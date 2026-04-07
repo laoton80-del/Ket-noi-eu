@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "725621161707",
+    "project_id": "ket-noi-global",
+    "storage_bucket": "ket-noi-global.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:725621161707:android:7748aa636c54365eb548ae",
+        "android_client_info": {
+          "package_name": "com.ahojbuono.ketnoieu"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDX0q1PZ_mL0AGH_q-D9lz6SG4eTrswkjo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
