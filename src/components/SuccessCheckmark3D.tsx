@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { Check } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
@@ -29,14 +29,14 @@ export function SuccessCheckmark3D({ visible, onClose }: SuccessCheckmark3DProps
     };
   }, []);
 
-  const onPresented = () => {
+  const onPresented = useCallback(() => {
     void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     if (timerRef.current) clearTimeout(timerRef.current);
     timerRef.current = setTimeout(() => {
       onClose();
       timerRef.current = null;
     }, 1500);
-  };
+  }, [onClose]);
 
   useEffect(() => {
     if (!visible) return;
@@ -53,7 +53,7 @@ export function SuccessCheckmark3D({ visible, onClose }: SuccessCheckmark3DProps
         runOnJS(onPresented)();
       }
     );
-  }, [opacity, scale, visible]);
+  }, [onPresented, opacity, scale, visible]);
 
   const badgeStyle = useAnimatedStyle(() => ({
     opacity: opacity.value,

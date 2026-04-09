@@ -114,7 +114,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [user]);
 
   useEffect(() => {
-    if (!user) return;
+    if (!user?.phone) return;
     void syncWalletFromServer();
   }, [user?.phone]);
 

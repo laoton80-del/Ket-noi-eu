@@ -159,7 +159,7 @@ export const LifeOSDashboard: React.FC = () => {
       setLastAction('callAssist');
       lifeOS.actions.onPressCallAssist();
     }
-  }, [lifeOS.actions, user?.phone]);
+  }, [lifeOS.actions, setDailyState, user?.phone]);
 
   const onCompanionSuggestionPress = useCallback((label: string) => {
     if (user?.phone) void recordAIIdentityAction(user.phone, `companion:${label}`);

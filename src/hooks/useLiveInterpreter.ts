@@ -377,7 +377,17 @@ export function useLiveInterpreter({ assistantLanguageCode }: UseLiveInterpreter
       setErrorKey('interpreter_failed');
       setPhase('error');
     }
-  }, [assistantLanguageCode, direction, finalizeSession, getSessionDurationMs, playAudio, scenario, sessionActive, user?.phone]);
+  }, [
+    assistantLanguageCode,
+    direction,
+    finalizeSession,
+    getSessionDurationMs,
+    playAudio,
+    scenario,
+    sessionActive,
+    user?.country,
+    user?.phone,
+  ]);
 
   const endSession = useCallback(
     (endedByUser: boolean): SessionEndPayload | null => {

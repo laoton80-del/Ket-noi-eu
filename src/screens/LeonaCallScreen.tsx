@@ -93,7 +93,7 @@ export function LeonaCallScreen() {
       const timer = setTimeout(() => setFromReminder(false), 1800);
       return () => clearTimeout(timer);
     }
-  }, [route.params?.prefillRequest]);
+  }, [attention, route.params?.prefillRequest]);
 
   useEffect(() => {
     const loop = RNAnimated.loop(
@@ -146,10 +146,13 @@ export function LeonaCallScreen() {
     }).start();
   };
 
+  const onCallRef = useRef(onCall);
+  onCallRef.current = onCall;
+
   useEffect(() => {
     if (!autoSubmitRequested || phase !== 'idle') return;
     if (!canCall) return;
-    void onCall();
+    void onCallRef.current();
   }, [autoSubmitRequested, canCall, phase]);
 
   if (!user) return null;

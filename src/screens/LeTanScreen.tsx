@@ -417,10 +417,21 @@ export function LeTanScreen() {
     Alert.alert(`CSKH ${inboundPersonaName}`, msg);
   };
 
+  const onSimulateRef = useRef(onSimulate);
+  onSimulateRef.current = onSimulate;
+
+  const autoSimulateGateRef = useRef(false);
+
   useEffect(() => {
-    if (!user || !autoSimulate || !proactiveQuestion || isSimulating) return;
-    void onSimulate();
+    autoSimulateGateRef.current = false;
   }, [user, autoSimulate, proactiveQuestion]);
+
+  useEffect(() => {
+    if (!user || !autoSimulate || !proactiveQuestion) return;
+    if (isSimulating || autoSimulateGateRef.current) return;
+    autoSimulateGateRef.current = true;
+    void onSimulateRef.current();
+  }, [user, autoSimulate, proactiveQuestion, isSimulating]);
 
   useEffect(() => {
     if (aiMode !== 'roleplay') {

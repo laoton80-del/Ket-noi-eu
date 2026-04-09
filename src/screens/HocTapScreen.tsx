@@ -3,7 +3,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Audio } from 'expo-av';
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -118,7 +118,7 @@ export function HocTapScreen() {
     if (timeFilter === 'week') return diff > oneDay && diff <= sevenDays;
     return diff > sevenDays;
   });
-  const loadB1B2UnlockState = async () => {
+  const loadB1B2UnlockState = useCallback(async () => {
     try {
       const stored = await AsyncStorage.getItem(B1_B2_UNLOCK_STORAGE_KEY);
       const unlocked = user?.isLearningFullUnlocked === true || user?.isLearningUnlocked === true || stored === 'true';
@@ -126,11 +126,11 @@ export function HocTapScreen() {
     } catch {
       setIsLearningFullUnlocked(user?.isLearningFullUnlocked === true || user?.isLearningUnlocked === true);
     }
-  };
+  }, [user?.isLearningFullUnlocked, user?.isLearningUnlocked]);
 
   useEffect(() => {
     void loadB1B2UnlockState();
-  }, [user?.isLearningFullUnlocked, user?.isLearningUnlocked]);
+  }, [loadB1B2UnlockState]);
 
   const showLearningSalesSheet = () => {
     Alert.alert(
