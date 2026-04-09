@@ -83,6 +83,9 @@ export function ComboWalletScreen() {
   const [platformPayClientSecret, setPlatformPayClientSecret] = useState<string | null>(null);
   const [loadingComboId, setLoadingComboId] = useState<string | null>(null);
   const [showPaySuccess, setShowPaySuccess] = useState(false);
+  const onPaySuccessClose = useCallback(() => {
+    setShowPaySuccess(false);
+  }, []);
   const [paymentFailureMessage, setPaymentFailureMessage] = useState<string | null>(null);
   const [topupPending, setTopupPending] = useState(false);
   const inboundPersonaName = getPersonaDisplayName('loan');
@@ -494,12 +497,7 @@ export function ComboWalletScreen() {
           <Text style={styles.pendingText}>{w.pendingVerifyText}</Text>
         </View>
       ) : null}
-      <SuccessCheckmark3D
-        visible={showPaySuccess}
-        onClose={() => {
-          setShowPaySuccess(false);
-        }}
-      />
+      <SuccessCheckmark3D visible={showPaySuccess} onClose={onPaySuccessClose} />
     </SafeAreaView>
   );
 }
