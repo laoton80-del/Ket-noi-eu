@@ -4,9 +4,7 @@ import type { RouteProp } from '@react-navigation/native';
 import { useEffect, useMemo, useState } from 'react';
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useAuth } from '../context/AuthContext';
-import type { ResidencyStatus } from '../context/AuthContext';
-import type { UserSegment } from '../context/AuthContext';
+import { useAuth, type ResidencyStatus, type UserSegment } from '../context/AuthContext';
 import type { PricingTierId } from '../config/countryPacks';
 import { PILOT_LEONA_SERVICES_FALLBACK_PREFILL, resolvePilotAwareRedirectTarget } from '../config/launchPilot';
 import type { RootStackParamList } from '../navigation/routes';
@@ -25,7 +23,7 @@ function isValidIsoDate(input: string): boolean {
   return date.getUTCFullYear() === y && date.getUTCMonth() === m - 1 && date.getUTCDate() === d;
 }
 
-const RESIDENCY_COUNTRIES: Array<{ code: string; tier: PricingTierId; label: string }> = [
+const RESIDENCY_COUNTRIES: { code: string; tier: PricingTierId; label: string }[] = [
   { code: 'CZ', tier: 'T1', label: 'Czechia (T1)' },
   { code: 'SK', tier: 'T1', label: 'Slovakia (T1)' },
   { code: 'PL', tier: 'T1', label: 'Poland (T1)' },
@@ -35,14 +33,14 @@ const RESIDENCY_COUNTRIES: Array<{ code: string; tier: PricingTierId; label: str
   { code: 'GB', tier: 'T2', label: 'United Kingdom — GB (T2)' },
 ];
 
-const RESIDENCY_OPTIONS: Array<{ value: ResidencyStatus; label: string }> = [
+const RESIDENCY_OPTIONS: { value: ResidencyStatus; label: string }[] = [
   { value: 'du_hoc', label: 'Du học' },
   { value: 'lao_dong', label: 'Lao động' },
   { value: 'dinh_cu', label: 'Định cư' },
   { value: 'ti_nan', label: 'Tị nạn' },
 ];
 
-const SEGMENT_OPTIONS: Array<{ value: UserSegment; label: string }> = [
+const SEGMENT_OPTIONS: { value: UserSegment; label: string }[] = [
   { value: 'adult', label: 'Người lớn (học tiếng bản địa)' },
   { value: 'child', label: 'Trẻ em (học tiếng Việt)' },
 ];

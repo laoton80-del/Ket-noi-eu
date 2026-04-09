@@ -24,7 +24,7 @@ export async function loadRecentLifeOSActions(): Promise<LifeOSRecentAction[]> {
   try {
     const raw = await AsyncStorage.getItem(RECENT_ACTIONS_KEY);
     if (!raw) return [];
-    const parsed = JSON.parse(raw) as Array<Partial<LifeOSRecentAction>>;
+    const parsed = JSON.parse(raw) as Partial<LifeOSRecentAction>[];
     const cleaned: LifeOSRecentAction[] = [];
     for (const item of parsed) {
       if (!item?.action) continue;

@@ -96,7 +96,6 @@ export async function processVisionFrame(imageUri: string, languageCode: string)
   const base64 = await FileSystem.readAsStringAsync(optimizedUri, {
     encoding: FileSystem.EncodingType.Base64,
   });
-  const dataUrl = `data:image/jpeg;base64,${base64}`;
 
   const content = await analyzeImage(base64);
   const parsed = tryParseJson(content);

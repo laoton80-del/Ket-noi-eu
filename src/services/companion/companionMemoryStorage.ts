@@ -5,7 +5,7 @@ import { STORAGE_KEYS } from '../../storage/storageKeys';
 export type CompanionActionType = 'learning' | 'call_help' | 'interpreter' | 'call_assist' | 'radar';
 
 export type CompanionMemory = {
-  recentActions: Array<{ action: CompanionActionType; at: number }>;
+  recentActions: { action: CompanionActionType; at: number }[];
   preferences: {
     preferredMode: 'learning' | 'calls' | 'mixed';
     tone: 'friendly' | 'supportive';

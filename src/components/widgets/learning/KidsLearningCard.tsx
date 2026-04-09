@@ -1,5 +1,5 @@
 import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text } from 'react-native';
 import { WidgetCard } from '../WidgetCard';
 import { AnimatedPressable } from '../AnimatedPressable';
 

@@ -51,7 +51,7 @@ type AuthContextValue = {
     segment?: UserSegment;
     isLearningFullUnlocked?: boolean;
     isLearningUnlocked?: boolean;
-    identityDocuments?: Array<Pick<DocumentVaultItem, 'id' | 'documentType' | 'expiryDate' | 'holderName'>>;
+    identityDocuments?: Pick<DocumentVaultItem, 'id' | 'documentType' | 'expiryDate' | 'holderName'>[];
   }) => void;
   logout: () => void;
 };

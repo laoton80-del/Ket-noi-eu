@@ -1,4 +1,4 @@
-import type { DailyLoopAction, DailyLoopState } from './dailyLoopStorage';
+import type { DailyLoopAction } from './dailyLoopStorage';
 
 export type DailyContentInput = {
   segment: 'adult' | 'child';

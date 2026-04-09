@@ -311,8 +311,6 @@ export function LeTanScreen() {
     })();
   }, [user]);
 
-  if (!user) return null;
-
   const b2bQueueConfigured = Boolean(devB2bTenantId || isB2bStaffQueueHttpsPreferred());
   const b2bQueueMetricValue = !b2bQueueConfigured ? '—' : liveQueueLoading ? '…' : String(liveQueueRows.length);
 
@@ -373,7 +371,7 @@ export function LeTanScreen() {
     const hh = String(now.getHours()).padStart(2, '0');
     const mm = String(now.getMinutes()).padStart(2, '0');
     const customers = ['Aneta', 'Petra', 'Lucie', 'Milu', 'Jana', 'Monika'];
-    const services: Array<{ label: string; kind: AppointmentKind }> = [
+    const services: { label: string; kind: AppointmentKind }[] = [
       { label: 'Smart Gel & Pedicure', kind: 'nails' },
       { label: 'Bàn tối 4 người', kind: 'restaurant' },
       { label: 'Đơn tạp hoá nhanh', kind: 'grocery_retail' },
@@ -420,9 +418,9 @@ export function LeTanScreen() {
   };
 
   useEffect(() => {
-    if (!autoSimulate || !proactiveQuestion || isSimulating) return;
+    if (!user || !autoSimulate || !proactiveQuestion || isSimulating) return;
     void onSimulate();
-  }, [autoSimulate, proactiveQuestion]);
+  }, [user, autoSimulate, proactiveQuestion]);
 
   useEffect(() => {
     if (aiMode !== 'roleplay') {
@@ -453,6 +451,8 @@ export function LeTanScreen() {
     const total = coachScores.reduce((sum, item) => sum + item, 0);
     return Math.round(total / coachScores.length);
   }, [coachScores]);
+
+  if (!user) return null;
 
   const onSendCoachTurn = async () => {
     const userInput = coachInput.trim();

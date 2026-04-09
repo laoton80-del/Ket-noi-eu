@@ -17,8 +17,7 @@ import { FontFamily } from '../theme/typography';
 const AUTH_STORAGE_KEY = STORAGE_KEYS.authSession;
 const SUGGESTIONS_CACHE_KEY = STORAGE_KEYS.proactiveSuggestions;
 const SUGGESTIONS_CACHE_TTL_MS = 6 * 60 * 60 * 1000;
-const FALLBACK_QUESTIONS = ['Gia hạn visa', 'Luật lao động mới', 'Tìm bác sĩ gần đây'];
-const FALLBACK_SUGGESTIONS: Array<{ text: string; persona: 'leona' | 'loan' }> = [
+const FALLBACK_SUGGESTIONS: { text: string; persona: 'leona' | 'loan' }[] = [
   { text: 'Gia hạn visa', persona: 'leona' },
   { text: 'Luật lao động mới', persona: 'leona' },
   { text: 'Tìm bác sĩ gần đây', persona: 'loan' },
@@ -31,7 +30,7 @@ type AuthSnapshot = {
 
 type SuggestionsCachePayload = {
   at: number;
-  suggestions: Array<{ text: string; persona: 'leona' | 'loan' }>;
+  suggestions: { text: string; persona: 'leona' | 'loan' }[];
 };
 
 function inferProfession(name?: string): string {
@@ -42,7 +41,7 @@ function inferProfession(name?: string): string {
   return 'dịch vụ tổng hợp';
 }
 
-function parseSuggestions(raw: string): Array<{ text: string; persona: 'leona' | 'loan' }> {
+function parseSuggestions(raw: string): { text: string; persona: 'leona' | 'loan' }[] {
   try {
     const parsed = JSON.parse(raw);
     const rows: unknown[] = Array.isArray(parsed?.suggestions)
@@ -89,7 +88,7 @@ export function ProactiveSuggestions({
 }) {
   const [loading, setLoading] = useState(true);
   const [suggestions, setSuggestions] =
-    useState<Array<{ text: string; persona: 'leona' | 'loan' }>>(FALLBACK_SUGGESTIONS);
+    useState<{ text: string; persona: 'leona' | 'loan' }[]>(FALLBACK_SUGGESTIONS);
   const shimmer = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {

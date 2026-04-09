@@ -46,10 +46,10 @@ export type AutonomousUserState = {
   userCountry?: string;
   visaExpiry: string | null;
   daysToExpiry: number | null;
-  recentActions: Array<{ action: string; at: number }>;
+  recentActions: { action: string; at: number }[];
   learningProgress: number;
   creditBalance: number;
-  upcomingEvents: Array<{ type: string; date: string; daysLeft?: number }>;
+  upcomingEvents: { type: string; date: string; daysLeft?: number }[];
 };
 
 export type AutonomousActionTrigger = {

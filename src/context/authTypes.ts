@@ -18,5 +18,5 @@ export type AuthUser = {
   aiCallCredits: number;
   isLearningFullUnlocked: boolean;
   isLearningUnlocked: boolean;
-  identityDocuments: Array<Pick<DocumentVaultItem, 'id' | 'documentType' | 'expiryDate' | 'holderName'>>;
+  identityDocuments: Pick<DocumentVaultItem, 'id' | 'documentType' | 'expiryDate' | 'holderName'>[];
 };

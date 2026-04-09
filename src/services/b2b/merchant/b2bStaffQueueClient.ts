@@ -27,8 +27,6 @@ import { getFirebaseApp } from '../../../config/firebaseApp';
 import { liveStaffQueueRowFromBookingDoc, liveStaffQueueRowFromOrderDoc } from './staffQueueRowMapping';
 import type { LiveStaffQueueRow } from './staffQueueTypes';
 
-export type { LiveStaffQueueRow } from './staffQueueTypes';
-
 export type FetchStaffQueueResult = {
   rows: LiveStaffQueueRow[];
   error: string | null;

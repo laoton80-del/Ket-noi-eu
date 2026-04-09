@@ -57,6 +57,11 @@ export function AiEyeScreen() {
     void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
   }, [isScanning]);
 
+  const saveFxStyle = useAnimatedStyle(() => ({
+    opacity: 1 - fxProgress.value,
+    transform: [{ translateY: -36 * fxProgress.value }],
+  }));
+
   if (!user) return null;
 
   const onCaptureAndScan = async () => {
@@ -125,11 +130,6 @@ export function AiEyeScreen() {
     setResult(null);
     setCapturedUri(null);
   };
-
-  const saveFxStyle = useAnimatedStyle(() => ({
-    opacity: 1 - fxProgress.value,
-    transform: [{ translateY: -36 * fxProgress.value }],
-  }));
 
   if (!permission) {
     return (

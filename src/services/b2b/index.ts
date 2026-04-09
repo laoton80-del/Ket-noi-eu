@@ -18,7 +18,7 @@ export * from './ai/bookingSlotSessionApply';
 export * from './ai/bookingSlotVoice';
 export * from './merchant/merchantHandoffSummary';
 export * from './merchant/b2bStaffQueueClient';
-export * from './merchant/staffQueueTypes';
+export type { LiveStaffQueueRow } from './merchant/staffQueueTypes';
 export * from './merchant/staffQueueLabels';
 export * from './hospitality/stayCommitMapping';
 export * from './ai/voiceOrderCommit';

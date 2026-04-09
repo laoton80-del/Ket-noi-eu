@@ -12,7 +12,7 @@ type Nav = NativeStackNavigationProp<RootStackParamList>;
 export function OtpScreen() {
   const navigation = useNavigation<Nav>();
   const [otp, setOtp] = useState(['', '', '', '']);
-  const refs = useRef<Array<TextInput | null>>([]);
+  const refs = useRef<(TextInput | null)[]>([]);
 
   const update = (index: number, value: string) => {
     const v = value.replace(/\D/g, '').slice(-1);

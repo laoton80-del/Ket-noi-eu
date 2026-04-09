@@ -15,7 +15,7 @@ import { resolveCountryPack } from '../config/countryPacks';
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
 
-const OPTIONS: Array<{ type: EmergencyType; title: string; subtitle: string }> = [
+const OPTIONS: { type: EmergencyType; title: string; subtitle: string }[] = [
   { type: 'ambulance', title: 'Ambulance', subtitle: 'Cấp cứu y tế' },
   { type: 'police', title: 'Police', subtitle: 'Cảnh sát' },
   { type: 'fire', title: 'Fire', subtitle: 'Cháy nổ' },

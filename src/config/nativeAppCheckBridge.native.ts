@@ -47,7 +47,7 @@ function readSharedDebugToken(): string | undefined {
   return a || b || undefined;
 }
 
-function useDebugProvider(): boolean {
+function shouldUseAppCheckDebugProvider(): boolean {
   if (process.env.EXPO_PUBLIC_FIREBASE_APP_CHECK_USE_DEBUG_PROVIDER === '1') return true;
   return __DEV__;
 }
@@ -58,7 +58,7 @@ export function describeNativeAppCheckBridge(): NativeAppCheckBridgeDescribe {
     initAttempted,
     initOk: nativeAppCheckInstance !== null,
     lastError: lastInitError,
-    providerMode: useDebugProvider() ? 'debug' : 'production_attestation',
+    providerMode: shouldUseAppCheckDebugProvider() ? 'debug' : 'production_attestation',
   };
 }
 
@@ -76,7 +76,7 @@ export async function ensureNativeRnFirebaseAppCheck(): Promise<boolean> {
   try {
     const app = getApp();
     const debugToken = readSharedDebugToken();
-    const debug = useDebugProvider();
+    const debug = shouldUseAppCheckDebugProvider();
 
     const rnfbProvider = new ReactNativeFirebaseAppCheckProvider();
     rnfbProvider.configure({

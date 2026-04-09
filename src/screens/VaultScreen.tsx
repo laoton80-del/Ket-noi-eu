@@ -359,7 +359,9 @@ export function VaultScreen() {
           <View style={styles.emptyCard}>
             <Ionicons name="archive-outline" size={26} color="#8A6A1A" />
             <Text style={styles.emptyTitle}>Kho lưu trữ đang trống</Text>
-            <Text style={styles.emptySub}>Bấm "Quét Giấy Tờ" để lưu Visa, Passport hoặc Contract.</Text>
+            <Text style={styles.emptySub}>
+              Bấm &quot;Quét Giấy Tờ&quot; để lưu Visa, Passport hoặc Contract.
+            </Text>
           </View>
         )}
       </ScrollView>

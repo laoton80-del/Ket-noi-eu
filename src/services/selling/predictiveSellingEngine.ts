@@ -24,18 +24,18 @@ export type UserState = {
   recentActions: LifeOSRecentAction[];
   learningProgress: number;
   creditBalance: number;
-  upcomingEvents: Array<{ type: 'visa_expiry'; date: string; daysLeft: number }>;
+  upcomingEvents: { type: 'visa_expiry'; date: string; daysLeft: number }[];
   segment: 'adult' | 'child';
   userCountry?: string;
 };
 
 export type AutoCTA = {
   message: string;
-  actions: Array<{
+  actions: {
     label: string;
     action: LifeOSPredictAction;
     credits: number;
-  }>;
+  }[];
 };
 
 export async function getUserState(input: PredictiveEngineLifeOSInput): Promise<UserState> {

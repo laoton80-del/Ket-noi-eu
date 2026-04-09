@@ -44,13 +44,6 @@ export function voiceStatusLabel(phase: VoicePhase, t: VoiceStatusCopy): string 
   }
 }
 
-function localeFromLanguageCode(languageCode: string): string {
-  if (languageCode === 'vi') return 'vi-VN';
-  if (languageCode === 'cs') return 'cs-CZ';
-  if (languageCode === 'de') return 'de-DE';
-  return 'en-GB';
-}
-
 export type UseVoiceAIOptions = {
   persona: VoicePersona;
   languageCode: string;

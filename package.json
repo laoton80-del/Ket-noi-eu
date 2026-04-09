@@ -26,7 +26,8 @@
     "functions:verify-bundle": "node scripts/verify-functions-bundle.mjs",
     "b2b:verify-phase32": "npm run b2b:verify-phase32 --prefix functions",
     "b2b:g1-set-claims": "node functions/scripts/b2b-set-staff-claims.cjs",
-    "verify:receipt": "node scripts/verify-receipt-strictness.mjs"
+    "verify:receipt": "node scripts/verify-receipt-strictness.mjs",
+    "lint": "expo lint"
   },
   "dependencies": {
     "@expo-google-fonts/be-vietnam-pro": "^0.4.1",
@@ -69,6 +70,8 @@
   "devDependencies": {
     "@types/react": "~19.1.0",
     "babel-preset-expo": "~54.0.10",
+    "eslint": "^9.0.0",
+    "eslint-config-expo": "~10.0.0",
     "typescript": "~5.9.2"
   },
   "expo": {

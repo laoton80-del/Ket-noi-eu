@@ -25,7 +25,7 @@ import {
 } from '../onboarding/guidedOnboardingStorage';
 import { INTERPRETER_MAX_SESSION_MINUTES, INTERPRETER_SESSION_CREDITS } from '../services/liveInterpreterService';
 import { setPendingSellResume } from '../services/selling/sellResumeStorage';
-import type { SellCTA, SellResume } from '../services/selling/sellingTypes';
+import type { SellCTA } from '../services/selling/sellingTypes';
 import type { RootStackParamList } from '../navigation/routes';
 import { useAssistantSettings } from '../state/assistantSettings';
 import { useWalletState } from '../state/wallet';
@@ -80,7 +80,6 @@ export function LiveInterpreterScreen() {
     setScenario,
     direction,
     setDirection,
-    phase,
     isRecording,
     isBusy,
     turns,

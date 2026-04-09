@@ -64,7 +64,7 @@ const LEARNING_UNLOCK_COST = 999;
 
 export function HocTapScreen() {
   const navigation = useNavigation<Nav>();
-  const { user, setPendingRedirect, updateProfile } = useAuth();
+  const { user, updateProfile } = useAuth();
   const wallet = useWalletState();
   const pulse = useRef(new RNAnimated.Value(1)).current;
   const { cards } = useFlashcardState();

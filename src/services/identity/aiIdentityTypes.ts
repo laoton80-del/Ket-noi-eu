@@ -11,7 +11,7 @@ export type AIIdentityProfile = {
 };
 
 export type AIIdentityMemory = {
-  recentActions: Array<{ action: string; at: number }>;
+  recentActions: { action: string; at: number }[];
   preferences: {
     communicationStyle?: CommunicationStyle;
     tonePreference?: TonePreference;

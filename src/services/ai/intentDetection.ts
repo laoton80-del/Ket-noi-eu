@@ -28,7 +28,7 @@ const SEARCH_KEYWORDS = [
   'near me',
 ];
 
-const SERVICE_HINTS: Array<{ keywords: string[]; value: string }> = [
+const SERVICE_HINTS: { keywords: string[]; value: string }[] = [
   { keywords: ['khám', 'kham', 'bác sĩ', 'bac si', 'doctor', 'clinic'], value: 'Khám bệnh' },
   { keywords: ['làm móng', 'lam mong', 'nails', 'nail'], value: 'Làm móng' },
   { keywords: ['nhà hàng', 'nha hang', 'quán ăn', 'quan an', 'restaurant'], value: 'Nhà hàng' },

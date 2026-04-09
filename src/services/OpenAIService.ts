@@ -27,7 +27,6 @@ function throwAiProxyHttpError(res: Response, bodyText: string, label: string): 
   throw new Error(code);
 }
 
-const OPENAI_BASE = 'https://api.openai.com/v1';
 const BACKEND_API_BASE = process.env.EXPO_PUBLIC_BACKEND_API_BASE?.trim() ?? '';
 const TTS_CACHE_API_BASE = process.env.EXPO_PUBLIC_TTS_CACHE_API_BASE?.trim() ?? '';
 const TTS_CACHE_TTL_DAYS = Number(process.env.EXPO_PUBLIC_TTS_CACHE_TTL_DAYS ?? '90');
@@ -81,15 +80,6 @@ async function withOneRetry<T>(fn: () => Promise<T>): Promise<T> {
     await sleep(RETRY_DELAY_MS);
     return fn();
   }
-}
-
-function arrayBufferToBase64(buffer: ArrayBuffer): string {
-  const bytes = new Uint8Array(buffer);
-  let binary = '';
-  for (let i = 0; i < bytes.byteLength; i++) {
-    binary += String.fromCharCode(bytes[i]!);
-  }
-  return btoa(binary);
 }
 
 function normalizeTtsText(text: string): string {
@@ -284,7 +274,7 @@ export async function analyzeImage(
   const userPrompt = options?.userPrompt ?? 'Phân tích bài tập và trả JSON đúng schema.';
   const data = await withOneRetry(() =>
     openAIRequest<{
-      choices?: Array<{ message?: { content?: string } }>;
+      choices?: { message?: { content?: string } }[];
     }>({
       path: '/chat/completions',
       headers: { 'Content-Type': 'application/json' },
@@ -319,7 +309,7 @@ export async function analyzeImage(
 export async function scanDocumentWithAI(base64Image: string, countryCode?: string): Promise<DocumentScanAiResult> {
   const data = await withOneRetry(() =>
     openAIRequest<{
-      choices?: Array<{ message?: { content?: string } }>;
+      choices?: { message?: { content?: string } }[];
     }>({
       path: '/chat/completions',
       headers: { 'Content-Type': 'application/json' },
@@ -371,7 +361,7 @@ export async function scanDocumentWithAI(base64Image: string, countryCode?: stri
   // Re-check pass: focus extracting expiry only when first pass is uncertain.
   const second = await withOneRetry(() =>
     openAIRequest<{
-      choices?: Array<{ message?: { content?: string } }>;
+      choices?: { message?: { content?: string } }[];
     }>({
       path: '/chat/completions',
       headers: { 'Content-Type': 'application/json' },
@@ -407,7 +397,7 @@ export async function scanDocumentWithAI(base64Image: string, countryCode?: stri
 export async function analyzeKidsHomeworkWithAI(base64Image: string): Promise<KidsHomeworkAiResult> {
   const data = await withOneRetry(() =>
     openAIRequest<{
-      choices?: Array<{ message?: { content?: string } }>;
+      choices?: { message?: { content?: string } }[];
     }>({
       path: '/chat/completions',
       headers: { 'Content-Type': 'application/json' },
@@ -514,7 +504,7 @@ export async function getChatCompletion(
 
   const data = await withOneRetry(() =>
     openAIRequest<{
-      choices?: Array<{ message?: { content?: string } }>;
+      choices?: { message?: { content?: string } }[];
     }>({
       path: '/chat/completions',
       headers: { 'Content-Type': 'application/json' },

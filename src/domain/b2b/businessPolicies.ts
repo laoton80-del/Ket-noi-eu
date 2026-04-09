@@ -1,4 +1,4 @@
-import type { B2BBusinessType, B2BResourceKind, BusinessBooking, BusinessOrder } from './models';
+import type { B2BBusinessType, B2BResourceKind, BusinessOrder } from './models';
 
 /**
  * Engine policies keyed by `B2BBusinessType`.

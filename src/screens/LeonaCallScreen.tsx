@@ -110,19 +110,6 @@ export function LeonaCallScreen() {
     };
   }, [phase, pulse]);
 
-  if (!user) return null;
-
-  const ringScales = [
-    pulse.interpolate({ inputRange: [0, 1], outputRange: [1, 1.35] }),
-    pulse.interpolate({ inputRange: [0, 1], outputRange: [1.1, 1.5] }),
-  ];
-  const ringOpacity = [
-    pulse.interpolate({ inputRange: [0, 0.7, 1], outputRange: [0.6, 0.22, 0.02] }),
-    pulse.interpolate({ inputRange: [0, 0.7, 1], outputRange: [0.42, 0.18, 0.01] }),
-  ];
-  const attentionScale = attention.interpolate({ inputRange: [0, 1], outputRange: [1, 1.08] });
-  const attentionGlow = attention.interpolate({ inputRange: [0, 1], outputRange: [0, 1] });
-  const liveCoreScale = pulse.interpolate({ inputRange: [0, 1], outputRange: [1, 1.06] });
   const canCall = phone.trim().length >= 7 && requestText.trim().length >= 6 && phase !== 'calling';
 
   const onCall = async () => {
@@ -164,6 +151,19 @@ export function LeonaCallScreen() {
     if (!canCall) return;
     void onCall();
   }, [autoSubmitRequested, canCall, phase]);
+
+  if (!user) return null;
+
+  const ringScales = [
+    pulse.interpolate({ inputRange: [0, 1], outputRange: [1, 1.35] }),
+    pulse.interpolate({ inputRange: [0, 1], outputRange: [1.1, 1.5] }),
+  ];
+  const ringOpacity = [
+    pulse.interpolate({ inputRange: [0, 0.7, 1], outputRange: [0.6, 0.22, 0.02] }),
+    pulse.interpolate({ inputRange: [0, 0.7, 1], outputRange: [0.42, 0.18, 0.01] }),
+  ];
+  const attentionScale = attention.interpolate({ inputRange: [0, 1], outputRange: [1, 1.08] });
+  const liveCoreScale = pulse.interpolate({ inputRange: [0, 1], outputRange: [1, 1.06] });
 
   return (
     <SafeAreaView style={styles.container}>

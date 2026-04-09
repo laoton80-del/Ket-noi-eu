@@ -4,7 +4,7 @@ export type HolidayItem = {
   month: number;
   day: number;
   country: string;
-  tags: Array<'family' | 'administrative' | 'travel' | 'closure'>;
+  tags: ('family' | 'administrative' | 'travel' | 'closure')[];
 };
 
 /** Fixed-date holiday seed for VN (kept lightweight for local product actions). */

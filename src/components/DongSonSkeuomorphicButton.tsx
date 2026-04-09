@@ -37,7 +37,7 @@ function createStarPolygon(cx: number, cy: number, points = 14, outerR = 28, inn
 }
 
 function BirdRing({ radius, color = '#7A4B0A', opacity = 0.8 }: { radius: number; color?: string; opacity?: number }) {
-  const birds: Array<{ x: number; y: number; r: number; rot: number }> = [];
+  const birds: { x: number; y: number; r: number; rot: number }[] = [];
   const ringR = radius * 0.7;
   for (let i = 0; i < 14; i += 1) {
     const a = (-Math.PI / 2) + (i * Math.PI * 2) / 14;

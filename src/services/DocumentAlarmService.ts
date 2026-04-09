@@ -24,7 +24,7 @@ export type DocumentVaultItem = {
   holder_name?: string;
 };
 
-type SeenThresholdMap = Record<string, Array<90 | 30>>;
+type SeenThresholdMap = Record<string, (90 | 30)[]>;
 
 type StartupAlarmAction = {
   documentId: string;
@@ -82,7 +82,7 @@ export async function loadVaultDocuments(): Promise<DocumentVaultItem[]> {
   const raw = await AsyncStorage.getItem(DOCUMENT_VAULT_STORAGE_KEY);
   if (!raw) return [];
   try {
-    const parsed = JSON.parse(raw) as Array<Partial<DocumentVaultItem>>;
+    const parsed = JSON.parse(raw) as Partial<DocumentVaultItem>[];
     if (!Array.isArray(parsed)) return [];
     return parsed.map(normalizeVaultDocument).filter((item): item is DocumentVaultItem => !!item);
   } catch {
