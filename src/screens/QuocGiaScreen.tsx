@@ -6,7 +6,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { getStrings } from '../i18n/strings';
 import type { SupportedLanguage } from '../i18n/strings';
-import { COUNTRY_PACKS } from '../config/countryPacks';
+import { COUNTRY_PACKS, normalizeCountryCodeOrSentinel } from '../config/countryPacks';
+import { getWalletPackagePricesByCountry } from '../config/commercialSpine';
 import { useAuth } from '../context/AuthContext';
 import type { RootStackParamList } from '../navigation/routes';
 import {
@@ -17,7 +18,8 @@ import {
 } from '../state/assistantSettings';
 import { APP_BRAND } from '../config/appBrand';
 import { GLOBAL_WALLET_PACKAGES } from '../config/globalWalletPackages';
-import { Colors } from '../theme/colors';
+import { DiscoveryCuratedList } from '../components/DiscoveryCuratedList';
+import { theme } from '../theme/theme';
 import { FontFamily } from '../theme/typography';
 
 const FLAG_BY_COUNTRY: Record<string, string> = {
@@ -32,7 +34,7 @@ const FLAG_BY_COUNTRY: Record<string, string> = {
   VN: '🇻🇳',
 };
 
-const COMBO_PREVIEW_TONES = ['#E9C5AA', '#D7DCE1', '#EAD88B', '#E0D5C6', '#D5E5E1', '#F0E0C4'];
+const WALLET_PACK_PREVIEW_TONES = ['#E8EEF6', '#E5EBF4', '#EDF2FA', '#E2EAF5', '#EAEFF7', '#DFE8F4'];
 const LANGUAGE_CODES: SupportedLanguage[] = ['vi', 'en', 'cs', 'de'];
 
 function countryCodesForPricingTier(tier: 'T1' | 'T2'): string[] {
@@ -67,14 +69,30 @@ export function QuocGiaScreen() {
 
   const languageCode = LANGUAGE_CODES[languageIndex % LANGUAGE_CODES.length];
   const strings = getStrings(languageCode);
+  const locale =
+    languageCode === 'vi' ? 'vi-VN' : languageCode === 'cs' ? 'cs-CZ' : languageCode === 'de' ? 'de-DE' : 'en-GB';
+  const country = normalizeCountryCodeOrSentinel(user?.country);
+  /** Same labels as wallet checkout spine (illustrative carousel only — no purchase on this screen). */
+  const walletPackPriceLabelsById = useMemo(() => {
+    const cards = getWalletPackagePricesByCountry(country, locale);
+    return Object.fromEntries(cards.map((c) => [c.id, c.amountLabel])) as Record<string, string>;
+  }, [country, locale]);
   const languageOptions = strings.country.languageOptions;
   const language = languageOptions[languageIndex % languageOptions.length];
-  const comboPreview = GLOBAL_WALLET_PACKAGES.map((pkg, idx) => ({
-    id: pkg.id,
-    tone: COMBO_PREVIEW_TONES[idx % COMBO_PREVIEW_TONES.length],
-    title: pkg.nameVi,
-    turns: pkg.credits != null ? `${pkg.credits} Credits` : 'Theo hợp đồng',
-  }));
+  const walletPackPreview = useMemo(
+    () =>
+      GLOBAL_WALLET_PACKAGES.map((pkg, idx) => ({
+        id: pkg.id,
+        tone: WALLET_PACK_PREVIEW_TONES[idx % WALLET_PACK_PREVIEW_TONES.length],
+        title: pkg.nameVi,
+        turns:
+          pkg.credits != null
+            ? strings.utility.packTurnsCredits.replace('{turns}', String(pkg.credits))
+            : strings.walletTopUp.enterpriseCta,
+        priceLabel: walletPackPriceLabelsById[pkg.id] ?? '',
+      })),
+    [walletPackPriceLabelsById, strings.utility.packTurnsCredits, strings.walletTopUp.enterpriseCta]
+  );
 
   const cycleLanguage = () => {
     setLanguageIndex((i) => (i + 1) % LANGUAGE_CODES.length);
@@ -98,6 +116,12 @@ export function QuocGiaScreen() {
           <Text style={styles.title}>{strings.country.screenTitle}</Text>
           <Text style={styles.subtitle}>{strings.country.subtitle}</Text>
         </View>
+
+        <DiscoveryCuratedList
+          sectionTitle={strings.utility.discoverySectionTitle}
+          sectionSubtitle={strings.utility.discoverySectionSubtitle}
+          categories={strings.utility.discoveryCategories}
+        />
 
         <View style={styles.tierBox}>
           <View style={styles.countryRow}>
@@ -132,19 +156,20 @@ export function QuocGiaScreen() {
         </View>
 
         <Text style={styles.sectionTitle}>{strings.reception.prepaidTitle}</Text>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.comboRow}>
-          {comboPreview.map((item) => (
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.walletPackCarouselRow}>
+          {walletPackPreview.map((item) => (
             <Pressable
               key={item.id}
               onPress={() => {}}
               style={({ pressed }) => [
-                styles.comboCard,
+                styles.walletPackCarouselCard,
                 { backgroundColor: item.tone },
                 pressed && { opacity: 0.72 },
               ]}
             >
-              <Text style={styles.comboTitle}>{item.title}</Text>
-              <Text style={styles.comboTurns}>({item.turns})</Text>
+              <Text style={styles.walletPackCarouselTitle}>{item.title}</Text>
+              <Text style={styles.walletPackCarouselCredits}>({item.turns})</Text>
+              {item.priceLabel ? <Text style={styles.walletPackCarouselPrice} numberOfLines={1}>{item.priceLabel}</Text> : null}
             </Pressable>
           ))}
         </ScrollView>
@@ -203,7 +228,7 @@ export function QuocGiaScreen() {
             </View>
             <View style={styles.settingValueRow}>
               <Text style={styles.settingValue}>{language.label}</Text>
-              <Ionicons name="chevron-forward" size={18} color={Colors.textSoft} />
+              <Ionicons name="chevron-forward" size={18} color={theme.hybrid.signal} />
             </View>
           </Pressable>
 
@@ -220,7 +245,7 @@ export function QuocGiaScreen() {
               value={humanSimulation}
               onValueChange={setHumanSimulation}
               disabled={assistantMode === 'loan'}
-              trackColor={{ false: '#D6C9B4', true: '#C49A3C' }}
+              trackColor={{ false: theme.colors.text.tertiary, true: theme.hybrid.signal }}
               thumbColor="#FFFDF7"
             />
           </View>
@@ -291,11 +316,11 @@ export function QuocGiaScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
+    backgroundColor: theme.colors.background,
   },
   content: {
-    paddingHorizontal: 20,
-    paddingTop: 20,
+    paddingHorizontal: theme.spacing.xl,
+    paddingTop: theme.spacing.xl,
     paddingBottom: 120,
   },
   headerBlock: {
@@ -305,14 +330,14 @@ const styles = StyleSheet.create({
     fontSize: 36,
     fontWeight: '800',
     fontFamily: FontFamily.extrabold,
-    color: Colors.text,
+    color: theme.colors.text.primary,
     letterSpacing: 0.2,
     marginBottom: 2,
   },
   launchLine: {
     fontSize: 13,
     fontFamily: FontFamily.medium,
-    color: Colors.textSoft,
+    color: theme.colors.text.secondary,
     marginBottom: 10,
     opacity: 0.9,
   },
@@ -320,23 +345,22 @@ const styles = StyleSheet.create({
     fontSize: 32,
     fontWeight: '700',
     fontFamily: FontFamily.bold,
-    color: Colors.text,
+    color: theme.colors.text.primary,
     marginBottom: 6,
   },
   subtitle: {
     fontSize: 16,
     lineHeight: 24,
     fontFamily: FontFamily.regular,
-    color: Colors.text,
-    opacity: 0.86,
+    color: theme.colors.text.secondary,
   },
   tierBox: {
-    borderRadius: 18,
-    backgroundColor: 'rgba(255,251,243,0.88)',
+    borderRadius: theme.radius.lg,
+    backgroundColor: theme.hybrid.panelCool,
     borderWidth: 1,
-    borderColor: Colors.glassBorder,
-    padding: 12,
-    marginBottom: 12,
+    borderColor: theme.hybrid.panelCoolBorder,
+    padding: theme.spacing.md,
+    marginBottom: theme.spacing.md,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
@@ -358,14 +382,14 @@ const styles = StyleSheet.create({
   countryName: {
     marginTop: 4,
     fontSize: 11,
-    color: Colors.text,
+    color: theme.hybrid.panelCoolText,
     fontFamily: FontFamily.medium,
   },
   tierBadge: {
     marginLeft: 8,
     minWidth: 100,
-    borderRadius: 16,
-    backgroundColor: '#651A17',
+    borderRadius: theme.radius.md,
+    backgroundColor: theme.hybrid.signalStrong,
     paddingHorizontal: 12,
     paddingVertical: 10,
     alignItems: 'center',
@@ -375,7 +399,7 @@ const styles = StyleSheet.create({
     marginBottom: 1,
   },
   tierTitle: {
-    color: '#F9EBC3',
+    color: theme.hybrid.onSignal,
     fontSize: 20,
     fontWeight: '700',
     fontFamily: FontFamily.bold,
@@ -383,7 +407,7 @@ const styles = StyleSheet.create({
   },
   tierSub: {
     marginTop: 2,
-    color: '#F2DBB0',
+    color: 'rgba(245, 249, 252, 0.88)',
     fontSize: 11,
     fontFamily: FontFamily.regular,
   },
@@ -391,85 +415,94 @@ const styles = StyleSheet.create({
     marginTop: 6,
     fontSize: 14,
     fontWeight: '800',
-    color: Colors.text,
+    color: theme.colors.text.primary,
     fontFamily: FontFamily.extrabold,
   },
   sectionSpacing: {
     marginTop: 18,
   },
-  comboRow: {
+  walletPackCarouselRow: {
     marginTop: 10,
     paddingBottom: 8,
     gap: 10,
   },
-  comboCard: {
+  walletPackCarouselCard: {
     width: 122,
-    height: 84,
-    borderRadius: 12,
+    minHeight: 84,
+    paddingVertical: 6,
+    borderRadius: theme.radius.md,
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.75)',
+    borderColor: theme.hybrid.panelCoolBorder,
   },
-  comboTitle: {
+  walletPackCarouselTitle: {
     fontSize: 14,
     fontWeight: '700',
-    color: '#2A251E',
+    color: theme.hybrid.panelCoolText,
     fontFamily: FontFamily.semibold,
     textAlign: 'center',
   },
-  comboTurns: {
+  walletPackCarouselCredits: {
     marginTop: 2,
     fontSize: 12,
     fontFamily: FontFamily.regular,
-    color: '#2A251E',
+    color: theme.hybrid.panelCoolTextMuted,
+  },
+  walletPackCarouselPrice: {
+    marginTop: 2,
+    fontSize: 10,
+    fontFamily: FontFamily.semibold,
+    color: theme.hybrid.signalStrong,
+    textAlign: 'center',
+    paddingHorizontal: 4,
   },
   glassPanel: {
     marginTop: 10,
-    borderRadius: 18,
-    backgroundColor: Colors.glass,
+    borderRadius: theme.radius.lg,
+    backgroundColor: theme.colors.surfaceElevated,
     borderWidth: 1,
-    borderColor: Colors.glassBorder,
-    padding: 14,
-    shadowColor: '#7D602A',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 12,
+    borderColor: theme.hybrid.borderOnInk,
+    padding: theme.spacing.md,
+    shadowColor: theme.colors.glass.shadow,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.12,
+    shadowRadius: 10,
     elevation: 2,
   },
   toggleRow: {
     flexDirection: 'row',
-    borderRadius: 14,
-    backgroundColor: 'rgba(255,255,255,0.5)',
+    borderRadius: theme.radius.md,
+    backgroundColor: theme.colors.executive.panelMuted,
     padding: 4,
     borderWidth: 1,
-    borderColor: 'rgba(255,245,227,0.85)',
+    borderColor: theme.hybrid.borderOnInk,
   },
   toggleSegment: {
     flex: 1,
     paddingVertical: 12,
-    borderRadius: 11,
+    borderRadius: theme.radius.sm,
     alignItems: 'center',
     justifyContent: 'center',
   },
   toggleSegmentActive: {
-    backgroundColor: '#651A17',
+    backgroundColor: theme.hybrid.signalStrong,
   },
   toggleText: {
     fontSize: 13,
     fontFamily: FontFamily.semibold,
-    color: Colors.textSoft,
+    color: theme.colors.text.secondary,
     textAlign: 'center',
   },
   toggleTextActive: {
-    color: '#F9EBC3',
+    color: theme.hybrid.onSignal,
   },
   assistantHint: {
     marginTop: 12,
     fontSize: 13,
     lineHeight: 20,
     fontFamily: FontFamily.regular,
-    color: Colors.textSoft,
+    color: theme.colors.text.secondary,
   },
   settingRow: {
     flexDirection: 'row',
@@ -484,13 +517,13 @@ const styles = StyleSheet.create({
   settingLabel: {
     fontSize: 16,
     fontFamily: FontFamily.semibold,
-    color: Colors.text,
+    color: theme.colors.text.primary,
   },
   settingSub: {
     marginTop: 4,
     fontSize: 12,
     fontFamily: FontFamily.regular,
-    color: Colors.textSoft,
+    color: theme.colors.text.secondary,
   },
   settingSubMuted: {
     opacity: 0.55,
@@ -503,12 +536,12 @@ const styles = StyleSheet.create({
   settingValue: {
     fontSize: 14,
     fontFamily: FontFamily.medium,
-    color: Colors.primary,
+    color: theme.hybrid.signal,
     maxWidth: 160,
   },
   divider: {
     height: 1,
-    backgroundColor: 'rgba(182,133,45,0.18)',
+    backgroundColor: theme.hybrid.borderOnInk,
     marginVertical: 10,
   },
   voiceGenderBlock: {
@@ -519,7 +552,7 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     fontSize: 12,
     fontFamily: FontFamily.regular,
-    color: Colors.textSoft,
+    color: theme.colors.text.secondary,
     lineHeight: 18,
   },
   voiceChipRow: {
@@ -529,22 +562,22 @@ const styles = StyleSheet.create({
   voiceChip: {
     flex: 1,
     paddingVertical: 10,
-    borderRadius: 12,
+    borderRadius: theme.radius.md,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: 'rgba(182,133,45,0.35)',
-    backgroundColor: 'rgba(255,255,255,0.45)',
+    borderColor: theme.hybrid.borderOnInk,
+    backgroundColor: theme.colors.executive.panelMuted,
   },
   voiceChipActive: {
-    borderColor: '#651A17',
-    backgroundColor: 'rgba(101,26,23,0.12)',
+    borderColor: theme.hybrid.signalSubtleBorder,
+    backgroundColor: theme.hybrid.signalMutedBg,
   },
   voiceChipText: {
     fontSize: 14,
     fontFamily: FontFamily.semibold,
-    color: Colors.textSoft,
+    color: theme.colors.text.secondary,
   },
   voiceChipTextActive: {
-    color: '#651A17',
+    color: theme.hybrid.signal,
   },
 });

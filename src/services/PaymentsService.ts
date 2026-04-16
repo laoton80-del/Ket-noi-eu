@@ -1,10 +1,16 @@
 import { normalizeCountryCodeOrSentinel, pricingTierForUsageDebits, resolveCountryPack } from '../config/countryPacks';
 import { LETAN_BOOKING_CREDITS_BY_TIER, OUTBOUND_CALL_CREDITS_BY_TIER } from '../config/countryPacks/pricingByTier';
+import type { WalletPackageId } from '../config/globalWalletPackages';
 import { devWarn } from '../utils/devLog';
 
-type PlatformIntentRequest = {
+/** POST `/platform-pay/intent` JSON body (payments microservice — repo assumes this shape). */
+export type PlatformPayIntentRequest = {
   amount: number;
   currency: string;
+  /**
+   * **Wire name (payments API legacy):** JSON body key expected by `platform-pay/intent`.
+   * **Semantic:** GLOBAL_V1 wallet pack id (`WalletPackageId` — starter…enterprise), not a “combo tier” label.
+   */
   comboId: string;
   idempotencyKey?: string;
   /** D8: normalized ISO2 or `ZZ` — same contract as `resolveCommercialCountryContext`. */
@@ -18,6 +24,32 @@ type PlatformIntentRequest = {
 type PlatformIntentResponse = {
   clientSecret?: string;
 };
+
+/**
+ * Canonical app input for wallet top-up intent — maps to wire field `comboId` (legacy key = {@link WalletPackageId}).
+ * Keeps one place that documents the display/checkout ↔ payments contract without renaming the remote API.
+ */
+export type WalletPackPlatformPayIntentInput = {
+  walletPackageId: WalletPackageId;
+  amount: number;
+  currency: string;
+  idempotencyKey?: string;
+  commercialCountryCode?: string;
+  merchantCountryCode?: string;
+  displayCurrency?: string;
+};
+
+export function toPlatformPayIntentRequest(input: WalletPackPlatformPayIntentInput): PlatformPayIntentRequest {
+  return {
+    amount: input.amount,
+    currency: input.currency,
+    comboId: input.walletPackageId,
+    idempotencyKey: input.idempotencyKey,
+    commercialCountryCode: input.commercialCountryCode,
+    merchantCountryCode: input.merchantCountryCode,
+    displayCurrency: input.displayCurrency,
+  };
+}
 
 const PAYMENTS_API_BASE = process.env.EXPO_PUBLIC_PAYMENTS_API_BASE?.trim() ?? '';
 
@@ -38,12 +70,29 @@ export function isPaymentsApiConfigured(): boolean {
  * `platform_payment_receipts/{paymentEventId}` (see `functions/src/payments/paymentReceiptModel.ts`);
  * enable `WALLET_TOPUP_REQUIRE_PAYMENT_RECEIPT=1` on Functions so topup requires `status: paid` first (`docs/RECEIPT_STRICTNESS.md`).
  */
-type VerifyTopupEntitlementRequest = {
+/** POST `/wallet/topup/verify` body (payments microservice). */
+export type VerifyTopupEntitlementRequest = {
   country: string;
+  /** Wire key; value = {@link WalletPackageId} (same as intent `comboId`). */
   comboId: string;
   provider: 'platform_pay';
   idempotencyKey?: string;
 };
+
+export type WalletPackTopupVerifyInput = {
+  country: string;
+  walletPackageId: WalletPackageId;
+  idempotencyKey?: string;
+};
+
+export function toTopupVerifyRequest(input: WalletPackTopupVerifyInput): VerifyTopupEntitlementRequest {
+  return {
+    country: input.country,
+    comboId: input.walletPackageId,
+    provider: 'platform_pay',
+    idempotencyKey: input.idempotencyKey,
+  };
+}
 
 /** Backend verify response — not the same as wallet credit applied. */
 type VerifyTopupEntitlementResponse = {
@@ -109,7 +158,7 @@ export function calculateLeTanBookingPrice(userCountry?: string): LeTanBookingPr
   };
 }
 
-export async function createPlatformPayIntent(input: PlatformIntentRequest): Promise<string | null> {
+export async function createPlatformPayIntent(input: PlatformPayIntentRequest): Promise<string | null> {
   if (!isPaymentsApiConfigured()) {
     devWarn('payments', 'EXPO_PUBLIC_PAYMENTS_API_BASE is unset — top-up intents disabled');
     return null;

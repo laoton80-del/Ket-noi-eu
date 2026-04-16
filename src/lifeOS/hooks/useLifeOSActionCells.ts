@@ -103,7 +103,7 @@ export function useLifeOSActionCells(deps: LifeOSActionDeps): LifeOSActionCell[]
       },
       {
         key: 'radar',
-        title: LAUNCH_PILOT_CONFIG.enableRadarSurface ? 'Tìm dịch vụ gần' : 'Tìm dịch vụ (pilot)',
+        title: LAUNCH_PILOT_CONFIG.enableRadarSurface ? 'Tìm dịch vụ gần' : 'Tìm dịch vụ · Leona',
         costLine: LAUNCH_PILOT_CONFIG.enableRadarSurface ? '0 Credits · xem radar' : '0 Credits · chuyển qua Leona',
         outcomeLine: LAUNCH_PILOT_CONFIG.enableRadarSurface ? 'Quán & tiệm gần bạn' : 'Leona hỗ trợ tìm & gọi',
         loading: deps.loadingActionKey === 'radar',

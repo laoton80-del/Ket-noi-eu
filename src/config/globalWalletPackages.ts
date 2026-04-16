@@ -2,8 +2,9 @@ import type { PricingTierId } from './countryPacks/types';
 
 /**
  * Global wallet top-up families (Kết Nối Global pricing architecture).
+ * **Import path for live spine:** prefer `src/config/commercialSpine.ts` (re-exports this module + pricing entrypoints).
  * Canonical list prices are USD at **T2**; other tiers apply `TIER_PRICE_MULTIPLIER`.
- * Fiat shown in-app is localized via `Pricing.usdToLocalDisplayAmount` (not CZK-anchored).
+ * Fiat shown in-app is localized via `Pricing.usdToLocalDisplayAmount` (**illustrative** local label; **USD list × tier** is the in-app pricing spine — not CZK-first public anchor; see GLOBAL_V1 commercial docs).
  * Tier selection for wallet/call debits ultimately flows from `countryPacks` — rebuild `functions/lib` after pack changes.
  */
 export type WalletPackageId =

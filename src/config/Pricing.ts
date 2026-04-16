@@ -1,11 +1,13 @@
 /**
- * Global pricing display spine:
+ * Global pricing display spine (implementation detail for wallet packs):
+ * - **App import path:** prefer `src/config/commercialSpine.ts` + `docs/COMMERCIAL_SPINE_LIVE.md` for “what is live”.
  * - **Canonical list prices:** USD at tier (see `globalWalletPackages.usdT2` × tier multiplier).
  * - **Local fiat labels:** `usdToLocalDisplayAmount` uses **static** approximate rates per currency (not live FX).
  * - **Per-call debit anchors:** `internal_call_czk` / `external_call_czk` are legacy **credit-unit anchors** (name retained for compatibility), converted to local display via `EXCHANGE_RATE_FROM_CZK`.
  * - **Country truth:** use `resolveCommercialCountryContext` as the canonical fallback contract:
  *   `{ countryCode, pricingPack, displayCurrency, merchantCountryCode }`.
  * - **Functions bundle:** Cloud Functions inlines this module via esbuild (`functions/npm run build`); keep tier logic in sync with `countryPacks/index.ts`.
+ * - **Legacy names (compatibility only):** `ComboPlan`, `ComboPriceCard`, `getComboPricesByCountry` — alias lịch sử; ưu tiên `Wallet*` / `getWalletPackagePricesByCountry` + `commercialSpine.ts` (GLOBAL_V1).
  */
 import type { PackCurrencyCode } from './countryPacks/types';
 import {
@@ -31,23 +33,29 @@ export type MarketTier = {
   currencyCode: CurrencyCode;
 };
 
-export type ComboPlan = {
+/** Wallet pack row for display/checkout (GLOBAL_V1 six-pack family). */
+export type WalletPackagePlan = {
   id: WalletPackageId;
   name: string;
-  /** Credits granted after successful top-up (field name kept for wallet UI compatibility). */
+  /** Credits granted after successful top-up (historical field name `turns`). Payments service uses wire key `comboId` for the same pack id. */
   turns: number;
   gift: string;
   purchasable: boolean;
 };
 
-export type ComboPriceCard = ComboPlan & {
+export type WalletPriceCard = WalletPackagePlan & {
   amount: number;
   currencyCode: CurrencyCode;
   currencySymbol: string;
   amountLabel: string;
-  /** Tier-adjusted list price in USD (canonical layer). */
+  /** Tier-adjusted list price in USD (canonical commercial anchor per GLOBAL_V1). */
   listUsd: number;
 };
+
+/** @deprecated Use `WalletPackagePlan`. */
+export type ComboPlan = WalletPackagePlan;
+/** @deprecated Use `WalletPriceCard`. */
+export type ComboPriceCard = WalletPriceCard;
 
 /**
  * Markets matrix for geo labels + per-call debit anchors → local display.
@@ -226,7 +234,10 @@ export function getPricingByCountry(countryCode?: string) {
   };
 }
 
-export function getComboPricesByCountry(countryCode?: string, locale?: string): ComboPriceCard[] {
+/**
+ * Live wallet pack prices for UI: **USD list** × country tier → **local fiat label** (static FX scaffold — not a public commercial master anchor; see GLOBAL_V1).
+ */
+export function getWalletPackagePricesByCountry(countryCode?: string, locale?: string): WalletPriceCard[] {
   const ctx = resolveCommercialCountryContext(countryCode);
   const tier = pricingTierForUsageDebits(ctx.countryCode);
   const currencyCode = ctx.displayCurrency;
@@ -249,6 +260,11 @@ export function getComboPricesByCountry(countryCode?: string, locale?: string): 
       listUsd,
     };
   });
+}
+
+/** @deprecated Use `getWalletPackagePricesByCountry` (same implementation). */
+export function getComboPricesByCountry(countryCode?: string, locale?: string): WalletPriceCard[] {
+  return getWalletPackagePricesByCountry(countryCode, locale);
 }
 
 export function getMarketTierByCountry(countryCode?: string): MarketTier {
