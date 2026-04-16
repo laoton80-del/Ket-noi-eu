@@ -328,6 +328,10 @@ export const walletOps = onRequest(
        * Receipt → wallet flow (see `payments/paymentReceiptModel.ts`):
        * 1) Optional precondition: webhook sets `platform_payment_receipts/{paymentEventId}` to `paid`.
        * 2) This handler applies credits once and mirrors idempotency in `wallets/{uid}/verifiedTopups/...`.
+       *
+       * **Pack identity:** `walletOps` topup does **not** accept `comboId` / pack id. Credits granted are
+       * exactly `body.amount` after receipt checks. Client must send the same credit count the user saw
+       * at checkout; payments microservice may correlate `comboId` + fiat separately (not in this repo).
        */
       const amount = Number(body.amount ?? 0);
       const paymentEventId = String(body.paymentEventId ?? '').trim().replace(/\//g, '_');
