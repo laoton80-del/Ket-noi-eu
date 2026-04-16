@@ -1,6 +1,8 @@
 # Wave 1 — Runbook đóng vận hành (FAIL → PASS)
 
-Tài liệu này bổ sung `docs/WAVE1_CLOSURE_EVIDENCE.md`. **Không thay thế** bằng chứng runtime: mọi mục “ops” phải có log/artifact thật đính kèm PR hoặc release ticket.
+**Governance:** `docs/GLOBAL_V1_PROJECT_RULES_CURSOR.md` (W1), `docs/WAVE1_CLOSURE_EVIDENCE.md` (bảng yêu cầu + PASS rule). **W0** (P0 ký + P7) mở thì **không** kết luận chương trình đã đóng wave sau, dù lệnh repo chạy xanh.
+
+Tài liệu này bổ sung `docs/WAVE1_CLOSURE_EVIDENCE.md`. **Không thay thế** bằng chứng runtime: mọi mục “ops” phải có log/artifact thật đính kèm PR hoặc release ticket. `.trust-live-stamp` chỉ là đầu vào tùy chọn cho **strict commercial gate** — **không** tương đương W1-04 đầy đủ hoặc W0 PASS.
 
 ---
 
@@ -89,6 +91,42 @@ node scripts/verify-receipt-strictness.mjs seeded-flow
 | `GOOGLE_APPLICATION_CREDENTIALS` | Admin seed receipt / `seeded-flow` |
 | `VERIFY_RECEIPT_FIREBASE_UID` | UID khớp chủ ví test |
 | `COMMERCIAL_GATE_ALLOW_NO_TRUST_LIVE_STAMP=I_UNDERSTAND` | Chỉ khi cố tình bỏ qua stamp (ghi rõ lý do) |
+
+**Session / `.env`:** `set` trong PowerShell/cmd chỉ có hiệu lực trong **phiên terminal đó** — đóng cửa sổ là mất (trừ khi ghi vào biến môi trường User/Machine). File **`.env`** phục vụ build Expo **không** được `trust:live` / `verify:receipt` / `seeded-flow` tự nạp; phải **`set` lại** `TRUST_SMOKE_*` (và các biến seed) trong shell trước khi chạy, hoặc dùng cơ chế inject secrets của CI. Chi tiết: `docs/G3_APP_CHECK_AND_RELEASE.md` §2.1.
+
+### B3b — `trust:live` / `aiProxy`: critical path operator (runtime)
+
+**Bối cảnh:** Cùng phiên smoke, nếu **walletOps đã HTTP 200** nhưng **aiProxy trả HTTP 500** với `{"ok":false,"error":"proxy_error"}` — các cổng App Check và (nếu bật) Firebase bearer trong `functions/src/index.ts` thường đã qua; lỗi nằm trong `catch` sau nhánh upstream (`openaiProxy`). Neo repo: `docs/WAVE1_CLOSURE_EVIDENCE.md` §Runtime evidence, `docs/P4_EXECUTION_BOARD.md` § trust:live vs aiProxy.
+
+#### Cloud Logging (GCP) — checklist ngắn
+
+1. Mở đúng **GCP / Firebase project** trùng với host trong `TRUST_SMOKE_BACKEND_BASE` và với **ID token** smoke.  
+2. **Region** deploy: **`europe-west1`** (khớp `aiProxy` trong repo).  
+3. Phạm vi log: revision / service **`aiProxy`** (Gen2).  
+4. Lọc log chứa **`[aiProxy] error`** — đọc message / exception (vd. `openai_key_missing`, `openai_chat_<status>`).  
+5. Giữ **stdout `npm run trust:live`** cùng phiên (đối chiếu: walletOps OK ⇒ base + token không “chết toàn bộ”).
+
+#### Xác minh ngoài repo (trước khi sửa code app)
+
+- **`OPENAI_API_KEY`:** đã gắn đúng cho **revision đang chạy** của `aiProxy` (Secret Manager / env Gen2).  
+- **Base URL smoke:** không slash cuối; đúng project (vd. `https://europe-west1-<PROJECT_ID>.cloudfunctions.net`).  
+- **App Check:** nếu deploy `FIREBASE_APP_CHECK_ENFORCE=1`, smoke cần `TRUST_SMOKE_APP_CHECK`; **401** `app_check_*` **không** phải `proxy_error`.  
+- Sau đổi secret/env: **redeploy** `aiProxy` theo pipeline dự án → chạy lại `npm run trust:live`.
+
+#### Mẫu điền evidence (dán ticket / PR / bảng W1)
+
+```
+Timestamp (UTC):
+TRUST_SMOKE_BACKEND_BASE:
+walletOps: HTTP status=   ledger ok (Y/N):
+b2bStaffQueueSnapshot: HTTP status=   note:
+aiProxy: HTTP status=   body snippet (≤200 chars):
+Cloud Logging ([aiProxy] error): finding:
+Hành động ngoài repo (OPENAI_API_KEY / redeploy / URL / App Check):
+Chạy lại trust:live: PASS / FAIL
+```
+
+**Không** ký **trust:live PASS** hay chuyển tracker **DONE** chỉ từ cập nhật doc — cần **stdout smoke mới** + (khuyến nghị) log GCP neo trên.
 
 ---
 
