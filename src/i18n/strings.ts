@@ -5,12 +5,13 @@ type ReceptionStrings = {
   prepaidTitle: string;
   homelandTitle: string;
   homelandQuote: string;
-  comboBronze: string;
-  comboSilver: string;
-  comboGold: string;
-  comboBronzeTurns: string;
-  comboSilverTurns: string;
-  comboGoldTurns: string;
+  /** Sample labels — GLOBAL_V1 pack names (Starter / Basic / Standard); not legacy tier names. */
+  walletPackStarterLabel: string;
+  walletPackBasicLabel: string;
+  walletPackStandardLabel: string;
+  walletPackStarterCredits: string;
+  walletPackBasicCredits: string;
+  walletPackStandardCredits: string;
 };
 
 type CountryStrings = {
@@ -47,6 +48,8 @@ type LearningStrings = {
   startPracticeWithChauLoan: string;
 };
 
+export type UtilityDiscoveryCategory = { title: string; hint: string };
+
 type UtilityStrings = {
   screenTitle: string;
   pricingTitle: string;
@@ -59,6 +62,24 @@ type UtilityStrings = {
   serviceHousing: string;
   serviceLegal: string;
   serviceExchange: string;
+  /** LifeOS hub entry (utilities grid). */
+  serviceLifeOS: string;
+  /** Travel companion surface. */
+  serviceTravel: string;
+  /** Optional surface when launch flag enables it. */
+  serviceYeuThuong: string;
+  /** Radar discovery when enabled. */
+  serviceRadarDiscovery: string;
+  /** Fallback: Leona path when Radar is off. */
+  serviceFindServicesLeona: string;
+  /** Document vault entry. */
+  serviceVault: string;
+  /** Pack preview line on utility screen; `{turns}` = credit count. */
+  packTurnsCredits: string;
+  /** Curated discovery — Quốc gia + Tiện ích (PASS 1 hybrid). */
+  discoverySectionTitle: string;
+  discoverySectionSubtitle: string;
+  discoveryCategories: UtilityDiscoveryCategory[];
 };
 
 type CommunityStrings = {
@@ -228,13 +249,13 @@ export const STRINGS_BY_LANGUAGE: Record<SupportedLanguage, AppStrings> = {
       screenTitle: 'Lễ tân',
       prepaidTitle: 'Gói Credits Global (Starter → Enterprise)',
       homelandTitle: 'Góc Quê Hương',
-      homelandQuote: 'Dù ở châu Âu, gốc quê nhà vẫn luôn ở bên Bạn.',
-      comboBronze: 'Starter · Nhập môn',
-      comboSilver: 'Basic · Tiêu chuẩn nhẹ',
-      comboGold: 'Standard · Phổ biến',
-      comboBronzeTurns: '100 Credits',
-      comboSilverTurns: '230 Credits',
-      comboGoldTurns: '650 Credits',
+      homelandQuote: 'Dù ở đâu, gốc quê nhà vẫn luôn ở bên Bạn.',
+      walletPackStarterLabel: 'Gói Starter · Nhập môn',
+      walletPackBasicLabel: 'Gói Basic · Tiêu chuẩn nhẹ',
+      walletPackStandardLabel: 'Gói Standard · Phổ biến',
+      walletPackStarterCredits: '100 Credits',
+      walletPackBasicCredits: '230 Credits',
+      walletPackStandardCredits: '650 Credits',
     },
     country: {
       screenTitle: 'Quốc gia',
@@ -292,6 +313,50 @@ export const STRINGS_BY_LANGUAGE: Record<SupportedLanguage, AppStrings> = {
       serviceHousing: 'Thuê nhà',
       serviceLegal: 'Dịch vụ pháp lý',
       serviceExchange: 'Đổi tiền',
+      serviceLifeOS: 'LifeOS — trung tâm điều phối',
+      serviceTravel: 'Đồng hành du lịch',
+      serviceYeuThuong: 'Kết Nối Yêu Thương',
+      serviceRadarDiscovery: 'Radar — khám phá dịch vụ',
+      serviceFindServicesLeona: 'Tìm dịch vụ (Leona)',
+      serviceVault: 'Két sắt giấy tờ',
+      packTurnsCredits: '{turns} Credits',
+      discoverySectionTitle: 'Khám phá dịch vụ theo nhu cầu thực tế',
+      discoverySectionSubtitle:
+        'Định hướng toàn cầu, ưu tiên hỗ trợ thực hành — không phải danh mục tài chính xa xỉ.',
+      discoveryCategories: [
+        {
+          title: 'Visa & giấy tờ',
+          hint: 'Hộ chiếu, visa, hợp đồng và giấy tờ cần cho sinh sống tại nước sở tại.',
+        },
+        {
+          title: 'Cư trú & nhập cư',
+          hint: 'Gia hạn, đổi loại cư trú và thủ tục nhập cư cơ bản.',
+        },
+        {
+          title: 'Y tế & đặt lịch',
+          hint: 'Khám chữa, bảo hiểm và định hướng đặt hẹn trong hệ thống y tế địa phương.',
+        },
+        {
+          title: 'Pháp lý & tư vấn',
+          hint: 'Hợp đồng, lao động và hỗ trợ pháp lý thực dụng.',
+        },
+        {
+          title: 'Việc làm & doanh nghiệp',
+          hint: 'Tìm việc, hợp đồng lao động và dịch vụ liên quan doanh nghiệp nhỏ.',
+        },
+        {
+          title: 'Nhà ở, khách sạn & homestay',
+          hint: 'Thuê nhà, lưu trú ngắn hạn và homestay phù hợp ngân sách.',
+        },
+        {
+          title: 'Nails, quán ăn & dịch vụ Việt',
+          hint: 'Tiện ích quen thuộc: nails, ăn uống, mua sắm phục vụ cộng đồng người Việt.',
+        },
+        {
+          title: 'Booking & hỗ trợ dịch vụ',
+          hint: 'Đặt chỗ, gọi hỗ trợ và đồng hành xử lý tình huống thực tế.',
+        },
+      ],
     },
     community: {
       screenTitle: 'Cộng đồng',
@@ -439,13 +504,13 @@ export const STRINGS_BY_LANGUAGE: Record<SupportedLanguage, AppStrings> = {
       screenTitle: 'Reception',
       prepaidTitle: 'Global Credits packs (Starter → Enterprise)',
       homelandTitle: 'Homeland Corner',
-      homelandQuote: 'Where your roots stay close, even in Europe.',
-      comboBronze: 'Starter · Entry',
-      comboSilver: 'Basic · Light',
-      comboGold: 'Standard · Popular',
-      comboBronzeTurns: '100 Credits',
-      comboSilverTurns: '230 Credits',
-      comboGoldTurns: '650 Credits',
+      homelandQuote: 'Where your roots stay close, wherever you are.',
+      walletPackStarterLabel: 'Starter pack · Entry',
+      walletPackBasicLabel: 'Basic pack · Light',
+      walletPackStandardLabel: 'Standard pack · Popular',
+      walletPackStarterCredits: '100 Credits',
+      walletPackBasicCredits: '230 Credits',
+      walletPackStandardCredits: '650 Credits',
     },
     country: {
       screenTitle: 'Countries',
