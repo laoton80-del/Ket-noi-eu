@@ -5,13 +5,14 @@ import { useMemo } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { LAUNCH_PILOT_CONFIG, PILOT_LEONA_SERVICES_FALLBACK_PREFILL } from '../config/launchPilot';
 import { APP_BRAND } from '../config/appBrand';
-import { getComboPricesByCountry } from '../config/Pricing';
+import { getWalletPackagePricesByCountry } from '../config/commercialSpine';
 import { normalizeCountryCodeOrSentinel } from '../config/countryPacks';
 import { useAuth } from '../context/AuthContext';
 import { getStrings } from '../i18n/strings';
 import type { RootStackParamList } from '../navigation/routes';
 import { useAssistantSettings } from '../state/assistantSettings';
-import { Colors } from '../theme/colors';
+import { DiscoveryCuratedList } from '../components/DiscoveryCuratedList';
+import { theme } from '../theme/theme';
 import { FontFamily } from '../theme/typography';
 
 export function TienIchScreen() {
@@ -21,23 +22,24 @@ export function TienIchScreen() {
   const strings = getStrings(languageCode);
   const locale = languageCode === 'vi' ? 'vi-VN' : languageCode === 'cs' ? 'cs-CZ' : languageCode === 'de' ? 'de-DE' : 'en-GB';
   const country = normalizeCountryCodeOrSentinel(user?.country);
-  const comboCards = useMemo(() => getComboPricesByCountry(country, locale), [country, locale]);
+  const walletPackCards = useMemo(() => getWalletPackagePricesByCountry(country, locale), [country, locale]);
+  const u = strings.utility;
   const serviceCards = [
-    { id: 'job', label: strings.utility.serviceJob, icon: 'briefcase-outline' as const },
-    { id: 'housing', label: strings.utility.serviceHousing, icon: 'home-outline' as const },
-    { id: 'legal', label: strings.utility.serviceLegal, icon: 'document-text-outline' as const },
-    { id: 'exchange', label: strings.utility.serviceExchange, icon: 'swap-horizontal-outline' as const },
-    { id: 'lifeos', label: 'LifeOS Dashboard', icon: 'speedometer-outline' as const },
-    { id: 'travel', label: 'Đồng hành du lịch', icon: 'airplane-outline' as const },
+    { id: 'job' as const, label: u.serviceJob, icon: 'briefcase-outline' as const },
+    { id: 'housing' as const, label: u.serviceHousing, icon: 'home-outline' as const },
+    { id: 'legal' as const, label: u.serviceLegal, icon: 'document-text-outline' as const },
+    { id: 'exchange' as const, label: u.serviceExchange, icon: 'swap-horizontal-outline' as const },
+    { id: 'lifeos' as const, label: u.serviceLifeOS, icon: 'speedometer-outline' as const },
+    { id: 'travel' as const, label: u.serviceTravel, icon: 'airplane-outline' as const },
     ...(LAUNCH_PILOT_CONFIG.enableYeuThuongSurface
-      ? [{ id: 'yeuthuong' as const, label: 'Kết Nối Yêu Thương', icon: 'heart-outline' as const }]
+      ? [{ id: 'yeuthuong' as const, label: u.serviceYeuThuong, icon: 'heart-outline' as const }]
       : []),
     {
-      id: 'radar',
-      label: LAUNCH_PILOT_CONFIG.enableRadarSurface ? 'Radar Discovery' : 'Tìm dịch vụ (Leona)',
+      id: 'radar' as const,
+      label: LAUNCH_PILOT_CONFIG.enableRadarSurface ? u.serviceRadarDiscovery : u.serviceFindServicesLeona,
       icon: 'radio-outline' as const,
     },
-    { id: 'vault', label: 'Két Sắt Giấy Tờ', icon: 'shield-checkmark-outline' as const },
+    { id: 'vault' as const, label: u.serviceVault, icon: 'shield-checkmark-outline' as const },
   ];
 
   return (
@@ -46,6 +48,12 @@ export function TienIchScreen() {
       <Text style={styles.launchHint}>{APP_BRAND.launchSubtitle}</Text>
       <Text style={styles.title}>{strings.utility.screenTitle}</Text>
       <Text style={styles.subtitle}>{strings.utility.subtitle}</Text>
+
+      <DiscoveryCuratedList
+        sectionTitle={strings.utility.discoverySectionTitle}
+        sectionSubtitle={strings.utility.discoverySectionSubtitle}
+        categories={strings.utility.discoveryCategories}
+      />
 
       <Text style={styles.sectionTitle}>{strings.utility.servicesTitle}</Text>
       <View style={styles.grid}>
@@ -84,7 +92,7 @@ export function TienIchScreen() {
             style={({ pressed }) => [styles.serviceCard, pressed && { opacity: 0.72 }]}
           >
             <View style={styles.iconBubble}>
-              <Ionicons name={item.icon} size={22} color={Colors.primary} />
+              <Ionicons name={item.icon} size={22} color={theme.hybrid.signalStrong} />
             </View>
             <Text style={styles.serviceLabel}>{item.label}</Text>
           </Pressable>
@@ -92,18 +100,20 @@ export function TienIchScreen() {
       </View>
 
       <Text style={styles.sectionTitle}>{strings.reception.prepaidTitle}</Text>
-      {comboCards.map((combo) => (
+      {walletPackCards.map((pack) => (
         <Pressable
-          key={combo.id}
+          key={pack.id}
           onPress={() => {}}
           style={({ pressed }) => [styles.pricingCard, pressed && { opacity: 0.72 }]}
         >
-          <Text style={styles.cardTitle}>{combo.name}</Text>
+          <Text style={styles.cardTitle}>{pack.name}</Text>
           <Text style={styles.cardHint}>
-            {combo.purchasable ? `${combo.turns} Credits` : strings.comboWallet.enterpriseCta}
+            {pack.purchasable
+              ? strings.utility.packTurnsCredits.replace('{turns}', String(pack.turns))
+              : strings.walletTopUp.enterpriseCta}
           </Text>
           <Text style={styles.priceLine}>
-            {strings.comboWallet.packPriceLine.replace('{amount}', combo.amountLabel)}
+            {strings.walletTopUp.packPriceLine.replace('{amount}', pack.amountLabel)}
           </Text>
         </Pressable>
       ))}
@@ -114,45 +124,46 @@ export function TienIchScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
+    backgroundColor: theme.colors.background,
   },
   content: {
-    paddingHorizontal: 16,
-    paddingTop: 12,
+    paddingHorizontal: theme.spacing.lg,
+    paddingTop: theme.spacing.md,
     paddingBottom: 120,
   },
   brand: {
     fontSize: 14,
-    color: Colors.textSoft,
+    color: theme.colors.text.secondary,
     fontFamily: FontFamily.regular,
-    marginBottom: 4,
+    marginBottom: theme.spacing.xs,
   },
   launchHint: {
-    fontSize: 12,
-    color: Colors.textSoft,
+    fontSize: theme.typeScale.caption.fontSize,
+    color: theme.colors.text.secondary,
     fontFamily: FontFamily.medium,
-    marginBottom: 8,
+    marginBottom: theme.spacing.sm,
     opacity: 0.9,
   },
   title: {
-    fontSize: 30,
+    fontSize: theme.typeScale.h1.fontSize,
     fontFamily: FontFamily.extrabold,
-    color: Colors.text,
+    color: theme.colors.text.primary,
     marginBottom: 6,
   },
   subtitle: {
     fontSize: 14,
     lineHeight: 21,
     fontFamily: FontFamily.regular,
-    color: Colors.textSoft,
-    marginBottom: 12,
+    color: theme.colors.text.secondary,
+    marginBottom: theme.spacing.md,
   },
   sectionTitle: {
-    marginTop: 10,
-    marginBottom: 10,
+    marginTop: theme.spacing.sm,
+    marginBottom: theme.spacing.sm,
     fontSize: 14,
     fontFamily: FontFamily.extrabold,
-    color: Colors.text,
+    color: theme.colors.text.primary,
+    letterSpacing: 0.2,
   },
   grid: {
     flexDirection: 'row',
@@ -163,17 +174,17 @@ const styles = StyleSheet.create({
     width: '48%',
     minHeight: 116,
     borderWidth: 1,
-    borderColor: Colors.glassBorder,
-    backgroundColor: Colors.glass,
-    borderRadius: 16,
+    borderColor: theme.hybrid.borderOnInk,
+    backgroundColor: theme.colors.surfaceMuted,
+    borderRadius: theme.radius.lg,
     paddingHorizontal: 10,
     paddingVertical: 14,
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#8D6D31',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.12,
-    shadowRadius: 14,
+    shadowColor: theme.colors.glass.shadow,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
     elevation: 2,
   },
   iconBubble: {
@@ -182,42 +193,42 @@ const styles = StyleSheet.create({
     borderRadius: 21,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'rgba(255, 251, 242, 0.85)',
+    backgroundColor: theme.hybrid.signalMutedBg,
     borderWidth: 1,
-    borderColor: Colors.glassBorder,
+    borderColor: theme.hybrid.signalSubtleBorder,
     marginBottom: 10,
   },
   serviceLabel: {
     textAlign: 'center',
     fontSize: 15,
-    color: Colors.text,
+    color: theme.colors.text.primary,
     fontFamily: FontFamily.semibold,
   },
   pricingCard: {
     width: '100%',
     borderWidth: 1,
-    borderColor: Colors.glassBorder,
-    backgroundColor: Colors.glass,
-    borderRadius: 16,
+    borderColor: theme.hybrid.panelCoolBorder,
+    backgroundColor: theme.hybrid.panelCool,
+    borderRadius: theme.radius.lg,
     padding: 14,
     marginTop: 10,
   },
   cardTitle: {
     fontSize: 18,
     fontWeight: '700',
-    color: Colors.text,
+    color: theme.hybrid.panelCoolText,
     marginBottom: 6,
     fontFamily: FontFamily.bold,
   },
   cardHint: {
     fontSize: 15,
     fontFamily: FontFamily.regular,
-    color: Colors.textSoft,
+    color: theme.hybrid.panelCoolTextMuted,
   },
   priceLine: {
     fontSize: 16,
     fontWeight: '600',
-    color: Colors.primary,
+    color: theme.hybrid.signalStrong,
     marginTop: 2,
     fontFamily: FontFamily.semibold,
   },

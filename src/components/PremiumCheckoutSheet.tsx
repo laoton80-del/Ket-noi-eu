@@ -203,6 +203,10 @@ export function PremiumCheckoutSheet({
     platformPayClientSecret,
   ]);
 
+  if (__DEV__) {
+    console.log('[diag][PremiumCheckoutSheet] render (post-hooks)', { visible });
+  }
+
   if (!visible) return null;
 
   const showNativeButton = Platform.OS === 'ios' || Platform.OS === 'android';
@@ -307,11 +311,11 @@ const styles = StyleSheet.create({
     zIndex: 80,
   },
   sheet: {
-    borderRadius: 16,
+    borderRadius: theme.radius.lg,
     borderWidth: 1,
-    borderColor: theme.colors.primary,
-    backgroundColor: theme.colors.background,
-    padding: 14,
+    borderColor: theme.hybrid.signalSubtleBorder,
+    backgroundColor: theme.colors.surfaceElevated,
+    padding: theme.spacing.md,
     shadowColor: '#000',
     shadowOffset: theme.elevation.modal.shadowOffset,
     shadowOpacity: theme.elevation.modal.shadowOpacity,
@@ -331,7 +335,7 @@ const styles = StyleSheet.create({
     marginBottom: 2,
   },
   totalAmount: {
-    color: theme.colors.text.primary,
+    color: theme.hybrid.signal,
     fontSize: 26,
     fontFamily: FontFamily.extrabold,
     marginBottom: 12,
@@ -358,9 +362,9 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     padding: 12,
     borderRadius: theme.radius.md,
-    backgroundColor: 'rgba(255,255,255,0.65)',
+    backgroundColor: theme.colors.executive.card,
     borderWidth: 1,
-    borderColor: 'rgba(212, 175, 55, 0.35)',
+    borderColor: theme.hybrid.signalSubtleBorder,
   },
   authGateTitle: {
     fontSize: 14,
@@ -378,12 +382,12 @@ const styles = StyleSheet.create({
   authGateBtn: {
     minHeight: 44,
     borderRadius: theme.radius.md,
-    backgroundColor: theme.colors.text.primary,
+    backgroundColor: theme.hybrid.signalStrong,
     alignItems: 'center',
     justifyContent: 'center',
   },
   authGateBtnText: {
-    color: theme.colors.surface,
+    color: theme.hybrid.onSignal,
     fontSize: 14,
     fontFamily: FontFamily.bold,
   },
@@ -395,7 +399,7 @@ const styles = StyleSheet.create({
   authPinLinkText: {
     fontSize: 13,
     fontFamily: FontFamily.semibold,
-    color: theme.colors.primary,
+    color: theme.hybrid.signatureGold,
     textDecorationLine: 'underline',
   },
   unlockedHint: {
@@ -408,12 +412,12 @@ const styles = StyleSheet.create({
   fallbackPayBtn: {
     height: 50,
     borderRadius: theme.radius.md,
-    backgroundColor: theme.colors.text.primary,
+    backgroundColor: theme.hybrid.signalStrong,
     alignItems: 'center',
     justifyContent: 'center',
   },
   fallbackPayText: {
-    color: theme.colors.surface,
+    color: theme.hybrid.onSignal,
     fontSize: 15,
     fontFamily: FontFamily.bold,
   },
@@ -424,8 +428,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
-    borderColor: 'rgba(77,63,36,0.25)',
-    backgroundColor: 'rgba(255,255,255,0.55)',
+    borderColor: theme.hybrid.borderOnInk,
+    backgroundColor: theme.colors.executive.panelMuted,
   },
   secondaryBtnText: {
     color: theme.colors.text.secondary,
@@ -439,8 +443,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
-    borderColor: 'rgba(77,63,36,0.2)',
-    backgroundColor: 'rgba(255,255,255,0.65)',
+    borderColor: theme.hybrid.borderOnInk,
+    backgroundColor: theme.colors.executive.card,
   },
   closeText: {
     color: theme.colors.text.secondary,

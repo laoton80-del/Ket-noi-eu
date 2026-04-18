@@ -6,8 +6,9 @@ import Svg, { Circle, G, Path, Polygon } from 'react-native-svg';
 import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
 import { gradients } from '../theme/gradients';
 import { theme } from '../theme/theme';
+import { TrustSurfaceCard, type TrustSurfaceCardTone } from './TrustSurfaceCard';
 
-type DongSonSkeuomorphicButtonProps = {
+export type DongSonSkeuomorphicButtonProps = {
   variant?: 'button' | 'card' | 'avatar-ring';
   onPress?: () => void;
   size?: 'sm' | 'md' | 'lg';
@@ -15,7 +16,7 @@ type DongSonSkeuomorphicButtonProps = {
   children?: ReactNode;
   style?: StyleProp<ViewStyle>;
   watermarkOpacity?: number;
-  cardTone?: 'gold' | 'dark';
+  cardTone?: TrustSurfaceCardTone;
 };
 
 const SIZE_MAP = {
@@ -63,21 +64,10 @@ function BirdRing({ radius, color = '#7A4B0A', opacity = 0.8 }: { radius: number
   );
 }
 
-const Watermark = memo(function Watermark({ size = 92, opacity = 0.12 }: { size?: number; opacity?: number }) {
-  const radius = size / 2;
-  const starPoints = createStarPolygon(radius, radius, 14, radius * 0.46, radius * 0.2);
-  return (
-    <Svg width={size} height={size}>
-      <G>
-        <Circle cx={radius} cy={radius} r={radius * 0.73} fill="none" stroke="#7A4B0A" strokeWidth={2} opacity={opacity} />
-        <Circle cx={radius} cy={radius} r={radius * 0.86} fill="none" stroke="#7A4B0A" strokeWidth={1.5} opacity={opacity * 0.8} />
-        <BirdRing radius={radius} color="#7A4B0A" opacity={opacity} />
-        <Polygon points={starPoints} fill="#7A4B0A" opacity={opacity} />
-      </G>
-    </Svg>
-  );
-});
-
+/**
+ * @deprecated Prefer `TrustSurfaceCard` for `variant="card"` (wallet / status panels).
+ * This export remains for `button` and `avatar-ring` (ornate bronze / Đông Sơn-style chrome) and backward compatibility.
+ */
 export const DongSonSkeuomorphicButton = memo(function DongSonSkeuomorphicButton({
   variant = 'button',
   onPress,
@@ -113,21 +103,10 @@ export const DongSonSkeuomorphicButton = memo(function DongSonSkeuomorphicButton
   };
 
   if (variant === 'card') {
-    const darkTone = cardTone === 'dark';
     return (
-      <Animated.View style={[styles.cardBase, animatedStyle, style]}>
-        <LinearGradient
-          colors={darkTone ? ['#0F1116', '#1A1F27', '#0E1014'] : ['#F3DEB0', '#DFC175', '#B98A32']}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={[styles.cardGradient, darkTone && styles.cardGradientDark]}
-        >
-          <View style={styles.cardContent}>{children}</View>
-          <View style={styles.watermarkWrap}>
-            <Watermark opacity={watermarkOpacity} />
-          </View>
-        </LinearGradient>
-      </Animated.View>
+      <TrustSurfaceCard cardTone={cardTone} watermarkOpacity={watermarkOpacity} style={style}>
+        {children}
+      </TrustSurfaceCard>
     );
   }
 
@@ -205,37 +184,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     zIndex: 2,
-  },
-  cardBase: {
-    borderRadius: 24,
-    minHeight: 132,
-    shadowColor: '#4A3511',
-    shadowOffset: { width: 0, height: 12 },
-    shadowOpacity: 0.45,
-    shadowRadius: 16,
-    elevation: theme.elevation.modal.elevation + 2,
-    borderTopWidth: 1,
-    borderColor: 'rgba(255,255,255,0.45)',
-    overflow: 'hidden',
-  },
-  cardGradient: {
-    flex: 1,
-    borderRadius: 24,
-    borderWidth: 1,
-    borderColor: 'rgba(122, 75, 10, 0.25)',
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-  },
-  cardGradientDark: {
-    borderColor: 'rgba(212,175,55,0.22)',
-  },
-  cardContent: {
-    zIndex: 2,
-  },
-  watermarkWrap: {
-    position: 'absolute',
-    right: -8,
-    bottom: -8,
   },
   disabled: {
     opacity: 0.58,

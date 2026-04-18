@@ -49,6 +49,36 @@ export const theme = {
       liveQueueBorder: 'rgba(120, 160, 220, 0.35)',
     },
   },
+  /**
+   * Hybrid master direction (PASS 1): Deep Ink structure + Cool White panels + Signal Blue actions.
+   * Muted gold stays a small signature accent via `signatureGold` / legacy `colors.primary`.
+   */
+  hybrid: {
+    signal: '#5590E0',
+    signalStrong: '#3D78D4',
+    onSignal: '#F5F9FC',
+    signalMutedBg: 'rgba(85, 144, 224, 0.2)',
+    signalSubtleBorder: 'rgba(85, 144, 224, 0.38)',
+    panelCool: '#EDF1F7',
+    panelCoolBorder: 'rgba(6, 18, 36, 0.1)',
+    panelCoolText: '#0B1628',
+    panelCoolTextMuted: 'rgba(11, 22, 40, 0.58)',
+    signatureGold: '#C5A059',
+    signatureLine: 'rgba(197, 160, 89, 0.42)',
+    borderOnInk: 'rgba(236, 242, 252, 0.12)',
+    trustChipBg: 'rgba(27, 94, 32, 0.1)',
+    trustChipText: '#1B4D20',
+    trustChipBorder: 'rgba(27, 94, 32, 0.22)',
+    /** Status chips (on dark surfaces — wallet history / system rows). */
+    chipProcessingBg: 'rgba(85, 144, 224, 0.16)',
+    chipProcessingText: '#B8D4F5',
+    chipClearedBg: 'rgba(129, 199, 132, 0.14)',
+    chipClearedText: '#C8E6C9',
+    chipErrorBg: 'rgba(229, 115, 115, 0.16)',
+    chipErrorText: '#FFCDD2',
+    chipVerifiedBg: 'rgba(129, 199, 132, 0.12)',
+    chipVerifiedText: '#A5D6A7',
+  },
   radius: {
     sm: 10,
     md: 14,

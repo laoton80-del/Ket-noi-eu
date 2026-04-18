@@ -1,4 +1,3 @@
-import { LIFEOS_LEGAL_LEONA_CREDITS } from '../../constants/lifeOSConversion';
 import { INTERPRETER_SESSION_CREDITS } from '../../services/liveInterpreterService';
 import { calculateCallCreditPrice, calculateLeTanBookingPrice } from '../../services/PaymentsService';
 
@@ -6,7 +5,8 @@ export function deriveLifeOSPricing(country?: string) {
   const leonaQuote = calculateCallCreditPrice(country);
   const leTanQuote = calculateLeTanBookingPrice(country);
   return {
-    legalLeona: LIFEOS_LEGAL_LEONA_CREDITS,
+    /** Same tiered outbound Credits as Leona call (`OUTBOUND_CALL_CREDITS_BY_TIER`). */
+    legalLeona: leonaQuote.localAmount,
     leonaOutbound: leonaQuote.localAmount,
     interpreterSession: INTERPRETER_SESSION_CREDITS,
     leTanBooking: leTanQuote.localAmount,
