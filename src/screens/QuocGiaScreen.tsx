@@ -88,10 +88,10 @@ export function QuocGiaScreen() {
         turns:
           pkg.credits != null
             ? strings.utility.packTurnsCredits.replace('{turns}', String(pkg.credits))
-            : strings.walletTopUp.enterpriseCta,
+            : strings.comboWallet.enterpriseCta,
         priceLabel: walletPackPriceLabelsById[pkg.id] ?? '',
       })),
-    [walletPackPriceLabelsById, strings.utility.packTurnsCredits, strings.walletTopUp.enterpriseCta]
+    [walletPackPriceLabelsById, strings.utility.packTurnsCredits, strings.comboWallet.enterpriseCta]
   );
 
   const cycleLanguage = () => {
