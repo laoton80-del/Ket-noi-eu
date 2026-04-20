@@ -110,10 +110,10 @@ export function TienIchScreen() {
           <Text style={styles.cardHint}>
             {pack.purchasable
               ? strings.utility.packTurnsCredits.replace('{turns}', String(pack.turns))
-              : strings.walletTopUp.enterpriseCta}
+              : strings.comboWallet.enterpriseCta}
           </Text>
           <Text style={styles.priceLine}>
-            {strings.walletTopUp.packPriceLine.replace('{amount}', pack.amountLabel)}
+            {strings.comboWallet.packPriceLine.replace('{amount}', pack.amountLabel)}
           </Text>
         </Pressable>
       ))}

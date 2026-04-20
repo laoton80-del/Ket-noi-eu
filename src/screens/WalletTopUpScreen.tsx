@@ -72,7 +72,7 @@ export function WalletTopUpScreen() {
   const { user, setPendingRedirect } = useAuth();
   const { languageCode } = useAssistantSettings();
   const strings = getStrings(languageCode);
-  const w = strings.walletTopUp;
+  const w = strings.comboWallet;
   const u = strings.utility;
   const biometricReason = w.biometricReason;
   const [country, setCountry] = useState(() => normalizeCountryCodeOrSentinel(user?.country));

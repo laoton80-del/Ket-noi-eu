@@ -207,6 +207,12 @@ type ComboWalletStrings = {
   giftLine: string;
   /** `{amount}` display label e.g. formatted price */
   packPriceLine: string;
+  /** Balance line next to icon; `{credits}` */
+  balanceCreditsDisplay: string;
+  /** Trust chip label beside shield */
+  trustVerifiedBadge: string;
+  /** Purchasable pack CTA; `{turns}`, `{amount}` */
+  buyPackCtaLine: string;
   historySectionTitle: string;
   historyFootnote: string;
   emptyHistory: string;
@@ -481,6 +487,9 @@ export const STRINGS_BY_LANGUAGE: Record<SupportedLanguage, AppStrings> = {
         'Hỗ trợ trong app ({inboundName}): {inboundPrice} | Gọi đối ngoại ({outboundName}): {outboundPrice}',
       giftLine: 'Quà tặng: {gift}',
       packPriceLine: 'Giá gói: {amount}',
+      balanceCreditsDisplay: '{credits} Credits',
+      trustVerifiedBadge: 'Đã xác minh',
+      buyPackCtaLine: 'Nạp {turns} Credits — {amount}',
       historySectionTitle: 'Lịch sử trên thiết bị',
       historyFootnote: 'Chỉ mang tính tham khảo; số dư thật lấy từ máy chủ sau khi đăng nhập.',
       emptyHistory: 'Chưa có giao dịch nào.',
@@ -568,6 +577,50 @@ export const STRINGS_BY_LANGUAGE: Record<SupportedLanguage, AppStrings> = {
       serviceHousing: 'Housing Rental',
       serviceLegal: 'Legal Services',
       serviceExchange: 'Currency Exchange',
+      serviceLifeOS: 'LifeOS — coordination hub',
+      serviceTravel: 'Travel companion',
+      serviceYeuThuong: 'Kết Nối Yêu Thương',
+      serviceRadarDiscovery: 'Radar — service discovery',
+      serviceFindServicesLeona: 'Find services (Leona)',
+      serviceVault: 'Document vault',
+      packTurnsCredits: '{turns} Credits',
+      discoverySectionTitle: 'Discover services by real need',
+      discoverySectionSubtitle:
+        'Global-first guidance focused on practical support — not a luxury finance catalog.',
+      discoveryCategories: [
+        {
+          title: 'Visa & documents',
+          hint: 'Passports, visas, contracts and paperwork for living in your host country.',
+        },
+        {
+          title: 'Residency & immigration',
+          hint: 'Extensions, status changes and basic immigration steps.',
+        },
+        {
+          title: 'Healthcare & appointments',
+          hint: 'Care navigation, insurance basics and booking in local systems.',
+        },
+        {
+          title: 'Legal & advice',
+          hint: 'Contracts, employment and practical legal support.',
+        },
+        {
+          title: 'Jobs & small business',
+          hint: 'Job search, employment contracts and SME-related services.',
+        },
+        {
+          title: 'Housing, hotels & homestay',
+          hint: 'Rentals, short stays and budget-friendly homestay.',
+        },
+        {
+          title: 'Vietnamese community services',
+          hint: 'Nails, food spots and shopping familiar to the Vietnamese community.',
+        },
+        {
+          title: 'Booking & service support',
+          hint: 'Reservations, calls and help handling real-life situations.',
+        },
+      ],
     },
     community: {
       screenTitle: 'Community',
@@ -692,6 +745,9 @@ export const STRINGS_BY_LANGUAGE: Record<SupportedLanguage, AppStrings> = {
         'In-app support ({inboundName}): {inboundPrice} | Outbound ({outboundName}): {outboundPrice}',
       giftLine: 'Gift: {gift}',
       packPriceLine: 'Pack price: {amount}',
+      balanceCreditsDisplay: '{credits} Credits',
+      trustVerifiedBadge: 'Verified',
+      buyPackCtaLine: 'Top up {turns} Credits — {amount}',
       historySectionTitle: 'On-device history',
       historyFootnote: 'For reference only; real balance comes from the server after sign-in.',
       emptyHistory: 'No transactions yet.',
@@ -716,12 +772,12 @@ export const STRINGS_BY_LANGUAGE: Record<SupportedLanguage, AppStrings> = {
       prepaidTitle: 'Globalni balicky Credits',
       homelandTitle: 'Koutek domova',
       homelandQuote: 'Koreni zustavaji blizko, i kdyz jste v Evrope.',
-      comboBronze: 'Starter · vstup',
-      comboSilver: 'Basic · lehky',
-      comboGold: 'Standard · bezny',
-      comboBronzeTurns: '100 Credits',
-      comboSilverTurns: '230 Credits',
-      comboGoldTurns: '650 Credits',
+      walletPackStarterLabel: 'Starter balicek · vstup',
+      walletPackBasicLabel: 'Basic balicek · lehky',
+      walletPackStandardLabel: 'Standard balicek · bezny',
+      walletPackStarterCredits: '100 Credits',
+      walletPackBasicCredits: '230 Credits',
+      walletPackStandardCredits: '650 Credits',
     },
     country: {
       screenTitle: 'Zeme',
@@ -779,6 +835,50 @@ export const STRINGS_BY_LANGUAGE: Record<SupportedLanguage, AppStrings> = {
       serviceHousing: 'Pronajem bydleni',
       serviceLegal: 'Pravni sluzby',
       serviceExchange: 'Smena meny',
+      serviceLifeOS: 'LifeOS — koordinacni centrum',
+      serviceTravel: 'Spolecnik na cestach',
+      serviceYeuThuong: 'Kết Nối Yêu Thương',
+      serviceRadarDiscovery: 'Radar — objevovani sluzeb',
+      serviceFindServicesLeona: 'Najit sluzby (Leona)',
+      serviceVault: 'Trezor dokumentu',
+      packTurnsCredits: '{turns} Credits',
+      discoverySectionTitle: 'Objevte sluzby podle skutecne potreby',
+      discoverySectionSubtitle:
+        'Globalni orientace na praktickou podporu — ne katalog luxusnich financi.',
+      discoveryCategories: [
+        {
+          title: 'Visa a dokumenty',
+          hint: 'Pasy, viza, smlouvy a administrativa pro zivot v hostitelske zemi.',
+        },
+        {
+          title: 'Pobyt a imigrace',
+          hint: 'Prodlouzeni, zmeny statusu a zakladni kroky imigrace.',
+        },
+        {
+          title: 'Zdravotnictvi a objednavky',
+          hint: 'Navigace pece, pojisteni a rezervace v mistnich systemech.',
+        },
+        {
+          title: 'Pravo a poradenstvi',
+          hint: 'Smlouvy, prace a prakticka pravni podpora.',
+        },
+        {
+          title: 'Prace a male firmy',
+          hint: 'Hledani prace, pracovni smlouvy a sluzby pro male podniky.',
+        },
+        {
+          title: 'Bydleni, hotely a homestay',
+          hint: 'Pronajmy, kratke pobyty a dostupny homestay.',
+        },
+        {
+          title: 'Vietnamska komunita',
+          hint: 'Nehty, jidlo a nakupy pro vietnamskou komunitu.',
+        },
+        {
+          title: 'Rezervace a podpora',
+          hint: 'Objednavky, hovory a pomoc v praktickych situacich.',
+        },
+      ],
     },
     community: {
       screenTitle: 'Komunita',
@@ -903,6 +1003,9 @@ export const STRINGS_BY_LANGUAGE: Record<SupportedLanguage, AppStrings> = {
         'Podpora v aplikaci ({inboundName}): {inboundPrice} | Externi hovor ({outboundName}): {outboundPrice}',
       giftLine: 'Darek: {gift}',
       packPriceLine: 'Cena balicku: {amount}',
+      balanceCreditsDisplay: '{credits} Credits',
+      trustVerifiedBadge: 'Overeno',
+      buyPackCtaLine: 'Dobit {turns} Credits — {amount}',
       historySectionTitle: 'Historie v zarizeni',
       historyFootnote: 'Jen orientacne; skutecny zustatek je ze serveru po prihlaseni.',
       emptyHistory: 'Zatim zadne transakce.',
@@ -927,12 +1030,12 @@ export const STRINGS_BY_LANGUAGE: Record<SupportedLanguage, AppStrings> = {
       prepaidTitle: 'Global Credits-Pakete',
       homelandTitle: 'Heimat-Ecke',
       homelandQuote: 'Deine Wurzeln bleiben nah, auch in Europa.',
-      comboBronze: 'Starter · Einstieg',
-      comboSilver: 'Basic · leicht',
-      comboGold: 'Standard · beliebt',
-      comboBronzeTurns: '100 Credits',
-      comboSilverTurns: '230 Credits',
-      comboGoldTurns: '650 Credits',
+      walletPackStarterLabel: 'Starter-Paket · Einstieg',
+      walletPackBasicLabel: 'Basic-Paket · leicht',
+      walletPackStandardLabel: 'Standard-Paket · beliebt',
+      walletPackStarterCredits: '100 Credits',
+      walletPackBasicCredits: '230 Credits',
+      walletPackStandardCredits: '650 Credits',
     },
     country: {
       screenTitle: 'Land',
@@ -990,6 +1093,50 @@ export const STRINGS_BY_LANGUAGE: Record<SupportedLanguage, AppStrings> = {
       serviceHousing: 'Wohnung mieten',
       serviceLegal: 'Rechtsservice',
       serviceExchange: 'Geldwechsel',
+      serviceLifeOS: 'LifeOS — Koordinationszentrale',
+      serviceTravel: 'Reisebegleitung',
+      serviceYeuThuong: 'Kết Nối Yêu Thương',
+      serviceRadarDiscovery: 'Radar — Service-Entdeckung',
+      serviceFindServicesLeona: 'Services finden (Leona)',
+      serviceVault: 'Dokumententresor',
+      packTurnsCredits: '{turns} Credits',
+      discoverySectionTitle: 'Services nach echtem Bedarf entdecken',
+      discoverySectionSubtitle:
+        'Global ausgerichtet auf praktische Unterstuetzung — kein Luxus-Finanzkatalog.',
+      discoveryCategories: [
+        {
+          title: 'Visa & Dokumente',
+          hint: 'Reisepaesse, Visa, Vertraege und Papierkram fuer den Aufenthalt.',
+        },
+        {
+          title: 'Aufenthalt & Einwanderung',
+          hint: 'Verlaengerungen, Statuswechsel und grundlegende Einwanderungsschritte.',
+        },
+        {
+          title: 'Gesundheit & Termine',
+          hint: 'Versorgung, Versicherung und Termine in lokalen Systemen.',
+        },
+        {
+          title: 'Recht & Beratung',
+          hint: 'Vertraege, Arbeit und praktische Rechtsunterstuetzung.',
+        },
+        {
+          title: 'Jobs & Kleinunternehmen',
+          hint: 'Jobsuche, Arbeitsvertraege und Dienstleistungen fuer KMU.',
+        },
+        {
+          title: 'Wohnen, Hotels & Homestay',
+          hint: 'Mieten, Kurzaufenthalte und budgetfreundliches Homestay.',
+        },
+        {
+          title: 'Vietnamesische Community',
+          hint: 'Nagelstudios, Essen und Einkaufen fuer die vietnamesische Community.',
+        },
+        {
+          title: 'Buchung & Support',
+          hint: 'Reservierungen, Anrufe und Hilfe im Alltag.',
+        },
+      ],
     },
     community: {
       screenTitle: 'Community',
@@ -1115,6 +1262,9 @@ export const STRINGS_BY_LANGUAGE: Record<SupportedLanguage, AppStrings> = {
         'In-App-Support ({inboundName}): {inboundPrice} | Ausgehend ({outboundName}): {outboundPrice}',
       giftLine: 'Geschenk: {gift}',
       packPriceLine: 'Paketpreis: {amount}',
+      balanceCreditsDisplay: '{credits} Credits',
+      trustVerifiedBadge: 'Verifiziert',
+      buyPackCtaLine: '{turns} Credits aufladen — {amount}',
       historySectionTitle: 'Verlauf auf dem Geraet',
       historyFootnote:
         'Nur zur Orientierung; der echte Kontostand kommt nach dem Login vom Server.',
