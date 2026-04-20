@@ -1,17 +1,10 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as FirebaseAuth from 'firebase/auth';
-import type { Auth, Persistence } from 'firebase/auth';
+import type { Auth } from 'firebase/auth';
 import { ensureFirebaseAppCheckInitialized } from '../config/appCheckClient';
 import { maybeLogNativeAppCheckEnforcementRiskOnce } from '../config/runtimeTrustProfile';
 import { getFirebaseApp, isFirebaseClientConfigured } from '../config/firebaseApp';
 
 const { getAuth, getIdToken, initializeAuth, signInAnonymously } = FirebaseAuth;
-
-const getReactNativePersistence = (
-  FirebaseAuth as unknown as {
-    getReactNativePersistence?: (storage: typeof AsyncStorage) => Persistence;
-  }
-).getReactNativePersistence;
 
 let authReady: Promise<Auth | null> | null = null;
 
@@ -21,11 +14,6 @@ function getOrInitAuth(): Auth | null {
   try {
     return getAuth(app);
   } catch {
-    if (typeof getReactNativePersistence === 'function') {
-      return initializeAuth(app, {
-        persistence: getReactNativePersistence(AsyncStorage),
-      });
-    }
     return initializeAuth(app);
   }
 }
