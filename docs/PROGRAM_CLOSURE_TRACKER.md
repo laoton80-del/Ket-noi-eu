@@ -9,6 +9,10 @@ Tracker này theo dõi công việc **đóng ngoài repo / thủ công** sau khi
 - `BLOCKED`
 - `DONE`
 
+## Path P0 / P7 trên nhánh repo
+
+`docs/P0_DECISION_MEMO.md` và `docs/P7_B2B_OPERATIONAL_SURFACE_DECISION.md` hiện là **bản nháp / placeholder** — **không có hiệu lực** — cho tới khi các mục **E1** và **E2** dưới đây hoàn tất theo đúng điều kiện trong bảng. **E1** và **E2** đang **NOT STARTED** nghĩa là **chưa** có memo hay quyết định P7 đã chốt trong repo theo nghĩa gate; không suy ra đã có bản có hiệu lực chỉ vì đường dẫn tồn tại.
+
 ---
 
 ## A. Decision Gates
