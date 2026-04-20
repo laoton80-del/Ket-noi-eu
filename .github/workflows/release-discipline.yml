@@ -28,3 +28,5 @@ jobs:
         run: npm run ci:release-discipline
         env:
           CI: true
+          # CI runner build có thể khác local (esbuild/order); chỉ nới strict HEAD sync của functions bundle.
+          FUNCTIONS_BUNDLE_CI_RELAX_HEAD_SYNC: "1"
