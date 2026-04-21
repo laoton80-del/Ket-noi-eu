@@ -54,7 +54,7 @@ const requireHeadSync =
 
 if (requireHeadSync) {
   try {
-    execSync('git diff --quiet HEAD -- functions/lib', { cwd: root, stdio: 'pipe' });
+    execSync('git diff --ignore-cr-at-eol --quiet HEAD -- functions/lib', { cwd: root, stdio: 'pipe' });
   } catch {
     console.error(
       '[verify-functions-bundle] FAIL: HEAD sync check — `functions/lib` differs from HEAD after build.'
@@ -73,6 +73,13 @@ if (process.env.SKIP_FUNCTIONS_BUNDLE_GIT_CHECK === '1') {
 
 const afterPorcelain = readPorcelainForFunctionsLib();
 if (afterPorcelain !== beforePorcelain) {
+  try {
+    execSync('git diff --ignore-cr-at-eol --quiet -- functions/lib', { cwd: root, stdio: 'pipe' });
+    console.warn('[verify-functions-bundle] WARN: only EOL drift detected for `functions/lib`; treating as deterministic.');
+    process.exit(0);
+  } catch {
+    // Non-EOL content drift remains; fail below as before.
+  }
   console.error('[verify-functions-bundle] FAIL: `functions/lib` changed after `npm run build`.');
   console.error('Bundle parity drift detected relative to pre-build repo state.');
   console.error('Fix: review changes in `functions/lib`, then stage/commit them (or revert unintended source edits).');

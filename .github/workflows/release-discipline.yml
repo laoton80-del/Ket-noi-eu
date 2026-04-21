@@ -30,5 +30,3 @@ jobs:
           CI: true
           # CI runner build có thể khác local (esbuild/order); chỉ nới strict HEAD sync của functions bundle.
           FUNCTIONS_BUNDLE_CI_RELAX_HEAD_SYNC: "1"
-          # CI-only escape: bỏ parity check before/after git trạng thái cho functions/lib.
-          SKIP_FUNCTIONS_BUNDLE_GIT_CHECK: "1"
