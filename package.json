@@ -28,6 +28,7 @@
     "b2b:g1-set-claims": "node functions/scripts/b2b-set-staff-claims.cjs",
     "verify:receipt": "node scripts/verify-receipt-strictness.mjs",
     "check:commercial-mapping": "tsx scripts/check-commercial-flagship-mapping.ts",
+    "test:payments-mapper": "tsx scripts/test-payments-mapper.ts",
     "lint": "expo lint"
   },
   "dependencies": {

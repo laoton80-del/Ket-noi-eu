@@ -5,6 +5,7 @@ import type { B2BMonthlyQuadruple, B2BUsageTriple, MonetizationBand, PayPerCaseT
 /**
  * Integer amounts in {@link MONETIZATION_CANONICAL_DISPLAY_CURRENCY} (major units); table semantics in `metadata.ts` (`MONETIZATION_TABLE_METADATA`).
  * **Not** the live B2C wallet checkout spine — see `docs/COMMERCIAL_SPINE_LIVE.md` (`commercialSpine` + `Pricing`).
+ * Guardrail: this file must not become the source for runtime checkout amount calculation or wallet debit logic.
  */
 
 /**
