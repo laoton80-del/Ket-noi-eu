@@ -142,12 +142,7 @@ export function PremiumCheckoutSheet({
     const cartItems: PlatformPay.CartSummaryItem[] = [
       {
         paymentType: PlatformPay.PaymentType.Immediate,
-        label: 'Credits',
-        amount: amountStr,
-      },
-      {
-        paymentType: PlatformPay.PaymentType.Immediate,
-        label: APP_BRAND.paymentsDisplayName,
+        label: `${APP_BRAND.paymentsDisplayName} · Credits`,
         amount: amountStr,
       },
     ];
