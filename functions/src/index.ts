@@ -282,8 +282,44 @@ export const aiProxy = onRequest(
       }
       return void res.status(400).json({ ok: false, error: 'unknown_op' });
     } catch (e) {
-      logger.error('[aiProxy] error', e instanceof Error ? e : undefined);
-      return void res.status(500).json({ ok: false, error: 'proxy_error' });
+      const err = e instanceof Error ? e : new Error(String(e));
+      let proxyOp = '';
+      try {
+        const b = (typeof req.body === 'object' && req.body !== null ? req.body : {}) as Record<string, unknown>;
+        proxyOp = String(b.op ?? '');
+      } catch {
+        /* ignore body read for logging */
+      }
+      const errMsg = err.message;
+      const errName = err.name;
+      let httpStatus = 500;
+      let errorCode = 'proxy_error';
+      let openaiStatus: number | undefined;
+      if (errMsg === 'openai_key_missing') {
+        httpStatus = 503;
+        errorCode = 'openai_key_missing';
+      } else {
+        const m = /^openai_(chat|stt|tts)_(\d+)$/.exec(errMsg);
+        if (m) {
+          httpStatus = 502;
+          errorCode = 'openai_upstream_http';
+          openaiStatus = Number(m[2]);
+        }
+      }
+      logger.error('[aiProxy] error', {
+        trust_surface: 'ai_proxy',
+        errName,
+        errMsg,
+        stack: err.stack,
+        proxyOp: proxyOp || '(none)',
+        responseError: errorCode,
+        httpStatus,
+        openaiStatus,
+      });
+      if (openaiStatus !== undefined) {
+        return void res.status(httpStatus).json({ ok: false, error: errorCode, openaiStatus });
+      }
+      return void res.status(httpStatus).json({ ok: false, error: errorCode });
     }
   }
 );
