@@ -255,7 +255,6 @@ export function WalletTopUpScreen() {
         walletPackageId,
         commercialCountryCode: commercialCtx.countryCode,
         idempotencyKey: maskIdempotencyKey(idempotencyKey),
-        result: 'start',
       });
       if (__DEV__) {
         console.log('[wallet-topup] intent key', maskIdempotencyKey(idempotencyKey));
@@ -354,14 +353,14 @@ export function WalletTopUpScreen() {
         return;
       }
       const topup = await topupCreditsServer(checkoutPack.turns, paymentEventId);
+      logPaymentPilotStage('topup_result', {
+        walletPackageId,
+        commercialCountryCode: commercialCtx.countryCode,
+        paymentEventId: maskIdempotencyKey(paymentEventId),
+        result: topup.ok ? 'ok' : 'fail',
+        errorCode: topup.ok ? undefined : 'wallet_topup_failed',
+      });
       if (!topup.ok) {
-        logPaymentPilotStage('topup_result', {
-          walletPackageId,
-          commercialCountryCode: commercialCtx.countryCode,
-          paymentEventId: maskIdempotencyKey(paymentEventId),
-          result: 'fail',
-          errorCode: 'wallet_topup_failed',
-        });
         showPaymentFailure(w.creditsNotCreditedBody);
         Alert.alert(w.creditsNotCreditedTitle, w.creditsNotCreditedBody, [
           { text: w.alertLater, style: 'cancel' },
@@ -369,12 +368,6 @@ export function WalletTopUpScreen() {
         ]);
         return;
       }
-      logPaymentPilotStage('topup_result', {
-        walletPackageId,
-        commercialCountryCode: commercialCtx.countryCode,
-        paymentEventId: maskIdempotencyKey(paymentEventId),
-        result: 'ok',
-      });
       setCheckoutPackId(null);
       setCheckoutIdempotencyKey(null);
       setPlatformPayClientSecret(null);
