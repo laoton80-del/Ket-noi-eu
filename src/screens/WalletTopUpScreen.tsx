@@ -67,6 +67,18 @@ function maskIdempotencyKey(key: string): string {
   return `${key.slice(0, 8)}...${key.slice(-4)}`;
 }
 
+function logPaymentPilotStage(
+  stage: 'intent_requested' | 'intent_received' | 'verify_result' | 'topup_result',
+  payload: Record<string, unknown>
+) {
+  if (!__DEV__ && process.env.EXPO_PUBLIC_PAYMENT_PILOT_LOGS !== '1') return;
+  try {
+    console.log('[payment-pilot]', JSON.stringify({ stage, ...payload }));
+  } catch {
+    // no-op: logging must never affect payment flow
+  }
+}
+
 export function WalletTopUpScreen() {
   const navigation = useNavigation<Nav>();
   const { user, setPendingRedirect } = useAuth();
@@ -239,6 +251,12 @@ export function WalletTopUpScreen() {
     try {
       const walletPackageId = pack.id;
       const idempotencyKey = `topup-${walletPackageId}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+      logPaymentPilotStage('intent_requested', {
+        walletPackageId,
+        commercialCountryCode: commercialCtx.countryCode,
+        idempotencyKey: maskIdempotencyKey(idempotencyKey),
+        result: 'start',
+      });
       if (__DEV__) {
         console.log('[wallet-topup] intent key', maskIdempotencyKey(idempotencyKey));
       }
@@ -254,9 +272,23 @@ export function WalletTopUpScreen() {
         })
       );
       if (!secret) {
+        logPaymentPilotStage('intent_received', {
+          walletPackageId,
+          commercialCountryCode: commercialCtx.countryCode,
+          idempotencyKey: maskIdempotencyKey(idempotencyKey),
+          result: 'fail',
+          errorCode: 'client_secret_missing',
+        });
         Alert.alert(w.paymentInitFailTitle, w.paymentInitFailBody);
         return;
       }
+      logPaymentPilotStage('intent_received', {
+        walletPackageId,
+        commercialCountryCode: commercialCtx.countryCode,
+        idempotencyKey: maskIdempotencyKey(idempotencyKey),
+        clientSecret: maskIdempotencyKey(secret),
+        result: 'ok',
+      });
       setCheckoutIdempotencyKey(idempotencyKey);
       setPlatformPayClientSecret(secret);
       setCheckoutPackId(packId);
@@ -290,6 +322,13 @@ export function WalletTopUpScreen() {
           })
         );
       }
+      logPaymentPilotStage('verify_result', {
+        walletPackageId,
+        commercialCountryCode: commercialCtx.countryCode,
+        idempotencyKey: checkoutIdempotencyKey ? maskIdempotencyKey(checkoutIdempotencyKey) : null,
+        result: verified ? 'ok' : 'fail',
+        errorCode: verified ? undefined : 'entitlement_not_verified',
+      });
       if (!verified) {
         setCheckoutPackId(null);
         setCheckoutIdempotencyKey(null);
@@ -303,12 +342,26 @@ export function WalletTopUpScreen() {
       }
       const paymentEventId = checkoutIdempotencyKey?.trim() ?? '';
       if (!paymentEventId) {
+        logPaymentPilotStage('topup_result', {
+          walletPackageId,
+          commercialCountryCode: commercialCtx.countryCode,
+          paymentEventId: null,
+          result: 'fail',
+          errorCode: 'payment_event_id_missing',
+        });
         showPaymentFailure(w.paymentMissingIdBody);
         Alert.alert(w.paymentMissingIdTitle, w.paymentMissingIdBody);
         return;
       }
       const topup = await topupCreditsServer(checkoutPack.turns, paymentEventId);
       if (!topup.ok) {
+        logPaymentPilotStage('topup_result', {
+          walletPackageId,
+          commercialCountryCode: commercialCtx.countryCode,
+          paymentEventId: maskIdempotencyKey(paymentEventId),
+          result: 'fail',
+          errorCode: 'wallet_topup_failed',
+        });
         showPaymentFailure(w.creditsNotCreditedBody);
         Alert.alert(w.creditsNotCreditedTitle, w.creditsNotCreditedBody, [
           { text: w.alertLater, style: 'cancel' },
@@ -316,6 +369,12 @@ export function WalletTopUpScreen() {
         ]);
         return;
       }
+      logPaymentPilotStage('topup_result', {
+        walletPackageId,
+        commercialCountryCode: commercialCtx.countryCode,
+        paymentEventId: maskIdempotencyKey(paymentEventId),
+        result: 'ok',
+      });
       setCheckoutPackId(null);
       setCheckoutIdempotencyKey(null);
       setPlatformPayClientSecret(null);
@@ -332,6 +391,13 @@ export function WalletTopUpScreen() {
         navigation.navigate(resume.route, resume.params as never);
       }
     } catch {
+      logPaymentPilotStage('topup_result', {
+        walletPackageId: checkoutPack.id,
+        commercialCountryCode: commercialCtx.countryCode,
+        paymentEventId: checkoutIdempotencyKey ? maskIdempotencyKey(checkoutIdempotencyKey) : null,
+        result: 'fail',
+        errorCode: 'payment_flow_exception',
+      });
       showPaymentFailure(w.connectionInterruptedBody);
       Alert.alert(w.connectionInterruptedTitle, w.connectionInterruptedBody, [
         { text: w.alertClose, style: 'cancel' },
