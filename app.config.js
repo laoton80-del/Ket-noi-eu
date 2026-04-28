@@ -6,9 +6,13 @@ module.exports = () => {
     [
       'expo-splash-screen',
       {
-        image: './assets/images/splash-icon.png',
-        imageWidth: 200,
+        image: './assets/images/splash.png',
+        imageWidth: 240,
         backgroundColor: '#0B2A66',
+        dark: {
+          image: './assets/images/splash-dark.png',
+          backgroundColor: '#04122E',
+        },
       },
     ],
     [
@@ -32,7 +36,7 @@ module.exports = () => {
     [
       'expo-local-authentication',
       {
-        faceIDPermission: 'Ứng dụng cần Face ID để bảo vệ Ví Combo và thanh toán an toàn.',
+        faceIDPermission: 'Ứng dụng cần Face ID để bảo vệ Ví Global và thanh toán an toàn.',
       },
     ],
     [
@@ -70,18 +74,18 @@ module.exports = () => {
   }
 
   return { expo: {
-    name: 'ket-noi-eu',
-    slug: 'ket-noi-eu',
+    name: 'Kết Nối Global',
+    slug: 'ket-noi-global',
     version: '1.0.0',
     orientation: 'portrait',
     icon: './assets/images/icon.png',
     userInterfaceStyle: 'light',
-    scheme: 'ketnoieu',
+    scheme: 'ketnoiglobal',
     newArchEnabled: true,
     ios: {
       icon: './assets/images/icon.png',
       supportsTablet: true,
-      bundleIdentifier: 'com.ahojbuono.ketnoieu',
+      bundleIdentifier: 'com.ketnoiglobal.app',
       googleServicesFile: process.env.GOOGLE_SERVICE_INFO_PLIST ?? './GoogleService-Info.plist',
       infoPlist: {
         ITSAppUsesNonExemptEncryption: false,
@@ -103,16 +107,17 @@ module.exports = () => {
         'android.permission.USE_BIOMETRIC',
         'android.permission.USE_FINGERPRINT',
       ],
-      package: 'com.ahojbuono.ketnoieu',
+      package: 'com.ketnoiglobal.app',
       googleServicesFile: process.env.GOOGLE_SERVICES_JSON ?? './google-services.json',
     },
     web: {
       favicon: './assets/images/favicon.png',
+      themeColor: '#0B2A66',
     },
     plugins,
     extra: {
       eas: {
-        projectId: 'cf62c186-ccc8-4f06-83d8-c15ec1e6efbe',
+        projectId: '2c3531a4-61e9-4c5c-aaeb-3086543ecdc6',
       },
     },
   }};

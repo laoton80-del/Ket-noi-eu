@@ -191,7 +191,7 @@ export function ProactiveSuggestions({
 const styles = StyleSheet.create({
   wrap: { marginBottom: 10 },
   title: {
-    fontSize: 13,
+    ...theme.typeScale.caption,
     color: theme.colors.text.secondary,
     fontFamily: FontFamily.bold,
     marginBottom: 8,
@@ -201,7 +201,7 @@ const styles = StyleSheet.create({
   chipBorder: {
     borderRadius: 20,
     padding: 1,
-    backgroundColor: 'rgba(197, 160, 89, 0.35)',
+    backgroundColor: theme.colors.glass.gradientStrong,
   },
   chipInner: {
     minHeight: 38,
@@ -215,14 +215,14 @@ const styles = StyleSheet.create({
   },
   chipText: {
     color: theme.colors.text.primary,
-    fontSize: 13,
+    ...theme.typeScale.body,
     fontFamily: FontFamily.medium,
   },
   skeletonChip: {
     width: 128,
     height: 38,
     borderRadius: 19,
-    backgroundColor: 'rgba(197, 160, 89, 0.15)',
+    backgroundColor: theme.colors.glass.goldGlow,
     borderWidth: 1,
     borderColor: theme.colors.glass.borderSoft,
   },

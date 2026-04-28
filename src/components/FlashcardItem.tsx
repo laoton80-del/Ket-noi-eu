@@ -8,6 +8,7 @@ import Animated, {
   withSpring,
 } from 'react-native-reanimated';
 import { FontFamily } from '../theme/typography';
+import { theme } from '../theme/theme';
 
 const AUDIO_CTA_COPY = 'Mở khóa gói học tập để nghe';
 
@@ -74,12 +75,12 @@ export function FlashcardItem({
           }}
           style={({ pressed }) => [styles.speakerBtn, pressed && { opacity: 0.84 }]}
         >
-          <Ionicons name={audioUnlocked ? 'volume-high' : 'lock-closed'} size={18} color="#FFFFFF" />
+          <Ionicons name={audioUnlocked ? 'volume-high' : 'lock-closed'} size={18} color={theme.colors.CeolWhite} />
         </Pressable>
         {!audioUnlocked ? (
           <View style={styles.audioBadgeWrap}>
             <View style={styles.audioBadge}>
-              <Ionicons name="diamond" size={11} color="#5F420A" />
+              <Ionicons name="diamond" size={11} color={theme.colors.SignatureGold} />
               <Text style={styles.audioBadgeText}>Nghe phát âm</Text>
             </View>
             <Text style={styles.audioCtaText}>{AUDIO_CTA_COPY}</Text>
@@ -97,7 +98,7 @@ export function FlashcardItem({
           </>
         ) : (
           <View style={styles.lockedContentWrap}>
-            <Ionicons name="lock-closed" size={16} color="#8A6A28" />
+            <Ionicons name="lock-closed" size={16} color={theme.colors.PendingAmber} />
             <Text style={styles.lockedContentText}>Nội dung bị khóa</Text>
           </View>
         )}
@@ -120,7 +121,7 @@ export function FlashcardItem({
           </>
         ) : (
           <View style={styles.backLockedWrap}>
-            <Ionicons name="lock-closed" size={18} color="#A63F3F" />
+            <Ionicons name="lock-closed" size={18} color={theme.colors.RouteError} />
             <Text style={styles.backLockedText}>Mở khóa để xem toàn bộ kiến thức.</Text>
           </View>
         )}
@@ -141,16 +142,16 @@ const styles = StyleSheet.create({
     borderRadius: 18,
     padding: 12,
     backfaceVisibility: 'hidden',
-    shadowColor: '#8B7355',
+    shadowColor: theme.colors.glass.shadow,
     shadowOffset: { width: 0, height: 10 },
     shadowOpacity: 0.22,
     shadowRadius: 14,
     elevation: 5,
   },
   frontCard: {
-    backgroundColor: '#FFFDF8',
+    backgroundColor: theme.colors.CeolWhite,
     borderWidth: 1,
-    borderColor: 'rgba(212, 175, 55, 0.5)',
+    borderColor: theme.colors.glass.border,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -163,8 +164,8 @@ const styles = StyleSheet.create({
     borderRadius: 17,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#C83D3D',
-    shadowColor: '#7D2727',
+    backgroundColor: theme.colors.RouteError,
+    shadowColor: theme.colors.glass.shadow,
     shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.28,
     shadowRadius: 8,
@@ -172,24 +173,24 @@ const styles = StyleSheet.create({
     zIndex: 3,
   },
   promptText: {
-    fontSize: 18,
-    color: '#2B241B',
+    ...theme.typeScale.h2,
+    color: theme.colors.GraphiteBlue,
     fontFamily: FontFamily.extrabold,
     textAlign: 'center',
-    lineHeight: 24,
+    lineHeight: theme.typeScale.h2.lineHeight,
   },
   targetWordText: {
     marginTop: 10,
-    fontSize: 14,
-    color: '#5B4A36',
+    ...theme.typeScale.body,
+    color: theme.colors.text.secondary,
     fontFamily: FontFamily.bold,
     textAlign: 'center',
-    lineHeight: 20,
+    lineHeight: theme.typeScale.body.lineHeight,
   },
   phoneticText: {
     marginTop: 4,
-    fontSize: 12,
-    color: '#7F6A50',
+    ...theme.typeScale.caption,
+    color: theme.colors.text.secondary,
     fontFamily: FontFamily.medium,
     textAlign: 'center',
   },
@@ -204,29 +205,29 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: '#F5D47A',
+    backgroundColor: theme.colors.primaryBright,
     borderWidth: 1,
-    borderColor: '#C79A32',
+    borderColor: theme.colors.SignatureGold,
     borderRadius: 10,
     paddingHorizontal: 7,
     paddingVertical: 3,
   },
   audioBadgeText: {
-    color: '#5F420A',
-    fontSize: 10,
+    color: theme.colors.SignatureGold,
+    ...theme.typeScale.caption,
     fontFamily: FontFamily.bold,
   },
   audioCtaText: {
     marginTop: 3,
     marginLeft: 2,
-    color: '#8A6A28',
-    fontSize: 10,
+    color: theme.colors.PendingAmber,
+    ...theme.typeScale.caption,
     fontFamily: FontFamily.semibold,
   },
   backCard: {
-    backgroundColor: '#FFFAF1',
+    backgroundColor: theme.colors.SoftMineralGrey,
     borderWidth: 1.5,
-    borderColor: 'rgba(226, 92, 92, 0.55)',
+    borderColor: theme.colors.RouteError,
     justifyContent: 'space-between',
   },
   lockedContentWrap: {
@@ -234,36 +235,36 @@ const styles = StyleSheet.create({
     minHeight: 28,
     borderRadius: 10,
     borderWidth: 1,
-    borderColor: 'rgba(199,154,50,0.45)',
-    backgroundColor: 'rgba(245,212,122,0.2)',
+    borderColor: theme.colors.SignatureGold,
+    backgroundColor: theme.colors.overlay.ringSoft,
     paddingHorizontal: 8,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
   },
   lockedContentText: {
-    fontSize: 11,
-    color: '#8A6A28',
+    ...theme.typeScale.caption,
+    color: theme.colors.PendingAmber,
     fontFamily: FontFamily.semibold,
   },
   backTitle: {
-    fontSize: 12,
-    color: '#A63F3F',
+    ...theme.typeScale.caption,
+    color: theme.colors.RouteError,
     fontFamily: FontFamily.bold,
     marginBottom: 4,
     marginTop: 2,
   },
   meaningText: {
-    fontSize: 13,
-    color: '#2B241B',
+    ...theme.typeScale.body,
+    color: theme.colors.GraphiteBlue,
     fontFamily: FontFamily.medium,
-    lineHeight: 18,
+    lineHeight: theme.typeScale.body.lineHeight,
   },
   knowledgeText: {
-    fontSize: 12,
-    color: '#5B4A36',
+    ...theme.typeScale.caption,
+    color: theme.colors.text.secondary,
     fontFamily: FontFamily.regular,
-    lineHeight: 17,
+    lineHeight: theme.typeScale.caption.lineHeight,
   },
   backLockedWrap: {
     flex: 1,
@@ -272,8 +273,8 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   backLockedText: {
-    fontSize: 12,
-    color: '#7D2F2F',
+    ...theme.typeScale.caption,
+    color: theme.colors.RouteError,
     fontFamily: FontFamily.semibold,
     textAlign: 'center',
   },

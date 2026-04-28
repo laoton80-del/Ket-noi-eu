@@ -15,7 +15,7 @@ const VARIANT_STYLES: Record<
 > = {
   verified: {
     backgroundColor: theme.hybrid.chipClearedBg,
-    borderColor: 'rgba(129, 199, 132, 0.42)',
+    borderColor: theme.colors.SoftEmerald,
     color: theme.hybrid.chipClearedText,
   },
   processing: {
@@ -24,13 +24,13 @@ const VARIANT_STYLES: Record<
     color: theme.hybrid.chipProcessingText,
   },
   cleared: {
-    backgroundColor: 'rgba(129, 199, 132, 0.1)',
-    borderColor: 'rgba(129, 199, 132, 0.32)',
+    backgroundColor: theme.hybrid.chipVerifiedBg,
+    borderColor: theme.colors.SoftEmerald,
     color: theme.hybrid.chipClearedText,
   },
   routeError: {
     backgroundColor: theme.hybrid.chipErrorBg,
-    borderColor: 'rgba(229, 115, 115, 0.48)',
+    borderColor: theme.colors.RouteError,
     color: theme.hybrid.chipErrorText,
   },
 };
@@ -57,8 +57,7 @@ const styles = StyleSheet.create({
     marginBottom: 6,
   },
   text: {
-    fontSize: 10,
+    ...theme.typeScale.caption,
     fontFamily: FontFamily.semibold,
-    lineHeight: 14,
   },
 });

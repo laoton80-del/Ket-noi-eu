@@ -30,6 +30,7 @@ import { getPersonaDisplayName } from '../config/aiPrompts';
 import { LAUNCH_PILOT_CONFIG, PILOT_LEONA_SERVICES_FALLBACK_PREFILL } from '../config/launchPilot';
 import { hasSeenMicroHint, markMicroHintSeen } from '../onboarding/guidedOnboardingStorage';
 import type { RootStackParamList } from '../navigation/routes';
+import { theme } from '../theme/theme';
 import { FontFamily } from '../theme/typography';
 
 type BusinessKind = 'nails' | 'pho' | 'service';
@@ -157,8 +158,8 @@ function RadarPin({
         style,
       ]}
     >
-      <Pressable onPress={onPress} style={({ pressed }) => [styles.pin, pressed && { opacity: 0.84 }]}>
-        <Ionicons name={kindIcon[business.kind]} size={16} color="#FFE8BE" />
+      <Pressable onPress={onPress} style={({ pressed }) => [styles.pin, pressed && { opacity: 0.8 }]}>
+        <Ionicons name={kindIcon[business.kind]} size={16} color={theme.colors.primaryBright} />
       </Pressable>
     </Animated.View>
   );
@@ -265,7 +266,7 @@ export function RadarDiscoveryScreen() {
     if (!selected) return;
     if (selected.kind === 'pho') {
       navigation.navigate('Tabs', {
-        screen: 'LeTan',
+        screen: 'Concierge',
         params: {
           proactiveQuestion: `Hỗ trợ đặt bàn tại ${selected.name} cho khách Việt tối nay.`,
           autoSimulate: true,
@@ -287,7 +288,7 @@ export function RadarDiscoveryScreen() {
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.pilotHoldWrap}>
-          <ActivityIndicator color="#FFE3B0" />
+          <ActivityIndicator color={theme.colors.primaryBright} />
           <Text style={styles.subtitle}>Đang chuyển sang Leona…</Text>
         </View>
       </SafeAreaView>
@@ -316,12 +317,12 @@ export function RadarDiscoveryScreen() {
           <Ring key={offset} progress={progress} offset={offset} />
         ))}
         <View style={styles.centerDot}>
-          <Ionicons name="locate" size={16} color="#C8FFCF" />
+          <Ionicons name="locate" size={16} color={theme.colors.success} />
         </View>
 
         {loading ? (
           <View style={styles.loaderWrap}>
-            <ActivityIndicator color="#FFE3B0" />
+            <ActivityIndicator color={theme.colors.primaryBright} />
           </View>
         ) : (
           businesses.map((biz) => (
@@ -344,17 +345,17 @@ export function RadarDiscoveryScreen() {
             {distanceLabel} • ⭐ {selected.rating.toFixed(1)}
           </Text>
           <View style={styles.btnRow}>
-            <Pressable onPress={() => void openDirection()} style={({ pressed }) => [styles.sheetBtn, pressed && { opacity: 0.84 }]}>
+            <Pressable onPress={() => void openDirection()} style={({ pressed }) => [styles.sheetBtn, pressed && { opacity: 0.8 }]}>
               <Text style={styles.sheetBtnText}>Chỉ đường</Text>
             </Pressable>
-            <Pressable onPress={() => void callNow()} style={({ pressed }) => [styles.sheetBtn, pressed && { opacity: 0.84 }]}>
+            <Pressable onPress={() => void callNow()} style={({ pressed }) => [styles.sheetBtn, pressed && { opacity: 0.8 }]}>
               <Text style={styles.sheetBtnText}>Gọi ngay</Text>
             </Pressable>
           </View>
           {selected.isForeign ? (
             <Pressable
               onPress={openAssistedCall}
-              style={({ pressed }) => [styles.aiBtn, pressed && { opacity: 0.84 }]}
+              style={({ pressed }) => [styles.aiBtn, pressed && { opacity: 0.8 }]}
             >
               <Text style={styles.aiBtnText}>Gọi qua {inboundPersonaName}</Text>
             </Pressable>
@@ -368,7 +369,7 @@ export function RadarDiscoveryScreen() {
 
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#07080B', paddingHorizontal: 16, paddingTop: 8 },
+  container: { flex: 1, backgroundColor: theme.colors.DeepInkNavy, paddingHorizontal: 16, paddingTop: 8 },
   pilotHoldWrap: {
     flex: 1,
     alignItems: 'center',
@@ -376,19 +377,18 @@ const styles = StyleSheet.create({
     gap: 12,
     paddingHorizontal: 16,
   },
-  title: { fontSize: 28, color: '#F7E6BF', fontFamily: FontFamily.extrabold },
+  title: { ...theme.typeScale.h1, color: theme.colors.primaryBright, fontFamily: FontFamily.extrabold },
   subtitle: {
     marginTop: 4,
     marginBottom: 10,
-    color: 'rgba(235,220,188,0.78)',
-    fontSize: 13,
-    fontFamily: FontFamily.regular,
+    color: theme.colors.text.secondary,
+    ...theme.typeScale.caption,
   },
   preview: {
     marginTop: -2,
     marginBottom: 10,
-    color: '#FBD38D',
-    fontSize: 12,
+    color: theme.colors.primaryBright,
+    ...theme.typeScale.caption,
     fontFamily: FontFamily.semibold,
   },
   radarWrap: {
@@ -396,11 +396,11 @@ const styles = StyleSheet.create({
     aspectRatio: 1,
     borderRadius: 999,
     borderWidth: 1.2,
-    borderColor: 'rgba(212,175,55,0.42)',
+    borderColor: theme.hybrid.signatureLine,
     overflow: 'hidden',
     alignSelf: 'center',
-    backgroundColor: 'rgba(7,18,24,0.82)',
-    shadowColor: '#000',
+    backgroundColor: theme.colors.glass.surface,
+    shadowColor: theme.colors.glass.shadow,
     shadowOpacity: 0.35,
     shadowRadius: 18,
     shadowOffset: { width: 0, height: 8 },
@@ -412,7 +412,7 @@ const styles = StyleSheet.create({
     height: '100%',
     borderRadius: 999,
     borderWidth: 1,
-    borderColor: 'rgba(100,255,170,0.66)',
+    borderColor: theme.colors.success,
   },
   crosshair: {
     position: 'absolute',
@@ -420,7 +420,7 @@ const styles = StyleSheet.create({
     right: 0,
     top: '50%',
     height: 1,
-    backgroundColor: 'rgba(160,220,190,0.2)',
+    backgroundColor: theme.colors.overlay.ringSoft,
   },
   crosshairV: {
     top: 0,
@@ -441,9 +441,9 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'rgba(87,230,135,0.2)',
+    backgroundColor: theme.colors.overlay.ringSoft,
     borderWidth: 1,
-    borderColor: 'rgba(120,255,178,0.74)',
+    borderColor: theme.colors.success,
   },
   pinWrap: {
     position: 'absolute',
@@ -456,10 +456,10 @@ const styles = StyleSheet.create({
     borderRadius: 18,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'rgba(149,45,45,0.85)',
+    backgroundColor: theme.colors.RouteError,
     borderWidth: 1,
-    borderColor: 'rgba(255,211,156,0.8)',
-    shadowColor: '#000',
+    borderColor: theme.colors.primaryBright,
+    shadowColor: theme.colors.glass.shadow,
     shadowOpacity: 0.3,
     shadowRadius: 8,
     shadowOffset: { width: 0, height: 4 },
@@ -478,8 +478,8 @@ const styles = StyleSheet.create({
     marginTop: 14,
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: 'rgba(212,175,55,0.42)',
-    backgroundColor: 'rgba(255,255,255,0.12)',
+    borderColor: theme.hybrid.signatureLine,
+    backgroundColor: theme.colors.overlay.ringSoft,
     padding: 14,
   },
   sheetHandle: {
@@ -487,32 +487,32 @@ const styles = StyleSheet.create({
     width: 50,
     height: 5,
     borderRadius: 3,
-    backgroundColor: 'rgba(255,235,188,0.4)',
+    backgroundColor: theme.colors.glass.gradientStrong,
     marginBottom: 10,
   },
-  sheetName: { color: '#FFF0CF', fontSize: 20, fontFamily: FontFamily.extrabold },
-  sheetMeta: { marginTop: 4, color: '#F6DCAB', fontSize: 13, fontFamily: FontFamily.medium },
+  sheetName: { ...theme.typeScale.h2, color: theme.colors.primaryBright, fontFamily: FontFamily.extrabold },
+  sheetMeta: { ...theme.typeScale.caption, marginTop: 4, color: theme.colors.primaryBright, fontFamily: FontFamily.medium },
   btnRow: { marginTop: 12, flexDirection: 'row', gap: 8 },
   sheetBtn: {
     flex: 1,
     minHeight: 42,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: 'rgba(212,175,55,0.5)',
+    borderColor: theme.hybrid.signatureLine,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'rgba(40,30,22,0.72)',
+    backgroundColor: theme.colors.executive.panelMuted,
   },
-  sheetBtnText: { color: '#FFECC8', fontFamily: FontFamily.bold },
+  sheetBtnText: { ...theme.typeScale.caption, color: theme.colors.primaryBright, fontFamily: FontFamily.bold },
   aiBtn: {
     marginTop: 10,
     minHeight: 42,
     borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#A63737',
+    backgroundColor: theme.colors.RouteError,
     borderWidth: 1,
-    borderColor: 'rgba(255,218,172,0.6)',
+    borderColor: theme.colors.primaryBright,
   },
-  aiBtnText: { color: '#FFEBD2', fontFamily: FontFamily.bold },
+  aiBtnText: { ...theme.typeScale.caption, color: theme.colors.primaryBright, fontFamily: FontFamily.bold },
 });

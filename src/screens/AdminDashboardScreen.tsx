@@ -8,6 +8,7 @@ import type { RootStackParamList } from '../navigation/routes';
 import { getLastLaunchCriticalGrowthEventsForDebug } from '../services/growth/launchEvents';
 import type { GrowthEvent } from '../services/growth/types';
 import { clearTtsCache, getTtsCacheStats, type TtsCacheStats } from '../services/OpenAIService';
+import { theme } from '../theme/theme';
 import { FontFamily } from '../theme/typography';
 
 const LAUNCH_DEBUG_EVENT_LIMIT = 25;
@@ -135,7 +136,7 @@ export function AdminDashboardScreen() {
               <Text style={styles.statsTitle}>TTS Cache Live</Text>
               <Pressable
                 onPress={() => void refreshStatsSilently()}
-                style={({ pressed }) => [styles.refreshBtn, pressed && { opacity: 0.85 }]}
+                style={({ pressed }) => [styles.refreshBtn, pressed && { opacity: 0.8 }]}
               >
                 <Text style={styles.refreshBtnText}>Refresh</Text>
               </Pressable>
@@ -153,7 +154,7 @@ export function AdminDashboardScreen() {
               <Pressable
                 onPress={() => void refreshLaunchCriticalDebug()}
                 disabled={loadingLaunchDebug}
-                style={({ pressed }) => [styles.refreshBtn, pressed && { opacity: 0.85 }]}
+                style={({ pressed }) => [styles.refreshBtn, pressed && { opacity: 0.8 }]}
               >
                 <Text style={styles.refreshBtnText}>{loadingLaunchDebug ? '…' : 'Refresh'}</Text>
               </Pressable>
@@ -175,12 +176,12 @@ export function AdminDashboardScreen() {
             style={({ pressed }) => [
               styles.statsBtn,
               readingStats && styles.clearBtnDisabled,
-              pressed && { opacity: 0.85 },
+              pressed && { opacity: 0.8 },
             ]}
           >
             {readingStats ? (
               <View style={styles.clearBtnLoading}>
-                <ActivityIndicator size="small" color="#FFEBD2" />
+                <ActivityIndicator size="small" color={theme.colors.primaryBright} />
                 <Text style={styles.statsBtnText}>Đang đọc cache stats...</Text>
               </View>
             ) : (
@@ -193,12 +194,12 @@ export function AdminDashboardScreen() {
             style={({ pressed }) => [
               styles.clearBtn,
               clearingCache && styles.clearBtnDisabled,
-              pressed && { opacity: 0.85 },
+              pressed && { opacity: 0.8 },
             ]}
           >
             {clearingCache ? (
               <View style={styles.clearBtnLoading}>
-                <ActivityIndicator size="small" color="#20160D" />
+                <ActivityIndicator size="small" color={theme.colors.DeepInkNavy} />
                 <Text style={styles.clearBtnText}>Đang dọn TTS cache...</Text>
               </View>
             ) : (
@@ -212,17 +213,17 @@ export function AdminDashboardScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#080808' },
+  container: { flex: 1, backgroundColor: theme.colors.DeepInkNavy },
   content: { paddingHorizontal: 16, paddingTop: 16, paddingBottom: 120 },
   title: {
-    fontSize: 28,
-    color: '#E7C66D',
+    ...theme.typeScale.h1,
+    color: theme.colors.primary,
     fontFamily: FontFamily.extrabold,
     marginBottom: 6,
   },
   subtitle: {
-    fontSize: 13,
-    color: 'rgba(231,198,109,0.72)',
+    ...theme.typeScale.caption,
+    color: theme.colors.text.secondary,
     fontFamily: FontFamily.regular,
     marginBottom: 12,
   },
@@ -231,10 +232,10 @@ const styles = StyleSheet.create({
   card: {
     borderRadius: 18,
     borderWidth: 1,
-    borderColor: 'rgba(240, 215, 154, 0.55)',
-    backgroundColor: 'rgba(16,16,16,0.94)',
+    borderColor: theme.colors.glass.border,
+    backgroundColor: theme.colors.executive.panel,
     padding: 14,
-    shadowColor: '#D8B86E',
+    shadowColor: theme.colors.SignatureGold,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.14,
     shadowRadius: 10,
@@ -250,25 +251,25 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   cardLabel: {
-    fontSize: 13,
-    color: 'rgba(240, 215, 154, 0.9)',
+    ...theme.typeScale.caption,
+    color: theme.colors.primaryBright,
     fontFamily: FontFamily.medium,
     marginBottom: 6,
   },
   cardValue: {
-    fontSize: 24,
-    color: '#FFF5D7',
+    ...theme.typeScale.h2,
+    color: theme.colors.text.primary,
     fontFamily: FontFamily.extrabold,
     marginBottom: 2,
   },
   cardSub: {
-    fontSize: 12,
-    color: 'rgba(240, 215, 154, 0.72)',
+    ...theme.typeScale.caption,
+    color: theme.colors.text.secondary,
     fontFamily: FontFamily.regular,
   },
   // legacy shadow tuning kept for subtle depth on dark theme
   shadowLegacy: {
-    shadowColor: '#000',
+    shadowColor: theme.colors.glass.shadow,
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.28,
     shadowRadius: 14,
@@ -278,21 +279,21 @@ const styles = StyleSheet.create({
     marginTop: 14,
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: 'rgba(240, 215, 154, 0.4)',
-    backgroundColor: 'rgba(12,12,12,0.88)',
+    borderColor: theme.colors.glass.border,
+    backgroundColor: theme.colors.executive.panelMuted,
     padding: 12,
   },
   toolsTitle: {
-    fontSize: 13,
-    color: 'rgba(240, 215, 154, 0.9)',
+    ...theme.typeScale.caption,
+    color: theme.colors.primaryBright,
     fontFamily: FontFamily.semibold,
     marginBottom: 8,
   },
   statsCard: {
     borderRadius: 10,
     borderWidth: 1,
-    borderColor: 'rgba(212, 175, 55, 0.28)',
-    backgroundColor: 'rgba(255,255,255,0.03)',
+    borderColor: theme.colors.glass.borderSoft,
+    backgroundColor: theme.colors.executive.panel,
     padding: 10,
     marginBottom: 8,
   },
@@ -303,35 +304,35 @@ const styles = StyleSheet.create({
     marginBottom: 6,
   },
   statsTitle: {
-    fontSize: 12,
-    color: 'rgba(240, 215, 154, 0.95)',
+    ...theme.typeScale.caption,
+    color: theme.colors.primaryBright,
     fontFamily: FontFamily.bold,
   },
   refreshBtn: {
     minHeight: 24,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: 'rgba(240, 215, 154, 0.4)',
-    backgroundColor: 'rgba(240, 215, 154, 0.12)',
+    borderColor: theme.colors.glass.border,
+    backgroundColor: theme.hybrid.signalMutedBg,
     paddingHorizontal: 8,
     alignItems: 'center',
     justifyContent: 'center',
   },
   refreshBtnText: {
-    fontSize: 11,
-    color: '#FFEBD2',
+    ...theme.typeScale.caption,
+    color: theme.colors.primaryBright,
     fontFamily: FontFamily.semibold,
   },
   statsLine: {
-    fontSize: 12,
-    color: 'rgba(240, 215, 154, 0.86)',
+    ...theme.typeScale.caption,
+    color: theme.colors.text.secondary,
     fontFamily: FontFamily.medium,
     marginBottom: 2,
   },
   launchDebugLine: {
-    fontSize: 10,
+    ...theme.typeScale.caption,
     lineHeight: 14,
-    color: 'rgba(240, 215, 154, 0.78)',
+    color: theme.colors.text.secondary,
     fontFamily: FontFamily.regular,
     marginTop: 4,
   },
@@ -339,8 +340,8 @@ const styles = StyleSheet.create({
     minHeight: 40,
     borderRadius: 10,
     borderWidth: 1,
-    borderColor: 'rgba(212, 175, 55, 0.56)',
-    backgroundColor: '#E7C66D',
+    borderColor: theme.colors.glass.border,
+    backgroundColor: theme.colors.primary,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 10,
@@ -349,16 +350,16 @@ const styles = StyleSheet.create({
     minHeight: 40,
     borderRadius: 10,
     borderWidth: 1,
-    borderColor: 'rgba(212, 175, 55, 0.4)',
-    backgroundColor: 'rgba(231, 198, 109, 0.18)',
+    borderColor: theme.colors.glass.border,
+    backgroundColor: theme.hybrid.signalMutedBg,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 10,
     marginBottom: 8,
   },
   statsBtnText: {
-    fontSize: 13,
-    color: '#FFEBD2',
+    ...theme.typeScale.body,
+    color: theme.colors.primaryBright,
     fontFamily: FontFamily.bold,
   },
   clearBtnDisabled: {
@@ -370,8 +371,8 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   clearBtnText: {
-    fontSize: 13,
-    color: '#20160D',
+    ...theme.typeScale.body,
+    color: theme.colors.DeepInkNavy,
     fontFamily: FontFamily.bold,
   },
 });

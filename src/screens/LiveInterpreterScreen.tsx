@@ -29,7 +29,7 @@ import type { SellCTA } from '../services/selling/sellingTypes';
 import type { RootStackParamList } from '../navigation/routes';
 import { useAssistantSettings } from '../state/assistantSettings';
 import { useWalletState } from '../state/wallet';
-import { Colors } from '../theme/colors';
+import { theme } from '../theme/theme';
 import { FontFamily } from '../theme/typography';
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
@@ -220,7 +220,7 @@ export function LiveInterpreterScreen() {
       />
       <View style={styles.header}>
         <Pressable onPress={() => navigation.goBack()} style={({ pressed }) => [styles.back, pressed && { opacity: 0.8 }]}>
-          <Ionicons name="chevron-back" size={22} color={Colors.text} />
+          <Ionicons name="chevron-back" size={22} color={theme.colors.text.primary} />
         </Pressable>
         <View style={styles.headerText}>
           <Text style={styles.title}>Phiên dịch trực tiếp</Text>
@@ -248,7 +248,7 @@ export function LiveInterpreterScreen() {
             style={({ pressed }) => [
               styles.chip,
               scenario === s.id && styles.chipOn,
-              pressed && { opacity: 0.85 },
+              pressed && { opacity: 0.8 },
               sessionActive && { opacity: 0.55 },
             ]}
           >
@@ -261,14 +261,24 @@ export function LiveInterpreterScreen() {
         <Pressable
           onPress={() => setDirection('vi_to_local')}
           disabled={sessionActive}
-          style={[styles.dirBtn, direction === 'vi_to_local' && styles.dirBtnOn, sessionActive && { opacity: 0.55 }]}
+          style={({ pressed }) => [
+            styles.dirBtn,
+            direction === 'vi_to_local' && styles.dirBtnOn,
+            sessionActive && { opacity: 0.55 },
+            pressed && { opacity: 0.8 },
+          ]}
         >
           <Text style={styles.dirText}>Vi → Local</Text>
         </Pressable>
         <Pressable
           onPress={() => setDirection('local_to_vi')}
           disabled={sessionActive}
-          style={[styles.dirBtn, direction === 'local_to_vi' && styles.dirBtnOn, sessionActive && { opacity: 0.55 }]}
+          style={({ pressed }) => [
+            styles.dirBtn,
+            direction === 'local_to_vi' && styles.dirBtnOn,
+            sessionActive && { opacity: 0.55 },
+            pressed && { opacity: 0.8 },
+          ]}
         >
           <Text style={styles.dirText}>Local → Vi</Text>
         </Pressable>
@@ -313,20 +323,20 @@ export function LiveInterpreterScreen() {
           disabled={!sessionActive || isBusy}
           style={({ pressed }) => [
             styles.mic,
-            pressed && { opacity: 0.88 },
+            pressed && { opacity: 0.8 },
             (!sessionActive || isBusy) && { opacity: 0.45 },
           ]}
         >
           {isBusy && !isRecording ? (
-            <ActivityIndicator color="#FFF" />
+            <ActivityIndicator color={theme.colors.CeolWhite} />
           ) : (
-            <Ionicons name={isRecording ? 'mic' : 'mic-outline'} size={32} color="#FFF" />
+            <Ionicons name={isRecording ? 'mic' : 'mic-outline'} size={32} color={theme.colors.CeolWhite} />
           )}
         </Pressable>
         <Pressable
           onPress={onEndSession}
           disabled={!sessionActive}
-          style={({ pressed }) => [styles.endBtn, pressed && { opacity: 0.86 }, !sessionActive && { opacity: 0.45 }]}
+          style={({ pressed }) => [styles.endBtn, pressed && { opacity: 0.8 }, !sessionActive && { opacity: 0.45 }]}
         >
           <Text style={styles.endText}>Kết thúc phiên</Text>
         </Pressable>
@@ -336,7 +346,7 @@ export function LiveInterpreterScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Colors.background },
+  container: { flex: 1, backgroundColor: theme.colors.DeepInkNavy },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -346,22 +356,21 @@ const styles = StyleSheet.create({
   },
   back: { padding: 6 },
   headerText: { flex: 1 },
-  title: { fontSize: 20, fontFamily: FontFamily.extrabold, color: Colors.text },
-  sub: { fontSize: 12, fontFamily: FontFamily.regular, color: Colors.textSoft, marginTop: 2 },
+  title: { ...theme.typeScale.h2, color: theme.colors.text.primary, fontFamily: FontFamily.extrabold },
+  sub: { ...theme.typeScale.caption, color: theme.colors.text.secondary, marginTop: 2 },
   creditPill: {
     paddingHorizontal: 10,
     paddingVertical: 6,
     borderRadius: 10,
     borderWidth: 1,
-    borderColor: 'rgba(212,175,55,0.35)',
-    backgroundColor: 'rgba(255,251,242,0.6)',
+    borderColor: theme.colors.glass.borderSoft,
+    backgroundColor: theme.colors.glass.surface,
   },
-  creditText: { fontSize: 12, fontFamily: FontFamily.semibold, color: '#7A5A1C' },
+  creditText: { ...theme.typeScale.caption, fontFamily: FontFamily.semibold, color: theme.colors.primaryBright },
   hint: {
     paddingHorizontal: 16,
-    fontSize: 12,
-    fontFamily: FontFamily.regular,
-    color: Colors.textSoft,
+    ...theme.typeScale.caption,
+    color: theme.colors.text.secondary,
     marginBottom: 8,
   },
   row: {
@@ -376,43 +385,43 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     borderRadius: 10,
     borderWidth: 1,
-    borderColor: 'rgba(212,175,55,0.25)',
-    backgroundColor: 'rgba(255,251,242,0.5)',
+    borderColor: theme.colors.glass.borderSoft,
+    backgroundColor: theme.colors.executive.chipFill,
   },
   chipOn: {
-    borderColor: 'rgba(212,175,55,0.55)',
-    backgroundColor: 'rgba(212,175,55,0.2)',
+    borderColor: theme.hybrid.signalSubtleBorder,
+    backgroundColor: theme.hybrid.signalMutedBg,
   },
-  chipText: { fontSize: 12, fontFamily: FontFamily.medium, color: Colors.textSoft },
-  chipTextOn: { color: Colors.text, fontFamily: FontFamily.semibold },
+  chipText: { ...theme.typeScale.caption, fontFamily: FontFamily.medium, color: theme.colors.text.secondary },
+  chipTextOn: { color: theme.colors.text.primary, fontFamily: FontFamily.semibold },
   dirRow: { flexDirection: 'row', gap: 8, paddingHorizontal: 16, marginBottom: 10 },
   dirBtn: {
     flex: 1,
     paddingVertical: 8,
     borderRadius: 10,
     borderWidth: 1,
-    borderColor: 'rgba(212,175,55,0.28)',
+    borderColor: theme.colors.glass.borderSoft,
     alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.55)',
+    backgroundColor: theme.colors.glass.surface,
   },
   dirBtnOn: {
-    borderColor: 'rgba(182,133,45,0.65)',
-    backgroundColor: 'rgba(255,235,200,0.45)',
+    borderColor: theme.hybrid.signalSubtleBorder,
+    backgroundColor: theme.hybrid.signalMutedBg,
   },
-  dirText: { fontSize: 12, fontFamily: FontFamily.semibold, color: Colors.text },
+  dirText: { ...theme.typeScale.caption, fontFamily: FontFamily.semibold, color: theme.colors.text.primary },
   log: { flex: 1 },
   logContent: { paddingHorizontal: 16, paddingBottom: 16, gap: 10 },
-  empty: { fontSize: 13, fontFamily: FontFamily.regular, color: Colors.textSoft, lineHeight: 20 },
+  empty: { ...theme.typeScale.body, fontFamily: FontFamily.regular, color: theme.colors.text.secondary, lineHeight: 20 },
   turn: {
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: 'rgba(212,175,55,0.28)',
+    borderColor: theme.colors.glass.borderSoft,
     padding: 10,
-    backgroundColor: 'rgba(255,251,242,0.55)',
+    backgroundColor: theme.colors.glass.surface,
   },
-  turnOrig: { fontSize: 12, fontFamily: FontFamily.regular, color: Colors.textSoft, marginBottom: 4 },
-  turnTrans: { fontSize: 14, fontFamily: FontFamily.semibold, color: Colors.text },
-  err: { fontSize: 12, color: '#A93535', fontFamily: FontFamily.medium },
+  turnOrig: { ...theme.typeScale.caption, fontFamily: FontFamily.regular, color: theme.colors.text.secondary, marginBottom: 4 },
+  turnTrans: { ...theme.typeScale.body, fontFamily: FontFamily.semibold, color: theme.colors.text.primary },
+  err: { ...theme.typeScale.caption, color: theme.colors.RouteError, fontFamily: FontFamily.medium },
   footer: {
     paddingHorizontal: 16,
     paddingBottom: 16,
@@ -424,9 +433,9 @@ const styles = StyleSheet.create({
     width: 72,
     height: 72,
     borderRadius: 36,
-    backgroundColor: '#8B4513',
+    backgroundColor: theme.hybrid.signalStrong,
     borderWidth: 2,
-    borderColor: 'rgba(212,175,55,0.5)',
+    borderColor: theme.hybrid.signalSubtleBorder,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -435,8 +444,8 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     borderRadius: 10,
     borderWidth: 1,
-    borderColor: 'rgba(212,175,55,0.35)',
-    backgroundColor: 'rgba(58,45,30,0.78)',
+    borderColor: theme.colors.glass.border,
+    backgroundColor: theme.colors.executive.panel,
   },
-  endText: { fontSize: 13, fontFamily: FontFamily.semibold, color: '#FFE8C7' },
+  endText: { ...theme.typeScale.body, fontFamily: FontFamily.semibold, color: theme.colors.primaryBright },
 });

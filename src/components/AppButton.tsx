@@ -61,7 +61,7 @@ const styles = StyleSheet.create({
     minHeight: theme.components.button.height.md,
     borderRadius: theme.radius.md,
     borderWidth: 1,
-    borderColor: 'rgba(197, 160, 89, 0.55)',
+    borderColor: theme.colors.glass.border,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: theme.spacing.lg,
@@ -86,7 +86,7 @@ const styles = StyleSheet.create({
     fontFamily: FontFamily.bold,
   },
   pressed: {
-    opacity: 0.88,
+    opacity: 0.78,
   },
   disabled: {
     opacity: 0.5,

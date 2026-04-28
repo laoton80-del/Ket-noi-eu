@@ -42,12 +42,13 @@ export const APP_BRAND = {
   /** Primary header on most surfaces */
   name: 'Kết Nối Global',
   /** Secondary line under brand (launch-lane context only) */
-  launchSubtitle: 'Launch lane: EU',
+  launchSubtitle: 'Đồng Hành Cùng Người Việt Toàn Cầu',
   /** Stripe / wallet sheet merchant display name */
   paymentsDisplayName: 'Kết Nối Global',
-  visualStyle: 'Neo-Indochine & Glassmorphism',
+  visualStyle: 'Premium Gold Phoenix Identity',
   icon: '🌳✨',
-  iconLabel: 'Cây Bồ Đề vàng 3D',
+  iconLabel: 'Kết Nối Global premium phoenix logo',
+  iconAsset: require('../../assets/images/brand-logo-premium.png'),
   supportEmail: 'support@ketnoiglobal.com',
   legal: {
     privacyUrl: 'https://ketnoiglobal.com/privacy',
@@ -82,7 +83,7 @@ const T2 = subscriptionUsdForTier('T2');
 const T3 = subscriptionUsdForTier('T3');
 const T4 = subscriptionUsdForTier('T4');
 
-/** Subscription/marketing tier cards (USD anchors). Wallet combo families live in `globalWalletPackages.ts`. */
+/** Subscription/marketing tier cards (USD anchors). Wallet pack families live in `globalWalletPackages.ts`. */
 export const PRICING_MARKET_TIERS_USD: PricingTier[] = [
   {
     id: 'T1',

@@ -2,6 +2,8 @@ import React from 'react';
 import { StyleSheet, Text } from 'react-native';
 import { WidgetCard } from '../WidgetCard';
 import { AnimatedPressable } from '../AnimatedPressable';
+import { theme } from '../../../theme/theme';
+import { FontFamily } from '../../../theme/typography';
 
 type Props = {
   progress: number;
@@ -29,20 +31,25 @@ export const KidsLearningCard = React.memo(KidsLearningCardComponent);
 
 const styles = StyleSheet.create({
   title: {
-    fontSize: 18,
-    fontWeight: '700',
+    ...theme.typeScale.h2,
+    fontFamily: FontFamily.bold,
+    color: theme.colors.GraphiteBlue,
   },
   subtitle: {
     marginVertical: 8,
-    color: '#6B7280',
+    ...theme.typeScale.body,
+    color: theme.colors.text.secondary,
+    fontFamily: FontFamily.regular,
   },
   button: {
-    backgroundColor: '#2563EB',
+    backgroundColor: theme.colors.SignalBlue,
     borderRadius: 12,
     padding: 12,
   },
   buttonText: {
-    color: '#fff',
+    color: theme.colors.CeolWhite,
+    ...theme.typeScale.body,
+    fontFamily: FontFamily.semibold,
     textAlign: 'center',
   },
 });

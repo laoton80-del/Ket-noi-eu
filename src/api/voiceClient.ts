@@ -1,7 +1,7 @@
 import type { SupportedLanguage } from '../i18n/strings';
 import { Platform } from 'react-native';
 
-export const VOICE_API_URL = 'https://api.ketnoieu.com/v1/voice';
+export const VOICE_API_URL = 'https://api.ketnoiglobal.com/v1/voice';
 
 export type VoicePersona = 'leona' | 'loan';
 

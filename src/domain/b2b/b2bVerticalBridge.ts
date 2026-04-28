@@ -3,7 +3,7 @@ import type { B2BBusinessType } from './models';
 /**
  * Phase 3 — explicit mapping between **product verticals** and **fulfillment engine families**.
  * Firestore resource overlap + booking/order engines may still share implementations; this module is the
- * single place to read “what bucket does this tenant type use?” without hidden `potraviny` spread.
+ * single place to read “what bucket does this tenant type use?” without hidden legacy aliases.
  */
 
 /** Engine-shaped grouping (not necessarily 1:1 with Firestore collections). */
@@ -12,9 +12,7 @@ export type B2BFulfillmentEngineFamily =
   | 'restaurant'
   | 'grocery_retail_fulfillment'
   | 'grocery_wholesale_fulfillment'
-  | 'hospitality_stay'
-  /** Legacy tenant rows still storing `businessType: 'potraviny'` — treat like retail fulfillment until migrated. */
-  | 'legacy_potraviny_fulfillment';
+  | 'hospitality_stay';
 
 export function fulfillmentEngineFamily(bt: B2BBusinessType): B2BFulfillmentEngineFamily {
   switch (bt) {
@@ -28,16 +26,13 @@ export function fulfillmentEngineFamily(bt: B2BBusinessType): B2BFulfillmentEngi
       return 'grocery_wholesale_fulfillment';
     case 'hospitality_stay':
       return 'hospitality_stay';
-    case 'potraviny':
-      return 'legacy_potraviny_fulfillment';
   }
 }
 
 export function usesOrderIntentFlow(bt: B2BBusinessType): boolean {
   return (
     bt === 'grocery_retail' ||
-    bt === 'grocery_wholesale' ||
-    bt === 'potraviny'
+    bt === 'grocery_wholesale'
   );
 }
 
@@ -67,6 +62,5 @@ export function requiredBookingSlotKeys(bt: B2BBusinessType): B2BBookingSlotKey[
 export function grocerySegmentLabel(bt: B2BBusinessType): 'retail' | 'wholesale' | 'legacy' | 'n/a' {
   if (bt === 'grocery_retail') return 'retail';
   if (bt === 'grocery_wholesale') return 'wholesale';
-  if (bt === 'potraviny') return 'legacy';
   return 'n/a';
 }

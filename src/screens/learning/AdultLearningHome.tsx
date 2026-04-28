@@ -30,7 +30,7 @@ export function AdultLearningHome() {
     (situation: string) => {
       setSelectedSituation(situation);
       // V1: mọi tình huống tạm mở Học tập; sau này có thể truyền params filter topic.
-      navigation.navigate('Tabs', { screen: 'HocTap' });
+      navigation.navigate('Tabs', { screen: 'Academy' });
     },
     [navigation]
   );
@@ -42,7 +42,7 @@ export function AdultLearningHome() {
         user?.phone
       );
       navigation.navigate('Tabs', {
-        screen: 'LeTan',
+        screen: 'Concierge',
         params: {
           aiMode: session.aiMode,
           scenario: session.scenario,
@@ -51,14 +51,14 @@ export function AdultLearningHome() {
         },
       });
     } catch {
-      navigation.navigate('Tabs', { screen: 'HocTap' });
+      navigation.navigate('Tabs', { screen: 'Academy' });
     }
   }, [navigation, selectedSituation, user?.phone]);
 
   const onPressPhrase = useCallback(
     (phrase: string) => {
       navigation.navigate('Tabs', {
-        screen: 'LeTan',
+        screen: 'Concierge',
         params: {
           proactiveQuestion: `${phrase}. Tôi đang luyện phát âm, xin bạn trả lời từ từ.`,
         },

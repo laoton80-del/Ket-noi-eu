@@ -14,7 +14,6 @@ export const RESOURCE_KINDS_BY_BUSINESS: Record<B2BBusinessType, B2BResourceKind
   grocery_retail: ['grocery_retail_fulfillment_slot'],
   grocery_wholesale: ['grocery_wholesale_fulfillment_slot'],
   hospitality_stay: ['hospitality_room'],
-  potraviny: ['potraviny_fulfillment_slot'],
 };
 
 export type NailsBookingConstraints = {
@@ -29,7 +28,7 @@ export type RestaurantBookingConstraints = {
   tableCapacityMustFitParty: true;
 };
 
-export type PotravinyOrderConstraints = {
+export type RetailOrderConstraints = {
   allowDelivery: boolean;
   allowPickup: boolean;
   maxItemsPerOrder?: number;
@@ -60,7 +59,6 @@ export type BusinessTypePolicy = {
   type: B2BBusinessType;
   nails?: NailsBookingConstraints;
   restaurant?: RestaurantBookingConstraints;
-  potraviny?: PotravinyOrderConstraints;
   grocery_retail?: GroceryRetailOrderConstraints;
   grocery_wholesale?: GroceryWholesaleOrderConstraints;
   hospitality_stay?: HospitalityStayConstraints;
@@ -77,11 +75,6 @@ export function defaultPolicy(type: B2BBusinessType): BusinessTypePolicy {
       return {
         type,
         restaurant: { partySizeMin: 1, partySizeMax: 20, tableCapacityMustFitParty: true },
-      };
-    case 'potraviny':
-      return {
-        type,
-        potraviny: { allowDelivery: true, allowPickup: true, maxItemsPerOrder: 80 },
       };
     case 'grocery_retail':
       return {

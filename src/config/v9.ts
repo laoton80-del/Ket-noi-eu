@@ -12,6 +12,6 @@ export {
 } from './appBrand';
 
 /** @deprecated Use `ASSISTANTS_ROSTER`. */
-export const ASSISTANTS_V9 = ASSISTANTS_ROSTER;
+export const ASSISTANTS_CORE_V1 = ASSISTANTS_ROSTER;
 /** @deprecated Use `PRICING_MARKET_TIERS_USD`. */
-export const PRICING_GLOBAL_V9 = PRICING_MARKET_TIERS_USD;
+export const PRICING_GLOBAL_CORE_V1 = PRICING_MARKET_TIERS_USD;

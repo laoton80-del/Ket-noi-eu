@@ -6,6 +6,7 @@ import type { GuidedIntentId } from '../onboarding/guidedOnboardingStorage';
 import { Colors } from '../theme/colors';
 import { gradients } from '../theme/gradients';
 import { FontFamily } from '../theme/typography';
+import { theme } from '../theme/theme';
 
 const OPTIONS: { id: GuidedIntentId; label: string; icon: keyof typeof Ionicons.glyphMap }[] = [
   { id: 'call_book', label: 'Gọi / đặt lịch', icon: 'call' },
@@ -36,7 +37,7 @@ export function IntentEntryModal({ visible, onSelectIntent, onSkip }: Props) {
                   style={({ pressed }) => [styles.option, pressed && { opacity: 0.88 }]}
                 >
                   <View style={styles.optionIcon}>
-                    <Ionicons name={opt.icon} size={22} color="#7A5A1C" />
+                    <Ionicons name={opt.icon} size={22} color={theme.colors.SignatureGold} />
                   </View>
                   <Text style={styles.optionLabel}>{opt.label}</Text>
                 </Pressable>
@@ -55,7 +56,7 @@ export function IntentEntryModal({ visible, onSelectIntent, onSkip }: Props) {
 const styles = StyleSheet.create({
   backdrop: {
     flex: 1,
-    backgroundColor: 'rgba(26, 22, 18, 0.52)',
+    backgroundColor: theme.colors.overlay.dim,
     justifyContent: 'center',
     paddingHorizontal: 18,
   },
@@ -64,18 +65,17 @@ const styles = StyleSheet.create({
     borderRadius: 24,
     padding: 20,
     borderWidth: 1,
-    borderColor: 'rgba(212,175,55,0.45)',
+    borderColor: theme.colors.glass.border,
   },
   question: {
-    fontSize: 22,
+    ...theme.typeScale.h2,
     fontFamily: FontFamily.extrabold,
     color: Colors.text,
     textAlign: 'center',
     marginBottom: 8,
   },
   sub: {
-    fontSize: 13,
-    lineHeight: 20,
+    ...theme.typeScale.body,
     fontFamily: FontFamily.regular,
     color: Colors.textSoft,
     textAlign: 'center',
@@ -93,9 +93,9 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     paddingVertical: 14,
     paddingHorizontal: 10,
-    backgroundColor: 'rgba(255,255,255,0.72)',
+    backgroundColor: theme.colors.executive.card,
     borderWidth: 1,
-    borderColor: 'rgba(212,175,55,0.28)',
+    borderColor: theme.colors.glass.borderSoft,
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
@@ -104,12 +104,12 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: 'rgba(212,175,55,0.15)',
+    backgroundColor: theme.colors.overlay.ringSoft,
     alignItems: 'center',
     justifyContent: 'center',
   },
   optionLabel: {
-    fontSize: 14,
+    ...theme.typeScale.body,
     fontFamily: FontFamily.semibold,
     color: Colors.text,
     textAlign: 'center',
@@ -121,8 +121,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
   },
   skipText: {
-    fontSize: 14,
+    ...theme.typeScale.body,
     fontFamily: FontFamily.medium,
-    color: 'rgba(90,70,40,0.65)',
+    color: theme.colors.text.secondary,
   },
 });

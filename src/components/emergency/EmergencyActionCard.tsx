@@ -1,6 +1,8 @@
 import React from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import type { EmergencyType } from '../../services/emergency/emergencyPhrasePacks';
+import { theme } from '../../theme/theme';
+import { FontFamily } from '../../theme/typography';
 
 type Props = {
   type: EmergencyType;
@@ -24,31 +26,31 @@ export const EmergencyActionCard: React.FC<Props> = ({ type, title, subtitle, ac
 const styles = StyleSheet.create({
   card: {
     width: '48%',
-    backgroundColor: '#111827',
+    backgroundColor: theme.colors.GraphiteBlue,
     borderRadius: 14,
     paddingHorizontal: 12,
     paddingVertical: 14,
     minHeight: 104,
     justifyContent: 'center',
     borderWidth: 1,
-    borderColor: '#374151',
+    borderColor: theme.colors.glass.border,
   },
   active: {
-    borderColor: '#EF4444',
-    backgroundColor: '#2B0E0E',
+    borderColor: theme.colors.RouteError,
+    backgroundColor: theme.hybrid.chipErrorBg,
   },
   pressed: {
     opacity: 0.88,
   },
   title: {
-    color: '#FFFFFF',
-    fontWeight: '800',
-    fontSize: 17,
+    color: theme.colors.CeolWhite,
+    ...theme.typeScale.h2,
+    fontFamily: FontFamily.bold,
     marginBottom: 6,
   },
   sub: {
-    color: '#E5E7EB',
-    fontSize: 12,
-    lineHeight: 17,
+    color: theme.colors.text.secondary,
+    ...theme.typeScale.caption,
+    fontFamily: FontFamily.semibold,
   },
 });

@@ -42,7 +42,7 @@ export function buildLifeOSActions(
       });
     },
     onPressCallAssist: () => {
-      navigation.navigate('Tabs', { screen: 'LeTan' });
+      navigation.navigate('Tabs', { screen: 'Concierge' });
     },
     onPressFindServices: () => {
       if (LAUNCH_PILOT_CONFIG.enableRadarSurface) {

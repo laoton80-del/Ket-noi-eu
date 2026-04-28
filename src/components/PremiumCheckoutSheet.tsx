@@ -1,6 +1,12 @@
 import { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, Alert, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
-import { PlatformPay, PlatformPayButton, useStripe } from '@stripe/stripe-react-native';
+import {
+  PlatformPay,
+  PlatformPayButton,
+  useStripe,
+  type PlatformPayCartSummaryItem,
+  type PlatformPayConfirmParams,
+} from '../providers/StripeFacade';
 import * as Haptics from 'expo-haptics';
 import Animated, { FadeInDown, FadeOutDown } from 'react-native-reanimated';
 import { APP_BRAND } from '../config/appBrand';
@@ -139,7 +145,7 @@ export function PremiumCheckoutSheet({
       return;
     }
     const amountStr = formatStripeCartAmount(amountValue, currencyCode);
-    const cartItems: PlatformPay.CartSummaryItem[] = [
+    const cartItems: PlatformPayCartSummaryItem[] = [
       {
         paymentType: PlatformPay.PaymentType.Immediate,
         label: `${APP_BRAND.paymentsDisplayName} · Credits`,
@@ -151,7 +157,7 @@ export function PremiumCheckoutSheet({
     const cur = currencyCode.toUpperCase();
 
     try {
-      const params: PlatformPay.ConfirmParams =
+      const params: PlatformPayConfirmParams =
         Platform.OS === 'ios'
               ? {
                   applePay: {
@@ -197,10 +203,6 @@ export function PremiumCheckoutSheet({
     paymentAuthOk,
     platformPayClientSecret,
   ]);
-
-  if (__DEV__) {
-    console.log('[diag][PremiumCheckoutSheet] render (post-hooks)', { visible });
-  }
 
   if (!visible) return null;
 
@@ -311,7 +313,7 @@ const styles = StyleSheet.create({
     borderColor: theme.hybrid.signalSubtleBorder,
     backgroundColor: theme.colors.surfaceElevated,
     padding: theme.spacing.md,
-    shadowColor: '#000',
+    shadowColor: theme.colors.glass.shadow,
     shadowOffset: theme.elevation.modal.shadowOffset,
     shadowOpacity: theme.elevation.modal.shadowOpacity,
     shadowRadius: theme.elevation.modal.shadowRadius,

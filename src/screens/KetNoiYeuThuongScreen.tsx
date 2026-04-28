@@ -2,7 +2,7 @@ import React from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { APP_BRAND } from '../config/appBrand';
-import { Colors } from '../theme/colors';
+import { theme } from '../theme/theme';
 import { FontFamily } from '../theme/typography';
 
 type Section = {
@@ -89,26 +89,26 @@ export function KetNoiYeuThuongScreen() {
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: Colors.background },
-  container: { flex: 1, backgroundColor: Colors.background },
+  safe: { flex: 1, backgroundColor: theme.colors.DeepInkNavy },
+  container: { flex: 1, backgroundColor: theme.colors.DeepInkNavy },
   content: { paddingHorizontal: 16, paddingBottom: 32 },
   brand: {
-    fontSize: 13,
-    color: Colors.textSoft,
+    ...theme.typeScale.caption,
+    color: theme.colors.text.secondary,
     fontFamily: FontFamily.regular,
     marginTop: 4,
     marginBottom: 6,
   },
   title: {
-    fontSize: 30,
-    color: Colors.text,
+    ...theme.typeScale.h1,
+    color: theme.colors.text.primary,
     fontFamily: FontFamily.extrabold,
     marginBottom: 10,
   },
   hero: {
-    fontSize: 15,
+    ...theme.typeScale.body,
     lineHeight: 23,
-    color: Colors.text,
+    color: theme.colors.text.primary,
     fontFamily: FontFamily.regular,
     marginBottom: 10,
   },
@@ -116,20 +116,20 @@ const styles = StyleSheet.create({
     marginTop: 10,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: Colors.glassBorder,
-    backgroundColor: Colors.glass,
+    borderColor: theme.colors.glass.border,
+    backgroundColor: theme.colors.glass.surface,
     padding: 14,
   },
   cardTitle: {
-    fontSize: 17,
-    color: Colors.text,
+    ...theme.typeScale.body,
+    color: theme.colors.text.primary,
     fontFamily: FontFamily.bold,
     marginBottom: 8,
   },
   cardLine: {
-    fontSize: 14,
+    ...theme.typeScale.body,
     lineHeight: 22,
-    color: Colors.textSoft,
+    color: theme.colors.text.secondary,
     fontFamily: FontFamily.regular,
     marginBottom: 6,
   },
@@ -137,14 +137,14 @@ const styles = StyleSheet.create({
     marginTop: 14,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: Colors.glassBorder,
-    backgroundColor: 'rgba(255, 248, 232, 0.75)',
+    borderColor: theme.colors.glass.border,
+    backgroundColor: theme.colors.glass.surfaceStrong,
     padding: 14,
   },
   quote: {
-    fontSize: 16,
+    ...theme.typeScale.body,
     lineHeight: 24,
-    color: Colors.text,
+    color: theme.colors.text.primary,
     fontFamily: FontFamily.semibold,
     textAlign: 'center',
   },
@@ -153,14 +153,14 @@ const styles = StyleSheet.create({
     borderRadius: 999,
     minHeight: 42,
     borderWidth: 1,
-    borderColor: Colors.glassBorder,
+    borderColor: theme.colors.glass.border,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: Colors.glass,
+    backgroundColor: theme.colors.glass.surface,
   },
   softCtaText: {
-    color: Colors.primary,
-    fontSize: 14,
+    color: theme.colors.primary,
+    ...theme.typeScale.body,
     fontFamily: FontFamily.bold,
   },
 });

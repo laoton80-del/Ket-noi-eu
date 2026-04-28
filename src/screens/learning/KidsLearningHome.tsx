@@ -28,7 +28,7 @@ export function KidsLearningHome() {
           Khu học tiếng Việt cho bé (daily lesson, gamification, story mode).
         </Text>
         <Pressable
-          onPress={() => navigation.navigate('Tabs', { screen: 'HocTap' })}
+          onPress={() => navigation.navigate('Tabs', { screen: 'Academy' })}
           style={({ pressed }) => [styles.cta, pressed && { opacity: 0.86 }]}
         >
           <Text style={styles.ctaText}>Bắt đầu học</Text>
@@ -39,7 +39,7 @@ export function KidsLearningHome() {
         >
           <Text style={styles.ctaText}>Quet bai tap cho be</Text>
         </Pressable>
-        {loading ? <ActivityIndicator style={{ marginTop: 12 }} color="#2563EB" /> : null}
+        {loading ? <ActivityIndicator style={{ marginTop: 12 }} color={theme.colors.SignalBlue} /> : null}
         {hw ? (
           <View style={styles.hwCard}>
             <Text style={styles.hwTitle}>Tro ly bai tap: {hw.subject}</Text>
@@ -70,7 +70,7 @@ export function KidsLearningHome() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: theme.colors.background,
+    backgroundColor: theme.colors.DeepInkNavy,
     padding: 16,
   },
   card: {
@@ -82,14 +82,13 @@ const styles = StyleSheet.create({
     padding: 14,
   },
   title: {
-    fontSize: 22,
+    ...theme.typeScale.h2,
     color: theme.colors.text.primary,
-    fontFamily: FontFamily.extrabold,
+    fontFamily: FontFamily.bold,
     marginBottom: 6,
   },
   subtitle: {
-    fontSize: 13,
-    lineHeight: 20,
+    ...theme.typeScale.body,
     color: theme.colors.text.secondary,
     fontFamily: FontFamily.regular,
     marginBottom: 12,
@@ -97,18 +96,18 @@ const styles = StyleSheet.create({
   cta: {
     minHeight: 42,
     borderRadius: theme.radius.sm,
-    backgroundColor: '#2563EB',
+    backgroundColor: theme.colors.SignalBlue,
     alignItems: 'center',
     justifyContent: 'center',
   },
   ctaText: {
-    color: '#FFFFFF',
-    fontSize: 14,
+    color: theme.colors.CeolWhite,
+    ...theme.typeScale.body,
     fontFamily: FontFamily.bold,
   },
   scanCta: {
     marginTop: 10,
-    backgroundColor: '#0F766E',
+    backgroundColor: theme.colors.SoftEmerald,
   },
   hwCard: {
     marginTop: 12,
@@ -119,14 +118,13 @@ const styles = StyleSheet.create({
     padding: 10,
   },
   hwTitle: {
-    fontSize: 14,
+    ...theme.typeScale.body,
     fontFamily: FontFamily.bold,
     color: theme.colors.text.primary,
     marginBottom: 6,
   },
   hwText: {
-    fontSize: 13,
-    lineHeight: 19,
+    ...theme.typeScale.body,
     color: theme.colors.text.secondary,
     fontFamily: FontFamily.regular,
   },

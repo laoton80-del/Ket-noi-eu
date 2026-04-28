@@ -5,7 +5,7 @@ import type { FirestoreTimestamp } from './firestoreTypes';
  *
  * **Phase 3:** `grocery_retail` and `grocery_wholesale` are **distinct** product/engine semantics (đổ hàng / sỉ vs tạp hoá).
  * `hospitality_stay` is room/night stay (inquiry vs billable reservation is explicit on booking + summaries).
- * **`potraviny`** remains for **legacy tenants** only — same fulfillment family as retail; migrate off when Firestore allows.
+ * Legacy retail rows should map to `grocery_retail` at ingestion boundaries.
  * Bridge table: `b2bVerticalBridge.fulfillmentEngineFamily`, marketplace map: `b2bMarketplaceAdapter`.
  */
 export type B2BBusinessType =
@@ -13,8 +13,7 @@ export type B2BBusinessType =
   | 'restaurant'
   | 'grocery_retail'
   | 'grocery_wholesale'
-  | 'hospitality_stay'
-  | 'potraviny';
+  | 'hospitality_stay';
 
 /** Mirrors B2C wallet geo groups for usage debit. */
 export type B2BPricingGroup = 'group1' | 'group2';
@@ -94,7 +93,7 @@ export type BusinessLocation = {
   openingHours?: B2BOpeningDay[];
   /** Location-specific inbound numbers (subset or override). */
   inboundPhoneNumbers?: string[];
-  /** Potraviny: default prep time minutes. */
+  /** Retail fulfillment: default prep time minutes. */
   defaultPrepMinutes?: number;
   createdAt: FirestoreTimestamp;
   updatedAt: FirestoreTimestamp;
@@ -129,7 +128,7 @@ export type B2BResourceKind =
   | 'nail_table'
   | 'foot_chair'
   | 'restaurant_table'
-  | 'potraviny_fulfillment_slot'
+  | 'legacy_retail_fulfillment_slot'
   | 'grocery_retail_fulfillment_slot'
   | 'grocery_wholesale_fulfillment_slot'
   | 'hospitality_room';

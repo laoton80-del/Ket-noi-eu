@@ -2,7 +2,7 @@ import type { PricingTierId } from '../config/countryPacks';
 import type { DocumentVaultItem } from '../services/DocumentAlarmService';
 
 export type ResidencyStatus = 'du_hoc' | 'lao_dong' | 'dinh_cu' | 'ti_nan';
-export type SubscriptionPlan = 'free' | 'premium' | 'combo';
+export type SubscriptionPlan = 'free' | 'premium' | 'pack';
 export type UserSegment = 'adult' | 'child';
 
 export type AuthUser = {

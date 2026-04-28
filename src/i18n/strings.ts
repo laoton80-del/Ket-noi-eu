@@ -115,7 +115,7 @@ type ProfileStrings = {
   residencyStatusTiNan: string;
   planFree: string;
   planPremium: string;
-  planCombo: string;
+  planPack: string;
   settingsTitle: string;
   settingLanguage: string;
   settingNotifications: string;
@@ -163,8 +163,8 @@ type ErrorsStrings = {
   outOfCredits: string;
 };
 
-/** Wallet / top-up alerts and inline copy (`ComboWalletScreen`). */
-type ComboWalletStrings = {
+/** Wallet / top-up alerts and inline copy (`GlobalWalletScreen`). */
+type GlobalWalletStrings = {
   walletLockedTitle: string;
   walletLockedBody: string;
   backendMissingTitle: string;
@@ -232,13 +232,13 @@ type AppStrings = {
   profile: ProfileStrings;
   voice: VoiceStrings;
   errors: ErrorsStrings;
-  comboWallet: ComboWalletStrings;
+  globalWallet: GlobalWalletStrings;
   nav: {
-    countryTab: string;
-    utilityTab: string;
-    learningTab: string;
+    discoverTab: string;
+    servicesTab: string;
+    academyTab: string;
     communityTab: string;
-    receptionTab: string;
+    conciergeTab: string;
     profileTab: string;
   };
 };
@@ -396,7 +396,7 @@ export const STRINGS_BY_LANGUAGE: Record<SupportedLanguage, AppStrings> = {
       residencyStatusTiNan: 'Tị nạn',
       planFree: 'Free',
       planPremium: 'Premium',
-      planCombo: 'Combo',
+      planPack: 'Pack',
       settingsTitle: 'Cài đặt ứng dụng',
       settingLanguage: 'Ngôn ngữ',
       settingNotifications: 'Thông báo',
@@ -440,7 +440,7 @@ export const STRINGS_BY_LANGUAGE: Record<SupportedLanguage, AppStrings> = {
     errors: {
       outOfCredits: 'Bạn đã hết Credits. Vui lòng nạp thêm để tiếp tục sử dụng CSKH Minh Khang.',
     },
-    comboWallet: {
+    globalWallet: {
       walletLockedTitle: 'Ví đang khóa',
       walletLockedBody: 'Vui lòng xác thực để tiếp tục thanh toán.',
       backendMissingTitle: 'Chưa cấu hình máy chủ',
@@ -495,11 +495,11 @@ export const STRINGS_BY_LANGUAGE: Record<SupportedLanguage, AppStrings> = {
       emptyHistory: 'Chưa có giao dịch nào.',
     },
     nav: {
-      countryTab: 'Quốc gia',
-      utilityTab: 'Tiện ích',
-      learningTab: 'Học tập',
+      discoverTab: 'Khám phá',
+      servicesTab: 'Dịch vụ',
+      academyTab: 'Học viện',
       communityTab: 'Cộng đồng',
-      receptionTab: 'Lễ tân',
+      conciergeTab: 'Trợ lý',
       profileTab: 'Cá nhân',
     },
   },
@@ -654,7 +654,7 @@ export const STRINGS_BY_LANGUAGE: Record<SupportedLanguage, AppStrings> = {
       residencyStatusTiNan: 'Refugee',
       planFree: 'Free',
       planPremium: 'Premium',
-      planCombo: 'Combo',
+      planPack: 'Pack',
       settingsTitle: 'App Settings',
       settingLanguage: 'Language',
       settingNotifications: 'Notifications',
@@ -698,7 +698,7 @@ export const STRINGS_BY_LANGUAGE: Record<SupportedLanguage, AppStrings> = {
     errors: {
       outOfCredits: 'You are out of Credits. Please top up to continue using Minh Khang support.',
     },
-    comboWallet: {
+    globalWallet: {
       walletLockedTitle: 'Wallet is locked',
       walletLockedBody: 'Please authenticate to continue checkout.',
       backendMissingTitle: 'Backend not configured',
@@ -753,11 +753,11 @@ export const STRINGS_BY_LANGUAGE: Record<SupportedLanguage, AppStrings> = {
       emptyHistory: 'No transactions yet.',
     },
     nav: {
-      countryTab: 'Countries',
-      utilityTab: 'Utilities',
-      learningTab: 'Learning',
+      discoverTab: 'Discover',
+      servicesTab: 'Services',
+      academyTab: 'Academy',
       communityTab: 'Community',
-      receptionTab: 'Reception',
+      conciergeTab: 'Concierge',
       profileTab: 'Profile',
     },
   },
@@ -890,7 +890,7 @@ export const STRINGS_BY_LANGUAGE: Record<SupportedLanguage, AppStrings> = {
       post1Body: 'Dokoncil jsem prodlouzeni pobytu. Kdo chce checklist, poslu ho.',
       post1Meta: 'pred 2 h',
       post2Author: 'Linh - Berlin',
-      post2Body: 'O vikendu je vietnamsky trh v Berline. Skvele misto na domaci potraviny.',
+      post2Body: 'O vikendu je vietnamsky trh v Berline. Skvele misto na domaci retail/taphoa.',
       post2Meta: 'dnes',
     },
     profile: {
@@ -912,7 +912,7 @@ export const STRINGS_BY_LANGUAGE: Record<SupportedLanguage, AppStrings> = {
       residencyStatusTiNan: 'Uprchlik',
       planFree: 'Free',
       planPremium: 'Premium',
-      planCombo: 'Combo',
+      planPack: 'Pack',
       settingsTitle: 'Nastaveni aplikace',
       settingLanguage: 'Jazyk',
       settingNotifications: 'Notifikace',
@@ -956,7 +956,7 @@ export const STRINGS_BY_LANGUAGE: Record<SupportedLanguage, AppStrings> = {
     errors: {
       outOfCredits: 'Nemate zadne Credits. Dobijte je pro dalsi pouziti podpory Minh Khang.',
     },
-    comboWallet: {
+    globalWallet: {
       walletLockedTitle: 'Penezenka je uzamcena',
       walletLockedBody: 'Pro pokracovani v platbe se overte.',
       backendMissingTitle: 'Backend neni nakonfigurovan',
@@ -1011,11 +1011,11 @@ export const STRINGS_BY_LANGUAGE: Record<SupportedLanguage, AppStrings> = {
       emptyHistory: 'Zatim zadne transakce.',
     },
     nav: {
-      countryTab: 'Zeme',
-      utilityTab: 'Nastroje',
-      learningTab: 'Vyuka',
+      discoverTab: 'Objevit',
+      servicesTab: 'Sluzby',
+      academyTab: 'Akademie',
       communityTab: 'Komunita',
-      receptionTab: 'Recepce',
+      conciergeTab: 'Asistent',
       profileTab: 'Profil',
     },
   },
@@ -1170,7 +1170,7 @@ export const STRINGS_BY_LANGUAGE: Record<SupportedLanguage, AppStrings> = {
       residencyStatusTiNan: 'Fluchtstatus',
       planFree: 'Free',
       planPremium: 'Premium',
-      planCombo: 'Combo',
+      planPack: 'Pack',
       settingsTitle: 'App-Einstellungen',
       settingLanguage: 'Sprache',
       settingNotifications: 'Benachrichtigungen',
@@ -1215,7 +1215,7 @@ export const STRINGS_BY_LANGUAGE: Record<SupportedLanguage, AppStrings> = {
     errors: {
       outOfCredits: 'Sie haben keine Credits mehr. Bitte laden Sie auf, um Minh Khang weiter zu nutzen.',
     },
-    comboWallet: {
+    globalWallet: {
       walletLockedTitle: 'Wallet gesperrt',
       walletLockedBody: 'Bitte authentifizieren Sie sich, um fortzufahren.',
       backendMissingTitle: 'Backend nicht konfiguriert',
@@ -1271,11 +1271,11 @@ export const STRINGS_BY_LANGUAGE: Record<SupportedLanguage, AppStrings> = {
       emptyHistory: 'Noch keine Transaktionen.',
     },
     nav: {
-      countryTab: 'Land',
-      utilityTab: 'Tools',
-      learningTab: 'Lernen',
+      discoverTab: 'Entdecken',
+      servicesTab: 'Dienste',
+      academyTab: 'Akademie',
       communityTab: 'Community',
-      receptionTab: 'Empfang',
+      conciergeTab: 'Concierge',
       profileTab: 'Profil',
     },
   },
@@ -1285,7 +1285,6 @@ export const STRINGS_BY_LANGUAGE: Record<SupportedLanguage, AppStrings> = {
 export const STRINGS_GLOBAL = STRINGS_BY_LANGUAGE;
 
 /** @deprecated Use `STRINGS_GLOBAL`, `STRINGS_BY_LANGUAGE`, or `getStrings`. */
-export const STRINGS_V9 = STRINGS_BY_LANGUAGE;
 
 export function getStrings(languageCode: string): AppStrings {
   const key = languageCode.toLowerCase() as SupportedLanguage;

@@ -70,9 +70,12 @@ function persistWalletState() {
   void AsyncStorage.setItem(WALLET_STORAGE_KEY, JSON.stringify(walletState));
 }
 
-async function callWalletOps<T = unknown>(payload: Record<string, unknown>): Promise<T> {
+async function callWalletOps<T = unknown>(
+  payload: Record<string, unknown>,
+  options?: { forceRefreshToken?: boolean }
+): Promise<T> {
   if (!BACKEND_API_BASE) throw new Error('backend_api_base_missing');
-  const token = await getWalletIdToken();
+  const token = await getWalletIdToken(options?.forceRefreshToken === true);
   if (!token) throw new Error('wallet_auth_token_missing');
   const headers = await mergeTrustBackendHeaders({
     'Content-Type': 'application/json',
@@ -194,16 +197,49 @@ export async function chargeTrustedService(params: {
   }
 }
 
-/** Grant credits only once per immutable payment event id (server ledger). */
-export async function topupCreditsServer(amount: number, paymentEventId: string): Promise<{ ok: boolean }> {
-  const pei = paymentEventId.trim();
-  if (!pei) return { ok: false };
+/** Grant credits based on server pack truth table; idempotent by immutable key. */
+export async function topupCreditsServer(packId: string, idempotencyKey: string): Promise<{ ok: boolean }> {
+  const pid = packId.trim();
+  const key = idempotencyKey.trim();
+  if (!pid || !key) return { ok: false };
   try {
-    const out = await callWalletOps<{ ok: boolean }>({ op: 'topup', amount, paymentEventId: pei });
+    const out = await callWalletOps<{ ok: boolean }>(
+      { op: 'topup', packId: pid, idempotencyKey: key },
+      { forceRefreshToken: true }
+    );
     if (!out.ok) return { ok: false };
     await syncWalletFromServer();
     return { ok: true };
   } catch {
     return { ok: false };
+  }
+}
+
+export async function chargeWalletServer(
+  serviceId: string,
+  idempotencyKey: string
+): Promise<{ ok: boolean; error?: string }> {
+  const sid = serviceId.trim();
+  const key = idempotencyKey.trim();
+  if (!sid) return { ok: false, error: 'service_id_required' };
+  if (!key) return { ok: false, error: 'idempotency_key_required' };
+  try {
+    const out = await callWalletOps<{ ok: boolean; error?: string }>(
+      { op: 'charge', serviceId: sid, idempotencyKey: key },
+      { forceRefreshToken: true }
+    );
+    if (!out.ok) {
+      return {
+        ok: false,
+        error: typeof out.error === 'string' ? out.error : 'charge_failed',
+      };
+    }
+    await syncWalletFromServer();
+    return { ok: true };
+  } catch (error) {
+    return {
+      ok: false,
+      error: error instanceof Error ? error.message : 'charge_failed',
+    };
   }
 }

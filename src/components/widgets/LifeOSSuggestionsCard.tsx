@@ -2,6 +2,8 @@ import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { AnimatedPressable } from './AnimatedPressable';
 import { WidgetCard } from './WidgetCard';
+import { theme } from '../../theme/theme';
+import { FontFamily } from '../../theme/typography';
 
 export type LifeOSSuggestionsCardProps = {
   lines: string[];
@@ -31,29 +33,30 @@ export const LifeOSSuggestionsCard = React.memo(LifeOSSuggestionsCardComponent);
 
 const styles = StyleSheet.create({
   title: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#111827',
+    ...theme.typeScale.h2,
+    fontFamily: FontFamily.bold,
+    color: theme.colors.GraphiteBlue,
     marginBottom: 6,
   },
   sub: {
-    fontSize: 13,
-    color: '#6B7280',
+    ...theme.typeScale.body,
+    color: theme.colors.text.secondary,
+    fontFamily: FontFamily.regular,
     marginBottom: 12,
-    lineHeight: 18,
   },
   list: { gap: 8 },
   row: { flexDirection: 'row', alignItems: 'flex-start', gap: 8, borderRadius: 10, paddingVertical: 2 },
   bullet: {
-    fontSize: 14,
-    color: '#9CA3AF',
+    ...theme.typeScale.body,
+    color: theme.colors.text.secondary,
+    fontFamily: FontFamily.semibold,
     marginTop: 1,
     width: 14,
   },
   line: {
     flex: 1,
-    fontSize: 14,
-    color: '#374151',
-    lineHeight: 20,
+    ...theme.typeScale.body,
+    color: theme.colors.GraphiteBlue,
+    fontFamily: FontFamily.regular,
   },
 });

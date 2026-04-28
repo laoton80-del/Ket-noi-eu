@@ -2,6 +2,8 @@ import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { AnimatedPressable } from './AnimatedPressable';
 import { WidgetCard } from './WidgetCard';
+import { theme } from '../../theme/theme';
+import { FontFamily } from '../../theme/typography';
 
 type Props = {
   visible: boolean;
@@ -34,12 +36,12 @@ const LifeOSPostActionCardComponent: React.FC<Props> = ({ visible, lines, onDism
 export const LifeOSPostActionCard = React.memo(LifeOSPostActionCardComponent);
 
 const styles = StyleSheet.create({
-  title: { fontSize: 17, fontWeight: '700', color: '#111827', marginBottom: 4 },
-  sub: { fontSize: 13, color: '#6B7280', marginBottom: 10, lineHeight: 18 },
+  title: { ...theme.typeScale.h2, fontFamily: FontFamily.bold, color: theme.colors.GraphiteBlue, marginBottom: 4 },
+  sub: { ...theme.typeScale.body, fontFamily: FontFamily.regular, color: theme.colors.text.secondary, marginBottom: 10 },
   list: { gap: 8, marginBottom: 12 },
   row: { flexDirection: 'row', gap: 8, alignItems: 'flex-start' },
-  bullet: { fontSize: 14, color: '#111827', fontWeight: '700' },
-  line: { flex: 1, fontSize: 14, color: '#374151', lineHeight: 20 },
+  bullet: { ...theme.typeScale.body, color: theme.colors.GraphiteBlue, fontFamily: FontFamily.bold },
+  line: { flex: 1, ...theme.typeScale.body, color: theme.colors.GraphiteBlue, fontFamily: FontFamily.regular },
   dismiss: { alignSelf: 'flex-start', paddingVertical: 8, paddingHorizontal: 4 },
-  dismissText: { fontSize: 14, fontWeight: '600', color: '#2563EB' },
+  dismissText: { ...theme.typeScale.body, fontFamily: FontFamily.semibold, color: theme.colors.SignalBlue },
 });

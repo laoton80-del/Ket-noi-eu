@@ -3,6 +3,7 @@ import { StyleSheet, Text, View } from 'react-native';
 import type { UsageHistoryItem } from '../../services/history';
 import { Colors } from '../../theme/colors';
 import { FontFamily } from '../../theme/typography';
+import { theme } from '../../theme/theme';
 
 type Props = {
   items: UsageHistoryItem[];
@@ -44,6 +45,6 @@ const styles = StyleSheet.create({
   row: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   type: { fontSize: 13, color: Colors.textSoft, fontFamily: FontFamily.medium },
   status: { fontSize: 13, fontFamily: FontFamily.semibold },
-  ok: { color: '#166534' },
-  fail: { color: '#991B1B' },
+  ok: { color: theme.colors.SoftEmerald },
+  fail: { color: theme.colors.RouteError },
 });

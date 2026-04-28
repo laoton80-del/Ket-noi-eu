@@ -8,7 +8,7 @@ import type { RedirectTarget } from '../context/AuthContext';
  * - Leona legal / booking assist (`LeonaCall`)
  * - Vault + OCR + expiry reminders (`Vault`, `DocumentAlarmService`)
  * - LifeOS hub (`LifeOSDashboard`)
- * - Wallet / top-up (`Wallet` / `ComboWalletScreen`)
+ * - Wallet / top-up (`Wallet` / `GlobalWalletScreen`)
  * - Emergency SOS (`EmergencySOS`)
  * - Le Tan reception tab (AI concierge — launch core)
  *

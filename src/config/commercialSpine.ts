@@ -27,7 +27,6 @@ export { GLOBAL_WALLET_PACKAGES, TIER_PRICE_MULTIPLIER, usdListPriceForPackageAt
 export type { WalletPackagePlan, WalletPriceCard } from './Pricing';
 export {
   formatMoneyByCurrency,
-  getComboPricesByCountry,
   getLocalPriceMeta,
   getMarketTierByCountry,
   getPricingByCountry,

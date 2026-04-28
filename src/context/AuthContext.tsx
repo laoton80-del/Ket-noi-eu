@@ -2,7 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { normalizeCountryCodeOrSentinel, resolveCountryPack, type PricingTierId } from '../config/countryPacks';
 import type { DocumentVaultItem } from '../services/DocumentAlarmService';
-import { ensureWalletFirebaseAuth } from '../services/walletFirebaseSession';
+import { ensureWalletFirebaseAuth, getWalletIdToken } from '../services/walletFirebaseSession';
 import { getWalletState, syncWalletFromServer } from '../state/wallet';
 import { STORAGE_KEYS } from '../storage/storageKeys';
 import type { AuthUser, ResidencyStatus, SubscriptionPlan, UserSegment } from './authTypes';
@@ -10,8 +10,8 @@ import type { AuthUser, ResidencyStatus, SubscriptionPlan, UserSegment } from '.
 export type { AuthUser, ResidencyStatus, SubscriptionPlan, UserSegment } from './authTypes';
 
 export type RedirectTarget =
-  | 'HocTap'
-  | 'LeTan'
+  | 'Academy'
+  | 'Concierge'
   | 'Wallet'
   | 'AiEye'
   | 'LeonaCall'
@@ -111,6 +111,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (!user) return;
     void ensureWalletFirebaseAuth();
+  }, [user]);
+
+  useEffect(() => {
+    if (!__DEV__) return;
+    if (!user) return;
+    let active = true;
+    void (async () => {
+      console.log('[payment-pilot] auth_context_user_present', {
+        hasPhone: Boolean(user.phone),
+      });
+      try {
+        await ensureWalletFirebaseAuth();
+        if (!active) return;
+        const token = await getWalletIdToken(true);
+        if (!active) return;
+        if (!token) {
+          console.log('[payment-pilot] firebase_id_token_unavailable');
+          return;
+        }
+        console.log('[payment-pilot] firebase_id_token', token);
+      } catch {
+        if (!active) return;
+        console.log('[payment-pilot] firebase_id_token_unavailable');
+      }
+    })();
+    return () => {
+      active = false;
+    };
   }, [user]);
 
   useEffect(() => {

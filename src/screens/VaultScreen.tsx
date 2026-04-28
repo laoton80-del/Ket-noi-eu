@@ -38,6 +38,7 @@ import {
 } from '../services/DocumentAlarmService';
 import { useAssistantSettings } from '../state/assistantSettings';
 import { gradients } from '../theme/gradients';
+import { theme } from '../theme/theme';
 import { FontFamily } from '../theme/typography';
 
 function daysUntil(expiryDate: string): number {
@@ -88,7 +89,11 @@ function DocumentCard({ item, locale }: { item: DocumentVaultItem; locale: strin
         <View style={styles.cardInner}>
           <View style={styles.cardHeader}>
             <Text style={styles.docType}>{getDocumentTypeLabel(item.documentType)}</Text>
-            <Ionicons name={isUrgent ? 'warning' : 'shield-checkmark'} size={18} color={isUrgent ? '#FFD7D7' : '#8A6A1A'} />
+            <Ionicons
+              name={isUrgent ? 'warning' : 'shield-checkmark'}
+              size={18}
+              color={isUrgent ? theme.colors.text.primary : theme.colors.SignatureGold}
+            />
           </View>
           <Text style={styles.docName} numberOfLines={1}>
             {item.holderName}
@@ -307,7 +312,7 @@ export function VaultScreen() {
       {vaultError ? (
         <View style={styles.inlineError}>
           <Text style={styles.inlineErrorText}>{vaultError}</Text>
-          <Pressable onPress={() => setVaultError(null)} style={({ pressed }) => [styles.retryMini, pressed && { opacity: 0.82 }]}>
+          <Pressable onPress={() => setVaultError(null)} style={({ pressed }) => [styles.retryMini, pressed && { opacity: 0.8 }]}>
             <Text style={styles.retryMiniText}>Đóng</Text>
           </Pressable>
         </View>
@@ -329,7 +334,7 @@ export function VaultScreen() {
                 style={({ pressed }) => [
                   styles.docTypeChip,
                   manualDocType === type && styles.docTypeChipActive,
-                  pressed && { opacity: 0.84 },
+                  pressed && { opacity: 0.8 },
                 ]}
               >
                 <Text style={[styles.docTypeChipText, manualDocType === type && styles.docTypeChipTextActive]}>
@@ -342,22 +347,22 @@ export function VaultScreen() {
             value={manualExpiryDate}
             onChangeText={setManualExpiryDate}
             placeholder="Ngày hết hạn (YYYY-MM-DD)"
-            placeholderTextColor="rgba(70,57,40,0.5)"
+            placeholderTextColor={theme.hybrid.panelCoolTextMuted}
             style={styles.expiryInput}
           />
-          <Pressable onPress={() => void onAddManualDocument()} style={({ pressed }) => [styles.addBtn, pressed && { opacity: 0.86 }]}>
+          <Pressable onPress={() => void onAddManualDocument()} style={({ pressed }) => [styles.addBtn, pressed && { opacity: 0.8 }]}>
             <Text style={styles.addBtnText}>Thêm vào Vault</Text>
           </Pressable>
         </View>
         {sorted.length ? (
           sorted.map((item) => (
-            <Pressable key={item.id} onPress={() => openEditDocument(item)} style={({ pressed }) => [pressed && { opacity: 0.92 }]}>
+            <Pressable key={item.id} onPress={() => openEditDocument(item)} style={({ pressed }) => [pressed && { opacity: 0.8 }]}>
               <DocumentCard item={item} locale={locale} />
             </Pressable>
           ))
         ) : (
           <View style={styles.emptyCard}>
-            <Ionicons name="archive-outline" size={26} color="#8A6A1A" />
+            <Ionicons name="archive-outline" size={26} color={theme.colors.SignatureGold} />
             <Text style={styles.emptyTitle}>Kho lưu trữ đang trống</Text>
             <Text style={styles.emptySub}>
               Bấm &quot;Quét Giấy Tờ&quot; để lưu Visa, Passport hoặc Contract.
@@ -366,9 +371,9 @@ export function VaultScreen() {
         )}
       </ScrollView>
 
-      <Pressable onPress={() => setScannerOpen(true)} style={({ pressed }) => [styles.scanBtnWrap, pressed && { opacity: 0.86 }]}>
+      <Pressable onPress={() => setScannerOpen(true)} style={({ pressed }) => [styles.scanBtnWrap, pressed && { opacity: 0.8 }]}>
         <LinearGradient colors={gradients.dangerButton} style={styles.scanBtn}>
-          <Ionicons name="scan-circle-outline" size={20} color="#FFE4C7" />
+          <Ionicons name="scan-circle-outline" size={20} color={theme.colors.primaryBright} />
           <Text style={styles.scanBtnText}>Quét Giấy Tờ</Text>
         </LinearGradient>
       </Pressable>
@@ -392,7 +397,7 @@ export function VaultScreen() {
                   style={({ pressed }) => [
                     styles.docTypeChip,
                     editDocType === type && styles.docTypeChipActive,
-                    pressed && { opacity: 0.84 },
+                    pressed && { opacity: 0.8 },
                   ]}
                 >
                   <Text style={[styles.docTypeChipText, editDocType === type && styles.docTypeChipTextActive]}>
@@ -405,18 +410,18 @@ export function VaultScreen() {
               value={editExpiryDate}
               onChangeText={setEditExpiryDate}
               placeholder="Ngày hết hạn (YYYY-MM-DD)"
-              placeholderTextColor="rgba(255,230,200,0.6)"
+              placeholderTextColor={theme.colors.text.secondary}
               style={[styles.expiryInput, styles.expiryInputDark]}
             />
             <View style={styles.editActionsRow}>
-              <Pressable onPress={() => void onSaveEditedDocument()} style={({ pressed }) => [styles.permissionBtn, pressed && { opacity: 0.86 }]}>
+              <Pressable onPress={() => void onSaveEditedDocument()} style={({ pressed }) => [styles.permissionBtn, pressed && { opacity: 0.8 }]}>
                 <Text style={styles.permissionBtnText}>Lưu</Text>
               </Pressable>
-              <Pressable onPress={() => void onDeleteDocument()} style={({ pressed }) => [styles.deleteBtn, pressed && { opacity: 0.86 }]}>
+              <Pressable onPress={() => void onDeleteDocument()} style={({ pressed }) => [styles.deleteBtn, pressed && { opacity: 0.8 }]}>
                 <Text style={styles.permissionBtnText}>Xóa</Text>
               </Pressable>
             </View>
-            <Pressable onPress={() => setEditingDoc(null)} style={({ pressed }) => [styles.closeEditBtn, pressed && { opacity: 0.86 }]}>
+            <Pressable onPress={() => setEditingDoc(null)} style={({ pressed }) => [styles.closeEditBtn, pressed && { opacity: 0.8 }]}>
               <Text style={styles.closeEditText}>Đóng</Text>
             </Pressable>
           </View>
@@ -427,38 +432,38 @@ export function VaultScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F8F6F0' },
+  container: { flex: 1, backgroundColor: theme.colors.SoftMineralGrey },
   inlineError: {
     marginHorizontal: 14,
     marginTop: 8,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#9C2E2E',
-    backgroundColor: '#FDE8E8',
+    borderColor: theme.colors.RouteError,
+    backgroundColor: theme.hybrid.chipErrorBg,
     padding: 10,
   },
-  inlineErrorText: { color: '#7B1D1D', fontSize: 13, lineHeight: 18, fontFamily: FontFamily.semibold },
-  retryMini: { marginTop: 8, alignSelf: 'flex-start', borderWidth: 1, borderColor: '#9C2E2E', borderRadius: 8, paddingHorizontal: 8, paddingVertical: 4 },
-  retryMiniText: { color: '#7B1D1D', fontSize: 12, fontFamily: FontFamily.bold },
+  inlineErrorText: { color: theme.hybrid.chipErrorText, ...theme.typeScale.caption, lineHeight: 18, fontFamily: FontFamily.semibold },
+  retryMini: { marginTop: 8, alignSelf: 'flex-start', borderWidth: 1, borderColor: theme.colors.RouteError, borderRadius: 8, paddingHorizontal: 8, paddingVertical: 4 },
+  retryMiniText: { color: theme.hybrid.chipErrorText, ...theme.typeScale.caption, fontFamily: FontFamily.bold },
   header: { paddingHorizontal: 16, paddingTop: 8, paddingBottom: 6 },
-  title: { fontSize: 24, color: '#2A231A', fontFamily: FontFamily.extrabold },
-  subtitle: { marginTop: 4, fontSize: 13, color: '#675A45', fontFamily: FontFamily.regular },
+  title: { ...theme.typeScale.h2, color: theme.hybrid.panelCoolText, fontFamily: FontFamily.extrabold },
+  subtitle: { marginTop: 4, ...theme.typeScale.caption, color: theme.hybrid.panelCoolTextMuted, fontFamily: FontFamily.regular },
   content: { paddingHorizontal: 14, paddingBottom: 120, gap: 10 },
   quickAddCard: {
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: 'rgba(212,175,55,0.35)',
-    backgroundColor: 'rgba(255,255,255,0.74)',
+    borderColor: theme.hybrid.panelCoolBorder,
+    backgroundColor: theme.colors.CeolWhite,
     padding: 12,
     marginBottom: 4,
   },
-  quickAddTitle: { fontSize: 14, color: '#2A231A', fontFamily: FontFamily.bold, marginBottom: 8 },
+  quickAddTitle: { ...theme.typeScale.body, color: theme.hybrid.panelCoolText, fontFamily: FontFamily.bold, marginBottom: 8 },
   quickAddHint: {
     marginTop: -2,
     marginBottom: 8,
-    fontSize: 12,
+    ...theme.typeScale.caption,
     lineHeight: 18,
-    color: '#5C4A2E',
+    color: theme.hybrid.panelCoolTextMuted,
     fontFamily: FontFamily.medium,
   },
   docTypeRow: { flexDirection: 'row', gap: 6, flexWrap: 'wrap' },
@@ -466,24 +471,24 @@ const styles = StyleSheet.create({
     minHeight: 30,
     borderRadius: 10,
     borderWidth: 1,
-    borderColor: 'rgba(212,175,55,0.34)',
-    backgroundColor: 'rgba(255,255,255,0.8)',
+    borderColor: theme.hybrid.panelCoolBorder,
+    backgroundColor: theme.colors.CeolWhite,
     paddingHorizontal: 10,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  docTypeChipActive: { backgroundColor: 'rgba(212,175,55,0.25)' },
-  docTypeChipText: { fontSize: 12, color: '#5D4D35', fontFamily: FontFamily.medium },
-  docTypeChipTextActive: { color: '#2A231A', fontFamily: FontFamily.bold },
+  docTypeChipActive: { backgroundColor: theme.hybrid.signalMutedBg },
+  docTypeChipText: { ...theme.typeScale.caption, color: theme.hybrid.panelCoolTextMuted, fontFamily: FontFamily.medium },
+  docTypeChipTextActive: { color: theme.hybrid.panelCoolText, fontFamily: FontFamily.bold },
   expiryInput: {
     marginTop: 8,
     height: 40,
     borderRadius: 10,
     borderWidth: 1,
-    borderColor: 'rgba(212,175,55,0.34)',
-    backgroundColor: 'rgba(255,255,255,0.86)',
+    borderColor: theme.hybrid.panelCoolBorder,
+    backgroundColor: theme.colors.CeolWhite,
     paddingHorizontal: 10,
-    color: '#2A231A',
+    color: theme.hybrid.panelCoolText,
     fontFamily: FontFamily.medium,
   },
   addBtn: {
@@ -492,12 +497,12 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#B33434',
+    backgroundColor: theme.colors.RouteError,
   },
-  addBtnText: { color: '#FFE6CA', fontSize: 13, fontFamily: FontFamily.bold },
+  addBtnText: { color: theme.colors.CeolWhite, ...theme.typeScale.caption, fontFamily: FontFamily.bold },
   cardWrap: {
     borderRadius: 18,
-    shadowColor: '#6F5735',
+    shadowColor: theme.colors.glass.shadow,
     shadowOpacity: 0.16,
     shadowOffset: { width: 0, height: 8 },
     shadowRadius: 10,
@@ -505,36 +510,36 @@ const styles = StyleSheet.create({
   },
   cardWrapUrgent: {
     zIndex: 2,
-    shadowColor: '#8A1A1A',
+    shadowColor: theme.colors.RouteError,
     shadowOpacity: 0.35,
     elevation: 8,
   },
   cardBorder: { borderRadius: 18, padding: 1.2 },
   cardInner: {
     borderRadius: 17,
-    backgroundColor: 'rgba(255,255,255,0.8)',
+    backgroundColor: theme.colors.CeolWhite,
     padding: 12,
   },
   cardHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  docType: { fontSize: 13, color: '#8A6A1A', fontFamily: FontFamily.bold },
-  docName: { marginTop: 6, fontSize: 18, color: '#2A231A', fontFamily: FontFamily.extrabold },
-  docExpiry: { marginTop: 6, fontSize: 13, color: '#584A37', fontFamily: FontFamily.regular },
-  daysLeft: { marginTop: 4, fontSize: 13, color: '#8A6A1A', fontFamily: FontFamily.bold },
-  daysLeftUrgent: { color: '#B22A2A' },
-  actionText: { marginTop: 6, fontSize: 12, lineHeight: 18, color: '#564834', fontFamily: FontFamily.regular },
+  docType: { ...theme.typeScale.caption, color: theme.colors.SignatureGold, fontFamily: FontFamily.bold },
+  docName: { marginTop: 6, ...theme.typeScale.h2, color: theme.hybrid.panelCoolText, fontFamily: FontFamily.extrabold },
+  docExpiry: { marginTop: 6, ...theme.typeScale.caption, color: theme.hybrid.panelCoolTextMuted, fontFamily: FontFamily.regular },
+  daysLeft: { marginTop: 4, ...theme.typeScale.caption, color: theme.colors.SignatureGold, fontFamily: FontFamily.bold },
+  daysLeftUrgent: { color: theme.colors.RouteError },
+  actionText: { marginTop: 6, ...theme.typeScale.caption, lineHeight: 18, color: theme.hybrid.panelCoolTextMuted, fontFamily: FontFamily.regular },
   emptyCard: {
     marginTop: 18,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: 'rgba(212,175,55,0.35)',
-    backgroundColor: 'rgba(255,255,255,0.72)',
+    borderColor: theme.hybrid.panelCoolBorder,
+    backgroundColor: theme.colors.CeolWhite,
     minHeight: 170,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 20,
   },
-  emptyTitle: { marginTop: 10, fontSize: 17, color: '#2A231A', fontFamily: FontFamily.bold },
-  emptySub: { marginTop: 4, fontSize: 13, color: '#655742', textAlign: 'center', fontFamily: FontFamily.regular },
+  emptyTitle: { marginTop: 10, ...theme.typeScale.body, color: theme.hybrid.panelCoolText, fontFamily: FontFamily.bold },
+  emptySub: { marginTop: 4, ...theme.typeScale.caption, color: theme.hybrid.panelCoolTextMuted, textAlign: 'center', fontFamily: FontFamily.regular },
   scanBtnWrap: { position: 'absolute', left: 16, right: 16, bottom: 20 },
   scanBtn: {
     height: 52,
@@ -543,40 +548,40 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
-    shadowColor: '#741B1B',
+    shadowColor: theme.colors.RouteError,
     shadowOpacity: 0.25,
     shadowRadius: 8,
     shadowOffset: { width: 0, height: 5 },
     elevation: 6,
   },
-  scanBtnText: { color: '#FFE4C7', fontSize: 15, fontFamily: FontFamily.bold },
-  scannerOverlay: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(12,10,8,0.72)' },
+  scanBtnText: { color: theme.colors.primaryBright, ...theme.typeScale.body, fontFamily: FontFamily.bold },
+  scannerOverlay: { ...StyleSheet.absoluteFillObject, backgroundColor: theme.colors.overlay.dim },
   permissionCard: {
     marginTop: 180,
     marginHorizontal: 24,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: 'rgba(212,175,55,0.45)',
-    backgroundColor: 'rgba(28,22,16,0.9)',
+    borderColor: theme.colors.glass.border,
+    backgroundColor: theme.colors.executive.panel,
     alignItems: 'center',
     padding: 16,
   },
-  permissionTitle: { color: '#FFF0CF', fontSize: 16, fontFamily: FontFamily.bold, marginBottom: 12 },
+  permissionTitle: { color: theme.colors.text.primary, ...theme.typeScale.body, fontFamily: FontFamily.bold, marginBottom: 12 },
   permissionBtn: {
     minWidth: 120,
     height: 42,
     borderRadius: 12,
-    backgroundColor: '#C62828',
+    backgroundColor: theme.colors.RouteError,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  permissionBtnText: { color: '#FFE8D0', fontFamily: FontFamily.bold },
+  permissionBtnText: { color: theme.colors.CeolWhite, ...theme.typeScale.body, fontFamily: FontFamily.bold },
   editActionsRow: { marginTop: 8, flexDirection: 'row', gap: 8 },
   deleteBtn: {
     minWidth: 120,
     height: 42,
     borderRadius: 12,
-    backgroundColor: '#8B2222',
+    backgroundColor: theme.colors.RouteError,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -585,12 +590,12 @@ const styles = StyleSheet.create({
     minHeight: 34,
     borderRadius: 10,
     borderWidth: 1,
-    borderColor: 'rgba(212,175,55,0.45)',
+    borderColor: theme.colors.glass.border,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 12,
   },
-  closeEditText: { color: '#FFE8D0', fontSize: 12, fontFamily: FontFamily.medium },
+  closeEditText: { color: theme.colors.primaryBright, ...theme.typeScale.caption, fontFamily: FontFamily.medium },
   cameraWrap: { flex: 1 },
   cameraTopBar: {
     position: 'absolute',
@@ -605,8 +610,8 @@ const styles = StyleSheet.create({
     height: 42,
     borderRadius: 21,
     borderWidth: 1,
-    borderColor: 'rgba(212,175,55,0.45)',
-    backgroundColor: 'rgba(21,17,12,0.75)',
+    borderColor: theme.colors.glass.border,
+    backgroundColor: theme.colors.executive.panel,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -616,7 +621,7 @@ const styles = StyleSheet.create({
     height: 260,
     borderRadius: 20,
     borderWidth: 2,
-    borderColor: 'rgba(212,175,55,0.86)',
+    borderColor: theme.colors.glass.border,
     backgroundColor: 'transparent',
   },
   captureBtnOuter: {
@@ -627,22 +632,22 @@ const styles = StyleSheet.create({
     height: 88,
     borderRadius: 44,
     borderWidth: 3,
-    borderColor: 'rgba(212,175,55,0.95)',
+    borderColor: theme.colors.SignatureGold,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'rgba(255,232,170,0.24)',
+    backgroundColor: theme.hybrid.signalMutedBg,
   },
   captureBtnInner: {
     width: 66,
     height: 66,
     borderRadius: 33,
-    backgroundColor: '#CB3D3D',
+    backgroundColor: theme.colors.RouteError,
     alignItems: 'center',
     justifyContent: 'center',
   },
   expiryInputDark: {
-    backgroundColor: 'rgba(255,255,255,0.12)',
-    borderColor: 'rgba(255,235,200,0.42)',
-    color: '#FFE8C9',
+    backgroundColor: theme.colors.executive.panelMuted,
+    borderColor: theme.colors.glass.border,
+    color: theme.colors.text.primary,
   },
 });

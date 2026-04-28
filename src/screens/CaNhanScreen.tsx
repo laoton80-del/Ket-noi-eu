@@ -12,10 +12,11 @@ import type { RootStackParamList } from '../navigation/routes';
 import { useAssistantSettings } from '../state/assistantSettings';
 import { resetGuidedOnboarding } from '../onboarding/guidedOnboardingStorage';
 import { loadUsageHistory, type UsageHistoryItem } from '../services/history';
+import { PrecisePanel } from '../components/ui/PrecisePanel';
+import { useRegionState } from '../state/region';
 import { useWalletState } from '../state/wallet';
 import { STORAGE_KEYS } from '../storage/storageKeys';
 import { TrustHistoryCard } from '../components/widgets';
-import { Colors } from '../theme/colors';
 import { theme } from '../theme/theme';
 import { FontFamily } from '../theme/typography';
 
@@ -35,6 +36,7 @@ export function CaNhanScreen() {
   const { user } = useAuth();
   const { languageCode } = useAssistantSettings();
   const strings = getStrings(languageCode);
+  const { currentCountry, localCurrency } = useRegionState();
   const wallet = useWalletState();
   const settings = [
     {
@@ -93,7 +95,7 @@ export function CaNhanScreen() {
   const planLabel = (() => {
     if (!user?.subscriptionPlan) return strings.profile.planFree;
     if (user.subscriptionPlan === 'premium') return strings.profile.planPremium;
-    if (user.subscriptionPlan === 'combo') return strings.profile.planCombo;
+    if (user.subscriptionPlan === 'pack') return strings.profile.planPack;
     return strings.profile.planFree;
   })();
 
@@ -118,32 +120,40 @@ export function CaNhanScreen() {
         <Text style={styles.launchHint}>{APP_BRAND.launchSubtitle}</Text>
         <Text style={styles.title}>{strings.profile.screenTitle}</Text>
         <Text style={styles.subtitle}>{strings.profile.subtitle}</Text>
+        <Text style={styles.contextText}>
+          {currentCountry} · {localCurrency}
+        </Text>
 
-        <Pressable
-          onPress={() => navigation.navigate('SetupProfile', { mode: 'edit' })}
-          style={({ pressed }) => [styles.profileCard, pressed && { opacity: 0.72 }]}
-        >
-          <View style={styles.avatarWrap}>
-            <Ionicons name="person" size={34} color={Colors.primary} />
-          </View>
-          <View style={styles.profileMeta}>
-            <Text style={styles.profileName}>{strings.common.pronounYou}</Text>
-            <Text style={styles.profilePlan}>{strings.profile.currentPlan}</Text>
-          </View>
-        </Pressable>
+        <PrecisePanel style={styles.panel}>
+          <Pressable
+            onPress={() => navigation.navigate('SetupProfile', { mode: 'edit' })}
+            style={({ pressed }) => [styles.profileCard, pressed && styles.pressed]}
+          >
+            <View style={styles.avatarWrap}>
+              <Ionicons name="person" size={34} color={theme.colors.SignatureGold} />
+            </View>
+            <View style={styles.profileMeta}>
+              <Text style={styles.profileName}>{strings.common.pronounYou}</Text>
+              <Text style={styles.profilePlan}>{strings.profile.currentPlan}</Text>
+            </View>
+          </Pressable>
+        </PrecisePanel>
 
-        <Pressable
-          onPress={() => navigation.navigate('Wallet')}
-          style={({ pressed }) => [styles.creditsCard, pressed && { opacity: 0.72 }]}
-        >
-          <Text style={styles.cardTitle}>{strings.profile.creditsTitle}</Text>
-          <Text style={styles.cardBalance}>
-            {interpolate(strings.profile.creditsBalanceCurrent, { credits: String(wallet.credits) })}
-          </Text>
-          <Text style={styles.cardHint}>{strings.profile.creditsHint}</Text>
-        </Pressable>
+        <PrecisePanel style={styles.panel}>
+          <Pressable
+            onPress={() => navigation.navigate('Wallet')}
+            style={({ pressed }) => [styles.creditsCard, pressed && styles.pressed]}
+          >
+            <Text style={styles.cardTitle}>{strings.profile.creditsTitle}</Text>
+            <Text style={styles.cardBalance}>
+              {interpolate(strings.profile.creditsBalanceCurrent, { credits: String(wallet.credits) })}
+            </Text>
+            <Text style={styles.cardHint}>{strings.profile.creditsHint}</Text>
+          </Pressable>
+        </PrecisePanel>
 
-        <View style={styles.identityCard}>
+        <PrecisePanel style={styles.panel}>
+          <View style={styles.identityCard}>
           <Text style={styles.cardTitle}>{strings.profile.identityTitle}</Text>
           <View style={styles.identityRow}>
             <Text style={styles.identityKey}>{strings.profile.residencyStatusLabel}</Text>
@@ -167,25 +177,28 @@ export function CaNhanScreen() {
           </View>
           <Pressable
             onPress={() => navigation.navigate('SetupProfile', { mode: 'edit' })}
-            style={({ pressed }) => [styles.editIdentityBtn, pressed && { opacity: 0.82 }]}
+            style={({ pressed }) => [styles.editIdentityBtn, pressed && styles.pressed]}
           >
             <Text style={styles.editIdentityText}>{strings.profile.editIdentityCta}</Text>
           </Pressable>
-        </View>
+          </View>
+        </PrecisePanel>
 
         <Text style={styles.sectionTitle}>{strings.profile.settingsTitle}</Text>
-        <View style={styles.settingsCard}>
+        <PrecisePanel style={styles.panel}>
+          <View style={styles.settingsCard}>
           {settings.map((item) => (
             <Pressable
               key={item.key}
               onPress={item.onPress}
-              style={({ pressed }) => [styles.settingRow, pressed && { opacity: 0.72 }]}
+              style={({ pressed }) => [styles.settingRow, pressed && styles.pressed]}
             >
               <Text style={styles.settingText}>{item.label}</Text>
-              <Ionicons name="chevron-forward" size={16} color={Colors.textSoft} />
+              <Ionicons name="chevron-forward" size={16} color={theme.colors.text.secondary} />
             </Pressable>
           ))}
-        </View>
+          </View>
+        </PrecisePanel>
 
         <TrustHistoryCard items={history} />
 
@@ -205,10 +218,10 @@ export function CaNhanScreen() {
               },
             ]);
           }}
-          style={({ pressed }) => [styles.resetOnboardingRow, pressed && { opacity: 0.72 }]}
+          style={({ pressed }) => [styles.resetOnboardingRow, pressed && styles.pressed]}
         >
           <Text style={styles.settingText}>{strings.profile.onboardingResetRowLabel}</Text>
-          <Ionicons name="refresh" size={18} color={Colors.textSoft} />
+          <Ionicons name="refresh" size={18} color={theme.colors.text.secondary} />
         </Pressable>
 
         {adminUnlocked ? (
@@ -218,10 +231,10 @@ export function CaNhanScreen() {
               setAdminUnlocked(false);
             }}
             delayLongPress={1200}
-            style={({ pressed }) => [styles.resetAdminCard, pressed && { opacity: 0.8 }]}
+            style={({ pressed }) => [styles.resetAdminCard, pressed && styles.pressed]}
           >
-            <Text style={styles.resetAdminTitle}>Nội bộ QA</Text>
-            <Text style={styles.resetAdminText}>Nhấn giữ 1.2s để Reset Admin Unlock (yêu cầu nhập lại PIN 8888)</Text>
+            <Text style={styles.resetAdminTitle}>{strings.profile.settingsTitle}</Text>
+            <Text style={styles.resetAdminText}>{strings.profile.onboardingResetMessage}</Text>
           </Pressable>
         ) : null}
       </ScrollView>
@@ -232,7 +245,7 @@ export function CaNhanScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
+    backgroundColor: theme.colors.DeepInkNavy,
   },
   content: {
     paddingHorizontal: 16,
@@ -246,34 +259,33 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   launchHint: {
-    fontSize: 12,
+    ...theme.typeScale.caption,
     color: theme.colors.text.secondary,
-    fontFamily: FontFamily.medium,
     marginBottom: 8,
     opacity: 0.95,
   },
   title: {
-    fontSize: 30,
-    fontFamily: FontFamily.extrabold,
-    color: theme.colors.text.primary,
+    ...theme.typeScale.h1,
+    color: theme.colors.SignatureGold,
     marginBottom: 6,
   },
   subtitle: {
-    fontSize: 14,
-    lineHeight: 21,
-    fontFamily: FontFamily.regular,
-    color: Colors.textSoft,
+    ...theme.typeScale.body,
+    color: theme.colors.text.secondary,
+  },
+  contextText: {
+    ...theme.typeScale.caption,
+    color: theme.colors.text.secondary,
     marginBottom: 12,
   },
-  profileCard: {
-    borderRadius: 18,
-    borderWidth: 1,
-    borderColor: theme.colors.glass.border,
+  panel: {
     backgroundColor: theme.colors.executive.card,
-    padding: 14,
+    marginBottom: 10,
+  },
+  profileCard: {
+    padding: 2,
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 10,
   },
   avatarWrap: {
     width: 62,
@@ -290,49 +302,34 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   profileName: {
-    fontSize: 22,
-    color: Colors.text,
-    fontFamily: FontFamily.bold,
+    ...theme.typeScale.h2,
+    color: theme.colors.CeolWhite,
     marginBottom: 2,
   },
   profilePlan: {
-    fontSize: 13,
-    color: Colors.textSoft,
-    fontFamily: FontFamily.regular,
+    ...theme.typeScale.caption,
+    color: theme.colors.text.secondary,
   },
   creditsCard: {
-    borderRadius: 18,
-    borderWidth: 1,
-    borderColor: theme.colors.glass.border,
-    backgroundColor: theme.colors.executive.card,
-    padding: 14,
-    marginBottom: 12,
+    padding: 2,
   },
   cardTitle: {
-    fontSize: 16,
-    color: Colors.text,
-    fontFamily: FontFamily.bold,
+    ...theme.typeScale.h2,
+    color: theme.colors.SignatureGold,
     marginBottom: 4,
   },
   cardBalance: {
-    fontSize: 18,
-    color: Colors.primary,
+    ...theme.typeScale.h2,
+    color: theme.colors.SignatureGold,
     fontFamily: FontFamily.extrabold,
     marginBottom: 6,
   },
   cardHint: {
-    fontSize: 13,
-    lineHeight: 20,
-    color: Colors.textSoft,
-    fontFamily: FontFamily.regular,
+    ...theme.typeScale.body,
+    color: theme.colors.text.secondary,
   },
   identityCard: {
-    borderRadius: 18,
-    borderWidth: 1,
-    borderColor: theme.colors.glass.border,
-    backgroundColor: theme.colors.executive.card,
-    padding: 14,
-    marginBottom: 12,
+    padding: 2,
     gap: 8,
   },
   identityRow: {
@@ -343,16 +340,16 @@ const styles = StyleSheet.create({
   },
   identityKey: {
     flex: 1,
-    fontSize: 13,
-    color: Colors.textSoft,
-    fontFamily: FontFamily.medium,
+    ...theme.typeScale.caption,
+    color: theme.colors.text.secondary,
+    fontFamily: FontFamily.semibold,
   },
   identityValue: {
     flex: 1,
     textAlign: 'right',
-    fontSize: 13,
-    color: Colors.text,
-    fontFamily: FontFamily.bold,
+    ...theme.typeScale.caption,
+    color: theme.colors.CeolWhite,
+    fontFamily: FontFamily.semibold,
   },
   editIdentityBtn: {
     marginTop: 8,
@@ -360,27 +357,22 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     borderWidth: 1,
     borderColor: theme.colors.glass.border,
-    backgroundColor: theme.colors.executive.panelMuted,
+    backgroundColor: theme.colors.GraphiteBlue,
     alignItems: 'center',
     justifyContent: 'center',
   },
   editIdentityText: {
-    fontSize: 12,
-    color: Colors.text,
-    fontFamily: FontFamily.bold,
+    ...theme.typeScale.caption,
+    color: theme.colors.CeolWhite,
+    fontFamily: FontFamily.semibold,
   },
   sectionTitle: {
-    fontSize: 14,
-    color: Colors.text,
-    fontFamily: FontFamily.extrabold,
+    ...theme.typeScale.h2,
+    color: theme.colors.SignatureGold,
     marginBottom: 8,
   },
   settingsCard: {
-    borderRadius: 18,
-    borderWidth: 1,
-    borderColor: theme.colors.glass.border,
-    backgroundColor: theme.colors.executive.card,
-    paddingHorizontal: 12,
+    paddingHorizontal: 2,
   },
   resetOnboardingRow: {
     marginTop: 10,
@@ -404,9 +396,8 @@ const styles = StyleSheet.create({
     borderBottomColor: theme.colors.glass.borderSoft,
   },
   settingText: {
-    fontSize: 14,
-    color: Colors.text,
-    fontFamily: FontFamily.medium,
+    ...theme.typeScale.body,
+    color: theme.colors.CeolWhite,
   },
   resetAdminCard: {
     marginTop: 12,
@@ -417,14 +408,16 @@ const styles = StyleSheet.create({
     padding: 12,
   },
   resetAdminTitle: {
-    fontSize: 12,
-    color: theme.colors.primaryBright,
-    fontFamily: FontFamily.bold,
+    ...theme.typeScale.caption,
+    color: theme.colors.SignatureGold,
+    fontFamily: FontFamily.semibold,
     marginBottom: 4,
   },
   resetAdminText: {
-    fontSize: 13,
-    color: Colors.textSoft,
-    fontFamily: FontFamily.regular,
+    ...theme.typeScale.body,
+    color: theme.colors.text.secondary,
+  },
+  pressed: {
+    opacity: 0.78,
   },
 });

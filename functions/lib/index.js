@@ -3476,6 +3476,7 @@ var require_react = __commonJS({
 var index_exports = {};
 __export(index_exports, {
   aiProxy: () => aiProxy,
+  analyzeDocumentProxy: () => analyzeDocumentProxy,
   b2bInboundVoiceWebhook: () => b2bInboundVoiceWebhook,
   b2bOrderStaffOps: () => b2bOrderStaffOps,
   b2bStaffQueueSnapshot: () => b2bStaffQueueSnapshot,
@@ -3831,8 +3832,6 @@ function verticalLabel(bt) {
       return "Grocery \xB7 wholesale (\u0111\u1ED5 h\xE0ng)";
     case "grocery_retail":
       return "Grocery \xB7 retail";
-    case "potraviny":
-      return "Grocery \xB7 retail (legacy businessType; migrate to grocery_retail)";
     case "nails":
       return "Nails";
     case "restaurant":
@@ -5032,7 +5031,7 @@ function scenarioBaseTone(scenario) {
     case "nails":
     case "restaurant":
       return "friendly";
-    case "potraviny":
+    case "retail_taphoa":
     case "grocery_wholesale":
     case "work":
       return "neutral";
@@ -5051,7 +5050,7 @@ function scenarioBaseTone(scenario) {
 function businessWarmthAdjust(bt) {
   if (!bt) return null;
   if (bt === "nails" || bt === "restaurant") return "friendly";
-  if (bt === "potraviny" || bt === "grocery_retail" || bt === "grocery_wholesale") return "neutral";
+  if (bt === "grocery_retail" || bt === "grocery_wholesale") return "neutral";
   if (bt === "hospitality_stay") return "formal";
   return null;
 }
@@ -5407,12 +5406,9 @@ function getVoiceRealismEngineConfig() {
 }
 
 // ../src/services/OpenAIService.ts
-var import_async_storage7 = __toESM(require("@react-native-async-storage/async-storage"));
+var import_async_storage6 = __toESM(require("@react-native-async-storage/async-storage"));
 var FileSystem = __toESM(require("expo-file-system/legacy"));
 var import_react_native3 = require("react-native");
-
-// ../src/services/walletFirebaseSession.ts
-var import_async_storage = __toESM(require("@react-native-async-storage/async-storage"));
 
 // ../node_modules/firebase/auth/dist/index.mjs
 var dist_exports = {};
@@ -10995,74 +10991,74 @@ var { getAuth: getAuth2, getIdToken: getIdToken2, initializeAuth: initializeAuth
 
 // ../src/storage/storageKeys.ts
 var STORAGE_KEYS = {
-  schemaVersion: "ketnoieu.storage.schema.version",
+  schemaVersion: "ketnoiglobal.storage.schema.version",
   // owner: storage/runMigrations
-  authSession: "ketnoieu.auth.session.v1",
+  authSession: "ketnoiglobal.auth.session.v1",
   // owner: AuthContext
-  wallet: "ketnoieu.wallet.v1",
+  wallet: "ketnoiglobal.wallet.v1",
   // owner: state/wallet (server balance is truth)
-  usageHistory: "ketnoieu.usage.history.v1",
+  usageHistory: "ketnoiglobal.usage.history.v1",
   // owner: services/history (interpreter/leona/booking/…)
-  growthSnapshot: "ketnoieu.growth.snapshot.v1",
+  growthSnapshot: "ketnoiglobal.growth.snapshot.v1",
   // owner: services/growth
-  dailyLoop: "ketnoieu.engagement.dailyLoop.v1",
+  dailyLoop: "ketnoiglobal.engagement.dailyLoop.v1",
   // owner: services/engagement
-  companionMemory: "ketnoieu.companion.memory.v1",
+  companionMemory: "ketnoiglobal.companion.memory.v1",
   // owner: services/companion
-  networkEffectAggregates: "ketnoieu.networkEffect.aggregates.v1",
+  networkEffectAggregates: "ketnoiglobal.networkEffect.aggregates.v1",
   // owner: services/networkEffect
-  lifeOsRecentActions: "ketnoieu.lifeos.recentActions.v1",
+  lifeOsRecentActions: "ketnoiglobal.lifeos.recentActions.v1",
   // owner: services/selling
-  sellPendingResume: "ketnoieu.sell.pendingResume.v1",
+  sellPendingResume: "ketnoiglobal.sell.pendingResume.v1",
   // owner: services/selling
-  guidedIntentCompleted: "ketnoieu.guided.intent.completed.v1",
+  guidedIntentCompleted: "ketnoiglobal.guided.intent.completed.v1",
   // owner: onboarding
-  guidedLeTanAiSeed: "ketnoieu.guided.letan.aiSeed.v1",
+  guidedLeTanAiSeed: "ketnoiglobal.guided.letan.aiSeed.v1",
   // owner: onboarding
-  guidedMicroPrefix: "ketnoieu.guided.micro.",
+  guidedMicroPrefix: "ketnoiglobal.guided.micro.",
   // owner: onboarding (pairs with STORAGE_KEY_BUILDERS.guidedMicro)
-  adminUnlock: "ketnoieu.admin.unlocked.v1",
+  adminUnlock: "ketnoiglobal.admin.unlocked.v1",
   // owner: HomeScreen/CaNhanScreen
-  proactiveSuggestions: "ketnoieu.proactive.suggestions.v1",
+  proactiveSuggestions: "ketnoiglobal.proactive.suggestions.v1",
   // owner: components/ProactiveSuggestions
-  ttsClientCache: "ketnoieu.tts.cache.v1",
+  ttsClientCache: "ketnoiglobal.tts.cache.v1",
   // owner: services/OpenAIService
-  documentVault: "ketnoieu.userDocuments.v1",
+  documentVault: "ketnoiglobal.userDocuments.v1",
   // owner: services/DocumentAlarmService (+ Vault UI)
-  documentAlarmSeen: "ketnoieu.documentAlarmSeen.v1",
+  documentAlarmSeen: "ketnoiglobal.documentAlarmSeen.v1",
   // owner: services/DocumentAlarmService
-  learningB1B2Unlocked: "ketnoieu.learning.b1b2.unlocked.v1",
-  // owner: screens/HocTapScreen
-  marketplaceTransactions: "ketnoieu.marketplace.transactions.v1",
+  learningB1B2Unlocked: "ketnoiglobal.learning.b1b2.unlocked.v1",
+  // owner: screens/AcademyScreen
+  marketplaceTransactions: "ketnoiglobal.marketplace.transactions.v1",
   // owner: services/marketplace
-  moatHabitSignals: "ketnoieu.moat.habit.signals.v1",
+  moatHabitSignals: "ketnoiglobal.moat.habit.signals.v1",
   // owner: services/moat/habitLoop
-  moatB2bLockIn: "ketnoieu.moat.b2b.lockin.v1",
+  moatB2bLockIn: "ketnoiglobal.moat.b2b.lockin.v1",
   // owner: services/moat/b2bLockIn
-  moatLearningAggregates: "ketnoieu.moat.learning.aggregates.v1",
+  moatLearningAggregates: "ketnoiglobal.moat.learning.aggregates.v1",
   // owner: services/moat/centralLearningData
-  autonomyAudit: "ketnoieu.autonomy.audit.v1"
+  autonomyAudit: "ketnoiglobal.autonomy.audit.v1"
   // owner: services/autonomy/auditLogStorage
 };
 
 // ../src/services/identity/aiIdentityService.ts
-var import_async_storage2 = __toESM(require("@react-native-async-storage/async-storage"));
+var import_async_storage = __toESM(require("@react-native-async-storage/async-storage"));
 var AUTH_STORAGE_KEY = STORAGE_KEYS.authSession;
 
 // ../src/services/networkEffect/store.ts
-var import_async_storage3 = __toESM(require("@react-native-async-storage/async-storage"));
+var import_async_storage2 = __toESM(require("@react-native-async-storage/async-storage"));
 var STORE_KEY = STORAGE_KEYS.networkEffectAggregates;
 
 // ../src/services/moat/centralLearningData.ts
-var import_async_storage4 = __toESM(require("@react-native-async-storage/async-storage"));
+var import_async_storage3 = __toESM(require("@react-native-async-storage/async-storage"));
 var KEY = STORAGE_KEYS.moatLearningAggregates;
 
 // ../src/services/moat/b2bLockIn.ts
-var import_async_storage5 = __toESM(require("@react-native-async-storage/async-storage"));
+var import_async_storage4 = __toESM(require("@react-native-async-storage/async-storage"));
 var KEY2 = STORAGE_KEYS.moatB2bLockIn;
 
 // ../src/services/moat/habitLoop.ts
-var import_async_storage6 = __toESM(require("@react-native-async-storage/async-storage"));
+var import_async_storage5 = __toESM(require("@react-native-async-storage/async-storage"));
 var KEY3 = STORAGE_KEYS.moatHabitSignals;
 
 // ../src/services/OpenAIService.ts
@@ -11172,12 +11168,12 @@ Ti\u1EBFp theo: n\u1EBFu b\u1EA1n mu\u1ED1n g\u1ECDi \u0111\u1EB7t l\u1ECBch, m\
       return {
         action,
         creditsCost: leTanCost,
-        message: `M\xECnh c\xF3 th\u1EC3 chuy\u1EC3n b\u1EA1n sang L\u1EC5 t\xE2n \u0111\u1EC3 h\u1ED7 tr\u1EE3 ch\u1ED1t nhanh. (C\u1EA7n ${leTanCost} Credits/l\u01B0\u1EE3t m\xF4 ph\u1ECFng)
+        message: `M\xECnh c\xF3 th\u1EC3 chuy\u1EC3n b\u1EA1n sang Tr\u1EE3 l\xFD \u0111\u1EC3 h\u1ED7 tr\u1EE3 ch\u1ED1t nhanh. (C\u1EA7n ${leTanCost} Credits/l\u01B0\u1EE3t m\xF4 ph\u1ECFng)
 Ti\u1EBFp theo: sau khi ch\u1ED1t, n\u1EBFu c\u1EA7n x\xE1c nh\u1EADn cu\u1ED9c g\u1ECDi th\u1EADt, m\xECnh \u0111\u1EC1 xu\u1EA5t Leona.`,
         resume: {
           route: "Tabs",
           params: {
-            screen: "LeTan",
+            screen: "Concierge",
             params: { proactiveQuestion, autoSimulate: true }
           }
         }
@@ -11263,7 +11259,6 @@ function bookingSlotQuestion(businessType) {
     case "nails":
       return "What service and time work best for you?";
     case "grocery_retail":
-    case "potraviny":
       return "What time works for pickup or delivery, and what should we prepare?";
     case "grocery_wholesale":
       return "For a wholesale request, what products and approximate volumes do you need, and pickup or delivery?";
@@ -11785,9 +11780,8 @@ function businessTypeToVoiceScenario(bt) {
       return "nails";
     case "restaurant":
       return "restaurant";
-    case "potraviny":
     case "grocery_retail":
-      return "potraviny";
+      return "retail_taphoa";
     case "grocery_wholesale":
       return "grocery_wholesale";
     case "hospitality_stay":
@@ -12662,6 +12656,19 @@ var b2bStaffQueueSnapshot = (0, import_https.onRequest)(
 // src/index.ts
 var db = (0, import_firestore7.getFirestore)();
 var B2B_WEBHOOK_SECRET = process.env.B2B_WEBHOOK_SECRET?.trim() ?? "";
+var PACK_TRUTH_TABLE = {
+  starter: 100,
+  basic: 230,
+  standard: 650,
+  pro: 1400,
+  power: 3e3
+};
+var SERVICE_COST_TABLE = {
+  ai_teacher_session: 50,
+  call_help_leona: 100,
+  business_copilot_draft: 30,
+  tax_refund_draft: 30
+};
 async function receiptAllowsTopup(fs, paymentEventId, walletUid, creditsAmount) {
   if (process.env.WALLET_TOPUP_REQUIRE_PAYMENT_RECEIPT?.trim() !== "1") {
     return { ok: true };
@@ -12691,6 +12698,8 @@ async function receiptAllowsTopup(fs, paymentEventId, walletUid, creditsAmount) 
 var AI_PROXY_REQUIRE_AUTH = process.env.AI_PROXY_REQUIRE_AUTH?.trim() !== "0";
 var AI_PROXY_MAX_RPM = Math.max(0, Number.parseInt(process.env.AI_PROXY_MAX_RPM ?? "120", 10) || 120);
 var AI_PROXY_RATE_WINDOW_MS = Math.max(1e4, Number.parseInt(process.env.AI_PROXY_RATE_WINDOW_MS ?? "60000", 10) || 6e4);
+var GEMINI_API_KEY = process.env.GEMINI_API_KEY?.trim() ?? "";
+var GEMINI_MODEL = process.env.GEMINI_MODEL?.trim() || "gemini-1.5-flash";
 logRuntimeTrustPostureOnce();
 function adminPhoneRouteRepo2() {
   return {
@@ -12867,8 +12876,180 @@ var aiProxy = (0, import_https2.onRequest)(
       }
       return void res.status(400).json({ ok: false, error: "unknown_op" });
     } catch (e) {
-      import_v29.logger.error("[aiProxy] error", e instanceof Error ? e : void 0);
-      return void res.status(500).json({ ok: false, error: "proxy_error" });
+      const err = e instanceof Error ? e : new Error(String(e));
+      let proxyOp = "";
+      try {
+        const b = typeof req.body === "object" && req.body !== null ? req.body : {};
+        proxyOp = String(b.op ?? "");
+      } catch {
+      }
+      const errMsg = err.message;
+      const errName = err.name;
+      let httpStatus = 500;
+      let errorCode = "proxy_error";
+      let openaiStatus;
+      if (errMsg === "openai_key_missing") {
+        httpStatus = 503;
+        errorCode = "openai_key_missing";
+      } else {
+        const m = /^openai_(chat|stt|tts)_(\d+)$/.exec(errMsg);
+        if (m) {
+          httpStatus = 502;
+          errorCode = "openai_upstream_http";
+          openaiStatus = Number(m[2]);
+        }
+      }
+      import_v29.logger.error("[aiProxy] error", {
+        trust_surface: "ai_proxy",
+        errName,
+        errMsg,
+        stack: err.stack,
+        proxyOp: proxyOp || "(none)",
+        responseError: errorCode,
+        httpStatus,
+        openaiStatus
+      });
+      if (openaiStatus !== void 0) {
+        return void res.status(httpStatus).json({ ok: false, error: errorCode, openaiStatus });
+      }
+      return void res.status(httpStatus).json({ ok: false, error: errorCode });
+    }
+  }
+);
+function safeJsonParse(text) {
+  try {
+    return JSON.parse(text);
+  } catch {
+    return null;
+  }
+}
+function extractJsonObject(raw) {
+  const trimmed = raw.trim();
+  if (trimmed.startsWith("{") && trimmed.endsWith("}")) return trimmed;
+  const first = trimmed.indexOf("{");
+  const last = trimmed.lastIndexOf("}");
+  if (first >= 0 && last > first) return trimmed.slice(first, last + 1).trim();
+  return trimmed;
+}
+function parseDocumentResultOrThrow(rawModelText) {
+  const parsed = safeJsonParse(extractJsonObject(rawModelText));
+  if (!parsed || typeof parsed !== "object") {
+    throw new import_https2.HttpsError("internal", "ai_parse_invalid_json");
+  }
+  const record = parsed;
+  const title = typeof record.title === "string" ? record.title.trim() : "";
+  const summary = typeof record.summary === "string" ? record.summary.trim() : "";
+  const urgencyRaw = typeof record.urgency === "string" ? record.urgency.trim() : "";
+  const actionItemsRaw = Array.isArray(record.actionItems) ? record.actionItems : [];
+  const actionItems = actionItemsRaw.filter((v) => typeof v === "string").map((v) => v.trim()).filter(Boolean);
+  const urgency = urgencyRaw === "Low" || urgencyRaw === "Medium" || urgencyRaw === "High" ? urgencyRaw : null;
+  if (!title || !summary || !urgency || actionItems.length === 0) {
+    throw new import_https2.HttpsError("internal", "ai_parse_schema_mismatch");
+  }
+  return { title, summary, urgency, actionItems };
+}
+var analyzeDocumentProxy = (0, import_https2.onRequest)(
+  { region: "europe-west1", cors: true, timeoutSeconds: 120, memory: "1GiB" },
+  async (req, res) => {
+    if (req.method !== "POST") return void res.status(405).send("Method Not Allowed");
+    try {
+      const ac = await verifyAppCheckForRequest(req, "aiProxy");
+      if (!ac.ok) {
+        import_v29.logger.warn("[analyzeDocumentProxy] denied", {
+          trust_surface: "document_proxy",
+          gate: "app_check",
+          status: ac.status,
+          error: ac.error
+        });
+        return void res.status(ac.status).json({ ok: false, error: ac.error });
+      }
+      const who = await requireFirebaseBearerUser(req);
+      if (!who.ok) {
+        import_v29.logger.warn("[analyzeDocumentProxy] denied", {
+          trust_surface: "document_proxy",
+          gate: "firebase_bearer",
+          status: who.status,
+          error: who.error
+        });
+        return void res.status(who.status).json({ ok: false, error: who.error });
+      }
+      const body = typeof req.body === "object" && req.body !== null ? req.body : {};
+      const base64Image = typeof body.base64Image === "string" ? body.base64Image.trim() : "";
+      const countryContext = typeof body.countryContext === "string" ? body.countryContext.trim() : "";
+      if (!base64Image) return void res.status(400).json({ ok: false, error: "base64_image_required" });
+      if (!countryContext) return void res.status(400).json({ ok: false, error: "country_context_required" });
+      if (base64Image.length > 7e6) return void res.status(413).json({ ok: false, error: "image_too_large" });
+      const systemPrompt = `You are an expert administrative/legal assistant for Vietnamese expats living in ${countryContext}. Analyze the provided document image.
+You MUST return ONLY a valid JSON object (no markdown, no backticks, no extra text) matching exactly this interface:
+{
+  "title": "string (short descriptive title in Vietnamese)",
+  "summary": "string (1-2 sentences explaining what the document is about)",
+  "urgency": "Low" | "Medium" | "High",
+  "actionItems": ["string", "string"] (list of practical steps the user must take)
+}`;
+      if (!GEMINI_API_KEY) {
+        import_v29.logger.error("[analyzeDocumentProxy] missing_gemini_api_key", { trust_surface: "document_proxy" });
+        return void res.status(503).json({ ok: false, error: "gemini_key_missing" });
+      }
+      const geminiReq = {
+        contents: [
+          {
+            role: "user",
+            parts: [
+              { text: systemPrompt },
+              {
+                inline_data: {
+                  mime_type: "image/jpeg",
+                  data: base64Image
+                }
+              }
+            ]
+          }
+        ],
+        generationConfig: {
+          temperature: 0.2,
+          responseMimeType: "application/json"
+        }
+      };
+      const upstream = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(GEMINI_MODEL)}:generateContent?key=${encodeURIComponent(GEMINI_API_KEY)}`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(geminiReq)
+        }
+      );
+      const upstreamText = await upstream.text();
+      if (!upstream.ok) {
+        import_v29.logger.error("[analyzeDocumentProxy] gemini_http_error", {
+          trust_surface: "document_proxy",
+          status: upstream.status,
+          bodyPreview: upstreamText.slice(0, 400)
+        });
+        return void res.status(502).json({ ok: false, error: "gemini_upstream_http", upstreamStatus: upstream.status });
+      }
+      const upstreamJson = safeJsonParse(upstreamText);
+      const modelText = upstreamJson?.candidates?.[0]?.content?.parts?.find((p) => typeof p.text === "string")?.text ?? "";
+      if (!modelText) {
+        import_v29.logger.error("[analyzeDocumentProxy] gemini_empty_output", { trust_surface: "document_proxy" });
+        return void res.status(502).json({ ok: false, error: "gemini_empty_output" });
+      }
+      const result = parseDocumentResultOrThrow(modelText);
+      return void res.status(200).json({ ok: true, ...result });
+    } catch (error) {
+      const err = error instanceof import_https2.HttpsError ? error : null;
+      if (err) {
+        const status = err.code === "unauthenticated" ? 401 : err.code === "permission-denied" ? 403 : err.code === "invalid-argument" ? 400 : 500;
+        return void res.status(status).json({ ok: false, error: err.message });
+      }
+      const e = error instanceof Error ? error : new Error(String(error));
+      import_v29.logger.error("[analyzeDocumentProxy] proxy_error", {
+        trust_surface: "document_proxy",
+        errName: e.name,
+        errMsg: e.message,
+        stack: e.stack
+      });
+      return void res.status(500).json({ ok: false, error: "document_proxy_error" });
     }
   }
 );
@@ -12904,45 +13085,117 @@ var walletOps = (0, import_https2.onRequest)(
       });
     }
     if (op === "topup") {
-      const amount = Number(body.amount ?? 0);
-      const paymentEventId = String(body.paymentEventId ?? "").trim().replace(/\//g, "_");
-      if (!paymentEventId) return void res.status(400).json({ ok: false, error: "payment_event_id_required" });
-      if (!Number.isFinite(amount) || amount <= 0) return void res.status(400).json({ ok: false, error: "invalid_amount" });
-      if (paymentEventId.length > 900) return void res.status(400).json({ ok: false, error: "payment_event_id_too_long" });
-      const pre = await receiptAllowsTopup(db, paymentEventId, userId, amount);
-      if (!pre.ok) {
-        import_v29.logger.warn("[walletOps] topup_receipt_denied", { firebaseUid: userId, paymentEventId, error: pre.error });
-        return void res.status(409).json({ ok: false, error: pre.error });
-      }
-      const ledgerRef = ref.collection("verifiedTopups").doc(paymentEventId);
-      const result = await db.runTransaction(async (tx) => {
-        const led = await tx.get(ledgerRef);
-        if (led.exists) {
-          const st = String(led.data()?.status ?? "");
-          if (st === "applied") return { ok: true, duplicate: true };
+      try {
+        const packId = String(body.packId ?? "").trim();
+        const idempotencyKey = String(body.idempotencyKey ?? "").trim().replace(/\//g, "_");
+        if (!packId) throw new import_https2.HttpsError("invalid-argument", "pack_id_required");
+        if (!idempotencyKey) throw new import_https2.HttpsError("invalid-argument", "idempotency_key_required");
+        if (idempotencyKey.length > 900) throw new import_https2.HttpsError("invalid-argument", "idempotency_key_too_long");
+        const creditsToGrant = PACK_TRUTH_TABLE[packId];
+        if (!Number.isFinite(creditsToGrant) || creditsToGrant <= 0) {
+          throw new import_https2.HttpsError("invalid-argument", "invalid_pack_id");
         }
-        const snap = await tx.get(ref);
-        const d = snap.data() ?? {};
-        const nextCredits = (d.credits ?? 0) + amount;
-        tx.set(
-          ref,
-          { credits: nextCredits, lifetimeSpent: d.lifetimeSpent ?? 0, updatedAt: import_firestore8.FieldValue.serverTimestamp() },
-          { merge: true }
-        );
-        tx.set(ledgerRef, {
-          status: "applied",
-          creditsGranted: amount,
-          createdAt: import_firestore8.FieldValue.serverTimestamp()
+        const pre = await receiptAllowsTopup(db, idempotencyKey, userId, creditsToGrant);
+        if (!pre.ok) {
+          import_v29.logger.warn("[walletOps] topup_receipt_denied", { firebaseUid: userId, idempotencyKey, error: pre.error });
+          return void res.status(409).json({ ok: false, error: pre.error });
+        }
+        const ledgerRef = ref.collection("verifiedTopups").doc(idempotencyKey);
+        await db.runTransaction(async (tx) => {
+          const led = await tx.get(ledgerRef);
+          if (led.exists && String(led.data()?.status ?? "") === "applied") {
+            throw new import_https2.HttpsError("already-exists", "idempotency_key_already_processed");
+          }
+          const snap = await tx.get(ref);
+          const d = snap.data() ?? {};
+          const nextCredits = (d.credits ?? 0) + creditsToGrant;
+          tx.set(
+            ref,
+            { credits: nextCredits, lifetimeSpent: d.lifetimeSpent ?? 0, updatedAt: import_firestore8.FieldValue.serverTimestamp() },
+            { merge: true }
+          );
+          tx.set(ledgerRef, {
+            status: "applied",
+            packId,
+            creditsGranted: creditsToGrant,
+            createdAt: import_firestore8.FieldValue.serverTimestamp()
+          });
         });
-        return { ok: true, duplicate: false };
-      });
-      import_v29.logger.info("[walletOps] topup", {
-        firebaseUid: userId,
-        paymentEventId,
-        amount,
-        duplicate: result.duplicate === true
-      });
-      return void res.status(200).json({ ok: true, duplicate: result.duplicate === true });
+        import_v29.logger.info("[walletOps] topup", {
+          firebaseUid: userId,
+          packId,
+          idempotencyKey,
+          creditsGranted: creditsToGrant
+        });
+        return void res.status(200).json({ ok: true, packId, creditsGranted: creditsToGrant });
+      } catch (e) {
+        if (e instanceof import_https2.HttpsError) {
+          const status = e.code === "already-exists" ? 409 : e.code === "invalid-argument" ? 400 : 500;
+          return void res.status(status).json({ ok: false, error: e.message });
+        }
+        throw e;
+      }
+    }
+    if (op === "charge") {
+      try {
+        const serviceId = String(body.serviceId ?? "").trim();
+        const idempotencyKey = String(body.idempotencyKey ?? "").trim().replace(/\//g, "_");
+        if (!serviceId) throw new import_https2.HttpsError("invalid-argument", "service_id_required");
+        if (!idempotencyKey) throw new import_https2.HttpsError("invalid-argument", "idempotency_key_required");
+        if (idempotencyKey.length > 900) throw new import_https2.HttpsError("invalid-argument", "idempotency_key_too_long");
+        const requiredCost = SERVICE_COST_TABLE[serviceId];
+        if (!Number.isFinite(requiredCost) || requiredCost <= 0) {
+          throw new import_https2.HttpsError("invalid-argument", "invalid_service_id");
+        }
+        const chargeLedgerRef = ref.collection("verifiedCharges").doc(idempotencyKey);
+        const txLogRef = ref.collection("transactions").doc();
+        await db.runTransaction(async (tx) => {
+          const chargeLedger = await tx.get(chargeLedgerRef);
+          if (chargeLedger.exists && String(chargeLedger.data()?.status ?? "") === "applied") {
+            throw new import_https2.HttpsError("already-exists", "idempotency_key_already_processed");
+          }
+          const snap = await tx.get(ref);
+          const d = snap.data() ?? {};
+          const balance = d.credits ?? 0;
+          if (balance < requiredCost) {
+            throw new import_https2.HttpsError("failed-precondition", "insufficient_funds");
+          }
+          const nextCredits = balance - requiredCost;
+          const nextLifetimeSpent = (d.lifetimeSpent ?? 0) + requiredCost;
+          tx.set(
+            ref,
+            { credits: nextCredits, lifetimeSpent: nextLifetimeSpent, updatedAt: import_firestore8.FieldValue.serverTimestamp() },
+            { merge: true }
+          );
+          tx.set(chargeLedgerRef, {
+            status: "applied",
+            serviceId,
+            amount: requiredCost,
+            createdAt: import_firestore8.FieldValue.serverTimestamp()
+          });
+          tx.set(txLogRef, {
+            type: "charge",
+            amount: -requiredCost,
+            serviceId,
+            idempotencyKey,
+            createdAt: import_firestore8.FieldValue.serverTimestamp(),
+            balanceAfter: nextCredits
+          });
+        });
+        import_v29.logger.info("[walletOps] charge", {
+          firebaseUid: userId,
+          serviceId,
+          idempotencyKey,
+          requiredCost
+        });
+        return void res.status(200).json({ ok: true, serviceId, chargedCredits: requiredCost });
+      } catch (e) {
+        if (e instanceof import_https2.HttpsError) {
+          const status = e.code === "already-exists" ? 409 : e.code === "invalid-argument" ? 400 : e.code === "failed-precondition" ? 412 : 500;
+          return void res.status(status).json({ ok: false, error: e.message });
+        }
+        throw e;
+      }
     }
     if (op === "chargeTrustedService") {
       const amount = Number(body.amount ?? 0);
@@ -13035,6 +13288,7 @@ var walletOps = (0, import_https2.onRequest)(
 // Annotate the CommonJS export names for ESM import in node:
 0 && (module.exports = {
   aiProxy,
+  analyzeDocumentProxy,
   b2bInboundVoiceWebhook,
   b2bOrderStaffOps,
   b2bStaffQueueSnapshot,

@@ -2,6 +2,8 @@ import React from 'react';
 import { StyleSheet, Text } from 'react-native';
 import { AnimatedPressable } from './AnimatedPressable';
 import { WidgetCard } from './WidgetCard';
+import { theme } from '../../theme/theme';
+import { FontFamily } from '../../theme/typography';
 
 type Props = {
   isUnlocked: boolean;
@@ -36,25 +38,27 @@ export const EducationWidget = React.memo(EducationWidgetComponent);
 
 const styles = StyleSheet.create({
   title: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#111827',
+    ...theme.typeScale.h2,
+    fontFamily: FontFamily.bold,
+    color: theme.colors.GraphiteBlue,
     marginBottom: 8,
   },
   subtitle: {
-    fontSize: 14,
-    color: '#4B5563',
+    ...theme.typeScale.body,
+    color: theme.colors.text.secondary,
+    fontFamily: FontFamily.regular,
     marginBottom: 14,
   },
   button: {
-    backgroundColor: '#111827',
+    backgroundColor: theme.colors.GraphiteBlue,
     borderRadius: 14,
     paddingVertical: 12,
     paddingHorizontal: 14,
   },
   buttonText: {
-    color: '#FFFFFF',
-    fontWeight: '600',
+    color: theme.colors.CeolWhite,
+    ...theme.typeScale.body,
+    fontFamily: FontFamily.semibold,
     textAlign: 'center',
   },
 });

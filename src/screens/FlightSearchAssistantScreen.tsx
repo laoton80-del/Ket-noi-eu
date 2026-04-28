@@ -5,7 +5,7 @@ import { useCallback, useMemo, useState } from 'react';
 import { Alert, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import type { RootStackParamList } from '../navigation/routes';
-import { Colors } from '../theme/colors';
+import { theme } from '../theme/theme';
 import { FontFamily } from '../theme/typography';
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
@@ -69,7 +69,7 @@ export function FlightSearchAssistantScreen() {
       return;
     }
     navigation.navigate('Tabs', {
-      screen: 'LeTan',
+      screen: 'Concierge',
       params: {
         aiMode: 'roleplay',
         scenario: 'So sánh chuyến bay (không đặt vé trong app)',
@@ -99,8 +99,8 @@ export function FlightSearchAssistantScreen() {
     <SafeAreaView style={styles.safe} edges={['top']}>
       <ScrollView style={styles.container} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
         <View style={styles.topBar}>
-          <Pressable onPress={() => navigation.goBack()} style={({ pressed }) => [styles.backBtn, pressed && { opacity: 0.7 }]}>
-            <Ionicons name="chevron-back" size={22} color={Colors.text} />
+          <Pressable onPress={() => navigation.goBack()} style={({ pressed }) => [styles.backBtn, pressed && { opacity: 0.8 }]}>
+            <Ionicons name="chevron-back" size={22} color={theme.colors.text.primary} />
             <Text style={styles.backText}>Quay lại</Text>
           </Pressable>
         </View>
@@ -111,7 +111,7 @@ export function FlightSearchAssistantScreen() {
         </Text>
 
         <View style={styles.trustBox}>
-          <Ionicons name="shield-checkmark-outline" size={20} color={Colors.primary} />
+          <Ionicons name="shield-checkmark-outline" size={20} color={theme.colors.primary} />
           <Text style={styles.trustText}>
             Đây không phải đặt vé hay thanh toán trong app. Không có vé đã phát hành, không cam kết giữ chỗ. Bạn cần hoàn tất trên trang
             chính thức của hãng bay, đại lý hoặc nền tảng bạn chọn.
@@ -121,13 +121,13 @@ export function FlightSearchAssistantScreen() {
         <Text style={styles.sectionTitle}>Loại chuyến</Text>
         <View style={styles.segmentRow}>
           <Pressable
-            style={({ pressed }) => [styles.segment, trip === 'oneway' && styles.segmentOn, pressed && { opacity: 0.85 }]}
+            style={({ pressed }) => [styles.segment, trip === 'oneway' && styles.segmentOn, pressed && { opacity: 0.8 }]}
             onPress={() => setTrip('oneway')}
           >
             <Text style={[styles.segmentText, trip === 'oneway' && styles.segmentTextOn]}>Một chiều</Text>
           </Pressable>
           <Pressable
-            style={({ pressed }) => [styles.segment, trip === 'roundtrip' && styles.segmentOn, pressed && { opacity: 0.85 }]}
+            style={({ pressed }) => [styles.segment, trip === 'roundtrip' && styles.segmentOn, pressed && { opacity: 0.8 }]}
             onPress={() => setTrip('roundtrip')}
           >
             <Text style={[styles.segmentText, trip === 'roundtrip' && styles.segmentTextOn]}>Khứ hồi</Text>
@@ -152,28 +152,28 @@ export function FlightSearchAssistantScreen() {
         <View style={styles.checklist}>
           {COMPARE_CHECKLIST.map((line) => (
             <View key={line} style={styles.checkRow}>
-              <Ionicons name="ellipse-outline" size={14} color={Colors.primary} style={{ marginTop: 3 }} />
+              <Ionicons name="ellipse-outline" size={14} color={theme.colors.primary} style={{ marginTop: 3 }} />
               <Text style={styles.checkText}>{line}</Text>
             </View>
           ))}
         </View>
 
-        <Pressable style={({ pressed }) => [styles.primaryBtn, pressed && { opacity: 0.85 }]} onPress={openMinhKhang}>
-          <Ionicons name="chatbubbles-outline" size={20} color="#FFFFFF" />
+        <Pressable style={({ pressed }) => [styles.primaryBtn, pressed && { opacity: 0.8 }]} onPress={openMinhKhang}>
+          <Ionicons name="chatbubbles-outline" size={20} color={theme.colors.CeolWhite} />
           <Text style={styles.primaryBtnText}>Hỏi Minh Khang: lựa chọn nào phù hợp hơn?</Text>
         </Pressable>
 
-        <Pressable style={({ pressed }) => [styles.secondaryBtn, pressed && { opacity: 0.85 }]} onPress={openLeona}>
-          <Ionicons name="call-outline" size={20} color={Colors.primary} />
+        <Pressable style={({ pressed }) => [styles.secondaryBtn, pressed && { opacity: 0.8 }]} onPress={openLeona}>
+          <Ionicons name="call-outline" size={20} color={theme.colors.primary} />
           <Text style={styles.secondaryBtnText}>Nhờ Leona gọi / xác minh với hãng hoặc đại lý</Text>
         </Pressable>
 
         <Pressable
-          style={({ pressed }) => [styles.linkRow, pressed && { opacity: 0.75 }]}
+          style={({ pressed }) => [styles.linkRow, pressed && { opacity: 0.8 }]}
           onPress={() => navigation.navigate('TravelCompanion')}
         >
           <Text style={styles.linkText}>Quay về Đồng hành du lịch</Text>
-          <Ionicons name="chevron-forward" size={18} color={Colors.primary} />
+          <Ionicons name="chevron-forward" size={18} color={theme.colors.primary} />
         </Pressable>
       </ScrollView>
     </SafeAreaView>
@@ -194,7 +194,7 @@ function LabeledInput(props: {
         value={props.value}
         onChangeText={props.onChangeText}
         placeholder={props.placeholder}
-        placeholderTextColor={Colors.textSoft}
+        placeholderTextColor={theme.colors.text.secondary}
         style={[styles.input, props.multiline && styles.inputMulti]}
         multiline={props.multiline}
       />
@@ -203,64 +203,94 @@ function LabeledInput(props: {
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: Colors.background },
+  safe: { flex: 1, backgroundColor: theme.colors.DeepInkNavy },
   container: { flex: 1 },
   content: { paddingHorizontal: 16, paddingBottom: 48 },
   topBar: { marginBottom: 8 },
   backBtn: { flexDirection: 'row', alignItems: 'center', gap: 4, alignSelf: 'flex-start', paddingVertical: 8 },
-  backText: { fontSize: 16, color: Colors.text, fontFamily: FontFamily.medium },
-  title: { fontSize: 24, fontFamily: FontFamily.bold, color: Colors.text, marginTop: 4 },
-  subtitle: { fontSize: 14, fontFamily: FontFamily.regular, color: Colors.textSoft, marginTop: 8, lineHeight: 20 },
+  backText: { fontSize: theme.typeScale.body.fontSize, color: theme.colors.text.primary, fontFamily: FontFamily.medium },
+  title: { fontSize: theme.typeScale.h2.fontSize, fontFamily: FontFamily.bold, color: theme.colors.text.primary, marginTop: 4 },
+  subtitle: {
+    fontSize: theme.typeScale.caption.fontSize,
+    fontFamily: FontFamily.regular,
+    color: theme.colors.text.secondary,
+    marginTop: 8,
+    lineHeight: theme.typeScale.body.lineHeight,
+  },
   trustBox: {
     flexDirection: 'row',
     gap: 10,
     marginTop: 16,
     padding: 12,
     borderRadius: 12,
-    backgroundColor: Colors.glass,
+    backgroundColor: theme.colors.glass.surface,
     borderWidth: 1,
-    borderColor: Colors.glassBorder,
+    borderColor: theme.colors.glass.border,
   },
-  trustText: { flex: 1, fontSize: 13, fontFamily: FontFamily.regular, color: Colors.text, lineHeight: 19 },
-  sectionTitle: { fontSize: 16, fontFamily: FontFamily.bold, color: Colors.text, marginTop: 20, marginBottom: 8 },
-  hint: { fontSize: 12, fontFamily: FontFamily.regular, color: Colors.textSoft, marginBottom: 8, lineHeight: 17 },
+  trustText: {
+    flex: 1,
+    fontSize: theme.typeScale.caption.fontSize,
+    fontFamily: FontFamily.regular,
+    color: theme.colors.text.primary,
+    lineHeight: theme.typeScale.body.lineHeight,
+  },
+  sectionTitle: {
+    fontSize: theme.typeScale.body.fontSize,
+    fontFamily: FontFamily.bold,
+    color: theme.colors.text.primary,
+    marginTop: 20,
+    marginBottom: 8,
+  },
+  hint: {
+    fontSize: theme.typeScale.caption.fontSize,
+    fontFamily: FontFamily.regular,
+    color: theme.colors.text.secondary,
+    marginBottom: 8,
+    lineHeight: theme.typeScale.caption.lineHeight,
+  },
   segmentRow: { flexDirection: 'row', gap: 10 },
   segment: {
     flex: 1,
     paddingVertical: 12,
     borderRadius: 12,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: theme.colors.CeolWhite,
     borderWidth: 1,
-    borderColor: Colors.glassBorder,
+    borderColor: theme.colors.glass.border,
     alignItems: 'center',
   },
-  segmentOn: { backgroundColor: Colors.primary, borderColor: Colors.primary },
-  segmentText: { fontSize: 14, fontFamily: FontFamily.semibold, color: Colors.text },
-  segmentTextOn: { color: '#FFFFFF' },
+  segmentOn: { backgroundColor: theme.colors.primary, borderColor: theme.colors.primary },
+  segmentText: { fontSize: theme.typeScale.caption.fontSize, fontFamily: FontFamily.semibold, color: theme.colors.text.primary },
+  segmentTextOn: { color: theme.colors.CeolWhite },
   fieldWrap: { marginBottom: 12 },
-  fieldLabel: { fontSize: 13, fontFamily: FontFamily.medium, color: Colors.text, marginBottom: 6 },
+  fieldLabel: { fontSize: theme.typeScale.caption.fontSize, fontFamily: FontFamily.medium, color: theme.colors.text.primary, marginBottom: 6 },
   input: {
     borderWidth: 1,
-    borderColor: Colors.glassBorder,
+    borderColor: theme.colors.glass.border,
     borderRadius: 12,
     paddingHorizontal: 12,
     paddingVertical: 10,
-    fontSize: 15,
+    fontSize: theme.typeScale.body.fontSize,
     fontFamily: FontFamily.regular,
-    color: Colors.text,
-    backgroundColor: '#FFFFFF',
+    color: theme.colors.text.primary,
+    backgroundColor: theme.colors.CeolWhite,
   },
   inputMulti: { minHeight: 72, textAlignVertical: 'top' },
   checklist: {
     padding: 12,
     borderRadius: 12,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: theme.colors.CeolWhite,
     borderWidth: 1,
-    borderColor: Colors.glassBorder,
+    borderColor: theme.colors.glass.border,
     gap: 10,
   },
   checkRow: { flexDirection: 'row', gap: 10, alignItems: 'flex-start' },
-  checkText: { flex: 1, fontSize: 13, fontFamily: FontFamily.regular, color: Colors.text, lineHeight: 19 },
+  checkText: {
+    flex: 1,
+    fontSize: theme.typeScale.caption.fontSize,
+    fontFamily: FontFamily.regular,
+    color: theme.colors.text.primary,
+    lineHeight: theme.typeScale.body.lineHeight,
+  },
   primaryBtn: {
     marginTop: 20,
     flexDirection: 'row',
@@ -269,9 +299,9 @@ const styles = StyleSheet.create({
     gap: 10,
     paddingVertical: 14,
     borderRadius: 14,
-    backgroundColor: Colors.primary,
+    backgroundColor: theme.colors.primary,
   },
-  primaryBtnText: { fontSize: 15, fontFamily: FontFamily.bold, color: '#FFFFFF', flexShrink: 1 },
+  primaryBtnText: { fontSize: theme.typeScale.body.fontSize, fontFamily: FontFamily.bold, color: theme.colors.CeolWhite, flexShrink: 1 },
   secondaryBtn: {
     marginTop: 12,
     flexDirection: 'row',
@@ -280,11 +310,11 @@ const styles = StyleSheet.create({
     gap: 10,
     paddingVertical: 14,
     borderRadius: 14,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: theme.colors.CeolWhite,
     borderWidth: 1,
-    borderColor: Colors.primary,
+    borderColor: theme.colors.primary,
   },
-  secondaryBtnText: { fontSize: 14, fontFamily: FontFamily.semibold, color: Colors.primary, flexShrink: 1 },
+  secondaryBtnText: { fontSize: theme.typeScale.caption.fontSize, fontFamily: FontFamily.semibold, color: theme.colors.primary, flexShrink: 1 },
   linkRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, marginTop: 20 },
-  linkText: { fontSize: 14, fontFamily: FontFamily.semibold, color: Colors.primary },
+  linkText: { fontSize: theme.typeScale.caption.fontSize, fontFamily: FontFamily.semibold, color: theme.colors.primary },
 });

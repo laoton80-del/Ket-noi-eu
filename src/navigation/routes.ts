@@ -4,14 +4,14 @@ import type { RedirectTarget } from '../context/AuthContext';
 
 /**
  * Navigation contracts. Pilot **in-scope** stacks: Tabs + LifeOS, TravelCompanion, FlightSearchAssistant, Wallet, Vault,
- * LiveInterpreter, LeonaCall, EmergencySOS, LeTan. Radar is registered but redirects when `LAUNCH_PILOT_CONFIG.enableRadarSurface` is false.
+ * LiveInterpreter, LeonaCall, EmergencySOS, Concierge. Radar is registered but redirects when `LAUNCH_PILOT_CONFIG.enableRadarSurface` is false.
  */
 export type RootTabParamList = {
-  QuocGia: undefined;
-  TienIch: undefined;
-  HocTap: undefined;
+  Discover: undefined;
+  Services: undefined;
+  Academy: undefined;
   CongDong: undefined;
-  LeTan:
+  Concierge:
     | {
         proactiveQuestion?: string;
         autoSimulate?: boolean;
@@ -34,6 +34,10 @@ export type RootStackParamList = {
   EmergencySOS: undefined;
   AdultLearningHome: undefined;
   KidsLearningHome: undefined;
+  LiveAiTeacher: undefined;
+  AssistantChat: undefined;
+  InboundQueue: undefined;
+  SmartCalendar: undefined;
   Wallet: undefined;
   AiEye: undefined;
   Vault: undefined;

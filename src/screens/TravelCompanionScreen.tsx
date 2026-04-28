@@ -7,12 +7,12 @@ import type { InterpreterScenario } from '../config/aiPrompts';
 import { resolveCountryPack } from '../config/countryPacks';
 import { useAuth } from '../context/AuthContext';
 import type { RootStackParamList } from '../navigation/routes';
-import { Colors } from '../theme/colors';
+import { theme } from '../theme/theme';
 import { FontFamily } from '../theme/typography';
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
 
-/** Le Tân chỉ seed `initialPrompt` khi `aiMode === 'roleplay'` (xem LeTanScreen). */
+/** Trợ lý chỉ seed `initialPrompt` khi `aiMode === 'roleplay'` (xem Concierge screen). */
 const LETAN_TRAVEL_SCENARIO = 'Du lịch & giao tiếp nơi công cộng';
 
 type TravelScenarioRow = {
@@ -120,8 +120,8 @@ export function TravelCompanionScreen() {
     <SafeAreaView style={styles.safe} edges={['top']}>
       <ScrollView style={styles.container} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.topBar}>
-          <Pressable onPress={() => navigation.goBack()} style={({ pressed }) => [styles.backBtn, pressed && { opacity: 0.7 }]}>
-            <Ionicons name="chevron-back" size={22} color={Colors.text} />
+          <Pressable onPress={() => navigation.goBack()} style={({ pressed }) => [styles.backBtn, pressed && { opacity: 0.8 }]}>
+            <Ionicons name="chevron-back" size={22} color={theme.colors.text.primary} />
             <Text style={styles.backText}>Quay lại</Text>
           </Pressable>
         </View>
@@ -133,21 +133,21 @@ export function TravelCompanionScreen() {
         <Text style={styles.localeHint}>{localeLine}</Text>
 
         <View style={styles.trustBox}>
-          <Ionicons name="information-circle-outline" size={20} color={Colors.primary} />
+          <Ionicons name="information-circle-outline" size={20} color={theme.colors.primary} />
           <Text style={styles.trustText}>{TRUST_NOTE}</Text>
         </View>
 
         <Text style={styles.sectionTitle}>Hỗ trợ nhanh</Text>
         <View style={styles.quickRow}>
           <Pressable
-            style={({ pressed }) => [styles.quickChip, pressed && { opacity: 0.75 }]}
+            style={({ pressed }) => [styles.quickChip, pressed && { opacity: 0.8 }]}
             onPress={() => navigation.navigate('LiveInterpreter', { scenario: 'travel' })}
           >
-            <Ionicons name="mic-outline" size={18} color={Colors.primary} />
+            <Ionicons name="mic-outline" size={18} color={theme.colors.primary} />
             <Text style={styles.quickChipText}>Phiên dịch trực tiếp</Text>
           </Pressable>
           <Pressable
-            style={({ pressed }) => [styles.quickChip, pressed && { opacity: 0.75 }]}
+            style={({ pressed }) => [styles.quickChip, pressed && { opacity: 0.8 }]}
             onPress={() =>
               navigation.navigate('LeonaCall', {
                 prefillRequest:
@@ -156,23 +156,23 @@ export function TravelCompanionScreen() {
               })
             }
           >
-            <Ionicons name="call-outline" size={18} color={Colors.primary} />
+            <Ionicons name="call-outline" size={18} color={theme.colors.primary} />
             <Text style={styles.quickChipText}>Gọi điện hỏi giúp</Text>
           </Pressable>
         </View>
         <View style={styles.quickRow}>
           <Pressable
-            style={({ pressed }) => [styles.quickChip, styles.quickChipDanger, pressed && { opacity: 0.75 }]}
+            style={({ pressed }) => [styles.quickChip, styles.quickChipDanger, pressed && { opacity: 0.8 }]}
             onPress={() => navigation.navigate('EmergencySOS')}
           >
-            <Ionicons name="warning-outline" size={18} color="#FFFFFF" />
+            <Ionicons name="warning-outline" size={18} color={theme.colors.CeolWhite} />
             <Text style={[styles.quickChipText, styles.quickChipTextOnDanger]}>Hỗ trợ khẩn cấp</Text>
           </Pressable>
           <Pressable
-            style={({ pressed }) => [styles.quickChip, pressed && { opacity: 0.75 }]}
+            style={({ pressed }) => [styles.quickChip, pressed && { opacity: 0.8 }]}
             onPress={() =>
               navigation.navigate('Tabs', {
-                screen: 'LeTan',
+                screen: 'Concierge',
                 params: {
                   aiMode: 'roleplay',
                   scenario: LETAN_TRAVEL_SCENARIO,
@@ -182,7 +182,7 @@ export function TravelCompanionScreen() {
               })
             }
           >
-            <Ionicons name="chatbubbles-outline" size={18} color={Colors.primary} />
+            <Ionicons name="chatbubbles-outline" size={18} color={theme.colors.primary} />
             <Text style={styles.quickChipText}>Minh Khang</Text>
           </Pressable>
         </View>
@@ -192,13 +192,13 @@ export function TravelCompanionScreen() {
           onPress={() => navigation.navigate('FlightSearchAssistant')}
         >
           <View style={styles.flightEntryLeft}>
-            <Ionicons name="search-outline" size={22} color={Colors.primary} />
+            <Ionicons name="search-outline" size={22} color={theme.colors.primary} />
             <View style={{ flex: 1 }}>
               <Text style={styles.flightEntryTitle}>So sánh & chuẩn bị chuyến bay</Text>
               <Text style={styles.flightEntryHint}>Ghi chú hành trình và gợi ý so sánh — tìm vé trên trang hãng/đại lý; không đặt vé trong app</Text>
             </View>
           </View>
-          <Ionicons name="chevron-forward" size={20} color={Colors.textSoft} />
+          <Ionicons name="chevron-forward" size={20} color={theme.colors.text.secondary} />
         </Pressable>
 
         <Text style={styles.sectionTitle}>Theo tình huống</Text>
@@ -206,7 +206,7 @@ export function TravelCompanionScreen() {
           <View key={row.id} style={styles.card}>
             <View style={styles.cardHeader}>
               <View style={styles.iconBubble}>
-                <Ionicons name={row.icon} size={20} color={Colors.primary} />
+                <Ionicons name={row.icon} size={20} color={theme.colors.primary} />
               </View>
               <View style={{ flex: 1 }}>
                 <Text style={styles.cardTitle}>{row.label}</Text>
@@ -215,13 +215,13 @@ export function TravelCompanionScreen() {
             </View>
             <View style={styles.cardActions}>
               <Pressable
-                style={({ pressed }) => [styles.actionPill, pressed && { opacity: 0.75 }]}
+                style={({ pressed }) => [styles.actionPill, pressed && { opacity: 0.8 }]}
                 onPress={() => navigation.navigate('LiveInterpreter', { scenario: row.interpreterScenario })}
               >
                 <Text style={styles.actionPillText}>Phiên dịch</Text>
               </Pressable>
               <Pressable
-                style={({ pressed }) => [styles.actionPill, pressed && { opacity: 0.75 }]}
+                style={({ pressed }) => [styles.actionPill, pressed && { opacity: 0.8 }]}
                 onPress={() =>
                   navigation.navigate('LeonaCall', {
                     prefillRequest: row.leonaPrefill,
@@ -232,10 +232,10 @@ export function TravelCompanionScreen() {
                 <Text style={styles.actionPillText}>Leona</Text>
               </Pressable>
               <Pressable
-                style={({ pressed }) => [styles.actionPill, styles.actionPillOutline, pressed && { opacity: 0.75 }]}
+                style={({ pressed }) => [styles.actionPill, styles.actionPillOutline, pressed && { opacity: 0.8 }]}
                 onPress={() =>
                   navigation.navigate('Tabs', {
-                    screen: 'LeTan',
+                    screen: 'Concierge',
                     params: {
                       aiMode: 'roleplay',
                       scenario: LETAN_TRAVEL_SCENARIO,
@@ -248,7 +248,7 @@ export function TravelCompanionScreen() {
               </Pressable>
               {row.id === 'emergency' ? (
                 <Pressable
-                  style={({ pressed }) => [styles.actionPill, styles.actionPillSos, pressed && { opacity: 0.75 }]}
+                  style={({ pressed }) => [styles.actionPill, styles.actionPillSos, pressed && { opacity: 0.8 }]}
                   onPress={() => navigation.navigate('EmergencySOS')}
                 >
                   <Text style={[styles.actionPillText, styles.actionPillTextOnDanger]}>SOS</Text>
@@ -267,27 +267,27 @@ export function TravelCompanionScreen() {
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: Colors.background },
+  safe: { flex: 1, backgroundColor: theme.colors.DeepInkNavy },
   container: { flex: 1 },
   content: { paddingHorizontal: 16, paddingBottom: 48 },
   topBar: { marginBottom: 8 },
   backBtn: { flexDirection: 'row', alignItems: 'center', gap: 4, alignSelf: 'flex-start', paddingVertical: 8 },
-  backText: { fontSize: 16, color: Colors.text, fontFamily: FontFamily.medium },
-  title: { fontSize: 26, fontFamily: FontFamily.bold, color: Colors.text, marginTop: 4 },
-  subtitle: { fontSize: 14, fontFamily: FontFamily.regular, color: Colors.textSoft, marginTop: 8, lineHeight: 20 },
-  localeHint: { fontSize: 12, fontFamily: FontFamily.regular, color: Colors.textSoft, marginTop: 10 },
+  backText: { ...theme.typeScale.body, color: theme.colors.text.primary, fontFamily: FontFamily.medium },
+  title: { ...theme.typeScale.h1, fontFamily: FontFamily.bold, color: theme.colors.text.primary, marginTop: 4 },
+  subtitle: { ...theme.typeScale.body, color: theme.colors.text.secondary, marginTop: 8 },
+  localeHint: { ...theme.typeScale.caption, color: theme.colors.text.secondary, marginTop: 10 },
   trustBox: {
     flexDirection: 'row',
     gap: 10,
     marginTop: 16,
     padding: 12,
     borderRadius: 12,
-    backgroundColor: Colors.glass,
+    backgroundColor: theme.colors.glass.surface,
     borderWidth: 1,
-    borderColor: Colors.glassBorder,
+    borderColor: theme.colors.glass.border,
   },
-  trustText: { flex: 1, fontSize: 13, fontFamily: FontFamily.regular, color: Colors.text, lineHeight: 19 },
-  sectionTitle: { fontSize: 16, fontFamily: FontFamily.bold, color: Colors.text, marginTop: 22, marginBottom: 10 },
+  trustText: { ...theme.typeScale.caption, flex: 1, color: theme.colors.text.primary },
+  sectionTitle: { ...theme.typeScale.body, fontFamily: FontFamily.bold, color: theme.colors.text.primary, marginTop: 22, marginBottom: 10 },
   quickRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginBottom: 10 },
   quickChip: {
     flexDirection: 'row',
@@ -296,65 +296,64 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     paddingHorizontal: 14,
     borderRadius: 999,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: theme.colors.CeolWhite,
     borderWidth: 1,
-    borderColor: Colors.glassBorder,
+    borderColor: theme.colors.glass.border,
     flexGrow: 1,
     minWidth: '42%',
   },
-  quickChipDanger: { backgroundColor: '#DC2626', borderColor: '#DC2626' },
-  quickChipText: { fontSize: 13, fontFamily: FontFamily.semibold, color: Colors.text, flex: 1 },
-  quickChipTextOnDanger: { color: '#FFFFFF' },
+  quickChipDanger: { backgroundColor: theme.colors.RouteError, borderColor: theme.colors.RouteError },
+  quickChipText: { ...theme.typeScale.caption, fontFamily: FontFamily.semibold, color: theme.colors.text.primary, flex: 1 },
+  quickChipTextOnDanger: { color: theme.colors.CeolWhite },
   flightEntry: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     padding: 14,
     borderRadius: 14,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: theme.colors.CeolWhite,
     borderWidth: 1,
-    borderColor: Colors.primary,
+    borderColor: theme.colors.primary,
     marginTop: 6,
     gap: 12,
   },
   flightEntryLeft: { flexDirection: 'row', alignItems: 'center', gap: 12, flex: 1 },
-  flightEntryTitle: { fontSize: 15, fontFamily: FontFamily.bold, color: Colors.text },
-  flightEntryHint: { fontSize: 12, fontFamily: FontFamily.regular, color: Colors.textSoft, marginTop: 4 },
+  flightEntryTitle: { ...theme.typeScale.body, color: theme.colors.text.primary },
+  flightEntryHint: { ...theme.typeScale.caption, color: theme.colors.text.secondary, marginTop: 4 },
   card: {
     marginBottom: 12,
     padding: 14,
     borderRadius: 14,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: theme.colors.CeolWhite,
     borderWidth: 1,
-    borderColor: Colors.glassBorder,
+    borderColor: theme.colors.glass.border,
   },
   cardHeader: { flexDirection: 'row', gap: 12, alignItems: 'flex-start' },
   iconBubble: {
     width: 40,
     height: 40,
     borderRadius: 12,
-    backgroundColor: Colors.background,
+    backgroundColor: theme.colors.background,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  cardTitle: { fontSize: 16, fontFamily: FontFamily.bold, color: Colors.text },
-  cardSubtitle: { fontSize: 13, fontFamily: FontFamily.regular, color: Colors.textSoft, marginTop: 4, lineHeight: 18 },
+  cardTitle: { ...theme.typeScale.body, fontFamily: FontFamily.bold, color: theme.colors.text.primary },
+  cardSubtitle: { ...theme.typeScale.caption, color: theme.colors.text.secondary, marginTop: 4 },
   cardActions: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 12 },
   actionPill: {
     paddingVertical: 8,
     paddingHorizontal: 12,
     borderRadius: 999,
-    backgroundColor: Colors.background,
+    backgroundColor: theme.colors.background,
   },
-  actionPillOutline: { backgroundColor: 'transparent', borderWidth: 1, borderColor: Colors.primary },
-  actionPillSos: { backgroundColor: '#DC2626' },
-  actionPillText: { fontSize: 12, fontFamily: FontFamily.semibold, color: Colors.primary },
-  actionPillTextOutline: { color: Colors.primary },
-  actionPillTextOnDanger: { color: '#FFFFFF' },
+  actionPillOutline: { backgroundColor: 'transparent', borderWidth: 1, borderColor: theme.colors.primary },
+  actionPillSos: { backgroundColor: theme.colors.RouteError },
+  actionPillText: { ...theme.typeScale.caption, fontFamily: FontFamily.semibold, color: theme.colors.primary },
+  actionPillTextOutline: { color: theme.colors.primary },
+  actionPillTextOnDanger: { color: theme.colors.CeolWhite },
   footerNote: {
-    fontSize: 12,
-    fontFamily: FontFamily.regular,
-    color: Colors.textSoft,
+    ...theme.typeScale.caption,
+    color: theme.colors.text.secondary,
     marginTop: 20,
     lineHeight: 18,
   },

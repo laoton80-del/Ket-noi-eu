@@ -66,11 +66,11 @@ export function generateSellCTA(
       return {
         action,
         creditsCost: leTanCost,
-        message: `Mình có thể chuyển bạn sang Lễ tân để hỗ trợ chốt nhanh. (Cần ${leTanCost} Credits/lượt mô phỏng)\nTiếp theo: sau khi chốt, nếu cần xác nhận cuộc gọi thật, mình đề xuất Leona.`,
+        message: `Mình có thể chuyển bạn sang Trợ lý để hỗ trợ chốt nhanh. (Cần ${leTanCost} Credits/lượt mô phỏng)\nTiếp theo: sau khi chốt, nếu cần xác nhận cuộc gọi thật, mình đề xuất Leona.`,
         resume: {
           route: 'Tabs',
           params: {
-            screen: 'LeTan',
+            screen: 'Concierge',
             params: { proactiveQuestion, autoSimulate: true },
           },
         },

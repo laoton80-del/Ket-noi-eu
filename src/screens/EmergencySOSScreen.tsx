@@ -12,6 +12,8 @@ import { resolveEmergencyLocation } from '../services/emergency/emergencyLocatio
 import { appendUsageHistory } from '../services/history';
 import { generateSpeech } from '../services/OpenAIService';
 import { resolveCountryPack } from '../config/countryPacks';
+import { theme } from '../theme/theme';
+import { FontFamily } from '../theme/typography';
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
 
@@ -107,13 +109,13 @@ export function EmergencySOSScreen() {
           ))}
         </View>
 
-        <Pressable style={styles.callBtn} onPress={() => void callEmergencyNow()}>
+        <Pressable style={({ pressed }) => [styles.callBtn, pressed && { opacity: 0.8 }]} onPress={() => void callEmergencyNow()}>
           <Text style={styles.callText}>GỌI {emergencyNumber} NGAY</Text>
         </Pressable>
 
         <View style={styles.locBox}>
           <Text style={styles.locTitle}>Vị trí hiện tại</Text>
-          {locationLoading ? <ActivityIndicator color="#EF4444" /> : <Text style={styles.locText}>{locationLabel}</Text>}
+          {locationLoading ? <ActivityIndicator color={theme.colors.RouteError} /> : <Text style={styles.locText}>{locationLabel}</Text>}
         </View>
 
         <View style={styles.phraseBox}>
@@ -124,10 +126,10 @@ export function EmergencySOSScreen() {
         </View>
 
         <View style={styles.row}>
-          <Pressable style={styles.secondaryBtn} onPress={() => void onPlayVoice()}>
+          <Pressable style={({ pressed }) => [styles.secondaryBtn, pressed && { opacity: 0.8 }]} onPress={() => void onPlayVoice()}>
             <Text style={styles.secondaryText}>{ttsLoading ? 'Đang phát...' : 'Phát giọng nói'}</Text>
           </Pressable>
-          <Pressable style={styles.secondaryBtn} onPress={() => setShowCannotSpeak((v) => !v)}>
+          <Pressable style={({ pressed }) => [styles.secondaryBtn, pressed && { opacity: 0.8 }]} onPress={() => setShowCannotSpeak((v) => !v)}>
             <Text style={styles.secondaryText}>{showCannotSpeak ? 'Ẩn chế độ' : 'Tôi không thể nói'}</Text>
           </Pressable>
         </View>
@@ -139,7 +141,7 @@ export function EmergencySOSScreen() {
         ) : null}
 
         <Pressable
-          style={styles.langSupportBtn}
+          style={({ pressed }) => [styles.langSupportBtn, pressed && { opacity: 0.8 }]}
           onPress={() => navigation.navigate('LiveInterpreter', { guidedEntry: true, scenario: 'general' })}
         >
           <Text style={styles.langSupportText}>Hỗ trợ ngôn ngữ</Text>
@@ -150,48 +152,48 @@ export function EmergencySOSScreen() {
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: '#09090B' },
-  container: { flex: 1, backgroundColor: '#09090B' },
+  safe: { flex: 1, backgroundColor: theme.colors.DeepInkNavy },
+  container: { flex: 1, backgroundColor: theme.colors.DeepInkNavy },
   content: { padding: 16, paddingBottom: 32, gap: 14 },
   header: { marginBottom: 4 },
-  sos: { color: '#F87171', fontSize: 34, fontWeight: '900' },
-  headerSub: { color: '#FCA5A5', fontSize: 14, marginTop: 4 },
+  sos: { color: theme.colors.RouteError, ...theme.typeScale.h1, fontFamily: FontFamily.bold },
+  headerSub: { color: theme.colors.text.secondary, ...theme.typeScale.body, fontFamily: FontFamily.regular, marginTop: 4 },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
   callBtn: {
     marginTop: 4,
-    backgroundColor: '#DC2626',
+    backgroundColor: theme.colors.RouteError,
     borderRadius: 14,
     minHeight: 64,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  callText: { color: '#FFFFFF', fontSize: 24, fontWeight: '900' },
-  locBox: { backgroundColor: '#1F2937', borderRadius: 12, padding: 12, minHeight: 70 },
-  locTitle: { color: '#F3F4F6', fontSize: 13, fontWeight: '700', marginBottom: 6 },
-  locText: { color: '#E5E7EB', fontSize: 14, lineHeight: 20 },
-  phraseBox: { backgroundColor: '#111827', borderRadius: 12, padding: 12 },
-  localLabel: { color: '#FCA5A5', fontSize: 12, fontWeight: '700', marginBottom: 6 },
-  localText: { color: '#FFFFFF', fontSize: 19, fontWeight: '800', lineHeight: 26 },
-  vnLabel: { color: '#93C5FD', fontSize: 12, fontWeight: '700', marginTop: 12, marginBottom: 6 },
-  vnText: { color: '#E5E7EB', fontSize: 16, lineHeight: 24 },
+  callText: { color: theme.colors.CeolWhite, ...theme.typeScale.h1, fontFamily: FontFamily.bold },
+  locBox: { backgroundColor: theme.colors.GraphiteBlue, borderRadius: 12, padding: 12, minHeight: 70 },
+  locTitle: { color: theme.colors.CeolWhite, ...theme.typeScale.caption, fontFamily: FontFamily.semibold, marginBottom: 6 },
+  locText: { color: theme.colors.text.secondary, ...theme.typeScale.body, fontFamily: FontFamily.regular },
+  phraseBox: { backgroundColor: theme.colors.GraphiteBlue, borderRadius: 12, padding: 12 },
+  localLabel: { color: theme.colors.RouteError, ...theme.typeScale.caption, fontFamily: FontFamily.semibold, marginBottom: 6 },
+  localText: { color: theme.colors.CeolWhite, ...theme.typeScale.h2, fontFamily: FontFamily.bold },
+  vnLabel: { color: theme.colors.SignalBlue, ...theme.typeScale.caption, fontFamily: FontFamily.semibold, marginTop: 12, marginBottom: 6 },
+  vnText: { color: theme.colors.text.secondary, ...theme.typeScale.body, fontFamily: FontFamily.regular },
   row: { flexDirection: 'row', gap: 10 },
   secondaryBtn: {
     flex: 1,
-    backgroundColor: '#374151',
+    backgroundColor: theme.colors.executive.panelMuted,
     borderRadius: 12,
     minHeight: 44,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  secondaryText: { color: '#FFFFFF', fontWeight: '700', fontSize: 14 },
-  cannotSpeakBox: { backgroundColor: '#000000', borderRadius: 12, padding: 14, borderWidth: 1, borderColor: '#EF4444' },
-  cannotSpeakText: { color: '#FFFFFF', fontSize: 26, fontWeight: '900', lineHeight: 34, textAlign: 'center' },
+  secondaryText: { color: theme.colors.CeolWhite, ...theme.typeScale.body, fontFamily: FontFamily.bold },
+  cannotSpeakBox: { backgroundColor: theme.colors.glass.shadow, borderRadius: 12, padding: 14, borderWidth: 1, borderColor: theme.colors.RouteError },
+  cannotSpeakText: { color: theme.colors.CeolWhite, ...theme.typeScale.h1, fontFamily: FontFamily.bold, textAlign: 'center' },
   langSupportBtn: {
-    backgroundColor: '#1D4ED8',
+    backgroundColor: theme.colors.SignalBlue,
     borderRadius: 12,
     minHeight: 46,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  langSupportText: { color: '#FFFFFF', fontSize: 15, fontWeight: '800' },
+  langSupportText: { color: theme.colors.CeolWhite, ...theme.typeScale.body, fontFamily: FontFamily.bold },
 });

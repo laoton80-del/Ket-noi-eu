@@ -71,12 +71,8 @@ function logPaymentPilotStage(
   stage: 'intent_requested' | 'intent_received' | 'verify_result' | 'topup_result',
   payload: Record<string, unknown>
 ) {
-  if (!__DEV__ && process.env.EXPO_PUBLIC_PAYMENT_PILOT_LOGS !== '1') return;
-  try {
-    console.log('[payment-pilot]', JSON.stringify({ stage, ...payload }));
-  } catch {
-    // no-op: logging must never affect payment flow
-  }
+  void stage;
+  void payload;
 }
 
 export function WalletTopUpScreen() {
@@ -84,7 +80,7 @@ export function WalletTopUpScreen() {
   const { user, setPendingRedirect } = useAuth();
   const { languageCode } = useAssistantSettings();
   const strings = getStrings(languageCode);
-  const w = strings.comboWallet;
+  const w = strings.globalWallet;
   const u = strings.utility;
   const biometricReason = w.biometricReason;
   const [country, setCountry] = useState(() => normalizeCountryCodeOrSentinel(user?.country));
@@ -204,10 +200,6 @@ export function WalletTopUpScreen() {
     ]).start();
   }, [glowAnim, wallet.credits]);
 
-  if (__DEV__) {
-    console.log('[diag][WalletTopUp] hooks settled', { hasUser: Boolean(user) });
-  }
-
   if (!user) return null;
 
   const filterLabels: Record<FilterMode, string> = {
@@ -256,9 +248,6 @@ export function WalletTopUpScreen() {
         commercialCountryCode: commercialCtx.countryCode,
         idempotencyKey: maskIdempotencyKey(idempotencyKey),
       });
-      if (__DEV__) {
-        console.log('[wallet-topup] intent key', maskIdempotencyKey(idempotencyKey));
-      }
       const secret = await createPlatformPayIntent(
         toPlatformPayIntentRequest({
           walletPackageId,
@@ -312,15 +301,6 @@ export function WalletTopUpScreen() {
           idempotencyKey: checkoutIdempotencyKey ?? undefined,
         })
       );
-      if (__DEV__) {
-        console.log(
-          '[wallet-topup] verify result',
-          JSON.stringify({
-            key: checkoutIdempotencyKey ? maskIdempotencyKey(checkoutIdempotencyKey) : null,
-            verified,
-          })
-        );
-      }
       logPaymentPilotStage('verify_result', {
         walletPackageId,
         commercialCountryCode: commercialCtx.countryCode,
@@ -352,7 +332,7 @@ export function WalletTopUpScreen() {
         Alert.alert(w.paymentMissingIdTitle, w.paymentMissingIdBody);
         return;
       }
-      const topup = await topupCreditsServer(checkoutPack.turns, paymentEventId);
+      const topup = await topupCreditsServer(checkoutPack.id, paymentEventId);
       logPaymentPilotStage('topup_result', {
         walletPackageId,
         commercialCountryCode: commercialCtx.countryCode,
@@ -376,8 +356,8 @@ export function WalletTopUpScreen() {
       setShowPaySuccess(true);
       void trackGrowthEvent('successful_credit_topup', {
         value: checkoutPack.turns,
-        // LEGACY analytics key name: value is WalletPackageId (same semantics as payments wire `comboId`).
-        meta: { comboId: checkoutPack.id, country: commercialCtx.countryCode },
+        // Analytics payload keeps canonical wallet package identifiers.
+        meta: { walletPackageId: checkoutPack.id, country: commercialCtx.countryCode },
       });
       const resume = await consumePendingSellResume();
       if (resume) {
@@ -398,10 +378,6 @@ export function WalletTopUpScreen() {
       ]);
     }
   };
-
-  if (__DEV__) {
-    console.log('[diag][WalletTopUp] render main ui');
-  }
 
   return (
     <SafeAreaView style={styles.container}>

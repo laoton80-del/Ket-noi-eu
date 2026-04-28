@@ -4,6 +4,7 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 import type { VisionResultPayload } from '../../api/visionPipeline';
 import { FontFamily } from '../../theme/typography';
+import { theme } from '../../theme/theme';
 
 type ResultBottomSheetProps = {
   visible: boolean;
@@ -38,7 +39,7 @@ export function ResultBottomSheet({ visible, result, onSave }: ResultBottomSheet
         <View style={styles.promptList}>
           {(result?.cauHoiGoiMo ?? []).map((item) => (
             <View key={item} style={styles.promptRow}>
-              <Ionicons name="diamond" size={10} color="#D4AF37" />
+              <Ionicons name="diamond" size={10} color={theme.colors.SignatureGold} />
               <Text style={styles.promptText}>{item}</Text>
             </View>
           ))}
@@ -64,9 +65,9 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 26,
     borderTopRightRadius: 26,
     borderWidth: 1,
-    borderColor: 'rgba(212, 175, 55, 0.38)',
-    backgroundColor: '#F8F2E6',
-    shadowColor: '#5B4730',
+    borderColor: theme.colors.glass.border,
+    backgroundColor: theme.colors.CeolWhite,
+    shadowColor: theme.colors.glass.shadow,
     shadowOffset: { width: 0, height: -5 },
     shadowOpacity: 0.16,
     shadowRadius: 12,
@@ -78,7 +79,7 @@ const styles = StyleSheet.create({
     width: 54,
     height: 5,
     borderRadius: 4,
-    backgroundColor: 'rgba(125, 96, 42, 0.35)',
+    backgroundColor: theme.colors.glass.borderSoft,
   },
   content: {
     paddingHorizontal: 16,
@@ -86,30 +87,28 @@ const styles = StyleSheet.create({
     paddingBottom: 30,
   },
   sectionTitle: {
-    fontSize: 15,
-    color: '#2A231A',
+    ...theme.typeScale.body,
+    color: theme.colors.GraphiteBlue,
     fontFamily: FontFamily.bold,
     marginTop: 10,
     marginBottom: 6,
   },
   translation: {
-    fontSize: 14,
-    lineHeight: 21,
-    color: '#4A443D',
+    ...theme.typeScale.body,
+    color: theme.colors.text.secondary,
     fontStyle: 'italic',
     fontFamily: FontFamily.regular,
   },
   knowledgeCard: {
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: 'rgba(212,175,55,0.3)',
-    backgroundColor: 'rgba(255,255,255,0.64)',
+    borderColor: theme.colors.glass.borderSoft,
+    backgroundColor: theme.colors.SoftMineralGrey,
     padding: 12,
   },
   knowledgeText: {
-    fontSize: 14,
-    lineHeight: 21,
-    color: '#D4AF37',
+    ...theme.typeScale.body,
+    color: theme.colors.SignatureGold,
     fontFamily: FontFamily.bold,
   },
   promptList: { gap: 8, marginTop: 2 },
@@ -120,27 +119,25 @@ const styles = StyleSheet.create({
   },
   promptText: {
     flex: 1,
-    fontSize: 14,
-    lineHeight: 20,
-    color: '#D65A5A',
+    ...theme.typeScale.body,
+    color: theme.colors.RouteError,
     fontFamily: FontFamily.regular,
   },
   saveOuter: {
     marginTop: 16,
     borderRadius: 14,
     padding: 2,
-    backgroundColor: 'rgba(212,175,55,0.75)',
+    backgroundColor: theme.colors.glass.gradientStrong,
   },
   saveInner: {
     height: 46,
     borderRadius: 12,
-    backgroundColor: '#C93A3A',
+    backgroundColor: theme.colors.RouteError,
     alignItems: 'center',
     justifyContent: 'center',
   },
   saveText: {
-    color: '#FFEAD1',
-    fontFamily: FontFamily.bold,
-    fontSize: 14,
+    color: theme.colors.CeolWhite,
+    ...theme.typeScale.body,
   },
 });

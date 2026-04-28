@@ -2,6 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Colors } from '../theme/colors';
 import { FontFamily } from '../theme/typography';
+import { theme } from '../theme/theme';
 
 type Props = {
   visible: boolean;
@@ -19,7 +20,7 @@ export function MicroHintBanner({ visible, text, onDismiss }: Props) {
       <View style={styles.card}>
         <Text style={styles.text}>{text}</Text>
         <Pressable onPress={onDismiss} style={({ pressed }) => [styles.close, pressed && { opacity: 0.75 }]} hitSlop={10}>
-          <Ionicons name="close-circle" size={22} color="rgba(90,70,40,0.55)" />
+          <Ionicons name="close-circle" size={22} color={theme.colors.text.secondary} />
         </Pressable>
       </View>
     </View>
@@ -41,10 +42,10 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     paddingHorizontal: 12,
     borderRadius: 14,
-    backgroundColor: 'rgba(255,251,242,0.96)',
+    backgroundColor: theme.colors.executive.card,
     borderWidth: 1,
-    borderColor: 'rgba(212,175,55,0.4)',
-    shadowColor: '#5C4A2E',
+    borderColor: theme.colors.glass.border,
+    shadowColor: theme.colors.glass.shadow,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.12,
     shadowRadius: 10,
@@ -52,8 +53,7 @@ const styles = StyleSheet.create({
   },
   text: {
     flex: 1,
-    fontSize: 13,
-    lineHeight: 19,
+    ...theme.typeScale.body,
     fontFamily: FontFamily.medium,
     color: Colors.text,
   },

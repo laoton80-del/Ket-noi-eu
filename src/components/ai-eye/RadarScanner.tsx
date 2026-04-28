@@ -8,6 +8,7 @@ import Animated, {
   withRepeat,
   withTiming,
 } from 'react-native-reanimated';
+import { theme } from '../../theme/theme';
 
 type RadarScannerProps = {
   active: boolean;
@@ -56,8 +57,8 @@ const styles = StyleSheet.create({
     right: 0,
     height: 10,
     borderRadius: 8,
-    backgroundColor: 'rgba(226, 92, 92, 0.76)',
-    shadowColor: '#E25C5C',
+    backgroundColor: theme.hybrid.chipErrorBg,
+    shadowColor: theme.colors.RouteError,
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.55,
     shadowRadius: 10,

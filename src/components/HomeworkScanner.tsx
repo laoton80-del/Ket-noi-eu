@@ -5,6 +5,7 @@ import { manipulateAsync, SaveFormat } from 'expo-image-manipulator';
 import { useRef, useState } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 import { FontFamily } from '../theme/typography';
+import { theme } from '../theme/theme';
 
 export function HomeworkScanner({
   visible,
@@ -44,7 +45,7 @@ export function HomeworkScanner({
     <View style={styles.overlay}>
       {!permission ? (
         <View style={styles.permissionCard}>
-          <ActivityIndicator color="#D4AF37" />
+          <ActivityIndicator color={theme.colors.SignatureGold} />
         </View>
       ) : !permission.granted ? (
         <View style={styles.permissionCard}>
@@ -59,13 +60,13 @@ export function HomeworkScanner({
       ) : (
         <View style={styles.cameraWrap}>
           <CameraView ref={cameraRef} style={StyleSheet.absoluteFill} facing="back" />
-          <Pressable onPress={onClose} style={styles.iconBtn}>
-            <Ionicons name="close" size={20} color="#FFE9C0" />
+          <Pressable onPress={onClose} style={({ pressed }) => [styles.iconBtn, pressed && { opacity: 0.8 }]}>
+            <Ionicons name="close" size={20} color={theme.colors.primaryBright} />
           </Pressable>
           <View style={styles.bound} />
           <Text style={styles.hint}>Dat bai tap vao khung roi chup</Text>
           <Pressable onPress={onCapture} disabled={busy} style={({ pressed }) => [styles.captureOuter, pressed && { opacity: 0.86 }]}>
-            <View style={styles.captureInner}>{busy ? <ActivityIndicator color="#FFF2DF" /> : null}</View>
+            <View style={styles.captureInner}>{busy ? <ActivityIndicator color={theme.colors.primaryBright} /> : null}</View>
           </Pressable>
         </View>
       )}
@@ -74,38 +75,38 @@ export function HomeworkScanner({
 }
 
 const styles = StyleSheet.create({
-  overlay: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(12,10,8,0.75)' },
+  overlay: { ...StyleSheet.absoluteFillObject, backgroundColor: theme.colors.overlay.dim },
   permissionCard: {
     marginTop: 180,
     marginHorizontal: 24,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: 'rgba(212,175,55,0.45)',
-    backgroundColor: 'rgba(28,22,16,0.9)',
+    borderColor: theme.colors.glass.border,
+    backgroundColor: theme.colors.executive.panel,
     alignItems: 'center',
     padding: 16,
   },
-  permissionTitle: { color: '#FFF0CF', fontSize: 16, fontFamily: FontFamily.bold, marginBottom: 12 },
+  permissionTitle: { color: theme.colors.primaryBright, ...theme.typeScale.h2, fontFamily: FontFamily.bold, marginBottom: 12 },
   btn: {
     minWidth: 120,
     height: 42,
     borderRadius: 12,
-    backgroundColor: '#C62828',
+    backgroundColor: theme.colors.RouteError,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  btnText: { color: '#FFE8D0', fontFamily: FontFamily.bold },
+  btnText: { color: theme.colors.primaryBright, fontFamily: FontFamily.bold },
   closeBtn: {
     marginTop: 8,
     minHeight: 34,
     borderRadius: 10,
     borderWidth: 1,
-    borderColor: 'rgba(212,175,55,0.45)',
+    borderColor: theme.colors.glass.border,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 12,
   },
-  closeText: { color: '#FFE8D0', fontSize: 12, fontFamily: FontFamily.medium },
+  closeText: { color: theme.colors.primaryBright, ...theme.typeScale.caption, fontFamily: FontFamily.medium },
   cameraWrap: { flex: 1 },
   iconBtn: {
     position: 'absolute',
@@ -115,8 +116,8 @@ const styles = StyleSheet.create({
     height: 42,
     borderRadius: 21,
     borderWidth: 1,
-    borderColor: 'rgba(212,175,55,0.45)',
-    backgroundColor: 'rgba(21,17,12,0.75)',
+    borderColor: theme.colors.glass.border,
+    backgroundColor: theme.colors.executive.panelMuted,
     alignItems: 'center',
     justifyContent: 'center',
     zIndex: 10,
@@ -127,14 +128,14 @@ const styles = StyleSheet.create({
     height: 290,
     borderRadius: 18,
     borderWidth: 2,
-    borderColor: 'rgba(212,175,55,0.92)',
+    borderColor: theme.colors.SignatureGold,
     backgroundColor: 'transparent',
   },
   hint: {
     marginTop: 10,
     textAlign: 'center',
-    color: '#FFE7C7',
-    fontSize: 12,
+    color: theme.colors.primaryBright,
+    ...theme.typeScale.caption,
     fontFamily: FontFamily.medium,
   },
   captureOuter: {
@@ -145,16 +146,16 @@ const styles = StyleSheet.create({
     height: 86,
     borderRadius: 43,
     borderWidth: 3,
-    borderColor: 'rgba(212,175,55,0.95)',
+    borderColor: theme.colors.SignatureGold,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'rgba(255,232,170,0.24)',
+    backgroundColor: theme.colors.overlay.ringSoft,
   },
   captureInner: {
     width: 64,
     height: 64,
     borderRadius: 32,
-    backgroundColor: '#CB3D3D',
+    backgroundColor: theme.colors.RouteError,
     alignItems: 'center',
     justifyContent: 'center',
   },

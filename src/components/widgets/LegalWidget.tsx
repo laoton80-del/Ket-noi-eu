@@ -2,6 +2,8 @@ import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { AnimatedPressable } from './AnimatedPressable';
 import { WidgetCard } from './WidgetCard';
+import { theme } from '../../theme/theme';
+import { FontFamily } from '../../theme/typography';
 
 type Props = {
   daysToExpiry: number | null;
@@ -13,10 +15,10 @@ type Props = {
 };
 
 function getAlertTone(days: number | null) {
-  if (days === null) return '#FFF4E5';
-  if (days < 14) return '#FDE8E8';
-  if (days < 30) return '#FDECEC';
-  return '#FFF4E5';
+  if (days === null) return theme.colors.executive.panelMuted;
+  if (days < 14) return theme.hybrid.chipErrorBg;
+  if (days < 30) return theme.colors.executive.panelMuted;
+  return theme.colors.executive.panelMuted;
 }
 
 function formatExpiryShort(iso?: string | null): string | null {
@@ -73,38 +75,39 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   title: {
-    fontSize: 18,
-    fontWeight: '700',
+    ...theme.typeScale.h2,
+    fontFamily: FontFamily.bold,
     marginBottom: 8,
-    color: '#1F2937',
+    color: theme.colors.GraphiteBlue,
   },
   subtitle: {
-    fontSize: 14,
-    color: '#4B5563',
+    ...theme.typeScale.body,
+    color: theme.colors.text.secondary,
+    fontFamily: FontFamily.regular,
     marginBottom: 8,
   },
   countdown: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: '#92400E',
+    ...theme.typeScale.caption,
+    fontFamily: FontFamily.semibold,
+    color: theme.colors.PendingAmber,
     marginBottom: 6,
   },
   risk: {
-    fontSize: 13,
-    color: '#B91C1C',
-    fontWeight: '600',
+    ...theme.typeScale.caption,
+    color: theme.colors.RouteError,
+    fontFamily: FontFamily.semibold,
     marginBottom: 12,
-    lineHeight: 18,
   },
   button: {
-    backgroundColor: '#111827',
+    backgroundColor: theme.colors.GraphiteBlue,
     borderRadius: 14,
     paddingVertical: 12,
     paddingHorizontal: 14,
   },
   buttonText: {
-    color: '#FFFFFF',
-    fontWeight: '600',
+    color: theme.colors.CeolWhite,
+    ...theme.typeScale.body,
+    fontFamily: FontFamily.semibold,
     textAlign: 'center',
   },
 });

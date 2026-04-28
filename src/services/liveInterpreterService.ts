@@ -1,5 +1,4 @@
 import type { InterpreterDirection, InterpreterScenario } from '../config/aiPrompts';
-import { buildLiveInterpreterTranslationUserContent } from '../config/aiPrompts';
 import {
   getVoiceRealismEngineConfig,
   humanizeSpokenResponse,
@@ -8,12 +7,13 @@ import {
 } from './voice';
 import { interpreterScenarioToVoiceScenario } from './voicePersona';
 import type { VoiceUserGender } from './voicePersona';
-import { generateSpeech, getChatCompletion, transcribeAudio } from './OpenAIService';
+import { generateSpeech } from './OpenAIService';
 import { detectIntent } from './ai/intentDetection';
 import { maybeGenerateSellCTA } from './selling/sellEngine';
 import type { SellCTA } from './selling/sellingTypes';
 import { defaultPatternIdFor, trackNetworkEffectEvent } from './networkEffect';
 import { getAssistantSettings } from '../state/assistantSettings';
+import { runInterpreterTurnCore } from './liveInterpreterProvider';
 
 export type InterpreterTurnResult = {
   transcript: string;
@@ -24,8 +24,7 @@ export type InterpreterTurnResult = {
   spokenUri: string | null;
 };
 
-/** Flat fee per interpreter session (deducted once when session starts). */
-export const INTERPRETER_SESSION_CREDITS = 25;
+export { INTERPRETER_SESSION_CREDITS } from './interpreterSessionConstants';
 
 /** Hard cap on session length (cost control + UX). */
 export const INTERPRETER_MAX_SESSION_MINUTES = 8;
@@ -62,28 +61,7 @@ export async function runInterpreterTurn(
 ): Promise<InterpreterTurnResult> {
   const startedAt = Date.now();
   try {
-    const transcript = await transcribeAudio(audioUri);
-    const userContent = buildLiveInterpreterTranslationUserContent(
-      params.scenario,
-      params.direction,
-      params.assistantLanguageCode,
-      transcript,
-      params.countryCode
-    );
-    const translation = await getChatCompletion(
-      [{ role: 'user', content: userContent }],
-      'loan',
-      {
-        ...(params.userId ? { userId: params.userId } : {}),
-        serviceContext: 'interpreter',
-        activeScenario: params.scenario,
-        networkContext: {
-          actionType: 'interpreter',
-          language: params.assistantLanguageCode,
-          scenario: params.scenario,
-        },
-      }
-    );
+    const { transcript, translation, provider, fallbackFromGemini } = await runInterpreterTurnCore(audioUri, params);
     const intent = detectIntent(transcript);
     const { cta, opportunity } = maybeGenerateSellCTA({
       userInput: transcript,
@@ -136,7 +114,7 @@ export async function runInterpreterTurn(
       success: true,
       durationMs: Date.now() - startedAt,
       language: params.assistantLanguageCode,
-      scenario: params.scenario,
+      scenario: fallbackFromGemini ? `${params.scenario}:openai_fallback` : `${params.scenario}:${provider}`,
       responsePatternId: defaultPatternIdFor('interpreter'),
       flowId: 'interpreter_loop',
     });

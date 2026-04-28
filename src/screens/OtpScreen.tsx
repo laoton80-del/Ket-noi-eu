@@ -5,6 +5,7 @@ import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import type { RootStackParamList } from '../navigation/routes';
 import { Colors } from '../theme/colors';
+import { theme } from '../theme/theme';
 import { FontFamily } from '../theme/typography';
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
@@ -57,31 +58,31 @@ export function OtpScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F8F6F0', justifyContent: 'center', paddingHorizontal: 18 },
+  container: { flex: 1, backgroundColor: theme.colors.SoftMineralGrey, justifyContent: 'center', paddingHorizontal: 18 },
   card: {
     borderRadius: 22,
     borderWidth: 1,
-    borderColor: 'rgba(212, 175, 55, 0.4)',
-    backgroundColor: 'rgba(255,255,255,0.7)',
+    borderColor: theme.colors.glass.border,
+    backgroundColor: theme.colors.CeolWhite,
     padding: 16,
-    shadowColor: '#8B7355',
+    shadowColor: theme.colors.glass.shadow,
     shadowOffset: { width: 4, height: 8 },
     shadowOpacity: 0.15,
     shadowRadius: 12,
     elevation: 4,
   },
-  title: { fontSize: 27, color: Colors.text, fontFamily: FontFamily.extrabold, marginBottom: 6 },
-  sub: { fontSize: 13, lineHeight: 20, color: Colors.textSoft, fontFamily: FontFamily.regular, marginBottom: 12 },
+  title: { ...theme.typeScale.h1, color: Colors.text, fontFamily: FontFamily.bold, marginBottom: 6 },
+  sub: { ...theme.typeScale.body, color: Colors.textSoft, fontFamily: FontFamily.regular, marginBottom: 12 },
   otpRow: { flexDirection: 'row', justifyContent: 'space-between', gap: 8 },
   otpBox: {
     width: 62,
     height: 62,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: 'rgba(212, 175, 55, 0.35)',
-    backgroundColor: 'rgba(255,255,255,0.92)',
+    borderColor: theme.colors.glass.borderSoft,
+    backgroundColor: theme.colors.CeolWhite,
     textAlign: 'center',
-    fontSize: 24,
+    ...theme.typeScale.h1,
     color: Colors.text,
     fontFamily: FontFamily.bold,
   },
@@ -89,10 +90,10 @@ const styles = StyleSheet.create({
     height: 46,
     borderRadius: 12,
     marginTop: 14,
-    backgroundColor: '#C62828',
+    backgroundColor: theme.colors.RouteError,
     alignItems: 'center',
     justifyContent: 'center',
   },
   ctaDisabled: { opacity: 0.45 },
-  ctaText: { color: '#FFE9D2', fontFamily: FontFamily.bold, fontSize: 15 },
+  ctaText: { color: theme.colors.CeolWhite, ...theme.typeScale.body },
 });

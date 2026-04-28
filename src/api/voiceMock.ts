@@ -50,28 +50,28 @@ const USER_COMMANDS_LEONA: Record<SupportedLanguage, string[]> = {
 
 const USER_COMMANDS_LOAN: Record<SupportedLanguage, string[]> = {
   vi: [
-    'Em muốn kiểm tra số dư Combo hiện tại.',
-    'LOAN ơi, đăng ký Combo mới cần những bước gì?',
+    'Em muốn kiểm tra số dư Pack hiện tại.',
+    'LOAN ơi, đăng ký Pack mới cần những bước gì?',
     'Mình cần hỗ trợ gia hạn lượt sử dụng.',
-    'Có gói Combo nào cho người mới không ạ?',
+    'Có gói Pack nào cho người mới không ạ?',
   ],
   en: [
-    'I’d like to check my current Combo balance.',
-    'What do I need to register a new Combo?',
+    'I’d like to check my current Pack balance.',
+    'What do I need to register a new Pack?',
     'I need help extending my usage credits.',
-    'Do you have a Combo plan for newcomers?',
+    'Do you have a Pack plan for newcomers?',
   ],
   cs: [
-    'Chtel bych zkontrolovat zustatek Combo.',
+    'Chtel bych zkontrolovat zustatek Pack.',
     'Co potrebuju k registraci noveho Comba?',
     'Potrebuji pomoc s prodlouzenim kreditu.',
-    'Mate Combo balicek pro nove klienty?',
+    'Mate Pack balicek pro nove klienty?',
   ],
   de: [
-    'Ich moechte meinen Combo-Kontostand pruefen.',
-    'Was brauche ich fuer eine neue Combo-Registrierung?',
+    'Ich moechte meinen Pack-Kontostand pruefen.',
+    'Was brauche ich fuer eine neue Pack-Registrierung?',
     'Ich brauche Hilfe bei der Verlaengerung meiner Nutzungen.',
-    'Gibt es ein Combo-Paket fuer Neukundinnen?',
+    'Gibt es ein Pack-Paket fuer Neukundinnen?',
   ],
 };
 
@@ -103,10 +103,10 @@ export function getProfessionalMockResponse(
   }
 
   const loanBy: Record<SupportedLanguage, string> = {
-    vi: 'Chào Bạn, LOAN đây! Bạn cần hỗ trợ kiểm tra số dư hay đăng ký Combo mới?',
-    en: "Hello—LOAN here! Would you like to check your balance or register a new Combo package?",
-    cs: 'Dobry den, tady LOAN! Prejete si zkontrolovat zustatek nebo zaregistrovat nove Combo?',
-    de: 'Guten Tag, LOAN am Apparat! Moechten Sie Ihren Kontostand pruefen oder ein neues Combo buchen?',
+    vi: 'Chào Bạn, LOAN đây! Bạn cần hỗ trợ kiểm tra số dư hay đăng ký Pack mới?',
+    en: "Hello—LOAN here! Would you like to check your balance or register a new Pack package?",
+    cs: 'Dobry den, tady LOAN! Prejete si zkontrolovat zustatek nebo zaregistrovat nove Pack?',
+    de: 'Guten Tag, LOAN am Apparat! Moechten Sie Ihren Kontostand pruefen oder ein neues Pack buchen?',
   };
   return { replyText: loanBy[lang] ?? loanBy.vi, audioUrl: MOCK_AUDIO_LOAN_PRO };
 }

@@ -8,10 +8,10 @@ export type PlatformPayIntentRequest = {
   amount: number;
   currency: string;
   /**
-   * **Wire name (payments API legacy):** JSON body key expected by `platform-pay/intent`.
-   * **Semantic:** GLOBAL_V1 wallet pack id (`WalletPackageId` — starter…enterprise), not a “combo tier” label.
+   * **Wire name:** JSON body key expected by `platform-pay/intent`.
+   * **Semantic:** GLOBAL_V1 wallet pack id (`WalletPackageId` — starter…enterprise).
    */
-  comboId: string;
+  packageId: string;
   idempotencyKey?: string;
   /** D8: normalized ISO2 or `ZZ` — same contract as `resolveCommercialCountryContext`. */
   commercialCountryCode?: string;
@@ -26,7 +26,7 @@ type PlatformIntentResponse = {
 };
 
 /**
- * Canonical app input for wallet top-up intent — maps to wire field `comboId` (legacy key = {@link WalletPackageId}).
+ * Canonical app input for wallet top-up intent — maps to wire field `packageId` ({@link WalletPackageId}).
  * Keeps one place that documents the display/checkout ↔ payments contract without renaming the remote API.
  */
 export type WalletPackPlatformPayIntentInput = {
@@ -43,7 +43,7 @@ export function toPlatformPayIntentRequest(input: WalletPackPlatformPayIntentInp
   return {
     amount: input.amount,
     currency: input.currency,
-    comboId: input.walletPackageId,
+    packageId: input.walletPackageId,
     idempotencyKey: input.idempotencyKey,
     commercialCountryCode: input.commercialCountryCode,
     merchantCountryCode: input.merchantCountryCode,
@@ -73,8 +73,8 @@ export function isPaymentsApiConfigured(): boolean {
 /** POST `/wallet/topup/verify` body (payments microservice). */
 export type VerifyTopupEntitlementRequest = {
   country: string;
-  /** Wire key; value = {@link WalletPackageId} (same as intent `comboId`). */
-  comboId: string;
+  /** Wire key; value = {@link WalletPackageId} (same as intent `packageId`). */
+  packageId: string;
   provider: 'platform_pay';
   idempotencyKey?: string;
 };
@@ -88,7 +88,7 @@ export type WalletPackTopupVerifyInput = {
 export function toTopupVerifyRequest(input: WalletPackTopupVerifyInput): VerifyTopupEntitlementRequest {
   return {
     country: input.country,
-    comboId: input.walletPackageId,
+    packageId: input.walletPackageId,
     provider: 'platform_pay',
     idempotencyKey: input.idempotencyKey,
   };

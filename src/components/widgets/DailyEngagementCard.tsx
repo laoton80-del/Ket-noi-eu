@@ -3,6 +3,8 @@ import { StyleSheet, Text, View } from 'react-native';
 import { AnimatedPressable } from './AnimatedPressable';
 import { WidgetCard } from './WidgetCard';
 import type { DailyLoopAction } from '../../services/engagement';
+import { theme } from '../../theme/theme';
+import { FontFamily } from '../../theme/typography';
 
 type Props = {
   streakDays: number;
@@ -49,30 +51,30 @@ const DailyEngagementCardComponent: React.FC<Props> = ({
 export const DailyEngagementCard = React.memo(DailyEngagementCardComponent);
 
 const styles = StyleSheet.create({
-  title: { fontSize: 17, fontWeight: '700', color: '#111827' },
-  streak: { marginTop: 4, fontSize: 13, color: '#374151', fontWeight: '600' },
-  suggestion: { marginTop: 8, fontSize: 13, color: '#4B5563', lineHeight: 18 },
+  title: { ...theme.typeScale.h2, color: theme.colors.GraphiteBlue, fontFamily: FontFamily.bold },
+  streak: { marginTop: 4, ...theme.typeScale.caption, color: theme.colors.GraphiteBlue, fontFamily: FontFamily.semibold },
+  suggestion: { marginTop: 8, ...theme.typeScale.body, color: theme.colors.text.secondary, fontFamily: FontFamily.regular },
   row: { marginTop: 10, flexDirection: 'row', gap: 8 },
   primaryBtn: {
     flex: 1,
     minHeight: 40,
     borderRadius: 12,
-    backgroundColor: '#111827',
+    backgroundColor: theme.colors.GraphiteBlue,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 8,
   },
-  primaryText: { color: '#FFF', fontSize: 13, fontWeight: '700', textAlign: 'center' },
+  primaryText: { color: theme.colors.CeolWhite, ...theme.typeScale.body, fontFamily: FontFamily.bold, textAlign: 'center' },
   secondaryBtn: {
     flex: 1,
     minHeight: 40,
     borderRadius: 12,
-    backgroundColor: '#374151',
+    backgroundColor: theme.colors.executive.panelMuted,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 8,
   },
-  secondaryText: { color: '#FFF', fontSize: 13, fontWeight: '600', textAlign: 'center' },
-  reminder: { marginTop: 10, fontSize: 12, color: '#6B7280', lineHeight: 17 },
-  achievement: { marginTop: 6, fontSize: 12, color: '#065F46', fontWeight: '600', lineHeight: 17 },
+  secondaryText: { color: theme.colors.CeolWhite, ...theme.typeScale.body, fontFamily: FontFamily.semibold, textAlign: 'center' },
+  reminder: { marginTop: 10, ...theme.typeScale.caption, color: theme.colors.text.secondary, fontFamily: FontFamily.regular },
+  achievement: { marginTop: 6, ...theme.typeScale.caption, color: theme.colors.SoftEmerald, fontFamily: FontFamily.semibold },
 });

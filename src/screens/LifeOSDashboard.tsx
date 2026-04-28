@@ -244,7 +244,7 @@ export const LifeOSDashboard: React.FC = () => {
               alignItems: 'center',
               gap: 12,
             },
-            pressed && { opacity: 0.88 },
+            pressed && { opacity: 0.8 },
           ]}
         >
           <View
@@ -260,8 +260,18 @@ export const LifeOSDashboard: React.FC = () => {
             <Ionicons name="airplane-outline" size={22} color={theme.colors.primary} />
           </View>
           <View style={{ flex: 1 }}>
-            <Text style={{ fontSize: 16, fontFamily: FontFamily.bold, color: theme.colors.text.primary }}>Đồng hành du lịch</Text>
-            <Text style={{ fontSize: 13, fontFamily: FontFamily.regular, color: theme.colors.text.secondary, marginTop: 4, lineHeight: 18 }}>
+            <Text style={{ fontSize: theme.typeScale.body.fontSize, fontFamily: FontFamily.bold, color: theme.colors.text.primary }}>
+              Đồng hành du lịch
+            </Text>
+            <Text
+              style={{
+                fontSize: theme.typeScale.caption.fontSize,
+                fontFamily: FontFamily.regular,
+                color: theme.colors.text.secondary,
+                marginTop: 4,
+                lineHeight: theme.typeScale.caption.lineHeight,
+              }}
+            >
               Sân bay, khách sạn, taxi, nhà hàng… — phiên dịch, Leona, SOS, Minh Khang. Không đặt vé hay tìm giá trong app.
             </Text>
           </View>
@@ -419,8 +429,8 @@ export const LifeOSDashboard: React.FC = () => {
           <View style={styles.creditChip}>
             <Text style={styles.creditChipText}>{lifeOS.creditBalance} Credits</Text>
           </View>
-          <Pressable style={styles.sosBtn} onPress={() => navigation.navigate('EmergencySOS')}>
-            <Ionicons name="warning" size={14} color="#FFFFFF" />
+          <Pressable style={({ pressed }) => [styles.sosBtn, pressed && { opacity: 0.8 }]} onPress={() => navigation.navigate('EmergencySOS')}>
+            <Ionicons name="warning" size={14} color={theme.colors.CeolWhite} />
             <Text style={styles.sosBtnText}>SOS</Text>
           </Pressable>
         </View>
@@ -435,7 +445,7 @@ export default LifeOSDashboard;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: theme.colors.background,
+    backgroundColor: theme.colors.DeepInkNavy,
   },
   contentContainer: {
     padding: 16,
@@ -448,23 +458,23 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   brand: {
-    fontSize: 14,
+    fontSize: theme.typeScale.caption.fontSize,
     color: theme.colors.text.secondary,
     fontFamily: FontFamily.regular,
     marginBottom: 2,
   },
   subtitle: {
-    fontSize: 24,
+    fontSize: theme.typeScale.h2.fontSize,
     color: theme.colors.text.primary,
     fontFamily: FontFamily.extrabold,
   },
   tagline: {
     marginTop: 6,
-    fontSize: 13,
+    fontSize: theme.typeScale.caption.fontSize,
     color: theme.colors.text.secondary,
     fontFamily: FontFamily.regular,
     maxWidth: '78%',
-    lineHeight: 18,
+    lineHeight: theme.typeScale.caption.lineHeight,
   },
   creditChip: {
     minHeight: 32,
@@ -481,7 +491,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   creditChipText: {
-    fontSize: 12,
+    fontSize: theme.typeScale.caption.fontSize,
     color: theme.colors.primary,
     fontFamily: FontFamily.bold,
   },
@@ -489,15 +499,15 @@ const styles = StyleSheet.create({
     minHeight: 30,
     paddingHorizontal: 10,
     borderRadius: 999,
-    backgroundColor: '#DC2626',
+    backgroundColor: theme.colors.RouteError,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
     justifyContent: 'center',
   },
   sosBtnText: {
-    color: '#FFFFFF',
-    fontSize: 12,
+    color: theme.colors.CeolWhite,
+    fontSize: theme.typeScale.caption.fontSize,
     fontFamily: FontFamily.bold,
   },
   stack: {

@@ -9,6 +9,7 @@ import Animated, {
   withSpring,
   withTiming,
 } from 'react-native-reanimated';
+import { theme } from '../theme/theme';
 
 type SuccessCheckmark3DProps = {
   visible: boolean;
@@ -66,7 +67,7 @@ export function SuccessCheckmark3D({ visible, onClose }: SuccessCheckmark3DProps
     <View style={styles.overlay} pointerEvents="none">
       <Animated.View style={[styles.medallion, badgeStyle]}>
         <View style={styles.innerHighlight} />
-        <Check size={34} color="#0A1628" strokeWidth={3} />
+        <Check size={34} color={theme.colors.onAccent} strokeWidth={3} />
       </Animated.View>
     </View>
   );
@@ -77,18 +78,18 @@ const styles = StyleSheet.create({
     ...StyleSheet.absoluteFillObject,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'rgba(5, 11, 20, 0.58)',
+    backgroundColor: theme.colors.overlay.dim,
   },
   medallion: {
     width: 80,
     height: 80,
     borderRadius: 40,
-    backgroundColor: '#C5A059',
+    backgroundColor: theme.colors.primary,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
-    borderColor: 'rgba(232, 213, 163, 0.65)',
-    shadowColor: '#000',
+    borderColor: theme.colors.primaryBright,
+    shadowColor: theme.colors.glass.shadow,
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.4,
     shadowRadius: 16,
@@ -98,6 +99,6 @@ const styles = StyleSheet.create({
     ...StyleSheet.absoluteFillObject,
     borderRadius: 40,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.25)',
+    borderColor: theme.colors.glass.borderSoft,
   },
 });

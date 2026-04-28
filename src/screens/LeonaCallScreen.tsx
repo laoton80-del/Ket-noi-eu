@@ -16,7 +16,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { AuthPaywallModal } from '../components/AuthPaywallModal';
 import { InlineStatusBanner } from '../components/feedback/InlineStatusBanner';
 import { MicroHintBanner } from '../components/MicroHintBanner';
-import { DongSonSkeuomorphicButton } from '../components/DongSonSkeuomorphicButton';
+import { TrustSurfaceCard } from '../components/TrustSurfaceCard';
 import { getPersonaDisplayName } from '../config/aiPrompts';
 import { normalizeCountryCodeOrSentinel } from '../config/countryPacks';
 import { useAuth } from '../context/AuthContext';
@@ -26,6 +26,7 @@ import { calculateCallCreditPrice } from '../services/PaymentsService';
 import { appendUsageHistory } from '../services/history';
 import { trackGrowthEventOnce } from '../services/growth';
 import { chargeTrustedService, syncWalletFromServer, useWalletState } from '../state/wallet';
+import { theme } from '../theme/theme';
 import { FontFamily } from '../theme/typography';
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
@@ -187,7 +188,7 @@ export function LeonaCallScreen() {
             : 'Tổng đài CSKH hỗ trợ gọi đối ngoại'}
         </Text>
         <View style={styles.creditPill}>
-          <Ionicons name="wallet" size={12} color="#DAB676" />
+          <Ionicons name="wallet" size={12} color={theme.colors.SignatureGold} />
           <Text style={styles.creditPillText}>{wallet.credits} Credits</Text>
         </View>
 
@@ -202,7 +203,7 @@ export function LeonaCallScreen() {
                   opacity: ringOpacity[i],
                   transform: [{ scale }],
                   borderWidth: fromReminder ? 1 : 0,
-                  borderColor: fromReminder ? 'rgba(255,214,155,0.85)' : 'transparent',
+                  borderColor: fromReminder ? theme.colors.primaryBright : 'transparent',
                 },
               ]}
             />
@@ -214,13 +215,21 @@ export function LeonaCallScreen() {
               },
             ]}
           >
-            <DongSonSkeuomorphicButton variant="avatar-ring" size="md" onPress={onCall} disabled={!canCall}>
-              {phase === 'calling' ? <ActivityIndicator color="#FFE8D8" /> : <Ionicons name="mic" size={30} color="#FFFFFF" />}
-            </DongSonSkeuomorphicButton>
+            <Pressable
+              onPress={() => void onCall()}
+              disabled={!canCall}
+              style={({ pressed }) => [styles.avatarRingButton, !canCall && styles.avatarRingDisabled, pressed && { opacity: 0.8 }]}
+            >
+              {phase === 'calling' ? (
+                <ActivityIndicator color={theme.colors.CeolWhite} />
+              ) : (
+                <Ionicons name="mic" size={30} color={theme.colors.CeolWhite} />
+              )}
+            </Pressable>
           </RNAnimated.View>
           {fromReminder ? (
             <View style={styles.reminderBadge}>
-              <Ionicons name="notifications" size={12} color="#FFE9C7" />
+              <Ionicons name="notifications" size={12} color={theme.colors.primaryBright} />
               <Text style={styles.reminderBadgeText}>Đã mở từ nhắc hạn</Text>
             </View>
           ) : null}
@@ -240,7 +249,7 @@ export function LeonaCallScreen() {
               placeholder="Số điện thoại cần gọi"
               keyboardType="phone-pad"
               style={styles.phoneInput}
-              placeholderTextColor="rgba(255,232,232,0.55)"
+              placeholderTextColor={theme.colors.text.secondary}
             />
           </View>
 
@@ -251,20 +260,20 @@ export function LeonaCallScreen() {
               placeholder="Yêu cầu của bạn (vd: đặt lịch bác sĩ răng lúc 3h chiều)"
               style={styles.requestInput}
               multiline
-              placeholderTextColor="rgba(255,232,232,0.55)"
+              placeholderTextColor={theme.colors.text.secondary}
             />
             <Pressable style={({ pressed }) => [styles.inlineMic, pressed && { opacity: 0.82 }]}>
-              <Ionicons name="mic" size={16} color="#FFE7E7" />
+              <Ionicons name="mic" size={16} color={theme.colors.CeolWhite} />
             </Pressable>
           </View>
         </View>
 
-        <DongSonSkeuomorphicButton variant="card" cardTone="dark" watermarkOpacity={0.03} style={styles.statusCard}>
+        <TrustSurfaceCard cardTone="dark" watermarkOpacity={0.03} style={styles.statusCard}>
           <Text style={styles.statusText}>
             {phase === 'calling' ? 'Máy chủ đang xác nhận Credits trước khi tiếp tục…' : 'Đang nghe...'}
           </Text>
           <Text style={styles.statusText}>Phí: {outboundCostLabel}/lượt</Text>
-        </DongSonSkeuomorphicButton>
+        </TrustSurfaceCard>
         {callError ? <InlineStatusBanner tone="error" text={callError} onRetry={() => void onCall()} /> : null}
       </View>
 
@@ -303,30 +312,48 @@ export function LeonaCallScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#200B13' },
+  container: { flex: 1, backgroundColor: theme.colors.DeepInkNavy },
   overlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0,0,0,0.36)',
+    backgroundColor: theme.colors.overlay.dim,
   },
   content: { paddingHorizontal: 16, paddingTop: 14 },
-  title: { fontSize: 28, color: '#FFE8D8', fontFamily: FontFamily.extrabold, marginBottom: 6 },
-  subtitle: { fontSize: 13, color: 'rgba(255,222,210,0.85)', fontFamily: FontFamily.regular, marginBottom: 10 },
+  avatarRingButton: {
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: theme.colors.RouteError,
+    borderWidth: 1,
+    borderColor: theme.colors.glass.border,
+    shadowColor: theme.colors.glass.shadow,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.35,
+    shadowRadius: 14,
+    elevation: 6,
+  },
+  avatarRingDisabled: {
+    opacity: 0.58,
+  },
+  title: { ...theme.typeScale.h1, color: theme.colors.CeolWhite, fontFamily: FontFamily.bold, marginBottom: 6 },
+  subtitle: { ...theme.typeScale.body, color: theme.colors.text.secondary, fontFamily: FontFamily.regular, marginBottom: 10 },
   creditPill: {
     alignSelf: 'flex-end',
     minHeight: 28,
     paddingHorizontal: 10,
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: 'rgba(226,92,92,0.45)',
-    backgroundColor: 'rgba(255,255,255,0.08)',
+    borderColor: theme.colors.glass.borderSoft,
+    backgroundColor: theme.colors.executive.panelMuted,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
     marginBottom: 8,
   },
   creditPillText: {
-    color: '#FFEAD9',
-    fontSize: 12,
+    color: theme.colors.primaryBright,
+    ...theme.typeScale.caption,
     fontFamily: FontFamily.semibold,
   },
   micArea: { height: 220, alignItems: 'center', justifyContent: 'center' },
@@ -337,31 +364,31 @@ const styles = StyleSheet.create({
     borderRadius: 79,
     borderWidth: 1,
   },
-  ringCalling: { borderColor: 'rgba(233, 198, 120, 0.75)' },
-  ringIdle: { borderColor: 'rgba(214, 176, 107, 0.55)' },
+  ringCalling: { borderColor: theme.colors.primaryBright },
+  ringIdle: { borderColor: theme.colors.glass.border },
   reminderBadge: {
     position: 'absolute',
     bottom: 12,
     minHeight: 24,
     borderRadius: 12,
     paddingHorizontal: 9,
-    backgroundColor: 'rgba(31,23,18,0.75)',
+    backgroundColor: theme.colors.executive.panelMuted,
     borderWidth: 1,
-    borderColor: 'rgba(212,175,55,0.5)',
+    borderColor: theme.colors.glass.border,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 5,
   },
   reminderBadgeText: {
-    color: '#FFE9C7',
+    color: theme.colors.primaryBright,
     fontFamily: FontFamily.medium,
     fontSize: 11,
   },
   inputCard: {
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: 'rgba(226,92,92,0.45)',
-    backgroundColor: 'rgba(255,255,255,0.1)',
+    borderColor: theme.colors.glass.borderSoft,
+    backgroundColor: theme.colors.executive.panelMuted,
     padding: 12,
     marginBottom: 12,
   },
@@ -370,36 +397,36 @@ const styles = StyleSheet.create({
     minWidth: 74,
     borderRadius: 10,
     borderWidth: 1,
-    borderColor: 'rgba(226,92,92,0.45)',
-    backgroundColor: 'rgba(255,255,255,0.12)',
+    borderColor: theme.colors.glass.borderSoft,
+    backgroundColor: theme.colors.executive.card,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  codeBtnText: { color: '#FFE9DF', fontFamily: FontFamily.semibold, fontSize: 13 },
+  codeBtnText: { color: theme.colors.primaryBright, ...theme.typeScale.body },
   phoneInput: {
     flex: 1,
     height: 42,
     borderRadius: 10,
     borderWidth: 1,
-    borderColor: 'rgba(226,92,92,0.45)',
-    backgroundColor: 'rgba(255,255,255,0.08)',
+    borderColor: theme.colors.glass.borderSoft,
+    backgroundColor: theme.colors.executive.panelMuted,
     paddingHorizontal: 10,
-    color: '#FFF0E6',
+    color: theme.colors.CeolWhite,
     fontFamily: FontFamily.medium,
   },
   requestWrap: {
     minHeight: 74,
     borderRadius: 10,
     borderWidth: 1,
-    borderColor: 'rgba(226,92,92,0.45)',
-    backgroundColor: 'rgba(255,255,255,0.08)',
+    borderColor: theme.colors.glass.borderSoft,
+    backgroundColor: theme.colors.executive.panelMuted,
     paddingLeft: 10,
     paddingRight: 38,
     paddingTop: 8,
   },
   requestInput: {
     minHeight: 58,
-    color: '#FFF0E6',
+    color: theme.colors.CeolWhite,
     fontFamily: FontFamily.regular,
     fontSize: 13,
   },
@@ -412,13 +439,13 @@ const styles = StyleSheet.create({
     borderRadius: 13,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'rgba(198,57,57,0.8)',
+    backgroundColor: theme.colors.RouteError,
   },
   statusCard: {
     marginTop: 12,
   },
   statusText: {
-    color: '#F5F5DC',
+    color: theme.colors.CeolWhite,
     fontFamily: FontFamily.semibold,
     fontSize: 13,
     marginBottom: 3,
@@ -431,8 +458,8 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     borderWidth: 1,
-    borderColor: 'rgba(212,175,55,0.45)',
-    backgroundColor: '#F8EFE2',
+    borderColor: theme.colors.glass.border,
+    backgroundColor: theme.colors.SoftMineralGrey,
     paddingHorizontal: 16,
     paddingTop: 8,
     paddingBottom: 22,
@@ -442,37 +469,37 @@ const styles = StyleSheet.create({
     width: 48,
     height: 5,
     borderRadius: 3,
-    backgroundColor: 'rgba(139,115,85,0.36)',
+    backgroundColor: theme.colors.glass.borderSoft,
     marginBottom: 10,
   },
   sheetTitle: {
     fontSize: 18,
-    color: '#2A231A',
+    color: theme.colors.GraphiteBlue,
     fontFamily: FontFamily.extrabold,
     marginBottom: 8,
   },
   sheetResult: {
     fontSize: 14,
     lineHeight: 22,
-    color: '#4A3A2C',
+    color: theme.colors.GraphiteBlue,
     fontFamily: FontFamily.medium,
     marginBottom: 12,
   },
   sheetCharge: {
     fontSize: 13,
-    color: '#8B0000',
+    color: theme.colors.RouteError,
     fontFamily: FontFamily.bold,
     marginBottom: 12,
   },
   sheetCloseBtn: {
     height: 42,
     borderRadius: 10,
-    backgroundColor: '#C83D3D',
+    backgroundColor: theme.colors.RouteError,
     alignItems: 'center',
     justifyContent: 'center',
   },
   sheetCloseText: {
-    color: '#FFEBD9',
+    color: theme.colors.CeolWhite,
     fontFamily: FontFamily.bold,
     fontSize: 14,
   },

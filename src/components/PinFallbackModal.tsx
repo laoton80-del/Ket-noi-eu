@@ -64,17 +64,17 @@ export function PinFallbackModal({ visible, title, onVerify, onClose }: PinFallb
 const styles = StyleSheet.create({
   backdrop: {
     flex: 1,
-    backgroundColor: 'rgba(15, 12, 10, 0.45)',
+    backgroundColor: theme.colors.overlay.dim,
     justifyContent: 'center',
     paddingHorizontal: 28,
   },
   sheet: {
     borderRadius: theme.radius.md,
     borderWidth: 1,
-    borderColor: 'rgba(212, 175, 55, 0.35)',
+    borderColor: theme.colors.glass.border,
     backgroundColor: theme.colors.background,
     padding: 18,
-    shadowColor: '#000',
+    shadowColor: theme.colors.glass.shadow,
     shadowOffset: { width: 0, height: 12 },
     shadowOpacity: 0.2,
     shadowRadius: 20,
@@ -87,7 +87,7 @@ const styles = StyleSheet.create({
     marginBottom: 6,
   },
   hint: {
-    fontSize: 13,
+    ...theme.typeScale.body,
     fontFamily: FontFamily.regular,
     color: theme.colors.text.secondary,
     marginBottom: 12,
@@ -95,11 +95,11 @@ const styles = StyleSheet.create({
   input: {
     borderRadius: theme.radius.sm,
     borderWidth: 1,
-    borderColor: 'rgba(74, 64, 54, 0.25)',
-    backgroundColor: 'rgba(255,255,255,0.9)',
+    borderColor: theme.colors.glass.borderSoft,
+    backgroundColor: theme.colors.CeolWhite,
     paddingHorizontal: 14,
     paddingVertical: 12,
-    fontSize: 18,
+    ...theme.typeScale.h2,
     fontFamily: FontFamily.semibold,
     color: theme.colors.text.primary,
     letterSpacing: 4,
@@ -118,8 +118,8 @@ const styles = StyleSheet.create({
   },
   btnGhost: {
     borderWidth: 1,
-    borderColor: 'rgba(74, 64, 54, 0.28)',
-    backgroundColor: 'rgba(255,255,255,0.5)',
+    borderColor: theme.colors.glass.borderSoft,
+    backgroundColor: theme.colors.executive.card,
   },
   btnGhostText: {
     fontFamily: FontFamily.semibold,

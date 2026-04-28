@@ -25,7 +25,7 @@ function createStarPolygon(cx: number, cy: number, points = 14, outerR = 28, inn
   return result.join(' ');
 }
 
-function BirdRing({ radius, color = '#7A4B0A', opacity = 0.8 }: { radius: number; color?: string; opacity?: number }) {
+function BirdRing({ radius, color = theme.colors.SignatureGold, opacity = 0.8 }: { radius: number; color?: string; opacity?: number }) {
   const birds: { x: number; y: number; r: number; rot: number }[] = [];
   const ringR = radius * 0.7;
   for (let i = 0; i < 14; i += 1) {
@@ -55,10 +55,10 @@ const OrbitWatermark = memo(function OrbitWatermark({ size = 92, opacity = 0.12 
   return (
     <Svg width={size} height={size}>
       <G>
-        <Circle cx={radius} cy={radius} r={radius * 0.73} fill="none" stroke="#7A4B0A" strokeWidth={2} opacity={opacity} />
-        <Circle cx={radius} cy={radius} r={radius * 0.86} fill="none" stroke="#7A4B0A" strokeWidth={1.5} opacity={opacity * 0.8} />
-        <BirdRing radius={radius} color="#7A4B0A" opacity={opacity} />
-        <Polygon points={starPoints} fill="#7A4B0A" opacity={opacity} />
+        <Circle cx={radius} cy={radius} r={radius * 0.73} fill="none" stroke={theme.colors.SignatureGold} strokeWidth={2} opacity={opacity} />
+        <Circle cx={radius} cy={radius} r={radius * 0.86} fill="none" stroke={theme.colors.SignatureGold} strokeWidth={1.5} opacity={opacity * 0.8} />
+        <BirdRing radius={radius} color={theme.colors.SignatureGold} opacity={opacity} />
+        <Polygon points={starPoints} fill={theme.colors.SignatureGold} opacity={opacity} />
       </G>
     </Svg>
   );
@@ -77,10 +77,10 @@ export const TrustSurfaceCard = memo(function TrustSurfaceCard({
   const darkTone = cardTone === 'dark';
   const trustTone = cardTone === 'trust';
   const gradientColors = trustTone
-    ? (['#F5F8FC', '#EEF3F9'] as const)
+    ? ([theme.hybrid.panelCool, theme.colors.CeolWhite] as const)
     : darkTone
-      ? (['#0F1116', '#1A1F27', '#0E1014'] as const)
-      : (['#F3DEB0', '#DFC175', '#B98A32'] as const);
+      ? ([theme.colors.backgroundDeep, theme.colors.GraphiteBlue, theme.colors.backgroundDeep] as const)
+      : ([theme.colors.primaryBright, theme.colors.primary, theme.hybrid.signatureGold] as const);
 
   return (
     <View style={[styles.cardBase, style]}>
@@ -107,20 +107,20 @@ const styles = StyleSheet.create({
   cardBase: {
     borderRadius: 24,
     minHeight: 132,
-    shadowColor: '#4A3511',
+    shadowColor: theme.colors.glass.shadow,
     shadowOffset: { width: 0, height: 12 },
     shadowOpacity: 0.45,
     shadowRadius: 16,
     elevation: theme.elevation.modal.elevation + 2,
     borderTopWidth: 1,
-    borderColor: 'rgba(255,255,255,0.45)',
+    borderColor: theme.colors.glass.border,
     overflow: 'hidden',
   },
   cardGradient: {
     flex: 1,
     borderRadius: 24,
     borderWidth: 1,
-    borderColor: 'rgba(122, 75, 10, 0.25)',
+    borderColor: theme.colors.glass.borderSoft,
     paddingHorizontal: 14,
     paddingVertical: 12,
   },
@@ -128,8 +128,8 @@ const styles = StyleSheet.create({
     borderColor: theme.hybrid.signalSubtleBorder,
   },
   cardGradientTrust: {
-    borderColor: 'rgba(85, 144, 224, 0.28)',
-    shadowColor: 'rgba(85, 144, 224, 0.12)',
+    borderColor: theme.hybrid.signalSubtleBorder,
+    shadowColor: theme.colors.glass.shadow,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.25,
     shadowRadius: 8,

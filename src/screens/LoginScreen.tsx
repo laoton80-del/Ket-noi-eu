@@ -8,6 +8,7 @@ import { useAuth } from '../context/AuthContext';
 import type { RedirectTarget } from '../context/AuthContext';
 import type { RootStackParamList } from '../navigation/routes';
 import { Colors } from '../theme/colors';
+import { theme } from '../theme/theme';
 import { FontFamily } from '../theme/typography';
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
@@ -29,8 +30,8 @@ export function LoginScreen() {
   };
 
   const redirectLabel: Record<RedirectTarget, string> = {
-    HocTap: 'Học tập',
-    LeTan: 'Lễ tân',
+    Academy: 'Học viện',
+    Concierge: 'Trợ lý',
     Wallet: 'Ví & Credits',
     AiEye: 'Mắt Thần',
     LeonaCall: `Tổng đài viên ${inboundPersonaName}`,
@@ -57,7 +58,7 @@ export function LoginScreen() {
             placeholder="Số điện thoại"
             keyboardType="phone-pad"
             style={styles.input}
-            placeholderTextColor="rgba(31,26,20,0.45)"
+            placeholderTextColor={theme.colors.text.secondary}
           />
         </View>
         <Pressable
@@ -78,21 +79,21 @@ export function LoginScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F8F6F0', justifyContent: 'center', paddingHorizontal: 18 },
+  container: { flex: 1, backgroundColor: theme.colors.SoftMineralGrey, justifyContent: 'center', paddingHorizontal: 18 },
   card: {
     borderRadius: 22,
     borderWidth: 1,
-    borderColor: 'rgba(212, 175, 55, 0.4)',
-    backgroundColor: 'rgba(255,255,255,0.7)',
+    borderColor: theme.colors.glass.border,
+    backgroundColor: theme.colors.CeolWhite,
     padding: 16,
-    shadowColor: '#8B7355',
+    shadowColor: theme.colors.glass.shadow,
     shadowOffset: { width: 4, height: 8 },
     shadowOpacity: 0.15,
     shadowRadius: 12,
     elevation: 4,
   },
-  title: { fontSize: 27, color: Colors.text, fontFamily: FontFamily.extrabold, marginBottom: 6 },
-  sub: { fontSize: 13, lineHeight: 20, color: Colors.textSoft, fontFamily: FontFamily.regular, marginBottom: 12 },
+  title: { ...theme.typeScale.h1, color: Colors.text, fontFamily: FontFamily.bold, marginBottom: 6 },
+  sub: { ...theme.typeScale.body, color: Colors.textSoft, fontFamily: FontFamily.regular, marginBottom: 12 },
   row: { flexDirection: 'row', gap: 8, alignItems: 'center' },
   codeBtn: {
     minWidth: 76,
@@ -100,18 +101,18 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'rgba(255,255,255,0.9)',
+    backgroundColor: theme.colors.CeolWhite,
     borderWidth: 1,
-    borderColor: 'rgba(212, 175, 55, 0.35)',
+    borderColor: theme.colors.glass.borderSoft,
   },
-  codeText: { color: Colors.text, fontFamily: FontFamily.semibold, fontSize: 14 },
+  codeText: { color: Colors.text, ...theme.typeScale.body },
   input: {
     flex: 1,
     height: 46,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: 'rgba(212, 175, 55, 0.28)',
-    backgroundColor: 'rgba(255,255,255,0.86)',
+    borderColor: theme.colors.glass.borderSoft,
+    backgroundColor: theme.colors.CeolWhite,
     paddingHorizontal: 12,
     color: Colors.text,
     fontFamily: FontFamily.medium,
@@ -120,11 +121,11 @@ const styles = StyleSheet.create({
     height: 46,
     borderRadius: 12,
     marginTop: 14,
-    backgroundColor: '#C62828',
+    backgroundColor: theme.colors.RouteError,
     alignItems: 'center',
     justifyContent: 'center',
   },
   ctaDisabled: { opacity: 0.45 },
-  ctaText: { color: '#FFE9D2', fontFamily: FontFamily.bold, fontSize: 15 },
-  redirectHint: { marginTop: 10, fontSize: 12, color: Colors.textSoft, fontFamily: FontFamily.regular },
+  ctaText: { color: theme.colors.CeolWhite, ...theme.typeScale.body },
+  redirectHint: { marginTop: 10, ...theme.typeScale.caption, color: Colors.textSoft },
 });

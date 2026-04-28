@@ -2,6 +2,15 @@ import { FontFamily } from './typography';
 
 export const theme = {
   colors: {
+    DeepInkNavy: '#0A192F',
+    GraphiteBlue: '#112240',
+    CeolWhite: '#FFFFFF',
+    SoftMineralGrey: '#F3F4F6',
+    SignatureGold: '#D4AF37',
+    SoftEmerald: '#10B981',
+    SignalBlue: '#3B82F6',
+    RouteError: '#EF4444',
+    PendingAmber: '#F59E0B',
     primary: '#C5A059',
     primaryBright: '#E8D5A3',
     background: '#0A1628',
