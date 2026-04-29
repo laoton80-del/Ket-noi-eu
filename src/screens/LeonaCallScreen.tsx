@@ -55,7 +55,7 @@ export function LeonaCallScreen() {
 
   const outboundQuote = calculateCallCreditPrice(normalizeCountryCodeOrSentinel(user?.country));
   const outboundCostCzk = outboundQuote.localAmount;
-  const outboundCostLabel = `${outboundCostCzk} Credits`;
+  const outboundCostLabel = `${outboundCostCzk} Điểm tín dụng`;
   const outboundPersonaName = getPersonaDisplayName('leona');
   const autoSubmitRequested = !!route.params?.autoSubmit;
 
@@ -120,7 +120,7 @@ export function LeonaCallScreen() {
     await syncWalletFromServer();
     if (wallet.credits < outboundCostCzk) {
       setShowLowCredit(true);
-      setCallError('Bạn chưa đủ Credits để thực hiện cuộc gọi. Vui lòng nạp rồi thử lại.');
+      setCallError('Bạn chưa đủ Điểm tín dụng để thực hiện cuộc gọi. Vui lòng nạp rồi thử lại.');
       void appendUsageHistory({ type: 'leona', status: 'failed', note: 'insufficient_credits' });
       return;
     }
@@ -173,7 +173,7 @@ export function LeonaCallScreen() {
     <SafeAreaView style={styles.container}>
       <MicroHintBanner
         visible={showLeonaMicro}
-        text="Nhập số và mô tả ngắn — bấm gọi để Leona xử lý (trừ Credits theo cuộc)."
+        text="Nhập số và mô tả ngắn — bấm gọi để Leona xử lý (trừ Điểm tín dụng theo cuộc)."
         onDismiss={() => {
           setShowLeonaMicro(false);
           void markMicroHintSeen('leona');
@@ -189,14 +189,14 @@ export function LeonaCallScreen() {
         </Text>
         <View style={styles.creditPill}>
           <Ionicons name="wallet" size={12} color={theme.colors.SignatureGold} />
-          <Text style={styles.creditPillText}>{wallet.credits} Credits</Text>
+          <Text style={styles.creditPillText}>{wallet.credits} Điểm tín dụng</Text>
         </View>
 
         <View style={styles.micArea}>
           {ringScales.map((scale, i) => (
             <RNAnimated.View
               key={`r-${i}`}
-              style={[
+              style={StyleSheet.flatten([
                 styles.ring,
                 phase === 'calling' ? styles.ringCalling : styles.ringIdle,
                 {
@@ -205,15 +205,15 @@ export function LeonaCallScreen() {
                   borderWidth: fromReminder ? 1 : 0,
                   borderColor: fromReminder ? theme.colors.primaryBright : 'transparent',
                 },
-              ]}
+              ])}
             />
           ))}
           <RNAnimated.View
-            style={[
+            style={StyleSheet.flatten([
               {
                 transform: [{ scale: phase === 'calling' ? liveCoreScale : attentionScale }],
               },
-            ]}
+            ])}
           >
             <Pressable
               onPress={() => void onCall()}
@@ -270,21 +270,21 @@ export function LeonaCallScreen() {
 
         <TrustSurfaceCard cardTone="dark" watermarkOpacity={0.03} style={styles.statusCard}>
           <Text style={styles.statusText}>
-            {phase === 'calling' ? 'Máy chủ đang xác nhận Credits trước khi tiếp tục…' : 'Đang nghe...'}
+            {phase === 'calling' ? 'Máy chủ đang xác nhận Điểm tín dụng trước khi tiếp tục…' : 'Đang nghe...'}
           </Text>
           <Text style={styles.statusText}>Phí: {outboundCostLabel}/lượt</Text>
         </TrustSurfaceCard>
         {callError ? <InlineStatusBanner tone="error" text={callError} onRetry={() => void onCall()} /> : null}
       </View>
 
-      <RNAnimated.View style={[styles.resultSheet, { transform: [{ translateY: sheetY }] }]}>
+      <RNAnimated.View style={StyleSheet.flatten([styles.resultSheet, { transform: [{ translateY: sheetY }] }])}>
         <View style={styles.sheetDrag} />
         <Text style={styles.sheetTitle}>Xác nhận yêu cầu và thanh toán</Text>
         <Text style={styles.sheetResult}>
-          ✅ Đã xác nhận thanh toán và trừ Credits; yêu cầu đã được ghi nhận. Kết quả cuộc gọi thực tế do tổng đài/đối tác —
+          ✅ Đã xác nhận thanh toán và trừ Điểm tín dụng; yêu cầu đã được ghi nhận. Kết quả cuộc gọi thực tế do tổng đài/đối tác —
           ứng dụng chỉ xác nhận lượt dịch vụ đã thanh toán.
         </Text>
-        <Text style={styles.sheetCharge}>Đã trừ {outboundCostCzk} Credits.</Text>
+        <Text style={styles.sheetCharge}>Đã trừ {outboundCostCzk} Điểm tín dụng.</Text>
         <Pressable
           onPress={() => {
             RNAnimated.timing(sheetY, { toValue: 320, duration: 240, useNativeDriver: true }).start(() => {
@@ -299,8 +299,8 @@ export function LeonaCallScreen() {
 
       <AuthPaywallModal
         visible={showLowCredit}
-        title="Hết Credits"
-        description={`Bạn đã hết Credits. Nạp thêm để tiếp tục dùng dịch gọi hỗ trợ ${outboundPersonaName}.`}
+        title="Hết Điểm tín dụng"
+        description={`Bạn đã hết Điểm tín dụng. Nạp thêm để tiếp tục dùng dịch gọi hỗ trợ ${outboundPersonaName}.`}
         onClose={() => setShowLowCredit(false)}
         onContinue={() => {
           setShowLowCredit(false);

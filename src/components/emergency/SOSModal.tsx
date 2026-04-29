@@ -1,6 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useEffect, useMemo, useState } from 'react';
 import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
+import { useDeviceLayout } from '../../hooks/useDeviceLayout';
 import { theme } from '../../theme/theme';
 import { FontFamily } from '../../theme/typography';
 
@@ -20,10 +21,12 @@ export function SOSModal({
   onClose,
   onEmergencyCall,
   onEmbassyCall,
-  locationText = 'Vi tri cua ban: Dang lay toa do...',
+  locationText = 'Vị trí của bạn: Đang lấy tọa độ...',
 }: SOSModalProps) {
   const [isHolding, setIsHolding] = useState(false);
   const [holdProgress, setHoldProgress] = useState(0);
+  const { isLandscape, isTablet, isWeb, isPortrait } = useDeviceLayout();
+  const shouldUseHorizontalActions = isLandscape && (isTablet || isWeb || !isPortrait);
 
   useEffect(() => {
     if (!visible) {
@@ -62,11 +65,11 @@ export function SOSModal({
         <View style={styles.sheet}>
           <View style={styles.headerRow}>
             <Ionicons name="warning" size={26} color={theme.colors.RouteError} />
-            <Text style={styles.headerTitle}>TRUONG HOP KHAN CAP</Text>
+            <Text style={styles.headerTitle}>TRƯỜNG HỢP KHẨN CẤP</Text>
           </View>
 
           <View style={styles.locationCard}>
-            <Text style={styles.locationLabel}>VI TRI HIEN TAI</Text>
+            <Text style={styles.locationLabel}>VỊ TRÍ HIỆN TẠI</Text>
             <Text style={styles.locationText}>{locationText}</Text>
           </View>
 
@@ -80,27 +83,35 @@ export function SOSModal({
             onLongPress={triggerEmergency}
             style={({ pressed }) => [styles.primaryAction, pressed && styles.primaryActionPressed]}
           >
-            <Text style={styles.primaryActionTitle}>GIU DE GOI KHAN CAP</Text>
+            <Text style={styles.primaryActionTitle}>GIỮ ĐỂ GỌI KHẨN CẤP</Text>
             <Text style={styles.primaryActionSub}>
-              {isHolding ? `Dang giu... ${progressValue}%` : 'Nhan va giu 2 giay de xac nhan cuoc goi'}
+              {isHolding ? `Đang giữ... ${progressValue}%` : 'Nhấn và giữ 2 giây để xác nhận cuộc gọi'}
             </Text>
             <View style={styles.progressTrack}>
               <View style={[styles.progressFill, { width: progressWidth }]} />
             </View>
           </Pressable>
 
-          <View style={styles.secondaryActions}>
+          <View style={[styles.secondaryActions, shouldUseHorizontalActions && styles.secondaryActionsRow]}>
             <Pressable
               onPress={onEmbassyCall}
-              style={({ pressed }) => [styles.secondaryBtn, pressed && { opacity: 0.84 }]}
+              style={({ pressed }) => [
+                styles.secondaryBtn,
+                shouldUseHorizontalActions && styles.secondaryBtnRowItem,
+                pressed && { opacity: 0.84 },
+              ]}
             >
-              <Text style={styles.secondaryBtnText}>Goi Dai Su Quan</Text>
+              <Text style={styles.secondaryBtnText}>Gọi Đại sứ quán</Text>
             </Pressable>
             <Pressable
               onPress={onClose}
-              style={({ pressed }) => [styles.cancelBtn, pressed && { opacity: 0.84 }]}
+              style={({ pressed }) => [
+                styles.cancelBtn,
+                shouldUseHorizontalActions && styles.secondaryBtnRowItem,
+                pressed && { opacity: 0.84 },
+              ]}
             >
-              <Text style={styles.cancelBtnText}>Dong (Cancel)</Text>
+              <Text style={styles.cancelBtnText}>Đóng (Hủy)</Text>
             </Pressable>
           </View>
         </View>
@@ -195,6 +206,13 @@ const styles = StyleSheet.create({
   },
   secondaryActions: {
     gap: theme.spacing.sm,
+  },
+  secondaryActionsRow: {
+    flexDirection: 'row',
+    alignItems: 'stretch',
+  },
+  secondaryBtnRowItem: {
+    flex: 1,
   },
   secondaryBtn: {
     minHeight: theme.components.button.height.md,

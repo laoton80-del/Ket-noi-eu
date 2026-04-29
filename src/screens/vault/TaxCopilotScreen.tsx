@@ -29,7 +29,7 @@ export function TaxCopilotScreen() {
       const result = await analyzePayslip(MOCK_BASE64_PAYSLIP, currentCountry);
       setAnalysis(result);
     } catch {
-      Alert.alert('Phan tich that bai', 'Khong the doc bang luong luc nay. Vui long thu lai.');
+      Alert.alert('Phân tích thất bại', 'Không thể đọc bảng lương lúc này. Vui lòng thử lại.');
     } finally {
       setIsAnalyzing(false);
     }
@@ -42,13 +42,13 @@ export function TaxCopilotScreen() {
       const chargeResult = await chargeWalletServer('tax_refund_draft', generateChargeKey('tax_refund'));
       if (!chargeResult.ok) {
         if (chargeResult.error === 'insufficient_funds') {
-          Alert.alert('Khong du Credits', 'Ban can nap them Credits de sinh don Hoan Thue.');
+          Alert.alert('Không đủ Điểm tín dụng', 'Bạn cần nạp thêm Điểm tín dụng để tạo đơn hoàn thuế.');
         } else {
-          Alert.alert('Thanh toan that bai', 'Khong the tru Credits luc nay. Vui long thu lai sau.');
+          Alert.alert('Thanh toán thất bại', 'Không thể trừ Điểm tín dụng lúc này. Vui lòng thử lại sau.');
         }
         return;
       }
-      Alert.alert('Da tao yeu cau', 'He thong da tiep nhan yeu cau sinh don Hoan Thue.');
+      Alert.alert('Đã tạo yêu cầu', 'Hệ thống đã tiếp nhận yêu cầu tạo đơn hoàn thuế.');
     } finally {
       setIsCharging(false);
     }
@@ -56,9 +56,9 @@ export function TaxCopilotScreen() {
 
   const breakdownRows: BreakdownRow[] = analysis
     ? [
-        { label: 'Gross Income', value: analysis.gross },
-        { label: 'Net Income', value: analysis.net },
-        { label: 'Tax Deducted', value: analysis.taxDeducted },
+        { label: 'Thu nhập gộp', value: analysis.gross },
+        { label: 'Thu nhập ròng', value: analysis.net },
+        { label: 'Thuế đã khấu trừ', value: analysis.taxDeducted },
       ]
     : [];
 
@@ -66,27 +66,27 @@ export function TaxCopilotScreen() {
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.header}>
-          <Text style={styles.title}>Co van Thue & Tai chinh</Text>
-          <Text style={styles.subtitle}>Phan tich bang luong va de xuat toi uu nghia vu thue.</Text>
+          <Text style={styles.title}>Cố vấn thuế & tài chính</Text>
+          <Text style={styles.subtitle}>Phân tích bảng lương và đề xuất tối ưu nghĩa vụ thuế.</Text>
         </View>
 
         <Pressable
           onPress={() => void onUploadPayslip()}
           style={({ pressed }) => [styles.uploadZone, pressed && { opacity: 0.8 }]}
         >
-          <Text style={styles.uploadText}>Chup/Tai len Bang luong (Payslip)</Text>
+          <Text style={styles.uploadText}>Chụp/Tải lên bảng lương (Payslip)</Text>
         </Pressable>
 
         {isAnalyzing ? (
           <PrecisePanel style={styles.loadingPanel}>
             <ActivityIndicator color={theme.colors.SignatureGold} />
-            <Text style={styles.loadingText}>Dang phan tich du lieu tai chinh...</Text>
+            <Text style={styles.loadingText}>Đang phân tích dữ liệu tài chính...</Text>
           </PrecisePanel>
         ) : null}
 
         {analysis ? (
           <PrecisePanel style={styles.resultPanel}>
-            <Text style={styles.resultHeader}>Financial Breakdown</Text>
+            <Text style={styles.resultHeader}>Bảng phân tích tài chính</Text>
             <View style={styles.table}>
               {breakdownRows.map((row) => (
                 <View key={row.label} style={styles.tableRow}>
@@ -95,7 +95,7 @@ export function TaxCopilotScreen() {
                 </View>
               ))}
             </View>
-            <Text style={styles.adviceTitle}>Khuyen nghi AI</Text>
+            <Text style={styles.adviceTitle}>Khuyến nghị AI</Text>
             <Text style={styles.adviceText}>{analysis.advice}</Text>
           </PrecisePanel>
         ) : null}
@@ -106,7 +106,7 @@ export function TaxCopilotScreen() {
           style={({ pressed }) => [styles.footerButton, isCharging && styles.footerButtonDisabled, pressed && { opacity: 0.8 }]}
         >
           {isCharging ? <ActivityIndicator color={theme.components.button.variant.primary.text} /> : null}
-          <Text style={styles.footerButtonText}>Sinh don Hoan Thue (30 Credits)</Text>
+          <Text style={styles.footerButtonText}>Tạo đơn hoàn thuế (30 Điểm tín dụng)</Text>
         </Pressable>
       </ScrollView>
     </SafeAreaView>

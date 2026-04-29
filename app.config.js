@@ -58,6 +58,7 @@ module.exports = () => {
         color: '#0B2A66',
       },
     ],
+    'expo-live-activity',
     'expo-font',
   ];
 
@@ -111,8 +112,12 @@ module.exports = () => {
       googleServicesFile: process.env.GOOGLE_SERVICES_JSON ?? './google-services.json',
     },
     web: {
+      shortName: 'KNG',
+      name: 'Kết Nối Global',
       favicon: './assets/images/favicon.png',
       themeColor: '#0B2A66',
+      backgroundColor: '#0B2A66',
+      display: 'standalone',
     },
     plugins,
     extra: {

@@ -50,9 +50,9 @@ export function LiveAiTeacherScreen() {
     setIsCharging(false);
     if (!result.ok) {
       if (result.error === 'insufficient_funds') {
-        Alert.alert('Not enough credits', 'You do not have enough credits to start this session. Please top up your wallet.');
+        Alert.alert('Không đủ tín dụng', 'Bạn không đủ tín dụng để bắt đầu phiên này. Vui lòng nạp thêm ví.');
       } else {
-        Alert.alert('Unable to start session', 'Billing could not be completed. Please try again.');
+        Alert.alert('Không thể bắt đầu phiên', 'Không thể hoàn tất thanh toán. Vui lòng thử lại.');
       }
       return;
     }
@@ -60,7 +60,7 @@ export function LiveAiTeacherScreen() {
   };
 
   const isConnected = stream.state === 'live' || stream.state === 'connecting';
-  const mainActionLabel = isCharging ? 'Processing...' : isConnected ? 'Disconnect' : 'Start Session';
+  const mainActionLabel = isCharging ? 'Đang xử lý...' : isConnected ? 'Ngắt kết nối' : 'Bắt đầu phiên';
 
   const handleMicPress = () => {
     if (isCharging || stream.state !== 'live') return;
@@ -71,8 +71,8 @@ export function LiveAiTeacherScreen() {
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <View style={styles.headerCenter}>
-          <Text style={styles.headerTitle}>Live AI Teacher</Text>
-          <Text style={styles.contextText}>Context: {currentCountry}</Text>
+          <Text style={styles.headerTitle}>Gia sư AI trực tiếp</Text>
+          <Text style={styles.contextText}>Ngữ cảnh: {currentCountry}</Text>
         </View>
         <StatusChip state={statusState} />
       </View>
@@ -80,17 +80,17 @@ export function LiveAiTeacherScreen() {
       <View style={styles.videoStage}>
         <View style={[styles.avatarPlaceholder, stream.state === 'live' && styles.avatarLiveGlow]}>
           <Ionicons name="videocam" size={40} color={theme.colors.SignatureGold} />
-          <Text style={styles.avatarTitle}>AI Avatar Stream</Text>
-          <Text style={styles.avatarHint}>WebRTC video avatar se hien thi tai day.</Text>
+          <Text style={styles.avatarTitle}>Luồng avatar AI</Text>
+          <Text style={styles.avatarHint}>Video avatar WebRTC sẽ hiển thị tại đây.</Text>
         </View>
         <Text style={styles.avatarSpeech} numberOfLines={3}>
-          {avatarSpeech || 'AI teacher dang san sang hoi thoai thoi gian thuc.'}
+          {avatarSpeech || 'Gia sư AI đang sẵn sàng hội thoại thời gian thực.'}
         </Text>
       </View>
 
       {whiteboardText.trim() ? (
         <PrecisePanel style={styles.whiteboardPanel}>
-          <Text style={styles.whiteboardTitle}>Whiteboard</Text>
+          <Text style={styles.whiteboardTitle}>Bảng ghi chú</Text>
           <Text style={styles.whiteboardLine}>{whiteboardText}</Text>
         </PrecisePanel>
       ) : null}

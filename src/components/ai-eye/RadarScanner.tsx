@@ -42,7 +42,7 @@ export function RadarScanner({ active, height, durationMs = 1300 }: RadarScanner
 
   return (
     <View pointerEvents="none" style={styles.container}>
-      <Animated.View style={[styles.line, animatedStyle]} />
+      <Animated.View style={StyleSheet.flatten([styles.line, animatedStyle])} />
     </View>
   );
 }

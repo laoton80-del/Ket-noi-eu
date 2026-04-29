@@ -5,9 +5,9 @@ import type { DocumentVaultItem } from '../services/DocumentAlarmService';
 import { ensureWalletFirebaseAuth, getWalletIdToken } from '../services/walletFirebaseSession';
 import { getWalletState, syncWalletFromServer } from '../state/wallet';
 import { STORAGE_KEYS } from '../storage/storageKeys';
-import type { AuthUser, ResidencyStatus, SubscriptionPlan, UserSegment } from './authTypes';
+import type { AuthUser, CommercialTier, ResidencyStatus, SubscriptionPlan, UserSegment } from './authTypes';
 
-export type { AuthUser, ResidencyStatus, SubscriptionPlan, UserSegment } from './authTypes';
+export type { AuthUser, CommercialTier, ResidencyStatus, SubscriptionPlan, UserSegment } from './authTypes';
 
 export type RedirectTarget =
   | 'Academy'
@@ -38,6 +38,7 @@ type AuthContextValue = {
     visaType: string;
     visaExpiryDate: string;
     subscriptionPlan?: SubscriptionPlan;
+    commercialTier?: CommercialTier;
     segment?: UserSegment;
   }) => void;
   updateProfile: (input: {
@@ -48,6 +49,7 @@ type AuthContextValue = {
     visaType?: string;
     visaExpiryDate?: string;
     subscriptionPlan?: SubscriptionPlan;
+    commercialTier?: CommercialTier;
     segment?: UserSegment;
     isLearningFullUnlocked?: boolean;
     isLearningUnlocked?: boolean;
@@ -92,6 +94,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               visaType: parsed.visaType ?? '',
               visaExpiryDate: parsed.visaExpiryDate ?? '',
               subscriptionPlan: parsed.subscriptionPlan ?? 'free',
+              commercialTier: parsed.commercialTier ?? 'starter',
               segment: parsed.segment ?? 'adult',
               aiCallCredits: getWalletState().credits,
               isLearningFullUnlocked: parsed.isLearningFullUnlocked === true || parsed.isLearningUnlocked === true,
@@ -154,7 +157,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       pendingRedirect,
       setPendingRedirect,
       beginLogin: (phone: string) => setPendingLogin({ phone }),
-      completeProfile: ({ name, country, countryTier, residencyStatus, visaType, visaExpiryDate, subscriptionPlan }) => {
+      completeProfile: ({ name, country, countryTier, residencyStatus, visaType, visaExpiryDate, subscriptionPlan, commercialTier }) => {
         if (!pendingLogin) return;
         const normalizedCountry = normalizeCountryCodeOrSentinel(country);
         const tier = countryTier ?? resolveCountryPack(normalizedCountry).pricingTier;
@@ -167,6 +170,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           visaType,
           visaExpiryDate,
           subscriptionPlan: subscriptionPlan ?? 'free',
+          commercialTier: commercialTier ?? 'starter',
           segment: 'adult',
           aiCallCredits: getWalletState().credits,
           isLearningFullUnlocked: false,

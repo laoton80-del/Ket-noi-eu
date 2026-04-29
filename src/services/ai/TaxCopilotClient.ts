@@ -16,7 +16,7 @@ function mockPayslipResult(country: string): PayslipAnalysis {
     gross: '3000 EUR',
     net: '2200 EUR',
     taxDeducted: '800 EUR',
-    advice: `Ban co the hoan lai khoang 300 EUR thue vao cuoi nam neu nop day du ho so khau tru tai ${country}.`,
+    advice: `Bạn có thể hoàn lại khoảng 300 EUR thuế vào cuối năm nếu nộp đầy đủ hồ sơ khấu trừ tại ${country}.`,
   };
 }
 
@@ -79,7 +79,7 @@ export async function analyzePayslip(base64Image: string, country: string): Prom
           { role: 'system', content: systemPrompt },
           {
             role: 'user',
-            content: `Phan tich bang luong nay (base64): ${normalizedImage.slice(0, 4000)}`,
+            content: `Phân tích bảng lương này (base64): ${normalizedImage.slice(0, 4000)}`,
           },
         ],
       }),

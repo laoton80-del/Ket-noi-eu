@@ -1,7 +1,9 @@
 export const FontFamily = {
+  light: 'Inter-Light',
   regular: 'Inter-Regular',
   medium: 'Inter-Medium',
   semibold: 'Inter-SemiBold',
   bold: 'Inter-Bold',
-  extrabold: 'Inter-ExtraBold',
+  // Backward-compat alias while migrating legacy usages.
+  extrabold: 'Inter-Bold',
 } as const;

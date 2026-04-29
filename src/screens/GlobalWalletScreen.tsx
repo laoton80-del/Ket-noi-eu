@@ -10,20 +10,12 @@ import { useRegionState } from '../state/region';
 import { useWalletState, type Transaction } from '../state/wallet';
 import { theme } from '../theme/theme';
 import { FontFamily } from '../theme/typography';
+import { formatDate as formatLocalizedDate } from '../utils/formatters';
 
 function deriveState(tx: Transaction): StatusChipState {
   if (tx.type === 'topup') return 'Cleared';
   if (tx.description.toLowerCase().includes('fail')) return 'Error';
   return 'Processing';
-}
-
-function formatDate(iso: string): string {
-  return new Date(iso).toLocaleString('vi-VN', {
-    hour: '2-digit',
-    minute: '2-digit',
-    day: '2-digit',
-    month: '2-digit',
-  });
 }
 
 export function GlobalWalletScreen() {
@@ -58,7 +50,7 @@ export function GlobalWalletScreen() {
               <View key={tx.id} style={styles.row}>
                 <View style={styles.rowLeft}>
                   <Text style={styles.rowTitle}>{tx.description}</Text>
-                  <Text style={styles.rowMeta}>{formatDate(tx.date)}</Text>
+                  <Text style={styles.rowMeta}>{formatLocalizedDate(tx.date)}</Text>
                 </View>
                 <View style={styles.rowRight}>
                   <StatusChip state={status} />

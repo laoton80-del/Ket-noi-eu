@@ -1,27 +1,35 @@
 import {
-  BeVietnamPro_400Regular,
-  BeVietnamPro_500Medium,
-  BeVietnamPro_600SemiBold,
-  BeVietnamPro_700Bold,
-  BeVietnamPro_800ExtraBold,
-  useFonts as useBeVietnamFonts,
-} from '@expo-google-fonts/be-vietnam-pro';
+  Inter_300Light,
+  Inter_400Regular,
+  Inter_500Medium,
+  Inter_600SemiBold,
+  Inter_700Bold,
+  useFonts as useInterFonts,
+} from '@expo-google-fonts/inter';
 import { Ionicons } from '@expo/vector-icons';
-import { NavigationContainer, createNavigationContainerRef, useNavigation } from '@react-navigation/native';
-import NetInfo from '@react-native-community/netinfo';
+import {
+  DarkTheme,
+  DefaultTheme,
+  NavigationContainer,
+  createNavigationContainerRef,
+  useNavigation,
+  type LinkingOptions,
+  type Theme as NavigationTheme,
+} from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { StatusBar } from 'expo-status-bar';
-import * as Notifications from 'expo-notifications';
 import { useEffect, useMemo, useState } from 'react';
 import { Image, Platform, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
+import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AuthPaywallModal } from './src/components/AuthPaywallModal';
 import { AppStateView } from './src/components/ui/AppStateView';
 import { IntentEntryModal } from './src/components/IntentEntryModal';
 import { SOSHeaderButton } from './src/components/emergency/SOSHeaderButton';
 import { AuthProvider, useAuth, type RedirectTarget } from './src/context/AuthContext';
+import { AppModeProvider, useAppMode } from './src/context/AppModeContext';
 import {
   isAdminDebugSurfaceEnabled,
 } from './src/config/adminDebugGate';
@@ -29,7 +37,9 @@ import { APP_BRAND } from './src/config/appBrand';
 import { getStrings } from './src/i18n/strings';
 import type { RootStackParamList, RootTabParamList } from './src/navigation/routes';
 import { CaNhanScreen } from './src/screens/CaNhanScreen';
-import { GlobalWalletScreen } from './src/screens/GlobalWalletScreen';
+import { GlobalWalletScreen } from './src/screens/commercial/GlobalWalletScreen';
+import { PartnerDealsScreen } from './src/screens/commercial/PartnerDealsScreen';
+import { ProSubscriptionPaywall } from './src/screens/commercial/ProSubscriptionPaywall';
 import { CongDongScreen } from './src/screens/CongDongScreen';
 import { HomeScreen } from './src/screens/HomeScreen';
 import { AcademyScreen } from './src/screens/AcademyScreen';
@@ -39,7 +49,6 @@ import { LoginScreen } from './src/screens/LoginScreen';
 import { OtpScreen } from './src/screens/OtpScreen';
 import { SetupProfileScreen } from './src/screens/SetupProfileScreen';
 import { ServicesScreen } from './src/screens/ServicesScreen';
-import { DiscoverScreen } from './src/screens/DiscoverScreen';
 import { AiEyeScreen } from './src/screens/AiEyeScreen';
 import { AdminDashboardScreen } from './src/screens/AdminDashboardScreen';
 import { VaultScreen } from './src/screens/VaultScreen';
@@ -65,25 +74,75 @@ import {
   PILOT_LEONA_SERVICES_FALLBACK_PREFILL,
   resolvePilotAwareRedirectTarget,
 } from './src/config/launchPilot';
+import { configurePushNotificationHandler } from './src/services/notifications/pushService';
+import { checkForEmergencyUpdates } from './src/services/updateService';
+import { TelemetryProvider, useNavigationTelemetry } from './src/services/telemetryService';
+import { FeatureFlagProvider } from './src/config/featureFlags';
+import { TourProvider } from './src/components/onboarding/TourProvider';
 import { ConditionalStripeProvider } from './src/providers/ConditionalStripeProvider';
 
 const Tab = createBottomTabNavigator<RootTabParamList>();
 const Stack = createNativeStackNavigator<RootStackParamList>();
 const navigationRef = createNavigationContainerRef<RootStackParamList>();
 
-const STRIPE_PUBLISHABLE_KEY = process.env.EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY ?? '';
+const b2cTheme: NavigationTheme = {
+  ...DefaultTheme,
+  colors: {
+    ...DefaultTheme.colors,
+    background: theme.colors.SoftMineralGrey,
+    card: theme.colors.CeolWhite,
+    text: theme.colors.textOnLight,
+    border: theme.hybrid.panelCoolBorder,
+    primary: theme.colors.SignalBlue,
+  },
+};
+
+const b2bTheme: NavigationTheme = {
+  ...DarkTheme,
+  colors: {
+    ...DarkTheme.colors,
+    background: theme.colors.DeepInkNavy,
+    card: theme.colors.executive.panel,
+    text: theme.colors.textOnDark,
+    border: theme.colors.glass.borderSoft,
+    primary: theme.hybrid.signalStrong,
+  },
+};
+
+const STRIPE_PUBLISHABLE_KEY =
+  process.env.EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY ?? 'pk_test_mock_key_for_now';
 const STRIPE_MERCHANT_IDENTIFIER = process.env.EXPO_PUBLIC_STRIPE_MERCHANT_IDENTIFIER || undefined;
 const STRIPE_URL_SCHEME = process.env.EXPO_PUBLIC_STRIPE_URL_SCHEME ?? 'ketnoiglobal';
 
-Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldShowAlert: true,
-    shouldShowBanner: true,
-    shouldShowList: true,
-    shouldPlaySound: true,
-    shouldSetBadge: true,
-  }),
-});
+const linking: LinkingOptions<RootStackParamList> = {
+  prefixes: ['ketnoiglobal://', 'https://ketnoiglobal.com'],
+  config: {
+    screens: {
+      Tabs: {
+        screens: {
+          Discover: 'discover',
+          Services: 'shop/:id',
+          Academy: 'academy',
+          CongDong: 'community',
+          Concierge: 'concierge',
+          CaNhan: 'profile',
+        },
+      },
+      Wallet: 'wallet',
+      GlobalWallet: 'wallet/global',
+      InboundQueue: 'b2b/inbound-queue',
+      SmartCalendar: 'b2b/calendar',
+      PartnerDeals: 'commercial/partner-deals',
+      LiveInterpreter: 'interpreter',
+      LeonaCall: 'leona-call',
+      RadarDiscovery: 'radar',
+      Vault: 'vault',
+      AiEye: 'ai-eye',
+    },
+  },
+};
+
+configurePushNotificationHandler();
 
 function iconByRoute(routeName: string, focused: boolean): keyof typeof Ionicons.glyphMap {
   if (routeName === 'Discover') return focused ? 'apps' : 'apps-outline';
@@ -98,6 +157,7 @@ function iconByRoute(routeName: string, focused: boolean): keyof typeof Ionicons
 function MainTabs() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { user, pendingRedirect, setPendingRedirect } = useAuth();
+  const { isB2B } = useAppMode();
   const { languageCode } = useAssistantSettings();
   const strings = getStrings(languageCode);
   const [paywallTarget, setPaywallTarget] = useState<RedirectTarget | null>(null);
@@ -157,18 +217,19 @@ function MainTabs() {
           headerShown: true,
           headerRight: () => <SOSHeaderButton />,
           tabBarActiveTintColor: theme.hybrid.signalStrong,
-          tabBarInactiveTintColor: theme.hybrid.panelCoolTextMuted,
+          tabBarInactiveTintColor: isB2B ? theme.colors.textOnDarkMuted : theme.hybrid.panelCoolTextMuted,
           tabBarLabelStyle: [styles.tabLabel, { fontSize: tabSizing.labelSize }],
           tabBarItemStyle: styles.tabItem,
           tabBarStyle: [
             styles.tabBar,
+            isB2B ? styles.tabBarB2B : styles.tabBarB2C,
             {
               height: tabSizing.tabBarBaseHeight + insets.bottom,
               paddingBottom: Math.max(insets.bottom, 10),
               paddingTop: 8,
             },
           ],
-          sceneStyle: styles.scene,
+          sceneStyle: [styles.scene, isB2B ? styles.sceneB2B : styles.sceneB2C],
           tabBarIcon: ({ focused }) => (
             <Ionicons
               name={iconByRoute(route.name, focused)}
@@ -178,7 +239,7 @@ function MainTabs() {
           ),
         })}
       >
-        <Tab.Screen name="Discover" component={DiscoverScreen} options={{ title: strings.nav.discoverTab }} />
+        <Tab.Screen name="Discover" component={HomeScreen} options={{ title: 'Trang chủ' }} />
         <Tab.Screen name="Services" component={ServicesScreen} options={{ title: strings.nav.servicesTab }} />
         <Tab.Screen
           name="Academy"
@@ -230,13 +291,15 @@ function MainTabs() {
 function AppRoot() {
   const insets = useSafeAreaInsets();
   const { isHydrating, user, setPendingRedirect } = useAuth();
-  const [isOnline, setIsOnline] = useState(true);
-  const [fontsLoaded] = useBeVietnamFonts({
-    BeVietnamPro_400Regular,
-    BeVietnamPro_500Medium,
-    BeVietnamPro_600SemiBold,
-    BeVietnamPro_700Bold,
-    BeVietnamPro_800ExtraBold,
+  const { mode, isB2B, setMode } = useAppMode();
+  const canAccessB2BWorkspace =
+    user?.commercialTier === 'pro' || user?.commercialTier === 'power' || user?.commercialTier === 'enterprise';
+  const [fontsLoaded] = useInterFonts({
+    Inter_300Light,
+    Inter_400Regular,
+    Inter_500Medium,
+    Inter_600SemiBold,
+    Inter_700Bold,
   });
 
   const {
@@ -252,32 +315,38 @@ function AppRoot() {
     navigationRef,
     setPendingRedirect,
   });
+  const { onNavigationReady, onNavigationStateChange } = useNavigationTelemetry(navigationRef);
+  const transitionProgress = useSharedValue(0);
 
   useEffect(() => {
-    const sub = NetInfo.addEventListener((s) => setIsOnline(s.isConnected !== false));
-    void NetInfo.fetch().then((s) => setIsOnline(s.isConnected !== false));
-    return () => sub();
-  }, []);
+    transitionProgress.value = 1;
+    transitionProgress.value = withTiming(0, { duration: 220 });
+  }, [mode, transitionProgress]);
 
-  if (!isOnline) {
-    return (
-      <AppStateView
-        variant="offline"
-        title="CONNECTION LOST"
-        message="Please check your network settings and try again."
-        onRetry={() => {
-          void NetInfo.refresh().then((s) => setIsOnline(s.isConnected !== false));
-        }}
-      />
-    );
-  }
+  useEffect(() => {
+    if (!isB2B) return;
+    if (canAccessB2BWorkspace) return;
+    setMode('B2C_MODE');
+    if (navigationRef.isReady()) {
+      navigationRef.navigate('B2BPaywall');
+    }
+  }, [canAccessB2BWorkspace, isB2B, setMode]);
+
+  const transitionOverlayStyle = useAnimatedStyle(() => ({
+    opacity: transitionProgress.value,
+    transform: [{ scale: withTiming(1 + transitionProgress.value * 0.015, { duration: 220 }) }],
+  }));
+
+  useEffect(() => {
+    void checkForEmergencyUpdates();
+  }, []);
 
   if (!fontsLoaded || isHydrating || !intentGateReady || !opsReady) {
     return (
       <AppStateView
         variant="loading"
-        title="CONNECTING"
-        message="Preparing your secure session…"
+        title="ĐANG KẾT NỐI"
+        message="Đang chuẩn bị phiên làm việc an toàn của bạn…"
       />
     );
   }
@@ -286,71 +355,118 @@ function AppRoot() {
     return (
       <AppStateView
         variant="maintenance"
-        title="SCHEDULED MAINTENANCE"
-        message="Kết Nối Global is temporarily unavailable. We will be back soon."
+        title="BẢO TRÌ THEO LỊCH"
+        message="Kết Nối Global đang tạm gián đoạn để bảo trì. Chúng tôi sẽ quay lại sớm."
         detail={`Ops source: ${opsConfig.source}`}
       />
     );
   }
 
   return (
-    <NavigationContainer ref={navigationRef}>
-      <StatusBar style="dark" />
-      <IntentEntryModal visible={showIntentModal} onSelectIntent={onGuidedIntent} onSkip={onSkipGuidedIntent} />
-      <Stack.Navigator screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="Tabs" component={MainTabs} />
-        <Stack.Screen name="LifeOSDashboard" component={LifeOSDashboard} />
-        <Stack.Screen name="TravelCompanion" component={TravelCompanionScreen} />
-        <Stack.Screen name="FlightSearchAssistant" component={FlightSearchAssistantScreen} />
-        <Stack.Screen name="KetNoiYeuThuong" component={KetNoiYeuThuongScreen} />
-        <Stack.Screen name="EmergencySOS" component={EmergencySOSScreen} />
-        <Stack.Screen name="AdultLearningHome" component={AdultLearningHome} />
-        <Stack.Screen name="KidsLearningHome" component={KidsLearningHome} />
-        <Stack.Screen name="LiveAiTeacher" component={LiveAiTeacherScreen} />
-        <Stack.Screen name="AssistantChat" component={AssistantChatScreen} />
-        <Stack.Screen name="InboundQueue" component={InboundQueueScreen} />
-        <Stack.Screen name="SmartCalendar" component={SmartCalendarScreen} />
-        <Stack.Screen name="Wallet" component={GlobalWalletScreen} />
-        <Stack.Screen name="AiEye" component={AiEyeScreen} />
-        <Stack.Screen name="Vault" component={VaultScreen} />
-        {/* Radar: mock preview when enableRadarSurface; otherwise auto-replace → Leona (see screen). */}
-        <Stack.Screen name="RadarDiscovery" component={RadarDiscoveryScreen} />
-        <Stack.Screen name="LiveInterpreter" component={LiveInterpreterScreen} />
-        <Stack.Screen name="LeonaCall" component={LeonaCallScreen} />
-        {isAdminDebugSurfaceEnabled() ? (
-          <Stack.Screen name="AdminDashboard" component={AdminDashboardScreen} />
-        ) : null}
-        <Stack.Screen name="Login" component={LoginScreen} options={{ presentation: 'modal' }} />
-        <Stack.Screen name="Otp" component={OtpScreen} options={{ presentation: 'modal' }} />
-        <Stack.Screen name="SetupProfile" component={SetupProfileScreen} options={{ presentation: 'modal' }} />
-      </Stack.Navigator>
+    <View style={styles.rootShell}>
       <View
         style={[
-          styles.brandBadge,
-          { top: insets.top + 6, right: insets.right + 12 },
+          Platform.OS === 'web' ? styles.webMobileFrame : styles.nativeFrame,
+          isB2B ? styles.workspaceFrameB2B : styles.workspaceFrameB2C,
         ]}
-        pointerEvents="box-none"
-        accessibilityLabel={APP_BRAND.iconLabel}
       >
-        <Image source={APP_BRAND.iconAsset} style={styles.brandIconImage} resizeMode="cover" />
+        <NavigationContainer
+          ref={navigationRef}
+          linking={linking}
+          theme={isB2B ? b2bTheme : b2cTheme}
+          onReady={onNavigationReady}
+          onStateChange={onNavigationStateChange}
+        >
+          <StatusBar style="dark" />
+          <IntentEntryModal visible={showIntentModal} onSelectIntent={onGuidedIntent} onSkip={onSkipGuidedIntent} />
+          <Stack.Navigator screenOptions={{ headerShown: false, headerBackTitle: 'Quay lại' }}>
+            <Stack.Group>
+              <Stack.Screen name="Tabs" component={MainTabs} />
+              <Stack.Screen name="EmergencySOS" component={EmergencySOSScreen} />
+              <Stack.Screen name="LeonaCall" component={LeonaCallScreen} />
+              <Stack.Screen name="TravelCompanion" component={TravelCompanionScreen} />
+              <Stack.Screen name="FlightSearchAssistant" component={FlightSearchAssistantScreen} />
+              <Stack.Screen name="LifeOSDashboard" component={LifeOSDashboard} />
+              <Stack.Screen name="KetNoiYeuThuong" component={KetNoiYeuThuongScreen} />
+              <Stack.Screen name="PartnerDeals" component={PartnerDealsScreen} />
+            </Stack.Group>
+
+            <Stack.Group>
+              <Stack.Screen name="Wallet" component={GlobalWalletScreen} />
+              <Stack.Screen name="GlobalWallet" component={GlobalWalletScreen} />
+              <Stack.Screen name="Vault" component={VaultScreen} />
+            </Stack.Group>
+
+            <Stack.Group>
+              <Stack.Screen name="LiveAiTeacher" component={LiveAiTeacherScreen} />
+              <Stack.Screen name="RolePlayScreen" component={AssistantChatScreen} />
+              <Stack.Screen name="AdultLearningHome" component={AdultLearningHome} />
+              <Stack.Screen name="KidsLearningHome" component={KidsLearningHome} />
+              <Stack.Screen name="AssistantChat" component={AssistantChatScreen} />
+            </Stack.Group>
+
+            <Stack.Group>
+              <Stack.Screen
+                name="SmartCalendar"
+                component={canAccessB2BWorkspace ? SmartCalendarScreen : ProSubscriptionPaywall}
+              />
+              <Stack.Screen
+                name="InboundQueue"
+                component={canAccessB2BWorkspace ? InboundQueueScreen : ProSubscriptionPaywall}
+              />
+              <Stack.Screen
+                name="MerchantDashboard"
+                component={canAccessB2BWorkspace ? LifeOSDashboard : ProSubscriptionPaywall}
+              />
+              <Stack.Screen name="B2BPaywall" component={ProSubscriptionPaywall} />
+            </Stack.Group>
+
+            <Stack.Group>
+              <Stack.Screen name="AiEye" component={AiEyeScreen} />
+            {/* Radar: mock preview when enableRadarSurface; otherwise auto-replace → Leona (see screen). */}
+            <Stack.Screen name="RadarDiscovery" component={RadarDiscoveryScreen} />
+            <Stack.Screen name="LiveInterpreter" component={LiveInterpreterScreen} />
+            </Stack.Group>
+            {isAdminDebugSurfaceEnabled() ? (
+              <Stack.Screen name="AdminDashboard" component={AdminDashboardScreen} />
+            ) : null}
+            <Stack.Screen name="Login" component={LoginScreen} options={{ presentation: 'modal' }} />
+            <Stack.Screen name="Otp" component={OtpScreen} options={{ presentation: 'modal' }} />
+            <Stack.Screen name="SetupProfile" component={SetupProfileScreen} options={{ presentation: 'modal' }} />
+          </Stack.Navigator>
+          <View
+            style={[
+              styles.brandBadge,
+              { top: insets.top + 6, right: insets.right + 12 },
+            ]}
+            pointerEvents="box-none"
+            accessibilityLabel={APP_BRAND.iconLabel}
+          >
+            <Image source={APP_BRAND.iconAsset} style={styles.brandIconImage} resizeMode="cover" />
+          </View>
+        </NavigationContainer>
+        <Animated.View pointerEvents="none" style={[styles.modeTransitionOverlay, transitionOverlayStyle]} />
       </View>
-    </NavigationContainer>
+    </View>
   );
 }
 
 export default function App() {
   const appShell = (
     <SafeAreaProvider>
-      <AuthProvider>
-        <AppRoot />
-      </AuthProvider>
+      <FeatureFlagProvider>
+        <TourProvider>
+          <TelemetryProvider>
+            <AuthProvider>
+              <AppModeProvider>
+                <AppRoot />
+              </AppModeProvider>
+            </AuthProvider>
+          </TelemetryProvider>
+        </TourProvider>
+      </FeatureFlagProvider>
     </SafeAreaProvider>
   );
-
-  // Web: never wrap with Stripe React Native (native-only / codegen). Native keeps ConditionalStripeProvider.
-  if (Platform.OS === 'web') {
-    return appShell;
-  }
 
   return (
     <ConditionalStripeProvider
@@ -364,19 +480,53 @@ export default function App() {
 }
 
 const styles = StyleSheet.create({
+  rootShell: {
+    flex: 1,
+    backgroundColor: Platform.OS === 'web' ? theme.colors.SoftMineralGrey : theme.colors.CeolWhite,
+  },
+  nativeFrame: {
+    flex: 1,
+  },
+  webMobileFrame: {
+    flex: 1,
+    width: '100%',
+    maxWidth: 480,
+    alignSelf: 'center',
+    overflow: 'hidden',
+    backgroundColor: theme.colors.CeolWhite,
+    shadowColor: theme.colors.glass.shadow,
+    shadowOffset: { width: 0, height: 12 },
+    shadowOpacity: 0.2,
+    shadowRadius: 24,
+    elevation: 12,
+  },
   tabBar: {
     position: 'absolute',
     borderTopWidth: 1,
     borderTopColor: theme.hybrid.panelCoolBorder,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: theme.colors.CeolWhite,
     elevation: 8,
-    shadowColor: '#0B1628',
+    shadowColor: theme.colors.background,
     shadowOffset: { width: 0, height: -4 },
     shadowOpacity: 0.06,
     shadowRadius: 12,
   },
+  tabBarB2B: {
+    borderTopColor: theme.colors.glass.borderSoft,
+    backgroundColor: theme.colors.executive.panel,
+  },
+  tabBarB2C: {
+    borderTopColor: theme.hybrid.panelCoolBorder,
+    backgroundColor: theme.colors.CeolWhite,
+  },
   scene: {
-    backgroundColor: '#F8F9FA',
+    backgroundColor: theme.colors.SoftMineralGrey,
+  },
+  sceneB2B: {
+    backgroundColor: theme.colors.DeepInkNavy,
+  },
+  sceneB2C: {
+    backgroundColor: theme.colors.SoftMineralGrey,
   },
   tabItem: {
     justifyContent: 'center',
@@ -393,10 +543,10 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: theme.colors.CeolWhite,
     borderWidth: 1,
     borderColor: theme.hybrid.panelCoolBorder,
-    shadowColor: '#0B1628',
+    shadowColor: theme.colors.background,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.07,
     shadowRadius: 8,
@@ -406,5 +556,15 @@ const styles = StyleSheet.create({
     width: 30,
     height: 30,
     borderRadius: 8,
+  },
+  workspaceFrameB2B: {
+    backgroundColor: theme.colors.DeepInkNavy,
+  },
+  workspaceFrameB2C: {
+    backgroundColor: theme.colors.CeolWhite,
+  },
+  modeTransitionOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(8, 18, 34, 0.14)',
   },
 });

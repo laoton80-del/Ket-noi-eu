@@ -148,7 +148,7 @@ export function PremiumCheckoutSheet({
     const cartItems: PlatformPayCartSummaryItem[] = [
       {
         paymentType: PlatformPay.PaymentType.Immediate,
-        label: `${APP_BRAND.paymentsDisplayName} · Credits`,
+        label: `${APP_BRAND.paymentsDisplayName} · Điểm tín dụng`,
         amount: amountStr,
       },
     ];
@@ -179,7 +179,7 @@ export function PremiumCheckoutSheet({
       if (error) {
         Alert.alert(
           'Thanh toán chưa hoàn tất',
-          'Nhà cung cấp chưa xác nhận thanh toán hoặc đã từ chối. Credits chưa được cộng. Bạn có thể thử lại.'
+          'Nhà cung cấp chưa xác nhận thanh toán hoặc đã từ chối. Điểm tín dụng chưa được cộng. Bạn có thể thử lại.'
         );
         onFallbackPayPress?.();
         return;
@@ -188,7 +188,7 @@ export function PremiumCheckoutSheet({
     } catch {
       Alert.alert(
         'Thanh toán tạm gián đoạn',
-        'Không thể hoàn tất xác nhận với ví. Credits chưa được cộng. Kiểm tra mạng và thử lại.'
+        'Không thể hoàn tất xác nhận với ví. Điểm tín dụng chưa được cộng. Kiểm tra mạng và thử lại.'
       );
       onFallbackPayPress?.();
     }
@@ -212,7 +212,7 @@ export function PremiumCheckoutSheet({
   const payDisabled = checkingPay || !paySupported || !platformPayClientSecret || !paymentAuthOk;
   const awaitingAuth =
     !checkingPay && paySupported && !!platformPayClientSecret && !paymentAuthOk;
-  const checkoutTitle = 'Nạp Credits';
+  const checkoutTitle = 'Nạp điểm tín dụng';
 
   return (
     <View style={styles.overlay} pointerEvents="box-none">

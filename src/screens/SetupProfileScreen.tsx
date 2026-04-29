@@ -158,6 +158,7 @@ export function SetupProfileScreen() {
               visaType: visaType.trim(),
               visaExpiryDate: visaExpiryRaw,
               subscriptionPlan: 'free',
+              commercialTier: 'starter',
             });
             const redirectTo = pendingRedirect;
             if (redirectTo === 'Wallet') {

@@ -48,7 +48,7 @@ export function AdminDashboardScreen() {
     setClearingCache(true);
     try {
       await clearTtsCache();
-      Alert.alert('Đã dọn TTS cache', 'Cache phát âm đã được xóa. Lần phát tiếp theo sẽ tạo lại theo version/TTL mới.');
+      Alert.alert('Đã dọn bộ đệm TTS', 'Bộ đệm phát âm đã được xóa. Lần phát tiếp theo sẽ tạo lại theo phiên bản/TTL mới.');
     } catch {
       Alert.alert('Không thể dọn cache', 'Vui lòng thử lại sau.');
     } finally {
@@ -63,13 +63,13 @@ export function AdminDashboardScreen() {
       const next = await getTtsCacheStats();
       setStats(next);
       Alert.alert(
-        'TTS Cache Stats',
+        'Thống kê bộ đệm TTS',
         `Tổng entry: ${next.totalEntries}\n` +
-          `Fresh: ${next.freshEntries}\n` +
-          `Expired: ${next.expiredEntries}\n` +
+          `Còn hạn: ${next.freshEntries}\n` +
+          `Hết hạn: ${next.expiredEntries}\n` +
           `Lệch version: ${next.versionMismatchEntries}\n` +
-          `Version active: ${next.activeVersion}\n` +
-          `TTL (days): ${next.ttlDays}`
+          `Phiên bản hiện hành: ${next.activeVersion}\n` +
+          `TTL (ngày): ${next.ttlDays}`
       );
     } catch {
       Alert.alert('Không thể đọc stats', 'Vui lòng thử lại sau.');
@@ -130,38 +130,38 @@ export function AdminDashboardScreen() {
           </View>
         </View>
         <View style={styles.toolsWrap}>
-          <Text style={styles.toolsTitle}>QA Debug Tools</Text>
+          <Text style={styles.toolsTitle}>Công cụ kiểm thử QA</Text>
           <View style={styles.statsCard}>
             <View style={styles.statsHeader}>
-              <Text style={styles.statsTitle}>TTS Cache Live</Text>
+              <Text style={styles.statsTitle}>Bộ đệm TTS thời gian thực</Text>
               <Pressable
                 onPress={() => void refreshStatsSilently()}
                 style={({ pressed }) => [styles.refreshBtn, pressed && { opacity: 0.8 }]}
               >
-                <Text style={styles.refreshBtnText}>Refresh</Text>
+                <Text style={styles.refreshBtnText}>Làm mới</Text>
               </Pressable>
             </View>
             <Text style={styles.statsLine}>Tổng entry: {stats?.totalEntries ?? '--'}</Text>
-            <Text style={styles.statsLine}>Fresh: {stats?.freshEntries ?? '--'}</Text>
-            <Text style={styles.statsLine}>Expired: {stats?.expiredEntries ?? '--'}</Text>
+            <Text style={styles.statsLine}>Còn hạn: {stats?.freshEntries ?? '--'}</Text>
+            <Text style={styles.statsLine}>Hết hạn: {stats?.expiredEntries ?? '--'}</Text>
             <Text style={styles.statsLine}>Lệch version: {stats?.versionMismatchEntries ?? '--'}</Text>
-            <Text style={styles.statsLine}>Version active: {stats?.activeVersion ?? '--'}</Text>
-            <Text style={styles.statsLine}>TTL (days): {stats?.ttlDays ?? '--'}</Text>
+            <Text style={styles.statsLine}>Phiên bản hiện hành: {stats?.activeVersion ?? '--'}</Text>
+            <Text style={styles.statsLine}>TTL (ngày): {stats?.ttlDays ?? '--'}</Text>
           </View>
           <View style={[styles.statsCard, { marginTop: 10 }]}>
             <View style={styles.statsHeader}>
-              <Text style={styles.statsTitle}>Launch-critical analytics (local)</Text>
+              <Text style={styles.statsTitle}>Phân tích trọng yếu trước phát hành (cục bộ)</Text>
               <Pressable
                 onPress={() => void refreshLaunchCriticalDebug()}
                 disabled={loadingLaunchDebug}
                 style={({ pressed }) => [styles.refreshBtn, pressed && { opacity: 0.8 }]}
               >
-                <Text style={styles.refreshBtnText}>{loadingLaunchDebug ? '…' : 'Refresh'}</Text>
+                <Text style={styles.refreshBtnText}>{loadingLaunchDebug ? '…' : 'Làm mới'}</Text>
               </Pressable>
             </View>
-            <Text style={styles.statsLine}>Last {LAUNCH_DEBUG_EVENT_LIMIT} events from growth snapshot</Text>
+            <Text style={styles.statsLine}>{LAUNCH_DEBUG_EVENT_LIMIT} sự kiện gần nhất từ ảnh chụp tăng trưởng</Text>
             {launchDebugLines.length === 0 ? (
-              <Text style={styles.launchDebugLine}>(no launch-critical events yet)</Text>
+              <Text style={styles.launchDebugLine}>(chưa có sự kiện trọng yếu trước phát hành)</Text>
             ) : (
               launchDebugLines.map((line, i) => (
                 <Text key={`${i}-${line.slice(0, 24)}`} style={styles.launchDebugLine}>
@@ -182,10 +182,10 @@ export function AdminDashboardScreen() {
             {readingStats ? (
               <View style={styles.clearBtnLoading}>
                 <ActivityIndicator size="small" color={theme.colors.primaryBright} />
-                <Text style={styles.statsBtnText}>Đang đọc cache stats...</Text>
+                <Text style={styles.statsBtnText}>Đang đọc thống kê bộ đệm...</Text>
               </View>
             ) : (
-              <Text style={styles.statsBtnText}>Show TTS Cache Stats</Text>
+              <Text style={styles.statsBtnText}>Hiển thị thống kê bộ đệm TTS</Text>
             )}
           </Pressable>
           <Pressable
@@ -200,10 +200,10 @@ export function AdminDashboardScreen() {
             {clearingCache ? (
               <View style={styles.clearBtnLoading}>
                 <ActivityIndicator size="small" color={theme.colors.DeepInkNavy} />
-                <Text style={styles.clearBtnText}>Đang dọn TTS cache...</Text>
+              <Text style={styles.clearBtnText}>Đang dọn bộ đệm TTS...</Text>
               </View>
             ) : (
-              <Text style={styles.clearBtnText}>Clear TTS Cache</Text>
+              <Text style={styles.clearBtnText}>Xóa bộ đệm TTS</Text>
             )}
           </Pressable>
         </View>

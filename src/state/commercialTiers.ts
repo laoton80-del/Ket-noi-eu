@@ -1,3 +1,5 @@
+import { formatCurrency } from '../utils/formatters';
+
 export type CommercialTierId = 'starter' | 'basic' | 'standard' | 'pro' | 'power' | 'enterprise';
 
 export type CommercialTier = {
@@ -11,71 +13,70 @@ export const GLOBAL_COMMERCIAL_TIERS: CommercialTier[] = [
   {
     id: 'starter',
     name: 'Starter',
-    subtitle: 'Ho tro co ban, vao he thong, trai nghiem nhe',
-    features: ['Onboarding co ban', 'Tro ly hoi dap nhe', 'Tong quan he thong Global'],
+    subtitle: 'Hỗ trợ cơ bản, vào hệ thống, trải nghiệm nhẹ',
+    features: ['Onboarding cơ bản', 'Trợ lý hỏi đáp nhẹ', 'Tổng quan hệ thống Global'],
   },
   {
     id: 'basic',
     name: 'Basic',
-    subtitle: 'Ho tro ca nhan thuc dung, giay to nhe, bat dau dung AI',
-    features: ['Ho tro giay to muc nhe', 'AI Copilot co ban', 'Huong dan xu ly tinh huong hang ngay'],
+    subtitle: 'Hỗ trợ cá nhân thực dụng, giấy tờ nhẹ, bắt đầu dùng AI',
+    features: ['Hỗ trợ giấy tờ mức nhẹ', 'AI Copilot cơ bản', 'Hướng dẫn xử lý tình huống hằng ngày'],
   },
   {
     id: 'standard',
     name: 'Standard',
-    subtitle: 'Bat dau co Hoc tap that va B2C support that',
-    features: ['Hoc tap thuc chien', 'Ho tro B2C nang cao', 'Theo doi tien trinh thong minh'],
+    subtitle: 'Bắt đầu có học tập thật và B2C support thật',
+    features: ['Học tập thực chiến', 'Hỗ trợ B2C nâng cao', 'Theo dõi tiến trình thông minh'],
   },
   {
     id: 'pro',
     name: 'Pro',
-    subtitle: 'Goi manh cho ca nhan nang va B2B Lite',
-    features: ['AI ho tro van hanh nang', 'B2B Lite booking support', 'Uu tien xu ly va canh bao'],
+    subtitle: 'Gói mạnh cho cá nhân nâng và B2B Lite',
+    features: ['AI hỗ trợ vận hành nâng', 'B2B Lite booking support', 'Ưu tiên xử lý và cảnh báo'],
   },
   {
     id: 'power',
     name: 'Power',
-    subtitle: 'Goi manh nhat cho ca nhan + B2B van hanh that',
-    features: ['Van hanh B2B day du', 'Tu dong hoa sau hon', 'Uu tien cao nhat trong he thong'],
+    subtitle: 'Gói mạnh nhất cho cá nhân + B2B vận hành thật',
+    features: ['Vận hành B2B đầy đủ', 'Tự động hóa sâu hơn', 'Ưu tiên cao nhất trong hệ thống'],
   },
   {
     id: 'enterprise',
     name: 'Enterprise',
-    subtitle: 'Thiet ke rieng cho to chuc/doanh nghiep',
-    features: ['Giai phap tuy chinh theo to chuc', 'SLA va governance rieng', 'Tich hop he thong noi bo'],
+    subtitle: 'Thiết kế riêng cho tổ chức/doanh nghiệp',
+    features: ['Giải pháp tùy chỉnh theo tổ chức', 'SLA và governance riêng', 'Tích hợp hệ thống nội bộ'],
   },
 ];
 
-const DISPLAY_PRICE_BY_CURRENCY: Record<string, Record<CommercialTierId, string>> = {
+const MONTHLY_PRICE_BY_CURRENCY: Record<string, Partial<Record<CommercialTierId, number>>> = {
   CZK: {
-    starter: '99 CZK/thang',
-    basic: '199 CZK/thang',
-    standard: '299 CZK/thang',
-    pro: '499 CZK/thang',
-    power: '899 CZK/thang',
-    enterprise: 'Lien he bao gia',
+    starter: 99,
+    basic: 199,
+    standard: 299,
+    pro: 499,
+    power: 899,
   },
   EUR: {
-    starter: '4 EUR/thang',
-    basic: '8 EUR/thang',
-    standard: '12 EUR/thang',
-    pro: '20 EUR/thang',
-    power: '36 EUR/thang',
-    enterprise: 'Lien he bao gia',
+    starter: 4,
+    basic: 8,
+    standard: 12,
+    pro: 20,
+    power: 36,
   },
   USD: {
-    starter: '4 USD/thang',
-    basic: '9 USD/thang',
-    standard: '13 USD/thang',
-    pro: '21 USD/thang',
-    power: '39 USD/thang',
-    enterprise: 'Contact pricing',
+    starter: 4,
+    basic: 9,
+    standard: 13,
+    pro: 21,
+    power: 39,
   },
 };
 
 export function getDisplayPrice(tierId: string, currency: string): string {
   const normalizedTier = (tierId ?? '').trim().toLowerCase() as CommercialTierId;
   const normalizedCurrency = (currency ?? '').trim().toUpperCase();
-  const tierPricing = DISPLAY_PRICE_BY_CURRENCY[normalizedCurrency] ?? DISPLAY_PRICE_BY_CURRENCY.CZK;
-  return tierPricing[normalizedTier] ?? 'Lien he tu van';
+  const tierPricing = MONTHLY_PRICE_BY_CURRENCY[normalizedCurrency] ?? MONTHLY_PRICE_BY_CURRENCY.CZK;
+  const amount = tierPricing[normalizedTier];
+  if (typeof amount !== 'number') return 'Liên hệ tư vấn';
+  return `${formatCurrency(amount, normalizedCurrency)}/tháng`;
 }

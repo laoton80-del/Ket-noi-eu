@@ -37,6 +37,7 @@ import { FontFamily } from '../theme/typography';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { authenticateBiometric, getBiometricAvailability, isValidWalletPin } from '../security/biometricUnlock';
 import { consumePendingSellResume } from '../services/selling/sellResumeStorage';
+import { formatDate as formatLocalizedDate } from '../utils/formatters';
 
 /** Temporary diagnostic: set `EXPO_PUBLIC_WALLET_DIAGNOSTIC_SKIP_CHECKOUT_SHEET=1` so Wallet mounts without `PremiumCheckoutSheet`. Remove after crash is isolated. */
 const WALLET_DIAGNOSTIC_SKIP_PREMIUM_CHECKOUT_SHEET =
@@ -51,15 +52,6 @@ function interpolate(template: string, vars: Record<string, string>): string {
     out = out.split(`{${key}}`).join(value);
   }
   return out;
-}
-
-function formatDate(iso: string, locale: string): string {
-  return new Date(iso).toLocaleString(locale, {
-    hour: '2-digit',
-    minute: '2-digit',
-    day: '2-digit',
-    month: '2-digit',
-  });
 }
 
 function maskIdempotencyKey(key: string): string {
@@ -386,7 +378,7 @@ export function WalletTopUpScreen() {
         <Text style={styles.brand}>{APP_BRAND.name}</Text>
         <Text style={styles.launchHint}>{APP_BRAND.launchSubtitle}</Text>
         <Text style={styles.subtitle}>{w.screenSubtitle}</Text>
-        <Animated.View style={[styles.walletCardGlowWrap, walletGlowStyle]}>
+        <Animated.View style={StyleSheet.flatten([styles.walletCardGlowWrap, walletGlowStyle])}>
           <TrustSurfaceCard cardTone="trust" watermarkOpacity={0.04} style={styles.walletCard}>
             <Text style={styles.walletBalanceLabel}>{w.balanceLabel}</Text>
             <View style={styles.balanceRow}>
@@ -501,7 +493,7 @@ export function WalletTopUpScreen() {
                 <View style={styles.txBody}>
                   <Text style={styles.txDescription}>{tx.description}</Text>
                   <Text style={styles.txDate}>
-                    {tx.timestampSnapshotLabel ?? formatDate(tx.date, locale)}
+                    {tx.timestampSnapshotLabel ?? formatLocalizedDate(tx.date)}
                     {tx.paymentSnapshotLabel
                       ? ` | ${tx.paymentSnapshotLabel}`
                       : tx.paymentAmount && tx.paymentCurrencyCode
@@ -511,7 +503,7 @@ export function WalletTopUpScreen() {
                 </View>
                 <Text style={[styles.txAmount, tx.type === 'topup' ? styles.txAmountTopup : styles.txAmountConsume]}>
                   {tx.type === 'topup' ? '+' : '-'}
-                  {tx.amount} Credits
+                  {tx.amount} Điểm tín dụng
                 </Text>
               </View>
             ))

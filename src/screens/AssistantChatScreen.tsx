@@ -3,6 +3,8 @@ import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { ZeroClickSuggestion } from '../components/ai/ZeroClickSuggestion';
+import { QuantumShieldBadge } from '../components/security/QuantumShieldBadge';
 import type { RootStackParamList } from '../navigation/routes';
 import { theme } from '../theme/theme';
 import { FontFamily } from '../theme/typography';
@@ -22,7 +24,10 @@ export function AssistantChatScreen() {
             Đây là điểm vào hội thoại trực tiếp. Bạn có thể chuyển ngay sang phiên dịch, gọi hỗ trợ,
             hoặc tiếp tục với luồng concierge hiện tại.
           </Text>
+          <QuantumShieldBadge compact />
         </View>
+
+        <ZeroClickSuggestion />
 
         <Pressable
           onPress={() => navigation.navigate('LiveInterpreter')}
@@ -45,15 +50,15 @@ export function AssistantChatScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F8F9FA' },
-  content: { padding: 16, gap: 12 },
+  container: { flex: 1, backgroundColor: theme.colors.SoftMineralGrey },
+  content: { padding: theme.spacing.lg, gap: theme.spacing.md },
   headerCard: {
-    borderRadius: 16,
+    borderRadius: theme.radius.lg,
     borderWidth: 1,
     borderColor: theme.hybrid.panelCoolBorder,
     backgroundColor: theme.colors.CeolWhite,
-    padding: 16,
-    shadowColor: '#0B1628',
+    padding: theme.spacing.lg,
+    shadowColor: theme.colors.background,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.08,
     shadowRadius: 12,

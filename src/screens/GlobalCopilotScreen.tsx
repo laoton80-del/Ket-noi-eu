@@ -25,16 +25,16 @@ export function GlobalCopilotScreen() {
       const chargeResult = await chargeWalletServer('business_copilot_draft', generateChargeKey('copilot'));
       if (!chargeResult.ok) {
         if (chargeResult.error === 'insufficient_funds') {
-          Alert.alert('Khong du Credits', 'Ban can nap them Credits de tao van ban voi Global Copilot.');
+          Alert.alert('Không đủ Điểm tín dụng', 'Bạn cần nạp thêm Điểm tín dụng để tạo văn bản với Trợ lý Toàn cầu.');
         } else {
-          Alert.alert('Thanh toan that bai', 'Khong the tru Credits luc nay. Vui long thu lai sau.');
+          Alert.alert('Thanh toán thất bại', 'Không thể trừ Điểm tín dụng lúc này. Vui lòng thử lại sau.');
         }
         return;
       }
       const generated = await draftGlobalDocument(intent, currentCountry, localLanguage);
       setDraft(generated);
     } catch {
-      Alert.alert('Khong the tao van ban', 'He thong AI tam thoi khong phan hoi. Vui long thu lai sau.');
+      Alert.alert('Không thể tạo văn bản', 'Hệ thống AI tạm thời không phản hồi. Vui lòng thử lại sau.');
     } finally {
       setIsGenerating(false);
     }
@@ -43,26 +43,26 @@ export function GlobalCopilotScreen() {
   const onCopy = async () => {
     if (!draft) return;
     await Clipboard.setStringAsync(draft);
-    Alert.alert('Da sao chep', 'Noi dung van ban da duoc sao chep vao clipboard.');
+    Alert.alert('Đã sao chép', 'Nội dung văn bản đã được sao chép vào bộ nhớ tạm.');
   };
 
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.header}>
-          <Text style={styles.title}>Global Copilot</Text>
+          <Text style={styles.title}>Trợ lý Toàn cầu</Text>
           <Text style={styles.subtitle}>
-            Drafting in {localLanguage} ({currentCountry})
+            Đang soạn theo ngôn ngữ {localLanguage} ({currentCountry})
           </Text>
         </View>
 
         <PrecisePanel style={styles.inputPanel}>
-          <Text style={styles.panelLabel}>Intent</Text>
+          <Text style={styles.panelLabel}>Mục tiêu văn bản</Text>
           <TextInput
             value={intent}
             onChangeText={setIntent}
             style={styles.input}
-            placeholder="Gach dau dong y muon cua ban..."
+            placeholder="Gạch đầu dòng ý muốn của bạn..."
             placeholderTextColor={theme.colors.text.secondary}
             multiline
             textAlignVertical="top"
@@ -75,15 +75,15 @@ export function GlobalCopilotScreen() {
           style={({ pressed }) => [styles.generateBtn, !canGenerate && styles.generateBtnDisabled, pressed && { opacity: 0.8 }]}
         >
           {isGenerating ? <ActivityIndicator color={theme.components.button.variant.primary.text} /> : null}
-          <Text style={styles.generateBtnText}>Generate Document (30 Credits)</Text>
+          <Text style={styles.generateBtnText}>Tạo văn bản (30 Điểm tín dụng)</Text>
         </Pressable>
 
         {draft ? (
           <PrecisePanel>
-            <Text style={styles.resultLabel}>Generated Document</Text>
+            <Text style={styles.resultLabel}>Văn bản đã tạo</Text>
             <Text style={styles.resultText}>{draft}</Text>
             <Pressable onPress={() => void onCopy()} style={({ pressed }) => [styles.copyBtn, pressed && { opacity: 0.8 }]}>
-              <Text style={styles.copyBtnText}>Copy to Clipboard</Text>
+              <Text style={styles.copyBtnText}>Sao chép vào bộ nhớ tạm</Text>
             </Pressable>
           </PrecisePanel>
         ) : null}

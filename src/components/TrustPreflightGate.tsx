@@ -48,7 +48,7 @@ export function TrustPreflightGate({ children }: { children: ReactNode }) {
       <SafeAreaView style={styles.bootContainer}>
         <View style={styles.centerWrap}>
           <ActivityIndicator color={theme.colors.SignatureGold} size="large" />
-          <Text style={styles.bootText}>Ket Noi Global - Securing connection...</Text>
+          <Text style={styles.bootText}>Kết Nối Global - Đang bảo mật kết nối...</Text>
         </View>
       </SafeAreaView>
     );
@@ -58,10 +58,10 @@ export function TrustPreflightGate({ children }: { children: ReactNode }) {
     return (
       <SafeAreaView style={styles.failContainer}>
         <View style={styles.failContent}>
-          <Text style={styles.failTitle}>Trust Preflight Failed</Text>
-          <Text style={styles.failBody}>Error: {errorCode ?? 'unknown_preflight_error'}</Text>
+          <Text style={styles.failTitle}>Kiểm tra bảo mật thất bại</Text>
+          <Text style={styles.failBody}>Mã lỗi: {errorCode ?? 'unknown_preflight_error'}</Text>
           <Pressable onPress={() => void onRetry()} style={({ pressed }) => [styles.retryBtn, pressed && { opacity: 0.8 }]}>
-            <Text style={styles.retryBtnText}>Retry Connection</Text>
+            <Text style={styles.retryBtnText}>Thử kết nối lại</Text>
           </Pressable>
         </View>
       </SafeAreaView>

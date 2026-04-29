@@ -26,9 +26,9 @@ export function GlobalTiersScreen() {
       const result = await verifyPurchaseReceipt(mockReceipt, platform, tierId);
       if (result.ok) {
         await syncWalletFromServer();
-        Alert.alert('Thanh toan thanh cong!', 'Vi cua ban da duoc cap nhat.');
+        Alert.alert('Thanh toán thành công!', 'Ví của bạn đã được cập nhật.');
       } else {
-        Alert.alert('Xac minh bien lai that bai.', 'Vui long thu lai trong it phut.');
+        Alert.alert('Xác minh biên lai thất bại.', 'Vui lòng thử lại trong ít phút.');
       }
     } finally {
       setIsPurchasing(false);
@@ -38,8 +38,8 @@ export function GlobalTiersScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.title}>Global Packages</Text>
-        <Text style={styles.subtitle}>Hien thi theo: {localCurrency}</Text>
+        <Text style={styles.title}>Gói dịch vụ toàn cầu</Text>
+        <Text style={styles.subtitle}>Hiển thị theo: {localCurrency}</Text>
       </View>
 
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.carousel}>
@@ -76,7 +76,7 @@ export function GlobalTiersScreen() {
                 ]}
               >
                 {isPurchasing ? <ActivityIndicator color={premiumTier ? theme.colors.CeolWhite : theme.colors.onAccent} /> : null}
-                <Text style={[styles.ctaText, premiumTier && styles.ctaTextPremium]}>Nang cap (Upgrade)</Text>
+                <Text style={[styles.ctaText, premiumTier && styles.ctaTextPremium]}>Nâng cấp</Text>
               </Pressable>
             </PrecisePanel>
           );

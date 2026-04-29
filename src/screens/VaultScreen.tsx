@@ -74,11 +74,11 @@ function DocumentCard({ item, locale }: { item: DocumentVaultItem; locale: strin
 
   return (
     <Animated.View
-      style={[
+      style={StyleSheet.flatten([
         styles.cardWrap,
         isUrgent && styles.cardWrapUrgent,
         isUrgent && { transform: [{ translateX: shake.interpolate({ inputRange: [-1, 1], outputRange: [-1.5, 1.5] }) }] },
-      ]}
+      ])}
     >
       <LinearGradient
         colors={isUrgent ? gradients.dangerCard : gradients.sandCard}
@@ -162,7 +162,7 @@ export function VaultScreen() {
       ToastAndroid.show(msg, ToastAndroid.SHORT);
       return;
     }
-    Alert.alert('Smart Vault', msg);
+    Alert.alert('Kho giấy tờ thông minh', msg);
   };
 
   const saveDocs = async (next: DocumentVaultItem[]) => {
@@ -189,7 +189,7 @@ export function VaultScreen() {
       if (when.getTime() <= Date.now()) continue;
       const id = await Notifications.scheduleNotificationAsync({
         content: {
-          title: 'Canh bao giay to',
+          title: 'Cảnh báo giấy tờ',
           body: `Cảnh báo: ${getDocumentTypeLabel(doc.documentType)} của bạn sẽ hết hạn vào ngày ${new Date(doc.expiryDate).toLocaleDateString(
             locale
           )}. Đừng để trễ hạn! Bạn có muốn Trợ lý Leona Nguyen gọi điện đặt lịch gia hạn ngay bây giờ không?`,
@@ -229,7 +229,7 @@ export function VaultScreen() {
         toast('Độ tin cậy quét thấp. Kiểm tra và chỉnh tay trước khi lưu.');
       }
       const meaning = understandDocument(result);
-      setDocInsight(`${meaning.summary} Goi y: ${meaning.suggestedActions.map((a) => a.title).slice(0, 1).join('')}`);
+      setDocInsight(`${meaning.summary} Gợi ý: ${meaning.suggestedActions.map((a) => a.title).slice(0, 1).join('')}`);
       setScannerOpen(false);
       void trackGrowthEvent('ocr_success', {
         meta: { confidence: result.confidence, source: 'vault' },
@@ -318,7 +318,7 @@ export function VaultScreen() {
         </View>
       ) : null}
       <View style={styles.header}>
-        <Text style={styles.title}>Smart Document Vault</Text>
+        <Text style={styles.title}>Kho giấy tờ thông minh</Text>
         <Text style={styles.subtitle}>Giấy tờ sắp hết hạn sẽ tự động nổi lên trên.</Text>
       </View>
 
@@ -365,7 +365,7 @@ export function VaultScreen() {
             <Ionicons name="archive-outline" size={26} color={theme.colors.SignatureGold} />
             <Text style={styles.emptyTitle}>Kho lưu trữ đang trống</Text>
             <Text style={styles.emptySub}>
-              Bấm &quot;Quét Giấy Tờ&quot; để lưu Visa, Passport hoặc Contract.
+              Bấm &quot;Quét Giấy Tờ&quot; để lưu visa, hộ chiếu hoặc hợp đồng.
             </Text>
           </View>
         )}

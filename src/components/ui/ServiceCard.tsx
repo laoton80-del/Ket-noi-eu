@@ -1,18 +1,26 @@
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import type { ComponentProps } from 'react';
+import { Platform, Pressable, StyleSheet, Text, View, type ViewStyle } from 'react-native';
+import { SOSLottiePlayer } from './SOSLottiePlayer';
 import { theme } from '../../theme/theme';
 import { FontFamily } from '../../theme/typography';
 
 type ServiceCardProps = {
   title: string;
   subtitle: string;
+  animationSource: NonNullable<ComponentProps<typeof SOSLottiePlayer>['source']>;
   onPress?: () => void;
 };
 
-export function ServiceCard({ title, subtitle, onPress }: ServiceCardProps) {
+export function ServiceCard({ title, subtitle, animationSource, onPress }: ServiceCardProps) {
+  const webGlassStyle =
+    Platform.OS === 'web'
+      ? ({ backdropFilter: 'blur(14px)', WebkitBackdropFilter: 'blur(14px)' } as unknown as ViewStyle)
+      : undefined;
+
   return (
-    <Pressable style={({ pressed }) => [styles.card, pressed && styles.pressed]} onPress={onPress}>
-      <View style={styles.imagePlaceholder}>
-        <Text style={styles.imageHint}>Image</Text>
+    <Pressable style={({ pressed }) => [styles.card, webGlassStyle, pressed && styles.pressed]} onPress={onPress}>
+      <View style={styles.mediaWrap}>
+        <SOSLottiePlayer source={animationSource} style={styles.lottie} />
       </View>
       <View style={styles.body}>
         <Text style={styles.title}>{title}</Text>
@@ -24,45 +32,45 @@ export function ServiceCard({ title, subtitle, onPress }: ServiceCardProps) {
 
 const styles = StyleSheet.create({
   card: {
-    borderRadius: 10,
+    borderRadius: 16,
     overflow: 'hidden',
     borderWidth: 1,
-    borderColor: theme.colors.GraphiteBlue,
-    backgroundColor: theme.colors.CeolWhite,
+    borderColor: theme.hybrid.signalSubtleBorder,
+    backgroundColor: theme.colors.glass.surface,
     shadowColor: theme.colors.glass.shadow,
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.08,
-    shadowRadius: 8,
-    elevation: 2,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.22,
+    shadowRadius: 18,
+    elevation: 6,
   },
-  imagePlaceholder: {
-    height: 96,
-    backgroundColor: theme.colors.SoftMineralGrey,
+  mediaWrap: {
+    height: 150,
+    width: '100%',
     alignItems: 'center',
     justifyContent: 'center',
+    backgroundColor: theme.colors.glass.surfaceStrong,
     borderBottomWidth: 1,
     borderBottomColor: theme.colors.glass.borderSoft,
+    paddingHorizontal: theme.spacing.sm,
   },
-  imageHint: {
-    color: theme.colors.GraphiteBlue,
-    fontSize: 12,
-    fontFamily: FontFamily.medium,
+  lottie: {
+    height: 150,
+    width: '100%',
   },
   body: {
     padding: 10,
     gap: 4,
   },
   title: {
-    color: theme.colors.GraphiteBlue,
+    color: theme.colors.CeolWhite,
     fontSize: 14,
     fontFamily: FontFamily.bold,
   },
   subtitle: {
-    color: theme.colors.GraphiteBlue,
+    color: theme.colors.text.secondary,
     fontSize: 12,
     lineHeight: 17,
     fontFamily: FontFamily.regular,
-    opacity: 0.72,
   },
   pressed: {
     opacity: 0.78,

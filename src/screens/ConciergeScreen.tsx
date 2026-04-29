@@ -2,6 +2,7 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { QuantumShieldBadge } from '../components/security/QuantumShieldBadge';
 import { PrecisePanel } from '../components/ui/PrecisePanel';
 import { StatusChip } from '../components/ui/StatusChip';
 import { getStrings } from '../i18n/strings';
@@ -53,24 +54,25 @@ export function ConciergeScreen() {
           <Text style={styles.assistantHint}>
             Mở hội thoại để bắt đầu hỗ trợ theo ngữ cảnh, sau đó chuyển nhanh sang phiên dịch hoặc gọi hỗ trợ.
           </Text>
+          <QuantumShieldBadge compact />
           <View style={styles.assistantActions}>
             <Pressable
               onPress={() => navigation.navigate('AssistantChat')}
               style={({ pressed }) => [styles.primaryActionBtn, pressed && { opacity: 0.86 }]}
             >
-              <Text style={styles.primaryActionText}>Chat / Talk to Assistant</Text>
+              <Text style={styles.primaryActionText}>Trò chuyện với Trợ lý</Text>
             </Pressable>
             <Pressable
               onPress={() => navigation.navigate('InboundQueue')}
               style={({ pressed }) => [styles.secondaryActionBtn, pressed && { opacity: 0.86 }]}
             >
-              <Text style={styles.secondaryActionText}>Inbound Queue</Text>
+              <Text style={styles.secondaryActionText}>Hàng chờ yêu cầu vào</Text>
             </Pressable>
             <Pressable
               onPress={() => navigation.navigate('SmartCalendar')}
               style={({ pressed }) => [styles.secondaryActionBtn, pressed && { opacity: 0.86 }]}
             >
-              <Text style={styles.secondaryActionText}>Smart Calendar</Text>
+              <Text style={styles.secondaryActionText}>Lịch thông minh</Text>
             </Pressable>
           </View>
         </PrecisePanel>

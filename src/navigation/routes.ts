@@ -38,7 +38,12 @@ export type RootStackParamList = {
   AssistantChat: undefined;
   InboundQueue: undefined;
   SmartCalendar: undefined;
+  MerchantDashboard: undefined;
+  RolePlayScreen: undefined;
+  B2BPaywall: undefined;
+  PartnerDeals: undefined;
   Wallet: undefined;
+  GlobalWallet: undefined;
   AiEye: undefined;
   Vault: undefined;
   RadarDiscovery: undefined;

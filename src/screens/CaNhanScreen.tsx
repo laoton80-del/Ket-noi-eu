@@ -6,6 +6,7 @@ import { useEffect, useState } from 'react';
 import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { APP_BRAND } from '../config/appBrand';
+import { useAppMode } from '../context/AppModeContext';
 import { useAuth } from '../context/AuthContext';
 import { getStrings } from '../i18n/strings';
 import type { RootStackParamList } from '../navigation/routes';
@@ -34,6 +35,7 @@ function interpolate(template: string, vars: Record<string, string>): string {
 export function CaNhanScreen() {
   const navigation = useNavigation<Nav>();
   const { user } = useAuth();
+  const { mode, setMode } = useAppMode();
   const { languageCode } = useAssistantSettings();
   const strings = getStrings(languageCode);
   const { currentCountry, localCurrency } = useRegionState();
@@ -201,6 +203,36 @@ export function CaNhanScreen() {
         </PrecisePanel>
 
         <TrustHistoryCard items={history} />
+
+        <Pressable
+          onPress={() => {
+            const isCommercialTierAllowed =
+              user?.commercialTier === 'pro' || user?.commercialTier === 'power' || user?.commercialTier === 'enterprise';
+
+            if (mode === 'B2B_MODE') {
+              setMode('B2C_MODE');
+              Alert.alert('Chuyển không gian làm việc', 'Đã quay lại không gian B2C tiêu chuẩn.');
+              return;
+            }
+
+            if (!isCommercialTierAllowed) {
+              setMode('B2C_MODE');
+              Alert.alert(
+                'Cần nâng cấp gói doanh nghiệp',
+                'Không gian B2B chỉ mở cho gói Pro, Power hoặc Enterprise.'
+              );
+              navigation.navigate('B2BPaywall');
+              return;
+            }
+
+            setMode('B2B_MODE');
+            Alert.alert('Chuyển không gian làm việc', 'Đang chuyển sang không gian Quản lý Doanh nghiệp.');
+          }}
+          style={({ pressed }) => [styles.switchWorkspaceRow, pressed && styles.pressed]}
+        >
+          <Text style={styles.settingText}>🔄 Chuyển sang Quản lý Doanh nghiệp</Text>
+          <Ionicons name="swap-horizontal" size={18} color={theme.colors.text.secondary} />
+        </Pressable>
 
         <Pressable
           onPress={() => {
@@ -375,6 +407,19 @@ const styles = StyleSheet.create({
     paddingHorizontal: 2,
   },
   resetOnboardingRow: {
+    marginTop: 10,
+    minHeight: 48,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: theme.colors.glass.borderSoft,
+    backgroundColor: theme.colors.executive.panelMuted,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+  },
+  switchWorkspaceRow: {
     marginTop: 10,
     minHeight: 48,
     flexDirection: 'row',

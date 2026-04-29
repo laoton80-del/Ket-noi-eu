@@ -1,5 +1,5 @@
 import React from 'react';
-import { Pressable, type PressableProps } from 'react-native';
+import { Pressable, StyleSheet, type PressableProps } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 
 const AnimatedView = Animated.createAnimatedComponent(Pressable);
@@ -14,7 +14,7 @@ export const AnimatedPressable: React.FC<PressableProps> = ({ children, ...props
   return (
     <AnimatedView
       {...props}
-      style={[animatedStyle, props.style]}
+      style={StyleSheet.flatten([animatedStyle, props.style])}
       onPressIn={(e) => {
         scale.value = withTiming(0.97, { duration: 100 });
         props.onPressIn?.(e);

@@ -127,8 +127,8 @@ export function LiveInterpreterScreen() {
         void (async () => {
           const ok = await beginSessionAfterPayment();
           if (!ok) {
-            Alert.alert('Không đủ Credits', 'Vui lòng nạp thêm Credits để mở phiên phiên dịch.', [
-              { text: 'OK', onPress: () => navigation.goBack() },
+            Alert.alert('Không đủ Điểm tín dụng', 'Vui lòng nạp thêm Điểm tín dụng để mở phiên phiên dịch.', [
+              { text: 'Đồng ý', onPress: () => navigation.goBack() },
             ]);
           }
         })();
@@ -137,7 +137,7 @@ export function LiveInterpreterScreen() {
     }
     Alert.alert(
       'Xác nhận phiên phiên dịch',
-      `Phiên dịch này sẽ tốn khoảng ${INTERPRETER_SESSION_CREDITS} Credits. Bạn muốn bắt đầu không?`,
+      `Phiên dịch này sẽ tốn khoảng ${INTERPRETER_SESSION_CREDITS} Điểm tín dụng. Bạn muốn bắt đầu không?`,
       [
         {
           text: 'Hủy',
@@ -150,8 +150,8 @@ export function LiveInterpreterScreen() {
             void (async () => {
               const ok = await beginSessionAfterPayment();
               if (!ok) {
-                Alert.alert('Không đủ Credits', 'Vui lòng nạp thêm Credits để mở phiên phiên dịch.', [
-                  { text: 'OK', onPress: () => navigation.goBack() },
+                Alert.alert('Không đủ Điểm tín dụng', 'Vui lòng nạp thêm Điểm tín dụng để mở phiên phiên dịch.', [
+                  { text: 'Đồng ý', onPress: () => navigation.goBack() },
                 ]);
               }
             })();
@@ -212,7 +212,7 @@ export function LiveInterpreterScreen() {
     <SafeAreaView style={styles.container} edges={['top']}>
       <MicroHintBanner
         visible={showMicroHint}
-        text="Giữ nút mic để nói — thả tay để dịch. Một phiên trừ Credits một lần."
+        text="Giữ nút mic để nói — thả tay để dịch. Một phiên trừ Điểm tín dụng một lần."
         onDismiss={() => {
           setShowMicroHint(false);
           void markMicroHintSeen('interpreter');
@@ -235,8 +235,8 @@ export function LiveInterpreterScreen() {
 
       <Text style={styles.hint}>
         {sessionActive
-          ? `Phiên: ${sessionCreditsFlat} Credits · Giữ mic · ${direction === 'vi_to_local' ? 'Việt → bản địa' : 'Bản địa → Việt'}`
-          : `Mỗi phiên: ${sessionCreditsFlat} Credits (trừ khi bấm Bắt đầu)`}
+          ? `Phiên: ${sessionCreditsFlat} Điểm tín dụng · Giữ mic · ${direction === 'vi_to_local' ? 'Việt → bản địa' : 'Bản địa → Việt'}`
+          : `Mỗi phiên: ${sessionCreditsFlat} Điểm tín dụng (trừ khi bấm Bắt đầu)`}
       </Text>
 
       <View style={styles.row}>
@@ -287,10 +287,10 @@ export function LiveInterpreterScreen() {
       <ScrollView style={styles.log} contentContainerStyle={styles.logContent}>
         {!sessionActive ? (
           <Text style={styles.empty}>
-            {route.params?.guidedEntry ? 'Đang khởi động phiên…' : 'Xác nhận Credits ở hộp thoại để bắt đầu phiên.'}
+            {route.params?.guidedEntry ? 'Đang khởi động phiên…' : 'Xác nhận Điểm tín dụng ở hộp thoại để bắt đầu phiên.'}
           </Text>
         ) : turns.length === 0 ? (
-          <Text style={styles.empty}>Giữ mic để nói. Không trừ thêm Credits theo từng câu.</Text>
+          <Text style={styles.empty}>Giữ mic để nói. Không trừ thêm Điểm tín dụng theo từng câu.</Text>
         ) : (
           turns.map((t) => (
             <View key={t.id} style={styles.turn}>

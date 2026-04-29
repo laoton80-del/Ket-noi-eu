@@ -1,8 +1,14 @@
 import { Ionicons } from '@expo/vector-icons';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import * as Haptics from 'expo-haptics';
+import { useCallback, useEffect, useState } from 'react';
+import { Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
+import Animated, { FadeIn, FadeOut, Layout } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { AdaptiveContainer } from '../../components/layout/AdaptiveContainer';
+import { Skeleton } from '../../components/ui/Skeleton';
 import { PrecisePanel } from '../../components/ui/PrecisePanel';
 import { StatusChip } from '../../components/ui/StatusChip';
+import { useDeviceLayout } from '../../hooks/useDeviceLayout';
 import { useB2BBookingStore } from '../../state/b2bBooking';
 import { theme } from '../../theme/theme';
 import { FontFamily } from '../../theme/typography';
@@ -13,60 +19,109 @@ function formatTime(iso: string): string {
 }
 
 export function InboundQueueScreen() {
+  const { isLandscape, isTablet, isWeb } = useDeviceLayout();
   const bookings = useB2BBookingStore((state) => state.bookings);
   const confirmBooking = useB2BBookingStore((state) => state.confirmBooking);
   const inquiries = bookings.filter((booking) => booking.status === 'inquiry');
+  const [refreshing, setRefreshing] = useState(false);
+  const [initialLoading, setInitialLoading] = useState(true);
+  const useWideLayout = (isTablet || isWeb) && isLandscape;
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setInitialLoading(false);
+    }, 1200);
+    return () => clearTimeout(timer);
+  }, []);
+
+  const onRefresh = useCallback(() => {
+    setRefreshing(true);
+    setTimeout(() => {
+      setRefreshing(false);
+      void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    }, 1500);
+  }, []);
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <View style={styles.header}>
-          <Text style={styles.title}>Inbound Queue</Text>
-          <View style={styles.headerStatusRow}>
-            <StatusChip state="Pending" />
-            <Text style={styles.pendingCount}>{inquiries.length} cho duyet</Text>
+      <AdaptiveContainer contentStyle={styles.adaptiveContent}>
+        <ScrollView
+          contentContainerStyle={[styles.content, useWideLayout && styles.contentWide]}
+          showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              colors={[theme.colors.primary]}
+              tintColor={theme.colors.primary}
+            />
+          }
+        >
+          <View style={styles.header}>
+            <Text style={styles.title}>Hàng chờ yêu cầu vào</Text>
+            <View style={styles.headerStatusRow}>
+              <StatusChip state="Pending" />
+              <Text style={styles.pendingCount}>{inquiries.length} chờ duyệt</Text>
+            </View>
           </View>
-        </View>
-
-        {inquiries.length === 0 ? (
-          <PrecisePanel style={styles.emptyPanel}>
-            <Ionicons name="checkmark-circle-outline" size={28} color={theme.colors.SoftMineralGrey} />
-            <Text style={styles.emptyText}>Khong co yeu cau cho duyet moi. AI Le Tan dang truc.</Text>
-          </PrecisePanel>
-        ) : (
-          <View style={styles.list}>
-            {inquiries.map((booking) => (
-              <PrecisePanel key={booking.id} style={styles.card}>
-                <View style={styles.cardHeader}>
-                  <View style={styles.cardHeaderText}>
-                    <Text style={styles.customerName}>{booking.customerName}</Text>
-                    <Text style={styles.requestedTime}>
-                      {formatTime(booking.startTime)} - {formatTime(booking.endTime)}
-                    </Text>
+          {initialLoading ? (
+            <View style={styles.list}>
+              {Array.from({ length: 3 }, (_, idx) => (
+                <PrecisePanel key={`skeleton_${idx}`} style={styles.card}>
+                  <View style={styles.skeletonHeaderRow}>
+                    <Skeleton width="48%" height={16} />
+                    <Skeleton width={74} height={24} borderRadius={theme.radius.pill} />
                   </View>
-                  <StatusChip state="Pending" />
-                </View>
+                  <Skeleton width="82%" height={14} />
+                  <Skeleton width="100%" height={44} borderRadius={theme.radius.md} />
+                </PrecisePanel>
+              ))}
+            </View>
+          ) : inquiries.length === 0 ? (
+            <PrecisePanel style={styles.emptyPanel}>
+              <Ionicons name="checkmark-circle-outline" size={28} color={theme.colors.SoftMineralGrey} />
+              <Text style={styles.emptyText}>Không có yêu cầu chờ duyệt mới. AI Lễ tân đang trực.</Text>
+            </PrecisePanel>
+          ) : (
+            <View style={styles.list}>
+              {inquiries.map((booking) => (
+                <Animated.View key={booking.id} entering={FadeIn} exiting={FadeOut} layout={Layout.springify()}>
+                  <PrecisePanel style={styles.card}>
+                    <View style={styles.cardHeader}>
+                      <View style={styles.cardHeaderText}>
+                        <Text style={styles.customerName}>{booking.customerName}</Text>
+                        <Text style={styles.requestedTime}>
+                          {formatTime(booking.startTime)} - {formatTime(booking.endTime)}
+                        </Text>
+                      </View>
+                      <StatusChip state="Pending" />
+                    </View>
 
-                <Text style={styles.summaryText}>
-                  {booking.handoffSummary ?? 'AI Le Tan chua gui tom tat cho yeu cau nay.'}
-                </Text>
+                    <Text style={styles.summaryText}>
+                      {booking.handoffSummary ?? 'AI Lễ tân chưa gửi tóm tắt cho yêu cầu này.'}
+                    </Text>
 
-                <View style={styles.footerActions}>
-                  <Pressable
-                    onPress={() => confirmBooking(booking.id)}
-                    style={({ pressed }) => [styles.confirmBtn, pressed && { opacity: 0.8 }]}
-                  >
-                    <Text style={styles.confirmBtnText}>Xac nhan (Confirm)</Text>
-                  </Pressable>
-                  <Pressable style={({ pressed }) => [styles.secondaryBtn, pressed && { opacity: 0.8 }]}>
-                    <Text style={styles.secondaryBtnText}>Tu choi / Goi lai</Text>
-                  </Pressable>
-                </View>
-              </PrecisePanel>
-            ))}
-          </View>
-        )}
-      </ScrollView>
+                    <View style={styles.footerActions}>
+                      <Pressable
+                        onPress={() => {
+                          confirmBooking(booking.id);
+                          void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+                        }}
+                        style={({ pressed }) => [styles.confirmBtn, pressed && { opacity: 0.8 }]}
+                      >
+                        <Text style={styles.confirmBtnText}>Xác nhận</Text>
+                      </Pressable>
+                      <Pressable style={({ pressed }) => [styles.secondaryBtn, pressed && { opacity: 0.8 }]}>
+                        <Text style={styles.secondaryBtnText}>Từ chối / Gọi lại</Text>
+                      </Pressable>
+                    </View>
+                  </PrecisePanel>
+                </Animated.View>
+              ))}
+            </View>
+          )}
+        </ScrollView>
+      </AdaptiveContainer>
     </SafeAreaView>
   );
 }
@@ -81,6 +136,14 @@ const styles = StyleSheet.create({
     paddingTop: theme.spacing.md,
     paddingBottom: theme.spacing.xxl,
     gap: theme.spacing.md,
+  },
+  adaptiveContent: {
+    flex: 1,
+  },
+  contentWide: {
+    maxWidth: 980,
+    alignSelf: 'center',
+    width: '100%',
   },
   header: {
     gap: theme.spacing.xs,
@@ -102,6 +165,12 @@ const styles = StyleSheet.create({
   },
   list: {
     gap: theme.spacing.md,
+  },
+  skeletonHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: theme.spacing.sm,
   },
   card: {
     backgroundColor: theme.colors.SoftMineralGrey,

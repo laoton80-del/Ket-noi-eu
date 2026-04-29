@@ -4,6 +4,7 @@ import type { DocumentVaultItem } from '../services/DocumentAlarmService';
 export type ResidencyStatus = 'du_hoc' | 'lao_dong' | 'dinh_cu' | 'ti_nan';
 export type SubscriptionPlan = 'free' | 'premium' | 'pack';
 export type UserSegment = 'adult' | 'child';
+export type CommercialTier = 'starter' | 'basic' | 'standard' | 'pro' | 'power' | 'enterprise' | 'none';
 
 export type AuthUser = {
   phone: string;
@@ -14,6 +15,7 @@ export type AuthUser = {
   visaType: string;
   visaExpiryDate: string;
   subscriptionPlan: SubscriptionPlan;
+  commercialTier: CommercialTier;
   segment: UserSegment;
   aiCallCredits: number;
   isLearningFullUnlocked: boolean;

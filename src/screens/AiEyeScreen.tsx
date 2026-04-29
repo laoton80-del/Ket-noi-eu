@@ -77,8 +77,8 @@ export function AiEyeScreen() {
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.header}>
-          <Text style={styles.title}>AI Document Eye</Text>
-          <Text style={styles.subtitle}>Local context: {currentCountry}</Text>
+          <Text style={styles.title}>Mắt AI quét giấy tờ</Text>
+          <Text style={styles.subtitle}>Ngữ cảnh địa phương: {currentCountry}</Text>
         </View>
 
         <Pressable
@@ -87,7 +87,7 @@ export function AiEyeScreen() {
           style={({ pressed }) => [styles.scanButton, isScanning && styles.scanButtonDisabled, pressed && { opacity: 0.8 }]}
         >
           <Ionicons name="camera-outline" size={28} color={theme.colors.CeolWhite} />
-          <Text style={styles.scanButtonText}>Scan Document</Text>
+          <Text style={styles.scanButtonText}>Quét giấy tờ</Text>
         </Pressable>
 
         {selectedImageUri ? (
@@ -99,7 +99,7 @@ export function AiEyeScreen() {
         {isScanning ? (
           <PrecisePanel style={styles.loadingPanel}>
             <ActivityIndicator color={theme.colors.primary} />
-            <Text style={styles.loadingText}>AI is analyzing document context...</Text>
+            <Text style={styles.loadingText}>AI đang phân tích ngữ cảnh giấy tờ...</Text>
           </PrecisePanel>
         ) : null}
 
@@ -114,7 +114,7 @@ export function AiEyeScreen() {
             </PrecisePanel>
 
             <PrecisePanel>
-              <Text style={styles.actionHeader}>Action Items</Text>
+              <Text style={styles.actionHeader}>Hành động đề xuất</Text>
               {scanResult.actionItems.map((item) => (
                 <View key={item} style={styles.actionRow}>
                   <Ionicons name="checkmark-circle-outline" size={16} color={theme.colors.primary} />

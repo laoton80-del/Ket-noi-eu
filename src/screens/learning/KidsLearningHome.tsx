@@ -23,7 +23,7 @@ export function KidsLearningHome() {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.card}>
-        <Text style={styles.title}>Kids Learning Home</Text>
+        <Text style={styles.title}>Học tập cho bé</Text>
         <Text style={styles.subtitle}>
           Khu học tiếng Việt cho bé (daily lesson, gamification, story mode).
         </Text>

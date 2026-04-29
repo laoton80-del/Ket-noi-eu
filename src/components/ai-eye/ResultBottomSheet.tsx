@@ -24,7 +24,7 @@ export function ResultBottomSheet({ visible, result, onSave }: ResultBottomSheet
   }));
 
   return (
-    <Animated.View pointerEvents={visible ? 'auto' : 'none'} style={[styles.sheet, animatedStyle]}>
+    <Animated.View pointerEvents={visible ? 'auto' : 'none'} style={StyleSheet.flatten([styles.sheet, animatedStyle])}>
       <View style={styles.drag} />
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
         <Text style={styles.sectionTitle}>📝 Dịch đề</Text>

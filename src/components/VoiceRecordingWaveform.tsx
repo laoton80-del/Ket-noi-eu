@@ -47,7 +47,7 @@ export function VoiceRecordingWaveform({ active }: Props) {
       {values.map((v, i) => (
         <Animated.View
           key={i}
-          style={[
+          style={StyleSheet.flatten([
             styles.bar,
             {
               transform: [
@@ -56,7 +56,7 @@ export function VoiceRecordingWaveform({ active }: Props) {
                 },
               ],
             },
-          ]}
+          ])}
         />
       ))}
     </View>

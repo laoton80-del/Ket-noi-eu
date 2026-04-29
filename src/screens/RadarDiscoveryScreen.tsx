@@ -105,7 +105,7 @@ function Ring({ progress, offset }: { progress: SharedValue<number>; offset: num
       transform: [{ scale: interpolate(ring, [0, 1], [0.2, 1.02]) }],
     };
   });
-  return <Animated.View style={[styles.ring, style]} />;
+  return <Animated.View style={StyleSheet.flatten([styles.ring, style])} />;
 }
 
 function RadarPin({
@@ -149,14 +149,14 @@ function RadarPin({
 
   return (
     <Animated.View
-      style={[
+      style={StyleSheet.flatten([
         styles.pinWrap,
         {
           left: `${50 + Math.cos(pinTheta) * pinRadius * 43}%`,
           top: `${50 + Math.sin(pinTheta) * pinRadius * 43}%`,
         },
         style,
-      ]}
+      ])}
     >
       <Pressable onPress={onPress} style={({ pressed }) => [styles.pin, pressed && { opacity: 0.8 }]}>
         <Ionicons name={kindIcon[business.kind]} size={16} color={theme.colors.primaryBright} />

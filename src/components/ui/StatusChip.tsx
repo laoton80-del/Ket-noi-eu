@@ -10,12 +10,20 @@ type StatusChipProps = {
 
 export function StatusChip({ state }: StatusChipProps) {
   const palette = statusPalette[state];
+  const label = statusLabel[state];
   return (
     <View style={[styles.chip, { backgroundColor: palette.bg, borderColor: palette.border }]}>
-      <Text style={[styles.label, { color: palette.text }]}>{state}</Text>
+      <Text style={[styles.label, { color: palette.text }]}>{label}</Text>
     </View>
   );
 }
+
+const statusLabel: Record<StatusChipState, string> = {
+  Processing: 'Đang xử lý',
+  Cleared: 'Đã xác nhận',
+  Pending: 'Đang chờ',
+  Error: 'Lỗi',
+};
 
 const statusPalette: Record<StatusChipState, { bg: string; border: string; text: string }> = {
   Processing: {
