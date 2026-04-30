@@ -1,5 +1,6 @@
 import type { NavigatorScreenParams } from '@react-navigation/native';
 import type { InterpreterScenario } from '../config/aiPrompts';
+import type { AiPersonaId } from '../config/aiPersonaCapabilities';
 import type { RedirectTarget } from '../context/AuthContext';
 
 /**
@@ -30,6 +31,8 @@ export type RootStackParamList = {
   TravelCompanion: undefined;
   /** KNG Travel — dedicated premium travel mini-app (concierge, homestay, interpreter). */
   TravelHub: { destinationQuery?: string } | undefined;
+  /** B2C Local universe — elite services bento + classifieds (V6.2). */
+  LocalUniverse: undefined;
   /** KNG Travel — embassy map + AI TTS quick phrases (medical / police). */
   TravelSosHub: undefined;
   /** KNG Travel — Vietnamese "fixer" marketplace (book via Leona). */
@@ -143,4 +146,11 @@ export type RootStackParamList = {
         mode?: 'onboarding' | 'edit';
       }
     | undefined;
+};
+
+export const ROUTE_PERSONA_POLICY: Readonly<Partial<Record<keyof RootStackParamList, AiPersonaId>>> = {
+  LiveInterpreter: 'minh_khang',
+  LiveAiTeacher: 'ai_teacher',
+  LeonaCall: 'leona',
+  InboundQueue: 'b2b_receptionist',
 };

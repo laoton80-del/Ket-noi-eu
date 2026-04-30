@@ -9,6 +9,7 @@
  */
 
 import type { WalletPackageId } from './globalWalletPackages';
+import { APP_BRAND } from './appBrand';
 
 // ---------------------------------------------------------------------------
 // Core enums (string unions — stable wire-friendly keys)
@@ -68,6 +69,12 @@ export type CommercialOfferDefinition = {
   guardrails: string;
   productionStatus: ProductionRolloutStatus;
 };
+
+export const BRAND_POLICY = {
+  publicSurfaceName: APP_BRAND.publicName,
+  b2bSurfaceName: APP_BRAND.internalName,
+  internalDocsName: APP_BRAND.masterName,
+} as const;
 
 /** Canonical backbone capability keys (doctrine / PDF service grain). */
 export type BackboneServiceKey =
@@ -168,7 +175,7 @@ export const BACKBONE_SERVICE_KEYS: readonly BackboneServiceKey[] = [
 // ---------------------------------------------------------------------------
 
 const AI_TEACHER_SURFACES: readonly CommercialSurfaceRef[] = [
-  { id: 'hoc_tap_tab', kind: 'screen', path: 'src/screens/AcademyScreen.tsx' },
+  { id: 'hoc_tap_tab', kind: 'screen', path: 'src/screens/HocTapScreen.tsx' },
   { id: 'learning_ai_core', kind: 'service', path: 'src/services/ai/learningAI.ts' },
   { id: 'adult_learning_home', kind: 'screen', path: 'src/screens/learning/AdultLearningHome.tsx' },
   { id: 'kids_learning_home', kind: 'screen', path: 'src/screens/learning/KidsLearningHome.tsx' },
@@ -210,12 +217,12 @@ const COMMERCIAL_OFFERS: Record<PublicOfferKey, CommercialOfferDefinition> = {
     addOnEligible: [...ALL_PACKAGE_TIERS],
     internalMeters: ['support_minutes', 'assistant_actions'],
     relatedSurfaces: [
-      { id: 'le_tan_consumer', kind: 'screen', path: 'src/screens/ConciergeScreen.tsx', notes: 'Mixed AI paths; see business_ops for ops-heavy B2B mapping.' },
+      { id: 'le_tan_consumer', kind: 'screen', path: 'src/screens/LeTanScreen.tsx', notes: 'Mixed AI paths; see business_ops for ops-heavy B2B mapping.' },
       { id: 'live_interpreter', kind: 'service', path: 'src/services/liveInterpreterService.ts' },
       { id: 'travel_companion', kind: 'screen', path: 'src/screens/TravelCompanionScreen.tsx' },
       { id: 'flight_search_assistant', kind: 'screen', path: 'src/screens/FlightSearchAssistantScreen.tsx' },
       { id: 'emergency_sos', kind: 'screen', path: 'src/screens/EmergencySOSScreen.tsx' },
-      { id: 'tien_ich_hub', kind: 'screen', path: 'src/screens/ServicesScreen.tsx' },
+      { id: 'tien_ich_hub', kind: 'screen', path: 'src/screens/TienIchScreen.tsx' },
     ],
     notes:
       'Minh Khang persona, phiên dịch (chat/voice UI), đồng hành du lịch, tìm chuyến bay, SOS neo vào đây ở lớp offer công khai; tách Call Help / Document khi đóng gói riêng.',
@@ -273,7 +280,7 @@ const COMMERCIAL_OFFERS: Record<PublicOfferKey, CommercialOfferDefinition> = {
     addOnEligible: [...B2B_COMMERCIAL_TIERS],
     internalMeters: ['b2b_operational_volume', 'assistant_actions'],
     relatedSurfaces: [
-      { id: 'le_tan_ops', kind: 'screen', path: 'src/screens/ConciergeScreen.tsx', notes: 'Inbound / booking flows; overlaps consumer AI — split by contract later.' },
+      { id: 'le_tan_ops', kind: 'screen', path: 'src/screens/LeTanScreen.tsx', notes: 'Inbound / booking flows; overlaps consumer AI — split by contract later.' },
       { id: 'b2b_models', kind: 'domain_module', path: 'src/domain/b2b/models.ts' },
       { id: 'b2b_policies', kind: 'domain_module', path: 'src/domain/b2b/businessPolicies.ts' },
       { id: 'b2b_vertical_bridge', kind: 'domain_module', path: 'src/domain/b2b/b2bVerticalBridge.ts' },
@@ -293,7 +300,7 @@ const B2B_OPS_SURFACES: readonly CommercialSurfaceRef[] = [
   {
     id: 'le_tan_ops',
     kind: 'screen',
-    path: 'src/screens/ConciergeScreen.tsx',
+    path: 'src/screens/LeTanScreen.tsx',
     notes: 'Inbound / booking flows; overlaps consumer AI — split by contract later.',
   },
   { id: 'b2b_models', kind: 'domain_module', path: 'src/domain/b2b/models.ts' },

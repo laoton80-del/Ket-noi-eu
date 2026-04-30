@@ -2,22 +2,24 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { normalizeCountryCodeOrSentinel, resolveCountryPack, type PricingTierId } from '../config/countryPacks';
 import type { DocumentVaultItem } from '../services/DocumentAlarmService';
-import { ensureWalletFirebaseAuth, getWalletIdToken } from '../services/walletFirebaseSession';
+import { clearRestApiJwt } from '../services/apiClient';
+import { ensureWalletFirebaseAuth } from '../services/walletFirebaseSession';
 import { getWalletState, syncWalletFromServer } from '../state/wallet';
 import { STORAGE_KEYS } from '../storage/storageKeys';
-import type { AuthUser, CommercialTier, ResidencyStatus, SubscriptionPlan, UserSegment } from './authTypes';
+import type { AuthUser, ResidencyStatus, SubscriptionPlan, UserSegment } from './authTypes';
 
-export type { AuthUser, CommercialTier, ResidencyStatus, SubscriptionPlan, UserSegment } from './authTypes';
+export type { AuthUser, ResidencyStatus, SubscriptionPlan, UserSegment } from './authTypes';
 
 export type RedirectTarget =
-  | 'Academy'
-  | 'Concierge'
+  | 'HocTap'
+  | 'LeTan'
   | 'Wallet'
   | 'AiEye'
   | 'LeonaCall'
   | 'Vault'
   | 'LiveInterpreter'
-  | 'RadarDiscovery';
+  | 'RadarDiscovery'
+  | 'B2BPaywall';
 
 type PendingLogin = {
   phone: string;
@@ -38,7 +40,6 @@ type AuthContextValue = {
     visaType: string;
     visaExpiryDate: string;
     subscriptionPlan?: SubscriptionPlan;
-    commercialTier?: CommercialTier;
     segment?: UserSegment;
   }) => void;
   updateProfile: (input: {
@@ -49,7 +50,6 @@ type AuthContextValue = {
     visaType?: string;
     visaExpiryDate?: string;
     subscriptionPlan?: SubscriptionPlan;
-    commercialTier?: CommercialTier;
     segment?: UserSegment;
     isLearningFullUnlocked?: boolean;
     isLearningUnlocked?: boolean;
@@ -94,7 +94,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               visaType: parsed.visaType ?? '',
               visaExpiryDate: parsed.visaExpiryDate ?? '',
               subscriptionPlan: parsed.subscriptionPlan ?? 'free',
-              commercialTier: parsed.commercialTier ?? 'starter',
               segment: parsed.segment ?? 'adult',
               aiCallCredits: getWalletState().credits,
               isLearningFullUnlocked: parsed.isLearningFullUnlocked === true || parsed.isLearningUnlocked === true,
@@ -117,34 +116,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [user]);
 
   useEffect(() => {
-    if (!__DEV__) return;
-    if (!user) return;
-    let active = true;
-    void (async () => {
-      console.log('[payment-pilot] auth_context_user_present', {
-        hasPhone: Boolean(user.phone),
-      });
-      try {
-        await ensureWalletFirebaseAuth();
-        if (!active) return;
-        const token = await getWalletIdToken(true);
-        if (!active) return;
-        if (!token) {
-          console.log('[payment-pilot] firebase_id_token_unavailable');
-          return;
-        }
-        console.log('[payment-pilot] firebase_id_token', token);
-      } catch {
-        if (!active) return;
-        console.log('[payment-pilot] firebase_id_token_unavailable');
-      }
-    })();
-    return () => {
-      active = false;
-    };
-  }, [user]);
-
-  useEffect(() => {
     if (!user?.phone) return;
     void syncWalletFromServer();
   }, [user?.phone]);
@@ -157,7 +128,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       pendingRedirect,
       setPendingRedirect,
       beginLogin: (phone: string) => setPendingLogin({ phone }),
-      completeProfile: ({ name, country, countryTier, residencyStatus, visaType, visaExpiryDate, subscriptionPlan, commercialTier }) => {
+      completeProfile: ({ name, country, countryTier, residencyStatus, visaType, visaExpiryDate, subscriptionPlan }) => {
         if (!pendingLogin) return;
         const normalizedCountry = normalizeCountryCodeOrSentinel(country);
         const tier = countryTier ?? resolveCountryPack(normalizedCountry).pricingTier;
@@ -170,7 +141,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           visaType,
           visaExpiryDate,
           subscriptionPlan: subscriptionPlan ?? 'free',
-          commercialTier: commercialTier ?? 'starter',
           segment: 'adult',
           aiCallCredits: getWalletState().credits,
           isLearningFullUnlocked: false,
@@ -201,6 +171,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setPendingLogin(null);
         setPendingRedirect(null);
         void AsyncStorage.removeItem(AUTH_STORAGE_KEY);
+        void clearRestApiJwt();
       },
     }),
     [isHydrating, pendingLogin, pendingRedirect, user]

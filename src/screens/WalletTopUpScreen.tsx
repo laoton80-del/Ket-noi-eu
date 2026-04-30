@@ -1,8 +1,9 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { ActivityIndicator, Alert, Animated, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Alert, Animated, Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import Reanimated, { Easing, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 import { AppStateView } from '../components/ui/AppStateView';
 import { PinFallbackModal } from '../components/PinFallbackModal';
 import { PremiumCheckoutSheet } from '../components/PremiumCheckoutSheet';
@@ -43,6 +44,7 @@ import { FontFamily } from '../theme/typography';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { authenticateBiometric, getBiometricAvailability, isValidWalletPin } from '../security/biometricUnlock';
 import { consumePendingSellResume } from '../services/selling/sellResumeStorage';
+import { transferVigTokensByPhone } from '../services/fintech/WalletService';
 
 /** Temporary diagnostic: set `EXPO_PUBLIC_WALLET_DIAGNOSTIC_SKIP_CHECKOUT_SHEET=1` so Wallet mounts without `PremiumCheckoutSheet`. Remove after crash is isolated. */
 const WALLET_DIAGNOSTIC_SKIP_PREMIUM_CHECKOUT_SHEET =
@@ -105,8 +107,13 @@ export function WalletTopUpScreen() {
   const outboundPersonaName = getPersonaDisplayName('leona');
   const [walletUnlocked, setWalletUnlocked] = useState(false);
   const [pinGateVisible, setPinGateVisible] = useState(false);
+  const [p2pVisible, setP2pVisible] = useState(false);
+  const [recipientPhone, setRecipientPhone] = useState('');
+  const [transferAmount, setTransferAmount] = useState('');
+  const [p2pSubmitting, setP2pSubmitting] = useState(false);
   const prevCreditsRef = useRef(wallet.credits);
   const glowAnim = useRef(new Animated.Value(0)).current;
+  const p2pAnim = useSharedValue(0);
 
   const handleWalletUnlockTap = useCallback(async () => {
     const availability = await getBiometricAvailability();
@@ -198,6 +205,18 @@ export function WalletTopUpScreen() {
       Animated.timing(glowAnim, { toValue: 0, duration: 760, useNativeDriver: false }),
     ]).start();
   }, [glowAnim, wallet.credits]);
+
+  useEffect(() => {
+    p2pAnim.value = withTiming(p2pVisible ? 1 : 0, {
+      duration: p2pVisible ? 220 : 160,
+      easing: Easing.out(Easing.cubic),
+    });
+  }, [p2pAnim, p2pVisible]);
+
+  const p2pModalAnimStyle = useAnimatedStyle(() => ({
+    opacity: p2pAnim.value,
+    transform: [{ translateY: (1 - p2pAnim.value) * 26 }, { scale: 0.98 + p2pAnim.value * 0.02 }],
+  }));
 
   if (__DEV__) {
     console.log('[diag][WalletTopUp] hooks settled', { hasUser: Boolean(user) });
@@ -378,6 +397,39 @@ export function WalletTopUpScreen() {
     }
   };
 
+  const submitP2PTransfer = useCallback(async () => {
+    if (!walletUnlocked) {
+      Alert.alert(w.walletLockedTitle, w.walletLockedBody);
+      return;
+    }
+    const senderPhone = user.phone.trim();
+    const recipient = recipientPhone.trim();
+    const amount = Number.parseInt(transferAmount, 10);
+    if (senderPhone.length < 8 || recipient.length < 8 || !Number.isFinite(amount) || amount <= 0) {
+      Alert.alert('Thiếu dữ liệu', 'Vui lòng nhập số điện thoại hợp lệ và số VIG Token lớn hơn 0.');
+      return;
+    }
+    setP2pSubmitting(true);
+    try {
+      const result = await transferVigTokensByPhone({
+        senderPhone,
+        recipientPhone: recipient,
+        amountVig: amount,
+        idempotencyKey: `p2p-${senderPhone}-${Date.now()}`,
+      });
+      if (!result.ok) {
+        Alert.alert('Không thể chuyển VIG', result.messageVi);
+        return;
+      }
+      Alert.alert('Chuyển thành công', `Đã chuyển ${result.amountVig} VIG Token đến ${result.recipientPhone}.`);
+      setRecipientPhone('');
+      setTransferAmount('');
+      setP2pVisible(false);
+    } finally {
+      setP2pSubmitting(false);
+    }
+  }, [recipientPhone, transferAmount, user.phone, w.walletLockedBody, w.walletLockedTitle, walletUnlocked]);
+
   if (__DEV__) {
     console.log('[diag][WalletTopUp] render main ui');
   }
@@ -448,6 +500,21 @@ export function WalletTopUpScreen() {
             <Text style={styles.cashOutEntrySub}>Rút hoa hồng giới thiệu (Cash-Out) — kiểm soát hạn mức</Text>
           </View>
           <Ionicons name="chevron-forward" size={22} color={theme.colors.primaryBright} />
+        </Pressable>
+
+        <Pressable
+          onPress={() => setP2pVisible(true)}
+          style={({ pressed }) => [styles.p2pEntry, pressed && { opacity: 0.9 }]}
+          className={mergeWebClassNames('kn-glass', 'kn-neon-b2b')}
+          accessibilityRole="button"
+          accessibilityLabel="Chuyển VIG Token theo số điện thoại"
+        >
+          <Ionicons name="swap-horizontal" size={22} color={theme.hybrid.signalStrong} />
+          <View style={styles.p2pEntryText}>
+            <Text style={styles.p2pEntryTitle}>Chuyển VIG Token (P2P)</Text>
+            <Text style={styles.p2pEntrySub}>Chuyển thẳng đến ví người nhận bằng số điện thoại.</Text>
+          </View>
+          <Ionicons name="chevron-forward" size={22} color={theme.hybrid.signalStrong} />
         </Pressable>
 
         <Text style={styles.unitPrice}>
@@ -692,6 +759,46 @@ export function WalletTopUpScreen() {
           <Text style={styles.pendingText}>{w.pendingVerifyText}</Text>
         </View>
       ) : null}
+      <Modal visible={p2pVisible} transparent animationType="none" onRequestClose={() => setP2pVisible(false)}>
+        <View style={styles.modalBackdrop}>
+          <Reanimated.View style={[styles.p2pModalCard, p2pModalAnimStyle]} className={mergeWebClassNames('kn-glass')}>
+            <Text style={styles.p2pModalTitle}>Chuyển VIG Token</Text>
+            <Text style={styles.p2pModalSub}>Số dư hiện tại: {wallet.credits} VIG Token</Text>
+            <TextInput
+              value={recipientPhone}
+              onChangeText={setRecipientPhone}
+              placeholder="Số điện thoại người nhận"
+              placeholderTextColor={theme.colors.text.secondary}
+              keyboardType="phone-pad"
+              style={styles.p2pInput}
+            />
+            <TextInput
+              value={transferAmount}
+              onChangeText={setTransferAmount}
+              placeholder="Số lượng VIG Token"
+              placeholderTextColor={theme.colors.text.secondary}
+              keyboardType="number-pad"
+              style={styles.p2pInput}
+            />
+            <View style={styles.p2pActions}>
+              <Pressable onPress={() => setP2pVisible(false)} style={styles.p2pCancelBtn}>
+                <Text style={styles.p2pCancelText}>Đóng</Text>
+              </Pressable>
+              <Pressable
+                onPress={() => void submitP2PTransfer()}
+                style={({ pressed }) => [styles.p2pSubmitBtn, (pressed || p2pSubmitting) && { opacity: 0.86 }]}
+                disabled={p2pSubmitting}
+              >
+                {p2pSubmitting ? (
+                  <ActivityIndicator size="small" color={theme.hybrid.onSignal} />
+                ) : (
+                  <Text style={styles.p2pSubmitText}>Xác nhận chuyển</Text>
+                )}
+              </Pressable>
+            </View>
+          </Reanimated.View>
+        </View>
+      </Modal>
       <SuccessCheckmark3D visible={showPaySuccess} onClose={onPaySuccessClose} />
     </SafeAreaView>
   );
@@ -772,6 +879,32 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontFamily: FontFamily.medium,
     color: theme.hybrid.panelCoolTextMuted,
+  },
+  p2pEntry: {
+    marginTop: theme.spacing.md,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: theme.spacing.md,
+    paddingVertical: theme.spacing.md,
+    paddingHorizontal: theme.spacing.lg,
+    borderRadius: theme.radius.lg,
+    borderWidth: 1,
+    borderColor: theme.hybrid.signalSubtleBorder,
+    backgroundColor: theme.colors.executive.panelMuted,
+  },
+  p2pEntryText: {
+    flex: 1,
+    gap: 3,
+  },
+  p2pEntryTitle: {
+    fontSize: 15,
+    fontFamily: FontFamily.bold,
+    color: theme.colors.text.primary,
+  },
+  p2pEntrySub: {
+    fontSize: 12,
+    fontFamily: FontFamily.medium,
+    color: theme.colors.text.secondary,
   },
   walletBalanceLabel: {
     fontSize: 13,
@@ -1178,5 +1311,77 @@ const styles = StyleSheet.create({
     color: theme.colors.text.primary,
     fontSize: 12,
     fontFamily: FontFamily.semibold,
+  },
+  modalBackdrop: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.55)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: theme.spacing.xl,
+  },
+  p2pModalCard: {
+    width: '100%',
+    borderRadius: theme.radius.lg,
+    borderWidth: 1,
+    borderColor: theme.hybrid.signalSubtleBorder,
+    backgroundColor: theme.colors.executive.card,
+    padding: theme.spacing.lg,
+    gap: theme.spacing.sm,
+  },
+  p2pModalTitle: {
+    fontSize: 18,
+    fontFamily: FontFamily.extrabold,
+    color: theme.colors.text.primary,
+  },
+  p2pModalSub: {
+    fontSize: 12,
+    color: theme.colors.text.secondary,
+    fontFamily: FontFamily.medium,
+    marginBottom: 2,
+  },
+  p2pInput: {
+    minHeight: 46,
+    borderRadius: theme.radius.md,
+    borderWidth: 1,
+    borderColor: theme.colors.glass.borderSoft,
+    paddingHorizontal: theme.spacing.md,
+    color: theme.colors.text.primary,
+    fontFamily: FontFamily.medium,
+    backgroundColor: theme.colors.executive.panelMuted,
+  },
+  p2pActions: {
+    marginTop: theme.spacing.xs,
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    gap: theme.spacing.sm,
+  },
+  p2pCancelBtn: {
+    minHeight: 40,
+    minWidth: 90,
+    borderRadius: theme.radius.md,
+    borderWidth: 1,
+    borderColor: theme.colors.glass.borderSoft,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: theme.spacing.md,
+  },
+  p2pCancelText: {
+    color: theme.colors.text.secondary,
+    fontFamily: FontFamily.semibold,
+    fontSize: 13,
+  },
+  p2pSubmitBtn: {
+    minHeight: 40,
+    minWidth: 130,
+    borderRadius: theme.radius.md,
+    backgroundColor: theme.hybrid.signalStrong,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: theme.spacing.md,
+  },
+  p2pSubmitText: {
+    color: theme.hybrid.onSignal,
+    fontFamily: FontFamily.bold,
+    fontSize: 13,
   },
 });

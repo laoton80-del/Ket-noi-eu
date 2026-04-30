@@ -7,6 +7,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { PrecisePanel } from '../../components/ui/PrecisePanel';
 import { StatusChip, type StatusChipState } from '../../components/ui/StatusChip';
 import { AI_TEACHER_PREMIUM_USD, PRICING_BASELINE_CURRENCY } from '../../config/pricingConfig';
+import { getPersonaCapability } from '../../config/aiPersonaCapabilities';
 import type { RootStackParamList } from '../../navigation/routes';
 import { useAiStream } from '../../services/academy/AiStreamClient';
 import { getAiTeacherPrompt } from '../../services/academy/TeacherPrompt';
@@ -21,6 +22,7 @@ type Nav = NativeStackNavigationProp<RootStackParamList>;
 export function LiveAiTeacherScreen() {
   const navigation = useNavigation<Nav>();
   const stream = useAiStream();
+  const teacherPersona = getPersonaCapability('ai_teacher');
   const { currentCountry, localLanguage } = useRegionState();
   const [whiteboardText, setWhiteboardText] = useState('');
   const [avatarSpeech, setAvatarSpeech] = useState('');
@@ -94,7 +96,7 @@ export function LiveAiTeacherScreen() {
           {formatCurrency(AI_TEACHER_PREMIUM_USD, PRICING_BASELINE_CURRENCY)} / tháng — đăng ký qua Ví (upsell)
         </Text>
         <Text style={styles.premiumUpsellCreditsNote}>
-          Bài học & mic trong app: trừ Xu (Credits); không hiển thị fiat theo phút tại màn hình này.
+          Bài học & mic trong app: trừ VIG Token; telemetry: {teacherPersona.telemetryTag}.
         </Text>
         <Text style={styles.premiumUpsellHero}>
           Luyện hội thoại không giới hạn 24/7 — Unlimited 24/7 speaking practice.

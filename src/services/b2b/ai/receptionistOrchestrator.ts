@@ -18,6 +18,7 @@ import { checkBookingAvailability, createBookingTransaction } from '../engines/b
 import { checkOrderWindowCapacity, createOrderTransaction } from '../engines/orderEngine';
 import { buildUsageBillingEventPayload } from '../billing/b2bBillingService';
 import type { FlowContextBase, FlowTransition, ReceptionistFlowStep } from './receptionistFlowTypes';
+import { getPersonaCapability } from '../../../config/aiPersonaCapabilities';
 
 export type ResolveTenantInput = { inboundNumberE164: string };
 
@@ -117,6 +118,7 @@ export function nextStepAfterIntent(intent: FlowContextBase['intent']): Receptio
 export type FlowAudit = { from: ReceptionistFlowStep; transition: FlowTransition };
 
 export function auditTransition(from: ReceptionistFlowStep, transition: FlowTransition): FlowAudit {
+  void getPersonaCapability('b2b_receptionist');
   return { from, transition };
 }
 

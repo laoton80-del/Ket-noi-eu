@@ -6,12 +6,14 @@ module.exports = () => {
     [
       'expo-splash-screen',
       {
-        image: './assets/images/splash.png',
+        image: './assets/splash.png',
+        resizeMode: 'contain',
         imageWidth: 240,
-        backgroundColor: '#0B2A66',
+        backgroundColor: '#050B14',
         dark: {
-          image: './assets/images/splash-dark.png',
-          backgroundColor: '#04122E',
+          image: './assets/splash.png',
+          resizeMode: 'contain',
+          backgroundColor: '#050B14',
         },
       },
     ],
@@ -80,6 +82,11 @@ module.exports = () => {
     version: '1.0.0',
     orientation: 'portrait',
     icon: './assets/icon.png',
+    splash: {
+      image: './assets/splash.png',
+      resizeMode: 'contain',
+      backgroundColor: '#050B14',
+    },
     userInterfaceStyle: 'light',
     scheme: 'ketnoiglobal',
     newArchEnabled: true,
@@ -97,8 +104,8 @@ module.exports = () => {
     },
     android: {
       adaptiveIcon: {
-        foregroundImage: './assets/adaptive-icon.png',
-        backgroundColor: '#001F3F',
+        foregroundImage: './assets/icon.png',
+        backgroundColor: '#050B14',
       },
       edgeToEdgeEnabled: true,
       predictiveBackGestureEnabled: false,
@@ -115,8 +122,8 @@ module.exports = () => {
       shortName: 'KNG',
       name: 'Kết Nối Global',
       favicon: './assets/favicon.png',
-      themeColor: '#0B2A66',
-      backgroundColor: '#0B2A66',
+      themeColor: '#050B14',
+      backgroundColor: '#050B14',
       display: 'standalone',
     },
     plugins,

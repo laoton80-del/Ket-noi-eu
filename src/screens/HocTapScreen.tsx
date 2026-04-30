@@ -207,11 +207,11 @@ export function HocTapScreen() {
   const showLearningSalesSheet = () => {
     Alert.alert(
       'Mở Khóa Trọn Bộ Tri Thức Global',
-      `${LEARNING_UNLOCK_COST} Xu — mở khóa vĩnh viễn: giáo trình A1–B2 + phát âm (giọng tổng hợp) không giới hạn.`,
+      `${LEARNING_UNLOCK_COST} VIG Token — mở khóa vĩnh viễn: giáo trình A1–B2 + phát âm (giọng tổng hợp) không giới hạn.`,
       [
         { text: 'Để sau', style: 'cancel' },
         {
-          text: `Nâng cấp ngay - ${LEARNING_UNLOCK_COST} Xu`,
+          text: `Nâng cấp ngay - ${LEARNING_UNLOCK_COST} VIG Token`,
           onPress: () => {
             void onUnlockLearning();
           },
@@ -251,7 +251,7 @@ export function HocTapScreen() {
   const onUnlockLearning = async () => {
     if (unlockLoading || isLearningFullUnlocked) return;
     if (wallet.credits < LEARNING_UNLOCK_COST) {
-      Alert.alert('Hết Xu', `Bạn cần ${LEARNING_UNLOCK_COST} Xu để mở khóa gói Học Tập.`);
+      Alert.alert('Thiếu VIG Token', `Bạn cần ${LEARNING_UNLOCK_COST} VIG Token để mở khóa gói Học Tập.`);
       navigation.navigate('Wallet');
       return;
     }
@@ -260,7 +260,7 @@ export function HocTapScreen() {
       await syncWalletFromServer();
       const deducted = await reserveAndCommitCredits(LEARNING_UNLOCK_COST, `learning-unlock-${Date.now()}`);
       if (!deducted.ok) {
-        Alert.alert('Hết Xu', `Bạn cần ${LEARNING_UNLOCK_COST} Xu để mở khóa gói Học Tập.`);
+        Alert.alert('Thiếu VIG Token', `Bạn cần ${LEARNING_UNLOCK_COST} VIG Token để mở khóa gói Học Tập.`);
         navigation.navigate('Wallet');
         return;
       }
@@ -311,7 +311,7 @@ export function HocTapScreen() {
         ) : null}
         <View style={styles.creditBadge}>
           <Ionicons name="wallet" size={14} color="#B6852D" />
-          <Text style={styles.creditBadgeText}>{wallet.credits} Xu</Text>
+          <Text style={styles.creditBadgeText}>{wallet.credits} VIG Token</Text>
         </View>
       </View>
 
@@ -337,7 +337,7 @@ export function HocTapScreen() {
         </Text>
         <Text style={styles.aiTeacherUpsellQuota}>
           Fair-use AI Giáo viên: {aiTeacherIncludedHoursDisplay} giờ đồng hồ / tháng trong gói; vượt mức:{' '}
-          {AI_TEACHER_OVERAGE_PER_MIN_CREDITS} Xu / phút.
+          {AI_TEACHER_OVERAGE_PER_MIN_CREDITS} VIG Token / phút.
         </Text>
         {showAiTeacherRemaining ? (
           <Text style={styles.aiTeacherUpsellRemaining}>
@@ -441,7 +441,7 @@ export function HocTapScreen() {
                 <Text style={styles.unlockBtnText}>Đang xử lý mở khóa...</Text>
               </View>
             ) : (
-              <Text style={styles.unlockBtnText}>Nâng cấp ngay - {LEARNING_UNLOCK_COST} Xu</Text>
+              <Text style={styles.unlockBtnText}>Nâng cấp ngay - {LEARNING_UNLOCK_COST} VIG Token</Text>
             )}
           </Pressable>
         ) : (

@@ -37,24 +37,33 @@ function subscriptionUsdForTier(tier: keyof typeof TIER_PRICE_MULTIPLIER): { mon
  * Screens should use `name` for headers; use `launchSubtitle` where launch context helps users.
  */
 export const APP_BRAND = {
+  publicName: 'ViGlobal',
+  internalName: 'KNG',
   masterName: 'Kết Nối Global',
   launchProductName: 'EU Launch Lane',
   /** Primary header on most surfaces */
   name: 'Kết Nối Global',
   /** Secondary line under brand (launch-lane context only) */
-  launchSubtitle: 'Đồng Hành Cùng Người Việt Toàn Cầu',
+  launchSubtitle: 'Global-first · EU rollout first',
   /** Stripe / wallet sheet merchant display name */
   paymentsDisplayName: 'Kết Nối Global',
-  visualStyle: 'Premium Gold Phoenix Identity',
+  visualStyle: 'Neo-Indochine & Glassmorphism',
   icon: '🌳✨',
-  iconLabel: 'Kết Nối Global premium phoenix logo',
-  iconAsset: require('../../assets/images/brand-logo-premium.png'),
+  iconLabel: 'Cây Bồ Đề vàng 3D',
   supportEmail: 'support@ketnoiglobal.com',
   legal: {
     privacyUrl: 'https://ketnoiglobal.com/privacy',
     termsUrl: 'https://ketnoiglobal.com/terms',
   },
 } as const;
+
+export type BrandSurface = 'b2c' | 'b2b' | 'internal';
+
+export function brandNameForSurface(surface: BrandSurface): string {
+  if (surface === 'b2c') return APP_BRAND.publicName;
+  if (surface === 'b2b') return APP_BRAND.internalName;
+  return APP_BRAND.masterName;
+}
 
 /** Assistant roster for prompts / persona wiring. */
 export const ASSISTANTS_ROSTER: AssistantIdentity[] = [
@@ -83,11 +92,11 @@ const T2 = subscriptionUsdForTier('T2');
 const T3 = subscriptionUsdForTier('T3');
 const T4 = subscriptionUsdForTier('T4');
 
-/** Subscription/marketing tier cards (USD anchors). Wallet pack families live in `globalWalletPackages.ts`. */
+/** Subscription/marketing tier cards (USD anchors). Wallet six-pack live spine: `commercialSpine.ts` + `docs/COMMERCIAL_SPINE_LIVE.md`. */
 export const PRICING_MARKET_TIERS_USD: PricingTier[] = [
   {
     id: 'T1',
-    name: 'T1 · Central Europe (pilot anchor)',
+    name: 'T1 · Central Europe (launch markets)',
     regions: 'CZ, SK, PL',
     monthlyUsd: T1.monthlyUsd,
     yearlyUsd: T1.yearlyUsd,

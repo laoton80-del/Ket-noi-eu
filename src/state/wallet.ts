@@ -9,7 +9,7 @@ import { STORAGE_KEYS } from '../storage/storageKeys';
 /**
  * Client wallet snapshot (display + cached history). Authoritative balances come from `walletOps` + `syncWalletFromServer`.
  *
- * **Do not** debit or grant Credits locally for product flows — use:
+ * **Do not** debit or grant VIG Token locally for product flows — use:
  * - `topupCreditsServer` (+ prior payment verify)
  * - `chargeTrustedService`, `reserveAndCommitCredits`, `rollbackReservedCredits`
  *
@@ -121,6 +121,15 @@ export function getWalletState(): WalletState {
   return walletState;
 }
 
+/** Apply VIG balance from REST `GET /api/wallet/balance` (updates all subscribers). */
+export function applyRestApiVigBalance(balanceVIG: number): void {
+  if (!Number.isFinite(balanceVIG)) return;
+  const credits = Math.max(0, Math.round(balanceVIG));
+  walletState = { ...walletState, credits };
+  persistWalletState();
+  emit();
+}
+
 export function useWalletState(): WalletState {
   return useSyncExternalStore(subscribe, getWalletState, getWalletState);
 }
@@ -194,7 +203,7 @@ export async function chargeTrustedService(params: {
   }
 }
 
-/** Grant credits only once per immutable payment event id (server ledger). */
+/** Grant VIG Token only once per immutable payment event id (server ledger). */
 export async function topupCreditsServer(amount: number, paymentEventId: string): Promise<{ ok: boolean }> {
   const pei = paymentEventId.trim();
   if (!pei) return { ok: false };

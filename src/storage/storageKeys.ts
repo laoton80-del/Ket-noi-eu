@@ -5,6 +5,8 @@
 export const STORAGE_KEYS = {
   schemaVersion: 'ketnoieu.storage.schema.version', // owner: storage/runMigrations
   authSession: 'ketnoieu.auth.session.v1', // owner: AuthContext
+  /** JWT for ViGlobal REST API (`/api/*`) — see `services/apiClient.ts`. */
+  restApiJwt: 'ketnoieu.restApi.jwt.v1', // owner: services/apiClient + restAuthClient
   wallet: 'ketnoieu.wallet.v1', // owner: state/wallet (server balance is truth)
   usageHistory: 'ketnoieu.usage.history.v1', // owner: services/history (interpreter/leona/booking/…)
   growthSnapshot: 'ketnoieu.growth.snapshot.v1', // owner: services/growth
