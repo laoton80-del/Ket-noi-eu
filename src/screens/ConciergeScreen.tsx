@@ -28,7 +28,7 @@ export function ConciergeScreen() {
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <PrecisePanel style={styles.headerPanel}>
-          <Text style={styles.title}>{strings.nav.conciergeTab}</Text>
+          <Text style={styles.title}>{strings.nav.receptionTab}</Text>
           <Text style={styles.subtitle}>
             {currentCountry} · {localCurrency}
           </Text>

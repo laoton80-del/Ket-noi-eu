@@ -19,7 +19,7 @@ export function AcademyScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <PrecisePanel style={styles.hero}>
-        <Text style={styles.title}>{strings.nav.academyTab}</Text>
+        <Text style={styles.title}>{strings.nav.learningTab}</Text>
         <Text style={styles.subtitle}>
           {currentCountry} · {localCurrency}
         </Text>

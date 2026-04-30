@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import { StyleSheet, View, type ViewStyle } from 'react-native';
 import { theme } from '../../theme/theme';
+import { applyWebStyles } from '../../utils/applyWebStyles';
 
 type WidgetCardProps = {
   children: ReactNode;
@@ -8,7 +9,11 @@ type WidgetCardProps = {
 };
 
 export function WidgetCard({ children, style }: WidgetCardProps) {
-  return <View style={[styles.card, style]}>{children}</View>;
+  return (
+    <View style={[styles.card, style]} className={applyWebStyles('kn-glass')}>
+      {children}
+    </View>
+  );
 }
 
 const styles = StyleSheet.create({

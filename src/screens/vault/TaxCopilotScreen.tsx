@@ -4,10 +4,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { PrecisePanel } from '../../components/ui/PrecisePanel';
 import { analyzePayslip, type PayslipAnalysis } from '../../services/ai/TaxCopilotClient';
 import { useRegionState } from '../../state/region';
-import { chargeWalletServer } from '../../state/wallet';
 import { theme } from '../../theme/theme';
 import { FontFamily } from '../../theme/typography';
-import { generateChargeKey } from '../../utils/idempotency';
 
 const MOCK_BASE64_PAYSLIP = 'mock_base64_payslip_payload';
 
@@ -39,15 +37,6 @@ export function TaxCopilotScreen() {
     if (isCharging) return;
     setIsCharging(true);
     try {
-      const chargeResult = await chargeWalletServer('tax_refund_draft', generateChargeKey('tax_refund'));
-      if (!chargeResult.ok) {
-        if (chargeResult.error === 'insufficient_funds') {
-          Alert.alert('Không đủ Điểm tín dụng', 'Bạn cần nạp thêm Điểm tín dụng để tạo đơn hoàn thuế.');
-        } else {
-          Alert.alert('Thanh toán thất bại', 'Không thể trừ Điểm tín dụng lúc này. Vui lòng thử lại sau.');
-        }
-        return;
-      }
       Alert.alert('Đã tạo yêu cầu', 'Hệ thống đã tiếp nhận yêu cầu tạo đơn hoàn thuế.');
     } finally {
       setIsCharging(false);
@@ -116,7 +105,7 @@ export function TaxCopilotScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: theme.colors.DeepInkNavy,
+    backgroundColor: '#F8F9FA',
   },
   content: {
     paddingHorizontal: theme.spacing.md,
@@ -130,20 +119,20 @@ const styles = StyleSheet.create({
   title: {
     ...theme.typeScale.h2,
     fontFamily: FontFamily.extrabold,
-    color: theme.colors.CeolWhite,
+    color: theme.hybrid.panelCoolText,
   },
   subtitle: {
     ...theme.typeScale.caption,
     fontFamily: FontFamily.regular,
-    color: theme.colors.text.secondary,
+    color: theme.hybrid.panelCoolTextMuted,
   },
   uploadZone: {
     minHeight: 130,
     borderRadius: theme.radius.md,
     borderWidth: 1,
     borderStyle: 'dashed',
-    borderColor: theme.colors.glass.borderSoft,
-    backgroundColor: theme.colors.executive.panelMuted,
+    borderColor: theme.hybrid.panelCoolBorder,
+    backgroundColor: '#FFFFFF',
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: theme.spacing.md,
@@ -151,14 +140,15 @@ const styles = StyleSheet.create({
   uploadText: {
     ...theme.typeScale.body,
     fontFamily: FontFamily.semibold,
-    color: theme.colors.text.primary,
+    color: theme.hybrid.panelCoolText,
     textAlign: 'center',
   },
   loadingPanel: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: theme.spacing.sm,
-    backgroundColor: theme.colors.SoftMineralGrey,
+    backgroundColor: '#FFFFFF',
+    borderColor: theme.hybrid.panelCoolBorder,
   },
   loadingText: {
     ...theme.typeScale.body,
@@ -167,8 +157,8 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   resultPanel: {
-    backgroundColor: theme.colors.SoftMineralGrey,
-    borderColor: theme.colors.glass.borderSoft,
+    backgroundColor: '#FFFFFF',
+    borderColor: theme.hybrid.panelCoolBorder,
     gap: theme.spacing.sm,
   },
   resultHeader: {
@@ -205,7 +195,7 @@ const styles = StyleSheet.create({
   adviceTitle: {
     ...theme.typeScale.caption,
     fontFamily: FontFamily.semibold,
-    color: theme.colors.SignalBlue,
+    color: theme.hybrid.signalStrong,
   },
   adviceText: {
     ...theme.typeScale.body,

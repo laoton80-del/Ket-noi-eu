@@ -23,13 +23,17 @@ import {
   hasSeenMicroHint,
   markMicroHintSeen,
 } from '../onboarding/guidedOnboardingStorage';
-import { INTERPRETER_MAX_SESSION_MINUTES, INTERPRETER_SESSION_CREDITS } from '../services/liveInterpreterService';
+import {
+  INTERPRETER_CREDITS_PER_MINUTE,
+  INTERPRETER_MAX_SESSION_MINUTES,
+  INTERPRETER_SESSION_CREDITS,
+} from '../services/liveInterpreterService';
 import { setPendingSellResume } from '../services/selling/sellResumeStorage';
 import type { SellCTA } from '../services/selling/sellingTypes';
 import type { RootStackParamList } from '../navigation/routes';
 import { useAssistantSettings } from '../state/assistantSettings';
 import { useWalletState } from '../state/wallet';
-import { theme } from '../theme/theme';
+import { Colors } from '../theme/colors';
 import { FontFamily } from '../theme/typography';
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
@@ -127,8 +131,8 @@ export function LiveInterpreterScreen() {
         void (async () => {
           const ok = await beginSessionAfterPayment();
           if (!ok) {
-            Alert.alert('Không đủ Điểm tín dụng', 'Vui lòng nạp thêm Điểm tín dụng để mở phiên phiên dịch.', [
-              { text: 'Đồng ý', onPress: () => navigation.goBack() },
+            Alert.alert('Không đủ Xu', 'Vui lòng nạp thêm Xu để mở phiên dịch.', [
+              { text: 'OK', onPress: () => navigation.goBack() },
             ]);
           }
         })();
@@ -137,7 +141,7 @@ export function LiveInterpreterScreen() {
     }
     Alert.alert(
       'Xác nhận phiên phiên dịch',
-      `Phiên dịch này sẽ tốn khoảng ${INTERPRETER_SESSION_CREDITS} Điểm tín dụng. Bạn muốn bắt đầu không?`,
+      `Phiên dịch: ${INTERPRETER_CREDITS_PER_MINUTE} Xu / phút — trữ tối đa ${INTERPRETER_SESSION_CREDITS} Xu cho tối đa ${INTERPRETER_MAX_SESSION_MINUTES} phút. Bạn muốn bắt đầu không?`,
       [
         {
           text: 'Hủy',
@@ -150,8 +154,8 @@ export function LiveInterpreterScreen() {
             void (async () => {
               const ok = await beginSessionAfterPayment();
               if (!ok) {
-                Alert.alert('Không đủ Điểm tín dụng', 'Vui lòng nạp thêm Điểm tín dụng để mở phiên phiên dịch.', [
-                  { text: 'Đồng ý', onPress: () => navigation.goBack() },
+                Alert.alert('Không đủ Xu', 'Vui lòng nạp thêm Xu để mở phiên dịch.', [
+                  { text: 'OK', onPress: () => navigation.goBack() },
                 ]);
               }
             })();
@@ -212,7 +216,7 @@ export function LiveInterpreterScreen() {
     <SafeAreaView style={styles.container} edges={['top']}>
       <MicroHintBanner
         visible={showMicroHint}
-        text="Giữ nút mic để nói — thả tay để dịch. Một phiên trừ Điểm tín dụng một lần."
+        text={`Giữ nút mic để nói — thả tay để dịch. Phí: ${INTERPRETER_CREDITS_PER_MINUTE} Xu / phút; một phiên trừ tối đa ${INTERPRETER_SESSION_CREDITS} Xu (${INTERPRETER_MAX_SESSION_MINUTES} phút).`}
         onDismiss={() => {
           setShowMicroHint(false);
           void markMicroHintSeen('interpreter');
@@ -220,23 +224,24 @@ export function LiveInterpreterScreen() {
       />
       <View style={styles.header}>
         <Pressable onPress={() => navigation.goBack()} style={({ pressed }) => [styles.back, pressed && { opacity: 0.8 }]}>
-          <Ionicons name="chevron-back" size={22} color={theme.colors.text.primary} />
+          <Ionicons name="chevron-back" size={22} color={Colors.text} />
         </Pressable>
         <View style={styles.headerText}>
           <Text style={styles.title}>Phiên dịch trực tiếp</Text>
           <Text style={styles.sub}>
             {loanName} · {timerLine}
           </Text>
+          <Text style={styles.feeLine}>Phí: {INTERPRETER_CREDITS_PER_MINUTE} Xu / phút</Text>
         </View>
         <View style={styles.creditPill}>
-          <Text style={styles.creditText}>{wallet.credits} Cr</Text>
+          <Text style={styles.creditText}>{wallet.credits} Xu</Text>
         </View>
       </View>
 
       <Text style={styles.hint}>
         {sessionActive
-          ? `Phiên: ${sessionCreditsFlat} Điểm tín dụng · Giữ mic · ${direction === 'vi_to_local' ? 'Việt → bản địa' : 'Bản địa → Việt'}`
-          : `Mỗi phiên: ${sessionCreditsFlat} Điểm tín dụng (trừ khi bấm Bắt đầu)`}
+          ? `Phiên (trữ tối đa ${sessionCreditsFlat} Xu) · Giữ mic · ${direction === 'vi_to_local' ? 'Việt → bản địa' : 'Bản địa → Việt'}`
+          : `Trữ tối đa ${sessionCreditsFlat} Xu khi bấm Bắt đầu (${INTERPRETER_CREDITS_PER_MINUTE} Xu / phút · tối đa ${maxSessionMinutes} phút)`}
       </Text>
 
       <View style={styles.row}>
@@ -248,7 +253,7 @@ export function LiveInterpreterScreen() {
             style={({ pressed }) => [
               styles.chip,
               scenario === s.id && styles.chipOn,
-              pressed && { opacity: 0.8 },
+              pressed && { opacity: 0.85 },
               sessionActive && { opacity: 0.55 },
             ]}
           >
@@ -261,24 +266,14 @@ export function LiveInterpreterScreen() {
         <Pressable
           onPress={() => setDirection('vi_to_local')}
           disabled={sessionActive}
-          style={({ pressed }) => [
-            styles.dirBtn,
-            direction === 'vi_to_local' && styles.dirBtnOn,
-            sessionActive && { opacity: 0.55 },
-            pressed && { opacity: 0.8 },
-          ]}
+          style={[styles.dirBtn, direction === 'vi_to_local' && styles.dirBtnOn, sessionActive && { opacity: 0.55 }]}
         >
           <Text style={styles.dirText}>Vi → Local</Text>
         </Pressable>
         <Pressable
           onPress={() => setDirection('local_to_vi')}
           disabled={sessionActive}
-          style={({ pressed }) => [
-            styles.dirBtn,
-            direction === 'local_to_vi' && styles.dirBtnOn,
-            sessionActive && { opacity: 0.55 },
-            pressed && { opacity: 0.8 },
-          ]}
+          style={[styles.dirBtn, direction === 'local_to_vi' && styles.dirBtnOn, sessionActive && { opacity: 0.55 }]}
         >
           <Text style={styles.dirText}>Local → Vi</Text>
         </Pressable>
@@ -287,10 +282,10 @@ export function LiveInterpreterScreen() {
       <ScrollView style={styles.log} contentContainerStyle={styles.logContent}>
         {!sessionActive ? (
           <Text style={styles.empty}>
-            {route.params?.guidedEntry ? 'Đang khởi động phiên…' : 'Xác nhận Điểm tín dụng ở hộp thoại để bắt đầu phiên.'}
+            {route.params?.guidedEntry ? 'Đang khởi động phiên…' : 'Xác nhận Xu ở hộp thoại để bắt đầu phiên.'}
           </Text>
         ) : turns.length === 0 ? (
-          <Text style={styles.empty}>Giữ mic để nói. Không trừ thêm Điểm tín dụng theo từng câu.</Text>
+          <Text style={styles.empty}>Giữ mic để nói. Không trừ thêm Xu theo từng câu.</Text>
         ) : (
           turns.map((t) => (
             <View key={t.id} style={styles.turn}>
@@ -323,20 +318,20 @@ export function LiveInterpreterScreen() {
           disabled={!sessionActive || isBusy}
           style={({ pressed }) => [
             styles.mic,
-            pressed && { opacity: 0.8 },
+            pressed && { opacity: 0.88 },
             (!sessionActive || isBusy) && { opacity: 0.45 },
           ]}
         >
           {isBusy && !isRecording ? (
-            <ActivityIndicator color={theme.colors.CeolWhite} />
+            <ActivityIndicator color="#FFF" />
           ) : (
-            <Ionicons name={isRecording ? 'mic' : 'mic-outline'} size={32} color={theme.colors.CeolWhite} />
+            <Ionicons name={isRecording ? 'mic' : 'mic-outline'} size={32} color="#FFF" />
           )}
         </Pressable>
         <Pressable
           onPress={onEndSession}
           disabled={!sessionActive}
-          style={({ pressed }) => [styles.endBtn, pressed && { opacity: 0.8 }, !sessionActive && { opacity: 0.45 }]}
+          style={({ pressed }) => [styles.endBtn, pressed && { opacity: 0.86 }, !sessionActive && { opacity: 0.45 }]}
         >
           <Text style={styles.endText}>Kết thúc phiên</Text>
         </Pressable>
@@ -346,7 +341,7 @@ export function LiveInterpreterScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: theme.colors.DeepInkNavy },
+  container: { flex: 1, backgroundColor: Colors.background },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -356,21 +351,28 @@ const styles = StyleSheet.create({
   },
   back: { padding: 6 },
   headerText: { flex: 1 },
-  title: { ...theme.typeScale.h2, color: theme.colors.text.primary, fontFamily: FontFamily.extrabold },
-  sub: { ...theme.typeScale.caption, color: theme.colors.text.secondary, marginTop: 2 },
+  title: { fontSize: 20, fontFamily: FontFamily.extrabold, color: Colors.text },
+  sub: { fontSize: 12, fontFamily: FontFamily.regular, color: Colors.textSoft, marginTop: 2 },
+  feeLine: {
+    fontSize: 12,
+    fontFamily: FontFamily.semibold,
+    color: Colors.text,
+    marginTop: 4,
+  },
   creditPill: {
     paddingHorizontal: 10,
     paddingVertical: 6,
     borderRadius: 10,
     borderWidth: 1,
-    borderColor: theme.colors.glass.borderSoft,
-    backgroundColor: theme.colors.glass.surface,
+    borderColor: 'rgba(212,175,55,0.35)',
+    backgroundColor: 'rgba(255,251,242,0.6)',
   },
-  creditText: { ...theme.typeScale.caption, fontFamily: FontFamily.semibold, color: theme.colors.primaryBright },
+  creditText: { fontSize: 12, fontFamily: FontFamily.semibold, color: '#7A5A1C' },
   hint: {
     paddingHorizontal: 16,
-    ...theme.typeScale.caption,
-    color: theme.colors.text.secondary,
+    fontSize: 12,
+    fontFamily: FontFamily.regular,
+    color: Colors.textSoft,
     marginBottom: 8,
   },
   row: {
@@ -385,43 +387,43 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     borderRadius: 10,
     borderWidth: 1,
-    borderColor: theme.colors.glass.borderSoft,
-    backgroundColor: theme.colors.executive.chipFill,
+    borderColor: 'rgba(212,175,55,0.25)',
+    backgroundColor: 'rgba(255,251,242,0.5)',
   },
   chipOn: {
-    borderColor: theme.hybrid.signalSubtleBorder,
-    backgroundColor: theme.hybrid.signalMutedBg,
+    borderColor: 'rgba(212,175,55,0.55)',
+    backgroundColor: 'rgba(212,175,55,0.2)',
   },
-  chipText: { ...theme.typeScale.caption, fontFamily: FontFamily.medium, color: theme.colors.text.secondary },
-  chipTextOn: { color: theme.colors.text.primary, fontFamily: FontFamily.semibold },
+  chipText: { fontSize: 12, fontFamily: FontFamily.medium, color: Colors.textSoft },
+  chipTextOn: { color: Colors.text, fontFamily: FontFamily.semibold },
   dirRow: { flexDirection: 'row', gap: 8, paddingHorizontal: 16, marginBottom: 10 },
   dirBtn: {
     flex: 1,
     paddingVertical: 8,
     borderRadius: 10,
     borderWidth: 1,
-    borderColor: theme.colors.glass.borderSoft,
+    borderColor: 'rgba(212,175,55,0.28)',
     alignItems: 'center',
-    backgroundColor: theme.colors.glass.surface,
+    backgroundColor: 'rgba(255,255,255,0.55)',
   },
   dirBtnOn: {
-    borderColor: theme.hybrid.signalSubtleBorder,
-    backgroundColor: theme.hybrid.signalMutedBg,
+    borderColor: 'rgba(182,133,45,0.65)',
+    backgroundColor: 'rgba(255,235,200,0.45)',
   },
-  dirText: { ...theme.typeScale.caption, fontFamily: FontFamily.semibold, color: theme.colors.text.primary },
+  dirText: { fontSize: 12, fontFamily: FontFamily.semibold, color: Colors.text },
   log: { flex: 1 },
   logContent: { paddingHorizontal: 16, paddingBottom: 16, gap: 10 },
-  empty: { ...theme.typeScale.body, fontFamily: FontFamily.regular, color: theme.colors.text.secondary, lineHeight: 20 },
+  empty: { fontSize: 13, fontFamily: FontFamily.regular, color: Colors.textSoft, lineHeight: 20 },
   turn: {
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: theme.colors.glass.borderSoft,
+    borderColor: 'rgba(212,175,55,0.28)',
     padding: 10,
-    backgroundColor: theme.colors.glass.surface,
+    backgroundColor: 'rgba(255,251,242,0.55)',
   },
-  turnOrig: { ...theme.typeScale.caption, fontFamily: FontFamily.regular, color: theme.colors.text.secondary, marginBottom: 4 },
-  turnTrans: { ...theme.typeScale.body, fontFamily: FontFamily.semibold, color: theme.colors.text.primary },
-  err: { ...theme.typeScale.caption, color: theme.colors.RouteError, fontFamily: FontFamily.medium },
+  turnOrig: { fontSize: 12, fontFamily: FontFamily.regular, color: Colors.textSoft, marginBottom: 4 },
+  turnTrans: { fontSize: 14, fontFamily: FontFamily.semibold, color: Colors.text },
+  err: { fontSize: 12, color: '#A93535', fontFamily: FontFamily.medium },
   footer: {
     paddingHorizontal: 16,
     paddingBottom: 16,
@@ -433,9 +435,9 @@ const styles = StyleSheet.create({
     width: 72,
     height: 72,
     borderRadius: 36,
-    backgroundColor: theme.hybrid.signalStrong,
+    backgroundColor: '#8B4513',
     borderWidth: 2,
-    borderColor: theme.hybrid.signalSubtleBorder,
+    borderColor: 'rgba(212,175,55,0.5)',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -444,8 +446,8 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     borderRadius: 10,
     borderWidth: 1,
-    borderColor: theme.colors.glass.border,
-    backgroundColor: theme.colors.executive.panel,
+    borderColor: 'rgba(212,175,55,0.35)',
+    backgroundColor: 'rgba(58,45,30,0.78)',
   },
-  endText: { ...theme.typeScale.body, fontFamily: FontFamily.semibold, color: theme.colors.primaryBright },
+  endText: { fontSize: 13, fontFamily: FontFamily.semibold, color: '#FFE8C7' },
 });

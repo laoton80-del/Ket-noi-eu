@@ -1,18 +1,25 @@
 import { Ionicons } from '@expo/vector-icons';
+import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, Alert, Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { PrecisePanel } from '../../components/ui/PrecisePanel';
 import { StatusChip, type StatusChipState } from '../../components/ui/StatusChip';
+import { AI_TEACHER_PREMIUM_USD, PRICING_BASELINE_CURRENCY } from '../../config/pricingConfig';
+import type { RootStackParamList } from '../../navigation/routes';
 import { useAiStream } from '../../services/academy/AiStreamClient';
 import { getAiTeacherPrompt } from '../../services/academy/TeacherPrompt';
 import { useRegionState } from '../../state/region';
-import { chargeWalletServer } from '../../state/wallet';
+import { b2cTheme } from '../../theme/appModeThemes';
 import { theme } from '../../theme/theme';
 import { FontFamily } from '../../theme/typography';
-import { generateChargeKey } from '../../utils/idempotency';
+import { formatCurrency } from '../../utils/currencyFormatter';
+
+type Nav = NativeStackNavigationProp<RootStackParamList>;
 
 export function LiveAiTeacherScreen() {
+  const navigation = useNavigation<Nav>();
   const stream = useAiStream();
   const { currentCountry, localLanguage } = useRegionState();
   const [whiteboardText, setWhiteboardText] = useState('');
@@ -45,18 +52,13 @@ export function LiveAiTeacherScreen() {
       return;
     }
     setIsCharging(true);
-    const key = generateChargeKey('ai_teacher_session');
-    const result = await chargeWalletServer('ai_teacher_session', key);
-    setIsCharging(false);
-    if (!result.ok) {
-      if (result.error === 'insufficient_funds') {
-        Alert.alert('Không đủ tín dụng', 'Bạn không đủ tín dụng để bắt đầu phiên này. Vui lòng nạp thêm ví.');
-      } else {
-        Alert.alert('Không thể bắt đầu phiên', 'Không thể hoàn tất thanh toán. Vui lòng thử lại.');
-      }
-      return;
+    try {
+      await stream.connect(aiTeacherPrompt);
+    } catch {
+      Alert.alert('Không thể bắt đầu phiên', 'Không thể kết nối phiên học lúc này. Vui lòng thử lại.');
+    } finally {
+      setIsCharging(false);
     }
-    await stream.connect(aiTeacherPrompt);
   };
 
   const isConnected = stream.state === 'live' || stream.state === 'connecting';
@@ -75,6 +77,38 @@ export function LiveAiTeacherScreen() {
           <Text style={styles.contextText}>Ngữ cảnh: {currentCountry}</Text>
         </View>
         <StatusChip state={statusState} />
+      </View>
+
+      <View
+        style={[
+          styles.premiumUpsell,
+          { backgroundColor: b2cTheme.colors.card, borderColor: b2cTheme.colors.border },
+        ]}
+      >
+        <View style={styles.premiumUpsellHeader}>
+          <Ionicons name="school" size={18} color={b2cTheme.colors.primary} />
+          <Text style={styles.premiumUpsellTitle}>Cô giáo AI — Thẻ Học Giả</Text>
+        </View>
+        <Text style={styles.premiumUpsellKicker}>Premium Learner</Text>
+        <Text style={styles.premiumUpsellPrice}>
+          {formatCurrency(AI_TEACHER_PREMIUM_USD, PRICING_BASELINE_CURRENCY)} / tháng — đăng ký qua Ví (upsell)
+        </Text>
+        <Text style={styles.premiumUpsellCreditsNote}>
+          Bài học & mic trong app: trừ Xu (Credits); không hiển thị fiat theo phút tại màn hình này.
+        </Text>
+        <Text style={styles.premiumUpsellHero}>
+          Luyện hội thoại không giới hạn 24/7 — Unlimited 24/7 speaking practice.
+        </Text>
+        <Text style={styles.premiumUpsellLine}>Nhập vai tình huống thực tế — Real-life roleplay scenarios.</Text>
+        <Pressable
+          onPress={() => navigation.navigate('Wallet')}
+          style={({ pressed }) => [styles.premiumUpsellCta, pressed && { opacity: 0.88 }]}
+          accessibilityRole="button"
+          accessibilityLabel="Đăng ký Thẻ Học Giả"
+        >
+          <Text style={styles.premiumUpsellCtaText}>Xem đăng ký & thanh toán</Text>
+          <Ionicons name="chevron-forward" size={16} color="#FFFFFF" />
+        </Pressable>
       </View>
 
       <View style={styles.videoStage}>
@@ -160,6 +194,73 @@ const styles = StyleSheet.create({
     ...theme.typeScale.caption,
     fontFamily: FontFamily.medium,
     opacity: 0.9,
+  },
+  premiumUpsell: {
+    marginHorizontal: 14,
+    marginBottom: 10,
+    padding: 12,
+    borderRadius: 14,
+    borderWidth: 1,
+    gap: 6,
+  },
+  premiumUpsellHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  premiumUpsellTitle: {
+    flex: 1,
+    color: b2cTheme.colors.text,
+    ...theme.typeScale.body,
+    fontFamily: FontFamily.extrabold,
+  },
+  premiumUpsellKicker: {
+    color: b2cTheme.colors.primary,
+    ...theme.typeScale.caption,
+    fontFamily: FontFamily.bold,
+    letterSpacing: 0.6,
+    textTransform: 'uppercase',
+    marginTop: 2,
+  },
+  premiumUpsellPrice: {
+    color: b2cTheme.colors.primary,
+    ...theme.typeScale.h2,
+    fontFamily: FontFamily.bold,
+  },
+  premiumUpsellCreditsNote: {
+    color: 'rgba(11, 22, 40, 0.72)',
+    ...theme.typeScale.caption,
+    fontFamily: FontFamily.regular,
+    lineHeight: 18,
+  },
+  premiumUpsellHero: {
+    color: b2cTheme.colors.text,
+    ...theme.typeScale.body,
+    fontFamily: FontFamily.extrabold,
+    lineHeight: 22,
+  },
+  premiumUpsellLine: {
+    color: 'rgba(11, 22, 40, 0.62)',
+    ...theme.typeScale.caption,
+    fontFamily: FontFamily.medium,
+    lineHeight: 18,
+  },
+  premiumUpsellCta: {
+    marginTop: 4,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    minHeight: 42,
+    borderRadius: 12,
+    backgroundColor: b2cTheme.colors.primary,
+    paddingHorizontal: 14,
+    alignSelf: 'stretch',
+  },
+  premiumUpsellCtaText: {
+    color: '#FFFFFF',
+    ...theme.typeScale.caption,
+    fontFamily: FontFamily.bold,
   },
   videoStage: {
     flex: 1,

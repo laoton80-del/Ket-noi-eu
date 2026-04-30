@@ -21,12 +21,16 @@ import { LinearGradient } from 'expo-linear-gradient';
 import * as Notifications from 'expo-notifications';
 import { DocumentScanner, mapDocumentTypeToCoreType, toIsoDateFromDdMmYyyy } from '../components/DocumentScanner';
 import { MicroHintBanner } from '../components/MicroHintBanner';
+import { PRICING_BASELINE_CURRENCY, VAULT_PRO_USD } from '../config/pricingConfig';
+import { resolveCurrencyForRegion } from '../config/globalLocalization';
+import { b2cTheme } from '../theme/appModeThemes';
 import { useAuth } from '../context/AuthContext';
 import type { RootStackParamList } from '../navigation/routes';
 import { hasSeenMicroHint, markMicroHintSeen } from '../onboarding/guidedOnboardingStorage';
 import { understandDocument } from '../services/documentAI';
 import { appendUsageHistory } from '../services/history';
 import { trackGrowthEvent } from '../services/growth';
+import { formatCurrency } from '../utils/currencyFormatter';
 import {
   DOCUMENT_VAULT_STORAGE_KEY,
   clearDocumentAlarmSeen,
@@ -89,11 +93,7 @@ function DocumentCard({ item, locale }: { item: DocumentVaultItem; locale: strin
         <View style={styles.cardInner}>
           <View style={styles.cardHeader}>
             <Text style={styles.docType}>{getDocumentTypeLabel(item.documentType)}</Text>
-            <Ionicons
-              name={isUrgent ? 'warning' : 'shield-checkmark'}
-              size={18}
-              color={isUrgent ? theme.colors.text.primary : theme.colors.SignatureGold}
-            />
+            <Ionicons name={isUrgent ? 'warning' : 'shield-checkmark'} size={18} color={isUrgent ? '#FFD7D7' : '#8A6A1A'} />
           </View>
           <Text style={styles.docName} numberOfLines={1}>
             {item.holderName}
@@ -162,7 +162,7 @@ export function VaultScreen() {
       ToastAndroid.show(msg, ToastAndroid.SHORT);
       return;
     }
-    Alert.alert('Kho giấy tờ thông minh', msg);
+    Alert.alert('Smart Vault', msg);
   };
 
   const saveDocs = async (next: DocumentVaultItem[]) => {
@@ -189,7 +189,7 @@ export function VaultScreen() {
       if (when.getTime() <= Date.now()) continue;
       const id = await Notifications.scheduleNotificationAsync({
         content: {
-          title: 'Cảnh báo giấy tờ',
+          title: 'Canh bao giay to',
           body: `Cảnh báo: ${getDocumentTypeLabel(doc.documentType)} của bạn sẽ hết hạn vào ngày ${new Date(doc.expiryDate).toLocaleDateString(
             locale
           )}. Đừng để trễ hạn! Bạn có muốn Trợ lý Leona Nguyen gọi điện đặt lịch gia hạn ngay bây giờ không?`,
@@ -229,7 +229,7 @@ export function VaultScreen() {
         toast('Độ tin cậy quét thấp. Kiểm tra và chỉnh tay trước khi lưu.');
       }
       const meaning = understandDocument(result);
-      setDocInsight(`${meaning.summary} Gợi ý: ${meaning.suggestedActions.map((a) => a.title).slice(0, 1).join('')}`);
+      setDocInsight(`${meaning.summary} Goi y: ${meaning.suggestedActions.map((a) => a.title).slice(0, 1).join('')}`);
       setScannerOpen(false);
       void trackGrowthEvent('ocr_success', {
         meta: { confidence: result.confidence, source: 'vault' },
@@ -312,14 +312,34 @@ export function VaultScreen() {
       {vaultError ? (
         <View style={styles.inlineError}>
           <Text style={styles.inlineErrorText}>{vaultError}</Text>
-          <Pressable onPress={() => setVaultError(null)} style={({ pressed }) => [styles.retryMini, pressed && { opacity: 0.8 }]}>
+          <Pressable onPress={() => setVaultError(null)} style={({ pressed }) => [styles.retryMini, pressed && { opacity: 0.82 }]}>
             <Text style={styles.retryMiniText}>Đóng</Text>
           </Pressable>
         </View>
       ) : null}
       <View style={styles.header}>
-        <Text style={styles.title}>Kho giấy tờ thông minh</Text>
+        <Text style={styles.title}>Smart Document Vault</Text>
         <Text style={styles.subtitle}>Giấy tờ sắp hết hạn sẽ tự động nổi lên trên.</Text>
+        <View
+          style={[
+            styles.vaultPromo,
+            { backgroundColor: b2cTheme.colors.card, borderColor: b2cTheme.colors.border },
+          ]}
+        >
+          <Text style={styles.vaultPromoTitle}>Kho lưu trữ cơ bản — miễn phí vĩnh viễn</Text>
+          <Text style={styles.vaultPromoBody}>
+            Danh sách giấy tờ, nhắc hạn và quét OCR cốt lõi luôn miễn phí; không giới hạn số lượng hồ sơ cơ bản.
+          </Text>
+          <View style={styles.vaultProRow}>
+            <Text style={styles.vaultProLabel}>Vault Pro</Text>
+            <Text style={styles.vaultProPrice}>
+              Thẻ Vault Pro: {formatCurrency(VAULT_PRO_USD, resolveCurrencyForRegion(user?.country))} / tháng
+            </Text>
+          </View>
+          <Text style={styles.vaultProBody}>
+            Nâng cấp tùy chọn: nhắc thông minh nâng cao, ưu tiên sao lưu và gợi ý gia hạn chủ động hơn.
+          </Text>
+        </View>
       </View>
 
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
@@ -334,7 +354,7 @@ export function VaultScreen() {
                 style={({ pressed }) => [
                   styles.docTypeChip,
                   manualDocType === type && styles.docTypeChipActive,
-                  pressed && { opacity: 0.8 },
+                  pressed && { opacity: 0.84 },
                 ]}
               >
                 <Text style={[styles.docTypeChipText, manualDocType === type && styles.docTypeChipTextActive]}>
@@ -347,33 +367,33 @@ export function VaultScreen() {
             value={manualExpiryDate}
             onChangeText={setManualExpiryDate}
             placeholder="Ngày hết hạn (YYYY-MM-DD)"
-            placeholderTextColor={theme.hybrid.panelCoolTextMuted}
+            placeholderTextColor="rgba(70,57,40,0.5)"
             style={styles.expiryInput}
           />
-          <Pressable onPress={() => void onAddManualDocument()} style={({ pressed }) => [styles.addBtn, pressed && { opacity: 0.8 }]}>
+          <Pressable onPress={() => void onAddManualDocument()} style={({ pressed }) => [styles.addBtn, pressed && { opacity: 0.86 }]}>
             <Text style={styles.addBtnText}>Thêm vào Vault</Text>
           </Pressable>
         </View>
         {sorted.length ? (
           sorted.map((item) => (
-            <Pressable key={item.id} onPress={() => openEditDocument(item)} style={({ pressed }) => [pressed && { opacity: 0.8 }]}>
+            <Pressable key={item.id} onPress={() => openEditDocument(item)} style={({ pressed }) => [pressed && { opacity: 0.92 }]}>
               <DocumentCard item={item} locale={locale} />
             </Pressable>
           ))
         ) : (
           <View style={styles.emptyCard}>
-            <Ionicons name="archive-outline" size={26} color={theme.colors.SignatureGold} />
+            <Ionicons name="archive-outline" size={26} color="#8A6A1A" />
             <Text style={styles.emptyTitle}>Kho lưu trữ đang trống</Text>
             <Text style={styles.emptySub}>
-              Bấm &quot;Quét Giấy Tờ&quot; để lưu visa, hộ chiếu hoặc hợp đồng.
+              Bấm &quot;Quét Giấy Tờ&quot; để lưu Visa, Passport hoặc Contract.
             </Text>
           </View>
         )}
       </ScrollView>
 
-      <Pressable onPress={() => setScannerOpen(true)} style={({ pressed }) => [styles.scanBtnWrap, pressed && { opacity: 0.8 }]}>
+      <Pressable onPress={() => setScannerOpen(true)} style={({ pressed }) => [styles.scanBtnWrap, pressed && { opacity: 0.86 }]}>
         <LinearGradient colors={gradients.dangerButton} style={styles.scanBtn}>
-          <Ionicons name="scan-circle-outline" size={20} color={theme.colors.primaryBright} />
+          <Ionicons name="scan-circle-outline" size={20} color="#FFE4C7" />
           <Text style={styles.scanBtnText}>Quét Giấy Tờ</Text>
         </LinearGradient>
       </Pressable>
@@ -397,7 +417,7 @@ export function VaultScreen() {
                   style={({ pressed }) => [
                     styles.docTypeChip,
                     editDocType === type && styles.docTypeChipActive,
-                    pressed && { opacity: 0.8 },
+                    pressed && { opacity: 0.84 },
                   ]}
                 >
                   <Text style={[styles.docTypeChipText, editDocType === type && styles.docTypeChipTextActive]}>
@@ -410,18 +430,18 @@ export function VaultScreen() {
               value={editExpiryDate}
               onChangeText={setEditExpiryDate}
               placeholder="Ngày hết hạn (YYYY-MM-DD)"
-              placeholderTextColor={theme.colors.text.secondary}
+              placeholderTextColor="rgba(255,230,200,0.6)"
               style={[styles.expiryInput, styles.expiryInputDark]}
             />
             <View style={styles.editActionsRow}>
-              <Pressable onPress={() => void onSaveEditedDocument()} style={({ pressed }) => [styles.permissionBtn, pressed && { opacity: 0.8 }]}>
+              <Pressable onPress={() => void onSaveEditedDocument()} style={({ pressed }) => [styles.permissionBtn, pressed && { opacity: 0.86 }]}>
                 <Text style={styles.permissionBtnText}>Lưu</Text>
               </Pressable>
-              <Pressable onPress={() => void onDeleteDocument()} style={({ pressed }) => [styles.deleteBtn, pressed && { opacity: 0.8 }]}>
+              <Pressable onPress={() => void onDeleteDocument()} style={({ pressed }) => [styles.deleteBtn, pressed && { opacity: 0.86 }]}>
                 <Text style={styles.permissionBtnText}>Xóa</Text>
               </Pressable>
             </View>
-            <Pressable onPress={() => setEditingDoc(null)} style={({ pressed }) => [styles.closeEditBtn, pressed && { opacity: 0.8 }]}>
+            <Pressable onPress={() => setEditingDoc(null)} style={({ pressed }) => [styles.closeEditBtn, pressed && { opacity: 0.86 }]}>
               <Text style={styles.closeEditText}>Đóng</Text>
             </Pressable>
           </View>
@@ -432,38 +452,81 @@ export function VaultScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: theme.colors.SoftMineralGrey },
+  container: { flex: 1, backgroundColor: '#F8F6F0' },
   inlineError: {
     marginHorizontal: 14,
     marginTop: 8,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: theme.colors.RouteError,
-    backgroundColor: theme.hybrid.chipErrorBg,
+    borderColor: '#9C2E2E',
+    backgroundColor: '#FDE8E8',
     padding: 10,
   },
-  inlineErrorText: { color: theme.hybrid.chipErrorText, ...theme.typeScale.caption, lineHeight: 18, fontFamily: FontFamily.semibold },
-  retryMini: { marginTop: 8, alignSelf: 'flex-start', borderWidth: 1, borderColor: theme.colors.RouteError, borderRadius: 8, paddingHorizontal: 8, paddingVertical: 4 },
-  retryMiniText: { color: theme.hybrid.chipErrorText, ...theme.typeScale.caption, fontFamily: FontFamily.bold },
+  inlineErrorText: { color: '#7B1D1D', fontSize: 13, lineHeight: 18, fontFamily: FontFamily.semibold },
+  retryMini: { marginTop: 8, alignSelf: 'flex-start', borderWidth: 1, borderColor: '#9C2E2E', borderRadius: 8, paddingHorizontal: 8, paddingVertical: 4 },
+  retryMiniText: { color: '#7B1D1D', fontSize: 12, fontFamily: FontFamily.bold },
   header: { paddingHorizontal: 16, paddingTop: 8, paddingBottom: 6 },
-  title: { ...theme.typeScale.h2, color: theme.hybrid.panelCoolText, fontFamily: FontFamily.extrabold },
-  subtitle: { marginTop: 4, ...theme.typeScale.caption, color: theme.hybrid.panelCoolTextMuted, fontFamily: FontFamily.regular },
+  title: { fontSize: 24, color: '#2A231A', fontFamily: FontFamily.extrabold },
+  subtitle: { marginTop: 4, fontSize: 13, color: '#675A45', fontFamily: FontFamily.regular },
+  vaultPromo: {
+    marginTop: 12,
+    padding: theme.spacing.md,
+    borderRadius: theme.radius.lg,
+    borderWidth: 1,
+    gap: 6,
+  },
+  vaultPromoTitle: {
+    fontSize: 14,
+    fontFamily: FontFamily.bold,
+    color: b2cTheme.colors.text,
+  },
+  vaultPromoBody: {
+    fontSize: 12,
+    lineHeight: 18,
+    fontFamily: FontFamily.regular,
+    color: 'rgba(11, 22, 40, 0.62)',
+  },
+  vaultProRow: {
+    marginTop: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 8,
+  },
+  vaultProLabel: {
+    fontSize: 13,
+    fontFamily: FontFamily.extrabold,
+    color: b2cTheme.colors.primary,
+  },
+  vaultProPrice: {
+    flex: 1,
+    fontSize: 13,
+    fontFamily: FontFamily.bold,
+    color: b2cTheme.colors.text,
+    textAlign: 'right',
+  },
+  vaultProBody: {
+    fontSize: 12,
+    lineHeight: 17,
+    fontFamily: FontFamily.regular,
+    color: 'rgba(11, 22, 40, 0.62)',
+  },
   content: { paddingHorizontal: 14, paddingBottom: 120, gap: 10 },
   quickAddCard: {
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: theme.hybrid.panelCoolBorder,
-    backgroundColor: theme.colors.CeolWhite,
+    borderColor: 'rgba(212,175,55,0.35)',
+    backgroundColor: 'rgba(255,255,255,0.74)',
     padding: 12,
     marginBottom: 4,
   },
-  quickAddTitle: { ...theme.typeScale.body, color: theme.hybrid.panelCoolText, fontFamily: FontFamily.bold, marginBottom: 8 },
+  quickAddTitle: { fontSize: 14, color: '#2A231A', fontFamily: FontFamily.bold, marginBottom: 8 },
   quickAddHint: {
     marginTop: -2,
     marginBottom: 8,
-    ...theme.typeScale.caption,
+    fontSize: 12,
     lineHeight: 18,
-    color: theme.hybrid.panelCoolTextMuted,
+    color: '#5C4A2E',
     fontFamily: FontFamily.medium,
   },
   docTypeRow: { flexDirection: 'row', gap: 6, flexWrap: 'wrap' },
@@ -471,24 +534,24 @@ const styles = StyleSheet.create({
     minHeight: 30,
     borderRadius: 10,
     borderWidth: 1,
-    borderColor: theme.hybrid.panelCoolBorder,
-    backgroundColor: theme.colors.CeolWhite,
+    borderColor: 'rgba(212,175,55,0.34)',
+    backgroundColor: 'rgba(255,255,255,0.8)',
     paddingHorizontal: 10,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  docTypeChipActive: { backgroundColor: theme.hybrid.signalMutedBg },
-  docTypeChipText: { ...theme.typeScale.caption, color: theme.hybrid.panelCoolTextMuted, fontFamily: FontFamily.medium },
-  docTypeChipTextActive: { color: theme.hybrid.panelCoolText, fontFamily: FontFamily.bold },
+  docTypeChipActive: { backgroundColor: 'rgba(212,175,55,0.25)' },
+  docTypeChipText: { fontSize: 12, color: '#5D4D35', fontFamily: FontFamily.medium },
+  docTypeChipTextActive: { color: '#2A231A', fontFamily: FontFamily.bold },
   expiryInput: {
     marginTop: 8,
     height: 40,
     borderRadius: 10,
     borderWidth: 1,
-    borderColor: theme.hybrid.panelCoolBorder,
-    backgroundColor: theme.colors.CeolWhite,
+    borderColor: 'rgba(212,175,55,0.34)',
+    backgroundColor: 'rgba(255,255,255,0.86)',
     paddingHorizontal: 10,
-    color: theme.hybrid.panelCoolText,
+    color: '#2A231A',
     fontFamily: FontFamily.medium,
   },
   addBtn: {
@@ -497,12 +560,12 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: theme.colors.RouteError,
+    backgroundColor: '#B33434',
   },
-  addBtnText: { color: theme.colors.CeolWhite, ...theme.typeScale.caption, fontFamily: FontFamily.bold },
+  addBtnText: { color: '#FFE6CA', fontSize: 13, fontFamily: FontFamily.bold },
   cardWrap: {
     borderRadius: 18,
-    shadowColor: theme.colors.glass.shadow,
+    shadowColor: '#6F5735',
     shadowOpacity: 0.16,
     shadowOffset: { width: 0, height: 8 },
     shadowRadius: 10,
@@ -510,36 +573,36 @@ const styles = StyleSheet.create({
   },
   cardWrapUrgent: {
     zIndex: 2,
-    shadowColor: theme.colors.RouteError,
+    shadowColor: '#8A1A1A',
     shadowOpacity: 0.35,
     elevation: 8,
   },
   cardBorder: { borderRadius: 18, padding: 1.2 },
   cardInner: {
     borderRadius: 17,
-    backgroundColor: theme.colors.CeolWhite,
+    backgroundColor: 'rgba(255,255,255,0.8)',
     padding: 12,
   },
   cardHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  docType: { ...theme.typeScale.caption, color: theme.colors.SignatureGold, fontFamily: FontFamily.bold },
-  docName: { marginTop: 6, ...theme.typeScale.h2, color: theme.hybrid.panelCoolText, fontFamily: FontFamily.extrabold },
-  docExpiry: { marginTop: 6, ...theme.typeScale.caption, color: theme.hybrid.panelCoolTextMuted, fontFamily: FontFamily.regular },
-  daysLeft: { marginTop: 4, ...theme.typeScale.caption, color: theme.colors.SignatureGold, fontFamily: FontFamily.bold },
-  daysLeftUrgent: { color: theme.colors.RouteError },
-  actionText: { marginTop: 6, ...theme.typeScale.caption, lineHeight: 18, color: theme.hybrid.panelCoolTextMuted, fontFamily: FontFamily.regular },
+  docType: { fontSize: 13, color: '#8A6A1A', fontFamily: FontFamily.bold },
+  docName: { marginTop: 6, fontSize: 18, color: '#2A231A', fontFamily: FontFamily.extrabold },
+  docExpiry: { marginTop: 6, fontSize: 13, color: '#584A37', fontFamily: FontFamily.regular },
+  daysLeft: { marginTop: 4, fontSize: 13, color: '#8A6A1A', fontFamily: FontFamily.bold },
+  daysLeftUrgent: { color: '#B22A2A' },
+  actionText: { marginTop: 6, fontSize: 12, lineHeight: 18, color: '#564834', fontFamily: FontFamily.regular },
   emptyCard: {
     marginTop: 18,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: theme.hybrid.panelCoolBorder,
-    backgroundColor: theme.colors.CeolWhite,
+    borderColor: 'rgba(212,175,55,0.35)',
+    backgroundColor: 'rgba(255,255,255,0.72)',
     minHeight: 170,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 20,
   },
-  emptyTitle: { marginTop: 10, ...theme.typeScale.body, color: theme.hybrid.panelCoolText, fontFamily: FontFamily.bold },
-  emptySub: { marginTop: 4, ...theme.typeScale.caption, color: theme.hybrid.panelCoolTextMuted, textAlign: 'center', fontFamily: FontFamily.regular },
+  emptyTitle: { marginTop: 10, fontSize: 17, color: '#2A231A', fontFamily: FontFamily.bold },
+  emptySub: { marginTop: 4, fontSize: 13, color: '#655742', textAlign: 'center', fontFamily: FontFamily.regular },
   scanBtnWrap: { position: 'absolute', left: 16, right: 16, bottom: 20 },
   scanBtn: {
     height: 52,
@@ -548,40 +611,40 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
-    shadowColor: theme.colors.RouteError,
+    shadowColor: '#741B1B',
     shadowOpacity: 0.25,
     shadowRadius: 8,
     shadowOffset: { width: 0, height: 5 },
     elevation: 6,
   },
-  scanBtnText: { color: theme.colors.primaryBright, ...theme.typeScale.body, fontFamily: FontFamily.bold },
-  scannerOverlay: { ...StyleSheet.absoluteFillObject, backgroundColor: theme.colors.overlay.dim },
+  scanBtnText: { color: '#FFE4C7', fontSize: 15, fontFamily: FontFamily.bold },
+  scannerOverlay: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(12,10,8,0.72)' },
   permissionCard: {
     marginTop: 180,
     marginHorizontal: 24,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: theme.colors.glass.border,
-    backgroundColor: theme.colors.executive.panel,
+    borderColor: 'rgba(212,175,55,0.45)',
+    backgroundColor: 'rgba(28,22,16,0.9)',
     alignItems: 'center',
     padding: 16,
   },
-  permissionTitle: { color: theme.colors.text.primary, ...theme.typeScale.body, fontFamily: FontFamily.bold, marginBottom: 12 },
+  permissionTitle: { color: '#FFF0CF', fontSize: 16, fontFamily: FontFamily.bold, marginBottom: 12 },
   permissionBtn: {
     minWidth: 120,
     height: 42,
     borderRadius: 12,
-    backgroundColor: theme.colors.RouteError,
+    backgroundColor: '#C62828',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  permissionBtnText: { color: theme.colors.CeolWhite, ...theme.typeScale.body, fontFamily: FontFamily.bold },
+  permissionBtnText: { color: '#FFE8D0', fontFamily: FontFamily.bold },
   editActionsRow: { marginTop: 8, flexDirection: 'row', gap: 8 },
   deleteBtn: {
     minWidth: 120,
     height: 42,
     borderRadius: 12,
-    backgroundColor: theme.colors.RouteError,
+    backgroundColor: '#8B2222',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -590,12 +653,12 @@ const styles = StyleSheet.create({
     minHeight: 34,
     borderRadius: 10,
     borderWidth: 1,
-    borderColor: theme.colors.glass.border,
+    borderColor: 'rgba(212,175,55,0.45)',
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 12,
   },
-  closeEditText: { color: theme.colors.primaryBright, ...theme.typeScale.caption, fontFamily: FontFamily.medium },
+  closeEditText: { color: '#FFE8D0', fontSize: 12, fontFamily: FontFamily.medium },
   cameraWrap: { flex: 1 },
   cameraTopBar: {
     position: 'absolute',
@@ -610,8 +673,8 @@ const styles = StyleSheet.create({
     height: 42,
     borderRadius: 21,
     borderWidth: 1,
-    borderColor: theme.colors.glass.border,
-    backgroundColor: theme.colors.executive.panel,
+    borderColor: 'rgba(212,175,55,0.45)',
+    backgroundColor: 'rgba(21,17,12,0.75)',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -621,7 +684,7 @@ const styles = StyleSheet.create({
     height: 260,
     borderRadius: 20,
     borderWidth: 2,
-    borderColor: theme.colors.glass.border,
+    borderColor: 'rgba(212,175,55,0.86)',
     backgroundColor: 'transparent',
   },
   captureBtnOuter: {
@@ -632,22 +695,22 @@ const styles = StyleSheet.create({
     height: 88,
     borderRadius: 44,
     borderWidth: 3,
-    borderColor: theme.colors.SignatureGold,
+    borderColor: 'rgba(212,175,55,0.95)',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: theme.hybrid.signalMutedBg,
+    backgroundColor: 'rgba(255,232,170,0.24)',
   },
   captureBtnInner: {
     width: 66,
     height: 66,
     borderRadius: 33,
-    backgroundColor: theme.colors.RouteError,
+    backgroundColor: '#CB3D3D',
     alignItems: 'center',
     justifyContent: 'center',
   },
   expiryInputDark: {
-    backgroundColor: theme.colors.executive.panelMuted,
-    borderColor: theme.colors.glass.border,
-    color: theme.colors.text.primary,
+    backgroundColor: 'rgba(255,255,255,0.12)',
+    borderColor: 'rgba(255,235,200,0.42)',
+    color: '#FFE8C9',
   },
 });

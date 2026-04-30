@@ -4,14 +4,14 @@ import type { RedirectTarget } from '../context/AuthContext';
 
 /**
  * Navigation contracts. Pilot **in-scope** stacks: Tabs + LifeOS, TravelCompanion, FlightSearchAssistant, Wallet, Vault,
- * LiveInterpreter, LeonaCall, EmergencySOS, Concierge. Radar is registered but redirects when `LAUNCH_PILOT_CONFIG.enableRadarSurface` is false.
+ * LiveInterpreter, LeonaCall, EmergencySOS, LeTan. Radar is registered but redirects when `LAUNCH_PILOT_CONFIG.enableRadarSurface` is false.
  */
 export type RootTabParamList = {
-  Discover: undefined;
-  Services: undefined;
-  Academy: undefined;
+  QuocGia: undefined;
+  TienIch: undefined;
+  HocTap: undefined;
   CongDong: undefined;
-  Concierge:
+  LeTan:
     | {
         proactiveQuestion?: string;
         autoSimulate?: boolean;
@@ -28,22 +28,56 @@ export type RootStackParamList = {
   LifeOSDashboard: undefined;
   /** Phase 4: travel hub — scenarios + quick links (no booking automation). */
   TravelCompanion: undefined;
+  /** KNG Travel — dedicated premium travel mini-app (concierge, homestay, interpreter). */
+  TravelHub: { destinationQuery?: string } | undefined;
+  /** KNG Travel — embassy map + AI TTS quick phrases (medical / police). */
+  TravelSosHub: undefined;
+  /** KNG Travel — Vietnamese "fixer" marketplace (book via Leona). */
+  LocalFixer: undefined;
+  /** KNG Travel — Local Fixer checkout (customer receipt + fixer earnings; Stripe Connect plan). */
+  LocalFixerCheckout: Readonly<{
+    fixerId: string;
+    fixerDisplayName: string;
+    hoursBooked: number;
+    hourlyRateEur: number;
+  }>;
+  FixerEarnings: Readonly<{
+    fixerId: string;
+    fixerDisplayName: string;
+    baseAmountEur: number;
+  }>;
+  /** KNG Travel — flight search (aggregator / affiliate lead magnet). */
+  TravelFlightSearch: undefined;
+  /** Hospitality concierge — GPS Near Me, FX snapshot, Travel Pass (B2C). */
+  TravelHospitality: undefined;
   /** Phase 4: flight intent + compare/explain framing only (search off-device). */
   FlightSearchAssistant: undefined;
   KetNoiYeuThuong: undefined;
   EmergencySOS: undefined;
   AdultLearningHome: undefined;
   KidsLearningHome: undefined;
-  LiveAiTeacher: undefined;
-  AssistantChat: undefined;
-  InboundQueue: undefined;
-  SmartCalendar: undefined;
-  MerchantDashboard: undefined;
-  RolePlayScreen: undefined;
-  B2BPaywall: undefined;
-  PartnerDeals: undefined;
+  VietKids: undefined;
+  KidsLeaderboard: undefined;
+  /** KNG Rewards — Tích điểm Đổi quà (VIP tiers + catalog). */
+  LoyaltyRewards: undefined;
   Wallet: undefined;
-  GlobalWallet: undefined;
+  ReferralReward: undefined;
+  /** B2C referral commission cash-out (deep link: `/CashOut`). */
+  CashOut: undefined;
+  /** Daily streak + lucky spin gamification (deep link: `/DailyReward`). */
+  DailyReward: undefined;
+  /** B2B SaaS pricing / upgrade surface (deep link: `/B2BPaywall`). */
+  B2BPaywall: undefined;
+  /** B2B merchant console — Flash Sale & ops (deep link: `/MerchantDashboard`). */
+  MerchantDashboard: undefined;
+  /** B2B promo — printable / downloadable QR for B2C acquisition (deep link: `/PromoTools`). */
+  PromoTools: undefined;
+  /** B2B sponsored listings — daily bid for TOP 1 in B2C search (deep link: `/SponsoredAds`). */
+  SponsoredAds: undefined;
+  /** KOL / affiliate — passive revenue & VIP tracking link (deep link: `/KOLPartnerDashboard`). */
+  KOLPartnerDashboard: undefined;
+  /** B2B partner lead capture — Certified Partner funnel (deep link: `/PartnerOnboarding`). */
+  PartnerOnboarding: undefined;
   AiEye: undefined;
   Vault: undefined;
   RadarDiscovery: undefined;
@@ -64,9 +98,45 @@ export type RootStackParamList = {
         selectedPlace?: string;
       }
     | undefined;
+  AssistantChat: undefined;
+  InboundQueue: undefined;
+  SmartCalendar: undefined;
+  /** B2B wholesale / AI order tickets (Voice AI function-calling mock). */
+  Orders: undefined;
+  /** B2B internal trade market (verified merchants only). */
+  InternalTradeMarket: undefined;
+  /** B2B in-app ad bidding (wallet-funded sponsored priority). */
+  AdBidding: undefined;
+  /** B2B wallet + Voice AI receptionist metering (merchant-billed). */
+  WalletB2B: undefined;
+  /** B2C storefront — VoIP AI receptionist entry (merchant bears voice COGS). */
+  MerchantDetail: { merchantId: string; merchantName: string; industry?: string };
+  /** B2C storefront booking page with Smart Trio language switcher. */
+  MerchantStorefront: {
+    merchantId: string;
+    merchantName: string;
+    merchantCountryCode?: string;
+  };
+  LiveAiTeacher: undefined;
+  Concierge: undefined;
+  Academy: undefined;
+  Discover: undefined;
+  Services: undefined;
   AdminDashboard: undefined;
+  /** CFO master profit — multi-stream revenue mock dashboard (admin debug). */
+  AdminProfitDashboard: undefined;
+  /** Telesale CRM — B2B leads pipeline (admin debug). */
+  SalesLeadCRM: undefined;
+  /** AI Ad Factory — Facebook/Google creative templates (admin debug). */
+  AdContentFactory: undefined;
+  /** Outbound AI sales — Twilio+Realtime dialer campaign (admin debug). */
+  OutboundCampaign: undefined;
+  /** Facebook growth war room (deep link: `/FacebookWarRoom`). */
+  FacebookWarRoom: undefined;
   Login: { redirectTo?: RedirectTarget } | undefined;
   Otp: { redirectTo?: RedirectTarget } | undefined;
+  /** Post-OTP: B2C vs B2B intent (+84 auto B2C path). */
+  RoleSelection: undefined;
   SetupProfile:
     | {
         redirectTo?: RedirectTarget;

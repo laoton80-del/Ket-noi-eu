@@ -1,25 +1,39 @@
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useNavigation } from '@react-navigation/native';
 import { useCallback, useEffect, useState } from 'react';
-import { Image, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Alert, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import Animated, { interpolate, useAnimatedStyle, useSharedValue, withRepeat, withTiming } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { SOSHeaderButton } from '../../components/emergency/SOSHeaderButton';
+import {
+  CallerLanguageBadge,
+  getCallerLanguageFlagEmoji,
+  getCallerLanguageLabelVi,
+} from '../../components/b2b/CallerLanguageBadge';
+import { VoiceAiReceptionistMerchantPanel } from '../../components/b2b/VoiceAiReceptionistMerchantPanel';
+import { VoiceAiSecuredTag } from '../../components/b2b/VoiceAiSecuredTag';
+import { ZeroTouchCommandDeck } from '../../components/b2b/ZeroTouchCommandDeck';
 import { AdaptiveContainer } from '../../components/layout/AdaptiveContainer';
 import { PrecisePanel } from '../../components/ui/PrecisePanel';
 import { StatusChip, type StatusChipState } from '../../components/ui/StatusChip';
 import { APP_BRAND } from '../../config/appBrand';
+import { PRICING_AUTHORITY, PRICING_BASELINE_CURRENCY } from '../../config/pricingConfig';
 import { useDeviceLayout } from '../../hooks/useDeviceLayout';
+import { stripeConnectService } from '../../services/fintech/StripeConnectService';
+import { subscribeVoiceReceptionistAiEvents } from '../../services/ai/VoiceReceptionistService';
 import { useB2BBookingStore, type Booking, type Service } from '../../state/b2bBooking';
 import { theme } from '../../theme/theme';
 import { FontFamily } from '../../theme/typography';
+import { applyWebStyles, mergeWebClassNames } from '../../utils/applyWebStyles';
+import { formatCurrency } from '../../utils/currencyFormatter';
+import { webGlassStyle, webHoverStyle } from '../../utils/webStyles';
 
 const CALENDAR_START_HOUR = 8;
 const CALENDAR_END_HOUR = 18;
 const HOUR_BLOCK_HEIGHT = 72;
 const ROW_LABEL_WIDTH = 58;
-const BOOKING_HORIZONTAL_INSET = 10;
+const BOOKING_HORIZONTAL_INSET = 6;
 
 function minutesSinceStart(iso: string): number {
   const date = new Date(iso);
@@ -80,11 +94,12 @@ function CalendarEventBlock({ booking, serviceName, top, height, isInquiry }: Ca
   const hoverProgress = useSharedValue(0);
   const glowColor = isInquiry ? '#FFB000' : '#00FF66';
   const pressableStyle = isInquiry ? styles.bookingBlockInquiry : styles.bookingBlockConfirmed;
+  const HOVER_ANIM_MS = 180;
 
   const animatedBlockStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: withTiming(interpolate(hoverProgress.value, [0, 1], [1, 1.02]), { duration: 180 }) }],
-    shadowOpacity: withTiming(interpolate(hoverProgress.value, [0, 1], [0.35, 0.72]), { duration: 180 }),
-    shadowRadius: withTiming(interpolate(hoverProgress.value, [0, 1], [6, 12]), { duration: 180 }),
+    transform: [{ scale: withTiming(interpolate(hoverProgress.value, [0, 1], [1, 1.02]), { duration: HOVER_ANIM_MS }) }],
+    shadowOpacity: withTiming(interpolate(hoverProgress.value, [0, 1], [0.22, 0.68]), { duration: HOVER_ANIM_MS }),
+    shadowRadius: withTiming(interpolate(hoverProgress.value, [0, 1], [5, 14]), { duration: HOVER_ANIM_MS }),
   }));
 
   return (
@@ -119,15 +134,28 @@ function CalendarEventBlock({ booking, serviceName, top, height, isInquiry }: Ca
           <Text style={styles.bookingName} numberOfLines={1}>{booking.customerName}</Text>
           <StatusChip state={bookingChipState(booking.status)} />
         </View>
+        {booking.aiSummaryVi ? (
+          <Text style={styles.bookingAiHeadline} numberOfLines={2}>
+            {booking.aiSummaryVi}
+          </Text>
+        ) : null}
         <Text style={styles.bookingMeta} numberOfLines={1}>
           {formatTime(booking.startTime)} - {formatTime(booking.endTime)} · {serviceName}
         </Text>
+        {booking.voiceAiMeta?.securedByAi ? (
+          <View style={styles.bookingAiRow}>
+            <CallerLanguageBadge language={booking.voiceAiMeta.callerLanguage} />
+            <VoiceAiSecuredTag />
+          </View>
+        ) : null}
       </Pressable>
     </Animated.View>
   );
 }
 
 export function SmartCalendarScreen() {
+  const navigation = useNavigation();
+  const { width } = useWindowDimensions();
   const bookings = useB2BBookingStore((state) => state.bookings);
   const services = useB2BBookingStore((state) => state.services);
   const { isLandscape, isTablet, isWeb } = useDeviceLayout();
@@ -135,6 +163,21 @@ export function SmartCalendarScreen() {
   const queueBookings = bookings.filter((booking) => booking.status === 'inquiry' || booking.status === 'confirmed');
   const [refreshing, setRefreshing] = useState(false);
   const [hoveredQueueId, setHoveredQueueId] = useState<string | null>(null);
+  const [mockTier, setMockTier] = useState<'PRO' | 'POWER'>('POWER');
+  const [aiVoiceToast, setAiVoiceToast] = useState<string | null>(null);
+  const isBillingDesktop = width >= 980;
+  const confirmedBookingsToday = queueBookings.filter((booking) => booking.status === 'confirmed').length;
+  const voiceMerchantPackage = mockTier === 'POWER' ? 'Power' : 'Pro';
+  const voiceUsedMinutesThisMonth = mockTier === 'POWER' ? 155 : 10;
+  const todayRevenueMajor = 450;
+  const kngPlatformFeeMajor = -Math.max(
+    PRICING_AUTHORITY.overageAndPlatformFees.basePriorityFeeMajor,
+    confirmedBookingsToday * PRICING_AUTHORITY.overageAndPlatformFees.basePriorityFeeMajor
+  );
+  const passiveIncomeMajor =
+    confirmedBookingsToday *
+    PRICING_AUTHORITY.tiers.Basic.displayPriceMajor *
+    PRICING_AUTHORITY.passiveIncomeSplit.partner;
   const hours = Array.from({ length: CALENDAR_END_HOUR - CALENDAR_START_HOUR + 1 }, (_, idx) => CALENDAR_START_HOUR + idx);
   const totalHeight = (CALENDAR_END_HOUR - CALENDAR_START_HOUR) * HOUR_BLOCK_HEIGHT;
   const onRefresh = useCallback(() => {
@@ -145,8 +188,21 @@ export function SmartCalendarScreen() {
     }, 1500);
   }, []);
 
+  useEffect(() => {
+    let hideTimer: ReturnType<typeof setTimeout> | undefined;
+    const unsub = subscribeVoiceReceptionistAiEvents((evt) => {
+      setAiVoiceToast(evt.toastVi);
+      if (hideTimer) clearTimeout(hideTimer);
+      hideTimer = setTimeout(() => setAiVoiceToast(null), 5200);
+    });
+    return () => {
+      unsub();
+      if (hideTimer) clearTimeout(hideTimer);
+    };
+  }, []);
+
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container} className={applyWebStyles('kn-glass kn-neon-b2b')}>
       <LinearGradient
         pointerEvents="none"
         colors={[theme.colors.DeepInkNavy, theme.colors.executive.panel, theme.colors.DeepInkNavy]}
@@ -157,6 +213,7 @@ export function SmartCalendarScreen() {
       <ScrollView
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
+        className={applyWebStyles('kn-glass')}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
@@ -166,21 +223,149 @@ export function SmartCalendarScreen() {
           />
         }
       >
-        <View style={styles.topBar}>
-          <View style={styles.brandWrap}>
+        <View style={styles.topBar} className={applyWebStyles('kn-glass')}>
+          <View style={styles.brandWrap} className={applyWebStyles('kn-neon-b2b')}>
             <Ionicons name="earth-outline" size={20} color={theme.colors.SignatureGold} />
             <Text style={styles.brandText}>{APP_BRAND.name}</Text>
           </View>
-          <SOSHeaderButton tone="danger" />
+          <Pressable
+            onPress={() => navigation.navigate('EmergencySOS' as never)}
+            style={({ pressed }) => [styles.sosPillBtn, pressed && { opacity: 0.9 }]}
+            accessibilityRole="button"
+            accessibilityLabel="SOS"
+          >
+            <Text style={styles.sosPillText}>SOS</Text>
+          </Pressable>
         </View>
 
-        <View style={styles.header}>
+        <View style={styles.headerCompactRow}>
           <Text style={styles.title}>Lịch doanh nghiệp</Text>
           <View style={styles.statusRow}>
             <AiListeningPulse />
             <Text style={styles.statusLabel}>Lễ tân AI: Đang hoạt động</Text>
           </View>
         </View>
+
+        {aiVoiceToast ? (
+          <View style={styles.aiVoiceToast} className={applyWebStyles('kn-neon-b2b')}>
+            <Text style={styles.aiVoiceToastText}>{aiVoiceToast}</Text>
+          </View>
+        ) : null}
+
+        <View style={styles.financialSnapshotWrap} className={applyWebStyles('kn-glass kn-neon-b2b')}>
+        <PrecisePanel style={styles.financialSnapshotPanel}>
+          <View style={styles.financialSnapshotHeader}>
+            <Text style={styles.financialSnapshotTitle}>Financial Snapshot</Text>
+            <View style={styles.financialHeaderActions}>
+              <Pressable
+                onPress={() => setMockTier((prev) => (prev === 'POWER' ? 'PRO' : 'POWER'))}
+                style={({ pressed }) => [styles.devTierToggleBtn, pressed && { opacity: 0.84 }]}
+              >
+                <Text style={styles.devTierToggleText}>DEV: {mockTier}</Text>
+              </Pressable>
+              <View style={styles.billingTierBadge}>
+                <Text style={styles.billingTierBadgeText}>
+                  {mockTier} TIER - Active
+                </Text>
+              </View>
+            </View>
+          </View>
+          <View style={[styles.financialMetricsRow, isBillingDesktop ? styles.financialMetricsRowDesktop : styles.financialMetricsRowMobile]}>
+            <View style={styles.financialMetricCard} className={applyWebStyles('kn-neon-b2b')}>
+              <View style={styles.financialMetricTitleRow}>
+                <Text style={styles.financialMetricIcon}>💰</Text>
+                <Text style={styles.financialMetricLabel}>Doanh Thu Hôm Nay</Text>
+              </View>
+              <Text style={styles.financialMetricValue}>
+                {formatCurrency(todayRevenueMajor, PRICING_BASELINE_CURRENCY)}
+              </Text>
+            </View>
+            <View style={styles.financialMetricCard} className={applyWebStyles('kn-neon-sos')}>
+              <View style={styles.financialMetricTitleRow}>
+                <Text style={styles.financialMetricIcon}>⚡</Text>
+                <Text style={styles.financialMetricLabel}>Phí Nền Tảng KNG</Text>
+              </View>
+              <Text style={styles.financialMetricValueDanger}>
+                {formatCurrency(kngPlatformFeeMajor, PRICING_BASELINE_CURRENCY)}
+              </Text>
+            </View>
+            <View style={styles.financialMetricCard} className={applyWebStyles('kn-neon-b2b')}>
+              <View style={styles.financialMetricTitleRow}>
+                <Text style={styles.financialMetricIcon}>🌟</Text>
+                <Text style={styles.financialMetricLabel}>Thu Nhập Thụ Động</Text>
+              </View>
+              <Text style={styles.financialMetricValue}>
+                {formatCurrency(passiveIncomeMajor, PRICING_BASELINE_CURRENCY)}
+              </Text>
+            </View>
+          </View>
+          <Text style={styles.financialHintLine}>
+            Đã áp phí theo lượt xác nhận hôm nay: {confirmedBookingsToday} lượt x{' '}
+            {formatCurrency(PRICING_AUTHORITY.overageAndPlatformFees.basePriorityFeeMajor, PRICING_BASELINE_CURRENCY)}.
+          </Text>
+          {mockTier === 'PRO' ? (
+            <Pressable style={({ pressed }) => [styles.powerUpsellBtn, pressed && { opacity: 0.86 }]}>
+              <Text style={styles.powerUpsellText}>Nâng cấp POWER - Không giới hạn đơn</Text>
+            </Pressable>
+          ) : (
+            <Text style={styles.powerActiveLine}>POWER TIER - Active</Text>
+          )}
+        </PrecisePanel>
+        </View>
+
+        <View
+          style={[styles.stripeConnectPanel, isBillingDesktop && styles.stripeConnectPanelWide]}
+          className={applyWebStyles('kn-glass')}
+        >
+          <Text style={styles.stripeConnectTitle}>CỔNG THANH TOÁN QUỐC TẾ (Stripe Connect)</Text>
+          <Text style={styles.stripeConnectKyc}>
+            Vui lòng xác minh danh tính (KYC) để nhận tiền thanh toán trực tiếp từ khách hàng.
+          </Text>
+          <View style={styles.stripeConnectRateWrap} className={mergeWebClassNames('kn-neon-b2b')}>
+            <Text style={styles.stripeConnectRate}>
+              Phí giao dịch: {PRICING_AUTHORITY.overageAndPlatformFees.b2bTransactionFeePercent}% +{' '}
+              {formatCurrency(PRICING_AUTHORITY.overageAndPlatformFees.b2bTransactionFixedFeeMajor, PRICING_BASELINE_CURRENCY)}
+            </Text>
+          </View>
+          <Text style={styles.stripeConnectSub}>
+            Minh bạch tuyệt đối - Không phụ phí ẩn. Tiền về thẳng tài khoản ngân hàng của tiệm!
+          </Text>
+          <View style={isBillingDesktop ? styles.stripeConnectActionsRow : styles.stripeConnectActionsCol}>
+            <Pressable
+              onPress={() => {
+                const r = stripeConnectService.onboardB2BMerchant('b2b-merchant-smart-calendar');
+                Alert.alert('Stripe Connect (mock)', `${r.messageVi}\n\n${r.stripeOnboardingUrl}`);
+              }}
+              style={({ pressed }) => [styles.stripeConnectBtn, pressed && { opacity: 0.88 }]}
+            >
+              <Ionicons name="shield-checkmark-outline" size={18} color={theme.colors.primaryBright} />
+              <Text style={styles.stripeConnectBtnText}>Bắt đầu KYC (mock)</Text>
+            </Pressable>
+            <Pressable
+              onPress={() => {
+                const r = stripeConnectService.processMarketplaceTransaction('b2c-demo', 'b2b-merchant-smart-calendar', 100);
+                if (r.ok) {
+                  Alert.alert('Marketplace (mock)', r.messageVi);
+                } else {
+                  Alert.alert('Lỗi', r.messageVi);
+                }
+              }}
+              style={({ pressed }) => [styles.stripeConnectBtnSecondary, pressed && { opacity: 0.88 }]}
+            >
+              <Ionicons name="swap-horizontal-outline" size={18} color={theme.hybrid.onSignal} />
+              <Text style={styles.stripeConnectBtnSecondaryText}>
+                Demo giao dịch {formatCurrency(100, PRICING_BASELINE_CURRENCY)}
+              </Text>
+            </Pressable>
+          </View>
+        </View>
+
+        <VoiceAiReceptionistMerchantPanel
+          merchantPackage={voiceMerchantPackage}
+          usedVoiceAiMinutesThisMonth={voiceUsedMinutesThisMonth}
+        />
+
+        <ZeroTouchCommandDeck variant="dark" />
 
         <AdaptiveContainer contentStyle={[styles.mainLayout, showSplitView ? styles.mainLayoutSplit : styles.mainLayoutStack]}>
           <PrecisePanel style={[styles.queuePanel, showSplitView && styles.queuePanelSplit]}>
@@ -196,6 +381,13 @@ export function SmartCalendarScreen() {
                   const serviceName = resolveServiceName(booking, services);
                   const isPending = booking.status === 'inquiry';
                   const statusLabel = isPending ? 'Đang chờ' : 'Đã xác nhận';
+                  const callerLang = booking.voiceAiMeta?.callerLanguage;
+                  const commandHeadline =
+                    booking.aiSummaryVi && callerLang
+                      ? `${booking.aiSummaryVi} — Khách: ${booking.customerName} (${getCallerLanguageFlagEmoji(callerLang)} ${getCallerLanguageLabelVi(callerLang)})`
+                      : booking.aiSummaryVi
+                        ? `${booking.aiSummaryVi} — Khách: ${booking.customerName}`
+                        : null;
                   return (
                   <Pressable
                     key={booking.id}
@@ -203,10 +395,18 @@ export function SmartCalendarScreen() {
                     onHoverOut={() => setHoveredQueueId((prev) => (prev === booking.id ? null : prev))}
                     style={({ pressed }) => [
                       styles.queueItem,
+                      webGlassStyle,
+                      isPending ? styles.queueItemPendingGlow : styles.queueItemConfirmedGlow,
+                      webHoverStyle,
                       hoveredQueueId === booking.id && styles.queueItemHover,
                       pressed && { opacity: 0.92 },
                     ]}
                   >
+                    {commandHeadline ? (
+                      <Text style={styles.queueCommandHeadline} numberOfLines={3}>
+                        {commandHeadline}
+                      </Text>
+                    ) : null}
                     <View style={styles.queueItemTopRow}>
                       <Text style={styles.queueItemName} numberOfLines={1}>{booking.customerName}</Text>
                       <View style={styles.queueStatusWrap}>
@@ -222,10 +422,24 @@ export function SmartCalendarScreen() {
                       </View>
                     </View>
                     <Text style={styles.queueItemMeta}>{formatTime(booking.startTime)} - {formatTime(booking.endTime)}</Text>
+                    {booking.voiceAiMeta?.securedByAi ? (
+                      <View style={styles.queueAiRow}>
+                        <CallerLanguageBadge language={booking.voiceAiMeta.callerLanguage} />
+                        <VoiceAiSecuredTag />
+                      </View>
+                    ) : null}
                     <View style={styles.serviceTagWrap}>
                       <View style={[styles.serviceTag, isPending ? styles.serviceTagPending : styles.serviceTagConfirmed]}>
                         <Text style={styles.serviceTagText} numberOfLines={1}>{serviceName}</Text>
                       </View>
+                    </View>
+                    <View style={styles.queueActionsRow}>
+                      <Pressable style={({ pressed }) => [styles.queueConfirmBtn, pressed && { opacity: 0.86 }]}>
+                        <Text style={styles.queueConfirmText}>Xác nhận</Text>
+                      </Pressable>
+                      <Pressable style={({ pressed }) => [styles.queueCancelBtn, pressed && { opacity: 0.86 }]}>
+                        <Text style={styles.queueCancelText}>Hủy</Text>
+                      </Pressable>
                     </View>
                   </Pressable>
                   );
@@ -245,7 +459,7 @@ export function SmartCalendarScreen() {
             </Pressable>
           </PrecisePanel>
 
-          <PrecisePanel style={styles.timelineShell}>
+          <PrecisePanel style={[styles.timelineShell, showSplitView && styles.timelineShellSplit, webGlassStyle, webHoverStyle]}>
             <View style={styles.timelineBody}>
               <View style={styles.timeColumn}>
                 {hours.map((hour) => (
@@ -318,20 +532,41 @@ const styles = StyleSheet.create({
     gap: theme.spacing.xs,
     minWidth: 0,
   },
-  brandLogo: {
-    width: 28,
-    height: 28,
-  },
   brandText: {
     ...theme.typeScale.body,
     fontFamily: FontFamily.bold,
     color: theme.colors.CeolWhite,
   },
-  header: {
-    gap: theme.spacing.xs,
+  sosPillBtn: {
+    minHeight: 34,
+    borderRadius: theme.radius.pill,
+    paddingHorizontal: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#7E121A',
+    shadowColor: '#FF3333',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.8,
+    shadowRadius: 10,
+    elevation: 8,
+  },
+  sosPillText: {
+    color: '#FFFFFF',
+    fontSize: 13,
+    fontFamily: FontFamily.extrabold,
+    letterSpacing: 0.5,
+  },
+  headerCompactRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: theme.spacing.sm,
+    marginBottom: theme.spacing.xs,
   },
   title: {
     ...theme.typeScale.h2,
+    fontSize: 20,
+    lineHeight: 26,
     fontFamily: FontFamily.extrabold,
     color: theme.colors.CeolWhite,
   },
@@ -356,8 +591,253 @@ const styles = StyleSheet.create({
     fontFamily: FontFamily.semibold,
     color: theme.colors.SoftEmerald,
   },
+  aiVoiceToast: {
+    marginBottom: theme.spacing.sm,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    borderRadius: theme.radius.md,
+    borderWidth: 1,
+    borderColor: 'rgba(197, 160, 89, 0.55)',
+    backgroundColor: 'rgba(0, 255, 102, 0.1)',
+  },
+  aiVoiceToastText: {
+    ...theme.typeScale.caption,
+    fontFamily: FontFamily.bold,
+    color: theme.colors.CeolWhite,
+    lineHeight: 18,
+  },
+  financialSnapshotPanel: {
+    borderRadius: theme.radius.lg,
+    borderWidth: 1.5,
+    borderColor: theme.hybrid.signatureLine,
+    backgroundColor: 'rgba(255,255,255,0.04)',
+    gap: theme.spacing.sm,
+  },
+  financialSnapshotWrap: {
+    marginBottom: theme.spacing.xs,
+    borderRadius: theme.radius.lg,
+  },
+  stripeConnectPanel: {
+    borderRadius: theme.radius.lg,
+    borderWidth: 1,
+    borderColor: theme.hybrid.signatureLine,
+    backgroundColor: 'rgba(17, 20, 31, 0.88)',
+    padding: theme.spacing.md,
+    gap: theme.spacing.sm,
+    marginBottom: theme.spacing.sm,
+  },
+  stripeConnectPanelWide: {
+    paddingHorizontal: theme.spacing.lg,
+    paddingVertical: theme.spacing.lg,
+  },
+  stripeConnectTitle: {
+    fontSize: 15,
+    fontFamily: FontFamily.extrabold,
+    color: theme.colors.CeolWhite,
+    letterSpacing: 0.3,
+  },
+  stripeConnectKyc: {
+    fontSize: 13,
+    lineHeight: 20,
+    fontFamily: FontFamily.medium,
+    color: theme.colors.text.secondary,
+  },
+  stripeConnectRateWrap: {
+    borderRadius: theme.radius.md,
+    paddingVertical: theme.spacing.sm,
+    paddingHorizontal: theme.spacing.md,
+    borderWidth: 1,
+    borderColor: theme.colors.primary,
+    backgroundColor: 'rgba(197, 160, 89, 0.1)',
+  },
+  stripeConnectRate: {
+    fontSize: 14,
+    lineHeight: 22,
+    fontFamily: FontFamily.bold,
+    color: theme.colors.primaryBright,
+  },
+  stripeConnectSub: {
+    fontSize: 12,
+    lineHeight: 18,
+    fontFamily: FontFamily.medium,
+    color: theme.colors.text.secondary,
+  },
+  stripeConnectActionsRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: theme.spacing.sm,
+    marginTop: theme.spacing.xs,
+  },
+  stripeConnectActionsCol: {
+    flexDirection: 'column',
+    gap: theme.spacing.sm,
+    marginTop: theme.spacing.xs,
+  },
+  stripeConnectBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: theme.spacing.sm,
+    flex: 1,
+    minWidth: 160,
+    justifyContent: 'center',
+    paddingVertical: theme.spacing.sm,
+    paddingHorizontal: theme.spacing.md,
+    borderRadius: theme.radius.md,
+    borderWidth: 1,
+    borderColor: theme.colors.primary,
+    backgroundColor: 'rgba(197, 160, 89, 0.16)',
+  },
+  stripeConnectBtnText: {
+    fontSize: 13,
+    fontFamily: FontFamily.bold,
+    color: theme.colors.primaryBright,
+  },
+  stripeConnectBtnSecondary: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: theme.spacing.sm,
+    flex: 1,
+    minWidth: 160,
+    justifyContent: 'center',
+    paddingVertical: theme.spacing.sm,
+    paddingHorizontal: theme.spacing.md,
+    borderRadius: theme.radius.md,
+    borderWidth: 1,
+    borderColor: theme.hybrid.signalSubtleBorder,
+    backgroundColor: theme.hybrid.signalMutedBg,
+  },
+  stripeConnectBtnSecondaryText: {
+    fontSize: 13,
+    fontFamily: FontFamily.semibold,
+    color: theme.hybrid.onSignal,
+  },
+  financialSnapshotHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: theme.spacing.sm,
+  },
+  financialHeaderActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: theme.spacing.xs,
+  },
+  financialSnapshotTitle: {
+    ...theme.typeScale.body,
+    color: theme.colors.CeolWhite,
+    fontFamily: FontFamily.extrabold,
+  },
+  billingTierBadge: {
+    minHeight: 28,
+    borderRadius: theme.radius.pill,
+    paddingHorizontal: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: theme.hybrid.signatureLine,
+    backgroundColor: 'rgba(197, 160, 89, 0.18)',
+    shadowColor: theme.colors.SignatureGold,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.42,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  devTierToggleBtn: {
+    minHeight: 26,
+    borderRadius: theme.radius.pill,
+    paddingHorizontal: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.24)',
+    backgroundColor: 'rgba(17,20,31,0.95)',
+  },
+  devTierToggleText: {
+    ...theme.typeScale.caption,
+    color: theme.colors.text.secondary,
+    fontFamily: FontFamily.semibold,
+  },
+  billingTierBadgeText: {
+    ...theme.typeScale.caption,
+    color: theme.colors.primaryBright,
+    fontFamily: FontFamily.bold,
+  },
+  financialMetricsRow: {
+    gap: theme.spacing.sm,
+  },
+  financialMetricsRowDesktop: {
+    flexDirection: 'row',
+  },
+  financialMetricsRowMobile: {
+    flexDirection: 'column',
+  },
+  financialMetricCard: {
+    flex: 1,
+    borderRadius: theme.radius.md,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.12)',
+    backgroundColor: 'rgba(17, 20, 31, 0.92)',
+    paddingHorizontal: theme.spacing.sm,
+    paddingVertical: theme.spacing.sm,
+    gap: 4,
+  },
+  financialMetricTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  financialMetricIcon: {
+    fontSize: 12,
+    lineHeight: 16,
+  },
+  financialMetricLabel: {
+    ...theme.typeScale.caption,
+    color: theme.colors.text.secondary,
+    fontFamily: FontFamily.medium,
+  },
+  financialMetricValue: {
+    ...theme.typeScale.h2,
+    color: '#00FF66',
+    fontFamily: FontFamily.extrabold,
+  },
+  financialMetricValueDanger: {
+    ...theme.typeScale.h2,
+    color: '#FF6B6B',
+    fontFamily: FontFamily.extrabold,
+  },
+  financialHintLine: {
+    ...theme.typeScale.caption,
+    color: theme.colors.text.secondary,
+    fontFamily: FontFamily.medium,
+    lineHeight: theme.typeScale.caption.lineHeight * 1.2,
+  },
+  powerUpsellBtn: {
+    marginTop: 2,
+    minHeight: 38,
+    borderRadius: theme.radius.md,
+    borderWidth: 1.5,
+    borderColor: theme.hybrid.signatureLine,
+    backgroundColor: '#4F46E5',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  powerUpsellText: {
+    ...theme.typeScale.caption,
+    color: theme.colors.CeolWhite,
+    fontFamily: FontFamily.bold,
+  },
+  powerActiveLine: {
+    ...theme.typeScale.caption,
+    color: theme.colors.primaryBright,
+    fontFamily: FontFamily.bold,
+    textAlign: 'right',
+  },
   mainLayout: {
     gap: theme.spacing.md,
+    width: '100%',
+    maxWidth: 1200,
+    alignSelf: 'center',
+    flex: 1,
   },
   mainLayoutSplit: {
     flexDirection: 'row',
@@ -417,6 +897,16 @@ const styles = StyleSheet.create({
     shadowRadius: 12,
     elevation: 3,
   },
+  queueItemConfirmedGlow: {
+    shadowColor: '#00FF66',
+    shadowOpacity: 0.22,
+    shadowRadius: 8,
+  },
+  queueItemPendingGlow: {
+    shadowColor: '#FFB000',
+    shadowOpacity: 0.22,
+    shadowRadius: 8,
+  },
   queueItemHover: {
     borderColor: 'rgba(114, 137, 218, 0.5)',
     transform: [{ translateY: -1 }],
@@ -427,6 +917,14 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     gap: theme.spacing.sm,
   },
+  queueCommandHeadline: {
+    fontSize: 14,
+    fontFamily: FontFamily.extrabold,
+    color: theme.colors.CeolWhite,
+    lineHeight: 19,
+    marginBottom: 8,
+    letterSpacing: 0.2,
+  },
   queueItemName: {
     ...theme.typeScale.caption,
     fontFamily: FontFamily.semibold,
@@ -436,6 +934,13 @@ const styles = StyleSheet.create({
     ...theme.typeScale.caption,
     fontFamily: FontFamily.regular,
     color: theme.colors.text.secondary,
+  },
+  queueAiRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    alignItems: 'center',
+    gap: 6,
+    marginTop: 6,
   },
   queueStatusWrap: {
     flexDirection: 'row',
@@ -495,6 +1000,41 @@ const styles = StyleSheet.create({
     color: theme.colors.CeolWhite,
     fontFamily: FontFamily.medium,
   },
+  queueActionsRow: {
+    marginTop: theme.spacing.sm,
+    flexDirection: 'row',
+    gap: theme.spacing.xs,
+  },
+  queueConfirmBtn: {
+    flex: 1,
+    minHeight: 30,
+    borderRadius: theme.radius.sm,
+    borderWidth: 1,
+    borderColor: 'rgba(0,255,102,0.5)',
+    backgroundColor: 'rgba(0,255,102,0.14)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  queueConfirmText: {
+    ...theme.typeScale.caption,
+    fontFamily: FontFamily.semibold,
+    color: '#00FF66',
+  },
+  queueCancelBtn: {
+    flex: 1,
+    minHeight: 30,
+    borderRadius: theme.radius.sm,
+    borderWidth: 1,
+    borderColor: 'rgba(229,57,53,0.88)',
+    backgroundColor: '#E53935',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  queueCancelText: {
+    ...theme.typeScale.caption,
+    fontFamily: FontFamily.bold,
+    color: '#FFFFFF',
+  },
   queueEmptyText: {
     ...theme.typeScale.caption,
     fontFamily: FontFamily.regular,
@@ -502,10 +1042,9 @@ const styles = StyleSheet.create({
   },
   timelineShell: {
     flex: 1,
-    width: '70%',
+    minWidth: 0,
     backgroundColor: 'rgba(255,255,255,0.03)',
     borderColor: 'rgba(255,255,255,0.05)',
-    overflow: 'hidden',
     padding: 0,
     minHeight: (CALENDAR_END_HOUR - CALENDAR_START_HOUR) * HOUR_BLOCK_HEIGHT + 76,
     shadowColor: '#000000',
@@ -513,6 +1052,9 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.08,
     shadowRadius: 12,
     elevation: 3,
+  },
+  timelineShellSplit: {
+    width: undefined,
   },
   timelineBody: {
     flexDirection: 'row',
@@ -551,8 +1093,8 @@ const styles = StyleSheet.create({
     paddingVertical: theme.spacing.xs,
     borderWidth: 1.5,
     shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.6,
-    shadowRadius: 6,
+    shadowOpacity: 0.22,
+    shadowRadius: 5,
     elevation: 1,
     borderRadius: theme.radius.md,
   },
@@ -576,7 +1118,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     gap: theme.spacing.xs,
-    flexWrap: 'nowrap',
+    flexWrap: 'wrap',
   },
   bookingName: {
     ...theme.typeScale.body,
@@ -584,10 +1126,25 @@ const styles = StyleSheet.create({
     color: theme.colors.CeolWhite,
     flex: 1,
   },
+  bookingAiHeadline: {
+    ...theme.typeScale.caption,
+    fontSize: 11,
+    lineHeight: 15,
+    fontFamily: FontFamily.bold,
+    color: 'rgba(255, 230, 190, 0.95)',
+    marginBottom: 2,
+  },
   bookingMeta: {
     ...theme.typeScale.caption,
     fontFamily: FontFamily.regular,
     color: 'rgba(255,255,255,0.84)',
+  },
+  bookingAiRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    alignItems: 'center',
+    gap: 6,
+    marginTop: 4,
   },
   trackOverlay: {
     position: 'absolute',

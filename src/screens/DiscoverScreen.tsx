@@ -33,7 +33,7 @@ export function DiscoverScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <PrecisePanel style={[styles.localHeaderPanel, webGlassStyle]}>
-        <Text style={styles.localHeaderTitle}>{strings.nav.discoverTab} tại {currentCountry}</Text>
+        <Text style={styles.localHeaderTitle}>{strings.nav.utilityTab} tại {currentCountry}</Text>
         <Text style={styles.localHeaderMeta}>Tiền tệ: {localCurrency}</Text>
       </PrecisePanel>
       <PrecisePanel style={[styles.searchPanel, webGlassStyle]}>

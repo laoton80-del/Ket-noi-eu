@@ -73,6 +73,9 @@ export function ServiceHubScreen() {
         <View style={styles.header}>
           <Text style={styles.title}>Dịch vụ địa phương</Text>
           <Text style={styles.subtitle}>Tại {currentCountry}</Text>
+          <Text style={styles.affiliateHint}>
+            Giới thiệu đối tác — Miễn phí dịch vụ cho bạn · Được tài trợ bởi đối tác chính thức
+          </Text>
         </View>
 
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterRow}>
@@ -142,6 +145,13 @@ const styles = StyleSheet.create({
     ...theme.typeScale.caption,
     fontFamily: FontFamily.regular,
     color: theme.colors.text.secondary,
+  },
+  affiliateHint: {
+    marginTop: 4,
+    ...theme.typeScale.caption,
+    fontFamily: FontFamily.medium,
+    color: theme.colors.SoftEmerald,
+    lineHeight: 18,
   },
   filterRow: {
     gap: theme.spacing.sm,

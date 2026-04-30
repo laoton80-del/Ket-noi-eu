@@ -1,12 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, Alert, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
-import {
-  PlatformPay,
-  PlatformPayButton,
-  useStripe,
-  type PlatformPayCartSummaryItem,
-  type PlatformPayConfirmParams,
-} from '../providers/StripeFacade';
+import { PlatformPay, PlatformPayButton, useStripe } from '@stripe/stripe-react-native';
 import * as Haptics from 'expo-haptics';
 import Animated, { FadeInDown, FadeOutDown } from 'react-native-reanimated';
 import { APP_BRAND } from '../config/appBrand';
@@ -15,6 +9,7 @@ import { FontFamily } from '../theme/typography';
 import { theme } from '../theme/theme';
 import { PinFallbackModal } from './PinFallbackModal';
 import { authenticateBiometric, getBiometricAvailability, isValidWalletPin } from '../security/biometricUnlock';
+import { applyWebStyles } from '../utils/applyWebStyles';
 
 type PremiumCheckoutSheetProps = {
   visible: boolean;
@@ -145,10 +140,15 @@ export function PremiumCheckoutSheet({
       return;
     }
     const amountStr = formatStripeCartAmount(amountValue, currencyCode);
-    const cartItems: PlatformPayCartSummaryItem[] = [
+    const cartItems: PlatformPay.CartSummaryItem[] = [
       {
         paymentType: PlatformPay.PaymentType.Immediate,
-        label: `${APP_BRAND.paymentsDisplayName} · Điểm tín dụng`,
+        label: 'Credits',
+        amount: amountStr,
+      },
+      {
+        paymentType: PlatformPay.PaymentType.Immediate,
+        label: APP_BRAND.paymentsDisplayName,
         amount: amountStr,
       },
     ];
@@ -157,7 +157,7 @@ export function PremiumCheckoutSheet({
     const cur = currencyCode.toUpperCase();
 
     try {
-      const params: PlatformPayConfirmParams =
+      const params: PlatformPay.ConfirmParams =
         Platform.OS === 'ios'
               ? {
                   applePay: {
@@ -179,7 +179,7 @@ export function PremiumCheckoutSheet({
       if (error) {
         Alert.alert(
           'Thanh toán chưa hoàn tất',
-          'Nhà cung cấp chưa xác nhận thanh toán hoặc đã từ chối. Điểm tín dụng chưa được cộng. Bạn có thể thử lại.'
+          'Nhà cung cấp chưa xác nhận thanh toán hoặc đã từ chối. Credits chưa được cộng. Bạn có thể thử lại.'
         );
         onFallbackPayPress?.();
         return;
@@ -188,7 +188,7 @@ export function PremiumCheckoutSheet({
     } catch {
       Alert.alert(
         'Thanh toán tạm gián đoạn',
-        'Không thể hoàn tất xác nhận với ví. Điểm tín dụng chưa được cộng. Kiểm tra mạng và thử lại.'
+        'Không thể hoàn tất xác nhận với ví. Credits chưa được cộng. Kiểm tra mạng và thử lại.'
       );
       onFallbackPayPress?.();
     }
@@ -204,6 +204,10 @@ export function PremiumCheckoutSheet({
     platformPayClientSecret,
   ]);
 
+  if (__DEV__) {
+    console.log('[diag][PremiumCheckoutSheet] render (post-hooks)', { visible });
+  }
+
   if (!visible) return null;
 
   const showNativeButton = Platform.OS === 'ios' || Platform.OS === 'android';
@@ -212,7 +216,7 @@ export function PremiumCheckoutSheet({
   const payDisabled = checkingPay || !paySupported || !platformPayClientSecret || !paymentAuthOk;
   const awaitingAuth =
     !checkingPay && paySupported && !!platformPayClientSecret && !paymentAuthOk;
-  const checkoutTitle = 'Nạp điểm tín dụng';
+  const checkoutTitle = 'Nạp Credits';
 
   return (
     <View style={styles.overlay} pointerEvents="box-none">
@@ -229,7 +233,12 @@ export function PremiumCheckoutSheet({
           }
         }}
       />
-      <Animated.View entering={FadeInDown.duration(280)} exiting={FadeOutDown.duration(220)} style={styles.sheet}>
+      <Animated.View
+        entering={FadeInDown.duration(280)}
+        exiting={FadeOutDown.duration(220)}
+        style={styles.sheet}
+        className={applyWebStyles('kn-glass kn-neon-b2b')}
+      >
         <Text style={styles.checkoutType}>{checkoutTitle}</Text>
         <Text style={styles.totalTitle}>Tổng thanh toán:</Text>
         <Text style={styles.totalAmount}>{amountLabel}</Text>
@@ -313,7 +322,7 @@ const styles = StyleSheet.create({
     borderColor: theme.hybrid.signalSubtleBorder,
     backgroundColor: theme.colors.surfaceElevated,
     padding: theme.spacing.md,
-    shadowColor: theme.colors.glass.shadow,
+    shadowColor: '#000',
     shadowOffset: theme.elevation.modal.shadowOffset,
     shadowOpacity: theme.elevation.modal.shadowOpacity,
     shadowRadius: theme.elevation.modal.shadowRadius,

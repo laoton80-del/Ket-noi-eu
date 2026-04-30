@@ -27,6 +27,8 @@ export type MarketplaceMerchant = {
   available: boolean;
   priceTier: 1 | 2 | 3;
   supportsAiBooking: boolean;
+  /** Active in-app ad bid (major currency / priority impression). Higher bid ranks earlier in B2C feed. */
+  activeAdBidMajor?: number;
   b2bTenantId?: string;
   b2bLocationId?: string;
 };

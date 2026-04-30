@@ -79,12 +79,12 @@ module.exports = () => {
     slug: 'ket-noi-global',
     version: '1.0.0',
     orientation: 'portrait',
-    icon: './assets/images/icon.png',
+    icon: './assets/icon.png',
     userInterfaceStyle: 'light',
     scheme: 'ketnoiglobal',
     newArchEnabled: true,
     ios: {
-      icon: './assets/images/icon.png',
+      icon: './assets/icon.png',
       supportsTablet: true,
       bundleIdentifier: 'com.ketnoiglobal.app',
       googleServicesFile: process.env.GOOGLE_SERVICE_INFO_PLIST ?? './GoogleService-Info.plist',
@@ -97,8 +97,8 @@ module.exports = () => {
     },
     android: {
       adaptiveIcon: {
-        foregroundImage: './assets/images/adaptive-icon.png',
-        backgroundColor: '#0B2A66',
+        foregroundImage: './assets/adaptive-icon.png',
+        backgroundColor: '#001F3F',
       },
       edgeToEdgeEnabled: true,
       predictiveBackGestureEnabled: false,
@@ -114,7 +114,7 @@ module.exports = () => {
     web: {
       shortName: 'KNG',
       name: 'Kết Nối Global',
-      favicon: './assets/images/favicon.png',
+      favicon: './assets/favicon.png',
       themeColor: '#0B2A66',
       backgroundColor: '#0B2A66',
       display: 'standalone',

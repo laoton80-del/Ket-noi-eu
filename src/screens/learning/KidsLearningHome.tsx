@@ -23,15 +23,21 @@ export function KidsLearningHome() {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.card}>
-        <Text style={styles.title}>Học tập cho bé</Text>
+        <Text style={styles.title}>Kids Learning Home</Text>
         <Text style={styles.subtitle}>
           Khu học tiếng Việt cho bé (daily lesson, gamification, story mode).
         </Text>
         <Pressable
-          onPress={() => navigation.navigate('Tabs', { screen: 'Academy' })}
+          onPress={() => navigation.navigate('Tabs', { screen: 'HocTap' })}
           style={({ pressed }) => [styles.cta, pressed && { opacity: 0.86 }]}
         >
           <Text style={styles.ctaText}>Bắt đầu học</Text>
+        </Pressable>
+        <Pressable
+          onPress={() => navigation.navigate('VietKids')}
+          style={({ pressed }) => [styles.cta, styles.vietKidsCta, pressed && { opacity: 0.86 }]}
+        >
+          <Text style={styles.ctaText}>Vào lớp Viet-Kids</Text>
         </Pressable>
         <Pressable
           onPress={() => setScannerOpen(true)}
@@ -39,7 +45,7 @@ export function KidsLearningHome() {
         >
           <Text style={styles.ctaText}>Quet bai tap cho be</Text>
         </Pressable>
-        {loading ? <ActivityIndicator style={{ marginTop: 12 }} color={theme.colors.SignalBlue} /> : null}
+        {loading ? <ActivityIndicator style={{ marginTop: 12 }} color="#2563EB" /> : null}
         {hw ? (
           <View style={styles.hwCard}>
             <Text style={styles.hwTitle}>Tro ly bai tap: {hw.subject}</Text>
@@ -70,7 +76,7 @@ export function KidsLearningHome() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: theme.colors.DeepInkNavy,
+    backgroundColor: theme.colors.background,
     padding: 16,
   },
   card: {
@@ -82,13 +88,14 @@ const styles = StyleSheet.create({
     padding: 14,
   },
   title: {
-    ...theme.typeScale.h2,
+    fontSize: 22,
     color: theme.colors.text.primary,
-    fontFamily: FontFamily.bold,
+    fontFamily: FontFamily.extrabold,
     marginBottom: 6,
   },
   subtitle: {
-    ...theme.typeScale.body,
+    fontSize: 13,
+    lineHeight: 20,
     color: theme.colors.text.secondary,
     fontFamily: FontFamily.regular,
     marginBottom: 12,
@@ -96,18 +103,22 @@ const styles = StyleSheet.create({
   cta: {
     minHeight: 42,
     borderRadius: theme.radius.sm,
-    backgroundColor: theme.colors.SignalBlue,
+    backgroundColor: '#2563EB',
     alignItems: 'center',
     justifyContent: 'center',
   },
   ctaText: {
-    color: theme.colors.CeolWhite,
-    ...theme.typeScale.body,
+    color: '#FFFFFF',
+    fontSize: 14,
     fontFamily: FontFamily.bold,
   },
   scanCta: {
     marginTop: 10,
-    backgroundColor: theme.colors.SoftEmerald,
+    backgroundColor: '#0F766E',
+  },
+  vietKidsCta: {
+    marginTop: 10,
+    backgroundColor: '#7C3AED',
   },
   hwCard: {
     marginTop: 12,
@@ -118,13 +129,14 @@ const styles = StyleSheet.create({
     padding: 10,
   },
   hwTitle: {
-    ...theme.typeScale.body,
+    fontSize: 14,
     fontFamily: FontFamily.bold,
     color: theme.colors.text.primary,
     marginBottom: 6,
   },
   hwText: {
-    ...theme.typeScale.body,
+    fontSize: 13,
+    lineHeight: 19,
     color: theme.colors.text.secondary,
     fontFamily: FontFamily.regular,
   },

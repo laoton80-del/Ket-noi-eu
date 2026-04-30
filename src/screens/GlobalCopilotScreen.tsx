@@ -5,10 +5,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { PrecisePanel } from '../components/ui/PrecisePanel';
 import { draftGlobalDocument } from '../services/ai/CopilotClient';
 import { useRegionState } from '../state/region';
-import { chargeWalletServer } from '../state/wallet';
 import { theme } from '../theme/theme';
 import { FontFamily } from '../theme/typography';
-import { generateChargeKey } from '../utils/idempotency';
 
 export function GlobalCopilotScreen() {
   const { currentCountry, localLanguage } = useRegionState();
@@ -22,15 +20,6 @@ export function GlobalCopilotScreen() {
     if (!canGenerate) return;
     setIsGenerating(true);
     try {
-      const chargeResult = await chargeWalletServer('business_copilot_draft', generateChargeKey('copilot'));
-      if (!chargeResult.ok) {
-        if (chargeResult.error === 'insufficient_funds') {
-          Alert.alert('Không đủ Điểm tín dụng', 'Bạn cần nạp thêm Điểm tín dụng để tạo văn bản với Trợ lý Toàn cầu.');
-        } else {
-          Alert.alert('Thanh toán thất bại', 'Không thể trừ Điểm tín dụng lúc này. Vui lòng thử lại sau.');
-        }
-        return;
-      }
       const generated = await draftGlobalDocument(intent, currentCountry, localLanguage);
       setDraft(generated);
     } catch {

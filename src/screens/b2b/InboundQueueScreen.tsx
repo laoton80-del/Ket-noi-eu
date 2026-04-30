@@ -12,6 +12,8 @@ import { useDeviceLayout } from '../../hooks/useDeviceLayout';
 import { useB2BBookingStore } from '../../state/b2bBooking';
 import { theme } from '../../theme/theme';
 import { FontFamily } from '../../theme/typography';
+import { applyWebStyles } from '../../utils/applyWebStyles';
+import { webGlassStyle, webHoverStyle, webNeonGlowStyle } from '../../utils/webStyles';
 
 function formatTime(iso: string): string {
   const date = new Date(iso);
@@ -43,11 +45,12 @@ export function InboundQueueScreen() {
   }, []);
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container} className={applyWebStyles('kn-glass kn-neon-b2b')}>
       <AdaptiveContainer contentStyle={styles.adaptiveContent}>
         <ScrollView
           contentContainerStyle={[styles.content, useWideLayout && styles.contentWide]}
           showsVerticalScrollIndicator={false}
+          className={applyWebStyles('kn-glass')}
           refreshControl={
             <RefreshControl
               refreshing={refreshing}
@@ -86,7 +89,7 @@ export function InboundQueueScreen() {
             <View style={styles.list}>
               {inquiries.map((booking) => (
                 <Animated.View key={booking.id} entering={FadeIn} exiting={FadeOut} layout={Layout.springify()}>
-                  <PrecisePanel style={styles.card}>
+                  <PrecisePanel style={[styles.card, webGlassStyle, webNeonGlowStyle, webHoverStyle]}>
                     <View style={styles.cardHeader}>
                       <View style={styles.cardHeaderText}>
                         <Text style={styles.customerName}>{booking.customerName}</Text>

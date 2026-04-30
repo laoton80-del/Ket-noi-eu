@@ -1,3 +1,5 @@
+import { resolveAiUiLocale } from './localeFallback';
+
 export type SupportedLanguage = 'vi' | 'en' | 'cs' | 'de';
 
 type ReceptionStrings = {
@@ -115,7 +117,7 @@ type ProfileStrings = {
   residencyStatusTiNan: string;
   planFree: string;
   planPremium: string;
-  planPack: string;
+  planBundle: string;
   settingsTitle: string;
   settingLanguage: string;
   settingNotifications: string;
@@ -163,8 +165,8 @@ type ErrorsStrings = {
   outOfCredits: string;
 };
 
-/** Wallet / top-up alerts and inline copy (`GlobalWalletScreen`). */
-type GlobalWalletStrings = {
+/** Wallet / top-up alerts and inline copy (`WalletTopUpScreen`). */
+type WalletTopUpStrings = {
   walletLockedTitle: string;
   walletLockedBody: string;
   backendMissingTitle: string;
@@ -207,15 +209,15 @@ type GlobalWalletStrings = {
   giftLine: string;
   /** `{amount}` display label e.g. formatted price */
   packPriceLine: string;
-  /** Balance line next to icon; `{credits}` */
-  balanceCreditsDisplay: string;
-  /** Trust chip label beside shield */
-  trustVerifiedBadge: string;
-  /** Purchasable pack CTA; `{turns}`, `{amount}` */
-  buyPackCtaLine: string;
   historySectionTitle: string;
   historyFootnote: string;
   emptyHistory: string;
+  /** Trust cue on balance hero (server-sync framing). */
+  trustVerifiedBadge: string;
+  /** Main balance line; `{credits}` = number. */
+  balanceCreditsDisplay: string;
+  /** Primary buy CTA; `{turns}`, `{amount}` = formatted pack labels. */
+  buyPackCtaLine: string;
 };
 
 type AppStrings = {
@@ -232,13 +234,13 @@ type AppStrings = {
   profile: ProfileStrings;
   voice: VoiceStrings;
   errors: ErrorsStrings;
-  globalWallet: GlobalWalletStrings;
+  walletTopUp: WalletTopUpStrings;
   nav: {
-    discoverTab: string;
-    servicesTab: string;
-    academyTab: string;
+    countryTab: string;
+    utilityTab: string;
+    learningTab: string;
     communityTab: string;
-    conciergeTab: string;
+    receptionTab: string;
     profileTab: string;
   };
 };
@@ -258,10 +260,10 @@ export const STRINGS_BY_LANGUAGE: Record<SupportedLanguage, AppStrings> = {
       homelandQuote: 'Dù ở đâu, gốc quê nhà vẫn luôn ở bên Bạn.',
       walletPackStarterLabel: 'Gói Starter · Nhập môn',
       walletPackBasicLabel: 'Gói Basic · Tiêu chuẩn nhẹ',
-      walletPackStandardLabel: 'Gói Tiêu chuẩn · Phổ biến',
-      walletPackStarterCredits: '100 Điểm tín dụng',
-      walletPackBasicCredits: '230 Điểm tín dụng',
-      walletPackStandardCredits: '650 Điểm tín dụng',
+      walletPackStandardLabel: 'Gói Standard · Phổ biến',
+      walletPackStarterCredits: '100 Credits',
+      walletPackBasicCredits: '230 Credits',
+      walletPackStandardCredits: '650 Credits',
     },
     country: {
       screenTitle: 'Quốc gia',
@@ -325,7 +327,7 @@ export const STRINGS_BY_LANGUAGE: Record<SupportedLanguage, AppStrings> = {
       serviceRadarDiscovery: 'Radar — khám phá dịch vụ',
       serviceFindServicesLeona: 'Tìm dịch vụ (Leona)',
       serviceVault: 'Két sắt giấy tờ',
-      packTurnsCredits: '{turns} Điểm tín dụng',
+      packTurnsCredits: '{turns} Credits',
       discoverySectionTitle: 'Khám phá dịch vụ theo nhu cầu thực tế',
       discoverySectionSubtitle:
         'Định hướng toàn cầu, ưu tiên hỗ trợ thực hành — không phải danh mục tài chính xa xỉ.',
@@ -380,37 +382,37 @@ export const STRINGS_BY_LANGUAGE: Record<SupportedLanguage, AppStrings> = {
     profile: {
       screenTitle: 'Cá nhân',
       subtitle: 'Thông tin tài khoản và gói dịch vụ của Bạn.',
-      currentPlan: 'Gói hiện tại: Tiêu chuẩn',
-      creditsTitle: 'Điểm tín dụng',
+      currentPlan: 'Gói hiện tại: Standard',
+      creditsTitle: 'Credits',
       creditsBalance: 'Số dư đồng bộ từ máy chủ — xem mục Ví',
-      creditsHint: 'Bạn có thể dùng Điểm tín dụng cho gọi điện ủy quyền, học tập và dịch vụ.',
-      identityTitle: 'Hồ Sơ Định Danh',
+      creditsHint: 'Bạn có thể dùng Credits cho gọi điện ủy quyền, học tập và dịch vụ.',
+      identityTitle: 'Identity Snapshot',
       residencyStatusLabel: 'Diện cư trú',
       visaTypeLabel: 'Loại visa/thẻ',
       visaExpiryLabel: 'Hạn visa',
       subscriptionPlanLabel: 'Gói thuê bao',
-      aiCreditsLabel: 'Điểm tín dụng dịch vụ',
+      aiCreditsLabel: 'Credits dịch vụ',
       residencyStatusDuHoc: 'Du học',
       residencyStatusLaoDong: 'Lao động',
       residencyStatusDinhCu: 'Định cư',
       residencyStatusTiNan: 'Tị nạn',
-      planFree: 'Miễn phí',
+      planFree: 'Free',
       planPremium: 'Premium',
-      planPack: 'Pack',
+      planBundle: 'Gói đồng hành',
       settingsTitle: 'Cài đặt ứng dụng',
       settingLanguage: 'Ngôn ngữ',
       settingNotifications: 'Thông báo',
       settingPrivacy: 'Riêng tư & bảo mật',
       settingSupport: 'Hỗ trợ',
-      creditsBalanceCurrent: 'Số dư hiện tại: {credits} Điểm tín dụng',
-      editIdentityCta: 'Chỉnh sửa hồ sơ định danh',
+      creditsBalanceCurrent: 'Số dư hiện tại: {credits} Credits',
+      editIdentityCta: 'Chỉnh sửa hồ sơ Identity',
       alertLanguageTitle: 'Ngôn ngữ',
       alertLanguageBody: 'Đổi ngôn ngữ trong màn Quốc gia để đồng bộ giọng và giao diện.',
       alertNotificationsTitle: 'Thông báo',
       alertNotificationsBody:
         'Thông báo nhắc hạn giấy tờ và nội dung hằng ngày được bật theo quyền thiết bị.',
       alertPrivacyTitle: 'Riêng tư & bảo mật',
-      alertPrivacyBody: 'Chính sách riêng tư: {privacyUrl}\nĐiều khoản sử dụng: {termsUrl}',
+      alertPrivacyBody: 'Privacy: {privacyUrl}\nTerms: {termsUrl}',
       alertSupportTitle: 'Hỗ trợ',
       alertSupportBody: 'Liên hệ: {email}\nSản phẩm: {product}\nPhiên bản launch: {launch}',
       onboardingResetTitle: 'Hướng dẫn lần đầu',
@@ -438,9 +440,9 @@ export const STRINGS_BY_LANGUAGE: Record<SupportedLanguage, AppStrings> = {
       receptionHint: 'Giữ micro — CSKH Minh Khang hỗ trợ Bạn với giọng chuyên nghiệp, thân thiện.',
     },
     errors: {
-      outOfCredits: 'Bạn đã hết Điểm tín dụng. Vui lòng nạp thêm để tiếp tục sử dụng CSKH Minh Khang.',
+      outOfCredits: 'Bạn đã hết Credits. Vui lòng nạp thêm để tiếp tục sử dụng CSKH Minh Khang.',
     },
-    globalWallet: {
+    walletTopUp: {
       walletLockedTitle: 'Ví đang khóa',
       walletLockedBody: 'Vui lòng xác thực để tiếp tục thanh toán.',
       backendMissingTitle: 'Chưa cấu hình máy chủ',
@@ -473,33 +475,33 @@ export const STRINGS_BY_LANGUAGE: Record<SupportedLanguage, AppStrings> = {
       alertClose: 'Đóng',
       alertRetry: 'Thử lại',
       alertLater: 'Để sau',
-      screenSubtitle: 'Ví Điểm tín dụng',
+      screenSubtitle: 'Ví Credits',
       balanceLabel: 'Số dư hiện tại',
       balanceHint:
         'Số dư Credits đồng bộ từ máy chủ sau đăng nhập. Giá gói theo tiền tệ địa phương theo quốc gia hồ sơ ({country}).',
-      buyInitInProgress: 'Đang khởi tạo thanh toán…',
+      buyInitInProgress: 'Đang khởi tạo thanh toán...',
       enterpriseCta: 'Enterprise: liên hệ kinh doanh — thanh toán trong app sắp có.',
       biometricReason: 'Xác thực để xem Ví Kết Nối Global',
       filterAll: 'Tất cả',
       filterTopup: 'Đã Nạp',
       filterConsume: 'Đã Dùng',
       unitPriceLine:
-        'Hỗ trợ trong app ({inboundName}): {inboundPrice} | Gọi đối ngoại ({outboundName}): {outboundPrice}',
+        'Chỉ tham khảo (tiền địa phương ước tính — cuộc gọi trừ Credits): hỗ trợ trong app ({inboundName}): {inboundPrice} | gọi đối ngoại ({outboundName}): {outboundPrice}',
       giftLine: 'Quà tặng: {gift}',
       packPriceLine: 'Giá gói: {amount}',
-      balanceCreditsDisplay: '{credits} Điểm tín dụng',
-      trustVerifiedBadge: 'Đã xác minh',
-      buyPackCtaLine: 'Nạp {turns} Điểm tín dụng — {amount}',
       historySectionTitle: 'Lịch sử trên thiết bị',
       historyFootnote: 'Chỉ mang tính tham khảo; số dư thật lấy từ máy chủ sau khi đăng nhập.',
       emptyHistory: 'Chưa có giao dịch nào.',
+      trustVerifiedBadge: 'Đã xác minh — đồng bộ máy chủ',
+      balanceCreditsDisplay: '{credits} Credits',
+      buyPackCtaLine: '{turns} Credits — {amount}',
     },
     nav: {
-      discoverTab: 'Khám phá',
-      servicesTab: 'Dịch vụ',
-      academyTab: 'Học viện',
+      countryTab: 'Quốc gia',
+      utilityTab: 'Tiện ích',
+      learningTab: 'Học tập',
       communityTab: 'Cộng đồng',
-      conciergeTab: 'Trợ lý',
+      receptionTab: 'Lễ tân',
       profileTab: 'Cá nhân',
     },
   },
@@ -577,48 +579,48 @@ export const STRINGS_BY_LANGUAGE: Record<SupportedLanguage, AppStrings> = {
       serviceHousing: 'Housing Rental',
       serviceLegal: 'Legal Services',
       serviceExchange: 'Currency Exchange',
-      serviceLifeOS: 'LifeOS — coordination hub',
+      serviceLifeOS: 'LifeOS dashboard',
       serviceTravel: 'Travel companion',
       serviceYeuThuong: 'Kết Nối Yêu Thương',
-      serviceRadarDiscovery: 'Radar — service discovery',
+      serviceRadarDiscovery: 'Radar discovery',
       serviceFindServicesLeona: 'Find services (Leona)',
       serviceVault: 'Document vault',
       packTurnsCredits: '{turns} Credits',
-      discoverySectionTitle: 'Discover services by real need',
+      discoverySectionTitle: 'Services by real-world needs',
       discoverySectionSubtitle:
-        'Global-first guidance focused on practical support — not a luxury finance catalog.',
+        'Global-first, practical support — not a luxury or wealth-management catalog.',
       discoveryCategories: [
         {
-          title: 'Visa & documents',
-          hint: 'Passports, visas, contracts and paperwork for living in your host country.',
+          title: 'Visa & paperwork',
+          hint: 'Passports, visas, contracts, and documents for life in your host country.',
         },
         {
           title: 'Residency & immigration',
-          hint: 'Extensions, status changes and basic immigration steps.',
+          hint: 'Extensions, status changes, and core immigration paperwork.',
         },
         {
           title: 'Healthcare & appointments',
-          hint: 'Care navigation, insurance basics and booking in local systems.',
+          hint: 'Care navigation, insurance context, and booking guidance.',
         },
         {
-          title: 'Legal & advice',
-          hint: 'Contracts, employment and practical legal support.',
+          title: 'Legal & advisory',
+          hint: 'Practical legal support: contracts, employment, and everyday issues.',
         },
         {
           title: 'Jobs & small business',
-          hint: 'Job search, employment contracts and SME-related services.',
+          hint: 'Work search, employment contracts, and small-business related help.',
         },
         {
-          title: 'Housing, hotels & homestay',
-          hint: 'Rentals, short stays and budget-friendly homestay.',
+          title: 'Housing, hotel & homestay',
+          hint: 'Rentals, short stays, and budget-appropriate homestays.',
         },
         {
-          title: 'Vietnamese community services',
-          hint: 'Nails, food spots and shopping familiar to the Vietnamese community.',
+          title: 'Nails, food & Vietnamese services',
+          hint: 'Community staples: nails, dining, and familiar retail services.',
         },
         {
           title: 'Booking & service support',
-          hint: 'Reservations, calls and help handling real-life situations.',
+          hint: 'Bookings, helpline-style support, and practical coordination.',
         },
       ],
     },
@@ -654,7 +656,7 @@ export const STRINGS_BY_LANGUAGE: Record<SupportedLanguage, AppStrings> = {
       residencyStatusTiNan: 'Refugee',
       planFree: 'Free',
       planPremium: 'Premium',
-      planPack: 'Pack',
+      planBundle: 'Bundle plan',
       settingsTitle: 'App Settings',
       settingLanguage: 'Language',
       settingNotifications: 'Notifications',
@@ -698,7 +700,7 @@ export const STRINGS_BY_LANGUAGE: Record<SupportedLanguage, AppStrings> = {
     errors: {
       outOfCredits: 'You are out of Credits. Please top up to continue using Minh Khang support.',
     },
-    globalWallet: {
+    walletTopUp: {
       walletLockedTitle: 'Wallet is locked',
       walletLockedBody: 'Please authenticate to continue checkout.',
       backendMissingTitle: 'Backend not configured',
@@ -742,22 +744,22 @@ export const STRINGS_BY_LANGUAGE: Record<SupportedLanguage, AppStrings> = {
       filterTopup: 'Top-up',
       filterConsume: 'Used',
       unitPriceLine:
-        'In-app support ({inboundName}): {inboundPrice} | Outbound ({outboundName}): {outboundPrice}',
+        'Reference only (approximate local money — calls debit Credits): in-app support ({inboundName}): {inboundPrice} | outbound ({outboundName}): {outboundPrice}',
       giftLine: 'Gift: {gift}',
       packPriceLine: 'Pack price: {amount}',
-      balanceCreditsDisplay: '{credits} Credits',
-      trustVerifiedBadge: 'Verified',
-      buyPackCtaLine: 'Top up {turns} Credits — {amount}',
       historySectionTitle: 'On-device history',
       historyFootnote: 'For reference only; real balance comes from the server after sign-in.',
       emptyHistory: 'No transactions yet.',
+      trustVerifiedBadge: 'Verified — server sync',
+      balanceCreditsDisplay: '{credits} Credits',
+      buyPackCtaLine: '{turns} Credits — {amount}',
     },
     nav: {
-      discoverTab: 'Discover',
-      servicesTab: 'Services',
-      academyTab: 'Academy',
+      countryTab: 'Countries',
+      utilityTab: 'Utilities',
+      learningTab: 'Learning',
       communityTab: 'Community',
-      conciergeTab: 'Concierge',
+      receptionTab: 'Reception',
       profileTab: 'Profile',
     },
   },
@@ -771,10 +773,10 @@ export const STRINGS_BY_LANGUAGE: Record<SupportedLanguage, AppStrings> = {
       screenTitle: 'Recepce',
       prepaidTitle: 'Globalni balicky Credits',
       homelandTitle: 'Koutek domova',
-      homelandQuote: 'Koreni zustavaji blizko, i kdyz jste v Evrope.',
-      walletPackStarterLabel: 'Starter balicek · vstup',
-      walletPackBasicLabel: 'Basic balicek · lehky',
-      walletPackStandardLabel: 'Standard balicek · bezny',
+      homelandQuote: 'Koreny máte nablízku, ať jste kdekoli.',
+      walletPackStarterLabel: 'Starter balíček · vstup',
+      walletPackBasicLabel: 'Basic balíček · lehky',
+      walletPackStandardLabel: 'Standard balíček · bezny',
       walletPackStarterCredits: '100 Credits',
       walletPackBasicCredits: '230 Credits',
       walletPackStandardCredits: '650 Credits',
@@ -835,48 +837,48 @@ export const STRINGS_BY_LANGUAGE: Record<SupportedLanguage, AppStrings> = {
       serviceHousing: 'Pronajem bydleni',
       serviceLegal: 'Pravni sluzby',
       serviceExchange: 'Smena meny',
-      serviceLifeOS: 'LifeOS — koordinacni centrum',
-      serviceTravel: 'Spolecnik na cestach',
+      serviceLifeOS: 'LifeOS prehled',
+      serviceTravel: 'Spolecnik na cesty',
       serviceYeuThuong: 'Kết Nối Yêu Thương',
       serviceRadarDiscovery: 'Radar — objevovani sluzeb',
       serviceFindServicesLeona: 'Najit sluzby (Leona)',
       serviceVault: 'Trezor dokumentu',
       packTurnsCredits: '{turns} Credits',
-      discoverySectionTitle: 'Objevte sluzby podle skutecne potreby',
+      discoverySectionTitle: 'Sluzby podle skutecnych potreb',
       discoverySectionSubtitle:
-        'Globalni orientace na praktickou podporu — ne katalog luxusnich financi.',
+        'Globalni zamereni a prakticka podpora — ne katalog luxusnich financnich sluzeb.',
       discoveryCategories: [
         {
-          title: 'Visa a dokumenty',
-          hint: 'Pasy, viza, smlouvy a administrativa pro zivot v hostitelske zemi.',
+          title: 'Viza a dokumenty',
+          hint: 'Pasy, viza, smlouvy a dokumenty pro zivot v hostitelske zemi.',
         },
         {
           title: 'Pobyt a imigrace',
-          hint: 'Prodlouzeni, zmeny statusu a zakladni kroky imigrace.',
+          hint: 'Prodlouzeni, zmena statusu a zakladni imigracni agenda.',
         },
         {
-          title: 'Zdravotnictvi a objednavky',
-          hint: 'Navigace pece, pojisteni a rezervace v mistnich systemech.',
+          title: 'Zdravotni pece a terminy',
+          hint: 'Orientace v peci, pojisteni a rezervace.',
         },
         {
           title: 'Pravo a poradenstvi',
-          hint: 'Smlouvy, prace a prakticka pravni podpora.',
+          hint: 'Prakticka pravni pomoc: smlouvy, prace, bezny provoz.',
         },
         {
-          title: 'Prace a male firmy',
-          hint: 'Hledani prace, pracovni smlouvy a sluzby pro male podniky.',
+          title: 'Prace a male podnikani',
+          hint: 'Hledani prace, pracovni smlouvy a souvisejici sluzby.',
         },
         {
-          title: 'Bydleni, hotely a homestay',
-          hint: 'Pronajmy, kratke pobyty a dostupny homestay.',
+          title: 'Bydleni, hotel a homestay',
+          hint: 'Najmy, kratke pobyty a homestay podle rozpoctu.',
         },
         {
-          title: 'Vietnamska komunita',
-          hint: 'Nehty, jidlo a nakupy pro vietnamskou komunitu.',
+          title: 'Nehty, jidlo a vietnamské sluzby',
+          hint: 'Bezne sluzby komunity: nehty, stravovani, nakupy.',
         },
         {
-          title: 'Rezervace a podpora',
-          hint: 'Objednavky, hovory a pomoc v praktickych situacich.',
+          title: 'Rezervace a podpora sluzeb',
+          hint: 'Rezervace, linka podpory a prakticka koordinace.',
         },
       ],
     },
@@ -890,7 +892,7 @@ export const STRINGS_BY_LANGUAGE: Record<SupportedLanguage, AppStrings> = {
       post1Body: 'Dokoncil jsem prodlouzeni pobytu. Kdo chce checklist, poslu ho.',
       post1Meta: 'pred 2 h',
       post2Author: 'Linh - Berlin',
-      post2Body: 'O vikendu je vietnamsky trh v Berline. Skvele misto na domaci retail/taphoa.',
+      post2Body: 'O vikendu je vietnamsky trh v Berline. Skvele misto na domaci potraviny.',
       post2Meta: 'dnes',
     },
     profile: {
@@ -912,7 +914,7 @@ export const STRINGS_BY_LANGUAGE: Record<SupportedLanguage, AppStrings> = {
       residencyStatusTiNan: 'Uprchlik',
       planFree: 'Free',
       planPremium: 'Premium',
-      planPack: 'Pack',
+      planBundle: 'Balíčkový tarif',
       settingsTitle: 'Nastaveni aplikace',
       settingLanguage: 'Jazyk',
       settingNotifications: 'Notifikace',
@@ -956,7 +958,7 @@ export const STRINGS_BY_LANGUAGE: Record<SupportedLanguage, AppStrings> = {
     errors: {
       outOfCredits: 'Nemate zadne Credits. Dobijte je pro dalsi pouziti podpory Minh Khang.',
     },
-    globalWallet: {
+    walletTopUp: {
       walletLockedTitle: 'Penezenka je uzamcena',
       walletLockedBody: 'Pro pokracovani v platbe se overte.',
       backendMissingTitle: 'Backend neni nakonfigurovan',
@@ -1000,22 +1002,22 @@ export const STRINGS_BY_LANGUAGE: Record<SupportedLanguage, AppStrings> = {
       filterTopup: 'Nabito',
       filterConsume: 'Použito',
       unitPriceLine:
-        'Podpora v aplikaci ({inboundName}): {inboundPrice} | Externi hovor ({outboundName}): {outboundPrice}',
+        'Jen orientačně (přibližná místní měna — za hovory se účtují Credits): podpora v aplikaci ({inboundName}): {inboundPrice} | odchozí hovor ({outboundName}): {outboundPrice}',
       giftLine: 'Darek: {gift}',
       packPriceLine: 'Cena balicku: {amount}',
-      balanceCreditsDisplay: '{credits} Credits',
-      trustVerifiedBadge: 'Overeno',
-      buyPackCtaLine: 'Dobit {turns} Credits — {amount}',
       historySectionTitle: 'Historie v zarizeni',
       historyFootnote: 'Jen orientacne; skutecny zustatek je ze serveru po prihlaseni.',
       emptyHistory: 'Zatim zadne transakce.',
+      trustVerifiedBadge: 'Overeno — synchronizace serveru',
+      balanceCreditsDisplay: '{credits} Credits',
+      buyPackCtaLine: '{turns} Credits — {amount}',
     },
     nav: {
-      discoverTab: 'Objevit',
-      servicesTab: 'Sluzby',
-      academyTab: 'Akademie',
+      countryTab: 'Zeme',
+      utilityTab: 'Nastroje',
+      learningTab: 'Vyuka',
       communityTab: 'Komunita',
-      conciergeTab: 'Asistent',
+      receptionTab: 'Recepce',
       profileTab: 'Profil',
     },
   },
@@ -1029,7 +1031,7 @@ export const STRINGS_BY_LANGUAGE: Record<SupportedLanguage, AppStrings> = {
       screenTitle: 'Empfang',
       prepaidTitle: 'Global Credits-Pakete',
       homelandTitle: 'Heimat-Ecke',
-      homelandQuote: 'Deine Wurzeln bleiben nah, auch in Europa.',
+      homelandQuote: 'Deine Wurzeln bleiben nah — egal, wo du bist.',
       walletPackStarterLabel: 'Starter-Paket · Einstieg',
       walletPackBasicLabel: 'Basic-Paket · leicht',
       walletPackStandardLabel: 'Standard-Paket · beliebt',
@@ -1093,48 +1095,48 @@ export const STRINGS_BY_LANGUAGE: Record<SupportedLanguage, AppStrings> = {
       serviceHousing: 'Wohnung mieten',
       serviceLegal: 'Rechtsservice',
       serviceExchange: 'Geldwechsel',
-      serviceLifeOS: 'LifeOS — Koordinationszentrale',
+      serviceLifeOS: 'LifeOS Uebersicht',
       serviceTravel: 'Reisebegleitung',
       serviceYeuThuong: 'Kết Nối Yêu Thương',
-      serviceRadarDiscovery: 'Radar — Service-Entdeckung',
+      serviceRadarDiscovery: 'Radar Entdeckung',
       serviceFindServicesLeona: 'Services finden (Leona)',
       serviceVault: 'Dokumententresor',
       packTurnsCredits: '{turns} Credits',
-      discoverySectionTitle: 'Services nach echtem Bedarf entdecken',
+      discoverySectionTitle: 'Services nach realem Bedarf',
       discoverySectionSubtitle:
-        'Global ausgerichtet auf praktische Unterstuetzung — kein Luxus-Finanzkatalog.',
+        'Global ausgerichtet und praxisnah — kein Luxus- oder Wealth-Management-Katalog.',
       discoveryCategories: [
         {
-          title: 'Visa & Dokumente',
-          hint: 'Reisepaesse, Visa, Vertraege und Papierkram fuer den Aufenthalt.',
+          title: 'Visa & Unterlagen',
+          hint: 'Reisepaesse, Visa, Vertraege und Dokumente fuer den Aufenthalt.',
         },
         {
           title: 'Aufenthalt & Einwanderung',
-          hint: 'Verlaengerungen, Statuswechsel und grundlegende Einwanderungsschritte.',
+          hint: 'Verlaengerungen, Statuswechsel und Kernformalitaeten.',
         },
         {
           title: 'Gesundheit & Termine',
-          hint: 'Versorgung, Versicherung und Termine in lokalen Systemen.',
+          hint: 'Versorgung, Versicherungskontext und Terminorientierung.',
         },
         {
           title: 'Recht & Beratung',
-          hint: 'Vertraege, Arbeit und praktische Rechtsunterstuetzung.',
+          hint: 'Praktische Hilfe: Vertraege, Arbeit, Alltagsfragen.',
         },
         {
-          title: 'Jobs & Kleinunternehmen',
-          hint: 'Jobsuche, Arbeitsvertraege und Dienstleistungen fuer KMU.',
+          title: 'Jobs & kleine Betriebe',
+          hint: 'Jobsuche, Arbeitsvertraege und nahe Dienstleistungen.',
         },
         {
-          title: 'Wohnen, Hotels & Homestay',
-          hint: 'Mieten, Kurzaufenthalte und budgetfreundliches Homestay.',
+          title: 'Wohnen, Hotel & Homestay',
+          hint: 'Mieten, Kurzaufenthalte und budgetfreundliche Homestays.',
         },
         {
-          title: 'Vietnamesische Community',
-          hint: 'Nagelstudios, Essen und Einkaufen fuer die vietnamesische Community.',
+          title: 'Nagelstudio, Essen & vietnamesische Services',
+          hint: 'Vertraute Services: Nagelstudio, Gastronomie, Einkauf.',
         },
         {
-          title: 'Buchung & Support',
-          hint: 'Reservierungen, Anrufe und Hilfe im Alltag.',
+          title: 'Buchung & Service-Support',
+          hint: 'Buchungen, Hotline-artige Hilfe und praktische Koordination.',
         },
       ],
     },
@@ -1170,7 +1172,7 @@ export const STRINGS_BY_LANGUAGE: Record<SupportedLanguage, AppStrings> = {
       residencyStatusTiNan: 'Fluchtstatus',
       planFree: 'Free',
       planPremium: 'Premium',
-      planPack: 'Pack',
+      planBundle: 'Paket-Tarif',
       settingsTitle: 'App-Einstellungen',
       settingLanguage: 'Sprache',
       settingNotifications: 'Benachrichtigungen',
@@ -1215,7 +1217,7 @@ export const STRINGS_BY_LANGUAGE: Record<SupportedLanguage, AppStrings> = {
     errors: {
       outOfCredits: 'Sie haben keine Credits mehr. Bitte laden Sie auf, um Minh Khang weiter zu nutzen.',
     },
-    globalWallet: {
+    walletTopUp: {
       walletLockedTitle: 'Wallet gesperrt',
       walletLockedBody: 'Bitte authentifizieren Sie sich, um fortzufahren.',
       backendMissingTitle: 'Backend nicht konfiguriert',
@@ -1259,23 +1261,23 @@ export const STRINGS_BY_LANGUAGE: Record<SupportedLanguage, AppStrings> = {
       filterTopup: 'Aufgeladen',
       filterConsume: 'Verbraucht',
       unitPriceLine:
-        'In-App-Support ({inboundName}): {inboundPrice} | Ausgehend ({outboundName}): {outboundPrice}',
+        'Nur Referenz (ungefähre lokale Währung — Anrufe werden in Credits abgebucht): In-App-Support ({inboundName}): {inboundPrice} | Ausgehend ({outboundName}): {outboundPrice}',
       giftLine: 'Geschenk: {gift}',
       packPriceLine: 'Paketpreis: {amount}',
-      balanceCreditsDisplay: '{credits} Credits',
-      trustVerifiedBadge: 'Verifiziert',
-      buyPackCtaLine: '{turns} Credits aufladen — {amount}',
       historySectionTitle: 'Verlauf auf dem Geraet',
       historyFootnote:
         'Nur zur Orientierung; der echte Kontostand kommt nach dem Login vom Server.',
       emptyHistory: 'Noch keine Transaktionen.',
+      trustVerifiedBadge: 'Verifiziert — Server-Sync',
+      balanceCreditsDisplay: '{credits} Credits',
+      buyPackCtaLine: '{turns} Credits — {amount}',
     },
     nav: {
-      discoverTab: 'Entdecken',
-      servicesTab: 'Dienste',
-      academyTab: 'Akademie',
+      countryTab: 'Land',
+      utilityTab: 'Tools',
+      learningTab: 'Lernen',
       communityTab: 'Community',
-      conciergeTab: 'Concierge',
+      receptionTab: 'Empfang',
       profileTab: 'Profil',
     },
   },
@@ -1284,9 +1286,18 @@ export const STRINGS_BY_LANGUAGE: Record<SupportedLanguage, AppStrings> = {
 /** Canonical export — language tables for the Global app shell. */
 export const STRINGS_GLOBAL = STRINGS_BY_LANGUAGE;
 
-/** @deprecated Use `STRINGS_GLOBAL`, `STRINGS_BY_LANGUAGE`, or `getStrings`. */
+/**
+ * @deprecated Prefer `STRINGS_GLOBAL` or `getStrings`.
+ * The legacy export `STRINGS_V9` (alias of `STRINGS_BY_LANGUAGE`) was removed — no repo imports remained.
+ */
 
 export function getStrings(languageCode: string): AppStrings {
-  const key = languageCode.toLowerCase() as SupportedLanguage;
-  return STRINGS_BY_LANGUAGE[key] ?? STRINGS_BY_LANGUAGE.vi;
+  const primary = languageCode.trim().toLowerCase().split('-')[0] ?? '';
+  const supported = primary as SupportedLanguage;
+  if (supported === 'vi' || supported === 'en' || supported === 'cs' || supported === 'de') {
+    const row = STRINGS_BY_LANGUAGE[supported];
+    if (row) return row;
+  }
+  const fb = resolveAiUiLocale(languageCode);
+  return STRINGS_BY_LANGUAGE[fb];
 }

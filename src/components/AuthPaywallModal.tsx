@@ -1,6 +1,6 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { FontFamily } from '../theme/typography';
-import { theme } from '../theme/theme';
+import { applyWebStyles } from '../utils/applyWebStyles';
 
 type Props = {
   visible: boolean;
@@ -21,7 +21,7 @@ export function AuthPaywallModal({
 
   return (
     <View style={styles.overlay}>
-      <View style={styles.card}>
+      <View style={styles.card} className={applyWebStyles('kn-glass')}>
         <Text style={styles.title}>{title}</Text>
         <Text style={styles.desc}>{description}</Text>
         <Pressable onPress={onContinue} style={({ pressed }) => [styles.cta, pressed && { opacity: 0.82 }]}>
@@ -39,7 +39,7 @@ const styles = StyleSheet.create({
   overlay: {
     ...StyleSheet.absoluteFillObject,
     zIndex: 80,
-    backgroundColor: theme.colors.overlay.dim,
+    backgroundColor: 'rgba(40,28,18,0.35)',
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 22,
@@ -48,49 +48,52 @@ const styles = StyleSheet.create({
     width: '100%',
     borderRadius: 22,
     borderWidth: 1,
-    borderColor: theme.colors.glass.border,
-    backgroundColor: theme.colors.executive.card,
+    borderColor: 'rgba(212, 175, 55, 0.4)',
+    backgroundColor: 'rgba(255,255,255,0.72)',
     padding: 16,
-    shadowColor: theme.colors.glass.shadow,
+    shadowColor: '#8B7355',
     shadowOffset: { width: 4, height: 8 },
     shadowOpacity: 0.15,
     shadowRadius: 12,
     elevation: 6,
   },
   title: {
-    ...theme.typeScale.h2,
-    color: theme.colors.SignatureGold,
-    fontFamily: FontFamily.bold,
+    fontSize: 22,
+    color: '#2A231A',
+    fontFamily: FontFamily.extrabold,
     marginBottom: 6,
   },
   desc: {
-    ...theme.typeScale.body,
-    color: theme.colors.text.secondary,
+    fontSize: 13,
+    lineHeight: 20,
+    color: 'rgba(42,35,26,0.82)',
     fontFamily: FontFamily.regular,
     marginBottom: 12,
   },
   cta: {
     borderRadius: 12,
     minHeight: 44,
-    backgroundColor: theme.colors.RouteError,
+    backgroundColor: '#C62828',
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 8,
   },
   ctaText: {
-    color: theme.colors.CeolWhite,
-    ...theme.typeScale.body,
+    color: '#FFE9D2',
+    fontFamily: FontFamily.bold,
+    fontSize: 14,
   },
   secondary: {
     borderRadius: 10,
     minHeight: 36,
     borderWidth: 1,
-    borderColor: theme.colors.glass.borderSoft,
+    borderColor: 'rgba(212, 175, 55, 0.35)',
     alignItems: 'center',
     justifyContent: 'center',
   },
   secondaryText: {
-    color: theme.colors.text.secondary,
-    ...theme.typeScale.body,
+    color: '#6A583E',
+    fontFamily: FontFamily.medium,
+    fontSize: 13,
   },
 });

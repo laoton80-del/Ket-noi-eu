@@ -22,7 +22,7 @@ export function GlobalWalletScreen() {
   const wallet = useWalletState();
   const { languageCode } = useAssistantSettings();
   const strings = getStrings(languageCode);
-  const w = strings.globalWallet;
+  const w = strings.walletTopUp;
   const { currentCountry, localCurrency } = useRegionState();
 
   return (
@@ -71,22 +71,23 @@ export function GlobalWalletScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: theme.colors.DeepInkNavy,
+    backgroundColor: '#F8F9FA',
     paddingHorizontal: 12,
     paddingTop: 8,
   },
   header: {
-    backgroundColor: theme.colors.executive.card,
+    backgroundColor: '#FFFFFF',
+    borderColor: theme.hybrid.panelCoolBorder,
   },
   brand: {
-    color: theme.colors.SignatureGold,
+    color: theme.hybrid.panelCoolText,
     ...theme.typeScale.h2,
     fontFamily: FontFamily.bold,
     letterSpacing: 0.3,
   },
   balanceLabel: {
     marginTop: 10,
-    color: theme.colors.text.secondary,
+    color: theme.hybrid.panelCoolTextMuted,
     ...theme.typeScale.caption,
     fontFamily: FontFamily.semibold,
   },
@@ -98,12 +99,12 @@ const styles = StyleSheet.create({
   },
   contextLabel: {
     ...theme.typeScale.caption,
-    color: theme.colors.text.secondary,
+    color: theme.hybrid.panelCoolTextMuted,
     fontFamily: FontFamily.semibold,
     marginTop: 4,
   },
   balanceValue: {
-    color: theme.colors.SignatureGold,
+    color: theme.hybrid.signalStrong,
     ...theme.typeScale.h1,
     fontFamily: FontFamily.bold,
   },
@@ -111,11 +112,12 @@ const styles = StyleSheet.create({
     flex: 1,
     marginTop: 12,
     marginBottom: 12,
-    backgroundColor: theme.colors.executive.card,
+    backgroundColor: '#FFFFFF',
+    borderColor: theme.hybrid.panelCoolBorder,
   },
   historyTitle: {
     ...theme.typeScale.h2,
-    color: theme.colors.SignatureGold,
+    color: theme.hybrid.panelCoolText,
     fontFamily: FontFamily.bold,
     marginBottom: 10,
   },
@@ -127,7 +129,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: theme.colors.glass.border,
     borderRadius: 10,
-    backgroundColor: theme.colors.DeepInkNavy,
+    backgroundColor: '#FFFFFF',
     padding: 10,
     flexDirection: 'row',
     alignItems: 'center',
@@ -138,13 +140,13 @@ const styles = StyleSheet.create({
     paddingRight: 8,
   },
   rowTitle: {
-    color: theme.colors.CeolWhite,
+    color: theme.hybrid.panelCoolText,
     ...theme.typeScale.body,
     fontFamily: FontFamily.semibold,
   },
   rowMeta: {
     marginTop: 3,
-    color: theme.colors.text.secondary,
+    color: theme.hybrid.panelCoolTextMuted,
     ...theme.typeScale.caption,
     fontFamily: FontFamily.semibold,
   },

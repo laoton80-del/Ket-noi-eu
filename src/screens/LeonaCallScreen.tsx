@@ -10,30 +10,28 @@ import {
   StyleSheet,
   Text,
   TextInput,
+  TouchableOpacity,
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { AuthPaywallModal } from '../components/AuthPaywallModal';
 import { InlineStatusBanner } from '../components/feedback/InlineStatusBanner';
 import { MicroHintBanner } from '../components/MicroHintBanner';
-import { TrustSurfaceCard } from '../components/TrustSurfaceCard';
 import { getPersonaDisplayName } from '../config/aiPrompts';
-import { normalizeCountryCodeOrSentinel } from '../config/countryPacks';
+import { AI_LEONA_PER_MIN_CREDITS, LEONA_CALL_COST_CREDITS } from '../config/pricingConfig';
 import { useAuth } from '../context/AuthContext';
 import type { RootStackParamList } from '../navigation/routes';
 import { hasSeenMicroHint, markMicroHintSeen } from '../onboarding/guidedOnboardingStorage';
-import { calculateCallCreditPrice } from '../services/PaymentsService';
 import { appendUsageHistory } from '../services/history';
 import { trackGrowthEventOnce } from '../services/growth';
 import { chargeTrustedService, syncWalletFromServer, useWalletState } from '../state/wallet';
-import { theme } from '../theme/theme';
 import { FontFamily } from '../theme/typography';
+import { applyWebStyles } from '../utils/applyWebStyles';
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
 type ScreenRoute = RouteProp<RootStackParamList, 'LeonaCall'>;
 
 const COUNTRY_CODES = ['+420', '+421', '+48', '+49', '+33', '+44', '+41'];
-
 export function LeonaCallScreen() {
   const navigation = useNavigation<Nav>();
   const route = useRoute<ScreenRoute>();
@@ -53,9 +51,8 @@ export function LeonaCallScreen() {
   const [showLeonaMicro, setShowLeonaMicro] = useState(false);
   const [callError, setCallError] = useState<string | null>(null);
 
-  const outboundQuote = calculateCallCreditPrice(normalizeCountryCodeOrSentinel(user?.country));
-  const outboundCostCzk = outboundQuote.localAmount;
-  const outboundCostLabel = `${outboundCostCzk} Điểm tín dụng`;
+  const leonaCallCostXu = LEONA_CALL_COST_CREDITS;
+  const outboundCostLabel = `Phí: ${LEONA_CALL_COST_CREDITS} Xu / cuộc gọi`;
   const outboundPersonaName = getPersonaDisplayName('leona');
   const autoSubmitRequested = !!route.params?.autoSubmit;
 
@@ -118,16 +115,16 @@ export function LeonaCallScreen() {
     void trackGrowthEventOnce('first_call_attempt');
     setCallError(null);
     await syncWalletFromServer();
-    if (wallet.credits < outboundCostCzk) {
+    if (wallet.credits < leonaCallCostXu) {
       setShowLowCredit(true);
-      setCallError('Bạn chưa đủ Điểm tín dụng để thực hiện cuộc gọi. Vui lòng nạp rồi thử lại.');
+      setCallError('Bạn chưa đủ Xu để thực hiện cuộc gọi. Vui lòng nạp rồi thử lại.');
       void appendUsageHistory({ type: 'leona', status: 'failed', note: 'insufficient_credits' });
       return;
     }
     setPhase('calling');
     const chargeKey = `leona-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
     const res = await chargeTrustedService({
-      amount: outboundCostCzk,
+      amount: leonaCallCostXu,
       idempotencyKey: chargeKey,
       serviceKind: 'leona_outbound',
     });
@@ -170,10 +167,10 @@ export function LeonaCallScreen() {
   const liveCoreScale = pulse.interpolate({ inputRange: [0, 1], outputRange: [1, 1.06] });
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container} className={applyWebStyles('kn-glass')}>
       <MicroHintBanner
         visible={showLeonaMicro}
-        text="Nhập số và mô tả ngắn — bấm gọi để Leona xử lý (trừ Điểm tín dụng theo cuộc)."
+        text="Nhập số và mô tả ngắn — bấm gọi để Leona xử lý (trừ Xu theo cuộc)."
         onDismiss={() => {
           setShowLeonaMicro(false);
           void markMicroHintSeen('leona');
@@ -188,8 +185,8 @@ export function LeonaCallScreen() {
             : 'Tổng đài CSKH hỗ trợ gọi đối ngoại'}
         </Text>
         <View style={styles.creditPill}>
-          <Ionicons name="wallet" size={12} color={theme.colors.SignatureGold} />
-          <Text style={styles.creditPillText}>{wallet.credits} Điểm tín dụng</Text>
+          <Ionicons name="wallet" size={12} color="#DAB676" />
+          <Text style={styles.creditPillText}>{wallet.credits} Xu</Text>
         </View>
 
         <View style={styles.micArea}>
@@ -203,7 +200,7 @@ export function LeonaCallScreen() {
                   opacity: ringOpacity[i],
                   transform: [{ scale }],
                   borderWidth: fromReminder ? 1 : 0,
-                  borderColor: fromReminder ? theme.colors.primaryBright : 'transparent',
+                  borderColor: fromReminder ? 'rgba(255,214,155,0.85)' : 'transparent',
                 },
               ])}
             />
@@ -215,27 +212,27 @@ export function LeonaCallScreen() {
               },
             ])}
           >
-            <Pressable
+            <TouchableOpacity
               onPress={() => void onCall()}
               disabled={!canCall}
-              style={({ pressed }) => [styles.avatarRingButton, !canCall && styles.avatarRingDisabled, pressed && { opacity: 0.8 }]}
+              activeOpacity={0.85}
+              style={[styles.premiumMicButton, !canCall && styles.premiumMicButtonDisabled]}
             >
-              {phase === 'calling' ? (
-                <ActivityIndicator color={theme.colors.CeolWhite} />
-              ) : (
-                <Ionicons name="mic" size={30} color={theme.colors.CeolWhite} />
-              )}
-            </Pressable>
+              {phase === 'calling' ? <ActivityIndicator color="#FFE8D8" /> : <Ionicons name="mic" size={30} color="#FFFFFF" />}
+            </TouchableOpacity>
           </RNAnimated.View>
+          <Text style={styles.micFeeLine}>{outboundCostLabel}</Text>
+          <Text style={styles.leonaBurnWarning}>Cước phí: {AI_LEONA_PER_MIN_CREDITS} Xu/Phút</Text>
+          <Text style={styles.micTrustBadge}>* Hoàn 100% Xu nếu cuộc gọi không thành công.</Text>
           {fromReminder ? (
             <View style={styles.reminderBadge}>
-              <Ionicons name="notifications" size={12} color={theme.colors.primaryBright} />
+              <Ionicons name="notifications" size={12} color="#FFE9C7" />
               <Text style={styles.reminderBadgeText}>Đã mở từ nhắc hạn</Text>
             </View>
           ) : null}
         </View>
 
-        <View style={styles.inputCard}>
+        <View style={styles.inputCard} className={applyWebStyles('kn-glass kn-neon-b2b')}>
           <View style={styles.phoneRow}>
             <Pressable
               onPress={() => setCountryCodeIndex((v) => (v + 1) % COUNTRY_CODES.length)}
@@ -249,7 +246,7 @@ export function LeonaCallScreen() {
               placeholder="Số điện thoại cần gọi"
               keyboardType="phone-pad"
               style={styles.phoneInput}
-              placeholderTextColor={theme.colors.text.secondary}
+              placeholderTextColor="rgba(255,232,232,0.55)"
             />
           </View>
 
@@ -260,20 +257,19 @@ export function LeonaCallScreen() {
               placeholder="Yêu cầu của bạn (vd: đặt lịch bác sĩ răng lúc 3h chiều)"
               style={styles.requestInput}
               multiline
-              placeholderTextColor={theme.colors.text.secondary}
+              placeholderTextColor="rgba(255,232,232,0.55)"
             />
             <Pressable style={({ pressed }) => [styles.inlineMic, pressed && { opacity: 0.82 }]}>
-              <Ionicons name="mic" size={16} color={theme.colors.CeolWhite} />
+              <Ionicons name="mic" size={16} color="#FFE7E7" />
             </Pressable>
           </View>
         </View>
 
-        <TrustSurfaceCard cardTone="dark" watermarkOpacity={0.03} style={styles.statusCard}>
+        <View style={styles.statusCard} className={applyWebStyles('kn-glass')}>
           <Text style={styles.statusText}>
-            {phase === 'calling' ? 'Máy chủ đang xác nhận Điểm tín dụng trước khi tiếp tục…' : 'Đang nghe...'}
+            {phase === 'calling' ? 'Máy chủ đang xác nhận Xu trước khi tiếp tục…' : 'Đang nghe...'}
           </Text>
-          <Text style={styles.statusText}>Phí: {outboundCostLabel}/lượt</Text>
-        </TrustSurfaceCard>
+        </View>
         {callError ? <InlineStatusBanner tone="error" text={callError} onRetry={() => void onCall()} /> : null}
       </View>
 
@@ -281,10 +277,10 @@ export function LeonaCallScreen() {
         <View style={styles.sheetDrag} />
         <Text style={styles.sheetTitle}>Xác nhận yêu cầu và thanh toán</Text>
         <Text style={styles.sheetResult}>
-          ✅ Đã xác nhận thanh toán và trừ Điểm tín dụng; yêu cầu đã được ghi nhận. Kết quả cuộc gọi thực tế do tổng đài/đối tác —
+          ✅ Đã xác nhận thanh toán và trừ Xu; yêu cầu đã được ghi nhận. Kết quả cuộc gọi thực tế do tổng đài/đối tác —
           ứng dụng chỉ xác nhận lượt dịch vụ đã thanh toán.
         </Text>
-        <Text style={styles.sheetCharge}>Đã trừ {outboundCostCzk} Điểm tín dụng.</Text>
+        <Text style={styles.sheetCharge}>Đã trừ {leonaCallCostXu} Xu.</Text>
         <Pressable
           onPress={() => {
             RNAnimated.timing(sheetY, { toValue: 320, duration: 240, useNativeDriver: true }).start(() => {
@@ -299,8 +295,8 @@ export function LeonaCallScreen() {
 
       <AuthPaywallModal
         visible={showLowCredit}
-        title="Hết Điểm tín dụng"
-        description={`Bạn đã hết Điểm tín dụng. Nạp thêm để tiếp tục dùng dịch gọi hỗ trợ ${outboundPersonaName}.`}
+        title="Hết Xu"
+        description={`Bạn đã hết Xu. Nạp thêm để tiếp tục dùng dịch gọi hỗ trợ ${outboundPersonaName}.`}
         onClose={() => setShowLowCredit(false)}
         onContinue={() => {
           setShowLowCredit(false);
@@ -312,51 +308,59 @@ export function LeonaCallScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: theme.colors.DeepInkNavy },
+  container: { flex: 1, backgroundColor: '#200B13' },
   overlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: theme.colors.overlay.dim,
+    backgroundColor: 'rgba(0,0,0,0.36)',
   },
   content: { paddingHorizontal: 16, paddingTop: 14 },
-  avatarRingButton: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: theme.colors.RouteError,
-    borderWidth: 1,
-    borderColor: theme.colors.glass.border,
-    shadowColor: theme.colors.glass.shadow,
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.35,
-    shadowRadius: 14,
-    elevation: 6,
-  },
-  avatarRingDisabled: {
-    opacity: 0.58,
-  },
-  title: { ...theme.typeScale.h1, color: theme.colors.CeolWhite, fontFamily: FontFamily.bold, marginBottom: 6 },
-  subtitle: { ...theme.typeScale.body, color: theme.colors.text.secondary, fontFamily: FontFamily.regular, marginBottom: 10 },
+  title: { fontSize: 28, color: '#FFE8D8', fontFamily: FontFamily.extrabold, marginBottom: 6 },
+  subtitle: { fontSize: 13, color: 'rgba(255,222,210,0.85)', fontFamily: FontFamily.regular, marginBottom: 10 },
   creditPill: {
     alignSelf: 'flex-end',
     minHeight: 28,
     paddingHorizontal: 10,
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: theme.colors.glass.borderSoft,
-    backgroundColor: theme.colors.executive.panelMuted,
+    borderColor: 'rgba(226,92,92,0.45)',
+    backgroundColor: 'rgba(255,255,255,0.08)',
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
     marginBottom: 8,
   },
   creditPillText: {
-    color: theme.colors.primaryBright,
-    ...theme.typeScale.caption,
+    color: '#FFEAD9',
+    fontSize: 12,
     fontFamily: FontFamily.semibold,
   },
-  micArea: { height: 220, alignItems: 'center', justifyContent: 'center' },
+  micArea: { minHeight: 220, alignItems: 'center', justifyContent: 'center', paddingBottom: 8 },
+  micFeeLine: {
+    marginTop: 14,
+    color: '#FFEAD9',
+    fontFamily: FontFamily.semibold,
+    fontSize: 13,
+    textAlign: 'center',
+    paddingHorizontal: 12,
+  },
+  leonaBurnWarning: {
+    marginTop: 6,
+    color: '#FFB74D',
+    fontFamily: FontFamily.bold,
+    fontSize: 12,
+    textAlign: 'center',
+    paddingHorizontal: 12,
+  },
+  micTrustBadge: {
+    marginTop: 6,
+    maxWidth: 320,
+    color: 'rgba(255, 245, 230, 0.88)',
+    fontFamily: FontFamily.regular,
+    fontSize: 11,
+    lineHeight: 16,
+    textAlign: 'center',
+    paddingHorizontal: 16,
+  },
   ring: {
     position: 'absolute',
     width: 158,
@@ -364,31 +368,31 @@ const styles = StyleSheet.create({
     borderRadius: 79,
     borderWidth: 1,
   },
-  ringCalling: { borderColor: theme.colors.primaryBright },
-  ringIdle: { borderColor: theme.colors.glass.border },
+  ringCalling: { borderColor: 'rgba(233, 198, 120, 0.75)' },
+  ringIdle: { borderColor: 'rgba(214, 176, 107, 0.55)' },
   reminderBadge: {
     position: 'absolute',
     bottom: 12,
     minHeight: 24,
     borderRadius: 12,
     paddingHorizontal: 9,
-    backgroundColor: theme.colors.executive.panelMuted,
+    backgroundColor: 'rgba(31,23,18,0.75)',
     borderWidth: 1,
-    borderColor: theme.colors.glass.border,
+    borderColor: 'rgba(212,175,55,0.5)',
     flexDirection: 'row',
     alignItems: 'center',
     gap: 5,
   },
   reminderBadgeText: {
-    color: theme.colors.primaryBright,
+    color: '#FFE9C7',
     fontFamily: FontFamily.medium,
     fontSize: 11,
   },
   inputCard: {
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: theme.colors.glass.borderSoft,
-    backgroundColor: theme.colors.executive.panelMuted,
+    borderColor: 'rgba(226,92,92,0.45)',
+    backgroundColor: 'rgba(255,255,255,0.1)',
     padding: 12,
     marginBottom: 12,
   },
@@ -397,36 +401,36 @@ const styles = StyleSheet.create({
     minWidth: 74,
     borderRadius: 10,
     borderWidth: 1,
-    borderColor: theme.colors.glass.borderSoft,
-    backgroundColor: theme.colors.executive.card,
+    borderColor: 'rgba(226,92,92,0.45)',
+    backgroundColor: 'rgba(255,255,255,0.12)',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  codeBtnText: { color: theme.colors.primaryBright, ...theme.typeScale.body },
+  codeBtnText: { color: '#FFE9DF', fontFamily: FontFamily.semibold, fontSize: 13 },
   phoneInput: {
     flex: 1,
     height: 42,
     borderRadius: 10,
     borderWidth: 1,
-    borderColor: theme.colors.glass.borderSoft,
-    backgroundColor: theme.colors.executive.panelMuted,
+    borderColor: 'rgba(226,92,92,0.45)',
+    backgroundColor: 'rgba(255,255,255,0.08)',
     paddingHorizontal: 10,
-    color: theme.colors.CeolWhite,
+    color: '#FFF0E6',
     fontFamily: FontFamily.medium,
   },
   requestWrap: {
     minHeight: 74,
     borderRadius: 10,
     borderWidth: 1,
-    borderColor: theme.colors.glass.borderSoft,
-    backgroundColor: theme.colors.executive.panelMuted,
+    borderColor: 'rgba(226,92,92,0.45)',
+    backgroundColor: 'rgba(255,255,255,0.08)',
     paddingLeft: 10,
     paddingRight: 38,
     paddingTop: 8,
   },
   requestInput: {
     minHeight: 58,
-    color: theme.colors.CeolWhite,
+    color: '#FFF0E6',
     fontFamily: FontFamily.regular,
     fontSize: 13,
   },
@@ -439,13 +443,36 @@ const styles = StyleSheet.create({
     borderRadius: 13,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: theme.colors.RouteError,
+    backgroundColor: 'rgba(198,57,57,0.8)',
+  },
+  premiumMicButton: {
+    width: 84,
+    height: 84,
+    borderRadius: 42,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#C83D3D',
+    borderWidth: 2,
+    borderColor: 'rgba(255, 214, 155, 0.85)',
+    shadowColor: '#D4AF37',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.45,
+    shadowRadius: 14,
+    elevation: 8,
+  },
+  premiumMicButtonDisabled: {
+    opacity: 0.55,
   },
   statusCard: {
     marginTop: 12,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: 'rgba(226,92,92,0.45)',
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    padding: 12,
   },
   statusText: {
-    color: theme.colors.CeolWhite,
+    color: '#F5F5DC',
     fontFamily: FontFamily.semibold,
     fontSize: 13,
     marginBottom: 3,
@@ -458,8 +485,8 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     borderWidth: 1,
-    borderColor: theme.colors.glass.border,
-    backgroundColor: theme.colors.SoftMineralGrey,
+    borderColor: 'rgba(212,175,55,0.45)',
+    backgroundColor: '#F8EFE2',
     paddingHorizontal: 16,
     paddingTop: 8,
     paddingBottom: 22,
@@ -469,37 +496,37 @@ const styles = StyleSheet.create({
     width: 48,
     height: 5,
     borderRadius: 3,
-    backgroundColor: theme.colors.glass.borderSoft,
+    backgroundColor: 'rgba(139,115,85,0.36)',
     marginBottom: 10,
   },
   sheetTitle: {
     fontSize: 18,
-    color: theme.colors.GraphiteBlue,
+    color: '#2A231A',
     fontFamily: FontFamily.extrabold,
     marginBottom: 8,
   },
   sheetResult: {
     fontSize: 14,
     lineHeight: 22,
-    color: theme.colors.GraphiteBlue,
+    color: '#4A3A2C',
     fontFamily: FontFamily.medium,
     marginBottom: 12,
   },
   sheetCharge: {
     fontSize: 13,
-    color: theme.colors.RouteError,
+    color: '#8B0000',
     fontFamily: FontFamily.bold,
     marginBottom: 12,
   },
   sheetCloseBtn: {
     height: 42,
     borderRadius: 10,
-    backgroundColor: theme.colors.RouteError,
+    backgroundColor: '#C83D3D',
     alignItems: 'center',
     justifyContent: 'center',
   },
   sheetCloseText: {
-    color: theme.colors.CeolWhite,
+    color: '#FFEBD9',
     fontFamily: FontFamily.bold,
     fontSize: 14,
   },

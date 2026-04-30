@@ -33,6 +33,7 @@ import { useLifeOSActionCells } from '../lifeOS/hooks/useLifeOSActionCells';
 import { useLifeOSCompanionAndPredictive } from '../lifeOS/hooks/useLifeOSCompanionAndPredictive';
 import { useLifeOSDailyLoopBootstrap } from '../lifeOS/hooks/useLifeOSDailyLoopBootstrap';
 import { APP_BRAND } from '../config/appBrand';
+import { applyWebStyles } from '../utils/applyWebStyles';
 
 export const LifeOSDashboard: React.FC = () => {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
@@ -244,7 +245,7 @@ export const LifeOSDashboard: React.FC = () => {
               alignItems: 'center',
               gap: 12,
             },
-            pressed && { opacity: 0.8 },
+            pressed && { opacity: 0.88 },
           ]}
         >
           <View
@@ -260,18 +261,8 @@ export const LifeOSDashboard: React.FC = () => {
             <Ionicons name="airplane-outline" size={22} color={theme.colors.primary} />
           </View>
           <View style={{ flex: 1 }}>
-            <Text style={{ fontSize: theme.typeScale.body.fontSize, fontFamily: FontFamily.bold, color: theme.colors.text.primary }}>
-              Đồng hành du lịch
-            </Text>
-            <Text
-              style={{
-                fontSize: theme.typeScale.caption.fontSize,
-                fontFamily: FontFamily.regular,
-                color: theme.colors.text.secondary,
-                marginTop: 4,
-                lineHeight: theme.typeScale.caption.lineHeight,
-              }}
-            >
+            <Text style={{ fontSize: 16, fontFamily: FontFamily.bold, color: theme.colors.text.primary }}>Đồng hành du lịch</Text>
+            <Text style={{ fontSize: 13, fontFamily: FontFamily.regular, color: theme.colors.text.secondary, marginTop: 4, lineHeight: 18 }}>
               Sân bay, khách sạn, taxi, nhà hàng… — phiên dịch, Leona, SOS, Minh Khang. Không đặt vé hay tìm giá trong app.
             </Text>
           </View>
@@ -418,7 +409,12 @@ export const LifeOSDashboard: React.FC = () => {
   ]);
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer} showsVerticalScrollIndicator={false}>
+    <ScrollView
+      style={styles.container}
+      contentContainerStyle={styles.contentContainer}
+      showsVerticalScrollIndicator={false}
+      className={applyWebStyles('kn-glass')}
+    >
       <View style={styles.header}>
         <View>
           <Text style={styles.brand}>{APP_BRAND.name}</Text>
@@ -429,8 +425,12 @@ export const LifeOSDashboard: React.FC = () => {
           <View style={styles.creditChip}>
             <Text style={styles.creditChipText}>{lifeOS.creditBalance} Credits</Text>
           </View>
-          <Pressable style={({ pressed }) => [styles.sosBtn, pressed && { opacity: 0.8 }]} onPress={() => navigation.navigate('EmergencySOS')}>
-            <Ionicons name="warning" size={14} color={theme.colors.CeolWhite} />
+          <Pressable
+            style={styles.sosBtn}
+            onPress={() => navigation.navigate('EmergencySOS')}
+            className={applyWebStyles('kn-neon-sos')}
+          >
+            <Ionicons name="warning" size={14} color="#FFFFFF" />
             <Text style={styles.sosBtnText}>SOS</Text>
           </Pressable>
         </View>
@@ -445,7 +445,7 @@ export default LifeOSDashboard;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: theme.colors.DeepInkNavy,
+    backgroundColor: theme.colors.background,
   },
   contentContainer: {
     padding: 16,
@@ -458,23 +458,23 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   brand: {
-    fontSize: theme.typeScale.caption.fontSize,
+    fontSize: 14,
     color: theme.colors.text.secondary,
     fontFamily: FontFamily.regular,
     marginBottom: 2,
   },
   subtitle: {
-    fontSize: theme.typeScale.h2.fontSize,
+    fontSize: 24,
     color: theme.colors.text.primary,
     fontFamily: FontFamily.extrabold,
   },
   tagline: {
     marginTop: 6,
-    fontSize: theme.typeScale.caption.fontSize,
+    fontSize: 13,
     color: theme.colors.text.secondary,
     fontFamily: FontFamily.regular,
     maxWidth: '78%',
-    lineHeight: theme.typeScale.caption.lineHeight,
+    lineHeight: 18,
   },
   creditChip: {
     minHeight: 32,
@@ -491,7 +491,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   creditChipText: {
-    fontSize: theme.typeScale.caption.fontSize,
+    fontSize: 12,
     color: theme.colors.primary,
     fontFamily: FontFamily.bold,
   },
@@ -499,15 +499,15 @@ const styles = StyleSheet.create({
     minHeight: 30,
     paddingHorizontal: 10,
     borderRadius: 999,
-    backgroundColor: theme.colors.RouteError,
+    backgroundColor: '#DC2626',
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
     justifyContent: 'center',
   },
   sosBtnText: {
-    color: theme.colors.CeolWhite,
-    fontSize: theme.typeScale.caption.fontSize,
+    color: '#FFFFFF',
+    fontSize: 12,
     fontFamily: FontFamily.bold,
   },
   stack: {

@@ -4,6 +4,7 @@
  */
 import { rankMerchants } from './merchantRanking';
 import type { MarketplaceBestServiceResult, MarketplaceMerchant, MarketplaceUserContext } from './types';
+import { getEffectiveAdBidPowerForMerchant, resetBidPowerToZeroIfHoneymoonExpired } from '../b2b/AdBiddingService';
 
 const MERCHANTS: MarketplaceMerchant[] = [
   {
@@ -65,8 +66,14 @@ const MERCHANTS: MarketplaceMerchant[] = [
 ];
 
 function byBusinessType(ctx: MarketplaceUserContext): MarketplaceMerchant[] {
-  if (ctx.businessType === 'general') return MERCHANTS;
-  return MERCHANTS.filter((m) => m.businessType === ctx.businessType);
+  const pool = ctx.businessType === 'general' ? MERCHANTS : MERCHANTS.filter((m) => m.businessType === ctx.businessType);
+  return pool.map((m) => ({
+    ...m,
+    activeAdBidMajor: (() => {
+      resetBidPowerToZeroIfHoneymoonExpired(m.id);
+      return getEffectiveAdBidPowerForMerchant(m.id);
+    })(),
+  }));
 }
 
 export function findBestService(userContext: MarketplaceUserContext): MarketplaceBestServiceResult {

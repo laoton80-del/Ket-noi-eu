@@ -4,11 +4,14 @@ import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import * as Location from 'expo-location';
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { BlurView } from 'expo-blur';
 import {
   ActivityIndicator,
   Alert,
   Linking,
+  Platform,
   Pressable,
+  ScrollView,
   StyleSheet,
   Text,
   View,
@@ -27,11 +30,13 @@ import Animated, {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MicroHintBanner } from '../components/MicroHintBanner';
 import { getPersonaDisplayName } from '../config/aiPrompts';
+import { B2C_GLOBAL_VIP_MONTHLY_USD, PRICING_BASELINE_CURRENCY } from '../config/pricingConfig';
 import { LAUNCH_PILOT_CONFIG, PILOT_LEONA_SERVICES_FALLBACK_PREFILL } from '../config/launchPilot';
 import { hasSeenMicroHint, markMicroHintSeen } from '../onboarding/guidedOnboardingStorage';
 import type { RootStackParamList } from '../navigation/routes';
-import { theme } from '../theme/theme';
 import { FontFamily } from '../theme/typography';
+import { applyWebStyles } from '../utils/applyWebStyles';
+import { formatCurrency } from '../utils/currencyFormatter';
 
 type BusinessKind = 'nails' | 'pho' | 'service';
 type Business = {
@@ -158,8 +163,8 @@ function RadarPin({
         style,
       ])}
     >
-      <Pressable onPress={onPress} style={({ pressed }) => [styles.pin, pressed && { opacity: 0.8 }]}>
-        <Ionicons name={kindIcon[business.kind]} size={16} color={theme.colors.primaryBright} />
+      <Pressable onPress={onPress} style={({ pressed }) => [styles.pin, pressed && { opacity: 0.84 }]}>
+        <Ionicons name={kindIcon[business.kind]} size={16} color="#FFE8BE" />
       </Pressable>
     </Animated.View>
   );
@@ -266,7 +271,7 @@ export function RadarDiscoveryScreen() {
     if (!selected) return;
     if (selected.kind === 'pho') {
       navigation.navigate('Tabs', {
-        screen: 'Concierge',
+        screen: 'LeTan',
         params: {
           proactiveQuestion: `Hỗ trợ đặt bàn tại ${selected.name} cho khách Việt tối nay.`,
           autoSimulate: true,
@@ -288,7 +293,7 @@ export function RadarDiscoveryScreen() {
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.pilotHoldWrap}>
-          <ActivityIndicator color={theme.colors.primaryBright} />
+          <ActivityIndicator color="#FFE3B0" />
           <Text style={styles.subtitle}>Đang chuyển sang Leona…</Text>
         </View>
       </SafeAreaView>
@@ -297,7 +302,11 @@ export function RadarDiscoveryScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <>
+      <ScrollView
+        style={styles.scroll}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
       <MicroHintBanner
         visible={showRadarMicro}
         text="Chấm vào chấm trên radar để xem chi tiết — có thể gọi hoặc nhờ Lễ tân / Leona đặt hộ."
@@ -317,12 +326,12 @@ export function RadarDiscoveryScreen() {
           <Ring key={offset} progress={progress} offset={offset} />
         ))}
         <View style={styles.centerDot}>
-          <Ionicons name="locate" size={16} color={theme.colors.success} />
+          <Ionicons name="locate" size={16} color="#C8FFCF" />
         </View>
 
         {loading ? (
           <View style={styles.loaderWrap}>
-            <ActivityIndicator color={theme.colors.primaryBright} />
+            <ActivityIndicator color="#FFE3B0" />
           </View>
         ) : (
           businesses.map((biz) => (
@@ -345,31 +354,105 @@ export function RadarDiscoveryScreen() {
             {distanceLabel} • ⭐ {selected.rating.toFixed(1)}
           </Text>
           <View style={styles.btnRow}>
-            <Pressable onPress={() => void openDirection()} style={({ pressed }) => [styles.sheetBtn, pressed && { opacity: 0.8 }]}>
+            <Pressable onPress={() => void openDirection()} style={({ pressed }) => [styles.sheetBtn, pressed && { opacity: 0.84 }]}>
               <Text style={styles.sheetBtnText}>Chỉ đường</Text>
             </Pressable>
-            <Pressable onPress={() => void callNow()} style={({ pressed }) => [styles.sheetBtn, pressed && { opacity: 0.8 }]}>
+            <Pressable onPress={() => void callNow()} style={({ pressed }) => [styles.sheetBtn, pressed && { opacity: 0.84 }]}>
               <Text style={styles.sheetBtnText}>Gọi ngay</Text>
             </Pressable>
           </View>
           {selected.isForeign ? (
             <Pressable
               onPress={openAssistedCall}
-              style={({ pressed }) => [styles.aiBtn, pressed && { opacity: 0.8 }]}
+              style={({ pressed }) => [styles.aiBtn, pressed && { opacity: 0.84 }]}
             >
               <Text style={styles.aiBtnText}>Gọi qua {inboundPersonaName}</Text>
             </Pressable>
           ) : null}
+          <Pressable
+            onPress={() =>
+              navigation.navigate('MerchantDetail', {
+                merchantId: selected.id,
+                merchantName: selected.name,
+                industry: selected.kind,
+              })
+            }
+            style={({ pressed }) => [styles.merchantDetailBtn, pressed && { opacity: 0.86 }]}
+            className={applyWebStyles('kn-neon-b2b')}
+            accessibilityRole="button"
+            accessibilityLabel="Mở trang cửa hàng và Lễ tân AI"
+          >
+            <Text style={styles.merchantDetailBtnText}>Lễ tân AI — đặt lịch / đặt hàng</Text>
+            <Ionicons name="chevron-forward" size={18} color="#0B1628" />
+          </Pressable>
         </View>
       ) : null}
-      </>
+
+      <View style={styles.socialHeaderRow}>
+        <Text style={styles.socialSectionTitle}>Ai đã xem bạn</Text>
+        <Ionicons name="lock-closed" size={18} color="rgba(251, 211, 141, 0.95)" accessibilityLabel="Đã khóa" />
+      </View>
+      <Text style={styles.socialSectionSub}>Radar xã hội — chỉ dành cho thành viên VIP.</Text>
+      <View style={styles.whoViewedOuter} className={applyWebStyles('kn-glass')}>
+        <View style={styles.whoViewedShell}>
+          <View style={styles.whoViewedFake} pointerEvents="none">
+            <View style={styles.fakeRow}>
+              <View style={[styles.fakeAvatar, { backgroundColor: 'rgba(200,160,255,0.35)' }]} />
+              <View style={styles.fakeBarCol}>
+                <View style={styles.fakeBarWide} />
+                <View style={styles.fakeBarNarrow} />
+              </View>
+            </View>
+            <View style={styles.fakeRow}>
+              <View style={[styles.fakeAvatar, { backgroundColor: 'rgba(120,200,255,0.35)' }]} />
+              <View style={styles.fakeBarCol}>
+                <View style={styles.fakeBarWide} />
+                <View style={styles.fakeBarNarrow} />
+              </View>
+            </View>
+            <View style={styles.fakeRow}>
+              <View style={[styles.fakeAvatar, { backgroundColor: 'rgba(255,200,140,0.4)' }]} />
+              <View style={styles.fakeBarCol}>
+                <View style={styles.fakeBarWide} />
+                <View style={styles.fakeBarNarrow} />
+              </View>
+            </View>
+          </View>
+          {Platform.OS === 'web' ? (
+            <View style={[styles.glassBlur, styles.glassBlurWeb]} />
+          ) : (
+            <BlurView intensity={72} tint="dark" style={styles.glassBlur} />
+          )}
+          <View style={styles.glassFrostLayer} pointerEvents="none" />
+          <View style={styles.whoViewedLockLayer} pointerEvents="box-none">
+            <View style={styles.lockIconRing}>
+              <Ionicons name="lock-closed" size={28} color="#FBD38D" />
+            </View>
+            <Text style={styles.vipPitch}>
+              Nâng cấp Global VIP ({formatCurrency(B2C_GLOBAL_VIP_MONTHLY_USD, PRICING_BASELINE_CURRENCY)}/tháng) để xem ai đang quan tâm bạn và nhắn tin không giới hạn.
+            </Text>
+            <Pressable
+              onPress={() => navigation.navigate('Wallet')}
+              style={({ pressed }) => [styles.vipCta, pressed && { opacity: 0.88 }]}
+              accessibilityRole="button"
+              accessibilityLabel="Nâng cấp Global VIP"
+            >
+              <Ionicons name="sparkles" size={18} color="#0A1628" />
+              <Text style={styles.vipCtaText}>Nâng cấp Global VIP</Text>
+            </Pressable>
+          </View>
+        </View>
+      </View>
+      </ScrollView>
     </SafeAreaView>
   );
 }
 
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: theme.colors.DeepInkNavy, paddingHorizontal: 16, paddingTop: 8 },
+  container: { flex: 1, backgroundColor: '#07080B', paddingHorizontal: 16, paddingTop: 8 },
+  scroll: { flex: 1 },
+  scrollContent: { paddingBottom: 32 },
   pilotHoldWrap: {
     flex: 1,
     alignItems: 'center',
@@ -377,18 +460,19 @@ const styles = StyleSheet.create({
     gap: 12,
     paddingHorizontal: 16,
   },
-  title: { ...theme.typeScale.h1, color: theme.colors.primaryBright, fontFamily: FontFamily.extrabold },
+  title: { fontSize: 28, color: '#F7E6BF', fontFamily: FontFamily.extrabold },
   subtitle: {
     marginTop: 4,
     marginBottom: 10,
-    color: theme.colors.text.secondary,
-    ...theme.typeScale.caption,
+    color: 'rgba(235,220,188,0.78)',
+    fontSize: 13,
+    fontFamily: FontFamily.regular,
   },
   preview: {
     marginTop: -2,
     marginBottom: 10,
-    color: theme.colors.primaryBright,
-    ...theme.typeScale.caption,
+    color: '#FBD38D',
+    fontSize: 12,
     fontFamily: FontFamily.semibold,
   },
   radarWrap: {
@@ -396,11 +480,11 @@ const styles = StyleSheet.create({
     aspectRatio: 1,
     borderRadius: 999,
     borderWidth: 1.2,
-    borderColor: theme.hybrid.signatureLine,
+    borderColor: 'rgba(212,175,55,0.42)',
     overflow: 'hidden',
     alignSelf: 'center',
-    backgroundColor: theme.colors.glass.surface,
-    shadowColor: theme.colors.glass.shadow,
+    backgroundColor: 'rgba(7,18,24,0.82)',
+    shadowColor: '#000',
     shadowOpacity: 0.35,
     shadowRadius: 18,
     shadowOffset: { width: 0, height: 8 },
@@ -412,7 +496,7 @@ const styles = StyleSheet.create({
     height: '100%',
     borderRadius: 999,
     borderWidth: 1,
-    borderColor: theme.colors.success,
+    borderColor: 'rgba(100,255,170,0.66)',
   },
   crosshair: {
     position: 'absolute',
@@ -420,7 +504,7 @@ const styles = StyleSheet.create({
     right: 0,
     top: '50%',
     height: 1,
-    backgroundColor: theme.colors.overlay.ringSoft,
+    backgroundColor: 'rgba(160,220,190,0.2)',
   },
   crosshairV: {
     top: 0,
@@ -441,9 +525,9 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: theme.colors.overlay.ringSoft,
+    backgroundColor: 'rgba(87,230,135,0.2)',
     borderWidth: 1,
-    borderColor: theme.colors.success,
+    borderColor: 'rgba(120,255,178,0.74)',
   },
   pinWrap: {
     position: 'absolute',
@@ -456,10 +540,10 @@ const styles = StyleSheet.create({
     borderRadius: 18,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: theme.colors.RouteError,
+    backgroundColor: 'rgba(149,45,45,0.85)',
     borderWidth: 1,
-    borderColor: theme.colors.primaryBright,
-    shadowColor: theme.colors.glass.shadow,
+    borderColor: 'rgba(255,211,156,0.8)',
+    shadowColor: '#000',
     shadowOpacity: 0.3,
     shadowRadius: 8,
     shadowOffset: { width: 0, height: 4 },
@@ -478,8 +562,8 @@ const styles = StyleSheet.create({
     marginTop: 14,
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: theme.hybrid.signatureLine,
-    backgroundColor: theme.colors.overlay.ringSoft,
+    borderColor: 'rgba(212,175,55,0.42)',
+    backgroundColor: 'rgba(255,255,255,0.12)',
     padding: 14,
   },
   sheetHandle: {
@@ -487,32 +571,173 @@ const styles = StyleSheet.create({
     width: 50,
     height: 5,
     borderRadius: 3,
-    backgroundColor: theme.colors.glass.gradientStrong,
+    backgroundColor: 'rgba(255,235,188,0.4)',
     marginBottom: 10,
   },
-  sheetName: { ...theme.typeScale.h2, color: theme.colors.primaryBright, fontFamily: FontFamily.extrabold },
-  sheetMeta: { ...theme.typeScale.caption, marginTop: 4, color: theme.colors.primaryBright, fontFamily: FontFamily.medium },
+  sheetName: { color: '#FFF0CF', fontSize: 20, fontFamily: FontFamily.extrabold },
+  sheetMeta: { marginTop: 4, color: '#F6DCAB', fontSize: 13, fontFamily: FontFamily.medium },
   btnRow: { marginTop: 12, flexDirection: 'row', gap: 8 },
   sheetBtn: {
     flex: 1,
     minHeight: 42,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: theme.hybrid.signatureLine,
+    borderColor: 'rgba(212,175,55,0.5)',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: theme.colors.executive.panelMuted,
+    backgroundColor: 'rgba(40,30,22,0.72)',
   },
-  sheetBtnText: { ...theme.typeScale.caption, color: theme.colors.primaryBright, fontFamily: FontFamily.bold },
+  sheetBtnText: { color: '#FFECC8', fontFamily: FontFamily.bold },
   aiBtn: {
     marginTop: 10,
     minHeight: 42,
     borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: theme.colors.RouteError,
+    backgroundColor: '#A63737',
     borderWidth: 1,
-    borderColor: theme.colors.primaryBright,
+    borderColor: 'rgba(255,218,172,0.6)',
   },
-  aiBtnText: { ...theme.typeScale.caption, color: theme.colors.primaryBright, fontFamily: FontFamily.bold },
+  aiBtnText: { color: '#FFEBD2', fontFamily: FontFamily.bold },
+  merchantDetailBtn: {
+    marginTop: 10,
+    minHeight: 46,
+    borderRadius: 14,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    paddingHorizontal: 14,
+    backgroundColor: '#D4AF37',
+    borderWidth: 1.5,
+    borderColor: 'rgba(11, 22, 40, 0.35)',
+    shadowColor: '#FFD700',
+    shadowOpacity: 0.55,
+    shadowRadius: 16,
+    shadowOffset: { width: 0, height: 0 },
+    elevation: 10,
+  },
+  merchantDetailBtnText: { color: '#0B1628', fontFamily: FontFamily.extrabold, fontSize: 14 },
+  socialHeaderRow: {
+    marginTop: 22,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 10,
+  },
+  socialSectionTitle: {
+    fontSize: 18,
+    color: '#F7E6BF',
+    fontFamily: FontFamily.extrabold,
+    flex: 1,
+  },
+  socialSectionSub: {
+    marginTop: 4,
+    marginBottom: 10,
+    fontSize: 12,
+    color: 'rgba(235,220,188,0.65)',
+    fontFamily: FontFamily.regular,
+  },
+  whoViewedOuter: {
+    borderRadius: 22,
+    padding: 1.5,
+    marginBottom: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(212, 175, 89, 0.45)',
+    backgroundColor: 'rgba(255, 255, 255, 0.04)',
+  },
+  whoViewedShell: {
+    position: 'relative',
+    borderRadius: 20,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: 'rgba(212,175,55,0.28)',
+    minHeight: 200,
+  },
+  whoViewedFake: {
+    padding: 14,
+    gap: 12,
+    backgroundColor: 'rgba(255,255,255,0.06)',
+  },
+  fakeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  fakeAvatar: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.2)',
+  },
+  fakeBarCol: {
+    flex: 1,
+    gap: 8,
+  },
+  fakeBarWide: {
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: 'rgba(255,255,255,0.22)',
+    width: '72%',
+  },
+  fakeBarNarrow: {
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: 'rgba(255,255,255,0.12)',
+    width: '40%',
+  },
+  glassBlur: {
+    ...StyleSheet.absoluteFillObject,
+  },
+  glassBlurWeb: {
+    backgroundColor: 'rgba(12, 14, 22, 0.78)',
+  },
+  glassFrostLayer: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(255, 255, 255, 0.06)',
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255, 255, 255, 0.12)',
+  },
+  whoViewedLockLayer: {
+    ...StyleSheet.absoluteFillObject,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 20,
+    gap: 12,
+  },
+  lockIconRing: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(0,0,0,0.35)',
+    borderWidth: 1,
+    borderColor: 'rgba(251,211,141,0.45)',
+  },
+  vipPitch: {
+    textAlign: 'center',
+    fontSize: 13,
+    lineHeight: 19,
+    color: '#FFF5E4',
+    fontFamily: FontFamily.semibold,
+  },
+  vipCta: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginTop: 4,
+    paddingHorizontal: 18,
+    paddingVertical: 12,
+    borderRadius: 14,
+    backgroundColor: '#FBD38D',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.35)',
+  },
+  vipCtaText: {
+    fontSize: 14,
+    fontFamily: FontFamily.bold,
+    color: '#0A1628',
+  },
 });

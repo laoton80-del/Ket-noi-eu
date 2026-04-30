@@ -16,6 +16,11 @@ import {
   getPricingByCountry,
   getWalletPackagePricesByCountry,
 } from '../config/commercialSpine';
+import {
+  B2C_AVATAR_FRAME_CREDITS,
+  B2C_PASSPORT_BADGE_CREDITS_PER_YEAR,
+  PRICING_AUTHORITY,
+} from '../config/pricingConfig';
 import { normalizeCountryCodeOrSentinel, resolveCommercialCountryContext } from '../config/countryPacks';
 import { APP_BRAND } from '../config/appBrand';
 import { useAuth } from '../context/AuthContext';
@@ -30,14 +35,14 @@ import {
 } from '../services/PaymentsService';
 import { useAssistantSettings } from '../state/assistantSettings';
 import type { Transaction } from '../state/wallet';
-import { topupCreditsServer, useWalletState } from '../state/wallet';
+import { reserveAndCommitCredits, topupCreditsServer, useWalletState } from '../state/wallet';
 import { trackGrowthEvent } from '../services/growth';
 import { theme } from '../theme/theme';
+import { applyWebStyles, mergeWebClassNames } from '../utils/applyWebStyles';
 import { FontFamily } from '../theme/typography';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { authenticateBiometric, getBiometricAvailability, isValidWalletPin } from '../security/biometricUnlock';
 import { consumePendingSellResume } from '../services/selling/sellResumeStorage';
-import { formatDate as formatLocalizedDate } from '../utils/formatters';
 
 /** Temporary diagnostic: set `EXPO_PUBLIC_WALLET_DIAGNOSTIC_SKIP_CHECKOUT_SHEET=1` so Wallet mounts without `PremiumCheckoutSheet`. Remove after crash is isolated. */
 const WALLET_DIAGNOSTIC_SKIP_PREMIUM_CHECKOUT_SHEET =
@@ -54,17 +59,18 @@ function interpolate(template: string, vars: Record<string, string>): string {
   return out;
 }
 
+function formatDate(iso: string, locale: string): string {
+  return new Date(iso).toLocaleString(locale, {
+    hour: '2-digit',
+    minute: '2-digit',
+    day: '2-digit',
+    month: '2-digit',
+  });
+}
+
 function maskIdempotencyKey(key: string): string {
   if (key.length <= 10) return key;
   return `${key.slice(0, 8)}...${key.slice(-4)}`;
-}
-
-function logPaymentPilotStage(
-  stage: 'intent_requested' | 'intent_received' | 'verify_result' | 'topup_result',
-  payload: Record<string, unknown>
-) {
-  void stage;
-  void payload;
 }
 
 export function WalletTopUpScreen() {
@@ -72,7 +78,7 @@ export function WalletTopUpScreen() {
   const { user, setPendingRedirect } = useAuth();
   const { languageCode } = useAssistantSettings();
   const strings = getStrings(languageCode);
-  const w = strings.globalWallet;
+  const w = strings.walletTopUp;
   const u = strings.utility;
   const biometricReason = w.biometricReason;
   const [country, setCountry] = useState(() => normalizeCountryCodeOrSentinel(user?.country));
@@ -94,6 +100,7 @@ export function WalletTopUpScreen() {
   }, []);
   const [paymentFailureMessage, setPaymentFailureMessage] = useState<string | null>(null);
   const [topupPending, setTopupPending] = useState(false);
+  const [cosmeticLoadingId, setCosmeticLoadingId] = useState<string | null>(null);
   const inboundPersonaName = getPersonaDisplayName('loan');
   const outboundPersonaName = getPersonaDisplayName('leona');
   const [walletUnlocked, setWalletUnlocked] = useState(false);
@@ -192,6 +199,10 @@ export function WalletTopUpScreen() {
     ]).start();
   }, [glowAnim, wallet.credits]);
 
+  if (__DEV__) {
+    console.log('[diag][WalletTopUp] hooks settled', { hasUser: Boolean(user) });
+  }
+
   if (!user) return null;
 
   const filterLabels: Record<FilterMode, string> = {
@@ -235,11 +246,9 @@ export function WalletTopUpScreen() {
     try {
       const walletPackageId = pack.id;
       const idempotencyKey = `topup-${walletPackageId}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-      logPaymentPilotStage('intent_requested', {
-        walletPackageId,
-        commercialCountryCode: commercialCtx.countryCode,
-        idempotencyKey: maskIdempotencyKey(idempotencyKey),
-      });
+      if (__DEV__) {
+        console.log('[wallet-topup] intent key', maskIdempotencyKey(idempotencyKey));
+      }
       const secret = await createPlatformPayIntent(
         toPlatformPayIntentRequest({
           walletPackageId,
@@ -252,28 +261,45 @@ export function WalletTopUpScreen() {
         })
       );
       if (!secret) {
-        logPaymentPilotStage('intent_received', {
-          walletPackageId,
-          commercialCountryCode: commercialCtx.countryCode,
-          idempotencyKey: maskIdempotencyKey(idempotencyKey),
-          result: 'fail',
-          errorCode: 'client_secret_missing',
-        });
         Alert.alert(w.paymentInitFailTitle, w.paymentInitFailBody);
         return;
       }
-      logPaymentPilotStage('intent_received', {
-        walletPackageId,
-        commercialCountryCode: commercialCtx.countryCode,
-        idempotencyKey: maskIdempotencyKey(idempotencyKey),
-        clientSecret: maskIdempotencyKey(secret),
-        result: 'ok',
-      });
       setCheckoutIdempotencyKey(idempotencyKey);
       setPlatformPayClientSecret(secret);
       setCheckoutPackId(packId);
     } finally {
       setLoadingPackId(null);
+    }
+  };
+
+  const tryBuyVirtualItem = async (item: { id: string; title: string; priceXu: number }) => {
+    if (!walletUnlocked) {
+      Alert.alert(w.walletLockedTitle, w.walletLockedBody);
+      return;
+    }
+    if (wallet.credits < item.priceXu) {
+      Alert.alert('Không đủ VIG Token', `Bạn cần ${item.priceXu} VIG Token để mua "${item.title}". Nạp thêm VIG Token để tiếp tục.`);
+      return;
+    }
+    const backendOk = Boolean(process.env.EXPO_PUBLIC_BACKEND_API_BASE?.trim());
+    if (!backendOk) {
+      Alert.alert(
+        'Kết nối máy chủ',
+        'Mua vật phẩm bằng VIG Token cần API ví an toàn. Khi máy chủ được bật, giao dịch sẽ ghi nhận tự động trên lịch sử ví.'
+      );
+      return;
+    }
+    setCosmeticLoadingId(item.id);
+    try {
+      const idempotencyKey = `virtual-${item.id}-${user.phone}-${Date.now()}`;
+      const { ok } = await reserveAndCommitCredits(item.priceXu, idempotencyKey);
+      if (!ok) {
+        Alert.alert('Không thể mua', 'Máy chủ từ chối giao dịch. Kiểm tra số dư hoặc thử lại sau.');
+        return;
+      }
+      Alert.alert('Thành công', `Đã mở khóa: ${item.title}. Hiển thị trên hồ sơ khi đồng bộ hoàn tất.`);
+    } finally {
+      setCosmeticLoadingId(null);
     }
   };
 
@@ -293,13 +319,15 @@ export function WalletTopUpScreen() {
           idempotencyKey: checkoutIdempotencyKey ?? undefined,
         })
       );
-      logPaymentPilotStage('verify_result', {
-        walletPackageId,
-        commercialCountryCode: commercialCtx.countryCode,
-        idempotencyKey: checkoutIdempotencyKey ? maskIdempotencyKey(checkoutIdempotencyKey) : null,
-        result: verified ? 'ok' : 'fail',
-        errorCode: verified ? undefined : 'entitlement_not_verified',
-      });
+      if (__DEV__) {
+        console.log(
+          '[wallet-topup] verify result',
+          JSON.stringify({
+            key: checkoutIdempotencyKey ? maskIdempotencyKey(checkoutIdempotencyKey) : null,
+            verified,
+          })
+        );
+      }
       if (!verified) {
         setCheckoutPackId(null);
         setCheckoutIdempotencyKey(null);
@@ -313,25 +341,11 @@ export function WalletTopUpScreen() {
       }
       const paymentEventId = checkoutIdempotencyKey?.trim() ?? '';
       if (!paymentEventId) {
-        logPaymentPilotStage('topup_result', {
-          walletPackageId,
-          commercialCountryCode: commercialCtx.countryCode,
-          paymentEventId: null,
-          result: 'fail',
-          errorCode: 'payment_event_id_missing',
-        });
         showPaymentFailure(w.paymentMissingIdBody);
         Alert.alert(w.paymentMissingIdTitle, w.paymentMissingIdBody);
         return;
       }
-      const topup = await topupCreditsServer(checkoutPack.id, paymentEventId);
-      logPaymentPilotStage('topup_result', {
-        walletPackageId,
-        commercialCountryCode: commercialCtx.countryCode,
-        paymentEventId: maskIdempotencyKey(paymentEventId),
-        result: topup.ok ? 'ok' : 'fail',
-        errorCode: topup.ok ? undefined : 'wallet_topup_failed',
-      });
+      const topup = await topupCreditsServer(checkoutPack.turns, paymentEventId);
       if (!topup.ok) {
         showPaymentFailure(w.creditsNotCreditedBody);
         Alert.alert(w.creditsNotCreditedTitle, w.creditsNotCreditedBody, [
@@ -348,21 +362,14 @@ export function WalletTopUpScreen() {
       setShowPaySuccess(true);
       void trackGrowthEvent('successful_credit_topup', {
         value: checkoutPack.turns,
-        // Analytics payload keeps canonical wallet package identifiers.
-        meta: { walletPackageId: checkoutPack.id, country: commercialCtx.countryCode },
+        // LEGACY analytics key name: value is WalletPackageId (same semantics as payments wire `comboId`).
+        meta: { comboId: checkoutPack.id, country: commercialCtx.countryCode },
       });
       const resume = await consumePendingSellResume();
       if (resume) {
         navigation.navigate(resume.route, resume.params as never);
       }
     } catch {
-      logPaymentPilotStage('topup_result', {
-        walletPackageId: checkoutPack.id,
-        commercialCountryCode: commercialCtx.countryCode,
-        paymentEventId: checkoutIdempotencyKey ? maskIdempotencyKey(checkoutIdempotencyKey) : null,
-        result: 'fail',
-        errorCode: 'payment_flow_exception',
-      });
       showPaymentFailure(w.connectionInterruptedBody);
       Alert.alert(w.connectionInterruptedTitle, w.connectionInterruptedBody, [
         { text: w.alertClose, style: 'cancel' },
@@ -371,6 +378,10 @@ export function WalletTopUpScreen() {
     }
   };
 
+  if (__DEV__) {
+    console.log('[diag][WalletTopUp] render main ui');
+  }
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.walletLayer}>
@@ -378,6 +389,35 @@ export function WalletTopUpScreen() {
         <Text style={styles.brand}>{APP_BRAND.name}</Text>
         <Text style={styles.launchHint}>{APP_BRAND.launchSubtitle}</Text>
         <Text style={styles.subtitle}>{w.screenSubtitle}</Text>
+
+        <View style={styles.remittanceBlock}>
+          <Text style={styles.remittanceKicker}>Fintech — Kiều hối</Text>
+          <View style={styles.remittanceBtnOuter}>
+            <Pressable
+              onPress={() =>
+                Alert.alert(
+                  'Chuyển tiền về Việt Nam',
+                  'Kênh kiều hối đang Beta. Bạn sẽ gửi ngoại tệ (theo khu vực nguồn) an toàn về tài khoản VND — đội Fintech sẽ mở đăng ký sớm.',
+                  [{ text: 'Đã hiểu' }]
+                )
+              }
+              style={({ pressed }) => [styles.remittanceBtn, pressed && { opacity: 0.9 }]}
+              className={applyWebStyles('kn-neon-b2b')}
+              accessibilityRole="button"
+              accessibilityLabel="Chuyển tiền về Việt Nam (BETA)"
+            >
+              <View style={styles.betaBadge}>
+                <Text style={styles.betaBadgeText}>BETA</Text>
+              </View>
+              <Ionicons name="earth-outline" size={22} color={theme.hybrid.onSignal} />
+              <Text style={styles.remittanceBtnText}>Chuyển tiền về Việt Nam (BETA)</Text>
+            </Pressable>
+          </View>
+          <Text style={styles.fxTicker} accessibilityLiveRegion="polite">
+            Tỷ giá tham chiếu (minh họa): 1 USD ≈ 26,000 VND — neo thực tế theo FX khi kênh mở.
+          </Text>
+        </View>
+
         <Animated.View style={StyleSheet.flatten([styles.walletCardGlowWrap, walletGlowStyle])}>
           <TrustSurfaceCard cardTone="trust" watermarkOpacity={0.04} style={styles.walletCard}>
             <Text style={styles.walletBalanceLabel}>{w.balanceLabel}</Text>
@@ -394,6 +434,22 @@ export function WalletTopUpScreen() {
             <Text style={styles.hint}>{interpolate(w.balanceHint, { country: country || 'ZZ' })}</Text>
           </TrustSurfaceCard>
         </Animated.View>
+
+        <Pressable
+          onPress={() => navigation.navigate('CashOut')}
+          style={({ pressed }) => [styles.cashOutEntry, pressed && { opacity: 0.9 }]}
+          className={mergeWebClassNames('kn-glass', 'kn-neon-b2b')}
+          accessibilityRole="button"
+          accessibilityLabel="Quy đổi tiền mặt từ hoa hồng"
+        >
+          <Ionicons name="wallet-outline" size={22} color={theme.colors.primaryBright} />
+          <View style={styles.cashOutEntryText}>
+            <Text style={styles.cashOutEntryTitle}>Quy Đổi Tiền Mặt</Text>
+            <Text style={styles.cashOutEntrySub}>Rút hoa hồng giới thiệu (Cash-Out) — kiểm soát hạn mức</Text>
+          </View>
+          <Ionicons name="chevron-forward" size={22} color={theme.colors.primaryBright} />
+        </Pressable>
+
         <Text style={styles.unitPrice}>
           {interpolate(w.unitPriceLine, {
             inboundName: inboundPersonaName,
@@ -402,6 +458,85 @@ export function WalletTopUpScreen() {
             outboundPrice: getLocalPriceMeta(unitPricing.externalCallPriceCzk, country, locale).label,
           })}
         </Text>
+
+        <View style={styles.virtualStoreSection}>
+          <View style={styles.virtualStoreHeader}>
+            <Ionicons name="color-wand-outline" size={22} color={theme.colors.primary} />
+            <Text style={[styles.sectionTitle, styles.virtualStoreTitle]}>Cửa hàng Vật phẩm</Text>
+          </View>
+          <Text style={styles.virtualStoreSub}>
+            Gamification & VIP — khung avatar và huy hiệu xác minh; thanh toán bằng VIG Token qua ví.
+          </Text>
+        </View>
+        <View style={styles.virtualCard}>
+          <View style={styles.virtualRowTop}>
+            <View style={styles.virtualIconBubble}>
+              <Ionicons name="disc-outline" size={22} color={theme.hybrid.signalStrong} />
+            </View>
+            <View style={styles.virtualMeta}>
+              <Text style={styles.virtualItemTitle}>Khung Avatar Trống Đồng</Text>
+              <Text style={styles.virtualItemSub}>Viền avatar phong cách Đông Sơn — nổi bật trên Radar & hồ sơ.</Text>
+            </View>
+          </View>
+          <View style={styles.virtualRowBottom}>
+            <Text style={styles.virtualPrice}>{B2C_AVATAR_FRAME_CREDITS} VIG Token</Text>
+            <Pressable
+              onPress={() =>
+                void tryBuyVirtualItem({
+                  id: 'bronze_drum_frame',
+                  title: 'Khung Avatar Trống Đồng',
+                  priceXu: B2C_AVATAR_FRAME_CREDITS,
+                })
+              }
+              disabled={cosmeticLoadingId !== null}
+              style={({ pressed }) => [
+                styles.virtualBuyBtn,
+                (pressed || cosmeticLoadingId !== null) && { opacity: 0.82 },
+              ]}
+            >
+              {cosmeticLoadingId === 'bronze_drum_frame' ? (
+                <ActivityIndicator size="small" color={theme.hybrid.onSignal} />
+              ) : (
+                <Text style={styles.virtualBuyText}>Mua</Text>
+              )}
+            </Pressable>
+          </View>
+        </View>
+        <View style={styles.virtualCard}>
+          <View style={styles.virtualRowTop}>
+            <View style={styles.virtualIconBubble}>
+              <Ionicons name="shield-checkmark" size={22} color={theme.hybrid.trustChipText} />
+            </View>
+            <View style={styles.virtualMeta}>
+              <Text style={styles.virtualItemTitle}>Huy hiệu Xác minh Hộ chiếu</Text>
+              <Text style={styles.virtualItemSub}>Huy hiệu xác minh hộ chiếu — {B2C_PASSPORT_BADGE_CREDITS_PER_YEAR} VIG Token/năm, gia hạn theo năm.</Text>
+            </View>
+          </View>
+          <View style={styles.virtualRowBottom}>
+            <Text style={styles.virtualPrice}>{B2C_PASSPORT_BADGE_CREDITS_PER_YEAR} VIG Token / năm</Text>
+            <Pressable
+              onPress={() =>
+                void tryBuyVirtualItem({
+                  id: 'passport_verified_badge',
+                  title: 'Huy hiệu Xác minh Hộ chiếu (1 năm)',
+                  priceXu: B2C_PASSPORT_BADGE_CREDITS_PER_YEAR,
+                })
+              }
+              disabled={cosmeticLoadingId !== null}
+              style={({ pressed }) => [
+                styles.virtualBuyBtn,
+                (pressed || cosmeticLoadingId !== null) && { opacity: 0.82 },
+              ]}
+            >
+              {cosmeticLoadingId === 'passport_verified_badge' ? (
+                <ActivityIndicator size="small" color={theme.hybrid.onSignal} />
+              ) : (
+                <Text style={styles.virtualBuyText}>Mua</Text>
+              )}
+            </Pressable>
+          </View>
+        </View>
+
         {paymentFailureMessage ? (
           <AppStateView
             variant="paymentFailure"
@@ -493,7 +628,7 @@ export function WalletTopUpScreen() {
                 <View style={styles.txBody}>
                   <Text style={styles.txDescription}>{tx.description}</Text>
                   <Text style={styles.txDate}>
-                    {tx.timestampSnapshotLabel ?? formatLocalizedDate(tx.date)}
+                    {tx.timestampSnapshotLabel ?? formatDate(tx.date, locale)}
                     {tx.paymentSnapshotLabel
                       ? ` | ${tx.paymentSnapshotLabel}`
                       : tx.paymentAmount && tx.paymentCurrencyCode
@@ -503,7 +638,7 @@ export function WalletTopUpScreen() {
                 </View>
                 <Text style={[styles.txAmount, tx.type === 'topup' ? styles.txAmountTopup : styles.txAmountConsume]}>
                   {tx.type === 'topup' ? '+' : '-'}
-                  {tx.amount} Điểm tín dụng
+                  {tx.amount} VIG Token
                 </Text>
               </View>
             ))
@@ -607,6 +742,37 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.12,
     shadowRadius: 12,
   },
+  cashOutEntry: {
+    marginTop: theme.spacing.md,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: theme.spacing.md,
+    paddingVertical: theme.spacing.lg,
+    paddingHorizontal: theme.spacing.lg,
+    borderRadius: theme.radius.lg,
+    borderWidth: 2,
+    borderColor: theme.colors.primary,
+    backgroundColor: 'rgba(197, 160, 89, 0.1)',
+    shadowColor: theme.colors.primary,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.35,
+    shadowRadius: 12,
+    elevation: 6,
+  },
+  cashOutEntryText: {
+    flex: 1,
+    gap: 4,
+  },
+  cashOutEntryTitle: {
+    fontSize: 16,
+    fontFamily: FontFamily.extrabold,
+    color: theme.colors.primaryBright,
+  },
+  cashOutEntrySub: {
+    fontSize: 12,
+    fontFamily: FontFamily.medium,
+    color: theme.hybrid.panelCoolTextMuted,
+  },
   walletBalanceLabel: {
     fontSize: 13,
     color: theme.hybrid.panelCoolTextMuted,
@@ -649,12 +815,192 @@ const styles = StyleSheet.create({
     fontFamily: FontFamily.regular,
     color: theme.hybrid.panelCoolTextMuted,
   },
+  remittanceBlock: {
+    marginTop: theme.spacing.sm,
+    marginBottom: theme.spacing.lg,
+  },
+  remittanceKicker: {
+    fontSize: 11,
+    fontFamily: FontFamily.extrabold,
+    color: theme.colors.primaryBright,
+    letterSpacing: 1,
+    textTransform: 'uppercase',
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  remittanceBtnOuter: {
+    borderRadius: theme.radius.lg + 4,
+    padding: 3,
+    backgroundColor: 'rgba(197, 160, 89, 0.25)',
+    shadowColor: theme.colors.primaryBright,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.55,
+    shadowRadius: 18,
+    elevation: 10,
+  },
+  remittanceBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 10,
+    minHeight: 56,
+    borderRadius: theme.radius.lg,
+    paddingHorizontal: theme.spacing.lg,
+    backgroundColor: theme.hybrid.signalStrong,
+    borderWidth: 1.5,
+    borderColor: theme.colors.primaryBright,
+    shadowColor: theme.hybrid.signalStrong,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.75,
+    shadowRadius: 22,
+    elevation: 14,
+  },
+  betaBadge: {
+    position: 'absolute',
+    top: -12,
+    right: 10,
+    minHeight: 24,
+    paddingHorizontal: 10,
+    borderRadius: theme.radius.pill,
+    backgroundColor: theme.colors.RouteError,
+    borderWidth: 2,
+    borderColor: '#FFE082',
+    shadowColor: '#FF7043',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.95,
+    shadowRadius: 14,
+    elevation: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  betaBadgeText: {
+    fontSize: 10,
+    fontFamily: FontFamily.extrabold,
+    color: theme.colors.CeolWhite,
+    letterSpacing: 0.6,
+  },
+  remittanceBtnText: {
+    fontSize: 16,
+    fontFamily: FontFamily.bold,
+    color: theme.hybrid.onSignal,
+  },
+  fxTicker: {
+    marginTop: theme.spacing.sm,
+    fontSize: 14,
+    fontFamily: FontFamily.semibold,
+    color: theme.colors.primaryBright,
+    textAlign: 'center',
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: theme.radius.md,
+    backgroundColor: 'rgba(197, 160, 89, 0.12)',
+    borderWidth: 1,
+    borderColor: 'rgba(197, 160, 89, 0.35)',
+    overflow: 'hidden',
+  },
   unitPrice: {
     marginTop: 8,
     fontSize: 12,
     lineHeight: 18,
     fontFamily: FontFamily.semibold,
     color: theme.colors.text.secondary,
+    marginBottom: theme.spacing.sm,
+  },
+  virtualStoreSection: {
+    marginTop: theme.spacing.md,
+    marginBottom: theme.spacing.xs,
+    padding: theme.spacing.md,
+    borderRadius: theme.radius.lg,
+    borderWidth: 1.5,
+    borderColor: theme.colors.primary,
+    backgroundColor: 'rgba(197, 160, 89, 0.08)',
+  },
+  virtualStoreHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: theme.spacing.sm,
+    marginBottom: theme.spacing.xs,
+  },
+  virtualStoreTitle: {
+    marginTop: 0,
+    marginBottom: 0,
+    flex: 1,
+  },
+  virtualStoreSub: {
+    fontSize: 12,
+    lineHeight: 17,
+    fontFamily: FontFamily.regular,
+    color: theme.colors.text.secondary,
+    marginBottom: theme.spacing.sm,
+  },
+  virtualCard: {
+    marginBottom: theme.spacing.md,
+    borderRadius: theme.radius.lg,
+    borderWidth: 1,
+    borderColor: theme.hybrid.signatureLine,
+    backgroundColor: theme.colors.surfaceMuted,
+    padding: theme.spacing.md,
+    gap: theme.spacing.sm,
+    shadowColor: theme.colors.primary,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.12,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  virtualRowTop: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: theme.spacing.md,
+  },
+  virtualIconBubble: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: theme.hybrid.signalMutedBg,
+    borderWidth: 1,
+    borderColor: theme.hybrid.signalSubtleBorder,
+  },
+  virtualMeta: {
+    flex: 1,
+    gap: 4,
+  },
+  virtualItemTitle: {
+    fontSize: 16,
+    fontFamily: FontFamily.bold,
+    color: theme.colors.text.primary,
+  },
+  virtualItemSub: {
+    fontSize: 12,
+    lineHeight: 17,
+    fontFamily: FontFamily.regular,
+    color: theme.colors.text.secondary,
+  },
+  virtualRowBottom: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginTop: theme.spacing.xs,
+  },
+  virtualPrice: {
+    fontSize: 15,
+    fontFamily: FontFamily.extrabold,
+    color: theme.colors.primary,
+  },
+  virtualBuyBtn: {
+    minWidth: 88,
+    minHeight: 40,
+    paddingHorizontal: theme.spacing.lg,
+    borderRadius: theme.radius.md,
+    backgroundColor: theme.hybrid.signalStrong,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  virtualBuyText: {
+    fontSize: 14,
+    fontFamily: FontFamily.bold,
+    color: theme.hybrid.onSignal,
   },
   paymentFailureState: {
     marginTop: 10,

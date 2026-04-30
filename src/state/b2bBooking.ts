@@ -6,6 +6,14 @@ export interface Service {
   durationMinutes: number;
 }
 
+/** Caller language for Voice AI auto-detect (UI flags + prompt routing). */
+export type VoiceCallerLanguage = 'cs' | 'de' | 'en' | 'vi' | 'pl' | 'unknown';
+
+export type VoiceAiBookingMeta = {
+  readonly securedByAi: true;
+  readonly callerLanguage: VoiceCallerLanguage;
+};
+
 export interface Booking {
   id: string;
   customerName: string;
@@ -14,12 +22,41 @@ export interface Booking {
   endTime: string;
   status: 'inquiry' | 'confirmed' | 'completed' | 'no_show';
   handoffSummary?: string;
+  /**
+   * Zero-touch: concise Vietnamese summary for merchant (auto-translated from caller language / intent).
+   */
+  aiSummaryVi?: string;
+  /** Set when Lễ tân AI secured the slot via function-calling (mock). */
+  voiceAiMeta?: VoiceAiBookingMeta;
+}
+
+export type VoiceAiWholesaleMeta = {
+  readonly securedByAi: true;
+  readonly callerLanguage: VoiceCallerLanguage;
+};
+
+export interface WholesaleOrder {
+  id: string;
+  merchantId: string;
+  customerName: string;
+  callerLanguage: VoiceCallerLanguage;
+  itemsSummary: string;
+  address: string;
+  /** AI-closed wholesale GMV (USD-major ledger) — drives performance commission on pending bill. */
+  orderValueMajorUsd: number;
+  status: 'open' | 'acknowledged';
+  createdAtIso: string;
+  /** Zero-touch: Vietnamese headline for warehouse / counter (translated from voice). */
+  aiSummaryVi?: string;
+  voiceAiMeta?: VoiceAiWholesaleMeta;
 }
 
 type B2BBookingState = {
   services: Service[];
   bookings: Booking[];
+  wholesaleOrders: WholesaleOrder[];
   addAiBooking: (booking: Omit<Booking, 'id'>) => Booking;
+  addAiWholesaleOrder: (order: Omit<WholesaleOrder, 'id' | 'createdAtIso'>) => WholesaleOrder;
   confirmBooking: (id: string) => void;
 };
 
@@ -78,6 +115,7 @@ const mockBookings: Booking[] = [
 export const useB2BBookingStore = create<B2BBookingState>((set) => ({
   services: mockServices,
   bookings: mockBookings,
+  wholesaleOrders: [],
   addAiBooking: (booking) => {
     const created: Booking = {
       ...booking,
@@ -87,6 +125,17 @@ export const useB2BBookingStore = create<B2BBookingState>((set) => ({
       bookings: [...state.bookings, created].sort(
         (a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime()
       ),
+    }));
+    return created;
+  },
+  addAiWholesaleOrder: (order) => {
+    const created: WholesaleOrder = {
+      ...order,
+      id: `wo_ai_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+      createdAtIso: new Date().toISOString(),
+    };
+    set((state) => ({
+      wholesaleOrders: [created, ...state.wholesaleOrders],
     }));
     return created;
   },

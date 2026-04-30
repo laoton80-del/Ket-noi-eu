@@ -50,7 +50,7 @@ export function ServicesScreen() {
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <PrecisePanel style={styles.localHeaderPanel}>
-          <Text style={styles.localHeaderTitle}>{strings.nav.servicesTab} in {currentCountry}</Text>
+          <Text style={styles.localHeaderTitle}>{strings.nav.utilityTab} in {currentCountry}</Text>
           <Text style={styles.localHeaderMeta}>{APP_BRAND.name} · {localCurrency}</Text>
         </PrecisePanel>
 
@@ -115,10 +115,10 @@ export function ServicesScreen() {
               <Text style={styles.cardHint}>
                 {pack.purchasable
                   ? strings.utility.packTurnsCredits.replace('{turns}', String(pack.turns))
-                  : strings.globalWallet.enterpriseCta}
+                  : strings.walletTopUp.enterpriseCta}
               </Text>
               <Text style={styles.priceLine}>
-                {strings.globalWallet.packPriceLine.replace('{amount}', `${pack.amountLabel} (${localCurrency})`)}
+                {strings.walletTopUp.packPriceLine.replace('{amount}', `${pack.amountLabel} (${localCurrency})`)}
               </Text>
             </Pressable>
           </PrecisePanel>

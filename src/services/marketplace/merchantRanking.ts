@@ -7,6 +7,7 @@ function clamp01(v: number): number {
 }
 
 export function scoreMerchant(m: MarketplaceMerchant, ctx: MarketplaceUserContext): MarketplaceRankedMerchant {
+  const adBidScore = clamp01((m.activeAdBidMajor ?? 0) / 2.5);
   const distanceScore = clamp01(1 - m.distanceKm / 8);
   const ratingScore = clamp01((m.rating - 3.5) / 1.5);
   const availabilityScore = m.available ? 1 : 0;
@@ -14,13 +15,15 @@ export function scoreMerchant(m: MarketplaceMerchant, ctx: MarketplaceUserContex
   const aiBookingScore = m.supportsAiBooking ? 1 : 0.4;
 
   const score =
-    distanceScore * 0.2 +
-    ratingScore * 0.25 +
-    availabilityScore * 0.25 +
-    typeScore * 0.2 +
-    aiBookingScore * 0.1;
+    adBidScore * 0.45 +
+    distanceScore * 0.14 +
+    ratingScore * 0.16 +
+    availabilityScore * 0.14 +
+    typeScore * 0.07 +
+    aiBookingScore * 0.04;
 
   const reasons: string[] = [];
+  if ((m.activeAdBidMajor ?? 0) > 0) reasons.push(`Bid ưu tiên ${m.activeAdBidMajor?.toFixed(2)}`);
   if (m.available) reasons.push('Sẵn lịch');
   if (m.rating >= 4.7) reasons.push('Đánh giá cao');
   if (m.distanceKm <= 2) reasons.push('Gần bạn');
