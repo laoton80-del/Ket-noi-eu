@@ -4,7 +4,7 @@
  * Env (map to IAM user or task role):
  * - `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` — optional on Lambda/ECS when using instance/task role.
  * - `AWS_REGION` or `SES_REGION` — SES region (e.g. `eu-west-1`).
- * - `SES_FROM_EMAIL` or `MAIL_FROM` — verified SES identity (must match or be allowed domain).
+ * - `SES_FROM_EMAIL`, `MAIL_FROM`, or `AWS_SES_SENDER_EMAIL` — verified SES identity (must match or be allowed domain).
  */
 
 import { SESClient, SendEmailCommand } from '@aws-sdk/client-ses';
@@ -41,7 +41,11 @@ export function resetSesClientSingleton(): void {
 }
 
 function readFromAddress(): string | null {
-  const from = process.env.SES_FROM_EMAIL?.trim() ?? process.env.MAIL_FROM?.trim() ?? '';
+  const from =
+    process.env.SES_FROM_EMAIL?.trim() ??
+    process.env.MAIL_FROM?.trim() ??
+    process.env.AWS_SES_SENDER_EMAIL?.trim() ??
+    '';
   return from.length > 0 ? from : null;
 }
 
@@ -64,26 +68,31 @@ export function isSmtpConfigured(): boolean {
 export async function sendEmail(input: SendEmailInput): Promise<void> {
   const source = readFromAddress();
   if (!source) {
-    throw new Error('SES not configured (set SES_FROM_EMAIL or MAIL_FROM)');
+    throw new Error('SES not configured (set SES_FROM_EMAIL, MAIL_FROM, or AWS_SES_SENDER_EMAIL)');
   }
   if (!isEmailConfigured()) {
     throw new Error('SES credentials missing (set AWS_ACCESS_KEY_ID + AWS_SECRET_ACCESS_KEY or use an AWS role)');
   }
 
   const client = getSesClient();
-  await client.send(
-    new SendEmailCommand({
-      Source: source,
-      Destination: { ToAddresses: [input.to.trim()] },
-      Message: {
-        Subject: { Data: input.subject, Charset: 'UTF-8' },
-        Body: {
-          Text: { Data: input.text, Charset: 'UTF-8' },
-          ...(input.html && input.html.length > 0
-            ? { Html: { Data: input.html, Charset: 'UTF-8' } }
-            : {}),
+  try {
+    await client.send(
+      new SendEmailCommand({
+        Source: source,
+        Destination: { ToAddresses: [input.to.trim()] },
+        Message: {
+          Subject: { Data: input.subject, Charset: 'UTF-8' },
+          Body: {
+            Text: { Data: input.text, Charset: 'UTF-8' },
+            ...(input.html && input.html.length > 0
+              ? { Html: { Data: input.html, Charset: 'UTF-8' } }
+              : {}),
+          },
         },
-      },
-    })
-  );
+      })
+    );
+  } catch (err) {
+    console.error('LỖI AWS SES CHI TIẾT:', err);
+    throw err;
+  }
 }

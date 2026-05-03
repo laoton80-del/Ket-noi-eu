@@ -70,7 +70,8 @@ export async function postEmailOtpRequest(req: Request, res: Response): Promise<
       return;
     }
     jsonOk(res, { sent: true });
-  } catch {
+  } catch (err) {
+    console.error('LỖI OTP REQUEST (không xử lý được — xem stack bên dưới):', err);
     jsonFail(res, 'Unexpected error', 500);
   }
 }
