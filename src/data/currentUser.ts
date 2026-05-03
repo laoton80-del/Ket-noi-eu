@@ -1,7 +1,7 @@
 /** Mock user — sau này có thể thay bằng UserContext / API */
 export const CURRENT_USER_MOCK = {
   name: 'Nguyễn Văn Vinh',
-  avatarUrl: 'https://static.ketnoiglobal.com/avatars/vinh.jpg',
+  avatarUrl: 'https://static.ketnoieu.com/avatars/vinh.jpg',
 } as const;
 
 export const DEFAULT_STUDENT_AVATAR =

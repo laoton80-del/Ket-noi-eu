@@ -42,7 +42,7 @@ export function buildLifeOSActions(
       });
     },
     onPressCallAssist: () => {
-      navigation.navigate('Tabs', { screen: 'Concierge' });
+      navigation.navigate('Tabs', { screen: 'TabAi' });
     },
     onPressFindServices: () => {
       if (LAUNCH_PILOT_CONFIG.enableRadarSurface) {

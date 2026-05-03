@@ -28,7 +28,7 @@ export function KidsLearningHome() {
           Khu học tiếng Việt cho bé (daily lesson, gamification, story mode).
         </Text>
         <Pressable
-          onPress={() => navigation.navigate('Tabs', { screen: 'HocTap' })}
+          onPress={() => navigation.navigate('Tabs', { screen: 'TabHome' })}
           style={({ pressed }) => [styles.cta, pressed && { opacity: 0.86 }]}
         >
           <Text style={styles.ctaText}>Bắt đầu học</Text>

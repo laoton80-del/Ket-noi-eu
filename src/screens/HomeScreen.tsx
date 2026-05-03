@@ -13,7 +13,6 @@ import {
   Alert,
   Linking,
   Modal,
-  Image,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -23,8 +22,10 @@ import {
   useWindowDimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { AppImage } from '../components/ui/AppImage';
 import { AppButton } from '../components/AppButton';
 import { AuthPaywallModal } from '../components/AuthPaywallModal';
+import { PersonaOnboardingModal } from '../components/PersonaOnboardingModal';
 import { ProactiveSuggestions } from '../components/ProactiveSuggestions';
 import { CharityWidget } from '../components/ui/CharityWidget';
 import {
@@ -42,6 +43,7 @@ import {
 } from '../services/travel/EmergencySosService';
 import { getTravelContext } from '../services/context/UserContextService';
 import { getRestApiJwt, isRestApiConfigured } from '../services/apiClient';
+import { patchUserPersonaOnServer } from '../services/viGlobalUserPersonaApi';
 import { fetchBalance } from '../services/viGlobalWalletApi';
 import { useWalletState } from '../state/wallet';
 import { STORAGE_KEYS } from '../storage/storageKeys';
@@ -91,7 +93,9 @@ type BriefingCard = Readonly<{
 export function HomeScreen() {
   const navigation = useNavigation<Nav>();
   const { width } = useWindowDimensions();
-  const { user, setPendingRedirect } = useAuth();
+  const { user, setPendingRedirect, updateProfile } = useAuth();
+  const isTourist = user?.persona === 'TOURIST';
+  const [personaModalVisible, setPersonaModalVisible] = useState(false);
   const wallet = useWalletState();
   const [showPaywall, setShowPaywall] = useState(false);
   const [showPin, setShowPin] = useState(false);
@@ -119,6 +123,10 @@ export function HomeScreen() {
     return () => clearInterval(id);
   }, []);
 
+  useEffect(() => {
+    if (!user) setPersonaModalVisible(false);
+  }, [user]);
+
   useFocusEffect(
     useCallback(() => {
       let cancelled = false;
@@ -142,6 +150,21 @@ export function HomeScreen() {
     }, [])
   );
 
+  useFocusEffect(
+    useCallback(() => {
+      if (user?.needsPersonaOnboarding === true) setPersonaModalVisible(true);
+    }, [user?.needsPersonaOnboarding])
+  );
+
+  const applyPersonaChoice = useCallback(
+    (persona: 'EXPAT' | 'TOURIST') => {
+      void patchUserPersonaOnServer(persona);
+      updateProfile({ persona, needsPersonaOnboarding: false });
+      setPersonaModalVisible(false);
+    },
+    [updateProfile]
+  );
+
   const localClock = useMemo(
     () => clockTick.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' }),
     [clockTick]
@@ -157,7 +180,7 @@ export function HomeScreen() {
   );
 
   const briefingCards = useMemo((): readonly BriefingCard[] => {
-    return [
+    const all: readonly BriefingCard[] = [
       {
         id: 'b1',
         headline: 'New Schengen Visa Rules',
@@ -179,7 +202,9 @@ export function HomeScreen() {
         sub: 'Wealth brief · year-end checklist',
       },
     ];
-  }, []);
+    if (isTourist) return all.filter((c) => c.id !== 'b1' && c.id !== 'b4');
+    return all;
+  }, [isTourist]);
 
   const layout = useMemo(() => {
     const maxShell = 720;
@@ -215,6 +240,15 @@ export function HomeScreen() {
     [navigation, setPendingRedirect, user]
   );
 
+  const openInterpreter = useCallback(() => {
+    if (!user) {
+      setPendingRedirect('LiveInterpreter');
+      setShowPaywall(true);
+      return;
+    }
+    navigation.navigate('LiveInterpreter', { guidedEntry: true, scenario: 'general' });
+  }, [navigation, setPendingRedirect, user]);
+
   const onSecretTap = useCallback(() => {
     if (!isAdminDebugSurfaceEnabled()) return;
     const now = Date.now();
@@ -242,7 +276,7 @@ export function HomeScreen() {
       }
       if (persona === 'loan') {
         navigation.navigate('Tabs', {
-          screen: 'LeTan',
+          screen: 'TabAi',
           params: { proactiveQuestion: question, autoSimulate: true },
         });
         return;
@@ -343,13 +377,20 @@ export function HomeScreen() {
       <StatusBar style="light" />
       <LinearGradient colors={['#050B14', '#0c1828']} style={StyleSheet.absoluteFillObject} />
       <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
-      <View style={styles.creditPill}>
-        {walletBalanceLoading ? (
-          <ActivityIndicator size="small" color={GOLD_ACCENT} accessibilityLabel="Đang tải số dư" />
-        ) : (
-          <Ionicons name="wallet-outline" size={14} color={GOLD_ACCENT} />
-        )}
-        <Text style={styles.creditPillText}>{wallet.credits} VIG Token</Text>
+      <View style={[styles.creditPill, isTourist && styles.creditPillTourist]}>
+        <View style={styles.creditPillRow}>
+          {walletBalanceLoading ? (
+            <ActivityIndicator size="small" color={GOLD_ACCENT} accessibilityLabel="Đang tải số dư" />
+          ) : (
+            <Ionicons name="wallet-outline" size={14} color={GOLD_ACCENT} />
+          )}
+          <Text style={styles.creditPillText}>{wallet.credits} VIG Token</Text>
+        </View>
+        {isTourist && !walletBalanceLoading ? (
+          <Text style={styles.creditPillSub} numberOfLines={2}>
+            Your Safe Travel Money
+          </Text>
+        ) : null}
       </View>
 
       <ScrollView
@@ -366,11 +407,42 @@ export function HomeScreen() {
       >
         <View style={styles.hero}>
           <Text style={styles.heroEyebrow}>{brandNameForSurface('b2c')}</Text>
-          <Text style={styles.heading}>Trung tâm B2C</Text>
+          <Text style={styles.heading}>{isTourist ? 'Vietnam travel hub' : 'Trung tâm B2C'}</Text>
           <Text style={styles.heroSub}>
-            Ba vũ trụ ứng dụng — Local cho đời thường, Travel cho chuyến đi cao cấp, Academy cho học tập AI.
+            {isTourist
+              ? 'Wallet, live interpreter, and premium travel logistics — one ViGlobal app for Western visitors.'
+              : 'Ba vũ trụ ứng dụng — Local cho đời thường, Travel cho chuyến đi cao cấp, Academy cho học tập AI.'}
           </Text>
         </View>
+
+        {isTourist ? <DashboardB2CScreen contentWidth={layout.inner} /> : null}
+
+        {isTourist ? (
+          <View style={[styles.survivalStrip, { width: layout.inner }]} className={applyWebStyles('kn-glass')}>
+            <Text style={styles.survivalTitle}>AI translation & survival</Text>
+            <Text style={styles.survivalSub}>Tap for instant help in Vietnam — highlighted for travel mode.</Text>
+            <View style={styles.survivalRow}>
+              <Pressable
+                onPress={openInterpreter}
+                style={({ pressed }) => [styles.survivalChip, styles.survivalChipPrimary, pressed && { opacity: 0.9 }]}
+                accessibilityRole="button"
+                accessibilityLabel="Live interpreter"
+              >
+                <Ionicons name="mic" size={20} color={GOLD_ACCENT} />
+                <Text style={styles.survivalChipText}>Live interpreter</Text>
+              </Pressable>
+              <Pressable
+                onPress={() => openProtected('LeonaCall')}
+                style={({ pressed }) => [styles.survivalChip, styles.survivalChipPrimary, pressed && { opacity: 0.9 }]}
+                accessibilityRole="button"
+                accessibilityLabel="AI voice line"
+              >
+                <Ionicons name="call" size={20} color={GOLD_ACCENT} />
+                <Text style={styles.survivalChipText}>AI voice line</Text>
+              </Pressable>
+            </View>
+          </View>
+        ) : null}
 
         <View style={[styles.charityWrap, { width: layout.inner }]}>
           <CharityWidget />
@@ -438,7 +510,7 @@ export function HomeScreen() {
               style={({ pressed }) => [styles.logoWrap, pressed && { opacity: 0.92 }]}
               className={applyWebStyles('kn-neon-b2b')}
             >
-              <Image source={IMG_LOGO} style={styles.logoImage} accessibilityLabel="Logo" />
+              <AppImage source={IMG_LOGO} style={styles.logoImage} accessibilityLabel="Logo" />
             </Pressable>
             <View style={styles.featureCopy}>
               <Text style={styles.featureTitle}>Tổng đài viên {inboundPersonaName}</Text>
@@ -459,7 +531,7 @@ export function HomeScreen() {
           </View>
         </View>
 
-        <DashboardB2CScreen contentWidth={layout.inner} />
+        {!isTourist ? <DashboardB2CScreen contentWidth={layout.inner} /> : null}
 
         <View style={[styles.utilityStrip, { width: layout.inner }]} className={applyWebStyles('kn-glass')}>
           <Text style={styles.utilityStripTitle}>Lối tắt hệ thống</Text>
@@ -502,6 +574,12 @@ export function HomeScreen() {
           </View>
         </View>
       </ScrollView>
+
+      <PersonaOnboardingModal
+        visible={personaModalVisible}
+        onPickExpat={() => applyPersonaChoice('EXPAT')}
+        onPickTourist={() => applyPersonaChoice('TOURIST')}
+      />
 
       <AuthPaywallModal
         visible={showPaywall}
@@ -686,23 +764,101 @@ const styles = StyleSheet.create({
     zIndex: 10,
     minHeight: 32,
     paddingHorizontal: 12,
+    paddingVertical: 6,
     borderRadius: theme.radius.pill,
     borderWidth: 1,
     borderColor: GOLD_BORDER,
     backgroundColor: CARD_BG,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
+    flexDirection: 'column',
+    alignItems: 'flex-end',
+    gap: 2,
+    maxWidth: '58%',
     shadowColor: '#0B1628',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.06,
     shadowRadius: 8,
     elevation: 2,
   },
+  creditPillTourist: {
+    borderColor: 'rgba(212, 175, 55, 0.85)',
+    shadowOpacity: 0.12,
+  },
+  creditPillRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
   creditPillText: {
     fontSize: 13,
     color: TEXT_PRIMARY,
     fontFamily: FontFamily.semibold,
+    flexShrink: 1,
+  },
+  creditPillSub: {
+    fontSize: 10,
+    lineHeight: 13,
+    color: GOLD_ACCENT,
+    fontFamily: FontFamily.semibold,
+    textAlign: 'right',
+    maxWidth: 168,
+  },
+  survivalStrip: {
+    alignSelf: 'center',
+    borderRadius: 16,
+    borderTopWidth: 1,
+    borderTopColor: GOLD_BORDER,
+    borderLeftWidth: 1,
+    borderLeftColor: GOLD_BORDER,
+    borderRightWidth: 1,
+    borderRightColor: 'rgba(255,255,255,0.08)',
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255,255,255,0.06)',
+    backgroundColor: CARD_BG,
+    padding: theme.spacing.md,
+    marginBottom: theme.spacing.lg,
+  },
+  survivalTitle: {
+    fontSize: 13,
+    fontFamily: FontFamily.extrabold,
+    letterSpacing: 0.6,
+    color: GOLD_ACCENT,
+    textTransform: 'uppercase',
+    marginBottom: 4,
+  },
+  survivalSub: {
+    fontSize: 12,
+    lineHeight: 17,
+    color: TEXT_MUTED,
+    fontFamily: FontFamily.regular,
+    marginBottom: 12,
+  },
+  survivalRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 10,
+  },
+  survivalChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingVertical: 12,
+    paddingHorizontal: 14,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.12)',
+    backgroundColor: 'rgba(0,0,0,0.22)',
+    flexGrow: 1,
+    minWidth: 140,
+  },
+  survivalChipPrimary: {
+    borderColor: GOLD_BORDER,
+    backgroundColor: 'rgba(197, 160, 89, 0.14)',
+  },
+  survivalChipText: {
+    fontSize: 13,
+    color: TEXT_PRIMARY,
+    fontFamily: FontFamily.bold,
+    flexShrink: 1,
   },
   actionCenter: {
     flexDirection: 'row',

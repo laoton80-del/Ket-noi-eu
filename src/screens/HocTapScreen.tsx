@@ -8,7 +8,6 @@ import {
   ActivityIndicator,
   Alert,
   Animated as RNAnimated,
-  FlatList,
   Pressable,
   StyleSheet,
   Text,
@@ -16,6 +15,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { FlashcardItem } from '../components/FlashcardItem';
+import { OptimizedFlatList } from '../components/ui/OptimizedFlatList';
 import {
   AI_TEACHER_INCLUDED_MINUTES_PER_MONTH,
   AI_TEACHER_OVERAGE_PER_MIN_CREDITS,
@@ -380,13 +380,13 @@ export function HocTapScreen() {
       </View>
 
       <View style={styles.gridShell}>
-        <FlatList
+        <OptimizedFlatList
           data={filteredCards}
           keyExtractor={(item) => item.id}
           numColumns={2}
-          initialNumToRender={6}
-          maxToRenderPerBatch={8}
-          windowSize={7}
+          initialNumToRender={10}
+          maxToRenderPerBatch={10}
+          windowSize={5}
           removeClippedSubviews
           contentContainerStyle={styles.gridContent}
           columnWrapperStyle={styles.gridRow}

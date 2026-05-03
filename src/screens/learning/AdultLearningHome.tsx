@@ -18,10 +18,12 @@ import {
 import { theme } from '../../theme/theme';
 import { FontFamily } from '../../theme/typography';
 import { useAuth } from '../../context/AuthContext';
+import { useSyncHubOnFocus } from '../../hooks/useSyncHubOnFocus';
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
 
 export function AdultLearningHome() {
+  useSyncHubOnFocus('HUB_ACADEMY');
   const navigation = useNavigation<Nav>();
   const { user } = useAuth();
   const [selectedSituation, setSelectedSituation] = useState<string | null>(null);
@@ -30,7 +32,7 @@ export function AdultLearningHome() {
     (situation: string) => {
       setSelectedSituation(situation);
       // V1: mọi tình huống tạm mở Học tập; sau này có thể truyền params filter topic.
-      navigation.navigate('Tabs', { screen: 'Academy' });
+      navigation.navigate('Tabs', { screen: 'TabHome' });
     },
     [navigation]
   );
@@ -42,7 +44,7 @@ export function AdultLearningHome() {
         user?.phone
       );
       navigation.navigate('Tabs', {
-        screen: 'Concierge',
+        screen: 'TabAi',
         params: {
           aiMode: session.aiMode,
           scenario: session.scenario,
@@ -51,14 +53,14 @@ export function AdultLearningHome() {
         },
       });
     } catch {
-      navigation.navigate('Tabs', { screen: 'Academy' });
+      navigation.navigate('Tabs', { screen: 'TabHome' });
     }
   }, [navigation, selectedSituation, user?.phone]);
 
   const onPressPhrase = useCallback(
     (phrase: string) => {
       navigation.navigate('Tabs', {
-        screen: 'Concierge',
+        screen: 'TabAi',
         params: {
           proactiveQuestion: `${phrase}. Tôi đang luyện phát âm, xin bạn trả lời từ từ.`,
         },

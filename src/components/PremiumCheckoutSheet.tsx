@@ -10,6 +10,7 @@ import { theme } from '../theme/theme';
 import { PinFallbackModal } from './PinFallbackModal';
 import { authenticateBiometric, getBiometricAvailability, isValidWalletPin } from '../security/biometricUnlock';
 import { applyWebStyles } from '../utils/applyWebStyles';
+import { isDemoSandboxActive } from '../services/ux/DemoSandbox';
 
 type PremiumCheckoutSheetProps = {
   visible: boolean;
@@ -90,7 +91,7 @@ export function PremiumCheckoutSheet({
   }, [isPlatformPaySupported, visible]);
 
   useEffect(() => {
-    if (!visible) return;
+    if (isDemoSandboxActive() || !visible) return;
     setPaymentAuthOk(false);
     let cancelled = false;
     void (async () => {
@@ -209,6 +210,8 @@ export function PremiumCheckoutSheet({
   }
 
   if (!visible) return null;
+
+  if (isDemoSandboxActive()) return null;
 
   const showNativeButton = Platform.OS === 'ios' || Platform.OS === 'android';
   const payReady =

@@ -1,6 +1,6 @@
 import * as Notifications from 'expo-notifications';
 import type { AuthUser } from '../../context/AuthContext';
-import { LIFEOS_LEGAL_LEONA_CREDITS } from '../../constants/lifeOSConversion';
+import { calculateCallCreditPrice } from '../PaymentsService';
 import { syncWalletFromServer } from '../../state/wallet';
 import type { SellResume } from '../selling/sellingTypes';
 import { loadAutonomousConsent } from './consentStorage';
@@ -48,7 +48,8 @@ export async function orchestrateAutonomousAction(params: {
   await syncWalletFromServer();
   const userState = await getUserState(user);
   const consent = await loadAutonomousConsent(userState.userId);
-  const actionCost = trigger.type === 'visa_expiry_threshold' ? LIFEOS_LEGAL_LEONA_CREDITS : 0;
+  const actionCost =
+    trigger.type === 'visa_expiry_threshold' ? calculateCallCreditPrice(user.country).localAmount : 0;
   const dailySpent = await getTodayAutonomyCreditsSpent(userState.userId);
   const cooldown = {
     isActive:

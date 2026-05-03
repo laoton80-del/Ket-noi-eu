@@ -22,7 +22,7 @@ export type SellResume =
   | {
       route: 'Tabs';
       params: {
-        screen: 'Concierge';
+        screen: 'TabAi';
         params?: {
           proactiveQuestion?: string;
           autoSimulate?: boolean;

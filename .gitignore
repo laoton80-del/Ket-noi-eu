@@ -33,10 +33,17 @@ yarn-error.*
 # G5 optional trust:live success stamp (local / CI workspace)
 .trust-live-stamp
 
-# local env files
+# DevSecOps: never commit local secrets — `.env` must stay out of git (use EAS Secrets / CI).
 .env
-.env*.local
+.env.*
 !.env.example
+.env*.local
+
+# Firebase / GCP — keep out of git; inject via EAS secrets or CI (see app.config.js env paths).
+google-services.json
+GoogleService-Info.plist
+*serviceAccount*.json
+firebase-adminsdk*.json
 
 # typescript
 *.tsbuildinfo

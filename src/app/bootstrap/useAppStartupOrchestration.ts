@@ -15,6 +15,10 @@ import { warnIfAdminDebugInReleaseBuild } from '../../config/adminDebugGate';
 import { getDocumentTypeLabel, runStartupDocumentAlarmCheck } from '../../services/DocumentAlarmService';
 import { buildVisaExpiryThresholdTrigger, orchestrateAutonomousAction } from '../../services/autonomy';
 import { scheduleHolidayNotificationsForCountry } from '../../services/holidays';
+import {
+  addForegroundNotificationListener,
+  initializePushNotificationsOnStartup,
+} from '../../services/NotificationService';
 import { markAppInstallOnce, setGrowthUserTraits, trackGrowthEvent, trackGrowthEventOnce } from '../../services/growth';
 import { runStorageMigrations } from '../../storage/runMigrations';
 import {
@@ -99,10 +103,8 @@ export function useAppStartupOrchestration({
 
   useEffect(() => {
     void (async () => {
-      const { status } = await Notifications.requestPermissionsAsync();
-      if (status !== 'granted') return;
       try {
-        await Notifications.getDevicePushTokenAsync();
+        await initializePushNotificationsOnStartup();
       } catch {
         // Dev client / simulator may not provide a device token; remote push still optional for local vault reminders.
       }
@@ -110,7 +112,14 @@ export function useAppStartupOrchestration({
         await scheduleHolidayNotificationsForCountry(user.country);
       }
     })();
-  }, [user?.country]);
+  }, [user?.country, user?.phone]);
+
+  useEffect(() => {
+    const sub = addForegroundNotificationListener(() => {
+      // Foreground notifications are presented via NotificationService handler; hook for future analytics.
+    });
+    return () => sub.remove();
+  }, []);
 
   useEffect(() => {
     const sub = Notifications.addNotificationResponseReceivedListener((response) => {
@@ -191,10 +200,10 @@ export function useAppStartupOrchestration({
             'Chào bạn, mình là LOAN. Bạn muốn gọi hay đặt lịch? Nói một câu — mình gợi ý bước tiếp theo.'
           );
           if (user) {
-            navigationRef.navigate('Tabs', { screen: 'Concierge' });
+            navigationRef.navigate('Tabs', { screen: 'TabAi' });
           } else {
-            setPendingRedirect('Concierge');
-            navigationRef.navigate('Login', { redirectTo: 'Concierge' });
+            setPendingRedirect('LeTan');
+            navigationRef.navigate('Login', { redirectTo: 'LeTan' });
           }
           break;
         case 'language':

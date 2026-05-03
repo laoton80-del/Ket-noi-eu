@@ -2,8 +2,6 @@ import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { AnimatedPressable } from './AnimatedPressable';
 import { WidgetCard } from './WidgetCard';
-import { theme } from '../../theme/theme';
-import { FontFamily } from '../../theme/typography';
 
 type Props = {
   visible: boolean;
@@ -42,14 +40,14 @@ export const LifeOSLowCreditBanner = React.memo(LifeOSLowCreditBannerComponent);
 
 const styles = StyleSheet.create({
   wrap: { gap: 10 },
-  title: { ...theme.typeScale.h2, color: theme.colors.PendingAmber, fontFamily: FontFamily.bold },
-  body: { ...theme.typeScale.body, color: theme.colors.text.secondary, fontFamily: FontFamily.regular },
+  title: { fontSize: 16, fontWeight: '700', color: '#B45309' },
+  body: { fontSize: 13, color: '#4B5563', lineHeight: 19 },
   button: {
-    backgroundColor: theme.colors.GraphiteBlue,
+    backgroundColor: '#111827',
     borderRadius: 14,
     paddingVertical: 12,
     paddingHorizontal: 14,
     alignSelf: 'flex-start',
   },
-  buttonText: { ...theme.typeScale.body, color: theme.colors.CeolWhite, fontFamily: FontFamily.semibold },
+  buttonText: { color: '#FFFFFF', fontWeight: '600' },
 });

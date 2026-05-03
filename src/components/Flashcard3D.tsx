@@ -7,7 +7,6 @@ import Animated, {
   withSpring,
 } from 'react-native-reanimated';
 import { FontFamily } from '../theme/typography';
-import { theme } from '../theme/theme';
 
 type Flashcard3DProps = {
   prompt: string;
@@ -78,16 +77,16 @@ const styles = StyleSheet.create({
     borderRadius: 18,
     padding: 12,
     backfaceVisibility: 'hidden',
-    shadowColor: theme.colors.glass.shadow,
+    shadowColor: '#8B7355',
     shadowOffset: { width: 0, height: 10 },
     shadowOpacity: 0.22,
     shadowRadius: 14,
     elevation: 5,
   },
   frontCard: {
-    backgroundColor: theme.colors.CeolWhite,
+    backgroundColor: '#FFFDF8',
     borderWidth: 1,
-    borderColor: theme.colors.glass.border,
+    borderColor: 'rgba(212, 175, 55, 0.5)',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -95,39 +94,39 @@ const styles = StyleSheet.create({
     ...StyleSheet.absoluteFillObject,
     borderRadius: 18,
     borderWidth: 1,
-    borderColor: theme.colors.glass.borderSoft,
+    borderColor: 'rgba(139,115,85,0.16)',
   },
   promptText: {
-    ...theme.typeScale.h2,
-    color: theme.colors.GraphiteBlue,
+    fontSize: 18,
+    color: '#2B241B',
     fontFamily: FontFamily.extrabold,
     textAlign: 'center',
-    lineHeight: theme.typeScale.h2.lineHeight,
+    lineHeight: 24,
   },
   backCard: {
-    backgroundColor: theme.colors.SoftMineralGrey,
+    backgroundColor: '#FFFAF1',
     borderWidth: 1.5,
-    borderColor: theme.colors.RouteError,
+    borderColor: 'rgba(226, 92, 92, 0.55)',
   },
   backTitle: {
-    ...theme.typeScale.caption,
-    color: theme.colors.RouteError,
+    fontSize: 12,
+    color: '#A63F3F',
     fontFamily: FontFamily.bold,
     marginBottom: 4,
     marginTop: 2,
   },
   meaningText: {
-    ...theme.typeScale.body,
-    color: theme.colors.GraphiteBlue,
+    fontSize: 13,
+    color: '#2B241B',
     fontFamily: FontFamily.medium,
-    lineHeight: theme.typeScale.body.lineHeight,
+    lineHeight: 18,
     marginBottom: 6,
   },
   knowledgeText: {
-    ...theme.typeScale.caption,
-    color: theme.colors.text.secondary,
+    fontSize: 12,
+    color: '#5B4A36',
     fontFamily: FontFamily.regular,
-    lineHeight: theme.typeScale.caption.lineHeight,
+    lineHeight: 17,
   },
 });
 

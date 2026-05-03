@@ -2,8 +2,6 @@ import React from 'react';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 import { AnimatedPressable } from './AnimatedPressable';
 import { WidgetCard } from './WidgetCard';
-import { theme } from '../../theme/theme';
-import { FontFamily } from '../../theme/typography';
 
 export type LifeOSActionCell = {
   key: string;
@@ -40,7 +38,7 @@ const LifeOSActionGridComponent: React.FC<LifeOSActionGridProps> = ({ cells }) =
             <Text style={[styles.costLine, c.disabled && styles.cellMuted]}>{c.costLine}</Text>
             {c.loading ? (
               <View style={styles.loadingRow}>
-                <ActivityIndicator size="small" color={theme.colors.CeolWhite} />
+                <ActivityIndicator size="small" color="#FFFFFF" />
                 <Text style={styles.loadingText}>Đang mở...</Text>
               </View>
             ) : (
@@ -57,16 +55,16 @@ export const LifeOSActionGrid = React.memo(LifeOSActionGridComponent);
 
 const styles = StyleSheet.create({
   sectionTitle: {
-    ...theme.typeScale.h2,
-    fontFamily: FontFamily.bold,
-    color: theme.colors.GraphiteBlue,
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#111827',
     marginBottom: 6,
   },
   sectionSub: {
-    ...theme.typeScale.body,
-    color: theme.colors.text.secondary,
-    fontFamily: FontFamily.regular,
+    fontSize: 13,
+    color: '#6B7280',
     marginBottom: 14,
+    lineHeight: 18,
   },
   grid: {
     flexDirection: 'row',
@@ -77,7 +75,7 @@ const styles = StyleSheet.create({
     width: '47%',
     flexGrow: 1,
     minWidth: '44%',
-    backgroundColor: theme.colors.GraphiteBlue,
+    backgroundColor: '#111827',
     borderRadius: 14,
     paddingVertical: 12,
     paddingHorizontal: 10,
@@ -86,26 +84,26 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   cellDisabled: {
-    backgroundColor: theme.colors.executive.panelMuted,
+    backgroundColor: '#4B5563',
     opacity: 0.72,
   },
   cellTitle: {
-    color: theme.colors.CeolWhite,
-    ...theme.typeScale.body,
-    fontFamily: FontFamily.bold,
+    color: '#FFFFFF',
+    fontWeight: '700',
+    fontSize: 13,
     textAlign: 'center',
   },
   costLine: {
-    color: theme.colors.CeolWhite,
-    ...theme.typeScale.caption,
-    fontFamily: FontFamily.semibold,
+    color: 'rgba(255,255,255,0.88)',
+    fontWeight: '600',
+    fontSize: 12,
     textAlign: 'center',
   },
   outcomeLine: {
-    color: theme.colors.text.secondary,
-    ...theme.typeScale.caption,
-    fontFamily: FontFamily.regular,
+    color: 'rgba(255,255,255,0.75)',
+    fontSize: 11,
     textAlign: 'center',
+    lineHeight: 15,
   },
   loadingRow: {
     marginTop: 2,
@@ -115,11 +113,11 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   loadingText: {
-    color: theme.colors.CeolWhite,
-    ...theme.typeScale.caption,
-    fontFamily: FontFamily.semibold,
+    color: 'rgba(255,255,255,0.92)',
+    fontSize: 11,
+    fontWeight: '600',
   },
   cellMuted: {
-    color: theme.colors.text.secondary,
+    color: 'rgba(255,255,255,0.65)',
   },
 });

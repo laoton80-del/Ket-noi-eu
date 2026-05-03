@@ -1,3 +1,12 @@
+import './src/i18n';
+import { applyStoredLanguage } from './src/i18n/persistLanguage';
+import { AppQueryProvider } from './src/providers/AppQueryProvider';
+import { initProductAnalytics } from './src/services/AnalyticsService';
+import * as Sentry from '@sentry/react-native';
+import { initMonitoringRadar } from './src/config/sentryConfig';
+
+initMonitoringRadar();
+
 import {
   Montserrat_400Regular,
   Montserrat_500Medium,
@@ -6,23 +15,18 @@ import {
   Montserrat_800ExtraBold,
   useFonts as useMontserratFonts,
 } from '@expo-google-fonts/montserrat';
-import { Ionicons } from '@expo/vector-icons';
 import {
   NavigationContainer,
   ThemeProvider,
   createNavigationContainerRef,
-  useNavigation,
   type LinkingOptions,
 } from '@react-navigation/native';
 import NetInfo from '@react-native-community/netinfo';
-import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { StatusBar } from 'expo-status-bar';
 import * as Notifications from 'expo-notifications';
-import { useEffect, useMemo, useRef, useState, type ReactElement } from 'react';
+import { useEffect, useRef, useState, type ReactElement } from 'react';
 import {
-  Alert,
   Animated,
   Easing,
   Platform,
@@ -32,28 +36,25 @@ import {
   useWindowDimensions,
 } from 'react-native';
 import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
-import { AuthPaywallModal } from './src/components/AuthPaywallModal';
 import { AppStateView } from './src/components/ui/AppStateView';
 import { IntentEntryModal } from './src/components/IntentEntryModal';
-import { AuthProvider, useAuth, type RedirectTarget } from './src/context/AuthContext';
+import { AuthProvider, useAuth } from './src/context/AuthContext';
 import {
   isAdminDebugSurfaceEnabled,
 } from './src/config/adminDebugGate';
 import { APP_BRAND } from './src/config/appBrand';
-import { getStrings } from './src/i18n/strings';
-import type { RootStackParamList, RootTabParamList } from './src/navigation/routes';
+import type { GuidedIntentId } from './src/onboarding/guidedOnboardingStorage';
+import { resolveRootStackRoute } from './src/navigation/AppNavigator';
+import { MainTabNavigator } from './src/navigation/MainTabNavigator';
+import type { RootStackParamList } from './src/navigation/routes';
 import { CaNhanScreen } from './src/screens/CaNhanScreen';
 import { WalletScreen } from './src/screens/WalletScreen';
-import { CongDongScreen } from './src/screens/CongDongScreen';
-import { HomeScreen } from './src/screens/HomeScreen';
-import { HocTapScreen } from './src/screens/HocTapScreen';
-import { LeTanScreen } from './src/screens/LeTanScreen';
 import { LeonaCallScreen } from './src/screens/LeonaCallScreen';
+import { CallScreen } from './src/screens/comms/CallScreen';
 import { LoginScreen } from './src/screens/LoginScreen';
 import { OtpScreen } from './src/screens/OtpScreen';
 import { RoleSelectionScreen } from './src/screens/auth/RoleSelectionScreen';
 import { SetupProfileScreen } from './src/screens/SetupProfileScreen';
-import { ServiceHubScreen } from './src/screens/ServiceHubScreen';
 import { AiEyeScreen } from './src/screens/AiEyeScreen';
 import { AdminDashboardScreen } from './src/screens/AdminDashboardScreen';
 import { AdminProfitDashboardScreen } from './src/screens/admin/AdminProfitDashboardScreen';
@@ -61,6 +62,7 @@ import { AdContentFactoryScreen } from './src/screens/admin/AdContentFactoryScre
 import { SalesLeadCRM } from './src/screens/admin/SalesLeadCRM';
 import { OutboundCampaignScreen } from './src/screens/admin/OutboundCampaignScreen';
 import { FacebookWarRoomScreen } from './src/screens/admin/FacebookWarRoomScreen';
+import { MarketingApprovalScreen } from './src/screens/admin/MarketingApprovalScreen';
 import { VaultScreen } from './src/screens/VaultScreen';
 import { ReferralRewardScreen } from './src/screens/ReferralRewardScreen';
 import { CashOutScreen } from './src/screens/b2c/CashOutScreen';
@@ -71,6 +73,10 @@ import { TravelHospitalityScreen } from './src/screens/b2c/TravelHospitalityScre
 import { FlightSearchScreen } from './src/screens/b2c/travel/FlightSearchScreen';
 import { TravelHubScreen } from './src/screens/b2c/travel/TravelHubScreen';
 import { LocalScreen } from './src/screens/b2c/LocalScreen';
+import { VietnamHubScreen } from './src/screens/b2c/VietnamHubScreen';
+import { TourismBookingConfirmedScreen } from './src/screens/b2c/TourismBookingConfirmedScreen';
+import { ViralWrapScreen } from './src/screens/b2c/ViralWrapScreen';
+import { TourismCheckoutScreen } from './src/screens/b2c/TourismCheckoutScreen';
 import { TravelSosHubScreen } from './src/screens/b2c/travel/TravelSosHubScreen';
 import { LocalFixerScreen } from './src/screens/b2c/travel/LocalFixerScreen';
 import { LocalFixerCheckoutScreen } from './src/screens/b2c/travel/LocalFixerCheckoutScreen';
@@ -83,18 +89,13 @@ import { AdultLearningHome } from './src/screens/learning/AdultLearningHome';
 import { KidsLearningHome } from './src/screens/learning/KidsLearningHome';
 import { VietKidsScreen } from './src/screens/b2c/academy/VietKidsScreen';
 import { KidsLeaderboardScreen } from './src/screens/b2c/academy/KidsLeaderboardScreen';
-import { useAssistantSettings } from './src/state/assistantSettings';
+import { SuperAppUserStoreSync } from './src/store/SuperAppUserStoreSync';
 import { theme } from './src/theme/theme';
-import { FontFamily } from './src/theme/typography';
 import { useAppStartupOrchestration } from './src/app/bootstrap/useAppStartupOrchestration';
 import { AppModeProvider, useAppMode } from './src/context/AppModeContext';
-import {
-  LAUNCH_PILOT_CONFIG,
-  PILOT_LEONA_SERVICES_FALLBACK_PREFILL,
-  resolvePilotAwareRedirectTarget,
-} from './src/config/launchPilot';
+import { HubThemeProvider } from './src/context/HubThemeContext';
 import { ConditionalStripeProvider } from './src/providers/ConditionalStripeProvider';
-import { ProSubscriptionPaywall } from './src/screens/commercial/ProSubscriptionPaywall';
+import { B2BPaywallScreen } from './src/screens/b2b/B2BPaywallScreen';
 import { PartnerOnboardingScreen } from './src/screens/commercial/PartnerOnboardingScreen';
 import { MerchantDashboardScreen } from './src/screens/b2b/MerchantDashboardScreen';
 import { SmartCalendarScreen } from './src/screens/b2b/SmartCalendarScreen';
@@ -105,21 +106,18 @@ import { AdBiddingScreen } from './src/screens/b2b/AdBiddingScreen';
 import { MerchantDetailScreen } from './src/screens/b2c/MerchantDetailScreen';
 import { MerchantStorefrontScreen } from './src/screens/b2c/MerchantStorefrontScreen';
 import { PromoToolsScreen } from './src/screens/b2b/PromoToolsScreen';
+import { B2BPromotionSettings } from './src/screens/b2b/B2BPromotionSettings';
 import { SponsoredAdsScreen } from './src/screens/b2b/SponsoredAdsScreen';
 import { KOLPartnerDashboard } from './src/screens/commercial/KOLPartnerDashboard';
 import { DailyRewardScreen } from './src/screens/b2c/DailyRewardScreen';
 import { LoyaltyRewardsScreen } from './src/screens/b2c/LoyaltyRewardsScreen';
 import { InboundQueueScreen } from './src/screens/b2b/InboundQueueScreen';
 import { LiveAiTeacherScreen } from './src/screens/academy/LiveAiTeacherScreen';
-import { b2bTheme, b2cTheme } from './src/theme/appModeThemes';
-import {
-  DIASPORA_RESTRICTION_MODAL_MESSAGE,
-  DIASPORA_RESTRICTION_MODAL_TITLE,
-} from './src/components/modals/DiasporaRestrictionModal';
-import { evaluateMerchantSurfaceAccess } from './src/services/auth/merchantSurfaceEntry';
+import { DemoTourOverlay } from './src/components/onboarding/DemoTourOverlay';
+import { V7NavigationSurfaceProvider, useNavigationThemeForHub } from './src/context/V7NavigationSurfaceContext';
+import { b2bTheme } from './src/theme/appModeThemes';
 import { hasB2BWorkspaceAccess } from './src/utils/b2bAccess';
 
-const Tab = createBottomTabNavigator<RootTabParamList>();
 const Stack = createNativeStackNavigator<RootStackParamList>();
 const navigationRef = createNavigationContainerRef<RootStackParamList>();
 
@@ -127,7 +125,26 @@ const rootLinking: LinkingOptions<RootStackParamList> = {
   prefixes: ['/'],
   config: {
     screens: {
-      Tabs: '',
+      Tabs: {
+        path: '',
+        screens: {
+          TabHome: 'home',
+          TabLocal: 'local',
+          TabTravel: 'travel',
+          TabAi: 'ai',
+          TabMerchant: 'm',
+          TabCatalog: 'catalog',
+          TabOrders: 'orders',
+          TabEarnings: 'earnings',
+          TabRadar: 'broker',
+          TabBrokerMerchants: 'broker-merchants',
+          TabQr: 'broker-qr',
+          TabCommissions: 'broker-pay',
+          TabBrokerWallet: 'broker-wallet',
+          TabCommandCenter: 'command-center',
+        },
+      },
+      PersonalHub: 'account',
       B2BPaywall: 'B2BPaywall',
       MerchantDashboard: 'MerchantDashboard',
       WalletB2B: 'WalletB2B',
@@ -135,6 +152,7 @@ const rootLinking: LinkingOptions<RootStackParamList> = {
       InternalTradeMarket: 'InternalTradeMarket',
       AdBidding: 'AdBidding',
       PromoTools: 'PromoTools',
+      B2BPromotionSettings: 'B2BPromotionSettings',
       SponsoredAds: 'SponsoredAds',
       KOLPartnerDashboard: 'KOLPartnerDashboard',
       PartnerOnboarding: 'PartnerOnboarding',
@@ -142,6 +160,9 @@ const rootLinking: LinkingOptions<RootStackParamList> = {
       TravelCompanion: 'TravelCompanion',
       TravelHub: 'TravelHub',
       LocalUniverse: 'LocalUniverse',
+      VietnamHub: 'VietnamHub',
+      TourismCheckout: 'tourism-checkout',
+      TourismBookingConfirmed: 'tourism-booking-confirmed',
       TravelSosHub: 'TravelSosHub',
       LocalFixer: 'LocalFixer',
       LocalFixerCheckout: 'LocalFixerCheckout',
@@ -194,177 +215,249 @@ Notifications.setNotificationHandler({
   }),
 });
 
-function iconByRoute(routeName: string, focused: boolean): keyof typeof Ionicons.glyphMap {
-  if (routeName === 'QuocGia') return focused ? 'apps' : 'apps-outline';
-  if (routeName === 'TienIch') return focused ? 'grid' : 'grid-outline';
-  if (routeName === 'HocTap') return focused ? 'school' : 'school-outline';
-  if (routeName === 'CongDong') return focused ? 'people' : 'people-outline';
-  if (routeName === 'LeTan') return focused ? 'headset' : 'headset-outline';
-  if (routeName === 'CaNhan') return focused ? 'person' : 'person-outline';
-  return 'ellipse';
-}
+type AppNavigationShellProps = Readonly<{
+  insets: import('react-native-safe-area-context').EdgeInsets;
+  isLargeScreen: boolean;
+  user: import('./src/context/authTypes').AuthUser | null;
+  transitionAnim: Animated.Value;
+  mode: import('./src/context/AppModeContext').AppMode;
+  showIntentModal: boolean;
+  onGuidedIntent: (id: GuidedIntentId) => void;
+  onSkipGuidedIntent: () => void;
+}>;
 
-function MainTabs() {
-  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
-  const { user, pendingRedirect, setPendingRedirect } = useAuth();
-  const { languageCode } = useAssistantSettings();
-  const strings = getStrings(languageCode);
-  const [paywallTarget, setPaywallTarget] = useState<RedirectTarget | null>(null);
-  const { width } = useWindowDimensions();
-  const insets = useSafeAreaInsets();
-  const isDesktopWeb = Platform.OS === 'web' && width > 768;
-  const compactTabs = width <= 375;
-  const tabSizing = useMemo(
-    () => ({
-      tabBarBaseHeight: compactTabs ? 52 : 56,
-      labelSize: compactTabs ? 10 : 11,
-      iconSize: compactTabs ? 22 : 24,
-    }),
-    [compactTabs]
-  );
-
-  const openPaywall = (target: RedirectTarget) => {
-    setPendingRedirect(target);
-    setPaywallTarget(target);
-  };
-
-  useEffect(() => {
-    if (!user || !pendingRedirect) return;
-    if (pendingRedirect === 'HocTap' || pendingRedirect === 'LeTan') {
-      navigation.navigate('Tabs', { screen: pendingRedirect });
-      setPendingRedirect(null);
-      return;
-    }
-    if (pendingRedirect === 'LiveInterpreter') {
-      navigation.navigate('LiveInterpreter', { guidedEntry: true, scenario: 'general' });
-      setPendingRedirect(null);
-      return;
-    }
-    if (pendingRedirect === 'RadarDiscovery') {
-      setPendingRedirect(null);
-      const next = resolvePilotAwareRedirectTarget('RadarDiscovery');
-      if (next === 'LeonaCall') {
-        navigation.navigate('LeonaCall', {
-          prefillRequest: PILOT_LEONA_SERVICES_FALLBACK_PREFILL,
-          autoSubmit: false,
-        });
-      } else {
-        navigation.navigate('RadarDiscovery');
-      }
-      return;
-    }
-    if (pendingRedirect === 'B2BPaywall') {
-      setPendingRedirect(null);
-      void (async () => {
-        const access = await evaluateMerchantSurfaceAccess(user?.phone);
-        if (access.denied && access.kind === 'vn_dial') {
-          Alert.alert(DIASPORA_RESTRICTION_MODAL_TITLE, DIASPORA_RESTRICTION_MODAL_MESSAGE);
-          navigation.navigate('Tabs');
-          return;
-        }
-        if (access.denied && access.kind === 'gps_vn') {
-          Alert.alert('Kết Nối Global', access.message);
-          navigation.navigate('Tabs');
-          return;
-        }
-        navigation.navigate('B2BPaywall');
-      })();
-      return;
-    }
-    if (
-      pendingRedirect === 'Wallet' ||
-      pendingRedirect === 'AiEye' ||
-      pendingRedirect === 'LeonaCall' ||
-      pendingRedirect === 'Vault'
-    ) {
-      navigation.navigate(pendingRedirect);
-      setPendingRedirect(null);
-    }
-  }, [navigation, pendingRedirect, setPendingRedirect, user]);
-
+function AppNavigationShell({
+  insets,
+  isLargeScreen,
+  user,
+  transitionAnim,
+  mode,
+  showIntentModal,
+  onGuidedIntent,
+  onSkipGuidedIntent,
+}: AppNavigationShellProps): ReactElement {
+  const { navigationTheme, statusBarStyle, syncFromRootStackRoute } = useNavigationThemeForHub();
   return (
-    <>
-      <Tab.Navigator
-        screenOptions={({ route }) => ({
-          // Solid bar only (tabBarStyle). Do not use tabBarBackground + BlurView: web crashes if BlurView is not imported.
-          headerShown: false,
-          tabBarPosition: isDesktopWeb ? 'left' : 'bottom',
-          tabBarActiveTintColor: theme.hybrid.signalStrong,
-          tabBarInactiveTintColor: theme.hybrid.panelCoolTextMuted,
-          tabBarLabelStyle: [styles.tabLabel, { fontSize: tabSizing.labelSize }],
-          tabBarItemStyle: [styles.tabItem, isDesktopWeb && styles.tabItemDesktop],
-          tabBarStyle: [
-            styles.tabBar,
-            isDesktopWeb
-              ? {
-                  width: 250,
-                  height: '100%',
-                  paddingTop: insets.top + 16,
-                  paddingBottom: Math.max(insets.bottom, 16),
-                }
-              : {
-                  height: tabSizing.tabBarBaseHeight + insets.bottom,
-                  paddingBottom: Math.max(insets.bottom, 10),
-                  paddingTop: 8,
-                },
-            isDesktopWeb && styles.tabBarDesktop,
-          ],
-          sceneStyle: [styles.scene, isDesktopWeb && styles.sceneDesktop],
-          tabBarIcon: ({ focused }) => (
-            <Ionicons
-              name={iconByRoute(route.name, focused)}
-              size={tabSizing.iconSize}
-              color={focused ? theme.hybrid.signalStrong : theme.hybrid.panelCoolTextMuted}
-            />
-          ),
-        })}
-      >
-        <Tab.Screen name="QuocGia" component={HomeScreen} options={{ title: strings.nav.countryTab }} />
-        <Tab.Screen name="TienIch" component={ServiceHubScreen} options={{ title: strings.nav.utilityTab }} />
-        <Tab.Screen
-          name="HocTap"
-          component={HocTapScreen}
-          options={{ title: strings.nav.learningTab }}
-          listeners={{
-            tabPress: (e) => {
-              if (!user) {
-                e.preventDefault();
-                openPaywall('HocTap');
-              }
-            },
+    <View style={{ flex: 1, width: '100%', maxWidth: isLargeScreen ? '100%' : 600, alignSelf: 'center' }}>
+      <ThemeProvider value={navigationTheme}>
+        <NavigationContainer
+          ref={navigationRef}
+          linking={rootLinking}
+          theme={navigationTheme}
+          onStateChange={(state) => {
+            if (!state?.routes?.length) return;
+            const idx = state.index ?? 0;
+            const r = state.routes[idx];
+            if (r?.name) syncFromRootStackRoute(r.name as keyof RootStackParamList);
           }}
-        />
-        {LAUNCH_PILOT_CONFIG.enableCommunitySurface ? (
-          <Tab.Screen name="CongDong" component={CongDongScreen} options={{ title: strings.nav.communityTab }} />
-        ) : null}
-        <Tab.Screen
-          name="LeTan"
-          component={LeTanScreen}
-          options={{ title: strings.nav.receptionTab }}
-          listeners={{
-            tabPress: (e) => {
-              if (!user) {
-                e.preventDefault();
-                openPaywall('LeTan');
-              }
-            },
-          }}
-        />
-        <Tab.Screen name="CaNhan" component={CaNhanScreen} options={{ title: strings.nav.profileTab }} />
-      </Tab.Navigator>
-      <AuthPaywallModal
-        visible={!!paywallTarget}
-        title="Tính năng hỗ trợ & gọi"
-        description="Học tập, Lễ tân Minh Khang và gọi hỗ trợ Leona cần đăng nhập. Vui lòng xác thực số điện thoại để tiếp tục."
-        onClose={() => setPaywallTarget(null)}
-        onContinue={() => {
-          const redirect = paywallTarget ?? undefined;
-          setPaywallTarget(null);
-          if (redirect) setPendingRedirect(redirect);
-          navigation.navigate('Login', { redirectTo: redirect });
-        }}
-      />
-    </>
+        >
+          <StatusBar style={statusBarStyle} />
+          <SuperAppUserStoreSync />
+          <IntentEntryModal visible={showIntentModal} onSelectIntent={onGuidedIntent} onSkip={onSkipGuidedIntent} />
+          <Stack.Navigator
+            key={`root-${user?.phone ?? 'guest'}`}
+            initialRouteName={resolveRootStackRoute(user)}
+            screenOptions={{ headerShown: false }}
+          >
+            <Stack.Group>
+              <Stack.Screen name="Tabs" component={MainTabNavigator} />
+              <Stack.Screen name="PersonalHub" component={CaNhanScreen} />
+              <Stack.Screen name="LifeOSDashboard" component={LifeOSDashboard} />
+              <Stack.Screen name="TravelCompanion" component={TravelCompanionScreen} />
+              <Stack.Screen
+                name="TravelHub"
+                component={TravelHubScreen}
+                options={{
+                  headerShown: false,
+                  animation: 'slide_from_right',
+                  fullScreenGestureEnabled: true,
+                }}
+              />
+              <Stack.Screen
+                name="LocalUniverse"
+                component={LocalScreen}
+                options={{
+                  headerShown: false,
+                  animation: 'slide_from_right',
+                  fullScreenGestureEnabled: true,
+                }}
+              />
+              <Stack.Screen
+                name="VietnamHub"
+                component={VietnamHubScreen}
+                options={{
+                  headerShown: false,
+                  animation: 'slide_from_right',
+                  fullScreenGestureEnabled: true,
+                }}
+              />
+              <Stack.Screen
+                name="TourismCheckout"
+                component={TourismCheckoutScreen}
+                options={{
+                  headerShown: false,
+                  animation: 'slide_from_right',
+                  fullScreenGestureEnabled: true,
+                }}
+              />
+              <Stack.Screen
+                name="TourismBookingConfirmed"
+                component={TourismBookingConfirmedScreen}
+                options={{
+                  headerShown: false,
+                  animation: 'slide_from_right',
+                  fullScreenGestureEnabled: true,
+                }}
+              />
+              <Stack.Screen
+                name="ViralWrap"
+                component={ViralWrapScreen}
+                options={{
+                  headerShown: false,
+                  animation: 'slide_from_bottom',
+                  fullScreenGestureEnabled: true,
+                }}
+              />
+              <Stack.Screen
+                name="TravelSosHub"
+                component={TravelSosHubScreen}
+                options={{
+                  headerShown: false,
+                  animation: 'slide_from_right',
+                  fullScreenGestureEnabled: true,
+                }}
+              />
+              <Stack.Screen
+                name="LocalFixer"
+                component={LocalFixerScreen}
+                options={{
+                  headerShown: false,
+                  animation: 'slide_from_right',
+                  fullScreenGestureEnabled: true,
+                }}
+              />
+              <Stack.Screen
+                name="LocalFixerCheckout"
+                component={LocalFixerCheckoutScreen}
+                options={{
+                  headerShown: false,
+                  animation: 'slide_from_right',
+                  fullScreenGestureEnabled: true,
+                }}
+              />
+              <Stack.Screen
+                name="FixerEarnings"
+                component={FixerEarningsScreen}
+                options={{
+                  headerShown: false,
+                  animation: 'slide_from_right',
+                  fullScreenGestureEnabled: true,
+                }}
+              />
+              <Stack.Screen
+                name="TravelFlightSearch"
+                component={FlightSearchScreen}
+                options={{
+                  headerShown: false,
+                  animation: 'slide_from_right',
+                  fullScreenGestureEnabled: true,
+                }}
+              />
+              <Stack.Screen name="TravelHospitality" component={TravelHospitalityScreen} />
+              <Stack.Screen name="FlightSearchAssistant" component={FlightSearchAssistantScreen} />
+              <Stack.Screen name="KetNoiYeuThuong" component={KetNoiYeuThuongScreen} />
+              <Stack.Screen name="EmergencySOS" component={EmergencySOSScreen} />
+              <Stack.Screen name="LeonaCall" component={LeonaCallScreen} />
+              <Stack.Screen
+                name="P2PVoiceCall"
+                component={CallScreen}
+                options={{ headerShown: false, animation: 'fade' }}
+              />
+              <Stack.Screen name="LiveInterpreter" component={LiveInterpreterScreen} />
+            </Stack.Group>
+
+            <Stack.Group>
+              <Stack.Screen name="Wallet" component={WalletScreen} />
+              <Stack.Screen name="MerchantDetail" component={MerchantDetailScreen} />
+              <Stack.Screen name="MerchantStorefront" component={MerchantStorefrontScreen} />
+              <Stack.Screen name="ReferralReward" component={ReferralRewardScreen} />
+              <Stack.Screen name="CashOut" component={CashOutScreen} />
+              <Stack.Screen name="DailyReward" component={DailyRewardScreen} />
+              <Stack.Screen
+                name="LoyaltyRewards"
+                component={LoyaltyRewardsScreen}
+                options={{ headerShown: false, animation: 'slide_from_bottom', presentation: 'transparentModal' }}
+              />
+              <Stack.Screen name="Vault" component={VaultScreen} />
+              <Stack.Screen name="AiEye" component={AiEyeScreen} />
+            </Stack.Group>
+
+            <Stack.Group>
+              <Stack.Screen name="AdultLearningHome" component={AdultLearningHome} />
+              <Stack.Screen name="KidsLearningHome" component={KidsLearningHome} />
+              <Stack.Screen name="VietKids" component={VietKidsScreen} />
+              <Stack.Screen name="KidsLeaderboard" component={KidsLeaderboardScreen} />
+              <Stack.Screen name="LiveAiTeacher" component={LiveAiTeacherScreen} />
+            </Stack.Group>
+
+            <Stack.Group>
+              <Stack.Screen name="B2BPaywall" component={B2BPaywallScreen} />
+              <Stack.Screen name="MerchantDashboard" component={GatedMerchantDashboardScreen} />
+              <Stack.Screen name="InboundQueue" component={GatedInboundQueueScreen} />
+              <Stack.Screen name="SmartCalendar" component={GatedSmartCalendarScreen} />
+              <Stack.Screen name="WalletB2B" component={GatedWalletB2BScreen} />
+              <Stack.Screen name="Orders" component={GatedOrdersScreen} />
+              <Stack.Screen name="InternalTradeMarket" component={GatedInternalTradeMarketScreen} />
+              <Stack.Screen name="AdBidding" component={GatedAdBiddingScreen} />
+              <Stack.Screen name="PromoTools" component={GatedPromoToolsScreen} />
+              <Stack.Screen name="B2BPromotionSettings" component={GatedB2BPromotionSettingsScreen} />
+              <Stack.Screen name="SponsoredAds" component={GatedSponsoredAdsScreen} />
+              <Stack.Screen name="KOLPartnerDashboard" component={GatedKOLPartnerDashboardScreen} />
+              <Stack.Screen name="PartnerOnboarding" component={PartnerOnboardingScreen} />
+            </Stack.Group>
+
+            <Stack.Screen name="RadarDiscovery" component={RadarDiscoveryScreen} />
+            {isAdminDebugSurfaceEnabled() ? (
+              <>
+                <Stack.Screen name="AdminDashboard" component={AdminDashboardScreen} />
+                <Stack.Screen name="AdminProfitDashboard" component={AdminProfitDashboardScreen} />
+                <Stack.Screen name="SalesLeadCRM" component={SalesLeadCRM} />
+                <Stack.Screen name="AdContentFactory" component={AdContentFactoryScreen} />
+                <Stack.Screen name="OutboundCampaign" component={OutboundCampaignScreen} />
+                <Stack.Screen name="FacebookWarRoom" component={FacebookWarRoomScreen} />
+                <Stack.Screen name="MarketingApproval" component={MarketingApprovalScreen} />
+              </>
+            ) : null}
+            <Stack.Screen name="Login" component={LoginScreen} options={{ presentation: 'modal' }} />
+            <Stack.Screen name="Otp" component={OtpScreen} options={{ presentation: 'modal' }} />
+            <Stack.Screen name="RoleSelection" component={RoleSelectionScreen} options={{ presentation: 'modal' }} />
+            <Stack.Screen name="SetupProfile" component={SetupProfileScreen} options={{ presentation: 'modal' }} />
+          </Stack.Navigator>
+          <View
+            style={[
+              styles.brandBadge,
+              { top: insets.top + 6, right: insets.right + 12 },
+            ]}
+            pointerEvents="box-none"
+            accessibilityLabel={APP_BRAND.iconLabel}
+          >
+            <Text style={styles.brandIcon}>{APP_BRAND.icon}</Text>
+          </View>
+          <Animated.View
+            pointerEvents="none"
+            style={[
+              styles.modeTransitionOverlay,
+              {
+                opacity: transitionAnim.interpolate({ inputRange: [0, 1], outputRange: [0.22, 0] }),
+                transform: [{ scale: transitionAnim.interpolate({ inputRange: [0, 1], outputRange: [0.985, 1] }) }],
+                backgroundColor: mode === 'B2B_MODE' ? 'rgba(0, 255, 102, 0.22)' : 'rgba(85, 144, 224, 0.18)',
+              },
+            ]}
+          />
+          <DemoTourOverlay />
+        </NavigationContainer>
+      </ThemeProvider>
+    </View>
   );
 }
 
@@ -402,6 +495,14 @@ function AppRoot() {
     const sub = NetInfo.addEventListener((s) => setIsOnline(s.isConnected !== false));
     void NetInfo.fetch().then((s) => setIsOnline(s.isConnected !== false));
     return () => sub();
+  }, []);
+
+  useEffect(() => {
+    void applyStoredLanguage();
+  }, []);
+
+  useEffect(() => {
+    initProductAnalytics();
   }, []);
 
   useEffect(() => {
@@ -448,176 +549,25 @@ function AppRoot() {
     );
   }
 
-  const navigationTheme = b2cTheme;
-
   return (
-    <View style={{ flex: 1, width: '100%', maxWidth: isLargeScreen ? '100%' : 600, alignSelf: 'center' }}>
-      <ThemeProvider value={navigationTheme}>
-      <NavigationContainer ref={navigationRef} linking={rootLinking} theme={navigationTheme}>
-        <StatusBar style="dark" />
-        <IntentEntryModal visible={showIntentModal} onSelectIntent={onGuidedIntent} onSkip={onSkipGuidedIntent} />
-        <Stack.Navigator screenOptions={{ headerShown: false }}>
-          <Stack.Group>
-            <Stack.Screen name="Tabs" component={MainTabs} />
-            <Stack.Screen name="LifeOSDashboard" component={LifeOSDashboard} />
-            <Stack.Screen name="TravelCompanion" component={TravelCompanionScreen} />
-            <Stack.Screen
-              name="TravelHub"
-              component={TravelHubScreen}
-              options={{
-                headerShown: false,
-                animation: 'slide_from_right',
-                fullScreenGestureEnabled: true,
-              }}
-            />
-            <Stack.Screen
-              name="LocalUniverse"
-              component={LocalScreen}
-              options={{
-                headerShown: false,
-                animation: 'slide_from_right',
-                fullScreenGestureEnabled: true,
-              }}
-            />
-            <Stack.Screen
-              name="TravelSosHub"
-              component={TravelSosHubScreen}
-              options={{
-                headerShown: false,
-                animation: 'slide_from_right',
-                fullScreenGestureEnabled: true,
-              }}
-            />
-            <Stack.Screen
-              name="LocalFixer"
-              component={LocalFixerScreen}
-              options={{
-                headerShown: false,
-                animation: 'slide_from_right',
-                fullScreenGestureEnabled: true,
-              }}
-            />
-            <Stack.Screen
-              name="LocalFixerCheckout"
-              component={LocalFixerCheckoutScreen}
-              options={{
-                headerShown: false,
-                animation: 'slide_from_right',
-                fullScreenGestureEnabled: true,
-              }}
-            />
-            <Stack.Screen
-              name="FixerEarnings"
-              component={FixerEarningsScreen}
-              options={{
-                headerShown: false,
-                animation: 'slide_from_right',
-                fullScreenGestureEnabled: true,
-              }}
-            />
-            <Stack.Screen
-              name="TravelFlightSearch"
-              component={FlightSearchScreen}
-              options={{
-                headerShown: false,
-                animation: 'slide_from_right',
-                fullScreenGestureEnabled: true,
-              }}
-            />
-            <Stack.Screen name="TravelHospitality" component={TravelHospitalityScreen} />
-            <Stack.Screen name="FlightSearchAssistant" component={FlightSearchAssistantScreen} />
-            <Stack.Screen name="KetNoiYeuThuong" component={KetNoiYeuThuongScreen} />
-            <Stack.Screen name="EmergencySOS" component={EmergencySOSScreen} />
-            <Stack.Screen name="LeonaCall" component={LeonaCallScreen} />
-            <Stack.Screen name="LiveInterpreter" component={LiveInterpreterScreen} />
-          </Stack.Group>
-
-          <Stack.Group>
-            <Stack.Screen name="Wallet" component={WalletScreen} />
-            <Stack.Screen name="MerchantDetail" component={MerchantDetailScreen} />
-            <Stack.Screen name="MerchantStorefront" component={MerchantStorefrontScreen} />
-            <Stack.Screen name="ReferralReward" component={ReferralRewardScreen} />
-            <Stack.Screen name="CashOut" component={CashOutScreen} />
-            <Stack.Screen name="DailyReward" component={DailyRewardScreen} />
-            <Stack.Screen
-              name="LoyaltyRewards"
-              component={LoyaltyRewardsScreen}
-              options={{ headerShown: false, animation: 'slide_from_bottom', presentation: 'transparentModal' }}
-            />
-            <Stack.Screen name="Vault" component={VaultScreen} />
-            <Stack.Screen name="AiEye" component={AiEyeScreen} />
-          </Stack.Group>
-
-          <Stack.Group>
-            <Stack.Screen name="AdultLearningHome" component={AdultLearningHome} />
-            <Stack.Screen name="KidsLearningHome" component={KidsLearningHome} />
-            <Stack.Screen name="VietKids" component={VietKidsScreen} />
-            <Stack.Screen name="KidsLeaderboard" component={KidsLeaderboardScreen} />
-            <Stack.Screen name="LiveAiTeacher" component={LiveAiTeacherScreen} />
-          </Stack.Group>
-
-          <Stack.Group>
-            <Stack.Screen name="B2BPaywall" component={ProSubscriptionPaywall} />
-            <Stack.Screen name="MerchantDashboard" component={GatedMerchantDashboardScreen} />
-            <Stack.Screen name="InboundQueue" component={GatedInboundQueueScreen} />
-            <Stack.Screen name="SmartCalendar" component={GatedSmartCalendarScreen} />
-            <Stack.Screen name="WalletB2B" component={GatedWalletB2BScreen} />
-            <Stack.Screen name="Orders" component={GatedOrdersScreen} />
-            <Stack.Screen name="InternalTradeMarket" component={GatedInternalTradeMarketScreen} />
-            <Stack.Screen name="AdBidding" component={GatedAdBiddingScreen} />
-            <Stack.Screen name="PromoTools" component={GatedPromoToolsScreen} />
-            <Stack.Screen name="SponsoredAds" component={GatedSponsoredAdsScreen} />
-            <Stack.Screen name="KOLPartnerDashboard" component={GatedKOLPartnerDashboardScreen} />
-            <Stack.Screen name="PartnerOnboarding" component={PartnerOnboardingScreen} />
-          </Stack.Group>
-
-          {/* Radar: mock preview when enableRadarSurface; otherwise auto-replace → Leona (see screen). */}
-          <Stack.Screen name="RadarDiscovery" component={RadarDiscoveryScreen} />
-          {isAdminDebugSurfaceEnabled() ? (
-            <>
-              <Stack.Screen name="AdminDashboard" component={AdminDashboardScreen} />
-              <Stack.Screen name="AdminProfitDashboard" component={AdminProfitDashboardScreen} />
-              <Stack.Screen name="SalesLeadCRM" component={SalesLeadCRM} />
-              <Stack.Screen name="AdContentFactory" component={AdContentFactoryScreen} />
-              <Stack.Screen name="OutboundCampaign" component={OutboundCampaignScreen} />
-              <Stack.Screen name="FacebookWarRoom" component={FacebookWarRoomScreen} />
-            </>
-          ) : null}
-          <Stack.Screen name="Login" component={LoginScreen} options={{ presentation: 'modal' }} />
-          <Stack.Screen name="Otp" component={OtpScreen} options={{ presentation: 'modal' }} />
-          <Stack.Screen name="RoleSelection" component={RoleSelectionScreen} options={{ presentation: 'modal' }} />
-          <Stack.Screen name="SetupProfile" component={SetupProfileScreen} options={{ presentation: 'modal' }} />
-        </Stack.Navigator>
-        <View
-          style={[
-            styles.brandBadge,
-            { top: insets.top + 6, right: insets.right + 12 },
-          ]}
-          pointerEvents="box-none"
-          accessibilityLabel={APP_BRAND.iconLabel}
-        >
-          <Text style={styles.brandIcon}>{APP_BRAND.icon}</Text>
-        </View>
-        <Animated.View
-          pointerEvents="none"
-          style={[
-            styles.modeTransitionOverlay,
-            {
-              opacity: transitionAnim.interpolate({ inputRange: [0, 1], outputRange: [0.22, 0] }),
-              transform: [{ scale: transitionAnim.interpolate({ inputRange: [0, 1], outputRange: [0.985, 1] }) }],
-              backgroundColor: mode === 'B2B_MODE' ? 'rgba(0, 255, 102, 0.22)' : 'rgba(85, 144, 224, 0.18)',
-            },
-          ]}
-        />
-      </NavigationContainer>
-      </ThemeProvider>
-    </View>
+    <V7NavigationSurfaceProvider>
+      <AppNavigationShell
+        insets={insets}
+        isLargeScreen={isLargeScreen}
+        user={user}
+        transitionAnim={transitionAnim}
+        mode={mode}
+        showIntentModal={showIntentModal}
+        onGuidedIntent={onGuidedIntent}
+        onSkipGuidedIntent={onSkipGuidedIntent}
+      />
+    </V7NavigationSurfaceProvider>
   );
 }
 
 function B2BWorkspaceGate({ children }: { children: ReactElement }) {
   const { user } = useAuth();
-  if (!hasB2BWorkspaceAccess(user)) return <ProSubscriptionPaywall />;
+  if (!hasB2BWorkspaceAccess(user)) return <B2BPaywallScreen />;
   return <ThemeProvider value={b2bTheme}>{children}</ThemeProvider>;
 }
 
@@ -685,6 +635,14 @@ function GatedPromoToolsScreen() {
   );
 }
 
+function GatedB2BPromotionSettingsScreen() {
+  return (
+    <B2BWorkspaceGate>
+      <B2BPromotionSettings />
+    </B2BWorkspaceGate>
+  );
+}
+
 function GatedSponsoredAdsScreen() {
   return (
     <B2BWorkspaceGate>
@@ -701,14 +659,18 @@ function GatedKOLPartnerDashboardScreen() {
   );
 }
 
-export default function App() {
+function App() {
   const appShell = (
     <SafeAreaProvider>
-      <AuthProvider>
-        <AppModeProvider>
-          <AppRoot />
-        </AppModeProvider>
-      </AuthProvider>
+      <AppQueryProvider>
+        <AuthProvider>
+          <AppModeProvider>
+            <HubThemeProvider>
+              <AppRoot />
+            </HubThemeProvider>
+          </AppModeProvider>
+        </AuthProvider>
+      </AppQueryProvider>
     </SafeAreaProvider>
   );
 
@@ -728,44 +690,9 @@ export default function App() {
   );
 }
 
+export default Sentry.wrap(App);
+
 const styles = StyleSheet.create({
-  tabBar: {
-    position: 'absolute',
-    borderTopWidth: 1,
-    borderTopColor: theme.hybrid.panelCoolBorder,
-    backgroundColor: b2cTheme.colors.card,
-    elevation: 8,
-    shadowColor: '#0B1628',
-    shadowOffset: { width: 0, height: -4 },
-    shadowOpacity: 0.06,
-    shadowRadius: 12,
-  },
-  scene: {
-    backgroundColor: b2cTheme.colors.background,
-  },
-  tabItem: {
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  tabItemDesktop: {
-    alignItems: 'flex-start',
-    justifyContent: 'center',
-  },
-  tabLabel: {
-    fontFamily: FontFamily.semibold,
-    marginTop: 2,
-  },
-  tabBarDesktop: {
-    position: 'relative',
-    borderTopWidth: 0,
-    borderRightWidth: 1,
-    borderRightColor: theme.hybrid.panelCoolBorder,
-    shadowOpacity: 0,
-    elevation: 0,
-  },
-  sceneDesktop: {
-    flex: 1,
-  },
   brandBadge: {
     position: 'absolute',
     width: 44,

@@ -2,13 +2,14 @@ import type { RedirectTarget } from '../context/AuthContext';
 
 /**
  * Launch rollout switchboard for **public** surfaces.
+ * **Naming:** “pilot” = rollout/feature flags — **not** the deprecated public tier label “pilot-anchor” (GLOBAL_V1).
  *
  * ## In scope (launch-ready flows)
  * - Live Interpreter (`LiveInterpreter`)
  * - Leona legal / booking assist (`LeonaCall`)
  * - Vault + OCR + expiry reminders (`Vault`, `DocumentAlarmService`)
  * - LifeOS hub (`LifeOSDashboard`)
- * - Wallet / top-up (`Wallet` / `GlobalWalletScreen`)
+ * - Wallet / top-up (`Wallet` / `WalletTopUpScreen`)
  * - Emergency SOS (`EmergencySOS`)
  * - Le Tan reception tab (AI concierge — launch core)
  *

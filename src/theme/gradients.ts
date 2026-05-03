@@ -27,7 +27,6 @@ export const gradients = {
   dangerButton: ['#E57373', '#C62828', '#8E1A1A'] as const,
   dangerCard: ['rgba(140, 40, 40, 0.9)', 'rgba(198, 40, 40, 0.85)', 'rgba(100, 24, 24, 0.9)'] as const,
   sandCard: ['#1a3352', '#152A45', '#0F2238'] as const,
-  signatureMetal: ['#E8D5A3', '#C5A059', '#7A6128'] as const,
   bronzeMetal: ['#E8D5A3', '#C5A059', '#7A6128'] as const,
   /** Tab — active gold, idle dark navy */
   tabOrbActive: ['#F0E6C8', '#C5A059', '#8A6B38'] as const,

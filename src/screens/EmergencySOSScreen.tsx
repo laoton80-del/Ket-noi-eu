@@ -100,7 +100,9 @@ export function EmergencySOSScreen() {
         {
           text: 'Mở bản đồ',
           onPress: () => {
-            void Linking.openURL('https://www.google.com/maps/search/Đại+sứ+quán+Việt+Nam');
+            void Linking.openURL(
+              'https://www.openstreetmap.org/search?query=' + encodeURIComponent('Đại sứ quán Việt Nam')
+            );
           },
         },
       ]

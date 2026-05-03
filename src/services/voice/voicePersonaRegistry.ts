@@ -32,7 +32,7 @@ function scenarioBaseTone(scenario: VoiceScenario): VoicePersonaTone {
     case 'nails':
     case 'restaurant':
       return 'friendly';
-    case 'retail_taphoa':
+    case 'potraviny':
     case 'grocery_wholesale':
     case 'work':
       return 'neutral';
@@ -52,7 +52,7 @@ function scenarioBaseTone(scenario: VoiceScenario): VoicePersonaTone {
 function businessWarmthAdjust(bt: B2BBusinessType | undefined): VoicePersonaTone | null {
   if (!bt) return null;
   if (bt === 'nails' || bt === 'restaurant') return 'friendly';
-  if (bt === 'grocery_retail' || bt === 'grocery_wholesale') return 'neutral';
+  if (bt === 'potraviny' || bt === 'grocery_retail' || bt === 'grocery_wholesale') return 'neutral';
   if (bt === 'hospitality_stay') return 'formal';
   return null;
 }

@@ -11,7 +11,7 @@ function isPilotAllowedSellResume(value: unknown): value is SellResume {
   if (o.route === 'LiveInterpreter') return typeof o.params === 'object' && o.params !== null;
   if (o.route === 'Tabs') {
     const p = o.params as { screen?: unknown } | null;
-    return !!p && typeof p === 'object' && p.screen === 'Concierge';
+    return !!p && typeof p === 'object' && p.screen === 'TabAi';
   }
   return false;
 }

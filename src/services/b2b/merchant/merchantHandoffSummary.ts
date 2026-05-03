@@ -23,6 +23,8 @@ function verticalLabel(bt: B2BBusinessType | undefined): string {
       return 'Grocery · wholesale (đổ hàng)';
     case 'grocery_retail':
       return 'Grocery · retail';
+    case 'potraviny':
+      return 'Grocery · retail (legacy businessType; migrate to grocery_retail)';
     case 'nails':
       return 'Nails';
     case 'restaurant':

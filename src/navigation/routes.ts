@@ -4,15 +4,14 @@ import type { AiPersonaId } from '../config/aiPersonaCapabilities';
 import type { RedirectTarget } from '../context/AuthContext';
 
 /**
- * Navigation contracts. Pilot **in-scope** stacks: Tabs + LifeOS, TravelCompanion, FlightSearchAssistant, Wallet, Vault,
- * LiveInterpreter, LeonaCall, EmergencySOS, LeTan. Radar is registered but redirects when `LAUNCH_PILOT_CONFIG.enableRadarSurface` is false.
+ * Super-app bottom tabs: route names are **role-partitioned** — only the active role’s four routes are mounted.
+ * Legacy names (`QuocGia`, `LeTan`, …) removed; use navigation helpers / `MAIN_TAB` constants.
  */
 export type RootTabParamList = {
-  QuocGia: undefined;
-  TienIch: undefined;
-  HocTap: undefined;
-  CongDong: undefined;
-  LeTan:
+  TabHome: undefined;
+  TabLocal: undefined;
+  TabTravel: undefined;
+  TabAi:
     | {
         proactiveQuestion?: string;
         autoSimulate?: boolean;
@@ -21,11 +20,55 @@ export type RootTabParamList = {
         initialPrompt?: string;
       }
     | undefined;
-  CaNhan: undefined;
+  TabMerchant: undefined;
+  TabCatalog: undefined;
+  TabOrders: undefined;
+  TabEarnings: undefined;
+  TabRadar: undefined;
+  /** Broker — acquired merchant portfolio (field / KOL pipeline). */
+  TabBrokerMerchants: undefined;
+  TabQr: undefined;
+  TabCommissions: undefined;
+  /** Broker shell — VIG wallet & payouts (same stack pattern as consumer Wallet). */
+  TabBrokerWallet: undefined;
+  /** Super-admin Command Center (single-tab deck; `serverRole === 'ADMIN'` only). */
+  TabCommandCenter: undefined;
 };
+
+export const MAIN_TAB = {
+  B2C: {
+    home: 'TabHome',
+    local: 'TabLocal',
+    travel: 'TabTravel',
+    ai: 'TabAi',
+  },
+  B2B: {
+    merchant: 'TabMerchant',
+    catalog: 'TabCatalog',
+    orders: 'TabOrders',
+    earnings: 'TabEarnings',
+  },
+  BROKER: {
+    radar: 'TabRadar',
+    merchants: 'TabBrokerMerchants',
+    qr: 'TabQr',
+    commissions: 'TabCommissions',
+    wallet: 'TabBrokerWallet',
+  },
+  ADMIN: {
+    deck: 'TabCommandCenter',
+  },
+} as const satisfies Readonly<{
+  B2C: Record<string, keyof RootTabParamList>;
+  B2B: Record<string, keyof RootTabParamList>;
+  BROKER: Record<string, keyof RootTabParamList>;
+  ADMIN: Record<string, keyof RootTabParamList>;
+}>;
 
 export type RootStackParamList = {
   Tabs: NavigatorScreenParams<RootTabParamList> | undefined;
+  /** Full account hub (wallet, language, legal) — opened from Profile Switcher / merchant-broker headers. */
+  PersonalHub: undefined;
   LifeOSDashboard: undefined;
   /** Phase 4: travel hub — scenarios + quick links (no booking automation). */
   TravelCompanion: undefined;
@@ -33,6 +76,27 @@ export type RootStackParamList = {
   TravelHub: { destinationQuery?: string } | undefined;
   /** B2C Local universe — elite services bento + classifieds (V6.2). */
   LocalUniverse: undefined;
+  /** V6.3 Vietnam inbound tourism hub — +84 merchants ↔ tourists / expats. */
+  VietnamHub: undefined;
+  /** B2C VIG checkout — quote from `/api/tourism/quote`, pay via `/api/tourism/book`. */
+  TourismCheckout: Readonly<{
+    businessId: string;
+    serviceId: string;
+    businessName: string;
+    serviceTitle: string;
+    startDate: string;
+    endDate: string;
+    guestCount: number;
+  }>;
+  /** Post-payment celebration; booking is already on merchant radar server-side. */
+  TourismBookingConfirmed: Readonly<{
+    bookingId: string;
+    totalPaidVIG: number;
+    businessName: string;
+    serviceTitle: string;
+  }>;
+  /** AI “Trip Wrapped” viral share card — Story-style recap (`GET /api/tourism/wrap/:bookingId`). */
+  ViralWrap: Readonly<{ bookingId?: string }> | undefined;
   /** KNG Travel — embassy map + AI TTS quick phrases (medical / police). */
   TravelSosHub: undefined;
   /** KNG Travel — Vietnamese "fixer" marketplace (book via Leona). */
@@ -75,6 +139,8 @@ export type RootStackParamList = {
   MerchantDashboard: undefined;
   /** B2B promo — printable / downloadable QR for B2C acquisition (deep link: `/PromoTools`). */
   PromoTools: undefined;
+  /** B2B merchant-approved Leona promo rules (no AI-invented discounts). */
+  B2BPromotionSettings: undefined;
   /** B2B sponsored listings — daily bid for TOP 1 in B2C search (deep link: `/SponsoredAds`). */
   SponsoredAds: undefined;
   /** KOL / affiliate — passive revenue & VIP tracking link (deep link: `/KOLPartnerDashboard`). */
@@ -101,6 +167,15 @@ export type RootStackParamList = {
         selectedPlace?: string;
       }
     | undefined;
+  /** In-app VoIP — WebRTC P2P audio; signaling via Socket.IO (same host as API). */
+  P2PVoiceCall: Readonly<{
+    /** Canonical room `vg|<idLow>|<idHigh>` — use `buildP2PSignalingRoomId` (`p2pSignalingRoom.ts`); JWT required for signaling. */
+    roomId: string;
+    role: 'tourist' | 'merchant';
+    peerDisplayName?: string;
+    /** Tourist typically creates the SDP offer. */
+    isOfferer: boolean;
+  }>;
   AssistantChat: undefined;
   InboundQueue: undefined;
   SmartCalendar: undefined;
@@ -136,6 +211,8 @@ export type RootStackParamList = {
   OutboundCampaign: undefined;
   /** Facebook growth war room (deep link: `/FacebookWarRoom`). */
   FacebookWarRoom: undefined;
+  /** AI marketing drafts — human approve before Meta publish (admin debug). */
+  MarketingApproval: undefined;
   Login: { redirectTo?: RedirectTarget } | undefined;
   Otp: { redirectTo?: RedirectTarget } | undefined;
   /** Post-OTP: B2C vs B2B intent (+84 auto B2C path). */

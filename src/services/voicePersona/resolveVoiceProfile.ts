@@ -14,7 +14,7 @@ function scenarioToTone(scenario: VoiceScenario): VoiceProfile['tone'] {
     case 'live_interpreter':
     case 'b2b_receptionist':
       return 'friendly';
-    case 'retail_taphoa':
+    case 'potraviny':
     case 'grocery_wholesale':
     case 'work':
       return 'neutral';

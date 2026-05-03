@@ -9,6 +9,7 @@ import { chargeWalletServer } from '../../state/wallet';
 import { theme } from '../../theme/theme';
 import { FontFamily } from '../../theme/typography';
 import { generateChargeKey } from '../../utils/idempotency';
+import { isDemoSandboxActive } from '../../services/ux/DemoSandbox';
 
 type PaymentCheckoutSheetProps = {
   visible: boolean;
@@ -75,6 +76,8 @@ export function PaymentCheckoutSheet({ visible, onClose }: PaymentCheckoutSheetP
     setShowConfetti(true);
     void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
   };
+
+  if (isDemoSandboxActive()) return null;
 
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={resetAndClose}>

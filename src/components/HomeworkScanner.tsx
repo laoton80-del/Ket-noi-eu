@@ -1,11 +1,9 @@
 import { Ionicons } from '@expo/vector-icons';
 import { CameraView, useCameraPermissions } from 'expo-camera';
-import * as FileSystem from 'expo-file-system/legacy';
-import { manipulateAsync, SaveFormat } from 'expo-image-manipulator';
 import { useRef, useState } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
+import { compressLocalImageForUpload, optimizedImageToBase64 } from '../utils/ImageProcessor';
 import { FontFamily } from '../theme/typography';
-import { theme } from '../theme/theme';
 
 export function HomeworkScanner({
   visible,
@@ -25,16 +23,10 @@ export function HomeworkScanner({
     if (!cameraRef.current || busy) return;
     setBusy(true);
     try {
-      const shot = await cameraRef.current.takePictureAsync({ quality: 0.82, skipProcessing: true });
+      const shot = await cameraRef.current.takePictureAsync({ quality: 1, skipProcessing: true });
       if (!shot?.uri) return;
-      const optimized = await manipulateAsync(shot.uri, [{ resize: { width: 900 } }], {
-        compress: 0.72,
-        format: SaveFormat.JPEG,
-        base64: true,
-      });
-      const base64 =
-        optimized.base64 ??
-        (await FileSystem.readAsStringAsync(optimized.uri, { encoding: FileSystem.EncodingType.Base64 }));
+      const optimized = await compressLocalImageForUpload(shot.uri);
+      const base64 = await optimizedImageToBase64(optimized);
       onCaptured(base64);
     } finally {
       setBusy(false);
@@ -45,7 +37,7 @@ export function HomeworkScanner({
     <View style={styles.overlay}>
       {!permission ? (
         <View style={styles.permissionCard}>
-          <ActivityIndicator color={theme.colors.SignatureGold} />
+          <ActivityIndicator color="#D4AF37" />
         </View>
       ) : !permission.granted ? (
         <View style={styles.permissionCard}>
@@ -60,13 +52,13 @@ export function HomeworkScanner({
       ) : (
         <View style={styles.cameraWrap}>
           <CameraView ref={cameraRef} style={StyleSheet.absoluteFill} facing="back" />
-          <Pressable onPress={onClose} style={({ pressed }) => [styles.iconBtn, pressed && { opacity: 0.8 }]}>
-            <Ionicons name="close" size={20} color={theme.colors.primaryBright} />
+          <Pressable onPress={onClose} style={styles.iconBtn}>
+            <Ionicons name="close" size={20} color="#FFE9C0" />
           </Pressable>
           <View style={styles.bound} />
           <Text style={styles.hint}>Dat bai tap vao khung roi chup</Text>
           <Pressable onPress={onCapture} disabled={busy} style={({ pressed }) => [styles.captureOuter, pressed && { opacity: 0.86 }]}>
-            <View style={styles.captureInner}>{busy ? <ActivityIndicator color={theme.colors.primaryBright} /> : null}</View>
+            <View style={styles.captureInner}>{busy ? <ActivityIndicator color="#FFF2DF" /> : null}</View>
           </Pressable>
         </View>
       )}
@@ -75,38 +67,38 @@ export function HomeworkScanner({
 }
 
 const styles = StyleSheet.create({
-  overlay: { ...StyleSheet.absoluteFillObject, backgroundColor: theme.colors.overlay.dim },
+  overlay: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(12,10,8,0.75)' },
   permissionCard: {
     marginTop: 180,
     marginHorizontal: 24,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: theme.colors.glass.border,
-    backgroundColor: theme.colors.executive.panel,
+    borderColor: 'rgba(212,175,55,0.45)',
+    backgroundColor: 'rgba(28,22,16,0.9)',
     alignItems: 'center',
     padding: 16,
   },
-  permissionTitle: { color: theme.colors.primaryBright, ...theme.typeScale.h2, fontFamily: FontFamily.bold, marginBottom: 12 },
+  permissionTitle: { color: '#FFF0CF', fontSize: 16, fontFamily: FontFamily.bold, marginBottom: 12 },
   btn: {
     minWidth: 120,
     height: 42,
     borderRadius: 12,
-    backgroundColor: theme.colors.RouteError,
+    backgroundColor: '#C62828',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  btnText: { color: theme.colors.primaryBright, fontFamily: FontFamily.bold },
+  btnText: { color: '#FFE8D0', fontFamily: FontFamily.bold },
   closeBtn: {
     marginTop: 8,
     minHeight: 34,
     borderRadius: 10,
     borderWidth: 1,
-    borderColor: theme.colors.glass.border,
+    borderColor: 'rgba(212,175,55,0.45)',
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 12,
   },
-  closeText: { color: theme.colors.primaryBright, ...theme.typeScale.caption, fontFamily: FontFamily.medium },
+  closeText: { color: '#FFE8D0', fontSize: 12, fontFamily: FontFamily.medium },
   cameraWrap: { flex: 1 },
   iconBtn: {
     position: 'absolute',
@@ -116,8 +108,8 @@ const styles = StyleSheet.create({
     height: 42,
     borderRadius: 21,
     borderWidth: 1,
-    borderColor: theme.colors.glass.border,
-    backgroundColor: theme.colors.executive.panelMuted,
+    borderColor: 'rgba(212,175,55,0.45)',
+    backgroundColor: 'rgba(21,17,12,0.75)',
     alignItems: 'center',
     justifyContent: 'center',
     zIndex: 10,
@@ -128,14 +120,14 @@ const styles = StyleSheet.create({
     height: 290,
     borderRadius: 18,
     borderWidth: 2,
-    borderColor: theme.colors.SignatureGold,
+    borderColor: 'rgba(212,175,55,0.92)',
     backgroundColor: 'transparent',
   },
   hint: {
     marginTop: 10,
     textAlign: 'center',
-    color: theme.colors.primaryBright,
-    ...theme.typeScale.caption,
+    color: '#FFE7C7',
+    fontSize: 12,
     fontFamily: FontFamily.medium,
   },
   captureOuter: {
@@ -146,16 +138,16 @@ const styles = StyleSheet.create({
     height: 86,
     borderRadius: 43,
     borderWidth: 3,
-    borderColor: theme.colors.SignatureGold,
+    borderColor: 'rgba(212,175,55,0.95)',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: theme.colors.overlay.ringSoft,
+    backgroundColor: 'rgba(255,232,170,0.24)',
   },
   captureInner: {
     width: 64,
     height: 64,
     borderRadius: 32,
-    backgroundColor: theme.colors.RouteError,
+    backgroundColor: '#CB3D3D',
     alignItems: 'center',
     justifyContent: 'center',
   },

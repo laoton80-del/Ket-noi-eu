@@ -13,7 +13,8 @@ export type GrowthEventName =
   | 'booking_success' // legacy; prefer `successful_booking` for new emissions
   | 'successful_booking'
   | 'credits_spent'
-  | 'payment_completed';
+  | 'payment_completed'
+  | 'partner_lead_submitted';
 
 export type GrowthTraits = {
   country?: string;

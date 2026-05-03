@@ -7,7 +7,7 @@
  * - **Country truth:** use `resolveCommercialCountryContext` as the canonical fallback contract:
  *   `{ countryCode, pricingPack, displayCurrency, merchantCountryCode }`.
  * - **Functions bundle:** Cloud Functions inlines this module via esbuild (`functions/npm run build`); keep tier logic in sync with `countryPacks/index.ts`.
- * - **Legacy names (compatibility only):** removed in favor of `Wallet*` / `getWalletPackagePricesByCountry` + `commercialSpine.ts` (GLOBAL_V1).
+ * - **Legacy names (compatibility only):** `ComboPlan`, `ComboPriceCard`, `getComboPricesByCountry` — alias lịch sử; ưu tiên `Wallet*` / `getWalletPackagePricesByCountry` + `commercialSpine.ts` (GLOBAL_V1).
  */
 import type { PackCurrencyCode } from './countryPacks/types';
 import {
@@ -37,7 +37,7 @@ export type MarketTier = {
 export type WalletPackagePlan = {
   id: WalletPackageId;
   name: string;
-  /** Credits granted after successful top-up (historical field name `turns`). */
+  /** Credits granted after successful top-up (historical field name `turns`). Payments service uses wire key `comboId` for the same pack id. */
   turns: number;
   gift: string;
   purchasable: boolean;
@@ -51,6 +51,11 @@ export type WalletPriceCard = WalletPackagePlan & {
   /** Tier-adjusted list price in USD (canonical commercial anchor per GLOBAL_V1). */
   listUsd: number;
 };
+
+/** @deprecated Use `WalletPackagePlan`. */
+export type ComboPlan = WalletPackagePlan;
+/** @deprecated Use `WalletPriceCard`. */
+export type ComboPriceCard = WalletPriceCard;
 
 /**
  * Markets matrix for geo labels + per-call debit anchors → local display.
@@ -255,6 +260,11 @@ export function getWalletPackagePricesByCountry(countryCode?: string, locale?: s
       listUsd,
     };
   });
+}
+
+/** @deprecated Use `getWalletPackagePricesByCountry` (same implementation). */
+export function getComboPricesByCountry(countryCode?: string, locale?: string): WalletPriceCard[] {
+  return getWalletPackagePricesByCountry(countryCode, locale);
 }
 
 export function getMarketTierByCountry(countryCode?: string): MarketTier {

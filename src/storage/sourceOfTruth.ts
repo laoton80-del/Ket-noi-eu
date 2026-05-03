@@ -6,7 +6,7 @@
  * |---------------------|-------------------------------------------|---------------------------------------|
  * | Auth profile        | `STORAGE_KEYS.authSession`                | Same (no backend auth in pilot)       |
  * | Wallet balance      | `STORAGE_KEYS.wallet`                     | Firebase `walletOps` + Firestore      |
- * | Learning progress   | AuthUser flags + Academy `learningB1B234` | Profile fields; unlock flag local     |
+ * | Learning progress   | AuthUser flags + HocTap `learningB1B234`  | Profile fields; unlock flag local     |
  * | Daily loop          | `STORAGE_KEYS.dailyLoop`                 | Local-only                            |
  * | Companion memory    | `STORAGE_KEYS.companionMemory`            | Local-only                            |
  * | Growth / analytics  | `STORAGE_KEYS.growthSnapshot`             | Local snapshot (export to BI later)   |

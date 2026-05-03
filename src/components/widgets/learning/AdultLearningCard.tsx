@@ -2,8 +2,6 @@ import React from 'react';
 import { StyleSheet, Text } from 'react-native';
 import { WidgetCard } from '../WidgetCard';
 import { AnimatedPressable } from '../AnimatedPressable';
-import { theme } from '../../../theme/theme';
-import { FontFamily } from '../../../theme/typography';
 
 type Props = {
   currentLevel: string;
@@ -32,25 +30,20 @@ export const AdultLearningCard = React.memo(AdultLearningCardComponent);
 
 const styles = StyleSheet.create({
   title: {
-    ...theme.typeScale.h2,
-    fontFamily: FontFamily.bold,
-    color: theme.colors.GraphiteBlue,
+    fontSize: 18,
+    fontWeight: '700',
   },
   subtitle: {
     marginVertical: 8,
-    ...theme.typeScale.body,
-    color: theme.colors.text.secondary,
-    fontFamily: FontFamily.regular,
+    color: '#6B7280',
   },
   button: {
-    backgroundColor: theme.colors.GraphiteBlue,
+    backgroundColor: '#111827',
     borderRadius: 12,
     padding: 12,
   },
   buttonText: {
-    color: theme.colors.CeolWhite,
-    ...theme.typeScale.body,
-    fontFamily: FontFamily.semibold,
+    color: '#fff',
     textAlign: 'center',
   },
 });

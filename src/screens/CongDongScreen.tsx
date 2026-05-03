@@ -1,18 +1,15 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { PrecisePanel } from '../components/ui/PrecisePanel';
 import { APP_BRAND } from '../config/appBrand';
 import { getStrings } from '../i18n/strings';
 import { useAssistantSettings } from '../state/assistantSettings';
-import { useRegionState } from '../state/region';
-import { theme } from '../theme/theme';
+import { Colors } from '../theme/colors';
 import { FontFamily } from '../theme/typography';
 
 export function CongDongScreen() {
   const { languageCode } = useAssistantSettings();
   const strings = getStrings(languageCode);
-  const { currentCountry } = useRegionState();
   const feedItems = [
     { id: '1', author: strings.community.post1Author, body: strings.community.post1Body, meta: strings.community.post1Meta },
     { id: '2', author: strings.community.post2Author, body: strings.community.post2Body, meta: strings.community.post2Meta },
@@ -24,35 +21,34 @@ export function CongDongScreen() {
         <Text style={styles.brand}>{APP_BRAND.name}</Text>
         <Text style={styles.title}>{strings.community.screenTitle}</Text>
         <Text style={styles.subtitle}>{strings.community.subtitle}</Text>
-        <Text style={styles.contextText}>{currentCountry}</Text>
-        <PrecisePanel style={styles.previewPill}>
-          <Text style={styles.previewText}>{strings.community.subtitle}</Text>
-        </PrecisePanel>
+        <View style={styles.previewPill}>
+          <Text style={styles.previewText}>Cộng đồng đang được hoàn thiện trước khi mở công khai. Tạm thời vui lòng dùng LifeOS/Leona/Phiên dịch.</Text>
+        </View>
 
-        <PrecisePanel style={styles.composer}>
+        <View style={styles.composer}>
           <Text style={styles.composerText}>{strings.community.composerPlaceholder}</Text>
           <Pressable
             onPress={() =>
-              Alert.alert(strings.community.screenTitle, strings.community.subtitle)
+              Alert.alert('Cộng đồng', 'Tính năng này đang trong giai đoạn hoàn thiện. Vui lòng dùng LifeOS, Leona hoặc Phiên dịch.')
             }
-            style={({ pressed }) => [styles.postButton, pressed && styles.pressed]}
+            style={({ pressed }) => [styles.postButton, pressed && { opacity: 0.72 }]}
           >
             <Text style={styles.postButtonText}>{strings.community.postButton}</Text>
           </Pressable>
-        </PrecisePanel>
+        </View>
 
         <Text style={styles.feedTitle}>{strings.community.feedTitle}</Text>
         {feedItems.map((item) => (
           <Pressable
             key={item.id}
             onPress={() =>
-              Alert.alert(strings.community.screenTitle, strings.community.feedTitle)
+              Alert.alert('Cộng đồng', 'Bài đăng mẫu — cộng đồng công khai sẽ được cập nhật khi sẵn sàng.')
             }
-            style={({ pressed }) => [styles.feedCard, pressed && styles.pressed]}
+            style={({ pressed }) => [styles.feedCard, pressed && { opacity: 0.72 }]}
           >
             <View style={styles.feedHeader}>
               <View style={styles.avatarCircle}>
-                <Ionicons name="person" size={14} color={theme.colors.SignatureGold} />
+                <Ionicons name="person" size={14} color={Colors.primary} />
               </View>
               <Text style={styles.author}>{item.author}</Text>
               <Text style={styles.meta}>{item.meta}</Text>
@@ -68,7 +64,7 @@ export function CongDongScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: theme.colors.DeepInkNavy,
+    backgroundColor: Colors.background,
   },
   content: {
     paddingHorizontal: 16,
@@ -76,61 +72,72 @@ const styles = StyleSheet.create({
     paddingBottom: 120,
   },
   brand: {
-    ...theme.typeScale.caption,
-    color: theme.colors.text.secondary,
+    fontSize: 14,
+    color: Colors.textSoft,
+    fontFamily: FontFamily.regular,
     marginBottom: 4,
   },
   title: {
-    ...theme.typeScale.h1,
-    color: theme.colors.SignatureGold,
+    fontSize: 30,
+    fontFamily: FontFamily.extrabold,
+    color: Colors.text,
     marginBottom: 6,
   },
   subtitle: {
-    ...theme.typeScale.body,
-    color: theme.colors.text.secondary,
-  },
-  contextText: {
-    ...theme.typeScale.caption,
-    color: theme.colors.text.secondary,
+    fontSize: 14,
+    lineHeight: 21,
+    fontFamily: FontFamily.regular,
+    color: Colors.textSoft,
     marginBottom: 12,
   },
   previewPill: {
-    backgroundColor: theme.colors.executive.card,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#B7791F',
+    backgroundColor: '#FEF3C7',
+    paddingHorizontal: 10,
+    paddingVertical: 8,
     marginBottom: 10,
   },
-  previewText: { ...theme.typeScale.caption, color: theme.colors.CeolWhite, fontFamily: FontFamily.semibold },
+  previewText: { fontSize: 12, color: '#7C2D12', fontFamily: FontFamily.semibold },
   composer: {
-    backgroundColor: theme.colors.executive.card,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: Colors.glassBorder,
+    backgroundColor: Colors.glass,
+    padding: 12,
     marginBottom: 12,
   },
   composerText: {
-    ...theme.typeScale.body,
-    color: theme.colors.text.secondary,
+    fontSize: 14,
+    color: Colors.textSoft,
+    fontFamily: FontFamily.regular,
     marginBottom: 10,
   },
   postButton: {
     alignSelf: 'flex-end',
     borderRadius: 10,
-    backgroundColor: theme.colors.SignatureGold,
+    backgroundColor: Colors.accent,
     paddingHorizontal: 14,
     paddingVertical: 8,
   },
   postButtonText: {
-    ...theme.typeScale.caption,
-    color: theme.colors.onAccent,
-    fontFamily: FontFamily.semibold,
+    fontSize: 13,
+    color: '#33240E',
+    fontFamily: FontFamily.bold,
   },
   feedTitle: {
     marginTop: 4,
     marginBottom: 8,
-    ...theme.typeScale.h2,
-    color: theme.colors.SignatureGold,
+    fontSize: 14,
+    color: Colors.text,
+    fontFamily: FontFamily.extrabold,
   },
   feedCard: {
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: theme.colors.glass.border,
-    backgroundColor: theme.colors.executive.card,
+    borderColor: Colors.glassBorder,
+    backgroundColor: Colors.glass,
     padding: 12,
     marginBottom: 10,
   },
@@ -145,26 +152,26 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: theme.colors.executive.chipFill,
+    backgroundColor: 'rgba(255,251,242,0.9)',
     borderWidth: 1,
-    borderColor: theme.colors.glass.borderSoft,
+    borderColor: Colors.glassBorder,
   },
   author: {
     marginLeft: 8,
-    ...theme.typeScale.body,
-    color: theme.colors.CeolWhite,
+    fontSize: 14,
+    color: Colors.text,
     fontFamily: FontFamily.semibold,
     flex: 1,
   },
   meta: {
-    ...theme.typeScale.caption,
-    color: theme.colors.text.secondary,
+    fontSize: 12,
+    color: Colors.textSoft,
+    fontFamily: FontFamily.regular,
   },
   body: {
-    ...theme.typeScale.body,
-    color: theme.colors.CeolWhite,
-  },
-  pressed: {
-    opacity: 0.78,
+    fontSize: 14,
+    lineHeight: 21,
+    color: Colors.text,
+    fontFamily: FontFamily.regular,
   },
 });

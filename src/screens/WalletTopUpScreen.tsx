@@ -1,7 +1,19 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { ActivityIndicator, Alert, Animated, Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import {
+  ActivityIndicator,
+  Alert,
+  Animated,
+  Linking,
+  Modal,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Reanimated, { Easing, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 import { AppStateView } from '../components/ui/AppStateView';
@@ -37,6 +49,7 @@ import {
 import { useAssistantSettings } from '../state/assistantSettings';
 import type { Transaction } from '../state/wallet';
 import { reserveAndCommitCredits, topupCreditsServer, useWalletState } from '../state/wallet';
+import { billingGatewayForPlanPurchase } from '../services/IAPRouter';
 import { trackGrowthEvent } from '../services/growth';
 import { theme } from '../theme/theme';
 import { applyWebStyles, mergeWebClassNames } from '../utils/applyWebStyles';
@@ -251,6 +264,30 @@ export function WalletTopUpScreen() {
     }
     const pack = walletPackCards.find((item) => item.id === packId);
     if (!pack || !pack.purchasable) return;
+
+    const iapGate = billingGatewayForPlanPurchase(user?.subscriptionPlan ?? 'free', 'digital_credit');
+    if (iapGate.hideDigitalPurchaseButton) {
+      Alert.alert('Chế độ App Review', iapGate.reason);
+      return;
+    }
+    if (iapGate.gateway === 'external_stripe_portal') {
+      const portal = iapGate.stripeCustomerPortalUrl;
+      if (portal != null && portal.length > 0) {
+        Alert.alert(
+          'Thanh toán ngoài app (V7 IAPRouter)',
+          `${iapGate.reason}\n\nMở Stripe Customer Portal để nạp VIG / SaaS — tránh phí IAP 30% trên hàng kỹ thuật số.`,
+          [
+            { text: 'Hủy', style: 'cancel' },
+            { text: 'Mở Portal', onPress: () => void Linking.openURL(portal) },
+          ]
+        );
+        return;
+      }
+      if (__DEV__) {
+        console.warn('[IAPRouter] external portal URL missing — falling back to in-app PI (set EXPO_PUBLIC_STRIPE_CUSTOMER_PORTAL_URL for production).');
+      }
+    }
+
     const backendOk = Boolean(process.env.EXPO_PUBLIC_BACKEND_API_BASE?.trim());
     if (!backendOk) {
       Alert.alert(w.backendMissingTitle, w.backendMissingBody);

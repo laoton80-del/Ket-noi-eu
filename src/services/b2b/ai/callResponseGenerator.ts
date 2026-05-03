@@ -92,6 +92,7 @@ function bookingSlotQuestion(businessType: GenerateCallResponseInput['businessTy
     case 'nails':
       return 'What service and time work best for you?';
     case 'grocery_retail':
+    case 'potraviny':
       return 'What time works for pickup or delivery, and what should we prepare?';
     case 'grocery_wholesale':
       return 'For a wholesale request, what products and approximate volumes do you need, and pickup or delivery?';

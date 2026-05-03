@@ -1,13 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
-import {
-  ActivityIndicator,
-  Pressable,
-  StyleSheet,
-  Text,
-  View,
-  type ViewStyle,
-} from 'react-native';
+import { Pressable, StyleSheet, Text, View, type ViewStyle } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { ScreenSkeleton } from './ScreenSkeleton';
 import { theme } from '../../theme/theme';
 import { FontFamily } from '../../theme/typography';
 
@@ -60,11 +54,7 @@ export function AppStateView({
   const body = (
     <View style={[embedded ? styles.embeddedInner : styles.inner]}>
       {variant === 'loading' ? (
-        <ActivityIndicator
-          size={embedded ? 'small' : 'large'}
-          color={theme.colors.primaryBright}
-          style={embedded ? styles.loaderEmbedded : styles.loader}
-        />
+        <ScreenSkeleton rows={embedded ? 3 : 6} style={embedded ? styles.loaderEmbedded : styles.loader} />
       ) : (
         <View style={[styles.iconRing, embedded && styles.iconRingEmbedded]}>
           <Ionicons name={icon} size={embedded ? 28 : 36} color={theme.colors.primaryBright} />
@@ -124,8 +114,8 @@ const styles = StyleSheet.create({
   embeddedInner: {
     alignItems: 'center',
   },
-  loader: { marginBottom: theme.spacing.lg },
-  loaderEmbedded: { marginBottom: theme.spacing.sm },
+  loader: { marginBottom: theme.spacing.lg, width: '100%', maxWidth: 320 },
+  loaderEmbedded: { marginBottom: theme.spacing.sm, width: '100%', maxWidth: 280 },
   iconRing: {
     width: 88,
     height: 88,

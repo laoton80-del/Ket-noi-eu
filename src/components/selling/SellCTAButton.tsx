@@ -3,8 +3,6 @@ import type { SellCTA } from '../../services/selling';
 import { AnimatedPressable } from '../widgets/AnimatedPressable';
 import { WidgetCard } from '../widgets/WidgetCard';
 import { StyleSheet, Text, View } from 'react-native';
-import { theme } from '../../theme/theme';
-import { FontFamily } from '../../theme/typography';
 
 type Props = {
   cta: SellCTA;
@@ -41,16 +39,16 @@ const styles = StyleSheet.create({
   card: { marginTop: 10 },
   row: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10 },
   textCol: { flex: 1, minWidth: 0 },
-  title: { ...theme.typeScale.body, fontFamily: FontFamily.bold, color: theme.colors.GraphiteBlue },
-  cost: { ...theme.typeScale.caption, fontFamily: FontFamily.semibold, color: theme.colors.text.secondary, marginTop: 2 },
+  title: { fontSize: 14, fontWeight: '800', color: '#111827' },
+  cost: { fontSize: 12, fontWeight: '700', color: '#6B7280', marginTop: 2 },
   button: {
-    backgroundColor: theme.colors.GraphiteBlue,
+    backgroundColor: '#111827',
     borderRadius: 14,
     paddingVertical: 12,
     paddingHorizontal: 14,
     alignSelf: 'flex-start',
   },
-  buttonText: { color: theme.colors.CeolWhite, ...theme.typeScale.body, fontFamily: FontFamily.bold },
-  message: { marginTop: 10, ...theme.typeScale.body, color: theme.colors.GraphiteBlue, fontFamily: FontFamily.regular },
+  buttonText: { color: '#FFFFFF', fontWeight: '700', fontSize: 13 },
+  message: { marginTop: 10, fontSize: 13, color: '#374151', lineHeight: 19 },
 });
 

@@ -13,18 +13,18 @@
  * @see https://rnfirebase.io/app-check/usage
  * @see docs/G5_PLATFORM_TRUST.md
  */
-import { getApp } from '@react-native-firebase/app';
 import type { AppCheck } from '@react-native-firebase/app-check';
+import { Platform } from 'react-native';
 
-/* Modular package re-exports `ReactNativeFirebaseAppCheckProvider` in a way some TS configs treat as type-only.
- * Runtime export exists (see dist/module/modular.js). */
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-const rnfbAppCheck = require('@react-native-firebase/app-check') as {
+type RnFirebaseAppModule = {
+  getApp: () => unknown;
+};
+
+type RnFirebaseAppCheckModule = {
   ReactNativeFirebaseAppCheckProvider: new () => { configure(options: Record<string, unknown>): void };
-  initializeAppCheck: (app: ReturnType<typeof getApp>, options: unknown) => Promise<AppCheck>;
+  initializeAppCheck: (app: unknown, options: unknown) => Promise<AppCheck>;
   getToken: (instance: AppCheck, forceRefresh?: boolean) => Promise<{ token: string }>;
 };
-const { ReactNativeFirebaseAppCheckProvider, initializeAppCheck, getToken } = rnfbAppCheck;
 
 export type NativeAppCheckBridgeDescribe = {
   nativeBridgeActive: boolean;
@@ -41,6 +41,23 @@ let initAttempted = false;
 let nativeAppCheckInstance: AppCheck | null = null;
 let lastInitError: string | null = null;
 
+function loadNativeAppCheckModules(): { app: RnFirebaseAppModule; appCheck: RnFirebaseAppCheckModule } | null {
+  if (Platform.OS === 'web') {
+    lastInitError = 'web_runtime_no_native_firebase';
+    return null;
+  }
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const app = require('@react-native-firebase/app') as RnFirebaseAppModule;
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const appCheck = require('@react-native-firebase/app-check') as RnFirebaseAppCheckModule;
+    return { app, appCheck };
+  } catch (e) {
+    lastInitError = e instanceof Error ? e.message : String(e);
+    return null;
+  }
+}
+
 function readSharedDebugToken(): string | undefined {
   const a = process.env.EXPO_PUBLIC_FIREBASE_APP_CHECK_NATIVE_DEBUG_TOKEN?.trim();
   const b = process.env.EXPO_PUBLIC_FIREBASE_APP_CHECK_DEBUG_TOKEN?.trim();
@@ -53,6 +70,16 @@ function shouldUseAppCheckDebugProvider(): boolean {
 }
 
 export function describeNativeAppCheckBridge(): NativeAppCheckBridgeDescribe {
+  if (Platform.OS === 'web') {
+    return {
+      nativeBridgeActive: false,
+      reason: 'web_runtime_no_native_firebase',
+      initAttempted,
+      initOk: false,
+      lastError: lastInitError,
+      providerMode: shouldUseAppCheckDebugProvider() ? 'debug' : 'production_attestation',
+    };
+  }
   return {
     nativeBridgeActive: true,
     initAttempted,
@@ -67,6 +94,11 @@ export function describeNativeAppCheckBridge(): NativeAppCheckBridgeDescribe {
  * Returns true when an `AppCheck` instance is ready for `getToken`.
  */
 export async function ensureNativeRnFirebaseAppCheck(): Promise<boolean> {
+  if (Platform.OS === 'web') {
+    initAttempted = true;
+    lastInitError = 'web_runtime_no_native_firebase';
+    return false;
+  }
   if (nativeAppCheckInstance) return true;
   if (initAttempted) return false;
 
@@ -74,7 +106,10 @@ export async function ensureNativeRnFirebaseAppCheck(): Promise<boolean> {
   lastInitError = null;
 
   try {
-    const app = getApp();
+    const modules = loadNativeAppCheckModules();
+    if (!modules) return false;
+    const app = modules.app.getApp();
+    const { ReactNativeFirebaseAppCheckProvider, initializeAppCheck } = modules.appCheck;
     const debugToken = readSharedDebugToken();
     const debug = shouldUseAppCheckDebugProvider();
 
@@ -107,9 +142,13 @@ export async function ensureNativeRnFirebaseAppCheck(): Promise<boolean> {
 }
 
 export async function getNativeRnFirebaseAppCheckToken(forceRefresh = false): Promise<string | null> {
+  if (Platform.OS === 'web') return null;
   const ok = await ensureNativeRnFirebaseAppCheck();
   if (!ok || !nativeAppCheckInstance) return null;
   try {
+    const modules = loadNativeAppCheckModules();
+    if (!modules) return null;
+    const { getToken } = modules.appCheck;
     const { token } = await getToken(nativeAppCheckInstance, forceRefresh);
     return token?.trim() ? token : null;
   } catch {

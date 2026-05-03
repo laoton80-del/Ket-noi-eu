@@ -7,7 +7,8 @@ import type { MarketplaceRankedMerchant } from './types';
  *
  * **Phase 3:** `grocery_retail` and `grocery_wholesale` map to **distinct** `B2BBusinessType` values.
  * `clinic` and other non-nails/restaurant B2C types still map to **`grocery_retail`** for shared fulfillment
- * semantics until a dedicated `clinic` B2B vertical exists.
+ * semantics until a dedicated `clinic` B2B vertical exists (explicit, not hidden `potraviny`).
+ * Legacy Firestore tenants may still use `businessType: 'potraviny'` — see `b2bVerticalBridge`.
  */
 export function marketplaceBusinessTypeToB2B(mt: MarketplaceRankedMerchant['businessType']): B2BBusinessType {
   if (mt === 'nails') return 'nails';

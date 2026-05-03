@@ -186,7 +186,7 @@ export function TravelCompanionScreen() {
             style={({ pressed }) => [styles.quickChip, pressed && { opacity: 0.75 }]}
             onPress={() =>
               navigation.navigate('Tabs', {
-                screen: 'LeTan',
+                screen: 'TabAi',
                 params: {
                   aiMode: 'roleplay',
                   scenario: LETAN_TRAVEL_SCENARIO,
@@ -249,7 +249,7 @@ export function TravelCompanionScreen() {
                 style={({ pressed }) => [styles.actionPill, styles.actionPillOutline, pressed && { opacity: 0.75 }]}
                 onPress={() =>
                   navigation.navigate('Tabs', {
-                    screen: 'LeTan',
+                    screen: 'TabAi',
                     params: {
                       aiMode: 'roleplay',
                       scenario: LETAN_TRAVEL_SCENARIO,

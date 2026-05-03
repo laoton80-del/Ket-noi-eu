@@ -14,6 +14,7 @@ import type { SellCTA } from './selling/sellingTypes';
 import { defaultPatternIdFor, trackNetworkEffectEvent } from './networkEffect';
 import { getAssistantSettings } from '../state/assistantSettings';
 import { runInterpreterTurnCore } from './liveInterpreterProvider';
+import { QuotaExceededError } from './ai/AIQuotaManager';
 
 export type InterpreterTurnResult = {
   transcript: string;
@@ -24,10 +25,18 @@ export type InterpreterTurnResult = {
   spokenUri: string | null;
 };
 
-export { INTERPRETER_SESSION_CREDITS } from './interpreterSessionConstants';
+import {
+  INTERPRETER_CREDITS_PER_MINUTE,
+  INTERPRETER_MAX_SESSION_MINUTES,
+  INTERPRETER_SESSION_CREDITS,
+} from './interpreterSessionConstants';
 
-/** Hard cap on session length (cost control + UX). */
-export const INTERPRETER_MAX_SESSION_MINUTES = 8;
+export {
+  INTERPRETER_CREDITS_PER_MINUTE,
+  INTERPRETER_MAX_SESSION_MINUTES,
+  INTERPRETER_SESSION_CREDITS,
+};
+
 export const INTERPRETER_MAX_SESSION_MS = INTERPRETER_MAX_SESSION_MINUTES * 60 * 1000;
 
 /**
@@ -125,7 +134,18 @@ export async function runInterpreterTurn(
       sellCta,
       spokenUri,
     };
-  } catch {
+  } catch (e) {
+    if (e instanceof QuotaExceededError) {
+      const msg =
+        '⚠️ Energy depleted. Please top up VIG Tokens to continue using AI Services.';
+      return {
+        transcript: '',
+        translation: msg,
+        translationForDisplay: msg,
+        sellCta: null,
+        spokenUri: null,
+      };
+    }
     return {
       transcript: '',
       translation: 'Mình chưa xử lý kịp. Bạn thử nói lại ngắn hơn hoặc đổi hướng phiên dịch nhé.',

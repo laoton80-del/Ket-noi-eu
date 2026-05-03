@@ -2,8 +2,6 @@ import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { AnimatedPressable } from './AnimatedPressable';
 import { WidgetCard } from './WidgetCard';
-import { theme } from '../../theme/theme';
-import { FontFamily } from '../../theme/typography';
 
 type Props = {
   creditBalance: number;
@@ -48,38 +46,36 @@ const styles = StyleSheet.create({
   },
   leftCol: { flex: 1, minWidth: 0 },
   label: {
-    ...theme.typeScale.body,
-    color: theme.colors.text.secondary,
-    fontFamily: FontFamily.regular,
+    fontSize: 14,
+    color: '#6B7280',
     marginBottom: 6,
   },
   smartLine: {
-    ...theme.typeScale.caption,
-    color: theme.colors.GraphiteBlue,
-    fontFamily: FontFamily.medium,
+    fontSize: 12,
+    color: '#374151',
     marginTop: 4,
+    lineHeight: 17,
+    fontWeight: '500',
   },
   balance: {
-    ...theme.typeScale.h1,
-    fontFamily: FontFamily.bold,
-    color: theme.colors.GraphiteBlue,
+    fontSize: 28,
+    fontWeight: '800',
+    color: '#111827',
   },
   warning: {
     marginTop: 6,
-    ...theme.typeScale.caption,
-    color: theme.colors.PendingAmber,
-    fontFamily: FontFamily.semibold,
+    fontSize: 13,
+    color: '#B45309',
   },
   button: {
-    backgroundColor: theme.colors.GraphiteBlue,
+    backgroundColor: '#111827',
     borderRadius: 14,
     paddingVertical: 12,
     paddingHorizontal: 14,
   },
   buttonText: {
-    color: theme.colors.CeolWhite,
-    ...theme.typeScale.body,
-    fontFamily: FontFamily.semibold,
+    color: '#FFFFFF',
+    fontWeight: '600',
   },
 });
 

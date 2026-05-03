@@ -33,6 +33,10 @@ import type { SellCTA } from '../services/selling/sellingTypes';
 import type { RootStackParamList } from '../navigation/routes';
 import { useAssistantSettings } from '../state/assistantSettings';
 import { useWalletState } from '../state/wallet';
+import {
+  hasInterpreterMicrophoneConsent,
+  setInterpreterMicrophoneConsent,
+} from '../services/compliance/sensorConsent';
 import { Colors } from '../theme/colors';
 import { FontFamily } from '../theme/typography';
 
@@ -107,6 +111,11 @@ export function LiveInterpreterScreen() {
     return () => clearInterval(id);
   }, []);
 
+  const [sensorConsent, setSensorConsent] = useState<boolean | null>(null);
+  useEffect(() => {
+    void hasInterpreterMicrophoneConsent().then(setSensorConsent);
+  }, []);
+
   const consentShownRef = useRef(false);
   const [showMicroHint, setShowMicroHint] = useState(false);
 
@@ -123,6 +132,7 @@ export function LiveInterpreterScreen() {
   }, []);
 
   useEffect(() => {
+    if (sensorConsent !== true) return;
     if (consentShownRef.current) return;
     consentShownRef.current = true;
     const guided = route.params?.guidedEntry === true;
@@ -163,7 +173,7 @@ export function LiveInterpreterScreen() {
         },
       ]
     );
-  }, [beginSessionAfterPayment, navigation, route.params?.guidedEntry]);
+  }, [beginSessionAfterPayment, navigation, route.params?.guidedEntry, sensorConsent]);
 
   useEffect(() => {
     if (!autoStopPayload) return;
@@ -211,6 +221,44 @@ export function LiveInterpreterScreen() {
   const timerLine = sessionActive
     ? `${formatMmSs(sessionDurationMs)} · còn ${formatMmSs(remainingSessionMs)} · tối đa ${maxSessionMinutes} phút`
     : 'Chưa bắt đầu phiên';
+
+  if (sensorConsent === null) {
+    return (
+      <SafeAreaView style={[styles.container, styles.consentCenter]} edges={['top']}>
+        <ActivityIndicator color={Colors.primary} size="large" />
+        <Text style={styles.consentLoadingText}>Đang tải cài đặt quyền…</Text>
+      </SafeAreaView>
+    );
+  }
+
+  if (!sensorConsent) {
+    return (
+      <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
+        <View style={styles.consentCard}>
+          <Ionicons name="mic-circle-outline" size={48} color={Colors.primary} />
+          <Text style={styles.consentTitle}>Quyền micro (Minh Khang Live)</Text>
+          <Text style={styles.consentBody}>
+            Phiên dịch giọng nói cần micro để thu âm và xử lý an toàn trên máy chủ ViGlobal. Bạn có thể từ chối và quay lại
+            sau.
+          </Text>
+          <Pressable
+            onPress={() => {
+              void (async () => {
+                await setInterpreterMicrophoneConsent(true);
+                setSensorConsent(true);
+              })();
+            }}
+            style={({ pressed }) => [styles.consentPrimary, pressed && { opacity: 0.88 }]}
+          >
+            <Text style={styles.consentPrimaryText}>Đồng ý &amp; tiếp tục</Text>
+          </Pressable>
+          <Pressable onPress={() => navigation.goBack()} style={({ pressed }) => [styles.consentSecondary, pressed && { opacity: 0.82 }]}>
+            <Text style={styles.consentSecondaryText}>Không cho phép</Text>
+          </Pressable>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
@@ -450,4 +498,25 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(58,45,30,0.78)',
   },
   endText: { fontSize: 13, fontFamily: FontFamily.semibold, color: '#FFE8C7' },
+  consentCenter: { justifyContent: 'center', alignItems: 'center', gap: 12 },
+  consentLoadingText: { fontSize: 13, fontFamily: FontFamily.medium, color: Colors.textSoft },
+  consentCard: {
+    flex: 1,
+    paddingHorizontal: 20,
+    paddingTop: 24,
+    gap: 14,
+    justifyContent: 'center',
+  },
+  consentTitle: { fontSize: 20, fontFamily: FontFamily.extrabold, color: Colors.text },
+  consentBody: { fontSize: 14, fontFamily: FontFamily.regular, color: Colors.textSoft, lineHeight: 22 },
+  consentPrimary: {
+    paddingVertical: 14,
+    borderRadius: 12,
+    backgroundColor: '#8B4513',
+    alignItems: 'center',
+    marginTop: 8,
+  },
+  consentPrimaryText: { fontSize: 15, fontFamily: FontFamily.bold, color: '#FFF8E7' },
+  consentSecondary: { paddingVertical: 12, alignItems: 'center' },
+  consentSecondaryText: { fontSize: 14, fontFamily: FontFamily.semibold, color: Colors.textSoft },
 });

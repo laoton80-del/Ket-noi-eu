@@ -1,6 +1,9 @@
+require('dotenv').config();
+
 module.exports = () => {
   const stripeMerchantIdentifier = process.env.EXPO_PUBLIC_STRIPE_MERCHANT_IDENTIFIER?.trim() ?? '';
   const plugins = [
+    'react-native-compressor',
     '@react-native-firebase/app',
     '@react-native-firebase/app-check',
     [
@@ -60,8 +63,10 @@ module.exports = () => {
         color: '#0B2A66',
       },
     ],
+    '@rnmapbox/maps',
     'expo-live-activity',
     'expo-font',
+    '@sentry/react-native',
   ];
 
   // Only enable Stripe config plugin when merchant identifier is provided.
@@ -114,6 +119,7 @@ module.exports = () => {
         'android.permission.MODIFY_AUDIO_SETTINGS',
         'android.permission.USE_BIOMETRIC',
         'android.permission.USE_FINGERPRINT',
+        'android.permission.READ_MEDIA_IMAGES',
       ],
       package: 'com.ketnoiglobal.app',
       googleServicesFile: process.env.GOOGLE_SERVICES_JSON ?? './google-services.json',
@@ -131,6 +137,17 @@ module.exports = () => {
       eas: {
         projectId: '2c3531a4-61e9-4c5c-aaeb-3086543ecdc6',
       },
+      /** Injected at build time from root `.env` (see `src/config/env.ts`). Safe for client. */
+      stripePublishableKey: process.env.STRIPE_PUBLISHABLE_KEY?.trim() ?? '',
+      /** Mapbox public token (CEO: `EXPO_PUBLIC_MAPBOX_KEY`); legacy name still supported. */
+      mapboxKey:
+        process.env.EXPO_PUBLIC_MAPBOX_KEY?.trim() ??
+        process.env.EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN?.trim() ??
+        '',
+      mapboxAccessToken:
+        process.env.EXPO_PUBLIC_MAPBOX_KEY?.trim() ??
+        process.env.EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN?.trim() ??
+        '',
     },
   }};
 };

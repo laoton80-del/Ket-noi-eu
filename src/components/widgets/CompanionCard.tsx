@@ -2,8 +2,6 @@ import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { AnimatedPressable } from './AnimatedPressable';
 import { WidgetCard } from './WidgetCard';
-import { theme } from '../../theme/theme';
-import { FontFamily } from '../../theme/typography';
 
 type Props = {
   message: string;
@@ -30,17 +28,17 @@ const CompanionCardComponent: React.FC<Props> = ({ message, suggestedActions, on
 export const CompanionCard = React.memo(CompanionCardComponent);
 
 const styles = StyleSheet.create({
-  title: { ...theme.typeScale.h2, color: theme.colors.GraphiteBlue, fontFamily: FontFamily.bold },
-  message: { marginTop: 8, ...theme.typeScale.body, color: theme.colors.text.secondary, fontFamily: FontFamily.regular },
+  title: { fontSize: 17, fontWeight: '700', color: '#111827' },
+  message: { marginTop: 8, fontSize: 13, color: '#4B5563', lineHeight: 19 },
   row: { marginTop: 10, flexDirection: 'row', gap: 8 },
   suggestionBtn: {
     flex: 1,
     minHeight: 38,
     borderRadius: 12,
-    backgroundColor: theme.colors.GraphiteBlue,
+    backgroundColor: '#1F2937',
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 8,
   },
-  suggestionText: { ...theme.typeScale.caption, color: theme.colors.CeolWhite, fontFamily: FontFamily.semibold, textAlign: 'center' },
+  suggestionText: { fontSize: 12, color: '#FFFFFF', fontWeight: '600', textAlign: 'center' },
 });

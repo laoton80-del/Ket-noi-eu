@@ -10,8 +10,10 @@ import { useAssistantSettings } from '../state/assistantSettings';
 import { useRegionState } from '../state/region';
 import { theme } from '../theme/theme';
 import { FontFamily } from '../theme/typography';
+import { useSyncHubOnFocus } from '../hooks/useSyncHubOnFocus';
 
 export function DiscoverScreen() {
+  useSyncHubOnFocus('HUB_SERVICE');
   const { languageCode } = useAssistantSettings();
   const strings = getStrings(languageCode);
   const { currentCountry, localCurrency } = useRegionState();

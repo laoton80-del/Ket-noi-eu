@@ -4,11 +4,13 @@ import * as Clipboard from 'expo-clipboard';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useCallback, useEffect, useState } from 'react';
-import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Alert, Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { APP_BRAND } from '../config/appBrand';
 import { useAppMode } from '../context/AppModeContext';
 import { useAuth } from '../context/AuthContext';
+import { isMerchantServerRole } from '../context/authTypes';
+import { persistUserLanguage } from '../i18n/persistLanguage';
 import { getStrings } from '../i18n/strings';
 import type { RootStackParamList } from '../navigation/routes';
 import { useAssistantSettings } from '../state/assistantSettings';
@@ -23,6 +25,7 @@ import { loadUsageHistory, type UsageHistoryItem } from '../services/history';
 import { ensureWalletFirebaseAuth, getWalletIdToken } from '../services/walletFirebaseSession';
 import { useWalletState } from '../state/wallet';
 import { STORAGE_KEYS } from '../storage/storageKeys';
+import { GDPRDashboard } from '../components/compliance/GDPRDashboard';
 import { TrustHistoryCard } from '../components/widgets';
 import { b2cTheme } from '../theme/appModeThemes';
 import { theme } from '../theme/theme';
@@ -31,6 +34,22 @@ import { hasB2BWorkspaceAccess } from '../utils/b2bAccess';
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
 const ADMIN_UNLOCK_KEY = STORAGE_KEYS.adminUnlock;
+
+const LANGUAGE_OPTIONS: ReadonlyArray<{
+  code: 'vi' | 'en' | 'cs' | 'de';
+  title: string;
+  hint: string;
+}> = [
+  { code: 'vi', title: '🇻🇳 Tiếng Việt', hint: 'Default · F1' },
+  { code: 'en', title: '🇬🇧 English', hint: 'Global · F2 / F3' },
+  { code: 'cs', title: '🇨🇿 Čeština', hint: 'EU expansion' },
+  { code: 'de', title: '🇩🇪 Deutsch', hint: 'EU expansion' },
+];
+
+function languageSubtitleForCode(code: string): string {
+  const row = LANGUAGE_OPTIONS.find((o) => o.code === code);
+  return row ? `${row.title} · ${row.hint}` : code;
+}
 
 /** TEMP DEV-only — gỡ trước release: log UID + token cho trust:live / verify:receipt (Metro console). */
 function devLogFirebaseIdTokenAudit(firebaseUid: string, token: string): void {
@@ -121,12 +140,13 @@ function interpolate(template: string, vars: Record<string, string>): string {
 
 export function CaNhanScreen() {
   const navigation = useNavigation<Nav>();
-  const { user } = useAuth();
+  const { user, updateProfile } = useAuth();
   const { mode, setMode } = useAppMode();
   const { languageCode } = useAssistantSettings();
   const strings = getStrings(languageCode);
   const wallet = useWalletState();
   const [diasporaRestrictionOpen, setDiasporaRestrictionOpen] = useState(false);
+  const [languageModalOpen, setLanguageModalOpen] = useState(false);
 
   const openMerchantRoute = useCallback(
     (route: 'B2BPaywall' | 'PartnerOnboarding') => {
@@ -163,13 +183,6 @@ export function CaNhanScreen() {
   }, [navigation, setMode, user]);
 
   const settings = [
-    {
-      key: 'language',
-      label: strings.profile.settingLanguage,
-      onPress: () => {
-        Alert.alert(strings.profile.alertLanguageTitle, strings.profile.alertLanguageBody);
-      },
-    },
     {
       key: 'notifications',
       label: strings.profile.settingNotifications,
@@ -382,6 +395,34 @@ export function CaNhanScreen() {
           <Ionicons name="chevron-forward" size={18} color={theme.colors.CeolWhite} />
         </Pressable>
 
+        {user && (user.serverRole === 'BROKER' || isMerchantServerRole(user.serverRole)) ? (
+          <Pressable
+            onPress={() => {
+              if (user.workspaceUiOverride === 'consumer') {
+                updateProfile({ workspaceUiOverride: null });
+              } else {
+                updateProfile({ workspaceUiOverride: 'consumer' });
+              }
+            }}
+            style={({ pressed }) => [styles.workspaceHatCard, pressed && { opacity: 0.82 }]}
+            accessibilityRole="button"
+            accessibilityLabel="Switch default between workspace and consumer home"
+          >
+            <Ionicons name="people-circle-outline" size={22} color={theme.colors.primary} />
+            <View style={styles.b2bSwitchMeta}>
+              <Text style={styles.workspaceHatTitle}>
+                {user.workspaceUiOverride === 'consumer'
+                  ? `Use ${user.serverRole === 'BROKER' ? 'broker' : 'merchant'} dashboard as default home`
+                  : 'Switch default home to ViGlobal consumer app'}
+              </Text>
+              <Text style={styles.workspaceHatHint}>
+                One tap — saved on this device. Open wallet & tabs stay the same.
+              </Text>
+            </View>
+            <Ionicons name="chevron-forward" size={18} color={theme.colors.text.secondary} />
+          </Pressable>
+        ) : null}
+
         <Pressable
           onPress={() => openMerchantRoute('PartnerOnboarding')}
           style={({ pressed }) => [
@@ -439,6 +480,20 @@ export function CaNhanScreen() {
 
         <Text style={styles.sectionTitle}>{strings.profile.settingsTitle}</Text>
         <View style={styles.settingsCard}>
+          <Pressable
+            onPress={() => setLanguageModalOpen(true)}
+            style={({ pressed }) => [styles.settingRow, pressed && { opacity: 0.72 }]}
+            accessibilityRole="button"
+            accessibilityLabel="Language Ngôn ngữ"
+          >
+            <View style={styles.languageRowText}>
+              <Text style={styles.settingText}>🌐 Language / Ngôn ngữ</Text>
+              <Text style={styles.languageRowSub} numberOfLines={1}>
+                {languageSubtitleForCode(languageCode)}
+              </Text>
+            </View>
+            <Ionicons name="chevron-forward" size={16} color={theme.colors.text.secondary} />
+          </Pressable>
           {settings.map((item) => (
             <Pressable
               key={item.key}
@@ -450,6 +505,8 @@ export function CaNhanScreen() {
             </Pressable>
           ))}
         </View>
+
+        <GDPRDashboard />
 
         {__DEV__ ? (
           <View style={styles.devTokenCard}>
@@ -509,6 +566,49 @@ export function CaNhanScreen() {
           </Pressable>
         ) : null}
       </ScrollView>
+      <Modal
+        visible={languageModalOpen}
+        animationType="fade"
+        transparent
+        onRequestClose={() => setLanguageModalOpen(false)}
+      >
+        <View style={styles.langModalBackdrop}>
+          <Pressable style={StyleSheet.absoluteFill} onPress={() => setLanguageModalOpen(false)} />
+          <View style={styles.langModalCard}>
+            <Text style={styles.langModalTitle}>🌐 Language / Ngôn ngữ</Text>
+            <Text style={styles.langModalCaption}>Intergenerational bridge — choose your preferred language.</Text>
+            {LANGUAGE_OPTIONS.map((opt) => {
+              const active = languageCode === opt.code;
+              return (
+                <Pressable
+                  key={opt.code}
+                  onPress={() => {
+                    void (async () => {
+                      await persistUserLanguage(opt.code);
+                      setLanguageModalOpen(false);
+                    })();
+                  }}
+                  style={({ pressed }) => [
+                    styles.langOption,
+                    active && styles.langOptionActive,
+                    pressed && { opacity: 0.88 },
+                  ]}
+                >
+                  <Text style={[styles.langOptionTitle, active && styles.langOptionTitleActive]}>{opt.title}</Text>
+                  <Text style={[styles.langOptionHint, active && styles.langOptionHintActive]}>{opt.hint}</Text>
+                </Pressable>
+              );
+            })}
+            <Pressable
+              onPress={() => setLanguageModalOpen(false)}
+              style={({ pressed }) => [styles.langModalClose, pressed && { opacity: 0.82 }]}
+            >
+              <Text style={styles.langModalCloseText}>Close</Text>
+            </Pressable>
+          </View>
+        </View>
+      </Modal>
+
       <DiasporaRestrictionModal
         visible={diasporaRestrictionOpen}
         onClose={() => setDiasporaRestrictionOpen(false)}
@@ -655,6 +755,29 @@ const styles = StyleSheet.create({
     fontFamily: FontFamily.regular,
     color: 'rgba(255,255,255,0.9)',
   },
+  workspaceHatCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: theme.spacing.md,
+    borderRadius: theme.radius.lg,
+    borderWidth: 1,
+    borderColor: theme.hybrid.signatureLine,
+    backgroundColor: b2cTheme.colors.card,
+    paddingVertical: theme.spacing.md,
+    paddingHorizontal: theme.spacing.md,
+    marginBottom: theme.spacing.md,
+  },
+  workspaceHatTitle: {
+    fontSize: 14,
+    fontFamily: FontFamily.bold,
+    color: b2cTheme.colors.text,
+  },
+  workspaceHatHint: {
+    fontSize: 12,
+    lineHeight: 17,
+    fontFamily: FontFamily.regular,
+    color: theme.colors.text.secondary,
+  },
   virtualStoreShortcut: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -799,6 +922,85 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.executive.card,
     paddingHorizontal: 12,
   },
+  languageRowText: {
+    flex: 1,
+    marginRight: 8,
+  },
+  languageRowSub: {
+    fontSize: 11,
+    marginTop: 2,
+    color: theme.colors.text.secondary,
+    fontFamily: FontFamily.regular,
+  },
+  langModalBackdrop: {
+    flex: 1,
+    backgroundColor: theme.colors.overlay.dim,
+    justifyContent: 'center',
+    paddingHorizontal: 20,
+  },
+  langModalCard: {
+    borderRadius: theme.radius.lg,
+    borderWidth: 1,
+    borderColor: theme.colors.glass.border,
+    backgroundColor: theme.colors.surfaceElevated,
+    padding: 18,
+    maxWidth: 420,
+    width: '100%',
+    alignSelf: 'center',
+  },
+  langModalTitle: {
+    fontSize: 18,
+    fontFamily: FontFamily.bold,
+    color: theme.colors.text.primary,
+    marginBottom: 4,
+  },
+  langModalCaption: {
+    fontSize: 12,
+    lineHeight: 17,
+    fontFamily: FontFamily.regular,
+    color: theme.colors.text.secondary,
+    marginBottom: 14,
+  },
+  langOption: {
+    paddingVertical: 12,
+    paddingHorizontal: 12,
+    borderRadius: 12,
+    marginBottom: 8,
+    borderWidth: 1,
+    borderColor: theme.colors.glass.borderSoft,
+    backgroundColor: 'rgba(244, 241, 234, 0.04)',
+  },
+  langOptionActive: {
+    borderColor: theme.colors.primary,
+    backgroundColor: 'rgba(197, 160, 89, 0.14)',
+  },
+  langOptionTitle: {
+    fontSize: 15,
+    fontFamily: FontFamily.semibold,
+    color: theme.colors.text.secondary,
+  },
+  langOptionTitleActive: {
+    color: theme.colors.primaryBright,
+  },
+  langOptionHint: {
+    fontSize: 11,
+    marginTop: 2,
+    fontFamily: FontFamily.regular,
+    color: theme.colors.text.tertiary,
+  },
+  langOptionHintActive: {
+    color: theme.colors.text.secondary,
+  },
+  langModalClose: {
+    marginTop: 6,
+    alignItems: 'center',
+    paddingVertical: 10,
+  },
+  langModalCloseText: {
+    fontSize: 14,
+    fontFamily: FontFamily.medium,
+    color: theme.colors.text.secondary,
+  },
   resetOnboardingRow: {
     marginTop: 10,
     minHeight: 48,
@@ -819,6 +1021,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     borderBottomWidth: 1,
     borderBottomColor: theme.colors.glass.borderSoft,
+    paddingVertical: 4,
   },
   devTokenCard: {
     borderRadius: 14,

@@ -19,6 +19,8 @@ export const STORAGE_KEYS = {
   guidedLeTanAiSeed: 'ketnoieu.guided.letan.aiSeed.v1', // owner: onboarding
   guidedMicroPrefix: 'ketnoieu.guided.micro.', // owner: onboarding (pairs with STORAGE_KEY_BUILDERS.guidedMicro)
   adminUnlock: 'ketnoieu.admin.unlocked.v1', // owner: HomeScreen/CaNhanScreen
+  /** Must match `APP_LANGUAGE_KEY` in `src/i18n/persistLanguage.ts` (`@app_language`). */
+  appLanguage: '@app_language', // owner: i18n persistLanguage + CaNhanScreen language modal
   proactiveSuggestions: 'ketnoieu.proactive.suggestions.v1', // owner: components/ProactiveSuggestions
   ttsClientCache: 'ketnoieu.tts.cache.v1', // owner: services/OpenAIService
   documentVault: 'ketnoieu.userDocuments.v1', // owner: services/DocumentAlarmService (+ Vault UI)
@@ -33,6 +35,8 @@ export const STORAGE_KEYS = {
   moatB2bLockIn: 'ketnoieu.moat.b2b.lockin.v1', // owner: services/moat/b2bLockIn
   moatLearningAggregates: 'ketnoieu.moat.learning.aggregates.v1', // owner: services/moat/centralLearningData
   autonomyAudit: 'ketnoieu.autonomy.audit.v1', // owner: services/autonomy/auditLogStorage
+  /** B2B merchant-approved Leona promo rules + human-touch queue (client cache). */
+  b2bMerchantPromoSettings: 'ketnoieu.b2b.merchantPromoSettings.v1',
 } as const;
 
 export const STORAGE_KEY_BUILDERS = {

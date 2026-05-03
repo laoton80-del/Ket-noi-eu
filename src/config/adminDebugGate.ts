@@ -50,9 +50,9 @@ export function warnIfAdminDebugInReleaseBuild(): void {
   if (!isAdminDebugRequested()) return;
   if (!hasReleaseDebugAck()) {
     console.error(
-      '[ketnoiglobal] Admin debug requested on release build but blocked (missing EXPO_PUBLIC_ENABLE_ADMIN_DEBUG_RELEASE_ACK).'
+      '[ketnoieu] Admin debug requested on release build but blocked (missing EXPO_PUBLIC_ENABLE_ADMIN_DEBUG_RELEASE_ACK).'
     );
     return;
   }
-  console.warn('[ketnoiglobal] Admin debug enabled on release build with explicit risk acknowledgment. Use internal-only.');
+  console.warn('[ketnoieu] Admin debug enabled on release build with explicit risk acknowledgment. Use internal-only.');
 }

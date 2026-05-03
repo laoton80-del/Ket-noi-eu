@@ -28,6 +28,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { AppMap, type AppMapMarker } from '../components/Map/AppMap';
 import { MicroHintBanner } from '../components/MicroHintBanner';
 import { getPersonaDisplayName } from '../config/aiPrompts';
 import { B2C_GLOBAL_VIP_MONTHLY_USD, PRICING_BASELINE_CURRENCY } from '../config/pricingConfig';
@@ -37,12 +38,15 @@ import type { RootStackParamList } from '../navigation/routes';
 import { FontFamily } from '../theme/typography';
 import { applyWebStyles } from '../utils/applyWebStyles';
 import { formatCurrency } from '../utils/currencyFormatter';
+import { openDirectionsExternally } from '../utils/mapExternalLinks';
 
 type BusinessKind = 'nails' | 'pho' | 'service';
 type Business = {
   id: string;
   name: string;
   kind: BusinessKind;
+  /** Map marker category for Mapbox PointAnnotation. */
+  mapPlaceKind: AppMapMarker['kind'];
   distanceKm: number;
   rating: number;
   phone: string;
@@ -67,6 +71,7 @@ function buildMockBusinesses(lat: number, lon: number): Business[] {
       id: 'nails-1',
       name: 'Hanoi Beauty Nails',
       kind: 'nails',
+      mapPlaceKind: 'business',
       distanceKm: 0.5,
       rating: 4.8,
       phone: '+420777111222',
@@ -76,9 +81,36 @@ function buildMockBusinesses(lat: number, lon: number): Business[] {
       angleDeg: 330,
     },
     {
+      id: 'homestay-1',
+      name: 'Old Quarter Homestay',
+      kind: 'service',
+      mapPlaceKind: 'homestay',
+      distanceKm: 0.9,
+      rating: 4.7,
+      phone: '+420777888999',
+      isForeign: true,
+      lat: lat - 0.0035,
+      lon: lon + 0.0051,
+      angleDeg: 60,
+    },
+    {
+      id: 'tour-1',
+      name: 'Praha Walking Tour · Việt',
+      kind: 'service',
+      mapPlaceKind: 'tour',
+      distanceKm: 1.4,
+      rating: 4.9,
+      phone: '+420777000111',
+      isForeign: true,
+      lat: lat + 0.008,
+      lon: lon - 0.0042,
+      angleDeg: 180,
+    },
+    {
       id: 'pho-1',
       name: 'Phở Việt Praha',
       kind: 'pho',
+      mapPlaceKind: 'business',
       distanceKm: 1.2,
       rating: 4.9,
       phone: '+420777333444',
@@ -91,6 +123,7 @@ function buildMockBusinesses(lat: number, lon: number): Business[] {
       id: 'service-1',
       name: 'Kế toán Minh Anh',
       kind: 'service',
+      mapPlaceKind: 'business',
       distanceKm: 2.0,
       rating: 5.0,
       phone: '+420777555666',
@@ -184,6 +217,7 @@ export function RadarDiscoveryScreen() {
   }, [navigation, radarOn]);
   const [loading, setLoading] = useState(true);
   const [businesses, setBusinesses] = useState<Business[]>([]);
+  const [mapAnchor, setMapAnchor] = useState({ lat: 50.0755, lon: 14.4378 });
   const [selected, setSelected] = useState<Business | null>(null);
   const [showRadarMicro, setShowRadarMicro] = useState(false);
   const progress = useSharedValue(0);
@@ -211,14 +245,19 @@ export function RadarDiscoveryScreen() {
       try {
         const { status } = await Location.requestForegroundPermissionsAsync();
         if (status !== 'granted') {
+          setMapAnchor({ lat: 50.0755, lon: 14.4378 });
           setBusinesses(buildMockBusinesses(50.0755, 14.4378));
           return;
         }
         const pos = await Location.getCurrentPositionAsync({
           accuracy: Location.Accuracy.Balanced,
         });
-        setBusinesses(buildMockBusinesses(pos.coords.latitude, pos.coords.longitude));
+        const la = pos.coords.latitude;
+        const lo = pos.coords.longitude;
+        setMapAnchor({ lat: la, lon: lo });
+        setBusinesses(buildMockBusinesses(la, lo));
       } catch {
+        setMapAnchor({ lat: 50.0755, lon: 14.4378 });
         setBusinesses(buildMockBusinesses(50.0755, 14.4378));
       } finally {
         setLoading(false);
@@ -243,19 +282,21 @@ export function RadarDiscoveryScreen() {
     [selected]
   );
 
+  const mapMarkers = useMemo(
+    (): AppMapMarker[] =>
+      businesses.map((b) => ({
+        id: b.id,
+        latitude: b.lat,
+        longitude: b.lon,
+        kind: b.mapPlaceKind,
+        title: b.name,
+      })),
+    [businesses]
+  );
+
   const openDirection = async () => {
     if (!selected) return;
-    try {
-      const url = `https://www.google.com/maps/dir/?api=1&destination=${selected.lat},${selected.lon}`;
-      const can = await Linking.canOpenURL(url);
-      if (can) {
-        await Linking.openURL(url);
-      } else {
-        Alert.alert('Radar Discovery', 'Không mở được bản đồ lúc này. Bạn thử lại sau.');
-      }
-    } catch {
-      Alert.alert('Radar Discovery', 'Kết nối bản đồ đang lỗi. Bạn thử lại sau ít phút.');
-    }
+    await openDirectionsExternally(selected.lat, selected.lon, selected.name);
   };
 
   const callNow = async () => {
@@ -271,7 +312,7 @@ export function RadarDiscoveryScreen() {
     if (!selected) return;
     if (selected.kind === 'pho') {
       navigation.navigate('Tabs', {
-        screen: 'LeTan',
+        screen: 'TabAi',
         params: {
           proactiveQuestion: `Hỗ trợ đặt bàn tại ${selected.name} cho khách Việt tối nay.`,
           autoSimulate: true,
@@ -318,6 +359,16 @@ export function RadarDiscoveryScreen() {
       <Text style={styles.title}>Radar Discovery</Text>
       <Text style={styles.subtitle}>Quét tiện ích Việt quanh bạn theo thời gian thực.</Text>
       <Text style={styles.preview}>Dữ liệu đang ở chế độ xem trước để thử trải nghiệm.</Text>
+
+      <View style={styles.mapBlock}>
+        <AppMap
+          latitude={mapAnchor.lat}
+          longitude={mapAnchor.lon}
+          zoomLevel={13}
+          markers={mapMarkers}
+          style={styles.mapBox}
+        />
+      </View>
 
       <View style={styles.radarWrap}>
         <View style={styles.crosshair} />
@@ -474,6 +525,19 @@ const styles = StyleSheet.create({
     color: '#FBD38D',
     fontSize: 12,
     fontFamily: FontFamily.semibold,
+  },
+  mapBlock: {
+    width: '100%',
+    marginTop: 12,
+    marginBottom: 8,
+    borderRadius: 16,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: 'rgba(212,175,55,0.28)',
+  },
+  mapBox: {
+    width: '100%',
+    height: 220,
   },
   radarWrap: {
     width: '100%',

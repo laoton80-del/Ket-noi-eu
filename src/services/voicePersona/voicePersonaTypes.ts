@@ -21,7 +21,7 @@ export type VoiceScenario =
   | 'government'
   | 'nails'
   | 'restaurant'
-  | 'retail_taphoa'
+  | 'potraviny'
   | 'hospitality_stay'
   | 'grocery_wholesale'
   | 'work'

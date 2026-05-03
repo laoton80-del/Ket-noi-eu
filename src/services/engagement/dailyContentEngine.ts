@@ -22,7 +22,7 @@ export type DailyContent = {
 
 function milestone(streak: number): string | null {
   if (streak >= 21) return 'Huy hiệu: 21 ngày duy trì nhịp học và xử lý việc đều đặn.';
-  if (streak >= 7) return 'Huy hiệu: 7 ngày liên tiếp mở ứng dụng.';
+  if (streak >= 7) return 'Huy hiệu: 7 ngày liên tiếp mở app.';
   if (streak >= 3) return 'Tiến bộ tốt: 3 ngày liên tiếp.';
   return null;
 }

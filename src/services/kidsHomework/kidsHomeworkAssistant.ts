@@ -14,7 +14,7 @@ export async function assistKidsHomeworkFromImage(input: {
   withVoice?: boolean;
   voiceId?: string;
 }): Promise<KidsHomeworkAssistResult> {
-  const analysis = await analyzeKidsHomeworkWithAI(input.base64Image);
+  const analysis = await analyzeKidsHomeworkWithAI(input.base64Image, 'image/webp');
   const explanation = `${analysis.plainSummary}\n\n${analysis.steps.map((s, i) => `${i + 1}. ${s}`).join('\n')}`;
   let voiceUri: string | null = null;
   if (input.withVoice) {

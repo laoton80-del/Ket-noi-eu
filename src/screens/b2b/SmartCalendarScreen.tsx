@@ -18,6 +18,7 @@ import { AdaptiveContainer } from '../../components/layout/AdaptiveContainer';
 import { PrecisePanel } from '../../components/ui/PrecisePanel';
 import { StatusChip, type StatusChipState } from '../../components/ui/StatusChip';
 import { APP_BRAND } from '../../config/appBrand';
+import { useAuth } from '../../context/AuthContext';
 import { PRICING_AUTHORITY, PRICING_BASELINE_CURRENCY } from '../../config/pricingConfig';
 import { useDeviceLayout } from '../../hooks/useDeviceLayout';
 import { stripeConnectService } from '../../services/fintech/StripeConnectService';
@@ -155,6 +156,8 @@ function CalendarEventBlock({ booking, serviceName, top, height, isInquiry }: Ca
 
 export function SmartCalendarScreen() {
   const navigation = useNavigation();
+  const { user } = useAuth();
+  const isKycVerified = user?.kycVerified === true;
   const { width } = useWindowDimensions();
   const bookings = useB2BBookingStore((state) => state.bookings);
   const services = useB2BBookingStore((state) => state.services);
@@ -323,8 +326,7 @@ export function SmartCalendarScreen() {
           </Text>
           <View style={styles.stripeConnectRateWrap} className={mergeWebClassNames('kn-neon-b2b')}>
             <Text style={styles.stripeConnectRate}>
-              Phí giao dịch: {PRICING_AUTHORITY.overageAndPlatformFees.b2bTransactionFeePercent}% +{' '}
-              {formatCurrency(PRICING_AUTHORITY.overageAndPlatformFees.b2bTransactionFixedFeeMajor, PRICING_BASELINE_CURRENCY)}
+              Phí nền tảng: ước tính Stripe theo thẻ + 1% biên KNG (không còn mức cố định % + phí cố định).
             </Text>
           </View>
           <Text style={styles.stripeConnectSub}>
@@ -363,6 +365,7 @@ export function SmartCalendarScreen() {
         <VoiceAiReceptionistMerchantPanel
           merchantPackage={voiceMerchantPackage}
           usedVoiceAiMinutesThisMonth={voiceUsedMinutesThisMonth}
+          isKycVerified={isKycVerified}
         />
 
         <ZeroTouchCommandDeck variant="dark" />
