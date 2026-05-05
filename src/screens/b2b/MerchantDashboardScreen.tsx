@@ -165,6 +165,10 @@ export function MerchantDashboardScreen(): ReactElement {
     navigation.navigate('InboundQueue');
   }, [navigation]);
 
+  const openDemoSimulator = useCallback(() => {
+    navigation.navigate('AiReceptionistDemoSimulator');
+  }, [navigation]);
+
   const openLeonaPromoSettings = useCallback(() => {
     navigation.navigate('B2BPromotionSettings');
   }, [navigation]);
@@ -174,7 +178,7 @@ export function MerchantDashboardScreen(): ReactElement {
   }, [navigation]);
 
   const openPilotRequest = useCallback(() => {
-    navigation.navigate('B2BPaywall');
+    navigation.navigate('AiReceptionistPilotRequest');
   }, [navigation]);
 
   const aiSetupStates = useMemo(() => {
@@ -358,7 +362,7 @@ export function MerchantDashboardScreen(): ReactElement {
           </Text>
           <View style={styles.aiReceptionistActionRow}>
             <Pressable
-              onPress={openDeepQueue}
+              onPress={openDemoSimulator}
               disabled={!aiSetupStates.demoAvailable}
               style={({ pressed }) => [
                 styles.aiReceptionistBtn,

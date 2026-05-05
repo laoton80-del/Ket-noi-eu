@@ -234,6 +234,21 @@ export function AiReceptionistSetupChecklistScreen(): ReactElement {
             );
           })}
         </View>
+
+        <View style={styles.actionRow}>
+          <Pressable
+            onPress={() => navigation.navigate('AiReceptionistDemoSimulator')}
+            style={({ pressed }) => [styles.actionBtn, pressed && { opacity: 0.86 }]}
+          >
+            <Text style={styles.actionBtnText}>View simulated demo</Text>
+          </Pressable>
+          <Pressable
+            onPress={() => navigation.navigate('AiReceptionistPilotRequest')}
+            style={({ pressed }) => [styles.actionBtn, pressed && { opacity: 0.86 }]}
+          >
+            <Text style={styles.actionBtnText}>Request pilot</Text>
+          </Pressable>
+        </View>
       </ScrollView>
     </SafeAreaView>
   );
@@ -384,5 +399,22 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: '700',
     color: '#F4F7FF',
+  },
+  actionRow: {
+    gap: 8,
+  },
+  actionBtn: {
+    borderRadius: 11,
+    borderWidth: 1,
+    borderColor: 'rgba(159,183,255,0.42)',
+    backgroundColor: 'rgba(61,90,254,0.18)',
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    alignItems: 'center',
+  },
+  actionBtnText: {
+    fontSize: 13,
+    fontWeight: '800',
+    color: '#DCE8FF',
   },
 });

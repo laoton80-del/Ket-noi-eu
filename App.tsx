@@ -99,6 +99,8 @@ import { B2BPaywallScreen } from './src/screens/b2b/B2BPaywallScreen';
 import { PartnerOnboardingScreen } from './src/screens/commercial/PartnerOnboardingScreen';
 import { MerchantDashboardScreen } from './src/screens/b2b/MerchantDashboardScreen';
 import { AiReceptionistSetupChecklistScreen } from './src/screens/b2b/AiReceptionistSetupChecklistScreen';
+import { AiReceptionistDemoSimulatorScreen } from './src/screens/b2b/AiReceptionistDemoSimulatorScreen';
+import { AiReceptionistPilotRequestScreen } from './src/screens/b2b/AiReceptionistPilotRequestScreen';
 import { SmartCalendarScreen } from './src/screens/b2b/SmartCalendarScreen';
 import { WalletB2BScreen } from './src/screens/b2b/WalletB2BScreen';
 import { OrdersScreen } from './src/screens/b2b/OrdersScreen';
@@ -320,6 +322,8 @@ const rootLinking: LinkingOptions<RootStackParamList> = {
       B2BPaywall: 'B2BPaywall',
       MerchantDashboard: 'MerchantDashboard',
       AiReceptionistSetupChecklist: 'AiReceptionistSetupChecklist',
+      AiReceptionistDemoSimulator: 'AiReceptionistDemoSimulator',
+      AiReceptionistPilotRequest: 'AiReceptionistPilotRequest',
       WalletB2B: 'WalletB2B',
       Orders: 'Orders',
       InternalTradeMarket: 'InternalTradeMarket',
@@ -577,6 +581,8 @@ function AppNavigationShell({
               <Stack.Screen name="B2BPaywall" component={B2BPaywallScreen} />
               <Stack.Screen name="MerchantDashboard" component={GatedMerchantDashboardScreen} />
               <Stack.Screen name="AiReceptionistSetupChecklist" component={GatedAiReceptionistSetupChecklistScreen} />
+              <Stack.Screen name="AiReceptionistDemoSimulator" component={GatedAiReceptionistDemoSimulatorScreen} />
+              <Stack.Screen name="AiReceptionistPilotRequest" component={GatedAiReceptionistPilotRequestScreen} />
               <Stack.Screen name="InboundQueue" component={GatedInboundQueueScreen} />
               <Stack.Screen name="SmartCalendar" component={GatedSmartCalendarScreen} />
               <Stack.Screen name="WalletB2B" component={GatedWalletB2BScreen} />
@@ -766,6 +772,40 @@ function GatedAiReceptionistSetupChecklistScreen() {
   return (
     <B2BWorkspaceGate>
       <AiReceptionistSetupChecklistScreen />
+    </B2BWorkspaceGate>
+  );
+}
+
+function GatedAiReceptionistDemoSimulatorScreen() {
+  const flags = getFeatureFlags();
+  if (!flags.b2bAiReceptionistDemoEnabled && !flags.b2bAiReceptionistPilotEnabled) {
+    return (
+      <MvpSurfaceDisabledScreen
+        title="B2B AI Receptionist demo"
+        message="Lễ Tân AI simulated demo is unavailable. Enable demo or pilot mode to access this local-only preview surface."
+      />
+    );
+  }
+  return (
+    <B2BWorkspaceGate>
+      <AiReceptionistDemoSimulatorScreen />
+    </B2BWorkspaceGate>
+  );
+}
+
+function GatedAiReceptionistPilotRequestScreen() {
+  const flags = getFeatureFlags();
+  if (!flags.b2bAiReceptionistDemoEnabled && !flags.b2bAiReceptionistPilotEnabled) {
+    return (
+      <MvpSurfaceDisabledScreen
+        title="B2B AI Receptionist pilot request"
+        message="Lễ Tân AI pilot request is unavailable. Enable demo or pilot mode to access this local-only request surface."
+      />
+    );
+  }
+  return (
+    <B2BWorkspaceGate>
+      <AiReceptionistPilotRequestScreen />
     </B2BWorkspaceGate>
   );
 }

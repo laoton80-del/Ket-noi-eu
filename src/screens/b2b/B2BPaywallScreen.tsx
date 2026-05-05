@@ -99,6 +99,10 @@ export function B2BPaywallScreen(): ReactElement {
     handleStripeCheckout();
   }, []);
 
+  const onContinuePilotRequest = useCallback(() => {
+    navigation.navigate('AiReceptionistPilotRequest');
+  }, [navigation]);
+
   const onCancelSubscription = useCallback(async () => {
     if (!merchantIdForBilling) {
       Alert.alert('Không hủy được', 'Thiếu mã merchant — đăng nhập lại hoặc đồng bộ hồ sơ.');
@@ -285,6 +289,15 @@ export function B2BPaywallScreen(): ReactElement {
             >
               <Text style={styles.ctaText}>Secure My Business & Upgrade Now</Text>
             </LinearGradient>
+          </Pressable>
+
+          <Pressable
+            onPress={onContinuePilotRequest}
+            style={({ pressed }) => [styles.secondaryPilotCta, pressed && { opacity: 0.9 }]}
+            accessibilityRole="button"
+            accessibilityLabel="Continue to pilot request form"
+          >
+            <Text style={styles.secondaryPilotCtaText}>Continue to pilot request form</Text>
           </Pressable>
 
           <View style={styles.stripeRow}>
@@ -682,5 +695,19 @@ const styles = StyleSheet.create({
     lineHeight: 16,
     textAlign: 'center',
     color: 'rgba(100,116,139,0.95)',
+  },
+  secondaryPilotCta: {
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(212,175,55,0.45)',
+    backgroundColor: 'rgba(212,175,55,0.12)',
+    paddingVertical: 11,
+    alignItems: 'center',
+    marginBottom: 14,
+  },
+  secondaryPilotCtaText: {
+    fontSize: 13,
+    fontWeight: '800',
+    color: '#F4F7FF',
   },
 });
