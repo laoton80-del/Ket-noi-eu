@@ -98,6 +98,7 @@ import { ConditionalStripeProvider } from './src/providers/ConditionalStripeProv
 import { B2BPaywallScreen } from './src/screens/b2b/B2BPaywallScreen';
 import { PartnerOnboardingScreen } from './src/screens/commercial/PartnerOnboardingScreen';
 import { MerchantDashboardScreen } from './src/screens/b2b/MerchantDashboardScreen';
+import { AiReceptionistSetupChecklistScreen } from './src/screens/b2b/AiReceptionistSetupChecklistScreen';
 import { SmartCalendarScreen } from './src/screens/b2b/SmartCalendarScreen';
 import { WalletB2BScreen } from './src/screens/b2b/WalletB2BScreen';
 import { OrdersScreen } from './src/screens/b2b/OrdersScreen';
@@ -318,6 +319,7 @@ const rootLinking: LinkingOptions<RootStackParamList> = {
       PersonalHub: 'account',
       B2BPaywall: 'B2BPaywall',
       MerchantDashboard: 'MerchantDashboard',
+      AiReceptionistSetupChecklist: 'AiReceptionistSetupChecklist',
       WalletB2B: 'WalletB2B',
       Orders: 'Orders',
       InternalTradeMarket: 'InternalTradeMarket',
@@ -574,6 +576,7 @@ function AppNavigationShell({
             <Stack.Group>
               <Stack.Screen name="B2BPaywall" component={B2BPaywallScreen} />
               <Stack.Screen name="MerchantDashboard" component={GatedMerchantDashboardScreen} />
+              <Stack.Screen name="AiReceptionistSetupChecklist" component={GatedAiReceptionistSetupChecklistScreen} />
               <Stack.Screen name="InboundQueue" component={GatedInboundQueueScreen} />
               <Stack.Screen name="SmartCalendar" component={GatedSmartCalendarScreen} />
               <Stack.Screen name="WalletB2B" component={GatedWalletB2BScreen} />
@@ -746,6 +749,23 @@ function GatedMerchantDashboardScreen() {
   return (
     <B2BWorkspaceGate>
       <MerchantDashboardScreen />
+    </B2BWorkspaceGate>
+  );
+}
+
+function GatedAiReceptionistSetupChecklistScreen() {
+  const flags = getFeatureFlags();
+  if (!flags.b2bAiReceptionistDemoEnabled && !flags.b2bAiReceptionistPilotEnabled) {
+    return (
+      <MvpSurfaceDisabledScreen
+        title="B2B AI Receptionist setup"
+        message="Lễ Tân AI setup is unavailable. Enable demo or pilot mode to access this safety checklist surface. Production automation remains locked until cutover approval."
+      />
+    );
+  }
+  return (
+    <B2BWorkspaceGate>
+      <AiReceptionistSetupChecklistScreen />
     </B2BWorkspaceGate>
   );
 }

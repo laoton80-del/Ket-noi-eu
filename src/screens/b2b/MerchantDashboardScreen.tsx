@@ -25,6 +25,7 @@ import { isRestApiConfigured } from '../../services/apiClient';
 import { formatVigTokenNumber } from '../../utils/currency';
 import { useSyncHubOnFocus } from '../../hooks/useSyncHubOnFocus';
 import { useTranslation } from '../../utils/i18n';
+import { getFeatureFlags } from '../../core/feature-flags/featureFlags';
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
 
@@ -84,6 +85,7 @@ export function MerchantDashboardScreen(): ReactElement {
   useSyncHubOnFocus('HUB_SERVICE');
   const navigation = useNavigation<Nav>();
   const { t, i18n } = useTranslation();
+  const featureFlags = useMemo(() => getFeatureFlags(), []);
   const [catalogAiTranslate, setCatalogAiTranslate] = useState(true);
   const [radar, setRadar] = useState<readonly RadarBooking[]>(INITIAL_RADAR);
   const [ranking, setRanking] = useState<MerchantRankingResult | null>(null);
@@ -166,6 +168,30 @@ export function MerchantDashboardScreen(): ReactElement {
   const openLeonaPromoSettings = useCallback(() => {
     navigation.navigate('B2BPromotionSettings');
   }, [navigation]);
+
+  const openAiReceptionistSetup = useCallback(() => {
+    navigation.navigate('AiReceptionistSetupChecklist');
+  }, [navigation]);
+
+  const openPilotRequest = useCallback(() => {
+    navigation.navigate('B2BPaywall');
+  }, [navigation]);
+
+  const aiSetupStates = useMemo(() => {
+    const demoAvailable = featureFlags.b2bAiReceptionistDemoEnabled;
+    const pilotAvailable = featureFlags.b2bAiReceptionistPilotEnabled;
+    const productionReady =
+      featureFlags.b2bAiReceptionistProductionEnabled &&
+      featureFlags.b2bAutoBookingEnabled &&
+      featureFlags.b2bAutoInventoryEnabled &&
+      featureFlags.b2bAutoBillPrintEnabled &&
+      featureFlags.b2bAutoPaymentEnabled;
+    return {
+      demoAvailable,
+      pilotAvailable,
+      productionReady,
+    };
+  }, [featureFlags]);
 
   const acceptBooking = useCallback((id: string) => {
     setRadar((prev) =>
@@ -299,6 +325,63 @@ export function MerchantDashboardScreen(): ReactElement {
           </View>
           <Ionicons name="chevron-forward" size={20} color="rgba(232, 237, 247, 0.35)" />
         </Pressable>
+
+        <View style={styles.aiReceptionistCard}>
+          <View style={styles.aiReceptionistHead}>
+            <View style={styles.aiReceptionistTitleWrap}>
+              <Text style={styles.aiReceptionistTitle}>Lễ Tân AI Beta</Text>
+              <Text style={styles.aiReceptionistSub}>
+                Demo/pilot only. AI may make mistakes and merchant confirmation is required until production approval.
+              </Text>
+            </View>
+          </View>
+          <View style={styles.aiReceptionistBadgeRow}>
+            <View style={styles.aiReceptionistBadge}>
+              <Text style={styles.aiReceptionistBadgeText}>
+                {aiSetupStates.demoAvailable ? 'Demo available' : 'Demo locked'}
+              </Text>
+            </View>
+            <View style={styles.aiReceptionistBadge}>
+              <Text style={styles.aiReceptionistBadgeText}>
+                {aiSetupStates.pilotAvailable ? 'Pilot available' : 'Pilot locked'}
+              </Text>
+            </View>
+            <View style={[styles.aiReceptionistBadge, styles.aiReceptionistBadgeWarn]}>
+              <Text style={styles.aiReceptionistBadgeText}>
+                {aiSetupStates.productionReady ? 'Production eligible' : 'Production locked'}
+              </Text>
+            </View>
+          </View>
+          <Text style={styles.aiReceptionistSafetyCopy}>
+            Production automation requires setup checklist, policy approval, and sub-flag gates for booking, inventory,
+            bill printing, and payment.
+          </Text>
+          <View style={styles.aiReceptionistActionRow}>
+            <Pressable
+              onPress={openDeepQueue}
+              disabled={!aiSetupStates.demoAvailable}
+              style={({ pressed }) => [
+                styles.aiReceptionistBtn,
+                !aiSetupStates.demoAvailable && styles.aiReceptionistBtnDisabled,
+                pressed && aiSetupStates.demoAvailable && { opacity: 0.86 },
+              ]}
+            >
+              <Text style={styles.aiReceptionistBtnText}>View demo</Text>
+            </Pressable>
+            <Pressable
+              onPress={openAiReceptionistSetup}
+              style={({ pressed }) => [styles.aiReceptionistBtn, pressed && { opacity: 0.86 }]}
+            >
+              <Text style={styles.aiReceptionistBtnText}>Configure</Text>
+            </Pressable>
+            <Pressable
+              onPress={openPilotRequest}
+              style={({ pressed }) => [styles.aiReceptionistBtn, pressed && { opacity: 0.86 }]}
+            >
+              <Text style={styles.aiReceptionistBtnText}>Request pilot</Text>
+            </Pressable>
+          </View>
+        </View>
 
         <View style={styles.statsRow}>
           <View style={styles.statCard}>
@@ -588,6 +671,82 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: 'rgba(232, 237, 247, 0.55)',
     lineHeight: 17,
+  },
+  aiReceptionistCard: {
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(122, 228, 255, 0.28)',
+    backgroundColor: 'rgba(14, 24, 38, 0.94)',
+    padding: 14,
+    gap: 10,
+  },
+  aiReceptionistHead: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
+  },
+  aiReceptionistTitleWrap: {
+    flex: 1,
+    minWidth: 0,
+    gap: 4,
+  },
+  aiReceptionistTitle: {
+    fontSize: 16,
+    fontWeight: '900',
+    color: '#E8F7FF',
+  },
+  aiReceptionistSub: {
+    fontSize: 12,
+    lineHeight: 17,
+    color: 'rgba(226, 232, 240, 0.72)',
+  },
+  aiReceptionistBadgeRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  aiReceptionistBadge: {
+    borderRadius: 999,
+    paddingVertical: 4,
+    paddingHorizontal: 10,
+    borderWidth: 1,
+    borderColor: 'rgba(122, 228, 255, 0.35)',
+    backgroundColor: 'rgba(122, 228, 255, 0.12)',
+  },
+  aiReceptionistBadgeWarn: {
+    borderColor: 'rgba(250, 204, 21, 0.45)',
+    backgroundColor: 'rgba(250, 204, 21, 0.12)',
+  },
+  aiReceptionistBadgeText: {
+    fontSize: 11,
+    fontWeight: '800',
+    color: '#E8EDF7',
+  },
+  aiReceptionistSafetyCopy: {
+    fontSize: 12,
+    lineHeight: 17,
+    color: 'rgba(232, 237, 247, 0.62)',
+  },
+  aiReceptionistActionRow: {
+    flexDirection: 'row',
+    gap: 8,
+    flexWrap: 'wrap',
+  },
+  aiReceptionistBtn: {
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: 'rgba(159, 183, 255, 0.42)',
+    backgroundColor: 'rgba(61, 90, 254, 0.18)',
+    paddingVertical: 8,
+    paddingHorizontal: 10,
+  },
+  aiReceptionistBtnDisabled: {
+    opacity: 0.45,
+  },
+  aiReceptionistBtnText: {
+    fontSize: 12,
+    fontWeight: '800',
+    color: '#DCE8FF',
   },
   scroll: { paddingHorizontal: 18, paddingBottom: 40, gap: 18 },
   rankingBanner: {

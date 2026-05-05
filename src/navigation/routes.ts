@@ -143,6 +143,8 @@ export type RootStackParamList = {
   B2BPromotionSettings: undefined;
   /** B2B sponsored listings — daily bid for TOP 1 in B2C search (deep link: `/SponsoredAds`). */
   SponsoredAds: undefined;
+  /** B2B AI Receptionist setup + cutover checklist (read-only safety surface). */
+  AiReceptionistSetupChecklist: undefined;
   /** KOL / affiliate — passive revenue & VIP tracking link (deep link: `/KOLPartnerDashboard`). */
   KOLPartnerDashboard: undefined;
   /** B2B partner lead capture — Certified Partner funnel (deep link: `/PartnerOnboarding`). */

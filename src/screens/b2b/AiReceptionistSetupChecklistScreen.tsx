@@ -1,0 +1,388 @@
+import { Ionicons } from '@expo/vector-icons';
+import { useMemo, type ReactElement } from 'react';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+
+import { AI_RECEPTIONIST_FEATURE_CONFIGS } from '../../core/ai-receptionist/aiReceptionistFeatureConfig';
+import {
+  B2B_AI_RECEPTIONIST_MERCHANT_CUTOVER_CHECKLIST,
+  type MerchantCutoverChecklistItem,
+} from '../../core/ai-receptionist/merchantCutoverChecklistConfig';
+import { getFeatureFlags, type FeatureFlagKey } from '../../core/feature-flags/featureFlags';
+import type { RootStackParamList } from '../../navigation/routes';
+
+type Nav = NativeStackNavigationProp<RootStackParamList>;
+
+type SetupChecklistItem = Readonly<{
+  id: string;
+  label: string;
+  done: boolean;
+  note: string;
+}>;
+
+const BASE_CHECKLIST_ORDER: readonly Readonly<{ id: string; label: string; note: string }>[] = [
+  {
+    id: 'merchant-verified',
+    label: 'Merchant verified',
+    note: 'Requires merchant identity and legal profile validation before production.',
+  },
+  {
+    id: 'services-configured',
+    label: 'Services configured',
+    note: 'Service catalog should be complete before AI can route requests safely.',
+  },
+  {
+    id: 'prices-configured',
+    label: 'Prices configured',
+    note: 'AI must use configured prices only; no free-form pricing.',
+  },
+  {
+    id: 'business-hours-configured',
+    label: 'Business hours configured',
+    note: 'Policy engine must enforce opening hours and exceptions.',
+  },
+  {
+    id: 'staff-capacity-configured',
+    label: 'Staff/capacity configured',
+    note: 'Prevent overbooking by defining slot and capacity limits.',
+  },
+  {
+    id: 'fallback-contact-configured',
+    label: 'Fallback contact configured',
+    note: 'Human escalation contact is required for uncertainty and exceptions.',
+  },
+  {
+    id: 'payment-account-connected',
+    label: 'Payment account connected (if payment enabled)',
+    note: 'Needed only when auto payment is enabled.',
+  },
+  {
+    id: 'test-calls-passed',
+    label: 'Test calls passed',
+    note: 'Voice/call quality and fallback handoff must be validated first.',
+  },
+  {
+    id: 'hold-confirm-tested',
+    label: 'Booking hold/confirm tested',
+    note: 'Use hold then confirm flow; never skip confirmation boundaries.',
+  },
+  {
+    id: 'cost-cap-configured',
+    label: 'Cost cap configured',
+    note: 'Cost firewall should be configured before broad rollout.',
+  },
+  {
+    id: 'human-fallback-tested',
+    label: 'Human fallback tested',
+    note: 'Escalation path must be verified for low confidence/high risk cases.',
+  },
+  {
+    id: 'policy-pack-approved',
+    label: 'Policy pack approved',
+    note: 'Operations and compliance approval is required before production.',
+  },
+];
+
+function getCutoverDone(item: MerchantCutoverChecklistItem, flags: ReturnType<typeof getFeatureFlags>): boolean {
+  if (!item.relatedFlag) return false;
+  return flags[item.relatedFlag];
+}
+
+function featureIsEnabled(requiredFlags: readonly FeatureFlagKey[], flags: ReturnType<typeof getFeatureFlags>): boolean {
+  return requiredFlags.every((flag) => flags[flag]);
+}
+
+export function AiReceptionistSetupChecklistScreen(): ReactElement {
+  const navigation = useNavigation<Nav>();
+  const flags = useMemo(() => getFeatureFlags(), []);
+
+  const statusBadges = useMemo(() => {
+    const demo = flags.b2bAiReceptionistDemoEnabled ? 'Demo available' : 'Demo off';
+    const pilot = flags.b2bAiReceptionistPilotEnabled ? 'Pilot available' : 'Pilot locked';
+    const productionReady =
+      flags.b2bAiReceptionistProductionEnabled &&
+      flags.b2bAutoBookingEnabled &&
+      flags.b2bAutoInventoryEnabled &&
+      flags.b2bAutoBillPrintEnabled &&
+      flags.b2bAutoPaymentEnabled;
+    const production = productionReady ? 'Production eligible' : 'Production locked';
+    return [demo, pilot, production] as const;
+  }, [flags]);
+
+  const setupChecklist = useMemo<readonly SetupChecklistItem[]>(() => {
+    const itemDoneMap: Record<string, boolean> = {
+      'merchant-verified': false,
+      'services-configured': false,
+      'prices-configured': false,
+      'business-hours-configured': false,
+      'staff-capacity-configured': false,
+      'fallback-contact-configured': false,
+      'payment-account-connected': !flags.b2bAutoPaymentEnabled || flags.b2bAiReceptionistProductionEnabled,
+      'test-calls-passed': flags.b2bAiReceptionistPilotEnabled || flags.b2bAiReceptionistProductionEnabled,
+      'hold-confirm-tested': flags.b2bAutoBookingEnabled,
+      'cost-cap-configured': flags.b2bAiReceptionistProductionEnabled,
+      'human-fallback-tested': flags.b2bAiReceptionistPilotEnabled || flags.b2bAiReceptionistProductionEnabled,
+      'policy-pack-approved': flags.b2bAiReceptionistProductionEnabled,
+    };
+
+    return BASE_CHECKLIST_ORDER.map((item) => ({
+      id: item.id,
+      label: item.label,
+      note: item.note,
+      done: itemDoneMap[item.id] ?? false,
+    }));
+  }, [flags]);
+
+  return (
+    <SafeAreaView style={styles.safe} edges={['top', 'left', 'right']}>
+      <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
+        <View style={styles.headerRow}>
+          <Pressable
+            onPress={() => navigation.goBack()}
+            accessibilityRole="button"
+            accessibilityLabel="Back"
+            style={({ pressed }) => [styles.backBtn, pressed && styles.backBtnPressed]}
+          >
+            <Ionicons name="chevron-back" size={20} color="#E8EDF7" />
+          </Pressable>
+          <View style={styles.headerTextWrap}>
+            <Text style={styles.kicker}>B2B AI Receptionist</Text>
+            <Text style={styles.title}>Lễ Tân AI</Text>
+          </View>
+        </View>
+
+        <View style={styles.badgeRow}>
+          {statusBadges.map((badge) => (
+            <View key={badge} style={styles.badgePill}>
+              <Text style={styles.badgeText}>{badge}</Text>
+            </View>
+          ))}
+        </View>
+
+        <View style={styles.sectionCard}>
+          <Text style={styles.sectionTitle}>Safety summary</Text>
+          <Text style={styles.sectionBody}>
+            AI can support multilingual intake and request capture in beta/pilot mode. AI may make mistakes, merchant
+            confirmation is required until production setup and approvals are complete.
+          </Text>
+          <Text style={styles.sectionBody}>
+            Production automation is locked by default and must pass checklist + policy approval before enabling.
+          </Text>
+        </View>
+
+        <View style={styles.sectionCard}>
+          <Text style={styles.sectionTitle}>Merchant setup checklist</Text>
+          {setupChecklist.map((item) => (
+            <View key={item.id} style={styles.listRow}>
+              <Ionicons
+                name={item.done ? 'checkmark-circle' : 'lock-closed'}
+                size={18}
+                color={item.done ? '#7AE4FF' : '#FACC15'}
+              />
+              <View style={styles.listTextWrap}>
+                <Text style={styles.listTitle}>{item.label}</Text>
+                <Text style={styles.listNote}>{item.note}</Text>
+              </View>
+            </View>
+          ))}
+        </View>
+
+        <View style={styles.sectionCard}>
+          <Text style={styles.sectionTitle}>Foundation guardrails (Phase 1 configs)</Text>
+          {B2B_AI_RECEPTIONIST_MERCHANT_CUTOVER_CHECKLIST.map((item) => {
+            const done = getCutoverDone(item, flags);
+            return (
+              <View key={item.id} style={styles.listRow}>
+                <Ionicons
+                  name={done ? 'checkmark-circle' : 'time-outline'}
+                  size={18}
+                  color={done ? '#7AE4FF' : '#F59E0B'}
+                />
+                <View style={styles.listTextWrap}>
+                  <Text style={styles.listTitle}>{item.title}</Text>
+                  <Text style={styles.listNote}>{item.acceptanceCriteria}</Text>
+                </View>
+              </View>
+            );
+          })}
+        </View>
+
+        <View style={styles.sectionCardWarning}>
+          <Text style={styles.sectionTitle}>Production locked until ready</Text>
+          <Text style={styles.sectionBody}>
+            No live autonomous booking, inventory updates, bill printing, or payment capture should be treated as
+            production until setup is completed and flags are approved.
+          </Text>
+        </View>
+
+        <View style={styles.sectionCard}>
+          <Text style={styles.sectionTitle}>Automation capabilities</Text>
+          {AI_RECEPTIONIST_FEATURE_CONFIGS.filter((f) => f.surface === 'production').map((feature) => {
+            const enabled = featureIsEnabled(feature.requiredFlags, flags);
+            return (
+              <View key={feature.id} style={styles.capRow}>
+                <View style={styles.capTextWrap}>
+                  <Text style={styles.capTitle}>{feature.title}</Text>
+                  <Text style={styles.capNote}>{feature.description}</Text>
+                </View>
+                <View style={[styles.capStatus, enabled ? styles.capStatusOn : styles.capStatusOff]}>
+                  <Text style={styles.capStatusText}>{enabled ? 'Ready' : 'Locked / Requires setup'}</Text>
+                </View>
+              </View>
+            );
+          })}
+        </View>
+      </ScrollView>
+    </SafeAreaView>
+  );
+}
+
+const styles = StyleSheet.create({
+  safe: {
+    flex: 1,
+    backgroundColor: '#0C1017',
+  },
+  scroll: {
+    paddingHorizontal: 16,
+    paddingBottom: 28,
+    gap: 14,
+  },
+  headerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    marginTop: 6,
+  },
+  backBtn: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(232,237,247,0.15)',
+    backgroundColor: 'rgba(20,27,40,0.88)',
+  },
+  backBtnPressed: {
+    opacity: 0.84,
+  },
+  headerTextWrap: {
+    flex: 1,
+    minWidth: 0,
+  },
+  kicker: {
+    fontSize: 11,
+    fontWeight: '700',
+    letterSpacing: 0.4,
+    color: 'rgba(232,237,247,0.62)',
+  },
+  title: {
+    fontSize: 28,
+    fontWeight: '900',
+    color: '#F4F7FF',
+  },
+  badgeRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  badgePill: {
+    borderRadius: 999,
+    paddingVertical: 6,
+    paddingHorizontal: 10,
+    borderWidth: 1,
+    borderColor: 'rgba(122,228,255,0.45)',
+    backgroundColor: 'rgba(61,90,254,0.16)',
+  },
+  badgeText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#E8EDF7',
+  },
+  sectionCard: {
+    borderRadius: 14,
+    padding: 14,
+    borderWidth: 1,
+    borderColor: 'rgba(232,237,247,0.08)',
+    backgroundColor: '#151C27',
+    gap: 10,
+  },
+  sectionCardWarning: {
+    borderRadius: 14,
+    padding: 14,
+    borderWidth: 1,
+    borderColor: 'rgba(250,204,21,0.4)',
+    backgroundColor: 'rgba(250,204,21,0.09)',
+    gap: 10,
+  },
+  sectionTitle: {
+    fontSize: 16,
+    fontWeight: '800',
+    color: '#F4F7FF',
+  },
+  sectionBody: {
+    fontSize: 13,
+    lineHeight: 19,
+    color: 'rgba(232,237,247,0.72)',
+  },
+  listRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 10,
+  },
+  listTextWrap: {
+    flex: 1,
+    minWidth: 0,
+    gap: 4,
+  },
+  listTitle: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#E8EDF7',
+  },
+  listNote: {
+    fontSize: 12,
+    lineHeight: 17,
+    color: 'rgba(232,237,247,0.62)',
+  },
+  capRow: {
+    borderRadius: 12,
+    padding: 10,
+    borderWidth: 1,
+    borderColor: 'rgba(232,237,247,0.08)',
+    backgroundColor: 'rgba(12,16,23,0.78)',
+    gap: 8,
+  },
+  capTextWrap: {
+    gap: 3,
+  },
+  capTitle: {
+    fontSize: 13,
+    fontWeight: '800',
+    color: '#E8EDF7',
+  },
+  capNote: {
+    fontSize: 12,
+    lineHeight: 17,
+    color: 'rgba(232,237,247,0.58)',
+  },
+  capStatus: {
+    alignSelf: 'flex-start',
+    borderRadius: 999,
+    paddingVertical: 4,
+    paddingHorizontal: 10,
+  },
+  capStatusOn: {
+    backgroundColor: 'rgba(34,197,94,0.2)',
+  },
+  capStatusOff: {
+    backgroundColor: 'rgba(245,158,11,0.18)',
+  },
+  capStatusText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#F4F7FF',
+  },
+});
