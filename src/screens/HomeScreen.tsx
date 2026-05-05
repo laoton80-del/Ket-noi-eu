@@ -35,7 +35,7 @@ import {
 } from '../config/adminDebugGate';
 import { brandConfig } from '../core/brand/brandConfig';
 import { getFeatureFlags } from '../core/feature-flags/featureFlags';
-import { formatVioCredits, getVioPointsLabel } from '../core/monetization/vioDisplayLabels';
+import { getVioPointsLabel } from '../core/monetization/vioDisplayLabels';
 import { getPersonaDisplayName } from '../config/aiPrompts';
 import { useAuth } from '../context/AuthContext';
 import {
@@ -57,6 +57,7 @@ import { STORAGE_KEYS } from '../storage/storageKeys';
 import { theme } from '../theme/theme';
 import { FontFamily } from '../theme/typography';
 import { applyWebStyles } from '../utils/applyWebStyles';
+import { useTranslation } from '../i18n';
 import { DashboardB2CScreen } from './b2c/DashboardB2CScreen';
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
@@ -98,6 +99,7 @@ type BriefingCard = Readonly<{
 }>;
 
 export function HomeScreen() {
+  const { t } = useTranslation();
   const navigation = useNavigation<Nav>();
   const { width } = useWindowDimensions();
   const { user, setPendingRedirect, updateProfile } = useAuth();
@@ -112,11 +114,11 @@ export function HomeScreen() {
   const [adminUnlocked, setAdminUnlocked] = useState(false);
   const [sosVisible, setSosVisible] = useState(false);
   const [sosLoading, setSosLoading] = useState(false);
-  const [sosCountryCode, setSosCountryCode] = useState('CZ');
-  const [sosCity, setSosCity] = useState('Unknown');
+  const [sosCountryCode, setSosCountryCode] = useState('VN');
+  const [sosCity, setSosCity] = useState('');
   const [sosCoords, setSosCoords] = useState<Readonly<{ lat: number; lng: number }>>({
-    lat: 50.0755,
-    lng: 14.4378,
+    lat: 10.8231,
+    lng: 106.6297,
   });
   const [sosTtsBusy, setSosTtsBusy] = useState(false);
   const soundRef = useRef<Audio.Sound | null>(null);
@@ -191,28 +193,34 @@ export function HomeScreen() {
     const all: readonly BriefingCard[] = [
       {
         id: 'b1',
-        headline: 'New Schengen Visa Rules',
-        sub: 'Travel desk · EU policy snapshot',
+        headline: t('home.briefingB1h'),
+        sub: t('home.briefingB1s'),
       },
       {
         id: 'b2',
-        headline: 'EUR/VND +2.1% this week',
-        sub: 'FX pulse · diaspora remittance',
+        headline: t('home.briefingB2h'),
+        sub: t('home.briefingB2s'),
       },
       {
         id: 'b3',
-        headline: 'Gold lounge access Prague',
-        sub: 'Partner perk · limited seats',
+        headline: t('home.briefingB3h'),
+        sub: t('home.briefingB3s'),
       },
       {
         id: 'b4',
-        headline: 'Tax treaty reminder',
-        sub: 'Wealth brief · year-end checklist',
+        headline: t('home.briefingB4h'),
+        sub: t('home.briefingB4s'),
       },
     ];
     if (isTourist) return all.filter((c) => c.id !== 'b1' && c.id !== 'b4');
     return all;
-  }, [isTourist]);
+  }, [isTourist, t]);
+
+  const walletChipLabel = useMemo(() => {
+    const n = wallet.credits;
+    const useCompact = width < 400;
+    return useCompact ? t('home.walletChipCompact', { amount: n }) : t('home.walletChipFull', { amount: n });
+  }, [t, wallet.credits, width]);
 
   const layout = useMemo(() => {
     const maxShell = 720;
@@ -424,11 +432,19 @@ export function HomeScreen() {
           ) : (
             <Ionicons name="wallet-outline" size={14} color={GOLD_ACCENT} />
           )}
-          <Text style={styles.creditPillText}>{formatVioCredits(wallet.credits)}</Text>
+          <Text
+            style={styles.creditPillText}
+            numberOfLines={1}
+            adjustsFontSizeToFit
+            minimumFontScale={0.82}
+            maxFontSizeMultiplier={1.15}
+          >
+            {walletChipLabel}
+          </Text>
         </View>
         {isTourist && !walletBalanceLoading ? (
           <Text style={styles.creditPillSub} numberOfLines={2}>
-            In-app travel credits (not bank cash)
+            {t('home.touristCreditsHint')}
           </Text>
         ) : null}
       </View>
@@ -445,13 +461,13 @@ export function HomeScreen() {
         ]}
         showsVerticalScrollIndicator={false}
       >
-        <View style={styles.hero}>
+        <View style={[styles.hero, { paddingRight: Math.max(112, Math.min(width * 0.36, 172)) }]}>
           <Text style={styles.heroEyebrow}>{brandConfig.displayName}</Text>
-          <Text style={styles.heading}>{isTourist ? 'Vietnam travel hub' : 'Trung tâm B2C'}</Text>
+          <Text style={styles.heading}>
+            {isTourist ? t('home.headingTourist') : t('home.headingExpat')}
+          </Text>
           <Text style={styles.heroSub}>
-            {isTourist
-              ? 'One VIONA hub for wallet, live interpreter, and trusted travel support in Vietnam.'
-              : 'VIONA kết nối đời sống, kinh doanh, du lịch và AI support cho người Việt toàn cầu.'}
+            {isTourist ? t('home.heroSubTourist') : t('home.heroSubExpat')}
           </Text>
         </View>
 
@@ -493,17 +509,21 @@ export function HomeScreen() {
             onPress={() => openProtected('Wallet')}
             style={({ pressed }) => [styles.actionWidget, pressed && { opacity: 0.9 }]}
             accessibilityRole="button"
-            accessibilityLabel="QR Pay"
+            accessibilityLabel={t('home.qrPayA11y')}
           >
             <Ionicons name="qr-code" size={22} color={GOLD_ACCENT} />
-            <Text style={styles.actionWidgetTitle}>QR Pay</Text>
-            <Text style={styles.actionWidgetSub}>Scan & pay</Text>
+            <Text style={styles.actionWidgetTitle}>{t('home.qrPayTitle')}</Text>
+            <Text style={styles.actionWidgetSub}>{t('home.qrPaySub')}</Text>
           </Pressable>
           <View style={styles.actionWidget}>
             <Ionicons name="time-outline" size={22} color={GOLD_ACCENT} />
-            <Text style={styles.actionWidgetTitle}>Dual Clock</Text>
-            <Text style={styles.actionWidgetSub}>Local {localClock}</Text>
-            <Text style={styles.actionWidgetSub}>VN {vnClock}</Text>
+            <Text style={styles.actionWidgetTitle}>{t('home.dualClockTitle')}</Text>
+            <Text style={styles.actionWidgetSub}>
+              {t('home.dualClockLocalLabel')} {localClock}
+            </Text>
+            <Text style={styles.actionWidgetSub}>
+              {t('home.dualClockVnLabel')} {vnClock}
+            </Text>
           </View>
           {featureFlags.vigTokenEconomyEnabled ? (
             <Pressable
@@ -513,20 +533,22 @@ export function HomeScreen() {
               accessibilityLabel={`${getVioPointsLabel()} index`}
             >
               <Ionicons name="trending-up" size={22} color={GOLD_ACCENT} />
-              <Text style={styles.actionWidgetTitle}>{getVioPointsLabel()} index</Text>
-              <Text style={styles.actionWidgetSub}>Live index</Text>
+              <Text style={styles.actionWidgetTitle}>
+                {t('home.vioIndexTitle', { label: getVioPointsLabel() })}
+              </Text>
+              <Text style={styles.actionWidgetSub}>{t('home.vioIndexSub')}</Text>
             </Pressable>
           ) : null}
         </View>
 
         <View style={[styles.briefingBlock, { width: layout.inner }]}>
-          <Text style={styles.briefingTitle}>VIONA Briefing</Text>
+          <Text style={styles.briefingTitle}>{t('home.briefingTitle')}</Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.briefingRail}>
             {briefingCards.map((card) => (
               <Pressable
                 key={card.id}
                 onPress={() =>
-                  Alert.alert(card.headline, `${card.sub}\n\nNội dung concierge — cập nhật theo kênh tin cậy (demo).`)
+                  Alert.alert(card.headline, `${card.sub}\n\n${t('home.briefingAlertDemo')}`)
                 }
                 style={({ pressed }) => [styles.briefingCard, pressed && { opacity: 0.9 }]}
                 accessibilityRole="button"
@@ -691,12 +713,14 @@ export function HomeScreen() {
       <Pressable
         onPress={openSosPanel}
         style={({ pressed }) => [styles.sosFab, pressed && { opacity: 0.92 }]}
-        className={applyWebStyles('kn-glass kn-neon-sos')}
+        className={applyWebStyles('kn-glass')}
         accessibilityRole="button"
-        accessibilityLabel="Global Lifeline SOS"
+        accessibilityLabel={t('home.sosFabA11y')}
       >
-        <Ionicons name="warning" size={18} color="#FFFFFF" />
-        <Text style={styles.sosFabText}>SOS</Text>
+        <Ionicons name="warning" size={17} color="#FFFFFF" />
+        <Text style={styles.sosFabText} numberOfLines={1}>
+          {t('home.sosFabLabel')}
+        </Text>
       </Pressable>
 
       <Modal
@@ -708,7 +732,7 @@ export function HomeScreen() {
         <View style={styles.sosOverlay}>
           <View style={styles.sosSheet} className={applyWebStyles('kn-glass')}>
             <View style={styles.sosHeader}>
-              <Text style={styles.sosTitle}>Global Lifeline SOS</Text>
+              <Text style={styles.sosTitle}>{t('home.sosModalTitle')}</Text>
               <Pressable onPress={closeSosPanel} style={styles.sosCloseBtn}>
                 <Ionicons name="close" size={18} color={theme.colors.text.primary} />
               </Pressable>
@@ -719,7 +743,11 @@ export function HomeScreen() {
                 <Text style={styles.sosBody}>Đang định vị để bản địa hóa cứu hộ...</Text>
               </View>
             ) : (
-              <Text style={styles.sosBody}>Khu vực: {sosCity} ({sosCountryCode})</Text>
+              <Text style={styles.sosBody}>
+                {sosCity.trim().length > 0
+                  ? t('home.sosAreaLine', { city: sosCity, code: sosCountryCode })
+                  : t('home.sosAreaPending')}
+              </Text>
             )}
 
             <View style={styles.sosCard}>
@@ -784,7 +812,6 @@ const styles = StyleSheet.create({
   },
   hero: {
     marginBottom: theme.spacing.lg,
-    paddingRight: 100,
   },
   heroEyebrow: {
     fontSize: 12,
@@ -822,7 +849,7 @@ const styles = StyleSheet.create({
     flexDirection: 'column',
     alignItems: 'flex-end',
     gap: 2,
-    maxWidth: '58%',
+    maxWidth: '78%',
     shadowColor: '#0B1628',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.06,
@@ -842,7 +869,7 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: TEXT_PRIMARY,
     fontFamily: FontFamily.semibold,
-    flexShrink: 1,
+    flexShrink: 0,
   },
   creditPillSub: {
     fontSize: 10,
@@ -1023,7 +1050,7 @@ const styles = StyleSheet.create({
   },
   featureRow: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     gap: theme.spacing.md,
   },
   logoWrap: {
@@ -1031,12 +1058,17 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     borderWidth: 1,
     borderColor: GOLD_BORDER,
+    width: 128,
+    height: 56,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(0,0,0,0.2)',
   },
   logoImage: {
-    width: 88,
-    height: 88,
-    resizeMode: 'cover',
-    backgroundColor: 'rgba(0,0,0,0.25)',
+    width: '100%',
+    height: '100%',
+    resizeMode: 'contain',
+    backgroundColor: 'transparent',
   },
   featureCopy: {
     flex: 1,
@@ -1193,21 +1225,27 @@ const styles = StyleSheet.create({
     right: 16,
     bottom: 24,
     minHeight: 48,
-    paddingHorizontal: 14,
+    maxWidth: '56%',
+    paddingHorizontal: 12,
     borderRadius: 999,
-    backgroundColor: 'rgba(200, 28, 28, 0.94)',
+    backgroundColor: 'rgba(185, 28, 28, 0.96)',
     borderWidth: 1,
-    borderColor: 'rgba(255, 160, 160, 0.6)',
+    borderColor: 'rgba(252, 165, 165, 0.45)',
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
-    shadowColor: '#FF3B3B',
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.48,
-    shadowRadius: 12,
-    elevation: 8,
+    gap: 6,
+    shadowColor: '#7F1D1D',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.22,
+    shadowRadius: 8,
+    elevation: 6,
   },
-  sosFabText: { color: '#FFFFFF', fontSize: 14, fontFamily: FontFamily.extrabold },
+  sosFabText: {
+    color: '#FFFFFF',
+    fontSize: 12,
+    fontFamily: FontFamily.extrabold,
+    flexShrink: 1,
+  },
   sosOverlay: {
     flex: 1,
     backgroundColor: 'rgba(10, 16, 28, 0.56)',

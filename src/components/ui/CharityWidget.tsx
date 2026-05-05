@@ -7,6 +7,7 @@ import { readCharityLedgerTotals } from '../../services/fintech/CharityService';
 import { theme } from '../../theme/theme';
 import { FontFamily } from '../../theme/typography';
 import { applyWebStyles } from '../../utils/applyWebStyles';
+import { useTranslation } from '../../i18n';
 
 function formatUsd(amount: number): string {
   return new Intl.NumberFormat('en-US', {
@@ -17,6 +18,7 @@ function formatUsd(amount: number): string {
 }
 
 export function CharityWidget() {
+  const { t } = useTranslation();
   const [totalUsd, setTotalUsd] = useState(0);
   const [displayAmount, setDisplayAmount] = useState('$0');
   const [loading, setLoading] = useState(false);
@@ -61,7 +63,7 @@ export function CharityWidget() {
         <View style={styles.heartWrap}>
           <Ionicons name="heart" size={18} color="#F43F5E" />
         </View>
-        <Text style={styles.title}>Quỹ Trái Tim ViGlobal</Text>
+        <Text style={styles.title}>{t('home.charityTitle')}</Text>
         <Pressable style={({ pressed }) => [styles.refreshBtn, pressed && { opacity: 0.86 }]} onPress={() => void refresh()}>
           <Ionicons name="refresh" size={14} color="#E11D48" />
         </Pressable>

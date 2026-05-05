@@ -27,9 +27,9 @@ import { isDemoSandboxActive } from '../services/ux/DemoSandbox';
 import { useUserStore, type ActiveRole } from '../store/userStore';
 import { getFeatureFlags } from '../core/feature-flags/featureFlags';
 import type { RootStackParamList, RootTabParamList } from './routes';
+import { useTranslation } from '../i18n';
 import { MAIN_TAB } from './routes';
 import { MvpSurfaceDisabledScreen } from './mvpSurfaceGate';
-import { V7_B2C_TAB_LABELS } from './v7FourUniversesBlueprint';
 import { roleTabChrome } from './tabRoleTheme';
 
 import { HomeScreen } from '../screens/HomeScreen';
@@ -134,6 +134,7 @@ function tabIconName(
 }
 
 export function MainTabNavigator(): ReactElement {
+  const { t } = useTranslation();
   const navigation = useNavigation<StackNav>();
   const { user, pendingRedirect, setPendingRedirect } = useAuth();
   const currentActiveRole = useUserStore((s) => s.currentActiveRole);
@@ -330,28 +331,28 @@ export function MainTabNavigator(): ReactElement {
               <Tab.Screen
                 name={MAIN_TAB.B2C.home}
                 component={HomeScreen}
-                options={{ title: V7_B2C_TAB_LABELS[MAIN_TAB.B2C.home] }}
+                options={{ title: t('home.tabHub') }}
               />
             ) : null}
             {flags.localEnabled ? (
               <Tab.Screen
                 name={MAIN_TAB.B2C.local}
                 component={LocalScreen}
-                options={{ title: V7_B2C_TAB_LABELS[MAIN_TAB.B2C.local] }}
+                options={{ title: t('home.tabLocal') }}
               />
             ) : null}
             {flags.travelLiteEnabled ? (
               <Tab.Screen
                 name={MAIN_TAB.B2C.travel}
                 component={TravelHubScreen}
-                options={{ title: V7_B2C_TAB_LABELS[MAIN_TAB.B2C.travel] }}
+                options={{ title: t('home.tabTravel') }}
               />
             ) : null}
             {flags.academyLiteEnabled ? (
               <Tab.Screen
                 name={MAIN_TAB.B2C.ai}
                 component={LeTanScreen}
-                options={{ title: V7_B2C_TAB_LABELS[MAIN_TAB.B2C.ai] }}
+                options={{ title: t('home.tabAcademy') }}
                 listeners={{
                   tabPress: (e) => {
                     if (!user && !isDemoSandboxActive()) {

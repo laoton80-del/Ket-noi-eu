@@ -18,6 +18,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '../context/AuthContext';
 import type { RootStackParamList } from '../navigation/routes';
 import type { ActiveRole } from '../store/userStore';
+import { useTranslation } from '../i18n';
 import { ACTIVE_ROLE_LABEL, useUserStore } from '../store/userStore';
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
@@ -52,6 +53,7 @@ export type ProfileSwitcherProps = Readonly<{
 type VigGate = 'merchant' | 'broker' | null;
 
 export function ProfileSwitcher({ tabBarLift }: ProfileSwitcherProps): ReactElement | null {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const navigation = useNavigation<Nav>();
   const insets = useSafeAreaInsets();
@@ -70,9 +72,19 @@ export function ProfileSwitcher({ tabBarLift }: ProfileSwitcherProps): ReactElem
   const sortedRoles = useMemo(() => [...allowedRoles], [allowedRoles]);
 
   const chipLabel = useMemo(() => {
-    const short = ACTIVE_ROLE_LABEL[currentActiveRole];
-    return short;
-  }, [currentActiveRole]);
+    switch (currentActiveRole) {
+      case 'B2C':
+        return t('home.roleB2C');
+      case 'B2B':
+        return t('home.roleB2B');
+      case 'BROKER':
+        return t('home.roleBroker');
+      case 'ADMIN':
+        return t('home.roleAdmin');
+      default:
+        return ACTIVE_ROLE_LABEL[currentActiveRole];
+    }
+  }, [currentActiveRole, t]);
 
   const isAdminUndercover =
     user?.serverRole === 'ADMIN' && currentActiveRole !== 'ADMIN';
@@ -152,10 +164,12 @@ export function ProfileSwitcher({ tabBarLift }: ProfileSwitcherProps): ReactElem
           { bottom: tabBarLift + Math.max(insets.bottom, 8) },
         ]}
         accessibilityRole="button"
-        accessibilityLabel="Open account hub"
+        accessibilityLabel={t('home.accountChipA11y')}
       >
         <Ionicons name="person-circle" size={22} color="#FFFFFF" />
-        <Text style={styles.singleChipText}>Account</Text>
+        <Text style={styles.singleChipText} numberOfLines={1}>
+          {t('home.accountChip')}
+        </Text>
       </Pressable>
     );
   }
@@ -180,7 +194,9 @@ export function ProfileSwitcher({ tabBarLift }: ProfileSwitcherProps): ReactElem
         ) : (
           <Ionicons name="shuffle-outline" size={18} color="#FFFFFF" />
         )}
-        <Text style={styles.chipText}>{chipLabel}</Text>
+        <Text style={styles.chipText} numberOfLines={1}>
+          {chipLabel}
+        </Text>
         <Ionicons name="chevron-up" size={16} color="rgba(255,255,255,0.85)" />
       </Pressable>
 
@@ -323,6 +339,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.12)',
     zIndex: 50,
+    maxWidth: '92%',
   },
   singleChipText: { fontSize: 13, fontWeight: '800', color: '#FFFFFF' },
   modalRoot: { flex: 1, justifyContent: 'flex-end' },
