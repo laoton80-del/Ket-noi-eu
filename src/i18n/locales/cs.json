@@ -1,9 +1,9 @@
 {
-  "welcome_message": "Vítejte v ViGlobal",
+  "welcome_message": "Vítejte v VIONA",
   "book_now": "Rezervovat",
   "global_ready_tagline": "Jedna aplikace, každý region",
   "login": {
-    "welcome": "Welcome to ViGlobal",
+    "welcome": "Welcome to VIONA",
     "subtitle": "Enter your phone number to continue. OTP is for demo.",
     "phone_placeholder": "Enter phone number",
     "pin_placeholder": "PIN code",
@@ -44,8 +44,8 @@
     "fixersTitle": "Místní fixeři",
     "fixersSub": "Průvodci a řešení problémů na místě",
     "empty": "Nabídky brzy — Leona může domluvit ručně.",
-    "fromPrice": "Od {{price}} VIG",
-    "scrollKicker": "V6.3 Inbound · ViGlobal"
+    "fromPrice": "Od {{price}} VIO Credits",
+    "scrollKicker": "V6.3 Inbound · VIONA"
   },
   "sos": {
     "fabLabel": "SOS — nouzové volání",
@@ -53,7 +53,7 @@
     "emergencyAssistance": "Nouzová asistence a mezinárodní záchranná koordinace",
     "subtitle": "Zůstaňte v klidu. Pomoc je k dispozici.",
     "gpsLocationShared": "Aktivní sdílení přesné polohy GPS",
-    "gpsShareDetail": "Vaše přesná souřadnice GPS se v reálném čase předávají do ViGlobal Command Center za účelem zajištění osobní bezpečnosti.",
+    "gpsShareDetail": "Vaše přesné souřadnice GPS se v reálném čase sdílejí s bezpečnostním centrem VIONA za účelem zajištění osobní bezpečnosti.",
     "gpsLoading": "Zajišťujeme polohu…",
     "gpsUnavailable": "Poloha není k dispozici. Nouzová čísla a pomoc stále fungují.",
     "coordsLocked": "GPS uzamčeno: {{lat}}, {{lng}}",
@@ -63,12 +63,12 @@
     "policeTitle": "Policejní pohotovostní a zásahová linka 113",
     "policeSub": "Spojit policii — simultánní AI tlumočení na další obrazovce",
     "reportScam": "Nahlášení podvodného jednání a neoprávněného předražování",
-    "reportScamSub": "Okamžité upozornění ViGlobal Command Center včetně přesné polohy",
+    "reportScamSub": "Okamžité upozornění VIONA včetně přesné polohy",
     "close": "Zavřít",
     "callFailedTitle": "Nelze otevřít volání",
     "callFailedBody": "Vytočte {{number}} na telefonu.",
     "reportQueuedTitle": "Hlášení zařazeno",
-    "reportQueuedBody": "Poloha a reference odeslány do fronty ViGlobal Command Center."
+    "reportQueuedBody": "Poloha a reference odeslány do fronty bezpečnostního centra VIONA."
   },
   "ai_voice": {
     "tapToSpeak": "Klepněte a mluvte",
@@ -116,7 +116,7 @@
     "backA11y": "Zpět",
     "heroTitle": "Vítejte ve Vietnamu",
     "heroSubtitle": "Prémiové ubytování, zájezdy a prověření místní průvodci — pro příchozí turisty a navracející se expaty.",
-    "scrollKicker": "V6.3 Inbound · ViGlobal",
+    "scrollKicker": "V6.3 Inbound · VIONA",
     "loading": "Načítání nabídek…",
     "errorLoad": "Centrum se nepodařilo načíst. Zkontrolujte síť a konfiguraci API.",
     "retry": "Zkusit znovu",

@@ -86,7 +86,7 @@ export function B2BPaywallScreen(): ReactElement {
       if (mid && isValidUuid(mid)) {
         const enf = enforceV7TrapRestrictions(mid, days);
         if (enf.requiresVigTopUp) {
-          return `${base} Enforcement: featured placement suspended until VIG top-up.`;
+          return `${base} Enforcement: featured placement suspended until VIO Credits top-up.`;
         }
       }
       return base;
@@ -187,7 +187,7 @@ export function B2BPaywallScreen(): ReactElement {
               <Text style={styles.metricLabel}>Lifetime platform value (display)</Text>
               <Text style={styles.metricValue}>{formatEur(MOCK_BOOKINGS_EUR)}</Text>
               <Text style={styles.metricCopy}>
-                {`ViGlobal has processed ${formatEur(MOCK_BOOKINGS_EUR)} in bookings for you. Don't lose your automated AI receptionist and VIP client data.`}
+                {`VIONA has processed ${formatEur(MOCK_BOOKINGS_EUR)} in bookings for you. Don't lose your automated AI receptionist and VIP client data.`}
               </Text>
             </View>
           </View>
@@ -197,9 +197,9 @@ export function B2BPaywallScreen(): ReactElement {
           <View style={styles.secondaryCard}>
             <Text style={styles.tierBadge}>Tier 1</Text>
             <Text style={styles.secondaryTitle}>Pay-as-you-go</Text>
-            <Text style={styles.secondaryPrice}>VIG Token top-up</Text>
+            <Text style={styles.secondaryPrice}>VIO Credits top-up</Text>
             <Text style={styles.secondaryBody}>
-              Metered voice, SMS, and booking events. Best when volume is unpredictable — top up tokens and scale down
+              Metered voice, SMS, and booking events. Best when volume is unpredictable — top up VIO Credits and scale down
               anytime.
             </Text>
             <View style={styles.secondaryFoot}>
@@ -265,7 +265,7 @@ export function B2BPaywallScreen(): ReactElement {
             <Text style={styles.wholesaleTitle}>Wholesale Corridor</Text>
             <Text style={styles.wholesalePrice}>1% platform fee</Text>
             <Text style={styles.wholesaleBody}>
-              B2B wholesale & supply volume — lowest headline take for merchants moving stock through ViGlobal’s verified
+              B2B wholesale & supply volume — lowest headline take for merchants moving stock through VIONA’s verified
               trade lane (qualifying SKUs; see Merchant Ops).
             </Text>
             <View style={styles.wholesaleFoot}>
@@ -310,7 +310,7 @@ export function B2BPaywallScreen(): ReactElement {
           </View>
 
           <Text style={styles.legalHint}>
-            Subscription renews monthly until cancelled. Taxes may apply. ViGlobal B2B terms apply.
+            Subscription renews monthly until cancelled. Taxes may apply. VIONA B2B terms apply.
           </Text>
         </ScrollView>
       </SafeAreaView>

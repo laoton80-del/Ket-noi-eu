@@ -1,9 +1,9 @@
 {
-  "welcome_message": "Willkommen bei ViGlobal",
+  "welcome_message": "Willkommen bei VIONA",
   "book_now": "Jetzt buchen",
   "global_ready_tagline": "Eine App, jede Region",
   "login": {
-    "welcome": "Welcome to ViGlobal",
+    "welcome": "Welcome to VIONA",
     "subtitle": "Enter your phone number to continue. OTP is for demo.",
     "phone_placeholder": "Enter phone number",
     "pin_placeholder": "PIN code",
@@ -44,8 +44,8 @@
     "fixersTitle": "Local Fixers",
     "fixersSub": "Guides & Problemlöser vor Ort",
     "empty": "Listings folgen — Leona kann manuell arrangieren.",
-    "fromPrice": "Ab {{price}} VIG",
-    "scrollKicker": "V6.3 Inbound · ViGlobal"
+    "fromPrice": "Ab {{price}} VIO Credits",
+    "scrollKicker": "V6.3 Inbound · VIONA"
   },
   "sos": {
     "fabLabel": "Notfall SOS",
@@ -53,7 +53,7 @@
     "emergencyAssistance": "Notfallhilfe und internationale Rettungskoordination",
     "subtitle": "Bleiben Sie ruhig. Hilfe ist verfügbar.",
     "gpsLocationShared": "GPS-Standortfreigabe aktiv",
-    "gpsShareDetail": "Ihr exakter GPS-Standort wird live mit dem ViGlobal Command Center zur Gewährleistung Ihrer persönlichen Sicherheit geteilt.",
+    "gpsShareDetail": "Ihr exakter GPS-Standort wird live mit dem Sicherheitszentrum von VIONA zur Gewährleistung Ihrer persönlichen Sicherheit geteilt.",
     "gpsLoading": "Standort wird gesichert…",
     "gpsUnavailable": "Standort nicht verfügbar. Notrufe und Hilfe funktionieren weiter.",
     "coordsLocked": "GPS fixiert: {{lat}}, {{lng}}",
@@ -63,12 +63,12 @@
     "policeTitle": "Polizeilicher Notruf / Lagezentrum 113",
     "policeSub": "Polizei verständigen — KI-Dolmetsch auf dem nächsten Bildschirm",
     "reportScam": "Betrugs- und Wuchermeldezentrale",
-    "reportScamSub": "ViGlobal Command Center mit Standortdaten alarmieren",
+    "reportScamSub": "VIONA mit Standortdaten alarmieren",
     "close": "Schließen",
     "callFailedTitle": "Wählen nicht möglich",
     "callFailedBody": "Bitte {{number}} manuell wählen.",
     "reportQueuedTitle": "Meldung eingereiht",
-    "reportQueuedBody": "Standort und Referenz wurden an die Warteschlange des ViGlobal Command Center gesendet."
+    "reportQueuedBody": "Standort und Referenz wurden an die Warteschlange des Sicherheitszentrums von VIONA gesendet."
   },
   "ai_voice": {
     "tapToSpeak": "Tippen zum Sprechen",
@@ -116,7 +116,7 @@
     "backA11y": "Zurück",
     "heroTitle": "Willkommen in Vietnam",
     "heroSubtitle": "Premium-Unterkünfte, Touren und geprüfte Locals — für Inbound-Reisende und zurückkehrende Expatriates.",
-    "scrollKicker": "V6.3 Inbound · ViGlobal",
+    "scrollKicker": "V6.3 Inbound · VIONA",
     "loading": "Angebote werden geladen…",
     "errorLoad": "Hub konnte nicht geladen werden. Netzwerk und API prüfen.",
     "retry": "Erneut versuchen",

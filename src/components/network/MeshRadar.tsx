@@ -43,7 +43,7 @@ export function MeshRadar() {
         <RadarRing phase={0.66} />
         <View style={styles.centerDot} />
       </View>
-      <Text style={styles.label}>Đang dò tìm người dùng Kết Nối Global quanh bạn qua Bluetooth...</Text>
+      <Text style={styles.label}>Đang dò tìm người dùng VIONA quanh bạn qua Bluetooth...</Text>
     </View>
   );
 }
