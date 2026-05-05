@@ -6,6 +6,12 @@ import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 import type { RootStackParamList } from '../../navigation/routes';
+import { isRestApiConfigured } from '../../services/apiClient';
+import {
+  submitAiReceptionistPilotLead,
+  type AiReceptionistLeadDesiredAutomation,
+  type AiReceptionistLeadIndustry,
+} from '../../services/api/aiReceptionistLeadApi';
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
 type Industry = 'nail_salon' | 'spa' | 'restaurant' | 'barber' | 'other';
@@ -43,6 +49,9 @@ export function AiReceptionistPilotRequestScreen(): ReactElement {
   const [consentAccepted, setConsentAccepted] = useState(false);
   const [consentError, setConsentError] = useState<string | null>(null);
   const [isSubmittedLocalDraft, setIsSubmittedLocalDraft] = useState(false);
+  const [submittedStatus, setSubmittedStatus] = useState<'submitted_for_manual_review' | null>(null);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const industryLabel = useMemo(
     () => INDUSTRY_OPTIONS.find((item) => item.id === industry)?.label ?? 'Unknown',
@@ -55,6 +64,91 @@ export function AiReceptionistPilotRequestScreen(): ReactElement {
 
   const toggleAutomation = (id: Automation): void => {
     setDesiredAutomation((prev) => (prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]));
+  };
+
+  const industryToApi: Record<Industry, AiReceptionistLeadIndustry> = {
+    nail_salon: 'Nail salon',
+    spa: 'Spa',
+    restaurant: 'Restaurant',
+    barber: 'Barber',
+    other: 'Other',
+  };
+
+  const automationToApi: Record<Automation, AiReceptionistLeadDesiredAutomation> = {
+    intake_only: 'Intake only',
+    booking_request: 'Booking request',
+    auto_booking_later: 'Auto booking later',
+    multi_language_support: 'Multi-language support',
+  };
+
+  const handleSubmit = async (): Promise<void> => {
+    if (!consentAccepted) {
+      setConsentError('Please accept consent to submit this pilot request.');
+      return;
+    }
+    setConsentError(null);
+    setSubmitError(null);
+    setSubmittedStatus(null);
+
+    const normalizedPhone = contactPhone.trim();
+    const normalizedEmail = contactEmail.trim();
+    if (!normalizedPhone && !normalizedEmail) {
+      setSubmitError('Please provide at least contact phone or contact email.');
+      return;
+    }
+
+    const normalizedMissedCalls = estimatedMissedCallsPerDay.trim();
+    if (!/^\d{1,4}$/.test(normalizedMissedCalls)) {
+      setSubmitError('Estimated missed calls per day must be a valid number.');
+      return;
+    }
+
+    if (!isRestApiConfigured()) {
+      setIsSubmittedLocalDraft(true);
+      setSubmitError('Pilot request relay is not configured yet. Your draft remains local.');
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      const result = await submitAiReceptionistPilotLead({
+        businessName: businessName.trim(),
+        industry: industryToApi[industry],
+        city: city.trim(),
+        country: country.trim(),
+        contactName: contactName.trim(),
+        contactPhone: normalizedPhone || undefined,
+        contactEmail: normalizedEmail || undefined,
+        languagesNeeded: languagesNeeded.trim(),
+        estimatedMissedCallsPerDay: normalizedMissedCalls,
+        desiredAutomation: desiredAutomation.map((item) => automationToApi[item]),
+        preferredPilotDate: preferredPilotDate.trim() || undefined,
+        notes: notes.trim() || undefined,
+        consentAccepted: true,
+      });
+
+      if (result.ok) {
+        setIsSubmittedLocalDraft(false);
+        setSubmittedStatus(result.data.status);
+        setSubmitError(null);
+        return;
+      }
+
+      setIsSubmittedLocalDraft(true);
+      if (result.status === 503 || /LEAD_CAPTURE_NOT_CONFIGURED/i.test(result.error)) {
+        setSubmitError('Pilot request relay is not configured yet. Your draft remains local.');
+      } else if (result.status === 400) {
+        setSubmitError('Please review your pilot request fields and try again.');
+      } else if (result.status === 401) {
+        setSubmitError('Your session is invalid or expired. Please sign in again.');
+      } else if (result.unreachable) {
+        setSubmitError('Could not send request. Your draft is still local.');
+      } else {
+        setSubmitError('Could not send request. Your draft is still local.');
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -226,25 +320,48 @@ export function AiReceptionistPilotRequestScreen(): ReactElement {
 
           <Pressable
             onPress={() => {
-              if (!consentAccepted) {
-                setConsentError('Please accept consent to submit this local pilot draft.');
-                return;
-              }
-              setConsentError(null);
-              setIsSubmittedLocalDraft(true);
+              void handleSubmit();
             }}
-            style={({ pressed }) => [styles.submitBtn, !consentAccepted && styles.submitBtnDisabled, pressed && { opacity: 0.86 }]}
+            disabled={!consentAccepted || isSubmitting}
+            style={({ pressed }) => [
+              styles.submitBtn,
+              (!consentAccepted || isSubmitting) && styles.submitBtnDisabled,
+              pressed && { opacity: 0.86 },
+            ]}
           >
-            <Text style={styles.submitBtnText}>Submit pilot request</Text>
+            <Text style={styles.submitBtnText}>
+              {isSubmitting ? 'Sending to VIONA team...' : 'Submit pilot request'}
+            </Text>
           </Pressable>
+          {submitError ? <Text style={styles.submitErrorText}>{submitError}</Text> : null}
         </View>
 
-        {isSubmittedLocalDraft ? (
+        {submittedStatus ? (
+          <View style={styles.cardConfirm}>
+            <Text style={styles.cardTitle}>Pilot request sent for manual review.</Text>
+            <Text style={styles.cardBody}>Status: {submittedStatus}</Text>
+            <Text style={styles.cardBody}>
+              VIONA team will review your request before any pilot activation.
+            </Text>
+            <Text style={styles.previewTitle}>Submitted preview</Text>
+            <Text style={styles.previewLine}>Business: {businessName || 'N/A'}</Text>
+            <Text style={styles.previewLine}>Industry: {industryLabel}</Text>
+            <Text style={styles.previewLine}>City/Country: {(city || 'N/A') + ' / ' + (country || 'N/A')}</Text>
+            <Text style={styles.previewLine}>Contact: {contactName || 'N/A'}</Text>
+            <Text style={styles.previewLine}>Phone: {contactPhone || 'N/A'}</Text>
+            <Text style={styles.previewLine}>Email: {contactEmail || 'N/A'}</Text>
+            <Text style={styles.previewLine}>Languages: {languagesNeeded || 'N/A'}</Text>
+            <Text style={styles.previewLine}>Missed calls/day: {estimatedMissedCallsPerDay || 'N/A'}</Text>
+            <Text style={styles.previewLine}>Desired automation: {desiredAutomationLabels}</Text>
+            <Text style={styles.previewLine}>Preferred pilot date: {preferredPilotDate || 'N/A'}</Text>
+            <Text style={styles.previewLine}>Notes: {notes || 'N/A'}</Text>
+          </View>
+        ) : isSubmittedLocalDraft ? (
           <View style={styles.cardConfirm}>
             <Text style={styles.cardTitle}>Pilot request draft created</Text>
-            <Text style={styles.cardBody}>Consent was captured locally for this demo draft.</Text>
-            <Text style={styles.cardBody}>This request is saved only as a local draft in this demo build.</Text>
-            <Text style={styles.cardBody}>Next production step: connect this form to approved backend lead capture.</Text>
+            <Text style={styles.cardBody}>Consent was captured for this request attempt.</Text>
+            <Text style={styles.cardBody}>Could not send request. Your draft is still local.</Text>
+            <Text style={styles.cardBody}>No pilot approval or activation happened from this local draft.</Text>
             <Text style={styles.previewTitle}>Draft preview</Text>
             <Text style={styles.previewLine}>Business: {businessName || 'N/A'}</Text>
             <Text style={styles.previewLine}>Industry: {industryLabel}</Text>
@@ -390,6 +507,7 @@ const styles = StyleSheet.create({
   },
   consentText: { flex: 1, fontSize: 12, color: '#DCE8FF' },
   consentError: { fontSize: 12, color: '#FCA5A5' },
+  submitErrorText: { fontSize: 12, color: '#FCA5A5' },
   previewTitle: { marginTop: 4, fontSize: 13, fontWeight: '800', color: '#E8EDF7' },
   previewLine: { fontSize: 12, color: 'rgba(232,237,247,0.76)' },
   actionRow: { gap: 8, marginTop: 2 },
