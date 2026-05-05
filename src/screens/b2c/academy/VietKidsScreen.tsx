@@ -8,6 +8,7 @@ import { KidsFlashcard } from '../../../components/academy/KidsFlashcard';
 import { KidsMatchingGame } from '../../../components/academy/KidsMatchingGame';
 import { TeacherAvatar, type TeacherEmotion } from '../../../components/academy/TeacherAvatar';
 import { useAuth } from '../../../context/AuthContext';
+import { formatVioPoints } from '../../../core/monetization/vioDisplayLabels';
 import type { RootStackParamList } from '../../../navigation/routes';
 import { awardPoints } from '../../../services/loyalty/LoyaltyService';
 import { KIDS_MODE_TOKENS } from '../../../theme/kidsModeTokens';
@@ -38,7 +39,9 @@ export function VietKidsScreen() {
     setAwardedLevels((prev) => ({ ...prev, [kind]: true }));
     setTeacherEmotion('praising');
     setShowConfetti(true);
-    setRewardText(`+${award.vigTokensAdded} VIG Token cho phụ huynh (${kind === 'flashcard' ? 'Thẻ Bài' : 'Mini-Game'})`);
+    setRewardText(
+      `+${formatVioPoints(award.vigTokensAdded)} cho phụ huynh (${kind === 'flashcard' ? 'Thẻ Bài' : 'Mini-Game'})`
+    );
     setTimeout(() => {
       setShowConfetti(false);
       setTeacherEmotion('idle');
