@@ -7,7 +7,8 @@ import { isEmailConfigured, sendEmail } from '../EmailService';
 import { findUserByEmail, issueSessionForUserId, type AuthUserProfile } from '../api/AuthService';
 
 const OTP_TTL_MS = 10 * 60 * 1000;
-const OTP_SEND_WINDOW_MS = 10 * 60 * 1000;
+/** Cửa sổ trượt: tối đa {@link MAX_OTP_SENDS_PER_EMAIL_WINDOW} lần gửi OTP / email / cửa sổ này (chống spam SES). */
+const OTP_SEND_WINDOW_MS = 60 * 60 * 1000;
 const MAX_OTP_SENDS_PER_EMAIL_WINDOW = 3;
 const MAX_ATTEMPTS = 6;
 const CODE_LENGTH = 6;
@@ -45,9 +46,17 @@ export async function requestEmailOtp(rawEmail: string): Promise<EmailOtpRequest
     return { ok: false, reason: 'smtp_not_configured' };
   }
 
+  const prisma = getPrisma();
+  const windowStart = new Date(Date.now() - OTP_SEND_WINDOW_MS);
+  const sendsInWindow = await prisma.emailOtpSendLog.count({
+    where: { email, createdAt: { gte: windowStart } },
+  });
+  if (sendsInWindow >= MAX_OTP_SENDS_PER_EMAIL_WINDOW) {
+    return { ok: false, reason: 'rate_limited' };
+  }
+
   const code = generateNumericOtp();
   const codeHash = await bcrypt.hash(code, 10);
-  const prisma = getPrisma();
   await prisma.emailOtpChallenge.deleteMany({ where: { email } });
   await prisma.emailOtpChallenge.create({
     data: {

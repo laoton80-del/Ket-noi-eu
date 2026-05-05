@@ -1,10 +1,14 @@
-import 'express-serve-static-core';
+/**
+ * Augment Express `Request` without importing `express-serve-static-core`
+ * (avoids eslint `import/no-unresolved` when types are nested under `@types/express`).
+ */
+export {};
 
-declare module 'express-serve-static-core' {
-  interface Request {
-    /** Set by `authMiddleware` after a valid JWT. */
-    authUserId?: string;
+declare global {
+  namespace Express {
+    interface Request {
+      /** Set by `authMiddleware` after a valid JWT. */
+      authUserId?: string;
+    }
   }
 }
-
-export {};

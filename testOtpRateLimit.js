@@ -1,7 +1,7 @@
 'use strict';
 
 /**
- * Gọi tuần tự 4 lần POST /api/auth/email/otp/request để kiểm tra giới hạn theo email (3 / 10 phút → lần 4: 429).
+ * Gọi tuần tự 4 lần POST /api/auth/email/otp/request — giới hạn server: tối đa 3 lần / email / giờ (lần 4 → 429).
  *
  * Chạy khi API đã bật: npm run api:dev
  *
@@ -48,7 +48,7 @@ async function main() {
     }
   }
 
-  console.log('Kỳ vọng: 200 (3 lần đầu, nếu SES + JWT + DB OK) → 429 lần 4 (rate limit theo email).');
+  console.log('Kỳ vọng: 200 (3 lần đầu, nếu SES + JWT + DB OK) → 429 lần 4 (tối đa 3 OTP/giờ cho cùng email).');
   console.log('Nếu 503: chưa cấu hình SES / email trên server.');
 }
 

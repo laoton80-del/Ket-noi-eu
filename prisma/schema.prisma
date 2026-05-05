@@ -191,8 +191,33 @@ model User {
   masterBroker     User?   @relation("BrokerHierarchy", fields: [masterBrokerId], references: [id], onDelete: SetNull)
   subBrokers       User[]  @relation("BrokerHierarchy")
   brokerEscrows    BrokerCommissionEscrow[] @relation("EscrowBeneficiary")
+  /// Opaque refresh sessions (hash-only); cascade on user delete (GDPR).
+  authRefreshSessions AuthRefreshSession[]
 
   @@index([masterBrokerId])
+}
+
+/// Refresh token session — opaque token stored only as **SHA-256 hex** on server; rotation via `replacementSession`.
+model AuthRefreshSession {
+  id     String @id @default(uuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  /// SHA-256 hex (64 chars) of `crypto.randomBytes(32).toString('hex')` — never store plaintext refresh.
+  tokenHash String @unique
+
+  expiresAt  DateTime
+  createdAt  DateTime  @default(now())
+  lastUsedAt DateTime?
+  revokedAt  DateTime?
+
+  /// After rotation: this row points to the new session. Null = active tail or not yet rotated-from.
+  replacedBySessionId String? @unique
+  replacementSession  AuthRefreshSession?  @relation("AuthRefreshRotation", fields: [replacedBySessionId], references: [id], onDelete: SetNull)
+  supersededSessions    AuthRefreshSession[] @relation("AuthRefreshRotation")
+
+  @@index([userId, expiresAt])
+  @@index([userId, revokedAt])
 }
 
 /// Short-lived email OTP for sign-up / verification (Zero-SMS Doctrine).

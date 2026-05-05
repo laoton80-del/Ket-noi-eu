@@ -3,6 +3,7 @@ import type { Request, Response } from 'express';
 import { loginWithPhoneAndPin } from '../services/api/AuthService';
 import { requestEmailOtp, verifyEmailOtp } from '../services/auth/EmailOtpService';
 import { jsonFail, jsonOk } from '../utils/apiEnvelope';
+import { logger } from '../utils/Logger';
 
 function readString(value: unknown): string | null {
   return typeof value === 'string' ? value : null;
@@ -36,7 +37,8 @@ export async function postLogin(req: Request, res: Response): Promise<void> {
     }
 
     jsonOk(res, { token: result.token, user: result.user });
-  } catch {
+  } catch (err) {
+    logger.error({ err }, 'LỖI postLogin');
     jsonFail(res, 'Unexpected error', 500);
   }
 }
@@ -63,7 +65,7 @@ export async function postEmailOtpRequest(req: Request, res: Response): Promise<
         return;
       }
       if (r.reason === 'rate_limited') {
-        jsonFail(res, 'Too many OTP requests for this email. Try again in about 10 minutes.', 429);
+        jsonFail(res, 'Too many OTP requests for this email. Maximum 3 per hour; try again later.', 429);
         return;
       }
       jsonFail(res, 'Invalid email address', 400);
@@ -71,7 +73,7 @@ export async function postEmailOtpRequest(req: Request, res: Response): Promise<
     }
     jsonOk(res, { sent: true });
   } catch (err) {
-    console.error('LỖI OTP REQUEST (không xử lý được — xem stack bên dưới):', err);
+    logger.error({ err }, 'LỖI postEmailOtpRequest');
     jsonFail(res, 'Unexpected error', 500);
   }
 }
@@ -109,7 +111,8 @@ export async function postEmailOtpVerify(req: Request, res: Response): Promise<v
       return;
     }
     jsonOk(res, { flow: 'pre_auth' as const, preAuthToken: r.preAuthToken, email: r.email });
-  } catch {
+  } catch (err) {
+    logger.error({ err }, 'LỖI postEmailOtpVerify');
     jsonFail(res, 'Unexpected error', 500);
   }
 }

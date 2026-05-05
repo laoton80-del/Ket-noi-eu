@@ -77,11 +77,17 @@ export const authApiRateLimiter = createIpRateLimiter({
 });
 
 /**
- * Apply path-aware limits: webhook excluded by caller; AI stricter; auth separate; default general.
+ * Apply path-aware limits: **Stripe webhook bypass** (chữ ký Stripe-Signature đủ tin); AI chặt hơn; auth riêng; còn lại general.
+ * Webhook cũng được mount trước middleware này trong `app.ts` — bypass ở đây để tránh 429 nếu thứ tự mount thay đổi sau này.
  */
 export function pathAwareApiRateLimiter(req: Request, res: Response, next: NextFunction): void {
   const path = req.originalUrl.split('?')[0] ?? '';
   if (path === '/health') {
+    next();
+    return;
+  }
+  /** Burst retry từ Stripe không được chặn bởi IP limit 5/s của API chung. */
+  if (path === '/api/pay/webhook/stripe') {
     next();
     return;
   }
