@@ -1,9 +1,9 @@
 /**
- * Disk-backed image cache on native (FastImage); falls back to RN `Image` on web.
+ * Disk-backed image cache on native (FastImage). Web uses `AppImage.web.tsx` (RN `Image` only).
  */
 
 import React, { type ReactElement } from 'react';
-import { Image, Platform, type ImageProps as RNImageProps, type ImageResizeMode } from 'react-native';
+import { type ImageProps as RNImageProps, type ImageResizeMode } from 'react-native';
 import FastImage, { type FastImageProps } from 'react-native-fast-image';
 
 type AppImageProps = Omit<RNImageProps, 'source'> & {
@@ -45,17 +45,6 @@ export function AppImage({
   ...rest
 }: AppImageProps): ReactElement {
   const mode = resizeMode as ResizeMode | undefined;
-
-  if (Platform.OS === 'web') {
-    const src = source;
-    if (typeof src === 'number') {
-      return <Image source={src} resizeMode={resizeMode} {...rest} />;
-    }
-    if (src && typeof src === 'object' && !Array.isArray(src) && 'uri' in src) {
-      return <Image source={{ uri: src.uri }} resizeMode={resizeMode} {...rest} />;
-    }
-    return <Image source={src as RNImageProps['source']} resizeMode={resizeMode} {...rest} />;
-  }
 
   const norm = normalizeSource(source, cache);
   return (
