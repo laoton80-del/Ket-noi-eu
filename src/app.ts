@@ -27,7 +27,10 @@ export function createApp(): express.Application {
   app.disable('x-powered-by');
   app.use(cors(buildExpressCorsOptions()));
 
-  /** Stripe signature verification requires the raw body — must run before `express.json`. */
+  /**
+   * Stripe webhook: raw body + đăng ký **trước** `express.json` và `pathAwareApiRateLimiter`.
+   * Khớp path thì handler kết thúc response (không rơi xuống rate limit); `RateLimitMiddleware` vẫn bypass `/api/pay/webhook/stripe` phòng đổi thứ tự mount.
+   */
   app.post(
     '/api/pay/webhook/stripe',
     express.raw({ type: 'application/json', limit: '1mb' }),
