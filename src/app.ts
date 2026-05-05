@@ -17,6 +17,7 @@ import { userRouter } from './routes/userRoutes';
 import { brokerRouter } from './routes/brokerRoutes';
 import { tourismRouter } from './routes/tourismRoutes';
 import { walletRouter } from './routes/walletRoutes';
+import { aiReceptionistLeadRouter } from './routes/aiReceptionistLeadRoutes';
 import { jsonFail } from './utils/apiEnvelope';
 import { logger } from './utils/Logger';
 
@@ -58,6 +59,7 @@ export function createApp(): express.Application {
   app.use('/api/broker', brokerRouter);
   app.use('/api/business', businessRouter);
   app.use('/api/ai', aiRouter);
+  app.use('/api/ai-receptionist', aiReceptionistLeadRouter);
   app.use('/api/edu', educationRouter);
   app.use('/api/media', mediaRouter);
 
