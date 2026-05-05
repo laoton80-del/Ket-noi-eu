@@ -4,20 +4,20 @@
     "slug": "ket-noi-global",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
+    "icon": "./assets/brand/viona/app-icon.png",
     "splash": {
-      "image": "./assets/splash.png",
+      "image": "./assets/brand/viona/splash.png",
       "resizeMode": "contain",
-      "backgroundColor": "#050B14"
+      "backgroundColor": "#071936"
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/icon.png",
-        "backgroundColor": "#050B14"
+        "foregroundImage": "./assets/brand/viona/adaptive-icon.png",
+        "backgroundColor": "#071936"
       }
     },
     "web": {
-      "favicon": "./assets/favicon.png"
+      "favicon": "./assets/brand/viona/favicon.png"
     }
   }
 }

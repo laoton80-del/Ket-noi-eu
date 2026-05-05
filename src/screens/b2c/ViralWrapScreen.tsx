@@ -231,7 +231,7 @@ export function ViralWrapScreen(): ReactElement {
 
             <View style={styles.brandRow}>
               <AppImage
-                source={require('../../../assets/branding/logo-horizontal.png')}
+                source={require('../../../assets/brand/viona/logo-in-app.png')}
                 style={styles.logo}
                 resizeMode="contain"
                 accessibilityLabel="ViGlobal"

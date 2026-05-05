@@ -2,7 +2,6 @@ require('dotenv').config();
 
 module.exports = () => {
   const stripeMerchantIdentifier = process.env.EXPO_PUBLIC_STRIPE_MERCHANT_IDENTIFIER?.trim() ?? '';
-  // TODO(brand): `./assets/icon.png`, `./assets/splash.png`, `./assets/favicon.png` may still be legacy art until VIONA asset pack lands.
   const plugins = [
     'react-native-compressor',
     '@react-native-firebase/app',
@@ -10,14 +9,14 @@ module.exports = () => {
     [
       'expo-splash-screen',
       {
-        image: './assets/splash.png',
+        image: './assets/brand/viona/splash.png',
         resizeMode: 'contain',
         imageWidth: 240,
-        backgroundColor: '#050B14',
+        backgroundColor: '#071936',
         dark: {
-          image: './assets/splash.png',
+          image: './assets/brand/viona/splash.png',
           resizeMode: 'contain',
-          backgroundColor: '#050B14',
+          backgroundColor: '#071936',
         },
       },
     ],
@@ -88,17 +87,17 @@ module.exports = () => {
     slug: 'ket-noi-global',
     version: '1.0.0',
     orientation: 'portrait',
-    icon: './assets/icon.png',
+    icon: './assets/brand/viona/app-icon.png',
     splash: {
-      image: './assets/splash.png',
+      image: './assets/brand/viona/splash.png',
       resizeMode: 'contain',
-      backgroundColor: '#050B14',
+      backgroundColor: '#071936',
     },
     userInterfaceStyle: 'light',
     scheme: 'ketnoiglobal',
     newArchEnabled: true,
     ios: {
-      icon: './assets/icon.png',
+      icon: './assets/brand/viona/app-icon.png',
       supportsTablet: true,
       bundleIdentifier: 'com.ketnoiglobal.app',
       googleServicesFile: process.env.GOOGLE_SERVICE_INFO_PLIST ?? './GoogleService-Info.plist',
@@ -111,8 +110,8 @@ module.exports = () => {
     },
     android: {
       adaptiveIcon: {
-        foregroundImage: './assets/icon.png',
-        backgroundColor: '#050B14',
+        foregroundImage: './assets/brand/viona/adaptive-icon.png',
+        backgroundColor: '#071936',
       },
       edgeToEdgeEnabled: true,
       predictiveBackGestureEnabled: false,
@@ -129,9 +128,9 @@ module.exports = () => {
     web: {
       shortName: 'VIONA',
       name: 'VIONA',
-      favicon: './assets/favicon.png',
-      themeColor: '#050B14',
-      backgroundColor: '#050B14',
+      favicon: './assets/brand/viona/favicon.png',
+      themeColor: '#071936',
+      backgroundColor: '#071936',
       display: 'standalone',
     },
     plugins,

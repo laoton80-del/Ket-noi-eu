@@ -61,7 +61,7 @@ import { DashboardB2CScreen } from './b2c/DashboardB2CScreen';
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
 
-const IMG_LOGO = require('../../assets/home/logo.png');
+const IMG_LOGO = require('../../assets/brand/viona/logo-in-app.png');
 const ADMIN_UNLOCK_KEY = STORAGE_KEYS.adminUnlock;
 const EMERGENCY_COUNTRY_NUMBERS: Readonly<
   Record<string, Readonly<{ police: string; ambulance: string; fire: string }>>
