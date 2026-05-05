@@ -15,6 +15,7 @@ import { useRegionState } from '../../state/region';
 import { b2cTheme } from '../../theme/appModeThemes';
 import { theme } from '../../theme/theme';
 import { FontFamily } from '../../theme/typography';
+import { getVioCreditsLabel } from '../../core/monetization/vioDisplayLabels';
 import { formatCurrency } from '../../utils/currencyFormatter';
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
@@ -96,7 +97,7 @@ export function LiveAiTeacherScreen() {
           {formatCurrency(AI_TEACHER_PREMIUM_USD, PRICING_BASELINE_CURRENCY)} / tháng — đăng ký qua Ví (upsell)
         </Text>
         <Text style={styles.premiumUpsellCreditsNote}>
-          Bài học & mic trong app: trừ VIG Token; telemetry: {teacherPersona.telemetryTag}.
+          {`Bài học & mic trong app: trừ ${getVioCreditsLabel()}. Telemetry: ${teacherPersona.telemetryTag}.`}
         </Text>
         <Text style={styles.premiumUpsellHero}>
           Luyện hội thoại không giới hạn 24/7 — Unlimited 24/7 speaking practice.

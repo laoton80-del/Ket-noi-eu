@@ -13,6 +13,8 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LOYALTY_REWARDS_CATALOG } from '../../config/loyaltyRewardsCatalog';
+import { brandConfig } from '../../core/brand/brandConfig';
+import { formatVioPoints, getVioPointsLabel } from '../../core/monetization/vioDisplayLabels';
 import { useAuth } from '../../context/AuthContext';
 import type { RootStackParamList } from '../../navigation/routes';
 import {
@@ -83,21 +85,24 @@ export function LoyaltyRewardsScreen() {
   const accent = useMemo(() => tierAccent(summary.tier), [summary.tier]);
   const toNextLine =
     summary.toNext === null
-      ? 'Bạn đã ở cấp tối đa — cảm ơn bạn đã đồng hành cùng ViGlobal!'
-      : `Còn ${summary.toNext} VIG Token để lên hạng tiếp theo.`;
+      ? `Bạn đã ở cấp tối đa — cảm ơn bạn đã đồng hành cùng ${brandConfig.displayName}!`
+      : `Còn ${summary.toNext} ${getVioPointsLabel()} để lên hạng tiếp theo.`;
 
   const onRedeem = useCallback(
     (rewardId: string) => {
       if (!userId) {
-      Alert.alert('ViGlobal Rewards', 'Đăng nhập để đổi quà.');
+      Alert.alert(`${brandConfig.displayName} Rewards`, 'Đăng nhập để đổi quà.');
         return;
       }
       const res = redeemPointsForReward(userId, rewardId);
       if (!res.ok) {
-        Alert.alert('ViGlobal Rewards', res.message);
+        Alert.alert(`${brandConfig.displayName} Rewards`, res.message);
         return;
       }
-      Alert.alert('Đổi quà thành công', `${res.perkLabel} đã được mở khóa (demo). Số dư: ${res.remainingVigTokens} VIG Token.`);
+      Alert.alert(
+        'Đổi quà thành công',
+        `${res.perkLabel} đã được mở khóa (demo). Số dư: ${formatVioPoints(res.remainingVigTokens)}.`
+      );
     },
     [userId]
   );
@@ -108,7 +113,7 @@ export function LoyaltyRewardsScreen() {
     const tierUp = r.newTier !== r.previousTier;
     Alert.alert(
       'Đã tích điểm (demo)',
-      `+${r.vigTokensAdded} VIG Token từ 18,5 EUR chi tiêu mock.${tierUp ? ` Chúc mừng lên hạng ${tierLabelVi(r.newTier)}!` : ''}`
+      `+${r.vigTokensAdded} ${getVioPointsLabel()} (demo) từ hoạt động hợp lệ — ví dụ chi tiêu mock 18,5 EUR.${tierUp ? ` Chúc mừng lên hạng ${tierLabelVi(r.newTier)}!` : ''}`
     );
   }, [userId]);
 
@@ -118,7 +123,7 @@ export function LoyaltyRewardsScreen() {
         <Pressable onPress={() => navigation.goBack()} style={styles.back} accessibilityRole="button">
           <Ionicons name="chevron-back" size={24} color={theme.hybrid.panelCoolText} />
         </Pressable>
-        <Text style={styles.topTitle}>VIG Token · Đổi quà</Text>
+        <Text style={styles.topTitle}>{`${getVioPointsLabel()} · Đổi quà (demo)`}</Text>
         <View style={styles.backSpacer} />
       </View>
 
@@ -128,17 +133,20 @@ export function LoyaltyRewardsScreen() {
           <View style={[styles.cardGlass, { borderColor: accent }]} className={applyWebStyles('kn-glass')}>
             <View style={styles.cardChipRow}>
               <View style={[styles.chip, { borderColor: accent }]}>
-                <Text style={[styles.chipText, { color: accent }]}>VIG TOKEN</Text>
+                <Text style={[styles.chipText, { color: accent }]}>{getVioPointsLabel().toUpperCase()}</Text>
               </View>
               <VigTokenIcon size={24} />
             </View>
             <Text style={[styles.tierHuge, { color: '#FAFAFA' }]}>{tierLabelVi(summary.tier)}</Text>
             <Text style={styles.pointsLine}>
               <Text style={[styles.pointsVal, { color: accent }]}>{summary.vigTokens}</Text>
-              <Text style={styles.pointsSuffix}> VIG Token</Text>
+              <Text style={styles.pointsSuffix}> {getVioPointsLabel()}</Text>
             </Text>
             <Text style={styles.nextTier}>{toNextLine}</Text>
-            <Text style={styles.ruleHint}>1 EUR chi tiêu hợp lệ = 10 VIG Token (chính sách — nối hóa đơn sau).</Text>
+            <Text style={styles.ruleHint}>
+              Tích {getVioPointsLabel()} từ hoạt động hợp lệ trong app (demo: ví dụ + điểm sau giao dịch được xác minh —
+              không phải tỷ giá đầu tư hay ngoại hối).
+            </Text>
             {__DEV__ ? (
               <Pressable onPress={simulateSpend} style={styles.devSim}>
                 <Text style={styles.devSimText}>+ Demo 18,5 EUR chi tiêu</Text>
@@ -148,7 +156,9 @@ export function LoyaltyRewardsScreen() {
         </View>
 
         <Text style={styles.sectionTitle}>Đổi Quà Tặng</Text>
-        <Text style={styles.sectionSub}>Đổi VIG Token lấy quà ngay — giữ chân bạn trong hệ sinh thái ViGlobal.</Text>
+        <Text style={styles.sectionSub}>
+          {`Đổi ${getVioPointsLabel()} lấy quà (demo rewards) — trải nghiệm trong ${brandConfig.displayName}, không phải tài sản đầu tư hay tiền mặt rút được.`}
+        </Text>
 
         {LOYALTY_REWARDS_CATALOG.map((r) => (
           <View key={r.id} style={styles.rewardCard} className={applyWebStyles('kn-glass')}>
@@ -164,7 +174,7 @@ export function LoyaltyRewardsScreen() {
             <View style={styles.rewardFooter}>
               <View style={styles.costPill}>
                 <VigTokenIcon size={16} />
-                <Text style={styles.costPillText}>{r.vigTokenCost} VIG Token</Text>
+                <Text style={styles.costPillText}>{formatVioPoints(r.vigTokenCost)}</Text>
               </View>
               <Pressable
                 onPress={() => onRedeem(r.id)}

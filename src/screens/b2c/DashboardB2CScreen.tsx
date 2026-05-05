@@ -1,10 +1,13 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { useCallback, useEffect } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { useCallback, useEffect, useMemo } from 'react';
+import { Alert, Pressable, StyleSheet, Text, View } from 'react-native';
 import { VigTokenIcon } from '../../components/ui/VigTokenIcon';
+import { brandConfig } from '../../core/brand/brandConfig';
 import { useAuth } from '../../context/AuthContext';
+import { getFeatureFlags } from '../../core/feature-flags/featureFlags';
+import { formatVioPoints } from '../../core/monetization/vioDisplayLabels';
 import type { RootStackParamList } from '../../navigation/routes';
 import { bootstrapLoyaltyProfile } from '../../services/loyalty/LoyaltyService';
 import { useKngLoyaltyStore } from '../../state/kngLoyaltyStore';
@@ -21,6 +24,7 @@ export type DashboardB2CScreenProps = Readonly<{
 export function DashboardB2CScreen({ contentWidth }: DashboardB2CScreenProps) {
   const navigation = useNavigation<Nav>();
   const { user } = useAuth();
+  const featureFlags = useMemo(() => getFeatureFlags(), []);
   const isTourist = user?.persona === 'TOURIST';
   const userId = user?.phone?.trim() ?? '';
   const loyaltySnap = useKngLoyaltyStore((s) => (userId.length > 0 ? s.byUser[userId] : undefined));
@@ -32,20 +36,32 @@ export function DashboardB2CScreen({ contentWidth }: DashboardB2CScreenProps) {
   }, [userId]);
 
   const openLoyalty = useCallback(() => {
+    if (!featureFlags.vigTokenEconomyEnabled) {
+      Alert.alert('Rewards', 'Token economy surfaces are not available in this MVP build.');
+      return;
+    }
     navigation.navigate('LoyaltyRewards');
-  }, [navigation]);
+  }, [featureFlags.vigTokenEconomyEnabled, navigation]);
 
   const openLocal = useCallback(() => {
     navigation.navigate('LocalUniverse');
   }, [navigation]);
 
   const openTravel = useCallback(() => {
+    if (!featureFlags.travelEnabled) {
+      Alert.alert('Travel', 'Travel is not available in this MVP build.');
+      return;
+    }
     navigation.navigate('TravelHub', {});
-  }, [navigation]);
+  }, [featureFlags.travelEnabled, navigation]);
 
   const openAcademy = useCallback(() => {
+    if (!featureFlags.academyEnabled) {
+      Alert.alert('Academy', 'Academy and learning surfaces are not available in this MVP build.');
+      return;
+    }
     navigation.navigate('AdultLearningHome');
-  }, [navigation]);
+  }, [featureFlags.academyEnabled, navigation]);
 
   const localCard = (
     <Pressable
@@ -138,38 +154,45 @@ export function DashboardB2CScreen({ contentWidth }: DashboardB2CScreenProps) {
 
   return (
     <View style={[styles.wrapOuter, { width: contentWidth }]}>
-      <Pressable
-        onPress={openLoyalty}
-        style={({ pressed }) => [styles.vipBadge, pressed && { opacity: 0.9 }]}
-        className={applyWebStyles('kn-glass')}
-        accessibilityRole="button"
-        accessibilityLabel="ViGlobal Rewards VIG Token tích lũy"
-      >
-        <VigTokenIcon size={16} />
-        <Text style={styles.vipBadgeText} numberOfLines={1}>
-          {userId.length > 0 ? `VIG: ${loyaltyPoints} Token` : 'VIG · Đăng nhập'}
-        </Text>
-      </Pressable>
+      {featureFlags.vigTokenEconomyEnabled ? (
+        <Pressable
+          onPress={openLoyalty}
+          style={({ pressed }) => [styles.vipBadge, pressed && { opacity: 0.9 }]}
+          className={applyWebStyles('kn-glass')}
+          accessibilityRole="button"
+          accessibilityLabel={
+            userId.length > 0
+              ? `${brandConfig.displayName} Rewards — ${formatVioPoints(loyaltyPoints)}`
+              : `${brandConfig.displayName} Rewards — đăng nhập`
+          }
+        >
+          <VigTokenIcon size={16} />
+          <Text style={styles.vipBadgeText} numberOfLines={1}>
+            {userId.length > 0 ? formatVioPoints(loyaltyPoints) : `${brandConfig.displayName} Rewards · Đăng nhập`}
+          </Text>
+        </Pressable>
+      ) : null}
 
       <View style={styles.wrap}>
         <Text style={styles.hubEyebrow}>{isTourist ? 'Travel mode' : 'Đa vũ trụ ứng dụng'}</Text>
         <Text style={styles.hubTitle}>{isTourist ? 'Vietnam journey hub' : 'Chọn không gian của bạn'}</Text>
         <Text style={styles.hubSub}>
           {isTourist
-            ? 'KNG Travel first · Live translation · VIG wallet for your trip · Academy for quick language wins.'
+            ? 'KNG Travel first · Live translation · VIO Credits in-app for your trip · Academy for quick language wins.'
             : 'KNG Local cho đời sống hằng ngày · KNG Travel cho chuyến đi cao cấp · KNG Academy cho học tập AI.'}
         </Text>
 
         {isTourist ? (
           <>
-            {travelCard}
-            {academyCard}
+            {featureFlags.travelEnabled ? travelCard : null}
+            {featureFlags.academyEnabled ? academyCard : null}
+            {!featureFlags.travelEnabled && !featureFlags.academyEnabled ? localCard : null}
           </>
         ) : (
           <>
             {localCard}
-            {travelCard}
-            {academyCard}
+            {featureFlags.travelEnabled ? travelCard : null}
+            {featureFlags.academyEnabled ? academyCard : null}
           </>
         )}
       </View>

@@ -29,13 +29,10 @@ import {
   getPricingByCountry,
   getWalletPackagePricesByCountry,
 } from '../config/commercialSpine';
-import {
-  B2C_AVATAR_FRAME_CREDITS,
-  B2C_PASSPORT_BADGE_CREDITS_PER_YEAR,
-  PRICING_AUTHORITY,
-} from '../config/pricingConfig';
+import { B2C_AVATAR_FRAME_CREDITS, B2C_PASSPORT_BADGE_CREDITS_PER_YEAR } from '../config/pricingConfig';
 import { normalizeCountryCodeOrSentinel, resolveCommercialCountryContext } from '../config/countryPacks';
 import { APP_BRAND } from '../config/appBrand';
+import { formatVioCredits } from '../core/monetization/vioDisplayLabels';
 import { useAuth } from '../context/AuthContext';
 import { getStrings } from '../i18n/strings';
 import type { RootStackParamList } from '../navigation/routes';
@@ -231,6 +228,42 @@ export function WalletTopUpScreen() {
     transform: [{ translateY: (1 - p2pAnim.value) * 26 }, { scale: 0.98 + p2pAnim.value * 0.02 }],
   }));
 
+  const submitP2PTransfer = useCallback(async () => {
+    if (!user) {
+      return;
+    }
+    if (!walletUnlocked) {
+      Alert.alert(w.walletLockedTitle, w.walletLockedBody);
+      return;
+    }
+    const senderPhone = user.phone.trim();
+    const recipient = recipientPhone.trim();
+    const amount = Number.parseInt(transferAmount, 10);
+    if (senderPhone.length < 8 || recipient.length < 8 || !Number.isFinite(amount) || amount <= 0) {
+      Alert.alert('Thiếu dữ liệu', 'Vui lòng nhập số điện thoại hợp lệ và số VIO Credits lớn hơn 0.');
+      return;
+    }
+    setP2pSubmitting(true);
+    try {
+      const result = await transferVigTokensByPhone({
+        senderPhone,
+        recipientPhone: recipient,
+        amountVig: amount,
+        idempotencyKey: `p2p-${senderPhone}-${Date.now()}`,
+      });
+      if (!result.ok) {
+        Alert.alert('Không thể chuyển VIO Credits', result.messageVi);
+        return;
+      }
+      Alert.alert('Chuyển thành công', `Đã chuyển ${formatVioCredits(result.amountVig)} đến ${result.recipientPhone}.`);
+      setRecipientPhone('');
+      setTransferAmount('');
+      setP2pVisible(false);
+    } finally {
+      setP2pSubmitting(false);
+    }
+  }, [recipientPhone, transferAmount, user, w.walletLockedBody, w.walletLockedTitle, walletUnlocked]);
+
   if (__DEV__) {
     console.log('[diag][WalletTopUp] hooks settled', { hasUser: Boolean(user) });
   }
@@ -275,7 +308,7 @@ export function WalletTopUpScreen() {
       if (portal != null && portal.length > 0) {
         Alert.alert(
           'Thanh toán ngoài app (V7 IAPRouter)',
-          `${iapGate.reason}\n\nMở Stripe Customer Portal để nạp VIG / SaaS — tránh phí IAP 30% trên hàng kỹ thuật số.`,
+          `${iapGate.reason}\n\nMở Stripe Customer Portal để nạp VIO Credits / SaaS — tránh phí IAP 30% trên hàng kỹ thuật số.`,
           [
             { text: 'Hủy', style: 'cancel' },
             { text: 'Mở Portal', onPress: () => void Linking.openURL(portal) },
@@ -334,14 +367,17 @@ export function WalletTopUpScreen() {
       return;
     }
     if (wallet.credits < item.priceXu) {
-      Alert.alert('Không đủ VIG Token', `Bạn cần ${item.priceXu} VIG Token để mua "${item.title}". Nạp thêm VIG Token để tiếp tục.`);
+      Alert.alert(
+        'Không đủ VIO Credits',
+        `Bạn cần ${formatVioCredits(item.priceXu)} để mua "${item.title}". Nạp thêm VIO Credits để tiếp tục.`
+      );
       return;
     }
     const backendOk = Boolean(process.env.EXPO_PUBLIC_BACKEND_API_BASE?.trim());
     if (!backendOk) {
       Alert.alert(
         'Kết nối máy chủ',
-        'Mua vật phẩm bằng VIG Token cần API ví an toàn. Khi máy chủ được bật, giao dịch sẽ ghi nhận tự động trên lịch sử ví.'
+        'Mua vật phẩm bằng VIO Credits cần API ví an toàn. Khi máy chủ được bật, giao dịch sẽ ghi nhận tự động trên lịch sử ví.'
       );
       return;
     }
@@ -434,39 +470,6 @@ export function WalletTopUpScreen() {
     }
   };
 
-  const submitP2PTransfer = useCallback(async () => {
-    if (!walletUnlocked) {
-      Alert.alert(w.walletLockedTitle, w.walletLockedBody);
-      return;
-    }
-    const senderPhone = user.phone.trim();
-    const recipient = recipientPhone.trim();
-    const amount = Number.parseInt(transferAmount, 10);
-    if (senderPhone.length < 8 || recipient.length < 8 || !Number.isFinite(amount) || amount <= 0) {
-      Alert.alert('Thiếu dữ liệu', 'Vui lòng nhập số điện thoại hợp lệ và số VIG Token lớn hơn 0.');
-      return;
-    }
-    setP2pSubmitting(true);
-    try {
-      const result = await transferVigTokensByPhone({
-        senderPhone,
-        recipientPhone: recipient,
-        amountVig: amount,
-        idempotencyKey: `p2p-${senderPhone}-${Date.now()}`,
-      });
-      if (!result.ok) {
-        Alert.alert('Không thể chuyển VIG', result.messageVi);
-        return;
-      }
-      Alert.alert('Chuyển thành công', `Đã chuyển ${result.amountVig} VIG Token đến ${result.recipientPhone}.`);
-      setRecipientPhone('');
-      setTransferAmount('');
-      setP2pVisible(false);
-    } finally {
-      setP2pSubmitting(false);
-    }
-  }, [recipientPhone, transferAmount, user.phone, w.walletLockedBody, w.walletLockedTitle, walletUnlocked]);
-
   if (__DEV__) {
     console.log('[diag][WalletTopUp] render main ui');
   }
@@ -478,6 +481,10 @@ export function WalletTopUpScreen() {
         <Text style={styles.brand}>{APP_BRAND.name}</Text>
         <Text style={styles.launchHint}>{APP_BRAND.launchSubtitle}</Text>
         <Text style={styles.subtitle}>{w.screenSubtitle}</Text>
+        <View style={styles.vioDisclaimerBox}>
+          <Text style={styles.vioDisclaimerTitle}>{w.vioDisclaimerTitle}</Text>
+          <Text style={styles.vioDisclaimerBody}>{w.vioDisclaimerBody}</Text>
+        </View>
 
         <View style={styles.remittanceBlock}>
           <Text style={styles.remittanceKicker}>Fintech — Kiều hối</Text>
@@ -544,11 +551,11 @@ export function WalletTopUpScreen() {
           style={({ pressed }) => [styles.p2pEntry, pressed && { opacity: 0.9 }]}
           className={mergeWebClassNames('kn-glass', 'kn-neon-b2b')}
           accessibilityRole="button"
-          accessibilityLabel="Chuyển VIG Token theo số điện thoại"
+          accessibilityLabel="Chuyển VIO Credits theo số điện thoại"
         >
           <Ionicons name="swap-horizontal" size={22} color={theme.hybrid.signalStrong} />
           <View style={styles.p2pEntryText}>
-            <Text style={styles.p2pEntryTitle}>Chuyển VIG Token (P2P)</Text>
+            <Text style={styles.p2pEntryTitle}>Chuyển VIO Credits (P2P)</Text>
             <Text style={styles.p2pEntrySub}>Chuyển thẳng đến ví người nhận bằng số điện thoại.</Text>
           </View>
           <Ionicons name="chevron-forward" size={22} color={theme.hybrid.signalStrong} />
@@ -569,7 +576,7 @@ export function WalletTopUpScreen() {
             <Text style={[styles.sectionTitle, styles.virtualStoreTitle]}>Cửa hàng Vật phẩm</Text>
           </View>
           <Text style={styles.virtualStoreSub}>
-            Gamification & VIP — khung avatar và huy hiệu xác minh; thanh toán bằng VIG Token qua ví.
+            Gamification & VIP — khung avatar và huy hiệu xác minh; thanh toán bằng VIO Credits qua ví.
           </Text>
         </View>
         <View style={styles.virtualCard}>
@@ -583,7 +590,7 @@ export function WalletTopUpScreen() {
             </View>
           </View>
           <View style={styles.virtualRowBottom}>
-            <Text style={styles.virtualPrice}>{B2C_AVATAR_FRAME_CREDITS} VIG Token</Text>
+            <Text style={styles.virtualPrice}>{formatVioCredits(B2C_AVATAR_FRAME_CREDITS)}</Text>
             <Pressable
               onPress={() =>
                 void tryBuyVirtualItem({
@@ -613,11 +620,14 @@ export function WalletTopUpScreen() {
             </View>
             <View style={styles.virtualMeta}>
               <Text style={styles.virtualItemTitle}>Huy hiệu Xác minh Hộ chiếu</Text>
-              <Text style={styles.virtualItemSub}>Huy hiệu xác minh hộ chiếu — {B2C_PASSPORT_BADGE_CREDITS_PER_YEAR} VIG Token/năm, gia hạn theo năm.</Text>
+              <Text style={styles.virtualItemSub}>
+                Huy hiệu xác minh hộ chiếu — {formatVioCredits(B2C_PASSPORT_BADGE_CREDITS_PER_YEAR)}/năm, gia hạn theo
+                năm.
+              </Text>
             </View>
           </View>
           <View style={styles.virtualRowBottom}>
-            <Text style={styles.virtualPrice}>{B2C_PASSPORT_BADGE_CREDITS_PER_YEAR} VIG Token / năm</Text>
+            <Text style={styles.virtualPrice}>{formatVioCredits(B2C_PASSPORT_BADGE_CREDITS_PER_YEAR)} / năm</Text>
             <Pressable
               onPress={() =>
                 void tryBuyVirtualItem({
@@ -742,7 +752,7 @@ export function WalletTopUpScreen() {
                 </View>
                 <Text style={[styles.txAmount, tx.type === 'topup' ? styles.txAmountTopup : styles.txAmountConsume]}>
                   {tx.type === 'topup' ? '+' : '-'}
-                  {tx.amount} VIG Token
+                  {formatVioCredits(tx.amount)}
                 </Text>
               </View>
             ))
@@ -799,8 +809,8 @@ export function WalletTopUpScreen() {
       <Modal visible={p2pVisible} transparent animationType="none" onRequestClose={() => setP2pVisible(false)}>
         <View style={styles.modalBackdrop}>
           <Reanimated.View style={[styles.p2pModalCard, p2pModalAnimStyle]} className={mergeWebClassNames('kn-glass')}>
-            <Text style={styles.p2pModalTitle}>Chuyển VIG Token</Text>
-            <Text style={styles.p2pModalSub}>Số dư hiện tại: {wallet.credits} VIG Token</Text>
+            <Text style={styles.p2pModalTitle}>Chuyển VIO Credits</Text>
+            <Text style={styles.p2pModalSub}>Số dư hiện tại: {formatVioCredits(wallet.credits)}</Text>
             <TextInput
               value={recipientPhone}
               onChangeText={setRecipientPhone}
@@ -812,7 +822,7 @@ export function WalletTopUpScreen() {
             <TextInput
               value={transferAmount}
               onChangeText={setTransferAmount}
-              placeholder="Số lượng VIG Token"
+              placeholder="Số lượng VIO Credits"
               placeholderTextColor={theme.colors.text.secondary}
               keyboardType="number-pad"
               style={styles.p2pInput}
@@ -865,6 +875,27 @@ const styles = StyleSheet.create({
     fontSize: theme.typeScale.h2.fontSize,
     fontFamily: theme.typeScale.h2.fontFamily,
     color: theme.hybrid.signal,
+  },
+  vioDisclaimerBox: {
+    marginTop: 12,
+    marginBottom: 8,
+    padding: 12,
+    borderRadius: 12,
+    backgroundColor: 'rgba(5, 11, 20, 0.06)',
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: theme.hybrid.signalSubtleBorder,
+  },
+  vioDisclaimerTitle: {
+    fontSize: 13,
+    fontFamily: FontFamily.bold,
+    color: theme.colors.text.primary,
+    marginBottom: 6,
+  },
+  vioDisclaimerBody: {
+    fontSize: 12,
+    lineHeight: 17,
+    fontFamily: FontFamily.regular,
+    color: theme.colors.text.secondary,
   },
   historyFootnote: {
     fontSize: 11,
