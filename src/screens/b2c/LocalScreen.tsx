@@ -176,7 +176,7 @@ export function LocalScreen() {
       try {
         const bk = await createBooking(payload);
         if (bk.ok) {
-          Alert.alert('ViGlobal', 'Success!');
+          Alert.alert('VIONA', 'Success!');
         } else {
           Alert.alert('Đặt luật sư', bk.error);
         }
@@ -285,7 +285,7 @@ export function LocalScreen() {
         <Pressable onPress={() => navigation.goBack()} style={styles.backBtn} accessibilityRole="button" accessibilityLabel="Quay lại">
           <Ionicons name="chevron-back" size={24} color={GOLD} />
         </Pressable>
-        <Text style={styles.topTitle}>ViGlobal Local</Text>
+        <Text style={styles.topTitle}>VIONA Local</Text>
         <View style={styles.backSpacer} />
       </View>
 
@@ -297,7 +297,7 @@ export function LocalScreen() {
       >
         <Text style={styles.universeKicker}>Universe 02 · Dark</Text>
         <Text style={styles.heroHeadline}>Đặt dịch vụ đời thường</Text>
-        <Text style={styles.heroSub}>Nails & Spa · Nhà hàng · Đối tác B2B — tốc độ địa phương, chuẩn ViGlobal.</Text>
+        <Text style={styles.heroSub}>Nails & Spa · Nhà hàng · Đối tác B2B — tốc độ địa phương, chuẩn VIONA.</Text>
 
         {showVietnamInboundHub ? (
           <Pressable
@@ -392,14 +392,14 @@ export function LocalScreen() {
 
         <View style={styles.bentoMidRow}>
           <TouchableOpacity
-            onPress={() => openLeonaPrefill('ViGlobal Transit — ghép xe / gửi hàng')}
+            onPress={() => openLeonaPrefill('VIONA Transit — ghép xe / gửi hàng')}
             activeOpacity={0.88}
             style={styles.bentoMedium}
             accessibilityRole="button"
-            accessibilityLabel="ViGlobal Transit"
+            accessibilityLabel="VIONA Transit"
           >
             <Ionicons name="car-outline" size={24} color={GOLD} />
-            <Text style={styles.bentoTitle}>ViGlobal Transit</Text>
+            <Text style={styles.bentoTitle}>VIONA Transit</Text>
             <Text style={styles.bentoSub}>Carpool · Parcel</Text>
           </TouchableOpacity>
           <TouchableOpacity

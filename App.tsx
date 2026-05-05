@@ -723,7 +723,7 @@ function AppRoot() {
       <AppStateView
         variant="maintenance"
         title="SCHEDULED MAINTENANCE"
-        message="Kết Nối Global is temporarily unavailable. We will be back soon."
+        message="VIONA is temporarily unavailable. We will be back soon."
         detail={`Ops source: ${opsConfig.source}`}
       />
     );

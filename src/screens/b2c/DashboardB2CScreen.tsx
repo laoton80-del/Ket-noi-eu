@@ -74,7 +74,7 @@ export function DashboardB2CScreen({ contentWidth }: DashboardB2CScreenProps) {
         <Text style={styles.cardEmoji}>🏙️</Text>
         <View style={styles.cardTitleCol}>
           <Text style={styles.cardKicker}>Universe 01</Text>
-          <Text style={styles.cardTitle}>KNG LOCAL</Text>
+          <Text style={styles.cardTitle}>VIONA LOCAL</Text>
         </View>
         <Ionicons name="chevron-forward" size={22} color={theme.hybrid.signalStrong} />
       </View>
@@ -104,7 +104,7 @@ export function DashboardB2CScreen({ contentWidth }: DashboardB2CScreenProps) {
         <Text style={styles.cardEmoji}>✈️</Text>
         <View style={styles.cardTitleCol}>
           <Text style={[styles.cardKicker, styles.travelKicker]}>Universe 02 · Premium</Text>
-          <Text style={[styles.cardTitle, styles.travelTitle]}>KNG TRAVEL</Text>
+          <Text style={[styles.cardTitle, styles.travelTitle]}>VIONA TRAVEL</Text>
         </View>
         <Ionicons name="airplane" size={22} color="#C5A059" />
       </View>
@@ -136,7 +136,7 @@ export function DashboardB2CScreen({ contentWidth }: DashboardB2CScreenProps) {
         <Text style={styles.cardEmoji}>🎓</Text>
         <View style={styles.cardTitleCol}>
           <Text style={styles.cardKicker}>Universe 03</Text>
-          <Text style={styles.cardTitle}>KNG ACADEMY</Text>
+          <Text style={styles.cardTitle}>VIONA ACADEMY</Text>
         </View>
         <Ionicons name="school-outline" size={22} color={theme.hybrid.signalStrong} />
       </View>
@@ -178,8 +178,8 @@ export function DashboardB2CScreen({ contentWidth }: DashboardB2CScreenProps) {
         <Text style={styles.hubTitle}>{isTourist ? 'Vietnam journey hub' : 'Chọn không gian của bạn'}</Text>
         <Text style={styles.hubSub}>
           {isTourist
-            ? 'KNG Travel first · Live translation · VIO Credits in-app for your trip · Academy for quick language wins.'
-            : 'KNG Local cho đời sống hằng ngày · KNG Travel cho chuyến đi cao cấp · KNG Academy cho học tập AI.'}
+            ? 'VIONA Travel first · Live translation · VIO Credits in-app for your trip · Academy for quick language wins.'
+            : 'VIONA Local cho đời sống hằng ngày · VIONA Travel cho chuyến đi an tâm · VIONA Academy cho học tập AI.'}
         </Text>
 
         {isTourist ? (

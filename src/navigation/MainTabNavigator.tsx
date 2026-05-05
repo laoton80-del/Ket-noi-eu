@@ -263,7 +263,7 @@ export function MainTabNavigator(): ReactElement {
           return;
         }
         if (access.denied && access.kind === 'gps_vn') {
-          Alert.alert('Kết Nối Global', access.message);
+          Alert.alert('VIONA', access.message);
           navigation.navigate('Tabs');
           return;
         }

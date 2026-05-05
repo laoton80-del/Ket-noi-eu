@@ -408,7 +408,7 @@ export function HomeScreen() {
     }
     Alert.alert(
       'Ping Rescue',
-      `Đã gửi SOS ping với tọa độ ${coordsLine} tới người dùng ViGlobal lân cận (blueprint local/home tier).`
+      `Đã gửi SOS ping với tọa độ ${coordsLine} tới cộng đồng VIONA lân cận (blueprint local/home tier).`
     );
   }, [sosCity, sosCoords.lat, sosCoords.lng]);
 
@@ -450,8 +450,8 @@ export function HomeScreen() {
           <Text style={styles.heading}>{isTourist ? 'Vietnam travel hub' : 'Trung tâm B2C'}</Text>
           <Text style={styles.heroSub}>
             {isTourist
-              ? 'Wallet, live interpreter, and premium travel logistics — one ViGlobal app for Western visitors.'
-              : 'Ba vũ trụ ứng dụng — Local cho đời thường, Travel cho chuyến đi cao cấp, Academy cho học tập AI.'}
+              ? 'One VIONA hub for wallet, live interpreter, and trusted travel support in Vietnam.'
+              : 'VIONA kết nối đời sống, kinh doanh, du lịch và AI support cho người Việt toàn cầu.'}
           </Text>
         </View>
 
@@ -520,7 +520,7 @@ export function HomeScreen() {
         </View>
 
         <View style={[styles.briefingBlock, { width: layout.inner }]}>
-          <Text style={styles.briefingTitle}>ViGlobal Briefing</Text>
+          <Text style={styles.briefingTitle}>VIONA Briefing</Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.briefingRail}>
             {briefingCards.map((card) => (
               <Pressable
@@ -759,7 +759,7 @@ export function HomeScreen() {
             <View style={styles.sosCard}>
               <Text style={styles.sosCardTitle}>📍 Ping Rescue</Text>
               <Pressable style={styles.sosActionBtn} onPress={() => void pingRescue()}>
-                <Text style={styles.sosActionText}>Gửi SOS + GPS tới ViGlobal nearby</Text>
+                <Text style={styles.sosActionText}>Gửi SOS + GPS tới cộng đồng VIONA nearby</Text>
               </Pressable>
             </View>
           </View>
