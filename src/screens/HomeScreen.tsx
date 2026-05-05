@@ -33,7 +33,7 @@ import {
   isAdminDebugPinConfigured,
   isAdminDebugSurfaceEnabled,
 } from '../config/adminDebugGate';
-import { brandNameForSurface } from '../config/appBrand';
+import { brandConfig } from '../core/brand/brandConfig';
 import { getFeatureFlags } from '../core/feature-flags/featureFlags';
 import { formatVioCredits, getVioPointsLabel } from '../core/monetization/vioDisplayLabels';
 import { getPersonaDisplayName } from '../config/aiPrompts';
@@ -446,7 +446,7 @@ export function HomeScreen() {
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.hero}>
-          <Text style={styles.heroEyebrow}>{brandNameForSurface('b2c')}</Text>
+          <Text style={styles.heroEyebrow}>{brandConfig.displayName}</Text>
           <Text style={styles.heading}>{isTourist ? 'Vietnam travel hub' : 'Trung tâm B2C'}</Text>
           <Text style={styles.heroSub}>
             {isTourist

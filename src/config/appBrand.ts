@@ -33,20 +33,20 @@ function subscriptionUsdForTier(tier: keyof typeof TIER_PRICE_MULTIPLIER): { mon
 }
 
 /**
- * Brand spine: **Kết Nối Global** (master) + EU launch lane context.
- * Screens should use `name` for headers; use `launchSubtitle` where launch context helps users.
+ * Brand spine: **VIONA** is the primary customer-facing name.
+ * `masterName` / `internalName` remain for legacy internal copy (ops, mapping); prefer `brandConfig` for new UI.
  */
 export const APP_BRAND = {
-  publicName: 'ViGlobal',
+  publicName: 'VIONA',
   internalName: 'KNG',
   masterName: 'Kết Nối Global',
   launchProductName: 'EU Launch Lane',
   /** Primary header on most surfaces */
-  name: 'Kết Nối Global',
+  name: 'VIONA',
   /** Secondary line under brand (launch-lane context only) */
-  launchSubtitle: 'Global-first · EU rollout first',
+  launchSubtitle: 'Siêu ứng dụng · ưu tiên EU — toàn cầu cho cộng đồng Việt',
   /** Stripe / wallet sheet merchant display name */
-  paymentsDisplayName: 'Kết Nối Global',
+  paymentsDisplayName: 'VIONA',
   visualStyle: 'Neo-Indochine & Glassmorphism',
   icon: '🌳✨',
   iconLabel: 'Cây Bồ Đề vàng 3D',

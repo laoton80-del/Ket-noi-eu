@@ -2,6 +2,7 @@ require('dotenv').config();
 
 module.exports = () => {
   const stripeMerchantIdentifier = process.env.EXPO_PUBLIC_STRIPE_MERCHANT_IDENTIFIER?.trim() ?? '';
+  // TODO(brand): `./assets/icon.png`, `./assets/splash.png`, `./assets/favicon.png` may still be legacy art until VIONA asset pack lands.
   const plugins = [
     'react-native-compressor',
     '@react-native-firebase/app',
@@ -41,7 +42,8 @@ module.exports = () => {
     [
       'expo-local-authentication',
       {
-        faceIDPermission: 'Ứng dụng cần Face ID để bảo vệ Ví Global và thanh toán an toàn.',
+        faceIDPermission:
+          'Ứng dụng cần Face ID để bảo vệ ví VIONA và VIO Credits trong app, cùng thanh toán an toàn.',
       },
     ],
     [
@@ -82,7 +84,7 @@ module.exports = () => {
   }
 
   return { expo: {
-    name: 'Kết Nối Global',
+    name: 'VIONA',
     slug: 'ket-noi-global',
     version: '1.0.0',
     orientation: 'portrait',
@@ -125,8 +127,8 @@ module.exports = () => {
       googleServicesFile: process.env.GOOGLE_SERVICES_JSON ?? './google-services.json',
     },
     web: {
-      shortName: 'KNG',
-      name: 'Kết Nối Global',
+      shortName: 'VIONA',
+      name: 'VIONA',
       favicon: './assets/favicon.png',
       themeColor: '#050B14',
       backgroundColor: '#050B14',

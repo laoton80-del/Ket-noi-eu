@@ -48,7 +48,7 @@ export function TrustPreflightGate({ children }: { children: ReactNode }) {
       <SafeAreaView style={styles.bootContainer}>
         <View style={styles.centerWrap}>
           <ActivityIndicator color={theme.colors.SignatureGold} size="large" />
-          <Text style={styles.bootText}>Kết Nối Global - Đang bảo mật kết nối...</Text>
+          <Text style={styles.bootText}>VIONA — Đang bảo mật kết nối...</Text>
         </View>
       </SafeAreaView>
     );
