@@ -84,17 +84,6 @@ export function AppMap({
     [latitude, longitude]
   );
 
-  if (Platform.OS === 'web') {
-    return (
-      <View style={[styles.fallback, style]}>
-        <Text style={styles.fallbackTitle}>Bản đồ Mapbox (native)</Text>
-        <Text style={styles.fallbackSub}>
-          {latitude.toFixed(4)}, {longitude.toFixed(4)} · {markers.length} điểm
-        </Text>
-      </View>
-    );
-  }
-
   if (!token) {
     return (
       <View style={[styles.fallback, style]}>
