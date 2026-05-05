@@ -97,9 +97,7 @@ export function AngelInvestmentHub() {
               kết nối thông tin, không đảm bảo lợi nhuận.
             </Text>
 
-            <Text style={styles.inputLabel}>
-              Vui lòng nhập "{AGREEMENT_TEXT}" để tiếp tục:
-            </Text>
+            <Text style={styles.inputLabel}>{`Vui lòng nhập "${AGREEMENT_TEXT}" để tiếp tục:`}</Text>
             <TextInput
               value={agreementInput}
               onChangeText={setAgreementInput}
@@ -111,7 +109,7 @@ export function AngelInvestmentHub() {
             />
 
             {submitted && !canProceed ? (
-              <Text style={styles.errorText}>Bạn cần nhập chính xác cụm "{AGREEMENT_TEXT}".</Text>
+              <Text style={styles.errorText}>{`Bạn cần nhập chính xác cụm "${AGREEMENT_TEXT}".`}</Text>
             ) : null}
 
             <View style={styles.modalActions}>

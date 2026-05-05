@@ -219,7 +219,7 @@ export function KidsInteractiveMode({
           <Text style={styles.word}>{result.vietnameseWord}</Text>
           <Text style={styles.pronounceHint}>{result.pronunciationHint}</Text>
           {result.sourceLanguageText ? (
-            <Text style={styles.sourceText}>Con đã nói: "{result.sourceLanguageText}"</Text>
+            <Text style={styles.sourceText}>{`Con đã nói: "${result.sourceLanguageText}"`}</Text>
           ) : null}
           <Pressable
             style={({ pressed }) => [styles.speakBtn, pressed && { opacity: 0.88 }]}

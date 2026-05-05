@@ -905,7 +905,7 @@ export function AdminDashboardScreen() {
 
           <View style={styles.card} className={applyWebStyles('kn-glass kn-neon-b2b')}>
             <Text style={styles.cardTitle}>VIP & Family Whitelist</Text>
-            <Text style={styles.kpi}>Label enforced: "Người nhà Tổng Tư Lệnh"</Text>
+            <Text style={styles.kpi}>{'Label enforced: "Người nhà Tổng Tư Lệnh"'}</Text>
             {dataset.vipWhitelist.map((row: VipWhitelistRow) => (
               <Text key={row.userId} style={styles.kpi}>{row.userId} · [{row.label}] · Người nhà Tổng Tư Lệnh</Text>
             ))}
