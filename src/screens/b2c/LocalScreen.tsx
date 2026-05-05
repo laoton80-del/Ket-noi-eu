@@ -19,6 +19,9 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Reanimated, { Easing, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 import { getDemoBookingPayload } from '../../config/demoRestBooking';
+import { getFeatureFlags } from '../../core/feature-flags/featureFlags';
+import { formatVioCredits, getVioCreditsLabel } from '../../core/monetization/vioDisplayLabels';
+import { MVP_LEONA_LITE_OFF_MSG } from '../../navigation/mvpSurfaceGate';
 import type { RootStackParamList } from '../../navigation/routes';
 import { previewLegalScanCostVig, scanLegalDocument } from '../../services/aiService';
 import { confirmSecurityDepositThen } from '../../services/bookingEscrowUi';
@@ -92,10 +95,12 @@ const DEFAULT_POSTS: readonly ClassifiedPost[] = [
 export function LocalScreen() {
   const navigation = useNavigation<Nav>();
   const wallet = useWalletState();
+  const featureFlags = useMemo(() => getFeatureFlags(), []);
+  const legalScanEnabled = featureFlags.legalScanEnabled;
   const showVietnamInboundHub = useMemo(() => {
     const region = Localization.getLocales()[0]?.regionCode?.toUpperCase() ?? '';
-    return region === 'VN';
-  }, []);
+    return region === 'VN' && featureFlags.travelEnabled;
+  }, [featureFlags.travelEnabled]);
   const scrollRef = useRef<ScrollView>(null);
   const [classifiedsY, setClassifiedsY] = useState(0);
   const [posts, setPosts] = useState<readonly ClassifiedPost[]>(DEFAULT_POSTS);
@@ -145,6 +150,17 @@ export function LocalScreen() {
   const scrollToClassifieds = useCallback(() => {
     scrollRef.current?.scrollTo({ y: Math.max(0, classifiedsY - 12), animated: true });
   }, [classifiedsY]);
+
+  const openLeonaPrefill = useCallback(
+    (prefillRequest: string) => {
+      if (!featureFlags.leonaAssistantEnabled) {
+        Alert.alert('Leona Assistant Lite', MVP_LEONA_LITE_OFF_MSG);
+        return;
+      }
+      navigation.navigate('LeonaCall', { prefillRequest, autoSubmit: false });
+    },
+    [featureFlags.leonaAssistantEnabled, navigation]
+  );
 
   const bookLawyerAfterCritical = useCallback(() => {
     confirmSecurityDepositThen(async () => {
@@ -200,6 +216,10 @@ export function LocalScreen() {
   );
 
   const onLegalScannerPress = useCallback(() => {
+    if (!featureFlags.legalScanEnabled) {
+      Alert.alert('AI Trạng Sư', 'Tính năng đang tạm đóng băng (Coming soon).');
+      return;
+    }
     void (async () => {
       if (!isRestApiConfigured()) {
         Alert.alert('AI Trạng Sư', 'Chưa cấu hình EXPO_PUBLIC_REST_API_BASE.');
@@ -216,7 +236,7 @@ export function LocalScreen() {
       const est = previewLegalScanCostVig(dummyCriticalText);
       Alert.alert(
         'AI Trạng Sư',
-        `Estimated Cost: ${est} VIG based on document length. Proceed?`,
+        `Ước tính: ${formatVioCredits(est)} (đơn vị trong app) theo độ dài văn bản. Tiếp tục?`,
         [
           { text: 'Cancel', style: 'cancel' },
           { text: 'Proceed', onPress: () => void runLegalScanAfterPriceConfirm(dummyCriticalText) },
@@ -236,7 +256,7 @@ export function LocalScreen() {
         const idempotencyKey = `classified-vip-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
         const paid = await reserveAndCommitCredits(VIP_POSTING_COST_VIG, idempotencyKey);
         if (!paid.ok) {
-          Alert.alert('Không thể đăng VIP', 'Số dư VIG Token không đủ hoặc hệ thống tạm gián đoạn.');
+          Alert.alert('Không thể đăng VIP', 'Số dư VIO Credits không đủ hoặc hệ thống tạm gián đoạn.');
           return;
         }
       }
@@ -351,28 +371,28 @@ export function LocalScreen() {
           <Text style={styles.bentoSub}>Immigration · Tax · Asset desk</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity
-          onPress={() => void onLegalScannerPress()}
-          activeOpacity={0.88}
-          disabled={legalScanBusy}
-          style={[styles.legalScannerBtn, legalScanBusy && styles.legalScannerBtnDisabled]}
-          accessibilityRole="button"
-          accessibilityLabel="AI Legal Scanner"
-        >
-          {legalScanBusy ? (
-            <ActivityIndicator size="small" color={GOLD} accessibilityLabel="Đang phân tích" />
-          ) : (
-            <Text style={styles.legalScannerEmoji}>⚖️</Text>
-          )}
-          <Text style={styles.legalScannerLabel}>AI Legal Scanner</Text>
-          <Ionicons name="scan-outline" size={22} color={GOLD} />
-        </TouchableOpacity>
+        {legalScanEnabled ? (
+          <TouchableOpacity
+            onPress={() => void onLegalScannerPress()}
+            activeOpacity={0.88}
+            disabled={legalScanBusy}
+            style={[styles.legalScannerBtn, legalScanBusy && styles.legalScannerBtnDisabled]}
+            accessibilityRole="button"
+            accessibilityLabel="AI Legal Scanner"
+          >
+            {legalScanBusy ? (
+              <ActivityIndicator size="small" color={GOLD} accessibilityLabel="Đang phân tích" />
+            ) : (
+              <Text style={styles.legalScannerEmoji}>⚖️</Text>
+            )}
+            <Text style={styles.legalScannerLabel}>AI Legal Scanner</Text>
+            <Ionicons name="scan-outline" size={22} color={GOLD} />
+          </TouchableOpacity>
+        ) : null}
 
         <View style={styles.bentoMidRow}>
           <TouchableOpacity
-            onPress={() =>
-              navigation.navigate('LeonaCall', { prefillRequest: 'ViGlobal Transit — ghép xe / gửi hàng', autoSubmit: false })
-            }
+            onPress={() => openLeonaPrefill('ViGlobal Transit — ghép xe / gửi hàng')}
             activeOpacity={0.88}
             style={styles.bentoMedium}
             accessibilityRole="button"
@@ -405,7 +425,7 @@ export function LocalScreen() {
           <Ionicons name="pricetags-outline" size={24} color={GOLD} />
           <View style={styles.bannerTextCol}>
             <Text style={styles.bentoTitle}>Classifieds</Text>
-            <Text style={styles.bentoSub}>Chợ rao vặt · VIP đăng tin bằng VIG Token</Text>
+            <Text style={styles.bentoSub}>{`Chợ rao vặt · VIP đăng tin bằng ${getVioCreditsLabel()}`}</Text>
           </View>
           <Ionicons name="chevron-forward" size={22} color={GOLD} />
         </TouchableOpacity>
@@ -418,7 +438,7 @@ export function LocalScreen() {
         >
           <View style={styles.classifiedsHeaderRow}>
             <Text style={styles.sectionTitle}>Chợ rao vặt</Text>
-            <Text style={styles.walletHint}>{wallet.credits} VIG</Text>
+            <Text style={styles.walletHint}>{formatVioCredits(wallet.credits)}</Text>
           </View>
           <Pressable style={styles.postBtn} onPress={() => setComposerVisible(true)}>
             <Ionicons name="add-circle-outline" size={20} color={NAVY} />
@@ -483,7 +503,7 @@ export function LocalScreen() {
             />
             <Pressable onPress={() => setVipEnabled((v) => !v)} style={[styles.vipToggle, vipEnabled && styles.vipToggleActive]}>
               <Ionicons name={vipEnabled ? 'checkmark-circle' : 'ellipse-outline'} size={18} color={GOLD} />
-              <Text style={styles.vipToggleText}>Đăng VIP (+{VIP_POSTING_COST_VIG} VIG Token)</Text>
+              <Text style={styles.vipToggleText}>Đăng VIP (+{formatVioCredits(VIP_POSTING_COST_VIG)})</Text>
             </Pressable>
             <View style={styles.modalActions}>
               <Pressable onPress={() => setComposerVisible(false)} style={styles.cancelBtn}>

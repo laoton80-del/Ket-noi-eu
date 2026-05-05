@@ -16,6 +16,8 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../../context/AuthContext';
+import { getFeatureFlags } from '../../core/feature-flags/featureFlags';
+import { getVioPointsLabel } from '../../core/monetization/vioDisplayLabels';
 import type { RootStackParamList } from '../../navigation/routes';
 import { buildBrokerOnboardDeepLink, isValidUuid } from '../../services/broker/V7AttributionService';
 import { generateViralFlyer } from '../../services/marketing/FlyerCannonService';
@@ -65,6 +67,7 @@ function BrokerMerchantRow({ item }: { item: MerchantPulseRow }): ReactElement {
 export function BrokerDashboardScreen(): ReactElement {
   const navigation = useNavigation<Nav>();
   const { user } = useAuth();
+  const brokerQrEnabled = useMemo(() => getFeatureFlags().brokerQrEnabled, []);
   const [qrOpen, setQrOpen] = useState(false);
 
   const brokerOnboardDeepLink = useMemo(() => {
@@ -140,16 +143,20 @@ export function BrokerDashboardScreen(): ReactElement {
           end={{ x: 1, y: 1 }}
           style={styles.hero}
         >
-          <Text style={styles.heroEyebrow}>LIVE COMMISSION EARNED</Text>
+          <Text style={styles.heroEyebrow}>LIVE COMMISSION (DEMO)</Text>
           <Text style={styles.heroAmount}>{formattedCommission}</Text>
-          <Text style={styles.heroUnit}>VIG · updates when tourists pay</Text>
+          <Text style={styles.heroUnit}>
+            {`${getVioPointsLabel()} (demo) · ${
+              brokerQrEnabled ? 'Preview when tourists settle' : 'Broker QR disabled — not a bank payout'
+            }`}
+          </Text>
           <Pressable
             onPress={openWallet}
             style={({ pressed }) => [styles.withdrawBtn, pressed && { opacity: 0.92 }]}
             accessibilityRole="button"
-            accessibilityLabel="Withdraw to wallet"
+            accessibilityLabel="Payout preview to wallet (demo)"
           >
-            <Text style={styles.withdrawLabel}>Withdraw</Text>
+            <Text style={styles.withdrawLabel}>Payout preview</Text>
             <Ionicons name="arrow-forward-circle" size={22} color="#1E063A" />
           </Pressable>
         </LinearGradient>

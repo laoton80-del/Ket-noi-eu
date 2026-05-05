@@ -2,6 +2,7 @@ import type { Request, Response } from 'express';
 import { LlmRouterTaskType, Prisma, TxStatus, TxType } from '@prisma/client';
 import type { ChatCompletionMessageParam } from 'openai/resources/chat/completions';
 
+import { getFeatureFlags } from '../core/feature-flags/featureFlags';
 import {
   countWordsInDocument,
   estimateLegalScanPages,
@@ -85,8 +86,20 @@ class LegalScanPaymentError extends Error {
   }
 }
 
+const LEGAL_SCAN_DISABLED_MESSAGE = 'Legal scan is not available in this MVP.' as const;
+
 export async function postLegalScan(req: Request, res: Response): Promise<void> {
   try {
+    if (!getFeatureFlags().legalScanEnabled) {
+      res.status(403).json({
+        success: false,
+        code: 'FEATURE_DISABLED',
+        message: LEGAL_SCAN_DISABLED_MESSAGE,
+        error: LEGAL_SCAN_DISABLED_MESSAGE,
+      });
+      return;
+    }
+
     const userId = readAuthUserId(req);
     if (!userId) {
       jsonFail(res, 'Unauthorized', 401);

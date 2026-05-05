@@ -2,6 +2,7 @@ import { createHash, randomBytes, timingSafeEqual } from 'node:crypto';
 
 import { BookStatus, PayStatus, Prisma, TxStatus, TxType } from '@prisma/client';
 
+import { getFeatureFlags } from '../../core/feature-flags/featureFlags';
 import { getPrisma } from '../../lib/prisma';
 import { finalizeBrokerQrProgramAfterBookingCommit, syntheticWalletFingerprintForBooker } from './brokerEmpireEscrow';
 import { recordCharityAccrualForSettlement } from './LedgerService';
@@ -462,9 +463,11 @@ export async function completeBookingViaQr(
       }
     );
 
-    void finalizeBrokerQrProgramAfterBookingCommit(bookingId).catch((err: unknown) => {
-      console.error('[BookingService] broker QR program post-commit failed', err);
-    });
+    if (getFeatureFlags().brokerQrEnabled) {
+      void finalizeBrokerQrProgramAfterBookingCommit(bookingId).catch((err: unknown) => {
+        console.error('[BookingService] broker QR program post-commit failed', err);
+      });
+    }
 
     return { ok: true, ...out };
   } catch (e) {

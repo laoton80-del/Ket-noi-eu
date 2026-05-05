@@ -10,6 +10,7 @@ import {
 
 import { B2B_POWER_TIER_EUR } from '../../config/pricingConfig';
 import { GLOBAL_MAX_LIST_ITEMS } from '../../constants/globalPerformance';
+import { getFeatureFlags } from '../../core/feature-flags/featureFlags';
 import { getPrisma } from '../../lib/prisma';
 import { createEscrowPendingCredit, maybeCreateLeadershipEscrowForMaster } from './brokerEmpireEscrow';
 import { createWalletForUser } from '../WalletService';
@@ -50,6 +51,10 @@ export async function tryCreditBrokerPaygShareFromAiUsage(input: Readonly<{
   billedVig: number;
   correlationKey: string;
 }>): Promise<PaygAiBrokerCreditResult> {
+  if (!getFeatureFlags().brokerQrEnabled) {
+    return { ok: false, reason: 'feature_disabled' };
+  }
+
   const uid = input.merchantOwnerUserId.trim();
   const key = input.correlationKey.trim();
   if (uid.length === 0 || key.length === 0) {
@@ -176,6 +181,10 @@ export async function tryCreditBrokerB2bPowerSubscriptionShare(input: Readonly<{
   stripeEventId: string;
   metadata: Readonly<Record<string, string>>;
 }>): Promise<B2bPowerBrokerPayoutResult> {
+  if (!getFeatureFlags().brokerQrEnabled) {
+    return { ok: false, reason: 'feature_disabled' };
+  }
+
   const eventId = input.stripeEventId.trim();
   if (eventId.length === 0) return { ok: false, reason: 'invalid_event' };
 

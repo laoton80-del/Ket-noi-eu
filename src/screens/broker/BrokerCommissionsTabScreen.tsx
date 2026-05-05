@@ -5,6 +5,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import type { ReactElement } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { getVioPointsLabel } from '../../core/monetization/vioDisplayLabels';
 import type { RootStackParamList } from '../../navigation/routes';
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
@@ -13,16 +14,22 @@ const MOCK_TOTAL = 18427.55;
 
 export function BrokerCommissionsTabScreen(): ReactElement {
   const navigation = useNavigation<Nav>();
+  const pointsLabel = getVioPointsLabel();
 
   return (
     <SafeAreaView style={styles.safe} edges={['top', 'left', 'right']}>
       <Text style={styles.title}>Commissions</Text>
-      <Text style={styles.sub}>VIG credited when inbound tourists settle</Text>
+      <Text style={styles.sub}>
+        {`${pointsLabel} (demo) — preview when inbound tourists settle; not a bank payout.`}
+      </Text>
 
       <LinearGradient colors={['#2a1810', '#050508']} style={styles.hero}>
         <Text style={styles.heroEyebrow}>ALL-TIME EARNED</Text>
         <Text style={styles.heroAmt}>
-          {MOCK_TOTAL.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} VIG
+          {`${MOCK_TOTAL.toLocaleString(undefined, {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+          })} ${pointsLabel} (demo)`}
         </Text>
         <Pressable
           onPress={() => navigation.navigate('Wallet')}
@@ -35,7 +42,11 @@ export function BrokerCommissionsTabScreen(): ReactElement {
 
       <ScrollView contentContainerStyle={styles.scroll}>
         <Text style={styles.section}>Recent</Text>
-        {['+128 VIG · Phở Minh', '+64 VIG · Lotus Homestay', '+32 VIG · Biển Xanh'].map((line) => (
+        {[
+          `+128 ${pointsLabel} (demo) · Phở Minh`,
+          `+64 ${pointsLabel} (demo) · Lotus Homestay`,
+          `+32 ${pointsLabel} (demo) · Biển Xanh`,
+        ].map((line) => (
           <View key={line} style={styles.line}>
             <Ionicons name="ellipse" size={8} color="#F5D286" />
             <Text style={styles.lineText}>{line}</Text>
