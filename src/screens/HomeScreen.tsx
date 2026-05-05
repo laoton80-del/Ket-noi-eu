@@ -34,8 +34,15 @@ import {
   isAdminDebugSurfaceEnabled,
 } from '../config/adminDebugGate';
 import { brandNameForSurface } from '../config/appBrand';
+import { getFeatureFlags } from '../core/feature-flags/featureFlags';
+import { formatVioCredits, getVioPointsLabel } from '../core/monetization/vioDisplayLabels';
 import { getPersonaDisplayName } from '../config/aiPrompts';
 import { useAuth } from '../context/AuthContext';
+import {
+  MVP_ACADEMY_LITE_OFF_MSG,
+  MVP_B2B_AI_RECEPTIONIST_DEMO_OFF_MSG,
+  MVP_LEONA_LITE_OFF_MSG,
+} from '../navigation/mvpSurfaceGate';
 import type { RootStackParamList } from '../navigation/routes';
 import {
   resolveNearestVietnameseMission,
@@ -95,6 +102,7 @@ export function HomeScreen() {
   const { width } = useWindowDimensions();
   const { user, setPendingRedirect, updateProfile } = useAuth();
   const isTourist = user?.persona === 'TOURIST';
+  const featureFlags = useMemo(() => getFeatureFlags(), []);
   const [personaModalVisible, setPersonaModalVisible] = useState(false);
   const wallet = useWalletState();
   const [showPaywall, setShowPaywall] = useState(false);
@@ -230,6 +238,14 @@ export function HomeScreen() {
 
   const openProtected = useCallback(
     (target: 'Wallet' | 'AiEye' | 'LeonaCall' | 'Vault') => {
+      if (target === 'AiEye' && !featureFlags.b2bAiReceptionistDemoEnabled) {
+        Alert.alert('B2B AI Receptionist (demo)', MVP_B2B_AI_RECEPTIONIST_DEMO_OFF_MSG);
+        return;
+      }
+      if (target === 'LeonaCall' && !featureFlags.leonaAssistantEnabled) {
+        Alert.alert('Leona Assistant Lite', MVP_LEONA_LITE_OFF_MSG);
+        return;
+      }
       if (!user) {
         setPendingRedirect(target);
         setShowPaywall(true);
@@ -237,17 +253,27 @@ export function HomeScreen() {
       }
       navigation.navigate(target);
     },
-    [navigation, setPendingRedirect, user]
+    [
+      featureFlags.b2bAiReceptionistDemoEnabled,
+      featureFlags.leonaAssistantEnabled,
+      navigation,
+      setPendingRedirect,
+      user,
+    ]
   );
 
   const openInterpreter = useCallback(() => {
+    if (!featureFlags.leonaAssistantEnabled) {
+      Alert.alert('Live Interpreter', MVP_LEONA_LITE_OFF_MSG);
+      return;
+    }
     if (!user) {
       setPendingRedirect('LiveInterpreter');
       setShowPaywall(true);
       return;
     }
     navigation.navigate('LiveInterpreter', { guidedEntry: true, scenario: 'general' });
-  }, [navigation, setPendingRedirect, user]);
+  }, [featureFlags.leonaAssistantEnabled, navigation, setPendingRedirect, user]);
 
   const onSecretTap = useCallback(() => {
     if (!isAdminDebugSurfaceEnabled()) return;
@@ -269,6 +295,14 @@ export function HomeScreen() {
   const onSelectProactive = useCallback(
     (question: string, persona: 'leona' | 'loan') => {
       void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      if (persona === 'loan' && !featureFlags.academyLiteEnabled) {
+        Alert.alert('Academy Lite', MVP_ACADEMY_LITE_OFF_MSG);
+        return;
+      }
+      if (persona === 'leona' && !featureFlags.leonaAssistantEnabled) {
+        Alert.alert('Leona Assistant Lite', MVP_LEONA_LITE_OFF_MSG);
+        return;
+      }
       if (!user) {
         setPendingRedirect(persona === 'loan' ? 'LeTan' : 'LeonaCall');
         setShowPaywall(true);
@@ -283,7 +317,13 @@ export function HomeScreen() {
       }
       navigation.navigate('LeonaCall', { prefillRequest: question, autoSubmit: true });
     },
-    [navigation, setPendingRedirect, user]
+    [
+      featureFlags.academyLiteEnabled,
+      featureFlags.leonaAssistantEnabled,
+      navigation,
+      setPendingRedirect,
+      user,
+    ]
   );
 
   const openSosPanel = useCallback(() => {
@@ -384,11 +424,11 @@ export function HomeScreen() {
           ) : (
             <Ionicons name="wallet-outline" size={14} color={GOLD_ACCENT} />
           )}
-          <Text style={styles.creditPillText}>{wallet.credits} VIG Token</Text>
+          <Text style={styles.creditPillText}>{formatVioCredits(wallet.credits)}</Text>
         </View>
         {isTourist && !walletBalanceLoading ? (
           <Text style={styles.creditPillSub} numberOfLines={2}>
-            Your Safe Travel Money
+            In-app travel credits (not bank cash)
           </Text>
         ) : null}
       </View>
@@ -417,7 +457,7 @@ export function HomeScreen() {
 
         {isTourist ? <DashboardB2CScreen contentWidth={layout.inner} /> : null}
 
-        {isTourist ? (
+        {isTourist && featureFlags.leonaAssistantEnabled ? (
           <View style={[styles.survivalStrip, { width: layout.inner }]} className={applyWebStyles('kn-glass')}>
             <Text style={styles.survivalTitle}>AI translation & survival</Text>
             <Text style={styles.survivalSub}>Tap for instant help in Vietnam — highlighted for travel mode.</Text>
@@ -465,16 +505,18 @@ export function HomeScreen() {
             <Text style={styles.actionWidgetSub}>Local {localClock}</Text>
             <Text style={styles.actionWidgetSub}>VN {vnClock}</Text>
           </View>
-          <Pressable
-            onPress={() => navigation.navigate('LoyaltyRewards')}
-            style={({ pressed }) => [styles.actionWidget, pressed && { opacity: 0.9 }]}
-            accessibilityRole="button"
-            accessibilityLabel="VIG Rate"
-          >
-            <Ionicons name="trending-up" size={22} color={GOLD_ACCENT} />
-            <Text style={styles.actionWidgetTitle}>VIG Rate</Text>
-            <Text style={styles.actionWidgetSub}>Live index</Text>
-          </Pressable>
+          {featureFlags.vigTokenEconomyEnabled ? (
+            <Pressable
+              onPress={() => navigation.navigate('LoyaltyRewards')}
+              style={({ pressed }) => [styles.actionWidget, pressed && { opacity: 0.9 }]}
+              accessibilityRole="button"
+              accessibilityLabel={`${getVioPointsLabel()} index`}
+            >
+              <Ionicons name="trending-up" size={22} color={GOLD_ACCENT} />
+              <Text style={styles.actionWidgetTitle}>{getVioPointsLabel()} index</Text>
+              <Text style={styles.actionWidgetSub}>Live index</Text>
+            </Pressable>
+          ) : null}
         </View>
 
         <View style={[styles.briefingBlock, { width: layout.inner }]}>
@@ -501,7 +543,9 @@ export function HomeScreen() {
           </ScrollView>
         </View>
 
-        <ProactiveSuggestions onSelect={onSelectProactive} />
+        {featureFlags.academyLiteEnabled || featureFlags.leonaAssistantEnabled ? (
+          <ProactiveSuggestions onSelect={onSelectProactive} />
+        ) : null}
 
         <View style={[styles.featureCard, { width: layout.inner }]} className={applyWebStyles('kn-glass')}>
           <View style={styles.featureRow}>
@@ -543,20 +587,24 @@ export function HomeScreen() {
               <Ionicons name="shield-checkmark-outline" size={18} color={GOLD_ACCENT} />
               <Text style={styles.utilityChipText}>Vault</Text>
             </Pressable>
-            <Pressable
-              onPress={() => navigation.navigate('TravelCompanion')}
-              style={({ pressed }) => [styles.utilityChip, pressed && { opacity: 0.88 }]}
-            >
-              <Ionicons name="airplane-outline" size={18} color={GOLD_ACCENT} />
-              <Text style={styles.utilityChipText}>Đồng hành</Text>
-            </Pressable>
-            <Pressable
-              onPress={() => openProtected('AiEye')}
-              style={({ pressed }) => [styles.utilityChip, pressed && { opacity: 0.88 }]}
-            >
-              <Ionicons name="scan-outline" size={18} color={GOLD_ACCENT} />
-              <Text style={styles.utilityChipText}>Mắt Thần</Text>
-            </Pressable>
+            {featureFlags.travelEnabled ? (
+              <Pressable
+                onPress={() => navigation.navigate('TravelCompanion')}
+                style={({ pressed }) => [styles.utilityChip, pressed && { opacity: 0.88 }]}
+              >
+                <Ionicons name="airplane-outline" size={18} color={GOLD_ACCENT} />
+                <Text style={styles.utilityChipText}>Đồng hành</Text>
+              </Pressable>
+            ) : null}
+            {featureFlags.b2bAiReceptionistDemoEnabled ? (
+              <Pressable
+                onPress={() => openProtected('AiEye')}
+                style={({ pressed }) => [styles.utilityChip, pressed && { opacity: 0.88 }]}
+              >
+                <Ionicons name="scan-outline" size={18} color={GOLD_ACCENT} />
+                <Text style={styles.utilityChipText}>Mắt Thần</Text>
+              </Pressable>
+            ) : null}
             <Pressable
               onPress={() => openProtected('Wallet')}
               style={({ pressed }) => [styles.utilityChip, pressed && { opacity: 0.88 }]}
@@ -564,13 +612,15 @@ export function HomeScreen() {
               <Ionicons name="wallet-outline" size={18} color={GOLD_ACCENT} />
               <Text style={styles.utilityChipText}>Ví</Text>
             </Pressable>
-            <Pressable
-              onPress={() => openProtected('LeonaCall')}
-              style={({ pressed }) => [styles.utilityChip, pressed && { opacity: 0.88 }]}
-            >
-              <Ionicons name="call-outline" size={18} color={GOLD_ACCENT} />
-              <Text style={styles.utilityChipText}>{outboundPersonaName}</Text>
-            </Pressable>
+            {featureFlags.leonaAssistantEnabled ? (
+              <Pressable
+                onPress={() => openProtected('LeonaCall')}
+                style={({ pressed }) => [styles.utilityChip, pressed && { opacity: 0.88 }]}
+              >
+                <Ionicons name="call-outline" size={18} color={GOLD_ACCENT} />
+                <Text style={styles.utilityChipText}>{outboundPersonaName}</Text>
+              </Pressable>
+            ) : null}
           </View>
         </View>
       </ScrollView>

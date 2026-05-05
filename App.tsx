@@ -117,8 +117,179 @@ import { DemoTourOverlay } from './src/components/onboarding/DemoTourOverlay';
 import { V7NavigationSurfaceProvider, useNavigationThemeForHub } from './src/context/V7NavigationSurfaceContext';
 import { b2bTheme } from './src/theme/appModeThemes';
 import { hasB2BWorkspaceAccess } from './src/utils/b2bAccess';
+import { getFeatureFlags, type FeatureFlags } from './src/core/feature-flags/featureFlags';
+import {
+  mvpGateByFlag,
+  MVP_ACADEMY_LITE_OFF_MSG,
+  MVP_B2B_AI_RECEPTIONIST_PRODUCTION_OFF_MSG,
+  MVP_B2B_AUTO_BILL_PRINT_OFF_MSG,
+  MVP_B2B_AUTO_BOOKING_OFF_MSG,
+  MVP_B2B_AUTO_INVENTORY_OFF_MSG,
+  MVP_B2B_AUTO_PAYMENT_OFF_MSG,
+  MVP_B2B_AI_RECEPTIONIST_DEMO_OFF_MSG,
+  MVP_LEONA_LITE_OFF_MSG,
+  MVP_LIVE_PAYMENT_OFF_MSG,
+  MVP_OMNI_DEMO_OFF_MSG,
+  MVP_TOKEN_ECONOMY_OFF_MSG,
+  MVP_TRAVEL_LITE_OFF_MSG,
+  MvpSurfaceDisabledScreen,
+} from './src/navigation/mvpSurfaceGate';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
+
+const TravelCompanionScreenGated = mvpGateByFlag(
+  'travelLiteEnabled',
+  'Travel Lite',
+  MVP_TRAVEL_LITE_OFF_MSG,
+  TravelCompanionScreen
+);
+const TravelHubStackScreenGated = mvpGateByFlag(
+  'travelLiteEnabled',
+  'Travel Lite',
+  MVP_TRAVEL_LITE_OFF_MSG,
+  TravelHubScreen
+);
+const VietnamHubScreenGated = mvpGateByFlag(
+  'travelLiteEnabled',
+  'Travel Lite',
+  MVP_TRAVEL_LITE_OFF_MSG,
+  VietnamHubScreen
+);
+const TourismCheckoutScreenGated = mvpGateByFlag(
+  'travelLiteEnabled',
+  'Travel Lite',
+  MVP_TRAVEL_LITE_OFF_MSG,
+  mvpGateByFlag('liveStripePaymentEnabled', 'Live payments', MVP_LIVE_PAYMENT_OFF_MSG, TourismCheckoutScreen)
+);
+const TourismBookingConfirmedScreenGated = mvpGateByFlag(
+  'travelLiteEnabled',
+  'Travel Lite',
+  MVP_TRAVEL_LITE_OFF_MSG,
+  mvpGateByFlag(
+    'liveStripePaymentEnabled',
+    'Live payments',
+    MVP_LIVE_PAYMENT_OFF_MSG,
+    TourismBookingConfirmedScreen
+  )
+);
+const ViralWrapScreenGated = mvpGateByFlag(
+  'travelLiteEnabled',
+  'Travel Lite',
+  MVP_TRAVEL_LITE_OFF_MSG,
+  ViralWrapScreen
+);
+const TravelSosHubScreenGated = mvpGateByFlag(
+  'travelLiteEnabled',
+  'Travel Lite',
+  MVP_TRAVEL_LITE_OFF_MSG,
+  TravelSosHubScreen
+);
+const LocalFixerScreenGated = mvpGateByFlag(
+  'travelLiteEnabled',
+  'Travel Lite',
+  MVP_TRAVEL_LITE_OFF_MSG,
+  LocalFixerScreen
+);
+const LocalFixerCheckoutScreenGated = mvpGateByFlag(
+  'travelLiteEnabled',
+  'Travel Lite',
+  MVP_TRAVEL_LITE_OFF_MSG,
+  mvpGateByFlag('liveStripePaymentEnabled', 'Live payments', MVP_LIVE_PAYMENT_OFF_MSG, LocalFixerCheckoutScreen)
+);
+const FixerEarningsScreenGated = mvpGateByFlag(
+  'travelLiteEnabled',
+  'Travel Lite',
+  MVP_TRAVEL_LITE_OFF_MSG,
+  mvpGateByFlag('liveStripePaymentEnabled', 'Live payments', MVP_LIVE_PAYMENT_OFF_MSG, FixerEarningsScreen)
+);
+const FlightSearchScreenGated = mvpGateByFlag(
+  'travelLiteEnabled',
+  'Travel Lite',
+  MVP_TRAVEL_LITE_OFF_MSG,
+  mvpGateByFlag('liveStripePaymentEnabled', 'Live payments', MVP_LIVE_PAYMENT_OFF_MSG, FlightSearchScreen)
+);
+const TravelHospitalityScreenGated = mvpGateByFlag(
+  'travelLiteEnabled',
+  'Travel Lite',
+  MVP_TRAVEL_LITE_OFF_MSG,
+  mvpGateByFlag('liveStripePaymentEnabled', 'Live payments', MVP_LIVE_PAYMENT_OFF_MSG, TravelHospitalityScreen)
+);
+const FlightSearchAssistantScreenGated = mvpGateByFlag(
+  'travelLiteEnabled',
+  'Travel Lite',
+  MVP_TRAVEL_LITE_OFF_MSG,
+  mvpGateByFlag('liveStripePaymentEnabled', 'Live payments', MVP_LIVE_PAYMENT_OFF_MSG, FlightSearchAssistantScreen)
+);
+
+const AdultLearningHomeGated = mvpGateByFlag(
+  'academyLiteEnabled',
+  'Academy Lite',
+  MVP_ACADEMY_LITE_OFF_MSG,
+  AdultLearningHome
+);
+const KidsLearningHomeGated = mvpGateByFlag(
+  'academyLiteEnabled',
+  'Academy Lite',
+  MVP_ACADEMY_LITE_OFF_MSG,
+  KidsLearningHome
+);
+const VietKidsScreenGated = mvpGateByFlag(
+  'academyLiteEnabled',
+  'Academy Lite',
+  MVP_ACADEMY_LITE_OFF_MSG,
+  VietKidsScreen
+);
+const KidsLeaderboardScreenGated = mvpGateByFlag(
+  'academyLiteEnabled',
+  'Academy Lite',
+  MVP_ACADEMY_LITE_OFF_MSG,
+  KidsLeaderboardScreen
+);
+const LiveAiTeacherScreenGated = mvpGateByFlag(
+  'academyLiteEnabled',
+  'Academy Lite',
+  MVP_ACADEMY_LITE_OFF_MSG,
+  LiveAiTeacherScreen
+);
+
+const LeonaCallScreenGated = mvpGateByFlag(
+  'leonaAssistantEnabled',
+  'Leona Assistant Lite',
+  MVP_LEONA_LITE_OFF_MSG,
+  LeonaCallScreen
+);
+const LiveInterpreterScreenGated = mvpGateByFlag(
+  'leonaAssistantEnabled',
+  'Live Interpreter',
+  MVP_LEONA_LITE_OFF_MSG,
+  LiveInterpreterScreen
+);
+const RadarDiscoveryScreenGated = mvpGateByFlag(
+  'leonaAssistantEnabled',
+  'Radar & Discovery',
+  MVP_LEONA_LITE_OFF_MSG,
+  RadarDiscoveryScreen
+);
+const AiEyeScreenGated = mvpGateByFlag(
+  'b2bAiReceptionistDemoEnabled',
+  'B2B AI Receptionist (demo)',
+  MVP_B2B_AI_RECEPTIONIST_DEMO_OFF_MSG,
+  AiEyeScreen
+);
+
+const CashOutScreenGated = mvpGateByFlag(
+  'vigTokenEconomyEnabled',
+  'Cash out',
+  MVP_TOKEN_ECONOMY_OFF_MSG,
+  CashOutScreen
+);
+const VaultScreenGated = mvpGateByFlag(
+  'vigTokenEconomyEnabled',
+  'Vault',
+  MVP_TOKEN_ECONOMY_OFF_MSG,
+  VaultScreen
+);
+
 const navigationRef = createNavigationContainerRef<RootStackParamList>();
 
 const rootLinking: LinkingOptions<RootStackParamList> = {
@@ -263,10 +434,10 @@ function AppNavigationShell({
               <Stack.Screen name="Tabs" component={MainTabNavigator} />
               <Stack.Screen name="PersonalHub" component={CaNhanScreen} />
               <Stack.Screen name="LifeOSDashboard" component={LifeOSDashboard} />
-              <Stack.Screen name="TravelCompanion" component={TravelCompanionScreen} />
+              <Stack.Screen name="TravelCompanion" component={TravelCompanionScreenGated} />
               <Stack.Screen
                 name="TravelHub"
-                component={TravelHubScreen}
+                component={TravelHubStackScreenGated}
                 options={{
                   headerShown: false,
                   animation: 'slide_from_right',
@@ -284,7 +455,7 @@ function AppNavigationShell({
               />
               <Stack.Screen
                 name="VietnamHub"
-                component={VietnamHubScreen}
+                component={VietnamHubScreenGated}
                 options={{
                   headerShown: false,
                   animation: 'slide_from_right',
@@ -293,7 +464,7 @@ function AppNavigationShell({
               />
               <Stack.Screen
                 name="TourismCheckout"
-                component={TourismCheckoutScreen}
+                component={TourismCheckoutScreenGated}
                 options={{
                   headerShown: false,
                   animation: 'slide_from_right',
@@ -302,7 +473,7 @@ function AppNavigationShell({
               />
               <Stack.Screen
                 name="TourismBookingConfirmed"
-                component={TourismBookingConfirmedScreen}
+                component={TourismBookingConfirmedScreenGated}
                 options={{
                   headerShown: false,
                   animation: 'slide_from_right',
@@ -311,7 +482,7 @@ function AppNavigationShell({
               />
               <Stack.Screen
                 name="ViralWrap"
-                component={ViralWrapScreen}
+                component={ViralWrapScreenGated}
                 options={{
                   headerShown: false,
                   animation: 'slide_from_bottom',
@@ -320,7 +491,7 @@ function AppNavigationShell({
               />
               <Stack.Screen
                 name="TravelSosHub"
-                component={TravelSosHubScreen}
+                component={TravelSosHubScreenGated}
                 options={{
                   headerShown: false,
                   animation: 'slide_from_right',
@@ -329,7 +500,7 @@ function AppNavigationShell({
               />
               <Stack.Screen
                 name="LocalFixer"
-                component={LocalFixerScreen}
+                component={LocalFixerScreenGated}
                 options={{
                   headerShown: false,
                   animation: 'slide_from_right',
@@ -338,7 +509,7 @@ function AppNavigationShell({
               />
               <Stack.Screen
                 name="LocalFixerCheckout"
-                component={LocalFixerCheckoutScreen}
+                component={LocalFixerCheckoutScreenGated}
                 options={{
                   headerShown: false,
                   animation: 'slide_from_right',
@@ -347,7 +518,7 @@ function AppNavigationShell({
               />
               <Stack.Screen
                 name="FixerEarnings"
-                component={FixerEarningsScreen}
+                component={FixerEarningsScreenGated}
                 options={{
                   headerShown: false,
                   animation: 'slide_from_right',
@@ -356,24 +527,24 @@ function AppNavigationShell({
               />
               <Stack.Screen
                 name="TravelFlightSearch"
-                component={FlightSearchScreen}
+                component={FlightSearchScreenGated}
                 options={{
                   headerShown: false,
                   animation: 'slide_from_right',
                   fullScreenGestureEnabled: true,
                 }}
               />
-              <Stack.Screen name="TravelHospitality" component={TravelHospitalityScreen} />
-              <Stack.Screen name="FlightSearchAssistant" component={FlightSearchAssistantScreen} />
+              <Stack.Screen name="TravelHospitality" component={TravelHospitalityScreenGated} />
+              <Stack.Screen name="FlightSearchAssistant" component={FlightSearchAssistantScreenGated} />
               <Stack.Screen name="KetNoiYeuThuong" component={KetNoiYeuThuongScreen} />
               <Stack.Screen name="EmergencySOS" component={EmergencySOSScreen} />
-              <Stack.Screen name="LeonaCall" component={LeonaCallScreen} />
+              <Stack.Screen name="LeonaCall" component={LeonaCallScreenGated} />
               <Stack.Screen
                 name="P2PVoiceCall"
                 component={CallScreen}
                 options={{ headerShown: false, animation: 'fade' }}
               />
-              <Stack.Screen name="LiveInterpreter" component={LiveInterpreterScreen} />
+              <Stack.Screen name="LiveInterpreter" component={LiveInterpreterScreenGated} />
             </Stack.Group>
 
             <Stack.Group>
@@ -381,23 +552,23 @@ function AppNavigationShell({
               <Stack.Screen name="MerchantDetail" component={MerchantDetailScreen} />
               <Stack.Screen name="MerchantStorefront" component={MerchantStorefrontScreen} />
               <Stack.Screen name="ReferralReward" component={ReferralRewardScreen} />
-              <Stack.Screen name="CashOut" component={CashOutScreen} />
+              <Stack.Screen name="CashOut" component={CashOutScreenGated} />
               <Stack.Screen name="DailyReward" component={DailyRewardScreen} />
               <Stack.Screen
                 name="LoyaltyRewards"
                 component={LoyaltyRewardsScreen}
                 options={{ headerShown: false, animation: 'slide_from_bottom', presentation: 'transparentModal' }}
               />
-              <Stack.Screen name="Vault" component={VaultScreen} />
-              <Stack.Screen name="AiEye" component={AiEyeScreen} />
+              <Stack.Screen name="Vault" component={VaultScreenGated} />
+              <Stack.Screen name="AiEye" component={AiEyeScreenGated} />
             </Stack.Group>
 
             <Stack.Group>
-              <Stack.Screen name="AdultLearningHome" component={AdultLearningHome} />
-              <Stack.Screen name="KidsLearningHome" component={KidsLearningHome} />
-              <Stack.Screen name="VietKids" component={VietKidsScreen} />
-              <Stack.Screen name="KidsLeaderboard" component={KidsLeaderboardScreen} />
-              <Stack.Screen name="LiveAiTeacher" component={LiveAiTeacherScreen} />
+              <Stack.Screen name="AdultLearningHome" component={AdultLearningHomeGated} />
+              <Stack.Screen name="KidsLearningHome" component={KidsLearningHomeGated} />
+              <Stack.Screen name="VietKids" component={VietKidsScreenGated} />
+              <Stack.Screen name="KidsLeaderboard" component={KidsLeaderboardScreenGated} />
+              <Stack.Screen name="LiveAiTeacher" component={LiveAiTeacherScreenGated} />
             </Stack.Group>
 
             <Stack.Group>
@@ -416,10 +587,10 @@ function AppNavigationShell({
               <Stack.Screen name="PartnerOnboarding" component={PartnerOnboardingScreen} />
             </Stack.Group>
 
-            <Stack.Screen name="RadarDiscovery" component={RadarDiscoveryScreen} />
-            {isAdminDebugSurfaceEnabled() ? (
+            <Stack.Screen name="RadarDiscovery" component={RadarDiscoveryScreenGated} />
+            {isAdminDebugSurfaceEnabled() && getFeatureFlags().adminDemoMetricsEnabled ? (
               <>
-                <Stack.Screen name="AdminDashboard" component={AdminDashboardScreen} />
+                <Stack.Screen name="AdminDashboard" component={GatedAdminDashboardScreen} />
                 <Stack.Screen name="AdminProfitDashboard" component={AdminProfitDashboardScreen} />
                 <Stack.Screen name="SalesLeadCRM" component={SalesLeadCRM} />
                 <Stack.Screen name="AdContentFactory" component={AdContentFactoryScreen} />
@@ -580,6 +751,17 @@ function GatedMerchantDashboardScreen() {
 }
 
 function GatedInboundQueueScreen() {
+  const flags = getFeatureFlags();
+  if (!flags.b2bAiReceptionistDemoEnabled && !flags.b2bAiReceptionistPilotEnabled) {
+    return (
+      <MvpSurfaceDisabledScreen
+        title="B2B AI Receptionist"
+        message="Inbound queue demo and pilot are not available. Enable the B2B AI Receptionist demo or pilot flag. Production phone automation stays off unless production is explicitly enabled."
+      />
+    );
+  }
+  const automationGate = getB2bReceptionistAutomationGate(flags);
+  if (automationGate) return automationGate;
   return (
     <B2BWorkspaceGate>
       <InboundQueueScreen />
@@ -588,6 +770,17 @@ function GatedInboundQueueScreen() {
 }
 
 function GatedSmartCalendarScreen() {
+  const flags = getFeatureFlags();
+  if (!flags.b2bAiReceptionistDemoEnabled && !flags.b2bAiReceptionistPilotEnabled) {
+    return (
+      <MvpSurfaceDisabledScreen
+        title="B2B AI Receptionist"
+        message="Smart Calendar demo and pilot are not available. Enable the B2B AI Receptionist demo or pilot flag. Auto booking, inventory, bill print, and auto payment still require their own sub-flags."
+      />
+    );
+  }
+  const automationGate = getB2bReceptionistAutomationGate(flags);
+  if (automationGate) return automationGate;
   return (
     <B2BWorkspaceGate>
       <SmartCalendarScreen />
@@ -652,11 +845,52 @@ function GatedSponsoredAdsScreen() {
 }
 
 function GatedKOLPartnerDashboardScreen() {
+  const flags = getFeatureFlags();
+  if (!flags.kolDemoEnabled) {
+    return (
+      <MvpSurfaceDisabledScreen
+        title="KOL Partner"
+        message="KOL partner analytics are not available in this MVP build."
+      />
+    );
+  }
   return (
     <B2BWorkspaceGate>
       <KOLPartnerDashboard />
     </B2BWorkspaceGate>
   );
+}
+
+function GatedAdminDashboardScreen() {
+  const flags = getFeatureFlags();
+  if (!flags.omniDemoEnabled) {
+    return <MvpSurfaceDisabledScreen title="Omni demo" message={MVP_OMNI_DEMO_OFF_MSG} />;
+  }
+  return <AdminDashboardScreen />;
+}
+
+function getB2bReceptionistAutomationGate(flags: FeatureFlags): ReactElement | null {
+  if (!flags.b2bAiReceptionistProductionEnabled) {
+    return (
+      <MvpSurfaceDisabledScreen
+        title="B2B AI Receptionist production"
+        message={MVP_B2B_AI_RECEPTIONIST_PRODUCTION_OFF_MSG}
+      />
+    );
+  }
+  if (!flags.b2bAutoBookingEnabled) {
+    return <MvpSurfaceDisabledScreen title="B2B auto-booking" message={MVP_B2B_AUTO_BOOKING_OFF_MSG} />;
+  }
+  if (!flags.b2bAutoInventoryEnabled) {
+    return <MvpSurfaceDisabledScreen title="B2B auto-inventory" message={MVP_B2B_AUTO_INVENTORY_OFF_MSG} />;
+  }
+  if (!flags.b2bAutoBillPrintEnabled) {
+    return <MvpSurfaceDisabledScreen title="B2B auto bill print" message={MVP_B2B_AUTO_BILL_PRINT_OFF_MSG} />;
+  }
+  if (!flags.b2bAutoPaymentEnabled) {
+    return <MvpSurfaceDisabledScreen title="B2B auto payment" message={MVP_B2B_AUTO_PAYMENT_OFF_MSG} />;
+  }
+  return null;
 }
 
 function App() {

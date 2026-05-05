@@ -25,8 +25,10 @@ import { FontFamily } from '../theme/typography';
 import { hasB2BWorkspaceAccess } from '../utils/b2bAccess';
 import { isDemoSandboxActive } from '../services/ux/DemoSandbox';
 import { useUserStore, type ActiveRole } from '../store/userStore';
+import { getFeatureFlags } from '../core/feature-flags/featureFlags';
 import type { RootStackParamList, RootTabParamList } from './routes';
 import { MAIN_TAB } from './routes';
+import { MvpSurfaceDisabledScreen } from './mvpSurfaceGate';
 import { V7_B2C_TAB_LABELS } from './v7FourUniversesBlueprint';
 import { roleTabChrome } from './tabRoleTheme';
 
@@ -52,16 +54,54 @@ const Tab = createBottomTabNavigator<RootTabParamList>();
 
 type StackNav = NativeStackNavigationProp<RootStackParamList>;
 
-function GatedOrdersTab(): ReactElement {
-  const { user } = useAuth();
-  if (!hasB2BWorkspaceAccess(user)) return <B2BPaywallScreen />;
-  return <OrdersScreen />;
-}
-
 function GatedWalletB2BTab(): ReactElement {
   const { user } = useAuth();
   if (!hasB2BWorkspaceAccess(user)) return <B2BPaywallScreen />;
   return <WalletB2BScreen />;
+}
+
+function B2BMvpDisabledSurface(): ReactElement {
+  return (
+    <MvpSurfaceDisabledScreen
+      title="Merchant workspace"
+      message="Merchant workspace is not available in this MVP build."
+    />
+  );
+}
+
+function BrokerRoleMvpDisabledSurface(): ReactElement {
+  return (
+    <MvpSurfaceDisabledScreen
+      title="Broker QR"
+      message="Broker tools are not available in this MVP build."
+    />
+  );
+}
+
+function B2BMvpMerchantDashboard(): ReactElement {
+  const flags = useMemo(() => getFeatureFlags(), []);
+  if (!flags.merchantDashboardEnabled) return <B2BMvpDisabledSurface />;
+  return <MerchantDashboardScreen />;
+}
+
+function B2BMvpCatalog(): ReactElement {
+  const flags = useMemo(() => getFeatureFlags(), []);
+  if (!flags.merchantDashboardEnabled) return <B2BMvpDisabledSurface />;
+  return <MerchantCatalogTabScreen />;
+}
+
+function B2BMvpOrders(): ReactElement {
+  const { user } = useAuth();
+  const flags = useMemo(() => getFeatureFlags(), []);
+  if (!flags.merchantDashboardEnabled) return <B2BMvpDisabledSurface />;
+  if (!hasB2BWorkspaceAccess(user)) return <B2BPaywallScreen />;
+  return <OrdersScreen />;
+}
+
+function B2BMvpEarnings(): ReactElement {
+  const flags = useMemo(() => getFeatureFlags(), []);
+  if (!flags.merchantDashboardEnabled) return <B2BMvpDisabledSurface />;
+  return <GatedWalletB2BTab />;
 }
 
 function tabIconName(
@@ -160,6 +200,8 @@ export function MainTabNavigator(): ReactElement {
     [compactTabs]
   );
 
+  const flags = useMemo(() => getFeatureFlags(), []);
+
   const tabBarLift = tabSizing.tabBarBaseHeight + (isDesktopWeb ? Math.max(insets.bottom, 16) : Math.max(insets.bottom, 10)) + 10;
 
   const openPaywall = (target: RedirectTarget) => {
@@ -185,7 +227,11 @@ export function MainTabNavigator(): ReactElement {
       return;
     }
     if (pendingRedirect === 'LeTan') {
-      goB2cAi();
+      if (!flags.academyLiteEnabled) {
+        goB2cHome();
+      } else {
+        goB2cAi();
+      }
       setPendingRedirect(null);
       return;
     }
@@ -234,7 +280,7 @@ export function MainTabNavigator(): ReactElement {
       navigation.navigate(pendingRedirect);
       setPendingRedirect(null);
     }
-  }, [navigation, pendingRedirect, setPendingRedirect, switchRole, user]);
+  }, [flags.academyLiteEnabled, navigation, pendingRedirect, setPendingRedirect, switchRole, user]);
 
   return (
     <>
@@ -280,78 +326,82 @@ export function MainTabNavigator(): ReactElement {
       >
         {currentActiveRole === 'B2C' ? (
           <>
-            <Tab.Screen
-              name={MAIN_TAB.B2C.home}
-              component={HomeScreen}
-              options={{ title: V7_B2C_TAB_LABELS[MAIN_TAB.B2C.home] }}
-            />
-            <Tab.Screen
-              name={MAIN_TAB.B2C.local}
-              component={LocalScreen}
-              options={{ title: V7_B2C_TAB_LABELS[MAIN_TAB.B2C.local] }}
-            />
-            <Tab.Screen
-              name={MAIN_TAB.B2C.travel}
-              component={TravelHubScreen}
-              options={{ title: V7_B2C_TAB_LABELS[MAIN_TAB.B2C.travel] }}
-            />
-            <Tab.Screen
-              name={MAIN_TAB.B2C.ai}
-              component={LeTanScreen}
-              options={{ title: V7_B2C_TAB_LABELS[MAIN_TAB.B2C.ai] }}
-              listeners={{
-                tabPress: (e) => {
-                  if (!user && !isDemoSandboxActive()) {
-                    e.preventDefault();
-                    openPaywall('LeTan');
-                  }
-                },
-              }}
-            />
+            {flags.hubEnabled ? (
+              <Tab.Screen
+                name={MAIN_TAB.B2C.home}
+                component={HomeScreen}
+                options={{ title: V7_B2C_TAB_LABELS[MAIN_TAB.B2C.home] }}
+              />
+            ) : null}
+            {flags.localEnabled ? (
+              <Tab.Screen
+                name={MAIN_TAB.B2C.local}
+                component={LocalScreen}
+                options={{ title: V7_B2C_TAB_LABELS[MAIN_TAB.B2C.local] }}
+              />
+            ) : null}
+            {flags.travelLiteEnabled ? (
+              <Tab.Screen
+                name={MAIN_TAB.B2C.travel}
+                component={TravelHubScreen}
+                options={{ title: V7_B2C_TAB_LABELS[MAIN_TAB.B2C.travel] }}
+              />
+            ) : null}
+            {flags.academyLiteEnabled ? (
+              <Tab.Screen
+                name={MAIN_TAB.B2C.ai}
+                component={LeTanScreen}
+                options={{ title: V7_B2C_TAB_LABELS[MAIN_TAB.B2C.ai] }}
+                listeners={{
+                  tabPress: (e) => {
+                    if (!user && !isDemoSandboxActive()) {
+                      e.preventDefault();
+                      openPaywall('LeTan');
+                    }
+                  },
+                }}
+              />
+            ) : null}
           </>
         ) : null}
 
         {currentActiveRole === 'B2B' ? (
           <>
-            <Tab.Screen
-              name={MAIN_TAB.B2B.merchant}
-              component={MerchantDashboardScreen}
-              options={{ title: 'Dashboard' }}
-            />
-            <Tab.Screen
-              name={MAIN_TAB.B2B.catalog}
-              component={MerchantCatalogTabScreen}
-              options={{ title: 'Menu' }}
-            />
-            <Tab.Screen name={MAIN_TAB.B2B.orders} component={GatedOrdersTab} options={{ title: 'Orders' }} />
-            <Tab.Screen
-              name={MAIN_TAB.B2B.earnings}
-              component={GatedWalletB2BTab}
-              options={{ title: 'Wallet' }}
-            />
+            <Tab.Screen name={MAIN_TAB.B2B.merchant} component={B2BMvpMerchantDashboard} options={{ title: 'Dashboard' }} />
+            <Tab.Screen name={MAIN_TAB.B2B.catalog} component={B2BMvpCatalog} options={{ title: 'Menu' }} />
+            <Tab.Screen name={MAIN_TAB.B2B.orders} component={B2BMvpOrders} options={{ title: 'Orders' }} />
+            <Tab.Screen name={MAIN_TAB.B2B.earnings} component={B2BMvpEarnings} options={{ title: 'Wallet' }} />
           </>
         ) : null}
 
         {currentActiveRole === 'BROKER' ? (
-          <>
-            <Tab.Screen name={MAIN_TAB.BROKER.radar} component={BrokerDashboardScreen} options={{ title: 'Radar' }} />
+          flags.brokerQrEnabled ? (
+            <>
+              <Tab.Screen name={MAIN_TAB.BROKER.radar} component={BrokerDashboardScreen} options={{ title: 'Radar' }} />
+              <Tab.Screen
+                name={MAIN_TAB.BROKER.merchants}
+                component={BrokerMerchantsTabScreen}
+                options={{ title: 'Merchants' }}
+              />
+              <Tab.Screen
+                name={MAIN_TAB.BROKER.qr}
+                component={BrokerQrTabScreen}
+                options={{ title: 'QR' }}
+              />
+              <Tab.Screen
+                name={MAIN_TAB.BROKER.commissions}
+                component={BrokerCommissionsTabScreen}
+                options={{ title: 'Commissions' }}
+              />
+              <Tab.Screen name={MAIN_TAB.BROKER.wallet} component={WalletScreen} options={{ title: 'Wallet' }} />
+            </>
+          ) : (
             <Tab.Screen
-              name={MAIN_TAB.BROKER.merchants}
-              component={BrokerMerchantsTabScreen}
-              options={{ title: 'Merchants' }}
+              name={MAIN_TAB.BROKER.radar}
+              component={BrokerRoleMvpDisabledSurface}
+              options={{ title: 'Broker' }}
             />
-            <Tab.Screen
-              name={MAIN_TAB.BROKER.qr}
-              component={BrokerQrTabScreen}
-              options={{ title: 'QR' }}
-            />
-            <Tab.Screen
-              name={MAIN_TAB.BROKER.commissions}
-              component={BrokerCommissionsTabScreen}
-              options={{ title: 'Commissions' }}
-            />
-            <Tab.Screen name={MAIN_TAB.BROKER.wallet} component={WalletScreen} options={{ title: 'Wallet' }} />
-          </>
+          )
         ) : null}
 
         {currentActiveRole === 'ADMIN' ? (
@@ -383,7 +433,7 @@ export function MainTabNavigator(): ReactElement {
       <AuthPaywallModal
         visible={!!paywallTarget}
         title="Tính năng hỗ trợ & gọi"
-        description="Học tập, Lễ tân Minh Khang và gọi hỗ trợ Leona cần đăng nhập. Vui lòng xác thực số điện thoại để tiếp tục."
+        description="Học tập, Lễ tân Minh Khang và gọi hỗ trợ Leona cần đăng nhập. Vui lòng xác thực số điện thoại để tiếp tục. Leona và các tính năng AI là hướng dẫn tự động, không thay thế tư vấn pháp lý, y tế hay nhân viên thật."
         onClose={() => setPaywallTarget(null)}
         onContinue={() => {
           const redirect = paywallTarget ?? undefined;

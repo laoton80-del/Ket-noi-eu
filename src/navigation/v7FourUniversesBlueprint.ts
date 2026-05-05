@@ -15,6 +15,6 @@ export const V7_B2C_ACADEMY_ROUTE = MAIN_TAB.B2C.ai;
 export const V7_B2C_TAB_LABELS = {
   [MAIN_TAB.B2C.home]: 'Hub',
   [MAIN_TAB.B2C.local]: 'Local',
-  [MAIN_TAB.B2C.travel]: 'Travel',
-  [MAIN_TAB.B2C.ai]: 'Academy',
+  [MAIN_TAB.B2C.travel]: 'Travel Lite',
+  [MAIN_TAB.B2C.ai]: 'Academy Lite',
 } as const;
