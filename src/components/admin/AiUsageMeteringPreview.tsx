@@ -2,6 +2,11 @@ import { useMemo, type ReactElement } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { getAiCostGuard } from '../../core/aiCost';
+import {
+  DEFAULT_AI_AUTO_PAUSE_POLICY,
+  evaluateAiAutoPauseDecision,
+  type AiAutoPauseAction,
+} from '../../core/aiEnforcement';
 import { AI_USAGE_AUDIT_FIXTURES, evaluateAiUsageFixtureForAudit } from '../../core/aiUsage';
 import { theme } from '../../theme/theme';
 import { FontFamily } from '../../theme/typography';
@@ -27,6 +32,8 @@ type FixtureRow = Readonly<{
   autoPauseRecommended: boolean;
   mismatch: boolean;
   note: string;
+  enforcementAction: AiAutoPauseAction;
+  enforcementProductionEnforced: boolean;
 }>;
 
 export function AiUsageMeteringPreview(): ReactElement {
@@ -36,6 +43,7 @@ export function AiUsageMeteringPreview(): ReactElement {
     return AI_USAGE_AUDIT_FIXTURES.map((fixture) => {
       const guard = getAiCostGuard(fixture.featureId);
       const result = evaluateAiUsageFixtureForAudit(fixture);
+      const pauseDecision = evaluateAiAutoPauseDecision(result, DEFAULT_AI_AUTO_PAUSE_POLICY);
       const mismatch = result.verdict !== fixture.expectedVerdict;
       return {
         fixtureId: fixture.id,
@@ -54,6 +62,8 @@ export function AiUsageMeteringPreview(): ReactElement {
         autoPauseRecommended: result.autoPauseRecommended,
         mismatch,
         note: fixture.note,
+        enforcementAction: pauseDecision.action,
+        enforcementProductionEnforced: pauseDecision.productionEnforced,
       };
     });
   }, [t]);
@@ -64,6 +74,8 @@ export function AiUsageMeteringPreview(): ReactElement {
       <Text style={styles.subtitle}>{t('aiUsage.preview.subtitle')}</Text>
       <Text style={styles.disclaimer}>{t('aiUsage.preview.evidenceOnly')}</Text>
       <Text style={styles.disclaimer}>{t('aiUsage.preview.noProviderCalls')}</Text>
+      <Text style={styles.enforcementHeader}>{t('aiEnforcement.preview.title')}</Text>
+      <Text style={styles.disclaimer}>{t('aiEnforcement.preview.dryRun')}</Text>
 
       {rows.map((row) => (
         <View key={row.fixtureId} style={styles.fixtureBlock}>
@@ -92,6 +104,10 @@ export function AiUsageMeteringPreview(): ReactElement {
             <Text style={styles.pass}>{t('aiUsage.preview.pass')}</Text>
           )}
           <Text style={styles.note}>{row.note}</Text>
+          <Text style={styles.enforcementLine}>
+            {t(`aiEnforcement.action.${row.enforcementAction}`)} · {t('aiEnforcement.preview.productionEnforced')}:{' '}
+            {row.enforcementProductionEnforced ? 'true' : 'false'}
+          </Text>
         </View>
       ))}
     </View>
@@ -122,6 +138,18 @@ const styles = StyleSheet.create({
     fontFamily: FontFamily.regular,
     fontSize: 11,
     color: 'rgba(148, 163, 184, 0.95)',
+  },
+  enforcementHeader: {
+    fontFamily: FontFamily.semibold,
+    fontSize: 12,
+    color: '#e879f9',
+    marginTop: theme.spacing.xs,
+  },
+  enforcementLine: {
+    fontFamily: FontFamily.regular,
+    fontSize: 11,
+    color: 'rgba(226, 232, 240, 0.88)',
+    marginTop: 4,
   },
   fixtureBlock: {
     marginTop: theme.spacing.md,
