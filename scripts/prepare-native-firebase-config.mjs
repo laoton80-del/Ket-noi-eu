@@ -5,6 +5,8 @@ import { fileURLToPath } from 'node:url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const root = path.resolve(__dirname, '..');
+const googleServicesJsonPath = path.join(root, 'google-services.json');
+const googleServiceInfoPlistPath = path.join(root, 'GoogleService-Info.plist');
 
 function requiredEnv(name) {
   const value = process.env[name];
@@ -29,6 +31,12 @@ function writeRequiredFile(filename, bytes) {
 }
 
 function main() {
+  const alreadyPresent = existsSync(googleServicesJsonPath) && existsSync(googleServiceInfoPlistPath);
+  if (alreadyPresent) {
+    console.log('native Firebase config already present');
+    process.exit(0);
+  }
+
   const jsonB64 = requiredEnv('GOOGLE_SERVICES_JSON_B64');
   const plistB64 = requiredEnv('GOOGLE_SERVICE_INFO_PLIST_B64');
 
@@ -46,6 +54,11 @@ function main() {
   console.log('created google-services.json');
   writeRequiredFile('GoogleService-Info.plist', plistBytes);
   console.log('created GoogleService-Info.plist');
+
+  if (!existsSync(googleServicesJsonPath) || !existsSync(googleServiceInfoPlistPath)) {
+    console.error('Failed to materialize native Firebase config files at repo root.');
+    process.exit(1);
+  }
 }
 
 main();
