@@ -517,5 +517,26 @@
       "industryLabel": "Industry (registry)",
       "previewIndustryId": "Industry id: {{id}}"
     }
+  },
+  "smartTrio": {
+    "language": {
+      "vi": "Vietnamese",
+      "en": "English",
+      "cs": "Czech",
+      "de": "German",
+      "fr": "French",
+      "ja": "Japanese",
+      "ko": "Korean"
+    },
+    "market": {
+      "global": "Global",
+      "cz": "Czechia",
+      "de": "Germany",
+      "vn": "Vietnam",
+      "us": "United States",
+      "fr": "France",
+      "jp": "Japan",
+      "kr": "South Korea"
+    }
   }
 }
