@@ -1,39 +1,114 @@
-import type { FeatureFlagKey } from '../feature-flags/featureFlags';
+import type { FeatureFlagKey, FeatureFlags } from '../feature-flags/featureFlags';
+
+/** Logical universe for registry / analytics (not always 1:1 with a single screen). */
+export type MiniAppUniverse =
+  | 'hub'
+  | 'local'
+  | 'travel'
+  | 'academy'
+  | 'merchant'
+  | 'income'
+  | 'admin';
+
+/**
+ * Product lifecycle / trust label for a mini-app.
+ * Aligns with V2 blueprint (Active / Lite / Demo / Pilot / …).
+ */
+export type MiniAppStatus =
+  | 'active'
+  | 'lite'
+  | 'demo'
+  | 'pilot'
+  | 'beta'
+  | 'comingSoon'
+  | 'gated'
+  | 'frozen';
+
+/**
+ * Shell role used for resolver gates (lowercase, product vocabulary).
+ * Map from `ActiveRole` via `activeRoleToMiniAppRole` in `resolveMiniAppEntry.ts`.
+ */
+export type MiniAppRole = 'guest' | 'b2c' | 'merchant' | 'broker' | 'admin';
+
+export type MiniAppRiskLevel =
+  | 'low'
+  | 'medium'
+  | 'high'
+  | 'financial'
+  | 'ai'
+  | 'legal'
+  | 'medical';
+
+export type MiniAppReadiness = 'ready' | 'partial' | 'notReady';
+
+export type MiniAppMonetizationModel =
+  | 'free'
+  | 'credits'
+  | 'subscription'
+  | 'transaction_fee'
+  | 'saas'
+  | 'none';
 
 export type MiniAppId =
   | 'hub'
   | 'local'
   | 'booking'
-  | 'merchant'
-  | 'vio_points'
-  | 'academy'
-  | 'leona_assistant'
+  | 'merchantDashboard'
+  | 'b2bAiReceptionist'
+  | 'b2cAiCallAssistant'
   | 'travel'
-  | 'b2b_ai_receptionist'
-  | 'broker'
-  | 'legal_scan'
-  | 'payroll'
-  | 'vio_economy';
+  | 'travelOutbound'
+  | 'travelInboundVietnam'
+  | 'travelReturnToVietnam'
+  | 'academy'
+  | 'leonaAssistant'
+  | 'minhKhangTranslator'
+  | 'brokerQr'
+  | 'admin';
 
 /**
- * - `lite` / `pilot`: same gating as `beta` (flag must be on); use descriptions to spell “Lite” / “Pilot”.
- * - `coming_soon`: visible in catalog as roadmap slot even when flag is false.
+ * Navigation target string.
+ * - `Tabs/<TabName>` — name inside `RootTabParamList` after switching to `Tabs` stack.
+ * - Otherwise — a `keyof RootStackParamList` stack route (single screen).
  */
-export type MiniAppStatus = 'active' | 'beta' | 'lite' | 'pilot' | 'coming_soon' | 'frozen';
+export type MiniAppRouteRef = string;
 
-/** Who may access the mini-app shell when enabled (policy layer may refine further). */
-export type MiniAppRequiredRole = 'guest' | 'user' | 'merchant' | 'broker' | 'admin';
+export interface MiniAppDefinition {
+  readonly id: MiniAppId;
+  readonly universe: MiniAppUniverse;
+  /** i18n key for display name (add under `miniapps.*` when wiring UI). */
+  readonly nameKey: string;
+  readonly descriptionKey: string;
+  readonly route: MiniAppRouteRef;
+  readonly status: MiniAppStatus;
+  /** When set, `enabledFeatureFlags[key]` must be true to pass the flag gate. */
+  readonly featureFlag?: FeatureFlagKey;
+  /** User must have at least one of these roles (empty = no role gate). */
+  readonly requiredRoles: readonly MiniAppRole[];
+  readonly permissions: readonly string[];
+  readonly dataDependencies: readonly string[];
+  readonly monetizationModel: MiniAppMonetizationModel;
+  readonly riskLevel: MiniAppRiskLevel;
+  readonly readiness: MiniAppReadiness;
+  readonly primaryCtaKey: string;
+}
 
-export type MiniAppDefinition = Readonly<{
-  id: MiniAppId;
-  name: string;
-  status: MiniAppStatus;
-  /** Stable route key for future wiring (not yet bound to React Navigation). */
-  route: string;
-  requiredRole: MiniAppRequiredRole;
-  /** Key into {@link getFeatureFlags} — must match a flag that gates this mini-app. */
-  featureFlag: FeatureFlagKey;
-  description: string;
-  /** Sort order for registry listings (ascending). */
-  order: number;
+export type ResolveMiniAppEntryInput = Readonly<{
+  miniAppId: string;
+  userRole: MiniAppRole;
+  enabledFeatureFlags: FeatureFlags;
+  /** Reserved for destination/market gates (Travel); not enforced in foundation v1. */
+  currentMarket?: string;
 }>;
+
+export type ResolveMiniAppEntryResult =
+  | Readonly<{ type: 'navigate'; route: MiniAppRouteRef; miniAppId: MiniAppId }>
+  | Readonly<{ type: 'showDemoNotice'; route: MiniAppRouteRef; miniAppId: MiniAppId }>
+  | Readonly<{ type: 'showComingSoon'; miniAppId: MiniAppId }>
+  | Readonly<{
+      type: 'showGate';
+      miniAppId: MiniAppId;
+      reason: 'role' | 'featureFlag' | 'market' | 'readiness';
+    }>
+  | Readonly<{ type: 'showFrozen'; miniAppId: MiniAppId; reason: string }>
+  | Readonly<{ type: 'showError'; messageKey: string }>;

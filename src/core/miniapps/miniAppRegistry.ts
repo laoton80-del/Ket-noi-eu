@@ -1,205 +1,274 @@
-import { getFeatureFlags, type FeatureFlags } from '../feature-flags/featureFlags';
-import type { MiniAppDefinition, MiniAppId, MiniAppStatus } from './miniAppTypes';
+import type { MiniAppDefinition, MiniAppId } from './miniAppTypes';
 
-function isGatedLaunchStatus(status: MiniAppStatus): boolean {
-  return status === 'active' || status === 'beta' || status === 'lite' || status === 'pilot';
-}
-
-const REGISTRY: readonly MiniAppDefinition[] = [
-  {
+/**
+ * Single source of truth for mini-app metadata (VIONA Companion OS / blueprint V2).
+ * Route strings: `Tabs/<TabRoute>` for bottom tabs; otherwise stack keys from `RootStackParamList`.
+ */
+export const MINI_APP_REGISTRY: Readonly<Record<MiniAppId, MiniAppDefinition>> = {
+  hub: {
     id: 'hub',
-    name: 'Hub',
+    universe: 'hub',
+    nameKey: 'miniapps.hub.name',
+    descriptionKey: 'miniapps.hub.description',
+    route: 'Tabs/TabHome',
     status: 'active',
-    route: 'hub',
-    requiredRole: 'user',
     featureFlag: 'hubEnabled',
-    description: 'Life OS / command center — Super App Lite core.',
-    order: 10,
+    requiredRoles: ['b2c', 'merchant', 'broker', 'admin'],
+    permissions: [],
+    dataDependencies: ['auth.session'],
+    monetizationModel: 'free',
+    riskLevel: 'low',
+    readiness: 'ready',
+    primaryCtaKey: 'miniapps.hub.cta',
   },
-  {
+  local: {
     id: 'local',
-    name: 'Local',
-    status: 'active',
-    route: 'local',
-    requiredRole: 'user',
-    featureFlag: 'localEnabled',
-    description: 'Local discovery & merchant booking — primary business engine.',
-    order: 20,
-  },
-  {
-    id: 'booking',
-    name: 'Booking',
-    status: 'active',
-    route: 'booking',
-    requiredRole: 'user',
-    featureFlag: 'bookingEnabled',
-    description: 'Bookings and completion flows — Super App Lite core.',
-    order: 30,
-  },
-  {
-    id: 'merchant',
-    name: 'Merchant Dashboard',
-    status: 'beta',
-    route: 'merchant',
-    requiredRole: 'merchant',
-    featureFlag: 'merchantDashboardEnabled',
-    description: 'Merchant workspace (basic) — beta; tenant-isolated.',
-    order: 40,
-  },
-  {
-    id: 'vio_points',
-    name: 'VIO Points',
+    universe: 'local',
+    nameKey: 'miniapps.local.name',
+    descriptionKey: 'miniapps.local.description',
+    route: 'Tabs/TabLocal',
     status: 'lite',
-    route: 'vio_points',
-    requiredRole: 'user',
-    featureFlag: 'vioPointsDisplayEnabled',
-    description:
-      'VIO Points / VIO Credits display (loyalty & in-app credits). Full on-chain-style token economy stays frozen.',
-    order: 45,
+    featureFlag: 'localEnabled',
+    requiredRoles: ['b2c', 'merchant', 'broker', 'admin'],
+    permissions: [],
+    dataDependencies: ['auth.session', 'merchants.directory'],
+    monetizationModel: 'transaction_fee',
+    riskLevel: 'medium',
+    readiness: 'ready',
+    primaryCtaKey: 'miniapps.local.cta',
   },
-  {
-    id: 'academy',
-    name: 'Academy',
-    status: 'beta',
-    route: 'academy',
-    requiredRole: 'user',
-    featureFlag: 'academyLiteEnabled',
-    description: 'Academy Lite — Vietnamese learning & family modes; label non-prod AI as Lite/Beta.',
-    order: 50,
+  booking: {
+    id: 'booking',
+    universe: 'local',
+    nameKey: 'miniapps.booking.name',
+    descriptionKey: 'miniapps.booking.description',
+    route: 'Tabs/TabLocal',
+    status: 'lite',
+    featureFlag: 'bookingEnabled',
+    requiredRoles: ['b2c', 'merchant', 'broker', 'admin'],
+    permissions: [],
+    dataDependencies: ['auth.session', 'bookings.api'],
+    monetizationModel: 'transaction_fee',
+    riskLevel: 'medium',
+    readiness: 'partial',
+    primaryCtaKey: 'miniapps.booking.cta',
   },
-  {
-    id: 'leona_assistant',
-    name: 'Leona Assistant',
-    status: 'beta',
-    route: 'leona_assistant',
-    requiredRole: 'user',
-    featureFlag: 'leonaAssistantEnabled',
-    description: 'Leona Assistant Lite — concierge / survival help; not lawyer/doctor replacement.',
-    order: 55,
+  merchantDashboard: {
+    id: 'merchantDashboard',
+    universe: 'merchant',
+    nameKey: 'miniapps.merchantDashboard.name',
+    descriptionKey: 'miniapps.merchantDashboard.description',
+    route: 'Tabs/TabMerchant',
+    status: 'lite',
+    featureFlag: 'merchantDashboardEnabled',
+    requiredRoles: ['merchant'],
+    permissions: [],
+    dataDependencies: ['auth.session', 'merchant.tenant'],
+    monetizationModel: 'saas',
+    riskLevel: 'financial',
+    readiness: 'ready',
+    primaryCtaKey: 'miniapps.merchantDashboard.cta',
   },
-  {
-    id: 'travel',
-    name: 'Travel',
-    status: 'beta',
-    route: 'travel',
-    requiredRole: 'user',
-    featureFlag: 'travelLiteEnabled',
-    description: 'Travel Lite — safety, translation, fixer; premium paid legs stay gated until providers are real.',
-    order: 60,
-  },
-  {
-    id: 'b2b_ai_receptionist',
-    name: 'B2B AI Receptionist',
+  b2bAiReceptionist: {
+    id: 'b2bAiReceptionist',
+    universe: 'merchant',
+    nameKey: 'miniapps.b2bAiReceptionist.name',
+    descriptionKey: 'miniapps.b2bAiReceptionist.description',
+    route: 'AiReceptionistSetupChecklist',
     status: 'pilot',
-    route: 'b2b_ai_receptionist',
-    requiredRole: 'merchant',
     featureFlag: 'b2bAiReceptionistDemoEnabled',
-    description:
-      'B2B AI Receptionist — Demo/Pilot; production voice, auto-booking, inventory, bill, payment require separate env cutover flags.',
-    order: 70,
+    requiredRoles: ['merchant'],
+    permissions: ['microphone'],
+    dataDependencies: ['auth.session', 'merchant.tenant', 'ai.policy'],
+    monetizationModel: 'saas',
+    riskLevel: 'ai',
+    readiness: 'partial',
+    primaryCtaKey: 'miniapps.b2bAiReceptionist.cta',
   },
-  {
-    id: 'broker',
-    name: 'Broker QR',
-    status: 'frozen',
-    route: 'broker',
-    requiredRole: 'broker',
+  b2cAiCallAssistant: {
+    id: 'b2cAiCallAssistant',
+    universe: 'hub',
+    nameKey: 'miniapps.b2cAiCallAssistant.name',
+    descriptionKey: 'miniapps.b2cAiCallAssistant.description',
+    route: 'LeonaCall',
+    status: 'demo',
+    featureFlag: 'leonaAssistantEnabled',
+    requiredRoles: ['b2c', 'merchant', 'broker', 'admin'],
+    permissions: ['microphone'],
+    dataDependencies: ['auth.session', 'ai.call'],
+    monetizationModel: 'credits',
+    riskLevel: 'ai',
+    readiness: 'partial',
+    primaryCtaKey: 'miniapps.b2cAiCallAssistant.cta',
+  },
+  travel: {
+    id: 'travel',
+    universe: 'travel',
+    nameKey: 'miniapps.travel.name',
+    descriptionKey: 'miniapps.travel.description',
+    route: 'Tabs/TabTravel',
+    status: 'lite',
+    featureFlag: 'travelLiteEnabled',
+    requiredRoles: ['b2c', 'merchant', 'broker', 'admin'],
+    permissions: [],
+    dataDependencies: ['auth.session', 'travel.content'],
+    monetizationModel: 'transaction_fee',
+    riskLevel: 'medium',
+    readiness: 'partial',
+    primaryCtaKey: 'miniapps.travel.cta',
+  },
+  travelOutbound: {
+    id: 'travelOutbound',
+    universe: 'travel',
+    nameKey: 'miniapps.travelOutbound.name',
+    descriptionKey: 'miniapps.travelOutbound.description',
+    route: 'Tabs/TabTravel',
+    status: 'lite',
+    featureFlag: 'travelLiteEnabled',
+    requiredRoles: ['b2c', 'merchant', 'broker', 'admin'],
+    permissions: [],
+    dataDependencies: ['auth.session', 'travel.content'],
+    monetizationModel: 'transaction_fee',
+    riskLevel: 'medium',
+    readiness: 'partial',
+    primaryCtaKey: 'miniapps.travelOutbound.cta',
+  },
+  travelInboundVietnam: {
+    id: 'travelInboundVietnam',
+    universe: 'travel',
+    nameKey: 'miniapps.travelInboundVietnam.name',
+    descriptionKey: 'miniapps.travelInboundVietnam.description',
+    route: 'Tabs/TabTravel',
+    status: 'lite',
+    featureFlag: 'travelLiteEnabled',
+    requiredRoles: ['b2c', 'merchant', 'broker', 'admin'],
+    permissions: [],
+    dataDependencies: ['auth.session', 'travel.content'],
+    monetizationModel: 'transaction_fee',
+    riskLevel: 'medium',
+    readiness: 'partial',
+    primaryCtaKey: 'miniapps.travelInboundVietnam.cta',
+  },
+  travelReturnToVietnam: {
+    id: 'travelReturnToVietnam',
+    universe: 'travel',
+    nameKey: 'miniapps.travelReturnToVietnam.name',
+    descriptionKey: 'miniapps.travelReturnToVietnam.description',
+    route: 'Tabs/TabTravel',
+    status: 'lite',
+    featureFlag: 'travelLiteEnabled',
+    requiredRoles: ['b2c', 'merchant', 'broker', 'admin'],
+    permissions: [],
+    dataDependencies: ['auth.session', 'travel.content'],
+    monetizationModel: 'transaction_fee',
+    riskLevel: 'medium',
+    readiness: 'partial',
+    primaryCtaKey: 'miniapps.travelReturnToVietnam.cta',
+  },
+  academy: {
+    id: 'academy',
+    universe: 'academy',
+    nameKey: 'miniapps.academy.name',
+    descriptionKey: 'miniapps.academy.description',
+    route: 'Tabs/TabAi',
+    status: 'lite',
+    featureFlag: 'academyLiteEnabled',
+    requiredRoles: ['b2c', 'merchant', 'broker', 'admin'],
+    permissions: [],
+    dataDependencies: ['auth.session', 'academy.content'],
+    monetizationModel: 'subscription',
+    riskLevel: 'ai',
+    readiness: 'partial',
+    primaryCtaKey: 'miniapps.academy.cta',
+  },
+  leonaAssistant: {
+    id: 'leonaAssistant',
+    universe: 'academy',
+    nameKey: 'miniapps.leonaAssistant.name',
+    descriptionKey: 'miniapps.leonaAssistant.description',
+    route: 'LeonaCall',
+    status: 'lite',
+    featureFlag: 'leonaAssistantEnabled',
+    requiredRoles: ['b2c', 'merchant', 'broker', 'admin'],
+    permissions: ['microphone'],
+    dataDependencies: ['auth.session', 'ai.leona'],
+    monetizationModel: 'credits',
+    riskLevel: 'ai',
+    readiness: 'partial',
+    primaryCtaKey: 'miniapps.leonaAssistant.cta',
+  },
+  minhKhangTranslator: {
+    id: 'minhKhangTranslator',
+    universe: 'academy',
+    nameKey: 'miniapps.minhKhangTranslator.name',
+    descriptionKey: 'miniapps.minhKhangTranslator.description',
+    route: 'LiveInterpreter',
+    status: 'beta',
+    featureFlag: 'aiReceptionistEnabled',
+    requiredRoles: ['b2c', 'merchant', 'broker', 'admin'],
+    permissions: ['camera', 'microphone'],
+    dataDependencies: ['auth.session', 'ai.minhKhang'],
+    monetizationModel: 'credits',
+    riskLevel: 'ai',
+    readiness: 'partial',
+    primaryCtaKey: 'miniapps.minhKhangTranslator.cta',
+  },
+  brokerQr: {
+    id: 'brokerQr',
+    universe: 'income',
+    nameKey: 'miniapps.brokerQr.name',
+    descriptionKey: 'miniapps.brokerQr.description',
+    route: 'Tabs/TabQr',
+    status: 'gated',
     featureFlag: 'brokerQrEnabled',
-    description:
-      'Broker QR & full commission engine — frozen until ledger + settlement gates; thaw only with EXPO_PUBLIC_FEATURE_BROKER_QR=true.',
-    order: 80,
+    requiredRoles: ['broker'],
+    permissions: [],
+    dataDependencies: ['auth.session', 'broker.attribution'],
+    monetizationModel: 'transaction_fee',
+    riskLevel: 'financial',
+    readiness: 'partial',
+    primaryCtaKey: 'miniapps.brokerQr.cta',
   },
-  {
-    id: 'legal_scan',
-    name: 'Legal Scan',
-    status: 'frozen',
-    route: 'legal_scan',
-    requiredRole: 'user',
-    featureFlag: 'legalScanEnabled',
-    description: 'Paid legal scan — frozen while output may be mock; kill-switch stays off by default.',
-    order: 90,
+  admin: {
+    id: 'admin',
+    universe: 'admin',
+    nameKey: 'miniapps.admin.name',
+    descriptionKey: 'miniapps.admin.description',
+    route: 'Tabs/TabCommandCenter',
+    status: 'gated',
+    requiredRoles: ['admin'],
+    permissions: [],
+    dataDependencies: ['auth.session', 'admin.ops'],
+    monetizationModel: 'none',
+    riskLevel: 'high',
+    readiness: 'partial',
+    primaryCtaKey: 'miniapps.admin.cta',
   },
-  {
-    id: 'payroll',
-    name: 'Payroll',
-    status: 'frozen',
-    route: 'payroll',
-    requiredRole: 'merchant',
-    featureFlag: 'payrollEnabled',
-    description: 'Payroll automation — frozen until payroll production gate & policy pack.',
-    order: 100,
-  },
-  {
-    id: 'vio_economy',
-    name: 'VIO Token Economy',
-    status: 'frozen',
-    route: 'vio_economy',
-    requiredRole: 'user',
-    featureFlag: 'vigTokenEconomyEnabled',
-    description:
-      'Withdrawable / tradable token economy — frozen in MVP; VIO Points display is separate (vio_points mini-app).',
-    order: 110,
-  },
+};
+
+export const MINI_APP_IDS: readonly MiniAppId[] = [
+  'hub',
+  'local',
+  'booking',
+  'merchantDashboard',
+  'b2bAiReceptionist',
+  'b2cAiCallAssistant',
+  'travel',
+  'travelOutbound',
+  'travelInboundVietnam',
+  'travelReturnToVietnam',
+  'academy',
+  'leonaAssistant',
+  'minhKhangTranslator',
+  'brokerQr',
+  'admin',
 ];
 
-function isFlagOn(flags: FeatureFlags, key: MiniAppDefinition['featureFlag']): boolean {
-  return flags[key] === true;
+export function isMiniAppId(value: string): value is MiniAppId {
+  return Object.prototype.hasOwnProperty.call(MINI_APP_REGISTRY, value);
 }
 
-/** Full catalog including frozen (for tooling/docs). */
-export function getAllMiniApps(): readonly MiniAppDefinition[] {
-  return REGISTRY;
+export function getMiniAppDefinition(id: string): MiniAppDefinition | undefined {
+  if (!isMiniAppId(id)) return undefined;
+  return MINI_APP_REGISTRY[id];
 }
-
-/**
- * Mini-apps that may appear in a shell or picker.
- * - Excludes `frozen`.
- * - `active` / `beta` / `lite` / `pilot`: included only if their feature flag is true.
- * - `coming_soon`: included even when flag is false (teaser / roadmap slot).
- */
-export function getVisibleMiniApps(): readonly MiniAppDefinition[] {
-  const flags = getFeatureFlags();
-  return REGISTRY.filter((app) => {
-    if (app.status === 'frozen') {
-      return false;
-    }
-    if (app.status === 'coming_soon') {
-      return true;
-    }
-    if (isGatedLaunchStatus(app.status)) {
-      return isFlagOn(flags, app.featureFlag);
-    }
-    return false;
-  });
-}
-
-/** Subset that is both active status and flag-enabled (usable surfaces). */
-export function getActiveMiniApps(): readonly MiniAppDefinition[] {
-  const flags = getFeatureFlags();
-  return REGISTRY.filter((app) => app.status === 'active' && isFlagOn(flags, app.featureFlag));
-}
-
-/**
- * True when the mini-app can be treated as enabled for real use:
- * not frozen, not coming_soon, launch status (active/beta/lite/pilot), and feature flag on.
- */
-export function isMiniAppEnabled(id: MiniAppId): boolean {
-  const flags = getFeatureFlags();
-  const app = REGISTRY.find((a) => a.id === id);
-  if (app == null) {
-    return false;
-  }
-  if (app.status === 'frozen' || app.status === 'coming_soon') {
-    return false;
-  }
-  if (!isGatedLaunchStatus(app.status)) {
-    return false;
-  }
-  return isFlagOn(flags, app.featureFlag);
-}
-
-export function getMiniAppById(id: MiniAppId): MiniAppDefinition | undefined {
-  return REGISTRY.find((a) => a.id === id);
-}
-
-export type { MiniAppStatus };
