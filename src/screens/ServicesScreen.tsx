@@ -10,6 +10,7 @@ import { getWalletPackagePricesByCountry } from '../config/commercialSpine';
 import { normalizeCountryCodeOrSentinel } from '../config/countryPacks';
 import { PrecisePanel } from '../components/ui/PrecisePanel';
 import { useAuth } from '../context/AuthContext';
+import { useMiniAppEntry } from '../hooks/useMiniAppEntry';
 import { getStrings } from '../i18n/strings';
 import type { RootStackParamList } from '../navigation/routes';
 import { useAssistantSettings } from '../state/assistantSettings';
@@ -20,6 +21,7 @@ import { FontFamily } from '../theme/typography';
 
 export function ServicesScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const { openMiniApp } = useMiniAppEntry();
   const { user } = useAuth();
   const { languageCode } = useAssistantSettings();
   const strings = getStrings(languageCode);
@@ -75,10 +77,12 @@ export function ServicesScreen() {
                       if (LAUNCH_PILOT_CONFIG.enableRadarSurface) {
                         navigation.navigate('RadarDiscovery');
                       } else {
-                        navigation.navigate('LeonaCall', {
-                          prefillRequest: PILOT_LEONA_SERVICES_FALLBACK_PREFILL,
-                          autoSubmit: false,
-                        });
+                        openMiniApp('b2cAiCallAssistant', () =>
+                          navigation.navigate('LeonaCall', {
+                            prefillRequest: PILOT_LEONA_SERVICES_FALLBACK_PREFILL,
+                            autoSubmit: false,
+                          })
+                        );
                       }
                       return;
                     }
@@ -87,7 +91,7 @@ export function ServicesScreen() {
                       return;
                     }
                     if (item.id === 'travel') {
-                      navigation.navigate('TravelCompanion');
+                      openMiniApp('travel', () => navigation.navigate('TravelCompanion'));
                       return;
                     }
                     if (item.id === 'yeuthuong') {

@@ -6,6 +6,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import type { InterpreterScenario } from '../config/aiPrompts';
 import { resolveCountryPack } from '../config/countryPacks';
 import { useAuth } from '../context/AuthContext';
+import { useMiniAppEntry } from '../hooks/useMiniAppEntry';
 import type { RootStackParamList } from '../navigation/routes';
 import { Colors } from '../theme/colors';
 import { FontFamily } from '../theme/typography';
@@ -110,6 +111,7 @@ const TRUST_NOTE =
 export function TravelCompanionScreen() {
   const navigation = useNavigation<Nav>();
   const { user } = useAuth();
+  const { openMiniApp } = useMiniAppEntry();
   const pack = resolveCountryPack(user?.country);
   const localeLine =
     pack.countryCode === 'ZZ'
@@ -155,7 +157,11 @@ export function TravelCompanionScreen() {
         <View style={styles.quickRow}>
           <Pressable
             style={({ pressed }) => [styles.quickChip, pressed && { opacity: 0.75 }]}
-            onPress={() => navigation.navigate('LiveInterpreter', { scenario: 'travel' })}
+            onPress={() =>
+              openMiniApp('minhKhangTranslator', () =>
+                navigation.navigate('LiveInterpreter', { scenario: 'travel' })
+              )
+            }
           >
             <Ionicons name="mic-outline" size={18} color={Colors.primary} />
             <Text style={styles.quickChipText}>Phiên dịch trực tiếp</Text>
@@ -163,11 +169,13 @@ export function TravelCompanionScreen() {
           <Pressable
             style={({ pressed }) => [styles.quickChip, pressed && { opacity: 0.75 }]}
             onPress={() =>
-              navigation.navigate('LeonaCall', {
-                prefillRequest:
-                  'Hỗ trợ gọi điện xác minh hoặc đặt chỗ bên ngoài cho khách Việt đang đi du lịch. Không đặt vé máy bay tự động trong app.',
-                autoSubmit: false,
-              })
+              openMiniApp('b2cAiCallAssistant', () =>
+                navigation.navigate('LeonaCall', {
+                  prefillRequest:
+                    'Hỗ trợ gọi điện xác minh hoặc đặt chỗ bên ngoài cho khách Việt đang đi du lịch. Không đặt vé máy bay tự động trong app.',
+                  autoSubmit: false,
+                })
+              )
             }
           >
             <Ionicons name="call-outline" size={18} color={Colors.primary} />
@@ -230,17 +238,23 @@ export function TravelCompanionScreen() {
             <View style={styles.cardActions}>
               <Pressable
                 style={({ pressed }) => [styles.actionPill, pressed && { opacity: 0.75 }]}
-                onPress={() => navigation.navigate('LiveInterpreter', { scenario: row.interpreterScenario })}
+                onPress={() =>
+                  openMiniApp('minhKhangTranslator', () =>
+                    navigation.navigate('LiveInterpreter', { scenario: row.interpreterScenario })
+                  )
+                }
               >
                 <Text style={styles.actionPillText}>Phiên dịch</Text>
               </Pressable>
               <Pressable
                 style={({ pressed }) => [styles.actionPill, pressed && { opacity: 0.75 }]}
                 onPress={() =>
-                  navigation.navigate('LeonaCall', {
-                    prefillRequest: row.leonaPrefill,
-                    autoSubmit: false,
-                  })
+                  openMiniApp('b2cAiCallAssistant', () =>
+                    navigation.navigate('LeonaCall', {
+                      prefillRequest: row.leonaPrefill,
+                      autoSubmit: false,
+                    })
+                  )
                 }
               >
                 <Text style={styles.actionPillText}>Leona</Text>
