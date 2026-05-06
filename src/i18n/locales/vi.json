@@ -516,5 +516,26 @@
       "industryLabel": "Ngành (registry)",
       "previewIndustryId": "Mã ngành: {{id}}"
     }
+  },
+  "smartTrio": {
+    "language": {
+      "vi": "Tiếng Việt",
+      "en": "English",
+      "cs": "Čeština",
+      "de": "Deutsch",
+      "fr": "Français",
+      "ja": "日本語",
+      "ko": "한국어"
+    },
+    "market": {
+      "global": "Toàn cầu",
+      "cz": "Séc (Czechia)",
+      "de": "Đức",
+      "vn": "Việt Nam",
+      "us": "Hoa Kỳ",
+      "fr": "Pháp",
+      "jp": "Nhật Bản",
+      "kr": "Hàn Quốc"
+    }
   }
 }
