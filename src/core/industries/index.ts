@@ -19,3 +19,8 @@ export {
 } from './industryRegistry';
 
 export { AI_RECEPTIONIST_PLAYBOOKS, getAiReceptionistPlaybook } from './aiReceptionistIndustryPlaybooks';
+export {
+  AI_RECEPTIONIST_GLOBAL_PILOT_POSTURE,
+  buildPilotLeadStructuredAppendix,
+} from './aiReceptionistPilotPosture';
+export type { AiReceptionistGlobalPilotPosture, AiReceptionistPilotReadiness } from './aiReceptionistPilotPosture';

@@ -31,15 +31,15 @@ type DemoScenario = Readonly<{
   aiDraftResponse: string;
 }>;
 
-const TIMELINE_STEPS: readonly string[] = [
-  'Incoming call',
-  'Language detected',
-  'Intent detected',
-  'Service checked',
-  'Time requested',
-  'Booking request drafted',
-  'Merchant confirmation required',
-];
+const TIMELINE_STEP_IDS = [
+  'incomingCall',
+  'languageDetected',
+  'intentDetected',
+  'serviceChecked',
+  'timeRequested',
+  'draftRequest',
+  'merchantConfirm',
+] as const;
 
 function buildDemoScenario(
   industryId: IndustryId,
@@ -72,6 +72,11 @@ export function AiReceptionistDemoSimulatorScreen(): ReactElement {
     [selectedIndustryId, t]
   );
 
+  const timelineSteps = useMemo(
+    () => TIMELINE_STEP_IDS.map((id) => t(`aiReceptionist.demo.timeline.${id}`)),
+    [t]
+  );
+
   return (
     <SafeAreaView style={styles.safe} edges={['top', 'left', 'right']}>
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
@@ -85,23 +90,24 @@ export function AiReceptionistDemoSimulatorScreen(): ReactElement {
             <Ionicons name="chevron-back" size={20} color="#E8EDF7" />
           </Pressable>
           <View style={styles.headerTextWrap}>
-            <Text style={styles.kicker}>AI Receptionist</Text>
-            <Text style={styles.title}>Lễ Tân AI Demo</Text>
+            <Text style={styles.kicker}>{t('aiReceptionist.demo.screenKicker')}</Text>
+            <Text style={styles.title}>{t('aiReceptionist.demo.screenTitle')}</Text>
           </View>
         </View>
 
         <View style={styles.simulatedBadge}>
-          <Text style={styles.simulatedBadgeText}>SIMULATED DEMO</Text>
+          <Text style={styles.simulatedBadgeText}>{t('aiReceptionist.demo.simulatedBadge')}</Text>
         </View>
 
         <View style={styles.card}>
-          <Text style={styles.cardTitle}>Safety disclaimer</Text>
-          <Text style={styles.cardBody}>This is a simulated demo.</Text>
-          <Text style={styles.cardBody}>No real call is made.</Text>
-          <Text style={styles.cardBody}>No booking is created.</Text>
-          <Text style={styles.cardBody}>Merchant confirmation is required.</Text>
-          <Text style={styles.cardBody}>AI may make mistakes.</Text>
-          <Text style={styles.cardBody}>No live AI model is invoked from this screen.</Text>
+          <Text style={styles.cardTitle}>{t('aiReceptionist.demo.safetyCardTitle')}</Text>
+          <Text style={styles.cardBody}>{t('aiReceptionist.pilot.requestCaptured')}</Text>
+          <Text style={styles.cardBody}>{t('aiReceptionist.demo.safetyNoRealCall')}</Text>
+          <Text style={styles.cardBody}>{t('aiReceptionist.demo.safetyNoBookingFinal')}</Text>
+          <Text style={styles.cardBody}>{t('aiReceptionist.demo.safetyMerchantConfirm')}</Text>
+          <Text style={styles.cardBody}>{t('aiReceptionist.pilot.merchantMustConfirm')}</Text>
+          <Text style={styles.cardBody}>{t('aiReceptionist.pilot.noPayment')}</Text>
+          <Text style={styles.cardBody}>{t('aiReceptionist.demo.safetyNoLiveModel')}</Text>
         </View>
 
         {!selectedIndustryId ? (
@@ -147,12 +153,12 @@ export function AiReceptionistDemoSimulatorScreen(): ReactElement {
             </View>
 
             <View style={styles.card}>
-              <Text style={styles.cardTitle}>Simulated call timeline</Text>
-              {TIMELINE_STEPS.map((step, idx) => (
-                <View key={step} style={styles.timelineRow}>
+              <Text style={styles.cardTitle}>{t('aiReceptionist.demo.timelineTitle')}</Text>
+              {timelineSteps.map((step, idx) => (
+                <View key={TIMELINE_STEP_IDS[idx]} style={styles.timelineRow}>
                   <View style={styles.timelineDotWrap}>
                     <View style={styles.timelineDot} />
-                    {idx < TIMELINE_STEPS.length - 1 ? <View style={styles.timelineLine} /> : null}
+                    {idx < timelineSteps.length - 1 ? <View style={styles.timelineLine} /> : null}
                   </View>
                   <Text style={styles.timelineText}>{step}</Text>
                 </View>
@@ -160,27 +166,42 @@ export function AiReceptionistDemoSimulatorScreen(): ReactElement {
             </View>
 
             <View style={styles.card}>
-              <Text style={styles.cardTitle}>Transcript preview</Text>
-              <Text style={styles.metaLine}>Customer: {scenario.customerName}</Text>
-              <Text style={styles.metaLine}>Language: {scenario.language}</Text>
-              <Text style={styles.transcriptLine}>Customer: {scenario.transcriptCustomer}</Text>
-              <Text style={styles.transcriptLine}>AI receptionist: {scenario.transcriptAi}</Text>
-              <Text style={styles.transcriptLine}>Confirmation: {scenario.transcriptConfirm}</Text>
-              <Text style={styles.transcriptLine}>Fallback: {scenario.transcriptFallback}</Text>
-              <Text style={styles.noteLine}>Demo note: Conversation preview only. No backend action is performed.</Text>
+              <Text style={styles.cardTitle}>{t('aiReceptionist.demo.transcriptTitle')}</Text>
+              <Text style={styles.metaLine}>
+                {t('aiReceptionist.demo.transcriptMetaCustomer', { name: scenario.customerName })}
+              </Text>
+              <Text style={styles.metaLine}>
+                {t('aiReceptionist.demo.transcriptMetaLanguage', { language: scenario.language })}
+              </Text>
+              <Text style={styles.transcriptLine}>
+                {t('aiReceptionist.demo.transcriptPrefixCustomer')}: {scenario.transcriptCustomer}
+              </Text>
+              <Text style={styles.transcriptLine}>
+                {t('aiReceptionist.demo.transcriptPrefixAi')}: {scenario.transcriptAi}
+              </Text>
+              <Text style={styles.transcriptLine}>
+                {t('aiReceptionist.demo.transcriptPrefixConfirm')}: {scenario.transcriptConfirm}
+              </Text>
+              <Text style={styles.transcriptLine}>
+                {t('aiReceptionist.demo.transcriptPrefixFallback')}: {scenario.transcriptFallback}
+              </Text>
+              <Text style={styles.noteLine}>{t('aiReceptionist.demo.transcriptDemoNote')}</Text>
             </View>
 
             <View style={styles.card}>
-              <Text style={styles.cardTitle}>Booking request preview (draft)</Text>
-              <Text style={styles.metaLine}>Intent: {scenario.intent}</Text>
-              <Text style={styles.metaLine}>Service: {scenario.sampleService}</Text>
-              <Text style={styles.metaLine}>Date/time: {scenario.requestedTime}</Text>
-              <Text style={styles.metaLine}>Customer phone: {scenario.customerPhonePreview}</Text>
+              <Text style={styles.cardTitle}>{t('aiReceptionist.demo.bookingDraftTitle')}</Text>
+              <Text style={styles.metaLine}>{t('aiReceptionist.demo.bookingDraftIntent', { value: scenario.intent })}</Text>
+              <Text style={styles.metaLine}>{t('aiReceptionist.demo.bookingDraftService', { value: scenario.sampleService })}</Text>
+              <Text style={styles.metaLine}>{t('aiReceptionist.demo.bookingDraftTime', { value: scenario.requestedTime })}</Text>
+              <Text style={styles.metaLine}>
+                {t('aiReceptionist.demo.bookingDraftPhone', { value: scenario.customerPhonePreview })}
+              </Text>
               <View style={styles.pendingPill}>
-                <Text style={styles.pendingPillText}>Pending merchant confirmation</Text>
+                <Text style={styles.pendingPillText}>{t('aiReceptionist.demo.pendingPill')}</Text>
               </View>
               <Text style={styles.noteLine}>{scenario.aiDraftResponse}</Text>
-              <Text style={styles.noteLine}>Safety: Not created in system.</Text>
+              <Text style={styles.noteLine}>{t('aiReceptionist.demo.draftFooterNote')}</Text>
+              <Text style={styles.noteLine}>{t('aiReceptionist.demo.draftNotInSystem')}</Text>
             </View>
           </>
         ) : null}
@@ -190,19 +211,19 @@ export function AiReceptionistDemoSimulatorScreen(): ReactElement {
             onPress={() => navigation.navigate('AiReceptionistSetupChecklist')}
             style={({ pressed }) => [styles.actionBtn, pressed && { opacity: 0.86 }]}
           >
-            <Text style={styles.actionBtnText}>Configure setup</Text>
+            <Text style={styles.actionBtnText}>{t('aiReceptionist.demo.ctaChecklist')}</Text>
           </Pressable>
           <Pressable
             onPress={() => navigation.navigate('AiReceptionistPilotRequest')}
             style={({ pressed }) => [styles.actionBtn, pressed && { opacity: 0.86 }]}
           >
-            <Text style={styles.actionBtnText}>Request pilot</Text>
+            <Text style={styles.actionBtnText}>{t('aiReceptionist.demo.ctaPilot')}</Text>
           </Pressable>
           <Pressable
             onPress={() => navigation.navigate('MerchantDashboard')}
             style={({ pressed }) => [styles.actionBtn, pressed && { opacity: 0.86 }]}
           >
-            <Text style={styles.actionBtnText}>Back to merchant dashboard</Text>
+            <Text style={styles.actionBtnText}>{t('aiReceptionist.demo.ctaMerchant')}</Text>
           </Pressable>
         </View>
       </ScrollView>
