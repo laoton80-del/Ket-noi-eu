@@ -6,10 +6,16 @@ import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 import type { RootStackParamList } from '../../navigation/routes';
+import { useTranslation } from '../../i18n';
+import {
+  getAiReceptionistPlaybook,
+  INDUSTRY_GROUP_ORDER,
+  industryGroupNameKey,
+  listIndustriesByGroup,
+} from '../../core/industries';
+import type { IndustryId } from '../../core/industries';
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
-
-type DemoIndustryKey = 'nail_salon' | 'spa' | 'restaurant' | 'barber';
 
 type DemoScenario = Readonly<{
   customerName: string;
@@ -25,68 +31,6 @@ type DemoScenario = Readonly<{
   aiDraftResponse: string;
 }>;
 
-const INDUSTRY_LABELS: Readonly<Record<DemoIndustryKey, string>> = {
-  nail_salon: 'Nail salon',
-  spa: 'Spa',
-  restaurant: 'Restaurant',
-  barber: 'Barber',
-};
-
-const DEMO_SCENARIOS: Readonly<Record<DemoIndustryKey, DemoScenario>> = {
-  nail_salon: {
-    customerName: 'Linh N.',
-    language: 'Vietnamese',
-    intent: 'Book nail service',
-    sampleService: 'Gel manicure + red stone design',
-    requestedTime: 'Tomorrow 15:30',
-    customerPhonePreview: '+xx xxx xxx 128',
-    transcriptCustomer: 'Hi em, mai chị đặt làm gel đỏ đính đá lúc 3 rưỡi được không?',
-    transcriptAi: 'Dạ em đã ghi nhận dịch vụ và khung giờ chị yêu cầu. Em kiểm tra lịch trống demo cho tiệm.',
-    transcriptConfirm: 'Em sẽ gửi yêu cầu nháp để chủ tiệm xác nhận trước khi chốt lịch. Chị đồng ý không ạ?',
-    transcriptFallback: 'Nếu lịch bận, em sẽ đề xuất giờ gần nhất để chị chọn.',
-    aiDraftResponse: 'Draft booking request prepared for merchant confirmation.',
-  },
-  spa: {
-    customerName: 'Mark T.',
-    language: 'English',
-    intent: 'Book spa treatment',
-    sampleService: 'Deep tissue massage 60 minutes',
-    requestedTime: 'Friday 18:00',
-    customerPhonePreview: '+xx xxx xxx 441',
-    transcriptCustomer: 'Hello, can I reserve a 60-minute deep tissue session on Friday evening?',
-    transcriptAi: 'Thanks, I have captured your request and checked the demo service list for available slots.',
-    transcriptConfirm: 'I will submit a draft request for merchant confirmation before any booking is finalized.',
-    transcriptFallback: 'If this slot is not available, I can suggest nearby times for your review.',
-    aiDraftResponse: 'Draft request is ready and waiting for merchant action.',
-  },
-  restaurant: {
-    customerName: 'Anna K.',
-    language: 'Czech',
-    intent: 'Reserve table',
-    sampleService: 'Dinner table for 4 guests',
-    requestedTime: 'Saturday 19:00',
-    customerPhonePreview: '+xx xxx xxx 772',
-    transcriptCustomer: 'Dobry den, chtela bych rezervaci stolu pro ctyri osoby na sobotu v sedm.',
-    transcriptAi: 'Dekujeme, zaznamenal jsem vas pozadavek a pripravil navrh rezervace v demo rezimu.',
-    transcriptConfirm: 'Navrh poslu provozovateli k potvrzeni, rezervace jeste neni finalni.',
-    transcriptFallback: 'Kdyz termin nebude volny, navrhnu nejblizsi dostupny cas.',
-    aiDraftResponse: 'Table request drafted and marked pending merchant confirmation.',
-  },
-  barber: {
-    customerName: 'David P.',
-    language: 'German',
-    intent: 'Book haircut',
-    sampleService: 'Haircut + beard trim',
-    requestedTime: 'Today 17:45',
-    customerPhonePreview: '+xx xxx xxx 905',
-    transcriptCustomer: 'Guten Tag, ich mochte heute gegen 17:45 einen Haarschnitt mit Bart trimmen.',
-    transcriptAi: 'Danke, ich habe Ihre Anfrage verstanden und im Demo-System als Entwurf vorbereitet.',
-    transcriptConfirm: 'Zur Sicherheit muss der Merchant diese Anfrage bestatigen, bevor etwas gebucht wird.',
-    transcriptFallback: 'Falls die Zeit belegt ist, schlage ich alternative Termine vor.',
-    aiDraftResponse: 'Draft appointment prepared with merchant confirmation required.',
-  },
-};
-
 const TIMELINE_STEPS: readonly string[] = [
   'Incoming call',
   'Language detected',
@@ -97,11 +41,36 @@ const TIMELINE_STEPS: readonly string[] = [
   'Merchant confirmation required',
 ];
 
+function buildDemoScenario(
+  industryId: IndustryId,
+  t: (key: string, options?: Record<string, unknown>) => string
+): DemoScenario {
+  const pb = getAiReceptionistPlaybook(industryId);
+  const svc = pb.demoHintService;
+  return {
+    customerName: t('aiReceptionist.playbookDemo._generic.customerName'),
+    language: t('aiReceptionist.playbookDemo._generic.language'),
+    intent: t('aiReceptionist.playbookDemo._generic.intent', { service: svc }),
+    sampleService: t('aiReceptionist.playbookDemo._generic.sampleService', { service: svc }),
+    requestedTime: t('aiReceptionist.playbookDemo._generic.requestedTime'),
+    customerPhonePreview: t('aiReceptionist.playbookDemo._generic.customerPhonePreview'),
+    transcriptCustomer: t('aiReceptionist.playbookDemo._generic.transcriptCustomer', { service: svc }),
+    transcriptAi: t('aiReceptionist.playbookDemo._generic.transcriptAi'),
+    transcriptConfirm: t('aiReceptionist.playbookDemo._generic.transcriptConfirm'),
+    transcriptFallback: t('aiReceptionist.playbookDemo._generic.transcriptFallback'),
+    aiDraftResponse: t('aiReceptionist.playbookDemo._generic.aiDraftResponse'),
+  };
+}
+
 export function AiReceptionistDemoSimulatorScreen(): ReactElement {
   const navigation = useNavigation<Nav>();
-  const [selectedIndustry, setSelectedIndustry] = useState<DemoIndustryKey>('nail_salon');
+  const { t } = useTranslation();
+  const [selectedIndustryId, setSelectedIndustryId] = useState<IndustryId | null>(null);
 
-  const scenario = useMemo(() => DEMO_SCENARIOS[selectedIndustry], [selectedIndustry]);
+  const scenario = useMemo(
+    () => (selectedIndustryId ? buildDemoScenario(selectedIndustryId, t) : null),
+    [selectedIndustryId, t]
+  );
 
   return (
     <SafeAreaView style={styles.safe} edges={['top', 'left', 'right']}>
@@ -132,68 +101,89 @@ export function AiReceptionistDemoSimulatorScreen(): ReactElement {
           <Text style={styles.cardBody}>No booking is created.</Text>
           <Text style={styles.cardBody}>Merchant confirmation is required.</Text>
           <Text style={styles.cardBody}>AI may make mistakes.</Text>
+          <Text style={styles.cardBody}>No live AI model is invoked from this screen.</Text>
         </View>
 
-        <View style={styles.card}>
-          <Text style={styles.cardTitle}>Industry selector</Text>
-          <View style={styles.selectorRow}>
-            {(Object.keys(INDUSTRY_LABELS) as DemoIndustryKey[]).map((industry) => {
-              const active = industry === selectedIndustry;
-              return (
-                <Pressable
-                  key={industry}
-                  onPress={() => setSelectedIndustry(industry)}
-                  style={({ pressed }) => [
-                    styles.selectorChip,
-                    active && styles.selectorChipActive,
-                    pressed && { opacity: 0.88 },
-                  ]}
-                >
-                  <Text style={[styles.selectorChipText, active && styles.selectorChipTextActive]}>
-                    {INDUSTRY_LABELS[industry]}
-                  </Text>
-                </Pressable>
-              );
-            })}
+        {!selectedIndustryId ? (
+          <View style={styles.promptCard}>
+            <Text style={styles.promptTitle}>{t('aiReceptionist.demo.selectIndustryPrompt')}</Text>
           </View>
-        </View>
+        ) : null}
 
         <View style={styles.card}>
-          <Text style={styles.cardTitle}>Simulated call timeline</Text>
-          {TIMELINE_STEPS.map((step, idx) => (
-            <View key={step} style={styles.timelineRow}>
-              <View style={styles.timelineDotWrap}>
-                <View style={styles.timelineDot} />
-                {idx < TIMELINE_STEPS.length - 1 ? <View style={styles.timelineLine} /> : null}
+          <Text style={styles.cardTitle}>{t('aiReceptionist.demo.industrySectionTitle')}</Text>
+          {INDUSTRY_GROUP_ORDER.map((groupId) => (
+            <View key={groupId} style={styles.groupBlock}>
+              <Text style={styles.groupTitle}>{t(industryGroupNameKey(groupId))}</Text>
+              <View style={styles.selectorRow}>
+                {listIndustriesByGroup(groupId).map((def) => {
+                  const active = def.id === selectedIndustryId;
+                  return (
+                    <Pressable
+                      key={def.id}
+                      onPress={() => setSelectedIndustryId(def.id)}
+                      style={({ pressed }) => [
+                        styles.selectorChip,
+                        active && styles.selectorChipActive,
+                        pressed && { opacity: 0.88 },
+                      ]}
+                    >
+                      <Text style={[styles.selectorChipText, active && styles.selectorChipTextActive]}>
+                        {t(def.nameKey)}
+                      </Text>
+                    </Pressable>
+                  );
+                })}
               </View>
-              <Text style={styles.timelineText}>{step}</Text>
             </View>
           ))}
         </View>
 
-        <View style={styles.card}>
-          <Text style={styles.cardTitle}>Transcript preview</Text>
-          <Text style={styles.metaLine}>Customer: {scenario.customerName}</Text>
-          <Text style={styles.metaLine}>Language: {scenario.language}</Text>
-          <Text style={styles.transcriptLine}>Customer: {scenario.transcriptCustomer}</Text>
-          <Text style={styles.transcriptLine}>AI receptionist: {scenario.transcriptAi}</Text>
-          <Text style={styles.transcriptLine}>Confirmation: {scenario.transcriptConfirm}</Text>
-          <Text style={styles.transcriptLine}>Fallback: {scenario.transcriptFallback}</Text>
-          <Text style={styles.noteLine}>Demo note: Conversation preview only. No backend action is performed.</Text>
-        </View>
+        {selectedIndustryId && scenario ? (
+          <>
+            <View style={styles.card}>
+              <Text style={styles.cardTitle}>{t('aiReceptionist.demo.playbookTitle')}</Text>
+              <Text style={styles.cardBody}>{t(getAiReceptionistPlaybook(selectedIndustryId).disclaimerKey)}</Text>
+            </View>
 
-        <View style={styles.card}>
-          <Text style={styles.cardTitle}>Booking request preview (draft)</Text>
-          <Text style={styles.metaLine}>Intent: {scenario.intent}</Text>
-          <Text style={styles.metaLine}>Service: {scenario.sampleService}</Text>
-          <Text style={styles.metaLine}>Date/time: {scenario.requestedTime}</Text>
-          <Text style={styles.metaLine}>Customer phone: {scenario.customerPhonePreview}</Text>
-          <View style={styles.pendingPill}>
-            <Text style={styles.pendingPillText}>Pending merchant confirmation</Text>
-          </View>
-          <Text style={styles.noteLine}>{scenario.aiDraftResponse}</Text>
-          <Text style={styles.noteLine}>Safety: Not created in system.</Text>
-        </View>
+            <View style={styles.card}>
+              <Text style={styles.cardTitle}>Simulated call timeline</Text>
+              {TIMELINE_STEPS.map((step, idx) => (
+                <View key={step} style={styles.timelineRow}>
+                  <View style={styles.timelineDotWrap}>
+                    <View style={styles.timelineDot} />
+                    {idx < TIMELINE_STEPS.length - 1 ? <View style={styles.timelineLine} /> : null}
+                  </View>
+                  <Text style={styles.timelineText}>{step}</Text>
+                </View>
+              ))}
+            </View>
+
+            <View style={styles.card}>
+              <Text style={styles.cardTitle}>Transcript preview</Text>
+              <Text style={styles.metaLine}>Customer: {scenario.customerName}</Text>
+              <Text style={styles.metaLine}>Language: {scenario.language}</Text>
+              <Text style={styles.transcriptLine}>Customer: {scenario.transcriptCustomer}</Text>
+              <Text style={styles.transcriptLine}>AI receptionist: {scenario.transcriptAi}</Text>
+              <Text style={styles.transcriptLine}>Confirmation: {scenario.transcriptConfirm}</Text>
+              <Text style={styles.transcriptLine}>Fallback: {scenario.transcriptFallback}</Text>
+              <Text style={styles.noteLine}>Demo note: Conversation preview only. No backend action is performed.</Text>
+            </View>
+
+            <View style={styles.card}>
+              <Text style={styles.cardTitle}>Booking request preview (draft)</Text>
+              <Text style={styles.metaLine}>Intent: {scenario.intent}</Text>
+              <Text style={styles.metaLine}>Service: {scenario.sampleService}</Text>
+              <Text style={styles.metaLine}>Date/time: {scenario.requestedTime}</Text>
+              <Text style={styles.metaLine}>Customer phone: {scenario.customerPhonePreview}</Text>
+              <View style={styles.pendingPill}>
+                <Text style={styles.pendingPillText}>Pending merchant confirmation</Text>
+              </View>
+              <Text style={styles.noteLine}>{scenario.aiDraftResponse}</Text>
+              <Text style={styles.noteLine}>Safety: Not created in system.</Text>
+            </View>
+          </>
+        ) : null}
 
         <View style={styles.actionRow}>
           <Pressable
@@ -247,6 +237,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
   },
   simulatedBadgeText: { fontSize: 11, fontWeight: '800', color: '#F9E7A4', letterSpacing: 0.5 },
+  promptCard: {
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: 'rgba(122,228,255,0.35)',
+    backgroundColor: 'rgba(61,90,254,0.12)',
+    padding: 14,
+  },
+  promptTitle: { fontSize: 14, fontWeight: '800', color: '#E8EDF7', lineHeight: 20 },
   card: {
     borderRadius: 14,
     borderWidth: 1,
@@ -255,6 +253,8 @@ const styles = StyleSheet.create({
     padding: 14,
     gap: 7,
   },
+  groupBlock: { gap: 8, marginTop: 4 },
+  groupTitle: { fontSize: 12, fontWeight: '800', color: '#C7D7FF' },
   cardTitle: { fontSize: 16, fontWeight: '800', color: '#F4F7FF' },
   cardBody: { fontSize: 13, color: 'rgba(232,237,247,0.74)', lineHeight: 18 },
   selectorRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
@@ -270,7 +270,7 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(125,211,252,0.75)',
     backgroundColor: 'rgba(59,130,246,0.25)',
   },
-  selectorChipText: { fontSize: 12, fontWeight: '700', color: '#D4E9FF' },
+  selectorChipText: { fontSize: 11, fontWeight: '700', color: '#D4E9FF' },
   selectorChipTextActive: { color: '#F4F7FF' },
   timelineRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 10 },
   timelineDotWrap: { width: 16, alignItems: 'center' },

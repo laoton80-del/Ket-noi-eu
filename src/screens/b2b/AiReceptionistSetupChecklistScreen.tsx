@@ -1,5 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
-import { useMemo, type ReactElement } from 'react';
+import { useMemo, useState, type ReactElement } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
@@ -12,6 +12,14 @@ import {
 } from '../../core/ai-receptionist/merchantCutoverChecklistConfig';
 import { getFeatureFlags, type FeatureFlagKey } from '../../core/feature-flags/featureFlags';
 import type { RootStackParamList } from '../../navigation/routes';
+import { useTranslation } from '../../i18n';
+import {
+  getAiReceptionistPlaybook,
+  INDUSTRY_GROUP_ORDER,
+  industryGroupNameKey,
+  listIndustriesByGroup,
+} from '../../core/industries';
+import type { IndustryId } from '../../core/industries';
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
 
@@ -96,7 +104,14 @@ function featureIsEnabled(requiredFlags: readonly FeatureFlagKey[], flags: Retur
 
 export function AiReceptionistSetupChecklistScreen(): ReactElement {
   const navigation = useNavigation<Nav>();
+  const { t } = useTranslation();
   const flags = useMemo(() => getFeatureFlags(), []);
+  const [selectedIndustryId, setSelectedIndustryId] = useState<IndustryId | null>(null);
+
+  const selectedPlaybook = useMemo(() => {
+    if (!selectedIndustryId) return null;
+    return getAiReceptionistPlaybook(selectedIndustryId);
+  }, [selectedIndustryId]);
 
   const statusBadges = useMemo(() => {
     const demo = flags.b2bAiReceptionistDemoEnabled ? 'Demo available' : 'Demo off';
@@ -170,6 +185,58 @@ export function AiReceptionistSetupChecklistScreen(): ReactElement {
           <Text style={styles.sectionBody}>
             Production automation is locked by default and must pass checklist + policy approval before enabling.
           </Text>
+        </View>
+
+        <View style={styles.sectionCard}>
+          <Text style={styles.sectionTitle}>{t('aiReceptionist.setup.industrySectionTitle')}</Text>
+          <Text style={styles.sectionBody}>{t('aiReceptionist.setup.industrySectionBody')}</Text>
+          {INDUSTRY_GROUP_ORDER.map((groupId) => (
+            <View key={groupId} style={styles.industryGroupBlock}>
+              <Text style={styles.industryGroupTitle}>{t(industryGroupNameKey(groupId))}</Text>
+              <View style={styles.industryChipWrap}>
+                {listIndustriesByGroup(groupId).map((def) => {
+                  const active = def.id === selectedIndustryId;
+                  return (
+                    <Pressable
+                      key={def.id}
+                      onPress={() => setSelectedIndustryId(def.id)}
+                      style={({ pressed }) => [
+                        styles.industryChip,
+                        active && styles.industryChipActive,
+                        pressed && { opacity: 0.88 },
+                      ]}
+                    >
+                      <Text style={[styles.industryChipText, active && styles.industryChipTextActive]}>
+                        {t(def.nameKey)}
+                      </Text>
+                    </Pressable>
+                  );
+                })}
+              </View>
+            </View>
+          ))}
+          {!selectedIndustryId ? (
+            <View style={styles.industryHintBox}>
+              <Text style={styles.industryHintTitle}>{t('aiReceptionist.setup.industryNoneTitle')}</Text>
+              <Text style={styles.industryHintBody}>{t('aiReceptionist.setup.industryNoneBody')}</Text>
+            </View>
+          ) : null}
+          {selectedPlaybook ? (
+            <>
+              <Text style={styles.sectionTitle}>{t('aiReceptionist.setup.disclaimerTitle')}</Text>
+              <Text style={styles.sectionBody}>{t(selectedPlaybook.disclaimerKey)}</Text>
+              <Text style={styles.sectionTitle}>{t('aiReceptionist.setup.playbookSummaryTitle')}</Text>
+              <Text style={styles.sectionBody}>
+                {t('aiReceptionist.playbook.bookingModeLabel', { mode: selectedPlaybook.bookingMode })}
+              </Text>
+              <Text style={styles.sectionBody}>
+                {t('aiReceptionist.playbook.riskLabel', { risk: selectedPlaybook.riskLevel })}
+              </Text>
+              <Text style={styles.sectionBody}>
+                {t('aiReceptionist.playbook.confirmationLabel', { policy: selectedPlaybook.confirmationPolicy })}
+              </Text>
+            </>
+          ) : null}
         </View>
 
         <View style={styles.sectionCard}>
@@ -416,5 +483,58 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '800',
     color: '#DCE8FF',
+  },
+  industryGroupBlock: {
+    gap: 8,
+    marginTop: 4,
+  },
+  industryGroupTitle: {
+    fontSize: 13,
+    fontWeight: '800',
+    color: '#C7D7FF',
+  },
+  industryChipWrap: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  industryChip: {
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: 'rgba(122,228,255,0.35)',
+    backgroundColor: 'rgba(122,228,255,0.1)',
+    paddingVertical: 6,
+    paddingHorizontal: 10,
+  },
+  industryChipActive: {
+    borderColor: 'rgba(125,211,252,0.85)',
+    backgroundColor: 'rgba(59,130,246,0.28)',
+  },
+  industryChipText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#D4E9FF',
+  },
+  industryChipTextActive: {
+    color: '#F4F7FF',
+  },
+  industryHintBox: {
+    marginTop: 8,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: 'rgba(250,204,21,0.35)',
+    backgroundColor: 'rgba(250,204,21,0.08)',
+    padding: 10,
+    gap: 4,
+  },
+  industryHintTitle: {
+    fontSize: 12,
+    fontWeight: '800',
+    color: '#FDE68A',
+  },
+  industryHintBody: {
+    fontSize: 12,
+    lineHeight: 17,
+    color: 'rgba(232,237,247,0.72)',
   },
 });

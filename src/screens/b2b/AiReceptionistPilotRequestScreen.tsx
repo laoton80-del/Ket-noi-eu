@@ -6,6 +6,15 @@ import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 import type { RootStackParamList } from '../../navigation/routes';
+import { useTranslation } from '../../i18n';
+import {
+  getAiReceptionistPlaybook,
+  getIndustryDefinition,
+  INDUSTRY_GROUP_ORDER,
+  industryGroupNameKey,
+  listIndustriesByGroup,
+} from '../../core/industries';
+import type { IndustryId } from '../../core/industries';
 import { isRestApiConfigured } from '../../services/apiClient';
 import {
   submitAiReceptionistPilotLead,
@@ -14,16 +23,7 @@ import {
 } from '../../services/api/aiReceptionistLeadApi';
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
-type Industry = 'nail_salon' | 'spa' | 'restaurant' | 'barber' | 'other';
 type Automation = 'intake_only' | 'booking_request' | 'auto_booking_later' | 'multi_language_support';
-
-const INDUSTRY_OPTIONS: readonly Readonly<{ id: Industry; label: string }>[] = [
-  { id: 'nail_salon', label: 'Nail salon' },
-  { id: 'spa', label: 'Spa' },
-  { id: 'restaurant', label: 'Restaurant' },
-  { id: 'barber', label: 'Barber' },
-  { id: 'other', label: 'Other' },
-];
 
 const AUTOMATION_OPTIONS: readonly Readonly<{ id: Automation; label: string }>[] = [
   { id: 'intake_only', label: 'Intake only' },
@@ -32,10 +32,45 @@ const AUTOMATION_OPTIONS: readonly Readonly<{ id: Automation; label: string }>[]
   { id: 'multi_language_support', label: 'Multi-language support' },
 ];
 
+function mapIndustryIdToPilotLeadIndustry(id: IndustryId): AiReceptionistLeadIndustry {
+  switch (id) {
+    case 'nailSalon':
+    case 'lashBrow':
+    case 'waxing':
+      return 'Nail salon';
+    case 'spaMassage':
+      return 'Spa';
+    case 'hairBarber':
+      return 'Barber';
+    case 'restaurantTakeaway':
+    case 'bakery':
+      return 'Restaurant';
+    default:
+      return 'Other';
+  }
+}
+
+function buildIndustryAppendix(industryId: IndustryId, t: (key: string, opts?: Record<string, unknown>) => string): string {
+  const def = getIndustryDefinition(industryId);
+  const pb = getAiReceptionistPlaybook(industryId);
+  const label = t(def.nameKey);
+  return [
+    '---',
+    'VIONA Industry Registry (structured)',
+    `industryId: ${industryId}`,
+    `industryLabel: ${label}`,
+    `bookingMode: ${pb.bookingMode}`,
+    `riskLevel: ${pb.riskLevel}`,
+    `confirmationPolicy: ${pb.confirmationPolicy}`,
+    `disallowedViaAI: ${pb.blockedActions.join(', ')}`,
+  ].join('\n');
+}
+
 export function AiReceptionistPilotRequestScreen(): ReactElement {
   const navigation = useNavigation<Nav>();
+  const { t } = useTranslation();
   const [businessName, setBusinessName] = useState('');
-  const [industry, setIndustry] = useState<Industry>('nail_salon');
+  const [industry, setIndustry] = useState<IndustryId>('nailSalon');
   const [city, setCity] = useState('');
   const [country, setCountry] = useState('');
   const [contactName, setContactName] = useState('');
@@ -53,10 +88,7 @@ export function AiReceptionistPilotRequestScreen(): ReactElement {
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const industryLabel = useMemo(
-    () => INDUSTRY_OPTIONS.find((item) => item.id === industry)?.label ?? 'Unknown',
-    [industry]
-  );
+  const industryLabel = useMemo(() => t(getIndustryDefinition(industry).nameKey), [industry, t]);
   const desiredAutomationLabels = useMemo(() => {
     const labels = AUTOMATION_OPTIONS.filter((item) => desiredAutomation.includes(item.id)).map((item) => item.label);
     return labels.length > 0 ? labels.join(', ') : 'Not selected';
@@ -64,14 +96,6 @@ export function AiReceptionistPilotRequestScreen(): ReactElement {
 
   const toggleAutomation = (id: Automation): void => {
     setDesiredAutomation((prev) => (prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]));
-  };
-
-  const industryToApi: Record<Industry, AiReceptionistLeadIndustry> = {
-    nail_salon: 'Nail salon',
-    spa: 'Spa',
-    restaurant: 'Restaurant',
-    barber: 'Barber',
-    other: 'Other',
   };
 
   const automationToApi: Record<Automation, AiReceptionistLeadDesiredAutomation> = {
@@ -103,6 +127,9 @@ export function AiReceptionistPilotRequestScreen(): ReactElement {
       return;
     }
 
+    const appendix = buildIndustryAppendix(industry, t);
+    const mergedNotes = [notes.trim(), appendix].filter((s) => s.length > 0).join('\n\n');
+
     if (!isRestApiConfigured()) {
       setIsSubmittedLocalDraft(true);
       setSubmitError('Pilot request relay is not configured yet. Your draft remains local.');
@@ -113,7 +140,7 @@ export function AiReceptionistPilotRequestScreen(): ReactElement {
     try {
       const result = await submitAiReceptionistPilotLead({
         businessName: businessName.trim(),
-        industry: industryToApi[industry],
+        industry: mapIndustryIdToPilotLeadIndustry(industry),
         city: city.trim(),
         country: country.trim(),
         contactName: contactName.trim(),
@@ -123,7 +150,7 @@ export function AiReceptionistPilotRequestScreen(): ReactElement {
         estimatedMissedCallsPerDay: normalizedMissedCalls,
         desiredAutomation: desiredAutomation.map((item) => automationToApi[item]),
         preferredPilotDate: preferredPilotDate.trim() || undefined,
-        notes: notes.trim() || undefined,
+        notes: mergedNotes || undefined,
         consentAccepted: true,
       });
 
@@ -187,21 +214,26 @@ export function AiReceptionistPilotRequestScreen(): ReactElement {
           <Text style={styles.label}>Business name</Text>
           <TextInput value={businessName} onChangeText={setBusinessName} style={styles.input} placeholder="Business name" placeholderTextColor="#8EA0BC" />
 
-          <Text style={styles.label}>Industry</Text>
-          <View style={styles.chipRow}>
-            {INDUSTRY_OPTIONS.map((item) => {
-              const active = item.id === industry;
-              return (
-                <Pressable
-                  key={item.id}
-                  onPress={() => setIndustry(item.id)}
-                  style={({ pressed }) => [styles.chip, active && styles.chipActive, pressed && { opacity: 0.88 }]}
-                >
-                  <Text style={[styles.chipText, active && styles.chipTextActive]}>{item.label}</Text>
-                </Pressable>
-              );
-            })}
-          </View>
+          <Text style={styles.label}>{t('aiReceptionist.pilot.industryLabel')}</Text>
+          {INDUSTRY_GROUP_ORDER.map((groupId) => (
+            <View key={groupId} style={styles.industryGroup}>
+              <Text style={styles.industryGroupTitle}>{t(industryGroupNameKey(groupId))}</Text>
+              <View style={styles.chipRow}>
+                {listIndustriesByGroup(groupId).map((def) => {
+                  const active = def.id === industry;
+                  return (
+                    <Pressable
+                      key={def.id}
+                      onPress={() => setIndustry(def.id)}
+                      style={({ pressed }) => [styles.chip, active && styles.chipActive, pressed && { opacity: 0.88 }]}
+                    >
+                      <Text style={[styles.chipText, active && styles.chipTextActive]}>{t(def.nameKey)}</Text>
+                    </Pressable>
+                  );
+                })}
+              </View>
+            </View>
+          ))}
 
           <Text style={styles.label}>City</Text>
           <TextInput value={city} onChangeText={setCity} style={styles.input} placeholder="City" placeholderTextColor="#8EA0BC" />
@@ -346,6 +378,7 @@ export function AiReceptionistPilotRequestScreen(): ReactElement {
             <Text style={styles.previewTitle}>Submitted preview</Text>
             <Text style={styles.previewLine}>Business: {businessName || 'N/A'}</Text>
             <Text style={styles.previewLine}>Industry: {industryLabel}</Text>
+            <Text style={styles.previewLine}>{t('aiReceptionist.pilot.previewIndustryId', { id: industry })}</Text>
             <Text style={styles.previewLine}>City/Country: {(city || 'N/A') + ' / ' + (country || 'N/A')}</Text>
             <Text style={styles.previewLine}>Contact: {contactName || 'N/A'}</Text>
             <Text style={styles.previewLine}>Phone: {contactPhone || 'N/A'}</Text>
@@ -365,6 +398,7 @@ export function AiReceptionistPilotRequestScreen(): ReactElement {
             <Text style={styles.previewTitle}>Draft preview</Text>
             <Text style={styles.previewLine}>Business: {businessName || 'N/A'}</Text>
             <Text style={styles.previewLine}>Industry: {industryLabel}</Text>
+            <Text style={styles.previewLine}>{t('aiReceptionist.pilot.previewIndustryId', { id: industry })}</Text>
             <Text style={styles.previewLine}>City/Country: {(city || 'N/A') + ' / ' + (country || 'N/A')}</Text>
             <Text style={styles.previewLine}>Contact: {contactName || 'N/A'}</Text>
             <Text style={styles.previewLine}>Phone: {contactPhone || 'N/A'}</Text>
@@ -451,6 +485,8 @@ const styles = StyleSheet.create({
   },
   textArea: { minHeight: 82, textAlignVertical: 'top' },
   chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  industryGroup: { marginTop: 8, gap: 6 },
+  industryGroupTitle: { fontSize: 12, fontWeight: '800', color: '#C7D7FF' },
   chip: {
     borderRadius: 999,
     borderWidth: 1,
@@ -463,7 +499,7 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(125,211,252,0.75)',
     backgroundColor: 'rgba(59,130,246,0.25)',
   },
-  chipText: { fontSize: 12, fontWeight: '700', color: '#D4E9FF' },
+  chipText: { fontSize: 11, fontWeight: '700', color: '#D4E9FF' },
   chipTextActive: { color: '#F4F7FF' },
   submitBtn: {
     marginTop: 8,
