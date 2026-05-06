@@ -100,9 +100,8 @@ function businessTypeToVoiceScenario(bt: B2BBusinessType): VoiceScenario {
       return 'nails';
     case 'restaurant':
       return 'restaurant';
-    case 'potraviny':
     case 'grocery_retail':
-      return 'potraviny';
+      return 'retail_taphoa';
     case 'grocery_wholesale':
       return 'grocery_wholesale';
     case 'hospitality_stay':

@@ -1,5 +1,6 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { FontFamily } from '../theme/typography';
+import { applyWebStyles } from '../utils/applyWebStyles';
 
 type Props = {
   visible: boolean;
@@ -20,7 +21,7 @@ export function AuthPaywallModal({
 
   return (
     <View style={styles.overlay}>
-      <View style={styles.card}>
+      <View style={styles.card} className={applyWebStyles('kn-glass')}>
         <Text style={styles.title}>{title}</Text>
         <Text style={styles.desc}>{description}</Text>
         <Pressable onPress={onContinue} style={({ pressed }) => [styles.cta, pressed && { opacity: 0.82 }]}>

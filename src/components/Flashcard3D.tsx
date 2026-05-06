@@ -44,14 +44,14 @@ export function Flashcard3D({ prompt, meaning, knowledge }: Flashcard3DProps) {
 
   return (
     <Pressable onPress={onFlip} style={({ pressed }) => [styles.wrap, pressed && { opacity: 0.92 }]}>
-      <Animated.View style={[styles.card, styles.frontCard, frontStyle]}>
+      <Animated.View style={StyleSheet.flatten([styles.card, styles.frontCard, frontStyle])}>
         <View style={styles.innerGlow} />
         <Text numberOfLines={4} style={styles.promptText}>
           {prompt}
         </Text>
       </Animated.View>
 
-      <Animated.View style={[styles.card, styles.backCard, backStyle]}>
+      <Animated.View style={StyleSheet.flatten([styles.card, styles.backCard, backStyle])}>
         <Text style={styles.backTitle}>Dịch nghĩa</Text>
         <Text numberOfLines={3} style={styles.meaningText}>
           {meaning}

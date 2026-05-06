@@ -1,0 +1,606 @@
+// ViGlobal user domain — align with product spec (phone + PIN, tiers, B2B businesses).
+// Run in a Node service: npm i -D prisma && npm i @prisma/client && npx prisma validate
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  B2C
+  B2B
+  /// EU / diaspora B2B merchant (legacy `B2B` treated as EU in product copy where needed).
+  B2B_EU
+  /// Vietnam domestic vendor (taxi, homestay, F&B) — QR payouts + platform commission.
+  B2B_VN
+  ADMIN
+  /// Field broker / Mica affiliate — onboards merchants + earns fee-share on fulfilled tourism.
+  BROKER
+}
+
+enum UserTier {
+  STANDARD
+  POWER
+  ELITE
+}
+
+enum TxType {
+  P2P
+  BOOKING
+  BOOKING_LOCK
+  TOPUP
+  WITHDRAW
+  CHARITY_FEE
+  ESCROW_LOCK
+  ESCROW_REFUND
+  PENALTY_FEE
+  AI_LEGAL_SCAN
+  LESSON_REWARD
+  PLATFORM_FEE
+  /// Tourist → VN merchant QR settlement (split: platform fee + vendor net).
+  QR_MERCHANT
+  /// Broker commission credit (Mica / affiliate) paid from treasury on fulfilled inbound tourism.
+  BROKER_COMMISSION
+}
+
+enum TxStatus {
+  PENDING
+  SUCCESS
+  FAILED
+}
+
+enum BrokerEscrowStatus {
+  PENDING_CLEARANCE
+  RELEASED
+  CANCELLED_CHARGEBACK
+  CANCELLED_FRAUD_WASH
+  CANCELLED_OTHER
+}
+
+enum BrokerEscrowKind {
+  PAYG_AI_NET_SHARE
+  B2B_POWER_SUBSCRIPTION
+  ACTIVATION_BOUNTY
+  LEADERSHIP_BONUS
+}
+
+/// Vietnam inbound hub — B2B verticals (+84 merchants) surfaced to tourists & expats.
+enum BizType {
+  HOTEL
+  HOMESTAY
+  TOUR_OPERATOR
+  LOCAL_EXPERIENCE
+  RESTAURANT
+  TRANSPORT
+}
+
+enum BookStatus {
+  PENDING
+  CONFIRMED
+  COMPLETED
+  CANCELLED
+}
+
+enum TourismBookingStatus {
+  PENDING
+  CONFIRMED
+  COMPLETED
+  CANCELLED
+}
+
+enum PayStatus {
+  UNPAID
+  DEPOSIT_PAID
+  FULL_PAID
+}
+
+enum DocType {
+  PASSPORT
+  VISA
+  GREEN_CARD
+}
+
+/// Travel hub purchase line (UI copy may say “eSIM”; value is `ESIM`).
+enum TravelType {
+  FLIGHT
+  CHAUFFEUR
+  FAST_TRACK
+  TELEHEALTH
+  ESIM
+}
+
+/// Extend in migrations if you need paid vs fulfilled vs refunded granularity.
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  COMPLETED
+  CANCELLED
+  FAILED
+}
+
+enum AIPersona {
+  LEONA
+  MINH_KHANG
+  TEACHER
+  RECEPTIONIST
+}
+
+/// Human-in-the-loop AI social posts — cron creates `DRAFT` only; Meta publish is manual.
+enum MarketingPostStatus {
+  DRAFT
+  PUBLISHED
+  REJECTED
+}
+
+/// LLM router task labels — drives model tier (mini vs full) in `AIRouterService`.
+enum LlmRouterTaskType {
+  SIMPLE_TRANSLATION
+  ROUTING_INQUIRY
+  COMPLEX_MARKETING
+  DEEP_CONTEXT
+}
+
+model User {
+  id              String   @id @default(uuid())
+  phoneNumber     String   @unique // E.164 prefix checks: +84, +49, +420, …
+  role            Role     @default(B2C)
+  pinCode         String // App / transaction gate — store hash only at application layer
+  tier            UserTier @default(STANDARD)
+  createdAt       DateTime @default(now())
+  viStarPoints    Int      @default(0) // ViStar: kid-facing virtual points (no cash value)
+  /// Anti-fraud fiat cashout: future Withdrawal API MUST allow initiation only when
+  /// `userType === "B2B"` AND `isKYCVerified === true` (never for unverified B2C).
+  isKYCVerified Boolean @default(false)
+  /// Segment label aligned with product (e.g. `"B2C"` | `"B2B"`). Enforce at withdrawal time with `isKYCVerified`.
+  userType      String  @default("B2C")
+  /// B2B subscription tier: `"BASIC"` | `"ELITE"`.
+  subscriptionPlan   String    @default("BASIC")
+  subscriptionExpiry DateTime?
+  /// Product routing: diaspora vs inbound Vietnam travel (`EXPAT` | `TOURIST`).
+  persona              String    @default("EXPAT")
+  /// VN B2B vendor vertical: `TAXI` | `HOMESTAY` | `FOOD` | … (free text for reporting).
+  businessCategory     String?
+  /// GDPR erasure completed — no PII processing beyond legal retention.
+  gdprErasedAt         DateTime?
+
+  /// Expo / FCM device push token (Expo abstracts native FCM/APNs). Nullable until client registers.
+  fcmToken             String?
+  /// Verified contact for Zero-SMS auth and transactional email (optional until linked).
+  email                String?   @unique
+  emailVerifiedAt      DateTime?
+
+  profile            Profile?
+  wallet             Wallet?
+  businesses         Business[]
+  bookings           Booking[]
+  tourismBookings    TourismBooking[]
+  secureVaults       SecureVault[]
+  travelOrders       TravelOrder[]
+  aiLogs             AILog[]
+  llmApiUsageLogs    LlmApiUsageLog[]
+  piggyBanksFunded   PiggyBank[] @relation("PiggyBankParentUser")
+  piggyBanksForChild PiggyBank[] @relation("PiggyBankChildUser")
+  /// Businesses acquired via Mica / broker field kit (`Business.brokerId`).
+  brokeredBusinesses Business[] @relation("BrokerAcquiredBusiness")
+  /// Optional upline (master broker) for leadership bonus — enforce `Role.BROKER` in app layer.
+  masterBrokerId String?
+  masterBroker     User?   @relation("BrokerHierarchy", fields: [masterBrokerId], references: [id], onDelete: SetNull)
+  subBrokers       User[]  @relation("BrokerHierarchy")
+  brokerEscrows    BrokerCommissionEscrow[] @relation("EscrowBeneficiary")
+  /// Opaque refresh sessions (hash-only); cascade on user delete (GDPR).
+  authRefreshSessions AuthRefreshSession[]
+
+  @@index([masterBrokerId])
+}
+
+/// Refresh token session — opaque token stored only as **SHA-256 hex** on server; rotation via `replacementSession`.
+model AuthRefreshSession {
+  id     String @id @default(uuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  /// SHA-256 hex (64 chars) of `crypto.randomBytes(32).toString('hex')` — never store plaintext refresh.
+  tokenHash String @unique
+
+  expiresAt  DateTime
+  createdAt  DateTime  @default(now())
+  lastUsedAt DateTime?
+  revokedAt  DateTime?
+
+  /// After rotation: this row points to the new session. Null = active tail or not yet rotated-from.
+  replacedBySessionId String? @unique
+  replacementSession  AuthRefreshSession?  @relation("AuthRefreshRotation", fields: [replacedBySessionId], references: [id], onDelete: SetNull)
+  supersededSessions    AuthRefreshSession[] @relation("AuthRefreshRotation")
+
+  @@index([userId, expiresAt])
+  @@index([userId, revokedAt])
+}
+
+/// Short-lived email OTP for sign-up / verification (Zero-SMS Doctrine).
+model EmailOtpChallenge {
+  id           String   @id @default(uuid())
+  email        String
+  codeHash     String
+  expiresAt    DateTime
+  attemptCount Int      @default(0)
+  createdAt    DateTime @default(now())
+
+  @@index([email])
+}
+
+/// Append-only audit of OTP send attempts — used for per-email rate limiting (SES cost / abuse).
+model EmailOtpSendLog {
+  id        String   @id @default(uuid())
+  email     String
+  createdAt DateTime @default(now())
+
+  @@index([email, createdAt])
+}
+
+/// Deduplicated AI text translation — hash lookup avoids repeat OpenAI spend (P2: $0 on hit).
+model TranslationCache {
+  id             String   @id @default(uuid())
+  /// Normalized source (trimmed, collapsed whitespace) — stored for audit/debug.
+  sourceText     String
+  /// BCP-47-ish tag, e.g. `vi`, `en`, `de`.
+  targetLanguage String
+  translatedText String
+  /// SHA-256 hex of normalized `sourceText` + `targetLanguage` — unique index = O(1) lookup.
+  hash           String   @unique
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+/// Tracks referred-merchant QR booking completions toward the 500 VIG activation bounty (fraud-gated).
+model MerchantBrokerActivation {
+  businessId               String   @id
+  activationBountyEscrowId String?  @unique
+  bountyAwarded            Boolean  @default(false)
+  updatedAt                DateTime @updatedAt
+
+  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+}
+
+/// All broker commissions & bounties default to **pending clearance** (~7d) before spendable release.
+model BrokerCommissionEscrow {
+  id                       String             @id @default(uuid())
+  beneficiaryUserId        String
+  amountVIG                Float
+  kind                     BrokerEscrowKind
+  status                   BrokerEscrowStatus @default(PENDING_CLEARANCE)
+  createdAt                DateTime           @default(now())
+  clearAt                  DateTime
+  releasedAt               DateTime?
+  idempotencyKey           String             @unique
+  stripePaymentIntentId    String?
+  paymentMethodFingerprint String?
+  underlyingKngNetVig      Float?
+  merchantBusinessId       String?
+  sourceBookingId          String?
+  pendingTransactionId     String?            @unique
+
+  beneficiary User @relation("EscrowBeneficiary", fields: [beneficiaryUserId], references: [id], onDelete: Cascade)
+
+  @@index([status, clearAt])
+  @@index([beneficiaryUserId, status])
+}
+
+/// Parent-pre-funded lesson rewards (VIG never minted by treasury — only released from `lockedVigAmount`).
+model PiggyBank {
+  id               String    @id @default(uuid())
+  parentId         String
+  childId          String
+  lockedVigAmount  Float     @default(0)
+  rewardPerLesson  Float     @default(0)
+  /// Set on create (e.g. now + 30 days). Expired piggy blocks lesson VIG; cron refunds remainder to parent wallet.
+  expiresAt        DateTime?
+
+  parent User @relation("PiggyBankParentUser", fields: [parentId], references: [id], onDelete: Cascade)
+  child  User @relation("PiggyBankChildUser", fields: [childId], references: [id], onDelete: Cascade)
+
+  @@unique([parentId, childId])
+  @@index([parentId])
+  @@index([expiresAt])
+}
+
+model Profile {
+  id           String  @id @default(uuid())
+  userId       String  @unique
+  fullName     String
+  avatarUrl    String?
+  country      String // Display or ISO; app copy: Đức, Séc, Pháp, Mỹ…
+  languageCode String  @default("vi") // Smart trio: vi | en | local
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Wallet {
+  id               String  @id @default(uuid())
+  userId           String  @unique
+  /// Spendable VIG (EUR-pegged 1:1). Booking pre-auth moves funds here → `lockedBalanceVIG`.
+  balanceVIG       Float   @default(0)
+  /// VIG held for active booking commitments (not spendable until release or cancel rules apply).
+  lockedBalanceVIG Float   @default(0)
+  stripeCustId     String? // Stripe Customer id (gateway link)
+
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  transactions Transaction[]
+}
+
+/// Ledger line stored against the wallet whose history UI/API loads (`walletId`).
+/// For P2P you may write two rows (debit/credit) sharing a correlation id in app layer, or one row per party.
+model Transaction {
+  id         String   @id @default(uuid())
+  walletId   String
+  senderId   String // User id or sentinel e.g. `System` for top-ups
+  receiverId String
+  amountVIG  Float
+  feeAmount  Float    @default(0) // ViGlobal fee (e.g. 2.5% or split-fee)
+  type       TxType
+  status     TxStatus
+  createdAt  DateTime @default(now())
+  /// Prevents double AI / billing debits when clients retry the same request id.
+  idempotencyKey String? @unique
+
+  wallet Wallet @relation(fields: [walletId], references: [id], onDelete: Cascade)
+
+  @@index([walletId, createdAt])
+  @@index([senderId, receiverId])
+}
+
+/// Stripe webhook idempotency — never double-credit VIG on event replay.
+model ProcessedStripeEvent {
+  id              String   @id @default(uuid())
+  stripeEventId   String   @unique
+  eventType       String
+  paymentIntentId String?
+  createdAt       DateTime @default(now())
+}
+
+/// Singleton aggregate for live CSR counter on Home (enforce one row in app migrations / seed).
+model CharityFund {
+  id             Int      @id @default(1)
+  totalAmountVIG Float    @default(0)
+  updatedAt      DateTime @updatedAt
+}
+
+/// Immutable audit trail: **1% of KNG net revenue** per settled platform event (source of truth for Hub charity UI).
+model CharityLedgerEntry {
+  id                 String   @id @default(uuid())
+  idempotencyKey     String   @unique
+  kngNetRevenueVig   Float
+  charityAccrualVig  Float
+  sourceKind         String
+  createdAt          DateTime @default(now())
+
+  @@index([createdAt])
+}
+
+model Business {
+  id           String    @id @default(uuid())
+  ownerId      String // B2B User id
+  /// Optional broker (`Role.BROKER`) who placed the Mica gold QR / acquired this merchant.
+  brokerId     String?
+  /// Dynamic deep-link / universal URL encoded on the merchant’s physical Mica sign.
+  qrCodeUrl    String?
+  name         String
+  category     BizType
+  locationLat  Float
+  locationLng  Float
+  description  String    @default("")
+  isTopAd      Boolean   @default(false) // 90-day featured placement
+  adExpiryDate DateTime?
+  /// Omniversal Prime: anchor for 90-day free top-rank trial + paid lock-in ladder.
+  joinedAt                 DateTime  @default(now())
+  /// High placement in discovery / ad slots (trial or paid credits).
+  isPremiumRank            Boolean   @default(true)
+  /// VIG balance reserved for sponsored ranking after trial (burned daily while active).
+  paidAdCredits            Float     @default(0)
+  /// UTC anchor for idempotent daily `paidAdCredits` burn (post–day-90 only).
+  lastAdCreditDeductionAt  DateTime?
+  /// NAPAS acquirer BIN (6 digits) for VietQR EMV — e.g. VietinBank `970415`.
+  vietQrBankBin         String?
+  /// Domestic bank account number printed on VietQR.
+  vietQrAccountNumber   String?
+  /// Beneficiary name as registered with the bank (VietQR display / NAPAS).
+  vietQrAccountName     String?
+
+  owner            User              @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  broker           User?             @relation("BrokerAcquiredBusiness", fields: [brokerId], references: [id], onDelete: SetNull)
+  services         Service[]
+  bookings         Booking[]
+  tourismServices  TourismService[]
+  tourismBookings  TourismBooking[]
+  brokerActivation MerchantBrokerActivation?
+
+  @@index([ownerId])
+  @@index([category, locationLat, locationLng])
+}
+
+/// Bookable offering under a B2B business (minimal shape — extend price/duration in migrations).
+model Service {
+  id         String @id @default(uuid())
+  businessId String
+  name       String
+  priceVIG   Float  @default(0) // List price (VIG 1:1 EUR); booking locks 100% at create time
+
+  business Business  @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  bookings Booking[]
+
+  @@index([businessId])
+}
+
+model Booking {
+  id                     String     @id @default(uuid())
+  userId                 String // B2C booker
+  businessId             String
+  serviceId              String
+  /// GLOBAL STANDARD: stored as UTC instant only. API accepts ISO 8601 with `Z` or explicit offset — never naive local strings.
+  timeSlot               DateTime
+  status                 BookStatus
+  paymentStatus          PayStatus
+  /// Full list-price VIG pre-authorized at booking (moved from wallet `balanceVIG` → `lockedBalanceVIG`).
+  lockedAmountVIG        Float      @default(0)
+  /// 10% platform commission (VIG) collected from B2B on successful QR completion — persisted for reporting.
+  platformFeeVIG        Float      @default(0)
+  /// SHA-256 hex of one-time QR completion token (issued when `lockedAmountVIG > 0`). Never store plaintext token.
+  completionQrTokenHash String?
+  /// Set if a card rail later disputes / refunds (broker bounty fraud checks).
+  refundedAt DateTime?
+  /// Optional Stripe PI when checkout is card-backed (chargeback verification on escrow release).
+  stripePaymentIntentId String?
+  /// Stripe `payment_method` fingerprint or synthetic `VIG_BOOKER:<userId>` for wallet-only QR.
+  paymentMethodFingerprint String?
+  /// Set when `status` becomes `COMPLETED` (activation bounty + audit).
+  completedAt DateTime?
+
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  service  Service  @relation(fields: [serviceId], references: [id], onDelete: Restrict)
+
+  @@index([userId, timeSlot])
+  @@index([businessId, timeSlot])
+}
+
+/// Inbound tourism catalog line (hotels, tours, fixers, F&B) — distinct from legacy `Service` / `Booking`.
+model TourismService {
+  id          String   @id @default(uuid())
+  businessId  String
+  title       String
+  priceVIG    Float    @default(0)
+  description String   @default("")
+
+  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  tourismBookings TourismBooking[]
+
+  @@index([businessId])
+}
+
+model TourismBooking {
+  id         String                 @id @default(uuid())
+  userId     String
+  businessId String
+  serviceId  String
+  startDate  DateTime
+  endDate    DateTime
+  guestCount Int
+  status     TourismBookingStatus
+  /// 5% ViGlobal commission taken from the Vietnamese provider’s share of list base.
+  providerFeeVIG Float @default(0)
+  /// 5–7% “Trust & AI Shield” fee on the tourist (applied to base list amount).
+  touristFeeVIG Float @default(0)
+  /// Gross deducted from tourist spendable wallet: base list + `touristFeeVIG`.
+  totalPaidVIG Float @default(0)
+  /// Provider wallet credit: base list − `providerFeeVIG`.
+  netProviderEarningsVIG Float @default(0)
+  /// Share of platform fees routed to `Business.brokerId` when booking is marked COMPLETED.
+  brokerCommissionVIG    Float     @default(0)
+  brokerCommissionPaidAt DateTime?
+  /// Snapshot: `providerFeeVIG + touristFeeVIG` at completion (gross platform fee pool on the booking).
+  grossPlatformFeePoolVIG  Float @default(0)
+  /// After estimated acquirer allocation — ViGlobal net platform revenue attributable to this booking (audit; broker payout uses net-revenue-share outside tourism).
+  kngNetPlatformRevenueVIG Float @default(0)
+  /// EUR→VND spot locked at booking time (VIG ≡ EUR) — cash / VietQR off-ramp reconciliation.
+  lockedEurVndRate Float?
+  fxLockedAt       DateTime?
+  /// Rounded VND equivalent of `totalPaidVIG` at `fxLockedAt` (display + local bank transfer hint).
+  offRampVndHint   Int?
+
+  user     User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  business Business       @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  service  TourismService @relation(fields: [serviceId], references: [id], onDelete: Restrict)
+
+  @@index([userId, startDate])
+  @@index([businessId, startDate])
+}
+
+/// Encrypted blob only — never store plaintext identity docs in `encryptedData`.
+model SecureVault {
+  id            String   @id @default(uuid())
+  userId        String
+  documentType  DocType
+  encryptedData String // AES-256 ciphertext + IV metadata as produced by your crypto layer
+  uploadedAt    DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, documentType])
+}
+
+model TravelOrder {
+  id            String      @id @default(uuid())
+  userId        String
+  orderType     TravelType
+  referenceCode String // Airline PNR / partner ref
+  amountVIG     Float
+  status        OrderStatus
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, status])
+  @@index([referenceCode])
+}
+
+/// OpenAI chat completion usage — model + token counts for cost auditing (router-selected tier).
+model LlmApiUsageLog {
+  id               String            @id @default(uuid())
+  taskType         LlmRouterTaskType
+  model            String
+  promptTokens     Int?
+  completionTokens Int?
+  totalTokens      Int?
+  createdAt        DateTime          @default(now())
+  userId           String?
+  user             User?             @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([createdAt])
+  @@index([taskType, createdAt])
+  @@index([model, createdAt])
+}
+
+/// Per-call AI usage / billing audit (e.g. “Translate Menu”, “Call Booking”).
+model AILog {
+  id           String    @id @default(uuid())
+  userId       String
+  persona      AIPersona
+  action       String // e.g. "Translate Menu", "Call Booking"
+  tokensBurned Float // VIG-equivalent burn for this AI invocation
+  timestamp    DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, timestamp])
+  @@index([persona, timestamp])
+}
+
+/// Facebook / social copy drafted by cron or manual trigger — admin approves before Graph API publish.
+model MarketingPost {
+  id                  String              @id @default(uuid())
+  content             String
+  /// Human-approved source text for polyglot translation + optional official Page publish.
+  approvedBaseContent String?
+  status              MarketingPostStatus @default(DRAFT)
+  createdAt           DateTime            @default(now())
+  publishedAt         DateTime?
+  translations        MarketingTranslation[]
+
+  @@index([status, createdAt])
+}
+
+/// Localized ammunition for manual paste into third-party Facebook Groups (no automated group posting).
+model MarketingTranslation {
+  id                 String @id @default(uuid())
+  postId             String
+  languageCode       String
+  translatedContent  String
+  targetAudience     String
+
+  post MarketingPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@unique([postId, languageCode])
+  @@index([postId])
+}

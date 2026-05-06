@@ -170,7 +170,7 @@ export function ProactiveSuggestions({
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.row}>
         {loading
           ? [0, 1, 2].map((idx) => (
-              <Animated.View key={`sk-${idx}`} style={[styles.skeletonChip, shimmerStyle]} />
+              <Animated.View key={`sk-${idx}`} style={StyleSheet.flatten([styles.skeletonChip, shimmerStyle])} />
             ))
           : suggestions.map((item) => (
               <Pressable

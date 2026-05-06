@@ -9,6 +9,7 @@
  */
 
 import type { WalletPackageId } from './globalWalletPackages';
+import { APP_BRAND } from './appBrand';
 
 // ---------------------------------------------------------------------------
 // Core enums (string unions — stable wire-friendly keys)
@@ -68,6 +69,12 @@ export type CommercialOfferDefinition = {
   guardrails: string;
   productionStatus: ProductionRolloutStatus;
 };
+
+export const BRAND_POLICY = {
+  publicSurfaceName: APP_BRAND.publicName,
+  b2bSurfaceName: APP_BRAND.internalName,
+  internalDocsName: APP_BRAND.masterName,
+} as const;
 
 /** Canonical backbone capability keys (doctrine / PDF service grain). */
 export type BackboneServiceKey =

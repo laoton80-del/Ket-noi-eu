@@ -1,5 +1,6 @@
 import { memo, type ReactNode } from 'react';
 import { StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
+import { applyWebStyles } from '../utils/applyWebStyles';
 import { LinearGradient } from 'expo-linear-gradient';
 import Svg, { Circle, G, Path, Polygon } from 'react-native-svg';
 import { theme } from '../theme/theme';
@@ -83,7 +84,7 @@ export const TrustSurfaceCard = memo(function TrustSurfaceCard({
       : (['#F3DEB0', '#DFC175', '#B98A32'] as const);
 
   return (
-    <View style={[styles.cardBase, style]}>
+    <View style={[styles.cardBase, style]} className={applyWebStyles('kn-glass')}>
       <LinearGradient
         colors={gradientColors}
         start={{ x: 0, y: 0 }}

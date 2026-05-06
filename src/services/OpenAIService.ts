@@ -2,6 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as FileSystem from 'expo-file-system/legacy';
 import { Platform } from 'react-native';
 import type { VoicePersona } from '../api/voiceClient';
+import { trackEvent } from './AnalyticsService';
 import { getPersonaSystemPrompt } from '../config/aiPrompts';
 import type { LegalScenario } from '../config/countryPacks';
 import { vaultDataExtractorPrimarySystemPrompt, vaultDataExtractorSecondarySystemPrompt } from '../config/countryPacks';
@@ -12,6 +13,8 @@ import { adaptResponse, buildAIIdentityPromptContext, getAIIdentity, getAIIdenti
 import { buildNetworkPromptInjection, type NetworkPromptContextInput } from './networkEffect';
 import { devWarn } from '../utils/devLog';
 import { mergeTrustBackendHeaders } from '../utils/trustBackendHeaders';
+import { isDemoSandboxActive, mockOpenAiUserVisibleReply } from './ux/DemoSandbox';
+import { checkAndConsumeQuota, QuotaExceededError } from './ai/AIQuotaManager';
 
 function throwAiProxyHttpError(res: Response, bodyText: string, label: string): never {
   let code = `${label}_${res.status}`;
@@ -53,6 +56,14 @@ async function openAIRequest<T>({ path, method = 'POST', headers, body }: OpenAI
   if (!BACKEND_API_BASE) throw new Error('backend_api_base_missing');
   if (method !== 'POST' || path !== '/chat/completions') throw new Error('openai_proxy_unsupported');
   const parsed = typeof body === 'string' ? (JSON.parse(body) as { messages?: unknown[]; temperature?: number; max_tokens?: number }) : {};
+  if (isDemoSandboxActive()) {
+    const msgs = Array.isArray(parsed.messages) ? parsed.messages : [];
+    const lastUser = [...msgs].reverse().find((m) => typeof m === 'object' && m && (m as { role?: string }).role === 'user') as
+      | { content?: string }
+      | undefined;
+    const text = mockOpenAiUserVisibleReply(typeof lastUser?.content === 'string' ? lastUser.content : '');
+    return { choices: [{ message: { content: text } }] } as T;
+  }
   const baseHeaders = await backendAiHeaders();
   const res = await fetch(`${BACKEND_API_BASE}/aiProxy`, {
     method: 'POST',
@@ -265,13 +276,19 @@ async function readAuthSnapshot(): Promise<Partial<AuthUser> | null> {
 
 export async function analyzeImage(
   base64Image: string,
-  options?: { systemPrompt?: string; userPrompt?: string }
+  options?: {
+    systemPrompt?: string;
+    userPrompt?: string;
+    /** Data-URL MIME for vision (raw base64 without prefix). Default `image/jpeg`. */
+    imageMimeType?: 'image/jpeg' | 'image/webp' | 'image/png';
+  }
 ): Promise<string> {
   const systemPrompt =
     options?.systemPrompt ??
     "Bạn là gia sư xuất sắc. Hãy phân tích bài tập trong ảnh. BẮT BUỘC trả về định dạng JSON (response_format: { type: 'json_object' }) " +
       'với đúng 3 keys: dich_de (string), kien_thuc (string), cau_hoi_goi_mo (array of 3 strings).';
   const userPrompt = options?.userPrompt ?? 'Phân tích bài tập và trả JSON đúng schema.';
+  const imageMimeType = options?.imageMimeType ?? 'image/jpeg';
   const data = await withOneRetry(() =>
     openAIRequest<{
       choices?: { message?: { content?: string } }[];
@@ -290,7 +307,7 @@ export async function analyzeImage(
             role: 'user',
             content: [
               { type: 'text', text: userPrompt },
-              { type: 'image_url', image_url: { url: `data:image/jpeg;base64,${base64Image}` } },
+              { type: 'image_url', image_url: { url: `data:${imageMimeType};base64,${base64Image}` } },
             ],
           },
         ],
@@ -306,7 +323,11 @@ export async function analyzeImage(
   return content;
 }
 
-export async function scanDocumentWithAI(base64Image: string, countryCode?: string): Promise<DocumentScanAiResult> {
+export async function scanDocumentWithAI(
+  base64Image: string,
+  countryCode?: string,
+  imageMimeType: 'image/jpeg' | 'image/webp' | 'image/png' = 'image/webp'
+): Promise<DocumentScanAiResult> {
   const data = await withOneRetry(() =>
     openAIRequest<{
       choices?: { message?: { content?: string } }[];
@@ -325,7 +346,7 @@ export async function scanDocumentWithAI(base64Image: string, countryCode?: stri
             role: 'user',
             content: [
               { type: 'text', text: 'Trích xuất documentType và expiryDate từ ảnh giấy tờ.' },
-              { type: 'image_url', image_url: { url: `data:image/jpeg;base64,${base64Image}` } },
+              { type: 'image_url', image_url: { url: `data:${imageMimeType};base64,${base64Image}` } },
             ],
           },
         ],
@@ -377,7 +398,7 @@ export async function scanDocumentWithAI(base64Image: string, countryCode?: stri
             role: 'user',
             content: [
               { type: 'text', text: 'Kiểm tra lại duy nhất ngày hết hạn.' },
-              { type: 'image_url', image_url: { url: `data:image/jpeg;base64,${base64Image}` } },
+              { type: 'image_url', image_url: { url: `data:${imageMimeType};base64,${base64Image}` } },
             ],
           },
         ],
@@ -394,7 +415,10 @@ export async function scanDocumentWithAI(base64Image: string, countryCode?: stri
   return { documentType: firstPass.documentType, expiryDate: null, confidence: 'low' };
 }
 
-export async function analyzeKidsHomeworkWithAI(base64Image: string): Promise<KidsHomeworkAiResult> {
+export async function analyzeKidsHomeworkWithAI(
+  base64Image: string,
+  imageMimeType: 'image/jpeg' | 'image/webp' | 'image/png' = 'image/jpeg'
+): Promise<KidsHomeworkAiResult> {
   const data = await withOneRetry(() =>
     openAIRequest<{
       choices?: { message?: { content?: string } }[];
@@ -414,7 +438,7 @@ export async function analyzeKidsHomeworkWithAI(base64Image: string): Promise<Ki
             role: 'user',
             content: [
               { type: 'text', text: 'Giải thích bài tập này theo từng bước đơn giản cho trẻ.' },
-              { type: 'image_url', image_url: { url: `data:image/jpeg;base64,${base64Image}` } },
+              { type: 'image_url', image_url: { url: `data:${imageMimeType};base64,${base64Image}` } },
             ],
           },
         ],
@@ -502,6 +526,26 @@ export async function getChatCompletion(
     : null;
   const injectedMessages = hiddenContext ? [{ role: 'user' as const, content: `[CONTEXT ẨN] ${hiddenContext}` }, ...messages] : messages;
 
+  const charsApprox =
+    systemPrompt.length +
+    (identityContext?.length ?? 0) +
+    (networkContext?.length ?? 0) +
+    injectedMessages.reduce((acc, m) => acc + m.content.length, 0);
+  const whisperPad = options?.serviceContext === 'interpreter' ? 520 : 0;
+  const requiredTokens = 240 + Math.ceil(charsApprox / 4) + whisperPad;
+  const quotaUserId = String(options?.userId ?? authSnapshot?.phone ?? '').trim();
+  const subPlan = authSnapshot?.subscriptionPlan ?? 'free';
+  if (quotaUserId.length > 0 && subPlan === 'free') {
+    try {
+      await checkAndConsumeQuota(quotaUserId, requiredTokens, { subscriptionPlan: subPlan });
+    } catch (e) {
+      if (e instanceof QuotaExceededError) {
+        throw e;
+      }
+      throw e;
+    }
+  }
+
   const data = await withOneRetry(() =>
     openAIRequest<{
       choices?: { message?: { content?: string } }[];
@@ -525,6 +569,9 @@ export async function getChatCompletion(
   const content = data.choices?.[0]?.message?.content?.trim();
   if (!content) {
     throw new Error('openai_chat_empty');
+  }
+  if (options?.serviceContext === 'interpreter') {
+    trackEvent('ai_interpreter_llm_used', { persona: String(persona) });
   }
   return identity ? adaptResponse(content, identity) : content;
 }

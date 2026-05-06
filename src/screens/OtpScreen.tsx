@@ -45,7 +45,7 @@ export function OtpScreen() {
           ))}
         </View>
         <Pressable
-          onPress={() => navigation.navigate('SetupProfile')}
+          onPress={() => navigation.navigate('RoleSelection')}
           disabled={!canContinue}
           style={({ pressed }) => [styles.cta, !canContinue && styles.ctaDisabled, pressed && { opacity: 0.82 }]}
         >

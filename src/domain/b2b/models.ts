@@ -3,10 +3,17 @@ import type { FirestoreTimestamp } from './firestoreTypes';
 /**
  * Vertical — drives resource shape, engine, and console modules.
  *
+ * **GLOBAL_V1 product-facing verticals (mapping):** Nails/Spa → `nails`; Restaurant → `restaurant`; Grocery/retail → `grocery_retail`;
+ * Wholesale/order supply → `grocery_wholesale`; Hotel & Homestay → `hospitality_stay` + optional {@link HospitalityStayVariant};
+ * Vietnamese service businesses → use closest `B2BBusinessType` until a dedicated enum variant is approved (do not infer web parity — P7).
+ *
  * **Phase 3:** `grocery_retail` and `grocery_wholesale` are **distinct** product/engine semantics (đổ hàng / sỉ vs tạp hoá).
  * `hospitality_stay` is room/night stay (inquiry vs billable reservation is explicit on booking + summaries).
  * **`potraviny`** remains for **legacy tenants** only — same fulfillment family as retail; migrate off when Firestore allows.
  * Bridge table: `b2bVerticalBridge.fulfillmentEngineFamily`, marketplace map: `b2bMarketplaceAdapter`.
+ *
+ * **Domain-facing truth (GLOBAL_V1):** separate `retail` | `wholesale` | `hospitality_stay` (hotel|homestay via variant), lifecycle
+ * `inquiry` | `confirmed` | `billable` | `non-billable`, ops `staff handoff` | `fulfillment state` — see order/booking types below, not a single flat enum.
  */
 export type B2BBusinessType =
   | 'nails'
@@ -15,6 +22,9 @@ export type B2BBusinessType =
   | 'grocery_wholesale'
   | 'hospitality_stay'
   | 'potraviny';
+
+/** When `businessType === 'hospitality_stay'`, distinguishes **hotel** vs **homestay** product semantics (GLOBAL_V1). Optional for legacy rows. */
+export type HospitalityStayVariant = 'hotel' | 'homestay';
 
 /** Mirrors B2C wallet geo groups for usage debit. */
 export type B2BPricingGroup = 'group1' | 'group2';
@@ -70,6 +80,13 @@ export type BusinessTenant = {
   name: string;
   legalName?: string;
   businessType: B2BBusinessType;
+  /** Present when `businessType === 'hospitality_stay'` — hotel vs homestay (GLOBAL_V1). */
+  hospitalityStayVariant?: HospitalityStayVariant;
+  /**
+   * Optional product/analytics flag: tenant chủ lực phục vụ **doanh nghiệp dịch vụ mang tính Việt** (GLOBAL_V1 vertical).
+   * **Không** thay `businessType` cho engine; chỉ metadata hiển thị / báo cáo khi cần.
+   */
+  vnServiceBusinessPrimary?: boolean;
   /** IANA timezone default for locations. */
   timezone: string;
   pricingGroup: B2BPricingGroup;

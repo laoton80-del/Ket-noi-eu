@@ -9,6 +9,7 @@ function run(cmd, env = process.env) {
 }
 
 run('npm run ci:expo-readiness');
+run('npm run prepare:native-firebase-config');
 run('npm run security:preflight');
 run('npm run commercial:preflight');
 run('npm run trust:native-readiness', { ...process.env, TRUST_NATIVE_READINESS_STRICT: '1' });

@@ -199,12 +199,12 @@ export function SetupProfileScreen() {
             }
             if (redirectTo === 'LeTan') {
               setPendingRedirect(null);
-              navigation.navigate('Tabs', { screen: 'LeTan' });
+              navigation.navigate('Tabs', { screen: 'TabAi' });
               return;
             }
             if (redirectTo === 'HocTap') {
               setPendingRedirect(null);
-              navigation.navigate('Tabs', { screen: 'HocTap' });
+              navigation.navigate('Tabs', { screen: 'TabHome' });
               return;
             }
             setPendingRedirect(null);

@@ -1,4 +1,4 @@
-import { INTERPRETER_SESSION_CREDITS } from '../liveInterpreterService';
+import { INTERPRETER_SESSION_CREDITS } from '../interpreterSessionConstants';
 import { calculateCallCreditPrice, calculateLeTanBookingPrice } from '../PaymentsService';
 import type { DetectOpportunityInput, SellCTA, SellingOpportunity, SellingAction } from './sellingTypes';
 
@@ -70,7 +70,7 @@ export function generateSellCTA(
         resume: {
           route: 'Tabs',
           params: {
-            screen: 'LeTan',
+            screen: 'TabAi',
             params: { proactiveQuestion, autoSimulate: true },
           },
         },

@@ -3,156 +3,79 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import * as Haptics from 'expo-haptics';
-import { LinearGradient } from 'expo-linear-gradient';
-import { memo, useCallback, useRef, useState } from 'react';
-import { Image, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { StatusBar } from 'expo-status-bar';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import {
+  ActivityIndicator,
+  Alert,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+  useWindowDimensions,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import Svg, { Circle, Defs, Path, Rect, Stop, G, LinearGradient as SvgLinearGradient } from 'react-native-svg';
+import { AppImage } from '../components/ui/AppImage';
 import { AppButton } from '../components/AppButton';
 import { AuthPaywallModal } from '../components/AuthPaywallModal';
+import { PersonaOnboardingModal } from '../components/PersonaOnboardingModal';
 import { ProactiveSuggestions } from '../components/ProactiveSuggestions';
+import { CharityWidget } from '../components/ui/CharityWidget';
+import { VionaCard } from '../components/viona/VionaCard';
+import { VionaSectionHeader } from '../components/viona/VionaSectionHeader';
+import { vionaTrust } from '../components/viona/vionaTrustTokens';
 import {
   getConfiguredAdminDebugPin,
   isAdminDebugPinConfigured,
   isAdminDebugSurfaceEnabled,
 } from '../config/adminDebugGate';
+import { brandConfig } from '../core/brand/brandConfig';
+import { getFeatureFlags } from '../core/feature-flags/featureFlags';
+import { useMiniAppEntry } from '../hooks/useMiniAppEntry';
+import { getVioPointsLabel } from '../core/monetization/vioDisplayLabels';
 import { getPersonaDisplayName } from '../config/aiPrompts';
 import { useAuth } from '../context/AuthContext';
+import { MVP_B2B_AI_RECEPTIONIST_DEMO_OFF_MSG } from '../navigation/mvpSurfaceGate';
 import type { RootStackParamList } from '../navigation/routes';
+import { getRestApiJwt, isRestApiConfigured } from '../services/apiClient';
+import { patchUserPersonaOnServer } from '../services/viGlobalUserPersonaApi';
+import { fetchBalance } from '../services/viGlobalWalletApi';
 import { useWalletState } from '../state/wallet';
 import { STORAGE_KEYS } from '../storage/storageKeys';
-import { gradients } from '../theme/gradients';
 import { theme } from '../theme/theme';
 import { FontFamily } from '../theme/typography';
+import { useTranslation } from '../i18n';
+import { DashboardB2CScreen } from './b2c/DashboardB2CScreen';
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
 
-const IMG_LOGO = require('../../assets/home/logo.png');
+const IMG_LOGO = require('../../assets/brand/viona/logo-in-app.png');
 const ADMIN_UNLOCK_KEY = STORAGE_KEYS.adminUnlock;
-const GOLD_GLASS_GRADIENT = gradients.goldGlass;
+/** Clean Tech Trust — light canvas, ink text, gold accent. */
+const SCREEN_BG = vionaTrust.canvas;
+const CARD_BG = vionaTrust.surface;
+const GOLD_ACCENT = vionaTrust.accentGold;
+const GOLD_BORDER = vionaTrust.accentGoldLine;
+const TEXT_PRIMARY = vionaTrust.ink;
+const TEXT_MUTED = vionaTrust.inkMuted;
 
-const BentoCard = memo(function BentoCard({
-  title,
-  subtitle,
-  icon,
-  onPress,
-  tall,
-}: {
-  title: string;
-  subtitle: string;
-  icon: keyof typeof Ionicons.glyphMap;
-  onPress?: () => void;
-  tall?: boolean;
-}) {
-  return (
-    <LinearGradient
-      colors={GOLD_GLASS_GRADIENT}
-      start={{ x: 0, y: 0 }}
-      end={{ x: 1, y: 1 }}
-      style={[styles.cardBorder, tall && styles.cardBorderTall]}
-    >
-      <Pressable
-        onPress={onPress}
-        style={({ pressed }) => [styles.cardInner, tall && styles.cardInnerTall, pressed && { opacity: 0.82 }]}
-      >
-        <View style={styles.cardIconWrap}>
-          <Ionicons name={icon} size={20} color={theme.colors.primaryBright} />
-        </View>
-        <Text style={styles.cardTitle}>{title}</Text>
-        <Text numberOfLines={2} style={styles.cardSub}>
-          {subtitle}
-        </Text>
-      </Pressable>
-    </LinearGradient>
-  );
-});
-
-const HomeBentoIconsArt = memo(function HomeBentoIconsArt() {
-  const base = theme.colors.surface;
-  const stroke = theme.colors.glass.border;
-  const navy = theme.colors.primaryBright;
-  const gold = theme.colors.primary;
-  const red = theme.colors.danger;
-  const tile = theme.colors.surfaceElevated;
-  return (
-    <Svg width="100%" height="100%" viewBox="0 0 300 180">
-      <Defs>
-        <SvgLinearGradient id="bgBento" x1="0" y1="0" x2="1" y2="1">
-          <Stop offset="0" stopColor={base} stopOpacity="1" />
-          <Stop offset="1" stopColor={theme.colors.backgroundDeep} stopOpacity="1" />
-        </SvgLinearGradient>
-      </Defs>
-      <Rect x="0" y="0" width="300" height="180" rx="18" fill="url(#bgBento)" />
-      <G>
-        <Rect x="12" y="12" width="86" height="70" rx="14" fill={tile} stroke={stroke} />
-        <Rect x="107" y="12" width="86" height="70" rx="14" fill={tile} stroke={stroke} />
-        <Rect x="202" y="12" width="86" height="70" rx="14" fill={tile} stroke={stroke} />
-        <Rect x="12" y="92" width="86" height="76" rx="14" fill={tile} stroke={stroke} />
-        <Rect x="107" y="92" width="86" height="76" rx="14" fill={tile} stroke={stroke} />
-        <Rect x="202" y="92" width="86" height="76" rx="14" fill={tile} stroke={stroke} />
-      </G>
-      <Path d="M40 45h30m-15-15v30" stroke={gold} strokeWidth="5" strokeLinecap="round" />
-      <Path d="M132 37h34v26h-34z" fill="none" stroke={navy} strokeWidth="4" />
-      <Path d="M129 66h40" stroke={gold} strokeWidth="4" strokeLinecap="round" />
-      <Path d="M230 47a14 14 0 1028 0a14 14 0 10-28 0z" fill="none" stroke={navy} strokeWidth="4" />
-      <Path d="M239 47l8 8l12-14" fill="none" stroke={gold} strokeWidth="4" strokeLinecap="round" />
-      <Path d="M39 126h32v28H39z" fill="none" stroke={navy} strokeWidth="4" />
-      <Path d="M35 122h40" stroke={gold} strokeWidth="4" strokeLinecap="round" />
-      <Path d="M129 126l12-12l12 12l12-12" fill="none" stroke={navy} strokeWidth="4" strokeLinecap="round" />
-      <Circle cx="247" cy="128" r="14" fill="none" stroke={gold} strokeWidth="4" />
-      <Path d="M247 114v28M233 128h28" stroke={red} strokeWidth="3" strokeLinecap="round" />
-    </Svg>
-  );
-});
-
-const HomeMicsArt = memo(function HomeMicsArt() {
-  const navy = theme.colors.primaryBright;
-  const gold = theme.colors.primary;
-  return (
-    <Svg width="100%" height="100%" viewBox="0 0 300 180">
-      <Defs>
-        <SvgLinearGradient id="bgMics" x1="0" y1="0" x2="1" y2="1">
-          <Stop offset="0" stopColor={theme.colors.surface} />
-          <Stop offset="1" stopColor={theme.colors.backgroundDeep} />
-        </SvgLinearGradient>
-      </Defs>
-      <Rect x="0" y="0" width="300" height="180" rx="18" fill="url(#bgMics)" />
-      <Circle cx="86" cy="92" r="36" fill="none" stroke={gold} strokeWidth="3" opacity="0.45" />
-      <Circle cx="86" cy="92" r="24" fill="none" stroke={gold} strokeWidth="2" opacity="0.6" />
-      <Circle cx="214" cy="92" r="36" fill="none" stroke={gold} strokeWidth="3" opacity="0.45" />
-      <Circle cx="214" cy="92" r="24" fill="none" stroke={gold} strokeWidth="2" opacity="0.6" />
-      <Rect x="72" y="54" width="28" height="48" rx="14" fill="none" stroke={navy} strokeWidth="4" />
-      <Path d="M86 104v20M74 124h24" stroke={navy} strokeWidth="4" strokeLinecap="round" />
-      <Rect x="200" y="54" width="28" height="48" rx="14" fill="none" stroke={navy} strokeWidth="4" />
-      <Path d="M214 104v20M202 124h24" stroke={navy} strokeWidth="4" strokeLinecap="round" />
-      <Circle cx="150" cy="90" r="6" fill="#C62828" />
-    </Svg>
-  );
-});
-
-const HomeAiAvatarArt = memo(function HomeAiAvatarArt() {
-  const navy = theme.colors.primaryBright;
-  return (
-    <Svg width="100%" height="100%" viewBox="0 0 132 132">
-      <Defs>
-        <SvgLinearGradient id="bgAvatar" x1="0" y1="0" x2="1" y2="1">
-          <Stop offset="0" stopColor={theme.colors.surface} />
-          <Stop offset="1" stopColor={theme.colors.surfaceElevated} />
-        </SvgLinearGradient>
-      </Defs>
-      <Rect x="0" y="0" width="132" height="132" rx="66" fill="url(#bgAvatar)" />
-      <Circle cx="66" cy="50" r="20" fill="none" stroke={navy} strokeWidth="4" />
-      <Path d="M32 104c8-18 20-26 34-26s26 8 34 26" fill="none" stroke={theme.colors.primary} strokeWidth="5" strokeLinecap="round" />
-      <Circle cx="58" cy="48" r="3" fill={navy} />
-      <Circle cx="74" cy="48" r="3" fill={navy} />
-      <Path d="M58 60c4 4 12 4 16 0" fill="none" stroke={navy} strokeWidth="3" strokeLinecap="round" />
-    </Svg>
-  );
-});
+type BriefingCard = Readonly<{
+  id: string;
+  headline: string;
+  sub: string;
+}>;
 
 export function HomeScreen() {
+  const { t } = useTranslation();
+  const { openMiniApp } = useMiniAppEntry();
   const navigation = useNavigation<Nav>();
-  const { user, setPendingRedirect } = useAuth();
+  const { width } = useWindowDimensions();
+  const { user, setPendingRedirect, updateProfile } = useAuth();
+  const isTourist = user?.persona === 'TOURIST';
+  const featureFlags = useMemo(() => getFeatureFlags(), []);
+  const [personaModalVisible, setPersonaModalVisible] = useState(false);
   const wallet = useWalletState();
   const [showPaywall, setShowPaywall] = useState(false);
   const [showPin, setShowPin] = useState(false);
@@ -162,6 +85,112 @@ export function HomeScreen() {
   const tapsRef = useRef<number[]>([]);
   const inboundPersonaName = getPersonaDisplayName('loan');
   const outboundPersonaName = getPersonaDisplayName('leona');
+  const [clockTick, setClockTick] = useState(() => new Date());
+  const [walletBalanceLoading, setWalletBalanceLoading] = useState(false);
+
+  useEffect(() => {
+    const id = setInterval(() => setClockTick(new Date()), 30000);
+    return () => clearInterval(id);
+  }, []);
+
+  useEffect(() => {
+    if (!user) setPersonaModalVisible(false);
+  }, [user]);
+
+  useFocusEffect(
+    useCallback(() => {
+      let cancelled = false;
+      void (async () => {
+        if (!isRestApiConfigured()) return;
+        const jwt = await getRestApiJwt();
+        if (!jwt?.trim()) return;
+        setWalletBalanceLoading(true);
+        try {
+          const r = await fetchBalance();
+          if (!cancelled && !r.ok && __DEV__) {
+            console.warn('[HomeScreen] REST wallet balance:', r.error);
+          }
+        } finally {
+          if (!cancelled) setWalletBalanceLoading(false);
+        }
+      })();
+      return () => {
+        cancelled = true;
+      };
+    }, [])
+  );
+
+  useFocusEffect(
+    useCallback(() => {
+      if (user?.needsPersonaOnboarding === true) setPersonaModalVisible(true);
+    }, [user?.needsPersonaOnboarding])
+  );
+
+  const applyPersonaChoice = useCallback(
+    (persona: 'EXPAT' | 'TOURIST') => {
+      void patchUserPersonaOnServer(persona);
+      updateProfile({ persona, needsPersonaOnboarding: false });
+      setPersonaModalVisible(false);
+    },
+    [updateProfile]
+  );
+
+  const localClock = useMemo(
+    () => clockTick.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' }),
+    [clockTick]
+  );
+  const vnClock = useMemo(
+    () =>
+      clockTick.toLocaleTimeString('en-GB', {
+        hour: '2-digit',
+        minute: '2-digit',
+        timeZone: 'Asia/Ho_Chi_Minh',
+      }),
+    [clockTick]
+  );
+
+  const briefingCards = useMemo((): readonly BriefingCard[] => {
+    const all: readonly BriefingCard[] = [
+      {
+        id: 'b1',
+        headline: t('home.briefingB1h'),
+        sub: t('home.briefingB1s'),
+      },
+      {
+        id: 'b2',
+        headline: t('home.briefingB2h'),
+        sub: t('home.briefingB2s'),
+      },
+      {
+        id: 'b3',
+        headline: t('home.briefingB3h'),
+        sub: t('home.briefingB3s'),
+      },
+      {
+        id: 'b4',
+        headline: t('home.briefingB4h'),
+        sub: t('home.briefingB4s'),
+      },
+    ];
+    if (isTourist) return all.filter((c) => c.id !== 'b1' && c.id !== 'b4');
+    return all;
+  }, [isTourist, t]);
+
+  const walletChipLabel = useMemo(() => {
+    const n = wallet.credits;
+    const useCompact = width < 400;
+    return useCompact ? t('home.walletChipCompact', { amount: n }) : t('home.walletChipFull', { amount: n });
+  }, [t, wallet.credits, width]);
+
+  const layout = useMemo(() => {
+    const maxShell = 720;
+    const shellWidth = Math.min(width, maxShell);
+    const pad = theme.spacing.lg;
+    const inner = shellWidth - pad * 2;
+    return { shellWidth, pad, inner };
+  }, [width]);
+
+  const creditPillMax = useMemo(() => Math.min(width * 0.9, 300), [width]);
 
   useFocusEffect(
     useCallback(() => {
@@ -177,14 +206,47 @@ export function HomeScreen() {
     }, [])
   );
 
-  const openProtected = useCallback((target: 'Wallet' | 'AiEye' | 'LeonaCall' | 'Vault') => {
+  const openProtected = useCallback(
+    (target: 'Wallet' | 'AiEye' | 'LeonaCall' | 'Vault') => {
+      if (target === 'AiEye' && !featureFlags.b2bAiReceptionistDemoEnabled) {
+        Alert.alert('B2B AI Receptionist (demo)', MVP_B2B_AI_RECEPTIONIST_DEMO_OFF_MSG);
+        return;
+      }
+      if (target === 'LeonaCall') {
+        if (!user) {
+          setPendingRedirect('LeonaCall');
+          setShowPaywall(true);
+          return;
+        }
+        openMiniApp('b2cAiCallAssistant', () => navigation.navigate('LeonaCall'));
+        return;
+      }
+      if (!user) {
+        setPendingRedirect(target);
+        setShowPaywall(true);
+        return;
+      }
+      navigation.navigate(target);
+    },
+    [
+      featureFlags.b2bAiReceptionistDemoEnabled,
+      navigation,
+      openMiniApp,
+      setPendingRedirect,
+      user,
+    ]
+  );
+
+  const openInterpreter = useCallback(() => {
     if (!user) {
-      setPendingRedirect(target);
+      setPendingRedirect('LiveInterpreter');
       setShowPaywall(true);
       return;
     }
-    navigation.navigate(target);
-  }, [navigation, setPendingRedirect, user]);
+    openMiniApp('minhKhangTranslator', () =>
+      navigation.navigate('LiveInterpreter', { guidedEntry: true, scenario: 'general' })
+    );
+  }, [navigation, openMiniApp, setPendingRedirect, user]);
 
   const onSecretTap = useCallback(() => {
     if (!isAdminDebugSurfaceEnabled()) return;
@@ -203,125 +265,262 @@ export function HomeScreen() {
     }
   }, [adminUnlocked, navigation]);
 
-  const onSelectProactive = useCallback((question: string, persona: 'leona' | 'loan') => {
-    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    if (!user) {
-      setPendingRedirect(persona === 'loan' ? 'LeTan' : 'LeonaCall');
-      setShowPaywall(true);
-      return;
-    }
-    if (persona === 'loan') {
-      navigation.navigate('Tabs', {
-        screen: 'LeTan',
-        params: { proactiveQuestion: question, autoSimulate: true },
-      });
-      return;
-    }
-    navigation.navigate('LeonaCall', { prefillRequest: question, autoSubmit: true });
-  }, [navigation, setPendingRedirect, user]);
+  const onSelectProactive = useCallback(
+    (question: string, persona: 'leona' | 'loan') => {
+      void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      if (!user) {
+        setPendingRedirect(persona === 'loan' ? 'LeTan' : 'LeonaCall');
+        setShowPaywall(true);
+        return;
+      }
+      if (persona === 'loan') {
+        openMiniApp('academy', () =>
+          navigation.navigate('Tabs', {
+            screen: 'TabAi',
+            params: { proactiveQuestion: question, autoSimulate: true },
+          })
+        );
+        return;
+      }
+      openMiniApp('b2cAiCallAssistant', () =>
+        navigation.navigate('LeonaCall', { prefillRequest: question, autoSubmit: true })
+      );
+    },
+    [navigation, openMiniApp, setPendingRedirect, user]
+  );
 
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.creditPill}>
-        <Ionicons name="wallet" size={12} color={theme.colors.primary} />
-        <Text style={styles.creditPillText}>{wallet.credits} Credits</Text>
-      </View>
-      <View style={styles.dongSonRing} />
-      <View style={styles.dongSonCore} />
-      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <View style={styles.heroBlock}>
-          <Text style={styles.heroEyebrow}>Kết Nối Global</Text>
-          <Text style={styles.heading}>Home Operations Hub</Text>
-          <Text style={styles.heroSub}>Điều hướng nhanh các năng lực cốt lõi với bố cục ưu tiên mobile-first.</Text>
+    <View style={styles.rootFill}>
+      <StatusBar style="dark" />
+      <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
+      <View style={[styles.creditPill, isTourist && styles.creditPillTourist, { maxWidth: creditPillMax }]}>
+        <View style={styles.creditPillRow}>
+          {walletBalanceLoading ? (
+            <ActivityIndicator size="small" color={GOLD_ACCENT} accessibilityLabel="Đang tải số dư" />
+          ) : (
+            <Ionicons name="wallet-outline" size={14} color={GOLD_ACCENT} />
+          )}
+          <Text
+            style={styles.creditPillText}
+            numberOfLines={1}
+            adjustsFontSizeToFit
+            minimumFontScale={0.82}
+            maxFontSizeMultiplier={1.15}
+          >
+            {walletChipLabel}
+          </Text>
         </View>
-        <ProactiveSuggestions onSelect={onSelectProactive} />
+        {isTourist && !walletBalanceLoading ? (
+          <Text style={styles.creditPillSub} numberOfLines={2}>
+            {t('home.touristCreditsHint')}
+          </Text>
+        ) : null}
+      </View>
 
-        <View style={styles.bentoGrid}>
-          <View style={styles.colLeft}>
-            <LinearGradient colors={GOLD_GLASS_GRADIENT} style={styles.imageCardBorder}>
-              <View style={styles.imageCardInner}>
-                <View style={styles.refImage}>
-                  <HomeBentoIconsArt />
-                </View>
-              </View>
-            </LinearGradient>
-            <BentoCard
-              title="Két sắt giấy tờ"
-              subtitle="Lưu & nhắc hạn giấy tờ — chạm để mở."
-              icon="shield-checkmark-outline"
-              onPress={() => openProtected('Vault')}
-            />
-            <BentoCard
-              title="Đồng hành du lịch"
-              subtitle="Phiên dịch, Leona, SOS — so sánh chuyến bay ngoài app."
-              icon="airplane-outline"
-              onPress={() => navigation.navigate('TravelCompanion')}
-            />
+      <ScrollView
+        contentContainerStyle={[
+          styles.scrollContent,
+          {
+            paddingHorizontal: layout.pad,
+            paddingBottom: 120,
+            width: layout.shellWidth,
+            alignSelf: 'center',
+          },
+        ]}
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={[styles.hero, { paddingRight: Math.max(112, Math.min(width * 0.36, 172)) }]}>
+          <Text style={styles.heroEyebrow}>{brandConfig.displayName}</Text>
+          <Text style={styles.heading}>
+            {isTourist ? t('home.headingTourist') : t('home.headingExpat')}
+          </Text>
+          <Text style={styles.heroSub}>
+            {isTourist ? t('home.heroSubTourist') : t('home.heroSubExpat')}
+          </Text>
+        </View>
+
+        {isTourist ? <DashboardB2CScreen contentWidth={layout.inner} /> : null}
+
+        {isTourist && featureFlags.leonaAssistantEnabled ? (
+          <VionaCard style={{ width: layout.inner, marginBottom: theme.spacing.lg }} padded>
+            <VionaSectionHeader title={t('home.survivalTitle')} subtitle={t('home.survivalSub')} />
+            <View style={styles.survivalRow}>
+              <Pressable
+                onPress={openInterpreter}
+                style={({ pressed }) => [styles.survivalChip, styles.survivalChipPrimary, pressed && { opacity: 0.9 }]}
+                accessibilityRole="button"
+                accessibilityLabel={t('home.liveInterpreter')}
+              >
+                <Ionicons name="mic" size={20} color={theme.hybrid.signalStrong} />
+                <Text style={styles.survivalChipText}>{t('home.liveInterpreter')}</Text>
+              </Pressable>
+              <Pressable
+                onPress={() => openProtected('LeonaCall')}
+                style={({ pressed }) => [styles.survivalChip, styles.survivalChipPrimary, pressed && { opacity: 0.9 }]}
+                accessibilityRole="button"
+                accessibilityLabel={t('home.aiVoiceLine')}
+              >
+                <Ionicons name="call" size={20} color={theme.hybrid.signalStrong} />
+                <Text style={styles.survivalChipText}>{t('home.aiVoiceLine')}</Text>
+              </Pressable>
+            </View>
+          </VionaCard>
+        ) : null}
+
+        <View style={[styles.charityWrap, { width: layout.inner }]}>
+          <CharityWidget />
+        </View>
+
+        <View style={[styles.actionCenter, { width: layout.inner }]}>
+          <Pressable
+            onPress={() => openProtected('Wallet')}
+            style={({ pressed }) => [styles.actionWidget, pressed && { opacity: 0.9 }]}
+            accessibilityRole="button"
+            accessibilityLabel={t('home.qrPayA11y')}
+          >
+            <Ionicons name="qr-code" size={22} color={GOLD_ACCENT} />
+            <Text style={styles.actionWidgetTitle}>{t('home.qrPayTitle')}</Text>
+            <Text style={styles.actionWidgetSub}>{t('home.qrPaySub')}</Text>
+          </Pressable>
+          <View style={styles.actionWidget}>
+            <Ionicons name="time-outline" size={22} color={GOLD_ACCENT} />
+            <Text style={styles.actionWidgetTitle}>{t('home.dualClockTitle')}</Text>
+            <Text style={styles.actionWidgetSub}>
+              {t('home.dualClockLocalLabel')} {localClock}
+            </Text>
+            <Text style={styles.actionWidgetSub}>
+              {t('home.dualClockVnLabel')} {vnClock}
+            </Text>
           </View>
-
-          <View style={styles.colCenter}>
-            <LinearGradient
-              colors={GOLD_GLASS_GRADIENT}
-              style={styles.avatarBorder}
+          {featureFlags.vigTokenEconomyEnabled ? (
+            <Pressable
+              onPress={() => navigation.navigate('LoyaltyRewards')}
+              style={({ pressed }) => [styles.actionWidget, pressed && { opacity: 0.9 }]}
+              accessibilityRole="button"
+              accessibilityLabel={`${getVioPointsLabel()} index`}
             >
-              <View style={styles.avatarGlow} />
-              <View style={styles.avatar}>
-                <HomeAiAvatarArt />
-              </View>
-              <View style={styles.onlineBadge}>
-                <Ionicons name="pulse" size={14} color={theme.colors.success} />
-                <Text style={styles.onlineText}>Online</Text>
-              </View>
-            </LinearGradient>
-            <Text style={styles.centerCaption}>Tổng đài viên {inboundPersonaName}</Text>
-            {isAdminDebugSurfaceEnabled() && adminUnlocked ? (
-              <View style={styles.adminBadge}>
-                <Ionicons name="shield-checkmark" size={12} color={theme.colors.surface} />
-                <Text style={styles.adminBadgeText}>Admin unlocked</Text>
-              </View>
-            ) : null}
+              <Ionicons name="trending-up" size={22} color={GOLD_ACCENT} />
+              <Text style={styles.actionWidgetTitle}>
+                {t('home.vioIndexTitle', { label: getVioPointsLabel() })}
+              </Text>
+              <Text style={styles.actionWidgetSub}>{t('home.vioIndexSub')}</Text>
+            </Pressable>
+          ) : null}
+        </View>
+
+        <View style={[styles.briefingBlock, { width: layout.inner }]}>
+          <Text style={styles.briefingTitle}>{t('home.briefingTitle')}</Text>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.briefingRail}>
+            {briefingCards.map((card) => (
+              <Pressable
+                key={card.id}
+                onPress={() =>
+                  Alert.alert(card.headline, `${card.sub}\n\n${t('home.briefingAlertDemo')}`)
+                }
+                style={({ pressed }) => [styles.briefingCard, pressed && { opacity: 0.9 }]}
+                accessibilityRole="button"
+                accessibilityLabel={card.headline}
+              >
+                <Text style={styles.briefingHeadline} numberOfLines={2}>
+                  {card.headline}
+                </Text>
+                <Text style={styles.briefingSub} numberOfLines={2}>
+                  {card.sub}
+                </Text>
+              </Pressable>
+            ))}
+          </ScrollView>
+        </View>
+
+        {featureFlags.academyLiteEnabled || featureFlags.leonaAssistantEnabled ? (
+          <ProactiveSuggestions onSelect={onSelectProactive} />
+        ) : null}
+
+        <VionaCard style={{ width: layout.inner, marginBottom: theme.spacing.lg }} padded>
+          <View style={styles.featureRow}>
             <Pressable
               onPress={isAdminDebugSurfaceEnabled() ? onSecretTap : undefined}
-              style={({ pressed }) => [styles.logoTapArea, pressed && { opacity: 0.9 }]}
+              style={({ pressed }) => [styles.logoWrap, pressed && { opacity: 0.92 }]}
             >
-              <LinearGradient colors={GOLD_GLASS_GRADIENT} style={styles.logoCardBorder}>
-                <View style={styles.logoCardInner}>
-                  <Image source={IMG_LOGO} style={styles.logoImage} />
-                </View>
-              </LinearGradient>
+              <AppImage source={IMG_LOGO} style={styles.logoImage} accessibilityLabel="Logo VIONA" />
             </Pressable>
-          </View>
-
-          <View style={styles.colRight}>
-            <LinearGradient colors={GOLD_GLASS_GRADIENT} style={styles.imageCardBorder}>
-              <View style={styles.imageCardInner}>
-                <View style={styles.refImage}>
-                  <HomeMicsArt />
-                </View>
+            <View style={styles.featureCopy}>
+              <Text style={styles.featureTitle}>Tổng đài viên {inboundPersonaName}</Text>
+              <View style={styles.onlineRow}>
+                <View style={styles.onlineDot} />
+                <Text style={styles.onlineText}>Sẵn sàng hỗ trợ</Text>
               </View>
-            </LinearGradient>
-            <BentoCard
-              title="Mắt Thần · Quét bài"
-              subtitle="Quét bài, tóm tắt, ôn nhanh (cần đăng nhập)."
-              icon="scan-circle-outline"
-              onPress={() => openProtected('AiEye')}
-              tall
-            />
-            <BentoCard
-              title="Ví Credits"
-              subtitle="Nạp gói Global — giá hiển thị theo quốc gia hồ sơ."
-              icon="wallet-outline"
-              onPress={() => openProtected('Wallet')}
-            />
-            <BentoCard
-              title={`Gọi hỗ trợ · ${outboundPersonaName}`}
-              subtitle={`${inboundPersonaName} hỗ trợ trong app; Leona gọi đối ngoại khi Bạn yêu cầu.`}
-              icon="call-outline"
-              onPress={() => openProtected('LeonaCall')}
-            />
+              {isAdminDebugSurfaceEnabled() && adminUnlocked ? (
+                <View style={styles.adminBadge}>
+                  <Ionicons name="shield-checkmark" size={14} color={theme.hybrid.signalStrong} />
+                  <Text style={styles.adminBadgeText}>{t('home.adminUnlockedBadge')}</Text>
+                </View>
+              ) : null}
+              {isAdminDebugSurfaceEnabled() ? (
+                <Text style={styles.debugHint}>Gợi ý: chạm nhanh logo 5 lần để mở khu vực quản trị (dev).</Text>
+              ) : null}
+            </View>
           </View>
-        </View>
+        </VionaCard>
+
+        {!isTourist ? <DashboardB2CScreen contentWidth={layout.inner} /> : null}
+
+        <VionaCard style={{ width: layout.inner, marginBottom: theme.spacing.lg }} padded>
+          <Text style={styles.utilityStripTitle}>{t('home.utilityShortcutsTitle')}</Text>
+          <View style={styles.utilityRow}>
+            <Pressable
+              onPress={() => openProtected('Vault')}
+              style={({ pressed }) => [styles.utilityChip, pressed && { opacity: 0.88 }]}
+            >
+              <Ionicons name="shield-checkmark-outline" size={18} color={theme.hybrid.signalStrong} />
+              <Text style={styles.utilityChipText}>{t('home.vaultChipLabel')}</Text>
+            </Pressable>
+            {featureFlags.travelEnabled ? (
+              <Pressable
+                onPress={() =>
+                  openMiniApp('travel', () => navigation.navigate('TravelCompanion'))
+                }
+                style={({ pressed }) => [styles.utilityChip, pressed && { opacity: 0.88 }]}
+              >
+                <Ionicons name="airplane-outline" size={18} color={theme.hybrid.signalStrong} />
+                <Text style={styles.utilityChipText}>Đồng hành</Text>
+              </Pressable>
+            ) : null}
+            {featureFlags.b2bAiReceptionistDemoEnabled ? (
+              <Pressable
+                onPress={() => openProtected('AiEye')}
+                style={({ pressed }) => [styles.utilityChip, pressed && { opacity: 0.88 }]}
+              >
+                <Ionicons name="scan-outline" size={18} color={theme.hybrid.signalStrong} />
+                <Text style={styles.utilityChipText}>Mắt Thần</Text>
+              </Pressable>
+            ) : null}
+            <Pressable
+              onPress={() => openProtected('Wallet')}
+              style={({ pressed }) => [styles.utilityChip, pressed && { opacity: 0.88 }]}
+            >
+              <Ionicons name="wallet-outline" size={18} color={theme.hybrid.signalStrong} />
+              <Text style={styles.utilityChipText}>Ví</Text>
+            </Pressable>
+            {featureFlags.leonaAssistantEnabled ? (
+              <Pressable
+                onPress={() => openProtected('LeonaCall')}
+                style={({ pressed }) => [styles.utilityChip, pressed && { opacity: 0.88 }]}
+              >
+                <Ionicons name="call-outline" size={18} color={theme.hybrid.signalStrong} />
+                <Text style={styles.utilityChipText}>{outboundPersonaName}</Text>
+              </Pressable>
+            ) : null}
+          </View>
+        </VionaCard>
       </ScrollView>
+
+      <PersonaOnboardingModal
+        visible={personaModalVisible}
+        onPickExpat={() => applyPersonaChoice('EXPAT')}
+        onPickTourist={() => applyPersonaChoice('TOURIST')}
+      />
+
       <AuthPaywallModal
         visible={showPaywall}
         title="Đăng nhập để tiếp tục"
@@ -332,9 +531,10 @@ export function HomeScreen() {
           navigation.navigate('Login');
         }}
       />
+
       {isAdminDebugSurfaceEnabled() && showPin ? (
         <View style={styles.pinOverlay}>
-          <View style={styles.pinCard}>
+          <View style={[styles.pinCard, { maxWidth: Math.min(width - 48, 400) }]}>
             <Text style={styles.pinTitle}>Super Admin</Text>
             <Text style={styles.pinHint}>
               Nhập mã PIN cấu hình qua biến môi trường build (không dùng mặc định trong mã nguồn).
@@ -349,7 +549,7 @@ export function HomeScreen() {
               maxLength={64}
               secureTextEntry
               style={styles.pinInput}
-              placeholderTextColor={theme.colors.text.secondary}
+              placeholderTextColor={theme.hybrid.panelCoolTextMuted}
             />
             {pinError ? <Text style={styles.pinError}>{pinError}</Text> : null}
             <AppButton
@@ -357,7 +557,9 @@ export function HomeScreen() {
               variant="danger"
               onPress={() => {
                 if (!isAdminDebugPinConfigured()) {
-                  setPinError('Admin PIN chỉ hỗ trợ trong build dev và yêu cầu EXPO_PUBLIC_ADMIN_PIN >= 12 ký tự.');
+                  setPinError(
+                    'Admin PIN chỉ hỗ trợ trong build dev và yêu cầu EXPO_PUBLIC_ADMIN_PIN >= 12 ký tự.'
+                  );
                   return;
                 }
                 const expected = getConfiguredAdminDebugPin();
@@ -375,294 +577,347 @@ export function HomeScreen() {
           </View>
         </View>
       ) : null}
-    </SafeAreaView>
+      </SafeAreaView>
+    </View>
   );
 }
 
-
 const styles = StyleSheet.create({
+  rootFill: {
+    flex: 1,
+    backgroundColor: SCREEN_BG,
+  },
   container: {
     flex: 1,
-    backgroundColor: theme.colors.background,
+    backgroundColor: 'transparent',
   },
-  content: {
-    paddingHorizontal: theme.spacing.lg,
+  scrollContent: {
     paddingTop: theme.spacing.sm,
-    paddingBottom: 120,
   },
-  heroBlock: {
-    marginBottom: theme.spacing.md,
+  hero: {
+    marginBottom: theme.spacing.lg,
   },
   heroEyebrow: {
     fontSize: 12,
-    letterSpacing: 0.6,
-    color: theme.colors.primaryBright,
+    letterSpacing: 0.5,
+    color: GOLD_ACCENT,
     fontFamily: FontFamily.semibold,
     textTransform: 'uppercase',
     marginBottom: theme.spacing.xs,
   },
-  creditPill: {
-    position: 'absolute',
-    top: 8,
-    right: 14,
-    zIndex: 10,
-    minHeight: 28,
-    paddingHorizontal: 10,
-    borderRadius: theme.radius.pill,
-    borderWidth: 1,
-    borderColor: theme.colors.glass.border,
-    backgroundColor: theme.colors.glass.surfaceStrong,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  creditPillText: {
-    fontSize: 12,
-    color: theme.colors.text.primary,
-    fontFamily: FontFamily.semibold,
-  },
   heading: {
-    fontSize: 26,
+    fontSize: 28,
     lineHeight: 34,
-    color: theme.colors.text.primary,
+    color: TEXT_PRIMARY,
     fontFamily: FontFamily.extrabold,
     marginBottom: theme.spacing.xs,
   },
   heroSub: {
+    fontSize: 14,
+    lineHeight: 21,
+    color: TEXT_MUTED,
+    fontFamily: FontFamily.regular,
+  },
+  creditPill: {
+    position: 'absolute',
+    top: 8,
+    right: theme.spacing.lg,
+    zIndex: 10,
+    minHeight: 32,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: theme.radius.pill,
+    borderWidth: 1,
+    borderColor: GOLD_BORDER,
+    backgroundColor: CARD_BG,
+    flexDirection: 'column',
+    alignItems: 'flex-end',
+    gap: 2,
+    shadowColor: '#0B1628',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  creditPillTourist: {
+    borderColor: 'rgba(212, 175, 55, 0.85)',
+    shadowOpacity: 0.12,
+  },
+  creditPillRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    flexShrink: 1,
+    minWidth: 0,
+    maxWidth: '100%',
+  },
+  creditPillText: {
     fontSize: 13,
-    lineHeight: 20,
-    color: theme.colors.text.secondary,
-    fontFamily: FontFamily.regular,
+    color: TEXT_PRIMARY,
+    fontFamily: FontFamily.semibold,
+    flexShrink: 1,
+    minWidth: 0,
   },
-  dongSonRing: {
-    position: 'absolute',
-    width: 420,
-    height: 420,
-    borderRadius: 210,
-    borderWidth: 1.2,
-    borderColor: theme.colors.overlay.ringSoft,
-    top: -120,
-    left: -90,
+  creditPillSub: {
+    fontSize: 10,
+    lineHeight: 13,
+    color: GOLD_ACCENT,
+    fontFamily: FontFamily.semibold,
+    textAlign: 'right',
+    maxWidth: 168,
   },
-  dongSonCore: {
-    position: 'absolute',
-    width: 260,
-    height: 260,
-    borderRadius: 130,
-    borderWidth: 1,
-    borderColor: theme.colors.overlay.ringCore,
-    right: -80,
-    top: 180,
-  },
-  bentoGrid: {
+  survivalRow: {
     flexDirection: 'row',
-    gap: theme.spacing.sm,
+    flexWrap: 'wrap',
+    gap: 10,
   },
-  colLeft: {
-    flex: 1,
-    gap: theme.spacing.sm,
-  },
-  colCenter: {
-    width: 150,
+  survivalChip: {
+    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'flex-start',
-    gap: theme.spacing.sm,
-  },
-  colRight: {
-    flex: 1,
-    gap: theme.spacing.sm,
-  },
-  cardBorder: {
-    borderRadius: theme.radius.lg,
-    padding: 1,
-  },
-  cardBorderTall: {
-    minHeight: 210,
-  },
-  imageCardBorder: {
-    borderRadius: theme.radius.lg,
-    padding: 1,
-  },
-  imageCardInner: {
-    borderRadius: theme.radius.md,
-    minHeight: 100,
-    backgroundColor: theme.colors.glass.surface,
-    shadowColor: theme.colors.glass.shadow,
-    shadowOffset: theme.elevation.card.shadowOffset,
-    shadowOpacity: theme.elevation.card.shadowOpacity,
-    shadowRadius: theme.elevation.card.shadowRadius,
-    elevation: theme.elevation.card.elevation,
-    overflow: 'hidden',
-  },
-  refImage: {
-    width: '100%',
-    height: 120,
-    resizeMode: 'cover',
-  },
-  cardInner: {
-    borderRadius: theme.radius.md,
-    minHeight: 100,
-    padding: theme.spacing.md,
-    backgroundColor: theme.colors.glass.surface,
-    shadowColor: theme.colors.glass.shadow,
-    shadowOffset: theme.elevation.card.shadowOffset,
-    shadowOpacity: theme.elevation.card.shadowOpacity,
-    shadowRadius: theme.elevation.card.shadowRadius,
-    elevation: theme.elevation.card.elevation,
-  },
-  cardInnerTall: {
-    minHeight: 208,
-    justifyContent: 'flex-end',
-  },
-  cardIconWrap: {
-    width: 34,
-    height: 34,
-    borderRadius: theme.radius.pill,
-    backgroundColor: theme.colors.glass.surfaceStrong,
+    gap: 8,
+    paddingVertical: 12,
+    paddingHorizontal: 14,
+    borderRadius: 12,
     borderWidth: 1,
-    borderColor: theme.colors.glass.border,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 8,
+    borderColor: vionaTrust.border,
+    backgroundColor: vionaTrust.surfaceMuted,
+    flexGrow: 1,
+    minWidth: 140,
   },
-  cardTitle: {
-    fontSize: 15,
-    color: theme.colors.text.primary,
+  survivalChipPrimary: {
+    borderColor: theme.hybrid.signalSubtleBorder,
+    backgroundColor: theme.hybrid.signalMutedBg,
+  },
+  survivalChipText: {
+    fontSize: 13,
+    color: TEXT_PRIMARY,
     fontFamily: FontFamily.bold,
-    marginBottom: 4,
+    flexShrink: 1,
   },
-  cardSub: {
-    fontSize: 12,
-    lineHeight: 18,
-    color: theme.colors.text.secondary,
-    fontFamily: FontFamily.regular,
-  },
-  avatarBorder: {
-    width: 146,
-    height: 184,
-    borderRadius: theme.radius.lg,
-    padding: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: theme.colors.surfaceMuted,
-    shadowColor: theme.colors.glass.shadow,
-    shadowOffset: theme.elevation.card.shadowOffset,
-    shadowOpacity: theme.elevation.card.shadowOpacity,
-    shadowRadius: theme.elevation.card.shadowRadius,
-    elevation: theme.elevation.card.elevation,
-  },
-  avatarGlow: {
-    position: 'absolute',
-    width: 112,
-    height: 112,
-    borderRadius: 56,
-    backgroundColor: theme.colors.glass.goldGlow,
-  },
-  avatar: {
-    width: 132,
-    height: 132,
-    borderRadius: theme.radius.pill,
-    borderWidth: 2,
-    borderColor: theme.colors.glass.surfaceStrong,
-  },
-  onlineBadge: {
-    marginTop: 12,
-    minWidth: 84,
-    height: 30,
-    borderRadius: theme.radius.pill,
-    backgroundColor: 'rgba(129, 199, 132, 0.22)',
-    borderWidth: 1,
-    borderColor: theme.colors.glass.border,
+  actionCenter: {
     flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 4,
+    alignSelf: 'center',
+    gap: 12,
+    marginBottom: theme.spacing.lg,
   },
-  onlineText: {
-    fontSize: 11,
-    color: theme.colors.primaryBright,
-    fontFamily: FontFamily.medium,
-  },
-  centerCaption: {
-    fontSize: 12,
-    color: theme.colors.text.secondary,
-    fontFamily: FontFamily.medium,
-  },
-  adminBadge: {
-    minHeight: 24,
+  actionWidget: {
+    flex: 1,
+    minHeight: 104,
+    borderRadius: 16,
+    paddingVertical: 12,
     paddingHorizontal: 10,
-    borderRadius: theme.radius.pill,
+    backgroundColor: CARD_BG,
     borderWidth: 1,
-    borderColor: theme.colors.glass.border,
-    backgroundColor: theme.colors.executive.card,
-    flexDirection: 'row',
+    borderColor: vionaTrust.border,
     alignItems: 'center',
     gap: 6,
+    shadowColor: '#0B1628',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.07,
+    shadowRadius: 12,
+    elevation: 3,
   },
-  adminBadgeText: {
+  actionWidgetTitle: {
+    fontSize: 13,
+    fontFamily: FontFamily.extrabold,
+    color: TEXT_PRIMARY,
+  },
+  actionWidgetSub: {
     fontSize: 11,
-    color: theme.colors.primaryBright,
     fontFamily: FontFamily.medium,
+    color: TEXT_MUTED,
+    textAlign: 'center',
   },
-  logoCardBorder: {
-    borderRadius: theme.radius.md,
-    padding: 1,
-    width: 146,
+  briefingBlock: {
+    alignSelf: 'center',
+    marginBottom: theme.spacing.lg,
   },
-  logoTapArea: {
-    borderRadius: theme.radius.md,
+  briefingTitle: {
+    fontSize: 13,
+    fontFamily: FontFamily.extrabold,
+    letterSpacing: 0.6,
+    color: TEXT_PRIMARY,
+    marginBottom: 10,
   },
-  logoCardInner: {
-    borderRadius: theme.radius.md,
-    backgroundColor: theme.colors.glass.surface,
-    shadowColor: theme.colors.glass.shadow,
-    shadowOffset: theme.elevation.card.shadowOffset,
-    shadowOpacity: theme.elevation.card.shadowOpacity,
-    shadowRadius: theme.elevation.card.shadowRadius,
-    elevation: theme.elevation.card.elevation,
+  briefingRail: {
+    flexDirection: 'row',
+    gap: 12,
+    paddingRight: 4,
+    paddingBottom: 4,
+  },
+  briefingCard: {
+    width: 220,
+    minHeight: 92,
+    borderRadius: 16,
+    padding: 14,
+    backgroundColor: CARD_BG,
+    borderWidth: 1,
+    borderColor: vionaTrust.border,
+    shadowColor: '#0B1628',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.06,
+    shadowRadius: 10,
+    elevation: 2,
+  },
+  briefingHeadline: {
+    fontSize: 14,
+    fontFamily: FontFamily.extrabold,
+    color: TEXT_PRIMARY,
+    marginBottom: 6,
+    lineHeight: 18,
+  },
+  briefingSub: {
+    fontSize: 12,
+    fontFamily: FontFamily.medium,
+    color: TEXT_MUTED,
+    lineHeight: 16,
+  },
+  featureRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: theme.spacing.md,
+  },
+  logoWrap: {
+    borderRadius: 14,
     overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: vionaTrust.border,
+    width: 128,
+    height: 56,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: vionaTrust.surfaceMuted,
   },
   logoImage: {
     width: '100%',
-    height: 96,
-    resizeMode: 'cover',
+    height: '100%',
+    resizeMode: 'contain',
+    backgroundColor: 'transparent',
+  },
+  featureCopy: {
+    flex: 1,
+    minWidth: 0,
+  },
+  featureTitle: {
+    fontSize: 16,
+    color: TEXT_PRIMARY,
+    fontFamily: FontFamily.bold,
+    marginBottom: 6,
+  },
+  onlineRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 8,
+  },
+  onlineDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: theme.colors.success,
+  },
+  onlineText: {
+    fontSize: 13,
+    color: TEXT_MUTED,
+    fontFamily: FontFamily.medium,
+  },
+  adminBadge: {
+    alignSelf: 'flex-start',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: theme.radius.pill,
+    backgroundColor: theme.hybrid.signalMutedBg,
+    borderWidth: 1,
+    borderColor: theme.hybrid.signalSubtleBorder,
+    marginBottom: 6,
+  },
+  adminBadgeText: {
+    fontSize: 12,
+    color: theme.hybrid.signalStrong,
+    fontFamily: FontFamily.semibold,
+  },
+  debugHint: {
+    fontSize: 11,
+    lineHeight: 16,
+    color: TEXT_MUTED,
+    fontFamily: FontFamily.regular,
+  },
+  charityWrap: {
+    marginTop: 2,
+    marginBottom: 2,
+  },
+  utilityStripTitle: {
+    fontSize: 12,
+    color: TEXT_MUTED,
+    fontFamily: FontFamily.semibold,
+    marginBottom: 10,
+    letterSpacing: 0.2,
+  },
+  utilityRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  utilityChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: theme.radius.pill,
+    borderWidth: 1,
+    borderColor: vionaTrust.border,
+    backgroundColor: vionaTrust.surfaceMuted,
+  },
+  utilityChipText: {
+    fontSize: 12,
+    color: TEXT_PRIMARY,
+    fontFamily: FontFamily.semibold,
   },
   pinOverlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: theme.colors.overlay.dim,
+    backgroundColor: 'rgba(11, 22, 40, 0.45)',
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 24,
   },
   pinCard: {
     width: '100%',
-    borderRadius: theme.radius.lg,
+    borderRadius: 16,
     borderWidth: 1,
-    borderColor: theme.colors.glass.border,
-    backgroundColor: theme.colors.surfaceMuted,
-    padding: 16,
+    borderColor: vionaTrust.border,
+    backgroundColor: CARD_BG,
+    padding: theme.spacing.lg,
+    shadowColor: '#0B1628',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.1,
+    shadowRadius: 20,
+    elevation: 8,
   },
   pinTitle: {
     fontSize: 20,
-    color: theme.colors.text.primary,
+    color: TEXT_PRIMARY,
     fontFamily: FontFamily.extrabold,
     marginBottom: 6,
   },
   pinHint: {
     fontSize: 13,
     lineHeight: 20,
-    color: theme.colors.text.secondary,
+    color: TEXT_MUTED,
     fontFamily: FontFamily.regular,
     marginBottom: 10,
   },
   pinInput: {
     height: 44,
-    borderRadius: theme.radius.sm,
+    borderRadius: 12,
     borderWidth: 1,
-    borderColor: theme.colors.glass.borderSoft,
-    backgroundColor: theme.colors.glass.surfaceStrong,
+    borderColor: vionaTrust.border,
+    backgroundColor: vionaTrust.surfaceMuted,
     paddingHorizontal: 12,
-    color: theme.colors.text.primary,
+    color: TEXT_PRIMARY,
     fontFamily: FontFamily.bold,
     marginBottom: 8,
   },

@@ -1,0 +1,38 @@
+/**
+ * KN Global — pure CSS for web (glass + gold/navy neon). Dev: `knGlobalWebCss.web.ts`. Prod: linked from `dist/index.html`.
+ * Brand typeface is loaded app-wide via Expo `useMontserratFonts` + `FontFamily` in `src/theme/typography.ts`.
+ */
+html,
+body,
+#root {
+  font-family: Montserrat, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+/* Premium Gold Neon Glow (B2B) */
+.kn-neon-b2b {
+  box-shadow: 0 0 10px rgba(255, 215, 0, 0.6),
+              0 0 20px rgba(255, 215, 0, 0.4),
+              inset 0 0 15px rgba(255, 215, 0, 0.2) !important;
+}
+
+/* Red Alarm Glow (SOS) */
+.kn-neon-sos {
+  box-shadow: 0 0 10px rgba(255, 51, 51, 0.8),
+              0 0 20px rgba(255, 51, 51, 0.6) !important;
+}
+
+/* Travel Hub — primary SOS CTA (web glow + depth) */
+.kn-sos-btn {
+  box-shadow: 0 0 18px rgba(255, 45, 45, 0.95),
+              0 0 36px rgba(255, 0, 0, 0.55),
+              0 8px 24px rgba(0, 0, 0, 0.45) !important;
+  border-radius: 16px !important;
+}
+
+/* Glassmorphism over Dark Navy */
+.kn-glass {
+  backdrop-filter: blur(25px) !important;
+  -webkit-backdrop-filter: blur(25px) !important;
+  background-color: rgba(0, 31, 63, 0.05) !important;
+  border: 1px solid rgba(255, 215, 0, 0.1) !important;
+}

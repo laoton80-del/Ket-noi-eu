@@ -1,4 +1,4 @@
-import type { B2BBusinessType, B2BResourceKind, BusinessOrder } from './models';
+import type { B2BBusinessType, B2BResourceKind, BusinessOrder, HospitalityStayVariant } from './models';
 
 /**
  * Engine policies keyed by `B2BBusinessType`.
@@ -14,6 +14,7 @@ export const RESOURCE_KINDS_BY_BUSINESS: Record<B2BBusinessType, B2BResourceKind
   grocery_retail: ['grocery_retail_fulfillment_slot'],
   grocery_wholesale: ['grocery_wholesale_fulfillment_slot'],
   hospitality_stay: ['hospitality_room'],
+  /** @deprecated Legacy `businessType` — isolate; tenant mới dùng `grocery_retail` (GLOBAL_V1: giảm drift potraviny). */
   potraviny: ['potraviny_fulfillment_slot'],
 };
 
@@ -54,6 +55,8 @@ export type HospitalityStayConstraints = {
   minStayNights?: number;
   /** If true, voice/booking flow should label outcome as inquiry until staff confirms. */
   defaultInquiryFirst: boolean;
+  /** Optional echo of `BusinessTenant.hospitalityStayVariant` for policy packs (hotel vs homestay) — engine defaults unchanged if unset. */
+  stayVariant?: HospitalityStayVariant;
 };
 
 export type BusinessTypePolicy = {

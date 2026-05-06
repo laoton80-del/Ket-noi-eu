@@ -72,7 +72,7 @@ function actionsForMeaning(meaning: DocumentMeaningType, expiryDate: string | nu
       {
         title: 'Mở khu học tập để hỗ trợ bé',
         route: 'Tabs',
-        params: { screen: 'HocTap' },
+        params: { screen: 'TabHome' },
       },
     ];
   }

@@ -1,7 +1,7 @@
 import * as FileSystem from 'expo-file-system/legacy';
-import { manipulateAsync, SaveFormat } from 'expo-image-manipulator';
 import { documentLegalVisionSystemPrompt } from '../config/countryPacks';
 import { analyzeImage } from '../services/OpenAIService';
+import { compressLocalImageForUpload } from '../utils/ImageProcessor';
 
 export type VisionResultPayload = {
   dichDe: string;
@@ -69,23 +69,8 @@ function tryParseJson(content: string): Partial<VisionResultPayload> | null {
 
 async function optimizeVisionImage(imageUri: string): Promise<string> {
   try {
-    const info = await FileSystem.getInfoAsync(imageUri);
-    if (!info.exists) return imageUri;
-
-    const fileSizeMb = typeof info.size === 'number' ? info.size / (1024 * 1024) : 0;
-    const targetWidth = fileSizeMb > 6 ? 960 : fileSizeMb > 3 ? 1120 : 1280;
-    const compress = fileSizeMb > 6 ? 0.58 : fileSizeMb > 3 ? 0.66 : 0.74;
-
-    // Adaptive quality: anh lon nen manh hon de giam token va toc do upload
-    const result = await manipulateAsync(
-      imageUri,
-      [{ resize: { width: targetWidth } }],
-      {
-        compress,
-        format: SaveFormat.JPEG,
-      }
-    );
-    return result.uri;
+    const out = await compressLocalImageForUpload(imageUri);
+    return out.uri;
   } catch {
     return imageUri;
   }
@@ -97,7 +82,7 @@ export async function processVisionFrame(imageUri: string, languageCode: string)
     encoding: FileSystem.EncodingType.Base64,
   });
 
-  const content = await analyzeImage(base64);
+  const content = await analyzeImage(base64, { imageMimeType: 'image/webp' });
   const parsed = tryParseJson(content);
   return normalizeVisionPayload(parsed);
 }
@@ -110,6 +95,7 @@ export async function processDocumentFrame(imageUri: string, countryCode?: strin
   const content = await analyzeImage(base64, {
     systemPrompt: documentLegalVisionSystemPrompt(countryCode),
     userPrompt: 'Phân tích giấy tờ và trả JSON đúng schema bắt buộc.',
+    imageMimeType: 'image/webp',
   });
   const parsed = tryParseJson(content) as Partial<DocumentVisionPayload> | null;
   return {

@@ -48,8 +48,13 @@ import {
 } from '../onboarding/guidedOnboardingStorage';
 import { normalizeCountryCodeOrSentinel } from '../config/countryPacks';
 import { calculateLeTanBookingPrice } from '../services/PaymentsService';
+import {
+  acquireTimeSlotLock,
+  releaseTimeSlotLock,
+  V7_GLOBAL_SLOT_MERCHANT_ID,
+} from '../services/booking/V7ConcurrencyManager';
 import { chargeTrustedService, syncWalletFromServer, useWalletState } from '../state/wallet';
-import { Colors } from '../theme/colors';
+import { OperationalStatusChip } from '../components/operational/OperationalStatusChip';
 import { gradients } from '../theme/gradients';
 import { theme } from '../theme/theme';
 import { FontFamily } from '../theme/typography';
@@ -126,7 +131,7 @@ function demoWholesaleStaffHandoffText(): string {
 }
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
-type TabRoute = RouteProp<RootTabParamList, 'LeTan'>;
+type TabRoute = RouteProp<RootTabParamList, 'TabAi'>;
 type AppointmentKind =
   | 'nails'
   | 'restaurant'
@@ -211,7 +216,7 @@ export function LeTanScreen() {
   const [demoAppointments, setDemoAppointments] = useState<Appointment[]>([
     { id: 'a1', time: '10:20', customer: 'Katka', service: 'Smart Gel & Pedicure', kind: 'nails', state: 'today' },
     { id: 'a2', time: '12:05', customer: 'Marta', service: 'Buffet gia đình trưa', kind: 'restaurant', state: 'today' },
-    { id: 'a3', time: '14:30', customer: 'Eva', service: 'Giao combo thực phẩm tuần', kind: 'grocery_retail', state: 'today' },
+    { id: 'a3', time: '14:30', customer: 'Eva', service: 'Giao set thực phẩm tuần', kind: 'grocery_retail', state: 'today' },
     {
       id: 'a3b',
       time: '15:10',
@@ -341,6 +346,31 @@ export function LeTanScreen() {
       return;
     }
 
+    const slotAnchor = new Date();
+    slotAnchor.setSeconds(0, 0);
+    const slotStartMs = slotAnchor.getTime();
+    const letanTechId = 'tech-0';
+    if (
+      !acquireTimeSlotLock(V7_GLOBAL_SLOT_MERCHANT_ID, letanTechId, slotStartMs, {
+        owner: 'le_tan_b2b',
+      })
+    ) {
+      setBookingError(
+        'Khung giờ này vừa được kênh khác (Leona/B2B) chốt. Chọn khung giờ khác rồi thử lại.'
+      );
+      void appendUsageHistory({ type: 'booking', status: 'failed', note: 'slot_lock_contention' });
+      void trackNetworkEffectEvent({
+        actionType: 'booking',
+        success: false,
+        durationMs: Date.now() - startedAt,
+        language: 'vi',
+        scenario: roleplayScenario,
+        responsePatternId: defaultPatternIdFor('booking'),
+        flowId: 'booking_linear',
+      });
+      return;
+    }
+
     setIsSimulating(true);
     const chargeKey = `letan-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
     const deducted = await chargeTrustedService({
@@ -349,6 +379,7 @@ export function LeTanScreen() {
       serviceKind: 'letan_booking',
     });
     if (!deducted.ok) {
+      releaseTimeSlotLock(V7_GLOBAL_SLOT_MERCHANT_ID, letanTechId, slotStartMs);
       setIsSimulating(false);
       setShowLowCredit(true);
       setBookingError('Thanh toán cho lượt đặt lịch chưa hoàn tất. Bạn có thể thử lại ngay.');
@@ -367,16 +398,15 @@ export function LeTanScreen() {
 
     await new Promise<void>((resolve) => setTimeout(resolve, 600));
 
-    const now = new Date();
-    const hh = String(now.getHours()).padStart(2, '0');
-    const mm = String(now.getMinutes()).padStart(2, '0');
+    const hh = String(slotAnchor.getHours()).padStart(2, '0');
+    const mm = String(slotAnchor.getMinutes()).padStart(2, '0');
     const customers = ['Aneta', 'Petra', 'Lucie', 'Milu', 'Jana', 'Monika'];
     const services: { label: string; kind: AppointmentKind }[] = [
       { label: 'Smart Gel & Pedicure', kind: 'nails' },
       { label: 'Bàn tối 4 người', kind: 'restaurant' },
       { label: 'Đơn tạp hoá nhanh', kind: 'grocery_retail' },
       { label: 'Nails 4D Art', kind: 'nails' },
-      { label: 'Combo ăn trưa văn phòng', kind: 'restaurant' },
+      { label: 'Set trưa văn phòng', kind: 'restaurant' },
       { label: 'Đặt hàng sỉ — pallet demo', kind: 'grocery_wholesale' },
       { label: 'Đặt phòng — yêu cầu ghi nhận (chưa chốt cọc)', kind: 'hospitality_stay' },
     ];
@@ -742,7 +772,7 @@ export function LeTanScreen() {
                   value={coachInput}
                   onChangeText={setCoachInput}
                   placeholder="Nhập câu bạn muốn luyện..."
-                  placeholderTextColor={Colors.textSoft}
+                  placeholderTextColor={theme.colors.text.secondary}
                   style={styles.coachInput}
                   editable={!coachLoading}
                   returnKeyType="send"
@@ -758,7 +788,7 @@ export function LeTanScreen() {
                   style={({ pressed }) => [styles.coachSendBtn, pressed && { opacity: 0.86 }]}
                 >
                   {coachLoading ? (
-                    <ActivityIndicator size="small" color={theme.colors.primaryBright} />
+                    <ActivityIndicator size="small" color={theme.hybrid.signal} />
                   ) : (
                     <Text style={styles.coachSendText}>Gửi</Text>
                   )}
@@ -770,12 +800,12 @@ export function LeTanScreen() {
 
         <View style={styles.bentoWrap}>
           <LinearGradient
-            colors={gradients.goldGlassSoft}
+            colors={gradients.signalGlassSoft}
             style={styles.mainBorder}
           >
             <View style={styles.mainCard}>
               <View style={styles.heroRow}>
-                <RNAnimated.View style={[styles.avatarOrb, { opacity: pulse }]}>
+                <RNAnimated.View style={StyleSheet.flatten([styles.avatarOrb, { opacity: pulse }])}>
                   <Ionicons name="headset" size={30} color={theme.colors.primaryBright} />
                 </RNAnimated.View>
                 <View style={styles.heroMeta}>
@@ -859,7 +889,7 @@ export function LeTanScreen() {
               </Text>
             ) : null}
             {liveQueueLoading && liveQueueRows.length === 0 ? (
-              <ActivityIndicator style={styles.liveQueueSpinner} color={Colors.primary} />
+              <ActivityIndicator style={styles.liveQueueSpinner} color={theme.hybrid.signal} />
             ) : null}
             {liveQueueError ? <Text style={styles.liveQueueError}>{liveQueueError}</Text> : null}
             {liveQueuePartialWarn ? <Text style={styles.liveQueueWarn}>{liveQueuePartialWarn}</Text> : null}
@@ -894,9 +924,7 @@ export function LeTanScreen() {
                       : ''}
                   </Text>
                 )}
-                <View style={styles.operationalPill}>
-                  <Text style={styles.operationalPillText}>{row.operationalLine}</Text>
-                </View>
+                <OperationalStatusChip variant="processing" label={row.operationalLine} />
                 {row.escalationHint ? (
                   <Text style={styles.liveQueueEscalation}>Callback / escalation: {row.escalationHint}</Text>
                 ) : null}
@@ -989,7 +1017,7 @@ export function LeTanScreen() {
                             : 'basket'
                     }
                     size={14}
-                    color={Colors.primary}
+                    color={theme.hybrid.signal}
                   />
                   <Text style={styles.serviceType}>
                     {item.kind === 'nails'
@@ -1034,15 +1062,20 @@ export function LeTanScreen() {
                   </View>
                 ) : null}
               </View>
-              <View style={styles.badge}>
-                <Text style={styles.badgeText}>
-                  {item.kind === 'hospitality_stay'
+              <OperationalStatusChip
+                variant={
+                  item.kind === 'hospitality_stay' || item.kind === 'grocery_wholesale'
+                    ? 'processing'
+                    : 'verified'
+                }
+                label={
+                  item.kind === 'hospitality_stay'
                     ? 'Ghi nhận lưu trú (inquiry)'
                     : item.kind === 'grocery_wholesale'
                       ? 'Đặt sỉ · chờ xác nhận'
-                      : 'Đã chốt'}
-                </Text>
-              </View>
+                      : 'Đã chốt'
+                }
+              />
             </View>
           ))}
           {filteredAppointments.length === 0 ? (
@@ -1057,7 +1090,7 @@ export function LeTanScreen() {
         >
           {isSimulating ? (
             <View style={styles.devLoading}>
-              <ActivityIndicator size="small" color={theme.colors.primaryBright} />
+              <ActivityIndicator size="small" color={theme.hybrid.signal} />
               <Text style={styles.devText}>
                 Đang xác nhận thanh toán với máy chủ…{'\n'}
                 <Text style={styles.devSubText}>Vui lòng đợi — Credits chỉ trừ khi máy chủ báo OK.</Text>
@@ -1085,18 +1118,18 @@ export function LeTanScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Colors.background },
-  content: { paddingHorizontal: 16, paddingTop: 12, paddingBottom: 120 },
+  container: { flex: 1, backgroundColor: theme.colors.background },
+  content: { paddingHorizontal: theme.spacing.lg, paddingTop: theme.spacing.md, paddingBottom: 120 },
   brand: {
     fontSize: 13,
-    color: Colors.textSoft,
+    color: theme.colors.text.secondary,
     marginBottom: 4,
     fontFamily: FontFamily.regular,
   },
   title: {
     fontSize: 28,
     fontFamily: FontFamily.extrabold,
-    color: Colors.text,
+    color: theme.colors.text.primary,
     marginBottom: 12,
   },
   interpreterBtn: {
@@ -1187,7 +1220,7 @@ const styles = StyleSheet.create({
   },
   coachTitle: {
     fontSize: 13,
-    color: Colors.text,
+    color: theme.colors.text.primary,
     fontFamily: FontFamily.bold,
   },
   coachAverage: {
@@ -1210,18 +1243,18 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.executive.bubbleAi,
   },
   coachBubbleUser: {
-    borderColor: 'rgba(197, 160, 89, 0.35)',
+    borderColor: theme.hybrid.signatureLine,
     backgroundColor: theme.colors.executive.bubbleUser,
   },
   coachBubbleRole: {
     fontSize: 10,
-    color: Colors.textSoft,
+    color: theme.colors.text.secondary,
     fontFamily: FontFamily.semibold,
     marginBottom: 2,
   },
   coachBubbleText: {
     fontSize: 12,
-    color: Colors.text,
+    color: theme.colors.text.primary,
     fontFamily: FontFamily.regular,
     lineHeight: 18,
   },
@@ -1234,7 +1267,7 @@ const styles = StyleSheet.create({
   coachFeedbackText: {
     marginTop: 2,
     fontSize: 11,
-    color: Colors.textSoft,
+    color: theme.colors.text.secondary,
     fontFamily: FontFamily.medium,
   },
   coachComposer: {
@@ -1256,7 +1289,7 @@ const styles = StyleSheet.create({
     borderColor: theme.colors.glass.borderSoft,
     backgroundColor: theme.colors.executive.chipFill,
     paddingHorizontal: 10,
-    color: Colors.text,
+    color: theme.colors.text.primary,
     fontFamily: FontFamily.regular,
     fontSize: 13,
   },
@@ -1300,13 +1333,13 @@ const styles = StyleSheet.create({
   heroMeta: { flex: 1 },
   heroTitle: {
     fontSize: 18,
-    color: Colors.text,
+    color: theme.colors.text.primary,
     fontFamily: FontFamily.extrabold,
     marginBottom: 2,
   },
   heroSub: {
     fontSize: 12,
-    color: Colors.textSoft,
+    color: theme.colors.text.secondary,
     fontFamily: FontFamily.regular,
   },
   metricRow: { flexDirection: 'row', gap: 8 },
@@ -1321,18 +1354,18 @@ const styles = StyleSheet.create({
   },
   metricLabel: {
     fontSize: 11,
-    color: Colors.textSoft,
+    color: theme.colors.text.secondary,
     fontFamily: FontFamily.medium,
     marginBottom: 4,
   },
   metricValue: {
     fontSize: 20,
-    color: theme.colors.primaryBright,
+    color: theme.hybrid.signal,
     fontFamily: FontFamily.extrabold,
   },
   metricFootnote: {
     fontSize: 10,
-    color: Colors.textSoft,
+    color: theme.colors.text.secondary,
     fontFamily: FontFamily.regular,
     marginTop: 6,
     lineHeight: 14,
@@ -1349,7 +1382,7 @@ const styles = StyleSheet.create({
   },
   toggleLabel: {
     fontSize: 13,
-    color: Colors.text,
+    color: theme.colors.text.primary,
     fontFamily: FontFamily.semibold,
   },
   switchTrack: {
@@ -1376,7 +1409,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 14,
     fontFamily: FontFamily.extrabold,
-    color: Colors.text,
+    color: theme.colors.text.primary,
     marginBottom: 10,
     letterSpacing: 0.3,
   },
@@ -1400,21 +1433,21 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   filterChipActive: {
-    backgroundColor: 'rgba(197, 160, 89, 0.22)',
-    borderColor: theme.colors.glass.border,
-    shadowColor: theme.colors.primary,
+    backgroundColor: theme.hybrid.signalMutedBg,
+    borderColor: theme.hybrid.signalSubtleBorder,
+    shadowColor: theme.hybrid.signal,
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
+    shadowOpacity: 0.22,
     shadowRadius: 4,
     elevation: 2,
   },
   filterText: {
     fontSize: 12,
-    color: Colors.textSoft,
+    color: theme.colors.text.secondary,
     fontFamily: FontFamily.medium,
   },
   filterTextActive: {
-    color: Colors.text,
+    color: theme.hybrid.onSignal,
     fontFamily: FontFamily.semibold,
   },
   listWrap: { gap: 10 },
@@ -1432,7 +1465,7 @@ const styles = StyleSheet.create({
   },
   liveQueueHint: {
     fontSize: 11,
-    color: Colors.textSoft,
+    color: theme.colors.text.secondary,
     fontFamily: FontFamily.regular,
     lineHeight: 16,
     marginBottom: 10,
@@ -1440,7 +1473,7 @@ const styles = StyleSheet.create({
   liveQueueMono: {
     fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
     fontSize: 10,
-    color: Colors.text,
+    color: theme.colors.text.primary,
   },
   liveQueueSpinner: { marginVertical: 12 },
   liveQueueError: {
@@ -1451,7 +1484,7 @@ const styles = StyleSheet.create({
   },
   liveQueueWarn: {
     fontSize: 11,
-    color: theme.colors.primaryBright,
+    color: theme.hybrid.signal,
     fontFamily: FontFamily.medium,
     marginBottom: 8,
   },
@@ -1472,45 +1505,31 @@ const styles = StyleSheet.create({
   liveQueueSource: {
     fontSize: 11,
     fontFamily: FontFamily.semibold,
-    color: theme.colors.primaryBright,
+    color: theme.hybrid.signal,
   },
   liveQueueTime: {
     fontSize: 10,
-    color: Colors.textSoft,
+    color: theme.colors.text.secondary,
     fontFamily: FontFamily.regular,
   },
   liveQueueHeadline: {
     fontSize: 13,
     fontFamily: FontFamily.bold,
-    color: Colors.text,
+    color: theme.colors.text.primary,
     marginBottom: 2,
   },
   lifecycleLine: {
     fontSize: 12,
     fontFamily: FontFamily.medium,
-    color: Colors.textSoft,
+    color: theme.colors.text.secondary,
     marginTop: 6,
     lineHeight: 17,
   },
   liveQueueCustomer: {
     fontSize: 12,
-    color: Colors.textSoft,
+    color: theme.colors.text.secondary,
     fontFamily: FontFamily.regular,
     marginBottom: 6,
-  },
-  operationalPill: {
-    alignSelf: 'flex-start',
-    backgroundColor: 'rgba(197, 160, 89, 0.14)',
-    borderRadius: 8,
-    paddingHorizontal: 8,
-    paddingVertical: 5,
-    marginBottom: 6,
-  },
-  operationalPillText: {
-    fontSize: 10,
-    fontFamily: FontFamily.medium,
-    color: theme.colors.text.primary,
-    lineHeight: 14,
   },
   liveQueueEscalation: {
     fontSize: 10,
@@ -1528,7 +1547,7 @@ const styles = StyleSheet.create({
   },
   calendarDemoNote: {
     fontSize: 11,
-    color: Colors.textSoft,
+    color: theme.colors.text.secondary,
     fontFamily: FontFamily.regular,
     marginBottom: 8,
     marginTop: -4,
@@ -1560,13 +1579,13 @@ const styles = StyleSheet.create({
   },
   appCustomer: {
     fontSize: 14,
-    color: Colors.text,
+    color: theme.colors.text.primary,
     fontFamily: FontFamily.bold,
     marginBottom: 2,
   },
   appService: {
     fontSize: 12,
-    color: Colors.textSoft,
+    color: theme.colors.text.secondary,
     fontFamily: FontFamily.regular,
   },
   serviceRow: {
@@ -1577,7 +1596,7 @@ const styles = StyleSheet.create({
   },
   serviceType: {
     fontSize: 12,
-    color: theme.colors.primaryBright,
+    color: theme.hybrid.signal,
     fontFamily: FontFamily.semibold,
   },
   kindBadge: {
@@ -1590,8 +1609,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   kindBadgeNails: {
-    backgroundColor: 'rgba(197, 160, 89, 0.16)',
-    borderColor: theme.colors.glass.border,
+    backgroundColor: theme.hybrid.signalMutedBg,
+    borderColor: theme.hybrid.signalSubtleBorder,
   },
   kindBadgeRestaurant: {
     backgroundColor: theme.colors.executive.panelMuted,
@@ -1616,30 +1635,15 @@ const styles = StyleSheet.create({
   },
   staffHandoffLabel: {
     fontSize: 10,
-    color: Colors.textSoft,
+    color: theme.colors.text.secondary,
     fontFamily: FontFamily.semibold,
     marginBottom: 4,
   },
   staffHandoffText: {
     fontSize: 11,
-    color: Colors.text,
+    color: theme.colors.text.primary,
     fontFamily: FontFamily.regular,
     lineHeight: 15,
-  },
-  badge: {
-    borderRadius: 10,
-    backgroundColor: 'rgba(129, 199, 132, 0.2)',
-    borderWidth: 1,
-    borderColor: 'rgba(129, 199, 132, 0.45)',
-    paddingHorizontal: 8,
-    minHeight: 24,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  badgeText: {
-    fontSize: 11,
-    color: theme.colors.success,
-    fontFamily: FontFamily.bold,
   },
   devBtn: {
     marginTop: 16,
@@ -1667,7 +1671,7 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     fontSize: 12,
-    color: Colors.textSoft,
+    color: theme.colors.text.secondary,
     fontFamily: FontFamily.regular,
     paddingTop: 4,
   },

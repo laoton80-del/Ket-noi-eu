@@ -1,5 +1,6 @@
 /**
  * @deprecated Import from `src/config/appBrand` — kept so older paths keep working during Global spine cleanup (G3).
+ * **Naming:** `V9` here is a **legacy module path only** — not a public product tier or pricing anchor (GLOBAL_V1). Wallet pricing: `commercialSpine.ts`.
  */
 import { ASSISTANTS_ROSTER, PRICING_MARKET_TIERS_USD } from './appBrand';
 export type { AssistantIdentity, PricingTier } from './appBrand';

@@ -1,6 +1,7 @@
 import { normalizeCountryCodeOrSentinel, pricingTierForUsageDebits, resolveCountryPack } from '../config/countryPacks';
 import { LETAN_BOOKING_CREDITS_BY_TIER, OUTBOUND_CALL_CREDITS_BY_TIER } from '../config/countryPacks/pricingByTier';
 import type { WalletPackageId } from '../config/globalWalletPackages';
+import { notifyCharityEligiblePayment } from './fintech/CharityService';
 import { devWarn } from '../utils/devLog';
 
 /** POST `/platform-pay/intent` JSON body (payments microservice — repo assumes this shape). */
@@ -64,7 +65,7 @@ export function isPaymentsApiConfigured(): boolean {
  *
  * **Truth:** `verifyTopupCreditEntitlement` / `pollTopupCreditEntitlement` mean “payment path says the
  * user may receive this top-up” (e.g. provider captured + backend marked entitled). It does **not** mean
- * Credits are already on the wallet — that only happens after `topupCreditsServer` succeeds.
+ * VIG Tokens are already on the wallet — that only happens after `topupCreditsServer` succeeds.
  *
  * Webhook-authoritative mode: a payment provider webhook should write
  * `platform_payment_receipts/{paymentEventId}` (see `functions/src/payments/paymentReceiptModel.ts`);
@@ -104,7 +105,7 @@ type VerifyTopupEntitlementResponse = {
 
 export type CallCreditPriceQuote = {
   country: string;
-  /** Outbound Leona debit unit: Credits (tier from country pack). */
+  /** Outbound Leona debit unit: VIG Token (tier from country pack). */
   creditsPerCall: number;
   /** @deprecated Alias for `creditsPerCall` (legacy name). */
   basePerCallCzk: number;
@@ -117,7 +118,7 @@ export type LeTanBookingPriceQuote = {
   country: string;
   creditsPerBooking: number;
   localAmount: number;
-  currencyCode: 'CREDITS';
+  currencyCode: 'VIG_TOKEN';
   amountLabel: string;
 };
 
@@ -140,8 +141,8 @@ export function calculateCallCreditPrice(userCountry?: string): CallCreditPriceQ
     creditsPerCall,
     basePerCallCzk: creditsPerCall,
     localAmount: creditsPerCall,
-    currencyCode: 'CREDITS',
-    amountLabel: `${formatMoney(creditsPerCall)} Credits/cuộc`,
+    currencyCode: 'VIG_TOKEN',
+    amountLabel: `${formatMoney(creditsPerCall)} VIG Token/cuộc`,
   };
 }
 
@@ -153,8 +154,8 @@ export function calculateLeTanBookingPrice(userCountry?: string): LeTanBookingPr
     country,
     creditsPerBooking,
     localAmount: creditsPerBooking,
-    currencyCode: 'CREDITS',
-    amountLabel: `${creditsPerBooking} Credits/lượt`,
+    currencyCode: 'VIG_TOKEN',
+    amountLabel: `${creditsPerBooking} VIG Token/lượt`,
   };
 }
 
@@ -194,7 +195,14 @@ export async function verifyTopupCreditEntitlement(input: VerifyTopupEntitlement
       return false;
     }
     const data = (await res.json()) as VerifyTopupEntitlementResponse;
-    return data.credited === true || data.entitlement_active === true;
+    const verified = data.credited === true || data.entitlement_active === true;
+    if (verified && typeof input.idempotencyKey === 'string' && input.idempotencyKey.length > 0) {
+      void notifyCharityEligiblePayment({
+        paymentEventId: input.idempotencyKey,
+        source: 'wallet_topup',
+      });
+    }
+    return verified;
   } catch {
     return false;
   }

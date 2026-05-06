@@ -9,6 +9,8 @@ import { FontFamily } from '../theme/typography';
 import { theme } from '../theme/theme';
 import { PinFallbackModal } from './PinFallbackModal';
 import { authenticateBiometric, getBiometricAvailability, isValidWalletPin } from '../security/biometricUnlock';
+import { applyWebStyles } from '../utils/applyWebStyles';
+import { isDemoSandboxActive } from '../services/ux/DemoSandbox';
 
 type PremiumCheckoutSheetProps = {
   visible: boolean;
@@ -89,7 +91,7 @@ export function PremiumCheckoutSheet({
   }, [isPlatformPaySupported, visible]);
 
   useEffect(() => {
-    if (!visible) return;
+    if (isDemoSandboxActive() || !visible) return;
     setPaymentAuthOk(false);
     let cancelled = false;
     void (async () => {
@@ -142,7 +144,12 @@ export function PremiumCheckoutSheet({
     const cartItems: PlatformPay.CartSummaryItem[] = [
       {
         paymentType: PlatformPay.PaymentType.Immediate,
-        label: `${APP_BRAND.paymentsDisplayName} · Credits`,
+        label: 'Credits',
+        amount: amountStr,
+      },
+      {
+        paymentType: PlatformPay.PaymentType.Immediate,
+        label: APP_BRAND.paymentsDisplayName,
         amount: amountStr,
       },
     ];
@@ -204,6 +211,8 @@ export function PremiumCheckoutSheet({
 
   if (!visible) return null;
 
+  if (isDemoSandboxActive()) return null;
+
   const showNativeButton = Platform.OS === 'ios' || Platform.OS === 'android';
   const payReady =
     !checkingPay && paySupported && !!platformPayClientSecret && paymentAuthOk;
@@ -227,7 +236,12 @@ export function PremiumCheckoutSheet({
           }
         }}
       />
-      <Animated.View entering={FadeInDown.duration(280)} exiting={FadeOutDown.duration(220)} style={styles.sheet}>
+      <Animated.View
+        entering={FadeInDown.duration(280)}
+        exiting={FadeOutDown.duration(220)}
+        style={styles.sheet}
+        className={applyWebStyles('kn-glass kn-neon-b2b')}
+      >
         <Text style={styles.checkoutType}>{checkoutTitle}</Text>
         <Text style={styles.totalTitle}>Tổng thanh toán:</Text>
         <Text style={styles.totalAmount}>{amountLabel}</Text>

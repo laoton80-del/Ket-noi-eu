@@ -7,7 +7,6 @@ import { Ionicons } from '@expo/vector-icons';
 import {
   ActivityIndicator,
   Alert,
-  Image,
   Platform,
   Pressable,
   StyleSheet,
@@ -16,6 +15,7 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { AppImage } from '../components/ui/AppImage';
 import Animated, { Easing, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 import { RadarScanner } from '../components/ai-eye/RadarScanner';
 import { InlineStatusBanner } from '../components/feedback/InlineStatusBanner';
@@ -154,7 +154,7 @@ export function AiEyeScreen() {
   return (
     <SafeAreaView style={styles.container}>
       {capturedUri ? (
-        <Image source={{ uri: capturedUri }} style={styles.camera} resizeMode="cover" />
+        <AppImage source={{ uri: capturedUri }} style={styles.camera} resizeMode="cover" />
       ) : (
         <CameraView ref={cameraRef} style={styles.camera} facing="back" enableTorch={flashEnabled} />
       )}
@@ -205,7 +205,7 @@ export function AiEyeScreen() {
 
       <ResultBottomSheet visible={!!result} result={result} onSave={onSaveFlashcard} />
       {showSaveFx ? (
-        <Animated.View style={[styles.saveFxWrap, saveFxStyle]}>
+        <Animated.View style={StyleSheet.flatten([styles.saveFxWrap, saveFxStyle])}>
           <Ionicons name="leaf" size={16} color="#FFE3A2" />
           <Text style={styles.saveFxText}>+1 Thẻ học 3D</Text>
         </Animated.View>

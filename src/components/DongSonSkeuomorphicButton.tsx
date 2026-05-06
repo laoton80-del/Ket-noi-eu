@@ -113,7 +113,7 @@ export const DongSonSkeuomorphicButton = memo(function DongSonSkeuomorphicButton
   if (variant === 'avatar-ring') {
     return (
       <Pressable disabled={disabled} onPress={onPress} onPressIn={onPressIn} onPressOut={onPressOut} style={style}>
-        <Animated.View style={[styles.base, { width: dimension, height: dimension, borderRadius: radius }, animatedStyle, disabled && styles.disabled]}>
+        <Animated.View style={StyleSheet.flatten([styles.base, { width: dimension, height: dimension, borderRadius: radius }, animatedStyle, disabled && styles.disabled])}>
           <LinearGradient
             colors={gradients.bronzeMetal}
             start={{ x: 0, y: 0 }}
@@ -138,7 +138,7 @@ export const DongSonSkeuomorphicButton = memo(function DongSonSkeuomorphicButton
 
   return (
     <Pressable disabled={disabled} onPress={onPress} onPressIn={onPressIn} onPressOut={onPressOut} style={style}>
-      <Animated.View style={[styles.base, { width: dimension, height: dimension, borderRadius: radius }, animatedStyle, disabled && styles.disabled]}>
+      <Animated.View style={StyleSheet.flatten([styles.base, { width: dimension, height: dimension, borderRadius: radius }, animatedStyle, disabled && styles.disabled])}>
         <LinearGradient
           colors={gradients.bronzeMetal}
           start={{ x: 0, y: 0 }}

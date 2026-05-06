@@ -1,6 +1,5 @@
 import { INTERPRETER_SESSION_CREDITS } from '../liveInterpreterService';
 import { calculateCallCreditPrice, calculateLeTanBookingPrice } from '../PaymentsService';
-import { LIFEOS_LEGAL_LEONA_CREDITS } from '../../constants/lifeOSConversion';
 import {
   isLifeOSActionOnCooldown,
   loadRecentLifeOSActions,
@@ -90,7 +89,7 @@ export function generateAutoCTA(action: LifeOSPredictAction, userCountry?: strin
     return {
       message: `Sắp tới hạn giấy tờ — nên đặt lịch ngay để tránh rủi ro trễ hạn.`,
       actions: [
-        { label: 'Gọi Leona đặt lịch', action: 'call_booking', credits: LIFEOS_LEGAL_LEONA_CREDITS || leonaCost },
+        { label: 'Gọi Leona đặt lịch', action: 'call_booking', credits: leonaCost },
       ],
     };
   }

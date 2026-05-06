@@ -4,6 +4,9 @@ import type { B2BBusinessType } from './models';
  * Phase 3 — explicit mapping between **product verticals** and **fulfillment engine families**.
  * Firestore resource overlap + booking/order engines may still share implementations; this module is the
  * single place to read “what bucket does this tenant type use?” without hidden `potraviny` spread.
+ *
+ * **GLOBAL_V1:** `hospitality_stay` engine covers both **hotel** and **homestay**; discriminate at tenant level via
+ * `BusinessTenant.hospitalityStayVariant` when set (optional for legacy data).
  */
 
 /** Engine-shaped grouping (not necessarily 1:1 with Firestore collections). */
@@ -69,4 +72,9 @@ export function grocerySegmentLabel(bt: B2BBusinessType): 'retail' | 'wholesale'
   if (bt === 'grocery_wholesale') return 'wholesale';
   if (bt === 'potraviny') return 'legacy';
   return 'n/a';
+}
+
+/** `potraviny` tenants only — long-term migration target `grocery_retail`. */
+export function isLegacyPotravinyBusinessType(bt: B2BBusinessType): boolean {
+  return bt === 'potraviny';
 }

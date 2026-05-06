@@ -32,7 +32,8 @@ import { buildLifeOSSuggestionLines, buildPredictiveLines } from '../lifeOS/ui/s
 import { useLifeOSActionCells } from '../lifeOS/hooks/useLifeOSActionCells';
 import { useLifeOSCompanionAndPredictive } from '../lifeOS/hooks/useLifeOSCompanionAndPredictive';
 import { useLifeOSDailyLoopBootstrap } from '../lifeOS/hooks/useLifeOSDailyLoopBootstrap';
-import { APP_BRAND } from '../config/appBrand';
+import { brandNameForSurface } from '../config/appBrand';
+import { applyWebStyles } from '../utils/applyWebStyles';
 
 export const LifeOSDashboard: React.FC = () => {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
@@ -408,18 +409,27 @@ export const LifeOSDashboard: React.FC = () => {
   ]);
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer} showsVerticalScrollIndicator={false}>
+    <ScrollView
+      style={styles.container}
+      contentContainerStyle={styles.contentContainer}
+      showsVerticalScrollIndicator={false}
+      className={applyWebStyles('kn-glass')}
+    >
       <View style={styles.header}>
         <View>
-          <Text style={styles.brand}>{APP_BRAND.name}</Text>
+          <Text style={styles.brand}>{brandNameForSurface('b2b')}</Text>
           <Text style={styles.subtitle}>LifeOS</Text>
-          <Text style={styles.tagline}>Ưu tiên hành động tốn Credits có chủ đích — rõ giá, rõ kết quả.</Text>
+          <Text style={styles.tagline}>Ưu tiên hành động tốn VIG Token có chủ đích — rõ giá, rõ kết quả.</Text>
         </View>
         <View style={styles.headerRight}>
           <View style={styles.creditChip}>
-            <Text style={styles.creditChipText}>{lifeOS.creditBalance} Credits</Text>
+            <Text style={styles.creditChipText}>{lifeOS.creditBalance} VIG Token</Text>
           </View>
-          <Pressable style={styles.sosBtn} onPress={() => navigation.navigate('EmergencySOS')}>
+          <Pressable
+            style={styles.sosBtn}
+            onPress={() => navigation.navigate('EmergencySOS')}
+            className={applyWebStyles('kn-neon-sos')}
+          >
             <Ionicons name="warning" size={14} color="#FFFFFF" />
             <Text style={styles.sosBtnText}>SOS</Text>
           </Pressable>

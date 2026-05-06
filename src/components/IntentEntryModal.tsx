@@ -21,8 +21,11 @@ type Props = {
 };
 
 export function IntentEntryModal({ visible, onSelectIntent, onSkip }: Props) {
+  /** Chỉ mount Modal khi cần — tránh lớp Modal Android còn sót / chặn touch khi đã đóng. */
+  if (!visible) return null;
+
   return (
-    <Modal visible={visible} animationType="fade" transparent>
+    <Modal visible animationType="fade" transparent onRequestClose={onSkip}>
       <View style={styles.backdrop}>
         <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
           <LinearGradient colors={gradients.sandCard} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.card}>

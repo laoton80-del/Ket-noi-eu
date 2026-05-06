@@ -1,6 +1,7 @@
 import React from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import type { EmergencyType } from '../../services/emergency/emergencyPhrasePacks';
+import { applyWebStyles } from '../../utils/applyWebStyles';
 
 type Props = {
   type: EmergencyType;
@@ -12,7 +13,11 @@ type Props = {
 
 export const EmergencyActionCard: React.FC<Props> = ({ type, title, subtitle, active, onPress }) => {
   return (
-    <Pressable onPress={() => onPress(type)} style={({ pressed }) => [styles.card, active && styles.active, pressed && styles.pressed]}>
+    <Pressable
+      onPress={() => onPress(type)}
+      style={({ pressed }) => [styles.card, active && styles.active, pressed && styles.pressed]}
+      className={applyWebStyles(active ? 'kn-glass kn-neon-sos' : 'kn-glass')}
+    >
       <View>
         <Text style={styles.title}>{title}</Text>
         <Text style={styles.sub}>{subtitle}</Text>

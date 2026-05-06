@@ -33,18 +33,20 @@ function subscriptionUsdForTier(tier: keyof typeof TIER_PRICE_MULTIPLIER): { mon
 }
 
 /**
- * Brand spine: **Kết Nối Global** (master) + EU launch lane context.
- * Screens should use `name` for headers; use `launchSubtitle` where launch context helps users.
+ * Brand spine: **VIONA** is the primary customer-facing name.
+ * `masterName` / `internalName` remain for legacy internal copy (ops, mapping); prefer `brandConfig` for new UI.
  */
 export const APP_BRAND = {
+  publicName: 'VIONA',
+  internalName: 'KNG',
   masterName: 'Kết Nối Global',
   launchProductName: 'EU Launch Lane',
   /** Primary header on most surfaces */
-  name: 'Kết Nối Global',
+  name: 'VIONA',
   /** Secondary line under brand (launch-lane context only) */
-  launchSubtitle: 'Launch lane: EU',
+  launchSubtitle: 'Siêu ứng dụng · ưu tiên EU — toàn cầu cho cộng đồng Việt',
   /** Stripe / wallet sheet merchant display name */
-  paymentsDisplayName: 'Kết Nối Global',
+  paymentsDisplayName: 'VIONA',
   visualStyle: 'Neo-Indochine & Glassmorphism',
   icon: '🌳✨',
   iconLabel: 'Cây Bồ Đề vàng 3D',
@@ -54,6 +56,13 @@ export const APP_BRAND = {
     termsUrl: 'https://ketnoiglobal.com/terms',
   },
 } as const;
+
+export type BrandSurface = 'b2c' | 'b2b' | 'internal';
+
+export function brandNameForSurface(surface: BrandSurface): string {
+  if (surface === 'internal') return APP_BRAND.masterName;
+  return APP_BRAND.publicName;
+}
 
 /** Assistant roster for prompts / persona wiring. */
 export const ASSISTANTS_ROSTER: AssistantIdentity[] = [
@@ -82,11 +91,11 @@ const T2 = subscriptionUsdForTier('T2');
 const T3 = subscriptionUsdForTier('T3');
 const T4 = subscriptionUsdForTier('T4');
 
-/** Subscription/marketing tier cards (USD anchors). Wallet combo families live in `globalWalletPackages.ts`. */
+/** Subscription/marketing tier cards (USD anchors). Wallet six-pack live spine: `commercialSpine.ts` + `docs/COMMERCIAL_SPINE_LIVE.md`. */
 export const PRICING_MARKET_TIERS_USD: PricingTier[] = [
   {
     id: 'T1',
-    name: 'T1 · Central Europe (pilot anchor)',
+    name: 'T1 · Central Europe (launch markets)',
     regions: 'CZ, SK, PL',
     monthlyUsd: T1.monthlyUsd,
     yearlyUsd: T1.yearlyUsd,

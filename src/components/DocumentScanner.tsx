@@ -1,11 +1,11 @@
 import { Ionicons } from '@expo/vector-icons';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import * as Haptics from 'expo-haptics';
-import * as FileSystem from 'expo-file-system/legacy';
 import { manipulateAsync, SaveFormat } from 'expo-image-manipulator';
 import { useRef, useState } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 import { scanDocumentWithAI, type DocumentScanAiResult } from '../services/OpenAIService';
+import { compressLocalImageForUpload, optimizedImageToBase64 } from '../utils/ImageProcessor';
 import { FontFamily } from '../theme/typography';
 
 export type DocumentScannerResult = DocumentScanAiResult;
@@ -62,14 +62,13 @@ export function DocumentScanner({
       const cropHeight = Math.round(srcHeight * 0.56);
       const cropX = Math.max(0, Math.round((srcWidth - cropWidth) / 2));
       const cropY = Math.max(0, Math.round((srcHeight - cropHeight) / 2));
-      const optimized = await manipulateAsync(
+      const framed = await manipulateAsync(
         shot.uri,
-        [{ crop: { originX: cropX, originY: cropY, width: cropWidth, height: cropHeight } }, { resize: { width: 800 } }],
-        { compress: 0.7, format: SaveFormat.JPEG, base64: true }
+        [{ crop: { originX: cropX, originY: cropY, width: cropWidth, height: cropHeight } }, { resize: { width: 1200 } }],
+        { compress: 0.92, format: SaveFormat.JPEG }
       );
-      const base64 =
-        optimized.base64 ??
-        (await FileSystem.readAsStringAsync(optimized.uri, { encoding: FileSystem.EncodingType.Base64 }));
+      const optimized = await compressLocalImageForUpload(framed.uri);
+      const base64 = await optimizedImageToBase64(optimized);
       const result = await scanDocumentWithAI(base64, countryCode);
       await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
       onScanned(result);

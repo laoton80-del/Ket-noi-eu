@@ -10,29 +10,28 @@ import {
   StyleSheet,
   Text,
   TextInput,
+  TouchableOpacity,
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { AuthPaywallModal } from '../components/AuthPaywallModal';
 import { InlineStatusBanner } from '../components/feedback/InlineStatusBanner';
 import { MicroHintBanner } from '../components/MicroHintBanner';
-import { DongSonSkeuomorphicButton } from '../components/DongSonSkeuomorphicButton';
 import { getPersonaDisplayName } from '../config/aiPrompts';
-import { normalizeCountryCodeOrSentinel } from '../config/countryPacks';
+import { AI_LEONA_PER_MIN_CREDITS, LEONA_CALL_COST_CREDITS } from '../config/pricingConfig';
 import { useAuth } from '../context/AuthContext';
 import type { RootStackParamList } from '../navigation/routes';
 import { hasSeenMicroHint, markMicroHintSeen } from '../onboarding/guidedOnboardingStorage';
-import { calculateCallCreditPrice } from '../services/PaymentsService';
 import { appendUsageHistory } from '../services/history';
 import { trackGrowthEventOnce } from '../services/growth';
 import { chargeTrustedService, syncWalletFromServer, useWalletState } from '../state/wallet';
 import { FontFamily } from '../theme/typography';
+import { applyWebStyles } from '../utils/applyWebStyles';
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
 type ScreenRoute = RouteProp<RootStackParamList, 'LeonaCall'>;
 
 const COUNTRY_CODES = ['+420', '+421', '+48', '+49', '+33', '+44', '+41'];
-
 export function LeonaCallScreen() {
   const navigation = useNavigation<Nav>();
   const route = useRoute<ScreenRoute>();
@@ -52,9 +51,8 @@ export function LeonaCallScreen() {
   const [showLeonaMicro, setShowLeonaMicro] = useState(false);
   const [callError, setCallError] = useState<string | null>(null);
 
-  const outboundQuote = calculateCallCreditPrice(normalizeCountryCodeOrSentinel(user?.country));
-  const outboundCostCzk = outboundQuote.localAmount;
-  const outboundCostLabel = `${outboundCostCzk} Credits`;
+  const leonaCallCostXu = LEONA_CALL_COST_CREDITS;
+  const outboundCostLabel = `Phí: ${LEONA_CALL_COST_CREDITS} Xu / cuộc gọi`;
   const outboundPersonaName = getPersonaDisplayName('leona');
   const autoSubmitRequested = !!route.params?.autoSubmit;
 
@@ -117,16 +115,16 @@ export function LeonaCallScreen() {
     void trackGrowthEventOnce('first_call_attempt');
     setCallError(null);
     await syncWalletFromServer();
-    if (wallet.credits < outboundCostCzk) {
+    if (wallet.credits < leonaCallCostXu) {
       setShowLowCredit(true);
-      setCallError('Bạn chưa đủ Credits để thực hiện cuộc gọi. Vui lòng nạp rồi thử lại.');
+      setCallError('Bạn chưa đủ Xu để thực hiện cuộc gọi. Vui lòng nạp rồi thử lại.');
       void appendUsageHistory({ type: 'leona', status: 'failed', note: 'insufficient_credits' });
       return;
     }
     setPhase('calling');
     const chargeKey = `leona-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
     const res = await chargeTrustedService({
-      amount: outboundCostCzk,
+      amount: leonaCallCostXu,
       idempotencyKey: chargeKey,
       serviceKind: 'leona_outbound',
     });
@@ -169,10 +167,10 @@ export function LeonaCallScreen() {
   const liveCoreScale = pulse.interpolate({ inputRange: [0, 1], outputRange: [1, 1.06] });
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container} className={applyWebStyles('kn-glass')}>
       <MicroHintBanner
         visible={showLeonaMicro}
-        text="Nhập số và mô tả ngắn — bấm gọi để Leona xử lý (trừ Credits theo cuộc)."
+        text="Nhập số và mô tả ngắn — bấm gọi để Leona xử lý (trừ Xu theo cuộc)."
         onDismiss={() => {
           setShowLeonaMicro(false);
           void markMicroHintSeen('leona');
@@ -188,14 +186,14 @@ export function LeonaCallScreen() {
         </Text>
         <View style={styles.creditPill}>
           <Ionicons name="wallet" size={12} color="#DAB676" />
-          <Text style={styles.creditPillText}>{wallet.credits} Credits</Text>
+          <Text style={styles.creditPillText}>{wallet.credits} Xu</Text>
         </View>
 
         <View style={styles.micArea}>
           {ringScales.map((scale, i) => (
             <RNAnimated.View
               key={`r-${i}`}
-              style={[
+              style={StyleSheet.flatten([
                 styles.ring,
                 phase === 'calling' ? styles.ringCalling : styles.ringIdle,
                 {
@@ -204,20 +202,28 @@ export function LeonaCallScreen() {
                   borderWidth: fromReminder ? 1 : 0,
                   borderColor: fromReminder ? 'rgba(255,214,155,0.85)' : 'transparent',
                 },
-              ]}
+              ])}
             />
           ))}
           <RNAnimated.View
-            style={[
+            style={StyleSheet.flatten([
               {
                 transform: [{ scale: phase === 'calling' ? liveCoreScale : attentionScale }],
               },
-            ]}
+            ])}
           >
-            <DongSonSkeuomorphicButton variant="avatar-ring" size="md" onPress={onCall} disabled={!canCall}>
+            <TouchableOpacity
+              onPress={() => void onCall()}
+              disabled={!canCall}
+              activeOpacity={0.85}
+              style={[styles.premiumMicButton, !canCall && styles.premiumMicButtonDisabled]}
+            >
               {phase === 'calling' ? <ActivityIndicator color="#FFE8D8" /> : <Ionicons name="mic" size={30} color="#FFFFFF" />}
-            </DongSonSkeuomorphicButton>
+            </TouchableOpacity>
           </RNAnimated.View>
+          <Text style={styles.micFeeLine}>{outboundCostLabel}</Text>
+          <Text style={styles.leonaBurnWarning}>Cước phí: {AI_LEONA_PER_MIN_CREDITS} Xu/Phút</Text>
+          <Text style={styles.micTrustBadge}>* Hoàn 100% Xu nếu cuộc gọi không thành công.</Text>
           {fromReminder ? (
             <View style={styles.reminderBadge}>
               <Ionicons name="notifications" size={12} color="#FFE9C7" />
@@ -226,7 +232,7 @@ export function LeonaCallScreen() {
           ) : null}
         </View>
 
-        <View style={styles.inputCard}>
+        <View style={styles.inputCard} className={applyWebStyles('kn-glass kn-neon-b2b')}>
           <View style={styles.phoneRow}>
             <Pressable
               onPress={() => setCountryCodeIndex((v) => (v + 1) % COUNTRY_CODES.length)}
@@ -259,23 +265,22 @@ export function LeonaCallScreen() {
           </View>
         </View>
 
-        <DongSonSkeuomorphicButton variant="card" cardTone="dark" watermarkOpacity={0.03} style={styles.statusCard}>
+        <View style={styles.statusCard} className={applyWebStyles('kn-glass')}>
           <Text style={styles.statusText}>
-            {phase === 'calling' ? 'Máy chủ đang xác nhận Credits trước khi tiếp tục…' : 'Đang nghe...'}
+            {phase === 'calling' ? 'Máy chủ đang xác nhận Xu trước khi tiếp tục…' : 'Đang nghe...'}
           </Text>
-          <Text style={styles.statusText}>Phí: {outboundCostLabel}/lượt</Text>
-        </DongSonSkeuomorphicButton>
+        </View>
         {callError ? <InlineStatusBanner tone="error" text={callError} onRetry={() => void onCall()} /> : null}
       </View>
 
-      <RNAnimated.View style={[styles.resultSheet, { transform: [{ translateY: sheetY }] }]}>
+      <RNAnimated.View style={StyleSheet.flatten([styles.resultSheet, { transform: [{ translateY: sheetY }] }])}>
         <View style={styles.sheetDrag} />
         <Text style={styles.sheetTitle}>Xác nhận yêu cầu và thanh toán</Text>
         <Text style={styles.sheetResult}>
-          ✅ Đã xác nhận thanh toán và trừ Credits; yêu cầu đã được ghi nhận. Kết quả cuộc gọi thực tế do tổng đài/đối tác —
+          ✅ Đã xác nhận thanh toán và trừ Xu; yêu cầu đã được ghi nhận. Kết quả cuộc gọi thực tế do tổng đài/đối tác —
           ứng dụng chỉ xác nhận lượt dịch vụ đã thanh toán.
         </Text>
-        <Text style={styles.sheetCharge}>Đã trừ {outboundCostCzk} Credits.</Text>
+        <Text style={styles.sheetCharge}>Đã trừ {leonaCallCostXu} Xu.</Text>
         <Pressable
           onPress={() => {
             RNAnimated.timing(sheetY, { toValue: 320, duration: 240, useNativeDriver: true }).start(() => {
@@ -290,8 +295,8 @@ export function LeonaCallScreen() {
 
       <AuthPaywallModal
         visible={showLowCredit}
-        title="Hết Credits"
-        description={`Bạn đã hết Credits. Nạp thêm để tiếp tục dùng dịch gọi hỗ trợ ${outboundPersonaName}.`}
+        title="Hết Xu"
+        description={`Bạn đã hết Xu. Nạp thêm để tiếp tục dùng dịch gọi hỗ trợ ${outboundPersonaName}.`}
         onClose={() => setShowLowCredit(false)}
         onContinue={() => {
           setShowLowCredit(false);
@@ -329,7 +334,33 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontFamily: FontFamily.semibold,
   },
-  micArea: { height: 220, alignItems: 'center', justifyContent: 'center' },
+  micArea: { minHeight: 220, alignItems: 'center', justifyContent: 'center', paddingBottom: 8 },
+  micFeeLine: {
+    marginTop: 14,
+    color: '#FFEAD9',
+    fontFamily: FontFamily.semibold,
+    fontSize: 13,
+    textAlign: 'center',
+    paddingHorizontal: 12,
+  },
+  leonaBurnWarning: {
+    marginTop: 6,
+    color: '#FFB74D',
+    fontFamily: FontFamily.bold,
+    fontSize: 12,
+    textAlign: 'center',
+    paddingHorizontal: 12,
+  },
+  micTrustBadge: {
+    marginTop: 6,
+    maxWidth: 320,
+    color: 'rgba(255, 245, 230, 0.88)',
+    fontFamily: FontFamily.regular,
+    fontSize: 11,
+    lineHeight: 16,
+    textAlign: 'center',
+    paddingHorizontal: 16,
+  },
   ring: {
     position: 'absolute',
     width: 158,
@@ -414,8 +445,31 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     backgroundColor: 'rgba(198,57,57,0.8)',
   },
+  premiumMicButton: {
+    width: 84,
+    height: 84,
+    borderRadius: 42,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#C83D3D',
+    borderWidth: 2,
+    borderColor: 'rgba(255, 214, 155, 0.85)',
+    shadowColor: '#D4AF37',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.45,
+    shadowRadius: 14,
+    elevation: 8,
+  },
+  premiumMicButtonDisabled: {
+    opacity: 0.55,
+  },
   statusCard: {
     marginTop: 12,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: 'rgba(226,92,92,0.45)',
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    padding: 12,
   },
   statusText: {
     color: '#F5F5DC',

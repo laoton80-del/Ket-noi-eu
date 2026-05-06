@@ -21,12 +21,16 @@ import { LinearGradient } from 'expo-linear-gradient';
 import * as Notifications from 'expo-notifications';
 import { DocumentScanner, mapDocumentTypeToCoreType, toIsoDateFromDdMmYyyy } from '../components/DocumentScanner';
 import { MicroHintBanner } from '../components/MicroHintBanner';
+import { PRICING_BASELINE_CURRENCY, VAULT_PRO_USD } from '../config/pricingConfig';
+import { resolveCurrencyForRegion } from '../config/globalLocalization';
+import { b2cTheme } from '../theme/appModeThemes';
 import { useAuth } from '../context/AuthContext';
 import type { RootStackParamList } from '../navigation/routes';
 import { hasSeenMicroHint, markMicroHintSeen } from '../onboarding/guidedOnboardingStorage';
 import { understandDocument } from '../services/documentAI';
 import { appendUsageHistory } from '../services/history';
 import { trackGrowthEvent } from '../services/growth';
+import { formatCurrency } from '../utils/currencyFormatter';
 import {
   DOCUMENT_VAULT_STORAGE_KEY,
   clearDocumentAlarmSeen,
@@ -38,6 +42,7 @@ import {
 } from '../services/DocumentAlarmService';
 import { useAssistantSettings } from '../state/assistantSettings';
 import { gradients } from '../theme/gradients';
+import { theme } from '../theme/theme';
 import { FontFamily } from '../theme/typography';
 
 function daysUntil(expiryDate: string): number {
@@ -73,11 +78,11 @@ function DocumentCard({ item, locale }: { item: DocumentVaultItem; locale: strin
 
   return (
     <Animated.View
-      style={[
+      style={StyleSheet.flatten([
         styles.cardWrap,
         isUrgent && styles.cardWrapUrgent,
         isUrgent && { transform: [{ translateX: shake.interpolate({ inputRange: [-1, 1], outputRange: [-1.5, 1.5] }) }] },
-      ]}
+      ])}
     >
       <LinearGradient
         colors={isUrgent ? gradients.dangerCard : gradients.sandCard}
@@ -315,6 +320,26 @@ export function VaultScreen() {
       <View style={styles.header}>
         <Text style={styles.title}>Smart Document Vault</Text>
         <Text style={styles.subtitle}>Giấy tờ sắp hết hạn sẽ tự động nổi lên trên.</Text>
+        <View
+          style={[
+            styles.vaultPromo,
+            { backgroundColor: b2cTheme.colors.card, borderColor: b2cTheme.colors.border },
+          ]}
+        >
+          <Text style={styles.vaultPromoTitle}>Kho lưu trữ cơ bản — miễn phí vĩnh viễn</Text>
+          <Text style={styles.vaultPromoBody}>
+            Danh sách giấy tờ, nhắc hạn và quét OCR cốt lõi luôn miễn phí; không giới hạn số lượng hồ sơ cơ bản.
+          </Text>
+          <View style={styles.vaultProRow}>
+            <Text style={styles.vaultProLabel}>Vault Pro</Text>
+            <Text style={styles.vaultProPrice}>
+              Thẻ Vault Pro: {formatCurrency(VAULT_PRO_USD, resolveCurrencyForRegion(user?.country))} / tháng
+            </Text>
+          </View>
+          <Text style={styles.vaultProBody}>
+            Nâng cấp tùy chọn: nhắc thông minh nâng cao, ưu tiên sao lưu và gợi ý gia hạn chủ động hơn.
+          </Text>
+        </View>
       </View>
 
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
@@ -443,6 +468,49 @@ const styles = StyleSheet.create({
   header: { paddingHorizontal: 16, paddingTop: 8, paddingBottom: 6 },
   title: { fontSize: 24, color: '#2A231A', fontFamily: FontFamily.extrabold },
   subtitle: { marginTop: 4, fontSize: 13, color: '#675A45', fontFamily: FontFamily.regular },
+  vaultPromo: {
+    marginTop: 12,
+    padding: theme.spacing.md,
+    borderRadius: theme.radius.lg,
+    borderWidth: 1,
+    gap: 6,
+  },
+  vaultPromoTitle: {
+    fontSize: 14,
+    fontFamily: FontFamily.bold,
+    color: b2cTheme.colors.text,
+  },
+  vaultPromoBody: {
+    fontSize: 12,
+    lineHeight: 18,
+    fontFamily: FontFamily.regular,
+    color: 'rgba(11, 22, 40, 0.62)',
+  },
+  vaultProRow: {
+    marginTop: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 8,
+  },
+  vaultProLabel: {
+    fontSize: 13,
+    fontFamily: FontFamily.extrabold,
+    color: b2cTheme.colors.primary,
+  },
+  vaultProPrice: {
+    flex: 1,
+    fontSize: 13,
+    fontFamily: FontFamily.bold,
+    color: b2cTheme.colors.text,
+    textAlign: 'right',
+  },
+  vaultProBody: {
+    fontSize: 12,
+    lineHeight: 17,
+    fontFamily: FontFamily.regular,
+    color: 'rgba(11, 22, 40, 0.62)',
+  },
   content: { paddingHorizontal: 14, paddingBottom: 120, gap: 10 },
   quickAddCard: {
     borderRadius: 16,

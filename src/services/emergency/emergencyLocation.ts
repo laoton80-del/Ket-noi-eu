@@ -1,5 +1,7 @@
 import * as Location from 'expo-location';
 
+import { reverseGeocodeMapbox } from '../location/mapboxGeocoding';
+
 export async function resolveEmergencyLocation(): Promise<{
   status: 'ok' | 'unavailable';
   label: string;
@@ -10,20 +12,18 @@ export async function resolveEmergencyLocation(): Promise<{
       return { status: 'unavailable', label: 'Không lấy được vị trí (chưa cấp quyền vị trí).' };
     }
     const pos = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
+    const lat = pos.coords.latitude;
+    const lon = pos.coords.longitude;
+    const fallback = `${lat.toFixed(5)}, ${lon.toFixed(5)}`;
+
     try {
-      const geocoded = await Location.reverseGeocodeAsync({
-        latitude: pos.coords.latitude,
-        longitude: pos.coords.longitude,
-      });
-      const g = geocoded[0];
-      const address = [g?.name, g?.street, g?.city, g?.region, g?.country].filter(Boolean).join(', ');
-      const fallback = `${pos.coords.latitude.toFixed(5)}, ${pos.coords.longitude.toFixed(5)}`;
-      return { status: 'ok', label: address || fallback };
+      const mb = await reverseGeocodeMapbox(lat, lon);
+      if (mb?.placeLabel) {
+        return { status: 'ok', label: mb.placeLabel };
+      }
+      return { status: 'ok', label: fallback };
     } catch {
-      return {
-        status: 'ok',
-        label: `${pos.coords.latitude.toFixed(5)}, ${pos.coords.longitude.toFixed(5)}`,
-      };
+      return { status: 'ok', label: fallback };
     }
   } catch {
     return { status: 'unavailable', label: 'Không lấy được vị trí. Hãy nói địa chỉ gần nhất bạn biết.' };

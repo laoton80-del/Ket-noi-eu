@@ -1,9 +1,8 @@
 import { Ionicons } from '@expo/vector-icons';
 import { CameraView, useCameraPermissions } from 'expo-camera';
-import * as FileSystem from 'expo-file-system/legacy';
-import { manipulateAsync, SaveFormat } from 'expo-image-manipulator';
 import { useRef, useState } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
+import { compressLocalImageForUpload, optimizedImageToBase64 } from '../utils/ImageProcessor';
 import { FontFamily } from '../theme/typography';
 
 export function HomeworkScanner({
@@ -24,16 +23,10 @@ export function HomeworkScanner({
     if (!cameraRef.current || busy) return;
     setBusy(true);
     try {
-      const shot = await cameraRef.current.takePictureAsync({ quality: 0.82, skipProcessing: true });
+      const shot = await cameraRef.current.takePictureAsync({ quality: 1, skipProcessing: true });
       if (!shot?.uri) return;
-      const optimized = await manipulateAsync(shot.uri, [{ resize: { width: 900 } }], {
-        compress: 0.72,
-        format: SaveFormat.JPEG,
-        base64: true,
-      });
-      const base64 =
-        optimized.base64 ??
-        (await FileSystem.readAsStringAsync(optimized.uri, { encoding: FileSystem.EncodingType.Base64 }));
+      const optimized = await compressLocalImageForUpload(shot.uri);
+      const base64 = await optimizedImageToBase64(optimized);
       onCaptured(base64);
     } finally {
       setBusy(false);

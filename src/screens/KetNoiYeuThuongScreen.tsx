@@ -1,8 +1,10 @@
 import React from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { GlassCard } from '../components/ui/GlassCard';
 import { APP_BRAND } from '../config/appBrand';
-import { Colors } from '../theme/colors';
+import { useSyncHubOnFocus } from '../hooks/useSyncHubOnFocus';
+import { hubCore } from '../theme/colors';
 import { FontFamily } from '../theme/typography';
 
 type Section = {
@@ -53,6 +55,8 @@ const sections: Section[] = [
 ];
 
 export function KetNoiYeuThuongScreen() {
+  useSyncHubOnFocus('HUB_CHARITY');
+
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
       <ScrollView style={styles.container} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
@@ -66,14 +70,14 @@ export function KetNoiYeuThuongScreen() {
         </Text>
 
         {sections.map((section) => (
-          <View key={section.title} style={styles.card}>
+          <GlassCard key={section.title} style={styles.cardWrap}>
             <Text style={styles.cardTitle}>{section.title}</Text>
             {section.lines.map((line) => (
               <Text key={line} style={styles.cardLine}>
                 {line}
               </Text>
             ))}
-          </View>
+          </GlassCard>
         ))}
 
         <View style={styles.quoteCard}>
@@ -89,47 +93,42 @@ export function KetNoiYeuThuongScreen() {
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: Colors.background },
-  container: { flex: 1, backgroundColor: Colors.background },
+  safe: { flex: 1, backgroundColor: hubCore.backgroundTop },
+  container: { flex: 1, backgroundColor: hubCore.backgroundTop },
   content: { paddingHorizontal: 16, paddingBottom: 32 },
   brand: {
     fontSize: 13,
-    color: Colors.textSoft,
+    color: 'rgba(255,255,255,0.68)',
     fontFamily: FontFamily.regular,
     marginTop: 4,
     marginBottom: 6,
   },
   title: {
     fontSize: 30,
-    color: Colors.text,
+    color: hubCore.textPrimary,
     fontFamily: FontFamily.extrabold,
     marginBottom: 10,
   },
   hero: {
     fontSize: 15,
     lineHeight: 23,
-    color: Colors.text,
+    color: hubCore.textPrimary,
     fontFamily: FontFamily.regular,
     marginBottom: 10,
   },
-  card: {
+  cardWrap: {
     marginTop: 10,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: Colors.glassBorder,
-    backgroundColor: Colors.glass,
-    padding: 14,
   },
   cardTitle: {
     fontSize: 17,
-    color: Colors.text,
+    color: hubCore.textPrimary,
     fontFamily: FontFamily.bold,
     marginBottom: 8,
   },
   cardLine: {
     fontSize: 14,
     lineHeight: 22,
-    color: Colors.textSoft,
+    color: 'rgba(255,255,255,0.68)',
     fontFamily: FontFamily.regular,
     marginBottom: 6,
   },
@@ -137,14 +136,14 @@ const styles = StyleSheet.create({
     marginTop: 14,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: Colors.glassBorder,
+    borderColor: 'rgba(197, 160, 89, 0.35)',
     backgroundColor: 'rgba(255, 248, 232, 0.75)',
     padding: 14,
   },
   quote: {
     fontSize: 16,
     lineHeight: 24,
-    color: Colors.text,
+    color: hubCore.backgroundTop,
     fontFamily: FontFamily.semibold,
     textAlign: 'center',
   },
@@ -153,13 +152,13 @@ const styles = StyleSheet.create({
     borderRadius: 999,
     minHeight: 42,
     borderWidth: 1,
-    borderColor: Colors.glassBorder,
+    borderColor: 'rgba(255, 255, 255, 0.08)',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: Colors.glass,
+    backgroundColor: 'rgba(26, 26, 36, 0.75)',
   },
   softCtaText: {
-    color: Colors.primary,
+    color: hubCore.imperialGold,
     fontSize: 14,
     fontFamily: FontFamily.bold,
   },

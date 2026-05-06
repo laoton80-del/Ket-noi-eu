@@ -65,7 +65,7 @@ export function FlashcardItem({
 
   return (
     <Pressable onPress={onFlip} style={({ pressed }) => [styles.wrap, pressed && { opacity: 0.92 }]}>
-      <Animated.View style={[styles.card, styles.frontCard, frontStyle]}>
+      <Animated.View style={StyleSheet.flatten([styles.card, styles.frontCard, frontStyle])}>
         <Pressable
           onPress={(event) => {
             event.stopPropagation();
@@ -102,7 +102,7 @@ export function FlashcardItem({
           </View>
         )}
       </Animated.View>
-      <Animated.View style={[styles.card, styles.backCard, backStyle]}>
+      <Animated.View style={StyleSheet.flatten([styles.card, styles.backCard, backStyle])}>
         {contentUnlocked ? (
           <>
             <View>

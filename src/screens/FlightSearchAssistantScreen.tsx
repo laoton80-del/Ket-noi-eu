@@ -69,7 +69,7 @@ export function FlightSearchAssistantScreen() {
       return;
     }
     navigation.navigate('Tabs', {
-      screen: 'LeTan',
+      screen: 'TabAi',
       params: {
         aiMode: 'roleplay',
         scenario: 'So sánh chuyến bay (không đặt vé trong app)',

@@ -137,6 +137,20 @@ export function TravelCompanionScreen() {
           <Text style={styles.trustText}>{TRUST_NOTE}</Text>
         </View>
 
+        <Pressable
+          style={({ pressed }) => [styles.hospitalityEntry, pressed && { opacity: 0.88 }]}
+          onPress={() => navigation.navigate('TravelHospitality')}
+        >
+          <View style={styles.hospitalityLeft}>
+            <Ionicons name="bed-outline" size={24} color={Colors.primary} />
+            <View style={{ flex: 1 }}>
+              <Text style={styles.hospitalityTitle}>Khách sạn · Homestay · Near Me</Text>
+              <Text style={styles.hospitalityHint}>GPS thời gian thực, tỷ giá theo vị trí, Travel Pass — Concierge cao cấp</Text>
+            </View>
+          </View>
+          <Ionicons name="chevron-forward" size={22} color={Colors.textSoft} />
+        </Pressable>
+
         <Text style={styles.sectionTitle}>Hỗ trợ nhanh</Text>
         <View style={styles.quickRow}>
           <Pressable
@@ -172,7 +186,7 @@ export function TravelCompanionScreen() {
             style={({ pressed }) => [styles.quickChip, pressed && { opacity: 0.75 }]}
             onPress={() =>
               navigation.navigate('Tabs', {
-                screen: 'LeTan',
+                screen: 'TabAi',
                 params: {
                   aiMode: 'roleplay',
                   scenario: LETAN_TRAVEL_SCENARIO,
@@ -235,7 +249,7 @@ export function TravelCompanionScreen() {
                 style={({ pressed }) => [styles.actionPill, styles.actionPillOutline, pressed && { opacity: 0.75 }]}
                 onPress={() =>
                   navigation.navigate('Tabs', {
-                    screen: 'LeTan',
+                    screen: 'TabAi',
                     params: {
                       aiMode: 'roleplay',
                       scenario: LETAN_TRAVEL_SCENARIO,
@@ -287,6 +301,27 @@ const styles = StyleSheet.create({
     borderColor: Colors.glassBorder,
   },
   trustText: { flex: 1, fontSize: 13, fontFamily: FontFamily.regular, color: Colors.text, lineHeight: 19 },
+  hospitalityEntry: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginTop: 14,
+    padding: 14,
+    borderRadius: 14,
+    backgroundColor: Colors.backgroundElevated,
+    borderWidth: 1,
+    borderColor: Colors.primary,
+    gap: 12,
+  },
+  hospitalityLeft: { flexDirection: 'row', alignItems: 'center', gap: 12, flex: 1 },
+  hospitalityTitle: { fontSize: 16, fontFamily: FontFamily.bold, color: Colors.text },
+  hospitalityHint: {
+    fontSize: 12,
+    fontFamily: FontFamily.regular,
+    color: Colors.textSoft,
+    marginTop: 4,
+    lineHeight: 17,
+  },
   sectionTitle: { fontSize: 16, fontFamily: FontFamily.bold, color: Colors.text, marginTop: 22, marginBottom: 10 },
   quickRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginBottom: 10 },
   quickChip: {

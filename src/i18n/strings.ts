@@ -1,3 +1,5 @@
+import { resolveAiUiLocale } from './localeFallback';
+
 export type SupportedLanguage = 'vi' | 'en' | 'cs' | 'de';
 
 type ReceptionStrings = {
@@ -115,7 +117,7 @@ type ProfileStrings = {
   residencyStatusTiNan: string;
   planFree: string;
   planPremium: string;
-  planCombo: string;
+  planBundle: string;
   settingsTitle: string;
   settingLanguage: string;
   settingNotifications: string;
@@ -163,8 +165,8 @@ type ErrorsStrings = {
   outOfCredits: string;
 };
 
-/** Wallet / top-up alerts and inline copy (`ComboWalletScreen`). */
-type ComboWalletStrings = {
+/** Wallet / top-up alerts and inline copy (`WalletTopUpScreen`). */
+type WalletTopUpStrings = {
   walletLockedTitle: string;
   walletLockedBody: string;
   backendMissingTitle: string;
@@ -207,15 +209,19 @@ type ComboWalletStrings = {
   giftLine: string;
   /** `{amount}` display label e.g. formatted price */
   packPriceLine: string;
-  /** Balance line next to icon; `{credits}` */
-  balanceCreditsDisplay: string;
-  /** Trust chip label beside shield */
-  trustVerifiedBadge: string;
-  /** Purchasable pack CTA; `{turns}`, `{amount}` */
-  buyPackCtaLine: string;
   historySectionTitle: string;
   historyFootnote: string;
   emptyHistory: string;
+  /** Trust cue on balance hero (server-sync framing). */
+  trustVerifiedBadge: string;
+  /** Main balance line; `{credits}` = number. */
+  balanceCreditsDisplay: string;
+  /** Primary buy CTA; `{turns}`, `{amount}` = formatted pack labels. */
+  buyPackCtaLine: string;
+  /** Short heading for closed-loop / non-cash disclaimer (VIO safety copy). */
+  vioDisclaimerTitle: string;
+  /** Body: not crypto, not withdrawable cash, redemption limits (localized). */
+  vioDisclaimerBody: string;
 };
 
 type AppStrings = {
@@ -232,7 +238,7 @@ type AppStrings = {
   profile: ProfileStrings;
   voice: VoiceStrings;
   errors: ErrorsStrings;
-  comboWallet: ComboWalletStrings;
+  walletTopUp: WalletTopUpStrings;
   nav: {
     countryTab: string;
     utilityTab: string;
@@ -253,19 +259,19 @@ export const STRINGS_BY_LANGUAGE: Record<SupportedLanguage, AppStrings> = {
     },
     reception: {
       screenTitle: 'Lễ tân',
-      prepaidTitle: 'Gói Credits Global (Starter → Enterprise)',
+      prepaidTitle: 'Gói VIO Credits Global (Starter → Enterprise)',
       homelandTitle: 'Góc Quê Hương',
       homelandQuote: 'Dù ở đâu, gốc quê nhà vẫn luôn ở bên Bạn.',
       walletPackStarterLabel: 'Gói Starter · Nhập môn',
       walletPackBasicLabel: 'Gói Basic · Tiêu chuẩn nhẹ',
       walletPackStandardLabel: 'Gói Standard · Phổ biến',
-      walletPackStarterCredits: '100 Credits',
-      walletPackBasicCredits: '230 Credits',
-      walletPackStandardCredits: '650 Credits',
+      walletPackStarterCredits: '100 VIO Credits',
+      walletPackBasicCredits: '230 VIO Credits',
+      walletPackStandardCredits: '650 VIO Credits',
     },
     country: {
       screenTitle: 'Quốc gia',
-      subtitle: 'Chọn quốc gia hồ sơ — giá hiển thị & gói Credits theo nhóm thị trường Global.',
+      subtitle: 'Chọn quốc gia hồ sơ — giá hiển thị & gói VIO Credits theo nhóm thị trường Global.',
       countryNameByCode: {
         CZ: 'Séc',
         SK: 'Slovakia',
@@ -325,7 +331,7 @@ export const STRINGS_BY_LANGUAGE: Record<SupportedLanguage, AppStrings> = {
       serviceRadarDiscovery: 'Radar — khám phá dịch vụ',
       serviceFindServicesLeona: 'Tìm dịch vụ (Leona)',
       serviceVault: 'Két sắt giấy tờ',
-      packTurnsCredits: '{turns} Credits',
+      packTurnsCredits: '{turns} VIO Credits',
       discoverySectionTitle: 'Khám phá dịch vụ theo nhu cầu thực tế',
       discoverySectionSubtitle:
         'Định hướng toàn cầu, ưu tiên hỗ trợ thực hành — không phải danh mục tài chính xa xỉ.',
@@ -381,28 +387,28 @@ export const STRINGS_BY_LANGUAGE: Record<SupportedLanguage, AppStrings> = {
       screenTitle: 'Cá nhân',
       subtitle: 'Thông tin tài khoản và gói dịch vụ của Bạn.',
       currentPlan: 'Gói hiện tại: Standard',
-      creditsTitle: 'Credits',
+      creditsTitle: 'VIO Credits',
       creditsBalance: 'Số dư đồng bộ từ máy chủ — xem mục Ví',
-      creditsHint: 'Bạn có thể dùng Credits cho gọi điện ủy quyền, học tập và dịch vụ.',
+      creditsHint: 'Bạn có thể dùng VIO Credits cho gọi điện ủy quyền, học tập và dịch vụ trong app.',
       identityTitle: 'Identity Snapshot',
       residencyStatusLabel: 'Diện cư trú',
       visaTypeLabel: 'Loại visa/thẻ',
       visaExpiryLabel: 'Hạn visa',
       subscriptionPlanLabel: 'Gói thuê bao',
-      aiCreditsLabel: 'Credits dịch vụ',
+      aiCreditsLabel: 'VIO Credits dịch vụ',
       residencyStatusDuHoc: 'Du học',
       residencyStatusLaoDong: 'Lao động',
       residencyStatusDinhCu: 'Định cư',
       residencyStatusTiNan: 'Tị nạn',
       planFree: 'Free',
       planPremium: 'Premium',
-      planCombo: 'Combo',
+      planBundle: 'Gói đồng hành',
       settingsTitle: 'Cài đặt ứng dụng',
       settingLanguage: 'Ngôn ngữ',
       settingNotifications: 'Thông báo',
       settingPrivacy: 'Riêng tư & bảo mật',
       settingSupport: 'Hỗ trợ',
-      creditsBalanceCurrent: 'Số dư hiện tại: {credits} Credits',
+      creditsBalanceCurrent: 'Số dư hiện tại: {credits} VIO Credits',
       editIdentityCta: 'Chỉnh sửa hồ sơ Identity',
       alertLanguageTitle: 'Ngôn ngữ',
       alertLanguageBody: 'Đổi ngôn ngữ trong màn Quốc gia để đồng bộ giọng và giao diện.',
@@ -438,14 +444,14 @@ export const STRINGS_BY_LANGUAGE: Record<SupportedLanguage, AppStrings> = {
       receptionHint: 'Giữ micro — CSKH Minh Khang hỗ trợ Bạn với giọng chuyên nghiệp, thân thiện.',
     },
     errors: {
-      outOfCredits: 'Bạn đã hết Credits. Vui lòng nạp thêm để tiếp tục sử dụng CSKH Minh Khang.',
+      outOfCredits: 'Bạn đã hết VIO Credits. Vui lòng nạp thêm để tiếp tục sử dụng CSKH Minh Khang.',
     },
-    comboWallet: {
+    walletTopUp: {
       walletLockedTitle: 'Ví đang khóa',
       walletLockedBody: 'Vui lòng xác thực để tiếp tục thanh toán.',
       backendMissingTitle: 'Chưa cấu hình máy chủ',
       backendMissingBody:
-        'Thiếu EXPO_PUBLIC_BACKEND_API_BASE — không thể cộng Credits an toàn. Kiểm tra biến môi trường build.',
+        'Thiếu EXPO_PUBLIC_BACKEND_API_BASE — không thể cộng VIO Credits an toàn. Kiểm tra biến môi trường build.',
       paymentsMissingTitle: 'Chưa cấu hình thanh toán',
       paymentsMissingBody:
         'Thiếu EXPO_PUBLIC_PAYMENTS_API_BASE — không thể khởi tạo thanh toán. Kiểm tra biến môi trường build.',
@@ -454,45 +460,48 @@ export const STRINGS_BY_LANGUAGE: Record<SupportedLanguage, AppStrings> = {
         'Máy chủ thanh toán không trả client secret. Kiểm tra dịch vụ payments và mạng, rồi thử lại.',
       paymentNotVerifiedTitle: 'Chưa xác minh thanh toán',
       paymentNotVerifiedBody:
-        'Thanh toán có thể đã xong nhưng máy chủ chưa xác nhận quyền nạp. Credits chưa được cộng. Bạn có thể thử lại.',
+        'Thanh toán có thể đã xong nhưng máy chủ chưa xác nhận quyền nạp. VIO Credits chưa được cộng. Bạn có thể thử lại.',
       paymentMissingIdTitle: 'Thanh toán',
       paymentMissingIdBody: 'Thiếu mã giao dịch thanh toán. Vui lòng chọn gói lại.',
-      creditsNotCreditedTitle: 'Chưa cộng Credits',
+      creditsNotCreditedTitle: 'Chưa cộng VIO Credits',
       creditsNotCreditedBody:
-        'Thanh toán có thể đã thành công nhưng sổ Credits trên máy chủ chưa cập nhật. Thử lại để hoàn tất (idempotent).',
+        'Thanh toán có thể đã thành công nhưng sổ VIO Credits trên máy chủ chưa cập nhật. Thử lại để hoàn tất (idempotent).',
       connectionInterruptedTitle: 'Gián đoạn kết nối',
       connectionInterruptedBody:
-        'Không hoàn tất bước xác minh hoặc cộng Credits. Kiểm tra mạng; nếu đã trừ tiền, thử lại để đồng bộ.',
+        'Không hoàn tất bước xác minh hoặc cộng VIO Credits. Kiểm tra mạng; nếu đã trừ tiền, thử lại để đồng bộ.',
       pinWrongTitle: 'Không thể mở khóa',
       pinWrongBody: 'Mã PIN không đúng. Vui lòng thử lại.',
       closeCheckoutTitle: 'Đóng thanh toán',
       closeCheckoutBody:
-        'Nếu bạn đã trả tiền, Credits có thể vẫn đang chờ máy chủ. Kiểm tra số dư hoặc mở lại gói nạp và thử đồng bộ.',
+        'Nếu bạn đã trả tiền, VIO Credits có thể vẫn đang chờ máy chủ. Kiểm tra số dư hoặc mở lại gói nạp và thử đồng bộ.',
       unlockWalletTitle: 'Mở khóa Ví',
-      pendingVerifyText: 'Đang xác minh thanh toán và cộng Credits trên máy chủ…',
+      pendingVerifyText: 'Đang xác minh thanh toán và cộng VIO Credits trên máy chủ…',
       alertClose: 'Đóng',
       alertRetry: 'Thử lại',
       alertLater: 'Để sau',
-      screenSubtitle: 'Ví Credits',
+      screenSubtitle: 'Ví VIO Credits',
       balanceLabel: 'Số dư hiện tại',
       balanceHint:
-        'Số dư Credits đồng bộ từ máy chủ sau đăng nhập. Giá gói theo tiền tệ địa phương theo quốc gia hồ sơ ({country}).',
+        'Số dư VIO Credits đồng bộ từ máy chủ sau đăng nhập. Giá gói theo tiền tệ địa phương theo quốc gia hồ sơ ({country}).',
       buyInitInProgress: 'Đang khởi tạo thanh toán...',
       enterpriseCta: 'Enterprise: liên hệ kinh doanh — thanh toán trong app sắp có.',
-      biometricReason: 'Xác thực để xem Ví Kết Nối Global',
+      biometricReason: 'Xác thực để xem ví VIO Credits',
       filterAll: 'Tất cả',
       filterTopup: 'Đã Nạp',
       filterConsume: 'Đã Dùng',
       unitPriceLine:
-        'Hỗ trợ trong app ({inboundName}): {inboundPrice} | Gọi đối ngoại ({outboundName}): {outboundPrice}',
+        'Chỉ tham khảo (tiền địa phương ước tính — cuộc gọi trừ VIO Credits): hỗ trợ trong app ({inboundName}): {inboundPrice} | gọi đối ngoại ({outboundName}): {outboundPrice}',
       giftLine: 'Quà tặng: {gift}',
       packPriceLine: 'Giá gói: {amount}',
-      balanceCreditsDisplay: '{credits} Credits',
-      trustVerifiedBadge: 'Đã xác minh',
-      buyPackCtaLine: 'Nạp {turns} Credits — {amount}',
       historySectionTitle: 'Lịch sử trên thiết bị',
       historyFootnote: 'Chỉ mang tính tham khảo; số dư thật lấy từ máy chủ sau khi đăng nhập.',
       emptyHistory: 'Chưa có giao dịch nào.',
+      trustVerifiedBadge: 'Đã xác minh — đồng bộ máy chủ',
+      balanceCreditsDisplay: '{credits} VIO Credits',
+      buyPackCtaLine: '{turns} VIO Credits — {amount}',
+      vioDisclaimerTitle: 'Lưu ý an toàn — VIO',
+      vioDisclaimerBody:
+        'VIO Points và VIO Credits là điểm thưởng và hạn mức sử dụng trong VIONA. Không phải tiền điện tử (crypto), không phải tài sản đầu tư, không thể rút tiền mặt ra ngân hàng. Mức đổi quà có thể bị giới hạn theo chính sách.',
     },
     nav: {
       countryTab: 'Quốc gia',
@@ -511,15 +520,15 @@ export const STRINGS_BY_LANGUAGE: Record<SupportedLanguage, AppStrings> = {
     },
     reception: {
       screenTitle: 'Reception',
-      prepaidTitle: 'Global Credits packs (Starter → Enterprise)',
+      prepaidTitle: 'Global VIO Credits packs (Starter → Enterprise)',
       homelandTitle: 'Homeland Corner',
       homelandQuote: 'Where your roots stay close, wherever you are.',
       walletPackStarterLabel: 'Starter pack · Entry',
       walletPackBasicLabel: 'Basic pack · Light',
       walletPackStandardLabel: 'Standard pack · Popular',
-      walletPackStarterCredits: '100 Credits',
-      walletPackBasicCredits: '230 Credits',
-      walletPackStandardCredits: '650 Credits',
+      walletPackStarterCredits: '100 VIO Credits',
+      walletPackBasicCredits: '230 VIO Credits',
+      walletPackStandardCredits: '650 VIO Credits',
     },
     country: {
       screenTitle: 'Countries',
@@ -577,48 +586,48 @@ export const STRINGS_BY_LANGUAGE: Record<SupportedLanguage, AppStrings> = {
       serviceHousing: 'Housing Rental',
       serviceLegal: 'Legal Services',
       serviceExchange: 'Currency Exchange',
-      serviceLifeOS: 'LifeOS — coordination hub',
+      serviceLifeOS: 'LifeOS dashboard',
       serviceTravel: 'Travel companion',
       serviceYeuThuong: 'Kết Nối Yêu Thương',
-      serviceRadarDiscovery: 'Radar — service discovery',
+      serviceRadarDiscovery: 'Radar discovery',
       serviceFindServicesLeona: 'Find services (Leona)',
       serviceVault: 'Document vault',
-      packTurnsCredits: '{turns} Credits',
-      discoverySectionTitle: 'Discover services by real need',
+      packTurnsCredits: '{turns} VIO Credits',
+      discoverySectionTitle: 'Services by real-world needs',
       discoverySectionSubtitle:
-        'Global-first guidance focused on practical support — not a luxury finance catalog.',
+        'Global-first, practical support — not a luxury or wealth-management catalog.',
       discoveryCategories: [
         {
-          title: 'Visa & documents',
-          hint: 'Passports, visas, contracts and paperwork for living in your host country.',
+          title: 'Visa & paperwork',
+          hint: 'Passports, visas, contracts, and documents for life in your host country.',
         },
         {
           title: 'Residency & immigration',
-          hint: 'Extensions, status changes and basic immigration steps.',
+          hint: 'Extensions, status changes, and core immigration paperwork.',
         },
         {
           title: 'Healthcare & appointments',
-          hint: 'Care navigation, insurance basics and booking in local systems.',
+          hint: 'Care navigation, insurance context, and booking guidance.',
         },
         {
-          title: 'Legal & advice',
-          hint: 'Contracts, employment and practical legal support.',
+          title: 'Legal & advisory',
+          hint: 'Practical legal support: contracts, employment, and everyday issues.',
         },
         {
           title: 'Jobs & small business',
-          hint: 'Job search, employment contracts and SME-related services.',
+          hint: 'Work search, employment contracts, and small-business related help.',
         },
         {
-          title: 'Housing, hotels & homestay',
-          hint: 'Rentals, short stays and budget-friendly homestay.',
+          title: 'Housing, hotel & homestay',
+          hint: 'Rentals, short stays, and budget-appropriate homestays.',
         },
         {
-          title: 'Vietnamese community services',
-          hint: 'Nails, food spots and shopping familiar to the Vietnamese community.',
+          title: 'Nails, food & Vietnamese services',
+          hint: 'Community staples: nails, dining, and familiar retail services.',
         },
         {
           title: 'Booking & service support',
-          hint: 'Reservations, calls and help handling real-life situations.',
+          hint: 'Bookings, helpline-style support, and practical coordination.',
         },
       ],
     },
@@ -639,28 +648,28 @@ export const STRINGS_BY_LANGUAGE: Record<SupportedLanguage, AppStrings> = {
       screenTitle: 'Profile',
       subtitle: 'Your account details and active service package.',
       currentPlan: 'Current plan: Standard',
-      creditsTitle: 'Credits',
+      creditsTitle: 'VIO Credits',
       creditsBalance: 'Balance syncs from server — see Wallet',
-      creditsHint: 'You can use Credits for delegated calls, learning, and services.',
+      creditsHint: 'You can use VIO Credits for delegated calls, learning, and in-app services.',
       identityTitle: 'Identity Snapshot',
       residencyStatusLabel: 'Residency status',
       visaTypeLabel: 'Visa/card type',
       visaExpiryLabel: 'Visa expiry',
       subscriptionPlanLabel: 'Subscription',
-      aiCreditsLabel: 'Service credits',
+      aiCreditsLabel: 'VIO Credits (services)',
       residencyStatusDuHoc: 'Student',
       residencyStatusLaoDong: 'Worker',
       residencyStatusDinhCu: 'Settled',
       residencyStatusTiNan: 'Refugee',
       planFree: 'Free',
       planPremium: 'Premium',
-      planCombo: 'Combo',
+      planBundle: 'Bundle plan',
       settingsTitle: 'App Settings',
       settingLanguage: 'Language',
       settingNotifications: 'Notifications',
       settingPrivacy: 'Privacy & Security',
       settingSupport: 'Support',
-      creditsBalanceCurrent: 'Current balance: {credits} Credits',
+      creditsBalanceCurrent: 'Current balance: {credits} VIO Credits',
       editIdentityCta: 'Edit identity profile',
       alertLanguageTitle: 'Language',
       alertLanguageBody: 'Change language on the Countries tab to sync voice and interface.',
@@ -696,14 +705,14 @@ export const STRINGS_BY_LANGUAGE: Record<SupportedLanguage, AppStrings> = {
       receptionHint: 'Hold the mic — Minh Khang customer service assists you professionally.',
     },
     errors: {
-      outOfCredits: 'You are out of Credits. Please top up to continue using Minh Khang support.',
+      outOfCredits: 'You are out of VIO Credits. Please top up to continue using Minh Khang support.',
     },
-    comboWallet: {
+    walletTopUp: {
       walletLockedTitle: 'Wallet is locked',
       walletLockedBody: 'Please authenticate to continue checkout.',
       backendMissingTitle: 'Backend not configured',
       backendMissingBody:
-        'Missing EXPO_PUBLIC_BACKEND_API_BASE — Credits cannot be added safely. Check your build environment.',
+        'Missing EXPO_PUBLIC_BACKEND_API_BASE — VIO Credits cannot be added safely. Check your build environment.',
       paymentsMissingTitle: 'Payments not configured',
       paymentsMissingBody:
         'Missing EXPO_PUBLIC_PAYMENTS_API_BASE — checkout cannot start. Check your build environment.',
@@ -715,42 +724,45 @@ export const STRINGS_BY_LANGUAGE: Record<SupportedLanguage, AppStrings> = {
         'Payment may have succeeded but the server has not confirmed the top-up. Credits were not added. You can retry.',
       paymentMissingIdTitle: 'Payment',
       paymentMissingIdBody: 'Missing payment reference. Please pick a pack again.',
-      creditsNotCreditedTitle: 'Credits not posted',
+      creditsNotCreditedTitle: 'VIO Credits not posted',
       creditsNotCreditedBody:
-        'Payment may have succeeded but server credits are not updated yet. Retry to finish (idempotent).',
+        'Payment may have succeeded but server VIO Credits are not updated yet. Retry to finish (idempotent).',
       connectionInterruptedTitle: 'Connection interrupted',
       connectionInterruptedBody:
-        'Verification or credit posting did not finish. Check your network; if you were charged, retry to sync.',
+        'Verification or VIO Credits posting did not finish. Check your network; if you were charged, retry to sync.',
       pinWrongTitle: 'Cannot unlock',
       pinWrongBody: 'Incorrect PIN. Please try again.',
       closeCheckoutTitle: 'Close checkout',
       closeCheckoutBody:
         'If you already paid, Credits may still be pending on the server. Check your balance or reopen the pack and sync.',
       unlockWalletTitle: 'Unlock wallet',
-      pendingVerifyText: 'Verifying payment and posting Credits on the server…',
+      pendingVerifyText: 'Verifying payment and posting VIO Credits on the server…',
       alertClose: 'Close',
       alertRetry: 'Retry',
       alertLater: 'Later',
-      screenSubtitle: 'Credits wallet',
+      screenSubtitle: 'VIO Credits wallet',
       balanceLabel: 'Current balance',
       balanceHint:
-        'Credits sync from the server after sign-in. Pack prices use local currency for profile country ({country}).',
+        'VIO Credits sync from the server after sign-in. Pack prices use local currency for profile country ({country}).',
       buyInitInProgress: 'Initializing payment…',
       enterpriseCta: 'Enterprise: contact sales — in-app checkout coming soon.',
-      biometricReason: 'Authenticate to view the Kết Nối Global wallet',
+      biometricReason: 'Authenticate to view your VIO Credits wallet',
       filterAll: 'All',
       filterTopup: 'Top-up',
       filterConsume: 'Used',
       unitPriceLine:
-        'In-app support ({inboundName}): {inboundPrice} | Outbound ({outboundName}): {outboundPrice}',
+        'Reference only (approximate local money — calls debit VIO Credits): in-app support ({inboundName}): {inboundPrice} | outbound ({outboundName}): {outboundPrice}',
       giftLine: 'Gift: {gift}',
       packPriceLine: 'Pack price: {amount}',
-      balanceCreditsDisplay: '{credits} Credits',
-      trustVerifiedBadge: 'Verified',
-      buyPackCtaLine: 'Top up {turns} Credits — {amount}',
       historySectionTitle: 'On-device history',
       historyFootnote: 'For reference only; real balance comes from the server after sign-in.',
       emptyHistory: 'No transactions yet.',
+      trustVerifiedBadge: 'Verified — server sync',
+      balanceCreditsDisplay: '{credits} VIO Credits',
+      buyPackCtaLine: '{turns} VIO Credits — {amount}',
+      vioDisclaimerTitle: 'Important — VIO',
+      vioDisclaimerBody:
+        'VIO Points and VIO Credits are loyalty and in-app usage balances inside VIONA. They are not cryptocurrency, not investment products, and not withdrawable cash. Redemption caps may apply.',
     },
     nav: {
       countryTab: 'Countries',
@@ -771,13 +783,13 @@ export const STRINGS_BY_LANGUAGE: Record<SupportedLanguage, AppStrings> = {
       screenTitle: 'Recepce',
       prepaidTitle: 'Globalni balicky Credits',
       homelandTitle: 'Koutek domova',
-      homelandQuote: 'Koreni zustavaji blizko, i kdyz jste v Evrope.',
-      walletPackStarterLabel: 'Starter balicek · vstup',
-      walletPackBasicLabel: 'Basic balicek · lehky',
-      walletPackStandardLabel: 'Standard balicek · bezny',
-      walletPackStarterCredits: '100 Credits',
-      walletPackBasicCredits: '230 Credits',
-      walletPackStandardCredits: '650 Credits',
+      homelandQuote: 'Koreny máte nablízku, ať jste kdekoli.',
+      walletPackStarterLabel: 'Starter balíček · vstup',
+      walletPackBasicLabel: 'Basic balíček · lehky',
+      walletPackStandardLabel: 'Standard balíček · bezny',
+      walletPackStarterCredits: '100 VIO Credits',
+      walletPackBasicCredits: '230 VIO Credits',
+      walletPackStandardCredits: '650 VIO Credits',
     },
     country: {
       screenTitle: 'Zeme',
@@ -835,48 +847,48 @@ export const STRINGS_BY_LANGUAGE: Record<SupportedLanguage, AppStrings> = {
       serviceHousing: 'Pronajem bydleni',
       serviceLegal: 'Pravni sluzby',
       serviceExchange: 'Smena meny',
-      serviceLifeOS: 'LifeOS — koordinacni centrum',
-      serviceTravel: 'Spolecnik na cestach',
+      serviceLifeOS: 'LifeOS prehled',
+      serviceTravel: 'Spolecnik na cesty',
       serviceYeuThuong: 'Kết Nối Yêu Thương',
       serviceRadarDiscovery: 'Radar — objevovani sluzeb',
       serviceFindServicesLeona: 'Najit sluzby (Leona)',
       serviceVault: 'Trezor dokumentu',
-      packTurnsCredits: '{turns} Credits',
-      discoverySectionTitle: 'Objevte sluzby podle skutecne potreby',
+      packTurnsCredits: '{turns} VIO Credits',
+      discoverySectionTitle: 'Sluzby podle skutecnych potreb',
       discoverySectionSubtitle:
-        'Globalni orientace na praktickou podporu — ne katalog luxusnich financi.',
+        'Globalni zamereni a prakticka podpora — ne katalog luxusnich financnich sluzeb.',
       discoveryCategories: [
         {
-          title: 'Visa a dokumenty',
-          hint: 'Pasy, viza, smlouvy a administrativa pro zivot v hostitelske zemi.',
+          title: 'Viza a dokumenty',
+          hint: 'Pasy, viza, smlouvy a dokumenty pro zivot v hostitelske zemi.',
         },
         {
           title: 'Pobyt a imigrace',
-          hint: 'Prodlouzeni, zmeny statusu a zakladni kroky imigrace.',
+          hint: 'Prodlouzeni, zmena statusu a zakladni imigracni agenda.',
         },
         {
-          title: 'Zdravotnictvi a objednavky',
-          hint: 'Navigace pece, pojisteni a rezervace v mistnich systemech.',
+          title: 'Zdravotni pece a terminy',
+          hint: 'Orientace v peci, pojisteni a rezervace.',
         },
         {
           title: 'Pravo a poradenstvi',
-          hint: 'Smlouvy, prace a prakticka pravni podpora.',
+          hint: 'Prakticka pravni pomoc: smlouvy, prace, bezny provoz.',
         },
         {
-          title: 'Prace a male firmy',
-          hint: 'Hledani prace, pracovni smlouvy a sluzby pro male podniky.',
+          title: 'Prace a male podnikani',
+          hint: 'Hledani prace, pracovni smlouvy a souvisejici sluzby.',
         },
         {
-          title: 'Bydleni, hotely a homestay',
-          hint: 'Pronajmy, kratke pobyty a dostupny homestay.',
+          title: 'Bydleni, hotel a homestay',
+          hint: 'Najmy, kratke pobyty a homestay podle rozpoctu.',
         },
         {
-          title: 'Vietnamska komunita',
-          hint: 'Nehty, jidlo a nakupy pro vietnamskou komunitu.',
+          title: 'Nehty, jidlo a vietnamské sluzby',
+          hint: 'Bezne sluzby komunity: nehty, stravovani, nakupy.',
         },
         {
-          title: 'Rezervace a podpora',
-          hint: 'Objednavky, hovory a pomoc v praktickych situacich.',
+          title: 'Rezervace a podpora sluzeb',
+          hint: 'Rezervace, linka podpory a prakticka koordinace.',
         },
       ],
     },
@@ -912,7 +924,7 @@ export const STRINGS_BY_LANGUAGE: Record<SupportedLanguage, AppStrings> = {
       residencyStatusTiNan: 'Uprchlik',
       planFree: 'Free',
       planPremium: 'Premium',
-      planCombo: 'Combo',
+      planBundle: 'Balíčkový tarif',
       settingsTitle: 'Nastaveni aplikace',
       settingLanguage: 'Jazyk',
       settingNotifications: 'Notifikace',
@@ -956,7 +968,7 @@ export const STRINGS_BY_LANGUAGE: Record<SupportedLanguage, AppStrings> = {
     errors: {
       outOfCredits: 'Nemate zadne Credits. Dobijte je pro dalsi pouziti podpory Minh Khang.',
     },
-    comboWallet: {
+    walletTopUp: {
       walletLockedTitle: 'Penezenka je uzamcena',
       walletLockedBody: 'Pro pokracovani v platbe se overte.',
       backendMissingTitle: 'Backend neni nakonfigurovan',
@@ -995,20 +1007,23 @@ export const STRINGS_BY_LANGUAGE: Record<SupportedLanguage, AppStrings> = {
         'Zustatek Credits se synchronizuje ze serveru po prihlaseni. Ceny balicku jsou v mistni mene podle zeme profilu ({country}).',
       buyInitInProgress: 'Spoustim platbu…',
       enterpriseCta: 'Enterprise: kontaktujte obchod — platba v aplikaci bude brzy.',
-      biometricReason: 'Overte pro zobrazeni penezenky Kết Nối Global',
+      biometricReason: 'Ověřte pro zobrazení peněženky VIO Credits',
       filterAll: 'Vše',
       filterTopup: 'Nabito',
       filterConsume: 'Použito',
       unitPriceLine:
-        'Podpora v aplikaci ({inboundName}): {inboundPrice} | Externi hovor ({outboundName}): {outboundPrice}',
+        'Jen orientačně (přibližná místní měna — za hovory se účtují Credits): podpora v aplikaci ({inboundName}): {inboundPrice} | odchozí hovor ({outboundName}): {outboundPrice}',
       giftLine: 'Darek: {gift}',
       packPriceLine: 'Cena balicku: {amount}',
-      balanceCreditsDisplay: '{credits} Credits',
-      trustVerifiedBadge: 'Overeno',
-      buyPackCtaLine: 'Dobit {turns} Credits — {amount}',
       historySectionTitle: 'Historie v zarizeni',
       historyFootnote: 'Jen orientacne; skutecny zustatek je ze serveru po prihlaseni.',
       emptyHistory: 'Zatim zadne transakce.',
+      trustVerifiedBadge: 'Overeno — synchronizace serveru',
+      balanceCreditsDisplay: '{credits} VIO Credits',
+      buyPackCtaLine: '{turns} VIO Credits — {amount}',
+      vioDisclaimerTitle: 'Důležité — VIO',
+      vioDisclaimerBody:
+        'VIO Points a VIO Credits jsou vernostní a in-app zůstatky uvnitř VIONA. Nejsou kryptoměnou, nejsou investičním produktem a nejsou hotovostí k výběru z banky. Mohou platit limity výplat.',
     },
     nav: {
       countryTab: 'Zeme',
@@ -1029,13 +1044,13 @@ export const STRINGS_BY_LANGUAGE: Record<SupportedLanguage, AppStrings> = {
       screenTitle: 'Empfang',
       prepaidTitle: 'Global Credits-Pakete',
       homelandTitle: 'Heimat-Ecke',
-      homelandQuote: 'Deine Wurzeln bleiben nah, auch in Europa.',
+      homelandQuote: 'Deine Wurzeln bleiben nah — egal, wo du bist.',
       walletPackStarterLabel: 'Starter-Paket · Einstieg',
       walletPackBasicLabel: 'Basic-Paket · leicht',
       walletPackStandardLabel: 'Standard-Paket · beliebt',
-      walletPackStarterCredits: '100 Credits',
-      walletPackBasicCredits: '230 Credits',
-      walletPackStandardCredits: '650 Credits',
+      walletPackStarterCredits: '100 VIO Credits',
+      walletPackBasicCredits: '230 VIO Credits',
+      walletPackStandardCredits: '650 VIO Credits',
     },
     country: {
       screenTitle: 'Land',
@@ -1093,48 +1108,48 @@ export const STRINGS_BY_LANGUAGE: Record<SupportedLanguage, AppStrings> = {
       serviceHousing: 'Wohnung mieten',
       serviceLegal: 'Rechtsservice',
       serviceExchange: 'Geldwechsel',
-      serviceLifeOS: 'LifeOS — Koordinationszentrale',
+      serviceLifeOS: 'LifeOS Uebersicht',
       serviceTravel: 'Reisebegleitung',
       serviceYeuThuong: 'Kết Nối Yêu Thương',
-      serviceRadarDiscovery: 'Radar — Service-Entdeckung',
+      serviceRadarDiscovery: 'Radar Entdeckung',
       serviceFindServicesLeona: 'Services finden (Leona)',
       serviceVault: 'Dokumententresor',
-      packTurnsCredits: '{turns} Credits',
-      discoverySectionTitle: 'Services nach echtem Bedarf entdecken',
+      packTurnsCredits: '{turns} VIO Credits',
+      discoverySectionTitle: 'Services nach realem Bedarf',
       discoverySectionSubtitle:
-        'Global ausgerichtet auf praktische Unterstuetzung — kein Luxus-Finanzkatalog.',
+        'Global ausgerichtet und praxisnah — kein Luxus- oder Wealth-Management-Katalog.',
       discoveryCategories: [
         {
-          title: 'Visa & Dokumente',
-          hint: 'Reisepaesse, Visa, Vertraege und Papierkram fuer den Aufenthalt.',
+          title: 'Visa & Unterlagen',
+          hint: 'Reisepaesse, Visa, Vertraege und Dokumente fuer den Aufenthalt.',
         },
         {
           title: 'Aufenthalt & Einwanderung',
-          hint: 'Verlaengerungen, Statuswechsel und grundlegende Einwanderungsschritte.',
+          hint: 'Verlaengerungen, Statuswechsel und Kernformalitaeten.',
         },
         {
           title: 'Gesundheit & Termine',
-          hint: 'Versorgung, Versicherung und Termine in lokalen Systemen.',
+          hint: 'Versorgung, Versicherungskontext und Terminorientierung.',
         },
         {
           title: 'Recht & Beratung',
-          hint: 'Vertraege, Arbeit und praktische Rechtsunterstuetzung.',
+          hint: 'Praktische Hilfe: Vertraege, Arbeit, Alltagsfragen.',
         },
         {
-          title: 'Jobs & Kleinunternehmen',
-          hint: 'Jobsuche, Arbeitsvertraege und Dienstleistungen fuer KMU.',
+          title: 'Jobs & kleine Betriebe',
+          hint: 'Jobsuche, Arbeitsvertraege und nahe Dienstleistungen.',
         },
         {
-          title: 'Wohnen, Hotels & Homestay',
-          hint: 'Mieten, Kurzaufenthalte und budgetfreundliches Homestay.',
+          title: 'Wohnen, Hotel & Homestay',
+          hint: 'Mieten, Kurzaufenthalte und budgetfreundliche Homestays.',
         },
         {
-          title: 'Vietnamesische Community',
-          hint: 'Nagelstudios, Essen und Einkaufen fuer die vietnamesische Community.',
+          title: 'Nagelstudio, Essen & vietnamesische Services',
+          hint: 'Vertraute Services: Nagelstudio, Gastronomie, Einkauf.',
         },
         {
-          title: 'Buchung & Support',
-          hint: 'Reservierungen, Anrufe und Hilfe im Alltag.',
+          title: 'Buchung & Service-Support',
+          hint: 'Buchungen, Hotline-artige Hilfe und praktische Koordination.',
         },
       ],
     },
@@ -1170,7 +1185,7 @@ export const STRINGS_BY_LANGUAGE: Record<SupportedLanguage, AppStrings> = {
       residencyStatusTiNan: 'Fluchtstatus',
       planFree: 'Free',
       planPremium: 'Premium',
-      planCombo: 'Combo',
+      planBundle: 'Paket-Tarif',
       settingsTitle: 'App-Einstellungen',
       settingLanguage: 'Sprache',
       settingNotifications: 'Benachrichtigungen',
@@ -1215,7 +1230,7 @@ export const STRINGS_BY_LANGUAGE: Record<SupportedLanguage, AppStrings> = {
     errors: {
       outOfCredits: 'Sie haben keine Credits mehr. Bitte laden Sie auf, um Minh Khang weiter zu nutzen.',
     },
-    comboWallet: {
+    walletTopUp: {
       walletLockedTitle: 'Wallet gesperrt',
       walletLockedBody: 'Bitte authentifizieren Sie sich, um fortzufahren.',
       backendMissingTitle: 'Backend nicht konfiguriert',
@@ -1254,21 +1269,24 @@ export const STRINGS_BY_LANGUAGE: Record<SupportedLanguage, AppStrings> = {
         'Credits werden nach dem Login vom Server synchronisiert. Paketpreise in Landeswaehrung fuer Profil-Land ({country}).',
       buyInitInProgress: 'Zahlung wird vorbereitet…',
       enterpriseCta: 'Enterprise: Vertrieb kontaktieren — In-App-Checkout folgt.',
-      biometricReason: 'Authentifizieren Sie sich, um die Kết Nối Global Wallet zu oeffnen',
+      biometricReason: 'Authentifizieren Sie sich, um Ihre VIO-Credits-Wallet zu oeffnen',
       filterAll: 'Alle',
       filterTopup: 'Aufgeladen',
       filterConsume: 'Verbraucht',
       unitPriceLine:
-        'In-App-Support ({inboundName}): {inboundPrice} | Ausgehend ({outboundName}): {outboundPrice}',
+        'Nur Referenz (ungefähre lokale Währung — Anrufe werden in Credits abgebucht): In-App-Support ({inboundName}): {inboundPrice} | Ausgehend ({outboundName}): {outboundPrice}',
       giftLine: 'Geschenk: {gift}',
       packPriceLine: 'Paketpreis: {amount}',
-      balanceCreditsDisplay: '{credits} Credits',
-      trustVerifiedBadge: 'Verifiziert',
-      buyPackCtaLine: '{turns} Credits aufladen — {amount}',
       historySectionTitle: 'Verlauf auf dem Geraet',
       historyFootnote:
         'Nur zur Orientierung; der echte Kontostand kommt nach dem Login vom Server.',
       emptyHistory: 'Noch keine Transaktionen.',
+      trustVerifiedBadge: 'Verifiziert — Server-Sync',
+      balanceCreditsDisplay: '{credits} VIO Credits',
+      buyPackCtaLine: '{turns} VIO Credits — {amount}',
+      vioDisclaimerTitle: 'Hinweis — VIO',
+      vioDisclaimerBody:
+        'VIO Points und VIO Credits sind Treue- und In-App-Guthaben in VIONA. Keine Kryptowaehrung, kein Anlageprodukt, kein bar auszahlbarer Bank-Cash. Einloesungslimits koennen gelten.',
     },
     nav: {
       countryTab: 'Land',
@@ -1284,10 +1302,18 @@ export const STRINGS_BY_LANGUAGE: Record<SupportedLanguage, AppStrings> = {
 /** Canonical export — language tables for the Global app shell. */
 export const STRINGS_GLOBAL = STRINGS_BY_LANGUAGE;
 
-/** @deprecated Use `STRINGS_GLOBAL`, `STRINGS_BY_LANGUAGE`, or `getStrings`. */
-export const STRINGS_V9 = STRINGS_BY_LANGUAGE;
+/**
+ * @deprecated Prefer `STRINGS_GLOBAL` or `getStrings`.
+ * The legacy export `STRINGS_V9` (alias of `STRINGS_BY_LANGUAGE`) was removed — no repo imports remained.
+ */
 
 export function getStrings(languageCode: string): AppStrings {
-  const key = languageCode.toLowerCase() as SupportedLanguage;
-  return STRINGS_BY_LANGUAGE[key] ?? STRINGS_BY_LANGUAGE.vi;
+  const primary = languageCode.trim().toLowerCase().split('-')[0] ?? '';
+  const supported = primary as SupportedLanguage;
+  if (supported === 'vi' || supported === 'en' || supported === 'cs' || supported === 'de') {
+    const row = STRINGS_BY_LANGUAGE[supported];
+    if (row) return row;
+  }
+  const fb = resolveAiUiLocale(languageCode);
+  return STRINGS_BY_LANGUAGE[fb];
 }

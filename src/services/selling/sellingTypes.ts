@@ -22,7 +22,7 @@ export type SellResume =
   | {
       route: 'Tabs';
       params: {
-        screen: 'LeTan';
+        screen: 'TabAi';
         params?: {
           proactiveQuestion?: string;
           autoSimulate?: boolean;

@@ -1,14 +1,23 @@
+require('dotenv').config();
+
 module.exports = () => {
   const stripeMerchantIdentifier = process.env.EXPO_PUBLIC_STRIPE_MERCHANT_IDENTIFIER?.trim() ?? '';
   const plugins = [
+    'react-native-compressor',
     '@react-native-firebase/app',
     '@react-native-firebase/app-check',
     [
       'expo-splash-screen',
       {
-        image: './assets/images/splash-icon.png',
-        imageWidth: 200,
-        backgroundColor: '#0B2A66',
+        image: './assets/brand/viona/splash.png',
+        resizeMode: 'contain',
+        imageWidth: 240,
+        backgroundColor: '#071936',
+        dark: {
+          image: './assets/brand/viona/splash.png',
+          resizeMode: 'contain',
+          backgroundColor: '#071936',
+        },
       },
     ],
     [
@@ -32,7 +41,8 @@ module.exports = () => {
     [
       'expo-local-authentication',
       {
-        faceIDPermission: 'Ứng dụng cần Face ID để bảo vệ Ví Combo và thanh toán an toàn.',
+        faceIDPermission:
+          'Ứng dụng cần Face ID để bảo vệ ví VIONA và VIO Credits trong app, cùng thanh toán an toàn.',
       },
     ],
     [
@@ -54,7 +64,11 @@ module.exports = () => {
         color: '#0B2A66',
       },
     ],
+    '@rnmapbox/maps',
+    'expo-live-activity',
+    'expo-localization',
     'expo-font',
+    '@sentry/react-native',
   ];
 
   // Only enable Stripe config plugin when merchant identifier is provided.
@@ -70,18 +84,23 @@ module.exports = () => {
   }
 
   return { expo: {
-    name: 'ket-noi-eu',
-    slug: 'ket-noi-eu',
+    name: 'VIONA',
+    slug: 'ket-noi-global',
     version: '1.0.0',
     orientation: 'portrait',
-    icon: './assets/images/icon.png',
+    icon: './assets/brand/viona/app-icon.png',
+    splash: {
+      image: './assets/brand/viona/splash.png',
+      resizeMode: 'contain',
+      backgroundColor: '#071936',
+    },
     userInterfaceStyle: 'light',
-    scheme: 'ketnoieu',
+    scheme: 'ketnoiglobal',
     newArchEnabled: true,
     ios: {
-      icon: './assets/images/icon.png',
+      icon: './assets/brand/viona/app-icon.png',
       supportsTablet: true,
-      bundleIdentifier: 'com.ahojbuono.ketnoieu',
+      bundleIdentifier: 'com.ketnoiglobal.app',
       googleServicesFile: process.env.GOOGLE_SERVICE_INFO_PLIST ?? './GoogleService-Info.plist',
       infoPlist: {
         ITSAppUsesNonExemptEncryption: false,
@@ -92,8 +111,8 @@ module.exports = () => {
     },
     android: {
       adaptiveIcon: {
-        foregroundImage: './assets/images/adaptive-icon.png',
-        backgroundColor: '#0B2A66',
+        foregroundImage: './assets/brand/viona/adaptive-icon.png',
+        backgroundColor: '#071936',
       },
       edgeToEdgeEnabled: true,
       predictiveBackGestureEnabled: false,
@@ -102,18 +121,35 @@ module.exports = () => {
         'android.permission.MODIFY_AUDIO_SETTINGS',
         'android.permission.USE_BIOMETRIC',
         'android.permission.USE_FINGERPRINT',
+        'android.permission.READ_MEDIA_IMAGES',
       ],
-      package: 'com.ahojbuono.ketnoieu',
+      package: 'com.ketnoiglobal.app',
       googleServicesFile: process.env.GOOGLE_SERVICES_JSON ?? './google-services.json',
     },
     web: {
-      favicon: './assets/images/favicon.png',
+      shortName: 'VIONA',
+      name: 'VIONA',
+      favicon: './assets/brand/viona/favicon.png',
+      themeColor: '#071936',
+      backgroundColor: '#071936',
+      display: 'standalone',
     },
     plugins,
     extra: {
       eas: {
-        projectId: 'cf62c186-ccc8-4f06-83d8-c15ec1e6efbe',
+        projectId: '2c3531a4-61e9-4c5c-aaeb-3086543ecdc6',
       },
+      /** Injected at build time from root `.env` (see `src/config/env.ts`). Safe for client. */
+      stripePublishableKey: process.env.STRIPE_PUBLISHABLE_KEY?.trim() ?? '',
+      /** Mapbox public token (CEO: `EXPO_PUBLIC_MAPBOX_KEY`); legacy name still supported. */
+      mapboxKey:
+        process.env.EXPO_PUBLIC_MAPBOX_KEY?.trim() ??
+        process.env.EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN?.trim() ??
+        '',
+      mapboxAccessToken:
+        process.env.EXPO_PUBLIC_MAPBOX_KEY?.trim() ??
+        process.env.EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN?.trim() ??
+        '',
     },
   }};
 };

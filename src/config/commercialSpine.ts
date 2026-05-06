@@ -21,6 +21,33 @@ export const LIVE_B2C_WALLET_PACK_SPINE_ID = 'usd_tier_country_pack_to_local_lab
 /** Future single spine (band tables + unified consumer) — **not** active for wallet amounts. */
 export const MIGRATION_BAND_TABLE_SPINE_ID = 'band_czk_integer_tables_monetization_module' as const;
 
+// Phase 1 pricing authority consolidation:
+// expose one canonical financial source for all B2B/B2C commercial consumers.
+export {
+  BASELINE_PRICING_GLOBAL,
+  B2B_ADDITIONAL_BRANCH_EUR,
+  B2B_ENTERPRISE_TIER_EUR,
+  B2B_ENTERPRISE_TIER_USD,
+  B2B_PAY_AS_YOU_GO_MONTHLY_EUR,
+  B2B_PAY_AS_YOU_GO_MONTHLY_USD,
+  B2B_PAY_PER_BOOKING_EUR,
+  B2B_POWER_TIER_EUR,
+  B2B_PRO_TIER_EUR,
+  B2B_STANDARD_TIER_EUR,
+  B2B_TIERS,
+  B2C_AI_TEACHER_PREMIUM_EUR,
+  B2C_LEONA_CALL_COST_XU,
+  B2C_LIVE_INTERPRETER_PER_MIN_XU,
+  COMMISSION_RATES,
+  CREDIT_EXCHANGE_RATE_EUR,
+  CREDIT_EXCHANGE_RATE_USD,
+  OVERAGE_PLATFORM_FEES,
+  PASSIVE_INCOME_SPLIT,
+  PRICING_AUTHORITY,
+  PRICING_BASELINE_CURRENCY,
+  REGION_MULTIPLIERS,
+} from './pricingConfig';
+
 export type { WalletPackageId } from './globalWalletPackages';
 export { GLOBAL_WALLET_PACKAGES, TIER_PRICE_MULTIPLIER, usdListPriceForPackageAtTier } from './globalWalletPackages';
 

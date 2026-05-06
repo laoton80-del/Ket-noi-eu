@@ -64,7 +64,7 @@ export function SuccessCheckmark3D({ visible, onClose }: SuccessCheckmark3DProps
 
   return (
     <View style={styles.overlay} pointerEvents="none">
-      <Animated.View style={[styles.medallion, badgeStyle]}>
+      <Animated.View style={StyleSheet.flatten([styles.medallion, badgeStyle])}>
         <View style={styles.innerHighlight} />
         <Check size={34} color="#0A1628" strokeWidth={3} />
       </Animated.View>

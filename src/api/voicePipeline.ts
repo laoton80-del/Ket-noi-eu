@@ -10,6 +10,7 @@ import { detectIntent } from '../services/ai/intentDetection';
 import { maybeGenerateSellCTA } from '../services/selling/sellEngine';
 import type { SellCTA } from '../services/selling/sellingTypes';
 import { generateSpeech, getChatCompletion, transcribeAudio } from '../services/OpenAIService';
+import { trackEvent } from '../services/AnalyticsService';
 import { defaultPatternIdFor, trackNetworkEffectEvent } from '../services/networkEffect';
 import { getAssistantSettings } from '../state/assistantSettings';
 import type { VoicePersona } from './voiceClient';
@@ -96,6 +97,11 @@ async function runOpenAiPipeline(
     scenario: persona === 'loan' ? 'assistant_loan' : 'assistant_leona',
     responsePatternId: defaultPatternIdFor('call'),
     flowId: 'call_triage',
+  });
+  trackEvent('ai_voice_session_completed', {
+    persona: String(persona),
+    language: String(lang),
+    durationMs: Date.now() - startedAt,
   });
   return { replyText: humanized.spokenText, sellCta: effectiveSellCta, audioUri: audioOut, transcript };
 }

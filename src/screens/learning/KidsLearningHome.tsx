@@ -28,10 +28,16 @@ export function KidsLearningHome() {
           Khu học tiếng Việt cho bé (daily lesson, gamification, story mode).
         </Text>
         <Pressable
-          onPress={() => navigation.navigate('Tabs', { screen: 'HocTap' })}
+          onPress={() => navigation.navigate('Tabs', { screen: 'TabHome' })}
           style={({ pressed }) => [styles.cta, pressed && { opacity: 0.86 }]}
         >
           <Text style={styles.ctaText}>Bắt đầu học</Text>
+        </Pressable>
+        <Pressable
+          onPress={() => navigation.navigate('VietKids')}
+          style={({ pressed }) => [styles.cta, styles.vietKidsCta, pressed && { opacity: 0.86 }]}
+        >
+          <Text style={styles.ctaText}>Vào lớp Viet-Kids</Text>
         </Pressable>
         <Pressable
           onPress={() => setScannerOpen(true)}
@@ -109,6 +115,10 @@ const styles = StyleSheet.create({
   scanCta: {
     marginTop: 10,
     backgroundColor: '#0F766E',
+  },
+  vietKidsCta: {
+    marginTop: 10,
+    backgroundColor: '#7C3AED',
   },
   hwCard: {
     marginTop: 12,

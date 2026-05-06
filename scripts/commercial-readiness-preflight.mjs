@@ -15,10 +15,10 @@ function read(relPath) {
 
 const appBrand = read('src/config/appBrand.ts');
 const profileScreen = read('src/screens/CaNhanScreen.tsx');
-const comboWalletScreen = read('src/screens/ComboWalletScreen.tsx');
+const walletTopUpScreen = read('src/screens/WalletTopUpScreen.tsx');
 
-/** Known past hardcoded Vietnamese user-facing snippets — must not reappear in ComboWalletScreen (use i18n). */
-const comboWalletBannedSnippets = [
+/** Known past hardcoded Vietnamese user-facing snippets — must not reappear in wallet top-up UI (use i18n). */
+const walletTopUpBannedSnippets = [
   'Hỗ trợ trong app',
   'Quà tặng:',
   'Giá gói:',
@@ -36,9 +36,9 @@ const checks = [
   ['brand has support email anchor', appBrand.includes('supportEmail')],
   ['brand has legal URL anchors', appBrand.includes('privacyUrl') && appBrand.includes('termsUrl')],
   ['profile settings surface support/legal info', profileScreen.includes('APP_BRAND.legal.privacyUrl') && profileScreen.includes('APP_BRAND.supportEmail')],
-  ...comboWalletBannedSnippets.map((snippet) => [
-    `ComboWalletScreen has no hardcoded snippet: ${snippet.slice(0, 24)}…`,
-    !comboWalletScreen.includes(snippet),
+  ...walletTopUpBannedSnippets.map((snippet) => [
+    `WalletTopUpScreen has no hardcoded snippet: ${snippet.slice(0, 24)}…`,
+    !walletTopUpScreen.includes(snippet),
   ]),
 ];
 
