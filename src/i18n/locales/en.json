@@ -863,6 +863,52 @@
       "blockRequest": "Block request (enforced mode only, when explicitly allowed)"
     }
   },
+  "aiAlerts": {
+    "preview": {
+      "title": "Admin alert (dry-run)",
+      "subtitle": "No email, Slack, SMS, or push is sent from this preview.",
+      "previewOnly": "Preview only — not a live incident or notification record.",
+      "productionSendDisabled": "Production notification delivery: disabled (always in this pack).",
+      "ownerReview": "Requires owner review",
+      "incidentLog": "Requires incident log (when enabled in a future pack)",
+      "channels": "Recommended channels",
+      "flagYes": "Yes",
+      "flagNo": "No"
+    },
+    "severity": {
+      "info": "Info",
+      "warning": "Warning",
+      "critical": "Critical",
+      "blocked": "Blocked"
+    },
+    "title": {
+      "usageWithinPolicy": "AI usage within policy window",
+      "usageWarn": "AI usage warning — review context",
+      "usageCritical": "AI usage critical — auto-pause risk",
+      "usageBlocked": "AI usage blocked by guard"
+    },
+    "body": {
+      "usageWithinPolicy": "Meter verdict is allow; no admin escalation required in dry-run.",
+      "usageWarn": "Meter verdict is warn; ops should review usage, margin, or unit mismatch.",
+      "marginWarn": "Negative or risky margin signal; finance should review pricing vs provider cost.",
+      "autoPauseRisk": "Meter recommends auto-pause path; requires owner approval before any enforced pause.",
+      "blocked": "Request would be blocked by guard (e.g. frozen feature or missing configuration)."
+    },
+    "action": {
+      "reviewUsage": "Review usage and caps",
+      "reviewMargin": "Review margin / pricing",
+      "pauseRecommended": "Pause feature (after approvals only)",
+      "blockRecommended": "Block requests (after approvals only)",
+      "noAction": "No admin action required"
+    },
+    "channel": {
+      "dashboard": "Dashboard",
+      "email": "Email (not wired)",
+      "slack": "Slack (not wired)",
+      "sms": "SMS (not wired)",
+      "manualOps": "Manual ops"
+    }
+  },
   "telephony": {
     "sandbox": {
       "statusLabel": "Telephony: sandbox / manual ops readiness — not production calling",

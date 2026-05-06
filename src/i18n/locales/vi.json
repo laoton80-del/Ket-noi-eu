@@ -862,6 +862,52 @@
       "blockRequest": "Chặn request (chỉ enforced khi được phép rõ ràng)"
     }
   },
+  "aiAlerts": {
+    "preview": {
+      "title": "Cảnh báo admin (dry-run)",
+      "subtitle": "Không gửi email, Slack, SMS hay push từ preview này.",
+      "previewOnly": "Chỉ preview — không phải incident hay log thông báo thật.",
+      "productionSendDisabled": "Gửi thông báo production: tắt (luôn tắt trong pack này).",
+      "ownerReview": "Cần owner review",
+      "incidentLog": "Cần incident log (khi bật ở pack sau)",
+      "channels": "Kênh khuyến nghị",
+      "flagYes": "Có",
+      "flagNo": "Không"
+    },
+    "severity": {
+      "info": "Thông tin",
+      "warning": "Cảnh báo",
+      "critical": "Nghiêm trọng",
+      "blocked": "Bị chặn"
+    },
+    "title": {
+      "usageWithinPolicy": "Dùng AI trong ngưỡng chính sách",
+      "usageWarn": "Cảnh báo dùng AI — xem ngữ cảnh",
+      "usageCritical": "Dùng AI mức nghiêm trọng — rủi ro auto-pause",
+      "usageBlocked": "Dùng AI bị chặn bởi guard"
+    },
+    "body": {
+      "usageWithinPolicy": "Verdict meter là allow; không cần leo thang admin trong dry-run.",
+      "usageWarn": "Verdict meter là warn; ops nên xem usage, margin, hoặc lệch unit.",
+      "marginWarn": "Tín hiệu margin âm/rủi ro; tài chính nên xem giá vs chi phí provider.",
+      "autoPauseRisk": "Meter gợi ý auto-pause; cần owner duyệt trước mọi pause enforced.",
+      "blocked": "Request sẽ bị chặn bởi guard (vd. feature đóng băng hoặc thiếu cấu hình)."
+    },
+    "action": {
+      "reviewUsage": "Rà soát usage và cap",
+      "reviewMargin": "Rà soát margin / giá",
+      "pauseRecommended": "Tạm dừng tính năng (sau khi được duyệt)",
+      "blockRecommended": "Chặn request (sau khi được duyệt)",
+      "noAction": "Không cần hành động admin"
+    },
+    "channel": {
+      "dashboard": "Dashboard",
+      "email": "Email (chưa nối)",
+      "slack": "Slack (chưa nối)",
+      "sms": "SMS (chưa nối)",
+      "manualOps": "Manual ops"
+    }
+  },
   "telephony": {
     "sandbox": {
       "statusLabel": "Viễn thông: sẵn sàng sandbox / manual ops — không gọi production",

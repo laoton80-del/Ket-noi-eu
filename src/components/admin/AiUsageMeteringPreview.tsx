@@ -2,12 +2,14 @@ import { useMemo, type ReactElement } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { getAiCostGuard } from '../../core/aiCost';
+import { buildAiAdminAlertPreview, type AiAdminAlertPreview } from '../../core/aiAlerts';
 import {
   DEFAULT_AI_AUTO_PAUSE_POLICY,
   evaluateAiAutoPauseDecision,
   type AiAutoPauseAction,
 } from '../../core/aiEnforcement';
 import { AI_USAGE_AUDIT_FIXTURES, evaluateAiUsageFixtureForAudit } from '../../core/aiUsage';
+import { AiAdminAlertPreviewPanel } from './AiAdminAlertPreviewPanel';
 import { theme } from '../../theme/theme';
 import { FontFamily } from '../../theme/typography';
 
@@ -34,6 +36,7 @@ type FixtureRow = Readonly<{
   note: string;
   enforcementAction: AiAutoPauseAction;
   enforcementProductionEnforced: boolean;
+  alertPreview: AiAdminAlertPreview;
 }>;
 
 export function AiUsageMeteringPreview(): ReactElement {
@@ -44,6 +47,7 @@ export function AiUsageMeteringPreview(): ReactElement {
       const guard = getAiCostGuard(fixture.featureId);
       const result = evaluateAiUsageFixtureForAudit(fixture);
       const pauseDecision = evaluateAiAutoPauseDecision(result, DEFAULT_AI_AUTO_PAUSE_POLICY);
+      const alertPreview = buildAiAdminAlertPreview({ usageResult: result, autoPauseDecision: pauseDecision });
       const mismatch = result.verdict !== fixture.expectedVerdict;
       return {
         fixtureId: fixture.id,
@@ -64,6 +68,7 @@ export function AiUsageMeteringPreview(): ReactElement {
         note: fixture.note,
         enforcementAction: pauseDecision.action,
         enforcementProductionEnforced: pauseDecision.productionEnforced,
+        alertPreview,
       };
     });
   }, [t]);
@@ -108,6 +113,7 @@ export function AiUsageMeteringPreview(): ReactElement {
             {t(`aiEnforcement.action.${row.enforcementAction}`)} · {t('aiEnforcement.preview.productionEnforced')}:{' '}
             {row.enforcementProductionEnforced ? 'true' : 'false'}
           </Text>
+          <AiAdminAlertPreviewPanel preview={row.alertPreview} />
         </View>
       ))}
     </View>
