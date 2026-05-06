@@ -66,6 +66,7 @@ module.exports = () => {
     ],
     '@rnmapbox/maps',
     'expo-live-activity',
+    'expo-localization',
     'expo-font',
     '@sentry/react-native',
   ];
