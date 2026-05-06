@@ -805,6 +805,29 @@
       "na": "N/A"
     }
   },
+  "aiCost": {
+    "guard": {
+      "noUnlimitedAi": "No unlimited AI — usage is capped by policy.",
+      "pilotUsageCapped": "Pilot and demo usage is capped; metering is enforced server-side when enabled.",
+      "autoPause": "At-policy auto-pause prevents runaway provider spend when metering is wired.",
+      "manualApproval": "Raising caps or enabling production AI/voice routes requires manual ops approval.",
+      "costFirewallHint": "Pilot usage is capped. No unlimited AI. Manual ops required for production routes."
+    },
+    "feature": {
+      "aiReceptionistDemo": "AI Receptionist — simulator / demo",
+      "aiReceptionistPilot": "AI Receptionist — pilot intake",
+      "b2cAiCallAssistant": "B2C AI call assistant",
+      "leonaAssistant": "Leona assistant",
+      "minhKhangTranslator": "Minh Khang translator / vision assist",
+      "documentScanner": "Document scanner / vision",
+      "liveInterpreter": "Live interpreter",
+      "copilot": "In-app copilot",
+      "outboundMarketingDraft": "Outbound marketing draft"
+    },
+    "notes": {
+      "seeRunbook": "See docs/ops/VIONA_AI_COST_FIREWALL_RUNBOOK.md for caps and incident response."
+    }
+  },
   "smartTrio": {
     "language": {
       "vi": "Vietnamese",
