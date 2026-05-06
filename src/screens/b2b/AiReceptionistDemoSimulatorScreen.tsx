@@ -109,6 +109,7 @@ export function AiReceptionistDemoSimulatorScreen(): ReactElement {
           <Text style={styles.cardBody}>{t('aiReceptionist.pilot.noPayment')}</Text>
           <Text style={styles.cardBody}>{t('aiReceptionist.demo.safetyNoLiveModel')}</Text>
           <Text style={styles.cardBody}>{t('aiCost.guard.costFirewallHint')}</Text>
+          <Text style={styles.cardBody}>{t('telephony.sandbox.phonePilotFootnote')}</Text>
         </View>
 
         {!selectedIndustryId ? (

@@ -25,6 +25,7 @@
     "ops:preflight": "node scripts/ops-preflight.mjs",
     "ops:readiness": "node scripts/ops-readiness-check.mjs",
     "ai:cost-readiness": "node scripts/ai-cost-firewall-check.mjs",
+    "twilio:sandbox-readiness": "node scripts/twilio-sandbox-readiness-check.mjs",
     "functions:build": "npm run build --prefix functions",
     "functions:verify-bundle": "node scripts/verify-functions-bundle.mjs",
     "b2b:verify-phase32": "npm run b2b:verify-phase32 --prefix functions",

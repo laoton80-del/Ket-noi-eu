@@ -828,6 +828,22 @@
       "seeRunbook": "See docs/ops/VIONA_AI_COST_FIREWALL_RUNBOOK.md for caps and incident response."
     }
   },
+  "telephony": {
+    "sandbox": {
+      "statusLabel": "Telephony: sandbox / manual ops readiness — not production calling",
+      "productionDisabled": "Production outbound calling stays disabled until a separate approval gate.",
+      "consentRequired": "Explicit consent is required before any real handset dial or recording.",
+      "recordingDisclosure": "If recording is ever enabled, disclosure and lawful basis must be approved first.",
+      "costCapped": "Voice and AI call paths must follow the AI cost firewall — no unlimited minutes.",
+      "manualOpsFallback": "Manual ops callback is the safe default when automated voice is not approved.",
+      "phonePilotFootnote": "Phone calling is sandbox or manual-ops only. Production calls are disabled in this pilot lane."
+    },
+    "feature": {
+      "aiReceptionistTwilioSandbox": "AI Receptionist — Twilio sandbox lane",
+      "b2cAiCallAssistantSandbox": "B2C AI call assistant — sandbox lane (outbound gated)",
+      "liveInterpreterVoiceBridge": "Live interpreter / voice bridge — manual ops; production frozen"
+    }
+  },
   "smartTrio": {
     "language": {
       "vi": "Vietnamese",
