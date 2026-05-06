@@ -537,6 +537,19 @@
       "fr": "France",
       "jp": "Japan",
       "kr": "South Korea"
+    },
+    "switcher": {
+      "title": "Language & market",
+      "subtitle": "On-device Smart Trio preview — not saved to your account or servers.",
+      "market": "Market",
+      "appLanguage": "App language (trio)",
+      "nativeLanguage": "Native (market)",
+      "customerLanguage": "Customer leg",
+      "merchantLanguage": "Merchant leg",
+      "localOnlyNotice": "Selections stay on this device for this session. They do not change your profile country or run global app language switching.",
+      "close": "Done",
+      "change": "Change",
+      "followDevice": "Auto (device + profile)"
     }
   }
 }

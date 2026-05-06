@@ -20,6 +20,7 @@ import { useAuth } from '../context/AuthContext';
 import type { RootStackParamList } from '../navigation/routes';
 import type { ActiveRole } from '../store/userStore';
 import { useTranslation } from '../i18n';
+import { SmartTrioLanguageChip } from './smartTrio/SmartTrioLanguageChip';
 import { ACTIVE_ROLE_LABEL, useUserStore } from '../store/userStore';
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
@@ -168,30 +169,37 @@ export function ProfileSwitcher({ tabBarLift }: ProfileSwitcherProps): ReactElem
 
   if (!canSwitch) {
     return (
-      <Pressable
-        onPress={() => {
-          triggerHaptic();
-          openAccount();
-        }}
-        style={[
-          styles.singleChip,
-          isDesktopWeb ? styles.singleChipDesktop : styles.singleChipMobile,
-          isDesktopWeb && styles.singleChipDesktopSizing,
-          chipLiftStyle,
-        ]}
-        accessibilityRole="button"
-        accessibilityLabel={t('home.accountChipA11y')}
-      >
-        <Ionicons name="person-circle" size={22} color="#FFFFFF" />
-        <Text
-          style={styles.singleChipText}
-          numberOfLines={1}
-          adjustsFontSizeToFit
-          minimumFontScale={0.82}
+      <>
+        <SmartTrioLanguageChip
+          tabBarLift={tabBarLift}
+          placement="floating"
+          isDesktopWeb={isDesktopWeb}
+        />
+        <Pressable
+          onPress={() => {
+            triggerHaptic();
+            openAccount();
+          }}
+          style={[
+            styles.singleChip,
+            isDesktopWeb ? styles.singleChipDesktop : styles.singleChipMobile,
+            isDesktopWeb && styles.singleChipDesktopSizing,
+            chipLiftStyle,
+          ]}
+          accessibilityRole="button"
+          accessibilityLabel={t('home.accountChipA11y')}
         >
-          {singleAccountLabel}
-        </Text>
-      </Pressable>
+          <Ionicons name="person-circle" size={22} color="#FFFFFF" />
+          <Text
+            style={styles.singleChipText}
+            numberOfLines={1}
+            adjustsFontSizeToFit
+            minimumFontScale={0.82}
+          >
+            {singleAccountLabel}
+          </Text>
+        </Pressable>
+      </>
     );
   }
 
@@ -240,6 +248,8 @@ export function ProfileSwitcher({ tabBarLift }: ProfileSwitcherProps): ReactElem
             <View style={styles.sheetHandle} />
             <Text style={styles.sheetTitle}>Profile switcher</Text>
             <Text style={styles.sheetSub}>Instant · same app · {ACTIVE_ROLE_LABEL[currentActiveRole]} mode</Text>
+
+            <SmartTrioLanguageChip tabBarLift={tabBarLift} placement="sheet" isDesktopWeb={isDesktopWeb} />
 
             {sortedRoles.map((role) => {
               const meta = ROLE_META[role];

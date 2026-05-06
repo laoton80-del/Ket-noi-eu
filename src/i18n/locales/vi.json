@@ -536,6 +536,19 @@
       "fr": "Pháp",
       "jp": "Nhật Bản",
       "kr": "Hàn Quốc"
+    },
+    "switcher": {
+      "title": "Ngôn ngữ & thị trường",
+      "subtitle": "Xem trước Smart Trio trên máy — không lưu tài khoản hay máy chủ.",
+      "market": "Thị trường",
+      "appLanguage": "Ngôn ngữ ứng dụng (trio)",
+      "nativeLanguage": "Ngôn ngữ native (thị trường)",
+      "customerLanguage": "Nhánh khách hàng",
+      "merchantLanguage": "Nhánh merchant",
+      "localOnlyNotice": "Lựa chọn chỉ trên thiết bị cho phiên này. Không đổi quốc gia hồ sơ và không bật đổi ngôn ngữ toàn app tự động.",
+      "close": "Xong",
+      "change": "Đổi",
+      "followDevice": "Tự động (máy + hồ sơ)"
     }
   }
 }
