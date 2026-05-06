@@ -1,8 +1,9 @@
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { PrecisePanel } from '../components/ui/PrecisePanel';
+import { useMiniAppEntry } from '../hooks/useMiniAppEntry';
 import { getStrings } from '../i18n/strings';
 import type { RootStackParamList } from '../navigation/routes';
 import { useAssistantSettings } from '../state/assistantSettings';
@@ -13,6 +14,7 @@ type Nav = NativeStackNavigationProp<RootStackParamList>;
 
 export function AcademyScreen() {
   const navigation = useNavigation<Nav>();
+  const { openMiniApp } = useMiniAppEntry();
   const { languageCode } = useAssistantSettings();
   const strings = getStrings(languageCode);
   const { currentCountry, localCurrency } = useRegionState();
@@ -23,7 +25,10 @@ export function AcademyScreen() {
         <Text style={styles.subtitle}>
           {currentCountry} · {localCurrency}
         </Text>
-        <Pressable style={({ pressed }) => [styles.cta, pressed && styles.pressed]} onPress={() => navigation.navigate('LiveAiTeacher')}>
+        <Pressable
+          style={({ pressed }) => [styles.cta, pressed && styles.pressed]}
+          onPress={() => openMiniApp('academy', () => navigation.navigate('LiveAiTeacher'))}
+        >
           <Text style={styles.ctaText}>{strings.learning.startPracticeWithChauLoan}</Text>
         </Pressable>
       </PrecisePanel>

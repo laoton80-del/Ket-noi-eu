@@ -11,6 +11,7 @@ import {
   Pressable,
   StyleSheet,
   Text,
+  useWindowDimensions,
   View,
 } from 'react-native';
 import Animated, { FadeIn, FadeInDown, FadeOut } from 'react-native-reanimated';
@@ -57,6 +58,8 @@ export function ProfileSwitcher({ tabBarLift }: ProfileSwitcherProps): ReactElem
   const { user } = useAuth();
   const navigation = useNavigation<Nav>();
   const insets = useSafeAreaInsets();
+  const { width } = useWindowDimensions();
+  const isDesktopWeb = Platform.OS === 'web' && width > 768;
   const [open, setOpen] = useState(false);
   const [vigGate, setVigGate] = useState<VigGate>(null);
 
@@ -152,6 +155,17 @@ export function ProfileSwitcher({ tabBarLift }: ProfileSwitcherProps): ReactElem
     navigation.navigate('PersonalHub');
   }, [navigation]);
 
+  const chipLiftStyle = useMemo(() => {
+    if (isDesktopWeb) {
+      /** Below top wallet / tree chips on Home — avoids overlap on wide layouts. */
+      return { top: insets.top + 54, right: Math.max(insets.right, 16) };
+    }
+    return { bottom: tabBarLift + Math.max(insets.bottom, 8) };
+  }, [isDesktopWeb, insets.bottom, insets.right, insets.top, tabBarLift]);
+
+  const narrowProfileChip = width < 420;
+  const singleAccountLabel = narrowProfileChip ? t('home.accountChipShort') : t('home.accountChip');
+
   if (!canSwitch) {
     return (
       <Pressable
@@ -161,14 +175,21 @@ export function ProfileSwitcher({ tabBarLift }: ProfileSwitcherProps): ReactElem
         }}
         style={[
           styles.singleChip,
-          { bottom: tabBarLift + Math.max(insets.bottom, 8) },
+          isDesktopWeb ? styles.singleChipDesktop : styles.singleChipMobile,
+          isDesktopWeb && styles.singleChipDesktopSizing,
+          chipLiftStyle,
         ]}
         accessibilityRole="button"
         accessibilityLabel={t('home.accountChipA11y')}
       >
         <Ionicons name="person-circle" size={22} color="#FFFFFF" />
-        <Text style={styles.singleChipText} numberOfLines={1}>
-          {t('home.accountChip')}
+        <Text
+          style={styles.singleChipText}
+          numberOfLines={1}
+          adjustsFontSizeToFit
+          minimumFontScale={0.82}
+        >
+          {singleAccountLabel}
         </Text>
       </Pressable>
     );
@@ -184,7 +205,9 @@ export function ProfileSwitcher({ tabBarLift }: ProfileSwitcherProps): ReactElem
         style={[
           styles.chip,
           isAdminUndercover && styles.chipAdminUndercover,
-          { bottom: tabBarLift + Math.max(insets.bottom, 8) },
+          isDesktopWeb ? styles.chipDesktop : styles.chipMobile,
+          isDesktopWeb && styles.chipDesktopSizing,
+          chipLiftStyle,
         ]}
         accessibilityRole="button"
         accessibilityLabel="Switch active profile"
@@ -194,7 +217,7 @@ export function ProfileSwitcher({ tabBarLift }: ProfileSwitcherProps): ReactElem
         ) : (
           <Ionicons name="shuffle-outline" size={18} color="#FFFFFF" />
         )}
-        <Text style={styles.chipText} numberOfLines={1}>
+        <Text style={styles.chipText} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.82}>
           {chipLabel}
         </Text>
         <Ionicons name="chevron-up" size={16} color="rgba(255,255,255,0.85)" />
@@ -252,7 +275,7 @@ export function ProfileSwitcher({ tabBarLift }: ProfileSwitcherProps): ReactElem
               style={({ pressed }) => [styles.accountRow, pressed && { opacity: 0.9 }]}
             >
               <Ionicons name="settings-outline" size={20} color="#C9D6FF" />
-              <Text style={styles.accountLabel}>Account & wallet hub</Text>
+              <Text style={styles.accountLabel}>{t('home.accountWalletHubRow')}</Text>
             </Pressable>
           </Animated.View>
         </View>
@@ -271,23 +294,25 @@ export function ProfileSwitcher({ tabBarLift }: ProfileSwitcherProps): ReactElem
                 <View style={styles.vigIconRing}>
                   <Ionicons name="diamond" size={32} color="#F5D286" />
                 </View>
-                <Text style={styles.vigTitle}>Upgrade your account to earn VIG</Text>
+                <Text style={styles.vigTitle}>{t('home.profileRoleGateTitle')}</Text>
                 <Text style={styles.vigBody}>
                   {vigGate === 'broker'
-                    ? 'Field brokers earn VIG when tourists book through your merchants. Your wallet updates automatically — no extra apps.'
-                    : 'Merchants earn VIG on inbound tourism bookings. Connect your shop, manage your menu, and get paid in one wallet.'}
+                    ? t('home.profileRoleGateBrokerBody')
+                    : t('home.profileRoleGateMerchantBody')}
                 </Text>
                 <Pressable
                   onPress={onVigContinue}
                   style={({ pressed }) => [styles.vigPrimary, pressed && { opacity: 0.92 }]}
                 >
                   <Text style={styles.vigPrimaryLabel}>
-                    Continue as {vigGate === 'broker' ? 'Broker' : 'Merchant'}
+                    {vigGate === 'broker'
+                      ? t('home.profileRoleGateContinueBroker')
+                      : t('home.profileRoleGateContinueMerchant')}
                   </Text>
                   <Ionicons name="arrow-forward" size={20} color="#0B1628" />
                 </Pressable>
                 <Pressable onPress={onVigDismiss} style={styles.vigSecondary}>
-                  <Text style={styles.vigSecondaryLabel}>Maybe later</Text>
+                  <Text style={styles.vigSecondaryLabel}>{t('home.profileRoleGateLater')}</Text>
                 </Pressable>
               </LinearGradient>
             </Pressable>
@@ -299,9 +324,14 @@ export function ProfileSwitcher({ tabBarLift }: ProfileSwitcherProps): ReactElem
 }
 
 const styles = StyleSheet.create({
+  chipMobile: {
+    alignSelf: 'center',
+  },
+  chipDesktop: {
+    alignSelf: 'flex-end',
+  },
   chip: {
     position: 'absolute',
-    alignSelf: 'center',
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
@@ -316,7 +346,11 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.35,
     shadowRadius: 12,
     elevation: 10,
-    zIndex: 50,
+    zIndex: 45,
+    maxWidth: '92%',
+  },
+  chipDesktopSizing: {
+    maxWidth: 260,
   },
   chipText: { fontSize: 13, fontWeight: '800', color: '#FFFFFF' },
   chipAdminUndercover: {
@@ -326,9 +360,14 @@ const styles = StyleSheet.create({
     shadowColor: '#FF3366',
     shadowOpacity: 0.35,
   },
+  singleChipMobile: {
+    alignSelf: 'center',
+  },
+  singleChipDesktop: {
+    alignSelf: 'flex-end',
+  },
   singleChip: {
     position: 'absolute',
-    alignSelf: 'center',
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
@@ -338,8 +377,11 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(15, 28, 52, 0.88)',
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.12)',
-    zIndex: 50,
+    zIndex: 45,
     maxWidth: '92%',
+  },
+  singleChipDesktopSizing: {
+    maxWidth: 200,
   },
   singleChipText: { fontSize: 13, fontWeight: '800', color: '#FFFFFF' },
   modalRoot: { flex: 1, justifyContent: 'flex-end' },

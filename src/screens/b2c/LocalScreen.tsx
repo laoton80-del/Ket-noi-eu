@@ -8,6 +8,7 @@ import {
   ActivityIndicator,
   Alert,
   Modal,
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -15,13 +16,14 @@ import {
   TextInput,
   TouchableOpacity,
   View,
+  useWindowDimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Reanimated, { Easing, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 import { getDemoBookingPayload } from '../../config/demoRestBooking';
 import { getFeatureFlags } from '../../core/feature-flags/featureFlags';
+import { useMiniAppEntry } from '../../hooks/useMiniAppEntry';
 import { formatVioCredits, getVioCreditsLabel } from '../../core/monetization/vioDisplayLabels';
-import { MVP_LEONA_LITE_OFF_MSG } from '../../navigation/mvpSurfaceGate';
 import type { RootStackParamList } from '../../navigation/routes';
 import { previewLegalScanCostVig, scanLegalDocument } from '../../services/aiService';
 import { confirmSecurityDepositThen } from '../../services/bookingEscrowUi';
@@ -29,6 +31,11 @@ import { formatNetworkFailureMessage, getRestApiJwt, isRestApiConfigured } from 
 import { createBooking } from '../../services/bookingService';
 import { runUltraMasterBookingWithAlerts } from '../../services/ultraMasterBookingFlow';
 import { reserveAndCommitCredits, useWalletState } from '../../state/wallet';
+import { useTranslation } from '../../i18n';
+import { VionaCard } from '../../components/viona/VionaCard';
+import { VionaHeader } from '../../components/viona/VionaHeader';
+import { VionaSectionHeader } from '../../components/viona/VionaSectionHeader';
+import { vionaTrust } from '../../components/viona/vionaTrustTokens';
 import { theme } from '../../theme/theme';
 import { FontFamily } from '../../theme/typography';
 
@@ -48,10 +55,13 @@ type ClassifiedPost = Readonly<{
 }>;
 
 const VIP_POSTING_COST_VIG = 120;
-const NAVY = '#050B14';
-const GOLD = 'rgba(197, 160, 89, 0.95)';
-const GOLD_BORDER = 'rgba(212, 175, 55, 0.5)';
-const GLASS = 'rgba(255, 255, 255, 0.07)';
+const BG = vionaTrust.canvas;
+const SURFACE = vionaTrust.surface;
+const INK = vionaTrust.ink;
+const INK_MUTED = vionaTrust.inkMuted;
+const BORDER = vionaTrust.border;
+const GOLD = vionaTrust.accentGold;
+const GOLD_BORDER = 'rgba(197, 160, 89, 0.35)';
 
 const CATEGORY_META: Readonly<Record<ClassifiedCategory, { title: string; icon: keyof typeof Ionicons.glyphMap }>> = {
   hiring: { title: 'Tuyển thợ', icon: 'construct-outline' },
@@ -63,37 +73,40 @@ const DEFAULT_POSTS: readonly ClassifiedPost[] = [
   {
     id: 'cf_001',
     category: 'hiring',
-    title: 'Cần thợ nail full-time tại Praha',
-    city: 'Praha',
-    priceLabel: 'Lương 1.700 EUR/tháng + tip',
-    description: 'Tiệm đông khách, hỗ trợ giấy tờ và chỗ ở.',
+    title: 'Tuyển thợ nail full-time (khu trung tâm)',
+    city: 'TP. Hồ Chí Minh',
+    priceLabel: 'Lương thỏa thuận + tip',
+    description: 'Tiệm đông khách, hỗ trợ giấy tờ và chỗ ở (tin demo).',
     postedAtIso: '2026-04-28T08:30:00.000Z',
     isVip: true,
   },
   {
     id: 'cf_002',
     category: 'shop_transfer',
-    title: 'Sang tiệm tóc khu trung tâm Berlin',
-    city: 'Berlin',
-    priceLabel: 'Giá sang: 48.000 EUR',
-    description: 'Mặt bằng đẹp, hợp đồng 5 năm, lượng khách ổn định.',
+    title: 'Sang tiệm tóc mặt tiền đẹp',
+    city: 'Hà Nội',
+    priceLabel: 'Giá sang: thỏa thuận',
+    description: 'Mặt bằng tốt, lượng khách ổn định (tin demo).',
     postedAtIso: '2026-04-27T14:00:00.000Z',
     isVip: false,
   },
   {
     id: 'cf_003',
     category: 'housing',
-    title: 'Căn hộ 2PN gần tàu điện Vienna',
-    city: 'Vienna',
-    priceLabel: '1.150 EUR/tháng',
-    description: 'Nội thất đầy đủ, phù hợp gia đình có con nhỏ.',
+    title: 'Căn hộ 2PN gần trung tâm',
+    city: 'Đà Nẵng',
+    priceLabel: 'Giá thuê tham khảo',
+    description: 'Nội thất đầy đủ, phù hợp gia đình nhỏ (tin demo).',
     postedAtIso: '2026-04-25T18:15:00.000Z',
     isVip: false,
   },
 ];
 
 export function LocalScreen() {
+  const { t } = useTranslation();
+  const { width } = useWindowDimensions();
   const navigation = useNavigation<Nav>();
+  const { openMiniApp } = useMiniAppEntry();
   const wallet = useWalletState();
   const featureFlags = useMemo(() => getFeatureFlags(), []);
   const legalScanEnabled = featureFlags.legalScanEnabled;
@@ -135,8 +148,8 @@ export function LocalScreen() {
   );
 
   const openServiceHub = useCallback(() => {
-    navigation.navigate('Tabs', { screen: 'TabLocal' });
-  }, [navigation]);
+    openMiniApp('local', () => navigation.navigate('Tabs', { screen: 'TabLocal' }));
+  }, [navigation, openMiniApp]);
 
   const resetComposer = () => {
     setTitle('');
@@ -153,13 +166,11 @@ export function LocalScreen() {
 
   const openLeonaPrefill = useCallback(
     (prefillRequest: string) => {
-      if (!featureFlags.leonaAssistantEnabled) {
-        Alert.alert('Leona Assistant Lite', MVP_LEONA_LITE_OFF_MSG);
-        return;
-      }
-      navigation.navigate('LeonaCall', { prefillRequest, autoSubmit: false });
+      openMiniApp('b2cAiCallAssistant', () =>
+        navigation.navigate('LeonaCall', { prefillRequest, autoSubmit: false })
+      );
     },
-    [featureFlags.leonaAssistantEnabled, navigation]
+    [navigation, openMiniApp]
   );
 
   const bookLawyerAfterCritical = useCallback(() => {
@@ -281,23 +292,28 @@ export function LocalScreen() {
 
   return (
     <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
-      <View style={styles.topBar}>
-        <Pressable onPress={() => navigation.goBack()} style={styles.backBtn} accessibilityRole="button" accessibilityLabel="Quay lại">
-          <Ionicons name="chevron-back" size={24} color={GOLD} />
-        </Pressable>
-        <Text style={styles.topTitle}>VIONA Local</Text>
-        <View style={styles.backSpacer} />
-      </View>
+      <VionaHeader
+        variant="light"
+        title={t('localHub.screenTitle')}
+        titleAlign="center"
+        onBack={() => navigation.goBack()}
+        backA11yLabel="Quay lại"
+      />
 
       <ScrollView
         ref={scrollRef}
-        contentContainerStyle={styles.content}
+        contentContainerStyle={[styles.content, Platform.OS === 'web' && width > 768 && styles.contentDesktop]}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >
-        <Text style={styles.universeKicker}>Universe 02 · Dark</Text>
-        <Text style={styles.heroHeadline}>Đặt dịch vụ đời thường</Text>
-        <Text style={styles.heroSub}>Nails & Spa · Nhà hàng · Đối tác B2B — tốc độ địa phương, chuẩn VIONA.</Text>
+        <VionaCard style={styles.heroIntroCard} surfaceVariant="light">
+          <VionaSectionHeader
+            emphasis="hero"
+            kicker={t('localHub.universeKicker')}
+            title={t('localHub.heroHeadline')}
+            subtitle={t('localHub.heroSub')}
+          />
+        </VionaCard>
 
         {showVietnamInboundHub ? (
           <Pressable
@@ -307,17 +323,17 @@ export function LocalScreen() {
             accessibilityLabel="Vietnam inbound hub"
           >
             <LinearGradient
-              colors={['rgba(212, 175, 55, 0.28)', 'rgba(5, 11, 20, 0.92)']}
+              colors={['#E8F1FC', '#FFF8EC']}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
               style={styles.vnHubBannerInner}
             >
-              <Ionicons name="earth" size={22} color={GOLD} />
+              <Ionicons name="earth" size={22} color={theme.hybrid.signalStrong} />
               <View style={{ flex: 1 }}>
-                <Text style={styles.vnHubBannerTitle}>Vietnam Inbound Hub</Text>
-                <Text style={styles.vnHubBannerSub}>Stays · Tours · Fixers — V6.3 blueprint</Text>
+                <Text style={styles.vnHubBannerTitle}>{t('localHub.vnBannerTitle')}</Text>
+                <Text style={styles.vnHubBannerSub}>{t('localHub.vnBannerSub')}</Text>
               </View>
-              <Ionicons name="chevron-forward" size={20} color="rgba(255,255,255,0.45)" />
+              <Ionicons name="chevron-forward" size={20} color={INK_MUTED} />
             </LinearGradient>
           </Pressable>
         ) : null}
@@ -330,20 +346,18 @@ export function LocalScreen() {
             accessibilityLabel="Nails và Spa"
           >
             <Ionicons name="sparkles-outline" size={26} color={GOLD} />
-            <Text style={styles.heroCardTitle}>Nails & Spa</Text>
-            <Text style={styles.heroCardSub}>Beauty & nail concierge</Text>
+            <Text style={styles.heroCardTitle}>{t('localHub.nailsTitle')}</Text>
+            <Text style={styles.heroCardSub}>{t('localHub.nailsSub')}</Text>
           </Pressable>
           <Pressable
-            onPress={() =>
-              navigation.navigate('LeonaCall', { prefillRequest: 'Đặt bàn nhà hàng Việt gần tôi', autoSubmit: false })
-            }
+            onPress={() => openLeonaPrefill('Đặt bàn nhà hàng Việt gần tôi')}
             style={({ pressed }) => [styles.heroCard, pressed && { opacity: 0.9 }]}
             accessibilityRole="button"
-            accessibilityLabel="Nhà hàng"
+            accessibilityLabel={t('localHub.restaurantTitle')}
           >
             <Ionicons name="restaurant-outline" size={26} color={GOLD} />
-            <Text style={styles.heroCardTitle}>Restaurant</Text>
-            <Text style={styles.heroCardSub}>Đặt bàn & giao hàng</Text>
+            <Text style={styles.heroCardTitle}>{t('localHub.restaurantTitle')}</Text>
+            <Text style={styles.heroCardSub}>{t('localHub.restaurantSub')}</Text>
           </Pressable>
           <Pressable
             onPress={() => navigation.navigate('B2BPaywall')}
@@ -352,23 +366,23 @@ export function LocalScreen() {
             accessibilityLabel="Đặt lịch B2B"
           >
             <Ionicons name="briefcase-outline" size={26} color={GOLD} />
-            <Text style={styles.heroCardTitle}>B2B Booking</Text>
-            <Text style={styles.heroCardSub}>SaaS & đối tác</Text>
+            <Text style={styles.heroCardTitle}>{t('localHub.b2bTitle')}</Text>
+            <Text style={styles.heroCardSub}>{t('localHub.b2bSub')}</Text>
           </Pressable>
         </View>
 
-        <Text style={styles.bentoSectionTitle}>Elite Services</Text>
+        <Text style={styles.bentoSectionTitle}>{t('localHub.eliteSection')}</Text>
 
         <TouchableOpacity
-          onPress={() => void runUltraMasterBookingWithAlerts('Legal & Wealth')}
+          onPress={() => void runUltraMasterBookingWithAlerts(t('localHub.legalWealthTitle'))}
           activeOpacity={0.88}
           style={styles.bentoLarge}
           accessibilityRole="button"
-          accessibilityLabel="Legal and Wealth"
+          accessibilityLabel={t('localHub.legalWealthTitle')}
         >
           <Ionicons name="scale-outline" size={28} color={GOLD} />
-          <Text style={styles.bentoTitle}>Legal & Wealth</Text>
-          <Text style={styles.bentoSub}>Immigration · Tax · Asset desk</Text>
+          <Text style={styles.bentoTitle}>{t('localHub.legalWealthTitle')}</Text>
+          <Text style={styles.bentoSub}>{t('localHub.legalWealthSub')}</Text>
         </TouchableOpacity>
 
         {legalScanEnabled ? (
@@ -378,40 +392,40 @@ export function LocalScreen() {
             disabled={legalScanBusy}
             style={[styles.legalScannerBtn, legalScanBusy && styles.legalScannerBtnDisabled]}
             accessibilityRole="button"
-            accessibilityLabel="AI Legal Scanner"
+            accessibilityLabel={t('localHub.legalScannerA11y')}
           >
             {legalScanBusy ? (
               <ActivityIndicator size="small" color={GOLD} accessibilityLabel="Đang phân tích" />
             ) : (
               <Text style={styles.legalScannerEmoji}>⚖️</Text>
             )}
-            <Text style={styles.legalScannerLabel}>AI Legal Scanner</Text>
+            <Text style={styles.legalScannerLabel}>{t('localHub.legalScannerLabel')}</Text>
             <Ionicons name="scan-outline" size={22} color={GOLD} />
           </TouchableOpacity>
         ) : null}
 
         <View style={styles.bentoMidRow}>
           <TouchableOpacity
-            onPress={() => openLeonaPrefill('VIONA Transit — ghép xe / gửi hàng')}
+            onPress={() => openLeonaPrefill(t('localHub.transitLeonaPrefill'))}
             activeOpacity={0.88}
             style={styles.bentoMedium}
             accessibilityRole="button"
-            accessibilityLabel="VIONA Transit"
+            accessibilityLabel={t('localHub.transitTitle')}
           >
             <Ionicons name="car-outline" size={24} color={GOLD} />
-            <Text style={styles.bentoTitle}>VIONA Transit</Text>
-            <Text style={styles.bentoSub}>Carpool · Parcel</Text>
+            <Text style={styles.bentoTitle}>{t('localHub.transitTitle')}</Text>
+            <Text style={styles.bentoSub}>{t('localHub.transitSub')}</Text>
           </TouchableOpacity>
           <TouchableOpacity
             onPress={() => navigation.navigate('DailyReward')}
             activeOpacity={0.88}
             style={styles.bentoMedium}
             accessibilityRole="button"
-            accessibilityLabel="Expat Events"
+            accessibilityLabel={t('localHub.eventsTitle')}
           >
             <Ionicons name="ticket-outline" size={24} color={GOLD} />
-            <Text style={styles.bentoTitle}>Expat Events</Text>
-            <Text style={styles.bentoSub}>Community & VIP</Text>
+            <Text style={styles.bentoTitle}>{t('localHub.eventsTitle')}</Text>
+            <Text style={styles.bentoSub}>{t('localHub.eventsSub')}</Text>
           </TouchableOpacity>
         </View>
 
@@ -420,12 +434,14 @@ export function LocalScreen() {
           activeOpacity={0.88}
           style={styles.bentoBanner}
           accessibilityRole="button"
-          accessibilityLabel="Classifieds"
+          accessibilityLabel={t('localHub.classifiedsTitle')}
         >
           <Ionicons name="pricetags-outline" size={24} color={GOLD} />
           <View style={styles.bannerTextCol}>
-            <Text style={styles.bentoTitle}>Classifieds</Text>
-            <Text style={styles.bentoSub}>{`Chợ rao vặt · VIP đăng tin bằng ${getVioCreditsLabel()}`}</Text>
+            <Text style={styles.bentoTitle}>{t('localHub.classifiedsTitle')}</Text>
+            <Text style={styles.bentoSub}>
+              {t('localHub.classifiedsRowSub', { unit: getVioCreditsLabel() })}
+            </Text>
           </View>
           <Ionicons name="chevron-forward" size={22} color={GOLD} />
         </TouchableOpacity>
@@ -437,11 +453,11 @@ export function LocalScreen() {
           style={styles.classifiedsAnchor}
         >
           <View style={styles.classifiedsHeaderRow}>
-            <Text style={styles.sectionTitle}>Chợ rao vặt</Text>
+            <Text style={styles.sectionTitle}>{t('localHub.classifiedsTitle')}</Text>
             <Text style={styles.walletHint}>{formatVioCredits(wallet.credits)}</Text>
           </View>
           <Pressable style={styles.postBtn} onPress={() => setComposerVisible(true)}>
-            <Ionicons name="add-circle-outline" size={20} color={NAVY} />
+            <Ionicons name="add-circle-outline" size={20} color={INK} />
             <Text style={styles.postBtnText}>Đăng tin mới</Text>
           </Pressable>
 
@@ -470,7 +486,7 @@ export function LocalScreen() {
       <Modal visible={composerVisible} transparent animationType="none" onRequestClose={() => setComposerVisible(false)}>
         <View style={styles.modalBackdrop}>
           <Reanimated.View style={[styles.modalCard, modalAnimatedStyle]}>
-            <Text style={styles.modalTitle}>Đăng bài trong Chợ rao vặt</Text>
+            <Text style={styles.modalTitle}>{t('localHub.classifiedsComposerTitle')}</Text>
             <View style={styles.categoryRow}>
               {(Object.keys(CATEGORY_META) as ClassifiedCategory[]).map((category) => (
                 <Pressable
@@ -484,20 +500,20 @@ export function LocalScreen() {
                 </Pressable>
               ))}
             </View>
-            <TextInput value={title} onChangeText={setTitle} placeholder="Tiêu đề" placeholderTextColor="rgba(255,255,255,0.45)" style={styles.input} />
-            <TextInput value={city} onChangeText={setCity} placeholder="Thành phố" placeholderTextColor="rgba(255,255,255,0.45)" style={styles.input} />
+            <TextInput value={title} onChangeText={setTitle} placeholder="Tiêu đề" placeholderTextColor="rgba(11,22,40,0.42)" style={styles.input} />
+            <TextInput value={city} onChangeText={setCity} placeholder="Thành phố" placeholderTextColor="rgba(11,22,40,0.42)" style={styles.input} />
             <TextInput
               value={priceLabel}
               onChangeText={setPriceLabel}
               placeholder="Giá / mức lương"
-              placeholderTextColor="rgba(255,255,255,0.45)"
+              placeholderTextColor="rgba(11,22,40,0.42)"
               style={styles.input}
             />
             <TextInput
               value={description}
               onChangeText={setDescription}
               placeholder="Mô tả chi tiết"
-              placeholderTextColor="rgba(255,255,255,0.45)"
+              placeholderTextColor="rgba(11,22,40,0.42)"
               style={[styles.input, styles.inputMultiline]}
               multiline
             />
@@ -510,7 +526,7 @@ export function LocalScreen() {
                 <Text style={styles.cancelBtnText}>Hủy</Text>
               </Pressable>
               <Pressable onPress={() => void submitPost()} style={styles.submitBtn} disabled={submitting}>
-                {submitting ? <ActivityIndicator size="small" color={NAVY} /> : <Text style={styles.submitBtnText}>Đăng tin</Text>}
+                {submitting ? <ActivityIndicator size="small" color={INK} /> : <Text style={styles.submitBtnText}>Đăng tin</Text>}
               </Pressable>
             </View>
           </Reanimated.View>
@@ -521,45 +537,12 @@ export function LocalScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: NAVY },
-  topBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: theme.spacing.sm,
-    paddingBottom: 6,
-  },
-  backBtn: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
-  backSpacer: { width: 44 },
-  topTitle: {
-    flex: 1,
-    textAlign: 'center',
-    fontSize: 17,
-    fontFamily: FontFamily.extrabold,
-    color: 'rgba(248, 250, 252, 0.95)',
-    letterSpacing: -0.2,
-  },
-  content: { paddingHorizontal: theme.spacing.lg, paddingBottom: theme.spacing.xxl * 1.5, paddingTop: 4 },
-  universeKicker: {
-    fontSize: 11,
-    letterSpacing: 1.2,
-    color: GOLD,
-    fontFamily: FontFamily.extrabold,
-    marginBottom: 6,
-    textTransform: 'uppercase',
-  },
-  heroHeadline: {
-    fontSize: 24,
-    fontFamily: FontFamily.extrabold,
-    color: 'rgba(248, 250, 252, 0.98)',
-    marginBottom: 6,
-  },
-  heroSub: {
-    fontSize: 13,
-    fontFamily: FontFamily.medium,
-    color: 'rgba(226, 232, 240, 0.72)',
-    lineHeight: 19,
+  container: { flex: 1, backgroundColor: BG },
+  heroIntroCard: {
     marginBottom: theme.spacing.md,
   },
+  content: { paddingHorizontal: theme.spacing.lg, paddingBottom: theme.spacing.xxl * 2.25, paddingTop: 4 },
+  contentDesktop: { paddingBottom: theme.spacing.xxl * 3.25, paddingRight: 28 },
   heroRow: { flexDirection: 'row', gap: 10, marginBottom: theme.spacing.lg },
   heroCard: {
     flex: 1,
@@ -567,31 +550,25 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     paddingVertical: 12,
     paddingHorizontal: 8,
-    backgroundColor: GLASS,
+    backgroundColor: SURFACE,
     borderWidth: 1,
-    borderTopColor: GOLD_BORDER,
-    borderTopWidth: 1,
-    borderLeftColor: GOLD_BORDER,
-    borderLeftWidth: 1,
-    borderRightColor: 'rgba(255,255,255,0.08)',
-    borderBottomColor: 'rgba(255,255,255,0.08)',
+    borderColor: BORDER,
     alignItems: 'center',
     gap: 6,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.25,
-    shadowRadius: 16,
-    elevation: 8,
+    shadowColor: '#0B1628',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.06,
+    shadowRadius: 12,
+    elevation: 3,
   },
-  heroCardTitle: { fontSize: 12, fontFamily: FontFamily.extrabold, color: 'rgba(248,250,252,0.96)', textAlign: 'center' },
-  heroCardSub: { fontSize: 10, fontFamily: FontFamily.medium, color: 'rgba(226,232,240,0.6)', textAlign: 'center' },
+  heroCardTitle: { fontSize: 12, fontFamily: FontFamily.extrabold, color: INK, textAlign: 'center' },
+  heroCardSub: { fontSize: 10, fontFamily: FontFamily.medium, color: INK_MUTED, textAlign: 'center' },
   bentoSectionTitle: {
     fontSize: 13,
     fontFamily: FontFamily.extrabold,
-    letterSpacing: 1,
-    color: GOLD,
+    letterSpacing: 0.6,
+    color: INK,
     marginBottom: 10,
-    textTransform: 'uppercase',
   },
   legalScannerBtn: {
     width: '100%',
@@ -615,7 +592,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontSize: 15,
     fontFamily: FontFamily.extrabold,
-    color: 'rgba(248, 250, 252, 0.96)',
+    color: INK,
     letterSpacing: 0.2,
   },
   bentoLarge: {
@@ -624,21 +601,15 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     padding: theme.spacing.md,
     marginBottom: 12,
-    backgroundColor: GLASS,
-    borderTopWidth: 1,
-    borderTopColor: GOLD_BORDER,
-    borderLeftWidth: 1,
-    borderLeftColor: GOLD_BORDER,
-    borderRightWidth: 1,
-    borderRightColor: 'rgba(255,255,255,0.08)',
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255,255,255,0.08)',
+    backgroundColor: SURFACE,
+    borderWidth: 1,
+    borderColor: BORDER,
     gap: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.22,
-    shadowRadius: 18,
-    elevation: 10,
+    shadowColor: '#0B1628',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.06,
+    shadowRadius: 14,
+    elevation: 3,
   },
   bentoMidRow: { flexDirection: 'row', justifyContent: 'space-between', gap: 12, marginBottom: 12 },
   bentoMedium: {
@@ -646,21 +617,15 @@ const styles = StyleSheet.create({
     minHeight: 118,
     borderRadius: 18,
     padding: theme.spacing.md,
-    backgroundColor: GLASS,
-    borderTopWidth: 1,
-    borderTopColor: GOLD_BORDER,
-    borderLeftWidth: 1,
-    borderLeftColor: GOLD_BORDER,
-    borderRightWidth: 1,
-    borderRightColor: 'rgba(255,255,255,0.08)',
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255,255,255,0.08)',
+    backgroundColor: SURFACE,
+    borderWidth: 1,
+    borderColor: BORDER,
     gap: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.2,
-    shadowRadius: 14,
-    elevation: 8,
+    shadowColor: '#0B1628',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.06,
+    shadowRadius: 12,
+    elevation: 3,
   },
   bentoBanner: {
     flexDirection: 'row',
@@ -671,24 +636,18 @@ const styles = StyleSheet.create({
     paddingHorizontal: theme.spacing.md,
     gap: 12,
     marginBottom: theme.spacing.lg,
-    backgroundColor: GLASS,
-    borderTopWidth: 1,
-    borderTopColor: GOLD_BORDER,
-    borderLeftWidth: 1,
-    borderLeftColor: GOLD_BORDER,
-    borderRightWidth: 1,
-    borderRightColor: 'rgba(255,255,255,0.08)',
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255,255,255,0.08)',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.22,
-    shadowRadius: 16,
-    elevation: 9,
+    backgroundColor: SURFACE,
+    borderWidth: 1,
+    borderColor: BORDER,
+    shadowColor: '#0B1628',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.06,
+    shadowRadius: 14,
+    elevation: 3,
   },
   bannerTextCol: { flex: 1, minWidth: 0 },
-  bentoTitle: { fontSize: 16, fontFamily: FontFamily.extrabold, color: 'rgba(248,250,252,0.98)' },
-  bentoSub: { fontSize: 12, fontFamily: FontFamily.medium, color: 'rgba(226,232,240,0.65)' },
+  bentoTitle: { fontSize: 16, fontFamily: FontFamily.extrabold, color: INK },
+  bentoSub: { fontSize: 12, fontFamily: FontFamily.medium, color: INK_MUTED },
   classifiedsAnchor: { marginTop: 4 },
   classifiedsHeaderRow: {
     flexDirection: 'row',
@@ -696,7 +655,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     marginBottom: 10,
   },
-  sectionTitle: { fontSize: 16, fontFamily: FontFamily.extrabold, color: 'rgba(248,250,252,0.95)' },
+  sectionTitle: { fontSize: 16, fontFamily: FontFamily.extrabold, color: INK },
   walletHint: { fontSize: 12, fontFamily: FontFamily.bold, color: GOLD },
   postBtn: {
     minHeight: 44,
@@ -709,20 +668,15 @@ const styles = StyleSheet.create({
     gap: 8,
     marginBottom: theme.spacing.md,
   },
-  postBtnText: { color: NAVY, fontFamily: FontFamily.bold, fontSize: 14 },
+  postBtnText: { color: INK, fontFamily: FontFamily.bold, fontSize: 14 },
   postCard: {
     borderRadius: 14,
     borderWidth: 1,
-    borderTopColor: GOLD_BORDER,
-    borderLeftColor: GOLD_BORDER,
-    borderTopWidth: 1,
-    borderLeftWidth: 1,
-    borderRightColor: 'rgba(255,255,255,0.08)',
-    borderBottomColor: 'rgba(255,255,255,0.08)',
+    borderColor: BORDER,
     padding: theme.spacing.md,
     marginBottom: theme.spacing.sm,
     gap: 6,
-    backgroundColor: GLASS,
+    backgroundColor: SURFACE,
   },
   postHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   categoryChip: {
@@ -732,13 +686,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 5,
     borderRadius: theme.radius.pill,
-    backgroundColor: 'rgba(0,0,0,0.2)',
+    backgroundColor: vionaTrust.surfaceMuted,
     borderWidth: 1,
-    borderColor: 'rgba(212, 175, 55, 0.35)',
+    borderColor: BORDER,
   },
   categoryChipText: { fontSize: 11, color: GOLD, fontFamily: FontFamily.semibold },
   vipBadge: { fontSize: 11, color: GOLD, fontFamily: FontFamily.extrabold },
-  postTitle: { fontSize: 15, color: 'rgba(248,250,252,0.96)', fontFamily: FontFamily.bold },
+  postTitle: { fontSize: 15, color: INK, fontFamily: FontFamily.bold },
   postMeta: { fontSize: 12, color: GOLD, fontFamily: FontFamily.semibold },
   postDesc: { fontSize: 12, color: 'rgba(226,232,240,0.7)', fontFamily: FontFamily.medium, lineHeight: 18 },
   modalBackdrop: {
@@ -750,17 +704,12 @@ const styles = StyleSheet.create({
   modalCard: {
     borderRadius: theme.radius.lg,
     borderWidth: 1,
-    borderTopColor: GOLD_BORDER,
-    borderLeftColor: GOLD_BORDER,
-    borderTopWidth: 1,
-    borderLeftWidth: 1,
-    borderRightColor: 'rgba(255,255,255,0.1)',
-    borderBottomColor: 'rgba(255,255,255,0.1)',
-    backgroundColor: 'rgba(12, 20, 36, 0.96)',
+    borderColor: BORDER,
+    backgroundColor: SURFACE,
     padding: theme.spacing.lg,
     gap: theme.spacing.sm,
   },
-  modalTitle: { fontSize: 16, color: 'rgba(248,250,252,0.96)', fontFamily: FontFamily.extrabold },
+  modalTitle: { fontSize: 16, color: INK, fontFamily: FontFamily.extrabold },
   categoryRow: { flexDirection: 'row', gap: 6 },
   categoryBtn: {
     flex: 1,
@@ -772,17 +721,17 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   categoryBtnActive: { borderColor: GOLD, backgroundColor: 'rgba(197, 160, 89, 0.12)' },
-  categoryBtnText: { fontSize: 11, color: 'rgba(226,232,240,0.65)', fontFamily: FontFamily.semibold },
+  categoryBtnText: { fontSize: 11, color: INK_MUTED, fontFamily: FontFamily.semibold },
   categoryBtnTextActive: { color: GOLD },
   input: {
     minHeight: 42,
     borderRadius: theme.radius.md,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.12)',
+    borderColor: BORDER,
     paddingHorizontal: theme.spacing.md,
-    color: 'rgba(248,250,252,0.95)',
+    color: INK,
     fontFamily: FontFamily.medium,
-    backgroundColor: 'rgba(0,0,0,0.25)',
+    backgroundColor: vionaTrust.surfaceMuted,
   },
   inputMultiline: { minHeight: 86, textAlignVertical: 'top', paddingTop: 10 },
   vipToggle: {
@@ -796,7 +745,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   vipToggleActive: { borderColor: GOLD },
-  vipToggleText: { fontSize: 12, color: 'rgba(248,250,252,0.9)', fontFamily: FontFamily.semibold },
+  vipToggleText: { fontSize: 12, color: INK, fontFamily: FontFamily.semibold },
   modalActions: { flexDirection: 'row', justifyContent: 'flex-end', gap: 8, marginTop: 4 },
   cancelBtn: {
     minHeight: 40,
@@ -818,7 +767,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingHorizontal: 10,
   },
-  submitBtnText: { fontSize: 13, color: NAVY, fontFamily: FontFamily.bold },
+  submitBtnText: { fontSize: 13, color: INK, fontFamily: FontFamily.bold },
   vnHubBanner: {
     marginTop: 14,
     borderRadius: theme.radius.lg,
@@ -836,12 +785,12 @@ const styles = StyleSheet.create({
   vnHubBannerTitle: {
     fontFamily: FontFamily.bold,
     fontSize: 15,
-    color: 'rgba(252, 250, 245, 0.98)',
+    color: INK,
   },
   vnHubBannerSub: {
     marginTop: 2,
     fontFamily: FontFamily.medium,
     fontSize: 12,
-    color: 'rgba(226, 232, 240, 0.78)',
+    color: INK_MUTED,
   },
 });

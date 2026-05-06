@@ -3,6 +3,7 @@ import { useCallback, type ReactElement } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
+import { useTranslation } from '../../i18n';
 import { MAIN_TAB, type RootStackParamList } from '../../navigation/routes';
 import { useDemoModeStore } from '../../store/demoModeStore';
 import { theme } from '../../theme/theme';
@@ -14,10 +15,9 @@ type DemoTriggerButtonProps = Readonly<{
   navigation: Nav;
 }>;
 
-/**
- * Premium entry into **zero-friction demo** — no account, no charges; opens guided Omniverse tour.
- */
+/** Zero-friction demo entry — opens main tabs in demo mode (no backend charges). */
 export function DemoTriggerButton({ navigation }: DemoTriggerButtonProps): ReactElement {
+  const { t } = useTranslation();
   const setDemoMode = useDemoModeStore((s) => s.setDemoMode);
 
   const onPress = useCallback(() => {
@@ -33,7 +33,7 @@ export function DemoTriggerButton({ navigation }: DemoTriggerButtonProps): React
       onPress={onPress}
       style={({ pressed }) => [styles.outer, pressed && styles.outerPressed]}
       accessibilityRole="button"
-      accessibilityLabel="Start free interactive tour"
+      accessibilityLabel={t('login.demoEntryA11y')}
     >
       <LinearGradient
         colors={[
@@ -46,8 +46,8 @@ export function DemoTriggerButton({ navigation }: DemoTriggerButtonProps): React
         style={styles.gradient}
       >
         <View style={styles.innerGlow} />
-        <Text style={styles.label}>Chạm để Trải nghiệm Ngay (Free Tour)</Text>
-        <Text style={styles.hint}>V7 Omniverse · không cần tài khoản</Text>
+        <Text style={styles.label}>{t('login.demoEntryTitle')}</Text>
+        <Text style={styles.hint}>{t('login.demoEntryHint')}</Text>
       </LinearGradient>
     </Pressable>
   );

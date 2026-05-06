@@ -2,7 +2,49 @@
   "welcome_message": "Welcome to VIONA",
   "book_now": "Book now",
   "global_ready_tagline": "One app, every region",
+  "miniApp": {
+    "title": {
+      "gate": "Mini-app unavailable"
+    },
+    "gate": {
+      "role": "Switch profile mode in the profile switcher to access this area.",
+      "featureFlag": "This feature is off in the current build or for your account.",
+      "readiness": "This mini-app is not ready yet.",
+      "market": "This mini-app is not available in your market yet."
+    },
+    "status": {
+      "demo": "Demo mode",
+      "comingSoon": "Coming soon",
+      "frozen": "Temporarily unavailable"
+    },
+    "demo": {
+      "body": "This is a demo or pilot surface. Continuing does not enable live production automation by itself.",
+      "cancel": "Cancel",
+      "continue": "Continue"
+    },
+    "comingSoon": {
+      "body": "We are still building this experience. Please try again in a later release."
+    },
+    "frozen": {
+      "body": "This area is paused for safety or maintenance."
+    },
+    "error": {
+      "title": "Cannot open",
+      "unavailable": "This mini-app is not available right now."
+    }
+  },
+  "miniapps": {
+    "error": {
+      "unknownId": "Unknown or invalid mini-app."
+    }
+  },
   "login": {
+    "brandName": "VIONA",
+    "brandTagline": "Global services tailored for the Vietnamese community",
+    "brandEcosystemLine": "VIONA — global service ecosystem",
+    "demoEntryTitle": "Tap to explore the demo",
+    "demoEntryHint": "No account required",
+    "demoEntryA11y": "Explore the demo without an account",
     "welcome": "Welcome to VIONA",
     "subtitle": "Enter your phone number to continue. OTP is for demo.",
     "phone_placeholder": "Enter phone number",
@@ -111,7 +153,7 @@
       "criticalA11y": "Critical ranking warning",
       "lockedA11y": "Top ranking locked",
       "softNudgeBody": "You have {{daysLeft}} days of Premium Ranking left. Your business grew by {{growth}}% this month with VIONA.",
-      "criticalBody": "WARNING: Your Top 1 Ranking will be DROPPED in {{daysLeft}} days. Switch to Power SaaS or top up VIO Credits to maintain your customer flow.",
+      "criticalBody": "WARNING: Your Top 1 ranking will drop in {{daysLeft}} days. Upgrade to the SaaS Elite plan or top up VIO Credits to keep visibility.",
       "lockedBody": "Ranking dropped. Top up VIO Credits now!"
     },
     "vietqr": {
@@ -193,11 +235,20 @@
     "tabAcademy": "Academy Lite",
     "accountChip": "Account",
     "accountChipA11y": "Open account hub",
+    "accountWalletHubRow": "Account & wallet hub",
     "roleB2C": "Consumer",
     "roleB2B": "Merchant",
     "roleBroker": "Broker",
     "roleAdmin": "Command Center",
+    "profileRoleGateTitle": "Upgrade your account to earn VIO Credits",
+    "profileRoleGateBrokerBody": "Field brokers earn VIO Credits when tourists book through your merchants. Your wallet updates automatically — no extra apps.",
+    "profileRoleGateMerchantBody": "Merchants earn VIO Credits on inbound tourism bookings. Connect your shop, manage your menu, and get paid in one wallet.",
+    "profileRoleGateContinueBroker": "Continue as Broker",
+    "profileRoleGateContinueMerchant": "Continue as Merchant",
+    "profileRoleGateLater": "Maybe later",
     "charityTitle": "VIONA Care Heart Fund",
+    "charityBody": "Every transaction helps bring meals and classes to children in need in Vietnam.",
+    "accountChipShort": "Me",
     "headingExpat": "Your home hub",
     "headingTourist": "Vietnam travel hub",
     "heroSubExpat": "VIONA connects life, business, travel, and AI support for the Vietnamese diaspora worldwide.",
@@ -231,7 +282,24 @@
     "sosAreaPending": "Detecting your area…",
     "sosAreaLine": "Area: {{city}} ({{code}})",
     "walletChipCompact": "{{amount}} VIO",
-    "walletChipFull": "{{amount}} VIO Credits"
+    "walletChipFull": "{{amount}} VIO Credits",
+    "utilityShortcutsTitle": "Shortcuts",
+    "vaultChipLabel": "Secure vault",
+    "adminUnlockedBadge": "Admin unlocked",
+    "sosLocatingDetail": "Locating your area for accurate help…",
+    "sosEmergencyBlockTitle": "Local emergency services",
+    "sosPolice": "Police",
+    "sosAmbulance": "Ambulance",
+    "sosFire": "Fire",
+    "sosEmbassyBlockTitle": "Vietnamese embassy (nearest)",
+    "sosAiMaydayBlockTitle": "AI voice mayday",
+    "sosAiMaydayCta": "Play mayday phrase (multilingual)",
+    "sosPingBlockTitle": "Safety ping",
+    "sosPingCta": "Share location with nearby VIONA community",
+    "sosPingAlertTitle": "Ping sent",
+    "sosPingAlertBody": "SOS ping sent with coordinates {{coords}} ({{city}}). Pilot flow — not a substitute for authorities.",
+    "sosPingNotifyTitle": "VIONA — safety ping",
+    "sosPingNotifyBody": "SOS ping · {{city}} · {{coords}}"
   },
   "travelHub": {
     "screenTitle": "VIONA Travel",
@@ -274,12 +342,17 @@
     "esimAlertBody": "International eSIM channel in beta — activate data by destination (demo).",
     "destinationLabel": "Destination",
     "destinationPlaceholder": "Enter your destination",
-    "destinationHelper": "Services adapt to your profile country.",
-    "destinationExamples": "Examples: Paris, Prague, Berlin…",
+    "destinationHelper": "Services change based on your country of residence.",
+    "destinationExamples": "Examples: Paris, Tokyo, Singapore…",
     "destinationPending": "No destination entered",
+    "mapBadgePlaceholderLine1": "Based on your location or destination",
+    "mapBadgePlaceholderLine2": "Services vary by country of residence",
     "sectionStays": "Community stays",
     "travelSosA11y": "Emergency SOS",
-    "travelSosLabel": "SOS"
+    "travelSosLabel": "SOS",
+    "syncingLocation": "Syncing location…",
+    "cravingsEmpty": "No venues in range yet.",
+    "flightSearchA11y": "Book flights"
   },
   "localHub": {
     "screenTitle": "VIONA Local",
@@ -298,12 +371,16 @@
     "legalWealthTitle": "Legal & wealth",
     "legalWealthSub": "Immigration · Tax · Assets (demo)",
     "transitTitle": "VIONA Transit",
-    "transitSub": "Carpool · parcels",
+    "transitSub": "Ride-share · parcels",
+    "transitLeonaPrefill": "VIONA Transit — ride-share · parcels",
     "eventsTitle": "Community events",
-    "eventsSub": "Community & perks",
+    "eventsSub": "Community & VIP guests",
     "classifiedsTitle": "Classifieds",
-    "classifiedsRowSub": "Local listings · VIP posts",
-    "legalScannerLabel": "AI legal scan"
+    "classifiedsRowSub": "Classifieds · VIP posts use {{unit}}",
+    "legalScannerLabel": "AI legal scan",
+    "legalScannerA11y": "AI legal document scan",
+    "classifiedsComposerTitle": "Post to classifieds",
+    "postNewListing": "New listing"
   },
   "b2bPaywallUi": {
     "kicker": "Business upgrade",
@@ -311,11 +388,134 @@
     "subThreat": "Your trial window is ending soon. You can upgrade to keep automation features (demo).",
     "chooseLane": "Choose a plan for your business",
     "trapPendingSync": "Syncing merchant profile dates from VIONA for the 90-day cycle — refresh your business account.",
-    "trapTopSeo": "Days 1–90: Discovery boost active (you are on day {{day}}).",
-    "trapGate": "After day 90: SEO boost ends — VIO Credits top-up restores featured placement and AI reception capacity.",
+    "trapTopSeo": "Days 1–{{cap}}: Discovery boost active (day {{day}}).",
+    "trapGate": "After day {{cap}}: Priority placement ended — VIO Credits restore featured placement and AI reception.",
     "trapEnforcementVio": "Featured placement paused until VIO Credits top-up.",
     "ctaPrimary": "Secure my business & upgrade",
     "ctaPilot": "Continue to pilot request",
-    "backExit": "Exit"
+    "backExit": "Exit",
+    "backA11y": "Go back",
+    "metricLabel": "Platform value (demo display)",
+    "metricCopy": "Demo display: {{amount}} in bookings processed on the platform. Upgrade when you want to keep automation.",
+    "tier1Badge": "Tier 1",
+    "tier1Title": "Pay-as-you-go",
+    "tier1Price": "VIO Credits top-up",
+    "tier1Body": "Metered voice, SMS, and booking events. Best when volume shifts — top up VIO Credits and scale down anytime (demo).",
+    "tier1Hint": "Entry path · no annual lock-in",
+    "tier2Badge": "Tier 2 · RECOMMENDED",
+    "tier2Title": "SaaS Elite plan",
+    "tier2Price": "€139",
+    "tier2PerMonth": "/month",
+    "tier2Sub": "Full-stack automation, data tooling, and VIP retention (demo).",
+    "tier2Feat1": "Unlimited AI receptionist & intelligent routing",
+    "tier2Feat2": "VIP profiles, history, and retention signals",
+    "tier2Feat3": "Live booking intelligence & staff handoff",
+    "cancelTitle": "SaaS Elite — EU cancellation",
+    "cancelBody": "Cancel anytime. Access continues through your paid period — no extra retention steps.",
+    "cancelBtn": "Cancel subscription",
+    "cancelA11y": "Cancel SaaS Elite subscription at end of billing period",
+    "tier3Badge": "Tier 3",
+    "tier3Title": "Wholesale corridor",
+    "tier3Price": "1% platform fee",
+    "tier3Body": "B2B wholesale volume — lowest headline take for merchants on VIONA’s verified trade lane (qualifying SKUs; see merchant ops team).",
+    "tier3Hint": "Stack with Tier 1 or 2 for AI + voice",
+    "ctaA11y": "Upgrade to protect your business",
+    "stripeRow": "Secured by Stripe",
+    "legalHint": "Renews monthly until cancelled. Taxes may apply. VIONA B2B terms apply.",
+    "stripeSandboxAlert": "Stripe sandbox checkout started.",
+    "alertCancelOk": "Cancellation scheduled",
+    "alertCancelErr": "Error",
+    "alertCancelNoMerchant": "Missing merchant id — sign in again or sync your profile."
+  },
+  "aiReceptionist": {
+    "industryGroups": {
+      "beautyWellness": "Beauty & Wellness",
+      "foodRetail": "Food & Retail",
+      "stayTravel": "Stay & Travel",
+      "homeLocalServices": "Home & Local Services",
+      "professionalServices": "Professional Services",
+      "educationCommunity": "Education & Community",
+      "healthSchedulingOnly": "Health (scheduling only)"
+    },
+    "industry": {
+      "nailSalon": "Nail salon",
+      "spaMassage": "Spa / massage",
+      "hairBarber": "Hair & barber",
+      "lashBrow": "Lash & brow",
+      "waxing": "Waxing",
+      "aestheticsConsultation": "Aesthetics (consultation only)",
+      "restaurantTakeaway": "Restaurant / takeaway",
+      "groceryAsianMarket": "Grocery / Asian market",
+      "bakery": "Bakery",
+      "specialtyRetail": "Specialty retail",
+      "hotelMotel": "Hotel / motel",
+      "homestayShortStay": "Homestay / short stay",
+      "guesthouse": "Guesthouse",
+      "travelTourDesk": "Travel / tour desk",
+      "handyman": "Handyman",
+      "electricalPlumbing": "Electrical & plumbing",
+      "hvac": "HVAC",
+      "cleaning": "Cleaning",
+      "movingDeliveryHelper": "Moving / delivery helper",
+      "autoRepair": "Auto repair",
+      "accountingTax": "Accounting / tax",
+      "legalScheduling": "Legal (scheduling only)",
+      "insuranceBroker": "Insurance broker",
+      "immigrationScheduling": "Immigration (scheduling only)",
+      "languageSchoolTutoring": "Language school / tutoring",
+      "daycareAfterSchool": "Daycare / after school",
+      "communityClasses": "Community classes",
+      "drivingSchool": "Driving school",
+      "clinicGpScheduling": "GP clinic (scheduling)",
+      "dentistScheduling": "Dental (scheduling)",
+      "physioScheduling": "Physio (scheduling)"
+    },
+    "disclaimers": {
+      "defaultLite": "AI supports intake and draft requests. Merchant confirmation is required. No legal, medical, or financial final advice. No payment or booking finalization in this demo path.",
+      "aestheticsConsultationOnly": "Consultation scheduling only. No treatment advice, no medical outcomes, and no procedure booking as final via AI without human approval.",
+      "retailLead": "Lead and pickup scheduling only. Inventory and pricing changes are not performed by AI in this phase.",
+      "stayTravelLeadOrConfirm": "Availability and lead capture only unless merchant policy explicitly allows confirmed holds. No payment capture via AI here.",
+      "homeServicesEstimate": "Site visit / estimate scheduling only. No guaranteed quotes or structural sign-off via AI.",
+      "professionalSchedulingOnly": "Scheduling and intake only. No legal, tax, immigration, or insurance advice as a final professional opinion.",
+      "educationScheduling": "Class or enrollment scheduling intake only. No guarantee of placement or certification via AI.",
+      "healthSchedulingOnly": "Appointment scheduling intake only. No symptom diagnosis, triage as medical advice, prescriptions, or emergency handling via AI."
+    },
+    "playbook": {
+      "bookingModeLabel": "Booking mode: {{mode}}",
+      "riskLabel": "Risk tier: {{risk}}",
+      "confirmationLabel": "Confirmation policy: {{policy}}"
+    },
+    "playbookDemo": {
+      "_generic": {
+        "customerName": "Demo customer",
+        "language": "English",
+        "intent": "Request {{service}}",
+        "sampleService": "{{service}}",
+        "requestedTime": "Next available weekday 16:00",
+        "customerPhonePreview": "+xx xxx xxx 000",
+        "transcriptCustomer": "Hello, I would like to ask about {{service}} and available times.",
+        "transcriptAi": "Thanks — I captured a draft request for the merchant team. This is a local simulator only.",
+        "transcriptConfirm": "Nothing is finalized until the merchant confirms in their workflow.",
+        "transcriptFallback": "If the slot is busy, staff can propose alternatives during review.",
+        "aiDraftResponse": "Draft intake prepared — pending merchant confirmation (simulator)."
+      }
+    },
+    "setup": {
+      "industrySectionTitle": "Industry profile (local only)",
+      "industrySectionBody": "Select the vertical that best matches your business. This choice is stored on this device for this session only — it is not sent to VIONA servers until you submit a pilot request with consent.",
+      "industryNoneTitle": "No industry selected",
+      "industryNoneBody": "Pick an industry to see the intake playbook and safety disclaimer for Lễ Tân AI.",
+      "playbookSummaryTitle": "Playbook summary",
+      "disclaimerTitle": "Industry disclaimer"
+    },
+    "demo": {
+      "selectIndustryPrompt": "Select an industry so Lễ Tân AI understands your context.",
+      "industrySectionTitle": "Industry context",
+      "playbookTitle": "Playbook-driven preview"
+    },
+    "pilot": {
+      "industryLabel": "Industry (registry)",
+      "previewIndustryId": "Industry id: {{id}}"
+    }
   }
 }

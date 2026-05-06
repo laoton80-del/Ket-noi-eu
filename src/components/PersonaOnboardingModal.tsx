@@ -18,7 +18,7 @@ export function PersonaOnboardingModal({ visible, onPickExpat, onPickTourist }: 
     <Modal visible={visible} transparent animationType="fade" onRequestClose={() => {}}>
       <View style={styles.backdrop}>
         <View style={styles.card}>
-          <Text style={styles.title}>What brings you to ViGlobal?</Text>
+          <Text style={styles.title}>What brings you to VIONA?</Text>
           <Text style={styles.sub}>Choose once — we tailor your home dashboard.</Text>
           <Pressable
             onPress={onPickExpat}

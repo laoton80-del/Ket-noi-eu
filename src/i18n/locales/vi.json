@@ -2,7 +2,49 @@
   "welcome_message": "Chào mừng đến VIONA",
   "book_now": "Đặt ngay",
   "global_ready_tagline": "Một ứng dụng, mọi khu vực",
+  "miniApp": {
+    "title": {
+      "gate": "Không thể mở mini-app"
+    },
+    "gate": {
+      "role": "Hãy đổi chế độ hồ sơ trong nút chuyển profile để vào khu vực này.",
+      "featureFlag": "Tính năng đang tắt trong bản build hoặc với tài khoản của bạn.",
+      "readiness": "Mini-app chưa sẵn sàng.",
+      "market": "Mini-app chưa khả dụng tại thị trường của bạn."
+    },
+    "status": {
+      "demo": "Chế độ demo",
+      "comingSoon": "Sắp ra mắt",
+      "frozen": "Tạm khóa"
+    },
+    "demo": {
+      "body": "Đây là bề mặt demo hoặc pilot. Tiếp tục không đồng nghĩa bật tự động hóa production thật.",
+      "cancel": "Hủy",
+      "continue": "Tiếp tục"
+    },
+    "comingSoon": {
+      "body": "Chúng tôi vẫn đang hoàn thiện trải nghiệm này. Vui lòng quay lại ở phiên bản sau."
+    },
+    "frozen": {
+      "body": "Khu vực này tạm dừng vì an toàn hoặc bảo trì."
+    },
+    "error": {
+      "title": "Không thể mở",
+      "unavailable": "Mini-app hiện không khả dụng."
+    }
+  },
+  "miniapps": {
+    "error": {
+      "unknownId": "Mini-app không hợp lệ hoặc không xác định."
+    }
+  },
   "login": {
+    "brandName": "VIONA",
+    "brandTagline": "Mạng lưới dịch vụ toàn cầu cho người Việt",
+    "brandEcosystemLine": "VIONA — hệ sinh thái dịch vụ toàn cầu",
+    "demoEntryTitle": "Chạm để khám phá bản demo",
+    "demoEntryHint": "Không cần tài khoản",
+    "demoEntryA11y": "Khám phá bản demo, không cần tài khoản",
     "welcome": "Chào mừng đến với VIONA",
     "subtitle": "Nhập số điện thoại để tiếp tục. OTP dùng cho demo.",
     "phone_placeholder": "Nhập số điện thoại",
@@ -111,7 +153,7 @@
       "criticalA11y": "Cảnh báo xếp hạng nghiêm trọng",
       "lockedA11y": "Xếp hạng đã khóa",
       "softNudgeBody": "Bạn còn {{daysLeft}} ngày Xếp hạng Cao cấp. Doanh nghiệp của bạn tăng {{growth}}% tháng này nhờ VIONA.",
-      "criticalBody": "CẢNH BÁO: Top 1 sẽ BỊ HẠ trong {{daysLeft}} ngày. Chuyển sang Power SaaS hoặc nạp thêm VIO Credits để giữ dòng khách.",
+      "criticalBody": "CẢNH BÁO: Top 1 sẽ BỊ HẠ trong {{daysLeft}} ngày. Nâng cấp Gói SaaS Elite hoặc nạp thêm VIO Credits để giữ dòng khách.",
       "lockedBody": "Đã hạ xếp hạng. Nạp VIO Credits ngay!"
     },
     "vietqr": {
@@ -193,11 +235,20 @@
     "tabAcademy": "Học tập",
     "accountChip": "Tài khoản",
     "accountChipA11y": "Mở trung tâm tài khoản",
+    "accountWalletHubRow": "Tài khoản & ví",
     "roleB2C": "Người dùng",
     "roleB2B": "Đối tác",
     "roleBroker": "Môi giới",
     "roleAdmin": "Điều hành",
+    "profileRoleGateTitle": "Nâng cấp tài khoản để nhận VIO Credits",
+    "profileRoleGateBrokerBody": "Môi giới nhận VIO Credits khi khách đặt qua merchant của bạn. Ví cập nhật tự động — không cần app riêng.",
+    "profileRoleGateMerchantBody": "Đối tác nhận VIO Credits từ đơn du lịch inbound. Kết nối cửa hàng, quản lý menu và nhận thanh toán trong một ví.",
+    "profileRoleGateContinueBroker": "Tiếp tục làm Môi giới",
+    "profileRoleGateContinueMerchant": "Tiếp tục làm Đối tác",
+    "profileRoleGateLater": "Để sau",
     "charityTitle": "Quỹ Trái Tim VIONA Care",
+    "charityBody": "Mỗi giao dịch của bạn đang góp phần mang bữa ăn và lớp học đến cho trẻ em nghèo Việt Nam.",
+    "accountChipShort": "Tài khoản",
     "headingExpat": "Trung tâm của bạn",
     "headingTourist": "Trung tâm du lịch Việt Nam",
     "heroSubExpat": "VIONA kết nối đời sống, kinh doanh, du lịch và hỗ trợ AI cho người Việt toàn cầu.",
@@ -231,7 +282,24 @@
     "sosAreaPending": "Đang xác định khu vực của bạn…",
     "sosAreaLine": "Khu vực: {{city}} ({{code}})",
     "walletChipCompact": "{{amount}} VIO",
-    "walletChipFull": "{{amount}} VIO Credits"
+    "walletChipFull": "{{amount}} VIO Credits",
+    "utilityShortcutsTitle": "Lối tắt",
+    "vaultChipLabel": "Két an toàn",
+    "adminUnlockedBadge": "Đã mở quản trị",
+    "sosLocatingDetail": "Đang định vị để hỗ trợ đúng khu vực…",
+    "sosEmergencyBlockTitle": "Cấp cứu & an ninh tại chỗ",
+    "sosPolice": "Công an",
+    "sosAmbulance": "Cấp cứu",
+    "sosFire": "Cứu hỏa",
+    "sosEmbassyBlockTitle": "Đại sứ quán Việt Nam",
+    "sosAiMaydayBlockTitle": "Giọng AI khẩn cấp",
+    "sosAiMaydayCta": "Phát câu cứu hộ (đa ngữ)",
+    "sosPingBlockTitle": "Báo ping an toàn",
+    "sosPingCta": "Gửi vị trí tới cộng đồng VIONA lân cận",
+    "sosPingAlertTitle": "Đã gửi ping",
+    "sosPingAlertBody": "Đã gửi SOS ping kèm tọa độ {{coords}} ({{city}}). Luồng pilot — không thay thế cơ quan chức năng.",
+    "sosPingNotifyTitle": "VIONA — báo ping",
+    "sosPingNotifyBody": "Ping SOS · {{city}} · {{coords}}"
   },
   "travelHub": {
     "screenTitle": "VIONA Du lịch",
@@ -274,12 +342,17 @@
     "esimAlertBody": "Kênh eSIM đang beta — kích hoạt gói dữ liệu theo điểm đến (demo).",
     "destinationLabel": "Điểm đến",
     "destinationPlaceholder": "Nhập điểm đến của bạn",
-    "destinationHelper": "Dịch vụ sẽ thay đổi theo quốc gia sở tại.",
-    "destinationExamples": "Ví dụ: Paris, Praha, Berlin…",
+    "destinationHelper": "Dịch vụ thay đổi theo quốc gia sở tại.",
+    "destinationExamples": "Ví dụ: Paris, Tokyo, Singapore…",
     "destinationPending": "Chưa nhập điểm đến",
+    "mapBadgePlaceholderLine1": "Theo vị trí hoặc điểm đến của bạn",
+    "mapBadgePlaceholderLine2": "Dịch vụ thay đổi theo quốc gia sở tại",
     "sectionStays": "Chỗ nghỉ cộng đồng",
     "travelSosA11y": "SOS khẩn cấp",
-    "travelSosLabel": "SOS khẩn cấp"
+    "travelSosLabel": "SOS khẩn cấp",
+    "syncingLocation": "Đang đồng bộ vị trí…",
+    "cravingsEmpty": "Chưa có dữ liệu quán trong bán kính.",
+    "flightSearchA11y": "Đặt vé máy bay"
   },
   "localHub": {
     "screenTitle": "VIONA Địa phương",
@@ -298,12 +371,15 @@
     "legalWealthTitle": "Pháp lý & tài sản",
     "legalWealthSub": "Di trú · Thuế · Tài sản (demo)",
     "transitTitle": "VIONA Transit",
-    "transitSub": "Ghép xe · Gửi hàng",
+    "transitSub": "Ghép xe · gửi hàng",
     "eventsTitle": "Sự kiện cộng đồng",
     "eventsSub": "Cộng đồng & ưu đãi",
     "classifiedsTitle": "Chợ rao vặt",
-    "classifiedsRowSub": "Tin tức địa phương · VIP đăng tin",
-    "legalScannerLabel": "Quét hồ sơ pháp lý (AI)"
+    "classifiedsRowSub": "Chợ rao vặt · VIP đăng tin bằng {{unit}}",
+    "legalScannerLabel": "Quét hồ sơ pháp lý (AI)",
+    "legalScannerA11y": "Quét hồ sơ pháp lý bằng AI",
+    "classifiedsComposerTitle": "Đăng bài trong Chợ rao vặt",
+    "postNewListing": "Đăng tin mới"
   },
   "b2bPaywallUi": {
     "kicker": "Gói dịch vụ doanh nghiệp",
@@ -311,11 +387,134 @@
     "subThreat": "Thời gian dùng thử sắp kết thúc. Bạn có thể nâng cấp để tiếp tục dùng các tính năng tự động hóa (demo).",
     "chooseLane": "Chọn gói phù hợp với doanh nghiệp",
     "trapPendingSync": "Đang đồng bộ ngày tạo hồ sơ merchant từ VIONA để áp dụng chu kỳ 90 ngày — vui lòng làm mới tài khoản doanh nghiệp.",
-    "trapTopSeo": "Ngày 1–90: Ưu tiên hiển thị & khám phá đang bật (bạn đang ở ngày {{day}}).",
-    "trapGate": "Sau ngày 90: Giai đoạn ưu tiên SEO kết thúc — cần nạp VIO Credits để khôi phục vị trí nổi bật và năng lực lễ tân AI.",
+    "trapTopSeo": "Ngày 1–{{cap}}: Ưu tiên hiển thị & khám phá đang bật (bạn đang ở ngày {{day}}).",
+    "trapGate": "Sau ngày {{cap}}: Giai đoạn ưu tiên SEO kết thúc — cần nạp VIO Credits để khôi phục vị trí nổi bật và năng lực lễ tân AI.",
     "trapEnforcementVio": "Hiển thị nổi bật tạm dừng cho đến khi nạp VIO Credits.",
     "ctaPrimary": "Giữ doanh nghiệp & nâng cấp",
     "ctaPilot": "Tiếp tục form đăng ký pilot",
-    "backExit": "Thoát"
+    "backExit": "Thoát",
+    "backA11y": "Quay lại",
+    "metricLabel": "Giá trị nền tảng (hiển thị demo)",
+    "metricCopy": "Hiển thị demo: {{amount}} giá trị đặt chỗ trên nền tảng. Bạn có thể nâng cấp khi muốn giữ tự động hóa.",
+    "tier1Badge": "Cấp 1",
+    "tier1Title": "Trả theo mức dùng",
+    "tier1Price": "Nạp VIO Credits",
+    "tier1Body": "Giọng, SMS và sự kiện đặt chỗ tính theo mức dùng. Phù hợp khi khối lượng thay đổi — nạp VIO Credits và thu gọn bất cứ lúc nào (demo).",
+    "tier1Hint": "Lộ trình nhập môn · không khóa năm",
+    "tier2Badge": "Cấp 2 · ĐỀ XUẤT",
+    "tier2Title": "Gói SaaS Elite",
+    "tier2Price": "€139",
+    "tier2PerMonth": "/tháng",
+    "tier2Sub": "Tự động hóa trọn gói, dữ liệu và công cụ giữ chân khách (demo).",
+    "tier2Feat1": "Lễ tân AI & định tuyến thông minh không giới hạn",
+    "tier2Feat2": "Hồ sơ khách VIP, lịch sử và tín hiệu giữ chân",
+    "tier2Feat3": "Thông tin đặt chỗ theo thời gian thực & bàn giao nhân viên",
+    "cancelTitle": "Gói SaaS Elite — hủy theo quy định EU",
+    "cancelBody": "Bạn có thể hủy bất cứ lúc nào. Quyền truy cập đến hết kỳ thanh toán — không thêm bước giữ chân.",
+    "cancelBtn": "Hủy đăng ký",
+    "cancelA11y": "Hủy gói SaaS Elite ở cuối kỳ thanh toán",
+    "tier3Badge": "Cấp 3",
+    "tier3Title": "Kênh bán sỉ",
+    "tier3Price": "Phí nền tảng 1%",
+    "tier3Body": "Khối lượng B2B & cung ứng — mức phí mặt tiền thấp cho đối tác vận hành qua lành VIONA đã xác minh (SKU đủ điều kiện; xem đội vận hành).",
+    "tier3Hint": "Kết hợp Cấp 1 hoặc 2 để có AI & thoại",
+    "ctaA11y": "Nâng cấp để bảo vệ doanh nghiệp",
+    "stripeRow": "Thanh toán an toàn qua Stripe",
+    "legalHint": "Gói gia hạn hàng tháng đến khi hủy. Có thể áp dụng thuế. Áp dụng điều khoản B2B VIONA.",
+    "stripeSandboxAlert": "Đã mở luồng Stripe sandbox (thử nghiệm).",
+    "alertCancelOk": "Đã lên lịch hủy",
+    "alertCancelErr": "Lỗi",
+    "alertCancelNoMerchant": "Thiếu mã merchant — đăng nhập lại hoặc đồng bộ hồ sơ."
+  },
+  "aiReceptionist": {
+    "industryGroups": {
+      "beautyWellness": "Làm đẹp & chăm sóc",
+      "foodRetail": "Ăn uống & bán lẻ",
+      "stayTravel": "Lưu trú & du lịch",
+      "homeLocalServices": "Dịch vụ tại nhà & địa phương",
+      "professionalServices": "Dịch vụ chuyên nghiệp",
+      "educationCommunity": "Giáo dục & cộng đồng",
+      "healthSchedulingOnly": "Y tế (chỉ đặt lịch)"
+    },
+    "industry": {
+      "nailSalon": "Tiệm nail",
+      "spaMassage": "Spa / massage",
+      "hairBarber": "Cắt tóc & barber",
+      "lashBrow": "Mi & mày",
+      "waxing": "Waxing",
+      "aestheticsConsultation": "Thẩm mỹ (chỉ tư vấn)",
+      "restaurantTakeaway": "Nhà hàng / mang đi",
+      "groceryAsianMarket": "Tạp hóa / siêu thị Á",
+      "bakery": "Tiệm bánh",
+      "specialtyRetail": "Bán lẻ đặc sản",
+      "hotelMotel": "Khách sạn / motel",
+      "homestayShortStay": "Homestay / lưu trú ngắn",
+      "guesthouse": "Nhà nghỉ",
+      "travelTourDesk": "Tour / quầy du lịch",
+      "handyman": "Sửa chữa tổng hợp",
+      "electricalPlumbing": "Điện & nước",
+      "hvac": "HVAC",
+      "cleaning": "Vệ sinh",
+      "movingDeliveryHelper": "Chuyển nhà / giao hàng",
+      "autoRepair": "Sửa xe",
+      "accountingTax": "Kế toán / thuế",
+      "legalScheduling": "Luật (chỉ hẹn)",
+      "insuranceBroker": "Môi giới bảo hiểm",
+      "immigrationScheduling": "Di trú (chỉ hẹn)",
+      "languageSchoolTutoring": "Trung tâm ngoại ngữ / gia sư",
+      "daycareAfterSchool": "Nhà trẻ / ngoại khóa",
+      "communityClasses": "Lớp cộng đồng",
+      "drivingSchool": "Trường lái",
+      "clinicGpScheduling": "Phòng khám (đặt lịch)",
+      "dentistScheduling": "Nha khoa (đặt lịch)",
+      "physioScheduling": "Vật lý trị liệu (đặt lịch)"
+    },
+    "disclaimers": {
+      "defaultLite": "AI hỗ trợ tiếp nhận và soạn nháp yêu cầu. Merchant phải xác nhận. Không tư vấn pháp y/y tế/tài chính cuối cùng. Không thanh toán hay chốt đặt chỗ trong luồng demo này.",
+      "aestheticsConsultationOnly": "Chỉ đặt lịch tư vấn. Không tư vấn điều trị, không cam kết y tế, không đặt thủ thuật chính thức qua AI nếu chưa có người duyệt.",
+      "retailLead": "Chỉ lead và lịch nhận hàng. Không đổi tồn kho hay giá qua AI ở giai đoạn này.",
+      "stayTravelLeadOrConfirm": "Chỉ hỏi còn phòng / thu lead trừ khi chính sách merchant cho phép giữ chỗ. Không thu tiền qua AI tại đây.",
+      "homeServicesEstimate": "Chỉ hẹn khảo sát / báo giá. Không báo giá chốt hay cam kết kết cấu qua AI.",
+      "professionalSchedulingOnly": "Chỉ đặt lịch & thu thông tin. Không tư vấn pháp lý/thuế/di trú/bảo hiểm như ý kiến chuyên môn cuối cùng.",
+      "educationScheduling": "Chỉ thu intake lớp học / nhập học. Không cam kết suất hay chứng chỉ qua AI.",
+      "healthSchedulingOnly": "Chỉ đặt lịch khám. Không chẩn đoán triệu chứng, không kê đơn, không xử lý cấp cứu qua AI."
+    },
+    "playbook": {
+      "bookingModeLabel": "Chế độ booking: {{mode}}",
+      "riskLabel": "Mức rủi ro: {{risk}}",
+      "confirmationLabel": "Chính sách xác nhận: {{policy}}"
+    },
+    "playbookDemo": {
+      "_generic": {
+        "customerName": "Khách demo",
+        "language": "Tiếng Anh",
+        "intent": "Hỏi về {{service}}",
+        "sampleService": "{{service}}",
+        "requestedTime": "Ngày trong tuần tiếp theo, 16:00",
+        "customerPhonePreview": "+xx xxx xxx 000",
+        "transcriptCustomer": "Xin chào, tôi muốn hỏi về {{service}} và giờ trống.",
+        "transcriptAi": "Cảm ơn — tôi đã ghi nháp yêu cầu cho đội merchant. Đây chỉ là mô phỏng cục bộ.",
+        "transcriptConfirm": "Chưa chốt cho đến khi merchant xác nhận trong quy trình của họ.",
+        "transcriptFallback": "Nếu giờ bận, nhân viên có thể đề xuất giờ khác khi duyệt.",
+        "aiDraftResponse": "Đã soạn intake nháp — chờ merchant xác nhận (mô phỏng)."
+      }
+    },
+    "setup": {
+      "industrySectionTitle": "Ngành nghề (chỉ lưu trên máy)",
+      "industrySectionBody": "Chọn lĩnh vực phù hợp. Lựa chọn chỉ lưu trên thiết bị cho phiên này — chưa gửi server cho đến khi bạn gửi form pilot và đồng ý điều khoản.",
+      "industryNoneTitle": "Chưa chọn ngành",
+      "industryNoneBody": "Chọn ngành để xem playbook intake và cảnh báo an toàn cho Lễ Tân AI.",
+      "playbookSummaryTitle": "Tóm tắt playbook",
+      "disclaimerTitle": "Cảnh báo theo ngành"
+    },
+    "demo": {
+      "selectIndustryPrompt": "Chọn ngành nghề để Lễ Tân AI hiểu ngữ cảnh.",
+      "industrySectionTitle": "Ngữ cảnh ngành",
+      "playbookTitle": "Xem trước theo playbook"
+    },
+    "pilot": {
+      "industryLabel": "Ngành (registry)",
+      "previewIndustryId": "Mã ngành: {{id}}"
+    }
   }
 }

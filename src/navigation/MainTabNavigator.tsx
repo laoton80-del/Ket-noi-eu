@@ -213,6 +213,19 @@ export function MainTabNavigator(): ReactElement {
   useEffect(() => {
     if (!user || !pendingRedirect) return;
 
+    const defaultTabForActiveRole = (): keyof RootTabParamList => {
+      switch (currentActiveRole) {
+        case 'B2B':
+          return MAIN_TAB.B2B.merchant;
+        case 'BROKER':
+          return MAIN_TAB.BROKER.radar;
+        case 'ADMIN':
+          return MAIN_TAB.ADMIN.deck;
+        default:
+          return MAIN_TAB.B2C.home;
+      }
+    };
+
     const goB2cHome = () => {
       switchRole('B2C');
       navigation.navigate('Tabs', { screen: MAIN_TAB.B2C.home });
@@ -260,12 +273,12 @@ export function MainTabNavigator(): ReactElement {
         const access = await evaluateMerchantSurfaceAccess(user?.phone);
         if (access.denied && access.kind === 'vn_dial') {
           Alert.alert(DIASPORA_RESTRICTION_MODAL_TITLE, DIASPORA_RESTRICTION_MODAL_MESSAGE);
-          navigation.navigate('Tabs');
+          navigation.navigate('Tabs', { screen: defaultTabForActiveRole() });
           return;
         }
         if (access.denied && access.kind === 'gps_vn') {
           Alert.alert('VIONA', access.message);
-          navigation.navigate('Tabs');
+          navigation.navigate('Tabs', { screen: defaultTabForActiveRole() });
           return;
         }
         navigation.navigate('B2BPaywall');
@@ -281,7 +294,15 @@ export function MainTabNavigator(): ReactElement {
       navigation.navigate(pendingRedirect);
       setPendingRedirect(null);
     }
-  }, [flags.academyLiteEnabled, navigation, pendingRedirect, setPendingRedirect, switchRole, user]);
+  }, [
+    currentActiveRole,
+    flags.academyLiteEnabled,
+    navigation,
+    pendingRedirect,
+    setPendingRedirect,
+    switchRole,
+    user,
+  ]);
 
   return (
     <>
