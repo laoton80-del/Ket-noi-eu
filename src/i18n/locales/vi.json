@@ -827,6 +827,23 @@
       "seeRunbook": "Xem docs/ops/VIONA_AI_COST_FIREWALL_RUNBOOK.md về cap và xử lý sự cố."
     }
   },
+  "aiUsage": {
+    "preview": {
+      "title": "Đo lường AI — bảng chứng cứ (preview)",
+      "subtitle": "Fixture Pack U so với AI cost guard registry (không gọi provider, không DB).",
+      "fixture": "Fixture",
+      "expected": "Verdict mong đợi",
+      "actual": "Verdict thực tế",
+      "margin": "Biên lợi ước tính (đơn vị nhỏ, sự kiện này)",
+      "remaining": "Còn lại (cửa sổ cap)",
+      "autoPause": "Khuyến nghị auto-pause",
+      "productionReady": "Guard productionReady",
+      "evidenceOnly": "Chỉ bằng chứng — không phải usage tenant trực tiếp.",
+      "noProviderCalls": "Không gọi OpenAI, Gemini hay Twilio từ panel này.",
+      "pass": "Fixture khớp verdict mong đợi.",
+      "mismatch": "Cảnh báo: verdict thực tế khác mong đợi — kiể tra meter hoặc fixture."
+    }
+  },
   "telephony": {
     "sandbox": {
       "statusLabel": "Viễn thông: sẵn sàng sandbox / manual ops — không gọi production",

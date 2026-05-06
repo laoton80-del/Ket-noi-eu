@@ -42,6 +42,7 @@ import { applyWebStyles, mergeWebClassNames } from '../../utils/applyWebStyles';
 import { formatCurrency } from '../../utils/currencyFormatter';
 import { fetchAdminTourismStats, type AdminTourismStatsPayload } from '../../services/viGlobalAdminApi';
 import { formatNetworkFailureMessage, isRestApiConfigured } from '../../services/apiClient';
+import { AiUsageMeteringPreview } from '../../components/admin/AiUsageMeteringPreview';
 
 const COMMAND_NAVY = '#050B14';
 const NEON_CYAN = '#22d3ee';
@@ -780,6 +781,8 @@ export function AdminDashboardScreen() {
             <Text style={styles.aiScannerReviewBtnText}>Xem chi tiết tài khoản bị giữ / gian lận</Text>
           </Pressable>
         </View>
+
+        <AiUsageMeteringPreview />
 
         <View style={styles.grid}>
           <View style={styles.card} className={applyWebStyles('kn-glass kn-neon-b2b')}>
