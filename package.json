@@ -18,7 +18,7 @@
     "preflight:commercial": "npm run preflight:release && node scripts/commercial-release-gate.mjs",
     "preflight:commercial:strict": "npm run preflight:release && node scripts/commercial-release-gate.mjs --strict",
     "commercial:preflight": "node scripts/commercial-readiness-preflight.mjs",
-    "ci:expo-readiness": "npx expo config --type public && npx expo-doctor",
+    "ci:expo-readiness": "npx expo config --type public && npx expo install --check",
     "ci:release-discipline": "node scripts/ci-release-discipline.mjs",
     "security:preflight": "node scripts/security-preflight.mjs",
     "ops:preflight": "node scripts/ops-preflight.mjs",
