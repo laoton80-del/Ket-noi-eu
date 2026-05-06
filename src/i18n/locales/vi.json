@@ -827,6 +827,22 @@
       "seeRunbook": "Xem docs/ops/VIONA_AI_COST_FIREWALL_RUNBOOK.md về cap và xử lý sự cố."
     }
   },
+  "telephony": {
+    "sandbox": {
+      "statusLabel": "Viễn thông: sẵn sàng sandbox / manual ops — không gọi production",
+      "productionDisabled": "Gọi ra production vẫn tắt cho đến khi có cổng phê duyệt riêng.",
+      "consentRequired": "Cần đồng ý rõ ràng trước khi quay số thật hoặc ghi âm.",
+      "recordingDisclosure": "Nếu bật ghi âm, phải có công bố và cơ sở pháp lý được duyệt trước.",
+      "costCapped": "Giọng và AI call phải tuân AI cost firewall — không phút không giới hạn.",
+      "manualOpsFallback": "Gọi lại thủ công qua manual ops là mặc định an toàn khi chưa duyệt voice tự động.",
+      "phonePilotFootnote": "Gọi điện chỉ sandbox hoặc manual ops. Gọi production tắt trong làn pilot này."
+    },
+    "feature": {
+      "aiReceptionistTwilioSandbox": "Lễ Tân AI — làn Twilio sandbox",
+      "b2cAiCallAssistantSandbox": "Trợ lý cuộc gọi B2C — sandbox (chặn gọi ra sandbox đến khi duyệt)",
+      "liveInterpreterVoiceBridge": "Bridge phiên dịch / giọng — manual ops; production đang đóng băng"
+    }
+  },
   "smartTrio": {
     "language": {
       "vi": "Tiếng Việt",

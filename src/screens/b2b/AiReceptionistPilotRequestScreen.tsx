@@ -269,6 +269,7 @@ export function AiReceptionistPilotRequestScreen(): ReactElement {
           <Text style={styles.cardBody}>{t('aiReceptionist.pilot.noAutoBooking')}</Text>
           <Text style={styles.cardBody}>{t('aiReceptionist.pilot.noPayment')}</Text>
           <Text style={styles.cardBody}>{t('aiCost.guard.costFirewallHint')}</Text>
+          <Text style={styles.cardBody}>{t('telephony.sandbox.phonePilotFootnote')}</Text>
         </View>
 
         <View style={styles.card}>
