@@ -39,6 +39,7 @@ import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-cont
 import { AppStateView } from './src/components/ui/AppStateView';
 import { IntentEntryModal } from './src/components/IntentEntryModal';
 import { AuthProvider, useAuth } from './src/context/AuthContext';
+import { SmartTrioProvider } from './src/context/SmartTrioContext';
 import {
   isAdminDebugSurfaceEnabled,
 } from './src/config/adminDebugGate';
@@ -958,11 +959,13 @@ function App() {
     <SafeAreaProvider>
       <AppQueryProvider>
         <AuthProvider>
-          <AppModeProvider>
-            <HubThemeProvider>
-              <AppRoot />
-            </HubThemeProvider>
-          </AppModeProvider>
+          <SmartTrioProvider>
+            <AppModeProvider>
+              <HubThemeProvider>
+                <AppRoot />
+              </HubThemeProvider>
+            </AppModeProvider>
+          </SmartTrioProvider>
         </AuthProvider>
       </AppQueryProvider>
     </SafeAreaProvider>
