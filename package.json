@@ -29,6 +29,7 @@
     "ai:usage-preview-readiness": "node scripts/ai-usage-metering-preview-check.mjs",
     "ai:auto-pause-readiness": "node scripts/ai-auto-pause-readiness-check.mjs",
     "ai:admin-alert-readiness": "node scripts/ai-admin-alert-readiness-check.mjs",
+    "incident:dry-run-readiness": "node scripts/incident-dry-run-readiness-check.mjs",
     "twilio:sandbox-readiness": "node scripts/twilio-sandbox-readiness-check.mjs",
     "functions:build": "npm run build --prefix functions",
     "functions:verify-bundle": "node scripts/verify-functions-bundle.mjs",

@@ -909,6 +909,65 @@
       "manualOps": "Manual ops"
     }
   },
+  "incidents": {
+    "preview": {
+      "title": "Incident log (dry-run acknowledgement)",
+      "subtitle": "Design-only projection — no DB rows, tickets, or outbound messages.",
+      "previewOnly": "Preview only — not persisted as a production incident.",
+      "productionPersisted": "Production DB persisted",
+      "ownerRole": "Primary owner role",
+      "backupOwnerRole": "Backup owner role",
+      "acknowledgementMode": "Acknowledgement mode",
+      "nextStatus": "Simulated next status if acknowledged in a future system",
+      "nextStatusHint": "simulated",
+      "humanReview": "Requires human review",
+      "incidentLog": "Requires incident log",
+      "feature": "Feature",
+      "severity": "Severity",
+      "flagYes": "Yes",
+      "flagNo": "No",
+      "runbookNotes": "See docs/ops/VIONA_INCIDENT_DRY_RUN_RUNBOOK.md before enabling real incident logging or notifications."
+    },
+    "action": {
+      "acknowledgePreview": "Acknowledge (preview — disabled)"
+    },
+    "status": {
+      "previewOnly": "Preview only",
+      "open": "Open",
+      "acknowledged": "Acknowledged",
+      "escalated": "Escalated",
+      "resolved": "Resolved",
+      "suppressed": "Suppressed"
+    },
+    "source": {
+      "aiUsage": "AI usage metering",
+      "aiCost": "AI cost firewall",
+      "aiAutoPause": "AI auto-pause policy",
+      "aiAdminAlert": "AI admin alert",
+      "telephony": "Telephony",
+      "manualOps": "Manual ops",
+      "system": "System"
+    },
+    "ownerRole": {
+      "pilotOwner": "Pilot Owner",
+      "backupOwner": "Backup Owner",
+      "merchantSuccessOwner": "Merchant Success Owner",
+      "opsReviewer": "Ops Reviewer",
+      "none": "—"
+    },
+    "severity": {
+      "info": "Info",
+      "warning": "Warning",
+      "critical": "Critical",
+      "blocked": "Blocked"
+    },
+    "acknowledgementMode": {
+      "previewOnly": "Preview only (no write path)",
+      "manualOps": "Manual ops (future)",
+      "adminAction": "Admin action (future)",
+      "automatedLater": "Automated later (future)"
+    }
+  },
   "telephony": {
     "sandbox": {
       "statusLabel": "Telephony: sandbox / manual ops readiness — not production calling",
