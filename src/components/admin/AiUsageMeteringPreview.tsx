@@ -10,6 +10,7 @@ import {
 } from '../../core/aiEnforcement';
 import { AI_USAGE_AUDIT_FIXTURES, evaluateAiUsageFixtureForAudit } from '../../core/aiUsage';
 import { AiAdminAlertPreviewPanel } from './AiAdminAlertPreviewPanel';
+import { AiIncidentDryRunPreviewPanel } from './AiIncidentDryRunPreviewPanel';
 import { theme } from '../../theme/theme';
 import { FontFamily } from '../../theme/typography';
 
@@ -116,6 +117,7 @@ export function AiUsageMeteringPreview(): ReactElement {
           <AiAdminAlertPreviewPanel preview={row.alertPreview} />
         </View>
       ))}
+      <AiIncidentDryRunPreviewPanel />
     </View>
   );
 }

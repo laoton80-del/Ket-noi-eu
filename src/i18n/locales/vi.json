@@ -908,6 +908,65 @@
       "manualOps": "Manual ops"
     }
   },
+  "incidents": {
+    "preview": {
+      "title": "Incident log (dry-run acknowledgement)",
+      "subtitle": "Chỉ thiết kế — không ghi DB, không ticket, không gửi tin ra ngoài.",
+      "previewOnly": "Chỉ preview — không lưu incident production.",
+      "productionPersisted": "Đã persist DB production",
+      "ownerRole": "Vai owner chính",
+      "backupOwnerRole": "Vai owner dự phòng",
+      "acknowledgementMode": "Chế độ acknowledgement",
+      "nextStatus": "Trạng thái kế tiếp mô phỏng nếu ack trong hệ thống tương lai",
+      "nextStatusHint": "mô phỏng",
+      "humanReview": "Cần review người",
+      "incidentLog": "Cần incident log",
+      "feature": "Tính năng",
+      "severity": "Mức độ",
+      "flagYes": "Có",
+      "flagNo": "Không",
+      "runbookNotes": "Xem docs/ops/VIONA_INCIDENT_DRY_RUN_RUNBOOK.md trước khi bật log incident hoặc thông báo thật."
+    },
+    "action": {
+      "acknowledgePreview": "Acknowledge (preview — tắt)"
+    },
+    "status": {
+      "previewOnly": "Chỉ preview",
+      "open": "Mở",
+      "acknowledged": "Đã acknowledge",
+      "escalated": "Leo thang",
+      "resolved": "Đã xử lý",
+      "suppressed": "Đã suppress"
+    },
+    "source": {
+      "aiUsage": "Đo lường AI usage",
+      "aiCost": "AI cost firewall",
+      "aiAutoPause": "Chính sách auto-pause AI",
+      "aiAdminAlert": "Cảnh báo admin AI",
+      "telephony": "Viễn thông",
+      "manualOps": "Manual ops",
+      "system": "Hệ thống"
+    },
+    "ownerRole": {
+      "pilotOwner": "Pilot Owner",
+      "backupOwner": "Backup Owner",
+      "merchantSuccessOwner": "Merchant Success Owner",
+      "opsReviewer": "Ops Reviewer",
+      "none": "—"
+    },
+    "severity": {
+      "info": "Thông tin",
+      "warning": "Cảnh báo",
+      "critical": "Nghiêm trọng",
+      "blocked": "Bị chặn"
+    },
+    "acknowledgementMode": {
+      "previewOnly": "Chỉ preview (không ghi)",
+      "manualOps": "Manual ops (sau này)",
+      "adminAction": "Hành động admin (sau này)",
+      "automatedLater": "Tự động sau này"
+    }
+  },
   "telephony": {
     "sandbox": {
       "statusLabel": "Viễn thông: sẵn sàng sandbox / manual ops — không gọi production",
