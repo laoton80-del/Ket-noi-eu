@@ -828,6 +828,23 @@
       "seeRunbook": "See docs/ops/VIONA_AI_COST_FIREWALL_RUNBOOK.md for caps and incident response."
     }
   },
+  "aiUsage": {
+    "preview": {
+      "title": "AI usage metering — evidence preview",
+      "subtitle": "Pack U fixtures vs cost guard registry (no provider calls, no DB).",
+      "fixture": "Fixture",
+      "expected": "Expected verdict",
+      "actual": "Actual verdict",
+      "margin": "Estimated margin (minor, this event)",
+      "remaining": "Remaining (cap window)",
+      "autoPause": "Auto-pause recommended",
+      "productionReady": "Guard productionReady",
+      "evidenceOnly": "Evidence only — not live tenant usage.",
+      "noProviderCalls": "No OpenAI, Gemini, or Twilio requests are made from this panel.",
+      "pass": "Fixture matches expected verdict.",
+      "mismatch": "Warning: actual verdict differs from fixture expectation — investigate meter or fixture drift."
+    }
+  },
   "telephony": {
     "sandbox": {
       "statusLabel": "Telephony: sandbox / manual ops readiness — not production calling",
