@@ -33,11 +33,11 @@ export async function runUltraMasterBookingWithAlerts(featureLabel: string): Pro
   }
 
   confirmSecurityDepositThen(async () => {
-    Alert.alert('ViGlobal', 'Transaction Processing…');
+    Alert.alert('VIONA', 'Transaction Processing…');
     try {
       const res = await createBooking(payload);
       if (res.ok) {
-        Alert.alert('ViGlobal', 'Success!');
+        Alert.alert('VIONA', 'Success!');
         return;
       }
       Alert.alert(featureLabel, res.error);
