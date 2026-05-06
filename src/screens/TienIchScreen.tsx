@@ -16,6 +16,7 @@ import { APP_BRAND } from '../config/appBrand';
 import { getWalletPackagePricesByCountry } from '../config/commercialSpine';
 import { normalizeCountryCodeOrSentinel } from '../config/countryPacks';
 import { useAuth } from '../context/AuthContext';
+import { useMiniAppEntry } from '../hooks/useMiniAppEntry';
 import { getStrings } from '../i18n/strings';
 import type { RootStackParamList } from '../navigation/routes';
 import { useAssistantSettings } from '../state/assistantSettings';
@@ -60,6 +61,7 @@ function isAffiliateIntermediaryService(id: UtilityServiceId): boolean {
 
 export function TienIchScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const { openMiniApp } = useMiniAppEntry();
   const dailyGiftPulse = useRef(new Animated.Value(1)).current;
   const { user } = useAuth();
   const [diasporaRestrictionOpen, setDiasporaRestrictionOpen] = useState(false);
@@ -243,10 +245,12 @@ export function TienIchScreen() {
                 if (LAUNCH_PILOT_CONFIG.enableRadarSurface) {
                   navigation.navigate('RadarDiscovery');
                 } else {
-                  navigation.navigate('LeonaCall', {
-                    prefillRequest: PILOT_LEONA_SERVICES_FALLBACK_PREFILL,
-                    autoSubmit: false,
-                  });
+                  openMiniApp('b2cAiCallAssistant', () =>
+                    navigation.navigate('LeonaCall', {
+                      prefillRequest: PILOT_LEONA_SERVICES_FALLBACK_PREFILL,
+                      autoSubmit: false,
+                    })
+                  );
                 }
                 return;
               }
@@ -255,7 +259,7 @@ export function TienIchScreen() {
                 return;
               }
               if (item.id === 'travel') {
-                navigation.navigate('TravelCompanion');
+                openMiniApp('travel', () => navigation.navigate('TravelCompanion'));
                 return;
               }
               if (item.id === 'yeuthuong') {
