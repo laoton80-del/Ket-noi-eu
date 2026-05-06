@@ -804,6 +804,29 @@
       "na": "Không có"
     }
   },
+  "aiCost": {
+    "guard": {
+      "noUnlimitedAi": "Không có AI không giới hạn — mức dùng bị giới hạn theo chính sách.",
+      "pilotUsageCapped": "Pilot và demo có giới hạn dùng; đo lường thực thi phía server khi bật.",
+      "autoPause": "Tự tạm dừng khi chạm ngưỡng giúp tránh chi phí provider tăng vọt khi đã nối meter.",
+      "manualApproval": "Tăng cap hoặc bật route AI/giọng production cần manual ops phê duyệt.",
+      "costFirewallHint": "Pilot có giới hạn dùng. Không AI không giới hạn. Route production cần manual ops."
+    },
+    "feature": {
+      "aiReceptionistDemo": "Lễ Tân AI — mô phỏng / demo",
+      "aiReceptionistPilot": "Lễ Tân AI — intake pilot",
+      "b2cAiCallAssistant": "Trợ lý cuộc gọi AI B2C",
+      "leonaAssistant": "Trợ lý Leona",
+      "minhKhangTranslator": "Minh Khang — dịch / vision hỗ trợ",
+      "documentScanner": "Quét tài liệu / vision",
+      "liveInterpreter": "Phiên dịch trực tiếp",
+      "copilot": "Copilot trong app",
+      "outboundMarketingDraft": "Nháp marketing outbound"
+    },
+    "notes": {
+      "seeRunbook": "Xem docs/ops/VIONA_AI_COST_FIREWALL_RUNBOOK.md về cap và xử lý sự cố."
+    }
+  },
   "smartTrio": {
     "language": {
       "vi": "Tiếng Việt",
