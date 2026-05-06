@@ -8,6 +8,7 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '../../navigation/routes';
 import { useTranslation } from '../../i18n';
 import {
+  buildPilotLeadStructuredAppendix,
   getAiReceptionistPlaybook,
   getIndustryDefinition,
   INDUSTRY_GROUP_ORDER,
@@ -15,6 +16,7 @@ import {
   listIndustriesByGroup,
 } from '../../core/industries';
 import type { IndustryId } from '../../core/industries';
+import { useSmartTrio } from '../../context/SmartTrioContext';
 import { isRestApiConfigured } from '../../services/apiClient';
 import {
   submitAiReceptionistPilotLead,
@@ -25,12 +27,12 @@ import {
 type Nav = NativeStackNavigationProp<RootStackParamList>;
 type Automation = 'intake_only' | 'booking_request' | 'auto_booking_later' | 'multi_language_support';
 
-const AUTOMATION_OPTIONS: readonly Readonly<{ id: Automation; label: string }>[] = [
-  { id: 'intake_only', label: 'Intake only' },
-  { id: 'booking_request', label: 'Booking request' },
-  { id: 'auto_booking_later', label: 'Auto booking later' },
-  { id: 'multi_language_support', label: 'Multi-language support' },
-];
+const AUTOMATION_IDS: readonly Automation[] = [
+  'intake_only',
+  'booking_request',
+  'auto_booking_later',
+  'multi_language_support',
+] as const;
 
 function mapIndustryIdToPilotLeadIndustry(id: IndustryId): AiReceptionistLeadIndustry {
   switch (id) {
@@ -66,9 +68,21 @@ function buildIndustryAppendix(industryId: IndustryId, t: (key: string, opts?: R
   ].join('\n');
 }
 
+function buildSmartTrioAppendixLine(
+  customerLocale: string,
+  merchantLocale: string,
+  nativeLocale: string,
+  appLocale: string,
+  marketCode: string
+): string {
+  return `customerLocale=${customerLocale}; merchantLocale=${merchantLocale}; nativeLocale=${nativeLocale}; appLocale=${appLocale}; market=${marketCode}`;
+}
+
 export function AiReceptionistPilotRequestScreen(): ReactElement {
   const navigation = useNavigation<Nav>();
   const { t } = useTranslation();
+  const { customerLocale, merchantLocale, nativeLocale, appLocale, marketCode } = useSmartTrio();
+
   const [businessName, setBusinessName] = useState('');
   const [industry, setIndustry] = useState<IndustryId>('nailSalon');
   const [city, setCity] = useState('');
@@ -82,17 +96,40 @@ export function AiReceptionistPilotRequestScreen(): ReactElement {
   const [preferredPilotDate, setPreferredPilotDate] = useState('');
   const [notes, setNotes] = useState('');
   const [consentAccepted, setConsentAccepted] = useState(false);
+  const [manualOpsAck, setManualOpsAck] = useState(false);
+  const [noAutonomousAck, setNoAutonomousAck] = useState(false);
   const [consentError, setConsentError] = useState<string | null>(null);
+  const [manualOpsAckError, setManualOpsAckError] = useState<string | null>(null);
+  const [noAutonomousAckError, setNoAutonomousAckError] = useState<string | null>(null);
   const [isSubmittedLocalDraft, setIsSubmittedLocalDraft] = useState(false);
   const [submittedStatus, setSubmittedStatus] = useState<'submitted_for_manual_review' | null>(null);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const industryLabel = useMemo(() => t(getIndustryDefinition(industry).nameKey), [industry, t]);
+
+  const smartTrioDisplay = useMemo(
+    () =>
+      t('aiReceptionist.pilot.languageContext', {
+        customer: t(`smartTrio.language.${customerLocale}`),
+        merchant: t(`smartTrio.language.${merchantLocale}`),
+        native: t(`smartTrio.language.${nativeLocale}`),
+      }),
+    [t, customerLocale, merchantLocale, nativeLocale]
+  );
+
   const desiredAutomationLabels = useMemo(() => {
-    const labels = AUTOMATION_OPTIONS.filter((item) => desiredAutomation.includes(item.id)).map((item) => item.label);
-    return labels.length > 0 ? labels.join(', ') : 'Not selected';
-  }, [desiredAutomation]);
+    const labels = desiredAutomation.map((id) => t(`aiReceptionist.pilot.automation.${id}`));
+    return labels.length > 0 ? labels.join(', ') : t('aiReceptionist.pilot.automationNotSelected');
+  }, [desiredAutomation, t]);
+
+  const previewYes = useMemo(() => t('aiReceptionist.pilot.previewYes'), [t]);
+  const previewNo = useMemo(() => t('aiReceptionist.pilot.previewNo'), [t]);
+
+  const na = (value: string): string => {
+    const trimmed = value.trim();
+    return trimmed.length > 0 ? trimmed : t('aiReceptionist.pilot.na');
+  };
 
   const toggleAutomation = (id: Automation): void => {
     setDesiredAutomation((prev) => (prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]));
@@ -106,33 +143,52 @@ export function AiReceptionistPilotRequestScreen(): ReactElement {
   };
 
   const handleSubmit = async (): Promise<void> => {
-    if (!consentAccepted) {
-      setConsentError('Please accept consent to submit this pilot request.');
-      return;
-    }
     setConsentError(null);
+    setManualOpsAckError(null);
+    setNoAutonomousAckError(null);
     setSubmitError(null);
     setSubmittedStatus(null);
+
+    if (!manualOpsAck) {
+      setManualOpsAckError(t('aiReceptionist.pilot.errorManualOpsAck'));
+      return;
+    }
+    if (!noAutonomousAck) {
+      setNoAutonomousAckError(t('aiReceptionist.pilot.errorNoAutonomousAck'));
+      return;
+    }
+    if (!consentAccepted) {
+      setConsentError(t('aiReceptionist.pilot.consentError'));
+      return;
+    }
 
     const normalizedPhone = contactPhone.trim();
     const normalizedEmail = contactEmail.trim();
     if (!normalizedPhone && !normalizedEmail) {
-      setSubmitError('Please provide at least contact phone or contact email.');
+      setSubmitError(t('aiReceptionist.pilot.errorContactRequired'));
       return;
     }
 
     const normalizedMissedCalls = estimatedMissedCallsPerDay.trim();
     if (!/^\d{1,4}$/.test(normalizedMissedCalls)) {
-      setSubmitError('Estimated missed calls per day must be a valid number.');
+      setSubmitError(t('aiReceptionist.pilot.errorMissedCallsInvalid'));
       return;
     }
 
-    const appendix = buildIndustryAppendix(industry, t);
-    const mergedNotes = [notes.trim(), appendix].filter((s) => s.length > 0).join('\n\n');
+    const industryAppendix = buildIndustryAppendix(industry, t);
+    const trioOpsLine = buildSmartTrioAppendixLine(
+      customerLocale,
+      merchantLocale,
+      nativeLocale,
+      appLocale,
+      marketCode
+    );
+    const postureAppendix = buildPilotLeadStructuredAppendix(t, trioOpsLine);
+    const mergedNotes = [notes.trim(), industryAppendix, postureAppendix].filter((s) => s.length > 0).join('\n\n');
 
     if (!isRestApiConfigured()) {
       setIsSubmittedLocalDraft(true);
-      setSubmitError('Pilot request relay is not configured yet. Your draft remains local.');
+      setSubmitError(t('aiReceptionist.pilot.errorRelayNotConfigured'));
       return;
     }
 
@@ -163,20 +219,22 @@ export function AiReceptionistPilotRequestScreen(): ReactElement {
 
       setIsSubmittedLocalDraft(true);
       if (result.status === 503 || /LEAD_CAPTURE_NOT_CONFIGURED/i.test(result.error)) {
-        setSubmitError('Pilot request relay is not configured yet. Your draft remains local.');
+        setSubmitError(t('aiReceptionist.pilot.errorRelayNotConfigured'));
       } else if (result.status === 400) {
-        setSubmitError('Please review your pilot request fields and try again.');
+        setSubmitError(t('aiReceptionist.pilot.errorReviewFields'));
       } else if (result.status === 401) {
-        setSubmitError('Your session is invalid or expired. Please sign in again.');
+        setSubmitError(t('aiReceptionist.pilot.errorSession'));
       } else if (result.unreachable) {
-        setSubmitError('Could not send request. Your draft is still local.');
+        setSubmitError(t('aiReceptionist.pilot.errorUnreachable'));
       } else {
-        setSubmitError('Could not send request. Your draft is still local.');
+        setSubmitError(t('aiReceptionist.pilot.errorSendFailed'));
       }
     } finally {
       setIsSubmitting(false);
     }
   };
+
+  const submitDisabled = !consentAccepted || !manualOpsAck || !noAutonomousAck || isSubmitting;
 
   return (
     <SafeAreaView style={styles.safe} edges={['top', 'left', 'right']}>
@@ -191,28 +249,44 @@ export function AiReceptionistPilotRequestScreen(): ReactElement {
             <Ionicons name="chevron-back" size={20} color="#E8EDF7" />
           </Pressable>
           <View style={styles.headerTextWrap}>
-            <Text style={styles.kicker}>B2B AI Receptionist</Text>
-            <Text style={styles.title}>Request AI Receptionist Pilot</Text>
+            <Text style={styles.kicker}>{t('aiReceptionist.pilot.screenKicker')}</Text>
+            <Text style={styles.title}>{t('aiReceptionist.pilot.screenTitle')}</Text>
           </View>
         </View>
 
         <View style={styles.badge}>
-          <Text style={styles.badgeText}>Pilot request</Text>
+          <Text style={styles.badgeText}>{t('aiReceptionist.pilot.badgeLabel')}</Text>
         </View>
 
         <View style={styles.card}>
-          <Text style={styles.cardTitle}>Safety copy</Text>
-          <Text style={styles.cardBody}>This does not activate production phone automation.</Text>
-          <Text style={styles.cardBody}>No payment is taken.</Text>
-          <Text style={styles.cardBody}>VIONA team must review before pilot activation.</Text>
-          <Text style={styles.cardBody}>AI may make mistakes; merchant confirmation is required.</Text>
+          <Text style={styles.cardTitle}>{t('aiReceptionist.pilot.safetyCardTitle')}</Text>
+          <Text style={styles.cardBody}>{t('aiReceptionist.pilot.statusLabel')}</Text>
+          <Text style={styles.cardBody}>{t('aiReceptionist.pilot.safetyBody1')}</Text>
+          <Text style={styles.cardBody}>{t('aiReceptionist.pilot.safetyBody2')}</Text>
+          <Text style={styles.cardBody}>{t('aiReceptionist.pilot.safetyBody3')}</Text>
+          <Text style={styles.cardBody}>{t('aiReceptionist.pilot.safetyBody4')}</Text>
+          <Text style={styles.cardBody}>{t('aiReceptionist.pilot.manualOpsRequired')}</Text>
+          <Text style={styles.cardBody}>{t('aiReceptionist.pilot.noAutoBooking')}</Text>
+          <Text style={styles.cardBody}>{t('aiReceptionist.pilot.noPayment')}</Text>
         </View>
 
         <View style={styles.card}>
-          <Text style={styles.cardTitle}>Pilot request form</Text>
+          <Text style={styles.cardTitle}>{t('aiReceptionist.pilot.languageExpectationsTitle')}</Text>
+          <Text style={styles.cardBody}>{t('aiReceptionist.pilot.languageExpectationsBody')}</Text>
+          <Text style={styles.cardBody}>{smartTrioDisplay}</Text>
+        </View>
 
-          <Text style={styles.label}>Business name</Text>
-          <TextInput value={businessName} onChangeText={setBusinessName} style={styles.input} placeholder="Business name" placeholderTextColor="#8EA0BC" />
+        <View style={styles.card}>
+          <Text style={styles.cardTitle}>{t('aiReceptionist.pilot.formCardTitle')}</Text>
+
+          <Text style={styles.label}>{t('aiReceptionist.pilot.formBusinessName')}</Text>
+          <TextInput
+            value={businessName}
+            onChangeText={setBusinessName}
+            style={styles.input}
+            placeholder={t('aiReceptionist.pilot.placeholderBusinessName')}
+            placeholderTextColor="#8EA0BC"
+          />
 
           <Text style={styles.label}>{t('aiReceptionist.pilot.industryLabel')}</Text>
           {INDUSTRY_GROUP_ORDER.map((groupId) => (
@@ -235,100 +309,150 @@ export function AiReceptionistPilotRequestScreen(): ReactElement {
             </View>
           ))}
 
-          <Text style={styles.label}>City</Text>
-          <TextInput value={city} onChangeText={setCity} style={styles.input} placeholder="City" placeholderTextColor="#8EA0BC" />
-          <Text style={styles.label}>Country</Text>
-          <TextInput value={country} onChangeText={setCountry} style={styles.input} placeholder="Country" placeholderTextColor="#8EA0BC" />
+          <Text style={styles.label}>{t('aiReceptionist.pilot.formCity')}</Text>
+          <TextInput value={city} onChangeText={setCity} style={styles.input} placeholder={t('aiReceptionist.pilot.placeholderCity')} placeholderTextColor="#8EA0BC" />
+          <Text style={styles.label}>{t('aiReceptionist.pilot.formCountry')}</Text>
+          <TextInput
+            value={country}
+            onChangeText={setCountry}
+            style={styles.input}
+            placeholder={t('aiReceptionist.pilot.placeholderCountry')}
+            placeholderTextColor="#8EA0BC"
+          />
 
-          <Text style={styles.label}>Contact name</Text>
-          <TextInput value={contactName} onChangeText={setContactName} style={styles.input} placeholder="Contact name" placeholderTextColor="#8EA0BC" />
-          <Text style={styles.label}>Contact phone</Text>
+          <Text style={styles.label}>{t('aiReceptionist.pilot.formContactName')}</Text>
+          <TextInput
+            value={contactName}
+            onChangeText={setContactName}
+            style={styles.input}
+            placeholder={t('aiReceptionist.pilot.placeholderContactName')}
+            placeholderTextColor="#8EA0BC"
+          />
+          <Text style={styles.label}>{t('aiReceptionist.pilot.formContactPhone')}</Text>
           <TextInput
             value={contactPhone}
             onChangeText={setContactPhone}
             style={styles.input}
-            placeholder="Contact phone"
+            placeholder={t('aiReceptionist.pilot.placeholderContactPhone')}
             placeholderTextColor="#8EA0BC"
             keyboardType="phone-pad"
           />
-          <Text style={styles.label}>Contact email</Text>
+          <Text style={styles.label}>{t('aiReceptionist.pilot.formContactEmail')}</Text>
           <TextInput
             value={contactEmail}
             onChangeText={setContactEmail}
             style={styles.input}
-            placeholder="Contact email"
+            placeholder={t('aiReceptionist.pilot.placeholderContactEmail')}
             placeholderTextColor="#8EA0BC"
             keyboardType="email-address"
             autoCapitalize="none"
           />
 
-          <Text style={styles.label}>Languages needed</Text>
+          <Text style={styles.label}>{t('aiReceptionist.pilot.formLanguagesNeeded')}</Text>
           <TextInput
             value={languagesNeeded}
             onChangeText={setLanguagesNeeded}
             style={styles.input}
-            placeholder="Vietnamese, English, Czech..."
+            placeholder={t('aiReceptionist.pilot.placeholderLanguages')}
             placeholderTextColor="#8EA0BC"
           />
 
-          <Text style={styles.label}>Estimated missed calls per day</Text>
+          <Text style={styles.label}>{t('aiReceptionist.pilot.formMissedCalls')}</Text>
           <TextInput
             value={estimatedMissedCallsPerDay}
             onChangeText={setEstimatedMissedCallsPerDay}
             style={styles.input}
-            placeholder="e.g. 8"
+            placeholder={t('aiReceptionist.pilot.placeholderMissedCalls')}
             placeholderTextColor="#8EA0BC"
             keyboardType="number-pad"
           />
 
-          <Text style={styles.label}>Desired automation</Text>
+          <Text style={styles.label}>{t('aiReceptionist.pilot.formDesiredAutomation')}</Text>
           <View style={styles.chipRow}>
-            {AUTOMATION_OPTIONS.map((item) => {
-              const active = desiredAutomation.includes(item.id);
+            {AUTOMATION_IDS.map((id) => {
+              const active = desiredAutomation.includes(id);
               return (
                 <Pressable
-                  key={item.id}
-                  onPress={() => toggleAutomation(item.id)}
+                  key={id}
+                  onPress={() => toggleAutomation(id)}
                   style={({ pressed }) => [styles.chip, active && styles.chipActive, pressed && { opacity: 0.88 }]}
                 >
-                  <Text style={[styles.chipText, active && styles.chipTextActive]}>{item.label}</Text>
+                  <Text style={[styles.chipText, active && styles.chipTextActive]}>
+                    {t(`aiReceptionist.pilot.automation.${id}`)}
+                  </Text>
                 </Pressable>
               );
             })}
           </View>
 
-          <Text style={styles.label}>Preferred pilot date</Text>
+          <Text style={styles.label}>{t('aiReceptionist.pilot.formPreferredDate')}</Text>
           <TextInput
             value={preferredPilotDate}
             onChangeText={setPreferredPilotDate}
             style={styles.input}
-            placeholder="YYYY-MM-DD"
+            placeholder={t('aiReceptionist.pilot.placeholderPreferredDate')}
             placeholderTextColor="#8EA0BC"
           />
 
-          <Text style={styles.label}>Notes</Text>
+          <Text style={styles.label}>{t('aiReceptionist.pilot.formNotes')}</Text>
           <TextInput
             value={notes}
             onChangeText={setNotes}
             style={[styles.input, styles.textArea]}
-            placeholder="Additional context"
+            placeholder={t('aiReceptionist.pilot.placeholderNotes')}
             placeholderTextColor="#8EA0BC"
             multiline
           />
 
           <View style={styles.privacyBlock}>
-            <Text style={styles.privacyTitle}>Privacy and consent</Text>
-            <Text style={styles.privacyCopy}>
-              By submitting this pilot request, you agree that VIONA may contact you regarding AI Receptionist pilot
-              evaluation.
-            </Text>
-            <Text style={styles.privacyCopy}>This request does not activate production AI phone automation.</Text>
-            <Text style={styles.privacyCopy}>No payment is taken.</Text>
-            <Text style={styles.privacyCopy}>No booking is created.</Text>
-            <Text style={styles.privacyCopy}>No real AI phone call is made from this request.</Text>
-            <Text style={styles.privacyCopy}>
-              Your data is used only to evaluate pilot eligibility and onboarding readiness.
-            </Text>
+            <Text style={styles.privacyTitle}>{t('aiReceptionist.pilot.acknowledgementTitle')}</Text>
+            <Pressable
+              onPress={() => {
+                setManualOpsAck((prev) => {
+                  const next = !prev;
+                  if (next) setManualOpsAckError(null);
+                  return next;
+                });
+              }}
+              style={({ pressed }) => [styles.consentRow, pressed && { opacity: 0.88 }]}
+              accessibilityRole="checkbox"
+              accessibilityState={{ checked: manualOpsAck }}
+              accessibilityLabel={t('aiReceptionist.pilot.acknowledgement.manualOps')}
+            >
+              <View style={[styles.checkbox, manualOpsAck && styles.checkboxChecked]}>
+                {manualOpsAck ? <Ionicons name="checkmark" size={13} color="#061018" /> : null}
+              </View>
+              <Text style={styles.consentText}>{t('aiReceptionist.pilot.acknowledgement.manualOps')}</Text>
+            </Pressable>
+            {manualOpsAckError ? <Text style={styles.consentError}>{manualOpsAckError}</Text> : null}
+
+            <Pressable
+              onPress={() => {
+                setNoAutonomousAck((prev) => {
+                  const next = !prev;
+                  if (next) setNoAutonomousAckError(null);
+                  return next;
+                });
+              }}
+              style={({ pressed }) => [styles.consentRow, pressed && { opacity: 0.88 }]}
+              accessibilityRole="checkbox"
+              accessibilityState={{ checked: noAutonomousAck }}
+              accessibilityLabel={t('aiReceptionist.pilot.acknowledgement.noAutonomous')}
+            >
+              <View style={[styles.checkbox, noAutonomousAck && styles.checkboxChecked]}>
+                {noAutonomousAck ? <Ionicons name="checkmark" size={13} color="#061018" /> : null}
+              </View>
+              <Text style={styles.consentText}>{t('aiReceptionist.pilot.acknowledgement.noAutonomous')}</Text>
+            </Pressable>
+            {noAutonomousAckError ? <Text style={styles.consentError}>{noAutonomousAckError}</Text> : null}
+
+            <Text style={[styles.privacyTitle, { marginTop: 8 }]}>{t('aiReceptionist.pilot.privacyTitle')}</Text>
+            <Text style={styles.privacyCopy}>{t('aiReceptionist.pilot.privacyCopy1')}</Text>
+            <Text style={styles.privacyCopy}>{t('aiReceptionist.pilot.privacyCopy2')}</Text>
+            <Text style={styles.privacyCopy}>{t('aiReceptionist.pilot.privacyCopy3')}</Text>
+            <Text style={styles.privacyCopy}>{t('aiReceptionist.pilot.privacyCopy4')}</Text>
+            <Text style={styles.privacyCopy}>{t('aiReceptionist.pilot.privacyCopy5')}</Text>
+            <Text style={styles.privacyCopy}>{t('aiReceptionist.pilot.privacyCopy6')}</Text>
             <Pressable
               onPress={() => {
                 setConsentAccepted((prev) => {
@@ -340,12 +464,12 @@ export function AiReceptionistPilotRequestScreen(): ReactElement {
               style={({ pressed }) => [styles.consentRow, pressed && { opacity: 0.88 }]}
               accessibilityRole="checkbox"
               accessibilityState={{ checked: consentAccepted }}
-              accessibilityLabel="Consent accepted"
+              accessibilityLabel={t('aiReceptionist.pilot.consentA11y')}
             >
               <View style={[styles.checkbox, consentAccepted && styles.checkboxChecked]}>
                 {consentAccepted ? <Ionicons name="checkmark" size={13} color="#061018" /> : null}
               </View>
-              <Text style={styles.consentText}>I agree to pilot lead evaluation and privacy terms.</Text>
+              <Text style={styles.consentText}>{t('aiReceptionist.pilot.consentLabel')}</Text>
             </Pressable>
             {consentError ? <Text style={styles.consentError}>{consentError}</Text> : null}
           </View>
@@ -354,15 +478,15 @@ export function AiReceptionistPilotRequestScreen(): ReactElement {
             onPress={() => {
               void handleSubmit();
             }}
-            disabled={!consentAccepted || isSubmitting}
+            disabled={submitDisabled}
             style={({ pressed }) => [
               styles.submitBtn,
-              (!consentAccepted || isSubmitting) && styles.submitBtnDisabled,
+              submitDisabled && styles.submitBtnDisabled,
               pressed && { opacity: 0.86 },
             ]}
           >
             <Text style={styles.submitBtnText}>
-              {isSubmitting ? 'Sending to VIONA team...' : 'Submit pilot request'}
+              {isSubmitting ? t('aiReceptionist.pilot.submitSending') : t('aiReceptionist.pilot.submitCta')}
             </Text>
           </Pressable>
           {submitError ? <Text style={styles.submitErrorText}>{submitError}</Text> : null}
@@ -370,56 +494,74 @@ export function AiReceptionistPilotRequestScreen(): ReactElement {
 
         {submittedStatus ? (
           <View style={styles.cardConfirm}>
-            <Text style={styles.cardTitle}>Pilot request sent for manual review.</Text>
-            <Text style={styles.cardBody}>Status: {submittedStatus}</Text>
-            <Text style={styles.cardBody}>
-              VIONA team will review your request before any pilot activation.
-            </Text>
-            <Text style={styles.previewTitle}>Submitted preview</Text>
-            <Text style={styles.previewLine}>Business: {businessName || 'N/A'}</Text>
-            <Text style={styles.previewLine}>Industry: {industryLabel}</Text>
+            <Text style={styles.cardTitle}>{t('aiReceptionist.pilot.confirmTitle')}</Text>
+            <Text style={styles.cardBody}>{t('aiReceptionist.pilot.confirmStatusLine', { status: submittedStatus })}</Text>
+            <Text style={styles.cardBody}>{t('aiReceptionist.pilot.confirmBody')}</Text>
+            <Text style={styles.previewTitle}>{t('aiReceptionist.pilot.previewTitle')}</Text>
+            <Text style={styles.previewLine}>{t('aiReceptionist.pilot.previewBusiness', { value: na(businessName) })}</Text>
+            <Text style={styles.previewLine}>{t('aiReceptionist.pilot.previewIndustry', { value: industryLabel })}</Text>
             <Text style={styles.previewLine}>{t('aiReceptionist.pilot.previewIndustryId', { id: industry })}</Text>
-            <Text style={styles.previewLine}>City/Country: {(city || 'N/A') + ' / ' + (country || 'N/A')}</Text>
-            <Text style={styles.previewLine}>Contact: {contactName || 'N/A'}</Text>
-            <Text style={styles.previewLine}>Phone: {contactPhone || 'N/A'}</Text>
-            <Text style={styles.previewLine}>Email: {contactEmail || 'N/A'}</Text>
-            <Text style={styles.previewLine}>Languages: {languagesNeeded || 'N/A'}</Text>
-            <Text style={styles.previewLine}>Missed calls/day: {estimatedMissedCallsPerDay || 'N/A'}</Text>
-            <Text style={styles.previewLine}>Desired automation: {desiredAutomationLabels}</Text>
-            <Text style={styles.previewLine}>Preferred pilot date: {preferredPilotDate || 'N/A'}</Text>
-            <Text style={styles.previewLine}>Notes: {notes || 'N/A'}</Text>
+            <Text style={styles.previewLine}>
+              {t('aiReceptionist.pilot.previewCityCountry', { value: `${na(city)} / ${na(country)}` })}
+            </Text>
+            <Text style={styles.previewLine}>{t('aiReceptionist.pilot.previewContact', { value: na(contactName) })}</Text>
+            <Text style={styles.previewLine}>{t('aiReceptionist.pilot.previewPhone', { value: na(contactPhone) })}</Text>
+            <Text style={styles.previewLine}>{t('aiReceptionist.pilot.previewEmail', { value: na(contactEmail) })}</Text>
+            <Text style={styles.previewLine}>{t('aiReceptionist.pilot.previewLanguages', { value: na(languagesNeeded) })}</Text>
+            <Text style={styles.previewLine}>
+              {t('aiReceptionist.pilot.previewMissedCalls', { value: na(estimatedMissedCallsPerDay) })}
+            </Text>
+            <Text style={styles.previewLine}>{t('aiReceptionist.pilot.previewAutomation', { value: desiredAutomationLabels })}</Text>
+            <Text style={styles.previewLine}>{t('aiReceptionist.pilot.previewDate', { value: na(preferredPilotDate) })}</Text>
+            <Text style={styles.previewLine}>{t('aiReceptionist.pilot.previewNotes', { value: na(notes) })}</Text>
+            <Text style={styles.previewLine}>
+              {t('aiReceptionist.pilot.previewAckManualOps', { value: manualOpsAck ? previewYes : previewNo })}
+            </Text>
+            <Text style={styles.previewLine}>
+              {t('aiReceptionist.pilot.previewAckNoAutonomous', { value: noAutonomousAck ? previewYes : previewNo })}
+            </Text>
           </View>
         ) : isSubmittedLocalDraft ? (
           <View style={styles.cardConfirm}>
-            <Text style={styles.cardTitle}>Pilot request draft created</Text>
-            <Text style={styles.cardBody}>Consent was captured for this request attempt.</Text>
-            <Text style={styles.cardBody}>Could not send request. Your draft is still local.</Text>
-            <Text style={styles.cardBody}>No pilot approval or activation happened from this local draft.</Text>
-            <Text style={styles.previewTitle}>Draft preview</Text>
-            <Text style={styles.previewLine}>Business: {businessName || 'N/A'}</Text>
-            <Text style={styles.previewLine}>Industry: {industryLabel}</Text>
+            <Text style={styles.cardTitle}>{t('aiReceptionist.pilot.draftTitle')}</Text>
+            <Text style={styles.cardBody}>{t('aiReceptionist.pilot.draftBody1')}</Text>
+            <Text style={styles.cardBody}>{t('aiReceptionist.pilot.draftBody2')}</Text>
+            <Text style={styles.cardBody}>{t('aiReceptionist.pilot.draftBody3')}</Text>
+            <Text style={styles.previewTitle}>{t('aiReceptionist.pilot.draftPreviewTitle')}</Text>
+            <Text style={styles.previewLine}>{t('aiReceptionist.pilot.previewBusiness', { value: na(businessName) })}</Text>
+            <Text style={styles.previewLine}>{t('aiReceptionist.pilot.previewIndustry', { value: industryLabel })}</Text>
             <Text style={styles.previewLine}>{t('aiReceptionist.pilot.previewIndustryId', { id: industry })}</Text>
-            <Text style={styles.previewLine}>City/Country: {(city || 'N/A') + ' / ' + (country || 'N/A')}</Text>
-            <Text style={styles.previewLine}>Contact: {contactName || 'N/A'}</Text>
-            <Text style={styles.previewLine}>Phone: {contactPhone || 'N/A'}</Text>
-            <Text style={styles.previewLine}>Email: {contactEmail || 'N/A'}</Text>
-            <Text style={styles.previewLine}>Languages: {languagesNeeded || 'N/A'}</Text>
-            <Text style={styles.previewLine}>Missed calls/day: {estimatedMissedCallsPerDay || 'N/A'}</Text>
-            <Text style={styles.previewLine}>Desired automation: {desiredAutomationLabels}</Text>
-            <Text style={styles.previewLine}>Preferred pilot date: {preferredPilotDate || 'N/A'}</Text>
-            <Text style={styles.previewLine}>Notes: {notes || 'N/A'}</Text>
+            <Text style={styles.previewLine}>
+              {t('aiReceptionist.pilot.previewCityCountry', { value: `${na(city)} / ${na(country)}` })}
+            </Text>
+            <Text style={styles.previewLine}>{t('aiReceptionist.pilot.previewContact', { value: na(contactName) })}</Text>
+            <Text style={styles.previewLine}>{t('aiReceptionist.pilot.previewPhone', { value: na(contactPhone) })}</Text>
+            <Text style={styles.previewLine}>{t('aiReceptionist.pilot.previewEmail', { value: na(contactEmail) })}</Text>
+            <Text style={styles.previewLine}>{t('aiReceptionist.pilot.previewLanguages', { value: na(languagesNeeded) })}</Text>
+            <Text style={styles.previewLine}>
+              {t('aiReceptionist.pilot.previewMissedCalls', { value: na(estimatedMissedCallsPerDay) })}
+            </Text>
+            <Text style={styles.previewLine}>{t('aiReceptionist.pilot.previewAutomation', { value: desiredAutomationLabels })}</Text>
+            <Text style={styles.previewLine}>{t('aiReceptionist.pilot.previewDate', { value: na(preferredPilotDate) })}</Text>
+            <Text style={styles.previewLine}>{t('aiReceptionist.pilot.previewNotes', { value: na(notes) })}</Text>
+            <Text style={styles.previewLine}>
+              {t('aiReceptionist.pilot.previewAckManualOps', { value: manualOpsAck ? previewYes : previewNo })}
+            </Text>
+            <Text style={styles.previewLine}>
+              {t('aiReceptionist.pilot.previewAckNoAutonomous', { value: noAutonomousAck ? previewYes : previewNo })}
+            </Text>
           </View>
         ) : null}
 
         <View style={styles.actionRow}>
           <Pressable onPress={() => navigation.navigate('AiReceptionistDemoSimulator')} style={({ pressed }) => [styles.actionBtn, pressed && { opacity: 0.86 }]}>
-            <Text style={styles.actionBtnText}>Back to demo</Text>
+            <Text style={styles.actionBtnText}>{t('aiReceptionist.pilot.ctaDemo')}</Text>
           </Pressable>
           <Pressable onPress={() => navigation.navigate('AiReceptionistSetupChecklist')} style={({ pressed }) => [styles.actionBtn, pressed && { opacity: 0.86 }]}>
-            <Text style={styles.actionBtnText}>Configure checklist</Text>
+            <Text style={styles.actionBtnText}>{t('aiReceptionist.pilot.ctaChecklist')}</Text>
           </Pressable>
           <Pressable onPress={() => navigation.navigate('MerchantDashboard')} style={({ pressed }) => [styles.actionBtn, pressed && { opacity: 0.86 }]}>
-            <Text style={styles.actionBtnText}>Back to merchant dashboard</Text>
+            <Text style={styles.actionBtnText}>{t('aiReceptionist.pilot.ctaMerchant')}</Text>
           </Pressable>
         </View>
       </ScrollView>

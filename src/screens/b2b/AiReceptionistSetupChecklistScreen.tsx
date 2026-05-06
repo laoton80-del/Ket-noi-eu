@@ -14,6 +14,7 @@ import { getFeatureFlags, type FeatureFlagKey } from '../../core/feature-flags/f
 import type { RootStackParamList } from '../../navigation/routes';
 import { useTranslation } from '../../i18n';
 import {
+  AI_RECEPTIONIST_GLOBAL_PILOT_POSTURE,
   getAiReceptionistPlaybook,
   INDUSTRY_GROUP_ORDER,
   industryGroupNameKey,
@@ -114,17 +115,23 @@ export function AiReceptionistSetupChecklistScreen(): ReactElement {
   }, [selectedIndustryId]);
 
   const statusBadges = useMemo(() => {
-    const demo = flags.b2bAiReceptionistDemoEnabled ? 'Demo available' : 'Demo off';
-    const pilot = flags.b2bAiReceptionistPilotEnabled ? 'Pilot available' : 'Pilot locked';
+    const demo = flags.b2bAiReceptionistDemoEnabled
+      ? t('aiReceptionist.setup.badgeDemoOn')
+      : t('aiReceptionist.setup.badgeDemoOff');
+    const pilot = flags.b2bAiReceptionistPilotEnabled
+      ? t('aiReceptionist.setup.badgePilotOn')
+      : t('aiReceptionist.setup.badgePilotOff');
     const productionReady =
       flags.b2bAiReceptionistProductionEnabled &&
       flags.b2bAutoBookingEnabled &&
       flags.b2bAutoInventoryEnabled &&
       flags.b2bAutoBillPrintEnabled &&
       flags.b2bAutoPaymentEnabled;
-    const production = productionReady ? 'Production eligible' : 'Production locked';
+    const production = productionReady
+      ? t('aiReceptionist.setup.badgeProductionFlagsOn')
+      : t('aiReceptionist.setup.badgeProductionLocked');
     return [demo, pilot, production] as const;
-  }, [flags]);
+  }, [flags, t]);
 
   const setupChecklist = useMemo<readonly SetupChecklistItem[]>(() => {
     const itemDoneMap: Record<string, boolean> = {
@@ -163,8 +170,8 @@ export function AiReceptionistSetupChecklistScreen(): ReactElement {
             <Ionicons name="chevron-back" size={20} color="#E8EDF7" />
           </Pressable>
           <View style={styles.headerTextWrap}>
-            <Text style={styles.kicker}>B2B AI Receptionist</Text>
-            <Text style={styles.title}>Lễ Tân AI</Text>
+            <Text style={styles.kicker}>{t('aiReceptionist.setup.screenKicker')}</Text>
+            <Text style={styles.title}>{t('aiReceptionist.setup.screenTitle')}</Text>
           </View>
         </View>
 
@@ -177,14 +184,9 @@ export function AiReceptionistSetupChecklistScreen(): ReactElement {
         </View>
 
         <View style={styles.sectionCard}>
-          <Text style={styles.sectionTitle}>Safety summary</Text>
-          <Text style={styles.sectionBody}>
-            AI can support multilingual intake and request capture in beta/pilot mode. AI may make mistakes, merchant
-            confirmation is required until production setup and approvals are complete.
-          </Text>
-          <Text style={styles.sectionBody}>
-            Production automation is locked by default and must pass checklist + policy approval before enabling.
-          </Text>
+          <Text style={styles.sectionTitle}>{t('aiReceptionist.setup.safetySummaryTitle')}</Text>
+          <Text style={styles.sectionBody}>{t('aiReceptionist.setup.safetySummaryBody1')}</Text>
+          <Text style={styles.sectionBody}>{t('aiReceptionist.setup.safetySummaryBody2')}</Text>
         </View>
 
         <View style={styles.sectionCard}>
@@ -235,12 +237,29 @@ export function AiReceptionistSetupChecklistScreen(): ReactElement {
               <Text style={styles.sectionBody}>
                 {t('aiReceptionist.playbook.confirmationLabel', { policy: selectedPlaybook.confirmationPolicy })}
               </Text>
+              <Text style={styles.sectionTitle}>{t('aiReceptionist.pilot.industryPlaybook')}</Text>
+              <Text style={styles.sectionBody}>
+                {t('aiReceptionist.pilot.blockedActions')}: {selectedPlaybook.blockedActions.join(', ')}
+              </Text>
+              <Text style={styles.sectionBody}>
+                {t('aiReceptionist.pilot.allowedActions')}: {selectedPlaybook.allowedActions.join(', ')}
+              </Text>
+              <Text style={styles.sectionTitle}>{t('aiReceptionist.pilot.postureCardTitle')}</Text>
+              <Text style={styles.sectionBody}>
+                {t('aiReceptionist.pilot.statusLabel')} — {AI_RECEPTIONIST_GLOBAL_PILOT_POSTURE.pilotReadiness}
+              </Text>
+              <Text style={styles.sectionBody}>{t('aiReceptionist.pilot.manualOpsRequired')}</Text>
+              <Text style={styles.sectionBody}>{t('aiReceptionist.pilot.noAutoBooking')}</Text>
+              <Text style={styles.sectionBody}>{t('aiReceptionist.pilot.noPayment')}</Text>
+              <Text style={styles.sectionBody}>{t('aiReceptionist.pilot.noInventoryChange')}</Text>
+              <Text style={styles.sectionBody}>{t('aiReceptionist.pilot.noBillPrinting')}</Text>
+              <Text style={styles.sectionBody}>{t('aiReceptionist.pilot.consentRequired')}</Text>
             </>
           ) : null}
         </View>
 
         <View style={styles.sectionCard}>
-          <Text style={styles.sectionTitle}>Merchant setup checklist</Text>
+          <Text style={styles.sectionTitle}>{t('aiReceptionist.setup.merchantChecklistTitle')}</Text>
           {setupChecklist.map((item) => (
             <View key={item.id} style={styles.listRow}>
               <Ionicons
@@ -277,11 +296,8 @@ export function AiReceptionistSetupChecklistScreen(): ReactElement {
         </View>
 
         <View style={styles.sectionCardWarning}>
-          <Text style={styles.sectionTitle}>Production locked until ready</Text>
-          <Text style={styles.sectionBody}>
-            No live autonomous booking, inventory updates, bill printing, or payment capture should be treated as
-            production until setup is completed and flags are approved.
-          </Text>
+          <Text style={styles.sectionTitle}>{t('aiReceptionist.setup.productionGateTitle')}</Text>
+          <Text style={styles.sectionBody}>{t('aiReceptionist.setup.productionGateBody')}</Text>
         </View>
 
         <View style={styles.sectionCard}>
@@ -307,13 +323,13 @@ export function AiReceptionistSetupChecklistScreen(): ReactElement {
             onPress={() => navigation.navigate('AiReceptionistDemoSimulator')}
             style={({ pressed }) => [styles.actionBtn, pressed && { opacity: 0.86 }]}
           >
-            <Text style={styles.actionBtnText}>View simulated demo</Text>
+            <Text style={styles.actionBtnText}>{t('aiReceptionist.setup.ctaDemo')}</Text>
           </Pressable>
           <Pressable
             onPress={() => navigation.navigate('AiReceptionistPilotRequest')}
             style={({ pressed }) => [styles.actionBtn, pressed && { opacity: 0.86 }]}
           >
-            <Text style={styles.actionBtnText}>Request pilot</Text>
+            <Text style={styles.actionBtnText}>{t('aiReceptionist.setup.ctaPilot')}</Text>
           </Pressable>
         </View>
       </ScrollView>
