@@ -354,6 +354,58 @@
     "cravingsEmpty": "No venues in range yet.",
     "flightSearchA11y": "Book flights"
   },
+  "travel": {
+    "direction": {
+      "title": "Who are you on this trip?",
+      "subtitle": "Pick a direction lens. Surfaces stay Lite / Pilot / Coming soon — no live provider fulfillment in this build.",
+      "contextLine": "Smart Trio preview: {{market}} · {{native}}",
+      "liteNotice": "Lens choice is on-device for this session only. It does not book services, charge cards, or change production AI.",
+      "select": "Set as active lens",
+      "selected": "Active lens: {{label}}",
+      "status": {
+        "lite": "Lite",
+        "pilot": "Pilot",
+        "comingSoon": "Coming soon",
+        "gated": "Gated"
+      },
+      "vietnameseAbroad": {
+        "title": "Vietnamese abroad",
+        "subtitle": "Vietnamese passport or resident traveling outside Vietnam — language bridges, safety rails, and bureaucracy cues (informational).",
+        "badge": "VN → world",
+        "actions": {
+          "translate": "Quick translate & phrase cards",
+          "aiCallDemo": "AI call / schedule assist (demo only — not a human concierge)",
+          "checklist": "Safety & embassy checklist (informational)",
+          "sos": "SOS & community ping (pilot — not a substitute for authorities)",
+          "localServices": "Local services discovery (pilot — no fulfillment)"
+        }
+      },
+      "inboundVietnam": {
+        "title": "Foreign visitors to Vietnam",
+        "subtitle": "First-time or returning visitors to Vietnam — guides, safety, and trusted-experience cues (no guaranteed bookings).",
+        "badge": "World → VN",
+        "actions": {
+          "guide": "Vietnam guide & etiquette (Lite)",
+          "fixer": "Local fixer marketplace (Pilot — manual ops only)",
+          "airportSim": "Airport / SIM / taxi safety sheet (Coming soon)",
+          "translation": "Translation & menu reader (Lite)",
+          "experiences": "Trusted experiences shortlist (Pilot — verify before you pay)"
+        }
+      },
+      "returnVietnam": {
+        "title": "Diaspora returning to Vietnam",
+        "subtitle": "Kiều bào về nước — family, hometown logistics, paperwork, and soft landing support (informational / pilot).",
+        "badge": "Homecoming",
+        "actions": {
+          "family": "Family & hometown coordination (Lite)",
+          "paperwork": "Paperwork & consulate checklist (Lite)",
+          "concierge": "Travel concierge lite (Pilot — no VIP fulfillment)",
+          "localServices": "Local services discovery (Pilot — no fulfillment)",
+          "translation": "Translation bridge for relatives (Lite)"
+        }
+      }
+    }
+  },
   "localHub": {
     "screenTitle": "VIONA Local",
     "universeKicker": "Local services",

@@ -354,6 +354,58 @@
     "cravingsEmpty": "Chưa có dữ liệu quán trong bán kính.",
     "flightSearchA11y": "Đặt vé máy bay"
   },
+  "travel": {
+    "direction": {
+      "title": "Bạn là ai trong chuyến đi này?",
+      "subtitle": "Chọn góc nhìn (lens). Các lớp vẫn ở mức Lite / Pilot / Sắp có — không cam kết cung ứng dịch vụ thật trong bản build này.",
+      "contextLine": "Xem trước Smart Trio: {{market}} · {{native}}",
+      "liteNotice": "Lựa chọn chỉ trên thiết bị cho phiên này. Không đặt dịch vụ, không thu phí, không đổi AI production.",
+      "select": "Chọn góc nhìn này",
+      "selected": "Đang chọn: {{label}}",
+      "status": {
+        "lite": "Lite",
+        "pilot": "Pilot",
+        "comingSoon": "Sắp có",
+        "gated": "Giới hạn"
+      },
+      "vietnameseAbroad": {
+        "title": "Người Việt đi nước ngoài",
+        "subtitle": "Hộ chiếu hoặc cư trú Việt Nam, đi ngoài nước — cầu ngôn ngữ, an toàn, gợi ý thủ tục (mang tính thông tin).",
+        "badge": "VN → thế giới",
+        "actions": {
+          "translate": "Dịch nhanh & thẻ câu",
+          "aiCallDemo": "AI hỗ trợ gọi / lịch (chỉ demo — không thay concierge người thật)",
+          "checklist": "Checklist an toàn & đại sứ quán (thông tin)",
+          "sos": "SOS & ping cộng đồng (pilot — không thay cơ quan chức năng)",
+          "localServices": "Khám phá dịch vụ địa phương (pilot — không fulfill)"
+        }
+      },
+      "inboundVietnam": {
+        "title": "Người nước ngoài đến Việt Nam",
+        "subtitle": "Khách quốc tế đến Việt Nam — hướng dẫn, an toàn, trải nghiệm tin cậy (không đảm bảo đặt chỗ).",
+        "badge": "Thế giới → VN",
+        "actions": {
+          "guide": "Cẩm nang & phép tắc (Lite)",
+          "fixer": "Thị trường fixer địa phương (Pilot — vận hành thủ công)",
+          "airportSim": "Sân bay / SIM / taxi an toàn (Sắp có)",
+          "translation": "Phiên dịch & đọc menu (Lite)",
+          "experiences": "Danh sách trải nghiệm tin cậy (Pilot — kiểm tra trước khi thanh toán)"
+        }
+      },
+      "returnVietnam": {
+        "title": "Kiều bào về Việt Nam",
+        "subtitle": "Về thăm quê, họ hàng, thủ tục và hạ cánh mềm (thông tin / pilot).",
+        "badge": "Về nước",
+        "actions": {
+          "family": "Hỗ trợ họ hàng & quê hương (Lite)",
+          "paperwork": "Checklist giấy tờ & lãnh sự (Lite)",
+          "concierge": "Concierge du lịch lite (Pilot — không VIP fulfill)",
+          "localServices": "Dịch vụ địa phương (pilot — không fulfill)",
+          "translation": "Cầu ngôn ngữ với người thân (Lite)"
+        }
+      }
+    }
+  },
   "localHub": {
     "screenTitle": "VIONA Địa phương",
     "universeKicker": "Dịch vụ địa phương",
