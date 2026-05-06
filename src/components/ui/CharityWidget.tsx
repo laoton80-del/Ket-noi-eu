@@ -4,10 +4,12 @@ import { useCallback, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 import Animated, { runOnJS, useAnimatedReaction, useSharedValue, withTiming } from 'react-native-reanimated';
 import { readCharityLedgerTotals } from '../../services/fintech/CharityService';
-import { theme } from '../../theme/theme';
 import { FontFamily } from '../../theme/typography';
 import { applyWebStyles } from '../../utils/applyWebStyles';
 import { useTranslation } from '../../i18n';
+
+const CHARITY_INK = '#0f172a';
+const CHARITY_INK_MUTED = 'rgba(15, 23, 42, 0.72)';
 
 function formatUsd(amount: number): string {
   return new Intl.NumberFormat('en-US', {
@@ -89,8 +91,8 @@ const styles = StyleSheet.create({
   wrap: {
     borderRadius: 18,
     borderWidth: 1,
-    borderColor: 'rgba(244, 63, 94, 0.24)',
-    backgroundColor: 'rgba(255,255,255,0.06)',
+    borderColor: 'rgba(244, 63, 94, 0.28)',
+    backgroundColor: 'rgba(255,255,255,0.82)',
     padding: 14,
     gap: 8,
   },
@@ -114,7 +116,7 @@ const styles = StyleSheet.create({
   },
   title: {
     flex: 1,
-    color: theme.colors.text.primary,
+    color: CHARITY_INK,
     fontSize: 16,
     fontFamily: FontFamily.extrabold,
   },
@@ -133,7 +135,7 @@ const styles = StyleSheet.create({
     fontFamily: FontFamily.extrabold,
   },
   subtext: {
-    color: theme.colors.text.secondary,
+    color: CHARITY_INK_MUTED,
     fontSize: 12,
     lineHeight: 18,
     fontFamily: FontFamily.medium,

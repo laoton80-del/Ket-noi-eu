@@ -1,5 +1,5 @@
 /**
- * B2B "Toll Station" — 90-day trap / premium paywall. Midnight Navy & Imperial Gold.
+ * B2B merchant upgrade surface — trial messaging & tier cards. Midnight Navy & Imperial Gold.
  * Stripe CTA is sandbox/mock only until backend checkout sessions are wired.
  */
 import { Ionicons } from '@expo/vector-icons';
@@ -20,12 +20,15 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { VionaCard } from '../../components/viona/VionaCard';
+import { vionaTrust } from '../../components/viona/vionaTrustTokens';
 import { useAuth } from '../../context/AuthContext';
+import { useTranslation } from '../../i18n';
 import {
   calculateActualTrialDays,
   enforceV7TrapRestrictions,
-  getV7TrialTrapPendingSyncCopy,
-  getV7TrialTrapSurfaceCopy,
+  resolveV7MerchantTrialPhase,
+  V7_TRIAL_TOP_SEO_DAY_CAP,
 } from '../../monetization/v7MerchantTrialTrap';
 import { MAIN_TAB, type RootStackParamList } from '../../navigation/routes';
 import { isValidUuid } from '../../services/broker/V7AttributionService';
@@ -34,21 +37,21 @@ import {
   isMerchantOnPowerSaasTier,
 } from '../../services/billing/StripeSubscriptionService';
 
-const MIDNIGHT_NAVY = '#0A192F';
-const PRIMARY_GOLD = '#D4AF37';
+const SHELL_TOP = '#F0F3F8';
+const SHELL_MID = vionaTrust.canvas;
+const SHELL_DEEP = '#E2E8F0';
+const PRIMARY_GOLD = '#B8952E';
 const GOLD_DEEP = '#8B6914';
 const GOLD_BRIGHT = '#FFF8E7';
-const GOLD_MID = '#E8C547';
-const THREAT_RED = '#C41E3A';
+const GOLD_MID = '#C9A227';
+const THREAT_RED = '#B91C1C';
+const INK_SUB = vionaTrust.inkMuted;
+const INK = vionaTrust.ink;
 
 /** Mock processed volume — replace with ledger aggregate when live. */
 const MOCK_BOOKINGS_EUR = 12_847;
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
-
-export function handleStripeCheckout(): void {
-  Alert.alert('Stripe Sandbox Checkout Initiated');
-}
 
 function formatEur(value: number): string {
   return `€${value.toLocaleString('en-US', { maximumFractionDigits: 0 })}`;
@@ -64,6 +67,7 @@ function GoldCheck({ label }: Readonly<{ label: string }>): ReactElement {
 }
 
 export function B2BPaywallScreen(): ReactElement {
+  const { t } = useTranslation();
   const navigation = useNavigation<Nav>();
   const { user } = useAuth();
   const [cancelBusy, setCancelBusy] = useState(false);
@@ -75,29 +79,36 @@ export function B2BPaywallScreen(): ReactElement {
   const merchantCreatedAtIso =
     typeof process !== 'undefined' ? process.env?.EXPO_PUBLIC_DEV_MERCHANT_CREATED_AT?.trim() : undefined;
 
+  const cap = V7_TRIAL_TOP_SEO_DAY_CAP;
+
   const trapComplianceLine = useMemo(() => {
     if (!merchantCreatedAtIso) {
-      return getV7TrialTrapPendingSyncCopy();
+      return t('b2bPaywallUi.trapPendingSync');
     }
     try {
       const days = calculateActualTrialDays(merchantCreatedAtIso);
-      const base = getV7TrialTrapSurfaceCopy(days);
+      const phase = resolveV7MerchantTrialPhase(days);
+      const displayDay = Math.min(days, cap);
+      const base =
+        phase === 'top_seo_window'
+          ? t('b2bPaywallUi.trapTopSeo', { cap, day: displayDay })
+          : t('b2bPaywallUi.trapGate', { cap });
       const mid = user?.serverUserId?.trim();
       if (mid && isValidUuid(mid)) {
         const enf = enforceV7TrapRestrictions(mid, days);
         if (enf.requiresVigTopUp) {
-          return `${base} Enforcement: featured placement suspended until VIO Credits top-up.`;
+          return `${base} ${t('b2bPaywallUi.trapEnforcementVio')}`;
         }
       }
       return base;
     } catch {
-      return getV7TrialTrapPendingSyncCopy();
+      return t('b2bPaywallUi.trapPendingSync');
     }
-  }, [merchantCreatedAtIso, user?.serverUserId]);
+  }, [merchantCreatedAtIso, user?.serverUserId, t, cap]);
 
   const onUpgrade = useCallback(() => {
-    handleStripeCheckout();
-  }, []);
+    Alert.alert(t('b2bPaywallUi.stripeSandboxAlert'));
+  }, [t]);
 
   const onContinuePilotRequest = useCallback(() => {
     navigation.navigate('AiReceptionistPilotRequest');
@@ -105,17 +116,17 @@ export function B2BPaywallScreen(): ReactElement {
 
   const onCancelSubscription = useCallback(async () => {
     if (!merchantIdForBilling) {
-      Alert.alert('Không hủy được', 'Thiếu mã merchant — đăng nhập lại hoặc đồng bộ hồ sơ.');
+      Alert.alert(t('b2bPaywallUi.alertCancelErr'), t('b2bPaywallUi.alertCancelNoMerchant'));
       return;
     }
     setCancelBusy(true);
     try {
       const result = await cancelStripeSubscription(merchantIdForBilling);
-      Alert.alert(result.ok ? 'Đã lên lịch hủy' : 'Lỗi', result.message);
+      Alert.alert(result.ok ? t('b2bPaywallUi.alertCancelOk') : t('b2bPaywallUi.alertCancelErr'), result.message);
     } finally {
       setCancelBusy(false);
     }
-  }, [merchantIdForBilling]);
+  }, [merchantIdForBilling, t]);
 
   const onBack = useCallback(() => {
     if (navigation.canGoBack()) {
@@ -125,11 +136,13 @@ export function B2BPaywallScreen(): ReactElement {
     navigation.navigate('Tabs', { screen: MAIN_TAB.B2B.merchant });
   }, [navigation]);
 
+  const metricAmount = formatEur(MOCK_BOOKINGS_EUR);
+
   return (
     <View style={styles.shell}>
       <LinearGradient
-        colors={[MIDNIGHT_NAVY, '#050B18', MIDNIGHT_NAVY]}
-        locations={[0, 0.45, 1]}
+        colors={[SHELL_TOP, SHELL_MID, SHELL_DEEP]}
+        locations={[0, 0.5, 1]}
         start={{ x: 0.5, y: 0 }}
         end={{ x: 0.5, y: 1 }}
         style={StyleSheet.absoluteFillObject}
@@ -141,10 +154,10 @@ export function B2BPaywallScreen(): ReactElement {
           style={({ pressed }) => [styles.backRow, pressed && styles.backPressed]}
           hitSlop={12}
           accessibilityRole="button"
-          accessibilityLabel="Go back"
+          accessibilityLabel={t('b2bPaywallUi.backA11y')}
         >
-          <Ionicons name="chevron-back" size={26} color="rgba(255,248,231,0.92)" />
-          <Text style={styles.backText}>Exit</Text>
+          <Ionicons name="chevron-back" size={26} color={vionaTrust.ink} />
+          <Text style={styles.backText}>{t('b2bPaywallUi.backExit')}</Text>
         </Pressable>
 
         <ScrollView
@@ -152,11 +165,11 @@ export function B2BPaywallScreen(): ReactElement {
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
         >
-          <Text style={styles.kicker}>TOLL STATION</Text>
+          <Text style={styles.kicker}>{t('b2bPaywallUi.kicker')}</Text>
 
           <View style={styles.titleBlock}>
             <Text style={styles.warningTitle} accessibilityRole="header">
-              Warning: Premium Access Expires in 7 Days.
+              {t('b2bPaywallUi.warningTitle')}
             </Text>
             <LinearGradient
               colors={['rgba(196,30,58,0.9)', PRIMARY_GOLD, 'rgba(212,175,55,0.85)']}
@@ -166,9 +179,7 @@ export function B2BPaywallScreen(): ReactElement {
             />
           </View>
 
-          <Text style={styles.subThreat}>
-            Your trial runway is closing. Lock in automation before client data and routing priority reset.
-          </Text>
+          <Text style={styles.subThreat}>{t('b2bPaywallUi.subThreat')}</Text>
 
           <View style={styles.trapStrip}>
             <Ionicons name="alarm-outline" size={18} color={PRIMARY_GOLD} />
@@ -176,68 +187,61 @@ export function B2BPaywallScreen(): ReactElement {
           </View>
 
           <View style={styles.glassWrap}>
-            <BlurView intensity={Platform.OS === 'ios' ? 48 : 36} tint="dark" style={StyleSheet.absoluteFillObject} />
+            <BlurView intensity={Platform.OS === 'ios' ? 24 : 18} tint="light" style={StyleSheet.absoluteFillObject} />
             <LinearGradient
-              colors={['rgba(212,175,55,0.14)', 'rgba(10,25,47,0.2)', 'rgba(255,255,255,0.06)']}
+              colors={['rgba(255,255,255,0.92)', 'rgba(248,250,252,0.98)', 'rgba(241,245,249,0.95)']}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
               style={StyleSheet.absoluteFillObject}
             />
             <View style={styles.glassInner}>
-              <Text style={styles.metricLabel}>Lifetime platform value (display)</Text>
-              <Text style={styles.metricValue}>{formatEur(MOCK_BOOKINGS_EUR)}</Text>
-              <Text style={styles.metricCopy}>
-                {`VIONA has processed ${formatEur(MOCK_BOOKINGS_EUR)} in bookings for you. Don't lose your automated AI receptionist and VIP client data.`}
-              </Text>
+              <Text style={styles.metricLabel}>{t('b2bPaywallUi.metricLabel')}</Text>
+              <Text style={styles.metricValue}>{metricAmount}</Text>
+              <Text style={styles.metricCopy}>{t('b2bPaywallUi.metricCopy', { amount: metricAmount })}</Text>
             </View>
           </View>
 
-          <Text style={styles.sectionLabel}>Choose your SaaS lane (V7)</Text>
+          <Text style={styles.sectionLabel}>{t('b2bPaywallUi.chooseLane')}</Text>
 
-          <View style={styles.secondaryCard}>
-            <Text style={styles.tierBadge}>Tier 1</Text>
-            <Text style={styles.secondaryTitle}>Pay-as-you-go</Text>
-            <Text style={styles.secondaryPrice}>VIO Credits top-up</Text>
-            <Text style={styles.secondaryBody}>
-              Metered voice, SMS, and booking events. Best when volume is unpredictable — top up VIO Credits and scale down
-              anytime.
-            </Text>
+          <VionaCard surfaceVariant="light" style={styles.pricingCard}>
+            <Text style={styles.tierBadge}>{t('b2bPaywallUi.tier1Badge')}</Text>
+            <Text style={styles.secondaryTitle}>{t('b2bPaywallUi.tier1Title')}</Text>
+            <Text style={styles.secondaryPrice}>{t('b2bPaywallUi.tier1Price')}</Text>
+            <Text style={styles.secondaryBody}>{t('b2bPaywallUi.tier1Body')}</Text>
             <View style={styles.secondaryFoot}>
-              <Ionicons name="wallet-outline" size={18} color="rgba(226,232,240,0.55)" />
-              <Text style={styles.secondaryHint}>Entry path · no annual lock-in</Text>
+              <Ionicons name="wallet-outline" size={18} color={INK_SUB} />
+              <Text style={styles.secondaryHint}>{t('b2bPaywallUi.tier1Hint')}</Text>
             </View>
-          </View>
+          </VionaCard>
 
           <View style={styles.eliteShell}>
             <LinearGradient
-              colors={['rgba(212,175,55,0.22)', 'rgba(10,25,47,0.95)', 'rgba(5,11,24,0.98)']}
+              colors={['rgba(252,248,235,0.98)', 'rgba(255,255,255,0.99)', 'rgba(248,250,252,0.98)']}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
               style={StyleSheet.absoluteFillObject}
             />
             <View style={styles.eliteGlow} />
             <View style={styles.eliteInner}>
-              <Text style={styles.tierBadgeGold}>Tier 2 · RECOMMENDED</Text>
-              <Text style={styles.eliteTitle}>Power SaaS Elite</Text>
+              <Text style={styles.tierBadgeGold}>{t('b2bPaywallUi.tier2Badge')}</Text>
+              <Text style={styles.eliteTitle}>{t('b2bPaywallUi.tier2Title')}</Text>
               <Text style={styles.elitePrice}>
-                €139<Text style={styles.elitePriceSuffix}>/month</Text>
+                {t('b2bPaywallUi.tier2Price')}
+                <Text style={styles.elitePriceSuffix}>{t('b2bPaywallUi.tier2PerMonth')}</Text>
               </Text>
-              <Text style={styles.eliteSub}>Full-stack automation, data sovereignty, and VIP retention tooling.</Text>
+              <Text style={styles.eliteSub}>{t('b2bPaywallUi.tier2Sub')}</Text>
               <View style={styles.eliteFeatures}>
-                <GoldCheck label="Unlimited AI receptionist & intelligent routing" />
-                <GoldCheck label="VIP client profiles, history, and retention signals" />
-                <GoldCheck label="Real-time booking intelligence & staff handoff" />
+                <GoldCheck label={t('b2bPaywallUi.tier2Feat1')} />
+                <GoldCheck label={t('b2bPaywallUi.tier2Feat2')} />
+                <GoldCheck label={t('b2bPaywallUi.tier2Feat3')} />
               </View>
             </View>
           </View>
 
           {isPowerSubscriber ? (
             <View style={styles.cancelComplianceShell} accessibilityRole="summary">
-              <Text style={styles.cancelComplianceTitle}>Power SaaS — EU cancellation</Text>
-              <Text style={styles.cancelComplianceBody}>
-                You may cancel anytime. Access continues until the end of your paid period — no extra steps or retention
-                calls required.
-              </Text>
+              <Text style={styles.cancelComplianceTitle}>{t('b2bPaywallUi.cancelTitle')}</Text>
+              <Text style={styles.cancelComplianceBody}>{t('b2bPaywallUi.cancelBody')}</Text>
               <Pressable
                 onPress={onCancelSubscription}
                 disabled={cancelBusy}
@@ -246,39 +250,36 @@ export function B2BPaywallScreen(): ReactElement {
                   (pressed || cancelBusy) && styles.cancelSubscriptionBtnPressed,
                 ]}
                 accessibilityRole="button"
-                accessibilityLabel="Cancel Power subscription at end of billing period"
+                accessibilityLabel={t('b2bPaywallUi.cancelA11y')}
               >
                 {cancelBusy ? (
-                  <ActivityIndicator color={GOLD_BRIGHT} />
+                  <ActivityIndicator color={PRIMARY_GOLD} />
                 ) : (
                   <>
                     <Ionicons name="close-circle-outline" size={22} color={THREAT_RED} />
-                    <Text style={styles.cancelSubscriptionText}>Cancel Subscription</Text>
+                    <Text style={styles.cancelSubscriptionText}>{t('b2bPaywallUi.cancelBtn')}</Text>
                   </>
                 )}
               </Pressable>
             </View>
           ) : null}
 
-          <View style={styles.wholesaleCard}>
-            <Text style={styles.tierBadge}>Tier 3</Text>
-            <Text style={styles.wholesaleTitle}>Wholesale Corridor</Text>
-            <Text style={styles.wholesalePrice}>1% platform fee</Text>
-            <Text style={styles.wholesaleBody}>
-              B2B wholesale & supply volume — lowest headline take for merchants moving stock through VIONA’s verified
-              trade lane (qualifying SKUs; see Merchant Ops).
-            </Text>
+          <VionaCard surfaceVariant="muted" style={styles.pricingCardWholesale}>
+            <Text style={styles.tierBadge}>{t('b2bPaywallUi.tier3Badge')}</Text>
+            <Text style={styles.wholesaleTitle}>{t('b2bPaywallUi.tier3Title')}</Text>
+            <Text style={styles.wholesalePrice}>{t('b2bPaywallUi.tier3Price')}</Text>
+            <Text style={styles.wholesaleBody}>{t('b2bPaywallUi.tier3Body')}</Text>
             <View style={styles.wholesaleFoot}>
               <Ionicons name="git-network-outline" size={18} color={PRIMARY_GOLD} />
-              <Text style={styles.wholesaleHint}>Stack with Tier 1 or 2 for AI + voice</Text>
+              <Text style={styles.wholesaleHint}>{t('b2bPaywallUi.tier3Hint')}</Text>
             </View>
-          </View>
+          </VionaCard>
 
           <Pressable
             onPress={onUpgrade}
             style={({ pressed }) => [styles.ctaOuter, pressed && styles.ctaPressed]}
             accessibilityRole="button"
-            accessibilityLabel="Secure My Business and Upgrade Now"
+            accessibilityLabel={t('b2bPaywallUi.ctaA11y')}
           >
             <LinearGradient
               colors={[GOLD_DEEP, GOLD_MID, GOLD_BRIGHT, GOLD_MID, GOLD_DEEP]}
@@ -287,7 +288,7 @@ export function B2BPaywallScreen(): ReactElement {
               end={{ x: 1, y: 0.5 }}
               style={styles.ctaGradient}
             >
-              <Text style={styles.ctaText}>Secure My Business & Upgrade Now</Text>
+              <Text style={styles.ctaText}>{t('b2bPaywallUi.ctaPrimary')}</Text>
             </LinearGradient>
           </Pressable>
 
@@ -295,13 +296,13 @@ export function B2BPaywallScreen(): ReactElement {
             onPress={onContinuePilotRequest}
             style={({ pressed }) => [styles.secondaryPilotCta, pressed && { opacity: 0.9 }]}
             accessibilityRole="button"
-            accessibilityLabel="Continue to pilot request form"
+            accessibilityLabel={t('b2bPaywallUi.ctaPilot')}
           >
-            <Text style={styles.secondaryPilotCtaText}>Continue to pilot request form</Text>
+            <Text style={styles.secondaryPilotCtaText}>{t('b2bPaywallUi.ctaPilot')}</Text>
           </Pressable>
 
           <View style={styles.stripeRow}>
-            <Text style={styles.stripeText}>Secured by Stripe</Text>
+            <Text style={styles.stripeText}>{t('b2bPaywallUi.stripeRow')}</Text>
             <View style={styles.cardIcons}>
               <View style={[styles.cardChip, styles.cardChipWide]} />
               <View style={[styles.cardChip, styles.cardChipMid]} />
@@ -309,9 +310,7 @@ export function B2BPaywallScreen(): ReactElement {
             </View>
           </View>
 
-          <Text style={styles.legalHint}>
-            Subscription renews monthly until cancelled. Taxes may apply. VIONA B2B terms apply.
-          </Text>
+          <Text style={styles.legalHint}>{t('b2bPaywallUi.legalHint')}</Text>
         </ScrollView>
       </SafeAreaView>
     </View>
@@ -321,7 +320,7 @@ export function B2BPaywallScreen(): ReactElement {
 const styles = StyleSheet.create({
   shell: {
     flex: 1,
-    backgroundColor: MIDNIGHT_NAVY,
+    backgroundColor: SHELL_MID,
   },
   safe: {
     flex: 1,
@@ -340,7 +339,7 @@ const styles = StyleSheet.create({
   backText: {
     fontSize: 15,
     fontWeight: '600',
-    color: 'rgba(255,248,231,0.88)',
+    color: INK,
   },
   scroll: {
     flex: 1,
@@ -353,7 +352,7 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: '800',
     letterSpacing: 4,
-    color: 'rgba(212,175,55,0.75)',
+    color: INK_SUB,
     marginBottom: 10,
   },
   titleBlock: {
@@ -364,10 +363,7 @@ const styles = StyleSheet.create({
     lineHeight: 32,
     fontWeight: '300',
     letterSpacing: 0.3,
-    color: GOLD_BRIGHT,
-    textShadowColor: THREAT_RED,
-    textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 16,
+    color: INK,
     marginBottom: 10,
   },
   titleAccentBar: {
@@ -381,7 +377,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     lineHeight: 21,
     fontWeight: '500',
-    color: 'rgba(226,232,240,0.78)',
+    color: INK_SUB,
     marginBottom: 14,
   },
   trapStrip: {
@@ -400,13 +396,13 @@ const styles = StyleSheet.create({
     fontSize: 12,
     lineHeight: 17,
     fontWeight: '600',
-    color: 'rgba(241,245,249,0.9)',
+    color: INK,
   },
   glassWrap: {
     borderRadius: 18,
     overflow: 'hidden',
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.12)',
+    borderColor: vionaTrust.border,
     marginBottom: 28,
   },
   glassInner: {
@@ -417,28 +413,28 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     letterSpacing: 1.2,
     textTransform: 'uppercase',
-    color: 'rgba(226,232,240,0.55)',
+    color: INK_SUB,
     marginBottom: 8,
   },
   metricValue: {
     fontSize: 36,
     fontWeight: '200',
     letterSpacing: 1,
-    color: GOLD_BRIGHT,
+    color: PRIMARY_GOLD,
     marginBottom: 12,
   },
   metricCopy: {
     fontSize: 15,
     lineHeight: 22,
     fontWeight: '500',
-    color: 'rgba(241,245,249,0.92)',
+    color: INK,
   },
   sectionLabel: {
     fontSize: 12,
     fontWeight: '800',
     letterSpacing: 2,
     textTransform: 'uppercase',
-    color: 'rgba(212,175,55,0.65)',
+    color: INK_SUB,
     marginBottom: 14,
   },
   eliteShell: {
@@ -448,16 +444,16 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: PRIMARY_GOLD,
     shadowColor: PRIMARY_GOLD,
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.55,
-    shadowRadius: 20,
-    elevation: 14,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.12,
+    shadowRadius: 12,
+    elevation: 6,
   },
   eliteGlow: {
     ...StyleSheet.absoluteFillObject,
     borderRadius: 18,
     borderWidth: 1,
-    borderColor: 'rgba(255,248,231,0.25)',
+    borderColor: 'rgba(184,149,46,0.25)',
   },
   eliteInner: {
     padding: 20,
@@ -466,7 +462,7 @@ const styles = StyleSheet.create({
     fontSize: 10,
     fontWeight: '900',
     letterSpacing: 1.2,
-    color: 'rgba(148,163,184,0.95)',
+    color: INK_SUB,
     marginBottom: 8,
   },
   tierBadgeGold: {
@@ -479,7 +475,7 @@ const styles = StyleSheet.create({
   eliteTitle: {
     fontSize: 22,
     fontWeight: '800',
-    color: GOLD_BRIGHT,
+    color: INK,
     marginBottom: 4,
   },
   elitePrice: {
@@ -491,12 +487,12 @@ const styles = StyleSheet.create({
   elitePriceSuffix: {
     fontSize: 16,
     fontWeight: '600',
-    color: 'rgba(226,232,240,0.7)',
+    color: INK_SUB,
   },
   eliteSub: {
     fontSize: 13,
     lineHeight: 19,
-    color: 'rgba(226,232,240,0.72)',
+    color: INK_SUB,
     marginBottom: 16,
   },
   eliteFeatures: {
@@ -512,32 +508,30 @@ const styles = StyleSheet.create({
     fontSize: 14,
     lineHeight: 20,
     fontWeight: '600',
-    color: 'rgba(248,250,252,0.95)',
+    color: INK,
   },
-  secondaryCard: {
-    borderRadius: 16,
-    padding: 18,
+  pricingCard: {
     marginBottom: 16,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.14)',
-    backgroundColor: 'rgba(255,255,255,0.04)',
+  },
+  pricingCardWholesale: {
+    marginBottom: 28,
   },
   secondaryTitle: {
     fontSize: 17,
     fontWeight: '700',
-    color: 'rgba(226,232,240,0.88)',
+    color: INK,
     marginBottom: 4,
   },
   secondaryPrice: {
     fontSize: 15,
     fontWeight: '600',
-    color: 'rgba(148,163,184,0.95)',
+    color: INK_SUB,
     marginBottom: 10,
   },
   secondaryBody: {
     fontSize: 13,
     lineHeight: 20,
-    color: 'rgba(148,163,184,0.9)',
+    color: INK_SUB,
     marginBottom: 12,
   },
   secondaryFoot: {
@@ -548,20 +542,12 @@ const styles = StyleSheet.create({
   secondaryHint: {
     fontSize: 12,
     fontWeight: '600',
-    color: 'rgba(148,163,184,0.75)',
-  },
-  wholesaleCard: {
-    borderRadius: 16,
-    padding: 18,
-    marginBottom: 28,
-    borderWidth: 1,
-    borderColor: 'rgba(212,175,55,0.28)',
-    backgroundColor: 'rgba(10,25,47,0.55)',
+    color: INK_SUB,
   },
   wholesaleTitle: {
     fontSize: 17,
     fontWeight: '700',
-    color: 'rgba(248,250,252,0.92)',
+    color: INK,
     marginBottom: 4,
   },
   wholesalePrice: {
@@ -573,7 +559,7 @@ const styles = StyleSheet.create({
   wholesaleBody: {
     fontSize: 13,
     lineHeight: 20,
-    color: 'rgba(148,163,184,0.92)',
+    color: INK_SUB,
     marginBottom: 12,
   },
   wholesaleFoot: {
@@ -598,14 +584,14 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '800',
     letterSpacing: 0.8,
-    color: GOLD_BRIGHT,
+    color: INK,
     marginBottom: 8,
   },
   cancelComplianceBody: {
     fontSize: 12,
     lineHeight: 18,
     fontWeight: '600',
-    color: 'rgba(226,232,240,0.88)',
+    color: INK_SUB,
     marginBottom: 14,
   },
   cancelSubscriptionBtn: {
@@ -618,7 +604,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     borderWidth: 2,
     borderColor: THREAT_RED,
-    backgroundColor: 'rgba(10,25,47,0.65)',
+    backgroundColor: vionaTrust.surface,
     minHeight: 52,
   },
   cancelSubscriptionBtnPressed: {
@@ -628,7 +614,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '900',
     letterSpacing: 0.3,
-    color: GOLD_BRIGHT,
+    color: THREAT_RED,
   },
   ctaOuter: {
     borderRadius: 16,
@@ -708,6 +694,6 @@ const styles = StyleSheet.create({
   secondaryPilotCtaText: {
     fontSize: 13,
     fontWeight: '800',
-    color: '#F4F7FF',
+    color: INK,
   },
 });

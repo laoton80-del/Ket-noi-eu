@@ -13,6 +13,7 @@ import { useAuth } from '../../context/AuthContext';
 import type { RootStackParamList } from '../../navigation/routes';
 import { fetchMerchantLedger, type MerchantLedgerItem } from '../../services/viGlobalMerchantLedgerApi';
 import { useWalletState } from '../../state/wallet';
+import { vionaOps } from '../../components/viona/vionaTrustTokens';
 import { FontFamily } from '../../theme/typography';
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
@@ -57,7 +58,7 @@ export function MerchantVnDashboardScreen() {
     <SafeAreaView style={styles.safe} edges={['top', 'left', 'right']}>
       <View style={styles.header}>
         <Ionicons name="storefront" size={22} color={GOLD} />
-        <Text style={styles.headerTitle}>ViGlobal Merchant</Text>
+        <Text style={styles.headerTitle}>VIONA Merchant</Text>
       </View>
 
       {!kycOk ? (
@@ -128,7 +129,7 @@ export function MerchantVnDashboardScreen() {
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: '#050B14', paddingHorizontal: 16 },
+  safe: { flex: 1, backgroundColor: vionaOps.bg, paddingHorizontal: 16 },
   header: {
     flexDirection: 'row',
     alignItems: 'center',

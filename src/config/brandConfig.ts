@@ -1,8 +1,8 @@
 export const BRAND_CONFIG = {
   internalName: 'KNG',
-  publicName: 'ViGlobal',
+  publicName: 'VIONA',
   tagline: 'Your Local Global Network',
-  supportEmail: 'support@viglobal.app',
+  supportEmail: 'support@viona.app',
 } as const;
 
 export type BrandConfig = typeof BRAND_CONFIG;

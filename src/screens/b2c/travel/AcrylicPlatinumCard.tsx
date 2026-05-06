@@ -2,27 +2,51 @@ import { BlurView } from 'expo-blur';
 import type { ReactNode } from 'react';
 import { Platform, StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 
-const ACRYLIC_BG = 'rgba(255, 255, 255, 0.72)';
-const CHAMPAGNE_SPECULAR = 'rgba(212, 175, 55, 0.55)';
+import { vionaPremium, vionaTrust } from '../../../components/viona/vionaTrustTokens';
+
+const CHAMPAGNE_SPECULAR = 'rgba(200, 164, 77, 0.35)';
+const RICH_ACRYLIC_BG = 'rgba(255, 255, 255, 0.82)';
 
 export type AcrylicPlatinumCardProps = Readonly<{
   children: ReactNode;
   style?: StyleProp<ViewStyle>;
   contentStyle?: StyleProp<ViewStyle>;
-  /** Corner radius for shell + glass face (default 24). Use ~18–22 for pill chips. */
+  /** Corner radius for shell (default 20). */
   surfaceRadius?: number;
+  /**
+   * `minimal` — solid trust surface, thin border (default — less glass).
+   * `rich` — legacy acrylic blur + specular (VIP moments only).
+   */
+  appearance?: 'minimal' | 'rich';
 }>;
 
 /**
- * Luxury acrylic glass tile — pearl mesh stack, champagne specular on top/left, soft elevation.
+ * Travel / hub card — default **minimal** (Clean Trust + restrained premium border).
  */
-export function AcrylicPlatinumCard({ children, style, contentStyle, surfaceRadius }: AcrylicPlatinumCardProps) {
-  const r = surfaceRadius ?? 24;
+export function AcrylicPlatinumCard({
+  children,
+  style,
+  contentStyle,
+  surfaceRadius,
+  appearance = 'minimal',
+}: AcrylicPlatinumCardProps) {
+  const r = surfaceRadius ?? 20;
+
+  if (appearance === 'minimal') {
+    return (
+      <View style={[styles.minimalShell, { borderRadius: r }, style]}>
+        <View style={[styles.minimalFace, { borderRadius: r }]}>
+          <View style={[styles.minimalInner, contentStyle]}>{children}</View>
+        </View>
+      </View>
+    );
+  }
+
   return (
-    <View style={[styles.elevationShell, { borderRadius: r }, style]}>
+    <View style={[styles.richShell, { borderRadius: r }, style]}>
       <View style={[styles.acrylicOuter, { borderRadius: r }]}>
         {Platform.OS === 'ios' ? (
-          <BlurView intensity={40} tint="light" style={StyleSheet.absoluteFill} />
+          <BlurView intensity={28} tint="light" style={StyleSheet.absoluteFill} />
         ) : null}
         <View style={styles.acrylicTint} />
         <View style={[styles.acrylicInner, contentStyle]}>{children}</View>
@@ -32,12 +56,28 @@ export function AcrylicPlatinumCard({ children, style, contentStyle, surfaceRadi
 }
 
 const styles = StyleSheet.create({
-  elevationShell: {
-    shadowColor: 'rgba(10, 22, 40, 0.18)',
-    shadowOffset: { width: 0, height: 12 },
+  minimalShell: {
+    shadowColor: 'rgba(15, 23, 42, 0.08)',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 1,
+    shadowRadius: 16,
+    elevation: 4,
+  },
+  minimalFace: {
+    borderWidth: 1,
+    borderColor: vionaPremium.cardBorder,
+    backgroundColor: vionaTrust.surface,
+    overflow: 'hidden',
+  },
+  minimalInner: {
+    padding: 16,
+  },
+  richShell: {
+    shadowColor: 'rgba(10, 22, 40, 0.12)',
+    shadowOffset: { width: 0, height: 10 },
     shadowOpacity: 0.14,
-    shadowRadius: 28,
-    elevation: 12,
+    shadowRadius: 22,
+    elevation: 8,
   },
   acrylicOuter: {
     overflow: 'hidden',
@@ -49,11 +89,11 @@ const styles = StyleSheet.create({
     borderBottomWidth: StyleSheet.hairlineWidth,
     borderRightColor: 'rgba(5, 11, 20, 0.06)',
     borderBottomColor: 'rgba(5, 11, 20, 0.06)',
-    backgroundColor: Platform.OS === 'android' ? ACRYLIC_BG : 'transparent',
+    backgroundColor: Platform.OS === 'android' ? RICH_ACRYLIC_BG : 'transparent',
   },
   acrylicTint: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: ACRYLIC_BG,
+    backgroundColor: RICH_ACRYLIC_BG,
   },
   acrylicInner: {
     position: 'relative',

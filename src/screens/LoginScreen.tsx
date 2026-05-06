@@ -8,12 +8,16 @@ import type { RootStackParamList } from '../navigation/routes';
 import { persistUserLanguage, useTranslation } from '../utils/i18n';
 import { DemoTriggerButton } from '../components/onboarding/DemoTriggerButton';
 import { WelcomeBrandPanel } from './auth/WelcomeScreen';
-import { Colors } from '../theme/colors';
 import { FontFamily } from '../theme/typography';
+import { vionaHybrid } from '../components/viona/vionaTrustTokens';
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
 /** Ordering: Vietnam / major EU dial codes first — avoid +420 as the default-first option. */
 const COUNTRY_CODES = ['+84', '+49', '+33', '+44', '+48', '+421', '+420'];
+
+const LOGIN_INK = '#1a1426';
+const LOGIN_INK_SOFT = 'rgba(26, 20, 38, 0.72)';
+const LOGIN_TRUST_CTA = vionaHybrid.trustBlue;
 
 export function LoginScreen() {
   const navigation = useNavigation<Nav>();
@@ -129,7 +133,7 @@ export function LoginScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F8F6F0', justifyContent: 'center', paddingHorizontal: 18 },
+  container: { flex: 1, backgroundColor: vionaHybrid.background, justifyContent: 'center', paddingHorizontal: 18 },
   langBar: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -180,7 +184,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 27,
-    color: Colors.text,
+    color: LOGIN_INK,
     fontFamily: FontFamily.extrabold,
     marginBottom: 6,
     flexShrink: 1,
@@ -188,7 +192,7 @@ const styles = StyleSheet.create({
   sub: {
     fontSize: 13,
     lineHeight: 20,
-    color: Colors.textSoft,
+    color: LOGIN_INK_SOFT,
     fontFamily: FontFamily.regular,
     marginBottom: 12,
     flexShrink: 1,
@@ -204,7 +208,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'rgba(212, 175, 55, 0.35)',
   },
-  codeText: { color: Colors.text, fontFamily: FontFamily.semibold, fontSize: 14 },
+  codeText: { color: LOGIN_INK, fontFamily: FontFamily.semibold, fontSize: 14 },
   input: {
     flex: 1,
     minWidth: 120,
@@ -214,20 +218,20 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(212, 175, 55, 0.28)',
     backgroundColor: 'rgba(255,255,255,0.86)',
     paddingHorizontal: 12,
-    color: Colors.text,
+    color: LOGIN_INK,
     fontFamily: FontFamily.medium,
   },
   cta: {
     height: 46,
     borderRadius: 12,
     marginTop: 14,
-    backgroundColor: '#C62828',
+    backgroundColor: LOGIN_TRUST_CTA,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 12,
   },
   ctaDisabled: { opacity: 0.45 },
-  ctaText: { color: '#FFE9D2', fontFamily: FontFamily.bold, fontSize: 15, textAlign: 'center' },
+  ctaText: { color: '#FFFFFF', fontFamily: FontFamily.bold, fontSize: 15, textAlign: 'center' },
   registerRow: {
     marginTop: 14,
     flexDirection: 'row',
@@ -238,7 +242,7 @@ const styles = StyleSheet.create({
   },
   registerPrompt: {
     fontSize: 13,
-    color: Colors.textSoft,
+    color: LOGIN_INK_SOFT,
     fontFamily: FontFamily.regular,
     flexShrink: 1,
   },
@@ -252,7 +256,7 @@ const styles = StyleSheet.create({
   redirectHint: {
     marginTop: 10,
     fontSize: 12,
-    color: Colors.textSoft,
+    color: LOGIN_INK_SOFT,
     fontFamily: FontFamily.regular,
     flexShrink: 1,
   },

@@ -33,9 +33,14 @@ const NEON_RED_GLOW = '#FF5252';
 export type SOSShieldComponentProps = Readonly<{
   /** Fires once when hold duration completes (single-shot per gesture). */
   onHoldComplete: () => void;
+  /** Softer pulse/shadow for wide layouts (e.g. web) so SOS stays visible without overlapping content visually. */
+  reduceMotionGlow?: boolean;
 }>;
 
-export function SOSShieldComponent({ onHoldComplete }: SOSShieldComponentProps): ReactElement {
+export function SOSShieldComponent({
+  onHoldComplete,
+  reduceMotionGlow = false,
+}: SOSShieldComponentProps): ReactElement {
   const { t, i18n } = useTranslation();
   const [progress, setProgress] = useState(0);
   const holdStartRef = useRef<number | null>(null);
@@ -45,6 +50,11 @@ export function SOSShieldComponent({ onHoldComplete }: SOSShieldComponentProps):
   const ringPulse = useSharedValue(0.35);
 
   useEffect(() => {
+    if (reduceMotionGlow || Platform.OS === 'web') {
+      pulse.value = 1;
+      ringPulse.value = 0.32;
+      return;
+    }
     pulse.value = withRepeat(
       withSequence(
         withTiming(1.06, { duration: 850, easing: Easing.inOut(Easing.ease) }),
@@ -61,7 +71,7 @@ export function SOSShieldComponent({ onHoldComplete }: SOSShieldComponentProps):
       -1,
       false
     );
-  }, [pulse, ringPulse]);
+  }, [pulse, ringPulse, reduceMotionGlow]);
 
   const fabAnim = useAnimatedStyle(() => ({
     transform: [{ scale: pulse.value }],
@@ -128,7 +138,10 @@ export function SOSShieldComponent({ onHoldComplete }: SOSShieldComponentProps):
       style={styles.wrap}
       accessibilityElementsHidden={false}
     >
-      <Animated.View style={[styles.pulseRing, ringAnim]} pointerEvents="none" />
+      <Animated.View
+        style={[styles.pulseRing, reduceMotionGlow && styles.pulseRingDesktop, ringAnim]}
+        pointerEvents="none"
+      />
       <Animated.View style={fabAnim}>
         <View style={styles.ringSlot}>
           <Svg
@@ -174,13 +187,17 @@ export function SOSShieldComponent({ onHoldComplete }: SOSShieldComponentProps):
           <Pressable
             onPressIn={onPressIn}
             onPressOut={onPressOut}
-            style={({ pressed }) => [styles.hit, pressed && styles.hitPressed]}
+            style={({ pressed }) => [
+              styles.hit,
+              reduceMotionGlow && styles.hitDesktop,
+              pressed && styles.hitPressed,
+            ]}
             accessibilityRole="button"
             accessibilityLabel={t('sos.fabLabel')}
             accessibilityHint={t('sos.fabHoldHint')}
           >
             <LinearGradient
-              colors={['#B91C1C', '#DC2626', '#F59E0B', '#FBBF24']}
+              colors={['#B91C1C', '#DC2626']}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
               style={styles.gradient}
@@ -193,17 +210,19 @@ export function SOSShieldComponent({ onHoldComplete }: SOSShieldComponentProps):
           </Pressable>
         </View>
       </Animated.View>
-      <View style={styles.captionWrap} pointerEvents="none">
-        <Text
-          style={styles.caption}
-          numberOfLines={2}
-          adjustsFontSizeToFit
-          minimumFontScale={0.62}
-          maxFontSizeMultiplier={1.1}
-        >
-          {progress > 0 && progress < 1 ? t('sos.holdProgress') : t('sos.fabLabel')}
-        </Text>
-      </View>
+      {(progress > 0 && progress < 1) || !reduceMotionGlow ? (
+        <View style={styles.captionWrap} pointerEvents="none">
+          <Text
+            style={styles.caption}
+            numberOfLines={2}
+            adjustsFontSizeToFit
+            minimumFontScale={0.62}
+            maxFontSizeMultiplier={1.1}
+          >
+            {progress > 0 && progress < 1 ? t('sos.holdProgress') : t('sos.fabLabel')}
+          </Text>
+        </View>
+      ) : null}
     </View>
   );
 }
@@ -223,6 +242,11 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(255, 23, 68, 0.45)',
     backgroundColor: 'rgba(255, 23, 68, 0.08)',
   },
+  pulseRingDesktop: {
+    borderWidth: 1,
+    borderColor: 'rgba(255, 23, 68, 0.18)',
+    backgroundColor: 'rgba(255, 23, 68, 0.03)',
+  },
   ringSlot: {
     width: RING_SIZE,
     height: RING_SIZE,
@@ -235,11 +259,17 @@ const styles = StyleSheet.create({
   hit: {
     borderRadius: 36,
     overflow: 'hidden',
-    elevation: 14,
+    elevation: 12,
     shadowColor: '#DC2626',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.45,
-    shadowRadius: 14,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.32,
+    shadowRadius: 10,
+  },
+  hitDesktop: {
+    elevation: 4,
+    shadowOpacity: 0.14,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 3 },
   },
   hitPressed: { opacity: 0.92 },
   gradient: {
@@ -283,7 +313,7 @@ const styles = StyleSheet.create({
     fontFamily: FontFamily.extrabold,
     fontSize: 10,
     fontWeight: '800',
-    color: '#FEF08A',
+    color: '#FEE2E2',
     textAlign: 'center',
     letterSpacing: 0.3,
     textShadowColor: 'rgba(0,0,0,0.55)',

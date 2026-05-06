@@ -60,9 +60,8 @@ export const APP_BRAND = {
 export type BrandSurface = 'b2c' | 'b2b' | 'internal';
 
 export function brandNameForSurface(surface: BrandSurface): string {
-  if (surface === 'b2c') return APP_BRAND.publicName;
-  if (surface === 'b2b') return APP_BRAND.internalName;
-  return APP_BRAND.masterName;
+  if (surface === 'internal') return APP_BRAND.masterName;
+  return APP_BRAND.publicName;
 }
 
 /** Assistant roster for prompts / persona wiring. */

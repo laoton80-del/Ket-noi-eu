@@ -1,5 +1,5 @@
 import { type ReactElement } from 'react';
-import { View } from 'react-native';
+import { Platform, useWindowDimensions, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { SOSShieldComponent } from './premium/SOSShieldComponent';
@@ -16,19 +16,22 @@ export type SOSFloatingButtonProps = Readonly<{
  */
 export function SOSFloatingButton({ tabBarLift, onHoldComplete }: SOSFloatingButtonProps): ReactElement {
   const insets = useSafeAreaInsets();
-  const bottom = tabBarLift + Math.max(insets.bottom, 10) + 6;
+  const { width } = useWindowDimensions();
+  const isDesktopWeb = Platform.OS === 'web' && width > 768;
+  const bottom = tabBarLift + Math.max(insets.bottom, 10) + (isDesktopWeb ? 22 : 6);
+  const right = Math.max(insets.right, isDesktopWeb ? 32 : 14);
 
   return (
     <View
       pointerEvents="box-none"
       style={{
         position: 'absolute',
-        zIndex: 70,
+        zIndex: 65,
         bottom,
-        right: Math.max(insets.right, 14),
+        right,
       }}
     >
-      <SOSShieldComponent onHoldComplete={onHoldComplete} />
+      <SOSShieldComponent reduceMotionGlow={isDesktopWeb} onHoldComplete={onHoldComplete} />
     </View>
   );
 }

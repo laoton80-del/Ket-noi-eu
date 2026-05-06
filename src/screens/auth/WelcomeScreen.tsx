@@ -1,23 +1,22 @@
 import type { ReactElement } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
-import { BRAND_CONFIG } from '../../config/brandConfig';
+import { useTranslation } from '../../i18n';
 import { FontFamily } from '../../theme/typography';
-import { applyWebStyles } from '../../utils/applyWebStyles';
-
-const MERCHANT_SUBLABEL = `${BRAND_CONFIG.publicName} - Powered by ${BRAND_CONFIG.internalName} Ecosystem` as const;
+import { vionaTrust } from '../../components/viona/vionaTrustTokens';
 
 /**
  * Brand hero used on auth entry (Login / onboarding modals).
  */
 export function WelcomeBrandPanel(): ReactElement {
+  const { t } = useTranslation();
   return (
     <View style={styles.wrap}>
-      <Text style={styles.logo}>{BRAND_CONFIG.publicName}</Text>
-      <View style={styles.subGlass} className={applyWebStyles('kn-glass kn-neon-b2b')}>
-        <Text style={styles.sub}>{BRAND_CONFIG.tagline}</Text>
+      <Text style={styles.logo}>{t('login.brandName')}</Text>
+      <View style={styles.subGlass}>
+        <Text style={styles.sub}>{t('login.brandTagline')}</Text>
       </View>
       <View style={styles.merchantSub}>
-        <Text style={styles.merchantSubText}>{MERCHANT_SUBLABEL}</Text>
+        <Text style={styles.merchantSubText}>{t('login.brandEcosystemLine')}</Text>
       </View>
     </View>
   );
@@ -46,8 +45,9 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     paddingHorizontal: 14,
     marginTop: 4,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: 'rgba(197, 160, 89, 0.35)',
+    borderWidth: 1,
+    borderColor: vionaTrust.border,
+    backgroundColor: vionaTrust.surface,
   },
   merchantSub: {
     marginTop: 8,
