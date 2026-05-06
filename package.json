@@ -14,6 +14,7 @@
     "trust:preflight": "node scripts/trust-preflight.mjs",
     "trust:native-readiness": "node scripts/trust-native-readiness.mjs",
     "trust:live": "node scripts/trust-live-smoke.mjs",
+    "prepare:native-firebase-config": "node scripts/prepare-native-firebase-config.mjs",
     "preflight:release": "npm run preflight:with-functions && npm run trust:preflight",
     "preflight:commercial": "npm run preflight:release && node scripts/commercial-release-gate.mjs",
     "preflight:commercial:strict": "npm run preflight:release && node scripts/commercial-release-gate.mjs --strict",
