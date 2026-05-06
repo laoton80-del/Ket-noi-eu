@@ -28,7 +28,9 @@ import { hasTravelLocationConsent, setTravelLocationConsent } from '../../servic
 import { getTravelContext } from '../../services/context/UserContextService';
 import { runUltraMasterBookingWithAlerts } from '../../services/ultraMasterBookingFlow';
 import { listVietnameseRestaurantsByProximity, type CravingsRadarHit } from '../../services/travel/travelCravingsRadar';
+import { TravelDirectionSelector } from '../../components/travel/TravelDirectionSelector';
 import { VionaMiniAppCard } from '../../components/viona/VionaMiniAppCard';
+import type { TravelDirectionId } from '../../core/travel/travelDirectionTypes';
 import { vionaPremium, vionaTrust } from '../../components/viona/vionaTrustTokens';
 import { theme } from '../../theme/theme';
 import { FontFamily } from '../../theme/typography';
@@ -76,6 +78,8 @@ export function TravelScreen() {
   const [locationGate, setLocationGate] = useState<LocationGate>('loading');
   /** When true, {@link getTravelContext} runs; when false, Travel UI uses default coordinates only. */
   const [gpsOptIn, setGpsOptIn] = useState(false);
+  /** Pack D — Universe Travel lens (local UI only; no API / fulfillment). */
+  const [travelDirectionId, setTravelDirectionId] = useState<TravelDirectionId | null>(null);
 
   useEffect(() => {
     void hasTravelLocationConsent().then((ok) => {
@@ -286,6 +290,8 @@ export function TravelScreen() {
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
+          <TravelDirectionSelector selectedId={travelDirectionId} onSelect={setTravelDirectionId} />
+
           <AcrylicPlatinumCard style={styles.heroCard}>
             <Text style={styles.cardKicker}>{t('travelHub.mapKicker')}</Text>
             <View style={styles.mapShell}>
