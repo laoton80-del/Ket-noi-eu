@@ -844,6 +844,24 @@
       "mismatch": "Cảnh báo: verdict thực tế khác mong đợi — kiể tra meter hoặc fixture."
     }
   },
+  "aiEnforcement": {
+    "preview": {
+      "title": "Thực thi auto-pause (khuyến nghị dry-run)",
+      "dryRun": "Chỉ dry-run — app không thực thi pause/block gateway production.",
+      "productionEnforced": "Đã thực thi production (mô phỏng)"
+    },
+    "policy": {
+      "defaultNotes": "Mặc định dry-run và cần phê duyệt thủ công trước mọi pause enforced sau này."
+    },
+    "action": {
+      "none": "Không hành động enforcement",
+      "warnUser": "Khuyến nghị cảnh báo người dùng (nhẹ)",
+      "warnAdmin": "Khuyến nghị cảnh báo admin / ops",
+      "pauseFeature": "Tạm dừng tính năng (chỉ enforced khi được phép rõ ràng)",
+      "requireManualApproval": "Cần phê duyệt thủ công trước khi pause",
+      "blockRequest": "Chặn request (chỉ enforced khi được phép rõ ràng)"
+    }
+  },
   "telephony": {
     "sandbox": {
       "statusLabel": "Viễn thông: sẵn sàng sandbox / manual ops — không gọi production",

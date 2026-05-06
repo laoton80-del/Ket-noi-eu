@@ -27,6 +27,7 @@
     "ai:cost-readiness": "node scripts/ai-cost-firewall-check.mjs",
     "ai:usage-readiness": "node scripts/ai-usage-metering-check.mjs",
     "ai:usage-preview-readiness": "node scripts/ai-usage-metering-preview-check.mjs",
+    "ai:auto-pause-readiness": "node scripts/ai-auto-pause-readiness-check.mjs",
     "twilio:sandbox-readiness": "node scripts/twilio-sandbox-readiness-check.mjs",
     "functions:build": "npm run build --prefix functions",
     "functions:verify-bundle": "node scripts/verify-functions-bundle.mjs",

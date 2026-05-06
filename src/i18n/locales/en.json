@@ -845,6 +845,24 @@
       "mismatch": "Warning: actual verdict differs from fixture expectation — investigate meter or fixture drift."
     }
   },
+  "aiEnforcement": {
+    "preview": {
+      "title": "Auto-pause enforcement (dry-run recommendation)",
+      "dryRun": "Dry-run only — no production gateway pause or block is executed from the app.",
+      "productionEnforced": "Production enforced (simulated)"
+    },
+    "policy": {
+      "defaultNotes": "Default policy is dry-run with human approval required before any future enforced pause."
+    },
+    "action": {
+      "none": "No enforcement action",
+      "warnUser": "Recommend warn user (soft)",
+      "warnAdmin": "Recommend warn admin / ops",
+      "pauseFeature": "Pause feature (enforced mode only, when explicitly allowed)",
+      "requireManualApproval": "Require manual approval before pause",
+      "blockRequest": "Block request (enforced mode only, when explicitly allowed)"
+    }
+  },
   "telephony": {
     "sandbox": {
       "statusLabel": "Telephony: sandbox / manual ops readiness — not production calling",
