@@ -406,6 +406,73 @@
       }
     }
   },
+  "localCommerce": {
+    "title": "Universe Local — Vietnamese services marketplace",
+    "subtitle": "Listings and flows are Lite, Request, Demo, or Pilot. Nothing here guarantees instant fulfillment or production payments.",
+    "vietnameseAbroadTitle": "Vietnamese abroad",
+    "vietnameseAbroadSubtitle": "Book Viet-owned salons, food, and pros from overseas; merchants typically confirm in Vietnamese workflows.",
+    "nativeCustomerTitle": "Local customers booking Vietnamese businesses",
+    "nativeCustomerSubtitle": "Browse in your language; requests route to Vietnamese merchants with translation assists (Lite / Demo).",
+    "vietnameseMerchantTitle": "Vietnamese merchant operations",
+    "vietnameseMerchantSubtitle": "Dashboards, menus, and Lễ Tân AI Pilot — you confirm before an appointment is final.",
+    "bookingStatus": {
+      "lite": "Lite",
+      "requestOnly": "Request",
+      "demo": "Demo",
+      "pilot": "Pilot",
+      "comingSoon": "Coming soon",
+      "gated": "Gated"
+    },
+    "safety": {
+      "bookingRequestNote": "Some services are in Lite/Pilot mode. Merchants confirm before an appointment is finalized.",
+      "aiPilotNote": "Lễ Tân AI Receptionist is a pilot surface — not autonomous production booking or payouts."
+    },
+    "smartTrioContext": "Language legs (preview): customer {{customer}} · merchant {{merchant}} · native {{native}}.",
+    "cta": {
+      "browseServices": "Browse services",
+      "requestBooking": "Send booking assist",
+      "merchantSetup": "Merchant / B2B setup",
+      "aiReceptionistPilot": "AI Receptionist (Pilot)"
+    },
+    "capability": {
+      "localMarketplace": {
+        "title": "Discover Vietnamese services",
+        "description": "Lite discovery — responses are asynchronous; no on-demand guarantee."
+      },
+      "serviceMenu": {
+        "title": "Service menus & storefronts",
+        "description": "Lite browsing — prices and slots may be indicative until a merchant replies."
+      },
+      "bookingRequest": {
+        "title": "Booking as a request",
+        "description": "Request-only path — you are not \"confirmed\" until the merchant accepts in their workflow."
+      },
+      "merchantDashboard": {
+        "title": "Merchant dashboard & inbox",
+        "description": "Lite operations shell — reconcile requests before promising a slot."
+      },
+      "aiReceptionistPilot": {
+        "title": "Lễ Tân AI Receptionist",
+        "description": "Pilot assistant for intake and FAQs — not a licensed concierge or auto-payment agent."
+      },
+      "nativeLanguageBooking": {
+        "title": "Local-language booking assist",
+        "description": "Demo / Lite translation bridges — merchants may still reply primarily in Vietnamese."
+      }
+    },
+    "alert": {
+      "demoBookingTitle": "Demo booking (legal intake)",
+      "demoBookingMissingEnv": "Missing EXPO_PUBLIC_DEMO_BOOKING_BUSINESS_ID or EXPO_PUBLIC_DEMO_BOOKING_SERVICE_ID in .env.",
+      "processingRequest": "Submitting request… (not a production payment receipt.)",
+      "requestRecordedDemo": "Request recorded in demo/staging context — not a confirmed paid appointment.",
+      "bookLawyerImmediate": "Send demo booking request"
+    },
+    "a11y": {
+      "merchantB2bHub": "Merchant and B2B setup"
+    },
+    "leonaRestaurantPrefill": "Help me request a table at a nearby Vietnamese restaurant (assist only).",
+    "leonaBookingAssistPrefill": "Help me draft a booking request to a Vietnamese service (assist only, merchant must confirm)."
+  },
   "localHub": {
     "screenTitle": "VIONA Local",
     "universeKicker": "Local services",

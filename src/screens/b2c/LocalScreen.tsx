@@ -32,6 +32,7 @@ import { createBooking } from '../../services/bookingService';
 import { runUltraMasterBookingWithAlerts } from '../../services/ultraMasterBookingFlow';
 import { reserveAndCommitCredits, useWalletState } from '../../state/wallet';
 import { useTranslation } from '../../i18n';
+import { LocalCommerceClarityBlock } from '../../components/localCommerce/LocalCommerceClarityBlock';
 import { VionaCard } from '../../components/viona/VionaCard';
 import { VionaHeader } from '../../components/viona/VionaHeader';
 import { VionaSectionHeader } from '../../components/viona/VionaSectionHeader';
@@ -151,6 +152,10 @@ export function LocalScreen() {
     openMiniApp('local', () => navigation.navigate('Tabs', { screen: 'TabLocal' }));
   }, [navigation, openMiniApp]);
 
+  const onAiReceptionistPilotInfo = useCallback(() => {
+    Alert.alert(t('localCommerce.cta.aiReceptionistPilot'), t('localCommerce.safety.aiPilotNote'));
+  }, [t]);
+
   const resetComposer = () => {
     setTitle('');
     setCity('');
@@ -178,24 +183,24 @@ export function LocalScreen() {
       const payload = getDemoBookingPayload();
       if (!payload) {
         Alert.alert(
-          'Đặt luật sư',
-          'Thiếu EXPO_PUBLIC_DEMO_BOOKING_BUSINESS_ID hoặc EXPO_PUBLIC_DEMO_BOOKING_SERVICE_ID trong .env.'
+          t('localCommerce.alert.demoBookingTitle'),
+          t('localCommerce.alert.demoBookingMissingEnv')
         );
         return;
       }
-      Alert.alert('Đặt luật sư', 'Transaction Processing…');
+      Alert.alert(t('localCommerce.alert.demoBookingTitle'), t('localCommerce.alert.processingRequest'));
       try {
         const bk = await createBooking(payload);
         if (bk.ok) {
-          Alert.alert('VIONA', 'Success!');
+          Alert.alert(t('localCommerce.alert.demoBookingTitle'), t('localCommerce.alert.requestRecordedDemo'));
         } else {
-          Alert.alert('Đặt luật sư', bk.error);
+          Alert.alert(t('localCommerce.alert.demoBookingTitle'), bk.error);
         }
       } catch (e) {
-        Alert.alert('Đặt luật sư', formatNetworkFailureMessage(e));
+        Alert.alert(t('localCommerce.alert.demoBookingTitle'), formatNetworkFailureMessage(e));
       }
     });
-  }, []);
+  }, [t]);
 
   const runLegalScanAfterPriceConfirm = useCallback(
     async (documentText: string) => {
@@ -212,7 +217,7 @@ export function LocalScreen() {
           const body = r.data.summary.join('\n');
           Alert.alert('⚠️ CRITICAL — AI Trạng Sư', body, [
             { text: 'Đóng', style: 'cancel' },
-            { text: 'Book Lawyer Immediately', onPress: bookLawyerAfterCritical },
+            { text: t('localCommerce.alert.bookLawyerImmediate'), onPress: bookLawyerAfterCritical },
           ]);
         } else {
           Alert.alert('AI Trạng Sư', r.data.summary.join('\n'));
@@ -223,7 +228,7 @@ export function LocalScreen() {
         setLegalScanBusy(false);
       }
     },
-    [bookLawyerAfterCritical]
+    [bookLawyerAfterCritical, t]
   );
 
   const onLegalScannerPress = useCallback(() => {
@@ -315,6 +320,15 @@ export function LocalScreen() {
           />
         </VionaCard>
 
+        <LocalCommerceClarityBlock
+          onBrowseServices={openServiceHub}
+          onRequestBookingAssist={() =>
+            openLeonaPrefill(t('localCommerce.leonaBookingAssistPrefill'))
+          }
+          onMerchantSetup={() => navigation.navigate('B2BPaywall')}
+          onAiReceptionistPilotInfo={onAiReceptionistPilotInfo}
+        />
+
         {showVietnamInboundHub ? (
           <Pressable
             onPress={() => navigation.navigate('VietnamHub')}
@@ -350,7 +364,7 @@ export function LocalScreen() {
             <Text style={styles.heroCardSub}>{t('localHub.nailsSub')}</Text>
           </Pressable>
           <Pressable
-            onPress={() => openLeonaPrefill('Đặt bàn nhà hàng Việt gần tôi')}
+            onPress={() => openLeonaPrefill(t('localCommerce.leonaRestaurantPrefill'))}
             style={({ pressed }) => [styles.heroCard, pressed && { opacity: 0.9 }]}
             accessibilityRole="button"
             accessibilityLabel={t('localHub.restaurantTitle')}
@@ -363,7 +377,7 @@ export function LocalScreen() {
             onPress={() => navigation.navigate('B2BPaywall')}
             style={({ pressed }) => [styles.heroCard, pressed && { opacity: 0.9 }]}
             accessibilityRole="button"
-            accessibilityLabel="Đặt lịch B2B"
+            accessibilityLabel={t('localCommerce.a11y.merchantB2bHub')}
           >
             <Ionicons name="briefcase-outline" size={26} color={GOLD} />
             <Text style={styles.heroCardTitle}>{t('localHub.b2bTitle')}</Text>
@@ -458,7 +472,7 @@ export function LocalScreen() {
           </View>
           <Pressable style={styles.postBtn} onPress={() => setComposerVisible(true)}>
             <Ionicons name="add-circle-outline" size={20} color={INK} />
-            <Text style={styles.postBtnText}>Đăng tin mới</Text>
+            <Text style={styles.postBtnText}>{t('localHub.postNewListing')}</Text>
           </Pressable>
 
           {sortedPosts.map((item) => {

@@ -406,6 +406,73 @@
       }
     }
   },
+  "localCommerce": {
+    "title": "Universe Local — marketplace dịch vụ Việt",
+    "subtitle": "Luồng ở mức Lite, Request, Demo hoặc Pilot. Không cam kết fulfill tức thì hay thanh toán production tại đây.",
+    "vietnameseAbroadTitle": "Người Việt ở nước ngoài",
+    "vietnameseAbroadSubtitle": "Đặt nail, ẩm thực, thợ/dịch vụ Việt từ xa; merchant thường xác nhận theo quy trình tiếng Việt.",
+    "nativeCustomerTitle": "Khách bản địa đặt dịch vụ doanh nghiệp Việt",
+    "nativeCustomerSubtitle": "Duyệt bằng ngôn ngữ bạn quen; yêu cầu gửi tới merchant Việt kèm hỗ trợ dịch (Lite / Demo).",
+    "vietnameseMerchantTitle": "Merchant Việt vận hành",
+    "vietnameseMerchantSubtitle": "Dashboard, menu và Lễ Tân AI Pilot — bạn xác nhận trước khi lịch được chốt.",
+    "bookingStatus": {
+      "lite": "Lite",
+      "requestOnly": "Gửi yêu cầu",
+      "demo": "Demo",
+      "pilot": "Pilot",
+      "comingSoon": "Sắp có",
+      "gated": "Giới hạn"
+    },
+    "safety": {
+      "bookingRequestNote": "Một số dịch vụ đang ở chế độ Lite/Pilot. Merchant sẽ xác nhận trước khi lịch được chốt.",
+      "aiPilotNote": "Lễ Tân AI Receptionist là bề mặt pilot — không phải đặt chỗ/tự động thanh toán production."
+    },
+    "smartTrioContext": "Nhánh ngôn ngữ (xem trước): khách {{customer}} · merchant {{merchant}} · native {{native}}.",
+    "cta": {
+      "browseServices": "Duyệt dịch vụ",
+      "requestBooking": "Gửi yêu cầu đặt lịch",
+      "merchantSetup": "Thiết lập merchant / B2B",
+      "aiReceptionistPilot": "Lễ Tân AI (Pilot)"
+    },
+    "capability": {
+      "localMarketplace": {
+        "title": "Khám phá dịch vụ Việt",
+        "description": "Lite — phản hồi không đồng bộ; không cam kết có slot ngay."
+      },
+      "serviceMenu": {
+        "title": "Menu & cửa hàng dịch vụ",
+        "description": "Lite — giá/giờ mang tính tham khảo cho đến khi merchant trả lời."
+      },
+      "bookingRequest": {
+        "title": "Đặt lịch dạng yêu cầu",
+        "description": "Chỉ là request — chưa \"chốt lịch\" cho đến khi merchant chấp nhận trong quy trình của họ."
+      },
+      "merchantDashboard": {
+        "title": "Dashboard & hộp thư merchant",
+        "description": "Lite — đối soát yêu cầu trước khi hứa giờ cụ thể."
+      },
+      "aiReceptionistPilot": {
+        "title": "Lễ Tân AI Receptionist",
+        "description": "Pilot hỗ trợ tiếp nhận & FAQ — không phải concierge cấp phép hay agent thanh toán."
+      },
+      "nativeLanguageBooking": {
+        "title": "Hỗ trợ đặt bằng ngôn ngữ địa phương",
+        "description": "Demo / Lite cầu ngôn ngữ — merchant vẫn có thể trả lời chủ yếu bằng tiếng Việt."
+      }
+    },
+    "alert": {
+      "demoBookingTitle": "Đặt lịch demo (legal intake)",
+      "demoBookingMissingEnv": "Thiếu EXPO_PUBLIC_DEMO_BOOKING_BUSINESS_ID hoặc EXPO_PUBLIC_DEMO_BOOKING_SERVICE_ID trong .env.",
+      "processingRequest": "Đang gửi yêu cầu… (không phải biên lai thanh toán production.)",
+      "requestRecordedDemo": "Đã ghi nhận yêu cầu trong ngữ cảnh demo/staging — không phải lịch đã thanh toán/chốt production.",
+      "bookLawyerImmediate": "Gửi yêu cầu đặt lịch (demo)"
+    },
+    "a11y": {
+      "merchantB2bHub": "Thiết lập merchant và B2B"
+    },
+    "leonaRestaurantPrefill": "Giúp tôi soạn yêu cầu đặt bàn nhà hàng Việt gần đây (chỉ hỗ trợ).",
+    "leonaBookingAssistPrefill": "Giúp tôi soạn yêu cầu đặt lịch tới một dịch vụ Việt (chỉ hỗ trợ; merchant phải xác nhận)."
+  },
   "localHub": {
     "screenTitle": "VIONA Địa phương",
     "universeKicker": "Dịch vụ địa phương",
