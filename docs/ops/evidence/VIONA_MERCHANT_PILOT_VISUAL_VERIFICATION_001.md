@@ -2,11 +2,11 @@
 
 ## Metadata
 - Date: 2026-05-07
-- Branch: `rehearsal-merchant-pilot-001-visual-verification`
-- Commit: `62fc3d1`
-- Operator: Codex (ops evidence pass)
-- Device/browser: Not visually executed in this run — needs manual device/browser verification
-- Environment: Local verification run (docs + readiness + source-backed checks)
+- Branch: `rehearsal-merchant-pilot-001-visual-execution`
+- Commit: `62fc3d1` (master baseline before docs update)
+- Operator: Codex (manual execution attempt)
+- Device/browser: Expo web dev server attempted; no direct interactive browser control in this environment
+- Environment: Local verification run + web startup attempt (`npm run web`)
 - Pilot Owner: Needs owner assignment
 - Backup Owner: Needs owner assignment
 - Merchant candidate: VIONA Demo Nails & Spa (mock)
@@ -42,6 +42,13 @@
 | Brand/i18n | Smart Trio chip/sheet in ProfileSwitcher visible | NOT EXECUTED | Needs manual device/browser verification. |
 | Brand/i18n | Language/market context understandable | NOT EXECUTED | Needs manual device/browser verification. |
 
+## Execution Attempt Notes
+
+- Dev method identified from `package.json`: `npm run web` (`expo start --web`).
+- Command was executed and server boot process started.
+- Visual walkthrough could not be completed because this environment cannot directly operate a real browser/device session for interactive UI checks.
+- Result policy applied: no visual item was marked PASS without direct observation.
+
 ## Safety Verification
 | Guard | Expected | Result | Note |
 |------|------|------|------|
@@ -55,7 +62,7 @@
 | Cost guard visible | Preview/panel visible | NOT EXECUTED | Readiness PASS; visual pending. |
 | Alert preview visible | Preview panel visible | NOT EXECUTED | Readiness PASS; visual pending. |
 | Incident dry-run visible | Preview panel visible | NOT EXECUTED | Readiness PASS; visual pending. |
-| Brand/i18n acceptable | No obvious trust-breaking copy | CONDITIONAL | Brand script PASS with allowlisted warnings. |
+| Brand/i18n acceptable | No obvious trust-breaking copy | CONDITIONAL | `brand:i18n-readiness` PASS with allowlisted warnings; visual confirmation pending. |
 
 ## Go / No-Go
 - Internal demo: **Conditional Go**
