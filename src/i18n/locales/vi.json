@@ -122,7 +122,15 @@
     "triageBannerTitle": "Ưu tiên sàng lọc AI Minh Khang",
     "triageBannerCountdown": "Nút gọi khẩn cấp mở sau {{seconds}} giây",
     "triageBufferTitle": "Đang trong vùng đệm sàng lọc",
-    "triageBufferBody": "Hoàn tất kiểm tra an toàn với AI trước. Gọi khẩn cấp mở sau {{seconds}} giây."
+    "triageBufferBody": "Hoàn tất kiểm tra an toàn với AI trước. Gọi khẩn cấp mở sau {{seconds}} giây.",
+    "assistConfirmTitle": "Xác nhận gọi khẩn cấp",
+    "assistConfirmBody": "Hệ thống sẽ chuẩn bị gọi tới {{number}}. Chỉ tiếp tục nếu bạn cần hỗ trợ khẩn cấp ngay.",
+    "assistConfirmCta": "Gọi ngay",
+    "assist": {
+      "title": "SOS Assist",
+      "subtitle": "Ưu tiên hướng dẫn an toàn",
+      "demoNotice": "Chế độ pilot an toàn: màn hình này không tự động gọi hoặc điều phối cứu hộ thật. Hãy xem lựa chọn và xác nhận trước khi gọi."
+    }
   },
   "ai_voice": {
     "tapToSpeak": "Chạm để nói",
@@ -269,6 +277,18 @@
     "universeTravelSub": "Điều hướng du lịch an toàn, rõ trạng thái pilot.",
     "universeAcademyTitle": "Academy",
     "universeAcademySub": "Học và luyện cùng trợ lý AI trong vùng demo.",
+    "universe": {
+      "eyebrow": "ĐA VŨ TRỤ VIONA",
+      "title": "Chọn không gian của bạn",
+      "subtitle": "Hệ sinh thái flagship cho Local, Travel, Academy và hỗ trợ định hướng bằng AI.",
+      "subheadline": "Đi vào đúng không gian theo nhu cầu hiện tại, vẫn giữ rõ trạng thái pilot an toàn.",
+      "localTitle": "VIONA Local",
+      "localSub": "Dịch vụ Việt đáng tin với trạng thái merchant xác nhận.",
+      "travelTitle": "VIONA Travel",
+      "travelSub": "Điều hướng du lịch với trạng thái an toàn pilot rõ ràng.",
+      "academyTitle": "VIONA Academy",
+      "academySub": "Học tập và chuẩn bị cùng trợ lý AI trong luồng demo an toàn."
+    },
     "touristCreditsHint": "Credits trong app cho du lịch (không phải tiền ngân hàng)",
     "survivalTitle": "Phiên dịch & sinh tồn (AI)",
     "survivalSub": "Chạm để được hỗ trợ nhanh khi đi du lịch — làm nổi bật cho chế độ khách.",
@@ -316,6 +336,15 @@
     "sosPingAlertBody": "Đã gửi SOS ping kèm tọa độ {{coords}} ({{city}}). Luồng pilot — không thay thế cơ quan chức năng.",
     "sosPingNotifyTitle": "VIONA — báo ping",
     "sosPingNotifyBody": "Ping SOS · {{city}} · {{coords}}"
+  },
+  "shell": {
+    "utility": {
+      "account": "Tài khoản",
+      "language": "Ngôn ngữ & Thị trường",
+      "change": "Đổi",
+      "safety": "An toàn",
+      "sosAssist": "SOS Assist"
+    }
   },
   "travelHub": {
     "screenTitle": "VIONA Du lịch",

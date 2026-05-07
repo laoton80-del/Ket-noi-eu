@@ -23,7 +23,7 @@ import { useTranslation } from '../../utils/i18n';
 
 export const V7_SOS_HOLD_TO_TRIGGER_MS = 3_000 as const;
 
-const RING_SIZE = 82;
+const RING_SIZE = 64;
 const STROKE = 4;
 const R = (RING_SIZE - STROKE) / 2;
 const CIRC = 2 * Math.PI * R;
@@ -197,14 +197,17 @@ export function SOSShieldComponent({
             accessibilityHint={t('sos.fabHoldHint')}
           >
             <LinearGradient
-              colors={['#B91C1C', '#DC2626']}
+              colors={['#7F1D1D', '#B91C1C']}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
               style={styles.gradient}
             >
-              <Ionicons name="shield" size={26} color="#FFFFFF" style={styles.iconShadow} />
-              <View style={styles.sosBadge}>
-                <View style={styles.sosDot} />
+              <View style={styles.mainRow}>
+                <Ionicons name="shield-checkmark" size={18} color="#FFFFFF" style={styles.iconShadow} />
+                <View style={styles.labelCol}>
+                  <Text style={styles.mainLabel}>{t('shell.utility.sosAssist')}</Text>
+                  <Text style={styles.subLabel}>{t('shell.utility.safety')}</Text>
+                </View>
               </View>
             </LinearGradient>
           </Pressable>
@@ -219,7 +222,7 @@ export function SOSShieldComponent({
             minimumFontScale={0.62}
             maxFontSizeMultiplier={1.1}
           >
-            {progress > 0 && progress < 1 ? t('sos.holdProgress') : t('sos.fabLabel')}
+            {t('sos.holdProgress')}
           </Text>
         </View>
       ) : null}
@@ -231,16 +234,16 @@ const styles = StyleSheet.create({
   wrap: {
     alignItems: 'center',
     justifyContent: 'flex-end',
-    maxWidth: 98,
+    maxWidth: 168,
   },
   pulseRing: {
     position: 'absolute',
-    width: 74,
-    height: 74,
-    borderRadius: 37,
-    borderWidth: 2,
-    borderColor: 'rgba(255, 23, 68, 0.45)',
-    backgroundColor: 'rgba(255, 23, 68, 0.08)',
+    width: 116,
+    height: 42,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 23, 68, 0.24)',
+    backgroundColor: 'rgba(255, 23, 68, 0.04)',
   },
   pulseRingDesktop: {
     borderWidth: 1,
@@ -248,8 +251,8 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255, 23, 68, 0.03)',
   },
   ringSlot: {
-    width: RING_SIZE,
-    height: RING_SIZE,
+    width: 116,
+    height: 64,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -257,9 +260,9 @@ const styles = StyleSheet.create({
     position: 'absolute',
   },
   hit: {
-    borderRadius: 32,
+    borderRadius: 14,
     overflow: 'hidden',
-    elevation: 12,
+    elevation: 8,
     shadowColor: '#DC2626',
     shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.32,
@@ -273,40 +276,44 @@ const styles = StyleSheet.create({
   },
   hitPressed: { opacity: 0.92 },
   gradient: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
+    width: 116,
+    height: 42,
+    borderRadius: 14,
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 2,
-    borderColor: 'rgba(255, 255, 255, 0.35)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.3)',
+  },
+  mainRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 7,
+  },
+  labelCol: {
+    minWidth: 0,
+    alignItems: 'flex-start',
+  },
+  mainLabel: {
+    fontFamily: FontFamily.bold,
+    fontSize: 11,
+    color: '#FFF1F2',
+    lineHeight: 13,
+  },
+  subLabel: {
+    fontFamily: FontFamily.semibold,
+    fontSize: 9,
+    color: '#FECACA',
+    lineHeight: 11,
   },
   iconShadow: {
     textShadowColor: 'rgba(0,0,0,0.35)',
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 3,
   },
-  sosBadge: {
-    position: 'absolute',
-    top: 6,
-    right: 6,
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-    backgroundColor: 'rgba(0,0,0,0.25)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  sosDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: '#FEF08A',
-  },
   captionWrap: {
     marginTop: 6,
-    width: 92,
-    maxWidth: 92,
+    width: 120,
+    maxWidth: 120,
     alignItems: 'center',
   },
   caption: {

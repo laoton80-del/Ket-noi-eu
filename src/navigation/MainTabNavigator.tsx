@@ -49,7 +49,6 @@ import { WalletScreen } from '../screens/WalletScreen';
 import { AdminCommandCenter } from '../screens/admin/AdminCommandCenter';
 import { SOSFloatingButton } from '../components/SOSFloatingButton';
 import { SOSModal } from '../screens/b2c/SOSModal';
-import { initiateAITriage, V7_SOS_EMERGENCY_DIAL_BUFFER_MS } from '../services/emergency/sosAITriage';
 const Tab = createBottomTabNavigator<RootTabParamList>();
 
 type StackNav = NativeStackNavigationProp<RootStackParamList>;
@@ -165,13 +164,11 @@ export function MainTabNavigator(): ReactElement {
   const switchRole = useUserStore((s) => s.switchRole);
   const [paywallTarget, setPaywallTarget] = useState<RedirectTarget | null>(null);
   const [sosSheetOpen, setSosSheetOpen] = useState(false);
-  const [sosEmergencyDialGateUntilMs, setSosEmergencyDialGateUntilMs] = useState<number | null>(null);
 
   const onSosHoldComplete = useCallback(() => {
-    initiateAITriage(navigation);
-    setSosEmergencyDialGateUntilMs(Date.now() + V7_SOS_EMERGENCY_DIAL_BUFFER_MS);
+    // AD.3 safety UX: open assistance sheet first, avoid immediate sensitive actions.
     setSosSheetOpen(true);
-  }, [navigation]);
+  }, []);
 
   const { setCurrentHub } = useHubTheme();
   const { syncFromMainTab } = useNavigationThemeForHub();
@@ -483,10 +480,8 @@ export function MainTabNavigator(): ReactElement {
           <SOSFloatingButton tabBarLift={tabBarLift} onHoldComplete={onSosHoldComplete} />
           <SOSModal
             visible={sosSheetOpen}
-            emergencyDialGateUntilMs={sosEmergencyDialGateUntilMs}
             onRequestClose={() => {
               setSosSheetOpen(false);
-              setSosEmergencyDialGateUntilMs(null);
             }}
             stackNavigation={navigation}
           />

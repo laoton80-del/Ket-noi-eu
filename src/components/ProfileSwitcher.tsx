@@ -158,8 +158,7 @@ export function ProfileSwitcher({ tabBarLift }: ProfileSwitcherProps): ReactElem
 
   const chipLiftStyle = useMemo(() => {
     if (isDesktopWeb) {
-      /** Keep profile chip in top-right utility cluster without creating a dashboard-like band. */
-      return { top: insets.top + 14, right: Math.max(insets.right, 14) };
+      return { top: insets.top + 12, right: Math.max(insets.right, 12) };
     }
     return { bottom: tabBarLift + Math.max(insets.bottom, 8) };
   }, [isDesktopWeb, insets.bottom, insets.right, insets.top, tabBarLift]);
@@ -167,7 +166,47 @@ export function ProfileSwitcher({ tabBarLift }: ProfileSwitcherProps): ReactElem
   const narrowProfileChip = width < 420;
   const singleAccountLabel = narrowProfileChip ? t('home.accountChipShort') : t('home.accountChip');
 
+  const accountDockChip = (
+    <Pressable
+      onPress={() => {
+        triggerHaptic();
+        if (canSwitch) {
+          setOpen(true);
+          return;
+        }
+        openAccount();
+      }}
+      style={({ pressed }) => [
+        canSwitch ? styles.chip : styles.singleChip,
+        isDesktopWeb ? styles.dockChipDesktop : styles.dockChipMobile,
+        isDesktopWeb && styles.dockChipBase,
+        pressed && { opacity: 0.9 },
+      ]}
+      accessibilityRole="button"
+      accessibilityLabel={t('shell.utility.account')}
+    >
+      <Ionicons name={canSwitch ? 'person-circle-outline' : 'person-circle'} size={20} color="#F6FAFF" />
+      <Text
+        style={canSwitch ? styles.chipText : styles.singleChipText}
+        numberOfLines={1}
+        adjustsFontSizeToFit
+        minimumFontScale={0.82}
+      >
+        {singleAccountLabel}
+      </Text>
+      {canSwitch ? <Ionicons name="chevron-up" size={14} color="rgba(255,255,255,0.8)" /> : null}
+    </Pressable>
+  );
+
   if (!canSwitch) {
+    if (isDesktopWeb) {
+      return (
+        <View style={[styles.utilityDock, chipLiftStyle]} pointerEvents="box-none">
+          {accountDockChip}
+          <SmartTrioLanguageChip tabBarLift={tabBarLift} placement="dock" isDesktopWeb />
+        </View>
+      );
+    }
     return (
       <>
         <SmartTrioLanguageChip
@@ -205,31 +244,37 @@ export function ProfileSwitcher({ tabBarLift }: ProfileSwitcherProps): ReactElem
 
   return (
     <>
-      <Pressable
-        onPress={() => {
-          triggerHaptic();
-          setOpen(true);
-        }}
-        style={[
-          styles.chip,
-          isAdminUndercover && styles.chipAdminUndercover,
-          isDesktopWeb ? styles.chipDesktop : styles.chipMobile,
-          isDesktopWeb && styles.chipDesktopSizing,
-          chipLiftStyle,
-        ]}
-        accessibilityRole="button"
-        accessibilityLabel="Switch active profile"
-      >
-        {isAdminUndercover ? (
-          <Ionicons name="ribbon" size={18} color="#FF6B8A" />
-        ) : (
-          <Ionicons name="shuffle-outline" size={18} color="#FFFFFF" />
-        )}
-        <Text style={styles.chipText} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.82}>
-          {chipLabel}
-        </Text>
-        <Ionicons name="chevron-up" size={16} color="rgba(255,255,255,0.85)" />
-      </Pressable>
+      {isDesktopWeb ? (
+        <View style={[styles.utilityDock, chipLiftStyle]} pointerEvents="box-none">
+          {accountDockChip}
+          <SmartTrioLanguageChip tabBarLift={tabBarLift} placement="dock" isDesktopWeb />
+        </View>
+      ) : (
+        <Pressable
+          onPress={() => {
+            triggerHaptic();
+            setOpen(true);
+          }}
+          style={[
+            styles.chip,
+            isAdminUndercover && styles.chipAdminUndercover,
+            styles.chipMobile,
+            chipLiftStyle,
+          ]}
+          accessibilityRole="button"
+          accessibilityLabel="Switch active profile"
+        >
+          {isAdminUndercover ? (
+            <Ionicons name="ribbon" size={18} color="#FF6B8A" />
+          ) : (
+            <Ionicons name="shuffle-outline" size={18} color="#FFFFFF" />
+          )}
+          <Text style={styles.chipText} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.82}>
+            {chipLabel}
+          </Text>
+          <Ionicons name="chevron-up" size={16} color="rgba(255,255,255,0.85)" />
+        </Pressable>
+      )}
 
       <Modal visible={open} transparent animationType="fade" onRequestClose={() => setOpen(false)}>
         <View style={styles.modalRoot}>
@@ -334,6 +379,13 @@ export function ProfileSwitcher({ tabBarLift }: ProfileSwitcherProps): ReactElem
 }
 
 const styles = StyleSheet.create({
+  utilityDock: {
+    position: 'absolute',
+    zIndex: 46,
+    width: 258,
+    alignItems: 'stretch',
+    gap: 8,
+  },
   chipMobile: {
     alignSelf: 'center',
   },
@@ -392,6 +444,27 @@ const styles = StyleSheet.create({
   },
   singleChipDesktopSizing: {
     maxWidth: 200,
+  },
+  dockChipBase: {
+    position: 'relative',
+    alignSelf: 'stretch',
+    maxWidth: undefined,
+    zIndex: undefined,
+    shadowOpacity: 0.12,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 3 },
+    elevation: 4,
+    paddingVertical: 9,
+    paddingHorizontal: 12,
+    gap: 6,
+    backgroundColor: 'rgba(14, 24, 44, 0.94)',
+    borderColor: 'rgba(122, 228, 255, 0.24)',
+  },
+  dockChipDesktop: {
+    alignSelf: 'stretch',
+  },
+  dockChipMobile: {
+    alignSelf: 'center',
   },
   singleChipText: { fontSize: 13, fontWeight: '800', color: '#FFFFFF' },
   modalRoot: { flex: 1, justifyContent: 'flex-end' },

@@ -7,7 +7,7 @@ import { SOSShieldComponent } from './premium/SOSShieldComponent';
 export type SOSFloatingButtonProps = Readonly<{
   /** Distance from bottom edge to clear tab bar + home indicator region (same basis as ProfileSwitcher). */
   tabBarLift: number;
-  /** After 3s hold — opens triage sheet; {@link initiateAITriage} is invoked by parent. */
+  /** After hold confirmation — opens safety assistance sheet. */
   onHoldComplete: () => void;
 }>;
 
@@ -18,8 +18,8 @@ export function SOSFloatingButton({ tabBarLift, onHoldComplete }: SOSFloatingBut
   const insets = useSafeAreaInsets();
   const { width } = useWindowDimensions();
   const isDesktopWeb = Platform.OS === 'web' && width > 768;
-  const bottom = tabBarLift + Math.max(insets.bottom, 10) + (isDesktopWeb ? 18 : 0);
-  const right = Math.max(insets.right, isDesktopWeb ? 32 : 14);
+  const bottom = tabBarLift + Math.max(insets.bottom, 10) + (isDesktopWeb ? 16 : 0);
+  const right = Math.max(insets.right, isDesktopWeb ? 20 : 14);
 
   return (
     <View

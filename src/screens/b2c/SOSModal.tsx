@@ -130,11 +130,20 @@ export function SOSModal({
       Alert.alert(t('sos.triageBufferTitle'), t('sos.triageBufferBody', { seconds: sec }));
       return;
     }
-    logAndQueuePayload('medical', 'tel_115');
-    onRequestClose();
-    void Linking.openURL('tel:115').catch(() => {
-      Alert.alert(t('sos.callFailedTitle'), t('sos.callFailedBody', { number: '115' }));
-    });
+    Alert.alert(t('sos.assistConfirmTitle'), t('sos.assistConfirmBody', { number: '115' }), [
+      { text: t('sos.close'), style: 'cancel' },
+      {
+        text: t('sos.assistConfirmCta'),
+        style: 'destructive',
+        onPress: () => {
+          logAndQueuePayload('medical', 'tel_115');
+          onRequestClose();
+          void Linking.openURL('tel:115').catch(() => {
+            Alert.alert(t('sos.callFailedTitle'), t('sos.callFailedBody', { number: '115' }));
+          });
+        },
+      },
+    ]);
   }, [emergencyDialGateUntilMs, logAndQueuePayload, onRequestClose, t]);
 
   const onPolice = useCallback(() => {
@@ -144,11 +153,20 @@ export function SOSModal({
       Alert.alert(t('sos.triageBufferTitle'), t('sos.triageBufferBody', { seconds: sec }));
       return;
     }
-    logAndQueuePayload('police', 'tel_113');
-    onRequestClose();
-    void Linking.openURL('tel:113').catch(() => {
-      Alert.alert(t('sos.callFailedTitle'), t('sos.callFailedBody', { number: '113' }));
-    });
+    Alert.alert(t('sos.assistConfirmTitle'), t('sos.assistConfirmBody', { number: '113' }), [
+      { text: t('sos.close'), style: 'cancel' },
+      {
+        text: t('sos.assistConfirmCta'),
+        style: 'destructive',
+        onPress: () => {
+          logAndQueuePayload('police', 'tel_113');
+          onRequestClose();
+          void Linking.openURL('tel:113').catch(() => {
+            Alert.alert(t('sos.callFailedTitle'), t('sos.callFailedBody', { number: '113' }));
+          });
+        },
+      },
+    ]);
   }, [emergencyDialGateUntilMs, logAndQueuePayload, onRequestClose, t]);
 
   const onScam = useCallback(() => {
@@ -217,6 +235,10 @@ export function SOSModal({
               >
                 {t('sos.subtitle')}
               </Text>
+            </View>
+            <View style={styles.demoNotice}>
+              <Text style={styles.demoNoticeTitle}>{t('sos.assist.title')}</Text>
+              <Text style={styles.demoNoticeBody}>{t('sos.assist.demoNotice')}</Text>
             </View>
 
             <View style={styles.gpsBanner}>
@@ -496,6 +518,26 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'rgba(96, 165, 250, 0.45)',
     maxWidth: '100%',
+  },
+  demoNotice: {
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    borderWidth: 1,
+    borderColor: 'rgba(251, 191, 36, 0.4)',
+    backgroundColor: 'rgba(120, 53, 15, 0.3)',
+    gap: 4,
+  },
+  demoNoticeTitle: {
+    fontFamily: FontFamily.bold,
+    fontSize: 13,
+    color: '#FDE68A',
+  },
+  demoNoticeBody: {
+    fontFamily: FontFamily.medium,
+    fontSize: 12,
+    color: 'rgba(254, 243, 199, 0.92)',
+    lineHeight: 17,
   },
   gpsIcon: { flexShrink: 0, marginTop: 2 },
   gpsTextCol: { flex: 1, minWidth: 0, gap: 6, maxWidth: '100%' },

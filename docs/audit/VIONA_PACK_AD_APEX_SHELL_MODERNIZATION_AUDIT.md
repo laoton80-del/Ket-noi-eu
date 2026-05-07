@@ -89,3 +89,12 @@
 - Utility cluster was re-aligned to a tighter top-right zone so it remains readable without recreating a heavy dashboard bar.
 - Expected visual difference: content starts shortly after compact rail (about ~96-112px rail + small gutter), with materially wider perceived content area.
 - No product logic changed.
+
+## AD.3 Premium Home Hero + Utility Dock + Safe SOS UX
+
+- Promoted Home first fold around the Multiverse narrative so the flagship hierarchy now leads with ecosystem clarity (Local / Travel / Academy).
+- Demoted VIONA Care Heart Fund from hero treatment to a secondary impact card directly below the flagship hero.
+- Consolidated Account and Smart Trio controls into a cleaner top-right utility dock on desktop/web, reducing floating-pill noise and overlap risk.
+- Redesigned SOS affordance from an ambiguous red orb toward a clearer compact "SOS Assist / Safety" surface with safer comprehension.
+- Added confirmation before sensitive call intents (113/115) and explicit pilot-safe notice copy that no automatic dispatch/call is triggered without user confirmation.
+- Scope remains UI/layout/i18n only; no payment, booking, wallet internals, backend/API, DB/Prisma, Twilio activation, AI provider calls, route-name changes, or feature-flag behavior changes.

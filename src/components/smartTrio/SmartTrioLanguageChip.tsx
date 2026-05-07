@@ -9,7 +9,7 @@ import type { MarketCode, SmartTrioLocale } from '../../core/i18n/smartTrioTypes
 import { useTranslation } from '../../i18n';
 import { SmartTrioLanguageSheet } from './SmartTrioLanguageSheet';
 
-export type SmartTrioLanguageChipPlacement = 'sheet' | 'floating';
+export type SmartTrioLanguageChipPlacement = 'sheet' | 'floating' | 'dock';
 
 export type SmartTrioLanguageChipProps = Readonly<{
   tabBarLift: number;
@@ -47,6 +47,10 @@ export function SmartTrioLanguageChip({
       [t(localeI18nKey(appLocale)), t(marketI18nKey(marketCode)), t(localeI18nKey(nativeLocale))].join(' · '),
     [appLocale, marketCode, nativeLocale, t]
   );
+  const dockSummary = useMemo(
+    () => [t(localeI18nKey(appLocale)), t(marketI18nKey(marketCode))].join(' · '),
+    [appLocale, marketCode, t]
+  );
 
   const onOpen = useCallback(() => {
     triggerHaptic();
@@ -71,6 +75,7 @@ export function SmartTrioLanguageChip({
 
   const narrow = width < 420;
 
+  const dockMode = placement === 'dock';
   const body = (
     <>
       <Pressable
@@ -78,23 +83,24 @@ export function SmartTrioLanguageChip({
         style={({ pressed }) => [
           styles.row,
           placement === 'floating' && styles.rowFloating,
+          dockMode && styles.rowDock,
           pressed && { opacity: 0.9 },
         ]}
         accessibilityRole="button"
-        accessibilityLabel={t('smartTrio.switcher.title')}
+        accessibilityLabel={t('shell.utility.language')}
       >
-        <View style={styles.iconWrap}>
+        <View style={[styles.iconWrap, dockMode && styles.iconWrapDock]}>
           <Ionicons name="globe-outline" size={18} color="#7AE4FF" />
         </View>
         <View style={styles.textCol}>
           <Text style={styles.caption} numberOfLines={1}>
-            {t('smartTrio.switcher.title')}
+            {dockMode ? t('shell.utility.language') : t('smartTrio.switcher.title')}
           </Text>
-          <Text style={styles.summary} numberOfLines={narrow ? 2 : 1}>
-            {summary}
+          <Text style={styles.summary} numberOfLines={dockMode ? 1 : narrow ? 2 : 1}>
+            {dockMode ? dockSummary : summary}
           </Text>
         </View>
-        <Text style={styles.change}>{t('smartTrio.switcher.change')}</Text>
+        <Text style={styles.change}>{dockMode ? t('shell.utility.change') : t('smartTrio.switcher.change')}</Text>
         <Ionicons name="chevron-forward" size={18} color="rgba(255,255,255,0.45)" />
       </Pressable>
       <SmartTrioLanguageSheet visible={sheetOpen} onClose={onCloseSheet} />
@@ -112,11 +118,16 @@ export function SmartTrioLanguageChip({
     );
   }
 
+  if (placement === 'dock') {
+    return <View style={styles.dockWrap}>{body}</View>;
+  }
+
   return <View style={styles.sheetWrap}>{body}</View>;
 }
 
 const styles = StyleSheet.create({
   sheetWrap: { width: '100%' },
+  dockWrap: { width: '100%' },
   floatingWrap: {
     position: 'absolute',
     zIndex: 44,
@@ -141,6 +152,13 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(15, 28, 52, 0.94)',
     borderColor: 'rgba(122, 228, 255, 0.36)',
   },
+  rowDock: {
+    paddingVertical: 8,
+    paddingHorizontal: 10,
+    borderRadius: 12,
+    backgroundColor: 'rgba(10, 18, 34, 0.94)',
+    borderColor: 'rgba(122, 228, 255, 0.2)',
+  },
   iconWrap: {
     width: 36,
     height: 36,
@@ -148,6 +166,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: 'rgba(122, 228, 255, 0.12)',
+  },
+  iconWrapDock: {
+    width: 30,
+    height: 30,
+    borderRadius: 10,
   },
   textCol: { flex: 1, minWidth: 0, gap: 2 },
   caption: { fontSize: 11, fontWeight: '800', color: 'rgba(255,255,255,0.74)', textTransform: 'uppercase' },

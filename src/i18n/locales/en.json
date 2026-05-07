@@ -122,7 +122,15 @@
     "triageBannerTitle": "AI Minh Khang triage first",
     "triageBannerCountdown": "Emergency call buttons unlock in {{seconds}}s",
     "triageBufferTitle": "Triage buffer active",
-    "triageBufferBody": "Complete the AI safety check first. Emergency dial unlocks in {{seconds}}s."
+    "triageBufferBody": "Complete the AI safety check first. Emergency dial unlocks in {{seconds}}s.",
+    "assistConfirmTitle": "Confirm emergency call",
+    "assistConfirmBody": "This prepares a call to {{number}}. Continue only if you need emergency support now.",
+    "assistConfirmCta": "Call now",
+    "assist": {
+      "title": "SOS Assist",
+      "subtitle": "Safety guidance first",
+      "demoNotice": "Pilot safety mode: this screen does not auto-call or auto-dispatch. Review options and confirm before any call action."
+    }
   },
   "ai_voice": {
     "tapToSpeak": "Tap to Speak",
@@ -269,6 +277,18 @@
     "universeTravelSub": "Navigate Vietnam with safety-first pilot clarity.",
     "universeAcademyTitle": "Academy",
     "universeAcademySub": "Learn and practice with AI assistants in demo-safe mode.",
+    "universe": {
+      "eyebrow": "VIONA UNIVERSE",
+      "title": "Choose your space",
+      "subtitle": "A flagship ecosystem for Local, Travel, Academy, and AI-guided support.",
+      "subheadline": "Enter the space that matches your current mission while staying in pilot-safe mode.",
+      "localTitle": "VIONA Local",
+      "localSub": "Trusted Vietnamese services with merchant-confirmed visibility.",
+      "travelTitle": "VIONA Travel",
+      "travelSub": "Travel navigation with clear pilot safety status.",
+      "academyTitle": "VIONA Academy",
+      "academySub": "AI-assisted learning and preparation in demo-safe flow."
+    },
     "touristCreditsHint": "In-app travel credits (not bank cash)",
     "survivalTitle": "AI translation & survival",
     "survivalSub": "Tap for quick help while traveling — highlighted in travel mode.",
@@ -316,6 +336,15 @@
     "sosPingAlertBody": "SOS ping sent with coordinates {{coords}} ({{city}}). Pilot flow — not a substitute for authorities.",
     "sosPingNotifyTitle": "VIONA — safety ping",
     "sosPingNotifyBody": "SOS ping · {{city}} · {{coords}}"
+  },
+  "shell": {
+    "utility": {
+      "account": "Account",
+      "language": "Language & Market",
+      "change": "Change",
+      "safety": "Safety",
+      "sosAssist": "SOS Assist"
+    }
   },
   "travelHub": {
     "screenTitle": "VIONA Travel",

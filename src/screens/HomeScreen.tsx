@@ -185,20 +185,20 @@ export function HomeScreen() {
     (): readonly UniverseCard[] => [
       {
         id: 'local',
-        title: t('home.universeLocalTitle'),
-        subtitle: t('home.universeLocalSub'),
+        title: t('home.universe.localTitle'),
+        subtitle: t('home.universe.localSub'),
         icon: 'grid-outline',
       },
       {
         id: 'travel',
-        title: t('home.universeTravelTitle'),
-        subtitle: t('home.universeTravelSub'),
+        title: t('home.universe.travelTitle'),
+        subtitle: t('home.universe.travelSub'),
         icon: 'airplane-outline',
       },
       {
         id: 'academy',
-        title: t('home.universeAcademyTitle'),
-        subtitle: t('home.universeAcademySub'),
+        title: t('home.universe.academyTitle'),
+        subtitle: t('home.universe.academySub'),
         icon: 'sparkles-outline',
       },
     ],
@@ -339,8 +339,8 @@ export function HomeScreen() {
           <View style={styles.heroTopRow}>
             <View style={styles.heroCopyCol}>
               <Text style={styles.heroEyebrow}>{brandConfig.displayName}</Text>
-              <Text style={styles.heading}>{t('home.multiverseHeroTitle')}</Text>
-              <Text style={styles.heroSub}>{t('home.multiverseHeroSub')}</Text>
+              <Text style={styles.heading}>{t('home.universe.title')}</Text>
+              <Text style={styles.heroSub}>{t('home.universe.subtitle')}</Text>
             </View>
             <View style={[styles.creditPill, isTourist && styles.creditPillTourist, { maxWidth: creditPillMax }]}>
               <View style={styles.creditPillRow}>
@@ -367,9 +367,9 @@ export function HomeScreen() {
             </View>
           </View>
           <VionaCard style={styles.multiverseHeroCard} padded>
-            <Text style={styles.multiverseEyebrow}>{t('home.multiverseHeroKicker')}</Text>
-            <Text style={styles.multiverseHeadline}>{t('home.multiverseHeroTitle')}</Text>
-            <Text style={styles.multiverseSubheadline}>{t('home.multiverseHeroSubheadline')}</Text>
+            <Text style={styles.multiverseEyebrow}>{t('home.universe.eyebrow')}</Text>
+            <Text style={styles.multiverseHeadline}>{t('home.universe.title')}</Text>
+            <Text style={styles.multiverseSubheadline}>{t('home.universe.subheadline')}</Text>
             <View style={styles.multiverseGrid}>
               {universeCards.map((card) => (
                 <View key={card.id} style={styles.universeCard}>
