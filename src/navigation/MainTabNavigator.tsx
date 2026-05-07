@@ -2,11 +2,13 @@ import { Ionicons } from '@expo/vector-icons';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { useNavigation, useNavigationState } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { useCallback, useEffect, useMemo, useState, type ReactElement } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactElement } from 'react';
 import { Alert, Platform, StyleSheet, useWindowDimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { ProfileSwitcher } from '../components/ProfileSwitcher';
+import { ProfileSwitcher, type ProfileSwitcherHandle } from '../components/ProfileSwitcher';
+import { SmartTrioLanguageSheet } from '../components/smartTrio/SmartTrioLanguageSheet';
+import { HomeCommandProvider, type HomeCommandContextValue } from '../context/HomeCommandContext';
 import { AuthPaywallModal } from '../components/AuthPaywallModal';
 import {
   DIASPORA_RESTRICTION_MODAL_MESSAGE,
@@ -163,9 +165,13 @@ export function MainTabNavigator(): ReactElement {
   const { user, pendingRedirect, setPendingRedirect } = useAuth();
   const currentActiveRole = useUserStore((s) => s.currentActiveRole);
   const switchRole = useUserStore((s) => s.switchRole);
+  const allowedRoles = useUserStore((s) => s.allowedRoles);
+  const showRolePicker = allowedRoles.length > 1;
   const [paywallTarget, setPaywallTarget] = useState<RedirectTarget | null>(null);
   const [sosSheetOpen, setSosSheetOpen] = useState(false);
   const [sosEmergencyDialGateUntilMs, setSosEmergencyDialGateUntilMs] = useState<number | null>(null);
+  const [languageSheetOpen, setLanguageSheetOpen] = useState(false);
+  const profileSwitcherRef = useRef<ProfileSwitcherHandle | null>(null);
 
   const onSosHoldComplete = useCallback(() => {
     initiateAITriage(navigation);
@@ -228,6 +234,34 @@ export function MainTabNavigator(): ReactElement {
   const flags = useMemo(() => getFeatureFlags(), []);
 
   const tabBarLift = tabSizing.tabBarBaseHeight + (isDesktopWeb ? Math.max(insets.bottom, 16) : Math.max(insets.bottom, 10)) + 10;
+
+  const suppressHomeFloatingChrome =
+    isDesktopWeb && currentActiveRole === 'B2C' && focusedTabRoute === MAIN_TAB.B2C.home;
+
+  useEffect(() => {
+    if (!suppressHomeFloatingChrome) setLanguageSheetOpen(false);
+  }, [suppressHomeFloatingChrome]);
+
+  const b2cDesktopBottomTabs = isDesktopWeb && currentActiveRole === 'B2C';
+  const tabBarPosition = b2cDesktopBottomTabs ? 'bottom' : isDesktopWeb ? 'left' : 'bottom';
+
+  const b2cHomeDesktopScene = suppressHomeFloatingChrome;
+  const sceneTopPadding = !isDesktopWeb
+    ? 0
+    : b2cHomeDesktopScene
+      ? Math.max(insets.top, 8)
+      : Math.max(100, insets.top + 96);
+
+  const homeCommandValue = useMemo<HomeCommandContextValue>(
+    () => ({
+      openLanguageSheet: () => setLanguageSheetOpen(true),
+      triggerSafetyAssist: onSosHoldComplete,
+      openAccount: () => profileSwitcherRef.current?.openPersonalHub(),
+      openRolePicker: () => profileSwitcherRef.current?.openRolePicker(),
+      showRolePicker,
+    }),
+    [onSosHoldComplete, showRolePicker]
+  );
 
   const openPaywall = (target: RedirectTarget) => {
     setPendingRedirect(target);
@@ -330,58 +364,62 @@ export function MainTabNavigator(): ReactElement {
 
   return (
     <>
-      <Tab.Navigator
-        key={currentActiveRole}
-        screenOptions={({ route }) => ({
-          headerShown: false,
-          tabBarPosition: isDesktopWeb ? 'left' : 'bottom',
-          tabBarActiveTintColor: chrome.active,
-          tabBarInactiveTintColor: chrome.inactive,
-          tabBarActiveBackgroundColor: isDesktopWeb ? 'rgba(122, 228, 255, 0.14)' : undefined,
-          tabBarLabelStyle: [
-            styles.tabLabel,
-            { fontSize: isDesktopWeb ? 10 : tabSizing.labelSize },
-            isDesktopWeb && styles.tabLabelDesktop,
-          ],
-          tabBarItemStyle: [styles.tabItem, isDesktopWeb && styles.tabItemDesktop],
-          tabBarStyle: [
-            styles.tabBar,
-            {
+      <HomeCommandProvider value={homeCommandValue}>
+        <Tab.Navigator
+          key={currentActiveRole}
+          screenOptions={({ route }) => ({
+            headerShown: false,
+            tabBarPosition,
+            tabBarActiveTintColor: chrome.active,
+            tabBarInactiveTintColor: chrome.inactive,
+            tabBarActiveBackgroundColor: tabBarPosition === 'left' ? 'rgba(122, 228, 255, 0.14)' : undefined,
+            tabBarLabelStyle: [
+              styles.tabLabel,
+              {
+                fontSize: tabBarPosition === 'left' ? 10 : tabSizing.labelSize,
+              },
+              tabBarPosition === 'left' && styles.tabLabelDesktop,
+            ],
+            tabBarItemStyle: [styles.tabItem, tabBarPosition === 'left' && styles.tabItemDesktop],
+            tabBarStyle: [
+              styles.tabBar,
+              {
+                backgroundColor: chrome.barBg,
+                borderTopColor: chrome.barBorder,
+                borderRightColor: chrome.barBorder,
+              },
+              tabBarPosition === 'left'
+                ? {
+                    width: 94,
+                    height: '100%',
+                    paddingTop: insets.top + 12,
+                    paddingBottom: Math.max(insets.bottom, 16),
+                    paddingHorizontal: 8,
+                  }
+                : {
+                    height: tabSizing.tabBarBaseHeight + insets.bottom,
+                    paddingBottom: Math.max(insets.bottom, 10),
+                    paddingTop: 8,
+                  },
+              tabBarPosition === 'left' && styles.tabBarDesktop,
+            ],
+            sceneStyle: {
               backgroundColor: chrome.barBg,
-              borderTopColor: chrome.barBorder,
-              borderRightColor: chrome.barBorder,
+              paddingTop: sceneTopPadding,
             },
-            isDesktopWeb
-              ? {
-                  width: 94,
-                  height: '100%',
-                  paddingTop: insets.top + 12,
-                  paddingBottom: Math.max(insets.bottom, 16),
-                  paddingHorizontal: 8,
-                }
-              : {
-                  height: tabSizing.tabBarBaseHeight + insets.bottom,
-                  paddingBottom: Math.max(insets.bottom, 10),
-                  paddingTop: 8,
-                },
-            isDesktopWeb && styles.tabBarDesktop,
-          ],
-          sceneStyle: {
-            backgroundColor: chrome.barBg,
-            paddingTop: isDesktopWeb ? Math.max(100, insets.top + 96) : 0,
-          },
-          tabBarLabel: isDesktopWeb
-            ? compactDesktopTabLabel(route.name as keyof RootTabParamList, currentActiveRole)
-            : undefined,
-          tabBarIcon: ({ focused }) => (
-            <Ionicons
-              name={tabIconName(route.name as keyof RootTabParamList, currentActiveRole, focused)}
-              size={tabSizing.iconSize}
-              color={focused ? chrome.active : chrome.inactive}
-            />
-          ),
-        })}
-      >
+            tabBarLabel:
+              tabBarPosition === 'left'
+                ? compactDesktopTabLabel(route.name as keyof RootTabParamList, currentActiveRole)
+                : undefined,
+            tabBarIcon: ({ focused }) => (
+              <Ionicons
+                name={tabIconName(route.name as keyof RootTabParamList, currentActiveRole, focused)}
+                size={tabSizing.iconSize}
+                color={focused ? chrome.active : chrome.inactive}
+              />
+            ),
+          })}
+        >
         {currentActiveRole === 'B2C' ? (
           <>
             {flags.hubEnabled ? (
@@ -469,13 +507,27 @@ export function MainTabNavigator(): ReactElement {
             options={{ title: 'Command Center' }}
           />
         ) : null}
-      </Tab.Navigator>
+        </Tab.Navigator>
+      </HomeCommandProvider>
 
-      <ProfileSwitcher tabBarLift={tabBarLift} />
+      <ProfileSwitcher
+        ref={profileSwitcherRef}
+        tabBarLift={tabBarLift}
+        suppressFloatingChrome={suppressHomeFloatingChrome}
+      />
+
+      {suppressHomeFloatingChrome ? (
+        <SmartTrioLanguageSheet
+          visible={languageSheetOpen}
+          onClose={() => setLanguageSheetOpen(false)}
+        />
+      ) : null}
 
       {showGlobalLifelineSos ? (
         <>
-          <SOSFloatingButton tabBarLift={tabBarLift} onHoldComplete={onSosHoldComplete} />
+          {!suppressHomeFloatingChrome ? (
+            <SOSFloatingButton tabBarLift={tabBarLift} onHoldComplete={onSosHoldComplete} />
+          ) : null}
           <SOSModal
             visible={sosSheetOpen}
             emergencyDialGateUntilMs={sosEmergencyDialGateUntilMs}

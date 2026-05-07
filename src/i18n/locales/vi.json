@@ -38,6 +38,15 @@
       "unknownId": "Mini-app không hợp lệ hoặc không xác định."
     }
   },
+  "shell": {
+    "utility": {
+      "language": "Ngôn ngữ",
+      "vioCredits": "VIO Credits",
+      "safetyAssist": "Hỗ trợ an toàn",
+      "accountProfile": "Tài khoản",
+      "switchRole": "Hồ sơ"
+    }
+  },
   "login": {
     "brandName": "VIONA",
     "brandTagline": "Mạng lưới dịch vụ toàn cầu cho người Việt",
@@ -273,6 +282,28 @@
         "title": "VIONA Academy",
         "subtitle": "Học tập và luyện AI cho gia đình, kỹ năng và tương lai.",
         "status": "Demo"
+      }
+    },
+    "fashionTech": {
+      "eyebrow": "VIONA HUMAN CONSTELLATION",
+      "headline": "Người đồng hành toàn cầu, theo từng chặng sống của bạn.",
+      "subtitle": "Đời sống, du lịch, học tập và AI support — thiết kế cho người Việt ở khắp thế giới.",
+      "visualInset": "Khung ảnh · chỉ dùng asset có license",
+      "local": {
+        "title": "Local",
+        "subtitle": "Kết nối cộng đồng, dịch vụ, đời sống hằng ngày."
+      },
+      "travel": {
+        "title": "Travel",
+        "subtitle": "Hướng đi, di chuyển, an toàn, trở về."
+      },
+      "academy": {
+        "title": "Academy",
+        "subtitle": "Học cùng gia đình, luyện AI, kỹ năng tương lai."
+      },
+      "care": {
+        "title": "Quỹ Trái Tim Care",
+        "subtitle": "Chạm đến con người, sự ấm áp và tác động cộng đồng."
       }
     },
     "impact": {

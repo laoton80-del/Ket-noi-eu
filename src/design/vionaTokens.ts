@@ -102,6 +102,25 @@ export const vionaTokens = {
     topUtilityHeight: 78,
     bottomSafeDockOffset: 10,
   },
+  /** AE.3 Fashion-Tech Human Constellation — dark editorial shell (no remote photography baked in). */
+  fashionTech: {
+    canvas: '#07090e',
+    canvasElevated: '#0c1018',
+    heroGradient: ['#050608', '#0f141c', '#14110c'] as const,
+    champagne: '#c9a962',
+    champagneMuted: 'rgba(201, 169, 98, 0.55)',
+    champagneLine: 'rgba(201, 169, 98, 0.38)',
+    inkOnDark: '#f4f6fa',
+    mutedOnDark: 'rgba(244, 246, 250, 0.68)',
+    commandBarBg: 'rgba(10, 14, 22, 0.92)',
+    visualPanelGradient: ['#1a1510', '#0d1218', '#060809'] as const,
+    worlds: {
+      local: ['#0c1218', '#152220', '#0a1412'] as const,
+      travel: ['#0a1018', '#14202e', '#101820'] as const,
+      academy: ['#100c18', '#18182a', '#140f18'] as const,
+      care: ['#140c12', '#1a1418', '#120e14'] as const,
+    },
+  },
 } as const;
 
 export type VionaTokens = typeof vionaTokens;

@@ -25,10 +25,13 @@ import { AuthPaywallModal } from '../components/AuthPaywallModal';
 import { PersonaOnboardingModal } from '../components/PersonaOnboardingModal';
 import { ProactiveSuggestions } from '../components/ProactiveSuggestions';
 import { CharityWidget } from '../components/ui/CharityWidget';
+import {
+  VionaFashionHomeCommandBar,
+  VionaFashionWorldCard,
+} from '../components/viona';
 import { VionaCard } from '../components/viona/VionaCard';
 import { VionaSectionHeader } from '../components/viona/VionaSectionHeader';
 import { VionaSurface } from '../components/viona/VionaSurface';
-import { VionaUniverseCard } from '../components/viona/VionaUniverseCard';
 import { vionaTrust } from '../components/viona/vionaTrustTokens';
 import {
   getConfiguredAdminDebugPin,
@@ -37,6 +40,7 @@ import {
 } from '../config/adminDebugGate';
 import { getFeatureFlags } from '../core/feature-flags/featureFlags';
 import { useMiniAppEntry } from '../hooks/useMiniAppEntry';
+import { useHomeCommand } from '../context/HomeCommandContext';
 import { getVioPointsLabel } from '../core/monetization/vioDisplayLabels';
 import { getPersonaDisplayName } from '../config/aiPrompts';
 import { useAuth } from '../context/AuthContext';
@@ -270,6 +274,26 @@ export function HomeScreen() {
     openMiniApp('academy', () => navigation.navigate('Tabs', { screen: MAIN_TAB.B2C.ai }));
   }, [navigation, openMiniApp]);
 
+  const homeCommand = useHomeCommand();
+  const scrollRef = useRef<InstanceType<typeof ScrollView> | null>(null);
+  const charitySectionY = useRef(0);
+
+  const scrollToCareSection = useCallback(() => {
+    scrollRef.current?.scrollTo({
+      y: Math.max(0, charitySectionY.current - 16),
+      animated: true,
+    });
+  }, []);
+
+  const scrollToTop = useCallback(() => {
+    scrollRef.current?.scrollTo({ y: 0, animated: true });
+  }, []);
+
+  const goTravelTab = useCallback(() => {
+    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    navigation.navigate('Tabs', { screen: MAIN_TAB.B2C.travel });
+  }, [navigation]);
+
   const onSecretTap = useCallback(() => {
     if (!isAdminDebugSurfaceEnabled()) return;
     const now = Date.now();
@@ -312,10 +336,11 @@ export function HomeScreen() {
   );
 
   return (
-    <View style={styles.rootFill}>
-      <StatusBar style="dark" />
+    <View style={[styles.rootFill, isDesktopWeb && styles.rootFillFashion]}>
+      <StatusBar style={isDesktopWeb ? 'light' : 'dark'} />
       <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
       <ScrollView
+        ref={scrollRef}
         contentContainerStyle={[
           styles.scrollContent,
           {
@@ -328,46 +353,78 @@ export function HomeScreen() {
         ]}
         showsVerticalScrollIndicator={false}
       >
-        <View style={[styles.worldStageBleed, { marginHorizontal: -layout.pad }]}>
+        {isDesktopWeb && homeCommand ? (
+          <VionaFashionHomeCommandBar
+            onPressLogo={scrollToTop}
+            onPressLocal={goUniverseLocal}
+            onPressTravel={goTravelTab}
+            onPressAcademy={goUniverseAcademy}
+            onPressLanguage={() => homeCommand.openLanguageSheet()}
+            onPressVio={() => openProtected('Wallet')}
+            onPressSafety={() => homeCommand.triggerSafetyAssist()}
+            onPressAccount={() => homeCommand.openAccount()}
+            onPressRole={homeCommand.showRolePicker ? () => homeCommand.openRolePicker() : undefined}
+            showRolePicker={homeCommand.showRolePicker}
+          />
+        ) : null}
+
+        <View style={[styles.ftHeroBleed, { marginHorizontal: -layout.pad }]}>
           <LinearGradient
-            colors={[...vionaTokens.gradients.multiverseHero]}
+            colors={[...vionaTokens.fashionTech.heroGradient]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
-            style={styles.worldStageGradient}
+            style={styles.ftHero}
           >
-            <View style={styles.worldStageGlow} />
-            <Text style={styles.wsEyebrow}>{t('home.worldStage.eyebrow')}</Text>
-            <Text style={styles.wsHeadline}>{t('home.worldStage.headline')}</Text>
-            <Text style={styles.wsSubtitle}>{t('home.worldStage.subtitle')}</Text>
+            <View
+              style={[
+                styles.ftHeroMain,
+                { flexDirection: width >= 900 ? 'row' : 'column', alignItems: width >= 900 ? 'stretch' : 'flex-start' },
+              ]}
+            >
+              <View style={styles.ftCopyCol}>
+                <Text style={styles.ftEyebrow}>{t('home.fashionTech.eyebrow')}</Text>
+                <Text style={styles.ftHeadline}>{t('home.fashionTech.headline')}</Text>
+                <Text style={styles.ftSubtitle}>{t('home.fashionTech.subtitle')}</Text>
+              </View>
+              {width >= 720 ? (
+                <LinearGradient
+                  colors={[...vionaTokens.fashionTech.visualPanelGradient]}
+                  start={{ x: 0, y: 0.2 }}
+                  end={{ x: 1, y: 1 }}
+                  style={styles.ftVisualPanel}
+                >
+                  <View style={styles.ftVisualFrame}>
+                    <Text style={styles.ftVisualInset}>{t('home.fashionTech.visualInset')}</Text>
+                  </View>
+                </LinearGradient>
+              ) : null}
+            </View>
 
             <View
               style={[
-                styles.entranceStack,
-                { flexDirection: width >= 820 ? 'row' : 'column', width: layout.inner },
+                styles.ftCardGrid,
+                {
+                  flexDirection: width >= 1100 ? 'row' : width >= 560 ? 'row' : 'column',
+                  flexWrap: width >= 1100 ? 'nowrap' : 'wrap',
+                },
               ]}
             >
-              <View style={width >= 820 ? styles.entranceCell : undefined}>
-                <VionaUniverseCard
-                  layout="worldStage"
+              <View style={[styles.ftCardCell, width >= 1100 && styles.ftCardCellQuarter]}>
+                <VionaFashionWorldCard
                   accent="local"
-                  title={t('home.worldStage.local.title')}
-                  subtitle={t('home.worldStage.local.subtitle')}
-                  icon={
-                    <Ionicons name="grid-outline" size={22} color={vionaTokens.colors.universe.local.accent} />
-                  }
+                  title={t('home.fashionTech.local.title')}
+                  subtitle={t('home.fashionTech.local.subtitle')}
+                  icon={<Ionicons name="grid-outline" size={22} color={vionaTokens.fashionTech.champagne} />}
                   status={{ label: t('home.worldStage.local.status'), tone: 'lite' }}
                   onPress={goUniverseLocal}
                 />
               </View>
-              <View style={width >= 820 ? styles.entranceCell : undefined}>
-                <VionaUniverseCard
-                  layout="worldStage"
+              <View style={[styles.ftCardCell, width >= 1100 && styles.ftCardCellQuarter]}>
+                <VionaFashionWorldCard
                   accent="travel"
-                  title={t('home.worldStage.travel.title')}
-                  subtitle={t('home.worldStage.travel.subtitle')}
-                  icon={
-                    <Ionicons name="airplane-outline" size={22} color={vionaTokens.colors.universe.travel.accent} />
-                  }
+                  title={t('home.fashionTech.travel.title')}
+                  subtitle={t('home.fashionTech.travel.subtitle')}
+                  icon={<Ionicons name="airplane-outline" size={22} color={vionaTokens.fashionTech.champagne} />}
                   status={
                     featureFlags.travelEnabled
                       ? { label: t('home.worldStage.travel.status'), tone: 'pilot' }
@@ -377,17 +434,24 @@ export function HomeScreen() {
                   disabled={!featureFlags.travelEnabled}
                 />
               </View>
-              <View style={width >= 820 ? styles.entranceCell : undefined}>
-                <VionaUniverseCard
-                  layout="worldStage"
+              <View style={[styles.ftCardCell, width >= 1100 && styles.ftCardCellQuarter]}>
+                <VionaFashionWorldCard
                   accent="academy"
-                  title={t('home.worldStage.academy.title')}
-                  subtitle={t('home.worldStage.academy.subtitle')}
-                  icon={
-                    <Ionicons name="sparkles-outline" size={22} color={vionaTokens.colors.universe.academy.accent} />
-                  }
+                  title={t('home.fashionTech.academy.title')}
+                  subtitle={t('home.fashionTech.academy.subtitle')}
+                  icon={<Ionicons name="sparkles-outline" size={22} color={vionaTokens.fashionTech.champagne} />}
                   status={{ label: t('home.worldStage.academy.status'), tone: 'demo' }}
                   onPress={goUniverseAcademy}
+                />
+              </View>
+              <View style={[styles.ftCardCell, width >= 1100 && styles.ftCardCellQuarter]}>
+                <VionaFashionWorldCard
+                  accent="care"
+                  title={t('home.fashionTech.care.title')}
+                  subtitle={t('home.fashionTech.care.subtitle')}
+                  icon={<Ionicons name="heart-outline" size={22} color={vionaTokens.fashionTech.champagne} />}
+                  status={{ label: t('home.impact.kicker'), tone: 'safe' }}
+                  onPress={scrollToCareSection}
                 />
               </View>
             </View>
@@ -396,40 +460,47 @@ export function HomeScreen() {
 
         <VionaSurface variant="glass" style={[styles.trustStrip, { width: layout.inner }]}>
           <View style={styles.trustStripRow}>
-            <View
-              style={[
-                styles.creditPill,
-                isTourist && styles.creditPillTourist,
-                { maxWidth: creditPillMax, flexShrink: 0 },
-              ]}
-            >
-              <View style={styles.creditPillRow}>
-                {walletBalanceLoading ? (
-                  <ActivityIndicator size="small" color={GOLD_ACCENT} accessibilityLabel={t('home.walletLoadingA11y')} />
-                ) : (
-                  <Ionicons name="wallet-outline" size={14} color={GOLD_ACCENT} />
-                )}
-                <Text
-                  style={styles.creditPillText}
-                  numberOfLines={1}
-                  adjustsFontSizeToFit
-                  minimumFontScale={0.82}
-                  maxFontSizeMultiplier={1.15}
-                >
-                  {walletChipLabel}
-                </Text>
+            {!isDesktopWeb ? (
+              <View
+                style={[
+                  styles.creditPill,
+                  isTourist && styles.creditPillTourist,
+                  { maxWidth: creditPillMax, flexShrink: 0 },
+                ]}
+              >
+                <View style={styles.creditPillRow}>
+                  {walletBalanceLoading ? (
+                    <ActivityIndicator size="small" color={GOLD_ACCENT} accessibilityLabel={t('home.walletLoadingA11y')} />
+                  ) : (
+                    <Ionicons name="wallet-outline" size={14} color={GOLD_ACCENT} />
+                  )}
+                  <Text
+                    style={styles.creditPillText}
+                    numberOfLines={1}
+                    adjustsFontSizeToFit
+                    minimumFontScale={0.82}
+                    maxFontSizeMultiplier={1.15}
+                  >
+                    {walletChipLabel}
+                  </Text>
+                </View>
+                {isTourist && !walletBalanceLoading ? (
+                  <Text style={styles.creditPillSub} numberOfLines={2}>
+                    {t('home.touristCreditsHint')}
+                  </Text>
+                ) : null}
               </View>
-              {isTourist && !walletBalanceLoading ? (
-                <Text style={styles.creditPillSub} numberOfLines={2}>
-                  {t('home.touristCreditsHint')}
-                </Text>
-              ) : null}
-            </View>
-            <Text style={styles.trustStripHint}>{t('home.trustStripHint')}</Text>
+            ) : null}
+            <Text style={[styles.trustStripHint, isDesktopWeb && styles.trustStripHintDesktop]}>{t('home.trustStripHint')}</Text>
           </View>
         </VionaSurface>
 
-        <View style={[styles.charityWrap, { width: layout.inner }]}>
+        <View
+          style={[styles.charityWrap, { width: layout.inner }]}
+          onLayout={(e) => {
+            charitySectionY.current = e.nativeEvent.layout.y;
+          }}
+        >
           <CharityWidget layoutVariant="impactSecondary" />
         </View>
 
@@ -675,62 +746,96 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: SCREEN_BG,
   },
+  rootFillFashion: {
+    backgroundColor: vionaTokens.fashionTech.canvas,
+  },
   container: {
     flex: 1,
     backgroundColor: 'transparent',
   },
   scrollContent: {},
-  worldStageBleed: {
+  ftHeroBleed: {
     marginBottom: vionaTokens.spacing[20],
   },
-  worldStageGradient: {
+  ftHero: {
     borderRadius: vionaTokens.radius.xxl,
     paddingHorizontal: vionaTokens.spacing[24],
-    paddingTop: vionaTokens.spacing[32],
-    paddingBottom: vionaTokens.spacing[32],
+    paddingVertical: vionaTokens.spacing[32],
     overflow: 'hidden',
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.65)',
+    borderColor: vionaTokens.fashionTech.champagneLine,
     ...vionaTokens.shadows.hero,
   },
-  worldStageGlow: {
-    ...StyleSheet.absoluteFillObject,
-    borderRadius: vionaTokens.radius.xxl,
-    borderWidth: 1,
-    borderColor: 'rgba(99, 102, 241, 0.14)',
-    pointerEvents: 'none',
+  ftHeroMain: {
+    gap: vionaTokens.spacing[20],
   },
-  wsEyebrow: {
+  ftCopyCol: {
+    flex: 1,
+    minWidth: 0,
+    paddingRight: vionaTokens.spacing[8],
+  },
+  ftEyebrow: {
     fontSize: 11,
-    letterSpacing: 1.2,
+    letterSpacing: 2,
     textTransform: 'uppercase',
-    color: vionaTokens.colors.softInk,
+    color: vionaTokens.fashionTech.champagne,
     fontFamily: FontFamily.semibold,
     marginBottom: vionaTokens.spacing[12],
   },
-  wsHeadline: {
-    fontSize: 30,
-    lineHeight: 36,
-    color: vionaTokens.colors.ink,
+  ftHeadline: {
+    fontSize: 28,
+    lineHeight: 34,
+    color: vionaTokens.fashionTech.inkOnDark,
     fontFamily: FontFamily.extrabold,
     marginBottom: vionaTokens.spacing[12],
     maxWidth: 560,
   },
-  wsSubtitle: {
+  ftSubtitle: {
     fontSize: 15,
     lineHeight: 23,
-    color: vionaTokens.colors.softInk,
+    color: vionaTokens.fashionTech.mutedOnDark,
     fontFamily: FontFamily.medium,
-    marginBottom: vionaTokens.spacing[24],
     maxWidth: 520,
   },
-  entranceStack: {
-    alignSelf: 'center',
-    gap: vionaTokens.spacing[12],
-  },
-  entranceCell: {
+  ftVisualPanel: {
     flex: 1,
-    minWidth: 0,
+    minHeight: 160,
+    borderRadius: vionaTokens.radius.xl,
+    borderWidth: 1,
+    borderColor: 'rgba(201, 169, 98, 0.25)',
+    overflow: 'hidden',
+    justifyContent: 'flex-end',
+  },
+  ftVisualFrame: {
+    flex: 1,
+    padding: vionaTokens.spacing[16],
+    justifyContent: 'flex-end',
+    backgroundColor: 'rgba(0,0,0,0.35)',
+  },
+  ftVisualInset: {
+    fontSize: 11,
+    letterSpacing: 1,
+    textTransform: 'uppercase',
+    color: vionaTokens.fashionTech.mutedOnDark,
+    fontFamily: FontFamily.semibold,
+  },
+  ftCardGrid: {
+    gap: vionaTokens.spacing[12],
+    marginTop: vionaTokens.spacing[32],
+  },
+  ftCardCell: {
+    flexGrow: 1,
+    flexBasis: '47%',
+    minWidth: 240,
+    maxWidth: '100%',
+  },
+  ftCardCellQuarter: {
+    flexBasis: '23%',
+    minWidth: 200,
+  },
+  trustStripHintDesktop: {
+    flex: 1,
+    textAlign: 'right',
   },
   trustStrip: {
     alignSelf: 'center',

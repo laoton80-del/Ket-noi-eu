@@ -4,7 +4,14 @@ import { BlurView } from 'expo-blur';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { useCallback, useMemo, useState, type ReactElement } from 'react';
+import {
+  forwardRef,
+  useCallback,
+  useImperativeHandle,
+  useMemo,
+  useState,
+  type ReactElement,
+} from 'react';
 import {
   Modal,
   Platform,
@@ -50,11 +57,22 @@ function triggerHaptic(style: 'light' | 'medium' = 'medium'): void {
 
 export type ProfileSwitcherProps = Readonly<{
   tabBarLift: number;
+  /** When true, floating language/account chips are hidden (e.g. B2C Home desktop command shell). */
+  suppressFloatingChrome?: boolean;
+}>;
+
+export type ProfileSwitcherHandle = Readonly<{
+  openRolePicker: () => void;
+  openPersonalHub: () => void;
 }>;
 
 type VigGate = 'merchant' | 'broker' | null;
 
-export function ProfileSwitcher({ tabBarLift }: ProfileSwitcherProps): ReactElement | null {
+export const ProfileSwitcher = forwardRef<ProfileSwitcherHandle, ProfileSwitcherProps>(
+  function ProfileSwitcher(
+    { tabBarLift, suppressFloatingChrome = false },
+    ref
+  ): ReactElement | null {
   const { t } = useTranslation();
   const { user } = useAuth();
   const navigation = useNavigation<Nav>();
@@ -156,6 +174,21 @@ export function ProfileSwitcher({ tabBarLift }: ProfileSwitcherProps): ReactElem
     navigation.navigate('PersonalHub');
   }, [navigation]);
 
+  useImperativeHandle(
+    ref,
+    () => ({
+      openRolePicker: () => {
+        if (!canSwitch) return;
+        triggerHaptic('light');
+        setOpen(true);
+      },
+      openPersonalHub: () => {
+        openAccount();
+      },
+    }),
+    [canSwitch, openAccount]
+  );
+
   const chipLiftStyle = useMemo(() => {
     if (isDesktopWeb) {
       /** Keep profile chip in header zone on wide layouts. */
@@ -168,6 +201,9 @@ export function ProfileSwitcher({ tabBarLift }: ProfileSwitcherProps): ReactElem
   const singleAccountLabel = narrowProfileChip ? t('home.accountChipShort') : t('home.accountChip');
 
   if (!canSwitch) {
+    if (suppressFloatingChrome) {
+      return null;
+    }
     return (
       <>
         <SmartTrioLanguageChip
@@ -205,31 +241,33 @@ export function ProfileSwitcher({ tabBarLift }: ProfileSwitcherProps): ReactElem
 
   return (
     <>
-      <Pressable
-        onPress={() => {
-          triggerHaptic();
-          setOpen(true);
-        }}
-        style={[
-          styles.chip,
-          isAdminUndercover && styles.chipAdminUndercover,
-          isDesktopWeb ? styles.chipDesktop : styles.chipMobile,
-          isDesktopWeb && styles.chipDesktopSizing,
-          chipLiftStyle,
-        ]}
-        accessibilityRole="button"
-        accessibilityLabel="Switch active profile"
-      >
-        {isAdminUndercover ? (
-          <Ionicons name="ribbon" size={18} color="#FF6B8A" />
-        ) : (
-          <Ionicons name="shuffle-outline" size={18} color="#FFFFFF" />
-        )}
-        <Text style={styles.chipText} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.82}>
-          {chipLabel}
-        </Text>
-        <Ionicons name="chevron-up" size={16} color="rgba(255,255,255,0.85)" />
-      </Pressable>
+      {!suppressFloatingChrome ? (
+        <Pressable
+          onPress={() => {
+            triggerHaptic();
+            setOpen(true);
+          }}
+          style={[
+            styles.chip,
+            isAdminUndercover && styles.chipAdminUndercover,
+            isDesktopWeb ? styles.chipDesktop : styles.chipMobile,
+            isDesktopWeb && styles.chipDesktopSizing,
+            chipLiftStyle,
+          ]}
+          accessibilityRole="button"
+          accessibilityLabel="Switch active profile"
+        >
+          {isAdminUndercover ? (
+            <Ionicons name="ribbon" size={18} color="#FF6B8A" />
+          ) : (
+            <Ionicons name="shuffle-outline" size={18} color="#FFFFFF" />
+          )}
+          <Text style={styles.chipText} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.82}>
+            {chipLabel}
+          </Text>
+          <Ionicons name="chevron-up" size={16} color="rgba(255,255,255,0.85)" />
+        </Pressable>
+      ) : null}
 
       <Modal visible={open} transparent animationType="fade" onRequestClose={() => setOpen(false)}>
         <View style={styles.modalRoot}>
@@ -331,7 +369,7 @@ export function ProfileSwitcher({ tabBarLift }: ProfileSwitcherProps): ReactElem
       </Modal>
     </>
   );
-}
+});
 
 const styles = StyleSheet.create({
   chipMobile: {
