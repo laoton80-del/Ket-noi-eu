@@ -66,6 +66,12 @@
       "B2BPaywall": "Bảng giá doanh nghiệp"
     }
   },
+  "authPaywall": {
+    "title": "Tính năng VIP",
+    "description": "Bạn cần đăng nhập bằng số điện thoại để dùng đầy đủ trợ lý trong app (Lễ tân, học tập và công cụ).",
+    "continuePhone": "Tiếp tục bằng số điện thoại",
+    "later": "Để sau"
+  },
   "vietnamHub": {
     "screenTitle": "Trung tâm Du lịch Việt Nam",
     "backA11y": "Quay lại",

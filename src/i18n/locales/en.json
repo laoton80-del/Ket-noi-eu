@@ -66,6 +66,12 @@
       "B2BPaywall": "Business pricing"
     }
   },
+  "authPaywall": {
+    "title": "VIP Features",
+    "description": "Sign in with your phone number to unlock full assistant capabilities in the app (reception, learning, and tools).",
+    "continuePhone": "Continue with Phone Number",
+    "later": "Maybe later"
+  },
   "vietnamHub": {
     "screenTitle": "Vietnam Hub",
     "backA11y": "Go back",

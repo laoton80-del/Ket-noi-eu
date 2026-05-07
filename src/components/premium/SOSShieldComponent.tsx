@@ -23,8 +23,8 @@ import { useTranslation } from '../../utils/i18n';
 
 export const V7_SOS_HOLD_TO_TRIGGER_MS = 3_000 as const;
 
-const RING_SIZE = 92;
-const STROKE = 5;
+const RING_SIZE = 82;
+const STROKE = 4;
 const R = (RING_SIZE - STROKE) / 2;
 const CIRC = 2 * Math.PI * R;
 const NEON_RED = '#FF1744';
@@ -202,7 +202,7 @@ export function SOSShieldComponent({
               end={{ x: 1, y: 1 }}
               style={styles.gradient}
             >
-              <Ionicons name="shield" size={30} color="#FFFFFF" style={styles.iconShadow} />
+              <Ionicons name="shield" size={26} color="#FFFFFF" style={styles.iconShadow} />
               <View style={styles.sosBadge}>
                 <View style={styles.sosDot} />
               </View>
@@ -210,7 +210,7 @@ export function SOSShieldComponent({
           </Pressable>
         </View>
       </Animated.View>
-      {(progress > 0 && progress < 1) || !reduceMotionGlow ? (
+      {progress > 0 && progress < 1 ? (
         <View style={styles.captionWrap} pointerEvents="none">
           <Text
             style={styles.caption}
@@ -231,14 +231,14 @@ const styles = StyleSheet.create({
   wrap: {
     alignItems: 'center',
     justifyContent: 'flex-end',
-    maxWidth: 112,
+    maxWidth: 98,
   },
   pulseRing: {
     position: 'absolute',
-    width: 82,
-    height: 82,
-    borderRadius: 41,
-    borderWidth: 3,
+    width: 74,
+    height: 74,
+    borderRadius: 37,
+    borderWidth: 2,
     borderColor: 'rgba(255, 23, 68, 0.45)',
     backgroundColor: 'rgba(255, 23, 68, 0.08)',
   },
@@ -257,7 +257,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
   },
   hit: {
-    borderRadius: 36,
+    borderRadius: 32,
     overflow: 'hidden',
     elevation: 12,
     shadowColor: '#DC2626',
@@ -273,9 +273,9 @@ const styles = StyleSheet.create({
   },
   hitPressed: { opacity: 0.92 },
   gradient: {
-    width: 72,
-    height: 72,
-    borderRadius: 36,
+    width: 64,
+    height: 64,
+    borderRadius: 32,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 2,
@@ -305,8 +305,8 @@ const styles = StyleSheet.create({
   },
   captionWrap: {
     marginTop: 6,
-    width: 104,
-    maxWidth: 104,
+    width: 92,
+    maxWidth: 92,
     alignItems: 'center',
   },
   caption: {

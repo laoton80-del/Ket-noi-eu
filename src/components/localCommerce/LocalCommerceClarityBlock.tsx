@@ -60,11 +60,11 @@ export function LocalCommerceClarityBlock({
 
       <View style={styles.audienceBlock}>
         <Text style={styles.audienceTitle}>{t('localCommerce.vietnameseAbroadTitle')}</Text>
-        <Text style={styles.audienceSub}>{t('localCommerce.vietnameseAbroadSubtitle')}</Text>
+        <Text style={styles.audienceSub} numberOfLines={2}>{t('localCommerce.vietnameseAbroadSubtitle')}</Text>
         <Text style={styles.audienceTitle}>{t('localCommerce.nativeCustomerTitle')}</Text>
-        <Text style={styles.audienceSub}>{t('localCommerce.nativeCustomerSubtitle')}</Text>
+        <Text style={styles.audienceSub} numberOfLines={2}>{t('localCommerce.nativeCustomerSubtitle')}</Text>
         <Text style={styles.audienceTitle}>{t('localCommerce.vietnameseMerchantTitle')}</Text>
-        <Text style={styles.audienceSub}>{t('localCommerce.vietnameseMerchantSubtitle')}</Text>
+        <Text style={styles.audienceSub} numberOfLines={2}>{t('localCommerce.vietnameseMerchantSubtitle')}</Text>
       </View>
 
       <Text style={styles.trioHint}>{trioLine}</Text>
@@ -86,7 +86,7 @@ export function LocalCommerceClarityBlock({
           <View key={c.id} style={styles.capRow}>
             <View style={styles.capTextCol}>
               <Text style={styles.capTitle}>{t(c.titleKey)}</Text>
-              <Text style={styles.capDesc} numberOfLines={2}>
+              <Text style={styles.capDesc} numberOfLines={1}>
                 {t(c.descriptionKey)}
               </Text>
             </View>
@@ -126,12 +126,12 @@ export function LocalCommerceClarityBlock({
 const styles = StyleSheet.create({
   card: { marginBottom: 12 },
   title: { fontSize: 17, fontWeight: '900', color: INK },
-  subtitle: { marginTop: 6, fontSize: 13, fontWeight: '600', color: INK_MUTED, lineHeight: 18 },
-  audienceBlock: { marginTop: 12, gap: 6 },
+  subtitle: { marginTop: 5, fontSize: 12, fontWeight: '600', color: INK_MUTED, lineHeight: 17 },
+  audienceBlock: { marginTop: 10, gap: 4 },
   audienceTitle: { fontSize: 13, fontWeight: '800', color: INK },
-  audienceSub: { fontSize: 12, fontWeight: '600', color: INK_MUTED, lineHeight: 17 },
-  trioHint: { marginTop: 10, fontSize: 11, fontWeight: '600', color: 'rgba(5, 11, 20, 0.45)', lineHeight: 16 },
-  statusScroll: { marginTop: 10, maxHeight: 36 },
+  audienceSub: { fontSize: 11, fontWeight: '600', color: INK_MUTED, lineHeight: 15 },
+  trioHint: { marginTop: 8, fontSize: 11, fontWeight: '600', color: 'rgba(5, 11, 20, 0.5)', lineHeight: 15 },
+  statusScroll: { marginTop: 8, maxHeight: 34 },
   statusRow: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingRight: 8 },
   statusChip: {
     paddingHorizontal: 10,
@@ -142,12 +142,12 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(197, 160, 89, 0.28)',
   },
   statusChipText: { fontSize: 10, fontWeight: '800', color: INK, textTransform: 'uppercase' },
-  safety: { marginTop: 10, fontSize: 11, fontWeight: '600', color: INK_MUTED, lineHeight: 16 },
-  capList: { marginTop: 10, gap: 8 },
+  safety: { marginTop: 8, fontSize: 11, fontWeight: '600', color: INK_MUTED, lineHeight: 15 },
+  capList: { marginTop: 8, gap: 6 },
   capRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 10 },
   capTextCol: { flex: 1, minWidth: 0 },
   capTitle: { fontSize: 12, fontWeight: '800', color: INK },
-  capDesc: { fontSize: 11, fontWeight: '600', color: INK_MUTED, marginTop: 2, lineHeight: 15 },
+  capDesc: { fontSize: 10, fontWeight: '600', color: INK_MUTED, marginTop: 1, lineHeight: 14 },
   capPill: {
     fontSize: 10,
     fontWeight: '800',
@@ -155,7 +155,7 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
     marginTop: 2,
   },
-  ctaRow: { marginTop: 12, flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  ctaRow: { marginTop: 10, flexDirection: 'row', flexWrap: 'wrap', gap: 7 },
   ctaChip: {
     flexDirection: 'row',
     alignItems: 'center',
