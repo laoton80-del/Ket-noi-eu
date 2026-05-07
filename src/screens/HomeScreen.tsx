@@ -66,6 +66,12 @@ type BriefingCard = Readonly<{
   headline: string;
   sub: string;
 }>;
+type UniverseCard = Readonly<{
+  id: 'local' | 'travel' | 'academy';
+  title: string;
+  subtitle: string;
+  icon: keyof typeof Ionicons.glyphMap;
+}>;
 
 export function HomeScreen() {
   const { t } = useTranslation();
@@ -175,6 +181,29 @@ export function HomeScreen() {
     if (isTourist) return all.filter((c) => c.id !== 'b1' && c.id !== 'b4');
     return all;
   }, [isTourist, t]);
+  const universeCards = useMemo(
+    (): readonly UniverseCard[] => [
+      {
+        id: 'local',
+        title: t('home.universeLocalTitle'),
+        subtitle: t('home.universeLocalSub'),
+        icon: 'grid-outline',
+      },
+      {
+        id: 'travel',
+        title: t('home.universeTravelTitle'),
+        subtitle: t('home.universeTravelSub'),
+        icon: 'airplane-outline',
+      },
+      {
+        id: 'academy',
+        title: t('home.universeAcademyTitle'),
+        subtitle: t('home.universeAcademySub'),
+        icon: 'sparkles-outline',
+      },
+    ],
+    [t]
+  );
 
   const walletChipLabel = useMemo(() => {
     const n = wallet.credits;
@@ -309,12 +338,8 @@ export function HomeScreen() {
           <View style={styles.heroTopRow}>
             <View style={styles.heroCopyCol}>
               <Text style={styles.heroEyebrow}>{brandConfig.displayName}</Text>
-              <Text style={styles.heading}>
-                {isTourist ? t('home.headingTourist') : t('home.headingExpat')}
-              </Text>
-              <Text style={styles.heroSub}>
-                {isTourist ? t('home.heroSubTourist') : t('home.heroSubExpat')}
-              </Text>
+              <Text style={styles.heading}>{t('home.multiverseHeroTitle')}</Text>
+              <Text style={styles.heroSub}>{t('home.multiverseHeroSub')}</Text>
             </View>
             <View style={[styles.creditPill, isTourist && styles.creditPillTourist, { maxWidth: creditPillMax }]}>
               <View style={styles.creditPillRow}>
@@ -340,6 +365,26 @@ export function HomeScreen() {
               ) : null}
             </View>
           </View>
+          <VionaCard style={styles.multiverseHeroCard} padded>
+            <Text style={styles.multiverseEyebrow}>{t('home.multiverseHeroKicker')}</Text>
+            <Text style={styles.multiverseHeadline}>{t('home.multiverseHeroTitle')}</Text>
+            <Text style={styles.multiverseSubheadline}>{t('home.multiverseHeroSubheadline')}</Text>
+            <View style={styles.multiverseGrid}>
+              {universeCards.map((card) => (
+                <View key={card.id} style={styles.universeCard}>
+                  <View style={styles.universeIconWrap}>
+                    <Ionicons name={card.icon} size={18} color={GOLD_ACCENT} />
+                  </View>
+                  <Text style={styles.universeTitle}>{card.title}</Text>
+                  <Text style={styles.universeSubtitle}>{card.subtitle}</Text>
+                </View>
+              ))}
+            </View>
+          </VionaCard>
+        </View>
+
+        <View style={[styles.charityWrap, { width: layout.inner }]}>
+          <CharityWidget />
         </View>
 
         {isTourist ? <DashboardB2CScreen contentWidth={layout.inner} /> : null}
@@ -369,10 +414,6 @@ export function HomeScreen() {
             </View>
           </VionaCard>
         ) : null}
-
-        <View style={[styles.charityWrap, { width: layout.inner }]}>
-          <CharityWidget />
-        </View>
 
         <View style={[styles.actionCenter, { width: layout.inner }]}>
           <Pressable
@@ -628,6 +669,70 @@ const styles = StyleSheet.create({
     lineHeight: 21,
     color: TEXT_MUTED,
     fontFamily: FontFamily.regular,
+  },
+  multiverseHeroCard: {
+    marginTop: 12,
+    borderRadius: 20,
+    borderColor: 'rgba(212, 175, 55, 0.36)',
+    backgroundColor: 'rgba(255,255,255,0.96)',
+  },
+  multiverseEyebrow: {
+    fontSize: 11,
+    letterSpacing: 0.8,
+    textTransform: 'uppercase',
+    color: GOLD_ACCENT,
+    fontFamily: FontFamily.semibold,
+    marginBottom: 6,
+  },
+  multiverseHeadline: {
+    fontSize: 26,
+    lineHeight: 32,
+    color: TEXT_PRIMARY,
+    fontFamily: FontFamily.extrabold,
+  },
+  multiverseSubheadline: {
+    marginTop: 6,
+    fontSize: 13,
+    lineHeight: 20,
+    color: TEXT_MUTED,
+    fontFamily: FontFamily.medium,
+  },
+  multiverseGrid: {
+    marginTop: 14,
+    flexDirection: 'row',
+    gap: 10,
+  },
+  universeCard: {
+    flex: 1,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: vionaTrust.border,
+    backgroundColor: vionaTrust.surfaceMuted,
+    paddingHorizontal: 10,
+    paddingVertical: 12,
+    minHeight: 110,
+  },
+  universeIconWrap: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(212, 175, 55, 0.12)',
+    marginBottom: 8,
+  },
+  universeTitle: {
+    fontSize: 13,
+    lineHeight: 18,
+    color: TEXT_PRIMARY,
+    fontFamily: FontFamily.bold,
+  },
+  universeSubtitle: {
+    marginTop: 4,
+    fontSize: 11,
+    lineHeight: 16,
+    color: TEXT_MUTED,
+    fontFamily: FontFamily.medium,
   },
   creditPill: {
     minWidth: 170,
