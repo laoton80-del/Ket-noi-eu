@@ -1,16 +1,18 @@
-import { type ReactElement, type ReactNode } from 'react';
+import { type ReactNode } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text, type StyleProp, type ViewStyle } from 'react-native';
 
+import { vionaTokens } from '../../design';
 import { FontFamily } from '../../theme/typography';
-import { vionaHybrid, vionaSpacing, vionaTouchMin, vionaPressedOpacity } from './vionaDesignTokens';
-import { vionaTrust } from './vionaTrustTokens';
 
-export type VionaButtonVariant = 'primary' | 'secondary' | 'danger' | 'ghost';
+export type VionaButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger' | 'soft';
+export type VionaButtonSize = 'sm' | 'md' | 'lg';
 
 export type VionaButtonProps = Readonly<{
-  label: string;
+  label?: string;
+  children?: ReactNode;
   onPress: () => void;
   variant?: VionaButtonVariant;
+  size?: VionaButtonSize;
   disabled?: boolean;
   loading?: boolean;
   accessibilityLabel?: string;
@@ -18,46 +20,94 @@ export type VionaButtonProps = Readonly<{
   leftIcon?: ReactNode;
 }>;
 
+const toneStyles: Record<VionaButtonVariant, { bg: string; border: string; text: string; spinner: string }> = {
+  primary: {
+    bg: vionaTokens.colors.blue,
+    border: vionaTokens.colors.blue,
+    text: vionaTokens.colors.white,
+    spinner: vionaTokens.colors.white,
+  },
+  secondary: {
+    bg: vionaTokens.colors.white,
+    border: vionaTokens.colors.border,
+    text: vionaTokens.colors.softInk,
+    spinner: vionaTokens.colors.softInk,
+  },
+  ghost: {
+    bg: 'transparent',
+    border: 'transparent',
+    text: vionaTokens.colors.blue,
+    spinner: vionaTokens.colors.blue,
+  },
+  danger: {
+    bg: vionaTokens.colors.safetyRed,
+    border: vionaTokens.colors.safetyRed,
+    text: vionaTokens.colors.white,
+    spinner: vionaTokens.colors.white,
+  },
+  soft: {
+    bg: vionaTokens.colors.cloud,
+    border: 'rgba(33, 81, 154, 0.2)',
+    text: vionaTokens.colors.indigo,
+    spinner: vionaTokens.colors.indigo,
+  },
+};
+
+const sizeStyles: Record<VionaButtonSize, ViewStyle> = {
+  sm: { minHeight: 34, paddingHorizontal: vionaTokens.spacing[12], paddingVertical: vionaTokens.spacing[6] },
+  md: { minHeight: 42, paddingHorizontal: vionaTokens.spacing[16], paddingVertical: vionaTokens.spacing[8] },
+  lg: { minHeight: 50, paddingHorizontal: vionaTokens.spacing[20], paddingVertical: vionaTokens.spacing[12] },
+};
+
+const textSizeStyles: Record<VionaButtonSize, object> = {
+  sm: vionaTokens.typography.meta,
+  md: vionaTokens.typography.bodyStrong,
+  lg: vionaTokens.typography.title,
+};
+
 export function VionaButton({
   label,
+  children,
   onPress,
   variant = 'primary',
+  size = 'md',
   disabled = false,
   loading = false,
   accessibilityLabel,
   style,
   leftIcon,
-}: VionaButtonProps): ReactElement {
-  const busy = loading || disabled;
-  const colors = buttonColors(variant);
+}: VionaButtonProps) {
+  const busy = disabled || loading;
+  const tone = toneStyles[variant];
+  const textContent = children ?? label ?? '';
 
   return (
     <Pressable
-      onPress={() => {
-        if (!busy) onPress();
-      }}
       accessibilityRole="button"
       accessibilityLabel={accessibilityLabel ?? label}
       accessibilityState={{ disabled: busy }}
+      disabled={busy}
+      onPress={onPress}
       style={({ pressed }) => [
         styles.base,
+        sizeStyles[size],
         {
-          backgroundColor: colors.bg,
-          borderColor: colors.border,
+          backgroundColor: tone.bg,
+          borderColor: tone.border,
           borderWidth: variant === 'ghost' ? 0 : 1,
-          opacity: pressed && !busy ? vionaPressedOpacity : 1,
         },
         busy && styles.disabled,
+        pressed && !busy && styles.pressed,
         style,
       ]}
     >
       {loading ? (
-        <ActivityIndicator color={colors.spinner} />
+        <ActivityIndicator color={tone.spinner} />
       ) : (
         <>
           {leftIcon}
-          <Text style={[styles.label, { color: colors.text }]} numberOfLines={2}>
-            {label}
+          <Text style={[styles.label, textSizeStyles[size], { color: tone.text }]} numberOfLines={2}>
+            {textContent}
           </Text>
         </>
       )}
@@ -65,58 +115,22 @@ export function VionaButton({
   );
 }
 
-function buttonColors(
-  variant: VionaButtonVariant
-): Readonly<{ bg: string; border: string; text: string; spinner: string }> {
-  switch (variant) {
-    case 'secondary':
-      return {
-        bg: vionaTrust.surface,
-        border: vionaTrust.border,
-        text: vionaTrust.ink,
-        spinner: vionaTrust.ink,
-      };
-    case 'danger':
-      return {
-        bg: 'rgba(220, 38, 38, 0.08)',
-        border: vionaHybrid.danger,
-        text: vionaHybrid.danger,
-        spinner: vionaHybrid.danger,
-      };
-    case 'ghost':
-      return {
-        bg: 'transparent',
-        border: 'transparent',
-        text: vionaTrust.signal,
-        spinner: vionaTrust.signal,
-      };
-    default:
-      return {
-        bg: vionaTrust.signal,
-        border: vionaTrust.signal,
-        text: '#FFFFFF',
-        spinner: '#FFFFFF',
-      };
-  }
-}
-
 const styles = StyleSheet.create({
   base: {
-    minHeight: vionaTouchMin,
-    paddingHorizontal: vionaSpacing.lg,
-    borderRadius: 14,
-    flexDirection: 'row',
+    borderRadius: vionaTokens.radius.md,
     alignItems: 'center',
     justifyContent: 'center',
-    gap: vionaSpacing.sm,
+    flexDirection: 'row',
+    gap: vionaTokens.spacing[8],
   },
   label: {
-    fontSize: 16,
-    fontFamily: FontFamily.extrabold,
-    letterSpacing: 0.2,
+    fontFamily: FontFamily.bold,
     textAlign: 'center',
   },
   disabled: {
     opacity: 0.45,
+  },
+  pressed: {
+    opacity: 0.88,
   },
 });

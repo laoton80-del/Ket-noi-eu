@@ -31,6 +31,7 @@
     "ai:admin-alert-readiness": "node scripts/ai-admin-alert-readiness-check.mjs",
     "incident:dry-run-readiness": "node scripts/incident-dry-run-readiness-check.mjs",
     "gate:production-readiness": "node scripts/global-production-gate-check.mjs",
+    "design:readiness": "node scripts/design-system-readiness-check.mjs",
     "pilot:rehearsal-readiness": "node scripts/merchant-pilot-rehearsal-check.mjs",
     "brand:i18n-readiness": "node scripts/brand-i18n-readiness-check.mjs",
     "twilio:sandbox-readiness": "node scripts/twilio-sandbox-readiness-check.mjs",
