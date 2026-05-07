@@ -52,7 +52,7 @@ export function VietKidsScreen() {
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.content}>
         <View style={styles.heroCard}>
-          <Text style={styles.kicker}>ViGlobal ACADEMY KIDS</Text>
+          <Text style={styles.kicker}>VIONA ACADEMY KIDS</Text>
           <Text style={styles.title}>Học Tiếng Việt Cùng Cô AI</Text>
           <Text style={styles.subtitle}>
             Duolingo-style: Thẻ bài tương tác + game tìm chữ giúp bé ghi nhớ từ vựng nhanh hơn.

@@ -157,7 +157,7 @@ export function CaNhanScreen() {
           return;
         }
         if (access.denied && access.kind === 'gps_vn') {
-          Alert.alert('Kết Nối Global', access.message);
+          Alert.alert('VIONA', access.message);
           return;
         }
         navigation.navigate(route);
@@ -174,7 +174,7 @@ export function CaNhanScreen() {
         return;
       }
       if (access.denied && access.kind === 'gps_vn') {
-        Alert.alert('Kết Nối Global', access.message);
+        Alert.alert('VIONA', access.message);
         return;
       }
       setMode('B2B_MODE');
@@ -413,7 +413,7 @@ export function CaNhanScreen() {
               <Text style={styles.workspaceHatTitle}>
                 {user.workspaceUiOverride === 'consumer'
                   ? `Use ${user.serverRole === 'BROKER' ? 'broker' : 'merchant'} dashboard as default home`
-                  : 'Switch default home to ViGlobal consumer app'}
+                  : 'Switch default home to VIONA consumer app'}
               </Text>
               <Text style={styles.workspaceHatHint}>
                 One tap — saved on this device. Open wallet & tabs stay the same.

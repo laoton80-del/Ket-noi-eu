@@ -16,14 +16,14 @@ const sections: Section[] = [
   {
     title: 'Sứ mệnh',
     lines: [
-      'Chúng tôi mong muốn, khi Kết Nối Global phát triển vững vàng hơn, hệ sinh thái này sẽ từng bước tạo ra những hỗ trợ thiết thực cho trẻ em có hoàn cảnh khó khăn tại Việt Nam.',
+      'Chúng tôi mong muốn, khi VIONA phát triển vững vàng hơn, hệ sinh thái này sẽ từng bước tạo ra những hỗ trợ thiết thực cho trẻ em có hoàn cảnh khó khăn tại Việt Nam.',
       'Đó có thể là hỗ trợ học tập, đồ dùng cần thiết, điều kiện sinh hoạt tốt hơn, hoặc những chương trình đồng hành dài hạn mang lại giá trị bền vững.',
     ],
   },
   {
     title: 'Cam kết',
     lines: [
-      'Kết Nối Global sẽ từng bước dành một phần giá trị tạo ra từ hệ sinh thái để đồng hành cùng các hoạt động thiện nguyện thiết thực.',
+      'VIONA sẽ từng bước dành một phần giá trị tạo ra từ hệ sinh thái để đồng hành cùng các hoạt động thiện nguyện thiết thực.',
       'Chúng tôi chọn cách đi chậm nhưng thật, rõ ràng và bền vững.',
       'Khi chương trình được triển khai chính thức, mọi hoạt động sẽ được cập nhật minh bạch trong ứng dụng.',
     ],
@@ -31,7 +31,7 @@ const sections: Section[] = [
   {
     title: 'Trong thời gian tới',
     lines: [
-      'Khi hệ thống vận hành ổn định hơn, cộng đồng người dùng Kết Nối Global cũng sẽ có thể cùng chung tay đóng góp thông qua Kết Nối Yêu Thương.',
+      'Khi hệ thống vận hành ổn định hơn, cộng đồng người dùng VIONA cũng sẽ có thể cùng chung tay đóng góp thông qua Kết Nối Yêu Thương.',
       'Mỗi sự đồng hành, dù nhỏ, đều có thể tạo ra một thay đổi ý nghĩa.',
     ],
   },
@@ -63,7 +63,7 @@ export function KetNoiYeuThuongScreen() {
         <Text style={styles.brand}>{APP_BRAND.name}</Text>
         <Text style={styles.title}>Kết Nối Yêu Thương</Text>
         <Text style={styles.hero}>
-          Kết Nối Global tin rằng công nghệ không chỉ giúp cuộc sống dễ hơn, mà còn có thể tạo ra những giá trị tốt đẹp hơn cho cộng đồng.
+          VIONA tin rằng công nghệ không chỉ giúp cuộc sống dễ hơn, mà còn có thể tạo ra những giá trị tốt đẹp hơn cho cộng đồng.
         </Text>
         <Text style={styles.hero}>
           Kết Nối Yêu Thương là định hướng đồng hành lâu dài của chúng tôi dành cho trẻ em có hoàn cảnh khó khăn tại Việt Nam.

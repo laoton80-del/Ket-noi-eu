@@ -19,8 +19,8 @@
     "fixersTitle": "ローカルフィクサー",
     "fixersSub": "現地ガイド & トラブル対応",
     "empty": "掲載は近日公開 — Leonaに手配を依頼できます。",
-    "fromPrice": "{{price}} VIG〜",
-    "scrollKicker": "V6.3 Inbound · ViGlobal"
+    "fromPrice": "{{price}} VIO Credits〜",
+    "scrollKicker": "V6.3 Inbound · VIONA"
   },
   "sos": {
     "fabLabel": "緊急 SOS",
@@ -28,7 +28,7 @@
     "fabAnnounce": "緊急シールドを開きました。",
     "sheetTitle": "AIシールド & SOS",
     "sheetSubtitle": "落ち着いて。サポートがあります。",
-    "gpsBanner": "正確なGPS位置は安全のためViGlobal Command Centerと共有されています。",
+    "gpsBanner": "正確なGPS位置は安全のためVIONAセーフティセンターと共有されています。",
     "gpsLoading": "位置情報を取得中…",
     "gpsUnavailable": "位置が取得できません。緊急番号とサポートは利用できます。",
     "coordsLocked": "GPS確定: {{lat}}, {{lng}}",
@@ -38,11 +38,48 @@
     "optionPoliceTitle": "警察 · 113",
     "optionPoliceSub": "警察通報 — 次の画面でAI通訳",
     "optionScamTitle": "詐欺・ぼったくりを通報",
-    "optionScamSub": "位置情報付きでViGlobal Command Centerへ通知",
+    "optionScamSub": "位置情報付きでVIONAセーフティセンターへ通知",
     "close": "閉じる",
     "callFailedTitle": "発信できません",
     "callFailedBody": "端末で{{number}}にかけてください。",
     "reportQueuedTitle": "通報を受け付けました",
-    "reportQueuedBody": "位置と参照情報をViGlobal Command Centerのキューに送りました。"
+    "reportQueuedBody": "位置と参照情報をVIONAセーフティセンターのキューに送りました。"
+  },
+  "smartTrio": {
+    "fallbackLabel": "Smart Trio fallback copy (not final localization)"
+  },
+  "travel": {
+    "direction": {
+      "fallbackLabel": "Travel direction fallback copy (not final localization)"
+    }
+  },
+  "localCommerce": {
+    "fallbackLabel": "Local Commerce fallback copy (not final localization)"
+  },
+  "aiReceptionist": {
+    "fallbackLabel": "AI Receptionist fallback copy (not final localization)",
+    "pilot": {
+      "fallbackLabel": "Pilot fallback copy (not final localization)"
+    }
+  },
+  "aiCost": {
+    "fallbackLabel": "AI cost fallback copy (not final localization)"
+  },
+  "telephony": {
+    "fallbackLabel": "Telephony fallback copy (not final localization)"
+  },
+  "aiUsage": {
+    "preview": {
+      "fallbackLabel": "AI usage preview fallback copy (not final localization)"
+    }
+  },
+  "aiEnforcement": {
+    "fallbackLabel": "AI enforcement fallback copy (not final localization)"
+  },
+  "aiAlerts": {
+    "fallbackLabel": "AI alerts fallback copy (not final localization)"
+  },
+  "incidents": {
+    "fallbackLabel": "Incidents fallback copy (not final localization)"
   }
 }

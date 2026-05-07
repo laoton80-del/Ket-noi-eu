@@ -160,7 +160,7 @@ export function QRScannerScreen() {
               <Ionicons name="camera-outline" size={40} color={GOLD} />
               <Text style={styles.permissionTitle}>Camera access</Text>
               <Text style={styles.permissionBody}>
-                ViGlobal uses your camera only to read payment QR codes. Your video is not stored.
+                VIONA uses your camera only to read payment QR codes. Your video is not stored.
               </Text>
               {permissionDenied ? (
                 <Pressable style={styles.primaryBtn} onPress={openSettings}>

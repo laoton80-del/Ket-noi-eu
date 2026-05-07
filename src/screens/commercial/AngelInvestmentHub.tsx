@@ -62,7 +62,7 @@ export function AngelInvestmentHub() {
   return (
     <SafeAreaView style={styles.container}>
       <AdaptiveContainer contentStyle={styles.content}>
-        <Text style={styles.headerTitle}>Cộng đồng Đầu tư Thiên thần Kết Nối Global</Text>
+        <Text style={styles.headerTitle}>Cộng đồng Đầu tư Thiên thần VIONA</Text>
         <Text style={styles.headerSubtitle}>
           Kết nối minh bạch giữa nhà đầu tư và dự án mở rộng kinh doanh địa phương.
         </Text>
@@ -93,7 +93,7 @@ export function AngelInvestmentHub() {
           <View style={styles.modalCard}>
             <Text style={styles.modalTitle}>Xác nhận Rủi ro Đầu tư</Text>
             <Text style={styles.modalBody}>
-              Đầu tư kinh doanh luôn đi kèm rủi ro. Ứng dụng Kết Nối Global đóng vai trò là nền tảng
+              Đầu tư kinh doanh luôn đi kèm rủi ro. Ứng dụng VIONA đóng vai trò là nền tảng
               kết nối thông tin, không đảm bảo lợi nhuận.
             </Text>
 

@@ -419,11 +419,11 @@ export const LifeOSDashboard: React.FC = () => {
         <View>
           <Text style={styles.brand}>{brandNameForSurface('b2b')}</Text>
           <Text style={styles.subtitle}>LifeOS</Text>
-          <Text style={styles.tagline}>Ưu tiên hành động tốn VIG Token có chủ đích — rõ giá, rõ kết quả.</Text>
+          <Text style={styles.tagline}>Ưu tiên hành động tốn VIO Credits có chủ đích — rõ giá, rõ kết quả.</Text>
         </View>
         <View style={styles.headerRight}>
           <View style={styles.creditChip}>
-            <Text style={styles.creditChipText}>{lifeOS.creditBalance} VIG Token</Text>
+            <Text style={styles.creditChipText}>{lifeOS.creditBalance} VIO Credits</Text>
           </View>
           <Pressable
             style={styles.sosBtn}

@@ -75,7 +75,7 @@ const VALUE_PROPS: { title: string; body: string; icon: keyof typeof Ionicons.gl
   },
 ];
 
-const SUCCESS_COPY = 'Đội ngũ Kết Nối Global sẽ liên hệ với bạn trong 24h!';
+const SUCCESS_COPY = 'Đội ngũ VIONA sẽ liên hệ với bạn trong 24h!';
 
 export function PartnerOnboardingScreen() {
   const navigation = useNavigation<Nav>();
@@ -130,7 +130,7 @@ export function PartnerOnboardingScreen() {
       await assertMerchantSurfacesAllowedByGps();
     } catch (e) {
       if (e instanceof MerchantSurfacesBlockedInVietnamGpsError) {
-        Alert.alert('Kết Nối Global', e.message);
+        Alert.alert('VIONA', e.message);
         return;
       }
       if (e instanceof B2BDomesticVietnamPhoneNotAllowedError) {
@@ -194,7 +194,7 @@ export function PartnerOnboardingScreen() {
             </Text>
             <Text style={[styles.lead, { color: B2C.textMuted }]}>
               Luật sư, hãng bay, logistics và dịch vụ chuyên nghiệp — đăng ký để trở thành Đối tác được chứng nhận, chia sẻ
-              doanh thu minh bạch trên nền tảng Kết Nối Global.
+              doanh thu minh bạch trên nền tảng VIONA.
             </Text>
 
             <View style={[styles.valueGrid, isWide && styles.valueGridWide, isThreeCol && styles.valueGridThree]}>

@@ -238,7 +238,7 @@ export function LiveInterpreterScreen() {
           <Ionicons name="mic-circle-outline" size={48} color={Colors.primary} />
           <Text style={styles.consentTitle}>Quyền micro (Minh Khang Live)</Text>
           <Text style={styles.consentBody}>
-            Phiên dịch giọng nói cần micro để thu âm và xử lý an toàn trên máy chủ ViGlobal. Bạn có thể từ chối và quay lại
+            Phiên dịch giọng nói cần micro để thu âm và xử lý an toàn trên máy chủ VIONA. Bạn có thể từ chối và quay lại
             sau.
           </Text>
           <Pressable

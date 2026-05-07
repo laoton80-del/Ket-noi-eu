@@ -52,8 +52,8 @@ export const APP_BRAND = {
   iconLabel: 'Cây Bồ Đề vàng 3D',
   supportEmail: 'support@ketnoiglobal.com',
   legal: {
-    privacyUrl: 'https://ketnoiglobal.com/privacy',
-    termsUrl: 'https://ketnoiglobal.com/terms',
+    privacyUrl: 'https://vionaio.com/privacy',
+    termsUrl: 'https://vionaio.com/terms',
   },
 } as const;
 

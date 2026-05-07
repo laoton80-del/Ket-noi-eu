@@ -138,7 +138,7 @@ export function ProSubscriptionPaywall() {
         return;
       }
       if (access.denied && access.kind === 'gps_vn') {
-        Alert.alert('Kết Nối Global', access.message);
+        Alert.alert('VIONA', access.message);
         return;
       }
       navigation.navigate('MerchantDashboard');
@@ -152,7 +152,7 @@ export function ProSubscriptionPaywall() {
         <Pressable onPress={() => navigation.goBack()} style={({ pressed }) => [styles.backBtn, pressed && { opacity: 0.75 }]}>
           <Ionicons name="chevron-back" size={22} color={B2C.text} />
         </Pressable>
-        <Text style={styles.screenTitle}>Kết Nối Global — Doanh nghiệp</Text>
+        <Text style={styles.screenTitle}>VIONA — Doanh nghiệp</Text>
         <View style={styles.backSpacer} />
       </View>
       <ScrollView contentContainerStyle={[styles.scroll, isDesktopWeb && styles.scrollDesktop]} showsVerticalScrollIndicator={false}>

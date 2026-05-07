@@ -32,6 +32,7 @@
     "incident:dry-run-readiness": "node scripts/incident-dry-run-readiness-check.mjs",
     "gate:production-readiness": "node scripts/global-production-gate-check.mjs",
     "pilot:rehearsal-readiness": "node scripts/merchant-pilot-rehearsal-check.mjs",
+    "brand:i18n-readiness": "node scripts/brand-i18n-readiness-check.mjs",
     "twilio:sandbox-readiness": "node scripts/twilio-sandbox-readiness-check.mjs",
     "functions:build": "npm run build --prefix functions",
     "functions:verify-bundle": "node scripts/verify-functions-bundle.mjs",

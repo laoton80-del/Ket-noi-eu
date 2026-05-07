@@ -93,7 +93,7 @@ export function PaymentCheckoutSheet({ visible, onClose }: PaymentCheckoutSheetP
               <Text style={styles.value}>{formatUsd(serviceAmount)}</Text>
             </View>
             <View style={styles.row}>
-              <Text style={styles.label}>Phí nền tảng Kết Nối Global</Text>
+              <Text style={styles.label}>Phí nền tảng VIONA</Text>
               <Text style={styles.value}>{formatUsd(platformFee)}</Text>
             </View>
             <View style={styles.protectionRow}>

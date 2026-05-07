@@ -37,7 +37,7 @@ export function DashboardScreen() {
           onPress: () => {
             Alert.alert(
               'Đang hoàn thiện',
-                `Đội kỹ thuật sẽ kích hoạt thanh toán ${FLASH_BROADCAST_LABEL} và lịch phát sóng trên môi trường production. Bạn có thể liên hệ Kết Nối Global để ưu tiên onboarding.`
+                `Đội kỹ thuật sẽ kích hoạt thanh toán ${FLASH_BROADCAST_LABEL} và lịch phát sóng trên môi trường production. Bạn có thể liên hệ VIONA để ưu tiên onboarding.`
             );
           },
         },

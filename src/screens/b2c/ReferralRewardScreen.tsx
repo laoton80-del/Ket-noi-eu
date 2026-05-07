@@ -31,8 +31,8 @@ export function ReferralRewardScreen() {
   };
 
   const onShareReferral = async () => {
-    const message = `Khám phá siêu ứng dụng Kết Nối Global! Nhập mã [${REFERRAL_CODE}] để nhận ngay ${PRICING_AUTHORITY.b2cCredits.referralBonus} Xu gọi AI Leona miễn phí! Tải app tại: ${SHARE_URL}`;
-    await Share.share({ message, url: SHARE_URL, title: 'Kết Nối Global - Referral' });
+    const message = `Khám phá siêu ứng dụng VIONA! Nhập mã [${REFERRAL_CODE}] để nhận ngay ${PRICING_AUTHORITY.b2cCredits.referralBonus} Xu gọi AI Leona miễn phí! Tải app tại: ${SHARE_URL}`;
+    await Share.share({ message, url: SHARE_URL, title: 'VIONA - Referral' });
   };
 
   return (

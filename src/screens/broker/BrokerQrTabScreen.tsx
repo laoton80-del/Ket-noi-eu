@@ -15,8 +15,8 @@ export function BrokerQrTabScreen(): ReactElement {
         <View style={styles.qrBox}>
           <Ionicons name="qr-code-outline" size={72} color="#F5D286" />
         </View>
-        <Text style={styles.mono}>https://app.viglobal.io/MerchantStorefront?merchantId=…</Text>
-        <Text style={styles.hint}>Save merchant in broker console → ViGlobal mints this QR automatically.</Text>
+        <Text style={styles.mono}>https://vionaio.com/merchant-storefront?merchantId=…</Text>
+        <Text style={styles.hint}>Save merchant in broker console → VIONA mints this QR automatically.</Text>
       </LinearGradient>
     </SafeAreaView>
   );
