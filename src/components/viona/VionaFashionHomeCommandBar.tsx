@@ -100,6 +100,7 @@ export function VionaFashionHomeCommandBar({
 }
 
 const styles = StyleSheet.create({
+  /** Top shell row — background comes from parent `HomeScreen` fashion shell; no “floating card”. */
   bar: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -107,12 +108,10 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     gap: vionaTokens.spacing[12],
     paddingVertical: vionaTokens.spacing[12],
-    paddingHorizontal: vionaTokens.spacing[12],
-    borderRadius: vionaTokens.radius.lg,
-    backgroundColor: vionaTokens.fashionTech.commandBarBg,
-    borderWidth: 1,
-    borderColor: vionaTokens.fashionTech.champagneLine,
-    marginBottom: vionaTokens.spacing[20],
+    paddingHorizontal: 0,
+    backgroundColor: 'transparent',
+    borderWidth: 0,
+    marginBottom: 0,
   },
   leftCluster: {
     flexDirection: 'row',

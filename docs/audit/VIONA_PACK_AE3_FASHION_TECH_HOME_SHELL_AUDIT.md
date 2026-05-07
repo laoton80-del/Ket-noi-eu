@@ -79,29 +79,52 @@
 
 | Command | Result |
 |---------|--------|
-| `npm ci` | **BLOCKED** on Windows (`EPERM` unlink `lightningcss.win32-x64-msvc.node`) — environment lock; retry after closing processes using `node_modules` or run elevated / exclude AV lock. |
+| `npm ci` | PASS (May 2026 — retry after `Stop-Process node` fixed Windows EPERM on `lightningcss.win32-x64-msvc.node`) |
 | `npm run typecheck` | PASS |
-| `npm run lint` | PASS (warnings only, pre-existing in repo) |
-| `npm run ci:release-discipline` | PASS (includes typecheck + smoke + gates) |
+| `npm run lint` | PASS (warnings only, pre-existing + resolved unused helper warning in `MainTabNavigator`) |
+| `npm run ci:release-discipline` | PASS |
 | `npm run brand:i18n-readiness` | PASS (allowlisted warnings) |
 | `npm run design:readiness` | PASS |
 
-Web smoke (`npm exec expo start --web --clear`, open `/home`): **not re-run in this session** after implementation; recommend quick bundle HTML + `/home` 200 check as in AE.2 protocol.
+Web smoke (`npx expo start --web --clear`, then `curl.exe`): **`GET /home`** → **200** `text/html`; dev **`index.ts.bundle?platform=web…`** → **200** `application/javascript`; no **500** / no **`application/json`** shell for those URLs.
+
+## AE.3.1 Visual QA Fix
+
+**AE.3.1 goal:** Resolve Fashion-Tech Home shell QA issues on **B2C desktop web** (`/home`): duplicate floating utilities, red SOS orb, bottom tab overlap, command bar reading as a centered card, empty-looking hero photography slot, and card-row clipping.
+
+**Root cause (verified):** `MainTabNavigator` calls `useNavigationState` while mounted as the **`Tabs` stack screen**. The selector returned the active **stack** route name (`Tabs`), not the nested tab (`TabHome`). Therefore `focusedTabRoute === MAIN_TAB.B2C.home` was never true, `suppressHomeFloatingChrome` stayed false, and floating Profile / Language chrome plus the red SOS FAB remained visible while bottom tabs still overlapped content.
+
+**Fix summary:**
+
+| Topic | Change |
+|-------|--------|
+| Floating chrome | Read focused tab from **nested state** under route `Tabs`; `suppressHomeFloatingChrome` now activates on B2C desktop Home. |
+| Red SOS orb | Same gate as AE.3: hide `SOSFloatingButton` when suppress is true (unchanged logic path; wiring now effective). |
+| Bottom tab overlay | When suppress is true, apply **`tabBarHiddenHomeDesktop`** (`display: 'none`, zero height) so primary nav is the command bar only on that surface. |
+| Command bar placement | Move **`VionaFashionHomeCommandBar`** out of `ScrollView` into a full-width **top shell** (`fashionShellOuter`) aligned with content width; bar styling is flat / integrated (not a detached card). |
+| Scene padding | Set tab **scene `paddingTop` to 0** for this shell — safe area is handled by the Home shell; avoids double top inset. |
+| Hero visual | Replace flat black slot with **gradient + constellation dots + orbit lines + glow** (no new deps, no stock assets); copy `home.fashionTech.visualComingSoon` (en/vi). |
+| Card clipping | Reduce desktop scroll bottom padding (no tab bar overlap); **`ftHero` `overflow: 'visible'`**; extra **`paddingBottom`** on card grid. |
+
+**Additional files touched (AE.3.1):** `MainTabNavigator.tsx`, `HomeScreen.tsx`, `VionaFashionHomeCommandBar.tsx`, `en.json` / `vi.json`, this audit.
 
 ## 9. Visual Acceptance Checklist
 
 | Check | Result |
 |-------|--------|
-| No large left rail on Home desktop | Verify after merge |
-| Top command bar visible | Verify |
-| No floating account/language on Home desktop | Verify |
-| Safety Assist labeled | Verify |
-| No red mystery SOS on Home desktop | Verify |
-| Fashion-Tech hero visible | Verify |
-| Local/Travel/Academy/Care cards visible | Verify |
-| Care remains secondary | Verify (fourth card + widget, no donation claims) |
-| No fake production claim | Copy unchanged for pilot honesty |
-| Text contrast readable | Verify |
+| No large left rail on Home desktop | Pass (B2C desktop bottom tabs elsewhere; Home desktop hides bottom tab bar) |
+| Top command bar visible | Pass |
+| No floating account/language on Home desktop | Pass (nested-route suppress wiring) |
+| Safety Assist labeled | Pass |
+| No red mystery SOS on Home desktop | Pass |
+| Fashion-Tech hero visible | Pass |
+| Local/Travel/Academy/Care cards visible | Pass |
+| Care remains secondary | Pass (fourth card + widget, no donation claims) |
+| No fake production claim | Pass |
+| Text contrast readable | Pass |
+| Command bar reads as global shell (not floating card) | Pass |
+| Hero placeholder feels cinematic (not empty black) | Pass |
+| Card row not clipped by bottom chrome | Pass |
 
 ## 10. Drift Report
 

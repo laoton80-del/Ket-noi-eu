@@ -5,7 +5,7 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import * as Haptics from 'expo-haptics';
 import { LinearGradient } from 'expo-linear-gradient';
 import { StatusBar } from 'expo-status-bar';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactElement } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -18,7 +18,7 @@ import {
   View,
   useWindowDimensions,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AppImage } from '../components/ui/AppImage';
 import { AppButton } from '../components/AppButton';
 import { AuthPaywallModal } from '../components/AuthPaywallModal';
@@ -74,6 +74,64 @@ type BriefingCard = Readonly<{
   headline: string;
   sub: string;
 }>;
+
+function FashionTechHeroVisualSlot(): ReactElement {
+  const { t } = useTranslation();
+  const dots = useMemo(
+    () =>
+      [
+        { top: '20%', left: '14%', s: 5, o: 0.9 },
+        { top: '28%', left: '78%', s: 4, o: 0.45 },
+        { top: '52%', left: '22%', s: 3, o: 0.65 },
+        { top: '46%', left: '58%', s: 4, o: 0.55 },
+        { top: '68%', left: '84%', s: 3, o: 0.5 },
+        { top: '72%', left: '38%', s: 4, o: 0.4 },
+        { top: '14%', left: '48%', s: 3, o: 0.35 },
+      ] as const,
+    []
+  );
+
+  return (
+    <View style={styles.ftVisualPanel}>
+      <LinearGradient
+        colors={[...vionaTokens.fashionTech.visualPanelGradient]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={StyleSheet.absoluteFillObject}
+      />
+      <LinearGradient
+        colors={['rgba(201, 169, 98, 0.14)', 'transparent', 'rgba(90, 140, 210, 0.07)']}
+        start={{ x: 0.15, y: 0 }}
+        end={{ x: 0.85, y: 1 }}
+        style={StyleSheet.absoluteFillObject}
+      />
+      <View pointerEvents="none" style={StyleSheet.absoluteFillObject}>
+        <View style={styles.ftGlowBlob} />
+        <View style={styles.ftOrbitLine} />
+        <View style={[styles.ftOrbitLine, styles.ftOrbitLineSecond]} />
+        {dots.map((d, i) => (
+          <View
+            key={i}
+            style={[
+              styles.ftConstellationDot,
+              {
+                top: d.top,
+                left: d.left,
+                width: d.s,
+                height: d.s,
+                opacity: d.o,
+              },
+            ]}
+          />
+        ))}
+      </View>
+      <View style={styles.ftVisualCopy}>
+        <Text style={styles.ftVisualPolicy}>{t('home.fashionTech.visualInset')}</Text>
+        <Text style={styles.ftVisualSoon}>{t('home.fashionTech.visualComingSoon')}</Text>
+      </View>
+    </View>
+  );
+}
 
 export function HomeScreen() {
   const { t } = useTranslation();
@@ -199,6 +257,12 @@ export function HomeScreen() {
     const inner = shellWidth - pad * 2;
     return { shellWidth, pad, inner };
   }, [width]);
+
+  const insets = useSafeAreaInsets();
+  const scrollBottomPad = useMemo(() => {
+    if (!isDesktopWeb) return 140;
+    return Math.max(insets.bottom, 16) + 48;
+  }, [isDesktopWeb, insets.bottom]);
 
   const creditPillMax = useMemo(() => Math.min(width * 0.9, 300), [width]);
 
@@ -338,36 +402,44 @@ export function HomeScreen() {
   return (
     <View style={[styles.rootFill, isDesktopWeb && styles.rootFillFashion]}>
       <StatusBar style={isDesktopWeb ? 'light' : 'dark'} />
-      <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
+      {isDesktopWeb && homeCommand ? (
+        <View style={[styles.fashionShellOuter, { paddingTop: insets.top }]}>
+          <View
+            style={[
+              styles.fashionShellInner,
+              { maxWidth: layout.shellWidth, paddingHorizontal: layout.pad },
+            ]}
+          >
+            <VionaFashionHomeCommandBar
+              onPressLogo={scrollToTop}
+              onPressLocal={goUniverseLocal}
+              onPressTravel={goTravelTab}
+              onPressAcademy={goUniverseAcademy}
+              onPressLanguage={() => homeCommand.openLanguageSheet()}
+              onPressVio={() => openProtected('Wallet')}
+              onPressSafety={() => homeCommand.triggerSafetyAssist()}
+              onPressAccount={() => homeCommand.openAccount()}
+              onPressRole={homeCommand.showRolePicker ? () => homeCommand.openRolePicker() : undefined}
+              showRolePicker={homeCommand.showRolePicker}
+            />
+          </View>
+        </View>
+      ) : null}
+      <SafeAreaView style={styles.container} edges={isDesktopWeb ? ['left', 'right', 'bottom'] : ['top', 'left', 'right']}>
       <ScrollView
         ref={scrollRef}
         contentContainerStyle={[
           styles.scrollContent,
           {
             paddingHorizontal: layout.pad,
-            paddingBottom: 140,
-            paddingTop: isDesktopWeb ? theme.spacing.lg : theme.spacing.md,
+            paddingBottom: scrollBottomPad,
+            paddingTop: isDesktopWeb ? theme.spacing.md : theme.spacing.md,
             width: layout.shellWidth,
             alignSelf: 'center',
           },
         ]}
         showsVerticalScrollIndicator={false}
       >
-        {isDesktopWeb && homeCommand ? (
-          <VionaFashionHomeCommandBar
-            onPressLogo={scrollToTop}
-            onPressLocal={goUniverseLocal}
-            onPressTravel={goTravelTab}
-            onPressAcademy={goUniverseAcademy}
-            onPressLanguage={() => homeCommand.openLanguageSheet()}
-            onPressVio={() => openProtected('Wallet')}
-            onPressSafety={() => homeCommand.triggerSafetyAssist()}
-            onPressAccount={() => homeCommand.openAccount()}
-            onPressRole={homeCommand.showRolePicker ? () => homeCommand.openRolePicker() : undefined}
-            showRolePicker={homeCommand.showRolePicker}
-          />
-        ) : null}
-
         <View style={[styles.ftHeroBleed, { marginHorizontal: -layout.pad }]}>
           <LinearGradient
             colors={[...vionaTokens.fashionTech.heroGradient]}
@@ -386,18 +458,7 @@ export function HomeScreen() {
                 <Text style={styles.ftHeadline}>{t('home.fashionTech.headline')}</Text>
                 <Text style={styles.ftSubtitle}>{t('home.fashionTech.subtitle')}</Text>
               </View>
-              {width >= 720 ? (
-                <LinearGradient
-                  colors={[...vionaTokens.fashionTech.visualPanelGradient]}
-                  start={{ x: 0, y: 0.2 }}
-                  end={{ x: 1, y: 1 }}
-                  style={styles.ftVisualPanel}
-                >
-                  <View style={styles.ftVisualFrame}>
-                    <Text style={styles.ftVisualInset}>{t('home.fashionTech.visualInset')}</Text>
-                  </View>
-                </LinearGradient>
-              ) : null}
+              {width >= 720 ? <FashionTechHeroVisualSlot /> : null}
             </View>
 
             <View
@@ -749,6 +810,16 @@ const styles = StyleSheet.create({
   rootFillFashion: {
     backgroundColor: vionaTokens.fashionTech.canvas,
   },
+  fashionShellOuter: {
+    width: '100%',
+    backgroundColor: vionaTokens.fashionTech.commandBarBg,
+    borderBottomWidth: 1,
+    borderBottomColor: vionaTokens.fashionTech.champagneLine,
+  },
+  fashionShellInner: {
+    width: '100%',
+    alignSelf: 'center',
+  },
   container: {
     flex: 1,
     backgroundColor: 'transparent',
@@ -761,7 +832,7 @@ const styles = StyleSheet.create({
     borderRadius: vionaTokens.radius.xxl,
     paddingHorizontal: vionaTokens.spacing[24],
     paddingVertical: vionaTokens.spacing[32],
-    overflow: 'hidden',
+    overflow: 'visible',
     borderWidth: 1,
     borderColor: vionaTokens.fashionTech.champagneLine,
     ...vionaTokens.shadows.hero,
@@ -799,29 +870,72 @@ const styles = StyleSheet.create({
   },
   ftVisualPanel: {
     flex: 1,
-    minHeight: 160,
+    minHeight: 200,
     borderRadius: vionaTokens.radius.xl,
     borderWidth: 1,
     borderColor: 'rgba(201, 169, 98, 0.25)',
     overflow: 'hidden',
     justifyContent: 'flex-end',
+    position: 'relative',
   },
-  ftVisualFrame: {
-    flex: 1,
+  ftGlowBlob: {
+    position: 'absolute',
+    width: 140,
+    height: 140,
+    borderRadius: 70,
+    backgroundColor: 'rgba(201, 169, 98, 0.07)',
+    top: '8%',
+    right: '6%',
+  },
+  ftOrbitLine: {
+    position: 'absolute',
+    width: '86%',
+    height: StyleSheet.hairlineWidth,
+    maxHeight: 1,
+    backgroundColor: 'rgba(201, 169, 98, 0.28)',
+    top: '44%',
+    left: '7%',
+    transform: [{ rotate: '-17deg' }],
+  },
+  ftOrbitLineSecond: {
+    top: '58%',
+    opacity: 0.45,
+    transform: [{ rotate: '11deg' }],
+    width: '72%',
+    left: '14%',
+  },
+  ftConstellationDot: {
+    position: 'absolute',
+    borderRadius: 99,
+    backgroundColor: 'rgba(244, 246, 250, 0.95)',
+    shadowColor: '#c9a962',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.55,
+    shadowRadius: 6,
+    elevation: 2,
+  },
+  ftVisualCopy: {
     padding: vionaTokens.spacing[16],
-    justifyContent: 'flex-end',
-    backgroundColor: 'rgba(0,0,0,0.35)',
+    gap: vionaTokens.spacing[8],
+    backgroundColor: 'rgba(5, 8, 12, 0.45)',
   },
-  ftVisualInset: {
-    fontSize: 11,
+  ftVisualPolicy: {
+    fontSize: 10,
     letterSpacing: 1,
     textTransform: 'uppercase',
     color: vionaTokens.fashionTech.mutedOnDark,
     fontFamily: FontFamily.semibold,
   },
+  ftVisualSoon: {
+    fontSize: 13,
+    lineHeight: 18,
+    color: vionaTokens.fashionTech.champagneMuted,
+    fontFamily: FontFamily.medium,
+  },
   ftCardGrid: {
     gap: vionaTokens.spacing[12],
     marginTop: vionaTokens.spacing[32],
+    paddingBottom: vionaTokens.spacing[8],
   },
   ftCardCell: {
     flexGrow: 1,

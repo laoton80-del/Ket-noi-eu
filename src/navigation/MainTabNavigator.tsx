@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { useNavigation, useNavigationState } from '@react-navigation/native';
+import { useNavigation, useNavigationState, type NavigationState } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactElement } from 'react';
 import { Alert, Platform, StyleSheet, useWindowDimensions } from 'react-native';
@@ -55,6 +55,24 @@ import { initiateAITriage, V7_SOS_EMERGENCY_DIAL_BUFFER_MS } from '../services/e
 const Tab = createBottomTabNavigator<RootTabParamList>();
 
 type StackNav = NativeStackNavigationProp<RootStackParamList>;
+
+/** Root stack nests tabs under `Tabs`; `useNavigationState` from MainTabNavigator reads that stack, not tab routes. */
+function readFocusedTabRouteFromRootState(
+  state: NavigationState | undefined
+): keyof RootTabParamList | undefined {
+  if (!state?.routes || state.index == null) return undefined;
+  const rootRoute = state.routes[state.index];
+  if (!rootRoute) return undefined;
+  if (rootRoute.name === 'Tabs') {
+    const inner = rootRoute.state as NavigationState | undefined;
+    if (inner?.routes != null && inner.index != null) {
+      const tabRoute = inner.routes[inner.index];
+      return tabRoute?.name as keyof RootTabParamList | undefined;
+    }
+    return undefined;
+  }
+  return rootRoute.name as keyof RootTabParamList | undefined;
+}
 
 function GatedWalletB2BTab(): ReactElement {
   const { user } = useAuth();
@@ -182,10 +200,7 @@ export function MainTabNavigator(): ReactElement {
   const { setCurrentHub } = useHubTheme();
   const { syncFromMainTab } = useNavigationThemeForHub();
 
-  const focusedTabRoute = useNavigationState((state) => {
-    if (!state?.routes || state.index == null) return undefined;
-    return state.routes[state.index]?.name as keyof RootTabParamList | undefined;
-  });
+  const focusedTabRoute = useNavigationState(readFocusedTabRouteFromRootState);
 
   /** V7 “Global Lifeline”: all roles; B2C hides only on Academy tab (voice shell). */
   const showGlobalLifelineSos =
@@ -249,7 +264,7 @@ export function MainTabNavigator(): ReactElement {
   const sceneTopPadding = !isDesktopWeb
     ? 0
     : b2cHomeDesktopScene
-      ? Math.max(insets.top, 8)
+      ? 0
       : Math.max(100, insets.top + 96);
 
   const homeCommandValue = useMemo<HomeCommandContextValue>(
@@ -402,6 +417,7 @@ export function MainTabNavigator(): ReactElement {
                     paddingTop: 8,
                   },
               tabBarPosition === 'left' && styles.tabBarDesktop,
+              suppressHomeFloatingChrome && styles.tabBarHiddenHomeDesktop,
             ],
             sceneStyle: {
               backgroundColor: chrome.barBg,
@@ -592,5 +608,18 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     shadowOffset: { width: 2, height: 0 },
     elevation: 2,
+  },
+  /** B2C Home desktop: fashion-tech command bar is primary nav — hide bottom tabs without unmounting routes. */
+  tabBarHiddenHomeDesktop: {
+    display: 'none',
+    height: 0,
+    minHeight: 0,
+    overflow: 'hidden',
+    opacity: 0,
+    paddingTop: 0,
+    paddingBottom: 0,
+    borderTopWidth: 0,
+    elevation: 0,
+    shadowOpacity: 0,
   },
 });
