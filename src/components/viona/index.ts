@@ -10,8 +10,11 @@ export type { VionaStatusPillProps } from './VionaStatusPill';
 export { VionaUniverseCard } from './VionaUniverseCard';
 export type { VionaUniverseCardProps } from './VionaUniverseCard';
 
-export { VionaUtilityDock } from './VionaUtilityDock';
-export type { VionaUtilityDockProps } from './VionaUtilityDock';
+export { VionaFashionWorldCard } from './VionaFashionWorldCard';
+export type { VionaFashionWorldCardProps } from './VionaFashionWorldCard';
+
+export { VionaFashionHomeCommandBar } from './VionaFashionHomeCommandBar';
+export type { VionaFashionHomeCommandBarProps } from './VionaFashionHomeCommandBar';
 
 export { VionaSafetyAssist } from './VionaSafetyAssist';
 export type { VionaSafetyAssistProps } from './VionaSafetyAssist';

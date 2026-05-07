@@ -38,6 +38,15 @@
       "unknownId": "Unknown or invalid mini-app."
     }
   },
+  "shell": {
+    "utility": {
+      "language": "Language",
+      "vioCredits": "VIO Credits",
+      "safetyAssist": "Safety Assist",
+      "accountProfile": "Account",
+      "switchRole": "Profiles"
+    }
+  },
   "login": {
     "brandName": "VIONA",
     "brandTagline": "Global services tailored for the Vietnamese community",
@@ -273,6 +282,28 @@
         "title": "VIONA Academy",
         "subtitle": "Learning and AI practice for families and future skills.",
         "status": "Demo"
+      }
+    },
+    "fashionTech": {
+      "eyebrow": "VIONA HUMAN CONSTELLATION",
+      "headline": "Your global companion, wherever life moves.",
+      "subtitle": "Local life, travel support, learning, and AI assistance — designed for Vietnamese people worldwide.",
+      "visualInset": "Photography slot · licensed assets only",
+      "local": {
+        "title": "Local",
+        "subtitle": "Community connection, services, daily life."
+      },
+      "travel": {
+        "title": "Travel",
+        "subtitle": "Direction, movement, safety, return."
+      },
+      "academy": {
+        "title": "Academy",
+        "subtitle": "Family learning, AI practice, future skills."
+      },
+      "care": {
+        "title": "Care Heart Fund",
+        "subtitle": "Human care, warmth, and community impact."
       }
     },
     "impact": {
