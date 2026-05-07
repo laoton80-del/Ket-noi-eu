@@ -26,6 +26,8 @@ export const vionaTokens = {
     impact: { bg: '#FFE4F1', accent: '#E6005C' },
   },
   gradients: {
+    /** World Stage / Strategic Pastel — atmospheric hero base (manifesto). */
+    multiverseHero: ['#F8FAFC', '#EEF4FF', '#FFF8ED'],
     heroBlue: ['#EAF2FF', '#D9E8FF', '#F8FBFF'],
     softAurora: ['#EFF9FF', '#F4EEFF', '#FFF7F2'],
     safetySoft: ['#FDEDEF', '#FBE3E8'],
