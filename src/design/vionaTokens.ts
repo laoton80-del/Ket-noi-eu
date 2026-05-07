@@ -16,6 +16,14 @@ export const vionaTokens = {
     border: 'rgba(12, 33, 70, 0.14)',
     surface: 'rgba(255, 255, 255, 0.95)',
     elevatedSurface: '#FFFFFF',
+    universe: {
+      local: { bg: '#DDFBF3', accent: '#14B8A6' },
+      travel: { bg: '#E0F2FE', accent: '#2563EB' },
+      academy: { bg: '#EEE7FF', accent: '#7C3AED' },
+      ai: { bg: '#FFE8D6', accent: '#F97316' },
+    },
+    safety: { bg: '#FFE4E6', accent: '#EF4444' },
+    impact: { bg: '#FFE4F1', accent: '#E6005C' },
   },
   gradients: {
     heroBlue: ['#EAF2FF', '#D9E8FF', '#F8FBFF'],
