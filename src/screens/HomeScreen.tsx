@@ -183,7 +183,7 @@ export function HomeScreen() {
   }, [t, wallet.credits, width]);
 
   const layout = useMemo(() => {
-    const maxShell = 720;
+    const maxShell = width > 1280 ? 860 : 760;
     const shellWidth = Math.min(width, maxShell);
     const pad = theme.spacing.lg;
     const inner = shellWidth - pad * 2;
@@ -293,30 +293,6 @@ export function HomeScreen() {
     <View style={styles.rootFill}>
       <StatusBar style="dark" />
       <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
-      <View style={[styles.creditPill, isTourist && styles.creditPillTourist, { maxWidth: creditPillMax }]}>
-        <View style={styles.creditPillRow}>
-          {walletBalanceLoading ? (
-            <ActivityIndicator size="small" color={GOLD_ACCENT} accessibilityLabel="Đang tải số dư" />
-          ) : (
-            <Ionicons name="wallet-outline" size={14} color={GOLD_ACCENT} />
-          )}
-          <Text
-            style={styles.creditPillText}
-            numberOfLines={1}
-            adjustsFontSizeToFit
-            minimumFontScale={0.82}
-            maxFontSizeMultiplier={1.15}
-          >
-            {walletChipLabel}
-          </Text>
-        </View>
-        {isTourist && !walletBalanceLoading ? (
-          <Text style={styles.creditPillSub} numberOfLines={2}>
-            {t('home.touristCreditsHint')}
-          </Text>
-        ) : null}
-      </View>
-
       <ScrollView
         contentContainerStyle={[
           styles.scrollContent,
@@ -329,14 +305,41 @@ export function HomeScreen() {
         ]}
         showsVerticalScrollIndicator={false}
       >
-        <View style={[styles.hero, { paddingRight: Math.max(112, Math.min(width * 0.36, 172)) }]}>
-          <Text style={styles.heroEyebrow}>{brandConfig.displayName}</Text>
-          <Text style={styles.heading}>
-            {isTourist ? t('home.headingTourist') : t('home.headingExpat')}
-          </Text>
-          <Text style={styles.heroSub}>
-            {isTourist ? t('home.heroSubTourist') : t('home.heroSubExpat')}
-          </Text>
+        <View style={styles.hero}>
+          <View style={styles.heroTopRow}>
+            <View style={styles.heroCopyCol}>
+              <Text style={styles.heroEyebrow}>{brandConfig.displayName}</Text>
+              <Text style={styles.heading}>
+                {isTourist ? t('home.headingTourist') : t('home.headingExpat')}
+              </Text>
+              <Text style={styles.heroSub}>
+                {isTourist ? t('home.heroSubTourist') : t('home.heroSubExpat')}
+              </Text>
+            </View>
+            <View style={[styles.creditPill, isTourist && styles.creditPillTourist, { maxWidth: creditPillMax }]}>
+              <View style={styles.creditPillRow}>
+                {walletBalanceLoading ? (
+                  <ActivityIndicator size="small" color={GOLD_ACCENT} accessibilityLabel="Đang tải số dư" />
+                ) : (
+                  <Ionicons name="wallet-outline" size={14} color={GOLD_ACCENT} />
+                )}
+                <Text
+                  style={styles.creditPillText}
+                  numberOfLines={1}
+                  adjustsFontSizeToFit
+                  minimumFontScale={0.82}
+                  maxFontSizeMultiplier={1.15}
+                >
+                  {walletChipLabel}
+                </Text>
+              </View>
+              {isTourist && !walletBalanceLoading ? (
+                <Text style={styles.creditPillSub} numberOfLines={2}>
+                  {t('home.touristCreditsHint')}
+                </Text>
+              ) : null}
+            </View>
+          </View>
         </View>
 
         {isTourist ? <DashboardB2CScreen contentWidth={layout.inner} /> : null}
@@ -523,8 +526,6 @@ export function HomeScreen() {
 
       <AuthPaywallModal
         visible={showPaywall}
-        title="Đăng nhập để tiếp tục"
-        description="Ví, quét bài, gọi hỗ trợ và các tính năng chính cần xác thực số điện thoại."
         onClose={() => setShowPaywall(false)}
         onContinue={() => {
           setShowPaywall(false);
@@ -592,10 +593,20 @@ const styles = StyleSheet.create({
     backgroundColor: 'transparent',
   },
   scrollContent: {
-    paddingTop: theme.spacing.sm,
+    paddingTop: theme.spacing.md,
   },
   hero: {
     marginBottom: theme.spacing.lg,
+  },
+  heroTopRow: {
+    flexDirection: 'row',
+    gap: 12,
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
+  },
+  heroCopyCol: {
+    flex: 1,
+    minWidth: 0,
   },
   heroEyebrow: {
     fontSize: 12,
@@ -619,10 +630,7 @@ const styles = StyleSheet.create({
     fontFamily: FontFamily.regular,
   },
   creditPill: {
-    position: 'absolute',
-    top: 8,
-    right: theme.spacing.lg,
-    zIndex: 10,
+    minWidth: 170,
     minHeight: 32,
     paddingHorizontal: 12,
     paddingVertical: 6,
@@ -631,7 +639,7 @@ const styles = StyleSheet.create({
     borderColor: GOLD_BORDER,
     backgroundColor: CARD_BG,
     flexDirection: 'column',
-    alignItems: 'flex-end',
+    alignItems: 'flex-start',
     gap: 2,
     shadowColor: '#0B1628',
     shadowOffset: { width: 0, height: 2 },
@@ -663,7 +671,7 @@ const styles = StyleSheet.create({
     lineHeight: 13,
     color: GOLD_ACCENT,
     fontFamily: FontFamily.semibold,
-    textAlign: 'right',
+    textAlign: 'left',
     maxWidth: 168,
   },
   survivalRow: {

@@ -133,6 +133,30 @@ function tabIconName(
   return 'ellipse';
 }
 
+function compactDesktopTabLabel(route: keyof RootTabParamList, role: ActiveRole): string {
+  if (role === 'B2C') {
+    if (route === MAIN_TAB.B2C.home) return 'Hub';
+    if (route === MAIN_TAB.B2C.local) return 'Local';
+    if (route === MAIN_TAB.B2C.travel) return 'Travel';
+    if (route === MAIN_TAB.B2C.ai) return 'Academy';
+  }
+  if (role === 'B2B') {
+    if (route === MAIN_TAB.B2B.merchant) return 'Hub';
+    if (route === MAIN_TAB.B2B.catalog) return 'Local';
+    if (route === MAIN_TAB.B2B.orders) return 'Travel';
+    if (route === MAIN_TAB.B2B.earnings) return 'Wallet';
+  }
+  if (role === 'BROKER') {
+    if (route === MAIN_TAB.BROKER.radar) return 'Hub';
+    if (route === MAIN_TAB.BROKER.merchants) return 'Local';
+    if (route === MAIN_TAB.BROKER.qr) return 'QR';
+    if (route === MAIN_TAB.BROKER.commissions) return 'Travel';
+    if (route === MAIN_TAB.BROKER.wallet) return 'Wallet';
+  }
+  if (role === 'ADMIN') return 'Hub';
+  return '';
+}
+
 export function MainTabNavigator(): ReactElement {
   const { t } = useTranslation();
   const navigation = useNavigation<StackNav>();
@@ -313,7 +337,12 @@ export function MainTabNavigator(): ReactElement {
           tabBarPosition: isDesktopWeb ? 'left' : 'bottom',
           tabBarActiveTintColor: chrome.active,
           tabBarInactiveTintColor: chrome.inactive,
-          tabBarLabelStyle: [styles.tabLabel, { fontSize: tabSizing.labelSize }],
+          tabBarActiveBackgroundColor: isDesktopWeb ? 'rgba(122, 228, 255, 0.14)' : undefined,
+          tabBarLabelStyle: [
+            styles.tabLabel,
+            { fontSize: isDesktopWeb ? 10 : tabSizing.labelSize },
+            isDesktopWeb && styles.tabLabelDesktop,
+          ],
           tabBarItemStyle: [styles.tabItem, isDesktopWeb && styles.tabItemDesktop],
           tabBarStyle: [
             styles.tabBar,
@@ -324,10 +353,11 @@ export function MainTabNavigator(): ReactElement {
             },
             isDesktopWeb
               ? {
-                  width: 250,
+                  width: 94,
                   height: '100%',
-                  paddingTop: insets.top + 16,
+                  paddingTop: insets.top + 12,
                   paddingBottom: Math.max(insets.bottom, 16),
+                  paddingHorizontal: 8,
                 }
               : {
                   height: tabSizing.tabBarBaseHeight + insets.bottom,
@@ -336,7 +366,13 @@ export function MainTabNavigator(): ReactElement {
                 },
             isDesktopWeb && styles.tabBarDesktop,
           ],
-          sceneStyle: { backgroundColor: chrome.barBg },
+          sceneStyle: {
+            backgroundColor: chrome.barBg,
+            paddingTop: isDesktopWeb ? 78 : 0,
+          },
+          tabBarLabel: isDesktopWeb
+            ? compactDesktopTabLabel(route.name as keyof RootTabParamList, currentActiveRole)
+            : undefined,
           tabBarIcon: ({ focused }) => (
             <Ionicons
               name={tabIconName(route.name as keyof RootTabParamList, currentActiveRole, focused)}
@@ -454,8 +490,6 @@ export function MainTabNavigator(): ReactElement {
 
       <AuthPaywallModal
         visible={!!paywallTarget}
-        title="Tính năng hỗ trợ & gọi"
-        description="Học tập, Lễ tân Minh Khang và gọi hỗ trợ Leona cần đăng nhập. Vui lòng xác thực số điện thoại để tiếp tục. Leona và các tính năng AI là hướng dẫn tự động, không thay thế tư vấn pháp lý, y tế hay nhân viên thật."
         onClose={() => setPaywallTarget(null)}
         onContinue={() => {
           const redirect = paywallTarget ?? undefined;
@@ -483,19 +517,28 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   tabItemDesktop: {
-    alignItems: 'flex-start',
+    alignItems: 'center',
     justifyContent: 'center',
+    marginVertical: 3,
+    borderRadius: 14,
   },
   tabLabel: {
     fontFamily: FontFamily.semibold,
     marginTop: 2,
+  },
+  tabLabelDesktop: {
+    textAlign: 'center',
+    marginTop: 4,
+    maxWidth: 72,
   },
   tabBarDesktop: {
     position: 'relative',
     borderTopWidth: 0,
     borderRightWidth: 1,
     borderRightColor: theme.hybrid.panelCoolBorder,
-    shadowOpacity: 0,
-    elevation: 0,
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    shadowOffset: { width: 2, height: 0 },
+    elevation: 2,
   },
 });
