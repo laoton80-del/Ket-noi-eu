@@ -50,6 +50,98 @@ Propose final palette:
 - coral: human warmth moments and non-critical emotional accents
 - safety red: Safety Assist and critical caution only
 
+## Strategic Pastel System
+
+VIONA uses pastel strategically, not decoratively.
+
+Pastel is used to:
+- identify each universe
+- create emotional warmth
+- reduce dashboard heaviness
+- make the app feel more global, bright, and alive
+- support first-love visual impact
+
+Pastel must not:
+- make text low contrast
+- make the app childish
+- make the app feel like a template
+- replace clear hierarchy
+- be used randomly across screens
+- be used for critical text labels
+
+### Core Base
+
+- Ink: `#0F172A`
+- Soft Ink: `#334155`
+- Muted: `#64748B`
+- Cloud: `#F8FAFC`
+- White: `#FFFFFF`
+- Mist Border: `#E2E8F0`
+
+### Universe Pastels
+
+Local:
+- Background: `#DDFBF3`
+- Accent: `#14B8A6`
+- Feeling: everyday life, services, local trust, community
+
+Travel:
+- Background: `#E0F2FE`
+- Accent: `#2563EB`
+- Feeling: movement, sky, calm navigation, cross-border confidence
+
+Academy:
+- Background: `#EEE7FF`
+- Accent: `#7C3AED`
+- Feeling: learning, intelligence, AI practice, family growth
+
+AI Support:
+- Background: `#FFE8D6`
+- Accent: `#F97316`
+- Feeling: warmth, assistance, human + AI support
+
+Safety:
+- Background: `#FFE4E6`
+- Accent: `#EF4444`
+- Feeling: safety, attention, trust, not panic
+
+Impact / Care:
+- Background: `#FFE4F1`
+- Accent: `#E6005C`
+- Feeling: compassion, mission, community care
+
+### Hero Gradient
+
+Use subtle premium gradients only:
+
+- Cloud to Sky to Ivory:
+  `#F8FAFC → #EEF4FF → #FFF8ED`
+
+Do not use loud gradients across the full app.
+
+### Usage Rules
+
+1. Pastel is for surfaces, cards, icon wells, and emotional zones.
+2. Text must use Ink or Soft Ink, never low-contrast pastel.
+3. Each screen should use one dominant universe color.
+4. Home may use multiple universe pastels because it is the Multiverse entry.
+5. Safety red must always be paired with clear label and confirmation behavior.
+6. Gold/navy may remain as legacy accents but must not dominate the new global experience.
+7. Critical CTAs must use strong accent colors, not pale pastel.
+8. Pastel must be paired with strong typography and spacing to avoid a washed-out look.
+
+### First Impression Rule
+
+The first fold of Home should feel:
+- bright
+- premium
+- alive
+- emotionally welcoming
+- globally credible
+- immediately understandable
+
+The user should see VIONA as a multiverse companion, not as a dashboard or charity page.
+
 ## 5. Typography Direction
 Define:
 - display
