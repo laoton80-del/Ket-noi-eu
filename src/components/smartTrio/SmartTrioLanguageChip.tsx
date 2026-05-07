@@ -59,12 +59,12 @@ export function SmartTrioLanguageChip({
     if (placement !== 'floating') return undefined;
     if (isDesktopWeb) {
       return {
-        top: insets.top + 54 + 50,
+        top: insets.top + 112,
         right: Math.max(insets.right, 16),
       } as const;
     }
     return {
-      bottom: tabBarLift + Math.max(insets.bottom, 8) + 56,
+      bottom: tabBarLift + Math.max(insets.bottom, 8) + 64,
       alignSelf: 'center' as const,
     };
   }, [placement, isDesktopWeb, insets.top, insets.right, insets.bottom, tabBarLift]);
@@ -123,7 +123,7 @@ const styles = StyleSheet.create({
     maxWidth: '92%',
   },
   floatingWrapDesktop: {
-    maxWidth: 280,
+    maxWidth: 300,
   },
   row: {
     flexDirection: 'row',
@@ -137,7 +137,9 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(122, 228, 255, 0.22)',
   },
   rowFloating: {
-    paddingHorizontal: 14,
+    paddingHorizontal: 16,
+    backgroundColor: 'rgba(15, 28, 52, 0.94)',
+    borderColor: 'rgba(122, 228, 255, 0.36)',
   },
   iconWrap: {
     width: 36,
@@ -148,7 +150,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(122, 228, 255, 0.12)',
   },
   textCol: { flex: 1, minWidth: 0, gap: 2 },
-  caption: { fontSize: 11, fontWeight: '800', color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase' },
-  summary: { fontSize: 13, fontWeight: '700', color: '#FFFFFF' },
-  change: { fontSize: 12, fontWeight: '800', color: '#7AE4FF' },
+  caption: { fontSize: 11, fontWeight: '800', color: 'rgba(255,255,255,0.74)', textTransform: 'uppercase' },
+  summary: { fontSize: 13, fontWeight: '800', color: '#F6FAFF' },
+  change: { fontSize: 12, fontWeight: '900', color: '#8DEBFF' },
 });

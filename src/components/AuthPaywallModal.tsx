@@ -1,4 +1,5 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { useTranslation } from '../i18n';
 import { FontFamily } from '../theme/typography';
 import { applyWebStyles } from '../utils/applyWebStyles';
 
@@ -12,23 +13,26 @@ type Props = {
 
 export function AuthPaywallModal({
   visible,
-  title = 'Tính năng VIP',
-  description = 'Bạn cần đăng nhập bằng số điện thoại để dùng đầy đủ trợ lý trong app (Lễ tân, học tập, công cụ).',
+  title,
+  description,
   onContinue,
   onClose,
 }: Props) {
+  const { t } = useTranslation();
   if (!visible) return null;
+  const resolvedTitle = title ?? t('authPaywall.title');
+  const resolvedDescription = description ?? t('authPaywall.description');
 
   return (
     <View style={styles.overlay}>
       <View style={styles.card} className={applyWebStyles('kn-glass')}>
-        <Text style={styles.title}>{title}</Text>
-        <Text style={styles.desc}>{description}</Text>
+        <Text style={styles.title}>{resolvedTitle}</Text>
+        <Text style={styles.desc}>{resolvedDescription}</Text>
         <Pressable onPress={onContinue} style={({ pressed }) => [styles.cta, pressed && { opacity: 0.82 }]}>
-          <Text style={styles.ctaText}>Tiếp tục bằng Số Điện Thoại</Text>
+          <Text style={styles.ctaText}>{t('authPaywall.continuePhone')}</Text>
         </Pressable>
         <Pressable onPress={onClose} style={({ pressed }) => [styles.secondary, pressed && { opacity: 0.8 }]}>
-          <Text style={styles.secondaryText}>Để sau</Text>
+          <Text style={styles.secondaryText}>{t('authPaywall.later')}</Text>
         </Pressable>
       </View>
     </View>
@@ -39,18 +43,19 @@ const styles = StyleSheet.create({
   overlay: {
     ...StyleSheet.absoluteFillObject,
     zIndex: 80,
-    backgroundColor: 'rgba(40,28,18,0.35)',
+    backgroundColor: 'rgba(9, 8, 12, 0.62)',
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 22,
   },
   card: {
     width: '100%',
+    maxWidth: 380,
     borderRadius: 22,
     borderWidth: 1,
-    borderColor: 'rgba(212, 175, 55, 0.4)',
-    backgroundColor: 'rgba(255,255,255,0.72)',
-    padding: 16,
+    borderColor: 'rgba(212, 175, 55, 0.5)',
+    backgroundColor: 'rgba(255,255,255,0.86)',
+    padding: 18,
     shadowColor: '#8B7355',
     shadowOffset: { width: 4, height: 8 },
     shadowOpacity: 0.15,
@@ -87,12 +92,13 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     minHeight: 36,
     borderWidth: 1,
-    borderColor: 'rgba(212, 175, 55, 0.35)',
+    borderColor: 'rgba(90, 70, 40, 0.35)',
+    backgroundColor: 'rgba(255,255,255,0.58)',
     alignItems: 'center',
     justifyContent: 'center',
   },
   secondaryText: {
-    color: '#6A583E',
+    color: '#4C3E2B',
     fontFamily: FontFamily.medium,
     fontSize: 13,
   },
