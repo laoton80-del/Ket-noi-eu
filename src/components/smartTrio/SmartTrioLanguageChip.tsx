@@ -156,8 +156,8 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     paddingHorizontal: 10,
     borderRadius: 12,
-    backgroundColor: 'rgba(10, 18, 34, 0.94)',
-    borderColor: 'rgba(122, 228, 255, 0.2)',
+    backgroundColor: 'rgba(10, 19, 36, 0.8)',
+    borderColor: 'rgba(122, 228, 255, 0.16)',
   },
   iconWrap: {
     width: 36,

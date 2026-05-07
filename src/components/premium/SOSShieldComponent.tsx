@@ -205,7 +205,7 @@ export function SOSShieldComponent({
               <View style={styles.mainRow}>
                 <Ionicons name="shield-checkmark" size={18} color="#FFFFFF" style={styles.iconShadow} />
                 <View style={styles.labelCol}>
-                  <Text style={styles.mainLabel}>{t('shell.utility.sosAssist')}</Text>
+                  <Text style={styles.mainLabel}>{t('shell.utility.safetyAssist')}</Text>
                   <Text style={styles.subLabel}>{t('shell.utility.safety')}</Text>
                 </View>
               </View>

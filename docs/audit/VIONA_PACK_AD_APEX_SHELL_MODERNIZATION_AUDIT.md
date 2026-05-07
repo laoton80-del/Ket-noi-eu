@@ -98,3 +98,11 @@
 - Redesigned SOS affordance from an ambiguous red orb toward a clearer compact "SOS Assist / Safety" surface with safer comprehension.
 - Added confirmation before sensitive call intents (113/115) and explicit pilot-safe notice copy that no automatic dispatch/call is triggered without user confirmation.
 - Scope remains UI/layout/i18n only; no payment, booking, wallet internals, backend/API, DB/Prisma, Twilio activation, AI provider calls, route-name changes, or feature-flag behavior changes.
+
+## AD.4 First-Love Visual System
+
+- Home first impression was upgraded to a clearer flagship hierarchy so users immediately understand VIONA as a premium ecosystem (Local / Travel / Academy + AI support), not an admin/dashboard shell.
+- Care Heart Fund was intentionally demoted to secondary visual priority to preserve trust messaging while avoiding confusion about primary app value.
+- Utility dock visuals were refined to feel like one coherent control system (Account + Language/Market), reducing floating/debug-chip perception.
+- SOS affordance was polished toward a clearer Safety Assist presentation, keeping accidental-press risk low and preserving explicit confirm-first behavior for sensitive call actions.
+- No production behavior changed: no payment/booking/wallet logic, no backend/API/Prisma, no Twilio activation, no AI provider invocation, no route-name or feature-flag behavior changes.

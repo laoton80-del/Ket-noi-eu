@@ -338,7 +338,7 @@ export function HomeScreen() {
         <View style={styles.hero}>
           <View style={styles.heroTopRow}>
             <View style={styles.heroCopyCol}>
-              <Text style={styles.heroEyebrow}>{brandConfig.displayName}</Text>
+              <Text style={styles.heroEyebrow}>{t('home.universe.eyebrow')}</Text>
               <Text style={styles.heading}>{t('home.universe.title')}</Text>
               <Text style={styles.heroSub}>{t('home.universe.subtitle')}</Text>
             </View>
@@ -367,8 +367,9 @@ export function HomeScreen() {
             </View>
           </View>
           <VionaCard style={styles.multiverseHeroCard} padded>
-            <Text style={styles.multiverseEyebrow}>{t('home.universe.eyebrow')}</Text>
-            <Text style={styles.multiverseHeadline}>{t('home.universe.title')}</Text>
+            <View style={styles.multiverseGlow} pointerEvents="none" />
+            <Text style={styles.multiverseEyebrow}>{brandConfig.displayName}</Text>
+            <Text style={styles.multiverseHeadline}>{t('home.universe.eyebrow')}</Text>
             <Text style={styles.multiverseSubheadline}>{t('home.universe.subheadline')}</Text>
             <View style={styles.multiverseGrid}>
               {universeCards.map((card) => (
@@ -651,43 +652,58 @@ const styles = StyleSheet.create({
     minWidth: 0,
   },
   heroEyebrow: {
-    fontSize: 12,
-    letterSpacing: 0.5,
+    fontSize: 11,
+    letterSpacing: 0.8,
     color: GOLD_ACCENT,
     fontFamily: FontFamily.semibold,
     textTransform: 'uppercase',
     marginBottom: theme.spacing.xs,
   },
   heading: {
-    fontSize: 28,
-    lineHeight: 34,
+    fontSize: 34,
+    lineHeight: 40,
     color: TEXT_PRIMARY,
     fontFamily: FontFamily.extrabold,
     marginBottom: theme.spacing.xs,
   },
   heroSub: {
-    fontSize: 14,
-    lineHeight: 21,
+    fontSize: 15,
+    lineHeight: 22,
     color: TEXT_MUTED,
     fontFamily: FontFamily.regular,
   },
   multiverseHeroCard: {
     marginTop: 12,
-    borderRadius: 20,
-    borderColor: 'rgba(212, 175, 55, 0.36)',
-    backgroundColor: 'rgba(255,255,255,0.96)',
+    borderRadius: 24,
+    borderColor: 'rgba(212, 175, 55, 0.4)',
+    backgroundColor: 'rgba(255,252,246,0.97)',
+    overflow: 'hidden',
+    shadowColor: '#9C7D2F',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.12,
+    shadowRadius: 18,
+    elevation: 6,
+  },
+  multiverseGlow: {
+    position: 'absolute',
+    top: -70,
+    right: -40,
+    width: 220,
+    height: 170,
+    borderRadius: 110,
+    backgroundColor: 'rgba(212, 175, 55, 0.16)',
   },
   multiverseEyebrow: {
     fontSize: 11,
-    letterSpacing: 0.8,
+    letterSpacing: 0.6,
     textTransform: 'uppercase',
-    color: GOLD_ACCENT,
+    color: 'rgba(130, 92, 20, 0.9)',
     fontFamily: FontFamily.semibold,
     marginBottom: 6,
   },
   multiverseHeadline: {
-    fontSize: 26,
-    lineHeight: 32,
+    fontSize: 29,
+    lineHeight: 35,
     color: TEXT_PRIMARY,
     fontFamily: FontFamily.extrabold,
   },
@@ -699,19 +715,19 @@ const styles = StyleSheet.create({
     fontFamily: FontFamily.medium,
   },
   multiverseGrid: {
-    marginTop: 14,
+    marginTop: 16,
     flexDirection: 'row',
-    gap: 10,
+    gap: 12,
   },
   universeCard: {
     flex: 1,
-    borderRadius: 14,
+    borderRadius: 16,
     borderWidth: 1,
-    borderColor: vionaTrust.border,
-    backgroundColor: vionaTrust.surfaceMuted,
-    paddingHorizontal: 10,
-    paddingVertical: 12,
-    minHeight: 110,
+    borderColor: 'rgba(128, 94, 28, 0.2)',
+    backgroundColor: 'rgba(255,255,255,0.88)',
+    paddingHorizontal: 12,
+    paddingVertical: 13,
+    minHeight: 122,
   },
   universeIconWrap: {
     width: 30,
@@ -723,8 +739,8 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   universeTitle: {
-    fontSize: 13,
-    lineHeight: 18,
+    fontSize: 14,
+    lineHeight: 19,
     color: TEXT_PRIMARY,
     fontFamily: FontFamily.bold,
   },
@@ -960,8 +976,11 @@ const styles = StyleSheet.create({
     fontFamily: FontFamily.regular,
   },
   charityWrap: {
-    marginTop: 2,
-    marginBottom: 2,
+    marginTop: 0,
+    marginBottom: 8,
+    alignSelf: 'center',
+    maxWidth: 680,
+    opacity: 0.95,
   },
   utilityStripTitle: {
     fontSize: 12,
