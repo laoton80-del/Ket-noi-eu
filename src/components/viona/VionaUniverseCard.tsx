@@ -7,13 +7,15 @@ import { VionaSurface } from './VionaSurface';
 
 type VionaUniverseAccent = 'local' | 'travel' | 'academy' | 'ai' | 'safety';
 
-const accentMap: Record<VionaUniverseAccent, string> = {
-  local: vionaTokens.colors.blue,
-  travel: vionaTokens.colors.indigo,
-  academy: vionaTokens.colors.teal,
-  ai: vionaTokens.colors.coral,
-  safety: vionaTokens.colors.safetyRed,
-};
+function pastelBackground(accent: VionaUniverseAccent): string {
+  if (accent === 'safety') return vionaTokens.colors.safety.bg;
+  return vionaTokens.colors.universe[accent].bg;
+}
+
+function accentColor(accent: VionaUniverseAccent): string {
+  if (accent === 'safety') return vionaTokens.colors.safety.accent;
+  return vionaTokens.colors.universe[accent].accent;
+}
 
 type StatusToneProps = Parameters<typeof VionaStatusPill>[0]['tone'];
 
@@ -36,9 +38,21 @@ export function VionaUniverseCard({
   accent,
   disabled = false,
 }: VionaUniverseCardProps) {
+  const bar = accentColor(accent);
+  const fill = pastelBackground(accent);
   const content = (
-    <VionaSurface variant="elevated" style={[styles.surface, disabled && styles.disabled]}>
-      <View style={[styles.accentBar, { backgroundColor: accentMap[accent] }]} />
+    <VionaSurface
+      variant="elevated"
+      style={[
+        styles.surface,
+        {
+          backgroundColor: fill,
+          borderColor: `${bar}55`,
+        },
+        disabled && styles.disabled,
+      ]}
+    >
+      <View style={[styles.accentBar, { backgroundColor: bar }]} />
       <View style={styles.row}>
         {icon ? <View style={styles.iconWrap}>{icon}</View> : null}
         <View style={styles.copyWrap}>

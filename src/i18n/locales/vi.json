@@ -254,6 +254,32 @@
     "profileRoleGateLater": "Để sau",
     "charityTitle": "Quỹ Trái Tim VIONA Care",
     "charityBody": "Mỗi giao dịch của bạn đang góp phần mang bữa ăn và lớp học đến cho trẻ em nghèo Việt Nam.",
+    "universe": {
+      "eyebrow": "ĐA VŨ TRỤ VIONA",
+      "headline": "Người đồng hành toàn cầu cho từng chặng sống của bạn.",
+      "subtitle": "Đời sống, du lịch, học tập và AI support — thiết kế cho người Việt ở khắp thế giới.",
+      "local": {
+        "title": "VIONA Local",
+        "subtitle": "Dịch vụ Việt, hỗ trợ ngôn ngữ địa phương, merchant xác nhận trước khi hoàn tất.",
+        "status": "Lite"
+      },
+      "travel": {
+        "title": "VIONA Travel",
+        "subtitle": "Hỗ trợ hành trình theo từng hướng đi: ra thế giới, đến Việt Nam, trở về quê nhà.",
+        "status": "Lite",
+        "statusComingSoon": "Sắp ra mắt"
+      },
+      "academy": {
+        "title": "VIONA Academy",
+        "subtitle": "Học tập, luyện kỹ năng và AI hỗ trợ học trong chế độ demo-safe.",
+        "status": "Demo"
+      }
+    },
+    "trustStripHint": "Bề mặt pilot · Trạng thái minh bạch · VIO nằm trong ví của bạn",
+    "impact": {
+      "title": "Quỹ Trái Tim VIONA Care",
+      "subtitle": "Ấm áp, đặt dưới các vũ trụ — không phải lối vào chính."
+    },
     "accountChipShort": "Tài khoản",
     "headingExpat": "Trung tâm của bạn",
     "headingTourist": "Trung tâm du lịch Việt Nam",
@@ -300,6 +326,9 @@
     "walletChipCompact": "{{amount}} VIO",
     "walletChipFull": "{{amount}} VIO Credits",
     "utilityShortcutsTitle": "Lối tắt",
+    "utilityTravelChip": "Đồng hành",
+    "utilityAiEyeChip": "Mắt Thần",
+    "utilityWalletChip": "Ví",
     "vaultChipLabel": "Két an toàn",
     "adminUnlockedBadge": "Đã mở quản trị",
     "sosLocatingDetail": "Đang định vị để hỗ trợ đúng khu vực…",

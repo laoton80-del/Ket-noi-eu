@@ -254,6 +254,32 @@
     "profileRoleGateLater": "Maybe later",
     "charityTitle": "VIONA Care Heart Fund",
     "charityBody": "Every transaction helps bring meals and classes to children in need in Vietnam.",
+    "universe": {
+      "eyebrow": "VIONA MULTIVERSE",
+      "headline": "Your global companion, in every direction.",
+      "subtitle": "Local life, travel support, learning, and AI assistance — designed for Vietnamese people worldwide.",
+      "local": {
+        "title": "VIONA Local",
+        "subtitle": "Vietnamese services, local-language support, merchant-confirmed flow.",
+        "status": "Lite"
+      },
+      "travel": {
+        "title": "VIONA Travel",
+        "subtitle": "Direction-aware travel support for going abroad, visiting Vietnam, and coming home.",
+        "status": "Lite",
+        "statusComingSoon": "Coming soon"
+      },
+      "academy": {
+        "title": "VIONA Academy",
+        "subtitle": "Learning, practice, and AI study support in demo-safe mode.",
+        "status": "Demo"
+      }
+    },
+    "trustStripHint": "Pilot-safe surfaces · Status labels stay honest · VIO stays in your wallet hub",
+    "impact": {
+      "title": "VIONA Care Heart Fund",
+      "subtitle": "Warm impact below your universes — not the main entry point."
+    },
     "accountChipShort": "Me",
     "headingExpat": "Your home hub",
     "headingTourist": "Vietnam travel hub",
@@ -300,6 +326,9 @@
     "walletChipCompact": "{{amount}} VIO",
     "walletChipFull": "{{amount}} VIO Credits",
     "utilityShortcutsTitle": "Shortcuts",
+    "utilityTravelChip": "Travel companion",
+    "utilityAiEyeChip": "AI scan (demo)",
+    "utilityWalletChip": "Wallet",
     "vaultChipLabel": "Secure vault",
     "adminUnlockedBadge": "Admin unlocked",
     "sosLocatingDetail": "Locating your area for accurate help…",

@@ -4,12 +4,15 @@ import { useCallback, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 import Animated, { runOnJS, useAnimatedReaction, useSharedValue, withTiming } from 'react-native-reanimated';
 import { readCharityLedgerTotals } from '../../services/fintech/CharityService';
+import { vionaTokens } from '../../design';
 import { FontFamily } from '../../theme/typography';
 import { applyWebStyles } from '../../utils/applyWebStyles';
 import { useTranslation } from '../../i18n';
 
 const CHARITY_INK = '#0f172a';
 const CHARITY_INK_MUTED = 'rgba(15, 23, 42, 0.72)';
+
+export type CharityWidgetLayoutVariant = 'default' | 'impactSecondary';
 
 function formatUsd(amount: number): string {
   return new Intl.NumberFormat('en-US', {
@@ -19,7 +22,11 @@ function formatUsd(amount: number): string {
   }).format(amount);
 }
 
-export function CharityWidget() {
+type CharityWidgetProps = Readonly<{
+  layoutVariant?: CharityWidgetLayoutVariant;
+}>;
+
+export function CharityWidget({ layoutVariant = 'default' }: CharityWidgetProps) {
   const { t } = useTranslation();
   const [totalUsd, setTotalUsd] = useState(0);
   const [displayAmount, setDisplayAmount] = useState('$0');
@@ -59,27 +66,40 @@ export function CharityWidget() {
 
   const fallbackText = useMemo(() => formatUsd(totalUsd), [totalUsd]);
 
+  const impact = layoutVariant === 'impactSecondary';
+  const accent = vionaTokens.colors.impact.accent;
+  const wrapStyle = impact ? styles.wrapImpact : styles.wrap;
+  const heartWrapStyle = impact ? styles.heartWrapImpact : styles.heartWrap;
+  const titleStyle = impact ? styles.titleImpact : styles.title;
+  const refreshStyle = impact ? styles.refreshBtnImpact : styles.refreshBtn;
+  const amountStyle = impact ? styles.amountImpact : styles.amount;
+  const subStyle = impact ? styles.subtextImpact : styles.subtext;
+
   return (
-    <View style={styles.wrap} className={applyWebStyles('kn-glass')}>
+    <View style={wrapStyle} className={applyWebStyles('kn-glass')}>
       <View style={styles.header}>
-        <View style={styles.heartWrap}>
-          <Ionicons name="heart" size={18} color="#F43F5E" />
+        <View style={heartWrapStyle}>
+          <Ionicons name="heart" size={impact ? 16 : 18} color={accent} />
         </View>
-        <Text style={styles.title}>{t('home.charityTitle')}</Text>
-        <Pressable style={({ pressed }) => [styles.refreshBtn, pressed && { opacity: 0.86 }]} onPress={() => void refresh()}>
-          <Ionicons name="refresh" size={14} color="#E11D48" />
+        <View style={styles.titleCol}>
+          <Text style={titleStyle}>{impact ? t('home.impact.title') : t('home.charityTitle')}</Text>
+          {impact ? <Text style={styles.impactKicker}>{t('home.impact.subtitle')}</Text> : null}
+        </View>
+        <Pressable
+          style={({ pressed }) => [refreshStyle, pressed && { opacity: 0.86 }]}
+          onPress={() => void refresh()}
+        >
+          <Ionicons name="refresh" size={14} color={accent} />
         </Pressable>
       </View>
 
       <View style={styles.amountWrap}>
         {loading ? (
-          <ActivityIndicator color="#E11D48" />
+          <ActivityIndicator color={accent} />
         ) : (
           <>
-            <Animated.Text style={styles.amount}>{displayAmount || fallbackText}</Animated.Text>
-            <Text style={styles.subtext}>
-              Mỗi giao dịch của bạn đang góp phần mang bữa ăn và lớp học đến cho trẻ em nghèo Việt Nam.
-            </Text>
+            <Animated.Text style={amountStyle}>{displayAmount || fallbackText}</Animated.Text>
+            <Text style={subStyle}>{t('home.charityBody')}</Text>
           </>
         )}
       </View>
@@ -96,10 +116,24 @@ const styles = StyleSheet.create({
     padding: 14,
     gap: 8,
   },
+  wrapImpact: {
+    borderRadius: vionaTokens.radius.lg,
+    borderWidth: 1,
+    borderColor: `${vionaTokens.colors.impact.accent}44`,
+    backgroundColor: vionaTokens.colors.impact.bg,
+    padding: vionaTokens.spacing[12],
+    gap: vionaTokens.spacing[8],
+    ...vionaTokens.shadows.soft,
+  },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
+  },
+  titleCol: {
+    flex: 1,
+    minWidth: 0,
+    gap: 4,
   },
   heartWrap: {
     width: 30,
@@ -114,11 +148,29 @@ const styles = StyleSheet.create({
     shadowRadius: 10,
     elevation: 3,
   },
+  heartWrapImpact: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: `${vionaTokens.colors.impact.accent}22`,
+  },
   title: {
-    flex: 1,
     color: CHARITY_INK,
     fontSize: 16,
     fontFamily: FontFamily.extrabold,
+  },
+  titleImpact: {
+    color: vionaTokens.colors.ink,
+    fontSize: 14,
+    fontFamily: FontFamily.extrabold,
+  },
+  impactKicker: {
+    color: vionaTokens.colors.muted,
+    fontSize: 11,
+    lineHeight: 16,
+    fontFamily: FontFamily.medium,
   },
   refreshBtn: {
     width: 28,
@@ -128,14 +180,33 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     backgroundColor: 'rgba(251,113,133,0.14)',
   },
+  refreshBtnImpact: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: `${vionaTokens.colors.impact.accent}18`,
+  },
   amountWrap: { gap: 8 },
   amount: {
     color: '#E11D48',
     fontSize: 34,
     fontFamily: FontFamily.extrabold,
   },
+  amountImpact: {
+    color: vionaTokens.colors.impact.accent,
+    fontSize: 26,
+    fontFamily: FontFamily.extrabold,
+  },
   subtext: {
     color: CHARITY_INK_MUTED,
+    fontSize: 12,
+    lineHeight: 18,
+    fontFamily: FontFamily.medium,
+  },
+  subtextImpact: {
+    color: vionaTokens.colors.softInk,
     fontSize: 12,
     lineHeight: 18,
     fontFamily: FontFamily.medium,
