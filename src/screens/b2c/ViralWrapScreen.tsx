@@ -46,12 +46,12 @@ const MOCK_WRAP: ViralWrapPayloadDto = {
   tripStartIso: new Date().toISOString(),
   tripEndIso: new Date().toISOString(),
   languageCode: 'en',
-  viralTagline: 'You survived Hanoi traffic and still made the sunset cruise. ViGlobal energy: unstoppable.',
-  downloadUrl: 'https://ketnoiglobal.com/download',
+  viralTagline: 'You survived Hanoi traffic and still made the sunset cruise. VIONA energy: unstoppable.',
+  downloadUrl: 'https://vionaio.com/download',
 };
 
 function formatVig(v: number): string {
-  return `${Math.round(v).toLocaleString('en-US')} VIG`;
+  return `${Math.round(v).toLocaleString('en-US')} VIO Credits`;
 }
 
 function formatUsd(n: number): string {
@@ -107,7 +107,7 @@ export function ViralWrapScreen(): ReactElement {
 
   const shareCaption = useMemo(() => {
     if (!display) return '';
-    return `${display.viralTagline}\n\n${display.downloadUrl}\n#ViGlobal #InboundTourism`;
+    return `${display.viralTagline}\n\n${display.downloadUrl}\n#VIONA #InboundTourism`;
   }, [display]);
 
   const onShare = async (): Promise<void> => {
@@ -234,11 +234,11 @@ export function ViralWrapScreen(): ReactElement {
                 source={require('../../../assets/brand/viona/logo-in-app.png')}
                 style={styles.logo}
                 resizeMode="contain"
-                accessibilityLabel="ViGlobal"
+                accessibilityLabel="VIONA"
               />
             </View>
 
-            <Text style={styles.yearLabel}>VIGLOBAL</Text>
+            <Text style={styles.yearLabel}>VIONA</Text>
             <Text style={styles.heroHeadline}>YOUR TRIP{'\n'}IN THE WILD</Text>
             <Text style={styles.dest} numberOfLines={3}>
               {display.destinationLabel}

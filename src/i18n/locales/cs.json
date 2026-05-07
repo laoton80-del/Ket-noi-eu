@@ -137,5 +137,42 @@
     "book_now": "Rezervovat",
     "checkout": "Pokladna",
     "view_details": "Podrobnosti"
+  },
+  "smartTrio": {
+    "fallbackLabel": "Smart Trio fallback copy (not final localization)"
+  },
+  "travel": {
+    "direction": {
+      "fallbackLabel": "Travel direction fallback copy (not final localization)"
+    }
+  },
+  "localCommerce": {
+    "fallbackLabel": "Local Commerce fallback copy (not final localization)"
+  },
+  "aiReceptionist": {
+    "fallbackLabel": "AI Receptionist fallback copy (not final localization)",
+    "pilot": {
+      "fallbackLabel": "Pilot fallback copy (not final localization)"
+    }
+  },
+  "aiCost": {
+    "fallbackLabel": "AI cost fallback copy (not final localization)"
+  },
+  "telephony": {
+    "fallbackLabel": "Telephony fallback copy (not final localization)"
+  },
+  "aiUsage": {
+    "preview": {
+      "fallbackLabel": "AI usage preview fallback copy (not final localization)"
+    }
+  },
+  "aiEnforcement": {
+    "fallbackLabel": "AI enforcement fallback copy (not final localization)"
+  },
+  "aiAlerts": {
+    "fallbackLabel": "AI alerts fallback copy (not final localization)"
+  },
+  "incidents": {
+    "fallbackLabel": "Incidents fallback copy (not final localization)"
   }
 }

@@ -19,8 +19,8 @@
     "fixersTitle": "로컬 픽서",
     "fixersSub": "현장 가이드 & 문제 해결",
     "empty": "곧 상세 오픈 — Leona에게 수동 예약을 요청하세요.",
-    "fromPrice": "{{price}} VIG부터",
-    "scrollKicker": "V6.3 Inbound · ViGlobal"
+    "fromPrice": "{{price}} VIO Credits부터",
+    "scrollKicker": "V6.3 Inbound · VIONA"
   },
   "sos": {
     "fabLabel": "긴급 SOS",
@@ -28,7 +28,7 @@
     "fabAnnounce": "긴급 실드가 열렸습니다.",
     "sheetTitle": "AI Shield & SOS",
     "sheetSubtitle": "침착하세요. 도움을 받을 수 있습니다.",
-    "gpsBanner": "정확한 GPS 위치는 안전을 위해 ViGlobal Command Center와 공유됩니다.",
+    "gpsBanner": "정확한 GPS 위치는 안전을 위해 VIONA 안전 센터와 공유됩니다.",
     "gpsLoading": "위치 확인 중…",
     "gpsUnavailable": "위치를 가져올 수 없습니다. 긴급 번호와 도움은 계속 이용할 수 있습니다.",
     "coordsLocked": "GPS 고정: {{lat}}, {{lng}}",
@@ -38,11 +38,48 @@
     "optionPoliceTitle": "경찰 · 113",
     "optionPoliceSub": "경찰 연결 — 다음 화면에서 AI 통역",
     "optionScamTitle": "사기·바가지 요금 신고",
-    "optionScamSub": "위치와 함께 ViGlobal Command Center에 알림",
+    "optionScamSub": "위치와 함께 VIONA 안전 센터에 알림",
     "close": "닫기",
     "callFailedTitle": "전화 앱을 열 수 없음",
     "callFailedBody": "휴대전화에서 {{number}}로 직접 걸어주세요.",
     "reportQueuedTitle": "신고 접수됨",
-    "reportQueuedBody": "위치와 참조가 ViGlobal Command Center 대기열로 전송되었습니다."
+    "reportQueuedBody": "위치와 참조가 VIONA 안전 센터 대기열로 전송되었습니다."
+  },
+  "smartTrio": {
+    "fallbackLabel": "Smart Trio fallback copy (not final localization)"
+  },
+  "travel": {
+    "direction": {
+      "fallbackLabel": "Travel direction fallback copy (not final localization)"
+    }
+  },
+  "localCommerce": {
+    "fallbackLabel": "Local Commerce fallback copy (not final localization)"
+  },
+  "aiReceptionist": {
+    "fallbackLabel": "AI Receptionist fallback copy (not final localization)",
+    "pilot": {
+      "fallbackLabel": "Pilot fallback copy (not final localization)"
+    }
+  },
+  "aiCost": {
+    "fallbackLabel": "AI cost fallback copy (not final localization)"
+  },
+  "telephony": {
+    "fallbackLabel": "Telephony fallback copy (not final localization)"
+  },
+  "aiUsage": {
+    "preview": {
+      "fallbackLabel": "AI usage preview fallback copy (not final localization)"
+    }
+  },
+  "aiEnforcement": {
+    "fallbackLabel": "AI enforcement fallback copy (not final localization)"
+  },
+  "aiAlerts": {
+    "fallbackLabel": "AI alerts fallback copy (not final localization)"
+  },
+  "incidents": {
+    "fallbackLabel": "Incidents fallback copy (not final localization)"
   }
 }

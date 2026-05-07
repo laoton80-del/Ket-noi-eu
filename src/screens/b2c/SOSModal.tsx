@@ -111,7 +111,7 @@ export function SOSModal({
       const payload = buildSosIncidentPayload(kind, coords);
       const serialized = serializeSosPayload(payload);
       if (__DEV__) {
-        console.info('[ViGlobal SOS] incident payload', serialized);
+        console.info('[VIONA SOS] incident payload', serialized);
       }
       void appendUsageHistory({
         type: 'emergency',
@@ -156,7 +156,7 @@ export function SOSModal({
     onRequestClose();
     Alert.alert(t('sos.reportQueuedTitle'), t('sos.reportQueuedBody'), [{ text: t('sos.close') }]);
     if (__DEV__) {
-      console.info('[ViGlobal SOS] Command Center queue', serializeSosPayload(payload), user?.serverUserId);
+      console.info('[VIONA SOS] Command Center queue', serializeSosPayload(payload), user?.serverUserId);
     }
   }, [logAndQueuePayload, onRequestClose, t, user?.serverUserId]);
 

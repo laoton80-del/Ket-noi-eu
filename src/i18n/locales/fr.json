@@ -19,8 +19,8 @@
     "fixersTitle": "Fixers locaux",
     "fixersSub": "Guides & résolution sur place",
     "empty": "Annonces bientôt — demandez à Leona une mise en relation manuelle.",
-    "fromPrice": "À partir de {{price}} VIG",
-    "scrollKicker": "V6.3 Inbound · ViGlobal"
+    "fromPrice": "À partir de {{price}} VIO Credits",
+    "scrollKicker": "V6.3 Inbound · VIONA"
   },
   "sos": {
     "fabLabel": "Urgence SOS",
@@ -28,7 +28,7 @@
     "fabAnnounce": "Bouclier d’urgence ouvert.",
     "sheetTitle": "AI Shield & SOS",
     "sheetSubtitle": "Restez calme. L’aide est disponible.",
-    "gpsBanner": "Votre position GPS exacte est partagée avec le ViGlobal Command Center pour votre sécurité.",
+    "gpsBanner": "Votre position GPS exacte est partagée avec le centre de sécurité VIONA pour votre sécurité.",
     "gpsLoading": "Sécurisation de la position…",
     "gpsUnavailable": "Position indisponible. Les numéros d’urgence fonctionnent toujours.",
     "coordsLocked": "GPS verrouillé : {{lat}}, {{lng}}",
@@ -38,11 +38,48 @@
     "optionPoliceTitle": "Police · 113",
     "optionPoliceSub": "Appeler la police — interprète IA à l’écran suivant",
     "optionScamTitle": "Signaler arnaque ou surfacturation",
-    "optionScamSub": "Alerter le ViGlobal Command Center avec votre position",
+    "optionScamSub": "Alerter le centre de sécurité VIONA avec votre position",
     "close": "Fermer",
     "callFailedTitle": "Impossible d’ouvrir l’appel",
     "callFailedBody": "Composez le {{number}} sur votre téléphone.",
     "reportQueuedTitle": "Signalement en file",
-    "reportQueuedBody": "Position et référence envoyées à la file du ViGlobal Command Center."
+    "reportQueuedBody": "Position et référence envoyées à la file du centre de sécurité VIONA."
+  },
+  "smartTrio": {
+    "fallbackLabel": "Smart Trio fallback copy (not final localization)"
+  },
+  "travel": {
+    "direction": {
+      "fallbackLabel": "Travel direction fallback copy (not final localization)"
+    }
+  },
+  "localCommerce": {
+    "fallbackLabel": "Local Commerce fallback copy (not final localization)"
+  },
+  "aiReceptionist": {
+    "fallbackLabel": "AI Receptionist fallback copy (not final localization)",
+    "pilot": {
+      "fallbackLabel": "Pilot fallback copy (not final localization)"
+    }
+  },
+  "aiCost": {
+    "fallbackLabel": "AI cost fallback copy (not final localization)"
+  },
+  "telephony": {
+    "fallbackLabel": "Telephony fallback copy (not final localization)"
+  },
+  "aiUsage": {
+    "preview": {
+      "fallbackLabel": "AI usage preview fallback copy (not final localization)"
+    }
+  },
+  "aiEnforcement": {
+    "fallbackLabel": "AI enforcement fallback copy (not final localization)"
+  },
+  "aiAlerts": {
+    "fallbackLabel": "AI alerts fallback copy (not final localization)"
+  },
+  "incidents": {
+    "fallbackLabel": "Incidents fallback copy (not final localization)"
   }
 }

@@ -320,7 +320,7 @@ export function B2BBookingDashboard(): ReactElement {
         const bookingId = `bk-tl-${blk.id}-${Date.now()}`;
         scheduleBookingOfflineFailsafe(V7_GLOBAL_SLOT_MERCHANT_ID, {
           bookingId,
-          summaryLine: `ViGlobal: ${result.clientName} · ${result.serviceName}`,
+          summaryLine: `VIONA: ${result.clientName} · ${result.serviceName}`,
           emergencyPhoneE164: process.env.EXPO_PUBLIC_V7_MERCHANT_EMERGENCY_PHONE_E164?.trim() || undefined,
         });
       } else if (result.status === 'SlotLocked') {

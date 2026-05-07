@@ -72,7 +72,7 @@ export function RoleSelectionScreen() {
           return;
         }
         if (access.denied && access.kind === 'gps_vn') {
-          Alert.alert('Kết Nối Global', access.message);
+          Alert.alert('VIONA', access.message);
           return;
         }
         navigation.navigate(route);
@@ -92,7 +92,7 @@ export function RoleSelectionScreen() {
         {isVnDial ? (
           <>
             <Text style={styles.kicker}>Chế độ Khách hàng (B2C)</Text>
-            <Text style={styles.title}>Chào mừng bạn đến với Kết Nối Global</Text>
+            <Text style={styles.title}>Chào mừng bạn đến với VIONA</Text>
             <Text style={styles.lead}>
               Số điện thoại Việt Nam của bạn được dùng đầy đủ tính năng Khách hàng: đặt dịch vụ nước ngoài, AI trợ lý,
               du lịch và ví. Chúng tôi đang chuyển bạn sang thiết lập hồ sơ…
