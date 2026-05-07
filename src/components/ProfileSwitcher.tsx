@@ -158,7 +158,7 @@ export function ProfileSwitcher({ tabBarLift }: ProfileSwitcherProps): ReactElem
 
   const chipLiftStyle = useMemo(() => {
     if (isDesktopWeb) {
-      return { top: insets.top + 12, right: Math.max(insets.right, 12) };
+      return { top: insets.top + 10, right: Math.max(insets.right, 14) };
     }
     return { bottom: tabBarLift + Math.max(insets.bottom, 8) };
   }, [isDesktopWeb, insets.bottom, insets.right, insets.top, tabBarLift]);
@@ -185,7 +185,11 @@ export function ProfileSwitcher({ tabBarLift }: ProfileSwitcherProps): ReactElem
       accessibilityRole="button"
       accessibilityLabel={t('shell.utility.account')}
     >
-      <Ionicons name={canSwitch ? 'person-circle-outline' : 'person-circle'} size={20} color="#F6FAFF" />
+      <Ionicons
+        name={canSwitch ? 'person-circle-outline' : 'person-circle'}
+        size={20}
+        color={isDesktopWeb ? '#17315A' : '#F6FAFF'}
+      />
       <Text
         style={canSwitch ? styles.chipText : styles.singleChipText}
         numberOfLines={1}
@@ -194,7 +198,7 @@ export function ProfileSwitcher({ tabBarLift }: ProfileSwitcherProps): ReactElem
       >
         {singleAccountLabel}
       </Text>
-      {canSwitch ? <Ionicons name="chevron-up" size={14} color="rgba(255,255,255,0.8)" /> : null}
+      {canSwitch ? <Ionicons name="chevron-up" size={14} color={isDesktopWeb ? 'rgba(23,49,90,0.8)' : 'rgba(255,255,255,0.8)'} /> : null}
     </Pressable>
   );
 
@@ -382,9 +386,9 @@ const styles = StyleSheet.create({
   utilityDock: {
     position: 'absolute',
     zIndex: 46,
-    width: 258,
+    width: 252,
     alignItems: 'stretch',
-    gap: 6,
+    gap: 7,
   },
   chipMobile: {
     alignSelf: 'center',
@@ -414,7 +418,7 @@ const styles = StyleSheet.create({
   chipDesktopSizing: {
     maxWidth: 260,
   },
-  chipText: { fontSize: 13, fontWeight: '800', color: '#FFFFFF' },
+  chipText: { fontSize: 13, fontWeight: '800', color: '#17315A' },
   chipAdminUndercover: {
     borderColor: 'rgba(255, 51, 102, 0.85)',
     borderWidth: 2,
@@ -450,15 +454,15 @@ const styles = StyleSheet.create({
     alignSelf: 'stretch',
     maxWidth: undefined,
     zIndex: undefined,
-    shadowOpacity: 0.09,
-    shadowRadius: 6,
-    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.08,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 4 },
     elevation: 4,
-    paddingVertical: 9,
+    paddingVertical: 10,
     paddingHorizontal: 12,
     gap: 6,
-    backgroundColor: 'rgba(10, 19, 36, 0.84)',
-    borderColor: 'rgba(122, 228, 255, 0.18)',
+    backgroundColor: 'rgba(243, 248, 255, 0.95)',
+    borderColor: 'rgba(13, 54, 122, 0.18)',
   },
   dockChipDesktop: {
     alignSelf: 'stretch',
@@ -466,7 +470,7 @@ const styles = StyleSheet.create({
   dockChipMobile: {
     alignSelf: 'center',
   },
-  singleChipText: { fontSize: 13, fontWeight: '800', color: '#FFFFFF' },
+  singleChipText: { fontSize: 13, fontWeight: '800', color: '#17315A' },
   modalRoot: { flex: 1, justifyContent: 'flex-end' },
   backdrop: { ...StyleSheet.absoluteFillObject },
   backdropAndroid: { backgroundColor: 'rgba(0,0,0,0.55)' },

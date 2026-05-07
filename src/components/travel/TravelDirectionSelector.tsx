@@ -36,6 +36,7 @@ export function TravelDirectionSelector({ selectedId, onSelect }: TravelDirectio
 
   return (
     <View style={styles.wrap}>
+      <Text style={styles.kicker}>{t('travel.direction.title')}</Text>
       <Text style={styles.title}>{t('travel.direction.title')}</Text>
       <Text style={styles.subtitle}>{t('travel.direction.subtitle')}</Text>
       <Text style={styles.contextHint}>{contextLine}</Text>
@@ -120,6 +121,13 @@ const styles = StyleSheet.create({
     color: INK,
     letterSpacing: -0.2,
   },
+  kicker: {
+    fontSize: 10,
+    fontWeight: '800',
+    textTransform: 'uppercase',
+    letterSpacing: 0.7,
+    color: 'rgba(7, 30, 68, 0.62)',
+  },
   subtitle: {
     fontSize: 13,
     fontWeight: '600',
@@ -139,12 +147,12 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   card: {
-    borderRadius: 16,
-    padding: 14,
+    borderRadius: 18,
+    padding: 15,
     marginTop: 10,
-    backgroundColor: 'rgba(255,255,255,0.72)',
+    backgroundColor: 'rgba(255,255,255,0.9)',
     borderWidth: 1,
-    borderColor: 'rgba(5, 11, 20, 0.08)',
+    borderColor: 'rgba(5, 11, 20, 0.11)',
     shadowColor: '#0B1628',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.06,

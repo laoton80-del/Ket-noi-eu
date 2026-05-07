@@ -27,8 +27,8 @@ const RING_SIZE = 64;
 const STROKE = 4;
 const R = (RING_SIZE - STROKE) / 2;
 const CIRC = 2 * Math.PI * R;
-const NEON_RED = '#FF1744';
-const NEON_RED_GLOW = '#FF5252';
+const NEON_RED = '#D94F64';
+const NEON_RED_GLOW = '#F59BA7';
 
 export type SOSShieldComponentProps = Readonly<{
   /** Fires once when hold duration completes (single-shot per gesture). */
@@ -197,7 +197,7 @@ export function SOSShieldComponent({
             accessibilityHint={t('sos.fabHoldHint')}
           >
             <LinearGradient
-              colors={['#7F1D1D', '#B91C1C']}
+              colors={['#6E2A33', '#A94859']}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
               style={styles.gradient}
@@ -242,13 +242,13 @@ const styles = StyleSheet.create({
     height: 42,
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: 'rgba(255, 23, 68, 0.24)',
-    backgroundColor: 'rgba(255, 23, 68, 0.04)',
+    borderColor: 'rgba(217, 79, 100, 0.25)',
+    backgroundColor: 'rgba(217, 79, 100, 0.06)',
   },
   pulseRingDesktop: {
     borderWidth: 1,
-    borderColor: 'rgba(255, 23, 68, 0.18)',
-    backgroundColor: 'rgba(255, 23, 68, 0.03)',
+    borderColor: 'rgba(217, 79, 100, 0.2)',
+    backgroundColor: 'rgba(217, 79, 100, 0.04)',
   },
   ringSlot: {
     width: 116,
@@ -263,7 +263,7 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     overflow: 'hidden',
     elevation: 8,
-    shadowColor: '#DC2626',
+    shadowColor: '#B84C5D',
     shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.32,
     shadowRadius: 10,
@@ -282,7 +282,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.3)',
+    borderColor: 'rgba(255, 255, 255, 0.24)',
   },
   mainRow: {
     flexDirection: 'row',

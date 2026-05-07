@@ -69,6 +69,7 @@ export function LocalCommerceClarityBlock({
 
   return (
     <VionaCard style={styles.card} surfaceVariant="light">
+      <Text style={styles.kicker}>{t('localCommerce.title')}</Text>
       <Text style={styles.title}>{t('localCommerce.title')}</Text>
       <Text style={styles.subtitle}>{t('localCommerce.subtitle')}</Text>
 
@@ -141,16 +142,24 @@ export function LocalCommerceClarityBlock({
 
 const styles = StyleSheet.create({
   card: { marginBottom: 12 },
-  title: { fontSize: 17, fontWeight: '900', color: INK },
-  subtitle: { marginTop: 5, fontSize: 12, fontWeight: '600', color: INK_MUTED, lineHeight: 17 },
+  kicker: {
+    fontSize: 10,
+    fontWeight: '800',
+    letterSpacing: 0.7,
+    textTransform: 'uppercase',
+    color: 'rgba(7, 30, 68, 0.62)',
+    marginBottom: 3,
+  },
+  title: { fontSize: 18, fontWeight: '900', color: INK, letterSpacing: -0.2 },
+  subtitle: { marginTop: 4, fontSize: 12, fontWeight: '600', color: INK_MUTED, lineHeight: 17 },
   audienceGrid: { marginTop: 10, gap: 8 },
   audienceChip: {
-    borderRadius: 12,
-    paddingHorizontal: 10,
-    paddingVertical: 9,
-    backgroundColor: 'rgba(255,255,255,0.7)',
+    borderRadius: 14,
+    paddingHorizontal: 11,
+    paddingVertical: 10,
+    backgroundColor: 'rgba(255,255,255,0.9)',
     borderWidth: 1,
-    borderColor: 'rgba(5, 11, 20, 0.08)',
+    borderColor: 'rgba(5, 11, 20, 0.1)',
   },
   audienceTitle: { fontSize: 12, fontWeight: '800', color: INK },
   audienceSub: { marginTop: 2, fontSize: 10, fontWeight: '600', color: INK_MUTED, lineHeight: 14 },

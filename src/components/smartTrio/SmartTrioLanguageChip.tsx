@@ -90,17 +90,19 @@ export function SmartTrioLanguageChip({
         accessibilityLabel={t('shell.utility.language')}
       >
         <View style={[styles.iconWrap, dockMode && styles.iconWrapDock]}>
-          <Ionicons name="globe-outline" size={18} color="#7AE4FF" />
+          <Ionicons name="globe-outline" size={18} color={dockMode ? '#21519A' : '#7AE4FF'} />
         </View>
         <View style={styles.textCol}>
-          <Text style={styles.caption} numberOfLines={1}>
+          <Text style={[styles.caption, dockMode && styles.captionDock]} numberOfLines={1}>
             {dockMode ? t('shell.utility.language') : t('smartTrio.switcher.title')}
           </Text>
-          <Text style={styles.summary} numberOfLines={dockMode ? 1 : narrow ? 2 : 1}>
+          <Text style={[styles.summary, dockMode && styles.summaryDock]} numberOfLines={dockMode ? 1 : narrow ? 2 : 1}>
             {dockMode ? dockSummary : summary}
           </Text>
         </View>
-        <Text style={styles.change}>{dockMode ? t('shell.utility.change') : t('smartTrio.switcher.change')}</Text>
+        <Text style={[styles.change, dockMode && styles.changeDock]}>
+          {dockMode ? t('shell.utility.change') : t('smartTrio.switcher.change')}
+        </Text>
         <Ionicons name="chevron-forward" size={18} color="rgba(255,255,255,0.45)" />
       </Pressable>
       <SmartTrioLanguageSheet visible={sheetOpen} onClose={onCloseSheet} />
@@ -156,8 +158,8 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     paddingHorizontal: 10,
     borderRadius: 12,
-    backgroundColor: 'rgba(10, 19, 36, 0.8)',
-    borderColor: 'rgba(122, 228, 255, 0.16)',
+    backgroundColor: 'rgba(243, 248, 255, 0.95)',
+    borderColor: 'rgba(13, 54, 122, 0.16)',
   },
   iconWrap: {
     width: 36,
@@ -174,6 +176,9 @@ const styles = StyleSheet.create({
   },
   textCol: { flex: 1, minWidth: 0, gap: 2 },
   caption: { fontSize: 11, fontWeight: '800', color: 'rgba(255,255,255,0.74)', textTransform: 'uppercase' },
+  captionDock: { color: 'rgba(24,47,87,0.62)' },
   summary: { fontSize: 13, fontWeight: '800', color: '#F6FAFF' },
+  summaryDock: { color: '#17315A' },
   change: { fontSize: 12, fontWeight: '900', color: '#8DEBFF' },
+  changeDock: { color: '#21519A' },
 });

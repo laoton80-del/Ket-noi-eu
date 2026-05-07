@@ -106,3 +106,12 @@
 - Utility dock visuals were refined to feel like one coherent control system (Account + Language/Market), reducing floating/debug-chip perception.
 - SOS affordance was polished toward a clearer Safety Assist presentation, keeping accidental-press risk low and preserving explicit confirm-first behavior for sensitive call actions.
 - No production behavior changed: no payment/booking/wallet logic, no backend/API/Prisma, no Twilio activation, no AI provider invocation, no route-name or feature-flag behavior changes.
+
+## AE — Global UX Reset
+
+- Visual direction moved to a brighter global-companion system (light premium surfaces, stronger typography hierarchy, cleaner spacing) to remove dashboard/prototype feel.
+- Home hierarchy was reset so the Multiverse hero is the clear flagship first impression, with stronger depth/layering and cleaner first-fold focus.
+- Utility dock was redesigned toward a compact professional control bar (Account + Language/Market + VIO context) that feels integrated rather than floating overlays.
+- Safety Assist visual was softened and clarified to reduce accidental urgency perception while keeping hold-to-trigger and pilot-safe behavior unchanged.
+- Secondary impact content (VIONA Care Heart Fund) was intentionally demoted below the hero to protect hierarchy and avoid competing with core onboarding value.
+- Scope remained UI/layout/i18n only; no product logic, payment, booking, wallet internals, backend/API/Prisma, Twilio activation, route names, or feature flags were changed.
