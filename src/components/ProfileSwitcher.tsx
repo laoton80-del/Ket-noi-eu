@@ -158,8 +158,8 @@ export function ProfileSwitcher({ tabBarLift }: ProfileSwitcherProps): ReactElem
 
   const chipLiftStyle = useMemo(() => {
     if (isDesktopWeb) {
-      /** Keep profile chip in header zone on wide layouts. */
-      return { top: insets.top + 36, right: Math.max(insets.right, 16) };
+      /** Keep profile chip in top-right utility cluster without creating a dashboard-like band. */
+      return { top: insets.top + 14, right: Math.max(insets.right, 14) };
     }
     return { bottom: tabBarLift + Math.max(insets.bottom, 8) };
   }, [isDesktopWeb, insets.bottom, insets.right, insets.top, tabBarLift]);

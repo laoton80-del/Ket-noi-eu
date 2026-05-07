@@ -183,11 +183,12 @@ export function HomeScreen() {
   }, [t, wallet.credits, width]);
 
   const layout = useMemo(() => {
-    const maxShell = width > 1280 ? 860 : 760;
-    const shellWidth = Math.min(width, maxShell);
+    const isDesktopWeb = width > 1024;
+    const maxShell = isDesktopWeb ? 1360 : 760;
+    const shellWidth = isDesktopWeb ? Math.min(width - 28, maxShell) : Math.min(width, maxShell);
     const pad = theme.spacing.lg;
     const inner = shellWidth - pad * 2;
-    return { shellWidth, pad, inner };
+    return { shellWidth, pad, inner, isDesktopWeb };
   }, [width]);
 
   const creditPillMax = useMemo(() => Math.min(width * 0.9, 300), [width]);
@@ -300,7 +301,7 @@ export function HomeScreen() {
             paddingHorizontal: layout.pad,
             paddingBottom: 120,
             width: layout.shellWidth,
-            alignSelf: 'center',
+            alignSelf: layout.isDesktopWeb ? 'flex-start' : 'center',
           },
         ]}
         showsVerticalScrollIndicator={false}

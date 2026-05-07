@@ -59,8 +59,8 @@ export function SmartTrioLanguageChip({
     if (placement !== 'floating') return undefined;
     if (isDesktopWeb) {
       return {
-        top: insets.top + 84,
-        right: Math.max(insets.right, 16),
+        top: insets.top + 58,
+        right: Math.max(insets.right, 14),
       } as const;
     }
     return {

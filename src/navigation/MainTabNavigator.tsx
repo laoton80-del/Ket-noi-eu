@@ -228,6 +228,7 @@ export function MainTabNavigator(): ReactElement {
   const flags = useMemo(() => getFeatureFlags(), []);
 
   const tabBarLift = tabSizing.tabBarBaseHeight + (isDesktopWeb ? Math.max(insets.bottom, 16) : Math.max(insets.bottom, 10)) + 10;
+  const desktopSceneTopInset = isDesktopWeb ? insets.top + 92 : 0;
 
   const openPaywall = (target: RedirectTarget) => {
     setPendingRedirect(target);
@@ -335,6 +336,8 @@ export function MainTabNavigator(): ReactElement {
         screenOptions={({ route }) => ({
           headerShown: false,
           tabBarPosition: isDesktopWeb ? 'left' : 'bottom',
+          tabBarVariant: isDesktopWeb ? 'material' : 'uikit',
+          tabBarLabelPosition: isDesktopWeb ? 'below-icon' : 'beside-icon',
           tabBarActiveTintColor: chrome.active,
           tabBarInactiveTintColor: chrome.inactive,
           tabBarActiveBackgroundColor: isDesktopWeb ? 'rgba(122, 228, 255, 0.14)' : undefined,
@@ -353,11 +356,13 @@ export function MainTabNavigator(): ReactElement {
             },
             isDesktopWeb
               ? {
-                  width: 94,
+                  width: 104,
+                  minWidth: 96,
+                  maxWidth: 112,
                   height: '100%',
                   paddingTop: insets.top + 12,
                   paddingBottom: Math.max(insets.bottom, 16),
-                  paddingHorizontal: 8,
+                  paddingHorizontal: 6,
                 }
               : {
                   height: tabSizing.tabBarBaseHeight + insets.bottom,
@@ -367,8 +372,8 @@ export function MainTabNavigator(): ReactElement {
             isDesktopWeb && styles.tabBarDesktop,
           ],
           sceneStyle: {
-            backgroundColor: chrome.barBg,
-            paddingTop: isDesktopWeb ? 78 : 0,
+            backgroundColor: theme.colors.background,
+            paddingTop: desktopSceneTopInset,
           },
           tabBarLabel: isDesktopWeb
             ? compactDesktopTabLabel(route.name as keyof RootTabParamList, currentActiveRole)
@@ -521,6 +526,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginVertical: 3,
     borderRadius: 14,
+    paddingHorizontal: 0,
   },
   tabLabel: {
     fontFamily: FontFamily.semibold,
@@ -536,8 +542,8 @@ const styles = StyleSheet.create({
     borderTopWidth: 0,
     borderRightWidth: 1,
     borderRightColor: theme.hybrid.panelCoolBorder,
-    shadowOpacity: 0.08,
-    shadowRadius: 8,
+    shadowOpacity: 0.05,
+    shadowRadius: 6,
     shadowOffset: { width: 2, height: 0 },
     elevation: 2,
   },

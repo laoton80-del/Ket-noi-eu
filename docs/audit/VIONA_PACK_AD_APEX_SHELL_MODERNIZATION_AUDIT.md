@@ -78,3 +78,14 @@
 - full mobile device QA still needed
 - final native-speaker localization review later
 - no public beta yet
+
+## AD.2 True Shell Fix
+
+- AD.1 compacted nav visuals but still left a perceived wide shell because content centering used full viewport behavior.
+- AD.2 fixes the actual desktop/web shell container behavior:
+  - left rail constrained to compact true width band (target ~96-112px),
+  - scene background switched to clean content canvas (not full-width navy shell feel),
+  - Home content starts from the content area after rail instead of being centered in the whole viewport.
+- Utility cluster was re-aligned to a tighter top-right zone so it remains readable without recreating a heavy dashboard bar.
+- Expected visual difference: content starts shortly after compact rail (about ~96-112px rail + small gutter), with materially wider perceived content area.
+- No product logic changed.
