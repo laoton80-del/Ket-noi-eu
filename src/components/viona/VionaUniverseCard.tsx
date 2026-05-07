@@ -7,13 +7,15 @@ import { VionaSurface } from './VionaSurface';
 
 type VionaUniverseAccent = 'local' | 'travel' | 'academy' | 'ai' | 'safety';
 
-const accentMap: Record<VionaUniverseAccent, string> = {
-  local: vionaTokens.colors.blue,
-  travel: vionaTokens.colors.indigo,
-  academy: vionaTokens.colors.teal,
-  ai: vionaTokens.colors.coral,
-  safety: vionaTokens.colors.safetyRed,
-};
+function pastelBackground(accent: VionaUniverseAccent): string {
+  if (accent === 'safety') return vionaTokens.colors.safety.bg;
+  return vionaTokens.colors.universe[accent].bg;
+}
+
+function accentColor(accent: VionaUniverseAccent): string {
+  if (accent === 'safety') return vionaTokens.colors.safety.accent;
+  return vionaTokens.colors.universe[accent].accent;
+}
 
 type StatusToneProps = Parameters<typeof VionaStatusPill>[0]['tone'];
 
@@ -25,6 +27,8 @@ export type VionaUniverseCardProps = Readonly<{
   onPress?: () => void;
   accent: VionaUniverseAccent;
   disabled?: boolean;
+  /** Editorial flagship — glass surface, accent rail, strong icon well (World Stage). */
+  layout?: 'default' | 'worldStage';
 }>;
 
 export function VionaUniverseCard({
@@ -35,10 +39,49 @@ export function VionaUniverseCard({
   onPress,
   accent,
   disabled = false,
+  layout = 'default',
 }: VionaUniverseCardProps) {
-  const content = (
-    <VionaSurface variant="elevated" style={[styles.surface, disabled && styles.disabled]}>
-      <View style={[styles.accentBar, { backgroundColor: accentMap[accent] }]} />
+  const bar = accentColor(accent);
+  const fill = pastelBackground(accent);
+  const isStage = layout === 'worldStage';
+
+  const content = isStage ? (
+    <VionaSurface
+      variant="hero"
+      style={[
+        styles.surfaceStage,
+        {
+          borderColor: 'rgba(15, 23, 42, 0.12)',
+          borderLeftColor: bar,
+          borderLeftWidth: 4,
+        },
+        disabled && styles.disabled,
+      ]}
+    >
+      <View style={styles.rowStage}>
+        {icon ? (
+          <View style={[styles.iconWell, { borderColor: `${bar}66`, backgroundColor: `${bar}14` }]}>{icon}</View>
+        ) : null}
+        <View style={styles.copyWrap}>
+          <Text style={styles.title}>{title}</Text>
+          <Text style={styles.subtitleStage}>{subtitle}</Text>
+          {status ? <VionaStatusPill label={status.label} tone={status.tone} size="sm" /> : null}
+        </View>
+      </View>
+    </VionaSurface>
+  ) : (
+    <VionaSurface
+      variant="elevated"
+      style={[
+        styles.surface,
+        {
+          backgroundColor: fill,
+          borderColor: `${bar}55`,
+        },
+        disabled && styles.disabled,
+      ]}
+    >
+      <View style={[styles.accentBar, { backgroundColor: bar }]} />
       <View style={styles.row}>
         {icon ? <View style={styles.iconWrap}>{icon}</View> : null}
         <View style={styles.copyWrap}>
@@ -65,6 +108,11 @@ const styles = StyleSheet.create({
     paddingBottom: vionaTokens.spacing[12],
     paddingHorizontal: vionaTokens.spacing[12],
   },
+  surfaceStage: {
+    paddingVertical: vionaTokens.spacing[16],
+    paddingHorizontal: vionaTokens.spacing[16],
+    backgroundColor: 'rgba(255, 255, 255, 0.88)',
+  },
   accentBar: {
     height: 3,
     borderRadius: vionaTokens.radius.pill,
@@ -75,11 +123,25 @@ const styles = StyleSheet.create({
     gap: vionaTokens.spacing[12],
     alignItems: 'flex-start',
   },
+  rowStage: {
+    flexDirection: 'row',
+    gap: vionaTokens.spacing[16],
+    alignItems: 'flex-start',
+  },
   iconWrap: {
     width: 28,
     height: 28,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  iconWell: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1.5,
+    ...vionaTokens.shadows.soft,
   },
   copyWrap: {
     flex: 1,
@@ -92,6 +154,12 @@ const styles = StyleSheet.create({
   subtitle: {
     color: vionaTokens.colors.muted,
     ...vionaTokens.typography.meta,
+  },
+  subtitleStage: {
+    color: vionaTokens.colors.softInk,
+    fontSize: 12,
+    lineHeight: 17,
+    fontWeight: '500',
   },
   disabled: {
     opacity: 0.55,

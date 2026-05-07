@@ -368,7 +368,7 @@ export function MainTabNavigator(): ReactElement {
           ],
           sceneStyle: {
             backgroundColor: chrome.barBg,
-            paddingTop: isDesktopWeb ? 78 : 0,
+            paddingTop: isDesktopWeb ? Math.max(100, insets.top + 96) : 0,
           },
           tabBarLabel: isDesktopWeb
             ? compactDesktopTabLabel(route.name as keyof RootTabParamList, currentActiveRole)

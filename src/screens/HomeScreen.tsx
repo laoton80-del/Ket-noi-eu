@@ -3,11 +3,13 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import * as Haptics from 'expo-haptics';
+import { LinearGradient } from 'expo-linear-gradient';
 import { StatusBar } from 'expo-status-bar';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -25,20 +27,22 @@ import { ProactiveSuggestions } from '../components/ProactiveSuggestions';
 import { CharityWidget } from '../components/ui/CharityWidget';
 import { VionaCard } from '../components/viona/VionaCard';
 import { VionaSectionHeader } from '../components/viona/VionaSectionHeader';
+import { VionaSurface } from '../components/viona/VionaSurface';
+import { VionaUniverseCard } from '../components/viona/VionaUniverseCard';
 import { vionaTrust } from '../components/viona/vionaTrustTokens';
 import {
   getConfiguredAdminDebugPin,
   isAdminDebugPinConfigured,
   isAdminDebugSurfaceEnabled,
 } from '../config/adminDebugGate';
-import { brandConfig } from '../core/brand/brandConfig';
 import { getFeatureFlags } from '../core/feature-flags/featureFlags';
 import { useMiniAppEntry } from '../hooks/useMiniAppEntry';
 import { getVioPointsLabel } from '../core/monetization/vioDisplayLabels';
 import { getPersonaDisplayName } from '../config/aiPrompts';
 import { useAuth } from '../context/AuthContext';
 import { MVP_B2B_AI_RECEPTIONIST_DEMO_OFF_MSG } from '../navigation/mvpSurfaceGate';
-import type { RootStackParamList } from '../navigation/routes';
+import { MAIN_TAB, type RootStackParamList } from '../navigation/routes';
+import { vionaTokens } from '../design';
 import { getRestApiJwt, isRestApiConfigured } from '../services/apiClient';
 import { patchUserPersonaOnServer } from '../services/viGlobalUserPersonaApi';
 import { fetchBalance } from '../services/viGlobalWalletApi';
@@ -53,8 +57,8 @@ type Nav = NativeStackNavigationProp<RootStackParamList>;
 
 const IMG_LOGO = require('../../assets/brand/viona/logo-in-app.png');
 const ADMIN_UNLOCK_KEY = STORAGE_KEYS.adminUnlock;
-/** Clean Tech Trust — light canvas, ink text, gold accent. */
-const SCREEN_BG = vionaTrust.canvas;
+/** World Stage — light canvas (aurora gradient applied in hero). */
+const SCREEN_BG = vionaTokens.gradients.multiverseHero[0];
 const CARD_BG = vionaTrust.surface;
 const GOLD_ACCENT = vionaTrust.accentGold;
 const GOLD_BORDER = vionaTrust.accentGoldLine;
@@ -65,12 +69,6 @@ type BriefingCard = Readonly<{
   id: string;
   headline: string;
   sub: string;
-}>;
-type UniverseCard = Readonly<{
-  id: 'local' | 'travel' | 'academy';
-  title: string;
-  subtitle: string;
-  icon: keyof typeof Ionicons.glyphMap;
 }>;
 
 export function HomeScreen() {
@@ -181,29 +179,8 @@ export function HomeScreen() {
     if (isTourist) return all.filter((c) => c.id !== 'b1' && c.id !== 'b4');
     return all;
   }, [isTourist, t]);
-  const universeCards = useMemo(
-    (): readonly UniverseCard[] => [
-      {
-        id: 'local',
-        title: t('home.universeLocalTitle'),
-        subtitle: t('home.universeLocalSub'),
-        icon: 'grid-outline',
-      },
-      {
-        id: 'travel',
-        title: t('home.universeTravelTitle'),
-        subtitle: t('home.universeTravelSub'),
-        icon: 'airplane-outline',
-      },
-      {
-        id: 'academy',
-        title: t('home.universeAcademyTitle'),
-        subtitle: t('home.universeAcademySub'),
-        icon: 'sparkles-outline',
-      },
-    ],
-    [t]
-  );
+
+  const isDesktopWeb = Platform.OS === 'web' && width > 768;
 
   const walletChipLabel = useMemo(() => {
     const n = wallet.credits;
@@ -277,6 +254,22 @@ export function HomeScreen() {
     );
   }, [navigation, openMiniApp, setPendingRedirect, user]);
 
+  const goUniverseLocal = useCallback(() => {
+    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    openMiniApp('local', () => navigation.navigate('Tabs', { screen: MAIN_TAB.B2C.local }));
+  }, [navigation, openMiniApp]);
+
+  const goUniverseTravel = useCallback(() => {
+    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    if (!featureFlags.travelEnabled) return;
+    openMiniApp('travel', () => navigation.navigate('TravelCompanion'));
+  }, [featureFlags.travelEnabled, navigation, openMiniApp]);
+
+  const goUniverseAcademy = useCallback(() => {
+    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    openMiniApp('academy', () => navigation.navigate('Tabs', { screen: MAIN_TAB.B2C.ai }));
+  }, [navigation, openMiniApp]);
+
   const onSecretTap = useCallback(() => {
     if (!isAdminDebugSurfaceEnabled()) return;
     const now = Date.now();
@@ -327,24 +320,92 @@ export function HomeScreen() {
           styles.scrollContent,
           {
             paddingHorizontal: layout.pad,
-            paddingBottom: 120,
+            paddingBottom: 140,
+            paddingTop: isDesktopWeb ? theme.spacing.lg : theme.spacing.md,
             width: layout.shellWidth,
             alignSelf: 'center',
           },
         ]}
         showsVerticalScrollIndicator={false}
       >
-        <View style={styles.hero}>
-          <View style={styles.heroTopRow}>
-            <View style={styles.heroCopyCol}>
-              <Text style={styles.heroEyebrow}>{brandConfig.displayName}</Text>
-              <Text style={styles.heading}>{t('home.multiverseHeroTitle')}</Text>
-              <Text style={styles.heroSub}>{t('home.multiverseHeroSub')}</Text>
+        <View style={[styles.worldStageBleed, { marginHorizontal: -layout.pad }]}>
+          <LinearGradient
+            colors={[...vionaTokens.gradients.multiverseHero]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.worldStageGradient}
+          >
+            <View style={styles.worldStageGlow} />
+            <Text style={styles.wsEyebrow}>{t('home.worldStage.eyebrow')}</Text>
+            <Text style={styles.wsHeadline}>{t('home.worldStage.headline')}</Text>
+            <Text style={styles.wsSubtitle}>{t('home.worldStage.subtitle')}</Text>
+
+            <View
+              style={[
+                styles.entranceStack,
+                { flexDirection: width >= 820 ? 'row' : 'column', width: layout.inner },
+              ]}
+            >
+              <View style={width >= 820 ? styles.entranceCell : undefined}>
+                <VionaUniverseCard
+                  layout="worldStage"
+                  accent="local"
+                  title={t('home.worldStage.local.title')}
+                  subtitle={t('home.worldStage.local.subtitle')}
+                  icon={
+                    <Ionicons name="grid-outline" size={22} color={vionaTokens.colors.universe.local.accent} />
+                  }
+                  status={{ label: t('home.worldStage.local.status'), tone: 'lite' }}
+                  onPress={goUniverseLocal}
+                />
+              </View>
+              <View style={width >= 820 ? styles.entranceCell : undefined}>
+                <VionaUniverseCard
+                  layout="worldStage"
+                  accent="travel"
+                  title={t('home.worldStage.travel.title')}
+                  subtitle={t('home.worldStage.travel.subtitle')}
+                  icon={
+                    <Ionicons name="airplane-outline" size={22} color={vionaTokens.colors.universe.travel.accent} />
+                  }
+                  status={
+                    featureFlags.travelEnabled
+                      ? { label: t('home.worldStage.travel.status'), tone: 'pilot' }
+                      : { label: t('home.worldStage.travel.statusComingSoon'), tone: 'comingSoon' }
+                  }
+                  onPress={featureFlags.travelEnabled ? goUniverseTravel : undefined}
+                  disabled={!featureFlags.travelEnabled}
+                />
+              </View>
+              <View style={width >= 820 ? styles.entranceCell : undefined}>
+                <VionaUniverseCard
+                  layout="worldStage"
+                  accent="academy"
+                  title={t('home.worldStage.academy.title')}
+                  subtitle={t('home.worldStage.academy.subtitle')}
+                  icon={
+                    <Ionicons name="sparkles-outline" size={22} color={vionaTokens.colors.universe.academy.accent} />
+                  }
+                  status={{ label: t('home.worldStage.academy.status'), tone: 'demo' }}
+                  onPress={goUniverseAcademy}
+                />
+              </View>
             </View>
-            <View style={[styles.creditPill, isTourist && styles.creditPillTourist, { maxWidth: creditPillMax }]}>
+          </LinearGradient>
+        </View>
+
+        <VionaSurface variant="glass" style={[styles.trustStrip, { width: layout.inner }]}>
+          <View style={styles.trustStripRow}>
+            <View
+              style={[
+                styles.creditPill,
+                isTourist && styles.creditPillTourist,
+                { maxWidth: creditPillMax, flexShrink: 0 },
+              ]}
+            >
               <View style={styles.creditPillRow}>
                 {walletBalanceLoading ? (
-                  <ActivityIndicator size="small" color={GOLD_ACCENT} accessibilityLabel="Đang tải số dư" />
+                  <ActivityIndicator size="small" color={GOLD_ACCENT} accessibilityLabel={t('home.walletLoadingA11y')} />
                 ) : (
                   <Ionicons name="wallet-outline" size={14} color={GOLD_ACCENT} />
                 )}
@@ -364,27 +425,12 @@ export function HomeScreen() {
                 </Text>
               ) : null}
             </View>
+            <Text style={styles.trustStripHint}>{t('home.trustStripHint')}</Text>
           </View>
-          <VionaCard style={styles.multiverseHeroCard} padded>
-            <Text style={styles.multiverseEyebrow}>{t('home.multiverseHeroKicker')}</Text>
-            <Text style={styles.multiverseHeadline}>{t('home.multiverseHeroTitle')}</Text>
-            <Text style={styles.multiverseSubheadline}>{t('home.multiverseHeroSubheadline')}</Text>
-            <View style={styles.multiverseGrid}>
-              {universeCards.map((card) => (
-                <View key={card.id} style={styles.universeCard}>
-                  <View style={styles.universeIconWrap}>
-                    <Ionicons name={card.icon} size={18} color={GOLD_ACCENT} />
-                  </View>
-                  <Text style={styles.universeTitle}>{card.title}</Text>
-                  <Text style={styles.universeSubtitle}>{card.subtitle}</Text>
-                </View>
-              ))}
-            </View>
-          </VionaCard>
-        </View>
+        </VionaSurface>
 
         <View style={[styles.charityWrap, { width: layout.inner }]}>
-          <CharityWidget />
+          <CharityWidget layoutVariant="impactSecondary" />
         </View>
 
         {isTourist ? <DashboardB2CScreen contentWidth={layout.inner} /> : null}
@@ -527,7 +573,7 @@ export function HomeScreen() {
                 style={({ pressed }) => [styles.utilityChip, pressed && { opacity: 0.88 }]}
               >
                 <Ionicons name="airplane-outline" size={18} color={theme.hybrid.signalStrong} />
-                <Text style={styles.utilityChipText}>Đồng hành</Text>
+                <Text style={styles.utilityChipText}>{t('home.utilityTravelChip')}</Text>
               </Pressable>
             ) : null}
             {featureFlags.b2bAiReceptionistDemoEnabled ? (
@@ -536,7 +582,7 @@ export function HomeScreen() {
                 style={({ pressed }) => [styles.utilityChip, pressed && { opacity: 0.88 }]}
               >
                 <Ionicons name="scan-outline" size={18} color={theme.hybrid.signalStrong} />
-                <Text style={styles.utilityChipText}>Mắt Thần</Text>
+                <Text style={styles.utilityChipText}>{t('home.utilityAiEyeChip')}</Text>
               </Pressable>
             ) : null}
             <Pressable
@@ -544,7 +590,7 @@ export function HomeScreen() {
               style={({ pressed }) => [styles.utilityChip, pressed && { opacity: 0.88 }]}
             >
               <Ionicons name="wallet-outline" size={18} color={theme.hybrid.signalStrong} />
-              <Text style={styles.utilityChipText}>Ví</Text>
+              <Text style={styles.utilityChipText}>{t('home.utilityWalletChip')}</Text>
             </Pressable>
             {featureFlags.leonaAssistantEnabled ? (
               <Pressable
@@ -633,105 +679,77 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: 'transparent',
   },
-  scrollContent: {
-    paddingTop: theme.spacing.md,
+  scrollContent: {},
+  worldStageBleed: {
+    marginBottom: vionaTokens.spacing[20],
   },
-  hero: {
-    marginBottom: theme.spacing.lg,
+  worldStageGradient: {
+    borderRadius: vionaTokens.radius.xxl,
+    paddingHorizontal: vionaTokens.spacing[24],
+    paddingTop: vionaTokens.spacing[32],
+    paddingBottom: vionaTokens.spacing[32],
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.65)',
+    ...vionaTokens.shadows.hero,
   },
-  heroTopRow: {
-    flexDirection: 'row',
-    gap: 12,
-    alignItems: 'flex-start',
-    justifyContent: 'space-between',
+  worldStageGlow: {
+    ...StyleSheet.absoluteFillObject,
+    borderRadius: vionaTokens.radius.xxl,
+    borderWidth: 1,
+    borderColor: 'rgba(99, 102, 241, 0.14)',
+    pointerEvents: 'none',
   },
-  heroCopyCol: {
+  wsEyebrow: {
+    fontSize: 11,
+    letterSpacing: 1.2,
+    textTransform: 'uppercase',
+    color: vionaTokens.colors.softInk,
+    fontFamily: FontFamily.semibold,
+    marginBottom: vionaTokens.spacing[12],
+  },
+  wsHeadline: {
+    fontSize: 30,
+    lineHeight: 36,
+    color: vionaTokens.colors.ink,
+    fontFamily: FontFamily.extrabold,
+    marginBottom: vionaTokens.spacing[12],
+    maxWidth: 560,
+  },
+  wsSubtitle: {
+    fontSize: 15,
+    lineHeight: 23,
+    color: vionaTokens.colors.softInk,
+    fontFamily: FontFamily.medium,
+    marginBottom: vionaTokens.spacing[24],
+    maxWidth: 520,
+  },
+  entranceStack: {
+    alignSelf: 'center',
+    gap: vionaTokens.spacing[12],
+  },
+  entranceCell: {
     flex: 1,
     minWidth: 0,
   },
-  heroEyebrow: {
-    fontSize: 12,
-    letterSpacing: 0.5,
-    color: GOLD_ACCENT,
-    fontFamily: FontFamily.semibold,
-    textTransform: 'uppercase',
-    marginBottom: theme.spacing.xs,
+  trustStrip: {
+    alignSelf: 'center',
+    marginBottom: theme.spacing.lg,
+    paddingVertical: vionaTokens.spacing[12],
+    paddingHorizontal: vionaTokens.spacing[16],
   },
-  heading: {
-    fontSize: 28,
-    lineHeight: 34,
-    color: TEXT_PRIMARY,
-    fontFamily: FontFamily.extrabold,
-    marginBottom: theme.spacing.xs,
-  },
-  heroSub: {
-    fontSize: 14,
-    lineHeight: 21,
-    color: TEXT_MUTED,
-    fontFamily: FontFamily.regular,
-  },
-  multiverseHeroCard: {
-    marginTop: 12,
-    borderRadius: 20,
-    borderColor: 'rgba(212, 175, 55, 0.36)',
-    backgroundColor: 'rgba(255,255,255,0.96)',
-  },
-  multiverseEyebrow: {
-    fontSize: 11,
-    letterSpacing: 0.8,
-    textTransform: 'uppercase',
-    color: GOLD_ACCENT,
-    fontFamily: FontFamily.semibold,
-    marginBottom: 6,
-  },
-  multiverseHeadline: {
-    fontSize: 26,
-    lineHeight: 32,
-    color: TEXT_PRIMARY,
-    fontFamily: FontFamily.extrabold,
-  },
-  multiverseSubheadline: {
-    marginTop: 6,
-    fontSize: 13,
-    lineHeight: 20,
-    color: TEXT_MUTED,
-    fontFamily: FontFamily.medium,
-  },
-  multiverseGrid: {
-    marginTop: 14,
+  trustStripRow: {
     flexDirection: 'row',
-    gap: 10,
-  },
-  universeCard: {
-    flex: 1,
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: vionaTrust.border,
-    backgroundColor: vionaTrust.surfaceMuted,
-    paddingHorizontal: 10,
-    paddingVertical: 12,
-    minHeight: 110,
-  },
-  universeIconWrap: {
-    width: 30,
-    height: 30,
-    borderRadius: 15,
     alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: 'rgba(212, 175, 55, 0.12)',
-    marginBottom: 8,
+    gap: vionaTokens.spacing[12],
+    flexWrap: 'wrap',
   },
-  universeTitle: {
-    fontSize: 13,
-    lineHeight: 18,
-    color: TEXT_PRIMARY,
-    fontFamily: FontFamily.bold,
-  },
-  universeSubtitle: {
-    marginTop: 4,
-    fontSize: 11,
-    lineHeight: 16,
-    color: TEXT_MUTED,
+  trustStripHint: {
+    flex: 1,
+    minWidth: 120,
+    fontSize: 12,
+    lineHeight: 17,
+    color: vionaTokens.colors.muted,
     fontFamily: FontFamily.medium,
   },
   creditPill: {
@@ -959,8 +977,8 @@ const styles = StyleSheet.create({
     fontFamily: FontFamily.regular,
   },
   charityWrap: {
-    marginTop: 2,
-    marginBottom: 2,
+    marginTop: vionaTokens.spacing[8],
+    marginBottom: theme.spacing.md,
   },
   utilityStripTitle: {
     fontSize: 12,

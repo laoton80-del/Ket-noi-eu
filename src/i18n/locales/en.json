@@ -96,7 +96,7 @@
     "scrollKicker": "V6.3 Inbound · VIONA"
   },
   "sos": {
-    "fabLabel": "Emergency SOS",
+    "fabLabel": "Safety Assist",
     "fabHint": "Opens the AI Shield and emergency options for Vietnam.",
     "emergencyAssistance": "Emergency Assistance",
     "subtitle": "Stay calm. Help is available.",
@@ -254,6 +254,37 @@
     "profileRoleGateLater": "Maybe later",
     "charityTitle": "VIONA Care Heart Fund",
     "charityBody": "Every transaction helps bring meals and classes to children in need in Vietnam.",
+    "worldStage": {
+      "eyebrow": "VIONA WORLD STAGE",
+      "headline": "Your global companion, for every life direction.",
+      "subtitle": "Local life, travel support, learning, and AI assistance — designed for Vietnamese people worldwide.",
+      "local": {
+        "title": "VIONA Local",
+        "subtitle": "Vietnamese services near you, with local-language support.",
+        "status": "Lite"
+      },
+      "travel": {
+        "title": "VIONA Travel",
+        "subtitle": "Direction-aware support before, during, and after the trip.",
+        "status": "Lite",
+        "statusComingSoon": "Coming soon"
+      },
+      "academy": {
+        "title": "VIONA Academy",
+        "subtitle": "Learning and AI practice for families and future skills.",
+        "status": "Demo"
+      }
+    },
+    "impact": {
+      "kicker": "Impact by VIONA",
+      "title": "Care Heart Fund",
+      "subtitle": "Warm impact — secondary to your daily universes."
+    },
+    "trustStripHint": "Pilot-safe surfaces · Honest status · VIO lives in your wallet hub",
+    "walletLoadingA11y": "Loading wallet balance",
+    "utilityTravelChip": "Travel companion",
+    "utilityAiEyeChip": "AI scan (demo)",
+    "utilityWalletChip": "Wallet",
     "accountChipShort": "Me",
     "headingExpat": "Your home hub",
     "headingTourist": "Vietnam travel hub",

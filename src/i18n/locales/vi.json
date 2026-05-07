@@ -96,7 +96,7 @@
     "scrollKicker": "V6.3 Inbound · VIONA"
   },
   "sos": {
-    "fabLabel": "SOS khẩn cấp",
+    "fabLabel": "Hỗ trợ an toàn",
     "fabHint": "Mở AI Shield và các lựa chọn an toàn tại Việt Nam.",
     "emergencyAssistance": "Hỗ trợ khẩn cấp",
     "subtitle": "Bình tĩnh. Đã có hỗ trợ.",
@@ -254,6 +254,37 @@
     "profileRoleGateLater": "Để sau",
     "charityTitle": "Quỹ Trái Tim VIONA Care",
     "charityBody": "Mỗi giao dịch của bạn đang góp phần mang bữa ăn và lớp học đến cho trẻ em nghèo Việt Nam.",
+    "worldStage": {
+      "eyebrow": "ĐA VŨ TRỤ VIONA",
+      "headline": "Người đồng hành toàn cầu cho từng chặng sống của bạn.",
+      "subtitle": "Đời sống, du lịch, học tập và AI support — thiết kế cho người Việt ở khắp thế giới.",
+      "local": {
+        "title": "VIONA Local",
+        "subtitle": "Dịch vụ Việt quanh bạn, có hỗ trợ ngôn ngữ địa phương.",
+        "status": "Lite"
+      },
+      "travel": {
+        "title": "VIONA Travel",
+        "subtitle": "Hỗ trợ theo từng hướng đi, trước, trong và sau hành trình.",
+        "status": "Lite",
+        "statusComingSoon": "Sắp ra mắt"
+      },
+      "academy": {
+        "title": "VIONA Academy",
+        "subtitle": "Học tập và luyện AI cho gia đình, kỹ năng và tương lai.",
+        "status": "Demo"
+      }
+    },
+    "impact": {
+      "kicker": "Tác động từ VIONA",
+      "title": "Quỹ Trái Tim VIONA Care",
+      "subtitle": "Ấm áp — đặt sau các vũ trụ chính của bạn."
+    },
+    "trustStripHint": "Bề mặt pilot · Trạng thái minh bạch · VIO nằm trong ví",
+    "walletLoadingA11y": "Đang tải số dư ví",
+    "utilityTravelChip": "Đồng hành",
+    "utilityAiEyeChip": "Mắt Thần (demo)",
+    "utilityWalletChip": "Ví",
     "accountChipShort": "Tài khoản",
     "headingExpat": "Trung tâm của bạn",
     "headingTourist": "Trung tâm du lịch Việt Nam",
