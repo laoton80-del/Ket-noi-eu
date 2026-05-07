@@ -31,6 +31,13 @@
 - Safety Assist affordance still needs clearer semantic confidence and accidental-press prevention cues.
 - Cross-surface consistency (Home/Local/Travel/B2B/Admin) remains incomplete for global-class perception.
 
+## Strategic Pastel Decision
+- User explicitly approved strategic pastel for VIONA global experience direction.
+- Pastel is defined for universe identity and emotional warmth, not decorative randomness.
+- Text contrast remains high (Ink/Soft Ink-first) to preserve readability and trust.
+- Visual direction explicitly avoids childish, mascot-style, or restaurant-style UI.
+- Next pack AE.1 must encode pastel tokens into `vionaTokens`.
+
 ## Next pack recommendation
 - Recommended next pack: **AE.1 Design System Foundation**.
 - Reason: token-level and component-level standardization is required before further surface redesign (AE.2+) to ensure consistent premium trust feel across universes.
