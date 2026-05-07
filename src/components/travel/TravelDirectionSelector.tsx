@@ -91,10 +91,12 @@ function DirectionCard({ def, selected, onSelect }: DirectionCardProps): ReactEl
         {previewActions.map((a) => (
           <View key={a.labelKey} style={styles.actionRow}>
             <Text style={styles.actionBullet}>•</Text>
-            <Text style={styles.actionText} numberOfLines={2}>
-              {t(a.labelKey)}
-            </Text>
-            <Text style={styles.actionPill}>{t(statusLabelKey(a.itemStatus))}</Text>
+            <View style={styles.actionTextCol}>
+              <Text style={styles.actionText} numberOfLines={2}>
+                {t(a.labelKey)}
+              </Text>
+              <Text style={styles.actionPill}>{t(statusLabelKey(a.itemStatus))}</Text>
+            </View>
           </View>
         ))}
       </View>
@@ -177,13 +179,14 @@ const styles = StyleSheet.create({
   actionList: { marginTop: 10, gap: 6 },
   actionRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   actionBullet: { fontSize: 13, color: MUTE, marginTop: 1 },
-  actionText: { flex: 1, fontSize: 12, fontWeight: '600', color: INK, lineHeight: 16 },
+  actionTextCol: { flex: 1, minWidth: 0, gap: 4 },
+  actionText: { fontSize: 12, fontWeight: '600', color: INK, lineHeight: 16 },
   actionPill: {
     fontSize: 9,
     fontWeight: '800',
     color: '#0B2A66',
     textTransform: 'uppercase',
-    marginTop: 0,
+    alignSelf: 'flex-start',
     backgroundColor: 'rgba(11, 42, 102, 0.12)',
     borderRadius: 8,
     overflow: 'hidden',

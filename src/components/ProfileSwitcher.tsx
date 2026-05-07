@@ -158,8 +158,8 @@ export function ProfileSwitcher({ tabBarLift }: ProfileSwitcherProps): ReactElem
 
   const chipLiftStyle = useMemo(() => {
     if (isDesktopWeb) {
-      /** Below top wallet / tree chips on Home — avoids overlap on wide layouts. */
-      return { top: insets.top + 64, right: Math.max(insets.right, 16) };
+      /** Keep profile chip in header zone on wide layouts. */
+      return { top: insets.top + 36, right: Math.max(insets.right, 16) };
     }
     return { bottom: tabBarLift + Math.max(insets.bottom, 8) };
   }, [isDesktopWeb, insets.bottom, insets.right, insets.top, tabBarLift]);
