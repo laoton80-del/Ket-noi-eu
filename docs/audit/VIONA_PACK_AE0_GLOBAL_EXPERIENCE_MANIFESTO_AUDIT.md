@@ -1,45 +1,36 @@
-# VIONA Pack AE.0 Global Experience Manifesto Audit
+# VIONA Pack AE0 Global Experience Manifesto Audit
 
-## Scope
+## Why docs-only
+- Team needs a single global UX standard before continuing UI implementation.
+- Current visual state improved from Pack AD but still lacks unified global-class system consistency.
+- Docs-first reduces rework risk, avoids ad-hoc styling drift, and aligns execution with blueprint + operating protocol constraints.
 
-- Pack AE.0 is intentionally docs-only.
-- Goal: standardize product feeling, visual hierarchy, trust posture, and acceptance gates before further UI implementation.
+## What was standardized
+- Product feeling and anti-feeling definition for VIONA identity.
+- First-impression standard for 3-second user understanding.
+- Visual direction principles (Global Companion Minimalism).
+- Color and typography direction with usage intent.
+- Shell, Home, Utility Dock, and Safety Assist behavior rules.
+- Universe-specific emotional/action/safety rule set.
+- Surface taxonomy, motion standards, and content guardrails.
+- Visual acceptance gate with grading model.
+- Implementation pack roadmap AE.1 to AE.6.
 
-## Why Docs-Only
-
-- Current UI reset work needs a stable, shared design contract before more code changes.
-- Blueprint and operating protocol require truth-first execution and controlled change scope.
-- A manifesto-first step reduces rework and prevents conflicting visual direction across Home, Local, Travel, Academy, B2B, and Admin.
-
-## What Was Standardized
-
-- Product feeling and anti-pattern list (what VIONA must feel / must not feel).
-- 3-second first-impression standard.
-- Global Companion Minimalism visual direction.
-- Final color and typography direction with usage governance.
-- Shell, Home, Utility Dock, and Safety Assist rules.
-- Universe-specific experience rules for Local, Travel, Academy, and B2B AI Receptionist.
-- Card/surface taxonomy and motion/interaction standards.
-- Content rules for Smart Trio consistency and public brand naming.
-- Visual Acceptance Gate with grading model and release threshold.
-- Implementation roadmap from AE.1 to AE.5.
-
-## Files Added
-
-- `docs/design/VIONA_GLOBAL_EXPERIENCE_MANIFESTO.md`
-- `docs/audit/VIONA_PACK_AE0_GLOBAL_EXPERIENCE_MANIFESTO_AUDIT.md`
-
-## What Code Was Not Changed
-
-- No app code changed.
-- No layout implementation changed.
-- No product logic changed.
+## What code was not changed
+- No app code changes.
+- No layout/logic implementation changes.
 - No payment/booking/wallet/backend/API/Prisma changes.
 - No Twilio activation changes.
 - No route name changes.
-- No feature flag behavior changes.
+- No feature flag changes.
 
-## Next Pack Recommendation
+## Why Pack AD visual is not enough
+- Home now includes Multiverse hierarchy but visual signature is not yet system-level consistent.
+- Shell still shows dashboard-like traces in top band treatment.
+- Utility controls remain visually detached in some states.
+- Safety Assist affordance still needs clearer semantic confidence and accidental-press prevention cues.
+- Cross-surface consistency (Home/Local/Travel/B2B/Admin) remains incomplete for global-class perception.
 
+## Next pack recommendation
 - Recommended next pack: **AE.1 Design System Foundation**.
-- Reason: token-level standardization (color/spacing/typography/elevation/state patterns) is required before AE.2+ visual implementation to keep consistency and reduce regression risk.
+- Reason: token-level and component-level standardization is required before further surface redesign (AE.2+) to ensure consistent premium trust feel across universes.
