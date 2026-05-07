@@ -86,11 +86,11 @@ export function LocalCommerceClarityBlock({
           <View key={c.id} style={styles.capRow}>
             <View style={styles.capTextCol}>
               <Text style={styles.capTitle}>{t(c.titleKey)}</Text>
+              <Text style={styles.capPill}>{t(bookingStatusKey(c.status))}</Text>
               <Text style={styles.capDesc} numberOfLines={1}>
                 {t(c.descriptionKey)}
               </Text>
             </View>
-            <Text style={styles.capPill}>{t(bookingStatusKey(c.status))}</Text>
           </View>
         ))}
       </View>
@@ -147,13 +147,19 @@ const styles = StyleSheet.create({
   capRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 10 },
   capTextCol: { flex: 1, minWidth: 0 },
   capTitle: { fontSize: 12, fontWeight: '800', color: INK },
-  capDesc: { fontSize: 10, fontWeight: '600', color: INK_MUTED, marginTop: 1, lineHeight: 14 },
+  capDesc: { fontSize: 10, fontWeight: '600', color: INK_MUTED, marginTop: 2, lineHeight: 14 },
   capPill: {
-    fontSize: 10,
+    alignSelf: 'flex-start',
+    fontSize: 9,
     fontWeight: '800',
     color: '#0B2A66',
     textTransform: 'uppercase',
     marginTop: 2,
+    backgroundColor: 'rgba(11, 42, 102, 0.1)',
+    borderRadius: 8,
+    overflow: 'hidden',
+    paddingHorizontal: 7,
+    paddingVertical: 2,
   },
   ctaRow: { marginTop: 10, flexDirection: 'row', flexWrap: 'wrap', gap: 7 },
   ctaChip: {
