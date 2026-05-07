@@ -52,19 +52,35 @@ export function LocalCommerceClarityBlock({
     'comingSoon',
     'gated',
   ];
+  const audienceItems = [
+    {
+      title: t('localCommerce.vietnameseAbroadTitle'),
+      subtitle: t('localCommerce.vietnameseAbroadSubtitle'),
+    },
+    {
+      title: t('localCommerce.nativeCustomerTitle'),
+      subtitle: t('localCommerce.nativeCustomerSubtitle'),
+    },
+    {
+      title: t('localCommerce.vietnameseMerchantTitle'),
+      subtitle: t('localCommerce.vietnameseMerchantSubtitle'),
+    },
+  ];
 
   return (
     <VionaCard style={styles.card} surfaceVariant="light">
       <Text style={styles.title}>{t('localCommerce.title')}</Text>
       <Text style={styles.subtitle}>{t('localCommerce.subtitle')}</Text>
 
-      <View style={styles.audienceBlock}>
-        <Text style={styles.audienceTitle}>{t('localCommerce.vietnameseAbroadTitle')}</Text>
-        <Text style={styles.audienceSub} numberOfLines={2}>{t('localCommerce.vietnameseAbroadSubtitle')}</Text>
-        <Text style={styles.audienceTitle}>{t('localCommerce.nativeCustomerTitle')}</Text>
-        <Text style={styles.audienceSub} numberOfLines={2}>{t('localCommerce.nativeCustomerSubtitle')}</Text>
-        <Text style={styles.audienceTitle}>{t('localCommerce.vietnameseMerchantTitle')}</Text>
-        <Text style={styles.audienceSub} numberOfLines={2}>{t('localCommerce.vietnameseMerchantSubtitle')}</Text>
+      <View style={styles.audienceGrid}>
+        {audienceItems.map((item) => (
+          <View key={item.title} style={styles.audienceChip}>
+            <Text style={styles.audienceTitle}>{item.title}</Text>
+            <Text style={styles.audienceSub} numberOfLines={2}>
+              {item.subtitle}
+            </Text>
+          </View>
+        ))}
       </View>
 
       <Text style={styles.trioHint}>{trioLine}</Text>
@@ -127,10 +143,18 @@ const styles = StyleSheet.create({
   card: { marginBottom: 12 },
   title: { fontSize: 17, fontWeight: '900', color: INK },
   subtitle: { marginTop: 5, fontSize: 12, fontWeight: '600', color: INK_MUTED, lineHeight: 17 },
-  audienceBlock: { marginTop: 10, gap: 4 },
-  audienceTitle: { fontSize: 13, fontWeight: '800', color: INK },
-  audienceSub: { fontSize: 11, fontWeight: '600', color: INK_MUTED, lineHeight: 15 },
-  trioHint: { marginTop: 8, fontSize: 11, fontWeight: '600', color: 'rgba(5, 11, 20, 0.5)', lineHeight: 15 },
+  audienceGrid: { marginTop: 10, gap: 8 },
+  audienceChip: {
+    borderRadius: 12,
+    paddingHorizontal: 10,
+    paddingVertical: 9,
+    backgroundColor: 'rgba(255,255,255,0.7)',
+    borderWidth: 1,
+    borderColor: 'rgba(5, 11, 20, 0.08)',
+  },
+  audienceTitle: { fontSize: 12, fontWeight: '800', color: INK },
+  audienceSub: { marginTop: 2, fontSize: 10, fontWeight: '600', color: INK_MUTED, lineHeight: 14 },
+  trioHint: { marginTop: 9, fontSize: 11, fontWeight: '600', color: 'rgba(5, 11, 20, 0.5)', lineHeight: 15 },
   statusScroll: { marginTop: 8, maxHeight: 34 },
   statusRow: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingRight: 8 },
   statusChip: {
