@@ -290,6 +290,8 @@
       "subtitle": "Local life, travel support, learning, and AI assistance — designed for Vietnamese people worldwide.",
       "visualInset": "Photography slot · licensed assets only",
       "visualComingSoon": "Licensed visual coming soon",
+      "visualStoryCaption": "A cinematic visual story will appear here soon.",
+      "heroVisualA11y": "Hero visual area. Only licensed photography will appear when ready.",
       "local": {
         "title": "Local",
         "subtitle": "Community connection, services, daily life."

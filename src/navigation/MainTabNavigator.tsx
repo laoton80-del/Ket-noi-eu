@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { useNavigation, useNavigationState, type NavigationState } from '@react-navigation/native';
+import { useNavigation, useNavigationState } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactElement } from 'react';
 import { Alert, Platform, StyleSheet, useWindowDimensions } from 'react-native';
@@ -32,6 +32,11 @@ import type { RootStackParamList, RootTabParamList } from './routes';
 import { useTranslation } from '../i18n';
 import { MAIN_TAB } from './routes';
 import { MvpSurfaceDisabledScreen } from './mvpSurfaceGate';
+import {
+  fashionHomeHiddenTabBarStyle,
+  isFashionHomeDesktopShell,
+  readFocusedTabRouteFromRootState,
+} from './fashionHomeDesktopShell';
 import { roleTabChrome } from './tabRoleTheme';
 
 import { HomeScreen } from '../screens/HomeScreen';
@@ -55,24 +60,6 @@ import { initiateAITriage, V7_SOS_EMERGENCY_DIAL_BUFFER_MS } from '../services/e
 const Tab = createBottomTabNavigator<RootTabParamList>();
 
 type StackNav = NativeStackNavigationProp<RootStackParamList>;
-
-/** Root stack nests tabs under `Tabs`; `useNavigationState` from MainTabNavigator reads that stack, not tab routes. */
-function readFocusedTabRouteFromRootState(
-  state: NavigationState | undefined
-): keyof RootTabParamList | undefined {
-  if (!state?.routes || state.index == null) return undefined;
-  const rootRoute = state.routes[state.index];
-  if (!rootRoute) return undefined;
-  if (rootRoute.name === 'Tabs') {
-    const inner = rootRoute.state as NavigationState | undefined;
-    if (inner?.routes != null && inner.index != null) {
-      const tabRoute = inner.routes[inner.index];
-      return tabRoute?.name as keyof RootTabParamList | undefined;
-    }
-    return undefined;
-  }
-  return rootRoute.name as keyof RootTabParamList | undefined;
-}
 
 function GatedWalletB2BTab(): ReactElement {
   const { user } = useAuth();
@@ -250,17 +237,25 @@ export function MainTabNavigator(): ReactElement {
 
   const tabBarLift = tabSizing.tabBarBaseHeight + (isDesktopWeb ? Math.max(insets.bottom, 16) : Math.max(insets.bottom, 10)) + 10;
 
-  const suppressHomeFloatingChrome =
-    isDesktopWeb && currentActiveRole === 'B2C' && focusedTabRoute === MAIN_TAB.B2C.home;
+  const fashionHomeDesktopShell = useMemo(
+    () =>
+      isFashionHomeDesktopShell({
+        platform: Platform.OS,
+        windowWidth: width,
+        activeRole: currentActiveRole,
+        focusedTabRoute,
+      }),
+    [currentActiveRole, focusedTabRoute, width]
+  );
 
   useEffect(() => {
-    if (!suppressHomeFloatingChrome) setLanguageSheetOpen(false);
-  }, [suppressHomeFloatingChrome]);
+    if (!fashionHomeDesktopShell) setLanguageSheetOpen(false);
+  }, [fashionHomeDesktopShell]);
 
   const b2cDesktopBottomTabs = isDesktopWeb && currentActiveRole === 'B2C';
   const tabBarPosition = b2cDesktopBottomTabs ? 'bottom' : isDesktopWeb ? 'left' : 'bottom';
 
-  const b2cHomeDesktopScene = suppressHomeFloatingChrome;
+  const b2cHomeDesktopScene = fashionHomeDesktopShell;
   const sceneTopPadding = !isDesktopWeb
     ? 0
     : b2cHomeDesktopScene
@@ -417,7 +412,7 @@ export function MainTabNavigator(): ReactElement {
                     paddingTop: 8,
                   },
               tabBarPosition === 'left' && styles.tabBarDesktop,
-              suppressHomeFloatingChrome && styles.tabBarHiddenHomeDesktop,
+              fashionHomeDesktopShell && fashionHomeHiddenTabBarStyle,
             ],
             sceneStyle: {
               backgroundColor: chrome.barBg,
@@ -442,7 +437,10 @@ export function MainTabNavigator(): ReactElement {
               <Tab.Screen
                 name={MAIN_TAB.B2C.home}
                 component={HomeScreen}
-                options={{ title: t('home.tabHub') }}
+                options={{
+                  title: t('home.tabHub'),
+                  tabBarStyle: fashionHomeDesktopShell ? fashionHomeHiddenTabBarStyle : undefined,
+                }}
               />
             ) : null}
             {flags.localEnabled ? (
@@ -529,10 +527,10 @@ export function MainTabNavigator(): ReactElement {
       <ProfileSwitcher
         ref={profileSwitcherRef}
         tabBarLift={tabBarLift}
-        suppressFloatingChrome={suppressHomeFloatingChrome}
+        suppressFloatingChrome={fashionHomeDesktopShell}
       />
 
-      {suppressHomeFloatingChrome ? (
+      {fashionHomeDesktopShell ? (
         <SmartTrioLanguageSheet
           visible={languageSheetOpen}
           onClose={() => setLanguageSheetOpen(false)}
@@ -541,7 +539,7 @@ export function MainTabNavigator(): ReactElement {
 
       {showGlobalLifelineSos ? (
         <>
-          {!suppressHomeFloatingChrome ? (
+          {!fashionHomeDesktopShell ? (
             <SOSFloatingButton tabBarLift={tabBarLift} onHoldComplete={onSosHoldComplete} />
           ) : null}
           <SOSModal
@@ -608,18 +606,5 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     shadowOffset: { width: 2, height: 0 },
     elevation: 2,
-  },
-  /** B2C Home desktop: fashion-tech command bar is primary nav — hide bottom tabs without unmounting routes. */
-  tabBarHiddenHomeDesktop: {
-    display: 'none',
-    height: 0,
-    minHeight: 0,
-    overflow: 'hidden',
-    opacity: 0,
-    paddingTop: 0,
-    paddingBottom: 0,
-    borderTopWidth: 0,
-    elevation: 0,
-    shadowOpacity: 0,
   },
 });

@@ -50,12 +50,16 @@
 | File | Purpose |
 |------|---------|
 | `src/context/HomeCommandContext.tsx` | Command-bar actions (language sheet, Safety Assist, account, role picker) |
-| `src/navigation/MainTabNavigator.tsx` | B2C desktop bottom tabs; scene padding; provider; SOS FAB hide on Home desktop; lifted language sheet |
-| `src/components/ProfileSwitcher.tsx` | `suppressFloatingChrome` + imperative handle for account/role |
+| `src/navigation/fashionHomeDesktopShell.ts` | **AE.3.2** — `isFashionHomeDesktopShell`, union `readFocusedTabRouteFromRootState`, shared tab-bar hide style |
+| `src/navigation/MainTabNavigator.tsx` | B2C desktop bottom tabs; scene padding; provider; SOS FAB hide on Home desktop; lifted language sheet; **AE.3.2** fashion shell + Home `tabBarStyle` |
+| `src/components/ProfileSwitcher.tsx` | `suppressFloatingChrome` + imperative handle; **AE.3.2** defensive fashion-shell merge |
+| `src/components/smartTrio/SmartTrioLanguageChip.tsx` | **AE.3.2** — `suppressFloating` early exit for floating chip |
+| `src/components/SOSFloatingButton.tsx` | **AE.3.2** — hard hide when fashion shell matches |
 | `src/components/viona/VionaFashionHomeCommandBar.tsx` | Fashion-Tech top command shell |
 | `src/components/viona/VionaFashionWorldCard.tsx` | Dark editorial universe cards |
 | `src/components/viona/index.ts` | Exports |
-| `src/screens/HomeScreen.tsx` | Fashion hero, cards, desktop command integration, trust strip tweak |
+| `src/screens/HomeScreen.tsx` | Fashion hero, cards, desktop command integration, trust strip tweak; **AE.3.2** shell width, hero caption, horizontal card rail |
+| `src/screens/b2c/SOSModal.tsx` | **AE.3.2** — Fashion-Tech visual polish (no flow change) |
 | `src/design/vionaTokens.ts` | `fashionTech` token group |
 | `src/i18n/locales/en.json` | `shell.*`, `home.fashionTech.*` |
 | `src/i18n/locales/vi.json` | Same |
@@ -79,14 +83,14 @@
 
 | Command | Result |
 |---------|--------|
-| `npm ci` | PASS (May 2026 — retry after `Stop-Process node` fixed Windows EPERM on `lightningcss.win32-x64-msvc.node`) |
+| `npm ci` | PASS (May 2026 — retry after `Stop-Process node` fixed Windows EPERM on `lightningcss.win32-x64-msvc.node`; AE.3.2 re-run same) |
 | `npm run typecheck` | PASS |
 | `npm run lint` | PASS (warnings only, pre-existing + resolved unused helper warning in `MainTabNavigator`) |
 | `npm run ci:release-discipline` | PASS |
 | `npm run brand:i18n-readiness` | PASS (allowlisted warnings) |
 | `npm run design:readiness` | PASS |
 
-Web smoke (`npx expo start --web --clear`, then `curl.exe`): **`GET /home`** → **200** `text/html`; dev **`index.ts.bundle?platform=web…`** → **200** `application/javascript`; no **500** / no **`application/json`** shell for those URLs.
+Web smoke (`npx expo start --web --clear`, then `curl.exe`): **`GET /home`** → **200** `text/html`; dev **`index.ts.bundle?platform=web…`** → **200** `application/javascript`; no **500** / no **`application/json`** shell for those URLs. *(AE.3.2: no dev server bound in this session — re-run `expo start --web` locally to reconfirm curl.)*
 
 ## AE.3.1 Visual QA Fix
 
@@ -108,6 +112,44 @@ Web smoke (`npx expo start --web --clear`, then `curl.exe`): **`GET /home`** →
 
 **Additional files touched (AE.3.1):** `MainTabNavigator.tsx`, `HomeScreen.tsx`, `VionaFashionHomeCommandBar.tsx`, `en.json` / `vi.json`, this audit.
 
+## AE.3.2 Hard Legacy Chrome Suppression
+
+**Post–AE.3.1 QA still showed:** floating Account, floating Language & Market chip, red SOS orb, bottom tab clipping world cards, command bar feeling “card-like”, hero slot still reading as **technical/debug** copy, SOS sheet visually gray.
+
+**Exact render paths (code-verified):**
+
+| # | UI element | Component / path |
+|---|------------|-------------------|
+| 1 | Floating Account (single-role users) | `ProfileSwitcher` → `Pressable` `styles.singleChip` when `!canSwitch` |
+| 2 | Floating Account / role chip (multi-role) | `ProfileSwitcher` → `Pressable` `styles.chip` when `canSwitch` |
+| 3 | Floating Language & Market | `SmartTrioLanguageChip` `placement="floating"` from `ProfileSwitcher` (single-role branch) **and** each chip mounts `SmartTrioLanguageSheet` internally |
+| 4 | Red SOS orb | `MainTabNavigator` → `SOSFloatingButton` → `SOSShieldComponent` |
+| 5 | Bottom tab bar | `@react-navigation/bottom-tabs` `Tab.Navigator` `tabBarStyle` / `tabBarPosition` (`MainTabNavigator`) |
+
+**Why suppression could still fail after AE.3.1:** `useNavigationState` may deliver **either** the **root stack** state (active route `Tabs` + nested tab index) **or** the **tab navigator** state (active route `TabHome`, …) depending on subscription scope. AE.3.1 only normalized the stack-nested case; without a **union** reader, `focusedTabRoute` could stay wrong → `suppressFloatingChrome` false. Separately, **web** tab bar hiding is more reliable when **`Tab.Screen` (Home) sets `tabBarStyle`** on focus, not only global `screenOptions`.
+
+**Shared predicate (single source of truth):** `src/navigation/fashionHomeDesktopShell.ts`
+
+- `readFocusedTabRouteFromRootState` — union of tab-first + `Tabs`→nested.
+- `isFashionHomeDesktopShell({ platform, windowWidth, activeRole, focusedTabRoute })` — web + width ≥ `FASHION_HOME_DESKTOP_MIN_WIDTH` (769) + B2C + `TabHome`.
+- `fashionHomeHiddenTabBarStyle` — shared hide fragment for tab bar.
+
+**Hard suppressions:**
+
+- `MainTabNavigator` — `fashionHomeDesktopShell` from helper; `tabBarStyle` merge + **Home** `options.tabBarStyle`; `ProfileSwitcher` / language sheet / SOS FAB gated.
+- `ProfileSwitcher` — `hideLegacyFloatingChrome = suppressFloatingChrome || localFashionShell` (local uses same helper + `readFocusedTabRouteFromRootState`).
+- `SmartTrioLanguageChip` — `suppressFloating` + early `return null` for floating placement.
+- `SOSFloatingButton` — early `return null` when local fashion shell matches (belt-and-suspenders with parent).
+
+**Home / hero / cards / modal:**
+
+- Wider `layout.shellWidth` when fashion shell; command bar `width: '100%'`.
+- Hero: visible copy = `home.fashionTech.visualStoryCaption` only; policy line lives in `heroVisualA11y` for screen readers.
+- Cards: horizontal `ScrollView` rail when fashion shell and `720 ≤ width < 1420`.
+- `SOSModal` — Fashion-Tech contrast (champagne border, richer sheet, row chrome, pill dismiss) — **no API / flow / semantics changes**.
+
+**Files touched (AE.3.2):** `fashionHomeDesktopShell.ts` (new), `MainTabNavigator.tsx`, `ProfileSwitcher.tsx`, `SmartTrioLanguageChip.tsx`, `SOSFloatingButton.tsx`, `HomeScreen.tsx`, `VionaFashionHomeCommandBar.tsx`, `SOSModal.tsx`, `en.json`, `vi.json`, this audit.
+
 ## 9. Visual Acceptance Checklist
 
 | Check | Result |
@@ -125,6 +167,12 @@ Web smoke (`npx expo start --web --clear`, then `curl.exe`): **`GET /home`** →
 | Command bar reads as global shell (not floating card) | Pass |
 | Hero placeholder feels cinematic (not empty black) | Pass |
 | Card row not clipped by bottom chrome | Pass |
+| AE.3.2: dual navigation state union for tab focus | Pass |
+| AE.3.2: Home `Tab.Screen` tabBarStyle hide on web | Pass |
+| AE.3.2: defensive floating chrome + SOS orb suppression | Pass |
+| AE.3.2: hero caption non-technical (policy in a11y only) | Pass |
+| AE.3.2: horizontal card rail mid-width desktop | Pass |
+| AE.3.2: SOS modal Fashion-Tech polish | Pass |
 
 ## 10. Drift Report
 

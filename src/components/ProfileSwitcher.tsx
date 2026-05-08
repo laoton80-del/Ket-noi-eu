@@ -2,7 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { BlurView } from 'expo-blur';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useNavigationState } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import {
   forwardRef,
@@ -29,6 +29,10 @@ import type { ActiveRole } from '../store/userStore';
 import { useTranslation } from '../i18n';
 import { SmartTrioLanguageChip } from './smartTrio/SmartTrioLanguageChip';
 import { ACTIVE_ROLE_LABEL, useUserStore } from '../store/userStore';
+import {
+  isFashionHomeDesktopShell,
+  readFocusedTabRouteFromRootState,
+} from '../navigation/fashionHomeDesktopShell';
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
 
@@ -84,6 +88,18 @@ export const ProfileSwitcher = forwardRef<ProfileSwitcherHandle, ProfileSwitcher
 
   const allowedRoles = useUserStore((s) => s.allowedRoles);
   const currentActiveRole = useUserStore((s) => s.currentActiveRole);
+  const focusedTabRoute = useNavigationState(readFocusedTabRouteFromRootState);
+  const fashionHomeDesktopShellLocal = useMemo(
+    () =>
+      isFashionHomeDesktopShell({
+        platform: Platform.OS,
+        windowWidth: width,
+        activeRole: currentActiveRole,
+        focusedTabRoute,
+      }),
+    [currentActiveRole, focusedTabRoute, width]
+  );
+  const hideLegacyFloatingChrome = suppressFloatingChrome || fashionHomeDesktopShellLocal;
   const switchRole = useUserStore((s) => s.switchRole);
   const hasSeenMerchantVigPrompt = useUserStore((s) => s.hasSeenMerchantVigPrompt);
   const hasSeenBrokerVigPrompt = useUserStore((s) => s.hasSeenBrokerVigPrompt);
@@ -201,16 +217,12 @@ export const ProfileSwitcher = forwardRef<ProfileSwitcherHandle, ProfileSwitcher
   const singleAccountLabel = narrowProfileChip ? t('home.accountChipShort') : t('home.accountChip');
 
   if (!canSwitch) {
-    if (suppressFloatingChrome) {
+    if (hideLegacyFloatingChrome) {
       return null;
     }
     return (
       <>
-        <SmartTrioLanguageChip
-          tabBarLift={tabBarLift}
-          placement="floating"
-          isDesktopWeb={isDesktopWeb}
-        />
+        <SmartTrioLanguageChip tabBarLift={tabBarLift} placement="floating" isDesktopWeb={isDesktopWeb} />
         <Pressable
           onPress={() => {
             triggerHaptic();

@@ -45,6 +45,7 @@ import { getVioPointsLabel } from '../core/monetization/vioDisplayLabels';
 import { getPersonaDisplayName } from '../config/aiPrompts';
 import { useAuth } from '../context/AuthContext';
 import { MVP_B2B_AI_RECEPTIONIST_DEMO_OFF_MSG } from '../navigation/mvpSurfaceGate';
+import { isFashionHomeDesktopShell } from '../navigation/fashionHomeDesktopShell';
 import { MAIN_TAB, type RootStackParamList } from '../navigation/routes';
 import { vionaTokens } from '../design';
 import { getRestApiJwt, isRestApiConfigured } from '../services/apiClient';
@@ -55,6 +56,7 @@ import { STORAGE_KEYS } from '../storage/storageKeys';
 import { theme } from '../theme/theme';
 import { FontFamily } from '../theme/typography';
 import { useTranslation } from '../i18n';
+import { useUserStore } from '../store/userStore';
 import { DashboardB2CScreen } from './b2c/DashboardB2CScreen';
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
@@ -92,7 +94,11 @@ function FashionTechHeroVisualSlot(): ReactElement {
   );
 
   return (
-    <View style={styles.ftVisualPanel}>
+    <View
+      style={styles.ftVisualPanel}
+      accessibilityRole="image"
+      accessibilityLabel={t('home.fashionTech.heroVisualA11y')}
+    >
       <LinearGradient
         colors={[...vionaTokens.fashionTech.visualPanelGradient]}
         start={{ x: 0, y: 0 }}
@@ -126,8 +132,7 @@ function FashionTechHeroVisualSlot(): ReactElement {
         ))}
       </View>
       <View style={styles.ftVisualCopy}>
-        <Text style={styles.ftVisualPolicy}>{t('home.fashionTech.visualInset')}</Text>
-        <Text style={styles.ftVisualSoon}>{t('home.fashionTech.visualComingSoon')}</Text>
+        <Text style={styles.ftVisualCaption}>{t('home.fashionTech.visualStoryCaption')}</Text>
       </View>
     </View>
   );
@@ -243,6 +248,18 @@ export function HomeScreen() {
   }, [isTourist, t]);
 
   const isDesktopWeb = Platform.OS === 'web' && width > 768;
+  const currentActiveRole = useUserStore((s) => s.currentActiveRole);
+  const fashionHomeDesktopShellActive = useMemo(
+    () =>
+      isFashionHomeDesktopShell({
+        platform: Platform.OS,
+        windowWidth: width,
+        activeRole: currentActiveRole,
+        focusedTabRoute: MAIN_TAB.B2C.home,
+      }),
+    [currentActiveRole, width]
+  );
+  const useFashionCardHorizontalRail = fashionHomeDesktopShellActive && width < 1420 && width >= 720;
 
   const walletChipLabel = useMemo(() => {
     const n = wallet.credits;
@@ -251,18 +268,27 @@ export function HomeScreen() {
   }, [t, wallet.credits, width]);
 
   const layout = useMemo(() => {
-    const maxShell = width > 1280 ? 860 : 760;
+    const maxShell = fashionHomeDesktopShellActive
+      ? width > 1500
+        ? 1240
+        : width > 1200
+          ? 1100
+          : 980
+      : width > 1280
+        ? 860
+        : 760;
     const shellWidth = Math.min(width, maxShell);
     const pad = theme.spacing.lg;
     const inner = shellWidth - pad * 2;
     return { shellWidth, pad, inner };
-  }, [width]);
+  }, [fashionHomeDesktopShellActive, width]);
 
   const insets = useSafeAreaInsets();
   const scrollBottomPad = useMemo(() => {
     if (!isDesktopWeb) return 140;
+    if (fashionHomeDesktopShellActive) return Math.max(insets.bottom, 20) + 56;
     return Math.max(insets.bottom, 16) + 48;
-  }, [isDesktopWeb, insets.bottom]);
+  }, [fashionHomeDesktopShellActive, isDesktopWeb, insets.bottom]);
 
   const creditPillMax = useMemo(() => Math.min(width * 0.9, 300), [width]);
 
@@ -405,10 +431,7 @@ export function HomeScreen() {
       {isDesktopWeb && homeCommand ? (
         <View style={[styles.fashionShellOuter, { paddingTop: insets.top }]}>
           <View
-            style={[
-              styles.fashionShellInner,
-              { maxWidth: layout.shellWidth, paddingHorizontal: layout.pad },
-            ]}
+            style={[styles.fashionShellInner, { width: '100%', maxWidth: layout.shellWidth, paddingHorizontal: layout.pad }]}
           >
             <VionaFashionHomeCommandBar
               onPressLogo={scrollToTop}
@@ -461,61 +484,117 @@ export function HomeScreen() {
               {width >= 720 ? <FashionTechHeroVisualSlot /> : null}
             </View>
 
-            <View
-              style={[
-                styles.ftCardGrid,
-                {
-                  flexDirection: width >= 1100 ? 'row' : width >= 560 ? 'row' : 'column',
-                  flexWrap: width >= 1100 ? 'nowrap' : 'wrap',
-                },
-              ]}
-            >
-              <View style={[styles.ftCardCell, width >= 1100 && styles.ftCardCellQuarter]}>
-                <VionaFashionWorldCard
-                  accent="local"
-                  title={t('home.fashionTech.local.title')}
-                  subtitle={t('home.fashionTech.local.subtitle')}
-                  icon={<Ionicons name="grid-outline" size={22} color={vionaTokens.fashionTech.champagne} />}
-                  status={{ label: t('home.worldStage.local.status'), tone: 'lite' }}
-                  onPress={goUniverseLocal}
-                />
+            {useFashionCardHorizontalRail ? (
+              <ScrollView
+                horizontal
+                nestedScrollEnabled
+                showsHorizontalScrollIndicator
+                style={styles.ftCardRailScrollOuter}
+                contentContainerStyle={styles.ftCardRailContent}
+              >
+                <View style={styles.ftCardRailCell}>
+                  <VionaFashionWorldCard
+                    accent="local"
+                    title={t('home.fashionTech.local.title')}
+                    subtitle={t('home.fashionTech.local.subtitle')}
+                    icon={<Ionicons name="grid-outline" size={22} color={vionaTokens.fashionTech.champagne} />}
+                    status={{ label: t('home.worldStage.local.status'), tone: 'lite' }}
+                    onPress={goUniverseLocal}
+                  />
+                </View>
+                <View style={styles.ftCardRailCell}>
+                  <VionaFashionWorldCard
+                    accent="travel"
+                    title={t('home.fashionTech.travel.title')}
+                    subtitle={t('home.fashionTech.travel.subtitle')}
+                    icon={<Ionicons name="airplane-outline" size={22} color={vionaTokens.fashionTech.champagne} />}
+                    status={
+                      featureFlags.travelEnabled
+                        ? { label: t('home.worldStage.travel.status'), tone: 'pilot' }
+                        : { label: t('home.worldStage.travel.statusComingSoon'), tone: 'comingSoon' }
+                    }
+                    onPress={featureFlags.travelEnabled ? goUniverseTravel : undefined}
+                    disabled={!featureFlags.travelEnabled}
+                  />
+                </View>
+                <View style={styles.ftCardRailCell}>
+                  <VionaFashionWorldCard
+                    accent="academy"
+                    title={t('home.fashionTech.academy.title')}
+                    subtitle={t('home.fashionTech.academy.subtitle')}
+                    icon={<Ionicons name="sparkles-outline" size={22} color={vionaTokens.fashionTech.champagne} />}
+                    status={{ label: t('home.worldStage.academy.status'), tone: 'demo' }}
+                    onPress={goUniverseAcademy}
+                  />
+                </View>
+                <View style={styles.ftCardRailCell}>
+                  <VionaFashionWorldCard
+                    accent="care"
+                    title={t('home.fashionTech.care.title')}
+                    subtitle={t('home.fashionTech.care.subtitle')}
+                    icon={<Ionicons name="heart-outline" size={22} color={vionaTokens.fashionTech.champagne} />}
+                    status={{ label: t('home.impact.kicker'), tone: 'safe' }}
+                    onPress={scrollToCareSection}
+                  />
+                </View>
+              </ScrollView>
+            ) : (
+              <View
+                style={[
+                  styles.ftCardGrid,
+                  {
+                    flexDirection: width >= 1100 ? 'row' : width >= 560 ? 'row' : 'column',
+                    flexWrap: width >= 1100 ? 'nowrap' : 'wrap',
+                  },
+                ]}
+              >
+                <View style={[styles.ftCardCell, width >= 1100 && styles.ftCardCellQuarter]}>
+                  <VionaFashionWorldCard
+                    accent="local"
+                    title={t('home.fashionTech.local.title')}
+                    subtitle={t('home.fashionTech.local.subtitle')}
+                    icon={<Ionicons name="grid-outline" size={22} color={vionaTokens.fashionTech.champagne} />}
+                    status={{ label: t('home.worldStage.local.status'), tone: 'lite' }}
+                    onPress={goUniverseLocal}
+                  />
+                </View>
+                <View style={[styles.ftCardCell, width >= 1100 && styles.ftCardCellQuarter]}>
+                  <VionaFashionWorldCard
+                    accent="travel"
+                    title={t('home.fashionTech.travel.title')}
+                    subtitle={t('home.fashionTech.travel.subtitle')}
+                    icon={<Ionicons name="airplane-outline" size={22} color={vionaTokens.fashionTech.champagne} />}
+                    status={
+                      featureFlags.travelEnabled
+                        ? { label: t('home.worldStage.travel.status'), tone: 'pilot' }
+                        : { label: t('home.worldStage.travel.statusComingSoon'), tone: 'comingSoon' }
+                    }
+                    onPress={featureFlags.travelEnabled ? goUniverseTravel : undefined}
+                    disabled={!featureFlags.travelEnabled}
+                  />
+                </View>
+                <View style={[styles.ftCardCell, width >= 1100 && styles.ftCardCellQuarter]}>
+                  <VionaFashionWorldCard
+                    accent="academy"
+                    title={t('home.fashionTech.academy.title')}
+                    subtitle={t('home.fashionTech.academy.subtitle')}
+                    icon={<Ionicons name="sparkles-outline" size={22} color={vionaTokens.fashionTech.champagne} />}
+                    status={{ label: t('home.worldStage.academy.status'), tone: 'demo' }}
+                    onPress={goUniverseAcademy}
+                  />
+                </View>
+                <View style={[styles.ftCardCell, width >= 1100 && styles.ftCardCellQuarter]}>
+                  <VionaFashionWorldCard
+                    accent="care"
+                    title={t('home.fashionTech.care.title')}
+                    subtitle={t('home.fashionTech.care.subtitle')}
+                    icon={<Ionicons name="heart-outline" size={22} color={vionaTokens.fashionTech.champagne} />}
+                    status={{ label: t('home.impact.kicker'), tone: 'safe' }}
+                    onPress={scrollToCareSection}
+                  />
+                </View>
               </View>
-              <View style={[styles.ftCardCell, width >= 1100 && styles.ftCardCellQuarter]}>
-                <VionaFashionWorldCard
-                  accent="travel"
-                  title={t('home.fashionTech.travel.title')}
-                  subtitle={t('home.fashionTech.travel.subtitle')}
-                  icon={<Ionicons name="airplane-outline" size={22} color={vionaTokens.fashionTech.champagne} />}
-                  status={
-                    featureFlags.travelEnabled
-                      ? { label: t('home.worldStage.travel.status'), tone: 'pilot' }
-                      : { label: t('home.worldStage.travel.statusComingSoon'), tone: 'comingSoon' }
-                  }
-                  onPress={featureFlags.travelEnabled ? goUniverseTravel : undefined}
-                  disabled={!featureFlags.travelEnabled}
-                />
-              </View>
-              <View style={[styles.ftCardCell, width >= 1100 && styles.ftCardCellQuarter]}>
-                <VionaFashionWorldCard
-                  accent="academy"
-                  title={t('home.fashionTech.academy.title')}
-                  subtitle={t('home.fashionTech.academy.subtitle')}
-                  icon={<Ionicons name="sparkles-outline" size={22} color={vionaTokens.fashionTech.champagne} />}
-                  status={{ label: t('home.worldStage.academy.status'), tone: 'demo' }}
-                  onPress={goUniverseAcademy}
-                />
-              </View>
-              <View style={[styles.ftCardCell, width >= 1100 && styles.ftCardCellQuarter]}>
-                <VionaFashionWorldCard
-                  accent="care"
-                  title={t('home.fashionTech.care.title')}
-                  subtitle={t('home.fashionTech.care.subtitle')}
-                  icon={<Ionicons name="heart-outline" size={22} color={vionaTokens.fashionTech.champagne} />}
-                  status={{ label: t('home.impact.kicker'), tone: 'safe' }}
-                  onPress={scrollToCareSection}
-                />
-              </View>
-            </View>
+            )}
           </LinearGradient>
         </View>
 
@@ -819,6 +898,7 @@ const styles = StyleSheet.create({
   fashionShellInner: {
     width: '100%',
     alignSelf: 'center',
+    maxWidth: '100%',
   },
   container: {
     flex: 1,
@@ -915,22 +995,34 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   ftVisualCopy: {
-    padding: vionaTokens.spacing[16],
-    gap: vionaTokens.spacing[8],
-    backgroundColor: 'rgba(5, 8, 12, 0.45)',
+    paddingVertical: vionaTokens.spacing[12],
+    paddingHorizontal: vionaTokens.spacing[16],
+    backgroundColor: 'rgba(5, 8, 12, 0.38)',
+    alignItems: 'center',
   },
-  ftVisualPolicy: {
-    fontSize: 10,
-    letterSpacing: 1,
-    textTransform: 'uppercase',
-    color: vionaTokens.fashionTech.mutedOnDark,
-    fontFamily: FontFamily.semibold,
-  },
-  ftVisualSoon: {
+  ftVisualCaption: {
     fontSize: 13,
-    lineHeight: 18,
+    lineHeight: 20,
     color: vionaTokens.fashionTech.champagneMuted,
     fontFamily: FontFamily.medium,
+    textAlign: 'center',
+    maxWidth: 280,
+  },
+  ftCardRailScrollOuter: {
+    marginTop: vionaTokens.spacing[32],
+    marginHorizontal: -vionaTokens.spacing[4],
+    paddingBottom: vionaTokens.spacing[12],
+  },
+  ftCardRailContent: {
+    flexDirection: 'row',
+    alignItems: 'stretch',
+    gap: vionaTokens.spacing[12],
+    paddingRight: vionaTokens.spacing[16],
+    paddingBottom: vionaTokens.spacing[8],
+  },
+  ftCardRailCell: {
+    width: 276,
+    flexShrink: 0,
   },
   ftCardGrid: {
     gap: vionaTokens.spacing[12],

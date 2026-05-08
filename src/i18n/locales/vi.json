@@ -290,6 +290,8 @@
       "subtitle": "Đời sống, du lịch, học tập và AI support — thiết kế cho người Việt ở khắp thế giới.",
       "visualInset": "Khung ảnh · chỉ dùng asset có license",
       "visualComingSoon": "Hình ảnh có license — sắp ra mắt",
+      "visualStoryCaption": "Câu chuyện hình ảnh được tuyển chọn sẽ xuất hiện tại đây.",
+      "heroVisualA11y": "Khu vực hình hero. Chỉ dùng ảnh có license khi sẵn sàng.",
       "local": {
         "title": "Local",
         "subtitle": "Kết nối cộng đồng, dịch vụ, đời sống hằng ngày."

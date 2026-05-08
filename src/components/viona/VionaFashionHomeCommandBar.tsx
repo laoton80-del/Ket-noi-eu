@@ -102,6 +102,8 @@ export function VionaFashionHomeCommandBar({
 const styles = StyleSheet.create({
   /** Top shell row — background comes from parent `HomeScreen` fashion shell; no “floating card”. */
   bar: {
+    width: '100%',
+    alignSelf: 'stretch',
     flexDirection: 'row',
     flexWrap: 'wrap',
     alignItems: 'center',
