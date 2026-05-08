@@ -304,6 +304,10 @@
         "title": "Academy",
         "subtitle": "Family learning, AI practice, future skills."
       },
+      "business": {
+        "title": "Business",
+        "subtitle": "AI receptionist, customer requests, and merchant growth."
+      },
       "care": {
         "title": "Care Heart Fund",
         "subtitle": "Human care, warmth, and community impact."
@@ -312,7 +316,8 @@
     "impact": {
       "kicker": "Impact by VIONA",
       "title": "Care Heart Fund",
-      "subtitle": "Warm impact — secondary to your daily universes."
+      "subtitle": "Warm impact — secondary to your daily universes.",
+      "stripCta": "View impact details"
     },
     "trustStripHint": "Pilot-safe surfaces · Honest status · VIO lives in your wallet hub",
     "walletLoadingA11y": "Loading wallet balance",

@@ -6,7 +6,7 @@ import { vionaTokens } from '../../design';
 import { FontFamily } from '../../theme/typography';
 import { VionaStatusPill } from './VionaStatusPill';
 
-type FashionAccent = 'local' | 'travel' | 'academy' | 'care';
+type FashionAccent = 'local' | 'travel' | 'academy' | 'business' | 'care';
 
 type FashionStatusTone = 'lite' | 'pilot' | 'demo' | 'comingSoon' | 'safe';
 
@@ -14,6 +14,7 @@ const GRADIENTS: Readonly<Record<FashionAccent, readonly [string, string, string
   local: [vionaTokens.fashionTech.worlds.local[0], vionaTokens.fashionTech.worlds.local[1], vionaTokens.fashionTech.worlds.local[2]],
   travel: [vionaTokens.fashionTech.worlds.travel[0], vionaTokens.fashionTech.worlds.travel[1], vionaTokens.fashionTech.worlds.travel[2]],
   academy: [vionaTokens.fashionTech.worlds.academy[0], vionaTokens.fashionTech.worlds.academy[1], vionaTokens.fashionTech.worlds.academy[2]],
+  business: [vionaTokens.fashionTech.worlds.business[0], vionaTokens.fashionTech.worlds.business[1], vionaTokens.fashionTech.worlds.business[2]],
   care: [vionaTokens.fashionTech.worlds.care[0], vionaTokens.fashionTech.worlds.care[1], vionaTokens.fashionTech.worlds.care[2]],
 };
 

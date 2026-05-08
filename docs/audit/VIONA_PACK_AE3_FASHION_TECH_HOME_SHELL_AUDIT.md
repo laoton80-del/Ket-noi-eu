@@ -2,7 +2,7 @@
 
 ## 1. Summary
 
-- **What changed:** B2C Hub (`HomeScreen`) now uses a **Fashion-Tech Human Constellation** hero (dark editorial shell, champagne accents, abstract visual slot), a **four-world card row** (Local, Travel, Academy, Care Heart Fund), and **desktop web** gains a **top command bar** (VIONA + mini navigation + Language / VIO Credits / Safety Assist / Account). The left vertical tab rail for **B2C desktop** moves to the **bottom** so the first impression is hero-first, not dashboard-sidebar. Floating ProfileSwitcher / Smart Trio chips are suppressed on **B2C Home desktop** in favor of the command bar; **Safety Assist** uses the existing SOS triage flow (`triggerSafetyAssist`) without the red floating orb on that surface.
+- **What changed:** B2C Hub (`HomeScreen`) now uses a **Fashion-Tech Human Constellation** hero (dark editorial shell, champagne accents, abstract visual slot), a **four-world card row** (Local, Travel, Academy, Business), and **desktop web** gains a **top command bar** (VIONA + mini navigation + Language / VIO Credits / Safety Assist / Account). The left vertical tab rail for **B2C desktop** moves to the **bottom** so the first impression is hero-first, not dashboard-sidebar. Floating ProfileSwitcher / Smart Trio chips are suppressed on **B2C Home desktop** in favor of the command bar; **Safety Assist** uses the existing SOS triage flow (`triggerSafetyAssist`) without the red floating orb on that surface.
 - **Why AE.2 needed stronger visual direction:** AE.2 established honest hierarchy and World Stage cards but read “lite pastel flagship,” not enough cinematic premium or Fashion-Tech soul for the flagship Hub entry.
 - **Why Fashion-Tech Human Constellation was selected:** Aligns with blueprint positioning (global Vietnamese companion OS), premium trust, and distinct differentiation from generic dashboards — without inventing new product claims.
 
@@ -41,7 +41,7 @@
 | Safety Assist / SOS | Red orb FAB reads “mystery SOS” on Hub | Hidden on B2C Home desktop; labeled Safety Assist in bar |
 | Home hero | Pastel World Stage | Fashion-Tech dark hero + visual slot |
 | Local / Travel / Academy cards | Pastel World Stage cards | Dark gradient Fashion-Tech cards |
-| Care Heart Fund | Secondary widget only | Fourth card + scroll to existing widget |
+| Care Heart Fund | Previously a primary card | Secondary impact strip + existing widget |
 | i18n | World Stage strings only | Added `home.fashionTech.*`, `shell.utility.*` (en/vi) |
 | Asset policy | Implicit | Documented asset slot + licensing note |
 
@@ -150,6 +150,13 @@ Web smoke (`npx expo start --web --clear`, then `curl.exe`): **`GET /home`** →
 
 **Files touched (AE.3.2):** `fashionHomeDesktopShell.ts` (new), `MainTabNavigator.tsx`, `ProfileSwitcher.tsx`, `SmartTrioLanguageChip.tsx`, `SOSFloatingButton.tsx`, `HomeScreen.tsx`, `VionaFashionHomeCommandBar.tsx`, `SOSModal.tsx`, `en.json`, `vi.json`, this audit.
 
+## AF.0 Business Pillar Promotion
+
+- Promoted **Business** to primary world card (Local / Travel / Academy / Business) on both desktop card layouts.
+- Added optional **Business** top-shell nav item only when a safe handler exists; wired to existing route path (`B2BPaywall` fallback, `Tabs/TabMerchant` when access is available).
+- Moved **Care Heart Fund** to a smaller **secondary impact strip** below primary worlds and kept the existing `CharityWidget` section.
+- Kept all guardrails: UI/layout/i18n only, no route renames, no feature-flag changes, and no production readiness claims.
+
 ## 9. Visual Acceptance Checklist
 
 | Check | Result |
@@ -160,8 +167,8 @@ Web smoke (`npx expo start --web --clear`, then `curl.exe`): **`GET /home`** →
 | Safety Assist labeled | Pass |
 | No red mystery SOS on Home desktop | Pass |
 | Fashion-Tech hero visible | Pass |
-| Local/Travel/Academy/Care cards visible | Pass |
-| Care remains secondary | Pass (fourth card + widget, no donation claims) |
+| Local/Travel/Academy/Business cards visible | Pass |
+| Care remains secondary | Pass (impact strip + widget, no donation claims) |
 | No fake production claim | Pass |
 | Text contrast readable | Pass |
 | Command bar reads as global shell (not floating card) | Pass |

@@ -304,6 +304,10 @@
         "title": "Academy",
         "subtitle": "Học cùng gia đình, luyện AI, kỹ năng tương lai."
       },
+      "business": {
+        "title": "Doanh nghiệp",
+        "subtitle": "Lễ tân AI, yêu cầu khách hàng và tăng trưởng dịch vụ."
+      },
       "care": {
         "title": "Quỹ Trái Tim Care",
         "subtitle": "Chạm đến con người, sự ấm áp và tác động cộng đồng."
@@ -312,7 +316,8 @@
     "impact": {
       "kicker": "Tác động từ VIONA",
       "title": "Quỹ Trái Tim VIONA Care",
-      "subtitle": "Ấm áp — đặt sau các vũ trụ chính của bạn."
+      "subtitle": "Ấm áp — đặt sau các vũ trụ chính của bạn.",
+      "stripCta": "Xem chi tiết tác động"
     },
     "trustStripHint": "Bề mặt pilot · Trạng thái minh bạch · VIO nằm trong ví",
     "walletLoadingA11y": "Đang tải số dư ví",

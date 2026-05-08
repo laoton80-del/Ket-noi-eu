@@ -10,6 +10,7 @@ export type VionaFashionHomeCommandBarProps = Readonly<{
   onPressLocal: () => void;
   onPressTravel: () => void;
   onPressAcademy: () => void;
+  onPressBusiness?: () => void;
   onPressLanguage: () => void;
   onPressVio: () => void;
   onPressSafety: () => void;
@@ -23,6 +24,7 @@ export function VionaFashionHomeCommandBar({
   onPressLocal,
   onPressTravel,
   onPressAcademy,
+  onPressBusiness,
   onPressLanguage,
   onPressVio,
   onPressSafety,
@@ -53,6 +55,11 @@ export function VionaFashionHomeCommandBar({
           <Pressable onPress={onPressAcademy} style={({ pressed }) => [styles.navLink, pressed && styles.pressed]}>
             <Text style={styles.navLinkText}>{t('home.tabAcademy')}</Text>
           </Pressable>
+          {onPressBusiness ? (
+            <Pressable onPress={onPressBusiness} style={({ pressed }) => [styles.navLink, pressed && styles.pressed]}>
+              <Text style={styles.navLinkText}>{t('home.fashionTech.business.title')}</Text>
+            </Pressable>
+          ) : null}
         </View>
       </View>
 

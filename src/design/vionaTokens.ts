@@ -118,6 +118,7 @@ export const vionaTokens = {
       local: ['#0c1218', '#152220', '#0a1412'] as const,
       travel: ['#0a1018', '#14202e', '#101820'] as const,
       academy: ['#100c18', '#18182a', '#140f18'] as const,
+      business: ['#0b0f1a', '#162236', '#0d1626'] as const,
       care: ['#140c12', '#1a1418', '#120e14'] as const,
     },
   },

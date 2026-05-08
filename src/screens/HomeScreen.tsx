@@ -57,6 +57,7 @@ import { theme } from '../theme/theme';
 import { FontFamily } from '../theme/typography';
 import { useTranslation } from '../i18n';
 import { useUserStore } from '../store/userStore';
+import { hasB2BWorkspaceAccess } from '../utils/b2bAccess';
 import { DashboardB2CScreen } from './b2c/DashboardB2CScreen';
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
@@ -249,6 +250,7 @@ export function HomeScreen() {
 
   const isDesktopWeb = Platform.OS === 'web' && width > 768;
   const currentActiveRole = useUserStore((s) => s.currentActiveRole);
+  const switchRole = useUserStore((s) => s.switchRole);
   const fashionHomeDesktopShellActive = useMemo(
     () =>
       isFashionHomeDesktopShell({
@@ -364,6 +366,16 @@ export function HomeScreen() {
     openMiniApp('academy', () => navigation.navigate('Tabs', { screen: MAIN_TAB.B2C.ai }));
   }, [navigation, openMiniApp]);
 
+  const goUniverseBusiness = useCallback(() => {
+    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    if (hasB2BWorkspaceAccess(user)) {
+      switchRole('B2B');
+      navigation.navigate('Tabs', { screen: MAIN_TAB.B2B.merchant });
+      return;
+    }
+    navigation.navigate('B2BPaywall');
+  }, [navigation, switchRole, user]);
+
   const homeCommand = useHomeCommand();
   const scrollRef = useRef<InstanceType<typeof ScrollView> | null>(null);
   const charitySectionY = useRef(0);
@@ -438,6 +450,7 @@ export function HomeScreen() {
               onPressLocal={goUniverseLocal}
               onPressTravel={goTravelTab}
               onPressAcademy={goUniverseAcademy}
+              onPressBusiness={goUniverseBusiness}
               onPressLanguage={() => homeCommand.openLanguageSheet()}
               onPressVio={() => openProtected('Wallet')}
               onPressSafety={() => homeCommand.triggerSafetyAssist()}
@@ -529,12 +542,12 @@ export function HomeScreen() {
                 </View>
                 <View style={styles.ftCardRailCell}>
                   <VionaFashionWorldCard
-                    accent="care"
-                    title={t('home.fashionTech.care.title')}
-                    subtitle={t('home.fashionTech.care.subtitle')}
-                    icon={<Ionicons name="heart-outline" size={22} color={vionaTokens.fashionTech.champagne} />}
-                    status={{ label: t('home.impact.kicker'), tone: 'safe' }}
-                    onPress={scrollToCareSection}
+                    accent="business"
+                    title={t('home.fashionTech.business.title')}
+                    subtitle={t('home.fashionTech.business.subtitle')}
+                    icon={<Ionicons name="briefcase-outline" size={22} color={vionaTokens.fashionTech.champagne} />}
+                    status={{ label: t('home.worldStage.travel.status'), tone: 'pilot' }}
+                    onPress={goUniverseBusiness}
                   />
                 </View>
               </ScrollView>
@@ -585,12 +598,12 @@ export function HomeScreen() {
                 </View>
                 <View style={[styles.ftCardCell, width >= 1100 && styles.ftCardCellQuarter]}>
                   <VionaFashionWorldCard
-                    accent="care"
-                    title={t('home.fashionTech.care.title')}
-                    subtitle={t('home.fashionTech.care.subtitle')}
-                    icon={<Ionicons name="heart-outline" size={22} color={vionaTokens.fashionTech.champagne} />}
-                    status={{ label: t('home.impact.kicker'), tone: 'safe' }}
-                    onPress={scrollToCareSection}
+                    accent="business"
+                    title={t('home.fashionTech.business.title')}
+                    subtitle={t('home.fashionTech.business.subtitle')}
+                    icon={<Ionicons name="briefcase-outline" size={22} color={vionaTokens.fashionTech.champagne} />}
+                    status={{ label: t('home.worldStage.travel.status'), tone: 'pilot' }}
+                    onPress={goUniverseBusiness}
                   />
                 </View>
               </View>
@@ -632,6 +645,25 @@ export function HomeScreen() {
               </View>
             ) : null}
             <Text style={[styles.trustStripHint, isDesktopWeb && styles.trustStripHintDesktop]}>{t('home.trustStripHint')}</Text>
+          </View>
+        </VionaSurface>
+
+        <VionaSurface variant="glass" style={[styles.impactStrip, { width: layout.inner }]}>
+          <View style={styles.impactStripRow}>
+            <View style={styles.impactStripCopy}>
+              <Text style={styles.impactStripKicker}>{t('home.impact.kicker')}</Text>
+              <Text style={styles.impactStripTitle}>{t('home.impact.title')}</Text>
+              <Text style={styles.impactStripSubtitle}>{t('home.impact.subtitle')}</Text>
+            </View>
+            <Pressable
+              onPress={scrollToCareSection}
+              style={({ pressed }) => [styles.impactStripCta, pressed && { opacity: 0.88 }]}
+              accessibilityRole="button"
+              accessibilityLabel={t('home.impact.title')}
+            >
+              <Ionicons name="heart-outline" size={14} color={vionaTokens.fashionTech.champagne} />
+              <Text style={styles.impactStripCtaText}>{t('home.impact.stripCta')}</Text>
+            </Pressable>
           </View>
         </VionaSurface>
 
@@ -1048,6 +1080,61 @@ const styles = StyleSheet.create({
     marginBottom: theme.spacing.lg,
     paddingVertical: vionaTokens.spacing[12],
     paddingHorizontal: vionaTokens.spacing[16],
+  },
+  impactStrip: {
+    alignSelf: 'center',
+    marginBottom: theme.spacing.md,
+    paddingVertical: vionaTokens.spacing[12],
+    paddingHorizontal: vionaTokens.spacing[16],
+  },
+  impactStripRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: vionaTokens.spacing[12],
+    flexWrap: 'wrap',
+  },
+  impactStripCopy: {
+    flex: 1,
+    minWidth: 180,
+    gap: 4,
+  },
+  impactStripKicker: {
+    fontSize: 11,
+    lineHeight: 16,
+    color: vionaTokens.fashionTech.champagneMuted,
+    fontFamily: FontFamily.semibold,
+    letterSpacing: 0.4,
+    textTransform: 'uppercase',
+  },
+  impactStripTitle: {
+    fontSize: 14,
+    lineHeight: 20,
+    color: TEXT_PRIMARY,
+    fontFamily: FontFamily.extrabold,
+  },
+  impactStripSubtitle: {
+    fontSize: 12,
+    lineHeight: 18,
+    color: TEXT_MUTED,
+    fontFamily: FontFamily.medium,
+  },
+  impactStripCta: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: theme.radius.pill,
+    borderWidth: 1,
+    borderColor: vionaTokens.fashionTech.champagneLine,
+    backgroundColor: 'rgba(0,0,0,0.22)',
+  },
+  impactStripCtaText: {
+    fontSize: 12,
+    lineHeight: 16,
+    color: vionaTokens.fashionTech.inkOnDark,
+    fontFamily: FontFamily.semibold,
   },
   trustStripRow: {
     flexDirection: 'row',
