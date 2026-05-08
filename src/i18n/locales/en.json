@@ -319,6 +319,13 @@
       "subtitle": "Warm impact — secondary to your daily universes.",
       "stripCta": "View impact details"
     },
+    "quickActions": {
+      "prompt": "What do you need most right now?",
+      "wallet": "Wallet & credits",
+      "interpreter": "Live interpreter",
+      "voice": "AI voice line",
+      "safety": "Safety Assist"
+    },
     "trustStripHint": "Pilot-safe surfaces · Honest status · VIO lives in your wallet hub",
     "walletLoadingA11y": "Loading wallet balance",
     "utilityTravelChip": "Travel companion",

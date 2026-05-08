@@ -85,6 +85,12 @@ export function isFashionHomeDesktopShell(input: FashionHomeDesktopShellInput): 
   if (input.platform !== 'web') return false;
   if (input.windowWidth < FASHION_HOME_DESKTOP_MIN_WIDTH) return false;
   if (input.activeRole !== 'B2C') return false;
+  if (input.focusedTabRoute == null) {
+    const maybeLocation = (globalThis as { location?: { pathname?: string } }).location;
+    const pathname = maybeLocation?.pathname?.toLowerCase() ?? '';
+    if (pathname === '/home' || pathname.endsWith('/home')) return true;
+    return false;
+  }
   if (input.focusedTabRoute !== MAIN_TAB.B2C.home) return false;
   return true;
 }

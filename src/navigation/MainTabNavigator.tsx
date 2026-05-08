@@ -25,6 +25,7 @@ import { evaluateMerchantSurfaceAccess } from '../services/auth/merchantSurfaceE
 import { theme } from '../theme/theme';
 import { FontFamily } from '../theme/typography';
 import { hasB2BWorkspaceAccess } from '../utils/b2bAccess';
+import { vionaTokens } from '../design';
 import { isDemoSandboxActive } from '../services/ux/DemoSandbox';
 import { useUserStore, type ActiveRole } from '../store/userStore';
 import { getFeatureFlags } from '../core/feature-flags/featureFlags';
@@ -252,7 +253,7 @@ export function MainTabNavigator(): ReactElement {
     if (!fashionHomeDesktopShell) setLanguageSheetOpen(false);
   }, [fashionHomeDesktopShell]);
 
-  const b2cDesktopBottomTabs = isDesktopWeb && currentActiveRole === 'B2C';
+  const b2cDesktopBottomTabs = isDesktopWeb && currentActiveRole === 'B2C' && !fashionHomeDesktopShell;
   const tabBarPosition = b2cDesktopBottomTabs ? 'bottom' : isDesktopWeb ? 'left' : 'bottom';
 
   const b2cHomeDesktopScene = fashionHomeDesktopShell;
@@ -415,7 +416,7 @@ export function MainTabNavigator(): ReactElement {
               fashionHomeDesktopShell && fashionHomeHiddenTabBarStyle,
             ],
             sceneStyle: {
-              backgroundColor: chrome.barBg,
+              backgroundColor: fashionHomeDesktopShell ? vionaTokens.fashionTech.canvas : chrome.barBg,
               paddingTop: sceneTopPadding,
             },
             tabBarLabel:

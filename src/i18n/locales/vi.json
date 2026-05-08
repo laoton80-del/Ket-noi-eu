@@ -319,6 +319,13 @@
       "subtitle": "Ấm áp — đặt sau các vũ trụ chính của bạn.",
       "stripCta": "Xem chi tiết tác động"
     },
+    "quickActions": {
+      "prompt": "Bạn đang cần gì nhất lúc này?",
+      "wallet": "Ví & credits",
+      "interpreter": "Phiên dịch trực tiếp",
+      "voice": "Đường dây giọng AI",
+      "safety": "Hỗ trợ an toàn"
+    },
     "trustStripHint": "Bề mặt pilot · Trạng thái minh bạch · VIO nằm trong ví",
     "walletLoadingA11y": "Đang tải số dư ví",
     "utilityTravelChip": "Đồng hành",

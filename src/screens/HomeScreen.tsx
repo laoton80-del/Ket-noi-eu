@@ -435,11 +435,41 @@ export function HomeScreen() {
     [navigation, openMiniApp, setPendingRedirect, user]
   );
 
+  const quickActionItems = useMemo(
+    () => [
+      {
+        id: 'wallet',
+        icon: 'wallet-outline' as const,
+        label: t('home.quickActions.wallet'),
+        onPress: () => openProtected('Wallet'),
+      },
+      {
+        id: 'interpreter',
+        icon: 'mic-outline' as const,
+        label: t('home.quickActions.interpreter'),
+        onPress: openInterpreter,
+      },
+      {
+        id: 'voice',
+        icon: 'call-outline' as const,
+        label: t('home.quickActions.voice'),
+        onPress: () => openProtected('LeonaCall'),
+      },
+      {
+        id: 'safety',
+        icon: 'shield-checkmark-outline' as const,
+        label: t('home.quickActions.safety'),
+        onPress: () => homeCommand?.triggerSafetyAssist(),
+      },
+    ],
+    [homeCommand, openInterpreter, openProtected, t]
+  );
+
   return (
     <View style={[styles.rootFill, isDesktopWeb && styles.rootFillFashion]}>
       <StatusBar style={isDesktopWeb ? 'light' : 'dark'} />
       {isDesktopWeb && homeCommand ? (
-        <View style={[styles.fashionShellOuter, { paddingTop: insets.top }]}>
+        <View style={[styles.fashionShellOuter, { paddingTop: 0 }]}>
           <View
             style={[styles.fashionShellInner, { width: '100%', maxWidth: layout.shellWidth, paddingHorizontal: layout.pad }]}
           >
@@ -552,6 +582,26 @@ export function HomeScreen() {
             </View>
           </LinearGradient>
         </View>
+
+        {fashionHomeDesktopShellActive ? (
+          <VionaSurface variant="glass" style={[styles.quickActionStrip, { width: layout.inner }]}>
+            <Text style={styles.quickActionPrompt}>{t('home.quickActions.prompt')}</Text>
+            <View style={styles.quickActionRow}>
+              {quickActionItems.map((item) => (
+                <Pressable
+                  key={item.id}
+                  onPress={item.onPress}
+                  style={({ pressed }) => [styles.quickActionChip, pressed && { opacity: 0.88 }]}
+                  accessibilityRole="button"
+                  accessibilityLabel={item.label}
+                >
+                  <Ionicons name={item.icon} size={16} color={vionaTokens.fashionTech.champagne} />
+                  <Text style={styles.quickActionChipText}>{item.label}</Text>
+                </Pressable>
+              ))}
+            </View>
+          </VionaSurface>
+        ) : null}
 
         <VionaSurface variant="glass" style={[styles.trustStrip, { width: layout.inner }]}>
           <View style={styles.trustStripRow}>
@@ -1022,6 +1072,41 @@ const styles = StyleSheet.create({
     marginBottom: theme.spacing.lg,
     paddingVertical: vionaTokens.spacing[12],
     paddingHorizontal: vionaTokens.spacing[16],
+  },
+  quickActionStrip: {
+    alignSelf: 'center',
+    marginBottom: theme.spacing.md,
+    paddingVertical: vionaTokens.spacing[12],
+    paddingHorizontal: vionaTokens.spacing[16],
+  },
+  quickActionPrompt: {
+    fontSize: 14,
+    lineHeight: 20,
+    color: vionaTokens.fashionTech.inkOnDark,
+    fontFamily: FontFamily.bold,
+    marginBottom: vionaTokens.spacing[12],
+  },
+  quickActionRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: vionaTokens.spacing[8],
+  },
+  quickActionChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: theme.radius.pill,
+    borderWidth: 1,
+    borderColor: vionaTokens.fashionTech.champagneLine,
+    backgroundColor: 'rgba(0,0,0,0.2)',
+  },
+  quickActionChipText: {
+    fontSize: 12,
+    lineHeight: 16,
+    color: vionaTokens.fashionTech.inkOnDark,
+    fontFamily: FontFamily.semibold,
   },
   impactStrip: {
     alignSelf: 'center',
