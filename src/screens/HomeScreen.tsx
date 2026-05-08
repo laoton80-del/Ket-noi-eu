@@ -261,8 +261,6 @@ export function HomeScreen() {
       }),
     [currentActiveRole, width]
   );
-  const useFashionCardHorizontalRail = fashionHomeDesktopShellActive && width < 1420 && width >= 720;
-
   const walletChipLabel = useMemo(() => {
     const n = wallet.credits;
     const useCompact = width < 400;
@@ -497,117 +495,61 @@ export function HomeScreen() {
               {width >= 720 ? <FashionTechHeroVisualSlot /> : null}
             </View>
 
-            {useFashionCardHorizontalRail ? (
-              <ScrollView
-                horizontal
-                nestedScrollEnabled
-                showsHorizontalScrollIndicator
-                style={styles.ftCardRailScrollOuter}
-                contentContainerStyle={styles.ftCardRailContent}
-              >
-                <View style={styles.ftCardRailCell}>
-                  <VionaFashionWorldCard
-                    accent="local"
-                    title={t('home.fashionTech.local.title')}
-                    subtitle={t('home.fashionTech.local.subtitle')}
-                    icon={<Ionicons name="grid-outline" size={22} color={vionaTokens.fashionTech.champagne} />}
-                    status={{ label: t('home.worldStage.local.status'), tone: 'lite' }}
-                    onPress={goUniverseLocal}
-                  />
-                </View>
-                <View style={styles.ftCardRailCell}>
-                  <VionaFashionWorldCard
-                    accent="travel"
-                    title={t('home.fashionTech.travel.title')}
-                    subtitle={t('home.fashionTech.travel.subtitle')}
-                    icon={<Ionicons name="airplane-outline" size={22} color={vionaTokens.fashionTech.champagne} />}
-                    status={
-                      featureFlags.travelEnabled
-                        ? { label: t('home.worldStage.travel.status'), tone: 'pilot' }
-                        : { label: t('home.worldStage.travel.statusComingSoon'), tone: 'comingSoon' }
-                    }
-                    onPress={featureFlags.travelEnabled ? goUniverseTravel : undefined}
-                    disabled={!featureFlags.travelEnabled}
-                  />
-                </View>
-                <View style={styles.ftCardRailCell}>
-                  <VionaFashionWorldCard
-                    accent="academy"
-                    title={t('home.fashionTech.academy.title')}
-                    subtitle={t('home.fashionTech.academy.subtitle')}
-                    icon={<Ionicons name="sparkles-outline" size={22} color={vionaTokens.fashionTech.champagne} />}
-                    status={{ label: t('home.worldStage.academy.status'), tone: 'demo' }}
-                    onPress={goUniverseAcademy}
-                  />
-                </View>
-                <View style={styles.ftCardRailCell}>
-                  <VionaFashionWorldCard
-                    accent="business"
-                    title={t('home.fashionTech.business.title')}
-                    subtitle={t('home.fashionTech.business.subtitle')}
-                    icon={<Ionicons name="briefcase-outline" size={22} color={vionaTokens.fashionTech.champagne} />}
-                    status={{ label: t('home.worldStage.travel.status'), tone: 'pilot' }}
-                    onPress={goUniverseBusiness}
-                  />
-                </View>
-              </ScrollView>
-            ) : (
-              <View
-                style={[
-                  styles.ftCardGrid,
-                  {
-                    flexDirection: width >= 1100 ? 'row' : width >= 560 ? 'row' : 'column',
-                    flexWrap: width >= 1100 ? 'nowrap' : 'wrap',
-                  },
-                ]}
-              >
-                <View style={[styles.ftCardCell, width >= 1100 && styles.ftCardCellQuarter]}>
-                  <VionaFashionWorldCard
-                    accent="local"
-                    title={t('home.fashionTech.local.title')}
-                    subtitle={t('home.fashionTech.local.subtitle')}
-                    icon={<Ionicons name="grid-outline" size={22} color={vionaTokens.fashionTech.champagne} />}
-                    status={{ label: t('home.worldStage.local.status'), tone: 'lite' }}
-                    onPress={goUniverseLocal}
-                  />
-                </View>
-                <View style={[styles.ftCardCell, width >= 1100 && styles.ftCardCellQuarter]}>
-                  <VionaFashionWorldCard
-                    accent="travel"
-                    title={t('home.fashionTech.travel.title')}
-                    subtitle={t('home.fashionTech.travel.subtitle')}
-                    icon={<Ionicons name="airplane-outline" size={22} color={vionaTokens.fashionTech.champagne} />}
-                    status={
-                      featureFlags.travelEnabled
-                        ? { label: t('home.worldStage.travel.status'), tone: 'pilot' }
-                        : { label: t('home.worldStage.travel.statusComingSoon'), tone: 'comingSoon' }
-                    }
-                    onPress={featureFlags.travelEnabled ? goUniverseTravel : undefined}
-                    disabled={!featureFlags.travelEnabled}
-                  />
-                </View>
-                <View style={[styles.ftCardCell, width >= 1100 && styles.ftCardCellQuarter]}>
-                  <VionaFashionWorldCard
-                    accent="academy"
-                    title={t('home.fashionTech.academy.title')}
-                    subtitle={t('home.fashionTech.academy.subtitle')}
-                    icon={<Ionicons name="sparkles-outline" size={22} color={vionaTokens.fashionTech.champagne} />}
-                    status={{ label: t('home.worldStage.academy.status'), tone: 'demo' }}
-                    onPress={goUniverseAcademy}
-                  />
-                </View>
-                <View style={[styles.ftCardCell, width >= 1100 && styles.ftCardCellQuarter]}>
-                  <VionaFashionWorldCard
-                    accent="business"
-                    title={t('home.fashionTech.business.title')}
-                    subtitle={t('home.fashionTech.business.subtitle')}
-                    icon={<Ionicons name="briefcase-outline" size={22} color={vionaTokens.fashionTech.champagne} />}
-                    status={{ label: t('home.worldStage.travel.status'), tone: 'pilot' }}
-                    onPress={goUniverseBusiness}
-                  />
-                </View>
+            <View
+              style={[
+                styles.ftCardGrid,
+                {
+                  flexDirection: width >= 1100 ? 'row' : width >= 560 ? 'row' : 'column',
+                  flexWrap: width >= 1100 ? 'nowrap' : 'wrap',
+                },
+              ]}
+            >
+              <View style={[styles.ftCardCell, width >= 1100 && styles.ftCardCellQuarter]}>
+                <VionaFashionWorldCard
+                  accent="local"
+                  title={t('home.fashionTech.local.title')}
+                  subtitle={t('home.fashionTech.local.subtitle')}
+                  icon={<Ionicons name="grid-outline" size={22} color={vionaTokens.fashionTech.champagne} />}
+                  status={{ label: t('home.worldStage.local.status'), tone: 'lite' }}
+                  onPress={goUniverseLocal}
+                />
               </View>
-            )}
+              <View style={[styles.ftCardCell, width >= 1100 && styles.ftCardCellQuarter]}>
+                <VionaFashionWorldCard
+                  accent="travel"
+                  title={t('home.fashionTech.travel.title')}
+                  subtitle={t('home.fashionTech.travel.subtitle')}
+                  icon={<Ionicons name="airplane-outline" size={22} color={vionaTokens.fashionTech.champagne} />}
+                  status={
+                    featureFlags.travelEnabled
+                      ? { label: t('home.worldStage.travel.status'), tone: 'pilot' }
+                      : { label: t('home.worldStage.travel.statusComingSoon'), tone: 'comingSoon' }
+                  }
+                  onPress={featureFlags.travelEnabled ? goUniverseTravel : undefined}
+                  disabled={!featureFlags.travelEnabled}
+                />
+              </View>
+              <View style={[styles.ftCardCell, width >= 1100 && styles.ftCardCellQuarter]}>
+                <VionaFashionWorldCard
+                  accent="academy"
+                  title={t('home.fashionTech.academy.title')}
+                  subtitle={t('home.fashionTech.academy.subtitle')}
+                  icon={<Ionicons name="sparkles-outline" size={22} color={vionaTokens.fashionTech.champagne} />}
+                  status={{ label: t('home.worldStage.academy.status'), tone: 'demo' }}
+                  onPress={goUniverseAcademy}
+                />
+              </View>
+              <View style={[styles.ftCardCell, width >= 1100 && styles.ftCardCellQuarter]}>
+                <VionaFashionWorldCard
+                  accent="business"
+                  title={t('home.fashionTech.business.title')}
+                  subtitle={t('home.fashionTech.business.subtitle')}
+                  icon={<Ionicons name="briefcase-outline" size={22} color={vionaTokens.fashionTech.champagne} />}
+                  status={{ label: t('home.worldStage.travel.status'), tone: 'pilot' }}
+                  onPress={goUniverseBusiness}
+                />
+              </View>
+            </View>
           </LinearGradient>
         </View>
 

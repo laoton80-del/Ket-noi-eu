@@ -222,7 +222,12 @@ export const ProfileSwitcher = forwardRef<ProfileSwitcherHandle, ProfileSwitcher
     }
     return (
       <>
-        <SmartTrioLanguageChip tabBarLift={tabBarLift} placement="floating" isDesktopWeb={isDesktopWeb} />
+        <SmartTrioLanguageChip
+          tabBarLift={tabBarLift}
+          placement="floating"
+          isDesktopWeb={isDesktopWeb}
+          suppressFloating={hideLegacyFloatingChrome}
+        />
         <Pressable
           onPress={() => {
             triggerHaptic();
@@ -253,7 +258,7 @@ export const ProfileSwitcher = forwardRef<ProfileSwitcherHandle, ProfileSwitcher
 
   return (
     <>
-      {!suppressFloatingChrome ? (
+      {!hideLegacyFloatingChrome ? (
         <Pressable
           onPress={() => {
             triggerHaptic();

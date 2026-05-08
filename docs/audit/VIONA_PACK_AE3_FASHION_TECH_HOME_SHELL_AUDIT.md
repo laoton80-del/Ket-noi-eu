@@ -157,6 +157,25 @@ Web smoke (`npx expo start --web --clear`, then `curl.exe`): **`GET /home`** →
 - Moved **Care Heart Fund** to a smaller **secondary impact strip** below primary worlds and kept the existing `CharityWidget` section.
 - Kept all guardrails: UI/layout/i18n only, no route renames, no feature-flag changes, and no production readiness claims.
 
+## AF.0.1 Home Visual Gate Fix
+
+- **Root causes found**
+  - `ProfileSwitcher` multi-role branch checked `suppressFloatingChrome` directly instead of merged gate `hideLegacyFloatingChrome`, so floating account chip could still render in Home desktop shell.
+  - Tab focus resolver could miss deeper nested navigation state in some tree shapes, making Home-shell predicate intermittently fail.
+  - Primary card rail used horizontal `ScrollView` for wide desktop ranges, causing visible horizontal scrollbar and occasional Business-card clipping.
+- **Fixes**
+  - Hardened `readFocusedTabRouteFromRootState` with recursive nested-state resolution while preserving existing route names.
+  - Enforced single shared `isFashionHomeDesktopShell` gate across floating account/language/SOS/tab bar suppression.
+  - Updated `ProfileSwitcher` to always respect `hideLegacyFloatingChrome`; floating language chip now also receives explicit suppress flag.
+  - Removed desktop horizontal card rail in Home hero and kept responsive grid behavior so four primary cards fit at desktop widths without horizontal scroll.
+- **Verification**
+  - Floating chrome removed on Home desktop shell (Account + Language/Market).
+  - Red SOS orb removed on Home desktop shell; Safety Assist remains in command bar.
+  - Bottom tab bar hidden on Home desktop shell using shared hidden style fragment.
+  - Primary cards fit and Business card remains readable without horizontal scrollbar.
+  - Care Heart Fund remains secondary (impact strip + existing charity section).
+  - No production behavior changes, no payment/booking/AI/backend/API/Prisma/Twilio changes.
+
 ## 9. Visual Acceptance Checklist
 
 | Check | Result |

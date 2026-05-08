@@ -47,12 +47,21 @@ export function readFocusedTabRouteFromRootState(
     return active.name;
   }
 
+  const nestedState = active.state as NavigationState | undefined;
+  if (nestedState?.routes != null && nestedState.index != null) {
+    const nestedResolved = readFocusedTabRouteFromRootState(nestedState);
+    if (nestedResolved) return nestedResolved;
+  }
+
   if (active.name === 'Tabs') {
     const inner = active.state as NavigationState | undefined;
     if (inner?.routes != null && inner.index != null) {
       const innerRoute = inner.routes[inner.index];
-      if (innerRoute?.name && isTabRouteName(innerRoute.name)) {
-        return innerRoute.name;
+      if (innerRoute?.name && isTabRouteName(innerRoute.name)) return innerRoute.name;
+      const deepState = innerRoute?.state as NavigationState | undefined;
+      if (deepState?.routes != null && deepState.index != null) {
+        const deepResolved = readFocusedTabRouteFromRootState(deepState);
+        if (deepResolved) return deepResolved;
       }
     }
     return undefined;
