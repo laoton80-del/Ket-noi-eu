@@ -290,7 +290,7 @@
       "subtitle": "Local life, travel support, learning, and AI assistance — designed for Vietnamese people worldwide.",
       "visualInset": "Photography slot · licensed assets only",
       "visualComingSoon": "Licensed visual coming soon",
-      "visualStoryCaption": "A cinematic visual story will appear here soon.",
+      "visualStoryCaption": "Human constellation routes, city-light signals, and calm guidance.",
       "heroVisualA11y": "Hero visual area. Only licensed photography will appear when ready.",
       "local": {
         "title": "Local",
@@ -320,7 +320,7 @@
       "stripCta": "View impact details"
     },
     "quickActions": {
-      "prompt": "What do you need most right now?",
+      "prompt": "What do you need right now?",
       "wallet": "Wallet & credits",
       "interpreter": "Live interpreter",
       "voice": "AI voice line",
@@ -352,7 +352,7 @@
     "liveInterpreter": "Live interpreter",
     "aiVoiceLine": "AI voice line",
     "qrPayTitle": "QR Pay",
-    "qrPaySub": "Scan & pay",
+    "qrPaySub": "Scan & pay (availability follows your wallet flow)",
     "qrPayA11y": "QR Pay",
     "dualClockTitle": "Dual clock",
     "dualClockLocalLabel": "Local",

@@ -290,7 +290,7 @@
       "subtitle": "Đời sống, du lịch, học tập và AI support — thiết kế cho người Việt ở khắp thế giới.",
       "visualInset": "Khung ảnh · chỉ dùng asset có license",
       "visualComingSoon": "Hình ảnh có license — sắp ra mắt",
-      "visualStoryCaption": "Câu chuyện hình ảnh được tuyển chọn sẽ xuất hiện tại đây.",
+      "visualStoryCaption": "Chòm sao kết nối con người, ánh đô thị dịu và định hướng an tâm.",
       "heroVisualA11y": "Khu vực hình hero. Chỉ dùng ảnh có license khi sẵn sàng.",
       "local": {
         "title": "Local",
@@ -320,7 +320,7 @@
       "stripCta": "Xem chi tiết tác động"
     },
     "quickActions": {
-      "prompt": "Bạn đang cần gì nhất lúc này?",
+      "prompt": "Bạn cần gì lúc này?",
       "wallet": "Ví & credits",
       "interpreter": "Phiên dịch trực tiếp",
       "voice": "Đường dây giọng AI",
@@ -352,7 +352,7 @@
     "liveInterpreter": "Phiên dịch trực tiếp",
     "aiVoiceLine": "Đường dây giọng AI",
     "qrPayTitle": "Thanh toán QR",
-    "qrPaySub": "Quét mã & thanh toán",
+    "qrPaySub": "Quét mã & thanh toán (theo khả dụng của luồng ví)",
     "qrPayA11y": "Thanh toán QR",
     "dualClockTitle": "Đồng hồ kép",
     "dualClockLocalLabel": "Địa phương",

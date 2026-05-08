@@ -1,6 +1,13 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import type { ReactNode } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import {
+  ImageBackground,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+  type ImageSourcePropType,
+} from 'react-native';
 
 import { vionaTokens } from '../../design';
 import { FontFamily } from '../../theme/typography';
@@ -23,6 +30,7 @@ export type VionaFashionWorldCardProps = Readonly<{
   subtitle: string;
   accent: FashionAccent;
   icon?: ReactNode;
+  backgroundImage?: ImageSourcePropType;
   status?: { label: string; tone: FashionStatusTone };
   onPress?: () => void;
   disabled?: boolean;
@@ -34,6 +42,7 @@ export function VionaFashionWorldCard({
   subtitle,
   accent,
   icon,
+  backgroundImage,
   status,
   onPress,
   disabled = false,
@@ -41,9 +50,21 @@ export function VionaFashionWorldCard({
 }: VionaFashionWorldCardProps) {
   const grad = GRADIENTS[accent];
   const minH = variant === 'heroRow' ? 168 : 142;
+  const overlay = (
+    <LinearGradient
+      colors={['rgba(6, 8, 12, 0.2)', 'rgba(6, 8, 12, 0.56)', 'rgba(6, 8, 12, 0.78)']}
+      start={{ x: 0.25, y: 0 }}
+      end={{ x: 0.8, y: 1 }}
+      style={StyleSheet.absoluteFillObject}
+    />
+  );
 
   const inner = (
     <LinearGradient colors={grad} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.grad}>
+      {backgroundImage ? (
+        <ImageBackground source={backgroundImage} resizeMode="cover" style={StyleSheet.absoluteFillObject} />
+      ) : null}
+      {overlay}
       <View style={styles.rowShell}>
         <View style={styles.accentRail} />
         <View style={[styles.inner, { minHeight: minH }]}>

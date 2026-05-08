@@ -9,6 +9,7 @@ import { useCallback, useEffect, useMemo, useRef, useState, type ReactElement } 
 import {
   ActivityIndicator,
   Alert,
+  ImageBackground,
   Platform,
   Pressable,
   ScrollView,
@@ -26,12 +27,14 @@ import { PersonaOnboardingModal } from '../components/PersonaOnboardingModal';
 import { ProactiveSuggestions } from '../components/ProactiveSuggestions';
 import { CharityWidget } from '../components/ui/CharityWidget';
 import {
+  VionaGlassPanel,
   VionaFashionHomeCommandBar,
   VionaFashionWorldCard,
+  VionaInfoTile,
+  VionaQuickActionPill,
 } from '../components/viona';
 import { VionaCard } from '../components/viona/VionaCard';
 import { VionaSectionHeader } from '../components/viona/VionaSectionHeader';
-import { VionaSurface } from '../components/viona/VionaSurface';
 import { vionaTrust } from '../components/viona/vionaTrustTokens';
 import {
   getConfiguredAdminDebugPin,
@@ -63,6 +66,11 @@ import { DashboardB2CScreen } from './b2c/DashboardB2CScreen';
 type Nav = NativeStackNavigationProp<RootStackParamList>;
 
 const IMG_LOGO = require('../../assets/brand/viona/logo-in-app.png');
+const IMG_HOME_HERO = require('../assets/viona/home/viona-home-hero-constellation.png');
+const IMG_HOME_LOCAL = require('../assets/viona/home/viona-home-local-night-market.png');
+const IMG_HOME_TRAVEL = require('../assets/viona/home/viona-home-travel-airport.png');
+const IMG_HOME_ACADEMY = require('../assets/viona/home/viona-home-academy-learning.png');
+const IMG_HOME_BUSINESS = require('../assets/viona/home/viona-home-business-shop-import.png');
 const ADMIN_UNLOCK_KEY = STORAGE_KEYS.adminUnlock;
 /** World Stage — light canvas (aurora gradient applied in hero). */
 const SCREEN_BG = vionaTokens.gradients.multiverseHero[0];
@@ -93,6 +101,15 @@ function FashionTechHeroVisualSlot(): ReactElement {
       ] as const,
     []
   );
+  const routes = useMemo(
+    () =>
+      [
+        { top: '24%', left: '16%', width: '62%', rotate: '-18deg', opacity: 0.52 },
+        { top: '36%', left: '24%', width: '56%', rotate: '12deg', opacity: 0.42 },
+        { top: '58%', left: '20%', width: '64%', rotate: '-9deg', opacity: 0.34 },
+      ] as const,
+    []
+  );
 
   return (
     <View
@@ -100,22 +117,45 @@ function FashionTechHeroVisualSlot(): ReactElement {
       accessibilityRole="image"
       accessibilityLabel={t('home.fashionTech.heroVisualA11y')}
     >
+      <ImageBackground source={IMG_HOME_HERO} resizeMode="cover" style={StyleSheet.absoluteFillObject} />
       <LinearGradient
-        colors={[...vionaTokens.fashionTech.visualPanelGradient]}
+        colors={['rgba(4, 6, 10, 0.22)', 'rgba(4, 6, 10, 0.48)', 'rgba(4, 6, 10, 0.72)']}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={StyleSheet.absoluteFillObject}
       />
       <LinearGradient
-        colors={['rgba(201, 169, 98, 0.14)', 'transparent', 'rgba(90, 140, 210, 0.07)']}
+        colors={['rgba(201, 169, 98, 0.22)', 'transparent', 'rgba(112, 200, 255, 0.1)']}
         start={{ x: 0.15, y: 0 }}
         end={{ x: 0.85, y: 1 }}
         style={StyleSheet.absoluteFillObject}
       />
+      <LinearGradient
+        colors={['rgba(255,124,198,0.09)', 'transparent']}
+        start={{ x: 0.9, y: 0.12 }}
+        end={{ x: 0.2, y: 0.95 }}
+        style={styles.ftCityGlow}
+      />
       <View pointerEvents="none" style={StyleSheet.absoluteFillObject}>
         <View style={styles.ftGlowBlob} />
+        <View style={styles.ftGlowBlobSecondary} />
         <View style={styles.ftOrbitLine} />
         <View style={[styles.ftOrbitLine, styles.ftOrbitLineSecond]} />
+        {routes.map((route, i) => (
+          <View
+            key={`route-${i}`}
+            style={[
+              styles.ftRouteLine,
+              {
+                top: route.top,
+                left: route.left,
+                width: route.width,
+                opacity: route.opacity,
+                transform: [{ rotate: route.rotate }],
+              },
+            ]}
+          />
+        ))}
         {dots.map((d, i) => (
           <View
             key={i}
@@ -440,24 +480,28 @@ export function HomeScreen() {
       {
         id: 'wallet',
         icon: 'wallet-outline' as const,
+        accent: 'gold' as const,
         label: t('home.quickActions.wallet'),
         onPress: () => openProtected('Wallet'),
       },
       {
         id: 'interpreter',
         icon: 'mic-outline' as const,
+        accent: 'cyan' as const,
         label: t('home.quickActions.interpreter'),
         onPress: openInterpreter,
       },
       {
         id: 'voice',
         icon: 'call-outline' as const,
+        accent: 'violet' as const,
         label: t('home.quickActions.voice'),
         onPress: () => openProtected('LeonaCall'),
       },
       {
         id: 'safety',
         icon: 'shield-checkmark-outline' as const,
+        accent: 'emerald' as const,
         label: t('home.quickActions.safety'),
         onPress: () => homeCommand?.triggerSafetyAssist(),
       },
@@ -537,6 +581,7 @@ export function HomeScreen() {
               <View style={[styles.ftCardCell, width >= 1100 && styles.ftCardCellQuarter]}>
                 <VionaFashionWorldCard
                   accent="local"
+                  backgroundImage={IMG_HOME_LOCAL}
                   title={t('home.fashionTech.local.title')}
                   subtitle={t('home.fashionTech.local.subtitle')}
                   icon={<Ionicons name="grid-outline" size={22} color={vionaTokens.fashionTech.champagne} />}
@@ -547,6 +592,7 @@ export function HomeScreen() {
               <View style={[styles.ftCardCell, width >= 1100 && styles.ftCardCellQuarter]}>
                 <VionaFashionWorldCard
                   accent="travel"
+                  backgroundImage={IMG_HOME_TRAVEL}
                   title={t('home.fashionTech.travel.title')}
                   subtitle={t('home.fashionTech.travel.subtitle')}
                   icon={<Ionicons name="airplane-outline" size={22} color={vionaTokens.fashionTech.champagne} />}
@@ -562,6 +608,7 @@ export function HomeScreen() {
               <View style={[styles.ftCardCell, width >= 1100 && styles.ftCardCellQuarter]}>
                 <VionaFashionWorldCard
                   accent="academy"
+                  backgroundImage={IMG_HOME_ACADEMY}
                   title={t('home.fashionTech.academy.title')}
                   subtitle={t('home.fashionTech.academy.subtitle')}
                   icon={<Ionicons name="sparkles-outline" size={22} color={vionaTokens.fashionTech.champagne} />}
@@ -572,6 +619,7 @@ export function HomeScreen() {
               <View style={[styles.ftCardCell, width >= 1100 && styles.ftCardCellQuarter]}>
                 <VionaFashionWorldCard
                   accent="business"
+                  backgroundImage={IMG_HOME_BUSINESS}
                   title={t('home.fashionTech.business.title')}
                   subtitle={t('home.fashionTech.business.subtitle')}
                   icon={<Ionicons name="briefcase-outline" size={22} color={vionaTokens.fashionTech.champagne} />}
@@ -584,26 +632,23 @@ export function HomeScreen() {
         </View>
 
         {fashionHomeDesktopShellActive ? (
-          <VionaSurface variant="glass" style={[styles.quickActionStrip, { width: layout.inner }]}>
+          <VionaGlassPanel style={[styles.quickActionStrip, { width: layout.inner }]} tone="cool">
             <Text style={styles.quickActionPrompt}>{t('home.quickActions.prompt')}</Text>
             <View style={styles.quickActionRow}>
               {quickActionItems.map((item) => (
-                <Pressable
+                <VionaQuickActionPill
                   key={item.id}
+                  label={item.label}
+                  icon={item.icon}
+                  accent={item.accent}
                   onPress={item.onPress}
-                  style={({ pressed }) => [styles.quickActionChip, pressed && { opacity: 0.88 }]}
-                  accessibilityRole="button"
-                  accessibilityLabel={item.label}
-                >
-                  <Ionicons name={item.icon} size={16} color={vionaTokens.fashionTech.champagne} />
-                  <Text style={styles.quickActionChipText}>{item.label}</Text>
-                </Pressable>
+                />
               ))}
             </View>
-          </VionaSurface>
+          </VionaGlassPanel>
         ) : null}
 
-        <VionaSurface variant="glass" style={[styles.trustStrip, { width: layout.inner }]}>
+        <VionaGlassPanel style={[styles.trustStrip, { width: layout.inner }]} tone="cool">
           <View style={styles.trustStripRow}>
             {!isDesktopWeb ? (
               <View
@@ -638,9 +683,9 @@ export function HomeScreen() {
             ) : null}
             <Text style={[styles.trustStripHint, isDesktopWeb && styles.trustStripHintDesktop]}>{t('home.trustStripHint')}</Text>
           </View>
-        </VionaSurface>
+        </VionaGlassPanel>
 
-        <VionaSurface variant="glass" style={[styles.impactStrip, { width: layout.inner }]}>
+        <VionaGlassPanel style={[styles.impactStrip, { width: layout.inner }]} tone="warm">
           <View style={styles.impactStripRow}>
             <View style={styles.impactStripCopy}>
               <Text style={styles.impactStripKicker}>{t('home.impact.kicker')}</Text>
@@ -657,7 +702,7 @@ export function HomeScreen() {
               <Text style={styles.impactStripCtaText}>{t('home.impact.stripCta')}</Text>
             </Pressable>
           </View>
-        </VionaSurface>
+        </VionaGlassPanel>
 
         <View
           style={[styles.charityWrap, { width: layout.inner }]}
@@ -697,39 +742,32 @@ export function HomeScreen() {
         ) : null}
 
         <View style={[styles.actionCenter, { width: layout.inner }]}>
-          <Pressable
+          <VionaInfoTile
+            icon="qr-code"
+            title={t('home.qrPayTitle')}
+            lines={[t('home.qrPaySub')]}
+            accent="gold"
             onPress={() => openProtected('Wallet')}
-            style={({ pressed }) => [styles.actionWidget, pressed && { opacity: 0.9 }]}
-            accessibilityRole="button"
             accessibilityLabel={t('home.qrPayA11y')}
-          >
-            <Ionicons name="qr-code" size={22} color={GOLD_ACCENT} />
-            <Text style={styles.actionWidgetTitle}>{t('home.qrPayTitle')}</Text>
-            <Text style={styles.actionWidgetSub}>{t('home.qrPaySub')}</Text>
-          </Pressable>
-          <View style={styles.actionWidget}>
-            <Ionicons name="time-outline" size={22} color={GOLD_ACCENT} />
-            <Text style={styles.actionWidgetTitle}>{t('home.dualClockTitle')}</Text>
-            <Text style={styles.actionWidgetSub}>
-              {t('home.dualClockLocalLabel')} {localClock}
-            </Text>
-            <Text style={styles.actionWidgetSub}>
-              {t('home.dualClockVnLabel')} {vnClock}
-            </Text>
-          </View>
+          />
+          <VionaInfoTile
+            icon="time-outline"
+            title={t('home.dualClockTitle')}
+            lines={[
+              `${t('home.dualClockLocalLabel')} ${localClock}`,
+              `${t('home.dualClockVnLabel')} ${vnClock}`,
+            ]}
+            accent="cyan"
+          />
           {featureFlags.vigTokenEconomyEnabled ? (
-            <Pressable
+            <VionaInfoTile
+              icon="trending-up"
+              title={t('home.vioIndexTitle', { label: getVioPointsLabel() })}
+              lines={[t('home.vioIndexSub')]}
+              accent="violet"
               onPress={() => navigation.navigate('LoyaltyRewards')}
-              style={({ pressed }) => [styles.actionWidget, pressed && { opacity: 0.9 }]}
-              accessibilityRole="button"
               accessibilityLabel={`${getVioPointsLabel()} index`}
-            >
-              <Ionicons name="trending-up" size={22} color={GOLD_ACCENT} />
-              <Text style={styles.actionWidgetTitle}>
-                {t('home.vioIndexTitle', { label: getVioPointsLabel() })}
-              </Text>
-              <Text style={styles.actionWidgetSub}>{t('home.vioIndexSub')}</Text>
-            </Pressable>
+            />
           ) : null}
         </View>
 
@@ -742,16 +780,18 @@ export function HomeScreen() {
                 onPress={() =>
                   Alert.alert(card.headline, `${card.sub}\n\n${t('home.briefingAlertDemo')}`)
                 }
-                style={({ pressed }) => [styles.briefingCard, pressed && { opacity: 0.9 }]}
+                style={({ pressed }) => [pressed && { opacity: 0.9 }]}
                 accessibilityRole="button"
                 accessibilityLabel={card.headline}
               >
-                <Text style={styles.briefingHeadline} numberOfLines={2}>
-                  {card.headline}
-                </Text>
-                <Text style={styles.briefingSub} numberOfLines={2}>
-                  {card.sub}
-                </Text>
+                <VionaGlassPanel style={styles.briefingCard} tone="default">
+                  <Text style={styles.briefingHeadline} numberOfLines={2}>
+                    {card.headline}
+                  </Text>
+                  <Text style={styles.briefingSub} numberOfLines={2}>
+                    {card.sub}
+                  </Text>
+                </VionaGlassPanel>
               </Pressable>
             ))}
           </ScrollView>
@@ -987,9 +1027,22 @@ const styles = StyleSheet.create({
     width: 140,
     height: 140,
     borderRadius: 70,
-    backgroundColor: 'rgba(201, 169, 98, 0.07)',
-    top: '8%',
+    backgroundColor: 'rgba(201, 169, 98, 0.12)',
+    top: '10%',
     right: '6%',
+  },
+  ftGlowBlobSecondary: {
+    position: 'absolute',
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    backgroundColor: 'rgba(112, 200, 255, 0.1)',
+    bottom: '12%',
+    left: '14%',
+  },
+  ftCityGlow: {
+    ...StyleSheet.absoluteFillObject,
+    opacity: 0.85,
   },
   ftOrbitLine: {
     position: 'absolute',
@@ -1007,6 +1060,12 @@ const styles = StyleSheet.create({
     transform: [{ rotate: '11deg' }],
     width: '72%',
     left: '14%',
+  },
+  ftRouteLine: {
+    position: 'absolute',
+    height: 1,
+    maxHeight: 1,
+    backgroundColor: 'rgba(244, 246, 250, 0.35)',
   },
   ftConstellationDot: {
     position: 'absolute',
@@ -1076,7 +1135,7 @@ const styles = StyleSheet.create({
   quickActionStrip: {
     alignSelf: 'center',
     marginBottom: theme.spacing.md,
-    paddingVertical: vionaTokens.spacing[12],
+    paddingVertical: vionaTokens.spacing[16],
     paddingHorizontal: vionaTokens.spacing[16],
   },
   quickActionPrompt: {
@@ -1091,27 +1150,10 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     gap: vionaTokens.spacing[8],
   },
-  quickActionChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    borderRadius: theme.radius.pill,
-    borderWidth: 1,
-    borderColor: vionaTokens.fashionTech.champagneLine,
-    backgroundColor: 'rgba(0,0,0,0.2)',
-  },
-  quickActionChipText: {
-    fontSize: 12,
-    lineHeight: 16,
-    color: vionaTokens.fashionTech.inkOnDark,
-    fontFamily: FontFamily.semibold,
-  },
   impactStrip: {
     alignSelf: 'center',
     marginBottom: theme.spacing.md,
-    paddingVertical: vionaTokens.spacing[12],
+    paddingVertical: vionaTokens.spacing[16],
     paddingHorizontal: vionaTokens.spacing[16],
   },
   impactStripRow: {
@@ -1137,13 +1179,13 @@ const styles = StyleSheet.create({
   impactStripTitle: {
     fontSize: 14,
     lineHeight: 20,
-    color: TEXT_PRIMARY,
+    color: vionaTokens.fashionTech.textPrimary,
     fontFamily: FontFamily.extrabold,
   },
   impactStripSubtitle: {
     fontSize: 12,
     lineHeight: 18,
-    color: TEXT_MUTED,
+    color: vionaTokens.fashionTech.textSecondary,
     fontFamily: FontFamily.medium,
   },
   impactStripCta: {
@@ -1154,8 +1196,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     borderRadius: theme.radius.pill,
     borderWidth: 1,
-    borderColor: vionaTokens.fashionTech.champagneLine,
-    backgroundColor: 'rgba(0,0,0,0.22)',
+    borderColor: 'rgba(255, 124, 198, 0.42)',
+    backgroundColor: 'rgba(255, 124, 198, 0.12)',
   },
   impactStripCtaText: {
     fontSize: 12,
@@ -1174,7 +1216,7 @@ const styles = StyleSheet.create({
     minWidth: 120,
     fontSize: 12,
     lineHeight: 17,
-    color: vionaTokens.colors.muted,
+    color: vionaTokens.fashionTech.textSecondary,
     fontFamily: FontFamily.medium,
   },
   creditPill: {
@@ -1252,37 +1294,10 @@ const styles = StyleSheet.create({
   },
   actionCenter: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     alignSelf: 'center',
     gap: 12,
     marginBottom: theme.spacing.lg,
-  },
-  actionWidget: {
-    flex: 1,
-    minHeight: 104,
-    borderRadius: 16,
-    paddingVertical: 12,
-    paddingHorizontal: 10,
-    backgroundColor: CARD_BG,
-    borderWidth: 1,
-    borderColor: vionaTrust.border,
-    alignItems: 'center',
-    gap: 6,
-    shadowColor: '#0B1628',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.07,
-    shadowRadius: 12,
-    elevation: 3,
-  },
-  actionWidgetTitle: {
-    fontSize: 13,
-    fontFamily: FontFamily.extrabold,
-    color: TEXT_PRIMARY,
-  },
-  actionWidgetSub: {
-    fontSize: 11,
-    fontFamily: FontFamily.medium,
-    color: TEXT_MUTED,
-    textAlign: 'center',
   },
   briefingBlock: {
     alignSelf: 'center',
@@ -1306,14 +1321,6 @@ const styles = StyleSheet.create({
     minHeight: 92,
     borderRadius: 16,
     padding: 14,
-    backgroundColor: CARD_BG,
-    borderWidth: 1,
-    borderColor: vionaTrust.border,
-    shadowColor: '#0B1628',
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.06,
-    shadowRadius: 10,
-    elevation: 2,
   },
   briefingHeadline: {
     fontSize: 14,

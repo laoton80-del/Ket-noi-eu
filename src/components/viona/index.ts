@@ -1,5 +1,7 @@
 export { VionaSurface } from './VionaSurface';
 export type { VionaSurfaceProps } from './VionaSurface';
+export { VionaGlassPanel } from './VionaGlassPanel';
+export type { VionaGlassPanelProps } from './VionaGlassPanel';
 
 export { VionaButton } from './VionaButton';
 export type { VionaButtonProps } from './VionaButton';
@@ -15,6 +17,10 @@ export type { VionaFashionWorldCardProps } from './VionaFashionWorldCard';
 
 export { VionaFashionHomeCommandBar } from './VionaFashionHomeCommandBar';
 export type { VionaFashionHomeCommandBarProps } from './VionaFashionHomeCommandBar';
+export { VionaQuickActionPill } from './VionaQuickActionPill';
+export type { VionaQuickActionPillProps } from './VionaQuickActionPill';
+export { VionaInfoTile } from './VionaInfoTile';
+export type { VionaInfoTileProps } from './VionaInfoTile';
 
 export { VionaSafetyAssist } from './VionaSafetyAssist';
 export type { VionaSafetyAssistProps } from './VionaSafetyAssist';
