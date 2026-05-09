@@ -19,6 +19,14 @@ export type VionaFashionHomeCommandBarProps = Readonly<{
   headerWishLine: string;
   /** Prominent local time + explicit region (e.g. “08:33 tại …”). */
   headerTimeLocationLine: string;
+  /**
+   * Desktop fashion home: large clock line + separate region line (localized country).
+   * When set, overrides the single-line `headerTimeLocationLine` for visual layout (a11y still uses full string).
+   */
+  desktopTimeRegion?: Readonly<{
+    clockLine: string;
+    regionLine: string | null;
+  }>;
   /** Full greeting block for screen readers. */
   headerGreetingA11y: string;
   onPressLanguage: () => void;
@@ -35,6 +43,7 @@ export function VionaFashionHomeCommandBar({
   headerGreetingLine1,
   headerWishLine,
   headerTimeLocationLine,
+  desktopTimeRegion,
   headerGreetingA11y,
   onPressLanguage,
   onPressVio,
@@ -77,13 +86,34 @@ export function VionaFashionHomeCommandBar({
           <Text style={[styles.wishLine, compactDensity && styles.wishLineCompact]} numberOfLines={2}>
             {headerWishLine}
           </Text>
-          <Text
-            style={[styles.timeLocationLine, compactDensity && styles.timeLocationLineCompact]}
-            numberOfLines={1}
-            ellipsizeMode="tail"
-          >
-            {headerTimeLocationLine}
-          </Text>
+          {desktopTimeRegion != null ? (
+            <View style={styles.desktopTimeBlock}>
+              <Text
+                style={[styles.desktopClockLine, compactDensity && styles.desktopClockLineCompact]}
+                numberOfLines={1}
+                ellipsizeMode="tail"
+              >
+                {desktopTimeRegion.clockLine}
+              </Text>
+              {desktopTimeRegion.regionLine != null && desktopTimeRegion.regionLine.length > 0 ? (
+                <Text
+                  style={[styles.desktopRegionLine, compactDensity && styles.desktopRegionLineCompact]}
+                  numberOfLines={1}
+                  ellipsizeMode="tail"
+                >
+                  {desktopTimeRegion.regionLine}
+                </Text>
+              ) : null}
+            </View>
+          ) : (
+            <Text
+              style={[styles.timeLocationLine, compactDensity && styles.timeLocationLineCompact]}
+              numberOfLines={1}
+              ellipsizeMode="tail"
+            >
+              {headerTimeLocationLine}
+            </Text>
+          )}
         </View>
       </View>
 
@@ -242,6 +272,41 @@ const styles = StyleSheet.create({
   timeLocationLineCompact: {
     fontSize: 16,
     lineHeight: 21,
+  },
+  desktopTimeBlock: {
+    marginTop: 2,
+    gap: 2,
+    maxWidth: '100%',
+  },
+  desktopClockLine: {
+    fontFamily: FontFamily.extrabold,
+    fontSize: 26,
+    letterSpacing: 0.4,
+    lineHeight: 30,
+    color: vionaTokens.fashionTech.champagne,
+    fontVariant: ['tabular-nums'],
+    textShadowColor: 'rgba(5, 10, 18, 0.55)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 6,
+  },
+  desktopClockLineCompact: {
+    fontSize: 22,
+    lineHeight: 26,
+  },
+  desktopRegionLine: {
+    fontFamily: FontFamily.semibold,
+    fontSize: 14,
+    letterSpacing: 0.2,
+    lineHeight: 18,
+    color: vionaTokens.fashionTech.inkOnDark,
+    opacity: 0.92,
+    textShadowColor: 'rgba(5, 10, 18, 0.45)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 4,
+  },
+  desktopRegionLineCompact: {
+    fontSize: 13,
+    lineHeight: 17,
   },
   utilityCluster: {
     flexDirection: 'row',

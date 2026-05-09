@@ -132,7 +132,9 @@ export function VionaFashionWorldCard({
 
   const photoLayer =
     backgroundImage != null ? (
-      <Image source={backgroundImage} resizeMode="cover" style={[styles.imageFull, imageStyle]} />
+      <View style={styles.imageClipFull} pointerEvents="none">
+        <Image source={backgroundImage} resizeMode="cover" style={[styles.imageFull, imageStyle]} />
+      </View>
     ) : (
       <LinearGradient colors={fallbackGrad} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={StyleSheet.absoluteFillObject} />
     );
@@ -315,19 +317,22 @@ export function VionaFashionWorldCard({
     </View>
   );
 
-  if (!onPress) {
+  /** Hover/focus for Living Hero (desktop) must work even when `onPress` is omitted (e.g. coming-soon travel). */
+  const hoverOnly = onPress == null && (onHoverIn != null || onHoverOut != null || onFocus != null || onBlur != null);
+
+  if (!onPress && !hoverOnly) {
     return <View style={stretch.press}>{gradShell}</View>;
   }
 
   return (
     <Pressable
-      onPress={onPress}
+      onPress={onPress ?? (() => {})}
       onHoverIn={onHoverIn}
       onHoverOut={onHoverOut}
       onFocus={onFocus}
       onBlur={onBlur}
-      disabled={disabled}
-      style={({ pressed }) => [styles.pressWrap, stretch.press, pressed && !disabled && styles.pressed]}
+      disabled={onPress != null && disabled}
+      style={({ pressed }) => [styles.pressWrap, stretch.press, pressed && onPress != null && !disabled && styles.pressed]}
     >
       {gradShell}
     </Pressable>
@@ -361,6 +366,10 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     backgroundColor: 'rgba(10, 14, 20, 0.2)',
     position: 'relative',
+  },
+  imageClipFull: {
+    ...StyleSheet.absoluteFillObject,
+    overflow: 'hidden',
   },
   imageFull: {
     ...StyleSheet.absoluteFillObject,

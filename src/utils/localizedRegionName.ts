@@ -5,8 +5,22 @@ import { normalizeCountryCodeOrSentinel } from '../config/countryPacks';
  * Returns `null` when country is unknown / sentinel (`ZZ`).
  */
 export function localizedRegionName(countryCode: string | undefined, uiLanguage: string): string | null {
-  const code = normalizeCountryCodeOrSentinel(countryCode);
-  if (code === 'ZZ') return null;
+  const raw = countryCode?.trim() ?? '';
+  if (!raw) return null;
+  const upper = raw.toUpperCase();
+
+  const iso3ToIso2: Readonly<Record<string, string>> = {
+    CZE: 'CZ',
+    DEU: 'DE',
+    VNM: 'VN',
+    USA: 'US',
+    FRA: 'FR',
+    JPN: 'JP',
+    KOR: 'KR',
+  };
+  const maybeIso2 = upper.length === 3 ? iso3ToIso2[upper] : upper;
+  const code = normalizeCountryCodeOrSentinel(maybeIso2);
+  if (code === 'ZZ') return raw.length > 2 ? raw : null;
 
   try {
     if (typeof Intl === 'undefined' || typeof Intl.DisplayNames === 'undefined') {

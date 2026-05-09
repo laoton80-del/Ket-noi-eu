@@ -7,10 +7,12 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { StatusBar } from 'expo-status-bar';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
-  ActivityIndicator,
   AccessibilityInfo,
+  ActivityIndicator,
   Alert,
   Animated,
+  Easing,
+  Image,
   Platform,
   Pressable,
   ScrollView,
@@ -18,6 +20,8 @@ import {
   Text,
   TextInput,
   View,
+  type ImageSourcePropType,
+  type ImageStyle,
   useWindowDimensions,
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -58,6 +62,7 @@ import {
   readFocusedTabRouteFromRootState,
 } from '../navigation/fashionHomeDesktopShell';
 import { MAIN_TAB, type RootStackParamList } from '../navigation/routes';
+import { normalizeCountryCodeOrSentinel } from '../config/countryPacks';
 import { vionaTokens } from '../design';
 import { getRestApiJwt, isRestApiConfigured } from '../services/apiClient';
 import { patchUserPersonaOnServer } from '../services/viGlobalUserPersonaApi';
@@ -71,15 +76,88 @@ import { useUserStore } from '../store/userStore';
 import { hasB2BWorkspaceAccess } from '../utils/b2bAccess';
 import { localizedRegionName } from '../utils/localizedRegionName';
 import { DashboardB2CScreen } from './b2c/DashboardB2CScreen';
+import type { AuthUser } from '../context/authTypes';
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
 
 const IMG_LOGO = require('../../assets/brand/viona/logo-in-app.png');
-const IMG_HOME_HERO = require('../assets/viona/home/viona-home-hero-constellation.png');
+const IMG_HOME_HERO = require('../assets/viona/home/viona-hero-human-constellation-1280x428.png');
+const IMG_HERO_DESKTOP_HUMAN = IMG_HOME_HERO;
+const IMG_HERO_DESKTOP_LOCAL = require('../assets/viona/home/viona-hero-local-1280x428.png');
+const IMG_HERO_DESKTOP_TRAVEL = require('../assets/viona/home/viona-hero-travel-1280x428.png');
+const IMG_HERO_DESKTOP_ACADEMY = require('../assets/viona/home/viona-hero-academy-1280x428.png');
+const IMG_HERO_DESKTOP_BUSINESS = require('../assets/viona/home/viona-hero-business-1280x428.png');
+
 const IMG_HOME_LOCAL = require('../assets/viona/home/viona-home-local-night-market.png');
 const IMG_HOME_TRAVEL = require('../assets/viona/home/viona-home-travel-airport.png');
 const IMG_HOME_ACADEMY = require('../assets/viona/home/viona-home-academy-learning.png');
 const IMG_HOME_BUSINESS = require('../assets/viona/home/viona-home-business-shop-import.png');
+
+type LivingHeroVisualKey = 'default' | 'local' | 'travel' | 'academy' | 'business';
+
+const LIVING_HERO_VISUAL_ORDER: readonly LivingHeroVisualKey[] = [
+  'default',
+  'local',
+  'travel',
+  'academy',
+  'business',
+];
+
+const LIVING_HERO_REVERT_MS = 1200;
+const LIVING_HERO_CROSSFADE_MS = 800;
+const LIVING_HERO_AUTO_INTERVAL_MS = 12000;
+/** Pause while hovering/focusing cards; disabled entirely when reduced-motion is on. */
+const LIVING_HERO_AUTO_ROTATION_ENABLED = false;
+
+const LIVING_HERO_DESKTOP_IMAGE: Readonly<Record<LivingHeroVisualKey, ImageSourcePropType>> = {
+  default: IMG_HERO_DESKTOP_HUMAN,
+  local: IMG_HERO_DESKTOP_LOCAL,
+  travel: IMG_HERO_DESKTOP_TRAVEL,
+  academy: IMG_HERO_DESKTOP_ACADEMY,
+  business: IMG_HERO_DESKTOP_BUSINESS,
+};
+
+const LIVING_HERO_DESKTOP_COPY: Readonly<
+  Record<LivingHeroVisualKey, Readonly<{ eyebrow: string; title: string; subtitle: string }>>
+> = {
+  default: {
+    eyebrow: 'VIONA HUMAN CONSTELLATION',
+    title: 'Your global companion, wherever life moves.',
+    subtitle:
+      'Local life, travel support, learning, and AI assistance — designed for Vietnamese people worldwide.',
+  },
+  local: {
+    eyebrow: 'VIONA LOCAL',
+    title: 'Find trusted support around where you live.',
+    subtitle:
+      'Local services, community connection, and daily life abroad — built for Vietnamese people worldwide.',
+  },
+  travel: {
+    eyebrow: 'VIONA TRAVEL',
+    title: 'Move across countries with confidence.',
+    subtitle:
+      'Direction, language support, and travel guidance before, during, and after the journey.',
+  },
+  academy: {
+    eyebrow: 'VIONA ACADEMY',
+    title: 'Learn, practice, and grow with AI.',
+    subtitle:
+      'Family learning, Vietnamese language support, and future skills in one calm space.',
+  },
+  business: {
+    eyebrow: 'VIONA BUSINESS',
+    title: 'Turn customer requests into growth.',
+    subtitle:
+      'AI receptionist, merchant tools, and service support for Vietnamese businesses.',
+  },
+};
+
+/** Left band only — keeps center/right hero art bright; copy stays on the left rail. */
+const DESKTOP_HERO_SCRIM_LEFT_COLORS = [
+  'rgba(5, 9, 15, 0.68)',
+  'rgba(5, 9, 15, 0.22)',
+  'rgba(5, 9, 15, 0)',
+] as const;
 const ADMIN_UNLOCK_KEY = STORAGE_KEYS.adminUnlock;
 /** World Stage — light canvas (aurora gradient applied in hero). */
 const SCREEN_BG = vionaTokens.gradients.multiverseHero[0];
@@ -95,7 +173,183 @@ type BriefingCard = Readonly<{
   sub: string;
 }>;
 
-type HeroVariant = 'default' | 'local' | 'travel' | 'academy' | 'business';
+/** Runtime auth snapshot may include server/extra keys merged into AsyncStorage JSON. */
+type HomeAuthSnapshot = AuthUser & Record<string, unknown>;
+
+function isLikelyPhoneOnlyName(s: string): boolean {
+  const compact = s.replace(/\s/g, '');
+  return /^\+?\d{8,}$/.test(compact);
+}
+
+function isPlaceholderRegionLabel(s: string): boolean {
+  const lower = s.trim().toLowerCase();
+  return lower === 'your region' || lower === 'khu vực của bạn';
+}
+
+function pickRawDisplayNameForHome(user: AuthUser | null | undefined): { raw: string; field: string } | null {
+  if (!user) return null;
+  const u = user as HomeAuthSnapshot;
+  const loose = u as Record<string, unknown>;
+  const profile =
+    u.profile && typeof u.profile === 'object' && u.profile !== null
+      ? (u.profile as Record<string, unknown>)
+      : undefined;
+  const account =
+    loose.account && typeof loose.account === 'object' && loose.account !== null
+      ? (loose.account as Record<string, unknown>)
+      : undefined;
+  const candidates: readonly { field: string; value: unknown }[] = [
+    { field: 'user.name', value: u.name },
+    { field: 'user.firstName', value: u.firstName },
+    { field: 'user.displayName', value: u.displayName },
+    { field: 'user.fullName', value: u.fullName },
+    { field: 'user.givenName', value: loose.givenName },
+    { field: 'profile.firstName', value: profile?.firstName },
+    { field: 'profile.name', value: profile?.name },
+    { field: 'profile.displayName', value: profile?.displayName },
+    { field: 'account.name', value: account?.name },
+  ];
+  for (const c of candidates) {
+    if (typeof c.value === 'string' && c.value.trim().length > 0) {
+      const trimmed = c.value.trim();
+      if (isLikelyPhoneOnlyName(trimmed)) continue;
+      return { raw: trimmed, field: c.field };
+    }
+  }
+  return null;
+}
+
+function firstTokenFromPersonName(raw: string): string {
+  return raw.split(/[,\s]+/).map((s) => s.trim()).filter(Boolean)[0] ?? '';
+}
+
+type HeaderHintPick = Readonly<{ raw: string; field: string }>;
+
+/** ISO2 first; then freeform location/country label (length ≥ 3), never ZZ-only or placeholder. */
+function pickLocationHeaderFromCandidates(
+  candidates: readonly { field: string; value: unknown }[]
+): HeaderHintPick | null {
+  for (const c of candidates) {
+    if (typeof c.value !== 'string') continue;
+    const raw = c.value.trim();
+    if (!raw) continue;
+    if (normalizeCountryCodeOrSentinel(raw) !== 'ZZ') {
+      return { raw, field: c.field };
+    }
+  }
+  for (const c of candidates) {
+    if (typeof c.value !== 'string') continue;
+    const raw = c.value.trim();
+    if (raw.length < 3) continue;
+    if (/^zz$/i.test(raw)) continue;
+    if (isPlaceholderRegionLabel(raw)) continue;
+    if (isLikelyPhoneOnlyName(raw)) continue;
+    return { raw, field: c.field };
+  }
+  return null;
+}
+
+function headerRegionDisplayLabel(raw: string, uiLanguage: string): string | null {
+  const viaIntl = localizedRegionName(raw, uiLanguage);
+  if (viaIntl != null && viaIntl.length > 0) return viaIntl;
+  const trimmed = raw.trim();
+  if (trimmed.length >= 3 && !/^zz$/i.test(trimmed) && !isPlaceholderRegionLabel(trimmed)) {
+    return trimmed;
+  }
+  return null;
+}
+
+/**
+ * Greeting-only: read persisted `authSession` JSON (same key as AuthContext), without changing
+ * hydration rules or `AuthUser` shape.
+ */
+function coalesceDisplayNameWithFieldFromAuthSessionJson(parsed: Record<string, unknown>): HeaderHintPick | null {
+  const pick = (v: unknown) => (typeof v === 'string' ? v.trim() : '');
+  const account = parsed.account;
+  const accountName =
+    account && typeof account === 'object' && account !== null && 'name' in account
+      ? pick((account as { name?: unknown }).name)
+      : '';
+  const profile =
+    parsed.profile && typeof parsed.profile === 'object' && parsed.profile !== null
+      ? (parsed.profile as Record<string, unknown>)
+      : undefined;
+  const ordered: readonly { field: string; value: string }[] = [
+    { field: 'authSession.json.name', value: pick(parsed.name) },
+    { field: 'authSession.json.firstName', value: pick(parsed.firstName) },
+    { field: 'authSession.json.displayName', value: pick(parsed.displayName) },
+    { field: 'authSession.json.fullName', value: pick(parsed.fullName) },
+    { field: 'authSession.json.givenName', value: pick(parsed.givenName) },
+    { field: 'authSession.json.profile.firstName', value: profile ? pick(profile.firstName) : '' },
+    { field: 'authSession.json.profile.name', value: profile ? pick(profile.name) : '' },
+    { field: 'authSession.json.profile.displayName', value: profile ? pick(profile.displayName) : '' },
+    { field: 'authSession.json.account.name', value: accountName },
+  ];
+  for (const o of ordered) {
+    if (o.value.length > 0 && !isLikelyPhoneOnlyName(o.value)) return { raw: o.value, field: o.field };
+  }
+  return null;
+}
+
+function pickCountryWithFieldFromAuthSessionJson(parsed: Record<string, unknown>): HeaderHintPick | null {
+  const profile =
+    parsed.profile && typeof parsed.profile === 'object' && parsed.profile !== null
+      ? (parsed.profile as Record<string, unknown>)
+      : undefined;
+  const candidates: readonly { field: string; value: unknown }[] = [
+    { field: 'authSession.json.country', value: parsed.country },
+    { field: 'authSession.json.countryCode', value: parsed.countryCode },
+    { field: 'authSession.json.residenceCountry', value: parsed.residenceCountry },
+    { field: 'authSession.json.profile.country', value: profile?.country },
+    { field: 'authSession.json.market', value: parsed.market },
+    { field: 'authSession.json.countryName', value: parsed.countryName },
+    { field: 'authSession.json.location', value: parsed.location },
+    { field: 'authSession.json.region', value: parsed.region },
+    { field: 'authSession.json.profile.countryName', value: profile?.countryName },
+    { field: 'authSession.json.profile.location', value: profile?.location },
+  ];
+  return pickLocationHeaderFromCandidates(candidates);
+}
+
+function pickRawCountryForHome(user: AuthUser | null | undefined): { raw: string; field: string } | null {
+  if (!user) return null;
+  const u = user as HomeAuthSnapshot;
+  const loose = u as Record<string, unknown>;
+  const profile =
+    u.profile && typeof u.profile === 'object' && u.profile !== null
+      ? (u.profile as Record<string, unknown>)
+      : undefined;
+  const candidates: readonly { field: string; value: unknown }[] = [
+    { field: 'user.country', value: u.country },
+    { field: 'user.countryCode', value: u.countryCode },
+    { field: 'user.residenceCountry', value: u.residenceCountry },
+    { field: 'profile.country', value: profile?.country },
+    { field: 'user.market', value: u.market },
+    { field: 'user.countryName', value: loose.countryName },
+    { field: 'user.location', value: loose.location },
+    { field: 'user.region', value: loose.region },
+    { field: 'profile.countryName', value: profile?.countryName },
+    { field: 'profile.location', value: profile?.location },
+  ];
+  return pickLocationHeaderFromCandidates(candidates);
+}
+
+/** Web: `object-fit: cover` only — desktop Living Hero uses fixed 1280×428 assets (no object-position). */
+const heroImageWebCoverStyle = (Platform.OS === 'web' ? { objectFit: 'cover' as const } : {}) as ImageStyle;
+/** Desktop hero: full frame inside shell; no object-position. */
+const heroDesktopLivingImageWebStyle = (
+  Platform.OS === 'web' ? { objectFit: 'contain' as const } : {}
+) as ImageStyle;
+/** Hero shell matches asset aspect; image scaled down uniformly for cinematic inset (no X/Y skew). */
+const DESKTOP_HERO_FRAME_ASPECT = 1280 / 428;
+const DESKTOP_HERO_IMAGE_INSET_SCALE = 0.86;
+const desktopHeroLivingImageTransformStyle = {
+  transform: [
+    { scale: DESKTOP_HERO_IMAGE_INSET_SCALE },
+    { translateX: -92 },
+    { translateY: -36 },
+  ],
+} as const;
 
 export function HomeScreen() {
   const { t, i18n } = useTranslation();
@@ -118,11 +372,33 @@ export function HomeScreen() {
   const outboundPersonaName = getPersonaDisplayName('leona');
   const [clockTick, setClockTick] = useState(() => new Date());
   const [walletBalanceLoading, setWalletBalanceLoading] = useState(false);
-  const [heroIntent, setHeroIntent] = useState<HeroVariant>('default');
-  const [heroDisplayed, setHeroDisplayed] = useState<HeroVariant>('default');
-  const [reduceMotionEnabled, setReduceMotionEnabled] = useState(false);
-  const heroFade = useRef(new Animated.Value(1)).current;
-  const heroResetTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  /** Home-only header hints from raw `authSession` JSON (does not alter AuthContext / hydration). */
+  const [sessionHeaderHints, setSessionHeaderHints] = useState<{
+    name: HeaderHintPick | null;
+    country: HeaderHintPick | null;
+  }>({ name: null, country: null });
+
+  useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      try {
+        const raw = await AsyncStorage.getItem(STORAGE_KEYS.authSession);
+        if (!raw || cancelled) return;
+        const parsed = JSON.parse(raw) as Record<string, unknown>;
+        if (!cancelled) {
+          setSessionHeaderHints({
+            name: coalesceDisplayNameWithFieldFromAuthSessionJson(parsed),
+            country: pickCountryWithFieldFromAuthSessionJson(parsed),
+          });
+        }
+      } catch {
+        if (!cancelled) setSessionHeaderHints({ name: null, country: null });
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [user?.country, user?.name, user?.phone]);
 
   useEffect(() => {
     if (!user) setPersonaModalVisible(false);
@@ -240,13 +516,6 @@ export function HomeScreen() {
     if (isLandscapeViewport && height < 520) return 'compact' as const;
     return 'comfortable' as const;
   }, [fashionHomeDesktopShellActive, width, height, isLandscapeViewport]);
-  const desktopHeroMinHeight = useMemo(() => {
-    if (!fashionHomeDesktopShellActive) return 0;
-    const wideHero = width >= 920;
-    if (!isLandscapeViewport) return wideHero ? 432 : 520;
-    const cap = Math.max(240, Math.floor(height * 0.5));
-    return wideHero ? Math.min(340, cap) : Math.min(300, cap);
-  }, [fashionHomeDesktopShellActive, width, height, isLandscapeViewport]);
   const ftVisualMinHeight = useMemo(() => {
     if (isLandscapeViewport) return Math.max(168, Math.min(240, Math.floor(height * 0.42)));
     if (isShortViewport) return Math.max(200, Math.min(260, Math.floor(height * 0.28)));
@@ -270,8 +539,8 @@ export function HomeScreen() {
     /** Late night 23:00–04:59; evening through 22:59. */
     const slot =
       h >= 23 || h < 5 ? 'lateNight' : h < 12 ? 'morning' : h < 18 ? 'afternoon' : 'evening';
-    const raw = user?.name?.trim();
-    const first = raw ? raw.split(/\s+/).filter(Boolean)[0] : '';
+    const namePick = pickRawDisplayNameForHome(user) ?? sessionHeaderHints.name;
+    const first = namePick ? firstTokenFromPersonName(namePick.raw) : '';
 
     const line1 =
       slot === 'lateNight'
@@ -290,7 +559,8 @@ export function HomeScreen() {
       hourCycle: 'h23',
     }).format(clockTick);
 
-    const region = localizedRegionName(user?.country, i18n.language);
+    const countryPick = pickRawCountryForHome(user) ?? sessionHeaderHints.country;
+    const region = countryPick ? headerRegionDisplayLabel(countryPick.raw, i18n.language) : null;
     const timeLocation =
       region != null && region.length > 0
         ? t('shell.header.timeAtLocation', { time: timeStr, location: region })
@@ -298,50 +568,265 @@ export function HomeScreen() {
 
     const a11y = `${line1} ${wish} ${t('shell.header.localTimeA11y')} ${timeLocation}`;
 
-    return { line1, wish, timeLocation, a11y };
-  }, [clockTick, i18n.language, t, user?.country, user?.name]);
+    return {
+      line1,
+      wish,
+      timeLocation,
+      a11y,
+      /** One line: `12:26 · Czech Republic` (see `shell.header.timeAtLocation`); region omitted when unknown. */
+      clockLine: timeLocation,
+      regionLine: null,
+    };
+  }, [clockTick, i18n.language, sessionHeaderHints, t, user]);
 
   const heroCopyByVariant = useMemo(
     () => ({
       default: {
-        eyebrow: 'VIONA HUMAN CONSTELLATION',
-        title: 'Your global companion, wherever life moves.',
-        subtitle:
-          'Local life, travel support, learning, and AI assistance — designed for Vietnamese people worldwide.',
+        eyebrow: LIVING_HERO_DESKTOP_COPY.default.eyebrow,
+        title: LIVING_HERO_DESKTOP_COPY.default.title,
+        subtitle: LIVING_HERO_DESKTOP_COPY.default.subtitle,
         image: IMG_HOME_HERO,
       },
       local: {
-        eyebrow: 'VIONA LOCAL',
-        title: 'Find trusted Vietnamese services around you.',
-        subtitle:
-          'Local support, daily services, and community connection — close to where you live.',
+        eyebrow: LIVING_HERO_DESKTOP_COPY.local.eyebrow,
+        title: LIVING_HERO_DESKTOP_COPY.local.title,
+        subtitle: LIVING_HERO_DESKTOP_COPY.local.subtitle,
         image: IMG_HOME_LOCAL,
       },
       travel: {
-        eyebrow: 'VIONA TRAVEL',
-        title: 'Move across countries with confidence.',
-        subtitle:
-          'Direction, language support, and travel guidance before, during, and after the trip.',
+        eyebrow: LIVING_HERO_DESKTOP_COPY.travel.eyebrow,
+        title: LIVING_HERO_DESKTOP_COPY.travel.title,
+        subtitle: LIVING_HERO_DESKTOP_COPY.travel.subtitle,
         image: IMG_HOME_TRAVEL,
       },
       academy: {
-        eyebrow: 'VIONA ACADEMY',
-        title: 'Learn, practice, and grow with AI.',
-        subtitle:
-          'Family learning, Vietnamese language support, and future skills in one calm space.',
+        eyebrow: LIVING_HERO_DESKTOP_COPY.academy.eyebrow,
+        title: LIVING_HERO_DESKTOP_COPY.academy.title,
+        subtitle: LIVING_HERO_DESKTOP_COPY.academy.subtitle,
         image: IMG_HOME_ACADEMY,
       },
       business: {
-        eyebrow: 'VIONA BUSINESS',
-        title: 'Turn customer requests into growth.',
-        subtitle:
-          'AI receptionist, merchant tools, and service support for Vietnamese businesses.',
+        eyebrow: LIVING_HERO_DESKTOP_COPY.business.eyebrow,
+        title: LIVING_HERO_DESKTOP_COPY.business.title,
+        subtitle: LIVING_HERO_DESKTOP_COPY.business.subtitle,
         image: IMG_HOME_BUSINESS,
       },
     }),
     []
   );
-  const activeHero = heroCopyByVariant[heroDisplayed];
+  const activeHero = heroCopyByVariant.default;
+
+  const [reduceMotion, setReduceMotion] = useState(false);
+  useEffect(() => {
+    let cancelled = false;
+    const apply = (v: boolean) => {
+      if (!cancelled) setReduceMotion(v);
+    };
+    const p = AccessibilityInfo.isReduceMotionEnabled?.();
+    if (p && typeof (p as Promise<boolean>).then === 'function') {
+      void (p as Promise<boolean>).then(apply).catch(() => {});
+    }
+    const sub = AccessibilityInfo.addEventListener?.('reduceMotionChanged', apply);
+    let mqRemove: (() => void) | undefined;
+    if (Platform.OS === 'web' && typeof window !== 'undefined') {
+      const mq = window.matchMedia?.('(prefers-reduced-motion: reduce)');
+      if (mq) {
+        apply(mq.matches);
+        const handler = (e: MediaQueryListEvent) => apply(e.matches);
+        mq.addEventListener('change', handler);
+        mqRemove = () => mq.removeEventListener('change', handler);
+      }
+    }
+    return () => {
+      cancelled = true;
+      sub?.remove?.();
+      mqRemove?.();
+    };
+  }, []);
+
+  const [livingBaseKey, setLivingBaseKey] = useState<LivingHeroVisualKey>('default');
+  const [livingOverlayKey, setLivingOverlayKey] = useState<LivingHeroVisualKey | null>(null);
+  const livingHeroOverlayOpacity = useRef(new Animated.Value(0)).current;
+  const livingHeroCopyBlend = useRef(new Animated.Value(1)).current;
+  const livingSettledKeyRef = useRef<LivingHeroVisualKey>('default');
+  const livingOverlayKeyRef = useRef<LivingHeroVisualKey | null>(null);
+  const livingHoverPinnedRef = useRef<LivingHeroVisualKey | null>(null);
+  const livingRevertTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const livingAutoRotateIndexRef = useRef(0);
+  const transitionLivingHeroRef = useRef<(next: LivingHeroVisualKey) => void>(() => {});
+
+  useEffect(() => {
+    return () => {
+      if (livingRevertTimerRef.current != null) clearTimeout(livingRevertTimerRef.current);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (fashionHomeDesktopShellActive) return;
+    livingHeroOverlayOpacity.stopAnimation();
+    livingHeroCopyBlend.stopAnimation();
+    livingHoverPinnedRef.current = null;
+    livingOverlayKeyRef.current = null;
+    livingSettledKeyRef.current = 'default';
+    livingAutoRotateIndexRef.current = 0;
+    if (livingRevertTimerRef.current != null) {
+      clearTimeout(livingRevertTimerRef.current);
+      livingRevertTimerRef.current = null;
+    }
+    setLivingBaseKey('default');
+    setLivingOverlayKey(null);
+    livingHeroOverlayOpacity.setValue(0);
+    livingHeroCopyBlend.setValue(1);
+  }, [fashionHomeDesktopShellActive, livingHeroCopyBlend, livingHeroOverlayOpacity]);
+
+  const flushLivingHeroOverlay = useCallback(() => {
+    livingHeroOverlayOpacity.stopAnimation();
+    livingHeroCopyBlend.stopAnimation();
+    const ov = livingOverlayKeyRef.current;
+    if (ov !== null) {
+      livingSettledKeyRef.current = ov;
+      setLivingBaseKey(ov);
+      livingOverlayKeyRef.current = null;
+      setLivingOverlayKey(null);
+      livingHeroOverlayOpacity.setValue(0);
+    }
+  }, [livingHeroCopyBlend, livingHeroOverlayOpacity]);
+
+  const transitionLivingHero = useCallback(
+    (next: LivingHeroVisualKey) => {
+      if (!fashionHomeDesktopShellActive) return;
+      flushLivingHeroOverlay();
+      const from = livingSettledKeyRef.current;
+      if (next === from) return;
+
+      livingOverlayKeyRef.current = next;
+      setLivingOverlayKey(next);
+      livingHeroOverlayOpacity.setValue(0);
+
+      if (reduceMotion) {
+        livingSettledKeyRef.current = next;
+        setLivingBaseKey(next);
+        livingOverlayKeyRef.current = null;
+        setLivingOverlayKey(null);
+        livingHeroOverlayOpacity.setValue(0);
+        livingHeroCopyBlend.setValue(1);
+        return;
+      }
+
+      const cross = LIVING_HERO_CROSSFADE_MS;
+      const dip = Math.floor(cross * 0.35);
+      const lift = Math.ceil(cross * 0.65);
+
+      Animated.parallel([
+        Animated.timing(livingHeroOverlayOpacity, {
+          toValue: 1,
+          duration: cross,
+          easing: Easing.out(Easing.cubic),
+          useNativeDriver: true,
+        }),
+        Animated.sequence([
+          Animated.timing(livingHeroCopyBlend, {
+            toValue: 0.88,
+            duration: dip,
+            easing: Easing.out(Easing.quad),
+            useNativeDriver: true,
+          }),
+          Animated.timing(livingHeroCopyBlend, {
+            toValue: 1,
+            duration: lift,
+            easing: Easing.out(Easing.cubic),
+            useNativeDriver: true,
+          }),
+        ]),
+      ]).start(({ finished }) => {
+        if (!finished) return;
+        livingSettledKeyRef.current = next;
+        setLivingBaseKey(next);
+        livingOverlayKeyRef.current = null;
+        setLivingOverlayKey(null);
+        livingHeroOverlayOpacity.setValue(0);
+        livingHeroCopyBlend.setValue(1);
+      });
+    },
+    [fashionHomeDesktopShellActive, flushLivingHeroOverlay, reduceMotion, livingHeroCopyBlend, livingHeroOverlayOpacity]
+  );
+
+  transitionLivingHeroRef.current = transitionLivingHero;
+
+  useEffect(() => {
+    if (
+      !fashionHomeDesktopShellActive ||
+      !LIVING_HERO_AUTO_ROTATION_ENABLED ||
+      reduceMotion
+    ) {
+      return;
+    }
+    const id = setInterval(() => {
+      if (livingHoverPinnedRef.current != null) return;
+      livingAutoRotateIndexRef.current =
+        (livingAutoRotateIndexRef.current + 1) % LIVING_HERO_VISUAL_ORDER.length;
+      const next = LIVING_HERO_VISUAL_ORDER[livingAutoRotateIndexRef.current];
+      transitionLivingHeroRef.current(next);
+    }, LIVING_HERO_AUTO_INTERVAL_MS);
+    return () => clearInterval(id);
+  }, [fashionHomeDesktopShellActive, reduceMotion]);
+
+  const pinDesktopLivingHero = useCallback(
+    (key: LivingHeroVisualKey) => {
+      if (!fashionHomeDesktopShellActive || key === 'default') return;
+      livingHoverPinnedRef.current = key;
+      if (livingRevertTimerRef.current != null) {
+        clearTimeout(livingRevertTimerRef.current);
+        livingRevertTimerRef.current = null;
+      }
+      transitionLivingHero(key);
+    },
+    [fashionHomeDesktopShellActive, transitionLivingHero]
+  );
+
+  const scheduleDesktopLivingHeroRevert = useCallback(() => {
+    if (!fashionHomeDesktopShellActive) return;
+    if (livingRevertTimerRef.current != null) clearTimeout(livingRevertTimerRef.current);
+    livingRevertTimerRef.current = setTimeout(() => {
+      livingRevertTimerRef.current = null;
+      livingHoverPinnedRef.current = null;
+      livingAutoRotateIndexRef.current = 0;
+      transitionLivingHero('default');
+    }, LIVING_HERO_REVERT_MS);
+  }, [fashionHomeDesktopShellActive, transitionLivingHero]);
+
+  const desktopLivingCopyKey: LivingHeroVisualKey = livingOverlayKey ?? livingBaseKey;
+  const desktopLivingCopy = LIVING_HERO_DESKTOP_COPY[desktopLivingCopyKey];
+
+  const desktopCardLivingHoverProps = useMemo(() => {
+    if (!fashionHomeDesktopShellActive) return null;
+    return {
+      local: {
+        onHoverIn: () => pinDesktopLivingHero('local'),
+        onHoverOut: scheduleDesktopLivingHeroRevert,
+        onFocus: () => pinDesktopLivingHero('local'),
+        onBlur: scheduleDesktopLivingHeroRevert,
+      },
+      travel: {
+        onHoverIn: () => pinDesktopLivingHero('travel'),
+        onHoverOut: scheduleDesktopLivingHeroRevert,
+        onFocus: () => pinDesktopLivingHero('travel'),
+        onBlur: scheduleDesktopLivingHeroRevert,
+      },
+      academy: {
+        onHoverIn: () => pinDesktopLivingHero('academy'),
+        onHoverOut: scheduleDesktopLivingHeroRevert,
+        onFocus: () => pinDesktopLivingHero('academy'),
+        onBlur: scheduleDesktopLivingHeroRevert,
+      },
+      business: {
+        onHoverIn: () => pinDesktopLivingHero('business'),
+        onHoverOut: scheduleDesktopLivingHeroRevert,
+        onFocus: () => pinDesktopLivingHero('business'),
+        onBlur: scheduleDesktopLivingHeroRevert,
+      },
+    } as const;
+  }, [fashionHomeDesktopShellActive, pinDesktopLivingHero, scheduleDesktopLivingHeroRevert]);
 
   const walletChipLabel = useMemo(() => {
     const n = wallet.credits;
@@ -543,84 +1028,6 @@ export function HomeScreen() {
     homeCommand?.triggerSafetyAssist();
   }, [homeCommand]);
 
-  useEffect(() => {
-    let mounted = true;
-    void AccessibilityInfo.isReduceMotionEnabled().then((enabled) => {
-      if (mounted) setReduceMotionEnabled(enabled);
-    });
-    const sub = AccessibilityInfo.addEventListener('reduceMotionChanged', setReduceMotionEnabled);
-    return () => {
-      mounted = false;
-      sub.remove();
-    };
-  }, []);
-
-  useEffect(() => {
-    return () => {
-      if (heroResetTimer.current != null) {
-        clearTimeout(heroResetTimer.current);
-      }
-    };
-  }, []);
-
-  useEffect(() => {
-    if (heroIntent === heroDisplayed) return;
-    if (reduceMotionEnabled) {
-      setHeroDisplayed(heroIntent);
-      heroFade.setValue(1);
-      return;
-    }
-    Animated.timing(heroFade, {
-      toValue: 0,
-      duration: 280,
-      useNativeDriver: true,
-    }).start(() => {
-      setHeroDisplayed(heroIntent);
-      Animated.timing(heroFade, {
-        toValue: 1,
-        duration: 380,
-        useNativeDriver: true,
-      }).start();
-    });
-  }, [heroDisplayed, heroFade, heroIntent, reduceMotionEnabled]);
-
-  const setHeroFocus = useCallback((next: HeroVariant) => {
-    if (heroResetTimer.current != null) {
-      clearTimeout(heroResetTimer.current);
-      heroResetTimer.current = null;
-    }
-    setHeroIntent(next);
-  }, []);
-
-  const scheduleHeroDefault = useCallback(() => {
-    if (!fashionHomeDesktopShellActive) return;
-    if (heroResetTimer.current != null) clearTimeout(heroResetTimer.current);
-    heroResetTimer.current = setTimeout(() => {
-      setHeroIntent('default');
-      heroResetTimer.current = null;
-    }, 700);
-  }, [fashionHomeDesktopShellActive]);
-
-  const goUniverseLocalWithHero = useCallback(() => {
-    setHeroFocus('local');
-    goUniverseLocal();
-  }, [goUniverseLocal, setHeroFocus]);
-
-  const goUniverseTravelWithHero = useCallback(() => {
-    setHeroFocus('travel');
-    goUniverseTravel();
-  }, [goUniverseTravel, setHeroFocus]);
-
-  const goUniverseAcademyWithHero = useCallback(() => {
-    setHeroFocus('academy');
-    goUniverseAcademy();
-  }, [goUniverseAcademy, setHeroFocus]);
-
-  const goUniverseBusinessWithHero = useCallback(() => {
-    setHeroFocus('business');
-    goUniverseBusiness();
-  }, [goUniverseBusiness, setHeroFocus]);
-
   const quickActionItems = useMemo(
     () => [
       {
@@ -689,6 +1096,10 @@ export function HomeScreen() {
               headerGreetingLine1={fashionDesktopHeaderBlock.line1}
               headerWishLine={fashionDesktopHeaderBlock.wish}
               headerTimeLocationLine={fashionDesktopHeaderBlock.timeLocation}
+              desktopTimeRegion={{
+                clockLine: fashionDesktopHeaderBlock.clockLine,
+                regionLine: fashionDesktopHeaderBlock.regionLine,
+              }}
               headerGreetingA11y={fashionDesktopHeaderBlock.a11y}
               onPressLanguage={() => homeCommand.openLanguageSheet()}
               onPressVio={() => openProtected('Wallet')}
@@ -721,21 +1132,39 @@ export function HomeScreen() {
           <>
           <View style={[styles.ftHeroBleedFashion, { marginHorizontal: -layout.pad }]}>
             <View
-              style={[styles.desktopHeroShell, { minHeight: desktopHeroMinHeight }]}
+              style={[styles.desktopHeroShell, { aspectRatio: DESKTOP_HERO_FRAME_ASPECT }]}
               accessibilityRole="image"
               accessibilityLabel={t('home.fashionTech.heroVisualA11y')}
             >
-              <Animated.Image
-                source={activeHero.image}
-                resizeMode="cover"
-                style={[styles.desktopHeroImage, !reduceMotionEnabled && { opacity: heroFade }]}
-              />
+              <View style={styles.desktopHeroImageClip} pointerEvents="none">
+                <Image
+                  source={LIVING_HERO_DESKTOP_IMAGE[livingBaseKey]}
+                  resizeMode="contain"
+                  style={[
+                    styles.desktopHeroImageFill,
+                    heroDesktopLivingImageWebStyle,
+                    desktopHeroLivingImageTransformStyle,
+                  ]}
+                />
+                {livingOverlayKey != null ? (
+                  <Animated.Image
+                    source={LIVING_HERO_DESKTOP_IMAGE[livingOverlayKey]}
+                    resizeMode="contain"
+                    style={[
+                      styles.desktopHeroImageFill,
+                      heroDesktopLivingImageWebStyle,
+                      desktopHeroLivingImageTransformStyle,
+                      { opacity: livingHeroOverlayOpacity },
+                    ]}
+                  />
+                ) : null}
+              </View>
               <LinearGradient
-                colors={['rgba(4, 7, 14, 0.9)', 'rgba(4, 7, 14, 0.48)', 'rgba(4, 7, 14, 0.08)', 'rgba(4, 7, 14, 0)']}
-                locations={[0, 0.34, 0.58, 1]}
+                colors={[...DESKTOP_HERO_SCRIM_LEFT_COLORS]}
+                locations={[0, 0.48, 1]}
                 start={{ x: 0, y: 0.5 }}
                 end={{ x: 1, y: 0.5 }}
-                style={StyleSheet.absoluteFillObject}
+                style={styles.desktopHeroReadabilityScrim}
                 pointerEvents="none"
               />
               <View
@@ -750,10 +1179,10 @@ export function HomeScreen() {
                   style={[
                     styles.desktopHeroCopy,
                     width < 920 ? { maxWidth: '100%' } : null,
-                    !reduceMotionEnabled && { opacity: heroFade },
+                    { opacity: livingHeroCopyBlend },
                   ]}
                 >
-                  <Text style={styles.ftEyebrow}>{activeHero.eyebrow}</Text>
+                  <Text style={styles.ftEyebrow}>{desktopLivingCopy.eyebrow}</Text>
                   <Text
                     style={[
                       styles.desktopHeroHeadline,
@@ -761,9 +1190,11 @@ export function HomeScreen() {
                       width < 520 ? styles.desktopHeroHeadlineXs : null,
                     ]}
                   >
-                    {activeHero.title}
+                    {desktopLivingCopy.title}
                   </Text>
-                  <Text style={[styles.ftSubtitle, width < 520 && styles.ftSubtitleNarrow]}>{activeHero.subtitle}</Text>
+                  <Text style={[styles.ftSubtitle, width < 520 && styles.ftSubtitleNarrow]}>
+                    {desktopLivingCopy.subtitle}
+                  </Text>
                   <View style={styles.desktopHeroCtaRow}>
                     <Pressable
                       onPress={scrollToWorldSection}
@@ -842,15 +1273,12 @@ export function HomeScreen() {
                     subtitle={t('home.fashionTech.local.subtitle')}
                     icon={<Ionicons name="grid-outline" size={22} color={vionaTokens.fashionTech.accentEmerald} />}
                     status={{ label: t('home.worldStage.local.status'), tone: 'lite' }}
-                    onPress={goUniverseLocalWithHero}
-                    onHoverIn={() => setHeroFocus('local')}
-                    onHoverOut={scheduleHeroDefault}
-                    onFocus={() => setHeroFocus('local')}
-                    onBlur={scheduleHeroDefault}
+                    onPress={goUniverseLocal}
                     footerHint={t('home.fashionTech.cardExploreHint')}
                     showChevron
                     neonRim
                     animatedNeonRim
+                    {...(desktopCardLivingHoverProps?.local ?? {})}
                   />
                 </View>
                 <View style={[styles.ftCardCarouselCell, { width: fashionCarouselCardWidth }]}>
@@ -866,15 +1294,12 @@ export function HomeScreen() {
                         ? { label: t('home.worldStage.travel.status'), tone: 'pilot' }
                         : { label: t('home.worldStage.travel.statusComingSoon'), tone: 'comingSoon' }
                     }
-                    onPress={featureFlags.travelEnabled ? goUniverseTravelWithHero : undefined}
-                    onHoverIn={() => setHeroFocus('travel')}
-                    onHoverOut={scheduleHeroDefault}
-                    onFocus={() => setHeroFocus('travel')}
-                    onBlur={scheduleHeroDefault}
+                    onPress={featureFlags.travelEnabled ? goUniverseTravel : undefined}
                     footerHint={t('home.fashionTech.cardExploreHint')}
                     showChevron
                     neonRim
                     animatedNeonRim
+                    {...(desktopCardLivingHoverProps?.travel ?? {})}
                   />
                 </View>
                 <View style={[styles.ftCardCarouselCell, { width: fashionCarouselCardWidth }]}>
@@ -886,15 +1311,12 @@ export function HomeScreen() {
                     subtitle={t('home.fashionTech.academy.subtitle')}
                     icon={<Ionicons name="sparkles-outline" size={22} color={vionaTokens.fashionTech.accentViolet} />}
                     status={{ label: t('home.worldStage.academy.status'), tone: 'demo' }}
-                    onPress={goUniverseAcademyWithHero}
-                    onHoverIn={() => setHeroFocus('academy')}
-                    onHoverOut={scheduleHeroDefault}
-                    onFocus={() => setHeroFocus('academy')}
-                    onBlur={scheduleHeroDefault}
+                    onPress={goUniverseAcademy}
                     footerHint={t('home.fashionTech.cardExploreHint')}
                     showChevron
                     neonRim
                     animatedNeonRim
+                    {...(desktopCardLivingHoverProps?.academy ?? {})}
                   />
                 </View>
                 <View style={[styles.ftCardCarouselCell, { width: fashionCarouselCardWidth }]}>
@@ -906,15 +1328,12 @@ export function HomeScreen() {
                     subtitle={t('home.fashionTech.business.subtitle')}
                     icon={<Ionicons name="briefcase-outline" size={22} color={vionaTokens.fashionTech.accentGold} />}
                     status={{ label: t('home.worldStage.business.status'), tone: 'pilot' }}
-                    onPress={goUniverseBusinessWithHero}
-                    onHoverIn={() => setHeroFocus('business')}
-                    onHoverOut={scheduleHeroDefault}
-                    onFocus={() => setHeroFocus('business')}
-                    onBlur={scheduleHeroDefault}
+                    onPress={goUniverseBusiness}
                     footerHint={t('home.fashionTech.cardExploreHint')}
                     showChevron
                     neonRim
                     animatedNeonRim
+                    {...(desktopCardLivingHoverProps?.business ?? {})}
                   />
                 </View>
               </ScrollView>
@@ -944,16 +1363,13 @@ export function HomeScreen() {
                     subtitle={t('home.fashionTech.local.subtitle')}
                     icon={<Ionicons name="grid-outline" size={22} color={vionaTokens.fashionTech.accentEmerald} />}
                     status={{ label: t('home.worldStage.local.status'), tone: 'lite' }}
-                    onPress={goUniverseLocalWithHero}
-                    onHoverIn={() => setHeroFocus('local')}
-                    onHoverOut={scheduleHeroDefault}
-                    onFocus={() => setHeroFocus('local')}
-                    onBlur={scheduleHeroDefault}
+                    onPress={goUniverseLocal}
                     footerHint={t('home.fashionTech.cardExploreHint')}
                     showChevron
                     neonRim
                     animatedNeonRim
                     stretchInColumn={stretchWorldCardsInGrid}
+                    {...(desktopCardLivingHoverProps?.local ?? {})}
                   />
                 </View>
                 <View
@@ -974,16 +1390,13 @@ export function HomeScreen() {
                         ? { label: t('home.worldStage.travel.status'), tone: 'pilot' }
                         : { label: t('home.worldStage.travel.statusComingSoon'), tone: 'comingSoon' }
                     }
-                    onPress={featureFlags.travelEnabled ? goUniverseTravelWithHero : undefined}
-                    onHoverIn={() => setHeroFocus('travel')}
-                    onHoverOut={scheduleHeroDefault}
-                    onFocus={() => setHeroFocus('travel')}
-                    onBlur={scheduleHeroDefault}
+                    onPress={featureFlags.travelEnabled ? goUniverseTravel : undefined}
                     footerHint={t('home.fashionTech.cardExploreHint')}
                     showChevron
                     neonRim
                     animatedNeonRim
                     stretchInColumn={stretchWorldCardsInGrid}
+                    {...(desktopCardLivingHoverProps?.travel ?? {})}
                   />
                 </View>
                 <View
@@ -1000,16 +1413,13 @@ export function HomeScreen() {
                     subtitle={t('home.fashionTech.academy.subtitle')}
                     icon={<Ionicons name="sparkles-outline" size={22} color={vionaTokens.fashionTech.accentViolet} />}
                     status={{ label: t('home.worldStage.academy.status'), tone: 'demo' }}
-                    onPress={goUniverseAcademyWithHero}
-                    onHoverIn={() => setHeroFocus('academy')}
-                    onHoverOut={scheduleHeroDefault}
-                    onFocus={() => setHeroFocus('academy')}
-                    onBlur={scheduleHeroDefault}
+                    onPress={goUniverseAcademy}
                     footerHint={t('home.fashionTech.cardExploreHint')}
                     showChevron
                     neonRim
                     animatedNeonRim
                     stretchInColumn={stretchWorldCardsInGrid}
+                    {...(desktopCardLivingHoverProps?.academy ?? {})}
                   />
                 </View>
                 <View
@@ -1026,16 +1436,13 @@ export function HomeScreen() {
                     subtitle={t('home.fashionTech.business.subtitle')}
                     icon={<Ionicons name="briefcase-outline" size={22} color={vionaTokens.fashionTech.accentGold} />}
                     status={{ label: t('home.worldStage.business.status'), tone: 'pilot' }}
-                    onPress={goUniverseBusinessWithHero}
-                    onHoverIn={() => setHeroFocus('business')}
-                    onHoverOut={scheduleHeroDefault}
-                    onFocus={() => setHeroFocus('business')}
-                    onBlur={scheduleHeroDefault}
+                    onPress={goUniverseBusiness}
                     footerHint={t('home.fashionTech.cardExploreHint')}
                     showChevron
                     neonRim
                     animatedNeonRim
                     stretchInColumn={stretchWorldCardsInGrid}
+                    {...(desktopCardLivingHoverProps?.business ?? {})}
                   />
                 </View>
               </View>
@@ -1067,7 +1474,7 @@ export function HomeScreen() {
                   },
                 ]}
               >
-                <Animated.View style={[styles.ftCopyCol, !reduceMotionEnabled && { opacity: heroFade }]}>
+                <Animated.View style={[styles.ftCopyCol]}>
                   <Text style={styles.ftEyebrow}>{activeHero.eyebrow}</Text>
                   <Text style={[styles.ftHeadline, width < 420 && styles.ftHeadlineCompact]}>
                     {activeHero.title}
@@ -1081,11 +1488,13 @@ export function HomeScreen() {
                   accessibilityRole="image"
                   accessibilityLabel={t('home.fashionTech.heroVisualA11y')}
                 >
-                  <Animated.Image
-                    source={activeHero.image}
-                    resizeMode="cover"
-                    style={[styles.ftVisualImage, !reduceMotionEnabled && { opacity: heroFade }]}
-                  />
+                  <View style={styles.ftVisualImageClip} pointerEvents="none">
+                    <Image
+                      source={activeHero.image}
+                      resizeMode="cover"
+                      style={[styles.ftVisualImageFill, heroImageWebCoverStyle]}
+                    />
+                  </View>
                   <LinearGradient
                     colors={['transparent', 'rgba(4, 6, 10, 0.12)']}
                     start={{ x: 0.5, y: 0 }}
@@ -1114,7 +1523,7 @@ export function HomeScreen() {
                       subtitle={t('home.fashionTech.local.subtitle')}
                       icon={<Ionicons name="grid-outline" size={22} color={vionaTokens.fashionTech.champagne} />}
                       status={{ label: t('home.worldStage.local.status'), tone: 'lite' }}
-                      onPress={goUniverseLocalWithHero}
+                      onPress={goUniverseLocal}
                     />
                   </View>
                   <View style={[styles.ftCardCarouselCell, { width: fashionCarouselCardWidth }]}>
@@ -1130,7 +1539,7 @@ export function HomeScreen() {
                           ? { label: t('home.worldStage.travel.status'), tone: 'pilot' }
                           : { label: t('home.worldStage.travel.statusComingSoon'), tone: 'comingSoon' }
                       }
-                      onPress={featureFlags.travelEnabled ? goUniverseTravelWithHero : undefined}
+                      onPress={featureFlags.travelEnabled ? goUniverseTravel : undefined}
                     />
                   </View>
                   <View style={[styles.ftCardCarouselCell, { width: fashionCarouselCardWidth }]}>
@@ -1142,7 +1551,7 @@ export function HomeScreen() {
                       subtitle={t('home.fashionTech.academy.subtitle')}
                       icon={<Ionicons name="sparkles-outline" size={22} color={vionaTokens.fashionTech.champagne} />}
                       status={{ label: t('home.worldStage.academy.status'), tone: 'demo' }}
-                      onPress={goUniverseAcademyWithHero}
+                      onPress={goUniverseAcademy}
                     />
                   </View>
                   <View style={[styles.ftCardCarouselCell, { width: fashionCarouselCardWidth }]}>
@@ -1154,7 +1563,7 @@ export function HomeScreen() {
                       subtitle={t('home.fashionTech.business.subtitle')}
                       icon={<Ionicons name="briefcase-outline" size={22} color={vionaTokens.fashionTech.champagne} />}
                       status={{ label: t('home.worldStage.business.status'), tone: 'pilot' }}
-                      onPress={goUniverseBusinessWithHero}
+                      onPress={goUniverseBusiness}
                     />
                   </View>
                 </ScrollView>
@@ -1183,7 +1592,7 @@ export function HomeScreen() {
                       subtitle={t('home.fashionTech.local.subtitle')}
                       icon={<Ionicons name="grid-outline" size={22} color={vionaTokens.fashionTech.champagne} />}
                       status={{ label: t('home.worldStage.local.status'), tone: 'lite' }}
-                      onPress={goUniverseLocalWithHero}
+                      onPress={goUniverseLocal}
                       stretchInColumn={stretchWorldCardsInGrid}
                     />
                   </View>
@@ -1206,7 +1615,7 @@ export function HomeScreen() {
                           ? { label: t('home.worldStage.travel.status'), tone: 'pilot' }
                           : { label: t('home.worldStage.travel.statusComingSoon'), tone: 'comingSoon' }
                       }
-                      onPress={featureFlags.travelEnabled ? goUniverseTravelWithHero : undefined}
+                      onPress={featureFlags.travelEnabled ? goUniverseTravel : undefined}
                       stretchInColumn={stretchWorldCardsInGrid}
                     />
                   </View>
@@ -1225,7 +1634,7 @@ export function HomeScreen() {
                       subtitle={t('home.fashionTech.academy.subtitle')}
                       icon={<Ionicons name="sparkles-outline" size={22} color={vionaTokens.fashionTech.champagne} />}
                       status={{ label: t('home.worldStage.academy.status'), tone: 'demo' }}
-                      onPress={goUniverseAcademyWithHero}
+                      onPress={goUniverseAcademy}
                       stretchInColumn={stretchWorldCardsInGrid}
                     />
                   </View>
@@ -1244,7 +1653,7 @@ export function HomeScreen() {
                       subtitle={t('home.fashionTech.business.subtitle')}
                       icon={<Ionicons name="briefcase-outline" size={22} color={vionaTokens.fashionTech.champagne} />}
                       status={{ label: t('home.worldStage.business.status'), tone: 'pilot' }}
-                      onPress={goUniverseBusinessWithHero}
+                      onPress={goUniverseBusiness}
                       stretchInColumn={stretchWorldCardsInGrid}
                     />
                   </View>
@@ -1340,31 +1749,33 @@ export function HomeScreen() {
             }
           }}
         >
-          <VionaGlassPanel
-            style={[
-              styles.impactStrip,
-              fashionHomeDesktopShellActive && styles.impactStripFashionDesktop,
-              { width: layout.inner },
-            ]}
-            tone={fashionHomeDesktopShellActive ? 'cool' : 'warm'}
-          >
-            <View style={styles.impactStripRow}>
-              <View style={styles.impactStripCopy}>
-                <Text style={styles.impactStripKicker}>{t('home.impact.kicker')}</Text>
-                <Text style={styles.impactStripTitle}>{t('home.impact.title')}</Text>
-                <Text style={styles.impactStripSubtitle}>{t('home.impact.subtitle')}</Text>
-              </View>
-              <Pressable
-                onPress={scrollToCareSection}
-                style={({ pressed }) => [styles.impactStripCta, pressed && { opacity: 0.88 }]}
-                accessibilityRole="button"
-                accessibilityLabel={t('home.impact.title')}
-              >
-                <Ionicons name="heart-outline" size={14} color={vionaTokens.fashionTech.champagne} />
-                <Text style={styles.impactStripCtaText}>{t('home.impact.stripCta')}</Text>
-              </Pressable>
+          {fashionHomeDesktopShellActive ? (
+            <View style={{ width: layout.inner, alignSelf: 'center' }}>
+              <CharityWidget layoutVariant="desktopFashionCare" />
             </View>
-          </VionaGlassPanel>
+          ) : (
+            <VionaGlassPanel
+              style={[styles.impactStrip, { width: layout.inner }]}
+              tone="warm"
+            >
+              <View style={styles.impactStripRow}>
+                <View style={styles.impactStripCopy}>
+                  <Text style={styles.impactStripKicker}>{t('home.impact.kicker')}</Text>
+                  <Text style={styles.impactStripTitle}>{t('home.impact.title')}</Text>
+                  <Text style={styles.impactStripSubtitle}>{t('home.impact.subtitle')}</Text>
+                </View>
+                <Pressable
+                  onPress={scrollToCareSection}
+                  style={({ pressed }) => [styles.impactStripCta, pressed && { opacity: 0.88 }]}
+                  accessibilityRole="button"
+                  accessibilityLabel={t('home.impact.title')}
+                >
+                  <Ionicons name="heart-outline" size={14} color={vionaTokens.fashionTech.champagne} />
+                  <Text style={styles.impactStripCtaText}>{t('home.impact.stripCta')}</Text>
+                </Pressable>
+              </View>
+            </VionaGlassPanel>
+          )}
         </View>
 
         {!fashionHomeDesktopShellActive ? (
@@ -1668,21 +2079,31 @@ const styles = StyleSheet.create({
     backgroundColor: vionaTokens.fashionTech.canvasElevated,
     ...vionaTokens.shadows.hero,
   },
-  desktopHeroImage: {
+  desktopHeroImageClip: {
     ...StyleSheet.absoluteFillObject,
-    width: '100%',
-    height: '100%',
-    opacity: 1,
+    overflow: 'hidden',
+    backgroundColor: '#070b12',
+  },
+  desktopHeroReadabilityScrim: {
+    position: 'absolute',
+    left: 0,
+    top: 0,
+    bottom: 0,
+    width: '56%',
+    maxWidth: 640,
+  },
+  desktopHeroImageFill: {
+    ...StyleSheet.absoluteFillObject,
   },
   desktopHeroForeground: {
     ...StyleSheet.absoluteFillObject,
     paddingHorizontal: vionaTokens.spacing[24],
-    paddingVertical: vionaTokens.spacing[24],
+    paddingTop: vionaTokens.spacing[32],
     paddingBottom: vionaTokens.spacing[40],
     justifyContent: 'center',
   },
   desktopHeroForegroundLandscape: {
-    paddingVertical: vionaTokens.spacing[16],
+    paddingTop: vionaTokens.spacing[20],
     paddingBottom: vionaTokens.spacing[24],
     paddingHorizontal: vionaTokens.spacing[16],
   },
@@ -1807,11 +2228,6 @@ const styles = StyleSheet.create({
     marginTop: vionaTokens.spacing[16],
     marginBottom: vionaTokens.spacing[20],
   },
-  impactStripFashionDesktop: {
-    backgroundColor: 'rgba(10, 14, 22, 0.88)',
-    borderWidth: 1,
-    borderColor: vionaTokens.fashionTech.champagneLine,
-  },
   ftHeroBleed: {
     marginBottom: vionaTokens.spacing[20],
   },
@@ -1885,15 +2301,12 @@ const styles = StyleSheet.create({
     shadowRadius: 20,
     elevation: 6,
   },
-  ftVisualImage: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    top: 0,
-    bottom: 0,
-    width: '100%',
-    height: '100%',
-    opacity: 1,
+  ftVisualImageClip: {
+    ...StyleSheet.absoluteFillObject,
+    overflow: 'hidden',
+  },
+  ftVisualImageFill: {
+    ...StyleSheet.absoluteFillObject,
   },
   ftVisualBottomVignette: {
     position: 'absolute',
@@ -1903,17 +2316,17 @@ const styles = StyleSheet.create({
     height: '42%',
   },
   cardImageLocal: {
-    transform: [{ scale: 1.05 }, { translateX: -4 }],
+    transform: [{ scale: 1.02 }, { translateX: 0 }],
   },
   cardImageTravel: {
-    transform: [{ scale: 1.22 }, { translateX: -6 }],
+    transform: [{ scale: 1.02 }, { translateX: 0 }],
   },
   cardImageAcademy: {
-    transform: [{ scale: 1.14 }, { translateX: 0 }],
+    transform: [{ scale: 1.02 }, { translateX: 0 }],
   },
-  /** Match Academy crop weight so Business is not visually heavier in the row. */
+  /** Match peers: centered frame, light zoom only. */
   cardImageBusiness: {
-    transform: [{ scale: 1.14 }, { translateX: 0 }],
+    transform: [{ scale: 1.02 }, { translateX: 0 }],
   },
   ftCardRailScrollOuter: {
     marginTop: vionaTokens.spacing[32],
