@@ -10,6 +10,7 @@ import { DemoTriggerButton } from '../components/onboarding/DemoTriggerButton';
 import { WelcomeBrandPanel } from './auth/WelcomeScreen';
 import { FontFamily } from '../theme/typography';
 import { vionaHybrid } from '../components/viona/vionaTrustTokens';
+import { vionaTokens } from '../design';
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
 /** Ordering: Vietnam / major EU dial codes first — avoid +420 as the default-first option. */
@@ -43,9 +44,23 @@ export function LoginScreen() {
 
   const redirectFeatureName = pendingRedirect ? t(`login.redirects.${pendingRedirect}`) : '';
 
+  const onPreLoginSos = () => {
+    Alert.alert(t('sos.preLoginTitle'), `${t('sos.preLoginBody')}\n\n${t('sos.disclaimer')}`, [
+      { text: t('sos.preLoginAck'), style: 'default' },
+    ]);
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.langBar}>
+        <Pressable
+          onPress={onPreLoginSos}
+          style={({ pressed }) => [styles.sosPreLogin, pressed && styles.pressed]}
+          accessibilityRole="button"
+          accessibilityLabel={t('sos.a11yChip')}
+        >
+          <Text style={styles.sosPreLoginText}>{t('sos.chip')}</Text>
+        </Pressable>
         <View style={styles.langBarSpacer} />
         <View style={styles.langSwitcher}>
           <Pressable
@@ -139,6 +154,25 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 8,
     minHeight: 36,
+  },
+  sosPreLogin: {
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: vionaTokens.fashionTech.sosNeonGlow,
+    backgroundColor: 'rgba(40, 10, 14, 0.55)',
+    shadowColor: vionaTokens.fashionTech.sosNeon,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.35,
+    shadowRadius: 8,
+    elevation: 3,
+  },
+  sosPreLoginText: {
+    fontFamily: FontFamily.extrabold,
+    fontSize: 12,
+    letterSpacing: 1.2,
+    color: vionaTokens.fashionTech.sosNeon,
   },
   langBarSpacer: { flex: 1 },
   langSwitcher: {

@@ -117,8 +117,8 @@ const styles = StyleSheet.create({
   wrapImpact: {
     borderRadius: vionaTokens.radius.lg,
     borderWidth: 1,
-    borderColor: `${vionaTokens.colors.impact.accent}38`,
-    backgroundColor: 'rgba(255, 246, 250, 0.92)',
+    borderColor: 'rgba(255, 124, 198, 0.34)',
+    backgroundColor: 'rgba(28, 16, 24, 0.92)',
     padding: vionaTokens.spacing[12],
     gap: vionaTokens.spacing[8],
     ...vionaTokens.shadows.soft,
@@ -158,13 +158,13 @@ const styles = StyleSheet.create({
     fontSize: 10,
     letterSpacing: 0.6,
     textTransform: 'uppercase',
-    color: vionaTokens.colors.muted,
+    color: 'rgba(244, 246, 250, 0.72)',
     fontFamily: FontFamily.semibold,
   },
   impactSub: {
     fontSize: 11,
     lineHeight: 15,
-    color: vionaTokens.colors.muted,
+    color: 'rgba(244, 246, 250, 0.75)',
     fontFamily: FontFamily.medium,
   },
   title: {
@@ -173,7 +173,7 @@ const styles = StyleSheet.create({
     fontFamily: FontFamily.extrabold,
   },
   titleImpact: {
-    color: vionaTokens.colors.ink,
+    color: vionaTokens.fashionTech.textPrimary,
     fontSize: 15,
     fontFamily: FontFamily.extrabold,
   },
@@ -191,7 +191,7 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: `${vionaTokens.colors.impact.accent}14`,
+    backgroundColor: 'rgba(255, 124, 198, 0.16)',
   },
   amountWrap: { gap: 8 },
   amount: {
@@ -200,7 +200,7 @@ const styles = StyleSheet.create({
     fontFamily: FontFamily.extrabold,
   },
   amountImpact: {
-    color: vionaTokens.colors.impact.accent,
+    color: '#ff9fd2',
     fontSize: 24,
     fontFamily: FontFamily.extrabold,
   },
@@ -211,7 +211,7 @@ const styles = StyleSheet.create({
     fontFamily: FontFamily.medium,
   },
   subtextImpact: {
-    color: vionaTokens.colors.softInk,
+    color: 'rgba(244, 246, 250, 0.82)',
     fontSize: 12,
     lineHeight: 18,
     fontFamily: FontFamily.medium,

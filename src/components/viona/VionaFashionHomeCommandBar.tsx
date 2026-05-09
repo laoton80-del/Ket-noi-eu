@@ -1,16 +1,26 @@
 import { Ionicons } from '@expo/vector-icons';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Image, Pressable, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 
 import { vionaTokens } from '../../design';
 import { FontFamily } from '../../theme/typography';
 import { useTranslation } from '../../i18n';
 
+/** Below this window width, use a slightly smaller wordmark so chips keep air. */
+const LOGO_COMPACT_BREAKPOINT = 1060;
+const LOGO_IMAGE = require('../../../assets/brand/viona/logo-in-app.png');
+
 export type VionaFashionHomeCommandBarProps = Readonly<{
+  /** Tighter typography and chips for mid-width desktop or short landscape viewports. */
+  density?: 'comfortable' | 'compact';
   onPressLogo: () => void;
-  onPressLocal: () => void;
-  onPressTravel: () => void;
-  onPressAcademy: () => void;
-  onPressBusiness?: () => void;
+  /** Primary greeting line (name + time-of-day hello). */
+  headerGreetingLine1: string;
+  /** Short supportive wish for the time of day. */
+  headerWishLine: string;
+  /** Prominent local time + explicit region (e.g. “08:33 tại …”). */
+  headerTimeLocationLine: string;
+  /** Full greeting block for screen readers. */
+  headerGreetingA11y: string;
   onPressLanguage: () => void;
   onPressVio: () => void;
   onPressSafety: () => void;
@@ -20,11 +30,12 @@ export type VionaFashionHomeCommandBarProps = Readonly<{
 }>;
 
 export function VionaFashionHomeCommandBar({
+  density = 'comfortable',
   onPressLogo,
-  onPressLocal,
-  onPressTravel,
-  onPressAcademy,
-  onPressBusiness,
+  headerGreetingLine1,
+  headerWishLine,
+  headerTimeLocationLine,
+  headerGreetingA11y,
   onPressLanguage,
   onPressVio,
   onPressSafety,
@@ -33,70 +44,100 @@ export function VionaFashionHomeCommandBar({
   showRolePicker,
 }: VionaFashionHomeCommandBarProps) {
   const { t } = useTranslation();
+  const { width: windowWidth } = useWindowDimensions();
+  const compactDensity = density === 'compact';
+  const useCompactLogo = compactDensity || (windowWidth > 0 && windowWidth < LOGO_COMPACT_BREAKPOINT);
 
   return (
-    <View style={styles.bar}>
-      <View style={styles.leftCluster}>
+    <View style={[styles.bar, compactDensity && styles.barCompact]}>
+      <View style={[styles.leftCluster, compactDensity && styles.leftClusterCompact]}>
         <Pressable
           onPress={onPressLogo}
           style={({ pressed }) => [styles.logoBtn, pressed && styles.pressed]}
           accessibilityRole="button"
           accessibilityLabel="VIONA Hub"
         >
-          <Text style={styles.logoMark}>VIONA</Text>
+          <Image
+            source={LOGO_IMAGE}
+            resizeMode="contain"
+            style={useCompactLogo ? styles.logoImageCompact : styles.logoImage}
+          />
         </Pressable>
-        <View style={styles.miniNav}>
-          <Pressable onPress={onPressLocal} style={({ pressed }) => [styles.navLink, pressed && styles.pressed]}>
-            <Text style={styles.navLinkText}>{t('home.tabLocal')}</Text>
-          </Pressable>
-          <Pressable onPress={onPressTravel} style={({ pressed }) => [styles.navLink, pressed && styles.pressed]}>
-            <Text style={styles.navLinkText}>{t('home.tabTravel')}</Text>
-          </Pressable>
-          <Pressable onPress={onPressAcademy} style={({ pressed }) => [styles.navLink, pressed && styles.pressed]}>
-            <Text style={styles.navLinkText}>{t('home.tabAcademy')}</Text>
-          </Pressable>
-          {onPressBusiness ? (
-            <Pressable onPress={onPressBusiness} style={({ pressed }) => [styles.navLink, pressed && styles.pressed]}>
-              <Text style={styles.navLinkText}>{t('home.fashionTech.business.title')}</Text>
-            </Pressable>
-          ) : null}
+        <View
+          style={styles.greetingBlock}
+          accessibilityRole="text"
+          accessibilityLabel={headerGreetingA11y}
+        >
+          <Text
+            style={[styles.greetingLine1, compactDensity && styles.greetingLine1Compact]}
+            numberOfLines={2}
+          >
+            {headerGreetingLine1}
+          </Text>
+          <Text style={[styles.wishLine, compactDensity && styles.wishLineCompact]} numberOfLines={2}>
+            {headerWishLine}
+          </Text>
+          <Text
+            style={[styles.timeLocationLine, compactDensity && styles.timeLocationLineCompact]}
+            numberOfLines={1}
+            ellipsizeMode="tail"
+          >
+            {headerTimeLocationLine}
+          </Text>
         </View>
       </View>
 
-      <View style={styles.utilityCluster}>
+      <View style={[styles.utilityCluster, compactDensity && styles.utilityClusterCompact]}>
         {showRolePicker && onPressRole ? (
-          <Pressable onPress={onPressRole} style={({ pressed }) => [styles.utilBtn, pressed && styles.pressed]}>
-            <Ionicons name="shuffle-outline" size={16} color={vionaTokens.fashionTech.champagne} />
+          <Pressable
+            onPress={onPressRole}
+            style={({ pressed }) => [styles.utilBtn, compactDensity && styles.utilBtnCompact, pressed && styles.pressed]}
+          >
+            <Ionicons name="shuffle-outline" size={compactDensity ? 15 : 16} color={vionaTokens.fashionTech.champagne} />
             <Text style={styles.utilLabel} numberOfLines={1}>
               {t('shell.utility.switchRole')}
             </Text>
           </Pressable>
         ) : null}
-        <Pressable onPress={onPressLanguage} style={({ pressed }) => [styles.utilBtn, pressed && styles.pressed]}>
-          <Ionicons name="globe-outline" size={16} color={vionaTokens.fashionTech.champagne} />
+        <Pressable
+          onPress={onPressLanguage}
+          style={({ pressed }) => [styles.utilBtn, compactDensity && styles.utilBtnCompact, pressed && styles.pressed]}
+        >
+          <Ionicons name="globe-outline" size={compactDensity ? 15 : 16} color={vionaTokens.fashionTech.champagne} />
           <Text style={styles.utilLabel} numberOfLines={1}>
             {t('shell.utility.language')}
           </Text>
         </Pressable>
-        <Pressable onPress={onPressVio} style={({ pressed }) => [styles.utilBtn, pressed && styles.pressed]}>
-          <Ionicons name="wallet-outline" size={16} color={vionaTokens.fashionTech.champagne} />
+        <Pressable
+          onPress={onPressVio}
+          style={({ pressed }) => [styles.utilBtn, compactDensity && styles.utilBtnCompact, pressed && styles.pressed]}
+        >
+          <Ionicons name="wallet-outline" size={compactDensity ? 15 : 16} color={vionaTokens.fashionTech.champagne} />
           <Text style={styles.utilLabel} numberOfLines={1}>
             {t('shell.utility.vioCredits')}
           </Text>
         </Pressable>
         <Pressable
           onPress={onPressSafety}
-          style={({ pressed }) => [styles.utilBtn, styles.safetyBtn, pressed && styles.pressed]}
+          style={({ pressed }) => [
+            styles.utilBtn,
+            compactDensity && styles.utilBtnCompact,
+            styles.sosBtn,
+            pressed && styles.pressed,
+          ]}
           accessibilityRole="button"
-          accessibilityLabel={t('shell.utility.safetyAssist')}
+          accessibilityLabel={t('sos.a11yChip')}
         >
-          <Ionicons name="shield-checkmark" size={16} color={vionaTokens.fashionTech.champagne} />
-          <Text style={styles.utilLabel} numberOfLines={1}>
-            {t('shell.utility.safetyAssist')}
+          <Ionicons name="shield" size={compactDensity ? 15 : 16} color={vionaTokens.fashionTech.sosNeon} />
+          <Text style={[styles.utilLabel, styles.sosLabel]} numberOfLines={1}>
+            {t('sos.chip')}
           </Text>
         </Pressable>
-        <Pressable onPress={onPressAccount} style={({ pressed }) => [styles.utilBtn, pressed && styles.pressed]}>
-          <Ionicons name="person-circle-outline" size={16} color={vionaTokens.fashionTech.champagne} />
+        <Pressable
+          onPress={onPressAccount}
+          style={({ pressed }) => [styles.utilBtn, compactDensity && styles.utilBtnCompact, pressed && styles.pressed]}
+        >
+          <Ionicons name="person-circle-outline" size={compactDensity ? 15 : 16} color={vionaTokens.fashionTech.champagne} />
           <Text style={styles.utilLabel} numberOfLines={1}>
             {t('shell.utility.accountProfile')}
           </Text>
@@ -115,70 +156,135 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     alignItems: 'center',
     justifyContent: 'space-between',
-    gap: vionaTokens.spacing[12],
-    paddingVertical: vionaTokens.spacing[12],
+    gap: vionaTokens.spacing[8],
+    paddingVertical: vionaTokens.spacing[6],
     paddingHorizontal: 0,
     backgroundColor: 'transparent',
     borderWidth: 0,
     marginBottom: 0,
   },
+  barCompact: {
+    gap: vionaTokens.spacing[8],
+    paddingVertical: vionaTokens.spacing[4],
+  },
   leftCluster: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
+    flexWrap: 'nowrap',
     alignItems: 'center',
-    gap: vionaTokens.spacing[16],
+    gap: vionaTokens.spacing[12],
     flex: 1,
     minWidth: 200,
   },
+  leftClusterCompact: {
+    gap: vionaTokens.spacing[12],
+    minWidth: 160,
+  },
   logoBtn: {
-    paddingVertical: 4,
-    paddingHorizontal: 2,
+    paddingVertical: 0,
+    paddingHorizontal: 0,
+    flexShrink: 0,
+    borderRadius: vionaTokens.radius.md,
+    backgroundColor: 'transparent',
   },
-  logoMark: {
-    fontFamily: FontFamily.extrabold,
-    fontSize: 18,
-    letterSpacing: 2.4,
-    color: vionaTokens.fashionTech.inkOnDark,
+  logoImage: {
+    width: 236,
+    height: 72,
   },
-  miniNav: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: vionaTokens.spacing[8],
-    alignItems: 'center',
+  logoImageCompact: {
+    width: 176,
+    height: 54,
   },
-  navLink: {
-    paddingVertical: 6,
-    paddingHorizontal: 8,
+  greetingBlock: {
+    flex: 1,
+    minWidth: 0,
+    flexDirection: 'column',
+    alignItems: 'flex-start',
+    gap: vionaTokens.spacing[2],
   },
-  navLinkText: {
+  greetingLine1: {
     fontFamily: FontFamily.semibold,
+    fontSize: 16,
+    letterSpacing: 0.12,
+    lineHeight: 20,
+    color: vionaTokens.fashionTech.inkOnDark,
+    flexShrink: 1,
+  },
+  greetingLine1Compact: {
+    fontSize: 14,
+    lineHeight: 18,
+  },
+  wishLine: {
+    fontFamily: FontFamily.medium,
     fontSize: 12,
+    letterSpacing: 0.15,
+    lineHeight: 16,
     color: vionaTokens.fashionTech.mutedOnDark,
-    letterSpacing: 0.3,
+    flexShrink: 1,
+  },
+  wishLineCompact: {
+    fontSize: 11,
+    lineHeight: 14,
+  },
+  timeLocationLine: {
+    marginTop: 2,
+    fontFamily: FontFamily.extrabold,
+    fontSize: 19,
+    letterSpacing: 0.25,
+    lineHeight: 24,
+    color: vionaTokens.fashionTech.champagne,
+    flexShrink: 1,
+    maxWidth: '100%',
+    fontVariant: ['tabular-nums'],
+    textShadowColor: 'rgba(5, 10, 18, 0.55)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 4,
+  },
+  timeLocationLineCompact: {
+    fontSize: 16,
+    lineHeight: 21,
   },
   utilityCluster: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: vionaTokens.spacing[8],
+    gap: vionaTokens.spacing[6],
     alignItems: 'center',
     justifyContent: 'flex-end',
     flex: 1,
     minWidth: 220,
   },
+  utilityClusterCompact: {
+    minWidth: 160,
+  },
   utilBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    paddingVertical: 8,
-    paddingHorizontal: 10,
+    paddingVertical: 7,
+    paddingHorizontal: 12,
     borderRadius: vionaTokens.radius.pill,
     borderWidth: 1,
-    borderColor: 'rgba(201, 169, 98, 0.22)',
-    backgroundColor: 'rgba(0,0,0,0.2)',
+    borderColor: vionaTokens.fashionTech.champagneLine,
+    backgroundColor: 'rgba(8, 12, 20, 0.55)',
     maxWidth: 200,
   },
-  safetyBtn: {
-    borderColor: 'rgba(201, 169, 98, 0.42)',
+  utilBtnCompact: {
+    paddingVertical: 6,
+    paddingHorizontal: 10,
+    maxWidth: 180,
+  },
+  sosBtn: {
+    borderColor: vionaTokens.fashionTech.sosNeonGlow,
+    backgroundColor: 'rgba(40, 10, 14, 0.55)',
+    shadowColor: vionaTokens.fashionTech.sosNeon,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.4,
+    shadowRadius: 10,
+    elevation: 5,
+  },
+  sosLabel: {
+    color: vionaTokens.fashionTech.sosNeon,
+    fontFamily: FontFamily.extrabold,
+    letterSpacing: 0.8,
   },
   utilLabel: {
     fontFamily: FontFamily.semibold,

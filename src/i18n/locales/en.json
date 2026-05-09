@@ -39,10 +39,32 @@
     }
   },
   "shell": {
+    "header": {
+      "greeting": {
+        "morningGeneric": "Good morning",
+        "morningNamed": "Good morning, {{name}}",
+        "afternoonGeneric": "Good afternoon",
+        "afternoonNamed": "Good afternoon, {{name}}",
+        "eveningGeneric": "Good evening",
+        "eveningNamed": "Good evening, {{name}}",
+        "lateNightGeneric": "Hello there",
+        "lateNightNamed": "Hello, {{name}}"
+      },
+      "wish": {
+        "morning": "Wishing you a calm, beautiful day ahead.",
+        "afternoon": "Hope your afternoon stays smooth and kind.",
+        "evening": "Unwind gently — you've earned this evening.",
+        "lateNight": "It's late — rest deeply whenever you're ready."
+      },
+      "timeAtLocation": "{{time}} · {{location}}",
+      "timeOnly": "{{time}}",
+      "locationUnknown": "your region",
+      "localTimeA11y": "Local time"
+    },
     "utility": {
       "language": "Language",
       "vioCredits": "VIO Credits",
-      "safetyAssist": "Safety Assist",
+      "safetyAssist": "SOS",
       "accountProfile": "Account",
       "switchRole": "Profiles"
     }
@@ -105,7 +127,7 @@
     "scrollKicker": "V6.3 Inbound · VIONA"
   },
   "sos": {
-    "fabLabel": "Safety Assist",
+    "fabLabel": "SOS",
     "fabHint": "Opens the AI Shield and emergency options for Vietnam.",
     "emergencyAssistance": "Emergency Assistance",
     "subtitle": "Stay calm. Help is available.",
@@ -131,7 +153,20 @@
     "triageBannerTitle": "AI Minh Khang triage first",
     "triageBannerCountdown": "Emergency call buttons unlock in {{seconds}}s",
     "triageBufferTitle": "Triage buffer active",
-    "triageBufferBody": "Complete the AI safety check first. Emergency dial unlocks in {{seconds}}s."
+    "triageBufferBody": "Complete the AI safety check first. Emergency dial unlocks in {{seconds}}s.",
+    "chip": "SOS",
+    "a11yChip": "SOS emergency entry",
+    "holdHelper": "Hold 3 seconds for emergency flow",
+    "holdA11y": "SOS hold control",
+    "plusName": "SOS Plus",
+    "priceEur": "4.99 EUR/month",
+    "disclaimer": "Emergency calling and recording require user setup, device permissions, and regional availability.",
+    "preLoginTitle": "SOS Basic",
+    "preLoginBody": "You can reach SOS Basic before sign-in. Full in-app emergency tools unlock after you log in. This entry does not place a call by itself.",
+    "preLoginAck": "OK",
+    "cancelHold": "Cancel",
+    "gateTitle": "SOS activation",
+    "gateSub": "Hold the control for 3 seconds to continue to the in-app emergency sheet. No automatic dispatch or guaranteed response."
   },
   "ai_voice": {
     "tapToSpeak": "Tap to Speak",
@@ -282,31 +317,45 @@
         "title": "VIONA Academy",
         "subtitle": "Learning and AI practice for families and future skills.",
         "status": "Demo"
+      },
+      "business": {
+        "title": "VIONA Business",
+        "subtitle": "Merchant workspace and growth tools.",
+        "status": "Pilot"
       }
     },
     "fashionTech": {
       "eyebrow": "VIONA HUMAN CONSTELLATION",
-      "headline": "Your global companion, wherever life moves.",
+      "headline": "Your global companion,\nwherever life moves.",
       "subtitle": "Local life, travel support, learning, and AI assistance — designed for Vietnamese people worldwide.",
+      "ctaExplore": "Explore VIONA",
+      "ctaWatch": "Watch overview",
+      "statusNetwork": "Pilot-safe surfaces",
+      "statusSupport": "AI support preview",
+      "statusCountries": "Global-ready experience",
+      "statusAvatarsA11y": "Network presence indicator",
+      "connectedChip": "Connected for you, wherever you are.",
+      "cardExploreHint": "Open",
+      "watchOverviewUnavailable": "Open Academy from the tab bar for guided demos and overviews.",
       "visualInset": "Photography slot · licensed assets only",
       "visualComingSoon": "Licensed visual coming soon",
       "visualStoryCaption": "Human constellation routes, city-light signals, and calm guidance.",
       "heroVisualA11y": "Hero visual area. Only licensed photography will appear when ready.",
       "local": {
         "title": "Local",
-        "subtitle": "Community connection, services, daily life."
+        "subtitle": "Community connection, services, and daily life."
       },
       "travel": {
         "title": "Travel",
-        "subtitle": "Direction, movement, safety, return."
+        "subtitle": "Direction, movement, safety, and return."
       },
       "academy": {
         "title": "Academy",
-        "subtitle": "Family learning, AI practice, future skills."
+        "subtitle": "Family learning, AI practice, and future skills."
       },
       "business": {
         "title": "Business",
-        "subtitle": "AI receptionist, customer requests, and merchant growth."
+        "subtitle": "AI receptionist, customer requests, merchant growth."
       },
       "care": {
         "title": "Care Heart Fund",
@@ -324,7 +373,9 @@
       "wallet": "Wallet & credits",
       "interpreter": "Live interpreter",
       "voice": "AI voice line",
-      "safety": "Safety Assist"
+      "documents": "Documents",
+      "nearbySupport": "Nearby support",
+      "safety": "SOS"
     },
     "trustStripHint": "Pilot-safe surfaces · Honest status · VIO lives in your wallet hub",
     "walletLoadingA11y": "Loading wallet balance",

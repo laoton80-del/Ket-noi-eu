@@ -39,10 +39,32 @@
     }
   },
   "shell": {
+    "header": {
+      "greeting": {
+        "morningGeneric": "Chào buổi sáng",
+        "morningNamed": "Chào buổi sáng, {{name}}",
+        "afternoonGeneric": "Chào buổi chiều",
+        "afternoonNamed": "Chào buổi chiều, {{name}}",
+        "eveningGeneric": "Chào buổi tối",
+        "eveningNamed": "Chào buổi tối, {{name}}",
+        "lateNightGeneric": "Chào bạn",
+        "lateNightNamed": "Chào {{name}}"
+      },
+      "wish": {
+        "morning": "Chúc bạn một ngày tốt lành.",
+        "afternoon": "Chúc bạn một buổi chiều nhẹ nhàng, suôn sẻ.",
+        "evening": "Chúc bạn một buổi tối ấm áp và thư thái.",
+        "lateNight": "Đã khuya rồi, chúc bạn ngủ ngon."
+      },
+      "timeAtLocation": "{{time}} · {{location}}",
+      "timeOnly": "{{time}}",
+      "locationUnknown": "khu vực của bạn",
+      "localTimeA11y": "Giờ địa phương"
+    },
     "utility": {
       "language": "Ngôn ngữ",
       "vioCredits": "VIO Credits",
-      "safetyAssist": "Hỗ trợ an toàn",
+      "safetyAssist": "SOS",
       "accountProfile": "Tài khoản",
       "switchRole": "Hồ sơ"
     }
@@ -105,7 +127,7 @@
     "scrollKicker": "V6.3 Inbound · VIONA"
   },
   "sos": {
-    "fabLabel": "Hỗ trợ an toàn",
+    "fabLabel": "SOS",
     "fabHint": "Mở AI Shield và các lựa chọn an toàn tại Việt Nam.",
     "emergencyAssistance": "Hỗ trợ khẩn cấp",
     "subtitle": "Bình tĩnh. Đã có hỗ trợ.",
@@ -131,7 +153,20 @@
     "triageBannerTitle": "Ưu tiên sàng lọc AI Minh Khang",
     "triageBannerCountdown": "Nút gọi khẩn cấp mở sau {{seconds}} giây",
     "triageBufferTitle": "Đang trong vùng đệm sàng lọc",
-    "triageBufferBody": "Hoàn tất kiểm tra an toàn với AI trước. Gọi khẩn cấp mở sau {{seconds}} giây."
+    "triageBufferBody": "Hoàn tất kiểm tra an toàn với AI trước. Gọi khẩn cấp mở sau {{seconds}} giây.",
+    "chip": "SOS",
+    "a11yChip": "Lối vào khẩn cấp SOS",
+    "holdHelper": "Giữ 3 giây để mở luồng khẩn cấp",
+    "holdA11y": "Điều khiển giữ SOS",
+    "plusName": "SOS Plus",
+    "priceEur": "4,99 EUR/tháng",
+    "disclaimer": "Gọi khẩn cấp và ghi âm/ghi hình cần người dùng thiết lập, cấp quyền thiết bị và phụ thuộc khu vực.",
+    "preLoginTitle": "SOS Basic",
+    "preLoginBody": "Bạn có thể mở SOS Basic trước khi đăng nhập. Công cụ khẩn cấp đầy đủ trong app mở sau khi đăng nhập. Thao tác này không tự động gọi điện.",
+    "preLoginAck": "OK",
+    "cancelHold": "Hủy",
+    "gateTitle": "Kích hoạt SOS",
+    "gateSub": "Giữ nút 3 giây để tiếp tục tới màn hình khẩn cấp trong app. Không tự động điều phối cứu hộ hay đảm bảo phản hồi."
   },
   "ai_voice": {
     "tapToSpeak": "Chạm để nói",
@@ -246,8 +281,8 @@
   "home": {
     "tabHub": "Tổng quan",
     "tabLocal": "Địa phương",
-    "tabTravel": "Du lịch",
-    "tabAcademy": "Học tập",
+    "tabTravel": "Du lịch Lite",
+    "tabAcademy": "Academy Lite",
     "accountChip": "Tài khoản",
     "accountChipA11y": "Mở trung tâm tài khoản",
     "accountWalletHubRow": "Tài khoản & ví",
@@ -282,31 +317,45 @@
         "title": "VIONA Academy",
         "subtitle": "Học tập và luyện AI cho gia đình, kỹ năng và tương lai.",
         "status": "Demo"
+      },
+      "business": {
+        "title": "VIONA Business",
+        "subtitle": "Không gian merchant và công cụ tăng trưởng.",
+        "status": "Pilot"
       }
     },
     "fashionTech": {
       "eyebrow": "VIONA HUMAN CONSTELLATION",
-      "headline": "Người đồng hành toàn cầu, theo từng chặng sống của bạn.",
+      "headline": "Người đồng hành toàn cầu,\nbất cứ nơi cuộc sống đưa bạn đi.",
       "subtitle": "Đời sống, du lịch, học tập và AI support — thiết kế cho người Việt ở khắp thế giới.",
+      "ctaExplore": "Khám phá VIONA",
+      "ctaWatch": "Xem tổng quan",
+      "statusNetwork": "Bề mặt pilot an toàn",
+      "statusSupport": "Xem trước hỗ trợ AI",
+      "statusCountries": "Trải nghiệm sẵn sàng toàn cầu",
+      "statusAvatarsA11y": "Chỉ báo hiện diện mạng lưới",
+      "connectedChip": "Luôn kết nối vì bạn, dù bạn ở đâu.",
+      "cardExploreHint": "Mở",
+      "watchOverviewUnavailable": "Mở Academy từ thanh tab để xem demo và tổng quan có hướng dẫn.",
       "visualInset": "Khung ảnh · chỉ dùng asset có license",
       "visualComingSoon": "Hình ảnh có license — sắp ra mắt",
       "visualStoryCaption": "Chòm sao kết nối con người, ánh đô thị dịu và định hướng an tâm.",
       "heroVisualA11y": "Khu vực hình hero. Chỉ dùng ảnh có license khi sẵn sàng.",
       "local": {
         "title": "Local",
-        "subtitle": "Kết nối cộng đồng, dịch vụ, đời sống hằng ngày."
+        "subtitle": "Kết nối cộng đồng, dịch vụ và đời sống hằng ngày."
       },
       "travel": {
         "title": "Travel",
-        "subtitle": "Hướng đi, di chuyển, an toàn, trở về."
+        "subtitle": "Hướng đi, di chuyển, an toàn và trở về."
       },
       "academy": {
         "title": "Academy",
-        "subtitle": "Học cùng gia đình, luyện AI, kỹ năng tương lai."
+        "subtitle": "Học cùng gia đình, luyện AI và kỹ năng tương lai."
       },
       "business": {
         "title": "Doanh nghiệp",
-        "subtitle": "Lễ tân AI, yêu cầu khách hàng và tăng trưởng dịch vụ."
+        "subtitle": "Lễ tân AI, yêu cầu khách, tăng trưởng merchant."
       },
       "care": {
         "title": "Quỹ Trái Tim Care",
@@ -324,7 +373,9 @@
       "wallet": "Ví & credits",
       "interpreter": "Phiên dịch trực tiếp",
       "voice": "Đường dây giọng AI",
-      "safety": "Hỗ trợ an toàn"
+      "documents": "Giấy tờ",
+      "nearbySupport": "Hỗ trợ gần bạn",
+      "safety": "SOS"
     },
     "trustStripHint": "Bề mặt pilot · Trạng thái minh bạch · VIO nằm trong ví",
     "walletLoadingA11y": "Đang tải số dư ví",

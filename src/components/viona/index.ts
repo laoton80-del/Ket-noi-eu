@@ -19,6 +19,10 @@ export { VionaFashionHomeCommandBar } from './VionaFashionHomeCommandBar';
 export type { VionaFashionHomeCommandBarProps } from './VionaFashionHomeCommandBar';
 export { VionaQuickActionPill } from './VionaQuickActionPill';
 export type { VionaQuickActionPillProps } from './VionaQuickActionPill';
+export { VionaSosHoldButton } from './VionaSosHoldButton';
+export type { VionaSosHoldButtonProps } from './VionaSosHoldButton';
+export { VionaSosHoldGateModal } from './VionaSosHoldGateModal';
+export type { VionaSosHoldGateModalProps } from './VionaSosHoldGateModal';
 export { VionaInfoTile } from './VionaInfoTile';
 export type { VionaInfoTileProps } from './VionaInfoTile';
 

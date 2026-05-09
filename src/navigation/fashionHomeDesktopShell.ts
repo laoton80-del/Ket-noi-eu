@@ -4,8 +4,17 @@ import { Platform } from 'react-native';
 import type { ActiveRole } from '../store/userStore';
 import { MAIN_TAB, type RootTabParamList } from './routes';
 
-/** Matches `Platform.OS === 'web' && width > 768` used across hub shell code. */
+/** Web B2C Home uses the integrated Fashion-Tech shell at this width and above. */
 export const FASHION_HOME_DESKTOP_MIN_WIDTH = 769;
+
+/** Primary world cards use a horizontal rail below this width (single-column phones). */
+export const FASHION_HOME_WORLD_CAROUSEL_MAX_WIDTH = 559;
+
+/** Two-column world card grid from this width up until the single desktop row breakpoint. */
+export const FASHION_HOME_WORLD_TWO_COL_MIN_WIDTH = 560;
+
+/** Four primary cards share one row at this width (desktop fashion home). */
+export const FASHION_HOME_WORLD_DESKTOP_ROW_MIN_WIDTH = 1100;
 
 const TAB_ROUTE_NAMES = [
   MAIN_TAB.B2C.home,
