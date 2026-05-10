@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useEffect, useRef, useState } from 'react';
-import { Alert, Animated, Linking, Pressable, StyleSheet, View } from 'react-native';
+import { Animated, Pressable, StyleSheet, View } from 'react-native';
 import { SOSModal } from './SOSModal';
 import { theme } from '../../theme/theme';
 
@@ -25,18 +25,6 @@ export function SOSHeaderButton({ tone = 'default' }: SOSHeaderButtonProps) {
     return () => loop.stop();
   }, [pulse]);
 
-  const handleEmergencyCall = () => {
-    void Linking.openURL('tel:112').catch(() => {
-      Alert.alert('SOS', 'Không thể mở cuộc gọi khẩn cấp trên thiết bị này.');
-    });
-  };
-
-  const handleEmbassyCall = () => {
-    void Linking.openURL('tel:+420123456789').catch(() => {
-      Alert.alert('SOS', 'Không thể mở số Đại sứ quán trên thiết bị này.');
-    });
-  };
-
   return (
     <>
       <Pressable
@@ -60,12 +48,7 @@ export function SOSHeaderButton({ tone = 'default' }: SOSHeaderButtonProps) {
           <Ionicons name="shield-outline" size={18} color={theme.colors.CeolWhite} />
         </View>
       </Pressable>
-      <SOSModal
-        visible={open}
-        onClose={() => setOpen(false)}
-        onEmergencyCall={handleEmergencyCall}
-        onEmbassyCall={handleEmbassyCall}
-      />
+      <SOSModal visible={open} onClose={() => setOpen(false)} />
     </>
   );
 }

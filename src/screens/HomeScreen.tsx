@@ -38,6 +38,7 @@ import {
   VionaInfoTile,
   VionaQuickActionPill,
   VionaSosHoldGateModal,
+  VionaSosPlusInfoModal,
 } from '../components/viona';
 import { VionaCard } from '../components/viona/VionaCard';
 import { VionaSectionHeader } from '../components/viona/VionaSectionHeader';
@@ -47,6 +48,8 @@ import {
   isAdminDebugPinConfigured,
   isAdminDebugSurfaceEnabled,
 } from '../config/adminDebugGate';
+import { SOS_PLUS_PROFILE_UI_ENABLED } from '../config/sosPlusProduction';
+import { SOS_PLUS_PRODUCT_SURFACE_UI_ENABLED } from '../config/sosPlusSurface';
 import { getFeatureFlags } from '../core/feature-flags/featureFlags';
 import { useMiniAppEntry } from '../hooks/useMiniAppEntry';
 import { useHomeCommand } from '../context/HomeCommandContext';
@@ -346,7 +349,7 @@ const DESKTOP_HERO_IMAGE_INSET_SCALE = 0.86;
 const desktopHeroLivingImageTransformStyle = {
   transform: [
     { scale: DESKTOP_HERO_IMAGE_INSET_SCALE },
-    { translateX: -92 },
+    { translateX: -104 },
     { translateY: -36 },
   ],
 } as const;
@@ -949,6 +952,7 @@ export function HomeScreen() {
   const impactCareScrollY = useRef(0);
   const worldSectionY = useRef(0);
   const [sosHoldGateOpen, setSosHoldGateOpen] = useState(false);
+  const [sosPlusInfoOpen, setSosPlusInfoOpen] = useState(false);
 
   const scrollToCareSection = useCallback(() => {
     const y = fashionHomeDesktopShellActive ? impactCareScrollY.current : charitySectionY.current;
@@ -1019,6 +1023,7 @@ export function HomeScreen() {
   );
 
   const openSosEntry = useCallback(() => {
+    setSosPlusInfoOpen(false);
     if (fashionHomeDesktopShellActive) setSosHoldGateOpen(true);
     else homeCommand?.triggerSafetyAssist();
   }, [fashionHomeDesktopShellActive, homeCommand]);
@@ -2032,7 +2037,25 @@ export function HomeScreen() {
         visible={sosHoldGateOpen}
         onRequestClose={() => setSosHoldGateOpen(false)}
         onHoldComplete={onSosHoldGateComplete}
+        variant="continueToAppSos"
+        onOpenPlusInfo={
+          SOS_PLUS_PRODUCT_SURFACE_UI_ENABLED ? () => setSosPlusInfoOpen(true) : undefined
+        }
       />
+      {SOS_PLUS_PRODUCT_SURFACE_UI_ENABLED ? (
+        <VionaSosPlusInfoModal
+          visible={sosPlusInfoOpen}
+          onRequestClose={() => setSosPlusInfoOpen(false)}
+          onPressOpenProfile={
+            SOS_PLUS_PROFILE_UI_ENABLED
+              ? () => {
+                  setSosPlusInfoOpen(false);
+                  navigation.navigate('SosPlusProfile');
+                }
+              : undefined
+          }
+        />
+      ) : null}
     </View>
   );
 }
@@ -2052,7 +2075,7 @@ const styles = StyleSheet.create({
   },
   fashionShellOuter: {
     width: '100%',
-    backgroundColor: vionaTokens.fashionTech.commandBarBg,
+    backgroundColor: vionaTokens.fashionTech.canvas,
     borderBottomWidth: 1,
     borderBottomColor: vionaTokens.fashionTech.champagneLine,
   },

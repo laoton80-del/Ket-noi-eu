@@ -86,6 +86,7 @@ import { FlightSearchAssistantScreen } from './src/screens/FlightSearchAssistant
 import { KetNoiYeuThuongScreen } from './src/screens/KetNoiYeuThuongScreen';
 import { LiveInterpreterScreen } from './src/screens/LiveInterpreterScreen';
 import { EmergencySOSScreen } from './src/screens/EmergencySOSScreen';
+import { SosPlusProfileScreen } from './src/screens/sos/SosPlusProfileScreen';
 import { AdultLearningHome } from './src/screens/learning/AdultLearningHome';
 import { KidsLearningHome } from './src/screens/learning/KidsLearningHome';
 import { VietKidsScreen } from './src/screens/b2c/academy/VietKidsScreen';
@@ -545,6 +546,11 @@ function AppNavigationShell({
               <Stack.Screen name="FlightSearchAssistant" component={FlightSearchAssistantScreenGated} />
               <Stack.Screen name="KetNoiYeuThuong" component={KetNoiYeuThuongScreen} />
               <Stack.Screen name="EmergencySOS" component={EmergencySOSScreen} />
+              <Stack.Screen
+                name="SosPlusProfile"
+                component={SosPlusProfileScreen}
+                options={{ animation: 'slide_from_right', headerShown: true }}
+              />
               <Stack.Screen name="LeonaCall" component={LeonaCallScreenGated} />
               <Stack.Screen
                 name="P2PVoiceCall"

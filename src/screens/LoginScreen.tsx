@@ -11,6 +11,9 @@ import { WelcomeBrandPanel } from './auth/WelcomeScreen';
 import { FontFamily } from '../theme/typography';
 import { vionaHybrid } from '../components/viona/vionaTrustTokens';
 import { vionaTokens } from '../design';
+import { SOS_PLUS_PROFILE_UI_ENABLED } from '../config/sosPlusProduction';
+import { SOS_PLUS_PRODUCT_SURFACE_UI_ENABLED } from '../config/sosPlusSurface';
+import { VionaSosHoldGateModal, VionaSosPlusInfoModal } from '../components/viona';
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
 /** Ordering: Vietnam / major EU dial codes first — avoid +420 as the default-first option. */
@@ -26,6 +29,8 @@ export function LoginScreen() {
   const { beginLogin, pendingRedirect } = useAuth();
   const [phone, setPhone] = useState('');
   const [codeIndex, setCodeIndex] = useState(0);
+  const [preLoginSosOpen, setPreLoginSosOpen] = useState(false);
+  const [preLoginPlusInfoOpen, setPreLoginPlusInfoOpen] = useState(false);
   const canContinue = useMemo(() => phone.trim().length >= 7, [phone]);
 
   const primaryLang = (i18n.language ?? 'en').split('-')[0] ?? 'en';
@@ -45,9 +50,12 @@ export function LoginScreen() {
   const redirectFeatureName = pendingRedirect ? t(`login.redirects.${pendingRedirect}`) : '';
 
   const onPreLoginSos = () => {
-    Alert.alert(t('sos.preLoginTitle'), `${t('sos.preLoginBody')}\n\n${t('sos.disclaimer')}`, [
-      { text: t('sos.preLoginAck'), style: 'default' },
-    ]);
+    setPreLoginPlusInfoOpen(false);
+    setPreLoginSosOpen(true);
+  };
+
+  const onPreLoginHoldComplete = () => {
+    setPreLoginSosOpen(false);
   };
 
   return (
@@ -143,6 +151,30 @@ export function LoginScreen() {
 
         <DemoTriggerButton navigation={navigation} />
       </View>
+
+      <VionaSosHoldGateModal
+        visible={preLoginSosOpen}
+        variant="preLogin"
+        onRequestClose={() => setPreLoginSosOpen(false)}
+        onHoldComplete={onPreLoginHoldComplete}
+        onOpenPlusInfo={
+          SOS_PLUS_PRODUCT_SURFACE_UI_ENABLED ? () => setPreLoginPlusInfoOpen(true) : undefined
+        }
+      />
+      {SOS_PLUS_PRODUCT_SURFACE_UI_ENABLED ? (
+        <VionaSosPlusInfoModal
+          visible={preLoginPlusInfoOpen}
+          onRequestClose={() => setPreLoginPlusInfoOpen(false)}
+          onPressOpenProfile={
+            SOS_PLUS_PROFILE_UI_ENABLED
+              ? () => {
+                  setPreLoginPlusInfoOpen(false);
+                  navigation.navigate('SosPlusProfile');
+                }
+              : undefined
+          }
+        />
+      ) : null}
     </SafeAreaView>
   );
 }

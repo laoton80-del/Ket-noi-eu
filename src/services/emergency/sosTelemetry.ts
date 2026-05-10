@@ -3,7 +3,7 @@ import { Platform } from 'react-native';
 
 /** Serializable payload ready for POST to ViGlobal safety / admin APIs. */
 export type SosIncidentPayload = Readonly<{
-  kind: 'medical' | 'police' | 'scam_report';
+  kind: 'medical' | 'police' | 'fire' | 'trusted_contact' | 'scam_report' | 'embassy_help';
   latitude: number | null;
   longitude: number | null;
   accuracyMeters: number | null;

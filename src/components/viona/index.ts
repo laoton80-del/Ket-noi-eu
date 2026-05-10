@@ -22,7 +22,9 @@ export type { VionaQuickActionPillProps } from './VionaQuickActionPill';
 export { VionaSosHoldButton } from './VionaSosHoldButton';
 export type { VionaSosHoldButtonProps } from './VionaSosHoldButton';
 export { VionaSosHoldGateModal } from './VionaSosHoldGateModal';
-export type { VionaSosHoldGateModalProps } from './VionaSosHoldGateModal';
+export type { VionaSosHoldGateModalProps, VionaSosHoldGateVariant } from './VionaSosHoldGateModal';
+export { VionaSosPlusInfoModal } from './VionaSosPlusInfoModal';
+export type { VionaSosPlusInfoModalProps } from './VionaSosPlusInfoModal';
 export { VionaInfoTile } from './VionaInfoTile';
 export type { VionaInfoTileProps } from './VionaInfoTile';
 

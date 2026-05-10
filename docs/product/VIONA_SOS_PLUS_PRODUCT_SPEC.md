@@ -1,48 +1,73 @@
-# VIONA SOS Basic & SOS Plus — product spec (UI / positioning)
+# VIONA SOS Basic & SOS Plus — product spec (AF.SOS.1)
 
-**Status:** Product positioning and UX intent. **This document does not implement billing, entitlements, emergency dispatch, or live calling.**
+**Document type:** Product / UX specification — Hub · LifeOS · SOS Lifeline mini-app surface.  
+**Status:** AF.SOS.1 surface + **AF.SOS.2** local typed entitlement/consent/session contracts & profile UI (see `VIONA_SOS_PLUS_PRODUCTION_ROADMAP.md`). **No live emergency automation, no billing SKU, no server-backed entitlements yet.**
 
-## Principles
+## Audience & personas
 
-1. **SOS Basic** must remain **discoverable before login** — users need a serious, visible emergency entry without a paywall or subscription gate for the *entry point* itself.
-2. **SOS Plus** (€4.99/month, positioning) covers **advanced protection and continuity features** — not the existence of a red SOS entry.
-3. **No implied guarantees:** no copy stating guaranteed rescue, automatic police/fire/ambulance routing as production-complete, or official emergency partnership unless separately verified and legally approved.
+**Vietnamese users worldwide** — diaspora in any host country, cross-border travelers, families, and vulnerable users who need **clear, calm** emergency-related guidance without misleading guarantees. Copy is **global**, not Europe-only; Europe appears only when a specific market filter or curated dataset is active.
 
-## SOS Basic (positioning)
+## Tier definitions
 
-- **Purpose:** Fast, emotionally clear path to in-app emergency assistance surfaces the product already exposes (e.g. existing SOS sheet after authentication where applicable).
-- **UX:** Premium red-neon affordance; **hold ~3 seconds** to reduce accidental activation (desktop Home gate in current UI pack).
-- **Pre-login:** A **non-destructive** entry (e.g. informational alert on Login) explains Basic vs full in-app flow after sign-in. **Does not** dial numbers or request sensitive permissions by itself in this pack.
+| Tier | Maturity | Purpose |
+|------|----------|---------|
+| **SOS Basic** | Lite | Always-visible entry; hold-to-confirm; routes (when signed in) to existing in-app emergency sheet and guidance already in the product. |
+| **SOS Plus** | Pilot / gated | **Global** emergency companion layer (**€4.99/month** positioning) for Vietnamese people abroad and travelers — deeper companion features; **not** required to see or tap SOS Basic. |
 
-## SOS Plus — €4.99 EUR/month (positioning only)
+## Honest labeling (non-negotiable)
 
-**Planned** differentiators (subject to legal/privacy/engineering review before any build):
+1. **VIONA SOS does not replace local emergency services.** Users must call local emergency numbers when life safety is at risk.
+2. No copy implying **guaranteed** rescue, **automatic** PSAP/police/fire/ambulance routing as production-complete, or official partnerships unless legally verified.
+3. Future capabilities are labeled **Planned**, **Pilot**, or **Requires setup** in UX.
 
-| Area | Intent |
-|------|--------|
-| Trusted contacts | User-defined contacts notified or referenced per policy |
-| Emergency profile | Medical / language / context card user maintains |
-| Location sharing | Explicit, consent-based sharing windows |
-| Encrypted incident vault | User-controlled storage of evidence metadata/files |
-| Voice triage | **After** SOS activation, optional guided prompts — requires speech consent, locale rules, false-positive controls |
-| Post-incident timeline | Structured log of user-visible steps (not a dispatch guarantee) |
+## UX behaviors (this repo wave)
 
-**Monetization:** €4.99/month is a **commercial target**; **no Stripe SKU, entitlement, or subscription enforcement** is defined in the SOS red-neon UI pack.
+- **Red neon SOS** remains in Home top chrome (`VionaFashionHomeCommandBar`) and quick actions (`VionaQuickActionPill`).
+- **Hold ~3 seconds** before continuing (`VionaSosHoldButton`; legacy header `components/emergency/SOSModal` aligned to 3s).
+- **Desktop fashion Home:** hold gate modal (`VionaSosHoldGateModal`) before invoking existing `triggerSafetyAssist()` → opens **`screens/b2c/SOSModal`** safety sheet only (no interpreter auto-start, no fake dispatch).
+- **Pre-login (`LoginScreen`):** SOS pill opens the same hold gate in **`preLogin`** variant — guidance + optional Basic vs Plus info — **no PSTN dial**, no navigation into authenticated tabs, hold completion only closes the gate.
+- **SOS Plus info:** `VionaSosPlusInfoModal` — Basic vs Plus, €4.99/month positioning, planned/pilot feature list, disclaimers. Reachable from hold gate (“Basic vs Plus”), emergency sheet link (“About SOS Plus”), and pre-login gate.
 
-## Voice command (future — not implemented)
+## SOS Plus — planned / pilot capabilities (positioning)
 
-- Activation only **after** user completes SOS hold / explicit SOS activation flow.
-- Example keyword intents (Vietnamese): *Cứu* (general emergency), *Cháy* (fire), *Cướp* / *giết người* (severe threat — police-oriented triage copy only).
-- Requires: regional emergency-number database, false-positive protection, consent & privacy review, **legal review** before shipping.
+Listed in-app as **not active today**:
 
-## Recording (future — not implemented)
+| Capability | Label |
+|------------|-------|
+| Voice keyword hints after activation (“Cứu”, “Cháy”, “Cướp”, “Help”) | Pilot — requires setup; not background listening |
+| Local emergency guidance by current country/region (informational) | Planned |
+| Trusted contact alert (anywhere you travel) | Planned |
+| Embassy / consulate pointers (official directories — no auto-dial) | Planned |
+| Consent-based audio/video recording | Pilot — consent required |
+| Emergency routing setup | Future — requires setup; **not** live dispatch |
 
-- Audio/video only **after** explicit SOS activation and **separate** informed consent.
-- OS permissions requested only in a dedicated flow; visible recording indicator; encrypted storage; upload/share only per user settings and applicable law.
-- **No** background recording without user-initiated SOS.
+## Monetization
 
-## Constraints (all packs)
+**€4.99/month** is a **commercial target** for SOS Plus. **No Stripe checkout, subscription object, or wallet mutation** ships in AF.SOS.1.
 
-- No claim of live emergency dispatch partnership unless verified.
-- No “production-ready” auto-routing to PSAP unless certified integrations exist.
-- Emergency calling and recording require user setup, device permissions, and regional availability (`sos.disclaimer` in app i18n).
+## Emergency routing rule (copy + product)
+
+- **Do not** hardcode Vietnam **113 / 114 / 115** or global shortcuts (**112 / 911**) in UX unless tied to a **verified country routing matrix** for that market.
+- Until that matrix exists, sheets show **generic guidance**: call your **local** emergency number directly if in immediate danger; categories (medical, police, fire, trusted contact, scam note, embassy/consulate help) stay **global**.
+
+## Explicit non-goals (AF.SOS.1)
+
+- Real PSTN automation or verified one-tap dialing from the guidance sheet without routing data and legal sign-off.
+- Twilio / telecom orchestration.
+- Voice recognition **activation** or hot-word listening in background.
+- Background or covert recording; camera capture pipelines.
+- Location **dispatch** to authorities.
+- Database / Prisma / API / Auth session semantics changes for SOS Plus entitlement.
+
+## Feature flag
+
+`src/config/sosPlusSurface.ts` — `SOS_PLUS_PRODUCT_SURFACE_UI_ENABLED` (local UI constant). Toggle off to hide Plus strip and info entry points without removing SOS Basic.
+
+## Related audits
+
+- `docs/audit/VIONA_AF_SOS_PLUS_SURFACE_AUDIT.md` — implementation verification for AF.SOS.1.
+- `docs/audit/VIONA_PACK_SOS_RED_NEON_AND_PLUS_SPEC_AUDIT.md` — earlier red-neon shell pack notes.
+
+---
+
+**Document control:** Update when billing, consent flows, or regional emergency data pipelines are introduced.

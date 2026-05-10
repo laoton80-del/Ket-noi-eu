@@ -20,6 +20,8 @@
 
 New keys under `sos.*`: `chip`, `a11yChip`, `holdHelper`, `holdA11y`, `plusName`, `priceEur`, `disclaimer`, `preLoginTitle`, `preLoginBody`, `preLoginAck`, `cancelHold`, `gateTitle`, `gateSub`.
 
+**Successor verification:** AF.SOS.1 implementation audit — `docs/audit/VIONA_AF_SOS_PLUS_SURFACE_AUDIT.md`.
+
 ## Files touched (this pack)
 
 - `src/components/viona/VionaSosHoldButton.tsx` (new)

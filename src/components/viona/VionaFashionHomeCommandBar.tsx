@@ -219,10 +219,12 @@ const styles = StyleSheet.create({
   logoImage: {
     width: 236,
     height: 72,
+    backgroundColor: vionaTokens.fashionTech.canvas,
   },
   logoImageCompact: {
     width: 176,
     height: 54,
+    backgroundColor: vionaTokens.fashionTech.canvas,
   },
   greetingBlock: {
     flex: 1,

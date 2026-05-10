@@ -1,6 +1,6 @@
 /**
  * V7 SOS shield — **hold-to-trigger** (≥3000ms) with neon-red circular progress.
- * Prevents accidental emergency sheet opens; pairs with {@link initiateAITriage} + 10s dial buffer in {@link SOSModal}.
+ * Prevents accidental emergency sheet opens; parent opens the in-app SOS guidance sheet after hold completes.
  */
 
 import { Ionicons } from '@expo/vector-icons';

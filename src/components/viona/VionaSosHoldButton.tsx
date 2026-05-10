@@ -21,12 +21,15 @@ export type VionaSosHoldButtonProps = Readonly<{
   holdDurationMs?: number;
   onHoldComplete: () => void;
   disabled?: boolean;
+  /** Overrides default `sos.holdHelper` copy when set. */
+  helperText?: string;
 }>;
 
 export function VionaSosHoldButton({
   holdDurationMs = DEFAULT_HOLD_MS,
   onHoldComplete,
   disabled = false,
+  helperText,
 }: VionaSosHoldButtonProps): ReactElement {
   const { t } = useTranslation();
   const [progress, setProgress] = useState(0);
@@ -90,7 +93,7 @@ export function VionaSosHoldButton({
           <Ionicons name="shield" size={32} color={vionaTokens.fashionTech.sosNeon} />
         </View>
         <Text style={styles.sosMark}>{t('sos.chip')}</Text>
-        <Text style={styles.helper}>{t('sos.holdHelper')}</Text>
+        <Text style={styles.helper}>{helperText ?? t('sos.holdHelper')}</Text>
         {showCountdown ? (
           <View style={styles.countPill}>
             <Text style={styles.countText}>{secondsLeft}</Text>

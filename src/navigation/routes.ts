@@ -121,6 +121,8 @@ export type RootStackParamList = {
   FlightSearchAssistant: undefined;
   KetNoiYeuThuong: undefined;
   EmergencySOS: undefined;
+  /** SOS Plus — consent & local stub entitlement (AF.SOS.2); not billing-backed yet. */
+  SosPlusProfile: undefined;
   AdultLearningHome: undefined;
   KidsLearningHome: undefined;
   VietKids: undefined;

@@ -21,14 +21,36 @@ import ja from './locales/ja.json';
 import ko from './locales/ko.json';
 import vi from './locales/vi.json';
 
+type LocaleJson = Readonly<Record<string, unknown>>;
+
+/**
+ * Non-EN locale files ship a **partial** `sos` object. i18next does not deep-merge missing
+ * nested keys into `fallbackLng`, so new SOS keys would render as raw paths (e.g. `sos.guideTitle`).
+ * Merge each locale's `sos` on top of English so every `sos.*` key resolves for all UI languages.
+ */
+function mergeSosWithEnglishBase(locale: LocaleJson): LocaleJson {
+  const enSos = en.sos;
+  const locSos = locale.sos;
+  if (typeof enSos !== 'object' || enSos === null) return locale;
+  const overlay =
+    typeof locSos === 'object' && locSos !== null ? (locSos as Readonly<Record<string, unknown>>) : {};
+  return {
+    ...locale,
+    sos: {
+      ...(enSos as Readonly<Record<string, unknown>>),
+      ...overlay,
+    },
+  };
+}
+
 const resources = {
   en: { translation: en },
-  vi: { translation: vi },
-  cs: { translation: cs },
-  de: { translation: de },
-  fr: { translation: fr },
-  ko: { translation: ko },
-  ja: { translation: ja },
+  vi: { translation: mergeSosWithEnglishBase(vi as LocaleJson) },
+  cs: { translation: mergeSosWithEnglishBase(cs as LocaleJson) },
+  de: { translation: mergeSosWithEnglishBase(de as LocaleJson) },
+  fr: { translation: mergeSosWithEnglishBase(fr as LocaleJson) },
+  ko: { translation: mergeSosWithEnglishBase(ko as LocaleJson) },
+  ja: { translation: mergeSosWithEnglishBase(ja as LocaleJson) },
 } as const;
 
 /** First launch: map device `languageCode` to a bundled UI language; default `en`. */

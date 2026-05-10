@@ -13,7 +13,7 @@ import { SOSShieldComponent } from './premium/SOSShieldComponent';
 export type SOSFloatingButtonProps = Readonly<{
   /** Distance from bottom edge to clear tab bar + home indicator region (same basis as ProfileSwitcher). */
   tabBarLift: number;
-  /** After 3s hold — opens triage sheet; {@link initiateAITriage} is invoked by parent. */
+  /** After 3s hold — parent opens the SOS safety sheet (no auto-dial, no interpreter). */
   onHoldComplete: () => void;
 }>;
 
