@@ -117,6 +117,11 @@ export function SOSModal({
   const { user } = useAuth();
   const [plusInfoOpen, setPlusInfoOpen] = useState(false);
 
+  /** Wide desktop web: 3×2 grid, near-full-height panel, compact vertical rhythm. */
+  const sosWebDesktopFit = Platform.OS === 'web' && width >= 1100;
+  /** Narrow web only: optional grab pill (desktop/tablet web hides it). */
+  const sosWebShowHandle = Platform.OS === 'web' && width < 768;
+
   useEffect(() => {
     if (!visible) setPlusInfoOpen(false);
   }, [visible]);
@@ -176,13 +181,17 @@ export function SOSModal({
     Alert.alert(t('sos.legacyEmbassyAlertTitle'), t('sos.legacyEmbassyAlertBody'), [{ text: t('sos.close') }]);
   }, [logIntent, t]);
 
-  /** Near full-viewport panel: web keeps only a slim top breath (8–16px); native clears notch. */
+  /** Desktop web: slim viewport breath above sheet so panel gains height; narrow/tablet web unchanged. */
   const topReservePx =
     Platform.OS === 'web'
-      ? 10
+      ? sosWebDesktopFit
+        ? 8
+        : 10
       : Math.max(insets.top + 8, 48);
   const availableHeight = Math.max(0, height - topReservePx);
-  const vhCap = height * (Platform.OS === 'web' ? 0.988 : 0.975);
+  const vhCap =
+    height *
+    (Platform.OS === 'web' ? (sosWebDesktopFit ? 0.98 : 0.988) : 0.975);
   /** Never taller than remaining viewport; never force taller than `availableHeight` on tiny windows. */
   const sheetMax =
     availableHeight <= 0
@@ -253,17 +262,34 @@ export function SOSModal({
                 height: sheetMax,
                 maxHeight: sheetMax,
                 paddingBottom: Math.max(insets.bottom, 16) + 8,
+                paddingTop:
+                  Platform.OS !== 'web'
+                    ? 10
+                    : sosWebShowHandle
+                      ? 12
+                      : sosWebDesktopFit
+                        ? 2
+                        : 6,
               },
             ]}
           >
-            <View style={styles.handle} accessibilityElementsHidden />
+            {Platform.OS !== 'web' || sosWebShowHandle ? (
+              <View style={styles.handleLane} accessibilityElementsHidden>
+                <View style={styles.handle} />
+              </View>
+            ) : null}
             <ScrollView
               style={styles.scrollArea}
               bounces={false}
               showsVerticalScrollIndicator={false}
-              contentContainerStyle={styles.scrollContent}
+              contentContainerStyle={[
+                styles.scrollContent,
+                Platform.OS === 'web' && sosWebDesktopFit && styles.scrollContentWebDesktopFit,
+                Platform.OS === 'web' && !sosWebDesktopFit && width >= 768 && styles.scrollContentWebTablet,
+                Platform.OS === 'web' && !sosWebDesktopFit && width < 768 && styles.scrollContentWebNarrow,
+              ]}
             >
-              <View style={styles.titleBlock}>
+              <View style={[styles.titleBlock, sosWebDesktopFit && styles.titleBlockDesktopFit]}>
                 <View style={styles.headerGlyph}>
                   <Ionicons name="alert-circle" size={36} color="#EF4444" accessibilityIgnoresInvertColors />
                 </View>
@@ -299,7 +325,11 @@ export function SOSModal({
               {SOS_PLUS_PRODUCT_SURFACE_UI_ENABLED ? (
                 <Pressable
                   onPress={() => setPlusInfoOpen(true)}
-                  style={({ pressed }) => [styles.plusInfoLink, pressed && { opacity: 0.88 }]}
+                  style={({ pressed }) => [
+                    styles.plusInfoLink,
+                    sosWebDesktopFit && styles.plusInfoLinkDesktopFit,
+                    pressed && { opacity: 0.88 },
+                  ]}
                   accessibilityRole="button"
                   accessibilityLabel={t('sos.learnBasicVsPlusA11y')}
                 >
@@ -307,7 +337,7 @@ export function SOSModal({
                 </Pressable>
               ) : null}
 
-              <View style={styles.locationBanner}>
+              <View style={[styles.locationBanner, sosWebDesktopFit && styles.locationBannerDesktopFit]}>
                 <Ionicons name="navigate-outline" size={22} color="#FCA5A5" style={styles.bannerIcon} />
                 <View style={styles.bannerTextCol}>
                   <Text
@@ -331,7 +361,7 @@ export function SOSModal({
                 </View>
               </View>
 
-              <View style={styles.routingCallout}>
+              <View style={[styles.routingCallout, sosWebDesktopFit && styles.routingCalloutDesktopFit]}>
                 <Text style={styles.routingCalloutTitle} numberOfLines={2}>
                   {t('sos.routingSetupTitle')}
                 </Text>
@@ -357,6 +387,7 @@ export function SOSModal({
                   gridLayout={useActionGrid}
                   gridWebCellStyle={gridWebCellStyle}
                   cardWidth={actionGridCardWidthNative}
+                  desktopGridCompact={sosWebDesktopFit && useActionGrid}
                 />
                 <SosActionCard
                   accent={SOS_ACTION_ACCENTS.police}
@@ -368,6 +399,7 @@ export function SOSModal({
                   gridLayout={useActionGrid}
                   gridWebCellStyle={gridWebCellStyle}
                   cardWidth={actionGridCardWidthNative}
+                  desktopGridCompact={sosWebDesktopFit && useActionGrid}
                 />
                 <SosActionCard
                   accent={SOS_ACTION_ACCENTS.fire}
@@ -379,6 +411,7 @@ export function SOSModal({
                   gridLayout={useActionGrid}
                   gridWebCellStyle={gridWebCellStyle}
                   cardWidth={actionGridCardWidthNative}
+                  desktopGridCompact={sosWebDesktopFit && useActionGrid}
                 />
                 <SosActionCard
                   accent={SOS_ACTION_ACCENTS.trusted}
@@ -390,6 +423,7 @@ export function SOSModal({
                   gridLayout={useActionGrid}
                   gridWebCellStyle={gridWebCellStyle}
                   cardWidth={actionGridCardWidthNative}
+                  desktopGridCompact={sosWebDesktopFit && useActionGrid}
                 />
                 <SosActionCard
                   accent={SOS_ACTION_ACCENTS.scam}
@@ -401,6 +435,7 @@ export function SOSModal({
                   gridLayout={useActionGrid}
                   gridWebCellStyle={gridWebCellStyle}
                   cardWidth={actionGridCardWidthNative}
+                  desktopGridCompact={sosWebDesktopFit && useActionGrid}
                 />
                 <SosActionCard
                   accent={SOS_ACTION_ACCENTS.embassy}
@@ -412,16 +447,24 @@ export function SOSModal({
                   gridLayout={useActionGrid}
                   gridWebCellStyle={gridWebCellStyle}
                   cardWidth={actionGridCardWidthNative}
+                  desktopGridCompact={sosWebDesktopFit && useActionGrid}
                 />
               </View>
 
-              <Text style={styles.footerDisclaimer} maxFontSizeMultiplier={1.15}>
+              <Text
+                style={[styles.footerDisclaimer, sosWebDesktopFit && styles.footerDisclaimerDesktopFit]}
+                maxFontSizeMultiplier={1.15}
+              >
                 {t('sos.footerDisclaimer')}
               </Text>
 
               <Pressable
                 onPress={onRequestClose}
-                style={({ pressed }) => [styles.dismissBtn, pressed && { opacity: 0.85 }]}
+                style={({ pressed }) => [
+                  styles.dismissBtn,
+                  sosWebDesktopFit && styles.dismissBtnDesktopFit,
+                  pressed && { opacity: 0.85 },
+                ]}
                 accessibilityRole="button"
                 accessibilityLabel={t('sos.close')}
               >
@@ -467,6 +510,7 @@ function SosActionCard({
   gridWebCellStyle,
   cardWidth,
   disabled = false,
+  desktopGridCompact = false,
 }: Readonly<{
   accent: SosActionAccent;
   icon: keyof typeof Ionicons.glyphMap;
@@ -478,6 +522,7 @@ function SosActionCard({
   gridWebCellStyle?: ViewStyle;
   cardWidth?: number;
   disabled?: boolean;
+  desktopGridCompact?: boolean;
 }>): ReactElement {
   const webPointer = Platform.OS === 'web' ? ({ cursor: 'pointer' } as const) : null;
 
@@ -494,6 +539,7 @@ function SosActionCard({
         if (gridLayout) {
           return [
             styles.gridCard,
+            desktopGridCompact && styles.gridCardCompactWebDesktop,
             gridWebCellStyle,
             gridWebCellStyle == null && cardWidth != null ? { width: cardWidth } : null,
             { borderColor: accent.border },
@@ -547,7 +593,13 @@ function SosActionCard({
     >
       {gridLayout ? (
         <>
-          <View style={[styles.gridIconWrap, { borderColor: accent.icon }]}>
+          <View
+            style={[
+              styles.gridIconWrap,
+              desktopGridCompact && styles.gridIconWrapCompactWebDesktop,
+              { borderColor: accent.icon },
+            ]}
+          >
             <Ionicons name={icon} size={26} color={accent.icon} accessibilityIgnoresInvertColors />
           </View>
           <View style={styles.gridTextCol}>
@@ -622,7 +674,8 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'rgba(220, 38, 38, 0.38)',
     paddingHorizontal: 18,
-    paddingTop: 14,
+    /** paddingTop applied inline (native / web / handle variants). */
+    paddingTop: 0,
     maxWidth: '100%',
     width: '100%',
     shadowColor: '#000',
@@ -631,13 +684,20 @@ const styles = StyleSheet.create({
     shadowRadius: 28,
     elevation: 16,
   },
+  /** Native-only lane so the grab pill never shares vertical space with the scroll header. */
+  handleLane: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexShrink: 0,
+    paddingTop: 8,
+    paddingBottom: 12,
+  },
   handle: {
     alignSelf: 'center',
     width: 44,
     height: 5,
     borderRadius: 3,
     backgroundColor: 'rgba(239, 68, 68, 0.35)',
-    marginBottom: 22,
   },
   scrollArea: {
     flex: 1,
@@ -645,14 +705,31 @@ const styles = StyleSheet.create({
     maxWidth: '100%',
   },
   scrollContent: {
-    paddingTop: 10,
+    paddingTop: 4,
     paddingBottom: 32,
     gap: 14,
     maxWidth: '100%',
     width: '100%',
     alignSelf: 'stretch',
   },
-  titleBlock: { gap: 8, alignItems: 'center', maxWidth: '100%', marginTop: 2 },
+  scrollContentWebNarrow: {
+    paddingTop: 6,
+    gap: 14,
+  },
+  /** Web ≥768 with no grab handle: keep icon near sheet top (no dead band above glyph). */
+  scrollContentWebTablet: {
+    paddingTop: 8,
+    paddingBottom: 28,
+    gap: 12,
+  },
+  /** ≥1100px web: icon tight to inner top; tighter stacks so 3×2 + footer fit shorter viewports. */
+  scrollContentWebDesktopFit: {
+    paddingTop: 4,
+    paddingBottom: 20,
+    gap: 10,
+  },
+  titleBlock: { gap: 8, alignItems: 'center', maxWidth: '100%', marginTop: 0 },
+  titleBlockDesktopFit: { gap: 6 },
   headerGlyph: {
     marginBottom: 2,
   },
@@ -692,6 +769,10 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(69, 10, 10, 0.55)',
     maxWidth: '100%',
   },
+  plusInfoLinkDesktopFit: {
+    marginTop: 0,
+    paddingVertical: 6,
+  },
   plusInfoLinkText: {
     fontFamily: FontFamily.semibold,
     fontSize: 13,
@@ -708,6 +789,10 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'rgba(59, 130, 246, 0.28)',
     maxWidth: '100%',
+  },
+  locationBannerDesktopFit: {
+    padding: 10,
+    gap: 8,
   },
   bannerIcon: { flexShrink: 0, marginTop: 2 },
   bannerTextCol: { flex: 1, minWidth: 0, gap: 6, maxWidth: '100%' },
@@ -734,6 +819,11 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(248, 113, 113, 0.35)',
     gap: 6,
     maxWidth: '100%',
+  },
+  routingCalloutDesktopFit: {
+    marginTop: 2,
+    padding: 10,
+    gap: 4,
   },
   routingCalloutTitle: {
     fontFamily: FontFamily.bold,
@@ -791,6 +881,12 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     minHeight: 112,
   },
+  /** Desktop web 3×2 only — shorter cards, still ≥100px target height. */
+  gridCardCompactWebDesktop: {
+    paddingVertical: 8,
+    paddingBottom: 11,
+    minHeight: 100,
+  },
   gridCardDisabled: { opacity: 0.42 },
   gridIconWrap: {
     width: 44,
@@ -801,6 +897,9 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     backgroundColor: 'rgba(15, 23, 42, 0.96)',
     marginBottom: 8,
+  },
+  gridIconWrapCompactWebDesktop: {
+    marginBottom: 6,
   },
   gridTextCol: {
     alignItems: 'center',
@@ -884,6 +983,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 4,
     maxWidth: '100%',
   },
+  footerDisclaimerDesktopFit: {
+    marginTop: 6,
+  },
   dismissBtn: {
     marginTop: 12,
     alignSelf: 'center',
@@ -895,6 +997,11 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'rgba(239, 68, 68, 0.45)',
     backgroundColor: 'rgba(127, 29, 29, 0.35)',
+  },
+  dismissBtnDesktopFit: {
+    marginTop: 8,
+    paddingVertical: 10,
+    paddingHorizontal: 24,
   },
   dismissLabel: {
     fontFamily: FontFamily.semibold,
