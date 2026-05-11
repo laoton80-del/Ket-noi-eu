@@ -67,6 +67,7 @@ import { MarketingApprovalScreen } from './src/screens/admin/MarketingApprovalSc
 import { VaultScreen } from './src/screens/VaultScreen';
 import { ReferralRewardScreen } from './src/screens/ReferralRewardScreen';
 import { CashOutScreen } from './src/screens/b2c/CashOutScreen';
+import { DashboardB2CPreviewScreen } from './src/screens/b2c/DashboardB2CPreviewScreen';
 import { RadarDiscoveryScreen } from './src/screens/RadarDiscoveryScreen';
 import { LifeOSDashboard } from './src/screens/LifeOSDashboard';
 import { TravelCompanionScreen } from './src/screens/TravelCompanionScreen';
@@ -321,6 +322,7 @@ const rootLinking: LinkingOptions<RootStackParamList> = {
         },
       },
       PersonalHub: 'account',
+      DashboardB2CPreview: 'dashboard-preview',
       B2BPaywall: 'B2BPaywall',
       MerchantDashboard: 'MerchantDashboard',
       AiReceptionistSetupChecklist: 'AiReceptionistSetupChecklist',
@@ -442,6 +444,7 @@ function AppNavigationShell({
               <Stack.Screen name="Tabs" component={MainTabNavigator} />
               <Stack.Screen name="PersonalHub" component={CaNhanScreen} />
               <Stack.Screen name="LifeOSDashboard" component={LifeOSDashboard} />
+              <Stack.Screen name="DashboardB2CPreview" component={DashboardB2CPreviewScreen} />
               <Stack.Screen name="TravelCompanion" component={TravelCompanionScreenGated} />
               <Stack.Screen
                 name="TravelHub"

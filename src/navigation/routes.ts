@@ -70,6 +70,8 @@ export type RootStackParamList = {
   /** Full account hub (wallet, language, legal) — opened from Profile Switcher / merchant-broker headers. */
   PersonalHub: undefined;
   LifeOSDashboard: undefined;
+  /** AF.UI.2 — isolated dashboard grid review (`/dashboard-preview`). */
+  DashboardB2CPreview: undefined;
   /** Phase 4: travel hub — scenarios + quick links (no booking automation). */
   TravelCompanion: undefined;
   /** KNG Travel — dedicated premium travel mini-app (concierge, homestay, interpreter). */

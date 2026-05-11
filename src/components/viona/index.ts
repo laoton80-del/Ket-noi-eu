@@ -33,3 +33,8 @@ export type { VionaSafetyAssistProps } from './VionaSafetyAssist';
 
 export { VionaModalSurface } from './VionaModalSurface';
 export type { VionaModalSurfaceProps } from './VionaModalSurface';
+
+export { VionaActionGrid } from './VionaActionGrid';
+export type { VionaActionGridProps, VionaActionGridContextValue } from './VionaActionGrid';
+export { VionaActionCard, vionaActionAccentFromHex } from './VionaActionCard';
+export type { VionaActionCardProps, VionaActionAccent } from './VionaActionCard';
