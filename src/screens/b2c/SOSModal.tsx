@@ -261,7 +261,10 @@ export function SOSModal({
               {
                 height: sheetMax,
                 maxHeight: sheetMax,
-                paddingBottom: Math.max(insets.bottom, 16) + 8,
+                paddingBottom:
+                  Platform.OS === 'web' && sosWebDesktopFit
+                    ? 8
+                    : Math.max(insets.bottom, 16) + 8,
                 paddingTop:
                   Platform.OS !== 'web'
                     ? 10
@@ -725,7 +728,7 @@ const styles = StyleSheet.create({
   /** ≥1100px web: icon tight to inner top; tighter stacks so 3×2 + footer fit shorter viewports. */
   scrollContentWebDesktopFit: {
     paddingTop: 4,
-    paddingBottom: 20,
+    paddingBottom: 10,
     gap: 10,
   },
   titleBlock: { gap: 8, alignItems: 'center', maxWidth: '100%', marginTop: 0 },
@@ -883,9 +886,9 @@ const styles = StyleSheet.create({
   },
   /** Desktop web 3×2 only — shorter cards, still ≥100px target height. */
   gridCardCompactWebDesktop: {
-    paddingVertical: 8,
-    paddingBottom: 11,
-    minHeight: 100,
+    paddingVertical: 7,
+    paddingBottom: 10,
+    minHeight: 96,
   },
   gridCardDisabled: { opacity: 0.42 },
   gridIconWrap: {
@@ -984,7 +987,7 @@ const styles = StyleSheet.create({
     maxWidth: '100%',
   },
   footerDisclaimerDesktopFit: {
-    marginTop: 6,
+    marginTop: 2,
   },
   dismissBtn: {
     marginTop: 12,
@@ -999,8 +1002,8 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(127, 29, 29, 0.35)',
   },
   dismissBtnDesktopFit: {
-    marginTop: 8,
-    paddingVertical: 10,
+    marginTop: 4,
+    paddingVertical: 8,
     paddingHorizontal: 24,
   },
   dismissLabel: {
