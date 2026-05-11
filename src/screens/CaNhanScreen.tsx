@@ -3,8 +3,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Clipboard from 'expo-clipboard';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { useCallback, useEffect, useState } from 'react';
-import { Alert, Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { Alert, Modal, Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { APP_BRAND } from '../config/appBrand';
 import { useAppMode } from '../context/AppModeContext';
@@ -27,7 +27,8 @@ import { useWalletState } from '../state/wallet';
 import { STORAGE_KEYS } from '../storage/storageKeys';
 import { GDPRDashboard } from '../components/compliance/GDPRDashboard';
 import { TrustHistoryCard } from '../components/widgets';
-import { b2cTheme } from '../theme/appModeThemes';
+import { VionaActionCard, VionaActionGrid, vionaActionAccentFromHex } from '../components/viona';
+import { vionaTokens } from '../design';
 import { theme } from '../theme/theme';
 import { FontFamily } from '../theme/typography';
 import { hasB2BWorkspaceAccess } from '../utils/b2bAccess';
@@ -35,11 +36,19 @@ import { hasB2BWorkspaceAccess } from '../utils/b2bAccess';
 type Nav = NativeStackNavigationProp<RootStackParamList>;
 const ADMIN_UNLOCK_KEY = STORAGE_KEYS.adminUnlock;
 
-const LANGUAGE_OPTIONS: ReadonlyArray<{
+const ft = vionaTokens.fashionTech;
+const ACC_ACCOUNT_STORE = vionaActionAccentFromHex(ft.accentGold);
+const ACC_ACCOUNT_B2B_PRICE = vionaActionAccentFromHex(ft.accentCyan);
+/** Strong CTA without full-bleed destructive red — accent border on dark tile (SOS-adjacent language). */
+const ACC_ACCOUNT_B2B_SWITCH = vionaActionAccentFromHex(ft.sosNeonMuted);
+const ACC_ACCOUNT_PARTNER = vionaActionAccentFromHex(ft.accentEmerald);
+const ACC_ACCOUNT_WORKSPACE = vionaActionAccentFromHex(ft.accentViolet);
+
+const LANGUAGE_OPTIONS: readonly {
   code: 'vi' | 'en' | 'cs' | 'de';
   title: string;
   hint: string;
-}> = [
+}[] = [
   { code: 'vi', title: '🇻🇳 Tiếng Việt', hint: 'Default · F1' },
   { code: 'en', title: '🇬🇧 English', hint: 'Global · F2 / F3' },
   { code: 'cs', title: '🇨🇿 Čeština', hint: 'EU expansion' },
@@ -140,11 +149,20 @@ function interpolate(template: string, vars: Record<string, string>): string {
 
 export function CaNhanScreen() {
   const navigation = useNavigation<Nav>();
+  const { width } = useWindowDimensions();
   const { user, updateProfile } = useAuth();
   const { mode, setMode } = useAppMode();
   const { languageCode } = useAssistantSettings();
   const strings = getStrings(languageCode);
   const wallet = useWalletState();
+  const accountActionGridWidth = useMemo(
+    () => Math.max(0, width - theme.spacing.lg * 2),
+    [width]
+  );
+  const showWorkspaceShortcut = Boolean(
+    user && (user.serverRole === 'BROKER' || isMerchantServerRole(user.serverRole))
+  );
+  const accountShortcutCount = showWorkspaceShortcut ? 5 : 4;
   const [diasporaRestrictionOpen, setDiasporaRestrictionOpen] = useState(false);
   const [languageModalOpen, setLanguageModalOpen] = useState(false);
 
@@ -332,7 +350,7 @@ export function CaNhanScreen() {
           style={({ pressed }) => [styles.profileCard, pressed && { opacity: 0.72 }]}
         >
           <View style={styles.avatarWrap}>
-            <Ionicons name="person" size={34} color={theme.colors.primary} />
+            <Ionicons name="person" size={34} color={ft.champagne} />
           </View>
           <View style={styles.profileMeta}>
             <Text style={styles.profileName}>{strings.common.pronounYou}</Text>
@@ -351,102 +369,72 @@ export function CaNhanScreen() {
           <Text style={styles.cardHint}>{strings.profile.creditsHint}</Text>
         </Pressable>
 
-        <Pressable
-          onPress={() => navigation.navigate('Wallet')}
-          style={({ pressed }) => [styles.virtualStoreShortcut, pressed && { opacity: 0.78 }]}
-          accessibilityRole="button"
-          accessibilityLabel="Cửa hàng Vật phẩm — Khung avatar và huy hiệu VIP"
-        >
-          <View style={styles.virtualStoreShortcutIcon}>
-            <Ionicons name="storefront-outline" size={20} color={theme.colors.primary} />
-          </View>
-          <View style={styles.virtualStoreShortcutMeta}>
-            <Text style={styles.virtualStoreShortcutTitle}>Cửa hàng Vật phẩm</Text>
-            <Text style={styles.virtualStoreShortcutHint}>Khung Avatar Trống Đồng · Huy hiệu Xác minh Hộ chiếu — thanh toán Xu.</Text>
-          </View>
-          <Ionicons name="chevron-forward" size={18} color={theme.colors.text.secondary} />
-        </Pressable>
-
-        <Pressable
-          onPress={() => openMerchantRoute('B2BPaywall')}
-          style={({ pressed }) => [styles.b2bPricingCard, pressed && { opacity: 0.72 }]}
-        >
-          <Ionicons name="pricetags-outline" size={22} color={theme.hybrid.signalStrong} />
-          <View style={styles.b2bPricingMeta}>
-            <Text style={styles.b2bPricingTitle}>Bảng giá doanh nghiệp (B2B)</Text>
-            <Text style={styles.b2bPricingHint}>Gói Cơ bản, Pro, Power — thanh toán theo lịch hoặc theo tháng.</Text>
-          </View>
-          <Ionicons name="chevron-forward" size={18} color={theme.colors.text.secondary} />
-        </Pressable>
-
-        <Pressable
-          onPress={openB2BWorkspaceSwitch}
-          style={({ pressed }) => [styles.b2bSwitchCard, pressed && { opacity: 0.78 }]}
-          accessibilityRole="button"
-          accessibilityLabel="Chuyển sang Quản lý Doanh nghiệp"
-        >
-          <Ionicons name="swap-horizontal" size={20} color={theme.colors.CeolWhite} />
-          <View style={styles.b2bSwitchMeta}>
-            <Text style={styles.b2bSwitchTitle}>🔄 Chuyển sang Quản lý Doanh nghiệp</Text>
-            <Text style={styles.b2bSwitchHint}>
-              Workspace hiện tại: {mode === 'B2B_MODE' ? 'B2B_MODE' : 'B2C_MODE'}.
-            </Text>
-          </View>
-          <Ionicons name="chevron-forward" size={18} color={theme.colors.CeolWhite} />
-        </Pressable>
-
-        {user && (user.serverRole === 'BROKER' || isMerchantServerRole(user.serverRole)) ? (
-          <Pressable
-            onPress={() => {
-              if (user.workspaceUiOverride === 'consumer') {
-                updateProfile({ workspaceUiOverride: null });
-              } else {
-                updateProfile({ workspaceUiOverride: 'consumer' });
-              }
-            }}
-            style={({ pressed }) => [styles.workspaceHatCard, pressed && { opacity: 0.82 }]}
-            accessibilityRole="button"
-            accessibilityLabel="Switch default between workspace and consumer home"
+        <View style={styles.actionGridSection}>
+          <VionaActionGrid
+            widthHint={accountActionGridWidth}
+            gap={theme.spacing.lg}
+            testID="account-shortcuts-grid"
+            preferTwoColumnQuartet
+            visibleCardCount={accountShortcutCount}
           >
-            <Ionicons name="people-circle-outline" size={22} color={theme.colors.primary} />
-            <View style={styles.b2bSwitchMeta}>
-              <Text style={styles.workspaceHatTitle}>
-                {user.workspaceUiOverride === 'consumer'
-                  ? `Use ${user.serverRole === 'BROKER' ? 'broker' : 'merchant'} dashboard as default home`
-                  : 'Switch default home to VIONA consumer app'}
-              </Text>
-              <Text style={styles.workspaceHatHint}>
-                One tap — saved on this device. Open wallet & tabs stay the same.
-              </Text>
-            </View>
-            <Ionicons name="chevron-forward" size={18} color={theme.colors.text.secondary} />
-          </Pressable>
-        ) : null}
-
-        <Pressable
-          onPress={() => openMerchantRoute('PartnerOnboarding')}
-          style={({ pressed }) => [
-            styles.partnerEnterpriseRow,
-            {
-              backgroundColor: b2cTheme.colors.card,
-              borderColor: theme.colors.primary,
-            },
-            pressed && { opacity: 0.78 },
-          ]}
-          accessibilityRole="button"
-          accessibilityLabel="Dành cho Doanh nghiệp: Trở thành đối tác"
-        >
-          <View style={[styles.partnerEnterpriseIcon, { borderColor: theme.colors.primary, backgroundColor: 'rgba(197, 160, 89, 0.12)' }]}>
-            <Ionicons name="shield-checkmark" size={20} color={theme.colors.primary} />
-          </View>
-          <View style={styles.partnerEnterpriseMeta}>
-            <Text style={[styles.partnerEnterpriseTitle, { color: b2cTheme.colors.text }]}>Dành cho Doanh nghiệp: Trở thành đối tác</Text>
-            <Text style={[styles.partnerEnterpriseHint, { color: 'rgba(11, 22, 40, 0.62)' }]}>
-              Chương trình Đối tác chứng nhận — chia sẻ doanh thu, liên hệ trong 24h.
-            </Text>
-          </View>
-          <Ionicons name="chevron-forward" size={18} color={b2cTheme.colors.text} />
-        </Pressable>
+            <VionaActionCard
+              iconName="storefront-outline"
+              title="Cửa hàng Vật phẩm"
+              subtitle="Khung Avatar Trống Đồng · Huy hiệu Xác minh Hộ chiếu — thanh toán Xu."
+              accent={ACC_ACCOUNT_STORE}
+              onPress={() => navigation.navigate('Wallet')}
+              accessibilityHint="Cửa hàng Vật phẩm — Khung avatar và huy hiệu VIP"
+              testID="account-action-virtual-store"
+            />
+            <VionaActionCard
+              iconName="pricetags-outline"
+              title="Bảng giá doanh nghiệp (B2B)"
+              subtitle="Gói Cơ bản, Pro, Power — thanh toán theo lịch hoặc theo tháng."
+              accent={ACC_ACCOUNT_B2B_PRICE}
+              onPress={() => openMerchantRoute('B2BPaywall')}
+              testID="account-action-b2b-pricing"
+            />
+            <VionaActionCard
+              iconName="swap-horizontal"
+              title="🔄 Chuyển sang Quản lý Doanh nghiệp"
+              subtitle={`Workspace hiện tại: ${mode === 'B2B_MODE' ? 'B2B_MODE' : 'B2C_MODE'}.`}
+              accent={ACC_ACCOUNT_B2B_SWITCH}
+              onPress={openB2BWorkspaceSwitch}
+              accessibilityHint="Chuyển sang Quản lý Doanh nghiệp"
+              testID="account-action-b2b-switch"
+            />
+            {showWorkspaceShortcut && user ? (
+              <VionaActionCard
+                iconName="people-circle-outline"
+                title={
+                  user.workspaceUiOverride === 'consumer'
+                    ? `Use ${user.serverRole === 'BROKER' ? 'broker' : 'merchant'} dashboard as default home`
+                    : 'Switch default home to VIONA consumer app'
+                }
+                subtitle="One tap — saved on this device. Open wallet & tabs stay the same."
+                accent={ACC_ACCOUNT_WORKSPACE}
+                onPress={() => {
+                  if (user.workspaceUiOverride === 'consumer') {
+                    updateProfile({ workspaceUiOverride: null });
+                  } else {
+                    updateProfile({ workspaceUiOverride: 'consumer' });
+                  }
+                }}
+                accessibilityHint="Switch default between workspace and consumer home"
+                testID="account-action-workspace-hat"
+              />
+            ) : null}
+            <VionaActionCard
+              iconName="shield-checkmark"
+              title="Dành cho Doanh nghiệp: Trở thành đối tác"
+              subtitle="Chương trình Đối tác chứng nhận — chia sẻ doanh thu, liên hệ trong 24h."
+              accent={ACC_ACCOUNT_PARTNER}
+              onPress={() => openMerchantRoute('PartnerOnboarding')}
+              accessibilityHint="Dành cho Doanh nghiệp: Trở thành đối tác"
+              testID="account-action-partner"
+            />
+          </VionaActionGrid>
+        </View>
 
         <View style={styles.identityCard}>
           <Text style={styles.cardTitle}>{strings.profile.identityTitle}</Text>
@@ -492,7 +480,7 @@ export function CaNhanScreen() {
                 {languageSubtitleForCode(languageCode)}
               </Text>
             </View>
-            <Ionicons name="chevron-forward" size={16} color={theme.colors.text.secondary} />
+            <Ionicons name="chevron-forward" size={16} color={ft.mutedOnDark} />
           </Pressable>
           {settings.map((item) => (
             <Pressable
@@ -501,7 +489,7 @@ export function CaNhanScreen() {
               style={({ pressed }) => [styles.settingRow, pressed && { opacity: 0.72 }]}
             >
               <Text style={styles.settingText}>{item.label}</Text>
-              <Ionicons name="chevron-forward" size={16} color={theme.colors.text.secondary} />
+              <Ionicons name="chevron-forward" size={16} color={ft.mutedOnDark} />
             </Pressable>
           ))}
         </View>
@@ -509,7 +497,7 @@ export function CaNhanScreen() {
         <GDPRDashboard />
 
         {__DEV__ ? (
-          <View style={styles.devTokenCard}>
+          <View style={[styles.devTokenCard, styles.devTokenCardDevMarker]}>
             <Text style={styles.devTokenLabel}>Dev only — TEMP (gỡ trước ship)</Text>
             <Text style={styles.devTokenHint}>
               Metro log: FIREBASE_UID, TOKEN_SEGMENTS, TOKEN_LENGTH, FIREBASE_ID_TOKEN
@@ -620,7 +608,7 @@ export function CaNhanScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: theme.colors.background,
+    backgroundColor: ft.canvas,
   },
   content: {
     paddingHorizontal: theme.spacing.lg,
@@ -629,13 +617,13 @@ const styles = StyleSheet.create({
   },
   brand: {
     fontSize: 14,
-    color: theme.colors.primaryBright,
+    color: ft.champagne,
     fontFamily: FontFamily.regular,
     marginBottom: 4,
   },
   launchHint: {
     fontSize: 12,
-    color: theme.colors.text.secondary,
+    color: ft.textSecondary,
     fontFamily: FontFamily.medium,
     marginBottom: 8,
     opacity: 0.95,
@@ -643,21 +631,26 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 30,
     fontFamily: FontFamily.extrabold,
-    color: theme.colors.text.primary,
+    color: ft.textPrimary,
     marginBottom: 6,
   },
   subtitle: {
     fontSize: 14,
     lineHeight: 21,
     fontFamily: FontFamily.regular,
-    color: theme.colors.text.secondary,
+    color: ft.textSecondary,
     marginBottom: 12,
+  },
+  actionGridSection: {
+    width: '100%',
+    alignSelf: 'stretch',
+    marginBottom: theme.spacing.md,
   },
   profileCard: {
     borderRadius: theme.radius.lg,
     borderWidth: 1,
-    borderColor: theme.colors.glass.border,
-    backgroundColor: theme.colors.executive.card,
+    borderColor: ft.borderGold,
+    backgroundColor: ft.surfaceElevated,
     padding: 14,
     flexDirection: 'row',
     alignItems: 'center',
@@ -669,9 +662,9 @@ const styles = StyleSheet.create({
     borderRadius: 31,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: theme.colors.executive.chipFill,
+    backgroundColor: 'rgba(12, 18, 28, 0.9)',
     borderWidth: 1,
-    borderColor: theme.colors.glass.borderSoft,
+    borderColor: ft.borderSubtle,
   },
   profileMeta: {
     marginLeft: 12,
@@ -679,198 +672,46 @@ const styles = StyleSheet.create({
   },
   profileName: {
     fontSize: 22,
-    color: theme.colors.text.primary,
+    color: ft.textPrimary,
     fontFamily: FontFamily.bold,
     marginBottom: 2,
   },
   profilePlan: {
     fontSize: 13,
-    color: theme.colors.text.secondary,
+    color: ft.textSecondary,
     fontFamily: FontFamily.regular,
   },
   creditsCard: {
     borderRadius: theme.radius.lg,
     borderWidth: 1,
-    borderColor: theme.colors.glass.border,
-    backgroundColor: theme.colors.executive.card,
+    borderColor: ft.borderGold,
+    backgroundColor: ft.surfaceElevated,
     padding: 14,
     marginBottom: 12,
   },
-  b2bPricingCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: theme.spacing.md,
-    borderRadius: theme.radius.lg,
-    borderWidth: 1,
-    borderColor: theme.hybrid.signalSubtleBorder,
-    backgroundColor: theme.hybrid.signalMutedBg,
-    paddingVertical: theme.spacing.md,
-    paddingHorizontal: theme.spacing.md,
-    marginBottom: theme.spacing.md,
-  },
-  b2bPricingMeta: {
-    flex: 1,
-    gap: 4,
-  },
-  b2bPricingTitle: {
-    fontSize: 15,
-    fontFamily: FontFamily.bold,
-    color: theme.colors.text.primary,
-  },
-  b2bPricingHint: {
-    fontSize: 12,
-    lineHeight: 17,
-    fontFamily: FontFamily.regular,
-    color: theme.colors.text.secondary,
-  },
-  b2bSwitchCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: theme.spacing.md,
-    borderRadius: theme.radius.lg,
-    borderWidth: 1,
-    borderColor: 'rgba(229, 57, 53, 0.6)',
-    backgroundColor: '#E53935',
-    paddingVertical: theme.spacing.md,
-    paddingHorizontal: theme.spacing.md,
-    marginBottom: theme.spacing.md,
-    shadowColor: '#E53935',
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.45,
-    shadowRadius: 10,
-    elevation: 6,
-  },
-  b2bSwitchMeta: {
-    flex: 1,
-    gap: 4,
-  },
-  b2bSwitchTitle: {
-    fontSize: 14,
-    fontFamily: FontFamily.bold,
-    color: theme.colors.CeolWhite,
-  },
-  b2bSwitchHint: {
-    fontSize: 12,
-    lineHeight: 17,
-    fontFamily: FontFamily.regular,
-    color: 'rgba(255,255,255,0.9)',
-  },
-  workspaceHatCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: theme.spacing.md,
-    borderRadius: theme.radius.lg,
-    borderWidth: 1,
-    borderColor: theme.hybrid.signatureLine,
-    backgroundColor: b2cTheme.colors.card,
-    paddingVertical: theme.spacing.md,
-    paddingHorizontal: theme.spacing.md,
-    marginBottom: theme.spacing.md,
-  },
-  workspaceHatTitle: {
-    fontSize: 14,
-    fontFamily: FontFamily.bold,
-    color: b2cTheme.colors.text,
-  },
-  workspaceHatHint: {
-    fontSize: 12,
-    lineHeight: 17,
-    fontFamily: FontFamily.regular,
-    color: theme.colors.text.secondary,
-  },
-  virtualStoreShortcut: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: theme.spacing.md,
-    borderRadius: theme.radius.lg,
-    borderWidth: 1.5,
-    borderColor: theme.hybrid.signatureLine,
-    backgroundColor: b2cTheme.colors.card,
-    paddingVertical: theme.spacing.md,
-    paddingHorizontal: theme.spacing.md,
-    marginBottom: theme.spacing.md,
-  },
-  virtualStoreShortcutIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: theme.colors.primary,
-    backgroundColor: 'rgba(197, 160, 89, 0.12)',
-  },
-  virtualStoreShortcutMeta: {
-    flex: 1,
-    gap: 4,
-  },
-  virtualStoreShortcutTitle: {
-    fontSize: 14,
-    fontFamily: FontFamily.bold,
-    color: b2cTheme.colors.text,
-  },
-  virtualStoreShortcutHint: {
-    fontSize: 12,
-    lineHeight: 17,
-    fontFamily: FontFamily.regular,
-    color: 'rgba(11, 22, 40, 0.62)',
-  },
-  partnerEnterpriseRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: theme.spacing.md,
-    borderRadius: theme.radius.lg,
-    borderWidth: 2,
-    paddingVertical: theme.spacing.md,
-    paddingHorizontal: theme.spacing.md,
-    marginBottom: theme.spacing.md,
-  },
-  partnerEnterpriseIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1.5,
-  },
-  partnerEnterpriseMeta: {
-    flex: 1,
-    gap: 4,
-  },
-  partnerEnterpriseTitle: {
-    fontSize: 14,
-    fontFamily: FontFamily.bold,
-    color: theme.colors.text.primary,
-  },
-  partnerEnterpriseHint: {
-    fontSize: 12,
-    lineHeight: 17,
-    fontFamily: FontFamily.regular,
-    color: theme.colors.text.secondary,
-  },
   cardTitle: {
     fontSize: 16,
-    color: theme.colors.text.primary,
+    color: ft.textPrimary,
     fontFamily: FontFamily.bold,
     marginBottom: 4,
   },
   cardBalance: {
     fontSize: 18,
-    color: theme.colors.primary,
+    color: ft.champagne,
     fontFamily: FontFamily.extrabold,
     marginBottom: 6,
   },
   cardHint: {
     fontSize: 13,
     lineHeight: 20,
-    color: theme.colors.text.secondary,
+    color: ft.textSecondary,
     fontFamily: FontFamily.regular,
   },
   identityCard: {
     borderRadius: theme.radius.lg,
     borderWidth: 1,
-    borderColor: theme.colors.glass.border,
-    backgroundColor: theme.colors.executive.card,
+    borderColor: ft.borderSubtle,
+    backgroundColor: ft.surfaceElevated,
     padding: 14,
     marginBottom: 12,
     gap: 8,
@@ -884,14 +725,14 @@ const styles = StyleSheet.create({
   identityKey: {
     flex: 1,
     fontSize: 13,
-    color: theme.colors.text.secondary,
+    color: ft.mutedOnDark,
     fontFamily: FontFamily.medium,
   },
   identityValue: {
     flex: 1,
     textAlign: 'right',
     fontSize: 13,
-    color: theme.colors.text.primary,
+    color: ft.textPrimary,
     fontFamily: FontFamily.bold,
   },
   editIdentityBtn: {
@@ -899,27 +740,27 @@ const styles = StyleSheet.create({
     minHeight: 34,
     borderRadius: 10,
     borderWidth: 1,
-    borderColor: theme.colors.glass.border,
-    backgroundColor: theme.colors.executive.panelMuted,
+    borderColor: ft.borderGold,
+    backgroundColor: 'rgba(12, 18, 28, 0.85)',
     alignItems: 'center',
     justifyContent: 'center',
   },
   editIdentityText: {
     fontSize: 12,
-    color: theme.colors.text.primary,
+    color: ft.champagne,
     fontFamily: FontFamily.bold,
   },
   sectionTitle: {
     fontSize: 14,
-    color: theme.colors.text.primary,
+    color: ft.textPrimary,
     fontFamily: FontFamily.extrabold,
     marginBottom: 8,
   },
   settingsCard: {
     borderRadius: theme.radius.lg,
     borderWidth: 1,
-    borderColor: theme.colors.glass.border,
-    backgroundColor: theme.colors.executive.card,
+    borderColor: ft.borderSubtle,
+    backgroundColor: ft.surfaceElevated,
     paddingHorizontal: 12,
   },
   languageRowText: {
@@ -929,7 +770,7 @@ const styles = StyleSheet.create({
   languageRowSub: {
     fontSize: 11,
     marginTop: 2,
-    color: theme.colors.text.secondary,
+    color: ft.textSecondary,
     fontFamily: FontFamily.regular,
   },
   langModalBackdrop: {
@@ -941,8 +782,8 @@ const styles = StyleSheet.create({
   langModalCard: {
     borderRadius: theme.radius.lg,
     borderWidth: 1,
-    borderColor: theme.colors.glass.border,
-    backgroundColor: theme.colors.surfaceElevated,
+    borderColor: ft.borderGold,
+    backgroundColor: ft.surfaceElevated,
     padding: 18,
     maxWidth: 420,
     width: '100%',
@@ -951,14 +792,14 @@ const styles = StyleSheet.create({
   langModalTitle: {
     fontSize: 18,
     fontFamily: FontFamily.bold,
-    color: theme.colors.text.primary,
+    color: ft.textPrimary,
     marginBottom: 4,
   },
   langModalCaption: {
     fontSize: 12,
     lineHeight: 17,
     fontFamily: FontFamily.regular,
-    color: theme.colors.text.secondary,
+    color: ft.textSecondary,
     marginBottom: 14,
   },
   langOption: {
@@ -967,29 +808,29 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     marginBottom: 8,
     borderWidth: 1,
-    borderColor: theme.colors.glass.borderSoft,
-    backgroundColor: 'rgba(244, 241, 234, 0.04)',
+    borderColor: ft.borderSubtle,
+    backgroundColor: 'rgba(10, 14, 22, 0.65)',
   },
   langOptionActive: {
-    borderColor: theme.colors.primary,
-    backgroundColor: 'rgba(197, 160, 89, 0.14)',
+    borderColor: ft.champagne,
+    backgroundColor: 'rgba(201, 169, 98, 0.12)',
   },
   langOptionTitle: {
     fontSize: 15,
     fontFamily: FontFamily.semibold,
-    color: theme.colors.text.secondary,
+    color: ft.textSecondary,
   },
   langOptionTitleActive: {
-    color: theme.colors.primaryBright,
+    color: ft.champagne,
   },
   langOptionHint: {
     fontSize: 11,
     marginTop: 2,
     fontFamily: FontFamily.regular,
-    color: theme.colors.text.tertiary,
+    color: ft.mutedOnDark,
   },
   langOptionHintActive: {
-    color: theme.colors.text.secondary,
+    color: ft.textSecondary,
   },
   langModalClose: {
     marginTop: 6,
@@ -999,7 +840,7 @@ const styles = StyleSheet.create({
   langModalCloseText: {
     fontSize: 14,
     fontFamily: FontFamily.medium,
-    color: theme.colors.text.secondary,
+    color: ft.textSecondary,
   },
   resetOnboardingRow: {
     marginTop: 10,
@@ -1009,8 +850,8 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: theme.colors.glass.borderSoft,
-    backgroundColor: theme.colors.executive.panelMuted,
+    borderColor: ft.borderSubtle,
+    backgroundColor: ft.surface,
     paddingHorizontal: 14,
     paddingVertical: 12,
   },
@@ -1020,72 +861,80 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     borderBottomWidth: 1,
-    borderBottomColor: theme.colors.glass.borderSoft,
+    borderBottomColor: ft.borderSubtle,
     paddingVertical: 4,
   },
   devTokenCard: {
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: theme.colors.glass.border,
-    backgroundColor: theme.colors.executive.card,
+    borderColor: ft.borderSubtle,
+    backgroundColor: 'rgba(10, 14, 22, 0.75)',
     padding: 14,
     marginBottom: 14,
   },
+  /** Visually distinct from premium account cards — engineering strip, dev builds only. */
+  devTokenCardDevMarker: {
+    borderWidth: 1,
+    borderColor: 'rgba(201, 169, 98, 0.32)',
+    backgroundColor: 'rgba(10, 14, 22, 0.82)',
+  },
   devTokenLabel: {
-    fontSize: 11,
-    fontFamily: FontFamily.medium,
-    color: theme.colors.text.secondary,
+    fontSize: 10,
+    fontFamily: FontFamily.semibold,
+    color: 'rgba(201, 169, 98, 0.72)',
     marginBottom: 4,
     textTransform: 'uppercase',
-    letterSpacing: 0.6,
+    letterSpacing: 0.5,
   },
   devTokenHint: {
     fontSize: 11,
     fontFamily: FontFamily.regular,
-    color: theme.colors.text.secondary,
+    color: ft.textSecondary,
     marginBottom: 8,
-    opacity: 0.9,
+    opacity: 0.95,
   },
   devTokenButton: {
     borderRadius: theme.radius.md,
-    backgroundColor: theme.colors.primary,
-    paddingVertical: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(197, 160, 89, 0.45)',
+    backgroundColor: 'rgba(197, 160, 89, 0.14)',
+    paddingVertical: 10,
     paddingHorizontal: 14,
     alignItems: 'center',
   },
   devTokenButtonText: {
-    fontSize: 15,
-    fontFamily: FontFamily.bold,
-    color: theme.colors.onAccent,
+    fontSize: 14,
+    fontFamily: FontFamily.semibold,
+    color: ft.champagne,
   },
   devTokenPreview: {
     marginTop: 10,
     fontSize: 12,
     fontFamily: FontFamily.regular,
-    color: theme.colors.text.secondary,
+    color: ft.mutedOnDark,
   },
   settingText: {
     fontSize: 14,
-    color: theme.colors.text.primary,
+    color: ft.textPrimary,
     fontFamily: FontFamily.medium,
   },
   resetAdminCard: {
     marginTop: 12,
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: theme.colors.glass.border,
-    backgroundColor: theme.colors.executive.panel,
+    borderColor: ft.borderGold,
+    backgroundColor: ft.surfaceElevated,
     padding: 12,
   },
   resetAdminTitle: {
     fontSize: 12,
-    color: theme.colors.primaryBright,
+    color: ft.champagne,
     fontFamily: FontFamily.bold,
     marginBottom: 4,
   },
   resetAdminText: {
     fontSize: 13,
-    color: theme.colors.text.secondary,
+    color: ft.textSecondary,
     fontFamily: FontFamily.regular,
   },
 });

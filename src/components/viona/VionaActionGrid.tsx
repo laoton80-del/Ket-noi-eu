@@ -1,4 +1,5 @@
 import {
+  Children,
   createContext,
   useCallback,
   useMemo,
@@ -31,6 +32,13 @@ export type VionaActionGridProps = Readonly<{
   widthHint?: number;
   gap?: number;
   testID?: string;
+  /**
+   * Account shortcuts only: when exactly four cards are visible, prefer a balanced 2×2 grid on
+   * medium/wide containers instead of 3+1 on desktop.
+   */
+  preferTwoColumnQuartet?: boolean;
+  /** Number of visible action cards (must match rendered children when using `preferTwoColumnQuartet`). */
+  visibleCardCount?: number;
 }>;
 
 /**
@@ -44,13 +52,53 @@ function colsForContainerWidth(w: number): number {
   return 1;
 }
 
+function countRenderableChildren(children: ReactNode): number {
+  let count = 0;
+  Children.forEach(children, (child) => {
+    if (child == null || child === false) return;
+    count += 1;
+  });
+  return count;
+}
+
+function resolveColumnCount(
+  w: number,
+  options: Readonly<{ preferTwoColumnQuartet?: boolean; visibleCardCount?: number }>
+): number {
+  if (
+    options.preferTwoColumnQuartet &&
+    options.visibleCardCount === 4 &&
+    w >= 560
+  ) {
+    return 2;
+  }
+  return colsForContainerWidth(w);
+}
+
+function webCellWidthStyle(cols: number, gap: number): ViewStyle | undefined {
+  if (Platform.OS !== 'web' || cols <= 1) return undefined;
+  const gaps = totalRowGapPx(cols, gap);
+  const expr = `calc((100% - ${gaps}px) / ${cols})`;
+  return {
+    flexGrow: 0,
+    flexShrink: 0,
+    flexBasis: expr as ViewStyle['flexBasis'],
+    minWidth: 0,
+    width: expr as ViewStyle['width'],
+    maxWidth: expr as ViewStyle['width'],
+  };
+}
+
 export function VionaActionGrid({
   children,
   widthHint,
   gap = vionaSpacing.lg,
   testID,
+  preferTwoColumnQuartet,
+  visibleCardCount,
 }: VionaActionGridProps): ReactElement {
   const [measuredW, setMeasuredW] = useState(0);
+  const renderableChildCount = useMemo(() => countRenderableChildren(children), [children]);
 
   const onLayout = useCallback((e: LayoutChangeEvent) => {
     const w = Math.round(e.nativeEvent.layout.width);
@@ -58,38 +106,19 @@ export function VionaActionGrid({
   }, []);
 
   const effectiveW = measuredW > 0 ? measuredW : (widthHint ?? 0);
-  const cols = colsForContainerWidth(effectiveW);
+  const quartetEligible =
+    preferTwoColumnQuartet === true && renderableChildCount === 4;
+  const cols = resolveColumnCount(effectiveW, {
+    preferTwoColumnQuartet: quartetEligible,
+    visibleCardCount: quartetEligible ? 4 : (visibleCardCount ?? renderableChildCount),
+  });
 
   const nativeCardWidth =
     Platform.OS !== 'web' && cols > 1 && effectiveW > 0
       ? (effectiveW - gap * (cols - 1)) / cols
       : undefined;
 
-  const webCellStyle = useMemo((): ViewStyle | undefined => {
-    if (Platform.OS !== 'web') return undefined;
-    const gaps = totalRowGapPx(cols, gap);
-    if (cols === 3) {
-      const expr = `calc((100% - ${gaps}px) / 3)`;
-      return {
-        flexGrow: 0,
-        flexShrink: 0,
-        minWidth: 0,
-        width: expr as ViewStyle['width'],
-        maxWidth: expr as ViewStyle['width'],
-      };
-    }
-    if (cols === 2) {
-      const expr = `calc((100% - ${gaps}px) / 2)`;
-      return {
-        flexGrow: 0,
-        flexShrink: 0,
-        minWidth: 0,
-        width: expr as ViewStyle['width'],
-        maxWidth: expr as ViewStyle['width'],
-      };
-    }
-    return undefined;
-  }, [cols, gap]);
+  const webCellStyle = useMemo((): ViewStyle | undefined => webCellWidthStyle(cols, gap), [cols, gap]);
 
   const ctx = useMemo<VionaActionGridContextValue>(
     () => ({ cols, gap, webCellStyle, nativeCardWidth }),
