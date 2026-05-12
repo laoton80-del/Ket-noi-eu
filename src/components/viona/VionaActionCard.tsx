@@ -3,6 +3,10 @@ import { useContext, useState, type ReactElement } from 'react';
 import { Platform, Pressable, StyleSheet, Text, View, type ViewStyle } from 'react-native';
 
 import { vionaTokens } from '../../design';
+import {
+  premiumCrispEdgeStroke,
+  premiumFrameEdgeOverlay,
+} from './fashionHomeDesktopShell';
 import { FontFamily } from '../../theme/typography';
 import { VionaActionGridContext } from './VionaActionGrid';
 import { VionaStatusPill, type VionaStatusPillProps } from './VionaStatusPill';
@@ -24,9 +28,9 @@ function vionaActionAccentFromHexCore(hex: string): VionaActionAccent {
   if (!Number.isFinite(n) || expanded.length !== 6) {
     return {
       icon: '#70c8ff',
-      border: 'rgba(112, 200, 255, 0.38)',
-      borderStrong: 'rgba(112, 200, 255, 0.56)',
-      shadow: 'rgba(112, 200, 255, 0.42)',
+      border: 'rgba(112, 200, 255, 0.4)',
+      borderStrong: 'rgba(112, 200, 255, 0.6)',
+      shadow: 'rgba(112, 200, 255, 0.14)',
       fillHover: 'rgba(112, 200, 255, 0.07)',
       fillPressed: 'rgba(112, 200, 255, 0.11)',
     };
@@ -38,9 +42,9 @@ function vionaActionAccentFromHexCore(hex: string): VionaActionAccent {
   const icon = hex.trim().startsWith('#') ? hex.trim() : `#${expanded}`;
   return {
     icon,
-    border: `rgba(${rgb}, 0.38)`,
-    borderStrong: `rgba(${rgb}, 0.56)`,
-    shadow: `rgba(${rgb}, 0.42)`,
+    border: `rgba(${rgb}, 0.4)`,
+    borderStrong: `rgba(${rgb}, 0.6)`,
+    shadow: `rgba(${rgb}, 0.14)`,
     fillHover: `rgba(${rgb}, 0.07)`,
     fillPressed: `rgba(${rgb}, 0.11)`,
   };
@@ -48,9 +52,9 @@ function vionaActionAccentFromHexCore(hex: string): VionaActionAccent {
 
 const CYAN_FALLBACK: VionaActionAccent = {
   icon: '#70c8ff',
-  border: 'rgba(112, 200, 255, 0.38)',
-  borderStrong: 'rgba(112, 200, 255, 0.56)',
-  shadow: 'rgba(112, 200, 255, 0.42)',
+  border: 'rgba(112, 200, 255, 0.4)',
+  borderStrong: 'rgba(112, 200, 255, 0.6)',
+  shadow: 'rgba(112, 200, 255, 0.14)',
   fillHover: 'rgba(112, 200, 255, 0.07)',
   fillPressed: 'rgba(112, 200, 255, 0.11)',
 };
@@ -132,39 +136,40 @@ export function VionaActionCard({
           const baseCard = gridLayout ? styles.cardGrid : styles.cardList;
           return [
             baseCard,
-            { borderColor: accent.border },
             webPointer,
             pressed &&
               !disabled && {
                 backgroundColor: accent.fillPressed,
-                borderColor: accent.borderStrong,
               },
             !disabled &&
               hovered &&
               Platform.OS === 'web' && {
                 backgroundColor: accent.fillHover,
-                borderColor: accent.borderStrong,
-                shadowColor: accent.shadow,
-                shadowOffset: { width: 0, height: 0 },
-                shadowOpacity: 0.22,
-                shadowRadius: 10,
-                elevation: 3,
               },
             !disabled &&
               focused &&
               Platform.OS === 'web' && {
-                borderColor: accent.borderStrong,
-                shadowColor: accent.shadow,
-                shadowOffset: { width: 0, height: 0 },
-                shadowOpacity: 0.18,
-                shadowRadius: 8,
+                backgroundColor: accent.fillHover,
               },
             disabled && styles.cardDisabled,
+            gridLayout && {
+              shadowColor: accent.shadow,
+              shadowOffset: { width: 0, height: 0 },
+              shadowOpacity: 1,
+              shadowRadius: 3,
+              elevation: 1,
+            },
           ];
         }}
       >
         {gridLayout ? (
           <>
+            <View
+              pointerEvents="none"
+              style={[styles.cardAmbientGlow, { backgroundColor: accent.fillPressed }]}
+              accessibilityElementsHidden
+            />
+            <View pointerEvents="none" style={styles.cardInnerHighlight} accessibilityElementsHidden />
             {kicker ? (
               <Text style={styles.kickerGrid} numberOfLines={1}>
                 {kicker}
@@ -175,7 +180,19 @@ export function VionaActionCard({
                 <VionaStatusPill label={badge.label} tone={badge.tone} size="sm" />
               </View>
             ) : null}
-            <View style={[styles.iconWrapGrid, { borderColor: accent.icon }]}>
+            <View
+              style={[
+                styles.iconWrapGrid,
+                {
+                  borderColor: accent.borderStrong,
+                  shadowColor: accent.shadow,
+                  shadowOffset: { width: 0, height: 0 },
+                  shadowOpacity: 1,
+                  shadowRadius: 3,
+                  elevation: 1,
+                },
+              ]}
+            >
               <Ionicons name={iconName} size={26} color={accent.icon} accessibilityIgnoresInvertColors />
             </View>
             <View style={styles.copyGrid}>
@@ -203,7 +220,7 @@ export function VionaActionCard({
           </>
         ) : (
           <View style={styles.rowList}>
-            <View style={[styles.iconWrapList, { borderColor: accent.icon }]}>
+            <View style={[styles.iconWrapList, { borderColor: accent.borderStrong }]}>
               <Ionicons name={iconName} size={26} color={accent.icon} accessibilityIgnoresInvertColors />
             </View>
             <View style={styles.copyList}>
@@ -244,6 +261,15 @@ export function VionaActionCard({
             />
           </View>
         )}
+        <View
+          pointerEvents="none"
+          style={[
+            styles.cardEdgeOverlay,
+            premiumFrameEdgeOverlay(14),
+            premiumCrispEdgeStroke(accent.borderStrong),
+          ]}
+          accessibilityElementsHidden
+        />
       </Pressable>
     </View>
   );
@@ -269,19 +295,40 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     paddingBottom: 16,
     borderRadius: 14,
-    backgroundColor: ft.surfaceElevated,
-    borderWidth: 1,
+    backgroundColor: 'rgba(12, 18, 28, 0.96)',
     minHeight: 112,
+    overflow: 'hidden',
+  },
+  cardAmbientGlow: {
+    position: 'absolute',
+    left: 14,
+    right: 14,
+    bottom: 0,
+    height: 1,
+    borderRadius: 0,
+    opacity: 0.78,
+  },
+  cardInnerHighlight: {
+    position: 'absolute',
+    left: 12,
+    right: 12,
+    top: 0,
+    height: 1,
+    backgroundColor: 'rgba(255, 232, 188, 0.2)',
   },
   cardList: {
+    position: 'relative',
     flexDirection: 'column',
     paddingVertical: 14,
     paddingHorizontal: 14,
     borderRadius: 14,
     backgroundColor: ft.surfaceElevated,
-    borderWidth: 1,
     minHeight: 96,
     width: '100%',
+    overflow: 'hidden',
+  },
+  cardEdgeOverlay: {
+    pointerEvents: 'none',
   },
   cardDisabled: { opacity: 0.42 },
   kickerGrid: {
@@ -304,7 +351,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 2,
+    borderWidth: 1,
     backgroundColor: 'rgba(15, 23, 42, 0.96)',
     marginBottom: 8,
   },
@@ -357,7 +404,7 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 2,
+    borderWidth: 1,
     backgroundColor: 'rgba(15, 23, 42, 0.96)',
   },
   copyList: {

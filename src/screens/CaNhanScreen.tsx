@@ -4,7 +4,18 @@ import * as Clipboard from 'expo-clipboard';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Alert, Modal, Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
+import {
+  Alert,
+  Image,
+  Modal,
+  Platform,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+  useWindowDimensions,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { APP_BRAND } from '../config/appBrand';
 import { useAppMode } from '../context/AppModeContext';
@@ -27,7 +38,18 @@ import { useWalletState } from '../state/wallet';
 import { STORAGE_KEYS } from '../storage/storageKeys';
 import { GDPRDashboard } from '../components/compliance/GDPRDashboard';
 import { TrustHistoryCard } from '../components/widgets';
-import { VionaActionCard, VionaActionGrid, vionaActionAccentFromHex } from '../components/viona';
+import {
+  VionaActionCard,
+  VionaActionGrid,
+  vionaActionAccentFromHex,
+  type VionaActionAccent,
+} from '../components/viona';
+import {
+  FASHION_HOME_COMMAND_LOGO_PLATE,
+  VIONA_COMPACT_BRAND_LOGO_SIZE,
+  premiumCrispEdgeStroke,
+  premiumFrameEdgeOverlay,
+} from '../components/viona/fashionHomeDesktopShell';
 import { vionaTokens } from '../design';
 import { theme } from '../theme/theme';
 import { FontFamily } from '../theme/typography';
@@ -37,12 +59,30 @@ type Nav = NativeStackNavigationProp<RootStackParamList>;
 const ADMIN_UNLOCK_KEY = STORAGE_KEYS.adminUnlock;
 
 const ft = vionaTokens.fashionTech;
-const ACC_ACCOUNT_STORE = vionaActionAccentFromHex(ft.accentGold);
-const ACC_ACCOUNT_B2B_PRICE = vionaActionAccentFromHex(ft.accentCyan);
+const IMG_VIONA_LOGO = require('../../assets/brand/viona/logo-in-app.png');
+const IMG_ACCOUNT_CONSTELLATION = require('../../assets/UI/viona-account-global-net-bg-v2.png');
+const constellationImageWebFit =
+  Platform.OS === 'web'
+    ? ({ objectFit: 'cover' as const, objectPosition: '56% 18%' as const } as const)
+    : null;
+
+function accountAccent(hex: string, borderAlpha = 0.48, strongAlpha = 0.64): VionaActionAccent {
+  const base = vionaActionAccentFromHex(hex);
+  return {
+    ...base,
+    border: base.border.replace(/0\.\d+\)$/, `${borderAlpha})`),
+    borderStrong: base.borderStrong.replace(/0\.\d+\)$/, `${strongAlpha})`),
+    fillHover: base.fillHover.replace(/0\.\d+\)$/, '0.08)'),
+    fillPressed: base.fillPressed.replace(/0\.\d+\)$/, '0.1)'),
+  };
+}
+
+const ACC_ACCOUNT_STORE = accountAccent(ft.accentGold);
+const ACC_ACCOUNT_B2B_PRICE = accountAccent(ft.accentCyan);
 /** Strong CTA without full-bleed destructive red — accent border on dark tile (SOS-adjacent language). */
-const ACC_ACCOUNT_B2B_SWITCH = vionaActionAccentFromHex(ft.sosNeonMuted);
-const ACC_ACCOUNT_PARTNER = vionaActionAccentFromHex(ft.accentEmerald);
-const ACC_ACCOUNT_WORKSPACE = vionaActionAccentFromHex(ft.accentViolet);
+const ACC_ACCOUNT_B2B_SWITCH = accountAccent(ft.sosNeonMuted, 0.28, 0.46);
+const ACC_ACCOUNT_PARTNER = accountAccent(ft.accentEmerald);
+const ACC_ACCOUNT_WORKSPACE = accountAccent(ft.accentViolet, 0.22, 0.34);
 
 const LANGUAGE_OPTIONS: readonly {
   code: 'vi' | 'en' | 'cs' | 'de';
@@ -159,6 +199,12 @@ export function CaNhanScreen() {
     () => Math.max(0, width - theme.spacing.lg * 2),
     [width]
   );
+  const constellationImageSize = useMemo(
+    () => ({
+      maxWidth: Math.min(width, 1672),
+    }),
+    [width],
+  );
   const showWorkspaceShortcut = Boolean(
     user && (user.serverRole === 'BROKER' || isMerchantServerRole(user.serverRole))
   );
@@ -204,6 +250,8 @@ export function CaNhanScreen() {
     {
       key: 'notifications',
       label: strings.profile.settingNotifications,
+      icon: 'notifications-outline' as const,
+      accent: ft.accentCyan,
       onPress: () => {
         Alert.alert(strings.profile.alertNotificationsTitle, strings.profile.alertNotificationsBody);
       },
@@ -211,6 +259,8 @@ export function CaNhanScreen() {
     {
       key: 'privacy',
       label: strings.profile.settingPrivacy,
+      icon: 'lock-closed-outline' as const,
+      accent: ft.accentViolet,
       onPress: () => {
         Alert.alert(
           strings.profile.alertPrivacyTitle,
@@ -224,6 +274,8 @@ export function CaNhanScreen() {
     {
       key: 'support',
       label: strings.profile.settingSupport,
+      icon: 'help-buoy-outline' as const,
+      accent: ft.accentEmerald,
       onPress: () => {
         Alert.alert(
           strings.profile.alertSupportTitle,
@@ -339,35 +391,77 @@ export function CaNhanScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
+      <View style={styles.screenBackdrop} pointerEvents="none">
+        <View style={styles.constellationFrame}>
+          <Image
+            source={IMG_ACCOUNT_CONSTELLATION}
+            style={[styles.constellationImage, constellationImageSize, constellationImageWebFit]}
+            resizeMode="cover"
+            accessibilityIgnoresInvertColors
+          />
+        </View>
+        <View style={styles.constellationOverlay} />
+      </View>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <Text style={styles.brand}>{APP_BRAND.name}</Text>
+        <Image
+          source={IMG_VIONA_LOGO}
+          resizeMode="contain"
+          accessibilityIgnoresInvertColors
+          style={styles.brandLogoImage}
+        />
         <Text style={styles.launchHint}>{APP_BRAND.launchSubtitle}</Text>
         <Text style={styles.title}>{strings.profile.screenTitle}</Text>
         <Text style={styles.subtitle}>{strings.profile.subtitle}</Text>
+        <View style={styles.subtitleAmbientLine} />
 
-        <Pressable
-          onPress={() => navigation.navigate('SetupProfile', { mode: 'edit' })}
-          style={({ pressed }) => [styles.profileCard, pressed && { opacity: 0.72 }]}
-        >
-          <View style={styles.avatarWrap}>
-            <Ionicons name="person" size={34} color={ft.champagne} />
-          </View>
-          <View style={styles.profileMeta}>
-            <Text style={styles.profileName}>{strings.common.pronounYou}</Text>
-            <Text style={styles.profilePlan}>{strings.profile.currentPlan}</Text>
-          </View>
-        </Pressable>
+        <View style={styles.flagshipSection}>
+          <Pressable
+            onPress={() => navigation.navigate('SetupProfile', { mode: 'edit' })}
+            style={({ pressed }) => [styles.profileCard, pressed && { opacity: 0.72 }]}
+          >
+            <View style={styles.cardSatinHighlight} pointerEvents="none" />
+            <View style={styles.avatarOuterRing}>
+              <View style={styles.avatarWrap}>
+                <Ionicons name="person" size={34} color={ft.champagne} />
+              </View>
+            </View>
+            <View style={styles.profileMeta}>
+              <Text style={styles.profileName}>{strings.common.pronounYou}</Text>
+              <Text style={styles.profilePlan}>{strings.profile.currentPlan}</Text>
+            </View>
+            <View
+              pointerEvents="none"
+              style={[
+                styles.premiumCardEdge,
+                premiumFrameEdgeOverlay(theme.radius.lg),
+                premiumCrispEdgeStroke(`${ft.accentGold}ea`),
+              ]}
+            />
+          </Pressable>
 
-        <Pressable
-          onPress={() => navigation.navigate('Wallet')}
-          style={({ pressed }) => [styles.creditsCard, pressed && { opacity: 0.72 }]}
-        >
-          <Text style={styles.cardTitle}>{strings.profile.creditsTitle}</Text>
-          <Text style={styles.cardBalance}>
-            {interpolate(strings.profile.creditsBalanceCurrent, { credits: String(wallet.credits) })}
-          </Text>
-          <Text style={styles.cardHint}>{strings.profile.creditsHint}</Text>
-        </Pressable>
+          <Pressable
+            onPress={() => navigation.navigate('Wallet')}
+            style={({ pressed }) => [styles.creditsCard, pressed && { opacity: 0.72 }]}
+          >
+            <View style={styles.cardSatinHighlight} pointerEvents="none" />
+            <View style={styles.creditsHeaderRow}>
+              <Ionicons name="wallet-outline" size={18} color={ft.champagne} />
+              <Text style={styles.cardTitle}>{strings.profile.creditsTitle}</Text>
+            </View>
+            <Text style={styles.cardBalance}>
+              {interpolate(strings.profile.creditsBalanceCurrent, { credits: String(wallet.credits) })}
+            </Text>
+            <Text style={styles.cardHint}>{strings.profile.creditsHint}</Text>
+            <View
+              pointerEvents="none"
+              style={[
+                styles.premiumCardEdge,
+                premiumFrameEdgeOverlay(theme.radius.lg),
+                premiumCrispEdgeStroke(`${ft.accentGold}ea`),
+              ]}
+            />
+          </Pressable>
+        </View>
 
         <View style={styles.actionGridSection}>
           <VionaActionGrid
@@ -437,7 +531,12 @@ export function CaNhanScreen() {
         </View>
 
         <View style={styles.identityCard}>
-          <Text style={styles.cardTitle}>{strings.profile.identityTitle}</Text>
+          <View style={styles.identityTitleRow}>
+            <View style={styles.identityBadge}>
+              <Ionicons name="shield-checkmark" size={14} color={ft.accentEmerald} />
+            </View>
+            <Text style={styles.cardTitle}>{strings.profile.identityTitle}</Text>
+          </View>
           <View style={styles.identityRow}>
             <Text style={styles.identityKey}>{strings.profile.residencyStatusLabel}</Text>
             <Text style={styles.identityValue}>{residencyLabel}</Text>
@@ -464,6 +563,14 @@ export function CaNhanScreen() {
           >
             <Text style={styles.editIdentityText}>{strings.profile.editIdentityCta}</Text>
           </Pressable>
+          <View
+            pointerEvents="none"
+            style={[
+              styles.premiumCardEdge,
+              premiumFrameEdgeOverlay(theme.radius.lg),
+              premiumCrispEdgeStroke(`${ft.accentEmerald}ea`),
+            ]}
+          />
         </View>
 
         <Text style={styles.sectionTitle}>{strings.profile.settingsTitle}</Text>
@@ -474,8 +581,11 @@ export function CaNhanScreen() {
             accessibilityRole="button"
             accessibilityLabel="Language Ngôn ngữ"
           >
+            <View style={[styles.settingIconWrap, styles.settingIconCyan]}>
+              <Ionicons name="language-outline" size={18} color={ft.accentCyan} />
+            </View>
             <View style={styles.languageRowText}>
-              <Text style={styles.settingText}>🌐 Language / Ngôn ngữ</Text>
+              <Text style={styles.settingText}>Language / Ngôn ngữ</Text>
               <Text style={styles.languageRowSub} numberOfLines={1}>
                 {languageSubtitleForCode(languageCode)}
               </Text>
@@ -488,6 +598,9 @@ export function CaNhanScreen() {
               onPress={item.onPress}
               style={({ pressed }) => [styles.settingRow, pressed && { opacity: 0.72 }]}
             >
+              <View style={[styles.settingIconWrap, { borderColor: `${item.accent}66` }]}>
+                <Ionicons name={item.icon} size={18} color={item.accent} />
+              </View>
               <Text style={styles.settingText}>{item.label}</Text>
               <Ionicons name="chevron-forward" size={16} color={ft.mutedOnDark} />
             </Pressable>
@@ -609,17 +722,39 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: ft.canvas,
+    overflow: 'hidden',
+  },
+  screenBackdrop: {
+    ...StyleSheet.absoluteFillObject,
+    zIndex: 0,
+    backgroundColor: ft.canvas,
+    overflow: 'hidden',
+  },
+  constellationFrame: {
+    ...StyleSheet.absoluteFillObject,
+    alignItems: 'center',
+  },
+  constellationImage: {
+    width: '100%',
+    height: '100%',
+    opacity: 0.58,
+  },
+  constellationOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(7, 9, 14, 0.28)',
   },
   content: {
     paddingHorizontal: theme.spacing.lg,
     paddingTop: theme.spacing.md,
     paddingBottom: 120,
+    zIndex: 1,
   },
-  brand: {
-    fontSize: 14,
-    color: ft.champagne,
-    fontFamily: FontFamily.regular,
+  brandLogoImage: {
+    width: VIONA_COMPACT_BRAND_LOGO_SIZE.width,
+    height: VIONA_COMPACT_BRAND_LOGO_SIZE.height,
     marginBottom: 4,
+    alignSelf: 'flex-start',
+    backgroundColor: FASHION_HOME_COMMAND_LOGO_PLATE,
   },
   launchHint: {
     fontSize: 12,
@@ -639,7 +774,28 @@ const styles = StyleSheet.create({
     lineHeight: 21,
     fontFamily: FontFamily.regular,
     color: ft.textSecondary,
+    marginBottom: 8,
+  },
+  subtitleAmbientLine: {
+    alignSelf: 'flex-start',
+    width: 40,
+    height: 1,
+    borderRadius: 1,
+    backgroundColor: ft.accentCyan,
+    opacity: 0.28,
     marginBottom: 12,
+  },
+  flagshipSection: {
+    position: 'relative',
+    marginBottom: 4,
+  },
+  cardSatinHighlight: {
+    position: 'absolute',
+    left: 12,
+    right: 12,
+    top: 0,
+    height: 1,
+    backgroundColor: 'rgba(255, 255, 255, 0.08)',
   },
   actionGridSection: {
     width: '100%',
@@ -647,22 +803,35 @@ const styles = StyleSheet.create({
     marginBottom: theme.spacing.md,
   },
   profileCard: {
+    position: 'relative',
     borderRadius: theme.radius.lg,
-    borderWidth: 1,
-    borderColor: ft.borderGold,
     backgroundColor: ft.surfaceElevated,
     padding: 14,
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 10,
+    shadowColor: 'rgba(238, 206, 128, 0.14)',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 1,
+    shadowRadius: 3,
+    elevation: 1,
   },
-  avatarWrap: {
-    width: 62,
-    height: 62,
-    borderRadius: 31,
+  avatarOuterRing: {
+    width: 68,
+    height: 68,
+    borderRadius: 34,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'rgba(12, 18, 28, 0.9)',
+    borderWidth: 1,
+    borderColor: `${ft.accentGold}ea`,
+  },
+  avatarWrap: {
+    width: 58,
+    height: 58,
+    borderRadius: 29,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(12, 18, 28, 0.92)',
     borderWidth: 1,
     borderColor: ft.borderSubtle,
   },
@@ -682,24 +851,36 @@ const styles = StyleSheet.create({
     fontFamily: FontFamily.regular,
   },
   creditsCard: {
+    position: 'relative',
     borderRadius: theme.radius.lg,
-    borderWidth: 1,
-    borderColor: ft.borderGold,
-    backgroundColor: ft.surfaceElevated,
+    backgroundColor: 'rgba(12, 18, 28, 0.96)',
     padding: 14,
     marginBottom: 12,
+    shadowColor: 'rgba(238, 206, 128, 0.14)',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 1,
+    shadowRadius: 3,
+    elevation: 1,
+  },
+  creditsHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 4,
   },
   cardTitle: {
     fontSize: 16,
     color: ft.textPrimary,
     fontFamily: FontFamily.bold,
-    marginBottom: 4,
   },
   cardBalance: {
     fontSize: 18,
     color: ft.champagne,
     fontFamily: FontFamily.extrabold,
     marginBottom: 6,
+    textShadowColor: 'rgba(233, 199, 120, 0.22)',
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 6,
   },
   cardHint: {
     fontSize: 13,
@@ -708,13 +889,36 @@ const styles = StyleSheet.create({
     fontFamily: FontFamily.regular,
   },
   identityCard: {
+    position: 'relative',
     borderRadius: theme.radius.lg,
-    borderWidth: 1,
-    borderColor: ft.borderSubtle,
-    backgroundColor: ft.surfaceElevated,
+    backgroundColor: 'rgba(12, 18, 28, 0.94)',
     padding: 14,
     marginBottom: 12,
     gap: 8,
+    shadowColor: 'rgba(46, 207, 155, 0.14)',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 1,
+    shadowRadius: 3,
+    elevation: 1,
+  },
+  premiumCardEdge: {
+    pointerEvents: 'none',
+  },
+  identityTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 2,
+  },
+  identityBadge: {
+    width: 22,
+    height: 22,
+    borderRadius: 7,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(46, 207, 155, 0.12)',
+    borderWidth: 1,
+    borderColor: `${ft.accentEmerald}ea`,
   },
   identityRow: {
     flexDirection: 'row',
@@ -740,7 +944,7 @@ const styles = StyleSheet.create({
     minHeight: 34,
     borderRadius: 10,
     borderWidth: 1,
-    borderColor: ft.borderGold,
+    borderColor: `${ft.accentGold}ea`,
     backgroundColor: 'rgba(12, 18, 28, 0.85)',
     alignItems: 'center',
     justifyContent: 'center',
@@ -759,9 +963,14 @@ const styles = StyleSheet.create({
   settingsCard: {
     borderRadius: theme.radius.lg,
     borderWidth: 1,
-    borderColor: ft.borderSubtle,
-    backgroundColor: ft.surfaceElevated,
+    borderColor: `${ft.accentCyan}ea`,
+    backgroundColor: 'rgba(12, 18, 28, 0.9)',
     paddingHorizontal: 12,
+    shadowColor: 'rgba(128, 210, 255, 0.14)',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 1,
+    shadowRadius: 3,
+    elevation: 1,
   },
   languageRowText: {
     flex: 1,
@@ -863,11 +1072,24 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: ft.borderSubtle,
     paddingVertical: 4,
+    gap: 10,
+  },
+  settingIconWrap: {
+    width: 32,
+    height: 32,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    backgroundColor: 'rgba(12, 18, 28, 0.82)',
+  },
+  settingIconCyan: {
+    borderColor: ft.borderSubtle,
   },
   devTokenCard: {
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: ft.borderSubtle,
+    borderColor: 'rgba(148, 172, 198, 0.34)',
     backgroundColor: 'rgba(10, 14, 22, 0.75)',
     padding: 14,
     marginBottom: 14,
@@ -875,7 +1097,7 @@ const styles = StyleSheet.create({
   /** Visually distinct from premium account cards — engineering strip, dev builds only. */
   devTokenCardDevMarker: {
     borderWidth: 1,
-    borderColor: 'rgba(201, 169, 98, 0.32)',
+    borderColor: 'rgba(148, 172, 198, 0.3)',
     backgroundColor: 'rgba(10, 14, 22, 0.82)',
   },
   devTokenLabel: {
@@ -896,7 +1118,7 @@ const styles = StyleSheet.create({
   devTokenButton: {
     borderRadius: theme.radius.md,
     borderWidth: 1,
-    borderColor: 'rgba(197, 160, 89, 0.45)',
+    borderColor: 'rgba(148, 172, 198, 0.32)',
     backgroundColor: 'rgba(197, 160, 89, 0.14)',
     paddingVertical: 10,
     paddingHorizontal: 14,
@@ -914,6 +1136,7 @@ const styles = StyleSheet.create({
     color: ft.mutedOnDark,
   },
   settingText: {
+    flex: 1,
     fontSize: 14,
     color: ft.textPrimary,
     fontFamily: FontFamily.medium,
