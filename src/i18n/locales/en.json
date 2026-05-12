@@ -67,6 +67,11 @@
       "safetyAssist": "SOS",
       "accountProfile": "Account",
       "switchRole": "Profiles"
+    },
+    "fullscreen": {
+      "enter": "Fullscreen",
+      "exit": "Exit fullscreen",
+      "unsupported": "Fullscreen is not supported by this browser"
     }
   },
   "login": {
@@ -449,11 +454,11 @@
       "subtitle": "Local life, travel support, learning, and AI assistance — designed for Vietnamese people worldwide.",
       "ctaExplore": "Explore VIONA",
       "ctaWatch": "Watch overview",
-      "statusNetwork": "Pilot-safe surfaces",
-      "statusSupport": "AI support preview",
-      "statusCountries": "Global-ready experience",
-      "statusAvatarsA11y": "Network presence indicator",
-      "connectedChip": "Connected for you, wherever you are.",
+      "statusNetwork": "Smart Trio ready",
+      "statusSupport": "Safety guide ready",
+      "statusCountries": "Global Lite preview",
+      "statusAvatarsA11y": "Companion network motif",
+      "connectedChip": "Constellation routes guide your next step.",
       "cardExploreHint": "Open",
       "watchOverviewUnavailable": "Open Academy from the tab bar for guided demos and overviews.",
       "visualInset": "Photography slot · licensed assets only",
@@ -488,13 +493,18 @@
       "stripCta": "View impact details"
     },
     "quickActions": {
-      "prompt": "What do you need right now?",
-      "wallet": "Wallet & credits",
-      "interpreter": "Live interpreter",
-      "voice": "AI voice line",
+      "prompt": "VIONA for you",
+      "wallet": "VIO credits",
+      "bookServices": "Book services",
+      "quickTranslate": "Quick translate",
+      "aiAssistant": "AI assistant (pilot)",
+      "interpreter": "Translate help (pilot)",
+      "voice": "AI help (pilot)",
       "documents": "Documents",
       "nearbySupport": "Nearby support",
-      "safety": "SOS"
+      "travelLite": "Travel Lite",
+      "learning": "Learning",
+      "safety": "Emergency help"
     },
     "trustStripHint": "Pilot-safe surfaces · Honest status · VIO lives in your wallet hub",
     "walletLoadingA11y": "Loading wallet balance",

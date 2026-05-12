@@ -16,6 +16,7 @@ import {
 } from 'react-native';
 
 import { vionaTokens } from '../../design';
+import { FASHION_HOME_GLOW_GOLD, FASHION_HOME_LINE_GOLD } from './fashionHomeDesktopShell';
 import { FontFamily } from '../../theme/typography';
 import { VionaStatusPill } from './VionaStatusPill';
 
@@ -97,7 +98,7 @@ export function VionaFashionWorldCard({
 }: VionaFashionWorldCardProps) {
   const fallbackGrad = FALLBACK_GRADIENT[accent];
   const accentColor = ACCENT_RAIL[accent];
-  const minH = variant === 'heroRow' ? 168 : 158;
+  const minH = variant === 'heroRow' ? 172 : 168;
   const glow = ACCENT_NEON_GLOW[accent];
   const pulse = useRef(new Animated.Value(0)).current;
 
@@ -126,9 +127,9 @@ export function VionaFashionWorldCard({
     };
   }, [animatedNeonRim, neonRim, pulse]);
 
-  const animShadowOpacity = pulse.interpolate({ inputRange: [0, 1], outputRange: [0.2, 0.36] });
-  const animShadowRadius = pulse.interpolate({ inputRange: [0, 1], outputRange: [9, 16] });
-  const animBorderOpacity = pulse.interpolate({ inputRange: [0, 1], outputRange: [0.42, 0.72] });
+  const animShadowOpacity = pulse.interpolate({ inputRange: [0, 1], outputRange: [0.1, 0.18] });
+  const animShadowRadius = pulse.interpolate({ inputRange: [0, 1], outputRange: [6, 10] });
+  const animBorderOpacity = pulse.interpolate({ inputRange: [0, 1], outputRange: [0.24, 0.38] });
 
   const photoLayer =
     backgroundImage != null ? (
@@ -142,7 +143,7 @@ export function VionaFashionWorldCard({
   /** Narrow left scrim for title/sub copy only — keeps photo side bright (no full-card blanket). */
   const textScrim = (
     <LinearGradient
-      colors={['rgba(6, 9, 14, 0.34)', 'rgba(6, 9, 14, 0.14)', 'rgba(6, 9, 14, 0)']}
+      colors={['rgba(4, 7, 12, 0.48)', 'rgba(4, 7, 12, 0.22)', 'rgba(4, 7, 12, 0)']}
       start={{ x: 0, y: 0.5 }}
       end={{ x: 1, y: 0.5 }}
       style={styles.textScrim}
@@ -150,17 +151,27 @@ export function VionaFashionWorldCard({
     />
   );
 
-  const localEmeraldCyanHalo =
-    neonRim && accent === 'local' ? (
-      <View
-        pointerEvents="none"
-        style={[
-          StyleSheet.absoluteFillObject,
-          styles.neonDualHalo,
-          { borderColor: 'rgba(112, 200, 255, 0.28)' },
-        ]}
-      />
+  const constellationAtmosphere =
+    backgroundImage != null ? (
+      <>
+        <LinearGradient
+          colors={['rgba(6, 9, 14, 0.1)', 'rgba(3, 6, 11, 0.38)', 'rgba(3, 6, 11, 0.32)']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={StyleSheet.absoluteFillObject}
+          pointerEvents="none"
+        />
+        <LinearGradient
+          colors={['rgba(233, 199, 120, 0.16)', 'rgba(233, 199, 120, 0)']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 0, y: 1 }}
+          style={styles.cardTopSheen}
+          pointerEvents="none"
+        />
+      </>
     ) : null;
+
+  const localEmeraldCyanHalo = null;
 
   const stretch = stretchInColumn
     ? {
@@ -191,6 +202,7 @@ export function VionaFashionWorldCard({
       ]}
     >
       {photoLayer}
+      {constellationAtmosphere}
       {backgroundImage != null ? textScrim : null}
       {localEmeraldCyanHalo}
       <Animated.View
@@ -219,7 +231,7 @@ export function VionaFashionWorldCard({
       <View style={[styles.rowShell, stretch.row]}>
         <View style={stretch.inner}>
           <View style={styles.topRow}>
-            {icon ? <View style={styles.iconSlot}>{icon}</View> : null}
+            {icon ? <View style={[styles.iconSlot, { borderColor: `${accentColor}88` }]}>{icon}</View> : null}
             <View style={styles.copy}>
               <Text style={styles.title} numberOfLines={2} ellipsizeMode="tail">
                 {title}
@@ -235,7 +247,7 @@ export function VionaFashionWorldCard({
             </View>
           ) : null}
           {footerHint != null || showChevron ? (
-            <View style={styles.footerRow}>
+            <View style={[styles.footerRow, { borderTopColor: `${accentColor}33` }]}>
               {footerHint ? (
                 <Text style={styles.footerHint} numberOfLines={1}>
                   {footerHint}
@@ -244,7 +256,7 @@ export function VionaFashionWorldCard({
                 <View style={styles.footerSpacer} />
               )}
               {showChevron ? (
-                <Ionicons name="arrow-forward-circle-outline" size={22} color={vionaTokens.fashionTech.champagneMuted} />
+                <Ionicons name="arrow-forward-circle-outline" size={22} color={accentColor} />
               ) : null}
             </View>
           ) : null}
@@ -259,9 +271,9 @@ export function VionaFashionWorldCard({
         neonRim && {
           shadowColor: glow,
           shadowOffset: { width: 0, height: 0 },
-          shadowOpacity: 0.32,
-          shadowRadius: 14,
-          elevation: 6,
+          shadowOpacity: 0.16,
+          shadowRadius: 8,
+          elevation: 4,
         },
       ]}
     >
@@ -299,7 +311,7 @@ export function VionaFashionWorldCard({
             </View>
           ) : null}
           {footerHint != null || showChevron ? (
-            <View style={styles.footerRow}>
+            <View style={[styles.footerRow, { borderTopColor: `${accentColor}33` }]}>
               {footerHint ? (
                 <Text style={styles.footerHint} numberOfLines={1}>
                   {footerHint}
@@ -308,7 +320,7 @@ export function VionaFashionWorldCard({
                 <View style={styles.footerSpacer} />
               )}
               {showChevron ? (
-                <Ionicons name="arrow-forward-circle-outline" size={22} color={vionaTokens.fashionTech.champagneMuted} />
+                <Ionicons name="arrow-forward-circle-outline" size={22} color={accentColor} />
               ) : null}
             </View>
           ) : null}
@@ -362,10 +374,23 @@ const styles = StyleSheet.create({
   grad: {
     borderRadius: vionaTokens.radius.lg,
     borderWidth: 1,
-    borderColor: vionaTokens.fashionTech.champagneLine,
+    borderColor: FASHION_HOME_LINE_GOLD,
     overflow: 'hidden',
-    backgroundColor: 'rgba(10, 14, 20, 0.2)',
+    backgroundColor: 'rgba(8, 12, 18, 0.28)',
     position: 'relative',
+    shadowColor: FASHION_HOME_GLOW_GOLD,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 1,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  cardTopSheen: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: '38%',
+    zIndex: 0,
   },
   imageClipFull: {
     ...StyleSheet.absoluteFillObject,
@@ -382,7 +407,7 @@ const styles = StyleSheet.create({
     left: 0,
     top: 0,
     bottom: 0,
-    width: '62%',
+    width: '72%',
     zIndex: 0,
   },
   rowShell: {
@@ -394,10 +419,10 @@ const styles = StyleSheet.create({
     zIndex: 1,
     borderRadius: vionaTokens.radius.lg,
     borderWidth: 1,
-    opacity: 0.34,
+    opacity: 0.28,
     shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.18,
-    shadowRadius: 9,
+    shadowOpacity: 0.12,
+    shadowRadius: 3,
   },
   accentEdgeHighlight: {
     position: 'absolute',
@@ -405,7 +430,7 @@ const styles = StyleSheet.create({
     top: 0,
     bottom: 0,
     width: 1.5,
-    opacity: 0.46,
+    opacity: 0.52,
     zIndex: 1,
   },
   inner: {
@@ -421,7 +446,8 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     gap: vionaTokens.spacing[8],
     marginTop: 'auto',
-    paddingTop: vionaTokens.spacing[4],
+    paddingTop: vionaTokens.spacing[6],
+    borderTopWidth: 1,
   },
   footerSpacer: {
     flex: 1,
@@ -452,8 +478,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
-    borderColor: vionaTokens.fashionTech.champagneLine,
-    backgroundColor: 'rgba(0,0,0,0.25)',
+    borderColor: FASHION_HOME_LINE_GOLD,
+    backgroundColor: 'rgba(6, 10, 18, 0.55)',
+    shadowColor: FASHION_HOME_GLOW_GOLD,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 1,
+    shadowRadius: 3,
+    elevation: 1,
   },
   copy: {
     flex: 1,
@@ -463,8 +494,8 @@ const styles = StyleSheet.create({
   title: {
     color: vionaTokens.fashionTech.inkOnDark,
     fontFamily: FontFamily.extrabold,
-    fontSize: 16,
-    lineHeight: 21,
+    fontSize: 17,
+    lineHeight: 22,
     textShadowColor: 'rgba(5, 8, 12, 0.72)',
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 4,

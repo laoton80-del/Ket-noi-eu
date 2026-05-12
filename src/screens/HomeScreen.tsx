@@ -40,6 +40,15 @@ import {
   VionaSosHoldGateModal,
   VionaSosPlusInfoModal,
 } from '../components/viona';
+import {
+  FASHION_HOME_DESKTOP_HERO_ASPECT,
+  FASHION_HOME_GLOW_GOLD,
+  FASHION_HOME_INNER_HIGHLIGHT,
+  FASHION_HOME_LINE_CYAN,
+  FASHION_HOME_LINE_GOLD,
+  FASHION_HOME_HERO_TOP_GLOW,
+  resolveFashionHomeDesktopLayout,
+} from '../components/viona/fashionHomeDesktopShell';
 import { VionaCard } from '../components/viona/VionaCard';
 import { VionaSectionHeader } from '../components/viona/VionaSectionHeader';
 import { vionaTrust } from '../components/viona/vionaTrustTokens';
@@ -74,6 +83,7 @@ import { useWalletState } from '../state/wallet';
 import { STORAGE_KEYS } from '../storage/storageKeys';
 import { theme } from '../theme/theme';
 import { FontFamily } from '../theme/typography';
+import { useFullscreenMode } from '../hooks/useFullscreenMode';
 import { useTranslation } from '../i18n';
 import { useUserStore } from '../store/userStore';
 import { hasB2BWorkspaceAccess } from '../utils/b2bAccess';
@@ -157,9 +167,9 @@ const LIVING_HERO_DESKTOP_COPY: Readonly<
 
 /** Left band only — keeps center/right hero art bright; copy stays on the left rail. */
 const DESKTOP_HERO_SCRIM_LEFT_COLORS = [
-  'rgba(5, 9, 15, 0.68)',
-  'rgba(5, 9, 15, 0.22)',
-  'rgba(5, 9, 15, 0)',
+  'rgba(4, 7, 12, 0.45)',
+  'rgba(4, 7, 12, 0.16)',
+  'rgba(4, 7, 12, 0)',
 ] as const;
 const ADMIN_UNLOCK_KEY = STORAGE_KEYS.adminUnlock;
 /** World Stage — light canvas (aurora gradient applied in hero). */
@@ -337,22 +347,13 @@ function pickRawCountryForHome(user: AuthUser | null | undefined): { raw: string
   return pickLocationHeaderFromCandidates(candidates);
 }
 
-/** Web: `object-fit: cover` only — desktop Living Hero uses fixed 1280×428 assets (no object-position). */
-const heroImageWebCoverStyle = (Platform.OS === 'web' ? { objectFit: 'cover' as const } : {}) as ImageStyle;
-/** Desktop hero: full frame inside shell; no object-position. */
+/** Desktop Living Hero: fill the frame; focal bias keeps subject/city visible on wide assets. */
 const heroDesktopLivingImageWebStyle = (
-  Platform.OS === 'web' ? { objectFit: 'contain' as const } : {}
+  Platform.OS === 'web' ? { objectFit: 'cover' as const, objectPosition: '42% center' as const } : {}
 ) as ImageStyle;
-/** Hero shell matches asset aspect; image scaled down uniformly for cinematic inset (no X/Y skew). */
-const DESKTOP_HERO_FRAME_ASPECT = 1280 / 428;
-const DESKTOP_HERO_IMAGE_INSET_SCALE = 0.86;
-const desktopHeroLivingImageTransformStyle = {
-  transform: [
-    { scale: DESKTOP_HERO_IMAGE_INSET_SCALE },
-    { translateX: -104 },
-    { translateY: -36 },
-  ],
-} as const;
+const heroImageWebCoverStyle = (Platform.OS === 'web' ? { objectFit: 'cover' as const } : {}) as ImageStyle;
+/** Hero shell aspect tuned for desktop viewport fit; image still covers via resizeMode/object-fit. */
+const DESKTOP_HERO_FRAME_ASPECT = FASHION_HOME_DESKTOP_HERO_ASPECT;
 
 export function HomeScreen() {
   const { t, i18n } = useTranslation();
@@ -530,6 +531,8 @@ export function HomeScreen() {
     return vionaTokens.spacing[32];
   }, [isLandscapeViewport, isShortViewport, width]);
   const quickActionsHorizontal = width < 768;
+  const quickActionsSingleRow = width >= 1400;
+  const quickActionsGrid = !quickActionsHorizontal && !quickActionsSingleRow;
 
   useEffect(() => {
     const ms = fashionHomeDesktopShellActive ? 1000 : 30000;
@@ -838,17 +841,10 @@ export function HomeScreen() {
   }, [t, wallet.credits, width]);
 
   const layout = useMemo(() => {
-    const maxShell = fashionHomeDesktopShellActive
-      ? width > 1600
-        ? 1280
-        : width > 1500
-          ? 1240
-          : width > 1200
-            ? 1100
-            : 980
-      : width > 1280
-        ? 860
-        : 760;
+    if (fashionHomeDesktopShellActive) {
+      return resolveFashionHomeDesktopLayout(width);
+    }
+    const maxShell = width > 1280 ? 860 : 760;
     const shellWidth = Math.min(width, maxShell);
     const pad = theme.spacing.lg;
     const inner = shellWidth - pad * 2;
@@ -946,6 +942,24 @@ export function HomeScreen() {
   }, [navigation, switchRole, user]);
 
   const homeCommand = useHomeCommand();
+  const { isWeb: isWebFullscreen, isSupported: isFullscreenSupported, isFullscreen, toggleFullscreen } =
+    useFullscreenMode();
+  const fullscreenControl = useMemo(() => {
+    if (!fashionHomeDesktopShellActive || !isWebFullscreen || !isFullscreenSupported) return undefined;
+    return {
+      isActive: isFullscreen,
+      onPress: toggleFullscreen,
+      accessibilityLabel: isFullscreen ? t('shell.fullscreen.exit') : t('shell.fullscreen.enter'),
+      label: isFullscreen ? t('shell.fullscreen.exit') : t('shell.fullscreen.enter'),
+    };
+  }, [
+    fashionHomeDesktopShellActive,
+    isFullscreen,
+    isFullscreenSupported,
+    isWebFullscreen,
+    t,
+    toggleFullscreen,
+  ]);
   const scrollRef = useRef<InstanceType<typeof ScrollView> | null>(null);
   const charitySectionY = useRef(0);
   /** Desktop fashion home: Care Heart Fund card is hidden; strip CTA scrolls to this impact row. */
@@ -1036,39 +1050,53 @@ export function HomeScreen() {
   const quickActionItems = useMemo(
     () => [
       {
-        id: 'wallet',
-        icon: 'wallet-outline' as const,
-        accent: 'gold' as const,
-        label: t('home.quickActions.wallet'),
-        onPress: () => openProtected('Wallet'),
+        id: 'bookServices',
+        icon: 'calendar-outline' as const,
+        accent: 'emerald' as const,
+        label: t('home.quickActions.bookServices'),
+        onPress: () => goUniverseLocal(),
       },
       {
-        id: 'interpreter',
-        icon: 'mic-outline' as const,
+        id: 'quickTranslate',
+        icon: 'language-outline' as const,
         accent: 'cyan' as const,
-        label: t('home.quickActions.interpreter'),
+        label: t('home.quickActions.quickTranslate'),
         onPress: openInterpreter,
       },
       {
-        id: 'voice',
-        icon: 'call-outline' as const,
+        id: 'aiAssistant',
+        icon: 'sparkles-outline' as const,
         accent: 'violet' as const,
-        label: t('home.quickActions.voice'),
+        label: t('home.quickActions.aiAssistant'),
         onPress: () => openProtected('LeonaCall'),
       },
       {
         id: 'documents',
         icon: 'document-text-outline' as const,
-        accent: 'emerald' as const,
+        accent: 'gold' as const,
         label: t('home.quickActions.documents'),
         onPress: () => openProtected('Vault'),
       },
       {
         id: 'nearbySupport',
         icon: 'location-outline' as const,
-        accent: 'cyan' as const,
+        accent: 'blue' as const,
         label: t('home.quickActions.nearbySupport'),
         onPress: () => goUniverseLocal(),
+      },
+      {
+        id: 'travelLite',
+        icon: 'airplane-outline' as const,
+        accent: 'cyan' as const,
+        label: t('home.quickActions.travelLite'),
+        onPress: () => goUniverseTravel(),
+      },
+      {
+        id: 'learning',
+        icon: 'school-outline' as const,
+        accent: 'violet' as const,
+        label: t('home.quickActions.learning'),
+        onPress: () => goUniverseAcademy(),
       },
       {
         id: 'safety',
@@ -1078,7 +1106,18 @@ export function HomeScreen() {
         onPress: () => openSosEntry(),
       },
     ],
-    [goUniverseLocal, openInterpreter, openProtected, openSosEntry, t]
+    [goUniverseAcademy, goUniverseLocal, goUniverseTravel, openInterpreter, openProtected, openSosEntry, t]
+  );
+
+  const renderQuickActionPill = (item: (typeof quickActionItems)[number], fill = false) => (
+    <VionaQuickActionPill
+      key={item.id}
+      label={item.label}
+      icon={item.icon}
+      accent={item.accent}
+      onPress={item.onPress}
+      fill={fill}
+    />
   );
 
   return (
@@ -1091,27 +1130,21 @@ export function HomeScreen() {
     >
       <StatusBar style={isDesktopWeb ? 'light' : 'dark'} />
       {fashionHomeDesktopShellActive && homeCommand ? (
-        <View style={[styles.fashionShellOuter, { paddingTop: Math.max(insets.top, 10) }]}>
-          <View
-            style={[styles.fashionShellInner, { width: '100%', maxWidth: layout.shellWidth, paddingHorizontal: layout.pad }]}
-          >
+        <View style={[styles.fashionShellOuter, { paddingTop: Math.max(insets.top, 8) }]}>
+          <View style={[styles.fashionShellInner, { paddingHorizontal: layout.pad }]}>
             <VionaFashionHomeCommandBar
               density={commandBarDensity}
               onPressLogo={scrollToTop}
               headerGreetingLine1={fashionDesktopHeaderBlock.line1}
               headerWishLine={fashionDesktopHeaderBlock.wish}
-              headerTimeLocationLine={fashionDesktopHeaderBlock.timeLocation}
-              desktopTimeRegion={{
-                clockLine: fashionDesktopHeaderBlock.clockLine,
-                regionLine: fashionDesktopHeaderBlock.regionLine,
-              }}
-              headerGreetingA11y={fashionDesktopHeaderBlock.a11y}
+              headerGreetingA11y={`${fashionDesktopHeaderBlock.line1} ${fashionDesktopHeaderBlock.wish}`}
               onPressLanguage={() => homeCommand.openLanguageSheet()}
               onPressVio={() => openProtected('Wallet')}
               onPressSafety={openSosEntry}
               onPressAccount={() => homeCommand.openAccount()}
               onPressRole={homeCommand.showRolePicker ? () => homeCommand.openRolePicker() : undefined}
               showRolePicker={homeCommand.showRolePicker}
+              fullscreenControl={fullscreenControl}
             />
           </View>
         </View>
@@ -1122,13 +1155,14 @@ export function HomeScreen() {
         ref={scrollRef}
         contentContainerStyle={[
           styles.scrollContent,
+          fashionHomeDesktopShellActive ? styles.scrollContentFashion : null,
           {
             paddingHorizontal: layout.pad,
             paddingBottom: scrollBottomPad,
-            paddingTop: isDesktopWeb ? theme.spacing.md : theme.spacing.md,
-            width: layout.shellWidth,
+            paddingTop: fashionHomeDesktopShellActive ? theme.spacing.xs : theme.spacing.md,
+            width: fashionHomeDesktopShellActive ? '100%' : layout.shellWidth,
             maxWidth: '100%',
-            alignSelf: 'center',
+            alignSelf: fashionHomeDesktopShellActive ? 'stretch' : 'center',
           },
         ]}
         showsVerticalScrollIndicator={false}
@@ -1141,24 +1175,29 @@ export function HomeScreen() {
               accessibilityRole="image"
               accessibilityLabel={t('home.fashionTech.heroVisualA11y')}
             >
+              <LinearGradient
+                colors={['rgba(242, 212, 136, 0)', FASHION_HOME_HERO_TOP_GLOW, 'rgba(242, 212, 136, 0)']}
+                locations={[0, 0.5, 1]}
+                start={{ x: 0, y: 0.5 }}
+                end={{ x: 1, y: 0.5 }}
+                style={styles.desktopHeroGoldAccent}
+                pointerEvents="none"
+              />
+              <View style={styles.desktopHeroCyanEdge} pointerEvents="none" />
+              <View style={styles.desktopHeroBottomCyanEdge} pointerEvents="none" />
               <View style={styles.desktopHeroImageClip} pointerEvents="none">
                 <Image
                   source={LIVING_HERO_DESKTOP_IMAGE[livingBaseKey]}
-                  resizeMode="contain"
-                  style={[
-                    styles.desktopHeroImageFill,
-                    heroDesktopLivingImageWebStyle,
-                    desktopHeroLivingImageTransformStyle,
-                  ]}
+                  resizeMode="cover"
+                  style={[styles.desktopHeroImageFill, heroDesktopLivingImageWebStyle]}
                 />
                 {livingOverlayKey != null ? (
                   <Animated.Image
                     source={LIVING_HERO_DESKTOP_IMAGE[livingOverlayKey]}
-                    resizeMode="contain"
+                    resizeMode="cover"
                     style={[
                       styles.desktopHeroImageFill,
                       heroDesktopLivingImageWebStyle,
-                      desktopHeroLivingImageTransformStyle,
                       { opacity: livingHeroOverlayOpacity },
                     ]}
                   />
@@ -1172,6 +1211,38 @@ export function HomeScreen() {
                 style={styles.desktopHeroReadabilityScrim}
                 pointerEvents="none"
               />
+              <LinearGradient
+                colors={['rgba(0, 0, 0, 0.06)', 'rgba(0, 0, 0, 0)', 'rgba(0, 0, 0, 0.08)']}
+                locations={[0, 0.45, 1]}
+                start={{ x: 0.5, y: 0 }}
+                end={{ x: 0.5, y: 1 }}
+                style={styles.desktopHeroInnerVignette}
+                pointerEvents="none"
+              />
+              <View style={styles.desktopHeroInnerFrame} pointerEvents="none" />
+              <View
+                style={[
+                  styles.desktopHeroLivingStatusCapsule,
+                  width < 520 && styles.desktopHeroLivingStatusCapsuleNarrow,
+                ]}
+                accessibilityRole="text"
+                accessibilityLabel={`${t('shell.header.localTimeA11y')} ${fashionDesktopHeaderBlock.timeLocation}`}
+                pointerEvents="none"
+              >
+                <View style={styles.desktopHeroLivingStatusCapsuleHighlight} pointerEvents="none" />
+                <Text style={styles.desktopHeroLivingStatusClock} numberOfLines={1} ellipsizeMode="tail">
+                  {fashionDesktopHeaderBlock.clockLine}
+                </Text>
+                {fashionDesktopHeaderBlock.regionLine ? (
+                  <Text
+                    style={styles.desktopHeroLivingStatusRegion}
+                    numberOfLines={1}
+                    ellipsizeMode="tail"
+                  >
+                    {fashionDesktopHeaderBlock.regionLine}
+                  </Text>
+                ) : null}
+              </View>
               <View
                 style={[
                   styles.desktopHeroForeground,
@@ -1187,7 +1258,7 @@ export function HomeScreen() {
                     { opacity: livingHeroCopyBlend },
                   ]}
                 >
-                  <Text style={styles.ftEyebrow}>{desktopLivingCopy.eyebrow}</Text>
+                  <Text style={styles.desktopHeroEyebrow}>{desktopLivingCopy.eyebrow}</Text>
                   <Text
                     style={[
                       styles.desktopHeroHeadline,
@@ -1197,7 +1268,7 @@ export function HomeScreen() {
                   >
                     {desktopLivingCopy.title}
                   </Text>
-                  <Text style={[styles.ftSubtitle, width < 520 && styles.ftSubtitleNarrow]}>
+                  <Text style={[styles.desktopHeroSubtitle, width < 520 && styles.desktopHeroSubtitleNarrow]}>
                     {desktopLivingCopy.subtitle}
                   </Text>
                   <View style={styles.desktopHeroCtaRow}>
@@ -1207,7 +1278,14 @@ export function HomeScreen() {
                       accessibilityRole="button"
                       accessibilityLabel={t('home.fashionTech.ctaExplore')}
                     >
-                      <Text style={styles.desktopHeroCtaPrimaryText}>{t('home.fashionTech.ctaExplore')}</Text>
+                      <LinearGradient
+                        colors={['rgba(248, 220, 156, 0.98)', 'rgba(201, 169, 98, 0.98)', 'rgba(168, 132, 62, 0.98)']}
+                        start={{ x: 0, y: 0 }}
+                        end={{ x: 1, y: 1 }}
+                        style={styles.desktopHeroCtaPrimaryFill}
+                      >
+                        <Text style={styles.desktopHeroCtaPrimaryText}>{t('home.fashionTech.ctaExplore')}</Text>
+                      </LinearGradient>
                     </Pressable>
                     <Pressable
                       onPress={onWatchOverview}
@@ -1218,25 +1296,18 @@ export function HomeScreen() {
                       <Text style={styles.desktopHeroCtaSecondaryText}>{t('home.fashionTech.ctaWatch')}</Text>
                     </Pressable>
                   </View>
-                  <View style={styles.desktopHeroStatusRow}>
+                  <View style={styles.desktopHeroStatusStrip}>
                     <View style={styles.desktopHeroStatusPill}>
                       <Text style={styles.desktopHeroStatusText}>{t('home.fashionTech.statusNetwork')}</Text>
                     </View>
+                    <View style={styles.desktopHeroStatusDivider} />
                     <View style={styles.desktopHeroStatusPill}>
                       <Text style={styles.desktopHeroStatusText}>{t('home.fashionTech.statusSupport')}</Text>
                     </View>
+                    <View style={styles.desktopHeroStatusDivider} />
                     <View style={styles.desktopHeroStatusPill}>
                       <Text style={styles.desktopHeroStatusText}>{t('home.fashionTech.statusCountries')}</Text>
                     </View>
-                  </View>
-                  <View
-                    style={styles.desktopHeroAvatarRow}
-                    accessibilityRole="text"
-                    accessibilityLabel={t('home.fashionTech.statusAvatarsA11y')}
-                  >
-                    <View style={styles.desktopHeroAvatarDot} />
-                    <View style={[styles.desktopHeroAvatarDot, styles.desktopHeroAvatarOverlap]} />
-                    <View style={[styles.desktopHeroAvatarDot, styles.desktopHeroAvatarOverlap]} />
                   </View>
                 </Animated.View>
                 {width >= 920 ? <View style={styles.desktopHeroImageSpacer} pointerEvents="none" /> : null}
@@ -1281,8 +1352,6 @@ export function HomeScreen() {
                     onPress={goUniverseLocal}
                     footerHint={t('home.fashionTech.cardExploreHint')}
                     showChevron
-                    neonRim
-                    animatedNeonRim
                     {...(desktopCardLivingHoverProps?.local ?? {})}
                   />
                 </View>
@@ -1302,8 +1371,6 @@ export function HomeScreen() {
                     onPress={featureFlags.travelEnabled ? goUniverseTravel : undefined}
                     footerHint={t('home.fashionTech.cardExploreHint')}
                     showChevron
-                    neonRim
-                    animatedNeonRim
                     {...(desktopCardLivingHoverProps?.travel ?? {})}
                   />
                 </View>
@@ -1319,8 +1386,6 @@ export function HomeScreen() {
                     onPress={goUniverseAcademy}
                     footerHint={t('home.fashionTech.cardExploreHint')}
                     showChevron
-                    neonRim
-                    animatedNeonRim
                     {...(desktopCardLivingHoverProps?.academy ?? {})}
                   />
                 </View>
@@ -1336,8 +1401,6 @@ export function HomeScreen() {
                     onPress={goUniverseBusiness}
                     footerHint={t('home.fashionTech.cardExploreHint')}
                     showChevron
-                    neonRim
-                    animatedNeonRim
                     {...(desktopCardLivingHoverProps?.business ?? {})}
                   />
                 </View>
@@ -1371,8 +1434,6 @@ export function HomeScreen() {
                     onPress={goUniverseLocal}
                     footerHint={t('home.fashionTech.cardExploreHint')}
                     showChevron
-                    neonRim
-                    animatedNeonRim
                     stretchInColumn={stretchWorldCardsInGrid}
                     {...(desktopCardLivingHoverProps?.local ?? {})}
                   />
@@ -1398,8 +1459,6 @@ export function HomeScreen() {
                     onPress={featureFlags.travelEnabled ? goUniverseTravel : undefined}
                     footerHint={t('home.fashionTech.cardExploreHint')}
                     showChevron
-                    neonRim
-                    animatedNeonRim
                     stretchInColumn={stretchWorldCardsInGrid}
                     {...(desktopCardLivingHoverProps?.travel ?? {})}
                   />
@@ -1421,8 +1480,6 @@ export function HomeScreen() {
                     onPress={goUniverseAcademy}
                     footerHint={t('home.fashionTech.cardExploreHint')}
                     showChevron
-                    neonRim
-                    animatedNeonRim
                     stretchInColumn={stretchWorldCardsInGrid}
                     {...(desktopCardLivingHoverProps?.academy ?? {})}
                   />
@@ -1444,8 +1501,6 @@ export function HomeScreen() {
                     onPress={goUniverseBusiness}
                     footerHint={t('home.fashionTech.cardExploreHint')}
                     showChevron
-                    neonRim
-                    animatedNeonRim
                     stretchInColumn={stretchWorldCardsInGrid}
                     {...(desktopCardLivingHoverProps?.business ?? {})}
                   />
@@ -1669,7 +1724,13 @@ export function HomeScreen() {
         )}
 
         {featureFlags.hubEnabled ? (
-          <VionaGlassPanel style={[styles.quickActionStrip, { width: layout.inner }]} tone="cool">
+          <VionaGlassPanel
+            style={[
+              styles.quickActionStrip,
+              fashionHomeDesktopShellActive ? styles.quickActionStripFashion : { width: layout.inner },
+            ]}
+            tone="warm"
+          >
             <Text style={styles.quickActionPrompt}>{t('home.quickActions.prompt')}</Text>
             {quickActionsHorizontal ? (
               <ScrollView
@@ -1680,28 +1741,31 @@ export function HomeScreen() {
                 style={styles.quickActionRowScroll}
                 contentContainerStyle={styles.quickActionRowScrollContent}
               >
-                {quickActionItems.map((item) => (
-                  <VionaQuickActionPill
-                    key={item.id}
-                    label={item.label}
-                    icon={item.icon}
-                    accent={item.accent}
-                    onPress={item.onPress}
-                    prominent={item.id === 'safety'}
-                  />
-                ))}
+                {quickActionItems.map((item) => renderQuickActionPill(item))}
               </ScrollView>
+            ) : quickActionsGrid ? (
+              <View style={styles.quickActionGrid}>
+                <View style={styles.quickActionGridRow}>
+                  {quickActionItems.slice(0, 4).map((item) => (
+                    <View key={item.id} style={styles.quickActionGridCell}>
+                      {renderQuickActionPill(item, true)}
+                    </View>
+                  ))}
+                </View>
+                <View style={styles.quickActionGridRow}>
+                  {quickActionItems.slice(4, 8).map((item) => (
+                    <View key={item.id} style={styles.quickActionGridCell}>
+                      {renderQuickActionPill(item, true)}
+                    </View>
+                  ))}
+                </View>
+              </View>
             ) : (
-              <View style={styles.quickActionRow}>
+              <View style={styles.quickActionRowEight}>
                 {quickActionItems.map((item) => (
-                  <VionaQuickActionPill
-                    key={item.id}
-                    label={item.label}
-                    icon={item.icon}
-                    accent={item.accent}
-                    onPress={item.onPress}
-                    prominent={item.id === 'safety'}
-                  />
+                  <View key={item.id} style={styles.quickActionCellEight}>
+                    {renderQuickActionPill(item, true)}
+                  </View>
                 ))}
               </View>
             )}
@@ -2076,8 +2140,8 @@ const styles = StyleSheet.create({
   fashionShellOuter: {
     width: '100%',
     backgroundColor: vionaTokens.fashionTech.canvas,
-    borderBottomWidth: 1,
-    borderBottomColor: vionaTokens.fashionTech.champagneLine,
+    position: 'relative',
+    overflow: 'hidden',
   },
   fashionShellInner: {
     width: '100%',
@@ -2089,7 +2153,12 @@ const styles = StyleSheet.create({
     backgroundColor: 'transparent',
   },
   scrollContent: {},
+  scrollContentFashion: {
+    width: '100%',
+    alignSelf: 'stretch',
+  },
   ftHeroBleedFashion: {
+    marginTop: -vionaTokens.spacing[6],
     marginBottom: 0,
   },
   desktopHeroShell: {
@@ -2098,31 +2167,134 @@ const styles = StyleSheet.create({
     borderRadius: vionaTokens.radius.xxl,
     overflow: 'hidden',
     borderWidth: 1,
-    borderColor: vionaTokens.fashionTech.champagneLine,
+    borderTopWidth: 0,
+    borderColor: FASHION_HOME_LINE_GOLD,
     backgroundColor: vionaTokens.fashionTech.canvasElevated,
-    ...vionaTokens.shadows.hero,
+    shadowColor: FASHION_HOME_GLOW_GOLD,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 1,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  desktopHeroGoldAccent: {
+    position: 'absolute',
+    left: '16%',
+    right: '16%',
+    top: 0,
+    height: 1,
+    zIndex: 4,
+  },
+  desktopHeroCyanEdge: {
+    position: 'absolute',
+    right: 0,
+    top: '12%',
+    bottom: '12%',
+    width: 1,
+    backgroundColor: FASHION_HOME_LINE_CYAN,
+    zIndex: 4,
+  },
+  desktopHeroBottomCyanEdge: {
+    position: 'absolute',
+    left: '18%',
+    right: 0,
+    bottom: 0,
+    height: 1,
+    backgroundColor: FASHION_HOME_LINE_CYAN,
+    zIndex: 4,
   },
   desktopHeroImageClip: {
     ...StyleSheet.absoluteFillObject,
     overflow: 'hidden',
-    backgroundColor: '#070b12',
+    backgroundColor: '#0a1018',
   },
   desktopHeroReadabilityScrim: {
     position: 'absolute',
     left: 0,
     top: 0,
     bottom: 0,
-    width: '56%',
-    maxWidth: 640,
+    width: '48%',
+    maxWidth: 560,
+    zIndex: 1,
+  },
+  desktopHeroInnerVignette: {
+    ...StyleSheet.absoluteFillObject,
+    zIndex: 1,
+  },
+  desktopHeroInnerFrame: {
+    position: 'absolute',
+    left: 1,
+    right: 1,
+    top: 1,
+    bottom: 1,
+    borderRadius: vionaTokens.radius.xxl - 1,
+    borderWidth: 0,
+    zIndex: 4,
   },
   desktopHeroImageFill: {
     ...StyleSheet.absoluteFillObject,
   },
+  desktopHeroLivingStatusCapsule: {
+    position: 'absolute',
+    top: vionaTokens.spacing[16],
+    right: vionaTokens.spacing[16],
+    zIndex: 5,
+    maxWidth: '32%',
+    minWidth: 148,
+    paddingVertical: vionaTokens.spacing[6],
+    paddingHorizontal: vionaTokens.spacing[8],
+    borderRadius: vionaTokens.radius.lg,
+    borderWidth: 1,
+    borderColor: FASHION_HOME_LINE_GOLD,
+    backgroundColor: 'rgba(6, 10, 18, 0.68)',
+    gap: 1,
+    shadowColor: FASHION_HOME_GLOW_GOLD,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 1,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  desktopHeroLivingStatusCapsuleNarrow: {
+    top: vionaTokens.spacing[16],
+    right: vionaTokens.spacing[16],
+    left: vionaTokens.spacing[16],
+    maxWidth: '100%',
+    minWidth: 0,
+    alignSelf: 'flex-start',
+  },
+  desktopHeroLivingStatusCapsuleHighlight: {
+    position: 'absolute',
+    left: 1,
+    right: 1,
+    top: 1,
+    height: 1,
+    borderTopLeftRadius: vionaTokens.radius.lg,
+    borderTopRightRadius: vionaTokens.radius.lg,
+    backgroundColor: FASHION_HOME_INNER_HIGHLIGHT,
+  },
+  desktopHeroLivingStatusClock: {
+    fontFamily: FontFamily.extrabold,
+    fontSize: 18,
+    letterSpacing: 0.28,
+    lineHeight: 22,
+    color: vionaTokens.fashionTech.champagne,
+    fontVariant: ['tabular-nums'],
+    textShadowColor: 'rgba(5, 10, 18, 0.55)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 4,
+  },
+  desktopHeroLivingStatusRegion: {
+    fontFamily: FontFamily.semibold,
+    fontSize: 11,
+    letterSpacing: 0.12,
+    lineHeight: 15,
+    color: vionaTokens.fashionTech.inkOnDark,
+    opacity: 0.9,
+  },
   desktopHeroForeground: {
     ...StyleSheet.absoluteFillObject,
     paddingHorizontal: vionaTokens.spacing[24],
-    paddingTop: vionaTokens.spacing[32],
-    paddingBottom: vionaTokens.spacing[40],
+    paddingTop: vionaTokens.spacing[24],
+    paddingBottom: vionaTokens.spacing[24],
     justifyContent: 'center',
   },
   desktopHeroForegroundLandscape: {
@@ -2141,7 +2313,7 @@ const styles = StyleSheet.create({
   desktopHeroHeadline: {
     fontSize: 32,
     lineHeight: 38,
-    color: vionaTokens.fashionTech.inkOnDark,
+    color: '#fafbfe',
     fontFamily: FontFamily.extrabold,
     textShadowColor: 'rgba(3, 6, 12, 0.65)',
     textShadowOffset: { width: 0, height: 1 },
@@ -2162,17 +2334,25 @@ const styles = StyleSheet.create({
     marginTop: vionaTokens.spacing[4],
   },
   desktopHeroCtaPrimary: {
+    borderRadius: vionaTokens.radius.pill,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 232, 188, 0.72)',
+    overflow: 'hidden',
+    shadowColor: 'rgba(233, 199, 120, 0.55)',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.42,
+    shadowRadius: 10,
+    elevation: 4,
+  },
+  desktopHeroCtaPrimaryFill: {
     paddingVertical: 12,
     paddingHorizontal: 20,
     borderRadius: vionaTokens.radius.pill,
-    backgroundColor: 'rgba(201, 169, 98, 0.22)',
-    borderWidth: 1,
-    borderColor: vionaTokens.fashionTech.champagneLine,
   },
   desktopHeroCtaPrimaryText: {
     fontFamily: FontFamily.extrabold,
     fontSize: 13,
-    color: vionaTokens.fashionTech.inkOnDark,
+    color: vionaTokens.fashionTech.canvas,
     letterSpacing: 0.3,
   },
   desktopHeroCtaSecondary: {
@@ -2180,49 +2360,48 @@ const styles = StyleSheet.create({
     paddingHorizontal: 18,
     borderRadius: vionaTokens.radius.pill,
     borderWidth: 1,
-    borderColor: 'rgba(112, 200, 255, 0.35)',
-    backgroundColor: 'rgba(8, 14, 22, 0.45)',
+    borderColor: 'rgba(112, 200, 255, 0.34)',
+    backgroundColor: 'rgba(8, 14, 22, 0.68)',
+    shadowColor: 'rgba(112, 200, 255, 0.25)',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.22,
+    shadowRadius: 6,
+    elevation: 2,
   },
   desktopHeroCtaSecondaryText: {
     fontFamily: FontFamily.semibold,
     fontSize: 13,
-    color: vionaTokens.fashionTech.mutedOnDark,
+    color: 'rgba(214, 236, 255, 0.92)',
   },
-  desktopHeroStatusRow: {
+  desktopHeroStatusStrip: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: vionaTokens.spacing[8],
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    gap: vionaTokens.spacing[6],
     marginTop: vionaTokens.spacing[12],
-  },
-  desktopHeroStatusPill: {
     paddingVertical: 6,
-    paddingHorizontal: 10,
+    paddingHorizontal: 8,
     borderRadius: vionaTokens.radius.pill,
     borderWidth: 1,
-    borderColor: 'rgba(201, 169, 98, 0.28)',
-    backgroundColor: 'rgba(6, 10, 18, 0.55)',
+    borderColor: 'rgba(233, 199, 120, 0.22)',
+    backgroundColor: 'rgba(4, 8, 14, 0.72)',
+  },
+  desktopHeroStatusPill: {
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+  },
+  desktopHeroStatusDivider: {
+    width: 1,
+    height: 14,
+    backgroundColor: 'rgba(233, 199, 120, 0.2)',
   },
   desktopHeroStatusText: {
     fontSize: 11,
     lineHeight: 15,
-    color: vionaTokens.fashionTech.mutedOnDark,
+    color: 'rgba(244, 246, 250, 0.82)',
     fontFamily: FontFamily.semibold,
-  },
-  desktopHeroAvatarRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: vionaTokens.spacing[12],
-  },
-  desktopHeroAvatarDot: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    borderWidth: 2,
-    borderColor: 'rgba(201, 169, 98, 0.55)',
-    backgroundColor: 'rgba(112, 200, 255, 0.35)',
-  },
-  desktopHeroAvatarOverlap: {
-    marginLeft: -10,
+    letterSpacing: 0.15,
   },
   desktopHeroImageSpacer: {
     flex: 1,
@@ -2248,8 +2427,8 @@ const styles = StyleSheet.create({
     fontFamily: FontFamily.medium,
   },
   ftCardGridFashionSibling: {
-    marginTop: vionaTokens.spacing[16],
-    marginBottom: vionaTokens.spacing[20],
+    marginTop: vionaTokens.spacing[4],
+    marginBottom: vionaTokens.spacing[8],
   },
   ftHeroBleed: {
     marginBottom: vionaTokens.spacing[20],
@@ -2274,6 +2453,32 @@ const styles = StyleSheet.create({
     maxWidth: 560,
     paddingRight: vionaTokens.spacing[4],
     justifyContent: 'center',
+  },
+  desktopHeroSubtitleNarrow: {
+    fontSize: 14,
+    lineHeight: 21,
+    maxWidth: '100%',
+  },
+  desktopHeroEyebrow: {
+    fontSize: 11,
+    letterSpacing: 2,
+    textTransform: 'uppercase',
+    color: 'rgba(248, 220, 156, 0.96)',
+    fontFamily: FontFamily.semibold,
+    marginBottom: vionaTokens.spacing[12],
+    textShadowColor: 'rgba(5, 10, 18, 0.55)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 4,
+  },
+  desktopHeroSubtitle: {
+    fontSize: 15,
+    lineHeight: 23,
+    color: 'rgba(244, 246, 250, 0.88)',
+    fontFamily: FontFamily.medium,
+    maxWidth: 520,
+    textShadowColor: 'rgba(3, 6, 12, 0.45)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 6,
   },
   ftEyebrow: {
     fontSize: 11,
@@ -2406,21 +2611,67 @@ const styles = StyleSheet.create({
   },
   quickActionStrip: {
     alignSelf: 'center',
+    marginTop: -vionaTokens.spacing[4],
     marginBottom: theme.spacing.md,
-    paddingVertical: vionaTokens.spacing[16],
+    paddingVertical: vionaTokens.spacing[12],
     paddingHorizontal: vionaTokens.spacing[16],
+    borderWidth: 1,
+    borderColor: FASHION_HOME_LINE_GOLD,
+    backgroundColor: 'rgba(8, 12, 20, 0.42)',
+    shadowColor: FASHION_HOME_GLOW_GOLD,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 1,
+    shadowRadius: 4,
+    elevation: 1,
+  },
+  quickActionStripFashion: {
+    width: '100%',
+    alignSelf: 'stretch',
+    marginTop: 0,
+    borderWidth: 1,
+    borderColor: FASHION_HOME_LINE_GOLD,
+    backgroundColor: 'rgba(8, 12, 20, 0.34)',
+    shadowColor: FASHION_HOME_GLOW_GOLD,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 1,
+    shadowRadius: 4,
+    elevation: 1,
   },
   quickActionPrompt: {
-    fontSize: 14,
-    lineHeight: 20,
-    color: vionaTokens.fashionTech.inkOnDark,
-    fontFamily: FontFamily.bold,
+    fontSize: 13,
+    lineHeight: 18,
+    color: vionaTokens.fashionTech.champagne,
+    fontFamily: FontFamily.extrabold,
+    letterSpacing: 0.35,
+    textTransform: 'uppercase',
     marginBottom: vionaTokens.spacing[12],
   },
   quickActionRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: vionaTokens.spacing[8],
+  },
+  quickActionRowEight: {
+    flexDirection: 'row',
+    flexWrap: 'nowrap',
+    gap: vionaTokens.spacing[8],
+    alignItems: 'stretch',
+  },
+  quickActionCellEight: {
+    flex: 1,
+    minWidth: 0,
+  },
+  quickActionGrid: {
+    gap: vionaTokens.spacing[8],
+  },
+  quickActionGridRow: {
+    flexDirection: 'row',
+    gap: vionaTokens.spacing[8],
+    alignItems: 'stretch',
+  },
+  quickActionGridCell: {
+    flex: 1,
+    minWidth: 0,
   },
   quickActionRowScroll: {
     flexGrow: 0,

@@ -67,6 +67,11 @@
       "safetyAssist": "SOS",
       "accountProfile": "Tài khoản",
       "switchRole": "Hồ sơ"
+    },
+    "fullscreen": {
+      "enter": "Toàn màn hình",
+      "exit": "Thoát toàn màn hình",
+      "unsupported": "Trình duyệt không hỗ trợ toàn màn hình"
     }
   },
   "login": {
@@ -449,11 +454,11 @@
       "subtitle": "Đời sống, du lịch, học tập và AI support — thiết kế cho người Việt ở khắp thế giới.",
       "ctaExplore": "Khám phá VIONA",
       "ctaWatch": "Xem tổng quan",
-      "statusNetwork": "Bề mặt pilot an toàn",
-      "statusSupport": "Xem trước hỗ trợ AI",
-      "statusCountries": "Trải nghiệm sẵn sàng toàn cầu",
-      "statusAvatarsA11y": "Chỉ báo hiện diện mạng lưới",
-      "connectedChip": "Luôn kết nối vì bạn, dù bạn ở đâu.",
+      "statusNetwork": "Smart Trio sẵn sàng",
+      "statusSupport": "Hướng dẫn an toàn sẵn sàng",
+      "statusCountries": "Xem trước Global Lite",
+      "statusAvatarsA11y": "Họa tiết mạng lưới đồng hành",
+      "connectedChip": "Tuyến chòm sao gợi bước tiếp theo.",
       "cardExploreHint": "Mở",
       "watchOverviewUnavailable": "Mở Academy từ thanh tab để xem demo và tổng quan có hướng dẫn.",
       "visualInset": "Khung ảnh · chỉ dùng asset có license",
@@ -488,13 +493,18 @@
       "stripCta": "Xem chi tiết tác động"
     },
     "quickActions": {
-      "prompt": "Bạn cần gì lúc này?",
-      "wallet": "Ví & credits",
-      "interpreter": "Phiên dịch trực tiếp",
-      "voice": "Đường dây giọng AI",
+      "prompt": "VIONA dành cho bạn",
+      "wallet": "VIO credits",
+      "bookServices": "Đặt dịch vụ",
+      "quickTranslate": "Dịch nhanh",
+      "aiAssistant": "Trợ lý AI (pilot)",
+      "interpreter": "Hỗ trợ dịch (pilot)",
+      "voice": "Trợ lý AI (pilot)",
       "documents": "Giấy tờ",
       "nearbySupport": "Hỗ trợ gần bạn",
-      "safety": "SOS"
+      "travelLite": "Du lịch Lite",
+      "learning": "Học tập",
+      "safety": "Hỗ trợ khẩn cấp"
     },
     "trustStripHint": "Bề mặt pilot · Trạng thái minh bạch · VIO nằm trong ví",
     "walletLoadingA11y": "Đang tải số dư ví",

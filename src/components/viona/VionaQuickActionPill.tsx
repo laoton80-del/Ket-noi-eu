@@ -3,17 +3,21 @@ import { type ComponentProps, type ReactElement } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { vionaTokens } from '../../design';
+import {
+  FASHION_HOME_GLOW_CYAN,
+  FASHION_HOME_GLOW_GOLD,
+} from './fashionHomeDesktopShell';
 import { FontFamily } from '../../theme/typography';
 
-type QuickAccent = 'gold' | 'cyan' | 'emerald' | 'violet' | 'sos';
+type QuickAccent = 'gold' | 'cyan' | 'emerald' | 'violet' | 'blue' | 'sos';
 
 export type VionaQuickActionPillProps = Readonly<{
   label: string;
   icon: ComponentProps<typeof Ionicons>['name'];
   onPress: () => void;
   accent?: QuickAccent;
-  /** Stronger SOS framing (e.g. desktop home quick actions). */
-  prominent?: boolean;
+  /** Stretch to fill a grid cell on wide desktop rows. */
+  fill?: boolean;
 }>;
 
 const accentColor: Record<QuickAccent, string> = {
@@ -21,7 +25,17 @@ const accentColor: Record<QuickAccent, string> = {
   cyan: vionaTokens.fashionTech.accentCyan,
   emerald: vionaTokens.fashionTech.accentEmerald,
   violet: vionaTokens.fashionTech.accentViolet,
+  blue: vionaTokens.fashionTech.statusLite,
   sos: vionaTokens.fashionTech.sosNeon,
+};
+
+const accentGlow: Record<QuickAccent, string> = {
+  gold: FASHION_HOME_GLOW_GOLD,
+  cyan: FASHION_HOME_GLOW_CYAN,
+  emerald: 'rgba(88, 214, 168, 0.12)',
+  violet: 'rgba(176, 140, 255, 0.12)',
+  blue: 'rgba(120, 196, 255, 0.12)',
+  sos: 'rgba(255, 92, 108, 0.12)',
 };
 
 export function VionaQuickActionPill({
@@ -29,7 +43,7 @@ export function VionaQuickActionPill({
   icon,
   onPress,
   accent = 'gold',
-  prominent = false,
+  fill = false,
 }: VionaQuickActionPillProps): ReactElement {
   const tone = accentColor[accent];
   const isSos = accent === 'sos';
@@ -38,25 +52,23 @@ export function VionaQuickActionPill({
       onPress={onPress}
       style={({ pressed }) => [
         styles.base,
-        { borderColor: isSos ? vionaTokens.fashionTech.sosNeonGlow : `${tone}99` },
-        isSos && styles.baseSos,
-        isSos && prominent && styles.baseSosProminent,
+        fill && styles.baseFill,
+        {
+          borderColor: isSos ? vionaTokens.fashionTech.sosNeonGlow : `${tone}ea`,
+          shadowColor: accentGlow[accent],
+          shadowOffset: { width: 0, height: 0 },
+          shadowOpacity: 1,
+          shadowRadius: 3,
+        },
         pressed && styles.pressed,
       ]}
       accessibilityRole="button"
       accessibilityLabel={label}
     >
-      <View
-        style={[
-          styles.iconWrap,
-          { backgroundColor: isSos ? 'rgba(255, 92, 108, 0.2)' : `${tone}22` },
-          isSos && styles.iconWrapSos,
-          isSos && prominent && styles.iconWrapSosProminent,
-        ]}
-      >
-        <Ionicons name={icon} size={prominent && isSos ? 17 : 15} color={tone} />
+      <View style={[styles.iconWrap, { backgroundColor: isSos ? 'rgba(255, 92, 108, 0.2)' : `${tone}22` }]}>
+        <Ionicons name={icon} size={15} color={tone} />
       </View>
-      <Text style={[styles.label, prominent && isSos && styles.labelProminent]}>{label}</Text>
+      <Text style={[styles.label, isSos && styles.labelSos]}>{label}</Text>
     </Pressable>
   );
 }
@@ -65,43 +77,22 @@ const styles = StyleSheet.create({
   base: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
     gap: 8,
+    minHeight: 36,
     borderRadius: vionaTokens.radius.pill,
     borderWidth: 1,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    backgroundColor: 'rgba(10, 15, 24, 0.72)',
+    paddingHorizontal: 13,
+    paddingVertical: 0,
+    backgroundColor: 'rgba(8, 12, 20, 0.72)',
+    elevation: 1,
   },
-  baseSos: {
-    shadowColor: vionaTokens.fashionTech.sosNeon,
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.35,
-    shadowRadius: 10,
-    elevation: 4,
-  },
-  baseSosProminent: {
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    borderWidth: 1.5,
-    shadowOpacity: 0.52,
-    shadowRadius: 14,
-    elevation: 6,
+  baseFill: {
+    width: '100%',
+    minWidth: 0,
   },
   pressed: {
     opacity: 0.88,
-  },
-  iconWrapSos: {
-    shadowColor: vionaTokens.fashionTech.sosNeon,
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.45,
-    shadowRadius: 6,
-  },
-  iconWrapSosProminent: {
-    width: 26,
-    height: 26,
-    borderRadius: 13,
-    shadowOpacity: 0.58,
-    shadowRadius: 8,
   },
   iconWrap: {
     width: 22,
@@ -116,9 +107,7 @@ const styles = StyleSheet.create({
     color: vionaTokens.fashionTech.textPrimary,
     fontFamily: FontFamily.semibold,
   },
-  labelProminent: {
-    fontSize: 13,
-    fontFamily: FontFamily.bold,
+  labelSos: {
     color: vionaTokens.fashionTech.sosNeon,
   },
 });
