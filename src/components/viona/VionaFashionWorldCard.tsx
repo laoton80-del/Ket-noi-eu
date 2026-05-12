@@ -6,6 +6,7 @@ import {
   Animated,
   Easing,
   Image,
+  Platform,
   Pressable,
   StyleSheet,
   Text,
@@ -13,10 +14,11 @@ import {
   type ImageStyle,
   type ImageSourcePropType,
   type StyleProp,
+  type ViewStyle,
 } from 'react-native';
 
 import { vionaTokens } from '../../design';
-import { FASHION_HOME_GLOW_GOLD, FASHION_HOME_LINE_GOLD } from './fashionHomeDesktopShell';
+import { FASHION_HOME_GLOW_CYAN, FASHION_HOME_GLOW_GOLD, FASHION_HOME_INNER_HIGHLIGHT } from './fashionHomeDesktopShell';
 import { FontFamily } from '../../theme/typography';
 import { VionaStatusPill } from './VionaStatusPill';
 
@@ -40,14 +42,39 @@ const ACCENT_RAIL: Readonly<Record<FashionAccent, string>> = {
   care: vionaTokens.fashionTech.accentMagenta,
 };
 
-const ACCENT_NEON_GLOW: Readonly<Record<FashionAccent, string>> = {
-  /** Emerald-led rim; cyan halo layered in `NeonRimHalo` for desktop fashion. */
-  local: vionaTokens.fashionTech.accentEmerald,
-  travel: vionaTokens.fashionTech.accentCyan,
-  academy: vionaTokens.fashionTech.accentViolet,
-  business: vionaTokens.fashionTech.accentGold,
-  care: vionaTokens.fashionTech.accentMagenta,
+const ACCENT_LUMINOUS_GLOW: Readonly<Record<FashionAccent, string>> = {
+  local: 'rgba(88, 214, 168, 0.14)',
+  travel: FASHION_HOME_GLOW_CYAN,
+  academy: 'rgba(176, 140, 255, 0.14)',
+  business: FASHION_HOME_GLOW_GOLD,
+  care: 'rgba(255, 92, 108, 0.14)',
 };
+
+const CARD_RADIUS = vionaTokens.radius.lg;
+const CARD_INSET_RADIUS = CARD_RADIUS - 1;
+
+function cardEdgeStrokeStyle(color: string): ViewStyle {
+  if (Platform.OS === 'web') {
+    return {
+      borderWidth: 0,
+      boxShadow: `inset 0 0 0 1px ${color}`,
+    };
+  }
+  return {
+    borderWidth: 1,
+    borderColor: color,
+  };
+}
+
+function luminousCardShell(accent: FashionAccent) {
+  return {
+    shadowColor: ACCENT_LUMINOUS_GLOW[accent],
+    shadowOffset: { width: 0, height: 0 } as const,
+    shadowOpacity: 1,
+    shadowRadius: 3,
+    elevation: 1 as const,
+  };
+}
 
 export type VionaFashionWorldCardProps = Readonly<{
   title: string;
@@ -99,7 +126,8 @@ export function VionaFashionWorldCard({
   const fallbackGrad = FALLBACK_GRADIENT[accent];
   const accentColor = ACCENT_RAIL[accent];
   const minH = variant === 'heroRow' ? 172 : 168;
-  const glow = ACCENT_NEON_GLOW[accent];
+  const cardShell = luminousCardShell(accent);
+  const cardEdgeColor = `${accentColor}ea`;
   const pulse = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
@@ -127,18 +155,22 @@ export function VionaFashionWorldCard({
     };
   }, [animatedNeonRim, neonRim, pulse]);
 
-  const animShadowOpacity = pulse.interpolate({ inputRange: [0, 1], outputRange: [0.1, 0.18] });
-  const animShadowRadius = pulse.interpolate({ inputRange: [0, 1], outputRange: [6, 10] });
-  const animBorderOpacity = pulse.interpolate({ inputRange: [0, 1], outputRange: [0.24, 0.38] });
+  const animShadowOpacity = pulse.interpolate({ inputRange: [0, 1], outputRange: [0.1, 0.14] });
+  const animShadowRadius = pulse.interpolate({ inputRange: [0, 1], outputRange: [3, 4] });
 
-  const photoLayer =
-    backgroundImage != null ? (
-      <View style={styles.imageClipFull} pointerEvents="none">
-        <Image source={backgroundImage} resizeMode="cover" style={[styles.imageFull, imageStyle]} />
-      </View>
-    ) : (
-      <LinearGradient colors={fallbackGrad} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={StyleSheet.absoluteFillObject} />
-    );
+  const stretch = stretchInColumn
+    ? {
+        press: styles.pressWrapStretch,
+        shell: styles.gradStretch,
+        row: styles.rowShellStretch,
+        inner: [styles.inner, styles.innerStretch, { minHeight: minH }],
+      }
+    : {
+        press: undefined,
+        shell: undefined,
+        row: undefined,
+        inner: [styles.inner, { minHeight: minH }],
+      };
 
   /** Narrow left scrim for title/sub copy only — keeps photo side bright (no full-card blanket). */
   const textScrim = (
@@ -173,167 +205,124 @@ export function VionaFashionWorldCard({
 
   const localEmeraldCyanHalo = null;
 
-  const stretch = stretchInColumn
-    ? {
-        press: styles.pressWrapStretch,
-        shell: styles.gradStretch,
-        row: styles.rowShellStretch,
-        inner: [styles.inner, styles.innerStretch, { minHeight: minH }],
-      }
-    : {
-        press: undefined,
-        shell: undefined,
-        row: undefined,
-        inner: [styles.inner, { minHeight: minH }],
-      };
+  const footerReadabilityScrim =
+    backgroundImage != null && (footerHint != null || showChevron) ? (
+      <LinearGradient
+        colors={['rgba(4, 7, 12, 0)', 'rgba(4, 7, 12, 0.24)', 'rgba(4, 7, 12, 0.46)']}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 0, y: 1 }}
+        style={styles.footerScrim}
+        pointerEvents="none"
+      />
+    ) : null;
 
-  const gradShell = neonRim && animatedNeonRim ? (
-    <Animated.View
-      style={[
-        styles.grad,
-        stretch.shell,
-        {
-          shadowColor: glow,
-          shadowOffset: { width: 0, height: 0 },
-          shadowOpacity: animShadowOpacity,
-          shadowRadius: animShadowRadius,
-          elevation: 6,
-        },
-      ]}
-    >
+  const photoLayer =
+    backgroundImage != null ? (
+      <Image source={backgroundImage} resizeMode="cover" style={[styles.imageFull, imageStyle]} />
+    ) : (
+      <LinearGradient colors={fallbackGrad} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={StyleSheet.absoluteFillObject} />
+    );
+
+  const visualStage = (
+    <View style={styles.visualStage} pointerEvents="none">
       {photoLayer}
       {constellationAtmosphere}
       {backgroundImage != null ? textScrim : null}
+      {footerReadabilityScrim}
       {localEmeraldCyanHalo}
-      <Animated.View
-        pointerEvents="none"
-        style={[
-          StyleSheet.absoluteFillObject,
-          styles.neonPulseRing,
-          {
-            borderColor: glow,
-            opacity: animBorderOpacity,
-          },
-        ]}
-      />
-      <View
-        pointerEvents="none"
-        style={[
-          StyleSheet.absoluteFillObject,
-          styles.accentFrame,
-          {
-            borderColor: accentColor,
-            shadowColor: accentColor,
-          },
-        ]}
-      />
-      <View pointerEvents="none" style={[styles.accentEdgeHighlight, { backgroundColor: accentColor }]} />
-      <View style={[styles.rowShell, stretch.row]}>
-        <View style={stretch.inner}>
-          <View style={styles.topRow}>
-            {icon ? <View style={[styles.iconSlot, { borderColor: `${accentColor}88` }]}>{icon}</View> : null}
-            <View style={styles.copy}>
-              <Text style={styles.title} numberOfLines={2} ellipsizeMode="tail">
-                {title}
-              </Text>
-              <Text style={styles.sub} numberOfLines={2} ellipsizeMode="tail">
-                {subtitle}
-              </Text>
-            </View>
+    </View>
+  );
+
+  const cardContent = (
+    <View style={[styles.rowShell, stretch.row]}>
+      <View style={stretch.inner}>
+        <View style={styles.topRow}>
+          {icon ? <View style={[styles.iconSlot, { borderColor: `${accentColor}ea` }]}>{icon}</View> : null}
+          <View style={styles.copy}>
+            <Text style={styles.title} numberOfLines={2} ellipsizeMode="tail">
+              {title}
+            </Text>
+            <Text style={styles.sub} numberOfLines={2} ellipsizeMode="tail">
+              {subtitle}
+            </Text>
           </View>
-          {status ? (
-            <View style={styles.pillRow}>
-              <VionaStatusPill label={status.label} tone={status.tone} size="sm" />
-            </View>
-          ) : null}
-          {footerHint != null || showChevron ? (
-            <View style={[styles.footerRow, { borderTopColor: `${accentColor}33` }]}>
-              {footerHint ? (
-                <Text style={styles.footerHint} numberOfLines={1}>
-                  {footerHint}
-                </Text>
-              ) : (
-                <View style={styles.footerSpacer} />
-              )}
-              {showChevron ? (
-                <Ionicons name="arrow-forward-circle-outline" size={22} color={accentColor} />
-              ) : null}
-            </View>
-          ) : null}
         </View>
-      </View>
-    </Animated.View>
-  ) : (
-    <View
-      style={[
-        styles.grad,
-        stretch.shell,
-        neonRim && {
-          shadowColor: glow,
-          shadowOffset: { width: 0, height: 0 },
-          shadowOpacity: 0.16,
-          shadowRadius: 8,
-          elevation: 4,
-        },
-      ]}
-    >
-      {photoLayer}
-      {backgroundImage != null ? textScrim : null}
-      {localEmeraldCyanHalo}
-      <View
-        pointerEvents="none"
-        style={[
-          StyleSheet.absoluteFillObject,
-          styles.accentFrame,
-          {
-            borderColor: accentColor,
-            shadowColor: accentColor,
-          },
-        ]}
-      />
-      <View pointerEvents="none" style={[styles.accentEdgeHighlight, { backgroundColor: accentColor }]} />
-      <View style={[styles.rowShell, stretch.row]}>
-        <View style={stretch.inner}>
-          <View style={styles.topRow}>
-            {icon ? <View style={styles.iconSlot}>{icon}</View> : null}
-            <View style={styles.copy}>
-              <Text style={styles.title} numberOfLines={2} ellipsizeMode="tail">
-                {title}
-              </Text>
-              <Text style={styles.sub} numberOfLines={2} ellipsizeMode="tail">
-                {subtitle}
-              </Text>
-            </View>
+        {status ? (
+          <View style={styles.pillRow}>
+            <VionaStatusPill label={status.label} tone={status.tone} size="sm" />
           </View>
-          {status ? (
-            <View style={styles.pillRow}>
-              <VionaStatusPill label={status.label} tone={status.tone} size="sm" />
-            </View>
-          ) : null}
-          {footerHint != null || showChevron ? (
-            <View style={[styles.footerRow, { borderTopColor: `${accentColor}33` }]}>
-              {footerHint ? (
-                <Text style={styles.footerHint} numberOfLines={1}>
-                  {footerHint}
-                </Text>
-              ) : (
-                <View style={styles.footerSpacer} />
-              )}
-              {showChevron ? (
-                <Ionicons name="arrow-forward-circle-outline" size={22} color={accentColor} />
-              ) : null}
-            </View>
-          ) : null}
-        </View>
+        ) : null}
+        {footerHint != null || showChevron ? (
+          <View style={styles.footerRow}>
+            {footerHint ? (
+              <Text style={styles.footerHint} numberOfLines={1}>
+                {footerHint}
+              </Text>
+            ) : (
+              <View style={styles.footerSpacer} />
+            )}
+            {showChevron ? (
+              <Ionicons name="arrow-forward-circle-outline" size={22} color={accentColor} />
+            ) : null}
+          </View>
+        ) : null}
       </View>
     </View>
   );
+
+  const cardEdgeFrame = (
+    <>
+      <View pointerEvents="none" style={[styles.cardEdgeOverlay, cardEdgeStrokeStyle(cardEdgeColor)]} />
+      <View pointerEvents="none" style={styles.cardInnerTopHighlight} />
+    </>
+  );
+
+  const cardFace = (
+    <View style={[styles.grad, stretch.shell]}>
+      {visualStage}
+      {cardContent}
+    </View>
+  );
+
+  const shellGlow = neonRim
+    ? {
+        shadowColor: cardShell.shadowColor,
+        shadowOffset: { width: 0, height: 0 } as const,
+        shadowOpacity: 1,
+        shadowRadius: 3,
+        elevation: 1 as const,
+      }
+    : cardShell;
+
+  const gradShell =
+    neonRim && animatedNeonRim ? (
+      <Animated.View
+        style={[
+          styles.pressWrap,
+          stretch.press,
+          shellGlow,
+          {
+            shadowColor: cardShell.shadowColor,
+            shadowOpacity: animShadowOpacity,
+            shadowRadius: animShadowRadius,
+          },
+        ]}
+      >
+        {cardFace}
+        {cardEdgeFrame}
+      </Animated.View>
+    ) : (
+      <View style={[styles.pressWrap, stretch.press, shellGlow]}>
+        {cardFace}
+        {cardEdgeFrame}
+      </View>
+    );
 
   /** Hover/focus for Living Hero (desktop) must work even when `onPress` is omitted (e.g. coming-soon travel). */
   const hoverOnly = onPress == null && (onHoverIn != null || onHoverOut != null || onFocus != null || onBlur != null);
 
   if (!onPress && !hoverOnly) {
-    return <View style={stretch.press}>{gradShell}</View>;
+    return gradShell;
   }
 
   return (
@@ -344,7 +333,7 @@ export function VionaFashionWorldCard({
       onFocus={onFocus}
       onBlur={onBlur}
       disabled={onPress != null && disabled}
-      style={({ pressed }) => [styles.pressWrap, stretch.press, pressed && onPress != null && !disabled && styles.pressed]}
+      style={({ pressed }) => [stretch.press, pressed && onPress != null && !disabled && styles.pressed]}
     >
       {gradShell}
     </Pressable>
@@ -353,8 +342,8 @@ export function VionaFashionWorldCard({
 
 const styles = StyleSheet.create({
   pressWrap: {
-    borderRadius: vionaTokens.radius.lg,
-    overflow: 'hidden',
+    borderRadius: CARD_RADIUS,
+    position: 'relative',
   },
   pressWrapStretch: {
     flex: 1,
@@ -372,17 +361,33 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   grad: {
-    borderRadius: vionaTokens.radius.lg,
-    borderWidth: 1,
-    borderColor: FASHION_HOME_LINE_GOLD,
-    overflow: 'hidden',
+    borderRadius: CARD_RADIUS,
     backgroundColor: 'rgba(8, 12, 18, 0.28)',
     position: 'relative',
-    shadowColor: FASHION_HOME_GLOW_GOLD,
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 1,
-    shadowRadius: 4,
-    elevation: 2,
+    overflow: 'hidden',
+  },
+  visualStage: {
+    ...StyleSheet.absoluteFillObject,
+    top: 1,
+    left: 1,
+    right: 1,
+    bottom: 1,
+    borderRadius: CARD_INSET_RADIUS,
+    overflow: 'hidden',
+  },
+  cardEdgeOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    borderRadius: CARD_RADIUS,
+    zIndex: 4,
+  },
+  cardInnerTopHighlight: {
+    position: 'absolute',
+    left: 12,
+    right: 12,
+    top: 1,
+    height: 1,
+    backgroundColor: FASHION_HOME_INNER_HIGHLIGHT,
+    zIndex: 5,
   },
   cardTopSheen: {
     position: 'absolute',
@@ -391,10 +396,6 @@ const styles = StyleSheet.create({
     right: 0,
     height: '38%',
     zIndex: 0,
-  },
-  imageClipFull: {
-    ...StyleSheet.absoluteFillObject,
-    overflow: 'hidden',
   },
   imageFull: {
     ...StyleSheet.absoluteFillObject,
@@ -410,27 +411,17 @@ const styles = StyleSheet.create({
     width: '72%',
     zIndex: 0,
   },
+  footerScrim: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 0,
+    height: '42%',
+    zIndex: 0,
+  },
   rowShell: {
     flexDirection: 'row',
     alignItems: 'stretch',
-    zIndex: 1,
-  },
-  accentFrame: {
-    zIndex: 1,
-    borderRadius: vionaTokens.radius.lg,
-    borderWidth: 1,
-    opacity: 0.28,
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.12,
-    shadowRadius: 3,
-  },
-  accentEdgeHighlight: {
-    position: 'absolute',
-    left: 0,
-    top: 0,
-    bottom: 0,
-    width: 1.5,
-    opacity: 0.52,
     zIndex: 1,
   },
   inner: {
@@ -447,7 +438,6 @@ const styles = StyleSheet.create({
     gap: vionaTokens.spacing[8],
     marginTop: 'auto',
     paddingTop: vionaTokens.spacing[6],
-    borderTopWidth: 1,
   },
   footerSpacer: {
     flex: 1,
@@ -478,13 +468,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
-    borderColor: FASHION_HOME_LINE_GOLD,
     backgroundColor: 'rgba(6, 10, 18, 0.55)',
-    shadowColor: FASHION_HOME_GLOW_GOLD,
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 1,
-    shadowRadius: 3,
-    elevation: 1,
   },
   copy: {
     flex: 1,
@@ -514,15 +498,5 @@ const styles = StyleSheet.create({
   },
   pressed: {
     opacity: 0.92,
-  },
-  neonPulseRing: {
-    zIndex: 0,
-    borderRadius: vionaTokens.radius.lg,
-    borderWidth: 1,
-  },
-  neonDualHalo: {
-    zIndex: 0,
-    borderRadius: vionaTokens.radius.lg,
-    borderWidth: 1,
   },
 });

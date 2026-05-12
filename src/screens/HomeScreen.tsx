@@ -42,11 +42,15 @@ import {
 } from '../components/viona';
 import {
   FASHION_HOME_DESKTOP_HERO_ASPECT,
+  FASHION_HOME_FRAME_BORDER,
+  FASHION_HOME_FRAME_GLOW,
   FASHION_HOME_GLOW_GOLD,
   FASHION_HOME_INNER_HIGHLIGHT,
   FASHION_HOME_LINE_CYAN,
   FASHION_HOME_LINE_GOLD,
   FASHION_HOME_HERO_TOP_GLOW,
+  premiumCrispEdgeStroke,
+  premiumFrameEdgeOverlay,
   resolveFashionHomeDesktopLayout,
 } from '../components/viona/fashionHomeDesktopShell';
 import { VionaCard } from '../components/viona/VionaCard';
@@ -1131,7 +1135,7 @@ export function HomeScreen() {
       <StatusBar style={isDesktopWeb ? 'light' : 'dark'} />
       {fashionHomeDesktopShellActive && homeCommand ? (
         <View style={[styles.fashionShellOuter, { paddingTop: Math.max(insets.top, 8) }]}>
-          <View style={[styles.fashionShellInner, { paddingHorizontal: layout.pad }]}>
+          <View style={styles.fashionShellInner}>
             <VionaFashionHomeCommandBar
               density={commandBarDensity}
               onPressLogo={scrollToTop}
@@ -1170,6 +1174,7 @@ export function HomeScreen() {
         {fashionHomeDesktopShellActive ? (
           <>
           <View style={[styles.ftHeroBleedFashion, { marginHorizontal: -layout.pad }]}>
+            <View style={styles.desktopHeroFrameShell}>
             <View
               style={[styles.desktopHeroShell, { aspectRatio: DESKTOP_HERO_FRAME_ASPECT }]}
               accessibilityRole="image"
@@ -1315,6 +1320,15 @@ export function HomeScreen() {
               <View style={styles.desktopHeroConnectedChip} pointerEvents="none">
                 <Text style={styles.desktopHeroConnectedChipText}>{t('home.fashionTech.connectedChip')}</Text>
               </View>
+            </View>
+              <View
+                pointerEvents="none"
+                style={[
+                  styles.desktopHeroEdgeOverlay,
+                  premiumFrameEdgeOverlay(vionaTokens.radius.xxl),
+                  premiumCrispEdgeStroke(FASHION_HOME_FRAME_BORDER),
+                ]}
+              />
             </View>
           </View>
 
@@ -1724,6 +1738,7 @@ export function HomeScreen() {
         )}
 
         {featureFlags.hubEnabled ? (
+          <View style={fashionHomeDesktopShellActive ? { marginHorizontal: -layout.pad } : undefined}>
           <VionaGlassPanel
             style={[
               styles.quickActionStrip,
@@ -1770,6 +1785,7 @@ export function HomeScreen() {
               </View>
             )}
           </VionaGlassPanel>
+          </View>
         ) : null}
 
         {!fashionHomeDesktopShellActive ? (
@@ -1819,7 +1835,7 @@ export function HomeScreen() {
           }}
         >
           {fashionHomeDesktopShellActive ? (
-            <View style={{ width: layout.inner, alignSelf: 'center' }}>
+            <View style={{ marginHorizontal: -layout.pad }}>
               <CharityWidget layoutVariant="desktopFashionCare" />
             </View>
           ) : (
@@ -2161,20 +2177,24 @@ const styles = StyleSheet.create({
     marginTop: -vionaTokens.spacing[6],
     marginBottom: 0,
   },
+  desktopHeroFrameShell: {
+    position: 'relative',
+    width: '100%',
+  },
   desktopHeroShell: {
     position: 'relative',
     width: '100%',
     borderRadius: vionaTokens.radius.xxl,
     overflow: 'hidden',
-    borderWidth: 1,
-    borderTopWidth: 0,
-    borderColor: FASHION_HOME_LINE_GOLD,
     backgroundColor: vionaTokens.fashionTech.canvasElevated,
-    shadowColor: FASHION_HOME_GLOW_GOLD,
+    shadowColor: FASHION_HOME_FRAME_GLOW,
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 1,
-    shadowRadius: 4,
+    shadowRadius: 3,
     elevation: 2,
+  },
+  desktopHeroEdgeOverlay: {
+    pointerEvents: 'none',
   },
   desktopHeroGoldAccent: {
     position: 'absolute',

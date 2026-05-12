@@ -4,11 +4,17 @@ import { Image, Pressable, StyleSheet, Text, View, useWindowDimensions } from 'r
 
 import { vionaTokens } from '../../design';
 import {
+  FASHION_HOME_COMMAND_LOGO_GLOW,
+  FASHION_HOME_COMMAND_LOGO_PLATE,
+  FASHION_HOME_COMMAND_LOGO_SIZE,
   FASHION_HOME_COMMAND_RAIL_BORDER,
+  FASHION_HOME_COMMAND_RAIL_GRADIENT,
   FASHION_HOME_COMMAND_RAIL_HIGHLIGHT,
   FASHION_HOME_GLOW_CYAN,
   FASHION_HOME_LINE_CYAN,
   FASHION_HOME_LINE_GOLD_SOFT,
+  premiumCrispEdgeStroke,
+  premiumFrameEdgeOverlay,
 } from './fashionHomeDesktopShell';
 import { FontFamily } from '../../theme/typography';
 import { useTranslation } from '../../i18n';
@@ -64,7 +70,7 @@ export function VionaFashionHomeCommandBar({
   return (
     <View style={[styles.barShell, compactDensity && styles.barShellCompact]}>
       <LinearGradient
-        colors={['rgba(8, 12, 20, 0.4)', 'rgba(7, 11, 18, 0.34)', 'rgba(7, 11, 18, 0.3)']}
+        colors={[...FASHION_HOME_COMMAND_RAIL_GRADIENT]}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={[styles.bar, compactDensity && styles.barCompact]}
@@ -78,11 +84,13 @@ export function VionaFashionHomeCommandBar({
               accessibilityRole="button"
               accessibilityLabel="VIONA Hub"
             >
-              <Image
-                source={LOGO_IMAGE}
-                resizeMode="contain"
-                style={useCompactLogo ? styles.logoImageCompact : styles.logoImage}
-              />
+              <View style={styles.logoBlendWell} pointerEvents="none">
+                <Image
+                  source={LOGO_IMAGE}
+                  resizeMode="contain"
+                  style={useCompactLogo ? styles.logoImageCompact : styles.logoImage}
+                />
+              </View>
             </Pressable>
             <View style={styles.greetingDivider} pointerEvents="none" />
             <View
@@ -226,6 +234,14 @@ export function VionaFashionHomeCommandBar({
           </View>
         </View>
       </LinearGradient>
+      <View
+        pointerEvents="none"
+        style={[
+          styles.railEdgeOverlay,
+          premiumFrameEdgeOverlay(vionaTokens.radius.lg),
+          premiumCrispEdgeStroke(FASHION_HOME_COMMAND_RAIL_BORDER),
+        ]}
+      />
     </View>
   );
 }
@@ -236,10 +252,8 @@ const styles = StyleSheet.create({
     alignSelf: 'stretch',
     borderRadius: vionaTokens.radius.lg,
     marginBottom: vionaTokens.spacing[2],
-    borderWidth: 1,
-    borderColor: FASHION_HOME_COMMAND_RAIL_BORDER,
     backgroundColor: 'transparent',
-    overflow: 'hidden',
+    position: 'relative',
   },
   barShellCompact: {
     marginBottom: vionaTokens.spacing[2],
@@ -248,8 +262,13 @@ const styles = StyleSheet.create({
     width: '100%',
     alignSelf: 'stretch',
     paddingVertical: vionaTokens.spacing[6],
-    paddingHorizontal: vionaTokens.spacing[8],
+    paddingHorizontal: vionaTokens.spacing[6],
     position: 'relative',
+    borderRadius: vionaTokens.radius.lg,
+    overflow: 'hidden',
+  },
+  railEdgeOverlay: {
+    pointerEvents: 'none',
   },
   barCompact: {
     paddingVertical: vionaTokens.spacing[4],
@@ -278,7 +297,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'nowrap',
     alignItems: 'center',
-    gap: vionaTokens.spacing[8],
+    gap: vionaTokens.spacing[6],
     flex: 1,
     minWidth: 200,
   },
@@ -289,26 +308,32 @@ const styles = StyleSheet.create({
   logoPressable: {
     paddingVertical: 0,
     paddingHorizontal: 0,
+    marginLeft: -4,
+    marginRight: -4,
     flexShrink: 0,
     backgroundColor: 'transparent',
   },
-  logoImage: {
-    width: 160,
-    height: 48,
+  logoBlendWell: {
     backgroundColor: 'transparent',
-    shadowColor: 'rgba(238, 206, 128, 0.28)',
+    overflow: 'hidden',
+  },
+  logoImage: {
+    width: FASHION_HOME_COMMAND_LOGO_SIZE.width,
+    height: FASHION_HOME_COMMAND_LOGO_SIZE.height,
+    backgroundColor: FASHION_HOME_COMMAND_LOGO_PLATE,
+    shadowColor: FASHION_HOME_COMMAND_LOGO_GLOW,
     shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.24,
-    shadowRadius: 5,
+    shadowOpacity: 0.22,
+    shadowRadius: 3,
   },
   logoImageCompact: {
-    width: 132,
-    height: 40,
-    backgroundColor: 'transparent',
-    shadowColor: 'rgba(238, 206, 128, 0.28)',
+    width: FASHION_HOME_COMMAND_LOGO_SIZE.compactWidth,
+    height: FASHION_HOME_COMMAND_LOGO_SIZE.compactHeight,
+    backgroundColor: FASHION_HOME_COMMAND_LOGO_PLATE,
+    shadowColor: FASHION_HOME_COMMAND_LOGO_GLOW,
     shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.24,
-    shadowRadius: 4,
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
   },
   greetingDivider: {
     width: 1,
