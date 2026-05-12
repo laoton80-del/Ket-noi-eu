@@ -1,13 +1,10 @@
 import type { ReactElement } from 'react';
-import { Image, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import { useTranslation } from '../../i18n';
 import { FontFamily } from '../../theme/typography';
+import { VionaBrandLockup } from '../../components/viona/VionaBrandLockup';
 import { vionaTrust } from '../../components/viona/vionaTrustTokens';
 import { vionaTokens } from '../../design';
-import {
-  FASHION_HOME_COMMAND_LOGO_PLATE,
-  VIONA_AUTH_BRAND_LOGO_SIZE,
-} from '../../components/viona/fashionHomeDesktopShell';
 
 type WelcomeBrandTone = 'light' | 'dark';
 
@@ -20,7 +17,6 @@ const LUM_CYAN_EDGE = `${ft.accentCyan}ea`;
 const LUM_GOLD_EDGE = `${ft.accentGold}ea`;
 const LUM_GLOW_CYAN = 'rgba(128, 210, 255, 0.14)';
 const LUM_GLOW_GOLD = 'rgba(238, 206, 128, 0.14)';
-const LOGO_IMAGE = require('../../../assets/brand/viona/logo-in-app.png');
 
 /**
  * Brand hero used on auth entry (Login / onboarding modals).
@@ -31,12 +27,7 @@ export function WelcomeBrandPanel({ tone = 'light' }: WelcomeBrandPanelProps): R
   return (
     <View style={styles.wrap}>
       <View style={styles.logoWrap}>
-        <Image
-          source={LOGO_IMAGE}
-          resizeMode="contain"
-          accessibilityIgnoresInvertColors
-          style={[styles.brandLogoImage, dark && styles.brandLogoImageDark]}
-        />
+        <VionaBrandLockup variant="hero" showAccentUnderline style={styles.heroLockup} />
         {dark ? (
           <View style={styles.statusChips}>
             <View style={styles.statusChipCyan}>
@@ -90,13 +81,9 @@ const styles = StyleSheet.create({
     marginBottom: 8,
     position: 'relative',
   },
-  brandLogoImage: {
-    width: VIONA_AUTH_BRAND_LOGO_SIZE.width,
-    height: VIONA_AUTH_BRAND_LOGO_SIZE.height,
-    backgroundColor: 'transparent',
-  },
-  brandLogoImageDark: {
-    backgroundColor: FASHION_HOME_COMMAND_LOGO_PLATE,
+  heroLockup: {
+    alignSelf: 'center',
+    alignItems: 'center',
   },
   statusChips: {
     flexDirection: 'row',

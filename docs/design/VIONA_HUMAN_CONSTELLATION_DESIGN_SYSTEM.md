@@ -543,6 +543,15 @@ Optional subtle network line / node impression inside the card must not compete 
 - **One logo per viewport** — no duplicated lockups on the same screen  
 - **Brand anchor, not small badge** — command rails and auth entry use confident scale; prefer reusable `VionaBrandLockup` variants when wired in rollout packs  
 
+**VIONA.BRAND.LOGO.1 lockup usage**
+
+- **Component:** `VionaBrandLockup` with tokens from `globalLightNetworkTokens.ts` (`VIONA_GLOBAL_LIGHT_NETWORK_LOGO`).  
+- **Variants:** `hero` (auth / welcome), `header` (Home command rail, Local rail, Account, Setup Profile), `compact` (dense rails below ~1060px width). `iconOnly` is asset-only fallback — not default on updated surfaces.  
+- **Surface rules:** one lockup per viewport; no boxed PNG plates; optional accent underline or uppercase eyebrow/subtitle for section identity — not a second logo.  
+- **Home:** fashion desktop command rail carries the primary lockup; legacy mobile feature row uses `header` only when the desktop shell is inactive — never two lockups at once.  
+- **Local:** command rail lockup + short rail caption only; universe kicker lives in the hero card, not repeated beside the wordmark.  
+- **Account / Auth / Identity:** `header` or `hero` on dark network fields; form titles remain separate from the wordmark.  
+
 ### 14.8 Anti-patterns
 
 - Safe **flat navy boxes** with no field or network read  

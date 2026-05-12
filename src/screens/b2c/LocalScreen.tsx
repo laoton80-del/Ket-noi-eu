@@ -1,5 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Localization from 'expo-localization';
@@ -7,6 +7,7 @@ import { useCallback, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
+  Image,
   Modal,
   Platform,
   Pressable,
@@ -14,11 +15,12 @@ import {
   StyleSheet,
   Text,
   TextInput,
-  TouchableOpacity,
   View,
   useWindowDimensions,
+  type ImageStyle,
+  type ViewStyle,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import Reanimated, { Easing, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 import { getDemoBookingPayload } from '../../config/demoRestBooking';
 import { getFeatureFlags } from '../../core/feature-flags/featureFlags';
@@ -32,11 +34,30 @@ import { createBooking } from '../../services/bookingService';
 import { runUltraMasterBookingWithAlerts } from '../../services/ultraMasterBookingFlow';
 import { reserveAndCommitCredits, useWalletState } from '../../state/wallet';
 import { useTranslation } from '../../i18n';
+import { useHomeCommand } from '../../context/HomeCommandContext';
 import { LocalCommerceClarityBlock } from '../../components/localCommerce/LocalCommerceClarityBlock';
-import { VionaCard } from '../../components/viona/VionaCard';
-import { VionaHeader } from '../../components/viona/VionaHeader';
-import { VionaSectionHeader } from '../../components/viona/VionaSectionHeader';
-import { vionaTrust } from '../../components/viona/vionaTrustTokens';
+import { LocalConstellationFrame } from '../../components/local/LocalConstellationFrame';
+import { VionaBrandLockup } from '../../components/viona/VionaBrandLockup';
+import {
+  FASHION_HOME_LINE_GOLD_SOFT,
+} from '../../components/viona/fashionHomeDesktopShell';
+import { SmartTrioLanguageSheet } from '../../components/smartTrio/SmartTrioLanguageSheet';
+import {
+  localAccentIconChipFill,
+  localAccentInk,
+  localAccentInkHover,
+  localAccentStatusFill,
+  localAccentStroke,
+  localAccentStrokeHover,
+  localConstellation,
+  localRailPillInk,
+  localRailPillStroke,
+  resolveLocalContentRail,
+  resolveLocalGridColumns,
+  resolveLocalGridItemWidth,
+  type LocalConstellationAccent,
+  type LocalRailPillAccent,
+} from '../../components/local/localConstellationTokens';
 import { theme } from '../../theme/theme';
 import { FontFamily } from '../../theme/typography';
 
@@ -56,13 +77,392 @@ type ClassifiedPost = Readonly<{
 }>;
 
 const VIP_POSTING_COST_VIG = 120;
-const BG = vionaTrust.canvas;
-const SURFACE = vionaTrust.surface;
-const INK = vionaTrust.ink;
-const INK_MUTED = vionaTrust.inkMuted;
-const BORDER = vionaTrust.border;
-const GOLD = vionaTrust.accentGold;
-const GOLD_BORDER = 'rgba(197, 160, 89, 0.35)';
+const LOCAL_GLOBAL_BG = require('../../../assets/UI/viona-local-global-network-bg-v1.png');
+const BG = localConstellation.canvas;
+const SURFACE = localConstellation.surfaceRaised;
+const INK = localConstellation.ink;
+const INK_STRONG = localConstellation.inkStrong;
+const INK_MUTED = localConstellation.inkMuted;
+const INK_CARD_SUB = localConstellation.inkCardSub;
+const BORDER = localConstellation.border;
+const GOLD = localConstellation.accentGold;
+const EMERALD = localConstellation.accentEmerald;
+const CYAN = localConstellation.accentCyan;
+const RISK = localConstellation.risk;
+const LOCAL_LEGACY_HIDE_STYLE_ID = 'viona-local-legacy-hide';
+
+function useLocalWebShellCompensation() {
+  const { t } = useTranslation();
+
+  useFocusEffect(
+    useCallback(() => {
+      if (Platform.OS !== 'web' || typeof document === 'undefined') return undefined;
+
+      const hiddenHosts = new Set<HTMLElement>();
+      const scenePadHosts = new Set<HTMLElement>();
+      const languageTitle = t('smartTrio.switcher.title');
+      const accountA11y = t('home.accountChipA11y');
+      const accountChip = t('home.accountChip');
+      const accountChipShort = t('home.accountChipShort');
+      const sosLabel = t('sos.fabLabel');
+
+      const localRoot = () => document.getElementById('local-hub-root');
+
+      const isInsideLocalRoot = (node: Element) => node.closest('#local-hub-root') != null;
+
+      const containsLocalRoot = (node: Element) => node.querySelector('#local-hub-root') != null;
+
+      const matchesLegacyControl = (ariaLabel: string, text: string) => {
+        const haystack = `${ariaLabel} ${text}`.trim();
+        return (
+          ariaLabel === sosLabel ||
+          text === sosLabel ||
+          ariaLabel === accountA11y ||
+          ariaLabel === accountChip ||
+          text === accountChip ||
+          text === accountChipShort ||
+          ariaLabel === languageTitle ||
+          (haystack.includes(languageTitle) && haystack.length <= 180)
+        );
+      };
+
+      const hideHost = (host: HTMLElement) => {
+        const root = localRoot();
+        if (root && (root === host || root.contains(host) || host.contains(root))) return;
+        if (hiddenHosts.has(host)) return;
+        hiddenHosts.add(host);
+        host.dataset.vionaLocalLegacyChrome = 'true';
+        host.dataset.localLegacyHidden = 'true';
+        host.style.setProperty('display', 'none', 'important');
+      };
+
+      const pickOutsideLegacyHost = (node: Element): HTMLElement | null => {
+        const root = localRoot();
+        let current: HTMLElement | null = node instanceof HTMLElement ? node : node.parentElement;
+        while (current && current !== document.body) {
+          if (current.id === 'local-hub-root') return null;
+          if (root?.contains(current)) return null;
+          const style = window.getComputedStyle(current);
+          const positioned =
+            style.position === 'fixed' || style.position === 'absolute' || style.position === 'sticky';
+          const rect = current.getBoundingClientRect();
+          if (positioned && rect.width >= 20 && rect.height >= 16) {
+            return current;
+          }
+          current = current.parentElement;
+        }
+        return null;
+      };
+
+      const resetSceneTopPadding = () => {
+        let current: HTMLElement | null = localRoot();
+        while (current?.parentElement) {
+          current = current.parentElement;
+          const pad = Number.parseFloat(window.getComputedStyle(current).paddingTop || '0');
+          if (pad < localConstellation.desktopScenePadMin) continue;
+          if (scenePadHosts.has(current)) continue;
+          scenePadHosts.add(current);
+          current.dataset.localScenePadPrev = current.style.paddingTop;
+          current.style.paddingTop = '0px';
+        }
+      };
+
+      const scanLegacyChrome = () => {
+        const root = localRoot();
+        const candidates = new Set<HTMLElement>();
+
+        const consider = (node: Element) => {
+          if (isInsideLocalRoot(node)) return;
+          const element = node as HTMLElement;
+          if (containsLocalRoot(element)) return;
+          const ariaLabel = element.getAttribute('aria-label') ?? '';
+          const text = (element.textContent ?? '').replace(/\s+/g, ' ').trim();
+          if (!matchesLegacyControl(ariaLabel, text)) return;
+          const host = pickOutsideLegacyHost(element);
+          if (!host || (root && (root.contains(host) || host.contains(root)))) return;
+          candidates.add(host);
+        };
+
+        document.querySelectorAll('[aria-label]').forEach(consider);
+        document.querySelectorAll('[role="button"], button, [tabindex="0"]').forEach(consider);
+
+        document.querySelectorAll('body *').forEach((node) => {
+          const element = node as HTMLElement;
+          if (isInsideLocalRoot(element)) return;
+          if (containsLocalRoot(element)) return;
+          const style = window.getComputedStyle(element);
+          if (style.position !== 'fixed' && style.position !== 'absolute' && style.position !== 'sticky') {
+            return;
+          }
+          const ariaLabel =
+            element.getAttribute('aria-label') ??
+            element.querySelector('[aria-label]')?.getAttribute('aria-label') ??
+            '';
+          const text = (element.textContent ?? '').replace(/\s+/g, ' ').trim();
+          if (!matchesLegacyControl(ariaLabel, text)) return;
+          if (root?.contains(element) || (root && element.contains(root))) return;
+          candidates.add(element);
+        });
+
+        candidates.forEach((host) => hideHost(host));
+      };
+
+      const ensureLegacyHideStyle = () => {
+        if (document.getElementById(LOCAL_LEGACY_HIDE_STYLE_ID)) return;
+        const style = document.createElement('style');
+        style.id = LOCAL_LEGACY_HIDE_STYLE_ID;
+        style.textContent = `
+          body[data-viona-local-hub="true"] [data-viona-local-legacy-chrome="true"] {
+            display: none !important;
+          }
+        `;
+        document.head.appendChild(style);
+      };
+
+      ensureLegacyHideStyle();
+      document.body.dataset.vionaLocalHub = 'true';
+      resetSceneTopPadding();
+      scanLegacyChrome();
+      const t1 = window.setTimeout(() => {
+        resetSceneTopPadding();
+        scanLegacyChrome();
+      }, 250);
+      const t2 = window.setTimeout(() => {
+        resetSceneTopPadding();
+        scanLegacyChrome();
+      }, 1200);
+      const t3 = window.setTimeout(() => {
+        resetSceneTopPadding();
+        scanLegacyChrome();
+      }, 3000);
+      const observer = new MutationObserver(() => {
+        resetSceneTopPadding();
+        scanLegacyChrome();
+      });
+      observer.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['aria-label', 'style', 'class'] });
+
+      return () => {
+        window.clearTimeout(t1);
+        window.clearTimeout(t2);
+        window.clearTimeout(t3);
+        observer.disconnect();
+        delete document.body.dataset.vionaLocalHub;
+        scenePadHosts.forEach((host) => {
+          host.style.paddingTop = host.dataset.localScenePadPrev ?? '';
+          delete host.dataset.localScenePadPrev;
+        });
+        scenePadHosts.clear();
+        hiddenHosts.forEach((host) => {
+          host.style.removeProperty('display');
+          delete host.dataset.localLegacyHidden;
+          delete host.dataset.vionaLocalLegacyChrome;
+        });
+        hiddenHosts.clear();
+      };
+    }, [t])
+  );
+}
+
+function LocalCommandPill({
+  label,
+  icon,
+  onPress,
+  a11yLabel,
+  accent,
+}: Readonly<{
+  label: string;
+  icon: keyof typeof Ionicons.glyphMap;
+  onPress: () => void;
+  a11yLabel: string;
+  accent: LocalRailPillAccent;
+}>) {
+  const tone = localRailPillInk(accent);
+  const stroke = localRailPillStroke(accent);
+
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={a11yLabel}
+      onPress={onPress}
+      style={({ pressed }) => [
+        styles.commandPill,
+        {
+          borderColor: stroke,
+          backgroundColor: localConstellation.commandPillBg,
+        },
+        pressed && styles.commandPillPressed,
+      ]}
+    >
+      <Ionicons name={icon} size={15} color={tone} />
+      <Text style={[styles.commandPillLabel, accent === 'risk' && styles.commandPillLabelRisk]} numberOfLines={1}>
+        {label}
+      </Text>
+    </Pressable>
+  );
+}
+
+function LocalDestinationCard({
+  cardWidth,
+  accent,
+  icon,
+  label,
+  title,
+  subtitle,
+  onPress,
+  a11yLabel,
+  disabled = false,
+}: Readonly<{
+  cardWidth: number;
+  accent: LocalConstellationAccent;
+  icon: keyof typeof Ionicons.glyphMap;
+  label: string;
+  title: string;
+  subtitle: string;
+  onPress: () => void;
+  a11yLabel: string;
+  disabled?: boolean;
+}>) {
+  const [hovered, setHovered] = useState(false);
+  const ink = hovered ? localAccentInkHover(accent) : localAccentInk(accent);
+
+  return (
+    <View style={{ width: cardWidth, opacity: disabled ? 0.72 : 1 }}>
+      <Pressable
+        onPress={onPress}
+        disabled={disabled}
+        onHoverIn={Platform.OS === 'web' ? () => setHovered(true) : undefined}
+        onHoverOut={Platform.OS === 'web' ? () => setHovered(false) : undefined}
+        style={({ pressed }) => [
+          styles.gridCardPressable,
+          Platform.OS === 'web' && styles.gridCardInteractive,
+          Platform.OS === 'web' && hovered && styles.gridCardHovered,
+          pressed && styles.gridCardPressed,
+        ]}
+        accessibilityRole="button"
+        accessibilityLabel={a11yLabel}
+      >
+        <LocalConstellationFrame accent={accent} radius={16} hovered={hovered} contentStyle={styles.destinationCard}>
+          <View style={styles.gridCardTop}>
+            <View
+              style={[
+                styles.heroIconChip,
+                {
+                  borderColor: hovered ? localAccentStrokeHover(accent) : localAccentStroke(accent),
+                  borderWidth: localConstellation.cardEdgeWidth,
+                  backgroundColor: localAccentIconChipFill(accent, hovered),
+                  shadowColor: ink,
+                  shadowOpacity: hovered ? 0.62 : 0.28,
+                  shadowRadius: hovered ? 16 : 7,
+                  shadowOffset: { width: 0, height: 0 },
+                },
+              ]}
+            >
+              <Ionicons name={icon} size={20} color={ink} />
+            </View>
+            <View
+              style={[
+                styles.gridCardStatusPill,
+                {
+                  borderColor: hovered ? localAccentStrokeHover(accent) : localAccentStroke(accent),
+                  borderWidth: localConstellation.cardEdgeWidth,
+                  backgroundColor: localAccentStatusFill(accent, hovered),
+                  shadowColor: ink,
+                  shadowOpacity: hovered ? 0.42 : 0.12,
+                  shadowRadius: hovered ? 10 : 4,
+                  shadowOffset: { width: 0, height: 0 },
+                },
+              ]}
+            >
+              <Text style={[styles.gridCardStatusText, { color: ink }]}>{label}</Text>
+            </View>
+          </View>
+          <Text style={[styles.destinationTitle, hovered && { color: ink }]} numberOfLines={2}>
+            {title}
+          </Text>
+          <Text style={styles.destinationSub} numberOfLines={2}>
+            {subtitle}
+          </Text>
+          <View style={styles.gridCardFooter}>
+            <Text
+              style={[
+                styles.gridCardCta,
+                {
+                  color: ink,
+                  shadowColor: ink,
+                  shadowOpacity: hovered ? 0.68 : 0.24,
+                  shadowRadius: hovered ? 10 : 5,
+                  shadowOffset: { width: 0, height: 0 },
+                },
+              ]}
+            >
+              →
+            </Text>
+          </View>
+        </LocalConstellationFrame>
+      </Pressable>
+    </View>
+  );
+}
+
+function LocalClassifiedCard({
+  cardWidth,
+  item,
+}: Readonly<{
+  cardWidth: number;
+  item: ClassifiedPost;
+}>) {
+  const { t } = useTranslation();
+  const [hovered, setHovered] = useState(false);
+  const meta = CATEGORY_META[item.category];
+  const accent: LocalConstellationAccent = item.isVip ? 'gold' : 'emerald';
+  const ink = hovered ? localAccentInkHover(accent) : localAccentInk(accent);
+
+  return (
+    <View style={{ width: cardWidth }}>
+      <Pressable
+        onHoverIn={Platform.OS === 'web' ? () => setHovered(true) : undefined}
+        onHoverOut={Platform.OS === 'web' ? () => setHovered(false) : undefined}
+        style={[
+          styles.gridCardPressable,
+          Platform.OS === 'web' && styles.gridCardInteractive,
+          Platform.OS === 'web' && hovered && styles.gridCardHovered,
+        ]}
+      >
+        <LocalConstellationFrame accent={accent} tier="service" radius={14} hovered={hovered} contentStyle={styles.postCard}>
+          <View style={styles.postHeader}>
+            <View
+              style={[
+                styles.categoryChip,
+                {
+                  borderColor: hovered ? localAccentStrokeHover(accent) : localAccentStroke(accent),
+                  borderWidth: localConstellation.cardEdgeWidth,
+                  backgroundColor: localAccentStatusFill(accent, hovered),
+                  shadowColor: ink,
+                  shadowOpacity: hovered ? 0.52 : 0.2,
+                  shadowRadius: hovered ? 12 : 5,
+                  shadowOffset: { width: 0, height: 0 },
+                },
+              ]}
+            >
+              <Ionicons name={meta.icon} size={14} color={ink} />
+              <Text style={[styles.categoryChipText, { color: ink }]}>{meta.title}</Text>
+            </View>
+            {item.isVip ? <Text style={styles.vipBadge}>{t('localHub.vipHighlight')}</Text> : null}
+          </View>
+          <Text style={styles.postTitle} numberOfLines={2}>
+            {item.title}
+          </Text>
+          <Text style={styles.postMeta} numberOfLines={1}>
+            {item.city} · {item.priceLabel}
+          </Text>
+          <Text style={styles.postDesc} numberOfLines={3}>
+            {item.description}
+          </Text>
+        </LocalConstellationFrame>
+      </Pressable>
+    </View>
+  );
+}
 
 const CATEGORY_META: Readonly<Record<ClassifiedCategory, { title: string; icon: keyof typeof Ionicons.glyphMap }>> = {
   hiring: { title: 'Tuyển thợ', icon: 'construct-outline' },
@@ -127,6 +527,8 @@ export function LocalScreen() {
   const [vipEnabled, setVipEnabled] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [legalScanBusy, setLegalScanBusy] = useState(false);
+  const [languageSheetOpen, setLanguageSheetOpen] = useState(false);
+  const homeCommand = useHomeCommand();
   const modalAnim = useSharedValue(0);
 
   modalAnim.value = withTiming(composerVisible ? 1 : 0, {
@@ -295,170 +697,282 @@ export function LocalScreen() {
     }
   };
 
-  return (
-    <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
-      <VionaHeader
-        variant="light"
-        title={t('localHub.screenTitle')}
-        titleAlign="center"
-        onBack={() => navigation.goBack()}
-        backA11yLabel="Quay lại"
-      />
+  const { horizontalPad, innerWidth } = resolveLocalContentRail(width);
+  const gridColumns = resolveLocalGridColumns(width);
+  const cardWidth = resolveLocalGridItemWidth(innerWidth, gridColumns);
+  const classifiedColumns = resolveLocalGridColumns(width, { desktop: 3, tablet: 2 });
+  const classifiedCardWidth = resolveLocalGridItemWidth(innerWidth, classifiedColumns);
+  const bottomPadClearance =
+    localConstellation.tabBarClearanceBottom +
+    (Platform.OS === 'web' ? localConstellation.floatingSosReserveBottom : 12);
 
+  const openLanguageSheet = useCallback(() => {
+    setLanguageSheetOpen(true);
+  }, []);
+
+  const openSafetyAssist = useCallback(() => {
+    homeCommand?.triggerSafetyAssist();
+  }, [homeCommand]);
+
+  const openAccountHub = useCallback(() => {
+    if (homeCommand) {
+      homeCommand.openAccount();
+      return;
+    }
+    navigation.navigate('PersonalHub');
+  }, [homeCommand, navigation]);
+
+  useLocalWebShellCompensation();
+
+  const insets = useSafeAreaInsets();
+  const desktopWeb = Platform.OS === 'web' && width > 768;
+  const canvasBackdropOpacity = desktopWeb
+    ? localConstellation.canvasBackdropOpacityDesktop
+    : localConstellation.canvasBackdropOpacityMobile;
+  const canvasBackdropTopBleed = desktopWeb
+    ? Math.min(insets.top, localConstellation.canvasBackdropTopBleed)
+    : 0;
+  const useCompactCommandLogo = width > 0 && width < 1060;
+  const backdropScale = localConstellation.canvasBackdropTextureScale;
+  const backdropInset = (1 - backdropScale) * 50;
+  const backdropTop = backdropInset - localConstellation.canvasBackdropRisePercent;
+  const backdropFocusY = localConstellation.canvasBackdropFocusYPercent;
+
+  return (
+    <SafeAreaView style={styles.container} edges={['left', 'right']}>
+      <View
+        pointerEvents="none"
+        style={[
+          styles.canvasBackdropHost,
+          { opacity: canvasBackdropOpacity, top: -canvasBackdropTopBleed },
+        ]}
+      >
+        <Image
+          source={LOCAL_GLOBAL_BG}
+          resizeMode="cover"
+          style={[
+            styles.canvasBackdrop,
+            {
+              width: `${backdropScale * 100}%`,
+              height: `${backdropScale * 100}%`,
+              left: `${backdropInset}%`,
+              top: `${backdropTop}%`,
+            },
+            Platform.OS === 'web'
+              ? ({ objectPosition: `center ${backdropFocusY}%` } as ImageStyle)
+              : null,
+          ]}
+          accessibilityIgnoresInvertColors
+        />
+      </View>
+      <View
+        pointerEvents="none"
+        style={[
+          styles.canvasBackdropVeil,
+          { opacity: localConstellation.canvasBackdropVeilOpacity, top: -canvasBackdropTopBleed },
+        ]}
+      />
+      <LinearGradient
+        pointerEvents="none"
+        colors={[
+          localConstellation.canvasGlowEmerald,
+          localConstellation.canvasGlowMid,
+          localConstellation.canvasGlowCyan,
+        ]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={[styles.canvasGlow, { top: -canvasBackdropTopBleed }]}
+      />
+      <View
+        style={styles.root}
+        nativeID="local-hub-root"
+        {...(Platform.OS === 'web' ? ({ id: 'local-hub-root' } as const) : {})}
+      >
       <ScrollView
         ref={scrollRef}
-        contentContainerStyle={[styles.content, Platform.OS === 'web' && width > 768 && styles.contentDesktop]}
+        style={styles.scroll}
+        contentContainerStyle={[
+          styles.content,
+          {
+            paddingHorizontal: horizontalPad,
+            paddingBottom: bottomPadClearance,
+            paddingTop: desktopWeb ? 8 : 10,
+          },
+        ]}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >
-        <VionaCard style={styles.heroIntroCard} surfaceVariant="light">
-          <VionaSectionHeader
-            emphasis="hero"
-            kicker={t('localHub.universeKicker')}
-            title={t('localHub.heroHeadline')}
-            subtitle={t('localHub.heroSub')}
-          />
-        </VionaCard>
+        <View style={[styles.contentRail, { width: innerWidth, maxWidth: '100%' }]}>
+          <View style={styles.commandRailRow}>
+            <View style={styles.commandRailLeft}>
+              <VionaBrandLockup variant={useCompactCommandLogo ? 'compact' : 'header'} />
+              <View style={styles.commandRailDivider} />
+              <View style={styles.commandRailCopy}>
+                <Text style={styles.commandCaption}>{t('localHub.hubRailCaption')}</Text>
+              </View>
+            </View>
+            <View style={styles.commandRailRight}>
+              <LocalCommandPill
+                label={t('localHub.railLanguage')}
+                icon="globe-outline"
+                onPress={openLanguageSheet}
+                a11yLabel={t('smartTrio.switcher.title')}
+                accent="cyan"
+              />
+              <LocalCommandPill
+                label={t('localHub.railSos')}
+                icon="shield-outline"
+                onPress={openSafetyAssist}
+                a11yLabel={t('localHub.railSosA11y')}
+                accent="risk"
+              />
+              <LocalCommandPill
+                label={t('localHub.railAccount')}
+                icon="person-circle-outline"
+                onPress={openAccountHub}
+                a11yLabel={t('localHub.railAccountA11y')}
+                accent="gold"
+              />
+            </View>
+          </View>
+
+        <LocalConstellationFrame
+          accent="emerald"
+          tier="hero"
+          radius={18}
+          style={styles.heroIntroCard}
+          contentStyle={styles.heroIntroInner}
+        >
+          <Text style={styles.hubKicker}>{t('localHub.universeKicker')}</Text>
+          <Text style={styles.heroHeadline}>{t('localHub.heroHeadline')}</Text>
+          <Text style={styles.hubSub} numberOfLines={3}>
+            {t('localHub.heroSub')}
+          </Text>
+          <View style={styles.heroChipRow}>
+            <Text style={styles.heroChip}>{t('localCommerce.bookingStatus.lite')}</Text>
+            <Text style={styles.heroChip}>{t('localCommerce.bookingStatus.pilot')}</Text>
+            <Text style={styles.heroChip}>{t('localCommerce.bookingStatus.requestOnly')}</Text>
+          </View>
+        </LocalConstellationFrame>
 
         <LocalCommerceClarityBlock
+          contentWidth={innerWidth}
           onBrowseServices={openServiceHub}
-          onRequestBookingAssist={() =>
-            openLeonaPrefill(t('localCommerce.leonaBookingAssistPrefill'))
-          }
-          onMerchantSetup={() => navigation.navigate('B2BPaywall')}
-          onAiReceptionistPilotInfo={onAiReceptionistPilotInfo}
+          onRequestBookingAssist={() => openLeonaPrefill(t('localCommerce.leonaBookingAssistPrefill'))}
         />
 
-        {showVietnamInboundHub ? (
-          <Pressable
-            onPress={() => navigation.navigate('VietnamHub')}
-            style={({ pressed }) => [styles.vnHubBanner, pressed && { opacity: 0.92 }]}
-            accessibilityRole="button"
-            accessibilityLabel="Vietnam inbound hub"
-          >
-            <LinearGradient
-              colors={['#E8F1FC', '#FFF8EC']}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={styles.vnHubBannerInner}
-            >
-              <Ionicons name="earth" size={22} color={theme.hybrid.signalStrong} />
-              <View style={{ flex: 1 }}>
-                <Text style={styles.vnHubBannerTitle}>{t('localHub.vnBannerTitle')}</Text>
-                <Text style={styles.vnHubBannerSub}>{t('localHub.vnBannerSub')}</Text>
-              </View>
-              <Ionicons name="chevron-forward" size={20} color={INK_MUTED} />
-            </LinearGradient>
-          </Pressable>
-        ) : null}
-
-        <View style={styles.heroRow}>
-          <Pressable
+        <Text style={styles.bentoSectionTitle}>{t('localHub.serviceCategoriesKicker')}</Text>
+        <View style={styles.cardGrid}>
+          <LocalDestinationCard
+            cardWidth={cardWidth}
+            accent="emerald"
+            icon="sparkles-outline"
+            label={t('localCommerce.bookingStatus.lite')}
+            title={t('localHub.nailsTitle')}
+            subtitle={t('localHub.nailsSub')}
             onPress={openServiceHub}
-            style={({ pressed }) => [styles.heroCard, pressed && { opacity: 0.9 }]}
-            accessibilityRole="button"
-            accessibilityLabel="Nails và Spa"
-          >
-            <Ionicons name="sparkles-outline" size={26} color={GOLD} />
-            <Text style={styles.heroCardTitle}>{t('localHub.nailsTitle')}</Text>
-            <Text style={styles.heroCardSub}>{t('localHub.nailsSub')}</Text>
-          </Pressable>
-          <Pressable
+            a11yLabel="Nails và Spa"
+          />
+          <LocalDestinationCard
+            cardWidth={cardWidth}
+            accent="cyan"
+            icon="restaurant-outline"
+            label={t('localCommerce.bookingStatus.requestOnly')}
+            title={t('localHub.restaurantTitle')}
+            subtitle={t('localHub.restaurantSub')}
             onPress={() => openLeonaPrefill(t('localCommerce.leonaRestaurantPrefill'))}
-            style={({ pressed }) => [styles.heroCard, pressed && { opacity: 0.9 }]}
-            accessibilityRole="button"
-            accessibilityLabel={t('localHub.restaurantTitle')}
-          >
-            <Ionicons name="restaurant-outline" size={26} color={GOLD} />
-            <Text style={styles.heroCardTitle}>{t('localHub.restaurantTitle')}</Text>
-            <Text style={styles.heroCardSub}>{t('localHub.restaurantSub')}</Text>
-          </Pressable>
-          <Pressable
+            a11yLabel={t('localHub.restaurantTitle')}
+          />
+          <LocalDestinationCard
+            cardWidth={cardWidth}
+            accent="gold"
+            icon="briefcase-outline"
+            label={t('localCommerce.bookingStatus.pilot')}
+            title={t('localHub.b2bTitle')}
+            subtitle={t('localHub.b2bSub')}
             onPress={() => navigation.navigate('B2BPaywall')}
-            style={({ pressed }) => [styles.heroCard, pressed && { opacity: 0.9 }]}
-            accessibilityRole="button"
-            accessibilityLabel={t('localCommerce.a11y.merchantB2bHub')}
-          >
-            <Ionicons name="briefcase-outline" size={26} color={GOLD} />
-            <Text style={styles.heroCardTitle}>{t('localHub.b2bTitle')}</Text>
-            <Text style={styles.heroCardSub}>{t('localHub.b2bSub')}</Text>
-          </Pressable>
+            a11yLabel={t('localCommerce.a11y.merchantB2bHub')}
+          />
         </View>
 
-        <Text style={styles.bentoSectionTitle}>{t('localHub.eliteSection')}</Text>
-
-        <TouchableOpacity
-          onPress={() => void runUltraMasterBookingWithAlerts(t('localHub.legalWealthTitle'))}
-          activeOpacity={0.88}
-          style={styles.bentoLarge}
-          accessibilityRole="button"
-          accessibilityLabel={t('localHub.legalWealthTitle')}
-        >
-          <Ionicons name="scale-outline" size={28} color={GOLD} />
-          <Text style={styles.bentoTitle}>{t('localHub.legalWealthTitle')}</Text>
-          <Text style={styles.bentoSub}>{t('localHub.legalWealthSub')}</Text>
-        </TouchableOpacity>
-
-        {legalScanEnabled ? (
-          <TouchableOpacity
-            onPress={() => void onLegalScannerPress()}
-            activeOpacity={0.88}
-            disabled={legalScanBusy}
-            style={[styles.legalScannerBtn, legalScanBusy && styles.legalScannerBtnDisabled]}
-            accessibilityRole="button"
-            accessibilityLabel={t('localHub.legalScannerA11y')}
-          >
-            {legalScanBusy ? (
-              <ActivityIndicator size="small" color={GOLD} accessibilityLabel="Đang phân tích" />
-            ) : (
-              <Text style={styles.legalScannerEmoji}>⚖️</Text>
-            )}
-            <Text style={styles.legalScannerLabel}>{t('localHub.legalScannerLabel')}</Text>
-            <Ionicons name="scan-outline" size={22} color={GOLD} />
-          </TouchableOpacity>
-        ) : null}
-
-        <View style={styles.bentoMidRow}>
-          <TouchableOpacity
+        <Text style={styles.bentoSectionTitle}>{t('localHub.universeGridKicker')}</Text>
+        <View style={styles.cardGrid}>
+          <LocalDestinationCard
+            cardWidth={cardWidth}
+            accent="emerald"
+            icon="scale-outline"
+            label={t('localCommerce.bookingStatus.demo')}
+            title={t('localHub.legalWealthTitle')}
+            subtitle={t('localHub.legalWealthSub')}
+            onPress={() => void runUltraMasterBookingWithAlerts(t('localHub.legalWealthTitle'))}
+            a11yLabel={t('localHub.legalWealthTitle')}
+          />
+          <LocalDestinationCard
+            cardWidth={cardWidth}
+            accent="cyan"
+            icon="car-outline"
+            label={t('localCommerce.bookingStatus.lite')}
+            title={t('localHub.transitTitle')}
+            subtitle={t('localHub.transitSub')}
             onPress={() => openLeonaPrefill(t('localHub.transitLeonaPrefill'))}
-            activeOpacity={0.88}
-            style={styles.bentoMedium}
-            accessibilityRole="button"
-            accessibilityLabel={t('localHub.transitTitle')}
-          >
-            <Ionicons name="car-outline" size={24} color={GOLD} />
-            <Text style={styles.bentoTitle}>{t('localHub.transitTitle')}</Text>
-            <Text style={styles.bentoSub}>{t('localHub.transitSub')}</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
+            a11yLabel={t('localHub.transitTitle')}
+          />
+          <LocalDestinationCard
+            cardWidth={cardWidth}
+            accent="emerald"
+            icon="ticket-outline"
+            label={t('localCommerce.bookingStatus.preview')}
+            title={t('localHub.eventsTitle')}
+            subtitle={t('localHub.eventsSub')}
             onPress={() => navigation.navigate('DailyReward')}
-            activeOpacity={0.88}
-            style={styles.bentoMedium}
-            accessibilityRole="button"
-            accessibilityLabel={t('localHub.eventsTitle')}
-          >
-            <Ionicons name="ticket-outline" size={24} color={GOLD} />
-            <Text style={styles.bentoTitle}>{t('localHub.eventsTitle')}</Text>
-            <Text style={styles.bentoSub}>{t('localHub.eventsSub')}</Text>
-          </TouchableOpacity>
+            a11yLabel={t('localHub.eventsTitle')}
+          />
+          <LocalDestinationCard
+            cardWidth={cardWidth}
+            accent="emerald"
+            icon="pricetags-outline"
+            label={t('localCommerce.bookingStatus.lite')}
+            title={t('localHub.classifiedsTitle')}
+            subtitle={t('localHub.classifiedsRowSub', { unit: getVioCreditsLabel() })}
+            onPress={() => void scrollToClassifieds()}
+            a11yLabel={t('localHub.classifiedsTitle')}
+          />
+          <LocalDestinationCard
+            cardWidth={cardWidth}
+            accent="violet"
+            icon="sparkles-outline"
+            label={t('localCommerce.bookingStatus.pilot')}
+            title={t('localCommerce.cta.aiReceptionistPilot')}
+            subtitle={t('localHub.aiPilotCardSub')}
+            onPress={onAiReceptionistPilotInfo}
+            a11yLabel={t('localCommerce.cta.aiReceptionistPilot')}
+          />
+          {showVietnamInboundHub ? (
+            <LocalDestinationCard
+              cardWidth={cardWidth}
+              accent="cyan"
+              icon="earth-outline"
+              label={t('localCommerce.bookingStatus.preview')}
+              title={t('localHub.vnBannerTitle')}
+              subtitle={t('localHub.vnBannerSub')}
+              onPress={() => navigation.navigate('VietnamHub')}
+              a11yLabel="Vietnam inbound hub"
+            />
+          ) : null}
+          {legalScanEnabled ? (
+            <LocalDestinationCard
+              cardWidth={cardWidth}
+              accent="cyan"
+              icon="scan-outline"
+              label={t('localCommerce.bookingStatus.demo')}
+              title={t('localHub.legalScannerLabel')}
+              subtitle={t('localHub.legalScannerSub')}
+              onPress={() => void onLegalScannerPress()}
+              a11yLabel={t('localHub.legalScannerA11y')}
+              disabled={legalScanBusy}
+            />
+          ) : null}
         </View>
-
-        <TouchableOpacity
-          onPress={() => void scrollToClassifieds()}
-          activeOpacity={0.88}
-          style={styles.bentoBanner}
-          accessibilityRole="button"
-          accessibilityLabel={t('localHub.classifiedsTitle')}
-        >
-          <Ionicons name="pricetags-outline" size={24} color={GOLD} />
-          <View style={styles.bannerTextCol}>
-            <Text style={styles.bentoTitle}>{t('localHub.classifiedsTitle')}</Text>
-            <Text style={styles.bentoSub}>
-              {t('localHub.classifiedsRowSub', { unit: getVioCreditsLabel() })}
-            </Text>
-          </View>
-          <Ionicons name="chevron-forward" size={22} color={GOLD} />
-        </TouchableOpacity>
 
         <View
           onLayout={(e) => {
@@ -467,33 +981,24 @@ export function LocalScreen() {
           style={styles.classifiedsAnchor}
         >
           <View style={styles.classifiedsHeaderRow}>
-            <Text style={styles.sectionTitle}>{t('localHub.classifiedsTitle')}</Text>
+            <View style={styles.classifiedsHeaderCopy}>
+              <Text style={styles.classifiedsKicker}>{t('localHub.classifiedsKicker')}</Text>
+              <Text style={styles.sectionTitle}>{t('localHub.classifiedsTitle')}</Text>
+            </View>
             <Text style={styles.walletHint}>{formatVioCredits(wallet.credits)}</Text>
           </View>
+
           <Pressable style={styles.postBtn} onPress={() => setComposerVisible(true)}>
-            <Ionicons name="add-circle-outline" size={20} color={INK} />
+            <Ionicons name="add-circle-outline" size={18} color={localConstellation.canvas} />
             <Text style={styles.postBtnText}>{t('localHub.postNewListing')}</Text>
           </Pressable>
 
-          {sortedPosts.map((item) => {
-            const meta = CATEGORY_META[item.category];
-            return (
-              <View key={item.id} style={styles.postCard}>
-                <View style={styles.postHeader}>
-                  <View style={styles.categoryChip}>
-                    <Ionicons name={meta.icon} size={14} color={GOLD} />
-                    <Text style={styles.categoryChipText}>{meta.title}</Text>
-                  </View>
-                  {item.isVip ? <Text style={styles.vipBadge}>VIP</Text> : null}
-                </View>
-                <Text style={styles.postTitle}>{item.title}</Text>
-                <Text style={styles.postMeta}>
-                  {item.city} · {item.priceLabel}
-                </Text>
-                <Text style={styles.postDesc}>{item.description}</Text>
-              </View>
-            );
-          })}
+          <View style={styles.cardGrid}>
+            {sortedPosts.map((item) => (
+              <LocalClassifiedCard key={item.id} cardWidth={classifiedCardWidth} item={item} />
+            ))}
+          </View>
+        </View>
         </View>
       </ScrollView>
 
@@ -514,20 +1019,20 @@ export function LocalScreen() {
                 </Pressable>
               ))}
             </View>
-            <TextInput value={title} onChangeText={setTitle} placeholder="Tiêu đề" placeholderTextColor="rgba(11,22,40,0.42)" style={styles.input} />
-            <TextInput value={city} onChangeText={setCity} placeholder="Thành phố" placeholderTextColor="rgba(11,22,40,0.42)" style={styles.input} />
+            <TextInput value={title} onChangeText={setTitle} placeholder="Tiêu đề" placeholderTextColor="rgba(226,232,240,0.42)" style={styles.input} />
+            <TextInput value={city} onChangeText={setCity} placeholder="Thành phố" placeholderTextColor="rgba(226,232,240,0.42)" style={styles.input} />
             <TextInput
               value={priceLabel}
               onChangeText={setPriceLabel}
               placeholder="Giá / mức lương"
-              placeholderTextColor="rgba(11,22,40,0.42)"
+              placeholderTextColor="rgba(226,232,240,0.42)"
               style={styles.input}
             />
             <TextInput
               value={description}
               onChangeText={setDescription}
               placeholder="Mô tả chi tiết"
-              placeholderTextColor="rgba(11,22,40,0.42)"
+              placeholderTextColor="rgba(226,232,240,0.42)"
               style={[styles.input, styles.inputMultiline]}
               multiline
             />
@@ -546,151 +1051,273 @@ export function LocalScreen() {
           </Reanimated.View>
         </View>
       </Modal>
+
+      <SmartTrioLanguageSheet visible={languageSheetOpen} onClose={() => setLanguageSheetOpen(false)} />
+      </View>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: BG },
-  heroIntroCard: {
-    marginBottom: theme.spacing.md,
+  container: { flex: 1, backgroundColor: BG, position: 'relative', overflow: 'hidden' },
+  root: { flex: 1, position: 'relative', zIndex: 1, backgroundColor: 'transparent' },
+  canvasBackdropHost: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 0,
+    zIndex: 0,
   },
-  content: { paddingHorizontal: theme.spacing.lg, paddingBottom: theme.spacing.xxl * 2.25, paddingTop: 4 },
-  contentDesktop: { paddingBottom: theme.spacing.xxl * 3.25, paddingRight: 28 },
-  heroRow: { flexDirection: 'row', gap: 10, marginBottom: theme.spacing.lg },
-  heroCard: {
+  canvasBackdrop: {
+    position: 'absolute',
+    ...(Platform.OS === 'web'
+      ? ({ objectFit: 'cover', imageRendering: '-webkit-optimize-contrast' } as ImageStyle)
+      : {}),
+  },
+  canvasBackdropVeil: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: localConstellation.canvasVeil,
+    zIndex: 0,
+  },
+  canvasGlow: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 0,
+    zIndex: 0,
+    opacity: 0.14,
+  },
+  scroll: {
     flex: 1,
-    minHeight: 112,
-    borderRadius: 16,
-    paddingVertical: 12,
-    paddingHorizontal: 8,
-    backgroundColor: SURFACE,
-    borderWidth: 1,
-    borderColor: BORDER,
-    alignItems: 'center',
-    gap: 6,
-    shadowColor: '#0B1628',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.06,
-    shadowRadius: 12,
-    elevation: 3,
+    backgroundColor: 'transparent',
   },
-  heroCardTitle: { fontSize: 12, fontFamily: FontFamily.extrabold, color: INK, textAlign: 'center' },
-  heroCardSub: { fontSize: 10, fontFamily: FontFamily.medium, color: INK_MUTED, textAlign: 'center' },
-  bentoSectionTitle: {
-    fontSize: 13,
-    fontFamily: FontFamily.extrabold,
-    letterSpacing: 0.6,
-    color: INK,
-    marginBottom: 10,
-  },
-  legalScannerBtn: {
+  commandRailRow: {
     width: '100%',
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
+    justifyContent: 'space-between',
     gap: 10,
-    minHeight: 52,
-    borderRadius: 16,
-    paddingVertical: 12,
-    paddingHorizontal: theme.spacing.md,
-    marginBottom: 12,
-    backgroundColor: 'rgba(197, 160, 89, 0.18)',
-    borderWidth: 1,
-    borderColor: GOLD_BORDER,
+    marginBottom: 8,
   },
-  legalScannerBtnDisabled: { opacity: 0.72 },
-  legalScannerEmoji: { fontSize: 22 },
-  legalScannerLabel: {
+  commandRailLeft: {
     flex: 1,
-    textAlign: 'center',
-    fontSize: 15,
+    minWidth: 0,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  commandRailDivider: {
+    width: 1,
+    alignSelf: 'stretch',
+    minHeight: 34,
+    backgroundColor: FASHION_HOME_LINE_GOLD_SOFT,
+  },
+  commandRailCopy: {
+    flex: 1,
+    minWidth: 0,
+    gap: 2,
+    justifyContent: 'center',
+  },
+  commandRailRight: {
+    flexShrink: 0,
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+    gap: 6,
+    maxWidth: 420,
+  },
+  commandPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    minHeight: 32,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: theme.radius.pill,
+    borderWidth: 1,
+  },
+  commandPillPressed: { opacity: 0.88 },
+  commandPillLabel: {
+    fontSize: 11,
     fontFamily: FontFamily.extrabold,
     color: INK,
     letterSpacing: 0.2,
   },
-  bentoLarge: {
-    width: '100%',
-    minHeight: 120,
-    borderRadius: 20,
-    padding: theme.spacing.md,
-    marginBottom: 12,
-    backgroundColor: SURFACE,
-    borderWidth: 1,
-    borderColor: BORDER,
-    gap: 8,
-    shadowColor: '#0B1628',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.06,
-    shadowRadius: 14,
-    elevation: 3,
+  commandPillLabelRisk: {
+    color: RISK,
   },
-  bentoMidRow: { flexDirection: 'row', justifyContent: 'space-between', gap: 12, marginBottom: 12 },
-  bentoMedium: {
-    width: '48%',
-    minHeight: 118,
-    borderRadius: 18,
-    padding: theme.spacing.md,
-    backgroundColor: SURFACE,
-    borderWidth: 1,
-    borderColor: BORDER,
-    gap: 8,
-    shadowColor: '#0B1628',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.06,
-    shadowRadius: 12,
-    elevation: 3,
+  commandSubtitle: {
+    fontSize: 11,
+    fontFamily: FontFamily.semibold,
+    color: INK_MUTED,
+    letterSpacing: 0.2,
+    lineHeight: 15,
   },
-  bentoBanner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    width: '100%',
-    minHeight: 72,
-    borderRadius: 18,
+  commandCaption: {
+    fontSize: 10,
+    fontFamily: FontFamily.semibold,
+    color: CYAN,
+    letterSpacing: 0.35,
+    textTransform: 'uppercase',
+  },
+  heroIntroCard: {
+    marginBottom: theme.spacing.sm,
+  },
+  heroIntroInner: {
     paddingHorizontal: theme.spacing.md,
-    gap: 12,
-    marginBottom: theme.spacing.lg,
-    backgroundColor: SURFACE,
-    borderWidth: 1,
-    borderColor: BORDER,
-    shadowColor: '#0B1628',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.06,
-    shadowRadius: 14,
-    elevation: 3,
+    paddingVertical: 14,
+    gap: 6,
   },
-  bannerTextCol: { flex: 1, minWidth: 0 },
-  bentoTitle: { fontSize: 16, fontFamily: FontFamily.extrabold, color: INK },
-  bentoSub: { fontSize: 12, fontFamily: FontFamily.medium, color: INK_MUTED },
-  classifiedsAnchor: { marginTop: 4 },
-  classifiedsHeaderRow: {
+  hubKicker: {
+    fontSize: 10,
+    fontFamily: FontFamily.extrabold,
+    letterSpacing: 0.8,
+    textTransform: 'uppercase',
+    color: EMERALD,
+  },
+  heroHeadline: {
+    fontSize: 20,
+    lineHeight: 24,
+    fontFamily: FontFamily.extrabold,
+    color: INK_STRONG,
+    letterSpacing: -0.2,
+  },
+  hubSub: {
+    fontSize: 12,
+    lineHeight: 17,
+    fontFamily: FontFamily.medium,
+    color: INK_MUTED,
+  },
+  heroChipRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 6,
+    marginTop: 8,
+  },
+  heroChip: {
+    fontSize: 9,
+    fontFamily: FontFamily.extrabold,
+    letterSpacing: 0.45,
+    textTransform: 'uppercase',
+    color: INK,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: theme.radius.pill,
+    backgroundColor: 'transparent',
+    borderWidth: 1,
+    borderColor: localConstellation.border,
+    overflow: 'hidden',
+  },
+  content: { alignItems: 'center' },
+  contentRail: { alignSelf: 'center' },
+  cardGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: localConstellation.gridGap,
+    marginBottom: theme.spacing.lg,
+    width: '100%',
+  },
+  gridCardPressable: { width: '100%' },
+  gridCardInteractive:
+    Platform.OS === 'web'
+      ? ({
+          transitionProperty: 'transform, opacity',
+          transitionDuration: `${localConstellation.cardHoverTransitionMs}ms`,
+          transitionTimingFunction: 'ease-out',
+        } as ViewStyle)
+      : {},
+  gridCardHovered:
+    Platform.OS === 'web'
+      ? ({
+          transform: [
+            { translateY: -localConstellation.cardHoverLiftPx },
+            { scale: localConstellation.cardHoverScale },
+          ],
+        } as ViewStyle)
+      : {},
+  gridCardPressed: { opacity: 0.9 },
+  destinationCard: {
+    minHeight: 148,
+    paddingVertical: 12,
+    paddingHorizontal: 12,
+    gap: 6,
+  },
+  gridCardTop: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 10,
+    gap: 8,
   },
-  sectionTitle: { fontSize: 16, fontFamily: FontFamily.extrabold, color: INK },
+  gridCardStatusPill: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: theme.radius.pill,
+  },
+  gridCardStatusText: {
+    fontSize: 9,
+    fontFamily: FontFamily.extrabold,
+    letterSpacing: 0.45,
+    textTransform: 'uppercase',
+  },
+  gridCardFooter: { marginTop: 'auto', alignItems: 'flex-end' },
+  gridCardCta: { fontSize: 16, fontFamily: FontFamily.extrabold },
+  destinationTitle: { fontSize: 13, fontFamily: FontFamily.extrabold, color: INK_STRONG, lineHeight: 17 },
+  destinationSub: { fontSize: 11, fontFamily: FontFamily.medium, color: INK_CARD_SUB, lineHeight: 15 },
+  heroIconChip: {
+    width: 34,
+    height: 34,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  bentoSectionTitle: {
+    fontSize: 11,
+    fontFamily: FontFamily.extrabold,
+    letterSpacing: 0.7,
+    textTransform: 'uppercase',
+    color: INK_MUTED,
+    marginBottom: 8,
+  },
+  classifiedsAnchor: { marginTop: 4 },
+  classifiedsHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    justifyContent: 'space-between',
+    marginBottom: 10,
+    gap: 12,
+  },
+  classifiedsHeaderCopy: { flex: 1, minWidth: 0, gap: 2 },
+  classifiedsKicker: {
+    fontSize: 10,
+    fontFamily: FontFamily.extrabold,
+    letterSpacing: 0.7,
+    textTransform: 'uppercase',
+    color: INK_MUTED,
+  },
+  sectionTitle: { fontSize: 17, fontFamily: FontFamily.extrabold, color: INK },
   walletHint: { fontSize: 12, fontFamily: FontFamily.bold, color: GOLD },
   postBtn: {
-    minHeight: 44,
-    borderRadius: 14,
+    alignSelf: 'flex-start',
+    minHeight: 40,
+    borderRadius: theme.radius.pill,
     backgroundColor: GOLD,
-    paddingHorizontal: theme.spacing.md,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
     marginBottom: theme.spacing.md,
   },
-  postBtnText: { color: INK, fontFamily: FontFamily.bold, fontSize: 14 },
+  postBtnText: { color: localConstellation.canvas, fontFamily: FontFamily.bold, fontSize: 14 },
   postCard: {
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: BORDER,
     padding: theme.spacing.md,
-    marginBottom: theme.spacing.sm,
-    gap: 6,
-    backgroundColor: SURFACE,
+    gap: 8,
+    minHeight: 148,
   },
   postHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   categoryChip: {
@@ -700,18 +1327,18 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 5,
     borderRadius: theme.radius.pill,
-    backgroundColor: vionaTrust.surfaceMuted,
+    backgroundColor: 'transparent',
     borderWidth: 1,
     borderColor: BORDER,
   },
-  categoryChipText: { fontSize: 11, color: GOLD, fontFamily: FontFamily.semibold },
+  categoryChipText: { fontSize: 11, color: EMERALD, fontFamily: FontFamily.semibold },
   vipBadge: { fontSize: 11, color: GOLD, fontFamily: FontFamily.extrabold },
   postTitle: { fontSize: 15, color: INK, fontFamily: FontFamily.bold },
-  postMeta: { fontSize: 12, color: GOLD, fontFamily: FontFamily.semibold },
-  postDesc: { fontSize: 12, color: 'rgba(226,232,240,0.7)', fontFamily: FontFamily.medium, lineHeight: 18 },
+  postMeta: { fontSize: 12, color: CYAN, fontFamily: FontFamily.semibold },
+  postDesc: { fontSize: 12, color: INK_MUTED, fontFamily: FontFamily.medium, lineHeight: 18 },
   modalBackdrop: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.65)',
+    backgroundColor: 'rgba(0,0,0,0.72)',
     justifyContent: 'center',
     padding: theme.spacing.lg,
   },
@@ -730,11 +1357,11 @@ const styles = StyleSheet.create({
     minHeight: 34,
     borderRadius: theme.radius.md,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.12)',
+    borderColor: BORDER,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  categoryBtnActive: { borderColor: GOLD, backgroundColor: 'rgba(197, 160, 89, 0.12)' },
+  categoryBtnActive: { borderColor: GOLD, backgroundColor: localConstellation.glowGold },
   categoryBtnText: { fontSize: 11, color: INK_MUTED, fontFamily: FontFamily.semibold },
   categoryBtnTextActive: { color: GOLD },
   input: {
@@ -745,14 +1372,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: theme.spacing.md,
     color: INK,
     fontFamily: FontFamily.medium,
-    backgroundColor: vionaTrust.surfaceMuted,
+    backgroundColor: localConstellation.surfaceMuted,
   },
   inputMultiline: { minHeight: 86, textAlignVertical: 'top', paddingTop: 10 },
   vipToggle: {
     minHeight: 40,
     borderRadius: theme.radius.md,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.12)',
+    borderColor: BORDER,
     paddingHorizontal: theme.spacing.md,
     flexDirection: 'row',
     alignItems: 'center',
@@ -766,12 +1393,12 @@ const styles = StyleSheet.create({
     minWidth: 84,
     borderRadius: theme.radius.md,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.2)',
+    borderColor: BORDER,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 10,
   },
-  cancelBtnText: { fontSize: 13, color: 'rgba(226,232,240,0.75)', fontFamily: FontFamily.semibold },
+  cancelBtnText: { fontSize: 13, color: INK_MUTED, fontFamily: FontFamily.semibold },
   submitBtn: {
     minHeight: 40,
     minWidth: 110,
@@ -781,30 +1408,5 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingHorizontal: 10,
   },
-  submitBtnText: { fontSize: 13, color: INK, fontFamily: FontFamily.bold },
-  vnHubBanner: {
-    marginTop: 14,
-    borderRadius: theme.radius.lg,
-    overflow: 'hidden',
-    borderWidth: 1,
-    borderColor: GOLD_BORDER,
-  },
-  vnHubBannerInner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    paddingVertical: 14,
-    paddingHorizontal: 14,
-  },
-  vnHubBannerTitle: {
-    fontFamily: FontFamily.bold,
-    fontSize: 15,
-    color: INK,
-  },
-  vnHubBannerSub: {
-    marginTop: 2,
-    fontFamily: FontFamily.medium,
-    fontSize: 12,
-    color: INK_MUTED,
-  },
+  submitBtnText: { fontSize: 13, color: localConstellation.canvas, fontFamily: FontFamily.bold },
 });

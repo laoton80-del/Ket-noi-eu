@@ -44,9 +44,8 @@ import {
   vionaActionAccentFromHex,
   type VionaActionAccent,
 } from '../components/viona';
+import { VionaBrandLockup } from '../components/viona/VionaBrandLockup';
 import {
-  FASHION_HOME_COMMAND_LOGO_PLATE,
-  VIONA_COMPACT_BRAND_LOGO_SIZE,
   premiumCrispEdgeStroke,
   premiumFrameEdgeOverlay,
 } from '../components/viona/fashionHomeDesktopShell';
@@ -59,11 +58,10 @@ type Nav = NativeStackNavigationProp<RootStackParamList>;
 const ADMIN_UNLOCK_KEY = STORAGE_KEYS.adminUnlock;
 
 const ft = vionaTokens.fashionTech;
-const IMG_VIONA_LOGO = require('../../assets/brand/viona/logo-in-app.png');
-const IMG_ACCOUNT_CONSTELLATION = require('../../assets/UI/viona-account-global-net-bg-v2.png');
+const IMG_ACCOUNT_CONSTELLATION = require('../../assets/UI/viona-account-global-network-bg-v1.png');
 const constellationImageWebFit =
   Platform.OS === 'web'
-    ? ({ objectFit: 'cover' as const, objectPosition: '56% 18%' as const } as const)
+    ? ({ objectFit: 'cover' as const, objectPosition: '52% 20%' as const } as const)
     : null;
 
 function accountAccent(hex: string, borderAlpha = 0.48, strongAlpha = 0.64): VionaActionAccent {
@@ -205,6 +203,7 @@ export function CaNhanScreen() {
     }),
     [width],
   );
+  const accountBackdropOpacity = Platform.OS === 'web' && width > 768 ? 0.68 : 0.46;
   const showWorkspaceShortcut = Boolean(
     user && (user.serverRole === 'BROKER' || isMerchantServerRole(user.serverRole))
   );
@@ -395,7 +394,12 @@ export function CaNhanScreen() {
         <View style={styles.constellationFrame}>
           <Image
             source={IMG_ACCOUNT_CONSTELLATION}
-            style={[styles.constellationImage, constellationImageSize, constellationImageWebFit]}
+            style={[
+              styles.constellationImage,
+              constellationImageSize,
+              { opacity: accountBackdropOpacity },
+              constellationImageWebFit,
+            ]}
             resizeMode="cover"
             accessibilityIgnoresInvertColors
           />
@@ -403,12 +407,7 @@ export function CaNhanScreen() {
         <View style={styles.constellationOverlay} />
       </View>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <Image
-          source={IMG_VIONA_LOGO}
-          resizeMode="contain"
-          accessibilityIgnoresInvertColors
-          style={styles.brandLogoImage}
-        />
+        <VionaBrandLockup variant="header" showAccentUnderline style={styles.brandLockup} />
         <Text style={styles.launchHint}>{APP_BRAND.launchSubtitle}</Text>
         <Text style={styles.title}>{strings.profile.screenTitle}</Text>
         <Text style={styles.subtitle}>{strings.profile.subtitle}</Text>
@@ -737,11 +736,10 @@ const styles = StyleSheet.create({
   constellationImage: {
     width: '100%',
     height: '100%',
-    opacity: 0.58,
   },
   constellationOverlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(7, 9, 14, 0.28)',
+    backgroundColor: 'rgba(7, 9, 14, 0.2)',
   },
   content: {
     paddingHorizontal: theme.spacing.lg,
@@ -749,12 +747,9 @@ const styles = StyleSheet.create({
     paddingBottom: 120,
     zIndex: 1,
   },
-  brandLogoImage: {
-    width: VIONA_COMPACT_BRAND_LOGO_SIZE.width,
-    height: VIONA_COMPACT_BRAND_LOGO_SIZE.height,
-    marginBottom: 4,
+  brandLockup: {
+    marginBottom: 6,
     alignSelf: 'flex-start',
-    backgroundColor: FASHION_HOME_COMMAND_LOGO_PLATE,
   },
   launchHint: {
     fontSize: 12,

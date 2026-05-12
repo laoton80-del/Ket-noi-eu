@@ -25,16 +25,16 @@ import {
   useWindowDimensions,
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
-import { AppImage } from '../components/ui/AppImage';
 import { AppButton } from '../components/AppButton';
 import { AuthPaywallModal } from '../components/AuthPaywallModal';
 import { PersonaOnboardingModal } from '../components/PersonaOnboardingModal';
 import { ProactiveSuggestions } from '../components/ProactiveSuggestions';
 import { CharityWidget } from '../components/ui/CharityWidget';
 import {
-  VionaGlassPanel,
+  VionaBrandLockup,
   VionaFashionHomeCommandBar,
   VionaFashionWorldCard,
+  VionaGlassPanel,
   VionaInfoTile,
   VionaQuickActionPill,
   VionaSosHoldGateModal,
@@ -97,7 +97,6 @@ import type { AuthUser } from '../context/authTypes';
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
 
-const IMG_LOGO = require('../../assets/brand/viona/logo-in-app.png');
 const IMG_HOME_HERO = require('../assets/viona/home/viona-hero-human-constellation-1280x428.png');
 const IMG_HERO_DESKTOP_HUMAN = IMG_HOME_HERO;
 const IMG_HERO_DESKTOP_LOCAL = require('../assets/viona/home/viona-hero-local-1280x428.png');
@@ -105,10 +104,10 @@ const IMG_HERO_DESKTOP_TRAVEL = require('../assets/viona/home/viona-hero-travel-
 const IMG_HERO_DESKTOP_ACADEMY = require('../assets/viona/home/viona-hero-academy-1280x428.png');
 const IMG_HERO_DESKTOP_BUSINESS = require('../assets/viona/home/viona-hero-business-1280x428.png');
 
-const IMG_HOME_LOCAL = require('../assets/viona/home/viona-home-local-night-market.png');
-const IMG_HOME_TRAVEL = require('../assets/viona/home/viona-home-travel-airport.png');
-const IMG_HOME_ACADEMY = require('../assets/viona/home/viona-home-academy-learning.png');
-const IMG_HOME_BUSINESS = require('../assets/viona/home/viona-home-business-shop-import.png');
+const IMG_HOME_LOCAL = require('../../assets/UI/viona-home-card-local-v1.png');
+const IMG_HOME_TRAVEL = require('../../assets/UI/viona-home-card-travel-v1.png');
+const IMG_HOME_ACADEMY = require('../../assets/UI/viona-home-card-academy-v1.png');
+const IMG_HOME_BUSINESS = require('../../assets/UI/viona-home-card-business-v1.png');
 
 type LivingHeroVisualKey = 'default' | 'local' | 'travel' | 'academy' | 'business';
 
@@ -1974,9 +1973,9 @@ export function HomeScreen() {
           <View style={styles.featureRow}>
             <Pressable
               onPress={isAdminDebugSurfaceEnabled() ? onSecretTap : undefined}
-              style={({ pressed }) => [styles.logoWrap, pressed && { opacity: 0.92 }]}
+              style={({ pressed }) => [pressed && { opacity: 0.92 }]}
             >
-              <AppImage source={IMG_LOGO} style={styles.logoImage} accessibilityLabel="Logo VIONA" />
+              <VionaBrandLockup variant="header" />
             </Pressable>
             <View style={styles.featureCopy}>
               <Text style={styles.featureTitle}>Tổng đài viên {inboundPersonaName}</Text>
@@ -2892,23 +2891,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'flex-start',
     gap: theme.spacing.md,
-  },
-  logoWrap: {
-    borderRadius: 14,
-    overflow: 'hidden',
-    borderWidth: 1,
-    borderColor: vionaTrust.border,
-    width: 128,
-    height: 56,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: vionaTrust.surfaceMuted,
-  },
-  logoImage: {
-    width: '100%',
-    height: '100%',
-    resizeMode: 'contain',
-    backgroundColor: 'transparent',
   },
   featureCopy: {
     flex: 1,

@@ -10,6 +10,7 @@ import type { PricingTierId } from '../config/countryPacks';
 import { PILOT_LEONA_SERVICES_FALLBACK_PREFILL, resolvePilotAwareRedirectTarget } from '../config/launchPilot';
 import type { RootStackParamList } from '../navigation/routes';
 import { vionaTokens } from '../design';
+import { VionaBrandLockup } from '../components/viona/VionaBrandLockup';
 import {
   premiumCrispEdgeStroke,
   premiumFrameEdgeOverlay,
@@ -124,6 +125,7 @@ export function SetupProfileScreen() {
       </View>
       <View style={styles.cardWrap}>
         <View style={styles.card}>
+          <VionaBrandLockup variant="header" showAccentUnderline style={styles.brandLockup} />
           <View style={styles.titleRow}>
           <View style={styles.identityGlyph}>
             <Ionicons name="shield-checkmark" size={15} color={ft.accentEmerald} />
@@ -341,6 +343,10 @@ const styles = StyleSheet.create({
     padding: 16,
     paddingTop: 18,
     overflow: 'hidden',
+  },
+  brandLockup: {
+    marginBottom: 10,
+    alignSelf: 'flex-start',
   },
   cardEdgeOverlay: {
     pointerEvents: 'none',
