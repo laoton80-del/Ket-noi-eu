@@ -856,9 +856,10 @@ export function LocalScreen() {
         </LocalConstellationFrame>
 
         <LocalCommerceClarityBlock
-          contentWidth={innerWidth}
           onBrowseServices={openServiceHub}
           onRequestBookingAssist={() => openLeonaPrefill(t('localCommerce.leonaBookingAssistPrefill'))}
+          onMerchantSetup={() => navigation.navigate('B2BPaywall')}
+          onAiReceptionistPilotInfo={onAiReceptionistPilotInfo}
         />
 
         <Text style={styles.bentoSectionTitle}>{t('localHub.serviceCategoriesKicker')}</Text>
