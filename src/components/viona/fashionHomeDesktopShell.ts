@@ -50,6 +50,58 @@ export const FASHION_HOME_COMMAND_RAIL_GRADIENT = [
   'rgba(7, 10, 16, 0.9)',
   'rgba(7, 9, 14, 0.92)',
 ] as const;
+
+/** VIONA.DAYLIGHT.BOOST.HOME.MVP.1 — Home-only outdoor readability; stays dark/cinematic (not white mode). */
+export const FASHION_HOME_DAYLIGHT_TRANSITION_MS = 220;
+
+/** Slightly lifted canvas vs `fashionTech.canvas`; still deep navy. */
+export const FASHION_HOME_DAYLIGHT_CANVAS = 'rgb(11, 16, 26)';
+export const FASHION_HOME_DAYLIGHT_CANVAS_ELEVATED = 'rgb(14, 21, 34)';
+
+/** Lighter left scrim so hero copy reads in sunlight without washing the image. */
+export const FASHION_HOME_DAYLIGHT_HERO_SCRIM_LEFT = [
+  'rgba(4, 7, 12, 0.32)',
+  'rgba(4, 7, 12, 0.11)',
+  'rgba(4, 7, 12, 0)',
+] as const;
+
+export const FASHION_HOME_DAYLIGHT_HERO_VIGNETTE = [
+  'rgba(0, 0, 0, 0.035)',
+  'rgba(0, 0, 0, 0)',
+  'rgba(0, 0, 0, 0.055)',
+] as const;
+
+/** Subtle warm/cool wash over the hero frame (no asset/crop change). */
+export const FASHION_HOME_DAYLIGHT_HERO_LUMINOUS = [
+  'rgba(255, 232, 188, 0.055)',
+  'rgba(255, 245, 220, 0.02)',
+  'rgba(136, 218, 255, 0.045)',
+] as const;
+
+export const FASHION_HOME_DAYLIGHT_FRAME_BORDER = 'rgba(252, 228, 180, 0.48)';
+export const FASHION_HOME_DAYLIGHT_FRAME_GLOW = 'rgba(244, 220, 150, 0.2)';
+
+export const FASHION_HOME_DAYLIGHT_RAIL_GRADIENT = [
+  'rgba(12, 18, 30, 0.96)',
+  'rgba(11, 17, 28, 0.93)',
+  'rgba(12, 18, 30, 0.95)',
+] as const;
+export const FASHION_HOME_DAYLIGHT_RAIL_BORDER = 'rgba(252, 236, 200, 0.34)';
+export const FASHION_HOME_DAYLIGHT_RAIL_HIGHLIGHT = 'rgba(255, 238, 200, 0.22)';
+
+export const FASHION_HOME_DAYLIGHT_HEADLINE = '#ffffff';
+export const FASHION_HOME_DAYLIGHT_TEXT_SHADOW = 'rgba(3, 6, 12, 0.4)';
+export const FASHION_HOME_DAYLIGHT_SUBTITLE = 'rgba(248, 250, 255, 0.94)';
+export const FASHION_HOME_DAYLIGHT_EYEBROW = 'rgba(255, 236, 200, 0.99)';
+
+/** Web-only CSS transition for Daylight Boost (no layout animation). */
+export function fashionHomeWebDaylightTransitionStyle(): ViewStyle {
+  if (Platform.OS !== 'web') return {};
+  const ms = FASHION_HOME_DAYLIGHT_TRANSITION_MS;
+  return {
+    transition: `background-color ${ms}ms ease-out, border-color ${ms}ms ease-out, box-shadow ${ms}ms ease-out, color ${ms}ms ease-out, text-shadow ${ms}ms ease-out`,
+  } as ViewStyle;
+}
 /** Logo plate harmonizes with the rail; soft lift only. */
 export const FASHION_HOME_COMMAND_LOGO_PLATE = 'rgba(7, 9, 14, 0.88)';
 export const FASHION_HOME_COMMAND_LOGO_GLOW = 'rgba(238, 206, 128, 0.16)';

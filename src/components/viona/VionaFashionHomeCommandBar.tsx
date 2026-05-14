@@ -9,9 +9,14 @@ import {
   FASHION_HOME_COMMAND_RAIL_GREETING_EXTRA_MARGIN_PX,
   FASHION_HOME_COMMAND_RAIL_HIGHLIGHT,
   FASHION_HOME_COMMAND_RAIL_SHELL_INSET_LEFT_PX,
+  FASHION_HOME_DAYLIGHT_RAIL_BORDER,
+  FASHION_HOME_DAYLIGHT_RAIL_GRADIENT,
+  FASHION_HOME_DAYLIGHT_RAIL_HIGHLIGHT,
   FASHION_HOME_GLOW_CYAN,
+  FASHION_HOME_GLOW_GOLD,
   FASHION_HOME_LINE_CYAN,
   FASHION_HOME_LINE_GOLD_SOFT,
+  fashionHomeWebDaylightTransitionStyle,
   premiumCrispEdgeStroke,
   premiumFrameEdgeOverlay,
 } from './fashionHomeDesktopShell';
@@ -46,6 +51,10 @@ export type VionaFashionHomeCommandBarProps = Readonly<{
     accessibilityLabel: string;
     label: string;
   }>;
+  /** Home-only Daylight Boost (Fashion desktop web). */
+  daylightBoost?: boolean;
+  onPressDaylightBoost?: () => void;
+  daylightBoostLabel?: string;
 }>;
 
 export function VionaFashionHomeCommandBar({
@@ -61,21 +70,28 @@ export function VionaFashionHomeCommandBar({
   onPressRole,
   showRolePicker,
   fullscreenControl,
+  daylightBoost,
+  onPressDaylightBoost,
+  daylightBoostLabel,
 }: VionaFashionHomeCommandBarProps) {
   const { t } = useTranslation();
   const { width: windowWidth } = useWindowDimensions();
   const compactDensity = density === 'compact';
   const useCompactLogo = compactDensity || (windowWidth > 0 && windowWidth < LOGO_COMPACT_BREAKPOINT);
+  const railGradient = daylightBoost ? FASHION_HOME_DAYLIGHT_RAIL_GRADIENT : FASHION_HOME_COMMAND_RAIL_GRADIENT;
+  const railBorder = daylightBoost ? FASHION_HOME_DAYLIGHT_RAIL_BORDER : FASHION_HOME_COMMAND_RAIL_BORDER;
+  const railTopHighlight = daylightBoost ? FASHION_HOME_DAYLIGHT_RAIL_HIGHLIGHT : FASHION_HOME_COMMAND_RAIL_HIGHLIGHT;
+  const barShellWebTransition = Platform.OS === 'web' ? fashionHomeWebDaylightTransitionStyle() : null;
 
   return (
-    <View style={[styles.barShell, compactDensity && styles.barShellCompact]}>
+    <View style={[styles.barShell, compactDensity && styles.barShellCompact, barShellWebTransition]}>
       <LinearGradient
-        colors={[...FASHION_HOME_COMMAND_RAIL_GRADIENT]}
+        colors={railGradient}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
-        style={[styles.bar, compactDensity && styles.barCompact]}
+        style={[styles.bar, compactDensity && styles.barCompact, barShellWebTransition]}
       >
-        <View style={styles.barInnerHighlight} pointerEvents="none" />
+        <View style={[styles.barInnerHighlight, { backgroundColor: railTopHighlight }]} pointerEvents="none" />
         <View style={[styles.barRow, compactDensity && styles.barRowCompact]}>
           <View style={[styles.brandRail, compactDensity && styles.brandRailCompact]}>
             <Pressable
@@ -152,6 +168,36 @@ export function VionaFashionHomeCommandBar({
                   {t('shell.utility.language')}
                 </Text>
               </Pressable>
+              {onPressDaylightBoost ? (
+                <Pressable
+                  onPress={onPressDaylightBoost}
+                  style={({ pressed }) => [
+                    styles.utilBtn,
+                    compactDensity && styles.utilBtnCompact,
+                    styles.daylightBoostBtn,
+                    compactDensity && styles.daylightBoostBtnCompact,
+                    daylightBoost && styles.daylightBoostBtnActive,
+                    pressed && styles.pressed,
+                  ]}
+                  accessibilityRole="button"
+                  accessibilityLabel={daylightBoostLabel ?? 'Daylight Boost'}
+                >
+                  <Ionicons
+                    name={daylightBoost ? 'moon-outline' : 'sunny-outline'}
+                    size={compactDensity ? 15 : 16}
+                    color={daylightBoost ? 'rgba(214, 236, 255, 0.95)' : vionaTokens.fashionTech.champagne}
+                  />
+                  {compactDensity ? null : (
+                    <Text
+                      style={[styles.utilLabel, daylightBoost && styles.daylightBoostLabelActive]}
+                      numberOfLines={1}
+                      ellipsizeMode="tail"
+                    >
+                      {daylightBoostLabel ?? 'Daylight'}
+                    </Text>
+                  )}
+                </Pressable>
+              ) : null}
               {fullscreenControl ? (
                 <Pressable
                   onPress={fullscreenControl.onPress}
@@ -239,7 +285,7 @@ export function VionaFashionHomeCommandBar({
         style={[
           styles.railEdgeOverlay,
           premiumFrameEdgeOverlay(vionaTokens.radius.lg),
-          premiumCrispEdgeStroke(FASHION_HOME_COMMAND_RAIL_BORDER),
+          premiumCrispEdgeStroke(railBorder),
         ]}
       />
     </View>
@@ -401,6 +447,30 @@ const styles = StyleSheet.create({
     minHeight: 32,
     paddingHorizontal: 9,
     maxWidth: 154,
+  },
+  daylightBoostBtn: {
+    maxWidth: 124,
+    borderColor: FASHION_HOME_LINE_GOLD_SOFT,
+    backgroundColor: 'rgba(10, 14, 22, 0.72)',
+    shadowColor: FASHION_HOME_GLOW_GOLD,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.85,
+    shadowRadius: 4,
+    elevation: 1,
+  },
+  daylightBoostBtnCompact: {
+    maxWidth: 40,
+    paddingHorizontal: 8,
+  },
+  daylightBoostBtnActive: {
+    borderColor: 'rgba(252, 228, 180, 0.55)',
+    backgroundColor: 'rgba(18, 26, 40, 0.88)',
+    shadowColor: FASHION_HOME_GLOW_GOLD,
+    shadowOpacity: 1,
+    shadowRadius: 6,
+  },
+  daylightBoostLabelActive: {
+    color: 'rgba(255, 248, 235, 0.96)',
   },
   fullscreenBtn: {
     maxWidth: 148,
