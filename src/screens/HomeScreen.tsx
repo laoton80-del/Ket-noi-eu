@@ -50,6 +50,8 @@ import {
   FASHION_HOME_LINE_GOLD,
   FASHION_HOME_HERO_TOP_GLOW,
   FASHION_HOME_HERO_COMMAND_CLEARANCE_PX,
+  FASHION_HOME_SCROLL_BOTTOM_BREATHING_EXTRA_PX,
+  FASHION_HOME_WORLD_CARD_ROW_NUDGE_UP_PX,
   premiumCrispEdgeStroke,
   premiumFrameEdgeOverlay,
   resolveFashionHomeDesktopLayout,
@@ -869,7 +871,9 @@ export function HomeScreen() {
 
   const scrollBottomPad = useMemo(() => {
     if (!isDesktopWeb) return 140;
-    if (fashionHomeDesktopShellActive) return Math.max(insets.bottom, 20) + 56;
+    if (fashionHomeDesktopShellActive) {
+      return Math.max(insets.bottom, 20) + 56 + FASHION_HOME_SCROLL_BOTTOM_BREATHING_EXTRA_PX;
+    }
     return Math.max(insets.bottom, 16) + 48;
   }, [fashionHomeDesktopShellActive, isDesktopWeb, insets.bottom]);
 
@@ -2481,7 +2485,7 @@ const styles = StyleSheet.create({
     fontFamily: FontFamily.medium,
   },
   ftCardGridFashionSibling: {
-    marginTop: vionaTokens.spacing[16],
+    marginTop: vionaTokens.spacing[16] - FASHION_HOME_WORLD_CARD_ROW_NUDGE_UP_PX,
     marginBottom: vionaTokens.spacing[8],
   },
   ftHeroBleed: {

@@ -27,6 +27,19 @@ export const FASHION_HOME_COMMAND_RAIL_SHELL_INSET_LEFT_PX = 19;
  * the greeting block reads ~1cm further right than before (VIONA.HOME.HEADER.BREATHING.1).
  */
 export const FASHION_HOME_COMMAND_RAIL_GREETING_EXTRA_MARGIN_PX = 19;
+
+/**
+ * VIONA.HOME.FULLSCREEN.BOTTOM.BREATHING.1 — pull the world-card row slightly toward the living hero (~2mm)
+ * without retuning hero or rail. Subtracted from the grid’s top margin on Fashion Home desktop web.
+ */
+export const FASHION_HOME_WORLD_CARD_ROW_NUDGE_UP_PX = 7;
+
+/**
+ * Extra `ScrollView` bottom padding on Fashion Home desktop web so fullscreen / short viewports can scroll
+ * past the world cards + quick actions without clipping the last row.
+ */
+export const FASHION_HOME_SCROLL_BOTTOM_BREATHING_EXTRA_PX = 8;
+
 export const FASHION_HOME_INNER_HIGHLIGHT = 'rgba(255, 232, 188, 0.18)';
 /** Command rail only — lighter than card/hero frames. */
 export const FASHION_HOME_COMMAND_RAIL_BORDER = 'rgba(242, 212, 136, 0.2)';
