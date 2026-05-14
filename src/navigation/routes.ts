@@ -205,7 +205,8 @@ export type RootStackParamList = {
     merchantName: string;
     merchantCountryCode?: string;
   };
-  LiveAiTeacher: undefined;
+  /** Cô Giáo / gia sư AI (Academy). Optional cues are learner-visible only — not wired into the stream until product defines it. */
+  LiveAiTeacher: { practiceFocus?: string; scenarioLabel?: string } | undefined;
   Concierge: undefined;
   Academy: undefined;
   Discover: undefined;

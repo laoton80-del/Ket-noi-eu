@@ -1,6 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import type { RouteProp } from '@react-navigation/native';
 import { useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, Alert, Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -22,6 +23,9 @@ type Nav = NativeStackNavigationProp<RootStackParamList>;
 
 export function LiveAiTeacherScreen() {
   const navigation = useNavigation<Nav>();
+  const route = useRoute<RouteProp<RootStackParamList, 'LiveAiTeacher'>>();
+  const scenarioLabel = route.params?.scenarioLabel?.trim();
+  const practiceFocus = route.params?.practiceFocus?.trim();
   const stream = useAiStream();
   const teacherPersona = getPersonaCapability('ai_teacher');
   const { currentCountry, localLanguage } = useRegionState();
@@ -81,6 +85,27 @@ export function LiveAiTeacherScreen() {
         </View>
         <StatusChip state={statusState} />
       </View>
+
+      {scenarioLabel || practiceFocus ? (
+        <PrecisePanel style={styles.learnerCuePanel}>
+          <Text style={styles.learnerCueTitle}>Gợi ý luyện (Academy Lite)</Text>
+          {scenarioLabel ? (
+            <Text style={styles.learnerCueLine}>
+              <Text style={styles.learnerCueEmphasis}>Tình huống: </Text>
+              {scenarioLabel}
+            </Text>
+          ) : null}
+          {practiceFocus ? (
+            <Text style={styles.learnerCueLine}>
+              <Text style={styles.learnerCueEmphasis}>Trọng tâm: </Text>
+              {practiceFocus}
+            </Text>
+          ) : null}
+          <Text style={styles.learnerCueHint}>
+            Hiển thị để bạn tự luyện — chưa tự động gửi vào phiên stream.
+          </Text>
+        </PrecisePanel>
+      ) : null}
 
       <View
         style={[
@@ -190,6 +215,36 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     flex: 1,
     paddingHorizontal: 12,
+  },
+  learnerCuePanel: {
+    marginHorizontal: 14,
+    marginBottom: 10,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+  },
+  learnerCueTitle: {
+    color: theme.colors.SignatureGold,
+    ...theme.typeScale.caption,
+    fontFamily: FontFamily.bold,
+    marginBottom: 6,
+  },
+  learnerCueLine: {
+    color: theme.colors.text.secondary,
+    ...theme.typeScale.caption,
+    fontFamily: FontFamily.regular,
+    lineHeight: 18,
+    marginBottom: 4,
+  },
+  learnerCueEmphasis: {
+    fontFamily: FontFamily.semibold,
+    color: theme.colors.text.primary,
+  },
+  learnerCueHint: {
+    marginTop: 4,
+    color: theme.colors.text.secondary,
+    ...theme.typeScale.caption,
+    fontFamily: FontFamily.medium,
+    opacity: 0.85,
   },
   contextText: {
     marginTop: 2,

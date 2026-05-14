@@ -43,14 +43,9 @@ export function AdultLearningHome() {
         resolveAdultScenario(selectedSituation),
         user?.phone
       );
-      navigation.navigate('Tabs', {
-        screen: 'TabAi',
-        params: {
-          aiMode: session.aiMode,
-          scenario: session.scenario,
-          initialPrompt: session.initialPrompt,
-          proactiveQuestion: session.initialPrompt,
-        },
+      navigation.navigate('LiveAiTeacher', {
+        scenarioLabel: session.scenario,
+        practiceFocus: session.initialPrompt,
       });
     } catch {
       navigation.navigate('Tabs', { screen: 'TabHome' });
@@ -59,11 +54,8 @@ export function AdultLearningHome() {
 
   const onPressPhrase = useCallback(
     (phrase: string) => {
-      navigation.navigate('Tabs', {
-        screen: 'TabAi',
-        params: {
-          proactiveQuestion: `${phrase}. Tôi đang luyện phát âm, xin bạn trả lời từ từ.`,
-        },
+      navigation.navigate('LiveAiTeacher', {
+        practiceFocus: `${phrase}. Tôi đang luyện phát âm, xin bạn trả lời từ từ.`,
       });
     },
     [navigation]

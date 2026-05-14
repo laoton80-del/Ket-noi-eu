@@ -13,9 +13,9 @@ type Props = {
 const VoicePracticeCardComponent: React.FC<Props> = ({ onPressStart }) => {
   return (
     <WidgetCard>
-      <Text style={styles.title}>Luyện nói với Minh Khang</Text>
+      <Text style={styles.title}>Luyện nói với Cô Giáo AI</Text>
       <Text style={styles.subtitle}>
-        Mở tab Lễ tân với CSKH Minh Khang và lời mở đầu luyện nói sẵn.
+        Mở gia sư AI trực tiếp (Academy Lite / pilot) kèm gợi ý luyện nói khi bạn bắt đầu.
       </Text>
       <AnimatedPressable onPress={onPressStart} style={styles.cta}>
         <Text style={styles.ctaText}>Bắt đầu luyện</Text>
