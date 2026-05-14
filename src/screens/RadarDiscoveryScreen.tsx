@@ -311,12 +311,9 @@ export function RadarDiscoveryScreen() {
   const openAssistedCall = () => {
     if (!selected) return;
     if (selected.kind === 'pho') {
-      navigation.navigate('Tabs', {
-        screen: 'TabAi',
-        params: {
-          proactiveQuestion: `Hỗ trợ đặt bàn tại ${selected.name} cho khách Việt tối nay.`,
-          autoSimulate: true,
-        },
+      navigation.navigate('LeonaCall', {
+        prefillRequest: `Hỗ trợ đặt bàn tại ${selected.name} cho khách Việt tối nay.`,
+        autoSubmit: false,
       });
       return;
     }

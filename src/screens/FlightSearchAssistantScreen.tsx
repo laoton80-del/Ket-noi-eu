@@ -68,13 +68,9 @@ export function FlightSearchAssistantScreen() {
       Alert.alert('Thiếu ngày về', 'Chuyến khứ hồi cần ngày về hoặc đổi sang một chiều.');
       return;
     }
-    navigation.navigate('Tabs', {
-      screen: 'TabAi',
-      params: {
-        aiMode: 'roleplay',
-        scenario: 'So sánh chuyến bay (không đặt vé trong app)',
-        initialPrompt: buildFlightSummary({ trip, from: f, to: t, depart: d, ret: ret.trim(), notes }),
-      },
+    navigation.navigate('LeonaCall', {
+      prefillRequest: buildFlightSummary({ trip, from: f, to: t, depart: d, ret: ret.trim(), notes }),
+      autoSubmit: false,
     });
   }, [depart, from, navigation, notes, ret, to, trip]);
 

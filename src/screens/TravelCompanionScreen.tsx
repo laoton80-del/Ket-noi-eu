@@ -13,9 +13,6 @@ import { FontFamily } from '../theme/typography';
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
 
-/** Le Tân chỉ seed `initialPrompt` khi `aiMode === 'roleplay'` (xem LeTanScreen). */
-const LETAN_TRAVEL_SCENARIO = 'Du lịch & giao tiếp nơi công cộng';
-
 type TravelScenarioRow = {
   id: string;
   label: string;
@@ -193,15 +190,13 @@ export function TravelCompanionScreen() {
           <Pressable
             style={({ pressed }) => [styles.quickChip, pressed && { opacity: 0.75 }]}
             onPress={() =>
-              navigation.navigate('Tabs', {
-                screen: 'TabAi',
-                params: {
-                  aiMode: 'roleplay',
-                  scenario: LETAN_TRAVEL_SCENARIO,
-                  initialPrompt:
+              openMiniApp('minhKhangTranslator', () =>
+                navigation.navigate('LeonaCall', {
+                  prefillRequest:
                     'Mình đang đi du lịch và cần Minh Khang gợi ý cách nói chuyện lịch sự, ngắn gọn với người địa phương (không hứa đặt dịch vụ thay mình).',
-                },
-              })
+                  autoSubmit: false,
+                })
+              )
             }
           >
             <Ionicons name="chatbubbles-outline" size={18} color={Colors.primary} />
@@ -262,14 +257,12 @@ export function TravelCompanionScreen() {
               <Pressable
                 style={({ pressed }) => [styles.actionPill, styles.actionPillOutline, pressed && { opacity: 0.75 }]}
                 onPress={() =>
-                  navigation.navigate('Tabs', {
-                    screen: 'TabAi',
-                    params: {
-                      aiMode: 'roleplay',
-                      scenario: LETAN_TRAVEL_SCENARIO,
-                      initialPrompt: row.letanSeed,
-                    },
-                  })
+                  openMiniApp('minhKhangTranslator', () =>
+                    navigation.navigate('LeonaCall', {
+                      prefillRequest: row.letanSeed,
+                      autoSubmit: false,
+                    })
+                  )
                 }
               >
                 <Text style={[styles.actionPillText, styles.actionPillTextOutline]}>Minh Khang</Text>
