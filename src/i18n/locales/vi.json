@@ -38,6 +38,38 @@
       "unknownId": "Mini-app không hợp lệ hoặc không xác định."
     }
   },
+  "academyHub": {
+    "railTitle": "Academy Lite",
+    "railContext": "Học tập · Cô Giáo AI",
+    "heroTitle": "Academy Lite",
+    "heroSubtitle": "Học tiếng Việt, văn hóa và kỹ năng sống toàn cầu cùng VIONA.",
+    "heroBadge": "Lite · Preview · Cô Giáo AI",
+    "safetyNote": "Cô Giáo AI hỗ trợ học tập và luyện tập. Không phải chứng chỉ chính thức hoặc đánh giá học thuật cao rủi ro.",
+    "primaryCta": "Mở Cô Giáo AI (xem trước)",
+    "statusLite": "Lite",
+    "statusPreview": "Xem trước",
+    "statusPilot": "Pilot",
+    "module1Title": "Cô Giáo AI",
+    "module1Status": "Xem trước",
+    "module1Body": "Luyện nói, luyện từ vựng, giải thích nhẹ — chỉ pilot.",
+    "module2Title": "Tiếng Việt cơ bản",
+    "module2Status": "Lite",
+    "module2Body": "Chữ, câu, hội thoại gia đình.",
+    "module3Title": "Survival phrases",
+    "module3Status": "Lite",
+    "module3Body": "Câu cần dùng khi đi học, đi làm, đi du lịch.",
+    "module4Title": "Văn hóa Việt",
+    "module4Status": "Lite",
+    "module4Body": "Lễ Tết, gia đình, giao tiếp, phong tục.",
+    "module5Title": "Family learning",
+    "module5Status": "Xem trước",
+    "module5Body": "Cha mẹ và con học cùng nhau.",
+    "module6Title": "Practice / quiz",
+    "module6Status": "Xem trước",
+    "module6Body": "Luyện tập nhẹ, không phải chứng chỉ chính thức.",
+    "comingSoonTitle": "Sắp có",
+    "comingSoonBody": "Mô-đun này chưa được nối trong bản Lite hiện tại."
+  },
   "shell": {
     "header": {
       "greeting": {
@@ -72,6 +104,15 @@
       "enter": "Toàn màn hình",
       "exit": "Thoát toàn màn hình",
       "unsupported": "Trình duyệt không hỗ trợ toàn màn hình"
+    },
+    "bottomEscape": {
+      "back": "Quay lại",
+      "close": "Đóng",
+      "home": "Về Home",
+      "backA11y": "Quay lại màn hình trước",
+      "closeA11y": "Đóng màn hình này",
+      "homeA11y": "Về trang chủ hub",
+      "toolbarA11y": "Lối thoát điều hướng trang"
     }
   },
   "login": {

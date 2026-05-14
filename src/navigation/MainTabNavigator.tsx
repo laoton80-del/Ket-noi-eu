@@ -41,7 +41,7 @@ import {
 import { roleTabChrome } from './tabRoleTheme';
 
 import { HomeScreen } from '../screens/HomeScreen';
-import { LeTanScreen } from '../screens/LeTanScreen';
+import { AcademyScreen } from '../screens/AcademyScreen';
 import { LocalScreen } from '../screens/b2c/LocalScreen';
 import { TravelHubScreen } from '../screens/b2c/travel/TravelHubScreen';
 import { MerchantDashboardScreen } from '../screens/b2b/MerchantDashboardScreen';
@@ -457,7 +457,7 @@ export function MainTabNavigator(): ReactElement {
             {flags.academyLiteEnabled ? (
               <Tab.Screen
                 name={MAIN_TAB.B2C.ai}
-                component={LeTanScreen}
+                component={AcademyScreen}
                 options={{ title: t('home.tabAcademy') }}
                 listeners={{
                   tabPress: (e) => {

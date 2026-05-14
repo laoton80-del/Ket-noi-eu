@@ -38,6 +38,38 @@
       "unknownId": "Unknown or invalid mini-app."
     }
   },
+  "academyHub": {
+    "railTitle": "Academy Lite",
+    "railContext": "Learning · Cô Giáo AI",
+    "heroTitle": "Academy Lite",
+    "heroSubtitle": "Learn Vietnamese, culture, and everyday global life skills with VIONA.",
+    "heroBadge": "Lite · Preview · Cô Giáo AI",
+    "safetyNote": "Cô Giáo AI supports practice and study. This is not official certification or high-stakes academic assessment.",
+    "primaryCta": "Open Cô Giáo AI (preview)",
+    "statusLite": "Lite",
+    "statusPreview": "Preview",
+    "statusPilot": "Pilot",
+    "module1Title": "Cô Giáo AI",
+    "module1Status": "Preview",
+    "module1Body": "Speaking practice, vocabulary, and light explanations — pilot only.",
+    "module2Title": "Basic Vietnamese",
+    "module2Status": "Lite",
+    "module2Body": "Letters, sentences, and family dialogues.",
+    "module3Title": "Survival phrases",
+    "module3Status": "Lite",
+    "module3Body": "Phrases for school, work, and travel.",
+    "module4Title": "Vietnamese culture",
+    "module4Status": "Lite",
+    "module4Body": "Holidays, family, customs, and polite communication.",
+    "module5Title": "Family learning",
+    "module5Status": "Preview",
+    "module5Body": "Parents and children learning together.",
+    "module6Title": "Practice & quiz",
+    "module6Status": "Preview",
+    "module6Body": "Light practice — not official certification.",
+    "comingSoonTitle": "Coming soon",
+    "comingSoonBody": "This module is not wired in this Lite build yet."
+  },
   "shell": {
     "header": {
       "greeting": {
@@ -72,6 +104,15 @@
       "enter": "Fullscreen",
       "exit": "Exit fullscreen",
       "unsupported": "Fullscreen is not supported by this browser"
+    },
+    "bottomEscape": {
+      "back": "Back",
+      "close": "Close",
+      "home": "Home",
+      "backA11y": "Go back",
+      "closeA11y": "Close this screen",
+      "homeA11y": "Go to home hub",
+      "toolbarA11y": "Page navigation shortcuts"
     }
   },
   "login": {
