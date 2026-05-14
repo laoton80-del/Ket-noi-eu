@@ -295,23 +295,14 @@ export function MainTabNavigator(): ReactElement {
       switchRole('B2C');
       navigation.navigate('Tabs', { screen: MAIN_TAB.B2C.home });
     };
-    const goB2cAi = () => {
-      switchRole('B2C');
-      navigation.navigate('Tabs', { screen: MAIN_TAB.B2C.ai });
-    };
-
     if (pendingRedirect === 'HocTap') {
       goB2cHome();
       setPendingRedirect(null);
       return;
     }
     if (pendingRedirect === 'LeTan') {
-      if (!flags.academyLiteEnabled) {
-        goB2cHome();
-      } else {
-        goB2cAi();
-      }
       setPendingRedirect(null);
+      navigation.navigate('AiReceptionistDemoSimulator');
       return;
     }
     if (pendingRedirect === 'LiveInterpreter') {
@@ -361,7 +352,6 @@ export function MainTabNavigator(): ReactElement {
     }
   }, [
     currentActiveRole,
-    flags.academyLiteEnabled,
     navigation,
     pendingRedirect,
     setPendingRedirect,

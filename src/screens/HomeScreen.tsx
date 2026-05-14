@@ -1024,12 +1024,7 @@ export function HomeScreen() {
         return;
       }
       if (persona === 'loan') {
-        openMiniApp('academy', () =>
-          navigation.navigate('Tabs', {
-            screen: 'TabAi',
-            params: { proactiveQuestion: question, autoSimulate: true },
-          })
-        );
+        openMiniApp('b2bAiReceptionist', () => navigation.navigate('AiReceptionistDemoSimulator'));
         return;
       }
       openMiniApp('b2cAiCallAssistant', () =>

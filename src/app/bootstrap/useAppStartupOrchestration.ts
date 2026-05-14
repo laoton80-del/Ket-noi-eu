@@ -206,7 +206,7 @@ export function useAppStartupOrchestration({
             'Chào bạn, mình là LOAN. Bạn muốn gọi hay đặt lịch? Nói một câu — mình gợi ý bước tiếp theo.'
           );
           if (user) {
-            navigationRef.navigate('Tabs', { screen: 'TabAi' });
+            navigationRef.navigate('AiReceptionistDemoSimulator');
           } else {
             setPendingRedirect('LeTan');
             navigationRef.navigate('Login', { redirectTo: 'LeTan' });

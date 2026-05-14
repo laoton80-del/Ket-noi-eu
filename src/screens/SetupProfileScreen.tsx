@@ -265,7 +265,7 @@ export function SetupProfileScreen() {
             }
             if (redirectTo === 'LeTan') {
               setPendingRedirect(null);
-              navigation.navigate('Tabs', { screen: 'TabAi' });
+              navigation.navigate('AiReceptionistDemoSimulator');
               return;
             }
             if (redirectTo === 'HocTap') {
