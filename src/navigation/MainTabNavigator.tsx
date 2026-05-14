@@ -300,6 +300,12 @@ export function MainTabNavigator(): ReactElement {
       setPendingRedirect(null);
       return;
     }
+    if (pendingRedirect === 'Academy') {
+      switchRole('B2C');
+      navigation.navigate('Tabs', { screen: MAIN_TAB.B2C.ai });
+      setPendingRedirect(null);
+      return;
+    }
     if (pendingRedirect === 'LeTan') {
       setPendingRedirect(null);
       navigation.navigate('AiReceptionistDemoSimulator');
@@ -453,7 +459,7 @@ export function MainTabNavigator(): ReactElement {
                   tabPress: (e) => {
                     if (!user && !isDemoSandboxActive()) {
                       e.preventDefault();
-                      openPaywall('LeTan');
+                      openPaywall('Academy');
                     }
                   },
                 }}

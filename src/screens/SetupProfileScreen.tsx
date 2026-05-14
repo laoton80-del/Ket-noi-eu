@@ -8,7 +8,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth, type ResidencyStatus, type UserSegment } from '../context/AuthContext';
 import type { PricingTierId } from '../config/countryPacks';
 import { PILOT_LEONA_SERVICES_FALLBACK_PREFILL, resolvePilotAwareRedirectTarget } from '../config/launchPilot';
-import type { RootStackParamList } from '../navigation/routes';
+import { MAIN_TAB, type RootStackParamList } from '../navigation/routes';
 import { vionaTokens } from '../design';
 import { VionaBrandLockup } from '../components/viona/VionaBrandLockup';
 import {
@@ -266,6 +266,11 @@ export function SetupProfileScreen() {
             if (redirectTo === 'LeTan') {
               setPendingRedirect(null);
               navigation.navigate('AiReceptionistDemoSimulator');
+              return;
+            }
+            if (redirectTo === 'Academy') {
+              setPendingRedirect(null);
+              navigation.navigate('Tabs', { screen: MAIN_TAB.B2C.ai });
               return;
             }
             if (redirectTo === 'HocTap') {
