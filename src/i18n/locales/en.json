@@ -391,6 +391,12 @@
       "accept": "Accept",
       "acceptedMsg": "Accepted · auto-message sent",
       "declinedMsg": "Declined · slot reopened"
+    },
+    "operatingPreview": {
+      "title": "Merchant operating hub (preview)",
+      "body": "You're viewing the merchant workspace layout with pilot/demo data. Production automation, settlements, and full AI receptionist flows require an eligible workspace plan.",
+      "upgradeCta": "View workspace plans",
+      "upgradeA11y": "Open workspace plans and pricing"
     }
   },
   "tourism": {

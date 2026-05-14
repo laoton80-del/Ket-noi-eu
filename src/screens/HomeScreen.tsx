@@ -958,7 +958,8 @@ export function HomeScreen() {
       navigation.navigate('Tabs', { screen: MAIN_TAB.B2B.merchant });
       return;
     }
-    navigation.navigate('B2BPaywall');
+    /** Merchant operating hub first (pilot preview); upgrade remains on `B2BPaywall`. */
+    navigation.navigate('MerchantDashboard');
   }, [navigation, switchRole, user]);
 
   const homeCommand = useHomeCommand();

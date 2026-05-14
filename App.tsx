@@ -100,6 +100,7 @@ import { HubThemeProvider } from './src/context/HubThemeContext';
 import { ConditionalStripeProvider } from './src/providers/ConditionalStripeProvider';
 import { B2BPaywallScreen } from './src/screens/b2b/B2BPaywallScreen';
 import { PartnerOnboardingScreen } from './src/screens/commercial/PartnerOnboardingScreen';
+import { MerchantDashboardOperatingPreview } from './src/screens/b2b/MerchantDashboardOperatingPreview';
 import { MerchantDashboardScreen } from './src/screens/b2b/MerchantDashboardScreen';
 import { AiReceptionistSetupChecklistScreen } from './src/screens/b2b/AiReceptionistSetupChecklistScreen';
 import { AiReceptionistDemoSimulatorScreen } from './src/screens/b2b/AiReceptionistDemoSimulatorScreen';
@@ -762,6 +763,14 @@ function B2BWorkspaceGate({ children }: { children: ReactElement }) {
 }
 
 function GatedMerchantDashboardScreen() {
+  const { user } = useAuth();
+  if (!hasB2BWorkspaceAccess(user)) {
+    return (
+      <ThemeProvider value={b2bTheme}>
+        <MerchantDashboardOperatingPreview />
+      </ThemeProvider>
+    );
+  }
   return (
     <B2BWorkspaceGate>
       <MerchantDashboardScreen />

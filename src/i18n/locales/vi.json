@@ -391,6 +391,12 @@
       "accept": "Nhận",
       "acceptedMsg": "Đã nhận · đã gửi tin tự động",
       "declinedMsg": "Đã từ chối · mở lại slot"
+    },
+    "operatingPreview": {
+      "title": "Không gian vận hành merchant (xem trước)",
+      "body": "Bạn đang xem bố cục dashboard với dữ liệu pilot/demo. Tự động hóa production, quyết toán và đầy đủ luồng lễ tân AI cần gói workspace phù hợp.",
+      "upgradeCta": "Xem gói workspace",
+      "upgradeA11y": "Mở trang gói workspace và báo giá"
     }
   },
   "tourism": {
