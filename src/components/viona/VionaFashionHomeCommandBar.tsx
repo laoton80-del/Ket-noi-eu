@@ -1,27 +1,27 @@
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Image, Pressable, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
+import { Pressable, Platform, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 
 import { vionaTokens } from '../../design';
 import {
-  FASHION_HOME_COMMAND_LOGO_GLOW,
-  FASHION_HOME_COMMAND_LOGO_PLATE,
-  FASHION_HOME_COMMAND_LOGO_SIZE,
   FASHION_HOME_COMMAND_RAIL_BORDER,
   FASHION_HOME_COMMAND_RAIL_GRADIENT,
+  FASHION_HOME_COMMAND_RAIL_GREETING_EXTRA_MARGIN_PX,
   FASHION_HOME_COMMAND_RAIL_HIGHLIGHT,
+  FASHION_HOME_COMMAND_RAIL_SHELL_INSET_LEFT_PX,
   FASHION_HOME_GLOW_CYAN,
   FASHION_HOME_LINE_CYAN,
   FASHION_HOME_LINE_GOLD_SOFT,
   premiumCrispEdgeStroke,
   premiumFrameEdgeOverlay,
 } from './fashionHomeDesktopShell';
+import { VionaBrandLockup } from './VionaBrandLockup';
+import { vionaGlobalTopRailWebRightReservePx } from './globalLightNetworkTokens';
 import { FontFamily } from '../../theme/typography';
 import { useTranslation } from '../../i18n';
 
 /** Below this window width, use a slightly smaller wordmark so chips keep air. */
 const LOGO_COMPACT_BREAKPOINT = 1060;
-const LOGO_IMAGE = require('../../../assets/brand/viona/logo-in-app.png');
 
 export type VionaFashionHomeCommandBarProps = Readonly<{
   /** Tighter typography and chips for mid-width desktop or short landscape viewports. */
@@ -84,17 +84,11 @@ export function VionaFashionHomeCommandBar({
               accessibilityRole="button"
               accessibilityLabel="VIONA Hub"
             >
-              <View style={styles.logoBlendWell} pointerEvents="none">
-                <Image
-                  source={LOGO_IMAGE}
-                  resizeMode="contain"
-                  style={useCompactLogo ? styles.logoImageCompact : styles.logoImage}
-                />
-              </View>
+              <VionaBrandLockup variant={useCompactLogo ? 'compact' : 'header'} />
             </Pressable>
             <View style={styles.greetingDivider} pointerEvents="none" />
             <View
-              style={styles.greetingBlock}
+              style={[styles.greetingBlock, { marginLeft: FASHION_HOME_COMMAND_RAIL_GREETING_EXTRA_MARGIN_PX }]}
               accessibilityRole="text"
               accessibilityLabel={headerGreetingA11y}
             >
@@ -115,7 +109,13 @@ export function VionaFashionHomeCommandBar({
             </View>
           </View>
           <View style={[styles.utilityTrack, compactDensity && styles.utilityTrackCompact]}>
-            <View style={[styles.utilityCluster, compactDensity && styles.utilityClusterCompact]}>
+            <View
+              style={[
+                styles.utilityCluster,
+                compactDensity && styles.utilityClusterCompact,
+                Platform.OS === 'web' ? { paddingRight: vionaGlobalTopRailWebRightReservePx(windowWidth) } : null,
+              ]}
+            >
               {showRolePicker && onPressRole ? (
                 <Pressable
                   onPress={onPressRole}
@@ -130,7 +130,7 @@ export function VionaFashionHomeCommandBar({
                     size={compactDensity ? 15 : 16}
                     color={vionaTokens.fashionTech.champagne}
                   />
-                  <Text style={styles.utilLabel} numberOfLines={1}>
+                  <Text style={styles.utilLabel} numberOfLines={1} ellipsizeMode="tail">
                     {t('shell.utility.switchRole')}
                   </Text>
                 </Pressable>
@@ -148,7 +148,7 @@ export function VionaFashionHomeCommandBar({
                   size={compactDensity ? 15 : 16}
                   color={vionaTokens.fashionTech.champagne}
                 />
-                <Text style={styles.utilLabel} numberOfLines={1}>
+                <Text style={styles.utilLabel} numberOfLines={1} ellipsizeMode="tail">
                   {t('shell.utility.language')}
                 </Text>
               </Pressable>
@@ -170,7 +170,7 @@ export function VionaFashionHomeCommandBar({
                     color={vionaTokens.fashionTech.champagne}
                   />
                   {compactDensity ? null : (
-                    <Text style={styles.utilLabel} numberOfLines={1}>
+                    <Text style={styles.utilLabel} numberOfLines={1} ellipsizeMode="tail">
                       {fullscreenControl.label}
                     </Text>
                   )}
@@ -189,7 +189,7 @@ export function VionaFashionHomeCommandBar({
                   size={compactDensity ? 15 : 16}
                   color={vionaTokens.fashionTech.champagne}
                 />
-                <Text style={styles.utilLabel} numberOfLines={1}>
+                <Text style={styles.utilLabel} numberOfLines={1} ellipsizeMode="tail">
                   {t('shell.utility.vioCredits')}
                 </Text>
               </Pressable>
@@ -209,7 +209,7 @@ export function VionaFashionHomeCommandBar({
                   size={compactDensity ? 15 : 16}
                   color={vionaTokens.fashionTech.sosNeon}
                 />
-                <Text style={[styles.utilLabel, styles.sosLabel]} numberOfLines={1}>
+                <Text style={[styles.utilLabel, styles.sosLabel]} numberOfLines={1} ellipsizeMode="tail">
                   {t('sos.chip')}
                 </Text>
               </Pressable>
@@ -226,7 +226,7 @@ export function VionaFashionHomeCommandBar({
                   size={compactDensity ? 15 : 16}
                   color={vionaTokens.fashionTech.champagne}
                 />
-                <Text style={styles.utilLabel} numberOfLines={1}>
+                <Text style={styles.utilLabel} numberOfLines={1} ellipsizeMode="tail">
                   {t('shell.utility.accountProfile')}
                 </Text>
               </Pressable>
@@ -262,7 +262,8 @@ const styles = StyleSheet.create({
     width: '100%',
     alignSelf: 'stretch',
     paddingVertical: vionaTokens.spacing[6],
-    paddingHorizontal: vionaTokens.spacing[6],
+    paddingLeft: vionaTokens.spacing[6] + FASHION_HOME_COMMAND_RAIL_SHELL_INSET_LEFT_PX,
+    paddingRight: vionaTokens.spacing[6],
     position: 'relative',
     borderRadius: vionaTokens.radius.lg,
     overflow: 'hidden',
@@ -299,7 +300,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: vionaTokens.spacing[6],
     flex: 1,
-    minWidth: 200,
+    minWidth: 168,
   },
   brandRailCompact: {
     minWidth: 160,
@@ -312,28 +313,6 @@ const styles = StyleSheet.create({
     marginRight: -4,
     flexShrink: 0,
     backgroundColor: 'transparent',
-  },
-  logoBlendWell: {
-    backgroundColor: 'transparent',
-    overflow: 'hidden',
-  },
-  logoImage: {
-    width: FASHION_HOME_COMMAND_LOGO_SIZE.width,
-    height: FASHION_HOME_COMMAND_LOGO_SIZE.height,
-    backgroundColor: FASHION_HOME_COMMAND_LOGO_PLATE,
-    shadowColor: FASHION_HOME_COMMAND_LOGO_GLOW,
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.22,
-    shadowRadius: 3,
-  },
-  logoImageCompact: {
-    width: FASHION_HOME_COMMAND_LOGO_SIZE.compactWidth,
-    height: FASHION_HOME_COMMAND_LOGO_SIZE.compactHeight,
-    backgroundColor: FASHION_HOME_COMMAND_LOGO_PLATE,
-    shadowColor: FASHION_HOME_COMMAND_LOGO_GLOW,
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.2,
-    shadowRadius: 2,
   },
   greetingDivider: {
     width: 1,
@@ -393,7 +372,7 @@ const styles = StyleSheet.create({
     gap: vionaTokens.spacing[6],
     alignItems: 'center',
     justifyContent: 'flex-end',
-    minWidth: 220,
+    minWidth: 168,
   },
   utilityClusterCompact: {
     minWidth: 160,
@@ -416,15 +395,15 @@ const styles = StyleSheet.create({
     shadowOpacity: 1,
     shadowRadius: 3,
     elevation: 1,
-    maxWidth: 200,
+    maxWidth: 170,
   },
   utilBtnCompact: {
     minHeight: 32,
     paddingHorizontal: 9,
-    maxWidth: 180,
+    maxWidth: 154,
   },
   fullscreenBtn: {
-    maxWidth: 168,
+    maxWidth: 148,
   },
   fullscreenBtnCompact: {
     maxWidth: 44,

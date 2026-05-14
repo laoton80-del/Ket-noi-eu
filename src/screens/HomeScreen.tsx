@@ -49,6 +49,7 @@ import {
   FASHION_HOME_LINE_CYAN,
   FASHION_HOME_LINE_GOLD,
   FASHION_HOME_HERO_TOP_GLOW,
+  FASHION_HOME_HERO_COMMAND_CLEARANCE_PX,
   premiumCrispEdgeStroke,
   premiumFrameEdgeOverlay,
   resolveFashionHomeDesktopLayout,
@@ -73,6 +74,7 @@ import { MVP_B2B_AI_RECEPTIONIST_DEMO_OFF_MSG } from '../navigation/mvpSurfaceGa
 import {
   FASHION_HOME_WORLD_DESKTOP_ROW_MIN_WIDTH,
   FASHION_HOME_WORLD_CAROUSEL_MAX_WIDTH,
+  FASHION_HOME_WORLD_ONE_COL_GRID_MAX_WIDTH,
   FASHION_HOME_WORLD_TWO_COL_MIN_WIDTH,
   isFashionHomeDesktopShell,
   readFocusedTabRouteFromRootState,
@@ -507,19 +509,30 @@ export function HomeScreen() {
 
   const isLandscapeViewport = width > height;
   const isShortViewport = height < 560;
-  /** Single-row horizontal rail for primary world cards (phones). */
+  /** Horizontal rail only for very narrow widths; wider mobile uses 1- or 2-column grid. */
   const useWorldCardCarousel = width <= FASHION_HOME_WORLD_CAROUSEL_MAX_WIDTH;
-  /** Equal card heights within each flex row (2×2 or 4×1). */
+  /** Four cards in one row: Fashion Home web shell, or wide non-fashion layout. */
+  const worldCardsDesktopSingleRow =
+    fashionHomeDesktopShellActive || width >= FASHION_HOME_WORLD_DESKTOP_ROW_MIN_WIDTH;
+  /** One full-width card per row (narrow grid, no carousel). */
+  const worldCardsOneColumnGrid =
+    !useWorldCardCarousel &&
+    !worldCardsDesktopSingleRow &&
+    width <= FASHION_HOME_WORLD_ONE_COL_GRID_MAX_WIDTH;
+  /** Equal card heights within each flex row (1-col, 2×2, or 4×1). */
   const stretchWorldCardsInGrid =
-    !useWorldCardCarousel && width >= FASHION_HOME_WORLD_TWO_COL_MIN_WIDTH;
-  const worldCardsDesktopSingleRow = width >= FASHION_HOME_WORLD_DESKTOP_ROW_MIN_WIDTH;
+    !useWorldCardCarousel &&
+    !worldCardsOneColumnGrid &&
+    (worldCardsDesktopSingleRow || width >= FASHION_HOME_WORLD_TWO_COL_MIN_WIDTH);
+  const worldCardsTwoColumnGrid =
+    !useWorldCardCarousel && !worldCardsDesktopSingleRow && !worldCardsOneColumnGrid;
   const fashionCarouselCardWidth = useMemo(
     () => Math.min(292, Math.max(256, Math.round(Math.min(width, height) * 0.78))),
     [width, height]
   );
   const commandBarDensity = useMemo(() => {
     if (!fashionHomeDesktopShellActive) return 'comfortable' as const;
-    if (width < 1024) return 'compact' as const;
+    if (width < 1180) return 'compact' as const;
     if (isLandscapeViewport && height < 520) return 'compact' as const;
     return 'comfortable' as const;
   }, [fashionHomeDesktopShellActive, width, height, isLandscapeViewport]);
@@ -1128,8 +1141,17 @@ export function HomeScreen() {
     >
       <StatusBar style={isDesktopWeb ? 'light' : 'dark'} />
       {fashionHomeDesktopShellActive && homeCommand ? (
-        <View style={[styles.fashionShellOuter, { paddingTop: Math.max(insets.top, 8) }]}>
-          <View style={styles.fashionShellInner}>
+        <View
+          style={[
+            styles.fashionShellOuter,
+            {
+              paddingTop: Math.max(insets.top, 8),
+              paddingHorizontal: layout.pad,
+            },
+          ]}
+        >
+          {/** Match ScrollView + hero bleed: pad then negative margin so rail frame spans same width as `desktopHeroFrameShell`. */}
+          <View style={{ marginHorizontal: -layout.pad }}>
             <VionaFashionHomeCommandBar
               density={commandBarDensity}
               onPressLogo={scrollToTop}
@@ -1167,7 +1189,15 @@ export function HomeScreen() {
       >
         {fashionHomeDesktopShellActive ? (
           <>
-          <View style={[styles.ftHeroBleedFashion, { marginHorizontal: -layout.pad }]}>
+          <View
+            style={[
+              styles.ftHeroBleedFashion,
+              {
+                marginHorizontal: -layout.pad,
+                marginTop: -vionaTokens.spacing[6] + FASHION_HOME_HERO_COMMAND_CLEARANCE_PX,
+              },
+            ]}
+          >
             <View style={styles.desktopHeroFrameShell}>
             <View
               style={[styles.desktopHeroShell, { aspectRatio: DESKTOP_HERO_FRAME_ASPECT }]}
@@ -1389,7 +1419,7 @@ export function HomeScreen() {
                     imageStyle={styles.cardImageAcademy}
                     title={t('home.fashionTech.academy.title')}
                     subtitle={t('home.fashionTech.academy.subtitle')}
-                    icon={<Ionicons name="sparkles-outline" size={22} color={vionaTokens.fashionTech.accentViolet} />}
+                    icon={<Ionicons name="sparkles-outline" size={22} color="#C77DFF" />}
                     status={{ label: t('home.worldStage.academy.status'), tone: 'demo' }}
                     onPress={goUniverseAcademy}
                     footerHint={t('home.fashionTech.cardExploreHint')}
@@ -1428,6 +1458,8 @@ export function HomeScreen() {
                 <View
                   style={[
                     styles.ftCardCell,
+                    worldCardsOneColumnGrid ? styles.ftCardCellSingle : null,
+                    worldCardsTwoColumnGrid ? styles.ftCardCellTwoColMobile : null,
                     stretchWorldCardsInGrid ? styles.ftCardCellFashionDesktop : null,
                   ]}
                 >
@@ -1449,6 +1481,8 @@ export function HomeScreen() {
                 <View
                   style={[
                     styles.ftCardCell,
+                    worldCardsOneColumnGrid ? styles.ftCardCellSingle : null,
+                    worldCardsTwoColumnGrid ? styles.ftCardCellTwoColMobile : null,
                     stretchWorldCardsInGrid ? styles.ftCardCellFashionDesktop : null,
                   ]}
                 >
@@ -1474,6 +1508,8 @@ export function HomeScreen() {
                 <View
                   style={[
                     styles.ftCardCell,
+                    worldCardsOneColumnGrid ? styles.ftCardCellSingle : null,
+                    worldCardsTwoColumnGrid ? styles.ftCardCellTwoColMobile : null,
                     stretchWorldCardsInGrid ? styles.ftCardCellFashionDesktop : null,
                   ]}
                 >
@@ -1483,7 +1519,7 @@ export function HomeScreen() {
                     imageStyle={styles.cardImageAcademy}
                     title={t('home.fashionTech.academy.title')}
                     subtitle={t('home.fashionTech.academy.subtitle')}
-                    icon={<Ionicons name="sparkles-outline" size={22} color={vionaTokens.fashionTech.accentViolet} />}
+                    icon={<Ionicons name="sparkles-outline" size={22} color="#C77DFF" />}
                     status={{ label: t('home.worldStage.academy.status'), tone: 'demo' }}
                     onPress={goUniverseAcademy}
                     footerHint={t('home.fashionTech.cardExploreHint')}
@@ -1495,6 +1531,8 @@ export function HomeScreen() {
                 <View
                   style={[
                     styles.ftCardCell,
+                    worldCardsOneColumnGrid ? styles.ftCardCellSingle : null,
+                    worldCardsTwoColumnGrid ? styles.ftCardCellTwoColMobile : null,
                     stretchWorldCardsInGrid ? styles.ftCardCellFashionDesktop : null,
                   ]}
                 >
@@ -1617,7 +1655,7 @@ export function HomeScreen() {
                       imageStyle={styles.cardImageAcademy}
                       title={t('home.fashionTech.academy.title')}
                       subtitle={t('home.fashionTech.academy.subtitle')}
-                      icon={<Ionicons name="sparkles-outline" size={22} color={vionaTokens.fashionTech.champagne} />}
+                      icon={<Ionicons name="sparkles-outline" size={22} color="#C77DFF" />}
                       status={{ label: t('home.worldStage.academy.status'), tone: 'demo' }}
                       onPress={goUniverseAcademy}
                     />
@@ -1648,6 +1686,8 @@ export function HomeScreen() {
                   <View
                     style={[
                       styles.ftCardCell,
+                      worldCardsOneColumnGrid ? styles.ftCardCellSingle : null,
+                      worldCardsTwoColumnGrid ? styles.ftCardCellTwoColMobile : null,
                       worldCardsDesktopSingleRow ? styles.ftCardCellQuarter : null,
                       stretchWorldCardsInGrid ? styles.ftCardCellFashionDesktop : null,
                     ]}
@@ -1667,6 +1707,8 @@ export function HomeScreen() {
                   <View
                     style={[
                       styles.ftCardCell,
+                      worldCardsOneColumnGrid ? styles.ftCardCellSingle : null,
+                      worldCardsTwoColumnGrid ? styles.ftCardCellTwoColMobile : null,
                       worldCardsDesktopSingleRow ? styles.ftCardCellQuarter : null,
                       stretchWorldCardsInGrid ? styles.ftCardCellFashionDesktop : null,
                     ]}
@@ -1690,6 +1732,8 @@ export function HomeScreen() {
                   <View
                     style={[
                       styles.ftCardCell,
+                      worldCardsOneColumnGrid ? styles.ftCardCellSingle : null,
+                      worldCardsTwoColumnGrid ? styles.ftCardCellTwoColMobile : null,
                       worldCardsDesktopSingleRow ? styles.ftCardCellQuarter : null,
                       stretchWorldCardsInGrid ? styles.ftCardCellFashionDesktop : null,
                     ]}
@@ -1700,7 +1744,7 @@ export function HomeScreen() {
                       imageStyle={styles.cardImageAcademy}
                       title={t('home.fashionTech.academy.title')}
                       subtitle={t('home.fashionTech.academy.subtitle')}
-                      icon={<Ionicons name="sparkles-outline" size={22} color={vionaTokens.fashionTech.champagne} />}
+                      icon={<Ionicons name="sparkles-outline" size={22} color="#C77DFF" />}
                       status={{ label: t('home.worldStage.academy.status'), tone: 'demo' }}
                       onPress={goUniverseAcademy}
                       stretchInColumn={stretchWorldCardsInGrid}
@@ -1709,6 +1753,8 @@ export function HomeScreen() {
                   <View
                     style={[
                       styles.ftCardCell,
+                      worldCardsOneColumnGrid ? styles.ftCardCellSingle : null,
+                      worldCardsTwoColumnGrid ? styles.ftCardCellTwoColMobile : null,
                       worldCardsDesktopSingleRow ? styles.ftCardCellQuarter : null,
                       stretchWorldCardsInGrid ? styles.ftCardCellFashionDesktop : null,
                     ]}
@@ -2153,11 +2199,6 @@ const styles = StyleSheet.create({
     position: 'relative',
     overflow: 'hidden',
   },
-  fashionShellInner: {
-    width: '100%',
-    alignSelf: 'center',
-    maxWidth: '100%',
-  },
   container: {
     flex: 1,
     backgroundColor: 'transparent',
@@ -2168,7 +2209,6 @@ const styles = StyleSheet.create({
     alignSelf: 'stretch',
   },
   ftHeroBleedFashion: {
-    marginTop: -vionaTokens.spacing[6],
     marginBottom: 0,
   },
   desktopHeroFrameShell: {
@@ -2327,11 +2367,11 @@ const styles = StyleSheet.create({
   desktopHeroHeadline: {
     fontSize: 32,
     lineHeight: 38,
-    color: '#fafbfe',
+    color: '#fcfdff',
     fontFamily: FontFamily.extrabold,
-    textShadowColor: 'rgba(3, 6, 12, 0.65)',
+    textShadowColor: 'rgba(3, 6, 12, 0.52)',
     textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 10,
+    textShadowRadius: 14,
   },
   desktopHeroHeadlineSm: {
     fontSize: 28,
@@ -2441,7 +2481,7 @@ const styles = StyleSheet.create({
     fontFamily: FontFamily.medium,
   },
   ftCardGridFashionSibling: {
-    marginTop: vionaTokens.spacing[4],
+    marginTop: vionaTokens.spacing[16],
     marginBottom: vionaTokens.spacing[8],
   },
   ftHeroBleed: {
@@ -2599,6 +2639,16 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     flexBasis: '47%',
     minWidth: 240,
+    maxWidth: '100%',
+  },
+  ftCardCellSingle: {
+    flexBasis: '100%',
+    minWidth: 0,
+    maxWidth: '100%',
+  },
+  ftCardCellTwoColMobile: {
+    flexBasis: '48%',
+    minWidth: 160,
     maxWidth: '100%',
   },
   ftCardCellQuarter: {

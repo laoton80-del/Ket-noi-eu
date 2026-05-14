@@ -7,14 +7,17 @@ import { MAIN_TAB, type RootTabParamList } from './routes';
 /** Web B2C Home uses the integrated Fashion-Tech shell at this width and above. */
 export const FASHION_HOME_DESKTOP_MIN_WIDTH = 769;
 
-/** Primary world cards use a horizontal rail below this width (single-column phones). */
-export const FASHION_HOME_WORLD_CAROUSEL_MAX_WIDTH = 559;
+/** Primary world cards use a horizontal rail only on very narrow widths. */
+export const FASHION_HOME_WORLD_CAROUSEL_MAX_WIDTH = 380;
 
-/** Two-column world card grid from this width up until the single desktop row breakpoint. */
-export const FASHION_HOME_WORLD_TWO_COL_MIN_WIDTH = 560;
+/** Stacked one-card-per-row grid from this width up to `FASHION_HOME_WORLD_ONE_COL_GRID_MAX_WIDTH`. */
+export const FASHION_HOME_WORLD_ONE_COL_GRID_MAX_WIDTH = 500;
 
-/** Four primary cards share one row at this width (desktop fashion home). */
-export const FASHION_HOME_WORLD_DESKTOP_ROW_MIN_WIDTH = 1100;
+/** Two-column world card grid from this width until the four-across desktop breakpoint (non–fashion-home). */
+export const FASHION_HOME_WORLD_TWO_COL_MIN_WIDTH = 501;
+
+/** Four primary cards share one row at this width when Fashion Home shell is off (tablet / wide web). */
+export const FASHION_HOME_WORLD_DESKTOP_ROW_MIN_WIDTH = 1024;
 
 const TAB_ROUTE_NAMES = [
   MAIN_TAB.B2C.home,
