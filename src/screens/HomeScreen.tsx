@@ -44,10 +44,13 @@ import {
   FASHION_HOME_DESKTOP_HERO_ASPECT,
   FASHION_HOME_DAYLIGHT_CANVAS,
   FASHION_HOME_DAYLIGHT_CANVAS_ELEVATED,
+  FASHION_HOME_DAYLIGHT_CHIP_CONTAINED_GLOW,
   FASHION_HOME_DAYLIGHT_EYEBROW,
   FASHION_HOME_DAYLIGHT_FRAME_BORDER,
   FASHION_HOME_DAYLIGHT_FRAME_GLOW,
   FASHION_HOME_DAYLIGHT_HEADLINE,
+  FASHION_HOME_DAYLIGHT_HERO_CYAN_EDGE,
+  FASHION_HOME_DAYLIGHT_HERO_LIFT_OVERLAY,
   FASHION_HOME_DAYLIGHT_HERO_LUMINOUS,
   FASHION_HOME_DAYLIGHT_HERO_SCRIM_LEFT,
   FASHION_HOME_DAYLIGHT_HERO_VIGNETTE,
@@ -62,8 +65,22 @@ import {
   FASHION_HOME_HERO_TOP_GLOW,
   FASHION_HOME_HERO_COMMAND_CLEARANCE_PX,
   FASHION_HOME_SCROLL_BOTTOM_BREATHING_EXTRA_PX,
-  FASHION_HOME_WORLD_CARD_ROW_NUDGE_UP_PX,
+  FASHION_HOME_WORLD_CARD_HERO_BREATHING_TOP_PX,
+  FASHION_HOME_WORLD_CARD_STAGE_LAP_PX,
+  FASHION_HOME_DAYLIGHT_WORLD_EDGE_SOFTEN,
+  FASHION_HOME_DAYLIGHT_WORLD_MATERIAL_GLOW,
+  FASHION_HOME_DAYLIGHT_WORLD_SURFACE_SHEEN,
+  fashionHomeDaylightQuickActionIconCapsuleStyle,
+  fashionHomeDaylightQuickActionPillStyle,
+  fashionHomeDaylightQuickActionSheen,
+  fashionHomeDaylightWorldCardNativeShellStyle,
+  fashionHomeWebDaylightHeroImageLiftStyle,
+  fashionHomeWebDaylightQuickActionPillMaterialStyle,
+  fashionHomeWebDaylightWorldCardMaterialStyle,
   fashionHomeWebDaylightTransitionStyle,
+  fashionHomeWorldCardGlassHostStyle,
+  type FashionHomeQuickActionAccent,
+  type FashionHomeWorldCardDaylightAccent,
   premiumCrispEdgeStroke,
   premiumFrameEdgeOverlay,
   resolveFashionHomeDesktopLayout,
@@ -369,7 +386,9 @@ function pickRawCountryForHome(user: AuthUser | null | undefined): { raw: string
 
 /** Desktop Living Hero: fill the frame; focal bias keeps subject/city visible on wide assets. */
 const heroDesktopLivingImageWebStyle = (
-  Platform.OS === 'web' ? { objectFit: 'cover' as const, objectPosition: '42% center' as const } : {}
+  Platform.OS === 'web'
+    ? { objectFit: 'cover' as const, objectPosition: '40% 38%' as const }
+    : {}
 ) as ImageStyle;
 const heroImageWebCoverStyle = (Platform.OS === 'web' ? { objectFit: 'cover' as const } : {}) as ImageStyle;
 /** Hero shell aspect tuned for desktop viewport fit; image still covers via resizeMode/object-fit. */
@@ -998,6 +1017,26 @@ export function HomeScreen() {
     toggleFullscreen,
   ]);
 
+  /** GLASS.HOME.2 — web desktop hero min/max height for a taller cinematic stage (vh-aware + fullscreen). */
+  const fashionDesktopWebHeroShellSizing = useMemo(() => {
+    if (Platform.OS !== 'web' || !fashionHomeDesktopShellActive) {
+      return {} as { minHeight?: number; maxHeight?: number };
+    }
+    const vh = Math.max(420, height);
+    const compactHeight = vh < 600;
+    const widthFloor =
+      width >= 1680 ? 640 : width >= 1440 ? 600 : width >= 1200 ? 580 : width >= 1024 ? 560 : 520;
+    const vhFrac = isFullscreen ? 0.72 : vh >= 920 ? 0.66 : vh >= 760 ? 0.6 : 0.54;
+    const fromVh = Math.round(vh * vhFrac);
+    let minHeight = Math.max(widthFloor, fromVh);
+    if (compactHeight) {
+      minHeight = Math.min(minHeight, Math.max(400, Math.round(vh * 0.52)));
+    }
+    const maxHeight = Math.round(vh * (isFullscreen ? 0.78 : 0.74));
+    minHeight = Math.min(minHeight, maxHeight);
+    return { minHeight, maxHeight };
+  }, [fashionHomeDesktopShellActive, height, isFullscreen, width]);
+
   const daylightToggleLabel = useMemo(() => {
     const vi = typeof i18n.language === 'string' && i18n.language.toLowerCase().startsWith('vi');
     if (daylightBoost) return vi ? 'Tắt đèn' : 'Night';
@@ -1155,16 +1194,134 @@ export function HomeScreen() {
     [goUniverseAcademy, goUniverseLocal, goUniverseTravel, openInterpreter, openProtected, openSosEntry, t]
   );
 
-  const renderQuickActionPill = (item: (typeof quickActionItems)[number], fill = false) => (
-    <VionaQuickActionPill
-      key={item.id}
-      label={item.label}
-      icon={item.icon}
-      accent={item.accent}
-      onPress={item.onPress}
-      fill={fill}
-    />
+  const FashionHomeDaylightQuickActionPill = ({
+    label,
+    icon,
+    onPress,
+    accent,
+    fill,
+    webTransition,
+  }: {
+    label: string;
+    // Ionicons name union is cumbersome here; keep it permissive.
+    icon: any;
+    onPress: () => void;
+    accent: FashionHomeQuickActionAccent;
+    fill: boolean;
+    webTransition?: any;
+  }) => {
+    const iconColor =
+      accent === 'gold'
+        ? vionaTokens.fashionTech.accentGold
+        : accent === 'cyan'
+          ? vionaTokens.fashionTech.accentCyan
+          : accent === 'emerald'
+            ? vionaTokens.fashionTech.accentEmerald
+            : accent === 'violet'
+              ? vionaTokens.fashionTech.accentViolet
+              : accent === 'blue'
+                ? vionaTokens.fashionTech.statusLite
+                : vionaTokens.fashionTech.sosNeon;
+
+    const sheen = fashionHomeDaylightQuickActionSheen(accent);
+
+    return (
+      <Pressable
+        onPress={onPress}
+        style={({ pressed }) => [
+          styles.quickActionPillDaylightBase,
+          fill && styles.quickActionPillDaylightFill,
+          fashionHomeDaylightQuickActionPillStyle(accent),
+          Platform.OS === 'web' && fashionHomeWebDaylightQuickActionPillMaterialStyle(accent),
+          webTransition,
+          pressed && styles.quickActionPillDaylightPressed,
+        ]}
+        accessibilityRole="button"
+        accessibilityLabel={label}
+      >
+        <LinearGradient
+          colors={[sheen[0], sheen[1]]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 0, y: 1 }}
+          pointerEvents="none"
+          style={styles.quickActionPillDaylightSheen}
+        />
+
+        <View
+          style={[
+            styles.quickActionPillDaylightIconCapsule,
+            Platform.OS === 'web' ? styles.quickActionPillDaylightIconCapsuleWeb : null,
+            fashionHomeDaylightQuickActionIconCapsuleStyle(accent),
+          ]}
+        >
+          <Ionicons name={icon} size={15} color={iconColor} />
+        </View>
+
+        <Text
+          style={[
+            styles.quickActionPillDaylightLabel,
+            accent === 'sos' && styles.quickActionPillDaylightLabelSos,
+          ]}
+          numberOfLines={1}
+          ellipsizeMode="tail"
+        >
+          {label}
+        </Text>
+      </Pressable>
+    );
+  };
+
+  const FashionHomeWorldCardGlassLayers = ({ accent }: { accent: FashionHomeWorldCardDaylightAccent }) => (
+    <View pointerEvents="none" style={styles.worldCardGlassLayers}>
+      <LinearGradient
+        colors={FASHION_HOME_DAYLIGHT_WORLD_SURFACE_SHEEN[accent]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        pointerEvents="none"
+        style={styles.worldCardGlassSurfaceSheen}
+      />
+      <LinearGradient
+        colors={FASHION_HOME_DAYLIGHT_WORLD_MATERIAL_GLOW[accent]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        pointerEvents="none"
+        style={styles.worldCardGlassInnerGlow}
+      />
+      <LinearGradient
+        colors={FASHION_HOME_DAYLIGHT_WORLD_EDGE_SOFTEN[accent]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 0 }}
+        pointerEvents="none"
+        style={styles.worldCardGlassEdgeSoften}
+      />
+      <View pointerEvents="none" style={styles.worldCardGlassTopRefraction} />
+    </View>
   );
+
+  const renderQuickActionPill = (item: (typeof quickActionItems)[number], fill = false) =>
+    fashionDaylight && fashionHomeDesktopShellActive ? (
+      <FashionHomeDaylightQuickActionPill
+        key={item.id}
+        label={item.label}
+        icon={item.icon}
+        accent={item.accent}
+        onPress={item.onPress}
+        fill={fill}
+        webTransition={fashionHomeWebTintTransition}
+      />
+    ) : (
+      <VionaQuickActionPill
+        key={item.id}
+        label={item.label}
+        icon={item.icon}
+        accent={item.accent}
+        onPress={item.onPress}
+        fill={fill}
+      />
+    );
+
+  const renderWorldCardGlassLayers = (accent: FashionHomeWorldCardDaylightAccent) =>
+    fashionDaylight ? <FashionHomeWorldCardGlassLayers accent={accent} /> : null;
 
   return (
     <View
@@ -1247,6 +1404,7 @@ export function HomeScreen() {
                 fashionDaylight && styles.desktopHeroShellDaylight,
                 fashionHomeWebTintTransition,
                 { aspectRatio: DESKTOP_HERO_FRAME_ASPECT },
+                fashionDesktopWebHeroShellSizing,
               ]}
               accessibilityRole="image"
               accessibilityLabel={t('home.fashionTech.heroVisualA11y')}
@@ -1259,9 +1417,23 @@ export function HomeScreen() {
                 style={styles.desktopHeroGoldAccent}
                 pointerEvents="none"
               />
-              <View style={styles.desktopHeroCyanEdge} pointerEvents="none" />
-              <View style={styles.desktopHeroBottomCyanEdge} pointerEvents="none" />
-              <View style={styles.desktopHeroImageClip} pointerEvents="none">
+              <View
+                style={[styles.desktopHeroCyanEdge, fashionDaylight && styles.desktopHeroCyanEdgeDaylight]}
+                pointerEvents="none"
+              />
+              <View
+                style={[styles.desktopHeroBottomCyanEdge, fashionDaylight && styles.desktopHeroBottomCyanEdgeDaylight]}
+                pointerEvents="none"
+              />
+              <View
+                style={[
+                  styles.desktopHeroImageClip,
+                  fashionDaylight && styles.desktopHeroImageClipDaylight,
+                  fashionDaylight && fashionHomeWebDaylightHeroImageLiftStyle(),
+                  fashionHomeWebTintTransition,
+                ]}
+                pointerEvents="none"
+              >
                 <Image
                   source={LIVING_HERO_DESKTOP_IMAGE[livingBaseKey]}
                   resizeMode="cover"
@@ -1295,7 +1467,7 @@ export function HomeScreen() {
                     ? [...FASHION_HOME_DAYLIGHT_HERO_VIGNETTE]
                     : ['rgba(0, 0, 0, 0.06)', 'rgba(0, 0, 0, 0)', 'rgba(0, 0, 0, 0.08)']
                 }
-                locations={[0, 0.45, 1]}
+                locations={[0, 0.42, 1]}
                 start={{ x: 0.5, y: 0 }}
                 end={{ x: 0.5, y: 1 }}
                 style={styles.desktopHeroInnerVignette}
@@ -1311,6 +1483,28 @@ export function HomeScreen() {
                   pointerEvents="none"
                 />
               ) : null}
+              {fashionDaylight ? (
+                <LinearGradient
+                  colors={[...FASHION_HOME_DAYLIGHT_HERO_LIFT_OVERLAY]}
+                  locations={[0, 0.42, 1]}
+                  start={{ x: 0.15, y: 0.35 }}
+                  end={{ x: 0.85, y: 0.95 }}
+                  style={styles.desktopHeroLiftOverlay}
+                  pointerEvents="none"
+                />
+              ) : null}
+              <LinearGradient
+                colors={
+                  fashionDaylight
+                    ? ['rgba(7, 9, 14, 0)', 'rgba(7, 9, 14, 0.18)', 'rgba(13, 18, 28, 0.62)']
+                    : ['rgba(4, 6, 10, 0)', 'rgba(4, 6, 10, 0.22)', 'rgba(6, 10, 16, 0.72)']
+                }
+                locations={[0, 0.45, 1]}
+                start={{ x: 0.5, y: 0 }}
+                end={{ x: 0.5, y: 1 }}
+                style={styles.desktopHeroBottomHandoff}
+                pointerEvents="none"
+              />
               <View style={styles.desktopHeroInnerFrame} pointerEvents="none" />
               <View
                 style={[
@@ -1397,17 +1591,34 @@ export function HomeScreen() {
                   <View style={styles.desktopHeroCtaRow}>
                     <Pressable
                       onPress={scrollToWorldSection}
-                      style={({ pressed }) => [styles.desktopHeroCtaPrimary, pressed && { opacity: 0.9 }]}
+                      style={({ pressed }) => [
+                        styles.desktopHeroCtaPrimary,
+                        fashionDaylight && styles.desktopHeroCtaPrimaryDaylight,
+                        fashionHomeWebTintTransition,
+                        pressed && { opacity: 0.9 },
+                      ]}
                       accessibilityRole="button"
                       accessibilityLabel={t('home.fashionTech.ctaExplore')}
                     >
                       <LinearGradient
-                        colors={['rgba(248, 220, 156, 0.98)', 'rgba(201, 169, 98, 0.98)', 'rgba(168, 132, 62, 0.98)']}
+                        colors={
+                          fashionDaylight
+                            ? ['rgba(255, 232, 188, 0.99)', 'rgba(214, 186, 118, 0.99)', 'rgba(182, 148, 78, 0.99)']
+                            : ['rgba(248, 220, 156, 0.98)', 'rgba(201, 169, 98, 0.98)', 'rgba(168, 132, 62, 0.98)']
+                        }
                         start={{ x: 0, y: 0 }}
                         end={{ x: 1, y: 1 }}
                         style={styles.desktopHeroCtaPrimaryFill}
                       >
-                        <Text style={styles.desktopHeroCtaPrimaryText}>{t('home.fashionTech.ctaExplore')}</Text>
+                        <Text
+                          style={[
+                            styles.desktopHeroCtaPrimaryText,
+                            fashionDaylight && styles.desktopHeroCtaPrimaryTextDaylight,
+                            fashionHomeWebTintTransition,
+                          ]}
+                        >
+                          {t('home.fashionTech.ctaExplore')}
+                        </Text>
                       </LinearGradient>
                     </Pressable>
                     <Pressable
@@ -1478,7 +1689,14 @@ export function HomeScreen() {
                 </Animated.View>
                 {width >= 920 ? <View style={styles.desktopHeroImageSpacer} pointerEvents="none" /> : null}
               </View>
-              <View style={styles.desktopHeroConnectedChip} pointerEvents="none">
+              <View
+                style={[
+                  styles.desktopHeroConnectedChip,
+                  fashionDaylight && styles.desktopHeroConnectedChipDaylight,
+                  fashionHomeWebTintTransition,
+                ]}
+                pointerEvents="none"
+              >
                 <Text
                   style={[
                     styles.desktopHeroConnectedChipText,
@@ -1528,7 +1746,10 @@ export function HomeScreen() {
                 <View
                   style={[
                     styles.ftCardCarouselCell,
-                    fashionDaylight && styles.ftCardCellDaylight,
+                    fashionDaylight && fashionHomeWorldCardGlassHostStyle(),
+                    fashionDaylight && fashionHomeDaylightWorldCardNativeShellStyle('local'),
+                    fashionDaylight && fashionHomeWebDaylightWorldCardMaterialStyle('local'),
+                    fashionHomeWebTintTransition,
                     { width: fashionCarouselCardWidth },
                   ]}
                 >
@@ -1545,11 +1766,15 @@ export function HomeScreen() {
                     showChevron
                     {...(desktopCardLivingHoverProps?.local ?? {})}
                   />
+                  {renderWorldCardGlassLayers('local')}
                 </View>
                 <View
                   style={[
                     styles.ftCardCarouselCell,
-                    fashionDaylight && styles.ftCardCellDaylight,
+                    fashionDaylight && fashionHomeWorldCardGlassHostStyle(),
+                    fashionDaylight && fashionHomeDaylightWorldCardNativeShellStyle('travel'),
+                    fashionDaylight && fashionHomeWebDaylightWorldCardMaterialStyle('travel'),
+                    fashionHomeWebTintTransition,
                     { width: fashionCarouselCardWidth },
                   ]}
                 >
@@ -1570,11 +1795,15 @@ export function HomeScreen() {
                     showChevron
                     {...(desktopCardLivingHoverProps?.travel ?? {})}
                   />
+                  {renderWorldCardGlassLayers('travel')}
                 </View>
                 <View
                   style={[
                     styles.ftCardCarouselCell,
-                    fashionDaylight && styles.ftCardCellDaylight,
+                    fashionDaylight && fashionHomeWorldCardGlassHostStyle(),
+                    fashionDaylight && fashionHomeDaylightWorldCardNativeShellStyle('academy'),
+                    fashionDaylight && fashionHomeWebDaylightWorldCardMaterialStyle('academy'),
+                    fashionHomeWebTintTransition,
                     { width: fashionCarouselCardWidth },
                   ]}
                 >
@@ -1591,11 +1820,15 @@ export function HomeScreen() {
                     showChevron
                     {...(desktopCardLivingHoverProps?.academy ?? {})}
                   />
+                  {renderWorldCardGlassLayers('academy')}
                 </View>
                 <View
                   style={[
                     styles.ftCardCarouselCell,
-                    fashionDaylight && styles.ftCardCellDaylight,
+                    fashionDaylight && fashionHomeWorldCardGlassHostStyle(),
+                    fashionDaylight && fashionHomeDaylightWorldCardNativeShellStyle('business'),
+                    fashionDaylight && fashionHomeWebDaylightWorldCardMaterialStyle('business'),
+                    fashionHomeWebTintTransition,
                     { width: fashionCarouselCardWidth },
                   ]}
                 >
@@ -1612,6 +1845,7 @@ export function HomeScreen() {
                     showChevron
                     {...(desktopCardLivingHoverProps?.business ?? {})}
                   />
+                  {renderWorldCardGlassLayers('business')}
                 </View>
               </ScrollView>
             ) : (
@@ -1632,7 +1866,10 @@ export function HomeScreen() {
                     worldCardsOneColumnGrid ? styles.ftCardCellSingle : null,
                     worldCardsTwoColumnGrid ? styles.ftCardCellTwoColMobile : null,
                     stretchWorldCardsInGrid ? styles.ftCardCellFashionDesktop : null,
-                    fashionDaylight && styles.ftCardCellDaylight,
+                    fashionDaylight && fashionHomeWorldCardGlassHostStyle(),
+                    fashionDaylight && fashionHomeDaylightWorldCardNativeShellStyle('local'),
+                    fashionDaylight && fashionHomeWebDaylightWorldCardMaterialStyle('local'),
+                    fashionHomeWebTintTransition,
                   ]}
                 >
                   <VionaFashionWorldCard
@@ -1649,6 +1886,7 @@ export function HomeScreen() {
                     stretchInColumn={stretchWorldCardsInGrid}
                     {...(desktopCardLivingHoverProps?.local ?? {})}
                   />
+                  {renderWorldCardGlassLayers('local')}
                 </View>
                 <View
                   style={[
@@ -1656,7 +1894,10 @@ export function HomeScreen() {
                     worldCardsOneColumnGrid ? styles.ftCardCellSingle : null,
                     worldCardsTwoColumnGrid ? styles.ftCardCellTwoColMobile : null,
                     stretchWorldCardsInGrid ? styles.ftCardCellFashionDesktop : null,
-                    fashionDaylight && styles.ftCardCellDaylight,
+                    fashionDaylight && fashionHomeWorldCardGlassHostStyle(),
+                    fashionDaylight && fashionHomeDaylightWorldCardNativeShellStyle('travel'),
+                    fashionDaylight && fashionHomeWebDaylightWorldCardMaterialStyle('travel'),
+                    fashionHomeWebTintTransition,
                   ]}
                 >
                   <VionaFashionWorldCard
@@ -1677,6 +1918,7 @@ export function HomeScreen() {
                     stretchInColumn={stretchWorldCardsInGrid}
                     {...(desktopCardLivingHoverProps?.travel ?? {})}
                   />
+                  {renderWorldCardGlassLayers('travel')}
                 </View>
                 <View
                   style={[
@@ -1684,7 +1926,10 @@ export function HomeScreen() {
                     worldCardsOneColumnGrid ? styles.ftCardCellSingle : null,
                     worldCardsTwoColumnGrid ? styles.ftCardCellTwoColMobile : null,
                     stretchWorldCardsInGrid ? styles.ftCardCellFashionDesktop : null,
-                    fashionDaylight && styles.ftCardCellDaylight,
+                    fashionDaylight && fashionHomeWorldCardGlassHostStyle(),
+                    fashionDaylight && fashionHomeDaylightWorldCardNativeShellStyle('academy'),
+                    fashionDaylight && fashionHomeWebDaylightWorldCardMaterialStyle('academy'),
+                    fashionHomeWebTintTransition,
                   ]}
                 >
                   <VionaFashionWorldCard
@@ -1701,6 +1946,7 @@ export function HomeScreen() {
                     stretchInColumn={stretchWorldCardsInGrid}
                     {...(desktopCardLivingHoverProps?.academy ?? {})}
                   />
+                  {renderWorldCardGlassLayers('academy')}
                 </View>
                 <View
                   style={[
@@ -1708,7 +1954,10 @@ export function HomeScreen() {
                     worldCardsOneColumnGrid ? styles.ftCardCellSingle : null,
                     worldCardsTwoColumnGrid ? styles.ftCardCellTwoColMobile : null,
                     stretchWorldCardsInGrid ? styles.ftCardCellFashionDesktop : null,
-                    fashionDaylight && styles.ftCardCellDaylight,
+                    fashionDaylight && fashionHomeWorldCardGlassHostStyle(),
+                    fashionDaylight && fashionHomeDaylightWorldCardNativeShellStyle('business'),
+                    fashionDaylight && fashionHomeWebDaylightWorldCardMaterialStyle('business'),
+                    fashionHomeWebTintTransition,
                   ]}
                 >
                   <VionaFashionWorldCard
@@ -1725,6 +1974,7 @@ export function HomeScreen() {
                     stretchInColumn={stretchWorldCardsInGrid}
                     {...(desktopCardLivingHoverProps?.business ?? {})}
                   />
+                  {renderWorldCardGlassLayers('business')}
                 </View>
               </View>
             )}
@@ -1798,7 +2048,10 @@ export function HomeScreen() {
                   <View
                     style={[
                       styles.ftCardCarouselCell,
-                      fashionDaylight && styles.ftCardCellDaylight,
+                      fashionDaylight && fashionHomeWorldCardGlassHostStyle(),
+                      fashionDaylight && fashionHomeDaylightWorldCardNativeShellStyle('local'),
+                      fashionDaylight && fashionHomeWebDaylightWorldCardMaterialStyle('local'),
+                      fashionHomeWebTintTransition,
                       { width: fashionCarouselCardWidth },
                     ]}
                   >
@@ -1812,11 +2065,15 @@ export function HomeScreen() {
                       status={{ label: t('home.worldStage.local.status'), tone: 'lite' }}
                       onPress={goUniverseLocal}
                     />
+                    {renderWorldCardGlassLayers('local')}
                   </View>
                   <View
                     style={[
                       styles.ftCardCarouselCell,
-                      fashionDaylight && styles.ftCardCellDaylight,
+                      fashionDaylight && fashionHomeWorldCardGlassHostStyle(),
+                      fashionDaylight && fashionHomeDaylightWorldCardNativeShellStyle('travel'),
+                      fashionDaylight && fashionHomeWebDaylightWorldCardMaterialStyle('travel'),
+                      fashionHomeWebTintTransition,
                       { width: fashionCarouselCardWidth },
                     ]}
                   >
@@ -1834,11 +2091,15 @@ export function HomeScreen() {
                       }
                       onPress={featureFlags.travelEnabled ? goUniverseTravel : undefined}
                     />
+                    {renderWorldCardGlassLayers('travel')}
                   </View>
                   <View
                     style={[
                       styles.ftCardCarouselCell,
-                      fashionDaylight && styles.ftCardCellDaylight,
+                      fashionDaylight && fashionHomeWorldCardGlassHostStyle(),
+                      fashionDaylight && fashionHomeDaylightWorldCardNativeShellStyle('academy'),
+                      fashionDaylight && fashionHomeWebDaylightWorldCardMaterialStyle('academy'),
+                      fashionHomeWebTintTransition,
                       { width: fashionCarouselCardWidth },
                     ]}
                   >
@@ -1852,11 +2113,15 @@ export function HomeScreen() {
                       status={{ label: t('home.worldStage.academy.status'), tone: 'demo' }}
                       onPress={goUniverseAcademy}
                     />
+                    {renderWorldCardGlassLayers('academy')}
                   </View>
                   <View
                     style={[
                       styles.ftCardCarouselCell,
-                      fashionDaylight && styles.ftCardCellDaylight,
+                      fashionDaylight && fashionHomeWorldCardGlassHostStyle(),
+                      fashionDaylight && fashionHomeDaylightWorldCardNativeShellStyle('business'),
+                      fashionDaylight && fashionHomeWebDaylightWorldCardMaterialStyle('business'),
+                      fashionHomeWebTintTransition,
                       { width: fashionCarouselCardWidth },
                     ]}
                   >
@@ -1870,6 +2135,7 @@ export function HomeScreen() {
                       status={{ label: t('home.worldStage.business.status'), tone: 'pilot' }}
                       onPress={goUniverseBusiness}
                     />
+                    {renderWorldCardGlassLayers('business')}
                   </View>
                 </ScrollView>
               ) : (
@@ -1889,7 +2155,10 @@ export function HomeScreen() {
                       worldCardsTwoColumnGrid ? styles.ftCardCellTwoColMobile : null,
                       worldCardsDesktopSingleRow ? styles.ftCardCellQuarter : null,
                       stretchWorldCardsInGrid ? styles.ftCardCellFashionDesktop : null,
-                      fashionDaylight && styles.ftCardCellDaylight,
+                      fashionDaylight && fashionHomeWorldCardGlassHostStyle(),
+                      fashionDaylight && fashionHomeDaylightWorldCardNativeShellStyle('local'),
+                      fashionDaylight && fashionHomeWebDaylightWorldCardMaterialStyle('local'),
+                      fashionHomeWebTintTransition,
                     ]}
                   >
                     <VionaFashionWorldCard
@@ -1903,6 +2172,7 @@ export function HomeScreen() {
                       onPress={goUniverseLocal}
                       stretchInColumn={stretchWorldCardsInGrid}
                     />
+                    {renderWorldCardGlassLayers('local')}
                   </View>
                   <View
                     style={[
@@ -1911,7 +2181,10 @@ export function HomeScreen() {
                       worldCardsTwoColumnGrid ? styles.ftCardCellTwoColMobile : null,
                       worldCardsDesktopSingleRow ? styles.ftCardCellQuarter : null,
                       stretchWorldCardsInGrid ? styles.ftCardCellFashionDesktop : null,
-                      fashionDaylight && styles.ftCardCellDaylight,
+                      fashionDaylight && fashionHomeWorldCardGlassHostStyle(),
+                      fashionDaylight && fashionHomeDaylightWorldCardNativeShellStyle('travel'),
+                      fashionDaylight && fashionHomeWebDaylightWorldCardMaterialStyle('travel'),
+                      fashionHomeWebTintTransition,
                     ]}
                   >
                     <VionaFashionWorldCard
@@ -1929,6 +2202,7 @@ export function HomeScreen() {
                       onPress={featureFlags.travelEnabled ? goUniverseTravel : undefined}
                       stretchInColumn={stretchWorldCardsInGrid}
                     />
+                    {renderWorldCardGlassLayers('travel')}
                   </View>
                   <View
                     style={[
@@ -1937,7 +2211,10 @@ export function HomeScreen() {
                       worldCardsTwoColumnGrid ? styles.ftCardCellTwoColMobile : null,
                       worldCardsDesktopSingleRow ? styles.ftCardCellQuarter : null,
                       stretchWorldCardsInGrid ? styles.ftCardCellFashionDesktop : null,
-                      fashionDaylight && styles.ftCardCellDaylight,
+                      fashionDaylight && fashionHomeWorldCardGlassHostStyle(),
+                      fashionDaylight && fashionHomeDaylightWorldCardNativeShellStyle('academy'),
+                      fashionDaylight && fashionHomeWebDaylightWorldCardMaterialStyle('academy'),
+                      fashionHomeWebTintTransition,
                     ]}
                   >
                     <VionaFashionWorldCard
@@ -1951,6 +2228,7 @@ export function HomeScreen() {
                       onPress={goUniverseAcademy}
                       stretchInColumn={stretchWorldCardsInGrid}
                     />
+                    {renderWorldCardGlassLayers('academy')}
                   </View>
                   <View
                     style={[
@@ -1959,7 +2237,10 @@ export function HomeScreen() {
                       worldCardsTwoColumnGrid ? styles.ftCardCellTwoColMobile : null,
                       worldCardsDesktopSingleRow ? styles.ftCardCellQuarter : null,
                       stretchWorldCardsInGrid ? styles.ftCardCellFashionDesktop : null,
-                      fashionDaylight && styles.ftCardCellDaylight,
+                      fashionDaylight && fashionHomeWorldCardGlassHostStyle(),
+                      fashionDaylight && fashionHomeDaylightWorldCardNativeShellStyle('business'),
+                      fashionDaylight && fashionHomeWebDaylightWorldCardMaterialStyle('business'),
+                      fashionHomeWebTintTransition,
                     ]}
                   >
                     <VionaFashionWorldCard
@@ -1973,6 +2254,7 @@ export function HomeScreen() {
                       onPress={goUniverseBusiness}
                       stretchInColumn={stretchWorldCardsInGrid}
                     />
+                    {renderWorldCardGlassLayers('business')}
                   </View>
                 </View>
               )}
@@ -1991,7 +2273,15 @@ export function HomeScreen() {
             ]}
             tone="warm"
           >
-            <Text style={styles.quickActionPrompt}>{t('home.quickActions.prompt')}</Text>
+            <Text
+              style={[
+                styles.quickActionPrompt,
+                fashionDaylight && styles.quickActionPromptDaylight,
+                fashionHomeWebTintTransition,
+              ]}
+            >
+              {t('home.quickActions.prompt')}
+            </Text>
             {quickActionsHorizontal ? (
               <ScrollView
                 horizontal
@@ -2441,6 +2731,10 @@ const styles = StyleSheet.create({
     ...StyleSheet.absoluteFillObject,
     zIndex: 1,
   },
+  desktopHeroLiftOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    zIndex: 1,
+  },
   desktopHeroEdgeOverlay: {
     pointerEvents: 'none',
   },
@@ -2461,6 +2755,9 @@ const styles = StyleSheet.create({
     backgroundColor: FASHION_HOME_LINE_CYAN,
     zIndex: 4,
   },
+  desktopHeroCyanEdgeDaylight: {
+    backgroundColor: FASHION_HOME_DAYLIGHT_HERO_CYAN_EDGE,
+  },
   desktopHeroBottomCyanEdge: {
     position: 'absolute',
     left: '18%',
@@ -2470,10 +2767,16 @@ const styles = StyleSheet.create({
     backgroundColor: FASHION_HOME_LINE_CYAN,
     zIndex: 4,
   },
+  desktopHeroBottomCyanEdgeDaylight: {
+    backgroundColor: FASHION_HOME_DAYLIGHT_HERO_CYAN_EDGE,
+  },
   desktopHeroImageClip: {
     ...StyleSheet.absoluteFillObject,
     overflow: 'hidden',
     backgroundColor: '#0a1018',
+  },
+  desktopHeroImageClipDaylight: {
+    backgroundColor: 'rgb(14, 20, 32)',
   },
   desktopHeroReadabilityScrim: {
     position: 'absolute',
@@ -2488,18 +2791,32 @@ const styles = StyleSheet.create({
     ...StyleSheet.absoluteFillObject,
     zIndex: 1,
   },
+  desktopHeroBottomHandoff: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 0,
+    height: '30%',
+    zIndex: 2,
+    pointerEvents: 'none',
+  },
   desktopHeroEyebrowDaylight: {
     color: FASHION_HOME_DAYLIGHT_EYEBROW,
     textShadowColor: FASHION_HOME_DAYLIGHT_TEXT_SHADOW,
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 10,
   },
   desktopHeroHeadlineDaylight: {
     color: FASHION_HOME_DAYLIGHT_HEADLINE,
     textShadowColor: FASHION_HOME_DAYLIGHT_TEXT_SHADOW,
-    textShadowRadius: 12,
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 16,
   },
   desktopHeroSubtitleDaylight: {
     color: FASHION_HOME_DAYLIGHT_SUBTITLE,
     textShadowColor: FASHION_HOME_DAYLIGHT_TEXT_SHADOW,
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 10,
   },
   desktopHeroCtaSecondaryDaylight: {
     borderColor: 'rgba(140, 210, 255, 0.42)',
@@ -2515,10 +2832,16 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(8, 14, 24, 0.62)',
   },
   desktopHeroStatusTextDaylight: {
-    color: 'rgba(252, 252, 255, 0.92)',
+    color: 'rgba(255, 255, 255, 0.95)',
+    textShadowColor: FASHION_HOME_DAYLIGHT_TEXT_SHADOW,
+    textShadowOffset: { width: 0, height: 0.5 },
+    textShadowRadius: 6,
   },
   desktopHeroConnectedChipTextDaylight: {
-    color: 'rgba(236, 242, 255, 0.9)',
+    color: 'rgba(248, 250, 255, 0.94)',
+    textShadowColor: FASHION_HOME_DAYLIGHT_TEXT_SHADOW,
+    textShadowOffset: { width: 0, height: 0.5 },
+    textShadowRadius: 6,
   },
   desktopHeroLivingStatusCapsuleDaylight: {
     borderColor: 'rgba(252, 228, 180, 0.52)',
@@ -2603,6 +2926,7 @@ const styles = StyleSheet.create({
   },
   desktopHeroForeground: {
     ...StyleSheet.absoluteFillObject,
+    zIndex: 3,
     paddingHorizontal: vionaTokens.spacing[24],
     paddingTop: vionaTokens.spacing[24],
     paddingBottom: vionaTokens.spacing[24],
@@ -2655,6 +2979,12 @@ const styles = StyleSheet.create({
     shadowRadius: 10,
     elevation: 4,
   },
+  desktopHeroCtaPrimaryDaylight: {
+    borderColor: 'rgba(255, 240, 210, 0.82)',
+    shadowColor: 'rgba(255, 220, 160, 0.5)',
+    shadowOpacity: 0.52,
+    shadowRadius: 12,
+  },
   desktopHeroCtaPrimaryFill: {
     paddingVertical: 12,
     paddingHorizontal: 20,
@@ -2665,6 +2995,12 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: vionaTokens.fashionTech.canvas,
     letterSpacing: 0.3,
+  },
+  desktopHeroCtaPrimaryTextDaylight: {
+    color: 'rgb(10, 14, 22)',
+    textShadowColor: 'rgba(255, 255, 255, 0.35)',
+    textShadowOffset: { width: 0, height: 0.5 },
+    textShadowRadius: 4,
   },
   desktopHeroCtaSecondary: {
     paddingVertical: 12,
@@ -2731,6 +3067,15 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(6, 10, 18, 0.72)',
     zIndex: 3,
   },
+  desktopHeroConnectedChipDaylight: {
+    borderColor: 'rgba(252, 228, 180, 0.42)',
+    backgroundColor: 'rgba(10, 16, 26, 0.78)',
+    shadowColor: FASHION_HOME_DAYLIGHT_CHIP_CONTAINED_GLOW,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.55,
+    shadowRadius: 8,
+    elevation: 2,
+  },
   desktopHeroConnectedChipText: {
     fontSize: 11,
     lineHeight: 15,
@@ -2738,7 +3083,8 @@ const styles = StyleSheet.create({
     fontFamily: FontFamily.medium,
   },
   ftCardGridFashionSibling: {
-    marginTop: vionaTokens.spacing[16] - FASHION_HOME_WORLD_CARD_ROW_NUDGE_UP_PX,
+    marginTop:
+      FASHION_HOME_WORLD_CARD_HERO_BREATHING_TOP_PX - FASHION_HOME_WORLD_CARD_STAGE_LAP_PX,
     marginBottom: vionaTokens.spacing[8],
   },
   ftHeroBleed: {
@@ -2868,7 +3214,7 @@ const styles = StyleSheet.create({
     transform: [{ scale: 1.02 }, { translateX: 0 }],
   },
   ftCardRailScrollOuter: {
-    marginTop: vionaTokens.spacing[32],
+    marginTop: FASHION_HOME_WORLD_CARD_HERO_BREATHING_TOP_PX + 10,
     marginHorizontal: -vionaTokens.spacing[4],
     paddingBottom: vionaTokens.spacing[12],
   },
@@ -2919,15 +3265,6 @@ const styles = StyleSheet.create({
     minWidth: 0,
     maxWidth: '100%',
     alignSelf: 'stretch',
-  },
-  /** Daylight Boost: outer glow on world-card cells (does not replace card glass). */
-  ftCardCellDaylight: {
-    borderRadius: vionaTokens.radius.xl,
-    shadowColor: FASHION_HOME_DAYLIGHT_FRAME_GLOW,
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 1,
-    shadowRadius: 18,
-    elevation: 5,
   },
   trustStripHintDesktop: {
     flex: 1,
@@ -2981,6 +3318,110 @@ const styles = StyleSheet.create({
     letterSpacing: 0.35,
     textTransform: 'uppercase',
     marginBottom: vionaTokens.spacing[12],
+  },
+  quickActionPromptDaylight: {
+    color: 'rgba(255, 244, 220, 0.98)',
+    textShadowColor: FASHION_HOME_DAYLIGHT_TEXT_SHADOW,
+    textShadowOffset: { width: 0, height: 0.5 },
+    textShadowRadius: 8,
+  },
+  quickActionPillDaylightBase: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    minHeight: 36,
+    borderRadius: vionaTokens.radius.pill,
+    borderWidth: 1,
+    paddingHorizontal: 13,
+    paddingVertical: 0,
+    elevation: 1,
+    overflow: 'hidden',
+  },
+  quickActionPillDaylightFill: {
+    width: '100%',
+    minWidth: 0,
+  },
+  quickActionPillDaylightPressed: {
+    opacity: 0.88,
+  },
+  quickActionPillDaylightSheen: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    top: 0,
+    height: 16,
+    zIndex: 2,
+    pointerEvents: 'none',
+  },
+  quickActionPillDaylightIconCapsule: {
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 3,
+  },
+  quickActionPillDaylightIconCapsuleWeb: {
+    boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.06)',
+  },
+  quickActionPillDaylightLabel: {
+    zIndex: 3,
+    fontSize: 12,
+    lineHeight: 16,
+    color: 'rgba(248, 250, 252, 0.98)',
+    fontFamily: FontFamily.semibold,
+    textShadowColor: FASHION_HOME_DAYLIGHT_TEXT_SHADOW,
+    textShadowOffset: { width: 0, height: 0.5 },
+    textShadowRadius: 6,
+  },
+  quickActionPillDaylightLabelSos: {
+    color: vionaTokens.fashionTech.sosNeon,
+  },
+  worldCardGlassLayers: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    top: 0,
+    bottom: 0,
+    zIndex: 8,
+    pointerEvents: 'none',
+  },
+  worldCardGlassSurfaceSheen: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    top: 0,
+    height: '45%',
+    opacity: 1,
+    zIndex: 1,
+  },
+  worldCardGlassInnerGlow: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    top: 0,
+    height: '62%',
+    opacity: 1,
+    zIndex: 1,
+  },
+  worldCardGlassEdgeSoften: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    top: 0,
+    bottom: 0,
+    opacity: 1,
+    zIndex: 1,
+  },
+  worldCardGlassTopRefraction: {
+    position: 'absolute',
+    left: 12,
+    right: 12,
+    top: 1,
+    height: 1,
+    backgroundColor: 'rgba(255,255,255,0.18)',
+    zIndex: 2,
   },
   quickActionRow: {
     flexDirection: 'row',

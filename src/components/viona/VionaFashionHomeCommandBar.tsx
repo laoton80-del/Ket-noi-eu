@@ -12,9 +12,9 @@ import {
   FASHION_HOME_DAYLIGHT_RAIL_BORDER,
   FASHION_HOME_DAYLIGHT_RAIL_GRADIENT,
   FASHION_HOME_DAYLIGHT_RAIL_HIGHLIGHT,
+  FASHION_HOME_DAYLIGHT_CHIP_CONTAINED_GLOW,
   FASHION_HOME_GLOW_CYAN,
   FASHION_HOME_GLOW_GOLD,
-  FASHION_HOME_LINE_CYAN,
   FASHION_HOME_LINE_GOLD_SOFT,
   fashionHomeWebDaylightTransitionStyle,
   premiumCrispEdgeStroke,
@@ -177,6 +177,7 @@ export function VionaFashionHomeCommandBar({
                     styles.daylightBoostBtn,
                     compactDensity && styles.daylightBoostBtnCompact,
                     daylightBoost && styles.daylightBoostBtnActive,
+                    Platform.OS === 'web' && daylightBoost && styles.daylightBoostBtnActiveWeb,
                     pressed && styles.pressed,
                   ]}
                   accessibilityRole="button"
@@ -434,12 +435,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 11,
     borderRadius: vionaTokens.radius.pill,
     borderWidth: 1,
-    borderColor: FASHION_HOME_LINE_CYAN,
+    borderColor: 'rgba(136, 218, 255, 0.24)',
     backgroundColor: 'rgba(8, 12, 20, 0.78)',
     shadowColor: FASHION_HOME_GLOW_CYAN,
     shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 1,
-    shadowRadius: 3,
+    shadowOpacity: 0.75,
+    shadowRadius: 2,
     elevation: 1,
     maxWidth: 170,
   },
@@ -463,11 +464,15 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
   },
   daylightBoostBtnActive: {
-    borderColor: 'rgba(252, 228, 180, 0.55)',
-    backgroundColor: 'rgba(18, 26, 40, 0.88)',
-    shadowColor: FASHION_HOME_GLOW_GOLD,
+    borderColor: 'rgba(252, 228, 180, 0.58)',
+    backgroundColor: 'rgba(20, 28, 44, 0.9)',
+    shadowColor: FASHION_HOME_DAYLIGHT_CHIP_CONTAINED_GLOW,
     shadowOpacity: 1,
     shadowRadius: 6,
+  },
+  daylightBoostBtnActiveWeb: {
+    boxShadow:
+      'inset 0 1px 0 rgba(255, 248, 230, 0.2), inset 0 -12px 28px rgba(10, 22, 40, 0.12), 0 0 0 1px rgba(252, 236, 200, 0.32), 0 4px 12px rgba(6, 10, 18, 0.38)',
   },
   daylightBoostLabelActive: {
     color: 'rgba(255, 248, 235, 0.96)',
