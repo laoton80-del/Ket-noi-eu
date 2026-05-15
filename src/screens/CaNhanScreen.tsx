@@ -58,7 +58,7 @@ type Nav = NativeStackNavigationProp<RootStackParamList>;
 const ADMIN_UNLOCK_KEY = STORAGE_KEYS.adminUnlock;
 
 const ft = vionaTokens.fashionTech;
-const IMG_ACCOUNT_CONSTELLATION = require('../../assets/UI/viona-account-global-network-bg-v1.png');
+const IMG_ACCOUNT_CONSTELLATION = require('../../assets/UI/viona-account-global-net-bg-v2.png');
 const constellationImageWebFit =
   Platform.OS === 'web'
     ? ({ objectFit: 'cover' as const, objectPosition: '52% 20%' as const } as const)

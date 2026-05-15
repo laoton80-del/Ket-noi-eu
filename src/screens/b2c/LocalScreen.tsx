@@ -77,7 +77,7 @@ type ClassifiedPost = Readonly<{
 }>;
 
 const VIP_POSTING_COST_VIG = 120;
-const LOCAL_GLOBAL_BG = require('../../../assets/UI/viona-local-global-network-bg-v1.png');
+const LOCAL_GLOBAL_BG = require('../../../assets/UI/viona-local-global-net-bg-v2.png');
 const BG = localConstellation.canvas;
 const SURFACE = localConstellation.surfaceRaised;
 const INK = localConstellation.ink;
