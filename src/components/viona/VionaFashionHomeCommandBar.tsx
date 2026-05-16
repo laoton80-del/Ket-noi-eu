@@ -16,6 +16,7 @@ import {
   FASHION_HOME_GLOW_CYAN,
   FASHION_HOME_GLOW_GOLD,
   FASHION_HOME_LINE_GOLD_SOFT,
+  fashionHomeWebCommandUtilityHoverStyle,
   fashionHomeWebDaylightTransitionStyle,
   premiumCrispEdgeStroke,
   premiumFrameEdgeOverlay,
@@ -24,6 +25,9 @@ import { VionaBrandLockup } from './VionaBrandLockup';
 import { vionaGlobalTopRailWebRightReservePx } from './globalLightNetworkTokens';
 import { FontFamily } from '../../theme/typography';
 import { useTranslation } from '../../i18n';
+
+/** RN types omit web `hovered`; runtime supplies it on react-native-web. */
+type FashionHomePressableStyleState = { pressed: boolean; hovered?: boolean };
 
 /** Below this window width, use a slightly smaller wordmark so chips keep air. */
 const LOGO_COMPACT_BREAKPOINT = 1060;
@@ -135,11 +139,15 @@ export function VionaFashionHomeCommandBar({
               {showRolePicker && onPressRole ? (
                 <Pressable
                   onPress={onPressRole}
-                  style={({ pressed }) => [
+                  style={(s) => {
+                    const { pressed, hovered } = s as FashionHomePressableStyleState;
+                    return [
                     styles.utilBtn,
                     compactDensity && styles.utilBtnCompact,
+                    Platform.OS === 'web' && fashionHomeWebCommandUtilityHoverStyle(!!hovered, !!daylightBoost),
                     pressed && styles.pressed,
-                  ]}
+                  ];
+                  }}
                 >
                   <Ionicons
                     name="shuffle-outline"
@@ -153,11 +161,15 @@ export function VionaFashionHomeCommandBar({
               ) : null}
               <Pressable
                 onPress={onPressLanguage}
-                style={({ pressed }) => [
+                style={(s) => {
+                  const { pressed, hovered } = s as FashionHomePressableStyleState;
+                  return [
                   styles.utilBtn,
                   compactDensity && styles.utilBtnCompact,
+                  Platform.OS === 'web' && fashionHomeWebCommandUtilityHoverStyle(!!hovered, !!daylightBoost),
                   pressed && styles.pressed,
-                ]}
+                ];
+                }}
               >
                 <Ionicons
                   name="globe-outline"
@@ -171,15 +183,19 @@ export function VionaFashionHomeCommandBar({
               {onPressDaylightBoost ? (
                 <Pressable
                   onPress={onPressDaylightBoost}
-                  style={({ pressed }) => [
+                  style={(s) => {
+                    const { pressed, hovered } = s as FashionHomePressableStyleState;
+                    return [
                     styles.utilBtn,
                     compactDensity && styles.utilBtnCompact,
                     styles.daylightBoostBtn,
                     compactDensity && styles.daylightBoostBtnCompact,
                     daylightBoost && styles.daylightBoostBtnActive,
                     Platform.OS === 'web' && daylightBoost && styles.daylightBoostBtnActiveWeb,
+                    Platform.OS === 'web' && fashionHomeWebCommandUtilityHoverStyle(!!hovered, !!daylightBoost),
                     pressed && styles.pressed,
-                  ]}
+                  ];
+                  }}
                   accessibilityRole="button"
                   accessibilityLabel={daylightBoostLabel ?? 'Daylight Boost'}
                 >
@@ -202,12 +218,16 @@ export function VionaFashionHomeCommandBar({
               {fullscreenControl ? (
                 <Pressable
                   onPress={fullscreenControl.onPress}
-                  style={({ pressed }) => [
+                  style={(s) => {
+                    const { pressed, hovered } = s as FashionHomePressableStyleState;
+                    return [
                     styles.utilBtn,
                     compactDensity && styles.utilBtnCompact,
                     compactDensity ? styles.fullscreenBtnCompact : styles.fullscreenBtn,
+                    Platform.OS === 'web' && fashionHomeWebCommandUtilityHoverStyle(!!hovered, !!daylightBoost),
                     pressed && styles.pressed,
-                  ]}
+                  ];
+                  }}
                   accessibilityRole="button"
                   accessibilityLabel={fullscreenControl.accessibilityLabel}
                 >
@@ -225,11 +245,15 @@ export function VionaFashionHomeCommandBar({
               ) : null}
               <Pressable
                 onPress={onPressVio}
-                style={({ pressed }) => [
+                style={(s) => {
+                  const { pressed, hovered } = s as FashionHomePressableStyleState;
+                  return [
                   styles.utilBtn,
                   compactDensity && styles.utilBtnCompact,
+                  Platform.OS === 'web' && fashionHomeWebCommandUtilityHoverStyle(!!hovered, !!daylightBoost),
                   pressed && styles.pressed,
-                ]}
+                ];
+                }}
               >
                 <Ionicons
                   name="wallet-outline"
@@ -262,11 +286,15 @@ export function VionaFashionHomeCommandBar({
               </Pressable>
               <Pressable
                 onPress={onPressAccount}
-                style={({ pressed }) => [
+                style={(s) => {
+                  const { pressed, hovered } = s as FashionHomePressableStyleState;
+                  return [
                   styles.utilBtn,
                   compactDensity && styles.utilBtnCompact,
+                  Platform.OS === 'web' && fashionHomeWebCommandUtilityHoverStyle(!!hovered, !!daylightBoost),
                   pressed && styles.pressed,
-                ]}
+                ];
+                }}
               >
                 <Ionicons
                   name="person-circle-outline"
@@ -435,11 +463,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: 11,
     borderRadius: vionaTokens.radius.pill,
     borderWidth: 1,
-    borderColor: 'rgba(136, 218, 255, 0.24)',
-    backgroundColor: 'rgba(8, 12, 20, 0.78)',
+    borderColor: 'rgba(136, 218, 255, 0.18)',
+    backgroundColor: 'rgba(10, 14, 22, 0.82)',
     shadowColor: FASHION_HOME_GLOW_CYAN,
     shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.75,
+    shadowOpacity: 0.5,
     shadowRadius: 2,
     elevation: 1,
     maxWidth: 170,
@@ -452,11 +480,11 @@ const styles = StyleSheet.create({
   daylightBoostBtn: {
     maxWidth: 124,
     borderColor: FASHION_HOME_LINE_GOLD_SOFT,
-    backgroundColor: 'rgba(10, 14, 22, 0.72)',
+    backgroundColor: 'rgba(10, 14, 22, 0.76)',
     shadowColor: FASHION_HOME_GLOW_GOLD,
     shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.85,
-    shadowRadius: 4,
+    shadowOpacity: 0.72,
+    shadowRadius: 3,
     elevation: 1,
   },
   daylightBoostBtnCompact: {

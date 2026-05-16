@@ -100,6 +100,13 @@ export type VionaFashionWorldCardProps = Readonly<{
   onHoverOut?: () => void;
   onFocus?: () => void;
   onBlur?: () => void;
+  /**
+   * Home Daylight desktop web: suppress full-card atmosphere wash; keep image sharp.
+   * Edge glass is supplied by Home `FashionHomeWorldCardGlassLayers` on the host cell.
+   */
+  glassMaterialMode?: 'default' | 'edgeLit';
+  /** Home Daylight web: brighter icon capsule when host cell is hovered. */
+  edgeLitHoverBoost?: boolean;
 }>;
 
 export function VionaFashionWorldCard({
@@ -122,7 +129,10 @@ export function VionaFashionWorldCard({
   onHoverOut,
   onFocus,
   onBlur,
+  glassMaterialMode = 'default',
+  edgeLitHoverBoost = false,
 }: VionaFashionWorldCardProps) {
+  const edgeLitGlass = glassMaterialMode === 'edgeLit';
   const fallbackGrad = FALLBACK_GRADIENT[accent];
   const accentColor = ACCENT_RAIL[accent];
   const minH = variant === 'heroRow' ? 172 : 168;
@@ -173,7 +183,15 @@ export function VionaFashionWorldCard({
       };
 
   /** Narrow left scrim for title/sub copy only — keeps photo side bright (no full-card blanket). */
-  const textScrim = (
+  const textScrim = edgeLitGlass ? (
+    <LinearGradient
+      colors={['rgba(4, 7, 12, 0.36)', 'rgba(4, 7, 12, 0.12)', 'rgba(4, 7, 12, 0)']}
+      start={{ x: 0, y: 0.5 }}
+      end={{ x: 1, y: 0.5 }}
+      style={styles.textScrimEdgeLit}
+      pointerEvents="none"
+    />
+  ) : (
     <LinearGradient
       colors={['rgba(4, 7, 12, 0.48)', 'rgba(4, 7, 12, 0.22)', 'rgba(4, 7, 12, 0)']}
       start={{ x: 0, y: 0.5 }}
@@ -184,7 +202,7 @@ export function VionaFashionWorldCard({
   );
 
   const constellationAtmosphere =
-    backgroundImage != null ? (
+    backgroundImage != null && !edgeLitGlass ? (
       <>
         <LinearGradient
           colors={['rgba(6, 9, 14, 0.1)', 'rgba(3, 6, 11, 0.38)', 'rgba(3, 6, 11, 0.32)']}
@@ -208,10 +226,14 @@ export function VionaFashionWorldCard({
   const footerReadabilityScrim =
     backgroundImage != null && (footerHint != null || showChevron) ? (
       <LinearGradient
-        colors={['rgba(4, 7, 12, 0)', 'rgba(4, 7, 12, 0.24)', 'rgba(4, 7, 12, 0.46)']}
+        colors={
+          edgeLitGlass
+            ? ['rgba(4, 7, 12, 0)', 'rgba(4, 7, 12, 0.32)', 'rgba(4, 7, 12, 0.52)']
+            : ['rgba(4, 7, 12, 0)', 'rgba(4, 7, 12, 0.24)', 'rgba(4, 7, 12, 0.46)']
+        }
         start={{ x: 0, y: 0 }}
         end={{ x: 0, y: 1 }}
-        style={styles.footerScrim}
+        style={edgeLitGlass ? styles.footerScrimEdgeLit : styles.footerScrim}
         pointerEvents="none"
       />
     ) : null;
@@ -237,7 +259,18 @@ export function VionaFashionWorldCard({
     <View style={[styles.rowShell, stretch.row]}>
       <View style={stretch.inner}>
         <View style={styles.topRow}>
-          {icon ? <View style={[styles.iconSlot, { borderColor: `${accentColor}ea` }]}>{icon}</View> : null}
+          {icon ? (
+            <View
+              style={[
+                styles.iconSlot,
+                { borderColor: `${accentColor}${edgeLitGlass && edgeLitHoverBoost ? 'ff' : 'ea'}` },
+                edgeLitGlass && styles.iconSlotEdgeLit,
+                edgeLitGlass && edgeLitHoverBoost && styles.iconSlotEdgeLitHover,
+              ]}
+            >
+              {icon}
+            </View>
+          ) : null}
           <View style={styles.copy}>
             <Text style={styles.title} numberOfLines={2} ellipsizeMode="tail">
               {title}
@@ -278,7 +311,7 @@ export function VionaFashionWorldCard({
   );
 
   const cardFace = (
-    <View style={[styles.grad, stretch.shell]}>
+    <View style={[styles.grad, edgeLitGlass && styles.gradEdgeLit, stretch.shell]}>
       {visualStage}
       {cardContent}
     </View>
@@ -366,6 +399,9 @@ const styles = StyleSheet.create({
     position: 'relative',
     overflow: 'hidden',
   },
+  gradEdgeLit: {
+    backgroundColor: 'rgba(6, 10, 16, 0.06)',
+  },
   visualStage: {
     ...StyleSheet.absoluteFillObject,
     top: 1,
@@ -411,12 +447,28 @@ const styles = StyleSheet.create({
     width: '72%',
     zIndex: 0,
   },
+  textScrimEdgeLit: {
+    position: 'absolute',
+    left: 0,
+    top: 0,
+    bottom: 0,
+    width: '58%',
+    zIndex: 0,
+  },
   footerScrim: {
     position: 'absolute',
     left: 0,
     right: 0,
     bottom: 0,
     height: '42%',
+    zIndex: 0,
+  },
+  footerScrimEdgeLit: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 0,
+    height: '34%',
     zIndex: 0,
   },
   rowShell: {
@@ -469,6 +521,22 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     borderWidth: 1,
     backgroundColor: 'rgba(6, 10, 18, 0.55)',
+  },
+  iconSlotEdgeLit: {
+    backgroundColor: 'rgba(6, 10, 18, 0.42)',
+  },
+  iconSlotEdgeLitHover: {
+    backgroundColor: 'rgba(8, 12, 20, 0.52)',
+    ...(Platform.OS === 'web'
+      ? ({
+          boxShadow: '0 0 0 1px rgba(255,255,255,0.22), 0 0 14px rgba(255,255,255,0.18)',
+        } as ViewStyle)
+      : {
+          shadowOffset: { width: 0, height: 0 },
+          shadowOpacity: 0.85,
+          shadowRadius: 8,
+          elevation: 2,
+        }),
   },
   copy: {
     flex: 1,
