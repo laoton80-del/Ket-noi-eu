@@ -209,13 +209,13 @@ const LIVING_HERO_DESKTOP_COPY: Readonly<
     eyebrow: 'VIONA HUMAN CONSTELLATION',
     title: 'Your global companion, wherever life moves.',
     subtitle:
-      'Local life, travel support, learning, and AI assistance â€” designed for Vietnamese people worldwide.',
+      'Local life, travel support, learning, and AI assistance — designed for Vietnamese people worldwide.',
   },
   local: {
     eyebrow: 'VIONA LOCAL',
     title: 'Find trusted support around where you live.',
     subtitle:
-      'Local services, community connection, and daily life abroad â€” built for Vietnamese people worldwide.',
+      'Local services, community connection, and daily life abroad — built for Vietnamese people worldwide.',
   },
   travel: {
     eyebrow: 'VIONA TRAVEL',

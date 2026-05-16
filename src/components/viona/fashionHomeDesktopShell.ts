@@ -48,16 +48,18 @@ export const FASHION_HOME_WEB_COMMAND_STAGE_BAR_RESERVE_COMPACT_PX = 98;
 /** Compact hero→cards gap on desktop web opening stage (px). */
 export const FASHION_HOME_WEB_COMMAND_STAGE_HERO_CARD_HOOK_PX = 6;
 /** Initial world-row height before `onLayout` measure (1366×768 four-card row + footers). */
-export const FASHION_HOME_WEB_WORLD_CARD_ROW_ESTIMATE_PX = 168;
+export const FASHION_HOME_WEB_WORLD_CARD_ROW_ESTIMATE_PX = 180;
 /** @deprecated Use `FASHION_HOME_WEB_OPENING_STAGE_CARD_ROW_BOTTOM_CLEARANCE_PX`. */
 export const FASHION_HOME_WEB_OPENING_STAGE_WORLD_STRIP_BOTTOM_INSET_PX = 10;
 /** Gap between hero bottom edge and world-card row top (px). */
 export const FASHION_HOME_WEB_OPENING_STAGE_HERO_TO_CARD_GAP_PX = 6;
 /** Opening hero height floor / cap (px) — viewport-capped; cards must not clip. */
-export const FASHION_HOME_WEB_OPENING_STAGE_HERO_MIN_PX = 414;
-export const FASHION_HOME_WEB_OPENING_STAGE_HERO_MAX_PX = 478;
-/** RIGHT.EDGE.ONLY.FINAL — hero + world-card row right reach (desktop web). */
-export const FASHION_HOME_WEB_OPENING_STAGE_STAGE_RIGHT_BLEED_PX = 149;
+export const FASHION_HOME_WEB_OPENING_STAGE_HERO_MIN_PX = 430;
+export const FASHION_HOME_WEB_OPENING_STAGE_HERO_MAX_PX = 494;
+/** PREMIUM.FRAME.MICRO.FINAL.1 — hero + world-card row right reach (desktop web). */
+export const FASHION_HOME_WEB_OPENING_STAGE_STAGE_RIGHT_BLEED_PX = 184;
+/** Opening-stage world card cell min height (host only; card component unchanged). */
+export const FASHION_HOME_WEB_OPENING_STAGE_WORLD_CARD_MIN_HEIGHT_PX = 180;
 /** Hub rail right reach — unchanged when opening stage widens. */
 export const FASHION_HOME_WEB_OPENING_STAGE_HUB_RIGHT_BLEED_PX = 109;
 /** Bottom air under card row inside opening viewport budget (px). */
@@ -95,7 +97,7 @@ export const FASHION_HOME_WEB_OPENING_STAGE_HERO_OBJECT_POSITION_X_PCT = 84;
 export const FASHION_HOME_WEB_OPENING_STAGE_HERO_OBJECT_POSITION_X_FULLSCREEN_SHIFT_PCT = 1;
 export const FASHION_HOME_WEB_OPENING_STAGE_HERO_OBJECT_POSITION_Y_PCT = 32;
 /** Pull VIONA FOR YOU block up toward cards (fullscreen only). */
-export const FASHION_HOME_WEB_OPENING_STAGE_HUB_PULLUP_PX = 6;
+export const FASHION_HOME_WEB_OPENING_STAGE_HUB_PULLUP_PX = 18;
 /** Non-fullscreen desktop web: keep hero flush under command rail (max 4px in shell). */
 export const FASHION_HOME_WEB_OPENING_STAGE_NORMAL_WEB_TOP_OFFSET_PX = 0;
 /** @deprecated Use `FASHION_HOME_WEB_WORLD_CARD_ROW_ESTIMATE_PX` + fold pad in layout memo. */
@@ -766,11 +768,12 @@ export function fashionHomeWebOpeningStageCardGridStyle(): ViewStyle {
   } as ViewStyle;
 }
 
-/** Opening-stage world card cell — stretch only; row height from measure + budget. */
+/** Opening-stage world card cell — slight height lift when budget allows. */
 export function fashionHomeWebOpeningStageCardCellStyle(): ViewStyle {
   if (Platform.OS !== 'web') return {};
   return {
     alignSelf: 'stretch',
+    minHeight: FASHION_HOME_WEB_OPENING_STAGE_WORLD_CARD_MIN_HEIGHT_PX,
   } as ViewStyle;
 }
 
