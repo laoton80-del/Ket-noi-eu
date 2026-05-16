@@ -185,7 +185,7 @@ export function VionaFashionWorldCard({
   /** Narrow left scrim for title/sub copy only — keeps photo side bright (no full-card blanket). */
   const textScrim = edgeLitGlass ? (
     <LinearGradient
-      colors={['rgba(4, 7, 12, 0.36)', 'rgba(4, 7, 12, 0.12)', 'rgba(4, 7, 12, 0)']}
+      colors={['rgba(4, 7, 12, 0.32)', 'rgba(4, 7, 12, 0.1)', 'rgba(4, 7, 12, 0)']}
       start={{ x: 0, y: 0.5 }}
       end={{ x: 1, y: 0.5 }}
       style={styles.textScrimEdgeLit}
@@ -228,7 +228,7 @@ export function VionaFashionWorldCard({
       <LinearGradient
         colors={
           edgeLitGlass
-            ? ['rgba(4, 7, 12, 0)', 'rgba(4, 7, 12, 0.32)', 'rgba(4, 7, 12, 0.52)']
+            ? ['rgba(4, 7, 12, 0)', 'rgba(4, 7, 12, 0.28)', 'rgba(4, 7, 12, 0.48)']
             : ['rgba(4, 7, 12, 0)', 'rgba(4, 7, 12, 0.24)', 'rgba(4, 7, 12, 0.46)']
         }
         start={{ x: 0, y: 0 }}
@@ -400,7 +400,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   gradEdgeLit: {
-    backgroundColor: 'rgba(6, 10, 16, 0.06)',
+    backgroundColor: 'rgba(6, 10, 16, 0.04)',
   },
   visualStage: {
     ...StyleSheet.absoluteFillObject,
@@ -529,7 +529,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(8, 12, 20, 0.52)',
     ...(Platform.OS === 'web'
       ? ({
-          boxShadow: '0 0 0 1px rgba(255,255,255,0.22), 0 0 14px rgba(255,255,255,0.18)',
+          boxShadow: '0 0 0 1px rgba(255,255,255,0.2), 0 0 12px rgba(255,255,255,0.1)',
         } as ViewStyle)
       : {
           shadowOffset: { width: 0, height: 0 },

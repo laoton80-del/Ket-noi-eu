@@ -500,7 +500,7 @@ const styles = StyleSheet.create({
   },
   daylightBoostBtnActiveWeb: {
     boxShadow:
-      'inset 0 1px 0 rgba(255, 248, 230, 0.2), inset 0 -12px 28px rgba(10, 22, 40, 0.12), 0 0 0 1px rgba(252, 236, 200, 0.32), 0 4px 12px rgba(6, 10, 18, 0.38)',
+      'inset 0 1px 0 rgba(255, 248, 230, 0.24), inset 0 -8px 18px rgba(10, 22, 40, 0.1), 0 0 0 1px rgba(252, 236, 200, 0.38), 0 4px 12px rgba(6, 10, 18, 0.38)',
   },
   daylightBoostLabelActive: {
     color: 'rgba(255, 248, 235, 0.96)',

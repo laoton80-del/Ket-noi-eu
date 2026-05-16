@@ -3707,7 +3707,7 @@ const styles = StyleSheet.create({
     zIndex: 1,
   },
   worldCardGlassCornerBoost: {
-    opacity: 1.28,
+    opacity: 1.16,
   },
   worldCardGlassCornerLitTr: {
     position: 'absolute',
@@ -3727,7 +3727,7 @@ const styles = StyleSheet.create({
     opacity: 1,
   },
   worldCardGlassDiagonalSpecHover: {
-    opacity: 1.12,
+    opacity: 1.08,
   },
   worldCardGlassSurfaceSheen: {
     position: 'absolute',
@@ -3772,10 +3772,10 @@ const styles = StyleSheet.create({
     top: '18%',
     height: '38%',
     zIndex: 8,
-    opacity: 0.72,
+    opacity: 0.64,
   },
   worldCardGlassHoverEdgeSweepBoost: {
-    opacity: 0.92,
+    opacity: 0.96,
   },
   worldCardGlassTopRefractionGrad: {
     position: 'absolute',
@@ -3795,8 +3795,8 @@ const styles = StyleSheet.create({
     zIndex: 9,
   },
   worldCardGlassRefractionBoost: {
-    opacity: 1.22,
-    height: 5,
+    opacity: 1.12,
+    height: 4,
   },
   quickActionRow: {
     flexDirection: 'row',
