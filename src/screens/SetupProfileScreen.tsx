@@ -3,13 +3,24 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RouteProp } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { useEffect, useMemo, useState } from 'react';
-import { Image, Platform, Pressable, StyleSheet, Text, TextInput, View, useWindowDimensions } from 'react-native';
+import {
+  Image,
+  Platform,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+  useWindowDimensions,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth, type ResidencyStatus, type UserSegment } from '../context/AuthContext';
 import type { PricingTierId } from '../config/countryPacks';
 import { PILOT_LEONA_SERVICES_FALLBACK_PREFILL, resolvePilotAwareRedirectTarget } from '../config/launchPilot';
 import { MAIN_TAB, type RootStackParamList } from '../navigation/routes';
 import { vionaTokens } from '../design';
+import { IdentityGlassTextField } from '../components/setupProfile/IdentityGlassTextField';
+import { IdentitySelectorCard } from '../components/setupProfile/IdentitySelectorCard';
 import { VionaBrandLockup } from '../components/viona/VionaBrandLockup';
 import {
   premiumCrispEdgeStroke,
@@ -19,10 +30,8 @@ import { FontFamily } from '../theme/typography';
 
 const ft = vionaTokens.fashionTech;
 const LUM_PANEL_BORDER = 'rgba(148, 172, 198, 0.44)';
-const LUM_CYAN_EDGE = `${ft.accentCyan}ea`;
 const LUM_GOLD_EDGE = `${ft.accentGold}ea`;
 const LUM_EMERALD_EDGE = `${ft.accentEmerald}ea`;
-const LUM_VIOLET_EDGE = `${ft.accentViolet}ea`;
 const LUM_GLOW_CYAN = 'rgba(128, 210, 255, 0.14)';
 const LUM_GLOW_GOLD = 'rgba(238, 206, 128, 0.14)';
 const LUM_GLOW_EMERALD = 'rgba(46, 207, 155, 0.14)';
@@ -123,6 +132,11 @@ export function SetupProfileScreen() {
         </View>
         <View style={styles.constellationOverlay} />
       </View>
+      <ScrollView
+        contentContainerStyle={styles.scrollBody}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+      >
       <View style={styles.cardWrap}>
         <View style={styles.card}>
           <VionaBrandLockup variant="header" showAccentUnderline style={styles.brandLockup} />
@@ -134,64 +148,57 @@ export function SetupProfileScreen() {
         </View>
         <Text style={styles.sub}>Chọn quốc gia cư trú và bổ sung hồ sơ để tư vấn và công cụ khớp ngữ cảnh hơn.</Text>
 
-        <Pressable
-          onPress={() => setCountryIndex((i) => (i + 1) % RESIDENCY_COUNTRIES.length)}
-          style={({ pressed }) => [styles.countryBtn, styles.countryBtnCyan, pressed && { opacity: 0.82 }]}
-        >
-          <View style={styles.rowBadgeCyan} />
-          <Text style={styles.countryLabel}>{selectedCountry.label}</Text>
-        </Pressable>
+        <View style={styles.selectorStack}>
+          <IdentitySelectorCard
+            kicker="Quốc gia"
+            valueLine={selectedCountry.label}
+            accent="cyan"
+            onPress={() => setCountryIndex((i) => (i + 1) % RESIDENCY_COUNTRIES.length)}
+            testID="setup-profile-country"
+          />
+          <IdentitySelectorCard
+            kicker="Diện cư trú"
+            valueLine={selectedResidency.label}
+            accent="emerald"
+            onPress={() => setResidencyIndex((i) => (i + 1) % RESIDENCY_OPTIONS.length)}
+            testID="setup-profile-residency"
+          />
+          <IdentitySelectorCard
+            kicker="Segment học tập"
+            valueLine={selectedSegment.label}
+            accent="violet"
+            onPress={() => setSegmentIndex((i) => (i + 1) % SEGMENT_OPTIONS.length)}
+            testID="setup-profile-segment"
+          />
+        </View>
 
-        <Pressable
-          onPress={() => setResidencyIndex((i) => (i + 1) % RESIDENCY_OPTIONS.length)}
-          style={({ pressed }) => [styles.countryBtn, styles.countryBtnTeal, pressed && { opacity: 0.82 }]}
-        >
-          <View style={styles.rowBadgeTeal} />
-          <Text style={styles.countryLabel}>Diện cư trú: {selectedResidency.label}</Text>
-        </Pressable>
-
-        <Pressable
-          onPress={() => setSegmentIndex((i) => (i + 1) % SEGMENT_OPTIONS.length)}
-          style={({ pressed }) => [styles.countryBtn, styles.countryBtnSegment, pressed && { opacity: 0.82 }]}
-        >
-          <View style={styles.rowBadgeSegment} />
-          <Text style={styles.countryLabel}>Segment học tập: {selectedSegment.label}</Text>
-        </Pressable>
-
-        <View style={styles.inputField}>
-          {focusedField === 'name' ? <View style={styles.inputMarker} /> : null}
-          <TextInput
+        <View style={styles.fieldStack}>
+          <IdentityGlassTextField
             value={name}
             onChangeText={setName}
             placeholder="Tên / Tên tiệm"
-            style={[styles.input, focusedField === 'name' && styles.inputFocused]}
-            placeholderTextColor="rgba(244, 246, 250, 0.72)"
+            focused={focusedField === 'name'}
             onFocus={() => setFocusedField('name')}
             onBlur={() => setFocusedField((prev) => (prev === 'name' ? null : prev))}
+            testID="setup-profile-name"
           />
-        </View>
-        <View style={[styles.inputField, styles.inputSpacer]}>
-          {focusedField === 'visaType' ? <View style={styles.inputMarker} /> : null}
-          <TextInput
+          <IdentityGlassTextField
             value={visaType}
             onChangeText={setVisaType}
             placeholder="Loại Visa/Thẻ cư trú (vd: Blue Card)"
-            style={[styles.input, focusedField === 'visaType' && styles.inputFocused]}
-            placeholderTextColor="rgba(244, 246, 250, 0.72)"
+            focused={focusedField === 'visaType'}
             onFocus={() => setFocusedField('visaType')}
             onBlur={() => setFocusedField((prev) => (prev === 'visaType' ? null : prev))}
+            testID="setup-profile-visa-type"
           />
-        </View>
-        <View style={[styles.inputField, styles.inputSpacer]}>
-          {focusedField === 'visaExpiry' ? <View style={styles.inputMarker} /> : null}
-          <TextInput
+          <IdentityGlassTextField
             value={visaExpiryDate}
             onChangeText={setVisaExpiryDate}
             placeholder="Ngày hết hạn Visa (YYYY-MM-DD)"
-            style={[styles.input, focusedField === 'visaExpiry' && styles.inputFocused]}
-            placeholderTextColor="rgba(244, 246, 250, 0.72)"
+            focused={focusedField === 'visaExpiry'}
             onFocus={() => setFocusedField('visaExpiry')}
             onBlur={() => setFocusedField((prev) => (prev === 'visaExpiry' ? null : prev))}
+            testID="setup-profile-visa-expiry"
           />
         </View>
         {showVisaExpiryError ? (
@@ -301,6 +308,7 @@ export function SetupProfileScreen() {
         />
         <View pointerEvents="none" style={styles.cardTopHighlight} />
       </View>
+      </ScrollView>
     </SafeAreaView>
   );
 }
@@ -309,9 +317,13 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: ft.canvas,
+    overflow: 'hidden',
+  },
+  scrollBody: {
+    flexGrow: 1,
     justifyContent: 'center',
     paddingHorizontal: 18,
-    overflow: 'hidden',
+    paddingVertical: 12,
   },
   backdrop: {
     ...StyleSheet.absoluteFillObject,
@@ -387,114 +399,12 @@ const styles = StyleSheet.create({
   },
   title: { flex: 1, fontSize: 27, color: ft.textPrimary, fontFamily: FontFamily.extrabold },
   sub: { fontSize: 13, lineHeight: 20, color: ft.textSecondary, fontFamily: FontFamily.regular, marginBottom: 12 },
-  countryBtn: {
-    minHeight: 48,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: 'rgba(136, 218, 255, 0.4)',
-    backgroundColor: 'rgba(14, 20, 30, 0.94)',
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 10,
-    paddingHorizontal: 14,
-    paddingVertical: 11,
+  selectorStack: {
     gap: 10,
+    marginBottom: 10,
   },
-  countryBtnCyan: {
-    borderColor: LUM_CYAN_EDGE,
-    backgroundColor: 'rgba(12, 18, 28, 0.96)',
-  },
-  countryBtnTeal: {
-    borderColor: LUM_EMERALD_EDGE,
-    backgroundColor: 'rgba(12, 18, 28, 0.96)',
-  },
-  countryBtnSegment: {
-    borderColor: LUM_VIOLET_EDGE,
-    backgroundColor: 'rgba(12, 18, 28, 0.96)',
-  },
-  rowBadgeCyan: {
-    width: 7,
-    height: 7,
-    borderRadius: 4,
-    backgroundColor: ft.accentCyan,
-    opacity: 1,
-    shadowColor: ft.accentCyan,
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.28,
-    shadowRadius: 3,
-    elevation: 1,
-  },
-  rowBadgeTeal: {
-    width: 7,
-    height: 7,
-    borderRadius: 4,
-    backgroundColor: ft.accentEmerald,
-    opacity: 1,
-    shadowColor: ft.accentEmerald,
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.28,
-    shadowRadius: 3,
-    elevation: 1,
-  },
-  rowBadgeSegment: {
-    width: 7,
-    height: 7,
-    borderRadius: 4,
-    backgroundColor: ft.accentViolet,
-    opacity: 1,
-    shadowColor: ft.accentViolet,
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.24,
-    shadowRadius: 3,
-    elevation: 1,
-  },
-  countryLabel: {
-    color: ft.textPrimary,
-    fontFamily: FontFamily.semibold,
-    fontSize: 14,
-    flex: 1,
-    flexShrink: 1,
-  },
-  inputField: {
-    position: 'relative',
-    justifyContent: 'center',
-  },
-  inputMarker: {
-    position: 'absolute',
-    left: 11,
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: ft.accentCyan,
-    opacity: 0.88,
-    zIndex: 1,
-  },
-  input: {
-    minHeight: 50,
-    height: 50,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: 'rgba(136, 218, 255, 0.4)',
-    backgroundColor: 'rgba(10, 14, 22, 0.96)',
-    paddingLeft: 14,
-    paddingRight: 14,
-    paddingVertical: 12,
-    fontSize: 15,
-    lineHeight: 20,
-    color: ft.textPrimary,
-    fontFamily: FontFamily.medium,
-  },
-  inputFocused: {
-    borderColor: LUM_CYAN_EDGE,
-    backgroundColor: 'rgba(10, 14, 22, 1)',
-    paddingLeft: 26,
-    shadowColor: LUM_GLOW_CYAN,
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 1,
-    shadowRadius: 3,
-  },
-  inputSpacer: {
-    marginTop: 10,
+  fieldStack: {
+    gap: 10,
   },
   errorText: {
     marginTop: 6,
