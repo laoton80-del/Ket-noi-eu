@@ -18,7 +18,14 @@ import {
 } from 'react-native';
 
 import { vionaTokens } from '../../design';
-import { FASHION_HOME_GLOW_CYAN, FASHION_HOME_GLOW_GOLD, FASHION_HOME_INNER_HIGHLIGHT } from './fashionHomeDesktopShell';
+import {
+  FASHION_HOME_GLOW_CYAN,
+  FASHION_HOME_GLOW_GOLD,
+  FASHION_HOME_INNER_HIGHLIGHT,
+  FASHION_HOME_WEB_WORLD_CARD_PRESS_SCALE,
+  fashionHomeWebDaylightWorldCardTextScrimStyle,
+  fashionHomeWebWorldCardImageHoverStyle,
+} from './fashionHomeDesktopShell';
 import { FontFamily } from '../../theme/typography';
 import { VionaStatusPill } from './VionaStatusPill';
 
@@ -184,13 +191,23 @@ export function VionaFashionWorldCard({
 
   /** Narrow left scrim for title/sub copy only — keeps photo side bright (no full-card blanket). */
   const textScrim = edgeLitGlass ? (
-    <LinearGradient
-      colors={['rgba(4, 7, 12, 0.32)', 'rgba(4, 7, 12, 0.1)', 'rgba(4, 7, 12, 0)']}
-      start={{ x: 0, y: 0.5 }}
-      end={{ x: 1, y: 0.5 }}
-      style={styles.textScrimEdgeLit}
-      pointerEvents="none"
-    />
+    Platform.OS === 'web' ? (
+      <View style={[styles.textScrimEdgeLit, fashionHomeWebDaylightWorldCardTextScrimStyle()]} pointerEvents="none" />
+    ) : (
+      <LinearGradient
+        colors={[
+          'rgba(4, 7, 12, 0.21)',
+          'rgba(4, 7, 12, 0.072)',
+          'rgba(4, 7, 12, 0.02)',
+          'rgba(4, 7, 12, 0)',
+        ]}
+        locations={[0, 0.3, 0.65, 1]}
+        start={{ x: 0, y: 0.5 }}
+        end={{ x: 1, y: 0.5 }}
+        style={styles.textScrimEdgeLit}
+        pointerEvents="none"
+      />
+    )
   ) : (
     <LinearGradient
       colors={['rgba(4, 7, 12, 0.48)', 'rgba(4, 7, 12, 0.22)', 'rgba(4, 7, 12, 0)']}
@@ -228,7 +245,7 @@ export function VionaFashionWorldCard({
       <LinearGradient
         colors={
           edgeLitGlass
-            ? ['rgba(4, 7, 12, 0)', 'rgba(4, 7, 12, 0.28)', 'rgba(4, 7, 12, 0.48)']
+            ? ['rgba(4, 7, 12, 0)', 'rgba(4, 7, 12, 0.076)', 'rgba(4, 7, 12, 0.22)']
             : ['rgba(4, 7, 12, 0)', 'rgba(4, 7, 12, 0.24)', 'rgba(4, 7, 12, 0.46)']
         }
         start={{ x: 0, y: 0 }}
@@ -238,9 +255,16 @@ export function VionaFashionWorldCard({
       />
     ) : null;
 
+  const imageHoverStyle =
+    edgeLitGlass && edgeLitHoverBoost ? fashionHomeWebWorldCardImageHoverStyle(true) : null;
+
   const photoLayer =
     backgroundImage != null ? (
-      <Image source={backgroundImage} resizeMode="cover" style={[styles.imageFull, imageStyle]} />
+      <Image
+        source={backgroundImage}
+        resizeMode="cover"
+        style={[styles.imageFull, imageStyle, imageHoverStyle]}
+      />
     ) : (
       <LinearGradient colors={fallbackGrad} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={StyleSheet.absoluteFillObject} />
     );
@@ -265,7 +289,13 @@ export function VionaFashionWorldCard({
                 styles.iconSlot,
                 { borderColor: `${accentColor}${edgeLitGlass && edgeLitHoverBoost ? 'ff' : 'ea'}` },
                 edgeLitGlass && styles.iconSlotEdgeLit,
-                edgeLitGlass && edgeLitHoverBoost && styles.iconSlotEdgeLitHover,
+                edgeLitGlass &&
+                  edgeLitHoverBoost &&
+                  (Platform.OS === 'web'
+                    ? ({
+                        boxShadow: `0 0 0 1px ${accentColor}66, 0 0 12px ${accentColor}2e`,
+                      } as ViewStyle)
+                    : styles.iconSlotEdgeLitHoverNative),
               ]}
             >
               {icon}
@@ -295,7 +325,18 @@ export function VionaFashionWorldCard({
               <View style={styles.footerSpacer} />
             )}
             {showChevron ? (
-              <Ionicons name="arrow-forward-circle-outline" size={22} color={accentColor} />
+              <Ionicons
+                name="arrow-forward-circle-outline"
+                size={22}
+                color={accentColor}
+                style={
+                  edgeLitHoverBoost && Platform.OS === 'web'
+                    ? ({ filter: `drop-shadow(0 0 3px ${accentColor}88)` } as const)
+                    : edgeLitHoverBoost
+                      ? styles.chevronHoverNative
+                      : undefined
+                }
+              />
             ) : null}
           </View>
         ) : null}
@@ -303,7 +344,7 @@ export function VionaFashionWorldCard({
     </View>
   );
 
-  const cardEdgeFrame = (
+  const cardEdgeFrame = edgeLitGlass ? null : (
     <>
       <View pointerEvents="none" style={[styles.cardEdgeOverlay, cardEdgeStrokeStyle(cardEdgeColor)]} />
       <View pointerEvents="none" style={styles.cardInnerTopHighlight} />
@@ -366,7 +407,11 @@ export function VionaFashionWorldCard({
       onFocus={onFocus}
       onBlur={onBlur}
       disabled={onPress != null && disabled}
-      style={({ pressed }) => [stretch.press, pressed && onPress != null && !disabled && styles.pressed]}
+      style={({ pressed }) => [
+        stretch.press,
+        pressed && onPress != null && !disabled && styles.pressed,
+        pressed && onPress != null && !disabled && styles.pressedCompress,
+      ]}
     >
       {gradShell}
     </Pressable>
@@ -400,7 +445,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   gradEdgeLit: {
-    backgroundColor: 'rgba(6, 10, 16, 0.04)',
+    backgroundColor: 'transparent',
   },
   visualStage: {
     ...StyleSheet.absoluteFillObject,
@@ -450,9 +495,9 @@ const styles = StyleSheet.create({
   textScrimEdgeLit: {
     position: 'absolute',
     left: 0,
-    top: 0,
-    bottom: 0,
-    width: '58%',
+    top: '18%',
+    bottom: '30%',
+    width: '40%',
     zIndex: 0,
   },
   footerScrim: {
@@ -468,7 +513,7 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    height: '34%',
+    height: '20%',
     zIndex: 0,
   },
   rowShell: {
@@ -523,20 +568,14 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(6, 10, 18, 0.55)',
   },
   iconSlotEdgeLit: {
-    backgroundColor: 'rgba(6, 10, 18, 0.42)',
+    backgroundColor: 'rgba(6, 10, 18, 0.32)',
   },
-  iconSlotEdgeLitHover: {
+  iconSlotEdgeLitHoverNative: {
     backgroundColor: 'rgba(8, 12, 20, 0.52)',
-    ...(Platform.OS === 'web'
-      ? ({
-          boxShadow: '0 0 0 1px rgba(255,255,255,0.2), 0 0 12px rgba(255,255,255,0.1)',
-        } as ViewStyle)
-      : {
-          shadowOffset: { width: 0, height: 0 },
-          shadowOpacity: 0.85,
-          shadowRadius: 8,
-          elevation: 2,
-        }),
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.85,
+    shadowRadius: 8,
+    elevation: 2,
   },
   copy: {
     flex: 1,
@@ -566,5 +605,11 @@ const styles = StyleSheet.create({
   },
   pressed: {
     opacity: 0.92,
+  },
+  pressedCompress: {
+    transform: [{ scale: FASHION_HOME_WEB_WORLD_CARD_PRESS_SCALE }],
+  },
+  chevronHoverNative: {
+    opacity: 1,
   },
 });

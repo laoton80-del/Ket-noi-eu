@@ -17,6 +17,7 @@ import {
   FASHION_HOME_GLOW_GOLD,
   FASHION_HOME_LINE_GOLD_SOFT,
   fashionHomeWebCommandUtilityHoverStyle,
+  fashionHomeWebCommandUtilityPressStyle,
   fashionHomeWebDaylightTransitionStyle,
   premiumCrispEdgeStroke,
   premiumFrameEdgeOverlay,
@@ -145,6 +146,7 @@ export function VionaFashionHomeCommandBar({
                     styles.utilBtn,
                     compactDensity && styles.utilBtnCompact,
                     Platform.OS === 'web' && fashionHomeWebCommandUtilityHoverStyle(!!hovered, !!daylightBoost),
+                    Platform.OS === 'web' && fashionHomeWebCommandUtilityPressStyle(!!pressed),
                     pressed && styles.pressed,
                   ];
                   }}
@@ -193,6 +195,7 @@ export function VionaFashionHomeCommandBar({
                     daylightBoost && styles.daylightBoostBtnActive,
                     Platform.OS === 'web' && daylightBoost && styles.daylightBoostBtnActiveWeb,
                     Platform.OS === 'web' && fashionHomeWebCommandUtilityHoverStyle(!!hovered, !!daylightBoost),
+                    Platform.OS === 'web' && fashionHomeWebCommandUtilityPressStyle(!!pressed),
                     pressed && styles.pressed,
                   ];
                   }}
@@ -225,6 +228,7 @@ export function VionaFashionHomeCommandBar({
                     compactDensity && styles.utilBtnCompact,
                     compactDensity ? styles.fullscreenBtnCompact : styles.fullscreenBtn,
                     Platform.OS === 'web' && fashionHomeWebCommandUtilityHoverStyle(!!hovered, !!daylightBoost),
+                    Platform.OS === 'web' && fashionHomeWebCommandUtilityPressStyle(!!pressed),
                     pressed && styles.pressed,
                   ];
                   }}
@@ -251,6 +255,7 @@ export function VionaFashionHomeCommandBar({
                   styles.utilBtn,
                   compactDensity && styles.utilBtnCompact,
                   Platform.OS === 'web' && fashionHomeWebCommandUtilityHoverStyle(!!hovered, !!daylightBoost),
+                  Platform.OS === 'web' && fashionHomeWebCommandUtilityPressStyle(!!pressed),
                   pressed && styles.pressed,
                 ];
                 }}
@@ -266,12 +271,18 @@ export function VionaFashionHomeCommandBar({
               </Pressable>
               <Pressable
                 onPress={onPressSafety}
-                style={({ pressed }) => [
-                  styles.utilBtn,
-                  compactDensity && styles.utilBtnCompact,
-                  styles.sosBtn,
-                  pressed && styles.pressed,
-                ]}
+                style={(s) => {
+                  const { pressed, hovered } = s as FashionHomePressableStyleState;
+                  return [
+                    styles.utilBtn,
+                    compactDensity && styles.utilBtnCompact,
+                    styles.sosBtn,
+                    Platform.OS === 'web' &&
+                      fashionHomeWebCommandUtilityHoverStyle(!!hovered, !!daylightBoost, { sos: true }),
+                    Platform.OS === 'web' && fashionHomeWebCommandUtilityPressStyle(!!pressed),
+                    pressed && styles.pressed,
+                  ];
+                }}
                 accessibilityRole="button"
                 accessibilityLabel={t('sos.a11yChip')}
               >
@@ -292,6 +303,7 @@ export function VionaFashionHomeCommandBar({
                   styles.utilBtn,
                   compactDensity && styles.utilBtnCompact,
                   Platform.OS === 'web' && fashionHomeWebCommandUtilityHoverStyle(!!hovered, !!daylightBoost),
+                  Platform.OS === 'web' && fashionHomeWebCommandUtilityPressStyle(!!pressed),
                   pressed && styles.pressed,
                 ];
                 }}
@@ -463,11 +475,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: 11,
     borderRadius: vionaTokens.radius.pill,
     borderWidth: 1,
-    borderColor: 'rgba(136, 218, 255, 0.18)',
-    backgroundColor: 'rgba(10, 14, 22, 0.82)',
+    borderColor: 'rgba(136, 218, 255, 0.16)',
+    backgroundColor: 'rgba(10, 14, 22, 0.78)',
     shadowColor: FASHION_HOME_GLOW_CYAN,
     shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.5,
+    shadowOpacity: 0.38,
     shadowRadius: 2,
     elevation: 1,
     maxWidth: 170,
@@ -480,27 +492,27 @@ const styles = StyleSheet.create({
   daylightBoostBtn: {
     maxWidth: 124,
     borderColor: FASHION_HOME_LINE_GOLD_SOFT,
-    backgroundColor: 'rgba(10, 14, 22, 0.76)',
+    backgroundColor: 'rgba(10, 14, 22, 0.7)',
     shadowColor: FASHION_HOME_GLOW_GOLD,
     shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.72,
-    shadowRadius: 3,
-    elevation: 1,
+    shadowOpacity: 0.32,
+    shadowRadius: 1,
+    elevation: 0,
   },
   daylightBoostBtnCompact: {
     maxWidth: 40,
     paddingHorizontal: 8,
   },
   daylightBoostBtnActive: {
-    borderColor: 'rgba(252, 228, 180, 0.58)',
-    backgroundColor: 'rgba(20, 28, 44, 0.9)',
+    borderColor: 'rgba(252, 228, 180, 0.48)',
+    backgroundColor: 'rgba(14, 20, 32, 0.66)',
     shadowColor: FASHION_HOME_DAYLIGHT_CHIP_CONTAINED_GLOW,
-    shadowOpacity: 1,
-    shadowRadius: 6,
+    shadowOpacity: 0.32,
+    shadowRadius: 1,
   },
   daylightBoostBtnActiveWeb: {
     boxShadow:
-      'inset 0 1px 0 rgba(255, 248, 230, 0.24), inset 0 -8px 18px rgba(10, 22, 40, 0.1), 0 0 0 1px rgba(252, 236, 200, 0.38), 0 4px 12px rgba(6, 10, 18, 0.38)',
+      'inset 0 0 0 1px rgba(252, 236, 200, 0.4), 0 0 3px rgba(148, 210, 255, 0.08), 0 1px 4px rgba(6, 10, 18, 0.16)',
   },
   daylightBoostLabelActive: {
     color: 'rgba(255, 248, 235, 0.96)',

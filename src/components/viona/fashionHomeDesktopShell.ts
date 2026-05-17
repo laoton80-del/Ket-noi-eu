@@ -1,4 +1,5 @@
-import { Platform, StyleSheet, type ImageStyle, type ViewStyle } from 'react-native';
+import { useEffect, useState } from 'react';
+import { AccessibilityInfo, Platform, StyleSheet, type ImageStyle, type ViewStyle } from 'react-native';
 
 import { vionaTokens } from '../../design';
 
@@ -13,7 +14,7 @@ export const FASHION_HOME_LINE_GOLD = 'rgba(244, 214, 144, 0.46)';
 export const FASHION_HOME_LINE_GOLD_SOFT = 'rgba(242, 212, 136, 0.34)';
 export const FASHION_HOME_LINE_CYAN = 'rgba(136, 218, 255, 0.32)';
 /** Hero top inner glow only — not a full-width divider. */
-export const FASHION_HOME_HERO_TOP_GLOW = 'rgba(244, 214, 144, 0.14)';
+export const FASHION_HOME_HERO_TOP_GLOW = 'rgba(244, 214, 144, 0.1)';
 export const FASHION_HOME_GLOW_GOLD = 'rgba(238, 206, 128, 0.14)';
 export const FASHION_HOME_GLOW_CYAN = 'rgba(128, 210, 255, 0.12)';
 /** Academy / violet quick actions — matches vivid academy cards (not SOS magenta). */
@@ -182,39 +183,77 @@ export const FASHION_HOME_DAYLIGHT_TRANSITION_MS = 200;
 export const FASHION_HOME_DAYLIGHT_CANVAS = 'rgb(13, 18, 28)';
 export const FASHION_HOME_DAYLIGHT_CANVAS_ELEVATED = 'rgb(16, 24, 38)';
 
-/** Lighter left scrim so hero art stays vivid outdoors. */
+/** Native fallback — wide dissolve before center (web uses radial scrim). */
 export const FASHION_HOME_DAYLIGHT_HERO_SCRIM_LEFT = [
-  'rgba(4, 7, 12, 0.22)',
-  'rgba(4, 7, 12, 0.07)',
+  'rgba(4, 7, 12, 0.32)',
+  'rgba(4, 7, 12, 0.14)',
+  'rgba(4, 7, 12, 0.05)',
+  'rgba(4, 7, 12, 0.015)',
   'rgba(4, 7, 12, 0)',
 ] as const;
 
-/** Lower global dark veil on hero interior (vs standard vignette). */
+/** @deprecated Daylight hero omits full-surface vignette (causes horizontal banding). */
 export const FASHION_HOME_DAYLIGHT_HERO_VIGNETTE = [
-  'rgba(0, 0, 0, 0.018)',
   'rgba(0, 0, 0, 0)',
-  'rgba(0, 0, 0, 0.03)',
+  'rgba(0, 0, 0, 0)',
+  'rgba(0, 0, 0, 0)',
 ] as const;
 
-/** Primary luminous veil — warm directional light (no cool milk wash). */
+/** @deprecated Removed from hero stack — full-surface luminous wash. */
 export const FASHION_HOME_DAYLIGHT_HERO_LUMINOUS = [
-  'rgba(255, 232, 198, 0.052)',
-  'rgba(255, 244, 228, 0.026)',
-  'rgba(236, 220, 200, 0.028)',
+  'rgba(255, 232, 198, 0)',
+  'rgba(255, 244, 228, 0)',
+  'rgba(236, 220, 200, 0)',
 ] as const;
 
-/** Secondary lift — warm ivory only (no blue-white haze). */
+/** @deprecated Removed from hero stack — full-surface lift wash. */
 export const FASHION_HOME_DAYLIGHT_HERO_LIFT_OVERLAY = [
-  'rgba(255, 248, 238, 0.016)',
-  'rgba(248, 240, 228, 0.02)',
-  'rgba(255, 238, 210, 0.018)',
+  'rgba(255, 248, 238, 0)',
+  'rgba(248, 240, 228, 0)',
+  'rgba(255, 238, 210, 0)',
 ] as const;
 
-export const FASHION_HOME_DAYLIGHT_FRAME_BORDER = 'rgba(252, 232, 190, 0.62)';
-export const FASHION_HOME_DAYLIGHT_FRAME_GLOW = 'rgba(252, 228, 168, 0.22)';
+/** @deprecated Removed from hero stack — large diagonal band. */
+export const FASHION_HOME_DAYLIGHT_HERO_REFRACTION_DIAGONAL = [
+  'rgba(170, 232, 255, 0)',
+  'rgba(238, 206, 128, 0)',
+  'rgba(170, 232, 255, 0)',
+] as const;
 
-/** Brighter hero rim lines (thin neon, same 1px geometry). */
-export const FASHION_HOME_DAYLIGHT_HERO_CYAN_EDGE = 'rgba(170, 232, 255, 0.58)';
+/** GLASS.HOME.PREMIUM.2 — champagne primary rim; cyan only as micro glass-tech accent. */
+export const FASHION_HOME_DAYLIGHT_FRAME_BORDER = 'rgba(252, 236, 200, 0.48)';
+export const FASHION_HOME_DAYLIGHT_FRAME_GLOW = 'rgba(252, 228, 168, 0.022)';
+
+/** 1px top hairline — specular catch, not a thick band. */
+export const FASHION_HOME_DAYLIGHT_HERO_TOP_EDGE = 'rgba(255, 242, 215, 0.27)';
+
+/** Tiny hero corner glint — top-left (warm). */
+export const FASHION_HOME_DAYLIGHT_HERO_CORNER_GLINT: readonly [string, string] = [
+  'rgba(252, 228, 168, 0.037)',
+  'rgba(252, 228, 168, 0)',
+];
+
+/** Tiny hero corner glint — top-right (cool accent). */
+export const FASHION_HOME_DAYLIGHT_HERO_CORNER_GLINT_TR: readonly [string, string] = [
+  'rgba(148, 210, 255, 0.032)',
+  'rgba(148, 210, 255, 0)',
+];
+
+/** Outer hero micro glow — tight dual halos (champagne + cyan glass-tech). */
+const FASHION_HOME_DAYLIGHT_HERO_EDGE_GLOW =
+  '0 0 2px rgba(252, 228, 168, 0.1), 0 0 4px rgba(252, 228, 168, 0.132), 0 0 2px rgba(148, 210, 255, 0.09), 0 0 3px rgba(148, 210, 255, 0.088)';
+
+const FASHION_HOME_DAYLIGHT_HERO_INNER_RIM = 'inset 0 0 0 1px rgba(252, 232, 190, 0.22)';
+const FASHION_HOME_DAYLIGHT_HERO_INNER_HIGHLIGHT = 'inset 0 1px 0 rgba(255, 248, 235, 0.042)';
+
+/** Hero side accent lines — 1px geometry only. */
+export const FASHION_HOME_DAYLIGHT_HERO_CYAN_EDGE = 'rgba(148, 210, 255, 0.32)';
+
+const FASHION_HOME_GLASS_DEPTH_SHADOW = '0 2px 10px rgba(4, 8, 12, 0.2)';
+
+function fashionHomeGlassBoxShadow(layers: string[]): string {
+  return layers.filter(Boolean).join(', ');
+}
 
 export const FASHION_HOME_DAYLIGHT_RAIL_GRADIENT = [
   'rgba(12, 18, 30, 0.96)',
@@ -222,7 +261,7 @@ export const FASHION_HOME_DAYLIGHT_RAIL_GRADIENT = [
   'rgba(12, 18, 30, 0.95)',
 ] as const;
 export const FASHION_HOME_DAYLIGHT_RAIL_BORDER = 'rgba(252, 236, 200, 0.42)';
-export const FASHION_HOME_DAYLIGHT_RAIL_HIGHLIGHT = 'rgba(255, 238, 200, 0.28)';
+export const FASHION_HOME_DAYLIGHT_RAIL_HIGHLIGHT = 'rgba(255, 238, 200, 0.16)';
 
 export const FASHION_HOME_DAYLIGHT_HEADLINE = '#ffffff';
 export const FASHION_HOME_DAYLIGHT_TEXT_SHADOW = 'rgba(2, 5, 10, 0.32)';
@@ -230,7 +269,7 @@ export const FASHION_HOME_DAYLIGHT_SUBTITLE = 'rgba(252, 253, 255, 0.96)';
 export const FASHION_HOME_DAYLIGHT_EYEBROW = 'rgba(255, 240, 210, 1)';
 
 /** Legacy neutral card wrapper tint (prefer semantic `fashionHomeDaylightWorldCardNativeShellStyle`). */
-export const FASHION_HOME_DAYLIGHT_CARD_FILL = 'rgba(255, 250, 238, 0.04)';
+export const FASHION_HOME_DAYLIGHT_CARD_FILL = 'rgba(255, 250, 238, 0.035)';
 
 /** Small contained rim for chips / compact glass (not world-card outer bloom). */
 export const FASHION_HOME_DAYLIGHT_CHIP_CONTAINED_GLOW = 'rgba(252, 228, 196, 0.34)';
@@ -238,26 +277,69 @@ export const FASHION_HOME_DAYLIGHT_CHIP_CONTAINED_GLOW = 'rgba(252, 228, 196, 0.
 /** World-card daylight accent — drives semantic glass material on wrappers. */
 export type FashionHomeWorldCardDaylightAccent = 'local' | 'travel' | 'academy' | 'business';
 
-/** GLASS.HOME.FINAL — edge-lit rim; no full-card white wash. */
+const FASHION_HOME_DAYLIGHT_WORLD_EDGE_GLOW: Record<FashionHomeWorldCardDaylightAccent, string> = {
+  local: '0 0 3px rgba(72, 210, 165, 0.11)',
+  travel: '0 0 3px rgba(92, 205, 255, 0.11)',
+  academy: '0 0 3px rgba(178, 132, 248, 0.078)',
+  business: '0 0 3px rgba(228, 192, 110, 0.126)',
+};
+
+const FASHION_HOME_DAYLIGHT_WORLD_WEB_RIM: Record<FashionHomeWorldCardDaylightAccent, string> = {
+  local: 'rgba(72, 210, 165, 0.8)',
+  travel: 'rgba(92, 205, 255, 0.8)',
+  academy: 'rgba(178, 132, 248, 0.69)',
+  business: 'rgba(228, 192, 110, 0.91)',
+};
+
+const FASHION_HOME_DAYLIGHT_WORLD_INNER_HIGHLIGHT: Record<FashionHomeWorldCardDaylightAccent, string> = {
+  local: 'inset 0 0 0 1px rgba(120, 235, 198, 0.16)',
+  travel: 'inset 0 0 0 1px rgba(140, 215, 255, 0.16)',
+  academy: 'inset 0 0 0 1px rgba(200, 165, 255, 0.13)',
+  business: 'inset 0 0 0 1px rgba(255, 215, 150, 0.185)',
+};
+
+const FASHION_HOME_DAYLIGHT_WORLD_INNER_DEPTH = 'inset 0 -2px 8px rgba(0, 0, 0, 0.17)';
+
+/** GLASS.HOME.PREMIUM.2 — thin rim + inner highlight + micro glow + depth (no surface wash). */
 const FASHION_HOME_DAYLIGHT_WORLD_WEB_MATERIAL: Record<FashionHomeWorldCardDaylightAccent, string> = {
-  local:
-    'inset 0 1px 0 rgba(255,255,255,0.26), inset 0 -4px 10px rgba(4,10,10,0.2), 0 0 0 1px rgba(72, 210, 165, 0.8), 0 0 0 1px rgba(0,0,0,0.5) inset, 0 4px 14px rgba(4,8,12,0.34)',
-  travel:
-    'inset 0 1px 0 rgba(255,255,255,0.26), inset 0 -4px 10px rgba(6,12,18,0.2), 0 0 0 1px rgba(92, 205, 255, 0.8), 0 0 0 1px rgba(0,0,0,0.48) inset, 0 4px 14px rgba(4,8,12,0.34)',
-  academy:
-    'inset 0 1px 0 rgba(255,255,255,0.24), inset 0 -4px 10px rgba(10,8,16,0.22), 0 0 0 1px rgba(178, 132, 248, 0.8), 0 0 0 1px rgba(0,0,0,0.48) inset, 0 4px 14px rgba(4,8,12,0.34)',
-  business:
-    'inset 0 1px 0 rgba(255,248,232,0.24), inset 0 -4px 10px rgba(14,10,6,0.2), 0 0 0 1px rgba(228, 192, 110, 0.82), 0 0 0 1px rgba(0,0,0,0.46) inset, 0 4px 14px rgba(4,8,12,0.34)',
+  local: fashionHomeGlassBoxShadow([
+    `0 0 0 1px ${FASHION_HOME_DAYLIGHT_WORLD_WEB_RIM.local}`,
+    FASHION_HOME_DAYLIGHT_WORLD_EDGE_GLOW.local,
+    FASHION_HOME_DAYLIGHT_WORLD_INNER_HIGHLIGHT.local,
+    FASHION_HOME_DAYLIGHT_WORLD_INNER_DEPTH,
+    FASHION_HOME_GLASS_DEPTH_SHADOW,
+  ]),
+  travel: fashionHomeGlassBoxShadow([
+    `0 0 0 1px ${FASHION_HOME_DAYLIGHT_WORLD_WEB_RIM.travel}`,
+    FASHION_HOME_DAYLIGHT_WORLD_EDGE_GLOW.travel,
+    FASHION_HOME_DAYLIGHT_WORLD_INNER_HIGHLIGHT.travel,
+    FASHION_HOME_DAYLIGHT_WORLD_INNER_DEPTH,
+    FASHION_HOME_GLASS_DEPTH_SHADOW,
+  ]),
+  academy: fashionHomeGlassBoxShadow([
+    `0 0 0 1px ${FASHION_HOME_DAYLIGHT_WORLD_WEB_RIM.academy}`,
+    FASHION_HOME_DAYLIGHT_WORLD_EDGE_GLOW.academy,
+    FASHION_HOME_DAYLIGHT_WORLD_INNER_HIGHLIGHT.academy,
+    FASHION_HOME_DAYLIGHT_WORLD_INNER_DEPTH,
+    FASHION_HOME_GLASS_DEPTH_SHADOW,
+  ]),
+  business: fashionHomeGlassBoxShadow([
+    `0 0 0 1px ${FASHION_HOME_DAYLIGHT_WORLD_WEB_RIM.business}`,
+    FASHION_HOME_DAYLIGHT_WORLD_EDGE_GLOW.business,
+    FASHION_HOME_DAYLIGHT_WORLD_INNER_HIGHLIGHT.business,
+    FASHION_HOME_DAYLIGHT_WORLD_INNER_DEPTH,
+    '0 2px 10px rgba(4, 8, 12, 0.18)',
+  ]),
 };
 
 const FASHION_HOME_DAYLIGHT_WORLD_NATIVE: Record<
   FashionHomeWorldCardDaylightAccent,
   Readonly<{ fill: string; rim: string; shadowRadius: number; elevation: number }>
 > = {
-  local: { fill: 'rgba(48, 175, 138, 0.032)', rim: 'rgba(58, 190, 150, 0.48)', shadowRadius: 9, elevation: 3 },
-  travel: { fill: 'rgba(72, 168, 228, 0.032)', rim: 'rgba(78, 175, 238, 0.48)', shadowRadius: 9, elevation: 3 },
-  academy: { fill: 'rgba(138, 108, 218, 0.038)', rim: 'rgba(160, 120, 235, 0.48)', shadowRadius: 9, elevation: 3 },
-  business: { fill: 'rgba(210, 172, 92, 0.036)', rim: 'rgba(205, 168, 88, 0.48)', shadowRadius: 9, elevation: 3 },
+  local: { fill: 'rgba(48, 175, 138, 0.019)', rim: 'rgba(58, 190, 150, 0.48)', shadowRadius: 8, elevation: 2 },
+  travel: { fill: 'rgba(72, 168, 228, 0.019)', rim: 'rgba(78, 175, 238, 0.48)', shadowRadius: 8, elevation: 2 },
+  academy: { fill: 'rgba(138, 108, 218, 0.021)', rim: 'rgba(160, 120, 235, 0.48)', shadowRadius: 8, elevation: 2 },
+  business: { fill: 'rgba(210, 172, 92, 0.018)', rim: 'rgba(205, 168, 88, 0.52)', shadowRadius: 8, elevation: 2 },
 };
 
 /** Narrow top sheen — specular edge only. */
@@ -266,10 +348,10 @@ export const FASHION_HOME_DAYLIGHT_WORLD_SURFACE_SHEEN: Record<
   FashionHomeWorldCardDaylightAccent,
   readonly [string, string, string]
 > = {
-  local: ['rgba(255, 255, 255, 0.014)', 'rgba(120, 220, 188, 0.028)', 'rgba(255, 255, 255, 0)'],
-  travel: ['rgba(255, 255, 255, 0.014)', 'rgba(130, 210, 255, 0.028)', 'rgba(255, 255, 255, 0)'],
-  academy: ['rgba(255, 255, 255, 0.012)', 'rgba(200, 165, 255, 0.026)', 'rgba(255, 255, 255, 0)'],
-  business: ['rgba(255, 248, 232, 0.014)', 'rgba(230, 195, 120, 0.026)', 'rgba(255, 255, 255, 0)'],
+  local: ['rgba(255, 255, 255, 0.009)', 'rgba(120, 220, 188, 0.018)', 'rgba(255, 255, 255, 0)'],
+  travel: ['rgba(255, 255, 255, 0.009)', 'rgba(130, 210, 255, 0.018)', 'rgba(255, 255, 255, 0)'],
+  academy: ['rgba(255, 255, 255, 0.007)', 'rgba(200, 165, 255, 0.014)', 'rgba(255, 255, 255, 0)'],
+  business: ['rgba(255, 248, 232, 0.009)', 'rgba(230, 195, 120, 0.017)', 'rgba(255, 255, 255, 0)'],
 };
 
 /** GLASS.HOME.FINAL — minimal horizontal tint; no milk across the photo. */
@@ -279,39 +361,39 @@ export const FASHION_HOME_DAYLIGHT_WORLD_FROST_FIELD: Record<
 > = {
   local: [
     'rgba(255, 255, 255, 0)',
-    'rgba(255, 255, 255, 0.01)',
-    'rgba(52, 175, 140, 0.05)',
-    'rgba(24, 72, 58, 0.08)',
+    'rgba(255, 255, 255, 0.006)',
+    'rgba(52, 175, 140, 0.036)',
+    'rgba(24, 72, 58, 0.058)',
   ],
   travel: [
     'rgba(255, 255, 255, 0)',
-    'rgba(255, 255, 255, 0.012)',
-    'rgba(70, 168, 228, 0.055)',
-    'rgba(22, 58, 92, 0.09)',
+    'rgba(255, 255, 255, 0.007)',
+    'rgba(70, 168, 228, 0.038)',
+    'rgba(22, 58, 92, 0.064)',
   ],
   academy: [
     'rgba(255, 255, 255, 0)',
-    'rgba(255, 255, 255, 0.01)',
-    'rgba(145, 112, 220, 0.055)',
-    'rgba(40, 28, 72, 0.1)',
+    'rgba(255, 255, 255, 0.005)',
+    'rgba(145, 112, 220, 0.035)',
+    'rgba(40, 28, 72, 0.068)',
   ],
   business: [
     'rgba(255, 248, 232, 0)',
-    'rgba(255, 248, 232, 0.012)',
-    'rgba(210, 168, 88, 0.05)',
-    'rgba(72, 48, 22, 0.08)',
+    'rgba(255, 248, 232, 0.006)',
+    'rgba(210, 168, 88, 0.033)',
+    'rgba(72, 48, 22, 0.053)',
   ],
 };
 
-/** GLASS.HOME.FINAL — tight diagonal spec; no bright white sheet. */
+/** @deprecated Omitted from card stack — diagonal sheets read as bands on photos. */
 export const FASHION_HOME_DAYLIGHT_WORLD_DIAGONAL_SPECULAR: Record<
   FashionHomeWorldCardDaylightAccent,
   readonly [string, string, string]
 > = {
-  local: ['rgba(255, 255, 255, 0)', 'rgba(255, 255, 255, 0.1)', 'rgba(120, 235, 198, 0.072)'],
-  travel: ['rgba(255, 255, 255, 0)', 'rgba(255, 255, 255, 0.09)', 'rgba(140, 210, 255, 0.07)'],
-  academy: ['rgba(255, 255, 255, 0)', 'rgba(255, 255, 255, 0.085)', 'rgba(220, 175, 255, 0.075)'],
-  business: ['rgba(255, 255, 255, 0)', 'rgba(255, 250, 228, 0.09)', 'rgba(240, 200, 120, 0.065)'],
+  local: ['rgba(255, 255, 255, 0)', 'rgba(255, 255, 255, 0)', 'rgba(120, 235, 198, 0)'],
+  travel: ['rgba(255, 255, 255, 0)', 'rgba(255, 255, 255, 0)', 'rgba(140, 210, 255, 0)'],
+  academy: ['rgba(255, 255, 255, 0)', 'rgba(255, 255, 255, 0)', 'rgba(220, 175, 255, 0)'],
+  business: ['rgba(255, 255, 255, 0)', 'rgba(255, 255, 255, 0)', 'rgba(240, 200, 120, 0)'],
 };
 
 /** Contained semantic glow — icon/title pocket only (used with small layout box in Home). */
@@ -321,8 +403,8 @@ export const FASHION_HOME_DAYLIGHT_WORLD_MATERIAL_GLOW: Record<
 > = {
   local: ['rgba(72, 210, 170, 0.08)', 'rgba(52, 175, 140, 0.018)', 'rgba(72, 205, 165, 0)'],
   travel: ['rgba(100, 200, 255, 0.08)', 'rgba(70, 168, 228, 0.018)', 'rgba(95, 195, 248, 0)'],
-  academy: ['rgba(195, 155, 255, 0.08)', 'rgba(140, 110, 220, 0.018)', 'rgba(175, 145, 248, 0)'],
-  business: ['rgba(235, 198, 120, 0.07)', 'rgba(210, 168, 88, 0.018)', 'rgba(235, 200, 120, 0)'],
+  academy: ['rgba(195, 155, 255, 0.074)', 'rgba(140, 110, 220, 0.016)', 'rgba(175, 145, 248, 0)'],
+  business: ['rgba(235, 198, 120, 0.076)', 'rgba(210, 168, 88, 0.019)', 'rgba(235, 200, 120, 0)'],
 };
 
 /** Bottom veil — dark footer only; stays off the photo body. */
@@ -330,21 +412,29 @@ export const FASHION_HOME_DAYLIGHT_WORLD_BOTTOM_VEIL: Record<
   FashionHomeWorldCardDaylightAccent,
   readonly [string, string]
 > = {
-  local: ['rgba(10, 28, 22, 0)', 'rgba(12, 36, 28, 0.48)'],
-  travel: ['rgba(10, 22, 34, 0)', 'rgba(12, 32, 52, 0.48)'],
-  academy: ['rgba(18, 12, 32, 0)', 'rgba(22, 16, 40, 0.5)'],
-  business: ['rgba(28, 20, 10, 0)', 'rgba(36, 24, 12, 0.48)'],
+  local: ['rgba(10, 28, 22, 0)', 'rgba(12, 36, 28, 0.32)'],
+  travel: ['rgba(10, 22, 34, 0)', 'rgba(12, 32, 52, 0.32)'],
+  academy: ['rgba(18, 12, 32, 0)', 'rgba(22, 16, 40, 0.34)'],
+  business: ['rgba(28, 20, 10, 0)', 'rgba(36, 24, 12, 0.29)'],
 };
 
-/** Thin top-edge refraction band (Daylight ON world cards, web stack). */
+/** 1px top edge hairline (replaces wide refraction band gradient). */
+export const FASHION_HOME_DAYLIGHT_WORLD_TOP_EDGE_LINE: Record<FashionHomeWorldCardDaylightAccent, string> = {
+  local: 'rgba(120, 235, 198, 0.5)',
+  travel: 'rgba(140, 215, 255, 0.5)',
+  academy: 'rgba(200, 165, 255, 0.41)',
+  business: 'rgba(255, 215, 150, 0.58)',
+};
+
+/** @deprecated Use `FASHION_HOME_DAYLIGHT_WORLD_TOP_EDGE_LINE` + 1px View. */
 export const FASHION_HOME_DAYLIGHT_WORLD_TOP_REFRACTION_BAND: Record<
   FashionHomeWorldCardDaylightAccent,
   readonly [string, string, string]
 > = {
-  local: ['rgba(210, 255, 238, 0.5)', 'rgba(255, 255, 255, 0.1)', 'rgba(200, 255, 232, 0.36)'],
-  travel: ['rgba(210, 244, 255, 0.48)', 'rgba(255, 255, 255, 0.09)', 'rgba(200, 236, 255, 0.34)'],
-  academy: ['rgba(235, 210, 255, 0.46)', 'rgba(255, 255, 255, 0.08)', 'rgba(225, 195, 255, 0.32)'],
-  business: ['rgba(255, 236, 200, 0.46)', 'rgba(255, 248, 232, 0.09)', 'rgba(255, 220, 160, 0.32)'],
+  local: ['rgba(210, 255, 238, 0)', 'rgba(210, 255, 238, 0)', 'rgba(210, 255, 238, 0)'],
+  travel: ['rgba(210, 244, 255, 0)', 'rgba(210, 244, 255, 0)', 'rgba(210, 244, 255, 0)'],
+  academy: ['rgba(235, 210, 255, 0)', 'rgba(235, 210, 255, 0)', 'rgba(235, 210, 255, 0)'],
+  business: ['rgba(255, 236, 200, 0)', 'rgba(255, 236, 200, 0)', 'rgba(255, 236, 200, 0)'],
 };
 
 /** GLASS.HOME.FINAL — edge soften optional; kept near-zero (Home may omit layer). */
@@ -352,50 +442,50 @@ export const FASHION_HOME_DAYLIGHT_WORLD_EDGE_SOFTEN: Record<
   FashionHomeWorldCardDaylightAccent,
   readonly [string, string]
 > = {
-  local: ['rgba(255, 255, 255, 0.008)', 'rgba(8, 12, 18, 0)'],
-  travel: ['rgba(255, 255, 255, 0.008)', 'rgba(8, 12, 18, 0)'],
-  academy: ['rgba(255, 255, 255, 0.008)', 'rgba(8, 12, 18, 0)'],
-  business: ['rgba(255, 248, 230, 0.01)', 'rgba(8, 12, 18, 0)'],
+  local: ['rgba(255, 255, 255, 0.005)', 'rgba(8, 12, 18, 0)'],
+  travel: ['rgba(255, 255, 255, 0.005)', 'rgba(8, 12, 18, 0)'],
+  academy: ['rgba(255, 255, 255, 0.005)', 'rgba(8, 12, 18, 0)'],
+  business: ['rgba(255, 248, 230, 0.006)', 'rgba(8, 12, 18, 0)'],
 };
 
-/** Top-left corner edge light. */
+/** Tiny top-left corner glint only (not a horizontal band). */
 export const FASHION_HOME_DAYLIGHT_WORLD_CORNER_LIT_TL: Record<
   FashionHomeWorldCardDaylightAccent,
   readonly [string, string]
 > = {
-  local: ['rgba(200, 255, 232, 0.64)', 'rgba(72, 205, 165, 0)'],
-  travel: ['rgba(210, 244, 255, 0.6)', 'rgba(70, 168, 228, 0)'],
-  academy: ['rgba(245, 205, 255, 0.58)', 'rgba(168, 138, 238, 0)'],
-  business: ['rgba(255, 232, 190, 0.62)', 'rgba(228, 192, 110, 0)'],
+  local: ['rgba(120, 235, 198, 0.044)', 'rgba(72, 205, 165, 0)'],
+  travel: ['rgba(140, 215, 255, 0.044)', 'rgba(70, 168, 228, 0)'],
+  academy: ['rgba(200, 165, 255, 0.033)', 'rgba(168, 138, 238, 0)'],
+  business: ['rgba(255, 215, 150, 0.052)', 'rgba(228, 192, 110, 0)'],
 };
 
-/** Top-right corner edge light. */
+/** @deprecated Omitted from card stack. */
 export const FASHION_HOME_DAYLIGHT_WORLD_CORNER_LIT_TR: Record<
   FashionHomeWorldCardDaylightAccent,
   readonly [string, string]
 > = {
-  local: ['rgba(255, 255, 255, 0.16)', 'rgba(52, 175, 140, 0)'],
-  travel: ['rgba(220, 246, 255, 0.18)', 'rgba(70, 168, 228, 0)'],
-  academy: ['rgba(255, 215, 245, 0.18)', 'rgba(145, 112, 220, 0)'],
-  business: ['rgba(255, 240, 210, 0.18)', 'rgba(210, 168, 88, 0)'],
+  local: ['rgba(120, 235, 198, 0)', 'rgba(52, 175, 140, 0)'],
+  travel: ['rgba(140, 215, 255, 0)', 'rgba(70, 168, 228, 0)'],
+  academy: ['rgba(220, 175, 255, 0)', 'rgba(145, 112, 220, 0)'],
+  business: ['rgba(255, 215, 150, 0)', 'rgba(210, 168, 88, 0)'],
 };
 
-/** Hover sweep — semantic glint only. */
+/** @deprecated Omitted — mid-card sweep reads as a horizontal band on hover. */
 export const FASHION_HOME_DAYLIGHT_WORLD_HOVER_EDGE_SWEEP: Record<
   FashionHomeWorldCardDaylightAccent,
   readonly [string, string, string]
 > = {
-  local: ['rgba(72, 205, 165, 0)', 'rgba(120, 235, 200, 0.32)', 'rgba(72, 205, 165, 0)'],
-  travel: ['rgba(70, 168, 228, 0)', 'rgba(140, 215, 255, 0.32)', 'rgba(70, 168, 228, 0)'],
-  academy: ['rgba(168, 138, 238, 0)', 'rgba(220, 175, 255, 0.3)', 'rgba(168, 138, 238, 0)'],
-  business: ['rgba(228, 192, 110, 0)', 'rgba(255, 215, 150, 0.28)', 'rgba(228, 192, 110, 0)'],
+  local: ['rgba(72, 205, 165, 0)', 'rgba(120, 235, 200, 0)', 'rgba(72, 205, 165, 0)'],
+  travel: ['rgba(70, 168, 228, 0)', 'rgba(140, 215, 255, 0)', 'rgba(70, 168, 228, 0)'],
+  academy: ['rgba(168, 138, 238, 0)', 'rgba(220, 175, 255, 0)', 'rgba(168, 138, 238, 0)'],
+  business: ['rgba(228, 192, 110, 0)', 'rgba(255, 215, 150, 0)', 'rgba(228, 192, 110, 0)'],
 };
 
-const FASHION_HOME_DAYLIGHT_WORLD_HOVER_RIM: Record<FashionHomeWorldCardDaylightAccent, string> = {
-  local: ', 0 0 0 1px rgba(110, 240, 200, 0.92), inset 0 2px 0 rgba(255,255,255,0.22), 0 6px 18px rgba(6,10,18,0.38)',
-  travel: ', 0 0 0 1px rgba(120, 210, 255, 0.92), inset 0 2px 0 rgba(255,255,255,0.22), 0 6px 18px rgba(6,10,18,0.38)',
-  academy: ', 0 0 0 1px rgba(205, 160, 255, 0.9), inset 0 2px 0 rgba(255,255,255,0.2), 0 6px 18px rgba(6,10,18,0.38)',
-  business: ', 0 0 0 1px rgba(255, 210, 130, 0.9), inset 0 2px 0 rgba(255,248,232,0.2), 0 6px 18px rgba(6,10,18,0.38)',
+const FASHION_HOME_DAYLIGHT_WORLD_HOVER_EDGE_GLOW: Record<FashionHomeWorldCardDaylightAccent, string> = {
+  local: ', 0 0 4px rgba(72, 210, 165, 0.13)',
+  travel: ', 0 0 4px rgba(92, 205, 255, 0.13)',
+  academy: ', 0 0 4px rgba(178, 132, 248, 0.097)',
+  business: ', 0 0 4px rgba(228, 192, 110, 0.148)',
 };
 
 export const FASHION_HOME_WORLD_CARD_GLASS_HOST_RADIUS = vionaTokens.radius.xl;
@@ -434,7 +524,7 @@ export function fashionHomeWebDaylightWorldCardMaterialStyle(
   if (Platform.OS !== 'web') return {};
   const base = FASHION_HOME_DAYLIGHT_WORLD_WEB_MATERIAL[accent];
   if (!hovered) return { boxShadow: base } as ViewStyle;
-  return { boxShadow: `${base}${FASHION_HOME_DAYLIGHT_WORLD_HOVER_RIM[accent]}` } as ViewStyle;
+  return { boxShadow: `${base}${FASHION_HOME_DAYLIGHT_WORLD_HOVER_EDGE_GLOW[accent]}` } as ViewStyle;
 }
 
 const FASHION_HOME_DAYLIGHT_WORLD_INNER_RIM: Record<FashionHomeWorldCardDaylightAccent, string> = {
@@ -444,32 +534,213 @@ const FASHION_HOME_DAYLIGHT_WORLD_INNER_RIM: Record<FashionHomeWorldCardDaylight
   business: 'rgba(255, 230, 186, 0.68)',
 };
 
+const FASHION_HOME_DAYLIGHT_WORLD_INNER_RIM_HOVER: Record<FashionHomeWorldCardDaylightAccent, string> = {
+  local: 'rgba(200, 255, 230, 0.82)',
+  travel: 'rgba(200, 236, 255, 0.82)',
+  academy: 'rgba(230, 210, 255, 0.8)',
+  business: 'rgba(255, 230, 186, 0.82)',
+};
+
 /** Web-only: thin inner luminous rim (semantic, not rainbow). */
 export function fashionHomeWebDaylightWorldCardInnerRimStyle(
   accent: FashionHomeWorldCardDaylightAccent,
   hovered = false
 ): ViewStyle {
   if (Platform.OS !== 'web') return {};
-  const c = FASHION_HOME_DAYLIGHT_WORLD_INNER_RIM[accent];
-  const top = hovered ? 'rgba(255,255,255,0.24)' : 'rgba(255,255,255,0.18)';
-  const under = hovered ? 'rgba(4,8,14,0.22)' : 'rgba(4,8,14,0.16)';
+  const c = hovered ? FASHION_HOME_DAYLIGHT_WORLD_INNER_RIM_HOVER[accent] : FASHION_HOME_DAYLIGHT_WORLD_INNER_RIM[accent];
   return {
-    boxShadow: `inset 0 0 0 1px ${c}, inset 0 1px 0 ${top}, inset 0 -16px 24px ${under}`,
+    boxShadow: `inset 0 0 0 1px ${c}`,
   } as ViewStyle;
 }
 
-/** Web: subtle lift + scale on world-card glass host (pointer hover). */
-export function fashionHomeWebWorldCardHostHoverMotionStyle(hovered: boolean): ViewStyle {
+/** HOME.INTERACTION.PREMIUM.1 — magnetic hover caps (desktop web world cards). */
+export const FASHION_HOME_WEB_MAGNETIC_MAX_TRANSLATE_PX = 3;
+export const FASHION_HOME_WEB_MAGNETIC_MAX_ROTATE_DEG = 0.65;
+export const FASHION_HOME_WEB_WORLD_CARD_PRESS_SCALE = 0.994;
+export const FASHION_HOME_WEB_EXPLORE_CTA_PULSE_MS = 4200;
+
+export type FashionHomeWebMagneticOffset = Readonly<{
+  translateX: number;
+  translateY: number;
+  rotateDeg: number;
+}>;
+
+/** Web + native reduce-motion (SSR-safe). */
+export function useFashionHomePrefersReducedMotion(): boolean {
+  const [reduceMotion, setReduceMotion] = useState(false);
+  useEffect(() => {
+    let cancelled = false;
+    const apply = (v: boolean) => {
+      if (!cancelled) setReduceMotion(v);
+    };
+    const p = AccessibilityInfo.isReduceMotionEnabled?.();
+    if (p && typeof (p as Promise<boolean>).then === 'function') {
+      void (p as Promise<boolean>).then(apply).catch(() => {});
+    }
+    const sub = AccessibilityInfo.addEventListener?.('reduceMotionChanged', apply);
+    let mqRemove: (() => void) | undefined;
+    if (Platform.OS === 'web' && typeof window !== 'undefined') {
+      const mq = window.matchMedia?.('(prefers-reduced-motion: reduce)');
+      if (mq) {
+        apply(mq.matches);
+        const handler = (e: MediaQueryListEvent) => apply(e.matches);
+        mq.addEventListener('change', handler);
+        mqRemove = () => mq.removeEventListener('change', handler);
+      }
+    }
+    return () => {
+      cancelled = true;
+      sub?.remove?.();
+      mqRemove?.();
+    };
+  }, []);
+  return reduceMotion;
+}
+
+export function computeFashionHomeWebMagneticOffset(
+  clientX: number,
+  clientY: number,
+  rect: { left: number; top: number; width: number; height: number }
+): FashionHomeWebMagneticOffset {
+  const cx = rect.left + rect.width / 2;
+  const cy = rect.top + rect.height / 2;
+  const nx = rect.width > 0 ? (clientX - cx) / (rect.width / 2) : 0;
+  const ny = rect.height > 0 ? (clientY - cy) / (rect.height / 2) : 0;
+  const clamp = (v: number) => Math.max(-1, Math.min(1, v));
+  return {
+    translateX: clamp(nx) * FASHION_HOME_WEB_MAGNETIC_MAX_TRANSLATE_PX,
+    translateY: clamp(ny) * FASHION_HOME_WEB_MAGNETIC_MAX_TRANSLATE_PX,
+    rotateDeg: clamp(nx) * FASHION_HOME_WEB_MAGNETIC_MAX_ROTATE_DEG,
+  };
+}
+
+/** Web: magnetic pointer offset + subtle lift (no motion when reduced-motion). */
+export function fashionHomeWebMagneticMotionStyle(
+  offset: FashionHomeWebMagneticOffset | null,
+  hovered: boolean
+): ViewStyle {
   if (Platform.OS !== 'web') return {};
   const ms = FASHION_HOME_DAYLIGHT_TRANSITION_MS;
+  const o = offset ?? { translateX: 0, translateY: 0, rotateDeg: 0 };
   return {
-    transform: [{ translateY: hovered ? -2 : 0 }, { scale: hovered ? 1.006 : 1 }],
+    transform: [
+      { translateX: o.translateX },
+      { translateY: o.translateY + (hovered ? -1 : 0) },
+      { rotate: `${o.rotateDeg}deg` },
+      { scale: hovered ? 1.004 : 1 },
+    ],
     transition: `transform ${ms}ms cubic-bezier(0.22, 1, 0.36, 1), box-shadow ${ms}ms ease-out`,
   } as ViewStyle;
 }
 
-/** Web-only: hero image stack only (avoid filtering card typography). GLASS.HOME.2 — slightly softer lift (less glare). */
-export const FASHION_HOME_DAYLIGHT_HERO_IMAGE_FILTER_WEB = 'brightness(1.04) contrast(1.08) saturate(1.08)';
+/** Web: world-card host motion — magnetic when allowed, static rim-only otherwise. */
+export function fashionHomeWebWorldCardHostMotionStyle(
+  cardAccent: FashionHomeWorldCardDaylightAccent,
+  activeAccent: FashionHomeWorldCardDaylightAccent | null,
+  magnetic: FashionHomeWebMagneticOffset | null,
+  reduceMotion: boolean
+): ViewStyle {
+  if (Platform.OS !== 'web') return {};
+  const hovered = activeAccent === cardAccent;
+  if (reduceMotion) return {};
+  return fashionHomeWebMagneticMotionStyle(hovered ? magnetic : null, hovered);
+}
+
+/** @deprecated Use `fashionHomeWebWorldCardHostMotionStyle`. */
+export function fashionHomeWebWorldCardHostHoverMotionStyle(hovered: boolean): ViewStyle {
+  if (Platform.OS !== 'web' || !hovered) return {};
+  const ms = FASHION_HOME_DAYLIGHT_TRANSITION_MS;
+  return {
+    transform: [{ translateY: -1 }, { scale: 1.004 }],
+    transition: `transform ${ms}ms cubic-bezier(0.22, 1, 0.36, 1), box-shadow ${ms}ms ease-out`,
+  } as ViewStyle;
+}
+
+/** Web: edge-lit image lift on hover (world card interior). */
+export function fashionHomeWebWorldCardImageHoverStyle(hovered: boolean): ImageStyle {
+  if (Platform.OS !== 'web' || !hovered) return {};
+  return { filter: 'contrast(1.01) saturate(1.01)' } as ImageStyle;
+}
+
+/** Web: world-card host pointer handlers (magnetic + hover accent). */
+export function createFashionHomeWebWorldCardPointerHandlers(options: {
+  accent: FashionHomeWorldCardDaylightAccent;
+  reduceMotion: boolean;
+  onActiveAccent: (accent: FashionHomeWorldCardDaylightAccent | null) => void;
+  onMagnetic: (offset: FashionHomeWebMagneticOffset | null) => void;
+}): {
+  onPointerEnter?: () => void;
+  onPointerLeave?: () => void;
+  onPointerMove?: (event: {
+    nativeEvent: { clientX?: number; clientY?: number };
+    currentTarget: unknown;
+  }) => void;
+} {
+  if (Platform.OS !== 'web') return {};
+  const { accent, reduceMotion, onActiveAccent, onMagnetic } = options;
+  return {
+    onPointerEnter: () => onActiveAccent(accent),
+    onPointerLeave: () => {
+      onActiveAccent(null);
+      onMagnetic(null);
+    },
+    onPointerMove: (event) => {
+      onActiveAccent(accent);
+      if (reduceMotion) return;
+      const target = event.currentTarget as { getBoundingClientRect?: () => DOMRect } | null;
+      const rect = target?.getBoundingClientRect?.();
+      if (!rect) return;
+      const clientX = event.nativeEvent.clientX ?? 0;
+      const clientY = event.nativeEvent.clientY ?? 0;
+      onMagnetic(computeFashionHomeWebMagneticOffset(clientX, clientY, rect));
+    },
+  };
+}
+
+/** Web: Explore VIONA primary CTA — gold glass material. */
+export function fashionHomeWebExploreCtaMaterialStyle(
+  hovered: boolean,
+  pressed: boolean
+): ViewStyle {
+  if (Platform.OS !== 'web') return {};
+  const ms = FASHION_HOME_DAYLIGHT_TRANSITION_MS;
+  const base =
+    'inset 0 1px 0 rgba(255,248,232,0.16), 0 0 0 1px rgba(238, 206, 128, 0.58), 0 2px 10px rgba(8, 12, 20, 0.3)';
+  const hoverLift =
+    hovered && !pressed
+      ? ', 0 0 0 1px rgba(255, 228, 168, 0.72), 0 0 6px rgba(238, 206, 128, 0.12), 0 4px 12px rgba(8, 12, 20, 0.34)'
+      : '';
+  return {
+    boxShadow: `${base}${hoverLift}`,
+    transition: `box-shadow ${ms}ms ease-out, transform ${ms}ms cubic-bezier(0.22, 1, 0.36, 1)`,
+  } as ViewStyle;
+}
+
+/** Web: Explore CTA press — slight compress, no bounce. */
+export function fashionHomeWebExploreCtaPressStyle(pressed: boolean): ViewStyle {
+  if (Platform.OS !== 'web' || !pressed) return {};
+  return {
+    transform: [{ scale: 0.994 }],
+    opacity: 0.96,
+  } as ViewStyle;
+}
+
+/** Web: animated gold glow radius for Explore CTA pulse (caller drives Animated.Value). */
+export function fashionHomeWebExploreCtaPulseShadowStyle(
+  glowRadius: number,
+  glowOpacity: number
+): ViewStyle {
+  if (Platform.OS !== 'web') return {};
+  return {
+    shadowColor: 'rgba(238, 206, 128, 0.72)',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: glowOpacity,
+    shadowRadius: glowRadius,
+  } as ViewStyle;
+}
+
+/** Web-only: hero image — no broad lift wash (keeps panel clear). */
+export const FASHION_HOME_DAYLIGHT_HERO_IMAGE_FILTER_WEB = 'none';
 
 /** Web-only CSS transition for Daylight Boost (no layout animation). */
 export function fashionHomeWebDaylightTransitionStyle(): ViewStyle {
@@ -484,6 +755,49 @@ export function fashionHomeWebDaylightTransitionStyle(): ViewStyle {
 export function fashionHomeWebDaylightHeroImageLiftStyle(): ViewStyle {
   if (Platform.OS !== 'web') return {};
   return { filter: FASHION_HOME_DAYLIGHT_HERO_IMAGE_FILTER_WEB } as ViewStyle;
+}
+
+/** Web: radial hero text scrim — smooth dissolve, no vertical rectangle edge. */
+export function fashionHomeWebDaylightHeroTextScrimStyle(): ViewStyle {
+  if (Platform.OS !== 'web') return {};
+  return {
+    backgroundImage:
+      'radial-gradient(ellipse 115% 150% at 0% 50%, rgba(4, 7, 12, 0.2) 0%, rgba(4, 7, 12, 0.065) 34%, rgba(4, 7, 12, 0.012) 52%, rgba(4, 7, 12, 0) 62%)',
+  } as ViewStyle;
+}
+
+/** Web: outer hero shell — 1px rim + restrained depth (no luminous slab). */
+export function fashionHomeWebDaylightHeroShellMaterialStyle(): ViewStyle {
+  if (Platform.OS !== 'web') return {};
+  return {
+    boxShadow: fashionHomeGlassBoxShadow([
+      `0 0 0 1px ${FASHION_HOME_DAYLIGHT_FRAME_BORDER}`,
+      FASHION_HOME_DAYLIGHT_HERO_EDGE_GLOW,
+      FASHION_HOME_DAYLIGHT_HERO_INNER_RIM,
+      FASHION_HOME_DAYLIGHT_HERO_INNER_HIGHLIGHT,
+      FASHION_HOME_GLASS_DEPTH_SHADOW,
+    ]),
+  } as ViewStyle;
+}
+
+/** Web: inner frame accent — complements shell stack without doubling outer glow. */
+export function fashionHomeWebDaylightHeroFrameDepthStyle(): ViewStyle {
+  if (Platform.OS !== 'web') return {};
+  return {
+    boxShadow: fashionHomeGlassBoxShadow([
+      'inset 0 0 0 1px rgba(148, 210, 255, 0.12)',
+      'inset 0 1px 0 rgba(255, 248, 235, 0.034)',
+    ]),
+  } as ViewStyle;
+}
+
+/** Web: localized radial scrim behind card title copy only. */
+export function fashionHomeWebDaylightWorldCardTextScrimStyle(): ViewStyle {
+  if (Platform.OS !== 'web') return {};
+  return {
+    backgroundImage:
+      'radial-gradient(ellipse 90% 72% at 0% 44%, rgba(4, 7, 12, 0.17) 0%, rgba(4, 7, 12, 0.052) 48%, rgba(4, 7, 12, 0) 62%)',
+  } as ViewStyle;
 }
 
 /** Quick-action pill accent (Home fashion strip). */
@@ -501,58 +815,52 @@ const FASHION_HOME_DAYLIGHT_QUICK_ACTION: Record<
   }>
 > = {
   gold: {
-    fill: 'rgba(14, 18, 28, 0.22)',
-    border: 'rgba(228, 192, 110, 0.32)',
-    iconBg: 'rgba(238, 206, 128, 0.2)',
-    iconRim: 'rgba(238, 206, 128, 0.52)',
-    webMaterial:
-      'inset 0 1px 0 rgba(255,248,232,0.2), inset 0 -12px 20px rgba(6,10,16,0.22), 0 0 0 1px rgba(228, 192, 110, 0.3), 0 3px 12px rgba(4, 8, 14, 0.32)',
-    sheen: ['rgba(255, 248, 228, 0.14)', 'rgba(255, 248, 228, 0)'],
+    fill: 'rgba(10, 14, 22, 0.23)',
+    border: 'rgba(228, 192, 110, 0.26)',
+    iconBg: 'rgba(238, 206, 128, 0.05)',
+    iconRim: 'rgba(238, 206, 128, 0.2)',
+    webMaterial: '0 1px 3px rgba(4, 8, 14, 0.1)',
+    sheen: ['rgba(255, 248, 228, 0.05)', 'rgba(255, 248, 228, 0)'],
   },
   cyan: {
-    fill: 'rgba(12, 18, 28, 0.22)',
-    border: 'rgba(95, 195, 248, 0.3)',
-    iconBg: 'rgba(128, 210, 255, 0.18)',
-    iconRim: 'rgba(128, 210, 255, 0.52)',
-    webMaterial:
-      'inset 0 1px 0 rgba(255,255,255,0.16), inset 0 -12px 20px rgba(6,10,16,0.22), 0 0 0 1px rgba(95, 195, 248, 0.28), 0 3px 12px rgba(4, 8, 14, 0.32)',
-    sheen: ['rgba(210, 238, 255, 0.12)', 'rgba(200, 235, 255, 0)'],
+    fill: 'rgba(10, 14, 22, 0.23)',
+    border: 'rgba(95, 195, 248, 0.24)',
+    iconBg: 'rgba(128, 210, 255, 0.044)',
+    iconRim: 'rgba(128, 210, 255, 0.2)',
+    webMaterial: '0 1px 3px rgba(4, 8, 14, 0.1)',
+    sheen: ['rgba(210, 238, 255, 0.04)', 'rgba(200, 235, 255, 0)'],
   },
   emerald: {
-    fill: 'rgba(12, 20, 26, 0.22)',
-    border: 'rgba(72, 195, 155, 0.3)',
-    iconBg: 'rgba(88, 214, 168, 0.18)',
-    iconRim: 'rgba(88, 214, 168, 0.52)',
-    webMaterial:
-      'inset 0 1px 0 rgba(255,255,255,0.15), inset 0 -12px 20px rgba(6,10,16,0.22), 0 0 0 1px rgba(72, 195, 155, 0.28), 0 3px 12px rgba(4, 8, 14, 0.32)',
-    sheen: ['rgba(195, 250, 225, 0.12)', 'rgba(180, 245, 220, 0)'],
+    fill: 'rgba(10, 14, 22, 0.23)',
+    border: 'rgba(72, 195, 155, 0.24)',
+    iconBg: 'rgba(88, 214, 168, 0.044)',
+    iconRim: 'rgba(88, 214, 168, 0.2)',
+    webMaterial: '0 1px 3px rgba(4, 8, 14, 0.1)',
+    sheen: ['rgba(195, 250, 225, 0.04)', 'rgba(180, 245, 220, 0)'],
   },
   violet: {
-    fill: 'rgba(14, 16, 28, 0.22)',
-    border: 'rgba(168, 138, 238, 0.3)',
-    iconBg: 'rgba(176, 140, 255, 0.18)',
-    iconRim: 'rgba(176, 140, 255, 0.52)',
-    webMaterial:
-      'inset 0 1px 0 rgba(255,255,255,0.15), inset 0 -12px 20px rgba(6,10,16,0.22), 0 0 0 1px rgba(168, 138, 238, 0.28), 0 3px 12px rgba(4, 8, 14, 0.32)',
-    sheen: ['rgba(228, 210, 255, 0.12)', 'rgba(220, 200, 255, 0)'],
+    fill: 'rgba(10, 14, 22, 0.23)',
+    border: 'rgba(168, 138, 238, 0.24)',
+    iconBg: 'rgba(176, 140, 255, 0.044)',
+    iconRim: 'rgba(176, 140, 255, 0.2)',
+    webMaterial: '0 1px 3px rgba(4, 8, 14, 0.1)',
+    sheen: ['rgba(228, 210, 255, 0.04)', 'rgba(220, 200, 255, 0)'],
   },
   blue: {
-    fill: 'rgba(12, 18, 28, 0.22)',
-    border: 'rgba(120, 196, 255, 0.3)',
-    iconBg: 'rgba(120, 196, 255, 0.16)',
-    iconRim: 'rgba(120, 196, 255, 0.5)',
-    webMaterial:
-      'inset 0 1px 0 rgba(255,255,255,0.15), inset 0 -12px 20px rgba(6,10,16,0.22), 0 0 0 1px rgba(120, 196, 255, 0.28), 0 3px 12px rgba(4, 8, 14, 0.32)',
-    sheen: ['rgba(210, 232, 255, 0.12)', 'rgba(200, 228, 255, 0)'],
+    fill: 'rgba(10, 14, 22, 0.23)',
+    border: 'rgba(120, 196, 255, 0.24)',
+    iconBg: 'rgba(120, 196, 255, 0.044)',
+    iconRim: 'rgba(120, 196, 255, 0.18)',
+    webMaterial: '0 1px 3px rgba(4, 8, 14, 0.1)',
+    sheen: ['rgba(210, 232, 255, 0.04)', 'rgba(200, 228, 255, 0)'],
   },
   sos: {
-    fill: 'rgba(22, 10, 14, 0.36)',
-    border: 'rgba(255, 92, 108, 0.36)',
-    iconBg: 'rgba(255, 92, 108, 0.2)',
-    iconRim: 'rgba(255, 92, 108, 0.52)',
-    webMaterial:
-      'inset 0 1px 0 rgba(255,220,225,0.14), inset 0 -10px 18px rgba(8,4,6,0.28), 0 0 0 1px rgba(255, 92, 108, 0.32), 0 3px 12px rgba(4, 8, 14, 0.32)',
-    sheen: ['rgba(255, 190, 198, 0.12)', 'rgba(255, 180, 190, 0)'],
+    fill: 'rgba(18, 8, 12, 0.26)',
+    border: 'rgba(255, 92, 108, 0.28)',
+    iconBg: 'rgba(255, 92, 108, 0.05)',
+    iconRim: 'rgba(255, 92, 108, 0.22)',
+    webMaterial: '0 1px 3px rgba(4, 8, 14, 0.1)',
+    sheen: ['rgba(255, 190, 198, 0.04)', 'rgba(255, 180, 190, 0)'],
   },
 };
 
@@ -564,32 +872,96 @@ export function fashionHomeDaylightQuickActionPillStyle(accent: FashionHomeQuick
     borderWidth: 1,
     shadowColor: q.iconRim,
     shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.28,
-    shadowRadius: 3,
+    shadowOpacity: 0.055,
+    shadowRadius: 0.5,
     elevation: 1,
   };
 }
 
-export function fashionHomeWebDaylightQuickActionPillMaterialStyle(
+const FASHION_HOME_DAYLIGHT_QUICK_ACTION_INNER_HIGHLIGHT: Record<FashionHomeQuickActionAccent, string> = {
+  gold: 'inset 0 0 0 1px rgba(228, 192, 110, 0.12)',
+  cyan: 'inset 0 0 0 1px rgba(95, 195, 248, 0.11)',
+  emerald: 'inset 0 0 0 1px rgba(72, 195, 155, 0.11)',
+  violet: 'inset 0 0 0 1px rgba(168, 138, 238, 0.11)',
+  blue: 'inset 0 0 0 1px rgba(120, 196, 255, 0.11)',
+  sos: 'inset 0 0 0 1px rgba(255, 92, 108, 0.13)',
+};
+
+const FASHION_HOME_DAYLIGHT_QUICK_ACTION_HOVER_BORDER: Record<FashionHomeQuickActionAccent, string> = {
+  gold: 'rgba(228, 192, 110, 0.38)',
+  cyan: 'rgba(95, 195, 248, 0.36)',
+  emerald: 'rgba(72, 195, 155, 0.36)',
+  violet: 'rgba(168, 138, 238, 0.36)',
+  blue: 'rgba(120, 196, 255, 0.36)',
+  sos: 'rgba(255, 92, 108, 0.42)',
+};
+
+const FASHION_HOME_DAYLIGHT_QUICK_ACTION_DEFAULT_EDGE_GLOW: Record<FashionHomeQuickActionAccent, string> = {
+  gold: '0 0 2px rgba(228, 192, 110, 0.058), 0 0 3px rgba(228, 192, 110, 0.072)',
+  cyan: '0 0 2px rgba(95, 195, 248, 0.055), 0 0 3px rgba(95, 195, 248, 0.069)',
+  emerald: '0 0 2px rgba(72, 195, 155, 0.055), 0 0 3px rgba(72, 195, 155, 0.069)',
+  violet: '0 0 2px rgba(168, 138, 238, 0.055), 0 0 3px rgba(168, 138, 238, 0.069)',
+  blue: '0 0 2px rgba(120, 196, 255, 0.055), 0 0 3px rgba(120, 196, 255, 0.069)',
+  sos: '0 0 2px rgba(255, 92, 108, 0.062), 0 0 3px rgba(255, 92, 108, 0.08)',
+};
+
+const FASHION_HOME_DAYLIGHT_QUICK_ACTION_HOVER_EDGE_GLOW: Record<FashionHomeQuickActionAccent, string> = {
+  gold: '0 0 3px rgba(228, 192, 110, 0.104)',
+  cyan: '0 0 3px rgba(95, 195, 248, 0.104)',
+  emerald: '0 0 3px rgba(72, 195, 155, 0.104)',
+  violet: '0 0 3px rgba(168, 138, 238, 0.104)',
+  blue: '0 0 3px rgba(120, 196, 255, 0.104)',
+  sos: '0 0 3px rgba(255, 92, 108, 0.124)',
+};
+
+/** Web: single 1px rim via box-shadow (avoids thick border + shadow stack). */
+export function fashionHomeWebDaylightQuickActionPillGlassStyle(
   accent: FashionHomeQuickActionAccent,
   hovered = false
 ): ViewStyle {
   if (Platform.OS !== 'web') return {};
-  const base = FASHION_HOME_DAYLIGHT_QUICK_ACTION[accent].webMaterial;
-  if (!hovered) return { boxShadow: base } as ViewStyle;
-  const lift =
-    ', inset 0 1px 0 rgba(255,255,255,0.1), 0 0 0 1px rgba(255,255,255,0.1), 0 8px 18px rgba(6,10,18,0.3)';
-  return { boxShadow: `${base}${lift}` } as ViewStyle;
+  const q = FASHION_HOME_DAYLIGHT_QUICK_ACTION[accent];
+  const rim = hovered ? FASHION_HOME_DAYLIGHT_QUICK_ACTION_HOVER_BORDER[accent] : q.border;
+  const layers = [
+    `0 0 0 1px ${rim}`,
+    FASHION_HOME_DAYLIGHT_QUICK_ACTION_INNER_HIGHLIGHT[accent],
+    hovered
+      ? FASHION_HOME_DAYLIGHT_QUICK_ACTION_HOVER_EDGE_GLOW[accent]
+      : FASHION_HOME_DAYLIGHT_QUICK_ACTION_DEFAULT_EDGE_GLOW[accent],
+    q.webMaterial,
+  ];
+  return {
+    backgroundColor: q.fill,
+    borderWidth: 0,
+    boxShadow: fashionHomeGlassBoxShadow(layers),
+  } as ViewStyle;
 }
 
-/** Web: inset glass rim on quick pills (no extra fill). */
-export function fashionHomeWebDaylightQuickActionInnerRimStyle(accent: FashionHomeQuickActionAccent): ViewStyle {
+/** @deprecated Use `fashionHomeWebDaylightQuickActionPillGlassStyle`. */
+export function fashionHomeWebDaylightQuickActionHoverBorderStyle(
+  accent: FashionHomeQuickActionAccent,
+  hovered = false
+): ViewStyle {
+  return fashionHomeWebDaylightQuickActionPillGlassStyle(accent, hovered);
+}
+
+/** @deprecated Use `fashionHomeWebDaylightQuickActionPillGlassStyle`. */
+export function fashionHomeWebDaylightQuickActionPillMaterialStyle(
+  accent: FashionHomeQuickActionAccent,
+  _hovered = false
+): ViewStyle {
   if (Platform.OS !== 'web') return {};
+  return { boxShadow: FASHION_HOME_DAYLIGHT_QUICK_ACTION[accent].webMaterial } as ViewStyle;
+}
+
+/** Web: native-only inset rim — web uses `borderWidth` + hover border brighten. */
+export function fashionHomeWebDaylightQuickActionInnerRimStyle(accent: FashionHomeQuickActionAccent): ViewStyle {
+  if (Platform.OS === 'web') return {};
   const b = FASHION_HOME_DAYLIGHT_QUICK_ACTION[accent].border;
   return {
     ...StyleSheet.absoluteFillObject,
     borderRadius: vionaTokens.radius.pill,
-    boxShadow: `inset 0 0 0 1px ${b}, inset 0 1px 0 rgba(255,255,255,0.16)`,
+    boxShadow: `inset 0 0 0 1px ${b}`,
   } as ViewStyle;
 }
 
@@ -1068,16 +1440,44 @@ export function fashionHomeWebOpeningStageHubWrapperStyle(
   return fashionHomeWebOpeningStageSharedRailWrapperStyle(padPx, options);
 }
 
-/** Web: restrained glass lift on command-rail utilities (caller should skip SOS). */
-export function fashionHomeWebCommandUtilityHoverStyle(hovered: boolean, daylightBoost: boolean): ViewStyle {
+/** Web: premium edge-lit hover on command-rail utilities. */
+export function fashionHomeWebCommandUtilityHoverStyle(
+  hovered: boolean,
+  daylightBoost: boolean,
+  options?: { sos?: boolean }
+): ViewStyle {
   if (Platform.OS !== 'web' || !hovered) return {};
   const ms = FASHION_HOME_DAYLIGHT_TRANSITION_MS;
+  if (options?.sos) {
+    return {
+      backgroundColor: 'rgba(255, 92, 108, 0.07)',
+      boxShadow: fashionHomeGlassBoxShadow([
+        'inset 0 0 0 1px rgba(255, 92, 108, 0.4)',
+        '0 0 3px rgba(255, 92, 108, 0.09)',
+        '0 1px 4px rgba(8, 6, 10, 0.18)',
+      ]),
+      transition: `background-color ${ms}ms ease-out, box-shadow ${ms}ms ease-out, transform ${ms}ms ease-out`,
+    } as ViewStyle;
+  }
+  const rim = daylightBoost
+    ? 'inset 0 0 0 1px rgba(148, 210, 255, 0.36)'
+    : 'inset 0 0 0 1px rgba(252, 236, 200, 0.38)';
+  const edgeGlow = daylightBoost
+    ? '0 0 3px rgba(148, 210, 255, 0.088)'
+    : '0 0 3px rgba(252, 228, 168, 0.088)';
   return {
-    backgroundColor: daylightBoost ? 'rgba(255, 255, 255, 0.05)' : 'rgba(255, 255, 255, 0.045)',
-    boxShadow: daylightBoost
-      ? 'inset 0 0 0 1px rgba(255, 248, 232, 0.32), 0 5px 16px rgba(6, 10, 18, 0.26)'
-      : 'inset 0 0 0 1px rgba(255, 255, 255, 0.18), 0 5px 16px rgba(6, 10, 18, 0.24)',
-    transition: `background-color ${ms}ms ease-out, box-shadow ${ms}ms ease-out`,
+    backgroundColor: daylightBoost ? 'rgba(255, 255, 255, 0.006)' : 'rgba(255, 255, 255, 0.005)',
+    boxShadow: fashionHomeGlassBoxShadow([rim, edgeGlow, '0 1px 4px rgba(6, 10, 18, 0.16)']),
+    transition: `background-color ${ms}ms ease-out, box-shadow ${ms}ms ease-out, transform ${ms}ms ease-out`,
+  } as ViewStyle;
+}
+
+/** Web: command utility press feedback. */
+export function fashionHomeWebCommandUtilityPressStyle(pressed: boolean): ViewStyle {
+  if (Platform.OS !== 'web' || !pressed) return {};
+  return {
+    transform: [{ scale: 0.992 }],
+    opacity: 0.94,
   } as ViewStyle;
 }
 
@@ -1090,8 +1490,8 @@ export function fashionHomeDaylightQuickActionIconCapsuleStyle(
     backgroundColor: q.iconBg,
     shadowColor: q.iconRim,
     shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: hovered ? 0.92 : 0.62,
-    shadowRadius: hovered ? 11 : 7,
+    shadowOpacity: hovered ? 0.22 : 0.14,
+    shadowRadius: hovered ? 1.5 : 0.5,
     elevation: 1,
   };
 }
