@@ -4,7 +4,7 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useCallback, useMemo, useState } from 'react';
 import { Alert, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import type { RootStackParamList } from '../navigation/routes';
+import { MAIN_TAB, type RootStackParamList } from '../navigation/routes';
 import { Colors } from '../theme/colors';
 import { FontFamily } from '../theme/typography';
 
@@ -166,7 +166,7 @@ export function FlightSearchAssistantScreen() {
 
         <Pressable
           style={({ pressed }) => [styles.linkRow, pressed && { opacity: 0.75 }]}
-          onPress={() => navigation.navigate('TravelCompanion')}
+          onPress={() => navigation.navigate('Tabs', { screen: MAIN_TAB.B2C.travel })}
         >
           <Text style={styles.linkText}>Quay về Đồng hành du lịch</Text>
           <Ionicons name="chevron-forward" size={18} color={Colors.primary} />

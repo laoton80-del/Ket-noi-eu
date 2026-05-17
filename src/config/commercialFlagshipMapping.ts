@@ -219,7 +219,7 @@ const COMMERCIAL_OFFERS: Record<PublicOfferKey, CommercialOfferDefinition> = {
     relatedSurfaces: [
       { id: 'le_tan_consumer', kind: 'screen', path: 'src/screens/LeTanScreen.tsx', notes: 'Mixed AI paths; see business_ops for ops-heavy B2B mapping.' },
       { id: 'live_interpreter', kind: 'service', path: 'src/services/liveInterpreterService.ts' },
-      { id: 'travel_companion', kind: 'screen', path: 'src/screens/TravelCompanionScreen.tsx' },
+      { id: 'travel_companion', kind: 'screen', path: 'src/screens/b2c/TravelScreen.tsx' },
       { id: 'flight_search_assistant', kind: 'screen', path: 'src/screens/FlightSearchAssistantScreen.tsx' },
       { id: 'emergency_sos', kind: 'screen', path: 'src/screens/EmergencySOSScreen.tsx' },
       { id: 'tien_ich_hub', kind: 'screen', path: 'src/screens/TienIchScreen.tsx' },
@@ -353,7 +353,7 @@ export const BACKBONE_SERVICE_MAPPINGS: readonly BackboneServiceMapping[] = [
     doctrineRefs: ['docs/COMMERCIAL_FLAGSHIP_DOCTRINE.md §3.B, §4 (neo tên dịch vụ)', 'docs/KNG_PDF_BACKBONE_DOCTRINE.md §1.1'],
     relatedSurfaces: [
       { id: 'live_interpreter', kind: 'service', path: 'src/services/liveInterpreterService.ts', notes: 'Persona Minh Khang / loan.' },
-      { id: 'travel_le_tan_scenario', kind: 'screen', path: 'src/screens/TravelCompanionScreen.tsx' },
+      { id: 'travel_le_tan_scenario', kind: 'screen', path: 'src/screens/b2c/TravelScreen.tsx' },
     ],
     notes: 'Giữ tên dịch vụ trên UI; monetization chính dưới AI Support.',
   },
@@ -396,7 +396,7 @@ export const BACKBONE_SERVICE_MAPPINGS: readonly BackboneServiceMapping[] = [
     doctrineRefs: ['docs/COMMERCIAL_FLAGSHIP_DOCTRINE.md §7', 'docs/KNG_PDF_BACKBONE_DOCTRINE.md §1.1'],
     relatedSurfaces: [
       { id: 'emergency_sos', kind: 'screen', path: 'src/screens/EmergencySOSScreen.tsx' },
-      { id: 'travel_companion_screen', kind: 'screen', path: 'src/screens/TravelCompanionScreen.tsx' },
+      { id: 'travel_companion_screen', kind: 'screen', path: 'src/screens/b2c/TravelScreen.tsx' },
     ],
     notes: 'Offer bucket = AI Support; free-controlled guard (miễn phí có kiểm soát) — doctrine §7.',
   },
@@ -405,7 +405,7 @@ export const BACKBONE_SERVICE_MAPPINGS: readonly BackboneServiceMapping[] = [
     labelVi: 'Đồng hành du lịch',
     primaryPublicOffer: 'ai_support',
     doctrineRefs: ['docs/COMMERCIAL_FLAGSHIP_DOCTRINE.md §7, §9', 'docs/KNG_PDF_BACKBONE_DOCTRINE.md §1.1'],
-    relatedSurfaces: [{ id: 'travel_companion_screen', kind: 'screen', path: 'src/screens/TravelCompanionScreen.tsx' }],
+    relatedSurfaces: [{ id: 'travel_companion_screen', kind: 'screen', path: 'src/screens/b2c/TravelScreen.tsx' }],
     notes: 'Tách ranh giới ý nghĩa với flight assistant.',
   },
   {
