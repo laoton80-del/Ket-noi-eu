@@ -1102,7 +1102,7 @@ export function HomeScreen() {
   const goUniverseTravel = useCallback(() => {
     void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     if (!featureFlags.travelEnabled) return;
-    openMiniApp('travel', () => navigation.navigate('TravelCompanion'));
+    openMiniApp('travel', () => navigation.navigate('Tabs', { screen: MAIN_TAB.B2C.travel }));
   }, [featureFlags.travelEnabled, navigation, openMiniApp]);
 
   const goUniverseAcademy = useCallback(() => {
@@ -2870,7 +2870,7 @@ export function HomeScreen() {
             {featureFlags.travelEnabled ? (
               <Pressable
                 onPress={() =>
-                  openMiniApp('travel', () => navigation.navigate('TravelCompanion'))
+                  openMiniApp('travel', () => navigation.navigate('Tabs', { screen: MAIN_TAB.B2C.travel }))
                 }
                 style={({ pressed }) => [styles.utilityChip, pressed && { opacity: 0.88 }]}
               >
