@@ -14,6 +14,7 @@
     "redirect_intro": "After login you'll return to:",
     "redirects": {
       "HocTap": "Learning",
+      "Academy": "Academy",
       "LeTan": "Reception",
       "Wallet": "Wallet & credits",
       "AiEye": "Ai Eye",

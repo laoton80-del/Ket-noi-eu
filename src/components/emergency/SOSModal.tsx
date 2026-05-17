@@ -1,6 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useEffect, useMemo, useState } from 'react';
-import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Alert, Modal, Pressable, StyleSheet, Text, View } from 'react-native';
+import { useTranslation } from '../../i18n';
 import { useDeviceLayout } from '../../hooks/useDeviceLayout';
 import { theme } from '../../theme/theme';
 import { FontFamily } from '../../theme/typography';
@@ -8,12 +9,13 @@ import { FontFamily } from '../../theme/typography';
 type SOSModalProps = {
   visible: boolean;
   onClose: () => void;
+  /** @deprecated Use in-sheet alerts only — no auto-dial in global SOS guidance. */
   onEmergencyCall?: () => void;
   onEmbassyCall?: () => void;
   locationText?: string;
 };
 
-const HOLD_DURATION_MS = 2000;
+const HOLD_DURATION_MS = 3000;
 const HOLD_TICK_MS = 100;
 
 export function SOSModal({
@@ -21,12 +23,15 @@ export function SOSModal({
   onClose,
   onEmergencyCall,
   onEmbassyCall,
-  locationText = 'Vị trí của bạn: Đang lấy tọa độ...',
+  locationText,
 }: SOSModalProps) {
+  const { t } = useTranslation();
   const [isHolding, setIsHolding] = useState(false);
   const [holdProgress, setHoldProgress] = useState(0);
   const { isLandscape, isTablet, isWeb, isPortrait } = useDeviceLayout();
   const shouldUseHorizontalActions = isLandscape && (isTablet || isWeb || !isPortrait);
+
+  const resolvedLocation = locationText ?? t('sos.legacyModalLocationFallback');
 
   useEffect(() => {
     if (!visible) {
@@ -56,7 +61,17 @@ export function SOSModal({
     resetHold();
     if (onEmergencyCall) {
       onEmergencyCall();
+      return;
     }
+    Alert.alert(t('sos.legacyEmergencyAlertTitle'), t('sos.legacyEmergencyAlertBody'));
+  };
+
+  const onEmbassyPress = () => {
+    if (onEmbassyCall) {
+      onEmbassyCall();
+      return;
+    }
+    Alert.alert(t('sos.legacyEmbassyAlertTitle'), t('sos.legacyEmbassyAlertBody'));
   };
 
   return (
@@ -65,12 +80,12 @@ export function SOSModal({
         <View style={styles.sheet}>
           <View style={styles.headerRow}>
             <Ionicons name="warning" size={26} color={theme.colors.RouteError} />
-            <Text style={styles.headerTitle}>TRƯỜNG HỢP KHẨN CẤP</Text>
+            <Text style={styles.headerTitle}>{t('sos.legacyModalHeader')}</Text>
           </View>
 
           <View style={styles.locationCard}>
-            <Text style={styles.locationLabel}>VỊ TRÍ HIỆN TẠI</Text>
-            <Text style={styles.locationText}>{locationText}</Text>
+            <Text style={styles.locationLabel}>{t('sos.legacyModalLocationLabel')}</Text>
+            <Text style={styles.locationText}>{resolvedLocation}</Text>
           </View>
 
           <Pressable
@@ -83,9 +98,11 @@ export function SOSModal({
             onLongPress={triggerEmergency}
             style={({ pressed }) => [styles.primaryAction, pressed && styles.primaryActionPressed]}
           >
-            <Text style={styles.primaryActionTitle}>GIỮ ĐỂ GỌI KHẨN CẤP</Text>
+            <Text style={styles.primaryActionTitle}>{t('sos.legacyHoldTitle')}</Text>
             <Text style={styles.primaryActionSub}>
-              {isHolding ? `Đang giữ... ${progressValue}%` : 'Nhấn và giữ 2 giây để xác nhận cuộc gọi'}
+              {isHolding
+                ? t('sos.legacyModalHolding', { percent: progressValue })
+                : t('sos.legacyModalHoldSeconds')}
             </Text>
             <View style={styles.progressTrack}>
               <View style={[styles.progressFill, { width: progressWidth }]} />
@@ -94,14 +111,14 @@ export function SOSModal({
 
           <View style={[styles.secondaryActions, shouldUseHorizontalActions && styles.secondaryActionsRow]}>
             <Pressable
-              onPress={onEmbassyCall}
+              onPress={onEmbassyPress}
               style={({ pressed }) => [
                 styles.secondaryBtn,
                 shouldUseHorizontalActions && styles.secondaryBtnRowItem,
                 pressed && { opacity: 0.84 },
               ]}
             >
-              <Text style={styles.secondaryBtnText}>Gọi Đại sứ quán</Text>
+              <Text style={styles.secondaryBtnText}>{t('sos.legacyEmbassy')}</Text>
             </Pressable>
             <Pressable
               onPress={onClose}
@@ -111,7 +128,7 @@ export function SOSModal({
                 pressed && { opacity: 0.84 },
               ]}
             >
-              <Text style={styles.cancelBtnText}>Đóng (Hủy)</Text>
+              <Text style={styles.cancelBtnText}>{t('sos.close')}</Text>
             </Pressable>
           </View>
         </View>

@@ -166,7 +166,7 @@ Implementation intent:
 ## 7. Home Rules
 - Multiverse Hero is primary
 - Care Heart Fund is secondary
-- Quick actions below hero
+- Quick actions below hero (wide layouts: prefer **[VIONA Action Grid Pattern](./VIONA_ACTION_GRID_PATTERN.md)** for density and alignment with hero cards)
 - no text wall
 - no mixed language
 - no fake production claims
@@ -208,6 +208,14 @@ Define:
 - status pill
 - modal
 - evidence/admin card
+
+### VIONA Action Grid Pattern
+
+For **feature actions** (shortcuts, tools, SOS tiles, wallet/travel/local/academy/business entry points, account shortcuts, merchant and B2B import tools), prefer **compact premium action cards** in a **responsive grid** instead of long vertical button lists on desktop and wide tablets. On mobile, default to **one column** for safety-critical flows; use two columns only when touch targets stay comfortable. Do **not** use this pattern for long data lists, transaction history, chat, legal text, dense settings screens, or admin tables.
+
+Canonical spec: **[VIONA Action Grid Pattern](./VIONA_ACTION_GRID_PATTERN.md)**.
+
+**LifeOS command center:** layouts should stay calm, readable, fast to scan, and safe — not dashboard-heavy and not “gaming” UI.
 
 ## 12. Motion / Interaction Rules
 - subtle

@@ -18,7 +18,7 @@ import { normalizeCountryCodeOrSentinel } from '../config/countryPacks';
 import { useAuth } from '../context/AuthContext';
 import { useMiniAppEntry } from '../hooks/useMiniAppEntry';
 import { getStrings } from '../i18n/strings';
-import type { RootStackParamList } from '../navigation/routes';
+import { MAIN_TAB, type RootStackParamList } from '../navigation/routes';
 import { useAssistantSettings } from '../state/assistantSettings';
 import { DiscoveryCuratedList } from '../components/DiscoveryCuratedList';
 import { b2cTheme } from '../theme/appModeThemes';
@@ -259,7 +259,7 @@ export function TienIchScreen() {
                 return;
               }
               if (item.id === 'travel') {
-                openMiniApp('travel', () => navigation.navigate('TravelCompanion'));
+                openMiniApp('travel', () => navigation.navigate('Tabs', { screen: MAIN_TAB.B2C.travel }));
                 return;
               }
               if (item.id === 'yeuthuong') {

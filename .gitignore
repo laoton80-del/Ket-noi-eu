@@ -53,3 +53,8 @@ firebase-adminsdk*.json
 /android
 
 .vercel
+
+# Local visual QA (Puppeteer captures, one-off fullscreen tuning scripts)
+qa-screenshots/
+.screenshots-viona-*/
+scripts/qa-fullscreen-*.mjs

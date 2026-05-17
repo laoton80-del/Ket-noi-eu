@@ -15,6 +15,8 @@ export type SmartTrioLanguageChipProps = Readonly<{
   tabBarLift: number;
   placement: SmartTrioLanguageChipPlacement;
   isDesktopWeb?: boolean;
+  /** When true, floating chip is not rendered (e.g. B2C Home desktop command shell). */
+  suppressFloating?: boolean;
 }>;
 
 function marketI18nKey(code: MarketCode): string {
@@ -35,7 +37,8 @@ export function SmartTrioLanguageChip({
   tabBarLift,
   placement,
   isDesktopWeb = false,
-}: SmartTrioLanguageChipProps): ReactElement {
+  suppressFloating = false,
+}: SmartTrioLanguageChipProps): ReactElement | null {
   const { t } = useTranslation();
   const insets = useSafeAreaInsets();
   const { width } = useWindowDimensions();
@@ -70,6 +73,10 @@ export function SmartTrioLanguageChip({
   }, [placement, isDesktopWeb, insets.top, insets.right, insets.bottom, tabBarLift]);
 
   const narrow = width < 420;
+
+  if (placement === 'floating' && suppressFloating) {
+    return null;
+  }
 
   const body = (
     <>

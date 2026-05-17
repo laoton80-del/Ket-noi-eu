@@ -25,6 +25,7 @@ import { evaluateMerchantSurfaceAccess } from '../services/auth/merchantSurfaceE
 import { theme } from '../theme/theme';
 import { FontFamily } from '../theme/typography';
 import { hasB2BWorkspaceAccess } from '../utils/b2bAccess';
+import { vionaTokens } from '../design';
 import { isDemoSandboxActive } from '../services/ux/DemoSandbox';
 import { useUserStore, type ActiveRole } from '../store/userStore';
 import { getFeatureFlags } from '../core/feature-flags/featureFlags';
@@ -32,10 +33,15 @@ import type { RootStackParamList, RootTabParamList } from './routes';
 import { useTranslation } from '../i18n';
 import { MAIN_TAB } from './routes';
 import { MvpSurfaceDisabledScreen } from './mvpSurfaceGate';
+import {
+  fashionHomeHiddenTabBarStyle,
+  isFashionHomeDesktopShell,
+  readFocusedTabRouteFromRootState,
+} from './fashionHomeDesktopShell';
 import { roleTabChrome } from './tabRoleTheme';
 
 import { HomeScreen } from '../screens/HomeScreen';
-import { LeTanScreen } from '../screens/LeTanScreen';
+import { AcademyScreen } from '../screens/AcademyScreen';
 import { LocalScreen } from '../screens/b2c/LocalScreen';
 import { TravelHubScreen } from '../screens/b2c/travel/TravelHubScreen';
 import { MerchantDashboardScreen } from '../screens/b2b/MerchantDashboardScreen';
@@ -51,7 +57,6 @@ import { WalletScreen } from '../screens/WalletScreen';
 import { AdminCommandCenter } from '../screens/admin/AdminCommandCenter';
 import { SOSFloatingButton } from '../components/SOSFloatingButton';
 import { SOSModal } from '../screens/b2c/SOSModal';
-import { initiateAITriage, V7_SOS_EMERGENCY_DIAL_BUFFER_MS } from '../services/emergency/sosAITriage';
 const Tab = createBottomTabNavigator<RootTabParamList>();
 
 type StackNav = NativeStackNavigationProp<RootStackParamList>;
@@ -169,23 +174,17 @@ export function MainTabNavigator(): ReactElement {
   const showRolePicker = allowedRoles.length > 1;
   const [paywallTarget, setPaywallTarget] = useState<RedirectTarget | null>(null);
   const [sosSheetOpen, setSosSheetOpen] = useState(false);
-  const [sosEmergencyDialGateUntilMs, setSosEmergencyDialGateUntilMs] = useState<number | null>(null);
   const [languageSheetOpen, setLanguageSheetOpen] = useState(false);
   const profileSwitcherRef = useRef<ProfileSwitcherHandle | null>(null);
 
   const onSosHoldComplete = useCallback(() => {
-    initiateAITriage(navigation);
-    setSosEmergencyDialGateUntilMs(Date.now() + V7_SOS_EMERGENCY_DIAL_BUFFER_MS);
     setSosSheetOpen(true);
-  }, [navigation]);
+  }, []);
 
   const { setCurrentHub } = useHubTheme();
   const { syncFromMainTab } = useNavigationThemeForHub();
 
-  const focusedTabRoute = useNavigationState((state) => {
-    if (!state?.routes || state.index == null) return undefined;
-    return state.routes[state.index]?.name as keyof RootTabParamList | undefined;
-  });
+  const focusedTabRoute = useNavigationState(readFocusedTabRouteFromRootState);
 
   /** V7 “Global Lifeline”: all roles; B2C hides only on Academy tab (voice shell). */
   const showGlobalLifelineSos =
@@ -235,21 +234,29 @@ export function MainTabNavigator(): ReactElement {
 
   const tabBarLift = tabSizing.tabBarBaseHeight + (isDesktopWeb ? Math.max(insets.bottom, 16) : Math.max(insets.bottom, 10)) + 10;
 
-  const suppressHomeFloatingChrome =
-    isDesktopWeb && currentActiveRole === 'B2C' && focusedTabRoute === MAIN_TAB.B2C.home;
+  const fashionHomeDesktopShell = useMemo(
+    () =>
+      isFashionHomeDesktopShell({
+        platform: Platform.OS,
+        windowWidth: width,
+        activeRole: currentActiveRole,
+        focusedTabRoute,
+      }),
+    [currentActiveRole, focusedTabRoute, width]
+  );
 
   useEffect(() => {
-    if (!suppressHomeFloatingChrome) setLanguageSheetOpen(false);
-  }, [suppressHomeFloatingChrome]);
+    if (!fashionHomeDesktopShell) setLanguageSheetOpen(false);
+  }, [fashionHomeDesktopShell]);
 
-  const b2cDesktopBottomTabs = isDesktopWeb && currentActiveRole === 'B2C';
+  const b2cDesktopBottomTabs = isDesktopWeb && currentActiveRole === 'B2C' && !fashionHomeDesktopShell;
   const tabBarPosition = b2cDesktopBottomTabs ? 'bottom' : isDesktopWeb ? 'left' : 'bottom';
 
-  const b2cHomeDesktopScene = suppressHomeFloatingChrome;
+  const b2cHomeDesktopScene = fashionHomeDesktopShell;
   const sceneTopPadding = !isDesktopWeb
     ? 0
     : b2cHomeDesktopScene
-      ? Math.max(insets.top, 8)
+      ? 0
       : Math.max(100, insets.top + 96);
 
   const homeCommandValue = useMemo<HomeCommandContextValue>(
@@ -288,23 +295,20 @@ export function MainTabNavigator(): ReactElement {
       switchRole('B2C');
       navigation.navigate('Tabs', { screen: MAIN_TAB.B2C.home });
     };
-    const goB2cAi = () => {
-      switchRole('B2C');
-      navigation.navigate('Tabs', { screen: MAIN_TAB.B2C.ai });
-    };
-
     if (pendingRedirect === 'HocTap') {
       goB2cHome();
       setPendingRedirect(null);
       return;
     }
-    if (pendingRedirect === 'LeTan') {
-      if (!flags.academyLiteEnabled) {
-        goB2cHome();
-      } else {
-        goB2cAi();
-      }
+    if (pendingRedirect === 'Academy') {
+      switchRole('B2C');
+      navigation.navigate('Tabs', { screen: MAIN_TAB.B2C.ai });
       setPendingRedirect(null);
+      return;
+    }
+    if (pendingRedirect === 'LeTan') {
+      setPendingRedirect(null);
+      navigation.navigate('AiReceptionistDemoSimulator');
       return;
     }
     if (pendingRedirect === 'LiveInterpreter') {
@@ -354,7 +358,6 @@ export function MainTabNavigator(): ReactElement {
     }
   }, [
     currentActiveRole,
-    flags.academyLiteEnabled,
     navigation,
     pendingRedirect,
     setPendingRedirect,
@@ -402,9 +405,10 @@ export function MainTabNavigator(): ReactElement {
                     paddingTop: 8,
                   },
               tabBarPosition === 'left' && styles.tabBarDesktop,
+              fashionHomeDesktopShell && fashionHomeHiddenTabBarStyle,
             ],
             sceneStyle: {
-              backgroundColor: chrome.barBg,
+              backgroundColor: fashionHomeDesktopShell ? vionaTokens.fashionTech.canvas : chrome.barBg,
               paddingTop: sceneTopPadding,
             },
             tabBarLabel:
@@ -426,7 +430,10 @@ export function MainTabNavigator(): ReactElement {
               <Tab.Screen
                 name={MAIN_TAB.B2C.home}
                 component={HomeScreen}
-                options={{ title: t('home.tabHub') }}
+                options={{
+                  title: t('home.tabHub'),
+                  tabBarStyle: fashionHomeDesktopShell ? fashionHomeHiddenTabBarStyle : undefined,
+                }}
               />
             ) : null}
             {flags.localEnabled ? (
@@ -446,13 +453,13 @@ export function MainTabNavigator(): ReactElement {
             {flags.academyLiteEnabled ? (
               <Tab.Screen
                 name={MAIN_TAB.B2C.ai}
-                component={LeTanScreen}
+                component={AcademyScreen}
                 options={{ title: t('home.tabAcademy') }}
                 listeners={{
                   tabPress: (e) => {
                     if (!user && !isDemoSandboxActive()) {
                       e.preventDefault();
-                      openPaywall('LeTan');
+                      openPaywall('Academy');
                     }
                   },
                 }}
@@ -513,10 +520,10 @@ export function MainTabNavigator(): ReactElement {
       <ProfileSwitcher
         ref={profileSwitcherRef}
         tabBarLift={tabBarLift}
-        suppressFloatingChrome={suppressHomeFloatingChrome}
+        suppressFloatingChrome={fashionHomeDesktopShell}
       />
 
-      {suppressHomeFloatingChrome ? (
+      {fashionHomeDesktopShell ? (
         <SmartTrioLanguageSheet
           visible={languageSheetOpen}
           onClose={() => setLanguageSheetOpen(false)}
@@ -525,15 +532,13 @@ export function MainTabNavigator(): ReactElement {
 
       {showGlobalLifelineSos ? (
         <>
-          {!suppressHomeFloatingChrome ? (
+          {!fashionHomeDesktopShell ? (
             <SOSFloatingButton tabBarLift={tabBarLift} onHoldComplete={onSosHoldComplete} />
           ) : null}
           <SOSModal
             visible={sosSheetOpen}
-            emergencyDialGateUntilMs={sosEmergencyDialGateUntilMs}
             onRequestClose={() => {
               setSosSheetOpen(false);
-              setSosEmergencyDialGateUntilMs(null);
             }}
             stackNavigation={navigation}
           />

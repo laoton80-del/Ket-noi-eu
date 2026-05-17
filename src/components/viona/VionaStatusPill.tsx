@@ -21,12 +21,28 @@ export type VionaStatusPillProps = Readonly<{
 }>;
 
 const toneStyleMap: Record<VionaStatusTone, { bg: string; border: string; fg: string }> = {
-  lite: { bg: 'rgba(33, 81, 154, 0.1)', border: 'rgba(33, 81, 154, 0.22)', fg: vionaTokens.colors.blue },
-  pilot: { bg: 'rgba(26, 143, 160, 0.12)', border: 'rgba(26, 143, 160, 0.26)', fg: vionaTokens.colors.teal },
-  demo: { bg: 'rgba(24, 60, 115, 0.1)', border: 'rgba(24, 60, 115, 0.22)', fg: vionaTokens.colors.indigo },
+  lite: {
+    bg: 'rgba(112, 200, 255, 0.12)',
+    border: 'rgba(112, 200, 255, 0.32)',
+    fg: vionaTokens.fashionTech.statusLite,
+  },
+  pilot: {
+    bg: 'rgba(46, 207, 155, 0.12)',
+    border: 'rgba(46, 207, 155, 0.3)',
+    fg: vionaTokens.fashionTech.statusPilot,
+  },
+  demo: {
+    bg: 'rgba(168, 141, 255, 0.14)',
+    border: 'rgba(168, 141, 255, 0.34)',
+    fg: vionaTokens.fashionTech.statusDemo,
+  },
   request: { bg: 'rgba(230, 124, 106, 0.12)', border: 'rgba(230, 124, 106, 0.25)', fg: vionaTokens.colors.coral },
   gated: { bg: 'rgba(23, 49, 90, 0.12)', border: 'rgba(23, 49, 90, 0.25)', fg: vionaTokens.colors.softInk },
-  comingSoon: { bg: 'rgba(201, 138, 46, 0.12)', border: 'rgba(201, 138, 46, 0.3)', fg: vionaTokens.colors.warning },
+  comingSoon: {
+    bg: 'rgba(201, 169, 98, 0.12)',
+    border: 'rgba(201, 169, 98, 0.3)',
+    fg: vionaTokens.fashionTech.statusComingSoon,
+  },
   safe: { bg: 'rgba(14, 159, 110, 0.12)', border: 'rgba(14, 159, 110, 0.3)', fg: vionaTokens.colors.success },
   warning: { bg: 'rgba(200, 75, 90, 0.12)', border: 'rgba(200, 75, 90, 0.3)', fg: vionaTokens.colors.safetyRed },
 };

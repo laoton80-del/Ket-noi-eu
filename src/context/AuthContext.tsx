@@ -21,6 +21,7 @@ export type { AuthUser, ResidencyStatus, ServerUserRole, SubscriptionPlan, UserP
 
 export type RedirectTarget =
   | 'HocTap'
+  | 'Academy'
   | 'LeTan'
   | 'Wallet'
   | 'AiEye'

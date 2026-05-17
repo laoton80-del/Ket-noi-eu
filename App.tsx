@@ -67,9 +67,9 @@ import { MarketingApprovalScreen } from './src/screens/admin/MarketingApprovalSc
 import { VaultScreen } from './src/screens/VaultScreen';
 import { ReferralRewardScreen } from './src/screens/ReferralRewardScreen';
 import { CashOutScreen } from './src/screens/b2c/CashOutScreen';
+import { DashboardB2CPreviewScreen } from './src/screens/b2c/DashboardB2CPreviewScreen';
 import { RadarDiscoveryScreen } from './src/screens/RadarDiscoveryScreen';
 import { LifeOSDashboard } from './src/screens/LifeOSDashboard';
-import { TravelCompanionScreen } from './src/screens/TravelCompanionScreen';
 import { TravelHospitalityScreen } from './src/screens/b2c/TravelHospitalityScreen';
 import { FlightSearchScreen } from './src/screens/b2c/travel/FlightSearchScreen';
 import { TravelHubScreen } from './src/screens/b2c/travel/TravelHubScreen';
@@ -86,6 +86,7 @@ import { FlightSearchAssistantScreen } from './src/screens/FlightSearchAssistant
 import { KetNoiYeuThuongScreen } from './src/screens/KetNoiYeuThuongScreen';
 import { LiveInterpreterScreen } from './src/screens/LiveInterpreterScreen';
 import { EmergencySOSScreen } from './src/screens/EmergencySOSScreen';
+import { SosPlusProfileScreen } from './src/screens/sos/SosPlusProfileScreen';
 import { AdultLearningHome } from './src/screens/learning/AdultLearningHome';
 import { KidsLearningHome } from './src/screens/learning/KidsLearningHome';
 import { VietKidsScreen } from './src/screens/b2c/academy/VietKidsScreen';
@@ -98,6 +99,7 @@ import { HubThemeProvider } from './src/context/HubThemeContext';
 import { ConditionalStripeProvider } from './src/providers/ConditionalStripeProvider';
 import { B2BPaywallScreen } from './src/screens/b2b/B2BPaywallScreen';
 import { PartnerOnboardingScreen } from './src/screens/commercial/PartnerOnboardingScreen';
+import { MerchantDashboardOperatingPreview } from './src/screens/b2b/MerchantDashboardOperatingPreview';
 import { MerchantDashboardScreen } from './src/screens/b2b/MerchantDashboardScreen';
 import { AiReceptionistSetupChecklistScreen } from './src/screens/b2b/AiReceptionistSetupChecklistScreen';
 import { AiReceptionistDemoSimulatorScreen } from './src/screens/b2b/AiReceptionistDemoSimulatorScreen';
@@ -141,12 +143,6 @@ import {
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
-const TravelCompanionScreenGated = mvpGateByFlag(
-  'travelLiteEnabled',
-  'Travel Lite',
-  MVP_TRAVEL_LITE_OFF_MSG,
-  TravelCompanionScreen
-);
 const TravelHubStackScreenGated = mvpGateByFlag(
   'travelLiteEnabled',
   'Travel Lite',
@@ -320,6 +316,7 @@ const rootLinking: LinkingOptions<RootStackParamList> = {
         },
       },
       PersonalHub: 'account',
+      DashboardB2CPreview: 'dashboard-preview',
       B2BPaywall: 'B2BPaywall',
       MerchantDashboard: 'MerchantDashboard',
       AiReceptionistSetupChecklist: 'AiReceptionistSetupChecklist',
@@ -441,7 +438,8 @@ function AppNavigationShell({
               <Stack.Screen name="Tabs" component={MainTabNavigator} />
               <Stack.Screen name="PersonalHub" component={CaNhanScreen} />
               <Stack.Screen name="LifeOSDashboard" component={LifeOSDashboard} />
-              <Stack.Screen name="TravelCompanion" component={TravelCompanionScreenGated} />
+              <Stack.Screen name="DashboardB2CPreview" component={DashboardB2CPreviewScreen} />
+              <Stack.Screen name="TravelCompanion" component={TravelHubStackScreenGated} />
               <Stack.Screen
                 name="TravelHub"
                 component={TravelHubStackScreenGated}
@@ -545,6 +543,11 @@ function AppNavigationShell({
               <Stack.Screen name="FlightSearchAssistant" component={FlightSearchAssistantScreenGated} />
               <Stack.Screen name="KetNoiYeuThuong" component={KetNoiYeuThuongScreen} />
               <Stack.Screen name="EmergencySOS" component={EmergencySOSScreen} />
+              <Stack.Screen
+                name="SosPlusProfile"
+                component={SosPlusProfileScreen}
+                options={{ animation: 'slide_from_right', headerShown: true }}
+              />
               <Stack.Screen name="LeonaCall" component={LeonaCallScreenGated} />
               <Stack.Screen
                 name="P2PVoiceCall"
@@ -753,6 +756,14 @@ function B2BWorkspaceGate({ children }: { children: ReactElement }) {
 }
 
 function GatedMerchantDashboardScreen() {
+  const { user } = useAuth();
+  if (!hasB2BWorkspaceAccess(user)) {
+    return (
+      <ThemeProvider value={b2bTheme}>
+        <MerchantDashboardOperatingPreview />
+      </ThemeProvider>
+    );
+  }
   return (
     <B2BWorkspaceGate>
       <MerchantDashboardScreen />

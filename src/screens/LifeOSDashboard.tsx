@@ -27,7 +27,7 @@ import { getDailyContent, markDailyAction, type DailyLoopAction } from '../servi
 import { noteCompanionAction } from '../services/companion';
 import { useAuth } from '../context/AuthContext';
 import { recordAIIdentityAction } from '../services/identity';
-import type { RootStackParamList } from '../navigation/routes';
+import { MAIN_TAB, type RootStackParamList } from '../navigation/routes';
 import { buildLifeOSSuggestionLines, buildPredictiveLines } from '../lifeOS/ui/suggestionBuilders';
 import { useLifeOSActionCells } from '../lifeOS/hooks/useLifeOSActionCells';
 import { useLifeOSCompanionAndPredictive } from '../lifeOS/hooks/useLifeOSCompanionAndPredictive';
@@ -233,7 +233,7 @@ export const LifeOSDashboard: React.FC = () => {
     result.push(
       <Animated.View key="travel-hub" entering={FadeInDown.duration(215)}>
         <Pressable
-          onPress={() => navigation.navigate('TravelCompanion')}
+          onPress={() => navigation.navigate('Tabs', { screen: MAIN_TAB.B2C.travel })}
           style={({ pressed }) => [
             {
               borderRadius: theme.radius.lg,

@@ -70,6 +70,8 @@ export type RootStackParamList = {
   /** Full account hub (wallet, language, legal) — opened from Profile Switcher / merchant-broker headers. */
   PersonalHub: undefined;
   LifeOSDashboard: undefined;
+  /** AF.UI.2 — isolated dashboard grid review (`/dashboard-preview`). */
+  DashboardB2CPreview: undefined;
   /** Phase 4: travel hub — scenarios + quick links (no booking automation). */
   TravelCompanion: undefined;
   /** KNG Travel — dedicated premium travel mini-app (concierge, homestay, interpreter). */
@@ -121,6 +123,8 @@ export type RootStackParamList = {
   FlightSearchAssistant: undefined;
   KetNoiYeuThuong: undefined;
   EmergencySOS: undefined;
+  /** SOS Plus — consent & local stub entitlement (AF.SOS.2); not billing-backed yet. */
+  SosPlusProfile: undefined;
   AdultLearningHome: undefined;
   KidsLearningHome: undefined;
   VietKids: undefined;
@@ -201,7 +205,8 @@ export type RootStackParamList = {
     merchantName: string;
     merchantCountryCode?: string;
   };
-  LiveAiTeacher: undefined;
+  /** Cô Giáo / gia sư AI (Academy). Optional cues are learner-visible only — not wired into the stream until product defines it. */
+  LiveAiTeacher: { practiceFocus?: string; scenarioLabel?: string } | undefined;
   Concierge: undefined;
   Academy: undefined;
   Discover: undefined;

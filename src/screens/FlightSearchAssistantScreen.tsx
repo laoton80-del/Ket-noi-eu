@@ -4,7 +4,7 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useCallback, useMemo, useState } from 'react';
 import { Alert, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import type { RootStackParamList } from '../navigation/routes';
+import { MAIN_TAB, type RootStackParamList } from '../navigation/routes';
 import { Colors } from '../theme/colors';
 import { FontFamily } from '../theme/typography';
 
@@ -68,13 +68,9 @@ export function FlightSearchAssistantScreen() {
       Alert.alert('Thiếu ngày về', 'Chuyến khứ hồi cần ngày về hoặc đổi sang một chiều.');
       return;
     }
-    navigation.navigate('Tabs', {
-      screen: 'TabAi',
-      params: {
-        aiMode: 'roleplay',
-        scenario: 'So sánh chuyến bay (không đặt vé trong app)',
-        initialPrompt: buildFlightSummary({ trip, from: f, to: t, depart: d, ret: ret.trim(), notes }),
-      },
+    navigation.navigate('LeonaCall', {
+      prefillRequest: buildFlightSummary({ trip, from: f, to: t, depart: d, ret: ret.trim(), notes }),
+      autoSubmit: false,
     });
   }, [depart, from, navigation, notes, ret, to, trip]);
 
@@ -170,7 +166,7 @@ export function FlightSearchAssistantScreen() {
 
         <Pressable
           style={({ pressed }) => [styles.linkRow, pressed && { opacity: 0.75 }]}
-          onPress={() => navigation.navigate('TravelCompanion')}
+          onPress={() => navigation.navigate('Tabs', { screen: MAIN_TAB.B2C.travel })}
         >
           <Text style={styles.linkText}>Quay về Đồng hành du lịch</Text>
           <Ionicons name="chevron-forward" size={18} color={Colors.primary} />

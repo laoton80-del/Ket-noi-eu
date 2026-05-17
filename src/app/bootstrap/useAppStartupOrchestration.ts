@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import type { NavigationContainerRefWithCurrent } from '@react-navigation/native';
 import * as Notifications from 'expo-notifications';
-import { Alert } from 'react-native';
+import { Alert, Platform } from 'react-native';
 import type { RootStackParamList } from '../../navigation/routes';
 import type { RedirectTarget } from '../../context/AuthContext';
 import type { AuthUser } from '../../context/authTypes';
@@ -43,6 +43,12 @@ function navigateWhenReady(navigationRef: NavigationContainerRefWithCurrent<Root
     else requestAnimationFrame(tick);
   };
   tick();
+}
+
+function isDesktopWebIntentModalBlocked(): boolean {
+  if (Platform.OS !== 'web') return false;
+  const maybeWindow = globalThis as { innerWidth?: number };
+  return (maybeWindow.innerWidth ?? 0) >= 1024;
 }
 
 export function useAppStartupOrchestration({
@@ -140,7 +146,7 @@ export function useAppStartupOrchestration({
   useEffect(() => {
     void (async () => {
       const done = await isGuidedIntentEntryCompleted();
-      if (!done) setShowIntentModal(true);
+      if (!done && !isDesktopWebIntentModalBlocked()) setShowIntentModal(true);
       setIntentGateReady(true);
     })();
   }, []);
@@ -200,7 +206,7 @@ export function useAppStartupOrchestration({
             'Chào bạn, mình là LOAN. Bạn muốn gọi hay đặt lịch? Nói một câu — mình gợi ý bước tiếp theo.'
           );
           if (user) {
-            navigationRef.navigate('Tabs', { screen: 'TabAi' });
+            navigationRef.navigate('AiReceptionistDemoSimulator');
           } else {
             setPendingRedirect('LeTan');
             navigationRef.navigate('Login', { redirectTo: 'LeTan' });

@@ -42,7 +42,11 @@ export function buildLifeOSActions(
       });
     },
     onPressCallAssist: () => {
-      navigation.navigate('Tabs', { screen: 'TabAi' });
+      navigation.navigate('LeonaCall', {
+        prefillRequest:
+          'Tôi cần trợ lý cuộc gọi AI B2C — gợi ý thoại và các bước trước khi liên hệ (không đặt hộ).',
+        autoSubmit: false,
+      });
     },
     onPressFindServices: () => {
       if (LAUNCH_PILOT_CONFIG.enableRadarSurface) {

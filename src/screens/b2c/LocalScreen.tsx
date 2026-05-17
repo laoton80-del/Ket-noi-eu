@@ -1,12 +1,12 @@
 import { Ionicons } from '@expo/vector-icons';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { LinearGradient } from 'expo-linear-gradient';
-import * as Localization from 'expo-localization';
 import { useCallback, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
+  Image,
   Modal,
   Platform,
   Pressable,
@@ -14,17 +14,20 @@ import {
   StyleSheet,
   Text,
   TextInput,
-  TouchableOpacity,
   View,
   useWindowDimensions,
+  type ImageStyle,
+  type StyleProp,
+  type ViewStyle,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import Reanimated, { Easing, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 import { getDemoBookingPayload } from '../../config/demoRestBooking';
 import { getFeatureFlags } from '../../core/feature-flags/featureFlags';
 import { useMiniAppEntry } from '../../hooks/useMiniAppEntry';
 import { formatVioCredits, getVioCreditsLabel } from '../../core/monetization/vioDisplayLabels';
 import type { RootStackParamList } from '../../navigation/routes';
+import { MAIN_TAB } from '../../navigation/routes';
 import { previewLegalScanCostVig, scanLegalDocument } from '../../services/aiService';
 import { confirmSecurityDepositThen } from '../../services/bookingEscrowUi';
 import { formatNetworkFailureMessage, getRestApiJwt, isRestApiConfigured } from '../../services/apiClient';
@@ -32,11 +35,36 @@ import { createBooking } from '../../services/bookingService';
 import { runUltraMasterBookingWithAlerts } from '../../services/ultraMasterBookingFlow';
 import { reserveAndCommitCredits, useWalletState } from '../../state/wallet';
 import { useTranslation } from '../../i18n';
+import { useHomeCommand } from '../../context/HomeCommandContext';
+import { useFullscreenMode } from '../../hooks/useFullscreenMode';
+import { useVionaHomeDaylightBoost } from '../../components/viona/useVionaHomeDaylightBoost';
 import { LocalCommerceClarityBlock } from '../../components/localCommerce/LocalCommerceClarityBlock';
-import { VionaCard } from '../../components/viona/VionaCard';
-import { VionaHeader } from '../../components/viona/VionaHeader';
-import { VionaSectionHeader } from '../../components/viona/VionaSectionHeader';
-import { vionaTrust } from '../../components/viona/vionaTrustTokens';
+import { LocalConstellationFrame } from '../../components/local/LocalConstellationFrame';
+import { VionaBrandLockup } from '../../components/viona/VionaBrandLockup';
+import { VIONA_TABLET_MIN_WIDTH } from '../../components/viona/VionaMiniAppShell';
+import { vionaTokens } from '../../design';
+import {
+  FASHION_HOME_COMMAND_RAIL_GRADIENT,
+  FASHION_HOME_COMMAND_RAIL_HIGHLIGHT,
+  FASHION_HOME_LINE_GOLD_SOFT,
+  fashionHomeWebCommandUtilityHoverStyle,
+  fashionHomeWebCommandUtilityPressStyle,
+} from '../../components/viona/fashionHomeDesktopShell';
+import { SmartTrioLanguageSheet } from '../../components/smartTrio/SmartTrioLanguageSheet';
+import {
+  localAccentIconChipFill,
+  localAccentInk,
+  localAccentInkHover,
+  localAccentStatusFill,
+  localAccentStroke,
+  localAccentStrokeHover,
+  localConstellation,
+  resolveLocalContentRail,
+  resolveLocalGridColumns,
+  resolveLocalGridItemWidth,
+  localWebRailPillGlassStyle,
+  type LocalConstellationAccent,
+} from '../../components/local/localConstellationTokens';
 import { theme } from '../../theme/theme';
 import { FontFamily } from '../../theme/typography';
 
@@ -56,13 +84,475 @@ type ClassifiedPost = Readonly<{
 }>;
 
 const VIP_POSTING_COST_VIG = 120;
-const BG = vionaTrust.canvas;
-const SURFACE = vionaTrust.surface;
-const INK = vionaTrust.ink;
-const INK_MUTED = vionaTrust.inkMuted;
-const BORDER = vionaTrust.border;
-const GOLD = vionaTrust.accentGold;
-const GOLD_BORDER = 'rgba(197, 160, 89, 0.35)';
+const LOCAL_GLOBAL_BG = require('../../../assets/UI/viona-local-global-net-bg-v2.png');
+const BG = localConstellation.canvas;
+const INK = localConstellation.ink;
+const INK_STRONG = localConstellation.inkStrong;
+const INK_MUTED = localConstellation.inkMuted;
+const INK_CARD_SUB = localConstellation.inkCardSub;
+const BORDER = localConstellation.border;
+const GOLD = localConstellation.accentGold;
+const EMERALD = localConstellation.accentEmerald;
+const CYAN = localConstellation.accentCyan;
+const RISK = localConstellation.risk;
+const LOCAL_LEGACY_HIDE_STYLE_ID = 'viona-local-legacy-hide';
+
+type LocalShellPressableState = { pressed: boolean; hovered?: boolean };
+
+function LocalShellUtilityBtn({
+  icon,
+  label,
+  onPress,
+  a11yLabel,
+  iconColor = vionaTokens.fashionTech.champagne,
+  compact = false,
+}: Readonly<{
+  icon: keyof typeof Ionicons.glyphMap;
+  label: string;
+  onPress: () => void;
+  a11yLabel: string;
+  iconColor?: string;
+  compact?: boolean;
+}>) {
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={a11yLabel}
+      onPress={onPress}
+      style={(s) => {
+        const { pressed, hovered } = s as LocalShellPressableState;
+        return [
+          styles.shellUtilBtn,
+          compact && styles.shellUtilBtnCompact,
+          Platform.OS === 'web' && fashionHomeWebCommandUtilityHoverStyle(!!hovered, false),
+          Platform.OS === 'web' && fashionHomeWebCommandUtilityPressStyle(!!pressed),
+          pressed && styles.shellUtilBtnPressed,
+        ];
+      }}
+    >
+      <Ionicons name={icon} size={compact ? 15 : 16} color={iconColor} />
+      <Text style={styles.shellUtilLabel} numberOfLines={1}>
+        {label}
+      </Text>
+    </Pressable>
+  );
+}
+
+function LocalConnectedUniverseLink({
+  icon,
+  label,
+  onPress,
+  a11yLabel,
+}: Readonly<{
+  icon: keyof typeof Ionicons.glyphMap;
+  label: string;
+  onPress: () => void;
+  a11yLabel: string;
+}>) {
+  const [hovered, setHovered] = useState(false);
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={a11yLabel}
+      onPress={onPress}
+      onHoverIn={Platform.OS === 'web' ? () => setHovered(true) : undefined}
+      onHoverOut={Platform.OS === 'web' ? () => setHovered(false) : undefined}
+      style={({ pressed }) => [
+        styles.connectedLink,
+        Platform.OS === 'web' ? localWebRailPillGlassStyle('cyan', hovered) : { borderColor: BORDER, borderWidth: 1 },
+        pressed && { opacity: 0.88 },
+      ]}
+    >
+      <Ionicons name={icon} size={15} color={CYAN} />
+      <Text style={styles.connectedLinkText} numberOfLines={1}>
+        {label}
+      </Text>
+      <Ionicons name="chevron-forward" size={14} color={INK_MUTED} />
+    </Pressable>
+  );
+}
+
+function LocalMiniappDock({
+  onBack,
+  onHome,
+  onLocalHub,
+  bottomOffset,
+}: Readonly<{
+  onBack: () => void;
+  onHome: () => void;
+  onLocalHub: () => void;
+  bottomOffset: number;
+}>) {
+  const { t } = useTranslation();
+  return (
+    <View pointerEvents="box-none" style={[styles.miniappDockHost, { bottom: bottomOffset }]}>
+      <View style={styles.miniappDock}>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={t('localHub.miniappDockBack')}
+          onPress={onBack}
+          style={({ pressed }) => [styles.miniappDockBtn, pressed && styles.shellUtilBtnPressed]}
+        >
+          <Ionicons name="arrow-back" size={16} color={INK} />
+          <Text style={styles.miniappDockBtnText}>{t('localHub.miniappDockBack')}</Text>
+        </Pressable>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={t('localHub.miniappDockHome')}
+          onPress={onHome}
+          style={({ pressed }) => [styles.miniappDockBtn, pressed && styles.shellUtilBtnPressed]}
+        >
+          <Ionicons name="home-outline" size={16} color={EMERALD} />
+          <Text style={styles.miniappDockBtnText}>{t('localHub.miniappDockHome')}</Text>
+        </Pressable>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={t('localHub.miniappDockLocal')}
+          onPress={onLocalHub}
+          style={({ pressed }) => [styles.miniappDockBtn, styles.miniappDockBtnActive, pressed && styles.shellUtilBtnPressed]}
+        >
+          <Ionicons name="location-outline" size={16} color={EMERALD} />
+          <Text style={[styles.miniappDockBtnText, styles.miniappDockBtnTextActive]}>{t('localHub.miniappDockLocal')}</Text>
+        </Pressable>
+      </View>
+    </View>
+  );
+}
+
+function useLocalWebShellCompensation() {
+  const { t } = useTranslation();
+
+  useFocusEffect(
+    useCallback(() => {
+      if (Platform.OS !== 'web' || typeof document === 'undefined') return undefined;
+
+      const hiddenHosts = new Set<HTMLElement>();
+      const scenePadHosts = new Set<HTMLElement>();
+      const languageTitle = t('smartTrio.switcher.title');
+      const accountA11y = t('home.accountChipA11y');
+      const accountChip = t('home.accountChip');
+      const accountChipShort = t('home.accountChipShort');
+      const sosLabel = t('sos.fabLabel');
+
+      const localRoot = () => document.getElementById('local-hub-root');
+
+      const isInsideLocalRoot = (node: Element) => node.closest('#local-hub-root') != null;
+
+      const containsLocalRoot = (node: Element) => node.querySelector('#local-hub-root') != null;
+
+      const matchesLegacyControl = (ariaLabel: string, text: string) => {
+        const haystack = `${ariaLabel} ${text}`.trim();
+        return (
+          ariaLabel === sosLabel ||
+          text === sosLabel ||
+          ariaLabel === accountA11y ||
+          ariaLabel === accountChip ||
+          text === accountChip ||
+          text === accountChipShort ||
+          ariaLabel === languageTitle ||
+          (haystack.includes(languageTitle) && haystack.length <= 180)
+        );
+      };
+
+      const hideHost = (host: HTMLElement) => {
+        const root = localRoot();
+        if (root && (root === host || root.contains(host) || host.contains(root))) return;
+        if (hiddenHosts.has(host)) return;
+        hiddenHosts.add(host);
+        host.dataset.vionaLocalLegacyChrome = 'true';
+        host.dataset.localLegacyHidden = 'true';
+        host.style.setProperty('display', 'none', 'important');
+      };
+
+      const pickOutsideLegacyHost = (node: Element): HTMLElement | null => {
+        const root = localRoot();
+        let current: HTMLElement | null = node instanceof HTMLElement ? node : node.parentElement;
+        while (current && current !== document.body) {
+          if (current.id === 'local-hub-root') return null;
+          if (root?.contains(current)) return null;
+          const style = window.getComputedStyle(current);
+          const positioned =
+            style.position === 'fixed' || style.position === 'absolute' || style.position === 'sticky';
+          const rect = current.getBoundingClientRect();
+          if (positioned && rect.width >= 20 && rect.height >= 16) {
+            return current;
+          }
+          current = current.parentElement;
+        }
+        return null;
+      };
+
+      const resetSceneTopPadding = () => {
+        let current: HTMLElement | null = localRoot();
+        while (current?.parentElement) {
+          current = current.parentElement;
+          const pad = Number.parseFloat(window.getComputedStyle(current).paddingTop || '0');
+          if (pad < localConstellation.desktopScenePadMin) continue;
+          if (scenePadHosts.has(current)) continue;
+          scenePadHosts.add(current);
+          current.dataset.localScenePadPrev = current.style.paddingTop;
+          current.style.paddingTop = '0px';
+        }
+      };
+
+      const scanLegacyChrome = () => {
+        const root = localRoot();
+        const candidates = new Set<HTMLElement>();
+
+        const consider = (node: Element) => {
+          if (isInsideLocalRoot(node)) return;
+          const element = node as HTMLElement;
+          if (containsLocalRoot(element)) return;
+          const ariaLabel = element.getAttribute('aria-label') ?? '';
+          const text = (element.textContent ?? '').replace(/\s+/g, ' ').trim();
+          if (!matchesLegacyControl(ariaLabel, text)) return;
+          const host = pickOutsideLegacyHost(element);
+          if (!host || (root && (root.contains(host) || host.contains(root)))) return;
+          candidates.add(host);
+        };
+
+        document.querySelectorAll('[aria-label]').forEach(consider);
+        document.querySelectorAll('[role="button"], button, [tabindex="0"]').forEach(consider);
+
+        document.querySelectorAll('body *').forEach((node) => {
+          const element = node as HTMLElement;
+          if (isInsideLocalRoot(element)) return;
+          if (containsLocalRoot(element)) return;
+          const style = window.getComputedStyle(element);
+          if (style.position !== 'fixed' && style.position !== 'absolute' && style.position !== 'sticky') {
+            return;
+          }
+          const ariaLabel =
+            element.getAttribute('aria-label') ??
+            element.querySelector('[aria-label]')?.getAttribute('aria-label') ??
+            '';
+          const text = (element.textContent ?? '').replace(/\s+/g, ' ').trim();
+          if (!matchesLegacyControl(ariaLabel, text)) return;
+          if (root?.contains(element) || (root && element.contains(root))) return;
+          candidates.add(element);
+        });
+
+        candidates.forEach((host) => hideHost(host));
+      };
+
+      const ensureLegacyHideStyle = () => {
+        if (document.getElementById(LOCAL_LEGACY_HIDE_STYLE_ID)) return;
+        const style = document.createElement('style');
+        style.id = LOCAL_LEGACY_HIDE_STYLE_ID;
+        style.textContent = `
+          body[data-viona-local-hub="true"] [data-viona-local-legacy-chrome="true"] {
+            display: none !important;
+          }
+        `;
+        document.head.appendChild(style);
+      };
+
+      ensureLegacyHideStyle();
+      document.body.dataset.vionaLocalHub = 'true';
+      resetSceneTopPadding();
+      scanLegacyChrome();
+      const t1 = window.setTimeout(() => {
+        resetSceneTopPadding();
+        scanLegacyChrome();
+      }, 250);
+      const t2 = window.setTimeout(() => {
+        resetSceneTopPadding();
+        scanLegacyChrome();
+      }, 1200);
+      const t3 = window.setTimeout(() => {
+        resetSceneTopPadding();
+        scanLegacyChrome();
+      }, 3000);
+      const observer = new MutationObserver(() => {
+        resetSceneTopPadding();
+        scanLegacyChrome();
+      });
+      observer.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['aria-label', 'style', 'class'] });
+
+      return () => {
+        window.clearTimeout(t1);
+        window.clearTimeout(t2);
+        window.clearTimeout(t3);
+        observer.disconnect();
+        delete document.body.dataset.vionaLocalHub;
+        scenePadHosts.forEach((host) => {
+          host.style.paddingTop = host.dataset.localScenePadPrev ?? '';
+          delete host.dataset.localScenePadPrev;
+        });
+        scenePadHosts.clear();
+        hiddenHosts.forEach((host) => {
+          host.style.removeProperty('display');
+          delete host.dataset.localLegacyHidden;
+          delete host.dataset.vionaLocalLegacyChrome;
+        });
+        hiddenHosts.clear();
+      };
+    }, [t])
+  );
+}
+
+function LocalDestinationCard({
+  cardWidth,
+  accent,
+  icon,
+  label,
+  title,
+  subtitle,
+  onPress,
+  a11yLabel,
+  disabled = false,
+}: Readonly<{
+  cardWidth: number;
+  accent: LocalConstellationAccent;
+  icon: keyof typeof Ionicons.glyphMap;
+  label: string;
+  title: string;
+  subtitle: string;
+  onPress: () => void;
+  a11yLabel: string;
+  disabled?: boolean;
+}>) {
+  const [hovered, setHovered] = useState(false);
+  const ink = hovered ? localAccentInkHover(accent) : localAccentInk(accent);
+
+  return (
+    <View style={{ width: cardWidth, opacity: disabled ? 0.72 : 1 }}>
+      <Pressable
+        onPress={onPress}
+        disabled={disabled}
+        onHoverIn={Platform.OS === 'web' ? () => setHovered(true) : undefined}
+        onHoverOut={Platform.OS === 'web' ? () => setHovered(false) : undefined}
+        style={({ pressed }) => [
+          styles.gridCardPressable,
+          Platform.OS === 'web' && styles.gridCardInteractive,
+          Platform.OS === 'web' && hovered && styles.gridCardHovered,
+          pressed && styles.gridCardPressed,
+        ]}
+        accessibilityRole="button"
+        accessibilityLabel={a11yLabel}
+      >
+        <LocalConstellationFrame accent={accent} radius={16} hovered={hovered} contentStyle={styles.destinationCard}>
+          <View style={styles.gridCardTop}>
+            <View
+              style={[
+                styles.heroIconChip,
+                {
+                  borderColor: hovered ? localAccentStrokeHover(accent) : localAccentStroke(accent),
+                  borderWidth: localConstellation.cardEdgeWidth,
+                  backgroundColor: localAccentIconChipFill(accent, hovered),
+                  shadowColor: ink,
+                  shadowOpacity: hovered ? 0.24 : 0.1,
+                  shadowRadius: hovered ? 5 : 3,
+                  shadowOffset: { width: 0, height: 0 },
+                },
+              ]}
+            >
+              <Ionicons name={icon} size={20} color={ink} />
+            </View>
+            <View
+              style={[
+                styles.gridCardStatusPill,
+                {
+                  borderColor: hovered ? localAccentStrokeHover(accent) : localAccentStroke(accent),
+                  borderWidth: localConstellation.cardEdgeWidth,
+                  backgroundColor: localAccentStatusFill(accent, hovered),
+                  shadowColor: ink,
+                  shadowOpacity: hovered ? 0.2 : 0.08,
+                  shadowRadius: hovered ? 4 : 2,
+                  shadowOffset: { width: 0, height: 0 },
+                },
+              ]}
+            >
+              <Text style={[styles.gridCardStatusText, { color: ink }]}>{label}</Text>
+            </View>
+          </View>
+          <Text style={[styles.destinationTitle, hovered && { color: ink }]} numberOfLines={2}>
+            {title}
+          </Text>
+          <Text style={styles.destinationSub} numberOfLines={2}>
+            {subtitle}
+          </Text>
+          <View style={styles.gridCardFooter}>
+            <Text
+              style={[
+                styles.gridCardCta,
+                {
+                  color: ink,
+                  shadowColor: ink,
+                  shadowOpacity: hovered ? 0.22 : 0.1,
+                  shadowRadius: hovered ? 4 : 2,
+                  shadowOffset: { width: 0, height: 0 },
+                },
+              ]}
+            >
+              →
+            </Text>
+          </View>
+        </LocalConstellationFrame>
+      </Pressable>
+    </View>
+  );
+}
+
+function LocalClassifiedCard({
+  cardWidth,
+  item,
+}: Readonly<{
+  cardWidth: number;
+  item: ClassifiedPost;
+}>) {
+  const { t } = useTranslation();
+  const [hovered, setHovered] = useState(false);
+  const meta = CATEGORY_META[item.category];
+  const accent: LocalConstellationAccent = item.isVip ? 'gold' : 'emerald';
+  const ink = hovered ? localAccentInkHover(accent) : localAccentInk(accent);
+
+  return (
+    <View style={{ width: cardWidth }}>
+      <Pressable
+        onHoverIn={Platform.OS === 'web' ? () => setHovered(true) : undefined}
+        onHoverOut={Platform.OS === 'web' ? () => setHovered(false) : undefined}
+        style={[
+          styles.gridCardPressable,
+          Platform.OS === 'web' && styles.gridCardInteractive,
+          Platform.OS === 'web' && hovered && styles.gridCardHovered,
+        ]}
+      >
+        <LocalConstellationFrame accent={accent} tier="service" radius={14} hovered={hovered} contentStyle={styles.postCard}>
+          <View style={styles.postHeader}>
+            <View
+              style={[
+                styles.categoryChip,
+                {
+                  borderColor: hovered ? localAccentStrokeHover(accent) : localAccentStroke(accent),
+                  borderWidth: localConstellation.cardEdgeWidth,
+                  backgroundColor: localAccentStatusFill(accent, hovered),
+                  shadowColor: ink,
+                  shadowOpacity: hovered ? 0.2 : 0.08,
+                  shadowRadius: hovered ? 4 : 2,
+                  shadowOffset: { width: 0, height: 0 },
+                },
+              ]}
+            >
+              <Ionicons name={meta.icon} size={14} color={ink} />
+              <Text style={[styles.categoryChipText, { color: ink }]}>{meta.title}</Text>
+            </View>
+            {item.isVip ? <Text style={styles.vipBadge}>{t('localHub.vipHighlight')}</Text> : null}
+          </View>
+          <Text style={styles.postTitle} numberOfLines={2}>
+            {item.title}
+          </Text>
+          <Text style={styles.postMeta} numberOfLines={1}>
+            {item.city} · {item.priceLabel}
+          </Text>
+          <Text style={styles.postDesc} numberOfLines={3}>
+            {item.description}
+          </Text>
+        </LocalConstellationFrame>
+      </Pressable>
+    </View>
+  );
+}
 
 const CATEGORY_META: Readonly<Record<ClassifiedCategory, { title: string; icon: keyof typeof Ionicons.glyphMap }>> = {
   hiring: { title: 'Tuyển thợ', icon: 'construct-outline' },
@@ -104,17 +594,13 @@ const DEFAULT_POSTS: readonly ClassifiedPost[] = [
 ];
 
 export function LocalScreen() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { width } = useWindowDimensions();
   const navigation = useNavigation<Nav>();
   const { openMiniApp } = useMiniAppEntry();
   const wallet = useWalletState();
   const featureFlags = useMemo(() => getFeatureFlags(), []);
   const legalScanEnabled = featureFlags.legalScanEnabled;
-  const showVietnamInboundHub = useMemo(() => {
-    const region = Localization.getLocales()[0]?.regionCode?.toUpperCase() ?? '';
-    return region === 'VN' && featureFlags.travelEnabled;
-  }, [featureFlags.travelEnabled]);
   const scrollRef = useRef<ScrollView>(null);
   const [classifiedsY, setClassifiedsY] = useState(0);
   const [posts, setPosts] = useState<readonly ClassifiedPost[]>(DEFAULT_POSTS);
@@ -127,6 +613,8 @@ export function LocalScreen() {
   const [vipEnabled, setVipEnabled] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [legalScanBusy, setLegalScanBusy] = useState(false);
+  const [languageSheetOpen, setLanguageSheetOpen] = useState(false);
+  const homeCommand = useHomeCommand();
   const modalAnim = useSharedValue(0);
 
   modalAnim.value = withTiming(composerVisible ? 1 : 0, {
@@ -152,9 +640,26 @@ export function LocalScreen() {
     openMiniApp('local', () => navigation.navigate('Tabs', { screen: 'TabLocal' }));
   }, [navigation, openMiniApp]);
 
-  const onAiReceptionistPilotInfo = useCallback(() => {
-    Alert.alert(t('localCommerce.cta.aiReceptionistPilot'), t('localCommerce.safety.aiPilotNote'));
-  }, [t]);
+  const [daylightBoost, setDaylightBoost] = useVionaHomeDaylightBoost();
+  const { isWeb: isWebFullscreen, isSupported: isFullscreenSupported, isFullscreen, toggleFullscreen } =
+    useFullscreenMode();
+  const desktopWeb = Platform.OS === 'web' && width > 768;
+  const fullscreenControl =
+    desktopWeb && isWebFullscreen && isFullscreenSupported
+      ? {
+          isActive: isFullscreen,
+          onPress: toggleFullscreen,
+          label: isFullscreen ? t('shell.fullscreen.exit') : t('shell.fullscreen.enter'),
+          a11y: isFullscreen ? t('shell.fullscreen.exit') : t('shell.fullscreen.enter'),
+        }
+      : undefined;
+  const daylightToggleLabel = daylightBoost
+    ? i18n.language?.startsWith('vi')
+      ? 'Tắt đèn'
+      : 'Night'
+    : i18n.language?.startsWith('vi')
+      ? 'Bật đèn'
+      : 'Daylight';
 
   const resetComposer = () => {
     setTitle('');
@@ -295,170 +800,360 @@ export function LocalScreen() {
     }
   };
 
-  return (
-    <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
-      <VionaHeader
-        variant="light"
-        title={t('localHub.screenTitle')}
-        titleAlign="center"
-        onBack={() => navigation.goBack()}
-        backA11yLabel="Quay lại"
-      />
+  const { horizontalPad, innerWidth } = resolveLocalContentRail(width);
+  const gridColumns = resolveLocalGridColumns(width);
+  const cardWidth = resolveLocalGridItemWidth(innerWidth, gridColumns);
+  const classifiedColumns = resolveLocalGridColumns(width, { desktop: 3, tablet: 2 });
+  const classifiedCardWidth = resolveLocalGridItemWidth(innerWidth, classifiedColumns);
 
+  const openLanguageSheet = useCallback(() => {
+    setLanguageSheetOpen(true);
+  }, []);
+
+  const openSafetyAssist = useCallback(() => {
+    homeCommand?.triggerSafetyAssist();
+  }, [homeCommand]);
+
+  const openAccountHub = useCallback(() => {
+    if (homeCommand) {
+      homeCommand.openAccount();
+      return;
+    }
+    navigation.navigate('PersonalHub');
+  }, [homeCommand, navigation]);
+
+  const walletChipLabel = useMemo(() => {
+    const n = wallet.credits;
+    const useCompact = width < 400;
+    return useCompact ? t('home.walletChipCompact', { amount: n }) : t('home.walletChipFull', { amount: n });
+  }, [t, wallet.credits, width]);
+
+  const goHome = useCallback(() => {
+    openMiniApp('hub', () => navigation.navigate('Tabs', { screen: MAIN_TAB.B2C.home }));
+  }, [navigation, openMiniApp]);
+
+  const goBack = useCallback(() => {
+    if (navigation.canGoBack()) {
+      navigation.goBack();
+      return;
+    }
+    goHome();
+  }, [goHome, navigation]);
+
+  const scrollToTop = useCallback(() => {
+    scrollRef.current?.scrollTo({ y: 0, animated: true });
+  }, []);
+
+  const openTravelUniverse = useCallback(() => {
+    if (!featureFlags.travelLiteEnabled) return;
+    openMiniApp('travel', () => navigation.navigate('Tabs', { screen: MAIN_TAB.B2C.travel }));
+  }, [featureFlags.travelLiteEnabled, navigation, openMiniApp]);
+
+  const openAcademyUniverse = useCallback(() => {
+    if (!featureFlags.academyLiteEnabled) return;
+    openMiniApp('academy', () => navigation.navigate('Tabs', { screen: MAIN_TAB.B2C.ai }));
+  }, [featureFlags.academyLiteEnabled, navigation, openMiniApp]);
+
+  const openBusinessUniverse = useCallback(() => {
+    openMiniApp('merchantDashboard', () => navigation.navigate('MerchantDashboard'));
+  }, [navigation, openMiniApp]);
+
+  useLocalWebShellCompensation();
+
+  const insets = useSafeAreaInsets();
+  const canvasBackdropOpacity = desktopWeb
+    ? localConstellation.canvasBackdropOpacityDesktop
+    : localConstellation.canvasBackdropOpacityMobile;
+  const canvasBackdropTopBleed = desktopWeb
+    ? Math.min(insets.top, localConstellation.canvasBackdropTopBleed)
+    : 0;
+  const useCompactCommandLogo = width > 0 && width < 1060;
+  const backdropScale = localConstellation.canvasBackdropTextureScale;
+  const backdropInset = (1 - backdropScale) * 50;
+  const backdropTop = backdropInset - localConstellation.canvasBackdropRisePercent;
+  const backdropFocusY = localConstellation.canvasBackdropFocusYPercent;
+  const miniappDockBottom = localConstellation.miniappDockBottomOffset + insets.bottom;
+  const bottomPadClearance =
+    miniappDockBottom +
+    localConstellation.miniappDockHeight +
+    localConstellation.tabBarClearanceBottom +
+    Math.max(insets.bottom, 12) +
+    20;
+
+  const tabletFullWidth = Platform.OS === 'web' && width >= VIONA_TABLET_MIN_WIDTH;
+  const tabletBreakoutStyle = useMemo((): StyleProp<ViewStyle> | null => {
+    if (!tabletFullWidth) return null;
+    return {
+      width: '100vw',
+      maxWidth: '100vw',
+      alignSelf: 'center',
+      marginLeft: 'calc(50% - 50vw)',
+      marginRight: 'calc(50% - 50vw)',
+    } as unknown as ViewStyle;
+  }, [tabletFullWidth, width]);
+
+  return (
+    <SafeAreaView style={[styles.container, tabletBreakoutStyle]} edges={['left', 'right']}>
+      <View
+        pointerEvents="none"
+        style={[
+          styles.canvasBackdropHost,
+          { opacity: canvasBackdropOpacity, top: -canvasBackdropTopBleed },
+        ]}
+      >
+        <Image
+          source={LOCAL_GLOBAL_BG}
+          resizeMode="cover"
+          style={[
+            styles.canvasBackdrop,
+            {
+              width: `${backdropScale * 100}%`,
+              height: `${backdropScale * 100}%`,
+              left: `${backdropInset}%`,
+              top: `${backdropTop}%`,
+            },
+            Platform.OS === 'web'
+              ? ({ objectPosition: `center ${backdropFocusY}%` } as ImageStyle)
+              : null,
+          ]}
+          accessibilityIgnoresInvertColors
+        />
+      </View>
+      <View
+        pointerEvents="none"
+        style={[
+          styles.canvasBackdropVeil,
+          { opacity: localConstellation.canvasBackdropVeilOpacity, top: -canvasBackdropTopBleed },
+        ]}
+      />
+      <LinearGradient
+        pointerEvents="none"
+        colors={[
+          localConstellation.canvasGlowEmerald,
+          localConstellation.canvasGlowMid,
+          localConstellation.canvasGlowCyan,
+        ]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={[styles.canvasGlow, { top: -canvasBackdropTopBleed, opacity: 0.1 }]}
+      />
+      <View
+        pointerEvents="none"
+        style={[styles.contentFieldVeil, { top: -canvasBackdropTopBleed }]}
+      />
+      <View
+        style={styles.root}
+        nativeID="local-hub-root"
+        {...(Platform.OS === 'web' ? ({ id: 'local-hub-root' } as const) : {})}
+      >
       <ScrollView
         ref={scrollRef}
-        contentContainerStyle={[styles.content, Platform.OS === 'web' && width > 768 && styles.contentDesktop]}
+        style={styles.scroll}
+        contentContainerStyle={[
+          styles.content,
+          {
+            paddingHorizontal: horizontalPad,
+            paddingBottom: bottomPadClearance,
+            paddingTop: desktopWeb ? 8 : 10,
+          },
+        ]}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >
-        <VionaCard style={styles.heroIntroCard} surfaceVariant="light">
-          <VionaSectionHeader
-            emphasis="hero"
-            kicker={t('localHub.universeKicker')}
-            title={t('localHub.heroHeadline')}
-            subtitle={t('localHub.heroSub')}
-          />
-        </VionaCard>
+        <View style={[styles.contentRail, { width: innerWidth, maxWidth: '100%' }]}>
+          <View style={styles.shellRailWrap}>
+            <LinearGradient
+              colors={FASHION_HOME_COMMAND_RAIL_GRADIENT}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.shellRail}
+            >
+              <View style={[styles.shellRailHighlight, { backgroundColor: FASHION_HOME_COMMAND_RAIL_HIGHLIGHT }]} />
+              <View style={styles.shellRailRow}>
+                <View style={styles.shellRailBrand}>
+                  <VionaBrandLockup variant={useCompactCommandLogo ? 'compact' : 'header'} />
+                  <View style={styles.commandRailDivider} />
+                  <Text style={styles.commandCaption} numberOfLines={1}>
+                    {t('localHub.hubRailCaption')}
+                  </Text>
+                </View>
+                <View style={styles.shellUtilityTrack}>
+                  {homeCommand?.showRolePicker ? (
+                    <LocalShellUtilityBtn
+                      icon="shuffle-outline"
+                      label={t('shell.utility.switchRole')}
+                      onPress={() => homeCommand.openRolePicker()}
+                      a11yLabel={t('shell.utility.switchRole')}
+                      compact={useCompactCommandLogo}
+                    />
+                  ) : null}
+                  <LocalShellUtilityBtn
+                    icon="globe-outline"
+                    label={t('shell.utility.language')}
+                    onPress={openLanguageSheet}
+                    a11yLabel={t('smartTrio.switcher.title')}
+                    compact={useCompactCommandLogo}
+                  />
+                  {Platform.OS === 'web' ? (
+                    <LocalShellUtilityBtn
+                      icon={daylightBoost ? 'moon-outline' : 'sunny-outline'}
+                      label={daylightToggleLabel}
+                      onPress={() => setDaylightBoost((v) => !v)}
+                      a11yLabel={daylightToggleLabel}
+                      compact={useCompactCommandLogo}
+                    />
+                  ) : null}
+                  {fullscreenControl ? (
+                    <LocalShellUtilityBtn
+                      icon={fullscreenControl.isActive ? 'contract-outline' : 'expand-outline'}
+                      label={fullscreenControl.label}
+                      onPress={fullscreenControl.onPress}
+                      a11yLabel={fullscreenControl.a11y}
+                      compact={useCompactCommandLogo}
+                    />
+                  ) : null}
+                  <LocalShellUtilityBtn
+                    icon="wallet-outline"
+                    label={walletChipLabel}
+                    onPress={() => navigation.navigate('PersonalHub')}
+                    a11yLabel={walletChipLabel}
+                    iconColor={GOLD}
+                    compact={useCompactCommandLogo}
+                  />
+                  <LocalShellUtilityBtn
+                    icon="shield-outline"
+                    label={t('shell.utility.safetyAssist')}
+                    onPress={openSafetyAssist}
+                    a11yLabel={t('localHub.railSosA11y')}
+                    iconColor={RISK}
+                    compact={useCompactCommandLogo}
+                  />
+                  <LocalShellUtilityBtn
+                    icon="person-circle-outline"
+                    label={t('shell.utility.accountProfile')}
+                    onPress={openAccountHub}
+                    a11yLabel={t('localHub.railAccountA11y')}
+                    compact={useCompactCommandLogo}
+                  />
+                </View>
+              </View>
+            </LinearGradient>
+          </View>
+
+        <LocalConstellationFrame
+          accent="emerald"
+          tier="hero"
+          radius={18}
+          style={styles.heroIntroCard}
+          contentStyle={styles.heroIntroInner}
+        >
+          <Text style={styles.hubKicker}>{t('localHub.universeKicker')}</Text>
+          <Text style={styles.heroHeadline}>{t('localHub.heroHeadline')}</Text>
+          <Text style={styles.hubSub} numberOfLines={3}>
+            {t('localHub.heroSub')}
+          </Text>
+          <View style={styles.heroChipRow}>
+            <Text style={styles.heroChip}>{t('localCommerce.bookingStatus.lite')}</Text>
+            <Text style={styles.heroChip}>{t('localCommerce.bookingStatus.pilot')}</Text>
+            <Text style={styles.heroChip}>{t('localCommerce.bookingStatus.requestOnly')}</Text>
+          </View>
+        </LocalConstellationFrame>
 
         <LocalCommerceClarityBlock
           onBrowseServices={openServiceHub}
-          onRequestBookingAssist={() =>
-            openLeonaPrefill(t('localCommerce.leonaBookingAssistPrefill'))
-          }
-          onMerchantSetup={() => navigation.navigate('B2BPaywall')}
-          onAiReceptionistPilotInfo={onAiReceptionistPilotInfo}
+          onRequestBookingAssist={() => openLeonaPrefill(t('localCommerce.leonaBookingAssistPrefill'))}
         />
 
-        {showVietnamInboundHub ? (
-          <Pressable
-            onPress={() => navigation.navigate('VietnamHub')}
-            style={({ pressed }) => [styles.vnHubBanner, pressed && { opacity: 0.92 }]}
-            accessibilityRole="button"
-            accessibilityLabel="Vietnam inbound hub"
-          >
-            <LinearGradient
-              colors={['#E8F1FC', '#FFF8EC']}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={styles.vnHubBannerInner}
-            >
-              <Ionicons name="earth" size={22} color={theme.hybrid.signalStrong} />
-              <View style={{ flex: 1 }}>
-                <Text style={styles.vnHubBannerTitle}>{t('localHub.vnBannerTitle')}</Text>
-                <Text style={styles.vnHubBannerSub}>{t('localHub.vnBannerSub')}</Text>
-              </View>
-              <Ionicons name="chevron-forward" size={20} color={INK_MUTED} />
-            </LinearGradient>
-          </Pressable>
-        ) : null}
-
-        <View style={styles.heroRow}>
-          <Pressable
+        <Text style={styles.bentoSectionTitle}>{t('localHub.serviceCategoriesKicker')}</Text>
+        <View style={styles.cardGrid}>
+          <LocalDestinationCard
+            cardWidth={cardWidth}
+            accent="emerald"
+            icon="sparkles-outline"
+            label={t('localCommerce.bookingStatus.lite')}
+            title={t('localHub.nailsTitle')}
+            subtitle={t('localHub.nailsSub')}
             onPress={openServiceHub}
-            style={({ pressed }) => [styles.heroCard, pressed && { opacity: 0.9 }]}
-            accessibilityRole="button"
-            accessibilityLabel="Nails và Spa"
-          >
-            <Ionicons name="sparkles-outline" size={26} color={GOLD} />
-            <Text style={styles.heroCardTitle}>{t('localHub.nailsTitle')}</Text>
-            <Text style={styles.heroCardSub}>{t('localHub.nailsSub')}</Text>
-          </Pressable>
-          <Pressable
+            a11yLabel="Nails và Spa"
+          />
+          <LocalDestinationCard
+            cardWidth={cardWidth}
+            accent="cyan"
+            icon="restaurant-outline"
+            label={t('localCommerce.bookingStatus.requestOnly')}
+            title={t('localHub.restaurantTitle')}
+            subtitle={t('localHub.restaurantSub')}
             onPress={() => openLeonaPrefill(t('localCommerce.leonaRestaurantPrefill'))}
-            style={({ pressed }) => [styles.heroCard, pressed && { opacity: 0.9 }]}
-            accessibilityRole="button"
-            accessibilityLabel={t('localHub.restaurantTitle')}
-          >
-            <Ionicons name="restaurant-outline" size={26} color={GOLD} />
-            <Text style={styles.heroCardTitle}>{t('localHub.restaurantTitle')}</Text>
-            <Text style={styles.heroCardSub}>{t('localHub.restaurantSub')}</Text>
-          </Pressable>
-          <Pressable
-            onPress={() => navigation.navigate('B2BPaywall')}
-            style={({ pressed }) => [styles.heroCard, pressed && { opacity: 0.9 }]}
-            accessibilityRole="button"
-            accessibilityLabel={t('localCommerce.a11y.merchantB2bHub')}
-          >
-            <Ionicons name="briefcase-outline" size={26} color={GOLD} />
-            <Text style={styles.heroCardTitle}>{t('localHub.b2bTitle')}</Text>
-            <Text style={styles.heroCardSub}>{t('localHub.b2bSub')}</Text>
-          </Pressable>
+            a11yLabel={t('localHub.restaurantTitle')}
+          />
         </View>
 
-        <Text style={styles.bentoSectionTitle}>{t('localHub.eliteSection')}</Text>
-
-        <TouchableOpacity
-          onPress={() => void runUltraMasterBookingWithAlerts(t('localHub.legalWealthTitle'))}
-          activeOpacity={0.88}
-          style={styles.bentoLarge}
-          accessibilityRole="button"
-          accessibilityLabel={t('localHub.legalWealthTitle')}
-        >
-          <Ionicons name="scale-outline" size={28} color={GOLD} />
-          <Text style={styles.bentoTitle}>{t('localHub.legalWealthTitle')}</Text>
-          <Text style={styles.bentoSub}>{t('localHub.legalWealthSub')}</Text>
-        </TouchableOpacity>
-
-        {legalScanEnabled ? (
-          <TouchableOpacity
-            onPress={() => void onLegalScannerPress()}
-            activeOpacity={0.88}
-            disabled={legalScanBusy}
-            style={[styles.legalScannerBtn, legalScanBusy && styles.legalScannerBtnDisabled]}
-            accessibilityRole="button"
-            accessibilityLabel={t('localHub.legalScannerA11y')}
-          >
-            {legalScanBusy ? (
-              <ActivityIndicator size="small" color={GOLD} accessibilityLabel="Đang phân tích" />
-            ) : (
-              <Text style={styles.legalScannerEmoji}>⚖️</Text>
-            )}
-            <Text style={styles.legalScannerLabel}>{t('localHub.legalScannerLabel')}</Text>
-            <Ionicons name="scan-outline" size={22} color={GOLD} />
-          </TouchableOpacity>
-        ) : null}
-
-        <View style={styles.bentoMidRow}>
-          <TouchableOpacity
+        <Text style={styles.bentoSectionTitle}>{t('localHub.localServicesKicker')}</Text>
+        <View style={styles.cardGrid}>
+          <LocalDestinationCard
+            cardWidth={cardWidth}
+            accent="emerald"
+            icon="scale-outline"
+            label={t('localCommerce.bookingStatus.demo')}
+            title={t('localHub.legalWealthTitle')}
+            subtitle={t('localHub.legalWealthSub')}
+            onPress={() => void runUltraMasterBookingWithAlerts(t('localHub.legalWealthTitle'))}
+            a11yLabel={t('localHub.legalWealthTitle')}
+          />
+          <LocalDestinationCard
+            cardWidth={cardWidth}
+            accent="cyan"
+            icon="car-outline"
+            label={t('localCommerce.bookingStatus.lite')}
+            title={t('localHub.transitTitle')}
+            subtitle={t('localHub.transitSub')}
             onPress={() => openLeonaPrefill(t('localHub.transitLeonaPrefill'))}
-            activeOpacity={0.88}
-            style={styles.bentoMedium}
-            accessibilityRole="button"
-            accessibilityLabel={t('localHub.transitTitle')}
-          >
-            <Ionicons name="car-outline" size={24} color={GOLD} />
-            <Text style={styles.bentoTitle}>{t('localHub.transitTitle')}</Text>
-            <Text style={styles.bentoSub}>{t('localHub.transitSub')}</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
+            a11yLabel={t('localHub.transitTitle')}
+          />
+          <LocalDestinationCard
+            cardWidth={cardWidth}
+            accent="emerald"
+            icon="ticket-outline"
+            label={t('localCommerce.bookingStatus.preview')}
+            title={t('localHub.eventsTitle')}
+            subtitle={t('localHub.eventsSub')}
             onPress={() => navigation.navigate('DailyReward')}
-            activeOpacity={0.88}
-            style={styles.bentoMedium}
-            accessibilityRole="button"
-            accessibilityLabel={t('localHub.eventsTitle')}
-          >
-            <Ionicons name="ticket-outline" size={24} color={GOLD} />
-            <Text style={styles.bentoTitle}>{t('localHub.eventsTitle')}</Text>
-            <Text style={styles.bentoSub}>{t('localHub.eventsSub')}</Text>
-          </TouchableOpacity>
+            a11yLabel={t('localHub.eventsTitle')}
+          />
+          <LocalDestinationCard
+            cardWidth={cardWidth}
+            accent="emerald"
+            icon="home-outline"
+            label={t('localCommerce.bookingStatus.lite')}
+            title={t('localHub.classifiedsHousingTitle')}
+            subtitle={t('localHub.classifiedsHousingSub')}
+            onPress={() => void scrollToClassifieds()}
+            a11yLabel={t('localHub.classifiedsHousingTitle')}
+          />
+          <LocalDestinationCard
+            cardWidth={cardWidth}
+            accent="emerald"
+            icon="pricetags-outline"
+            label={t('localCommerce.bookingStatus.lite')}
+            title={t('localHub.classifiedsTitle')}
+            subtitle={t('localHub.classifiedsRowSub', { unit: getVioCreditsLabel() })}
+            onPress={() => void scrollToClassifieds()}
+            a11yLabel={t('localHub.classifiedsTitle')}
+          />
+          {legalScanEnabled ? (
+            <LocalDestinationCard
+              cardWidth={cardWidth}
+              accent="cyan"
+              icon="scan-outline"
+              label={t('localCommerce.bookingStatus.demo')}
+              title={t('localHub.legalScannerLabel')}
+              subtitle={t('localHub.legalScannerSub')}
+              onPress={() => void onLegalScannerPress()}
+              a11yLabel={t('localHub.legalScannerA11y')}
+              disabled={legalScanBusy}
+            />
+          ) : null}
         </View>
-
-        <TouchableOpacity
-          onPress={() => void scrollToClassifieds()}
-          activeOpacity={0.88}
-          style={styles.bentoBanner}
-          accessibilityRole="button"
-          accessibilityLabel={t('localHub.classifiedsTitle')}
-        >
-          <Ionicons name="pricetags-outline" size={24} color={GOLD} />
-          <View style={styles.bannerTextCol}>
-            <Text style={styles.bentoTitle}>{t('localHub.classifiedsTitle')}</Text>
-            <Text style={styles.bentoSub}>
-              {t('localHub.classifiedsRowSub', { unit: getVioCreditsLabel() })}
-            </Text>
-          </View>
-          <Ionicons name="chevron-forward" size={22} color={GOLD} />
-        </TouchableOpacity>
 
         <View
           onLayout={(e) => {
@@ -467,39 +1162,64 @@ export function LocalScreen() {
           style={styles.classifiedsAnchor}
         >
           <View style={styles.classifiedsHeaderRow}>
-            <Text style={styles.sectionTitle}>{t('localHub.classifiedsTitle')}</Text>
+            <View style={styles.classifiedsHeaderCopy}>
+              <Text style={styles.classifiedsKicker}>{t('localHub.classifiedsKicker')}</Text>
+              <Text style={styles.sectionTitle}>{t('localHub.classifiedsTitle')}</Text>
+            </View>
             <Text style={styles.walletHint}>{formatVioCredits(wallet.credits)}</Text>
           </View>
+
           <Pressable style={styles.postBtn} onPress={() => setComposerVisible(true)}>
-            <Ionicons name="add-circle-outline" size={20} color={INK} />
+            <Ionicons name="add-circle-outline" size={18} color={GOLD} />
             <Text style={styles.postBtnText}>{t('localHub.postNewListing')}</Text>
           </Pressable>
 
-          {sortedPosts.map((item) => {
-            const meta = CATEGORY_META[item.category];
-            return (
-              <View key={item.id} style={styles.postCard}>
-                <View style={styles.postHeader}>
-                  <View style={styles.categoryChip}>
-                    <Ionicons name={meta.icon} size={14} color={GOLD} />
-                    <Text style={styles.categoryChipText}>{meta.title}</Text>
-                  </View>
-                  {item.isVip ? <Text style={styles.vipBadge}>VIP</Text> : null}
-                </View>
-                <Text style={styles.postTitle}>{item.title}</Text>
-                <Text style={styles.postMeta}>
-                  {item.city} · {item.priceLabel}
-                </Text>
-                <Text style={styles.postDesc}>{item.description}</Text>
-              </View>
-            );
-          })}
+          <View style={styles.cardGrid}>
+            {sortedPosts.map((item) => (
+              <LocalClassifiedCard key={item.id} cardWidth={classifiedCardWidth} item={item} />
+            ))}
+          </View>
+        </View>
+
+        <Text style={styles.bentoSectionTitle}>{t('localHub.connectedUniversesKicker')}</Text>
+        <View style={styles.connectedStrip}>
+          {featureFlags.travelLiteEnabled ? (
+            <LocalConnectedUniverseLink
+              icon="airplane-outline"
+              label={t('localHub.connectedTravel')}
+              onPress={openTravelUniverse}
+              a11yLabel={t('localHub.connectedTravel')}
+            />
+          ) : null}
+          <LocalConnectedUniverseLink
+            icon="briefcase-outline"
+            label={t('localHub.connectedBusiness')}
+            onPress={openBusinessUniverse}
+            a11yLabel={t('localHub.connectedBusiness')}
+          />
+          {featureFlags.academyLiteEnabled ? (
+            <LocalConnectedUniverseLink
+              icon="school-outline"
+              label={t('localHub.connectedAcademy')}
+              onPress={openAcademyUniverse}
+              a11yLabel={t('localHub.connectedAcademy')}
+            />
+          ) : null}
+        </View>
         </View>
       </ScrollView>
 
+      <LocalMiniappDock
+        onBack={goBack}
+        onHome={goHome}
+        onLocalHub={scrollToTop}
+        bottomOffset={miniappDockBottom}
+      />
+
       <Modal visible={composerVisible} transparent animationType="none" onRequestClose={() => setComposerVisible(false)}>
         <View style={styles.modalBackdrop}>
-          <Reanimated.View style={[styles.modalCard, modalAnimatedStyle]}>
+          <Reanimated.View style={[styles.modalCardWrap, modalAnimatedStyle]}>
+            <LocalConstellationFrame accent="emerald" tier="utility" radius={theme.radius.lg} contentStyle={styles.modalCard}>
             <Text style={styles.modalTitle}>{t('localHub.classifiedsComposerTitle')}</Text>
             <View style={styles.categoryRow}>
               {(Object.keys(CATEGORY_META) as ClassifiedCategory[]).map((category) => (
@@ -514,20 +1234,20 @@ export function LocalScreen() {
                 </Pressable>
               ))}
             </View>
-            <TextInput value={title} onChangeText={setTitle} placeholder="Tiêu đề" placeholderTextColor="rgba(11,22,40,0.42)" style={styles.input} />
-            <TextInput value={city} onChangeText={setCity} placeholder="Thành phố" placeholderTextColor="rgba(11,22,40,0.42)" style={styles.input} />
+            <TextInput value={title} onChangeText={setTitle} placeholder="Tiêu đề" placeholderTextColor="rgba(226,232,240,0.42)" style={styles.input} />
+            <TextInput value={city} onChangeText={setCity} placeholder="Thành phố" placeholderTextColor="rgba(226,232,240,0.42)" style={styles.input} />
             <TextInput
               value={priceLabel}
               onChangeText={setPriceLabel}
               placeholder="Giá / mức lương"
-              placeholderTextColor="rgba(11,22,40,0.42)"
+              placeholderTextColor="rgba(226,232,240,0.42)"
               style={styles.input}
             />
             <TextInput
               value={description}
               onChangeText={setDescription}
               placeholder="Mô tả chi tiết"
-              placeholderTextColor="rgba(11,22,40,0.42)"
+              placeholderTextColor="rgba(226,232,240,0.42)"
               style={[styles.input, styles.inputMultiline]}
               multiline
             />
@@ -543,154 +1263,409 @@ export function LocalScreen() {
                 {submitting ? <ActivityIndicator size="small" color={INK} /> : <Text style={styles.submitBtnText}>Đăng tin</Text>}
               </Pressable>
             </View>
+            </LocalConstellationFrame>
           </Reanimated.View>
         </View>
       </Modal>
+
+      <SmartTrioLanguageSheet visible={languageSheetOpen} onClose={() => setLanguageSheetOpen(false)} />
+      </View>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: BG },
-  heroIntroCard: {
-    marginBottom: theme.spacing.md,
+  container: { flex: 1, backgroundColor: BG, position: 'relative', overflow: 'hidden' },
+  root: { flex: 1, position: 'relative', zIndex: 1, backgroundColor: 'transparent' },
+  canvasBackdropHost: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 0,
+    zIndex: 0,
   },
-  content: { paddingHorizontal: theme.spacing.lg, paddingBottom: theme.spacing.xxl * 2.25, paddingTop: 4 },
-  contentDesktop: { paddingBottom: theme.spacing.xxl * 3.25, paddingRight: 28 },
-  heroRow: { flexDirection: 'row', gap: 10, marginBottom: theme.spacing.lg },
-  heroCard: {
+  canvasBackdrop: {
+    position: 'absolute',
+    ...(Platform.OS === 'web'
+      ? ({ objectFit: 'cover', imageRendering: '-webkit-optimize-contrast' } as ImageStyle)
+      : {}),
+  },
+  canvasBackdropVeil: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: localConstellation.canvasVeil,
+    zIndex: 0,
+  },
+  canvasGlow: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 0,
+    zIndex: 0,
+    opacity: 0.1,
+  },
+  contentFieldVeil: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 0,
+    zIndex: 0,
+    backgroundColor: localConstellation.contentFieldVeil,
+  },
+  scroll: {
     flex: 1,
-    minHeight: 112,
-    borderRadius: 16,
-    paddingVertical: 12,
-    paddingHorizontal: 8,
-    backgroundColor: SURFACE,
-    borderWidth: 1,
-    borderColor: BORDER,
-    alignItems: 'center',
-    gap: 6,
-    shadowColor: '#0B1628',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.06,
-    shadowRadius: 12,
-    elevation: 3,
+    backgroundColor: 'transparent',
   },
-  heroCardTitle: { fontSize: 12, fontFamily: FontFamily.extrabold, color: INK, textAlign: 'center' },
-  heroCardSub: { fontSize: 10, fontFamily: FontFamily.medium, color: INK_MUTED, textAlign: 'center' },
-  bentoSectionTitle: {
-    fontSize: 13,
-    fontFamily: FontFamily.extrabold,
-    letterSpacing: 0.6,
-    color: INK,
-    marginBottom: 10,
-  },
-  legalScannerBtn: {
+  shellRailWrap: {
     width: '100%',
+    marginBottom: 10,
+    borderRadius: theme.radius.lg,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: 'rgba(148, 163, 184, 0.16)',
+  },
+  shellRail: {
+    borderRadius: theme.radius.lg,
+    overflow: 'hidden',
+  },
+  shellRailHighlight: {
+    position: 'absolute',
+    top: 0,
+    left: 12,
+    right: 12,
+    height: 1,
+    zIndex: 2,
+  },
+  shellRailRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    gap: 10,
-    minHeight: 52,
-    borderRadius: 16,
-    paddingVertical: 12,
-    paddingHorizontal: theme.spacing.md,
-    marginBottom: 12,
-    backgroundColor: 'rgba(197, 160, 89, 0.18)',
-    borderWidth: 1,
-    borderColor: GOLD_BORDER,
+    justifyContent: 'space-between',
+    gap: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    minHeight: 48,
   },
-  legalScannerBtnDisabled: { opacity: 0.72 },
-  legalScannerEmoji: { fontSize: 22 },
-  legalScannerLabel: {
+  shellRailBrand: {
     flex: 1,
-    textAlign: 'center',
-    fontSize: 15,
+    minWidth: 0,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  shellUtilityTrack: {
+    flexShrink: 0,
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+    gap: 6,
+    maxWidth: '72%',
+  },
+  shellUtilBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    minHeight: 30,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: theme.radius.pill,
+    borderWidth: 1,
+    borderColor: 'rgba(148, 163, 184, 0.2)',
+    backgroundColor: 'rgba(10, 14, 22, 0.35)',
+  },
+  shellUtilBtnCompact: {
+    minHeight: 28,
+    paddingHorizontal: 7,
+  },
+  shellUtilBtnPressed: { opacity: 0.88 },
+  shellUtilLabel: {
+    fontSize: 10,
+    fontFamily: FontFamily.extrabold,
+    color: INK,
+    letterSpacing: 0.15,
+    maxWidth: 88,
+  },
+  miniappDockHost: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    zIndex: 8,
+    alignItems: 'center',
+    pointerEvents: 'box-none',
+  },
+  miniappDock: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: theme.radius.pill,
+    backgroundColor: 'rgba(8, 14, 26, 0.88)',
+    borderWidth: 1,
+    borderColor: 'rgba(72, 210, 165, 0.28)',
+    ...(Platform.OS === 'web'
+      ? ({ boxShadow: '0 0 0 1px rgba(72, 210, 165, 0.12), 0 0 8px rgba(72, 210, 165, 0.08)' } as ViewStyle)
+      : {}),
+  },
+  miniappDockBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: theme.radius.pill,
+    borderWidth: 1,
+    borderColor: 'rgba(148, 163, 184, 0.22)',
+    backgroundColor: 'rgba(10, 14, 22, 0.45)',
+  },
+  miniappDockBtnActive: {
+    borderColor: 'rgba(72, 210, 165, 0.42)',
+    backgroundColor: 'rgba(72, 210, 165, 0.1)',
+  },
+  miniappDockBtnText: {
+    fontSize: 11,
+    fontFamily: FontFamily.extrabold,
+    color: INK_MUTED,
+  },
+  miniappDockBtnTextActive: {
+    color: EMERALD,
+  },
+  connectedStrip: {
+    gap: 8,
+    marginBottom: theme.spacing.lg,
+  },
+  connectedLink: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    borderRadius: theme.radius.md,
+    backgroundColor: 'rgba(10, 14, 22, 0.42)',
+  },
+  connectedLinkText: {
+    flex: 1,
+    fontSize: 12,
+    fontFamily: FontFamily.semibold,
+    color: INK,
+  },
+  commandRailDivider: {
+    width: 1,
+    alignSelf: 'stretch',
+    minHeight: 34,
+    backgroundColor: FASHION_HOME_LINE_GOLD_SOFT,
+  },
+  commandRailCopy: {
+    flex: 1,
+    minWidth: 0,
+    gap: 2,
+    justifyContent: 'center',
+  },
+  commandRailRight: {
+    flexShrink: 0,
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+    gap: 6,
+    maxWidth: 420,
+  },
+  commandPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    minHeight: 32,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: theme.radius.pill,
+  },
+  commandPillPressed: { opacity: 0.88 },
+  commandPillLabel: {
+    fontSize: 11,
     fontFamily: FontFamily.extrabold,
     color: INK,
     letterSpacing: 0.2,
   },
-  bentoLarge: {
-    width: '100%',
-    minHeight: 120,
-    borderRadius: 20,
-    padding: theme.spacing.md,
-    marginBottom: 12,
-    backgroundColor: SURFACE,
-    borderWidth: 1,
-    borderColor: BORDER,
-    gap: 8,
-    shadowColor: '#0B1628',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.06,
-    shadowRadius: 14,
-    elevation: 3,
+  commandPillLabelRisk: {
+    color: RISK,
   },
-  bentoMidRow: { flexDirection: 'row', justifyContent: 'space-between', gap: 12, marginBottom: 12 },
-  bentoMedium: {
-    width: '48%',
-    minHeight: 118,
-    borderRadius: 18,
-    padding: theme.spacing.md,
-    backgroundColor: SURFACE,
-    borderWidth: 1,
-    borderColor: BORDER,
-    gap: 8,
-    shadowColor: '#0B1628',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.06,
-    shadowRadius: 12,
-    elevation: 3,
+  commandSubtitle: {
+    fontSize: 11,
+    fontFamily: FontFamily.semibold,
+    color: INK_MUTED,
+    letterSpacing: 0.2,
+    lineHeight: 15,
   },
-  bentoBanner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    width: '100%',
-    minHeight: 72,
-    borderRadius: 18,
+  commandCaption: {
+    fontSize: 10,
+    fontFamily: FontFamily.semibold,
+    color: CYAN,
+    letterSpacing: 0.35,
+    textTransform: 'uppercase',
+  },
+  heroIntroCard: {
+    marginBottom: theme.spacing.sm,
+  },
+  heroIntroInner: {
     paddingHorizontal: theme.spacing.md,
-    gap: 12,
-    marginBottom: theme.spacing.lg,
-    backgroundColor: SURFACE,
-    borderWidth: 1,
-    borderColor: BORDER,
-    shadowColor: '#0B1628',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.06,
-    shadowRadius: 14,
-    elevation: 3,
+    paddingVertical: 14,
+    gap: 6,
   },
-  bannerTextCol: { flex: 1, minWidth: 0 },
-  bentoTitle: { fontSize: 16, fontFamily: FontFamily.extrabold, color: INK },
-  bentoSub: { fontSize: 12, fontFamily: FontFamily.medium, color: INK_MUTED },
-  classifiedsAnchor: { marginTop: 4 },
-  classifiedsHeaderRow: {
+  hubKicker: {
+    fontSize: 10,
+    fontFamily: FontFamily.extrabold,
+    letterSpacing: 0.8,
+    textTransform: 'uppercase',
+    color: EMERALD,
+  },
+  heroHeadline: {
+    fontSize: 20,
+    lineHeight: 24,
+    fontFamily: FontFamily.extrabold,
+    color: INK_STRONG,
+    letterSpacing: -0.2,
+  },
+  hubSub: {
+    fontSize: 12,
+    lineHeight: 17,
+    fontFamily: FontFamily.medium,
+    color: INK_MUTED,
+  },
+  heroChipRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 6,
+    marginTop: 8,
+  },
+  heroChip: {
+    fontSize: 9,
+    fontFamily: FontFamily.extrabold,
+    letterSpacing: 0.45,
+    textTransform: 'uppercase',
+    color: EMERALD,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: theme.radius.pill,
+    backgroundColor: 'rgba(72, 210, 165, 0.08)',
+    borderWidth: 1,
+    borderColor: 'rgba(72, 210, 165, 0.28)',
+    overflow: 'hidden',
+  },
+  content: { alignItems: 'center' },
+  contentRail: {
+    alignSelf: 'center',
+    borderRadius: theme.radius.lg,
+    backgroundColor: 'rgba(5, 11, 20, 0.22)',
+    paddingVertical: 4,
+  },
+  cardGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: localConstellation.gridGap,
+    marginBottom: theme.spacing.lg,
+    width: '100%',
+  },
+  gridCardPressable: { width: '100%' },
+  gridCardInteractive:
+    Platform.OS === 'web'
+      ? ({
+          transitionProperty: 'transform, opacity',
+          transitionDuration: `${localConstellation.cardHoverTransitionMs}ms`,
+          transitionTimingFunction: 'ease-out',
+        } as ViewStyle)
+      : {},
+  gridCardHovered:
+    Platform.OS === 'web'
+      ? ({
+          transform: [
+            { translateY: -localConstellation.cardHoverLiftPx },
+            { scale: localConstellation.cardHoverScale },
+          ],
+        } as ViewStyle)
+      : {},
+  gridCardPressed: { opacity: 0.9 },
+  destinationCard: {
+    minHeight: 148,
+    paddingVertical: 12,
+    paddingHorizontal: 12,
+    gap: 6,
+  },
+  gridCardTop: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 10,
+    gap: 8,
   },
-  sectionTitle: { fontSize: 16, fontFamily: FontFamily.extrabold, color: INK },
+  gridCardStatusPill: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: theme.radius.pill,
+  },
+  gridCardStatusText: {
+    fontSize: 9,
+    fontFamily: FontFamily.extrabold,
+    letterSpacing: 0.45,
+    textTransform: 'uppercase',
+  },
+  gridCardFooter: { marginTop: 'auto', alignItems: 'flex-end' },
+  gridCardCta: { fontSize: 16, fontFamily: FontFamily.extrabold },
+  destinationTitle: { fontSize: 13, fontFamily: FontFamily.extrabold, color: INK_STRONG, lineHeight: 17 },
+  destinationSub: { fontSize: 11, fontFamily: FontFamily.medium, color: INK_CARD_SUB, lineHeight: 15 },
+  heroIconChip: {
+    width: 34,
+    height: 34,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  bentoSectionTitle: {
+    fontSize: 11,
+    fontFamily: FontFamily.extrabold,
+    letterSpacing: 0.7,
+    textTransform: 'uppercase',
+    color: INK_MUTED,
+    marginBottom: 8,
+  },
+  classifiedsAnchor: { marginTop: 4 },
+  classifiedsHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    justifyContent: 'space-between',
+    marginBottom: 10,
+    gap: 12,
+  },
+  classifiedsHeaderCopy: { flex: 1, minWidth: 0, gap: 2 },
+  classifiedsKicker: {
+    fontSize: 10,
+    fontFamily: FontFamily.extrabold,
+    letterSpacing: 0.7,
+    textTransform: 'uppercase',
+    color: INK_MUTED,
+  },
+  sectionTitle: { fontSize: 17, fontFamily: FontFamily.extrabold, color: INK },
   walletHint: { fontSize: 12, fontFamily: FontFamily.bold, color: GOLD },
   postBtn: {
-    minHeight: 44,
-    borderRadius: 14,
-    backgroundColor: GOLD,
-    paddingHorizontal: theme.spacing.md,
+    alignSelf: 'flex-start',
+    minHeight: 40,
+    borderRadius: theme.radius.pill,
+    backgroundColor: 'rgba(228, 192, 110, 0.16)',
+    borderWidth: 1,
+    borderColor: 'rgba(228, 192, 110, 0.42)',
+    paddingHorizontal: 14,
+    paddingVertical: 10,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
     marginBottom: theme.spacing.md,
   },
-  postBtnText: { color: INK, fontFamily: FontFamily.bold, fontSize: 14 },
+  postBtnText: { color: GOLD, fontFamily: FontFamily.bold, fontSize: 14 },
   postCard: {
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: BORDER,
     padding: theme.spacing.md,
-    marginBottom: theme.spacing.sm,
-    gap: 6,
-    backgroundColor: SURFACE,
+    gap: 8,
+    minHeight: 148,
   },
   postHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   categoryChip: {
@@ -700,26 +1675,25 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 5,
     borderRadius: theme.radius.pill,
-    backgroundColor: vionaTrust.surfaceMuted,
+    backgroundColor: 'transparent',
     borderWidth: 1,
     borderColor: BORDER,
   },
-  categoryChipText: { fontSize: 11, color: GOLD, fontFamily: FontFamily.semibold },
+  categoryChipText: { fontSize: 11, color: EMERALD, fontFamily: FontFamily.semibold },
   vipBadge: { fontSize: 11, color: GOLD, fontFamily: FontFamily.extrabold },
   postTitle: { fontSize: 15, color: INK, fontFamily: FontFamily.bold },
-  postMeta: { fontSize: 12, color: GOLD, fontFamily: FontFamily.semibold },
-  postDesc: { fontSize: 12, color: 'rgba(226,232,240,0.7)', fontFamily: FontFamily.medium, lineHeight: 18 },
+  postMeta: { fontSize: 12, color: CYAN, fontFamily: FontFamily.semibold },
+  postDesc: { fontSize: 12, color: INK_MUTED, fontFamily: FontFamily.medium, lineHeight: 18 },
   modalBackdrop: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.65)',
+    backgroundColor: 'rgba(0,0,0,0.72)',
     justifyContent: 'center',
     padding: theme.spacing.lg,
   },
+  modalCardWrap: {
+    width: '100%',
+  },
   modalCard: {
-    borderRadius: theme.radius.lg,
-    borderWidth: 1,
-    borderColor: BORDER,
-    backgroundColor: SURFACE,
     padding: theme.spacing.lg,
     gap: theme.spacing.sm,
   },
@@ -730,11 +1704,11 @@ const styles = StyleSheet.create({
     minHeight: 34,
     borderRadius: theme.radius.md,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.12)',
+    borderColor: BORDER,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  categoryBtnActive: { borderColor: GOLD, backgroundColor: 'rgba(197, 160, 89, 0.12)' },
+  categoryBtnActive: { borderColor: GOLD, backgroundColor: localConstellation.glowGold },
   categoryBtnText: { fontSize: 11, color: INK_MUTED, fontFamily: FontFamily.semibold },
   categoryBtnTextActive: { color: GOLD },
   input: {
@@ -745,14 +1719,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: theme.spacing.md,
     color: INK,
     fontFamily: FontFamily.medium,
-    backgroundColor: vionaTrust.surfaceMuted,
+    backgroundColor: localConstellation.surfaceMuted,
   },
   inputMultiline: { minHeight: 86, textAlignVertical: 'top', paddingTop: 10 },
   vipToggle: {
     minHeight: 40,
     borderRadius: theme.radius.md,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.12)',
+    borderColor: BORDER,
     paddingHorizontal: theme.spacing.md,
     flexDirection: 'row',
     alignItems: 'center',
@@ -766,45 +1740,22 @@ const styles = StyleSheet.create({
     minWidth: 84,
     borderRadius: theme.radius.md,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.2)',
+    borderColor: BORDER,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 10,
   },
-  cancelBtnText: { fontSize: 13, color: 'rgba(226,232,240,0.75)', fontFamily: FontFamily.semibold },
+  cancelBtnText: { fontSize: 13, color: INK_MUTED, fontFamily: FontFamily.semibold },
   submitBtn: {
     minHeight: 40,
     minWidth: 110,
     borderRadius: theme.radius.md,
-    backgroundColor: GOLD,
+    backgroundColor: 'rgba(72, 210, 165, 0.18)',
+    borderWidth: 1,
+    borderColor: 'rgba(72, 210, 165, 0.42)',
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 10,
   },
-  submitBtnText: { fontSize: 13, color: INK, fontFamily: FontFamily.bold },
-  vnHubBanner: {
-    marginTop: 14,
-    borderRadius: theme.radius.lg,
-    overflow: 'hidden',
-    borderWidth: 1,
-    borderColor: GOLD_BORDER,
-  },
-  vnHubBannerInner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    paddingVertical: 14,
-    paddingHorizontal: 14,
-  },
-  vnHubBannerTitle: {
-    fontFamily: FontFamily.bold,
-    fontSize: 15,
-    color: INK,
-  },
-  vnHubBannerSub: {
-    marginTop: 2,
-    fontFamily: FontFamily.medium,
-    fontSize: 12,
-    color: INK_MUTED,
-  },
+  submitBtnText: { fontSize: 13, color: EMERALD, fontFamily: FontFamily.bold },
 });
