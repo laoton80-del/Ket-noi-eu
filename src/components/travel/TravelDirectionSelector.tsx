@@ -1,14 +1,20 @@
 import { Ionicons } from '@expo/vector-icons';
-import { useMemo, type ReactElement } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { useMemo, useState, type ReactElement } from 'react';
+import { Pressable, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 
 import { useSmartTrio } from '../../context/SmartTrioContext';
 import type { MarketCode } from '../../core/i18n/smartTrioTypes';
 import { getAllTravelDirections, getTravelDirectionById } from '../../core/travel';
 import type { TravelDirectionCommercialStatus, TravelDirectionDefinition, TravelDirectionId } from '../../core/travel/travelDirectionTypes';
+import { localConstellation } from '../local/localConstellationTokens';
 import { useTranslation } from '../../i18n';
-import { theme } from '../../theme/theme';
+import { FontFamily } from '../../theme/typography';
+import { TravelGlassCard, type TravelSemanticAccent } from './TravelGlassCard';
 
+const INK = localConstellation.inkStrong;
+const INK_MUTED = localConstellation.inkMuted;
+const INK_SUB = localConstellation.inkCardSub;
+const CYAN = localConstellation.accentCyan;
 export type TravelDirectionSelectorProps = Readonly<{
   selectedId: TravelDirectionId | null;
   onSelect: (id: TravelDirectionId) => void;
@@ -25,8 +31,11 @@ function statusLabelKey(s: TravelDirectionCommercialStatus): string {
 
 export function TravelDirectionSelector({ selectedId, onSelect }: TravelDirectionSelectorProps): ReactElement {
   const { t } = useTranslation();
+  const { width } = useWindowDimensions();
   const directions = useMemo(() => getAllTravelDirections(), []);
   const { currentMarket, nativeLocale } = useSmartTrio();
+  const compactLayout = width < 768;
+  const [expanded, setExpanded] = useState(false);
 
   const contextLine = useMemo(() => {
     const marketLabel = t(marketLabelKey(currentMarket));
@@ -34,18 +43,60 @@ export function TravelDirectionSelector({ selectedId, onSelect }: TravelDirectio
     return t('travel.direction.contextLine', { market: marketLabel, native: nativeLabel });
   }, [currentMarket, nativeLocale, t]);
 
+  const toggleA11y = expanded ? t('travel.direction.collapseA11y') : t('travel.direction.expandA11y');
+
   return (
-    <View style={styles.wrap}>
-      <Text style={styles.title}>{t('travel.direction.title')}</Text>
-      <Text style={styles.subtitle}>{t('travel.direction.subtitle')}</Text>
-      <Text style={styles.contextHint}>{contextLine}</Text>
-      <Text style={styles.liteNotice}>{t('travel.direction.liteNotice')}</Text>
+    <View style={styles.wrapQuiet}>
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel={toggleA11y}
+        accessibilityState={{ expanded }}
+        onPress={() => setExpanded((v) => !v)}
+        style={({ pressed }) => [styles.headerRow, pressed && { opacity: 0.9 }]}
+      >
+        <View style={styles.headerText}>
+          <Text style={styles.sectionKicker}>{t('travel.direction.sectionKicker')}</Text>
+          <Text style={styles.title} numberOfLines={expanded ? 2 : 1}>
+            {t('travel.direction.title')}
+          </Text>
+          {expanded ? (
+            <Text style={styles.subtitle}>{t('travel.direction.subtitle')}</Text>
+          ) : (
+            <Text style={styles.collapsedHint} numberOfLines={2}>
+              {t('travel.direction.collapsedHint')}
+            </Text>
+          )}
+        </View>
+        <Ionicons name={expanded ? 'chevron-up' : 'chevron-down'} size={20} color={CYAN} />
+      </Pressable>
 
-      {directions.map((def) => (
-        <DirectionCard key={def.id} def={def} selected={selectedId === def.id} onSelect={() => onSelect(def.id)} />
-      ))}
+      {expanded ? (
+        <>
+          <Text style={styles.contextHint}>{contextLine}</Text>
+          <Text style={styles.liteNotice}>{t('travel.direction.liteNotice')}</Text>
 
-      {selectedId ? (
+          <View style={[styles.cardGrid, compactLayout ? styles.cardGridSingle : styles.cardGridDual]}>
+            {directions.map((def) => (
+              <View key={def.id} style={[styles.cardCell, compactLayout ? styles.cardCellFull : styles.cardCellHalf]}>
+                <DirectionCard
+              def={def}
+              accent={directionAccent(def.id)}
+              selected={selectedId === def.id}
+              onSelect={() => onSelect(def.id)}
+            />
+              </View>
+            ))}
+          </View>
+
+          {selectedId ? (
+            <Text style={styles.selectedLine}>
+              {t('travel.direction.selected', {
+                label: t(getTravelDirectionById(selectedId)?.titleKey ?? 'travel.direction.title'),
+              })}
+            </Text>
+          ) : null}
+        </>
+      ) : selectedId ? (
         <Text style={styles.selectedLine}>
           {t('travel.direction.selected', {
             label: t(getTravelDirectionById(selectedId)?.titleKey ?? 'travel.direction.title'),
@@ -58,168 +109,178 @@ export function TravelDirectionSelector({ selectedId, onSelect }: TravelDirectio
 
 type DirectionCardProps = Readonly<{
   def: TravelDirectionDefinition;
+  accent: TravelSemanticAccent;
   selected: boolean;
   onSelect: () => void;
 }>;
 
-function DirectionCard({ def, selected, onSelect }: DirectionCardProps): ReactElement {
+function directionAccent(id: TravelDirectionId): TravelSemanticAccent {
+  if (id === 'vietnameseAbroad') return 'cyan';
+  if (id === 'inboundVietnam') return 'gold';
+  return 'violet';
+}
+
+function DirectionCard({ def, accent, selected, onSelect }: DirectionCardProps): ReactElement {
   const { t } = useTranslation();
-  const previewActions = def.recommendedActions.slice(0, 3);
 
   return (
-    <Pressable
+    <TravelGlassCard
+      visual="standard"
+      accent={accent}
       onPress={onSelect}
-      style={({ pressed }) => [
-        styles.card,
-        selected && styles.cardSelected,
-        pressed && { opacity: 0.92 },
-      ]}
-      accessibilityRole="button"
-      accessibilityState={{ selected }}
       accessibilityLabel={t(def.titleKey)}
+      contentStyle={styles.cardInner}
+      style={selected ? styles.cardSelectedShell : undefined}
     >
       <View style={styles.cardTop}>
         <View style={styles.badgeRow}>
           <Text style={styles.badgeMain}>{t(def.badgeKey)}</Text>
           <Text style={styles.badgeStatus}>{t(statusLabelKey(def.status))}</Text>
         </View>
-        {selected ? <Ionicons name="checkmark-circle" size={22} color={theme.colors.primaryBright} /> : null}
+        {selected ? <Ionicons name="checkmark-circle" size={20} color={CYAN} /> : null}
       </View>
-      <Text style={styles.cardTitle}>{t(def.titleKey)}</Text>
-      <Text style={styles.cardSub}>{t(def.subtitleKey)}</Text>
-      <View style={styles.actionList}>
-        {previewActions.map((a) => (
-          <View key={a.labelKey} style={styles.actionRow}>
-            <Text style={styles.actionBullet}>•</Text>
-            <View style={styles.actionTextCol}>
-              <Text style={styles.actionText} numberOfLines={2}>
-                {t(a.labelKey)}
-              </Text>
-              <Text style={styles.actionPill}>{t(statusLabelKey(a.itemStatus))}</Text>
-            </View>
-          </View>
-        ))}
-      </View>
+      <Text style={styles.cardTitle} numberOfLines={2}>
+        {t(def.titleKey)}
+      </Text>
+      <Text style={styles.cardSub} numberOfLines={3}>
+        {t(def.subtitleKey)}
+      </Text>
       <Text style={styles.cta}>{t(def.primaryCtaKey)}</Text>
-    </Pressable>
+    </TravelGlassCard>
   );
 }
 
-const INK = 'rgba(5, 11, 20, 0.92)';
-const MUTE = 'rgba(5, 11, 20, 0.55)';
-
 const styles = StyleSheet.create({
-  wrap: {
-    marginBottom: 14,
-    gap: 8,
-    paddingRight: 6,
+  wrapQuiet: {
+    gap: 6,
+    opacity: 0.88,
+  },
+  sectionKicker: {
+    fontSize: 9,
+    fontFamily: FontFamily.extrabold,
+    color: 'rgba(186, 198, 214, 0.88)',
+    letterSpacing: 0.85,
   },
   title: {
-    fontSize: 17,
-    fontWeight: '900',
+    fontSize: 15,
+    fontFamily: FontFamily.extrabold,
     color: INK,
     letterSpacing: -0.2,
   },
   subtitle: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: MUTE,
-    lineHeight: 18,
+    fontSize: 12,
+    fontFamily: FontFamily.medium,
+    color: INK_MUTED,
+    lineHeight: 17,
   },
   contextHint: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: 'rgba(5, 11, 20, 0.45)',
+    fontSize: 11,
+    fontFamily: FontFamily.medium,
+    color: INK_SUB,
   },
   liteNotice: {
     fontSize: 11,
-    fontWeight: '600',
-    color: 'rgba(5, 11, 20, 0.42)',
+    fontFamily: FontFamily.medium,
+    color: INK_SUB,
     lineHeight: 16,
     marginBottom: 4,
   },
-  card: {
-    borderRadius: 16,
-    padding: 14,
-    marginTop: 10,
-    backgroundColor: 'rgba(255,255,255,0.72)',
-    borderWidth: 1,
-    borderColor: 'rgba(5, 11, 20, 0.08)',
-    shadowColor: '#0B1628',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.06,
-    shadowRadius: 10,
-    elevation: 3,
+  cardGrid: {
+    gap: 10,
+    marginTop: 4,
   },
-  cardSelected: {
-    borderColor: 'rgba(11, 42, 102, 0.45)',
-    backgroundColor: 'rgba(255,255,255,0.9)',
+  cardGridSingle: {
+    flexDirection: 'column',
+  },
+  cardGridDual: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+  },
+  cardCell: {},
+  cardCellFull: {
+    width: '100%',
+  },
+  cardCellHalf: {
+    width: '48.5%',
+  },
+  headerRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
+    gap: 10,
+    minHeight: 44,
+    paddingVertical: 4,
+  },
+  headerText: {
+    flex: 1,
+    minWidth: 0,
+    gap: 2,
+  },
+  collapsedHint: {
+    fontSize: 11,
+    fontFamily: FontFamily.medium,
+    color: INK_SUB,
+    lineHeight: 16,
+  },
+  cardInner: {
+    gap: 5,
+    minHeight: 44,
+    paddingVertical: 8,
+    paddingHorizontal: 6,
+  },
+  cardSelectedShell: {
+    borderWidth: 1,
+    borderColor: 'rgba(92, 205, 255, 0.42)',
   },
   cardTop: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 6,
+    gap: 8,
   },
-  badgeRow: { flexDirection: 'row', alignItems: 'center', gap: 8, flexWrap: 'wrap', flex: 1 },
+  badgeRow: { flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap', flex: 1 },
   badgeMain: {
-    fontSize: 11,
-    fontWeight: '800',
-    color: INK,
+    fontSize: 10,
+    fontFamily: FontFamily.extrabold,
+    color: CYAN,
     textTransform: 'uppercase',
     letterSpacing: 0.4,
   },
   badgeStatus: {
-    fontSize: 10,
-    fontWeight: '800',
-    color: '#0B2A66',
-    backgroundColor: 'rgba(11, 42, 102, 0.14)',
-    paddingHorizontal: 8,
+    fontSize: 9,
+    fontFamily: FontFamily.extrabold,
+    color: INK,
+    backgroundColor: localConstellation.statusCyanFill,
+    paddingHorizontal: 7,
     paddingVertical: 3,
     borderRadius: 8,
     overflow: 'hidden',
-  },
-  cardTitle: { fontSize: 16, fontWeight: '900', color: INK },
-  cardSub: { fontSize: 12, fontWeight: '600', color: MUTE, marginTop: 4, lineHeight: 17 },
-  actionList: { marginTop: 10, gap: 6 },
-  actionRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: 6,
-    paddingVertical: 2,
-  },
-  actionBullet: { fontSize: 13, color: MUTE, marginTop: 2 },
-  actionTextCol: { flex: 1, minWidth: 0, gap: 4 },
-  actionText: { fontSize: 12, fontWeight: '600', color: INK, lineHeight: 16 },
-  actionPill: {
-    fontSize: 9,
-    fontWeight: '800',
-    color: '#0B2A66',
     textTransform: 'uppercase',
-    alignSelf: 'flex-start',
-    backgroundColor: 'rgba(11, 42, 102, 0.12)',
-    borderRadius: 8,
-    overflow: 'hidden',
-    paddingHorizontal: 6,
-    paddingVertical: 2,
+  },
+  cardTitle: {
+    fontSize: 14,
+    fontFamily: FontFamily.extrabold,
+    color: INK,
+  },
+  cardSub: {
+    fontSize: 11,
+    fontFamily: FontFamily.medium,
+    color: INK_SUB,
+    lineHeight: 15,
   },
   cta: {
-    marginTop: 10,
-    fontSize: 11,
-    fontWeight: '900',
-    color: '#0B2A66',
-    backgroundColor: 'rgba(11, 42, 102, 0.12)',
-    borderRadius: 10,
-    paddingHorizontal: 10,
-    paddingVertical: 7,
-    alignSelf: 'flex-start',
+    marginTop: 4,
+    fontSize: 10,
+    fontFamily: FontFamily.extrabold,
+    color: CYAN,
     textTransform: 'uppercase',
-    letterSpacing: 0.3,
+    letterSpacing: 0.35,
   },
   selectedLine: {
-    marginTop: 10,
-    fontSize: 12,
-    fontWeight: '700',
-    color: '#0B2A66',
+    marginTop: 4,
+    fontSize: 11,
+    fontFamily: FontFamily.semibold,
+    color: INK_MUTED,
   },
 });

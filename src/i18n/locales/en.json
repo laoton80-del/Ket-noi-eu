@@ -633,8 +633,90 @@
   },
   "travelHub": {
     "screenTitle": "VIONA Travel",
-    "mapKicker": "Map · Local guides",
+    "railSubtitle": "Travel Lite · companion & language help",
+    "heroKicker": "TRAVEL LITE",
+    "heroCompanion": "VIONA Travel is your on-trip companion.",
+    "heroSub": "Situation-first guidance and language help — not an OTA checkout.",
+    "quickHelpKicker": "QUICK HELP",
+    "groupMove": "MOVE",
+    "groupStayEat": "STAY & EAT",
+    "groupSafetyHelp": "SAFETY & HELP",
+    "scenariosKicker": "TRAVEL SITUATIONS",
+    "scenarioChipSafety": "Safety",
+    "connectedUniversesKicker": "CONNECTED UNIVERSES",
+    "connectedLocal": "Local hub",
+    "connectedAcademy": "Academy Lite",
+    "connectedBusiness": "Business hub",
+    "consentHeadline": "Location & travel (GDPR)",
+    "consentCopy": "Weather, on-ground helpers, and nearby restaurant cues need location. You can decline and continue with default coordinates.",
+    "consentPrimary": "Allow location for Travel",
+    "consentSecondary": "Skip — continue with limited mode",
+    "modalClose": "Close",
+    "scenario": {
+      "airport": {
+        "title": "Airport",
+        "sub": "Check-in, security, baggage"
+      },
+      "hotel": {
+        "title": "Browse stays",
+        "sub": "Hotel help & lodging info — no confirmed booking in app"
+      },
+      "taxi": {
+        "title": "Rides assist",
+        "sub": "Request travel call help (demo) — not a booked ride"
+      },
+      "restaurant": {
+        "title": "Restaurant",
+        "sub": "Reservations, allergies, menu"
+      },
+      "transit": {
+        "title": "Public transport",
+        "sub": "Tickets, routes, transfers"
+      },
+      "shopping": {
+        "title": "Shopping",
+        "sub": "Returns, sizing, receipts"
+      },
+      "hospital": {
+        "title": "Hospital & pharmacy",
+        "sub": "Symptoms, appointments (not ER)"
+      },
+      "emergency": {
+        "title": "Emergency & police",
+        "sub": "Safety reporting — use local emergency numbers"
+      },
+      "translation": {
+        "title": "Translation assist",
+        "sub": "Live interpreter · Leona call help"
+      }
+    },
+    "connectedLocalHelpKicker": "CONNECTED LOCAL HELP",
+    "connectedLocalHelpTitle": "Local on-ground support",
+    "connectedLocalHelpSub": "Opens Local universe — guides & fixers, not a Travel scenario.",
+    "connectedLocalHelpCta": "Open Local guides",
+    "connectedLocalHelpA11y": "Open Local on-ground support",
     "localHelpersBadge": "Local assistants",
+    "enableLocationCta": "Enable location for weather & nearby cues",
+    "enableLocationA11y": "Enable location for Travel",
+    "leonaPrefill": {
+      "taxi": "Ride assist request (demo): help call or message a driver about pickup and fare. VIONA does not book or pay for rides in this build.",
+      "transit": "Transit assist (demo): help ask stations or operators about tickets and routes. VIONA does not buy tickets in app.",
+      "shopping": "Shopping assist (demo): help call a store about returns or orders. VIONA does not pay on your behalf in app."
+    },
+    "weather": {
+      "clear": "Clear skies",
+      "cloudy": "Mostly cloudy",
+      "lightRain": "Light rain",
+      "storms": "Scattered storms",
+      "watch": "Weather watch"
+    },
+    "fx": {
+      "cz": "1 EUR ≈ 24.6 CZK · 1 USD ≈ 22.8 CZK (demo reference)",
+      "pl": "1 EUR ≈ 4.32 PLN · 1 USD ≈ 3.98 PLN (demo reference)",
+      "vn": "1 EUR ≈ 27,500 ₫ · 1 USD ≈ 25,400 ₫ (demo reference)",
+      "default": "1 EUR ≈ 1.08 USD (demo reference)"
+    },
+    "mapKicker": "Map · Local guides",
     "exploreCta": "Explore locally",
     "exploreA11y": "Open local assistants",
     "flightTitle": "Book flights",
@@ -686,10 +768,14 @@
   },
   "travel": {
     "direction": {
-      "title": "Who are you on this trip?",
-      "subtitle": "Pick a direction lens. Surfaces stay Lite / Pilot / Coming soon — no live provider fulfillment in this build.",
+      "sectionKicker": "TRAVEL LENS",
+      "title": "Personalize your view (optional)",
+      "subtitle": "Choose a travel lens for tips in this session. It does not book rides, stays, or payments.",
       "contextLine": "Smart Trio preview: {{market}} · {{native}}",
       "liteNotice": "Lens choice is on-device for this session only. It does not book services, charge cards, or change production AI.",
+      "collapsedHint": "Optional session lens — tap to expand. Does not book rides or stays.",
+      "expandA11y": "Expand travel lens options",
+      "collapseA11y": "Collapse travel lens options",
       "select": "Set as active lens",
       "selected": "Active lens: {{label}}",
       "status": {

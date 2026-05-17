@@ -85,7 +85,7 @@ export function useMiniAppShellChrome(options: UseMiniAppShellChromeOptions = {}
   const { isWeb: isWebFullscreen, isSupported: isFullscreenSupported, isFullscreen, toggleFullscreen } =
     useFullscreenMode();
 
-  const desktopWeb = Platform.OS === 'web' && width > 768;
+  const desktopWeb = Platform.OS === 'web' && width >= 768;
 
   const goHome = useCallback(() => {
     const tab = homeTabForRole(activeRole);

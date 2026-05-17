@@ -70,7 +70,6 @@ import { CashOutScreen } from './src/screens/b2c/CashOutScreen';
 import { DashboardB2CPreviewScreen } from './src/screens/b2c/DashboardB2CPreviewScreen';
 import { RadarDiscoveryScreen } from './src/screens/RadarDiscoveryScreen';
 import { LifeOSDashboard } from './src/screens/LifeOSDashboard';
-import { TravelCompanionScreen } from './src/screens/TravelCompanionScreen';
 import { TravelHospitalityScreen } from './src/screens/b2c/TravelHospitalityScreen';
 import { FlightSearchScreen } from './src/screens/b2c/travel/FlightSearchScreen';
 import { TravelHubScreen } from './src/screens/b2c/travel/TravelHubScreen';
@@ -144,12 +143,6 @@ import {
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
-const TravelCompanionScreenGated = mvpGateByFlag(
-  'travelLiteEnabled',
-  'Travel Lite',
-  MVP_TRAVEL_LITE_OFF_MSG,
-  TravelCompanionScreen
-);
 const TravelHubStackScreenGated = mvpGateByFlag(
   'travelLiteEnabled',
   'Travel Lite',
@@ -446,7 +439,7 @@ function AppNavigationShell({
               <Stack.Screen name="PersonalHub" component={CaNhanScreen} />
               <Stack.Screen name="LifeOSDashboard" component={LifeOSDashboard} />
               <Stack.Screen name="DashboardB2CPreview" component={DashboardB2CPreviewScreen} />
-              <Stack.Screen name="TravelCompanion" component={TravelCompanionScreenGated} />
+              <Stack.Screen name="TravelCompanion" component={TravelHubStackScreenGated} />
               <Stack.Screen
                 name="TravelHub"
                 component={TravelHubStackScreenGated}

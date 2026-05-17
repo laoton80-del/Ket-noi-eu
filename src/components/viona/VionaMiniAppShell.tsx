@@ -31,13 +31,19 @@ export type VionaMiniAppUniverse = 'local' | 'travel' | 'academy' | 'business' |
 
 export type VionaMiniAppSurfaceMode = 'midnight' | 'light' | 'danger';
 
+/** `fixed` overlays the tab bar (stack/deep-link). `inline` scrolls with content (tab-root hubs). */
+export type VionaMiniAppDockPlacement = 'fixed' | 'inline' | 'none';
+
 export type VionaMiniAppShellProps = Readonly<{
   universe: VionaMiniAppUniverse;
   title: string;
   subtitle?: string;
   caption?: string;
   children: ReactNode;
+  /** Rendered after an inline dock (e.g. connected universes below escape pills). */
+  childrenAfterDock?: ReactNode;
   showDock?: boolean;
+  dockPlacement?: VionaMiniAppDockPlacement;
   dockCurrentLabel?: string;
   scrollBottomClearance?: number;
   surfaceMode?: VionaMiniAppSurfaceMode;
@@ -49,6 +55,9 @@ export type VionaMiniAppShellProps = Readonly<{
   rootStyle?: StyleProp<ViewStyle>;
   scrollRef?: RefObject<ScrollView | null>;
 }>;
+
+/** Web widths at or above this use tablet-capable shell (rail, legacy suppression, compact tier). */
+export const VIONA_TABLET_MIN_WIDTH = 768;
 
 const DEFAULT_DOCK_BOTTOM_OFFSET = 58;
 const DEFAULT_SCROLL_CLEARANCE = 172;
@@ -81,7 +90,9 @@ export function VionaMiniAppShell({
   subtitle = '',
   caption = '',
   children,
+  childrenAfterDock,
   showDock = false,
+  dockPlacement,
   dockCurrentLabel,
   scrollBottomClearance,
   surfaceMode = 'midnight',
@@ -97,7 +108,7 @@ export function VionaMiniAppShell({
   const { width } = useWindowDimensions();
   const insets = useSafeAreaInsets();
   const homeCommand = useHomeCommand();
-  const desktopWeb = Platform.OS === 'web' && width > 768;
+  const desktopWeb = Platform.OS === 'web' && width >= VIONA_TABLET_MIN_WIDTH;
   const enableDaylight = surfaceMode === 'midnight' && universe !== 'sos';
 
   const chrome = useMiniAppShellChrome({ enableDaylightToggle: enableDaylight });
@@ -117,9 +128,16 @@ export function VionaMiniAppShell({
     scenePadMin: 40,
   });
 
+  const resolvedDockPlacement: VionaMiniAppDockPlacement = !showDock
+    ? 'none'
+    : (dockPlacement ?? 'fixed');
+
   const scrollPadBottom = useMemo(() => {
     if (scrollBottomClearance != null) return scrollBottomClearance;
-    if (!showDock) return Math.max(insets.bottom, 12) + 24;
+    if (resolvedDockPlacement === 'none') return Math.max(insets.bottom, 12) + 24;
+    if (resolvedDockPlacement === 'inline') {
+      return Math.max(insets.bottom, 12) + 24;
+    }
     return (
       DEFAULT_DOCK_BOTTOM_OFFSET +
       insets.bottom +
@@ -127,7 +145,7 @@ export function VionaMiniAppShell({
       Math.max(insets.bottom, 12) +
       20
     );
-  }, [insets.bottom, scrollBottomClearance, showDock]);
+  }, [insets.bottom, resolvedDockPlacement, scrollBottomClearance]);
 
   const dockBottomOffset = DEFAULT_DOCK_BOTTOM_OFFSET + insets.bottom;
   const defaultDockLabels: Record<VionaMiniAppUniverse, string> = useMemo(
@@ -144,7 +162,7 @@ export function VionaMiniAppShell({
 
   const topRailProps = useMemo(
     () => ({
-      density: desktopWeb && width < 1180 ? ('compact' as const) : ('comfortable' as const),
+      density: Platform.OS === 'web' && width < 1180 ? ('compact' as const) : ('comfortable' as const),
       onPressLogo: handleHome,
       titleLine1: title,
       titleLine2,
@@ -159,8 +177,27 @@ export function VionaMiniAppShell({
       showRolePicker: chrome.showRolePicker,
       onPressRole: chrome.openRolePicker,
     }),
-    [chrome, desktopWeb, handleHome, title, titleA11y, titleLine2, width]
+    [chrome, handleHome, title, titleA11y, titleLine2, width]
   );
+
+  const dockBar =
+    resolvedDockPlacement === 'none' ? null : (
+      <VionaBottomEscapeBar
+        placement={resolvedDockPlacement === 'inline' ? 'inline' : 'fixed'}
+        variant={resolvedDockPlacement === 'inline' ? 'compact' : 'default'}
+        subdued={resolvedDockPlacement === 'inline'}
+        fixedBottomOffset={dockBottomOffset}
+        showBack
+        showHome
+        onBack={handleBack}
+        onHome={handleHome}
+        showCurrent={resolvedCurrentLabel.length > 0}
+        currentLabel={resolvedCurrentLabel}
+        onPressCurrent={onPressCurrent ?? handleHome}
+        currentAccentKind={UNIVERSE_DOCK_ACCENT[universe]}
+        currentIcon={UNIVERSE_DOCK_ICON[universe]}
+      />
+    );
 
   return (
     <SafeAreaView
@@ -188,23 +225,13 @@ export function VionaMiniAppShell({
           keyboardShouldPersistTaps="handled"
         >
           {children}
+          {resolvedDockPlacement === 'inline' && dockBar ? (
+            <View style={styles.inlineDockSlot}>{dockBar}</View>
+          ) : null}
+          {childrenAfterDock}
         </ScrollView>
 
-        {showDock ? (
-          <VionaBottomEscapeBar
-            placement="fixed"
-            fixedBottomOffset={dockBottomOffset}
-            showBack
-            showHome
-            onBack={handleBack}
-            onHome={handleHome}
-            showCurrent={resolvedCurrentLabel.length > 0}
-            currentLabel={resolvedCurrentLabel}
-            onPressCurrent={onPressCurrent ?? handleHome}
-            currentAccentKind={UNIVERSE_DOCK_ACCENT[universe]}
-            currentIcon={UNIVERSE_DOCK_ICON[universe]}
-          />
-        ) : null}
+        {resolvedDockPlacement === 'fixed' && dockBar ? dockBar : null}
       </View>
 
       {!homeCommand ? (
@@ -239,5 +266,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: theme.spacing.lg,
     paddingTop: theme.spacing.sm,
     gap: theme.spacing.md,
+  },
+  inlineDockSlot: {
+    marginTop: theme.spacing.xl,
+    marginBottom: theme.spacing.sm,
+    paddingVertical: theme.spacing.xs,
+    opacity: 0.92,
   },
 });

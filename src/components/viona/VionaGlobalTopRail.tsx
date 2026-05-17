@@ -92,6 +92,16 @@ export function VionaGlobalTopRail({
   const compactDensity = density === 'compact';
   const useCompactLogo = compactDensity || (windowWidth > 0 && windowWidth < LOGO_COMPACT_BREAKPOINT);
   const showContext = titleLine1.trim().length > 0 || titleLine2.trim().length > 0;
+  const hideUtilityLabels = windowWidth > 0 && windowWidth < 520;
+  const utilityTouchTarget = Platform.OS === 'web' && windowWidth > 0 && windowWidth < 900;
+  const webRightReservePx =
+    Platform.OS === 'web'
+      ? windowWidth < 480
+        ? 16
+        : windowWidth < 768
+          ? 28
+          : vionaGlobalTopRailWebRightReservePx(windowWidth)
+      : 0;
 
   return (
     <View style={[styles.barShell, compactDensity && styles.barShellCompact]}>
@@ -151,7 +161,7 @@ export function VionaGlobalTopRail({
               style={[
                 styles.utilityCluster,
                 compactDensity && styles.utilityClusterCompact,
-                Platform.OS === 'web' ? { paddingRight: vionaGlobalTopRailWebRightReservePx(windowWidth) } : null,
+                Platform.OS === 'web' ? { paddingRight: webRightReservePx } : null,
               ]}
             >
               {showRolePicker && onPressRole ? (
@@ -178,6 +188,8 @@ export function VionaGlobalTopRail({
                 style={({ pressed }) => [
                   styles.utilBtn,
                   compactDensity && styles.utilBtnCompact,
+                  utilityTouchTarget && styles.utilBtnTouch,
+                  hideUtilityLabels && styles.utilBtnIconOnly,
                   pressed && styles.pressed,
                 ]}
               >
@@ -186,9 +198,11 @@ export function VionaGlobalTopRail({
                   size={compactDensity ? 15 : 16}
                   color={vionaTokens.fashionTech.champagne}
                 />
-                <Text style={styles.utilLabel} numberOfLines={1} ellipsizeMode="tail">
-                  {t('shell.utility.language')}
-                </Text>
+                {hideUtilityLabels ? null : (
+                  <Text style={styles.utilLabel} numberOfLines={1} ellipsizeMode="tail">
+                    {t('shell.utility.language')}
+                  </Text>
+                )}
               </Pressable>
               {daylightControl ? (
                 <Pressable
@@ -243,6 +257,8 @@ export function VionaGlobalTopRail({
                   style={({ pressed }) => [
                     styles.utilBtn,
                     compactDensity && styles.utilBtnCompact,
+                    utilityTouchTarget && styles.utilBtnTouch,
+                    hideUtilityLabels && styles.utilBtnIconOnly,
                     pressed && styles.pressed,
                   ]}
                 >
@@ -251,9 +267,11 @@ export function VionaGlobalTopRail({
                     size={compactDensity ? 15 : 16}
                     color={vionaTokens.fashionTech.champagne}
                   />
-                  <Text style={styles.utilLabel} numberOfLines={1} ellipsizeMode="tail">
-                    {t('shell.utility.vioCredits')}
-                  </Text>
+                  {hideUtilityLabels ? null : (
+                    <Text style={styles.utilLabel} numberOfLines={1} ellipsizeMode="tail">
+                      {t('shell.utility.vioCredits')}
+                    </Text>
+                  )}
                 </Pressable>
               ) : null}
               {onPressSettings ? (
@@ -284,6 +302,8 @@ export function VionaGlobalTopRail({
                 style={({ pressed }) => [
                   styles.utilBtn,
                   compactDensity && styles.utilBtnCompact,
+                  utilityTouchTarget && styles.utilBtnTouch,
+                  hideUtilityLabels && styles.utilBtnIconOnly,
                   styles.sosBtn,
                   pressed && styles.pressed,
                 ]}
@@ -291,15 +311,19 @@ export function VionaGlobalTopRail({
                 accessibilityLabel={t('sos.a11yChip')}
               >
                 <Ionicons name="shield" size={compactDensity ? 15 : 16} color={vionaTokens.fashionTech.sosNeon} />
-                <Text style={[styles.utilLabel, styles.sosLabel]} numberOfLines={1} ellipsizeMode="tail">
-                  {t('sos.chip')}
-                </Text>
+                {hideUtilityLabels ? null : (
+                  <Text style={[styles.utilLabel, styles.sosLabel]} numberOfLines={1} ellipsizeMode="tail">
+                    {t('sos.chip')}
+                  </Text>
+                )}
               </Pressable>
               <Pressable
                 onPress={onPressAccount}
                 style={({ pressed }) => [
                   styles.utilBtn,
                   compactDensity && styles.utilBtnCompact,
+                  utilityTouchTarget && styles.utilBtnTouch,
+                  hideUtilityLabels && styles.utilBtnIconOnly,
                   pressed && styles.pressed,
                 ]}
               >
@@ -308,9 +332,11 @@ export function VionaGlobalTopRail({
                   size={compactDensity ? 15 : 16}
                   color={vionaTokens.fashionTech.champagne}
                 />
-                <Text style={styles.utilLabel} numberOfLines={1} ellipsizeMode="tail">
-                  {t('shell.utility.accountProfile')}
-                </Text>
+                {hideUtilityLabels ? null : (
+                  <Text style={styles.utilLabel} numberOfLines={1} ellipsizeMode="tail">
+                    {t('shell.utility.accountProfile')}
+                  </Text>
+                )}
               </Pressable>
               {trailingSlot}
             </View>
@@ -672,6 +698,15 @@ const styles = StyleSheet.create({
     minHeight: 32,
     paddingHorizontal: 9,
     maxWidth: 154,
+  },
+  utilBtnTouch: {
+    minHeight: 44,
+    minWidth: 44,
+  },
+  utilBtnIconOnly: {
+    paddingHorizontal: 10,
+    maxWidth: 48,
+    gap: 0,
   },
   fullscreenBtn: {
     maxWidth: 148,

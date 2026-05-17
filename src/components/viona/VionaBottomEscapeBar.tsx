@@ -36,6 +36,10 @@ export type VionaBottomEscapeBarProps = Readonly<{
   placement?: 'inline' | 'fixed';
   /** Used when `placement` is `fixed` — distance from screen bottom (above safe area). */
   fixedBottomOffset?: number;
+  /** Tighter pills for inline tab-root hubs (avoids heavy double chrome). */
+  variant?: 'default' | 'compact';
+  /** Lower visual weight when inline above tab bar (tab-root hubs). */
+  subdued?: boolean;
 }>;
 
 function accentFor(kind: VionaBottomEscapeAccent) {
@@ -53,6 +57,8 @@ function EscapePill({
   accentKind,
   onPress,
   active = false,
+  compact = false,
+  subdued = false,
 }: Readonly<{
   icon: keyof typeof Ionicons.glyphMap;
   label: string;
@@ -60,6 +66,8 @@ function EscapePill({
   accentKind: VionaBottomEscapeAccent;
   onPress: () => void;
   active?: boolean;
+  compact?: boolean;
+  subdued?: boolean;
 }>): ReactElement {
   const [hovered, setHovered] = useState(false);
   const a = accentFor(accentKind);
@@ -67,6 +75,8 @@ function EscapePill({
   const stroke = hovered ? a.strokeHover : a.stroke;
   const glow = hovered ? a.glowHover : a.glow;
   const wash = hovered ? a.washHover : a.washDefault;
+  const baseShadow = subdued ? 0.12 : 0.22;
+  const hoverShadow = subdued ? 0.24 : 0.42;
 
   return (
     <Pressable
@@ -77,16 +87,18 @@ function EscapePill({
       onHoverOut={Platform.OS === 'web' ? () => setHovered(false) : undefined}
       style={({ pressed }) => [
         styles.pill,
+        compact && styles.pillCompact,
+        subdued && styles.pillSubdued,
         {
           borderColor: active ? stroke : stroke,
           backgroundColor: active ? a.washHover : wash,
           shadowColor: glow,
-          shadowOpacity: hovered || active ? 0.42 : 0.22,
-          shadowRadius: hovered || active ? 12 : 6,
+          shadowOpacity: hovered || active ? hoverShadow : baseShadow,
+          shadowRadius: hovered || active ? (subdued ? 8 : 12) : subdued ? 4 : 6,
           shadowOffset: { width: 0, height: 0 },
         },
         active && styles.pillActive,
-        Platform.OS === 'web' && hovered && styles.pillHoverLift,
+        Platform.OS === 'web' && hovered && !subdued && styles.pillHoverLift,
         pressed && { transform: [{ scale: 0.985 }] },
       ]}
     >
@@ -114,11 +126,14 @@ export function VionaBottomEscapeBar({
   align = 'center',
   placement = 'inline',
   fixedBottomOffset,
+  variant = 'default',
+  subdued = false,
 }: VionaBottomEscapeBarProps): ReactElement | null {
   const { t } = useTranslation();
   const insets = useSafeAreaInsets();
   const { width } = useWindowDimensions();
-  const compact = width < 420;
+  const narrow = width < 420;
+  const pillCompact = variant === 'compact' || narrow;
 
   const labels = useMemo(
     () => ({
@@ -141,7 +156,13 @@ export function VionaBottomEscapeBar({
     fixedBottomOffset ?? Math.max(insets.bottom, 10) + bottomInsetExtra;
 
   const rail = (
-    <View style={[styles.glassRail, compact && styles.glassRailCompact]}>
+    <View
+      style={[
+        styles.glassRail,
+        pillCompact && styles.glassRailCompact,
+        subdued && styles.glassRailSubdued,
+      ]}
+    >
       {showBack && onBack ? (
         <EscapePill
           icon="arrow-back"
@@ -149,6 +170,8 @@ export function VionaBottomEscapeBar({
           a11y={labels.backA11y}
           accentKind="cyan"
           onPress={onBack}
+          compact={pillCompact}
+          subdued={subdued}
         />
       ) : null}
       {showHome && onHome ? (
@@ -158,6 +181,8 @@ export function VionaBottomEscapeBar({
           a11y={labels.homeA11y}
           accentKind="emerald"
           onPress={onHome}
+          compact={pillCompact}
+          subdued={subdued}
         />
       ) : null}
       {showCurrent && currentLabel.trim().length > 0 && onPressCurrent ? (
@@ -168,6 +193,8 @@ export function VionaBottomEscapeBar({
           accentKind={currentAccentKind}
           onPress={onPressCurrent}
           active
+          compact={pillCompact}
+          subdued={subdued}
         />
       ) : null}
       {showClose && onClose ? (
@@ -177,6 +204,8 @@ export function VionaBottomEscapeBar({
           a11y={labels.closeA11y}
           accentKind="magenta"
           onPress={onClose}
+          compact={pillCompact}
+          subdued={subdued}
         />
       ) : null}
     </View>
@@ -221,7 +250,7 @@ const styles = StyleSheet.create({
     marginTop: 0,
   },
   wrap: {
-    marginTop: 20,
+    marginTop: 8,
     paddingHorizontal: 4,
   },
   wrapAlignCenter: {
@@ -249,6 +278,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     gap: 8,
   },
+  glassRailSubdued: {
+    backgroundColor: 'rgba(7, 12, 26, 0.04)',
+    paddingVertical: 6,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: 'rgba(148, 163, 184, 0.1)',
+  },
   pill: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -258,6 +293,15 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     borderRadius: 999,
     borderWidth: 1,
+  },
+  pillCompact: {
+    minHeight: 44,
+    paddingHorizontal: 11,
+    paddingVertical: 6,
+    gap: 5,
+  },
+  pillSubdued: {
+    borderWidth: StyleSheet.hairlineWidth,
   },
   pillHoverLift: {
     transform: [{ translateY: -1 }],

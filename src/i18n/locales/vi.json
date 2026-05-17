@@ -633,8 +633,90 @@
   },
   "travelHub": {
     "screenTitle": "VIONA Du lịch",
-    "mapKicker": "Bản đồ · Thổ địa",
+    "railSubtitle": "Travel Lite · đồng hành & ngôn ngữ",
+    "heroKicker": "TRAVEL LITE",
+    "heroCompanion": "VIONA Travel là người bạn đồng hành trên hành trình.",
+    "heroSub": "Hướng dẫn theo tình huống & hỗ trợ ngôn ngữ — không phải đặt phòng/OTA.",
+    "quickHelpKicker": "TRỢ GIÚP NHANH",
+    "groupMove": "DI CHUYỂN",
+    "groupStayEat": "LƯU TRÚ & ĂN UỐNG",
+    "groupSafetyHelp": "AN TOÀN & HỖ TRỢ",
+    "scenariosKicker": "TÌNH HUỐNG DU LỊCH",
+    "scenarioChipSafety": "An toàn",
+    "connectedUniversesKicker": "VŨ TRỤ LIÊN KẾT",
+    "connectedLocal": "Local hub",
+    "connectedAcademy": "Academy Lite",
+    "connectedBusiness": "Doanh nghiệp",
+    "consentHeadline": "Vị trí & du lịch (GDPR)",
+    "consentCopy": "Thời tiết, thổ địa và gợi ý quán gần bạn cần quyền vị trí. Bạn có thể từ chối và dùng tọa độ mặc định.",
+    "consentPrimary": "Đồng ý — dùng vị trí cho Travel",
+    "consentSecondary": "Không chia sẻ — tiếp tục hạn chế",
+    "modalClose": "Đóng",
+    "scenario": {
+      "airport": {
+        "title": "Sân bay",
+        "sub": "Check-in, an ninh, hành lý"
+      },
+      "hotel": {
+        "title": "Xem chỗ nghỉ",
+        "sub": "Gợi ý khách sạn — không đặt phòng xác nhận trong app"
+      },
+      "taxi": {
+        "title": "Hỗ trợ xe",
+        "sub": "Yêu cầu gọi hỗ trợ (demo) — không phải xe đã đặt"
+      },
+      "restaurant": {
+        "title": "Nhà hàng",
+        "sub": "Đặt bàn, dị ứng, gọi món"
+      },
+      "transit": {
+        "title": "Phương tiện công cộng",
+        "sub": "Vé, lộ trình, chuyển tuyến"
+      },
+      "shopping": {
+        "title": "Mua sắm",
+        "sub": "Đổi trả, size, hóa đơn"
+      },
+      "hospital": {
+        "title": "Bệnh viện & thuốc",
+        "sub": "Triệu chứng, lịch hẹn (không cấp cứu)"
+      },
+      "emergency": {
+        "title": "Khẩn cấp & cảnh sát",
+        "sub": "An toàn — gọi số khẩn cấp địa phương"
+      },
+      "translation": {
+        "title": "Hỗ trợ phiên dịch",
+        "sub": "Phiên dịch trực tiếp · Leona"
+      }
+    },
+    "connectedLocalHelpKicker": "HỖ TRỢ LOCAL LIÊN KẾT",
+    "connectedLocalHelpTitle": "Hỗ trợ địa phương (Local)",
+    "connectedLocalHelpSub": "Mở vũ trụ Local — thổ địa & fixer, không phải thẻ tình huống Travel.",
+    "connectedLocalHelpCta": "Mở Local guides",
+    "connectedLocalHelpA11y": "Mở hỗ trợ địa phương Local",
     "localHelpersBadge": "Người hỗ trợ địa phương",
+    "enableLocationCta": "Bật vị trí cho thời tiết & gợi ý gần bạn",
+    "enableLocationA11y": "Bật vị trí cho Travel",
+    "leonaPrefill": {
+      "taxi": "Yêu cầu hỗ trợ xe (demo): giúp gọi hoặc nhắn tài xế về điểm đón và giá. VIONA không đặt hay thanh toán xe trong bản build này.",
+      "transit": "Hỗ trợ ga/PT (demo): giúp hỏi vé và lộ trình. VIONA không mua vé hộ trong app.",
+      "shopping": "Hỗ trợ mua sắm (demo): giúp gọi cửa hàng về đổi trả hoặc đơn hàng. VIONA không thanh toán thay trong app."
+    },
+    "weather": {
+      "clear": "Trời quang",
+      "cloudy": "Nhiều mây",
+      "lightRain": "Mưa nhẹ",
+      "storms": "Dông rải rác",
+      "watch": "Theo dõi cảnh báo"
+    },
+    "fx": {
+      "cz": "1 EUR ≈ 24,6 CZK · 1 USD ≈ 22,8 CZK (tham chiếu demo)",
+      "pl": "1 EUR ≈ 4,32 PLN · 1 USD ≈ 3,98 PLN (tham chiếu demo)",
+      "vn": "1 EUR ≈ 27.500 ₫ · 1 USD ≈ 25.400 ₫ (tham chiếu demo)",
+      "default": "1 EUR ≈ 1,08 USD (tham chiếu demo)"
+    },
+    "mapKicker": "Bản đồ · Thổ địa",
     "exploreCta": "Khám phá địa phương",
     "exploreA11y": "Mở người hỗ trợ địa phương",
     "flightTitle": "Đặt vé máy bay",
@@ -686,10 +768,14 @@
   },
   "travel": {
     "direction": {
-      "title": "Bạn là ai trong chuyến đi này?",
-      "subtitle": "Chọn góc nhìn (lens). Các lớp vẫn ở mức Lite / Pilot / Sắp có — không cam kết cung ứng dịch vụ thật trong bản build này.",
+      "sectionKicker": "GÓC NHÌN DU LỊCH",
+      "title": "Cá nhân hóa góc nhìn (tùy chọn)",
+      "subtitle": "Chọn lens cho mẹo trong phiên này. Không đặt xe, chỗ nghỉ hay thanh toán.",
       "contextLine": "Xem trước Smart Trio: {{market}} · {{native}}",
       "liteNotice": "Lựa chọn chỉ trên thiết bị cho phiên này. Không đặt dịch vụ, không thu phí, không đổi AI production.",
+      "collapsedHint": "Lens tùy chọn cho phiên — chạm để mở. Không đặt xe hay chỗ nghỉ.",
+      "expandA11y": "Mở tùy chọn travel lens",
+      "collapseA11y": "Thu gọn travel lens",
       "select": "Chọn góc nhìn này",
       "selected": "Đang chọn: {{label}}",
       "status": {
