@@ -205,7 +205,7 @@
 ```
 Blueprint aligned: yes (Hub OS / mini-app launchers; honest maturity labels)
 Universe: Hub / Core OS
-Mini-app: Home entry → Local / Travel / Academy / Care secondary
+Mini-app: Home entry → Local / Travel / Academy / Business primary; Care secondary
 Feature status: Lite/Demo/Pilot surfaces — unchanged semantics
 Business logic changed: no
 Payment touched: no
