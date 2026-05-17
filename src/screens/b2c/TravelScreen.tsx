@@ -600,17 +600,24 @@ export function TravelScreen() {
             <Image source={IMG_TRAVEL_HERO} style={styles.heroCinematicImage} resizeMode="cover" />
             <LinearGradient
               pointerEvents="none"
-              colors={['rgba(4, 8, 16, 0.82)', 'rgba(4, 10, 20, 0.48)', 'rgba(4, 10, 20, 0.1)']}
+              colors={['rgba(4, 8, 16, 0.9)', 'rgba(4, 10, 20, 0.62)', 'transparent']}
               start={{ x: 0, y: 0.5 }}
               end={{ x: 1, y: 0.5 }}
+              style={styles.heroTextVeil}
+            />
+            <LinearGradient
+              pointerEvents="none"
+              colors={['transparent', 'rgba(132, 238, 255, 0.2)', 'rgba(246, 212, 110, 0.12)', 'rgba(200, 160, 255, 0.1)']}
+              start={{ x: 0.25, y: 0.15 }}
+              end={{ x: 1, y: 0.9 }}
               style={StyleSheet.absoluteFillObject}
             />
             <LinearGradient
               pointerEvents="none"
-              colors={['transparent', 'rgba(132, 238, 255, 0.14)', 'rgba(246, 212, 110, 0.08)']}
-              start={{ x: 0.35, y: 0.2 }}
-              end={{ x: 1, y: 0.85 }}
-              style={StyleSheet.absoluteFillObject}
+              colors={['transparent', 'rgba(132, 238, 255, 0.35)', 'transparent']}
+              start={{ x: 0.2, y: 0.45 }}
+              end={{ x: 1, y: 0.55 }}
+              style={styles.heroRouteGlow}
             />
             <View style={styles.heroTextStack}>
               <Text style={styles.kicker}>{t('travelHub.heroKicker')}</Text>
@@ -802,11 +809,26 @@ const styles = StyleSheet.create({
   },
   heroCinematicImage: {
     position: 'absolute',
-    top: -4,
-    right: -8,
-    bottom: -4,
-    width: '68%',
-    opacity: 0.97,
+    top: -6,
+    right: -12,
+    bottom: -6,
+    width: '72%',
+    opacity: 1,
+  },
+  heroTextVeil: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    bottom: 0,
+    width: '62%',
+  },
+  heroRouteGlow: {
+    position: 'absolute',
+    top: '42%',
+    left: '18%',
+    right: 0,
+    height: 3,
+    opacity: 0.85,
   },
   heroTextStack: {
     gap: 5,
@@ -863,18 +885,18 @@ const styles = StyleSheet.create({
   quickHelpSectionKicker: {
     fontSize: 10,
     fontFamily: FontFamily.extrabold,
-    color: 'rgba(168, 232, 255, 0.99)',
-    letterSpacing: 1.05,
+    color: 'rgba(188, 238, 255, 1)',
+    letterSpacing: 1.1,
     marginTop: 4,
     marginBottom: 10,
-    textShadowColor: 'rgba(92, 205, 255, 0.55)',
+    textShadowColor: 'rgba(92, 205, 255, 0.68)',
     textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 8,
+    textShadowRadius: 10,
   },
   scenariosSectionKicker: {
     fontSize: 9,
     fontFamily: FontFamily.extrabold,
-    color: 'rgba(186, 198, 214, 0.88)',
+    color: 'rgba(186, 198, 214, 0.72)',
     letterSpacing: 0.9,
     marginTop: 2,
     marginBottom: 10,
@@ -920,7 +942,7 @@ const styles = StyleSheet.create({
     textShadowRadius: 2,
   },
   quickHelpChevron: {
-    opacity: 0.82,
+    opacity: 0.38,
   },
   groupBlock: {
     marginBottom: theme.spacing.xs,
@@ -980,12 +1002,12 @@ const styles = StyleSheet.create({
     paddingVertical: 2,
     borderRadius: 6,
     borderWidth: StyleSheet.hairlineWidth,
-    borderColor: 'rgba(255, 110, 140, 0.62)',
-    backgroundColor: 'rgba(255, 110, 140, 0.14)',
+    borderColor: 'rgba(255, 120, 155, 0.78)',
+    backgroundColor: 'rgba(255, 110, 140, 0.16)',
     overflow: 'hidden',
     textShadowColor: travelSemanticTokens('magenta').glow,
     textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 4,
+    textShadowRadius: 6,
   },
   scenarioTitle: {
     fontSize: 13,

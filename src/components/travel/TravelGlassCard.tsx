@@ -50,13 +50,13 @@ const SEMANTIC_TOKENS: Readonly<Record<TravelSemanticAccent, VionaGlobalLightNet
 /** Per-accent rim/glint visibility (non-cyan reads clearer). */
 const ACCENT_LIFT: Readonly<Record<TravelSemanticAccent, number>> = {
   cyan: 1.06,
-  gold: 1.26,
-  emerald: 1.24,
-  violet: 1.22,
-  magenta: 1.28,
+  gold: 1.44,
+  emerald: 1.41,
+  violet: 1.39,
+  magenta: 1.46,
 };
 
-const CAPSULE_GLOW_BOOST = 1.22;
+const CAPSULE_GLOW_BOOST = 1.3;
 
 export function travelSemanticTokens(accent: TravelSemanticAccent): VionaGlobalLightNetworkAccentTokens {
   return SEMANTIC_TOKENS[accent];
@@ -83,24 +83,24 @@ function resolveIntensity(
 ): IntensitySpec {
   if (visual === 'hero') {
     return {
-      glowMul: 1.58,
-      edgeMul: 1.04,
-      rimMul: 1.12,
-      washMul: 1.22,
+      glowMul: 1.64,
+      edgeMul: 1.02,
+      rimMul: 1.14,
+      washMul: 1.28,
       tier: 'hero',
-      outerShadow: 0.54,
-      edgePx: 4,
+      outerShadow: 0.56,
+      edgePx: 3,
     };
   }
   if (visual === 'quickHelp' || intensity === 'primary') {
     return {
-      glowMul: 1.88,
-      edgeMul: 1.1,
-      rimMul: 1.2,
-      washMul: 1.42,
+      glowMul: 2.04,
+      edgeMul: 1.08,
+      rimMul: 1.28,
+      washMul: 1.54,
       tier: 'service',
-      outerShadow: 0.54,
-      edgePx: 4,
+      outerShadow: 0.58,
+      edgePx: 3,
     };
   }
   if (intensity === 'quiet') {
@@ -115,12 +115,12 @@ function resolveIntensity(
     };
   }
   return {
-    glowMul: 1.22,
-    edgeMul: 0.72,
-    rimMul: 1.02,
-    washMul: 1.28,
+    glowMul: 1.28,
+    edgeMul: 0.68,
+    rimMul: 1.08,
+    washMul: 1.34,
     tier: 'service',
-    outerShadow: 0.42,
+    outerShadow: 0.44,
     edgePx: 2,
   };
 }
@@ -153,7 +153,7 @@ function TravelMaterialLayers({
   const accentBoost = ACCENT_LIFT[accent];
   const edgeAlpha = spec.edgeMul * accentBoost * lift;
   const edgePx = spec.edgePx;
-  const edgeBloomStrength = visual === 'standard' ? 0.58 : visual === 'quickHelp' ? 0.92 : 0.82;
+  const edgeBloomStrength = visual === 'standard' ? 0.52 : visual === 'quickHelp' ? 0.78 : 0.8;
 
   return (
     <>
@@ -172,7 +172,7 @@ function TravelMaterialLayers({
         end={{ x: 1, y: 1 }}
         style={[
           StyleSheet.absoluteFillObject,
-          { borderRadius: radius, opacity: 0.2 * spec.washMul * accentBoost * lift },
+          { borderRadius: radius, opacity: 0.24 * spec.washMul * accentBoost * lift },
         ]}
       />
       <LinearGradient
@@ -200,23 +200,35 @@ function TravelMaterialLayers({
             {
               borderTopLeftRadius: radius,
               borderBottomLeftRadius: radius,
-              opacity: (visual === 'quickHelp' ? 0.42 : 0.3) * spec.washMul * accentBoost * lift,
+              opacity: (visual === 'quickHelp' ? 0.5 : 0.36) * spec.washMul * accentBoost * lift,
             },
           ]}
         />
       ) : null}
       {visual === 'standard' ? (
-        <LinearGradient
-          pointerEvents="none"
-          colors={['rgba(255, 255, 255, 0.1)', 'rgba(255, 255, 255, 0.03)', 'transparent']}
-          start={{ x: 0.15, y: 0 }}
-          end={{ x: 0.85, y: 0.55 }}
-          style={[styles.interiorWell, { borderRadius: radius, opacity: 0.95 * lift }]}
-        />
+        <>
+          <LinearGradient
+            pointerEvents="none"
+            colors={[`${tokens.glow}`, `${tokens.washHover}`, 'rgba(5, 11, 20, 0)']}
+            start={{ x: 0.2, y: 0.5 }}
+            end={{ x: 1, y: 0.5 }}
+            style={[
+              styles.interiorWash,
+              { borderRadius: radius, opacity: 0.22 * spec.washMul * accentBoost * lift },
+            ]}
+          />
+          <LinearGradient
+            pointerEvents="none"
+            colors={['rgba(255, 255, 255, 0.12)', 'rgba(255, 255, 255, 0.04)', 'transparent']}
+            start={{ x: 0.15, y: 0 }}
+            end={{ x: 0.85, y: 0.55 }}
+            style={[styles.interiorWell, { borderRadius: radius, opacity: 0.95 * lift }]}
+          />
+        </>
       ) : null}
       <LinearGradient
         pointerEvents="none"
-        colors={['transparent', 'rgba(0, 0, 0, 0.2)', 'rgba(0, 0, 0, 0.52)']}
+        colors={['transparent', 'rgba(0, 0, 0, 0.16)', 'rgba(0, 0, 0, 0.48)']}
         start={{ x: 0.2, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={[
@@ -224,6 +236,18 @@ function TravelMaterialLayers({
           { borderBottomLeftRadius: radius, borderBottomRightRadius: radius },
         ]}
       />
+      {visual === 'standard' || visual === 'quickHelp' ? (
+        <LinearGradient
+          pointerEvents="none"
+          colors={['transparent', 'rgba(0, 0, 0, 0.08)', 'rgba(0, 0, 0, 0.38)']}
+          start={{ x: 0.55, y: 0.2 }}
+          end={{ x: 1, y: 1 }}
+          style={[
+            styles.depthShadowRight,
+            { borderBottomRightRadius: radius, borderTopRightRadius: radius },
+          ]}
+        />
+      ) : null}
       <View
         pointerEvents="none"
         style={[
@@ -243,10 +267,24 @@ function TravelMaterialLayers({
             borderTopLeftRadius: radius,
             borderBottomLeftRadius: radius,
             backgroundColor: tokens.glow,
-            opacity: 0.22 * spec.rimMul * edgeAlpha,
+            opacity: (visual === 'quickHelp' ? 0.3 : 0.26) * spec.rimMul * edgeAlpha,
           },
         ]}
       />
+      {visual === 'standard' || visual === 'quickHelp' ? (
+        <View
+          pointerEvents="none"
+          style={[
+            styles.rimRight,
+            {
+              borderTopRightRadius: radius,
+              borderBottomRightRadius: radius,
+              backgroundColor: tokens.glow,
+              opacity: 0.1 * spec.rimMul * accentBoost * lift,
+            },
+          ]}
+        />
+      ) : null}
       <View
         pointerEvents="none"
         style={[
@@ -303,7 +341,7 @@ function TravelMaterialLayers({
             borderTopRightRadius: radius,
             width: visual === 'standard' || visual === 'quickHelp' ? 52 : 46,
             height: visual === 'standard' || visual === 'quickHelp' ? 52 : 46,
-            opacity: 0.48 * spec.glowMul * accentBoost * lift,
+            opacity: (visual === 'quickHelp' ? 0.58 : 0.52) * spec.glowMul * accentBoost * lift,
           },
         ]}
       >
@@ -320,7 +358,7 @@ function TravelMaterialLayers({
           styles.cornerGlintBr,
           {
             borderBottomRightRadius: radius,
-            opacity: 0.18 * spec.glowMul * accentBoost,
+            opacity: (visual === 'quickHelp' ? 0.26 : 0.22) * spec.glowMul * accentBoost,
           },
         ]}
       >
@@ -341,7 +379,7 @@ function TravelMaterialLayers({
             colors={['rgba(255, 255, 255, 0.12)', 'rgba(255, 255, 255, 0.04)', 'transparent']}
             start={{ x: 0.12, y: 0 }}
             end={{ x: 0.88, y: 0.55 }}
-            style={[styles.interiorWell, { borderRadius: radius, opacity: 0.92 * lift }]}
+            style={[styles.interiorWell, { borderRadius: radius, opacity: 0.98 * lift }]}
           />
           <LinearGradient
             pointerEvents="none"
@@ -350,7 +388,7 @@ function TravelMaterialLayers({
             end={{ x: 1, y: 1 }}
             style={[
               styles.quickHelpAura,
-              { borderRadius: radius, opacity: 0.42 * spec.washMul * accentBoost * lift },
+              { borderRadius: radius, opacity: 0.5 * spec.washMul * accentBoost * lift },
             ]}
           />
         </>
@@ -374,9 +412,9 @@ function TravelHeroChrome({
       <LinearGradient
         pointerEvents="none"
         colors={[
-          'rgba(132, 238, 255, 0.28)',
-          'rgba(246, 212, 110, 0.16)',
-          'rgba(244, 230, 255, 0.18)',
+          'rgba(132, 238, 255, 0.34)',
+          'rgba(246, 212, 110, 0.22)',
+          'rgba(244, 230, 255, 0.24)',
           'rgba(5, 11, 20, 0)',
         ]}
         start={{ x: 0, y: 0.2 }}
@@ -385,44 +423,44 @@ function TravelHeroChrome({
       />
       <View
         pointerEvents="none"
-        style={[styles.heroOrb, styles.heroOrbCyan, { opacity: (hovered ? 0.82 : 0.68) * lift }]}
+        style={[styles.heroOrb, styles.heroOrbCyan, { opacity: (hovered ? 0.9 : 0.76) * lift }]}
       />
       <View
         pointerEvents="none"
-        style={[styles.heroOrb, styles.heroOrbViolet, { opacity: (hovered ? 0.52 : 0.38) * lift }]}
+        style={[styles.heroOrb, styles.heroOrbViolet, { opacity: (hovered ? 0.58 : 0.44) * lift }]}
       />
       <View
         pointerEvents="none"
-        style={[styles.heroOrb, styles.heroOrbGold, { opacity: (hovered ? 0.48 : 0.34) * lift }]}
+        style={[styles.heroOrb, styles.heroOrbGold, { opacity: (hovered ? 0.54 : 0.4) * lift }]}
       />
       <LinearGradient
         pointerEvents="none"
         colors={['transparent', tokens.glow, tokens.ink, tokens.glow, 'transparent']}
-        locations={[0, 0.35, 0.5, 0.65, 1]}
+        locations={[0, 0.32, 0.5, 0.68, 1]}
         start={{ x: 0, y: 0.5 }}
         end={{ x: 1, y: 0.5 }}
-        style={[styles.heroRouteLine, { opacity: (hovered ? 0.98 : 0.88) * lift }]}
+        style={[styles.heroRouteLine, { opacity: (hovered ? 1 : 0.94) * lift }]}
       />
       <LinearGradient
         pointerEvents="none"
-        colors={['transparent', 'rgba(132, 238, 255, 0.72)', 'transparent']}
-        start={{ x: 0.1, y: 0.35 }}
-        end={{ x: 0.9, y: 0.62 }}
-        style={[styles.heroRouteArc, { opacity: 0.56 * lift }]}
+        colors={['transparent', 'rgba(132, 238, 255, 0.88)', 'transparent']}
+        start={{ x: 0.08, y: 0.35 }}
+        end={{ x: 0.92, y: 0.62 }}
+        style={[styles.heroRouteArc, { opacity: 0.68 * lift }]}
       />
       <LinearGradient
         pointerEvents="none"
         colors={['transparent', VIONA_GLOBAL_LIGHT_NETWORK_ACCENT_GOLD.glow, 'transparent']}
         start={{ x: 0.15, y: 0.5 }}
         end={{ x: 0.7, y: 0.5 }}
-        style={[styles.heroRouteStreak, { opacity: 0.5 * lift }]}
+        style={[styles.heroRouteStreak, { opacity: 0.62 * lift }]}
       />
       <LinearGradient
         pointerEvents="none"
         colors={['transparent', VIONA_GLOBAL_LIGHT_NETWORK_ACCENT_VIOLET.glow, 'transparent']}
         start={{ x: 0.55, y: 0.48 }}
         end={{ x: 1, y: 0.52 }}
-        style={[styles.heroRouteStreak, { top: '48%', height: 2, opacity: 0.35 * lift }]}
+        style={[styles.heroRouteStreak, { top: '48%', height: 2, opacity: 0.44 * lift }]}
       />
       <View pointerEvents="none" style={[styles.heroParticle, styles.heroParticleA]} />
       <View pointerEvents="none" style={[styles.heroParticle, styles.heroParticleB]} />
@@ -461,8 +499,8 @@ export function TravelIconCapsule({
   const spec = resolveIntensity(intensity, prominent ? 'quickHelp' : 'standard');
   const accentBoost = ACCENT_LIFT[accent] * CAPSULE_GLOW_BOOST;
   const dim = prominent ? 44 : 38;
-  const glowPx = prominent ? 20 : 14;
-  const iconGlow = prominent ? 13 : 9;
+  const glowPx = prominent ? 22 : 15;
+  const iconGlow = prominent ? 14 : 10;
 
   return (
     <View
@@ -474,7 +512,7 @@ export function TravelIconCapsule({
           borderRadius: 10,
           borderColor: tokens.stroke,
           shadowColor: tokens.glow,
-          shadowOpacity: 0.38 + spec.glowMul * 0.18 * accentBoost,
+          shadowOpacity: 0.42 + spec.glowMul * 0.2 * accentBoost,
           shadowRadius: glowPx,
           shadowOffset: { width: 0, height: 0 },
         },
@@ -494,7 +532,7 @@ export function TravelIconCapsule({
         colors={[`${tokens.glow}`, `${tokens.washHover}`, 'transparent']}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
-        style={[StyleSheet.absoluteFillObject, { borderRadius: 10, opacity: 0.68 * accentBoost }]}
+        style={[StyleSheet.absoluteFillObject, { borderRadius: 10, opacity: (prominent ? 0.82 : 0.74) * accentBoost }]}
       />
       {secondary ? (
         <View
@@ -511,7 +549,10 @@ export function TravelIconCapsule({
       <View pointerEvents="none" style={styles.capsuleTopSheen} />
       <View
         pointerEvents="none"
-        style={[styles.capsuleInnerHighlight, { backgroundColor: tokens.glow, opacity: 0.14 * accentBoost }]}
+        style={[
+          styles.capsuleInnerHighlight,
+          { backgroundColor: tokens.glow, opacity: (prominent ? 0.2 : 0.16) * accentBoost },
+        ]}
       />
       <Ionicons
         name={icon}
@@ -637,6 +678,14 @@ const styles = StyleSheet.create({
     height: '72%',
     zIndex: 0,
   },
+  interiorWash: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    zIndex: 0,
+  },
   innerTopHighlight: {
     position: 'absolute',
     top: 0,
@@ -651,6 +700,14 @@ const styles = StyleSheet.create({
     right: 0,
     bottom: 0,
     height: '52%',
+    zIndex: 0,
+  },
+  depthShadowRight: {
+    position: 'absolute',
+    top: 0,
+    right: 0,
+    width: '42%',
+    bottom: 0,
     zIndex: 0,
   },
   rimTop: {
@@ -668,6 +725,14 @@ const styles = StyleSheet.create({
     left: 0,
     width: 1,
     bottom: 8,
+    zIndex: 2,
+  },
+  rimRight: {
+    position: 'absolute',
+    top: 10,
+    right: 0,
+    width: 1,
+    bottom: 10,
     zIndex: 2,
   },
   edgeBloom: {
