@@ -83,14 +83,14 @@
 
 | Command | Result |
 |---------|--------|
-| `npm ci` | PASS (May 2026 — retry after `Stop-Process node` fixed Windows EPERM on `lightningcss.win32-x64-msvc.node`; AE.3.2 re-run same) |
-| `npm run typecheck` | PASS |
-| `npm run lint` | PASS (warnings only, pre-existing + resolved unused helper warning in `MainTabNavigator`) |
-| `npm run ci:release-discipline` | PASS |
+| `npm run typecheck` | PASS (foundation checkpoint — May 2026; branch `pack-ae3-fashion-tech-home-shell`) |
+| `npm run lint` | PASS (0 errors; pre-existing warnings elsewhere in repo) |
+| `npm run smoke` | PASS (`release-smoke`: typecheck + navigation registry spot-check) |
+| `npm run ci:release-discipline` | PASS (AE.3 gate runs) |
 | `npm run brand:i18n-readiness` | PASS (allowlisted warnings) |
 | `npm run design:readiness` | PASS |
 
-Web smoke (`npx expo start --web --clear`, then `curl.exe`): **`GET /home`** → **200** `text/html`; dev **`index.ts.bundle?platform=web…`** → **200** `application/javascript`; no **500** / no **`application/json`** shell for those URLs. *(AE.3.2: no dev server bound in this session — re-run `expo start --web` locally to reconfirm curl.)*
+**Web manual QA (B2C Home desktop, width ≥769px):** `/home` — command bar visible; four primary world cards (**Local / Travel / Academy / Business**); **Care Heart Fund** only on secondary impact strip + existing charity widget; no duplicate floating Account/Language; no red SOS orb on Home desktop shell. Re-run `npx expo start --web` locally before release sign-off if bundle or curl checks are required.
 
 ## AE.3.1 Visual QA Fix
 
@@ -215,7 +215,8 @@ DB/Prisma touched: no (typecheck runs prisma generate only)
 Tenant risk: low (UI-only)
 Cost risk: low
 Fake production risk: mitigated (same SOS triage path; labeled Safety Assist)
-Typecheck: pass (local)
-Lint: see CI log
+Typecheck: pass
+Lint: pass (0 errors; warnings only)
+Smoke: pass
 Next safest step: Web smoke `/home` desktop width; capture screenshots for acceptance table
 ```
