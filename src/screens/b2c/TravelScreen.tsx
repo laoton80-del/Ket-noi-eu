@@ -189,7 +189,7 @@ function TravelQuickHelpChip({
         <Text style={styles.quickHelpLabel} numberOfLines={2}>
           {label}
         </Text>
-        <Ionicons name="chevron-forward" size={16} color={iconInk} style={styles.quickHelpChevron} />
+        <Ionicons name="chevron-forward" size={14} color={iconInk} style={styles.quickHelpChevron} />
       </View>
     </TravelGlassCard>
   );
@@ -233,7 +233,7 @@ function TravelScenarioCard({
             {t(`travelHub.scenario.${item.id}.sub`)}
           </Text>
         </View>
-        <Ionicons name="chevron-forward" size={16} color={INK_MUTED} />
+        <Ionicons name="chevron-forward" size={14} color={INK_MUTED} style={styles.scenarioChevron} />
       </View>
     </TravelGlassCard>
   );
@@ -542,6 +542,7 @@ export function TravelScreen() {
     scrollRef,
     scrollBottomClearance: travelScrollBottomClearance,
     onPressCurrent: scrollToTop,
+    tabletFullWidth: Platform.OS === 'web' && width >= 768,
   };
 
   if (locationGate === 'loading') {
@@ -599,9 +600,16 @@ export function TravelScreen() {
             <Image source={IMG_TRAVEL_HERO} style={styles.heroCinematicImage} resizeMode="cover" />
             <LinearGradient
               pointerEvents="none"
-              colors={['rgba(4, 8, 16, 0.94)', 'rgba(4, 10, 20, 0.72)', 'rgba(4, 10, 20, 0.28)']}
+              colors={['rgba(4, 8, 16, 0.82)', 'rgba(4, 10, 20, 0.48)', 'rgba(4, 10, 20, 0.1)']}
               start={{ x: 0, y: 0.5 }}
               end={{ x: 1, y: 0.5 }}
+              style={StyleSheet.absoluteFillObject}
+            />
+            <LinearGradient
+              pointerEvents="none"
+              colors={['transparent', 'rgba(132, 238, 255, 0.14)', 'rgba(246, 212, 110, 0.08)']}
+              start={{ x: 0.35, y: 0.2 }}
+              end={{ x: 1, y: 0.85 }}
               style={StyleSheet.absoluteFillObject}
             />
             <View style={styles.heroTextStack}>
@@ -794,11 +802,11 @@ const styles = StyleSheet.create({
   },
   heroCinematicImage: {
     position: 'absolute',
-    top: 0,
-    right: 0,
-    bottom: 0,
-    width: '62%',
-    opacity: 0.9,
+    top: -4,
+    right: -8,
+    bottom: -4,
+    width: '68%',
+    opacity: 0.97,
   },
   heroTextStack: {
     gap: 5,
@@ -853,15 +861,15 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   quickHelpSectionKicker: {
-    fontSize: 9,
+    fontSize: 10,
     fontFamily: FontFamily.extrabold,
-    color: 'rgba(140, 220, 255, 0.96)',
-    letterSpacing: 1,
+    color: 'rgba(168, 232, 255, 0.99)',
+    letterSpacing: 1.05,
     marginTop: 4,
     marginBottom: 10,
-    textShadowColor: 'rgba(92, 205, 255, 0.42)',
+    textShadowColor: 'rgba(92, 205, 255, 0.55)',
     textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 6,
+    textShadowRadius: 8,
   },
   scenariosSectionKicker: {
     fontSize: 9,
@@ -886,12 +894,12 @@ const styles = StyleSheet.create({
     minWidth: 0,
   },
   quickHelpCard: {
-    minHeight: 64,
+    minHeight: 66,
   },
   quickHelpInner: {
-    minHeight: 64,
-    paddingVertical: 10,
-    paddingHorizontal: 10,
+    minHeight: 66,
+    paddingVertical: 11,
+    paddingHorizontal: 11,
     justifyContent: 'center',
   },
   quickHelpRowInner: {
@@ -938,10 +946,13 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   scenarioInner: {
-    minHeight: 64,
-    paddingVertical: 10,
-    paddingHorizontal: 10,
+    minHeight: 68,
+    paddingVertical: 11,
+    paddingHorizontal: 11,
     justifyContent: 'center',
+  },
+  scenarioChevron: {
+    opacity: 0.32,
   },
   scenarioRow: {
     flexDirection: 'row',

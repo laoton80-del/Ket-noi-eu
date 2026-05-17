@@ -94,13 +94,13 @@ function resolveIntensity(
   }
   if (visual === 'quickHelp' || intensity === 'primary') {
     return {
-      glowMul: 1.72,
-      edgeMul: 1.08,
-      rimMul: 1.16,
-      washMul: 1.34,
+      glowMul: 1.88,
+      edgeMul: 1.1,
+      rimMul: 1.2,
+      washMul: 1.42,
       tier: 'service',
-      outerShadow: 0.5,
-      edgePx: 5,
+      outerShadow: 0.54,
+      edgePx: 4,
     };
   }
   if (intensity === 'quiet') {
@@ -115,13 +115,13 @@ function resolveIntensity(
     };
   }
   return {
-    glowMul: 1.16,
-    edgeMul: 0.94,
-    rimMul: 0.98,
-    washMul: 1.14,
+    glowMul: 1.22,
+    edgeMul: 0.72,
+    rimMul: 1.02,
+    washMul: 1.28,
     tier: 'service',
-    outerShadow: 0.38,
-    edgePx: 3,
+    outerShadow: 0.42,
+    edgePx: 2,
   };
 }
 
@@ -153,6 +153,7 @@ function TravelMaterialLayers({
   const accentBoost = ACCENT_LIFT[accent];
   const edgeAlpha = spec.edgeMul * accentBoost * lift;
   const edgePx = spec.edgePx;
+  const edgeBloomStrength = visual === 'standard' ? 0.58 : visual === 'quickHelp' ? 0.92 : 0.82;
 
   return (
     <>
@@ -199,9 +200,18 @@ function TravelMaterialLayers({
             {
               borderTopLeftRadius: radius,
               borderBottomLeftRadius: radius,
-              opacity: (visual === 'quickHelp' ? 0.34 : 0.24) * spec.washMul * accentBoost * lift,
+              opacity: (visual === 'quickHelp' ? 0.42 : 0.3) * spec.washMul * accentBoost * lift,
             },
           ]}
+        />
+      ) : null}
+      {visual === 'standard' ? (
+        <LinearGradient
+          pointerEvents="none"
+          colors={['rgba(255, 255, 255, 0.1)', 'rgba(255, 255, 255, 0.03)', 'transparent']}
+          start={{ x: 0.15, y: 0 }}
+          end={{ x: 0.85, y: 0.55 }}
+          style={[styles.interiorWell, { borderRadius: radius, opacity: 0.95 * lift }]}
         />
       ) : null}
       <LinearGradient
@@ -243,7 +253,7 @@ function TravelMaterialLayers({
           styles.edgeBloom,
           {
             width: edgePx,
-            opacity: Math.min(0.95, edgeAlpha * (visual === 'quickHelp' ? 1.05 : 0.88)),
+            opacity: Math.min(0.72, edgeAlpha * edgeBloomStrength),
             backgroundColor: tokens.glow,
             shadowColor: tokens.glow,
             shadowOpacity: 0.55 * accentBoost,
@@ -325,16 +335,25 @@ function TravelMaterialLayers({
         <TravelHeroChrome hovered={hovered} tokens={tokens} radius={radius} />
       ) : null}
       {visual === 'quickHelp' ? (
-        <LinearGradient
-          pointerEvents="none"
-          colors={[tokens.washHover, 'rgba(5, 11, 20, 0)']}
-          start={{ x: 0.5, y: 0.5 }}
-          end={{ x: 1, y: 1 }}
-          style={[
-            styles.quickHelpAura,
-            { borderRadius: radius, opacity: 0.34 * spec.washMul * accentBoost * lift },
-          ]}
-        />
+        <>
+          <LinearGradient
+            pointerEvents="none"
+            colors={['rgba(255, 255, 255, 0.12)', 'rgba(255, 255, 255, 0.04)', 'transparent']}
+            start={{ x: 0.12, y: 0 }}
+            end={{ x: 0.88, y: 0.55 }}
+            style={[styles.interiorWell, { borderRadius: radius, opacity: 0.92 * lift }]}
+          />
+          <LinearGradient
+            pointerEvents="none"
+            colors={[tokens.washHover, 'rgba(5, 11, 20, 0)']}
+            start={{ x: 0.5, y: 0.5 }}
+            end={{ x: 1, y: 1 }}
+            style={[
+              styles.quickHelpAura,
+              { borderRadius: radius, opacity: 0.42 * spec.washMul * accentBoost * lift },
+            ]}
+          />
+        </>
       ) : null}
     </>
   );
@@ -355,25 +374,18 @@ function TravelHeroChrome({
       <LinearGradient
         pointerEvents="none"
         colors={[
-          'rgba(132, 238, 255, 0.22)',
-          'rgba(246, 212, 110, 0.12)',
-          'rgba(244, 230, 255, 0.14)',
+          'rgba(132, 238, 255, 0.28)',
+          'rgba(246, 212, 110, 0.16)',
+          'rgba(244, 230, 255, 0.18)',
           'rgba(5, 11, 20, 0)',
         ]}
         start={{ x: 0, y: 0.2 }}
         end={{ x: 1, y: 0.9 }}
         style={[StyleSheet.absoluteFillObject, { borderRadius: radius }]}
       />
-      <LinearGradient
-        pointerEvents="none"
-        colors={['rgba(8, 18, 36, 0.15)', 'rgba(4, 10, 22, 0.55)', 'rgba(2, 6, 14, 0.88)']}
-        start={{ x: 0, y: 0.5 }}
-        end={{ x: 1, y: 0.5 }}
-        style={[StyleSheet.absoluteFillObject, { borderRadius: radius }]}
-      />
       <View
         pointerEvents="none"
-        style={[styles.heroOrb, styles.heroOrbCyan, { opacity: (hovered ? 0.72 : 0.58) * lift }]}
+        style={[styles.heroOrb, styles.heroOrbCyan, { opacity: (hovered ? 0.82 : 0.68) * lift }]}
       />
       <View
         pointerEvents="none"
@@ -389,14 +401,14 @@ function TravelHeroChrome({
         locations={[0, 0.35, 0.5, 0.65, 1]}
         start={{ x: 0, y: 0.5 }}
         end={{ x: 1, y: 0.5 }}
-        style={[styles.heroRouteLine, { opacity: (hovered ? 0.92 : 0.82) * lift }]}
+        style={[styles.heroRouteLine, { opacity: (hovered ? 0.98 : 0.88) * lift }]}
       />
       <LinearGradient
         pointerEvents="none"
-        colors={['transparent', 'rgba(132, 238, 255, 0.55)', 'transparent']}
+        colors={['transparent', 'rgba(132, 238, 255, 0.72)', 'transparent']}
         start={{ x: 0.1, y: 0.35 }}
         end={{ x: 0.9, y: 0.62 }}
-        style={[styles.heroRouteArc, { opacity: 0.42 * lift }]}
+        style={[styles.heroRouteArc, { opacity: 0.56 * lift }]}
       />
       <LinearGradient
         pointerEvents="none"
@@ -448,9 +460,9 @@ export function TravelIconCapsule({
   const secondary = accentSecondary ? travelSemanticTokens(accentSecondary) : null;
   const spec = resolveIntensity(intensity, prominent ? 'quickHelp' : 'standard');
   const accentBoost = ACCENT_LIFT[accent] * CAPSULE_GLOW_BOOST;
-  const dim = prominent ? 42 : 36;
-  const glowPx = prominent ? 18 : 13;
-  const iconGlow = prominent ? 12 : 8;
+  const dim = prominent ? 44 : 38;
+  const glowPx = prominent ? 20 : 14;
+  const iconGlow = prominent ? 13 : 9;
 
   return (
     <View
@@ -462,7 +474,7 @@ export function TravelIconCapsule({
           borderRadius: 10,
           borderColor: tokens.stroke,
           shadowColor: tokens.glow,
-          shadowOpacity: 0.34 + spec.glowMul * 0.16 * accentBoost,
+          shadowOpacity: 0.38 + spec.glowMul * 0.18 * accentBoost,
           shadowRadius: glowPx,
           shadowOffset: { width: 0, height: 0 },
         },
@@ -615,6 +627,14 @@ const styles = StyleSheet.create({
     left: 0,
     width: '58%',
     bottom: 0,
+    zIndex: 0,
+  },
+  interiorWell: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: '72%',
     zIndex: 0,
   },
   innerTopHighlight: {

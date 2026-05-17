@@ -53,6 +53,8 @@ export type VionaMiniAppShellProps = Readonly<{
   onPressCurrent?: () => void;
   contentContainerStyle?: StyleProp<ViewStyle>;
   rootStyle?: StyleProp<ViewStyle>;
+  /** Web: break out of narrow app column (e.g. 600px) to use full tablet viewport width. */
+  tabletFullWidth?: boolean;
   scrollRef?: RefObject<ScrollView | null>;
 }>;
 
@@ -102,6 +104,7 @@ export function VionaMiniAppShell({
   onPressCurrent,
   contentContainerStyle,
   rootStyle,
+  tabletFullWidth = false,
   scrollRef,
 }: VionaMiniAppShellProps): ReactElement {
   const { t } = useTranslation();
@@ -160,6 +163,19 @@ export function VionaMiniAppShell({
   );
   const resolvedCurrentLabel = (dockCurrentLabel ?? defaultDockLabels[universe]).trim();
 
+  const tabletBreakoutStyle = useMemo((): StyleProp<ViewStyle> | null => {
+    if (!tabletFullWidth || Platform.OS !== 'web' || width < VIONA_TABLET_MIN_WIDTH) {
+      return null;
+    }
+    return {
+      width: '100vw',
+      maxWidth: '100vw',
+      alignSelf: 'center',
+      marginLeft: 'calc(50% - 50vw)',
+      marginRight: 'calc(50% - 50vw)',
+    } as unknown as ViewStyle;
+  }, [tabletFullWidth, width]);
+
   const topRailProps = useMemo(
     () => ({
       density: Platform.OS === 'web' && width < 1180 ? ('compact' as const) : ('comfortable' as const),
@@ -201,7 +217,7 @@ export function VionaMiniAppShell({
 
   return (
     <SafeAreaView
-      style={[styles.safe, { backgroundColor: SURFACE_CANVAS[surfaceMode] }, rootStyle]}
+      style={[styles.safe, { backgroundColor: SURFACE_CANVAS[surfaceMode] }, tabletBreakoutStyle, rootStyle]}
       edges={['top', 'left', 'right']}
     >
       <View
