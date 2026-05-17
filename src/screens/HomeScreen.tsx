@@ -86,12 +86,17 @@ import {
   fashionHomeWebOpeningStageDeepHeroBleedStyle,
   fashionHomeWebOpeningStageDeepHeroCanvasStyle,
   fashionHomeWebOpeningStageDeepHeroShellStyle,
+  fashionHomeWebOpeningStageFullscreenGridColumnStyle,
   fashionHomeWebOpeningStageGridColumnStyle,
   fashionHomeWebOpeningStageHeroForegroundStyle,
   fashionHomeWebOpeningStageHeroFrameStyle,
   fashionHomeWebOpeningStageHeroImageClipStyle,
   fashionHomeWebOpeningStageHeroImageStyle,
-  fashionHomeWebOpeningStageHubWrapperStyle,
+  fashionHomeWebOpeningStageFullscreenHubPullUpPx,
+  fashionHomeWebOpeningStageHubDockFullscreenStyle,
+  fashionHomeWebOpeningStageHubPromptFullscreenStyle,
+  fashionHomeWebOpeningStageQuickActionStripFullscreenStyle,
+  fashionHomeWebOpeningStageSharedRailWrapperStyle,
   fashionHomeWebOpeningStageWorldStripBelowHeroStyle,
   FASHION_HOME_DAYLIGHT_WORLD_BOTTOM_VEIL,
   FASHION_HOME_DAYLIGHT_WORLD_DIAGONAL_SPECULAR,
@@ -1170,6 +1175,13 @@ export function HomeScreen() {
     webWorldStripHeight,
   ]);
 
+  /** TRUE_COMPACT_LAYOUT — explicit fullscreen branch for opening-stage geometry (web fashion home). */
+  const webOpeningStageFullscreen =
+    fashionHomeDesktopShellActive &&
+    Platform.OS === 'web' &&
+    isFullscreen &&
+    fashionDesktopWebHomeStageLayout != null;
+
   const fashionHomeEdgeLitWorldCardProps = useCallback(
     (accent: FashionHomeWorldCardDaylightAccent) =>
       fashionHomeDesktopShellActive && fashionDaylight && Platform.OS === 'web'
@@ -1807,7 +1819,10 @@ export function HomeScreen() {
             <View
               style={
                 fashionDesktopWebHomeStageLayout != null
-                  ? fashionHomeWebOpeningStageGridColumnStyle(fashionDesktopWebHomeStageLayout.contentPad)
+                  ? fashionHomeWebOpeningStageFullscreenGridColumnStyle(
+                      fashionDesktopWebHomeStageLayout.contentPad,
+                      webOpeningStageFullscreen
+                    )
                   : undefined
               }
             >
@@ -1815,7 +1830,10 @@ export function HomeScreen() {
               style={[
                 styles.desktopHeroFrameShell,
                 fashionDesktopWebHomeStageLayout != null &&
-                  fashionHomeWebOpeningStageHeroFrameStyle(fashionDesktopWebHomeStageLayout.heroHeightPx),
+                  fashionHomeWebOpeningStageHeroFrameStyle(
+                    fashionDesktopWebHomeStageLayout.heroHeightPx,
+                    webOpeningStageFullscreen
+                  ),
               ]}
             >
             <View
@@ -2171,7 +2189,7 @@ export function HomeScreen() {
             </View>
             {fashionDesktopWebHomeStageLayout != null ? (
               <View
-                style={fashionHomeWebOpeningStageWorldStripBelowHeroStyle()}
+                style={fashionHomeWebOpeningStageWorldStripBelowHeroStyle(webOpeningStageFullscreen)}
                 onLayout={(e) => {
                   worldSectionY.current = e.nativeEvent.layout.y;
                   const h = Math.ceil(e.nativeEvent.layout.height);
@@ -2554,9 +2572,14 @@ export function HomeScreen() {
           <View
             style={
               fashionHomeDesktopShellActive && Platform.OS === 'web'
-                ? fashionHomeWebOpeningStageHubWrapperStyle(layout.pad, {
-                    pullUpPx: isFullscreen ? FASHION_HOME_WEB_OPENING_STAGE_HUB_PULLUP_PX : 0,
-                  })
+                ? [
+                    fashionHomeWebOpeningStageSharedRailWrapperStyle(layout.pad, {
+                      pullUpPx: webOpeningStageFullscreen
+                        ? fashionHomeWebOpeningStageFullscreenHubPullUpPx()
+                        : 0,
+                    }),
+                    fashionHomeWebOpeningStageHubDockFullscreenStyle(webOpeningStageFullscreen),
+                  ]
                 : fashionHomeDesktopShellActive
                   ? { marginHorizontal: -layout.pad }
                   : undefined
@@ -2568,18 +2591,22 @@ export function HomeScreen() {
               fashionHomeDesktopShellActive ? styles.quickActionStripFashion : { width: layout.inner },
               fashionDaylight && styles.quickActionStripFashionDaylight,
               fashionHomeWebTintTransition,
+              webOpeningStageFullscreen &&
+                fashionHomeWebOpeningStageQuickActionStripFullscreenStyle(true),
             ]}
             tone="warm"
           >
-            <Text
-              style={[
-                styles.quickActionPrompt,
-                fashionDaylight && styles.quickActionPromptDaylight,
-                fashionHomeWebTintTransition,
-              ]}
-            >
-              {t('home.quickActions.prompt')}
-            </Text>
+            {!webOpeningStageFullscreen ? (
+              <Text
+                style={[
+                  styles.quickActionPrompt,
+                  fashionDaylight && styles.quickActionPromptDaylight,
+                  fashionHomeWebTintTransition,
+                ]}
+              >
+                {t('home.quickActions.prompt')}
+              </Text>
+            ) : null}
             {quickActionsHorizontal ? (
               <ScrollView
                 horizontal
@@ -2668,7 +2695,13 @@ export function HomeScreen() {
           }}
         >
           {fashionHomeDesktopShellActive ? (
-            <View style={{ marginHorizontal: -layout.pad }}>
+            <View
+              style={
+                Platform.OS === 'web'
+                  ? fashionHomeWebOpeningStageSharedRailWrapperStyle(layout.pad)
+                  : { marginHorizontal: -layout.pad }
+              }
+            >
               <CharityWidget layoutVariant="desktopFashionCare" />
             </View>
           ) : (

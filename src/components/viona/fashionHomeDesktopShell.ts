@@ -56,8 +56,13 @@ export const FASHION_HOME_WEB_OPENING_STAGE_HERO_TO_CARD_GAP_PX = 6;
 /** Opening hero height floor / cap (px) — viewport-capped; cards must not clip. */
 export const FASHION_HOME_WEB_OPENING_STAGE_HERO_MIN_PX = 430;
 export const FASHION_HOME_WEB_OPENING_STAGE_HERO_MAX_PX = 494;
-/** PREMIUM.FRAME.MICRO.FINAL.1 — hero + world-card row right reach (desktop web). */
-export const FASHION_HOME_WEB_OPENING_STAGE_STAGE_RIGHT_BLEED_PX = 184;
+/**
+ * Opening-stage bleed budget (desktop web) — used for hub margin breakout only.
+ * Stage hero/cards use `VIEWPORT_RIGHT_INSET_PX` inside a viewport-contained rail.
+ */
+export const FASHION_HOME_WEB_OPENING_STAGE_STAGE_RIGHT_BLEED_PX = 212;
+/** Visible inset from viewport right for hero + world cards (1366 → right ≈ 1352). */
+export const FASHION_HOME_WEB_OPENING_STAGE_VIEWPORT_RIGHT_INSET_PX = 14;
 /** Opening-stage world card cell min height (host only; card component unchanged). */
 export const FASHION_HOME_WEB_OPENING_STAGE_WORLD_CARD_MIN_HEIGHT_PX = 180;
 /** Hub rail right reach — unchanged when opening stage widens. */
@@ -98,6 +103,52 @@ export const FASHION_HOME_WEB_OPENING_STAGE_HERO_OBJECT_POSITION_X_FULLSCREEN_SH
 export const FASHION_HOME_WEB_OPENING_STAGE_HERO_OBJECT_POSITION_Y_PCT = 32;
 /** Pull VIONA FOR YOU block up toward cards (fullscreen only). */
 export const FASHION_HOME_WEB_OPENING_STAGE_HUB_PULLUP_PX = 18;
+/** TRUE_COMPACT_LAYOUT — fullscreen opening-stage vertical contract (web fashion home). */
+export const FASHION_HOME_WEB_OPENING_STAGE_FULLSCREEN_COMPACT_GRID_TOP_PX = 5;
+/** DOCK.FINAL.NUDGE — extra viewport budget trim so cards + dock sit higher (fullscreen). */
+export const FASHION_HOME_WEB_OPENING_STAGE_FULLSCREEN_DOCK_NUDGE_VIEWPORT_PX = 0;
+/** BOTTOM_DOCK.FIT — trim on rendered hero frame (fullscreen only). */
+export const FASHION_HOME_WEB_OPENING_STAGE_FULLSCREEN_DOCK_FIT_HERO_TRIM_PX = 0;
+/** PREMIUM_VERTICAL_LOCK — extra hero budget after dock-fit clamp (fullscreen only). */
+export const FASHION_HOME_WEB_OPENING_STAGE_FULLSCREEN_DOCK_FIT_HERO_HEIGHT_BONUS_PX = 11;
+/** PREMIUM_VERTICAL_LOCK — rendered hero frame extend below compute height (fullscreen only). */
+export const FASHION_HOME_WEB_OPENING_STAGE_FULLSCREEN_PREMIUM_HERO_FRAME_EXTEND_PX = 14;
+/** BOTTOM_DOCK.FIT — hero→card margin in normal flow (fullscreen only). */
+export const FASHION_HOME_WEB_OPENING_STAGE_FULLSCREEN_DOCK_FIT_CARD_GAP_PX = 4;
+/** BOTTOM_DOCK.FIT — card row→action dock margin (fullscreen only). */
+export const FASHION_HOME_WEB_OPENING_STAGE_FULLSCREEN_DOCK_FIT_DOCK_GAP_PX = 6;
+/** BOTTOM_DOCK.FIT — measured quick-action dock height at 1366×768 (two grid rows). */
+export const FASHION_HOME_WEB_OPENING_STAGE_FULLSCREEN_DOCK_PANEL_ESTIMATE_PX = 104;
+/** PREMIUM_VERTICAL_LOCK — dock bottom breathing inside viewport (fullscreen). */
+export const FASHION_HOME_WEB_OPENING_STAGE_FULLSCREEN_VIEWPORT_BOTTOM_AIR_PX = 6;
+/**
+ * BOTTOM_DOCK.FIT — floor when chrome measure lags in fullscreen (scroll offset to stage).
+ * Prevents opening stage from consuming space the dock needs below the card row.
+ */
+export const FASHION_HOME_WEB_OPENING_STAGE_FULLSCREEN_DOCK_FIT_CHROME_FLOOR_PX = 72;
+/** BOTTOM_DOCK.FIT — reserve two pill rows + gap in viewport budget (title hidden). */
+export const FASHION_HOME_WEB_OPENING_STAGE_FULLSCREEN_DOCK_RESERVE_PX = 124;
+/** @deprecated Use `FULLSCREEN_DOCK_FIT_HERO_TRIM_PX`. */
+export const FASHION_HOME_WEB_OPENING_STAGE_FULLSCREEN_COMPACT_HERO_HEIGHT_TRIM_PX =
+  FASHION_HOME_WEB_OPENING_STAGE_FULLSCREEN_DOCK_FIT_HERO_TRIM_PX;
+/** @deprecated Use `FULLSCREEN_DOCK_FIT_DOCK_GAP_PX`. */
+export const FASHION_HOME_WEB_OPENING_STAGE_FULLSCREEN_COMPACT_DOCK_GAP_PX =
+  FASHION_HOME_WEB_OPENING_STAGE_FULLSCREEN_DOCK_FIT_DOCK_GAP_PX;
+/** @deprecated Use `FULLSCREEN_COMPACT_GRID_TOP_PX`. */
+export const FASHION_HOME_WEB_OPENING_STAGE_FULLSCREEN_HERO_TOP_OFFSET_PX =
+  FASHION_HOME_WEB_OPENING_STAGE_FULLSCREEN_COMPACT_GRID_TOP_PX;
+/** @deprecated Use `FULLSCREEN_COMPACT_HERO_HEIGHT_TRIM_PX`. */
+export const FASHION_HOME_WEB_OPENING_STAGE_FULLSCREEN_HERO_REDUCE_PX =
+  FASHION_HOME_WEB_OPENING_STAGE_FULLSCREEN_COMPACT_HERO_HEIGHT_TRIM_PX;
+/** @deprecated Negative card lift removed — use normal 6px hero→card gap in fullscreen. */
+export const FASHION_HOME_WEB_OPENING_STAGE_FULLSCREEN_CARD_LIFT_PX = 0;
+/** @deprecated Use `FULLSCREEN_COMPACT_DOCK_GAP_PX`. */
+export const FASHION_HOME_WEB_OPENING_STAGE_FULLSCREEN_DOCK_GAP_PX =
+  FASHION_HOME_WEB_OPENING_STAGE_FULLSCREEN_COMPACT_DOCK_GAP_PX;
+export const FASHION_HOME_WEB_OPENING_STAGE_FULLSCREEN_ACTION_DOCK_GAP_PX =
+  FASHION_HOME_WEB_OPENING_STAGE_FULLSCREEN_COMPACT_DOCK_GAP_PX;
+export const FASHION_HOME_WEB_OPENING_STAGE_FULLSCREEN_HUB_GAP_PX =
+  FASHION_HOME_WEB_OPENING_STAGE_FULLSCREEN_COMPACT_DOCK_GAP_PX;
 /** Non-fullscreen desktop web: keep hero flush under command rail (max 4px in shell). */
 export const FASHION_HOME_WEB_OPENING_STAGE_NORMAL_WEB_TOP_OFFSET_PX = 0;
 /** @deprecated Use `FASHION_HOME_WEB_WORLD_CARD_ROW_ESTIMATE_PX` + fold pad in layout memo. */
@@ -554,12 +605,22 @@ export function fashionHomeWebQuickActionHoverMotionStyle(hovered: boolean): Vie
 
 /**
  * HOME.OPENING.STAGE.ALIGNMENT.1 — break out of ScrollView horizontal pad; shared grid lives inside.
+ * NO_CLIP.FINAL.1 — stage rail spans viewport by canceling scroll pad only (never bleed-sized width).
  */
 export function fashionHomeWebOpeningStageBreakoutStyle(
   padPx: number,
   rightBleedPx: number = FASHION_HOME_WEB_OPENING_STAGE_STAGE_RIGHT_BLEED_PX
 ): ViewStyle {
   if (Platform.OS !== 'web' || padPx <= 0) return {};
+  const isOpeningStageRail = rightBleedPx >= FASHION_HOME_WEB_OPENING_STAGE_STAGE_RIGHT_BLEED_PX;
+  if (isOpeningStageRail) {
+    return {
+      marginLeft: -padPx,
+      marginRight: -padPx,
+      width: `calc(100% + ${padPx * 2}px)` as ViewStyle['width'],
+      alignSelf: 'stretch',
+    } as ViewStyle;
+  }
   return {
     marginLeft: -padPx,
     marginRight: -(padPx + rightBleedPx),
@@ -657,18 +718,88 @@ export function fashionHomeWebOpeningStageHeroImageClipStyle(): ViewStyle {
   } as ViewStyle;
 }
 
-/** Shared grid column: hero block + card row (matches command bar `layout.pad`). */
-export function fashionHomeWebOpeningStageGridColumnStyle(padPx: number): ViewStyle {
+/** Inner horizontal inset shared by hero/cards, hub, and Care Heart Fund (web fashion home). */
+export function fashionHomeWebOpeningStageSharedRailInsetStyle(padPx: number): ViewStyle {
   if (Platform.OS !== 'web' || padPx <= 0) return {};
-  const rightBleed = FASHION_HOME_WEB_OPENING_STAGE_STAGE_RIGHT_BLEED_PX;
+  return {
+    paddingLeft: padPx,
+    paddingRight: FASHION_HOME_WEB_OPENING_STAGE_VIEWPORT_RIGHT_INSET_PX,
+  } as ViewStyle;
+}
+
+/** Fullscreen hub pull-up disabled — stage grid-top nudge moves cards + dock together. */
+export function fashionHomeWebOpeningStageFullscreenHubPullUpPx(): number {
+  return 0;
+}
+
+/** Fullscreen: margin above quick-action dock rail (no negative pull-up). */
+export function fashionHomeWebOpeningStageHubDockFullscreenStyle(isFullscreen: boolean): ViewStyle {
+  if (Platform.OS !== 'web' || !isFullscreen) return {};
+  return {
+    marginTop: FASHION_HOME_WEB_OPENING_STAGE_FULLSCREEN_DOCK_FIT_DOCK_GAP_PX,
+  } as ViewStyle;
+}
+
+/** Viewport-contained breakout + inset — same outer rail as opening-stage hero/cards. */
+export function fashionHomeWebOpeningStageSharedRailWrapperStyle(
+  padPx: number,
+  options?: { pullUpPx?: number }
+): ViewStyle {
+  if (Platform.OS !== 'web' || padPx <= 0) return {};
+  const pullUpPx = options?.pullUpPx ?? 0;
+  return {
+    ...fashionHomeWebOpeningStageBreakoutStyle(padPx),
+    ...fashionHomeWebOpeningStageSharedRailInsetStyle(padPx),
+    alignSelf: 'stretch',
+    ...(pullUpPx > 0 ? { marginTop: -pullUpPx } : {}),
+  } as ViewStyle;
+}
+
+/** Fullscreen hub: hide prompt only; quick-action grid stays visible. */
+export function fashionHomeWebOpeningStageHubPromptFullscreenStyle(
+  isFullscreen: boolean
+): ViewStyle {
+  if (Platform.OS !== 'web' || !isFullscreen) return {};
+  return { display: 'none', height: 0, marginBottom: 0, overflow: 'hidden' } as ViewStyle;
+}
+
+/** Fullscreen: tighter dock padding so two pill rows fit in viewport. */
+export function fashionHomeWebOpeningStageQuickActionStripFullscreenStyle(
+  isFullscreen: boolean
+): ViewStyle {
+  if (Platform.OS !== 'web' || !isFullscreen) return {};
+  return {
+    paddingTop: 10,
+    paddingBottom: 10,
+  } as ViewStyle;
+}
+
+/** Fullscreen-only grid column top breathing (applied from HomeScreen when opening stage active). */
+export function fashionHomeWebOpeningStageFullscreenGridColumnStyle(
+  padPx: number,
+  isFullscreen: boolean
+): ViewStyle {
+  const base = fashionHomeWebOpeningStageGridColumnStyle(padPx, false);
+  if (Platform.OS !== 'web' || !isFullscreen || padPx <= 0) return base;
+  return {
+    ...base,
+    paddingTop: FASHION_HOME_WEB_OPENING_STAGE_FULLSCREEN_COMPACT_GRID_TOP_PX,
+  } as ViewStyle;
+}
+
+/** Shared grid column: hero block + card row (matches command bar `layout.pad`). */
+export function fashionHomeWebOpeningStageGridColumnStyle(
+  padPx: number,
+  _isFullscreen = false
+): ViewStyle {
+  if (Platform.OS !== 'web' || padPx <= 0) return {};
   return {
     width: '100%',
     flex: 1,
     flexDirection: 'column',
     justifyContent: 'flex-start',
     alignItems: 'stretch',
-    paddingLeft: padPx,
-    paddingRight: Math.max(0, padPx - rightBleed),
+    ...fashionHomeWebOpeningStageSharedRailInsetStyle(padPx),
   } as ViewStyle;
 }
 
@@ -685,17 +816,34 @@ export function fashionHomeWebOpeningStageDeepHeroBleedStyle(): ViewStyle {
 }
 
 /** Hero frame slot — fixed height; bottom edge meets card row. */
-export function fashionHomeWebOpeningStageHeroFrameStyle(heroHeightPx: number): ViewStyle {
+export function fashionHomeWebOpeningStageHeroFrameStyle(
+  heroHeightPx: number,
+  isFullscreen = false
+): ViewStyle {
   if (Platform.OS !== 'web' || heroHeightPx <= 0) return {};
+  const heightPx = isFullscreen
+    ? fashionHomeWebOpeningStageFullscreenHeroFrameHeightPx(heroHeightPx)
+    : heroHeightPx;
   return {
     width: '100%',
     alignSelf: 'stretch',
-    height: heroHeightPx,
-    minHeight: heroHeightPx,
-    maxHeight: heroHeightPx,
+    height: heightPx,
+    minHeight: heightPx,
+    maxHeight: heightPx,
     flexShrink: 0,
     position: 'relative',
   } as ViewStyle;
+}
+
+/** Fullscreen hero frame height after trim (for stage budget / QA). */
+export function fashionHomeWebOpeningStageFullscreenHeroFrameHeightPx(
+  heroHeightPx: number
+): number {
+  if (heroHeightPx <= 0) return 0;
+  return (
+    Math.max(0, heroHeightPx - FASHION_HOME_WEB_OPENING_STAGE_FULLSCREEN_DOCK_FIT_HERO_TRIM_PX) +
+    FASHION_HOME_WEB_OPENING_STAGE_FULLSCREEN_PREMIUM_HERO_FRAME_EXTEND_PX
+  );
 }
 
 /** @deprecated Use `fashionHomeWebOpeningStageHeroFrameStyle`. */
@@ -733,13 +881,16 @@ export function fashionHomeWebOpeningStageConnectedChipStyle(): ViewStyle {
   } as ViewStyle;
 }
 
-/** World cards directly under hero frame (same grid width). */
-export function fashionHomeWebOpeningStageWorldStripBelowHeroStyle(): ViewStyle {
+/** World cards directly under hero frame — fullscreen uses explicit 4px gap (no transform). */
+export function fashionHomeWebOpeningStageWorldStripBelowHeroStyle(isFullscreen = false): ViewStyle {
   if (Platform.OS !== 'web') return {};
+  const marginTop = isFullscreen
+    ? FASHION_HOME_WEB_OPENING_STAGE_FULLSCREEN_DOCK_FIT_CARD_GAP_PX
+    : FASHION_HOME_WEB_OPENING_STAGE_HERO_TO_CARD_GAP_PX;
   return {
     width: '100%',
     flexShrink: 0,
-    marginTop: FASHION_HOME_WEB_OPENING_STAGE_HERO_TO_CARD_GAP_PX,
+    marginTop,
     zIndex: 12,
   } as ViewStyle;
 }
@@ -805,64 +956,116 @@ export function computeFashionHomeWebOpeningStageLayout(input: {
       FASHION_HOME_WEB_OPENING_STAGE_SCROLL_TOP_PAD_PX +
       FASHION_HOME_WEB_OPENING_STAGE_HEIGHT_FUDGE_PX
   );
-  /** Hub follows below the fold — do not reserve first-viewport peek (avoids card clipping). */
-  const hubPeekReserve = 0;
-  /** Visual hero→cards gap only (6px margin on strip); do not double-reserve hook in budget. */
-  const stackGap = FASHION_HOME_WEB_OPENING_STAGE_HERO_TO_CARD_GAP_PX;
+  /** Fullscreen: reserve action dock (2 rows, title hidden) so opening stage does not push hub off-screen. */
+  const hubPeekReserve = input.isFullscreen
+    ? FASHION_HOME_WEB_OPENING_STAGE_FULLSCREEN_DOCK_RESERVE_PX
+    : 0;
+  const stackGap = input.isFullscreen
+    ? FASHION_HOME_WEB_OPENING_STAGE_FULLSCREEN_DOCK_FIT_CARD_GAP_PX
+    : FASHION_HOME_WEB_OPENING_STAGE_HERO_TO_CARD_GAP_PX;
   const contentBudget = Math.max(
     280,
     availableBelowChrome -
       hubPeekReserve -
       FASHION_HOME_WEB_OPENING_STAGE_SAFE_BOTTOM_GAP_PX
   );
+  const gridTopPx = input.isFullscreen
+    ? FASHION_HOME_WEB_OPENING_STAGE_FULLSCREEN_COMPACT_GRID_TOP_PX
+    : 0;
+  const innerBudget = Math.max(200, contentBudget - gridTopPx);
   const heroMaxPx =
     input.viewportHeightPx > 900
       ? Math.min(480, FASHION_HOME_WEB_OPENING_STAGE_HERO_MAX_PX + 48)
       : FASHION_HOME_WEB_OPENING_STAGE_HERO_MAX_PX;
-  const heroBudgetPx = contentBudget - cardRowH - stackGap;
+  const heroBudgetPx = innerBudget - cardRowH - stackGap;
   let heroHeightPx = Math.min(heroMaxPx, Math.max(0, heroBudgetPx));
-  const stageWithHeroMin =
-    FASHION_HOME_WEB_OPENING_STAGE_HERO_MIN_PX + cardRowH + stackGap;
-  if (stageWithHeroMin <= contentBudget) {
-    heroHeightPx = Math.max(FASHION_HOME_WEB_OPENING_STAGE_HERO_MIN_PX, heroHeightPx);
-  }
-  const stackHeight = heroHeightPx + cardRowH + stackGap;
-  if (stackHeight > contentBudget) {
-    heroHeightPx = Math.max(0, contentBudget - cardRowH - stackGap);
-  }
-  if (
-    input.viewportHeightPx <= FASHION_HOME_WEB_OPENING_STAGE_HUB_IN_VIEWPORT_MAX_HEIGHT_PX
-  ) {
-    const nudgedHero = Math.min(
-      heroMaxPx,
-      heroHeightPx + FASHION_HOME_WEB_OPENING_STAGE_SHORT_VIEWPORT_HERO_NUDGE_PX
+
+  if (input.isFullscreen) {
+    const stackWithHeroMin =
+      FASHION_HOME_WEB_OPENING_STAGE_HERO_MIN_PX + cardRowH + stackGap;
+    if (stackWithHeroMin <= innerBudget) {
+      heroHeightPx = Math.max(FASHION_HOME_WEB_OPENING_STAGE_HERO_MIN_PX, heroHeightPx);
+    }
+    heroHeightPx = Math.min(heroHeightPx, Math.max(0, innerBudget - cardRowH - stackGap));
+
+    const chromeForDockFit = Math.max(
+      input.chromeAboveScrollPx,
+      FASHION_HOME_WEB_OPENING_STAGE_FULLSCREEN_DOCK_FIT_CHROME_FLOOR_PX
     );
-    if (nudgedHero + cardRowH + stackGap <= contentBudget) {
-      heroHeightPx = nudgedHero;
+    const maxStageHeightPx =
+      input.viewportHeightPx -
+      chromeForDockFit -
+      FASHION_HOME_WEB_OPENING_STAGE_FULLSCREEN_DOCK_FIT_DOCK_GAP_PX -
+      FASHION_HOME_WEB_OPENING_STAGE_FULLSCREEN_DOCK_PANEL_ESTIMATE_PX -
+      FASHION_HOME_WEB_OPENING_STAGE_FULLSCREEN_VIEWPORT_BOTTOM_AIR_PX +
+      FASHION_HOME_WEB_OPENING_STAGE_FULLSCREEN_PREMIUM_HERO_FRAME_EXTEND_PX;
+    const maxHeroFramePx = maxStageHeightPx - gridTopPx - cardRowH - stackGap;
+    const maxHeroPx =
+      maxHeroFramePx +
+      FASHION_HOME_WEB_OPENING_STAGE_FULLSCREEN_DOCK_FIT_HERO_TRIM_PX -
+      FASHION_HOME_WEB_OPENING_STAGE_FULLSCREEN_PREMIUM_HERO_FRAME_EXTEND_PX;
+    heroHeightPx = Math.min(heroHeightPx, Math.max(0, maxHeroPx));
+    heroHeightPx = Math.min(heroHeightPx, Math.max(0, innerBudget - cardRowH - stackGap));
+    heroHeightPx = Math.max(
+      0,
+      heroHeightPx - FASHION_HOME_WEB_OPENING_STAGE_FULLSCREEN_DOCK_NUDGE_VIEWPORT_PX
+    );
+    const heroWithBonusPx = Math.min(
+      heroMaxPx,
+      heroHeightPx + FASHION_HOME_WEB_OPENING_STAGE_FULLSCREEN_DOCK_FIT_HERO_HEIGHT_BONUS_PX
+    );
+    const bonusFramePx = fashionHomeWebOpeningStageFullscreenHeroFrameHeightPx(heroWithBonusPx);
+    const bonusStagePx = gridTopPx + bonusFramePx + cardRowH + stackGap;
+    const dockStackBottomPx =
+      chromeForDockFit +
+      bonusStagePx +
+      FASHION_HOME_WEB_OPENING_STAGE_FULLSCREEN_DOCK_FIT_DOCK_GAP_PX +
+      FASHION_HOME_WEB_OPENING_STAGE_FULLSCREEN_DOCK_PANEL_ESTIMATE_PX;
+    if (
+      bonusStagePx <= maxStageHeightPx &&
+      dockStackBottomPx <=
+        input.viewportHeightPx - FASHION_HOME_WEB_OPENING_STAGE_FULLSCREEN_VIEWPORT_BOTTOM_AIR_PX
+    ) {
+      heroHeightPx = heroWithBonusPx;
+    }
+  } else {
+    const stageWithHeroMin =
+      FASHION_HOME_WEB_OPENING_STAGE_HERO_MIN_PX + cardRowH + stackGap;
+    if (stageWithHeroMin <= contentBudget) {
+      heroHeightPx = Math.max(FASHION_HOME_WEB_OPENING_STAGE_HERO_MIN_PX, heroHeightPx);
+    }
+    const stackHeight = heroHeightPx + cardRowH + stackGap;
+    if (stackHeight > contentBudget) {
+      heroHeightPx = Math.max(0, contentBudget - cardRowH - stackGap);
+    }
+    if (
+      input.viewportHeightPx <= FASHION_HOME_WEB_OPENING_STAGE_HUB_IN_VIEWPORT_MAX_HEIGHT_PX
+    ) {
+      const nudgedHero = Math.min(
+        heroMaxPx,
+        heroHeightPx + FASHION_HOME_WEB_OPENING_STAGE_SHORT_VIEWPORT_HERO_NUDGE_PX
+      );
+      if (nudgedHero + cardRowH + stackGap <= contentBudget) {
+        heroHeightPx = nudgedHero;
+      }
     }
   }
-  const stageHeight = heroHeightPx + cardRowH + stackGap;
+
+  const stageHeight = input.isFullscreen
+    ? gridTopPx +
+      fashionHomeWebOpeningStageFullscreenHeroFrameHeightPx(heroHeightPx) +
+      cardRowH +
+      stackGap
+    : heroHeightPx + cardRowH + stackGap;
   return { stageHeight, heroHeightPx, cardRowH, hubPeekReserve };
 }
 
-/** Hub wrapper: breakout + same horizontal pad as hero frame (web fashion home). */
+/** @deprecated Use `fashionHomeWebOpeningStageSharedRailWrapperStyle`. */
 export function fashionHomeWebOpeningStageHubWrapperStyle(
   padPx: number,
   options?: { pullUpPx?: number }
 ): ViewStyle {
-  if (Platform.OS !== 'web' || padPx <= 0) return {};
-  const pullUpPx = options?.pullUpPx ?? 0;
-  return {
-    ...fashionHomeWebOpeningStageBreakoutStyle(
-      padPx,
-      FASHION_HOME_WEB_OPENING_STAGE_HUB_RIGHT_BLEED_PX
-    ),
-    ...fashionHomeWebOpeningStageContentRailStyle(
-      padPx,
-      FASHION_HOME_WEB_OPENING_STAGE_HUB_RIGHT_BLEED_PX
-    ),
-    ...(pullUpPx > 0 ? { marginTop: -pullUpPx } : {}),
-  } as ViewStyle;
+  return fashionHomeWebOpeningStageSharedRailWrapperStyle(padPx, options);
 }
 
 /** Web: restrained glass lift on command-rail utilities (caller should skip SOS). */
