@@ -113,6 +113,15 @@
       "closeA11y": "Đóng màn hình này",
       "homeA11y": "Về trang chủ hub",
       "toolbarA11y": "Lối thoát điều hướng trang"
+    },
+    "miniapp": {
+      "back": "Quay lại",
+      "home": "Trang chủ",
+      "local": "Local hub",
+      "travel": "Travel",
+      "academy": "Academy",
+      "business": "Doanh nghiệp",
+      "sos": "SOS"
     }
   },
   "login": {

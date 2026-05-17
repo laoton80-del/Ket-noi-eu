@@ -9,8 +9,12 @@ import {
   VIONA_BOTTOM_ESCAPE_VISUAL,
   VIONA_GLOBAL_LIGHT_NETWORK_ACCENT_CYAN,
   VIONA_GLOBAL_LIGHT_NETWORK_ACCENT_EMERALD,
+  VIONA_GLOBAL_LIGHT_NETWORK_ACCENT_GOLD,
   VIONA_GLOBAL_LIGHT_NETWORK_ACCENT_MAGENTA,
+  VIONA_GLOBAL_LIGHT_NETWORK_ACCENT_VIOLET,
 } from './globalLightNetworkTokens';
+
+export type VionaBottomEscapeAccent = 'cyan' | 'magenta' | 'emerald' | 'violet' | 'gold';
 
 export type VionaBottomEscapeBarProps = Readonly<{
   showBack?: boolean;
@@ -19,16 +23,26 @@ export type VionaBottomEscapeBarProps = Readonly<{
   onBack?: () => void;
   onClose?: () => void;
   onHome?: () => void;
+  /** Active miniapp / universe shortcut (e.g. Local hub). */
+  showCurrent?: boolean;
+  currentLabel?: string;
+  onPressCurrent?: () => void;
+  currentAccentKind?: VionaBottomEscapeAccent;
+  currentIcon?: keyof typeof Ionicons.glyphMap;
   /** Extra padding below the bar (e.g. tab bar reserve when not already in scroll padding). */
   bottomInsetExtra?: number;
   align?: 'center' | 'end';
+  /** `fixed` pins above the tab bar; `inline` stays in scroll content (default). */
+  placement?: 'inline' | 'fixed';
+  /** Used when `placement` is `fixed` — distance from screen bottom (above safe area). */
+  fixedBottomOffset?: number;
 }>;
 
-type Accent = 'cyan' | 'magenta' | 'emerald';
-
-function accentFor(kind: Accent) {
+function accentFor(kind: VionaBottomEscapeAccent) {
   if (kind === 'cyan') return VIONA_GLOBAL_LIGHT_NETWORK_ACCENT_CYAN;
   if (kind === 'magenta') return VIONA_GLOBAL_LIGHT_NETWORK_ACCENT_MAGENTA;
+  if (kind === 'violet') return VIONA_GLOBAL_LIGHT_NETWORK_ACCENT_VIOLET;
+  if (kind === 'gold') return VIONA_GLOBAL_LIGHT_NETWORK_ACCENT_GOLD;
   return VIONA_GLOBAL_LIGHT_NETWORK_ACCENT_EMERALD;
 }
 
@@ -38,12 +52,14 @@ function EscapePill({
   a11y,
   accentKind,
   onPress,
+  active = false,
 }: Readonly<{
   icon: keyof typeof Ionicons.glyphMap;
   label: string;
   a11y: string;
-  accentKind: Accent;
+  accentKind: VionaBottomEscapeAccent;
   onPress: () => void;
+  active?: boolean;
 }>): ReactElement {
   const [hovered, setHovered] = useState(false);
   const a = accentFor(accentKind);
@@ -62,13 +78,14 @@ function EscapePill({
       style={({ pressed }) => [
         styles.pill,
         {
-          borderColor: stroke,
-          backgroundColor: wash,
+          borderColor: active ? stroke : stroke,
+          backgroundColor: active ? a.washHover : wash,
           shadowColor: glow,
-          shadowOpacity: hovered ? 0.42 : 0.22,
-          shadowRadius: hovered ? 12 : 6,
+          shadowOpacity: hovered || active ? 0.42 : 0.22,
+          shadowRadius: hovered || active ? 12 : 6,
           shadowOffset: { width: 0, height: 0 },
         },
+        active && styles.pillActive,
         Platform.OS === 'web' && hovered && styles.pillHoverLift,
         pressed && { transform: [{ scale: 0.985 }] },
       ]}
@@ -88,8 +105,15 @@ export function VionaBottomEscapeBar({
   onBack,
   onClose,
   onHome,
+  showCurrent = false,
+  currentLabel = '',
+  onPressCurrent,
+  currentAccentKind = 'emerald',
+  currentIcon = 'ellipse-outline',
   bottomInsetExtra = 0,
   align = 'center',
+  placement = 'inline',
+  fixedBottomOffset,
 }: VionaBottomEscapeBarProps): ReactElement | null {
   const { t } = useTranslation();
   const insets = useSafeAreaInsets();
@@ -98,9 +122,9 @@ export function VionaBottomEscapeBar({
 
   const labels = useMemo(
     () => ({
-      back: t('shell.bottomEscape.back'),
+      back: t('shell.miniapp.back'),
       close: t('shell.bottomEscape.close'),
-      home: t('shell.bottomEscape.home'),
+      home: t('shell.miniapp.home'),
       backA11y: t('shell.bottomEscape.backA11y'),
       closeA11y: t('shell.bottomEscape.closeA11y'),
       homeA11y: t('shell.bottomEscape.homeA11y'),
@@ -108,56 +132,94 @@ export function VionaBottomEscapeBar({
     [t]
   );
 
-  if (!showBack && !showClose && !showHome) {
+  if (!showBack && !showClose && !showHome && !(showCurrent && currentLabel.trim().length > 0 && onPressCurrent)) {
     return null;
   }
 
-  const padBottom = Math.max(insets.bottom, 10) + bottomInsetExtra;
+  const padBottom = placement === 'fixed' ? 0 : Math.max(insets.bottom, 10) + bottomInsetExtra;
+  const fixedBottom =
+    fixedBottomOffset ?? Math.max(insets.bottom, 10) + bottomInsetExtra;
 
-  return (
+  const rail = (
+    <View style={[styles.glassRail, compact && styles.glassRailCompact]}>
+      {showBack && onBack ? (
+        <EscapePill
+          icon="arrow-back"
+          label={labels.back}
+          a11y={labels.backA11y}
+          accentKind="cyan"
+          onPress={onBack}
+        />
+      ) : null}
+      {showHome && onHome ? (
+        <EscapePill
+          icon="home-outline"
+          label={labels.home}
+          a11y={labels.homeA11y}
+          accentKind="emerald"
+          onPress={onHome}
+        />
+      ) : null}
+      {showCurrent && currentLabel.trim().length > 0 && onPressCurrent ? (
+        <EscapePill
+          icon={currentIcon}
+          label={currentLabel}
+          a11y={currentLabel}
+          accentKind={currentAccentKind}
+          onPress={onPressCurrent}
+          active
+        />
+      ) : null}
+      {showClose && onClose ? (
+        <EscapePill
+          icon="close"
+          label={labels.close}
+          a11y={labels.closeA11y}
+          accentKind="magenta"
+          onPress={onClose}
+        />
+      ) : null}
+    </View>
+  );
+
+  const toolbar = (
     <View
       style={[
         styles.wrap,
+        placement === 'fixed' ? styles.wrapFixed : null,
         { paddingBottom: padBottom },
         align === 'end' ? styles.wrapAlignEnd : styles.wrapAlignCenter,
       ]}
       accessibilityRole="toolbar"
       accessibilityLabel={t('shell.bottomEscape.toolbarA11y')}
     >
-      <View style={[styles.glassRail, compact && styles.glassRailCompact]}>
-        {showBack && onBack ? (
-          <EscapePill
-            icon="arrow-back"
-            label={labels.back}
-            a11y={labels.backA11y}
-            accentKind="cyan"
-            onPress={onBack}
-          />
-        ) : null}
-        {showClose && onClose ? (
-          <EscapePill
-            icon="close"
-            label={labels.close}
-            a11y={labels.closeA11y}
-            accentKind="magenta"
-            onPress={onClose}
-          />
-        ) : null}
-        {showHome && onHome ? (
-          <EscapePill
-            icon="home-outline"
-            label={labels.home}
-            a11y={labels.homeA11y}
-            accentKind="emerald"
-            onPress={onHome}
-          />
-        ) : null}
-      </View>
+      {rail}
     </View>
   );
+
+  if (placement === 'fixed') {
+    return (
+      <View pointerEvents="box-none" style={[styles.fixedHost, { bottom: fixedBottom }]}>
+        {toolbar}
+      </View>
+    );
+  }
+
+  return toolbar;
 }
 
 const styles = StyleSheet.create({
+  fixedHost: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    zIndex: 8,
+    alignItems: 'center',
+    pointerEvents: 'box-none',
+  },
+  wrapFixed: {
+    marginTop: 0,
+  },
   wrap: {
     marginTop: 20,
     paddingHorizontal: 4,
@@ -199,6 +261,9 @@ const styles = StyleSheet.create({
   },
   pillHoverLift: {
     transform: [{ translateY: -1 }],
+  },
+  pillActive: {
+    borderWidth: 1.5,
   },
   pillLabel: {
     fontSize: 12,

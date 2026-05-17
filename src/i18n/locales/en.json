@@ -113,6 +113,15 @@
       "closeA11y": "Close this screen",
       "homeA11y": "Go to home hub",
       "toolbarA11y": "Page navigation shortcuts"
+    },
+    "miniapp": {
+      "back": "Back",
+      "home": "Home",
+      "local": "Local hub",
+      "travel": "Travel",
+      "academy": "Academy",
+      "business": "Business",
+      "sos": "SOS"
     }
   },
   "login": {

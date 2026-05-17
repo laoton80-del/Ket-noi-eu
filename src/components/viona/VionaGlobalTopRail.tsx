@@ -56,6 +56,13 @@ export type VionaGlobalTopRailProps = Readonly<{
   settingsLabel?: string;
   /** Extra pills after account (rare). */
   trailingSlot?: ReactNode;
+  /** Web-only Daylight Boost toggle (miniapp shell; does not alter Home command bar). */
+  daylightControl?: Readonly<{
+    label: string;
+    onPress: () => void;
+    accessibilityLabel: string;
+    isDaylight: boolean;
+  }>;
 }>;
 
 export function VionaGlobalTopRail({
@@ -78,6 +85,7 @@ export function VionaGlobalTopRail({
   settingsA11y,
   settingsLabel = 'Settings',
   trailingSlot,
+  daylightControl,
 }: VionaGlobalTopRailProps): ReactElement {
   const { t } = useTranslation();
   const { width: windowWidth } = useWindowDimensions();
@@ -182,6 +190,29 @@ export function VionaGlobalTopRail({
                   {t('shell.utility.language')}
                 </Text>
               </Pressable>
+              {daylightControl ? (
+                <Pressable
+                  onPress={daylightControl.onPress}
+                  style={({ pressed }) => [
+                    styles.utilBtn,
+                    compactDensity && styles.utilBtnCompact,
+                    pressed && styles.pressed,
+                  ]}
+                  accessibilityRole="button"
+                  accessibilityLabel={daylightControl.accessibilityLabel}
+                >
+                  <Ionicons
+                    name={daylightControl.isDaylight ? 'moon-outline' : 'sunny-outline'}
+                    size={compactDensity ? 15 : 16}
+                    color={vionaTokens.fashionTech.champagne}
+                  />
+                  {compactDensity ? null : (
+                    <Text style={styles.utilLabel} numberOfLines={1} ellipsizeMode="tail">
+                      {daylightControl.label}
+                    </Text>
+                  )}
+                </Pressable>
+              ) : null}
               {fullscreenControl ? (
                 <Pressable
                   onPress={fullscreenControl.onPress}
