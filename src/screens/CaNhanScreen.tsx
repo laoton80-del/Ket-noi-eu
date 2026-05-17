@@ -30,6 +30,7 @@ import type { Auth, Persistence } from 'firebase/auth';
 import * as FirebaseAuth from 'firebase/auth';
 import { ensureFirebaseAppCheckInitialized } from '../config/appCheckClient';
 import { getFirebaseApp, isFirebaseClientConfigured } from '../config/firebaseApp';
+import { AccountNeonGlassPanel } from '../components/account/AccountNeonGlassPanel';
 import { DiasporaRestrictionModal } from '../components/modals/DiasporaRestrictionModal';
 import { evaluateMerchantSurfaceAccess } from '../services/auth/merchantSurfaceEntry';
 import { loadUsageHistory, type UsageHistoryItem } from '../services/history';
@@ -45,10 +46,6 @@ import {
   type VionaActionAccent,
 } from '../components/viona';
 import { VionaBrandLockup } from '../components/viona/VionaBrandLockup';
-import {
-  premiumCrispEdgeStroke,
-  premiumFrameEdgeOverlay,
-} from '../components/viona/fashionHomeDesktopShell';
 import { vionaTokens } from '../design';
 import { theme } from '../theme/theme';
 import { FontFamily } from '../theme/typography';
@@ -416,49 +413,40 @@ export function CaNhanScreen() {
         <View style={styles.flagshipSection}>
           <Pressable
             onPress={() => navigation.navigate('SetupProfile', { mode: 'edit' })}
-            style={({ pressed }) => [styles.profileCard, pressed && { opacity: 0.72 }]}
+            style={({ pressed }) => [styles.flagshipPressable, pressed && { opacity: 0.72 }]}
           >
-            <View style={styles.cardSatinHighlight} pointerEvents="none" />
-            <View style={styles.avatarOuterRing}>
-              <View style={styles.avatarWrap}>
-                <Ionicons name="person" size={34} color={ft.champagne} />
+            <AccountNeonGlassPanel
+              role="gold"
+              tier="elevated"
+              radius={theme.radius.lg}
+              contentStyle={styles.profileCardInner}
+            >
+              <View style={styles.avatarOuterRing}>
+                <View style={styles.avatarWrap}>
+                  <Ionicons name="person" size={34} color={ft.champagne} />
+                </View>
               </View>
-            </View>
-            <View style={styles.profileMeta}>
-              <Text style={styles.profileName}>{strings.common.pronounYou}</Text>
-              <Text style={styles.profilePlan}>{strings.profile.currentPlan}</Text>
-            </View>
-            <View
-              pointerEvents="none"
-              style={[
-                styles.premiumCardEdge,
-                premiumFrameEdgeOverlay(theme.radius.lg),
-                premiumCrispEdgeStroke(`${ft.accentGold}ea`),
-              ]}
-            />
+              <View style={styles.profileMeta}>
+                <Text style={styles.profileName}>{strings.common.pronounYou}</Text>
+                <Text style={styles.profilePlan}>{strings.profile.currentPlan}</Text>
+              </View>
+            </AccountNeonGlassPanel>
           </Pressable>
 
           <Pressable
             onPress={() => navigation.navigate('Wallet')}
-            style={({ pressed }) => [styles.creditsCard, pressed && { opacity: 0.72 }]}
+            style={({ pressed }) => [styles.flagshipPressableCredits, pressed && { opacity: 0.72 }]}
           >
-            <View style={styles.cardSatinHighlight} pointerEvents="none" />
-            <View style={styles.creditsHeaderRow}>
-              <Ionicons name="wallet-outline" size={18} color={ft.champagne} />
-              <Text style={styles.cardTitle}>{strings.profile.creditsTitle}</Text>
-            </View>
-            <Text style={styles.cardBalance}>
-              {interpolate(strings.profile.creditsBalanceCurrent, { credits: String(wallet.credits) })}
-            </Text>
-            <Text style={styles.cardHint}>{strings.profile.creditsHint}</Text>
-            <View
-              pointerEvents="none"
-              style={[
-                styles.premiumCardEdge,
-                premiumFrameEdgeOverlay(theme.radius.lg),
-                premiumCrispEdgeStroke(`${ft.accentGold}ea`),
-              ]}
-            />
+            <AccountNeonGlassPanel role="gold" tier="default" radius={theme.radius.lg} contentStyle={styles.creditsCardInner}>
+              <View style={styles.creditsHeaderRow}>
+                <Ionicons name="wallet-outline" size={18} color={ft.champagne} />
+                <Text style={styles.cardTitle}>{strings.profile.creditsTitle}</Text>
+              </View>
+              <Text style={styles.cardBalance}>
+                {interpolate(strings.profile.creditsBalanceCurrent, { credits: String(wallet.credits) })}
+              </Text>
+              <Text style={styles.cardHint}>{strings.profile.creditsHint}</Text>
+            </AccountNeonGlassPanel>
           </Pressable>
         </View>
 
@@ -529,7 +517,13 @@ export function CaNhanScreen() {
           </VionaActionGrid>
         </View>
 
-        <View style={styles.identityCard}>
+        <AccountNeonGlassPanel
+          role="emerald"
+          tier="identity"
+          radius={theme.radius.lg}
+          style={styles.identityCardWrap}
+          contentStyle={styles.identityCardInner}
+        >
           <View style={styles.identityTitleRow}>
             <View style={styles.identityBadge}>
               <Ionicons name="shield-checkmark" size={14} color={ft.accentEmerald} />
@@ -562,15 +556,7 @@ export function CaNhanScreen() {
           >
             <Text style={styles.editIdentityText}>{strings.profile.editIdentityCta}</Text>
           </Pressable>
-          <View
-            pointerEvents="none"
-            style={[
-              styles.premiumCardEdge,
-              premiumFrameEdgeOverlay(theme.radius.lg),
-              premiumCrispEdgeStroke(`${ft.accentEmerald}ea`),
-            ]}
-          />
-        </View>
+        </AccountNeonGlassPanel>
 
         <Text style={styles.sectionTitle}>{strings.profile.settingsTitle}</Text>
         <View style={styles.settingsCard}>
@@ -784,32 +770,21 @@ const styles = StyleSheet.create({
     position: 'relative',
     marginBottom: 4,
   },
-  cardSatinHighlight: {
-    position: 'absolute',
-    left: 12,
-    right: 12,
-    top: 0,
-    height: 1,
-    backgroundColor: 'rgba(255, 255, 255, 0.08)',
-  },
   actionGridSection: {
     width: '100%',
     alignSelf: 'stretch',
     marginBottom: theme.spacing.md,
   },
-  profileCard: {
-    position: 'relative',
-    borderRadius: theme.radius.lg,
-    backgroundColor: ft.surfaceElevated,
-    padding: 14,
+  flagshipPressable: {
+    marginBottom: 10,
+  },
+  flagshipPressableCredits: {
+    marginBottom: 12,
+  },
+  profileCardInner: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 10,
-    shadowColor: 'rgba(238, 206, 128, 0.14)',
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 1,
-    shadowRadius: 3,
-    elevation: 1,
+    padding: 14,
   },
   avatarOuterRing: {
     width: 68,
@@ -845,17 +820,8 @@ const styles = StyleSheet.create({
     color: ft.textSecondary,
     fontFamily: FontFamily.regular,
   },
-  creditsCard: {
-    position: 'relative',
-    borderRadius: theme.radius.lg,
-    backgroundColor: 'rgba(12, 18, 28, 0.96)',
+  creditsCardInner: {
     padding: 14,
-    marginBottom: 12,
-    shadowColor: 'rgba(238, 206, 128, 0.14)',
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 1,
-    shadowRadius: 3,
-    elevation: 1,
   },
   creditsHeaderRow: {
     flexDirection: 'row',
@@ -883,21 +849,12 @@ const styles = StyleSheet.create({
     color: ft.textSecondary,
     fontFamily: FontFamily.regular,
   },
-  identityCard: {
-    position: 'relative',
-    borderRadius: theme.radius.lg,
-    backgroundColor: 'rgba(12, 18, 28, 0.94)',
-    padding: 14,
+  identityCardWrap: {
     marginBottom: 12,
-    gap: 8,
-    shadowColor: 'rgba(46, 207, 155, 0.14)',
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 1,
-    shadowRadius: 3,
-    elevation: 1,
   },
-  premiumCardEdge: {
-    pointerEvents: 'none',
+  identityCardInner: {
+    padding: 14,
+    gap: 8,
   },
   identityTitleRow: {
     flexDirection: 'row',
