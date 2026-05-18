@@ -25,20 +25,10 @@
   "sos": {
     "fabLabel": "SOS",
     "fabHint": "世界中のベトナム人向けSOSガイド — 長押しで確認。",
-    "fabAnnounce": "SOSガイドを開きました。",
-    "sheetTitle": "SOS安全ガイド",
-    "sheetSubtitle": "落ち着いて。適切な次のステップを選んでください。",
-    "gpsBanner": "位置情報は許可後にのみ案内に使えます。VIONAは位置を自動共有しません。",
     "gpsLoading": "許可を確認中…",
     "gpsUnavailable": "位置の許可がオフまたは利用不可。下のガイドは引き続き使えます。",
     "coordsLocked": "このビルドでは座標は表示されません。",
     "coordsA11y": "ここでは位置の詳細は表示されません。",
-    "optionMedicalTitle": "医療 / 救急",
-    "optionMedicalSub": "現地の緊急番号の案内 — 発信はご自身で行います",
-    "optionPoliceTitle": "警察",
-    "optionPoliceSub": "現地の緊急番号の案内 — 発信はご自身で行います",
-    "optionScamTitle": "詐欺の報告",
-    "optionScamSub": "不審な状況を記録し次に何をするか決める落ち着いた手順を確認できます。VIONAは当局へ自動通知せず、位置も共有しません。",
     "reportScamSub": "不審な行為を記録し次に何をするか決める落ち着いた手順を確認。VIONAは当局へ自動通知せず、位置も共有しません。",
     "close": "閉じる",
     "callFailedTitle": "ダイヤラーを開けません",
@@ -135,6 +125,9 @@
     "legacyEmbassyAlertBody": "領事番号は国により異なります。政府の渡航勧告や公式大使館ディレクトリを使用 — VIONAはここでは代わりに発信しません。",
     "legacyEmergencyAlertTitle": "現地の緊急",
     "legacyEmergencyAlertBody": "直ちに危険な場合は、現地の緊急番号に直接かけてください。"
+  },
+  "ai_voice": {
+    "accessibilityAnnounce": "SOSガイドを開きました。"
   },
   "smartTrio": {
     "language": {
