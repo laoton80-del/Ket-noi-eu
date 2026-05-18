@@ -169,7 +169,7 @@ Agents working in this repository must:
 |-------|--------|
 | Canonical path | `docs/ai-context/VIONA_OPERATING_PROTOCOL.md` |
 | Updates | Revision PR with reason; notify Release Train Owner for gate-impacting edits |
-| Related locks | `docs/audit/VIONA_GLOBAL_ACTIVE_FULL_STANDARD_LOCK_1.md` — global Active/Full target vs internal readiness labels |
+| Related locks | `docs/audit/VIONA_GLOBAL_ACTIVE_FULL_STANDARD_LOCK_1.md` — global Active/Full target vs internal readiness labels; `docs/design/VIONA_DESIGN_MODE_LOCK.md` — dark product UI vs light presentation-only |
 
 ---
 
