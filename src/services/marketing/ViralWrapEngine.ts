@@ -75,7 +75,7 @@ async function generateHumorousViralLine(input: {
     'Write ONE short, punchy, slightly humorous line for an Instagram Story “travel wrap” card.',
     `Output language: ${input.languageName} only.`,
     `Destination context: ${input.destinationLabel}.`,
-    `Stats (use lightly, be playful): trip spend ${input.tripVigSpent.toFixed(0)} VIG,`,
+    `Stats (use lightly, be playful): trip spend ${input.tripVigSpent.toFixed(0)} VIO Credits,`,
     `lifetime completed tourism bookings ${input.bookingsCount},`,
     `rough “saved” USD ~${input.moneySavedUsd.toFixed(2)},`,
     `AI voice/translate sessions on trip ${input.aiSessions}.`,
@@ -90,7 +90,7 @@ async function generateHumorousViralLine(input: {
       {
         role: 'system',
         content:
-          'You are ViGlobal’s viral social copywriter. Be fun, confident, never mean-spirited, no slurs, no medical claims.',
+          'You are VIONA’s viral social copywriter. Be fun, confident, never mean-spirited, no slurs, no medical claims.',
       },
       { role: 'user', content: user },
     ],
@@ -167,7 +167,7 @@ export async function generateUserTripSummary(userId: string, tripId: string): P
   );
 
   const destinationLabel =
-    `${booking.business.name} · ${booking.service.title}`.slice(0, 120) || 'ViGlobal Vietnam';
+    `${booking.business.name} · ${booking.service.title}`.slice(0, 120) || 'VIONA Vietnam';
 
   const viralTagline = await generateHumorousViralLine({
     languageName,

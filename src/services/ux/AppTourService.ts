@@ -23,8 +23,9 @@ export type V7DemoStep = Readonly<{
 export const V7_DEMO_SEQUENCE: readonly V7DemoStep[] = [
   {
     id: 'welcome_hub',
-    title: 'Welcome to ViGlobal Hub',
-    subtitle: 'Your VIG Wallet and the SOS Shield live here — tap Wallet for balance, hold the lifeline for emergency.',
+    title: 'Welcome to VIONA Hub',
+    subtitle:
+      'Your Wallet (VIO Credits) and the SOS Shield live here — tap Wallet for balance, hold the lifeline for emergency.',
     pulse: { x: 0.5, y: 0.88, r: 0.14 },
     tabTarget: 'TabHome',
   },
@@ -52,7 +53,7 @@ export const V7_DEMO_SEQUENCE: readonly V7DemoStep[] = [
 ];
 
 const ACADEMY_MOCK_LINE_VI =
-  'Xin chào! Tôi là Cô Giáo AI ViGlobal. Chào mừng bạn đến Học viện — đây là bản demo năm giây.';
+  'Xin chào! Tôi là Cô Giáo AI VIONA. Chào mừng bạn đến Học viện — đây là bản demo năm giây.';
 
 let academySpeechToken = 0;
 

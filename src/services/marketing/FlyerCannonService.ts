@@ -63,7 +63,7 @@ export function generateViralFlyer(brokerId: string, merchantId: string): ViralF
   const deepLinkUniversal = `${universalBase}/tour?${qp.toString()}`;
 
   const shareCardImageUrl = `https://placehold.co/1080x1920/0A1628/C5A059/FFFFFF/png?text=${encodeURIComponent(
-    'ViGlobal · V7 Free Tour'
+    'VIONA · V7 Free Tour'
   )}&ref=${encodeURIComponent(trackingRef)}`;
 
   return {

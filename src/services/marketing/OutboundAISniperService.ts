@@ -44,7 +44,7 @@ export async function sendOnboardingLinkDelivery(input: {
   }
 
   const body =
-    'ViGlobal V7: Your 90-day SEO pilot + Free Omniverse Tour — tap to continue (broker-attributed): ' + TOUR_BASE();
+    'VIONA V7: Your 90-day SEO pilot + Free Omniverse Tour — tap to continue (broker-attributed): ' + TOUR_BASE();
 
   const webhook = process.env.EXPO_PUBLIC_MARKETING_ONBOARDING_EMAIL_WEBHOOK_URL?.trim() ?? '';
 
