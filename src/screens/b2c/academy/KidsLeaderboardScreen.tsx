@@ -54,10 +54,15 @@ export function KidsLeaderboardScreen() {
 
   const podium = useMemo<readonly PodiumSlot[]>(() => {
     const top = weeklyRows.slice(0, 3);
+    if (top.length === 0) return [];
+    const second = top[1] ?? top[0];
+    const first = top[0];
+    const third = top[2] ?? top[0];
+    if (!first || !second || !third) return [];
     return [
-      { row: top[1] ?? top[0], height: 84, medalColor: '#D1D5DB' },
-      { row: top[0], height: 112, medalColor: '#F59E0B' },
-      { row: top[2] ?? top[0], height: 70, medalColor: '#B45309' },
+      { row: second, height: 84, medalColor: '#D1D5DB' },
+      { row: first, height: 112, medalColor: '#F59E0B' },
+      { row: third, height: 70, medalColor: '#B45309' },
     ];
   }, [weeklyRows]);
 
@@ -135,6 +140,7 @@ export function KidsLeaderboardScreen() {
               <Text style={styles.loadingText}>{t('academySub.leaderboard.loadingWeekly')}</Text>
             </View>
           ) : null}
+          {!weeklyLoading && podium.length > 0 ? (
           <View style={styles.podiumWrap}>
             {podium.map((slot, idx) => (
               <View key={`${slot.row.nickname}-${slot.row.rank}`} style={styles.podiumCol}>
@@ -153,6 +159,7 @@ export function KidsLeaderboardScreen() {
               </View>
             ))}
           </View>
+          ) : null}
 
           <FlatList
             data={weeklyRows.slice(3, 50)}
