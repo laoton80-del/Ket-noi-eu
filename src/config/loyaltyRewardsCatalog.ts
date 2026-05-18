@@ -5,7 +5,7 @@ export const LOYALTY_REWARDS_CATALOG: readonly LoyaltyRewardDefinition[] = [
   {
     id: 'voucher_pho_10',
     titleVi: 'Voucher 10% Quán Phở đối tác',
-    subtitleVi: 'Áp dụng chi nhánh tham gia KNG Local (demo).',
+    subtitleVi: 'Áp dụng chi nhánh tham gia VIONA Local (demo).',
     vigTokenCost: 350,
     kind: 'voucher',
   },
@@ -18,15 +18,15 @@ export const LOYALTY_REWARDS_CATALOG: readonly LoyaltyRewardDefinition[] = [
   },
   {
     id: 'vig_100_ai',
-    titleVi: '100 VIG Token gọi AI',
-    subtitleVi: 'Cộng vào ví khi backend nạp tự động bật (hiện: mở khóa trong app).',
+    titleVi: '100 VIO Credits gọi AI',
+    subtitleVi: 'VIO Credits trong app (demo) — không phải tiền mặt, crypto hay rút được; mở khóa trong app.',
     vigTokenCost: 1_200,
     kind: 'vig_tokens',
   },
   {
     id: 'travel_lounge_pass',
     titleVi: 'Travel Pass Lounge (mock)',
-    subtitleVi: 'Ưu tiên hàng chờ KNG Travel — lead magnet nối vé & homestay.',
+    subtitleVi: 'Ưu tiên hàng chờ VIONA Travel Lite — xem trước lead vé & homestay (demo).',
     vigTokenCost: 2_800,
     kind: 'travel_perk',
   },

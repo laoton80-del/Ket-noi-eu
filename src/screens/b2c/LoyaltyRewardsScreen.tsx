@@ -96,7 +96,12 @@ export function LoyaltyRewardsScreen() {
       }
       const res = redeemPointsForReward(userId, rewardId);
       if (!res.ok) {
-        Alert.alert(`${brandConfig.displayName} Rewards`, res.message);
+        const reward = LOYALTY_REWARDS_CATALOG.find((item) => item.id === rewardId);
+        const message =
+          res.code === 'insufficient_vig_tokens' && reward
+            ? `Bạn cần thêm ${reward.vigTokenCost - summary.vigTokens} ${getVioPointsLabel()} để đổi quà này.`
+            : res.message;
+        Alert.alert(`${brandConfig.displayName} Rewards`, message);
         return;
       }
       Alert.alert(
@@ -104,7 +109,7 @@ export function LoyaltyRewardsScreen() {
         `${res.perkLabel} đã được mở khóa (demo). Số dư: ${formatVioPoints(res.remainingVigTokens)}.`
       );
     },
-    [userId]
+    [userId, summary.vigTokens]
   );
 
   const simulateSpend = useCallback(() => {
@@ -157,7 +162,7 @@ export function LoyaltyRewardsScreen() {
 
         <Text style={styles.sectionTitle}>Đổi Quà Tặng</Text>
         <Text style={styles.sectionSub}>
-          {`Đổi ${getVioPointsLabel()} lấy quà (demo rewards) — trải nghiệm trong ${brandConfig.displayName}, không phải tài sản đầu tư hay tiền mặt rút được.`}
+          {`Đổi ${getVioPointsLabel()} lấy quà (demo rewards) — trải nghiệm trong ${brandConfig.displayName}; điểm loyalty trong app, không phải tiền mặt, crypto hay rút được.`}
         </Text>
 
         {LOYALTY_REWARDS_CATALOG.map((r) => (
