@@ -74,8 +74,8 @@
     "close": "Schließen",
     "callFailedTitle": "Wählen nicht möglich",
     "callFailedBody": "Bitte die lokale Notrufnummer auf Ihrem Telefon wählen.",
-    "reportQueuedTitle": "Hinweis gespeichert",
-    "reportQueuedBody": "Hinweis nur auf diesem Gerät gespeichert. Keine Live-Warteschlange oder Meldung an Behörden."
+    "reportQueuedTitle": "SOS-Notizen bereit",
+    "reportQueuedBody": "Ihre Orientierungsnotizen sind zur Durchsicht bereit. VIONA sendet keine Meldungen automatisch, alarmiert keine Behörden und teilt Ihren Standort nicht."
   },
   "ai_voice": {
     "tapToSpeak": "Tippen zum Sprechen",
