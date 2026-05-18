@@ -15,6 +15,7 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useTranslation } from '../../../i18n';
 import type { RootStackParamList } from '../../../navigation/routes';
 import {
   getSosQuickActionScript,
@@ -31,6 +32,7 @@ type Nav = NativeStackNavigationProp<RootStackParamList>;
 
 export function TravelSosHubScreen() {
   const navigation = useNavigation<Nav>();
+  const { t } = useTranslation();
   const soundRef = useRef<Audio.Sound | null>(null);
   const [loading, setLoading] = useState(true);
   const [lat, setLat] = useState(50.0755);
@@ -75,6 +77,18 @@ export function TravelSosHubScreen() {
     void Linking.openURL(`https://www.openstreetmap.org/search?query=${q}`);
   }, [nearest.mission.mapsQueryHint]);
 
+  const dialMissionPhone = useCallback(() => {
+    const tel = nearest.mission.phoneDisplay.replace(/\s/g, '');
+    void Linking.openURL(`tel:${tel}`);
+  }, [nearest.mission.phoneDisplay]);
+
+  const confirmDialMission = useCallback(() => {
+    Alert.alert(t('travelSosHub.embassyCallConfirmTitle'), t('travelSosHub.embassyCallConfirmBody'), [
+      { text: t('travelSosHub.embassyCallCancel'), style: 'cancel' },
+      { text: t('travelSosHub.embassyCallConfirmCta'), onPress: dialMissionPhone },
+    ]);
+  }, [dialMissionPhone, t]);
+
   const playQuickAction = useCallback(
     async (kind: SosQuickActionKind) => {
       setTtsKind(kind);
@@ -93,14 +107,16 @@ export function TravelSosHubScreen() {
         });
       } catch {
         setTtsKind(null);
-        Alert.alert('TTS', 'Không phát được âm thanh. Kiểm tra mạng hoặc thử lại.');
+        Alert.alert(t('travelSosHub.ttsFailedTitle'), t('travelSosHub.ttsFailed'));
       }
     },
-    [countryCode]
+    [countryCode, t]
   );
 
   const medicalScript = useMemo(() => getSosQuickActionScript('medical', countryCode), [countryCode]);
   const policeScript = useMemo(() => getSosQuickActionScript('police', countryCode), [countryCode]);
+
+  const gpsDisplayLocation = cityLabel.length > 0 ? cityLabel : t('travelSosHub.locationFallback');
 
   return (
     <View style={styles.root}>
@@ -116,23 +132,27 @@ export function TravelSosHubScreen() {
             onPress={() => navigation.goBack()}
             style={({ pressed }) => [styles.iconBtn, pressed && { opacity: 0.85 }]}
             accessibilityRole="button"
-            accessibilityLabel="Quay lại"
+            accessibilityLabel={t('travelSosHub.backA11y')}
           >
             <Ionicons name="chevron-back" size={24} color="#FFF5F5" />
           </Pressable>
-          <Text style={styles.topTitle}>SOS · An toàn Kiều bào</Text>
+          <Text style={styles.topTitle}>{t('travelSosHub.screenTitle')}</Text>
           <View style={{ width: 44 }} />
         </View>
 
         <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
+          <Text style={styles.globalDisclaimer}>{t('sos.footerDisclaimer')}</Text>
+
           {loading ? (
             <View style={styles.loadingRow}>
               <ActivityIndicator color="#FF6B6B" />
-              <Text style={styles.loadingText}>Đang định vị GPS an toàn…</Text>
+              <Text style={styles.loadingText}>{t('travelSosHub.gpsLoading')}</Text>
             </View>
           ) : (
             <Text style={styles.gpsLine}>
-              📍 {cityLabel.length > 0 ? cityLabel : 'Vị trí'} · Gần nhất tính theo đường chim bay (demo)
+              {t('travelSosHub.gpsLineDemo', {
+                location: cityLabel.length > 0 ? cityLabel : gpsDisplayLocation,
+              })}
             </Text>
           )}
 
@@ -141,15 +161,18 @@ export function TravelSosHubScreen() {
             style={({ pressed }) => [styles.call112, pressed && { opacity: 0.92 }]}
             className={applyWebStyles('kn-neon-sos')}
             accessibilityRole="button"
-            accessibilityLabel="Mở màn hình gọi khẩn cấp 112"
+            accessibilityLabel={t('travelSosHub.openEmergencyA11y')}
           >
             <Ionicons name="call" size={22} color="#fff" />
-            <Text style={styles.call112Text}>Gọi khẩn cấp địa phương (112 / 911)</Text>
+            <Text style={styles.call112Text}>{t('travelSosHub.openEmergencyGuidance')}</Text>
             <Ionicons name="chevron-forward" size={20} color="#fff" />
           </Pressable>
 
           <View style={styles.card} className={applyWebStyles('kn-glass')}>
-            <Text style={styles.cardKicker}>Đại sứ quán / Lãnh sự gần nhất</Text>
+            <View style={styles.cardKickerRow}>
+              <Text style={styles.cardKicker}>{t('travelSosHub.embassyKicker')}</Text>
+              <Text style={styles.demoBadge}>{t('travelSosHub.demoBadge')}</Text>
+            </View>
             <Text style={styles.cardTitle}>{nearest.mission.nameVi}</Text>
             <Text style={styles.cardMeta}>
               {nearest.mission.cityLabel} · ~{nearest.distanceKm.toFixed(0)} km
@@ -157,26 +180,31 @@ export function TravelSosHubScreen() {
             <Text style={styles.phone}>{nearest.mission.phoneDisplay}</Text>
             <View style={styles.rowBtns}>
               <Pressable
-                onPress={() => void Linking.openURL(`tel:${nearest.mission.phoneDisplay.replace(/\s/g, '')}`)}
+                onPress={confirmDialMission}
                 style={({ pressed }) => [styles.miniBtn, pressed && { opacity: 0.9 }]}
+                accessibilityRole="button"
+                accessibilityLabel={t('travelSosHub.callMission')}
               >
                 <Ionicons name="call-outline" size={18} color="#E8D5A3" />
-                <Text style={styles.miniBtnText}>Gọi DSQ/LSQ</Text>
+                <Text style={styles.miniBtnText}>{t('travelSosHub.callMission')}</Text>
               </Pressable>
               <Pressable
                 onPress={openMapsMission}
                 style={({ pressed }) => [styles.miniBtn, pressed && { opacity: 0.9 }]}
+                accessibilityRole="button"
+                accessibilityLabel={t('travelSosHub.directions')}
               >
                 <Ionicons name="map-outline" size={18} color="#E8D5A3" />
-                <Text style={styles.miniBtnText}>Chỉ đường</Text>
+                <Text style={styles.miniBtnText}>{t('travelSosHub.directions')}</Text>
               </Pressable>
             </View>
           </View>
 
-          <Text style={styles.section}>Giọng đọc AI — câu sẵn cho y tế & cảnh sát</Text>
-          <Text style={styles.sectionHint}>
-            Một clip gồm tiếng địa phương + tiếng Việt (OpenAI TTS). Giữ máy gần tai nhân viên.
-          </Text>
+          <View style={styles.sectionRow}>
+            <Text style={styles.section}>{t('travelSosHub.ttsSection')}</Text>
+            <Text style={styles.demoBadge}>{t('travelSosHub.ttsPilotDisclaimer')}</Text>
+          </View>
+          <Text style={styles.sectionHint}>{t('travelSosHub.ttsHint')}</Text>
 
           <Pressable
             onPress={() => void playQuickAction('medical')}
@@ -191,13 +219,17 @@ export function TravelSosHubScreen() {
           >
             <Ionicons name="medical" size={26} color="#7CFFB2" />
             <View style={{ flex: 1, minWidth: 0 }}>
-              <Text style={styles.aiTileTitle}>Medical · Cấp cứu</Text>
+              <Text style={styles.aiTileTitle}>{t('travelSosHub.medicalTile')}</Text>
               <Text style={styles.aiTileBody} numberOfLines={3}>
                 {medicalScript.ttsPrimaryLocalLanguage}
               </Text>
               <Text style={styles.aiVi}>{medicalScript.vietnameseCompanionLine}</Text>
             </View>
-            {ttsKind === 'medical' ? <ActivityIndicator color="#7CFFB2" /> : <Ionicons name="volume-high" size={22} color="#7CFFB2" />}
+            {ttsKind === 'medical' ? (
+              <ActivityIndicator color="#7CFFB2" />
+            ) : (
+              <Ionicons name="volume-high" size={22} color="#7CFFB2" />
+            )}
           </Pressable>
 
           <Pressable
@@ -213,14 +245,20 @@ export function TravelSosHubScreen() {
           >
             <Ionicons name="shield" size={26} color="#9EC5FF" />
             <View style={{ flex: 1, minWidth: 0 }}>
-              <Text style={styles.aiTileTitle}>Police · Cảnh sát</Text>
+              <Text style={styles.aiTileTitle}>{t('travelSosHub.policeTile')}</Text>
               <Text style={styles.aiTileBody} numberOfLines={3}>
                 {policeScript.ttsPrimaryLocalLanguage}
               </Text>
               <Text style={styles.aiVi}>{policeScript.vietnameseCompanionLine}</Text>
             </View>
-            {ttsKind === 'police' ? <ActivityIndicator color="#9EC5FF" /> : <Ionicons name="volume-high" size={22} color="#9EC5FF" />}
+            {ttsKind === 'police' ? (
+              <ActivityIndicator color="#9EC5FF" />
+            ) : (
+              <Ionicons name="volume-high" size={22} color="#9EC5FF" />
+            )}
           </Pressable>
+
+          <Text style={styles.footerDisclaimer}>{t('sos.footerDisclaimer')}</Text>
         </ScrollView>
       </SafeAreaView>
     </View>
@@ -244,7 +282,22 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#FFF0F0',
   },
-  scroll: { paddingHorizontal: theme.spacing.lg, paddingBottom: theme.spacing.xxl },
+  scroll: { paddingHorizontal: theme.spacing.lg, paddingBottom: theme.spacing.xxl, gap: 12 },
+  globalDisclaimer: {
+    fontSize: 12,
+    lineHeight: 17,
+    color: 'rgba(248, 244, 236, 0.88)',
+    fontFamily: FontFamily.medium,
+    textAlign: 'center',
+  },
+  footerDisclaimer: {
+    fontSize: 12,
+    lineHeight: 17,
+    color: 'rgba(248, 244, 236, 0.72)',
+    fontFamily: FontFamily.medium,
+    textAlign: 'center',
+    marginTop: 8,
+  },
   loadingRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 14 },
   loadingText: { color: 'rgba(255,240,240,0.85)', fontFamily: FontFamily.medium },
   gpsLine: {
@@ -263,6 +316,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(180, 20, 20, 0.55)',
     borderWidth: 1,
     borderColor: 'rgba(255,120,120,0.5)',
+    minHeight: 48,
   },
   call112Text: {
     flex: 1,
@@ -278,12 +332,32 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(232, 213, 163, 0.35)',
     backgroundColor: 'rgba(12, 20, 36, 0.45)',
   },
+  cardKickerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 8,
+    marginBottom: 6,
+  },
   cardKicker: {
+    flex: 1,
     fontSize: 11,
     letterSpacing: 0.8,
     color: 'rgba(248,244,236,0.65)',
     fontFamily: FontFamily.extrabold,
-    marginBottom: 6,
+  },
+  demoBadge: {
+    fontSize: 9,
+    fontFamily: FontFamily.extrabold,
+    letterSpacing: 0.5,
+    textTransform: 'uppercase',
+    color: '#FCD34D',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+    borderWidth: 1,
+    borderColor: 'rgba(252, 211, 77, 0.45)',
+    backgroundColor: 'rgba(0,0,0,0.25)',
   },
   cardTitle: {
     fontSize: 17,
@@ -305,13 +379,21 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'rgba(232, 213, 163, 0.35)',
     backgroundColor: 'rgba(0,0,0,0.2)',
+    minHeight: 44,
   },
   miniBtnText: { color: '#E8D5A3', fontFamily: FontFamily.bold, fontSize: 13 },
+  sectionRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 8,
+    marginBottom: 6,
+  },
   section: {
+    flex: 1,
     fontSize: 14,
     color: '#FFF4E8',
     fontFamily: FontFamily.extrabold,
-    marginBottom: 6,
   },
   sectionHint: {
     fontSize: 12,
@@ -329,6 +411,7 @@ const styles = StyleSheet.create({
     marginBottom: theme.spacing.md,
     borderWidth: StyleSheet.hairlineWidth,
     borderColor: 'rgba(255,255,255,0.12)',
+    minHeight: 44,
   },
   aiMedical: { backgroundColor: 'rgba(20, 60, 40, 0.35)' },
   aiPolice: { backgroundColor: 'rgba(30, 50, 90, 0.35)' },
