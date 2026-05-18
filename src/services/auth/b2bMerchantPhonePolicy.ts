@@ -6,7 +6,7 @@
 export const B2B_DOMESTIC_VIETNAM_PHONE_PREFIX = '+84' as const;
 
 export const B2B_DOMESTIC_VIETNAM_PHONE_REJECT_MESSAGE =
-  'Rất tiếc! Hệ thống kinh doanh B2B của KNG hiện chỉ hỗ trợ các doanh nghiệp Kiều bào đang hoạt động tại nước ngoài.' as const;
+  'Rất tiếc! Hệ thống kinh doanh B2B của VIONA hiện chỉ hỗ trợ các doanh nghiệp Kiều bào đang hoạt động tại nước ngoài.' as const;
 
 export class B2BDomesticVietnamPhoneNotAllowedError extends Error {
   readonly code = 'b2b_domestic_vn_phone' as const;

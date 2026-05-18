@@ -1,3 +1,5 @@
+import { getVioCreditsLabel } from '../../core/monetization/vioDisplayLabels';
+
 export type AiPersona = 'LEONA' | 'MINH_KHANG';
 
 export const AI_LEONA_VIG_TOKENS_PER_MIN = 200 as const;
@@ -48,7 +50,7 @@ export function consumeAiMinutesFromVigBalance(
     return {
       ok: false,
       code: 'insufficient_vig_tokens',
-      message: `Số dư VIG Token không đủ. Cần ${estimate.vigTokensCost}, hiện có ${current}.`,
+      message: `Số dư ${getVioCreditsLabel()} không đủ. Cần ${estimate.vigTokensCost}, hiện có ${current}.`,
     };
   }
   return {

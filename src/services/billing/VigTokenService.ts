@@ -58,7 +58,7 @@ export function calculateVigBurnForService(
  */
 export function assertVigFiatWithdrawalForbidden(context: string): never {
   throw new Error(
-    `VIG_CLOSED_LOOP: withdrawal to fiat is prohibited (${context}). Burn only within ViGlobal services.`
+    `VIG_CLOSED_LOOP: withdrawal to fiat is prohibited (${context}). Use VIO Credits only within VIONA in-app services — not withdrawable cash.`
   );
 }
 

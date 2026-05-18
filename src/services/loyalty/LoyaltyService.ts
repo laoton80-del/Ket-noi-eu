@@ -3,6 +3,7 @@
  * Persistence: `useKngLoyaltyStore` (AsyncStorage). Replace with ledger-backed events when finance signs off.
  */
 
+import { getVioCreditsLabel } from '../../core/monetization/vioDisplayLabels';
 import { findLoyaltyRewardById } from '../../config/loyaltyRewardsCatalog';
 import { getOrCreateLoyaltySnapshot, useKngLoyaltyStore } from '../../state/kngLoyaltyStore';
 import {
@@ -102,7 +103,7 @@ export function redeemPointsForReward(userId: string, rewardId: string): RedeemP
     return {
       ok: false,
       code: 'insufficient_vig_tokens',
-      message: `Bạn cần thêm ${reward.vigTokenCost - snap.vigTokenBalance} VIG Token để đổi quà này.`,
+      message: `Bạn cần thêm ${reward.vigTokenCost - snap.vigTokenBalance} ${getVioCreditsLabel()} để đổi quà này.`,
     };
   }
   const nextBal = snap.vigTokenBalance - reward.vigTokenCost;

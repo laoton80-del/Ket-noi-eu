@@ -66,10 +66,10 @@ export function getV7TrialTrapSurfaceCopy(daySinceMerchantStart: number): string
   if (phase === 'top_seo_window') {
     return `Days 1–${V7_TRIAL_TOP_SEO_DAY_CAP}: Top SEO & discovery boost active (you are on day ${Math.min(day, V7_TRIAL_TOP_SEO_DAY_CAP)}).`;
   }
-  return `Day ${V7_TRIAL_TOP_SEO_DAY_CAP + 1}+: Top SEO runway ended — VIG Token top-up required to restore featured placement and AI reception capacity.`;
+  return `Day ${V7_TRIAL_TOP_SEO_DAY_CAP + 1}+: Top SEO runway ended — VIO Credits top-up required to restore featured placement and AI reception capacity (in-app only).`;
 }
 
 /** When merchant `created_at` is not yet synced, show compliance-safe copy (no fabricated day). */
 export function getV7TrialTrapPendingSyncCopy(): string {
-  return 'Merchant profile creation date must be loaded from ViGlobal to enforce the 90-day SEO runway and VIG gate — sync your business account.';
+  return 'Merchant profile creation date must be loaded from VIONA to enforce the 90-day SEO runway and in-app credits gate — sync your business account.';
 }

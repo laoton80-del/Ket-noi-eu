@@ -137,7 +137,7 @@ export async function runInterpreterTurn(
   } catch (e) {
     if (e instanceof QuotaExceededError) {
       const msg =
-        '⚠️ Energy depleted. Please top up VIG Tokens to continue using AI Services.';
+        '⚠️ Energy depleted. Please top up VIO Credits to continue using AI services (in-app only — not cash or crypto).';
       return {
         transcript: '',
         translation: msg,

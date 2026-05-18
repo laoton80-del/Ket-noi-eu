@@ -140,7 +140,7 @@ export class StripeConnectService {
       `Phí nền tảng merchant ${merchFeeLabel}${wholesaleNote}. ` +
       `Connect application_fee = trust + merchant fee (minor). ` +
       `Chủ tiệm nhận ~${merchantSharePct}% gốc dịch vụ (${netLabel}). ` +
-      `Ước tính Stripe+KNG 1% trên tổng quẹt: ${stripeLabel} + ${kngLabel} (mock).`;
+      `Ước tính Stripe+VIONA 1% trên tổng quẹt: ${stripeLabel} + ${kngLabel} (mock).`;
 
     return {
       ok: true,

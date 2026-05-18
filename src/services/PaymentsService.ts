@@ -1,3 +1,4 @@
+import { getVioCreditsLabel } from '../core/monetization/vioDisplayLabels';
 import { normalizeCountryCodeOrSentinel, pricingTierForUsageDebits, resolveCountryPack } from '../config/countryPacks';
 import { LETAN_BOOKING_CREDITS_BY_TIER, OUTBOUND_CALL_CREDITS_BY_TIER } from '../config/countryPacks/pricingByTier';
 import type { WalletPackageId } from '../config/globalWalletPackages';
@@ -142,7 +143,7 @@ export function calculateCallCreditPrice(userCountry?: string): CallCreditPriceQ
     basePerCallCzk: creditsPerCall,
     localAmount: creditsPerCall,
     currencyCode: 'VIG_TOKEN',
-    amountLabel: `${formatMoney(creditsPerCall)} VIG Token/cuộc`,
+    amountLabel: `${formatMoney(creditsPerCall)} ${getVioCreditsLabel()}/cuộc`,
   };
 }
 
@@ -155,7 +156,7 @@ export function calculateLeTanBookingPrice(userCountry?: string): LeTanBookingPr
     creditsPerBooking,
     localAmount: creditsPerBooking,
     currencyCode: 'VIG_TOKEN',
-    amountLabel: `${creditsPerBooking} VIG Token/lượt`,
+    amountLabel: `${creditsPerBooking} ${getVioCreditsLabel()}/lượt`,
   };
 }
 
