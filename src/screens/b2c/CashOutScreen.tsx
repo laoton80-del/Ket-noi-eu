@@ -37,7 +37,7 @@ const MOCK_COMMISSION_WALLET_XU = 18_500;
 const BANK_RAIL_GOAL_XU = 50_000;
 const BANK_RAIL_GOAL_MAJOR_USD = 500;
 
-/** Low tier: ecosystem voucher from 50 USD-major retained in KNG. */
+/** Low tier: ecosystem voucher from 50 USD-major retained in VIONA (demo). */
 const VOUCHER_MIN_MAJOR_USD = 50;
 const VOUCHER_MIN_XU = Math.round(VOUCHER_MIN_MAJOR_USD / CREDIT_EXCHANGE_RATE_USD);
 
@@ -83,7 +83,7 @@ export function CashOutScreen() {
     if (!voucherUnlocked) return;
     setVoucherIssued(true);
     Alert.alert(
-      'Voucher hệ sinh thái KNG',
+      'Voucher hệ sinh thái VIONA',
       'Đã phát hành voucher dịch vụ B2B (mock). Tiền thưởng giữ trong nền tảng — không rút ra ngoài.'
     );
   };
@@ -131,7 +131,7 @@ export function CashOutScreen() {
             Hai lựa chọn: quy đổi trong hệ sinh thái ({fmtLedger(VOUCHER_MIN_MAJOR_USD)}+) hoặc rút ngân hàng khi đạt {fmtLedger(BANK_RAIL_GOAL_MAJOR_USD)} (50.000 Xu).
           </Text>
           <Text style={styles.vigComplianceNote}>
-            V7 · VIG / Xu ví nạp mua: tiện ích một chiều (neo fiat trong app) — không rút ra ngân hàng. Chỉ ví hoa hồng giới thiệu mới có quy trình cash-out sau KYC và ngưỡng.
+            VIO Credits / Xu ví nạp mua: tiện ích một chiều trong app — không phải tiền mặt, crypto hay rút được. Chỉ ví hoa hồng giới thiệu (nếu bật) mới có quy trình rút sau KYC và ngưỡng (pilot).
           </Text>
           <Text style={styles.aiScanNote}>Hệ thống AI tự động kiểm duyệt gian lận trong 60 giây.</Text>
         </View>
@@ -170,7 +170,7 @@ export function CashOutScreen() {
           <View style={styles.optionBadge}>
             <Text style={styles.optionBadgeText}>OPTION 1 · LOW TIER</Text>
           </View>
-          <Text style={styles.optionTitle}>Đổi Voucher Hệ Sinh Thái KNG</Text>
+          <Text style={styles.optionTitle}>Đổi Voucher Hệ Sinh Thái VIONA</Text>
           <Text style={styles.optionBody}>
             Từ {fmtLedger(VOUCHER_MIN_MAJOR_USD)} trở lên — đổi thưởng thành dịch vụ B2B (ưu đãi merchant). Tiền không rời hệ thống, giảm áp lực thanh khoản.
           </Text>

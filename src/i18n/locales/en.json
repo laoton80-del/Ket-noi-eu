@@ -660,6 +660,7 @@
     "total": "Total VIO Credits to pay",
     "vndCashHint": "Cash / local bank apps (indicative): ≈ {{vnd}} VND at live FX — final lock applies when you pay.",
     "quoteLegal": "Amounts are computed on VIONA servers. Your wallet will be debited the total shown.",
+    "vioCreditsFootnote": "VIO Credits are in-app loyalty units for this preview — not cash, crypto, or withdrawable.",
     "payNow": "Pay {{amount}} now",
     "payA11y": "Pay {{total}} VIO Credits now",
     "configError": "API is not configured. Set EXPO_PUBLIC_REST_API_BASE.",

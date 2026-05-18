@@ -660,6 +660,7 @@
     "total": "Tổng VIO Credits cần trả",
     "vndCashHint": "Tiền mặt / app ngân hàng (tham chiếu): ≈ {{vnd}} VND theo tỷ giá — khóa chính xác khi thanh toán.",
     "quoteLegal": "Số tiền do máy chủ VIONA tính. Ví của bạn sẽ trừ đúng tổng hiển thị.",
+    "vioCreditsFootnote": "VIO Credits là đơn vị trong app cho bản xem trước — không phải tiền mặt, crypto hay rút được.",
     "payNow": "Trả {{amount}} ngay",
     "payA11y": "Trả {{total}} VIO Credits ngay",
     "configError": "Chưa cấu hình API. Đặt EXPO_PUBLIC_REST_API_BASE.",

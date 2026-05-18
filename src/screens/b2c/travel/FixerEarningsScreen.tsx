@@ -56,7 +56,7 @@ export function FixerEarningsScreen() {
                 <Text style={styles.rowValue}>{formatCurrency(breakdown.baseAmountEur, EUR)}</Text>
               </View>
               <View style={styles.row}>
-                <Text style={styles.rowLabel}>Phí nền tảng KNG ({breakdown.fixerProviderFeePercent.toFixed(1)}%)</Text>
+                <Text style={styles.rowLabel}>Phí nền tảng VIONA ({breakdown.fixerProviderFeePercent.toFixed(1)}%)</Text>
                 <Text style={styles.rowNeg}>-{formatCurrency(breakdown.providerFeeEur, EUR)}</Text>
               </View>
               <View style={[styles.line, { marginVertical: 10 }]} />

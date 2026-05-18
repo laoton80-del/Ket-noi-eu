@@ -48,7 +48,7 @@ export function LocalFixerScreen() {
             <Ionicons name="chevron-back" size={24} color="#F8F4EC" />
           </Pressable>
           <View style={styles.topCenter}>
-            <Text style={styles.kicker}>KNG Travel</Text>
+            <Text style={styles.kicker}>VIONA Travel Lite</Text>
             <Text style={styles.title}>Tìm Thổ Địa Người Việt</Text>
           </View>
           <View style={{ width: 44 }} />
@@ -58,7 +58,7 @@ export function LocalFixerScreen() {
           <View style={styles.hero} className={applyWebStyles('kn-glass kn-neon-b2b')}>
             <Text style={styles.heroTitle}>Chợ Thổ Địa tin cậy</Text>
             <Text style={styles.heroBody}>
-              Người Việt bản địa giúp bạn lái xe, phiên dịch, săn deal và xử lý giấy tờ — thanh toán & hợp đồng qua KNG
+              Người Việt bản địa giúp bạn lái xe, phiên dịch, săn deal và xử lý giấy tờ — thanh toán & hợp đồng qua VIONA (xem trước / pilot)
               (demo).
             </Text>
           </View>

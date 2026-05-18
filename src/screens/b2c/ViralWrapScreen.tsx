@@ -249,7 +249,7 @@ export function ViralWrapScreen(): ReactElement {
             </Text>
 
             <View style={styles.statGrid}>
-              <StatBlock label="VIG on this trip" value={formatVig(display.tripVigSpent)} accent />
+              <StatBlock label="VIO Credits on this trip" value={formatVig(display.tripVigSpent)} accent />
               <StatBlock
                 label="Est. saved vs chaos"
                 value={formatUsd(display.estimatedMoneySavedUsd)}

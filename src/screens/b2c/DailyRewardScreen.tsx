@@ -165,7 +165,7 @@ export function DailyRewardScreen() {
                 })}
                 <View style={styles.wheelHub}>
                   <Ionicons name="gift" size={32} color={theme.colors.SignatureGold} />
-                  <Text style={styles.wheelHubText}>KNG</Text>
+                  <Text style={styles.wheelHubText}>VIONA</Text>
                 </View>
               </LinearGradient>
             </View>

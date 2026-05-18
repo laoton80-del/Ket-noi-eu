@@ -175,6 +175,9 @@ export function TourismCheckoutScreen(): ReactElement {
               <Text style={styles.finePrint} numberOfLines={4} adjustsFontSizeToFit minimumFontScale={0.82}>
                 {t('checkout.quoteLegal')}
               </Text>
+              <Text style={styles.finePrint} numberOfLines={3} adjustsFontSizeToFit minimumFontScale={0.82}>
+                {t('checkout.vioCreditsFootnote')}
+              </Text>
             </>
           ) : null}
         </View>
