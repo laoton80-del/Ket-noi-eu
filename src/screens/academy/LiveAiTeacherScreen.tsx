@@ -1,14 +1,22 @@
 import { Ionicons } from '@expo/vector-icons';
-import { useNavigation, useRoute } from '@react-navigation/native';
-import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { useRoute } from '@react-navigation/native';
 import type { RouteProp } from '@react-navigation/native';
 import { useEffect, useMemo, useState } from 'react';
-import { ActivityIndicator, Alert, Pressable, StyleSheet, Text, View } from 'react-native';
+import {
+  ActivityIndicator,
+  Alert,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+  useWindowDimensions,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { PrecisePanel } from '../../components/ui/PrecisePanel';
 import { StatusChip, type StatusChipState } from '../../components/ui/StatusChip';
-import { AI_TEACHER_PREMIUM_USD, PRICING_BASELINE_CURRENCY } from '../../config/pricingConfig';
-import { getPersonaCapability } from '../../config/aiPersonaCapabilities';
+import { getVioCreditsLabel } from '../../core/monetization/vioDisplayLabels';
+import { useTranslation } from '../../i18n';
 import type { RootStackParamList } from '../../navigation/routes';
 import { useAiStream } from '../../services/academy/AiStreamClient';
 import { getAiTeacherPrompt } from '../../services/academy/TeacherPrompt';
@@ -16,22 +24,24 @@ import { useRegionState } from '../../state/region';
 import { b2cTheme } from '../../theme/appModeThemes';
 import { theme } from '../../theme/theme';
 import { FontFamily } from '../../theme/typography';
-import { getVioCreditsLabel } from '../../core/monetization/vioDisplayLabels';
-import { formatCurrency } from '../../utils/currencyFormatter';
 
-type Nav = NativeStackNavigationProp<RootStackParamList>;
+const NARROW_WIDTH = 400;
+const CONTROLS_BOTTOM_PAD = 120;
 
 export function LiveAiTeacherScreen() {
-  const navigation = useNavigation<Nav>();
   const route = useRoute<RouteProp<RootStackParamList, 'LiveAiTeacher'>>();
+  const { t } = useTranslation();
+  const { width } = useWindowDimensions();
   const scenarioLabel = route.params?.scenarioLabel?.trim();
   const practiceFocus = route.params?.practiceFocus?.trim();
   const stream = useAiStream();
-  const teacherPersona = getPersonaCapability('ai_teacher');
   const { currentCountry, localLanguage } = useRegionState();
   const [whiteboardText, setWhiteboardText] = useState('');
   const [avatarSpeech, setAvatarSpeech] = useState('');
   const [isCharging, setIsCharging] = useState(false);
+
+  const avatarStageMinHeight = width < NARROW_WIDTH ? 240 : 300;
+  const whiteboardPanelWidth = width < NARROW_WIDTH ? '92%' : '56%';
 
   useEffect(() => {
     stream.onMessage((message) => {
@@ -62,100 +72,126 @@ export function LiveAiTeacherScreen() {
     try {
       await stream.connect(aiTeacherPrompt);
     } catch {
-      Alert.alert('Không thể bắt đầu phiên', 'Không thể kết nối phiên học lúc này. Vui lòng thử lại.');
+      Alert.alert(t('academyLive.connectErrorTitle'), t('academyLive.connectErrorBody'));
     } finally {
       setIsCharging(false);
     }
   };
 
   const isConnected = stream.state === 'live' || stream.state === 'connecting';
-  const mainActionLabel = isCharging ? 'Đang xử lý...' : isConnected ? 'Ngắt kết nối' : 'Bắt đầu phiên';
+  const mainActionLabel = isCharging
+    ? t('academyLive.processing')
+    : isConnected
+      ? t('academyLive.disconnectSession')
+      : t('academyLive.startDemoSession');
 
   const handleMicPress = () => {
     if (isCharging || stream.state !== 'live') return;
     stream.sendAudio('sample_base64_audio');
   };
 
+  const idleSpeech =
+    stream.state === 'error'
+      ? t('academyLive.teacherUnavailableDemo')
+      : avatarSpeech || t('academyLive.avatarSpeechIdle');
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <View style={styles.headerCenter}>
-          <Text style={styles.headerTitle}>Gia sư AI trực tiếp</Text>
-          <Text style={styles.contextText}>Ngữ cảnh: {currentCountry}</Text>
+          <View style={styles.headerTitleRow}>
+            <Text style={styles.headerTitle}>{t('academyLive.headerTitle')}</Text>
+            <View style={styles.betaBadge}>
+              <Text style={styles.betaBadgeText}>{t('academyLive.betaBadge')}</Text>
+            </View>
+          </View>
+          <Text style={styles.contextText}>
+            {t('academyLive.contextLabel', { country: currentCountry })}
+          </Text>
+          <Text style={styles.sessionPreviewLabel}>{t('academyLive.sessionPreview')}</Text>
         </View>
         <StatusChip state={statusState} />
       </View>
 
-      {scenarioLabel || practiceFocus ? (
-        <PrecisePanel style={styles.learnerCuePanel}>
-          <Text style={styles.learnerCueTitle}>Gợi ý luyện (Academy Lite)</Text>
-          {scenarioLabel ? (
-            <Text style={styles.learnerCueLine}>
-              <Text style={styles.learnerCueEmphasis}>Tình huống: </Text>
-              {scenarioLabel}
-            </Text>
-          ) : null}
-          {practiceFocus ? (
-            <Text style={styles.learnerCueLine}>
-              <Text style={styles.learnerCueEmphasis}>Trọng tâm: </Text>
-              {practiceFocus}
-            </Text>
-          ) : null}
-          <Text style={styles.learnerCueHint}>
-            Hiển thị để bạn tự luyện — chưa tự động gửi vào phiên stream.
-          </Text>
-        </PrecisePanel>
-      ) : null}
-
-      <View
-        style={[
-          styles.premiumUpsell,
-          { backgroundColor: b2cTheme.colors.card, borderColor: b2cTheme.colors.border },
-        ]}
+      <ScrollView
+        style={styles.scroll}
+        contentContainerStyle={[styles.scrollContent, { paddingBottom: CONTROLS_BOTTOM_PAD }]}
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
       >
-        <View style={styles.premiumUpsellHeader}>
-          <Ionicons name="school" size={18} color={b2cTheme.colors.primary} />
-          <Text style={styles.premiumUpsellTitle}>Cô giáo AI — Thẻ Học Giả</Text>
-        </View>
-        <Text style={styles.premiumUpsellKicker}>Premium Learner</Text>
-        <Text style={styles.premiumUpsellPrice}>
-          {formatCurrency(AI_TEACHER_PREMIUM_USD, PRICING_BASELINE_CURRENCY)} / tháng — đăng ký qua Ví (upsell)
-        </Text>
-        <Text style={styles.premiumUpsellCreditsNote}>
-          {`Bài học & mic trong app: trừ ${getVioCreditsLabel()}. Telemetry: ${teacherPersona.telemetryTag}.`}
-        </Text>
-        <Text style={styles.premiumUpsellHero}>
-          Luyện hội thoại không giới hạn 24/7 — Unlimited 24/7 speaking practice.
-        </Text>
-        <Text style={styles.premiumUpsellLine}>Nhập vai tình huống thực tế — Real-life roleplay scenarios.</Text>
-        <Pressable
-          onPress={() => navigation.navigate('Wallet')}
-          style={({ pressed }) => [styles.premiumUpsellCta, pressed && { opacity: 0.88 }]}
-          accessibilityRole="button"
-          accessibilityLabel="Đăng ký Thẻ Học Giả"
+        {scenarioLabel || practiceFocus ? (
+          <PrecisePanel style={styles.learnerCuePanel}>
+            <Text style={styles.learnerCueTitle}>{t('academyLive.learnerCueTitle')}</Text>
+            {scenarioLabel ? (
+              <Text style={styles.learnerCueLine}>
+                <Text style={styles.learnerCueEmphasis}>{t('academyLive.scenarioLabel')}</Text>
+                {scenarioLabel}
+              </Text>
+            ) : null}
+            {practiceFocus ? (
+              <Text style={styles.learnerCueLine}>
+                <Text style={styles.learnerCueEmphasis}>{t('academyLive.focusLabel')}</Text>
+                {practiceFocus}
+              </Text>
+            ) : null}
+            <Text style={styles.learnerCueHint}>{t('academyLive.learnerCueHint')}</Text>
+          </PrecisePanel>
+        ) : null}
+
+        <View
+          style={[
+            styles.pilotPanel,
+            { backgroundColor: b2cTheme.colors.card, borderColor: b2cTheme.colors.border },
+          ]}
         >
-          <Text style={styles.premiumUpsellCtaText}>Xem đăng ký & thanh toán</Text>
-          <Ionicons name="chevron-forward" size={16} color="#FFFFFF" />
-        </Pressable>
-      </View>
-
-      <View style={styles.videoStage}>
-        <View style={[styles.avatarPlaceholder, stream.state === 'live' && styles.avatarLiveGlow]}>
-          <Ionicons name="videocam" size={40} color={theme.colors.SignatureGold} />
-          <Text style={styles.avatarTitle}>Luồng avatar AI</Text>
-          <Text style={styles.avatarHint}>Video avatar WebRTC sẽ hiển thị tại đây.</Text>
+          <View style={styles.pilotPanelHeader}>
+            <Ionicons name="school" size={18} color={b2cTheme.colors.primary} />
+            <Text style={styles.pilotPanelTitle}>{t('academyLive.upgradePanelTitle')}</Text>
+          </View>
+          <Text style={styles.pilotAccessKicker}>{t('academyLive.pilotAccess')}</Text>
+          <Text style={styles.upgradeComingSoon}>{t('academyLive.upgradeComingSoon')}</Text>
+          <Text style={styles.pilotPanelBody}>{t('academyLive.upgradePanelBody')}</Text>
+          <Text style={styles.pilotPanelNote}>
+            {t('academyLive.upgradePreviewNote', { credits: getVioCreditsLabel() })}
+          </Text>
+          <Text style={styles.upgradeInterestLabel}>{t('academyLive.upgradeInterestLabel')}</Text>
         </View>
-        <Text style={styles.avatarSpeech} numberOfLines={3}>
-          {avatarSpeech || 'Gia sư AI đang sẵn sàng hội thoại thời gian thực.'}
-        </Text>
-      </View>
 
-      {whiteboardText.trim() ? (
-        <PrecisePanel style={styles.whiteboardPanel}>
-          <Text style={styles.whiteboardTitle}>Bảng ghi chú</Text>
-          <Text style={styles.whiteboardLine}>{whiteboardText}</Text>
+        <PrecisePanel style={styles.safetyBanner}>
+          <View style={styles.safetyBannerHeader}>
+            <Ionicons name="shield-checkmark-outline" size={16} color={theme.colors.SignatureGold} />
+            <Text style={styles.safetyBannerTitle}>{t('academyLive.safetyBannerTitle')}</Text>
+          </View>
+          <Text style={styles.safetyLine}>{t('academyLive.demoSessionNotice')}</Text>
+          <Text style={styles.safetyLine}>{t('academyLive.notOfficialCertification')}</Text>
+          <Text style={styles.safetyLine}>{t('academyLive.availabilityLimited')}</Text>
+          <Text style={styles.safetyLine}>{t('academyLive.noHighStakes')}</Text>
         </PrecisePanel>
-      ) : null}
+
+        <View style={styles.videoStage}>
+          <View
+            style={[
+              styles.avatarPlaceholder,
+              { minHeight: avatarStageMinHeight },
+              stream.state === 'live' && styles.avatarLiveGlow,
+            ]}
+          >
+            <Ionicons name="videocam" size={40} color={theme.colors.SignatureGold} />
+            <Text style={styles.avatarTitle}>{t('academyLive.avatarStageTitle')}</Text>
+            <Text style={styles.avatarHint}>{t('academyLive.avatarStageHint')}</Text>
+          </View>
+          <Text style={styles.avatarSpeech} numberOfLines={4}>
+            {idleSpeech}
+          </Text>
+        </View>
+
+        {whiteboardText.trim() ? (
+          <PrecisePanel style={[styles.whiteboardPanel, { width: whiteboardPanelWidth }]}>
+            <Text style={styles.whiteboardTitle}>{t('academyLive.whiteboardTitle')}</Text>
+            <Text style={styles.whiteboardLine}>{whiteboardText}</Text>
+          </PrecisePanel>
+        ) : null}
+      </ScrollView>
 
       <View style={styles.controlsWrap}>
         <Pressable
@@ -169,6 +205,8 @@ export function LiveAiTeacherScreen() {
             void handleConnectToggle();
           }}
           disabled={isCharging}
+          accessibilityRole="button"
+          accessibilityLabel={mainActionLabel}
         >
           {isCharging ? (
             <View style={styles.processingWrap}>
@@ -183,19 +221,28 @@ export function LiveAiTeacherScreen() {
         <Pressable
           style={({ pressed }) => [styles.controlButton, styles.controlActive, pressed && { opacity: 0.8 }]}
           onPress={handleMicPress}
-          disabled={isCharging}
+          disabled={isCharging || stream.state !== 'live'}
+          accessibilityRole="button"
+          accessibilityLabel={t('academyLive.micA11y')}
         >
           <Ionicons name="mic" size={20} color={theme.colors.onAccent} />
         </Pressable>
       </View>
     </SafeAreaView>
   );
-};
+}
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: theme.colors.DeepInkNavy,
+  },
+  scroll: {
+    flex: 1,
+  },
+  scrollContent: {
+    paddingTop: 4,
+    gap: 10,
   },
   header: {
     paddingHorizontal: 14,
@@ -209,16 +256,45 @@ const styles = StyleSheet.create({
     color: theme.colors.SignatureGold,
     ...theme.typeScale.body,
     fontFamily: FontFamily.bold,
+    flexShrink: 1,
+  },
+  headerTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  betaBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: 'rgba(167, 139, 250, 0.55)',
+    backgroundColor: 'rgba(124, 58, 237, 0.22)',
+  },
+  betaBadgeText: {
+    color: '#DDD6FE',
+    fontSize: 10,
+    fontFamily: FontFamily.bold,
+    letterSpacing: 0.4,
+    textTransform: 'uppercase',
   },
   headerCenter: {
     alignItems: 'center',
     justifyContent: 'center',
     flex: 1,
-    paddingHorizontal: 12,
+    paddingHorizontal: 8,
+  },
+  sessionPreviewLabel: {
+    marginTop: 2,
+    color: theme.colors.text.secondary,
+    ...theme.typeScale.caption,
+    fontFamily: FontFamily.medium,
+    opacity: 0.88,
   },
   learnerCuePanel: {
     marginHorizontal: 14,
-    marginBottom: 10,
     paddingVertical: 10,
     paddingHorizontal: 12,
   },
@@ -252,27 +328,27 @@ const styles = StyleSheet.create({
     ...theme.typeScale.caption,
     fontFamily: FontFamily.medium,
     opacity: 0.9,
+    textAlign: 'center',
   },
-  premiumUpsell: {
+  pilotPanel: {
     marginHorizontal: 14,
-    marginBottom: 10,
     padding: 12,
     borderRadius: 14,
     borderWidth: 1,
     gap: 6,
   },
-  premiumUpsellHeader: {
+  pilotPanelHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
   },
-  premiumUpsellTitle: {
+  pilotPanelTitle: {
     flex: 1,
     color: b2cTheme.colors.text,
     ...theme.typeScale.body,
     fontFamily: FontFamily.extrabold,
   },
-  premiumUpsellKicker: {
+  pilotAccessKicker: {
     color: b2cTheme.colors.primary,
     ...theme.typeScale.caption,
     fontFamily: FontFamily.bold,
@@ -280,59 +356,66 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
     marginTop: 2,
   },
-  premiumUpsellPrice: {
+  upgradeComingSoon: {
     color: b2cTheme.colors.primary,
-    ...theme.typeScale.h2,
+    ...theme.typeScale.caption,
     fontFamily: FontFamily.bold,
+    lineHeight: 18,
   },
-  premiumUpsellCreditsNote: {
-    color: 'rgba(11, 22, 40, 0.72)',
+  pilotPanelBody: {
+    color: 'rgba(11, 22, 40, 0.78)',
     ...theme.typeScale.caption,
     fontFamily: FontFamily.regular,
     lineHeight: 18,
   },
-  premiumUpsellHero: {
-    color: b2cTheme.colors.text,
-    ...theme.typeScale.body,
-    fontFamily: FontFamily.extrabold,
-    lineHeight: 22,
-  },
-  premiumUpsellLine: {
+  pilotPanelNote: {
     color: 'rgba(11, 22, 40, 0.62)',
     ...theme.typeScale.caption,
     fontFamily: FontFamily.medium,
     lineHeight: 18,
   },
-  premiumUpsellCta: {
-    marginTop: 4,
+  upgradeInterestLabel: {
+    marginTop: 2,
+    color: 'rgba(11, 22, 40, 0.55)',
+    ...theme.typeScale.caption,
+    fontFamily: FontFamily.semibold,
+    lineHeight: 17,
+  },
+  safetyBanner: {
+    marginHorizontal: 14,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    gap: 4,
+  },
+  safetyBannerHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    gap: 6,
-    minHeight: 42,
-    borderRadius: 12,
-    backgroundColor: b2cTheme.colors.primary,
-    paddingHorizontal: 14,
-    alignSelf: 'stretch',
+    gap: 8,
+    marginBottom: 4,
   },
-  premiumUpsellCtaText: {
-    color: '#FFFFFF',
+  safetyBannerTitle: {
+    flex: 1,
+    color: theme.colors.SignatureGold,
     ...theme.typeScale.caption,
     fontFamily: FontFamily.bold,
   },
+  safetyLine: {
+    color: theme.colors.text.secondary,
+    ...theme.typeScale.caption,
+    fontFamily: FontFamily.regular,
+    lineHeight: 17,
+  },
   videoStage: {
-    flex: 1,
     paddingHorizontal: 16,
-    paddingTop: 12,
-    paddingBottom: 120,
-    justifyContent: 'center',
+    paddingTop: 4,
+    paddingBottom: 8,
+    minHeight: 200,
   },
   avatarPlaceholder: {
     borderRadius: 20,
     borderWidth: 1,
     borderColor: theme.colors.glass.border,
     backgroundColor: theme.colors.overlay.ringCore,
-    minHeight: 320,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 20,
@@ -350,6 +433,7 @@ const styles = StyleSheet.create({
     color: theme.colors.text.primary,
     ...theme.typeScale.h2,
     fontFamily: FontFamily.extrabold,
+    textAlign: 'center',
   },
   avatarHint: {
     marginTop: 8,
@@ -357,6 +441,7 @@ const styles = StyleSheet.create({
     ...theme.typeScale.caption,
     textAlign: 'center',
     fontFamily: FontFamily.medium,
+    paddingHorizontal: 8,
   },
   avatarSpeech: {
     marginTop: 12,
@@ -365,10 +450,9 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   whiteboardPanel: {
-    position: 'absolute',
-    right: 12,
-    bottom: 126,
-    width: '56%',
+    alignSelf: 'center',
+    marginHorizontal: 14,
+    marginTop: 4,
     backgroundColor: theme.colors.CeolWhite,
   },
   whiteboardTitle: {
@@ -404,6 +488,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
+    paddingHorizontal: 8,
   },
   connectBtn: {
     backgroundColor: theme.hybrid.signal,
@@ -417,6 +502,7 @@ const styles = StyleSheet.create({
     color: theme.colors.CeolWhite,
     ...theme.typeScale.caption,
     fontFamily: FontFamily.bold,
+    textAlign: 'center',
   },
   mainActionDisabled: {
     opacity: 0.78,
