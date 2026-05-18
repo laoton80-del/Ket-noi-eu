@@ -7,9 +7,13 @@
 **Prior waves:** Brand drift merge (`d044174`), global language strategy (`e039ed0`), loyalty catalog brand (`a382fbb` / `32b0482`)  
 **Date:** 2026-05-16  
 
-**Governing law:** [VIONA Operating Protocol](../ai-context/VIONA_OPERATING_PROTOCOL.md), [Global Language Strategy](./VIONA_I18N_GLOBAL_LANGUAGE_STRATEGY_AUDIT_1.md), [Brand Drift Sweep](./VIONA_I18N_BRAND_DRIFT_SWEEP_1.md).
+**Governing law:** [VIONA Operating Protocol](../ai-context/VIONA_OPERATING_PROTOCOL.md) §1.1, [Global Active/Full lock](./VIONA_GLOBAL_ACTIVE_FULL_STANDARD_LOCK_1.md), [Global Language Strategy](./VIONA_I18N_GLOBAL_LANGUAGE_STRATEGY_AUDIT_1.md), [Brand Drift Sweep](./VIONA_I18N_BRAND_DRIFT_SWEEP_1.md).
+
+**Product vision (not changed by this audit):** VIONA targets **Active / Full globally** for the entire app. **Lite / Pilot / Demo** in this report describe **locale and surface implementation readiness** only — not a strategic decision to limit markets or universes. Missing keys or stub namespaces are **progress**, not product scope removal.
 
 **Runtime note:** `src/i18n/index.ts` registers `en`, `vi`, `cs`, `de`, `fr`, `ko`, `ja` with `fallbackLng: 'en'` and `mergeSosWithEnglishBase()` for non-EN `sos` objects. **Missing keys resolve to English** unless a locale file overrides the same path.
+
+**Post-audit note:** `VIONA.I18N.TIER1_CS_DE_COMPLETION.1` may land after this audit snapshot; refresh key counts from `cs.json` / `de.json` when comparing coverage — global Active/Full target is unchanged regardless.
 
 ---
 
@@ -17,7 +21,7 @@
 
 | Item | Result |
 |------|--------|
-| **Overall readiness** | **Tier 1 is pilot / stub only** — not market-launch ready. Safe for **global demo** when users accept **EN fallback** for most surfaces. |
+| **Overall readiness** | **Tier 1 locale implementation is pilot / stub** — not full native UI launch. Safe for **global demo** when users accept **EN fallback** for uncovered surfaces. **Markets remain in global product scope.** |
 | **Current locale coverage** | `en`/`vi` ~100% key parity (~1,402 leaf keys); `cs`/`de` ~9.3%; `fr`/`ja`/`ko` ~3.9% |
 | **Highest risk gaps** | No localized `checkout` / `emergencySos` / `home` / `travelHub` / `localHub` in any Tier-1 file; `fr`/`ja`/`ko` lack `login` and root shell strings; stub `fallbackLabel` English leaks on merchant/ops namespaces |
 | **Recommended next pack** | **`VIONA.I18N.TIER1_CS_DE_COMPLETION.1`** (implementation), then **`VIONA.I18N.TIER1_FR_JA_KO_SAFETY_BUNDLE.1`** |
@@ -156,11 +160,14 @@ Same as `fr` — **stub-only**, SOS/hub safe, EN fallback elsewhere.
 
 ## Rollout decision
 
+**Scope clarification:** Rows below judge **locale / UX implementation readiness**, not whether CZ, DE, FR, JP, or KR are in VIONA’s product roadmap (they are — see [Global Active/Full lock](./VIONA_GLOBAL_ACTIVE_FULL_STANDARD_LOCK_1.md)).
+
 | Gate | cs | de | fr | ja | ko |
 |------|----|----|----|----|-----|
 | **Tier 1 demo readiness** (device lang + EN fallback acceptable) | **Yes** | **Yes** | **Yes** (label stub) | **Yes** (label stub) | **Yes** (label stub) |
-| **Tier 1 pilot readiness** (CZ/DE/FR/JP/KR market pilot with honest “Preview · EN bridge”) | **Partial** | **Partial** | **No** (stub) | **No** (stub) | **No** (stub) |
-| **Market launch readiness** | **No** | **No** | **No** | **No** | **No** |
+| **Tier 1 pilot readiness** (market pilot with honest “Preview · EN bridge”) | **Partial** | **Partial** | **No** (stub) | **No** (stub) | **No** (stub) |
+| **Full native UI launch readiness** | **No** | **No** | **No** | **No** | **No** |
+| **Strategic market in global Active/Full scope** | **Yes** | **Yes** | **Yes** | **Yes** | **Yes** |
 
 **Safety-critical translation bundle required before any market launch** (human-reviewed, per locale):
 
@@ -240,6 +247,8 @@ Until then: **`fallbackLng: 'en'` is the safety backstop** for Tier-1.
 | Locale JSON changed? | **No** |
 | Routes / payment / auth / backend / Prisma / package changed? | **No** |
 | Functions removed? | **No** |
+| Global Active/Full target? | **Yes** — markets/universes in scope; this audit measures **locale implementation** only |
+| Lite/Pilot = demo-only market? | **No** — internal readiness labels per [lock doc](./VIONA_GLOBAL_ACTIVE_FULL_STANDARD_LOCK_1.md) |
 
 ---
 

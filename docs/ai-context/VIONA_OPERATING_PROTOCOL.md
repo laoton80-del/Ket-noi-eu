@@ -12,6 +12,32 @@ Ensure VIONA advances as **Global Vietnamese Companion OS** implemented as a **S
 
 Named strategic surfaces in this protocol include **SOS / Global Lifeline / SOS Plus** (global safety layer for Vietnamese people worldwide — not Europe-only, not Vietnam-only unless an explicit market filter applies) and **B2B Wholesale / E-shop Import** (merchant commerce engine for wholesale and catalog import — not a fake production marketplace).
 
+### 1.1 Global Active / Full standard (product vision)
+
+**Target state:** VIONA is **Active / Full globally** for the **entire app**, across **all markets**. This is the north-star product scope — not a regional demo, not a “Lite app for CZ only,” and not a permanent subset of universes.
+
+| Principle | Rule |
+|-----------|------|
+| **Global scope** | All VIONA universes and mini-apps are **intended to be available globally**; every market is **in scope** for the full platform vision. |
+| **No strategic demo-only market** | No country or region is strategically classified as “demo-only” or “out of product scope.” Gaps in locale files, ops, payment rails, or legal readiness are **implementation progress**, not a reduced product definition. |
+| **Full core app** | The global target includes: **Home / LifeOS**, **SOS / Global Lifeline**, **Travel**, **Local**, **Academy**, **Account / Profile**, **VIO Loyalty**, **AI Companion**, **Business / Merchant**, **B2B Wholesale / E-shop Import**, **Income / Broker / Community loops**, and the **Smart Trio** language layer. |
+| **Internal readiness labels only** | **Lite**, **Pilot**, **Demo**, **Gated**, **Beta**, and **Coming Soon** describe **internal** safety, legal, ops, payment, AI-cost, and fulfillment readiness — they **must not** be read as “VIONA is only a partial product in this market.” |
+| **Public direction** | External and investor-facing direction: **global full platform**. Internal gates control **when** a surface may claim live behavior — not **whether** the surface belongs in VIONA globally. |
+
+**No-fake production boundary (unchanged by Active/Full):** Pursuing Active/Full globally **does not** permit fake or implied-live outcomes. The following remain forbidden unless backed by verified systems, legal review, and ops:
+
+- emergency dispatch or “authorities contacted”
+- GPS/location sharing to VIONA or third parties without explicit consent and implementation
+- payment captured / booking confirmed / refund guaranteed / payout or cash-out
+- official certification or accredited assessment claims
+- supplier fulfillment, inventory, or delivery promises without source-of-truth data
+- AI phone calling or autonomous booking/payment without approved gates
+- verified identity, provider, or merchant status when unverified
+
+**Locale strategy (implementation, not vision):** Bundled locale JSON and partial translation coverage are **implementation artifacts**. Missing native locale for a market **does not** remove that market from global scope; **English bridge + Vietnamese + safety-critical local bundles** may support early operation until **full native-language support by market** is reached.
+
+**Canonical lock doc:** `docs/audit/VIONA_GLOBAL_ACTIVE_FULL_STANDARD_LOCK_1.md` (`VIONA.GLOBAL_ACTIVE_FULL_STANDARD_LOCK.1`).
+
 ---
 
 ## 2. Twelve mandatory roles (collective accountability)
@@ -94,7 +120,7 @@ These roles must exist as named accountability on every release wave that touche
 
 2. **No fake production state.** UI must not imply **paid success**, **confirmed booking**, **live SOS resolution**, or **production AI outcomes** unless the backing systems and operations are truly in that mode.
 
-3. **Honest labeling for maturity.** Surfaces that are **Demo / Lite / Pilot / Gated** must be labeled accordingly in UX and docs; “pretty UI” must not obscure truth.
+3. **Honest labeling for maturity.** Surfaces that are **Demo / Lite / Pilot / Gated / Beta / Coming Soon** must be labeled accordingly in UX and docs; “pretty UI” must not obscure truth. These labels are **internal readiness and safety gates** (see §1.1) — they control what behavior may be claimed **now**, not whether the universe or market is in VIONA’s global product scope.
 
 4. **Tenant isolation is mandatory.** No cross-merchant access paths; administrative shortcuts require explicit audited mechanisms.
 
@@ -143,6 +169,7 @@ Agents working in this repository must:
 |-------|--------|
 | Canonical path | `docs/ai-context/VIONA_OPERATING_PROTOCOL.md` |
 | Updates | Revision PR with reason; notify Release Train Owner for gate-impacting edits |
+| Related locks | `docs/audit/VIONA_GLOBAL_ACTIVE_FULL_STANDARD_LOCK_1.md` — global Active/Full target vs internal readiness labels |
 
 ---
 
