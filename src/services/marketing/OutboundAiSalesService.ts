@@ -140,9 +140,9 @@ function dispositionLabelVi(d: OutboundSalesCallDisposition): string {
 function buildSeo90SniperTranscriptVi(businessName: string, disposition: OutboundSalesCallDisposition): string {
   const b = businessName.trim() || 'Salon';
   const intro =
-    `Lễ Tân AI: Good day — ViGlobal V7. Am I speaking with the owner of ${b}?\n` +
+    `Lễ Tân AI: Good day — VIONA V7. Am I speaking with the owner of ${b}?\n` +
     `Salon: Yes, briefly please.\n` +
-    `Lễ Tân AI: We offer a **90-day SEO visibility pilot** on ViGlobal Omniverse — zero listing fee during the trial; ` +
+    `Lễ Tân AI: We offer a **90-day SEO visibility pilot** on VIONA Omniverse — zero listing fee during the trial; ` +
     `your salon appears in local B2B + tourist discovery with AI receptionist answering DE/FR/EN. ` +
     `Commission only activates after you **opt in** post-trial — full tracking on your dashboard.\n`;
 

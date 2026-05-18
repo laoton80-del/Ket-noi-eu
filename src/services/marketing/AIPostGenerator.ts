@@ -67,8 +67,8 @@ export async function fetchMarketingDailyStats(now: Date = new Date()): Promise<
 }
 
 const SYSTEM_PROMPT =
-  'You are the witty and engaging Social Media Manager for ViGlobal Super App. ' +
-  'Write a short, viral Facebook post in Vietnamese (with emojis and hashtags like #ViGlobal #InboundTourism) ' +
+  'You are the witty and engaging Social Media Manager for VIONA Super App. ' +
+  'Write a short, viral Facebook post in Vietnamese (with emojis and hashtags like #VIONA #InboundTourism) ' +
   'announcing these daily stats or welcoming new merchants. Keep it high-energy.';
 
 export async function generateViGlobalFacebookPost(stats: MarketingDailyStats): Promise<string> {
@@ -76,7 +76,7 @@ export async function generateViGlobalFacebookPost(stats: MarketingDailyStats): 
     'Dữ liệu thống kê nội bộ (JSON):',
     JSON.stringify(stats, null, 2),
     '',
-    'Yêu cầu: một bài đăng Facebook duy nhất, tiếng Việt, ngắn gọn, có emoji và hashtag #ViGlobal #InboundTourism (có thể thêm hashtag phù hợp).',
+    'Yêu cầu: một bài đăng Facebook duy nhất, tiếng Việt, ngắn gọn, có emoji và hashtag #VIONA #InboundTourism (có thể thêm hashtag phù hợp).',
   ].join('\n');
 
   const completion = await createRoutedChatCompletion({
@@ -118,7 +118,7 @@ export async function createMarketingDraftFromOpenAI(): Promise<{
 }
 
 const TRANSLATION_JSON_INSTRUCTION = [
-  'You are a senior social media localization lead for ViGlobal (inbound tourism super-app).',
+  'You are a senior social media localization lead for VIONA (inbound tourism super-app).',
   'Translate and culturally adapt the base Facebook post for each target market.',
   'Keep energy, emojis, and hashtags where natural; avoid spam tone; respect Meta community standards.',
   'Return STRICT JSON only with shape:',
