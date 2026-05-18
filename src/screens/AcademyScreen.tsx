@@ -12,15 +12,23 @@ import {
   View,
   useWindowDimensions,
   type ImageStyle,
+  type ViewStyle,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { AcademyGlassCard, type AcademyGlassAccent } from '../components/academy/AcademyGlassCard';
+import { AccountNeonGlassPanel } from '../components/account/AccountNeonGlassPanel';
 import { SmartTrioLanguageSheet } from '../components/smartTrio/SmartTrioLanguageSheet';
 import {
   VionaGlobalTopRail,
   useVionaGlobalTopRailWebLegacySuppression,
 } from '../components/viona/VionaGlobalTopRail';
 import { VionaBottomEscapeBar } from '../components/viona/VionaBottomEscapeBar';
+import {
+  VIONA_GLOBAL_LIGHT_NETWORK_TYPOGRAPHY,
+  vionaAccountRoleStroke,
+  VIONA_ACCOUNT_ROLE_ACCENTS,
+} from '../components/viona/globalLightNetworkTokens';
 import { APP_BRAND } from '../config/appBrand';
 import { useHomeCommand } from '../context/HomeCommandContext';
 import { useFullscreenMode } from '../hooks/useFullscreenMode';
@@ -29,74 +37,23 @@ import { MAIN_TAB, type RootStackParamList } from '../navigation/routes';
 import { theme } from '../theme/theme';
 import { FontFamily } from '../theme/typography';
 
+const GLN = VIONA_GLOBAL_LIGHT_NETWORK_TYPOGRAPHY;
 const ACADEMY_GLOBAL_BG = require('../../assets/UI/viona-academy-global-network-bg-v1.png');
 const ACADEMY_CANVAS = '#050B14';
-
-const INK = 'rgba(245, 243, 255, 0.96)';
-const INK_MUTED = 'rgba(210, 208, 230, 0.82)';
-const VIOLET_STROKE = 'rgba(167, 139, 250, 0.55)';
-const CYAN_STROKE = 'rgba(34, 211, 238, 0.42)';
-const GOLD_SOFT = 'rgba(253, 224, 138, 0.88)';
-const CARD_FILL = 'rgba(10, 14, 32, 0.78)';
+const HUB_MAX_WIDTH = 1040;
+const TABLET_MIN = 768;
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
 
-type ModuleTone = 'violet' | 'cyan';
-
-function AcademyModuleCard({
-  title,
-  status,
-  body,
-  tone,
-  icon,
-  onPress,
-  a11y,
-}: Readonly<{
-  title: string;
-  status: string;
-  body: string;
-  tone: ModuleTone;
+type AcademyModuleConfig = Readonly<{
+  id: string;
+  accent: AcademyGlassAccent;
   icon: keyof typeof Ionicons.glyphMap;
+  titleKey: 'academyHub.module1Title' | 'academyHub.module2Title' | 'academyHub.module3Title' | 'academyHub.module4Title' | 'academyHub.module5Title' | 'academyHub.module6Title';
+  statusKey: 'academyHub.module1Status' | 'academyHub.module2Status' | 'academyHub.module3Status' | 'academyHub.module4Status' | 'academyHub.module5Status' | 'academyHub.module6Status';
+  bodyKey: 'academyHub.module1Body' | 'academyHub.module2Body' | 'academyHub.module3Body' | 'academyHub.module4Body' | 'academyHub.module5Body' | 'academyHub.module6Body';
   onPress: () => void;
-  a11y: string;
-}>): ReactElement {
-  const [hovered, setHovered] = useState(false);
-  const stroke = tone === 'violet' ? VIOLET_STROKE : CYAN_STROKE;
-  const iconColor = tone === 'violet' ? 'rgba(196, 181, 253, 0.95)' : 'rgba(103, 232, 249, 0.95)';
-
-  return (
-    <Pressable
-      accessibilityRole="button"
-      accessibilityLabel={a11y}
-      onPress={onPress}
-      onHoverIn={Platform.OS === 'web' ? () => setHovered(true) : undefined}
-      onHoverOut={Platform.OS === 'web' ? () => setHovered(false) : undefined}
-      style={({ pressed }) => [
-        styles.moduleCard,
-        {
-          borderColor: hovered ? 'rgba(255, 255, 255, 0.22)' : stroke,
-          backgroundColor: hovered ? 'rgba(12, 16, 36, 0.88)' : CARD_FILL,
-        },
-        Platform.OS === 'web' && hovered && styles.moduleCardHover,
-        pressed && { opacity: 0.92 },
-      ]}
-    >
-      <View style={styles.moduleHeader}>
-        <Ionicons name={icon} size={22} color={iconColor} />
-        <View style={styles.moduleTitleBlock}>
-          <Text style={styles.moduleTitle} numberOfLines={2}>
-            {title}
-          </Text>
-          <View style={styles.statusPill}>
-            <Text style={styles.statusPillText}>{status}</Text>
-          </View>
-        </View>
-      </View>
-      <Text style={styles.moduleBody}>{body}</Text>
-      <Text style={styles.moduleCtaHint}>{'›'}</Text>
-    </Pressable>
-  );
-}
+}>;
 
 export function AcademyScreen(): ReactElement {
   const navigation = useNavigation<Nav>();
@@ -104,13 +61,17 @@ export function AcademyScreen(): ReactElement {
   const { width } = useWindowDimensions();
   const homeCommand = useHomeCommand();
   const [languageSheetOpen, setLanguageSheetOpen] = useState(false);
-  const desktopWeb = Platform.OS === 'web' && width > 768;
-  const backdropOpacity = desktopWeb ? 0.58 : 0.42;
-  const gridColumns = width >= 720 ? 2 : 1;
-  const gridGap = 12;
-  const horizontalPad = theme.spacing.lg;
+  const desktopWeb = Platform.OS === 'web' && width >= TABLET_MIN;
+  const backdropOpacity = desktopWeb ? 0.56 : 0.44;
+  const horizontalPad = width >= TABLET_MIN ? theme.spacing.xl : theme.spacing.lg;
+  const contentWidth = Math.min(width, HUB_MAX_WIDTH);
+  const gridColumns = width >= 960 ? 3 : width >= 640 ? 2 : 1;
+  const gridGap = width >= TABLET_MIN ? 14 : 12;
+  const innerTrackWidth = contentWidth - horizontalPad * 2;
   const moduleWidth =
-    gridColumns === 2 ? (width - horizontalPad * 2 - gridGap) / 2 : width - horizontalPad * 2;
+    gridColumns === 1
+      ? innerTrackWidth
+      : (innerTrackWidth - gridGap * (gridColumns - 1)) / gridColumns;
 
   const { isWeb: isWebFs, isSupported: fsSupported, isFullscreen, toggleFullscreen } = useFullscreenMode();
 
@@ -198,6 +159,78 @@ export function AcademyScreen(): ReactElement {
     ]
   );
 
+  const modules = useMemo((): readonly AcademyModuleConfig[] => {
+    const nav = navigation.navigate.bind(navigation);
+    return [
+      {
+        id: 'module-1',
+        accent: 'violet',
+        icon: 'school-outline',
+        titleKey: 'academyHub.module1Title',
+        statusKey: 'academyHub.module1Status',
+        bodyKey: 'academyHub.module1Body',
+        onPress: () => nav('LiveAiTeacher'),
+      },
+      {
+        id: 'module-2',
+        accent: 'cyan',
+        icon: 'book-outline',
+        titleKey: 'academyHub.module2Title',
+        statusKey: 'academyHub.module2Status',
+        bodyKey: 'academyHub.module2Body',
+        onPress: () => nav('AdultLearningHome'),
+      },
+      {
+        id: 'module-3',
+        accent: 'cyan',
+        icon: 'earth-outline',
+        titleKey: 'academyHub.module3Title',
+        statusKey: 'academyHub.module3Status',
+        bodyKey: 'academyHub.module3Body',
+        onPress: () => nav('AdultLearningHome'),
+      },
+      {
+        id: 'module-4',
+        accent: 'emerald',
+        icon: 'color-palette-outline',
+        titleKey: 'academyHub.module4Title',
+        statusKey: 'academyHub.module4Status',
+        bodyKey: 'academyHub.module4Body',
+        onPress: () => nav('KidsLearningHome'),
+      },
+      {
+        id: 'module-5',
+        accent: 'emerald',
+        icon: 'people-outline',
+        titleKey: 'academyHub.module5Title',
+        statusKey: 'academyHub.module5Status',
+        bodyKey: 'academyHub.module5Body',
+        onPress: () => nav('KidsLearningHome'),
+      },
+      {
+        id: 'module-6',
+        accent: 'violet',
+        icon: 'bulb-outline',
+        titleKey: 'academyHub.module6Title',
+        statusKey: 'academyHub.module6Status',
+        bodyKey: 'academyHub.module6Body',
+        onPress: () => nav('LiveAiTeacher'),
+      },
+    ];
+  }, [navigation]);
+
+  const hubShellStyle = useMemo((): ViewStyle => {
+    return {
+      width: '100%',
+      maxWidth: HUB_MAX_WIDTH,
+      alignSelf: 'center',
+      paddingHorizontal: horizontalPad,
+    };
+  }, [horizontalPad]);
+
+  const violetInk = VIONA_ACCOUNT_ROLE_ACCENTS.violet.ink;
+  const goldInk = VIONA_ACCOUNT_ROLE_ACCENTS.gold.ink;
+
   return (
     <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
       <View pointerEvents="none" style={[StyleSheet.absoluteFillObject, { zIndex: 0 }]}>
@@ -218,10 +251,11 @@ export function AcademyScreen(): ReactElement {
           ]}
         />
         <View style={styles.backdropVeil} />
+        <View style={styles.backdropVioletWash} />
       </View>
 
       <View
-        style={styles.hubRoot}
+        style={[styles.hubRoot, hubShellStyle]}
         nativeID="academy-hub-root"
         {...(Platform.OS === 'web' ? ({ id: 'academy-hub-root' } as const) : {})}
       >
@@ -232,11 +266,18 @@ export function AcademyScreen(): ReactElement {
           contentContainerStyle={[
             styles.scrollContent,
             Platform.OS === 'web' && styles.scrollContentWebGrow,
+            { paddingBottom: width >= TABLET_MIN ? 132 : 120 },
           ]}
           showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
         >
-          <View style={styles.hero}>
-            <Text style={styles.heroKicker}>{t('academyHub.heroBadge')}</Text>
+          <AccountNeonGlassPanel role="violet" tier="elevated" radius={20} contentStyle={styles.heroInner}>
+            <View style={styles.heroTopRow}>
+              <View style={[styles.heroGlyph, { borderColor: vionaAccountRoleStroke('violet', false) }]}>
+                <Ionicons name="sparkles" size={20} color={violetInk} accessibilityIgnoresInvertColors />
+              </View>
+              <Text style={styles.heroKicker}>{t('academyHub.heroBadge')}</Text>
+            </View>
             <Text style={styles.heroTitle}>{t('academyHub.heroTitle')}</Text>
             <Text style={styles.heroSubtitle}>{t('academyHub.heroSubtitle')}</Text>
             <Pressable
@@ -245,90 +286,44 @@ export function AcademyScreen(): ReactElement {
               onPress={() => navigation.navigate('LiveAiTeacher')}
               style={({ pressed }) => [styles.heroCta, pressed && { opacity: 0.9 }]}
             >
-              <Ionicons name="sparkles-outline" size={18} color={GOLD_SOFT} />
+              <Ionicons name="sparkles-outline" size={18} color={goldInk} accessibilityIgnoresInvertColors />
               <Text style={styles.heroCtaText}>{t('academyHub.primaryCta')}</Text>
             </Pressable>
-          </View>
+          </AccountNeonGlassPanel>
 
-          <View style={styles.safetyCard}>
-            <Ionicons name="shield-checkmark-outline" size={18} color={CYAN_STROKE} />
-            <Text style={styles.safetyText}>{t('academyHub.safetyNote')}</Text>
-          </View>
+          <AccountNeonGlassPanel role="emerald" tier="identity" radius={16} contentStyle={styles.safetyInner}>
+            <View style={styles.safetyRow}>
+              <Ionicons name="shield-checkmark-outline" size={18} color={VIONA_ACCOUNT_ROLE_ACCENTS.emerald.ink} />
+              <Text style={styles.safetyText}>{t('academyHub.safetyNote')}</Text>
+            </View>
+          </AccountNeonGlassPanel>
 
           <Text style={styles.sectionLabel}>{t('home.universeAcademyTitle')}</Text>
 
           <View
             style={[
               styles.moduleGrid,
-              { gap: gridGap, flexDirection: gridColumns === 2 ? 'row' : 'column', flexWrap: 'wrap' },
+              {
+                gap: gridGap,
+                flexDirection: 'row',
+                flexWrap: 'wrap',
+                justifyContent: gridColumns === 1 ? 'center' : 'flex-start',
+              },
             ]}
           >
-            <View style={{ width: moduleWidth }}>
-              <AcademyModuleCard
-                title={t('academyHub.module1Title')}
-                status={t('academyHub.module1Status')}
-                body={t('academyHub.module1Body')}
-                tone="violet"
-                icon="school-outline"
-                a11y={t('academyHub.module1Title')}
-                onPress={() => navigation.navigate('LiveAiTeacher')}
-              />
-            </View>
-            <View style={{ width: moduleWidth }}>
-              <AcademyModuleCard
-                title={t('academyHub.module2Title')}
-                status={t('academyHub.module2Status')}
-                body={t('academyHub.module2Body')}
-                tone="cyan"
-                icon="book-outline"
-                a11y={t('academyHub.module2Title')}
-                onPress={() => navigation.navigate('AdultLearningHome')}
-              />
-            </View>
-            <View style={{ width: moduleWidth }}>
-              <AcademyModuleCard
-                title={t('academyHub.module3Title')}
-                status={t('academyHub.module3Status')}
-                body={t('academyHub.module3Body')}
-                tone="cyan"
-                icon="earth-outline"
-                a11y={t('academyHub.module3Title')}
-                onPress={() => navigation.navigate('AdultLearningHome')}
-              />
-            </View>
-            <View style={{ width: moduleWidth }}>
-              <AcademyModuleCard
-                title={t('academyHub.module4Title')}
-                status={t('academyHub.module4Status')}
-                body={t('academyHub.module4Body')}
-                tone="violet"
-                icon="color-palette-outline"
-                a11y={t('academyHub.module4Title')}
-                onPress={() => navigation.navigate('KidsLearningHome')}
-              />
-            </View>
-            <View style={{ width: moduleWidth }}>
-              <AcademyModuleCard
-                title={t('academyHub.module5Title')}
-                status={t('academyHub.module5Status')}
-                body={t('academyHub.module5Body')}
-                tone="violet"
-                icon="people-outline"
-                a11y={t('academyHub.module5Title')}
-                onPress={() => navigation.navigate('KidsLearningHome')}
-              />
-            </View>
-            <View style={{ width: moduleWidth }}>
-              <AcademyModuleCard
-                title={t('academyHub.module6Title')}
-                status={t('academyHub.module6Status')}
-                body={t('academyHub.module6Body')}
-                tone="cyan"
-                icon="bulb-outline"
-                a11y={t('academyHub.module6Title')}
-                onPress={() => navigation.navigate('LiveAiTeacher')}
-              />
-            </View>
+            {modules.map((mod) => (
+              <View key={mod.id} style={{ width: moduleWidth, maxWidth: '100%' }}>
+                <AcademyGlassCard
+                  accent={mod.accent}
+                  icon={mod.icon}
+                  title={t(mod.titleKey)}
+                  status={t(mod.statusKey)}
+                  body={t(mod.bodyKey)}
+                  onPress={mod.onPress}
+                  testID={`academy-hub-${mod.id}`}
+                />
+              </View>
+            ))}
           </View>
 
           <VionaBottomEscapeBar showBack showHome onBack={bottomEscapeBack} onHome={goHomeFromLogo} />
@@ -348,56 +343,70 @@ const styles = StyleSheet.create({
   },
   backdropVeil: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(5, 11, 20, 0.14)',
+    backgroundColor: 'rgba(5, 8, 18, 0.22)',
+  },
+  backdropVioletWash: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(120, 60, 200, 0.06)',
   },
   hubRoot: {
     flex: 1,
     minHeight: 0,
     zIndex: 2,
-    paddingHorizontal: theme.spacing.lg,
     paddingTop: theme.spacing.sm,
     flexDirection: 'column',
+    width: '100%',
   },
   scroll: { flex: 1, minHeight: 0 },
   scrollContent: {
-    paddingBottom: 120,
     paddingTop: theme.spacing.sm,
     gap: theme.spacing.md,
+    width: '100%',
   },
   scrollContentWebGrow: { flexGrow: 1 },
-  hero: {
-    borderRadius: 18,
+  heroInner: {
     padding: theme.spacing.lg,
-    borderWidth: 1,
-    borderColor: VIOLET_STROKE,
-    backgroundColor: CARD_FILL,
     gap: 8,
   },
+  heroTopRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  heroGlyph: {
+    width: 36,
+    height: 36,
+    borderRadius: 11,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(90, 50, 160, 0.18)',
+  },
   heroKicker: {
-    alignSelf: 'flex-start',
+    flex: 1,
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 999,
     borderWidth: 1,
-    borderColor: 'rgba(253, 224, 138, 0.35)',
-    backgroundColor: 'rgba(253, 224, 138, 0.1)',
-    color: GOLD_SOFT,
+    borderColor: 'rgba(246, 212, 110, 0.38)',
+    backgroundColor: 'rgba(246, 212, 110, 0.1)',
+    color: VIONA_ACCOUNT_ROLE_ACCENTS.gold.ink,
     fontSize: 11,
     fontFamily: FontFamily.semibold,
-    letterSpacing: 0.4,
+    letterSpacing: 0.45,
     textTransform: 'uppercase',
   },
   heroTitle: {
     fontSize: 26,
     fontFamily: FontFamily.extrabold,
-    color: INK,
+    color: GLN.titleIvory,
     letterSpacing: -0.3,
   },
   heroSubtitle: {
     fontSize: 14,
     lineHeight: 21,
     fontFamily: FontFamily.medium,
-    color: INK_MUTED,
+    color: GLN.bodyMuted,
   },
   heroCta: {
     marginTop: 4,
@@ -409,92 +418,37 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     borderRadius: 999,
     borderWidth: 1,
-    borderColor: CYAN_STROKE,
-    backgroundColor: 'rgba(34, 211, 238, 0.08)',
+    borderColor: 'rgba(246, 212, 110, 0.55)',
+    backgroundColor: 'rgba(246, 212, 110, 0.1)',
   },
   heroCtaText: {
-    color: CYAN_STROKE,
+    color: VIONA_ACCOUNT_ROLE_ACCENTS.gold.ink,
     fontFamily: FontFamily.extrabold,
     fontSize: 13,
   },
-  safetyCard: {
+  safetyInner: {
+    padding: theme.spacing.md,
+  },
+  safetyRow: {
     flexDirection: 'row',
     alignItems: 'flex-start',
     gap: 10,
-    padding: theme.spacing.md,
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: 'rgba(34, 211, 238, 0.28)',
-    backgroundColor: 'rgba(6, 20, 28, 0.55)',
   },
   safetyText: {
     flex: 1,
     fontSize: 12,
     lineHeight: 18,
-    color: INK_MUTED,
+    color: GLN.bodyMuted,
     fontFamily: FontFamily.medium,
   },
   sectionLabel: {
-    marginTop: 4,
+    marginTop: 2,
     fontSize: 13,
     fontFamily: FontFamily.semibold,
-    color: INK,
-    letterSpacing: 0.3,
+    color: GLN.titleIvory,
+    letterSpacing: 0.35,
   },
   moduleGrid: {
     width: '100%',
-  },
-  moduleCard: {
-    position: 'relative',
-    borderRadius: 16,
-    borderWidth: 1,
-    padding: 14,
-    marginBottom: 0,
-    minHeight: 132,
-  },
-  moduleCardHover: {
-    transform: [{ translateY: -1 }],
-  },
-  moduleHeader: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: 10,
-  },
-  moduleTitleBlock: { flex: 1, gap: 6 },
-  moduleTitle: {
-    fontSize: 16,
-    fontFamily: FontFamily.extrabold,
-    color: INK,
-  },
-  statusPill: {
-    alignSelf: 'flex-start',
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 8,
-    backgroundColor: 'rgba(255, 255, 255, 0.06)',
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.1)',
-  },
-  statusPillText: {
-    fontSize: 10,
-    fontFamily: FontFamily.semibold,
-    color: GOLD_SOFT,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-  },
-  moduleBody: {
-    marginTop: 10,
-    fontSize: 12,
-    lineHeight: 17,
-    color: INK_MUTED,
-    fontFamily: FontFamily.regular,
-  },
-  moduleCtaHint: {
-    position: 'absolute',
-    right: 12,
-    bottom: 10,
-    fontSize: 18,
-    color: 'rgba(255,255,255,0.25)',
-    fontFamily: FontFamily.semibold,
   },
 });
