@@ -1,7 +1,6 @@
-import { Ionicons } from '@expo/vector-icons';
-import { Audio } from 'expo-av';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { Audio } from 'expo-av';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
@@ -16,6 +15,8 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { EmergencyActionCard } from '../components/emergency/EmergencyActionCard';
+import { EmergencyHubTile } from '../components/emergency/EmergencyHubTile';
+import { emergencyContentColumnStyle, emergencyUiTokens } from '../components/emergency/emergencyUiTokens';
 import { useAuth } from '../context/AuthContext';
 import { useTranslation } from '../i18n';
 import type { RootStackParamList } from '../navigation/routes';
@@ -25,8 +26,6 @@ import { resolveEmergencyLocation, type EmergencyLocationStatus } from '../servi
 import { appendUsageHistory } from '../services/history';
 import { generateSpeech } from '../services/OpenAIService';
 import { applyWebStyles } from '../utils/applyWebStyles';
-import { webGlassStyle, webNeonPurpleStyle } from '../utils/webStyles';
-import { theme } from '../theme/theme';
 import { FontFamily } from '../theme/typography';
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
@@ -58,6 +57,7 @@ export function EmergencySOSScreen() {
   const [showCannotSpeak, setShowCannotSpeak] = useState(false);
   const soundRef = useRef<Audio.Sound | null>(null);
   const emergencyNumber = resolveCountryPack(user?.country).emergencyConfig.primaryNumber;
+  const contentColumn = useMemo(() => emergencyContentColumnStyle(), []);
 
   useEffect(() => {
     void appendUsageHistory({ type: 'emergency', status: 'success', note: 'sos_opened' });
@@ -173,68 +173,56 @@ export function EmergencySOSScreen() {
   }, [navigation, t]);
 
   return (
-    <View style={styles.outerShell} className={applyWebStyles('kn-glass kn-neon-sos')}>
+    <View style={styles.outerShell} className={applyWebStyles('kn-glass')}>
       <SafeAreaView style={[styles.safe, Platform.OS === 'web' && styles.safeWeb]}>
-        <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+        <ScrollView
+          style={styles.container}
+          contentContainerStyle={[styles.content, contentColumn]}
+          showsVerticalScrollIndicator={false}
+        >
           <View style={styles.header}>
             <Text style={styles.sos}>{t('emergencySos.screenTitle', { number: emergencyNumber })}</Text>
             <Text style={styles.headerSub}>{t('emergencySos.headerSubtitle')}</Text>
           </View>
 
-          <Text style={styles.globalDisclaimer}>{t('sos.footerDisclaimer')}</Text>
+          <View style={styles.disclaimerPanel}>
+            <Text style={styles.globalDisclaimer}>{t('sos.footerDisclaimer')}</Text>
+          </View>
 
           <View style={styles.emergencyHubGrid}>
-            <Pressable
+            <EmergencyHubTile
+              accent="emergency"
+              icon="medkit"
+              title={t('emergencySos.typeGeneralTitle')}
+              subtitle={t('emergencySos.dialCta', { number: emergencyNumber })}
               onPress={confirmAndDial}
-              style={({ pressed }) => [styles.hubBtn, styles.hubBtnRed, pressed && { opacity: 0.9 }]}
-              className={applyWebStyles('kn-neon-sos')}
-              accessibilityRole="button"
               accessibilityLabel={t('emergencySos.hubLocalEmergency', { number: emergencyNumber })}
-            >
-              <Ionicons name="medkit" size={24} color="#FFFFFF" />
-              <Text style={styles.hubBtnTitle}>
-                {t('emergencySos.hubLocalEmergency', { number: emergencyNumber })}
-              </Text>
-            </Pressable>
-
-            <Pressable
+            />
+            <EmergencyHubTile
+              accent="consular"
+              icon="business"
+              title={t('emergencySos.hubEmbassy')}
+              subtitle={t('emergencySos.embassyMap')}
               onPress={onOpenEmbassySupport}
-              style={({ pressed }) => [styles.hubBtn, styles.hubBtnBlue, pressed && { opacity: 0.9 }, webGlassStyle]}
-              accessibilityRole="button"
               accessibilityLabel={t('emergencySos.hubEmbassy')}
-            >
-              <Ionicons name="business" size={24} color="#FFFFFF" />
-              <Text style={styles.hubBtnTitle}>{t('emergencySos.hubEmbassy')}</Text>
-            </Pressable>
-
-            <Pressable
+            />
+            <EmergencyHubTile
+              accent="pilot"
+              icon="language"
+              title={t('emergencySos.hubTranslationPilot')}
+              subtitle={t('emergencySos.ttsPilotDisclaimer')}
+              statusLabel={t('emergencySos.pilotBadge')}
               onPress={() => navigation.navigate('LiveInterpreter', { guidedEntry: true, scenario: 'general' })}
-              style={({ pressed }) => [
-                styles.hubBtn,
-                styles.hubBtnPurple,
-                pressed && { opacity: 0.9 },
-                webNeonPurpleStyle,
-              ]}
-              accessibilityRole="button"
               accessibilityLabel={t('emergencySos.hubTranslationPilot')}
-            >
-              <View style={styles.pilotPill}>
-                <Text style={styles.pilotPillText}>{t('emergencySos.pilotBadge')}</Text>
-              </View>
-              <Ionicons name="language" size={24} color="#FFFFFF" />
-              <Text style={styles.hubBtnTitle}>{t('emergencySos.hubTranslationPilot')}</Text>
-            </Pressable>
-
-            <Pressable
+            />
+            <EmergencyHubTile
+              accent="family"
+              icon="people"
+              title={t('emergencySos.hubFamily')}
+              subtitle={t('emergencySos.familyLeona')}
               onPress={onContactFamily}
-              style={({ pressed }) => [styles.hubBtn, styles.hubBtnGreen, pressed && { opacity: 0.9 }]}
-              className={applyWebStyles('kn-neon-b2b')}
-              accessibilityRole="button"
               accessibilityLabel={t('emergencySos.hubFamily')}
-            >
-              <Ionicons name="call" size={24} color="#FFFFFF" />
-              <Text style={styles.hubBtnTitle}>{t('emergencySos.hubFamily')}</Text>
-            </Pressable>
+            />
           </View>
 
           <View style={styles.grid}>
@@ -251,8 +239,7 @@ export function EmergencySOSScreen() {
           </View>
 
           <Pressable
-            style={styles.callBtn}
-            className={applyWebStyles('kn-neon-sos')}
+            style={({ pressed }) => [styles.callBtn, pressed && styles.callBtnPressed]}
             onPress={confirmAndDial}
             accessibilityRole="button"
             accessibilityLabel={t('emergencySos.dialCta', { number: emergencyNumber })}
@@ -263,7 +250,7 @@ export function EmergencySOSScreen() {
           <View style={styles.locBox}>
             <Text style={styles.locTitle}>{t('emergencySos.locationCurrentTitle')}</Text>
             {locationStatus === 'loading' ? (
-              <ActivityIndicator color="#EF4444" />
+              <ActivityIndicator color="#F87171" />
             ) : (
               <Text style={styles.locText}>{locationLabel}</Text>
             )}
@@ -297,7 +284,9 @@ export function EmergencySOSScreen() {
             </View>
           ) : null}
 
-          <Text style={styles.footerDisclaimer}>{t('sos.footerDisclaimer')}</Text>
+          <View style={styles.disclaimerPanel}>
+            <Text style={styles.footerDisclaimer}>{t('sos.footerDisclaimer')}</Text>
+          </View>
         </ScrollView>
       </SafeAreaView>
     </View>
@@ -305,23 +294,37 @@ export function EmergencySOSScreen() {
 }
 
 const styles = StyleSheet.create({
-  outerShell: { flex: 1, backgroundColor: '#09090B' },
-  safe: { flex: 1, backgroundColor: '#09090B' },
+  outerShell: { flex: 1, backgroundColor: emergencyUiTokens.shellBg },
+  safe: { flex: 1, backgroundColor: emergencyUiTokens.shellBg },
   safeWeb: { backgroundColor: 'transparent' },
-  container: { flex: 1, backgroundColor: '#09090B' },
-  content: { padding: 16, paddingBottom: 32, gap: 14 },
-  header: { marginBottom: 4 },
+  container: { flex: 1, backgroundColor: emergencyUiTokens.shellBg },
+  content: {
+    padding: emergencyUiTokens.contentPadding,
+    paddingBottom: 32,
+    gap: 14,
+    width: '100%',
+  },
+  header: { marginBottom: 2 },
   sos: {
     color: '#F87171',
-    fontSize: 34,
+    fontSize: 32,
     fontFamily: FontFamily.extrabold,
+    letterSpacing: -0.3,
   },
   headerSub: {
-    color: '#FCA5A5',
+    color: 'rgba(252, 165, 165, 0.92)',
     fontSize: 14,
-    marginTop: 4,
+    marginTop: 6,
     lineHeight: 20,
     fontFamily: FontFamily.medium,
+  },
+  disclaimerPanel: {
+    backgroundColor: emergencyUiTokens.disclaimerPanelBg,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: emergencyUiTokens.disclaimerPanelBorder,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
   },
   globalDisclaimer: {
     fontSize: 12,
@@ -329,7 +332,6 @@ const styles = StyleSheet.create({
     color: 'rgba(203, 213, 225, 0.92)',
     fontFamily: FontFamily.medium,
     textAlign: 'center',
-    paddingHorizontal: 4,
   },
   footerDisclaimer: {
     fontSize: 12,
@@ -337,74 +339,33 @@ const styles = StyleSheet.create({
     color: 'rgba(148, 163, 184, 0.95)',
     fontFamily: FontFamily.medium,
     textAlign: 'center',
-    marginTop: 8,
-    paddingHorizontal: 4,
   },
   emergencyHubGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 10,
+    gap: emergencyUiTokens.gridGap,
+    justifyContent: 'space-between',
   },
-  hubBtn: {
-    width: '48%',
-    minHeight: 120,
-    borderRadius: 14,
-    borderWidth: 1.5,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 10,
-    gap: 8,
+  grid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: emergencyUiTokens.gridGap,
+    justifyContent: 'space-between',
   },
-  hubBtnRed: {
-    backgroundColor: '#B91C1C',
-    borderColor: '#F87171',
-  },
-  hubBtnBlue: {
-    backgroundColor: '#1E3A8A',
-    borderColor: '#60A5FA',
-  },
-  hubBtnPurple: {
-    backgroundColor: '#581C87',
-    borderColor: '#D8B4FE',
-  },
-  hubBtnGreen: {
-    backgroundColor: '#166534',
-    borderColor: '#86EFAC',
-  },
-  hubBtnTitle: {
-    color: '#FFFFFF',
-    fontSize: 14,
-    lineHeight: 18,
-    textAlign: 'center',
-    fontFamily: FontFamily.bold,
-  },
-  pilotPill: {
-    position: 'absolute',
-    top: 8,
-    right: 8,
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 6,
-    backgroundColor: 'rgba(0,0,0,0.35)',
-    borderWidth: 1,
-    borderColor: 'rgba(216, 180, 254, 0.5)',
-  },
-  pilotPillText: {
-    fontSize: 9,
-    fontFamily: FontFamily.extrabold,
-    color: '#E9D5FF',
-    letterSpacing: 0.4,
-    textTransform: 'uppercase',
-  },
-  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
   callBtn: {
-    marginTop: 4,
-    backgroundColor: '#DC2626',
+    marginTop: 2,
+    backgroundColor: emergencyUiTokens.dialBarBg,
     borderRadius: 14,
-    minHeight: 64,
+    borderWidth: 1,
+    borderColor: emergencyUiTokens.dialBarBorder,
+    minHeight: emergencyUiTokens.dialBarMinHeight,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 14,
+  },
+  callBtnPressed: {
+    backgroundColor: emergencyUiTokens.dialBarBgPressed,
   },
   callText: {
     color: '#FFFFFF',
@@ -413,7 +374,15 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     lineHeight: 22,
   },
-  locBox: { backgroundColor: '#1F2937', borderRadius: 12, padding: 12, minHeight: 70, gap: 6 },
+  locBox: {
+    backgroundColor: emergencyUiTokens.infoCardBg,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: emergencyUiTokens.infoCardBorder,
+    padding: 12,
+    minHeight: 70,
+    gap: 6,
+  },
   locTitle: { color: '#F3F4F6', fontSize: 13, fontFamily: FontFamily.bold },
   locText: { color: '#E5E7EB', fontSize: 14, lineHeight: 20, fontFamily: FontFamily.medium },
   locDisclaimer: {
@@ -422,7 +391,14 @@ const styles = StyleSheet.create({
     lineHeight: 15,
     fontFamily: FontFamily.medium,
   },
-  phraseBox: { backgroundColor: '#111827', borderRadius: 12, padding: 12, gap: 6 },
+  phraseBox: {
+    backgroundColor: emergencyUiTokens.infoCardBg,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: emergencyUiTokens.infoCardBorder,
+    padding: 12,
+    gap: 6,
+  },
   ttsPilotNote: {
     color: 'rgba(252, 211, 77, 0.95)',
     fontSize: 11,
@@ -437,8 +413,10 @@ const styles = StyleSheet.create({
   row: { flexDirection: 'row', gap: 10 },
   secondaryBtn: {
     flex: 1,
-    backgroundColor: '#374151',
+    backgroundColor: 'rgba(55, 65, 81, 0.85)',
     borderRadius: 12,
+    borderWidth: 1,
+    borderColor: emergencyUiTokens.infoCardBorder,
     minHeight: 44,
     alignItems: 'center',
     justifyContent: 'center',
@@ -455,7 +433,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 14,
     borderWidth: 1,
-    borderColor: '#EF4444',
+    borderColor: 'rgba(248, 113, 113, 0.45)',
   },
   cannotSpeakText: {
     color: '#FFFFFF',

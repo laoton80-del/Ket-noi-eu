@@ -15,6 +15,11 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { EmergencyHubTile } from '../../../components/emergency/EmergencyHubTile';
+import {
+  emergencyContentColumnStyle,
+  emergencyUiTokens,
+} from '../../../components/emergency/emergencyUiTokens';
 import { useTranslation } from '../../../i18n';
 import type { RootStackParamList } from '../../../navigation/routes';
 import {
@@ -27,6 +32,7 @@ import { getTravelContext } from '../../../services/context/UserContextService';
 import { theme } from '../../../theme/theme';
 import { FontFamily } from '../../../theme/typography';
 import { applyWebStyles } from '../../../utils/applyWebStyles';
+import { webGlassStyle } from '../../../utils/webStyles';
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
 
@@ -40,6 +46,7 @@ export function TravelSosHubScreen() {
   const [countryCode, setCountryCode] = useState('CZ');
   const [cityLabel, setCityLabel] = useState('');
   const [ttsKind, setTtsKind] = useState<SosQuickActionKind | null>(null);
+  const contentColumn = useMemo(() => emergencyContentColumnStyle(), []);
 
   useEffect(() => {
     let cancelled = false;
@@ -121,31 +128,36 @@ export function TravelSosHubScreen() {
   return (
     <View style={styles.root}>
       <LinearGradient
-        colors={['#1a0508', '#2a0a10', '#0a1628']}
+        colors={['#12151c', '#151a24', '#12151c']}
         start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
+        end={{ x: 0.2, y: 1 }}
         style={StyleSheet.absoluteFill}
       />
       <SafeAreaView style={styles.safe} edges={['top', 'left', 'right']}>
-        <View style={styles.topBar}>
+        <View style={[styles.topBar, contentColumn]}>
           <Pressable
             onPress={() => navigation.goBack()}
             style={({ pressed }) => [styles.iconBtn, pressed && { opacity: 0.85 }]}
             accessibilityRole="button"
             accessibilityLabel={t('travelSosHub.backA11y')}
           >
-            <Ionicons name="chevron-back" size={24} color="#FFF5F5" />
+            <Ionicons name="chevron-back" size={24} color="#E2E8F0" />
           </Pressable>
           <Text style={styles.topTitle}>{t('travelSosHub.screenTitle')}</Text>
           <View style={{ width: 44 }} />
         </View>
 
-        <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
-          <Text style={styles.globalDisclaimer}>{t('sos.footerDisclaimer')}</Text>
+        <ScrollView
+          contentContainerStyle={[styles.scroll, contentColumn]}
+          showsVerticalScrollIndicator={false}
+        >
+          <View style={styles.disclaimerPanel}>
+            <Text style={styles.globalDisclaimer}>{t('sos.footerDisclaimer')}</Text>
+          </View>
 
           {loading ? (
             <View style={styles.loadingRow}>
-              <ActivityIndicator color="#FF6B6B" />
+              <ActivityIndicator color="#F87171" />
               <Text style={styles.loadingText}>{t('travelSosHub.gpsLoading')}</Text>
             </View>
           ) : (
@@ -156,19 +168,17 @@ export function TravelSosHubScreen() {
             </Text>
           )}
 
-          <Pressable
+          <EmergencyHubTile
+            layout="full"
+            accent="emergency"
+            icon="navigate"
+            title={t('travelSosHub.openEmergencyGuidance')}
+            subtitle={t('emergencySos.typeGeneralSub')}
             onPress={() => navigation.navigate('EmergencySOS')}
-            style={({ pressed }) => [styles.call112, pressed && { opacity: 0.92 }]}
-            className={applyWebStyles('kn-neon-sos')}
-            accessibilityRole="button"
             accessibilityLabel={t('travelSosHub.openEmergencyA11y')}
-          >
-            <Ionicons name="call" size={22} color="#fff" />
-            <Text style={styles.call112Text}>{t('travelSosHub.openEmergencyGuidance')}</Text>
-            <Ionicons name="chevron-forward" size={20} color="#fff" />
-          </Pressable>
+          />
 
-          <View style={styles.card} className={applyWebStyles('kn-glass')}>
+          <View style={[styles.card, webGlassStyle]} className={applyWebStyles('kn-glass')}>
             <View style={styles.cardKickerRow}>
               <Text style={styles.cardKicker}>{t('travelSosHub.embassyKicker')}</Text>
               <Text style={styles.demoBadge}>{t('travelSosHub.demoBadge')}</Text>
@@ -185,7 +195,7 @@ export function TravelSosHubScreen() {
                 accessibilityRole="button"
                 accessibilityLabel={t('travelSosHub.callMission')}
               >
-                <Ionicons name="call-outline" size={18} color="#E8D5A3" />
+                <Ionicons name="call-outline" size={18} color="#E2E8F0" />
                 <Text style={styles.miniBtnText}>{t('travelSosHub.callMission')}</Text>
               </Pressable>
               <Pressable
@@ -194,7 +204,7 @@ export function TravelSosHubScreen() {
                 accessibilityRole="button"
                 accessibilityLabel={t('travelSosHub.directions')}
               >
-                <Ionicons name="map-outline" size={18} color="#E8D5A3" />
+                <Ionicons name="map-outline" size={18} color="#E2E8F0" />
                 <Text style={styles.miniBtnText}>{t('travelSosHub.directions')}</Text>
               </Pressable>
             </View>
@@ -210,15 +220,18 @@ export function TravelSosHubScreen() {
             onPress={() => void playQuickAction('medical')}
             disabled={ttsKind !== null}
             style={({ pressed }) => [
-              styles.aiTile,
+              styles.scriptCard,
               styles.aiMedical,
               pressed && { opacity: 0.92 },
               ttsKind !== null && { opacity: 0.55 },
+              webGlassStyle,
             ]}
             className={applyWebStyles('kn-glass')}
           >
-            <Ionicons name="medical" size={26} color="#7CFFB2" />
-            <View style={{ flex: 1, minWidth: 0 }}>
+            <View style={styles.scriptIconCapsule}>
+              <Ionicons name="medical" size={22} color="#7CFFB2" />
+            </View>
+            <View style={styles.scriptTextCol}>
               <Text style={styles.aiTileTitle}>{t('travelSosHub.medicalTile')}</Text>
               <Text style={styles.aiTileBody} numberOfLines={3}>
                 {medicalScript.ttsPrimaryLocalLanguage}
@@ -236,15 +249,18 @@ export function TravelSosHubScreen() {
             onPress={() => void playQuickAction('police')}
             disabled={ttsKind !== null}
             style={({ pressed }) => [
-              styles.aiTile,
+              styles.scriptCard,
               styles.aiPolice,
               pressed && { opacity: 0.92 },
               ttsKind !== null && { opacity: 0.55 },
+              webGlassStyle,
             ]}
             className={applyWebStyles('kn-glass')}
           >
-            <Ionicons name="shield" size={26} color="#9EC5FF" />
-            <View style={{ flex: 1, minWidth: 0 }}>
+            <View style={[styles.scriptIconCapsule, styles.scriptIconPolice]}>
+              <Ionicons name="shield" size={22} color="#9EC5FF" />
+            </View>
+            <View style={styles.scriptTextCol}>
               <Text style={styles.aiTileTitle}>{t('travelSosHub.policeTile')}</Text>
               <Text style={styles.aiTileBody} numberOfLines={3}>
                 {policeScript.ttsPrimaryLocalLanguage}
@@ -258,7 +274,9 @@ export function TravelSosHubScreen() {
             )}
           </Pressable>
 
-          <Text style={styles.footerDisclaimer}>{t('sos.footerDisclaimer')}</Text>
+          <View style={styles.disclaimerPanel}>
+            <Text style={styles.footerDisclaimer}>{t('sos.footerDisclaimer')}</Text>
+          </View>
         </ScrollView>
       </SafeAreaView>
     </View>
@@ -266,13 +284,14 @@ export function TravelSosHubScreen() {
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: '#140608' },
+  root: { flex: 1, backgroundColor: emergencyUiTokens.shellBgTravel },
   safe: { flex: 1 },
   topBar: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: theme.spacing.sm,
     marginBottom: theme.spacing.sm,
+    width: '100%',
   },
   iconBtn: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
   topTitle: {
@@ -280,57 +299,50 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontFamily: FontFamily.extrabold,
     fontSize: 16,
-    color: '#FFF0F0',
+    color: '#E2E8F0',
   },
-  scroll: { paddingHorizontal: theme.spacing.lg, paddingBottom: theme.spacing.xxl, gap: 12 },
+  scroll: {
+    paddingHorizontal: emergencyUiTokens.contentPadding,
+    paddingBottom: theme.spacing.xxl,
+    gap: 12,
+    width: '100%',
+  },
+  disclaimerPanel: {
+    backgroundColor: emergencyUiTokens.disclaimerPanelBg,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: emergencyUiTokens.disclaimerPanelBorder,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+  },
   globalDisclaimer: {
     fontSize: 12,
     lineHeight: 17,
-    color: 'rgba(248, 244, 236, 0.88)',
+    color: 'rgba(226, 232, 240, 0.9)',
     fontFamily: FontFamily.medium,
     textAlign: 'center',
   },
   footerDisclaimer: {
     fontSize: 12,
     lineHeight: 17,
-    color: 'rgba(248, 244, 236, 0.72)',
+    color: 'rgba(148, 163, 184, 0.95)',
     fontFamily: FontFamily.medium,
     textAlign: 'center',
-    marginTop: 8,
   },
-  loadingRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 14 },
-  loadingText: { color: 'rgba(255,240,240,0.85)', fontFamily: FontFamily.medium },
+  loadingRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  loadingText: { color: 'rgba(226, 232, 240, 0.85)', fontFamily: FontFamily.medium },
   gpsLine: {
     fontSize: 13,
-    color: 'rgba(255,230,230,0.88)',
+    color: 'rgba(203, 213, 225, 0.88)',
     fontFamily: FontFamily.medium,
-    marginBottom: theme.spacing.md,
-  },
-  call112: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    padding: 14,
-    borderRadius: theme.radius.lg,
-    marginBottom: theme.spacing.lg,
-    backgroundColor: 'rgba(180, 20, 20, 0.55)',
-    borderWidth: 1,
-    borderColor: 'rgba(255,120,120,0.5)',
-    minHeight: 48,
-  },
-  call112Text: {
-    flex: 1,
-    color: '#fff',
-    fontFamily: FontFamily.extrabold,
-    fontSize: 15,
+    lineHeight: 18,
   },
   card: {
     borderRadius: theme.radius.lg,
     padding: theme.spacing.md,
-    marginBottom: theme.spacing.lg,
     borderWidth: StyleSheet.hairlineWidth,
-    borderColor: 'rgba(232, 213, 163, 0.35)',
-    backgroundColor: 'rgba(12, 20, 36, 0.45)',
+    borderColor: emergencyUiTokens.infoCardBorder,
+    backgroundColor: emergencyUiTokens.infoCardBg,
   },
   cardKickerRow: {
     flexDirection: 'row',
@@ -343,7 +355,7 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 11,
     letterSpacing: 0.8,
-    color: 'rgba(248,244,236,0.65)',
+    color: 'rgba(203, 213, 225, 0.72)',
     fontFamily: FontFamily.extrabold,
   },
   demoBadge: {
@@ -361,12 +373,17 @@ const styles = StyleSheet.create({
   },
   cardTitle: {
     fontSize: 17,
-    color: '#FAF6EE',
+    color: '#F8FAFC',
     fontFamily: FontFamily.bold,
     marginBottom: 4,
   },
-  cardMeta: { fontSize: 13, color: 'rgba(232, 213, 163, 0.95)', fontFamily: FontFamily.semibold, marginBottom: 8 },
-  phone: { fontSize: 15, color: '#7CFFB2', fontFamily: FontFamily.extrabold, marginBottom: 12 },
+  cardMeta: {
+    fontSize: 13,
+    color: 'rgba(203, 213, 225, 0.88)',
+    fontFamily: FontFamily.semibold,
+    marginBottom: 8,
+  },
+  phone: { fontSize: 15, color: '#86EFAC', fontFamily: FontFamily.extrabold, marginBottom: 12 },
   rowBtns: { flexDirection: 'row', gap: 10 },
   miniBtn: {
     flex: 1,
@@ -377,51 +394,70 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     borderRadius: theme.radius.md,
     borderWidth: 1,
-    borderColor: 'rgba(232, 213, 163, 0.35)',
-    backgroundColor: 'rgba(0,0,0,0.2)',
+    borderColor: emergencyUiTokens.infoCardBorder,
+    backgroundColor: 'rgba(15, 23, 42, 0.65)',
     minHeight: 44,
   },
-  miniBtnText: { color: '#E8D5A3', fontFamily: FontFamily.bold, fontSize: 13 },
+  miniBtnText: { color: '#E2E8F0', fontFamily: FontFamily.bold, fontSize: 13 },
   sectionRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     gap: 8,
-    marginBottom: 6,
+    marginTop: 4,
   },
   section: {
     flex: 1,
     fontSize: 14,
-    color: '#FFF4E8',
+    color: '#E2E8F0',
     fontFamily: FontFamily.extrabold,
   },
   sectionHint: {
     fontSize: 12,
     lineHeight: 17,
-    color: 'rgba(248,244,236,0.72)',
+    color: 'rgba(203, 213, 225, 0.78)',
     fontFamily: FontFamily.regular,
-    marginBottom: theme.spacing.md,
+    marginBottom: 4,
   },
-  aiTile: {
+  scriptCard: {
     flexDirection: 'row',
     alignItems: 'flex-start',
     gap: 12,
     padding: 14,
     borderRadius: theme.radius.lg,
-    marginBottom: theme.spacing.md,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: 'rgba(255,255,255,0.12)',
+    borderWidth: 1,
+    borderColor: emergencyUiTokens.infoCardBorder,
     minHeight: 44,
   },
-  aiMedical: { backgroundColor: 'rgba(20, 60, 40, 0.35)' },
-  aiPolice: { backgroundColor: 'rgba(30, 50, 90, 0.35)' },
-  aiTileTitle: { fontSize: 15, color: '#FFF8E8', fontFamily: FontFamily.extrabold, marginBottom: 6 },
-  aiTileBody: { fontSize: 12, lineHeight: 17, color: 'rgba(248,244,236,0.88)', fontFamily: FontFamily.regular },
+  aiMedical: { backgroundColor: 'rgba(20, 45, 35, 0.45)' },
+  aiPolice: { backgroundColor: 'rgba(25, 40, 65, 0.45)' },
+  scriptIconCapsule: {
+    width: 40,
+    height: 40,
+    borderRadius: 11,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(124, 255, 178, 0.35)',
+    backgroundColor: 'rgba(15, 23, 42, 0.75)',
+    flexShrink: 0,
+  },
+  scriptIconPolice: {
+    borderColor: 'rgba(158, 197, 255, 0.35)',
+  },
+  scriptTextCol: { flex: 1, minWidth: 0 },
+  aiTileTitle: { fontSize: 15, color: '#F8FAFC', fontFamily: FontFamily.extrabold, marginBottom: 6 },
+  aiTileBody: {
+    fontSize: 12,
+    lineHeight: 17,
+    color: 'rgba(226, 232, 240, 0.88)',
+    fontFamily: FontFamily.regular,
+  },
   aiVi: {
     marginTop: 8,
     fontSize: 12,
     lineHeight: 17,
-    color: 'rgba(255, 200, 160, 0.95)',
+    color: 'rgba(252, 211, 181, 0.92)',
     fontFamily: FontFamily.semibold,
   },
 });
