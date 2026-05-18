@@ -39,6 +39,7 @@ import { useHomeCommand } from '../../context/HomeCommandContext';
 import { useFullscreenMode } from '../../hooks/useFullscreenMode';
 import { useVionaHomeDaylightBoost } from '../../components/viona/useVionaHomeDaylightBoost';
 import { LocalCommerceClarityBlock } from '../../components/localCommerce/LocalCommerceClarityBlock';
+import { LocalAppTile } from '../../components/local/LocalAppTile';
 import { LocalConstellationFrame } from '../../components/local/LocalConstellationFrame';
 import { VionaBrandLockup } from '../../components/viona/VionaBrandLockup';
 import { VIONA_TABLET_MIN_WIDTH } from '../../components/viona/VionaMiniAppShell';
@@ -52,7 +53,6 @@ import {
 } from '../../components/viona/fashionHomeDesktopShell';
 import { SmartTrioLanguageSheet } from '../../components/smartTrio/SmartTrioLanguageSheet';
 import {
-  localAccentIconChipFill,
   localAccentInk,
   localAccentInkHover,
   localAccentStatusFill,
@@ -89,7 +89,6 @@ const BG = localConstellation.canvas;
 const INK = localConstellation.ink;
 const INK_STRONG = localConstellation.inkStrong;
 const INK_MUTED = localConstellation.inkMuted;
-const INK_CARD_SUB = localConstellation.inkCardSub;
 const BORDER = localConstellation.border;
 const GOLD = localConstellation.accentGold;
 const EMERALD = localConstellation.accentEmerald;
@@ -388,109 +387,6 @@ function useLocalWebShellCompensation() {
         hiddenHosts.clear();
       };
     }, [t])
-  );
-}
-
-function LocalDestinationCard({
-  cardWidth,
-  accent,
-  icon,
-  label,
-  title,
-  subtitle,
-  onPress,
-  a11yLabel,
-  disabled = false,
-}: Readonly<{
-  cardWidth: number;
-  accent: LocalConstellationAccent;
-  icon: keyof typeof Ionicons.glyphMap;
-  label: string;
-  title: string;
-  subtitle: string;
-  onPress: () => void;
-  a11yLabel: string;
-  disabled?: boolean;
-}>) {
-  const [hovered, setHovered] = useState(false);
-  const ink = hovered ? localAccentInkHover(accent) : localAccentInk(accent);
-
-  return (
-    <View style={{ width: cardWidth, opacity: disabled ? 0.72 : 1 }}>
-      <Pressable
-        onPress={onPress}
-        disabled={disabled}
-        onHoverIn={Platform.OS === 'web' ? () => setHovered(true) : undefined}
-        onHoverOut={Platform.OS === 'web' ? () => setHovered(false) : undefined}
-        style={({ pressed }) => [
-          styles.gridCardPressable,
-          Platform.OS === 'web' && styles.gridCardInteractive,
-          Platform.OS === 'web' && hovered && styles.gridCardHovered,
-          pressed && styles.gridCardPressed,
-        ]}
-        accessibilityRole="button"
-        accessibilityLabel={a11yLabel}
-      >
-        <LocalConstellationFrame accent={accent} radius={16} hovered={hovered} contentStyle={styles.destinationCard}>
-          <View style={styles.gridCardTop}>
-            <View
-              style={[
-                styles.heroIconChip,
-                {
-                  borderColor: hovered ? localAccentStrokeHover(accent) : localAccentStroke(accent),
-                  borderWidth: localConstellation.cardEdgeWidth,
-                  backgroundColor: localAccentIconChipFill(accent, hovered),
-                  shadowColor: ink,
-                  shadowOpacity: hovered ? 0.24 : 0.1,
-                  shadowRadius: hovered ? 5 : 3,
-                  shadowOffset: { width: 0, height: 0 },
-                },
-              ]}
-            >
-              <Ionicons name={icon} size={20} color={ink} />
-            </View>
-            <View
-              style={[
-                styles.gridCardStatusPill,
-                {
-                  borderColor: hovered ? localAccentStrokeHover(accent) : localAccentStroke(accent),
-                  borderWidth: localConstellation.cardEdgeWidth,
-                  backgroundColor: localAccentStatusFill(accent, hovered),
-                  shadowColor: ink,
-                  shadowOpacity: hovered ? 0.2 : 0.08,
-                  shadowRadius: hovered ? 4 : 2,
-                  shadowOffset: { width: 0, height: 0 },
-                },
-              ]}
-            >
-              <Text style={[styles.gridCardStatusText, { color: ink }]}>{label}</Text>
-            </View>
-          </View>
-          <Text style={[styles.destinationTitle, hovered && { color: ink }]} numberOfLines={2}>
-            {title}
-          </Text>
-          <Text style={styles.destinationSub} numberOfLines={2}>
-            {subtitle}
-          </Text>
-          <View style={styles.gridCardFooter}>
-            <Text
-              style={[
-                styles.gridCardCta,
-                {
-                  color: ink,
-                  shadowColor: ink,
-                  shadowOpacity: hovered ? 0.22 : 0.1,
-                  shadowRadius: hovered ? 4 : 2,
-                  shadowOffset: { width: 0, height: 0 },
-                },
-              ]}
-            >
-              →
-            </Text>
-          </View>
-        </LocalConstellationFrame>
-      </Pressable>
-    </View>
   );
 }
 
@@ -803,7 +699,12 @@ export function LocalScreen() {
   const { horizontalPad, innerWidth } = resolveLocalContentRail(width);
   const gridColumns = resolveLocalGridColumns(width);
   const cardWidth = resolveLocalGridItemWidth(innerWidth, gridColumns);
-  const classifiedColumns = resolveLocalGridColumns(width, { desktop: 3, tablet: 2 });
+  const classifiedColumns = resolveLocalGridColumns(width, {
+    desktop: 3,
+    tablet: 2,
+    phone: 1,
+    tabletMin: 600,
+  });
   const classifiedCardWidth = resolveLocalGridItemWidth(innerWidth, classifiedColumns);
 
   const openLanguageSheet = useCallback(() => {
@@ -1066,91 +967,99 @@ export function LocalScreen() {
 
         <Text style={styles.bentoSectionTitle}>{t('localHub.serviceCategoriesKicker')}</Text>
         <View style={styles.cardGrid}>
-          <LocalDestinationCard
+          <LocalAppTile
             cardWidth={cardWidth}
             accent="emerald"
             icon="sparkles-outline"
-            label={t('localCommerce.bookingStatus.lite')}
+            statusLabel={t('localCommerce.bookingStatus.lite')}
             title={t('localHub.nailsTitle')}
             subtitle={t('localHub.nailsSub')}
             onPress={openServiceHub}
-            a11yLabel="Nails và Spa"
+            accessibilityLabel="Nails và Spa"
+            testID="local-tile-nails"
           />
-          <LocalDestinationCard
+          <LocalAppTile
             cardWidth={cardWidth}
             accent="cyan"
             icon="restaurant-outline"
-            label={t('localCommerce.bookingStatus.requestOnly')}
+            statusLabel={t('localCommerce.bookingStatus.requestOnly')}
             title={t('localHub.restaurantTitle')}
             subtitle={t('localHub.restaurantSub')}
             onPress={() => openLeonaPrefill(t('localCommerce.leonaRestaurantPrefill'))}
-            a11yLabel={t('localHub.restaurantTitle')}
+            accessibilityLabel={t('localHub.restaurantTitle')}
+            testID="local-tile-restaurant"
           />
         </View>
 
         <Text style={styles.bentoSectionTitle}>{t('localHub.localServicesKicker')}</Text>
         <View style={styles.cardGrid}>
-          <LocalDestinationCard
+          <LocalAppTile
             cardWidth={cardWidth}
             accent="emerald"
             icon="scale-outline"
-            label={t('localCommerce.bookingStatus.demo')}
+            statusLabel={t('localCommerce.bookingStatus.demo')}
             title={t('localHub.legalWealthTitle')}
             subtitle={t('localHub.legalWealthSub')}
             onPress={() => void runUltraMasterBookingWithAlerts(t('localHub.legalWealthTitle'))}
-            a11yLabel={t('localHub.legalWealthTitle')}
+            accessibilityLabel={t('localHub.legalWealthTitle')}
+            testID="local-tile-legal-wealth"
           />
-          <LocalDestinationCard
+          <LocalAppTile
             cardWidth={cardWidth}
             accent="cyan"
             icon="car-outline"
-            label={t('localCommerce.bookingStatus.lite')}
+            statusLabel={t('localCommerce.bookingStatus.lite')}
             title={t('localHub.transitTitle')}
             subtitle={t('localHub.transitSub')}
             onPress={() => openLeonaPrefill(t('localHub.transitLeonaPrefill'))}
-            a11yLabel={t('localHub.transitTitle')}
+            accessibilityLabel={t('localHub.transitTitle')}
+            testID="local-tile-transit"
           />
-          <LocalDestinationCard
+          <LocalAppTile
             cardWidth={cardWidth}
             accent="emerald"
             icon="ticket-outline"
-            label={t('localCommerce.bookingStatus.preview')}
+            statusLabel={t('localCommerce.bookingStatus.preview')}
             title={t('localHub.eventsTitle')}
             subtitle={t('localHub.eventsSub')}
             onPress={() => navigation.navigate('DailyReward')}
-            a11yLabel={t('localHub.eventsTitle')}
+            accessibilityLabel={t('localHub.eventsTitle')}
+            testID="local-tile-events"
           />
-          <LocalDestinationCard
+          <LocalAppTile
             cardWidth={cardWidth}
             accent="emerald"
             icon="home-outline"
-            label={t('localCommerce.bookingStatus.lite')}
+            statusLabel={t('localCommerce.bookingStatus.lite')}
             title={t('localHub.classifiedsHousingTitle')}
             subtitle={t('localHub.classifiedsHousingSub')}
             onPress={() => void scrollToClassifieds()}
-            a11yLabel={t('localHub.classifiedsHousingTitle')}
+            accessibilityLabel={t('localHub.classifiedsHousingTitle')}
+            testID="local-tile-housing"
           />
-          <LocalDestinationCard
+          <LocalAppTile
             cardWidth={cardWidth}
             accent="emerald"
             icon="pricetags-outline"
-            label={t('localCommerce.bookingStatus.lite')}
+            statusLabel={t('localCommerce.bookingStatus.lite')}
             title={t('localHub.classifiedsTitle')}
             subtitle={t('localHub.classifiedsRowSub', { unit: getVioCreditsLabel() })}
             onPress={() => void scrollToClassifieds()}
-            a11yLabel={t('localHub.classifiedsTitle')}
+            accessibilityLabel={t('localHub.classifiedsTitle')}
+            testID="local-tile-classifieds"
           />
           {legalScanEnabled ? (
-            <LocalDestinationCard
+            <LocalAppTile
               cardWidth={cardWidth}
               accent="cyan"
               icon="scan-outline"
-              label={t('localCommerce.bookingStatus.demo')}
+              statusLabel={t('localCommerce.bookingStatus.demo')}
               title={t('localHub.legalScannerLabel')}
               subtitle={t('localHub.legalScannerSub')}
               onPress={() => void onLegalScannerPress()}
-              a11yLabel={t('localHub.legalScannerA11y')}
+              accessibilityLabel={t('localHub.legalScannerA11y')}
               disabled={legalScanBusy}
+              testID="local-tile-legal-scanner"
             />
           ) : null}
         </View>
@@ -1586,40 +1495,6 @@ const styles = StyleSheet.create({
         } as ViewStyle)
       : {},
   gridCardPressed: { opacity: 0.9 },
-  destinationCard: {
-    minHeight: 148,
-    paddingVertical: 12,
-    paddingHorizontal: 12,
-    gap: 6,
-  },
-  gridCardTop: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: 8,
-  },
-  gridCardStatusPill: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: theme.radius.pill,
-  },
-  gridCardStatusText: {
-    fontSize: 9,
-    fontFamily: FontFamily.extrabold,
-    letterSpacing: 0.45,
-    textTransform: 'uppercase',
-  },
-  gridCardFooter: { marginTop: 'auto', alignItems: 'flex-end' },
-  gridCardCta: { fontSize: 16, fontFamily: FontFamily.extrabold },
-  destinationTitle: { fontSize: 13, fontFamily: FontFamily.extrabold, color: INK_STRONG, lineHeight: 17 },
-  destinationSub: { fontSize: 11, fontFamily: FontFamily.medium, color: INK_CARD_SUB, lineHeight: 15 },
-  heroIconChip: {
-    width: 34,
-    height: 34,
-    borderRadius: 10,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
   bentoSectionTitle: {
     fontSize: 11,
     fontFamily: FontFamily.extrabold,
