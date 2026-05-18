@@ -39,7 +39,7 @@ export async function executeCentralDispatchForUser(userId: string, payload: Dis
   let emailOk = false;
 
   const token = user?.fcmToken?.trim() ?? '';
-  const title = (payload.title ?? 'ViGlobal').trim() || 'ViGlobal';
+  const title = (payload.title ?? 'VIONA').trim() || 'VIONA';
   const body = payload.body.trim();
 
   if (channels.includes('push') && token.length > 0) {

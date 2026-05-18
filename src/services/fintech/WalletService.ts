@@ -1,3 +1,4 @@
+import { getVioCreditsLabel } from '../../core/monetization/vioDisplayLabels';
 import { syncWalletFromServer } from '../../state/wallet';
 import { trackEvent } from '../AnalyticsService';
 
@@ -46,10 +47,18 @@ export async function transferVigTokensByPhone(params: Readonly<{
   const amountVig = Math.floor(params.amountVig);
   const idempotencyKey = params.idempotencyKey.trim();
   if (senderPhone.length < 8 || recipientPhone.length < 8 || amountVig <= 0 || idempotencyKey.length < 8) {
-    return { ok: false, code: 'invalid_input', messageVi: 'Thông tin chuyển VIG Token không hợp lệ.' };
+    return {
+      ok: false,
+      code: 'invalid_input',
+      messageVi: `Thông tin chuyển ${getVioCreditsLabel()} không hợp lệ.`,
+    };
   }
   if (senderPhone === recipientPhone) {
-    return { ok: false, code: 'self_transfer_not_allowed', messageVi: 'Không thể tự chuyển VIG Token cho chính bạn.' };
+    return {
+      ok: false,
+      code: 'self_transfer_not_allowed',
+      messageVi: `Không thể tự chuyển ${getVioCreditsLabel()} cho chính bạn.`,
+    };
   }
 
   if (BACKEND_API_BASE) {
@@ -69,7 +78,11 @@ export async function transferVigTokensByPhone(params: Readonly<{
       const parsed = text ? (JSON.parse(text) as { ok?: boolean; error?: string; transferId?: string }) : {};
       if (!res.ok || parsed.ok !== true) {
         if (parsed.error === 'insufficient_balance') {
-          return { ok: false, code: 'insufficient_balance', messageVi: 'Số dư VIG Token không đủ để chuyển.' };
+          return {
+            ok: false,
+            code: 'insufficient_balance',
+            messageVi: `Số dư ${getVioCreditsLabel()} không đủ để chuyển.`,
+          };
         }
         return { ok: false, code: 'server_error', messageVi: 'Không thể xử lý chuyển khoản lúc này.' };
       }
@@ -83,7 +96,11 @@ export async function transferVigTokensByPhone(params: Readonly<{
         createdAtIso: new Date().toISOString(),
       };
     } catch {
-      return { ok: false, code: 'service_unavailable', messageVi: 'Dịch vụ chuyển VIG Token tạm thời gián đoạn.' };
+      return {
+        ok: false,
+        code: 'service_unavailable',
+        messageVi: `Dịch vụ chuyển ${getVioCreditsLabel()} tạm thời gián đoạn.`,
+      };
     }
   }
 
@@ -104,7 +121,11 @@ export async function transferVigTokensByPhone(params: Readonly<{
         }),
       });
       if (!res.ok) {
-        return { ok: false, code: 'server_error', messageVi: 'Supabase từ chối giao dịch chuyển VIG Token.' };
+        return {
+          ok: false,
+          code: 'server_error',
+          messageVi: `Supabase từ chối giao dịch chuyển ${getVioCreditsLabel()}.`,
+        };
       }
       const parsed = (await res.json()) as {
         ok?: boolean;
@@ -139,7 +160,7 @@ export async function transferVigTokensByPhone(params: Readonly<{
   return {
     ok: false,
     code: 'service_unavailable',
-    messageVi: 'Chưa cấu hình backend/Supabase cho P2P VIG Transfer.',
+    messageVi: `Chưa cấu hình backend/Supabase cho chuyển P2P ${getVioCreditsLabel()}.`,
   };
 }
 

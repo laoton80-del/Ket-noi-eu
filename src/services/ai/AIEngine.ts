@@ -183,7 +183,7 @@ export async function rawChatCompletion(input: AIEngineChatInput): Promise<strin
  * Salon persona turn — returns **only** user-safe text for HUD / toasts.
  */
 const QUOTA_EXHAUSTED_USER_MESSAGE =
-  '⚠️ Energy depleted. Please top up VIG Tokens to continue using AI Services.' as const;
+  '⚠️ Energy depleted. Please top up VIO Credits to continue using AI services (in-app only — not cash or crypto).' as const;
 
 export async function completeSalonPersonaTurn(
   persona: SalonAIPersonaId,

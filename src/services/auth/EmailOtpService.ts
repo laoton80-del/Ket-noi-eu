@@ -66,7 +66,7 @@ export async function requestEmailOtp(rawEmail: string): Promise<EmailOtpRequest
     },
   });
 
-  const brand = process.env.MAIL_BRAND_NAME?.trim() || 'ViGlobal';
+  const brand = process.env.MAIL_BRAND_NAME?.trim() || 'VIONA';
   await sendEmail({
     to: email,
     subject: `${brand} — mã xác minh email`,

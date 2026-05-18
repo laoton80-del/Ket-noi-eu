@@ -111,7 +111,7 @@ export async function transferVIG(input: TransferVIGInput): Promise<TransferVIGO
 
   assertPositiveFiniteVig(amountVIG, 'amountVIG');
   if (amountVIG + VIG_EPSILON < MIN_P2P_TRANSFER_VIG) {
-    throw new WalletServiceError('invalid_amount', 'Minimum transfer is 1.0 VIG');
+    throw new WalletServiceError('invalid_amount', 'Minimum transfer is 1.0 VIO Credits');
   }
   if (feeVIG < 0 || !Number.isFinite(feeVIG)) {
     throw new WalletServiceError('invalid_amount', 'feeVIG must be a finite number >= 0');
@@ -278,7 +278,7 @@ export async function executeQrMerchantVigPayment(input: QrMerchantPaymentInput)
   const gross = roundVig(input.grossAmountVIG);
   assertPositiveFiniteVig(gross, 'grossAmountVIG');
   if (gross + VIG_EPSILON < MIN_P2P_TRANSFER_VIG) {
-    throw new QrMerchantPaymentError('invalid_amount', 'Minimum QR payment is 1.0 VIG');
+    throw new QrMerchantPaymentError('invalid_amount', 'Minimum QR payment is 1.0 VIO Credits');
   }
   if (payerUserId === merchantUserId) {
     throw new QrMerchantPaymentError('invalid_input', 'Payer and merchant must differ');
@@ -337,7 +337,7 @@ export async function executeQrMerchantVigPayment(input: QrMerchantPaymentInput)
           data: { balanceVIG: { decrement: gross } },
         });
         if (payerDec.count !== 1) {
-          throw new QrMerchantPaymentError('insufficient_funds', 'Insufficient VIG balance for this payment');
+          throw new QrMerchantPaymentError('insufficient_funds', 'Insufficient VIO Credits balance for this payment');
         }
 
         await tx.wallet.update({
@@ -984,7 +984,7 @@ export async function debitSpendableVigForAiGateway(input: DebitAiGatewayInput):
           data: { balanceVIG: { decrement: amount } },
         });
         if (dec.count !== 1) {
-          throw new WalletServiceError('insufficient_funds', 'Insufficient VIG for AI inference');
+          throw new WalletServiceError('insufficient_funds', 'Insufficient VIO Credits for AI inference');
         }
 
         const w1 = await tx.wallet.findUnique({ where: { id: w0.id } });

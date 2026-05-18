@@ -56,7 +56,7 @@ export function buildVietQrPayload(input: Readonly<{
     throw new Error('vietqr_amount_vnd_invalid');
   }
   const memo = input.purpose?.trim() ?? '';
-  const purpose = memo.length > 0 ? memo.slice(0, 120) : 'ViGlobal';
+  const purpose = memo.length > 0 ? memo.slice(0, 120) : 'VIONA';
 
   const qr = QRPay.initVietQR({
     bankBin,

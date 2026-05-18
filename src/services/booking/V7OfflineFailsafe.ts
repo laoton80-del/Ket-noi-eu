@@ -82,7 +82,7 @@ async function dispatchMerchantBookingFailsafeData(
     summaryLine: details.summaryLine,
     emergencyPhoneE164: details.emergencyPhoneE164?.trim() ?? null,
     message:
-      'ViGlobal Alert: New booking confirmed. Check your dashboard immediately.',
+      'VIONA alert (preview): Booking note recorded — check your dashboard. Not a live fulfillment confirmation.',
   };
 
   if (webhook.length > 0) {

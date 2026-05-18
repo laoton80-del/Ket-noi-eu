@@ -41,7 +41,7 @@ export async function executeRightToErasure(userId: string): Promise<ErasureResu
   await localErasureCascade(uid);
 
   const detail = serverAcknowledged
-    ? 'Yêu cầu xóa đã được gửi tới máy chủ ViGlobal và dữ liệu cục bộ trên thiết bị đã được dọn.'
+    ? 'Yêu cầu xóa đã được gửi tới máy chủ VIONA và dữ liệu cục bộ trên thiết bị đã được dọn.'
     : 'Đã xóa dữ liệu cục bộ trên thiết bị. Kết nối API (EXPO_PUBLIC_REST_API_BASE) để xóa đầy đủ trên máy chủ (Supabase).';
 
   return {

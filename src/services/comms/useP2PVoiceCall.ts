@@ -130,7 +130,7 @@ export function useP2PVoiceCall(input: Readonly<{
       try {
         const jwt = await getRestApiJwt();
         if (!jwt) {
-          onErrorRef.current('Cần đăng nhập (JWT ViGlobal API) để kết nối thoại P2P.');
+          onErrorRef.current('Cần đăng nhập (JWT VIONA API) để kết nối thoại P2P.');
           return;
         }
 
