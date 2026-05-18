@@ -37,6 +37,7 @@ export type TravelGlassCardProps = Readonly<{
   visual?: TravelGlassVisual;
   disabled?: boolean;
   accessibilityLabel?: string;
+  testID?: string;
 }>;
 
 const SEMANTIC_TOKENS: Readonly<Record<TravelSemanticAccent, VionaGlobalLightNetworkAccentTokens>> = {
@@ -580,6 +581,7 @@ export function TravelGlassCard({
   visual = 'standard',
   disabled = false,
   accessibilityLabel,
+  testID,
 }: TravelGlassCardProps): ReactElement {
   const [hovered, setHovered] = useState(false);
   const tokens = travelSemanticTokens(accent);
@@ -636,6 +638,7 @@ export function TravelGlassCard({
 
   return (
     <Pressable
+      testID={testID}
       accessibilityRole="button"
       accessibilityLabel={accessibilityLabel}
       disabled={disabled}
