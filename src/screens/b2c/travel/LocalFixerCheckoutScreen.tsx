@@ -67,7 +67,7 @@ export function LocalFixerCheckoutScreen() {
                   <Text style={styles.rowValue}>{formatCurrency(breakdown.baseAmountEur, EUR)}</Text>
                 </View>
                 <View style={styles.row}>
-                  <Text style={styles.rowLabel}>Phí dịch vụ KNG ({breakdown.fixerCustomerFeePercent.toFixed(1)}%)</Text>
+                  <Text style={styles.rowLabel}>Phí nền tảng VIONA ({breakdown.fixerCustomerFeePercent.toFixed(1)}%)</Text>
                   <Text style={styles.rowValue}>{formatCurrency(breakdown.customerFeeEur, EUR)}</Text>
                 </View>
                 <View style={styles.row}>
@@ -76,7 +76,7 @@ export function LocalFixerCheckoutScreen() {
                 </View>
                 <Text style={styles.footnote}>
                   Stripe Connect destination charge: khách trả {formatCurrency(breakdown.totalChargeToCustomerEur, EUR)},
-                  KNG giữ application fee {formatCurrency(breakdown.totalPlatformRevenueEur, EUR)}.
+                  VIONA giữ application fee {formatCurrency(breakdown.totalPlatformRevenueEur, EUR)} (demo / pilot).
                 </Text>
               </View>
               <Pressable

@@ -51,6 +51,9 @@ export function TourismBookingConfirmedScreen(): ReactElement {
         <Text style={styles.sub} numberOfLines={4} adjustsFontSizeToFit minimumFontScale={0.82}>
           {t('checkout.confirmedSub')}
         </Text>
+        <Text style={styles.demoNote} numberOfLines={3} adjustsFontSizeToFit minimumFontScale={0.82}>
+          {t('checkout.confirmedDemoNote')}
+        </Text>
         <View style={styles.card}>
           <Text style={styles.cardLabel} numberOfLines={2}>
             {params.serviceTitle}
@@ -111,6 +114,14 @@ const styles = StyleSheet.create({
     color: 'rgba(226,232,240,0.88)',
     textAlign: 'center',
     lineHeight: 22,
+    maxWidth: '100%',
+  },
+  demoNote: {
+    fontFamily: FontFamily.regular,
+    fontSize: 13,
+    color: 'rgba(148,163,184,0.95)',
+    textAlign: 'center',
+    lineHeight: 19,
     maxWidth: '100%',
   },
   card: {

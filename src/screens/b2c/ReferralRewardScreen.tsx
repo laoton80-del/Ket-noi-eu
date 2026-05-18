@@ -13,7 +13,7 @@ import { applyWebStyles, mergeWebClassNames } from '../../utils/applyWebStyles';
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
 
-const REFERRAL_CODE = 'KNG-VIP-888';
+const REFERRAL_CODE = 'VIONA-VIP-888';
 const FRIENDS_JOINED = 12;
 const PASSIVE_CREDITS_EARNED = 600;
 const SHARE_URL = 'https://ketnoiglobal.com';

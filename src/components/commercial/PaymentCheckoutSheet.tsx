@@ -10,6 +10,7 @@ import { theme } from '../../theme/theme';
 import { FontFamily } from '../../theme/typography';
 import { generateChargeKey } from '../../utils/idempotency';
 import { isDemoSandboxActive } from '../../services/ux/DemoSandbox';
+import { useTranslation } from '../../utils/i18n';
 
 type PaymentCheckoutSheetProps = {
   visible: boolean;
@@ -21,6 +22,7 @@ function formatUsd(value: number): string {
 }
 
 export function PaymentCheckoutSheet({ visible, onClose }: PaymentCheckoutSheetProps) {
+  const { t } = useTranslation();
   const { isWeb, isTablet } = useDeviceLayout();
   const { isPlatformPaySupported } = useStripe();
   const [isProcessing, setIsProcessing] = useState(false);
@@ -67,7 +69,7 @@ export function PaymentCheckoutSheet({ visible, onClose }: PaymentCheckoutSheetP
     const result = await chargeWalletServer(serviceId, generateChargeKey(serviceId));
     setIsProcessing(false);
     if (!result.ok) {
-      setErrorMessage('Không thể xác nhận thanh toán từ máy chủ. Vui lòng thử lại.');
+      setErrorMessage(t('checkout.paymentSheetError'));
       void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       return;
     }
@@ -98,10 +100,8 @@ export function PaymentCheckoutSheet({ visible, onClose }: PaymentCheckoutSheetP
             </View>
             <View style={styles.protectionRow}>
               <View style={styles.protectionTextWrap}>
-                <Text style={styles.protectionTitle}>Bảo hiểm Dịch vụ Toàn cầu (+$1.00)</Text>
-                <Text style={styles.protectionSubtitle}>
-                  Hoàn tiền 100% và đền bù nếu dịch vụ không đúng cam kết. Hỗ trợ 24/7.
-                </Text>
+                <Text style={styles.protectionTitle}>{t('checkout.paymentSheetProtectionTitle')}</Text>
+                <Text style={styles.protectionSubtitle}>{t('checkout.paymentSheetProtectionSub')}</Text>
               </View>
               <Switch
                 value={protectionEnabled}
@@ -124,8 +124,8 @@ export function PaymentCheckoutSheet({ visible, onClose }: PaymentCheckoutSheetP
               <Ionicons name="checkmark-circle" size={26} color={theme.colors.success} />
               <Text style={styles.successText}>
                 {paymentMode === 'bnpl'
-                  ? 'Đăng ký trả góp thành công! Đã nhận xác nhận từ máy chủ.'
-                  : 'Thanh toán thành công! Đã nhận xác nhận từ máy chủ.'}
+                  ? t('checkout.paymentSheetSuccessBnpl')
+                  : t('checkout.paymentSheetSuccessPay')}
               </Text>
             </View>
           ) : (
@@ -141,13 +141,13 @@ export function PaymentCheckoutSheet({ visible, onClose }: PaymentCheckoutSheetP
                 ) : (
                   <>
                     <Ionicons name="lock-closed-outline" size={18} color={theme.hybrid.onSignal} />
-                    <Text style={styles.payBtnText}>Thanh toán an toàn với Stripe</Text>
+                    <Text style={styles.payBtnText}>{t('checkout.paymentSheetPayCta')}</Text>
                   </>
                 )}
               </Pressable>
 
               <View style={styles.bnplBox}>
-                <Text style={styles.bnplTitle}>Chia làm 4 kỳ thanh toán với Kết Nối Pay. 0% Lãi suất.</Text>
+                <Text style={styles.bnplTitle}>{t('checkout.paymentSheetBnplTitle')}</Text>
                 <Text style={styles.bnplBreakdown}>
                   Hôm nay trả: {formatUsd(bnplInstallment)}. Các kỳ sau: {formatUsd(bnplInstallment)}/tháng.
                 </Text>

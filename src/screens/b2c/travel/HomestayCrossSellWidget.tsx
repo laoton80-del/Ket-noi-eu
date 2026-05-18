@@ -30,7 +30,7 @@ export function HomestayCrossSellWidget({
     <View style={styles.wrap} className={applyWebStyles('kn-glass kn-neon-b2b')}>
       <View style={styles.iconRow}>
         <Ionicons name="airplane" size={18} color="#C5A059" />
-        <Text style={styles.kicker}>KNG Travel · Cross-sell</Text>
+        <Text style={styles.kicker}>VIONA Travel Lite · Cross-sell</Text>
       </View>
       <Text style={styles.headline}>{buildHeadline(destinationDisplay)}</Text>
       <Text style={styles.sub}>
@@ -61,7 +61,7 @@ export function HomestayCrossSellWidget({
         </View>
       ) : (
         <Text style={styles.empty}>
-          Chưa có homestay mock khớp từ khóa — bạn vẫn có thể xem toàn bộ lưu trú Kiều bào trong mạng KNG Travel.
+          Chưa có homestay mock khớp từ khóa — bạn vẫn có thể xem toàn bộ lưu trú Kiều bào trong mạng VIONA Travel Lite.
         </Text>
       )}
 

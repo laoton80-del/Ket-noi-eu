@@ -93,7 +93,7 @@ export function FlightSearchScreen() {
   const onBook = useCallback((offer: FlightOffer) => {
     setConfirmed(offer);
     Alert.alert(
-      'KNG Travel',
+      'VIONA Travel Lite',
       `Đã ghi nhận yêu cầu đặt vé (demo) — ${offer.airline}. Đội ngũ sẽ liên hệ qua kênh thanh toán affiliate khi tích hợp Duffel / Skyscanner hoàn tất.`,
       [{ text: 'Đã hiểu' }]
     );
@@ -121,7 +121,7 @@ export function FlightSearchScreen() {
           <Ionicons name="chevron-back" size={24} color={theme.hybrid.panelCoolText} />
         </Pressable>
         <View style={styles.headerText}>
-          <Text style={styles.headerKicker}>KNG Travel</Text>
+          <Text style={styles.headerKicker}>VIONA Travel Lite</Text>
           <Text style={styles.headerTitle}>✈️ Vé máy bay</Text>
         </View>
         <View style={styles.backSpacer} />

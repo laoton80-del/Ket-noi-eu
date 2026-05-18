@@ -1,19 +1,18 @@
+import { getVioCreditsLabel } from '../core/monetization/vioDisplayLabels';
+
 /**
- * Global VIG presentation helper — use everywhere the app shows token balances or prices.
- * Ledger amounts remain plain numbers; this is display-only (consistent 2 dp + unit suffix).
+ * In-app amount presentation (VIO Credits). Ledger field names may still use legacy `*VIG` internally.
+ * Display-only — consistent 2 dp + public unit suffix.
  */
 
 /**
- * Standard display format for VIG worldwide (US / EU / Asia): fixed two decimal places + unit.
- *
- * @example formatVIG(15) → "15.00 VIG"
- * @example formatVIG(15.2) → "15.20 VIG"
+ * @example formatVIG(15) → "15.00 VIO Credits"
  */
 export function formatVIG(amount: number): string {
   if (!Number.isFinite(amount)) {
-    return '— VIG';
+    return `— ${getVioCreditsLabel()}`;
   }
-  return `${amount.toFixed(2)} VIG`;
+  return `${amount.toFixed(2)} ${getVioCreditsLabel()}`;
 }
 
 /** Maps `i18next` language codes (e.g. from `i18n.language`) to `Intl` locales for separators. */
@@ -27,12 +26,11 @@ const VIG_NUMBER_LOCALE: Readonly<Record<string, string>> = {
   ko: 'ko-KR',
 };
 
-/**
- * Locale-aware VIG display (comma vs dot per region) — use for dashboard metrics & balances.
- */
+/** Locale-aware VIO Credits display (comma vs dot per region). */
 export function formatVigTokenNumber(amount: number, i18nLanguage?: string): string {
+  const unit = getVioCreditsLabel();
   if (!Number.isFinite(amount)) {
-    return '— VIG';
+    return `— ${unit}`;
   }
   const code = i18nLanguage?.split('-')[0]?.toLowerCase() ?? 'en';
   const locale = VIG_NUMBER_LOCALE[code] ?? VIG_NUMBER_LOCALE.en;
@@ -40,5 +38,5 @@ export function formatVigTokenNumber(amount: number, i18nLanguage?: string): str
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   }).format(amount);
-  return `${formatted} VIG`;
+  return `${formatted} ${unit}`;
 }
