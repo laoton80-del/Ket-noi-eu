@@ -78,14 +78,14 @@ export function AdminCommandCenter(): ReactElement {
         <View style={styles.card}>
           <Text style={styles.cardEyebrow}>LIVE FINANCIAL RADAR</Text>
           <Text style={styles.metricHuge}>
-            {MOCK_FINANCIAL.totalVigVolume.toLocaleString(undefined, { maximumFractionDigits: 2 })} VIG
+            {MOCK_FINANCIAL.totalVigVolume.toLocaleString(undefined, { maximumFractionDigits: 2 })} VIO Credits
           </Text>
           <Text style={styles.metricLabel}>Total ecosystem volume (rolling)</Text>
           <View style={styles.divider} />
           <Text style={styles.metricSecondary}>
             Daily revenue cut:{' '}
             <Text style={styles.accentBlue}>
-              {MOCK_FINANCIAL.dailyRevenueCut.toLocaleString(undefined, { maximumFractionDigits: 2 })} VIG
+              {MOCK_FINANCIAL.dailyRevenueCut.toLocaleString(undefined, { maximumFractionDigits: 2 })} VIO Credits
             </Text>
           </Text>
         </View>

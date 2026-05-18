@@ -86,7 +86,7 @@ export function AdBiddingScreen() {
             thumbTintColor={theme.colors.primaryBright}
           />
           <Text style={styles.panelHint}>
-            Feed B2C KNG Local ưu tiên xếp hạng merchant theo bid đang active, sau đó mới tới quality score.
+            Feed B2C VIONA Local ưu tiên xếp hạng merchant theo bid đang active, sau đó mới tới quality score.
           </Text>
         </View>
 

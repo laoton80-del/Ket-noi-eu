@@ -214,7 +214,7 @@ export function FacebookWarRoomScreen() {
             <Text style={styles.panelBadgeText}>3 · Radar</Text>
           </View>
           <Text style={styles.panelTitle}>RADAR LẮNG NGHE</Text>
-          <Text style={styles.panelHint}>Luồng mock: bài viết “bắt được” từ group — gợi ý trả lời kèm merchant KNG.</Text>
+          <Text style={styles.panelHint}>Luồng mock: bài viết “bắt được” từ group — gợi ý trả lời kèm merchant VIONA.</Text>
           {RADAR_MOCK_FEED.map((item) => (
             <View key={item.id} style={styles.radarCard}>
               <Text style={styles.radarMeta}>
@@ -227,7 +227,7 @@ export function FacebookWarRoomScreen() {
                 className={applyWebStyles('kn-neon-b2b')}
               >
                 <Ionicons name="chatbubble-ellipses-outline" size={18} color={theme.colors.primaryBright} />
-                <Text style={styles.radarActionText}>AI: Trả lời kèm Link KNG</Text>
+                <Text style={styles.radarActionText}>AI: Trả lời kèm Link VIONA</Text>
               </Pressable>
               {radarReplies[item.id] ? (
                 <View style={styles.replyBox}>

@@ -286,7 +286,7 @@ export function SmartCalendarScreen() {
             <View style={styles.financialMetricCard} className={applyWebStyles('kn-neon-sos')}>
               <View style={styles.financialMetricTitleRow}>
                 <Text style={styles.financialMetricIcon}>⚡</Text>
-                <Text style={styles.financialMetricLabel}>Phí Nền Tảng KNG</Text>
+                <Text style={styles.financialMetricLabel}>Phí Nền Tảng VIONA</Text>
               </View>
               <Text style={styles.financialMetricValueDanger}>
                 {formatCurrency(kngPlatformFeeMajor, PRICING_BASELINE_CURRENCY)}
@@ -326,7 +326,7 @@ export function SmartCalendarScreen() {
           </Text>
           <View style={styles.stripeConnectRateWrap} className={mergeWebClassNames('kn-neon-b2b')}>
             <Text style={styles.stripeConnectRate}>
-              Phí nền tảng: ước tính Stripe theo thẻ + 1% biên KNG (không còn mức cố định % + phí cố định).
+              Phí nền tảng: ước tính Stripe theo thẻ + 1% biên VIONA (không còn mức cố định % + phí cố định).
             </Text>
           </View>
           <Text style={styles.stripeConnectSub}>

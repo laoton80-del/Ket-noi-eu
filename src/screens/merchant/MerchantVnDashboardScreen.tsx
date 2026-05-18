@@ -72,7 +72,7 @@ export function MerchantVnDashboardScreen() {
       ) : null}
 
       <View style={styles.balanceRow}>
-        <Text style={styles.balanceLabel}>Spendable VIG</Text>
+        <Text style={styles.balanceLabel}>Spendable VIO Credits</Text>
         <Text style={styles.balanceVal}>{wallet.credits.toFixed(2)}</Text>
       </View>
 
@@ -104,7 +104,7 @@ export function MerchantVnDashboardScreen() {
             renderItem={({ item }) => (
               <View style={styles.ledgerRow}>
                 <View style={{ flex: 1 }}>
-                  <Text style={styles.ledgerAmt}>+{item.amountVIG.toFixed(2)} VIG</Text>
+                  <Text style={styles.ledgerAmt}>+{item.amountVIG.toFixed(2)} VIO Credits</Text>
                   <Text style={styles.ledgerMeta}>QR settlement · payer {item.senderId.slice(0, 8)}…</Text>
                 </View>
                 <Text style={styles.ledgerDate}>{new Date(item.createdAt).toLocaleString()}</Text>
