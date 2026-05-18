@@ -168,6 +168,30 @@ type ProfileStrings = {
   shortcutPartnerA11y: string;
 };
 
+type SetupProfileStrings = {
+  titleSetup: string;
+  titleEdit: string;
+  subtitle: string;
+  kickerCountry: string;
+  kickerResidency: string;
+  kickerSegment: string;
+  segmentAdult: string;
+  segmentChild: string;
+  placeholderName: string;
+  placeholderVisaType: string;
+  placeholderVisaExpiry: string;
+  errorVisaExpiryInvalid: string;
+  ctaSave: string;
+  selfDeclaredDisclaimer: string;
+  countryLabelByCode: Record<string, string>;
+  a11yCountry: string;
+  a11yResidency: string;
+  a11ySegment: string;
+  a11yName: string;
+  a11yVisaType: string;
+  a11yVisaExpiry: string;
+};
+
 type VoiceStrings = {
   holdMic: string;
   listening: string;
@@ -259,6 +283,7 @@ type AppStrings = {
   utility: UtilityStrings;
   community: CommunityStrings;
   profile: ProfileStrings;
+  setupProfile: SetupProfileStrings;
   voice: VoiceStrings;
   errors: ErrorsStrings;
   walletTopUp: WalletTopUpStrings;
@@ -470,6 +495,39 @@ export const STRINGS_BY_LANGUAGE: Record<SupportedLanguage, AppStrings> = {
       shortcutPartnerTitle: 'Trở thành đối tác doanh nghiệp',
       shortcutPartnerSubtitle: 'Chương trình đối tác — liên hệ trong 24h (không tự kích hoạt thanh toán).',
       shortcutPartnerA11y: 'Đăng ký đối tác doanh nghiệp',
+    },
+    setupProfile: {
+      titleSetup: 'Thiết lập hồ sơ',
+      titleEdit: 'Chỉnh sửa thông tin hồ sơ',
+      subtitle:
+        'Chọn quốc gia cư trú và bổ sung thông tin bạn tự khai báo — dùng để gợi ý và công cụ phù hợp ngữ cảnh hơn.',
+      kickerCountry: 'Quốc gia',
+      kickerResidency: 'Diện cư trú',
+      kickerSegment: 'Nhóm học tập',
+      segmentAdult: 'Người lớn (học tiếng bản địa)',
+      segmentChild: 'Trẻ em (học tiếng Việt)',
+      placeholderName: 'Tên / Tên tiệm',
+      placeholderVisaType: 'Loại visa/thẻ cư trú (vd: Blue Card)',
+      placeholderVisaExpiry: 'Ngày hết hạn visa (YYYY-MM-DD)',
+      errorVisaExpiryInvalid: 'Ngày hết hạn chưa đúng định dạng YYYY-MM-DD hoặc không hợp lệ.',
+      ctaSave: 'Lưu hồ sơ',
+      selfDeclaredDisclaimer:
+        'Thông tin do bạn tự khai báo — dùng để cá nhân hóa và hướng dẫn trong app. Không phải xác minh danh tính pháp lý hay của cơ quan nhà nước.',
+      countryLabelByCode: {
+        CZ: 'Séc (T1)',
+        SK: 'Slovakia (T1)',
+        PL: 'Ba Lan (T1)',
+        DE: 'Đức (T2)',
+        FR: 'Pháp (T2)',
+        UK: 'Vương quốc Anh (T2)',
+        GB: 'Vương quốc Anh — GB (T2)',
+      },
+      a11yCountry: 'Chọn quốc gia cư trú',
+      a11yResidency: 'Chọn diện cư trú',
+      a11ySegment: 'Chọn nhóm học tập',
+      a11yName: 'Tên hiển thị',
+      a11yVisaType: 'Loại visa hoặc thẻ cư trú',
+      a11yVisaExpiry: 'Ngày hết hạn visa',
     },
     voice: {
       holdMic: 'Giữ nút micro để nói.',
@@ -751,6 +809,39 @@ export const STRINGS_BY_LANGUAGE: Record<SupportedLanguage, AppStrings> = {
       shortcutPartnerSubtitle: 'Partner program — contact within 24h (no auto billing).',
       shortcutPartnerA11y: 'Business partner onboarding',
     },
+    setupProfile: {
+      titleSetup: 'Set up your profile',
+      titleEdit: 'Edit profile details',
+      subtitle:
+        'Choose your country of residence and add information you provide yourself — used for guidance and contextual tools.',
+      kickerCountry: 'Country',
+      kickerResidency: 'Residency status',
+      kickerSegment: 'Learning segment',
+      segmentAdult: 'Adult (learn local language)',
+      segmentChild: 'Child (learn Vietnamese)',
+      placeholderName: 'Name / business name',
+      placeholderVisaType: 'Visa or residence permit type (e.g. Blue Card)',
+      placeholderVisaExpiry: 'Visa expiry date (YYYY-MM-DD)',
+      errorVisaExpiryInvalid: 'Expiry must be a valid date in YYYY-MM-DD format.',
+      ctaSave: 'Save profile',
+      selfDeclaredDisclaimer:
+        'Information you provide yourself — used for in-app personalization and guidance only. Not government or legal identity verification.',
+      countryLabelByCode: {
+        CZ: 'Czechia (T1)',
+        SK: 'Slovakia (T1)',
+        PL: 'Poland (T1)',
+        DE: 'Germany (T2)',
+        FR: 'France (T2)',
+        UK: 'United Kingdom (T2)',
+        GB: 'United Kingdom — GB (T2)',
+      },
+      a11yCountry: 'Select country of residence',
+      a11yResidency: 'Select residency status',
+      a11ySegment: 'Select learning segment',
+      a11yName: 'Display name',
+      a11yVisaType: 'Visa or residence permit type',
+      a11yVisaExpiry: 'Visa expiry date',
+    },
     voice: {
       holdMic: 'Hold the mic button to speak.',
       listening: 'Listening…',
@@ -1030,6 +1121,39 @@ export const STRINGS_BY_LANGUAGE: Record<SupportedLanguage, AppStrings> = {
       shortcutPartnerTitle: 'Stat se partnerem',
       shortcutPartnerSubtitle: 'Partnersky program — kontakt do 24 h (bez automaticke platby).',
       shortcutPartnerA11y: 'Registrace partnera',
+    },
+    setupProfile: {
+      titleSetup: 'Nastaveni profilu',
+      titleEdit: 'Upravit udaje profilu',
+      subtitle:
+        'Zvolte zemi pobytu a doplnte udaje, ktere zadate sami — pro navody a kontextove nastroje v aplikaci.',
+      kickerCountry: 'Zeme',
+      kickerResidency: 'Status pobytu',
+      kickerSegment: 'Studijni segment',
+      segmentAdult: 'Dospely (uci se mistni jazyk)',
+      segmentChild: 'Dite (uci se vietnamsky)',
+      placeholderName: 'Jmeno / nazev podniku',
+      placeholderVisaType: 'Typ visa/pobytoveho prukazu (napr. Blue Card)',
+      placeholderVisaExpiry: 'Datum konce platnosti visa (YYYY-MM-DD)',
+      errorVisaExpiryInvalid: 'Datum musi byt platne ve formatu YYYY-MM-DD.',
+      ctaSave: 'Ulozit profil',
+      selfDeclaredDisclaimer:
+        'Udaje zadane vami — pouze pro personalizaci a navody v aplikaci. Neovereni identity statem ani pravne.',
+      countryLabelByCode: {
+        CZ: 'Cesko (T1)',
+        SK: 'Slovensko (T1)',
+        PL: 'Polsko (T1)',
+        DE: 'Nemecko (T2)',
+        FR: 'Francie (T2)',
+        UK: 'Spojene kralovstvi (T2)',
+        GB: 'Spojene kralovstvi — GB (T2)',
+      },
+      a11yCountry: 'Vybrat zemi pobytu',
+      a11yResidency: 'Vybrat status pobytu',
+      a11ySegment: 'Vybrat studijni segment',
+      a11yName: 'Zobrazovane jmeno',
+      a11yVisaType: 'Typ visa nebo pobytu',
+      a11yVisaExpiry: 'Datum konce platnosti visa',
     },
     voice: {
       holdMic: 'Drzte tlacitko mikrofonu a mluvte.',
@@ -1311,6 +1435,39 @@ export const STRINGS_BY_LANGUAGE: Record<SupportedLanguage, AppStrings> = {
       shortcutPartnerTitle: 'Business-Partner werden',
       shortcutPartnerSubtitle: 'Partnerprogramm — Kontakt in 24 h (keine Auto-Abrechnung).',
       shortcutPartnerA11y: 'Business-Partner-Onboarding',
+    },
+    setupProfile: {
+      titleSetup: 'Profil einrichten',
+      titleEdit: 'Profildaten bearbeiten',
+      subtitle:
+        'Waehlen Sie Ihr Wohnsitzland und ergaenzen Sie selbst angegebene Angaben — fuer Hinweise und kontextbezogene Tools.',
+      kickerCountry: 'Land',
+      kickerResidency: 'Aufenthaltsstatus',
+      kickerSegment: 'Lernsegment',
+      segmentAdult: 'Erwachsene (lokale Sprache lernen)',
+      segmentChild: 'Kind (Vietnamesisch lernen)',
+      placeholderName: 'Name / Geschaftsname',
+      placeholderVisaType: 'Visum- oder Aufenthaltstitel (z. B. Blue Card)',
+      placeholderVisaExpiry: 'Visumablauf (YYYY-MM-DD)',
+      errorVisaExpiryInvalid: 'Datum muss gueltig sein (Format YYYY-MM-DD).',
+      ctaSave: 'Profil speichern',
+      selfDeclaredDisclaimer:
+        'Von Ihnen angegebene Daten — nur fuer Personalisierung und Hinweise in der App. Keine staatliche oder rechtliche Identitaetspruefung.',
+      countryLabelByCode: {
+        CZ: 'Tschechien (T1)',
+        SK: 'Slowakei (T1)',
+        PL: 'Polen (T1)',
+        DE: 'Deutschland (T2)',
+        FR: 'Frankreich (T2)',
+        UK: 'Vereinigtes Koenigreich (T2)',
+        GB: 'Vereinigtes Koenigreich — GB (T2)',
+      },
+      a11yCountry: 'Wohnsitzland waehlen',
+      a11yResidency: 'Aufenthaltsstatus waehlen',
+      a11ySegment: 'Lernsegment waehlen',
+      a11yName: 'Anzeigename',
+      a11yVisaType: 'Visum- oder Aufenthaltstyp',
+      a11yVisaExpiry: 'Visumablaufdatum',
     },
     voice: {
       holdMic: 'Halten Sie die Mikrofon-Taste zum Sprechen.',

@@ -20,6 +20,7 @@ export type IdentitySelectorCardProps = Readonly<{
   accent: IdentitySelectorAccent;
   onPress: () => void;
   testID?: string;
+  accessibilityLabel?: string;
 }>;
 
 export function IdentitySelectorCard({
@@ -28,6 +29,7 @@ export function IdentitySelectorCard({
   accent,
   onPress,
   testID,
+  accessibilityLabel,
 }: IdentitySelectorCardProps): ReactElement {
   const [hovered, setHovered] = useState(false);
   const ink = VIONA_ACCOUNT_ROLE_ACCENTS[accent].ink;
@@ -38,6 +40,7 @@ export function IdentitySelectorCard({
     <Pressable
       testID={testID}
       accessibilityRole="button"
+      accessibilityLabel={accessibilityLabel ?? `${kicker}. ${valueLine}`}
       onPress={onPress}
       onHoverIn={Platform.OS === 'web' ? () => setHovered(true) : undefined}
       onHoverOut={Platform.OS === 'web' ? () => setHovered(false) : undefined}

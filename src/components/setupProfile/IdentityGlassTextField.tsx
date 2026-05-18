@@ -14,6 +14,7 @@ export type IdentityGlassTextFieldProps = Readonly<{
   onFocus: () => void;
   onBlur: () => void;
   testID?: string;
+  accessibilityLabel?: string;
 }>;
 
 export function IdentityGlassTextField({
@@ -24,11 +25,13 @@ export function IdentityGlassTextField({
   onFocus,
   onBlur,
   testID,
+  accessibilityLabel,
 }: IdentityGlassTextFieldProps): ReactElement {
   return (
     <View style={styles.wrap}>
       <TextInput
         testID={testID}
+        accessibilityLabel={accessibilityLabel ?? placeholder}
         value={value}
         onChangeText={onChangeText}
         placeholder={placeholder}

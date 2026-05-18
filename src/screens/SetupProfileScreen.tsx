@@ -5,6 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useEffect, useMemo, useState } from 'react';
 import {
   Image,
+  KeyboardAvoidingView,
   Platform,
   Pressable,
   ScrollView,
@@ -14,7 +15,9 @@ import {
   useWindowDimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useAuth, type ResidencyStatus, type UserSegment } from '../context/AuthContext';
+import { useAuth } from '../context/AuthContext';
+import { getStrings } from '../i18n/strings';
+import { useAssistantSettings } from '../state/assistantSettings';
 import type { PricingTierId } from '../config/countryPacks';
 import { PILOT_LEONA_SERVICES_FALLBACK_PREFILL, resolvePilotAwareRedirectTarget } from '../config/launchPilot';
 import { MAIN_TAB, type RootStackParamList } from '../navigation/routes';
@@ -54,33 +57,57 @@ function isValidIsoDate(input: string): boolean {
   return date.getUTCFullYear() === y && date.getUTCMonth() === m - 1 && date.getUTCDate() === d;
 }
 
-const RESIDENCY_COUNTRIES: { code: string; tier: PricingTierId; label: string }[] = [
-  { code: 'CZ', tier: 'T1', label: 'Czechia (T1)' },
-  { code: 'SK', tier: 'T1', label: 'Slovakia (T1)' },
-  { code: 'PL', tier: 'T1', label: 'Poland (T1)' },
-  { code: 'DE', tier: 'T2', label: 'Germany (T2)' },
-  { code: 'FR', tier: 'T2', label: 'France (T2)' },
-  { code: 'UK', tier: 'T2', label: 'United Kingdom (T2)' },
-  { code: 'GB', tier: 'T2', label: 'United Kingdom — GB (T2)' },
-];
+const SETUP_CONTENT_MAX_WIDTH = 560;
 
-const RESIDENCY_OPTIONS: { value: ResidencyStatus; label: string }[] = [
-  { value: 'du_hoc', label: 'Du học' },
-  { value: 'lao_dong', label: 'Lao động' },
-  { value: 'dinh_cu', label: 'Định cư' },
-  { value: 'ti_nan', label: 'Tị nạn' },
-];
-
-const SEGMENT_OPTIONS: { value: UserSegment; label: string }[] = [
-  { value: 'adult', label: 'Người lớn (học tiếng bản địa)' },
-  { value: 'child', label: 'Trẻ em (học tiếng Việt)' },
+const RESIDENCY_COUNTRY_DEFS: readonly { code: string; tier: PricingTierId }[] = [
+  { code: 'CZ', tier: 'T1' },
+  { code: 'SK', tier: 'T1' },
+  { code: 'PL', tier: 'T1' },
+  { code: 'DE', tier: 'T2' },
+  { code: 'FR', tier: 'T2' },
+  { code: 'UK', tier: 'T2' },
+  { code: 'GB', tier: 'T2' },
 ];
 
 export function SetupProfileScreen() {
   const navigation = useNavigation<Nav>();
   const route = useRoute<SetupRoute>();
   const { user, completeProfile, updateProfile, pendingRedirect, setPendingRedirect } = useAuth();
+  const { languageCode } = useAssistantSettings();
+  const strings = getStrings(languageCode);
   const { width: windowWidth } = useWindowDimensions();
+  const contentColumn = useMemo(
+    () => ({
+      width: '100%' as const,
+      maxWidth: SETUP_CONTENT_MAX_WIDTH,
+      alignSelf: 'center' as const,
+    }),
+    []
+  );
+  const countries = useMemo(
+    () =>
+      RESIDENCY_COUNTRY_DEFS.map((c) => ({
+        ...c,
+        label: strings.setupProfile.countryLabelByCode[c.code] ?? c.code,
+      })),
+    [strings.setupProfile.countryLabelByCode]
+  );
+  const residencyOptions = useMemo(
+    () => [
+      { value: 'du_hoc' as const, label: strings.profile.residencyStatusDuHoc },
+      { value: 'lao_dong' as const, label: strings.profile.residencyStatusLaoDong },
+      { value: 'dinh_cu' as const, label: strings.profile.residencyStatusDinhCu },
+      { value: 'ti_nan' as const, label: strings.profile.residencyStatusTiNan },
+    ],
+    [strings.profile]
+  );
+  const segmentOptions = useMemo(
+    () => [
+      { value: 'adult' as const, label: strings.setupProfile.segmentAdult },
+      { value: 'child' as const, label: strings.setupProfile.segmentChild },
+    ],
+    [strings.setupProfile.segmentAdult, strings.setupProfile.segmentChild]
+  );
   const constellationImageSize = useMemo(
     () => ({
       maxWidth: Math.min(windowWidth, 1672),
@@ -95,9 +122,9 @@ export function SetupProfileScreen() {
   const [visaType, setVisaType] = useState('');
   const [visaExpiryDate, setVisaExpiryDate] = useState('');
   const [focusedField, setFocusedField] = useState<'name' | 'visaType' | 'visaExpiry' | null>(null);
-  const selectedCountry = RESIDENCY_COUNTRIES[countryIndex];
-  const selectedResidency = RESIDENCY_OPTIONS[residencyIndex];
-  const selectedSegment = SEGMENT_OPTIONS[segmentIndex];
+  const selectedCountry = countries[countryIndex] ?? countries[0];
+  const selectedResidency = residencyOptions[residencyIndex] ?? residencyOptions[0];
+  const selectedSegment = segmentOptions[segmentIndex] ?? segmentOptions[0];
   const visaExpiryRaw = visaExpiryDate.trim();
   const visaExpiryValid = isValidIsoDate(visaExpiryRaw);
   const showVisaExpiryError = visaExpiryRaw.length > 0 && !visaExpiryValid;
@@ -109,15 +136,15 @@ export function SetupProfileScreen() {
   useEffect(() => {
     if (!isEditMode || !user) return;
     setName(user.name ?? '');
-    const cIdx = RESIDENCY_COUNTRIES.findIndex((c) => c.code === user.country);
+    const cIdx = countries.findIndex((c) => c.code === user.country);
     if (cIdx >= 0) setCountryIndex(cIdx);
-    const rIdx = RESIDENCY_OPTIONS.findIndex((r) => r.value === user.residencyStatus);
+    const rIdx = residencyOptions.findIndex((r) => r.value === user.residencyStatus);
     if (rIdx >= 0) setResidencyIndex(rIdx);
-    const sIdx = SEGMENT_OPTIONS.findIndex((s) => s.value === (user.segment ?? 'adult'));
+    const sIdx = segmentOptions.findIndex((s) => s.value === (user.segment ?? 'adult'));
     if (sIdx >= 0) setSegmentIndex(sIdx);
     setVisaType(user.visaType ?? '');
     setVisaExpiryDate(user.visaExpiryDate ?? '');
-  }, [isEditMode, user]);
+  }, [countries, isEditMode, residencyOptions, segmentOptions, user]);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -132,80 +159,95 @@ export function SetupProfileScreen() {
         </View>
         <View style={styles.constellationOverlay} />
       </View>
-      <ScrollView
-        contentContainerStyle={styles.scrollBody}
-        keyboardShouldPersistTaps="handled"
-        showsVerticalScrollIndicator={false}
+      <KeyboardAvoidingView
+        style={styles.keyboardAvoid}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 8 : 0}
       >
-      <View style={styles.cardWrap}>
+        <ScrollView
+          contentContainerStyle={[styles.scrollBody, contentColumn]}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+        >
+          <View style={styles.cardWrap}>
         <View style={styles.card}>
           <VionaBrandLockup variant="header" showAccentUnderline style={styles.brandLockup} />
           <View style={styles.titleRow}>
-          <View style={styles.identityGlyph}>
-            <Ionicons name="shield-checkmark" size={15} color={ft.accentEmerald} />
+            <View style={styles.identityGlyph}>
+              <Ionicons name="person-outline" size={15} color={ft.accentEmerald} />
+            </View>
+            <Text style={styles.title}>
+              {isEditMode ? strings.setupProfile.titleEdit : strings.setupProfile.titleSetup}
+            </Text>
           </View>
-          <Text style={styles.title}>{isEditMode ? 'Cập nhật hồ sơ Identity' : 'Thiết lập hồ sơ'}</Text>
-        </View>
-        <Text style={styles.sub}>Chọn quốc gia cư trú và bổ sung hồ sơ để tư vấn và công cụ khớp ngữ cảnh hơn.</Text>
+          <Text style={styles.sub}>{strings.setupProfile.subtitle}</Text>
 
-        <View style={styles.selectorStack}>
-          <IdentitySelectorCard
-            kicker="Quốc gia"
-            valueLine={selectedCountry.label}
-            accent="cyan"
-            onPress={() => setCountryIndex((i) => (i + 1) % RESIDENCY_COUNTRIES.length)}
-            testID="setup-profile-country"
-          />
-          <IdentitySelectorCard
-            kicker="Diện cư trú"
-            valueLine={selectedResidency.label}
-            accent="emerald"
-            onPress={() => setResidencyIndex((i) => (i + 1) % RESIDENCY_OPTIONS.length)}
-            testID="setup-profile-residency"
-          />
-          <IdentitySelectorCard
-            kicker="Segment học tập"
-            valueLine={selectedSegment.label}
-            accent="violet"
-            onPress={() => setSegmentIndex((i) => (i + 1) % SEGMENT_OPTIONS.length)}
-            testID="setup-profile-segment"
-          />
-        </View>
+          <View style={styles.selectorStack}>
+            <IdentitySelectorCard
+              kicker={strings.setupProfile.kickerCountry}
+              valueLine={selectedCountry.label}
+              accent="cyan"
+              onPress={() => setCountryIndex((i) => (i + 1) % countries.length)}
+              accessibilityLabel={strings.setupProfile.a11yCountry}
+              testID="setup-profile-country"
+            />
+            <IdentitySelectorCard
+              kicker={strings.setupProfile.kickerResidency}
+              valueLine={selectedResidency.label}
+              accent="emerald"
+              onPress={() => setResidencyIndex((i) => (i + 1) % residencyOptions.length)}
+              accessibilityLabel={strings.setupProfile.a11yResidency}
+              testID="setup-profile-residency"
+            />
+            <IdentitySelectorCard
+              kicker={strings.setupProfile.kickerSegment}
+              valueLine={selectedSegment.label}
+              accent="violet"
+              onPress={() => setSegmentIndex((i) => (i + 1) % segmentOptions.length)}
+              accessibilityLabel={strings.setupProfile.a11ySegment}
+              testID="setup-profile-segment"
+            />
+          </View>
 
-        <View style={styles.fieldStack}>
-          <IdentityGlassTextField
-            value={name}
-            onChangeText={setName}
-            placeholder="Tên / Tên tiệm"
-            focused={focusedField === 'name'}
-            onFocus={() => setFocusedField('name')}
-            onBlur={() => setFocusedField((prev) => (prev === 'name' ? null : prev))}
-            testID="setup-profile-name"
-          />
-          <IdentityGlassTextField
-            value={visaType}
-            onChangeText={setVisaType}
-            placeholder="Loại Visa/Thẻ cư trú (vd: Blue Card)"
-            focused={focusedField === 'visaType'}
-            onFocus={() => setFocusedField('visaType')}
-            onBlur={() => setFocusedField((prev) => (prev === 'visaType' ? null : prev))}
-            testID="setup-profile-visa-type"
-          />
-          <IdentityGlassTextField
-            value={visaExpiryDate}
-            onChangeText={setVisaExpiryDate}
-            placeholder="Ngày hết hạn Visa (YYYY-MM-DD)"
-            focused={focusedField === 'visaExpiry'}
-            onFocus={() => setFocusedField('visaExpiry')}
-            onBlur={() => setFocusedField((prev) => (prev === 'visaExpiry' ? null : prev))}
-            testID="setup-profile-visa-expiry"
-          />
-        </View>
-        {showVisaExpiryError ? (
-          <Text style={styles.errorText}>Ngày hết hạn chưa đúng định dạng YYYY-MM-DD hoặc không hợp lệ.</Text>
-        ) : null}
+          <View style={styles.fieldStack}>
+            <IdentityGlassTextField
+              value={name}
+              onChangeText={setName}
+              placeholder={strings.setupProfile.placeholderName}
+              focused={focusedField === 'name'}
+              onFocus={() => setFocusedField('name')}
+              onBlur={() => setFocusedField((prev) => (prev === 'name' ? null : prev))}
+              accessibilityLabel={strings.setupProfile.a11yName}
+              testID="setup-profile-name"
+            />
+            <IdentityGlassTextField
+              value={visaType}
+              onChangeText={setVisaType}
+              placeholder={strings.setupProfile.placeholderVisaType}
+              focused={focusedField === 'visaType'}
+              onFocus={() => setFocusedField('visaType')}
+              onBlur={() => setFocusedField((prev) => (prev === 'visaType' ? null : prev))}
+              accessibilityLabel={strings.setupProfile.a11yVisaType}
+              testID="setup-profile-visa-type"
+            />
+            <IdentityGlassTextField
+              value={visaExpiryDate}
+              onChangeText={setVisaExpiryDate}
+              placeholder={strings.setupProfile.placeholderVisaExpiry}
+              focused={focusedField === 'visaExpiry'}
+              onFocus={() => setFocusedField('visaExpiry')}
+              onBlur={() => setFocusedField((prev) => (prev === 'visaExpiry' ? null : prev))}
+              accessibilityLabel={strings.setupProfile.a11yVisaExpiry}
+              testID="setup-profile-visa-expiry"
+            />
+          </View>
+          {showVisaExpiryError ? (
+            <Text style={styles.errorText}>{strings.setupProfile.errorVisaExpiryInvalid}</Text>
+          ) : null}
 
-        <Pressable
+          <Text style={styles.disclaimer}>{strings.setupProfile.selfDeclaredDisclaimer}</Text>
+
+          <Pressable
           disabled={!canContinue}
           onPress={() => {
             if (isEditMode) {
@@ -298,7 +340,7 @@ export function SetupProfileScreen() {
           <Text
             style={[styles.ctaText, canContinue && styles.ctaTextEnabled, !canContinue && styles.ctaTextDisabled]}
           >
-            Hoàn tất
+            {strings.setupProfile.ctaSave}
           </Text>
         </Pressable>
         </View>
@@ -307,8 +349,9 @@ export function SetupProfileScreen() {
           style={[styles.cardEdgeOverlay, premiumFrameEdgeOverlay(22), premiumCrispEdgeStroke(LUM_PANEL_BORDER)]}
         />
         <View pointerEvents="none" style={styles.cardTopHighlight} />
-      </View>
-      </ScrollView>
+          </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
@@ -319,11 +362,16 @@ const styles = StyleSheet.create({
     backgroundColor: ft.canvas,
     overflow: 'hidden',
   },
+  keyboardAvoid: {
+    flex: 1,
+    zIndex: 1,
+  },
   scrollBody: {
     flexGrow: 1,
     justifyContent: 'center',
     paddingHorizontal: 18,
     paddingVertical: 12,
+    width: '100%',
   },
   backdrop: {
     ...StyleSheet.absoluteFillObject,
@@ -411,6 +459,14 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: ft.sosNeonMuted,
     fontFamily: FontFamily.medium,
+  },
+  disclaimer: {
+    marginTop: 10,
+    fontSize: 11,
+    lineHeight: 16,
+    color: ft.textSecondary,
+    fontFamily: FontFamily.regular,
+    opacity: 0.92,
   },
   cta: {
     height: 46,
