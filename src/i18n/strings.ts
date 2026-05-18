@@ -143,6 +143,29 @@ type ProfileStrings = {
   onboardingResetDoneTitle: string;
   onboardingResetDoneMessage: string;
   onboardingResetRowLabel: string;
+  /** Bilingual settings row label. */
+  settingLanguageRow: string;
+  /** In-app loyalty framing — not cash or crypto. */
+  creditsInAppOnly: string;
+  /** Subscription label is app state, not a paid receipt. */
+  subscriptionPlanFootnote: string;
+  shortcutStoreTitle: string;
+  shortcutStoreSubtitle: string;
+  shortcutStoreA11y: string;
+  shortcutB2bPricingTitle: string;
+  shortcutB2bPricingSubtitle: string;
+  shortcutB2bSwitchTitle: string;
+  /** Placeholder `{mode}` — B2C_MODE or B2B_MODE. */
+  shortcutB2bSwitchSubtitle: string;
+  shortcutB2bSwitchA11y: string;
+  shortcutWorkspaceMerchantTitle: string;
+  shortcutWorkspaceBrokerTitle: string;
+  shortcutWorkspaceConsumerTitle: string;
+  shortcutWorkspaceSubtitle: string;
+  shortcutWorkspaceA11y: string;
+  shortcutPartnerTitle: string;
+  shortcutPartnerSubtitle: string;
+  shortcutPartnerA11y: string;
 };
 
 type VoiceStrings = {
@@ -427,6 +450,26 @@ export const STRINGS_BY_LANGUAGE: Record<SupportedLanguage, AppStrings> = {
       onboardingResetDoneTitle: 'Đã đặt lại',
       onboardingResetDoneMessage: 'Khởi động lại app để thấy câu hỏi lần đầu.',
       onboardingResetRowLabel: 'Đặt lại hướng dẫn lần đầu',
+      settingLanguageRow: 'Ngôn ngữ / Language',
+      creditsInAppOnly: 'VIO Credits chỉ dùng trong app — không phải tiền mặt, không rút hay giao dịch crypto.',
+      subscriptionPlanFootnote: 'Nhãn gói phản ánh trạng thái trong app, không phải hóa đơn thanh toán.',
+      shortcutStoreTitle: 'Vật phẩm & huy hiệu',
+      shortcutStoreSubtitle:
+        'Khung avatar và huy hiệu đồng hành — chi tiêu VIO Credits trong app.',
+      shortcutStoreA11y: 'Vật phẩm và huy hiệu — chi tiêu VIO Credits trong app',
+      shortcutB2bPricingTitle: 'Bảng giá doanh nghiệp (B2B)',
+      shortcutB2bPricingSubtitle: 'Gói Cơ bản, Pro, Power — thanh toán theo lịch hoặc theo tháng.',
+      shortcutB2bSwitchTitle: 'Chuyển sang Quản lý Doanh nghiệp',
+      shortcutB2bSwitchSubtitle: 'Workspace hiện tại: {mode}.',
+      shortcutB2bSwitchA11y: 'Chuyển sang Quản lý Doanh nghiệp',
+      shortcutWorkspaceMerchantTitle: 'Dùng bảng merchant làm màn hình chính',
+      shortcutWorkspaceBrokerTitle: 'Dùng bảng broker làm màn hình chính',
+      shortcutWorkspaceConsumerTitle: 'Chuyển về app người dùng VIONA',
+      shortcutWorkspaceSubtitle: 'Một chạm — lưu trên thiết bị. Ví và tab giữ nguyên.',
+      shortcutWorkspaceA11y: 'Đổi màn hình chính giữa workspace và app người dùng',
+      shortcutPartnerTitle: 'Trở thành đối tác doanh nghiệp',
+      shortcutPartnerSubtitle: 'Chương trình đối tác — liên hệ trong 24h (không tự kích hoạt thanh toán).',
+      shortcutPartnerA11y: 'Đăng ký đối tác doanh nghiệp',
     },
     voice: {
       holdMic: 'Giữ nút micro để nói.',
@@ -688,6 +731,25 @@ export const STRINGS_BY_LANGUAGE: Record<SupportedLanguage, AppStrings> = {
       onboardingResetDoneTitle: 'Reset done',
       onboardingResetDoneMessage: 'Restart the app to see the first-time prompt.',
       onboardingResetRowLabel: 'Reset first-time guidance',
+      settingLanguageRow: 'Language / Ngôn ngữ',
+      creditsInAppOnly: 'VIO Credits are for in-app use only — not cash, crypto, or withdrawable money.',
+      subscriptionPlanFootnote: 'Plan label reflects in-app state, not a paid subscription receipt.',
+      shortcutStoreTitle: 'Items & badges',
+      shortcutStoreSubtitle: 'Companion avatars and badges — spend VIO Credits in-app only.',
+      shortcutStoreA11y: 'Items and badges — spend VIO Credits in-app',
+      shortcutB2bPricingTitle: 'Business pricing (B2B)',
+      shortcutB2bPricingSubtitle: 'Basic, Pro, Power — scheduled or monthly billing.',
+      shortcutB2bSwitchTitle: 'Switch to business workspace',
+      shortcutB2bSwitchSubtitle: 'Current workspace: {mode}.',
+      shortcutB2bSwitchA11y: 'Switch to business workspace',
+      shortcutWorkspaceMerchantTitle: 'Use merchant dashboard as home',
+      shortcutWorkspaceBrokerTitle: 'Use broker dashboard as home',
+      shortcutWorkspaceConsumerTitle: 'Switch to VIONA consumer home',
+      shortcutWorkspaceSubtitle: 'One tap — saved on this device. Wallet and tabs stay the same.',
+      shortcutWorkspaceA11y: 'Switch default home between workspace and consumer app',
+      shortcutPartnerTitle: 'Become a business partner',
+      shortcutPartnerSubtitle: 'Partner program — contact within 24h (no auto billing).',
+      shortcutPartnerA11y: 'Business partner onboarding',
     },
     voice: {
       holdMic: 'Hold the mic button to speak.',
@@ -949,6 +1011,25 @@ export const STRINGS_BY_LANGUAGE: Record<SupportedLanguage, AppStrings> = {
       onboardingResetDoneTitle: 'Reset probehl',
       onboardingResetDoneMessage: 'Restartujte aplikaci a uvidite uvadeci otazku.',
       onboardingResetRowLabel: 'Resetovat uvadeci pruvodce',
+      settingLanguageRow: 'Jazyk / Language',
+      creditsInAppOnly: 'Credits pouze v aplikaci — ne hotovost ani krypto.',
+      subscriptionPlanFootnote: 'Stitek planu je stav v aplikaci, ne potvrzeni platby.',
+      shortcutStoreTitle: 'Predmety a odznaky',
+      shortcutStoreSubtitle: 'Avatary a odznaky — utrácení Credits pouze v aplikaci.',
+      shortcutStoreA11y: 'Predmety a odznaky — Credits v aplikaci',
+      shortcutB2bPricingTitle: 'Cenik B2B',
+      shortcutB2bPricingSubtitle: 'Basic, Pro, Power — mesicne nebo podle harmonogramu.',
+      shortcutB2bSwitchTitle: 'Prepnout na firemni workspace',
+      shortcutB2bSwitchSubtitle: 'Aktualni workspace: {mode}.',
+      shortcutB2bSwitchA11y: 'Prepnout na firemni workspace',
+      shortcutWorkspaceMerchantTitle: 'Domovska obrazovka merchant',
+      shortcutWorkspaceBrokerTitle: 'Domovska obrazovka broker',
+      shortcutWorkspaceConsumerTitle: 'Prepnout na consumer aplikaci VIONA',
+      shortcutWorkspaceSubtitle: 'Jednim klepnutim — ulozeno v zarizeni. Penezenka a zalozky beze zmeny.',
+      shortcutWorkspaceA11y: 'Prepnout vychozi domovskou obrazovku',
+      shortcutPartnerTitle: 'Stat se partnerem',
+      shortcutPartnerSubtitle: 'Partnersky program — kontakt do 24 h (bez automaticke platby).',
+      shortcutPartnerA11y: 'Registrace partnera',
     },
     voice: {
       holdMic: 'Drzte tlacitko mikrofonu a mluvte.',
@@ -1211,6 +1292,25 @@ export const STRINGS_BY_LANGUAGE: Record<SupportedLanguage, AppStrings> = {
       onboardingResetDoneTitle: 'Zurueckgesetzt',
       onboardingResetDoneMessage: 'App neu starten, um die Erstnutzungsfrage zu sehen.',
       onboardingResetRowLabel: 'Erstmalige Hinweise zuruecksetzen',
+      settingLanguageRow: 'Sprache / Language',
+      creditsInAppOnly: 'Credits nur in der App — kein Bargeld, kein Krypto, nicht auszahlbar.',
+      subscriptionPlanFootnote: 'Plan-Label ist App-Status, keine Zahlungsquittung.',
+      shortcutStoreTitle: 'Items & Abzeichen',
+      shortcutStoreSubtitle: 'Avatare und Abzeichen — Credits nur in der App ausgeben.',
+      shortcutStoreA11y: 'Items und Abzeichen — Credits in der App',
+      shortcutB2bPricingTitle: 'B2B-Preise',
+      shortcutB2bPricingSubtitle: 'Basic, Pro, Power — monatlich oder nach Plan.',
+      shortcutB2bSwitchTitle: 'Zum Business-Workspace wechseln',
+      shortcutB2bSwitchSubtitle: 'Aktueller Workspace: {mode}.',
+      shortcutB2bSwitchA11y: 'Zum Business-Workspace wechseln',
+      shortcutWorkspaceMerchantTitle: 'Merchant-Dashboard als Start',
+      shortcutWorkspaceBrokerTitle: 'Broker-Dashboard als Start',
+      shortcutWorkspaceConsumerTitle: 'Zur VIONA Consumer-App wechseln',
+      shortcutWorkspaceSubtitle: 'Ein Tipp — auf diesem Geraet gespeichert. Wallet und Tabs bleiben.',
+      shortcutWorkspaceA11y: 'Standard-Start zwischen Workspace und Consumer wechseln',
+      shortcutPartnerTitle: 'Business-Partner werden',
+      shortcutPartnerSubtitle: 'Partnerprogramm — Kontakt in 24 h (keine Auto-Abrechnung).',
+      shortcutPartnerA11y: 'Business-Partner-Onboarding',
     },
     voice: {
       holdMic: 'Halten Sie die Mikrofon-Taste zum Sprechen.',

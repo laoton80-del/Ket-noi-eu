@@ -53,6 +53,8 @@ import { hasB2BWorkspaceAccess } from '../utils/b2bAccess';
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
 const ADMIN_UNLOCK_KEY = STORAGE_KEYS.adminUnlock;
+/** Calm centered column on tablet/web — aligned with emergency SOS polish. */
+const ACCOUNT_CONTENT_MAX_WIDTH = 560;
 
 const ft = vionaTokens.fashionTech;
 const IMG_ACCOUNT_CONSTELLATION = require('../../assets/UI/viona-account-global-net-bg-v2.png');
@@ -190,10 +192,27 @@ export function CaNhanScreen() {
   const { languageCode } = useAssistantSettings();
   const strings = getStrings(languageCode);
   const wallet = useWalletState();
+  const contentColumn = useMemo(
+    () => ({
+      width: '100%' as const,
+      maxWidth: ACCOUNT_CONTENT_MAX_WIDTH,
+      alignSelf: 'center' as const,
+    }),
+    []
+  );
   const accountActionGridWidth = useMemo(
-    () => Math.max(0, width - theme.spacing.lg * 2),
+    () => Math.min(Math.max(0, width - theme.spacing.lg * 2), ACCOUNT_CONTENT_MAX_WIDTH),
     [width]
   );
+  const workspaceShortcutTitle = useMemo(() => {
+    if (!user) return strings.profile.shortcutWorkspaceConsumerTitle;
+    if (user.workspaceUiOverride === 'consumer') {
+      return user.serverRole === 'BROKER'
+        ? strings.profile.shortcutWorkspaceBrokerTitle
+        : strings.profile.shortcutWorkspaceMerchantTitle;
+    }
+    return strings.profile.shortcutWorkspaceConsumerTitle;
+  }, [strings.profile, user]);
   const constellationImageSize = useMemo(
     () => ({
       maxWidth: Math.min(width, 1672),
@@ -403,7 +422,10 @@ export function CaNhanScreen() {
         </View>
         <View style={styles.constellationOverlay} />
       </View>
-      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        contentContainerStyle={[styles.content, contentColumn]}
+        showsVerticalScrollIndicator={false}
+      >
         <VionaBrandLockup variant="header" showAccentUnderline style={styles.brandLockup} />
         <Text style={styles.launchHint}>{APP_BRAND.launchSubtitle}</Text>
         <Text style={styles.title}>{strings.profile.screenTitle}</Text>
@@ -446,6 +468,7 @@ export function CaNhanScreen() {
                 {interpolate(strings.profile.creditsBalanceCurrent, { credits: String(wallet.credits) })}
               </Text>
               <Text style={styles.cardHint}>{strings.profile.creditsHint}</Text>
+              <Text style={styles.cardHintSecondary}>{strings.profile.creditsInAppOnly}</Text>
             </AccountNeonGlassPanel>
           </Pressable>
         </View>
@@ -460,39 +483,37 @@ export function CaNhanScreen() {
           >
             <VionaActionCard
               iconName="storefront-outline"
-              title="Cửa hàng Vật phẩm"
-              subtitle="Khung Avatar Trống Đồng · Huy hiệu Xác minh Hộ chiếu — thanh toán Xu."
+              title={strings.profile.shortcutStoreTitle}
+              subtitle={strings.profile.shortcutStoreSubtitle}
               accent={ACC_ACCOUNT_STORE}
               onPress={() => navigation.navigate('Wallet')}
-              accessibilityHint="Cửa hàng Vật phẩm — Khung avatar và huy hiệu VIP"
+              accessibilityHint={strings.profile.shortcutStoreA11y}
               testID="account-action-virtual-store"
             />
             <VionaActionCard
               iconName="pricetags-outline"
-              title="Bảng giá doanh nghiệp (B2B)"
-              subtitle="Gói Cơ bản, Pro, Power — thanh toán theo lịch hoặc theo tháng."
+              title={strings.profile.shortcutB2bPricingTitle}
+              subtitle={strings.profile.shortcutB2bPricingSubtitle}
               accent={ACC_ACCOUNT_B2B_PRICE}
               onPress={() => openMerchantRoute('B2BPaywall')}
               testID="account-action-b2b-pricing"
             />
             <VionaActionCard
               iconName="swap-horizontal"
-              title="🔄 Chuyển sang Quản lý Doanh nghiệp"
-              subtitle={`Workspace hiện tại: ${mode === 'B2B_MODE' ? 'B2B_MODE' : 'B2C_MODE'}.`}
+              title={strings.profile.shortcutB2bSwitchTitle}
+              subtitle={interpolate(strings.profile.shortcutB2bSwitchSubtitle, {
+                mode: mode === 'B2B_MODE' ? 'B2B_MODE' : 'B2C_MODE',
+              })}
               accent={ACC_ACCOUNT_B2B_SWITCH}
               onPress={openB2BWorkspaceSwitch}
-              accessibilityHint="Chuyển sang Quản lý Doanh nghiệp"
+              accessibilityHint={strings.profile.shortcutB2bSwitchA11y}
               testID="account-action-b2b-switch"
             />
             {showWorkspaceShortcut && user ? (
               <VionaActionCard
                 iconName="people-circle-outline"
-                title={
-                  user.workspaceUiOverride === 'consumer'
-                    ? `Use ${user.serverRole === 'BROKER' ? 'broker' : 'merchant'} dashboard as default home`
-                    : 'Switch default home to VIONA consumer app'
-                }
-                subtitle="One tap — saved on this device. Open wallet & tabs stay the same."
+                title={workspaceShortcutTitle}
+                subtitle={strings.profile.shortcutWorkspaceSubtitle}
                 accent={ACC_ACCOUNT_WORKSPACE}
                 onPress={() => {
                   if (user.workspaceUiOverride === 'consumer') {
@@ -501,17 +522,17 @@ export function CaNhanScreen() {
                     updateProfile({ workspaceUiOverride: 'consumer' });
                   }
                 }}
-                accessibilityHint="Switch default between workspace and consumer home"
+                accessibilityHint={strings.profile.shortcutWorkspaceA11y}
                 testID="account-action-workspace-hat"
               />
             ) : null}
             <VionaActionCard
               iconName="shield-checkmark"
-              title="Dành cho Doanh nghiệp: Trở thành đối tác"
-              subtitle="Chương trình Đối tác chứng nhận — chia sẻ doanh thu, liên hệ trong 24h."
+              title={strings.profile.shortcutPartnerTitle}
+              subtitle={strings.profile.shortcutPartnerSubtitle}
               accent={ACC_ACCOUNT_PARTNER}
               onPress={() => openMerchantRoute('PartnerOnboarding')}
-              accessibilityHint="Dành cho Doanh nghiệp: Trở thành đối tác"
+              accessibilityHint={strings.profile.shortcutPartnerA11y}
               testID="account-action-partner"
             />
           </VionaActionGrid>
@@ -546,6 +567,7 @@ export function CaNhanScreen() {
             <Text style={styles.identityKey}>{strings.profile.subscriptionPlanLabel}</Text>
             <Text style={styles.identityValue}>{planLabel}</Text>
           </View>
+          <Text style={styles.identityFootnote}>{strings.profile.subscriptionPlanFootnote}</Text>
           <View style={styles.identityRow}>
             <Text style={styles.identityKey}>{strings.profile.aiCreditsLabel}</Text>
             <Text style={styles.identityValue}>{user?.aiCallCredits ?? wallet.credits}</Text>
@@ -559,18 +581,24 @@ export function CaNhanScreen() {
         </AccountNeonGlassPanel>
 
         <Text style={styles.sectionTitle}>{strings.profile.settingsTitle}</Text>
-        <View style={styles.settingsCard}>
+        <AccountNeonGlassPanel
+          role="cyan"
+          tier="default"
+          radius={theme.radius.lg}
+          style={styles.settingsPanelWrap}
+          contentStyle={styles.settingsPanelInner}
+        >
           <Pressable
             onPress={() => setLanguageModalOpen(true)}
             style={({ pressed }) => [styles.settingRow, pressed && { opacity: 0.72 }]}
             accessibilityRole="button"
-            accessibilityLabel="Language Ngôn ngữ"
+            accessibilityLabel={strings.profile.settingLanguageRow}
           >
             <View style={[styles.settingIconWrap, styles.settingIconCyan]}>
               <Ionicons name="language-outline" size={18} color={ft.accentCyan} />
             </View>
             <View style={styles.languageRowText}>
-              <Text style={styles.settingText}>Language / Ngôn ngữ</Text>
+              <Text style={styles.settingText}>{strings.profile.settingLanguageRow}</Text>
               <Text style={styles.languageRowSub} numberOfLines={1}>
                 {languageSubtitleForCode(languageCode)}
               </Text>
@@ -590,7 +618,7 @@ export function CaNhanScreen() {
               <Ionicons name="chevron-forward" size={16} color={ft.mutedOnDark} />
             </Pressable>
           ))}
-        </View>
+        </AccountNeonGlassPanel>
 
         <GDPRDashboard />
 
@@ -839,15 +867,19 @@ const styles = StyleSheet.create({
     color: ft.champagne,
     fontFamily: FontFamily.extrabold,
     marginBottom: 6,
-    textShadowColor: 'rgba(233, 199, 120, 0.22)',
-    textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 6,
   },
   cardHint: {
     fontSize: 13,
     lineHeight: 20,
     color: ft.textSecondary,
     fontFamily: FontFamily.regular,
+  },
+  cardHintSecondary: {
+    fontSize: 11,
+    lineHeight: 16,
+    color: ft.mutedOnDark,
+    fontFamily: FontFamily.medium,
+    marginTop: 4,
   },
   identityCardWrap: {
     marginBottom: 12,
@@ -891,6 +923,13 @@ const styles = StyleSheet.create({
     color: ft.textPrimary,
     fontFamily: FontFamily.bold,
   },
+  identityFootnote: {
+    fontSize: 11,
+    lineHeight: 15,
+    color: ft.mutedOnDark,
+    fontFamily: FontFamily.medium,
+    marginTop: 2,
+  },
   editIdentityBtn: {
     marginTop: 8,
     minHeight: 34,
@@ -912,17 +951,12 @@ const styles = StyleSheet.create({
     fontFamily: FontFamily.extrabold,
     marginBottom: 8,
   },
-  settingsCard: {
-    borderRadius: theme.radius.lg,
-    borderWidth: 1,
-    borderColor: `${ft.accentCyan}ea`,
-    backgroundColor: 'rgba(12, 18, 28, 0.9)',
-    paddingHorizontal: 12,
-    shadowColor: 'rgba(128, 210, 255, 0.14)',
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 1,
-    shadowRadius: 3,
-    elevation: 1,
+  settingsPanelWrap: {
+    marginBottom: 12,
+  },
+  settingsPanelInner: {
+    paddingHorizontal: 4,
+    paddingVertical: 4,
   },
   languageRowText: {
     flex: 1,
@@ -1020,11 +1054,11 @@ const styles = StyleSheet.create({
     minHeight: 44,
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    borderBottomWidth: 1,
-    borderBottomColor: ft.borderSubtle,
-    paddingVertical: 4,
+    paddingVertical: 10,
+    paddingHorizontal: 8,
     gap: 10,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: ft.borderSubtle,
   },
   settingIconWrap: {
     width: 32,
