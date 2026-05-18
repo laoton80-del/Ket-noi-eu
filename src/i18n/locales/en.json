@@ -857,12 +857,12 @@
     "sosEmbassyBlockTitle": "Vietnamese embassy (nearest)",
     "sosAiMaydayBlockTitle": "AI voice mayday",
     "sosAiMaydayCta": "Play mayday phrase (multilingual)",
-    "sosPingBlockTitle": "Safety ping",
-    "sosPingCta": "Share location with nearby VIONA community",
-    "sosPingAlertTitle": "Ping sent",
-    "sosPingAlertBody": "SOS ping sent with coordinates {{coords}} ({{city}}). Pilot flow — not a substitute for authorities.",
-    "sosPingNotifyTitle": "VIONA — safety ping",
-    "sosPingNotifyBody": "SOS ping · {{city}} · {{coords}}"
+    "sosPingBlockTitle": "Prepare SOS guidance",
+    "sosPingCta": "Open SOS guidance",
+    "sosPingAlertTitle": "SOS guidance ready",
+    "sosPingAlertBody": "Open calm steps for urgent situations. VIONA does not automatically alert authorities or share your location. You stay in control of calls, contacts, and location sharing.",
+    "sosPingNotifyTitle": "VIONA — SOS guidance",
+    "sosPingNotifyBody": "Calm steps for {{city}}. VIONA does not automatically alert authorities or share your location."
   },
   "travelHub": {
     "screenTitle": "VIONA Travel",
