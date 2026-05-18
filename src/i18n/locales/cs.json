@@ -940,12 +940,12 @@
     "sosEmbassyBlockTitle": "Vietnamské velvyslanectví (nejbližší)",
     "sosAiMaydayBlockTitle": "AI hlasové mayday",
     "sosAiMaydayCta": "Přehrát mayday frázi (více jazyků)",
-    "sosPingBlockTitle": "Bezpečnostní ping",
-    "sosPingCta": "Sdílet polohu s komunitou VIONA v okolí",
-    "sosPingAlertTitle": "Ping odeslán",
-    "sosPingAlertBody": "SOS ping odeslán se souřadnicemi {{coords}} ({{city}}). Pilotní režim — nenahrazuje složky záchranných služeb.",
-    "sosPingNotifyTitle": "VIONA — bezpečnostní ping",
-    "sosPingNotifyBody": "SOS ping · {{city}} · {{coords}}"
+    "sosPingBlockTitle": "Připravit SOS návod",
+    "sosPingCta": "Otevřít SOS návod",
+    "sosPingAlertTitle": "SOS návod je připraven",
+    "sosPingAlertBody": "Otevřete klidné kroky pro naléhavé situace. VIONA automaticky nevolá složky ani nesdílí vaši polohu. Volání, kontakty i sdílení polohy máte pod kontrolou.",
+    "sosPingNotifyTitle": "VIONA — SOS návod",
+    "sosPingNotifyBody": "Klidné kroky pro {{city}}. VIONA automaticky nevolá složky ani nesdílí polohu."
   },
   "academySub": {
     "common": {

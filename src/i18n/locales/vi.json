@@ -857,12 +857,12 @@
     "sosEmbassyBlockTitle": "Đại sứ quán Việt Nam",
     "sosAiMaydayBlockTitle": "Giọng AI khẩn cấp",
     "sosAiMaydayCta": "Phát câu cứu hộ (đa ngữ)",
-    "sosPingBlockTitle": "Báo ping an toàn",
-    "sosPingCta": "Gửi vị trí tới cộng đồng VIONA lân cận",
-    "sosPingAlertTitle": "Đã gửi ping",
-    "sosPingAlertBody": "Đã gửi SOS ping kèm tọa độ {{coords}} ({{city}}). Luồng pilot — không thay thế cơ quan chức năng.",
-    "sosPingNotifyTitle": "VIONA — báo ping",
-    "sosPingNotifyBody": "Ping SOS · {{city}} · {{coords}}"
+    "sosPingBlockTitle": "Chuẩn bị hướng dẫn SOS",
+    "sosPingCta": "Mở hướng dẫn SOS",
+    "sosPingAlertTitle": "Hướng dẫn SOS đã sẵn sàng",
+    "sosPingAlertBody": "Mở các bước bình tĩnh cho tình huống khẩn cấp. VIONA không tự động báo cơ quan chức năng hoặc chia sẻ vị trí của bạn. Bạn kiểm soát cuộc gọi, liên hệ và chia sẻ vị trí.",
+    "sosPingNotifyTitle": "VIONA — hướng dẫn SOS",
+    "sosPingNotifyBody": "Các bước bình tĩnh tại {{city}}. VIONA không tự động báo cơ quan hoặc chia sẻ vị trí."
   },
   "travelHub": {
     "screenTitle": "VIONA Du lịch",

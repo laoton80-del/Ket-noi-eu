@@ -940,12 +940,12 @@
     "sosEmbassyBlockTitle": "Vietnamesische Botschaft (nächste)",
     "sosAiMaydayBlockTitle": "KI-Sprach-Notsignal",
     "sosAiMaydayCta": "Notsignal-Phrase abspielen (mehrsprachig)",
-    "sosPingBlockTitle": "Sicherheits-Ping",
-    "sosPingCta": "Standort mit VIONA-Community in der Nähe teilen",
-    "sosPingAlertTitle": "Ping gesendet",
-    "sosPingAlertBody": "SOS-Ping mit Koordinaten {{coords}} ({{city}}) gesendet. Pilot-Ablauf — kein Ersatz für Behörden.",
-    "sosPingNotifyTitle": "VIONA — Sicherheits-Ping",
-    "sosPingNotifyBody": "SOS-Ping · {{city}} · {{coords}}"
+    "sosPingBlockTitle": "SOS-Anleitung vorbereiten",
+    "sosPingCta": "SOS-Anleitung öffnen",
+    "sosPingAlertTitle": "SOS-Anleitung bereit",
+    "sosPingAlertBody": "Ruhige Schritte für dringende Situationen. VIONA alarmiert keine Behörden und teilt Ihren Standort nicht automatisch. Anrufe, Kontakte und Standortfreigabe bleiben in Ihrer Kontrolle.",
+    "sosPingNotifyTitle": "VIONA — SOS-Anleitung",
+    "sosPingNotifyBody": "Ruhige Schritte für {{city}}. VIONA alarmiert keine Behörden und teilt den Standort nicht automatisch."
   },
   "academySub": {
     "common": {
