@@ -202,20 +202,19 @@ export function SOSModal({
   const sosSheetSidePad = 36;
   const actionGap = 16;
   const usableActionWidth = Math.max(0, width - sosSheetSidePad);
-  /** Web: ≥1100 → 3×2 desktop; 768–1099 → 2 cols; else 1. Native: unchanged tablet breakpoints. */
+  /** Premium app-tile grid: 3×2 desktop web, 2-col from 360px (no horizontal list rows on mobile). */
   const actionCols =
     Platform.OS === 'web'
       ? width >= 1100
         ? 3
-        : width >= 768
+        : width >= 360
           ? 2
           : 1
       : width >= 760
         ? 3
-        : width >= 580
+        : width >= 360
           ? 2
           : 1;
-  const useActionGrid = actionCols >= 2;
 
   /**
    * Pixel widths from window falsely assume the sheet is full-bleed; the SOS sheet is narrower on web,
@@ -387,10 +386,10 @@ export function SOSModal({
                   subtitle={t('sos.emergencyRowSub')}
                   onPress={onMedical}
                   testHint="medical"
-                  gridLayout={useActionGrid}
                   gridWebCellStyle={gridWebCellStyle}
                   cardWidth={actionGridCardWidthNative}
-                  desktopGridCompact={sosWebDesktopFit && useActionGrid}
+                  singleColumn={actionCols === 1}
+                  compact={sosWebDesktopFit && actionCols >= 3}
                 />
                 <SosActionCard
                   accent={SOS_ACTION_ACCENTS.police}
@@ -399,10 +398,10 @@ export function SOSModal({
                   subtitle={t('sos.emergencyRowSub')}
                   onPress={onPolice}
                   testHint="police"
-                  gridLayout={useActionGrid}
                   gridWebCellStyle={gridWebCellStyle}
                   cardWidth={actionGridCardWidthNative}
-                  desktopGridCompact={sosWebDesktopFit && useActionGrid}
+                  singleColumn={actionCols === 1}
+                  compact={sosWebDesktopFit && actionCols >= 3}
                 />
                 <SosActionCard
                   accent={SOS_ACTION_ACCENTS.fire}
@@ -411,10 +410,10 @@ export function SOSModal({
                   subtitle={t('sos.emergencyRowSub')}
                   onPress={onFire}
                   testHint="fire"
-                  gridLayout={useActionGrid}
                   gridWebCellStyle={gridWebCellStyle}
                   cardWidth={actionGridCardWidthNative}
-                  desktopGridCompact={sosWebDesktopFit && useActionGrid}
+                  singleColumn={actionCols === 1}
+                  compact={sosWebDesktopFit && actionCols >= 3}
                 />
                 <SosActionCard
                   accent={SOS_ACTION_ACCENTS.trusted}
@@ -423,10 +422,10 @@ export function SOSModal({
                   subtitle={t('sos.trustedContactRowSub')}
                   onPress={onTrustedContact}
                   testHint="trusted"
-                  gridLayout={useActionGrid}
                   gridWebCellStyle={gridWebCellStyle}
                   cardWidth={actionGridCardWidthNative}
-                  desktopGridCompact={sosWebDesktopFit && useActionGrid}
+                  singleColumn={actionCols === 1}
+                  compact={sosWebDesktopFit && actionCols >= 3}
                 />
                 <SosActionCard
                   accent={SOS_ACTION_ACCENTS.scam}
@@ -435,10 +434,10 @@ export function SOSModal({
                   subtitle={t('sos.reportScamSub')}
                   onPress={onScam}
                   testHint="scam"
-                  gridLayout={useActionGrid}
                   gridWebCellStyle={gridWebCellStyle}
                   cardWidth={actionGridCardWidthNative}
-                  desktopGridCompact={sosWebDesktopFit && useActionGrid}
+                  singleColumn={actionCols === 1}
+                  compact={sosWebDesktopFit && actionCols >= 3}
                 />
                 <SosActionCard
                   accent={SOS_ACTION_ACCENTS.embassy}
@@ -447,10 +446,10 @@ export function SOSModal({
                   subtitle={t('sos.sheetEmbassySub')}
                   onPress={onEmbassy}
                   testHint="embassy"
-                  gridLayout={useActionGrid}
                   gridWebCellStyle={gridWebCellStyle}
                   cardWidth={actionGridCardWidthNative}
-                  desktopGridCompact={sosWebDesktopFit && useActionGrid}
+                  singleColumn={actionCols === 1}
+                  compact={sosWebDesktopFit && actionCols >= 3}
                 />
               </View>
 
@@ -509,11 +508,11 @@ function SosActionCard({
   subtitle,
   onPress,
   testHint,
-  gridLayout,
   gridWebCellStyle,
   cardWidth,
   disabled = false,
-  desktopGridCompact = false,
+  singleColumn = false,
+  compact = false,
 }: Readonly<{
   accent: SosActionAccent;
   icon: keyof typeof Ionicons.glyphMap;
@@ -521,11 +520,11 @@ function SosActionCard({
   subtitle: string;
   onPress: () => void;
   testHint: string;
-  gridLayout: boolean;
   gridWebCellStyle?: ViewStyle;
   cardWidth?: number;
   disabled?: boolean;
-  desktopGridCompact?: boolean;
+  singleColumn?: boolean;
+  compact?: boolean;
 }>): ReactElement {
   const webPointer = Platform.OS === 'web' ? ({ cursor: 'pointer' } as const) : null;
 
@@ -539,35 +538,12 @@ function SosActionCard({
           Platform.OS === 'web' &&
           'hovered' in state &&
           Boolean((state as Readonly<{ hovered?: boolean }>).hovered);
-        if (gridLayout) {
-          return [
-            styles.gridCard,
-            desktopGridCompact && styles.gridCardCompactWebDesktop,
-            gridWebCellStyle,
-            gridWebCellStyle == null && cardWidth != null ? { width: cardWidth } : null,
-            { borderColor: accent.border },
-            webPointer,
-            pressed &&
-              !disabled && {
-                backgroundColor: accent.fillPressed,
-                borderColor: accent.borderStrong,
-              },
-            !disabled &&
-              hovered &&
-              Platform.OS === 'web' && {
-                backgroundColor: accent.fillHover,
-                borderColor: accent.borderStrong,
-                shadowColor: accent.shadow,
-                shadowOffset: { width: 0, height: 0 },
-                shadowOpacity: 0.26,
-                shadowRadius: 11,
-                elevation: 4,
-              },
-            disabled && styles.gridCardDisabled,
-          ];
-        }
         return [
-          styles.listCard,
+          styles.tileCard,
+          compact && styles.tileCardCompact,
+          singleColumn && styles.tileCardSingleCol,
+          gridWebCellStyle,
+          gridWebCellStyle == null && cardWidth != null ? { width: cardWidth } : null,
           { borderColor: accent.border },
           webPointer,
           pressed &&
@@ -582,11 +558,11 @@ function SosActionCard({
               borderColor: accent.borderStrong,
               shadowColor: accent.shadow,
               shadowOffset: { width: 0, height: 0 },
-              shadowOpacity: 0.22,
-              shadowRadius: 10,
+              shadowOpacity: 0.2,
+              shadowRadius: 8,
               elevation: 3,
             },
-          disabled && styles.listCardDisabled,
+          disabled && styles.tileCardDisabled,
         ];
       }}
       accessibilityRole="button"
@@ -594,69 +570,23 @@ function SosActionCard({
       accessibilityLabel={`${title}. ${subtitle}`}
       testID={`sos-row-${testHint}`}
     >
-      {gridLayout ? (
-        <>
-          <View
-            style={[
-              styles.gridIconWrap,
-              desktopGridCompact && styles.gridIconWrapCompactWebDesktop,
-              { borderColor: accent.icon },
-            ]}
-          >
-            <Ionicons name={icon} size={26} color={accent.icon} accessibilityIgnoresInvertColors />
-          </View>
-          <View style={styles.gridTextCol}>
-            <Text
-              style={styles.gridTitle}
-              numberOfLines={2}
-              adjustsFontSizeToFit
-              minimumFontScale={0.62}
-              maxFontSizeMultiplier={1.22}
-            >
-              {title}
-            </Text>
-            <Text
-              style={styles.gridSub}
-              numberOfLines={3}
-              adjustsFontSizeToFit
-              minimumFontScale={0.62}
-              maxFontSizeMultiplier={1.12}
-            >
-              {subtitle}
-            </Text>
-          </View>
-          <View style={styles.gridChevron} accessibilityElementsHidden pointerEvents="none">
-            <Ionicons name="chevron-forward" size={14} color="rgba(255,255,255,0.2)" />
-          </View>
-        </>
-      ) : (
-        <>
-          <View style={[styles.listIconWrap, { borderColor: accent.icon }]}>
-            <Ionicons name={icon} size={30} color={accent.icon} accessibilityIgnoresInvertColors />
-          </View>
-          <View style={styles.listTextCol}>
-            <Text
-              style={styles.listTitle}
-              numberOfLines={2}
-              adjustsFontSizeToFit
-              minimumFontScale={0.6}
-              maxFontSizeMultiplier={1.28}
-            >
-              {title}
-            </Text>
-            <Text
-              style={styles.listSub}
-              numberOfLines={2}
-              adjustsFontSizeToFit
-              minimumFontScale={0.6}
-              maxFontSizeMultiplier={1.22}
-            >
-              {subtitle}
-            </Text>
-          </View>
-          <Ionicons name="chevron-forward" size={20} color="rgba(255,255,255,0.28)" style={styles.listChevron} />
-        </>
-      )}
+      <View
+        style={[
+          styles.tileIconWrap,
+          compact && styles.tileIconWrapCompact,
+          { borderColor: accent.icon },
+        ]}
+      >
+        <Ionicons name={icon} size={compact ? 22 : 24} color={accent.icon} accessibilityIgnoresInvertColors />
+      </View>
+      <View style={styles.tileTextCol}>
+        <Text style={styles.tileTitle} numberOfLines={1} maxFontSizeMultiplier={1.2}>
+          {title}
+        </Text>
+        <Text style={styles.tileSub} numberOfLines={2} maxFontSizeMultiplier={1.12}>
+          {subtitle}
+        </Text>
+      </View>
     </Pressable>
   );
 }
@@ -872,108 +802,61 @@ const styles = StyleSheet.create({
     width: 'calc((100% - 16px) / 2)' as ViewStyle['width'],
     maxWidth: 'calc((100% - 16px) / 2)' as ViewStyle['width'],
   },
-  gridCard: {
-    position: 'relative',
-    alignItems: 'center',
+  tileCard: {
+    alignItems: 'flex-start',
     justifyContent: 'flex-start',
     paddingVertical: 12,
-    paddingHorizontal: 8,
-    paddingBottom: 16,
+    paddingHorizontal: 10,
     borderRadius: 14,
-    backgroundColor: 'rgba(10, 17, 34, 0.98)',
+    backgroundColor: 'rgba(10, 17, 34, 0.96)',
     borderWidth: 1,
-    minHeight: 112,
+    minHeight: 108,
+    gap: 10,
   },
-  /** Desktop web 3×2 only — shorter cards, still ≥100px target height. */
-  gridCardCompactWebDesktop: {
-    paddingVertical: 7,
-    paddingBottom: 10,
+  tileCardSingleCol: {
+    width: '100%',
+    maxWidth: '100%',
+  },
+  tileCardCompact: {
+    paddingVertical: 8,
+    paddingHorizontal: 8,
     minHeight: 96,
+    gap: 8,
   },
-  gridCardDisabled: { opacity: 0.42 },
-  gridIconWrap: {
+  tileCardDisabled: { opacity: 0.42 },
+  tileIconWrap: {
     width: 44,
     height: 44,
     borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 2,
-    backgroundColor: 'rgba(15, 23, 42, 0.96)',
-    marginBottom: 8,
+    borderWidth: 1,
+    backgroundColor: 'rgba(15, 23, 42, 0.88)',
   },
-  gridIconWrapCompactWebDesktop: {
-    marginBottom: 6,
+  tileIconWrapCompact: {
+    width: 40,
+    height: 40,
+    borderRadius: 11,
   },
-  gridTextCol: {
-    alignItems: 'center',
+  tileTextCol: {
+    alignItems: 'flex-start',
     gap: 4,
     width: '100%',
-    paddingHorizontal: 2,
+    minWidth: 0,
   },
-  gridTitle: {
-    fontFamily: FontFamily.bold,
-    fontSize: 14,
-    fontWeight: '800',
-    color: '#FFFFFF',
-    textAlign: 'center',
-    lineHeight: 18,
-    maxWidth: '100%',
-  },
-  gridSub: {
-    fontFamily: FontFamily.semibold,
-    fontSize: 11,
-    fontWeight: '600',
-    color: 'rgba(203, 213, 225, 0.84)',
-    textAlign: 'center',
-    lineHeight: 15,
-    maxWidth: '100%',
-  },
-  gridChevron: {
-    position: 'absolute',
-    right: 5,
-    bottom: 7,
-  },
-  listCard: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: 12,
-    paddingVertical: 12,
-    paddingHorizontal: 12,
-    borderRadius: 14,
-    backgroundColor: 'rgba(10, 17, 34, 0.98)',
-    borderWidth: 1,
-    minHeight: 76,
-    width: '100%',
-    maxWidth: '100%',
-  },
-  listCardDisabled: { opacity: 0.42 },
-  listIconWrap: {
-    width: 52,
-    height: 52,
-    borderRadius: 14,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 2,
-    backgroundColor: 'rgba(15, 23, 42, 0.95)',
-    flexShrink: 0,
-    marginTop: 2,
-  },
-  listTextCol: { flex: 1, minWidth: 0, gap: 4, maxWidth: '100%', flexShrink: 1 },
-  listChevron: { flexShrink: 0, marginTop: 14 },
-  listTitle: {
-    fontFamily: FontFamily.bold,
-    fontSize: 17,
-    fontWeight: '800',
-    color: '#FFFFFF',
-    flexShrink: 1,
-    maxWidth: '100%',
-  },
-  listSub: {
-    fontFamily: FontFamily.semibold,
+  tileTitle: {
+    fontFamily: FontFamily.extrabold,
     fontSize: 13,
-    fontWeight: '600',
-    color: 'rgba(203, 213, 225, 0.78)',
-    flexShrink: 1,
+    color: '#F8FAFC',
+    letterSpacing: -0.14,
+    lineHeight: 17,
+    maxWidth: '100%',
+  },
+  tileSub: {
+    fontFamily: FontFamily.medium,
+    fontSize: 10,
+    color: 'rgba(203, 213, 225, 0.88)',
+    lineHeight: 14,
     maxWidth: '100%',
   },
   footerDisclaimer: {
