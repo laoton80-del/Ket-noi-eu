@@ -360,7 +360,7 @@
     "policeTitle": "Police",
     "policeSub": "Call local emergency number",
     "reportScam": "Report scam",
-    "reportScamSub": "Prepare a scam report with optional location context.",
+    "reportScamSub": "Get calm steps to document suspicious activity and decide what to do next. VIONA does not automatically alert authorities or share your location.",
     "close": "Close",
     "callFailedTitle": "Cannot open dialer",
     "callFailedBody": "Dial your local emergency number on your phone.",
