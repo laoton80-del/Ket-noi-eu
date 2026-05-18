@@ -1,6 +1,7 @@
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
+import { useTranslation } from '../../../i18n';
 import { WidgetCard } from '../../widgets/WidgetCard';
 import { AnimatedPressable } from '../../widgets/AnimatedPressable';
 import { theme } from '../../../theme/theme';
@@ -21,10 +22,12 @@ const QuickPhrasesCardComponent: React.FC<Props> = ({
   phrases = DEFAULT_QUICK_PHRASES,
   onPressPhrase,
 }) => {
+  const { t } = useTranslation();
+
   return (
     <WidgetCard>
-      <Text style={styles.title}>Mẫu câu nhanh</Text>
-      <Text style={styles.hint}>Chạm câu để luyện với Minh Khang (khi có)</Text>
+      <Text style={styles.title}>{t('academySub.adult.quickPhrasesTitle')}</Text>
+      <Text style={styles.hint}>{t('academySub.adult.quickPhrasesHint')}</Text>
       <View style={styles.list}>
         {phrases.map((phrase) => (
           <AnimatedPressable

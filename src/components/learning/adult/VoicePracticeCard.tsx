@@ -1,6 +1,7 @@
 import React from 'react';
 import { StyleSheet, Text } from 'react-native';
 
+import { useTranslation } from '../../../i18n';
 import { WidgetCard } from '../../widgets/WidgetCard';
 import { AnimatedPressable } from '../../widgets/AnimatedPressable';
 import { theme } from '../../../theme/theme';
@@ -11,14 +12,14 @@ type Props = {
 };
 
 const VoicePracticeCardComponent: React.FC<Props> = ({ onPressStart }) => {
+  const { t } = useTranslation();
+
   return (
     <WidgetCard>
-      <Text style={styles.title}>Luyện nói với Cô Giáo AI</Text>
-      <Text style={styles.subtitle}>
-        Mở gia sư AI trực tiếp (Academy Lite / pilot) kèm gợi ý luyện nói khi bạn bắt đầu.
-      </Text>
+      <Text style={styles.title}>{t('academySub.adult.voiceTitle')}</Text>
+      <Text style={styles.subtitle}>{t('academySub.adult.voiceSubtitle')}</Text>
       <AnimatedPressable onPress={onPressStart} style={styles.cta}>
-        <Text style={styles.ctaText}>Bắt đầu luyện</Text>
+        <Text style={styles.ctaText}>{t('academySub.adult.voiceCta')}</Text>
       </AnimatedPressable>
     </WidgetCard>
   );

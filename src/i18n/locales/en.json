@@ -103,6 +103,115 @@
     "connectErrorBody": "Demo session could not connect right now. Please try again.",
     "upgradeInterestLabel": "Paid plans — coming soon (no checkout in this build)"
   },
+  "academySub": {
+    "common": {
+      "litePilotBadge": "Academy Lite · Preview",
+      "notOfficialCert": "Not an official certificate or accreditation.",
+      "noGuaranteedOutcome": "For motivation only — not a guaranteed learning outcome.",
+      "vioCreditsOnly": "{{credits}} are in-app learning motivation only — not cash, crypto, or withdrawable.",
+      "parentSupervision": "A parent or guardian should supervise children's use of AI homework help.",
+      "notSchoolAdvice": "Not a replacement for a teacher, school, or professional advice.",
+      "previewDemoData": "Preview/demo data for local motivation — not an official ranking.",
+      "retry": "Try again",
+      "pointsUnit": "practice pts"
+    },
+    "adult": {
+      "title": "Local language practice",
+      "subtitle": "Real-life situations · speaking · quick phrases",
+      "disclaimer": "Academy Lite pilot — practice only. Not official certification or high-stakes assessment.",
+      "suggestedTitle": "Today's suggestion",
+      "suggestedBody": "You could practice: ",
+      "studyNow": "Practice now",
+      "situationSection": "Choose a situation",
+      "situationHint": "Tap a topic (Academy Lite)",
+      "voiceTitle": "Speaking with Cô Giáo AI",
+      "voiceSubtitle": "Opens the AI teacher preview (Academy Lite / pilot) with practice cues.",
+      "voiceCta": "Start practice",
+      "quickPhrasesTitle": "Quick phrases",
+      "quickPhrasesHint": "Tap a phrase to practice with the AI teacher preview",
+      "practiceFocusTemplate": "{{phrase}}. I am practicing pronunciation — please reply slowly.",
+      "situations": {
+        "doctor": "Doctor visit",
+        "paperwork": "Paperwork",
+        "work": "At work",
+        "phone": "Phone call",
+        "school": "School",
+        "grocery": "Grocery store"
+      }
+    },
+    "kidsHome": {
+      "title": "Family learning (preview)",
+      "subtitle": "Vietnamese practice for kids — stories, games, and lite lessons.",
+      "disclaimer": "AI homework help is a pilot. Parent supervision required. Not school or professional advice.",
+      "startLearning": "Start learning",
+      "openVietKids": "Open Viet-Kids class",
+      "scanHomework": "Scan homework (pilot)",
+      "homeworkResultTitle": "Homework helper: {{subject}}",
+      "liteBadge": "Lite · Preview"
+    },
+    "vietKids": {
+      "kicker": "VIONA Academy Kids",
+      "title": "Learn Vietnamese with Cô AI",
+      "subtitle": "Interactive cards and word games — lite practice for kids.",
+      "previewBadge": "Preview",
+      "modeFlashcard": "Flashcards",
+      "modeGame": "Word game",
+      "leaderboardCta": "Practice leaderboard (preview)",
+      "celebrationTitle": "Viet-Kids level complete!",
+      "rewardParent": "+{{points}} {{credits}} for parent account ({{mode}}) — in-app motivation only.",
+      "rewardModeFlashcard": "Flashcards",
+      "rewardModeGame": "Mini-game",
+      "vioDisclaimer": "{{credits}} are not cash or crypto and cannot be withdrawn."
+    },
+    "leaderboard": {
+      "title": "Practice leaderboard (preview)",
+      "subtitle": "Motivational sample progress for parents — not an official competition.",
+      "previewBanner": "Preview/demo leaderboard — ranks and points may be sample or local data.",
+      "tabWeekly": "Weekly preview",
+      "tabMonthly": "Monthly celebration",
+      "staleText": "Showing fallback preview data. Tap try again to refresh.",
+      "loadingWeekly": "Loading weekly preview…",
+      "loadingMonthly": "Loading monthly celebration…",
+      "metaWeekly": "Week: {{period}} · preview id: {{checksum}}",
+      "monthlyTop": "TOP {{rank}}",
+      "stickyRank": "Sample progress: rank {{rank}} — keep practicing!",
+      "stickyPoints": "{{points}} {{unit}} this week (preview)",
+      "defaultChildNickname": "Your child",
+      "pointsSuffix": "pts"
+    },
+    "certificate": {
+      "brand": "VIONA Academy",
+      "titleEn": "Learning celebration",
+      "titleVi": "Learning celebration",
+      "line1En": "Viet-Kids demo learning milestone",
+      "line1Vi": "Viet-Kids demo learning milestone",
+      "line2": "Milestone",
+      "reward": "In-app motivation",
+      "rewardValue": "{{amount}} {{credits}}",
+      "issueDate": "Preview month",
+      "signature": "Cô Giáo AI (demo)",
+      "footerDisclaimer": "Demo learning celebration — not an official certificate.",
+      "button": "Download / print celebration card",
+      "cardTitle": "Learning celebration",
+      "sign": "Signed: Cô Giáo AI (demo)",
+      "exportErrorTitle": "Could not export card",
+      "exportErrorStorage": "Temporary storage is not ready on this device.",
+      "exportErrorRetry": "Please try again later."
+    },
+    "share": {
+      "brand": "VIONA",
+      "cardSubtitle": "Viet-Kids practice leaderboard (preview)",
+      "rankLabel": "Sample rank {{rank}}",
+      "pointsLine": "{{points}} practice points this week (preview)",
+      "tagline": "Learning celebration — demo preview",
+      "button": "Share celebration",
+      "dialogTitle": "Share Viet-Kids preview",
+      "shareMessage": "{{nickname}} — sample rank {{rank}} in {{city}} · {{points}} practice points (preview). Not an official award.",
+      "errorTitle": "Could not share",
+      "errorStorage": "Temporary storage is not ready to create the image.",
+      "errorBusy": "Sharing is busy — please try again."
+    }
+  },
   "shell": {
     "header": {
       "greeting": {

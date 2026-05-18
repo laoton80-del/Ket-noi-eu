@@ -1,9 +1,10 @@
 import React, { useMemo } from 'react';
 import { StyleSheet, Text } from 'react-native';
 
+import { useTranslation } from '../../../i18n';
 import { WidgetCard } from '../../widgets/WidgetCard';
 import { AnimatedPressable } from '../../widgets/AnimatedPressable';
-import { pickSuggestedSituationToday } from './SituationGrid';
+import { pickSuggestedSituationKeyToday, situationLabelForKey } from './SituationGrid';
 import { theme } from '../../../theme/theme';
 import { FontFamily } from '../../../theme/typography';
 
@@ -17,23 +18,26 @@ const SuggestedLessonCardComponent: React.FC<Props> = ({
   situationLabel,
   onPressStudyNow,
 }) => {
+  const { t } = useTranslation();
   const situation = useMemo(
-    () => situationLabel?.trim() || pickSuggestedSituationToday(),
-    [situationLabel]
+    () =>
+      situationLabel?.trim() ||
+      situationLabelForKey(pickSuggestedSituationKeyToday(), t),
+    [situationLabel, t]
   );
 
   return (
     <WidgetCard>
-      <Text style={styles.title}>Gợi ý hôm nay</Text>
+      <Text style={styles.title}>{t('academySub.adult.suggestedTitle')}</Text>
       <Text style={styles.body}>
-        Hôm nay bạn nên học:{' '}
+        {t('academySub.adult.suggestedBody')}
         <Text style={styles.emphasis}>{situation}</Text>
       </Text>
       <AnimatedPressable
         onPress={() => onPressStudyNow(situation)}
         style={styles.cta}
       >
-        <Text style={styles.ctaText}>Học ngay</Text>
+        <Text style={styles.ctaText}>{t('academySub.adult.studyNow')}</Text>
       </AnimatedPressable>
     </WidgetCard>
   );

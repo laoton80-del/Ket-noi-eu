@@ -103,6 +103,115 @@
     "connectErrorBody": "Phiên demo chưa kết nối được lúc này. Vui lòng thử lại.",
     "upgradeInterestLabel": "Gói trả phí — sắp có (chưa có thanh toán trong bản này)"
   },
+  "academySub": {
+    "common": {
+      "litePilotBadge": "Academy Lite · Xem trước",
+      "notOfficialCert": "Không phải chứng chỉ hoặc công nhận chính thức.",
+      "noGuaranteedOutcome": "Chỉ để động viên — không đảm bảo kết quả học tập.",
+      "vioCreditsOnly": "{{credits}} chỉ là động lực học trong app — không phải tiền mặt, crypto hay rút được.",
+      "parentSupervision": "Phụ huynh nên giám sát khi bé dùng trợ lý AI bài tập.",
+      "notSchoolAdvice": "Không thay thế giáo viên, nhà trường hay tư vấn chuyên môn.",
+      "previewDemoData": "Dữ liệu xem trước/demo cho động viên — không phải bảng xếp hạng chính thức.",
+      "retry": "Thử lại",
+      "pointsUnit": "điểm luyện"
+    },
+    "adult": {
+      "title": "Học tiếng bản địa",
+      "subtitle": "Tình huống thực tế · luyện nói · cụm từ nhanh",
+      "disclaimer": "Pilot Academy Lite — chỉ luyện tập. Không phải chứng chỉ chính thức hay đánh giá rủi ro cao.",
+      "suggestedTitle": "Gợi ý hôm nay",
+      "suggestedBody": "Hôm nay bạn nên học: ",
+      "studyNow": "Luyện ngay",
+      "situationSection": "Chọn tình huống",
+      "situationHint": "Chạm chủ đề (Academy Lite)",
+      "voiceTitle": "Luyện nói với Cô Giáo AI",
+      "voiceSubtitle": "Mở xem trước gia sư AI (Academy Lite / pilot) kèm gợi ý luyện nói.",
+      "voiceCta": "Bắt đầu luyện",
+      "quickPhrasesTitle": "Mẫu câu nhanh",
+      "quickPhrasesHint": "Chạm câu để luyện với xem trước Cô Giáo AI",
+      "practiceFocusTemplate": "{{phrase}}. Tôi đang luyện phát âm, xin bạn trả lời từ từ.",
+      "situations": {
+        "doctor": "Đi khám bệnh",
+        "paperwork": "Làm giấy tờ",
+        "work": "Đi làm",
+        "phone": "Gọi điện",
+        "school": "Trường học",
+        "grocery": "Siêu thị"
+      }
+    },
+    "kidsHome": {
+      "title": "Học cùng gia đình (xem trước)",
+      "subtitle": "Luyện tiếng Việt cho bé — truyện, game và bài lite.",
+      "disclaimer": "Trợ lý AI bài tập là pilot. Cần phụ huynh giám sát. Không thay lời giáo viên hay trường học.",
+      "startLearning": "Bắt đầu học",
+      "openVietKids": "Vào lớp Viet-Kids",
+      "scanHomework": "Quét bài tập (pilot)",
+      "homeworkResultTitle": "Trợ lý bài tập: {{subject}}",
+      "liteBadge": "Lite · Xem trước"
+    },
+    "vietKids": {
+      "kicker": "VIONA Academy Kids",
+      "title": "Học tiếng Việt cùng Cô AI",
+      "subtitle": "Thẻ bài và game chữ — luyện tập lite cho bé.",
+      "previewBadge": "Xem trước",
+      "modeFlashcard": "Học qua thẻ bài",
+      "modeGame": "Chơi game tìm chữ",
+      "leaderboardCta": "Bảng luyện tập (xem trước)",
+      "celebrationTitle": "Hoàn thành level Viet-Kids!",
+      "rewardParent": "+{{points}} {{credits}} cho tài khoản phụ huynh ({{mode}}) — chỉ động lực trong app.",
+      "rewardModeFlashcard": "Thẻ bài",
+      "rewardModeGame": "Mini-game",
+      "vioDisclaimer": "{{credits}} không phải tiền mặt, crypto và không rút được."
+    },
+    "leaderboard": {
+      "title": "Bảng luyện tập (xem trước)",
+      "subtitle": "Tiến độ mẫu động viên cho phụ huynh — không phải cuộc thi chính thức.",
+      "previewBanner": "Bảng xem trước/demo — hạng và điểm có thể là dữ liệu mẫu hoặc cục bộ.",
+      "tabWeekly": "Tuần (xem trước)",
+      "tabMonthly": "Chúc mừng tháng",
+      "staleText": "Đang hiển thị dữ liệu dự phòng xem trước. Nhấn thử lại để làm mới.",
+      "loadingWeekly": "Đang tải bảng tuần (xem trước)…",
+      "loadingMonthly": "Đang tải chúc mừng tháng…",
+      "metaWeekly": "Tuần: {{period}} · mã xem trước: {{checksum}}",
+      "monthlyTop": "TOP {{rank}}",
+      "stickyRank": "Tiến độ mẫu: hạng {{rank}} — cố lên nhé!",
+      "stickyPoints": "{{points}} {{unit}} tuần này (xem trước)",
+      "defaultChildNickname": "Bé nhà bạn",
+      "pointsSuffix": "đ"
+    },
+    "certificate": {
+      "brand": "VIONA Academy",
+      "titleEn": "Chúc mừng học tập",
+      "titleVi": "Chúc mừng học tập",
+      "line1En": "Cột mốc học Viet-Kids (demo)",
+      "line1Vi": "Cột mốc học Viet-Kids (demo)",
+      "line2": "Thành tích",
+      "reward": "Động lực trong app",
+      "rewardValue": "{{amount}} {{credits}}",
+      "issueDate": "Tháng xem trước",
+      "signature": "Cô Giáo AI (demo)",
+      "footerDisclaimer": "Thẻ chúc mừng học tập demo — không phải chứng chỉ chính thức.",
+      "button": "Tải / in thẻ chúc mừng",
+      "cardTitle": "Chúc mừng học tập",
+      "sign": "Ký: Cô Giáo AI (demo)",
+      "exportErrorTitle": "Không thể xuất thẻ",
+      "exportErrorStorage": "Thiết bị chưa sẵn sàng bộ nhớ tạm.",
+      "exportErrorRetry": "Vui lòng thử lại sau."
+    },
+    "share": {
+      "brand": "VIONA",
+      "cardSubtitle": "Bảng luyện Viet-Kids (xem trước)",
+      "rankLabel": "Hạng mẫu {{rank}}",
+      "pointsLine": "{{points}} điểm luyện tuần này (xem trước)",
+      "tagline": "Chúc mừng học tập — xem trước demo",
+      "button": "Chia sẻ tiến độ",
+      "dialogTitle": "Chia sẻ Viet-Kids (xem trước)",
+      "shareMessage": "{{nickname}} — hạng mẫu {{rank}} tại {{city}} · {{points}} điểm luyện (xem trước). Không phải giải chính thức.",
+      "errorTitle": "Không thể chia sẻ",
+      "errorStorage": "Thiết bị chưa sẵn sàng bộ nhớ tạm để tạo ảnh.",
+      "errorBusy": "Hệ thống chia sẻ đang bận — vui lòng thử lại."
+    }
+  },
   "shell": {
     "header": {
       "greeting": {
