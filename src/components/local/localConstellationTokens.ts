@@ -109,14 +109,24 @@ export function resolveLocalContentRail(windowWidth: number): LocalContentRail {
 
 export function resolveLocalGridColumns(
   width: number,
-  options?: Readonly<{ desktop?: number; tablet?: number; tabletMin?: number; desktopMin?: number }>
+  options?: Readonly<{
+    desktop?: number;
+    tablet?: number;
+    phone?: number;
+    tabletMin?: number;
+    desktopMin?: number;
+    phoneMin?: number;
+  }>
 ): number {
   const desktopMin = options?.desktopMin ?? 1024;
-  const tabletMin = options?.tabletMin ?? 600;
-  const desktop = options?.desktop ?? 3;
-  const tablet = options?.tablet ?? 2;
+  const tabletMin = options?.tabletMin ?? 768;
+  const phoneMin = options?.phoneMin ?? 360;
+  const desktop = options?.desktop ?? 4;
+  const tablet = options?.tablet ?? 3;
+  const phone = options?.phone ?? 2;
   if (width >= desktopMin) return desktop;
   if (width >= tabletMin) return tablet;
+  if (width >= phoneMin) return phone;
   return 1;
 }
 
