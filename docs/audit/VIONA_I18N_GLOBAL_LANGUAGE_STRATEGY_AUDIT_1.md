@@ -6,7 +6,9 @@
 **Base context:** `docs/ai-context/VIONA_OPERATING_PROTOCOL.md`, `docs/audit/VIONA_I18N_BRAND_DRIFT_SWEEP_1.md`  
 **Date:** 2026-05-16  
 
-**Governing law:** VIONA is **Global Vietnamese Companion OS + Super App Mini-App Platform**. Language strategy is **global-first**. Bundled locale JSON files today are **MVP / pilot implementation**, not a permanent country or language ceiling.
+**Governing law:** VIONA is **Global Vietnamese Companion OS + Super App Mini-App Platform**. Language strategy is **global-first**. Bundled locale JSON files today are **implementation coverage only**, not a permanent country or language ceiling.
+
+**Product vision lock:** [`VIONA_GLOBAL_ACTIVE_FULL_STANDARD_LOCK_1.md`](./VIONA_GLOBAL_ACTIVE_FULL_STANDARD_LOCK_1.md) — target state is **Active / Full globally** for the entire app; **Lite / Pilot / Demo** are internal readiness/safety gates only, not a reduced product definition.
 
 ---
 
@@ -14,11 +16,14 @@
 
 | Item | Decision |
 |------|----------|
+| **Global Active/Full target** | All universes and all markets are **in strategic scope**. No market is “demo-only” by product vision. Current locale gaps = **implementation progress**. |
 | **Global principle** | Every market targets **Smart Trio**: Vietnamese + English + native local language. **English** is the product copy baseline and missing-key bridge. **Vietnamese** is the diaspora / merchant anchor. **Native** completes local customer and inbound-traveler trust. |
-| **Current shipped UI languages** | `en`, `vi` (full); `cs`, `de` (partial pilot); `fr`, `ko`, `ja` (stub / namespace guards) |
+| **Current shipped UI languages** | `en`, `vi` (full); `cs`, `de` (partial pilot); `fr`, `ko`, `ja` (stub / namespace guards) — **coverage %, not scope %** |
 | **Not a country limit** | Absence of `pl`, `es`, `th`, etc. in `resources` today is **capacity**, not strategy. Tier 2–3 markets are planned via matrix + packs, not by declaring “EN/VI only forever.” |
+| **Readiness labels** | **Lite / Pilot / Demo / Gated / Beta / Coming Soon** in UX = honest **internal** gates (safety, legal, ops, payment, AI cost, fulfillment) — **must not** be read as “VIONA is only Lite in this country.” |
 | **Fallback** | `fallbackLng: 'en'` (i18next). Partial locales must not override safety-critical keys with unreviewed machine copy. |
-| **Next work** | Loyalty catalog brand sweep → locale completeness packs per tier → wire `contentLocale` / `notificationLocale` / `aiConversationLocale` channels → expand `MARKET_LANGUAGE_CONFIG` as markets go live |
+| **Final language target** | **Full native-language support by market**; early operation may use EN bridge + VI + safety-critical local bundle. |
+| **Next work** | Locale completeness packs per tier → wire `contentLocale` / `notificationLocale` / `aiConversationLocale` channels → expand `MARKET_LANGUAGE_CONFIG` as markets go live |
 
 ---
 
@@ -58,17 +63,23 @@
 
 ---
 
-## 2. MVP vs pilot vs production-ready
+## 2. Implementation readiness vs global Active/Full target
 
-| Layer | Status | Meaning for users |
-|-------|--------|-------------------|
-| **Tier 0 `en` + `vi`** | MVP **complete** for bundled namespaces | Safe to treat as production copy **after** safety/legal review per release |
-| **Tier 1 `cs` + `de`** | **Pilot** — high-value namespaces only | Device/users in CZ/DE see localized slices; most UI falls back to **en** |
-| **Tier 1 `fr` + `ko` + `ja`** | **Pilot stub** — anti raw-key guards | Prevents `smartTrio.*` / ops namespace missing-root crashes; **not** full market launch |
-| **Hardcoded screen copy** | Ongoing debt | Travel/Local/B2B still mix `useTranslation`, `getStrings`, and inline strings — not limited by locale file count |
-| **AI / notifications** | Pre-channel | No dedicated `notificationLocale` or `contentLocale` pipeline in i18n yet |
+**Vision (locked):** VIONA targets **Active / Full** for the **full core app** globally (Home, SOS, Travel, Local, Academy, Account, VIO Loyalty, AI Companion, Business, B2B Wholesale, Income/Broker/Community, Smart Trio). See [Global Active/Full lock](./VIONA_GLOBAL_ACTIVE_FULL_STANDARD_LOCK_1.md).
 
-**Product rule:** Showing a language in **Settings / Smart Trio chip** implies **honest coverage** — label stub markets as **Preview · English bridge** until Tier 1 completeness threshold is met (see §7).
+**Implementation layers today** (locale + ops — **not** product scope limits):
+
+| Layer | Status | Meaning |
+|-------|--------|---------|
+| **Tier 0 `en` + `vi`** | Canonical bundled namespaces | Production copy **after** safety/legal review per release; baseline for all markets |
+| **Tier 1 `cs` + `de`** | **Pilot implementation** — expanding namespace coverage | Localized slices + **en** fallback; market **in scope**, UI **not** fully native yet |
+| **Tier 1 `fr` + `ko` + `ja`** | **Stub implementation** — anti raw-key guards | Market **in scope**; honest **Preview · EN bridge** until safety bundle + namespaces land |
+| **Hardcoded screen copy** | Ongoing debt | Not limited by locale file count — migrate toward i18n without shrinking universes |
+| **AI / notifications** | Pre-channel | `contentLocale` / `notificationLocale` / `aiConversationLocale` — implementation backlog |
+
+**Product rule:** **Lite / Pilot / Demo** on a surface describe **what it may do today**, not **whether** the universe exists in a market. Settings / Smart Trio must show **honest coverage** (e.g. Preview · English bridge) without implying VIONA is demo-only there.
+
+**No-fake boundary (unchanged):** Active/Full target does **not** permit fake dispatch, GPS sharing, payment captured, booking confirmed, refund guaranteed, payout/cash-out, official certification, supplier fulfillment, AI phone calling, or verified status when unverified.
 
 ---
 
@@ -293,6 +304,8 @@ Examples (non-exhaustive): **PL, ES, IT, NL, TH, SG, MY, AE, GB** (en), **MX** (
 | New locale files added? | **No** |
 | Whole app translated? | **No** |
 | Strategy limits countries? | **No** — tiers describe rollout order, not a permanent cap |
+| Global Active/Full target locked? | **Yes** — `VIONA_GLOBAL_ACTIVE_FULL_STANDARD_LOCK_1.md` |
+| Lite/Pilot/Demo = reduced vision? | **No** — internal readiness/safety gates only |
 
 ---
 
