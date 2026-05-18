@@ -8,12 +8,14 @@ import { syncWalletFromServer } from '../../state/wallet';
 import { verifyPurchaseReceipt } from '../../services/billing/receiptVerifier';
 import { theme } from '../../theme/theme';
 import { FontFamily } from '../../theme/typography';
+import { useTranslation } from '../../utils/i18n';
 
 function isPremiumTier(id: string): boolean {
   return id === 'pro' || id === 'power';
 }
 
 export function GlobalTiersScreen() {
+  const { t } = useTranslation();
   const { localCurrency } = useRegionState();
   const [isPurchasing, setIsPurchasing] = useState(false);
 
@@ -26,7 +28,7 @@ export function GlobalTiersScreen() {
       const result = await verifyPurchaseReceipt(mockReceipt, platform, tierId);
       if (result.ok) {
         await syncWalletFromServer();
-        Alert.alert('Thanh toán thành công!', 'Ví của bạn đã được cập nhật.');
+        Alert.alert(t('checkout.tierDemoSuccessTitle'), t('checkout.tierDemoSuccessBody'));
       } else {
         Alert.alert('Xác minh biên lai thất bại.', 'Vui lòng thử lại trong ít phút.');
       }

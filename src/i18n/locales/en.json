@@ -667,10 +667,20 @@
     "topUpBody": "Top up VIO Credits to complete this booking. Your quote stays valid—return here after topping up.",
     "topUpCta": "Open wallet & top up",
     "topUpDismiss": "Not now",
-    "confirmedTitle": "Booking confirmed",
-    "confirmedSub": "You’re secured. The merchant sees this booking on their Live Order Radar instantly.",
+    "confirmedTitle": "Request preview created",
+    "confirmedSub": "Your request details are ready for merchant review. Final price, availability, refunds, and confirmation must be verified by the merchant.",
+    "confirmedDemoNote": "Preview only — not a guaranteed booking, payment capture, or live merchant order radar update in this build.",
     "bookingRef": "Ref · {{id}}…",
-    "confirmedDone": "Back to home"
+    "confirmedDone": "Back to home",
+    "paymentSheetProtectionTitle": "Service protection add-on (preview) (+$1.00)",
+    "paymentSheetProtectionSub": "Pilot information only — not insurance. No guaranteed refund, compensation, or 24/7 claims handling here.",
+    "paymentSheetSuccessPay": "Demo payment step recorded in this build — not a live card capture or merchant confirmation.",
+    "paymentSheetSuccessBnpl": "Installment preview saved (demo) — not a live BNPL agreement or merchant confirmation.",
+    "paymentSheetError": "Could not complete this demo payment step. Please try again.",
+    "paymentSheetPayCta": "Try demo payment (Stripe preview)",
+    "paymentSheetBnplTitle": "Four-installment preview (demo). Approval and rates are not guaranteed.",
+    "tierDemoSuccessTitle": "Demo purchase recorded",
+    "tierDemoSuccessBody": "Wallet sync preview only — not an app-store receipt or live subscription."
   },
   "home": {
     "tabHub": "Hub",
