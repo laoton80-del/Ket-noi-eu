@@ -10,6 +10,7 @@ import {
   SuggestedLessonCard,
   VoicePracticeCard,
 } from '../../components/learning/adult';
+import { useTranslation } from '../../i18n';
 import type { RootStackParamList } from '../../navigation/routes';
 import {
   createAdultRoleplaySession,
@@ -24,6 +25,7 @@ type Nav = NativeStackNavigationProp<RootStackParamList>;
 
 export function AdultLearningHome() {
   useSyncHubOnFocus('HUB_ACADEMY');
+  const { t } = useTranslation();
   const navigation = useNavigation<Nav>();
   const { user } = useAuth();
   const [selectedSituation, setSelectedSituation] = useState<string | null>(null);
@@ -55,10 +57,10 @@ export function AdultLearningHome() {
   const onPressPhrase = useCallback(
     (phrase: string) => {
       navigation.navigate('LiveAiTeacher', {
-        practiceFocus: `${phrase}. Tôi đang luyện phát âm, xin bạn trả lời từ từ.`,
+        practiceFocus: t('academySub.adult.practiceFocusTemplate', { phrase }),
       });
     },
-    [navigation]
+    [navigation, t]
   );
 
   return (
@@ -69,10 +71,10 @@ export function AdultLearningHome() {
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.header}>
-          <Text style={styles.screenTitle}>Học tiếng bản địa</Text>
-          <Text style={styles.screenSubtitle}>
-            Tình huống thực tế · luyện nói · cụm từ nhanh
-          </Text>
+          <Text style={styles.liteBadge}>{t('academySub.common.litePilotBadge')}</Text>
+          <Text style={styles.screenTitle}>{t('academySub.adult.title')}</Text>
+          <Text style={styles.screenSubtitle}>{t('academySub.adult.subtitle')}</Text>
+          <Text style={styles.disclaimer}>{t('academySub.adult.disclaimer')}</Text>
         </View>
 
         <View style={styles.stack}>
@@ -104,17 +106,32 @@ const styles = StyleSheet.create({
   header: {
     paddingTop: 8,
     paddingBottom: 14,
+    gap: 4,
+  },
+  liteBadge: {
+    alignSelf: 'flex-start',
+    fontSize: 11,
+    fontFamily: FontFamily.bold,
+    color: '#6D28D9',
+    letterSpacing: 0.35,
+    textTransform: 'uppercase',
   },
   screenTitle: {
     fontSize: 22,
     fontFamily: FontFamily.extrabold,
     color: theme.colors.text.primary,
-    marginBottom: 4,
   },
   screenSubtitle: {
     fontSize: 13,
     lineHeight: 20,
     fontFamily: FontFamily.regular,
+    color: theme.colors.text.secondary,
+  },
+  disclaimer: {
+    marginTop: 4,
+    fontSize: 12,
+    lineHeight: 18,
+    fontFamily: FontFamily.medium,
     color: theme.colors.text.secondary,
   },
   stack: {

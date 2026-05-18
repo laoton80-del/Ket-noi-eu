@@ -8,7 +8,8 @@ import { KidsFlashcard } from '../../../components/academy/KidsFlashcard';
 import { KidsMatchingGame } from '../../../components/academy/KidsMatchingGame';
 import { TeacherAvatar, type TeacherEmotion } from '../../../components/academy/TeacherAvatar';
 import { useAuth } from '../../../context/AuthContext';
-import { formatVioPoints } from '../../../core/monetization/vioDisplayLabels';
+import { formatVioPoints, getVioCreditsLabel } from '../../../core/monetization/vioDisplayLabels';
+import { useTranslation } from '../../../i18n';
 import type { RootStackParamList } from '../../../navigation/routes';
 import { awardPoints } from '../../../services/loyalty/LoyaltyService';
 import { KIDS_MODE_TOKENS } from '../../../theme/kidsModeTokens';
@@ -17,6 +18,7 @@ import { getLocalLanguageConfig } from '../../../utils/languageMapper';
 
 export function VietKidsScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const { t } = useTranslation();
   const { user } = useAuth();
   const [activeMode, setActiveMode] = useState<'flashcard' | 'game'>('flashcard');
   const [teacherEmotion, setTeacherEmotion] = useState<TeacherEmotion>('idle');
@@ -26,6 +28,8 @@ export function VietKidsScreen() {
     flashcard: false,
     game: false,
   });
+
+  const creditsLabel = getVioCreditsLabel();
 
   const localLang = useMemo(() => {
     const items = getLocalLanguageConfig(user?.country ?? 'DE');
@@ -40,7 +44,14 @@ export function VietKidsScreen() {
     setTeacherEmotion('praising');
     setShowConfetti(true);
     setRewardText(
-      `+${formatVioPoints(award.vigTokensAdded)} cho phụ huynh (${kind === 'flashcard' ? 'Thẻ Bài' : 'Mini-Game'})`
+      t('academySub.vietKids.rewardParent', {
+        points: formatVioPoints(award.vigTokensAdded),
+        credits: creditsLabel,
+        mode:
+          kind === 'flashcard'
+            ? t('academySub.vietKids.rewardModeFlashcard')
+            : t('academySub.vietKids.rewardModeGame'),
+      })
     );
     setTimeout(() => {
       setShowConfetti(false);
@@ -52,10 +63,12 @@ export function VietKidsScreen() {
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.content}>
         <View style={styles.heroCard}>
-          <Text style={styles.kicker}>VIONA ACADEMY KIDS</Text>
-          <Text style={styles.title}>Học Tiếng Việt Cùng Cô AI</Text>
-          <Text style={styles.subtitle}>
-            Duolingo-style: Thẻ bài tương tác + game tìm chữ giúp bé ghi nhớ từ vựng nhanh hơn.
+          <Text style={styles.previewBadge}>{t('academySub.vietKids.previewBadge')}</Text>
+          <Text style={styles.kicker}>{t('academySub.vietKids.kicker')}</Text>
+          <Text style={styles.title}>{t('academySub.vietKids.title')}</Text>
+          <Text style={styles.subtitle}>{t('academySub.vietKids.subtitle')}</Text>
+          <Text style={styles.vioDisclaimer}>
+            {t('academySub.vietKids.vioDisclaimer', { credits: creditsLabel })}
           </Text>
           <TeacherAvatar currentEmotion={teacherEmotion} />
 
@@ -69,7 +82,7 @@ export function VietKidsScreen() {
               onPress={() => setActiveMode('flashcard')}
             >
               <Ionicons name="albums" size={16} color="#FFFFFF" />
-              <Text style={styles.modeBtnText}>Học qua Thẻ Bài</Text>
+              <Text style={styles.modeBtnText}>{t('academySub.vietKids.modeFlashcard')}</Text>
             </Pressable>
             <Pressable
               style={({ pressed }) => [
@@ -81,7 +94,7 @@ export function VietKidsScreen() {
               onPress={() => setActiveMode('game')}
             >
               <Ionicons name="game-controller" size={16} color="#FFFFFF" />
-              <Text style={styles.modeBtnText}>Chơi Game Tìm Chữ</Text>
+              <Text style={styles.modeBtnText}>{t('academySub.vietKids.modeGame')}</Text>
             </Pressable>
           </View>
           <Pressable
@@ -89,7 +102,7 @@ export function VietKidsScreen() {
             onPress={() => navigation.navigate('KidsLeaderboard')}
           >
             <Ionicons name="trophy" size={16} color="#FFFFFF" />
-            <Text style={styles.leaderboardBtnText}>Bảng Vàng Danh Vọng</Text>
+            <Text style={styles.leaderboardBtnText}>{t('academySub.vietKids.leaderboardCta')}</Text>
           </Pressable>
         </View>
 
@@ -112,8 +125,9 @@ export function VietKidsScreen() {
         {showConfetti ? (
           <View style={styles.celebrationCard}>
             <Text style={styles.celebrationEmoji}>🎉 🎊 ⭐</Text>
-            <Text style={styles.celebrationTitle}>Hoàn thành level Viet-Kids!</Text>
+            <Text style={styles.celebrationTitle}>{t('academySub.vietKids.celebrationTitle')}</Text>
             <Text style={styles.celebrationText}>{rewardText}</Text>
+            <Text style={styles.celebrationDisclaimer}>{t('academySub.common.notOfficialCert')}</Text>
           </View>
         ) : null}
       </ScrollView>
@@ -144,9 +158,37 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 8 },
     elevation: 3,
   },
+  previewBadge: {
+    alignSelf: 'flex-start',
+    color: '#6D28D9',
+    fontSize: 11,
+    letterSpacing: 0.5,
+    fontFamily: FontFamily.bold,
+    textTransform: 'uppercase',
+    marginBottom: 4,
+  },
   kicker: { color: '#0F766E', fontSize: 12, letterSpacing: 0.6, fontFamily: FontFamily.bold },
-  title: { color: KIDS_MODE_TOKENS.colors.textStrong, fontSize: KIDS_MODE_TOKENS.typography.titleSize, lineHeight: 34, fontFamily: FontFamily.extrabold, marginTop: 6 },
-  subtitle: { color: '#155E75', fontSize: KIDS_MODE_TOKENS.typography.bodySize, lineHeight: 21, fontFamily: FontFamily.medium, marginTop: 8 },
+  title: {
+    color: KIDS_MODE_TOKENS.colors.textStrong,
+    fontSize: KIDS_MODE_TOKENS.typography.titleSize,
+    lineHeight: 34,
+    fontFamily: FontFamily.extrabold,
+    marginTop: 6,
+  },
+  subtitle: {
+    color: '#155E75',
+    fontSize: KIDS_MODE_TOKENS.typography.bodySize,
+    lineHeight: 21,
+    fontFamily: FontFamily.medium,
+    marginTop: 8,
+  },
+  vioDisclaimer: {
+    marginTop: 6,
+    color: '#334155',
+    fontSize: 11,
+    lineHeight: 16,
+    fontFamily: FontFamily.medium,
+  },
   modeWrap: {
     marginTop: 10,
     flexDirection: 'row',
@@ -204,4 +246,11 @@ const styles = StyleSheet.create({
   celebrationEmoji: { fontSize: 24 },
   celebrationTitle: { color: '#92400E', fontSize: 18, fontFamily: FontFamily.extrabold },
   celebrationText: { color: '#B45309', fontSize: 13, textAlign: 'center', fontFamily: FontFamily.medium },
+  celebrationDisclaimer: {
+    color: '#78350F',
+    fontSize: 11,
+    textAlign: 'center',
+    fontFamily: FontFamily.medium,
+    marginTop: 4,
+  },
 });
