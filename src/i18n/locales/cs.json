@@ -74,8 +74,8 @@
     "close": "Zavřít",
     "callFailedTitle": "Nelze otevřít volání",
     "callFailedBody": "Vytočte místní tísňové číslo na telefonu.",
-    "reportQueuedTitle": "Poznámka uložena",
-    "reportQueuedBody": "Poznámka uložena pouze v zařízení. Žádná živá fronta ani odeslání úřadům."
+    "reportQueuedTitle": "SOS poznámky připraveny",
+    "reportQueuedBody": "Vaše poznámky k návodu jsou připraveny ke kontrole. VIONA automaticky neodesílá hlášení, nevolá úřady ani nesdílí vaši polohu."
   },
   "ai_voice": {
     "tapToSpeak": "Klepněte a mluvte",
