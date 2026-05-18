@@ -89,7 +89,7 @@ export function InternalTradeMarketScreen() {
         <View style={styles.heroCard} className={applyWebStyles('kn-glass kn-neon-b2b')}>
           <Text style={styles.heroTitle}>Sàn nội bộ cho Merchant đã xác minh</Text>
           <Text style={styles.heroSub}>
-            Nail Salons và Restaurants mua sỉ trực tiếp từ nhà bán buôn trong hệ sinh thái KNG. Phí giao dịch nội bộ:
+            Nail Salons và Restaurants mua sỉ trực tiếp từ nhà bán buôn trong hệ sinh thái VIONA. Phí giao dịch nội bộ:
             {' '}
             {feePct.toFixed(1)}%.
           </Text>

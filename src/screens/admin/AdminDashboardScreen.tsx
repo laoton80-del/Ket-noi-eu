@@ -513,14 +513,14 @@ export function AdminDashboardScreen() {
                 <View style={vnRadarStyles.kpiCard}>
                   <Text style={vnRadarStyles.kpiLabel}>GBV (lifetime)</Text>
                   <Text style={vnRadarStyles.kpiValue}>
-                    {formatVigCompact(tourismStats.totalTourismRevenueVIG)} VIG
+                    {formatVigCompact(tourismStats.totalTourismRevenueVIG)} VIO Credits
                   </Text>
                   <Text style={vnRadarStyles.kpiHint}>Σ TourismBooking.totalPaidVIG (excl. cancelled)</Text>
                 </View>
                 <View style={vnRadarStyles.kpiCard}>
-                  <Text style={vnRadarStyles.kpiLabel}>ViGlobal revenue cut</Text>
+                  <Text style={vnRadarStyles.kpiLabel}>VIONA revenue cut</Text>
                   <Text style={[vnRadarStyles.kpiValue, { color: NEON_MAGENTA }]}>
-                    {formatVigCompact(tourismStats.platformRevenueCutVIG)} VIG
+                    {formatVigCompact(tourismStats.platformRevenueCutVIG)} VIO Credits
                   </Text>
                   <Text style={vnRadarStyles.kpiHint}>Σ providerFee + touristFee (dual split)</Text>
                 </View>

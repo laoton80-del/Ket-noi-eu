@@ -103,7 +103,7 @@ export function BrokerDashboardScreen(): ReactElement {
     if (!brokerId || !isValidUuid(brokerId)) {
       Alert.alert(
         'Flyer Cannon',
-        'Broker UUID required for commission tracking. Sign in with a broker-linked ViGlobal account, then retry.'
+        'Broker UUID required for commission tracking. Sign in with a broker-linked VIONA account, then retry.'
       );
       return;
     }
@@ -218,13 +218,13 @@ export function BrokerDashboardScreen(): ReactElement {
             <Text style={styles.modalTitle}>Onboarding QR</Text>
             <Text style={styles.modalBody}>
               Each merchant gets one dynamic deep link for their Mica sign. After you save the shop in the field tool,
-              we mint the QR automatically — share it or print from ViGlobal web.
+              we mint the QR automatically — share it or print from the VIONA web console.
             </Text>
             <View style={styles.modalQrPlaceholder}>
               <Ionicons name="qr-code-outline" size={56} color="#6D28FF" />
               <Text style={styles.modalMono} selectable>
                 {brokerOnboardDeepLink ??
-                  'Broker UUID required — sign in with a broker-linked ViGlobal account. Payload: viglobal://onboard?brokerId=<UUID>'}
+                  'Broker UUID required — sign in with a broker-linked VIONA account, then generate onboarding QR again.'}
               </Text>
             </View>
             <Pressable

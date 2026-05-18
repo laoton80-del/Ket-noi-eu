@@ -312,7 +312,7 @@ export function TienIchScreen() {
               onPress={() =>
                 Alert.alert(
                   'Lead đã ghi nhận',
-                  'Chúng tôi đã gửi yêu cầu «Nhận tư vấn miễn phí» tới đối tác. Bạn không mất phí; đối tác trả phí lead theo hợp đồng KNG.',
+                  'Chúng tôi đã gửi yêu cầu «Nhận tư vấn miễn phí» tới đối tác. Bạn không mất phí; đối tác trả phí lead theo hợp đồng VIONA.',
                 )
               }
               style={({ pressed }) => [styles.expertCta, pressed && { opacity: 0.82 }]}
