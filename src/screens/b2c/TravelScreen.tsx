@@ -21,12 +21,8 @@ import {
 } from 'react-native';
 
 import { TravelDirectionSelector } from '../../components/travel/TravelDirectionSelector';
-import {
-  TravelGlassCard,
-  TravelIconCapsule,
-  travelSemanticTokens,
-  type TravelSemanticAccent,
-} from '../../components/travel/TravelGlassCard';
+import { TravelAppTile } from '../../components/travel/TravelAppTile';
+import { TravelGlassCard, type TravelSemanticAccent } from '../../components/travel/TravelGlassCard';
 import {
   localConstellation,
   localWebRailPillGlassStyle,
@@ -112,20 +108,17 @@ const SCENARIO_CAPSULE_SECONDARY: Partial<Readonly<Record<TravelScenarioId, Trav
 
 function travelScenarioGridColumns(width: number): 1 | 2 | 3 | 4 {
   if (width >= 1366) return 4;
-  if (width >= 1024) return 3;
-  if (width >= 768) return 2;
+  if (width >= 1024) return 4;
+  if (width >= 768) return 3;
+  if (width >= 360) return 2;
   return 1;
 }
 
 function scenarioCellWidthPercent(columns: 1 | 2 | 3 | 4): `${number}%` {
   if (columns === 1) return '100%';
-  if (columns === 2) return '48.5%';
-  if (columns === 3) return '31.2%';
-  return '23.5%';
-}
-
-function scenarioIconInk(id: TravelScenarioId): string {
-  return travelSemanticTokens(SCENARIO_SEMANTIC[id]).ink;
+  if (columns === 2) return '48.4%';
+  if (columns === 3) return '31.4%';
+  return '23.2%';
 }
 
 function scenarioCapsuleSecondary(id: TravelScenarioId): TravelSemanticAccent | undefined {
@@ -149,49 +142,26 @@ const TRAVEL_SCENARIO_GROUPS = [
   },
 ] as const;
 
-function TravelQuickHelpChip({
+function TravelQuickHelpTile({
   scenarioId,
-  icon,
-  label,
-  accent,
-  iconInk,
-  onPress,
-  a11yLabel,
+  item,
 }: Readonly<{
   scenarioId: TravelScenarioId;
-  icon: keyof typeof Ionicons.glyphMap;
-  label: string;
-  accent: TravelSemanticAccent;
-  iconInk: string;
-  onPress: () => void;
-  a11yLabel: string;
+  item: TravelScenario;
 }>): ReactElement {
+  const { t } = useTranslation();
   return (
-    <TravelGlassCard
-      visual="quickHelp"
-      accent={accent}
-      intensity="primary"
-      onPress={onPress}
-      accessibilityLabel={a11yLabel}
-      contentStyle={styles.quickHelpInner}
-      style={styles.quickHelpCard}
-    >
-      <View style={styles.quickHelpRowInner}>
-        <TravelIconCapsule
-          icon={icon}
-          ink={iconInk}
-          accent={accent}
-          accentSecondary={scenarioCapsuleSecondary(scenarioId)}
-          size={18}
-          prominent
-          intensity="primary"
-        />
-        <Text style={styles.quickHelpLabel} numberOfLines={2}>
-          {label}
-        </Text>
-        <Ionicons name="chevron-forward" size={14} color={iconInk} style={styles.quickHelpChevron} />
-      </View>
-    </TravelGlassCard>
+    <TravelAppTile
+      variant="quickHelp"
+      testID={`travel-quick-help-${scenarioId}`}
+      title={t(`travelHub.scenario.${scenarioId}.title`)}
+      subtitle={t(`travelHub.scenario.${scenarioId}.sub`)}
+      icon={item.icon}
+      accent={item.accent}
+      accentSecondary={scenarioCapsuleSecondary(scenarioId)}
+      onPress={item.onPress}
+      accessibilityLabel={t(`travelHub.scenario.${scenarioId}.title`)}
+    />
   );
 }
 
@@ -202,40 +172,17 @@ function TravelScenarioCard({
 }>): ReactElement {
   const { t } = useTranslation();
   return (
-    <TravelGlassCard
-      visual="standard"
+    <TravelAppTile
+      testID={`travel-scenario-${item.id}`}
+      title={t(`travelHub.scenario.${item.id}.title`)}
+      subtitle={t(`travelHub.scenario.${item.id}.sub`)}
+      icon={item.icon}
       accent={item.accent}
-      intensity="standard"
-      compact
+      accentSecondary={item.capsuleSecondary}
       onPress={item.onPress}
       accessibilityLabel={t(`travelHub.scenario.${item.id}.title`)}
-      contentStyle={styles.scenarioInner}
-    >
-      <View style={styles.scenarioRow}>
-        <TravelIconCapsule
-          icon={item.icon}
-          ink={scenarioIconInk(item.id)}
-          accent={item.accent}
-          accentSecondary={item.capsuleSecondary}
-          size={16}
-          intensity="standard"
-        />
-        <View style={styles.scenarioBody}>
-          <View style={styles.scenarioTitleRow}>
-            <Text style={styles.scenarioTitle} numberOfLines={1}>
-              {t(`travelHub.scenario.${item.id}.title`)}
-            </Text>
-            {item.id === 'emergency' ? (
-              <Text style={styles.scenarioChipEmergency}>{t('travelHub.scenarioChipSafety')}</Text>
-            ) : null}
-          </View>
-          <Text style={styles.scenarioSub} numberOfLines={2}>
-            {t(`travelHub.scenario.${item.id}.sub`)}
-          </Text>
-        </View>
-        <Ionicons name="chevron-forward" size={14} color={INK_MUTED} style={styles.scenarioChevron} />
-      </View>
-    </TravelGlassCard>
+      statusLabel={item.id === 'emergency' ? t('travelHub.scenarioChipSafety') : undefined}
+    />
   );
 }
 
@@ -638,15 +585,7 @@ export function TravelScreen() {
             if (!item) return null;
             return (
               <View key={id} style={styles.quickHelpCell}>
-                <TravelQuickHelpChip
-                  scenarioId={id}
-                  icon={item.icon}
-                  label={t(`travelHub.scenario.${id}.title`)}
-                  accent={item.accent}
-                  iconInk={scenarioIconInk(id)}
-                  onPress={item.onPress}
-                  a11yLabel={t(`travelHub.scenario.${id}.title`)}
-                />
+                <TravelQuickHelpTile scenarioId={id} item={item} />
               </View>
             );
           })}
@@ -915,35 +854,6 @@ const styles = StyleSheet.create({
     flex: 1,
     minWidth: 0,
   },
-  quickHelpCard: {
-    minHeight: 66,
-  },
-  quickHelpInner: {
-    minHeight: 66,
-    paddingVertical: 11,
-    paddingHorizontal: 11,
-    justifyContent: 'center',
-  },
-  quickHelpRowInner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-  },
-  quickHelpLabel: {
-    flex: 1,
-    minWidth: 0,
-    fontSize: 12,
-    fontFamily: FontFamily.extrabold,
-    color: 'rgba(252, 253, 255, 0.98)',
-    lineHeight: 15,
-    letterSpacing: -0.04,
-    textShadowColor: 'rgba(0, 0, 0, 0.4)',
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 2,
-  },
-  quickHelpChevron: {
-    opacity: 0.38,
-  },
   groupBlock: {
     marginBottom: theme.spacing.xs,
   },
@@ -966,61 +876,7 @@ const styles = StyleSheet.create({
   },
   scenarioCell: {
     width: '100%',
-  },
-  scenarioInner: {
-    minHeight: 68,
-    paddingVertical: 11,
-    paddingHorizontal: 11,
-    justifyContent: 'center',
-  },
-  scenarioChevron: {
-    opacity: 0.32,
-  },
-  scenarioRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-  },
-  scenarioBody: {
-    flex: 1,
-    minWidth: 0,
-    gap: 2,
-  },
-  scenarioTitleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    flexWrap: 'wrap',
-  },
-  scenarioChipEmergency: {
-    fontSize: 9,
-    fontFamily: FontFamily.extrabold,
-    color: travelSemanticTokens('magenta').ink,
-    letterSpacing: 0.35,
-    textTransform: 'uppercase',
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 6,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: 'rgba(255, 120, 155, 0.78)',
-    backgroundColor: 'rgba(255, 110, 140, 0.16)',
-    overflow: 'hidden',
-    textShadowColor: travelSemanticTokens('magenta').glow,
-    textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 6,
-  },
-  scenarioTitle: {
-    fontSize: 13,
-    fontFamily: FontFamily.extrabold,
-    color: INK,
-    letterSpacing: -0.18,
-  },
-  scenarioSub: {
-    fontSize: 10,
-    fontFamily: FontFamily.semibold,
-    color: INK_SUB,
-    lineHeight: 14,
-    opacity: 0.92,
+    minHeight: 44,
   },
   mapCardInner: { gap: 8 },
   mapHelpSub: {
