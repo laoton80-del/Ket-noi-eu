@@ -58,3 +58,15 @@ firebase-adminsdk*.json
 qa-screenshots/
 .screenshots-viona-*/
 scripts/qa-fullscreen-*.mjs
+
+# Tier-1 locale pack helpers (local/scratch — see docs/dev/VIONA_TIER1_LOCALE_BUILD_HELPERS_HYGIENE.md)
+scripts/tier1-*-pack.json
+scripts/_en-pilot-ns.json
+scripts/_safety-bundle-en.json
+scripts/_strings-en.json
+scripts/_tier1-*-leaves.json
+scripts/tr/
+scripts/build-tier1-*.mjs
+scripts/build-fr-ja-ko-safety.mjs
+scripts/tier1-pack-build.mjs
+scripts/_build-tier1-*.mjs
