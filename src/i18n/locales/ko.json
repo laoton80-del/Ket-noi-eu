@@ -25,20 +25,10 @@
   "sos": {
     "fabLabel": "SOS",
     "fabHint": "전 세계 베트남 사용자를 위한 SOS 안내 — 길게 눌러 확인.",
-    "fabAnnounce": "SOS 안내가 열렸습니다.",
-    "sheetTitle": "SOS 안전 안내",
-    "sheetSubtitle": "침착하세요. 적절한 다음 단계를 선택하세요.",
-    "gpsBanner": "위치는 허용 후에만 안내에 사용될 수 있습니다. VIONA는 위치를 자동으로 공유하지 않습니다.",
     "gpsLoading": "권한 확인 중…",
     "gpsUnavailable": "위치 권한이 꺼져 있거나 사용할 수 없습니다. 아래 안내는 계속 이용할 수 있습니다.",
     "coordsLocked": "이 빌드에서는 좌표가 표시되지 않습니다.",
     "coordsA11y": "여기서는 위치 세부 정보가 표시되지 않습니다.",
-    "optionMedicalTitle": "의료 / 구급",
-    "optionMedicalSub": "현지 긴급 번호 안내 — 전화는 사용자가 직접 합니다",
-    "optionPoliceTitle": "경찰",
-    "optionPoliceSub": "현지 긴급 번호 안내 — 전화는 사용자가 직접 합니다",
-    "optionScamTitle": "사기 신고",
-    "optionScamSub": "의심 상황을 기록하고 다음 행동을 결정하는 차분한 단계를 확인하세요. VIONA는 당국에 자동 알림하거나 위치를 공유하지 않습니다.",
     "reportScamSub": "의심 활동을 기록하고 다음 행동을 결정하는 차분한 단계를 확인하세요. VIONA는 당국에 자동 알리거나 위치를 공유하지 않습니다.",
     "close": "닫기",
     "callFailedTitle": "다이얼러를 열 수 없음",
@@ -135,6 +125,9 @@
     "legacyEmbassyAlertBody": "영사 번호는 국가마다 다릅니다. 정부 여행 권고나 공식 대사관 디렉터리 사용 — VIONA는 여기서 대신 전화하지 않습니다.",
     "legacyEmergencyAlertTitle": "현지 긴급",
     "legacyEmergencyAlertBody": "즉각 위험하면 현지 긴급 번호로 직접 전화하세요."
+  },
+  "ai_voice": {
+    "accessibilityAnnounce": "SOS 안내가 열렸습니다."
   },
   "smartTrio": {
     "language": {

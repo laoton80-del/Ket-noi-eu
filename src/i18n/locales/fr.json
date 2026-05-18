@@ -25,20 +25,10 @@
   "sos": {
     "fabLabel": "SOS",
     "fabHint": "Guidage SOS pour les utilisateurs vietnamiens dans le monde — maintenir pour confirmer.",
-    "fabAnnounce": "Guide SOS ouvert.",
-    "sheetTitle": "Guide de sécurité SOS",
-    "sheetSubtitle": "Restez calme. Choisissez la bonne étape.",
-    "gpsBanner": "La position peut guider les options locales après votre accord. VIONA ne partage pas votre position automatiquement.",
     "gpsLoading": "Vérification des autorisations…",
     "gpsUnavailable": "Autorisation de position désactivée ou indisponible. Vous pouvez suivre le guidage ci-dessous.",
     "coordsLocked": "Les coordonnées ne sont pas affichées dans ce build.",
     "coordsA11y": "Les détails de position ne s’affichent pas ici.",
-    "optionMedicalTitle": "Médical / Ambulance",
-    "optionMedicalSub": "Numéro d’urgence local — vous passez l’appel vous-même",
-    "optionPoliceTitle": "Police",
-    "optionPoliceSub": "Numéro d’urgence local — vous passez l’appel vous-même",
-    "optionScamTitle": "Signaler une arnaque",
-    "optionScamSub": "Des étapes calmes pour noter une situation suspecte et décider la suite. VIONA n’alerte pas les autorités ni ne partage votre position automatiquement.",
     "reportScamSub": "Obtenez des étapes calmes pour documenter une activité suspecte et décider la suite. VIONA n’alerte pas automatiquement les autorités ni ne partage votre position.",
     "close": "Fermer",
     "callFailedTitle": "Impossible d’ouvrir le composeur",
@@ -135,6 +125,9 @@
     "legacyEmbassyAlertBody": "Les numéros consulaires varient selon le pays. Utilisez l’avis voyage officiel ou l’annuaire d’ambassades — VIONA ne compose pas pour vous ici.",
     "legacyEmergencyAlertTitle": "Urgence locale",
     "legacyEmergencyAlertBody": "Composez directement votre numéro d’urgence local si vous êtes en danger immédiat."
+  },
+  "ai_voice": {
+    "accessibilityAnnounce": "Guide SOS ouvert."
   },
   "smartTrio": {
     "language": {
