@@ -1242,6 +1242,7 @@ export function HomeScreen() {
   const worldSectionY = useRef(0);
   const [sosHoldGateOpen, setSosHoldGateOpen] = useState(false);
   const [sosPlusInfoOpen, setSosPlusInfoOpen] = useState(false);
+  const [legacyDashboardExpanded, setLegacyDashboardExpanded] = useState(false);
 
   const scrollToCareSection = useCallback(() => {
     const y = fashionHomeDesktopShellActive ? impactCareScrollY.current : charitySectionY.current;
@@ -2730,12 +2731,33 @@ export function HomeScreen() {
           </View>
         ) : null}
 
-        {isTourist && !fashionHomeDesktopShellActive ? (
-          <DashboardB2CScreen contentWidth={layout.inner} />
+        {!fashionHomeDesktopShellActive ? (
+          <View style={[styles.legacySpacesBlock, { width: layout.inner }]}>
+            <VionaGlassPanel style={styles.legacySpacesToggle} tone="cool">
+              <Pressable
+                onPress={() => setLegacyDashboardExpanded((open) => !open)}
+                style={({ pressed }) => [styles.legacySpacesTogglePress, pressed && { opacity: 0.9 }]}
+                accessibilityRole="button"
+                accessibilityLabel={t('home.legacySpacesExpandA11y')}
+                accessibilityState={{ expanded: legacyDashboardExpanded }}
+              >
+                <View style={styles.legacySpacesToggleCopy}>
+                  <Text style={styles.legacySpacesKicker}>{t('home.legacySpacesKicker')}</Text>
+                  <Text style={styles.legacySpacesHint}>{t('home.legacySpacesHint')}</Text>
+                </View>
+                <Ionicons
+                  name={legacyDashboardExpanded ? 'chevron-up' : 'chevron-down'}
+                  size={18}
+                  color={vionaTokens.fashionTech.textSecondary}
+                />
+              </Pressable>
+            </VionaGlassPanel>
+            {legacyDashboardExpanded ? <DashboardB2CScreen contentWidth={layout.inner} /> : null}
+          </View>
         ) : null}
 
         {isTourist && featureFlags.leonaAssistantEnabled && !fashionHomeDesktopShellActive ? (
-          <VionaCard style={{ width: layout.inner, marginBottom: theme.spacing.lg }} padded>
+          <VionaCard style={[styles.legacySurvivalCard, { width: layout.inner }]} padded>
             <VionaSectionHeader title={t('home.survivalTitle')} subtitle={t('home.survivalSub')} />
             <View style={styles.survivalRow}>
               <Pressable
@@ -2761,40 +2783,44 @@ export function HomeScreen() {
         ) : null}
 
         {!fashionHomeDesktopShellActive ? (
-        <View style={[styles.actionCenter, { width: layout.inner }]}>
-          <VionaInfoTile
-            icon="qr-code"
-            title={t('home.qrPayTitle')}
-            lines={[t('home.qrPaySub')]}
-            accent="gold"
-            onPress={() => openProtected('Wallet')}
-            accessibilityLabel={t('home.qrPayA11y')}
-          />
-          <VionaInfoTile
-            icon="time-outline"
-            title={t('home.dualClockTitle')}
-            lines={[
-              `${t('home.dualClockLocalLabel')} ${localClock}`,
-              `${t('home.dualClockVnLabel')} ${vnClock}`,
-            ]}
-            accent="cyan"
-          />
-          {featureFlags.vigTokenEconomyEnabled ? (
-            <VionaInfoTile
-              icon="trending-up"
-              title={t('home.vioIndexTitle', { label: getVioPointsLabel() })}
-              lines={[t('home.vioIndexSub')]}
-              accent="violet"
-              onPress={() => navigation.navigate('LoyaltyRewards')}
-              accessibilityLabel={`${getVioPointsLabel()} index`}
-            />
-          ) : null}
-        </View>
+          <VionaGlassPanel style={[styles.legacyToolsStrip, { width: layout.inner }]} tone="cool">
+            <Text style={styles.legacyToolsKicker}>{t('home.legacyToolsKicker')}</Text>
+            <View style={styles.actionCenter}>
+              <VionaInfoTile
+                icon="qr-code"
+                title={t('home.qrPayTitle')}
+                lines={[t('home.qrPaySub')]}
+                accent="gold"
+                onPress={() => openProtected('Wallet')}
+                accessibilityLabel={t('home.qrPayA11y')}
+              />
+              <VionaInfoTile
+                icon="time-outline"
+                title={t('home.dualClockTitle')}
+                lines={[
+                  `${t('home.dualClockLocalLabel')} ${localClock}`,
+                  `${t('home.dualClockVnLabel')} ${vnClock}`,
+                ]}
+                accent="cyan"
+              />
+              {featureFlags.vigTokenEconomyEnabled ? (
+                <VionaInfoTile
+                  icon="trending-up"
+                  title={t('home.vioIndexTitle', { label: getVioPointsLabel() })}
+                  lines={[t('home.vioIndexSub')]}
+                  accent="violet"
+                  onPress={() => navigation.navigate('LoyaltyRewards')}
+                  accessibilityLabel={t('home.vioIndexA11y')}
+                />
+              ) : null}
+            </View>
+          </VionaGlassPanel>
         ) : null}
 
         {!fashionHomeDesktopShellActive ? (
         <View style={[styles.briefingBlock, { width: layout.inner }]}>
           <Text style={styles.briefingTitle}>{t('home.briefingTitle')}</Text>
+          <Text style={styles.briefingHint}>{t('home.briefingHint')}</Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.briefingRail}>
             {briefingCards.map((card) => (
               <Pressable
@@ -2835,10 +2861,12 @@ export function HomeScreen() {
               <VionaBrandLockup variant="header" />
             </Pressable>
             <View style={styles.featureCopy}>
-              <Text style={styles.featureTitle}>Tá»•ng Ä‘Ă i viĂŞn {inboundPersonaName}</Text>
+              <Text style={styles.featureTitle}>
+                {t('home.featureRowTitle', { name: inboundPersonaName })}
+              </Text>
               <View style={styles.onlineRow}>
                 <View style={styles.onlineDot} />
-                <Text style={styles.onlineText}>Sáşµn sĂ ng há»— trá»Ł</Text>
+                <Text style={styles.onlineText}>{t('home.featureRowOnline')}</Text>
               </View>
               {isAdminDebugSurfaceEnabled() && adminUnlocked ? (
                 <View style={styles.adminBadge}>
@@ -2847,14 +2875,12 @@ export function HomeScreen() {
                 </View>
               ) : null}
               {isAdminDebugSurfaceEnabled() ? (
-                <Text style={styles.debugHint}>Gá»Łi Ă˝: cháşˇm nhanh logo 5 láş§n Ä‘á» má»ź khu vá»±c quáşŁn trá»‹ (dev).</Text>
+                <Text style={styles.debugHint}>{t('home.featureRowDebugHint')}</Text>
               ) : null}
             </View>
           </View>
         </VionaCard>
         ) : null}
-
-        {!isTourist && !fashionHomeDesktopShellActive ? <DashboardB2CScreen contentWidth={layout.inner} /> : null}
 
         {!fashionHomeDesktopShellActive ? (
         <VionaCard style={{ width: layout.inner, marginBottom: theme.spacing.lg }} padded>
@@ -3624,9 +3650,10 @@ const styles = StyleSheet.create({
   },
   trustStrip: {
     alignSelf: 'center',
-    marginBottom: theme.spacing.lg,
-    paddingVertical: vionaTokens.spacing[12],
-    paddingHorizontal: vionaTokens.spacing[16],
+    marginBottom: theme.spacing.md,
+    paddingVertical: vionaTokens.spacing[8],
+    paddingHorizontal: vionaTokens.spacing[12],
+    maxWidth: '100%',
   },
   quickActionStrip: {
     alignSelf: 'center',
@@ -3964,18 +3991,18 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    paddingVertical: 12,
-    paddingHorizontal: 14,
+    paddingVertical: 11,
+    paddingHorizontal: 12,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: vionaTrust.border,
-    backgroundColor: vionaTrust.surfaceMuted,
+    borderColor: 'rgba(148, 172, 198, 0.28)',
+    backgroundColor: 'rgba(12, 18, 28, 0.72)',
     flexGrow: 1,
-    minWidth: 140,
+    minWidth: 132,
   },
   survivalChipPrimary: {
-    borderColor: theme.hybrid.signalSubtleBorder,
-    backgroundColor: theme.hybrid.signalMutedBg,
+    borderColor: 'rgba(148, 172, 198, 0.34)',
+    backgroundColor: 'rgba(16, 24, 36, 0.82)',
   },
   survivalChipText: {
     fontSize: 13,
@@ -3983,22 +4010,82 @@ const styles = StyleSheet.create({
     fontFamily: FontFamily.bold,
     flexShrink: 1,
   },
+  legacyToolsStrip: {
+    alignSelf: 'center',
+    marginBottom: theme.spacing.lg,
+    paddingVertical: vionaTokens.spacing[12],
+    paddingHorizontal: vionaTokens.spacing[12],
+    gap: vionaTokens.spacing[8],
+  },
+  legacyToolsKicker: {
+    fontSize: 11,
+    lineHeight: 15,
+    letterSpacing: 0.45,
+    textTransform: 'uppercase',
+    color: vionaTokens.fashionTech.textSecondary,
+    fontFamily: FontFamily.semibold,
+  },
+  legacySpacesBlock: {
+    alignSelf: 'center',
+    marginBottom: theme.spacing.md,
+    gap: vionaTokens.spacing[8],
+  },
+  legacySpacesToggle: {
+    paddingVertical: vionaTokens.spacing[8],
+    paddingHorizontal: vionaTokens.spacing[12],
+  },
+  legacySpacesTogglePress: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: vionaTokens.spacing[8],
+  },
+  legacySpacesToggleCopy: {
+    flex: 1,
+    minWidth: 0,
+    gap: 3,
+  },
+  legacySpacesKicker: {
+    fontSize: 12,
+    lineHeight: 16,
+    color: vionaTokens.fashionTech.textPrimary,
+    fontFamily: FontFamily.extrabold,
+  },
+  legacySpacesHint: {
+    fontSize: 11,
+    lineHeight: 16,
+    color: vionaTokens.fashionTech.textSecondary,
+    fontFamily: FontFamily.medium,
+  },
+  legacySurvivalCard: {
+    marginBottom: theme.spacing.lg,
+    borderWidth: 1,
+    borderColor: 'rgba(148, 172, 198, 0.22)',
+  },
   actionCenter: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    alignSelf: 'center',
-    gap: 12,
-    marginBottom: theme.spacing.lg,
+    alignSelf: 'stretch',
+    gap: 10,
+    width: '100%',
   },
   briefingBlock: {
     alignSelf: 'center',
     marginBottom: theme.spacing.lg,
+    maxWidth: '100%',
   },
   briefingTitle: {
     fontSize: 13,
     fontFamily: FontFamily.extrabold,
     letterSpacing: 0.6,
     color: TEXT_PRIMARY,
+    marginBottom: 4,
+  },
+  briefingHint: {
+    fontSize: 11,
+    lineHeight: 16,
+    color: TEXT_MUTED,
+    fontFamily: FontFamily.medium,
     marginBottom: 10,
   },
   briefingRail: {
@@ -4008,10 +4095,11 @@ const styles = StyleSheet.create({
     paddingBottom: 4,
   },
   briefingCard: {
-    width: 220,
-    minHeight: 92,
-    borderRadius: 16,
-    padding: 14,
+    width: 200,
+    minHeight: 84,
+    borderRadius: 14,
+    paddingVertical: 12,
+    paddingHorizontal: 12,
   },
   briefingHeadline: {
     fontSize: 14,

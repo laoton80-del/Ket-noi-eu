@@ -32,9 +32,9 @@ export function VionaInfoTile({
 }: VionaInfoTileProps): ReactElement {
   const color = accentColor[accent];
   const body = (
-    <View style={[styles.base, { borderColor: `${color}88` }]}>
-      <View style={[styles.iconWrap, { backgroundColor: `${color}1f` }]}>
-        <Ionicons name={icon} size={18} color={color} />
+    <View style={[styles.base, { borderColor: `${color}4d` }]}>
+      <View style={[styles.iconWrap, { backgroundColor: `${color}14` }]}>
+        <Ionicons name={icon} size={17} color={color} />
       </View>
       <Text style={styles.title}>{title}</Text>
       {lines.map((line) => (
@@ -62,28 +62,29 @@ export function VionaInfoTile({
 const styles = StyleSheet.create({
   base: {
     flex: 1,
-    minHeight: 112,
+    minHeight: 100,
     borderRadius: vionaTokens.radius.lg,
     borderWidth: 1,
-    paddingVertical: 12,
-    paddingHorizontal: 12,
-    backgroundColor: vionaTokens.fashionTech.surfaceElevated,
-    gap: 5,
+    paddingVertical: 11,
+    paddingHorizontal: 11,
+    backgroundColor: 'rgba(10, 14, 22, 0.78)',
+    gap: 4,
   },
   pressed: {
     opacity: 0.9,
   },
   pressable: {
     flex: 1,
-    minWidth: 190,
+    minWidth: 0,
+    maxWidth: '100%',
   },
   iconWrap: {
-    width: 30,
-    height: 30,
-    borderRadius: 15,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 4,
+    marginBottom: 2,
   },
   title: {
     fontSize: 13,
@@ -96,5 +97,6 @@ const styles = StyleSheet.create({
     lineHeight: 15,
     color: vionaTokens.fashionTech.textSecondary,
     fontFamily: FontFamily.medium,
+    opacity: 0.94,
   },
 });

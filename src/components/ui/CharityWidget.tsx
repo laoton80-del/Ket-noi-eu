@@ -305,10 +305,11 @@ const styles = StyleSheet.create({
   wrapImpact: {
     borderRadius: vionaTokens.radius.lg,
     borderWidth: 1,
-    borderColor: 'rgba(255, 124, 198, 0.34)',
-    backgroundColor: 'rgba(28, 16, 24, 0.92)',
-    padding: vionaTokens.spacing[12],
-    gap: vionaTokens.spacing[8],
+    borderColor: 'rgba(255, 124, 198, 0.28)',
+    backgroundColor: 'rgba(16, 12, 18, 0.88)',
+    paddingVertical: vionaTokens.spacing[12],
+    paddingHorizontal: vionaTokens.spacing[12],
+    gap: vionaTokens.spacing[6],
     ...vionaTokens.shadows.soft,
   },
   header: {
