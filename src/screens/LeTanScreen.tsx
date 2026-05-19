@@ -514,7 +514,7 @@ export function LeTanScreen() {
         {
           id: `a-${Date.now()}`,
           role: 'ai',
-          text: 'Mình chuyển bạn sang màn hình SOS ngay để gọi 112 khẩn cấp.',
+          text: 'Mình chuyển bạn sang màn hình SOS ngay — hãy gọi trực tiếp số khẩn cấp địa phương hoặc mở hướng dẫn SOS.',
           sellCta: null,
         },
       ]);
@@ -701,7 +701,7 @@ export function LeTanScreen() {
           style={({ pressed }) => [styles.sosBtn, pressed && { opacity: 0.88 }]}
         >
           <Ionicons name="warning" size={16} color={theme.colors.primaryBright} />
-          <Text style={styles.sosBtnText}>SOS 112 khẩn cấp</Text>
+          <Text style={styles.sosBtnText}>SOS khẩn cấp</Text>
         </Pressable>
         <Pressable
           onPress={() => navigation.navigate('LiveInterpreter')}
