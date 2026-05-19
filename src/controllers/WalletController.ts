@@ -86,7 +86,7 @@ export async function postTransfer(req: Request, res: Response): Promise<void> {
     }
 
     if (amountVIG < 1.0) {
-      jsonFail(res, 'Minimum transfer is 1.0 VIG', 400);
+      jsonFail(res, 'Minimum transfer is 1 VIO Credits', 400);
       return;
     }
 

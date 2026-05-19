@@ -114,7 +114,7 @@
       "vigFeeEstimated": "{{amount}} geschätzte Gebühr",
       "decline": "Ablehnen",
       "accept": "Annehmen",
-      "acceptedMsg": "Angenommen · Auto-Nachricht gesendet",
+      "acceptedMsg": "Demo-Händlerantwort · noch nicht an einen Live-Merchant gesendet",
       "declinedMsg": "Abgelehnt · Slot wieder frei"
     }
   },
@@ -398,7 +398,7 @@
     "trustShieldFee": "VIONA Trust & AI Shield Gebühr ({{pct}}%)",
     "total": "Gesamt in VIO Credits",
     "vndCashHint": "Bargeld / lokale Bank-Apps (Richtwert): ≈ {{vnd}} VND zum Live-Kurs — endgültiger Betrag beim Bezahlen.",
-    "quoteLegal": "Beträge werden auf VIONA-Servern berechnet. Dein Wallet wird um den angezeigten Gesamtbetrag belastet.",
+    "quoteLegal": "Beträge werden auf VIONA-Servern berechnet. VIO Credits werden nur bei bestätigter bezahlter Aktion abgezogen. Vorschau-Anfragen ziehen keine VIO Credits ab. Im Hold-Modus werden gehaltene VIO Credits bei Stornierung vor Abrechnung freigegeben.",
     "vioCreditsFootnote": "VIO Credits sind In-App-Treueeinheiten in dieser Preview — kein Bargeld, keine Kryptowährung, nicht auszahlbar.",
     "payNow": "Anfrage senden · {{amount}} VIO Credits",
     "payA11y": "Buchungsanfrage senden · {{total}} VIO Credits",
@@ -782,7 +782,7 @@
     "roleAdmin": "Command Center",
     "profileRoleGateTitle": "Konto upgraden und VIO Credits verdienen",
     "profileRoleGateBrokerBody": "Field-Broker verdienen VIO Credits, wenn Touristen über ihre Anbieter buchen. Dein Wallet aktualisiert sich automatisch — keine Extra-Apps.",
-    "profileRoleGateMerchantBody": "Anbieter verdienen VIO Credits bei Inbound-Tourismusbuchungen. Shop verbinden, Menü verwalten und in einem Wallet ausgezahlt werden.",
+    "profileRoleGateMerchantBody": "VIO-Credits-Aktivität und Auszahlungsbereitschaft des Merchants in einem Workspace verfolgen. Shop und Menü verwalten — Bankauszahlung erst mit Production-Rails.",
     "profileRoleGateContinueBroker": "Als Broker fortfahren",
     "profileRoleGateContinueMerchant": "Als Anbieter fortfahren",
     "profileRoleGateLater": "Vielleicht später",

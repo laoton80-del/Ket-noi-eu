@@ -54,7 +54,7 @@ function run(): void {
   assert.equal(pendingRow.actions.canCancel, true);
   assert.equal(pendingRow.actions.canComplete, false);
   assert.equal(displayStateLabel(pendingRow.merchantDisplayState), 'Pending merchant review');
-  assert.equal(walletPhaseLabel(pendingRow.walletPhase), 'HELD');
+  assert.equal(walletPhaseLabel(pendingRow.walletPhase), 'VIO Credits held');
 
   const confirmedActions = deriveTourismMerchantInboxActions({
     status: TourismBookingStatus.CONFIRMED,
@@ -117,7 +117,7 @@ function run(): void {
     })
   );
   assert.equal(previewLabels.displayState, 'Preview only');
-  assert.equal(previewLabels.walletPhase, 'PREVIEW');
+  assert.equal(previewLabels.walletPhase, 'Preview only');
 
   const noProviderNote = buildTourismInboxDisplayLabels(
     fixture({

@@ -221,7 +221,7 @@ export async function postBook(req: Request, res: Response): Promise<void> {
         service_not_found: 'Tourism service not found',
         service_business_mismatch: 'Service does not belong to the given business',
         wallet_not_found: 'Wallet not found',
-        insufficient_funds: 'Insufficient spendable VIG for this tourism booking (dual-fee total)',
+        insufficient_funds: 'Insufficient spendable VIO Credits for this tourism booking (dual-fee total)',
         self_booking_forbidden: 'Self-booking is prohibited.',
         treasury_not_configured: 'Treasury wallet is not configured (VIGLOBAL_TREASURY_USER_ID)',
         treasury_wallet_missing: 'Treasury user has no wallet row',

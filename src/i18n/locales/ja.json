@@ -279,7 +279,7 @@
     "trustShieldFee": "VIONA Trust & AI Shield 手数料（{{pct}}%）",
     "total": "支払う VIO Credits 合計",
     "vndCashHint": "現金 / 現地銀行アプリ（参考）：ライブ為替で ≈ {{vnd}} VND — 支払い時に最終確定。",
-    "quoteLegal": "金額は VIONA サーバーで計算されます。表示合計がウォレットから引かれます。",
+    "quoteLegal": "金額は VIONA サーバーで計算されます。VIO Credits は対応する有料アクションが確認された場合のみ差し引かれます。プレビューのみのリクエストでは差し引きません。ホールドモードでは、決済前にキャンセルされた場合、保持中の VIO Credits は解放されます。",
     "vioCreditsFootnote": "VIO Credits はこのプレビュー用のアプリ内ポイントです — 現金・暗号資産・出金はできません。",
     "payNow": "リクエスト送信 · {{amount}} VIO Credits",
     "payA11y": "予約リクエスト送信 · {{total}} VIO Credits",

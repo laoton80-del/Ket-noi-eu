@@ -38,17 +38,17 @@ export function displayStateLabel(state: TourismMerchantDisplayState): string {
 export function walletPhaseLabel(phase: TourismWalletPhase): string {
   switch (phase) {
     case 'HELD':
-      return 'HELD';
+      return 'VIO Credits held';
     case 'SETTLED':
-      return 'SETTLED';
+      return 'Provider settlement recorded';
     case 'RELEASED':
-      return 'RELEASED';
+      return 'Held VIO Credits released';
     case 'LEGACY_SETTLED':
-      return 'LEGACY_SETTLED';
+      return 'Legacy settled booking';
     case 'PREVIEW':
-      return 'PREVIEW';
+      return 'Preview only';
     default:
-      return 'NONE';
+      return 'No wallet action';
   }
 }
 

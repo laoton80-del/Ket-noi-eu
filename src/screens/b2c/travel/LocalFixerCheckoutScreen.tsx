@@ -45,7 +45,7 @@ export function LocalFixerCheckoutScreen() {
           >
             <Ionicons name="chevron-back" size={24} color="#F8F4EC" />
           </Pressable>
-          <Text style={styles.topTitle}>Thanh toán Thổ Địa</Text>
+          <Text style={styles.topTitle}>Xem báo giá Thổ Địa</Text>
           <View style={{ width: 44 }} />
         </View>
 
@@ -60,7 +60,7 @@ export function LocalFixerCheckoutScreen() {
 
               <View style={styles.card} className={applyWebStyles('kn-glass')}>
                 <Text style={styles.cardKicker}>Khách hàng</Text>
-                <Text style={styles.cardTitle}>Biên lai thanh toán</Text>
+                <Text style={styles.cardTitle}>Bảng báo giá (xem trước)</Text>
                 <View style={styles.line} />
                 <View style={styles.row}>
                   <Text style={styles.rowLabel}>Giá dịch vụ</Text>
@@ -71,12 +71,12 @@ export function LocalFixerCheckoutScreen() {
                   <Text style={styles.rowValue}>{formatCurrency(breakdown.customerFeeEur, EUR)}</Text>
                 </View>
                 <View style={styles.row}>
-                  <Text style={styles.netLabel}>Tổng thanh toán</Text>
+                  <Text style={styles.netLabel}>Tổng ước tính (chưa thu phí)</Text>
                   <Text style={styles.netValue}>{formatCurrency(breakdown.totalChargeToCustomerEur, EUR)}</Text>
                 </View>
                 <Text style={styles.footnote}>
-                  Stripe Connect destination charge: khách trả {formatCurrency(breakdown.totalChargeToCustomerEur, EUR)},
-                  VIONA giữ application fee {formatCurrency(breakdown.totalPlatformRevenueEur, EUR)} (demo / pilot).
+                  Xem trước phí nền tảng — không trừ VIO Credits trong bản build này. Stripe Connect (demo / pilot) chỉ minh họa
+                  phí {formatCurrency(breakdown.totalPlatformRevenueEur, EUR)}.
                 </Text>
               </View>
               <Pressable

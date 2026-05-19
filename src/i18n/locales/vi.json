@@ -618,7 +618,7 @@
       "vigFeeEstimated": "{{amount}} ước phí",
       "decline": "Từ chối",
       "accept": "Nhận",
-      "acceptedMsg": "Đã nhận · đã gửi tin tự động",
+      "acceptedMsg": "Phản hồi demo · chưa gửi tới merchant thật",
       "declinedMsg": "Đã từ chối · mở lại slot"
     },
     "operatingPreview": {
@@ -696,7 +696,7 @@
     "trustShieldFee": "Phí VIONA Trust & AI Shield ({{pct}}%)",
     "total": "Tổng VIO Credits cần trả",
     "vndCashHint": "Tiền mặt / app ngân hàng (tham chiếu): ≈ {{vnd}} VND theo tỷ giá — khóa chính xác khi thanh toán.",
-    "quoteLegal": "Số tiền do máy chủ VIONA tính. Ví của bạn sẽ trừ đúng tổng hiển thị.",
+    "quoteLegal": "Số tiền do máy chủ VIONA tính. VIO Credits chỉ bị trừ khi có hành động trả phí được xác nhận. Yêu cầu xem trước không trừ VIO Credits. Ở chế độ giữ (hold), VIO Credits đã giữ sẽ được trả lại nếu hủy trước khi quyết toán.",
     "vioCreditsFootnote": "VIO Credits là đơn vị trong app cho bản xem trước — không phải tiền mặt, crypto hay rút được.",
     "payNow": "Gửi yêu cầu · {{amount}} VIO Credits",
     "payA11y": "Gửi yêu cầu đặt chỗ · {{total}} VIO Credits",
@@ -734,7 +734,7 @@
     "roleAdmin": "Điều hành",
     "profileRoleGateTitle": "Nâng cấp tài khoản để nhận VIO Credits",
     "profileRoleGateBrokerBody": "Môi giới nhận VIO Credits khi khách đặt qua merchant của bạn. Ví cập nhật tự động — không cần app riêng.",
-    "profileRoleGateMerchantBody": "Đối tác nhận VIO Credits từ đơn du lịch inbound. Kết nối cửa hàng, quản lý menu và nhận thanh toán trong một ví.",
+    "profileRoleGateMerchantBody": "Theo dõi VIO Credits và mức sẵn sàng quyết toán merchant trong một workspace. Kết nối cửa hàng, quản lý menu — chuyển khoản ngân hàng chưa bật cho đến khi có kênh production.",
     "profileRoleGateContinueBroker": "Tiếp tục làm Môi giới",
     "profileRoleGateContinueMerchant": "Tiếp tục làm Đối tác",
     "profileRoleGateLater": "Để sau",
@@ -1207,7 +1207,13 @@
     "legalScannerLabel": "Quét hồ sơ pháp lý (AI)",
     "legalScannerA11y": "Quét hồ sơ pháp lý bằng AI",
     "classifiedsComposerTitle": "Đăng bài trong Chợ rao vặt",
-    "postNewListing": "Đăng tin mới"
+    "postNewListing": "Đăng tin mới",
+    "vipToggleLabel": "VIP boost (+{{amount}})",
+    "vipPostFailTitle": "Không thể đăng VIP boost",
+    "vipPostFailBody": "Số dư VIO Credits không đủ hoặc hệ thống tạm gián đoạn.",
+    "vipPostSuccessTitle": "Đăng tin thành công",
+    "vipPostSuccessVipBody": "Đã áp dụng VIP boost trên thiết bị (xem trước). Đây là đẩy tin trả phí — không phải ký quỹ booking hay tiền giữ cho merchant.",
+    "vipPostSuccessNormalBody": "Tin thường đã thêm trên thiết bị (xem trước)."
   },
   "b2bPaywallUi": {
     "kicker": "Gói dịch vụ doanh nghiệp",

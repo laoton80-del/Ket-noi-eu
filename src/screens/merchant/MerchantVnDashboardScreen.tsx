@@ -118,10 +118,10 @@ export function MerchantVnDashboardScreen() {
         onPress={() => navigation.navigate('CashOut')}
         style={({ pressed }) => [styles.cashoutBtn, pressed && { opacity: 0.9 }]}
         accessibilityRole="button"
-        accessibilityLabel="Cash out to local bank VND"
+        accessibilityLabel="Merchant payout setup preview — bank payout not active yet"
       >
         <Ionicons name="cash-outline" size={22} color="#0a1628" />
-        <Text style={styles.cashoutText}>3 · Cash out to local bank (VND)</Text>
+        <Text style={styles.cashoutText}>3 · Payout setup preview (demo · no bank transfer)</Text>
         <Ionicons name="chevron-forward" size={20} color="#0a1628" />
       </Pressable>
     </SafeAreaView>

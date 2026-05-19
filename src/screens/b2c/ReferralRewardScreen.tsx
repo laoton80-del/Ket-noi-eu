@@ -94,12 +94,12 @@ export function ReferralRewardScreen() {
             style={({ pressed }) => [styles.cashOutNav, pressed && { opacity: 0.9 }]}
             className={mergeWebClassNames('kn-glass', 'kn-neon-b2b')}
             accessibilityRole="button"
-            accessibilityLabel="Quy đổi tiền mặt"
+            accessibilityLabel="Commission payout preview — not withdrawable cash"
           >
             <Ionicons name="cash-outline" size={22} color={theme.colors.primaryBright} />
             <View style={styles.cashOutNavTextCol}>
-              <Text style={styles.cashOutNavTitle}>Quy Đổi Tiền Mặt</Text>
-              <Text style={styles.cashOutNavSub}>Rút hoa hồng giới thiệu — hạn mức tối thiểu · KYC</Text>
+              <Text style={styles.cashOutNavTitle}>Xem trước quyết toán thưởng</Text>
+              <Text style={styles.cashOutNavSub}>Bản xem trước — không phải tiền mặt · chưa chuyển khoản thật</Text>
             </View>
             <Ionicons name="chevron-forward" size={22} color={theme.colors.primaryBright} />
           </Pressable>

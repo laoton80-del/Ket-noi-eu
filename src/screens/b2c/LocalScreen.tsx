@@ -673,7 +673,7 @@ export function LocalScreen() {
         const idempotencyKey = `classified-vip-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
         const paid = await reserveAndCommitCredits(VIP_POSTING_COST_VIG, idempotencyKey);
         if (!paid.ok) {
-          Alert.alert('Không thể đăng VIP', 'Số dư VIO Credits không đủ hoặc hệ thống tạm gián đoạn.');
+          Alert.alert(t('localHub.vipPostFailTitle'), t('localHub.vipPostFailBody'));
           return;
         }
       }
@@ -690,7 +690,10 @@ export function LocalScreen() {
       setPosts((prev) => [newPost, ...prev]);
       setComposerVisible(false);
       resetComposer();
-      Alert.alert('Đăng tin thành công', vipEnabled ? 'Tin VIP đã được đẩy lên đầu bảng.' : 'Tin thường đã được đăng.');
+      Alert.alert(
+        t('localHub.vipPostSuccessTitle'),
+        vipEnabled ? t('localHub.vipPostSuccessVipBody') : t('localHub.vipPostSuccessNormalBody')
+      );
     } finally {
       setSubmitting(false);
     }
@@ -1162,7 +1165,9 @@ export function LocalScreen() {
             />
             <Pressable onPress={() => setVipEnabled((v) => !v)} style={[styles.vipToggle, vipEnabled && styles.vipToggleActive]}>
               <Ionicons name={vipEnabled ? 'checkmark-circle' : 'ellipse-outline'} size={18} color={GOLD} />
-              <Text style={styles.vipToggleText}>Đăng VIP (+{formatVioCredits(VIP_POSTING_COST_VIG)})</Text>
+              <Text style={styles.vipToggleText}>
+                {t('localHub.vipToggleLabel', { amount: formatVioCredits(VIP_POSTING_COST_VIG) })}
+              </Text>
             </Pressable>
             <View style={styles.modalActions}>
               <Pressable onPress={() => setComposerVisible(false)} style={styles.cancelBtn}>
