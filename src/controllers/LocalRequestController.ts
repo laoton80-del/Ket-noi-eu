@@ -11,6 +11,7 @@ import {
   parseMetadataJson,
 } from '../services/local/localRequestCreateValidation';
 import { confirmMerchantLocalServiceRequest } from '../services/local/localMerchantRequestConfirmService';
+import { rejectMerchantLocalServiceRequest } from '../services/local/localMerchantRequestRejectService';
 import { createLocalServiceRequest } from '../services/local/localRequestCreateService';
 import { listMerchantLocalServiceRequests } from '../services/local/localMerchantRequestInboxService';
 import { jsonFail, jsonOk } from '../utils/apiEnvelope';
@@ -84,6 +85,54 @@ export async function postConfirmMerchantLocalServiceRequest(
         invalid_status: 'Request cannot be confirmed in its current status',
         invalid_wallet_mode: 'Confirm is not available for this wallet mode',
         invalid_wallet_phase: 'Confirm is not available while wallet phase is not NONE',
+      };
+      jsonFail(res, msgMap[result.reason], statusMap[result.reason]);
+      return;
+    }
+
+    jsonOk(res, result.request, 200);
+  } catch {
+    jsonFail(res, 'Internal server error', 500);
+  }
+}
+
+/** `POST /api/local/merchant/requests/:id/reject` — merchant decline (no wallet side effects). */
+export async function postRejectMerchantLocalServiceRequest(
+  req: Request,
+  res: Response
+): Promise<void> {
+  try {
+    const merchantUserId = readAuthUserId(req);
+    if (!merchantUserId) {
+      jsonFail(res, 'Unauthorized', 401);
+      return;
+    }
+
+    const requestId = readString(req.params.id);
+    if (!requestId || requestId.trim().length === 0) {
+      jsonFail(res, 'Request id is required', 400);
+      return;
+    }
+
+    const result = await rejectMerchantLocalServiceRequest({
+      merchantUserId,
+      requestId: requestId.trim(),
+    });
+
+    if (!result.ok) {
+      const statusMap: Record<typeof result.reason, number> = {
+        invalid_input: 400,
+        request_not_found: 404,
+        invalid_status: 409,
+        invalid_wallet_mode: 409,
+        invalid_wallet_phase: 409,
+      };
+      const msgMap: Record<typeof result.reason, string> = {
+        invalid_input: 'Invalid reject request',
+        request_not_found: 'Request not found',
+        invalid_status: 'Request cannot be rejected in its current status',
+        invalid_wallet_mode: 'Reject is not available for this wallet mode',
+        invalid_wallet_phase: 'Reject is not available while wallet phase is not NONE',
       };
       jsonFail(res, msgMap[result.reason], statusMap[result.reason]);
       return;
