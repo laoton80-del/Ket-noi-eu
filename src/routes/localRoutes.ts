@@ -2,6 +2,7 @@ import { Router } from 'express';
 
 import * as LocalRequestController from '../controllers/LocalRequestController';
 import { authMiddleware } from '../middleware/authMiddleware';
+import { superAdminMiddleware } from '../middleware/superAdminMiddleware';
 
 export const localRouter = Router();
 
@@ -26,3 +27,11 @@ localRouter.post('/requests', (req, res, next) => {
 localRouter.post('/requests/:id/cancel', (req, res, next) => {
   void LocalRequestController.postCancelUserLocalServiceRequest(req, res).catch(next);
 });
+
+localRouter.post(
+  '/ops/requests/:id/cancel',
+  superAdminMiddleware,
+  (req, res, next) => {
+    void LocalRequestController.postOpsCancelLocalServiceRequest(req, res).catch(next);
+  }
+);
