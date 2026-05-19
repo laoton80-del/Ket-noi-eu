@@ -92,6 +92,15 @@ enum TourismBookingStatus {
   CANCELLED
 }
 
+/// Wallet settlement lifecycle for tourism bookings (legacy vs hold vs confirm).
+enum TourismSettlementMode {
+  UNKNOWN
+  LEGACY_SETTLE_ON_BOOK
+  HOLD_ON_SUBMIT
+  SETTLE_ON_CONFIRM
+  PREVIEW_ONLY
+}
+
 enum PayStatus {
   UNPAID
   DEPOSIT_PAID
@@ -510,12 +519,26 @@ model TourismBooking {
   /// Rounded VND equivalent of `totalPaidVIG` at `fxLockedAt` (display + local bank transfer hint).
   offRampVndHint   Int?
 
+  /// Row creation time; backfill from `fxLockedAt` for pre-migration rows (`LEGACY_SETTLED_BACKFILL.1`).
+  createdAt DateTime?
+  updatedAt DateTime? @updatedAt
+  /// Non-null when provider/treasury wallet credits have executed.
+  providerSettledAt DateTime?
+  /// Merchant ACK timestamp when `status` becomes CONFIRMED.
+  confirmedAt DateTime?
+  cancelledAt   DateTime?
+  cancelReason  String?
+  settlementMode TourismSettlementMode @default(UNKNOWN)
+
   user     User           @relation(fields: [userId], references: [id], onDelete: Cascade)
   business Business       @relation(fields: [businessId], references: [id], onDelete: Cascade)
   service  TourismService @relation(fields: [serviceId], references: [id], onDelete: Restrict)
 
   @@index([userId, startDate])
   @@index([businessId, startDate])
+  @@index([status, providerSettledAt])
+  @@index([businessId, status])
+  @@index([settlementMode])
 }
 
 /// Encrypted blob only — never store plaintext identity docs in `encryptedData`.
