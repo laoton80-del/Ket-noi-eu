@@ -21,6 +21,7 @@ import {
 } from '@prisma/client';
 
 import { getTourismSettlementMode } from '../config/tourismSettlementMode';
+import { evaluateTourismHeldBookingConfirmEligibility } from './tourism/tourismHeldBookingConfirmEligibility';
 import { getPrisma } from '../lib/prisma';
 
 import { estimateKngNetPlatformVigAfterAcquirer } from './api/StripeBillingService';
@@ -1138,6 +1139,289 @@ export async function processTourismBookingCheckout(
   return processTourismBookingHold(input);
 }
 
+export type TourismBookingConfirmErrorCode =
+  | 'invalid_input'
+  | 'booking_not_found'
+  | 'forbidden'
+  | 'invalid_settlement_mode'
+  | 'invalid_status'
+  | 'not_held'
+  | 'inconsistent_state'
+  | 'wallet_not_found'
+  | 'treasury_not_configured'
+  | 'treasury_wallet_missing'
+  | 'insufficient_locked_funds'
+  | 'concurrency_conflict';
+
+export class TourismBookingConfirmError extends Error {
+  readonly code: TourismBookingConfirmErrorCode;
+
+  constructor(code: TourismBookingConfirmErrorCode, message: string) {
+    super(message);
+    this.name = 'TourismBookingConfirmError';
+    this.code = code;
+  }
+}
+
+export type ConfirmTourismHeldBookingAsMerchantInput = Readonly<{
+  bookingId: string;
+  merchantUserId: string;
+}>;
+
+export type ConfirmTourismHeldBookingAsMerchantResult = Readonly<{
+  bookingId: string;
+  status: TourismBookingStatus;
+  providerSettledAt: Date;
+  confirmedAt: Date;
+  settlementMode: TourismSettlementMode;
+  idempotent?: boolean;
+}>;
+
+/**
+ * Merchant ACK: settle held VIO Credits to provider/treasury for `HOLD_ON_SUBMIT` bookings only.
+ */
+export async function confirmTourismHeldBookingAsMerchant(
+  input: ConfirmTourismHeldBookingAsMerchantInput
+): Promise<ConfirmTourismHeldBookingAsMerchantResult> {
+  const bookingId = input.bookingId.trim();
+  const merchantUserId = input.merchantUserId.trim();
+  if (bookingId.length === 0 || merchantUserId.length === 0) {
+    throw new TourismBookingConfirmError('invalid_input', 'bookingId and merchantUserId are required');
+  }
+
+  const treasuryUserId = process.env.VIGLOBAL_TREASURY_USER_ID?.trim() ?? '';
+  if (!treasuryUserId) {
+    throw new TourismBookingConfirmError(
+      'treasury_not_configured',
+      'VIGLOBAL_TREASURY_USER_ID is not configured'
+    );
+  }
+
+  try {
+    return await getPrisma().$transaction(
+      async (tx) => {
+        const booking = await tx.tourismBooking.findUnique({
+          where: { id: bookingId },
+          include: {
+            business: { select: { ownerId: true } },
+          },
+        });
+
+        if (!booking) {
+          throw new TourismBookingConfirmError('booking_not_found', 'Tourism booking not found');
+        }
+
+        if (booking.business.ownerId !== merchantUserId) {
+          throw new TourismBookingConfirmError(
+            'forbidden',
+            'Only the business owner can confirm this booking'
+          );
+        }
+
+        const eligibility = evaluateTourismHeldBookingConfirmEligibility(booking);
+        if (eligibility.kind === 'idempotent') {
+          return {
+            bookingId: booking.id,
+            status: booking.status,
+            providerSettledAt: booking.providerSettledAt!,
+            confirmedAt: booking.confirmedAt ?? booking.providerSettledAt!,
+            settlementMode: booking.settlementMode,
+            idempotent: true,
+          };
+        }
+        if (eligibility.kind === 'reject') {
+          const codeMap: Record<
+            typeof eligibility.code,
+            TourismBookingConfirmErrorCode
+          > = {
+            invalid_settlement_mode: 'invalid_settlement_mode',
+            invalid_status: 'invalid_status',
+            not_held: 'not_held',
+            inconsistent_state: 'inconsistent_state',
+          };
+          throw new TourismBookingConfirmError(codeMap[eligibility.code], eligibility.message);
+        }
+
+        const touristUserId = booking.userId;
+        const providerUserId = booking.business.ownerId;
+        const {
+          totalPaidVIG,
+          touristFeeVIG,
+          providerFeeVIG,
+          netProviderEarningsVIG,
+        } = booking;
+
+        const masterRevenueVIG = roundVig(providerFeeVIG + touristFeeVIG);
+        const basePriceVIG = roundVig(totalPaidVIG - touristFeeVIG);
+
+        const [touristWallet, providerWallet, treasuryWallet] = await Promise.all([
+          tx.wallet.findUnique({ where: { userId: touristUserId } }),
+          tx.wallet.findUnique({ where: { userId: providerUserId } }),
+          tx.wallet.findUnique({ where: { userId: treasuryUserId } }),
+        ]);
+
+        if (!touristWallet || !providerWallet) {
+          throw new TourismBookingConfirmError(
+            'wallet_not_found',
+            'Tourist or provider wallet not found'
+          );
+        }
+        if (!treasuryWallet) {
+          throw new TourismBookingConfirmError(
+            'treasury_wallet_missing',
+            'Treasury user has no wallet row'
+          );
+        }
+
+        if (totalPaidVIG > VIG_EPSILON) {
+          const lockHold = await tx.transaction.findFirst({
+            where: {
+              walletId: touristWallet.id,
+              type: TxType.BOOKING_LOCK,
+              senderId: touristUserId,
+              receiverId: TOURISM_BOOKING_LOCK_PARTY,
+              amountVIG: { gte: totalPaidVIG - VIG_EPSILON, lte: totalPaidVIG + VIG_EPSILON },
+            },
+            select: { id: true },
+          });
+          if (!lockHold) {
+            throw new TourismBookingConfirmError(
+              'not_held',
+              'No BOOKING_LOCK hold transaction found for this booking'
+            );
+          }
+
+          const lockDec = await tx.wallet.updateMany({
+            where: {
+              id: touristWallet.id,
+              lockedBalanceVIG: { gte: totalPaidVIG },
+            },
+            data: { lockedBalanceVIG: { decrement: totalPaidVIG } },
+          });
+          if (lockDec.count !== 1) {
+            throw new TourismBookingConfirmError(
+              'insufficient_locked_funds',
+              'Insufficient locked VIG to settle held tourism booking'
+            );
+          }
+        }
+
+        if (netProviderEarningsVIG > VIG_EPSILON) {
+          await tx.wallet.update({
+            where: { id: providerWallet.id },
+            data: { balanceVIG: { increment: netProviderEarningsVIG } },
+          });
+        }
+
+        if (masterRevenueVIG > VIG_EPSILON) {
+          await tx.wallet.update({
+            where: { id: treasuryWallet.id },
+            data: { balanceVIG: { increment: masterRevenueVIG } },
+          });
+        }
+
+        if (totalPaidVIG > VIG_EPSILON) {
+          await tx.transaction.create({
+            data: {
+              walletId: touristWallet.id,
+              senderId: touristUserId,
+              receiverId: providerUserId,
+              amountVIG: basePriceVIG,
+              feeAmount: touristFeeVIG,
+              type: TxType.BOOKING,
+              status: TxStatus.SUCCESS,
+            },
+          });
+        }
+
+        if (netProviderEarningsVIG > VIG_EPSILON) {
+          await tx.transaction.create({
+            data: {
+              walletId: providerWallet.id,
+              senderId: touristUserId,
+              receiverId: providerUserId,
+              amountVIG: netProviderEarningsVIG,
+              feeAmount: 0,
+              type: TxType.BOOKING,
+              status: TxStatus.SUCCESS,
+            },
+          });
+        }
+
+        if (masterRevenueVIG > VIG_EPSILON) {
+          await tx.transaction.create({
+            data: {
+              walletId: treasuryWallet.id,
+              senderId: touristUserId,
+              receiverId: treasuryUserId,
+              amountVIG: masterRevenueVIG,
+              feeAmount: 0,
+              type: TxType.PLATFORM_FEE,
+              status: TxStatus.SUCCESS,
+            },
+          });
+        }
+
+        const settledAt = new Date();
+        const updated = await tx.tourismBooking.updateMany({
+          where: {
+            id: bookingId,
+            settlementMode: TourismSettlementMode.HOLD_ON_SUBMIT,
+            status: TourismBookingStatus.PENDING,
+            providerSettledAt: null,
+          },
+          data: {
+            status: TourismBookingStatus.CONFIRMED,
+            confirmedAt: settledAt,
+            providerSettledAt: settledAt,
+            settlementMode: TourismSettlementMode.SETTLE_ON_CONFIRM,
+          },
+        });
+
+        if (updated.count !== 1) {
+          const again = await tx.tourismBooking.findUnique({ where: { id: bookingId } });
+          if (again?.providerSettledAt != null) {
+            return {
+              bookingId: again.id,
+              status: again.status,
+              providerSettledAt: again.providerSettledAt,
+              confirmedAt: again.confirmedAt ?? again.providerSettledAt,
+              settlementMode: again.settlementMode,
+              idempotent: true,
+            };
+          }
+          throw new TourismBookingConfirmError(
+            'concurrency_conflict',
+            'Confirm settlement aborted; booking state changed concurrently'
+          );
+        }
+
+        return {
+          bookingId,
+          status: TourismBookingStatus.CONFIRMED,
+          providerSettledAt: settledAt,
+          confirmedAt: settledAt,
+          settlementMode: TourismSettlementMode.SETTLE_ON_CONFIRM,
+        };
+      },
+      {
+        isolationLevel: Prisma.TransactionIsolationLevel.Serializable,
+        maxWait: 5000,
+        timeout: 20_000,
+      }
+    );
+  } catch (e) {
+    if (e instanceof TourismBookingConfirmError) throw e;
+    if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2034') {
+      throw new TourismBookingConfirmError(
+        'concurrency_conflict',
+        'Confirm settlement aborted due to serialization conflict; retry.'
+      );
+    }
+    throw e;
+  }
+}
+
 /**
  * Legacy helper — **inbound tourism no longer pays brokers from the fee pool** (net-revenue-share model:
  * PAYG → AI/telecom; Power SaaS → subscription renewal). Retained for reporting / env compatibility only.
@@ -1231,6 +1515,16 @@ export async function completeTourismBookingAsMerchant(
             brokerCommissionVIG: booking.brokerCommissionVIG,
             idempotent: true,
           };
+        }
+
+        if (
+          booking.settlementMode === TourismSettlementMode.HOLD_ON_SUBMIT &&
+          booking.providerSettledAt == null
+        ) {
+          throw new TourismBookingCompletionError(
+            'invalid_status',
+            'Held booking must be confirmed before completion'
+          );
         }
 
         if (

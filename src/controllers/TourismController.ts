@@ -7,7 +7,9 @@ import {
 } from '../services/api/TourismHubService';
 import {
   completeTourismBookingAsMerchant,
+  confirmTourismHeldBookingAsMerchant,
   TourismBookingCompletionError,
+  TourismBookingConfirmError,
 } from '../services/WalletService';
 import { generateUserTripSummary, ViralWrapError } from '../services/marketing/ViralWrapEngine';
 import { jsonFail, jsonOk } from '../utils/apiEnvelope';
@@ -212,6 +214,50 @@ export async function getViralWrap(req: Request, res: Response): Promise<void> {
       return;
     }
     console.error('[TourismController] getViralWrap', e);
+    jsonFail(res, 'Unexpected error', 500);
+  }
+}
+
+/** `POST /api/tourism/bookings/:bookingId/confirm` — merchant ACK; settle held VIO Credits. */
+export async function postConfirmBooking(req: Request, res: Response): Promise<void> {
+  try {
+    const merchantUserId = readAuthUserId(req);
+    if (!merchantUserId) {
+      jsonFail(res, 'Unauthorized', 401);
+      return;
+    }
+
+    const bookingId = readString(req.params.bookingId);
+    if (!bookingId) {
+      jsonFail(res, 'bookingId is required', 400);
+      return;
+    }
+
+    try {
+      const out = await confirmTourismHeldBookingAsMerchant({ bookingId, merchantUserId });
+      jsonOk(res, out);
+    } catch (e) {
+      if (e instanceof TourismBookingConfirmError) {
+        const statusMap: Record<TourismBookingConfirmError['code'], number> = {
+          invalid_input: 400,
+          booking_not_found: 404,
+          forbidden: 403,
+          invalid_settlement_mode: 409,
+          invalid_status: 409,
+          not_held: 409,
+          inconsistent_state: 409,
+          wallet_not_found: 404,
+          treasury_not_configured: 503,
+          treasury_wallet_missing: 503,
+          insufficient_locked_funds: 409,
+          concurrency_conflict: 409,
+        };
+        jsonFail(res, e.message, statusMap[e.code]);
+        return;
+      }
+      throw e;
+    }
+  } catch {
     jsonFail(res, 'Unexpected error', 500);
   }
 }
