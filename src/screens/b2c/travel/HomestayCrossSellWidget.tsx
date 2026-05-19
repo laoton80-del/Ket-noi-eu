@@ -16,7 +16,7 @@ export type HomestayCrossSellWidgetProps = Readonly<{
 function buildHeadline(destinationDisplay: string): string {
   const d = destinationDisplay.trim();
   const label = d.length > 0 ? d : 'điểm đến của bạn';
-  return `Bay đến ${label}? Đừng quên đặt phòng nhà người Việt và mang theo Trợ lý Minh Khang!`;
+  return `Bay đến ${label}? Gợi ý homestay người Việt và Trợ lý Minh Khang (xem trước).`;
 }
 
 export function HomestayCrossSellWidget({
@@ -34,7 +34,7 @@ export function HomestayCrossSellWidget({
       </View>
       <Text style={styles.headline}>{buildHeadline(destinationDisplay)}</Text>
       <Text style={styles.sub}>
-        Homestay của người Việt tại {destinationDisplay.trim() || 'điểm đến'} — đặt phòng sớm khi vé đã chốt.
+        Homestay người Việt tại {destinationDisplay.trim() || 'điểm đến'} — gợi ý lưu trú nếu bạn đặt vé ở nơi khác (ghi chú demo, không phải vé chốt trong app).
       </Text>
 
       {listings.length > 0 ? (
