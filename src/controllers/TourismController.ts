@@ -1,10 +1,12 @@
 import type { Request, Response } from 'express';
+import { TourismBookingStatus } from '@prisma/client';
 
 import {
   createTourismBooking,
   getTourismDiscover,
   quoteTourismBooking,
 } from '../services/api/TourismHubService';
+import { listMerchantTourismBookings } from '../services/tourism/tourismMerchantInboxService';
 import {
   cancelTourismHeldBooking,
   completeTourismBookingAsMerchant,
@@ -35,6 +37,22 @@ function readOptionalCancelReason(body: unknown): string | undefined {
   if (body == null || typeof body !== 'object') return undefined;
   const reason = (body as { cancelReason?: unknown }).cancelReason;
   return typeof reason === 'string' ? reason : undefined;
+}
+
+function readTourismBookingStatusQuery(raw: unknown): TourismBookingStatus | undefined {
+  if (typeof raw !== 'string' || raw.trim().length === 0) return undefined;
+  const value = raw.trim().toUpperCase();
+  if (value in TourismBookingStatus) {
+    return TourismBookingStatus[value as keyof typeof TourismBookingStatus];
+  }
+  return undefined;
+}
+
+function readOptionalLimitQuery(raw: unknown): number | undefined {
+  if (raw == null) return undefined;
+  const n = typeof raw === 'string' ? Number(raw) : typeof raw === 'number' ? raw : NaN;
+  if (!Number.isFinite(n) || !Number.isInteger(n) || n < 1) return undefined;
+  return n;
 }
 
 function parseIsoInstant(raw: string): Date | null {
@@ -222,6 +240,33 @@ export async function getViralWrap(req: Request, res: Response): Promise<void> {
       return;
     }
     console.error('[TourismController] getViralWrap', e);
+    jsonFail(res, 'Unexpected error', 500);
+  }
+}
+
+/** `GET /api/tourism/bookings/merchant` — inbox for business owner (confirm/cancel via existing POST routes). */
+export async function getMerchantBookings(req: Request, res: Response): Promise<void> {
+  try {
+    const merchantUserId = readAuthUserId(req);
+    if (!merchantUserId) {
+      jsonFail(res, 'Unauthorized', 401);
+      return;
+    }
+
+    const status = readTourismBookingStatusQuery(req.query.status);
+    if (req.query.status != null && status === undefined) {
+      jsonFail(res, 'Invalid status filter', 400);
+      return;
+    }
+
+    const limit = readOptionalLimitQuery(req.query.limit);
+    const data = await listMerchantTourismBookings({
+      merchantUserId,
+      status,
+      limit,
+    });
+    jsonOk(res, data);
+  } catch {
     jsonFail(res, 'Unexpected error', 500);
   }
 }

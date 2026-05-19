@@ -21,6 +21,10 @@ tourismRouter.get('/wrap/:bookingId', authMiddleware, (req, res, next) => {
   void TourismController.getViralWrap(req, res).catch(next);
 });
 
+tourismRouter.get('/bookings/merchant', authMiddleware, (req, res, next) => {
+  void TourismController.getMerchantBookings(req, res).catch(next);
+});
+
 tourismRouter.post('/bookings/:bookingId/cancel', authMiddleware, (req, res, next) => {
   void TourismController.postCancelBooking(req, res).catch(next);
 });
