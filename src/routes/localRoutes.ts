@@ -22,3 +22,7 @@ localRouter.post('/merchant/requests/:id/reject', (req, res, next) => {
 localRouter.post('/requests', (req, res, next) => {
   void LocalRequestController.postCreateLocalServiceRequest(req, res).catch(next);
 });
+
+localRouter.post('/requests/:id/cancel', (req, res, next) => {
+  void LocalRequestController.postCancelUserLocalServiceRequest(req, res).catch(next);
+});
