@@ -13,6 +13,8 @@ import {
 import { confirmMerchantLocalServiceRequest } from '../services/local/localMerchantRequestConfirmService';
 import { rejectMerchantLocalServiceRequest } from '../services/local/localMerchantRequestRejectService';
 import { cancelUserLocalServiceRequest } from '../services/local/localUserRequestCancelService';
+import { cancelOpsLocalServiceRequest } from '../services/local/localOpsRequestCancelService';
+import { normalizeLocalOpsCancelReason } from '../services/local/localOpsRequestCancelPolicy';
 import { createLocalServiceRequest } from '../services/local/localRequestCreateService';
 import { listMerchantLocalServiceRequests } from '../services/local/localMerchantRequestInboxService';
 import { jsonFail, jsonOk } from '../utils/apiEnvelope';
@@ -182,6 +184,69 @@ export async function postCancelUserLocalServiceRequest(
         invalid_status: 'Request cannot be cancelled in its current status',
         invalid_wallet_mode: 'Cancel is not available for this wallet mode',
         invalid_wallet_phase: 'Cancel is not available while wallet phase is not NONE',
+      };
+      jsonFail(res, msgMap[result.reason], statusMap[result.reason]);
+      return;
+    }
+
+    jsonOk(res, result.request, 200);
+  } catch {
+    jsonFail(res, 'Internal server error', 500);
+  }
+}
+
+/** `POST /api/local/ops/requests/:id/cancel` — super-admin cancel (no wallet side effects). */
+export async function postOpsCancelLocalServiceRequest(
+  req: Request,
+  res: Response
+): Promise<void> {
+  try {
+    const adminUserId = readAuthUserId(req);
+    if (!adminUserId) {
+      jsonFail(res, 'Unauthorized', 401);
+      return;
+    }
+
+    const requestId = readString(req.params.id);
+    if (!requestId || requestId.trim().length === 0) {
+      jsonFail(res, 'Request id is required', 400);
+      return;
+    }
+
+    const body: unknown = req.body;
+    const cancelReasonRaw =
+      typeof body === 'object' && body !== null
+        ? readString((body as { cancelReason?: unknown }).cancelReason)
+        : null;
+
+    const reasonCheck = normalizeLocalOpsCancelReason(cancelReasonRaw ?? undefined);
+    if (typeof reasonCheck !== 'string') {
+      jsonFail(res, reasonCheck.message, 400);
+      return;
+    }
+
+    const result = await cancelOpsLocalServiceRequest({
+      adminUserId,
+      requestId: requestId.trim(),
+      cancelReason: reasonCheck,
+    });
+
+    if (!result.ok) {
+      const statusMap: Record<typeof result.reason, number> = {
+        invalid_input: 400,
+        request_not_found: 404,
+        forbidden: 403,
+        invalid_status: 409,
+        invalid_wallet_mode: 409,
+        invalid_wallet_phase: 409,
+      };
+      const msgMap: Record<typeof result.reason, string> = {
+        invalid_input: 'Invalid ops cancel request',
+        request_not_found: 'Request not found',
+        forbidden: 'Forbidden: super-admin role required',
+        invalid_status: 'Request cannot be ops-cancelled in its current status',
+        invalid_wallet_mode: 'Ops cancel is not available for this wallet mode',
+        invalid_wallet_phase: 'Ops cancel is not available while wallet phase is not NONE',
       };
       jsonFail(res, msgMap[result.reason], statusMap[result.reason]);
       return;
