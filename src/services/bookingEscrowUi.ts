@@ -1,8 +1,8 @@
 import { Alert } from 'react-native';
 
-const ESCROW_TITLE = 'Full price pre-authorization';
+const ESCROW_TITLE = 'Booking request acknowledgement';
 const ESCROW_MESSAGE =
-  'The full service price in VIG will be locked (moved to a booking hold) when you confirm. Completion via QR settles payment to the merchant; cancel/no-show applies a 20% penalty split between the merchant and platform, with the remaining 80% returned to your spendable balance.';
+  'If you continue, VIO Credits for the quoted total may be reserved for this request preview. This is not a guaranteed booking, card payment, or merchant acceptance. Holds and refunds apply only when enabled in your build—merchants must review before anything is final.';
 
 /**
  * Mandatory deposit acknowledgement before any `createBooking` REST call.

@@ -103,7 +103,7 @@ export function LocalFixerScreen() {
                   style={({ pressed }) => [styles.cta, pressed && { opacity: 0.92 }]}
                   className={applyWebStyles('kn-neon-b2b')}
                 >
-                  <Text style={styles.ctaText}>Thuê Ngay</Text>
+                  <Text style={styles.ctaText}>Gửi yêu cầu (pilot)</Text>
                   <Ionicons name="arrow-forward-circle" size={22} color="#1a1420" />
                 </Pressable>
               </View>
