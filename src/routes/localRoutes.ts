@@ -11,6 +11,10 @@ localRouter.get('/merchant/requests', (req, res, next) => {
   void LocalRequestController.getMerchantLocalServiceRequests(req, res).catch(next);
 });
 
+localRouter.post('/merchant/requests/:id/confirm', (req, res, next) => {
+  void LocalRequestController.postConfirmMerchantLocalServiceRequest(req, res).catch(next);
+});
+
 localRouter.post('/requests', (req, res, next) => {
   void LocalRequestController.postCreateLocalServiceRequest(req, res).catch(next);
 });
