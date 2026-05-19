@@ -1123,7 +1123,7 @@ export async function processTourismBookingPreview(
 }
 
 /**
- * Routes tourism checkout by `TOURISM_SETTLEMENT_MODE` (default: hold).
+ * Routes tourism checkout by `TOURISM_SETTLEMENT_MODE` (default: legacy_settle_on_book; hold is opt-in).
  */
 export async function processTourismBookingCheckout(
   input: TourismBookingSettlementInput
