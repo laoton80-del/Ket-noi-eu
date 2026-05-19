@@ -183,6 +183,7 @@ export function EmergencySOSScreen() {
           <View style={styles.header}>
             <Text style={styles.sos}>{t('emergencySos.screenTitle', { number: emergencyNumber })}</Text>
             <Text style={styles.headerSub}>{t('emergencySos.headerSubtitle')}</Text>
+            <Text style={styles.numberDisclaimer}>{t('emergencySos.numberDisclaimer')}</Text>
           </View>
 
           <View style={styles.disclaimerPanel}>
@@ -316,6 +317,13 @@ const styles = StyleSheet.create({
     fontSize: 14,
     marginTop: 6,
     lineHeight: 20,
+    fontFamily: FontFamily.medium,
+  },
+  numberDisclaimer: {
+    color: 'rgba(148, 163, 184, 0.95)',
+    fontSize: 12,
+    marginTop: 8,
+    lineHeight: 17,
     fontFamily: FontFamily.medium,
   },
   disclaimerPanel: {

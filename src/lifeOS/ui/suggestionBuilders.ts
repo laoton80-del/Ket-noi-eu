@@ -1,5 +1,4 @@
 import type { AutoCTA } from '../../services/selling';
-import { resolveCountryPack } from '../../config/countryPacks';
 
 type SuggestionInput = {
   showLowCreditBanner: boolean;
@@ -26,8 +25,9 @@ export function buildLifeOSSuggestionLines(input: SuggestionInput): string[] {
   if (input.showLegalWidget) {
     if (input.legalSellFirstLine) lines.push(input.legalSellFirstLine);
     if (typeof input.daysToExpiry === 'number' && input.daysToExpiry <= 7) {
-      const emergencyNumber = resolveCountryPack(input.userCountry).emergencyConfig.primaryNumber;
-      lines.push(`Nếu có tình huống khẩn cấp sức khỏe/an ninh: bấm SOS và gọi ${emergencyNumber} ngay.`);
+      lines.push(
+        'Nếu có tình huống khẩn cấp sức khỏe/an ninh: mở SOS để xem hướng dẫn và gọi trực tiếp số khẩn cấp địa phương (số hiển thị chỉ mang tính tham khảo theo quốc gia hồ sơ).'
+      );
     }
   }
   if (input.isLowBalance) lines.push('Số dư dưới 50 Credits: ưu tiên nạp trước khi gọi Leona hoặc gia hạn.');
