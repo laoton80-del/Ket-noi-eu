@@ -1,5 +1,6 @@
 import type { Request, Response } from 'express';
 import type { Prisma } from '@prisma/client';
+import { LocalServiceRequestStatus } from '@prisma/client';
 
 import {
   findDangerousLocalRequestCreateBodyKeys,
@@ -10,6 +11,7 @@ import {
   parseMetadataJson,
 } from '../services/local/localRequestCreateValidation';
 import { createLocalServiceRequest } from '../services/local/localRequestCreateService';
+import { listMerchantLocalServiceRequests } from '../services/local/localMerchantRequestInboxService';
 import { jsonFail, jsonOk } from '../utils/apiEnvelope';
 
 function readAuthUserId(req: Request): string | null {
@@ -19,6 +21,64 @@ function readAuthUserId(req: Request): string | null {
 
 function readString(value: unknown): string | null {
   return typeof value === 'string' ? value : null;
+}
+
+function readLocalServiceRequestStatusQuery(raw: unknown): LocalServiceRequestStatus | undefined {
+  if (typeof raw !== 'string' || raw.trim().length === 0) return undefined;
+  const value = raw.trim().toUpperCase();
+  if (value in LocalServiceRequestStatus) {
+    return LocalServiceRequestStatus[value as keyof typeof LocalServiceRequestStatus];
+  }
+  return undefined;
+}
+
+function readOptionalLimitQuery(raw: unknown): number | undefined {
+  if (raw == null) return undefined;
+  const n = typeof raw === 'string' ? Number(raw) : typeof raw === 'number' ? raw : NaN;
+  if (!Number.isFinite(n) || !Number.isInteger(n) || n < 1) return undefined;
+  return n;
+}
+
+function readOptionalSkipQuery(raw: unknown): number | undefined {
+  if (raw == null) return undefined;
+  const n = typeof raw === 'string' ? Number(raw) : typeof raw === 'number' ? raw : NaN;
+  if (!Number.isFinite(n) || !Number.isInteger(n) || n < 0) return undefined;
+  return n;
+}
+
+/** `GET /api/local/merchant/requests` — read-only inbox for business owner. */
+export async function getMerchantLocalServiceRequests(req: Request, res: Response): Promise<void> {
+  try {
+    const merchantUserId = readAuthUserId(req);
+    if (!merchantUserId) {
+      jsonFail(res, 'Unauthorized', 401);
+      return;
+    }
+
+    const status = readLocalServiceRequestStatusQuery(req.query.status);
+    if (req.query.status != null && status === undefined) {
+      jsonFail(res, 'Invalid status filter', 400);
+      return;
+    }
+
+    const businessIdRaw = readString(req.query.businessId);
+    const businessId =
+      businessIdRaw != null && businessIdRaw.trim().length > 0
+        ? businessIdRaw.trim()
+        : undefined;
+
+    const data = await listMerchantLocalServiceRequests({
+      merchantUserId,
+      status,
+      businessId,
+      limit: readOptionalLimitQuery(req.query.limit),
+      skip: readOptionalSkipQuery(req.query.skip),
+    });
+
+    jsonOk(res, data);
+  } catch {
+    jsonFail(res, 'Internal server error', 500);
+  }
 }
 
 export async function postCreateLocalServiceRequest(req: Request, res: Response): Promise<void> {
