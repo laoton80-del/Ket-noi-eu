@@ -606,6 +606,11 @@
       "copied": "Copied",
       "error": "Could not load VietQR. Check bank fields (6-digit BIN + account) and API."
     },
+    "tourismInbox": {
+      "title": "Tourism booking inbox",
+      "subtitle": "Review hold-mode tourism requests — confirm or release VIO Credits before settlement.",
+      "openA11y": "Open tourism booking inbox"
+    },
     "radar": {
       "title": "Live order radar",
       "openQueue": "Open full queue",
@@ -649,7 +654,38 @@
     "book_now": "Book now",
     "checkout": "Checkout",
     "view_details": "View details",
-    "checkoutDemo": "Featured stay request preview · VIO Credits"
+    "checkoutDemo": "Featured stay request preview · VIO Credits",
+    "merchantInbox": {
+      "title": "Tourism Booking Inbox",
+      "backA11y": "Go back to merchant dashboard",
+      "safetyBanner": "Merchant confirmation is required before provider settlement in hold mode.",
+      "empty": "No tourism booking requests yet.",
+      "errorLoad": "Unable to load merchant bookings. Please retry.",
+      "guestFallback": "Guest",
+      "guests": "guests",
+      "confirmedNote": "Merchant confirmed — VIO Credits settled per backend record.",
+      "providerSettledNote": "Provider settlement recorded on this booking.",
+      "cancelReason": "Reason: {{reason}}",
+      "filter": {
+        "all": "All",
+        "pending": "Pending review",
+        "confirmed": "Confirmed",
+        "cancelled": "Cancelled",
+        "completed": "Completed",
+        "legacy": "Legacy"
+      },
+      "confirmBtn": "Confirm",
+      "rejectBtn": "Decline",
+      "completeBtn": "Mark complete",
+      "cancelBtn": "Not now",
+      "confirmTitle": "Confirm this booking?",
+      "confirmBody": "This settles held VIO Credits to the provider per server rules. You cannot undo settlement from this screen.",
+      "rejectTitle": "Decline this request?",
+      "rejectBody": "Held VIO Credits will be released back to the guest wallet — not a post-settlement refund.",
+      "completeTitle": "Mark booking complete?",
+      "completeBody": "Marks fulfillment complete after confirmation. No additional settlement occurs here.",
+      "actionFailedTitle": "Action failed"
+    }
   },
   "checkout": {
     "title": "Pay with VIO Credits",

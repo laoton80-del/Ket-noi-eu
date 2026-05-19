@@ -118,6 +118,7 @@ import { KOLPartnerDashboard } from './src/screens/commercial/KOLPartnerDashboar
 import { DailyRewardScreen } from './src/screens/b2c/DailyRewardScreen';
 import { LoyaltyRewardsScreen } from './src/screens/b2c/LoyaltyRewardsScreen';
 import { InboundQueueScreen } from './src/screens/b2b/InboundQueueScreen';
+import { TourismMerchantInboxScreen } from './src/screens/b2b/TourismMerchantInboxScreen';
 import { LiveAiTeacherScreen } from './src/screens/academy/LiveAiTeacherScreen';
 import { DemoTourOverlay } from './src/components/onboarding/DemoTourOverlay';
 import { V7NavigationSurfaceProvider, useNavigationThemeForHub } from './src/context/V7NavigationSurfaceContext';
@@ -323,6 +324,7 @@ const rootLinking: LinkingOptions<RootStackParamList> = {
       AiReceptionistDemoSimulator: 'AiReceptionistDemoSimulator',
       AiReceptionistPilotRequest: 'AiReceptionistPilotRequest',
       WalletB2B: 'WalletB2B',
+      TourismMerchantInbox: 'TourismMerchantInbox',
       Orders: 'Orders',
       InternalTradeMarket: 'InternalTradeMarket',
       AdBidding: 'AdBidding',
@@ -588,6 +590,7 @@ function AppNavigationShell({
               <Stack.Screen name="AiReceptionistDemoSimulator" component={GatedAiReceptionistDemoSimulatorScreen} />
               <Stack.Screen name="AiReceptionistPilotRequest" component={GatedAiReceptionistPilotRequestScreen} />
               <Stack.Screen name="InboundQueue" component={GatedInboundQueueScreen} />
+              <Stack.Screen name="TourismMerchantInbox" component={GatedTourismMerchantInboxScreen} />
               <Stack.Screen name="SmartCalendar" component={GatedSmartCalendarScreen} />
               <Stack.Screen name="WalletB2B" component={GatedWalletB2BScreen} />
               <Stack.Screen name="Orders" component={GatedOrdersScreen} />
@@ -856,6 +859,14 @@ function GatedSmartCalendarScreen() {
   return (
     <B2BWorkspaceGate>
       <SmartCalendarScreen />
+    </B2BWorkspaceGate>
+  );
+}
+
+function GatedTourismMerchantInboxScreen() {
+  return (
+    <B2BWorkspaceGate>
+      <TourismMerchantInboxScreen />
     </B2BWorkspaceGate>
   );
 }

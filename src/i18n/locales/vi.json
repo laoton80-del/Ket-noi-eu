@@ -606,6 +606,11 @@
       "copied": "Đã chép",
       "error": "Không tải được VietQR. Kiểm tra BIN (6 số) + STK và API."
     },
+    "tourismInbox": {
+      "title": "Hộp thư đặt tour du lịch",
+      "subtitle": "Xem yêu cầu tour ở chế độ giữ — xác nhận hoặc trả VIO Credits trước quyết toán.",
+      "openA11y": "Mở hộp thư đặt tour du lịch"
+    },
     "radar": {
       "title": "Radar đơn trực tiếp",
       "openQueue": "Mở hàng đợi đầy đủ",
@@ -649,7 +654,38 @@
     "book_now": "Đặt ngay",
     "checkout": "Thanh toán",
     "checkoutDemo": "Xem trước lưu trú nổi bật · VIO Credits",
-    "view_details": "Xem chi tiết"
+    "view_details": "Xem chi tiết",
+    "merchantInbox": {
+      "title": "Hộp thư đặt tour",
+      "backA11y": "Quay lại dashboard merchant",
+      "safetyBanner": "Cần xác nhận merchant trước khi quyết toán cho nhà cung cấp ở chế độ giữ.",
+      "empty": "Chưa có yêu cầu đặt tour nào.",
+      "errorLoad": "Không tải được đơn merchant. Vui lòng thử lại.",
+      "guestFallback": "Khách",
+      "guests": "khách",
+      "confirmedNote": "Merchant đã xác nhận — VIO Credits quyết toán theo bản ghi máy chủ.",
+      "providerSettledNote": "Đã ghi nhận quyết toán nhà cung cấp cho đơn này.",
+      "cancelReason": "Lý do: {{reason}}",
+      "filter": {
+        "all": "Tất cả",
+        "pending": "Chờ duyệt",
+        "confirmed": "Đã xác nhận",
+        "cancelled": "Đã hủy",
+        "completed": "Hoàn tất",
+        "legacy": "Legacy"
+      },
+      "confirmBtn": "Xác nhận",
+      "rejectBtn": "Từ chối",
+      "completeBtn": "Đánh dấu hoàn tất",
+      "cancelBtn": "Để sau",
+      "confirmTitle": "Xác nhận đơn này?",
+      "confirmBody": "Quyết toán VIO Credits đang giữ cho nhà cung cấp theo quy tắc máy chủ. Không hoàn tác quyết toán từ màn này.",
+      "rejectTitle": "Từ chối yêu cầu này?",
+      "rejectBody": "VIO Credits đang giữ sẽ trả về ví khách — không phải hoàn tiền sau quyết toán.",
+      "completeTitle": "Đánh dấu hoàn tất?",
+      "completeBody": "Ghi nhận hoàn tất sau xác nhận. Không có quyết toán thêm tại đây.",
+      "actionFailedTitle": "Thao tác thất bại"
+    }
   },
   "checkout": {
     "title": "Thanh toán VIO Credits",
