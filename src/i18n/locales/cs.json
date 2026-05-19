@@ -114,7 +114,7 @@
       "vigFeeEstimated": "{{amount}} odhad poplatku",
       "decline": "Odmítnout",
       "accept": "Přijmout",
-      "acceptedMsg": "Přijato · automatická zpráva odeslána",
+      "acceptedMsg": "Ukázková odpověď obchodníka · zatím neodesláno živému merchantovi",
       "declinedMsg": "Odmítnuto · termín uvolněn"
     }
   },
@@ -398,7 +398,7 @@
     "trustShieldFee": "Poplatek VIONA Trust & AI Shield ({{pct}} %)",
     "total": "Celkem k úhradě VIO Credits",
     "vndCashHint": "Hotovost / místní bankovní aplikace (orientačně): ≈ {{vnd}} VND podle aktuálního kurzu — finální částka se uzamkne při platbě.",
-    "quoteLegal": "Částky počítají servery VIONA. Z peněženky se strhne zobrazený součet.",
+    "quoteLegal": "Částky počítají servery VIONA. VIO Credits se odečtou jen po potvrzení podporované placené akce. Náhled žádosti VIO Credits neodečítá. V režimu hold se držané VIO Credits uvolní při zrušení před vypořádáním.",
     "vioCreditsFootnote": "VIO Credits jsou v této náhledové verzi jednotky v aplikaci — ne hotovost, krypto ani k výběru.",
     "payNow": "Odeslat žádost · {{amount}} VIO Credits",
     "payA11y": "Odeslat žádost o rezervaci · {{total}} VIO Credits",
@@ -782,7 +782,7 @@
     "roleAdmin": "Command Center",
     "profileRoleGateTitle": "Upgradujte účet a získejte VIO Credits",
     "profileRoleGateBrokerBody": "Terénní brokeři získávají VIO Credits, když turisté rezervují u jejich obchodníků. Peněženka se aktualizuje automaticky — bez dalších aplikací.",
-    "profileRoleGateMerchantBody": "Obchodníci získávají VIO Credits z inbound rezervací. Propojte provozovnu, spravujte nabídku a mějte vše v jedné peněžence.",
+    "profileRoleGateMerchantBody": "Sledujte aktivitu VIO Credits a připravenost výplat merchantů v jednom workspace. Propojte provozovnu a nabídku — bankovní výplata není aktivní, dokud není production rail.",
     "profileRoleGateContinueBroker": "Pokračovat jako broker",
     "profileRoleGateContinueMerchant": "Pokračovat jako obchodník",
     "profileRoleGateLater": "Možná později",

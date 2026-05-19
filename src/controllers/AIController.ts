@@ -166,7 +166,7 @@ export async function postLegalScan(req: Request, res: Response): Promise<void> 
           data: { balanceVIG: { decrement: chargedVIG } },
         });
         if (dec.count !== 1) {
-          throw new LegalScanPaymentError(402, 'Insufficient VIG for AI legal scan');
+          throw new LegalScanPaymentError(402, 'Insufficient VIO Credits for AI legal scan');
         }
 
         await tx.transaction.create({

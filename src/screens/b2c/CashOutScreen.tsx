@@ -84,7 +84,7 @@ export function CashOutScreen() {
     setVoucherIssued(true);
     Alert.alert(
       'Voucher hệ sinh thái VIONA',
-      'Đã phát hành voucher dịch vụ B2B (mock). Tiền thưởng giữ trong nền tảng — không rút ra ngoài.'
+      'Đã phát hành voucher dịch vụ B2B (mock). Tiền thưởng giữ trong nền tảng — không chuyển ra ngoài hệ thống.'
     );
   };
 
@@ -121,17 +121,19 @@ export function CashOutScreen() {
           <Pressable onPress={() => navigation.goBack()} style={({ pressed }) => [styles.backBtn, pressed && { opacity: 0.85 }]}>
             <Ionicons name="chevron-back" size={24} color={theme.colors.text.primary} />
           </Pressable>
-          <Text style={styles.screenTitle}>Rút Tiền Thưởng (Cash-Out)</Text>
+          <Text style={styles.screenTitle}>Xem trước quyết toán thưởng</Text>
           <View style={styles.backSpacer} />
         </View>
 
         <View style={styles.hero} className={mergeWebClassNames('kn-glass', 'kn-neon-b2b')}>
           <Text style={styles.heroKicker}>FinTech · Kiểm soát thanh khoản và AI tuân thủ</Text>
           <Text style={styles.heroBody}>
-            Hai lựa chọn: quy đổi trong hệ sinh thái ({fmtLedger(VOUCHER_MIN_MAJOR_USD)}+) hoặc rút ngân hàng khi đạt {fmtLedger(BANK_RAIL_GOAL_MAJOR_USD)} (50.000 Xu).
+            Bản xem trước (demo): voucher hệ sinh thái từ {fmtLedger(VOUCHER_MIN_MAJOR_USD)}+ hoặc thiết lập kênh ngân hàng khi đạt{' '}
+            {fmtLedger(BANK_RAIL_GOAL_MAJOR_USD)} — không chuyển tiền thật trong build này.
           </Text>
           <Text style={styles.vigComplianceNote}>
-            VIO Credits / Xu ví nạp mua: tiện ích một chiều trong app — không phải tiền mặt, crypto hay rút được. Chỉ ví hoa hồng giới thiệu (nếu bật) mới có quy trình rút sau KYC và ngưỡng (pilot).
+            VIO Credits là hạn mức trong app — không phải tiền mặt, crypto hay số dư rút được. Màn hình này chỉ mô phỏng quy trình
+            quyết toán thưởng (pilot).
           </Text>
           <Text style={styles.aiScanNote}>Hệ thống AI tự động kiểm duyệt gian lận trong 60 giây.</Text>
         </View>
@@ -143,14 +145,14 @@ export function CashOutScreen() {
             <Text style={styles.walletFiat}>≈ {fmtLedger(purchaseMajorUsd)}</Text>
           </View>
           <View style={[styles.walletCard, styles.walletCardGold]} className={applyWebStyles('kn-glass')}>
-            <Text style={styles.walletLabel}>Ví Hoa Hồng (Có thể quy đổi)</Text>
+            <Text style={styles.walletLabel}>Ví Hoa Hồng (Xem trước quyết toán)</Text>
             <Text style={styles.walletXu}>{formatXuVi(MOCK_COMMISSION_WALLET_XU)}</Text>
             <Text style={styles.walletFiat}>≈ {fmtLedger(commissionMajorUsd)}</Text>
           </View>
         </View>
 
         <View style={styles.panel} className={mergeWebClassNames('kn-glass', 'kn-neon-b2b')}>
-          <Text style={styles.panelTitle}>Mục tiêu rút ngân hàng ({fmtLedger(BANK_RAIL_GOAL_MAJOR_USD)})</Text>
+          <Text style={styles.panelTitle}>Mục tiêu thiết lập kênh ngân hàng ({fmtLedger(BANK_RAIL_GOAL_MAJOR_USD)})</Text>
           <Text style={styles.panelSub}>
             Ngưỡng bắt buộc: {formatXuVi(BANK_RAIL_GOAL_XU)} = {fmtLedger(BANK_RAIL_GOAL_MAJOR_USD)} — bảo vệ quỹ và chi phí kênh ngân hàng.
           </Text>
@@ -159,10 +161,10 @@ export function CashOutScreen() {
           </View>
           <Text style={styles.thresholdHint}>
             {remainingMajorToBank <= 0
-              ? 'Bạn đã đạt ngưỡng rút tiền mặt về ngân hàng.'
+              ? 'Bạn đã đạt ngưỡng xem trước thiết lập kênh ngân hàng (demo).'
               : `Còn cần thêm ${fmtLedger(remainingMajorToBank)} (${formatXuVi(
                   Math.ceil(remainingMajorToBank / CREDIT_EXCHANGE_RATE_USD)
-                )}) để mở kênh ngân hàng.`}
+                )}) để mở xem trước kênh ngân hàng.`}
           </Text>
         </View>
 
@@ -195,9 +197,10 @@ export function CashOutScreen() {
           <View style={styles.optionBadgeGold}>
             <Text style={styles.optionBadgeTextDark}>OPTION 2 · HIGH TIER</Text>
           </View>
-          <Text style={styles.optionTitle}>Rút Tiền Mặt Về Ngân Hàng</Text>
+          <Text style={styles.optionTitle}>Thiết lập kênh ngân hàng (xem trước)</Text>
           <Text style={styles.optionBody}>
-            Chỉ mở khi ví hoa hồng ≥ {fmtLedger(BANK_RAIL_GOAL_MAJOR_USD)}. Sau đó AI quét gian lận; rủi ro thấp có thể tự động chuyển kênh ngân hàng (mock).
+            Chỉ mở khi ví hoa hồng ≥ {fmtLedger(BANK_RAIL_GOAL_MAJOR_USD)}. AI quét gian lận (mock) — không chuyển khoản thật trong build
+            này.
           </Text>
           {!bankUnlocked ? (
             <View style={styles.lockedRow}>
@@ -241,7 +244,7 @@ export function CashOutScreen() {
             ) : (
               <>
                 <Ionicons name="shield-checkmark-outline" size={22} color={theme.colors.onAccent} />
-                <Text style={styles.ctaText}>GỬI YÊU CẦU RÚT TIỀN</Text>
+                <Text style={styles.ctaText}>GỬI YÊU CẦU XEM TRƯỚC (MOCK)</Text>
               </>
             )}
           </Pressable>

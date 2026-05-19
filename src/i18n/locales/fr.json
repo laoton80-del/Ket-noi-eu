@@ -279,7 +279,7 @@
     "trustShieldFee": "Frais VIONA Trust & AI Shield ({{pct}} %)",
     "total": "Total en VIO Credits à payer",
     "vndCashHint": "Espèces / apps bancaires locales (indicatif) : ≈ {{vnd}} VND au taux en direct — montant final verrouillé au paiement.",
-    "quoteLegal": "Les montants sont calculés sur les serveurs VIONA. Votre portefeuille sera débité du total affiché.",
+    "quoteLegal": "Les montants sont calculés sur les serveurs VIONA. Les VIO Credits ne sont débités que lorsqu’une action payante prise en charge est confirmée. Les aperçus ne débitent pas de VIO Credits. En mode hold, les VIO Credits retenus sont libérés si la demande est annulée avant règlement.",
     "vioCreditsFootnote": "Les VIO Credits sont des unités fidélité in-app pour cette preview — pas d’espèces, crypto ni retrait.",
     "payNow": "Envoyer la demande · {{amount}} VIO Credits",
     "payA11y": "Envoyer la demande de réservation · {{total}} VIO Credits",

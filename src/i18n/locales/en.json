@@ -618,7 +618,7 @@
       "vigFeeEstimated": "{{amount}} est. fee",
       "decline": "Decline",
       "accept": "Accept",
-      "acceptedMsg": "Accepted · auto-message sent",
+      "acceptedMsg": "Demo merchant response · not sent to a live merchant yet",
       "declinedMsg": "Declined · slot reopened"
     },
     "operatingPreview": {
@@ -696,7 +696,7 @@
     "trustShieldFee": "VIONA Trust & AI Shield fee ({{pct}}%)",
     "total": "Total VIO Credits to pay",
     "vndCashHint": "Cash / local bank apps (indicative): ≈ {{vnd}} VND at live FX — final lock applies when you pay.",
-    "quoteLegal": "Amounts are computed on VIONA servers. Your wallet will be debited the total shown.",
+    "quoteLegal": "Amounts are computed on VIONA servers. VIO Credits may be deducted only when a supported paid action is confirmed. Preview-only requests do not deduct VIO Credits. For hold-mode bookings, held VIO Credits are released if the request is cancelled before settlement.",
     "vioCreditsFootnote": "VIO Credits are in-app loyalty units for this preview — not cash, crypto, or withdrawable.",
     "payNow": "Send request · {{amount}} VIO Credits",
     "payA11y": "Send booking request · {{total}} VIO Credits",
@@ -734,7 +734,7 @@
     "roleAdmin": "Command Center",
     "profileRoleGateTitle": "Upgrade your account to earn VIO Credits",
     "profileRoleGateBrokerBody": "Field brokers earn VIO Credits when tourists book through your merchants. Your wallet updates automatically — no extra apps.",
-    "profileRoleGateMerchantBody": "Merchants earn VIO Credits on inbound tourism bookings. Connect your shop, manage your menu, and get paid in one wallet.",
+    "profileRoleGateMerchantBody": "Track merchant VIO Credits activity and payout readiness in one workspace. Connect your shop and manage your menu — bank payout is not active until production rails are enabled.",
     "profileRoleGateContinueBroker": "Continue as Broker",
     "profileRoleGateContinueMerchant": "Continue as Merchant",
     "profileRoleGateLater": "Maybe later",
@@ -1207,7 +1207,13 @@
     "legalScannerLabel": "AI legal scan",
     "legalScannerA11y": "AI legal document scan",
     "classifiedsComposerTitle": "Post to classifieds",
-    "postNewListing": "New listing"
+    "postNewListing": "New listing",
+    "vipToggleLabel": "VIP boost (+{{amount}})",
+    "vipPostFailTitle": "Cannot publish VIP boost",
+    "vipPostFailBody": "Insufficient VIO Credits or a temporary service issue.",
+    "vipPostSuccessTitle": "Listing posted",
+    "vipPostSuccessVipBody": "VIP boost applied on this device preview. Paid listing placement only — not a booking deposit or merchant-held funds.",
+    "vipPostSuccessNormalBody": "Standard listing added on this device preview."
   },
   "b2bPaywallUi": {
     "kicker": "Business upgrade",

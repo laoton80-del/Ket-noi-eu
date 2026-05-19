@@ -58,8 +58,8 @@ export function LocalFixerScreen() {
           <View style={styles.hero} className={applyWebStyles('kn-glass kn-neon-b2b')}>
             <Text style={styles.heroTitle}>Chợ Thổ Địa tin cậy</Text>
             <Text style={styles.heroBody}>
-              Người Việt bản địa giúp bạn lái xe, phiên dịch, săn deal và xử lý giấy tờ — thanh toán & hợp đồng qua VIONA (xem trước / pilot)
-              (demo).
+              Người Việt bản địa giúp bạn lái xe, phiên dịch, săn deal và xử lý giấy tờ — gửi yêu cầu & báo giá qua VIONA
+              (xem trước / pilot · chưa thu phí).
             </Text>
           </View>
 

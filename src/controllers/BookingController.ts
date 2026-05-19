@@ -88,7 +88,8 @@ export async function postCreateBooking(req: Request, res: Response): Promise<vo
         service_not_found: 'Service not found',
         service_business_mismatch: 'Service does not belong to the given business',
         wallet_not_found: 'Wallet not found',
-        insufficient_preauth: 'Insufficient spendable VIG for full service price lock (100% pre-authorization)',
+        insufficient_preauth:
+          'Insufficient spendable VIO Credits for full service price lock (100% pre-authorization)',
         self_booking_forbidden: 'Self-booking is prohibited for integrity reasons.',
         concurrency_conflict: 'Booking transaction conflict; please retry.',
       };
@@ -161,7 +162,8 @@ export async function postCompleteBookingViaQr(req: Request, res: Response): Pro
         self_booking_forbidden: 'Self-booking is prohibited for integrity reasons.',
         wallet_not_found: 'Required wallet not found',
         insufficient_locked_funds: 'Booker locked balance is insufficient for this booking (funds mismatch)',
-        insufficient_merchant_funds: 'Merchant wallet has insufficient VIG for the platform commission',
+        insufficient_merchant_funds:
+          'Merchant wallet has insufficient VIO Credits for the platform commission',
         treasury_not_configured: 'Treasury wallet is not configured (VIGLOBAL_TREASURY_USER_ID)',
         concurrency_conflict: 'Completion transaction conflict; please retry.',
       };
