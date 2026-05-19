@@ -6,8 +6,10 @@ import {
   quoteTourismBooking,
 } from '../services/api/TourismHubService';
 import {
+  cancelTourismHeldBooking,
   completeTourismBookingAsMerchant,
   confirmTourismHeldBookingAsMerchant,
+  TourismBookingCancelError,
   TourismBookingCompletionError,
   TourismBookingConfirmError,
 } from '../services/WalletService';
@@ -27,6 +29,12 @@ function readPositiveInt(value: unknown): number | null {
   if (typeof value !== 'number' || !Number.isInteger(value)) return null;
   if (value < 1) return null;
   return value;
+}
+
+function readOptionalCancelReason(body: unknown): string | undefined {
+  if (body == null || typeof body !== 'object') return undefined;
+  const reason = (body as { cancelReason?: unknown }).cancelReason;
+  return typeof reason === 'string' ? reason : undefined;
 }
 
 function parseIsoInstant(raw: string): Date | null {
@@ -214,6 +222,52 @@ export async function getViralWrap(req: Request, res: Response): Promise<void> {
       return;
     }
     console.error('[TourismController] getViralWrap', e);
+    jsonFail(res, 'Unexpected error', 500);
+  }
+}
+
+/** `POST /api/tourism/bookings/:bookingId/cancel` — release held VIO Credits (merchant reject or tourist cancel). */
+export async function postCancelBooking(req: Request, res: Response): Promise<void> {
+  try {
+    const actorUserId = readAuthUserId(req);
+    if (!actorUserId) {
+      jsonFail(res, 'Unauthorized', 401);
+      return;
+    }
+
+    const bookingId = readString(req.params.bookingId);
+    if (!bookingId) {
+      jsonFail(res, 'bookingId is required', 400);
+      return;
+    }
+
+    try {
+      const out = await cancelTourismHeldBooking({
+        bookingId,
+        actorUserId,
+        cancelReason: readOptionalCancelReason(req.body),
+      });
+      jsonOk(res, out);
+    } catch (e) {
+      if (e instanceof TourismBookingCancelError) {
+        const statusMap: Record<TourismBookingCancelError['code'], number> = {
+          invalid_input: 400,
+          booking_not_found: 404,
+          forbidden: 403,
+          invalid_settlement_mode: 409,
+          invalid_status: 409,
+          not_held: 409,
+          inconsistent_state: 409,
+          wallet_not_found: 404,
+          insufficient_locked_funds: 409,
+          concurrency_conflict: 409,
+        };
+        jsonFail(res, e.message, statusMap[e.code]);
+        return;
+      }
+      throw e;
+    }
+  } catch {
     jsonFail(res, 'Unexpected error', 500);
   }
 }

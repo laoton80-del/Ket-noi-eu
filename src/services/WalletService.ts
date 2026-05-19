@@ -21,6 +21,7 @@ import {
 } from '@prisma/client';
 
 import { getTourismSettlementMode } from '../config/tourismSettlementMode';
+import { evaluateTourismHeldBookingCancelEligibility } from './tourism/tourismHeldBookingCancelEligibility';
 import { evaluateTourismHeldBookingConfirmEligibility } from './tourism/tourismHeldBookingConfirmEligibility';
 import { getPrisma } from '../lib/prisma';
 
@@ -1416,6 +1417,231 @@ export async function confirmTourismHeldBookingAsMerchant(
       throw new TourismBookingConfirmError(
         'concurrency_conflict',
         'Confirm settlement aborted due to serialization conflict; retry.'
+      );
+    }
+    throw e;
+  }
+}
+
+export type TourismBookingCancelErrorCode =
+  | 'invalid_input'
+  | 'booking_not_found'
+  | 'forbidden'
+  | 'invalid_settlement_mode'
+  | 'invalid_status'
+  | 'not_held'
+  | 'inconsistent_state'
+  | 'wallet_not_found'
+  | 'insufficient_locked_funds'
+  | 'concurrency_conflict';
+
+export class TourismBookingCancelError extends Error {
+  readonly code: TourismBookingCancelErrorCode;
+
+  constructor(code: TourismBookingCancelErrorCode, message: string) {
+    super(message);
+    this.name = 'TourismBookingCancelError';
+    this.code = code;
+  }
+}
+
+export type CancelTourismHeldBookingInput = Readonly<{
+  bookingId: string;
+  actorUserId: string;
+  /** Optional; defaults to PROVIDER_REJECTED (merchant) or USER_CANCEL (tourist). */
+  cancelReason?: string;
+}>;
+
+export type CancelTourismHeldBookingResult = Readonly<{
+  bookingId: string;
+  status: TourismBookingStatus;
+  cancelledAt: Date;
+  cancelReason: string;
+  idempotent?: boolean;
+}>;
+
+function normalizeTourismHeldCancelReason(
+  inputReason: string | undefined,
+  actorRole: 'merchant' | 'tourist'
+): string {
+  const trimmed = inputReason?.trim() ?? '';
+  if (trimmed.length > 0) {
+    return trimmed.slice(0, 200);
+  }
+  return actorRole === 'merchant' ? 'PROVIDER_REJECTED' : 'USER_CANCEL';
+}
+
+/**
+ * Cancel a held tourism booking before merchant confirm: release locked VIO Credits to tourist spendable balance.
+ *
+ * **Actors:** business owner (reject) or booking tourist (self-cancel). Ops/admin cancel is not implemented here
+ * (no established tourism ops route); use DB playbook until a dedicated ops endpoint exists.
+ */
+export async function cancelTourismHeldBooking(
+  input: CancelTourismHeldBookingInput
+): Promise<CancelTourismHeldBookingResult> {
+  const bookingId = input.bookingId.trim();
+  const actorUserId = input.actorUserId.trim();
+  if (bookingId.length === 0 || actorUserId.length === 0) {
+    throw new TourismBookingCancelError('invalid_input', 'bookingId and actorUserId are required');
+  }
+
+  try {
+    return await getPrisma().$transaction(
+      async (tx) => {
+        const booking = await tx.tourismBooking.findUnique({
+          where: { id: bookingId },
+          include: {
+            business: { select: { ownerId: true } },
+          },
+        });
+
+        if (!booking) {
+          throw new TourismBookingCancelError('booking_not_found', 'Tourism booking not found');
+        }
+
+        const isMerchant = booking.business.ownerId === actorUserId;
+        const isTourist = booking.userId === actorUserId;
+        if (!isMerchant && !isTourist) {
+          throw new TourismBookingCancelError(
+            'forbidden',
+            'Only the business owner or booking tourist can cancel this held booking'
+          );
+        }
+
+        const actorRole: 'merchant' | 'tourist' = isMerchant ? 'merchant' : 'tourist';
+        const cancelReason = normalizeTourismHeldCancelReason(input.cancelReason, actorRole);
+
+        const eligibility = evaluateTourismHeldBookingCancelEligibility(booking);
+        if (eligibility.kind === 'idempotent') {
+          return {
+            bookingId: booking.id,
+            status: TourismBookingStatus.CANCELLED,
+            cancelledAt: booking.cancelledAt ?? new Date(),
+            cancelReason: booking.cancelReason ?? cancelReason,
+            idempotent: true,
+          };
+        }
+        if (eligibility.kind === 'reject') {
+          const codeMap: Record<
+            typeof eligibility.code,
+            TourismBookingCancelErrorCode
+          > = {
+            invalid_settlement_mode: 'invalid_settlement_mode',
+            invalid_status: 'invalid_status',
+            not_held: 'not_held',
+            inconsistent_state: 'inconsistent_state',
+          };
+          throw new TourismBookingCancelError(codeMap[eligibility.code], eligibility.message);
+        }
+
+        const touristUserId = booking.userId;
+        const { totalPaidVIG } = booking;
+
+        const touristWallet = await tx.wallet.findUnique({ where: { userId: touristUserId } });
+        if (!touristWallet) {
+          throw new TourismBookingCancelError('wallet_not_found', 'Tourist wallet not found');
+        }
+
+        if (totalPaidVIG > VIG_EPSILON) {
+          const lockHold = await tx.transaction.findFirst({
+            where: {
+              walletId: touristWallet.id,
+              type: TxType.BOOKING_LOCK,
+              senderId: touristUserId,
+              receiverId: TOURISM_BOOKING_LOCK_PARTY,
+              amountVIG: { gte: totalPaidVIG - VIG_EPSILON, lte: totalPaidVIG + VIG_EPSILON },
+            },
+            select: { id: true },
+          });
+          if (!lockHold) {
+            throw new TourismBookingCancelError(
+              'not_held',
+              'No BOOKING_LOCK hold transaction found for this booking'
+            );
+          }
+
+          const lockDec = await tx.wallet.updateMany({
+            where: {
+              id: touristWallet.id,
+              lockedBalanceVIG: { gte: totalPaidVIG },
+            },
+            data: {
+              lockedBalanceVIG: { decrement: totalPaidVIG },
+              balanceVIG: { increment: totalPaidVIG },
+            },
+          });
+          if (lockDec.count !== 1) {
+            throw new TourismBookingCancelError(
+              'insufficient_locked_funds',
+              'Insufficient locked VIG to release held tourism booking'
+            );
+          }
+
+          await tx.transaction.create({
+            data: {
+              walletId: touristWallet.id,
+              senderId: TOURISM_BOOKING_LOCK_PARTY,
+              receiverId: touristUserId,
+              amountVIG: totalPaidVIG,
+              feeAmount: 0,
+              type: TxType.ESCROW_REFUND,
+              status: TxStatus.SUCCESS,
+            },
+          });
+        }
+
+        const cancelledAt = new Date();
+        const updated = await tx.tourismBooking.updateMany({
+          where: {
+            id: bookingId,
+            settlementMode: TourismSettlementMode.HOLD_ON_SUBMIT,
+            status: TourismBookingStatus.PENDING,
+            providerSettledAt: null,
+          },
+          data: {
+            status: TourismBookingStatus.CANCELLED,
+            cancelledAt,
+            cancelReason,
+          },
+        });
+
+        if (updated.count !== 1) {
+          const again = await tx.tourismBooking.findUnique({ where: { id: bookingId } });
+          if (again?.status === TourismBookingStatus.CANCELLED) {
+            return {
+              bookingId: again.id,
+              status: TourismBookingStatus.CANCELLED,
+              cancelledAt: again.cancelledAt ?? cancelledAt,
+              cancelReason: again.cancelReason ?? cancelReason,
+              idempotent: true,
+            };
+          }
+          throw new TourismBookingCancelError(
+            'concurrency_conflict',
+            'Cancel release aborted; booking state changed concurrently'
+          );
+        }
+
+        return {
+          bookingId,
+          status: TourismBookingStatus.CANCELLED,
+          cancelledAt,
+          cancelReason,
+        };
+      },
+      {
+        isolationLevel: Prisma.TransactionIsolationLevel.Serializable,
+        maxWait: 5000,
+        timeout: 20_000,
+      }
+    );
+  } catch (e) {
+    if (e instanceof TourismBookingCancelError) throw e;
+    if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2034') {
+      throw new TourismBookingCancelError(
+        'concurrency_conflict',
+        'Cancel release aborted due to serialization conflict; retry.'
       );
     }
     throw e;
