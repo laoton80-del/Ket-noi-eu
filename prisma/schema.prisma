@@ -101,6 +101,67 @@ enum TourismSettlementMode {
   PREVIEW_ONLY
 }
 
+/// Local universe service request lifecycle (merchant ACK before settlement when hold enabled).
+enum LocalServiceRequestStatus {
+  DRAFT
+  REQUESTED
+  MERCHANT_REVIEW
+  CONFIRMED
+  IN_PROGRESS
+  COMPLETED
+  REJECTED
+  USER_CANCELLED
+  OPS_CANCELLED
+  EXPIRED
+}
+
+/// Local request wallet policy — default REQUEST_ONLY_NO_CHARGE until finance enables hold pilot.
+enum LocalWalletMode {
+  NO_LEDGER_PREVIEW
+  REQUEST_ONLY_NO_CHARGE
+  HOLD_ON_SUBMIT
+  SETTLE_ON_CONFIRM
+  LEGACY_BOOKING_BRIDGE
+}
+
+/// Ledger phase snapshot for Local requests (parallel to tourism walletPhase derivation).
+enum LocalWalletPhase {
+  NONE
+  HELD
+  SETTLED
+  RELEASED
+  REFUNDED
+  LEGACY_BRIDGE
+  PREVIEW
+}
+
+enum LocalRequestSource {
+  LOCAL_SCREEN
+  FIXER_CHECKOUT
+  LEONA_ASSIST
+  LEGAL_SCAN
+  ADMIN_SEED
+  API_DIRECT
+}
+
+enum LocalServiceType {
+  SERVICE_MENU
+  FIXER_HIRE
+  GENERIC_REQUEST
+  LEGAL_INTAKE
+  CLASSIFIED_LEAD
+}
+
+enum LocalCancelReason {
+  USER_CANCEL
+  PROVIDER_REJECTED
+  EXPIRED
+  OPS_CANCEL
+  SYSTEM_SAFETY_RELEASE
+  INSUFFICIENT_FUNDS
+  OTHER
+}
+
 enum PayStatus {
   UNPAID
   DEPOSIT_PAID
@@ -187,6 +248,8 @@ model User {
   businesses         Business[]
   bookings           Booking[]
   tourismBookings    TourismBooking[]
+  localServiceRequestsRequested LocalServiceRequest[] @relation("LocalServiceRequestRequester")
+  localServiceRequestsAssigned  LocalServiceRequest[] @relation("LocalRequestAssignedProvider")
   secureVaults       SecureVault[]
   travelOrders       TravelOrder[]
   aiLogs             AILog[]
@@ -424,6 +487,7 @@ model Business {
   bookings         Booking[]
   tourismServices  TourismService[]
   tourismBookings  TourismBooking[]
+  localServiceRequests LocalServiceRequest[]
   brokerActivation MerchantBrokerActivation?
 
   @@index([ownerId])
@@ -439,6 +503,7 @@ model Service {
 
   business Business  @relation(fields: [businessId], references: [id], onDelete: Cascade)
   bookings Booking[]
+  localServiceRequests LocalServiceRequest[]
 
   @@index([businessId])
 }
@@ -470,9 +535,77 @@ model Booking {
   user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
   service  Service  @relation(fields: [serviceId], references: [id], onDelete: Restrict)
+  localServiceRequest LocalServiceRequest?
 
   @@index([userId, timeSlot])
   @@index([businessId, timeSlot])
+}
+
+/// Local universe merchant service request — durable SoT before commercial ACK/wallet packs.
+/// See docs/architecture/VIONA_LOCAL_REQUEST_SCHEMA_DESIGN_1.md
+model LocalServiceRequest {
+  id String @id @default(uuid())
+
+  requesterUserId String
+  businessId      String
+
+  serviceId            String?
+  fixerProfileKey      String?
+  assignedProviderUserId String?
+  legacyBookingId      String? @unique
+
+  serviceType LocalServiceType
+  category    BizType?
+  title       String
+  description String  @default("")
+  locationText String?
+  city         String?
+  countryCode  String?
+
+  scheduledStartAt DateTime?
+  scheduledEndAt   DateTime?
+  requestedAt      DateTime @default(now())
+  merchantReviewDeadlineAt DateTime?
+
+  confirmedAt       DateTime?
+  rejectedAt        DateTime?
+  cancelledAt       DateTime?
+  completedAt       DateTime?
+  expiredAt         DateTime?
+  providerSettledAt DateTime?
+
+  status     LocalServiceRequestStatus @default(REQUESTED)
+  walletMode LocalWalletMode           @default(REQUEST_ONLY_NO_CHARGE)
+  walletPhase LocalWalletPhase         @default(NONE)
+
+  totalVioCredits            Float?
+  heldVioCredits             Float?
+  releasedVioCredits         Float?
+  platformFeeVioCredits      Float?
+  providerEarningsVioCredits Float?
+
+  cancelReason    LocalCancelReason?
+  rejectReason    LocalCancelReason?
+  cancelledByRole String?
+  source          LocalRequestSource
+  metadata        Json?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  requester        User     @relation("LocalServiceRequestRequester", fields: [requesterUserId], references: [id], onDelete: Cascade)
+  business         Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  service          Service? @relation(fields: [serviceId], references: [id], onDelete: SetNull)
+  assignedProvider User?    @relation("LocalRequestAssignedProvider", fields: [assignedProviderUserId], references: [id], onDelete: SetNull)
+  legacyBooking    Booking? @relation(fields: [legacyBookingId], references: [id], onDelete: SetNull)
+
+  @@index([requesterUserId, createdAt])
+  @@index([businessId, status, createdAt])
+  @@index([businessId, merchantReviewDeadlineAt])
+  @@index([status, walletPhase])
+  @@index([status, merchantReviewDeadlineAt])
+  @@index([walletMode])
+  @@index([legacyBookingId])
 }
 
 /// Inbound tourism catalog line (hotels, tours, fixers, F&B) — distinct from legacy `Service` / `Booking`.
