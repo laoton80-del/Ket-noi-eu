@@ -15,6 +15,7 @@ import { mediaRouter } from './routes/mediaRoutes';
 import { payRouter } from './routes/payRoutes';
 import { userRouter } from './routes/userRoutes';
 import { brokerRouter } from './routes/brokerRoutes';
+import { localRouter } from './routes/localRoutes';
 import { tourismRouter } from './routes/tourismRoutes';
 import { walletRouter } from './routes/walletRoutes';
 import { aiReceptionistLeadRouter } from './routes/aiReceptionistLeadRoutes';
@@ -56,6 +57,7 @@ export function createApp(): express.Application {
   app.use('/api/pay', payRouter);
   app.use('/api/bookings', bookingRouter);
   app.use('/api/tourism', tourismRouter);
+  app.use('/api/local', localRouter);
   app.use('/api/broker', brokerRouter);
   app.use('/api/business', businessRouter);
   app.use('/api/ai', aiRouter);
