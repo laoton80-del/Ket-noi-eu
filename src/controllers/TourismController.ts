@@ -6,15 +6,18 @@ import {
   getTourismDiscover,
   quoteTourismBooking,
 } from '../services/api/TourismHubService';
+import { getPrisma } from '../lib/prisma';
 import { listMerchantTourismBookings } from '../services/tourism/tourismMerchantInboxService';
 import {
   cancelTourismHeldBooking,
   completeTourismBookingAsMerchant,
   confirmTourismHeldBookingAsMerchant,
+  opsCancelTourismHeldBookingAsAdmin,
   TourismBookingCancelError,
   TourismBookingCompletionError,
   TourismBookingConfirmError,
 } from '../services/WalletService';
+import { normalizeOpsTourismCancelReason } from '../services/tourism/tourismOpsCancelPolicy';
 import { generateUserTripSummary, ViralWrapError } from '../services/marketing/ViralWrapEngine';
 import { jsonFail, jsonOk } from '../utils/apiEnvelope';
 
@@ -37,6 +40,21 @@ function readOptionalCancelReason(body: unknown): string | undefined {
   if (body == null || typeof body !== 'object') return undefined;
   const reason = (body as { cancelReason?: unknown }).cancelReason;
   return typeof reason === 'string' ? reason : undefined;
+}
+
+function readRequiredCancelReason(body: unknown): string | null {
+  const reason = readOptionalCancelReason(body);
+  return reason != null && reason.trim().length > 0 ? reason : null;
+}
+
+function readOptionalOpsNote(body: unknown): string | undefined {
+  if (body == null || typeof body !== 'object') return undefined;
+  const note = (body as { note?: unknown }).note;
+  return typeof note === 'string' ? note.slice(0, 500) : undefined;
+}
+
+function logTourismOpsCancelAudit(payload: Readonly<Record<string, unknown>>): void {
+  console.info('[tourism_ops_cancel]', JSON.stringify(payload));
 }
 
 function readTourismBookingStatusQuery(raw: unknown): TourismBookingStatus | undefined {
@@ -271,6 +289,94 @@ export async function getMerchantBookings(req: Request, res: Response): Promise<
   }
 }
 
+/** `POST /api/tourism/bookings/:bookingId/ops-cancel` — super-admin release of held booking (pre-confirm only). */
+export async function postOpsCancelBooking(req: Request, res: Response): Promise<void> {
+  const adminUserId = readAuthUserId(req);
+  const bookingId = readString(req.params.bookingId);
+  const cancelReasonRaw = readRequiredCancelReason(req.body);
+
+  if (!adminUserId) {
+    jsonFail(res, 'Unauthorized', 401);
+    return;
+  }
+  if (!bookingId) {
+    jsonFail(res, 'bookingId is required', 400);
+    return;
+  }
+  if (!cancelReasonRaw) {
+    jsonFail(res, 'cancelReason is required (OPS_CANCEL or SYSTEM_SAFETY_RELEASE)', 400);
+    return;
+  }
+
+  const reasonCheck = normalizeOpsTourismCancelReason(cancelReasonRaw);
+  if (typeof reasonCheck !== 'string') {
+    jsonFail(res, reasonCheck.message, 400);
+    return;
+  }
+
+  const existing = await getPrisma().tourismBooking.findUnique({
+    where: { id: bookingId },
+    select: { status: true, settlementMode: true },
+  });
+
+  const auditBase = {
+    event: 'tourism_ops_cancel',
+    bookingId,
+    adminUserId,
+    cancelReason: reasonCheck,
+    note: readOptionalOpsNote(req.body),
+    previousStatus: existing?.status ?? null,
+    previousSettlementMode: existing?.settlementMode ?? null,
+    at: new Date().toISOString(),
+  };
+
+  try {
+    const out = await opsCancelTourismHeldBookingAsAdmin({
+      bookingId,
+      adminUserId,
+      cancelReason: reasonCheck,
+    });
+    logTourismOpsCancelAudit({
+      ...auditBase,
+      result: 'success',
+      status: out.status,
+      idempotent: out.idempotent ?? false,
+      cancelledAt: out.cancelledAt.toISOString(),
+    });
+    jsonOk(res, out);
+  } catch (e) {
+    if (e instanceof TourismBookingCancelError) {
+      logTourismOpsCancelAudit({
+        ...auditBase,
+        result: 'error',
+        errorCode: e.code,
+        errorMessage: e.message,
+      });
+      const statusMap: Record<TourismBookingCancelError['code'], number> = {
+        invalid_input: 400,
+        booking_not_found: 404,
+        forbidden: 403,
+        invalid_cancel_reason: 400,
+        invalid_settlement_mode: 409,
+        invalid_status: 409,
+        not_held: 409,
+        inconsistent_state: 409,
+        wallet_not_found: 404,
+        insufficient_locked_funds: 409,
+        concurrency_conflict: 409,
+      };
+      jsonFail(res, e.message, statusMap[e.code]);
+      return;
+    }
+    logTourismOpsCancelAudit({
+      ...auditBase,
+      result: 'error',
+      errorCode: 'unexpected',
+    });
+    jsonFail(res, 'Unexpected error', 500);
+  }
+}
+
 /** `POST /api/tourism/bookings/:bookingId/cancel` — release held VIO Credits (merchant reject or tourist cancel). */
 export async function postCancelBooking(req: Request, res: Response): Promise<void> {
   try {
@@ -299,6 +405,7 @@ export async function postCancelBooking(req: Request, res: Response): Promise<vo
           invalid_input: 400,
           booking_not_found: 404,
           forbidden: 403,
+          invalid_cancel_reason: 400,
           invalid_settlement_mode: 409,
           invalid_status: 409,
           not_held: 409,
