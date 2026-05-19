@@ -188,6 +188,8 @@ export type RootStackParamList = {
   }>;
   AssistantChat: undefined;
   InboundQueue: undefined;
+  /** Tourism hold-mode merchant booking inbox (B2B workspace). */
+  TourismMerchantInbox: undefined;
   SmartCalendar: undefined;
   /** B2B wholesale / AI order tickets (Voice AI function-calling mock). */
   Orders: undefined;
