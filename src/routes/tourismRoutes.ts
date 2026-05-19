@@ -21,6 +21,10 @@ tourismRouter.get('/wrap/:bookingId', authMiddleware, (req, res, next) => {
   void TourismController.getViralWrap(req, res).catch(next);
 });
 
+tourismRouter.post('/bookings/:bookingId/confirm', authMiddleware, (req, res, next) => {
+  void TourismController.postConfirmBooking(req, res).catch(next);
+});
+
 tourismRouter.post('/bookings/:bookingId/complete', authMiddleware, (req, res, next) => {
   void TourismController.postCompleteBooking(req, res).catch(next);
 });
