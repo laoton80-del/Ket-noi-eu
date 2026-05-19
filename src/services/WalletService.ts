@@ -23,6 +23,10 @@ import {
 import { getTourismSettlementMode } from '../config/tourismSettlementMode';
 import { evaluateTourismHeldBookingCancelEligibility } from './tourism/tourismHeldBookingCancelEligibility';
 import { evaluateTourismHeldBookingConfirmEligibility } from './tourism/tourismHeldBookingConfirmEligibility';
+import {
+  normalizeOpsTourismCancelReason,
+  type TourismOpsCancelReason,
+} from './tourism/tourismOpsCancelPolicy';
 import { getPrisma } from '../lib/prisma';
 
 import { estimateKngNetPlatformVigAfterAcquirer } from './api/StripeBillingService';
@@ -1427,6 +1431,7 @@ export type TourismBookingCancelErrorCode =
   | 'invalid_input'
   | 'booking_not_found'
   | 'forbidden'
+  | 'invalid_cancel_reason'
   | 'invalid_settlement_mode'
   | 'invalid_status'
   | 'not_held'
@@ -1434,6 +1439,8 @@ export type TourismBookingCancelErrorCode =
   | 'wallet_not_found'
   | 'insufficient_locked_funds'
   | 'concurrency_conflict';
+
+export type TourismHeldBookingCancelActorKind = 'merchant' | 'tourist' | 'ops_admin';
 
 export class TourismBookingCancelError extends Error {
   readonly code: TourismBookingCancelErrorCode;
@@ -1448,8 +1455,13 @@ export class TourismBookingCancelError extends Error {
 export type CancelTourismHeldBookingInput = Readonly<{
   bookingId: string;
   actorUserId: string;
-  /** Optional; defaults to PROVIDER_REJECTED (merchant) or USER_CANCEL (tourist). */
+  /** Optional; defaults to PROVIDER_REJECTED (merchant) or USER_CANCEL (tourist). Required for `ops_admin`. */
   cancelReason?: string;
+  /**
+   * When `ops_admin`, skips merchant/tourist ownership check and requires allowlisted `cancelReason`.
+   * When omitted, actor must be business owner or booking tourist.
+   */
+  actorKind?: TourismHeldBookingCancelActorKind;
 }>;
 
 export type CancelTourismHeldBookingResult = Readonly<{
@@ -1474,8 +1486,7 @@ function normalizeTourismHeldCancelReason(
 /**
  * Cancel a held tourism booking before merchant confirm: release locked VIO Credits to tourist spendable balance.
  *
- * **Actors:** business owner (reject) or booking tourist (self-cancel). Ops/admin cancel is not implemented here
- * (no established tourism ops route); use DB playbook until a dedicated ops endpoint exists.
+ * **Actors:** business owner (reject), booking tourist (self-cancel), or `ops_admin` (allowlisted reason).
  */
 export async function cancelTourismHeldBooking(
   input: CancelTourismHeldBookingInput
@@ -1484,6 +1495,16 @@ export async function cancelTourismHeldBooking(
   const actorUserId = input.actorUserId.trim();
   if (bookingId.length === 0 || actorUserId.length === 0) {
     throw new TourismBookingCancelError('invalid_input', 'bookingId and actorUserId are required');
+  }
+
+  const isOpsAdmin = input.actorKind === 'ops_admin';
+  let opsCancelReason: TourismOpsCancelReason | undefined;
+  if (isOpsAdmin) {
+    const normalized = normalizeOpsTourismCancelReason(input.cancelReason);
+    if (typeof normalized !== 'string') {
+      throw new TourismBookingCancelError(normalized.code, normalized.message);
+    }
+    opsCancelReason = normalized;
   }
 
   try {
@@ -1500,17 +1521,21 @@ export async function cancelTourismHeldBooking(
           throw new TourismBookingCancelError('booking_not_found', 'Tourism booking not found');
         }
 
-        const isMerchant = booking.business.ownerId === actorUserId;
-        const isTourist = booking.userId === actorUserId;
-        if (!isMerchant && !isTourist) {
-          throw new TourismBookingCancelError(
-            'forbidden',
-            'Only the business owner or booking tourist can cancel this held booking'
-          );
+        let cancelReason: string;
+        if (isOpsAdmin) {
+          cancelReason = opsCancelReason!;
+        } else {
+          const isMerchant = booking.business.ownerId === actorUserId;
+          const isTourist = booking.userId === actorUserId;
+          if (!isMerchant && !isTourist) {
+            throw new TourismBookingCancelError(
+              'forbidden',
+              'Only the business owner or booking tourist can cancel this held booking'
+            );
+          }
+          const actorRole: 'merchant' | 'tourist' = isMerchant ? 'merchant' : 'tourist';
+          cancelReason = normalizeTourismHeldCancelReason(input.cancelReason, actorRole);
         }
-
-        const actorRole: 'merchant' | 'tourist' = isMerchant ? 'merchant' : 'tourist';
-        const cancelReason = normalizeTourismHeldCancelReason(input.cancelReason, actorRole);
 
         const eligibility = evaluateTourismHeldBookingCancelEligibility(booking);
         if (eligibility.kind === 'idempotent') {
@@ -1646,6 +1671,22 @@ export async function cancelTourismHeldBooking(
     }
     throw e;
   }
+}
+
+/** Super-admin ops cancel — same release path as merchant/tourist cancel; allowlisted reason required. */
+export async function opsCancelTourismHeldBookingAsAdmin(
+  input: Readonly<{
+    bookingId: string;
+    adminUserId: string;
+    cancelReason: string;
+  }>
+): Promise<CancelTourismHeldBookingResult> {
+  return cancelTourismHeldBooking({
+    bookingId: input.bookingId,
+    actorUserId: input.adminUserId,
+    cancelReason: input.cancelReason,
+    actorKind: 'ops_admin',
+  });
 }
 
 /**

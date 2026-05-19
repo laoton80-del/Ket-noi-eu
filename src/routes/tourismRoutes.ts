@@ -2,6 +2,7 @@ import { Router } from 'express';
 
 import * as TourismController from '../controllers/TourismController';
 import { authMiddleware } from '../middleware/authMiddleware';
+import { superAdminMiddleware } from '../middleware/superAdminMiddleware';
 
 export const tourismRouter = Router();
 
@@ -28,6 +29,15 @@ tourismRouter.get('/bookings/merchant', authMiddleware, (req, res, next) => {
 tourismRouter.post('/bookings/:bookingId/cancel', authMiddleware, (req, res, next) => {
   void TourismController.postCancelBooking(req, res).catch(next);
 });
+
+tourismRouter.post(
+  '/bookings/:bookingId/ops-cancel',
+  authMiddleware,
+  superAdminMiddleware,
+  (req, res, next) => {
+    void TourismController.postOpsCancelBooking(req, res).catch(next);
+  }
+);
 
 tourismRouter.post('/bookings/:bookingId/confirm', authMiddleware, (req, res, next) => {
   void TourismController.postConfirmBooking(req, res).catch(next);
