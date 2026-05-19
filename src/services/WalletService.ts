@@ -10,8 +10,17 @@
  * rails and FX risk must be delegated to **Stripe** (or another PSP) at top-up / payout boundaries only.
  */
 
-import { Prisma, PrismaClient, Role, TourismBookingStatus, TxStatus, TxType } from '@prisma/client';
+import {
+  Prisma,
+  PrismaClient,
+  Role,
+  TourismBookingStatus,
+  TourismSettlementMode,
+  TxStatus,
+  TxType,
+} from '@prisma/client';
 
+import { getTourismSettlementMode } from '../config/tourismSettlementMode';
 import { getPrisma } from '../lib/prisma';
 
 import { estimateKngNetPlatformVigAfterAcquirer } from './api/StripeBillingService';
@@ -505,6 +514,9 @@ export class TourismBookingSettlementError extends Error {
 
 const MS_PER_DAY_TOURISM = 86_400_000;
 
+/** Ledger sentinel: tourism hold moved from spendable into `lockedBalanceVIG`. */
+const TOURISM_BOOKING_LOCK_PARTY = 'ViGlobalTourismBookingLock';
+
 function tourismStayNights(start: Date, end: Date): number {
   const ms = end.getTime() - start.getTime();
   if (!Number.isFinite(ms) || ms <= 0) return 0;
@@ -726,6 +738,7 @@ export async function processTourismBookingSettlement(
           });
         }
 
+        const providerSettledAt = fxLockedAt ?? new Date();
         const row = await tx.tourismBooking.create({
           data: {
             userId: touristUserId,
@@ -742,6 +755,9 @@ export async function processTourismBookingSettlement(
             lockedEurVndRate,
             fxLockedAt,
             offRampVndHint,
+            createdAt: providerSettledAt,
+            providerSettledAt,
+            settlementMode: TourismSettlementMode.LEGACY_SETTLE_ON_BOOK,
           },
         });
 
@@ -779,6 +795,347 @@ export async function processTourismBookingSettlement(
     }
     throw e;
   }
+}
+
+type TourismBookingCheckoutResult = Readonly<{
+  id: string;
+  userId: string;
+  businessId: string;
+  serviceId: string;
+  startDate: Date;
+  endDate: Date;
+  guestCount: number;
+  status: TourismBookingStatus;
+  providerFeeVIG: number;
+  touristFeeVIG: number;
+  totalPaidVIG: number;
+  netProviderEarningsVIG: number;
+}>;
+
+function mapTourismBookingRow(row: {
+  id: string;
+  userId: string;
+  businessId: string;
+  serviceId: string;
+  startDate: Date;
+  endDate: Date;
+  guestCount: number;
+  status: TourismBookingStatus;
+  providerFeeVIG: number;
+  touristFeeVIG: number;
+  totalPaidVIG: number;
+  netProviderEarningsVIG: number;
+}): TourismBookingCheckoutResult {
+  return {
+    id: row.id,
+    userId: row.userId,
+    businessId: row.businessId,
+    serviceId: row.serviceId,
+    startDate: row.startDate,
+    endDate: row.endDate,
+    guestCount: row.guestCount,
+    status: row.status,
+    providerFeeVIG: row.providerFeeVIG,
+    touristFeeVIG: row.touristFeeVIG,
+    totalPaidVIG: row.totalPaidVIG,
+    netProviderEarningsVIG: row.netProviderEarningsVIG,
+  };
+}
+
+/**
+ * Hold-only tourism checkout: move `totalPaidVIG` from spendable to locked; no provider/treasury payout.
+ */
+export async function processTourismBookingHold(
+  input: TourismBookingSettlementInput
+): Promise<TourismBookingCheckoutResult> {
+  const touristUserId = input.touristUserId.trim();
+  const businessId = input.businessId.trim();
+  const serviceId = input.serviceId.trim();
+  if (
+    touristUserId.length === 0 ||
+    businessId.length === 0 ||
+    serviceId.length === 0 ||
+    !Number.isInteger(input.guestCount) ||
+    input.guestCount < 1 ||
+    input.guestCount > 50
+  ) {
+    throw new TourismBookingSettlementError('invalid_input', 'Invalid tourism settlement payload');
+  }
+  if (!(input.startDate instanceof Date) || Number.isNaN(input.startDate.getTime())) {
+    throw new TourismBookingSettlementError('invalid_input', 'Invalid startDate');
+  }
+  if (!(input.endDate instanceof Date) || Number.isNaN(input.endDate.getTime())) {
+    throw new TourismBookingSettlementError('invalid_input', 'Invalid endDate');
+  }
+  if (input.endDate.getTime() <= input.startDate.getTime()) {
+    throw new TourismBookingSettlementError('invalid_input', 'endDate must be after startDate');
+  }
+
+  try {
+    return await getPrisma().$transaction(
+      async (tx) => {
+        const business = await tx.business.findUnique({ where: { id: businessId } });
+        if (!business) {
+          throw new TourismBookingSettlementError('business_not_found', 'Business not found');
+        }
+
+        const providerUserId = business.ownerId;
+        if (touristUserId === providerUserId) {
+          throw new TourismBookingSettlementError(
+            'self_booking_forbidden',
+            'Self-booking is not allowed'
+          );
+        }
+
+        const service = await tx.tourismService.findFirst({
+          where: { id: serviceId, businessId },
+        });
+        if (!service) {
+          const orphan = await tx.tourismService.findUnique({ where: { id: serviceId } });
+          if (!orphan) {
+            throw new TourismBookingSettlementError('service_not_found', 'Tourism service not found');
+          }
+          throw new TourismBookingSettlementError(
+            'service_business_mismatch',
+            'Service does not belong to this business'
+          );
+        }
+
+        const unitPrice = Number.isFinite(service.priceVIG) ? service.priceVIG : 0;
+        const nights = tourismStayNights(input.startDate, input.endDate);
+        const amounts = computeTourismDualSplitAmounts(unitPrice, input.guestCount, nights);
+
+        const { providerFeeVIG, touristFeeVIG, netProviderEarningsVIG, totalPaidVIG } = amounts;
+
+        let lockedEurVndRate: number | undefined;
+        let fxLockedAt: Date | undefined;
+        let offRampVndHint: number | undefined;
+        const fxIn = input.fxLock;
+        if (
+          fxIn &&
+          Number.isFinite(fxIn.eurVndRate) &&
+          fxIn.eurVndRate > 0 &&
+          fxIn.lockedAt instanceof Date &&
+          !Number.isNaN(fxIn.lockedAt.getTime())
+        ) {
+          lockedEurVndRate = fxIn.eurVndRate;
+          fxLockedAt = fxIn.lockedAt;
+          offRampVndHint = Math.round(totalPaidVIG * fxIn.eurVndRate);
+        }
+
+        const holdAt = fxLockedAt ?? new Date();
+
+        const touristWallet = await tx.wallet.findUnique({ where: { userId: touristUserId } });
+        if (!touristWallet) {
+          throw new TourismBookingSettlementError('wallet_not_found', 'Tourist wallet not found');
+        }
+
+        if (totalPaidVIG > VIG_EPSILON) {
+          const lock = await tx.wallet.updateMany({
+            where: {
+              id: touristWallet.id,
+              balanceVIG: { gte: totalPaidVIG },
+            },
+            data: {
+              balanceVIG: { decrement: totalPaidVIG },
+              lockedBalanceVIG: { increment: totalPaidVIG },
+            },
+          });
+          if (lock.count !== 1) {
+            throw new TourismBookingSettlementError(
+              'insufficient_funds',
+              'Insufficient spendable VIG for tourism booking hold'
+            );
+          }
+
+          await tx.transaction.create({
+            data: {
+              walletId: touristWallet.id,
+              senderId: touristUserId,
+              receiverId: TOURISM_BOOKING_LOCK_PARTY,
+              amountVIG: totalPaidVIG,
+              feeAmount: 0,
+              type: TxType.BOOKING_LOCK,
+              status: TxStatus.SUCCESS,
+            },
+          });
+        }
+
+        const row = await tx.tourismBooking.create({
+          data: {
+            userId: touristUserId,
+            businessId,
+            serviceId,
+            startDate: input.startDate,
+            endDate: input.endDate,
+            guestCount: input.guestCount,
+            status: TourismBookingStatus.PENDING,
+            providerFeeVIG,
+            touristFeeVIG,
+            totalPaidVIG,
+            netProviderEarningsVIG,
+            lockedEurVndRate,
+            fxLockedAt,
+            offRampVndHint,
+            createdAt: holdAt,
+            providerSettledAt: null,
+            confirmedAt: null,
+            settlementMode: TourismSettlementMode.HOLD_ON_SUBMIT,
+          },
+        });
+
+        return mapTourismBookingRow(row);
+      },
+      {
+        isolationLevel: Prisma.TransactionIsolationLevel.Serializable,
+        maxWait: 5000,
+        timeout: 20_000,
+      }
+    );
+  } catch (e) {
+    if (e instanceof TourismBookingSettlementError) throw e;
+    if (e instanceof WalletServiceError && e.code === 'invalid_amount') {
+      throw new TourismBookingSettlementError('invalid_input', e.message);
+    }
+    if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2034') {
+      throw new TourismBookingSettlementError(
+        'concurrency_conflict',
+        'Tourism hold aborted due to serialization conflict; retry.'
+      );
+    }
+    throw e;
+  }
+}
+
+/**
+ * Preview-only tourism row — pricing snapshot without wallet mutation.
+ */
+export async function processTourismBookingPreview(
+  input: TourismBookingSettlementInput
+): Promise<TourismBookingCheckoutResult> {
+  const touristUserId = input.touristUserId.trim();
+  const businessId = input.businessId.trim();
+  const serviceId = input.serviceId.trim();
+  if (
+    touristUserId.length === 0 ||
+    businessId.length === 0 ||
+    serviceId.length === 0 ||
+    !Number.isInteger(input.guestCount) ||
+    input.guestCount < 1 ||
+    input.guestCount > 50
+  ) {
+    throw new TourismBookingSettlementError('invalid_input', 'Invalid tourism settlement payload');
+  }
+  if (!(input.startDate instanceof Date) || Number.isNaN(input.startDate.getTime())) {
+    throw new TourismBookingSettlementError('invalid_input', 'Invalid startDate');
+  }
+  if (!(input.endDate instanceof Date) || Number.isNaN(input.endDate.getTime())) {
+    throw new TourismBookingSettlementError('invalid_input', 'Invalid endDate');
+  }
+  if (input.endDate.getTime() <= input.startDate.getTime()) {
+    throw new TourismBookingSettlementError('invalid_input', 'endDate must be after startDate');
+  }
+
+  try {
+    return await getPrisma().$transaction(async (tx) => {
+      const business = await tx.business.findUnique({ where: { id: businessId } });
+      if (!business) {
+        throw new TourismBookingSettlementError('business_not_found', 'Business not found');
+      }
+      if (touristUserId === business.ownerId) {
+        throw new TourismBookingSettlementError('self_booking_forbidden', 'Self-booking is not allowed');
+      }
+
+      const service = await tx.tourismService.findFirst({
+        where: { id: serviceId, businessId },
+      });
+      if (!service) {
+        const orphan = await tx.tourismService.findUnique({ where: { id: serviceId } });
+        if (!orphan) {
+          throw new TourismBookingSettlementError('service_not_found', 'Tourism service not found');
+        }
+        throw new TourismBookingSettlementError(
+          'service_business_mismatch',
+          'Service does not belong to this business'
+        );
+      }
+
+      const unitPrice = Number.isFinite(service.priceVIG) ? service.priceVIG : 0;
+      const nights = tourismStayNights(input.startDate, input.endDate);
+      const amounts = computeTourismDualSplitAmounts(unitPrice, input.guestCount, nights);
+      const { providerFeeVIG, touristFeeVIG, netProviderEarningsVIG, totalPaidVIG } = amounts;
+
+      let lockedEurVndRate: number | undefined;
+      let fxLockedAt: Date | undefined;
+      let offRampVndHint: number | undefined;
+      const fxIn = input.fxLock;
+      if (
+        fxIn &&
+        Number.isFinite(fxIn.eurVndRate) &&
+        fxIn.eurVndRate > 0 &&
+        fxIn.lockedAt instanceof Date &&
+        !Number.isNaN(fxIn.lockedAt.getTime())
+      ) {
+        lockedEurVndRate = fxIn.eurVndRate;
+        fxLockedAt = fxIn.lockedAt;
+        offRampVndHint = Math.round(totalPaidVIG * fxIn.eurVndRate);
+      }
+
+      const previewAt = fxLockedAt ?? new Date();
+      const row = await tx.tourismBooking.create({
+        data: {
+          userId: touristUserId,
+          businessId,
+          serviceId,
+          startDate: input.startDate,
+          endDate: input.endDate,
+          guestCount: input.guestCount,
+          status: TourismBookingStatus.PENDING,
+          providerFeeVIG,
+          touristFeeVIG,
+          totalPaidVIG,
+          netProviderEarningsVIG,
+          lockedEurVndRate,
+          fxLockedAt,
+          offRampVndHint,
+          createdAt: previewAt,
+          providerSettledAt: null,
+          confirmedAt: null,
+          settlementMode: TourismSettlementMode.PREVIEW_ONLY,
+        },
+      });
+
+      return mapTourismBookingRow(row);
+    });
+  } catch (e) {
+    if (e instanceof TourismBookingSettlementError) throw e;
+    if (e instanceof WalletServiceError && e.code === 'invalid_amount') {
+      throw new TourismBookingSettlementError('invalid_input', e.message);
+    }
+    if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2034') {
+      throw new TourismBookingSettlementError(
+        'concurrency_conflict',
+        'Tourism preview booking aborted due to serialization conflict; retry.'
+      );
+    }
+    throw e;
+  }
+}
+
+/**
+ * Routes tourism checkout by `TOURISM_SETTLEMENT_MODE` (default: hold).
+ */
+export async function processTourismBookingCheckout(
+  input: TourismBookingSettlementInput
+): Promise<TourismBookingCheckoutResult> {
+  const mode = getTourismSettlementMode();
+  if (mode === 'legacy_settle_on_book') {
+    return processTourismBookingSettlement(input);
+  }
+  if (mode === 'preview_only') {
+    return processTourismBookingPreview(input);
+  }
+  return processTourismBookingHold(input);
 }
 
 /**

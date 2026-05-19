@@ -5,7 +5,7 @@ import { getPrisma } from '../../lib/prisma';
 import { fetchEurVndSpot } from '../payment/VigVndFxService';
 import {
   computeTourismDualSplitAmounts,
-  processTourismBookingSettlement,
+  processTourismBookingCheckout,
   resolveTouristTrustFeeRate,
   TourismBookingSettlementError,
   type TourismBookingSettlementErrorCode,
@@ -246,7 +246,7 @@ function tourismStayNightsQuote(start: Date, end: Date): number {
 }
 
 /**
- * Authoritative pricing quote — same math as `processTourismBookingSettlement`, no wallet mutation.
+ * Authoritative pricing quote — same math as tourism checkout settlement, no wallet mutation.
  */
 export async function quoteTourismBooking(
   input: TourismQuoteInput
@@ -340,7 +340,7 @@ export async function createTourismBooking(
   try {
     const spot = await fetchEurVndSpot();
     const lockedAt = new Date();
-    const row = await processTourismBookingSettlement({
+    const row = await processTourismBookingCheckout({
       touristUserId: userId,
       businessId,
       serviceId,
