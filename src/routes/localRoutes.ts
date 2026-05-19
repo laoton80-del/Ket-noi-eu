@@ -7,6 +7,10 @@ export const localRouter = Router();
 
 localRouter.use(authMiddleware);
 
+localRouter.get('/merchant/requests', (req, res, next) => {
+  void LocalRequestController.getMerchantLocalServiceRequests(req, res).catch(next);
+});
+
 localRouter.post('/requests', (req, res, next) => {
   void LocalRequestController.postCreateLocalServiceRequest(req, res).catch(next);
 });
