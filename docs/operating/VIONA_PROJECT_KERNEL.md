@@ -182,6 +182,7 @@ Known Local lifecycle milestones:
 🟢 User cancel API merged + pushed  
 🟢 Ops/admin cancel API merged + pushed  
 🟢 Request expiry worker design merged + pushed  
+🟢 Request expiry worker dry-run merged + pushed  
 
 Current Local mode:
 REQUEST_ONLY_NO_CHARGE
@@ -206,17 +207,16 @@ Current Local safety:
 
 Current correct Local backend order:
 
-1. Expiry worker dry-run
-2. Expiry worker apply — no wallet
-3. Audit log design
-4. Audit log runtime
-5. Rate limit / abuse guard for Local mutations
-6. Merchant inbox UI minimum
-7. User request status UI minimum
-8. Safe i18n copy pass
-9. AI Local Copilot read-only
-10. Human-confirmed AI actions
-11. Wallet hold/debit/release only after CFO-approved finance pack
+1. Expiry worker apply — no wallet
+2. Audit log design
+3. Audit log runtime
+4. Rate limit / abuse guard for Local mutations
+5. Merchant inbox UI minimum
+6. User request status UI minimum
+7. Safe i18n copy pass
+8. AI Local Copilot read-only
+9. Human-confirmed AI actions
+10. Wallet hold/debit/release only after CFO-approved finance pack
 
 Do not jump to wallet or AI autonomous actions before audit/safety gates.
 
