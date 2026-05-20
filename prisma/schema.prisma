@@ -162,6 +162,31 @@ enum LocalCancelReason {
   OTHER
 }
 
+/// Append-only Local request lifecycle audit event type (AUDIT_RUNTIME_1).
+enum LocalServiceRequestAuditEventType {
+  REQUEST_CREATED
+  MERCHANT_REVIEW_STARTED
+  MERCHANT_CONFIRMED
+  MERCHANT_REJECTED
+  USER_CANCELLED
+  OPS_CANCELLED
+  REQUEST_EXPIRED
+  EXPIRY_DRY_RUN_IDENTIFIED
+  EXPIRY_APPLY_ATTEMPTED
+  EXPIRY_APPLY_SKIPPED_RACE_CONDITION
+  EXPIRY_APPLY_COMPLETED
+}
+
+/// Actor attribution for Local request audit rows (human, ops, system, future AI).
+enum LocalServiceRequestAuditActorType {
+  REQUESTER
+  MERCHANT
+  OPS
+  SYSTEM
+  AI_COPILOT_READ_ONLY
+  AI_ACTION_ASSISTANT_FUTURE
+}
+
 enum PayStatus {
   UNPAID
   DEPOSIT_PAID
@@ -598,6 +623,7 @@ model LocalServiceRequest {
   service          Service? @relation(fields: [serviceId], references: [id], onDelete: SetNull)
   assignedProvider User?    @relation("LocalRequestAssignedProvider", fields: [assignedProviderUserId], references: [id], onDelete: SetNull)
   legacyBooking    Booking? @relation(fields: [legacyBookingId], references: [id], onDelete: SetNull)
+  auditEvents      LocalServiceRequestAuditEvent[]
 
   @@index([requesterUserId, createdAt])
   @@index([businessId, status, createdAt])
@@ -606,6 +632,44 @@ model LocalServiceRequest {
   @@index([status, merchantReviewDeadlineAt])
   @@index([walletMode])
   @@index([legacyBookingId])
+}
+
+/// Append-only audit trail for LocalServiceRequest lifecycle (no wallet mutation from writer).
+/// See docs/architecture/VIONA_LOCAL_REQUEST_AUDIT_LOG_DESIGN_1.md
+model LocalServiceRequestAuditEvent {
+  id        String @id @default(uuid())
+  requestId String
+
+  eventType LocalServiceRequestAuditEventType
+  actorType LocalServiceRequestAuditActorType
+
+  actorUserId String?
+  businessId  String?
+
+  fromStatus LocalServiceRequestStatus?
+  toStatus   LocalServiceRequestStatus?
+
+  reason      String?
+  safeMessage String?
+  metadataJson Json?
+
+  noWalletAction               Boolean @default(true)
+  walletPhaseSnapshot          LocalWalletPhase?
+  walletModeSnapshot           LocalWalletMode?
+  requestOnlyNoChargeSnapshot  Boolean @default(true)
+
+  idempotencyKey String?
+  runId          String?
+
+  createdAt DateTime @default(now())
+
+  request LocalServiceRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
+
+  @@index([requestId, createdAt])
+  @@index([eventType, createdAt])
+  @@index([actorType, createdAt])
+  @@index([runId])
+  @@index([idempotencyKey])
 }
 
 /// Inbound tourism catalog line (hotels, tours, fixers, F&B) — distinct from legacy `Service` / `Booking`.
