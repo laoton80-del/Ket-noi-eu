@@ -1,5 +1,9 @@
+import { randomUUID } from 'node:crypto';
+
 import {
   LocalCancelReason,
+  LocalServiceRequestAuditActorType,
+  LocalServiceRequestAuditEventType,
   LocalServiceRequestStatus,
   LocalWalletMode,
   LocalWalletPhase,
@@ -7,10 +11,17 @@ import {
 } from '@prisma/client';
 
 import {
+  assertLocalRequestAuditWritten,
+  createLocalRequestAuditEvent,
+} from './localRequestAuditEventService';
+import {
   LOCAL_REQUEST_EXPIRY_DRY_RUN_NO_WALLET_ACTION,
   LOCAL_REQUEST_EXPIRY_DRY_RUN_REASON,
   runLocalRequestExpiryDryRun,
 } from './localRequestExpiryDryRunService';
+
+const REQUEST_EXPIRED_AUDIT_SAFE_MESSAGE =
+  'Request expired because the merchant did not respond in time.' as const;
 
 const EXPIRABLE_STATUSES: readonly LocalServiceRequestStatus[] = [
   LocalServiceRequestStatus.REQUESTED,
@@ -28,6 +39,7 @@ export type LocalRequestExpiryApplyResult = Readonly<{
   dryRun: false;
   applied: true;
   now: string;
+  runId: string;
   attemptedCount: number;
   expiredCount: number;
   requestIds: readonly string[];
@@ -52,33 +64,52 @@ export async function applyLocalRequestExpiry(
     maxRows: options.maxRows,
   });
 
+  const runId = randomUUID();
   const expiredIds: string[] = [];
 
-  for (const requestId of candidates.requestIds) {
-    const updated = await prisma.localServiceRequest.updateMany({
-      where: {
-        id: requestId,
-        status: { in: [...EXPIRABLE_STATUSES] },
-        walletMode: LocalWalletMode.REQUEST_ONLY_NO_CHARGE,
-        walletPhase: LocalWalletPhase.NONE,
-        merchantReviewDeadlineAt: { not: null, lt: now },
-      },
-      data: {
-        status: LocalServiceRequestStatus.EXPIRED,
-        expiredAt: now,
-        cancelReason: LocalCancelReason.EXPIRED,
-      },
-    });
+  for (const item of candidates.items) {
+    await prisma.$transaction(async (tx) => {
+      const updated = await tx.localServiceRequest.updateMany({
+        where: {
+          id: item.requestId,
+          status: { in: [...EXPIRABLE_STATUSES] },
+          walletMode: LocalWalletMode.REQUEST_ONLY_NO_CHARGE,
+          walletPhase: LocalWalletPhase.NONE,
+          merchantReviewDeadlineAt: { not: null, lt: now },
+        },
+        data: {
+          status: LocalServiceRequestStatus.EXPIRED,
+          expiredAt: now,
+          cancelReason: LocalCancelReason.EXPIRED,
+        },
+      });
 
-    if (updated.count === 1) {
-      expiredIds.push(requestId);
-    }
+      if (updated.count === 1) {
+        assertLocalRequestAuditWritten(
+          await createLocalRequestAuditEvent({
+            db: tx,
+            requestId: item.requestId,
+            eventType: LocalServiceRequestAuditEventType.REQUEST_EXPIRED,
+            actorType: LocalServiceRequestAuditActorType.SYSTEM,
+            actorUserId: null,
+            businessId: item.businessId,
+            fromStatus: item.status,
+            toStatus: LocalServiceRequestStatus.EXPIRED,
+            reason: LOCAL_REQUEST_EXPIRY_DRY_RUN_REASON,
+            safeMessage: REQUEST_EXPIRED_AUDIT_SAFE_MESSAGE,
+            runId,
+          })
+        );
+        expiredIds.push(item.requestId);
+      }
+    });
   }
 
   return {
     dryRun: false,
     applied: true,
     now: now.toISOString(),
+    runId,
     attemptedCount: candidates.eligibleCount,
     expiredCount: expiredIds.length,
     requestIds: expiredIds,
