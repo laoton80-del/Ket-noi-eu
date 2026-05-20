@@ -15,6 +15,7 @@ import { rejectMerchantLocalServiceRequest } from '../services/local/localMercha
 import { cancelUserLocalServiceRequest } from '../services/local/localUserRequestCancelService';
 import { cancelOpsLocalServiceRequest } from '../services/local/localOpsRequestCancelService';
 import { readLocalRequestAuditEventsForOps } from '../services/local/localRequestAuditReadService';
+import { readLocalUserRequestTimeline } from '../services/local/localUserRequestTimelineService';
 import { normalizeLocalOpsCancelReason } from '../services/local/localOpsRequestCancelPolicy';
 import { createLocalServiceRequest } from '../services/local/localRequestCreateService';
 import { listMerchantLocalServiceRequests } from '../services/local/localMerchantRequestInboxService';
@@ -191,6 +192,45 @@ export async function postCancelUserLocalServiceRequest(
     }
 
     jsonOk(res, result.request, 200);
+  } catch {
+    jsonFail(res, 'Internal server error', 500);
+  }
+}
+
+/** `GET /api/local/requests/:id/timeline` — requester read-only safe public timeline. */
+export async function getUserLocalRequestTimeline(req: Request, res: Response): Promise<void> {
+  try {
+    const requesterUserId = readAuthUserId(req);
+    if (!requesterUserId) {
+      jsonFail(res, 'Unauthorized', 401);
+      return;
+    }
+
+    const requestId = readString(req.params.id);
+    if (!requestId || requestId.trim().length === 0) {
+      jsonFail(res, 'Request id is required', 400);
+      return;
+    }
+
+    const result = await readLocalUserRequestTimeline({
+      requesterUserId,
+      requestId: requestId.trim(),
+    });
+
+    if (!result.ok) {
+      const statusMap: Record<typeof result.reason, number> = {
+        invalid_input: 400,
+        request_not_found: 404,
+      };
+      const msgMap: Record<typeof result.reason, string> = {
+        invalid_input: 'Invalid timeline request',
+        request_not_found: 'Request not found',
+      };
+      jsonFail(res, msgMap[result.reason], statusMap[result.reason]);
+      return;
+    }
+
+    jsonOk(res, result.data, 200);
   } catch {
     jsonFail(res, 'Internal server error', 500);
   }
