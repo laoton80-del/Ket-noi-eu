@@ -1,5 +1,7 @@
 import {
   LocalCancelReason,
+  LocalServiceRequestAuditActorType,
+  LocalServiceRequestAuditEventType,
   LocalServiceRequestStatus,
   LocalWalletMode,
   LocalWalletPhase,
@@ -8,6 +10,11 @@ import {
 import { getPrisma } from '../../lib/prisma';
 
 import { evaluateLocalMerchantRequestRejectEligibility } from './localMerchantRequestRejectEligibility';
+import {
+  assertLocalRequestAuditWritten,
+  buildRequestAuditSafeMessage,
+  createLocalRequestAuditEvent,
+} from './localRequestAuditEventService';
 
 export const LOCAL_MERCHANT_REQUEST_REJECT_SUCCESS_MESSAGE =
   'Request rejected. No payment was captured.' as const;
@@ -117,16 +124,39 @@ export async function rejectMerchantLocalServiceRequest(
   }
 
   const rejectedAt = existing.rejectedAt ?? new Date();
+  const fromStatus = existing.status;
+  const rejectReason = existing.rejectReason ?? LocalCancelReason.PROVIDER_REJECTED;
 
-  const row = await prisma.localServiceRequest.update({
-    where: { id: requestId },
-    data: {
-      status: LocalServiceRequestStatus.REJECTED,
-      rejectedAt,
-      rejectReason: existing.rejectReason ?? LocalCancelReason.PROVIDER_REJECTED,
-      walletMode: LocalWalletMode.REQUEST_ONLY_NO_CHARGE,
-      walletPhase: LocalWalletPhase.NONE,
-    },
+  const row = await prisma.$transaction(async (tx) => {
+    const updated = await tx.localServiceRequest.update({
+      where: { id: requestId },
+      data: {
+        status: LocalServiceRequestStatus.REJECTED,
+        rejectedAt,
+        rejectReason,
+        walletMode: LocalWalletMode.REQUEST_ONLY_NO_CHARGE,
+        walletPhase: LocalWalletPhase.NONE,
+      },
+    });
+
+    assertLocalRequestAuditWritten(
+      await createLocalRequestAuditEvent({
+        db: tx,
+        requestId,
+        eventType: LocalServiceRequestAuditEventType.MERCHANT_REJECTED,
+        actorType: LocalServiceRequestAuditActorType.MERCHANT,
+        actorUserId: merchantUserId,
+        businessId: existing.businessId,
+        fromStatus,
+        toStatus: LocalServiceRequestStatus.REJECTED,
+        reason: rejectReason,
+        safeMessage: buildRequestAuditSafeMessage(
+          LocalServiceRequestAuditEventType.MERCHANT_REJECTED
+        ),
+      })
+    );
+
+    return updated;
   });
 
   return { ok: true, request: toRejectDto(row) };

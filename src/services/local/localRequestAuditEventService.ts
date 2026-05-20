@@ -9,6 +9,12 @@ import {
 
 import { getPrisma } from '../../lib/prisma';
 
+/** Prisma client or transaction scope for audit writes (lifecycle $transaction). */
+export type LocalRequestAuditDb = Pick<
+  Prisma.TransactionClient,
+  'localServiceRequest' | 'localServiceRequestAuditEvent'
+>;
+
 /** Keys that must never appear in audit `metadataJson` (PII / secrets). */
 export const UNSAFE_LOCAL_REQUEST_AUDIT_METADATA_KEYS = [
   'email',
@@ -49,6 +55,7 @@ export type CreateLocalRequestAuditEventInput = Readonly<{
   metadataJson?: Prisma.InputJsonValue | Record<string, unknown> | null;
   idempotencyKey?: string | null;
   runId?: string | null;
+  db?: LocalRequestAuditDb;
 }>;
 
 export type CreateLocalRequestAuditEventFailure =
@@ -86,10 +93,11 @@ export function buildRequestAuditSafeMessage(
     case LocalServiceRequestAuditEventType.MERCHANT_CONFIRMED:
       return 'Merchant confirmed your request. No payment has been captured.';
     case LocalServiceRequestAuditEventType.MERCHANT_REJECTED:
-      return 'Request declined by merchant.';
+      return 'Merchant rejected your request. No payment was captured.';
     case LocalServiceRequestAuditEventType.USER_CANCELLED:
-    case LocalServiceRequestAuditEventType.OPS_CANCELLED:
       return 'Request cancelled. No payment was captured.';
+    case LocalServiceRequestAuditEventType.OPS_CANCELLED:
+      return 'Request cancelled by ops. No payment was captured.';
     case LocalServiceRequestAuditEventType.REQUEST_EXPIRED:
       return 'Request expired because the merchant did not respond in time. No payment was captured.';
     default:
@@ -123,6 +131,12 @@ function findUnsafeMetadataKeys(value: unknown): string[] {
 function safeMessageImpliesPayment(message: string): boolean {
   const normalized = message.trim().toLowerCase();
   if (normalized.length === 0) return false;
+  if (
+    normalized.includes('no payment has been captured') ||
+    normalized.includes('no payment was captured')
+  ) {
+    return false;
+  }
   return UNSAFE_SAFE_MESSAGE_SUBSTRINGS.some((s) => normalized.includes(s));
 }
 
@@ -157,7 +171,7 @@ export async function createLocalRequestAuditEvent(
     }
   }
 
-  const prisma = getPrisma();
+  const prisma = input.db ?? getPrisma();
   const request = await prisma.localServiceRequest.findUnique({
     where: { id: requestId },
     select: { id: true },
@@ -205,4 +219,13 @@ export async function createLocalRequestAuditEvent(
       requestOnlyNoChargeSnapshot: row.requestOnlyNoChargeSnapshot,
     },
   };
+}
+
+/** Throws when audit write fails — use inside lifecycle `$transaction` to roll back mutation. */
+export function assertLocalRequestAuditWritten(
+  result: CreateLocalRequestAuditEventResult
+): asserts result is Extract<CreateLocalRequestAuditEventResult, { ok: true }> {
+  if (!result.ok) {
+    throw new Error(`local_request_audit_write_failed:${result.reason}`);
+  }
 }

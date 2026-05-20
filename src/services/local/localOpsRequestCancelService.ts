@@ -1,5 +1,7 @@
 import {
   LocalCancelReason,
+  LocalServiceRequestAuditActorType,
+  LocalServiceRequestAuditEventType,
   LocalServiceRequestStatus,
   LocalWalletMode,
   LocalWalletPhase,
@@ -9,6 +11,11 @@ import {
 import { getPrisma } from '../../lib/prisma';
 
 import { evaluateLocalOpsRequestCancelEligibility } from './localOpsRequestCancelEligibility';
+import {
+  assertLocalRequestAuditWritten,
+  buildRequestAuditSafeMessage,
+  createLocalRequestAuditEvent,
+} from './localRequestAuditEventService';
 import {
   localOpsCancelReasonToEnum,
   type LocalOpsCancelReasonCode,
@@ -138,17 +145,39 @@ export async function cancelOpsLocalServiceRequest(
 
   const cancelledAt = existing.cancelledAt ?? new Date();
   const cancelReason = localOpsCancelReasonToEnum(input.cancelReason);
+  const fromStatus = existing.status;
 
-  const row = await prisma.localServiceRequest.update({
-    where: { id: requestId },
-    data: {
-      status: LocalServiceRequestStatus.OPS_CANCELLED,
-      cancelledAt,
-      cancelReason,
-      cancelledByRole: existing.cancelledByRole ?? 'OPS',
-      walletMode: LocalWalletMode.REQUEST_ONLY_NO_CHARGE,
-      walletPhase: LocalWalletPhase.NONE,
-    },
+  const row = await prisma.$transaction(async (tx) => {
+    const updated = await tx.localServiceRequest.update({
+      where: { id: requestId },
+      data: {
+        status: LocalServiceRequestStatus.OPS_CANCELLED,
+        cancelledAt,
+        cancelReason,
+        cancelledByRole: existing.cancelledByRole ?? 'OPS',
+        walletMode: LocalWalletMode.REQUEST_ONLY_NO_CHARGE,
+        walletPhase: LocalWalletPhase.NONE,
+      },
+    });
+
+    assertLocalRequestAuditWritten(
+      await createLocalRequestAuditEvent({
+        db: tx,
+        requestId,
+        eventType: LocalServiceRequestAuditEventType.OPS_CANCELLED,
+        actorType: LocalServiceRequestAuditActorType.OPS,
+        actorUserId: adminUserId,
+        businessId: existing.businessId,
+        fromStatus,
+        toStatus: LocalServiceRequestStatus.OPS_CANCELLED,
+        reason: cancelReason,
+        safeMessage: buildRequestAuditSafeMessage(
+          LocalServiceRequestAuditEventType.OPS_CANCELLED
+        ),
+      })
+    );
+
+    return updated;
   });
 
   return { ok: true, request: toOpsCancelDto(row) };
