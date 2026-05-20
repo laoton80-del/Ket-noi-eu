@@ -28,6 +28,14 @@ localRouter.post('/requests/:id/cancel', (req, res, next) => {
   void LocalRequestController.postCancelUserLocalServiceRequest(req, res).catch(next);
 });
 
+localRouter.get(
+  '/ops/requests/:id/audit-events',
+  superAdminMiddleware,
+  (req, res, next) => {
+    void LocalRequestController.getOpsLocalRequestAuditEvents(req, res).catch(next);
+  }
+);
+
 localRouter.post(
   '/ops/requests/:id/cancel',
   superAdminMiddleware,

@@ -14,6 +14,7 @@ import { confirmMerchantLocalServiceRequest } from '../services/local/localMerch
 import { rejectMerchantLocalServiceRequest } from '../services/local/localMerchantRequestRejectService';
 import { cancelUserLocalServiceRequest } from '../services/local/localUserRequestCancelService';
 import { cancelOpsLocalServiceRequest } from '../services/local/localOpsRequestCancelService';
+import { readLocalRequestAuditEventsForOps } from '../services/local/localRequestAuditReadService';
 import { normalizeLocalOpsCancelReason } from '../services/local/localOpsRequestCancelPolicy';
 import { createLocalServiceRequest } from '../services/local/localRequestCreateService';
 import { listMerchantLocalServiceRequests } from '../services/local/localMerchantRequestInboxService';
@@ -190,6 +191,47 @@ export async function postCancelUserLocalServiceRequest(
     }
 
     jsonOk(res, result.request, 200);
+  } catch {
+    jsonFail(res, 'Internal server error', 500);
+  }
+}
+
+/** `GET /api/local/ops/requests/:id/audit-events` — ops read-only audit trail (no mutations). */
+export async function getOpsLocalRequestAuditEvents(req: Request, res: Response): Promise<void> {
+  try {
+    const adminUserId = readAuthUserId(req);
+    if (!adminUserId) {
+      jsonFail(res, 'Unauthorized', 401);
+      return;
+    }
+
+    const requestId = readString(req.params.id);
+    if (!requestId || requestId.trim().length === 0) {
+      jsonFail(res, 'Request id is required', 400);
+      return;
+    }
+
+    const result = await readLocalRequestAuditEventsForOps({
+      adminUserId,
+      requestId: requestId.trim(),
+    });
+
+    if (!result.ok) {
+      const statusMap: Record<typeof result.reason, number> = {
+        invalid_input: 400,
+        forbidden: 403,
+        request_not_found: 404,
+      };
+      const msgMap: Record<typeof result.reason, string> = {
+        invalid_input: 'Invalid audit read request',
+        forbidden: 'Forbidden: super-admin role required',
+        request_not_found: 'Request not found',
+      };
+      jsonFail(res, msgMap[result.reason], statusMap[result.reason]);
+      return;
+    }
+
+    jsonOk(res, result.data, 200);
   } catch {
     jsonFail(res, 'Internal server error', 500);
   }
