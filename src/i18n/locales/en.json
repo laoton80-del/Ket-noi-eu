@@ -718,6 +718,36 @@
       "rejectTitle": "Reject this request?",
       "rejectBody": "Declines the request on the server. No payment is captured and no wallet action occurs.",
       "actionFailedTitle": "Action failed"
+    },
+    "userRequestStatus": {
+      "title": "My Local requests",
+      "backA11y": "Go back to Local",
+      "safetyBanner": "Request-only / no-charge. No payment has been captured. Status updates come from the server only.",
+      "empty": "You have no Local service requests yet.",
+      "errorLoad": "Unable to load your requests. Please retry.",
+      "retry": "Retry",
+      "reviewPendingNote": "Waiting for merchant review",
+      "confirmedNote": "Confirmed does not mean paid — request-only / no-charge.",
+      "cancelHint": "You can cancel while the request is still open.",
+      "filter": {
+        "all": "All",
+        "pending": "Pending",
+        "confirmed": "Confirmed",
+        "active": "In progress",
+        "completed": "Completed",
+        "closed": "Closed"
+      },
+      "showTimeline": "View timeline",
+      "hideTimeline": "Hide timeline",
+      "timelineTitle": "Request timeline",
+      "cancelBtn": "Cancel request",
+      "cancelDismiss": "Not now",
+      "cancelTitle": "Cancel this request?",
+      "cancelBody": "Cancels your open request on the server. No payment is captured and no wallet action occurs.",
+      "actionFailedTitle": "Action failed",
+      "localTileTitle": "My requests",
+      "localTileSub": "Track request-only leads — no payment captured on this lane.",
+      "localTileA11y": "Open my Local service requests"
     }
   },
   "checkout": {

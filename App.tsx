@@ -74,6 +74,7 @@ import { TravelHospitalityScreen } from './src/screens/b2c/TravelHospitalityScre
 import { FlightSearchScreen } from './src/screens/b2c/travel/FlightSearchScreen';
 import { TravelHubScreen } from './src/screens/b2c/travel/TravelHubScreen';
 import { LocalScreen } from './src/screens/b2c/LocalScreen';
+import { LocalUserRequestStatusScreen } from './src/screens/b2c/LocalUserRequestStatusScreen';
 import { VietnamHubScreen } from './src/screens/b2c/VietnamHubScreen';
 import { TourismBookingConfirmedScreen } from './src/screens/b2c/TourismBookingConfirmedScreen';
 import { ViralWrapScreen } from './src/screens/b2c/ViralWrapScreen';
@@ -339,6 +340,7 @@ const rootLinking: LinkingOptions<RootStackParamList> = {
       TravelCompanion: 'TravelCompanion',
       TravelHub: 'TravelHub',
       LocalUniverse: 'LocalUniverse',
+      LocalUserRequestStatus: 'LocalUserRequestStatus',
       VietnamHub: 'VietnamHub',
       TourismCheckout: 'tourism-checkout',
       TourismBookingConfirmed: 'tourism-booking-confirmed',
@@ -456,6 +458,15 @@ function AppNavigationShell({
               <Stack.Screen
                 name="LocalUniverse"
                 component={LocalScreen}
+                options={{
+                  headerShown: false,
+                  animation: 'slide_from_right',
+                  fullScreenGestureEnabled: true,
+                }}
+              />
+              <Stack.Screen
+                name="LocalUserRequestStatus"
+                component={LocalUserRequestStatusScreen}
                 options={{
                   headerShown: false,
                   animation: 'slide_from_right',
