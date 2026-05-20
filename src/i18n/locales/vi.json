@@ -611,6 +611,11 @@
       "subtitle": "Xem yêu cầu tour ở chế độ giữ — xác nhận hoặc trả VIO Credits trước quyết toán.",
       "openA11y": "Mở hộp thư đặt tour du lịch"
     },
+    "localInbox": {
+      "title": "Hộp thư yêu cầu Local",
+      "subtitle": "Xem lead Local chỉ-yêu-cầu — không thu thanh toán trên luồng này.",
+      "openA11y": "Mở hộp thư yêu cầu Local"
+    },
     "radar": {
       "title": "Radar đơn trực tiếp",
       "openQueue": "Mở hàng đợi đầy đủ",
@@ -684,6 +689,34 @@
       "rejectBody": "VIO Credits đang giữ sẽ trả về ví khách — không phải hoàn tiền sau quyết toán.",
       "completeTitle": "Đánh dấu hoàn tất?",
       "completeBody": "Ghi nhận hoàn tất sau xác nhận. Không có quyết toán thêm tại đây.",
+      "actionFailedTitle": "Thao tác thất bại"
+    }
+  },
+  "local": {
+    "merchantInbox": {
+      "title": "Hộp thư yêu cầu Local",
+      "backA11y": "Quay lại dashboard merchant",
+      "safetyBanner": "Luồng chỉ-yêu-cầu / không thu phí. Chưa thu thanh toán. Xác nhận hoặc từ chối chỉ cập nhật trạng thái yêu cầu.",
+      "empty": "Chưa có yêu cầu dịch vụ Local.",
+      "errorLoad": "Không tải được yêu cầu Local. Vui lòng thử lại.",
+      "requesterFallback": "Người gửi yêu cầu",
+      "reviewPendingNote": "Đang chờ merchant xem xét",
+      "confirmedNote": "Đã xác nhận không có nghĩa đã thanh toán — chỉ-yêu-cầu / không thu phí.",
+      "filter": {
+        "all": "Tất cả",
+        "pending": "Chờ duyệt",
+        "confirmed": "Đã xác nhận",
+        "active": "Đang xử lý",
+        "completed": "Hoàn tất",
+        "closed": "Đã đóng"
+      },
+      "confirmBtn": "Xác nhận",
+      "rejectBtn": "Từ chối",
+      "cancelBtn": "Để sau",
+      "confirmTitle": "Xác nhận yêu cầu này?",
+      "confirmBody": "Đánh dấu đã xác nhận trên máy chủ. Không thu thanh toán và không có thao tác ví.",
+      "rejectTitle": "Từ chối yêu cầu này?",
+      "rejectBody": "Từ chối yêu cầu trên máy chủ. Không thu thanh toán và không có thao tác ví.",
       "actionFailedTitle": "Thao tác thất bại"
     }
   },
