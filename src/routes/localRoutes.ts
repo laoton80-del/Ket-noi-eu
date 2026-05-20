@@ -29,6 +29,10 @@ localRouter.post(
   }
 );
 
+localRouter.get('/requests', (req, res, next) => {
+  void LocalRequestController.getUserLocalServiceRequests(req, res).catch(next);
+});
+
 localRouter.post(
   '/requests',
   createLocalMutationRateLimiter('create_request'),
