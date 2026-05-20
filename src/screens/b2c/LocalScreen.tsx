@@ -968,6 +968,20 @@ export function LocalScreen() {
           onRequestBookingAssist={() => openLeonaPrefill(t('localCommerce.leonaBookingAssistPrefill'))}
         />
 
+        <View style={styles.cardGrid}>
+          <LocalAppTile
+            cardWidth={cardWidth}
+            accent="cyan"
+            icon="list-outline"
+            statusLabel={t('localCommerce.bookingStatus.requestOnly')}
+            title={t('local.userRequestStatus.localTileTitle')}
+            subtitle={t('local.userRequestStatus.localTileSub')}
+            onPress={() => navigation.navigate('LocalUserRequestStatus')}
+            accessibilityLabel={t('local.userRequestStatus.localTileA11y')}
+            testID="local-tile-my-requests"
+          />
+        </View>
+
         <Text style={styles.bentoSectionTitle}>{t('localHub.serviceCategoriesKicker')}</Text>
         <View style={styles.cardGrid}>
           <LocalAppTile

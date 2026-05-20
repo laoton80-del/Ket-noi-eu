@@ -718,6 +718,36 @@
       "rejectTitle": "Từ chối yêu cầu này?",
       "rejectBody": "Từ chối yêu cầu trên máy chủ. Không thu thanh toán và không có thao tác ví.",
       "actionFailedTitle": "Thao tác thất bại"
+    },
+    "userRequestStatus": {
+      "title": "Yêu cầu Local của tôi",
+      "backA11y": "Quay lại Local",
+      "safetyBanner": "Chỉ-yêu-cầu / không thu phí. Chưa thu thanh toán. Trạng thái cập nhật từ máy chủ.",
+      "empty": "Bạn chưa có yêu cầu dịch vụ Local.",
+      "errorLoad": "Không tải được yêu cầu. Vui lòng thử lại.",
+      "retry": "Thử lại",
+      "reviewPendingNote": "Đang chờ merchant xem xét",
+      "confirmedNote": "Đã xác nhận không có nghĩa đã thanh toán — chỉ-yêu-cầu / không thu phí.",
+      "cancelHint": "Bạn có thể hủy khi yêu cầu vẫn đang mở.",
+      "filter": {
+        "all": "Tất cả",
+        "pending": "Chờ xử lý",
+        "confirmed": "Đã xác nhận",
+        "active": "Đang xử lý",
+        "completed": "Hoàn tất",
+        "closed": "Đã đóng"
+      },
+      "showTimeline": "Xem timeline",
+      "hideTimeline": "Ẩn timeline",
+      "timelineTitle": "Timeline yêu cầu",
+      "cancelBtn": "Hủy yêu cầu",
+      "cancelDismiss": "Để sau",
+      "cancelTitle": "Hủy yêu cầu này?",
+      "cancelBody": "Hủy yêu cầu đang mở trên máy chủ. Không thu thanh toán và không có thao tác ví.",
+      "actionFailedTitle": "Thao tác thất bại",
+      "localTileTitle": "Yêu cầu của tôi",
+      "localTileSub": "Theo dõi lead chỉ-yêu-cầu — không thu thanh toán trên luồng này.",
+      "localTileA11y": "Mở yêu cầu Local của tôi"
     }
   },
   "checkout": {
