@@ -613,7 +613,7 @@
     },
     "localInbox": {
       "title": "Local service request inbox",
-      "subtitle": "Review request-only Local leads — no payment captured on this lane.",
+      "subtitle": "Request-only Local inbox — no payment has been captured. Not a paid booking.",
       "openA11y": "Open Local service request inbox"
     },
     "radar": {
@@ -696,12 +696,19 @@
     "merchantInbox": {
       "title": "Local Request Inbox",
       "backA11y": "Go back to merchant dashboard",
-      "safetyBanner": "Request-only / no-charge lane. No payment has been captured. Merchant confirm or reject updates request status only.",
+      "safetyBanner": "Request-only / no-charge. No payment has been captured. This is not a paid booking. Payment is not enabled for this Local request flow.",
       "empty": "No Local service requests yet.",
       "errorLoad": "Unable to load Local requests. Please retry.",
       "requesterFallback": "Requester",
       "reviewPendingNote": "Waiting for merchant review",
-      "confirmedNote": "Confirmed does not mean paid — request-only / no-charge.",
+      "confirmedNote": "Confirmed does not mean paid. Request-only / no-charge.",
+      "statusCopy": {
+        "requested": "Request submitted",
+        "merchantReview": "Waiting for merchant review",
+        "confirmed": "Merchant confirmed your request",
+        "rejected": "Merchant declined this request",
+        "expired": "This request expired"
+      },
       "filter": {
         "all": "All",
         "pending": "Pending review",
@@ -710,24 +717,31 @@
         "completed": "Completed",
         "closed": "Closed"
       },
-      "confirmBtn": "Confirm",
-      "rejectBtn": "Reject",
+      "confirmBtn": "Confirm request",
+      "rejectBtn": "Decline request",
       "cancelBtn": "Not now",
       "confirmTitle": "Confirm this request?",
-      "confirmBody": "Marks the request confirmed on the server. No payment is captured and no wallet action occurs.",
-      "rejectTitle": "Reject this request?",
-      "rejectBody": "Declines the request on the server. No payment is captured and no wallet action occurs.",
+      "confirmBody": "Updates request status on the server only. No payment has been captured. Payment is not enabled for this Local request flow.",
+      "rejectTitle": "Decline this request?",
+      "rejectBody": "Declines the request on the server. No payment has been captured. Payment is not enabled for this Local request flow.",
       "actionFailedTitle": "Action failed"
     },
     "userRequestStatus": {
       "title": "My Local requests",
       "backA11y": "Go back to Local",
-      "safetyBanner": "Request-only / no-charge. No payment has been captured. Status updates come from the server only.",
+      "safetyBanner": "Request-only / no-charge. No payment has been captured. This is not a paid booking. Payment is not enabled for this Local request flow.",
       "empty": "You have no Local service requests yet.",
       "errorLoad": "Unable to load your requests. Please retry.",
       "retry": "Retry",
       "reviewPendingNote": "Waiting for merchant review",
-      "confirmedNote": "Confirmed does not mean paid — request-only / no-charge.",
+      "confirmedNote": "Confirmed does not mean paid. Request-only / no-charge.",
+      "statusCopy": {
+        "requested": "Request submitted",
+        "merchantReview": "Waiting for merchant review",
+        "confirmed": "Merchant confirmed your request",
+        "rejected": "Merchant declined this request",
+        "expired": "This request expired"
+      },
       "cancelHint": "You can cancel while the request is still open.",
       "filter": {
         "all": "All",
@@ -743,10 +757,10 @@
       "cancelBtn": "Cancel request",
       "cancelDismiss": "Not now",
       "cancelTitle": "Cancel this request?",
-      "cancelBody": "Cancels your open request on the server. No payment is captured and no wallet action occurs.",
+      "cancelBody": "Cancels your open request on the server. No payment has been captured. Payment is not enabled for this Local request flow.",
       "actionFailedTitle": "Action failed",
       "localTileTitle": "My requests",
-      "localTileSub": "Track request-only leads — no payment captured on this lane.",
+      "localTileSub": "Request-only / no-charge — no payment has been captured. Not a paid booking.",
       "localTileA11y": "Open my Local service requests"
     }
   },

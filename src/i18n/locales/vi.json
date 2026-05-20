@@ -613,7 +613,7 @@
     },
     "localInbox": {
       "title": "Hộp thư yêu cầu Local",
-      "subtitle": "Xem lead Local chỉ-yêu-cầu — không thu thanh toán trên luồng này.",
+      "subtitle": "Hộp thư Local chỉ gửi yêu cầu — chưa thu khoản thanh toán nào. Đây chưa phải đặt lịch đã thanh toán.",
       "openA11y": "Mở hộp thư yêu cầu Local"
     },
     "radar": {
@@ -696,12 +696,19 @@
     "merchantInbox": {
       "title": "Hộp thư yêu cầu Local",
       "backA11y": "Quay lại dashboard merchant",
-      "safetyBanner": "Luồng chỉ-yêu-cầu / không thu phí. Chưa thu thanh toán. Xác nhận hoặc từ chối chỉ cập nhật trạng thái yêu cầu.",
+      "safetyBanner": "Chỉ gửi yêu cầu / không thu phí. Chưa thu khoản thanh toán nào. Đây chưa phải đặt lịch đã thanh toán. Tính năng thanh toán chưa được bật cho luồng Local này.",
       "empty": "Chưa có yêu cầu dịch vụ Local.",
       "errorLoad": "Không tải được yêu cầu Local. Vui lòng thử lại.",
       "requesterFallback": "Người gửi yêu cầu",
-      "reviewPendingNote": "Đang chờ merchant xem xét",
-      "confirmedNote": "Đã xác nhận không có nghĩa đã thanh toán — chỉ-yêu-cầu / không thu phí.",
+      "reviewPendingNote": "Đang chờ cửa hàng xem xét",
+      "confirmedNote": "Đã xác nhận không có nghĩa là đã thanh toán. Chỉ gửi yêu cầu / không thu phí.",
+      "statusCopy": {
+        "requested": "Yêu cầu đã được gửi",
+        "merchantReview": "Đang chờ cửa hàng xem xét",
+        "confirmed": "Cửa hàng đã xác nhận yêu cầu",
+        "rejected": "Cửa hàng đã từ chối yêu cầu này",
+        "expired": "Yêu cầu này đã hết hạn"
+      },
       "filter": {
         "all": "Tất cả",
         "pending": "Chờ duyệt",
@@ -710,25 +717,32 @@
         "completed": "Hoàn tất",
         "closed": "Đã đóng"
       },
-      "confirmBtn": "Xác nhận",
-      "rejectBtn": "Từ chối",
+      "confirmBtn": "Xác nhận yêu cầu",
+      "rejectBtn": "Từ chối yêu cầu",
       "cancelBtn": "Để sau",
       "confirmTitle": "Xác nhận yêu cầu này?",
-      "confirmBody": "Đánh dấu đã xác nhận trên máy chủ. Không thu thanh toán và không có thao tác ví.",
+      "confirmBody": "Chỉ cập nhật trạng thái yêu cầu trên máy chủ. Chưa thu khoản thanh toán nào. Tính năng thanh toán chưa được bật cho luồng Local này.",
       "rejectTitle": "Từ chối yêu cầu này?",
-      "rejectBody": "Từ chối yêu cầu trên máy chủ. Không thu thanh toán và không có thao tác ví.",
+      "rejectBody": "Từ chối yêu cầu trên máy chủ. Chưa thu khoản thanh toán nào. Tính năng thanh toán chưa được bật cho luồng Local này.",
       "actionFailedTitle": "Thao tác thất bại"
     },
     "userRequestStatus": {
       "title": "Yêu cầu Local của tôi",
       "backA11y": "Quay lại Local",
-      "safetyBanner": "Chỉ-yêu-cầu / không thu phí. Chưa thu thanh toán. Trạng thái cập nhật từ máy chủ.",
+      "safetyBanner": "Chỉ gửi yêu cầu / không thu phí. Chưa thu khoản thanh toán nào. Đây chưa phải đặt lịch đã thanh toán. Tính năng thanh toán chưa được bật cho luồng Local này.",
       "empty": "Bạn chưa có yêu cầu dịch vụ Local.",
       "errorLoad": "Không tải được yêu cầu. Vui lòng thử lại.",
       "retry": "Thử lại",
-      "reviewPendingNote": "Đang chờ merchant xem xét",
-      "confirmedNote": "Đã xác nhận không có nghĩa đã thanh toán — chỉ-yêu-cầu / không thu phí.",
-      "cancelHint": "Bạn có thể hủy khi yêu cầu vẫn đang mở.",
+      "reviewPendingNote": "Đang chờ cửa hàng xem xét",
+      "confirmedNote": "Đã xác nhận không có nghĩa là đã thanh toán. Chỉ gửi yêu cầu / không thu phí.",
+      "statusCopy": {
+        "requested": "Yêu cầu đã được gửi",
+        "merchantReview": "Đang chờ cửa hàng xem xét",
+        "confirmed": "Cửa hàng đã xác nhận yêu cầu",
+        "rejected": "Cửa hàng đã từ chối yêu cầu này",
+        "expired": "Yêu cầu này đã hết hạn"
+      },
+      "cancelHint": "Bạn có thể hủy khi yêu cầu còn đang mở.",
       "filter": {
         "all": "Tất cả",
         "pending": "Chờ xử lý",
@@ -743,10 +757,10 @@
       "cancelBtn": "Hủy yêu cầu",
       "cancelDismiss": "Để sau",
       "cancelTitle": "Hủy yêu cầu này?",
-      "cancelBody": "Hủy yêu cầu đang mở trên máy chủ. Không thu thanh toán và không có thao tác ví.",
+      "cancelBody": "Hủy yêu cầu đang mở trên máy chủ. Chưa thu khoản thanh toán nào. Tính năng thanh toán chưa được bật cho luồng Local này.",
       "actionFailedTitle": "Thao tác thất bại",
       "localTileTitle": "Yêu cầu của tôi",
-      "localTileSub": "Theo dõi lead chỉ-yêu-cầu — không thu thanh toán trên luồng này.",
+      "localTileSub": "Chỉ gửi yêu cầu / không thu phí — chưa thu khoản thanh toán nào. Chưa phải đặt lịch đã thanh toán.",
       "localTileA11y": "Mở yêu cầu Local của tôi"
     }
   },

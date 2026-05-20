@@ -52,13 +52,13 @@ export function localRequestStatusLabel(status: string): string {
     case LocalServiceRequestStatus.COMPLETED:
       return 'Completed';
     case LocalServiceRequestStatus.REJECTED:
-      return 'Rejected';
+      return 'Merchant declined this request';
     case LocalServiceRequestStatus.USER_CANCELLED:
       return 'Cancelled by requester';
     case LocalServiceRequestStatus.OPS_CANCELLED:
       return 'Cancelled by operations';
     case LocalServiceRequestStatus.EXPIRED:
-      return 'Expired';
+      return 'This request expired';
     default:
       return 'Unknown status';
   }
@@ -72,10 +72,10 @@ export function localWalletBadgeLabel(
     walletMode === LocalWalletMode.REQUEST_ONLY_NO_CHARGE &&
     walletPhase === LocalWalletPhase.NONE
   ) {
-    return 'No payment captured · Request-only / no-charge · walletPhase NONE';
+    return 'No payment has been captured · Request-only / no-charge · walletPhase NONE';
   }
   if (walletPhase === LocalWalletPhase.NONE) {
-    return 'No payment captured · walletPhase NONE';
+    return 'No payment has been captured · walletPhase NONE';
   }
   return `walletPhase ${walletPhase}`;
 }

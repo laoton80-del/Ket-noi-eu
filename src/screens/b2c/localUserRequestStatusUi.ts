@@ -55,13 +55,13 @@ export function localUserRequestStatusLabel(status: string): string {
     case LocalServiceRequestStatus.COMPLETED:
       return 'Completed';
     case LocalServiceRequestStatus.REJECTED:
-      return 'Rejected';
+      return 'Merchant declined this request';
     case LocalServiceRequestStatus.USER_CANCELLED:
       return 'Cancelled';
     case LocalServiceRequestStatus.OPS_CANCELLED:
       return 'Cancelled by support';
     case LocalServiceRequestStatus.EXPIRED:
-      return 'Expired';
+      return 'This request expired';
     default:
       return 'Request updated';
   }
