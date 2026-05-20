@@ -64,7 +64,7 @@ function run(): void {
   const requested = fixture({ status: LocalServiceRequestStatus.REQUESTED });
   const requestedLabels = buildLocalInboxDisplayLabels(requested);
   assert.equal(requestedLabels.showReviewPendingNote, true);
-  assert.match(requestedLabels.walletBadge, /No payment captured/);
+  assert.match(requestedLabels.walletBadge, /No payment has been captured/);
   assert.match(requestedLabels.walletBadge, /Request-only/);
   assert.equal(requested.actions.canConfirm, true);
   assert.equal(requested.actions.canReject, true);

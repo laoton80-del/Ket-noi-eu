@@ -67,10 +67,14 @@ function run(): void {
   assertNoForbiddenCopy(collectLocalUserStatusVisibleCopy(confirmedLabels));
 
   const rejected = fixture({ status: LocalServiceRequestStatus.REJECTED });
-  assert.equal(buildLocalUserRequestDisplayLabels(rejected).actions.canCancel, false);
+  const rejectedLabels = buildLocalUserRequestDisplayLabels(rejected);
+  assert.match(rejectedLabels.statusLabel, /Merchant declined this request/);
+  assert.equal(rejectedLabels.actions.canCancel, false);
 
   const expired = fixture({ status: LocalServiceRequestStatus.EXPIRED });
-  assert.equal(buildLocalUserRequestDisplayLabels(expired).actions.canCancel, false);
+  const expiredLabels = buildLocalUserRequestDisplayLabels(expired);
+  assert.match(expiredLabels.statusLabel, /This request expired/);
+  assert.equal(expiredLabels.actions.canCancel, false);
 
   const completed = fixture({ status: LocalServiceRequestStatus.COMPLETED });
   assert.equal(buildLocalUserRequestDisplayLabels(completed).actions.canCancel, false);
