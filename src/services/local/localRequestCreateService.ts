@@ -1,4 +1,6 @@
 import {
+  LocalServiceRequestAuditActorType,
+  LocalServiceRequestAuditEventType,
   LocalServiceRequestStatus,
   LocalWalletMode,
   LocalWalletPhase,
@@ -9,6 +11,12 @@ import {
 } from '@prisma/client';
 
 import { getPrisma } from '../../lib/prisma';
+
+import {
+  assertLocalRequestAuditWritten,
+  buildRequestAuditSafeMessage,
+  createLocalRequestAuditEvent,
+} from './localRequestAuditEventService';
 
 export const LOCAL_REQUEST_CREATE_SUCCESS_MESSAGE =
   'Request submitted for merchant review.' as const;
@@ -97,29 +105,49 @@ export async function createLocalServiceRequest(
     }
   }
 
-  const row = await prisma.localServiceRequest.create({
-    data: {
-      requesterUserId,
-      businessId,
-      serviceType: input.serviceType,
-      title,
-      source: input.source,
-      status: LocalServiceRequestStatus.REQUESTED,
-      walletMode: LocalWalletMode.REQUEST_ONLY_NO_CHARGE,
-      walletPhase: LocalWalletPhase.NONE,
-      ...(serviceId && serviceId.length > 0 ? { serviceId } : {}),
-      ...(input.fixerProfileKey?.trim()
-        ? { fixerProfileKey: input.fixerProfileKey.trim() }
-        : {}),
-      ...(input.category != null ? { category: input.category } : {}),
-      description: input.description?.trim() ?? '',
-      ...(input.locationText?.trim() ? { locationText: input.locationText.trim() } : {}),
-      ...(input.city?.trim() ? { city: input.city.trim() } : {}),
-      ...(input.countryCode?.trim() ? { countryCode: input.countryCode.trim() } : {}),
-      ...(input.scheduledStartAt != null ? { scheduledStartAt: input.scheduledStartAt } : {}),
-      ...(input.scheduledEndAt != null ? { scheduledEndAt: input.scheduledEndAt } : {}),
-      ...(input.metadata !== undefined ? { metadata: input.metadata } : {}),
-    },
+  const row = await prisma.$transaction(async (tx) => {
+    const created = await tx.localServiceRequest.create({
+      data: {
+        requesterUserId,
+        businessId,
+        serviceType: input.serviceType,
+        title,
+        source: input.source,
+        status: LocalServiceRequestStatus.REQUESTED,
+        walletMode: LocalWalletMode.REQUEST_ONLY_NO_CHARGE,
+        walletPhase: LocalWalletPhase.NONE,
+        ...(serviceId && serviceId.length > 0 ? { serviceId } : {}),
+        ...(input.fixerProfileKey?.trim()
+          ? { fixerProfileKey: input.fixerProfileKey.trim() }
+          : {}),
+        ...(input.category != null ? { category: input.category } : {}),
+        description: input.description?.trim() ?? '',
+        ...(input.locationText?.trim() ? { locationText: input.locationText.trim() } : {}),
+        ...(input.city?.trim() ? { city: input.city.trim() } : {}),
+        ...(input.countryCode?.trim() ? { countryCode: input.countryCode.trim() } : {}),
+        ...(input.scheduledStartAt != null ? { scheduledStartAt: input.scheduledStartAt } : {}),
+        ...(input.scheduledEndAt != null ? { scheduledEndAt: input.scheduledEndAt } : {}),
+        ...(input.metadata !== undefined ? { metadata: input.metadata } : {}),
+      },
+    });
+
+    assertLocalRequestAuditWritten(
+      await createLocalRequestAuditEvent({
+        db: tx,
+        requestId: created.id,
+        eventType: LocalServiceRequestAuditEventType.REQUEST_CREATED,
+        actorType: LocalServiceRequestAuditActorType.REQUESTER,
+        actorUserId: requesterUserId,
+        businessId,
+        fromStatus: null,
+        toStatus: LocalServiceRequestStatus.REQUESTED,
+        safeMessage: buildRequestAuditSafeMessage(
+          LocalServiceRequestAuditEventType.REQUEST_CREATED
+        ),
+      })
+    );
+
+    return created;
   });
 
   return {

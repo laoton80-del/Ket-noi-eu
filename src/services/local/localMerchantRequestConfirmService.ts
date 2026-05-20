@@ -1,4 +1,6 @@
 import {
+  LocalServiceRequestAuditActorType,
+  LocalServiceRequestAuditEventType,
   LocalServiceRequestStatus,
   LocalWalletMode,
   LocalWalletPhase,
@@ -7,6 +9,11 @@ import {
 import { getPrisma } from '../../lib/prisma';
 
 import { evaluateLocalMerchantRequestConfirmEligibility } from './localMerchantRequestConfirmEligibility';
+import {
+  assertLocalRequestAuditWritten,
+  buildRequestAuditSafeMessage,
+  createLocalRequestAuditEvent,
+} from './localRequestAuditEventService';
 
 export const LOCAL_MERCHANT_REQUEST_CONFIRM_SUCCESS_MESSAGE =
   'Request confirmed. No payment has been captured.' as const;
@@ -116,15 +123,36 @@ export async function confirmMerchantLocalServiceRequest(
   }
 
   const confirmedAt = existing.confirmedAt ?? new Date();
+  const fromStatus = existing.status;
 
-  const row = await prisma.localServiceRequest.update({
-    where: { id: requestId },
-    data: {
-      status: LocalServiceRequestStatus.CONFIRMED,
-      confirmedAt,
-      walletMode: LocalWalletMode.REQUEST_ONLY_NO_CHARGE,
-      walletPhase: LocalWalletPhase.NONE,
-    },
+  const row = await prisma.$transaction(async (tx) => {
+    const updated = await tx.localServiceRequest.update({
+      where: { id: requestId },
+      data: {
+        status: LocalServiceRequestStatus.CONFIRMED,
+        confirmedAt,
+        walletMode: LocalWalletMode.REQUEST_ONLY_NO_CHARGE,
+        walletPhase: LocalWalletPhase.NONE,
+      },
+    });
+
+    assertLocalRequestAuditWritten(
+      await createLocalRequestAuditEvent({
+        db: tx,
+        requestId,
+        eventType: LocalServiceRequestAuditEventType.MERCHANT_CONFIRMED,
+        actorType: LocalServiceRequestAuditActorType.MERCHANT,
+        actorUserId: merchantUserId,
+        businessId: existing.businessId,
+        fromStatus,
+        toStatus: LocalServiceRequestStatus.CONFIRMED,
+        safeMessage: buildRequestAuditSafeMessage(
+          LocalServiceRequestAuditEventType.MERCHANT_CONFIRMED
+        ),
+      })
+    );
+
+    return updated;
   });
 
   return { ok: true, request: toConfirmDto(row) };

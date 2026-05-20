@@ -1,5 +1,7 @@
 import {
   LocalCancelReason,
+  LocalServiceRequestAuditActorType,
+  LocalServiceRequestAuditEventType,
   LocalServiceRequestStatus,
   LocalWalletMode,
   LocalWalletPhase,
@@ -8,6 +10,11 @@ import {
 import { getPrisma } from '../../lib/prisma';
 
 import { evaluateLocalUserRequestCancelEligibility } from './localUserRequestCancelEligibility';
+import {
+  assertLocalRequestAuditWritten,
+  buildRequestAuditSafeMessage,
+  createLocalRequestAuditEvent,
+} from './localRequestAuditEventService';
 
 export const LOCAL_USER_REQUEST_CANCEL_SUCCESS_MESSAGE =
   'Request cancelled. No payment was captured.' as const;
@@ -117,17 +124,40 @@ export async function cancelUserLocalServiceRequest(
   }
 
   const cancelledAt = existing.cancelledAt ?? new Date();
+  const fromStatus = existing.status;
+  const cancelReason = existing.cancelReason ?? LocalCancelReason.USER_CANCEL;
 
-  const row = await prisma.localServiceRequest.update({
-    where: { id: requestId },
-    data: {
-      status: LocalServiceRequestStatus.USER_CANCELLED,
-      cancelledAt,
-      cancelReason: existing.cancelReason ?? LocalCancelReason.USER_CANCEL,
-      cancelledByRole: existing.cancelledByRole ?? 'REQUESTER',
-      walletMode: LocalWalletMode.REQUEST_ONLY_NO_CHARGE,
-      walletPhase: LocalWalletPhase.NONE,
-    },
+  const row = await prisma.$transaction(async (tx) => {
+    const updated = await tx.localServiceRequest.update({
+      where: { id: requestId },
+      data: {
+        status: LocalServiceRequestStatus.USER_CANCELLED,
+        cancelledAt,
+        cancelReason,
+        cancelledByRole: existing.cancelledByRole ?? 'REQUESTER',
+        walletMode: LocalWalletMode.REQUEST_ONLY_NO_CHARGE,
+        walletPhase: LocalWalletPhase.NONE,
+      },
+    });
+
+    assertLocalRequestAuditWritten(
+      await createLocalRequestAuditEvent({
+        db: tx,
+        requestId,
+        eventType: LocalServiceRequestAuditEventType.USER_CANCELLED,
+        actorType: LocalServiceRequestAuditActorType.REQUESTER,
+        actorUserId: requesterUserId,
+        businessId: existing.businessId,
+        fromStatus,
+        toStatus: LocalServiceRequestStatus.USER_CANCELLED,
+        reason: cancelReason,
+        safeMessage: buildRequestAuditSafeMessage(
+          LocalServiceRequestAuditEventType.USER_CANCELLED
+        ),
+      })
+    );
+
+    return updated;
   });
 
   return { ok: true, request: toCancelDto(row) };
