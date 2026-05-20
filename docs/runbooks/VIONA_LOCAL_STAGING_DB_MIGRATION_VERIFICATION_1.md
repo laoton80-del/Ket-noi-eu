@@ -196,6 +196,7 @@ Scoped review of `src/services/local`, Local routes/controllers, Local B2B/B2C s
 
 ## References
 
+- `docs/qa/VIONA_LOCAL_MANUAL_DEVICE_STAGING_WALKTHROUGH_1.md` — device/staging manual checklist (follows this runbook)
 - `docs/operating/VIONA_PROJECT_KERNEL.md`
 - `docs/qa/VIONA_LOCAL_NO_CHARGE_E2E_QA_1.md`
 - `docs/architecture/VIONA_LOCAL_REQUEST_SCHEMA_DESIGN_1.md`
