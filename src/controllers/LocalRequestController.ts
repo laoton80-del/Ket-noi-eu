@@ -19,6 +19,7 @@ import { readLocalUserRequestTimeline } from '../services/local/localUserRequest
 import { normalizeLocalOpsCancelReason } from '../services/local/localOpsRequestCancelPolicy';
 import { createLocalServiceRequest } from '../services/local/localRequestCreateService';
 import { listMerchantLocalServiceRequests } from '../services/local/localMerchantRequestInboxService';
+import { listUserLocalServiceRequests } from '../services/local/localUserRequestListService';
 import { jsonFail, jsonOk } from '../utils/apiEnvelope';
 
 function readAuthUserId(req: Request): string | null {
@@ -192,6 +193,34 @@ export async function postCancelUserLocalServiceRequest(
     }
 
     jsonOk(res, result.request, 200);
+  } catch {
+    jsonFail(res, 'Internal server error', 500);
+  }
+}
+
+/** `GET /api/local/requests` — requester read-only list of own Local requests. */
+export async function getUserLocalServiceRequests(req: Request, res: Response): Promise<void> {
+  try {
+    const requesterUserId = readAuthUserId(req);
+    if (!requesterUserId) {
+      jsonFail(res, 'Unauthorized', 401);
+      return;
+    }
+
+    const status = readLocalServiceRequestStatusQuery(req.query.status);
+    if (req.query.status != null && status === undefined) {
+      jsonFail(res, 'Invalid status filter', 400);
+      return;
+    }
+
+    const data = await listUserLocalServiceRequests({
+      requesterUserId,
+      status,
+      limit: readOptionalLimitQuery(req.query.limit),
+      skip: readOptionalSkipQuery(req.query.skip),
+    });
+
+    jsonOk(res, data);
   } catch {
     jsonFail(res, 'Internal server error', 500);
   }
