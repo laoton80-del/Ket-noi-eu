@@ -119,6 +119,7 @@ import { DailyRewardScreen } from './src/screens/b2c/DailyRewardScreen';
 import { LoyaltyRewardsScreen } from './src/screens/b2c/LoyaltyRewardsScreen';
 import { InboundQueueScreen } from './src/screens/b2b/InboundQueueScreen';
 import { TourismMerchantInboxScreen } from './src/screens/b2b/TourismMerchantInboxScreen';
+import { LocalMerchantRequestInboxScreen } from './src/screens/b2b/LocalMerchantRequestInboxScreen';
 import { LiveAiTeacherScreen } from './src/screens/academy/LiveAiTeacherScreen';
 import { DemoTourOverlay } from './src/components/onboarding/DemoTourOverlay';
 import { V7NavigationSurfaceProvider, useNavigationThemeForHub } from './src/context/V7NavigationSurfaceContext';
@@ -325,6 +326,7 @@ const rootLinking: LinkingOptions<RootStackParamList> = {
       AiReceptionistPilotRequest: 'AiReceptionistPilotRequest',
       WalletB2B: 'WalletB2B',
       TourismMerchantInbox: 'TourismMerchantInbox',
+      LocalMerchantRequestInbox: 'LocalMerchantRequestInbox',
       Orders: 'Orders',
       InternalTradeMarket: 'InternalTradeMarket',
       AdBidding: 'AdBidding',
@@ -591,6 +593,10 @@ function AppNavigationShell({
               <Stack.Screen name="AiReceptionistPilotRequest" component={GatedAiReceptionistPilotRequestScreen} />
               <Stack.Screen name="InboundQueue" component={GatedInboundQueueScreen} />
               <Stack.Screen name="TourismMerchantInbox" component={GatedTourismMerchantInboxScreen} />
+              <Stack.Screen
+                name="LocalMerchantRequestInbox"
+                component={GatedLocalMerchantRequestInboxScreen}
+              />
               <Stack.Screen name="SmartCalendar" component={GatedSmartCalendarScreen} />
               <Stack.Screen name="WalletB2B" component={GatedWalletB2BScreen} />
               <Stack.Screen name="Orders" component={GatedOrdersScreen} />
@@ -867,6 +873,14 @@ function GatedTourismMerchantInboxScreen() {
   return (
     <B2BWorkspaceGate>
       <TourismMerchantInboxScreen />
+    </B2BWorkspaceGate>
+  );
+}
+
+function GatedLocalMerchantRequestInboxScreen() {
+  return (
+    <B2BWorkspaceGate>
+      <LocalMerchantRequestInboxScreen />
     </B2BWorkspaceGate>
   );
 }

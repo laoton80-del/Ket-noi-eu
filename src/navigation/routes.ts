@@ -190,6 +190,8 @@ export type RootStackParamList = {
   InboundQueue: undefined;
   /** Tourism hold-mode merchant booking inbox (B2B workspace). */
   TourismMerchantInbox: undefined;
+  /** Local request-only merchant inbox (B2B workspace). */
+  LocalMerchantRequestInbox: undefined;
   SmartCalendar: undefined;
   /** B2B wholesale / AI order tickets (Voice AI function-calling mock). */
   Orders: undefined;

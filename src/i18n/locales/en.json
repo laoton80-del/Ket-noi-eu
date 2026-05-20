@@ -611,6 +611,11 @@
       "subtitle": "Review hold-mode tourism requests — confirm or release VIO Credits before settlement.",
       "openA11y": "Open tourism booking inbox"
     },
+    "localInbox": {
+      "title": "Local service request inbox",
+      "subtitle": "Review request-only Local leads — no payment captured on this lane.",
+      "openA11y": "Open Local service request inbox"
+    },
     "radar": {
       "title": "Live order radar",
       "openQueue": "Open full queue",
@@ -684,6 +689,34 @@
       "rejectBody": "Held VIO Credits will be released back to the guest wallet — not a post-settlement refund.",
       "completeTitle": "Mark booking complete?",
       "completeBody": "Marks fulfillment complete after confirmation. No additional settlement occurs here.",
+      "actionFailedTitle": "Action failed"
+    }
+  },
+  "local": {
+    "merchantInbox": {
+      "title": "Local Request Inbox",
+      "backA11y": "Go back to merchant dashboard",
+      "safetyBanner": "Request-only / no-charge lane. No payment has been captured. Merchant confirm or reject updates request status only.",
+      "empty": "No Local service requests yet.",
+      "errorLoad": "Unable to load Local requests. Please retry.",
+      "requesterFallback": "Requester",
+      "reviewPendingNote": "Waiting for merchant review",
+      "confirmedNote": "Confirmed does not mean paid — request-only / no-charge.",
+      "filter": {
+        "all": "All",
+        "pending": "Pending review",
+        "confirmed": "Confirmed",
+        "active": "In progress",
+        "completed": "Completed",
+        "closed": "Closed"
+      },
+      "confirmBtn": "Confirm",
+      "rejectBtn": "Reject",
+      "cancelBtn": "Not now",
+      "confirmTitle": "Confirm this request?",
+      "confirmBody": "Marks the request confirmed on the server. No payment is captured and no wallet action occurs.",
+      "rejectTitle": "Reject this request?",
+      "rejectBody": "Declines the request on the server. No payment is captured and no wallet action occurs.",
       "actionFailedTitle": "Action failed"
     }
   },

@@ -169,6 +169,10 @@ export function MerchantDashboardScreen(): ReactElement {
     navigation.navigate('TourismMerchantInbox');
   }, [navigation]);
 
+  const openLocalInbox = useCallback(() => {
+    navigation.navigate('LocalMerchantRequestInbox');
+  }, [navigation]);
+
   const openDemoSimulator = useCallback(() => {
     navigation.navigate('AiReceptionistDemoSimulator');
   }, [navigation]);
@@ -329,6 +333,22 @@ export function MerchantDashboardScreen(): ReactElement {
             <Text style={styles.promoLinkTitle}>{t('b2b.tourismInbox.title')}</Text>
             <Text style={styles.promoLinkSub} numberOfLines={2}>
               {t('b2b.tourismInbox.subtitle')}
+            </Text>
+          </View>
+          <Ionicons name="chevron-forward" size={20} color="rgba(232, 237, 247, 0.35)" />
+        </Pressable>
+
+        <Pressable
+          onPress={openLocalInbox}
+          style={({ pressed }) => [styles.promoLink, pressed && { opacity: 0.9 }]}
+          accessibilityRole="button"
+          accessibilityLabel={t('b2b.localInbox.openA11y')}
+        >
+          <Ionicons name="document-text-outline" size={20} color="#7AE4FF" />
+          <View style={styles.promoLinkTextCol}>
+            <Text style={styles.promoLinkTitle}>{t('b2b.localInbox.title')}</Text>
+            <Text style={styles.promoLinkSub} numberOfLines={2}>
+              {t('b2b.localInbox.subtitle')}
             </Text>
           </View>
           <Ionicons name="chevron-forward" size={20} color="rgba(232, 237, 247, 0.35)" />
