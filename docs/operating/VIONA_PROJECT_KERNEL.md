@@ -189,6 +189,7 @@ Known Local lifecycle milestones:
 🟢 Request lifecycle audit writes merged + pushed  
 🟢 Request expiry audit writes merged + pushed  
 🟢 Audit read API — internal ops read-only merged + pushed  
+🟢 User request status timeline — safe public projection merged + pushed  
 
 Current Local mode:
 REQUEST_ONLY_NO_CHARGE
@@ -213,16 +214,15 @@ Current Local safety:
 
 Current correct Local backend order:
 
-1. User request status timeline — safe public projection
-2. Rate limit / abuse guard for Local mutations
-3. Merchant inbox UI minimum
-4. User request status UI minimum
-5. Safe i18n copy pass
-6. AI Local Copilot read-only
-7. Human-confirmed AI actions
-8. Wallet hold/debit/release only after CFO-approved finance pack
+1. Rate limit / abuse guard for Local mutations
+2. Merchant inbox UI minimum
+3. User request status UI minimum
+4. Safe i18n copy pass
+5. AI Local Copilot read-only
+6. Human-confirmed AI actions
+7. Wallet hold/debit/release only after CFO-approved finance pack
 
-Do not jump to wallet or AI autonomous actions before safe timeline projection gates.
+Do not jump to wallet or AI autonomous actions before rate-limit and abuse-guard gates.
 
 ---
 
