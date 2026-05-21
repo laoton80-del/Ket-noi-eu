@@ -5,6 +5,7 @@
 **Master baseline:** `f3aab1b` (`docs(runbook): merge local staging database verification`)  
 **Date:** 2026-05-20  
 **Type:** Manual QA checklist + execution log (no product, schema, or wallet changes)
+**Handoff:** `docs/handoff/VIONA_LOCAL_NO_CHARGE_PILOT_READINESS_HANDOFF_1.md` — VI status badges wired on `master` @ `f87e053+`.
 
 ## Summary
 
@@ -184,10 +185,10 @@ Switch app language (profile / settings) between English and Vietnamese.
 | L3 | My requests tile subtitle | PASS expected | PASS expected | NOT RUN | |
 | L4 | Confirm / decline dialog bodies | PASS expected | PASS expected | NOT RUN | |
 | L5 | Cancel dialog body | PASS expected | PASS expected | NOT RUN | |
-| L6 | **Status badge on card** | EN helper strings | May remain **EN** | NOT RUN | **Known limitation:** `local.*.statusCopy` in `vi.json` not wired to `t()`; badges use `localUserRequestStatusUi.ts` / `localMerchantInboxUi.ts` English literals |
-| L7 | Wallet badge on card | EN literals | May remain EN | NOT RUN | Same limitation |
+| L6 | **Status badge on card** | EN from `statusCopy` via `t()` | VI from `statusCopy` via `t()` | NOT RUN | Wired on `master` @ `f87e053` — verify on device |
+| L7 | Wallet badge on card | EN `walletBadge.*` keys | VI `walletBadge.*` keys | NOT RUN | Same wiring |
 
-**VI limitation policy:** Not a blocker for pilot if banners/dialogs/tile are VI-correct; file follow-up pack to wire `statusCopy`.
+**VI policy:** Status and wallet badges should follow app locale; verify during walkthrough.
 
 ---
 
@@ -237,7 +238,7 @@ Confirm **none** of the following appear on Local user/merchant screens (except 
 |------------|--------|
 | Manual staging/device not executed when checklist published | Verdict stays PASS_WITH_LIMITATIONS until operator completes tables |
 | `EXPO_PUBLIC_REST_API_BASE` may be missing on dev machine | Device build must set staging API explicitly |
-| VI status badges may show EN | Documented; banners/dialogs should still be VI |
+| Re-verify VI status/wallet badges on device | Runtime i18n wired; confirm in L6/L7 |
 | No consumer create UI guaranteed on Local hub | May need API/seed to create first request |
 | Multi-instance rate limits not load-tested | E2E only |
 | Wallet / commercial / Tourism hold not enabled | By design for Local pilot |

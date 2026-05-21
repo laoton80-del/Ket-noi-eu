@@ -1,0 +1,236 @@
+# VIONA Local no-charge pilot readiness handoff — 1
+
+**Pack:** `VIONA.LOCAL.NO_CHARGE_PILOT_READINESS_HANDOFF.1`  
+**Branch:** `pack-local-no-charge-pilot-readiness-handoff-1`  
+**Master tested:** `f87e053` (`chore(local): merge localized request status labels`)  
+**Date:** 2026-05-21  
+**Type:** Handoff / readiness summary only (no product, schema, or wallet changes)
+
+---
+
+## 1. Executive summary
+
+The **Local request-only / no-charge** pilot lane on VIONA is **automated QA-ready** on `master`: schema, APIs, merchant/user UI, EN/VI safe copy, VI runtime status labels, composed E2E runner, staging DB verification runbook, and manual device checklist are in place.
+
+This is **not** a commercial or payment pilot. Local does **not** hold funds, settle to providers, or bridge Firebase VIP / Tourism booking wallets. Merchant confirm/reject updates **request status only** — **confirmed does not mean paid**.
+
+**Operator manual staging/device walkthrough has not been completed.** Until evidence tables in `docs/qa/VIONA_LOCAL_MANUAL_DEVICE_STAGING_WALKTHROUGH_1.md` are filled with PASS, treat pilot sign-off as **PASS_WITH_LIMITATIONS**, not production or staging operator PASS.
+
+---
+
+## 2. Master state
+
+| Item | Value |
+|------|--------|
+| **Master hash** | `f87e053` |
+| **Working tree** | Clean at handoff authoring |
+| **origin/master** | Synced with local `master` at `f87e053` |
+
+### Key merged milestones (recent `git log`)
+
+| Commit (short) | Milestone |
+|----------------|-----------|
+| `f87e053` / `5f72ff6` | VI runtime status + wallet badge i18n wiring |
+| `ede2c80` / `99aaed7` | Manual device/staging walkthrough checklist |
+| `f3aab1b` / `605feea` | Staging DB/migration verification runbook + readiness probe |
+| `7340675` / `ff8adc5` | Safe EN/VI no-charge i18n copy pass |
+| `cb7a112` / `59cc630` | Local no-charge E2E QA certification |
+| `4c7e719` / `b0c66b4` | User request status UI |
+| `e87a0ee` / `6ebb748` | User request list API |
+| `e45dd3a` / `b2c6d41` | Merchant request inbox UI |
+| `8dc4b1b` | Local mutation rate-limit guard |
+| `1ef461f` | User request timeline API |
+| `b82fdca` | Ops audit read API |
+| Earlier stack | Audit runtime, expiry, create API, `LocalServiceRequest` schema migrations |
+
+**Architecture references:** `docs/architecture/VIONA_LOCAL_REQUEST_SCHEMA_DESIGN_1.md`, `docs/architecture/VIONA_LOCAL_MERCHANT_ACK_STATE_MACHINE_DESIGN_1.md`, `docs/architecture/VIONA_WALLET_FIREBASE_VIP_ISOLATION_POLICY_1.md`, `docs/operating/VIONA_PROJECT_KERNEL.md`.
+
+---
+
+## 3. What is complete
+
+| Area | Status | Evidence |
+|------|--------|----------|
+| **LocalServiceRequest schema** | Done | `prisma/schema.prisma`; migrations `20260520120000_add_local_service_request`, `20260520140000_add_local_service_request_audit_event` |
+| **Create request API** | Done | `POST /api/local/requests` — `test-local-request-create-source-of-truth.ts` |
+| **User request list API** | Done | `GET /api/local/requests` — `test-local-user-request-list-api.ts` |
+| **User timeline API** | Done | `GET /api/local/requests/:id/timeline` — `test-local-user-request-timeline-1.ts` |
+| **User cancel API** | Done | `POST /api/local/requests/:id/cancel` — `test-local-user-request-cancel-api.ts` |
+| **Merchant inbox API** | Done | `GET /api/local/merchant/requests` — `test-local-merchant-request-inbox-api.ts` |
+| **Merchant confirm/reject APIs** | Done | confirm/reject scripts + rate limit |
+| **Ops cancel API** | Done | `test-local-ops-request-cancel-api.ts` |
+| **Ops audit read** | Done | `test-local-audit-read-api-1.ts` |
+| **Audit runtime (append-only)** | Done | `test-local-request-audit-runtime-1.ts` … `3.ts` |
+| **Expiry dry-run / apply** | Done | dry-run + apply scripts (status-only `EXPIRED`) |
+| **Rate limit guard** | Done | `test-local-rate-limit-abuse-guard-1.ts` |
+| **Merchant inbox UI** | Done | `LocalMerchantRequestInbox` — UI display test |
+| **User request status UI** | Done | `LocalUserRequestStatus` ← Local hub “My requests” |
+| **Safe EN/VI copy** | Done | `test-local-safe-i18n-copy-pass.ts` |
+| **VI runtime status labels** | Done | `statusCopy` + `walletBadge` via `t()` on both screens (`f87e053`) |
+| **E2E composed runner** | Done | `scripts/test-local-no-charge-e2e-qa.ts` (18 Local + 6 Tourism) |
+| **Staging DB verification runbook** | Done | `docs/runbooks/VIONA_LOCAL_STAGING_DB_MIGRATION_VERIFICATION_1.md` |
+| **Manual walkthrough checklist** | Published | `docs/qa/VIONA_LOCAL_MANUAL_DEVICE_STAGING_WALKTHROUGH_1.md` (execution **NOT RUN**) |
+| **E2E QA certification doc** | Done | `docs/qa/VIONA_LOCAL_NO_CHARGE_E2E_QA_1.md` |
+
+---
+
+## 4. Current Local safety state
+
+Local pilot lane **must** remain:
+
+| Invariant | Meaning |
+|-----------|---------|
+| `walletMode` | `REQUEST_ONLY_NO_CHARGE` (default on create) |
+| `walletPhase` | `NONE` |
+| Payment | **No payment captured** — user/merchant copy states this explicitly |
+| Confirm | **Confirmed does not mean paid** — status-only merchant ACK |
+| Settlement | **No settlement**, no provider payout, no platform fee on Local mutations |
+| Wallet ops | **No** hold, debit, release, refund, or `WalletTransaction` from Local routes/services |
+| Bridges | **No** Firebase VIP bridge; **no** `Booking` / `TourismBooking` bridge from Local UI/API |
+| Copy | **No** escrow, guaranteed booking, dispatch-as-fulfillment, or public **VIG** product term in Local lane |
+| AI / SOS | **No** autonomous AI status mutation; **no** SOS/rescue production claim in Local scope |
+
+User-facing safe phrases (EN/VI) are in i18n + runtime wiring; see `local.userRequestStatus` / `local.merchantInbox` in `en.json` / `vi.json`.
+
+---
+
+## 5. QA evidence — how to reproduce
+
+Run from repo root on a machine with `DATABASE_URL` set (for DB-backed scripts). UI-only scripts run without DB.
+
+### Standard gates
+
+```bash
+git diff --check
+npm run typecheck
+npm run lint
+npm run smoke
+npx prisma validate
+npx prisma generate
+```
+
+**Expected:** typecheck/smoke/prisma **PASS**; lint **0 errors** (pre-existing warnings acceptable).
+
+### Local no-charge suite
+
+```bash
+npx tsx scripts/test-local-no-charge-e2e-qa.ts
+npx tsx scripts/test-local-safe-i18n-copy-pass.ts
+npx tsx scripts/check-local-staging-readiness.ts
+```
+
+| Command | Expected | Notes |
+|---------|----------|-------|
+| `test-local-no-charge-e2e-qa.ts` | **PASS** (24 Local + 6 Tourism) | Skips DB scripts if `DATABASE_URL` unset |
+| `test-local-safe-i18n-copy-pass.ts` | **PASS** | Scans Local i18n + wired helpers |
+| `check-local-staging-readiness.ts` | **PASS** with limitations | Reports missing keys by name only; often `EXPO_PUBLIC_REST_API_BASE` missing locally |
+
+### Targeted scripts (also in E2E runner)
+
+```bash
+npx tsx scripts/test-local-user-request-status-ui-display.ts
+npx tsx scripts/test-local-merchant-inbox-ui-display.ts
+npx tsx scripts/test-local-request-schema-defaults.ts
+```
+
+### Known flakes (retry guidance)
+
+| Flake | Mitigation |
+|-------|------------|
+| `P2002` on `User.phoneNumber` | Retry failed script once or re-run full E2E runner |
+| `request-audit-runtime-2` or `request-audit-runtime-3` under full composed run | Intermittent under load; passes in isolation; **retry once** |
+| `merchant-request-confirm-api` / `reject-api` occasional fail in long runs | Same — retry |
+
+Do **not** treat a single flake as lane regression without retry.
+
+### Certification verdict (automated)
+
+**PASS_WITH_LIMITATIONS** — all scripted gates pass on configured dev DB; manual staging/device and operator-labeled staging Supabase **not** signed off.
+
+---
+
+## 6. Manual operator requirements
+
+Before changing verdict to **PASS** in `docs/qa/VIONA_LOCAL_MANUAL_DEVICE_STAGING_WALKTHROUGH_1.md`:
+
+1. **Confirm staging Supabase project** — label which project/environment is pilot staging (name only in docs; no secrets).
+2. **Confirm migrations applied** on that DB — `20260520120000_add_local_service_request`, `20260520140000_add_local_service_request_audit_event` (see staging runbook).
+3. **Set `EXPO_PUBLIC_REST_API_BASE`** on staging/device build to staging API host (not accidental localhost unless intended).
+4. **Provision accounts** — requester A/B, merchant M/N, ops if needed; confirm business ownership (no passwords in docs).
+5. **Create test requests** — via available UI or `POST /api/local/requests` if no consumer create path on device.
+6. **Run device matrix** — 390×844, tablet portrait/landscape, desktop 1366×768 (mark PASS / NOT RUN).
+7. **Execute walkthrough tables** — user flow, merchant flow, EN/VI copy, negative copy scan, wallet safety checklist.
+8. **Update walkthrough verdict** to **PASS** only with evidence (date, tester, screenshots refs).
+
+**Do not run `prisma migrate deploy`** on production/staging without explicit operator confirmation (`docs/runbooks/VIONA_LOCAL_STAGING_DB_MIGRATION_VERIFICATION_1.md`).
+
+---
+
+## 7. Still blocked (out of scope for this pilot)
+
+| Blocked capability | Why |
+|--------------------|-----|
+| Wallet hold / debit on Local submit | Finance policy not enabled; `HOLD_ON_SUBMIT` not active for Local pilot |
+| Refund / release of held funds | No hold → no release path in Local lane |
+| Settlement / provider payout | Tourism hold mode separate; Local is request-only |
+| Production Local **commercial** pilot | No payment capture, no paid booking claim |
+| Autonomous AI status mutation | AI copilot read-only / future only |
+| SOS / rescue production claim | Not in Local request flows |
+| Tourism production hold inbox | Separate lane; do not conflate with Local no-charge sign-off |
+| Global **Active Full** product mode | Kernel/program gate; Local pilot does not imply global activation |
+
+---
+
+## 8. Recommended next steps (ordered)
+
+| Step | Action | Owner |
+|------|--------|-------|
+| **A** | Execute manual staging/device walkthrough — `docs/qa/VIONA_LOCAL_MANUAL_DEVICE_STAGING_WALKTHROUGH_1.md` | Operator |
+| **B** | Update pilot sign-off: walkthrough **PASS** + staging target confirmed | Operator + eng lead |
+| **C** | Sync `docs/operating/VIONA_PROJECT_KERNEL.md` with this handoff and latest Local readiness | Docs/engineering |
+| **D** | *Later only:* finance-approved Local wallet hold policy (`HOLD_ON_SUBMIT`) | Product/finance |
+| **E** | *Later only:* AI Copilot read-only assist on Local requests | Product/AI |
+
+Do **not** enable wallet settlement, Firebase VIP bridge, or Tourism bridge on Local without explicit policy packs.
+
+---
+
+## 9. Verdict
+
+**PASS_WITH_LIMITATIONS**
+
+| Criterion | Status |
+|-----------|--------|
+| Automated QA (API, UI helpers, i18n, E2E, Tourism regression) | **Ready** on `master` @ `f87e053` |
+| Staging DB read-only verification (repo + connected DB) | **Documented** — operator must confirm target |
+| Manual device/staging walkthrough | **Not completed** — checklist published, tables NOT RUN |
+| Commercial / payment / production Local pilot | **Not claimed** |
+
+**Reason:** Engineering certification and documentation are complete; **operator manual PASS** is the remaining gate for staging pilot sign-off.
+
+---
+
+## Related documents
+
+| Document | Purpose |
+|----------|---------|
+| `docs/qa/VIONA_LOCAL_NO_CHARGE_E2E_QA_1.md` | Automated E2E certification detail |
+| `docs/qa/VIONA_LOCAL_MANUAL_DEVICE_STAGING_WALKTHROUGH_1.md` | Manual execution checklist |
+| `docs/runbooks/VIONA_LOCAL_STAGING_DB_MIGRATION_VERIFICATION_1.md` | DB/migration read-only verification |
+| `scripts/test-local-no-charge-e2e-qa.ts` | Single command Local + Tourism regression |
+| `scripts/check-local-staging-readiness.ts` | Env key presence probe (no secrets) |
+
+---
+
+## Handoff authoring validation (2026-05-21)
+
+| Check | Result |
+|-------|--------|
+| `git diff --check` | PASS (docs only) |
+| `npm run typecheck` | PASS |
+| `npm run lint` | PASS (0 errors) |
+| `npm run smoke` | PASS |
+| `npx prisma validate` | PASS |
+| `npx tsx scripts/test-local-no-charge-e2e-qa.ts` | PASS |
+| `npx tsx scripts/test-local-safe-i18n-copy-pass.ts` | PASS |
+| `npx tsx scripts/check-local-staging-readiness.ts` | PASS (`EXPO_PUBLIC_REST_API_BASE` missing noted) |
