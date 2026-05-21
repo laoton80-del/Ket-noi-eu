@@ -5,6 +5,7 @@
 **Master verified:** `7340675` (`chore(local): merge safe no-charge i18n copy`)  
 **Date:** 2026-05-20  
 **Type:** Ops / readiness verification only (no product, schema, or migration changes)
+**Handoff:** `docs/handoff/VIONA_LOCAL_NO_CHARGE_PILOT_READINESS_HANDOFF_1.md`
 
 ## Summary
 

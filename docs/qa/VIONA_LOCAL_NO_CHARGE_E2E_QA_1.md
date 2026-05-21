@@ -5,6 +5,7 @@
 **Master tested:** `4c7e719` (`feat(local): merge user request status UI`)  
 **Date:** 2026-05-20  
 **Type:** QA / readiness only (no product behavior changes)
+**Handoff:** See `docs/handoff/VIONA_LOCAL_NO_CHARGE_PILOT_READINESS_HANDOFF_1.md` for consolidated pilot readiness on latest `master`.
 
 ## Summary
 
