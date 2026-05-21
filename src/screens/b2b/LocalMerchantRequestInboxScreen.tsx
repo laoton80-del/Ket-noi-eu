@@ -225,7 +225,7 @@ export function LocalMerchantRequestInboxScreen(): ReactElement {
           ) : (
             <View style={styles.list}>
               {filtered.map((request) => {
-                const labels = buildLocalInboxDisplayLabels(request);
+                const labels = buildLocalInboxDisplayLabels(request, t);
                 const busy = actionRequestId === request.id;
                 const requesterName =
                   request.requester.displayName?.trim() ||
