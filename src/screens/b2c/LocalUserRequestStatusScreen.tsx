@@ -235,7 +235,7 @@ export function LocalUserRequestStatusScreen(): ReactElement {
           ) : (
             <View style={styles.list}>
               {filtered.map((request) => {
-                const labels = buildLocalUserRequestDisplayLabels(request);
+                const labels = buildLocalUserRequestDisplayLabels(request, t);
                 const busy = actionRequestId === request.id;
                 const expanded = expandedId === request.id;
                 const timeline = timelineById[request.id];

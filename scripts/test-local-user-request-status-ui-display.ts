@@ -4,6 +4,8 @@
  * Run: npx tsx scripts/test-local-user-request-status-ui-display.ts
  */
 import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import path from 'node:path';
 
 import {
   LocalServiceRequestStatus,
@@ -17,6 +19,35 @@ import {
   LOCAL_USER_STATUS_FORBIDDEN_COPY,
 } from '../src/screens/b2c/localUserRequestStatusUi';
 import type { LocalUserRequestListItem } from '../src/services/localUserRequestApi';
+
+const ROOT = path.resolve(__dirname, '..');
+
+type LocaleRoot = Record<string, unknown>;
+
+function loadLocale(file: string): LocaleRoot {
+  return JSON.parse(fs.readFileSync(path.join(ROOT, 'src/i18n/locales', file), 'utf8')) as LocaleRoot;
+}
+
+function localeTranslate(
+  root: LocaleRoot
+): (key: string, options?: Record<string, unknown>) => string {
+  return (key: string, options?: Record<string, unknown>) => {
+    const parts = key.split('.');
+    let cur: unknown = root;
+    for (const part of parts) {
+      if (!cur || typeof cur !== 'object') return key;
+      cur = (cur as Record<string, unknown>)[part];
+    }
+    if (typeof cur !== 'string') return key;
+    let out = cur;
+    if (options) {
+      for (const [k, v] of Object.entries(options)) {
+        out = out.replaceAll(`{{${k}}}`, String(v));
+      }
+    }
+    return out;
+  };
+}
 
 function fixture(overrides: Partial<LocalUserRequestListItem>): LocalUserRequestListItem {
   return {
@@ -51,42 +82,62 @@ function assertNoForbiddenCopy(visible: string): void {
 }
 
 function run(): void {
+  const tEn = localeTranslate(loadLocale('en.json'));
+  const tVi = localeTranslate(loadLocale('vi.json'));
+
   const requested = fixture({ status: LocalServiceRequestStatus.REQUESTED });
-  const requestedLabels = buildLocalUserRequestDisplayLabels(requested);
+  const requestedLabels = buildLocalUserRequestDisplayLabels(requested, tEn);
   assert.equal(requestedLabels.showReviewPendingNote, true);
   assert.match(requestedLabels.walletBadge, /No payment has been captured/);
   assert.equal(requestedLabels.actions.canCancel, true);
-  assertNoForbiddenCopy(collectLocalUserStatusVisibleCopy(requestedLabels));
+  assertNoForbiddenCopy(collectLocalUserStatusVisibleCopy(requestedLabels, tEn));
+
+  const requestedVi = buildLocalUserRequestDisplayLabels(requested, tVi);
+  assert.match(requestedVi.statusLabel, /Yêu cầu đã được gửi/);
+  assert.match(requestedVi.walletBadge, /Chưa thu khoản thanh toán nào/);
+  assert.match(requestedVi.walletBadge, /Chỉ gửi yêu cầu \/ không thu phí/);
 
   const confirmed = fixture({ status: LocalServiceRequestStatus.CONFIRMED });
-  const confirmedLabels = buildLocalUserRequestDisplayLabels(confirmed);
+  const confirmedLabels = buildLocalUserRequestDisplayLabels(confirmed, tEn);
   assert.equal(confirmedLabels.showConfirmedNote, true);
   assert.match(confirmedLabels.statusLabel, /Merchant confirmed your request/);
-  assert.match(collectLocalUserStatusVisibleCopy(confirmedLabels), /does not mean paid/);
+  assert.match(collectLocalUserStatusVisibleCopy(confirmedLabels, tEn), /does not mean paid/i);
   assert.equal(confirmedLabels.actions.canCancel, false);
-  assertNoForbiddenCopy(collectLocalUserStatusVisibleCopy(confirmedLabels));
+  assertNoForbiddenCopy(collectLocalUserStatusVisibleCopy(confirmedLabels, tEn));
+
+  const confirmedVi = buildLocalUserRequestDisplayLabels(confirmed, tVi);
+  assert.match(confirmedVi.statusLabel, /Cửa hàng đã xác nhận yêu cầu/);
+  assert.match(collectLocalUserStatusVisibleCopy(confirmedVi, tVi), /Đã xác nhận không có nghĩa là đã thanh toán/);
 
   const rejected = fixture({ status: LocalServiceRequestStatus.REJECTED });
-  const rejectedLabels = buildLocalUserRequestDisplayLabels(rejected);
+  const rejectedLabels = buildLocalUserRequestDisplayLabels(rejected, tEn);
   assert.match(rejectedLabels.statusLabel, /Merchant declined this request/);
   assert.equal(rejectedLabels.actions.canCancel, false);
+  assert.match(buildLocalUserRequestDisplayLabels(rejected, tVi).statusLabel, /Cửa hàng đã từ chối yêu cầu này/);
 
   const expired = fixture({ status: LocalServiceRequestStatus.EXPIRED });
-  const expiredLabels = buildLocalUserRequestDisplayLabels(expired);
+  const expiredLabels = buildLocalUserRequestDisplayLabels(expired, tEn);
   assert.match(expiredLabels.statusLabel, /This request expired/);
   assert.equal(expiredLabels.actions.canCancel, false);
+  assert.match(buildLocalUserRequestDisplayLabels(expired, tVi).statusLabel, /Yêu cầu này đã hết hạn/);
 
   const completed = fixture({ status: LocalServiceRequestStatus.COMPLETED });
-  assert.equal(buildLocalUserRequestDisplayLabels(completed).actions.canCancel, false);
+  assert.equal(buildLocalUserRequestDisplayLabels(completed, tEn).actions.canCancel, false);
+  assert.match(buildLocalUserRequestDisplayLabels(completed, tVi).statusLabel, /Hoàn tất/);
 
   const review = fixture({ status: LocalServiceRequestStatus.MERCHANT_REVIEW });
-  assert.equal(buildLocalUserRequestDisplayLabels(review).actions.canCancel, true);
+  assert.equal(buildLocalUserRequestDisplayLabels(review, tEn).actions.canCancel, true);
+  assert.match(
+    buildLocalUserRequestDisplayLabels(review, tVi).statusLabel,
+    /Đang chờ cửa hàng xem xét/
+  );
 
   const walletOk = buildLocalUserRequestDisplayLabels(
     fixture({
       walletMode: LocalWalletMode.REQUEST_ONLY_NO_CHARGE,
       walletPhase: LocalWalletPhase.NONE,
-    })
+    }),
+    tEn
   );
   assert.match(walletOk.walletBadge, /Request-only \/ no-charge/);
   assert.match(walletOk.walletBadge, /walletPhase NONE/);

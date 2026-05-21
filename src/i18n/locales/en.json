@@ -705,9 +705,19 @@
       "statusCopy": {
         "requested": "Request submitted",
         "merchantReview": "Waiting for merchant review",
-        "confirmed": "Merchant confirmed your request",
+        "confirmed": "Confirmed",
+        "inProgress": "In progress",
+        "completed": "Completed",
         "rejected": "Merchant declined this request",
-        "expired": "This request expired"
+        "userCancelled": "Cancelled by requester",
+        "opsCancelled": "Cancelled by operations",
+        "expired": "This request expired",
+        "unknown": "Unknown status"
+      },
+      "walletBadge": {
+        "requestOnlyNoCharge": "No payment has been captured · Request-only / no-charge · walletPhase NONE",
+        "phaseNone": "No payment has been captured · walletPhase NONE",
+        "phaseOther": "walletPhase {{phase}}"
       },
       "filter": {
         "all": "All",
@@ -739,8 +749,18 @@
         "requested": "Request submitted",
         "merchantReview": "Waiting for merchant review",
         "confirmed": "Merchant confirmed your request",
+        "inProgress": "In progress",
+        "completed": "Completed",
         "rejected": "Merchant declined this request",
-        "expired": "This request expired"
+        "userCancelled": "Cancelled",
+        "opsCancelled": "Cancelled by support",
+        "expired": "This request expired",
+        "unknown": "Request updated"
+      },
+      "walletBadge": {
+        "requestOnlyNoCharge": "No payment has been captured · Request-only / no-charge · walletPhase NONE",
+        "phaseNone": "No payment has been captured · walletPhase NONE",
+        "phaseOther": "walletPhase {{phase}}"
       },
       "cancelHint": "You can cancel while the request is still open.",
       "filter": {

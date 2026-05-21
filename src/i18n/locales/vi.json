@@ -705,9 +705,19 @@
       "statusCopy": {
         "requested": "Yêu cầu đã được gửi",
         "merchantReview": "Đang chờ cửa hàng xem xét",
-        "confirmed": "Cửa hàng đã xác nhận yêu cầu",
+        "confirmed": "Đã xác nhận",
+        "inProgress": "Đang xử lý",
+        "completed": "Hoàn tất",
         "rejected": "Cửa hàng đã từ chối yêu cầu này",
-        "expired": "Yêu cầu này đã hết hạn"
+        "userCancelled": "Đã hủy bởi người gửi",
+        "opsCancelled": "Đã hủy bởi vận hành",
+        "expired": "Yêu cầu này đã hết hạn",
+        "unknown": "Trạng thái không xác định"
+      },
+      "walletBadge": {
+        "requestOnlyNoCharge": "Chưa thu khoản thanh toán nào · Chỉ gửi yêu cầu / không thu phí · walletPhase NONE",
+        "phaseNone": "Chưa thu khoản thanh toán nào · walletPhase NONE",
+        "phaseOther": "walletPhase {{phase}}"
       },
       "filter": {
         "all": "Tất cả",
@@ -739,8 +749,18 @@
         "requested": "Yêu cầu đã được gửi",
         "merchantReview": "Đang chờ cửa hàng xem xét",
         "confirmed": "Cửa hàng đã xác nhận yêu cầu",
+        "inProgress": "Đang xử lý",
+        "completed": "Hoàn tất",
         "rejected": "Cửa hàng đã từ chối yêu cầu này",
-        "expired": "Yêu cầu này đã hết hạn"
+        "userCancelled": "Đã hủy",
+        "opsCancelled": "Đã hủy bởi hỗ trợ",
+        "expired": "Yêu cầu này đã hết hạn",
+        "unknown": "Yêu cầu đã cập nhật"
+      },
+      "walletBadge": {
+        "requestOnlyNoCharge": "Chưa thu khoản thanh toán nào · Chỉ gửi yêu cầu / không thu phí · walletPhase NONE",
+        "phaseNone": "Chưa thu khoản thanh toán nào · walletPhase NONE",
+        "phaseOther": "walletPhase {{phase}}"
       },
       "cancelHint": "Bạn có thể hủy khi yêu cầu còn đang mở.",
       "filter": {

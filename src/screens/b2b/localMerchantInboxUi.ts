@@ -26,6 +26,12 @@ export type LocalInboxDisplayLabels = Readonly<{
   actions: LocalMerchantInboxActions;
 }>;
 
+/** i18n lookup for Local merchant inbox status / wallet badge copy. */
+export type LocalMerchantCopyTranslate = (key: string, options?: Record<string, unknown>) => string;
+
+const MERCHANT_STATUS_PREFIX = 'local.merchantInbox.statusCopy.';
+const MERCHANT_WALLET_PREFIX = 'local.merchantInbox.walletBadge.';
+
 /** Forbidden payment/settlement copy — used by UI display tests only. */
 export const LOCAL_INBOX_FORBIDDEN_COPY = [
   'escrow',
@@ -39,6 +45,7 @@ export const LOCAL_INBOX_FORBIDDEN_COPY = [
   'dispatched',
 ] as const;
 
+/** English fallback labels for tests without i18n bootstrap. */
 export function localRequestStatusLabel(status: string): string {
   switch (status) {
     case LocalServiceRequestStatus.REQUESTED:
@@ -62,6 +69,47 @@ export function localRequestStatusLabel(status: string): string {
     default:
       return 'Unknown status';
   }
+}
+
+export function localMerchantRequestStatusI18nKey(status: string): string {
+  switch (status) {
+    case LocalServiceRequestStatus.REQUESTED:
+      return `${MERCHANT_STATUS_PREFIX}requested`;
+    case LocalServiceRequestStatus.MERCHANT_REVIEW:
+      return `${MERCHANT_STATUS_PREFIX}merchantReview`;
+    case LocalServiceRequestStatus.CONFIRMED:
+      return `${MERCHANT_STATUS_PREFIX}confirmed`;
+    case LocalServiceRequestStatus.IN_PROGRESS:
+      return `${MERCHANT_STATUS_PREFIX}inProgress`;
+    case LocalServiceRequestStatus.COMPLETED:
+      return `${MERCHANT_STATUS_PREFIX}completed`;
+    case LocalServiceRequestStatus.REJECTED:
+      return `${MERCHANT_STATUS_PREFIX}rejected`;
+    case LocalServiceRequestStatus.USER_CANCELLED:
+      return `${MERCHANT_STATUS_PREFIX}userCancelled`;
+    case LocalServiceRequestStatus.OPS_CANCELLED:
+      return `${MERCHANT_STATUS_PREFIX}opsCancelled`;
+    case LocalServiceRequestStatus.EXPIRED:
+      return `${MERCHANT_STATUS_PREFIX}expired`;
+    default:
+      return `${MERCHANT_STATUS_PREFIX}unknown`;
+  }
+}
+
+export function localMerchantWalletBadgeI18nKey(
+  walletMode: string,
+  walletPhase: string
+): { key: string; options?: Record<string, unknown> } {
+  if (
+    walletMode === LocalWalletMode.REQUEST_ONLY_NO_CHARGE &&
+    walletPhase === LocalWalletPhase.NONE
+  ) {
+    return { key: `${MERCHANT_WALLET_PREFIX}requestOnlyNoCharge` };
+  }
+  if (walletPhase === LocalWalletPhase.NONE) {
+    return { key: `${MERCHANT_WALLET_PREFIX}phaseNone` };
+  }
+  return { key: `${MERCHANT_WALLET_PREFIX}phaseOther`, options: { phase: walletPhase } };
 }
 
 export function localWalletBadgeLabel(
@@ -95,11 +143,13 @@ export function buildLocalInboxDisplayLabels(
   request: Pick<
     LocalMerchantInboxRequest,
     'status' | 'walletMode' | 'walletPhase' | 'actions'
-  >
+  >,
+  t: LocalMerchantCopyTranslate
 ): LocalInboxDisplayLabels {
+  const wallet = localMerchantWalletBadgeI18nKey(request.walletMode, request.walletPhase);
   return {
-    statusLabel: localRequestStatusLabel(request.status),
-    walletBadge: localWalletBadgeLabel(request.walletMode, request.walletPhase),
+    statusLabel: t(localMerchantRequestStatusI18nKey(request.status)),
+    walletBadge: t(wallet.key, wallet.options),
     showReviewPendingNote: shouldShowLocalReviewPendingNote(request.status),
     showConfirmedNote: shouldShowLocalConfirmedNote(request.status),
     actions: request.actions,
@@ -149,13 +199,20 @@ export function filterLocalInboxRequests(
 
 export function collectLocalInboxVisibleCopy(
   labels: LocalInboxDisplayLabels,
-  extraNotes: readonly string[]
+  extraNotes: readonly string[],
+  t?: LocalMerchantCopyTranslate
 ): string {
+  const reviewNote = t
+    ? t('local.merchantInbox.reviewPendingNote')
+    : 'Waiting for merchant review';
+  const confirmedNote = t
+    ? t('local.merchantInbox.confirmedNote')
+    : 'Confirmed does not mean paid';
   const parts = [
     labels.statusLabel,
     labels.walletBadge,
-    labels.showReviewPendingNote ? 'Waiting for merchant review' : '',
-    labels.showConfirmedNote ? 'Confirmed does not mean paid' : '',
+    labels.showReviewPendingNote ? reviewNote : '',
+    labels.showConfirmedNote ? confirmedNote : '',
     ...extraNotes,
   ];
   return parts.filter((p) => p.length > 0).join(' ');

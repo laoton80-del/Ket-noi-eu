@@ -11,14 +11,10 @@ import { LocalServiceRequestStatus } from '@prisma/client';
 
 import {
   buildLocalInboxDisplayLabels,
-  localRequestStatusLabel,
-  localWalletBadgeLabel,
   LOCAL_INBOX_FORBIDDEN_COPY,
 } from '../src/screens/b2b/localMerchantInboxUi';
 import {
   buildLocalUserRequestDisplayLabels,
-  localUserRequestStatusLabel,
-  localUserWalletBadgeLabel,
   LOCAL_USER_STATUS_FORBIDDEN_COPY,
 } from '../src/screens/b2c/localUserRequestStatusUi';
 
@@ -161,33 +157,90 @@ function assertRequiredPresent(corpus: string, required: readonly string[], labe
   }
 }
 
-function helperStatusCorpus(): string {
+function localeTranslate(
+  root: JsonRecord
+): (key: string, options?: Record<string, unknown>) => string {
+  return (key: string, options?: Record<string, unknown>) => {
+    const parts = key.split('.');
+    let cur: unknown = root;
+    for (const part of parts) {
+      if (!cur || typeof cur !== 'object') return key;
+      cur = (cur as JsonRecord)[part];
+    }
+    if (typeof cur !== 'string') return key;
+    let out = cur;
+    if (options) {
+      for (const [k, v] of Object.entries(options)) {
+        out = out.replaceAll(`{{${k}}}`, String(v));
+      }
+    }
+    return out;
+  };
+}
+
+function helperStatusCorpus(en: JsonRecord, vi: JsonRecord): string {
+  const tEn = localeTranslate(en);
+  const tVi = localeTranslate(vi);
   const statuses = Object.values(LocalServiceRequestStatus);
-  const user = statuses.map((s) => localUserRequestStatusLabel(s)).join(' ');
-  const merchant = statuses.map((s) => localRequestStatusLabel(s)).join(' ');
-  const wallet =
-    localUserWalletBadgeLabel('REQUEST_ONLY_NO_CHARGE', 'NONE') +
-    ' ' +
-    localWalletBadgeLabel('REQUEST_ONLY_NO_CHARGE', 'NONE');
-  const userLabels = buildLocalUserRequestDisplayLabels({
-    status: LocalServiceRequestStatus.CONFIRMED,
-    walletMode: 'REQUEST_ONLY_NO_CHARGE',
-    walletPhase: 'NONE',
-  });
-  const merchantLabels = buildLocalInboxDisplayLabels({
-    status: LocalServiceRequestStatus.CONFIRMED,
-    walletMode: 'REQUEST_ONLY_NO_CHARGE',
-    walletPhase: 'NONE',
-    actions: { canConfirm: false, canReject: false },
-  });
+  const userEn = statuses
+    .map((s) => buildLocalUserRequestDisplayLabels(
+      { status: s, walletMode: 'REQUEST_ONLY_NO_CHARGE', walletPhase: 'NONE' },
+      tEn
+    ).statusLabel)
+    .join(' ');
+  const userVi = statuses
+    .map((s) => buildLocalUserRequestDisplayLabels(
+      { status: s, walletMode: 'REQUEST_ONLY_NO_CHARGE', walletPhase: 'NONE' },
+      tVi
+    ).statusLabel)
+    .join(' ');
+  const merchantEn = statuses
+    .map((s) => buildLocalInboxDisplayLabels(
+      {
+        status: s,
+        walletMode: 'REQUEST_ONLY_NO_CHARGE',
+        walletPhase: 'NONE',
+        actions: { canConfirm: false, canReject: false },
+      },
+      tEn
+    ).statusLabel)
+    .join(' ');
+  const userLabels = buildLocalUserRequestDisplayLabels(
+    {
+      status: LocalServiceRequestStatus.CONFIRMED,
+      walletMode: 'REQUEST_ONLY_NO_CHARGE',
+      walletPhase: 'NONE',
+    },
+    tEn
+  );
+  const merchantLabels = buildLocalInboxDisplayLabels(
+    {
+      status: LocalServiceRequestStatus.CONFIRMED,
+      walletMode: 'REQUEST_ONLY_NO_CHARGE',
+      walletPhase: 'NONE',
+      actions: { canConfirm: false, canReject: false },
+    },
+    tEn
+  );
+  const walletVi = buildLocalUserRequestDisplayLabels(
+    {
+      status: LocalServiceRequestStatus.REQUESTED,
+      walletMode: 'REQUEST_ONLY_NO_CHARGE',
+      walletPhase: 'NONE',
+    },
+    tVi
+  ).walletBadge;
   return [
-    user,
-    merchant,
-    wallet,
+    userEn,
+    userVi,
+    merchantEn,
     userLabels.statusLabel,
     userLabels.walletBadge,
     merchantLabels.statusLabel,
     merchantLabels.walletBadge,
+    walletVi,
+    tEn('local.userRequestStatus.confirmedNote'),
+    tVi('local.userRequestStatus.confirmedNote'),
     'Confirmed does not mean paid',
     'Waiting for merchant review',
     'You can cancel while the request is still open',
@@ -204,8 +257,8 @@ function run(): void {
   assertNoForbidden(enStrings, 'en i18n');
   assertNoForbidden(viStrings, 'vi i18n');
 
-  const enCorpus = [...enStrings, helperStatusCorpus()].join('\n');
-  const viCorpus = viStrings.join('\n');
+  const enCorpus = [...enStrings, helperStatusCorpus(en, vi)].join('\n');
+  const viCorpus = [...viStrings, helperStatusCorpus(en, vi)].join('\n');
 
   assertRequiredPresent(enCorpus, REQUIRED_EN, 'en');
   assertRequiredPresent(viCorpus, REQUIRED_VI, 'vi');
