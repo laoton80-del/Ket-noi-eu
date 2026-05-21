@@ -1,11 +1,11 @@
 # VIONA Local manual device + staging walkthrough — 1
 
-**Pack:** `VIONA.LOCAL.MANUAL_DEVICE_STAGING_WALKTHROUGH.1`  
-**Branch:** `pack-local-manual-device-staging-walkthrough-1`  
-**Master baseline:** `f3aab1b` (`docs(runbook): merge local staging database verification`)  
-**Date:** 2026-05-20  
+**Pack:** `VIONA.LOCAL.MANUAL_DEVICE_STAGING_WALKTHROUGH.1` (+ evidence update `VIONA.LOCAL.MANUAL_STAGING_EVIDENCE_UPDATE.1`)
+**Branch:** `pack-local-manual-staging-evidence-update-1`
+**Master baseline:** `b4193a1` (`docs(operating): merge local no-charge readiness sync`; handoff @ `cce3eba` / `bfcf220`)
+**Date:** 2026-05-20 (checklist); 2026-05-21 (evidence update pack)
 **Type:** Manual QA checklist + execution log (no product, schema, or wallet changes)
-**Handoff:** `docs/handoff/VIONA_LOCAL_NO_CHARGE_PILOT_READINESS_HANDOFF_1.md` — VI status badges wired on `master` @ `f87e053+`.
+**Handoff:** `docs/handoff/VIONA_LOCAL_NO_CHARGE_PILOT_READINESS_HANDOFF_1.md` — merged on `master`; kernel sync @ `b4193a1`.
 
 ## Summary
 
@@ -26,14 +26,15 @@ This document does **not** certify staging by itself. Record evidence in the tab
 | **PASS_WITH_LIMITATIONS** | Checklist published but device/staging not fully executed, or known VI badge limitation only |
 | **BLOCKED** | Cannot reach staging API, missing `EXPO_PUBLIC_REST_API_BASE`, or auth blocked |
 
-**Current verdict (checklist publication):** **PASS_WITH_LIMITATIONS**
+**Current verdict:** **PASS_WITH_LIMITATIONS** — automated preflight only; **not** staging operator PASS.
 
 | Field | Value |
 |-------|--------|
 | Verdict | PASS_WITH_LIMITATIONS |
-| Reason | Manual device/staging execution pending operator |
-| Tester | _fill on completion_ |
-| Test date | _fill on completion_ |
+| Reason | No operator device/staging evidence submitted in evidence-update pack `.1`; manual tables remain NOT RUN |
+| Tester | _fill when operator completes walkthrough_ |
+| Test date | _fill when operator completes walkthrough_ |
+| Last evidence update | 2026-05-21 — `VIONA.LOCAL.MANUAL_STAGING_EVIDENCE_UPDATE.1` (no row-level PASS/FAIL payload) |
 
 ## Scope
 
@@ -66,7 +67,7 @@ This document does **not** certify staging by itself. Record evidence in the tab
 
 | # | Check | Expected | Result | Evidence |
 |---|--------|----------|--------|----------|
-| E1 | Git `master` hash | `f3aab1b` or later merge of this pack | NOT RUN | |
+| E1 | Git `master` hash | `b4193a1` or later (kernel sync + handoff on `master`) | NOT RUN | Repo baseline confirmed in pack; device/staging build not exercised |
 | E2 | Branch under test | Staging build from `master` after Local packs | NOT RUN | |
 | E3 | `EXPO_PUBLIC_REST_API_BASE` set on **device/staging build** | Points to **staging** API host (not accidental localhost unless intended) | NOT RUN | |
 | E4 | App REST calls hit staging | Network tab / server logs show staging host | NOT RUN | |
@@ -236,7 +237,7 @@ Confirm **none** of the following appear on Local user/merchant screens (except 
 
 | Limitation | Impact |
 |------------|--------|
-| Manual staging/device not executed when checklist published | Verdict stays PASS_WITH_LIMITATIONS until operator completes tables |
+| Manual staging/device not executed | Verdict stays PASS_WITH_LIMITATIONS until operator completes §1–§9 with evidence (2026-05-21 update: no evidence payload) |
 | `EXPO_PUBLIC_REST_API_BASE` may be missing on dev machine | Device build must set staging API explicitly |
 | Re-verify VI status/wallet badges on device | Runtime i18n wired; confirm in L6/L7 |
 | No consumer create UI guaranteed on Local hub | May need API/seed to create first request |
@@ -268,13 +269,23 @@ Confirm **none** of the following appear on Local user/merchant screens (except 
 
 ---
 
-## 13. Next recommendation
+## 13. Operator evidence update log
+
+| Pack | Date | Operator evidence received | Manual §1–§9 rows updated | Verdict change |
+|------|------|----------------------------|---------------------------|----------------|
+| `VIONA.LOCAL.MANUAL_STAGING_EVIDENCE_UPDATE.1` | 2026-05-21 | **No** — no tester, date, screenshot refs, account labels, device matrix, or step PASS/FAIL supplied | **None** — all remain **NOT RUN** | **No** — stays **PASS_WITH_LIMITATIONS** |
+
+**Rule:** Rows in §1–§9 are updated only from explicit operator evidence (PASS / FAIL / NOT RUN per step). This pack did not receive that payload.
+
+---
+
+## 14. Next recommendation
 
 | Option | Action |
 |--------|--------|
-| **A** | Merge this checklist; operator completes staging/device pass |
-| **B** | Wire VI `statusCopy` into runtime status badges |
-| **C** | Local no-charge pilot readiness handoff (accounts + staging build + sign-off) |
-| **D** | Stop/reassess if BLOCKED on env or API |
+| **A** | Operator runs staging/device walkthrough and supplies evidence (tester, date, screenshot refs, per-row results) |
+| **B** | After **A** with all required PASS: update verdict to **PASS** and pilot sign-off handoff |
+| **C** | If blocked on env/API: mark **BLOCKED** with FAIL rows and issue notes |
+| **D** | Stop/reassess if staging target or accounts cannot be provisioned |
 
-After operator PASS: proceed to **C**; if only VI badges lag, ship with **PASS_WITH_LIMITATIONS** and schedule **B**.
+VI `statusCopy` / `walletBadge` runtime wiring is on `master` @ `f87e053+` — verify on device during **A**, not a separate engineering gate.
