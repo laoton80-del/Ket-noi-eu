@@ -125,7 +125,7 @@ import { LiveAiTeacherScreen } from './src/screens/academy/LiveAiTeacherScreen';
 import { DemoTourOverlay } from './src/components/onboarding/DemoTourOverlay';
 import { V7NavigationSurfaceProvider, useNavigationThemeForHub } from './src/context/V7NavigationSurfaceContext';
 import { b2bTheme } from './src/theme/appModeThemes';
-import { hasB2BWorkspaceAccess } from './src/utils/b2bAccess';
+import { hasB2BWorkspaceAccess, hasLocalStagingWalkthroughUnlock } from './src/utils/b2bAccess';
 import { getFeatureFlags, type FeatureFlags } from './src/core/feature-flags/featureFlags';
 import {
   mvpGateByFlag,
@@ -889,6 +889,14 @@ function GatedTourismMerchantInboxScreen() {
 }
 
 function GatedLocalMerchantRequestInboxScreen() {
+  // Staging manual walkthrough only. Server-side ownership still enforced by JWT. Not production unlock.
+  if (hasLocalStagingWalkthroughUnlock()) {
+    return (
+      <ThemeProvider value={b2bTheme}>
+        <LocalMerchantRequestInboxScreen />
+      </ThemeProvider>
+    );
+  }
   return (
     <B2BWorkspaceGate>
       <LocalMerchantRequestInboxScreen />
