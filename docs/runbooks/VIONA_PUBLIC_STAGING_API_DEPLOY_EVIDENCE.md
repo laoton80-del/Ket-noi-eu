@@ -9,11 +9,12 @@
 
 | Layer | Result |
 |-------|--------|
-| **Fly.io deploy (fra)** | **BLOCKED** — no Fly access token in automation shell |
-| **Deployment config in repo** | **READY** @ `a904b64` |
-| **Public HTTPS URL** | **N/A** — deploy not executed |
-| **HTTPS smoke** | **NOT RUN** |
-| **API smoke (local parity)** | **PASS** @ `a904b64` — `http://127.0.0.1:8787` |
+| **Fly.io deploy (fra)** | **PASS** (operator) — app `viona-api-staging-eu` |
+| **Deployment config in repo** | **READY** @ `0862e00`+ |
+| **Public HTTPS URL** | `https://viona-api-staging-eu.fly.dev` |
+| **`GET /health` (HTTPS)** | **PASS** — HTTP 200 |
+| **HTTPS smoke (full)** | **BLOCKED** — all REST logins HTTP 500 (see debug pack below) |
+| **API smoke (local parity)** | **PASS** — `http://127.0.0.1:8787` |
 
 **Does not certify:** production launch, commercial/payment readiness, public HTTPS device matrix, or SOS production reliability.
 
@@ -71,6 +72,34 @@ Paste HTTPS smoke JSON into this doc and change verdict to **PASS** only when al
 
 ---
 
+## Login debug pack (`VIONA.STAGING.PUBLIC_API_SMOKE_LOGIN_DEBUG.1`) — 2026-05-20
+
+Smoke script now logs per-persona stage detail (no PIN/JWT/secrets).
+
+### HTTPS smoke (after deploy)
+
+| Stage | Result |
+|-------|--------|
+| health | **PASS** — HTTP 200 |
+| User A login | **FAIL** — HTTP 500 — `Authentication service unavailable` |
+| User B login | **FAIL** — HTTP 500 — same |
+| Merchant M login | **FAIL** — HTTP 500 — same |
+| Merchant N login | **FAIL** — HTTP 500 — same |
+| Local / inbox / confirm / decline | **NOT REACHED** |
+
+### Likely root cause (ops, not app code change in this pack)
+
+API maps HTTP 500 `Authentication service unavailable` to `server_misconfigured` when **`JWT_SECRET` is missing or &lt; 16 characters** on the Fly machine (`AuthService.loginWithPhoneAndPin`). All four personas fail identically → env/secret sync issue, not per-account PIN.
+
+**Operator fix (no secrets logged):**
+
+1. `fly secrets list --app viona-api-staging-eu` — confirm `JWT_SECRET` present.
+2. Re-run `node scripts/fly-staging-sync-secrets.mjs` from repo with valid `.env.local` (staging ref + `JWT_SECRET` length ≥ 16).
+3. `flyctl deploy --app viona-api-staging-eu` (or restart machines after secret import).
+4. Re-run `node scripts/smoke-public-staging-api.mjs https://viona-api-staging-eu.fly.dev`.
+
+---
+
 ## Deployment target
 
 | Field | Value |
@@ -97,8 +126,8 @@ Paste HTTPS smoke JSON into this doc and change verdict to **PASS** only when al
 
 | Check | Public HTTPS | Local parity (`127.0.0.1:8787`) |
 |-------|----------------|----------------------------------|
-| `GET /health` → `200` | **NOT RUN** | **PASS** |
-| No secrets in body | **NOT RUN** | **PASS** |
+| `GET /health` → `200` | **PASS** | **PASS** |
+| No secrets in body | **PASS** | **PASS** |
 
 ---
 
@@ -106,8 +135,8 @@ Paste HTTPS smoke JSON into this doc and change verdict to **PASS** only when al
 
 | Account | Public HTTPS | Local parity |
 |---------|--------------|--------------|
-| User A / B | **NOT RUN** | **PASS** |
-| Merchant M / N | **NOT RUN** | **PASS** |
+| User A / B | **FAIL** (HTTP 500 misconfigured) | **PASS** |
+| Merchant M / N | **FAIL** (HTTP 500 misconfigured) | **PASS** |
 | Dev JWT required | — | **No** |
 
 ---
@@ -116,10 +145,10 @@ Paste HTTPS smoke JSON into this doc and change verdict to **PASS** only when al
 
 | Check | Public HTTPS | Local parity |
 |-------|--------------|--------------|
-| Merchant M inbox | **NOT RUN** | **PASS** |
-| Merchant confirm | **NOT RUN** | **PASS** |
-| Merchant decline | **NOT RUN** | **PASS** |
-| Merchant N isolation | **NOT RUN** | **PASS** |
+| Merchant M inbox | **NOT REACHED** | **PASS** |
+| Merchant confirm | **NOT REACHED** | **PASS** |
+| Merchant decline | **NOT REACHED** | **PASS** |
+| Merchant N isolation | **NOT REACHED** | **PASS** |
 | `walletMode` | — | `REQUEST_ONLY_NO_CHARGE` |
 | `walletPhase` | — | `NONE` |
 | Payment captured | — | **No** |
@@ -154,6 +183,6 @@ Allowlist in `scripts/fly-staging-sync-secrets.mjs`: `localhost:8081`, `8089`, `
 
 ## Next required action
 
-1. In operator PowerShell: `flyctl auth whoami` must succeed.
-2. Run operator command block above; capture smoke JSON.
-3. Re-open `FOLLOWUP_HTTPS_SMOKE` or paste results to update this doc to **PASS**.
+1. Ensure Fly secret `JWT_SECRET` (≥ 16 chars) via `scripts/fly-staging-sync-secrets.mjs` + redeploy/restart.
+2. Re-run HTTPS smoke; paste passing JSON here when all stages PASS.
+3. Set `EXPO_PUBLIC_REST_API_BASE=https://viona-api-staging-eu.fly.dev`, clear dev JWT, `npx expo start -c`.
