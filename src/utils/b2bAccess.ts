@@ -1,4 +1,6 @@
 import type { AuthUser } from '../context/authTypes';
+import { isMerchantServerRole } from '../context/authTypes';
+import { isRestApiConfigured } from '../services/apiClient';
 
 export function hasB2BWorkspaceAccess(user: AuthUser | null): boolean {
   if (!user) return false;
@@ -15,8 +17,17 @@ export function hasB2BWorkspaceAccess(user: AuthUser | null): boolean {
  */
 export function hasLocalStagingWalkthroughUnlock(): boolean {
   if (!__DEV__) return false;
-  const devJwt = process.env.EXPO_PUBLIC_DEV_REST_JWT?.trim() ?? '';
-  if (devJwt.length === 0) return false;
   return process.env.EXPO_PUBLIC_LOCAL_STAGING_WALKTHROUGH_UNLOCK?.trim() === 'true';
+}
+
+/**
+ * Dev/staging Local merchant inbox — bypass client B2B paywall only for this surface.
+ * Normal path: REST UI login with merchant `serverRole` + configured API base.
+ * Legacy path: `EXPO_PUBLIC_LOCAL_STAGING_WALKTHROUGH_UNLOCK` (still requires `__DEV__`).
+ */
+export function canOpenLocalMerchantInboxDevBypass(user: AuthUser | null): boolean {
+  if (hasLocalStagingWalkthroughUnlock()) return true;
+  if (!__DEV__ || !isRestApiConfigured()) return false;
+  return user != null && isMerchantServerRole(user.serverRole);
 }
 

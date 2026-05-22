@@ -30,11 +30,10 @@ function getDevJwtOverride(): string | null {
 }
 
 export async function getRestApiJwt(): Promise<string | null> {
-  const dev = getDevJwtOverride();
-  if (dev) return dev;
   const stored = await AsyncStorage.getItem(STORAGE_KEYS.restApiJwt);
-  const t = stored?.trim() ?? '';
-  return t.length > 0 ? t : null;
+  const fromStorage = stored?.trim() ?? '';
+  if (fromStorage.length > 0) return fromStorage;
+  return getDevJwtOverride();
 }
 
 export async function setRestApiJwt(token: string): Promise<void> {

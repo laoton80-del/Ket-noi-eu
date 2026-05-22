@@ -4,6 +4,8 @@ import { normalizeCountryCodeOrSentinel, resolveCountryPack, type PricingTierId 
 import type { DocumentVaultItem } from '../services/DocumentAlarmService';
 import { identifyUser, resetUser } from '../services/AnalyticsService';
 import { clearRestApiJwt } from '../services/apiClient';
+import type { RestLoginData } from '../services/restAuthClient';
+import { mapRestAuthUserToAuthUser } from '../services/auth/restSessionBridge';
 import { ensureWalletFirebaseAuth } from '../services/walletFirebaseSession';
 import { getWalletState, syncWalletFromServer } from '../state/wallet';
 import { STORAGE_KEYS } from '../storage/storageKeys';
@@ -42,6 +44,8 @@ type AuthContextValue = {
   pendingRedirect: RedirectTarget | null;
   setPendingRedirect: (target: RedirectTarget | null) => void;
   beginLogin: (phone: string) => void;
+  /** Apply REST login result (JWT already persisted by `loginRestApi`). */
+  applyRestLoginSession: (data: RestLoginData, displayPhone?: string) => void;
   completeProfile: (input: {
     name: string;
     country: string;
@@ -178,6 +182,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       pendingRedirect,
       setPendingRedirect,
       beginLogin: (phone: string) => setPendingLogin({ phone }),
+      applyRestLoginSession: (data, displayPhone) => {
+        const nextUser = mapRestAuthUserToAuthUser(data.user, displayPhone ?? pendingLogin?.phone);
+        setUser(nextUser);
+        void AsyncStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(nextUser));
+        setPendingLogin(null);
+      },
       completeProfile: ({
         name,
         country,

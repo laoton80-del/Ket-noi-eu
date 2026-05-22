@@ -266,6 +266,18 @@
       "sos": "SOS"
     }
   },
+  "auth": {
+    "otpTitle": "Nhập OTP",
+    "pinTitle": "Nhập mã PIN",
+    "pinSubtitleRest": "Nhập mã PIN tài khoản để đăng nhập qua REST API.",
+    "pinSubtitleDemo": "Demo: nhập bất kỳ 4 chữ số khi chưa cấu hình địa chỉ API.",
+    "pinTooShort": "Mã PIN tối thiểu 6 ký tự.",
+    "loginFailed": "Số điện thoại hoặc mã PIN không đúng.",
+    "loginUnreachable": "Không kết nối được máy chủ. Kiểm tra mạng và địa chỉ API.",
+    "loginMisconfigured": "Dịch vụ đăng nhập không khả dụng trên máy chủ này.",
+    "verifyBtn": "Đăng nhập",
+    "otpVerifyBtn": "Xác thực"
+  },
   "login": {
     "brandName": "VIONA",
     "brandTagline": "Mạng lưới dịch vụ toàn cầu cho người Việt",

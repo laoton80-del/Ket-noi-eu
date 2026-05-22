@@ -266,6 +266,18 @@
       "sos": "SOS"
     }
   },
+  "auth": {
+    "otpTitle": "Enter OTP",
+    "pinTitle": "Enter PIN",
+    "pinSubtitleRest": "Enter your account PIN to sign in via the REST API.",
+    "pinSubtitleDemo": "Demo: enter any 4 digits when the API base URL is not configured.",
+    "pinTooShort": "PIN must be at least 6 characters.",
+    "loginFailed": "Invalid phone number or PIN.",
+    "loginUnreachable": "Cannot reach the server. Check your network and API base URL.",
+    "loginMisconfigured": "Sign-in service is unavailable on this server.",
+    "verifyBtn": "Sign in",
+    "otpVerifyBtn": "Verify"
+  },
   "login": {
     "brandName": "VIONA",
     "brandTagline": "Global services tailored for the Vietnamese community",

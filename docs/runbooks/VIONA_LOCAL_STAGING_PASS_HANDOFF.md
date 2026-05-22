@@ -41,11 +41,15 @@
 - Merchant confirm/reject = status only — **not** payment capture
 - No commercial / payment / escrow / payout / settlement readiness claim in evidence
 
+## REST UI login (post-`feat(auth)`)
+
+Staging walkthrough can use **Login → PIN → `POST /api/auth/login`** when `EXPO_PUBLIC_REST_API_BASE` is set. JWT is stored in `ketnoieu.restApi.jwt.v1` (preferred over `EXPO_PUBLIC_DEV_REST_JWT` when both exist). Pilot phones: `+420910000001/002`, `+420920000001/002` (operator PIN via provisioning — never commit).
+
 ## Remaining limitations
 
 | Limitation | Notes |
 |------------|--------|
-| Demo login UI | Does not call `POST /api/auth/login`; operator used dev JWT |
+| Demo login UI | Without `EXPO_PUBLIC_REST_API_BASE`, OTP screen stays 4-digit demo path |
 | Walkthrough unlock | `EXPO_PUBLIC_LOCAL_STAGING_WALKTHROUGH_UNLOCK=true` + `__DEV__` only |
 | Not production matrix | No public staging HTTPS / full device EN-VI matrix sign-off |
 | QA checklist rows | Full §1–§9 row-by-row not re-filled in QA doc |
