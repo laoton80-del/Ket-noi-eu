@@ -197,11 +197,23 @@ Known Local lifecycle milestones:
 🟢 Local no-charge E2E QA certification merged + pushed
 🟢 Safe EN/VI i18n copy pass merged + pushed
 🟢 Staging DB/migration verification runbook merged + pushed
-🟢 Manual device/staging walkthrough checklist merged + pushed (operator execution **NOT RUN**)
+🟢 Manual device/staging walkthrough checklist merged + pushed
+🟢 Staging pilot account provisioning merged + pushed (`40ff5bb`)
+🟢 Staging pilot Local request scripts merged + pushed (`ec1364b`)
+🟢 Staging merchant walkthrough bridge merged + pushed (`c49b354`)
+🟢 Web merchant inbox Confirm/Decline fix merged + pushed (`2137ce1`)
+🟢 Manual staging walkthrough evidence merged + pushed (`4d365bf`) — operator **PASS**
 🟢 VI status copy runtime wiring merged + pushed (`f87e053`)
 🟢 Pilot readiness handoff doc merged + pushed (`cce3eba` / `bfcf220`)
 
-**Automated Local no-charge pilot readiness (master @ `cce3eba`):** **PASS_WITH_LIMITATIONS** — request-only / no-charge lane is **automated QA-ready**. API, UI, EN/VI copy, composed E2E runner, staging DB runbook, manual walkthrough checklist, and handoff doc are on `master`. **Not** commercial/payment ready. **Not** staging operator PASS. **Operator manual walkthrough required** — checklist exists; execution **NOT RUN**. Handoff: `docs/handoff/VIONA_LOCAL_NO_CHARGE_PILOT_READINESS_HANDOFF_1.md`.
+**Local no-charge pilot readiness (master @ `4d365bf`):**
+
+| Layer | Verdict |
+|-------|---------|
+| **Automated QA** (API, UI, E2E, i18n, staging DB runbook) | **PASS_WITH_LIMITATIONS** — automated QA-ready |
+| **Staging / manual walkthrough** (staging DB + local-dev API + dev JWT) | **PASS** — see `docs/runbooks/VIONA_LOCAL_MANUAL_STAGING_EVIDENCE_2.md` |
+
+**Not** commercial/payment/production ready. **Not** escrow/payout/settlement automation. Handoff: `docs/runbooks/VIONA_LOCAL_STAGING_PASS_HANDOFF.md`, `docs/handoff/VIONA_LOCAL_NO_CHARGE_PILOT_READINESS_HANDOFF_1.md` (automated scope).
 
 Current Local mode:
 REQUEST_ONLY_NO_CHARGE
@@ -230,8 +242,8 @@ Current correct Local backend order:
 2. ~~Merchant inbox UI minimum~~ — **done on master**
 3. ~~User request status UI minimum~~ — **done on master**
 4. ~~Safe i18n copy pass + VI runtime status labels~~ — **done on master**
-5. **Operator manual staging/device walkthrough** — checklist published; **NOT RUN** (gate before staging sign-off)
-6. AI Local Copilot read-only — **blocked** until manual pilot sign-off and read-only policy pack
+5. ~~Operator manual staging/device walkthrough~~ — **PASS** on staging @ `4d365bf` (local-dev + dev JWT; not production matrix)
+6. AI Local Copilot read-only — **blocked** until read-only policy pack (staging manual sign-off done; commercial pilot still not started)
 7. Human-confirmed AI actions — **blocked**
 8. Wallet hold/debit/release/settlement — **blocked** until CFO/finance-approved Local wallet policy pack; Local commercial pilot **not** started
 
@@ -517,7 +529,7 @@ Forbidden acceleration:
 - fake production claims
 
 Target speed:
-- Local no-charge pilot: automated QA-ready on master; operator manual pass + sign-off still required (not “production ready”)
+- Local no-charge pilot: automated QA-ready on master; **staging manual walkthrough PASS** @ `4d365bf` (not commercial/payment/production ready)
 - AI Copilot read-only: 60–90 days target — **not started**
 - first safe wallet/settlement market: 3–5 months target — **blocked** for Local lane until finance pack
 - global full active: 6–9 months in good conditions, longer if legal/payment/ops blocks — **not reached**

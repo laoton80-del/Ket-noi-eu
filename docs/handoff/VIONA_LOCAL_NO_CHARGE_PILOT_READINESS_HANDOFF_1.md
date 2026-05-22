@@ -14,7 +14,22 @@ The **Local request-only / no-charge** pilot lane on VIONA is **automated QA-rea
 
 This is **not** a commercial or payment pilot. Local does **not** hold funds, settle to providers, or bridge Firebase VIP / Tourism booking wallets. Merchant confirm/reject updates **request status only** — **confirmed does not mean paid**.
 
-**Operator manual staging/device walkthrough has not been completed.** Until evidence tables in `docs/qa/VIONA_LOCAL_MANUAL_DEVICE_STAGING_WALKTHROUGH_1.md` are filled with PASS, treat pilot sign-off as **PASS_WITH_LIMITATIONS**, not production or staging operator PASS.
+**Automated engineering certification** remains the scope of this handoff (`f87e053` era). **Staging manual walkthrough** is now **PASS** on `master` @ `4d365bf` — see `docs/runbooks/VIONA_LOCAL_MANUAL_STAGING_EVIDENCE_2.md` and `docs/runbooks/VIONA_LOCAL_STAGING_PASS_HANDOFF.md`. That PASS is **staging / manual only** — not commercial, payment, escrow, payout, settlement, or production automation.
+
+---
+
+## Staging manual walkthrough PASS (2026-05-22)
+
+| Item | Value |
+|------|--------|
+| **Verdict** | **PASS** (staging / manual only) |
+| **Master** | `4d365bf` |
+| **Evidence** | `docs/runbooks/VIONA_LOCAL_MANUAL_STAGING_EVIDENCE_2.md` |
+| **Scope** | Staging DB + local-dev API + dev JWT + walkthrough unlock; request-only / no-charge |
+| **Guardrails** | No payment captured; `walletPhase` NONE; Transaction/Wallet deltas 0 |
+| **Limitations** | Demo login UI; not production HTTPS/device matrix; full EN/VI QA rows not re-filled; ops audit UI not covered |
+
+Supporting commits: `2137ce1`, `c49b354`, `ec1364b`, `40ff5bb`, `4d365bf`.
 
 ---
 
@@ -203,10 +218,10 @@ Do **not** enable wallet settlement, Firebase VIP bridge, or Tourism bridge on L
 |-----------|--------|
 | Automated QA (API, UI helpers, i18n, E2E, Tourism regression) | **Ready** on `master` @ `f87e053` |
 | Staging DB read-only verification (repo + connected DB) | **Documented** — operator must confirm target |
-| Manual device/staging walkthrough | **Not completed** — checklist published, tables NOT RUN |
+| Manual device/staging walkthrough | **PASS** on staging @ `4d365bf` — evidence in runbooks (not full QA row fill) |
 | Commercial / payment / production Local pilot | **Not claimed** |
 
-**Reason:** Engineering certification and documentation are complete; **operator manual PASS** is the remaining gate for staging pilot sign-off.
+**Reason:** Automated QA ready on `master`; **staging manual walkthrough PASS** recorded separately. Commercial/production Local pilot sign-off still **not** claimed.
 
 ---
 
