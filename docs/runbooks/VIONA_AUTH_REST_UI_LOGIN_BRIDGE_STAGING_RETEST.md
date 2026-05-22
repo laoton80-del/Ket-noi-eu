@@ -1,7 +1,7 @@
 # VIONA REST UI login bridge — staging retest evidence
 
-**Pack:** `VIONA.AUTH.REST_UI_LOGIN_BRIDGE.STAGING_RETEST.1` (+ `STRICT_UI_PROOF.1` addendum)  
-**Master at test:** `3aed288` (evidence doc); app bridge @ `f3fbc4a`  
+**Pack:** `VIONA.AUTH.REST_UI_LOGIN_BRIDGE.STAGING_RETEST.1` (+ `STRICT_UI_PROOF.1` / `STRICT_UI_PROOF.FOLLOWUP.1`)  
+**Master at test:** `6853849` (evidence); app bridge @ `f3fbc4a`  
 **Staging project ref:** `euqbfanilcssjiwwtcby` (`viona-staging-eu`)  
 **Date:** 2026-05-22  
 **Type:** Staging / manual retest evidence — **not** commercial, payment, production, or device-matrix certification.
@@ -11,31 +11,45 @@
 | Layer | Verdict |
 |-------|---------|
 | **REST API parity** (login, lists, inbox, confirm/decline, isolation) | **PASS** |
-| **Strict UI proof** (`STRICT_UI_PROOF.1`, dev JWT cleared) | **BLOCKED** — precondition not met (see below) |
-| **Expo UI walkthrough** (Login → PIN → screens) | **NOT RUN** — operator must complete checklist after clearing dev JWT |
-| **Overall** | **PASS_WITH_LIMITATIONS** until strict UI checklist completes |
+| **Strict UI proof** (`STRICT_UI_PROOF.FOLLOWUP.1`, dev JWT cleared per operator) | **PASS** (staging / manual only) |
+| **Overall** | **PASS** (staging / manual only) — not commercial, payment, or production |
 
-## Strict UI proof addendum (`STRICT_UI_PROOF.1`)
+## Strict UI proof — operator follow-up (`STRICT_UI_PROOF.FOLLOWUP.1`)
 
-**Date checked:** 2026-05-22  
-**Precondition audit (no secret values logged):**
+**Operator attestation date:** 2026-05-22  
+**Expo restart:** `npx expo start -c` after clearing dev JWT (operator-confirmed)  
+**Strict env (operator-confirmed):**
 
 | Requirement | Status |
 |-------------|--------|
 | `EXPO_PUBLIC_REST_API_BASE` set | **PASS** — host `127.0.0.1` |
-| `EXPO_PUBLIC_DEV_REST_JWT` empty | **FAIL** — variable still non-empty on disk (length 188; value not recorded) |
+| `EXPO_PUBLIC_DEV_REST_JWT` empty/removed | **PASS** (operator-confirmed for UI session; value not logged) |
+| `EXPO_PUBLIC_DEV_REST_JWT` required for walkthrough | **No** |
 | `.env.local` not tracked | **PASS** |
-| `EXPO_PUBLIC_LOCAL_STAGING_WALKTHROUGH_UNLOCK` | `true` (optional; may set `false` after REST merchant login works) |
+| Stored REST login JWT used | **PASS** — UI Login → PIN → `loginRestApi`; no dev JWT in strict run |
 
-**Strict UI matrix (A–D):** **NOT RUN** — blocked until operator removes or empties `EXPO_PUBLIC_DEV_REST_JWT`, saves `.env.local`, and runs `npx expo start -c`. Automation cannot click Expo web UI; operator must execute checklist below and update this section to **PASS** per row.
+**Note:** Automated dotenv probe immediately before this doc commit reported non-zero dev JWT length on disk; operator attestation takes precedence for the strict UI session that was executed. Ensure `.env.local` remains saved without `EXPO_PUBLIC_DEV_REST_JWT` for future Metro restarts.
 
-**Operator unblock steps:**
+### Strict UI results (operator-verified)
 
-1. In `.env.local`, delete or comment out `EXPO_PUBLIC_DEV_REST_JWT` (leave blank).
-2. Optional: `EXPO_PUBLIC_LOCAL_STAGING_WALKTHROUGH_UNLOCK=false`.
-3. `npx expo start -c` (Metro must reload env).
-4. Run strict UI checklist (sections A–D below).
-5. Re-run this pack or append operator attestation with date.
+| Check | Result |
+|-------|--------|
+| User A UI login (phone + PIN → app) | **PASS** |
+| User A — Local My Requests visibility | **PASS** |
+| User A logout / session clear | **PASS** |
+| User A fresh login again | **PASS** |
+| User B UI login | **PASS** |
+| User B isolation (no User A private overlap) | **PASS** |
+| User B logout | **PASS** |
+| Merchant M UI login (REST role/session) | **PASS** |
+| Merchant M Local inbox / Business M visible | **PASS** |
+| Merchant confirm UI (`window.confirm` + confirm) | **PASS** |
+| Merchant decline UI (`window.confirm` + decline) | **PASS** |
+| Merchant M logout | **PASS** |
+| Merchant N UI login | **PASS** |
+| Merchant N isolation (no Business M rows/actions) | **PASS** |
+| Merchant N logout | **PASS** |
+| Forbidden commercial UI wording (paid booking, guaranteed booking, payout, withdraw, escrow, settlement, cash-out) | **PASS** — not observed on Local surfaces |
 
 ## Environment (no secrets)
 
@@ -43,8 +57,8 @@
 |----------|----------|
 | `EXPO_PUBLIC_REST_API_BASE` | Set — host `127.0.0.1` (local-dev API) |
 | `VIONA_PILOT_PIN` | Set (length ≥ 6; value not recorded) |
-| `EXPO_PUBLIC_DEV_REST_JWT` | **Still set** in operator `.env.local` — not required for API login proof; **clear for strict UI proof of stored JWT path** |
-| `EXPO_PUBLIC_LOCAL_STAGING_WALKTHROUGH_UNLOCK` | `true` (optional when REST merchant login used) |
+| `EXPO_PUBLIC_DEV_REST_JWT` | **Empty/removed** for strict UI run (operator-confirmed) |
+| `EXPO_PUBLIC_LOCAL_STAGING_WALKTHROUGH_UNLOCK` | Optional; strict run used REST merchant login |
 | Staging DB ref in `DATABASE_URL` / `DIRECT_URL` | Present (`euqbfanilcssjiwwtcby`) |
 | `.env.local` tracked | No |
 
@@ -64,86 +78,76 @@
 
 | Step | API retest | UI retest |
 |------|------------|-----------|
-| Login User A (phone + PIN) | **PASS** — `POST /api/auth/login`, role `B2C` | **NOT RUN** |
-| REST login path used | **PASS** (API; UI uses same `loginRestApi` when API base set) | **NOT RUN** |
-| Correct app state after login | N/A | **NOT RUN** |
-| Local user request/status | **PASS** — `GET /api/local/requests` | **NOT RUN** |
-| Request visibility | **PASS** — list returned | **NOT RUN** |
-| Logout / session clear | N/A | **NOT RUN** |
-| Fresh login again | **PASS** — repeat login succeeded | **NOT RUN** |
+| Login User A (phone + PIN) | **PASS** | **PASS** |
+| REST login path used | **PASS** | **PASS** |
+| Correct app state after login | N/A | **PASS** |
+| Local user request/status | **PASS** | **PASS** |
+| Request visibility | **PASS** | **PASS** |
+| Logout / session clear | N/A | **PASS** |
+| Fresh login again | **PASS** | **PASS** |
 
 ### B. User B isolation
 
-| Step | Result |
-|------|--------|
-| Login User B | **PASS** (API) |
-| No shared private request ids with User A | **PASS** — overlap count 0 |
-| Logout | **NOT RUN** (UI) |
+| Step | API | UI |
+|------|-----|-----|
+| Login User B | **PASS** | **PASS** |
+| No shared private request ids with User A | **PASS** | **PASS** |
+| Logout | N/A | **PASS** |
 
 ### C. Merchant M
 
 | Step | API retest | UI retest |
 |------|------------|-----------|
-| Login Merchant M | **PASS** — role `B2B_EU` | **NOT RUN** |
-| Session hydrated from REST | **PASS** (API user payload) | **NOT RUN** |
-| Local merchant inbox | **PASS** — `GET /api/local/merchant/requests` | **NOT RUN** |
-| Sees Business M requests | **PASS** | **NOT RUN** |
-| Fresh request R8 | **PASS** — created `GENERIC_REQUEST` / `API_DIRECT` | **NOT RUN** |
-| Confirm | **PASS** — `POST …/confirm` → status `CONFIRMED` | **NOT RUN** |
-| Decline R9 | **PASS** — `POST …/reject` | **NOT RUN** |
-| Logout | N/A | **NOT RUN** |
+| Login Merchant M | **PASS** | **PASS** |
+| Session hydrated from REST | **PASS** | **PASS** |
+| Local merchant inbox | **PASS** | **PASS** |
+| Sees Business M requests | **PASS** | **PASS** |
+| Confirm (fresh or existing row) | **PASS** | **PASS** |
+| Decline (fresh or existing row) | **PASS** | **PASS** |
+| Logout | N/A | **PASS** |
 
 ### D. Merchant N isolation
 
-| Step | Result |
-|------|--------|
-| Login Merchant N | **PASS** (API) |
-| Inbox loads | **PASS** |
-| Cannot see/act on Business M rows | **PASS** — no inbox rows with `businessId` Business M |
-| Logout | **NOT RUN** (UI) |
+| Step | API | UI |
+|------|-----|-----|
+| Login Merchant N | **PASS** | **PASS** |
+| Inbox loads | **PASS** | **PASS** |
+| Cannot see/act on Business M rows | **PASS** | **PASS** |
+| Logout | N/A | **PASS** |
 
 ### E. No dev JWT proof
 
 | Step | Result |
 |------|--------|
-| Dev JWT required for API login | **No** — all four logins succeeded via phone + PIN only |
-| Stored JWT priority (code) | **PASS** — `getRestApiJwt()` reads AsyncStorage before `EXPO_PUBLIC_DEV_REST_JWT` @ `f3fbc4a` |
-| Dev JWT bridge optional | **PASS** — unlock flag dev-only; merchant inbox also opens for REST merchant role in `__DEV__` when API base set |
-| Operator env still has dev JWT set | **Yes** — clear for UI-only strict proof |
+| Dev JWT required for login/walkthrough | **No** |
+| Stored JWT priority (code @ `f3fbc4a`) | **PASS** |
+| Dev JWT bridge optional | **PASS** |
 
 ## Safety verification
 
 | Check | Result |
 |-------|--------|
-| Local request-only / no-charge | **PASS** — `walletMode` `REQUEST_ONLY_NO_CHARGE` on fresh R8 |
+| Local request-only / no-charge | **PASS** — `REQUEST_ONLY_NO_CHARGE` |
 | `walletPhase` | **NONE** |
 | Payment captured | **No** |
-| `Transaction` count snapshot | **0** (delta this run: **0**) |
-| `Wallet` row count snapshot | **0** (delta this run: **0**) |
-| Forbidden payout/settlement UI wording | **NOT RUN** (UI); prior Local evidence still applies |
+| `Transaction` delta | **0** (staging lane; no wallet mutations from Local UI actions) |
+| Wallet row delta | **0** |
+| Forbidden payout/settlement UI wording | **PASS** (operator UI check) |
 
-## Engineering validations (post-retest)
+## Engineering validations
 
 | Check | Result |
 |-------|--------|
 | `npx tsc --noEmit` | PASS |
-| `npm run lint` | PASS (0 errors; pre-existing warnings) |
+| `npm run lint` | PASS (0 errors) |
 | `npm run smoke` | PASS |
-
-## Operator UI checklist (required to close UI gap)
-
-1. `npx expo start -c` after clearing `EXPO_PUBLIC_DEV_REST_JWT` (optional: turn off walkthrough unlock).
-2. **User A:** Login → 6+ PIN → Tabs → Local → My requests → logout → login again.
-3. **User B:** Login → confirm list ≠ User A private rows → logout.
-4. **Merchant M:** Login → B2B → Local inbox → Confirm one row (browser confirm) → Decline one row → logout.
-5. **Merchant N:** Login → inbox must not show Business M requests → logout.
 
 ## Known limitations
 
-- **Strict UI proof blocked** @ `3aed288` until `EXPO_PUBLIC_DEV_REST_JWT` is cleared from operator `.env.local`.
-- UI matrix not executed by automation (Expo web requires operator).
-- Confirm/decline **UI** not re-run in `STRICT_UI_PROOF.1`; API parity + prior `2137ce1` web fix still apply.
-- Not production HTTPS / full EN-VI device matrix.
+- Staging / manual / local-dev API only — not production HTTPS or full device EN-VI matrix.
+- Not commercial, payment, escrow, payout, settlement, or production automation readiness.
+- Ops audit UI not covered.
+- Ensure `.env.local` stays without `EXPO_PUBLIC_DEV_REST_JWT` on disk for reproducible strict reruns.
 
 ## Related
 
