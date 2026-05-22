@@ -40,7 +40,11 @@
 | `flyctl deploy --app viona-api-staging-eu` | **NOT RUN** (blocked by auth) |
 | `node scripts/smoke-public-staging-api.mjs https://viona-api-staging-eu.fly.dev` | **NOT RUN** |
 
-### Non-secret failure summary
+### Docker build note (`API_DOCKER_NPM_CI_PEER_FIX.1`)
+
+Fly `npm ci` in `Dockerfile.api` failed with **ERESOLVE** (`react-native-fast-image` peer `react ^17||^18` vs lockfile `react 19`). Fix @ master after `eca91bd`: `npm ci --legacy-peer-deps` in API image only (no `package.json` change). Redeploy with `flyctl deploy --app viona-api-staging-eu` then HTTPS smoke.
+
+### Non-secret failure summary (auth blocker — prior automation run)
 
 ```
 Error: no access token available. Please login with 'flyctl auth login'

@@ -9,7 +9,9 @@ RUN apt-get update -y \
 COPY package.json package-lock.json ./
 COPY prisma ./prisma
 
-RUN npm ci
+# Monorepo lockfile includes Expo client deps (e.g. react-native-fast-image → react ^17|^18);
+# API image still only runs Express. legacy-peer-deps avoids ERESOLVE on react 19.
+RUN npm ci --legacy-peer-deps
 
 COPY src ./src
 COPY tsconfig.json ./
