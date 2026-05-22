@@ -1,0 +1,16 @@
+node_modules
+.git
+.expo
+dist
+web-build
+android
+ios
+functions
+docs
+agent-transcripts
+terminals
+*.md
+!prisma/**
+.env
+.env.*
+!.env.example

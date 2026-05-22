@@ -53,6 +53,7 @@
     "db:migrate": "prisma migrate dev",
     "db:studio": "prisma studio",
     "api:dev": "tsx src/server.ts",
+    "api:start": "tsx src/server.ts",
     "cron:marketing-draft": "tsx src/workers/runMarketingDraftOnce.ts",
     "test:ses-otp": "node testEmail.js",
     "test:core-flow": "tsx scripts/test-core-flow.ts"

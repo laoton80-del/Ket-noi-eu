@@ -1,0 +1,25 @@
+# VIONA staging REST API — Fly.io Frankfurt (plan: VIONA.STAGING.PUBLIC_API_DEPLOY_PLAN.1)
+app = 'viona-api-staging-eu'
+primary_region = 'fra'
+
+[build]
+  dockerfile = 'Dockerfile.api'
+
+[env]
+  NODE_ENV = 'production'
+  MARKETING_AUTO_POSTER_ENABLED = '0'
+  TRUST_PROXY_HOPS = '1'
+  JWT_EXPIRES_IN = '7d'
+
+[http_service]
+  internal_port = 8080
+  force_https = true
+  auto_stop_machines = 'stop'
+  auto_start_machines = true
+  min_machines_running = 1
+  processes = ['app']
+
+[[vm]]
+  memory = '1gb'
+  cpu_kind = 'shared'
+  cpus = 1

@@ -287,7 +287,11 @@ Configure `API_CORS_ORIGINS` (no wildcards for production domains):
 
 ---
 
-## 12. Related evidence
+## 12. Deploy execution evidence
+
+- `docs/runbooks/VIONA_PUBLIC_STAGING_API_DEPLOY_EVIDENCE.md` — pack `VIONA.STAGING.PUBLIC_API_DEPLOY.1` (config ready; Fly deploy blocked pending `flyctl auth login`)
+
+## 13. Related evidence
 
 - `docs/operating/VIONA_PROJECT_KERNEL.md` — next pack pointer @ `ea5e242`
 - `docs/runbooks/VIONA_AUTH_REST_UI_LOGIN_BRIDGE_STAGING_RETEST.md`

@@ -13,7 +13,7 @@ import { startMarketingAutoPoster, stopMarketingAutoPoster } from './services/ma
 import { flushLogsForShutdown, logger } from './utils/Logger';
 
 const app = createApp();
-const port = Number(process.env.API_PORT ?? 8787);
+const port = Number(process.env.PORT ?? process.env.API_PORT ?? 8787);
 
 const httpServer = http.createServer(app);
 const signalingIo = attachSignalingServer(httpServer);
