@@ -1,7 +1,7 @@
 # VIONA public staging HTTPS API — deployment evidence
 
-**Pack:** `VIONA.STAGING.PUBLIC_API_DEPLOY.1`  
-**Master before pack:** `8105c0e`  
+**Pack:** `VIONA.STAGING.PUBLIC_API_DEPLOY.1` + `VIONA.STAGING.PUBLIC_API_DEPLOY.FOLLOWUP_HTTPS_SMOKE.1`
+**Master before packs:** `8105c0e` → config `a904b64`
 **Date:** 2026-05-22  
 **Plan:** `docs/runbooks/VIONA_PUBLIC_STAGING_API_DEPLOY_PLAN.md`
 
@@ -9,12 +9,61 @@
 
 | Layer | Result |
 |-------|--------|
-| **Fly.io deploy (fra)** | **BLOCKED** — `flyctl` not authenticated in automation (`flyctl auth login` required) |
-| **Deployment config in repo** | **READY** — `fly.toml`, `Dockerfile.api`, `.dockerignore`, helper scripts |
-| **Public HTTPS URL** | **N/A** — no deploy executed |
-| **API smoke (local parity)** | **PASS** — `http://127.0.0.1:8787` (same codebase + staging DB env) |
+| **Fly.io deploy (fra)** | **BLOCKED** — no Fly access token in automation shell |
+| **Deployment config in repo** | **READY** @ `a904b64` |
+| **Public HTTPS URL** | **N/A** — deploy not executed |
+| **HTTPS smoke** | **NOT RUN** |
+| **API smoke (local parity)** | **PASS** @ `a904b64` — `http://127.0.0.1:8787` |
 
 **Does not certify:** production launch, commercial/payment readiness, public HTTPS device matrix, or SOS production reliability.
+
+---
+
+## Follow-up pack (`FOLLOWUP_HTTPS_SMOKE.1`) — 2026-05-22
+
+### Pre-checks (automation)
+
+| Check | Result |
+|-------|--------|
+| `master` / `origin` | `a904b64` |
+| `.env.local` tracked | No |
+| Staging DB ref `euqbfanilcssjiwwtcby` in `DATABASE_URL`/`DIRECT_URL` | **PASS** (presence only) |
+| `JWT_SECRET` / `VIONA_PILOT_PIN` present | **PASS** (length only; values not logged) |
+| `flyctl auth whoami` | **FAIL** — `no access token available` |
+| Fly config dir | `~/.fly/bin` exists; **no** `state.yml` (login not visible to agent shell) |
+
+### Attempted steps
+
+| Step | Result |
+|------|--------|
+| `node scripts/fly-staging-sync-secrets.mjs` | **FAIL** — same auth error (keys queued: `DATABASE_URL`, `DIRECT_URL`, `JWT_SECRET`, CORS, etc.; values not printed) |
+| `flyctl deploy --app viona-api-staging-eu` | **NOT RUN** (blocked by auth) |
+| `node scripts/smoke-public-staging-api.mjs https://viona-api-staging-eu.fly.dev` | **NOT RUN** |
+
+### Non-secret failure summary
+
+```
+Error: no access token available. Please login with 'flyctl auth login'
+```
+
+**Note:** Operator may have logged in in a separate interactive terminal; Cursor agent subprocess does not inherit that session. Re-run deploy + smoke in the **same** shell where `flyctl auth whoami` succeeds, or set `FLY_API_TOKEN` for automation (never commit).
+
+### Operator command block (run locally after `flyctl auth whoami` succeeds)
+
+```powershell
+cd c:\KNG\ket-noi-eu
+node scripts/fly-staging-sync-secrets.mjs
+flyctl deploy --app viona-api-staging-eu
+node scripts/smoke-public-staging-api.mjs https://viona-api-staging-eu.fly.dev
+```
+
+Then in `.env.local` (not committed):
+
+- `EXPO_PUBLIC_REST_API_BASE=https://viona-api-staging-eu.fly.dev`
+- `EXPO_PUBLIC_DEV_REST_JWT` empty / removed
+- `npx expo start -c`
+
+Paste HTTPS smoke JSON into this doc and change verdict to **PASS** only when all rows pass.
 
 ---
 
@@ -25,35 +74,18 @@
 | **Target** | Fly.io |
 | **Region** | `fra` (Frankfurt) |
 | **App name** | `viona-api-staging-eu` |
-| **Public HTTPS URL** | *Not deployed — set after `flyctl deploy`* |
+| **Expected public URL** | `https://viona-api-staging-eu.fly.dev` (after deploy) |
 
 ---
 
-## Config files added (safe to commit)
+## Config files (@ `a904b64`)
 
 | File | Purpose |
 |------|---------|
-| `fly.toml` | Fly app `viona-api-staging-eu`, `fra`, HTTP on internal port `8080`, HTTPS forced |
-| `Dockerfile.api` | Node 22 image: `npm ci`, `prisma generate`, `tsx src/server.ts` |
-| `.dockerignore` | Exclude client/assets/docs from API image |
-| `package.json` | `api:start` script |
-| `src/server.ts` | Read `PORT` (Fly) then `API_PORT` then `8787` |
-| `scripts/fly-staging-sync-secrets.mjs` | Import secrets from operator `.env.local` (no values logged) |
+| `fly.toml` | Fly app `viona-api-staging-eu`, `fra`, port `8080`, HTTPS forced |
+| `Dockerfile.api` | Node 22 API image |
+| `scripts/fly-staging-sync-secrets.mjs` | Staging secrets import (no value logs) |
 | `scripts/smoke-public-staging-api.mjs` | Health + REST + Local no-charge smoke |
-
----
-
-## Operator deploy steps (when unblocked)
-
-1. `flyctl auth login`
-2. `flyctl apps create viona-api-staging-eu` (if not exists) or `flyctl launch --no-deploy` once
-3. Confirm `DATABASE_URL` / `DIRECT_URL` contain staging ref `euqbfanilcssjiwwtcby` only
-4. `node scripts/fly-staging-sync-secrets.mjs`
-5. `flyctl deploy --app viona-api-staging-eu`
-6. Note public URL: `https://viona-api-staging-eu.fly.dev` (or custom hostname)
-7. `node scripts/smoke-public-staging-api.mjs https://<public-host>`
-8. Operator `.env.local`: `EXPO_PUBLIC_REST_API_BASE=https://<public-host>` (no `EXPO_PUBLIC_DEV_REST_JWT`)
-9. `npx expo start -c`
 
 ---
 
@@ -62,7 +94,7 @@
 | Check | Public HTTPS | Local parity (`127.0.0.1:8787`) |
 |-------|----------------|----------------------------------|
 | `GET /health` → `200` | **NOT RUN** | **PASS** |
-| No secrets in body | **NOT RUN** | **PASS** (`success` + `status: ok` only) |
+| No secrets in body | **NOT RUN** | **PASS** |
 
 ---
 
@@ -70,62 +102,38 @@
 
 | Account | Public HTTPS | Local parity |
 |---------|--------------|--------------|
-| User A | **NOT RUN** | **PASS** (`B2C`) |
-| User B | **NOT RUN** | **PASS** |
-| Merchant M | **NOT RUN** | **PASS** (`B2B_EU`) |
-| Merchant N | **NOT RUN** | **PASS** |
-| Dev JWT required | **No** (when using phone + PIN smoke) | **No** |
+| User A / B | **NOT RUN** | **PASS** |
+| Merchant M / N | **NOT RUN** | **PASS** |
+| Dev JWT required | — | **No** |
 
 ---
 
-## Local no-charge smoke (local parity)
+## Local no-charge smoke
 
-| Check | Result |
-|-------|--------|
-| User B isolation | **PASS** |
-| Merchant M inbox | **PASS** |
-| Merchant confirm | **PASS** |
-| Merchant decline | **PASS** |
-| Merchant N isolation | **PASS** |
-| `walletMode` | `REQUEST_ONLY_NO_CHARGE` |
-| `walletPhase` | `NONE` |
-| Payment captured | **No** |
-| Transaction / Wallet delta | **0** (staging lane; no ledger mutations from smoke) |
-
-Command: `node scripts/smoke-public-staging-api.mjs http://127.0.0.1:8787`
+| Check | Public HTTPS | Local parity |
+|-------|--------------|--------------|
+| Merchant M inbox | **NOT RUN** | **PASS** |
+| Merchant confirm | **NOT RUN** | **PASS** |
+| Merchant decline | **NOT RUN** | **PASS** |
+| Merchant N isolation | **NOT RUN** | **PASS** |
+| `walletMode` | — | `REQUEST_ONLY_NO_CHARGE` |
+| `walletPhase` | — | `NONE` |
+| Payment captured | — | **No** |
+| Transaction / Wallet delta | — | **0** |
 
 ---
 
 ## CORS (planned on Fly)
 
-`API_CORS_ORIGINS` (non-secret allowlist in `scripts/fly-staging-sync-secrets.mjs`):
-
-- `http://localhost:8081`
-- `http://localhost:8089`
-- `http://127.0.0.1:8081`
-- `http://127.0.0.1:8089`
-
-Plus staging web origin when known — add before device HTTPS walkthrough. **No wildcard production policy.**
-
-Server: `TRUST_PROXY_HOPS=1`, `NODE_ENV=production`, `MARKETING_AUTO_POSTER_ENABLED=0`.
+Allowlist in `scripts/fly-staging-sync-secrets.mjs`: `localhost:8081`, `8089`, `127.0.0.1:8081`, `8089`. No wildcard production policy. Applied only after successful `fly secrets import`.
 
 ---
 
 ## Rollback
 
-1. Point `EXPO_PUBLIC_REST_API_BASE` back to `http://127.0.0.1:8787`
-2. `flyctl apps destroy viona-api-staging-eu` or scale to 0 (operator choice)
-3. No migrations were run in this pack
-
----
-
-## Blocker detail
-
-```
-flyctl auth whoami → no access token available. Please login with 'flyctl auth login'
-```
-
-Automation cannot complete HTTPS deploy without operator Fly credentials.
+1. `EXPO_PUBLIC_REST_API_BASE` → `http://127.0.0.1:8787`
+2. Scale down or destroy Fly app `viona-api-staging-eu`
+3. No migrations in deploy packs
 
 ---
 
@@ -136,12 +144,12 @@ Automation cannot complete HTTPS deploy without operator Fly credentials.
 - Not merchant production onboarding
 - Not AI autonomous money/SOS actions
 - Not SOS dispatch or emergency-response claims
-- Local remains **request-only / no-charge** only
+- Local **request-only / no-charge** only
 
 ---
 
 ## Next required action
 
-1. Operator: `flyctl auth login` → deploy → re-run smoke with `https://` base URL.
-2. Update this doc with public URL + HTTPS smoke **PASS** rows.
-3. Optional follow-up pack: `VIONA.STAGING.PUBLIC_API_DEPLOY.FOLLOWUP.1` (evidence only after real deploy).
+1. In operator PowerShell: `flyctl auth whoami` must succeed.
+2. Run operator command block above; capture smoke JSON.
+3. Re-open `FOLLOWUP_HTTPS_SMOKE` or paste results to update this doc to **PASS**.
