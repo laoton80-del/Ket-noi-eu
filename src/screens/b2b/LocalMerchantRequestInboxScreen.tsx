@@ -5,6 +5,7 @@ import { useCallback, useEffect, useMemo, useState, type ReactElement } from 're
 import {
   ActivityIndicator,
   Alert,
+  Platform,
   Pressable,
   RefreshControl,
   ScrollView,
@@ -53,6 +54,31 @@ function formatTimestamp(iso: string, locale: string): string {
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return iso;
   return new Intl.DateTimeFormat(locale, { dateStyle: 'medium', timeStyle: 'short' }).format(d);
+}
+
+/** Expo web: multi-button Alert.alert does not reliably run confirm callbacks; use window.confirm. */
+function confirmMerchantInboxAction(
+  title: string,
+  body: string,
+  cancelLabel: string,
+  confirmLabel: string,
+  onConfirm: () => void,
+  options?: Readonly<{ destructive?: boolean }>
+): void {
+  if (Platform.OS === 'web') {
+    if (window.confirm(`${title}\n\n${body}`)) {
+      onConfirm();
+    }
+    return;
+  }
+  Alert.alert(title, body, [
+    { text: cancelLabel, style: 'cancel' },
+    {
+      text: confirmLabel,
+      style: options?.destructive ? 'destructive' : 'default',
+      onPress: onConfirm,
+    },
+  ]);
 }
 
 export function LocalMerchantRequestInboxScreen(): ReactElement {
@@ -121,16 +147,12 @@ export function LocalMerchantRequestInboxScreen(): ReactElement {
 
   const confirmAction = useCallback(
     (request: LocalMerchantInboxRequest) => {
-      Alert.alert(
+      confirmMerchantInboxAction(
         t('local.merchantInbox.confirmTitle'),
         t('local.merchantInbox.confirmBody'),
-        [
-          { text: t('local.merchantInbox.cancelBtn'), style: 'cancel' },
-          {
-            text: t('local.merchantInbox.confirmBtn'),
-            onPress: () => void runAction(request.id, 'confirm'),
-          },
-        ]
+        t('local.merchantInbox.cancelBtn'),
+        t('local.merchantInbox.confirmBtn'),
+        () => void runAction(request.id, 'confirm')
       );
     },
     [runAction, t]
@@ -138,17 +160,13 @@ export function LocalMerchantRequestInboxScreen(): ReactElement {
 
   const rejectAction = useCallback(
     (request: LocalMerchantInboxRequest) => {
-      Alert.alert(
+      confirmMerchantInboxAction(
         t('local.merchantInbox.rejectTitle'),
         t('local.merchantInbox.rejectBody'),
-        [
-          { text: t('local.merchantInbox.cancelBtn'), style: 'cancel' },
-          {
-            text: t('local.merchantInbox.rejectBtn'),
-            style: 'destructive',
-            onPress: () => void runAction(request.id, 'reject'),
-          },
-        ]
+        t('local.merchantInbox.cancelBtn'),
+        t('local.merchantInbox.rejectBtn'),
+        () => void runAction(request.id, 'reject'),
+        { destructive: true }
       );
     },
     [runAction, t]
