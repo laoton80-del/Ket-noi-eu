@@ -1,7 +1,7 @@
 # VIONA REST UI login bridge — staging retest evidence
 
-**Pack:** `VIONA.AUTH.REST_UI_LOGIN_BRIDGE.STAGING_RETEST.1`  
-**Master at test:** `f3fbc4a` — `feat(auth): bridge UI login to REST session`  
+**Pack:** `VIONA.AUTH.REST_UI_LOGIN_BRIDGE.STAGING_RETEST.1` (+ `STRICT_UI_PROOF.1` addendum)  
+**Master at test:** `3aed288` (evidence doc); app bridge @ `f3fbc4a`  
 **Staging project ref:** `euqbfanilcssjiwwtcby` (`viona-staging-eu`)  
 **Date:** 2026-05-22  
 **Type:** Staging / manual retest evidence — **not** commercial, payment, production, or device-matrix certification.
@@ -11,8 +11,31 @@
 | Layer | Verdict |
 |-------|---------|
 | **REST API parity** (login, lists, inbox, confirm/decline, isolation) | **PASS** |
-| **Expo UI walkthrough** (Login → PIN → screens) | **NOT RUN** in this pack (operator required) |
-| **Overall** | **PASS_WITH_LIMITATIONS** until operator completes UI matrix below |
+| **Strict UI proof** (`STRICT_UI_PROOF.1`, dev JWT cleared) | **BLOCKED** — precondition not met (see below) |
+| **Expo UI walkthrough** (Login → PIN → screens) | **NOT RUN** — operator must complete checklist after clearing dev JWT |
+| **Overall** | **PASS_WITH_LIMITATIONS** until strict UI checklist completes |
+
+## Strict UI proof addendum (`STRICT_UI_PROOF.1`)
+
+**Date checked:** 2026-05-22  
+**Precondition audit (no secret values logged):**
+
+| Requirement | Status |
+|-------------|--------|
+| `EXPO_PUBLIC_REST_API_BASE` set | **PASS** — host `127.0.0.1` |
+| `EXPO_PUBLIC_DEV_REST_JWT` empty | **FAIL** — variable still non-empty on disk (length 188; value not recorded) |
+| `.env.local` not tracked | **PASS** |
+| `EXPO_PUBLIC_LOCAL_STAGING_WALKTHROUGH_UNLOCK` | `true` (optional; may set `false` after REST merchant login works) |
+
+**Strict UI matrix (A–D):** **NOT RUN** — blocked until operator removes or empties `EXPO_PUBLIC_DEV_REST_JWT`, saves `.env.local`, and runs `npx expo start -c`. Automation cannot click Expo web UI; operator must execute checklist below and update this section to **PASS** per row.
+
+**Operator unblock steps:**
+
+1. In `.env.local`, delete or comment out `EXPO_PUBLIC_DEV_REST_JWT` (leave blank).
+2. Optional: `EXPO_PUBLIC_LOCAL_STAGING_WALKTHROUGH_UNLOCK=false`.
+3. `npx expo start -c` (Metro must reload env).
+4. Run strict UI checklist (sections A–D below).
+5. Re-run this pack or append operator attestation with date.
 
 ## Environment (no secrets)
 
@@ -117,9 +140,9 @@
 
 ## Known limitations
 
-- UI matrix not executed by automation in this pack.
-- Operator `.env.local` still exports `EXPO_PUBLIC_DEV_REST_JWT` (optional fallback; not needed for API proof).
-- Confirm/decline UI proof relies on operator or prior `2137ce1` evidence until UI checklist is run.
+- **Strict UI proof blocked** @ `3aed288` until `EXPO_PUBLIC_DEV_REST_JWT` is cleared from operator `.env.local`.
+- UI matrix not executed by automation (Expo web requires operator).
+- Confirm/decline **UI** not re-run in `STRICT_UI_PROOF.1`; API parity + prior `2137ce1` web fix still apply.
 - Not production HTTPS / full EN-VI device matrix.
 
 ## Related
