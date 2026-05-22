@@ -205,15 +205,26 @@ Known Local lifecycle milestones:
 🟢 Manual staging walkthrough evidence merged + pushed (`4d365bf`) — operator **PASS**
 🟢 VI status copy runtime wiring merged + pushed (`f87e053`)
 🟢 Pilot readiness handoff doc merged + pushed (`cce3eba` / `bfcf220`)
+🟢 REST UI login bridge merged + pushed (`f3fbc4a`)
+🟢 REST UI login staging retest evidence merged + pushed (`3aed288`)
+🟢 REST UI strict UI proof precondition doc merged + pushed (`6853849`)
+🟢 REST UI login bridge **STRICT UI PASS** — operator proof merged + pushed (`3cfea5e`)
 
-**Local no-charge pilot readiness (master @ `4d365bf`):**
+**Local + auth pilot readiness (master / origin @ `3cfea5e`):**
 
 | Layer | Verdict |
 |-------|---------|
 | **Automated QA** (API, UI, E2E, i18n, staging DB runbook) | **PASS_WITH_LIMITATIONS** — automated QA-ready |
-| **Staging / manual walkthrough** (staging DB + local-dev API + dev JWT) | **PASS** — see `docs/runbooks/VIONA_LOCAL_MANUAL_STAGING_EVIDENCE_2.md` |
+| **Staging / manual walkthrough** (staging DB + local-dev API) | **PASS** @ `4d365bf` — `docs/runbooks/VIONA_LOCAL_MANUAL_STAGING_EVIDENCE_2.md` |
+| **REST UI login** (phone + PIN → `loginRestApi`; no `EXPO_PUBLIC_DEV_REST_JWT` required per operator strict proof) | **STRICT UI PASS** @ `3cfea5e` — `docs/runbooks/VIONA_AUTH_REST_UI_LOGIN_BRIDGE_STAGING_RETEST.md` |
 
-**Not** commercial/payment/production ready. **Not** escrow/payout/settlement automation. Handoff: `docs/runbooks/VIONA_LOCAL_STAGING_PASS_HANDOFF.md`, `docs/handoff/VIONA_LOCAL_NO_CHARGE_PILOT_READINESS_HANDOFF_1.md` (automated scope).
+**REST UI strict proof (staging / manual only, not production):** User A/B and Merchant M/N login via UI PIN; User B isolation; Merchant M inbox + confirm/decline UI; Merchant N isolation; logout/session clear; forbidden commercial wording not observed on Local surfaces. `EXPO_PUBLIC_DEV_REST_JWT` **not required** for strict UI proof (operator attestation).
+
+**Auth milestone commits:** `f3fbc4a` (bridge), `3aed288` (API retest doc), `6853849` (strict precondition/blocked note), `3cfea5e` (strict operator PASS doc).
+
+**Not** commercial/payment/production ready. **Not** escrow/payout/settlement automation. Handoff: `docs/runbooks/VIONA_LOCAL_STAGING_PASS_HANDOFF.md`, `docs/handoff/VIONA_LOCAL_NO_CHARGE_PILOT_READINESS_HANDOFF_1.md`.
+
+**Strict UI limitations (honest):** staging / manual / local-dev API only; not production HTTPS; not full device EN-VI matrix; ops audit UI not covered; operator should keep `.env.local` saved without `EXPO_PUBLIC_DEV_REST_JWT` on disk (automation once detected non-empty length at doc-write).
 
 Current Local mode:
 REQUEST_ONLY_NO_CHARGE
@@ -242,12 +253,15 @@ Current correct Local backend order:
 2. ~~Merchant inbox UI minimum~~ — **done on master**
 3. ~~User request status UI minimum~~ — **done on master**
 4. ~~Safe i18n copy pass + VI runtime status labels~~ — **done on master**
-5. ~~Operator manual staging/device walkthrough~~ — **PASS** on staging @ `4d365bf` (local-dev + dev JWT; not production matrix)
-6. AI Local Copilot read-only — **blocked** until read-only policy pack (staging manual sign-off done; commercial pilot still not started)
+5. ~~Operator manual staging/device walkthrough~~ — **PASS** on staging @ `4d365bf` (local-dev; not production matrix)
+5b. ~~REST UI login bridge strict operator proof~~ — **PASS** @ `3cfea5e` (phone + PIN; dev JWT not required per operator attestation)
+6. AI Local Copilot read-only — **blocked** until read-only policy pack (staging + REST UI sign-off done; commercial pilot still not started)
 7. Human-confirmed AI actions — **blocked**
 8. Wallet hold/debit/release/settlement — **blocked** until CFO/finance-approved Local wallet policy pack; Local commercial pilot **not** started
 
 Do not jump to wallet or AI autonomous actions before operator manual walkthrough and finance-approved policy.
+
+**Recommended next pack (master clean @ `3cfea5e`):** `VIONA.STAGING.PUBLIC_API_DEPLOY_PLAN.1` — unless operator wants a one-line env-hygiene note first (save `.env.local` without `EXPO_PUBLIC_DEV_REST_JWT`).
 
 ---
 
@@ -529,7 +543,7 @@ Forbidden acceleration:
 - fake production claims
 
 Target speed:
-- Local no-charge pilot: automated QA-ready on master; **staging manual walkthrough PASS** @ `4d365bf` (not commercial/payment/production ready)
+- Local no-charge pilot: automated QA-ready; **staging manual PASS** @ `4d365bf`; **REST UI login STRICT UI PASS** @ `3cfea5e` (not commercial/payment/production ready)
 - AI Copilot read-only: 60–90 days target — **not started**
 - first safe wallet/settlement market: 3–5 months target — **blocked** for Local lane until finance pack
 - global full active: 6–9 months in good conditions, longer if legal/payment/ops blocks — **not reached**

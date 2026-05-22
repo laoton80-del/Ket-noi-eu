@@ -14,7 +14,24 @@ The **Local request-only / no-charge** pilot lane on VIONA is **automated QA-rea
 
 This is **not** a commercial or payment pilot. Local does **not** hold funds, settle to providers, or bridge Firebase VIP / Tourism booking wallets. Merchant confirm/reject updates **request status only** — **confirmed does not mean paid**.
 
-**Automated engineering certification** remains the scope of this handoff (`f87e053` era). **Staging manual walkthrough** is now **PASS** on `master` @ `4d365bf` — see `docs/runbooks/VIONA_LOCAL_MANUAL_STAGING_EVIDENCE_2.md` and `docs/runbooks/VIONA_LOCAL_STAGING_PASS_HANDOFF.md`. That PASS is **staging / manual only** — not commercial, payment, escrow, payout, settlement, or production automation.
+**Automated engineering certification** remains the scope of this handoff (`f87e053` era). **Staging manual walkthrough** is **PASS** @ `4d365bf`. **REST UI login strict operator proof** is **PASS** @ `3cfea5e` — see `docs/runbooks/VIONA_AUTH_REST_UI_LOGIN_BRIDGE_STAGING_RETEST.md`. All PASS scopes are **staging / manual only** — not commercial, payment, escrow, payout, settlement, or production automation.
+
+---
+
+## REST UI login strict proof PASS (2026-05-22)
+
+| Item | Value |
+|------|--------|
+| **Verdict** | **STRICT UI PASS** (staging / manual only) |
+| **Master** | `3cfea5e` |
+| **Evidence** | `docs/runbooks/VIONA_AUTH_REST_UI_LOGIN_BRIDGE_STAGING_RETEST.md` |
+| **Bridge commit** | `f3fbc4a` — `feat(auth): bridge UI login to REST session` |
+| **Proven** | UI phone + PIN → REST login; User A/B + Merchant M/N; isolation; M inbox confirm/decline UI; N isolation; logout/session clear; forbidden wording UI check |
+| **`EXPO_PUBLIC_DEV_REST_JWT` required** | **No** (operator strict proof) |
+| **Guardrails** | `REQUEST_ONLY_NO_CHARGE`; `walletPhase` NONE; no payment captured; Transaction/Wallet delta 0 |
+| **Limitations** | Not production HTTPS/device matrix; ops audit UI not covered; keep `.env.local` without dev JWT on disk |
+
+Auth doc commits: `3aed288`, `6853849`, `3cfea5e`.
 
 ---
 
