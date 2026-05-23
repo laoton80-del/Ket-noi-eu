@@ -357,4 +357,15 @@ When implemented, session 2 **optional** ops audit steps:
 | **Evidence** | `docs/runbooks/VIONA_LOCAL_NO_CHARGE_CONTROLLED_PILOT_SESSION_2.md` §5 |
 | **Platform** | Expo web + staging HTTPS API |
 | **Caveat** | Secret-tap/PIN path not exercised; deep-link + ADMIN REST login used |
-| **Next** | Optional native spot-check; broader pilot session 2 user/merchant flows |
+| **Next** | Operator completes native secret-tap attestation — `VIONA_LOCAL_NO_CHARGE_CONTROLLED_PILOT_SESSION_2.md` §11.3 |
+
+---
+
+## 16. Pack `NATIVE_SECRET_TAP_SPOT_CHECK.1` (evidence @ `028ea9f`)
+
+| Item | Result |
+|------|--------|
+| **Preconditions probe** | **PASS** (admin debug + staging HTTPS + empty dev JWT) |
+| **Native interactive** | **NOT RUN** — no device/simulator attested |
+| **API corroboration** | **PASS** — public HTTPS smoke |
+| **Next** | Operator §11.3 on iOS/Android |

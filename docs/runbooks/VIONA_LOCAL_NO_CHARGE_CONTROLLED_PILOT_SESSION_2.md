@@ -1,6 +1,6 @@
 # VIONA Local no-charge — controlled pilot session 2 (Ops Audit UI)
 
-**Packs:** `VIONA.LOCAL.NO_CHARGE.OPS_AUDIT_UI.PILOT_SESSION_2_USE.1` · `VIONA.LOCAL.NO_CHARGE.OPS_AUDIT_UI.EXPO_OPERATOR_WALKTHROUGH.1` · `VIONA.LOCAL.NO_CHARGE.CONTROLLED_PILOT_SESSION_2.USER_MERCHANT_OPS_USE.1`
+**Packs:** `VIONA.LOCAL.NO_CHARGE.OPS_AUDIT_UI.PILOT_SESSION_2_USE.1` · `VIONA.LOCAL.NO_CHARGE.OPS_AUDIT_UI.EXPO_OPERATOR_WALKTHROUGH.1` · `VIONA.LOCAL.NO_CHARGE.CONTROLLED_PILOT_SESSION_2.USER_MERCHANT_OPS_USE.1` · `VIONA.LOCAL.NO_CHARGE.OPS_AUDIT_UI.NATIVE_SECRET_TAP_SPOT_CHECK.1`
 **Playbook:** `docs/runbooks/VIONA_LOCAL_NO_CHARGE_CONTROLLED_PILOT_OPS_PLAYBOOK.md`
 **Ops Audit UI plan:** `docs/runbooks/VIONA_LOCAL_NO_CHARGE_OPS_AUDIT_UI_PLAN.md`
 **Master at user/merchant + ops use:** `deac415` (screen shell `727cc38`)
@@ -16,8 +16,9 @@
 | **Static UI implementation audit** | **PASS** @ `727cc38` |
 | **Interactive Expo Ops Audit UI (web)** | **PASS** @ 2026-05-23 — see §5 |
 | **User/merchant pilot flows + ops visibility (API)** | **PASS** @ 2026-05-23 — see §9 |
-| **Home secret-tap / PIN modal path** | **NOT RUN** in automation (deep-link + ADMIN REST login used instead) |
-| **On-disk `.env.local` admin debug flags** | **FAIL** at probe (Expo §5 only); **N/A** for API session |
+| **Home secret-tap / PIN modal path (native)** | **NOT RUN** — see §11 (no device/simulator attested) |
+| **Home secret-tap / PIN (Expo web §5)** | **NOT RUN** (deep-link + ADMIN REST used) |
+| **On-disk admin debug flags** | **PASS** @ native pack probe (values not logged) |
 | **Pause triggered** | **No** |
 | **Overall controlled pilot session 2** | **PASS** (staging / public HTTPS — user, merchant, ops read-only) |
 
@@ -32,11 +33,11 @@
 | 1 | `master` / `origin` ≥ `727cc38` | **PASS** | Expo walkthrough @ `21ec3ec` |
 | 2 | `EXPO_PUBLIC_REST_API_BASE` → public HTTPS staging | **PASS** | Used by Metro + UI fetches |
 | 3 | `EXPO_PUBLIC_DEV_REST_JWT` empty | **PASS** | Automated probe: length 0 |
-| 4 | Admin debug surfaces enabled | **PASS** (session) / **FAIL** (on-disk) | Shell overrides for Expo; add flags to `.env.local` for operator convenience |
+| 4 | Admin debug surfaces enabled | **PASS** | Probe @ §11.1 (values not logged) |
 | 5 | Server `Role.ADMIN` login (no dev JWT) | **PASS** | REST PIN login; JWT not logged |
 | 6 | Secrets printed in this doc | **No** | |
 
-**On-disk probe (no secret values):** `EXPO_PUBLIC_ENABLE_ADMIN_DEBUG` not `1`; `EXPO_PUBLIC_FEATURE_ADMIN_DEMO_METRICS` / `EXPO_PUBLIC_FEATURE_OMNI_DEMO` not truthy; `EXPO_PUBLIC_ADMIN_PIN` length 0.
+**Latest on-disk probe:** see §11.1 (admin debug **PASS** @ native pack).
 
 ---
 
@@ -123,17 +124,16 @@ Command: `node scripts/smoke-public-staging-api.mjs` (exit **0**).
 
 | Item | Detail |
 |------|--------|
-| **Issues found** | On-disk `.env.local` missing persistent admin-debug flags — use shell overrides or update local env before operator manual reruns |
+| **Issues found** | None blocking §5–§9 |
 | **Pause decision** | **No** |
 
 ---
 
 ## 7. Follow-up
 
-1. Optional: operator attestation of **secret-tap + PIN** path on phone (same checklist as §5.2).
-2. Persist admin-debug flags in local env (not committed) for routine `npx expo start -c`.
-3. Optional: native iOS/Android spot-check for user/merchant + ops UI on public HTTPS.
-4. **Not in scope:** payment/wallet, production admin, audit-events drawer UI.
+1. **Required for native PASS:** operator completes §11 attestation on iOS or Android (`npx expo start -c`).
+2. Optional: secret-tap + PIN re-check on Expo web (not substituted for native).
+3. **Not in scope:** payment/wallet, production admin, audit-events drawer UI.
 
 ---
 
@@ -205,7 +205,59 @@ Command: `node scripts/smoke-public-staging-api.mjs` (exit **0**).
 
 ---
 
-## 10. Validation (docs commits)
+## 11. Native secret-tap spot-check (`NATIVE_SECRET_TAP_SPOT_CHECK.1`) — 2026-05-23
+
+### 11.1 Preconditions (automated probe — no secret values)
+
+| Check | Result |
+|-------|--------|
+| `EXPO_PUBLIC_REST_API_BASE` → staging HTTPS | **PASS** |
+| `EXPO_PUBLIC_DEV_REST_JWT` empty | **PASS** |
+| `EXPO_PUBLIC_ENABLE_ADMIN_DEBUG=1` | **PASS** |
+| `EXPO_PUBLIC_FEATURE_ADMIN_DEMO_METRICS` | **PASS** |
+| `EXPO_PUBLIC_FEATURE_OMNI_DEMO` | **PASS** |
+| `EXPO_PUBLIC_ADMIN_PIN` length ≥ 12 | **PASS** (length only) |
+| Ops roster phone configured | **PASS** (set; not logged) |
+| `.env.local` committed | **No** |
+
+### 11.2 Native interactive walkthrough
+
+| Field | Result |
+|-------|--------|
+| **Device / platform** | **NOT RUN** — no iOS simulator session; Android emulator `Small_Phone` available on host but **not booted/connected** (`adb devices` empty) |
+| **Recommended command** | `npx expo start -c` → open on physical device or booted simulator |
+| **Secret-tap ×5 + PIN modal → Admin Dashboard** | **NOT RUN** |
+| **Local Ops Audit via native UI** | **NOT RUN** |
+| **Public HTTPS smoke (corroboration)** | **PASS** — exit 0; all `opsAudit*` stages PASS |
+
+**Do not treat native spot-check as PASS until §11.3 is completed on device.**
+
+### 11.3 Operator attestation template (native)
+
+| Check | PASS/FAIL | Notes |
+|-------|-----------|-------|
+| Home loads | | |
+| Local tab — no Ops Audit | | |
+| Secret-tap ×5 → PIN modal | | |
+| PIN → Grand Admin Dashboard | | |
+| Local Ops Audit row visible | | |
+| Ops Audit screen list/detail | | |
+| Safety chips (4) | | |
+| Limitation banner (4 themes) | | |
+| No mutation controls | | |
+| Consumer nav cannot reach Ops Audit | | |
+| Redaction (no phone/PIN/JWT on screen) | | |
+
+### 11.4 Issues / pause
+
+| Item | Detail |
+|------|--------|
+| **Issues found** | Native UI path not executed in automated agent session; operator device attestation pending |
+| **Pause decision** | **No** — does not invalidate session 2 API/Expo web evidence; blocks **native secret-tap PASS** claim only |
+
+---
+
+## 12. Validation (docs commits)
 
 | Check | All session 2 packs |
 |-------|---------------------|
@@ -213,4 +265,4 @@ Command: `node scripts/smoke-public-staging-api.mjs` (exit **0**).
 | `npx tsc --noEmit` | PASS @ commit |
 | `npm run lint` | PASS @ commit |
 | `npm run smoke` | PASS @ commit |
-| `smoke-public-staging-api.mjs` | PASS exit 0 @ §9 |
+| `smoke-public-staging-api.mjs` | PASS exit 0 @ §9 / §11 |
