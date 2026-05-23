@@ -53,6 +53,10 @@ localRouter.get('/requests/:id/timeline', (req, res, next) => {
   void LocalRequestController.getUserLocalRequestTimeline(req, res).catch(next);
 });
 
+localRouter.get('/ops/requests', superAdminMiddleware, (req, res, next) => {
+  void LocalRequestController.getOpsLocalServiceRequests(req, res).catch(next);
+});
+
 localRouter.get(
   '/ops/requests/:id/audit-events',
   superAdminMiddleware,
@@ -60,6 +64,10 @@ localRouter.get(
     void LocalRequestController.getOpsLocalRequestAuditEvents(req, res).catch(next);
   }
 );
+
+localRouter.get('/ops/requests/:id', superAdminMiddleware, (req, res, next) => {
+  void LocalRequestController.getOpsLocalServiceRequestDetail(req, res).catch(next);
+});
 
 localRouter.post(
   '/ops/requests/:id/cancel',

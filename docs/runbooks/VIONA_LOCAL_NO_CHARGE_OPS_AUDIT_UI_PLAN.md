@@ -143,12 +143,20 @@
 
 **Smoke script (operator, not UI):** `node scripts/smoke-public-staging-api.mjs https://viona-api-staging-eu.fly.dev` — validates personas; output is privacy-safe stage JSON (no pin).
 
-### Missing safe read-only endpoints (proposed — future pack)
+### Ops list/detail endpoints (`OPS_AUDIT_UI.READONLY_API_AUDIT.1`) — **implemented**
 
-| Method | Path | Purpose | Constraints |
-|--------|------|---------|-------------|
-| `GET` | `/api/local/ops/requests` | Paginated cross-pilot list | `superAdminMiddleware`; cap limit ≤100; filter by status/date; **no** phone/email; include `safety` block |
-| `GET` | `/api/local/ops/requests/:id` | Single request detail | Same role gate; redacted requester (id + optional displayName policy); wallet fields + business label |
+| Method | Path | Status | Notes |
+|--------|------|--------|-------|
+| `GET` | `/api/local/ops/requests` | **Live** | `superAdminMiddleware`; paginated; `safety` block; no phone/PIN |
+| `GET` | `/api/local/ops/requests/:id` | **Live** | Same redaction as list item |
+| `GET` | `/api/local/ops/requests/:id/audit-events` | **Live** (prior pack) | Per-request audit trail |
+
+**Service:** `src/services/local/localOpsRequestListService.ts`
+**Tests:** `npx tsx scripts/test-local-ops-request-list-api-1.ts` (DATABASE_URL; ephemeral ADMIN)
+
+**Staging HTTPS smoke:** optional when operator sets `VIONA_PILOT_OPS_ADMIN_PHONE` (roster-approved `Role.ADMIN` only — **not** in git). Without it, smoke logs `ops:listRequests` **SKIP**.
+
+**Roster blocker:** Pilot provision script (`provision-local-pilot-accounts-staging.ts`) does **not** create ADMIN. Ops must provision `Role.ADMIN` on staging with internal roster approval before HTTPS ops smoke or UI pack.
 
 **No DB migration in this plan.** Implement via existing Prisma models + select projections (mirror `localUserRequestListService` / `localMerchantRequestInboxService` field discipline).
 
@@ -180,7 +188,7 @@
 
 | Order | Pack ID | Deliverable | Depends on |
 |-------|---------|-------------|------------|
-| 1 | `OPS_AUDIT_UI.READONLY_API_AUDIT.1` | `GET /api/local/ops/requests` (+ optional `GET .../:id`); tests; redaction review | None (server-only) |
+| 1 | `OPS_AUDIT_UI.READONLY_API_AUDIT.1` | ~~`GET /api/local/ops/requests`~~ **done** (+ `GET .../:id`); tests; redaction review | None (server-only) |
 | 2 | `OPS_AUDIT_UI.SCREEN_SHELL.1` | `LocalOpsAuditScreen` + components; internal nav gate; read-only wiring to ops list + audit-events | Pack 1 |
 | 3 | `OPS_AUDIT_UI.PUBLIC_HTTPS_SMOKE.1` | Extend or companion script: ops list + audit-events smoke on staging HTTPS; runbook evidence row | Pack 1 |
 | 4 | `OPS_AUDIT_UI.PILOT_SESSION_2_USE.1` | Ops playbook session 2 checklist includes Ops Audit UI steps; privacy-safe session log columns | Packs 2–3 |

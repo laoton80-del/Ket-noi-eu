@@ -331,6 +331,46 @@ async function main() {
     failFinal(`walletPhase expected NONE got ${walletPhase}`);
   }
 
+  let opsAuditList = 'SKIP';
+  let opsAuditForbiddenB2c = 'SKIP';
+  const opsAdminPhone = (process.env.VIONA_PILOT_OPS_ADMIN_PHONE ?? '').trim();
+  if (opsAdminPhone.length > 0) {
+    const loginOps = await loginPersona('opsAdmin', opsAdminPhone);
+    if (!loginOps.ok) {
+      failFinal('ops admin login failed — roster-approved Role.ADMIN required');
+    }
+    if (loginOps.role !== 'ADMIN') {
+      failFinal(`ops admin must have role ADMIN, got ${loginOps.role ?? 'unknown'}`);
+    }
+    const opsList = await authedStage(
+      'ops:listRequests',
+      '/api/local/ops/requests?limit=10',
+      loginOps.token
+    );
+    opsAuditList = opsList.ok ? 'PASS' : 'FAIL';
+    if (!opsList.ok) failFinal('ops list failed');
+    const safety = opsList.data?.safety;
+    if (safety?.readOnly !== true || safety?.noPaymentCaptured !== true) {
+      failFinal('ops list missing read-only safety block');
+    }
+    const serialized = JSON.stringify(opsList.data ?? {}).toLowerCase();
+    if (serialized.includes('phone') || serialized.includes('pincode') || serialized.includes('eyj')) {
+      failFinal('ops list response may contain secrets');
+    }
+    const b2cOps = await authedStage(
+      'ops:listForbiddenUserA',
+      '/api/local/ops/requests',
+      loginA.token
+    );
+    if (b2cOps.ok || b2cOps.status !== 403) {
+      failFinal('B2C must not access ops list (expected 403)');
+    }
+    opsAuditForbiddenB2c = 'PASS';
+  } else {
+    log('ops', 'SKIP — set VIONA_PILOT_OPS_ADMIN_PHONE for roster-approved ADMIN HTTPS ops smoke');
+    record('ops:listRequests', 'SKIP', { reason: 'no_roster_phone' });
+  }
+
   console.log(
     JSON.stringify(
       {
@@ -348,6 +388,8 @@ async function main() {
         walletMode,
         walletPhase,
         paymentCaptured: false,
+        opsAuditList,
+        opsAuditForbiddenB2c,
         stages,
       },
       null,

@@ -204,3 +204,4 @@ Staging DB remains source of truth; rollback is **access/config**, not data dest
 | Deploy evidence | `VIONA_PUBLIC_STAGING_API_DEPLOY_EVIDENCE.md` |
 | Kernel | `VIONA_PROJECT_KERNEL.md` §6 |
 | Ops audit UI plan | `VIONA_LOCAL_NO_CHARGE_OPS_AUDIT_UI_PLAN.md` |
+| Ops audit API (read-only list) | `GET /api/local/ops/requests` — `Role.ADMIN`; test: `test-local-ops-request-list-api-1.ts` |

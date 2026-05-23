@@ -15,6 +15,10 @@ import { rejectMerchantLocalServiceRequest } from '../services/local/localMercha
 import { cancelUserLocalServiceRequest } from '../services/local/localUserRequestCancelService';
 import { cancelOpsLocalServiceRequest } from '../services/local/localOpsRequestCancelService';
 import { readLocalRequestAuditEventsForOps } from '../services/local/localRequestAuditReadService';
+import {
+  getOpsLocalServiceRequestById,
+  listOpsLocalServiceRequests,
+} from '../services/local/localOpsRequestListService';
 import { readLocalUserRequestTimeline } from '../services/local/localUserRequestTimelineService';
 import { normalizeLocalOpsCancelReason } from '../services/local/localOpsRequestCancelPolicy';
 import { createLocalServiceRequest } from '../services/local/localRequestCreateService';
@@ -253,6 +257,95 @@ export async function getUserLocalRequestTimeline(req: Request, res: Response): 
       };
       const msgMap: Record<typeof result.reason, string> = {
         invalid_input: 'Invalid timeline request',
+        request_not_found: 'Request not found',
+      };
+      jsonFail(res, msgMap[result.reason], statusMap[result.reason]);
+      return;
+    }
+
+    jsonOk(res, result.data, 200);
+  } catch {
+    jsonFail(res, 'Internal server error', 500);
+  }
+}
+
+/** `GET /api/local/ops/requests` — super-admin read-only paginated Local request audit list. */
+export async function getOpsLocalServiceRequests(req: Request, res: Response): Promise<void> {
+  try {
+    const adminUserId = readAuthUserId(req);
+    if (!adminUserId) {
+      jsonFail(res, 'Unauthorized', 401);
+      return;
+    }
+
+    const status = readLocalServiceRequestStatusQuery(req.query.status);
+    if (req.query.status != null && status === undefined) {
+      jsonFail(res, 'Invalid status filter', 400);
+      return;
+    }
+
+    const businessIdRaw = readString(req.query.businessId);
+    const businessId =
+      businessIdRaw != null && businessIdRaw.trim().length > 0
+        ? businessIdRaw.trim()
+        : undefined;
+
+    const result = await listOpsLocalServiceRequests({
+      adminUserId,
+      status,
+      businessId,
+      limit: readOptionalLimitQuery(req.query.limit),
+      skip: readOptionalSkipQuery(req.query.skip),
+    });
+
+    if (!result.ok) {
+      const statusMap: Record<typeof result.reason, number> = {
+        invalid_input: 400,
+        forbidden: 403,
+      };
+      const msgMap: Record<typeof result.reason, string> = {
+        invalid_input: 'Invalid ops list request',
+        forbidden: 'Forbidden: super-admin role required',
+      };
+      jsonFail(res, msgMap[result.reason], statusMap[result.reason]);
+      return;
+    }
+
+    jsonOk(res, result.data, 200);
+  } catch {
+    jsonFail(res, 'Internal server error', 500);
+  }
+}
+
+/** `GET /api/local/ops/requests/:id` — super-admin read-only Local request detail. */
+export async function getOpsLocalServiceRequestDetail(req: Request, res: Response): Promise<void> {
+  try {
+    const adminUserId = readAuthUserId(req);
+    if (!adminUserId) {
+      jsonFail(res, 'Unauthorized', 401);
+      return;
+    }
+
+    const requestId = readString(req.params.id);
+    if (!requestId || requestId.trim().length === 0) {
+      jsonFail(res, 'Request id is required', 400);
+      return;
+    }
+
+    const result = await getOpsLocalServiceRequestById({
+      adminUserId,
+      requestId: requestId.trim(),
+    });
+
+    if (!result.ok) {
+      const statusMap: Record<typeof result.reason, number> = {
+        invalid_input: 400,
+        forbidden: 403,
+        request_not_found: 404,
+      };
+      const msgMap: Record<typeof result.reason, string> = {
+        invalid_input: 'Invalid ops detail request',
+        forbidden: 'Forbidden: super-admin role required',
         request_not_found: 'Request not found',
       };
       jsonFail(res, msgMap[result.reason], statusMap[result.reason]);
