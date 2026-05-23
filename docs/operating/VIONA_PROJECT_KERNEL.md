@@ -253,7 +253,7 @@ Known Local lifecycle milestones:
 
 ### Kernel pointer (`KERNEL.LOCAL_NO_CHARGE_OPS_AUDIT_UI_PLAN.1`) — `40c2711`
 
-**Ops Audit UI:** `docs/runbooks/VIONA_LOCAL_NO_CHARGE_OPS_AUDIT_UI_PLAN.md`. **`SCREEN_SHELL.1`** @ `727cc38`. **`EXPO_OPERATOR_WALKTHROUGH.1`:** interactive Expo web **PASS** — `VIONA_LOCAL_NO_CHARGE_CONTROLLED_PILOT_SESSION_2.md` §5 @ `21ec3ec` (deep-link + ADMIN REST; secret-tap optional). **Not** production admin / payment dashboard. Next: optional native spot-check; broader pilot session 2 user/merchant flows.
+**Controlled pilot session 2:** `VIONA_LOCAL_NO_CHARGE_CONTROLLED_PILOT_SESSION_2.md` — user/merchant + ops read-only **PASS** @ `deac415` (`USER_MERCHANT_OPS_USE.1`); Expo ops UI **PASS** @ §5. Local: `REQUEST_ONLY_NO_CHARGE`, `walletPhase` **NONE**, `paymentCaptured` **false**. **Not** production/commercial. Next: optional native spot-check; pilot session 3+ per ops playbook when scheduled.
 
 ### Kernel sync (`KERNEL.LOCAL_NO_CHARGE_PILOT_SIGNOFF_SYNC.1`) — `5a714a8`
 
