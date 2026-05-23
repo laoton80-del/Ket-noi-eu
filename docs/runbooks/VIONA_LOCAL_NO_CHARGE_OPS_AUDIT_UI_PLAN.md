@@ -179,6 +179,30 @@
 
 **Ops admin login 401:** Smoke reports a safe message only (no PIN/phone logged). Verify phone + dedicated `VIONA_PILOT_OPS_ADMIN_PIN` or shared `VIONA_PILOT_PIN`. `Role.ADMIN` check unchanged after login.
 
+### Ops ADMIN DB target diagnosis (`OPS_ADMIN_DB_TARGET_DIAGNOSE.1`) — **BLOCKED** @ `0be8057`
+
+Run: `node scripts/smoke-public-staging-api.mjs --diagnose-ops-db` (no secrets printed).
+
+| Finding | Result |
+|---------|--------|
+| Local `DATABASE_URL` host | `aws-1-eu-central-1.pooler.supabase.com` — staging ref `euqbfanilcssjiwwtcby` present |
+| Fly `DATABASE_URL` secret | **Deployed** (`fly secrets list -a viona-api-staging-eu`; digest differs from local — credentials differ, same Supabase project ref typical) |
+| Local `Role.ADMIN` count | **1** |
+| Ops phone in local DB | **yes** — `role` ADMIN |
+| Ops `pinCode` storage | **plaintext** (`pinCodeFieldLength` 6, not `$2…` bcrypt) |
+| Pilot User A `pinCode` | **bcrypt** (field length 60) — explains pilot HTTPS login PASS |
+| `pinMatchesProvidedLoginPin` | **false** with current env PIN |
+| HTTPS smoke `login:opsAdmin` | **HTTP 401** |
+
+**Blocker classification:** `pin_storage_plaintext_not_bcrypt` (primary). Fly API uses `bcrypt.compare` on `User.pinCode`; ops ADMIN was provisioned without bcrypt hash. Same row is visible to Fly runtime DB → 401 is not a separate “missing user on Fly” case when local and Fly share staging Supabase.
+
+**Operator unblock (no fake PASS):**
+
+1. On staging DB via `DIRECT_URL` (same project `euqbfanilcssjiwwtcby`), set ops ADMIN `User.pinCode` to `bcrypt.hash(plainPin, 10)` (mirror `scripts/provision-local-pilot-accounts-staging.ts`).
+2. Use the **same** plain PIN in `.env.local` as `VIONA_PILOT_OPS_ADMIN_PIN` or `VIONA_PILOT_PIN`.
+3. Re-run diagnose → expect `pinStorageLooksBcrypt: true`, `pinMatchesProvidedLoginPin: true`.
+4. Re-run HTTPS smoke → all `opsAudit*` **PASS** before PASS evidence commit.
+
 **Smoke script coverage when unblocked:** admin login; `GET /api/local/ops/requests`; `GET /api/local/ops/requests/:id`; unauthenticated 401/403; User A 403; Merchant M 403; redaction scan; list-row `REQUEST_ONLY_NO_CHARGE` + `walletPhase` NONE; read-only mutation check (`status`/`updatedAt` unchanged).
 
 **Roster blocker:** Pilot provision script (`provision-local-pilot-accounts-staging.ts`) does **not** create ADMIN.

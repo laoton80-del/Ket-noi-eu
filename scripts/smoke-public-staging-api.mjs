@@ -1,6 +1,7 @@
 /**
  * Public (or local) staging API smoke — no secrets printed.
  * Usage: node scripts/smoke-public-staging-api.mjs [baseUrl]
+ *        node scripts/smoke-public-staging-api.mjs --diagnose-ops-db
  * Env: STAGING_PUBLIC_API_BASE or EXPO_PUBLIC_REST_API_BASE, VIONA_PILOT_PIN,
  *      VIONA_PILOT_OPS_ADMIN_PHONE (roster-approved Role.ADMIN for ops audit stages),
  *      VIONA_PILOT_OPS_ADMIN_PIN (optional; falls back to VIONA_PILOT_PIN when unset)
@@ -22,7 +23,16 @@ const BUSINESS_M_ID = '257f467a-8de2-41d0-b171-5ee499ba96d2';
 const RETRY_429_WAITS_MS = [1000, 2000, 3000];
 const MAX_429_RETRIES = 3;
 
-const base = (process.argv[2] ?? process.env.STAGING_PUBLIC_API_BASE ?? process.env.EXPO_PUBLIC_REST_API_BASE ?? '')
+const cliArgs = process.argv.slice(2);
+const diagnoseOpsDbOnly = cliArgs.includes('--diagnose-ops-db');
+const baseFromCli = cliArgs.find((a) => /^https?:\/\//i.test(a)) ?? '';
+
+const base = (
+  baseFromCli ||
+  process.env.STAGING_PUBLIC_API_BASE ||
+  process.env.EXPO_PUBLIC_REST_API_BASE ||
+  ''
+)
   .trim()
   .replace(/\/+$/, '');
 
@@ -270,7 +280,146 @@ function assertOpsResponseRedacted(data, stageLabel) {
   }
 }
 
+function fingerprintDbUrl(name, urlRaw) {
+  const url = (urlRaw ?? '').trim();
+  if (url.length === 0) {
+    return { name, set: false };
+  }
+  let host = 'parse_error';
+  let protocol = '?';
+  try {
+    const parsed = new URL(url);
+    host = parsed.hostname;
+    protocol = parsed.protocol;
+  } catch {
+    /* keep parse_error */
+  }
+  return {
+    name,
+    set: true,
+    protocol,
+    host,
+    stagingRef: url.includes(STAGING_REF),
+    pooler: host.includes('pooler.supabase.com'),
+    directSupabase: host.includes('db.') && host.includes('supabase'),
+  };
+}
+
+/** Safe ops ADMIN / DB target diagnosis — no secrets printed. */
+async function runDiagnoseOpsDbTarget() {
+  const crypto = await import('node:crypto');
+  const bcrypt = (await import('bcryptjs')).default;
+  const { Role } = await import('@prisma/client');
+  const { getPrisma, disconnectPrisma } = await import('../src/lib/prisma.ts');
+
+  const dbUrl = process.env.DATABASE_URL ?? '';
+  const directUrl = process.env.DIRECT_URL ?? '';
+  const opsPhone = (process.env.VIONA_PILOT_OPS_ADMIN_PHONE ?? '').trim();
+  const pilotPin = pin;
+  const dedicatedOpsPin = opsAdminPinRaw;
+  const loginPin = opsAdminPin;
+
+  const digest = (v) =>
+    v.length > 0 ? crypto.createHash('sha256').update(v).digest('hex').slice(0, 16) : null;
+
+  const prisma = getPrisma();
+  const adminCount = await prisma.user.count({ where: { role: Role.ADMIN } });
+
+  let opsUser = { exists: false };
+  if (opsPhone.length > 0) {
+    const row = await prisma.user.findUnique({
+      where: { phoneNumber: opsPhone },
+      select: { id: true, role: true, pinCode: true, phoneNumber: true },
+    });
+    if (row) {
+      const pinLooksBcrypt = typeof row.pinCode === 'string' && row.pinCode.startsWith('$2');
+      const pinMatches =
+        pinLooksBcrypt && loginPin.length >= 6
+          ? await bcrypt.compare(loginPin, row.pinCode)
+          : false;
+      opsUser = {
+        exists: true,
+        id: row.id,
+        role: row.role,
+        phoneLength: row.phoneNumber.length,
+        pinSet: typeof row.pinCode === 'string' && row.pinCode.length > 0,
+        pinCodeFieldLength: row.pinCode?.length ?? 0,
+        pinStorageLooksBcrypt: pinLooksBcrypt,
+        pinMatchesProvidedLoginPin: pinMatches,
+      };
+    }
+  }
+
+  const pilotA = await prisma.user.findUnique({
+    where: { phoneNumber: PHONE_USER_A },
+    select: { pinCode: true },
+  });
+  const pilotPinLooksBcrypt =
+    typeof pilotA?.pinCode === 'string' && pilotA.pinCode.startsWith('$2');
+
+  await disconnectPrisma();
+
+  let blocker = 'unknown';
+  if (!opsPhone) {
+    blocker = 'ops_phone_env_missing';
+  } else if (!opsUser.exists) {
+    blocker = 'ops_phone_not_in_local_db';
+  } else if (!opsUser.pinStorageLooksBcrypt) {
+    blocker = 'pin_storage_plaintext_not_bcrypt';
+  } else if (!opsUser.pinMatchesProvidedLoginPin) {
+    blocker = 'pin_mismatch_vs_env';
+  } else if (adminCount < 1) {
+    blocker = 'no_role_admin_in_local_db';
+  } else {
+    blocker = 'none_local_db_ok_check_fly_runtime';
+  }
+
+  const report = {
+    pack: 'OPS_ADMIN_DB_TARGET_DIAGNOSE.1',
+    localDatabaseUrl: fingerprintDbUrl('DATABASE_URL', dbUrl),
+    localDirectUrl: fingerprintDbUrl('DIRECT_URL', directUrl),
+    flySecrets: {
+      databaseUrlNameListed: true,
+      directUrlNameListed: true,
+      note: 'Compare digests via `fly secrets list -a viona-api-staging-eu` (values never printed)',
+    },
+    localDigestPrefix: {
+      databaseUrl: digest(dbUrl),
+      directUrl: digest(directUrl),
+    },
+    env: {
+      opsPhoneSet: opsPhone.length > 0,
+      opsPhoneLength: opsPhone.length,
+      opsPinDedicatedSet: dedicatedOpsPin.length > 0,
+      pilotPinSet: pilotPin.length >= 6,
+    },
+    localDb: {
+      adminCount,
+      opsUser,
+      pilotUserA_pinStorageLooksBcrypt: pilotPinLooksBcrypt,
+    },
+    blockerClassification: blocker,
+    hypothesis:
+      blocker === 'pin_storage_plaintext_not_bcrypt'
+        ? 'User.pinCode for ops ADMIN is not bcrypt-hashed; login uses bcrypt.compare — causes HTTP 401 on Fly and local.'
+        : blocker === 'pin_mismatch_vs_env'
+          ? 'ADMIN exists but VIONA_PILOT_OPS_ADMIN_PIN / VIONA_PILOT_PIN does not match stored hash.'
+          : 'See blockerClassification',
+    operatorUnblock:
+      blocker === 'pin_storage_plaintext_not_bcrypt' || blocker === 'pin_mismatch_vs_env'
+        ? 'Update ops ADMIN User.pinCode to bcrypt.hash(plainPin,10) on staging DB (DIRECT_URL), same as provision-local-pilot-accounts-staging.ts; then re-run HTTPS smoke.'
+        : 'Provision roster ADMIN on staging DB used by Fly; set VIONA_PILOT_OPS_ADMIN_PHONE + PIN in .env.local',
+  };
+
+  console.log(JSON.stringify(report, null, 2));
+}
+
 async function main() {
+  if (diagnoseOpsDbOnly) {
+    await runDiagnoseOpsDbTarget();
+    return;
+  }
+
   if (!base) failFinal('Set STAGING_PUBLIC_API_BASE or pass baseUrl argument.');
   if (pin.length < 6) failFinal('VIONA_PILOT_PIN not set (min 6 chars; value not logged).');
 
