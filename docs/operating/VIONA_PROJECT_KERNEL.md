@@ -209,14 +209,16 @@ Known Local lifecycle milestones:
 🟢 REST UI login staging retest evidence merged + pushed (`3aed288`)
 🟢 REST UI strict UI proof precondition doc merged + pushed (`6853849`)
 🟢 REST UI login bridge **STRICT UI PASS** — operator proof merged + pushed (`3cfea5e`)
+🟢 Public HTTPS staging API smoke **repeat PASS** @ `1daf006` — paced smoke `https://viona-api-staging-eu.fly.dev` (`docs/runbooks/VIONA_PUBLIC_STAGING_API_DEPLOY_EVIDENCE.md`)
 
-**Local + auth pilot readiness (master / origin @ `3cfea5e`):**
+**Local + auth pilot readiness (master / origin @ `1daf006` for public HTTPS API):**
 
 | Layer | Verdict |
 |-------|---------|
 | **Automated QA** (API, UI, E2E, i18n, staging DB runbook) | **PASS_WITH_LIMITATIONS** — automated QA-ready |
 | **Staging / manual walkthrough** (staging DB + local-dev API) | **PASS** @ `4d365bf` — `docs/runbooks/VIONA_LOCAL_MANUAL_STAGING_EVIDENCE_2.md` |
 | **REST UI login** (phone + PIN → `loginRestApi`; no `EXPO_PUBLIC_DEV_REST_JWT` required per operator strict proof) | **STRICT UI PASS** @ `3cfea5e` — `docs/runbooks/VIONA_AUTH_REST_UI_LOGIN_BRIDGE_STAGING_RETEST.md` |
+| **Public HTTPS staging API smoke** (500ms pacing; Local no-charge path) | **PASS** @ `1daf006` — `docs/runbooks/VIONA_PUBLIC_STAGING_API_DEPLOY_EVIDENCE.md` (not production / not device matrix) |
 
 **REST UI strict proof (staging / manual only, not production):** User A/B and Merchant M/N login via UI PIN; User B isolation; Merchant M inbox + confirm/decline UI; Merchant N isolation; logout/session clear; forbidden commercial wording not observed on Local surfaces. `EXPO_PUBLIC_DEV_REST_JWT` **not required** for strict UI proof (operator attestation).
 
@@ -224,7 +226,9 @@ Known Local lifecycle milestones:
 
 **Not** commercial/payment/production ready. **Not** escrow/payout/settlement automation. Handoff: `docs/runbooks/VIONA_LOCAL_STAGING_PASS_HANDOFF.md`, `docs/handoff/VIONA_LOCAL_NO_CHARGE_PILOT_READINESS_HANDOFF_1.md`.
 
-**Strict UI limitations (honest):** staging / manual / local-dev API only; not production HTTPS; not full device EN-VI matrix; ops audit UI not covered; operator should keep `.env.local` saved without `EXPO_PUBLIC_DEV_REST_JWT` on disk (automation once detected non-empty length at doc-write).
+**Strict UI limitations (honest):** staging / manual / local-dev API only; public HTTPS API smoke PASS is scripted staging proof only — not production HTTPS certification; not full device EN-VI matrix; ops audit UI not covered; operator should keep `.env.local` saved without `EXPO_PUBLIC_DEV_REST_JWT` on disk (automation once detected non-empty length at doc-write).
+
+**Public HTTPS smoke (honest):** Repeat PASS with 500ms pacing @ `1daf006`. Aborted background “Create R6 staging request” task is **not** evidence (no output). Next: point `EXPO_PUBLIC_REST_API_BASE` at Fly URL for Expo pilot (not full device matrix).
 
 Current Local mode:
 REQUEST_ONLY_NO_CHARGE

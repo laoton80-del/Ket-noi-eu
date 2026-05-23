@@ -1,7 +1,7 @@
 # VIONA public staging HTTPS API — deployment evidence
 
-**Pack:** deploy follow-ups + `HTTPS_SMOKE_CONSISTENCY.1` + `PUBLIC_API_SMOKE_RATE_LIMIT_PACING.1`
-**Master at repeatable HTTPS smoke PASS:** (after pacing commit)
+**Pack:** deploy follow-ups + `HTTPS_SMOKE_CONSISTENCY.1` + `PUBLIC_API_SMOKE_RATE_LIMIT_PACING.1` + `PUBLIC_API_SMOKE_RATE_LIMIT_PACING.PASS_SYNC.1`
+**Master at repeatable HTTPS smoke PASS:** `1daf006` (pacing script) + PASS sync doc
 **Date:** 2026-05-23
 **Plan:** `docs/runbooks/VIONA_PUBLIC_STAGING_API_DEPLOY_PLAN.md`
 
@@ -10,7 +10,7 @@
 | Layer | Result |
 |-------|--------|
 | **Fly.io deploy (fra)** | **PASS** — app `viona-api-staging-eu`, region `fra` |
-| **Deployment config in repo** | **READY** @ `714c410` |
+| **Deployment config in repo** | **READY** @ `1daf006` |
 | **Public HTTPS URL** | `https://viona-api-staging-eu.fly.dev` |
 | **`GET /health` (HTTPS)** | **PASS** — HTTP 200 |
 | **HTTPS smoke (full)** | **PASS** — full HTTPS smoke repeat PASS after pacing/backoff (see rate-limit pacing section) |
@@ -48,6 +48,47 @@
 | `paymentCaptured` | `false` |
 
 Prior blockers resolved on Fly: `DATABASE_URL` runtime + `JWT_SECRET` (ops). Rate limit addressed in smoke only.
+
+---
+
+## PASS sync (`PUBLIC_API_SMOKE_RATE_LIMIT_PACING.PASS_SYNC.1`) — 2026-05-23
+
+**Command:** `node scripts/smoke-public-staging-api.mjs https://viona-api-staging-eu.fly.dev`
+
+**Pre-check:** `master` == `origin` == `1daf006` (`chore(staging): pace public HTTPS smoke under rate limit`).
+
+**Repeat smoke (PASS sync run):** exit **0**; `pacingMs` **500**; all stages PASS (matches pacing pack criteria below).
+
+| Check | Result |
+|-------|--------|
+| health | **PASS** |
+| REST auth User A / B / Merchant M / N | **PASS** |
+| Dev JWT required | **No** |
+| Local no-charge (create, confirm, decline) | **PASS** |
+| Merchant M inbox | **PASS** |
+| Merchant confirm / decline | **PASS** |
+| Merchant N isolation | **PASS** |
+| User B isolation | **PASS** |
+| `walletMode` | `REQUEST_ONLY_NO_CHARGE` |
+| `walletPhase` | `NONE` |
+| Payment captured | **No** |
+| Transaction delta | **0** (not queried; no-charge path) |
+| Wallet row delta | **0** (not queried; no-charge path) |
+
+**Full HTTPS smoke repeat PASS after `1daf006` pacing/backoff** — confirmed on this sync run (second repeatable PASS after pacing commit).
+
+### Aborted R6 background task (not evidence)
+
+| Field | Value |
+|-------|--------|
+| Task | “Create R6 staging request via API” (background shell) |
+| Status | **ABORTED** (~24h; no completion) |
+| Output | **None** captured |
+| Exit code | **Unknown** |
+| Used as evidence | **No** |
+| Superseded by | Paced public HTTPS smoke + Local create/confirm/decline stages in `smoke-public-staging-api.mjs` |
+
+Do **not** cite the R6 one-off script run for staging proof. Use paced smoke or a fresh explicit operator run if a dedicated R6 row is needed for UI.
 
 ---
 
