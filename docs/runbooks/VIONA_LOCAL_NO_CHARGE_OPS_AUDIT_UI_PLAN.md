@@ -345,5 +345,16 @@ When implemented, session 2 **optional** ops audit steps:
 |------|--------|
 | **Doc** | `docs/runbooks/VIONA_LOCAL_NO_CHARGE_CONTROLLED_PILOT_SESSION_2.md` |
 | **API smoke** | **PASS** — ops list/detail/forbidden/redaction/mutation-safe |
-| **Interactive Expo UI** | **NOT RUN** — operator device attestation pending (§5) |
+| **Interactive Expo UI (web)** | **PASS** — `VIONA_LOCAL_NO_CHARGE_CONTROLLED_PILOT_SESSION_2.md` §5 @ 2026-05-23 |
 | **Static UI audit** | **PASS** — chips, banner, GET-only client, no mutation controls, admin-only route |
+
+---
+
+## 15. Pack `EXPO_OPERATOR_WALKTHROUGH.1` (shipped)
+
+| Item | Detail |
+|------|--------|
+| **Evidence** | `docs/runbooks/VIONA_LOCAL_NO_CHARGE_CONTROLLED_PILOT_SESSION_2.md` §5 |
+| **Platform** | Expo web + staging HTTPS API |
+| **Caveat** | Secret-tap/PIN path not exercised; deep-link + ADMIN REST login used |
+| **Next** | Optional native spot-check; broader pilot session 2 user/merchant flows |

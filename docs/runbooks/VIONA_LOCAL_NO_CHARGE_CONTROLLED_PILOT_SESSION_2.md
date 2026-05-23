@@ -1,11 +1,10 @@
 # VIONA Local no-charge — controlled pilot session 2 (Ops Audit UI)
 
-**Pack:** `VIONA.LOCAL.NO_CHARGE.OPS_AUDIT_UI.PILOT_SESSION_2_USE.1`
+**Packs:** `VIONA.LOCAL.NO_CHARGE.OPS_AUDIT_UI.PILOT_SESSION_2_USE.1` · `VIONA.LOCAL.NO_CHARGE.OPS_AUDIT_UI.EXPO_OPERATOR_WALKTHROUGH.1`
 **Playbook:** `docs/runbooks/VIONA_LOCAL_NO_CHARGE_CONTROLLED_PILOT_OPS_PLAYBOOK.md`
 **Ops Audit UI plan:** `docs/runbooks/VIONA_LOCAL_NO_CHARGE_OPS_AUDIT_UI_PLAN.md`
-**Master at evidence record:** `727cc38` — `feat(local): add read-only ops audit screen shell`
-**Session date (UTC):** 2026-05-20
-**Evidence class:** Preparation / use — **API corroboration + static UI audit** (interactive Expo UI **not run** in this pass)
+**Master at Expo walkthrough:** `21ec3ec` (docs + screen shell `727cc38`)
+**Session dates (UTC):** 2026-05-20 (API/static) · 2026-05-23 (interactive Expo web)
 
 ---
 
@@ -13,12 +12,13 @@
 
 | Layer | Result |
 |-------|--------|
-| **Preconditions (agent-verified)** | **PARTIAL** — see §1 |
-| **Public HTTPS ops API smoke** | **PASS** — exit 0 @ 2026-05-20 |
-| **Interactive Expo Ops Audit UI** | **NOT RUN** — requires operator device with admin debug build |
+| **Public HTTPS ops API smoke** | **PASS** |
 | **Static UI implementation audit** | **PASS** @ `727cc38` |
-| **Pause triggered** | **No** (API + shell ready; complete Expo attestation before pilot session 2 sign-off) |
-| **Overall session 2 (Ops Audit UI)** | **PARTIAL** — do **not** treat as full operator UI PASS until §4 checklist is attested on device |
+| **Interactive Expo Ops Audit UI (web)** | **PASS** @ 2026-05-23 — see §5 |
+| **Home secret-tap / PIN modal path** | **NOT RUN** in automation (deep-link + ADMIN REST login used instead) |
+| **On-disk `.env.local` admin debug flags** | **FAIL** at probe — Expo session used **shell env overrides** (§5.1) |
+| **Pause triggered** | **No** |
+| **Overall session 2 (Ops Audit UI)** | **PASS** (staging / Expo web / read-only ops audit) |
 
 **Money law (unchanged):** `REQUEST_ONLY_NO_CHARGE`; `walletPhase` **NONE**; **confirmed does not mean paid**. Whole VIONA: pre-commercial / staging-pilot. Global Active / full commercial: **not yet**.
 
@@ -26,14 +26,16 @@
 
 ## 1. Preconditions
 
-| # | Criterion | Agent check | Operator attestation |
-|---|-----------|-------------|----------------------|
-| 1 | `master` / `origin` = `727cc38` | **PASS** | — |
-| 2 | `EXPO_PUBLIC_REST_API_BASE` → `https://viona-api-staging-eu.fly.dev` | **PASS** (smoke target) | Confirm on device |
-| 3 | `EXPO_PUBLIC_DEV_REST_JWT` empty | **NOT VERIFIED** (`.env.local` not read) | Operator: length 0 |
-| 4 | Admin debug: `EXPO_PUBLIC_ENABLE_ADMIN_DEBUG=1` + `adminDemoMetricsEnabled` | **NOT VERIFIED** on device | Required for route |
-| 5 | Server `Role.ADMIN` login (no dev JWT) | **PASS** (smoke `opsAdmin` role=ADMIN) | Confirm UI login |
-| 6 | Secrets printed in this doc | **No** | — |
+| # | Criterion | Result | Notes |
+|---|-----------|--------|-------|
+| 1 | `master` / `origin` ≥ `727cc38` | **PASS** | Expo walkthrough @ `21ec3ec` |
+| 2 | `EXPO_PUBLIC_REST_API_BASE` → public HTTPS staging | **PASS** | Used by Metro + UI fetches |
+| 3 | `EXPO_PUBLIC_DEV_REST_JWT` empty | **PASS** | Automated probe: length 0 |
+| 4 | Admin debug surfaces enabled | **PASS** (session) / **FAIL** (on-disk) | Shell overrides for Expo; add flags to `.env.local` for operator convenience |
+| 5 | Server `Role.ADMIN` login (no dev JWT) | **PASS** | REST PIN login; JWT not logged |
+| 6 | Secrets printed in this doc | **No** | |
+
+**On-disk probe (no secret values):** `EXPO_PUBLIC_ENABLE_ADMIN_DEBUG` not `1`; `EXPO_PUBLIC_FEATURE_ADMIN_DEMO_METRICS` / `EXPO_PUBLIC_FEATURE_OMNI_DEMO` not truthy; `EXPO_PUBLIC_ADMIN_PIN` length 0.
 
 ---
 
@@ -41,83 +43,78 @@
 
 | Field | Value |
 |-------|--------|
-| **Device / platform (this evidence pass)** | Docs-only / automated — **not** a physical Expo session |
+| **Platform / device** | **Expo web** — Chromium headless against `http://localhost:19007` |
+| **Metro** | `npx expo start -c --web --port 19007` with admin-debug env overrides (§5.1) |
 | **API base** | `https://viona-api-staging-eu.fly.dev` |
-| **Admin role (API)** | Confirmed `ADMIN` via paced public HTTPS smoke (`login: opsAdmin`) — **no phone/PIN/JWT logged** |
-| **Screen shell commit** | `727cc38` |
+| **Admin role** | `ADMIN` confirmed via `POST /api/auth/login` (ops roster account; credentials not logged) |
+| **Screen shell** | `727cc38` |
 
 ---
 
-## 3. Public HTTPS API corroboration (2026-05-20)
+## 3. Public HTTPS API corroboration
 
 Command: `node scripts/smoke-public-staging-api.mjs` (exit **0**).
 
-| Stage | Result | Notes |
-|-------|--------|-------|
-| `opsAuditUnauthed` | **PASS** | 401/403 without token |
-| `opsAuditList` | **PASS** | `GET /api/local/ops/requests` |
-| `opsAuditDetail` | **PASS** | `GET /api/local/ops/requests/:id` (first list row) |
-| `opsAuditForbiddenB2c` | **PASS** | User A → 403 |
-| `opsAuditForbiddenMerchant` | **PASS** | Merchant M → 403 |
-| `opsAuditMutationSafe` | **PASS** | Read-only: status/`updatedAt` unchanged after reads |
-| Redaction (`assertOpsResponseRedacted`) | **PASS** | List + detail bodies |
-| Row safety | **PASS** | `walletMode` REQUEST_ONLY_NO_CHARGE, `walletPhase` NONE, `noPaymentCaptured` |
-
-**Pagination (API):** smoke used `limit=10`; staging list non-empty at run time. UI `load-more` / `PAGE_SIZE=20` — **not exercised** in this pass.
+| Stage | Result |
+|-------|--------|
+| `opsAuditList` / `opsAuditDetail` | **PASS** |
+| `opsAuditUnauthed` / forbidden B2C & merchant | **PASS** |
+| `opsAuditMutationSafe` | **PASS** |
+| Redaction | **PASS** |
 
 ---
 
-## 4. Ops Audit UI walkthrough checklist
+## 4. Static UI audit @ `727cc38`
 
-| Step | Requirement | Interactive Expo | Static @ `727cc38` | API smoke |
-|------|-------------|-------------------|-------------------|-----------|
-| 1 | Open app | **NOT RUN** | — | — |
-| 2 | Reach Grand Admin Dashboard (debug/PIN path) | **NOT RUN** | Route gated `isAdminDebugSurfaceEnabled()` + `adminDemoMetricsEnabled` | — |
-| 3 | Local Ops Audit row only on admin surface | **NOT RUN** | **PASS** — nav only in `AdminDashboardScreen` | — |
-| 4 | Tap Local Ops Audit | **NOT RUN** | **PASS** — `navigate('LocalOpsAudit')` | — |
-| 5 | Screen loads | **NOT RUN** | **PASS** — `LocalOpsAuditScreen` mounted via `GatedLocalOpsAuditScreen` | — |
-| 6 | List `GET /api/local/ops/requests` | **NOT RUN** | **PASS** — `fetchOpsLocalServiceRequests` GET only | **PASS** |
-| 7 | Pagination / load-more | **NOT RUN** | **PASS** — implemented (`PAGE_SIZE=20`, load-more) | Partial (`limit=10` only) |
-| 8 | Select one request | **NOT RUN** | **PASS** — card `onPress` → `loadDetail` | — |
-| 9 | Detail `GET …/:id` | **NOT RUN** | **PASS** — `fetchOpsLocalServiceRequestById` GET only | **PASS** |
-| 10 | Safety chips (4) | **NOT RUN** | **PASS** — `LocalOpsAuditSafetyChips` + i18n | — |
-| 11 | Limitation banner (4 lines) | **NOT RUN** | **PASS** — `LocalOpsAuditSafetyBanner` + i18n | — |
-| 12 | No mutation buttons | **NOT RUN** | **PASS** — grep: no confirm/reject/cancel/refund/payout/settlement/wallet adjustment in ops UI | **PASS** mutation-safe reads |
-| 13 | Consumer nav cannot reach route | **NOT RUN** | **PASS** — `LocalOpsAudit` only in admin-debug `Stack.Screen` block; no Home/Local/B2B links | **PASS** B2C/B2B 403 on API |
-| 14 | No secrets / raw phone / PIN / JWT in UI | **NOT RUN** | **PASS** — DTO shows ids + role labels only; no token fields in client types | **PASS** redaction |
-
-### Static forbidden-control scan (ops UI tree)
-
-Scanned paths: `src/screens/local/LocalOpsAuditScreen.tsx`, `src/components/local/ops/*`, `src/services/localOpsAuditApi.ts`.
-
-| Term / control | Found in ops audit UI? |
-|----------------|------------------------|
-| confirm / reject / cancel (action buttons) | **No** |
-| refund / payout / settlement / wallet adjustment | **No** |
-| POST / PATCH / DELETE in `localOpsAuditApi.ts` | **No** (GET only) |
-
-Field labels `confirmedAt` / `rejectedAt` / `merchantDecision` are **read-only timestamps/labels**, not mutation actions.
+| Check | Result |
+|-------|--------|
+| Route only when `isAdminDebugSurfaceEnabled()` + `adminDemoMetricsEnabled` | **PASS** |
+| Entry only `AdminDashboardScreen` | **PASS** |
+| Client `localOpsAuditApi.ts` GET-only | **PASS** |
+| No mutation action buttons in ops UI tree | **PASS** |
 
 ---
 
-## 5. Evidence summary (operator attestation template)
+## 5. Interactive Expo walkthrough (`EXPO_OPERATOR_WALKTHROUGH.1`) — 2026-05-23
 
-Copy and complete after **interactive** Expo pass:
+### 5.1 Method (honest)
 
-| Check | PASS/FAIL | Notes |
-|-------|-----------|-------|
-| Admin debug enabled on build | | |
-| Grand Admin Dashboard reached | | |
-| Local Ops Audit row visible | | |
-| Screen load | | |
-| List fetch | | |
-| Load-more (if ≥21 rows) | | |
-| Detail fetch | | |
-| Safety chips | | |
-| Limitation banner | | |
-| No mutation controls | | |
-| Consumer route hidden | | |
-| Redaction (no phone/PIN/JWT on screen) | | |
+| Item | Detail |
+|------|--------|
+| **Run** | `npx expo start -c --web --port 19007` |
+| **Admin debug** | Shell session overrides: `EXPO_PUBLIC_ENABLE_ADMIN_DEBUG=1`, `EXPO_PUBLIC_FEATURE_ADMIN_DEMO_METRICS=true`, `EXPO_PUBLIC_FEATURE_OMNI_DEMO=true`, `EXPO_PUBLIC_ADMIN_PIN` ≥ 12 chars (session-only test label; not committed) |
+| **Auth** | Ops `ADMIN` via staging `POST /api/auth/login`; JWT + auth snapshot seeded into web `localStorage` (phone redacted in storage seed) |
+| **Navigation** | Deep links `/AdminDashboard`, `/local`, `/LocalOpsAudit` (secret logo-tap ×5 + PIN modal **not** exercised in this automation) |
+| **Verification** | Chromium automation observed rendered copy + network `GET` ops endpoints |
+
+### 5.2 Walkthrough results
+
+| Check | Result |
+|-------|--------|
+| Admin debug enabled (route registered) | **PASS** |
+| Admin login (`Role.ADMIN`, no dev JWT) | **PASS** |
+| Route / access — Grand Admin Dashboard | **PASS** |
+| Local Ops Audit row on Admin Dashboard | **PASS** |
+| Consumer visibility — no ops audit on `/local` tab | **PASS** |
+| Screen load — `LocalOpsAudit` | **PASS** |
+| List — `GET /api/local/ops/requests` | **PASS** |
+| Detail — `GET /api/local/ops/requests/:id` | **PASS** |
+| Pagination / load-more | **PASS** (load-more control visible; extra list `GET` observed) |
+| Safety chips (4) | **PASS** |
+| Limitation banner (4 themes) | **PASS** |
+| Mutation controls absent | **PASS** |
+| Redaction (visible UI) | **PASS** — no JWT, `DATABASE_URL`, or raw phone in rendered body |
+
+**Sample detail request id (non-secret):** `291bd24a-846e-4898-8198-144365038c48`
+
+### 5.3 Not observed / limitations
+
+| Item | Status |
+|------|--------|
+| Loading / empty / error UI states | Not forced in this pass |
+| Native iOS / Android | **Not run** |
+| Secret-tap + `EXPO_PUBLIC_ADMIN_PIN` modal path | **Not run** (deep-link used) |
+| Audit-events drawer | Out of scope for screen shell v1 |
 
 ---
 
@@ -125,25 +122,25 @@ Copy and complete after **interactive** Expo pass:
 
 | Item | Detail |
 |------|--------|
-| **Issues found** | Interactive Expo Ops Audit UI walkthrough **not executed** in automated docs pass; operator device attestation pending |
-| **Pause decision** | **No** — API + shell remain safe; **do not** claim full session 2 UI PASS until §5 is completed |
+| **Issues found** | On-disk `.env.local` missing persistent admin-debug flags — use shell overrides or update local env before operator manual reruns |
+| **Pause decision** | **No** |
 
 ---
 
 ## 7. Follow-up
 
-1. Operator: `npx expo start -c` with admin debug env + staging HTTPS base; complete §5 on phone/tablet/web.
-2. Optional: log one non-secret request id from UI for incident cross-reference.
-3. Continue controlled no-charge pilot session 2 (user/merchant flows) per ops playbook when scheduled.
-4. **Not in scope:** payment/wallet, production admin, audit-events drawer (future pack).
+1. Optional: operator attestation of **secret-tap + PIN** path on phone (same checklist as §5.2).
+2. Persist admin-debug flags in local env (not committed) for routine `npx expo start -c`.
+3. Broader pilot session 2 user/merchant flows per ops playbook when scheduled.
+4. **Not in scope:** payment/wallet, production admin, audit-events drawer UI.
 
 ---
 
-## 8. Validation (docs commit)
+## 8. Validation (docs commits)
 
-| Check | Result |
-|-------|--------|
-| `git diff --check` | Run at commit |
-| `npx tsc --noEmit` | Run at commit |
-| `npm run lint` | Run at commit |
-| `npm run smoke` | Run at commit |
+| Check | `PILOT_SESSION_2_USE.1` | `EXPO_OPERATOR_WALKTHROUGH.1` |
+|-------|-------------------------|-------------------------------|
+| `git diff --check` | PASS | PASS |
+| `npx tsc --noEmit` | PASS | PASS |
+| `npm run lint` | PASS | PASS |
+| `npm run smoke` | PASS | PASS |
