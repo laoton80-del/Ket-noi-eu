@@ -253,7 +253,7 @@ Known Local lifecycle milestones:
 
 ### Kernel pointer (`KERNEL.LOCAL_NO_CHARGE_OPS_AUDIT_UI_PLAN.1`) — `40c2711`
 
-**Controlled pilot session 2:** `VIONA_LOCAL_NO_CHARGE_CONTROLLED_PILOT_SESSION_2.md` — user/merchant + ops API **PASS** @ `028ea9f`; Expo ops UI **PASS** @ §5. **Native secret-tap spot-check:** preconditions **PASS**, interactive **NOT RUN** @ §11 (`NATIVE_SECRET_TAP_SPOT_CHECK.1`). Local: `REQUEST_ONLY_NO_CHARGE`, `walletPhase` **NONE**. **Not** production/commercial. Next: operator native §11.3 attestation.
+**Controlled pilot session 2:** `VIONA_LOCAL_NO_CHARGE_CONTROLLED_PILOT_SESSION_2.md` — user/merchant + ops API **PASS** @ `028ea9f`; Expo ops UI **PASS** @ §5. **Native secret-tap:** **FAIL/BLOCKED** @ §11.5 (`NATIVE_SECRET_TAP_ATTESTATION.1`) — dev-client/runtime on emulator; use physical device + matching dev build. Local: `REQUEST_ONLY_NO_CHARGE`, `walletPhase` **NONE**. **Not** production/commercial.
 
 ### Kernel sync (`KERNEL.LOCAL_NO_CHARGE_PILOT_SIGNOFF_SYNC.1`) — `5a714a8`
 

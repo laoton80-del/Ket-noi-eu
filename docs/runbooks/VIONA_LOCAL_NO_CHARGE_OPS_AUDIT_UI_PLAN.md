@@ -368,4 +368,15 @@ When implemented, session 2 **optional** ops audit steps:
 | **Preconditions probe** | **PASS** (admin debug + staging HTTPS + empty dev JWT) |
 | **Native interactive** | **NOT RUN** — no device/simulator attested |
 | **API corroboration** | **PASS** — public HTTPS smoke |
-| **Next** | Operator §11.3 on iOS/Android |
+| **Next** | Working dev client + operator §11.3 (see session 2 §11.5 blockers) |
+
+---
+
+## 17. Pack `NATIVE_SECRET_TAP_ATTESTATION.1` (evidence @ `47e3687`)
+
+| Item | Result |
+|------|--------|
+| **Device** | Android emulator connected |
+| **Interactive secret-tap path** | **FAIL** — Home not reached (`ExpoLocalization` native module) |
+| **Fresh dev build** | **FAIL** — Mapbox Maven resolution on `expo run:android` |
+| **API smoke** | **PASS** |

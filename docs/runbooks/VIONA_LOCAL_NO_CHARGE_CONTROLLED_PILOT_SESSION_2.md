@@ -1,6 +1,6 @@
 # VIONA Local no-charge — controlled pilot session 2 (Ops Audit UI)
 
-**Packs:** `VIONA.LOCAL.NO_CHARGE.OPS_AUDIT_UI.PILOT_SESSION_2_USE.1` · `VIONA.LOCAL.NO_CHARGE.OPS_AUDIT_UI.EXPO_OPERATOR_WALKTHROUGH.1` · `VIONA.LOCAL.NO_CHARGE.CONTROLLED_PILOT_SESSION_2.USER_MERCHANT_OPS_USE.1` · `VIONA.LOCAL.NO_CHARGE.OPS_AUDIT_UI.NATIVE_SECRET_TAP_SPOT_CHECK.1`
+**Packs:** `VIONA.LOCAL.NO_CHARGE.OPS_AUDIT_UI.PILOT_SESSION_2_USE.1` · `VIONA.LOCAL.NO_CHARGE.OPS_AUDIT_UI.EXPO_OPERATOR_WALKTHROUGH.1` · `VIONA.LOCAL.NO_CHARGE.CONTROLLED_PILOT_SESSION_2.USER_MERCHANT_OPS_USE.1` · `VIONA.LOCAL.NO_CHARGE.OPS_AUDIT_UI.NATIVE_SECRET_TAP_SPOT_CHECK.1` · `VIONA.LOCAL.NO_CHARGE.OPS_AUDIT_UI.NATIVE_SECRET_TAP_ATTESTATION.1`
 **Playbook:** `docs/runbooks/VIONA_LOCAL_NO_CHARGE_CONTROLLED_PILOT_OPS_PLAYBOOK.md`
 **Ops Audit UI plan:** `docs/runbooks/VIONA_LOCAL_NO_CHARGE_OPS_AUDIT_UI_PLAN.md`
 **Master at user/merchant + ops use:** `deac415` (screen shell `727cc38`)
@@ -16,7 +16,7 @@
 | **Static UI implementation audit** | **PASS** @ `727cc38` |
 | **Interactive Expo Ops Audit UI (web)** | **PASS** @ 2026-05-23 — see §5 |
 | **User/merchant pilot flows + ops visibility (API)** | **PASS** @ 2026-05-23 — see §9 |
-| **Home secret-tap / PIN modal path (native)** | **NOT RUN** — see §11 (no device/simulator attested) |
+| **Home secret-tap / PIN modal path (native)** | **FAIL / BLOCKED** — see §11.5 (device connected; app did not reach Home) |
 | **Home secret-tap / PIN (Expo web §5)** | **NOT RUN** (deep-link + ADMIN REST used) |
 | **On-disk admin debug flags** | **PASS** @ native pack probe (values not logged) |
 | **Pause triggered** | **No** |
@@ -220,19 +220,16 @@ Command: `node scripts/smoke-public-staging-api.mjs` (exit **0**).
 | Ops roster phone configured | **PASS** (set; not logged) |
 | `.env.local` committed | **No** |
 
-### 11.2 Native interactive walkthrough
+### 11.2 Native interactive walkthrough (initial spot-check)
 
 | Field | Result |
 |-------|--------|
-| **Device / platform** | **NOT RUN** — no iOS simulator session; Android emulator `Small_Phone` available on host but **not booted/connected** (`adb devices` empty) |
-| **Recommended command** | `npx expo start -c` → open on physical device or booted simulator |
-| **Secret-tap ×5 + PIN modal → Admin Dashboard** | **NOT RUN** |
-| **Local Ops Audit via native UI** | **NOT RUN** |
-| **Public HTTPS smoke (corroboration)** | **PASS** — exit 0; all `opsAudit*` stages PASS |
+| **Device / platform** | **NOT RUN** @ first pass — no `adb` device connected |
+| **Public HTTPS smoke (corroboration)** | **PASS** |
 
-**Do not treat native spot-check as PASS until §11.3 is completed on device.**
+### 11.3 Operator attestation template (native — for physical device / working dev client)
 
-### 11.3 Operator attestation template (native)
+Complete on a device where `npx expo start -c` loads Home without native-module errors.
 
 | Check | PASS/FAIL | Notes |
 |-------|-----------|-------|
@@ -248,12 +245,44 @@ Command: `node scripts/smoke-public-staging-api.mjs` (exit **0**).
 | Consumer nav cannot reach Ops Audit | | |
 | Redaction (no phone/PIN/JWT on screen) | | |
 
-### 11.4 Issues / pause
+### 11.4 Issues / pause (spot-check pack)
 
 | Item | Detail |
 |------|--------|
-| **Issues found** | Native UI path not executed in automated agent session; operator device attestation pending |
-| **Pause decision** | **No** — does not invalidate session 2 API/Expo web evidence; blocks **native secret-tap PASS** claim only |
+| **Issues found** | First pass: no device connected |
+| **Pause decision** | **No** |
+
+### 11.5 Native attestation attempt (`NATIVE_SECRET_TAP_ATTESTATION.1`) — 2026-05-23
+
+| Field | Result |
+|-------|--------|
+| **Device connected** | **PASS** — `emulator-5554` (`Small_Phone` AVD) |
+| **Admin debug flags (probe)** | **PASS** — see §11.1 |
+| **Metro** | `npx expo start -c` — Android bundle completed |
+| **Dev client on device** | `com.ahojbuono.ketnoieu` (Expo Development Build) — connects to `http://10.0.2.2:8081` |
+| **Fresh `com.ketnoiglobal.app` install** | **FAIL** — `npx expo run:android` blocked by Mapbox Maven deps (`com.mapbox.maps:android-ndk27:11.18.2` not resolved) |
+| **Home loads** | **FAIL** — redbox: `Cannot find native module 'ExpoLocalization'` after bundle load |
+| **Secret-tap ×5 + PIN modal** | **FAIL** — Home not reached; PIN modal not observed |
+| **Grand Admin Dashboard / Local Ops Audit** | **NOT RUN** |
+| **Consumer Local tab check** | **NOT RUN** |
+| **Public HTTPS smoke** | **PASS** — all `opsAudit*` stages |
+
+| Check | Result |
+|-------|--------|
+| secret-tap/PIN path | **FAIL** |
+| admin login/session | **NOT RUN** (UI) |
+| route/access | **FAIL** |
+| list / detail | **NOT RUN** |
+| safety chips / limitation banner | **NOT RUN** |
+| mutation controls absent | **NOT RUN** (UI) |
+| consumer visibility | **NOT RUN** |
+| redaction | **NOT RUN** (UI) |
+
+**Issues found:** Native dev-client/runtime mismatch on emulator — not an Ops Audit UI logic defect. **Recommended unblock:** install current dev build on device (`eas build --profile development` or fix Mapbox Maven + `expo run:android`), or use physical device with matching dev client.
+
+**Pause decision:** **No** — does not invalidate session 2 API / Expo web / user-merchant ops evidence.
+
+**Do not claim native secret-tap PASS until §11.3 is completed on a working dev client.**
 
 ---
 

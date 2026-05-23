@@ -191,7 +191,7 @@ Staging DB remains source of truth; rollback is **access/config**, not data dest
 |---------|-----|---------|
 | **1** (API + UI) | `VIONA_LOCAL_NO_CHARGE_CONTROLLED_PILOT_SESSION_1.md` | **PASS** — API @ `fece42c`; UI @ `4c26830`; **no pause** |
 | **2** (user/merchant + ops) | `VIONA_LOCAL_NO_CHARGE_CONTROLLED_PILOT_SESSION_2.md` | **PASS** — user/merchant/ops API @ `028ea9f`; Expo ops UI @ `21ec3ec`; **no pause** |
-| **2b** (native ops secret-tap) | Same doc §11 | **NOT RUN** — operator device pending |
+| **2b** (native ops secret-tap) | Same doc §11.5 | **FAIL/BLOCKED** — emulator dev client `ExpoLocalization` crash; §11.3 for physical device |
 
 ---
 
