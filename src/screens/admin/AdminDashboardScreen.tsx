@@ -38,6 +38,7 @@ import type { RootStackParamList } from '../../navigation/routes';
 import { PRICING_BASELINE_CURRENCY } from '../../config/pricingConfig';
 import { theme } from '../../theme/theme';
 import { FontFamily } from '../../theme/typography';
+import { useTranslation } from '../../utils/i18n';
 import { applyWebStyles, mergeWebClassNames } from '../../utils/applyWebStyles';
 import { formatCurrency } from '../../utils/currencyFormatter';
 import { fetchAdminTourismStats, type AdminTourismStatsPayload } from '../../services/viGlobalAdminApi';
@@ -362,6 +363,7 @@ function formatOmniLogTime(timestampMs: number): string {
 
 export function AdminDashboardScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const { t } = useTranslation();
   const { width, height } = useWindowDimensions();
   const isWide = width >= 1080;
   const isShortViewport = height < 700;
@@ -487,6 +489,21 @@ export function AdminDashboardScreen() {
           <View style={styles.profitDashNavTextCol}>
             <Text style={styles.profitDashNavTitle}>💰 MASTER PROFIT DASHBOARD</Text>
             <Text style={styles.profitDashNavSub}>MRR · AI Viễn thông · Hoa hồng sỉ · Ads · Stripe + Gross Margin</Text>
+          </View>
+          <Ionicons name="chevron-forward" size={22} color={theme.colors.primaryBright} />
+        </Pressable>
+
+        <Pressable
+          onPress={() => navigation.navigate('LocalOpsAudit')}
+          style={({ pressed }) => [styles.profitDashNav, pressed && { opacity: 0.9 }]}
+          className={mergeWebClassNames('kn-glass', 'kn-neon-b2b')}
+          accessibilityRole="button"
+          accessibilityLabel={t('local.opsAudit.navFromAdmin')}
+        >
+          <Ionicons name="document-text-outline" size={24} color={theme.colors.primaryBright} />
+          <View style={styles.profitDashNavTextCol}>
+            <Text style={styles.profitDashNavTitle}>{t('local.opsAudit.navFromAdmin')}</Text>
+            <Text style={styles.profitDashNavSub}>{t('local.opsAudit.navFromAdminSub')}</Text>
           </View>
           <Ionicons name="chevron-forward" size={22} color={theme.colors.primaryBright} />
         </Pressable>

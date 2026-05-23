@@ -58,6 +58,7 @@ import { RoleSelectionScreen } from './src/screens/auth/RoleSelectionScreen';
 import { SetupProfileScreen } from './src/screens/SetupProfileScreen';
 import { AiEyeScreen } from './src/screens/AiEyeScreen';
 import { AdminDashboardScreen } from './src/screens/AdminDashboardScreen';
+import { LocalOpsAuditScreen } from './src/screens/local/LocalOpsAuditScreen';
 import { AdminProfitDashboardScreen } from './src/screens/admin/AdminProfitDashboardScreen';
 import { AdContentFactoryScreen } from './src/screens/admin/AdContentFactoryScreen';
 import { SalesLeadCRM } from './src/screens/admin/SalesLeadCRM';
@@ -369,6 +370,7 @@ const rootLinking: LinkingOptions<RootStackParamList> = {
       LiveInterpreter: 'LiveInterpreter',
       LeonaCall: 'LeonaCall',
       AdminDashboard: 'AdminDashboard',
+      LocalOpsAudit: 'LocalOpsAudit',
       AdminProfitDashboard: 'AdminProfitDashboard',
       SalesLeadCRM: 'SalesLeadCRM',
       AdContentFactory: 'AdContentFactory',
@@ -624,6 +626,7 @@ function AppNavigationShell({
             {isAdminDebugSurfaceEnabled() && getFeatureFlags().adminDemoMetricsEnabled ? (
               <>
                 <Stack.Screen name="AdminDashboard" component={GatedAdminDashboardScreen} />
+                <Stack.Screen name="LocalOpsAudit" component={GatedLocalOpsAuditScreen} />
                 <Stack.Screen name="AdminProfitDashboard" component={AdminProfitDashboardScreen} />
                 <Stack.Screen name="SalesLeadCRM" component={SalesLeadCRM} />
                 <Stack.Screen name="AdContentFactory" component={AdContentFactoryScreen} />
@@ -984,6 +987,14 @@ function GatedAdminDashboardScreen() {
     return <MvpSurfaceDisabledScreen title="Omni demo" message={MVP_OMNI_DEMO_OFF_MSG} />;
   }
   return <AdminDashboardScreen />;
+}
+
+function GatedLocalOpsAuditScreen() {
+  const flags = getFeatureFlags();
+  if (!flags.omniDemoEnabled) {
+    return <MvpSurfaceDisabledScreen title="Omni demo" message={MVP_OMNI_DEMO_OFF_MSG} />;
+  }
+  return <LocalOpsAuditScreen />;
 }
 
 function getB2bReceptionistAutomationGate(flags: FeatureFlags): ReactElement | null {

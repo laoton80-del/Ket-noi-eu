@@ -322,3 +322,17 @@ When implemented, session 2 **optional** ops audit steps:
 | 4 | Pack 1 merged before Pack 2 UI |
 
 **Plan acceptance for `OPS_AUDIT_UI_PLAN.1`:** this document merged @ kernel pointer; no runtime diff.
+
+---
+
+## 13. Pack `SCREEN_SHELL.1` (shipped)
+
+| Item | Detail |
+|------|--------|
+| **Screen** | `src/screens/local/LocalOpsAuditScreen.tsx` |
+| **Components** | `src/components/local/ops/*` (banner, chips, card, detail) |
+| **API client** | `src/services/localOpsAuditApi.ts` — `GET` only |
+| **Route** | `LocalOpsAudit` — registered only when `isAdminDebugSurfaceEnabled()` && `adminDemoMetricsEnabled` (same gate as `AdminDashboard`) |
+| **Entry** | `AdminDashboard` → Local Ops Audit nav (not Home / Local consumer UI) |
+| **i18n** | `local.opsAudit.*` in `en.json` / `vi.json` |
+| **Next** | `OPS_AUDIT_UI.PILOT_SESSION_2_USE.1` — operator walkthrough on staging |

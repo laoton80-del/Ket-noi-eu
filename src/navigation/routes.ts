@@ -218,6 +218,8 @@ export type RootStackParamList = {
   Discover: undefined;
   Services: undefined;
   AdminDashboard: undefined;
+  /** Local no-charge ops audit — read-only super-admin list/detail (admin debug). */
+  LocalOpsAudit: undefined;
   /** CFO master profit — multi-stream revenue mock dashboard (admin debug). */
   AdminProfitDashboard: undefined;
   /** Telesale CRM — B2B leads pipeline (admin debug). */

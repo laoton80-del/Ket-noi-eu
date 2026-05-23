@@ -794,6 +794,80 @@
       "localTileTitle": "Yêu cầu của tôi",
       "localTileSub": "Chỉ gửi yêu cầu / không thu phí — chưa thu khoản thanh toán nào. Chưa phải đặt lịch đã thanh toán.",
       "localTileA11y": "Mở yêu cầu Local của tôi"
+    },
+    "opsAudit": {
+      "title": "Kiểm toán Ops Local",
+      "subtitle": "Pilot vận hành chỉ đọc · REQUEST_ONLY_NO_CHARGE",
+      "backA11y": "Quay lại",
+      "loading": "Đang tải yêu cầu…",
+      "empty": "Không có yêu cầu Local trong khung nhìn này.",
+      "retry": "Thử lại",
+      "loadMore": "Tải thêm",
+      "navFromAdmin": "Kiểm toán Ops Local (chỉ đọc)",
+      "navFromAdminSub": "Danh sách super-admin · không thao tác · không phải bảng thanh toán",
+      "banner": {
+        "title": "Thông báo giới hạn vận hành",
+        "internalPilot": "Công cụ pilot nội bộ — không dành cho người dùng cuối.",
+        "notProduction": "Không phải admin production — chỉ bằng chứng staging / pilot.",
+        "notPaymentDashboard": "Không phải bảng thanh toán hay ví — không thu, giữ hay sổ cái tại đây.",
+        "confirmedNotPaid": "Xác nhận không có nghĩa đã thanh toán — REQUEST_ONLY_NO_CHARGE · walletPhase NONE."
+      },
+      "chips": {
+        "requestOnlyNoCharge": "REQUEST_ONLY_NO_CHARGE",
+        "walletPhaseNone": "walletPhase NONE",
+        "noPaymentCaptured": "Chưa thu thanh toán",
+        "readOnly": "Kiểm toán chỉ đọc"
+      },
+      "card": {
+        "a11y": "Yêu cầu {{id}}, trạng thái {{status}}"
+      },
+      "detail": {
+        "title": "Chi tiết yêu cầu",
+        "loading": "Đang tải chi tiết…",
+        "selectRow": "Chọn một yêu cầu trong danh sách."
+      },
+      "fields": {
+        "requestId": "ID yêu cầu",
+        "status": "Trạng thái",
+        "serviceType": "Loại dịch vụ",
+        "title": "Tiêu đề (đã che)",
+        "walletMode": "Chế độ ví",
+        "walletPhase": "Giai đoạn ví",
+        "merchantDecision": "Quyết định merchant",
+        "requestedAt": "Thời điểm yêu cầu",
+        "createdAt": "Tạo lúc",
+        "updatedAt": "Cập nhật lúc",
+        "confirmedAt": "Xác nhận lúc",
+        "rejectedAt": "Từ chối lúc",
+        "requesterSection": "Người yêu cầu",
+        "roleLabel": "Nhãn vai trò",
+        "userId": "ID người dùng",
+        "businessSection": "Doanh nghiệp",
+        "businessName": "Tên doanh nghiệp",
+        "businessId": "ID doanh nghiệp",
+        "ownerRole": "Vai trò chủ sở hữu",
+        "ownerUserId": "ID chủ sở hữu",
+        "tenantSection": "Cô lập tenant",
+        "requesterUserId": "ID người yêu cầu",
+        "businessOwnerUserId": "ID chủ DN",
+        "requesterIsOwner": "Người yêu cầu là chủ DN",
+        "noPaymentCaptured": "Chưa thu thanh toán",
+        "requestOnlyNoCharge": "Chỉ yêu cầu / không thu phí",
+        "yes": "Có",
+        "no": "Không"
+      },
+      "merchantDecision": {
+        "pending_review": "Chờ duyệt",
+        "confirmed": "Đã xác nhận (chưa thanh toán)",
+        "declined": "Đã từ chối",
+        "none": "Không có"
+      },
+      "error": {
+        "apiNotConfigured": "REST API chưa cấu hình. Đặt EXPO_PUBLIC_REST_API_BASE.",
+        "forbiddenRole": "Cần vai trò super-admin cho kiểm toán ops.",
+        "loadList": "Không tải được danh sách yêu cầu ops.",
+        "loadDetail": "Không tải được chi tiết yêu cầu."
+      }
     }
   },
   "checkout": {

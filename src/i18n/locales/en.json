@@ -794,6 +794,80 @@
       "localTileTitle": "My requests",
       "localTileSub": "Request-only / no-charge — no payment has been captured. Not a paid booking.",
       "localTileA11y": "Open my Local service requests"
+    },
+    "opsAudit": {
+      "title": "Local Ops Audit",
+      "subtitle": "Read-only operator pilot · REQUEST_ONLY_NO_CHARGE",
+      "backA11y": "Go back",
+      "loading": "Loading requests…",
+      "empty": "No Local service requests in this view.",
+      "retry": "Retry",
+      "loadMore": "Load more",
+      "navFromAdmin": "Local Ops Audit (read-only)",
+      "navFromAdminSub": "Super-admin list · no mutations · not a payment dashboard",
+      "banner": {
+        "title": "Operator limitation notice",
+        "internalPilot": "Internal operator pilot tool — not for end users.",
+        "notProduction": "Not production admin — staging / pilot evidence only.",
+        "notPaymentDashboard": "Not a payment or wallet dashboard — no capture, hold, or ledger actions here.",
+        "confirmedNotPaid": "Confirmed does not mean paid — REQUEST_ONLY_NO_CHARGE · walletPhase NONE."
+      },
+      "chips": {
+        "requestOnlyNoCharge": "REQUEST_ONLY_NO_CHARGE",
+        "walletPhaseNone": "walletPhase NONE",
+        "noPaymentCaptured": "No payment captured",
+        "readOnly": "Read-only audit"
+      },
+      "card": {
+        "a11y": "Request {{id}}, status {{status}}"
+      },
+      "detail": {
+        "title": "Request detail",
+        "loading": "Loading detail…",
+        "selectRow": "Select a request from the list."
+      },
+      "fields": {
+        "requestId": "Request ID",
+        "status": "Status",
+        "serviceType": "Service type",
+        "title": "Title (redacted)",
+        "walletMode": "Wallet mode",
+        "walletPhase": "Wallet phase",
+        "merchantDecision": "Merchant decision",
+        "requestedAt": "Requested at",
+        "createdAt": "Created at",
+        "updatedAt": "Updated at",
+        "confirmedAt": "Confirmed at",
+        "rejectedAt": "Rejected at",
+        "requesterSection": "Requester",
+        "roleLabel": "Role label",
+        "userId": "User ID",
+        "businessSection": "Business",
+        "businessName": "Business name",
+        "businessId": "Business ID",
+        "ownerRole": "Owner role",
+        "ownerUserId": "Owner user ID",
+        "tenantSection": "Tenant isolation",
+        "requesterUserId": "Requester user ID",
+        "businessOwnerUserId": "Business owner user ID",
+        "requesterIsOwner": "Requester is business owner",
+        "noPaymentCaptured": "No payment captured",
+        "requestOnlyNoCharge": "Request-only / no-charge",
+        "yes": "Yes",
+        "no": "No"
+      },
+      "merchantDecision": {
+        "pending_review": "Pending review",
+        "confirmed": "Confirmed (not paid)",
+        "declined": "Declined",
+        "none": "None"
+      },
+      "error": {
+        "apiNotConfigured": "REST API is not configured. Set EXPO_PUBLIC_REST_API_BASE.",
+        "forbiddenRole": "Super-admin role required for ops audit.",
+        "loadList": "Unable to load ops request list.",
+        "loadDetail": "Unable to load request detail."
+      }
     }
   },
   "checkout": {
