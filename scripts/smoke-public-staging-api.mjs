@@ -1,7 +1,8 @@
 /**
  * Public (or local) staging API smoke — no secrets printed.
  * Usage: node scripts/smoke-public-staging-api.mjs [baseUrl]
- * Env: STAGING_PUBLIC_API_BASE or EXPO_PUBLIC_REST_API_BASE, VIONA_PILOT_PIN
+ * Env: STAGING_PUBLIC_API_BASE or EXPO_PUBLIC_REST_API_BASE, VIONA_PILOT_PIN,
+ *      VIONA_PILOT_OPS_ADMIN_PHONE (roster-approved Role.ADMIN for ops audit stages)
  *
  * Public HTTPS: 500ms pacing between requests; HTTP 429 retries (1s/2s/3s, max 3).
  */
@@ -205,6 +206,62 @@ async function authedStage(stageLabel, path, token, method = 'GET', payload) {
   return { ok: true, status: res.status, data: body.data };
 }
 
+async function unauthedStage(stageLabel, path, method = 'GET') {
+  log(stageLabel, `${method} ${path} (no auth)`);
+  let res;
+  try {
+    res = await fetchPaced(stageLabel, `${base}${path}`, {
+      method,
+      headers: { Accept: 'application/json' },
+    });
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : String(e);
+    record(stageLabel, 'FAIL', { path, method, error: redactSafe(msg) });
+    return { ok: false, status: 0, error: msg };
+  }
+
+  const { json: body, text } = await readJsonSafe(res);
+  const denied = res.status === 401 || res.status === 403;
+  if (!denied) {
+    record(stageLabel, 'FAIL', {
+      path,
+      method,
+      httpStatus: res.status,
+      error: body ? safeErrorFromBody(body, res.status) : text,
+    });
+    log(stageLabel, `FAIL — expected 401/403 got HTTP ${res.status}`);
+    return { ok: false, status: res.status, error: 'expected_unauthorized' };
+  }
+
+  record(stageLabel, 'PASS', { path, method, httpStatus: res.status });
+  log(stageLabel, `PASS — HTTP ${res.status} (denied as expected)`);
+  return { ok: true, status: res.status, data: body?.data };
+}
+
+const OPS_REDACTION_DENY = [
+  'phonenumber',
+  'pincode',
+  'password',
+  'authorization',
+  'database_url',
+  'stripe',
+  'totalviocredits',
+  'heldviocredits',
+  'eyj',
+];
+
+function assertOpsResponseRedacted(data, stageLabel) {
+  const serialized = JSON.stringify(data ?? {}).toLowerCase();
+  for (const term of OPS_REDACTION_DENY) {
+    if (serialized.includes(term)) {
+      failFinal(`${stageLabel} response may contain forbidden field: ${term}`);
+    }
+  }
+  if (serialized.includes('@') && serialized.includes('.com')) {
+    failFinal(`${stageLabel} response may contain email`);
+  }
+}
+
 async function main() {
   if (!base) failFinal('Set STAGING_PUBLIC_API_BASE or pass baseUrl argument.');
   if (pin.length < 6) failFinal('VIONA_PILOT_PIN not set (min 6 chars; value not logged).');
@@ -332,7 +389,11 @@ async function main() {
   }
 
   let opsAuditList = 'SKIP';
+  let opsAuditDetail = 'SKIP';
+  let opsAuditUnauthed = 'SKIP';
   let opsAuditForbiddenB2c = 'SKIP';
+  let opsAuditForbiddenMerchant = 'SKIP';
+  let opsAuditMutationSafe = 'SKIP';
   const opsAdminPhone = (process.env.VIONA_PILOT_OPS_ADMIN_PHONE ?? '').trim();
   if (opsAdminPhone.length > 0) {
     const loginOps = await loginPersona('opsAdmin', opsAdminPhone);
@@ -342,6 +403,11 @@ async function main() {
     if (loginOps.role !== 'ADMIN') {
       failFinal(`ops admin must have role ADMIN, got ${loginOps.role ?? 'unknown'}`);
     }
+
+    const unauthedOps = await unauthedStage('ops:unauthedList', '/api/local/ops/requests');
+    opsAuditUnauthed = unauthedOps.ok ? 'PASS' : 'FAIL';
+    if (!unauthedOps.ok) failFinal('unauthenticated ops list must return 401/403');
+
     const opsList = await authedStage(
       'ops:listRequests',
       '/api/local/ops/requests?limit=10',
@@ -353,10 +419,49 @@ async function main() {
     if (safety?.readOnly !== true || safety?.noPaymentCaptured !== true) {
       failFinal('ops list missing read-only safety block');
     }
-    const serialized = JSON.stringify(opsList.data ?? {}).toLowerCase();
-    if (serialized.includes('phone') || serialized.includes('pincode') || serialized.includes('eyj')) {
-      failFinal('ops list response may contain secrets');
+    assertOpsResponseRedacted(opsList.data, 'ops:listRequests');
+
+    const requests = Array.isArray(opsList.data?.requests) ? opsList.data.requests : [];
+    for (const row of requests) {
+      if (row.walletMode !== 'REQUEST_ONLY_NO_CHARGE') {
+        failFinal(`ops list row ${row.id} walletMode not REQUEST_ONLY_NO_CHARGE`);
+      }
+      if (row.walletPhase !== 'NONE') {
+        failFinal(`ops list row ${row.id} walletPhase not NONE`);
+      }
+      if (row.display?.noPaymentCaptured !== true) {
+        failFinal(`ops list row ${row.id} missing noPaymentCaptured`);
+      }
     }
+
+    let snapshotBefore = null;
+    if (requests.length > 0) {
+      const first = requests[0];
+      snapshotBefore = {
+        id: first.id,
+        status: first.status,
+        updatedAt: first.updatedAt,
+      };
+      const opsDetail = await authedStage(
+        'ops:detailRequest',
+        `/api/local/ops/requests/${encodeURIComponent(first.id)}`,
+        loginOps.token
+      );
+      opsAuditDetail = opsDetail.ok ? 'PASS' : 'FAIL';
+      if (!opsDetail.ok) failFinal('ops detail failed');
+      assertOpsResponseRedacted(opsDetail.data, 'ops:detailRequest');
+      if (opsDetail.data?.id !== first.id) {
+        failFinal('ops detail id mismatch');
+      }
+      if (opsDetail.data?.walletMode !== 'REQUEST_ONLY_NO_CHARGE' || opsDetail.data?.walletPhase !== 'NONE') {
+        failFinal('ops detail wallet safety mismatch');
+      }
+    } else {
+      opsAuditDetail = 'SKIP';
+      log('ops', 'detail SKIP — empty ops list (no request id)');
+      record('ops:detailRequest', 'SKIP', { reason: 'empty_list' });
+    }
+
     const b2cOps = await authedStage(
       'ops:listForbiddenUserA',
       '/api/local/ops/requests',
@@ -366,6 +471,33 @@ async function main() {
       failFinal('B2C must not access ops list (expected 403)');
     }
     opsAuditForbiddenB2c = 'PASS';
+
+    const merchantOps = await authedStage(
+      'ops:listForbiddenMerchantM',
+      '/api/local/ops/requests',
+      loginM.token
+    );
+    if (merchantOps.ok || merchantOps.status !== 403) {
+      failFinal('Merchant M must not access ops list (expected 403)');
+    }
+    opsAuditForbiddenMerchant = 'PASS';
+
+    if (snapshotBefore) {
+      const opsListAfter = await authedStage(
+        'ops:listAfterReads',
+        `/api/local/ops/requests?limit=10`,
+        loginOps.token
+      );
+      if (!opsListAfter.ok) failFinal('ops list after reads failed');
+      const afterRow = (opsListAfter.data?.requests ?? []).find((r) => r.id === snapshotBefore.id);
+      if (!afterRow) {
+        failFinal('ops mutation check: snapshot request missing after reads');
+      }
+      if (afterRow.status !== snapshotBefore.status || afterRow.updatedAt !== snapshotBefore.updatedAt) {
+        failFinal('ops reads mutated request status or updatedAt');
+      }
+      opsAuditMutationSafe = 'PASS';
+    }
   } else {
     log('ops', 'SKIP — set VIONA_PILOT_OPS_ADMIN_PHONE for roster-approved ADMIN HTTPS ops smoke');
     record('ops:listRequests', 'SKIP', { reason: 'no_roster_phone' });
@@ -389,7 +521,11 @@ async function main() {
         walletPhase,
         paymentCaptured: false,
         opsAuditList,
+        opsAuditDetail,
+        opsAuditUnauthed,
         opsAuditForbiddenB2c,
+        opsAuditForbiddenMerchant,
+        opsAuditMutationSafe,
         stages,
       },
       null,

@@ -154,9 +154,26 @@
 **Service:** `src/services/local/localOpsRequestListService.ts`
 **Tests:** `npx tsx scripts/test-local-ops-request-list-api-1.ts` (DATABASE_URL; ephemeral ADMIN)
 
-**Staging HTTPS smoke:** optional when operator sets `VIONA_PILOT_OPS_ADMIN_PHONE` (roster-approved `Role.ADMIN` only — **not** in git). Without it, smoke logs `ops:listRequests` **SKIP**.
+**Staging HTTPS smoke (`READONLY_API_HTTPS_SMOKE.1`):** **BLOCKED** @ `fe117ea` (2026-05-23)
 
-**Roster blocker:** Pilot provision script (`provision-local-pilot-accounts-staging.ts`) does **not** create ADMIN. Ops must provision `Role.ADMIN` on staging with internal roster approval before HTTPS ops smoke or UI pack.
+| Check | Result |
+|-------|--------|
+| `GET /health` @ public HTTPS | **PASS** |
+| Existing pilot personas smoke | **PASS** |
+| `VIONA_PILOT_OPS_ADMIN_PHONE` in operator `.env.local` | **MISSING** (not set; value never logged) |
+| Staging DB `Role.ADMIN` user count (`euqbfanilcssjiwwtcby`) | **0** — no roster-approved super-admin on staging |
+| Ops list/detail HTTPS stages | **SKIP** — smoke script ready; re-run after unblock |
+
+**Unblock (ops, not engineering inventing accounts):**
+
+1. Internal roster approval for one staging `Role.ADMIN` operator identity.
+2. Provision ADMIN on staging DB (engineering runbook — **do not** commit phone/PIN).
+3. Operator sets `VIONA_PILOT_OPS_ADMIN_PHONE=<E.164>` in `.env.local` (gitignored) + existing `VIONA_PILOT_PIN`.
+4. Re-run: `node scripts/smoke-public-staging-api.mjs https://viona-api-staging-eu.fly.dev` — expect `opsAuditList`, `opsAuditDetail`, `opsAuditUnauthed`, `opsAuditForbiddenB2c`, `opsAuditForbiddenMerchant`, `opsAuditMutationSafe` all **PASS**.
+
+**Smoke script coverage when unblocked:** admin login; `GET /api/local/ops/requests`; `GET /api/local/ops/requests/:id`; unauthenticated 401/403; User A 403; Merchant M 403; redaction scan; list-row `REQUEST_ONLY_NO_CHARGE` + `walletPhase` NONE; read-only mutation check (`status`/`updatedAt` unchanged).
+
+**Roster blocker:** Pilot provision script (`provision-local-pilot-accounts-staging.ts`) does **not** create ADMIN.
 
 **No DB migration in this plan.** Implement via existing Prisma models + select projections (mirror `localUserRequestListService` / `localMerchantRequestInboxService` field discipline).
 

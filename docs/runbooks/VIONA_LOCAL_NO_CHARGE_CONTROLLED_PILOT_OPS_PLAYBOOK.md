@@ -205,3 +205,4 @@ Staging DB remains source of truth; rollback is **access/config**, not data dest
 | Kernel | `VIONA_PROJECT_KERNEL.md` §6 |
 | Ops audit UI plan | `VIONA_LOCAL_NO_CHARGE_OPS_AUDIT_UI_PLAN.md` |
 | Ops audit API (read-only list) | `GET /api/local/ops/requests` — `Role.ADMIN`; test: `test-local-ops-request-list-api-1.ts` |
+| Ops audit HTTPS smoke | **BLOCKED** until staging `Role.ADMIN` + `VIONA_PILOT_OPS_ADMIN_PHONE` — see `VIONA_LOCAL_NO_CHARGE_OPS_AUDIT_UI_PLAN.md` § Ops HTTPS smoke |
