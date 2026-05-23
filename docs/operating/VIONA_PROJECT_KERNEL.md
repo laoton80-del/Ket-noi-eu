@@ -212,8 +212,9 @@ Known Local lifecycle milestones:
 🟢 Public HTTPS staging API smoke **repeat PASS** @ `1daf006` — paced smoke `https://viona-api-staging-eu.fly.dev` (`docs/runbooks/VIONA_PUBLIC_STAGING_API_DEPLOY_EVIDENCE.md`)
 🟢 Public HTTPS REST UI walkthrough **PASS** — operator @ `OPERATOR_PASS_SYNC.1` (`docs/runbooks/VIONA_PUBLIC_HTTPS_REST_UI_WALKTHROUGH.md`)
 🟢 Public HTTPS Local device matrix **PASS** — 4 viewports × VI/EN @ `DEVICE_MATRIX.OPERATOR_PASS_SYNC.1` (`docs/runbooks/VIONA_PUBLIC_HTTPS_LOCAL_NO_CHARGE_DEVICE_MATRIX.md`)
+🟢 **Local no-charge public HTTPS pilot sign-off** — `READY_FOR_CONTROLLED_NO_CHARGE_PILOT` @ `0b9ea8f` (`docs/runbooks/VIONA_LOCAL_NO_CHARGE_PILOT_SIGNOFF.md`)
 
-**Local + auth pilot readiness (master / origin @ public HTTPS staging proof):**
+**Local + auth pilot readiness (master / origin @ `0b9ea8f` sign-off):**
 
 | Layer | Verdict |
 |-------|---------|
@@ -223,6 +224,7 @@ Known Local lifecycle milestones:
 | **Public HTTPS staging API smoke** (500ms pacing; Local no-charge path) | **PASS** @ `1daf006` — `docs/runbooks/VIONA_PUBLIC_STAGING_API_DEPLOY_EVIDENCE.md` |
 | **Public HTTPS REST UI** (phone + PIN; dev JWT cleared; confirm/decline/isolation) | **PASS** @ operator PASS sync — `docs/runbooks/VIONA_PUBLIC_HTTPS_REST_UI_WALKTHROUGH.md` |
 | **Public HTTPS device matrix** (390×844, 768×1024, 1024×768, 1366×768 × VI/EN) | **PASS** @ operator PASS sync — `docs/runbooks/VIONA_PUBLIC_HTTPS_LOCAL_NO_CHARGE_DEVICE_MATRIX.md` (web responsive; not production/native store) |
+| **Local no-charge public HTTPS pilot sign-off** | **READY_FOR_CONTROLLED_NO_CHARGE_PILOT** @ `0b9ea8f` — `docs/runbooks/VIONA_LOCAL_NO_CHARGE_PILOT_SIGNOFF.md` |
 
 **REST UI strict proof (staging / manual only, not production):** User A/B and Merchant M/N login via UI PIN; User B isolation; Merchant M inbox + confirm/decline UI; Merchant N isolation; logout/session clear; forbidden commercial wording not observed on Local surfaces. `EXPO_PUBLIC_DEV_REST_JWT` **not required** for strict UI proof (operator attestation).
 
@@ -232,7 +234,7 @@ Known Local lifecycle milestones:
 
 **Strict UI limitations (honest):** staging / manual / local-dev API only; public HTTPS API smoke PASS is scripted staging proof only — not production HTTPS certification; not full device EN-VI matrix; ops audit UI not covered; operator should keep `.env.local` saved without `EXPO_PUBLIC_DEV_REST_JWT` on disk (automation once detected non-empty length at doc-write).
 
-**Public HTTPS (honest):** API smoke PASS @ `1daf006`; REST UI PASS @ `7d1439e`; device matrix **PASS** (4 viewports × VI/EN) @ operator PASS sync — `docs/runbooks/VIONA_PUBLIC_HTTPS_LOCAL_NO_CHARGE_DEVICE_MATRIX.md` (web responsive; not production/native store). Aborted R6 background task is **not** evidence.
+**Public HTTPS (honest):** Sign-off @ `0b9ea8f` — controlled no-charge web pilot **READY**; whole VIONA still pre-commercial; Global Active **not yet**. Aborted R6 background task is **not** evidence.
 
 Current Local mode:
 REQUEST_ONLY_NO_CHARGE

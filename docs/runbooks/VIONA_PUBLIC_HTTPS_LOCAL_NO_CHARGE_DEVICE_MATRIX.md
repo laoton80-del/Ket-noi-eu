@@ -172,8 +172,11 @@ Forbidden terms scanned (not observed): paid booking, guaranteed booking, payout
 
 ---
 
+## Pilot sign-off
+
+Included in `docs/runbooks/VIONA_LOCAL_NO_CHARGE_PILOT_SIGNOFF.md` @ `0b9ea8f` as part of **READY_FOR_CONTROLLED_NO_CHARGE_PILOT** evidence.
+
 ## Next required action
 
 1. Optional: native iOS/Android spot-check on public HTTPS (separate pack if needed).
 2. Re-run paced HTTPS smoke after Fly/API deploys.
-3. Keep `.env.local` with public base + empty dev JWT (not committed).

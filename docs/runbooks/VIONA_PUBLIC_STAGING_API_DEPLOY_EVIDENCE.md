@@ -18,7 +18,9 @@
 | **Public HTTPS REST UI walkthrough** | **PASS** (operator @ `OPERATOR_PASS_SYNC.1`) — `docs/runbooks/VIONA_PUBLIC_HTTPS_REST_UI_WALKTHROUGH.md` |
 | **Full device matrix (4 viewports × EN/VI)** | **PASS** (operator @ `DEVICE_MATRIX.OPERATOR_PASS_SYNC.1`) — `docs/runbooks/VIONA_PUBLIC_HTTPS_LOCAL_NO_CHARGE_DEVICE_MATRIX.md` |
 
-**Does not certify:** production launch, commercial/payment readiness, public HTTPS device matrix, or SOS production reliability.
+**Pilot sign-off:** `docs/runbooks/VIONA_LOCAL_NO_CHARGE_PILOT_SIGNOFF.md` @ `0b9ea8f` — `READY_FOR_CONTROLLED_NO_CHARGE_PILOT` (Local web only).
+
+**Does not certify:** production launch, commercial/payment readiness, native iOS/Android store sign-off, or SOS production reliability.
 
 ---
 
@@ -329,6 +331,6 @@ Doc: `docs/runbooks/VIONA_PUBLIC_HTTPS_LOCAL_NO_CHARGE_DEVICE_MATRIX.md`
 
 ## Next required action
 
-1. Optional: native iOS/Android public HTTPS spot-check (separate scope).
-2. Re-run paced smoke after Fly deploys: `node scripts/smoke-public-staging-api.mjs https://viona-api-staging-eu.fly.dev`.
-3. Keep `.env.local` with public base + empty dev JWT (not committed).
+1. Run controlled no-charge pilot per `docs/runbooks/VIONA_LOCAL_NO_CHARGE_PILOT_SIGNOFF.md`.
+2. Optional: native iOS/Android public HTTPS spot-check (separate scope).
+3. Re-run paced smoke after Fly deploys.
