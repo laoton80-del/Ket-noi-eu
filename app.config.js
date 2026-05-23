@@ -24,11 +24,12 @@ module.exports = () => {
       'expo-build-properties',
       {
         android: {
-          kotlinVersion: '2.1.0',
+          kotlinVersion: '2.1.20',
           minSdkVersion: 24,
           compileSdkVersion: 36,
           targetSdkVersion: 35,
           buildToolsVersion: '35.0.0',
+          extraMavenRepos: ['https://api.mapbox.com/downloads/v2/releases/maven'],
         },
       },
     ],
@@ -64,7 +65,12 @@ module.exports = () => {
         color: '#0B2A66',
       },
     ],
-    '@rnmapbox/maps',
+    [
+      '@rnmapbox/maps',
+      {
+        RNMapboxMapsVersion: '11.18.2',
+      },
+    ],
     'expo-live-activity',
     'expo-localization',
     'expo-font',

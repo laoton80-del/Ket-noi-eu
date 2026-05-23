@@ -52,6 +52,9 @@ firebase-adminsdk*.json
 /ios
 /android
 
+# Local Gradle cache (use when ~/.gradle worker cache is corrupted)
+.gradle-user-home/
+
 .vercel
 
 # Local visual QA (Puppeteer captures, one-off fullscreen tuning scripts)

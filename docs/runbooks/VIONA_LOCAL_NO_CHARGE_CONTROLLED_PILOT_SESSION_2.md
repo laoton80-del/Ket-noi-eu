@@ -284,6 +284,21 @@ Complete on a device where `npx expo start -c` loads Home without native-module 
 
 **Do not claim native secret-tap PASS until §11.3 is completed on a working dev client.**
 
+### 11.6 Android dev-client build unblock (`VIONA.NATIVE.ANDROID.DEV_CLIENT_MAPBOX_BUILD_FIX.1`) — 2026-05-23
+
+| Field | Result |
+|-------|--------|
+| **Mapbox Maven resolution** | **PASS** — `expo-build-properties` `extraMavenRepos` + `@rnmapbox/maps` `RNMapboxMapsVersion: 11.18.2` in `app.config.js`; `npx expo prebuild -p android` applies `@rnmapbox/maps-v2-maven` block |
+| **Kotlin/KSP alignment** | **PASS** — `kotlinVersion` **2.1.20** (was **2.1.0** → expo-updates fell back to incompatible KSP **1.9.24-1.0.20**, `NoSuchMethodError` on `kspDebugKotlin`) |
+| **Gradle assembleDebug** | **PASS** — `app:assembleDebug` with project-local `GRADLE_USER_HOME` (corrupted `%USERPROFILE%\.gradle` caused `GradleWorkerMain` worker failures) |
+| **`com.ketnoiglobal.app` install** | **PASS** — `app-debug.apk` on `emulator-5554`; `versionName=1.0.0` |
+| **App launch (cold)** | **PASS** — `MainActivity` start; process observed (no secret-tap walkthrough) |
+| **Secret-tap ×5 + PIN / Ops Audit UI** | **NOT RUN** — attestation checklist §11.3 still required |
+
+**Operator notes (no secrets):** After clone, run `npx expo prebuild -p android` before `expo run:android`. If Gradle workers fail with `GradleWorkerMain` ClassNotFoundException, use a fresh `GRADLE_USER_HOME` or clear corrupted user Gradle caches.
+
+**Do not claim native secret-tap PASS until §11.3 is completed on a working dev client.**
+
 ---
 
 ## 12. Validation (docs commits)
