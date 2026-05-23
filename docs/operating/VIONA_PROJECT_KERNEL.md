@@ -213,10 +213,47 @@ Known Local lifecycle milestones:
 🟢 Public HTTPS REST UI walkthrough **PASS** — operator @ `OPERATOR_PASS_SYNC.1` (`docs/runbooks/VIONA_PUBLIC_HTTPS_REST_UI_WALKTHROUGH.md`)
 🟢 Public HTTPS Local device matrix **PASS** — 4 viewports × VI/EN @ `DEVICE_MATRIX.OPERATOR_PASS_SYNC.1` (`docs/runbooks/VIONA_PUBLIC_HTTPS_LOCAL_NO_CHARGE_DEVICE_MATRIX.md`)
 🟢 **Local no-charge public HTTPS web pilot readiness:** **READY_FOR_CONTROLLED_NO_CHARGE_PILOT** @ `5a714a8` (`docs/runbooks/VIONA_LOCAL_NO_CHARGE_PILOT_SIGNOFF.md`)
+🟢 **Controlled no-charge pilot session 1:** **API PASS + UI PASS + no pause** @ `4c26830` (`docs/runbooks/VIONA_LOCAL_NO_CHARGE_CONTROLLED_PILOT_SESSION_1.md`)
+
+### Kernel sync (`KERNEL.CONTROLLED_PILOT_SESSION_1_PASS_SYNC.1`) — `4c26830`
+
+**Latest master / origin:** `4c26830` — `docs(local): record controlled no-charge pilot UI session 1`
+
+| Item | Status |
+|------|--------|
+| Controlled pilot session 1 (API) | **PASS** @ `fece42c` |
+| Controlled pilot session 1 (UI) | **PASS** @ `4c26830` |
+| Pause decision | **No** |
+| Whole VIONA | Pre-commercial / staging-pilot foundation |
+| Global Active / full commercial | **Not yet** |
+
+#### Proven session 1 scope
+
+| Check | Result |
+|-------|--------|
+| API smoke (paced) | **PASS** |
+| User A UI | **PASS** |
+| User B isolation UI | **PASS** |
+| Merchant M inbox UI | **PASS** |
+| Merchant confirm UI | **PASS** |
+| Merchant decline UI | **PASS** |
+| Merchant N isolation UI | **PASS** |
+| Forbidden commercial wording | **PASS** — not observed |
+| No payment captured | **PASS** |
+| `REQUEST_ONLY_NO_CHARGE` | **PASS** |
+| `walletPhase` NONE | **PASS** |
+
+#### Next actions (post session 1)
+
+1. Pilot session 2+ per `VIONA_LOCAL_NO_CHARGE_CONTROLLED_PILOT_OPS_PLAYBOOK.md`
+2. Optional native iOS/Android spot-check
+3. Ops audit UI (internal)
+4. Support/incident playbook refinement
+5. **No** payment/commercial packs without finance approval
 
 ### Kernel sync (`KERNEL.LOCAL_NO_CHARGE_PILOT_SIGNOFF_SYNC.1`) — `5a714a8`
 
-**Latest master / origin:** `5a714a8` — `docs(local): sign off no-charge public HTTPS pilot readiness`
+**Sign-off baseline:** `5a714a8` — `docs(local): sign off no-charge public HTTPS pilot readiness`
 
 | Classification | Status |
 |----------------|--------|
@@ -235,6 +272,7 @@ Known Local lifecycle milestones:
 | Public HTTPS REST UI operator | **PASS** | `7d1439e` — `VIONA_PUBLIC_HTTPS_REST_UI_WALKTHROUGH.md` |
 | Public HTTPS device matrix 8/8 | **PASS** | `0b9ea8f` — `VIONA_PUBLIC_HTTPS_LOCAL_NO_CHARGE_DEVICE_MATRIX.md` |
 | Local no-charge pilot sign-off | **PASS** | `5a714a8` — `VIONA_LOCAL_NO_CHARGE_PILOT_SIGNOFF.md` |
+| Controlled pilot session 1 (API + UI) | **PASS** | `4c26830` — `VIONA_LOCAL_NO_CHARGE_CONTROLLED_PILOT_SESSION_1.md` |
 
 #### Proven scope (public HTTPS staging)
 
@@ -250,13 +288,13 @@ Not production; not commercial/payment readiness; not native iOS/Android store c
 
 #### Recommended next actions
 
-1. Controlled no-charge pilot — `docs/runbooks/VIONA_LOCAL_NO_CHARGE_CONTROLLED_PILOT_OPS_PLAYBOOK.md`.
-2. Optional native iOS/Android spot-check on public HTTPS.
+1. Pilot session 2+ — ops playbook.
+2. Optional native iOS/Android spot-check.
 3. Ops audit UI (internal).
-4. Operator support / incident playbook refinements.
-5. Finance-approved payment/wallet ledger architecture — **later only**.
+4. Support/incident playbook refinement.
+5. Finance-approved payment/wallet ledger — **later only**.
 
-**Local + auth pilot readiness (master / origin @ `5a714a8`):**
+**Local + auth pilot readiness (master / origin @ `4c26830`):**
 
 | Layer | Verdict |
 |-------|---------|
@@ -267,8 +305,9 @@ Not production; not commercial/payment readiness; not native iOS/Android store c
 | **Public HTTPS REST UI** | **PASS** @ `7d1439e` |
 | **Public HTTPS device matrix** | **PASS** 8/8 @ `0b9ea8f` |
 | **Pilot sign-off** | **READY_FOR_CONTROLLED_NO_CHARGE_PILOT** @ `5a714a8` |
+| **Controlled pilot session 1** | **PASS** (API + UI, no pause) @ `4c26830` |
 
-Handoff: `docs/handoff/VIONA_LOCAL_NO_CHARGE_PILOT_READINESS_HANDOFF_1.md`, `docs/runbooks/VIONA_LOCAL_NO_CHARGE_PILOT_SIGNOFF.md`.
+Handoff: `docs/handoff/VIONA_LOCAL_NO_CHARGE_PILOT_READINESS_HANDOFF_1.md`, `docs/runbooks/VIONA_LOCAL_NO_CHARGE_PILOT_SIGNOFF.md`, `docs/runbooks/VIONA_LOCAL_NO_CHARGE_CONTROLLED_PILOT_SESSION_1.md`.
 
 Aborted R6 background “Create staging request” task is **not** evidence.
 
@@ -302,15 +341,15 @@ Current correct Local backend order:
 5. ~~Operator manual staging/device walkthrough~~ — **PASS** on staging @ `4d365bf` (local-dev; not production matrix)
 5b. ~~REST UI login bridge strict operator proof~~ — **PASS** @ `3cfea5e` (phone + PIN; dev JWT not required per operator attestation)
 5c. ~~Public HTTPS deploy + smoke + REST UI + device matrix + pilot sign-off~~ — **READY** @ `5a714a8` (`READY_FOR_CONTROLLED_NO_CHARGE_PILOT`)
-6. ~~Controlled pilot session 1 (API + UI)~~ — **PASS** @ `fece42c` — `VIONA_LOCAL_NO_CHARGE_CONTROLLED_PILOT_SESSION_1.md`
-6b. **Next:** pilot session 2+ per ops playbook; optional native spot-check
+6. ~~Controlled pilot session 1 (API + UI)~~ — **PASS** @ `4c26830` — no pause
+6b. **Next:** pilot session 2+; optional native spot-check; ops audit UI
 7. AI Local Copilot read-only — **blocked** until read-only policy pack
 8. Human-confirmed AI actions — **blocked**
 9. Wallet hold/debit/release/settlement — **blocked** until CFO/finance-approved Local wallet policy pack; Local commercial pilot **not** started
 
 Do not jump to wallet or AI autonomous actions before operator manual walkthrough and finance-approved policy.
 
-**Recommended next (master @ `8e9859a`):** execute controlled pilot per `VIONA_LOCAL_NO_CHARGE_CONTROLLED_PILOT_OPS_PLAYBOOK.md`; optional native spot-check; ops audit UI — **not** payment/wallet/commercial packs without finance approval.
+**Recommended next (master @ `4c26830`):** pilot session 2+; optional native spot-check; ops audit UI — **not** payment/wallet/commercial without finance approval.
 
 ---
 
@@ -592,7 +631,7 @@ Forbidden acceleration:
 - fake production claims
 
 Target speed:
-- Local no-charge pilot: **READY_FOR_CONTROLLED_NO_CHARGE_PILOT** @ `5a714a8` (public HTTPS web); whole VIONA pre-commercial; Global Active **not yet**
+- Local no-charge pilot: **READY** @ `5a714a8`; **session 1 PASS** @ `4c26830` (API+UI); whole VIONA pre-commercial; Global Active **not yet**
 - AI Copilot read-only: 60–90 days target — **not started**
 - first safe wallet/settlement market: 3–5 months target — **blocked** for Local lane until finance pack
 - global full active: 6–9 months in good conditions, longer if legal/payment/ops blocks — **not reached**

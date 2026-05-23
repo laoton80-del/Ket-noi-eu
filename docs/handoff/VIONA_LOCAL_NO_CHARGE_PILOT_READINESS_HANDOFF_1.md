@@ -21,6 +21,23 @@
 
 ---
 
+## Controlled pilot session 1 (`KERNEL.CONTROLLED_PILOT_SESSION_1_PASS_SYNC.1`)
+
+| Item | Value |
+|------|--------|
+| **Master** | `4c26830` |
+| **Session doc** | `docs/runbooks/VIONA_LOCAL_NO_CHARGE_CONTROLLED_PILOT_SESSION_1.md` |
+| **API** | **PASS** @ `fece42c` (paced smoke) |
+| **UI** | **PASS** @ `4c26830` (operator attestation) |
+| **Pause** | **No** |
+| **Money safety** | `REQUEST_ONLY_NO_CHARGE`, `walletPhase` NONE, no payment captured |
+
+**Not claimed:** production, commercial/payment, Global Active, native store cert (unless separate), merchant production onboarding, AI autonomous actions, SOS production.
+
+**Next:** session 2+; optional native spot-check; ops audit UI; no finance packs without approval.
+
+---
+
 ## 1. Executive summary
 
 The **Local request-only / no-charge** pilot lane on VIONA is **automated QA-ready** on `master`: schema, APIs, merchant/user UI, EN/VI safe copy, VI runtime status labels, composed E2E runner, staging DB verification runbook, and manual device checklist are in place.
@@ -265,6 +282,8 @@ Do **not** enable wallet settlement, Firebase VIP bridge, or Tourism bridge on L
 | `scripts/test-local-no-charge-e2e-qa.ts` | Single command Local + Tourism regression |
 | `scripts/check-local-staging-readiness.ts` | Env key presence probe (no secrets) |
 | `docs/runbooks/VIONA_LOCAL_NO_CHARGE_PILOT_SIGNOFF.md` | **Final** public HTTPS no-charge pilot sign-off @ `5a714a8` |
+| `docs/runbooks/VIONA_LOCAL_NO_CHARGE_CONTROLLED_PILOT_SESSION_1.md` | Controlled pilot session 1 **PASS** @ `4c26830` |
+| `docs/runbooks/VIONA_LOCAL_NO_CHARGE_CONTROLLED_PILOT_OPS_PLAYBOOK.md` | Pilot operations |
 | `docs/runbooks/VIONA_PUBLIC_STAGING_API_DEPLOY_EVIDENCE.md` | Fly + HTTPS smoke |
 | `docs/runbooks/VIONA_PUBLIC_HTTPS_REST_UI_WALKTHROUGH.md` | Public HTTPS REST UI |
 | `docs/runbooks/VIONA_PUBLIC_HTTPS_LOCAL_NO_CHARGE_DEVICE_MATRIX.md` | 8/8 responsive matrix |

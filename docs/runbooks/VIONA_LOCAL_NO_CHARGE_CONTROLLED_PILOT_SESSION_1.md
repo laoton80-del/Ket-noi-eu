@@ -3,7 +3,7 @@
 **Pack:** `VIONA.LOCAL.NO_CHARGE.CONTROLLED_PILOT_SESSION_1.1` + `SESSION_1.UI.OPERATOR_PASS_SYNC.1`
 **Playbook:** `docs/runbooks/VIONA_LOCAL_NO_CHARGE_CONTROLLED_PILOT_OPS_PLAYBOOK.md`
 **Master at API session:** `fece42c` (API log @ `151f0fb` commit)
-**Master at UI PASS sync:** `fece42c`
+**Master at UI PASS sync:** `4c26830`
 **Session date (UTC):** 2026-05-23
 **Operator:** staging operator attestation (initials not in public doc)
 

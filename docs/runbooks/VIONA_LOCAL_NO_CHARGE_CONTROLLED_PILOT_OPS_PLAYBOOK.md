@@ -189,7 +189,7 @@ Staging DB remains source of truth; rollback is **access/config**, not data dest
 
 | Session | Doc | Verdict |
 |---------|-----|---------|
-| **1** (API + UI) | `VIONA_LOCAL_NO_CHARGE_CONTROLLED_PILOT_SESSION_1.md` | **PASS** — API @ `fece42c`; UI @ `SESSION_1.UI.OPERATOR_PASS_SYNC.1` |
+| **1** (API + UI) | `VIONA_LOCAL_NO_CHARGE_CONTROLLED_PILOT_SESSION_1.md` | **PASS** — API @ `fece42c`; UI @ `4c26830`; **no pause** |
 
 ---
 
