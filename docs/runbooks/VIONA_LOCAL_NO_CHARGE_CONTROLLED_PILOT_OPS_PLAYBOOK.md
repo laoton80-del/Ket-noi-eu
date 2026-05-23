@@ -185,6 +185,14 @@ Staging DB remains source of truth; rollback is **access/config**, not data dest
 
 ---
 
+## Pilot sessions index
+
+| Session | Doc | Verdict |
+|---------|-----|---------|
+| **1** (API) | `VIONA_LOCAL_NO_CHARGE_CONTROLLED_PILOT_SESSION_1.md` | **PASS_WITH_LIMITATIONS** — smoke PASS; Expo UI log pending |
+
+---
+
 ## Quick reference
 
 | Item | Value |
