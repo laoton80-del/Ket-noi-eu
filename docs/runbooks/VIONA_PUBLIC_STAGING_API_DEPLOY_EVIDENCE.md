@@ -18,7 +18,7 @@
 | **Public HTTPS REST UI walkthrough** | **PASS** (operator @ `OPERATOR_PASS_SYNC.1`) — `docs/runbooks/VIONA_PUBLIC_HTTPS_REST_UI_WALKTHROUGH.md` |
 | **Full device matrix (4 viewports × EN/VI)** | **PASS** (operator @ `DEVICE_MATRIX.OPERATOR_PASS_SYNC.1`) — `docs/runbooks/VIONA_PUBLIC_HTTPS_LOCAL_NO_CHARGE_DEVICE_MATRIX.md` |
 
-**Pilot sign-off:** `docs/runbooks/VIONA_LOCAL_NO_CHARGE_PILOT_SIGNOFF.md` @ `0b9ea8f` — `READY_FOR_CONTROLLED_NO_CHARGE_PILOT` (Local web only).
+**Pilot sign-off:** `docs/runbooks/VIONA_LOCAL_NO_CHARGE_PILOT_SIGNOFF.md` @ `5a714a8` — `READY_FOR_CONTROLLED_NO_CHARGE_PILOT` (Local web only). Kernel sync: `KERNEL.LOCAL_NO_CHARGE_PILOT_SIGNOFF_SYNC.1`.
 
 **Does not certify:** production launch, commercial/payment readiness, native iOS/Android store sign-off, or SOS production reliability.
 

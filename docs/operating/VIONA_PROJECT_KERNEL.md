@@ -212,29 +212,65 @@ Known Local lifecycle milestones:
 🟢 Public HTTPS staging API smoke **repeat PASS** @ `1daf006` — paced smoke `https://viona-api-staging-eu.fly.dev` (`docs/runbooks/VIONA_PUBLIC_STAGING_API_DEPLOY_EVIDENCE.md`)
 🟢 Public HTTPS REST UI walkthrough **PASS** — operator @ `OPERATOR_PASS_SYNC.1` (`docs/runbooks/VIONA_PUBLIC_HTTPS_REST_UI_WALKTHROUGH.md`)
 🟢 Public HTTPS Local device matrix **PASS** — 4 viewports × VI/EN @ `DEVICE_MATRIX.OPERATOR_PASS_SYNC.1` (`docs/runbooks/VIONA_PUBLIC_HTTPS_LOCAL_NO_CHARGE_DEVICE_MATRIX.md`)
-🟢 **Local no-charge public HTTPS pilot sign-off** — `READY_FOR_CONTROLLED_NO_CHARGE_PILOT` @ `0b9ea8f` (`docs/runbooks/VIONA_LOCAL_NO_CHARGE_PILOT_SIGNOFF.md`)
+🟢 **Local no-charge public HTTPS web pilot readiness:** **READY_FOR_CONTROLLED_NO_CHARGE_PILOT** @ `5a714a8` (`docs/runbooks/VIONA_LOCAL_NO_CHARGE_PILOT_SIGNOFF.md`)
 
-**Local + auth pilot readiness (master / origin @ `0b9ea8f` sign-off):**
+### Kernel sync (`KERNEL.LOCAL_NO_CHARGE_PILOT_SIGNOFF_SYNC.1`) — `5a714a8`
+
+**Latest master / origin:** `5a714a8` — `docs(local): sign off no-charge public HTTPS pilot readiness`
+
+| Classification | Status |
+|----------------|--------|
+| Local no-charge public HTTPS **web** pilot | **READY_FOR_CONTROLLED_NO_CHARGE_PILOT** |
+| Whole VIONA | Pre-commercial / staging-pilot foundation |
+| Global Active / full commercial | **Not yet** |
+
+#### Completed gates
+
+| Gate | Result | Evidence |
+|------|--------|----------|
+| Local staging / manual walkthrough | **PASS** | `4d365bf` — `VIONA_LOCAL_MANUAL_STAGING_EVIDENCE_2.md` |
+| REST UI login strict (local-dev) | **PASS** | `3cfea5e` — `VIONA_AUTH_REST_UI_LOGIN_BRIDGE_STAGING_RETEST.md` |
+| Public HTTPS API deploy + health | **PASS** | `VIONA_PUBLIC_STAGING_API_DEPLOY_EVIDENCE.md` |
+| Public HTTPS smoke (paced) | **PASS** | `1daf006`+ — `smoke-public-staging-api.mjs` |
+| Public HTTPS REST UI operator | **PASS** | `7d1439e` — `VIONA_PUBLIC_HTTPS_REST_UI_WALKTHROUGH.md` |
+| Public HTTPS device matrix 8/8 | **PASS** | `0b9ea8f` — `VIONA_PUBLIC_HTTPS_LOCAL_NO_CHARGE_DEVICE_MATRIX.md` |
+| Local no-charge pilot sign-off | **PASS** | `5a714a8` — `VIONA_LOCAL_NO_CHARGE_PILOT_SIGNOFF.md` |
+
+#### Proven scope (public HTTPS staging)
+
+User A/B login, request/status visibility, logout; User B isolation; Merchant M inbox; Merchant confirm/decline UI; Merchant N isolation; VI/EN responsive matrix (390×844, 768×1024, 1024×768, 1366×768); forbidden commercial wording not observed on Local surfaces.
+
+#### Money law (unchanged)
+
+`REQUEST_ONLY_NO_CHARGE`; `walletPhase` **NONE**; no payment captured; Transaction/Wallet delta **0** when checked; no hold/debit/release/refund/settlement/payout/cash-out/withdraw/escrow; **confirmed does not mean paid**.
+
+#### Honest limitations
+
+Not production; not commercial/payment readiness; not native iOS/Android store certification unless separately tested; not merchant onboarding production; not AI autonomous actions; not SOS production reliability; not Global Active/full commercial.
+
+#### Recommended next actions
+
+1. Controlled no-charge pilot with **limited participants** (operator playbook in sign-off doc).
+2. Optional native iOS/Android spot-check on public HTTPS.
+3. Ops audit UI (internal).
+4. Operator support / incident playbook refinements.
+5. Finance-approved payment/wallet ledger architecture — **later only**.
+
+**Local + auth pilot readiness (master / origin @ `5a714a8`):**
 
 | Layer | Verdict |
 |-------|---------|
 | **Automated QA** (API, UI, E2E, i18n, staging DB runbook) | **PASS_WITH_LIMITATIONS** — automated QA-ready |
-| **Staging / manual walkthrough** (staging DB + local-dev API) | **PASS** @ `4d365bf` — `docs/runbooks/VIONA_LOCAL_MANUAL_STAGING_EVIDENCE_2.md` |
-| **REST UI login** (phone + PIN → `loginRestApi`; no `EXPO_PUBLIC_DEV_REST_JWT` required per operator strict proof) | **STRICT UI PASS** @ `3cfea5e` — `docs/runbooks/VIONA_AUTH_REST_UI_LOGIN_BRIDGE_STAGING_RETEST.md` |
-| **Public HTTPS staging API smoke** (500ms pacing; Local no-charge path) | **PASS** @ `1daf006` — `docs/runbooks/VIONA_PUBLIC_STAGING_API_DEPLOY_EVIDENCE.md` |
-| **Public HTTPS REST UI** (phone + PIN; dev JWT cleared; confirm/decline/isolation) | **PASS** @ operator PASS sync — `docs/runbooks/VIONA_PUBLIC_HTTPS_REST_UI_WALKTHROUGH.md` |
-| **Public HTTPS device matrix** (390×844, 768×1024, 1024×768, 1366×768 × VI/EN) | **PASS** @ operator PASS sync — `docs/runbooks/VIONA_PUBLIC_HTTPS_LOCAL_NO_CHARGE_DEVICE_MATRIX.md` (web responsive; not production/native store) |
-| **Local no-charge public HTTPS pilot sign-off** | **READY_FOR_CONTROLLED_NO_CHARGE_PILOT** @ `0b9ea8f` — `docs/runbooks/VIONA_LOCAL_NO_CHARGE_PILOT_SIGNOFF.md` |
+| **Staging / manual walkthrough** (staging DB + local-dev API) | **PASS** @ `4d365bf` |
+| **REST UI login** (local-dev strict) | **PASS** @ `3cfea5e` |
+| **Public HTTPS staging API smoke** | **PASS** @ `1daf006`+ |
+| **Public HTTPS REST UI** | **PASS** @ `7d1439e` |
+| **Public HTTPS device matrix** | **PASS** 8/8 @ `0b9ea8f` |
+| **Pilot sign-off** | **READY_FOR_CONTROLLED_NO_CHARGE_PILOT** @ `5a714a8` |
 
-**REST UI strict proof (staging / manual only, not production):** User A/B and Merchant M/N login via UI PIN; User B isolation; Merchant M inbox + confirm/decline UI; Merchant N isolation; logout/session clear; forbidden commercial wording not observed on Local surfaces. `EXPO_PUBLIC_DEV_REST_JWT` **not required** for strict UI proof (operator attestation).
+Handoff: `docs/handoff/VIONA_LOCAL_NO_CHARGE_PILOT_READINESS_HANDOFF_1.md`, `docs/runbooks/VIONA_LOCAL_NO_CHARGE_PILOT_SIGNOFF.md`.
 
-**Auth milestone commits:** `f3fbc4a` (bridge), `3aed288` (API retest doc), `6853849` (strict precondition/blocked note), `3cfea5e` (strict operator PASS doc).
-
-**Not** commercial/payment/production ready. **Not** escrow/payout/settlement automation. Handoff: `docs/runbooks/VIONA_LOCAL_STAGING_PASS_HANDOFF.md`, `docs/handoff/VIONA_LOCAL_NO_CHARGE_PILOT_READINESS_HANDOFF_1.md`.
-
-**Strict UI limitations (honest):** staging / manual / local-dev API only; public HTTPS API smoke PASS is scripted staging proof only — not production HTTPS certification; not full device EN-VI matrix; ops audit UI not covered; operator should keep `.env.local` saved without `EXPO_PUBLIC_DEV_REST_JWT` on disk (automation once detected non-empty length at doc-write).
-
-**Public HTTPS (honest):** Sign-off @ `0b9ea8f` — controlled no-charge web pilot **READY**; whole VIONA still pre-commercial; Global Active **not yet**. Aborted R6 background task is **not** evidence.
+Aborted R6 background “Create staging request” task is **not** evidence.
 
 Current Local mode:
 REQUEST_ONLY_NO_CHARGE
@@ -265,13 +301,15 @@ Current correct Local backend order:
 4. ~~Safe i18n copy pass + VI runtime status labels~~ — **done on master**
 5. ~~Operator manual staging/device walkthrough~~ — **PASS** on staging @ `4d365bf` (local-dev; not production matrix)
 5b. ~~REST UI login bridge strict operator proof~~ — **PASS** @ `3cfea5e` (phone + PIN; dev JWT not required per operator attestation)
-6. AI Local Copilot read-only — **blocked** until read-only policy pack (staging + REST UI sign-off done; commercial pilot still not started)
-7. Human-confirmed AI actions — **blocked**
-8. Wallet hold/debit/release/settlement — **blocked** until CFO/finance-approved Local wallet policy pack; Local commercial pilot **not** started
+5c. ~~Public HTTPS deploy + smoke + REST UI + device matrix + pilot sign-off~~ — **READY** @ `5a714a8` (`READY_FOR_CONTROLLED_NO_CHARGE_PILOT`)
+6. **Next:** controlled no-charge pilot (limited participants) — see `VIONA_LOCAL_NO_CHARGE_PILOT_SIGNOFF.md`
+7. AI Local Copilot read-only — **blocked** until read-only policy pack
+8. Human-confirmed AI actions — **blocked**
+9. Wallet hold/debit/release/settlement — **blocked** until CFO/finance-approved Local wallet policy pack; Local commercial pilot **not** started
 
 Do not jump to wallet or AI autonomous actions before operator manual walkthrough and finance-approved policy.
 
-**Recommended next pack (master clean @ `3cfea5e`):** `VIONA.STAGING.PUBLIC_API_DEPLOY_PLAN.1` — unless operator wants a one-line env-hygiene note first (save `.env.local` without `EXPO_PUBLIC_DEV_REST_JWT`).
+**Recommended next (master @ `5a714a8`):** execute controlled no-charge pilot; optional native spot-check; ops audit UI; support playbook — **not** payment/wallet/commercial packs without finance approval.
 
 ---
 
@@ -553,7 +591,7 @@ Forbidden acceleration:
 - fake production claims
 
 Target speed:
-- Local no-charge pilot: automated QA-ready; **staging manual PASS** @ `4d365bf`; **REST UI login STRICT UI PASS** @ `3cfea5e` (not commercial/payment/production ready)
+- Local no-charge pilot: **READY_FOR_CONTROLLED_NO_CHARGE_PILOT** @ `5a714a8` (public HTTPS web); whole VIONA pre-commercial; Global Active **not yet**
 - AI Copilot read-only: 60–90 days target — **not started**
 - first safe wallet/settlement market: 3–5 months target — **blocked** for Local lane until finance pack
 - global full active: 6–9 months in good conditions, longer if legal/payment/ops blocks — **not reached**

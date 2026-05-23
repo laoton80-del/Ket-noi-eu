@@ -174,7 +174,7 @@ Forbidden terms scanned (not observed): paid booking, guaranteed booking, payout
 
 ## Pilot sign-off
 
-Included in `docs/runbooks/VIONA_LOCAL_NO_CHARGE_PILOT_SIGNOFF.md` @ `0b9ea8f` as part of **READY_FOR_CONTROLLED_NO_CHARGE_PILOT** evidence.
+Included in `docs/runbooks/VIONA_LOCAL_NO_CHARGE_PILOT_SIGNOFF.md` @ `5a714a8` as part of **READY_FOR_CONTROLLED_NO_CHARGE_PILOT** evidence.
 
 ## Next required action
 

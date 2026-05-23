@@ -1,7 +1,7 @@
 # VIONA Local no-charge pilot — final sign-off
 
 **Pack:** `VIONA.LOCAL.NO_CHARGE.PILOT_SIGNOFF.1`
-**Master / origin:** `0b9ea8f`
+**Master / origin:** `5a714a8` (`docs(local): sign off no-charge public HTTPS pilot readiness`)
 **Date:** 2026-05-23
 **Public API:** `https://viona-api-staging-eu.fly.dev`
 **Classification:** `READY_FOR_CONTROLLED_NO_CHARGE_PILOT` (Local lane / public HTTPS web only)
@@ -24,7 +24,7 @@ This sign-off does **not** authorize payment capture, payout, settlement, produc
 
 | Item | Evidence |
 |------|----------|
-| `master` / `origin` | `0b9ea8f` |
+| `master` / `origin` | `5a714a8` |
 | Public HTTPS API | `https://viona-api-staging-eu.fly.dev` (Fly `fra`, app `viona-api-staging-eu`) |
 | Public HTTPS smoke (paced) | **PASS** — `scripts/smoke-public-staging-api.mjs` @ `1daf006`+ |
 | Public HTTPS REST UI | **PASS** — `docs/runbooks/VIONA_PUBLIC_HTTPS_REST_UI_WALKTHROUGH.md` |

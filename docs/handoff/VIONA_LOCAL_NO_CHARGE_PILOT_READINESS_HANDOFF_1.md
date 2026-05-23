@@ -2,7 +2,7 @@
 
 **Pack:** `VIONA.LOCAL.NO_CHARGE_PILOT_READINESS_HANDOFF.1` (+ `VIONA.LOCAL.NO_CHARGE.PILOT_SIGNOFF.1`)
 **Branch:** `pack-local-no-charge-pilot-readiness-handoff-1`
-**Master tested:** `f87e053` (original handoff); **sign-off @ `0b9ea8f`**
+**Master tested:** `f87e053` (original handoff); **sign-off @ `5a714a8`**
 **Date:** 2026-05-21 (handoff); **2026-05-23** (public HTTPS sign-off)
 **Type:** Handoff / readiness summary only (no product, schema, or wallet changes)
 
@@ -13,7 +13,7 @@
 | Item | Value |
 |------|--------|
 | **Classification** | **READY_FOR_CONTROLLED_NO_CHARGE_PILOT** (Local / public HTTPS web only) |
-| **Master** | `0b9ea8f` |
+| **Master** | `5a714a8` |
 | **Sign-off doc** | `docs/runbooks/VIONA_LOCAL_NO_CHARGE_PILOT_SIGNOFF.md` |
 | **Public API** | `https://viona-api-staging-eu.fly.dev` |
 | **Proven** | HTTPS smoke PASS; REST UI PASS; device matrix 8/8 PASS; money safety invariants |
@@ -264,7 +264,7 @@ Do **not** enable wallet settlement, Firebase VIP bridge, or Tourism bridge on L
 | `docs/runbooks/VIONA_LOCAL_STAGING_DB_MIGRATION_VERIFICATION_1.md` | DB/migration read-only verification |
 | `scripts/test-local-no-charge-e2e-qa.ts` | Single command Local + Tourism regression |
 | `scripts/check-local-staging-readiness.ts` | Env key presence probe (no secrets) |
-| `docs/runbooks/VIONA_LOCAL_NO_CHARGE_PILOT_SIGNOFF.md` | **Final** public HTTPS no-charge pilot sign-off @ `0b9ea8f` |
+| `docs/runbooks/VIONA_LOCAL_NO_CHARGE_PILOT_SIGNOFF.md` | **Final** public HTTPS no-charge pilot sign-off @ `5a714a8` |
 | `docs/runbooks/VIONA_PUBLIC_STAGING_API_DEPLOY_EVIDENCE.md` | Fly + HTTPS smoke |
 | `docs/runbooks/VIONA_PUBLIC_HTTPS_REST_UI_WALKTHROUGH.md` | Public HTTPS REST UI |
 | `docs/runbooks/VIONA_PUBLIC_HTTPS_LOCAL_NO_CHARGE_DEVICE_MATRIX.md` | 8/8 responsive matrix |
