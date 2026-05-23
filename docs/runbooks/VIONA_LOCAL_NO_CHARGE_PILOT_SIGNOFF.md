@@ -81,6 +81,8 @@ This sign-off does **not** authorize payment capture, payout, settlement, produc
 
 ## 5. Operator playbook
 
+**Controlled pilot ops (full):** `docs/runbooks/VIONA_LOCAL_NO_CHARGE_CONTROLLED_PILOT_OPS_PLAYBOOK.md`
+
 ### Required env (`.env.local` — **not committed**)
 
 | Variable | Required value |
@@ -163,7 +165,7 @@ Staging DB should remain unchanged for rollback; pilot creates test requests onl
 | Priority | Item |
 |----------|------|
 | Optional | Native iOS/Android spot-check on public HTTPS |
-| Next | Controlled no-charge pilot with **limited participants** + support channel |
+| Next | Controlled no-charge pilot — `VIONA_LOCAL_NO_CHARGE_CONTROLLED_PILOT_OPS_PLAYBOOK.md` |
 | Later | Ops audit UI exposure (internal) |
 | Later | Operator support playbook refinements |
 | Locked until finance architecture approval | Payment capture, wallet ledger, settlement, payout, Firebase VIP money bridge |
@@ -178,6 +180,7 @@ Staging DB should remain unchanged for rollback; pilot creates test requests onl
 | `VIONA_PUBLIC_HTTPS_REST_UI_WALKTHROUGH.md` | REST UI operator PASS |
 | `VIONA_PUBLIC_HTTPS_LOCAL_NO_CHARGE_DEVICE_MATRIX.md` | 8/8 viewport×language PASS |
 | `VIONA_LOCAL_NO_CHARGE_PILOT_READINESS_HANDOFF_1.md` | Historical engineering handoff |
+| `VIONA_LOCAL_NO_CHARGE_CONTROLLED_PILOT_OPS_PLAYBOOK.md` | Controlled pilot operations |
 | `VIONA_PROJECT_KERNEL.md` | Operating kernel sync |
 
 ---

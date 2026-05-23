@@ -250,7 +250,7 @@ Not production; not commercial/payment readiness; not native iOS/Android store c
 
 #### Recommended next actions
 
-1. Controlled no-charge pilot with **limited participants** (operator playbook in sign-off doc).
+1. Controlled no-charge pilot — `docs/runbooks/VIONA_LOCAL_NO_CHARGE_CONTROLLED_PILOT_OPS_PLAYBOOK.md`.
 2. Optional native iOS/Android spot-check on public HTTPS.
 3. Ops audit UI (internal).
 4. Operator support / incident playbook refinements.
@@ -302,14 +302,14 @@ Current correct Local backend order:
 5. ~~Operator manual staging/device walkthrough~~ — **PASS** on staging @ `4d365bf` (local-dev; not production matrix)
 5b. ~~REST UI login bridge strict operator proof~~ — **PASS** @ `3cfea5e` (phone + PIN; dev JWT not required per operator attestation)
 5c. ~~Public HTTPS deploy + smoke + REST UI + device matrix + pilot sign-off~~ — **READY** @ `5a714a8` (`READY_FOR_CONTROLLED_NO_CHARGE_PILOT`)
-6. **Next:** controlled no-charge pilot (limited participants) — see `VIONA_LOCAL_NO_CHARGE_PILOT_SIGNOFF.md`
+6. **Next:** controlled no-charge pilot — `VIONA_LOCAL_NO_CHARGE_CONTROLLED_PILOT_OPS_PLAYBOOK.md`
 7. AI Local Copilot read-only — **blocked** until read-only policy pack
 8. Human-confirmed AI actions — **blocked**
 9. Wallet hold/debit/release/settlement — **blocked** until CFO/finance-approved Local wallet policy pack; Local commercial pilot **not** started
 
 Do not jump to wallet or AI autonomous actions before operator manual walkthrough and finance-approved policy.
 
-**Recommended next (master @ `5a714a8`):** execute controlled no-charge pilot; optional native spot-check; ops audit UI; support playbook — **not** payment/wallet/commercial packs without finance approval.
+**Recommended next (master @ `8e9859a`):** execute controlled pilot per `VIONA_LOCAL_NO_CHARGE_CONTROLLED_PILOT_OPS_PLAYBOOK.md`; optional native spot-check; ops audit UI — **not** payment/wallet/commercial packs without finance approval.
 
 ---
 
