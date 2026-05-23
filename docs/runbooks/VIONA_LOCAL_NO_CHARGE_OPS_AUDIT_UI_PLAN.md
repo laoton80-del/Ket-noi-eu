@@ -154,19 +154,32 @@
 **Service:** `src/services/local/localOpsRequestListService.ts`
 **Tests:** `npx tsx scripts/test-local-ops-request-list-api-1.ts` (DATABASE_URL; ephemeral ADMIN)
 
-**Staging HTTPS smoke (`READONLY_API_HTTPS_SMOKE.1`):** **BLOCKED** @ `fe117ea` (2026-05-23)
+### Public HTTPS ops smoke (`FLY_DEPLOY_AND_HTTPS_SMOKE.1`) — **PASS** @ `944d8eb` (2026-05-23)
 
-**Re-check (`READONLY_API_HTTPS_SMOKE.PASS_SYNC.1`)** @ `13c4b18` (2026-05-23): **still BLOCKED**
+| Item | Result |
+|------|--------|
+| Fly deploy | `fly deploy -a viona-api-staging-eu` — release **v8**, image `deployment-01KSAF805PBGS7DD43ZESG2B22` |
+| Git at deploy | `944d8eb` (includes `READONLY_API_AUDIT.1` ops routes) |
+| `GET /health` | **PASS** |
+| Pilot A/B/M/N + create/confirm/decline | **PASS** |
+| `login:opsAdmin` | **PASS** (`Role.ADMIN`) |
+| `opsAuditList` | **PASS** |
+| `opsAuditDetail` | **PASS** |
+| `opsAuditUnauthed` | **PASS** (401) |
+| `opsAuditForbiddenB2c` | **PASS** (403) |
+| `opsAuditForbiddenMerchant` | **PASS** (403) |
+| `opsAuditMutationSafe` | **PASS** |
+| Redaction scan | **PASS** |
+| `walletMode` / `walletPhase` | `REQUEST_ONLY_NO_CHARGE` / `NONE` |
+| `paymentCaptured` | **false** |
 
-| Check | Result |
-|-------|--------|
-| `GET /health` @ public HTTPS | **PASS** |
-| Existing pilot personas smoke | **PASS** |
-| `VIONA_PILOT_OPS_ADMIN_PHONE` in operator `.env.local` | **MISSING** — key not present in `.env.local` (value never logged) |
-| Staging DB `Role.ADMIN` user count (`euqbfanilcssjiwwtcby`) | **0** on `DATABASE_URL` used by smoke |
-| Ops list/detail HTTPS stages | **SKIP** — re-run after both gates PASS |
-| `EXPO_PUBLIC_REST_API_BASE` | Staging HTTPS host (no secret printed) |
-| `EXPO_PUBLIC_DEV_REST_JWT` | **EMPTY** |
+**Command:** `node scripts/smoke-public-staging-api.mjs https://viona-api-staging-eu.fly.dev` (exit 0)
+
+**Prior blockers resolved:** `pin_storage_plaintext_not_bcrypt` (`provision-local-ops-admin-staging.ts`); `fly_api_deploy_drift` (Fly deploy v8).
+
+**Does not certify:** production admin console, payment/settlement dashboard, commercial/payment readiness, settlement/payout, AI/SOS automation. Super-admin ops routes only by design.
+
+**Staging HTTPS smoke (`READONLY_API_HTTPS_SMOKE.1`) — historical:** was **BLOCKED** before ADMIN PIN rehash + Fly deploy (see sections below).
 
 **Unblock (ops, not engineering inventing accounts):**
 
@@ -212,9 +225,7 @@ Run: `node scripts/smoke-public-staging-api.mjs --diagnose-ops-db` (no secrets p
 | Staging pin bcrypt rehash | **PASS** — `pinCodeFieldLength` 60, `pinStorageLooksBcrypt` true |
 | Diagnose `--diagnose-ops-db` | **PASS** — `blockerClassification`: `none_local_db_ok_check_fly_runtime` |
 | HTTPS `login:opsAdmin` | **PASS** @ `https://viona-api-staging-eu.fly.dev` |
-| HTTPS `GET /api/local/ops/requests` | **FAIL** HTTP **404** — Fly app not yet deployed with `READONLY_API_AUDIT.1` routes |
-
-**Remaining blocker for HTTPS ops smoke PASS:** deploy `viona-api-staging-eu` from master ≥ `fe117ea` (ops list/detail routes), then re-run full smoke.
+| HTTPS `GET /api/local/ops/requests` | Was **404** before Fly deploy v8 — **PASS** after `FLY_DEPLOY_AND_HTTPS_SMOKE.1` |
 
 **Not claimed:** production admin, payment dashboard, commercial readiness, settlement/payout, AI/SOS automation.
 

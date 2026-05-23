@@ -253,7 +253,7 @@ Known Local lifecycle milestones:
 
 ### Kernel pointer (`KERNEL.LOCAL_NO_CHARGE_OPS_AUDIT_UI_PLAN.1`) — `40c2711`
 
-**Ops Audit UI:** `docs/runbooks/VIONA_LOCAL_NO_CHARGE_OPS_AUDIT_UI_PLAN.md`. **`READONLY_API_AUDIT.1` on master**. Ops ADMIN PIN rehashed (`provision-local-ops-admin-staging.ts`); HTTPS **admin login PASS**; **ops list 404 on Fly** until `viona-api-staging-eu` deploy ≥ `fe117ea`. Diagnose: `node scripts/smoke-public-staging-api.mjs --diagnose-ops-db`.
+**Ops Audit UI:** `docs/runbooks/VIONA_LOCAL_NO_CHARGE_OPS_AUDIT_UI_PLAN.md`. **`READONLY_API_AUDIT.1`** + **public HTTPS ops smoke PASS** @ `944d8eb` (`FLY_DEPLOY_AND_HTTPS_SMOKE.1` — Fly release v8). Read-only `GET /api/local/ops/requests` (+ detail) verified; non-admin 403; redaction + mutation-safe reads. **Not** production admin / payment dashboard. Next: `SCREEN_SHELL.1`.
 
 ### Kernel sync (`KERNEL.LOCAL_NO_CHARGE_PILOT_SIGNOFF_SYNC.1`) — `5a714a8`
 
