@@ -230,7 +230,7 @@ Known Local lifecycle milestones:
 
 **Strict UI limitations (honest):** staging / manual / local-dev API only; public HTTPS API smoke PASS is scripted staging proof only — not production HTTPS certification; not full device EN-VI matrix; ops audit UI not covered; operator should keep `.env.local` saved without `EXPO_PUBLIC_DEV_REST_JWT` on disk (automation once detected non-empty length at doc-write).
 
-**Public HTTPS (honest):** API smoke PASS @ `1daf006`; REST UI walkthrough PASS on `https://viona-api-staging-eu.fly.dev` @ operator PASS sync (staging/manual only). Full EN-VI device matrix **not** started. Aborted R6 background task is **not** evidence.
+**Public HTTPS (honest):** API smoke PASS @ `1daf006`; REST UI walkthrough PASS @ operator PASS sync (`7d1439e`). Device matrix pack `DEVICE_MATRIX.1`: checklist @ `docs/runbooks/VIONA_PUBLIC_HTTPS_LOCAL_NO_CHARGE_DEVICE_MATRIX.md` — viewport/language cells **NOT RUN** (operator manual). Aborted R6 background task is **not** evidence.
 
 Current Local mode:
 REQUEST_ONLY_NO_CHARGE
