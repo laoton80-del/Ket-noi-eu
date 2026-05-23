@@ -178,7 +178,7 @@ Staging DB remains source of truth; rollback is **access/config**, not data dest
 | Priority | Item |
 |----------|------|
 | 1 | Aggregate **pilot session evidence** (privacy-safe logs per §4) |
-| 2 | Ops audit UI (internal read-only) — plan: `VIONA_LOCAL_NO_CHARGE_OPS_AUDIT_UI_PLAN.md` |
+| 2 | Ops audit UI — complete interactive Expo attestation: `VIONA_LOCAL_NO_CHARGE_CONTROLLED_PILOT_SESSION_2.md` §5 |
 | 3 | Optional native iOS/Android spot-check on public HTTPS |
 | 4 | Refine support/incident playbook from real issues |
 | 5 | **Locked:** finance-approved payment/wallet ledger, settlement, payout — separate architecture packs only |
@@ -190,6 +190,7 @@ Staging DB remains source of truth; rollback is **access/config**, not data dest
 | Session | Doc | Verdict |
 |---------|-----|---------|
 | **1** (API + UI) | `VIONA_LOCAL_NO_CHARGE_CONTROLLED_PILOT_SESSION_1.md` | **PASS** — API @ `fece42c`; UI @ `4c26830`; **no pause** |
+| **2** (Ops Audit UI) | `VIONA_LOCAL_NO_CHARGE_CONTROLLED_PILOT_SESSION_2.md` | **PARTIAL** — API + static UI @ `727cc38`; interactive Expo **NOT RUN**; **no pause** |
 
 ---
 
@@ -205,5 +206,6 @@ Staging DB remains source of truth; rollback is **access/config**, not data dest
 | Kernel | `VIONA_PROJECT_KERNEL.md` §6 |
 | Ops audit UI plan | `VIONA_LOCAL_NO_CHARGE_OPS_AUDIT_UI_PLAN.md` |
 | Ops audit API (read-only list) | `GET /api/local/ops/requests` — `Role.ADMIN`; test: `test-local-ops-request-list-api-1.ts` |
-| Ops audit HTTPS smoke | **PASS** @ `944d8eb` — Fly v8 + paced smoke; see `VIONA_LOCAL_NO_CHARGE_OPS_AUDIT_UI_PLAN.md` § `FLY_DEPLOY_AND_HTTPS_SMOKE.1` |
+| Ops audit HTTPS smoke | **PASS** — latest paced smoke; see `VIONA_LOCAL_NO_CHARGE_CONTROLLED_PILOT_SESSION_2.md` |
+| Ops audit UI session 2 | `VIONA_LOCAL_NO_CHARGE_CONTROLLED_PILOT_SESSION_2.md` |
 | Ops ADMIN PIN rehash | `npx tsx scripts/provision-local-ops-admin-staging.ts` (staging only) |

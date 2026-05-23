@@ -335,4 +335,15 @@ When implemented, session 2 **optional** ops audit steps:
 | **Route** | `LocalOpsAudit` — registered only when `isAdminDebugSurfaceEnabled()` && `adminDemoMetricsEnabled` (same gate as `AdminDashboard`) |
 | **Entry** | `AdminDashboard` → Local Ops Audit nav (not Home / Local consumer UI) |
 | **i18n** | `local.opsAudit.*` in `en.json` / `vi.json` |
-| **Next** | `OPS_AUDIT_UI.PILOT_SESSION_2_USE.1` — operator walkthrough on staging |
+| **Next** | Complete interactive Expo attestation in `VIONA_LOCAL_NO_CHARGE_CONTROLLED_PILOT_SESSION_2.md` §5 |
+
+---
+
+## 14. Pack `PILOT_SESSION_2_USE.1` (evidence @ `727cc38`)
+
+| Item | Result |
+|------|--------|
+| **Doc** | `docs/runbooks/VIONA_LOCAL_NO_CHARGE_CONTROLLED_PILOT_SESSION_2.md` |
+| **API smoke** | **PASS** — ops list/detail/forbidden/redaction/mutation-safe |
+| **Interactive Expo UI** | **NOT RUN** — operator device attestation pending (§5) |
+| **Static UI audit** | **PASS** — chips, banner, GET-only client, no mutation controls, admin-only route |
