@@ -2,6 +2,8 @@
  * Public (or local) staging API smoke — no secrets printed.
  * Usage: node scripts/smoke-public-staging-api.mjs [baseUrl]
  * Env: STAGING_PUBLIC_API_BASE or EXPO_PUBLIC_REST_API_BASE, VIONA_PILOT_PIN
+ *
+ * Public HTTPS: 500ms pacing between requests; HTTP 429 retries (1s/2s/3s, max 3).
  */
 import { config } from 'dotenv';
 
@@ -15,13 +17,33 @@ const PHONE_MERCHANT_M = '+420920000001';
 const PHONE_MERCHANT_N = '+420920000002';
 const BUSINESS_M_ID = '257f467a-8de2-41d0-b171-5ee499ba96d2';
 
+const RETRY_429_WAITS_MS = [1000, 2000, 3000];
+const MAX_429_RETRIES = 3;
+
 const base = (process.argv[2] ?? process.env.STAGING_PUBLIC_API_BASE ?? process.env.EXPO_PUBLIC_REST_API_BASE ?? '')
   .trim()
   .replace(/\/+$/, '');
 
 const pin = process.env.VIONA_PILOT_PIN ?? '';
+const isPublicHttps = base.startsWith('https://');
+/** @type {500 | 300} */
+const PACE_MS = isPublicHttps ? 500 : 300;
 
 const stages = [];
+let lastRequestAt = 0;
+
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function paceBeforeRequest() {
+  const now = Date.now();
+  if (lastRequestAt > 0) {
+    const gap = PACE_MS - (now - lastRequestAt);
+    if (gap > 0) await sleep(gap);
+  }
+  lastRequestAt = Date.now();
+}
 
 function log(stage, detail) {
   const line = detail ? `[smoke-public-staging-api] ${stage}: ${detail}` : `[smoke-public-staging-api] ${stage}`;
@@ -46,8 +68,7 @@ function redactSafe(text) {
 function safeErrorFromBody(body, status) {
   if (body && typeof body === 'object') {
     const err = typeof body.error === 'string' ? redactSafe(body.error) : null;
-    const reason =
-      typeof body.reason === 'string' ? redactSafe(body.reason) : null;
+    const reason = typeof body.reason === 'string' ? redactSafe(body.reason) : null;
     if (err) return err;
     if (reason) return reason;
     if (body.success === false) return 'success:false';
@@ -67,8 +88,36 @@ async function readJsonSafe(res) {
 
 function failFinal(msg) {
   console.error(`[smoke-public-staging-api] FAIL: ${msg}`);
-  console.log(JSON.stringify({ base, stages }, null, 2));
+  console.log(JSON.stringify({ base, pacingMs: PACE_MS, stages }, null, 2));
   process.exit(1);
+}
+
+/**
+ * Paced fetch with 429-only retry (safe for mutations: only retries before acceptance).
+ */
+async function fetchPaced(stageLabel, url, init) {
+  for (let attempt = 0; attempt <= MAX_429_RETRIES; attempt++) {
+    await paceBeforeRequest();
+    let res;
+    try {
+      res = await fetch(url, init);
+    } catch (e) {
+      throw e;
+    }
+    if (res.status === 429 && attempt < MAX_429_RETRIES) {
+      const waitMs = RETRY_429_WAITS_MS[attempt];
+      log(stageLabel, `HTTP 429 — retry ${attempt + 1}/${MAX_429_RETRIES} after ${waitMs}ms`);
+      record(stageLabel, 'RETRY', {
+        httpStatus: 429,
+        retry: attempt + 1,
+        waitMs,
+      });
+      await sleep(waitMs);
+      continue;
+    }
+    return res;
+  }
+  throw new Error('fetchPaced: exhausted 429 retries');
 }
 
 async function loginPersona(label, phone) {
@@ -76,7 +125,7 @@ async function loginPersona(label, phone) {
   log('login', `${label} → POST ${path}`);
   let res;
   try {
-    res = await fetch(`${base}${path}`, {
+    res = await fetchPaced(`login:${label}`, `${base}${path}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
       body: JSON.stringify({ phoneNumber: phone, pinCode: pin }),
@@ -127,7 +176,7 @@ async function authedStage(stageLabel, path, token, method = 'GET', payload) {
   log(stageLabel, `${method} ${path}`);
   let res;
   try {
-    res = await fetch(`${base}${path}`, {
+    res = await fetchPaced(stageLabel, `${base}${path}`, {
       method,
       headers: {
         Accept: 'application/json',
@@ -148,7 +197,7 @@ async function authedStage(stageLabel, path, token, method = 'GET', payload) {
     const err = body ? safeErrorFromBody(body, res.status) : text || `HTTP ${res.status}`;
     record(stageLabel, 'FAIL', { path, method, httpStatus: res.status, error: err });
     log(stageLabel, `FAIL — HTTP ${res.status} — ${err}`);
-    return { ok: false, status: res.status, error: err };
+    return { ok: false, status: res.status, error: err, data: body?.data };
   }
 
   record(stageLabel, 'PASS', { path, method, httpStatus: res.status });
@@ -165,16 +214,23 @@ async function main() {
     failFinal(`DATABASE_URL/DIRECT_URL must contain staging ref ${STAGING_REF}.`);
   }
 
+  if (isPublicHttps) {
+    log('pacing', `${PACE_MS}ms between requests; 429 retry ${MAX_429_RETRIES}x (${RETRY_429_WAITS_MS.join('/')}ms)`);
+  }
+
   log('health', `GET /health @ ${base}`);
   let healthRes;
   try {
-    healthRes = await fetch(`${base}/health`);
+    healthRes = await fetchPaced('health', `${base}/health`, { method: 'GET' });
   } catch (e) {
     failFinal(`health unreachable: ${redactSafe(e instanceof Error ? e.message : String(e))}`);
   }
   const { json: healthJson, text: healthText } = await readJsonSafe(healthRes);
   if (healthRes.status !== 200 || healthJson?.success !== true) {
-    record('health', 'FAIL', { httpStatus: healthRes.status, error: safeErrorFromBody(healthJson, healthRes.status) || healthText });
+    record('health', 'FAIL', {
+      httpStatus: healthRes.status,
+      error: safeErrorFromBody(healthJson, healthRes.status) || healthText,
+    });
     failFinal(`health HTTP ${healthRes.status}`);
   }
   const healthBodyRedacted = redactSafe(JSON.stringify(healthJson));
@@ -226,13 +282,13 @@ async function main() {
   log('isolation:merchantN', 'PASS');
 
   const title = `Pilot public API smoke ${new Date().toISOString().slice(0, 10)}`;
-  const created = await authedStage('local:createConfirmTarget', '/api/local/requests', loginA.token, 'POST', {
+  const created = await authedStage('local:create', '/api/local/requests', loginA.token, 'POST', {
     businessId: BUSINESS_M_ID,
     serviceType: 'GENERIC_REQUEST',
     title: `${title} confirm`,
     source: 'API_DIRECT',
   });
-  const createdDecline = await authedStage('local:createDeclineTarget', '/api/local/requests', loginA.token, 'POST', {
+  const createdDecline = await authedStage('local:createDecline', '/api/local/requests', loginA.token, 'POST', {
     businessId: BUSINESS_M_ID,
     serviceType: 'GENERIC_REQUEST',
     title: `${title} decline`,
@@ -279,7 +335,9 @@ async function main() {
     JSON.stringify(
       {
         base,
-        https: base.startsWith('https://'),
+        https: isPublicHttps,
+        pacingMs: PACE_MS,
+        rateLimit429Retries: MAX_429_RETRIES,
         health: 'PASS',
         restAuth: 'PASS',
         userBIsolation: 'PASS',

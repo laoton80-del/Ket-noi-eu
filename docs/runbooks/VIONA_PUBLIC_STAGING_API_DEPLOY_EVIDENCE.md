@@ -1,7 +1,7 @@
 # VIONA public staging HTTPS API — deployment evidence
 
-**Pack:** `VIONA.STAGING.PUBLIC_API_DEPLOY.1` + follow-ups + `OPERATOR_PASS_SYNC.1` + `HTTPS_SMOKE_CONSISTENCY.1`
-**Master at consistency check:** `cadc93f`
+**Pack:** deploy follow-ups + `HTTPS_SMOKE_CONSISTENCY.1` + `PUBLIC_API_SMOKE_RATE_LIMIT_PACING.1`
+**Master at repeatable HTTPS smoke PASS:** (after pacing commit)
 **Date:** 2026-05-23
 **Plan:** `docs/runbooks/VIONA_PUBLIC_STAGING_API_DEPLOY_PLAN.md`
 
@@ -13,19 +13,49 @@
 | **Deployment config in repo** | **READY** @ `714c410` |
 | **Public HTTPS URL** | `https://viona-api-staging-eu.fly.dev` |
 | **`GET /health` (HTTPS)** | **PASS** — HTTP 200 |
-| **HTTPS smoke (full)** | **BLOCKED** — repeat smoke **FAIL** (see consistency section); operator attestation @ `cadc93f` **not repeatable** |
+| **HTTPS smoke (full)** | **PASS** — full HTTPS smoke repeat PASS after pacing/backoff (see rate-limit pacing section) |
 | **API smoke (local parity)** | **PASS** — `http://127.0.0.1:8787` |
-| **Device matrix / Expo public HTTPS** | **BLOCKED** until repeatable HTTPS smoke PASS |
+| **Device matrix / Expo public HTTPS** | **Unblocked for staging pilot** — point `EXPO_PUBLIC_REST_API_BASE` at public URL; not full matrix certification |
 
 **Does not certify:** production launch, commercial/payment readiness, public HTTPS device matrix, or SOS production reliability.
 
 ---
 
-## HTTPS smoke consistency (`HTTPS_SMOKE_CONSISTENCY.1`) — 2026-05-23
+## Rate-limit pacing (`PUBLIC_API_SMOKE_RATE_LIMIT_PACING.1`) — 2026-05-23
+
+**Root cause (prior FAIL):** Staging API rate limit **5 req/s per IP**; smoke burst exceeded limit → HTTP **429** on `merchantM:inbox` / `merchantN:inbox` (and potentially other stages). Server limit **unchanged**.
+
+**Script fix (`scripts/smoke-public-staging-api.mjs`):**
+
+| Behavior | Value |
+|----------|--------|
+| Pace between requests (public HTTPS) | **500ms** (300ms local HTTP) |
+| HTTP 429 retry | Up to **3** retries; waits **1000 / 2000 / 3000ms** |
+| Mutation safety | Retry **only** on 429 (before acceptance); no blind duplicate on success |
+
+**Full HTTPS smoke repeat PASS after pacing/backoff** — exit 0 @ `https://viona-api-staging-eu.fly.dev` (2026-05-23):
+
+| Stage | Result |
+|-------|--------|
+| health | **PASS** |
+| User A / B / Merchant M / N login | **PASS** |
+| user lists + merchant inboxes | **PASS** (no 429 after pacing) |
+| isolation user B / merchant N | **PASS** |
+| local create (confirm + decline targets) | **PASS** |
+| merchant confirm / decline | **PASS** |
+| `walletMode` | `REQUEST_ONLY_NO_CHARGE` |
+| `walletPhase` | `NONE` |
+| `paymentCaptured` | `false` |
+
+Prior blockers resolved on Fly: `DATABASE_URL` runtime + `JWT_SECRET` (ops). Rate limit addressed in smoke only.
+
+---
+
+## HTTPS smoke consistency (`HTTPS_SMOKE_CONSISTENCY.1`) — 2026-05-23 (historical FAIL)
 
 **Goal:** Confirm full public HTTPS smoke is repeatably PASS after evidence commit `cadc93f`.
 
-**Result:** **FAIL** — do **not** treat operator attestation as current PASS; do **not** proceed to device matrix.
+**Result:** **FAIL** at `0cf119f` (DATABASE_URL not set at runtime on Fly). **Superseded** by ops fix + pacing pack repeatable PASS above.
 
 ### Pre-checks
 
@@ -186,8 +216,8 @@ Root cause: Fly `JWT_SECRET` misconfiguration. Fixed per operator pass sync abov
 
 | Account | Public HTTPS | Local parity |
 |---------|--------------|--------------|
-| User A / B | **FAIL** (HTTP 500; repeat @ 2026-05-23) | **PASS** |
-| Merchant M / N | **FAIL** (HTTP 500; repeat @ 2026-05-23) | **PASS** |
+| User A / B | **PASS** | **PASS** |
+| Merchant M / N | **PASS** | **PASS** |
 | Dev JWT required | **No** (smoke uses PIN login) | **No** |
 
 ---
@@ -196,15 +226,15 @@ Root cause: Fly `JWT_SECRET` misconfiguration. Fixed per operator pass sync abov
 
 | Check | Public HTTPS | Local parity |
 |-------|--------------|--------------|
-| Merchant M inbox | **NOT REACHED** | **PASS** |
-| Merchant confirm | **NOT REACHED** | **PASS** |
-| Merchant decline | **NOT REACHED** | **PASS** |
-| Merchant N isolation | **NOT REACHED** | **PASS** |
-| User B isolation | **NOT REACHED** | **PASS** |
-| `walletMode` | — (not reached) | `REQUEST_ONLY_NO_CHARGE` |
-| `walletPhase` | — (not reached) | `NONE` |
-| Payment captured | — | **No** |
-| Transaction / Wallet delta | — | **0** |
+| Merchant M inbox | **PASS** | **PASS** |
+| Merchant confirm | **PASS** | **PASS** |
+| Merchant decline | **PASS** | **PASS** |
+| Merchant N isolation | **PASS** | **PASS** |
+| User B isolation | **PASS** | **PASS** |
+| `walletMode` | `REQUEST_ONLY_NO_CHARGE` | `REQUEST_ONLY_NO_CHARGE` |
+| `walletPhase` | `NONE` | `NONE` |
+| Payment captured | **No** | **No** |
+| Transaction / Wallet delta | **0** (not queried; no-charge path) | **0** |
 
 ---
 
@@ -235,6 +265,7 @@ Allowlist in `scripts/fly-staging-sync-secrets.mjs`: `localhost:8081`, `8089`, `
 
 ## Next required action
 
-1. Fix Fly runtime `DATABASE_URL` (see consistency section — re-sync secrets, restart/deploy all machines).
-2. Re-run `node scripts/smoke-public-staging-api.mjs https://viona-api-staging-eu.fly.dev` until exit 0.
-3. Update this doc with repeatable PASS line; only then set `EXPO_PUBLIC_REST_API_BASE` and clear dev JWT for device matrix.
+1. Set `EXPO_PUBLIC_REST_API_BASE=https://viona-api-staging-eu.fly.dev` in `.env.local` (not committed).
+2. Clear `EXPO_PUBLIC_DEV_REST_JWT`; `npx expo start -c`.
+3. Optional staging UI walkthrough on public HTTPS (not full device-matrix certification).
+4. Re-run paced smoke after deploys: `node scripts/smoke-public-staging-api.mjs https://viona-api-staging-eu.fly.dev`.
