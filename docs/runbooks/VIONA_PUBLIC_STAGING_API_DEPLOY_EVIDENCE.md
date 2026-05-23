@@ -16,7 +16,7 @@
 | **HTTPS smoke (full)** | **PASS** — full HTTPS smoke repeat PASS after pacing/backoff (see rate-limit pacing section) |
 | **API smoke (local parity)** | **PASS** — `http://127.0.0.1:8787` |
 | **Public HTTPS REST UI walkthrough** | **PASS** (operator @ `OPERATOR_PASS_SYNC.1`) — `docs/runbooks/VIONA_PUBLIC_HTTPS_REST_UI_WALKTHROUGH.md` |
-| **Full device matrix (4 viewports × EN/VI)** | **BLOCKED** — checklist published; cells **NOT RUN** (`docs/runbooks/VIONA_PUBLIC_HTTPS_LOCAL_NO_CHARGE_DEVICE_MATRIX.md`) |
+| **Full device matrix (4 viewports × EN/VI)** | **PASS** (operator @ `DEVICE_MATRIX.OPERATOR_PASS_SYNC.1`) — `docs/runbooks/VIONA_PUBLIC_HTTPS_LOCAL_NO_CHARGE_DEVICE_MATRIX.md` |
 
 **Does not certify:** production launch, commercial/payment readiness, public HTTPS device matrix, or SOS production reliability.
 
@@ -316,18 +316,19 @@ Doc: `docs/runbooks/VIONA_PUBLIC_HTTPS_REST_UI_WALKTHROUGH.md`
 
 ---
 
-## Public HTTPS device matrix (`LOCAL_NO_CHARGE.DEVICE_MATRIX.1`) — 2026-05-23
+## Public HTTPS device matrix — 2026-05-23
 
-| Layer | Result |
-|-------|--------|
-| Pre-checks + API smoke | **PASS** |
-| 390×844 / 768×1024 / 1024×768 / 1366×768 × VI/EN | **NOT RUN** (operator manual) |
-| Doc | `docs/runbooks/VIONA_PUBLIC_HTTPS_LOCAL_NO_CHARGE_DEVICE_MATRIX.md` |
+| Pack | Matrix cells |
+|------|----------------|
+| `DEVICE_MATRIX.1` | Checklist published — **NOT RUN** |
+| `DEVICE_MATRIX.OPERATOR_PASS_SYNC.1` | **PASS** — 8/8 (390×844, 768×1024, 1024×768, 1366×768 × VI/EN) |
+
+Doc: `docs/runbooks/VIONA_PUBLIC_HTTPS_LOCAL_NO_CHARGE_DEVICE_MATRIX.md`
 
 ---
 
 ## Next required action
 
-1. Operator: complete device matrix cells in `VIONA_PUBLIC_HTTPS_LOCAL_NO_CHARGE_DEVICE_MATRIX.md`.
+1. Optional: native iOS/Android public HTTPS spot-check (separate scope).
 2. Re-run paced smoke after Fly deploys: `node scripts/smoke-public-staging-api.mjs https://viona-api-staging-eu.fly.dev`.
 3. Keep `.env.local` with public base + empty dev JWT (not committed).

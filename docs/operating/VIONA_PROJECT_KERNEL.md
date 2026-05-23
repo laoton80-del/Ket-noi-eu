@@ -211,8 +211,9 @@ Known Local lifecycle milestones:
 🟢 REST UI login bridge **STRICT UI PASS** — operator proof merged + pushed (`3cfea5e`)
 🟢 Public HTTPS staging API smoke **repeat PASS** @ `1daf006` — paced smoke `https://viona-api-staging-eu.fly.dev` (`docs/runbooks/VIONA_PUBLIC_STAGING_API_DEPLOY_EVIDENCE.md`)
 🟢 Public HTTPS REST UI walkthrough **PASS** — operator @ `OPERATOR_PASS_SYNC.1` (`docs/runbooks/VIONA_PUBLIC_HTTPS_REST_UI_WALKTHROUGH.md`)
+🟢 Public HTTPS Local device matrix **PASS** — 4 viewports × VI/EN @ `DEVICE_MATRIX.OPERATOR_PASS_SYNC.1` (`docs/runbooks/VIONA_PUBLIC_HTTPS_LOCAL_NO_CHARGE_DEVICE_MATRIX.md`)
 
-**Local + auth pilot readiness (master / origin @ public HTTPS UI proof):**
+**Local + auth pilot readiness (master / origin @ public HTTPS staging proof):**
 
 | Layer | Verdict |
 |-------|---------|
@@ -220,7 +221,8 @@ Known Local lifecycle milestones:
 | **Staging / manual walkthrough** (staging DB + local-dev API) | **PASS** @ `4d365bf` — `docs/runbooks/VIONA_LOCAL_MANUAL_STAGING_EVIDENCE_2.md` |
 | **REST UI login** (phone + PIN → `loginRestApi`; no `EXPO_PUBLIC_DEV_REST_JWT` required per operator strict proof) | **STRICT UI PASS** @ `3cfea5e` — `docs/runbooks/VIONA_AUTH_REST_UI_LOGIN_BRIDGE_STAGING_RETEST.md` |
 | **Public HTTPS staging API smoke** (500ms pacing; Local no-charge path) | **PASS** @ `1daf006` — `docs/runbooks/VIONA_PUBLIC_STAGING_API_DEPLOY_EVIDENCE.md` |
-| **Public HTTPS REST UI** (phone + PIN; dev JWT cleared; confirm/decline/isolation) | **PASS** @ operator PASS sync — `docs/runbooks/VIONA_PUBLIC_HTTPS_REST_UI_WALKTHROUGH.md` (not production / not full device matrix) |
+| **Public HTTPS REST UI** (phone + PIN; dev JWT cleared; confirm/decline/isolation) | **PASS** @ operator PASS sync — `docs/runbooks/VIONA_PUBLIC_HTTPS_REST_UI_WALKTHROUGH.md` |
+| **Public HTTPS device matrix** (390×844, 768×1024, 1024×768, 1366×768 × VI/EN) | **PASS** @ operator PASS sync — `docs/runbooks/VIONA_PUBLIC_HTTPS_LOCAL_NO_CHARGE_DEVICE_MATRIX.md` (web responsive; not production/native store) |
 
 **REST UI strict proof (staging / manual only, not production):** User A/B and Merchant M/N login via UI PIN; User B isolation; Merchant M inbox + confirm/decline UI; Merchant N isolation; logout/session clear; forbidden commercial wording not observed on Local surfaces. `EXPO_PUBLIC_DEV_REST_JWT` **not required** for strict UI proof (operator attestation).
 
@@ -230,7 +232,7 @@ Known Local lifecycle milestones:
 
 **Strict UI limitations (honest):** staging / manual / local-dev API only; public HTTPS API smoke PASS is scripted staging proof only — not production HTTPS certification; not full device EN-VI matrix; ops audit UI not covered; operator should keep `.env.local` saved without `EXPO_PUBLIC_DEV_REST_JWT` on disk (automation once detected non-empty length at doc-write).
 
-**Public HTTPS (honest):** API smoke PASS @ `1daf006`; REST UI walkthrough PASS @ operator PASS sync (`7d1439e`). Device matrix pack `DEVICE_MATRIX.1`: checklist @ `docs/runbooks/VIONA_PUBLIC_HTTPS_LOCAL_NO_CHARGE_DEVICE_MATRIX.md` — viewport/language cells **NOT RUN** (operator manual). Aborted R6 background task is **not** evidence.
+**Public HTTPS (honest):** API smoke PASS @ `1daf006`; REST UI PASS @ `7d1439e`; device matrix **PASS** (4 viewports × VI/EN) @ operator PASS sync — `docs/runbooks/VIONA_PUBLIC_HTTPS_LOCAL_NO_CHARGE_DEVICE_MATRIX.md` (web responsive; not production/native store). Aborted R6 background task is **not** evidence.
 
 Current Local mode:
 REQUEST_ONLY_NO_CHARGE

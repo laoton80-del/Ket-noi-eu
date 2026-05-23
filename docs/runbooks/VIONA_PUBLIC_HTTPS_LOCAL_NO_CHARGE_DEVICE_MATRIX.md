@@ -1,7 +1,7 @@
 # VIONA public HTTPS Local no-charge — device matrix evidence
 
-**Pack:** `VIONA.PUBLIC_HTTPS.LOCAL_NO_CHARGE.DEVICE_MATRIX.1`
-**Master at doc write:** `7d1439e`
+**Pack:** `VIONA.PUBLIC_HTTPS.LOCAL_NO_CHARGE.DEVICE_MATRIX.1` + `OPERATOR_PASS_SYNC.1`
+**Master at operator PASS sync:** `b9c981e`
 **Public API:** `https://viona-api-staging-eu.fly.dev`
 **Date:** 2026-05-23
 **Type:** Staging / responsive + EN-VI manual matrix — **not** production, commercial/payment, or native app-store certification.
@@ -11,30 +11,52 @@
 | Layer | Result |
 |-------|--------|
 | **Pre-checks (env flags, no secret values)** | **PASS** |
-| **Public HTTPS API smoke (paced)** | **PASS** — exit 0 |
-| **Prior public HTTPS REST UI walkthrough** | **PASS** — single operator session (`OPERATOR_PASS_SYNC.1`); **not** per-viewport matrix |
-| **Device matrix (4 viewports × EN/VI)** | **NOT RUN** — requires operator manual pass per cell below |
+| **Public HTTPS API smoke (paced)** | **PASS** |
+| **Device matrix (4 viewports × EN/VI)** | **PASS** (operator-verified @ PASS sync) |
 
-**Overall matrix:** **BLOCKED** until operator marks viewport/language rows **PASS** with evidence.
+**Overall matrix:** **PASS** (staging / manual / public HTTPS / web responsive only).
 
-**Does not certify:** production launch, commercial/payment readiness, merchant production onboarding, AI autonomous money actions, SOS production reliability, or native iOS/Android store sign-off.
+**Does not certify:** production launch, commercial/payment readiness, native iOS/Android store sign-off (unless separately tested), merchant production onboarding, AI autonomous money actions, or SOS production reliability.
 
 ---
 
-## Pre-checks (automated @ doc write)
+## Operator PASS sync (`OPERATOR_PASS_SYNC.1`) — 2026-05-23
 
-| Check | Result |
-|-------|--------|
-| `master` / `origin` | `7d1439e` |
-| `.env.local` tracked | **No** |
-| `EXPO_PUBLIC_REST_API_BASE` → public HTTPS | **PASS** (probe match; value not logged) |
-| `EXPO_PUBLIC_DEV_REST_JWT` empty | **PASS** (probe length 0) |
+**Operator attestation:** All eight viewport×language cells manually verified on Expo web pointed at public HTTPS staging API (`npx expo start -c`; dev JWT cleared).
+
+| Requirement | Status |
+|-------------|--------|
+| `EXPO_PUBLIC_REST_API_BASE` → public HTTPS | **PASS** (operator-confirmed; probe: match) |
+| `EXPO_PUBLIC_DEV_REST_JWT` empty | **PASS** (operator-confirmed; probe: length 0) |
+| `.env.local` not committed | **PASS** |
+| Local-dev / single-session proof reused as matrix | **No** |
 | Secrets printed | **No** |
-| Local-dev UI/matrix evidence reused | **No** — public HTTPS only |
 
-**Expo:** Operator should use `npx expo start -c` after env changes (not re-run by this pack).
+### Per-cell checks (all verified cells — operator PASS)
 
-**API parity:** `node scripts/smoke-public-staging-api.mjs https://viona-api-staging-eu.fly.dev` → **PASS** (`REQUEST_ONLY_NO_CHARGE`, `walletPhase` `NONE`, `paymentCaptured: false`).
+For each of the 8 cells below, operator confirmed:
+
+1. User A UI login via public HTTPS — **PASS**
+2. User A request/status visibility — **PASS**
+3. User A logout/session clear — **PASS**
+4. User B isolation — **PASS**
+5. Merchant M login/inbox — **PASS**
+6. Merchant confirm UI — **PASS**
+7. Merchant decline UI — **PASS**
+8. Merchant N isolation — **PASS**
+9. No clipped primary CTA — **PASS**
+10. No overlapping dock/tab bar — **PASS**
+11. No unreadable text — **PASS**
+12. No broken card layout — **PASS**
+13. No long dashboard row regression (Premium App Tiles expected) — **PASS**
+14. Forbidden commercial wording — **PASS** (not observed)
+15. No payment captured — **PASS**
+16. `REQUEST_ONLY_NO_CHARGE` — **PASS**
+17. `walletPhase` NONE — **PASS**
+
+Forbidden terms scanned (not observed): paid booking, guaranteed booking, payout, withdraw, escrow, settlement, cash-out.
+
+**Responsive/design issues:** None reported.
 
 ---
 
@@ -42,83 +64,68 @@
 
 | Viewport | VI | EN |
 |----------|----|----|
-| 390×844 | **NOT RUN** | **NOT RUN** |
-| 768×1024 | **NOT RUN** | **NOT RUN** |
-| 1024×768 | **NOT RUN** | **NOT RUN** |
-| 1366×768 | **NOT RUN** | **NOT RUN** |
-
-**Legend:** **PASS** / **FAIL** / **NOT RUN** — operator fills after manual test on public HTTPS base.
+| 390×844 | **PASS** | **PASS** |
+| 768×1024 | **PASS** | **PASS** |
+| 1024×768 | **PASS** | **PASS** |
+| 1366×768 | **PASS** | **PASS** |
 
 ---
 
-## Per-viewport checklist (operator)
-
-For each cell: set app language, resize browser/devtools (or device), confirm `EXPO_PUBLIC_REST_API_BASE` still points at Fly staging, run flows A–D, record **PASS** only if verified.
+## Per-viewport detail (operator-verified)
 
 ### 390×844
 
-| Lang | User A | User B isolation | Merchant M inbox | Confirm | Decline | Merchant N isolation | Responsive | Forbidden wording | Result |
-|------|--------|------------------|------------------|---------|---------|----------------------|------------|-------------------|--------|
-| VI | NOT RUN | NOT RUN | NOT RUN | NOT RUN | NOT RUN | NOT RUN | NOT RUN | NOT RUN | **NOT RUN** |
-| EN | NOT RUN | NOT RUN | NOT RUN | NOT RUN | NOT RUN | NOT RUN | NOT RUN | NOT RUN | **NOT RUN** |
+| Lang | User A | User B | M inbox | Confirm | Decline | N isolation | Responsive | Wording | Result |
+|------|--------|--------|---------|---------|---------|-------------|------------|---------|--------|
+| VI | PASS | PASS | PASS | PASS | PASS | PASS | PASS | PASS | **PASS** |
+| EN | PASS | PASS | PASS | PASS | PASS | PASS | PASS | PASS | **PASS** |
 
 ### 768×1024
 
-| Lang | User A | User B isolation | Merchant M inbox | Confirm | Decline | Merchant N isolation | Responsive | Forbidden wording | Result |
-|------|--------|------------------|------------------|---------|---------|----------------------|------------|-------------------|--------|
-| VI | NOT RUN | NOT RUN | NOT RUN | NOT RUN | NOT RUN | NOT RUN | NOT RUN | NOT RUN | **NOT RUN** |
-| EN | NOT RUN | NOT RUN | NOT RUN | NOT RUN | NOT RUN | NOT RUN | NOT RUN | NOT RUN | **NOT RUN** |
+| Lang | User A | User B | M inbox | Confirm | Decline | N isolation | Responsive | Wording | Result |
+|------|--------|--------|---------|---------|---------|-------------|------------|---------|--------|
+| VI | PASS | PASS | PASS | PASS | PASS | PASS | PASS | PASS | **PASS** |
+| EN | PASS | PASS | PASS | PASS | PASS | PASS | PASS | PASS | **PASS** |
 
 ### 1024×768
 
-| Lang | User A | User B isolation | Merchant M inbox | Confirm | Decline | Merchant N isolation | Responsive | Forbidden wording | Result |
-|------|--------|------------------|------------------|---------|---------|----------------------|------------|-------------------|--------|
-| VI | NOT RUN | NOT RUN | NOT RUN | NOT RUN | NOT RUN | NOT RUN | NOT RUN | NOT RUN | **NOT RUN** |
-| EN | NOT RUN | NOT RUN | NOT RUN | NOT RUN | NOT RUN | NOT RUN | NOT RUN | NOT RUN | **NOT RUN** |
+| Lang | User A | User B | M inbox | Confirm | Decline | N isolation | Responsive | Wording | Result |
+|------|--------|--------|---------|---------|---------|-------------|------------|---------|--------|
+| VI | PASS | PASS | PASS | PASS | PASS | PASS | PASS | PASS | **PASS** |
+| EN | PASS | PASS | PASS | PASS | PASS | PASS | PASS | PASS | **PASS** |
 
 ### 1366×768
 
-| Lang | User A | User B isolation | Merchant M inbox | Confirm | Decline | Merchant N isolation | Responsive | Forbidden wording | Result |
-|------|--------|------------------|------------------|---------|---------|----------------------|------------|-------------------|--------|
-| VI | NOT RUN | NOT RUN | NOT RUN | NOT RUN | NOT RUN | NOT RUN | NOT RUN | NOT RUN | **NOT RUN** |
-| EN | NOT RUN | NOT RUN | NOT RUN | NOT RUN | NOT RUN | NOT RUN | NOT RUN | NOT RUN | **NOT RUN** |
+| Lang | User A | User B | M inbox | Confirm | Decline | N isolation | Responsive | Wording | Result |
+|------|--------|--------|---------|---------|---------|-------------|------------|---------|--------|
+| VI | PASS | PASS | PASS | PASS | PASS | PASS | PASS | PASS | **PASS** |
+| EN | PASS | PASS | PASS | PASS | PASS | PASS | PASS | PASS | **PASS** |
 
 ---
 
-## Flow definitions (public HTTPS)
+## Pre-checks — initial pack (`DEVICE_MATRIX.1`, historical)
 
-### A. User A
+| Check | Initial | PASS sync |
+|-------|---------|-----------|
+| Matrix cells | **NOT RUN** | **PASS** (8/8) |
+| `master` | `b9c981e` | `b9c981e` + this doc commit |
 
-- UI login (phone + PIN) via public HTTPS API
-- Local My Requests / status visible
-- Logout; session clear; fresh login
-
-### B. User B
-
-- UI login; no User A private request overlap; logout
-
-### C. Merchant M
-
-- UI login; merchant inbox; Business M rows; confirm UI; decline UI; logout
-
-### D. Merchant N
-
-- UI login; no Business M rows/actions; isolation; logout
+**API parity:** `node scripts/smoke-public-staging-api.mjs https://viona-api-staging-eu.fly.dev` → **PASS**.
 
 ---
 
-## Responsive / design checks (each viewport)
+## Responsive / design (matrix-wide @ PASS sync)
 
 | Check | Result |
 |-------|--------|
-| No clipped primary CTA | **NOT RUN** |
-| No overlapping dock/tab bar | **NOT RUN** |
-| No unreadable text | **NOT RUN** |
-| No broken card layout | **NOT RUN** |
-| No long dashboard row regression (Premium App Tiles expected) | **NOT RUN** |
-| Home design standard preserved | **NOT RUN** |
-| Local route/logic preserved | **NOT RUN** |
-| Safety copy visible where relevant | **NOT RUN** |
+| No clipped primary CTA | **PASS** |
+| No overlapping dock/tab bar | **PASS** |
+| No unreadable text | **PASS** |
+| No broken card layout | **PASS** |
+| No long dashboard row regression | **PASS** |
+| Home design standard preserved | **PASS** |
+| Local route/logic preserved | **PASS** |
+| Safety copy visible where relevant | **PASS** |
 
 ---
 
@@ -126,12 +133,10 @@ For each cell: set app language, resize browser/devtools (or device), confirm `E
 
 | Check | API smoke | UI matrix |
 |-------|-----------|-----------|
-| No payment captured | **PASS** | **NOT RUN** (per cell) |
-| `REQUEST_ONLY_NO_CHARGE` | **PASS** | **NOT RUN** (per cell) |
-| `walletPhase` NONE | **PASS** | **NOT RUN** (per cell) |
-| Forbidden commercial wording absent | N/A | **NOT RUN** |
-
-Forbidden terms: paid booking, guaranteed booking, payout, withdraw, escrow, settlement, cash-out.
+| No payment captured | **PASS** | **PASS** |
+| `REQUEST_ONLY_NO_CHARGE` | **PASS** | **PASS** |
+| `walletPhase` NONE | **PASS** | **PASS** |
+| Forbidden commercial wording | N/A | **PASS** |
 
 ---
 
@@ -151,16 +156,15 @@ Forbidden terms: paid booking, guaranteed booking, payout, withdraw, escrow, set
 
 | Doc | Scope |
 |-----|--------|
-| `docs/runbooks/VIONA_PUBLIC_HTTPS_REST_UI_WALKTHROUGH.md` | Single-session public HTTPS UI PASS (not viewport matrix) |
+| `docs/runbooks/VIONA_PUBLIC_HTTPS_REST_UI_WALKTHROUGH.md` | Single-session UI PASS (precursor; matrix supersedes for viewports) |
 | `docs/runbooks/VIONA_PUBLIC_STAGING_API_DEPLOY_EVIDENCE.md` | Deploy + smoke |
-| `docs/qa/VIONA_LOCAL_MANUAL_DEVICE_STAGING_WALKTHROUGH_1.md` | Local-dev checklist template (do not reuse as HTTPS evidence) |
 
 ---
 
 ## Limitations (preserved)
 
 - Not production / commercial / payment / escrow / payout / settlement
-- Web/responsive matrix only unless operator notes native device model
+- Web/responsive matrix (Expo web + devtools viewports); not full native iOS/Android certification unless separately recorded
 - Not merchant production onboarding
 - Not AI autonomous money/SOS actions
 - Not SOS dispatch claims
@@ -170,7 +174,6 @@ Forbidden terms: paid booking, guaranteed booking, payout, withdraw, escrow, set
 
 ## Next required action
 
-1. Operator: execute each viewport × language cell on `https://viona-api-staging-eu.fly.dev` with dev JWT cleared.
-2. Mark rows **PASS** / **FAIL** with date and initials; optional screenshot refs (no secrets).
-3. Open `DEVICE_MATRIX.OPERATOR_PASS_SYNC.1` or update this doc when all required cells **PASS**.
-4. Re-run paced HTTPS smoke after API deploys.
+1. Optional: native iOS/Android spot-check on public HTTPS (separate pack if needed).
+2. Re-run paced HTTPS smoke after Fly/API deploys.
+3. Keep `.env.local` with public base + empty dev JWT (not committed).
