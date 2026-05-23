@@ -203,6 +203,21 @@ Run: `node scripts/smoke-public-staging-api.mjs --diagnose-ops-db` (no secrets p
 3. Re-run diagnose → expect `pinStorageLooksBcrypt: true`, `pinMatchesProvidedLoginPin: true`.
 4. Re-run HTTPS smoke → all `opsAudit*` **PASS** before PASS evidence commit.
 
+### Ops ADMIN PIN rehash (`OPS_ADMIN_PIN_REHASH.1`) — 2026-05-23
+
+**Script:** `npx tsx scripts/provision-local-ops-admin-staging.ts` — updates **existing** `Role.ADMIN` `pinCode` only (no new user).
+
+| Step | Result |
+|------|--------|
+| Staging pin bcrypt rehash | **PASS** — `pinCodeFieldLength` 60, `pinStorageLooksBcrypt` true |
+| Diagnose `--diagnose-ops-db` | **PASS** — `blockerClassification`: `none_local_db_ok_check_fly_runtime` |
+| HTTPS `login:opsAdmin` | **PASS** @ `https://viona-api-staging-eu.fly.dev` |
+| HTTPS `GET /api/local/ops/requests` | **FAIL** HTTP **404** — Fly app not yet deployed with `READONLY_API_AUDIT.1` routes |
+
+**Remaining blocker for HTTPS ops smoke PASS:** deploy `viona-api-staging-eu` from master ≥ `fe117ea` (ops list/detail routes), then re-run full smoke.
+
+**Not claimed:** production admin, payment dashboard, commercial readiness, settlement/payout, AI/SOS automation.
+
 **Smoke script coverage when unblocked:** admin login; `GET /api/local/ops/requests`; `GET /api/local/ops/requests/:id`; unauthenticated 401/403; User A 403; Merchant M 403; redaction scan; list-row `REQUEST_ONLY_NO_CHARGE` + `walletPhase` NONE; read-only mutation check (`status`/`updatedAt` unchanged).
 
 **Roster blocker:** Pilot provision script (`provision-local-pilot-accounts-staging.ts`) does **not** create ADMIN.
