@@ -1,8 +1,8 @@
 # VIONA public staging HTTPS API — deployment evidence
 
-**Pack:** `VIONA.STAGING.PUBLIC_API_DEPLOY.1` + follow-ups + `VIONA.STAGING.PUBLIC_API_DEPLOY.OPERATOR_PASS_SYNC.1`
-**Master at operator PASS sync:** `714c410`
-**Date:** 2026-05-20
+**Pack:** `VIONA.STAGING.PUBLIC_API_DEPLOY.1` + follow-ups + `OPERATOR_PASS_SYNC.1` + `HTTPS_SMOKE_CONSISTENCY.1`
+**Master at consistency check:** `cadc93f`
+**Date:** 2026-05-23
 **Plan:** `docs/runbooks/VIONA_PUBLIC_STAGING_API_DEPLOY_PLAN.md`
 
 ## Verdict
@@ -13,14 +13,79 @@
 | **Deployment config in repo** | **READY** @ `714c410` |
 | **Public HTTPS URL** | `https://viona-api-staging-eu.fly.dev` |
 | **`GET /health` (HTTPS)** | **PASS** — HTTP 200 |
-| **HTTPS smoke (full)** | **PASS** (operator attestation — see pass sync section) |
+| **HTTPS smoke (full)** | **BLOCKED** — repeat smoke **FAIL** (see consistency section); operator attestation @ `cadc93f` **not repeatable** |
 | **API smoke (local parity)** | **PASS** — `http://127.0.0.1:8787` |
+| **Device matrix / Expo public HTTPS** | **BLOCKED** until repeatable HTTPS smoke PASS |
 
 **Does not certify:** production launch, commercial/payment readiness, public HTTPS device matrix, or SOS production reliability.
 
 ---
 
-## Operator pass sync (`OPERATOR_PASS_SYNC.1`) — 2026-05-20
+## HTTPS smoke consistency (`HTTPS_SMOKE_CONSISTENCY.1`) — 2026-05-23
+
+**Goal:** Confirm full public HTTPS smoke is repeatably PASS after evidence commit `cadc93f`.
+
+**Result:** **FAIL** — do **not** treat operator attestation as current PASS; do **not** proceed to device matrix.
+
+### Pre-checks
+
+| Check | Result |
+|-------|--------|
+| `master` / `origin` | `cadc93f` |
+| `.env.local` tracked | **No** (`.gitignore`) |
+| Secrets printed | **No** |
+
+### Fly (non-secret)
+
+| Check | Result |
+|-------|--------|
+| `fly auth whoami` | **PASS** (identity only; not logged) |
+| App | `viona-api-staging-eu`, region `fra` |
+| Machines | **1 started**, **1 stopped** (as of check) |
+| Secret keys (names only) | `API_CORS_ORIGINS`, `AWS_ACCESS_KEY_ID`, `AWS_REGION`, `AWS_SECRET_ACCESS_KEY`, `AWS_SES_SENDER_EMAIL`, `DATABASE_URL`, `DIRECT_URL`, `JWT_SECRET`, `MARKETING_AUTO_POSTER_ENABLED`, `NODE_ENV`, `TRUST_PROXY_HOPS` |
+| `JWT_SECRET` key | **Present** (deployed) |
+| `DATABASE_URL` key | **Present** in secrets list (deployed name only; runtime see logs) |
+
+### Health
+
+`GET https://viona-api-staging-eu.fly.dev/health` → **200** `{"success":true,"data":{"status":"ok"}}`
+
+### Repeat smoke (`node scripts/smoke-public-staging-api.mjs …`)
+
+| Stage | Result |
+|-------|--------|
+| health | **PASS** — HTTP 200 |
+| User A | **FAIL** — HTTP 500 — `Unexpected error` — `POST /api/auth/login` |
+| User B | **FAIL** — HTTP 500 — same |
+| Merchant M | **FAIL** — HTTP 500 — same |
+| Merchant N | **FAIL** — HTTP 500 — same |
+| Local / inbox / confirm / decline / isolation | **NOT REACHED** |
+
+**Consistency blocker:** Operator attestation recorded @ `cadc93f`, but **repeat smoke still fails** for all four personas with identical HTTP 500.
+
+### Fly log summary (non-secret, 2026-05-23)
+
+On `POST /api/auth/login`, app logs `LỖI postLogin` with:
+
+`DATABASE_URL is not set. Configure it before calling getPrisma() in a Node context.`
+
+Stack: `createClient` → `getPrisma` → `loginWithPhoneAndPin` → `postLogin`.
+
+**Interpretation:** `/health` does not use Prisma; login does. Secret name `DATABASE_URL` appears in `fly secrets list`, but the **running machine process does not have `DATABASE_URL` in env** (or value empty). Likely stale/partial secret rollout, manual `JWT_SECRET` set without re-importing DB URL, or traffic to an under-provisioned machine.
+
+### Recommended next fix pack (ops)
+
+1. `node scripts/fly-staging-sync-secrets.mjs` (staging ref guard; no value logs).
+2. `fly machines list --app viona-api-staging-eu` — ensure **both** app machines **started** and same secret version.
+3. `fly secrets list --app viona-api-staging-eu` — confirm `DATABASE_URL` / `DIRECT_URL` digests updated after import.
+4. `fly deploy --app viona-api-staging-eu` or rolling restart all machines.
+5. Re-run HTTPS smoke until exit 0; then update this doc with “Full HTTPS smoke repeat PASS after …”.
+
+---
+
+## Operator pass sync (`OPERATOR_PASS_SYNC.1`) — 2026-05-20 (superseded for repeatability)
+
+**Status:** Historical attestation only — **not** current repeatable PASS (see consistency section above).
 
 **Operator attestation:** Fly `JWT_SECRET` corrected and full public HTTPS smoke re-run **PASS** (exit 0).
 **Prior blocker:** HTTP 500 `Authentication service unavailable` (`server_misconfigured` — missing/short `JWT_SECRET` on Fly).
@@ -121,9 +186,9 @@ Root cause: Fly `JWT_SECRET` misconfiguration. Fixed per operator pass sync abov
 
 | Account | Public HTTPS | Local parity |
 |---------|--------------|--------------|
-| User A / B | **PASS** | **PASS** |
-| Merchant M / N | **PASS** | **PASS** |
-| Dev JWT required | **No** | **No** |
+| User A / B | **FAIL** (HTTP 500; repeat @ 2026-05-23) | **PASS** |
+| Merchant M / N | **FAIL** (HTTP 500; repeat @ 2026-05-23) | **PASS** |
+| Dev JWT required | **No** (smoke uses PIN login) | **No** |
 
 ---
 
@@ -131,15 +196,15 @@ Root cause: Fly `JWT_SECRET` misconfiguration. Fixed per operator pass sync abov
 
 | Check | Public HTTPS | Local parity |
 |-------|--------------|--------------|
-| Merchant M inbox | **PASS** | **PASS** |
-| Merchant confirm | **PASS** | **PASS** |
-| Merchant decline | **PASS** | **PASS** |
-| Merchant N isolation | **PASS** | **PASS** |
-| User B isolation | **PASS** | **PASS** |
-| `walletMode` | `REQUEST_ONLY_NO_CHARGE` | `REQUEST_ONLY_NO_CHARGE` |
-| `walletPhase` | `NONE` | `NONE` |
-| Payment captured | **No** | **No** |
-| Transaction / Wallet delta | **0** (not queried; no-charge path) | **0** |
+| Merchant M inbox | **NOT REACHED** | **PASS** |
+| Merchant confirm | **NOT REACHED** | **PASS** |
+| Merchant decline | **NOT REACHED** | **PASS** |
+| Merchant N isolation | **NOT REACHED** | **PASS** |
+| User B isolation | **NOT REACHED** | **PASS** |
+| `walletMode` | — (not reached) | `REQUEST_ONLY_NO_CHARGE` |
+| `walletPhase` | — (not reached) | `NONE` |
+| Payment captured | — | **No** |
+| Transaction / Wallet delta | — | **0** |
 
 ---
 
@@ -170,6 +235,6 @@ Allowlist in `scripts/fly-staging-sync-secrets.mjs`: `localhost:8081`, `8089`, `
 
 ## Next required action
 
-1. Point Expo at public API: `EXPO_PUBLIC_REST_API_BASE=https://viona-api-staging-eu.fly.dev`
-2. Clear `EXPO_PUBLIC_DEV_REST_JWT`; `npx expo start -c`
-3. Optional: REST UI strict proof on public HTTPS (device matrix still out of scope)
+1. Fix Fly runtime `DATABASE_URL` (see consistency section — re-sync secrets, restart/deploy all machines).
+2. Re-run `node scripts/smoke-public-staging-api.mjs https://viona-api-staging-eu.fly.dev` until exit 0.
+3. Update this doc with repeatable PASS line; only then set `EXPO_PUBLIC_REST_API_BASE` and clear dev JWT for device matrix.
