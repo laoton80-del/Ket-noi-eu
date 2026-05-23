@@ -302,8 +302,8 @@ Current correct Local backend order:
 5. ~~Operator manual staging/device walkthrough~~ — **PASS** on staging @ `4d365bf` (local-dev; not production matrix)
 5b. ~~REST UI login bridge strict operator proof~~ — **PASS** @ `3cfea5e` (phone + PIN; dev JWT not required per operator attestation)
 5c. ~~Public HTTPS deploy + smoke + REST UI + device matrix + pilot sign-off~~ — **READY** @ `5a714a8` (`READY_FOR_CONTROLLED_NO_CHARGE_PILOT`)
-6. ~~Controlled pilot session 1 (API smoke)~~ — **PASS_WITH_LIMITATIONS** @ `151f0fb` — `VIONA_LOCAL_NO_CHARGE_CONTROLLED_PILOT_SESSION_1.md`
-6b. **Next:** Expo UI session 1b per ops playbook §4 (or operator PASS sync)
+6. ~~Controlled pilot session 1 (API + UI)~~ — **PASS** @ `fece42c` — `VIONA_LOCAL_NO_CHARGE_CONTROLLED_PILOT_SESSION_1.md`
+6b. **Next:** pilot session 2+ per ops playbook; optional native spot-check
 7. AI Local Copilot read-only — **blocked** until read-only policy pack
 8. Human-confirmed AI actions — **blocked**
 9. Wallet hold/debit/release/settlement — **blocked** until CFO/finance-approved Local wallet policy pack; Local commercial pilot **not** started
