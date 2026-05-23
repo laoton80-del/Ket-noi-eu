@@ -172,8 +172,12 @@
 
 1. Internal roster approval for one staging `Role.ADMIN` operator identity.
 2. Provision ADMIN on staging DB (engineering runbook — **do not** commit phone/PIN).
-3. Operator sets `VIONA_PILOT_OPS_ADMIN_PHONE=<E.164>` in `.env.local` (gitignored) + existing `VIONA_PILOT_PIN`.
+3. Operator sets in `.env.local` (gitignored, never commit):
+   - `VIONA_PILOT_OPS_ADMIN_PHONE=<E.164>` (roster ADMIN)
+   - `VIONA_PILOT_OPS_ADMIN_PIN=<pin>` **optional** — use when ADMIN PIN differs from pilot personas (`SMOKE_ADMIN_PIN_SUPPORT.1`); if unset, smoke uses `VIONA_PILOT_PIN` for ops admin login only
 4. Re-run: `node scripts/smoke-public-staging-api.mjs https://viona-api-staging-eu.fly.dev` — expect `opsAuditList`, `opsAuditDetail`, `opsAuditUnauthed`, `opsAuditForbiddenB2c`, `opsAuditForbiddenMerchant`, `opsAuditMutationSafe` all **PASS**.
+
+**Ops admin login 401:** Smoke reports a safe message only (no PIN/phone logged). Verify phone + dedicated `VIONA_PILOT_OPS_ADMIN_PIN` or shared `VIONA_PILOT_PIN`. `Role.ADMIN` check unchanged after login.
 
 **Smoke script coverage when unblocked:** admin login; `GET /api/local/ops/requests`; `GET /api/local/ops/requests/:id`; unauthenticated 401/403; User A 403; Merchant M 403; redaction scan; list-row `REQUEST_ONLY_NO_CHARGE` + `walletPhase` NONE; read-only mutation check (`status`/`updatedAt` unchanged).
 

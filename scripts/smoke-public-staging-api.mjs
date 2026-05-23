@@ -2,7 +2,8 @@
  * Public (or local) staging API smoke — no secrets printed.
  * Usage: node scripts/smoke-public-staging-api.mjs [baseUrl]
  * Env: STAGING_PUBLIC_API_BASE or EXPO_PUBLIC_REST_API_BASE, VIONA_PILOT_PIN,
- *      VIONA_PILOT_OPS_ADMIN_PHONE (roster-approved Role.ADMIN for ops audit stages)
+ *      VIONA_PILOT_OPS_ADMIN_PHONE (roster-approved Role.ADMIN for ops audit stages),
+ *      VIONA_PILOT_OPS_ADMIN_PIN (optional; falls back to VIONA_PILOT_PIN when unset)
  *
  * Public HTTPS: 500ms pacing between requests; HTTP 429 retries (1s/2s/3s, max 3).
  */
@@ -26,6 +27,8 @@ const base = (process.argv[2] ?? process.env.STAGING_PUBLIC_API_BASE ?? process.
   .replace(/\/+$/, '');
 
 const pin = process.env.VIONA_PILOT_PIN ?? '';
+const opsAdminPinRaw = (process.env.VIONA_PILOT_OPS_ADMIN_PIN ?? '').trim();
+const opsAdminPin = opsAdminPinRaw.length > 0 ? opsAdminPinRaw : pin;
 const isPublicHttps = base.startsWith('https://');
 /** @type {500 | 300} */
 const PACE_MS = isPublicHttps ? 500 : 300;
@@ -56,9 +59,14 @@ function record(stage, status, extra = {}) {
 }
 
 /** Redact JWT-like strings and never echo pin/secrets from bodies. */
+function redactPhone(_phone) {
+  return '[REDACTED_PHONE]';
+}
+
 function redactSafe(text) {
   if (typeof text !== 'string') return String(text);
   return text
+    .replace(/\+[1-9]\d{6,14}/g, '[REDACTED_PHONE]')
     .replace(/eyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+/g, '[REDACTED_JWT]')
     .replace(/Bearer\s+\S+/gi, 'Bearer [REDACTED]')
     .replace(/"token"\s*:\s*"[^"]*"/gi, '"token":"[REDACTED]"')
@@ -121,15 +129,15 @@ async function fetchPaced(stageLabel, url, init) {
   throw new Error('fetchPaced: exhausted 429 retries');
 }
 
-async function loginPersona(label, phone) {
+async function loginPersona(label, phone, pinCode = pin) {
   const path = '/api/auth/login';
-  log('login', `${label} → POST ${path}`);
+  log('login', `${label} → POST ${path} (${redactPhone(phone)})`);
   let res;
   try {
     res = await fetchPaced(`login:${label}`, `${base}${path}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-      body: JSON.stringify({ phoneNumber: phone, pinCode: pin }),
+      body: JSON.stringify({ phoneNumber: phone, pinCode }),
     });
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e);
@@ -145,7 +153,7 @@ async function loginPersona(label, phone) {
       path,
       httpStatus: res.status,
       error: err,
-      phoneE164: phone,
+      phone: redactPhone(phone),
     });
     log('login', `${label} FAIL — HTTP ${res.status} — ${err}`);
     return { ok: false, label, path, status: res.status, error: err };
@@ -396,8 +404,21 @@ async function main() {
   let opsAuditMutationSafe = 'SKIP';
   const opsAdminPhone = (process.env.VIONA_PILOT_OPS_ADMIN_PHONE ?? '').trim();
   if (opsAdminPhone.length > 0) {
-    const loginOps = await loginPersona('opsAdmin', opsAdminPhone);
+    if (opsAdminPin.length < 6) {
+      failFinal(
+        'ops admin PIN not configured — set VIONA_PILOT_OPS_ADMIN_PIN (min 6) or VIONA_PILOT_PIN (value not logged)'
+      );
+    }
+    const opsPinSource =
+      opsAdminPinRaw.length > 0 ? 'VIONA_PILOT_OPS_ADMIN_PIN' : 'VIONA_PILOT_PIN (fallback)';
+    log('ops', `admin login using ${opsPinSource} (PIN not logged)`);
+    const loginOps = await loginPersona('opsAdmin', opsAdminPhone, opsAdminPin);
     if (!loginOps.ok) {
+      if (loginOps.status === 401) {
+        failFinal(
+          'ops admin login HTTP 401 — invalid phone or PIN (check VIONA_PILOT_OPS_ADMIN_PHONE and VIONA_PILOT_OPS_ADMIN_PIN or VIONA_PILOT_PIN; secrets not logged)'
+        );
+      }
       failFinal('ops admin login failed — roster-approved Role.ADMIN required');
     }
     if (loginOps.role !== 'ADMIN') {
