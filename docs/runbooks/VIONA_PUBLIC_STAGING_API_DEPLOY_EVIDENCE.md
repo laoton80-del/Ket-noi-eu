@@ -15,7 +15,8 @@
 | **`GET /health` (HTTPS)** | **PASS** — HTTP 200 |
 | **HTTPS smoke (full)** | **PASS** — full HTTPS smoke repeat PASS after pacing/backoff (see rate-limit pacing section) |
 | **API smoke (local parity)** | **PASS** — `http://127.0.0.1:8787` |
-| **Device matrix / Expo public HTTPS** | **BLOCKED** — public HTTPS REST UI walkthrough **NOT VERIFIED** (`docs/runbooks/VIONA_PUBLIC_HTTPS_REST_UI_WALKTHROUGH.md`) |
+| **Public HTTPS REST UI walkthrough** | **PASS** (operator @ `OPERATOR_PASS_SYNC.1`) — `docs/runbooks/VIONA_PUBLIC_HTTPS_REST_UI_WALKTHROUGH.md` |
+| **Full device matrix (EN-VI / all platforms)** | **NOT STARTED** — staging pilot only |
 
 **Does not certify:** production launch, commercial/payment readiness, public HTTPS device matrix, or SOS production reliability.
 
@@ -304,18 +305,19 @@ Allowlist in `scripts/fly-staging-sync-secrets.mjs`: `localhost:8081`, `8089`, `
 
 ---
 
-## Public HTTPS REST UI walkthrough (`PUBLIC_HTTPS_REST_UI_WALKTHROUGH.1`) — 2026-05-23
+## Public HTTPS REST UI walkthrough — 2026-05-23
 
-| Layer | Result |
-|-------|--------|
-| API smoke (paced) | **PASS** |
-| UI on public HTTPS | **BLOCKED** — `.env.local` probe: base not public HTTPS; dev JWT non-empty on disk |
-| Doc | `docs/runbooks/VIONA_PUBLIC_HTTPS_REST_UI_WALKTHROUGH.md` |
+| Pack | API smoke | UI (public HTTPS) |
+|------|-----------|-------------------|
+| `WALKTHROUGH.1` | **PASS** | **BLOCKED** (env preconditions) |
+| `OPERATOR_PASS_SYNC.1` | **PASS** | **PASS** (operator attestation; dev JWT cleared; Expo `-c`) |
+
+Doc: `docs/runbooks/VIONA_PUBLIC_HTTPS_REST_UI_WALKTHROUGH.md`
 
 ---
 
 ## Next required action
 
-1. Operator: `EXPO_PUBLIC_REST_API_BASE=https://viona-api-staging-eu.fly.dev`; clear `EXPO_PUBLIC_DEV_REST_JWT`; `npx expo start -c`.
-2. Complete UI matrix in `VIONA_PUBLIC_HTTPS_REST_UI_WALKTHROUGH.md`; mark rows PASS only when verified.
-3. Re-run paced smoke after Fly deploys if needed.
+1. Optional: full device matrix pack (EN-VI / iOS / Android) — separate scope.
+2. Re-run paced smoke after Fly deploys: `node scripts/smoke-public-staging-api.mjs https://viona-api-staging-eu.fly.dev`.
+3. Keep `.env.local` with public base + empty dev JWT (not committed).

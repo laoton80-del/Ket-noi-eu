@@ -1,7 +1,7 @@
 # VIONA public HTTPS REST UI walkthrough — evidence
 
-**Pack:** `VIONA.STAGING.PUBLIC_HTTPS_REST_UI_WALKTHROUGH.1`  
-**Master at doc write:** `a4763c8`  
+**Pack:** `VIONA.STAGING.PUBLIC_HTTPS_REST_UI_WALKTHROUGH.1` + `OPERATOR_PASS_SYNC.1`
+**Master at operator PASS sync:** `d8c8b26`
 **Public API:** `https://viona-api-staging-eu.fly.dev`  
 **Date:** 2026-05-23  
 **Type:** Staging / manual UI evidence — **not** production, commercial/payment, device matrix, or SOS certification.
@@ -10,41 +10,63 @@
 
 | Layer | Result |
 |-------|--------|
-| **Pre-checks (repo + env flags, no secret values)** | **BLOCKED** — see below |
-| **Public HTTPS API smoke (paced script)** | **PASS** — exit 0 (API parity; not UI proof) |
-| **REST UI walkthrough on public HTTPS** | **NOT VERIFIED** — preconditions fail on disk; agent cannot run Expo UI |
+| **Pre-checks (repo + env flags, no secret values)** | **PASS** @ operator PASS sync |
+| **Public HTTPS API smoke (paced script)** | **PASS** — exit 0 (`1daf006` / `a4763c8`) |
+| **REST UI walkthrough on public HTTPS** | **PASS** (operator-verified @ PASS sync) |
 
-**Overall UI walkthrough:** **BLOCKED** until operator completes env + manual UI matrix below.
+**Overall:** **PASS** (staging / manual / public HTTPS only) — not production, commercial/payment, or full device matrix.
 
 **Does not certify:** production launch, commercial/payment readiness, full EN-VI device matrix, merchant production onboarding, AI autonomous money actions, or SOS production reliability.
 
 ---
 
-## Pre-checks (2026-05-23)
+## Operator PASS sync (`OPERATOR_PASS_SYNC.1`) — 2026-05-23
 
-| Check | Result |
-|-------|--------|
-| `master` / `origin` | `a4763c8` |
-| `.env.local` tracked | **No** (`.gitignore`) |
-| `EXPO_PUBLIC_REST_API_BASE` → public HTTPS staging | **FAIL** — automated probe: not `https://viona-api-staging-eu.fly.dev` (host not logged) |
-| `EXPO_PUBLIC_DEV_REST_JWT` empty/removed | **FAIL** — automated probe: non-zero length on disk (value not logged) |
-| `VIONA_PILOT_PIN` present (length only) | **PASS** (≥ 6 chars) |
-| Secrets printed in this pack | **No** |
+**Operator attestation:** Manual UI checklist completed on Expo pointed at public HTTPS staging API.
 
-**Required operator env (do not commit `.env.local`):**
+| Requirement | Status |
+|-------------|--------|
+| `EXPO_PUBLIC_REST_API_BASE` → `https://viona-api-staging-eu.fly.dev` | **PASS** (operator-confirmed; automated probe: match) |
+| `EXPO_PUBLIC_DEV_REST_JWT` empty | **PASS** (operator-confirmed; automated probe: length 0) |
+| `.env.local` not committed | **PASS** |
+| Expo restart | **PASS** — `npx expo start -c` (operator-confirmed) |
+| REST login via UI PIN (not dev JWT) | **PASS** (operator-confirmed) |
+| Secrets printed | **No** |
 
-```text
-EXPO_PUBLIC_REST_API_BASE=https://viona-api-staging-eu.fly.dev
-EXPO_PUBLIC_DEV_REST_JWT=   # empty or remove key
-```
+### Operator-verified UI results
 
-Then: `npx expo start -c`
+| # | Check | Result |
+|---|--------|--------|
+| 1 | User A UI login via public HTTPS API | **PASS** |
+| 2 | User A logout / session clear | **PASS** |
+| 3 | User A fresh login again | **PASS** |
+| 4 | User B isolation (no User A private overlap) | **PASS** |
+| 5 | Merchant M login + inbox / Business M visible | **PASS** |
+| 6 | Merchant confirm UI | **PASS** |
+| 7 | Merchant decline UI | **PASS** |
+| 8 | Merchant N isolation (no Business M rows/actions) | **PASS** |
+| 9 | Forbidden commercial wording check | **PASS** — not observed on Local surfaces |
+| 10 | No payment captured | **PASS** |
+| 11 | Local `REQUEST_ONLY_NO_CHARGE` | **PASS** |
+| 12 | `walletPhase` NONE | **PASS** |
 
-Prior **local-dev** strict UI proof (`docs/runbooks/VIONA_AUTH_REST_UI_LOGIN_BRIDGE_STAGING_RETEST.md` @ `127.0.0.1`) does **not** substitute for public HTTPS UI proof.
+Forbidden terms scanned (not observed): paid booking, guaranteed booking, payout, withdraw, escrow, settlement, cash-out.
 
 ---
 
-## API parity (automated — not UI)
+## Pre-checks — initial pack (`WALKTHROUGH.1`, historical)
+
+| Check | Result (initial) | Result (PASS sync) |
+|-------|------------------|---------------------|
+| `master` / `origin` | `a4763c8` | `d8c8b26` |
+| Public HTTPS base on disk | **FAIL** | **PASS** |
+| Dev JWT empty on disk | **FAIL** | **PASS** |
+
+Prior **local-dev** strict UI proof (`docs/runbooks/VIONA_AUTH_REST_UI_LOGIN_BRIDGE_STAGING_RETEST.md` @ `127.0.0.1`) does **not** substitute for this public HTTPS UI proof.
+
+---
+
+## API parity (automated)
 
 Command: `node scripts/smoke-public-staging-api.mjs https://viona-api-staging-eu.fly.dev`
 
@@ -60,61 +82,56 @@ Command: `node scripts/smoke-public-staging-api.mjs https://viona-api-staging-eu
 | `walletMode` | `REQUEST_ONLY_NO_CHARGE` |
 | `walletPhase` | `NONE` |
 | `paymentCaptured` | `false` |
-| Transaction / Wallet delta | **0** (not queried; no-charge path) |
 
 ---
 
-## UI walkthrough matrix (operator — not verified in this pack)
-
-Mark **PASS** only after manual UI on public HTTPS base with dev JWT cleared.
+## UI walkthrough matrix (operator-verified @ PASS sync)
 
 ### A. User A
 
 | Step | Status |
 |------|--------|
-| Login via UI phone + PIN | **NOT VERIFIED** |
-| REST login uses public HTTPS API | **NOT VERIFIED** |
-| Local My Requests / status visible | **NOT VERIFIED** |
-| Logout / session clear | **NOT VERIFIED** |
-| Fresh login again | **NOT VERIFIED** |
+| Login via UI phone + PIN | **PASS** |
+| REST login uses public HTTPS API | **PASS** |
+| Local My Requests / status visible | **PASS** |
+| Logout / session clear | **PASS** |
+| Fresh login again | **PASS** |
 
 ### B. User B
 
 | Step | Status |
 |------|--------|
-| Login via UI phone + PIN | **NOT VERIFIED** |
-| No User A private overlap | **NOT VERIFIED** |
-| Logout | **NOT VERIFIED** |
+| Login via UI phone + PIN | **PASS** |
+| No User A private overlap | **PASS** |
+| Logout | **PASS** |
 
 ### C. Merchant M
 
 | Step | Status |
 |------|--------|
-| Login + merchant REST session | **NOT VERIFIED** |
-| Local merchant inbox / Business M | **NOT VERIFIED** |
-| Confirm one request (UI) | **NOT VERIFIED** |
-| Decline one request (UI) | **NOT VERIFIED** |
-| Logout | **NOT VERIFIED** |
+| Login + merchant REST session | **PASS** |
+| Local merchant inbox / Business M | **PASS** |
+| Confirm one request (UI) | **PASS** |
+| Decline one request (UI) | **PASS** |
+| Logout | **PASS** |
 
 ### D. Merchant N
 
 | Step | Status |
 |------|--------|
-| Login | **NOT VERIFIED** |
-| Inbox: no Business M rows/actions | **NOT VERIFIED** |
-| Ownership isolation | **NOT VERIFIED** |
-| Logout | **NOT VERIFIED** |
+| Login | **PASS** |
+| Inbox: no Business M rows/actions | **PASS** |
+| Ownership isolation | **PASS** |
+| Logout | **PASS** |
 
 ### Safety proof (UI)
 
 | Check | Status |
 |-------|--------|
-| No payment captured | **NOT VERIFIED** (API smoke: no charge) |
-| `REQUEST_ONLY_NO_CHARGE` | **PASS** (API smoke only) |
-| `walletPhase` NONE | **PASS** (API smoke only) |
-| Forbidden commercial wording not on Local surfaces | **NOT VERIFIED** |
-
-Forbidden terms to scan: paid booking, guaranteed booking, payout, withdraw, escrow, settlement, cash-out.
+| No payment captured | **PASS** |
+| `REQUEST_ONLY_NO_CHARGE` | **PASS** |
+| `walletPhase` NONE | **PASS** |
+| Forbidden commercial wording | **PASS** |
 
 ---
 
@@ -143,7 +160,6 @@ Forbidden terms to scan: paid booking, guaranteed booking, payout, withdraw, esc
 
 ## Next required action
 
-1. Operator: set public HTTPS `EXPO_PUBLIC_REST_API_BASE`; clear `EXPO_PUBLIC_DEV_REST_JWT`; save `.env.local` (not committed).
-2. `npx expo start -c`
-3. Execute UI matrix above; update this doc with **PASS** per verified row (or open `PUBLIC_HTTPS_REST_UI_WALKTHROUGH.FOLLOWUP.1`).
-4. Do not start full device matrix until public HTTPS UI proof is **PASS**.
+1. Optional: EN-VI / multi-device matrix on public HTTPS (separate pack; out of scope here).
+2. Re-run paced HTTPS smoke after Fly deploys if API changes.
+3. Keep `.env.local` saved with public base and empty dev JWT for future Metro restarts (not committed).
