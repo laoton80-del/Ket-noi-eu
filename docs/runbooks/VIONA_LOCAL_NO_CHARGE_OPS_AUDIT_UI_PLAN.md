@@ -1,0 +1,241 @@
+# VIONA Local no-charge — Ops Audit UI plan
+
+**Pack:** `VIONA.LOCAL.NO_CHARGE.OPS_AUDIT_UI_PLAN.1`
+**Master / origin baseline:** `40c2711` — `docs(kernel): sync controlled pilot session 1 pass`
+**Date:** 2026-05-23
+**Classification:** Planning only — **no runtime shipped by this pack**
+**Pilot context:** Controlled no-charge pilot session 1 **API PASS + UI PASS + no pause** @ `4c26830`
+
+**Related:**
+
+| Doc | Role |
+|-----|------|
+| `VIONA_LOCAL_NO_CHARGE_CONTROLLED_PILOT_OPS_PLAYBOOK.md` | Daily pilot ops |
+| `VIONA_LOCAL_NO_CHARGE_CONTROLLED_PILOT_SESSION_1.md` | Session 1 evidence |
+| `VIONA_LOCAL_NO_CHARGE_PILOT_SIGNOFF.md` | Pilot readiness sign-off |
+| `VIONA_PUBLIC_STAGING_API_DEPLOY_EVIDENCE.md` | Public HTTPS smoke |
+| `VIONA_PROJECT_KERNEL.md` | Kernel gates / money law |
+
+---
+
+## 1. Purpose
+
+| Goal | Detail |
+|------|--------|
+| **Primary** | Give **operators** a **safe, read-only** view of Local pilot activity to support controlled no-charge pilot sessions 2+ |
+| **Triage** | Improve issue triage with **privacy-safe** evidence (request ids, status, wallet safety flags, tenant boundaries) |
+| **Evidence links** | Surface links to smoke output, session runbooks, and audit trails — not raw secrets |
+| **Explicitly not** | A production admin console, payment/settlement dashboard, merchant self-service back office, or commercial readiness claim |
+
+**Money law (unchanged):** `REQUEST_ONLY_NO_CHARGE`; `walletPhase` **NONE**; **confirmed does not mean paid**; no payment captured.
+
+**Whole VIONA:** pre-commercial / staging-pilot foundation. **Global Active / full commercial:** not yet.
+
+---
+
+## 2. Read-only first scope
+
+### Ops UI may display (allowlist)
+
+| Field / concept | Source (planned) | Notes |
+|-----------------|------------------|-------|
+| Request id | List / detail API | UUID only; copy-friendly |
+| Created / updated time | List / detail | ISO timestamps |
+| Status + safe status label | List / detail | No “paid” implication |
+| `walletMode` / `walletPhase` | List / detail / audit | Must show `REQUEST_ONLY_NO_CHARGE` + `NONE` chips when applicable |
+| User role label | Operator context | e.g. “Pilot User A” — **label**, not phone/PIN |
+| Merchant / business label | List / detail | Business **name** + id; no owner PII |
+| Confirm / decline outcome | Status + audit events | Merchant ACK only — not settlement |
+| Tenant isolation indicators | Cross-check panels | e.g. “Business M rows absent for Merchant N lens” |
+| No-charge safety flags | API `safety` blocks + UI chips | `readOnly`, `noPaymentCaptured`, `requestOnlyNoCharge` |
+| Smoke / session summary links | Static runbook URLs + last smoke JSON path hint | No JWT/PIN in UI |
+
+### Ops UI must not mutate (forbidden in v1)
+
+| Domain | Rationale |
+|--------|-----------|
+| Payment capture / charge | Out of pilot money law |
+| Wallet hold / debit / release / refund | Blocked until finance pack |
+| Settlement / payout / escrow / cash-out | Commercial — not in scope |
+| Merchant balance / ledger | Not exposed in Local list DTOs today |
+| Request status (confirm / reject / cancel) | User/merchant flows only; **ops cancel** exists server-side but is **excluded** from v1 UI unless `OPS_CANCEL` pack approved |
+| AI / SOS actions | Separate safety domains |
+
+**Later (explicit pack only):** `POST /api/local/ops/requests/:id/cancel` — super-admin; **not** in read-only v1 UI.
+
+---
+
+## 3. Safety rules (non-negotiable)
+
+| Rule | UI enforcement |
+|------|----------------|
+| `REQUEST_ONLY_NO_CHARGE` | Persistent banner + per-row chip |
+| `walletPhase` **NONE** | Chip; warn if non-`NONE` |
+| No payment captured | Chip from API `safety.noPaymentCaptured` |
+| **Confirmed ≠ paid** | Copy on every `CONFIRMED` row |
+| No cash-out / payout / escrow wording | Copy lint checklist; forbidden-term scan in ops playbook |
+| No secrets | Never render JWT, PIN, `EXPO_PUBLIC_DEV_REST_JWT`, webhook secrets |
+| Minimal PII | Prefer ids + role labels; mask phone/email; full requester display only if super-admin detail pack approves |
+
+**Operator attestation:** Ops Audit UI evidence rows are **privacy-safe** (no PIN, no tokens) — same standard as pilot session logs.
+
+---
+
+## 4. Proposed screens and components
+
+### Screen
+
+| Name | Route (proposed) | Access |
+|------|------------------|--------|
+| `LocalOpsAuditScreen` | `LocalOpsAudit` (internal nav only) | Operator / super-admin gated |
+
+### Components (read-only)
+
+| Component | Function |
+|-----------|----------|
+| **Request table / card list** | Paginated Local requests with status, wallet chips, business label |
+| **Request detail drawer** | Id, timeline summary, confirm/decline audit hints |
+| **Safety status chips** | `REQUEST_ONLY_NO_CHARGE`, `walletPhase NONE`, `noPaymentCaptured` |
+| **Tenant isolation panel** | Compare expected pilot boundaries (docs-driven checklist + optional dual-lens fetch) |
+| **Pilot session evidence panel** | Links: session 1 runbook, device matrix, REST UI walkthrough |
+| **Smoke status panel** | Last smoke stage summary (manual paste or CI artifact URL — no secrets) |
+| **Pause checklist panel** | Mirrors ops playbook pause criteria (read-only checklist) |
+
+**UX standard:**
+
+- Dense admin/operator layout acceptable (not Home Premium App Tile standard).
+- Safety copy **always visible** (sticky header).
+- Mobile-readable; **desktop/tablet priority** for session 2+ ops.
+- EN primary; VI labels optional later (reuse safe status label maps).
+
+**Out of scope for shell:** Tourism wallet, Firebase VIP, B2B voice, `AdminDashboard` finance tiles.
+
+---
+
+## 5. Access model
+
+| Layer | v1 policy |
+|-------|-----------|
+| **Audience** | Dev / operator **internal builds only** |
+| **Public users** | **No** route registration in external pilot builds |
+| **Merchants** | **No** ops audit access in v1 (merchant inbox remains separate) |
+| **Server role** | `GET /api/local/ops/*` requires **super-admin** (`Role.ADMIN` + `superAdminMiddleware`) |
+| **Client gate** | Follow `adminDebugGate` pattern: `EXPO_PUBLIC_ENABLE_ADMIN_DEBUG=1` + dev-only; no client PIN backdoor in release |
+| **Auth** | REST JWT via operator login (staging super-admin account) — **not** dev JWT bypass for evidence |
+| **Tenant safety** | Cross-tenant list only via **ops** endpoints; never merge User A token with Merchant M inbox in one conflated “god view” without server enforcement |
+
+**Provisioning note:** Staging super-admin account must exist and be roster-approved; credentials never in git.
+
+---
+
+## 6. Data requirements
+
+### Existing API endpoints (usable read-only today)
+
+| Method | Path | Auth | Scope | Use in Ops Audit UI |
+|--------|------|------|-------|---------------------|
+| `GET` | `/health` | None | Liveness | Smoke status panel |
+| `GET` | `/api/local/requests` | Bearer (requester) | Own requests only | **Not** ops-wide; optional “impersonation lens” doc-only in session 2 — prefer ops list |
+| `GET` | `/api/local/requests/:id/timeline` | Bearer (requester) | Own request timeline | **Not** ops-wide without ownership |
+| `GET` | `/api/local/merchant/requests` | Bearer (merchant) | Owned businesses inbox | Per-merchant lens only; isolation checks |
+| `GET` | `/api/local/ops/requests/:id/audit-events` | Bearer + **super-admin** | Audit trail for one id | Detail drawer — **requires known request id** |
+| `POST` | `/api/local/ops/requests/:id/cancel` | Super-admin | Mutation | **Excluded** from v1 UI |
+
+**Smoke script (operator, not UI):** `node scripts/smoke-public-staging-api.mjs https://viona-api-staging-eu.fly.dev` — validates personas; output is privacy-safe stage JSON (no pin).
+
+### Missing safe read-only endpoints (proposed — future pack)
+
+| Method | Path | Purpose | Constraints |
+|--------|------|---------|-------------|
+| `GET` | `/api/local/ops/requests` | Paginated cross-pilot list | `superAdminMiddleware`; cap limit ≤100; filter by status/date; **no** phone/email; include `safety` block |
+| `GET` | `/api/local/ops/requests/:id` | Single request detail | Same role gate; redacted requester (id + optional displayName policy); wallet fields + business label |
+
+**No DB migration in this plan.** Implement via existing Prisma models + select projections (mirror `localUserRequestListService` / `localMerchantRequestInboxService` field discipline).
+
+**No direct client DB access.** All data via REST on `EXPO_PUBLIC_REST_API_BASE`.
+
+### Client service (future)
+
+| Module (proposed) | Role |
+|-------------------|------|
+| `localOpsAuditApi.ts` | Typed fetch for ops list + audit-events |
+| Reuse `restApiFetchJson` | Same envelope as Local user/merchant APIs |
+
+---
+
+## 7. UX and copy standards
+
+| Element | Standard |
+|---------|----------|
+| Page title | “Local pilot ops audit (read-only)” |
+| Subtitle | “Staging · no-charge · not production” |
+| Confirmed rows | Tooltip: “Merchant confirmed — not a payment” |
+| Empty state | Link to smoke runbook if no rows |
+| Error state | No raw stack traces; no response bodies with tokens |
+| Refresh | Manual refresh only in v1 (no aggressive polling — respect Fly 5 req/s; use 500ms+ pacing if batching) |
+
+---
+
+## 8. Implementation packs (small, sequential)
+
+| Order | Pack ID | Deliverable | Depends on |
+|-------|---------|-------------|------------|
+| 1 | `OPS_AUDIT_UI.READONLY_API_AUDIT.1` | `GET /api/local/ops/requests` (+ optional `GET .../:id`); tests; redaction review | None (server-only) |
+| 2 | `OPS_AUDIT_UI.SCREEN_SHELL.1` | `LocalOpsAuditScreen` + components; internal nav gate; read-only wiring to ops list + audit-events | Pack 1 |
+| 3 | `OPS_AUDIT_UI.PUBLIC_HTTPS_SMOKE.1` | Extend or companion script: ops list + audit-events smoke on staging HTTPS; runbook evidence row | Pack 1 |
+| 4 | `OPS_AUDIT_UI.PILOT_SESSION_2_USE.1` | Ops playbook session 2 checklist includes Ops Audit UI steps; privacy-safe session log columns | Packs 2–3 |
+
+**This plan pack (`OPS_AUDIT_UI_PLAN.1`):** docs only — no app or API changes.
+
+---
+
+## 9. Non-goals
+
+- Not a production admin console or SLA-backed ops tool
+- Not commercial / payment / settlement / payout readiness
+- Not merchant production onboarding at scale
+- Not AI autonomous actions or SOS production reliability certification
+- Not native store certification unless separately tested
+- Not Global Active / full commercial VIONA mode
+- Not wallet ledger, Transaction deltas, or Firebase VIP bridge UI
+- Not replacing paced public HTTPS smoke or manual UI walkthrough for pilot sign-off
+
+---
+
+## 10. Pilot session 2 operator preview (after packs 1–3)
+
+When implemented, session 2 **optional** ops audit steps:
+
+1. Login as staging super-admin (roster-approved).
+2. Open `LocalOpsAudit` (internal build).
+3. Verify banner: `REQUEST_ONLY_NO_CHARGE` / `walletPhase NONE`.
+4. Confirm list shows recent pilot requests (ids only in session log).
+5. Open one request → audit-events drawer → `noWalletAction: true` on events.
+6. Cross-check isolation doc labels (User B / Merchant N) — no cross-tenant rows.
+7. Record PASS/FAIL in session log (no secrets).
+
+---
+
+## 11. Validation (for future implementation packs)
+
+| Check | When |
+|-------|------|
+| `git diff --check` | Every commit |
+| `npx tsc --noEmit` | UI/API packs |
+| `npm run lint` | UI/API packs |
+| `npm run smoke` | UI/API packs |
+| Ops HTTPS smoke | Pack 3 |
+| Forbidden commercial wording scan | Pack 4 session log |
+
+---
+
+## 12. Acceptance criteria (plan only)
+
+| # | Criterion |
+|---|-----------|
+| 1 | Plan approved by operator lead |
+| 2 | Finance sign-off **not** required (read-only, no money mutation) |
+| 3 | Super-admin staging account provisioned before Pack 1 |
+| 4 | Pack 1 merged before Pack 2 UI |
+
+**Plan acceptance for `OPS_AUDIT_UI_PLAN.1`:** this document merged @ kernel pointer; no runtime diff.

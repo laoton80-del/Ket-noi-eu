@@ -178,7 +178,7 @@ Staging DB remains source of truth; rollback is **access/config**, not data dest
 | Priority | Item |
 |----------|------|
 | 1 | Aggregate **pilot session evidence** (privacy-safe logs per §4) |
-| 2 | Ops audit UI (internal read-only) |
+| 2 | Ops audit UI (internal read-only) — plan: `VIONA_LOCAL_NO_CHARGE_OPS_AUDIT_UI_PLAN.md` |
 | 3 | Optional native iOS/Android spot-check on public HTTPS |
 | 4 | Refine support/incident playbook from real issues |
 | 5 | **Locked:** finance-approved payment/wallet ledger, settlement, payout — separate architecture packs only |
@@ -203,3 +203,4 @@ Staging DB remains source of truth; rollback is **access/config**, not data dest
 | Sign-off | `VIONA_LOCAL_NO_CHARGE_PILOT_SIGNOFF.md` |
 | Deploy evidence | `VIONA_PUBLIC_STAGING_API_DEPLOY_EVIDENCE.md` |
 | Kernel | `VIONA_PROJECT_KERNEL.md` §6 |
+| Ops audit UI plan | `VIONA_LOCAL_NO_CHARGE_OPS_AUDIT_UI_PLAN.md` |

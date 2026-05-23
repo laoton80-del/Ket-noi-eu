@@ -247,9 +247,13 @@ Known Local lifecycle milestones:
 
 1. Pilot session 2+ per `VIONA_LOCAL_NO_CHARGE_CONTROLLED_PILOT_OPS_PLAYBOOK.md`
 2. Optional native iOS/Android spot-check
-3. Ops audit UI (internal)
+3. Ops audit UI (internal) — **planned** @ `VIONA_LOCAL_NO_CHARGE_OPS_AUDIT_UI_PLAN.md` (`OPS_AUDIT_UI_PLAN.1`)
 4. Support/incident playbook refinement
 5. **No** payment/commercial packs without finance approval
+
+### Kernel pointer (`KERNEL.LOCAL_NO_CHARGE_OPS_AUDIT_UI_PLAN.1`) — `40c2711`
+
+**Ops Audit UI:** planning doc only — `docs/runbooks/VIONA_LOCAL_NO_CHARGE_OPS_AUDIT_UI_PLAN.md`. Implementation packs: `READONLY_API_AUDIT.1` → `SCREEN_SHELL.1` → `PUBLIC_HTTPS_SMOKE.1` → `PILOT_SESSION_2_USE.1`. No runtime in plan pack.
 
 ### Kernel sync (`KERNEL.LOCAL_NO_CHARGE_PILOT_SIGNOFF_SYNC.1`) — `5a714a8`
 
@@ -342,7 +346,7 @@ Current correct Local backend order:
 5b. ~~REST UI login bridge strict operator proof~~ — **PASS** @ `3cfea5e` (phone + PIN; dev JWT not required per operator attestation)
 5c. ~~Public HTTPS deploy + smoke + REST UI + device matrix + pilot sign-off~~ — **READY** @ `5a714a8` (`READY_FOR_CONTROLLED_NO_CHARGE_PILOT`)
 6. ~~Controlled pilot session 1 (API + UI)~~ — **PASS** @ `4c26830` — no pause
-6b. **Next:** pilot session 2+; optional native spot-check; ops audit UI
+6b. **Next:** pilot session 2+; optional native spot-check; ops audit UI — see `VIONA_LOCAL_NO_CHARGE_OPS_AUDIT_UI_PLAN.md`
 7. AI Local Copilot read-only — **blocked** until read-only policy pack
 8. Human-confirmed AI actions — **blocked**
 9. Wallet hold/debit/release/settlement — **blocked** until CFO/finance-approved Local wallet policy pack; Local commercial pilot **not** started
