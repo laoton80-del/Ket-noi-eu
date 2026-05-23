@@ -299,6 +299,39 @@ Complete on a device where `npx expo start -c` loads Home without native-module 
 
 **Do not claim native secret-tap PASS until §11.3 is completed on a working dev client.**
 
+### 11.7 Native secret-tap attestation retry (`NATIVE_SECRET_TAP_ATTESTATION.RETRY.1`) — 2026-05-23
+
+| Field | Result |
+|-------|--------|
+| **Device / platform** | Android emulator `emulator-5554` (`Small_Phone` AVD, 720×1280) |
+| **Device connected** | **PASS** (initial); **FAIL** at end of session (`adb` reported device offline after hung `uiautomator` calls) |
+| **App package installed** | **PASS** — `com.ketnoiglobal.app` |
+| **Metro / native launch** | **PASS** — `npx expo start -c --android`; `Android Bundled` (5141 modules); logcat `Running "main"` after `cmd package compile -m speed` (first cold start had long Sentry/DEX verification) |
+| **Admin debug flags** | **PASS** — Metro session overrides only (not committed): `EXPO_PUBLIC_ENABLE_ADMIN_DEBUG=1`, `EXPO_PUBLIC_FEATURE_ADMIN_DEMO_METRICS=true`, `EXPO_PUBLIC_FEATURE_OMNI_DEMO=true`, `EXPO_PUBLIC_ADMIN_PIN` length ≥ 12 (session-only label; value not logged) |
+| **REST base / dev JWT** | **PASS** — staging HTTPS base; `EXPO_PUBLIC_DEV_REST_JWT` empty |
+| **Admin login (`Role.ADMIN`, API)** | **PASS** — `POST /api/auth/login` for ops roster account (credentials not logged) |
+| **Public HTTPS smoke** | **PASS** — `node scripts/smoke-public-staging-api.mjs https://viona-api-staging-eu.fly.dev` exit 0; `ops:listAfterReads` HTTP 200 |
+
+| Check | Result | Notes |
+|-------|--------|-------|
+| Home loads | **PARTIAL** | JS runtime reached (`Running "main"`); full Home UI not confirmed (uiautomator dump timed out) |
+| Local tab — no Ops Audit | **NOT RUN** | UI automation blocked |
+| Secret-tap ×5 → PIN modal | **FAIL** | Could not confirm PIN modal in UI (uiautomator `ETIMEDOUT` / empty hierarchy earlier) |
+| PIN → Grand Admin Dashboard | **NOT RUN** | |
+| Local Ops Audit row | **NOT RUN** | |
+| List / detail (HTTPS) | **NOT RUN** (UI) | API corroboration **PASS** via smoke script only |
+| Safety chips (4) | **NOT RUN** | |
+| Limitation banner (4 themes) | **NOT RUN** | |
+| Mutation controls absent | **NOT RUN** | |
+| Consumer nav cannot reach Ops Audit | **NOT RUN** | |
+| Redaction (visible UI) | **NOT RUN** | |
+
+**Issues found:** Android dev client build from §11.6 loads Metro JS, but **operator UI walkthrough could not be completed** on this emulator pass: `uiautomator` hangs/timeouts, `adb` went offline, AsyncStorage seed via `run-as`/`sqlite3` flaky after `force-stop`. **Not** an Ops Audit API defect — staging ops list/detail **PASS** on HTTPS.
+
+**Pause decision:** **No** — does not invalidate §5 Expo web, §9 user/merchant ops, or §11.6 build unblock.
+
+**Do not claim native secret-tap PASS until §11.3 checklist is completed on a stable device with confirmed Home + PIN modal + Ops Audit screen UI.**
+
 ---
 
 ## 12. Validation (docs commits)
