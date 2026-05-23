@@ -156,13 +156,17 @@
 
 **Staging HTTPS smoke (`READONLY_API_HTTPS_SMOKE.1`):** **BLOCKED** @ `fe117ea` (2026-05-23)
 
+**Re-check (`READONLY_API_HTTPS_SMOKE.PASS_SYNC.1`)** @ `13c4b18` (2026-05-23): **still BLOCKED**
+
 | Check | Result |
 |-------|--------|
 | `GET /health` @ public HTTPS | **PASS** |
 | Existing pilot personas smoke | **PASS** |
-| `VIONA_PILOT_OPS_ADMIN_PHONE` in operator `.env.local` | **MISSING** (not set; value never logged) |
-| Staging DB `Role.ADMIN` user count (`euqbfanilcssjiwwtcby`) | **0** — no roster-approved super-admin on staging |
-| Ops list/detail HTTPS stages | **SKIP** — smoke script ready; re-run after unblock |
+| `VIONA_PILOT_OPS_ADMIN_PHONE` in operator `.env.local` | **MISSING** — key not present in `.env.local` (value never logged) |
+| Staging DB `Role.ADMIN` user count (`euqbfanilcssjiwwtcby`) | **0** on `DATABASE_URL` used by smoke |
+| Ops list/detail HTTPS stages | **SKIP** — re-run after both gates PASS |
+| `EXPO_PUBLIC_REST_API_BASE` | Staging HTTPS host (no secret printed) |
+| `EXPO_PUBLIC_DEV_REST_JWT` | **EMPTY** |
 
 **Unblock (ops, not engineering inventing accounts):**
 

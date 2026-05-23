@@ -253,7 +253,7 @@ Known Local lifecycle milestones:
 
 ### Kernel pointer (`KERNEL.LOCAL_NO_CHARGE_OPS_AUDIT_UI_PLAN.1`) — `40c2711`
 
-**Ops Audit UI:** `docs/runbooks/VIONA_LOCAL_NO_CHARGE_OPS_AUDIT_UI_PLAN.md`. **`READONLY_API_AUDIT.1` implemented** — `GET /api/local/ops/requests`, `GET /api/local/ops/requests/:id` (super-admin). **`READONLY_API_HTTPS_SMOKE.1` BLOCKED** — staging has 0 `Role.ADMIN`; operator `VIONA_PILOT_OPS_ADMIN_PHONE` unset. Next: provision roster ADMIN → re-run HTTPS smoke → `SCREEN_SHELL.1`.
+**Ops Audit UI:** `docs/runbooks/VIONA_LOCAL_NO_CHARGE_OPS_AUDIT_UI_PLAN.md`. **`READONLY_API_AUDIT.1` implemented** — `GET /api/local/ops/requests`, `GET /api/local/ops/requests/:id` (super-admin). **`READONLY_API_HTTPS_SMOKE` still BLOCKED** @ `PASS_SYNC.1` — `Role.ADMIN` count 0 on staging `DATABASE_URL`; `VIONA_PILOT_OPS_ADMIN_PHONE` not in `.env.local`. Next: add env key + verify ADMIN on staging DB → re-run smoke → `SCREEN_SHELL.1`.
 
 ### Kernel sync (`KERNEL.LOCAL_NO_CHARGE_PILOT_SIGNOFF_SYNC.1`) — `5a714a8`
 
