@@ -53,6 +53,18 @@
 
 ---
 
+## Pilot readiness review after sessions 1–3 (`PILOT_READINESS_REVIEW_AFTER_SESSIONS_1_3.1`)
+
+| Item | Value |
+|------|--------|
+| **Baseline** | `2841d3d` |
+| **Review doc** | `docs/runbooks/VIONA_LOCAL_NO_CHARGE_PILOT_READINESS_REVIEW_AFTER_SESSIONS_1_3.md` |
+| **Verdict** | Session 4+ controlled no-charge pilot **may proceed** (Option A) — same scope, limited roster, ops audit active, pause criteria unchanged |
+| **Not approved** | Production, commercial/payment, Global Active, native production confidence |
+| **Native** | Secret-tap/PIN **NOT COMPLETED** — do not claim native PASS |
+
+---
+
 ## 1. Executive summary
 
 The **Local request-only / no-charge** pilot lane on VIONA is **automated QA-ready** on `master`: schema, APIs, merchant/user UI, EN/VI safe copy, VI runtime status labels, composed E2E runner, staging DB verification runbook, and manual device checklist are in place.

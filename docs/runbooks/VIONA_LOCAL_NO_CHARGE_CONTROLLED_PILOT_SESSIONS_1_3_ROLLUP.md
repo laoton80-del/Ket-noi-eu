@@ -4,7 +4,8 @@
 **Playbook:** `docs/runbooks/VIONA_LOCAL_NO_CHARGE_CONTROLLED_PILOT_OPS_PLAYBOOK.md`
 **Ops Audit UI plan:** `docs/runbooks/VIONA_LOCAL_NO_CHARGE_OPS_AUDIT_UI_PLAN.md`
 **Handoff:** `docs/handoff/VIONA_LOCAL_NO_CHARGE_PILOT_READINESS_HANDOFF_1.md`
-**Current HEAD:** `1d449ac` — `docs(local): record controlled pilot session 3`
+**Current HEAD:** `2841d3d` — `docs(local): roll up controlled pilot sessions 1-3`
+**Readiness review:** `docs/runbooks/VIONA_LOCAL_NO_CHARGE_PILOT_READINESS_REVIEW_AFTER_SESSIONS_1_3.md`
 **Rollup date (UTC):** 2026-05-24
 
 ---
@@ -154,7 +155,7 @@ node scripts/smoke-public-staging-api.mjs https://viona-api-staging-eu.fly.dev
 | 1 | **Session 4+** controlled pilot — same money law; extend evidence table in new session doc |
 | 2 | **Native manual attestation** — session 3 §7 on stable device (`com.ketnoiglobal.app`); do not claim PASS until done |
 | 3 | **Ops incident / support refinement** — playbook §7–§8 from real operator issues |
-| 4 | **Pilot readiness review** — sign-off + handoff sync if scope expands |
+| 4 | **Pilot readiness review** — `VIONA_LOCAL_NO_CHARGE_PILOT_READINESS_REVIEW_AFTER_SESSIONS_1_3.md` (post sessions 1–3) |
 | 5 | **Locked** — payment/wallet/commercial packs only with explicit finance approval |
 
 ---
@@ -169,4 +170,5 @@ node scripts/smoke-public-staging-api.mjs https://viona-api-staging-eu.fly.dev
 | `VIONA_LOCAL_NO_CHARGE_CONTROLLED_PILOT_OPS_PLAYBOOK.md` | Daily ops + pause + session index |
 | `VIONA_LOCAL_NO_CHARGE_OPS_AUDIT_UI_PLAN.md` | Ops Audit UI scope + packs |
 | `VIONA_LOCAL_NO_CHARGE_PILOT_SIGNOFF.md` | Readiness sign-off |
+| `VIONA_LOCAL_NO_CHARGE_PILOT_READINESS_REVIEW_AFTER_SESSIONS_1_3.md` | Post sessions 1–3 readiness decision |
 | `VIONA_PROJECT_KERNEL.md` | Kernel money law + pilot pointers |
