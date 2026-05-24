@@ -96,6 +96,7 @@
     "creditsHintShort": "Use VIO Credits inside VIONA services.",
     "creditsFootnote": "In-app units only — not cash or bank money.",
     "identityFootnote": "What you entered in-app — not government or legal verification.",
+    "settingsTileSub": "In-app preference — pilot only",
     "shortcut": {
       "store": {
         "title": "Virtual store",

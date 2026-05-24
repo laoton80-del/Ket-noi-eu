@@ -56,8 +56,8 @@ Ratings vs **Premium App Tiles — Universe Standard**.
 | **Travel** | **YELLOW** | Strong `TravelGlassCard`; 4-col @ 1024+ tight; glow busy on web | Tune glow multipliers; verify 3-col @ 768 | LOW | `WAVE_3B.TRAVEL_VISUAL_WOW.1` |
 | **Academy** | **YELLOW** | Violet canvas OK; reuses account-neon stack; module cards taller than compact ref | Align to compact tile height (~108–120px) | LOW | `WAVE_3B.ACADEMY_VISUAL_WOW.1` |
 | **Business entry** | **YELLOW** | World card pattern (hero-scale), not compact tile | Pilot chip OK; visual = Home dependency | MEDIUM | With Home pack G |
-| **Account** | **YELLOW** | `AccountNeonGlassPanel` + action grid — closer to wow; still separate token path | Unify accents via shared map; gold pilot strip OK | LOW | `WAVE_3B.ACCOUNT_SOS_VISUAL.1` |
-| **SOS** | **YELLOW** | Magenta semantic present; older gray dial bars vs glass tiles | Hub tiles to shared material; keep disclaimer honest | MEDIUM (safety copy) | `WAVE_3B.ACCOUNT_SOS_VISUAL.1` |
+| **Account** | **YELLOW→GREEN (partial)** | Wave 3B tiles on shortcuts/settings; profile/credits panels retain neon glass | Manual screenshot pass | LOW | Fix pack done |
+| **SOS** | **YELLOW→GREEN (partial)** | Hub on `PremiumAppTile`; type selector + dial CTA unchanged | Manual screenshot pass | LOW | Fix pack done |
 | **LeTan (reference)** | **RED** | Chat rows, legacy banners, wallet-adjacent UI — **not** tile universe | Out of 3B; risk surface only | HIGH if touched | No pack in 3B |
 
 ### Responsive grid vs reference (committed logic)
@@ -192,7 +192,7 @@ Visual wow packs must **not** introduce commercial/payment copy or behavior.
 | **`VIONA.WAVE_3B.LOCAL_VISUAL_WOW_FIX.1`** | **COMPLETE** — compressed hero; clarity block → compact premium tile grids; merged service grid; connected universes → semantic `PremiumAppTile` grid; stronger emerald glass tokens; extra bottom scroll clearance. Screenshots **NOT RUN**. |
 | **`WIONA.WAVE_3B.TRAVEL_VISUAL_WOW.1`** | **COMPLETE** — `TravelScreen` scenario + quick-help tiles → `PremiumAppTile` + `PremiumTileGrid`; pilot pills use cyan Wave 3B tokens. `TravelAppTile` retained for other imports only if unused in hub. Screenshots **NOT RUN**. |
 | **`WIONA.WAVE_3B.ACADEMY_VISUAL_WOW.1`** | **COMPLETE** — `AcademyScreen` module grid → `PremiumAppTile` + `PremiumTileGrid`; violet pilot pills use Wave 3B tokens. Hero/safety panels unchanged. Screenshots **NOT RUN**. |
-| **`WIONA.WAVE_3B.ACCOUNT_SOS_VISUAL_WOW.1`** | **Next** |
+| **`VIONA.WAVE_3B.ACCOUNT_SOS_VISUAL_WOW.1`** | **COMPLETE** — `CaNhanScreen` shortcuts/settings → `PremiumAppTile` grids; `EmergencyHubTile` → `PremiumAppTile` (sos); `EmergencySOSScreen` hub grid + magenta pilot chips. Screenshots **NOT RUN**. |
 
 ---
 
@@ -200,8 +200,8 @@ Visual wow packs must **not** introduce commercial/payment copy or behavior.
 
 | Priority | Action |
 |----------|--------|
-| **1** | **`VIONA.WAVE_3B.ACCOUNT_SOS_VISUAL_WOW.1`** |
-| **2** | Optional manual screenshot pass; Home shell alignment (pack G) later |
+| **1** | Optional manual screenshot pass (Account, SOS, Local at 4 viewports) |
+| **2** | Home shell alignment (pack G) later |
 | **3** | Optional: `git restore` 11 CRLF-noise paths after leadership confirms no lost local work |
 | **4** | Manual screenshot pass (pack I) before external demo |
 

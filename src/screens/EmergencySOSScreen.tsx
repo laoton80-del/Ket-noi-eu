@@ -12,11 +12,17 @@ import {
   StyleSheet,
   Text,
   View,
+  useWindowDimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { EmergencyActionCard } from '../components/emergency/EmergencyActionCard';
 import { EmergencyHubTile } from '../components/emergency/EmergencyHubTile';
 import { emergencyContentColumnStyle, emergencyUiTokens } from '../components/emergency/emergencyUiTokens';
+import { PremiumStatusChip, PremiumTileGrid } from '../components/viona';
+import {
+  premiumTileLayout,
+  resolvePremiumTileGridColumns,
+} from '../design/premiumTileVisualTokens';
 import { useAuth } from '../context/AuthContext';
 import { useTranslation } from '../i18n';
 import type { RootStackParamList } from '../navigation/routes';
@@ -54,8 +60,13 @@ const SOS_PILOT_PILLS = [
 
 export function EmergencySOSScreen() {
   const navigation = useNavigation<Nav>();
+  const { width } = useWindowDimensions();
   const { t } = useTranslation();
   const { user } = useAuth();
+  const hubColumns = useMemo(
+    () => Math.min(resolvePremiumTileGridColumns(width), 2),
+    [width]
+  );
   const [selected, setSelected] = useState<EmergencyType>('general112');
   const [locationStatus, setLocationStatus] = useState<EmergencyLocationStatus | 'loading'>('loading');
   const [locationPlaceLabel, setLocationPlaceLabel] = useState('');
@@ -205,16 +216,7 @@ export function EmergencySOSScreen() {
             </Text>
             <View style={styles.pilotPillRow}>
               {SOS_PILOT_PILLS.map((pill) => (
-                <View
-                  key={pill.key}
-                  style={styles.pilotPill}
-                  accessibilityRole="text"
-                  accessibilityLabel={t(pill.key)}
-                >
-                  <Text style={styles.pilotPillText} numberOfLines={2}>
-                    {t(pill.key)}
-                  </Text>
-                </View>
+                <PremiumStatusChip key={pill.key} accent="magenta" label={t(pill.key)} />
               ))}
             </View>
           </View>
@@ -227,7 +229,12 @@ export function EmergencySOSScreen() {
 
           <Text style={styles.hubGridKicker}>{t('emergencySos.hubGridKicker')}</Text>
 
-          <View style={styles.emergencyHubGrid}>
+          <PremiumTileGrid
+            columns={hubColumns}
+            wrapCells
+            gap={premiumTileLayout.gridGapTight}
+            style={styles.emergencyHubGrid}
+          >
             <EmergencyHubTile
               accent="emergency"
               icon="medkit"
@@ -236,6 +243,7 @@ export function EmergencySOSScreen() {
               statusLabel={t('emergencySos.hubDialBadge')}
               onPress={confirmAndDial}
               accessibilityLabel={t('emergencySos.hubLocalEmergency', { number: emergencyNumber })}
+              testID="sos-tile-dial"
             />
             <EmergencyHubTile
               accent="consular"
@@ -245,6 +253,7 @@ export function EmergencySOSScreen() {
               statusLabel={t('emergencySos.hubEmbassyBadge')}
               onPress={onOpenEmbassySupport}
               accessibilityLabel={t('emergencySos.hubEmbassy')}
+              testID="sos-tile-embassy"
             />
             <EmergencyHubTile
               accent="pilot"
@@ -254,6 +263,7 @@ export function EmergencySOSScreen() {
               statusLabel={t('emergencySos.pilotBadge')}
               onPress={() => navigation.navigate('LiveInterpreter', { guidedEntry: true, scenario: 'general' })}
               accessibilityLabel={t('emergencySos.hubTranslationPilot')}
+              testID="sos-tile-translation"
             />
             <EmergencyHubTile
               accent="family"
@@ -263,8 +273,9 @@ export function EmergencySOSScreen() {
               statusLabel={t('emergencySos.hubFamilyBadge')}
               onPress={onContactFamily}
               accessibilityLabel={t('emergencySos.hubFamily')}
+              testID="sos-tile-family"
             />
-          </View>
+          </PremiumTileGrid>
 
           <View style={styles.grid}>
             {EMERGENCY_TYPES.map((type) => (
@@ -442,10 +453,8 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   emergencyHubGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: emergencyUiTokens.gridGap,
-    justifyContent: 'space-between',
+    width: '100%',
+    marginBottom: 2,
   },
   grid: {
     flexDirection: 'row',

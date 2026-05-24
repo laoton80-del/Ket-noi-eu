@@ -40,12 +40,11 @@ import { useWalletState } from '../state/wallet';
 import { STORAGE_KEYS } from '../storage/storageKeys';
 import { GDPRDashboard } from '../components/compliance/GDPRDashboard';
 import { TrustHistoryCard } from '../components/widgets';
+import { PremiumAppTile, PremiumStatusChip, PremiumTileGrid } from '../components/viona';
 import {
-  VionaActionCard,
-  VionaActionGrid,
-  vionaActionAccentFromHex,
-  type VionaActionAccent,
-} from '../components/viona';
+  premiumTileLayout,
+  resolvePremiumTileGridColumns,
+} from '../design/premiumTileVisualTokens';
 import { VionaBrandLockup } from '../components/viona/VionaBrandLockup';
 import { vionaTokens } from '../design';
 import { theme } from '../theme/theme';
@@ -63,24 +62,6 @@ const constellationImageWebFit =
   Platform.OS === 'web'
     ? ({ objectFit: 'cover' as const, objectPosition: '52% 20%' as const } as const)
     : null;
-
-function accountAccent(hex: string, borderAlpha = 0.48, strongAlpha = 0.64): VionaActionAccent {
-  const base = vionaActionAccentFromHex(hex);
-  return {
-    ...base,
-    border: base.border.replace(/0\.\d+\)$/, `${borderAlpha})`),
-    borderStrong: base.borderStrong.replace(/0\.\d+\)$/, `${strongAlpha})`),
-    fillHover: base.fillHover.replace(/0\.\d+\)$/, '0.08)'),
-    fillPressed: base.fillPressed.replace(/0\.\d+\)$/, '0.1)'),
-  };
-}
-
-const ACC_ACCOUNT_STORE = accountAccent(ft.accentGold);
-const ACC_ACCOUNT_B2B_PRICE = accountAccent(ft.accentCyan);
-/** Strong CTA without full-bleed destructive red — accent border on dark tile (SOS-adjacent language). */
-const ACC_ACCOUNT_B2B_SWITCH = accountAccent(ft.sosNeonMuted, 0.28, 0.46);
-const ACC_ACCOUNT_PARTNER = accountAccent(ft.accentEmerald);
-const ACC_ACCOUNT_WORKSPACE = accountAccent(ft.accentViolet, 0.22, 0.34);
 
 const ACCOUNT_PILOT_PILLS = [
   { key: 'accountHub.pilotPill.profile' as const, icon: 'person-outline' as const },
@@ -208,10 +189,7 @@ export function CaNhanScreen() {
     }),
     []
   );
-  const accountActionGridWidth = useMemo(
-    () => Math.min(Math.max(0, width - theme.spacing.lg * 2), ACCOUNT_CONTENT_MAX_WIDTH),
-    [width]
-  );
+  const accountGridColumns = useMemo(() => resolvePremiumTileGridColumns(width), [width]);
   const workspaceShortcutTitle = useMemo(() => {
     if (!user) return strings.profile.shortcutWorkspaceConsumerTitle;
     if (user.workspaceUiOverride === 'consumer') {
@@ -231,7 +209,6 @@ export function CaNhanScreen() {
   const showWorkspaceShortcut = Boolean(
     user && (user.serverRole === 'BROKER' || isMerchantServerRole(user.serverRole))
   );
-  const accountShortcutCount = showWorkspaceShortcut ? 5 : 4;
   const [diasporaRestrictionOpen, setDiasporaRestrictionOpen] = useState(false);
   const [languageModalOpen, setLanguageModalOpen] = useState(false);
 
@@ -452,17 +429,7 @@ export function CaNhanScreen() {
           </Text>
           <View style={styles.pilotPillRow}>
             {ACCOUNT_PILOT_PILLS.map((pill) => (
-              <View
-                key={pill.key}
-                style={styles.pilotPill}
-                accessibilityRole="text"
-                accessibilityLabel={t(pill.key)}
-              >
-                <Ionicons name={pill.icon} size={12} color={ft.champagne} accessibilityIgnoresInvertColors />
-                <Text style={styles.pilotPillText} numberOfLines={2}>
-                  {t(pill.key)}
-                </Text>
-              </View>
+              <PremiumStatusChip key={pill.key} accent="gold" label={t(pill.key)} />
             ))}
           </View>
         </AccountNeonGlassPanel>
@@ -517,75 +484,83 @@ export function CaNhanScreen() {
 
         <Text style={styles.sectionKicker}>{t('accountHub.sectionShortcuts')}</Text>
 
-        <View style={styles.actionGridSection}>
-          <VionaActionGrid
-            widthHint={accountActionGridWidth}
-            gap={theme.spacing.lg}
-            testID="account-shortcuts-grid"
-            preferTwoColumnQuartet
-            visibleCardCount={accountShortcutCount}
-          >
-            <VionaActionCard
-              iconName="storefront-outline"
-              title={t('accountHub.shortcut.store.title')}
-              subtitle={t('accountHub.shortcut.store.subtitle')}
-              badge={{ label: t('accountHub.shortcut.store.badge'), tone: 'lite' }}
-              accent={ACC_ACCOUNT_STORE}
-              onPress={() => navigation.navigate('Wallet')}
-              accessibilityHint={strings.profile.shortcutStoreA11y}
-              testID="account-action-virtual-store"
+        <PremiumTileGrid
+          columns={accountGridColumns}
+          wrapCells
+          gap={premiumTileLayout.gridGapTight}
+          style={styles.actionGridSection}
+        >
+          <PremiumAppTile
+            variant="account"
+            accent="gold"
+            width="100%"
+            icon="storefront-outline"
+            statusLabel={t('accountHub.shortcut.store.badge')}
+            title={t('accountHub.shortcut.store.title')}
+            subtitle={t('accountHub.shortcut.store.subtitle')}
+            onPress={() => navigation.navigate('Wallet')}
+            accessibilityLabel={`${t('accountHub.shortcut.store.title')}. ${strings.profile.shortcutStoreA11y}`}
+            testID="account-action-virtual-store"
+          />
+          <PremiumAppTile
+            variant="account"
+            accent="cyan"
+            width="100%"
+            icon="pricetags-outline"
+            statusLabel={t('accountHub.shortcut.b2bPricing.badge')}
+            title={t('accountHub.shortcut.b2bPricing.title')}
+            subtitle={t('accountHub.shortcut.b2bPricing.subtitle')}
+            onPress={() => openMerchantRoute('B2BPaywall')}
+            accessibilityLabel={t('accountHub.shortcut.b2bPricing.title')}
+            testID="account-action-b2b-pricing"
+          />
+          <PremiumAppTile
+            variant="account"
+            accent="gold"
+            width="100%"
+            icon="swap-horizontal"
+            statusLabel={t('accountHub.shortcut.b2bSwitch.badge')}
+            title={t('accountHub.shortcut.b2bSwitch.title')}
+            subtitle={t('accountHub.shortcut.b2bSwitch.subtitle', {
+              mode: mode === 'B2B_MODE' ? 'B2B_MODE' : 'B2C_MODE',
+            })}
+            onPress={openB2BWorkspaceSwitch}
+            accessibilityLabel={`${t('accountHub.shortcut.b2bSwitch.title')}. ${strings.profile.shortcutB2bSwitchA11y}`}
+            testID="account-action-b2b-switch"
+          />
+          {showWorkspaceShortcut && user ? (
+            <PremiumAppTile
+              variant="account"
+              accent="violet"
+              width="100%"
+              icon="people-circle-outline"
+              statusLabel={t('accountHub.shortcut.workspace.badge')}
+              title={workspaceShortcutTitle}
+              subtitle={t('accountHub.shortcut.workspace.subtitle')}
+              onPress={() => {
+                if (user.workspaceUiOverride === 'consumer') {
+                  updateProfile({ workspaceUiOverride: null });
+                } else {
+                  updateProfile({ workspaceUiOverride: 'consumer' });
+                }
+              }}
+              accessibilityLabel={`${workspaceShortcutTitle}. ${strings.profile.shortcutWorkspaceA11y}`}
+              testID="account-action-workspace-hat"
             />
-            <VionaActionCard
-              iconName="pricetags-outline"
-              title={t('accountHub.shortcut.b2bPricing.title')}
-              subtitle={t('accountHub.shortcut.b2bPricing.subtitle')}
-              badge={{ label: t('accountHub.shortcut.b2bPricing.badge'), tone: 'demo' }}
-              accent={ACC_ACCOUNT_B2B_PRICE}
-              onPress={() => openMerchantRoute('B2BPaywall')}
-              testID="account-action-b2b-pricing"
-            />
-            <VionaActionCard
-              iconName="swap-horizontal"
-              title={t('accountHub.shortcut.b2bSwitch.title')}
-              subtitle={t('accountHub.shortcut.b2bSwitch.subtitle', {
-                mode: mode === 'B2B_MODE' ? 'B2B_MODE' : 'B2C_MODE',
-              })}
-              badge={{ label: t('accountHub.shortcut.b2bSwitch.badge'), tone: 'pilot' }}
-              accent={ACC_ACCOUNT_B2B_SWITCH}
-              onPress={openB2BWorkspaceSwitch}
-              accessibilityHint={strings.profile.shortcutB2bSwitchA11y}
-              testID="account-action-b2b-switch"
-            />
-            {showWorkspaceShortcut && user ? (
-              <VionaActionCard
-                iconName="people-circle-outline"
-                title={workspaceShortcutTitle}
-                subtitle={t('accountHub.shortcut.workspace.subtitle')}
-                badge={{ label: t('accountHub.shortcut.workspace.badge'), tone: 'pilot' }}
-                accent={ACC_ACCOUNT_WORKSPACE}
-                onPress={() => {
-                  if (user.workspaceUiOverride === 'consumer') {
-                    updateProfile({ workspaceUiOverride: null });
-                  } else {
-                    updateProfile({ workspaceUiOverride: 'consumer' });
-                  }
-                }}
-                accessibilityHint={strings.profile.shortcutWorkspaceA11y}
-                testID="account-action-workspace-hat"
-              />
-            ) : null}
-            <VionaActionCard
-              iconName="shield-checkmark"
-              title={t('accountHub.shortcut.partner.title')}
-              subtitle={t('accountHub.shortcut.partner.subtitle')}
-              badge={{ label: t('accountHub.shortcut.partner.badge'), tone: 'demo' }}
-              accent={ACC_ACCOUNT_PARTNER}
-              onPress={() => openMerchantRoute('PartnerOnboarding')}
-              accessibilityHint={strings.profile.shortcutPartnerA11y}
-              testID="account-action-partner"
-            />
-          </VionaActionGrid>
-        </View>
+          ) : null}
+          <PremiumAppTile
+            variant="account"
+            accent="emerald"
+            width="100%"
+            icon="shield-checkmark"
+            statusLabel={t('accountHub.shortcut.partner.badge')}
+            title={t('accountHub.shortcut.partner.title')}
+            subtitle={t('accountHub.shortcut.partner.subtitle')}
+            onPress={() => openMerchantRoute('PartnerOnboarding')}
+            accessibilityLabel={`${t('accountHub.shortcut.partner.title')}. ${strings.profile.shortcutPartnerA11y}`}
+            testID="account-action-partner"
+          />
+        </PremiumTileGrid>
 
         <AccountNeonGlassPanel
           role="emerald"
@@ -633,44 +608,44 @@ export function CaNhanScreen() {
         </AccountNeonGlassPanel>
 
         <Text style={styles.sectionKicker}>{t('accountHub.sectionSettings')}</Text>
-        <AccountNeonGlassPanel
-          role="cyan"
-          tier="default"
-          radius={theme.radius.lg}
-          style={styles.settingsPanelWrap}
-          contentStyle={styles.settingsPanelInner}
+        <PremiumTileGrid
+          columns={Math.min(accountGridColumns, 2)}
+          wrapCells
+          gap={premiumTileLayout.gridGapTight}
+          style={styles.settingsGridSection}
         >
-          <Pressable
+          <PremiumAppTile
+            variant="account"
+            accent="cyan"
+            width="100%"
+            icon="language-outline"
+            statusLabel={t('accountHub.creditsBadge')}
+            title={strings.profile.settingLanguageRow}
+            subtitle={languageSubtitleForCode(languageCode)}
             onPress={() => setLanguageModalOpen(true)}
-            style={({ pressed }) => [styles.settingRow, pressed && { opacity: 0.72 }]}
-            accessibilityRole="button"
             accessibilityLabel={strings.profile.settingLanguageRow}
-          >
-            <View style={[styles.settingIconWrap, styles.settingIconCyan]}>
-              <Ionicons name="language-outline" size={18} color={ft.accentCyan} />
-            </View>
-            <View style={styles.languageRowText}>
-              <Text style={styles.settingText}>{strings.profile.settingLanguageRow}</Text>
-              <Text style={styles.languageRowSub} numberOfLines={1}>
-                {languageSubtitleForCode(languageCode)}
-              </Text>
-            </View>
-            <Ionicons name="chevron-forward" size={16} color={ft.mutedOnDark} />
-          </Pressable>
+          />
           {settings.map((item) => (
-            <Pressable
+            <PremiumAppTile
               key={item.key}
+              variant="account"
+              accent={
+                item.key === 'notifications'
+                  ? 'cyan'
+                  : item.key === 'privacy'
+                    ? 'violet'
+                    : 'emerald'
+              }
+              width="100%"
+              icon={item.icon}
+              statusLabel={t('accountHub.creditsBadge')}
+              title={item.label}
+              subtitle={t('accountHub.settingsTileSub')}
               onPress={item.onPress}
-              style={({ pressed }) => [styles.settingRow, pressed && { opacity: 0.72 }]}
-            >
-              <View style={[styles.settingIconWrap, { borderColor: `${item.accent}66` }]}>
-                <Ionicons name={item.icon} size={18} color={item.accent} />
-              </View>
-              <Text style={styles.settingText}>{item.label}</Text>
-              <Ionicons name="chevron-forward" size={16} color={ft.mutedOnDark} />
-            </Pressable>
+              accessibilityLabel={item.label}
+            />
           ))}
-        </AccountNeonGlassPanel>
+        </PremiumTileGrid>
 
         <GDPRDashboard />
 
@@ -907,6 +882,11 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   actionGridSection: {
+    width: '100%',
+    alignSelf: 'stretch',
+    marginBottom: theme.spacing.md,
+  },
+  settingsGridSection: {
     width: '100%',
     alignSelf: 'stretch',
     marginBottom: theme.spacing.md,
