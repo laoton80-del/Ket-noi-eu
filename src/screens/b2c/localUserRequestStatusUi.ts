@@ -4,8 +4,21 @@ import {
   LocalWalletPhase,
 } from '@prisma/client';
 
+import type { LocalConstellationAccent } from '../../components/local/localConstellationTokens';
 import { evaluateLocalUserRequestCancelEligibility } from '../../services/local/localUserRequestCancelEligibility';
 import type { LocalUserRequestListItem } from '../../services/localUserRequestApi';
+
+/** Status icon names for Premium App Tile–style request rows (display only). */
+export type LocalUserRequestStatusIconName =
+  | 'paper-plane-outline'
+  | 'hourglass-outline'
+  | 'checkmark-circle-outline'
+  | 'sync-outline'
+  | 'checkmark-done-outline'
+  | 'close-circle-outline'
+  | 'ban-outline'
+  | 'time-outline'
+  | 'help-circle-outline';
 
 export type LocalUserStatusFilterChip =
   | 'all'
@@ -71,6 +84,73 @@ export function localUserRequestStatusLabel(status: string): string {
       return 'This request expired';
     default:
       return 'Request updated';
+  }
+}
+
+/** Semantic accent for request status rows — display mapping only. */
+export function localUserRequestStatusAccent(status: string): LocalConstellationAccent {
+  switch (status) {
+    case LocalServiceRequestStatus.REJECTED:
+    case LocalServiceRequestStatus.USER_CANCELLED:
+    case LocalServiceRequestStatus.OPS_CANCELLED:
+    case LocalServiceRequestStatus.EXPIRED:
+      return 'violet';
+    case LocalServiceRequestStatus.CONFIRMED:
+    case LocalServiceRequestStatus.COMPLETED:
+    case LocalServiceRequestStatus.IN_PROGRESS:
+      return 'emerald';
+    case LocalServiceRequestStatus.REQUESTED:
+    case LocalServiceRequestStatus.MERCHANT_REVIEW:
+    default:
+      return 'cyan';
+  }
+}
+
+export function localUserRequestStatusIcon(status: string): LocalUserRequestStatusIconName {
+  switch (status) {
+    case LocalServiceRequestStatus.REQUESTED:
+      return 'paper-plane-outline';
+    case LocalServiceRequestStatus.MERCHANT_REVIEW:
+      return 'hourglass-outline';
+    case LocalServiceRequestStatus.CONFIRMED:
+      return 'checkmark-circle-outline';
+    case LocalServiceRequestStatus.IN_PROGRESS:
+      return 'sync-outline';
+    case LocalServiceRequestStatus.COMPLETED:
+      return 'checkmark-done-outline';
+    case LocalServiceRequestStatus.REJECTED:
+      return 'close-circle-outline';
+    case LocalServiceRequestStatus.USER_CANCELLED:
+    case LocalServiceRequestStatus.OPS_CANCELLED:
+      return 'ban-outline';
+    case LocalServiceRequestStatus.EXPIRED:
+      return 'time-outline';
+    default:
+      return 'help-circle-outline';
+  }
+}
+
+/** Compact status hint i18n key, or null when redundant with chips. */
+export function localUserRequestStatusHintKey(status: string): string | null {
+  switch (status) {
+    case LocalServiceRequestStatus.REQUESTED:
+      return 'local.userRequestStatus.statusHint.sent';
+    case LocalServiceRequestStatus.MERCHANT_REVIEW:
+      return 'local.userRequestStatus.statusHint.review';
+    case LocalServiceRequestStatus.CONFIRMED:
+      return 'local.userRequestStatus.statusHint.confirmedNotPaid';
+    case LocalServiceRequestStatus.REJECTED:
+      return 'local.userRequestStatus.statusHint.declined';
+    case LocalServiceRequestStatus.IN_PROGRESS:
+      return 'local.userRequestStatus.statusHint.inProgress';
+    case LocalServiceRequestStatus.COMPLETED:
+      return 'local.userRequestStatus.statusHint.completed';
+    case LocalServiceRequestStatus.USER_CANCELLED:
+    case LocalServiceRequestStatus.OPS_CANCELLED:
+    case LocalServiceRequestStatus.EXPIRED:
+      return 'local.userRequestStatus.statusHint.closed';
+    default:
+      return null;
   }
 }
 

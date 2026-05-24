@@ -750,13 +750,24 @@
     },
     "userRequestStatus": {
       "title": "My Local requests",
+      "screenSubtitle": "Track each request. Merchant confirms before your visit is final.",
       "backA11y": "Go back to Local",
-      "safetyBanner": "Request-only / no-charge. No payment has been captured. This is not a paid booking. Payment is not enabled for this Local request flow.",
+      "safetyStripTitle": "No-charge pilot",
+      "safetyBanner": "Request-only · no charge. No payment captured. Confirmed ≠ paid.",
       "empty": "You have no Local service requests yet.",
       "errorLoad": "Unable to load your requests. Please retry.",
       "retry": "Retry",
       "reviewPendingNote": "Waiting for merchant review",
-      "confirmedNote": "Confirmed does not mean paid. Request-only / no-charge.",
+      "confirmedNote": "Confirmed ≠ paid — request-only, no charge.",
+      "statusHint": {
+        "sent": "Request sent — merchant reviewing",
+        "review": "Merchant is reviewing your request",
+        "confirmedNotPaid": "Confirmed ≠ paid — no payment captured",
+        "declined": "Merchant declined this request",
+        "inProgress": "In progress — no payment on this flow",
+        "completed": "Completed — no payment on this flow",
+        "closed": "Request closed"
+      },
       "statusCopy": {
         "requested": "Request submitted",
         "merchantReview": "Waiting for merchant review",
@@ -770,9 +781,9 @@
         "unknown": "Request updated"
       },
       "walletBadge": {
-        "requestOnlyNoCharge": "No payment has been captured · Request-only / no-charge · walletPhase NONE",
-        "phaseNone": "No payment has been captured · walletPhase NONE",
-        "phaseOther": "walletPhase {{phase}}"
+        "requestOnlyNoCharge": "Request-only · no payment captured",
+        "phaseNone": "No payment captured",
+        "phaseOther": "Wallet phase {{phase}} (pilot)"
       },
       "cancelHint": "You can cancel while the request is still open.",
       "filter": {

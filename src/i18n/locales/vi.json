@@ -750,13 +750,24 @@
     },
     "userRequestStatus": {
       "title": "Yêu cầu Local của tôi",
+      "screenSubtitle": "Theo dõi từng yêu cầu. Merchant xác nhận trước khi lịch được chốt.",
       "backA11y": "Quay lại Local",
-      "safetyBanner": "Chỉ gửi yêu cầu / không thu phí. Chưa thu khoản thanh toán nào. Đây chưa phải đặt lịch đã thanh toán. Tính năng thanh toán chưa được bật cho luồng Local này.",
+      "safetyStripTitle": "Pilot không thu phí",
+      "safetyBanner": "Chỉ gửi yêu cầu · không thu phí. Chưa thu thanh toán. Đã xác nhận ≠ đã thanh toán.",
       "empty": "Bạn chưa có yêu cầu dịch vụ Local.",
       "errorLoad": "Không tải được yêu cầu. Vui lòng thử lại.",
       "retry": "Thử lại",
       "reviewPendingNote": "Đang chờ cửa hàng xem xét",
-      "confirmedNote": "Đã xác nhận không có nghĩa là đã thanh toán. Chỉ gửi yêu cầu / không thu phí.",
+      "confirmedNote": "Đã xác nhận ≠ đã thanh toán — chỉ gửi yêu cầu, không thu phí.",
+      "statusHint": {
+        "sent": "Đã gửi yêu cầu — chờ merchant",
+        "review": "Merchant đang xem xét yêu cầu",
+        "confirmedNotPaid": "Đã xác nhận ≠ đã thanh toán — chưa thu phí",
+        "declined": "Merchant đã từ chối yêu cầu",
+        "inProgress": "Đang xử lý — không thu phí trên luồng này",
+        "completed": "Hoàn tất — không thu phí trên luồng này",
+        "closed": "Yêu cầu đã đóng"
+      },
       "statusCopy": {
         "requested": "Yêu cầu đã được gửi",
         "merchantReview": "Đang chờ cửa hàng xem xét",
@@ -770,9 +781,9 @@
         "unknown": "Yêu cầu đã cập nhật"
       },
       "walletBadge": {
-        "requestOnlyNoCharge": "Chưa thu khoản thanh toán nào · Chỉ gửi yêu cầu / không thu phí · walletPhase NONE",
-        "phaseNone": "Chưa thu khoản thanh toán nào · walletPhase NONE",
-        "phaseOther": "walletPhase {{phase}}"
+        "requestOnlyNoCharge": "Chỉ gửi yêu cầu · chưa thu thanh toán",
+        "phaseNone": "Chưa thu thanh toán",
+        "phaseOther": "Giai đoạn ví {{phase}} (pilot)"
       },
       "cancelHint": "Bạn có thể hủy khi yêu cầu còn đang mở.",
       "filter": {
