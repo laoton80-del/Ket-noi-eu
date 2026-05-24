@@ -8,6 +8,7 @@
 
 **Master wave roadmap:** `docs/roadmap/VIONA_GLOBAL_ACTIVE_FULL_COMMERCIAL_MASTER_WAVE_ROADMAP.md` — Global Active path in 12 waves; **not** commercial yet.
 **Wave 1 exit criteria:** `docs/runbooks/VIONA_LOCAL_NO_CHARGE_WAVE_1_EXIT_PILOT_SIGNOFF_CRITERIA.md` — **met** @ `9619886`.
+**Wave 2 native prep:** `docs/runbooks/VIONA_WAVE_2_NATIVE_MOBILE_CONFIDENCE_PREP.md` — **PREP**; attestation RUN pending.
 
 ---
 

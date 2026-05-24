@@ -80,6 +80,8 @@ Baseline (today) → Wave 1 → checkpoint → Wave 2 → … → Wave 12 → Gl
 
 ### Wave 2 — Native / mobile confidence
 
+**Prep:** `docs/runbooks/VIONA_WAVE_2_NATIVE_MOBILE_CONFIDENCE_PREP.md` (**PREP** @ `cf685ae+`); run pending
+
 | Pack theme | Examples |
 |------------|----------|
 | Android | Secret-tap ×5 → PIN → Admin → Local Ops Audit on **stable** device |
@@ -322,6 +324,7 @@ Cursor **must not**:
 | `VIONA_LOCAL_NO_CHARGE_CONTROLLED_PILOT_OPS_PLAYBOOK.md` | Pilot ops + pause |
 | `VIONA_LOCAL_NO_CHARGE_CONTROLLED_PILOT_SESSIONS_1_5_ROLLUP.md` | Sessions 1–5 aggregate |
 | `VIONA_LOCAL_NO_CHARGE_WAVE_1_EXIT_PILOT_SIGNOFF_CRITERIA.md` | Wave 1 exit criteria |
+| `VIONA_WAVE_2_NATIVE_MOBILE_CONFIDENCE_PREP.md` | Wave 2 native prep + checklist |
 | `VIONA_LOCAL_NO_CHARGE_PILOT_READINESS_REVIEW_AFTER_SESSIONS_1_4.md` | Option A through session 5+ |
 | `VIONA_LOCAL_NO_CHARGE_PILOT_READINESS_HANDOFF_1.md` | Handoff index |
 | Session runbooks 1–5 | Per-session evidence |

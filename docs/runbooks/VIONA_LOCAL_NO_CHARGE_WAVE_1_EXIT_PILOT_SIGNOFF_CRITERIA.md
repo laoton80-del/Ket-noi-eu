@@ -100,7 +100,7 @@ Wave 2 **may start** when:
 | 1 | Android dev client build remains **stable** (`com.ketnoiglobal.app` @ session 2 §11.6) |
 | 2 | **Stable** physical device or reliable simulator available (emulator-only **not** sufficient for PASS claim) |
 | 3 | Secret-tap ×5 → PIN → Admin → Local Ops Audit path can be **manually** tested |
-| 4 | Evidence table exists (session 5 §8.1 or Wave 2 native pack) |
+| 4 | Evidence table exists (`VIONA_WAVE_2_NATIVE_MOBILE_CONFIDENCE_PREP.md` §3–§4) |
 | 5 | Operator accepts **no native PASS** without completed checklist — API/web PASS does not substitute |
 
 **Wave 2 exit (future):** Native readiness note with honest PASS/FAIL per checklist row; still **not** store certification or Global Active.
@@ -202,4 +202,5 @@ Full playbook: `VIONA_LOCAL_NO_CHARGE_CONTROLLED_PILOT_OPS_PLAYBOOK.md` §5.
 | `VIONA_LOCAL_NO_CHARGE_CONTROLLED_PILOT_OPS_PLAYBOOK.md` | Daily ops + pause |
 | `VIONA_LOCAL_NO_CHARGE_OPS_AUDIT_UI_PLAN.md` | Ops Audit UI scope |
 | `VIONA_LOCAL_NO_CHARGE_PILOT_SIGNOFF.md` | Initial public HTTPS sign-off |
+| `VIONA_WAVE_2_NATIVE_MOBILE_CONFIDENCE_PREP.md` | Wave 2 native prep |
 | `VIONA_PROJECT_KERNEL.md` | Kernel money law |

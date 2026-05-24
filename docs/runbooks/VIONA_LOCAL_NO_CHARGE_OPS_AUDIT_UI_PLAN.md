@@ -398,4 +398,5 @@ When implemented, session 2 **optional** ops audit steps:
 | **Session 4 prep + run** | `VIONA_LOCAL_NO_CHARGE_CONTROLLED_PILOT_SESSION_4.md` — **PASS** @ 2026-05-24 (API); native §8 **NOT RUN** |
 | **Session 5 prep + run** | `VIONA_LOCAL_NO_CHARGE_CONTROLLED_PILOT_SESSION_5.md` — **PASS** @ 2026-05-24 (API); native §8 **NOT RUN** |
 | **Wave 1 exit** | `VIONA_LOCAL_NO_CHARGE_WAVE_1_EXIT_PILOT_SIGNOFF_CRITERIA.md` — criteria **met** @ `9619886` |
+| **Wave 2 native prep** | `VIONA_WAVE_2_NATIVE_MOBILE_CONFIDENCE_PREP.md` — checklist; RUN pending |
 | **Next** | Session 6+ or optional native §8 on stable device — **do not claim native PASS** until checklist complete |
