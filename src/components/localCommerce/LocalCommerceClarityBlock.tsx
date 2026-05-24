@@ -1,3 +1,4 @@
+import { Ionicons } from '@expo/vector-icons';
 import { useMemo, type ReactElement } from 'react';
 import { ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 
@@ -6,7 +7,10 @@ import { localConstellation } from '../local/localConstellationTokens';
 import { useSmartTrio } from '../../context/SmartTrioContext';
 import type { LocalBookingStatus } from '../../core/localCommerce';
 import { getAllLocalCommerceCapabilities } from '../../core/localCommerce';
-import { premiumTileLayout } from '../../design/premiumTileVisualTokens';
+import {
+  premiumTileLayout,
+  type VionaUniverseAccent,
+} from '../../design/premiumTileVisualTokens';
 import { useTranslation } from '../../i18n';
 import { FontFamily } from '../../theme/typography';
 import { PremiumAppTile, PremiumStatusChip, PremiumTileGrid } from '../viona';
@@ -45,6 +49,77 @@ function resolveClarityGridColumns(width: number): number {
   if (width >= 1024) return 4;
   if (width >= 768) return 3;
   return 2;
+}
+
+/** Semantic feature accent per capability — leading Local atmosphere stays emerald. */
+function localCapabilityFeatureAccent(capId: string): VionaUniverseAccent {
+  switch (capId) {
+    case 'localMarketplace':
+    case 'bookingRequest':
+      return 'emerald';
+    case 'serviceMenu':
+      return 'cyan';
+    case 'merchantDashboard':
+      return 'gold';
+    case 'aiReceptionistPilot':
+    case 'nativeLanguageBooking':
+      return 'violet';
+    default:
+      return 'emerald';
+  }
+}
+
+function localCapabilityIcon(capId: string): keyof typeof Ionicons.glyphMap {
+  switch (capId) {
+    case 'localMarketplace':
+      return 'storefront-outline';
+    case 'serviceMenu':
+      return 'menu-outline';
+    case 'bookingRequest':
+      return 'paper-plane-outline';
+    case 'merchantDashboard':
+      return 'grid-outline';
+    case 'aiReceptionistPilot':
+      return 'chatbubbles-outline';
+    case 'nativeLanguageBooking':
+      return 'language-outline';
+    default:
+      return 'ellipse-outline';
+  }
+}
+
+function statusLegendFeatureAccent(
+  key: (typeof STATUS_LEGEND)[number]['key']
+): VionaUniverseAccent {
+  switch (key) {
+    case 'legendRequestSent':
+      return 'cyan';
+    case 'legendMerchantConfirmed':
+    case 'legendConfirmedNotPaid':
+      return 'emerald';
+    case 'legendMerchantDeclined':
+      return 'magenta';
+    default:
+      return 'emerald';
+  }
+}
+
+function modeStatusFeatureAccent(status: LocalBookingStatus): VionaUniverseAccent {
+  switch (status) {
+    case 'lite':
+    case 'pilot':
+      return 'cyan';
+    case 'requestOnly':
+      return 'emerald';
+    case 'demo':
+      return 'violet';
+    case 'comingSoon':
+      return 'gold';
+    case 'gated':
+      return 'magenta';
+    default:
+      return 'emerald';
+  }
 }
 
 export function LocalCommerceClarityBlock({
@@ -120,7 +195,7 @@ export function LocalCommerceClarityBlock({
           <PremiumAppTile
             key={item.key}
             variant="local"
-            accent="emerald"
+            accent={statusLegendFeatureAccent(item.key)}
             width="100%"
             icon={item.icon}
             title={t(safetyKey(item.key))}
@@ -134,7 +209,7 @@ export function LocalCommerceClarityBlock({
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.modeScroll}>
         <View style={styles.modeRow}>
           {statusOrder.map((s) => (
-            <PremiumStatusChip key={s} accent="emerald" label={t(bookingStatusKey(s))} />
+            <PremiumStatusChip key={s} accent={modeStatusFeatureAccent(s)} label={t(bookingStatusKey(s))} />
           ))}
         </View>
       </ScrollView>
@@ -153,9 +228,9 @@ export function LocalCommerceClarityBlock({
           <PremiumAppTile
             key={c.id}
             variant="local"
-            accent="emerald"
+            accent={localCapabilityFeatureAccent(c.id)}
             width="100%"
-            icon="ellipse-outline"
+            icon={localCapabilityIcon(c.id)}
             statusLabel={t(bookingStatusKey(c.status))}
             title={t(c.titleKey)}
             subtitle={t(c.descriptionKey)}

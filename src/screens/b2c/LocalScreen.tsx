@@ -958,7 +958,7 @@ export function LocalScreen() {
         >
           <PremiumAppTile
             variant="local"
-            accent="cyan"
+            accent="emerald"
             width="100%"
             icon="list-outline"
             statusLabel={t('localCommerce.bookingStatus.requestOnly')}
@@ -982,7 +982,7 @@ export function LocalScreen() {
           />
           <PremiumAppTile
             variant="local"
-            accent="cyan"
+            accent="emerald"
             width="100%"
             icon="restaurant-outline"
             statusLabel={t('localCommerce.bookingStatus.requestOnly')}
@@ -994,7 +994,7 @@ export function LocalScreen() {
           />
           <PremiumAppTile
             variant="local"
-            accent="emerald"
+            accent="gold"
             width="100%"
             icon="scale-outline"
             statusLabel={t('localCommerce.bookingStatus.demo')}
@@ -1018,7 +1018,7 @@ export function LocalScreen() {
           />
           <PremiumAppTile
             variant="local"
-            accent="emerald"
+            accent="violet"
             width="100%"
             icon="ticket-outline"
             statusLabel={t('localCommerce.bookingStatus.preview')}
@@ -1030,7 +1030,7 @@ export function LocalScreen() {
           />
           <PremiumAppTile
             variant="local"
-            accent="emerald"
+            accent="cyan"
             width="100%"
             icon="home-outline"
             statusLabel={t('localCommerce.bookingStatus.lite')}
@@ -1042,7 +1042,7 @@ export function LocalScreen() {
           />
           <PremiumAppTile
             variant="local"
-            accent="emerald"
+            accent="gold"
             width="100%"
             icon="pricetags-outline"
             statusLabel={t('localCommerce.bookingStatus.lite')}
@@ -1055,7 +1055,7 @@ export function LocalScreen() {
           {legalScanEnabled ? (
             <PremiumAppTile
               variant="local"
-              accent="cyan"
+              accent="violet"
               width="100%"
               icon="scan-outline"
               statusLabel={t('localCommerce.bookingStatus.demo')}

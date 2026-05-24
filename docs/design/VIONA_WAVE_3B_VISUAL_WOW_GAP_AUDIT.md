@@ -194,6 +194,7 @@ Visual wow packs must **not** introduce commercial/payment copy or behavior.
 | **`WIONA.WAVE_3B.ACADEMY_VISUAL_WOW.1`** | **COMPLETE** — `AcademyScreen` module grid → `PremiumAppTile` + `PremiumTileGrid`; violet pilot pills use Wave 3B tokens. Hero/safety panels unchanged. Screenshots **NOT RUN**. |
 | **`VIONA.WAVE_3B.ACCOUNT_SOS_VISUAL_WOW.1`** | **COMPLETE** — `CaNhanScreen` shortcuts/settings → `PremiumAppTile` grids; `EmergencyHubTile` → `PremiumAppTile` (sos); `EmergencySOSScreen` hub grid + magenta pilot chips. Screenshots **NOT RUN**. |
 | **`VIONA.WAVE_3B.SEMANTIC_COLOR_GOVERNANCE.1`** | **COMPLETE** — docs + token comments: leading vs feature accent; controlled multi-color law; safety boundaries. **No screen changes.** |
+| **`VIONA.WAVE_3B.LOCAL_SEMANTIC_COLOR_BALANCE.1`** | **COMPLETE** — `LocalScreen` + `LocalCommerceClarityBlock` per-feature `accent` (emerald/cyan/violet/gold/magenta); mode chips multi-color; capability icons. Screenshots **NOT RUN**. |
 
 ---
 
@@ -201,7 +202,7 @@ Visual wow packs must **not** introduce commercial/payment copy or behavior.
 
 | Priority | Action |
 |----------|--------|
-| **1** | **`VIONA.WAVE_3B.LOCAL_SEMANTIC_COLOR_BALANCE.1`** — audit Local hub tiles for per-feature `accent` (avoid monochrome emerald); optional Account/SOS refinements same rule |
+| **1** | Optional manual screenshot pass (Local multi-color at 4 viewports) |
 | **2** | Optional manual screenshot pass (Account, SOS, Local at 4 viewports) — verify multi-color reads intentional |
 | **3** | Home shell alignment (pack G) later |
 | **3** | Optional: `git restore` 11 CRLF-noise paths after leadership confirms no lost local work |
