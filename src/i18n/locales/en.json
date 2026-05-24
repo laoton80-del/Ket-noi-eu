@@ -78,6 +78,51 @@
     "comingSoonTitle": "Coming soon",
     "comingSoonBody": "This module is not wired in this Lite build yet."
   },
+  "accountHub": {
+    "screenSubtitle": "Profile, settings & shortcuts — pilot account foundation.",
+    "pilotStripTitle": "Account · pilot",
+    "pilotStripBanner": "Self-declared profile preview — no global identity verification or payment rails active.",
+    "pilotPill": {
+      "profile": "Profile",
+      "settings": "Settings",
+      "network": "Network preview"
+    },
+    "sectionProfile": "Your profile",
+    "sectionShortcuts": "Quick actions",
+    "sectionIdentity": "Identity snapshot",
+    "sectionSettings": "Personal settings",
+    "identityBadge": "Self-declared",
+    "creditsBadge": "In-app only",
+    "creditsHintShort": "Use VIO Credits inside VIONA services.",
+    "creditsFootnote": "In-app units only — not cash or bank money.",
+    "identityFootnote": "What you entered in-app — not government or legal verification.",
+    "shortcut": {
+      "store": {
+        "title": "Virtual store",
+        "subtitle": "Avatars & badges — credits in-app only",
+        "badge": "Lite"
+      },
+      "b2bPricing": {
+        "title": "Business pricing",
+        "subtitle": "Plan tiers sheet — preview, not checkout",
+        "badge": "Preview"
+      },
+      "b2bSwitch": {
+        "title": "Business workspace",
+        "subtitle": "Current view · {{mode}}",
+        "badge": "Pilot"
+      },
+      "workspace": {
+        "subtitle": "Default home on this device",
+        "badge": "Pilot"
+      },
+      "partner": {
+        "title": "Partner program",
+        "subtitle": "Request intro — no auto billing",
+        "badge": "Preview"
+      }
+    }
+  },
   "academyLive": {
     "headerTitle": "Cô Giáo AI (preview)",
     "contextLabel": "Context: {{country}}",

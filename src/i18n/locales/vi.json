@@ -78,6 +78,51 @@
     "comingSoonTitle": "Sắp có",
     "comingSoonBody": "Mô-đun này chưa được nối trong bản Lite hiện tại."
   },
+  "accountHub": {
+    "screenSubtitle": "Hồ sơ, cài đặt & lối tắt — nền tảng tài khoản thử nghiệm.",
+    "pilotStripTitle": "Tài khoản · pilot",
+    "pilotStripBanner": "Xem trước hồ sơ tự khai — chưa xác minh danh tính toàn cầu hay kênh thanh toán.",
+    "pilotPill": {
+      "profile": "Hồ sơ",
+      "settings": "Cài đặt",
+      "network": "Mạng xem trước"
+    },
+    "sectionProfile": "Hồ sơ của bạn",
+    "sectionShortcuts": "Thao tác nhanh",
+    "sectionIdentity": "Ảnh chụp danh tính",
+    "sectionSettings": "Cài đặt cá nhân",
+    "identityBadge": "Tự khai",
+    "creditsBadge": "Chỉ trong app",
+    "creditsHintShort": "Dùng VIO Credits cho dịch vụ trong VIONA.",
+    "creditsFootnote": "Chỉ đơn vị trong app — không phải tiền mặt hay ngân hàng.",
+    "identityFootnote": "Thông tin bạn nhập — không phải xác minh pháp lý hay cơ quan nhà nước.",
+    "shortcut": {
+      "store": {
+        "title": "Cửa hàng ảo",
+        "subtitle": "Avatar & huy hiệu — credits chỉ trong app",
+        "badge": "Lite"
+      },
+      "b2bPricing": {
+        "title": "Bảng giá doanh nghiệp",
+        "subtitle": "Xem gói — xem trước, không thanh toán",
+        "badge": "Xem trước"
+      },
+      "b2bSwitch": {
+        "title": "Workspace doanh nghiệp",
+        "subtitle": "Chế độ hiện tại · {{mode}}",
+        "badge": "Pilot"
+      },
+      "workspace": {
+        "subtitle": "Màn hình chính trên thiết bị này",
+        "badge": "Pilot"
+      },
+      "partner": {
+        "title": "Chương trình đối tác",
+        "subtitle": "Yêu cầu liên hệ — không tự kích hoạt thanh toán",
+        "badge": "Xem trước"
+      }
+    }
+  },
   "academyLive": {
     "headerTitle": "Cô Giáo AI (xem trước)",
     "contextLabel": "Ngữ cảnh: {{country}}",

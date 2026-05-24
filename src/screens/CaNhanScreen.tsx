@@ -21,6 +21,7 @@ import { APP_BRAND } from '../config/appBrand';
 import { useAppMode } from '../context/AppModeContext';
 import { useAuth } from '../context/AuthContext';
 import { isMerchantServerRole } from '../context/authTypes';
+import { useTranslation } from '../i18n';
 import { persistUserLanguage } from '../i18n/persistLanguage';
 import { getStrings } from '../i18n/strings';
 import type { RootStackParamList } from '../navigation/routes';
@@ -80,6 +81,12 @@ const ACC_ACCOUNT_B2B_PRICE = accountAccent(ft.accentCyan);
 const ACC_ACCOUNT_B2B_SWITCH = accountAccent(ft.sosNeonMuted, 0.28, 0.46);
 const ACC_ACCOUNT_PARTNER = accountAccent(ft.accentEmerald);
 const ACC_ACCOUNT_WORKSPACE = accountAccent(ft.accentViolet, 0.22, 0.34);
+
+const ACCOUNT_PILOT_PILLS = [
+  { key: 'accountHub.pilotPill.profile' as const, icon: 'person-outline' as const },
+  { key: 'accountHub.pilotPill.settings' as const, icon: 'settings-outline' as const },
+  { key: 'accountHub.pilotPill.network' as const, icon: 'globe-outline' as const },
+] as const;
 
 const LANGUAGE_OPTIONS: readonly {
   code: 'vi' | 'en' | 'cs' | 'de';
@@ -190,6 +197,7 @@ export function CaNhanScreen() {
   const { user, updateProfile } = useAuth();
   const { mode, setMode } = useAppMode();
   const { languageCode } = useAssistantSettings();
+  const { t } = useTranslation();
   const strings = getStrings(languageCode);
   const wallet = useWalletState();
   const contentColumn = useMemo(
@@ -429,8 +437,37 @@ export function CaNhanScreen() {
         <VionaBrandLockup variant="header" showAccentUnderline style={styles.brandLockup} />
         <Text style={styles.launchHint}>{APP_BRAND.launchSubtitle}</Text>
         <Text style={styles.title}>{strings.profile.screenTitle}</Text>
-        <Text style={styles.subtitle}>{strings.profile.subtitle}</Text>
+        <Text style={styles.subtitle} numberOfLines={2}>
+          {t('accountHub.screenSubtitle')}
+        </Text>
         <View style={styles.subtitleAmbientLine} />
+
+        <AccountNeonGlassPanel role="gold" tier="identity" radius={14} contentStyle={styles.pilotStripInner}>
+          <View style={styles.pilotStripTitleRow}>
+            <Ionicons name="person-circle-outline" size={16} color={ft.champagne} accessibilityIgnoresInvertColors />
+            <Text style={styles.pilotStripTitle}>{t('accountHub.pilotStripTitle')}</Text>
+          </View>
+          <Text style={styles.pilotStripBanner} numberOfLines={2}>
+            {t('accountHub.pilotStripBanner')}
+          </Text>
+          <View style={styles.pilotPillRow}>
+            {ACCOUNT_PILOT_PILLS.map((pill) => (
+              <View
+                key={pill.key}
+                style={styles.pilotPill}
+                accessibilityRole="text"
+                accessibilityLabel={t(pill.key)}
+              >
+                <Ionicons name={pill.icon} size={12} color={ft.champagne} accessibilityIgnoresInvertColors />
+                <Text style={styles.pilotPillText} numberOfLines={2}>
+                  {t(pill.key)}
+                </Text>
+              </View>
+            ))}
+          </View>
+        </AccountNeonGlassPanel>
+
+        <Text style={styles.sectionKicker}>{t('accountHub.sectionProfile')}</Text>
 
         <View style={styles.flagshipSection}>
           <Pressable
@@ -463,15 +500,22 @@ export function CaNhanScreen() {
               <View style={styles.creditsHeaderRow}>
                 <Ionicons name="wallet-outline" size={18} color={ft.champagne} />
                 <Text style={styles.cardTitle}>{strings.profile.creditsTitle}</Text>
+                <Text style={styles.creditsStatusChip}>{t('accountHub.creditsBadge')}</Text>
               </View>
               <Text style={styles.cardBalance}>
                 {interpolate(strings.profile.creditsBalanceCurrent, { credits: String(wallet.credits) })}
               </Text>
-              <Text style={styles.cardHint}>{strings.profile.creditsHint}</Text>
-              <Text style={styles.cardHintSecondary}>{strings.profile.creditsInAppOnly}</Text>
+              <Text style={styles.cardHint} numberOfLines={2}>
+                {t('accountHub.creditsHintShort')}
+              </Text>
+              <Text style={styles.cardHintSecondary} numberOfLines={2}>
+                {t('accountHub.creditsFootnote')}
+              </Text>
             </AccountNeonGlassPanel>
           </Pressable>
         </View>
+
+        <Text style={styles.sectionKicker}>{t('accountHub.sectionShortcuts')}</Text>
 
         <View style={styles.actionGridSection}>
           <VionaActionGrid
@@ -483,8 +527,9 @@ export function CaNhanScreen() {
           >
             <VionaActionCard
               iconName="storefront-outline"
-              title={strings.profile.shortcutStoreTitle}
-              subtitle={strings.profile.shortcutStoreSubtitle}
+              title={t('accountHub.shortcut.store.title')}
+              subtitle={t('accountHub.shortcut.store.subtitle')}
+              badge={{ label: t('accountHub.shortcut.store.badge'), tone: 'lite' }}
               accent={ACC_ACCOUNT_STORE}
               onPress={() => navigation.navigate('Wallet')}
               accessibilityHint={strings.profile.shortcutStoreA11y}
@@ -492,18 +537,20 @@ export function CaNhanScreen() {
             />
             <VionaActionCard
               iconName="pricetags-outline"
-              title={strings.profile.shortcutB2bPricingTitle}
-              subtitle={strings.profile.shortcutB2bPricingSubtitle}
+              title={t('accountHub.shortcut.b2bPricing.title')}
+              subtitle={t('accountHub.shortcut.b2bPricing.subtitle')}
+              badge={{ label: t('accountHub.shortcut.b2bPricing.badge'), tone: 'demo' }}
               accent={ACC_ACCOUNT_B2B_PRICE}
               onPress={() => openMerchantRoute('B2BPaywall')}
               testID="account-action-b2b-pricing"
             />
             <VionaActionCard
               iconName="swap-horizontal"
-              title={strings.profile.shortcutB2bSwitchTitle}
-              subtitle={interpolate(strings.profile.shortcutB2bSwitchSubtitle, {
+              title={t('accountHub.shortcut.b2bSwitch.title')}
+              subtitle={t('accountHub.shortcut.b2bSwitch.subtitle', {
                 mode: mode === 'B2B_MODE' ? 'B2B_MODE' : 'B2C_MODE',
               })}
+              badge={{ label: t('accountHub.shortcut.b2bSwitch.badge'), tone: 'pilot' }}
               accent={ACC_ACCOUNT_B2B_SWITCH}
               onPress={openB2BWorkspaceSwitch}
               accessibilityHint={strings.profile.shortcutB2bSwitchA11y}
@@ -513,7 +560,8 @@ export function CaNhanScreen() {
               <VionaActionCard
                 iconName="people-circle-outline"
                 title={workspaceShortcutTitle}
-                subtitle={strings.profile.shortcutWorkspaceSubtitle}
+                subtitle={t('accountHub.shortcut.workspace.subtitle')}
+                badge={{ label: t('accountHub.shortcut.workspace.badge'), tone: 'pilot' }}
                 accent={ACC_ACCOUNT_WORKSPACE}
                 onPress={() => {
                   if (user.workspaceUiOverride === 'consumer') {
@@ -528,8 +576,9 @@ export function CaNhanScreen() {
             ) : null}
             <VionaActionCard
               iconName="shield-checkmark"
-              title={strings.profile.shortcutPartnerTitle}
-              subtitle={strings.profile.shortcutPartnerSubtitle}
+              title={t('accountHub.shortcut.partner.title')}
+              subtitle={t('accountHub.shortcut.partner.subtitle')}
+              badge={{ label: t('accountHub.shortcut.partner.badge'), tone: 'demo' }}
               accent={ACC_ACCOUNT_PARTNER}
               onPress={() => openMerchantRoute('PartnerOnboarding')}
               accessibilityHint={strings.profile.shortcutPartnerA11y}
@@ -549,7 +598,8 @@ export function CaNhanScreen() {
             <View style={styles.identityBadge}>
               <Ionicons name="shield-checkmark" size={14} color={ft.accentEmerald} />
             </View>
-            <Text style={styles.cardTitle}>{strings.profile.identityTitle}</Text>
+            <Text style={styles.cardTitle}>{t('accountHub.sectionIdentity')}</Text>
+            <Text style={styles.identityStatusChip}>{t('accountHub.identityBadge')}</Text>
           </View>
           <View style={styles.identityRow}>
             <Text style={styles.identityKey}>{strings.profile.residencyStatusLabel}</Text>
@@ -567,7 +617,9 @@ export function CaNhanScreen() {
             <Text style={styles.identityKey}>{strings.profile.subscriptionPlanLabel}</Text>
             <Text style={styles.identityValue}>{planLabel}</Text>
           </View>
-          <Text style={styles.identityFootnote}>{strings.profile.subscriptionPlanFootnote}</Text>
+          <Text style={styles.identityFootnote} numberOfLines={2}>
+            {t('accountHub.identityFootnote')}
+          </Text>
           <View style={styles.identityRow}>
             <Text style={styles.identityKey}>{strings.profile.aiCreditsLabel}</Text>
             <Text style={styles.identityValue}>{user?.aiCallCredits ?? wallet.credits}</Text>
@@ -580,7 +632,7 @@ export function CaNhanScreen() {
           </Pressable>
         </AccountNeonGlassPanel>
 
-        <Text style={styles.sectionTitle}>{strings.profile.settingsTitle}</Text>
+        <Text style={styles.sectionKicker}>{t('accountHub.sectionSettings')}</Text>
         <AccountNeonGlassPanel
           role="cyan"
           tier="default"
@@ -794,6 +846,62 @@ const styles = StyleSheet.create({
     opacity: 0.28,
     marginBottom: 12,
   },
+  pilotStripInner: {
+    gap: 8,
+    paddingVertical: 4,
+  },
+  pilotStripTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  pilotStripTitle: {
+    fontSize: 11,
+    fontFamily: FontFamily.extrabold,
+    color: ft.champagne,
+    letterSpacing: 0.6,
+  },
+  pilotStripBanner: {
+    fontSize: 11,
+    fontFamily: FontFamily.medium,
+    color: ft.textSecondary,
+    lineHeight: 16,
+  },
+  pilotPillRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  pilotPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    paddingHorizontal: 8,
+    paddingVertical: 6,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(246, 212, 110, 0.32)',
+    backgroundColor: 'rgba(246, 212, 110, 0.08)',
+    minHeight: 32,
+    maxWidth: '100%',
+  },
+  pilotPillText: {
+    flexShrink: 1,
+    fontSize: 9,
+    fontFamily: FontFamily.extrabold,
+    color: 'rgba(255, 240, 210, 0.95)',
+    letterSpacing: 0.35,
+    textTransform: 'uppercase',
+  },
+  sectionKicker: {
+    marginTop: 4,
+    marginBottom: 8,
+    fontSize: 10,
+    fontFamily: FontFamily.extrabold,
+    color: 'rgba(210, 208, 230, 0.88)',
+    letterSpacing: 0.9,
+    textTransform: 'uppercase',
+  },
   flagshipSection: {
     position: 'relative',
     marginBottom: 4,
@@ -854,8 +962,23 @@ const styles = StyleSheet.create({
   creditsHeaderRow: {
     flexDirection: 'row',
     alignItems: 'center',
+    flexWrap: 'wrap',
     gap: 8,
     marginBottom: 4,
+  },
+  creditsStatusChip: {
+    fontSize: 8,
+    fontFamily: FontFamily.extrabold,
+    letterSpacing: 0.4,
+    textTransform: 'uppercase',
+    color: ft.champagne,
+    paddingHorizontal: 6,
+    paddingVertical: 3,
+    borderRadius: 5,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: 'rgba(246, 212, 110, 0.42)',
+    backgroundColor: 'rgba(246, 212, 110, 0.1)',
+    overflow: 'hidden',
   },
   cardTitle: {
     fontSize: 16,
@@ -891,8 +1014,23 @@ const styles = StyleSheet.create({
   identityTitleRow: {
     flexDirection: 'row',
     alignItems: 'center',
+    flexWrap: 'wrap',
     gap: 8,
     marginBottom: 2,
+  },
+  identityStatusChip: {
+    fontSize: 8,
+    fontFamily: FontFamily.extrabold,
+    letterSpacing: 0.4,
+    textTransform: 'uppercase',
+    color: ft.accentEmerald,
+    paddingHorizontal: 6,
+    paddingVertical: 3,
+    borderRadius: 5,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: 'rgba(88, 214, 168, 0.42)',
+    backgroundColor: 'rgba(88, 214, 168, 0.1)',
+    overflow: 'hidden',
   },
   identityBadge: {
     width: 22,
