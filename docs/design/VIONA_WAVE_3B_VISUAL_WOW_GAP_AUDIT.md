@@ -182,15 +182,23 @@ Visual wow packs must **not** introduce commercial/payment copy or behavior.
 
 ---
 
-## 11. Next action
+## 11. Implementation status
+
+| Pack | Status |
+|------|--------|
+| **`VIONA.WAVE_3B.PREMIUM_TILE_VISUAL_TOKENS.1`** | **COMPLETE** — `src/design/premiumTileVisualTokens.ts` exported via `src/design/index.ts`. Foundation tokens only; **no surfaces refactored**. UI does **not** yet match the north-star image. |
+| **`VIONA.WAVE_3B.PREMIUM_APP_TILE_COMPONENT.1`** | **Next** — shared `PremiumAppTile` + adapters |
+
+---
+
+## 12. Next action
 
 | Priority | Action |
 |----------|--------|
-| **1** | **`VIONA.WAVE_3B.PREMIUM_TILE_VISUAL_TOKENS.1`** |
-| **2** | **`VIONA.WAVE_3B.PREMIUM_APP_TILE_COMPONENT.1`** |
-| **3** | Local hub visual wow (pack C), then Travel/Academy/Account/SOS |
-| **4** | Optional: `git restore` 11 CRLF-noise paths after leadership confirms no lost local work |
-| **5** | Manual screenshot pass (pack I) before external demo |
+| **1** | **`VIONA.WAVE_3B.PREMIUM_APP_TILE_COMPONENT.1`** |
+| **2** | Local hub visual wow (pack C), then Travel/Academy/Account/SOS |
+| **3** | Optional: `git restore` 11 CRLF-noise paths after leadership confirms no lost local work |
+| **4** | Manual screenshot pass (pack I) before external demo |
 
 ---
 

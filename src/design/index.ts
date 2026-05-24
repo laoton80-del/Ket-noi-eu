@@ -1,6 +1,33 @@
 export { vionaTokens } from './vionaTokens';
 export type { VionaTokens } from './vionaTokens';
 export {
+  premiumTileCanvas,
+  premiumTileGlass,
+  premiumTileLayout,
+  premiumTileIconCapsule,
+  premiumTileStatusChip,
+  premiumTileInteraction,
+  premiumUniverseAccentMap,
+  premiumUniverseAccentByHub,
+  premiumUniverseAccentSpec,
+  premiumUniverseInk,
+  premiumUniverseStroke,
+  premiumSemanticGlow,
+  premiumGlassSurface,
+  premiumTileMinHeight,
+  premiumIconCapsuleSize,
+  resolvePremiumTileGridColumns,
+  resolvePremiumTileItemWidth,
+  resolvePremiumTileCellWidthPercent,
+  resolvePremiumContentRail,
+  premiumTileWebBackdropBlur,
+  premiumTileSemanticShadowStyle,
+  type VionaUniverseAccent,
+  type PremiumTileState,
+  type PremiumTileSize,
+  type PremiumUniverseAccentSpec,
+} from './premiumTileVisualTokens';
+export {
   neonGlassCard,
   neonGlassAccentGlow,
   neonGlassAccentInk,
