@@ -1,6 +1,7 @@
 /**
  * Wave 3B — semantic icon capsule (visual primitive only).
- * Emerald ≠ paid/settled. Gold ≠ commercial/payout. Magenta ≠ dispatch/rescue.
+ * `accent` is the tile's semanticFeatureAccent (may differ from hub leading accent in multi-color grids).
+ * Emerald ≠ paid/settled. Gold ≠ commercial/payout. Magenta ≠ dispatch/rescue. Text chips carry meaning.
  */
 import { Ionicons } from '@expo/vector-icons';
 import type { ReactElement, ReactNode } from 'react';

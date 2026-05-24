@@ -454,7 +454,9 @@ Do not touch Home unless explicitly scoped.
 Consumer design system:
 - Premium App Tiles
 - icon + short title + concise subtitle
-- semantic glow
+- semantic glow per **feature** (controlled multi-color inside a hub — not one color per universe)
+- leading universe accent = hub atmosphere; per-tile `accent` = feature meaning (`docs/design/VIONA_WAVE_3_PREMIUM_APP_TILE_RULES.md` §5)
+- text status chip carries meaning; color is secondary
 - not icon-only
 - important quick actions may be larger hero tiles
 - scenario/module cards should be compact premium app tiles

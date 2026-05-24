@@ -126,27 +126,61 @@ Every **Premium App Tile** (compact or hero) **must** include:
 
 ---
 
-## 5. Semantic glow law
+## 5. Semantic glow law — leading accent + controlled multi-color
 
-| Accent | Meaning | Typical use |
-|--------|---------|-------------|
-| **Gold** | Premium · brand · primary CTA | Business world card, brand lockup, wallet chip (display only) |
-| **Cyan** | Tech · interactive · focus | Travel, transit, language, interactive modules |
-| **Emerald** | Verified · status good · safe / request-only OK | Local hub, confirmed-safe states, clarity block |
-| **Magenta** | SOS · special · high attention | Emergency scenarios, safety assist, SOS hub |
-| **Violet** | Learning · Academy universe | Academy modules (with cyan/emerald variants per module) |
+**Wave 3B correction (`VIONA.WAVE_3B.SEMANTIC_COLOR_GOVERNANCE.1`):** VIONA does **not** use one fixed color per universe. Each hub has a **leading universe accent** (atmosphere / section identity). Feature tiles inside that hub use a **semantic feature accent** chosen per tile (`PremiumAppTile` `accent` prop). **Controlled multi-color** premium grids are **recommended** and match the north-star reference.
 
-### Forbidden glow use
+| Concept | Code / doc | Rule |
+|---------|------------|------|
+| **Leading universe accent** | `premiumUniverseAccentByHub` / `variant` default | Hub hero, canvas wash, default tile when `accent` omitted |
+| **Semantic feature accent** | `accent` prop on `PremiumAppTile` | Per-tile meaning inside the hub — **overrides** leading accent |
+| **Controlled multi-accent** | Mixed accents in one `PremiumTileGrid` | Allowed and encouraged when semantics differ |
+
+### 5.1 Semantic feature accent meanings
+
+| Accent | Meaning | Typical feature use |
+|--------|---------|---------------------|
+| **Cyan** | Travel · tech · navigation · interactive · focus | Transit, maps, booking assist, settings, interpreter entry |
+| **Emerald** | Local trust · safe status · request clarity · progress | Request-only, no-charge, confirmed≠paid, safe checklist |
+| **Violet** | Academy · AI · language · translation · learning | Modules, LeTan preview, translation pilot |
+| **Gold** | Premium · account · business · highlighted value | Identity chrome, VIP highlight, featured listing — **not** paid/payout |
+| **Magenta** | SOS · alert · risk · urgent | Emergency hub, warnings — **not** dispatch/rescue/auto-alert |
+| **Assistant** | Pilot assistant (cyan-led + violet wash) | LeTan / intake — not autonomous production agent |
+
+### 5.2 Multi-color examples by universe (controlled)
+
+**Local** (leading: emerald): emerald request safety · cyan booking assist / transit / navigation · violet translation / AI receptionist preview · gold VIP / featured listing (no paid implication) · magenta warning/risk only.
+
+**Travel** (leading: cyan): cyan airport / transit / navigation · gold hotel / premium planning · emerald food / local-safe recommendations · violet interpreter / language · magenta emergency / safety warning only.
+
+**Academy** (leading: violet): violet learning / AI / language · cyan practice / interactive tools · gold achievement / highlight · emerald progress / success · magenta caution / safety notes only.
+
+**Account** (leading: gold): gold account / value / identity surface · cyan security / settings · violet assistant / profile intelligence · emerald safe-looking in-app status (**not** KYC / government verification) · magenta warnings only.
+
+**SOS** (leading: magenta): magenta emergency atmosphere · cyan call / navigation / tool actions · emerald safety checklist / safe status · gold important highlighted guidance (**not** paid) · violet rarely for language support.
+
+**Home world cards (reference):** local=emerald, travel=cyan, academy=violet, business=gold, care=magenta — **leading** accents for universe **entry** only; interior hub grids still use §5.2.
+
+### 5.3 Safety boundaries (color cannot imply)
+
+| Color must **not** imply | Enforcement |
+|--------------------------|-------------|
+| Payment captured · settlement · payout · cash-out | Copy + chip text; gold/emerald never substitute for money law |
+| KYC · government · legal verification | “Self-declared” / in-app only in text; emerald is not “verified identity” |
+| Dispatch · rescue guarantee · auto-alert | Magenta on SOS is guidance-only; user dials local emergency |
+| Production · commercial · Global Active readiness | No status chip or glow may claim launch/commercial |
+| **Meaning from color alone** | **Text status chip required**; `accessibilityLabel` includes title + subtitle + status |
+
+### 5.4 Forbidden glow use
 
 | Forbidden | Why |
 |-----------|-----|
+| **Monochrome universe grids** (all tiles same accent without semantic reason) | Fails north-star; use per-tile `accent` |
 | **Magenta** for normal commerce or booking | Reserves SOS / emergency attention |
-| **Gold** to imply paid, settled, or commercial readiness | Pre-commercial pilot; Gold = brand/CTA only |
+| **Gold** to imply paid, settled, or commercial readiness | Pre-commercial pilot |
 | **Emerald** to imply paid/settled when status is only **confirmed** | Confirmed ≠ paid on Local |
-| **Glow without meaning** | Decoration-only halos dilute trust semantics |
-| **Full-card neon wash** on compact tiles | Use edge-lit / chip glow only (Home world cards excepted) |
-
-**Home accent map (reference):** local=emerald, travel=cyan, academy=violet, business=gold, care=magenta (`VionaFashionWorldCard`).
+| **Glow without meaning** | Decoration-only halos dilute trust |
+| **Full-card neon wash** on compact tiles | Edge-lit / chip glow only (Home world cards excepted) |
 
 ---
 
@@ -209,12 +243,12 @@ Safety copy **must** remain visible without opening a tile. Tiles **repeat** mod
 | Universe | Recommended tile role | Semantic accent | Copy density | Safety / i18n | Impl. risk |
 |----------|----------------------|-----------------|--------------|---------------|------------|
 | **Home** | Hero world cards + command bar | Per-world emerald/cyan/violet/gold | Low on cards; avoid hardcoded EN in new work | SOS via modals, not tile overclaim | **HIGH** (monolith) |
-| **Local** | Compact `LocalAppTile` + clarity block | Emerald primary; cyan interactive | Low per tile; clarity block medium | **Strong** — extend confirmed≠paid to hub | **HIGH** if touching booking |
-| **Travel** | `TravelAppTile` + scenario groups | Cyan default; magenta emergency | Low | Location consent separate from tiles | **MEDIUM** |
-| **Academy** | `AcademyGlassCard` modules | Violet-led; cyan/emerald modules | Medium (body up to 4 lines) — **max density** | Paywall off-tab; rail safety assist | **LOW–MEDIUM** |
-| **Business entry** | Home `VionaFashionWorldCard` only | Gold | Low; pre-commercial tone | No revenue/settlement on entry card | **HIGH** if editing dashboard |
-| **Account** | Action grid (harmonize accents) | Gold/cyan/emerald/violet per action | Medium sections | Trust history; no wallet expansion | **MEDIUM** |
-| **SOS** | `EmergencyHubTile` | Magenta / emergency | Low + disclaimer panel | Pilot badge on translation; disclaimers required | **LOW** UX; **HIGH** copy claims |
+| **Local** | `PremiumAppTile` + clarity block | Leading emerald; **multi-color per §5.2** | Low per tile; clarity block medium | **Strong** — confirmed≠paid in text | Refine: `LOCAL_SEMANTIC_COLOR_BALANCE.1` |
+| **Travel** | `PremiumAppTile` scenario groups | Leading cyan; **multi-color per §5.2** | Low | Location consent separate from tiles | **MEDIUM** |
+| **Academy** | `PremiumAppTile` modules | Leading violet; **multi-color per §5.2** | Medium (body up to 4 lines) — **max density** | Paywall off-tab | **LOW–MEDIUM** |
+| **Business entry** | Home `VionaFashionWorldCard` only | Leading gold | Low; pre-commercial tone | No revenue/settlement on entry card | **HIGH** if editing dashboard |
+| **Account** | `PremiumAppTile` grid | Leading gold; **multi-color per §5.2** — not monochrome gold | Medium sections | Trust history; no wallet expansion | Refine after screenshot QA |
+| **SOS** | `PremiumAppTile` hub | Leading magenta; **multi-color per §5.2** | Low + disclaimer panel | Disclaimers required; no dispatch claim | **LOW** UX; **HIGH** copy claims |
 | **LeTan** | Entry prefill only | Cyan assist | N/A in chat | No payment promise in prompts | **HIGH** logic |
 
 ---

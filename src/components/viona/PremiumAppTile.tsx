@@ -1,13 +1,16 @@
 /**
  * Wave 3B — shared Premium App Tile primitive (visual only; no business logic).
  *
- * Safety (accent semantics):
- * - Gold: Business / Account identity — not paid, commercial ready, or payout.
- * - Emerald: Local trust / requests — not settled or provider paid.
- * - Magenta: SOS / alert — not dispatch, rescue, or normal commerce.
- * - Cyan / Violet / Assistant: Travel, Academy, pilot assistant — not autonomous AI execution.
+ * Color governance (`docs/design/VIONA_WAVE_3_PREMIUM_APP_TILE_RULES.md` §5):
+ * - `variant` → **leadingUniverseAccent** (hub atmosphere) when `accent` is omitted.
+ * - `accent` → **semanticFeatureAccent** override per tile (controlled multi-color inside a hub).
+ * - Not one color per universe — mix accents by feature meaning; status chip text is primary, color secondary.
  *
- * Surfaces adopt this via targeted packs; UI does not yet match the north-star until hubs migrate.
+ * Safety (semantic feature accents — never imply locked business state):
+ * - Gold — not paid, commercial ready, payout, or settlement.
+ * - Emerald — not settled, provider paid, or payment captured.
+ * - Magenta — not dispatch, rescue guarantee, auto-alert, or normal commerce checkout.
+ * - Cyan / Violet / Assistant — pilot surfaces only; not autonomous AI or production certification.
  */
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';

@@ -2,28 +2,45 @@
  * VIONA Wave 3B — Premium App Tile visual foundation.
  * North-star: “Premium App Tiles — Universe Standard” (see docs/design/VIONA_WAVE_3B_VISUAL_WOW_GAP_AUDIT.md).
  *
- * USAGE RULES (product + safety — not optional):
- * - Gold = Business / Account identity accent only — never “paid”, “commercial ready”, or payout.
- * - Emerald = Local trust / request flow — never “settled”, “provider paid”, or payment captured.
- * - Magenta = SOS / alert only — never normal commerce tiles or checkout.
- * - Cyan = Travel / tech / assistant surfaces — assistant is pilot UI, not autonomous AI.
- * - Violet = Academy / language / learning — never “production AI teacher”.
- * - Glow must encode universe meaning (stroke + corner wash + semantic shadow) — not decoration-only blobs.
+ * COLOR GOVERNANCE (Wave 3B semantic correction — `VIONA.WAVE_3B.SEMANTIC_COLOR_GOVERNANCE.1`):
+ * - **Not** one fixed color per universe. Each hub has a **leadingUniverseAccent** (atmosphere / section identity).
+ * - Each feature tile uses a **semanticFeatureAccent** (`PremiumAppTile` `accent` override) based on **function meaning**.
+ * - **controlledMultiAccent** grids mix accents inside a hub when semantics differ (recommended; matches north-star reference).
+ * - `premiumUniverseAccentMap` = material specs for all accents. `premiumUniverseAccentByHub` = **defaults only**, not a hard lock.
+ *
+ * SEMANTIC FEATURE ACCENT MEANINGS (product + safety — not optional):
+ * - **Cyan** — travel / tech / navigation / interactive / focus (not autonomous AI execution).
+ * - **Emerald** — local trust / safe status / request clarity / progress (not settled, provider paid, or payment captured).
+ * - **Violet** — academy / AI / language / translation / learning (not production AI teacher or accredited certification).
+ * - **Gold** — premium / account / business / highlighted value (not paid, payout, cash-out, or commercial readiness).
+ * - **Magenta** — SOS / alert / risk / urgent (not dispatch, rescue guarantee, or auto-alert).
+ * - **Assistant** — LeTan / pilot assistant (cyan-led + violet wash; pilot UI only).
+ * - Glow encodes **feature** meaning on each tile (stroke + corner wash + semantic shadow) — not decoration-only blobs.
+ * - **Text status chip carries meaning; color is secondary** — never icon-only status.
  * - Local remains REQUEST_ONLY_NO_CHARGE; SOS remains guidance-only (copy packs enforce; tokens do not imply money).
  *
- * This module is tokens/utilities only. Surfaces are not refactored until later Wave 3B packs.
+ * This module is tokens/utilities only.
  */
 
 import { Platform, type ViewStyle } from 'react-native';
 
-/** Semantic universe accents for Premium App Tiles (Wave 3B). */
+/**
+ * Semantic feature accent palette — usable on any hub tile via `accent` override.
+ * Not tied to a single universe; see `leadingUniverseAccentByHub` for hub defaults.
+ */
 export type VionaUniverseAccent =
-  | 'emerald' // Local
-  | 'cyan' // Travel
-  | 'violet' // Academy
-  | 'gold' // Business + Account (identity / premium chrome — not payment)
-  | 'magenta' // SOS / alert
-  | 'assistant'; // LeTan / assistant — cyan-led, violet secondary (pilot only)
+  | 'emerald'
+  | 'cyan'
+  | 'violet'
+  | 'gold'
+  | 'magenta'
+  | 'assistant';
+
+/** @alias VionaUniverseAccent — default atmosphere when a tile has no `accent` override. */
+export type LeadingUniverseAccent = VionaUniverseAccent;
+
+/** @alias VionaUniverseAccent — per-tile accent chosen for feature meaning inside a hub grid. */
+export type SemanticFeatureAccent = VionaUniverseAccent;
 
 /** Interaction state for tile material resolution. */
 export type PremiumTileState = 'default' | 'hovered' | 'pressed' | 'disabled';
@@ -140,8 +157,8 @@ export const premiumTileInteraction = {
 } as const;
 
 /**
- * Universe accent map — semantic glow/stroke/ink per hub.
- * Account uses gold (identity chrome). Assistant uses cyan primary + violet wash secondary.
+ * Material specs for every semantic feature accent (glow/stroke/ink/capsule).
+ * Tiles pick an entry via `accent` prop — not via hub name alone.
  */
 export const premiumUniverseAccentMap: Readonly<Record<VionaUniverseAccent, PremiumUniverseAccentSpec>> = {
   emerald: {
@@ -237,7 +254,10 @@ export const premiumUniverseAccentMap: Readonly<Record<VionaUniverseAccent, Prem
   },
 } as const;
 
-/** Hub → default universe accent (implementation packs may override per tile). */
+/**
+ * Hub → **leadingUniverseAccent** (section atmosphere / `PremiumAppTile` default when `accent` omitted).
+ * **controlledMultiAccent:** override per tile with `accent` for feature semantics — required for north-star grids.
+ */
 export const premiumUniverseAccentByHub = {
   local: 'emerald',
   travel: 'cyan',
@@ -247,6 +267,27 @@ export const premiumUniverseAccentByHub = {
   sos: 'magenta',
   assistant: 'assistant',
 } as const satisfies Readonly<Record<string, VionaUniverseAccent>>;
+
+/** @alias premiumUniverseAccentByHub — explicit leading-accent naming for docs/code review. */
+export const leadingUniverseAccentByHub = premiumUniverseAccentByHub;
+
+export type PremiumUniverseHubKey = keyof typeof premiumUniverseAccentByHub;
+
+/** Leading accent for hub canvas / hero atmosphere (not a per-tile lock). */
+export function resolveLeadingUniverseAccent(hub: PremiumUniverseHubKey): LeadingUniverseAccent {
+  return premiumUniverseAccentByHub[hub];
+}
+
+/**
+ * Tile accent resolution: explicit **semanticFeatureAccent** override wins; else hub leading accent.
+ * Use in packs when documenting intent: `resolveSemanticFeatureAccent('local', 'cyan')` for transit tile.
+ */
+export function resolveSemanticFeatureAccent(
+  hub: PremiumUniverseHubKey,
+  featureAccentOverride?: SemanticFeatureAccent
+): SemanticFeatureAccent {
+  return featureAccentOverride ?? premiumUniverseAccentByHub[hub];
+}
 
 export function premiumUniverseAccentSpec(accent: VionaUniverseAccent): PremiumUniverseAccentSpec {
   return premiumUniverseAccentMap[accent];

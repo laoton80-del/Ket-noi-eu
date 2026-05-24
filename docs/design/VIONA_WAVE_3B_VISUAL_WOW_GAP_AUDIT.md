@@ -36,7 +36,7 @@ Wave 3 succeeded at **copy, safety, and tile anatomy** (title/subtitle/chip, `nu
 | **Migration from dashboard rows** | **Incomplete** — Home **briefing rail**, collapsible `DashboardB2CScreen`, `VionaInfoTile`-style patterns remain | **Dense row / dashboard** feel on Home |
 | **Visual state system** | **Fragmented** — 4+ glass stacks: `LocalConstellationFrame`, `TravelGlassCard`, `AcademyGlassCard` (account neon), `AccountNeonGlassPanel`, `VionaFashionWorldCard`, `EmergencyHubTile` | Inconsistent depth, blur, and glow curves |
 | **Responsive pixel QA** | **Weak** — Wave 3 visual spot-check was **projection-only**; no screenshot artifacts | “Old” may be **real clipping** on device, not just tokens |
-| **Shared token/component reuse** | **Missing** — no `PremiumTile` / `PremiumGlassMaterial` / unified `universeAccentMap` export | Each pack tweaked one hub; **system did not land** |
+| **Shared token/component reuse** | **Landed** — `PremiumAppTile` + tokens; **governance corrected** @ SEMANTIC_COLOR_GOVERNANCE.1 (multi-color per feature, not one color per universe) | Future packs must use `accent` overrides per §5.2 |
 
 **Conclusion:** Wave 3 was a **grammar pass**, not a **material system pass**. The north-star requires **shared tokens + one tile primitive + hub canvas alignment + Home restraint** — implemented in small packs, not one rewrite.
 
@@ -193,6 +193,7 @@ Visual wow packs must **not** introduce commercial/payment copy or behavior.
 | **`WIONA.WAVE_3B.TRAVEL_VISUAL_WOW.1`** | **COMPLETE** — `TravelScreen` scenario + quick-help tiles → `PremiumAppTile` + `PremiumTileGrid`; pilot pills use cyan Wave 3B tokens. `TravelAppTile` retained for other imports only if unused in hub. Screenshots **NOT RUN**. |
 | **`WIONA.WAVE_3B.ACADEMY_VISUAL_WOW.1`** | **COMPLETE** — `AcademyScreen` module grid → `PremiumAppTile` + `PremiumTileGrid`; violet pilot pills use Wave 3B tokens. Hero/safety panels unchanged. Screenshots **NOT RUN**. |
 | **`VIONA.WAVE_3B.ACCOUNT_SOS_VISUAL_WOW.1`** | **COMPLETE** — `CaNhanScreen` shortcuts/settings → `PremiumAppTile` grids; `EmergencyHubTile` → `PremiumAppTile` (sos); `EmergencySOSScreen` hub grid + magenta pilot chips. Screenshots **NOT RUN**. |
+| **`VIONA.WAVE_3B.SEMANTIC_COLOR_GOVERNANCE.1`** | **COMPLETE** — docs + token comments: leading vs feature accent; controlled multi-color law; safety boundaries. **No screen changes.** |
 
 ---
 
@@ -200,8 +201,9 @@ Visual wow packs must **not** introduce commercial/payment copy or behavior.
 
 | Priority | Action |
 |----------|--------|
-| **1** | Optional manual screenshot pass (Account, SOS, Local at 4 viewports) |
-| **2** | Home shell alignment (pack G) later |
+| **1** | **`VIONA.WAVE_3B.LOCAL_SEMANTIC_COLOR_BALANCE.1`** — audit Local hub tiles for per-feature `accent` (avoid monochrome emerald); optional Account/SOS refinements same rule |
+| **2** | Optional manual screenshot pass (Account, SOS, Local at 4 viewports) — verify multi-color reads intentional |
+| **3** | Home shell alignment (pack G) later |
 | **3** | Optional: `git restore` 11 CRLF-noise paths after leadership confirms no lost local work |
 | **4** | Manual screenshot pass (pack I) before external demo |
 

@@ -1,6 +1,6 @@
 /**
  * Wave 3B — text status chip (visual primitive only).
- * Color accents universe meaning; label text is required — never icon-only status.
+ * Label text is required (meaning is not color-only); `accent` mirrors tile semanticFeatureAccent.
  */
 import type { ReactElement } from 'react';
 import { StyleSheet, Text, View, type StyleProp, type ViewStyle } from 'react-native';
