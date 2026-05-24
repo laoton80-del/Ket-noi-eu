@@ -31,7 +31,7 @@ Sessions 1–4 demonstrate repeatable staging behavior for user/merchant request
 | Public HTTPS smoke stability | **PASS** (4 sessions) | `smoke-public-staging-api.mjs` exit 0 |
 | Ops Audit read-only safety | **PASS** | `opsAuditMutationSafe`, forbidden roles 401/403, redaction |
 
-**Aggregate rollup:** `VIONA_LOCAL_NO_CHARGE_CONTROLLED_PILOT_SESSIONS_1_4_ROLLUP.md`
+**Aggregate rollup:** `VIONA_LOCAL_NO_CHARGE_CONTROLLED_PILOT_SESSIONS_1_5_ROLLUP.md` (sessions 1–5 @ `d118b12+`; post–1–4 snapshot: `VIONA_LOCAL_NO_CHARGE_CONTROLLED_PILOT_SESSIONS_1_4_ROLLUP.md`)
 
 ---
 
@@ -183,7 +183,8 @@ Options B and C can run **in parallel** with Option A if scope stays API/web-onl
 
 | Doc | Role |
 |-----|------|
-| `VIONA_LOCAL_NO_CHARGE_CONTROLLED_PILOT_SESSIONS_1_4_ROLLUP.md` | Evidence aggregate |
+| `VIONA_LOCAL_NO_CHARGE_CONTROLLED_PILOT_SESSIONS_1_5_ROLLUP.md` | Evidence aggregate (sessions 1–5) |
+| `VIONA_LOCAL_NO_CHARGE_CONTROLLED_PILOT_SESSIONS_1_4_ROLLUP.md` | Evidence aggregate (sessions 1–4 snapshot) |
 | `VIONA_LOCAL_NO_CHARGE_CONTROLLED_PILOT_SESSIONS_1_3_ROLLUP.md` | Sessions 1–3 snapshot |
 | `VIONA_LOCAL_NO_CHARGE_PILOT_READINESS_REVIEW_AFTER_SESSIONS_1_3.md` | Post sessions 1–3 review (superseded for current decision by this doc) |
 | `VIONA_LOCAL_NO_CHARGE_CONTROLLED_PILOT_SESSION_1.md` | Session 1 |

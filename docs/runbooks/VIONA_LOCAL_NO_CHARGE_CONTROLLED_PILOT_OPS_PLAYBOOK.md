@@ -191,7 +191,7 @@ Staging DB remains source of truth; rollback is **access/config**, not data dest
 
 ## Pilot sessions index
 
-**Rollup (sessions 1–4):** `VIONA_LOCAL_NO_CHARGE_CONTROLLED_PILOT_SESSIONS_1_4_ROLLUP.md` @ `0729e16+`
+**Rollup (sessions 1–5):** `VIONA_LOCAL_NO_CHARGE_CONTROLLED_PILOT_SESSIONS_1_5_ROLLUP.md` @ `d118b12+`
 **Readiness review (post 1–4):** `VIONA_LOCAL_NO_CHARGE_PILOT_READINESS_REVIEW_AFTER_SESSIONS_1_4.md` — Session 5+ **may proceed** (same scope)
 **Global Active roadmap:** `docs/roadmap/VIONA_GLOBAL_ACTIVE_FULL_COMMERCIAL_MASTER_WAVE_ROADMAP.md` — 12 waves; planning only; **not** commercial yet
 
@@ -220,5 +220,5 @@ Staging DB remains source of truth; rollback is **access/config**, not data dest
 | Ops audit API (read-only list) | `GET /api/local/ops/requests` — `Role.ADMIN`; test: `test-local-ops-request-list-api-1.ts` |
 | Ops audit HTTPS smoke | **PASS** — latest paced smoke; see `VIONA_LOCAL_NO_CHARGE_CONTROLLED_PILOT_SESSION_2.md` |
 | Ops audit UI session 2 | `VIONA_LOCAL_NO_CHARGE_CONTROLLED_PILOT_SESSION_2.md` |
-| Sessions 1–4 rollup | `VIONA_LOCAL_NO_CHARGE_CONTROLLED_PILOT_SESSIONS_1_4_ROLLUP.md` |
+| Sessions 1–5 rollup | `VIONA_LOCAL_NO_CHARGE_CONTROLLED_PILOT_SESSIONS_1_5_ROLLUP.md` |
 | Ops ADMIN PIN rehash | `npx tsx scripts/provision-local-ops-admin-staging.ts` (staging only) |

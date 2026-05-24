@@ -40,19 +40,32 @@
 
 ---
 
-## Controlled pilot sessions 1–4 rollup (`SESSIONS_1_4_ROLLUP.1`)
+## Controlled pilot sessions 1–5 rollup (`SESSIONS_1_5_ROLLUP.1`)
 
 | Item | Value |
 |------|--------|
-| **HEAD** | `0729e16` |
-| **Rollup doc** | `docs/runbooks/VIONA_LOCAL_NO_CHARGE_CONTROLLED_PILOT_SESSIONS_1_4_ROLLUP.md` |
+| **HEAD** | `d118b12` |
+| **Rollup doc** | `docs/runbooks/VIONA_LOCAL_NO_CHARGE_CONTROLLED_PILOT_SESSIONS_1_5_ROLLUP.md` |
 | **Session 1** | API + UI **PASS** |
 | **Session 2** | User/merchant/ops API + Expo ops UI **PASS** |
 | **Session 3** | Public HTTPS API/ops **PASS** |
 | **Session 4** | Public HTTPS API/ops **PASS** |
+| **Session 5** | Public HTTPS API/ops **PASS** |
 | **Native secret-tap** | **NOT RUN / NOT COMPLETED** |
+| **Pause** | **No** (sessions 1–5) |
+| **Classification** | Very strong repeated PASS evidence (sessions 1–5); whole VIONA pre-commercial |
+
+---
+
+## Controlled pilot sessions 1–4 rollup (`SESSIONS_1_4_ROLLUP.1`) — snapshot
+
+| Item | Value |
+|------|--------|
+| **HEAD** | `597bddb` |
+| **Rollup doc** | `docs/runbooks/VIONA_LOCAL_NO_CHARGE_CONTROLLED_PILOT_SESSIONS_1_4_ROLLUP.md` |
+| **Session 1–4** | **PASS** |
 | **Pause** | **No** (sessions 1–4) |
-| **Classification** | Strong repeated PASS evidence (sessions 1–4); whole VIONA pre-commercial |
+| **Classification** | Superseded by sessions 1–5 rollup |
 
 ---
 
