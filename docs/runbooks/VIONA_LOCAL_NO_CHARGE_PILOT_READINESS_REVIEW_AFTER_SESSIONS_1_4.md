@@ -1,20 +1,20 @@
-# VIONA Local no-charge — pilot readiness review (after sessions 1–3)
+# VIONA Local no-charge — pilot readiness review (after sessions 1–4)
 
-**Pack:** `VIONA.LOCAL.NO_CHARGE.PILOT_READINESS_REVIEW_AFTER_SESSIONS_1_3.1`
-**Superseded for current decision by:** `docs/runbooks/VIONA_LOCAL_NO_CHARGE_PILOT_READINESS_REVIEW_AFTER_SESSIONS_1_4.md` @ `597bddb+`
-**Rollup:** `docs/runbooks/VIONA_LOCAL_NO_CHARGE_CONTROLLED_PILOT_SESSIONS_1_3_ROLLUP.md`
+**Pack:** `VIONA.LOCAL.NO_CHARGE.PILOT_READINESS_REVIEW_AFTER_SESSIONS_1_4.1`
+**Rollup:** `docs/runbooks/VIONA_LOCAL_NO_CHARGE_CONTROLLED_PILOT_SESSIONS_1_4_ROLLUP.md`
 **Playbook:** `docs/runbooks/VIONA_LOCAL_NO_CHARGE_CONTROLLED_PILOT_OPS_PLAYBOOK.md`
 **Ops Audit UI plan:** `docs/runbooks/VIONA_LOCAL_NO_CHARGE_OPS_AUDIT_UI_PLAN.md`
-**Review baseline HEAD:** `2841d3d` — `docs(local): roll up controlled pilot sessions 1-3`
+**Prior review (sessions 1–3):** `docs/runbooks/VIONA_LOCAL_NO_CHARGE_PILOT_READINESS_REVIEW_AFTER_SESSIONS_1_3.md`
+**Review baseline HEAD:** `597bddb` — `docs(local): roll up controlled pilot sessions 1-4`
 **Review date (UTC):** 2026-05-24
 
 ---
 
 ## 1. Review headline
 
-**Local no-charge public HTTPS controlled pilot has strong sessions 1–3 PASS evidence, but remains non-commercial and not production.**
+**Local no-charge public HTTPS controlled pilot has strong repeated PASS evidence across sessions 1–4, but remains non-commercial and not production.**
 
-Sessions 1–3 demonstrate repeatable staging behavior for user/merchant request-only flows, tenant isolation, and read-only ops visibility on `https://viona-api-staging-eu.fly.dev`. This is **controlled pilot** evidence only — not production launch, not payment readiness, and not Global Active / full commercial VIONA.
+Sessions 1–4 demonstrate repeatable staging behavior for user/merchant request-only flows, tenant isolation, and read-only ops visibility on `https://viona-api-staging-eu.fly.dev`. This is **controlled pilot** evidence only — not production launch, not payment readiness, and not Global Active / full commercial VIONA.
 
 ---
 
@@ -26,20 +26,21 @@ Sessions 1–3 demonstrate repeatable staging behavior for user/merchant request
 | Session 2 user/merchant/ops API | **PASS** | Session 2 §9 @ `028ea9f` |
 | Session 2 Expo Ops Audit UI (web) | **PASS** | Session 2 §5 |
 | Session 3 public HTTPS API/ops | **PASS** | Session 3 §11 @ 2026-05-24 |
-| Pause decisions (sessions 1–3) | **No pause** | All session docs §issues/pause |
-| Public HTTPS smoke stability | **PASS** (3 sessions) | `smoke-public-staging-api.mjs` exit 0 |
+| Session 4 public HTTPS API/ops | **PASS** | Session 4 §11 @ 2026-05-24 |
+| Pause decisions (sessions 1–4) | **No pause** | All session docs §issues/pause |
+| Public HTTPS smoke stability | **PASS** (4 sessions) | `smoke-public-staging-api.mjs` exit 0 |
 | Ops Audit read-only safety | **PASS** | `opsAuditMutationSafe`, forbidden roles 401/403, redaction |
 
-**Aggregate rollup:** `VIONA_LOCAL_NO_CHARGE_CONTROLLED_PILOT_SESSIONS_1_4_ROLLUP.md` (sessions 1–4 @ `0729e16+`; post–1–3 snapshot: `VIONA_LOCAL_NO_CHARGE_CONTROLLED_PILOT_SESSIONS_1_3_ROLLUP.md`)
+**Aggregate rollup:** `VIONA_LOCAL_NO_CHARGE_CONTROLLED_PILOT_SESSIONS_1_4_ROLLUP.md`
 
 ---
 
 ## 3. Capability readiness
 
-Readiness = fit for **session 4+ controlled no-charge pilot** on public HTTPS (same scope). Not production certification.
+Readiness = fit for **session 5+ controlled no-charge pilot** on public HTTPS (same scope). Not production certification.
 
-| Capability | Readiness | Sessions 1–3 |
-|------------|-----------|--------------|
+| Capability | Readiness | Sessions 1–4 |
+|------------|-----------|----------------|
 | Public HTTPS API | **Ready** | Health PASS all sessions |
 | User login | **Ready** | User A/B PASS |
 | Merchant login | **Ready** | Merchant M/N PASS |
@@ -65,7 +66,7 @@ Readiness = fit for **session 4+ controlled no-charge pilot** on public HTTPS (s
 | Invariant | Status |
 |-----------|--------|
 | `REQUEST_ONLY_NO_CHARGE` | **PASS** — observed in smoke |
-| `walletPhase` **NONE** | **PASS** — no drift in sessions 1–3 |
+| `walletPhase` **NONE** | **PASS** — no drift in sessions 1–4 |
 | `paymentCaptured` **false** | **PASS** |
 | Confirmed does not mean paid | **PASS** — API `safety` + UI copy |
 | No hold / debit / refund / settlement / payout / cash-out / escrow | **PASS** — not in pilot actions |
@@ -82,9 +83,10 @@ Readiness = fit for **session 4+ controlled no-charge pilot** on public HTTPS (s
 |------|--------|
 | Ops Audit API (HTTPS) | **PASS** — list, detail, role gates |
 | Expo web operator walkthrough | **PASS** — session 2 §5 |
-| Used in sessions 2–3 | **Yes** — API corroboration each session |
+| Used in sessions 2–4 | **Yes** — API corroboration each session |
 | Support / incident procedures | **Lightweight** — playbook §7–§8 exist; may need refinement from real incidents |
 | Production admin | **Not claimed** |
+| Payment dashboard | **Not claimed** |
 | Native Ops Audit UI | **NOT COMPLETED** |
 
 **Verdict:** Ops visibility is **ready for controlled pilot** (read-only, staging). Not ready for production admin or payment-dashboard interpretation.
@@ -99,10 +101,10 @@ Readiness = fit for **session 4+ controlled no-charge pilot** on public HTTPS (s
 | Metro / JS launch | **PASS** @ session 2 §11.7 (with caveats) |
 | Secret-tap ×5 → PIN → Admin → Local Ops Audit (native UI) | **NOT COMPLETED** |
 | Claim native PASS | **Do not** — insufficient evidence |
-| Optional for web/API session 4+ | **Yes** — native not blocking API-only expansion |
-| Required before native production confidence | **Yes** — manual §7 checklist on stable device |
+| Optional for web/API session 5+ | **Yes** — native not blocking API-only continuation |
+| Required before native production confidence | **Yes** — manual §8 checklist on stable device (session 4 doc) |
 
-**Verdict:** Native track is **not ready** for production confidence; optional gate for session 4+ if scope stays public HTTPS + Expo web ops corroboration.
+**Verdict:** Native track is **not ready** for production confidence; optional gate for session 5+ if scope stays public HTTPS + Expo web ops corroboration.
 
 ---
 
@@ -110,14 +112,14 @@ Readiness = fit for **session 4+ controlled no-charge pilot** on public HTTPS (s
 
 | Risk | Level | Mitigation |
 |------|-------|------------|
-| Native secret-tap/PIN walkthrough not completed | **Medium** | Complete session 3 §7 on physical device; mark NOT RUN in session logs until done; do not substitute Expo web |
+| Native secret-tap/PIN walkthrough not completed | **Medium** | Complete session 4 §8 on physical device; mark NOT RUN in session logs until done; do not substitute Expo web |
 | Emulator / UI automation instability | **Low–Medium** | Prefer physical device for native attestation; avoid claiming UI PASS from flaky automation |
-| Ops support process still lightweight | **Low** | Use playbook §7–§8; file privacy-safe incident packs; refine after session 4 issues |
+| Ops support process still lightweight | **Low** | Use playbook §7–§8; file privacy-safe incident packs; refine after session 5+ issues |
 | No real paid/commercial payment path | **Low** (expected) | Keep money law in every session doc; pause on `paymentCaptured` or `walletPhase` drift |
 | No production merchant onboarding | **Low** (expected) | Limited roster only; manual approval for new participants |
 | No AI / SOS production reliability | **Low** (out of scope) | Do not conflate Local pilot PASS with SOS/AI production claims |
 | Ops Audit mistaken for payment dashboard | **Low** | Limitation banner + chips; operator training |
-| Staging-only evidence over-generalized | **Medium** | Repeat smoke each session; no production/commercial wording in evidence |
+| Staging evidence over-generalized as production | **Medium** | Repeat smoke each session; no production/commercial wording in evidence |
 
 ---
 
@@ -125,7 +127,7 @@ Readiness = fit for **session 4+ controlled no-charge pilot** on public HTTPS (s
 
 | Option | Description | When to choose |
 |--------|-------------|----------------|
-| **A** | Proceed with **Session 4+** controlled no-charge pilot (same scope) | Default if no pause triggers hit |
+| **A** | Proceed with **Session 5+** controlled no-charge pilot (same scope) | Default if no pause triggers hit |
 | **B** | Complete **native manual attestation** first | Before any native production narrative or store-facing claims |
 | **C** | Strengthen **ops support/incident playbook** first | After first real operator incident or support load |
 | **D** | **Pause** Local expansion until additional manual checks | Any pause criterion fires (§4 / playbook §5) |
@@ -136,7 +138,7 @@ Options B and C can run **in parallel** with Option A if scope stays API/web-onl
 
 ## 9. Recommended decision
 
-**Recommend Option A:** Session 4+ controlled no-charge pilot **may proceed** under all of the following:
+**Recommend Option A:** Session 5+ controlled no-charge pilot **may proceed** under all of the following:
 
 | Constraint | Requirement |
 |------------|-------------|
@@ -145,11 +147,11 @@ Options B and C can run **in parallel** with Option A if scope stays API/web-onl
 | Ops | Ops Audit **active** (read-only); ADMIN login; smoke at session start |
 | Claims | **No** production, payment, settlement, or Global Active claims |
 | Pause | Unchanged criteria — stop on money drift, isolation failure, ops leak, or mutation |
-| Native | Status **clearly marked NOT COMPLETED** in session evidence until §7 done |
+| Native | Status **clearly marked NOT COMPLETED** in session evidence until §8 done |
 
 **Not recommended without finance approval:** payment capture, wallet ledger, settlement, payout, commercial launch, production admin certification.
 
-**Optional parallel work (does not block A):** Option B (native §7 on stable device); Option C (playbook refinement from session 4 ops).
+**Optional parallel work (does not block A):** Option B (native §8 on stable device); Option C (playbook refinement from session 5+ ops).
 
 ---
 
@@ -170,10 +172,10 @@ Options B and C can run **in parallel** with Option A if scope stays API/web-onl
 
 | Question | Answer |
 |----------|--------|
-| Proceed to session 4+ (controlled, same scope)? | **Yes — recommended** |
+| Proceed to session 5+ (controlled, same scope)? | **Yes — recommended** |
 | Ready for production / commercial? | **No** |
 | Ready for native production confidence? | **No** — attestation incomplete |
-| Pause required now? | **No** (based on sessions 1–3 evidence) |
+| Pause required now? | **No** (based on sessions 1–4 evidence) |
 
 ---
 
@@ -181,11 +183,12 @@ Options B and C can run **in parallel** with Option A if scope stays API/web-onl
 
 | Doc | Role |
 |-----|------|
-| `VIONA_LOCAL_NO_CHARGE_CONTROLLED_PILOT_SESSIONS_1_4_ROLLUP.md` | Evidence aggregate (sessions 1–4) |
-| `VIONA_LOCAL_NO_CHARGE_CONTROLLED_PILOT_SESSIONS_1_3_ROLLUP.md` | Evidence aggregate (sessions 1–3 snapshot) |
+| `VIONA_LOCAL_NO_CHARGE_CONTROLLED_PILOT_SESSIONS_1_4_ROLLUP.md` | Evidence aggregate |
+| `VIONA_LOCAL_NO_CHARGE_CONTROLLED_PILOT_SESSIONS_1_3_ROLLUP.md` | Sessions 1–3 snapshot |
+| `VIONA_LOCAL_NO_CHARGE_PILOT_READINESS_REVIEW_AFTER_SESSIONS_1_3.md` | Post sessions 1–3 review (superseded for current decision by this doc) |
 | `VIONA_LOCAL_NO_CHARGE_CONTROLLED_PILOT_SESSION_1.md` | Session 1 |
 | `VIONA_LOCAL_NO_CHARGE_CONTROLLED_PILOT_SESSION_2.md` | Session 2 |
 | `VIONA_LOCAL_NO_CHARGE_CONTROLLED_PILOT_SESSION_3.md` | Session 3 |
-| `VIONA_LOCAL_NO_CHARGE_CONTROLLED_PILOT_SESSION_4.md` | Session 4 prep (Option A runbook) |
+| `VIONA_LOCAL_NO_CHARGE_CONTROLLED_PILOT_SESSION_4.md` | Session 4 |
 | `VIONA_LOCAL_NO_CHARGE_PILOT_SIGNOFF.md` | Initial readiness sign-off |
 | `VIONA_PROJECT_KERNEL.md` | Kernel pointers |

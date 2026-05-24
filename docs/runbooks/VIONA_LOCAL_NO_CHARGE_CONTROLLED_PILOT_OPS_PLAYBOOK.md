@@ -192,7 +192,7 @@ Staging DB remains source of truth; rollback is **access/config**, not data dest
 ## Pilot sessions index
 
 **Rollup (sessions 1–4):** `VIONA_LOCAL_NO_CHARGE_CONTROLLED_PILOT_SESSIONS_1_4_ROLLUP.md` @ `0729e16+`
-**Readiness review (post 1–3):** `VIONA_LOCAL_NO_CHARGE_PILOT_READINESS_REVIEW_AFTER_SESSIONS_1_3.md` — Session 4+ **may proceed** (same scope)
+**Readiness review (post 1–4):** `VIONA_LOCAL_NO_CHARGE_PILOT_READINESS_REVIEW_AFTER_SESSIONS_1_4.md` — Session 5+ **may proceed** (same scope)
 
 | Session | Doc | Verdict |
 |---------|-----|---------|

@@ -5,7 +5,7 @@
 **Ops Audit UI plan:** `docs/runbooks/VIONA_LOCAL_NO_CHARGE_OPS_AUDIT_UI_PLAN.md`
 **Handoff:** `docs/handoff/VIONA_LOCAL_NO_CHARGE_PILOT_READINESS_HANDOFF_1.md`
 **Prior rollup (sessions 1–3):** `docs/runbooks/VIONA_LOCAL_NO_CHARGE_CONTROLLED_PILOT_SESSIONS_1_3_ROLLUP.md`
-**Readiness review (post 1–3):** `docs/runbooks/VIONA_LOCAL_NO_CHARGE_PILOT_READINESS_REVIEW_AFTER_SESSIONS_1_3.md`
+**Readiness review:** `docs/runbooks/VIONA_LOCAL_NO_CHARGE_PILOT_READINESS_REVIEW_AFTER_SESSIONS_1_4.md` (post 1–3 snapshot: `VIONA_LOCAL_NO_CHARGE_PILOT_READINESS_REVIEW_AFTER_SESSIONS_1_3.md`)
 **Current HEAD:** `0729e16` — `docs(local): record controlled pilot session 4`
 **Rollup date (UTC):** 2026-05-24
 
@@ -183,5 +183,6 @@ node scripts/smoke-public-staging-api.mjs https://viona-api-staging-eu.fly.dev
 | `VIONA_LOCAL_NO_CHARGE_CONTROLLED_PILOT_OPS_PLAYBOOK.md` | Daily ops + pause + session index |
 | `VIONA_LOCAL_NO_CHARGE_OPS_AUDIT_UI_PLAN.md` | Ops Audit UI scope + packs |
 | `VIONA_LOCAL_NO_CHARGE_PILOT_SIGNOFF.md` | Readiness sign-off |
-| `VIONA_LOCAL_NO_CHARGE_PILOT_READINESS_REVIEW_AFTER_SESSIONS_1_3.md` | Post sessions 1–3 readiness decision |
+| `VIONA_LOCAL_NO_CHARGE_PILOT_READINESS_REVIEW_AFTER_SESSIONS_1_4.md` | Post sessions 1–4 readiness decision |
+| `VIONA_LOCAL_NO_CHARGE_PILOT_READINESS_REVIEW_AFTER_SESSIONS_1_3.md` | Post sessions 1–3 review snapshot |
 | `VIONA_PROJECT_KERNEL.md` | Kernel money law + pilot pointers |

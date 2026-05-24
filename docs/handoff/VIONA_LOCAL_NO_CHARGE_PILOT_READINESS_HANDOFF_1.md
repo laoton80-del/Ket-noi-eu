@@ -69,13 +69,25 @@
 
 ---
 
-## Pilot readiness review after sessions 1–3 (`PILOT_READINESS_REVIEW_AFTER_SESSIONS_1_3.1`)
+## Pilot readiness review after sessions 1–4 (`PILOT_READINESS_REVIEW_AFTER_SESSIONS_1_4.1`)
+
+| Item | Value |
+|------|--------|
+| **Baseline** | `597bddb` |
+| **Review doc** | `docs/runbooks/VIONA_LOCAL_NO_CHARGE_PILOT_READINESS_REVIEW_AFTER_SESSIONS_1_4.md` |
+| **Verdict** | Session 5+ controlled no-charge pilot **may proceed** (Option A) — same scope, limited roster, ops audit active, pause criteria unchanged |
+| **Not approved** | Production, commercial/payment, Global Active, native production confidence |
+| **Native** | Secret-tap/PIN **NOT COMPLETED** — do not claim native PASS |
+
+---
+
+## Pilot readiness review after sessions 1–3 (`PILOT_READINESS_REVIEW_AFTER_SESSIONS_1_3.1`) — snapshot
 
 | Item | Value |
 |------|--------|
 | **Baseline** | `2841d3d` |
 | **Review doc** | `docs/runbooks/VIONA_LOCAL_NO_CHARGE_PILOT_READINESS_REVIEW_AFTER_SESSIONS_1_3.md` |
-| **Verdict** | Session 4+ controlled no-charge pilot **may proceed** (Option A) — same scope, limited roster, ops audit active, pause criteria unchanged |
+| **Verdict** | Session 4+ controlled no-charge pilot **may proceed** (Option A) — superseded by post–1–4 review |
 | **Not approved** | Production, commercial/payment, Global Active, native production confidence |
 | **Native** | Secret-tap/PIN **NOT COMPLETED** — do not claim native PASS |
 
