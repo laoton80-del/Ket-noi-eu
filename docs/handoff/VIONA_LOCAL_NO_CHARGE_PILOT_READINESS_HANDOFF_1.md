@@ -77,6 +77,20 @@
 
 ---
 
+## Session 4 run (`CONTROLLED_PILOT_SESSION_4.RUN.1`)
+
+| Item | Value |
+|------|--------|
+| **Baseline** | `b5d7607` |
+| **Run doc** | `docs/runbooks/VIONA_LOCAL_NO_CHARGE_CONTROLLED_PILOT_SESSION_4.md` |
+| **Verdict** | **PASS** — public HTTPS smoke exit 0 @ 2026-05-24 |
+| **Money** | `REQUEST_ONLY_NO_CHARGE`; `walletPhase` **NONE**; `paymentCaptured` **false** |
+| **Ops** | ADMIN list/detail **PASS**; B2C/merchant 403; unauthed 401 |
+| **Native** | **NOT RUN** — secret-tap/PIN **NOT COMPLETED** |
+| **Pause** | **No** |
+
+---
+
 ## 1. Executive summary
 
 The **Local request-only / no-charge** pilot lane on VIONA is **automated QA-ready** on `master`: schema, APIs, merchant/user UI, EN/VI safe copy, VI runtime status labels, composed E2E runner, staging DB verification runbook, and manual device checklist are in place.

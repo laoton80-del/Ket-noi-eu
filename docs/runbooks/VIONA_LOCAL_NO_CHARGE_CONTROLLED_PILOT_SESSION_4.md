@@ -1,32 +1,51 @@
 # VIONA Local no-charge — controlled pilot session 4 (prep)
 
-**Pack:** `VIONA.LOCAL.NO_CHARGE.CONTROLLED_PILOT_SESSION_4.PREP.1`
+**Pack:** `VIONA.LOCAL.NO_CHARGE.CONTROLLED_PILOT_SESSION_4.PREP.1` · `VIONA.LOCAL.NO_CHARGE.CONTROLLED_PILOT_SESSION_4.RUN.1`
 **Rollup (sessions 1–3):** `docs/runbooks/VIONA_LOCAL_NO_CHARGE_CONTROLLED_PILOT_SESSIONS_1_3_ROLLUP.md`
 **Readiness review:** `docs/runbooks/VIONA_LOCAL_NO_CHARGE_PILOT_READINESS_REVIEW_AFTER_SESSIONS_1_3.md` — Option A (proceed same scope)
 **Playbook:** `docs/runbooks/VIONA_LOCAL_NO_CHARGE_CONTROLLED_PILOT_OPS_PLAYBOOK.md`
 **Ops Audit UI plan:** `docs/runbooks/VIONA_LOCAL_NO_CHARGE_OPS_AUDIT_UI_PLAN.md`
 **Prior sessions:** Sessions 1–3 **PASS**; native secret-tap/PIN **NOT COMPLETED**
-**Prep master baseline:** `7f0653e` — `docs(local): review pilot readiness after sessions 1-3`
-**Status:** **PREP** — session 4 run not yet executed; fill §7 evidence table on `CONTROLLED_PILOT_SESSION_4.RUN.1`
+**Run master baseline:** `b5d7607`
+**Status:** **PASS** (public HTTPS API) @ 2026-05-24 — see §11. Native §8 **NOT RUN**.
 
 ---
 
-## Session verdict (prep)
+## Session verdict
+
+| Layer | Result |
+|-------|--------|
+| **Public HTTPS health + smoke** | **PASS** @ 2026-05-24 — §11 |
+| **User A/B + Merchant M/N flows (API)** | **PASS** |
+| **Create / confirm / decline (API)** | **PASS** |
+| **Tenant isolation (API)** | **PASS** |
+| **Ops admin login + ops list/detail (API)** | **PASS** |
+| **Non-admin ops access rejected** | **PASS** — unauthed HTTP 401; B2C/merchant HTTP 403 |
+| **Redaction + mutation safety (API)** | **PASS** |
+| **No-charge money law** | **PASS** — `REQUEST_ONLY_NO_CHARGE`; `walletPhase` **NONE**; `paymentCaptured` **false** |
+| **Ops Audit UI (Expo web)** | **PASS** (carried forward @ session 2 §5 — not re-run) |
+| **Native secret-tap / PIN / Ops Audit UI** | **NOT RUN** @ §8 |
+| **Pause triggered** | **No** |
+| **Overall controlled pilot session 4** | **PASS** (staging / public HTTPS — user, merchant, ops read-only API) |
+
+---
+
+## Session verdict (prep — superseded by run above)
 
 | Layer | Carried forward (sessions 1–3) | Session 4 execution |
 |-------|-------------------------------|---------------------|
-| **Public HTTPS health + smoke** | **PASS** | Record at session start |
-| **User A/B + Merchant M/N flows (API)** | **PASS** | Re-verify |
-| **Create / confirm / decline (API)** | **PASS** | Re-verify |
-| **Tenant isolation (API)** | **PASS** | Re-verify |
-| **Ops admin login + ops list/detail (API)** | **PASS** | Re-verify |
-| **Non-admin ops access rejected** | **PASS** | Re-verify |
-| **Redaction + mutation safety (API)** | **PASS** | Re-verify |
-| **No-charge money law** | **PASS** (invariant) | Re-verify |
-| **Ops Audit UI (Expo web)** | **PASS** @ session 2 §5 | Optional re-run; not required if API corroborates |
-| **Native secret-tap / PIN / Ops Audit UI** | **NOT COMPLETED** | **NOT RUN** default until §8 checklist done |
-| **Pause triggered** | **No** (sessions 1–3) | TBD |
-| **Overall session 4** | — | **PENDING RUN** |
+| **Public HTTPS health + smoke** | **PASS** | **PASS** @ §11 |
+| **User A/B + Merchant M/N flows (API)** | **PASS** | **PASS** |
+| **Create / confirm / decline (API)** | **PASS** | **PASS** |
+| **Tenant isolation (API)** | **PASS** | **PASS** |
+| **Ops admin login + ops list/detail (API)** | **PASS** | **PASS** |
+| **Non-admin ops access rejected** | **PASS** | **PASS** |
+| **Redaction + mutation safety (API)** | **PASS** | **PASS** |
+| **No-charge money law** | **PASS** (invariant) | **PASS** |
+| **Ops Audit UI (Expo web)** | **PASS** @ session 2 §5 | Not re-run (carried forward) |
+| **Native secret-tap / PIN / Ops Audit UI** | **NOT COMPLETED** | **NOT RUN** @ §8 |
+| **Pause triggered** | **No** (sessions 1–3) | **No** |
+| **Overall session 4** | — | **PASS** (API) |
 
 **Money law (unchanged):** `REQUEST_ONLY_NO_CHARGE`; `walletPhase` **NONE**; `paymentCaptured` **false**; **confirmed does not mean paid**. Whole VIONA: pre-commercial / staging-pilot foundation. **Global Active / full commercial: not yet.**
 
@@ -138,7 +157,45 @@ node scripts/smoke-public-staging-api.mjs https://viona-api-staging-eu.fly.dev
 
 ---
 
-## 7. Session 4 evidence table (template — fill on RUN)
+## 7. Session 4 evidence table (`CONTROLLED_PILOT_SESSION_4.RUN.1`) — 2026-05-24
+
+| Field | Value |
+|-------|--------|
+| **Date / timestamp (UTC)** | 2026-05-24 (UTC) |
+| **Operator** | automated smoke (no initials) |
+| **master / origin @ start** | `b5d7607` |
+| **Platform** | Public HTTPS API — `node scripts/smoke-public-staging-api.mjs` |
+| **API base** | `https://viona-api-staging-eu.fly.dev` |
+| **Dev JWT empty** | **PASS** — smoke uses pilot roster login (no dev JWT path) |
+| **Public HTTPS smoke** | **PASS** (exit 0) |
+| **Health** | **PASS** — HTTP 200 |
+| **User flows (A/B)** | **PASS** |
+| **Merchant flows (M/N)** | **PASS** |
+| **Create / confirm / decline** | **PASS** |
+| **Tenant isolation** | **PASS** — user B + merchant N |
+| **Ops admin login** | **PASS** — `Role.ADMIN`; no dev JWT |
+| **Ops audit list** | **PASS** |
+| **Ops audit detail** | **PASS** |
+| **Ops audit visibility (UI)** | Expo web **NOT RUN** (carried forward session 2 §5 **PASS**) · Native **NOT RUN** |
+| **Non-admin ops denied** | **PASS** — unauthed HTTP 401; User A + Merchant M HTTP 403 |
+| **Redaction** | **PASS** — smoke redaction checks |
+| **Mutation safety** | **PASS** — `opsAuditMutationSafe` |
+| **No-charge safety** | **PASS** — see §11.3 |
+| **walletPhase** | **NONE** |
+| **paymentCaptured** | **false** |
+| **Native status** | **NOT RUN** |
+| **Issues found** | None blocking |
+| **Pause decision** | **No** |
+
+**Request ids (this run, non-secret):**
+
+- Confirm target: `52c7b5f1-cfab-4688-adf6-01d0e455d765`
+- Decline target: `9bdddb7e-6845-4885-a623-bad0548a6c75`
+- Ops detail opened: `9bdddb7e-6845-4885-a623-bad0548a6c75` (declined row)
+
+---
+
+## 7b. Session 4 evidence table (template — superseded by §7)
 
 | Field | Value |
 |-------|--------|
@@ -221,29 +278,90 @@ Metro admin-debug overrides are **session-only** (not committed). Do not log PIN
 
 ---
 
-## 10. Validation (docs commits for this prep pack)
+## 10. Validation (docs commits)
 
-| Check | Prep @ commit |
+| Check | Session 4 run |
 |-------|---------------|
-| `git diff --check` | Required PASS |
-| `npx tsc --noEmit` | Required PASS |
-| `npm run lint` | Required PASS |
-| `npm run smoke` | Required PASS |
-
-Session 4 **run** additionally requires `smoke-public-staging-api.mjs` exit 0 recorded in §7.
-
----
-
-## 11. Follow-up after session 4 prep
-
-1. Execute `CONTROLLED_PILOT_SESSION_4.RUN.1` — smoke + fill §7 evidence table.
-2. Update session verdict table at top of this doc with PASS/FAIL and date.
-3. Optional parallel: native §8 on stable device (does not block API-only Option A).
-4. **Locked:** payment/wallet/commercial packs without finance approval.
+| `git diff --check` | PASS @ commit |
+| `npx tsc --noEmit` | PASS @ commit |
+| `npm run lint` | PASS @ commit |
+| `npm run smoke` | PASS @ commit |
+| `smoke-public-staging-api.mjs` | PASS exit 0 @ §11 |
 
 ---
 
-## 12. Related documents
+## 11. User / merchant + ops visibility (`CONTROLLED_PILOT_SESSION_4.RUN.1`) — 2026-05-24
+
+### 11.1 Environment
+
+| Field | Value |
+|-------|--------|
+| **Platform** | Public HTTPS API — paced smoke |
+| **API base** | `https://viona-api-staging-eu.fly.dev` |
+| **Dev JWT** | Smoke uses pilot roster credentials (no dev JWT login path) |
+| **Ops UI** | Not re-run; corroborated via session 2 Expo web **PASS** + API ops stages below |
+
+### 11.2 Flow results
+
+| Step | Requirement | Result |
+|------|-------------|--------|
+| 1 | Health check | **PASS** — HTTP 200 |
+| 2 | User A login | **PASS** |
+| 3 | User B login | **PASS** |
+| 4 | Merchant M login | **PASS** |
+| 5 | Merchant N login | **PASS** |
+| 6 | User A creates Local request | **PASS** — HTTP 201 (`local:create`) |
+| 7 | User B isolation | **PASS** |
+| 8 | Merchant M inbox | **PASS** |
+| 9 | Merchant N isolation | **PASS** |
+| 10 | Merchant M confirm | **PASS** — HTTP 200 |
+| 11 | Merchant M decline | **PASS** — HTTP 200 |
+| 12 | Ops ADMIN login | **PASS** — `Role.ADMIN` |
+| 13 | Ops audit list | **PASS** — `ops:listRequests` HTTP 200 |
+| 14 | Ops audit detail | **PASS** — `ops:detailRequest` HTTP 200 |
+| 15 | Non-admin ops rejected | **PASS** — unauthed HTTP 401; User A + Merchant M HTTP 403 |
+| 16 | Redaction | **PASS** |
+| 17 | Mutation safety | **PASS** — `opsAuditMutationSafe` |
+| 18 | No-charge safety | **PASS** — see §11.3 |
+
+### 11.3 Money law (smoke snapshot)
+
+| Field | Value |
+|-------|--------|
+| `walletMode` | `REQUEST_ONLY_NO_CHARGE` |
+| `walletPhase` | `NONE` |
+| `paymentCaptured` | `false` |
+| Confirmed ≠ paid | Enforced in ops list `safety` + session 2 UI copy |
+
+### 11.4 Ops audit stages (same smoke run)
+
+| Stage | Result |
+|-------|--------|
+| `opsAuditUnauthed` | **PASS** — HTTP 401 |
+| `opsAuditList` | **PASS** |
+| `opsAuditDetail` | **PASS** |
+| `opsAuditForbiddenB2c` | **PASS** — HTTP 403 |
+| `opsAuditForbiddenMerchant` | **PASS** — HTTP 403 |
+| `opsAuditMutationSafe` | **PASS** |
+
+### 11.5 Issues / pause
+
+| Item | Detail |
+|------|--------|
+| **Issues found** | None blocking |
+| **Pause decision** | **No** |
+
+---
+
+## 12. Follow-up after session 4 run
+
+1. Optional: complete §8 native attestation on stable device — only then update native verdict to PASS.
+2. **Session 5+** or rollup extension — same Option A constraints unless pause criteria fire.
+3. **Locked:** payment/wallet/commercial packs without finance approval.
+
+---
+
+## 13. Related documents
 
 | Doc | Role |
 |-----|------|
