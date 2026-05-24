@@ -360,13 +360,14 @@ After this rules pack (per surface audit):
 
 | Grammar tier | Primary components |
 |--------------|-------------------|
+| **Hub shell / layout** | `PremiumAppShell`, `PremiumHubLayout`, `PremiumSection`, `PremiumContentSpacer` — `VIONA_WAVE_3B_PREMIUM_APP_SHELL_FOUNDATION.md` |
 | Hero universe | `VionaFashionWorldCard` |
-| Compact module | `LocalAppTile`, `TravelAppTile` |
+| Compact module | `PremiumAppTile`, `PremiumTileGrid` (migrated from `LocalAppTile`, `TravelAppTile`) |
 | Module + body | `AcademyGlassCard` |
 | Safety / status | `LocalCommerceClarityBlock`, `EmergencyHubTile` |
-| Frame / tokens | `LocalConstellationFrame`, `TravelGlassCard`, `fashionHomeDesktopShell` |
+| Frame / tokens | `LocalConstellationFrame`, `TravelGlassCard`, `premiumTileVisualTokens` |
 
-Future shared primitive extraction is **out of scope** until Wave 3 readiness review.
+Hub screens should **recompose** onto shell primitives in migration packs—not duplicate canvas/padding per screen.
 
 ---
 
@@ -379,3 +380,4 @@ Future shared primitive extraction is **out of scope** until Wave 3 readiness re
 | `VIONA_GLOBAL_EXPERIENCE_MANIFESTO.md` | Experience principles |
 | `VIONA_ACTION_GRID_PATTERN.md` | Account action grid |
 | `VIONA_NEON_GLASS_CARD_SYSTEM.md` | Glass material depth |
+| `VIONA_WAVE_3B_PREMIUM_APP_SHELL_FOUNDATION.md` | Shared hub shell + layout anatomy |

@@ -452,6 +452,7 @@ Do not redo UI from scratch.
 Do not touch Home unless explicitly scoped.
 
 Consumer design system:
+- Premium App Shell + Hub Layout (`docs/design/VIONA_WAVE_3B_PREMIUM_APP_SHELL_FOUNDATION.md`) — foundation only until hub migration packs
 - Premium App Tiles
 - icon + short title + concise subtitle
 - semantic glow per **feature** (controlled multi-color inside a hub — not one color per universe)

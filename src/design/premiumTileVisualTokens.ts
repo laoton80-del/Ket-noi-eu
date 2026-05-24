@@ -340,6 +340,102 @@ export function premiumIconCapsuleSize(size: PremiumTileSize): number {
   return size === 'compact' ? premiumTileLayout.iconCapsuleSizeCompact : premiumTileLayout.iconCapsuleSize;
 }
 
+/**
+ * Wave 3B — Premium App Shell layout breakpoints (shared hub chrome).
+ * Mobile-first: 390px must never horizontally overflow.
+ */
+export const premiumShellBreakpoints = {
+  mobile: 480,
+  tablet: 768,
+  landscapeTablet: 1024,
+  desktop: 1280,
+} as const;
+
+export type PremiumShellViewportTier = 'mobile' | 'tablet' | 'landscapeTablet' | 'desktop';
+
+export const premiumShellLayout = {
+  contentMaxWidthDesktop: 1200,
+  contentMaxWidthLandscape: 1080,
+  hubSlotGapMobile: 8,
+  hubSlotGapDefault: 10,
+  hubSlotGapDesktop: 12,
+  sectionGapMobile: 8,
+  sectionGapDefault: 10,
+  sectionKickerSize: 9,
+  sectionTitleSize: 14,
+  sectionSubtitleSize: 11,
+} as const;
+
+/** Bottom chrome reserved for mini-app dock + tab bar + scroll breathing room. */
+export const premiumShellChrome = {
+  miniappDockBottomOffset: 58,
+  miniappDockHeight: 46,
+  tabBarClearanceBottom: 64,
+  scrollPaddingBase: 48,
+  scrollPaddingMobileExtra: 96,
+} as const;
+
+export function resolvePremiumShellViewportTier(width: number): PremiumShellViewportTier {
+  if (width >= premiumShellBreakpoints.desktop) return 'desktop';
+  if (width >= premiumShellBreakpoints.landscapeTablet) return 'landscapeTablet';
+  if (width >= premiumShellBreakpoints.tablet) return 'tablet';
+  return 'mobile';
+}
+
+export function isPremiumShellMobile(width: number): boolean {
+  return width > 0 && width < premiumShellBreakpoints.mobile;
+}
+
+export function resolvePremiumShellContentRail(windowWidth: number): Readonly<{
+  horizontalPad: number;
+  innerWidth: number;
+  tier: PremiumShellViewportTier;
+  isMobile: boolean;
+}> {
+  const tier = resolvePremiumShellViewportTier(windowWidth);
+  const { horizontalPad, innerWidth } = resolvePremiumContentRail(windowWidth);
+  const cap =
+    tier === 'desktop'
+      ? premiumShellLayout.contentMaxWidthDesktop
+      : tier === 'landscapeTablet'
+        ? premiumShellLayout.contentMaxWidthLandscape
+        : innerWidth;
+  return {
+    horizontalPad,
+    innerWidth: Math.min(innerWidth, cap),
+    tier,
+    isMobile: isPremiumShellMobile(windowWidth),
+  };
+}
+
+export function resolvePremiumShellBottomPadding(
+  width: number,
+  insetsBottom = 0,
+  options?: Readonly<{
+    withMiniappDock?: boolean;
+    withTabBar?: boolean;
+    extra?: number;
+  }>
+): number {
+  const withTabBar = options?.withTabBar !== false;
+  const withMiniappDock = options?.withMiniappDock === true;
+  let pad = Math.max(insetsBottom, 12) + (options?.extra ?? 0);
+  if (withTabBar) pad += premiumShellChrome.tabBarClearanceBottom;
+  if (withMiniappDock) {
+    pad += premiumShellChrome.miniappDockBottomOffset + premiumShellChrome.miniappDockHeight;
+  }
+  pad += premiumShellChrome.scrollPaddingBase;
+  if (isPremiumShellMobile(width)) pad += premiumShellChrome.scrollPaddingMobileExtra;
+  return pad;
+}
+
+export function resolvePremiumHubSlotGap(width: number): number {
+  const tier = resolvePremiumShellViewportTier(width);
+  if (tier === 'desktop') return premiumShellLayout.hubSlotGapDesktop;
+  if (tier === 'mobile') return premiumShellLayout.hubSlotGapMobile;
+  return premiumShellLayout.hubSlotGapDefault;
+}
+
 /** Responsive premium tile grid — north-star breakpoints (Wave 3B). */
 export function resolvePremiumTileGridColumns(
   width: number,

@@ -59,3 +59,12 @@ export { PremiumStatusChip } from './PremiumStatusChip';
 export type { PremiumStatusChipProps } from './PremiumStatusChip';
 export { PremiumTileGrid } from './PremiumTileGrid';
 export type { PremiumTileGridProps } from './PremiumTileGrid';
+
+export { PremiumAppShell } from './PremiumAppShell';
+export type { PremiumAppShellProps } from './PremiumAppShell';
+export { PremiumHubLayout } from './PremiumHubLayout';
+export type { PremiumHubLayoutProps } from './PremiumHubLayout';
+export { PremiumSection } from './PremiumSection';
+export type { PremiumSectionProps } from './PremiumSection';
+export { PremiumContentSpacer } from './PremiumContentSpacer';
+export type { PremiumContentSpacerProps } from './PremiumContentSpacer';
