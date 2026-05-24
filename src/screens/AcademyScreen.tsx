@@ -51,9 +51,21 @@ type AcademyModuleConfig = Readonly<{
   icon: keyof typeof Ionicons.glyphMap;
   titleKey: 'academyHub.module1Title' | 'academyHub.module2Title' | 'academyHub.module3Title' | 'academyHub.module4Title' | 'academyHub.module5Title' | 'academyHub.module6Title';
   statusKey: 'academyHub.module1Status' | 'academyHub.module2Status' | 'academyHub.module3Status' | 'academyHub.module4Status' | 'academyHub.module5Status' | 'academyHub.module6Status';
-  bodyKey: 'academyHub.module1Body' | 'academyHub.module2Body' | 'academyHub.module3Body' | 'academyHub.module4Body' | 'academyHub.module5Body' | 'academyHub.module6Body';
+  subtitleKey:
+    | 'academyHub.module1Body'
+    | 'academyHub.module2Body'
+    | 'academyHub.module3Body'
+    | 'academyHub.module4Body'
+    | 'academyHub.module5Body'
+    | 'academyHub.module6Body';
   onPress: () => void;
 }>;
+
+const ACADEMY_PILOT_PILLS = [
+  { key: 'academyHub.pilotPill.lite' as const, icon: 'book-outline' as const },
+  { key: 'academyHub.pilotPill.preview' as const, icon: 'eye-outline' as const },
+  { key: 'academyHub.pilotPill.beta' as const, icon: 'flask-outline' as const },
+] as const;
 
 export function AcademyScreen(): ReactElement {
   const navigation = useNavigation<Nav>();
@@ -168,7 +180,7 @@ export function AcademyScreen(): ReactElement {
         icon: 'school-outline',
         titleKey: 'academyHub.module1Title',
         statusKey: 'academyHub.module1Status',
-        bodyKey: 'academyHub.module1Body',
+        subtitleKey: 'academyHub.module1Body',
         onPress: () => nav('LiveAiTeacher'),
       },
       {
@@ -177,7 +189,7 @@ export function AcademyScreen(): ReactElement {
         icon: 'book-outline',
         titleKey: 'academyHub.module2Title',
         statusKey: 'academyHub.module2Status',
-        bodyKey: 'academyHub.module2Body',
+        subtitleKey: 'academyHub.module2Body',
         onPress: () => nav('AdultLearningHome'),
       },
       {
@@ -186,7 +198,7 @@ export function AcademyScreen(): ReactElement {
         icon: 'earth-outline',
         titleKey: 'academyHub.module3Title',
         statusKey: 'academyHub.module3Status',
-        bodyKey: 'academyHub.module3Body',
+        subtitleKey: 'academyHub.module3Body',
         onPress: () => nav('AdultLearningHome'),
       },
       {
@@ -195,7 +207,7 @@ export function AcademyScreen(): ReactElement {
         icon: 'color-palette-outline',
         titleKey: 'academyHub.module4Title',
         statusKey: 'academyHub.module4Status',
-        bodyKey: 'academyHub.module4Body',
+        subtitleKey: 'academyHub.module4Body',
         onPress: () => nav('KidsLearningHome'),
       },
       {
@@ -204,7 +216,7 @@ export function AcademyScreen(): ReactElement {
         icon: 'people-outline',
         titleKey: 'academyHub.module5Title',
         statusKey: 'academyHub.module5Status',
-        bodyKey: 'academyHub.module5Body',
+        subtitleKey: 'academyHub.module5Body',
         onPress: () => nav('KidsLearningHome'),
       },
       {
@@ -213,7 +225,7 @@ export function AcademyScreen(): ReactElement {
         icon: 'bulb-outline',
         titleKey: 'academyHub.module6Title',
         statusKey: 'academyHub.module6Status',
-        bodyKey: 'academyHub.module6Body',
+        subtitleKey: 'academyHub.module6Body',
         onPress: () => nav('LiveAiTeacher'),
       },
     ];
@@ -279,7 +291,9 @@ export function AcademyScreen(): ReactElement {
               <Text style={styles.heroKicker}>{t('academyHub.heroBadge')}</Text>
             </View>
             <Text style={styles.heroTitle}>{t('academyHub.heroTitle')}</Text>
-            <Text style={styles.heroSubtitle}>{t('academyHub.heroSubtitle')}</Text>
+            <Text style={styles.heroSubtitle} numberOfLines={2}>
+              {t('academyHub.heroSubtitle')}
+            </Text>
             <Pressable
               accessibilityRole="button"
               accessibilityLabel={t('academyHub.primaryCta')}
@@ -298,7 +312,32 @@ export function AcademyScreen(): ReactElement {
             </View>
           </AccountNeonGlassPanel>
 
-          <Text style={styles.sectionLabel}>{t('home.universeAcademyTitle')}</Text>
+          <AccountNeonGlassPanel role="violet" tier="identity" radius={14} contentStyle={styles.pilotStripInner}>
+            <View style={styles.pilotStripTitleRow}>
+              <Ionicons name="school-outline" size={16} color={violetInk} accessibilityIgnoresInvertColors />
+              <Text style={styles.pilotStripTitle}>{t('academyHub.pilotStripTitle')}</Text>
+            </View>
+            <Text style={styles.pilotStripBanner} numberOfLines={2}>
+              {t('academyHub.pilotStripBanner')}
+            </Text>
+            <View style={styles.pilotPillRow}>
+              {ACADEMY_PILOT_PILLS.map((pill) => (
+                <View
+                  key={pill.key}
+                  style={styles.pilotPill}
+                  accessibilityRole="text"
+                  accessibilityLabel={t(pill.key)}
+                >
+                  <Ionicons name={pill.icon} size={12} color={violetInk} accessibilityIgnoresInvertColors />
+                  <Text style={styles.pilotPillText} numberOfLines={2}>
+                    {t(pill.key)}
+                  </Text>
+                </View>
+              ))}
+            </View>
+          </AccountNeonGlassPanel>
+
+          <Text style={styles.sectionLabel}>{t('academyHub.modulesKicker')}</Text>
 
           <View
             style={[
@@ -318,8 +357,9 @@ export function AcademyScreen(): ReactElement {
                   icon={mod.icon}
                   title={t(mod.titleKey)}
                   status={t(mod.statusKey)}
-                  body={t(mod.bodyKey)}
+                  subtitle={t(mod.subtitleKey)}
                   onPress={mod.onPress}
+                  accessibilityLabel={`${t(mod.titleKey)}. ${t(mod.subtitleKey)}`}
                   testID={`academy-hub-${mod.id}`}
                 />
               </View>
@@ -414,6 +454,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 8,
     alignSelf: 'flex-start',
+    minHeight: 44,
     paddingHorizontal: 14,
     paddingVertical: 10,
     borderRadius: 999,
@@ -441,12 +482,60 @@ const styles = StyleSheet.create({
     color: GLN.bodyMuted,
     fontFamily: FontFamily.medium,
   },
+  pilotStripInner: {
+    gap: 8,
+    paddingVertical: 4,
+  },
+  pilotStripTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  pilotStripTitle: {
+    fontSize: 11,
+    fontFamily: FontFamily.extrabold,
+    color: VIONA_ACCOUNT_ROLE_ACCENTS.violet.ink,
+    letterSpacing: 0.6,
+  },
+  pilotStripBanner: {
+    fontSize: 11,
+    fontFamily: FontFamily.medium,
+    color: GLN.bodyMuted,
+    lineHeight: 16,
+  },
+  pilotPillRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  pilotPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    paddingHorizontal: 8,
+    paddingVertical: 6,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(160, 120, 255, 0.32)',
+    backgroundColor: 'rgba(120, 60, 200, 0.12)',
+    minHeight: 32,
+    maxWidth: '100%',
+  },
+  pilotPillText: {
+    flexShrink: 1,
+    fontSize: 9,
+    fontFamily: FontFamily.extrabold,
+    color: 'rgba(220, 205, 255, 0.95)',
+    letterSpacing: 0.35,
+    textTransform: 'uppercase',
+  },
   sectionLabel: {
     marginTop: 2,
-    fontSize: 13,
-    fontFamily: FontFamily.semibold,
-    color: GLN.titleIvory,
-    letterSpacing: 0.35,
+    fontSize: 10,
+    fontFamily: FontFamily.extrabold,
+    color: 'rgba(200, 190, 230, 0.88)',
+    letterSpacing: 0.9,
+    textTransform: 'uppercase',
   },
   moduleGrid: {
     width: '100%',

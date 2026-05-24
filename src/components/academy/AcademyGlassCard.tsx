@@ -19,6 +19,7 @@ import {
 } from '../viona/globalLightNetworkTokens';
 
 const GLN = VIONA_GLOBAL_LIGHT_NETWORK_TYPOGRAPHY;
+const INK_SUB = 'rgba(210, 208, 230, 0.78)';
 const TRANSITION_MS = 165;
 
 /** Academy hub semantic accents — violet-led learning universe. */
@@ -28,7 +29,7 @@ export type AcademyGlassCardProps = Readonly<{
   accent: AcademyGlassAccent;
   title: string;
   status: string;
-  body: string;
+  subtitle: string;
   icon: keyof typeof Ionicons.glyphMap;
   onPress: () => void;
   accessibilityLabel?: string;
@@ -39,7 +40,7 @@ export function AcademyGlassCard({
   accent,
   title,
   status,
-  body,
+  subtitle,
   icon,
   onPress,
   accessibilityLabel,
@@ -51,7 +52,7 @@ export function AcademyGlassCard({
   const stroke = vionaAccountRoleStroke(role, hovered);
   const glow = vionaAccountRoleGlow(role, hovered);
   const wash = vionaAccountCornerWash(role, hovered);
-  const a11y = accessibilityLabel ?? `${title}. ${body}`;
+  const a11y = accessibilityLabel ?? `${title}. ${subtitle}`;
 
   return (
     <Pressable
@@ -106,31 +107,22 @@ export function AcademyGlassCard({
           accessibilityElementsHidden
         />
         <View style={styles.content}>
-          <View style={styles.header}>
+          <View style={styles.iconRow}>
             <View style={[styles.iconCapsule, { borderColor: stroke, shadowColor: glow }]}>
-              <Ionicons name={icon} size={20} color={tokens.ink} accessibilityIgnoresInvertColors />
+              <Ionicons name={icon} size={22} color={tokens.ink} accessibilityIgnoresInvertColors />
             </View>
-            <View style={styles.titleBlock}>
-              <Text style={styles.title} numberOfLines={2}>
-                {title}
-              </Text>
-              <View style={[styles.statusPill, { borderColor: stroke, backgroundColor: tokens.fillHover }]}>
-                <Text style={[styles.statusText, { color: tokens.ink }]} numberOfLines={1}>
-                  {status}
-                </Text>
-              </View>
-            </View>
+            <Text style={[styles.statusPill, { color: tokens.ink, borderColor: stroke }]} numberOfLines={1}>
+              {status}
+            </Text>
           </View>
-          <Text style={styles.body} numberOfLines={4}>
-            {body}
-          </Text>
-          <Ionicons
-            name="chevron-forward"
-            size={16}
-            color={hovered ? tokens.ink : 'rgba(210, 208, 230, 0.55)'}
-            style={styles.chevron}
-            accessibilityIgnoresInvertColors
-          />
+          <View style={styles.textBlock}>
+            <Text style={styles.title} numberOfLines={1}>
+              {title}
+            </Text>
+            <Text style={styles.subtitle} numberOfLines={2}>
+              {subtitle}
+            </Text>
+          </View>
         </View>
         <View style={[premiumFrameEdgeOverlay(16), premiumCrispEdgeStroke(stroke), styles.edge]} pointerEvents="none" />
       </View>
@@ -142,6 +134,7 @@ const styles = StyleSheet.create({
   pressOuter: {
     width: '100%',
     minWidth: 0,
+    minHeight: 44,
   },
   pressOuterHover:
     Platform.OS === 'web' ? ({ transform: [{ translateY: -2 }] } as ViewStyle) : ({} as ViewStyle),
@@ -150,7 +143,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     borderWidth: 1.1,
     overflow: 'hidden',
-    minHeight: 136,
+    minHeight: 108,
   },
   tint: {
     ...StyleSheet.absoluteFillObject,
@@ -174,21 +167,25 @@ const styles = StyleSheet.create({
     opacity: 0.35,
   },
   content: {
-    padding: 14,
-    paddingBottom: 12,
-    minHeight: 136,
+    paddingVertical: 12,
+    paddingHorizontal: 12,
+    minHeight: 108,
+    gap: 10,
+    justifyContent: 'flex-start',
   },
   edge: {
     pointerEvents: 'none',
   },
-  header: {
+  iconRow: {
     flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: 10,
+    alignItems: 'center',
+    gap: 8,
+    width: '100%',
+    minHeight: 44,
   },
   iconCapsule: {
-    width: 40,
-    height: 40,
+    width: 44,
+    height: 44,
     borderRadius: 12,
     borderWidth: 1,
     alignItems: 'center',
@@ -199,41 +196,37 @@ const styles = StyleSheet.create({
     shadowRadius: 6,
     elevation: 2,
   },
-  titleBlock: {
-    flex: 1,
-    gap: 6,
+  statusPill: {
+    flexShrink: 1,
+    fontSize: 8,
+    fontFamily: FontFamily.extrabold,
+    letterSpacing: 0.4,
+    textTransform: 'uppercase',
+    paddingHorizontal: 6,
+    paddingVertical: 3,
+    borderRadius: 6,
+    borderWidth: StyleSheet.hairlineWidth,
+    backgroundColor: 'rgba(255, 255, 255, 0.06)',
+    overflow: 'hidden',
+  },
+  textBlock: {
+    width: '100%',
+    gap: 4,
     minWidth: 0,
   },
   title: {
-    fontSize: 15,
-    lineHeight: 20,
+    width: '100%',
+    fontSize: 13,
+    lineHeight: 17,
     fontFamily: FontFamily.extrabold,
     color: GLN.titleIvory,
+    letterSpacing: -0.16,
   },
-  statusPill: {
-    alignSelf: 'flex-start',
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 8,
-    borderWidth: 1,
-  },
-  statusText: {
+  subtitle: {
     fontSize: 10,
-    fontFamily: FontFamily.semibold,
-    letterSpacing: 0.45,
-    textTransform: 'uppercase',
-  },
-  body: {
-    marginTop: 10,
-    fontSize: 12,
-    lineHeight: 17,
-    fontFamily: FontFamily.regular,
-    color: GLN.bodyMuted,
-    paddingRight: 18,
-  },
-  chevron: {
-    position: 'absolute',
-    right: 12,
-    bottom: 12,
+    lineHeight: 14,
+    fontFamily: FontFamily.medium,
+    color: INK_SUB,
+    opacity: 0.94,
   },
 });
