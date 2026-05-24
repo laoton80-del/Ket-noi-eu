@@ -200,6 +200,7 @@ Staging DB remains source of truth; rollback is **access/config**, not data dest
 | **2** (user/merchant + ops) | `VIONA_LOCAL_NO_CHARGE_CONTROLLED_PILOT_SESSION_2.md` | **PASS** — user/merchant/ops API @ `028ea9f`; Expo ops UI @ `21ec3ec`; **no pause** |
 | **2b** (native ops secret-tap) | Same doc §11.5–§11.7 | **NOT COMPLETED** — build unblock §11.6 **PASS**; secret-tap UI **FAIL** on emulator (§11.7) |
 | **3** (prep + run) | `VIONA_LOCAL_NO_CHARGE_CONTROLLED_PILOT_SESSION_3.md` | **PASS** — user/merchant/ops API @ 2026-05-24; native §7 **NOT RUN** |
+| **4** (prep) | `VIONA_LOCAL_NO_CHARGE_CONTROLLED_PILOT_SESSION_4.md` | **PREP** @ `7f0653e+` — Option A; run pending |
 
 ---
 

@@ -152,7 +152,7 @@ node scripts/smoke-public-staging-api.mjs https://viona-api-staging-eu.fly.dev
 
 | Priority | Option |
 |----------|--------|
-| 1 | **Session 4+** controlled pilot — same money law; extend evidence table in new session doc |
+| 1 | **Session 4** controlled pilot — `VIONA_LOCAL_NO_CHARGE_CONTROLLED_PILOT_SESSION_4.md` (**PREP** @ `7f0653e+`); run pending |
 | 2 | **Native manual attestation** — session 3 §7 on stable device (`com.ketnoiglobal.app`); do not claim PASS until done |
 | 3 | **Ops incident / support refinement** — playbook §7–§8 from real operator issues |
 | 4 | **Pilot readiness review** — `VIONA_LOCAL_NO_CHARGE_PILOT_READINESS_REVIEW_AFTER_SESSIONS_1_3.md` (post sessions 1–3) |
@@ -171,4 +171,5 @@ node scripts/smoke-public-staging-api.mjs https://viona-api-staging-eu.fly.dev
 | `VIONA_LOCAL_NO_CHARGE_OPS_AUDIT_UI_PLAN.md` | Ops Audit UI scope + packs |
 | `VIONA_LOCAL_NO_CHARGE_PILOT_SIGNOFF.md` | Readiness sign-off |
 | `VIONA_LOCAL_NO_CHARGE_PILOT_READINESS_REVIEW_AFTER_SESSIONS_1_3.md` | Post sessions 1–3 readiness decision |
+| `VIONA_LOCAL_NO_CHARGE_CONTROLLED_PILOT_SESSION_4.md` | Session 4 prep (Option A) |
 | `VIONA_PROJECT_KERNEL.md` | Kernel money law + pilot pointers |
