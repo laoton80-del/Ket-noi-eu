@@ -253,7 +253,7 @@ Known Local lifecycle milestones:
 
 ### Kernel pointer (`KERNEL.LOCAL_NO_CHARGE_OPS_AUDIT_UI_PLAN.1`) — `40c2711`
 
-**Controlled pilot sessions 1–4:** rollup `VIONA_LOCAL_NO_CHARGE_CONTROLLED_PILOT_SESSIONS_1_4_ROLLUP.md` @ `597bddb` — sessions 1–4 **PASS**; **no pause**; native secret-tap **NOT COMPLETED**. **Readiness review (post 1–4):** `VIONA_LOCAL_NO_CHARGE_PILOT_READINESS_REVIEW_AFTER_SESSIONS_1_4.md` — **Session 5+ may proceed** (Option A); **not** production/commercial. Local: `REQUEST_ONLY_NO_CHARGE`, `walletPhase` **NONE**.
+**Controlled pilot sessions 1–4:** rollup `VIONA_LOCAL_NO_CHARGE_CONTROLLED_PILOT_SESSIONS_1_4_ROLLUP.md` @ `597bddb` — sessions 1–4 **PASS**; **no pause**; native secret-tap **NOT COMPLETED**. **Readiness review (post 1–4):** `VIONA_LOCAL_NO_CHARGE_PILOT_READINESS_REVIEW_AFTER_SESSIONS_1_4.md` @ `8601354` — **Session 5+ may proceed** (Option A). **Session 5 prep:** `VIONA_LOCAL_NO_CHARGE_CONTROLLED_PILOT_SESSION_5.md` — run pending; **not** production/commercial. Local: `REQUEST_ONLY_NO_CHARGE`, `walletPhase` **NONE**.
 
 ### Kernel sync (`KERNEL.LOCAL_NO_CHARGE_PILOT_SIGNOFF_SYNC.1`) — `5a714a8`
 

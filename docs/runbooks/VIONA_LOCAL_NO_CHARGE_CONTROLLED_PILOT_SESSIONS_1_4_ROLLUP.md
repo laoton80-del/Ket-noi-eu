@@ -163,10 +163,10 @@ node scripts/smoke-public-staging-api.mjs https://viona-api-staging-eu.fly.dev
 
 | Priority | Option |
 |----------|--------|
-| 1 | **Session 5+** controlled no-charge pilot — same Option A constraints (`VIONA_LOCAL_NO_CHARGE_PILOT_READINESS_REVIEW_AFTER_SESSIONS_1_3.md`) |
-| 2 | **Native manual attestation** — session 4 §8 on stable device (`com.ketnoiglobal.app`); do not claim PASS until done |
+| 1 | **Session 5** controlled pilot — `VIONA_LOCAL_NO_CHARGE_CONTROLLED_PILOT_SESSION_5.md` (**PREP** @ `8601354+`); run pending |
+| 2 | **Native manual attestation** — session 5 §8 on stable device (`com.ketnoiglobal.app`); do not claim PASS until done |
 | 3 | **Ops incident / support refinement** — playbook §7–§8 from real operator issues |
-| 4 | **Pilot readiness review after sessions 1–4** — optional follow-on to post–1–3 review |
+| 4 | **Pilot readiness review** — `VIONA_LOCAL_NO_CHARGE_PILOT_READINESS_REVIEW_AFTER_SESSIONS_1_4.md` (post sessions 1–4) |
 | 5 | **Locked** — payment/wallet/commercial packs only with explicit finance approval |
 
 ---
@@ -179,6 +179,7 @@ node scripts/smoke-public-staging-api.mjs https://viona-api-staging-eu.fly.dev
 | `VIONA_LOCAL_NO_CHARGE_CONTROLLED_PILOT_SESSION_2.md` | Session 2 ops + Expo web + native attempts |
 | `VIONA_LOCAL_NO_CHARGE_CONTROLLED_PILOT_SESSION_3.md` | Session 3 API re-verify |
 | `VIONA_LOCAL_NO_CHARGE_CONTROLLED_PILOT_SESSION_4.md` | Session 4 API re-verify |
+| `VIONA_LOCAL_NO_CHARGE_CONTROLLED_PILOT_SESSION_5.md` | Session 5 prep (Option A) |
 | `VIONA_LOCAL_NO_CHARGE_CONTROLLED_PILOT_SESSIONS_1_3_ROLLUP.md` | Prior sessions 1–3 aggregate (superseded for current index by this doc) |
 | `VIONA_LOCAL_NO_CHARGE_CONTROLLED_PILOT_OPS_PLAYBOOK.md` | Daily ops + pause + session index |
 | `VIONA_LOCAL_NO_CHARGE_OPS_AUDIT_UI_PLAN.md` | Ops Audit UI scope + packs |

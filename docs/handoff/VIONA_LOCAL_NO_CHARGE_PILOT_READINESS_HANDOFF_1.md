@@ -119,6 +119,18 @@
 
 ---
 
+## Session 5 prep (`CONTROLLED_PILOT_SESSION_5.PREP.1`)
+
+| Item | Value |
+|------|--------|
+| **Baseline** | `8601354` |
+| **Prep doc** | `docs/runbooks/VIONA_LOCAL_NO_CHARGE_CONTROLLED_PILOT_SESSION_5.md` |
+| **Scope** | Option A — same no-charge, limited roster, public HTTPS, Ops Audit active |
+| **Status** | **PREP** — run not yet executed |
+| **Native** | **NOT COMPLETED** — no native PASS without §8 checklist |
+
+---
+
 ## 1. Executive summary
 
 The **Local request-only / no-charge** pilot lane on VIONA is **automated QA-ready** on `master`: schema, APIs, merchant/user UI, EN/VI safe copy, VI runtime status labels, composed E2E runner, staging DB verification runbook, and manual device checklist are in place.
