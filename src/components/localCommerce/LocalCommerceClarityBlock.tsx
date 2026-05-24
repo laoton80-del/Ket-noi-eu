@@ -48,6 +48,13 @@ function safetyKey(suffix: (typeof SAFETY_PILLS)[number]['key'] | (typeof STATUS
 function resolveClarityGridColumns(width: number): number {
   if (width >= 1024) return 4;
   if (width >= 768) return 3;
+  if (width < 400) return 1;
+  if (width < 480) return 2;
+  return 2;
+}
+
+function resolveClarityCtaColumns(width: number): number {
+  if (width < 400) return 1;
   return 2;
 }
 
@@ -130,7 +137,9 @@ export function LocalCommerceClarityBlock({
   const { width } = useWindowDimensions();
   const caps = useMemo(() => getAllLocalCommerceCapabilities(), []);
   const { customerLocale, merchantLocale, nativeLocale } = useSmartTrio();
+  const isClarityMobile = width < 480;
   const gridColumns = resolveClarityGridColumns(width);
+  const ctaColumns = resolveClarityCtaColumns(width);
 
   const trioLine = useMemo(
     () =>
@@ -152,19 +161,30 @@ export function LocalCommerceClarityBlock({
   ];
 
   return (
-    <LocalConstellationFrame accent="emerald" tier="service" radius={14} style={styles.card} contentStyle={styles.cardInner}>
-      <Text style={styles.title}>{t('localCommerce.title')}</Text>
-      <Text style={styles.subtitle} numberOfLines={2}>
+    <LocalConstellationFrame
+      accent="emerald"
+      tier="service"
+      radius={14}
+      style={styles.card}
+      contentStyle={[styles.cardInner, isClarityMobile && styles.cardInnerMobile]}
+    >
+      <Text style={[styles.title, isClarityMobile && styles.titleMobile]}>{t('localCommerce.title')}</Text>
+      <Text style={[styles.subtitle, isClarityMobile && styles.subtitleMobile]} numberOfLines={isClarityMobile ? 3 : 2}>
         {t('localCommerce.compactSubtitle')}
       </Text>
 
-      <View style={styles.chipRow}>
+      <View style={[styles.chipRow, isClarityMobile && styles.chipRowMobile]}>
         {SAFETY_PILLS.map((pill) => (
           <PremiumStatusChip key={pill.key} accent="emerald" label={t(safetyKey(pill.key))} />
         ))}
       </View>
 
-      <PremiumTileGrid columns={2} wrapCells gap={premiumTileLayout.gridGapTight} style={styles.tileSection}>
+      <PremiumTileGrid
+        columns={ctaColumns}
+        wrapCells
+        gap={premiumTileLayout.gridGapTight}
+        style={styles.tileSection}
+      >
         <PremiumAppTile
           variant="local"
           accent="emerald"
@@ -248,8 +268,15 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 12,
     gap: 0,
+    maxWidth: '100%',
+    width: '100%',
+  },
+  cardInnerMobile: {
+    paddingHorizontal: 10,
+    paddingVertical: 10,
   },
   title: { fontSize: 15, fontFamily: FontFamily.extrabold, color: INK, letterSpacing: -0.15 },
+  titleMobile: { fontSize: 14 },
   subtitle: {
     marginTop: 4,
     fontSize: 11,
@@ -257,13 +284,15 @@ const styles = StyleSheet.create({
     color: INK_MUTED,
     lineHeight: 15,
   },
+  subtitleMobile: { fontSize: 10, lineHeight: 14 },
   chipRow: {
     marginTop: 8,
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 6,
   },
-  tileSection: { marginTop: 10, marginBottom: 4 },
+  chipRowMobile: { marginTop: 6, gap: 5 },
+  tileSection: { marginTop: 10, marginBottom: 4, maxWidth: '100%', width: '100%' },
   tileSectionLast: { marginTop: 8, marginBottom: 0 },
   sectionKicker: {
     marginTop: 10,

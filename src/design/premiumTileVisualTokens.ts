@@ -373,12 +373,15 @@ export function resolvePremiumTileItemWidth(
   return (contentWidth - gap * (columns - 1)) / columns;
 }
 
-/** Flex-basis percent for wrapped tile rows (matches Travel scenario grid). */
-export function resolvePremiumTileCellWidthPercent(columns: number): `${number}%` {
+/** Flex-basis percent for wrapped tile rows (gap-aware; avoids mobile horizontal overflow). */
+export function resolvePremiumTileCellWidthPercent(
+  columns: number,
+  gapPx: number = premiumTileLayout.gridGap
+): `${number}%` {
   if (columns <= 1) return '100%';
-  if (columns === 2) return '48.4%';
-  if (columns === 3) return '31.4%';
-  return '23.2%';
+  if (columns === 2) return gapPx <= 12 ? '47.5%' : '48.4%';
+  if (columns === 3) return gapPx <= 12 ? '30.5%' : '31.4%';
+  return gapPx <= 12 ? '22.5%' : '23.2%';
 }
 
 export function resolvePremiumContentRail(windowWidth: number): Readonly<{ horizontalPad: number; innerWidth: number }> {

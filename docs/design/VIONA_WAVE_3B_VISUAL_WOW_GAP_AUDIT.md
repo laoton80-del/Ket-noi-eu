@@ -35,7 +35,7 @@ Wave 3 succeeded at **copy, safety, and tile anatomy** (title/subtitle/chip, `nu
 | **Grid density / compact tiles** | **Partial** — Local/Travel grids match 2/3/4 col logic; **Home** uses **large world cards** (~168px+), not compact app-tile grid | Home dominates first impression → “not the reference” |
 | **Migration from dashboard rows** | **Incomplete** — Home **briefing rail**, collapsible `DashboardB2CScreen`, `VionaInfoTile`-style patterns remain | **Dense row / dashboard** feel on Home |
 | **Visual state system** | **Fragmented** — 4+ glass stacks: `LocalConstellationFrame`, `TravelGlassCard`, `AcademyGlassCard` (account neon), `AccountNeonGlassPanel`, `VionaFashionWorldCard`, `EmergencyHubTile` | Inconsistent depth, blur, and glow curves |
-| **Responsive pixel QA** | **Weak** — Wave 3 visual spot-check was **projection-only**; no screenshot artifacts | “Old” may be **real clipping** on device, not just tokens |
+| **Responsive pixel QA** | **Improved** — `LOCAL_MANUAL_SCREENSHOT_QA.1` + `LOCAL_MOBILE_RESPONSIVE_FIX.1` artifacts @ `docs/design/evidence/wave-3b-local/`; 390 HIGH overflow addressed | Tablet/desktop density gaps remain |
 | **Shared token/component reuse** | **Landed** — `PremiumAppTile` + tokens; **governance corrected** @ SEMANTIC_COLOR_GOVERNANCE.1 (multi-color per feature, not one color per universe) | Future packs must use `accent` overrides per §5.2 |
 
 **Conclusion:** Wave 3 was a **grammar pass**, not a **material system pass**. The north-star requires **shared tokens + one tile primitive + hub canvas alignment + Home restraint** — implemented in small packs, not one rewrite.

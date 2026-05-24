@@ -110,6 +110,7 @@ function LocalShellUtilityBtn({
   a11yLabel,
   iconColor = vionaTokens.fashionTech.champagne,
   compact = false,
+  iconOnly = false,
 }: Readonly<{
   icon: keyof typeof Ionicons.glyphMap;
   label: string;
@@ -117,6 +118,7 @@ function LocalShellUtilityBtn({
   a11yLabel: string;
   iconColor?: string;
   compact?: boolean;
+  iconOnly?: boolean;
 }>) {
   return (
     <Pressable
@@ -128,16 +130,19 @@ function LocalShellUtilityBtn({
         return [
           styles.shellUtilBtn,
           compact && styles.shellUtilBtnCompact,
+          iconOnly && styles.shellUtilBtnIconOnly,
           Platform.OS === 'web' && fashionHomeWebCommandUtilityHoverStyle(!!hovered, false),
           Platform.OS === 'web' && fashionHomeWebCommandUtilityPressStyle(!!pressed),
           pressed && styles.shellUtilBtnPressed,
         ];
       }}
     >
-      <Ionicons name={icon} size={compact ? 15 : 16} color={iconColor} />
-      <Text style={styles.shellUtilLabel} numberOfLines={1}>
-        {label}
-      </Text>
+      <Ionicons name={icon} size={compact || iconOnly ? 15 : 16} color={iconColor} />
+      {iconOnly ? null : (
+        <Text style={styles.shellUtilLabel} numberOfLines={1}>
+          {label}
+        </Text>
+      )}
     </Pressable>
   );
 }
@@ -671,7 +676,13 @@ export function LocalScreen() {
   };
 
   const { horizontalPad, innerWidth } = resolveLocalContentRail(width);
-  const gridColumns = resolveLocalGridColumns(width);
+  const isLocalMobile = width > 0 && width < 480;
+  const isLocalPhone = width > 0 && width < 400;
+  const useIconOnlyShellUtilities = isLocalMobile;
+  const gridColumns = useMemo(() => {
+    if (isLocalPhone) return 1;
+    return resolveLocalGridColumns(width);
+  }, [isLocalPhone, width]);
   const classifiedColumns = resolveLocalGridColumns(width, {
     desktop: 3,
     tablet: 2,
@@ -752,7 +763,8 @@ export function LocalScreen() {
     localConstellation.miniappDockHeight +
     localConstellation.tabBarClearanceBottom +
     Math.max(insets.bottom, 12) +
-    48;
+    48 +
+    (isLocalMobile ? 96 : 0);
 
   const tabletFullWidth = Platform.OS === 'web' && width >= VIONA_TABLET_MIN_WIDTH;
   const tabletBreakoutStyle = useMemo((): StyleProp<ViewStyle> | null => {
@@ -828,13 +840,20 @@ export function LocalScreen() {
           {
             paddingHorizontal: horizontalPad,
             paddingBottom: bottomPadClearance,
-            paddingTop: desktopWeb ? 8 : 10,
+            paddingTop: desktopWeb ? 8 : isLocalMobile ? 6 : 10,
+            width: '100%',
+            maxWidth: '100%',
           },
         ]}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >
-        <View style={[styles.contentRail, { width: innerWidth, maxWidth: '100%' }]}>
+        <View
+          style={[
+            styles.contentRail,
+            isLocalMobile ? styles.contentRailMobile : { width: innerWidth, maxWidth: '100%' },
+          ]}
+        >
           <View style={styles.shellRailWrap}>
             <LinearGradient
               colors={FASHION_HOME_COMMAND_RAIL_GRADIENT}
@@ -843,15 +862,19 @@ export function LocalScreen() {
               style={styles.shellRail}
             >
               <View style={[styles.shellRailHighlight, { backgroundColor: FASHION_HOME_COMMAND_RAIL_HIGHLIGHT }]} />
-              <View style={styles.shellRailRow}>
+              <View style={[styles.shellRailRow, isLocalMobile && styles.shellRailRowMobile]}>
                 <View style={styles.shellRailBrand}>
                   <VionaBrandLockup variant={useCompactCommandLogo ? 'compact' : 'header'} />
-                  <View style={styles.commandRailDivider} />
-                  <Text style={styles.commandCaption} numberOfLines={1}>
-                    {t('localHub.hubRailCaption')}
-                  </Text>
+                  {!isLocalMobile ? (
+                    <>
+                      <View style={styles.commandRailDivider} />
+                      <Text style={styles.commandCaption} numberOfLines={1}>
+                        {t('localHub.hubRailCaption')}
+                      </Text>
+                    </>
+                  ) : null}
                 </View>
-                <View style={styles.shellUtilityTrack}>
+                <View style={[styles.shellUtilityTrack, isLocalMobile && styles.shellUtilityTrackMobile]}>
                   {homeCommand?.showRolePicker ? (
                     <LocalShellUtilityBtn
                       icon="shuffle-outline"
@@ -859,6 +882,7 @@ export function LocalScreen() {
                       onPress={() => homeCommand.openRolePicker()}
                       a11yLabel={t('shell.utility.switchRole')}
                       compact={useCompactCommandLogo}
+                      iconOnly={useIconOnlyShellUtilities}
                     />
                   ) : null}
                   <LocalShellUtilityBtn
@@ -867,6 +891,7 @@ export function LocalScreen() {
                     onPress={openLanguageSheet}
                     a11yLabel={t('smartTrio.switcher.title')}
                     compact={useCompactCommandLogo}
+                    iconOnly={useIconOnlyShellUtilities}
                   />
                   {Platform.OS === 'web' ? (
                     <LocalShellUtilityBtn
@@ -875,6 +900,7 @@ export function LocalScreen() {
                       onPress={() => setDaylightBoost((v) => !v)}
                       a11yLabel={daylightToggleLabel}
                       compact={useCompactCommandLogo}
+                      iconOnly={useIconOnlyShellUtilities}
                     />
                   ) : null}
                   {fullscreenControl ? (
@@ -884,6 +910,7 @@ export function LocalScreen() {
                       onPress={fullscreenControl.onPress}
                       a11yLabel={fullscreenControl.a11y}
                       compact={useCompactCommandLogo}
+                      iconOnly={useIconOnlyShellUtilities}
                     />
                   ) : null}
                   <LocalShellUtilityBtn
@@ -893,6 +920,7 @@ export function LocalScreen() {
                     a11yLabel={walletChipLabel}
                     iconColor={GOLD}
                     compact={useCompactCommandLogo}
+                    iconOnly={useIconOnlyShellUtilities}
                   />
                   <LocalShellUtilityBtn
                     icon="shield-outline"
@@ -901,6 +929,7 @@ export function LocalScreen() {
                     a11yLabel={t('localHub.railSosA11y')}
                     iconColor={RISK}
                     compact={useCompactCommandLogo}
+                    iconOnly={useIconOnlyShellUtilities}
                   />
                   <LocalShellUtilityBtn
                     icon="person-circle-outline"
@@ -908,6 +937,7 @@ export function LocalScreen() {
                     onPress={openAccountHub}
                     a11yLabel={t('localHub.railAccountA11y')}
                     compact={useCompactCommandLogo}
+                    iconOnly={useIconOnlyShellUtilities}
                   />
                 </View>
               </View>
@@ -919,14 +949,16 @@ export function LocalScreen() {
           tier="service"
           radius={14}
           style={styles.heroIntroCard}
-          contentStyle={styles.heroIntroInner}
+          contentStyle={[styles.heroIntroInner, isLocalMobile && styles.heroIntroInnerMobile]}
         >
           <Text style={styles.hubKicker}>{t('localHub.universeKicker')}</Text>
-          <Text style={styles.heroHeadline}>{t('localHub.heroHeadline')}</Text>
-          <Text style={styles.hubSub} numberOfLines={2}>
+          <Text style={[styles.heroHeadline, isLocalMobile && styles.heroHeadlineMobile]}>
+            {t('localHub.heroHeadline')}
+          </Text>
+          <Text style={[styles.hubSub, isLocalMobile && styles.hubSubMobile]} numberOfLines={isLocalMobile ? 2 : 2}>
             {t('localHub.heroSub')}
           </Text>
-          <View style={styles.heroChipRow}>
+          <View style={[styles.heroChipRow, isLocalMobile && styles.heroChipRowMobile]}>
             <View style={styles.heroChip} accessibilityRole="text" accessible accessibilityLabel={t('localCommerce.safety.heroChipRequestOnly')}>
               <Ionicons name="paper-plane-outline" size={11} color={EMERALD} accessibilityIgnoresInvertColors />
               <Text style={styles.heroChipText}>{t('localCommerce.safety.heroChipRequestOnly')}</Text>
@@ -1256,6 +1288,7 @@ const styles = StyleSheet.create({
   scroll: {
     flex: 1,
     backgroundColor: 'transparent',
+    ...(Platform.OS === 'web' ? ({ overflowX: 'hidden' } as const) : {}),
   },
   shellRailWrap: {
     width: '100%',
@@ -1286,6 +1319,14 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     minHeight: 48,
   },
+  shellRailRowMobile: {
+    flexDirection: 'column',
+    alignItems: 'stretch',
+    gap: 6,
+    paddingHorizontal: 8,
+    paddingVertical: 6,
+    minHeight: 0,
+  },
   shellRailBrand: {
     flex: 1,
     minWidth: 0,
@@ -1302,6 +1343,13 @@ const styles = StyleSheet.create({
     gap: 6,
     maxWidth: '72%',
   },
+  shellUtilityTrackMobile: {
+    width: '100%',
+    maxWidth: '100%',
+    flexShrink: 1,
+    justifyContent: 'flex-start',
+    gap: 5,
+  },
   shellUtilBtn: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -1317,6 +1365,12 @@ const styles = StyleSheet.create({
   shellUtilBtnCompact: {
     minHeight: 28,
     paddingHorizontal: 7,
+  },
+  shellUtilBtnIconOnly: {
+    minHeight: 36,
+    minWidth: 36,
+    paddingHorizontal: 8,
+    paddingVertical: 8,
   },
   shellUtilBtnPressed: { opacity: 0.88 },
   shellUtilLabel: {
@@ -1433,6 +1487,11 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     gap: 4,
   },
+  heroIntroInnerMobile: {
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    gap: 3,
+  },
   hubKicker: {
     fontSize: 10,
     fontFamily: FontFamily.extrabold,
@@ -1447,17 +1506,29 @@ const styles = StyleSheet.create({
     color: INK_STRONG,
     letterSpacing: -0.15,
   },
+  heroHeadlineMobile: {
+    fontSize: 15,
+    lineHeight: 19,
+  },
   hubSub: {
     fontSize: 11,
     lineHeight: 15,
     fontFamily: FontFamily.medium,
     color: INK_MUTED,
   },
+  hubSubMobile: {
+    fontSize: 10,
+    lineHeight: 14,
+  },
   heroChipRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 5,
     marginTop: 6,
+  },
+  heroChipRowMobile: {
+    gap: 4,
+    marginTop: 4,
   },
   heroChip: {
     flexDirection: 'row',
@@ -1489,12 +1560,23 @@ const styles = StyleSheet.create({
     lineHeight: 15,
     paddingHorizontal: 2,
   },
-  content: { alignItems: 'center' },
+  content: {
+    alignItems: 'center',
+    width: '100%',
+    maxWidth: '100%',
+    alignSelf: 'stretch',
+  },
   contentRail: {
     alignSelf: 'center',
     borderRadius: theme.radius.lg,
     backgroundColor: 'rgba(5, 11, 20, 0.22)',
     paddingVertical: 4,
+    overflow: 'hidden',
+  },
+  contentRailMobile: {
+    width: '100%',
+    maxWidth: '100%',
+    alignSelf: 'stretch',
   },
   cardGrid: {
     flexDirection: 'row',

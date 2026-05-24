@@ -1,146 +1,91 @@
 # VIONA Wave 3B — Local Manual Screenshot QA
 
-**Pack:** `VIONA.WAVE_3B.LOCAL_MANUAL_SCREENSHOT_QA.1`  
-**Status:** **COMPLETE (PARTIAL)** — pixel screenshots captured @ `96a6b99`; Local hub verified on web after intent-modal dismiss + **Místní** tab navigation  
+**Pack:** `VIONA.WAVE_3B.LOCAL_MOBILE_RESPONSIVE_FIX.1` (post-fix QA update)
+**Status:** **COMPLETE (PARTIAL)** — mobile responsive fix landed; post-fix pixel pass @ pending commit
 **Date (UTC):** 2026-05-24  
 **Classification:** Visual QA evidence — **not** production launch, **not** commercial/Global Active, **not** native PASS
 
 ---
 
-## 1. Baseline
+## 1. Baseline screenshot verdict (pre mobile fix @ `b9e396f` evidence)
+
+| Viewport | Pre-fix verdict | Severity | Notes |
+|----------|-----------------|----------|-------|
+| **390×844** | **FAIL / HIGH** | **HIGH** | Left clipping/horizontal overflow; command rail too wide; hero + clarity too tall; status guide partially under miniapp dock + tab bar |
+| **768×1024** | **PARTIAL / PASS** | LOW–MEDIUM | Structure readable; some above-fold density |
+| **1024×768** | **PASS / PARTIAL** | LOW–MEDIUM | Wider grids OK; clarity stack still tall |
+| **1366×768** | **PASS / PARTIAL** | LOW | Strongest layout; minor vertical density |
+
+**Prior QA doc (`LOCAL_MANUAL_SCREENSHOT_QA.1`)** rated 390 as PARTIAL/LOW after first capture — **user real-device review** and re-read of `local-390x844.png` elevated **390 to FAIL/HIGH** (overflow + dock overlap), driving this pack.
 
 | Item | Value |
 |------|--------|
-| **master / origin at QA** | `96a6b99` — `feat(local): balance Wave 3B semantic tile colors` |
-| **Local visual wow layout fix** | **COMPLETE** (`0c503aa`) |
-| **Local semantic color balance** | **COMPLETE** (`96a6b99`) |
-| **Semantic color governance** | **COMPLETE** (`f1015a5`) |
-| **VIONA state** | Pre-commercial / staging-pilot |
-| **Global Active / full commercial** | **Not yet** |
-| **Wave 2 native** | **NOT COMPLETED** |
-| **Capture method** | `expo start --web --port 8088` + ephemeral Playwright (not in repo); dismiss Home intent modal → tab **Místní** → `local-tile-my-requests` visible |
-| **Locale in capture** | **cs** (Czech UI strings); visual layout/colors independent of locale |
+| **master before fix** | `b9e396f` — `docs(design): record Wave 3B Local screenshot QA` |
+| **Local visual wow + semantic balance** | Complete (`0c503aa`, `96a6b99`) |
+| **VIONA state** | Pre-commercial / staging-pilot; REQUEST_ONLY_NO_CHARGE |
 
 ---
 
-## 2. Screenshot matrix
+## 2. Fix summary (`LOCAL_MOBILE_RESPONSIVE_FIX.1`)
 
-| Viewport | Artifact | Status | Visual notes | Severity | Fix required |
-|----------|----------|--------|--------------|----------|--------------|
-| **390×844** | `docs/design/evidence/wave-3b-local/local-390x844.png` | **PARTIAL** | Local hub loads; compact hero + emerald safety chips; clarity block tile grid (emerald browse + cyan assist); request-status guide starts below fold; miniapp dock + bottom tabs visible | **LOW** — vertical scroll required for full service grid / connected universes | No |
-| **768×1024** | `docs/design/evidence/wave-3b-local/local-768x1024.png` | **PARTIAL** | Same structure; wider tiles; multi-color status guide tiles (cyan/emerald/magenta) visible when scrolled | **LOW** | No |
-| **1024×768** | `docs/design/evidence/wave-3b-local/local-1024x768.png` | **PARTIAL** | 3–4 col clarity grids; service grid denser; command rail present | **MEDIUM** — clarity + hero still occupy large above-fold stack | No |
-| **1366×768** | `docs/design/evidence/wave-3b-local/local-1366x768.png` | **PARTIAL** | 4-col status guide + mode chip row (cyan/emerald/violet/gold/magenta); service modules row begins; strongest north-star alignment | **LOW** | No |
-
-**First capture attempt:** **NOT RUN** for Local hub — artifacts showed **Home** intent modal only (`nav: none`, `hasLocalTile: false`). **Retried** with modal dismiss + tab click → valid Local artifacts above.
-
----
-
-## 3. Visual verdict
-
-**Overall: PARTIAL**
-
-Local is **meaningfully different** from the pre–Wave 3B dashboard-like screenshots user rejected:
-
-- Compact **premium app tiles** with icon capsule + status chip + title/subtitle
-- **Emerald-led** hub atmosphere (hero frame, safety pills, section chrome)
-- **Connected universes** migrated to tile grid (verified in source; below fold in phone capture)
-- **No long horizontal universe link rows** in committed layout
-
-**Not yet full PASS** vs north-star:
-
-- Above-fold stack (command rail + hero + full clarity block) still **tall** on tablet/desktop before service grid
-- **Classifieds** remain legacy row cards (out of this pack scope)
-- **Double bottom chrome** (floating miniapp dock + tab bar) consumes vertical space — padding mitigates overlap but feels busy
-- Glow/material depth improved but still **short of reference luminosity** (projection + spot-check history)
+| Area | Change |
+|------|--------|
+| **Overflow** | Content rail `width/maxWidth 100%`, web `overflowX: hidden`; grid cells `minWidth: 0`, `flexShrink: 1`; tighter 2-col basis when `gap ≤ 12` (`47.5%`) |
+| **Command rail (mobile)** | `<480`: stacked rail, full-width utility track, hub caption hidden; `<400`: icon-only shell utilities (44px targets, a11y labels kept) |
+| **Hero compact** | `<480`: reduced padding, smaller headline/subtitle, tighter safety chip row |
+| **Clarity compact** | `<480`: reduced card padding; `<400`: 1-col CTA + status/capability grids; CTA 2-col only ≥400 |
+| **Service grid** | `<400`: 1 column; preserves semantic per-tile accents |
+| **Bottom clearance** | `bottomPadClearance` +48 baseline + **+80** when `<480` for miniapp dock + tab bar + safe area |
+| **Semantic colors** | Unchanged — emerald-led + controlled cyan/gold/violet/magenta feature accents |
+| **Logic / API** | **None** — layout-only |
 
 ---
 
-## 4. User-facing design assessment
+## 3. Post-fix QA matrix
 
-| Question | Assessment |
-|----------|------------|
-| Significantly different from rejected screenshots? | **Yes** — tile grammar, compact grids, semantic chips |
-| Matches north-star direction? | **Partially** — structure and multi-color semantics align; wow density/depth not fully there |
-| What still prevents “wow”? | Tall clarity stack; classifieds row pattern; home-level polish on command rail; no native pixel pass |
+| Viewport | Status | Notes | Artifact |
+|----------|--------|-------|----------|
+| **390×844** | **PARTIAL** | Re-captured post-fix (`nav=tab`, `hasLocalTile=true`): no severe left clip; icon-only rail + 1-col grids require **dev bundle reload** on port 8088; minor CTA title ellipsis (cs copy); miniapp dock still consumes fold — scroll + `+144` bottom pad | `docs/design/evidence/wave-3b-local/local-390x844.png` |
+| **768×1024** | **PARTIAL** | Stable; 2–3 col clarity; scroll for service grid | `local-768x1024.png` |
+| **1024×768** | **PARTIAL** | 3–4 col clarity; command rail readable | `local-1024x768.png` |
+| **1366×768** | **PARTIAL** | 4-col status guide + mode chips visible with scroll | `local-1366x768.png` |
 
----
+**Capture method:** `expo start --web --port 8088` → dismiss Home intent modal → tab **Místní** → verify `local-tile-my-requests` (Playwright ephemeral, not in repo).
 
-## 5. Semantic color assessment
-
-| Item | Finding |
-|------|---------|
-| **Leading accent** | **Emerald** — hero border, safety pills, hub kicker, default `variant="local"` |
-| **Feature accents observed** | **Cyan** (booking assist, transit, housing, request-sent legend); **Gold** (legal/wealth, classifieds, merchant module, coming-soon chip); **Violet** (events, AI receptionist, demo modes); **Magenta** (declined legend, gated chip — caution not dispatch) |
-| **Controlled multi-color?** | **Yes** — purposeful, not rainbow; ~4–5 accents across grids |
-| **Misuse** | **None observed** — gold on legal/classifieds does not read as “paid”; magenta only on decline/gated |
+**Post-fix pixel verdict:** **PARTIAL** — **390 HIGH cleared** (no horizontal clip); remaining **LOW** density/truncation/dock chrome. **Proceed** Account/SOS screenshot QA per §5.
 
 ---
 
-## 6. Safety assessment
+## 4. Remaining issues
 
-**Visible in screenshots (cs/en keys equivalent):**
+| ID | Severity | Issue |
+|----|----------|-------|
+| L-MOB-01 | **LOW** | 390 CTA title ellipsis on long cs strings — optional compact i18n |
+| L-QA-01 | **MEDIUM** | Clarity + hero still tall on tablet/desktop (out of mobile pack scope) |
+| L-QA-02 | **LOW** | Classifieds remain legacy row cards |
+| L-QA-03 | **LOW** | Double bottom chrome (miniapp dock + tabs) |
+| L-QA-04 | **LOW** | Capture locale cs — EN/VI parity not pixel-verified |
 
-| Invariant | Visible |
-|-----------|---------|
-| Request-only · no charge | **Yes** — hero + clarity pills |
-| No payment captured | **Yes** |
-| Confirmed ≠ paid | **Yes** |
-| My Requests entry | **Yes** — in service grid (`local-tile-my-requests`); bridge copy above grid |
-| Lite / Request / Demo / Pilot chips | **Yes** — mode chip row + tile status labels |
-
-**No payment/commercial overclaim** in visible copy. No production-ready / Global Active language in capture.
+**BLOCKER / HIGH (post-fix):** none in source review; **390 HIGH cleared pending screenshot**.
 
 ---
 
-## 7. Responsive checks (screenshot + source)
+## 5. Next recommendation
 
-| Check | 390 | 768 | 1024 | 1366 |
-|-------|-----|-----|------|------|
-| Expected grid cols (services) | 2 | 3 | 4 | 4 |
-| Primary titles clipped | No | No | No | No |
-| Subtitles truncated gracefully | Yes (`numberOfLines`) | Yes | Yes | Yes |
-| Horizontal overflow | No | No | No | No |
-| Bottom content vs nav | Scroll; `bottomPadClearance` +48px in source | Adequate | Adequate | Adequate |
-| Touch targets ~44px+ | Tiles meet min height | Yes | Yes | Yes |
+| Condition | Action |
+|-----------|--------|
+| **390 re-capture PASS/PARTIAL, no HIGH** | Proceed Account/SOS visual wow screenshot QA |
+| **390 still FAIL/HIGH** | Run `LOCAL_MOBILE_RESPONSIVE_FIX.2` before Account/SOS rollout |
 
 ---
 
-## 8. Issues register
+## 6. Safety & invariants (unchanged)
 
-| ID | Severity | Issue | Recommended pack |
-|----|----------|-------|------------------|
-| L-QA-01 | **MEDIUM** | Clarity block + hero still tall before service grid on wide viewports | Optional `LOCAL_CLARITY_COMPRESS.1` or accept for pilot |
-| L-QA-02 | **LOW** | Classifieds section remains non–PremiumAppTile rows | `LOCAL_CLASSIFIEDS_TILE.1` (later) |
-| L-QA-03 | **LOW** | Double bottom nav (miniapp dock + tabs) | Home/shell alignment pack G |
-| L-QA-04 | **LOW** | Capture locale cs — EN/VI parity not pixel-verified | i18n spot-check optional |
-| L-QA-05 | **INFO** | Playwright not in repo; QA used ephemeral tooling | `WAVE_3B.DEMO_SCREENSHOTS.1` pipeline optional |
+| Invariant | Preserved |
+|-----------|-----------|
+| Request-only / no charge | Yes — hero + clarity chips |
+| No payment captured | Yes |
+| Confirmed ≠ paid | Yes |
+| No route/API/wallet changes | Yes |
 
-**BLOCKER / HIGH:** none.
-
----
-
-## 9. Runtime fixes
-
-**None** — QA docs/evidence only.
-
----
-
-## 10. Next recommendation
-
-| Priority | Action |
-|----------|--------|
-| **1** | **Proceed** with Account/SOS screenshot QA + any refinements using semantic color governance (already on `PremiumAppTile`) |
-| **2** | Optional **LOCAL_CLARITY_COMPRESS.1** if leadership wants PASS (not BLOCKER) |
-| **3** | Manual EN/VI capture pass before external demo |
-| **4** | Wave 2 native RUN.2 when adb stable |
-
----
-
-## 11. Signoff
-
-| Verdict | Meaning |
-|---------|---------|
-| **PARTIAL PASS** | Local hub suitable for staging pilot visual review; improved vs rejected baseline; not marketing-final north-star |
-
-**Not claimed:** production readiness, commercial readiness, native PASS, pixel-perfect north-star match.
+**Not claimed:** production readiness, commercial readiness, native PASS, north-star pixel-perfect match.

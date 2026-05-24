@@ -25,7 +25,10 @@ export function PremiumTileGrid({
   style,
   wrapCells = false,
 }: PremiumTileGridProps): ReactElement {
-  const cellBasis = resolvePremiumTileCellWidthPercent(Math.max(1, Math.min(4, columns)) as 1 | 2 | 3 | 4);
+  const cellBasis = resolvePremiumTileCellWidthPercent(
+    Math.max(1, Math.min(4, columns)) as 1 | 2 | 3 | 4,
+    gap
+  );
 
   if (!wrapCells) {
     return (
@@ -52,9 +55,13 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     alignItems: 'flex-start',
     width: '100%',
+    maxWidth: '100%',
+    alignSelf: 'stretch',
   },
   cell: {
     flexGrow: 0,
-    flexShrink: 0,
+    flexShrink: 1,
+    minWidth: 0,
+    maxWidth: '100%',
   },
 });
