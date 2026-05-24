@@ -46,6 +46,12 @@ const TYPE_SUB_KEY: Record<EmergencyType, string> = {
   general112: 'emergencySos.typeGeneralSub',
 };
 
+const SOS_PILOT_PILLS = [
+  { key: 'emergencySos.pilotPill.guidance' as const, icon: 'compass-outline' as const },
+  { key: 'emergencySos.pilotPill.dialYou' as const, icon: 'call-outline' as const },
+  { key: 'emergencySos.pilotPill.noAutoHelp' as const, icon: 'shield-outline' as const },
+] as const;
+
 export function EmergencySOSScreen() {
   const navigation = useNavigation<Nav>();
   const { t } = useTranslation();
@@ -182,20 +188,52 @@ export function EmergencySOSScreen() {
         >
           <View style={styles.header}>
             <Text style={styles.sos}>{t('emergencySos.screenTitle', { number: emergencyNumber })}</Text>
-            <Text style={styles.headerSub}>{t('emergencySos.headerSubtitle')}</Text>
-            <Text style={styles.numberDisclaimer}>{t('emergencySos.numberDisclaimer')}</Text>
+            <Text style={styles.headerSub} numberOfLines={2}>
+              {t('emergencySos.headerSubtitle')}
+            </Text>
+            <Text style={styles.numberDisclaimer} numberOfLines={3}>
+              {t('emergencySos.numberDisclaimer')}
+            </Text>
+          </View>
+
+          <View style={[styles.disclaimerPanel, styles.pilotStripPanel]}>
+            <View style={styles.pilotStripTitleRow}>
+              <Text style={styles.pilotStripTitle}>{t('emergencySos.pilotStripTitle')}</Text>
+            </View>
+            <Text style={styles.pilotStripBanner} numberOfLines={2}>
+              {t('emergencySos.pilotStripBanner')}
+            </Text>
+            <View style={styles.pilotPillRow}>
+              {SOS_PILOT_PILLS.map((pill) => (
+                <View
+                  key={pill.key}
+                  style={styles.pilotPill}
+                  accessibilityRole="text"
+                  accessibilityLabel={t(pill.key)}
+                >
+                  <Text style={styles.pilotPillText} numberOfLines={2}>
+                    {t(pill.key)}
+                  </Text>
+                </View>
+              ))}
+            </View>
           </View>
 
           <View style={styles.disclaimerPanel}>
-            <Text style={styles.globalDisclaimer}>{t('sos.footerDisclaimer')}</Text>
+            <Text style={styles.globalDisclaimer} numberOfLines={4}>
+              {t('sos.footerDisclaimer')}
+            </Text>
           </View>
+
+          <Text style={styles.hubGridKicker}>{t('emergencySos.hubGridKicker')}</Text>
 
           <View style={styles.emergencyHubGrid}>
             <EmergencyHubTile
               accent="emergency"
               icon="medkit"
-              title={t('emergencySos.typeGeneralTitle')}
-              subtitle={t('emergencySos.dialCta', { number: emergencyNumber })}
+              title={t('emergencySos.hubDialTitle')}
+              subtitle={t('emergencySos.hubDialSub', { number: emergencyNumber })}
+              statusLabel={t('emergencySos.hubDialBadge')}
               onPress={confirmAndDial}
               accessibilityLabel={t('emergencySos.hubLocalEmergency', { number: emergencyNumber })}
             />
@@ -203,7 +241,8 @@ export function EmergencySOSScreen() {
               accent="consular"
               icon="business"
               title={t('emergencySos.hubEmbassy')}
-              subtitle={t('emergencySos.embassyMap')}
+              subtitle={t('emergencySos.hubEmbassySub')}
+              statusLabel={t('emergencySos.hubEmbassyBadge')}
               onPress={onOpenEmbassySupport}
               accessibilityLabel={t('emergencySos.hubEmbassy')}
             />
@@ -211,7 +250,7 @@ export function EmergencySOSScreen() {
               accent="pilot"
               icon="language"
               title={t('emergencySos.hubTranslationPilot')}
-              subtitle={t('emergencySos.ttsPilotDisclaimer')}
+              subtitle={t('emergencySos.hubTranslationSub')}
               statusLabel={t('emergencySos.pilotBadge')}
               onPress={() => navigation.navigate('LiveInterpreter', { guidedEntry: true, scenario: 'general' })}
               accessibilityLabel={t('emergencySos.hubTranslationPilot')}
@@ -220,7 +259,8 @@ export function EmergencySOSScreen() {
               accent="family"
               icon="people"
               title={t('emergencySos.hubFamily')}
-              subtitle={t('emergencySos.familyLeona')}
+              subtitle={t('emergencySos.hubFamilySub')}
+              statusLabel={t('emergencySos.hubFamilyBadge')}
               onPress={onContactFamily}
               accessibilityLabel={t('emergencySos.hubFamily')}
             />
@@ -333,6 +373,59 @@ const styles = StyleSheet.create({
     borderColor: emergencyUiTokens.disclaimerPanelBorder,
     paddingHorizontal: 12,
     paddingVertical: 10,
+  },
+  pilotStripPanel: {
+    borderColor: 'rgba(244, 114, 182, 0.32)',
+    backgroundColor: 'rgba(127, 29, 29, 0.22)',
+    gap: 8,
+  },
+  pilotStripTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  pilotStripTitle: {
+    fontSize: 11,
+    fontFamily: FontFamily.extrabold,
+    color: '#FDA4AF',
+    letterSpacing: 0.6,
+  },
+  pilotStripBanner: {
+    fontSize: 11,
+    lineHeight: 16,
+    color: 'rgba(254, 202, 202, 0.95)',
+    fontFamily: FontFamily.medium,
+  },
+  pilotPillRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  pilotPill: {
+    paddingHorizontal: 8,
+    paddingVertical: 6,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(248, 113, 113, 0.35)',
+    backgroundColor: 'rgba(0, 0, 0, 0.2)',
+    minHeight: 32,
+    maxWidth: '100%',
+    justifyContent: 'center',
+  },
+  pilotPillText: {
+    fontSize: 9,
+    fontFamily: FontFamily.extrabold,
+    color: 'rgba(255, 228, 230, 0.96)',
+    letterSpacing: 0.35,
+    textTransform: 'uppercase',
+  },
+  hubGridKicker: {
+    fontSize: 10,
+    fontFamily: FontFamily.extrabold,
+    color: 'rgba(248, 180, 180, 0.88)',
+    letterSpacing: 0.9,
+    textTransform: 'uppercase',
+    marginTop: 2,
+    marginBottom: 2,
   },
   globalDisclaimer: {
     fontSize: 12,

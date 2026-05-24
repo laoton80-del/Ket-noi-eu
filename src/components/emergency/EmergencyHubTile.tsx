@@ -35,6 +35,7 @@ export function EmergencyHubTile({
 }: EmergencyHubTileProps): ReactElement {
   const tokens = emergencyHubAccentTokens[accent];
   const isFull = layout === 'full';
+  const a11y = subtitle ? `${accessibilityLabel}. ${subtitle}` : accessibilityLabel;
 
   return (
     <Pressable
@@ -51,24 +52,26 @@ export function EmergencyHubTile({
       ]}
       className={applyWebStyles('kn-glass')}
       accessibilityRole="button"
-      accessibilityLabel={accessibilityLabel}
+      accessibilityLabel={a11y}
     >
-      {statusLabel ? (
-        <View style={styles.statusPill}>
-          <Text style={styles.statusPillText}>{statusLabel}</Text>
-        </View>
-      ) : null}
-      <View style={styles.row}>
-        <View
-          style={[
-            styles.iconCapsule,
-            { backgroundColor: tokens.iconBg, borderColor: tokens.iconBorder },
-          ]}
-        >
-          <Ionicons name={icon} size={isFull ? 22 : 20} color={tokens.icon} />
+      <View style={styles.stack}>
+        <View style={styles.iconRow}>
+          <View
+            style={[
+              styles.iconCapsule,
+              { backgroundColor: tokens.iconBg, borderColor: tokens.iconBorder },
+            ]}
+          >
+            <Ionicons name={icon} size={22} color={tokens.icon} accessibilityIgnoresInvertColors />
+          </View>
+          {statusLabel ? (
+            <Text style={[styles.statusPill, { color: tokens.icon, borderColor: tokens.iconBorder }]}>
+              {statusLabel}
+            </Text>
+          ) : null}
         </View>
         <View style={styles.textCol}>
-          <Text style={styles.title} numberOfLines={2}>
+          <Text style={styles.title} numberOfLines={1}>
             {title}
           </Text>
           {subtitle ? (
@@ -77,7 +80,15 @@ export function EmergencyHubTile({
             </Text>
           ) : null}
         </View>
-        {isFull ? <Ionicons name="chevron-forward" size={18} color="rgba(203, 213, 225, 0.75)" /> : null}
+        {isFull ? (
+          <Ionicons
+            name="chevron-forward"
+            size={18}
+            color="rgba(203, 213, 225, 0.75)"
+            style={styles.chevronFull}
+            accessibilityIgnoresInvertColors
+          />
+        ) : null}
       </View>
     </Pressable>
   );
@@ -104,29 +115,15 @@ const styles = StyleSheet.create({
   pressed: {
     opacity: 0.92,
   },
-  statusPill: {
-    position: 'absolute',
-    top: 8,
-    right: 8,
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 6,
-    backgroundColor: 'rgba(0,0,0,0.35)',
-    borderWidth: 1,
-    borderColor: 'rgba(216, 180, 254, 0.45)',
-    zIndex: 1,
-  },
-  statusPillText: {
-    fontSize: 9,
-    fontFamily: FontFamily.extrabold,
-    color: '#E9D5FF',
-    letterSpacing: 0.4,
-    textTransform: 'uppercase',
-  },
-  row: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
+  stack: {
     gap: 10,
+    width: '100%',
+  },
+  iconRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    minHeight: 44,
     width: '100%',
   },
   iconCapsule: {
@@ -138,22 +135,40 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     flexShrink: 0,
   },
+  statusPill: {
+    flexShrink: 1,
+    fontSize: 8,
+    fontFamily: FontFamily.extrabold,
+    letterSpacing: 0.4,
+    textTransform: 'uppercase',
+    paddingHorizontal: 6,
+    paddingVertical: 3,
+    borderRadius: 6,
+    borderWidth: StyleSheet.hairlineWidth,
+    backgroundColor: 'rgba(0, 0, 0, 0.28)',
+    overflow: 'hidden',
+  },
   textCol: {
     flex: 1,
     minWidth: 0,
     gap: 4,
-    paddingTop: 2,
   },
   title: {
     color: '#F8FAFC',
-    fontSize: 14,
-    lineHeight: 18,
+    fontSize: 13,
+    lineHeight: 17,
     fontFamily: FontFamily.extrabold,
+    letterSpacing: -0.14,
   },
   subtitle: {
     color: 'rgba(203, 213, 225, 0.88)',
-    fontSize: 11,
-    lineHeight: 15,
+    fontSize: 10,
+    lineHeight: 14,
     fontFamily: FontFamily.medium,
+  },
+  chevronFull: {
+    position: 'absolute',
+    right: 0,
+    top: 14,
   },
 });
