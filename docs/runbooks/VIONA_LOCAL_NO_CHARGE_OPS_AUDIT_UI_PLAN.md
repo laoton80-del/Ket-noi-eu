@@ -392,4 +392,5 @@ When implemented, session 2 **optional** ops audit steps:
 | **Expo web ops UI** | **PASS** @ session 2 §5 (carried forward) |
 | **Public HTTPS ops API** | **PASS** @ session 2 §9 (carried forward) |
 | **Session 3 prep doc** | `VIONA_LOCAL_NO_CHARGE_CONTROLLED_PILOT_SESSION_3.md` |
-| **Next** | Operator runs session 3 evidence table; optional native §7 on stable device — **do not claim native PASS** until checklist complete |
+| **Session 3 run** | **PASS** @ 2026-05-24 — public HTTPS smoke; native §7 **NOT RUN** |
+| **Next** | Optional native §7 on stable device — **do not claim native PASS** until checklist complete |

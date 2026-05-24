@@ -253,7 +253,7 @@ Known Local lifecycle milestones:
 
 ### Kernel pointer (`KERNEL.LOCAL_NO_CHARGE_OPS_AUDIT_UI_PLAN.1`) — `40c2711`
 
-**Controlled pilot session 2:** `VIONA_LOCAL_NO_CHARGE_CONTROLLED_PILOT_SESSION_2.md` — user/merchant + ops API **PASS**; Expo ops UI **PASS** @ §5; Android build **PASS** @ §11.6; **native secret-tap NOT COMPLETED** @ §11.7. **Session 3 prep:** `VIONA_LOCAL_NO_CHARGE_CONTROLLED_PILOT_SESSION_3.md` @ `CONTROLLED_PILOT_SESSION_3.PREP.1` — re-verify HTTPS gates; native §7 remains open. Local: `REQUEST_ONLY_NO_CHARGE`, `walletPhase` **NONE**. **Not** production/commercial.
+**Controlled pilot session 3:** `VIONA_LOCAL_NO_CHARGE_CONTROLLED_PILOT_SESSION_3.md` — user/merchant + ops API **PASS** @ 2026-05-24 (`CONTROLLED_PILOT_SESSION_3.RUN.1`); native §7 **NOT RUN**. Session 2 Expo ops UI **PASS** (carried forward). Local: `REQUEST_ONLY_NO_CHARGE`, `walletPhase` **NONE**. **Not** production/commercial.
 
 ### Kernel sync (`KERNEL.LOCAL_NO_CHARGE_PILOT_SIGNOFF_SYNC.1`) — `5a714a8`
 
