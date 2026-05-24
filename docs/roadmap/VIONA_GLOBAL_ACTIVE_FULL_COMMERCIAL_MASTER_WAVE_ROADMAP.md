@@ -96,7 +96,7 @@ Baseline (today) → Wave 1 → checkpoint → Wave 2 → … → Wave 12 → Gl
 
 ### Wave 3 — Consumer UX excellence
 
-**Prep:** `VIONA_WAVE_3_CONSUMER_UX_EXCELLENCE_PREP.md` · **Audit:** `VIONA_WAVE_3_CONSUMER_UX_SURFACE_AUDIT.md` (**COMPLETE** @ `e2b43ef+`); next: Premium App Tile rules doc
+**Prep:** `VIONA_WAVE_3_CONSUMER_UX_EXCELLENCE_PREP.md` · **Audit:** `VIONA_WAVE_3_CONSUMER_UX_SURFACE_AUDIT.md` · **Tile rules:** `VIONA_WAVE_3_PREMIUM_APP_TILE_RULES.md` (**COMPLETE** @ `f444a6b+`); next: Local no-charge safety copy visibility
 
 | Pack theme | Examples |
 |------------|----------|
@@ -297,7 +297,7 @@ Cursor **must not**:
 |----------|--------|-------------|
 | **1** | **Wave 1 exit signoff** — `VIONA_LOCAL_NO_CHARGE_WAVE_1_EXIT_PILOT_SIGNOFF_CRITERIA.md` (**done** @ `9619886`) |
 | **2** | **Wave 2 re-run** — install app on stable device; complete manual checklist | RUN **NOT RUN** @ 2026-05-24 |
-| **3** | **Wave 3** — `VIONA_WAVE_3_CONSUMER_UX_EXCELLENCE_PREP.md`; start **Surface Audit** | May parallel Wave 2 RUN.2; UI-only |
+| **3** | **Wave 3** — prep + audit + **tile rules complete**; start **Local safety copy visibility** | May parallel Wave 2 RUN.2; UI-only |
 | **4** | Optional **Session 6** smoke (Option A) | Continued corroboration if roster active |
 | **Later** | Waves 4–6 docs/planning | Only with explicit scope |
 
@@ -330,6 +330,7 @@ Cursor **must not**:
 | `VIONA_WAVE_2_NATIVE_MOBILE_CONFIDENCE_RUN.md` | Wave 2 run (**NOT RUN**) |
 | `VIONA_WAVE_3_CONSUMER_UX_EXCELLENCE_PREP.md` | Wave 3 consumer UX prep |
 | `VIONA_WAVE_3_CONSUMER_UX_SURFACE_AUDIT.md` | Wave 3 surface audit (**COMPLETE**) |
+| `VIONA_WAVE_3_PREMIUM_APP_TILE_RULES.md` | Premium App Tile rules (**COMPLETE**) |
 | `VIONA_LOCAL_NO_CHARGE_PILOT_READINESS_REVIEW_AFTER_SESSIONS_1_4.md` | Option A through session 5+ |
 | `VIONA_LOCAL_NO_CHARGE_PILOT_READINESS_HANDOFF_1.md` | Handoff index |
 | Session runbooks 1–5 | Per-session evidence |

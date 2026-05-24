@@ -5,7 +5,8 @@
 **Master wave roadmap:** `docs/roadmap/VIONA_GLOBAL_ACTIVE_FULL_COMMERCIAL_MASTER_WAVE_ROADMAP.md`
 **Audit baseline HEAD:** `e2b43ef` — `docs(design): prepare Wave 3 consumer UX excellence`
 **Audit date (UTC):** 2026-05-24
-**Status:** **AUDIT COMPLETE** — static inventory only; no UI implementation in this pack
+**Tile rules:** `docs/design/VIONA_WAVE_3_PREMIUM_APP_TILE_RULES.md` — **COMPLETE** (`VIONA.WAVE_3.PREMIUM_APP_TILE_RULES.1`)
+**Status:** **AUDIT COMPLETE** — static inventory only; tile rules locked; next: Local safety copy visibility pack
 
 **Classification:** Docs/static audit — **not** production launch, **not** commercial/payment readiness, **not** Global Active / full commercial, **not** native production confidence.
 
@@ -286,14 +287,14 @@
 
 ## 8. First implementation pack recommendation
 
-**Next pack (one only):** `VIONA.WAVE_3.PREMIUM_APP_TILE_RULES.1`
+**Next pack (one only):** `VIONA.WAVE_3.LOCAL_NO_CHARGE_SAFETY_COPY_VISIBILITY.1`
 
 | Why | Detail |
 |-----|--------|
-| **Docs/static** | Extracts shared rules from `VionaFashionWorldCard`, `LocalAppTile`, `TravelAppTile`, `AcademyGlassCard` without code churn |
-| **Low risk** | No Local service logic, wallet, or API changes |
-| **Unblocks** | Packs 2–9 can reference one canonical tile spec before multi-screen UI edits |
-| **Not yet** | Broad Home refactor or `HomeScreen.tsx` split — defer until rules doc approved |
+| **Rules complete** | `VIONA_WAVE_3_PREMIUM_APP_TILE_RULES.md` defines shared grammar |
+| **Trust-first** | Hub clarity block should surface confirmed≠paid and request-only legend |
+| **Small scope** | Copy/micro-UI on Local hub only — no booking/wallet logic |
+| **Not yet** | Broad Home refactor — defer until Local packs 1–3 validated on staging |
 
 ---
 
@@ -362,7 +363,7 @@
 
 ## 13. Next action
 
-1. Run **`VIONA.WAVE_3.PREMIUM_APP_TILE_RULES.1`** (docs-only tile rules).
+1. Run **`VIONA.WAVE_3.LOCAL_NO_CHARGE_SAFETY_COPY_VISIBILITY.1`** (first UI pack per tile rules).
 2. Keep **Wave 2 RUN.2** pending physical device.
 3. Do **not** stage the 17 unrelated `src/` edits.
 
@@ -373,6 +374,7 @@
 | Doc | Role |
 |-----|------|
 | `VIONA_WAVE_3_CONSUMER_UX_EXCELLENCE_PREP.md` | Wave 3 prep + pack map |
+| `VIONA_WAVE_3_PREMIUM_APP_TILE_RULES.md` | Premium App Tile rules (**COMPLETE**) |
 | `VIONA_GLOBAL_EXPERIENCE_MANIFESTO.md` | Experience principles |
 | `VIONA_ACTION_GRID_PATTERN.md` | Action grid (Account) |
 | `VIONA_LOCAL_NO_CHARGE_CONTROLLED_PILOT_SESSIONS_1_5_ROLLUP.md` | Local evidence |

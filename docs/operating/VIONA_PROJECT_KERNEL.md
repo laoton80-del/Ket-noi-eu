@@ -257,7 +257,7 @@ Known Local lifecycle milestones:
 
 ### Kernel pointer (`KERNEL.GLOBAL_ACTIVE_MASTER_WAVE_ROADMAP.1`) — `d118b12+`
 
-**Global Active / full commercial path:** planning only @ `docs/roadmap/VIONA_GLOBAL_ACTIVE_FULL_COMMERCIAL_MASTER_WAVE_ROADMAP.md` — **12 waves**; **not** production/commercial yet. **Wave 1 exit:** `VIONA_LOCAL_NO_CHARGE_WAVE_1_EXIT_PILOT_SIGNOFF_CRITERIA.md` @ `9619886` — **met** (sessions 1–5 rollup). **Wave 2:** `VIONA_WAVE_2_NATIVE_MOBILE_CONFIDENCE_RUN.md` — attestation **NOT RUN** @ 2026-05-24. **Wave 3:** `VIONA_WAVE_3_CONSUMER_UX_EXCELLENCE_PREP.md` + `VIONA_WAVE_3_CONSUMER_UX_SURFACE_AUDIT.md` — surface audit **complete**. Native production confidence **not achieved**. **Next:** Premium App Tile rules doc or Wave 2 RUN.2 on physical device. Payment/AI/SOS/commercial **locked**.
+**Global Active / full commercial path:** planning only @ `docs/roadmap/VIONA_GLOBAL_ACTIVE_FULL_COMMERCIAL_MASTER_WAVE_ROADMAP.md` — **12 waves**; **not** production/commercial yet. **Wave 1 exit:** `VIONA_LOCAL_NO_CHARGE_WAVE_1_EXIT_PILOT_SIGNOFF_CRITERIA.md` @ `9619886` — **met** (sessions 1–5 rollup). **Wave 2:** `VIONA_WAVE_2_NATIVE_MOBILE_CONFIDENCE_RUN.md` — attestation **NOT RUN** @ 2026-05-24. **Wave 3:** prep + surface audit + `VIONA_WAVE_3_PREMIUM_APP_TILE_RULES.md` — tile rules **complete**. Native production confidence **not achieved**. **Next:** Local no-charge safety copy visibility pack or Wave 2 RUN.2 on physical device. Payment/AI/SOS/commercial **locked**.
 
 ### Kernel sync (`KERNEL.LOCAL_NO_CHARGE_PILOT_SIGNOFF_SYNC.1`) — `5a714a8`
 
