@@ -257,7 +257,7 @@ Known Local lifecycle milestones:
 
 ### Kernel pointer (`KERNEL.GLOBAL_ACTIVE_MASTER_WAVE_ROADMAP.1`) — `d118b12+`
 
-**Global Active / full commercial path:** planning only @ `docs/roadmap/VIONA_GLOBAL_ACTIVE_FULL_COMMERCIAL_MASTER_WAVE_ROADMAP.md` — **12 waves**; **not** production/commercial yet. **Wave 1 exit:** `VIONA_LOCAL_NO_CHARGE_WAVE_1_EXIT_PILOT_SIGNOFF_CRITERIA.md` @ `9619886` — **met** (sessions 1–5 rollup). **Wave 2 prep:** `VIONA_WAVE_2_NATIVE_MOBILE_CONFIDENCE_PREP.md` @ `cf685ae+` — manual attestation RUN pending; native **NOT COMPLETED**. **Next:** Wave 2 RUN or Wave 3 (UX). Payment/AI/SOS/commercial **locked**.
+**Global Active / full commercial path:** planning only @ `docs/roadmap/VIONA_GLOBAL_ACTIVE_FULL_COMMERCIAL_MASTER_WAVE_ROADMAP.md` — **12 waves**; **not** production/commercial yet. **Wave 1 exit:** `VIONA_LOCAL_NO_CHARGE_WAVE_1_EXIT_PILOT_SIGNOFF_CRITERIA.md` @ `9619886` — **met** (sessions 1–5 rollup). **Wave 2:** `VIONA_WAVE_2_NATIVE_MOBILE_CONFIDENCE_RUN.md` — attestation **NOT RUN** @ 2026-05-24 (emulator; app not installed; no UI walkthrough). Android build **restored** (S2 §11.6). Native production confidence **not achieved**. **Next:** Wave 2 re-run on stable device with install, or Wave 3 (UX). Payment/AI/SOS/commercial **locked**.
 
 ### Kernel sync (`KERNEL.LOCAL_NO_CHARGE_PILOT_SIGNOFF_SYNC.1`) — `5a714a8`
 

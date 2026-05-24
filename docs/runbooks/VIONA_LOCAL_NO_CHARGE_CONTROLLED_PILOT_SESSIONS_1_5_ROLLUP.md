@@ -27,7 +27,7 @@
 | **Ops Audit API (HTTPS)** | **FULL PASS** — sessions 2–5 + ongoing smoke |
 | **Ops Audit UI (Expo web)** | **PASS** — session 2 §5 (carried forward sessions 3–5) |
 | **Android dev client build** | **PASS** — session 2 §11.6 (`85fafeb`) |
-| **Native secret-tap / PIN / Ops Audit UI** | **NOT RUN / NOT COMPLETED** — session 2 §11.7; sessions 3–5 §7/§8 **NOT RUN** |
+| **Native secret-tap / PIN / Ops Audit UI** | **NOT RUN / NOT COMPLETED** — session 2 §11.7; Wave 2 RUN **NOT RUN** @ 2026-05-24 |
 | **Pause across sessions 1–5** | **No** |
 
 ---
@@ -168,7 +168,7 @@ node scripts/smoke-public-staging-api.mjs https://viona-api-staging-eu.fly.dev
 |----------|--------|
 | 1 | **Wave 1 exit** — `VIONA_LOCAL_NO_CHARGE_WAVE_1_EXIT_PILOT_SIGNOFF_CRITERIA.md` (**met** @ `9619886`) |
 | 2 | **Session 6+** controlled no-charge pilot — same Option A constraints |
-| 3 | **Wave 2 native prep** — `VIONA_WAVE_2_NATIVE_MOBILE_CONFIDENCE_PREP.md`; attestation RUN pending |
+| 3 | **Wave 2 native re-run** — install `com.ketnoiglobal.app` on stable device; complete RUN.2 checklist |
 | 4 | **Native manual attestation** — session 5 §8 on stable device; do not claim PASS until done |
 | 5 | **Ops incident / support refinement** — playbook §7–§8 from real operator issues |
 | 6 | **Pilot readiness review after sessions 1–5** — optional follow-on |
@@ -193,4 +193,5 @@ node scripts/smoke-public-staging-api.mjs https://viona-api-staging-eu.fly.dev
 | `VIONA_GLOBAL_ACTIVE_FULL_COMMERCIAL_MASTER_WAVE_ROADMAP.md` | Global Active / full commercial wave roadmap |
 | `VIONA_LOCAL_NO_CHARGE_WAVE_1_EXIT_PILOT_SIGNOFF_CRITERIA.md` | Wave 1 exit / signoff criteria |
 | `VIONA_WAVE_2_NATIVE_MOBILE_CONFIDENCE_PREP.md` | Wave 2 native/mobile prep |
+| `VIONA_WAVE_2_NATIVE_MOBILE_CONFIDENCE_RUN.md` | Wave 2 attestation (**NOT RUN**) |
 | `VIONA_PROJECT_KERNEL.md` | Kernel money law + pilot pointers |

@@ -9,7 +9,7 @@
 **Prior native attempts:** `VIONA_LOCAL_NO_CHARGE_CONTROLLED_PILOT_SESSION_2.md` §11 (build **PASS** §11.6; secret-tap UI **NOT COMPLETED** §11.7)
 **Prep baseline HEAD:** `cf685ae` — `docs(local): define Wave 1 pilot exit criteria`
 **Prep date (UTC):** 2026-05-24
-**Status:** **PREP** — manual attestation run pending (`VIONA.WAVE_2.NATIVE_MOBILE_CONFIDENCE.RUN.1`)
+**Status:** **NOT RUN** @ 2026-05-24 — see `VIONA_WAVE_2_NATIVE_MOBILE_CONFIDENCE_RUN.md` (manual walkthrough not completed)
 
 **Classification:** Native/mobile confidence preparation only — **not** production launch, **not** native production ready, **not** Global Active / full commercial.
 
@@ -25,7 +25,7 @@
 | Ops Audit API (HTTPS) | **PASS** | Staging smoke |
 | Ops Audit UI (Expo web) | **PASS** | Session 2 §5 |
 | Android dev client build | **Restored** | Session 2 §11.6 — `com.ketnoiglobal.app` |
-| Native secret-tap / PIN / Ops Audit (native UI) | **NOT RUN / NOT COMPLETED** | Session 2 §11.7; sessions 3–5 §8 **NOT RUN** |
+| Native secret-tap / PIN / Ops Audit (native UI) | **NOT RUN / NOT COMPLETED** | Session 2 §11.7; Wave 2 RUN **NOT RUN** @ 2026-05-24 |
 | Native production confidence | **Not achieved** | No checklist PASS on stable device |
 | Money law (Local) | **Holding** | `REQUEST_ONLY_NO_CHARGE`; `walletPhase` **NONE** |
 | Whole VIONA | Pre-commercial / staging-pilot foundation | Kernel |
@@ -220,4 +220,5 @@ Wave 3 **consumer UX excellence** may start **after this prep** is published. Wa
 | `VIONA_LOCAL_NO_CHARGE_CONTROLLED_PILOT_SESSION_5.md` | §8 native checklist template |
 | `VIONA_LOCAL_NO_CHARGE_OPS_AUDIT_UI_PLAN.md` | Ops Audit UI scope + safety chips |
 | `VIONA_GLOBAL_ACTIVE_FULL_COMMERCIAL_MASTER_WAVE_ROADMAP.md` | Wave 2 map |
+| `VIONA_WAVE_2_NATIVE_MOBILE_CONFIDENCE_RUN.md` | Wave 2 attestation run (**NOT RUN**) |
 | `VIONA_PROJECT_KERNEL.md` | Kernel pointers |

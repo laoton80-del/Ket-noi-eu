@@ -34,7 +34,7 @@
 | Ops Audit API (HTTPS) | **PASS** | Sessions 2–5 smoke; read-only list/detail |
 | Ops Audit UI (Expo web) | **PASS** | Session 2 §5 (carried forward) |
 | Android dev client build | **PASS** | Session 2 §11.6 — `com.ketnoiglobal.app` |
-| Native secret-tap / PIN / Ops Audit UI | **NOT COMPLETED** | Sessions 2–5 native §7/§8 **NOT RUN** |
+| Native secret-tap / PIN / Ops Audit UI | **NOT COMPLETED** | Wave 2 RUN **NOT RUN** @ 2026-05-24 |
 | Money law (Local) | **Holding** | `REQUEST_ONLY_NO_CHARGE`; `walletPhase` **NONE**; `paymentCaptured` **false** |
 | Whole VIONA | Pre-commercial / staging-pilot foundation | Kernel + handoff |
 | **Global Active / full commercial** | **Not yet** | No production/commercial claim |
@@ -80,7 +80,7 @@ Baseline (today) → Wave 1 → checkpoint → Wave 2 → … → Wave 12 → Gl
 
 ### Wave 2 — Native / mobile confidence
 
-**Prep:** `docs/runbooks/VIONA_WAVE_2_NATIVE_MOBILE_CONFIDENCE_PREP.md` (**PREP** @ `cf685ae+`); run pending
+**Prep + run:** `VIONA_WAVE_2_NATIVE_MOBILE_CONFIDENCE_PREP.md` / `VIONA_WAVE_2_NATIVE_MOBILE_CONFIDENCE_RUN.md` — attestation **NOT RUN** @ 2026-05-24 (package not on emulator; no UI walkthrough)
 
 | Pack theme | Examples |
 |------------|----------|
@@ -294,7 +294,7 @@ Cursor **must not**:
 | Priority | Action | Rationale |
 |----------|--------|-------------|
 | **1** | **Wave 1 exit signoff** — `VIONA_LOCAL_NO_CHARGE_WAVE_1_EXIT_PILOT_SIGNOFF_CRITERIA.md` (**done** @ `9619886`) |
-| **2** | **Wave 2** — native/mobile confidence | Preferred next; secret-tap/PIN **NOT COMPLETED** |
+| **2** | **Wave 2 re-run** — install app on stable device; complete manual checklist | RUN **NOT RUN** @ 2026-05-24 |
 | **3** | **Wave 3** — consumer UX excellence | May parallel Wave 2; UI-only |
 | **4** | Optional **Session 6** smoke (Option A) | Continued corroboration if roster active |
 | **Later** | Waves 4–6 docs/planning | Only with explicit scope |
