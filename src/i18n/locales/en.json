@@ -707,13 +707,25 @@
   "local": {
     "merchantInbox": {
       "title": "Local Request Inbox",
+      "screenSubtitle": "Review and confirm requests — no payment on this pilot flow.",
       "backA11y": "Go back to merchant dashboard",
-      "safetyBanner": "Request-only / no-charge. No payment has been captured. This is not a paid booking. Payment is not enabled for this Local request flow.",
+      "safetyStripTitle": "No-charge pilot",
+      "safetyBanner": "Request-only · no charge. No payment captured. Your confirm ≠ customer paid.",
       "empty": "No Local service requests yet.",
       "errorLoad": "Unable to load Local requests. Please retry.",
+      "retry": "Retry",
       "requesterFallback": "Requester",
-      "reviewPendingNote": "Waiting for merchant review",
-      "confirmedNote": "Confirmed does not mean paid. Request-only / no-charge.",
+      "reviewPendingNote": "Needs your review",
+      "confirmedNote": "Confirmed ≠ paid — request-only, no charge.",
+      "statusHint": {
+        "newRequest": "New request — review and respond",
+        "needsReview": "Action required — confirm or decline",
+        "confirmedNotPaid": "You confirmed — customer not charged",
+        "declined": "Request declined",
+        "inProgress": "In progress — no payment on this flow",
+        "completed": "Completed — no payment on this flow",
+        "closed": "Request closed"
+      },
       "statusCopy": {
         "requested": "Request submitted",
         "merchantReview": "Waiting for merchant review",
@@ -727,9 +739,9 @@
         "unknown": "Unknown status"
       },
       "walletBadge": {
-        "requestOnlyNoCharge": "No payment has been captured · Request-only / no-charge · walletPhase NONE",
-        "phaseNone": "No payment has been captured · walletPhase NONE",
-        "phaseOther": "walletPhase {{phase}}"
+        "requestOnlyNoCharge": "Request-only · no payment captured",
+        "phaseNone": "No payment captured",
+        "phaseOther": "Wallet phase {{phase}} (pilot)"
       },
       "filter": {
         "all": "All",

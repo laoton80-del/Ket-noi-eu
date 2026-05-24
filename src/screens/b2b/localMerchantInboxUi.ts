@@ -9,6 +9,19 @@ import {
   type LocalMerchantInboxActions,
 } from '../../services/local/localMerchantInboxView';
 import type { LocalMerchantInboxRequest } from '../../services/localMerchantInboxApi';
+import type { LocalConstellationAccent } from '../../components/local/localConstellationTokens';
+
+/** Status icon names for merchant inbox rows (display only). */
+export type LocalMerchantInboxStatusIconName =
+  | 'paper-plane-outline'
+  | 'hourglass-outline'
+  | 'checkmark-circle-outline'
+  | 'sync-outline'
+  | 'checkmark-done-outline'
+  | 'close-circle-outline'
+  | 'ban-outline'
+  | 'time-outline'
+  | 'help-circle-outline';
 
 export type LocalInboxFilterChip =
   | 'all'
@@ -68,6 +81,72 @@ export function localRequestStatusLabel(status: string): string {
       return 'This request expired';
     default:
       return 'Unknown status';
+  }
+}
+
+/** Semantic accent for merchant inbox rows — display mapping only. */
+export function localMerchantInboxStatusAccent(status: string): LocalConstellationAccent {
+  switch (status) {
+    case LocalServiceRequestStatus.REJECTED:
+    case LocalServiceRequestStatus.USER_CANCELLED:
+    case LocalServiceRequestStatus.OPS_CANCELLED:
+    case LocalServiceRequestStatus.EXPIRED:
+      return 'violet';
+    case LocalServiceRequestStatus.CONFIRMED:
+    case LocalServiceRequestStatus.COMPLETED:
+    case LocalServiceRequestStatus.IN_PROGRESS:
+      return 'emerald';
+    case LocalServiceRequestStatus.REQUESTED:
+    case LocalServiceRequestStatus.MERCHANT_REVIEW:
+    default:
+      return 'cyan';
+  }
+}
+
+export function localMerchantInboxStatusIcon(status: string): LocalMerchantInboxStatusIconName {
+  switch (status) {
+    case LocalServiceRequestStatus.REQUESTED:
+      return 'paper-plane-outline';
+    case LocalServiceRequestStatus.MERCHANT_REVIEW:
+      return 'hourglass-outline';
+    case LocalServiceRequestStatus.CONFIRMED:
+      return 'checkmark-circle-outline';
+    case LocalServiceRequestStatus.IN_PROGRESS:
+      return 'sync-outline';
+    case LocalServiceRequestStatus.COMPLETED:
+      return 'checkmark-done-outline';
+    case LocalServiceRequestStatus.REJECTED:
+      return 'close-circle-outline';
+    case LocalServiceRequestStatus.USER_CANCELLED:
+    case LocalServiceRequestStatus.OPS_CANCELLED:
+      return 'ban-outline';
+    case LocalServiceRequestStatus.EXPIRED:
+      return 'time-outline';
+    default:
+      return 'help-circle-outline';
+  }
+}
+
+export function localMerchantInboxStatusHintKey(status: string): string | null {
+  switch (status) {
+    case LocalServiceRequestStatus.REQUESTED:
+      return 'local.merchantInbox.statusHint.newRequest';
+    case LocalServiceRequestStatus.MERCHANT_REVIEW:
+      return 'local.merchantInbox.statusHint.needsReview';
+    case LocalServiceRequestStatus.CONFIRMED:
+      return 'local.merchantInbox.statusHint.confirmedNotPaid';
+    case LocalServiceRequestStatus.REJECTED:
+      return 'local.merchantInbox.statusHint.declined';
+    case LocalServiceRequestStatus.IN_PROGRESS:
+      return 'local.merchantInbox.statusHint.inProgress';
+    case LocalServiceRequestStatus.COMPLETED:
+      return 'local.merchantInbox.statusHint.completed';
+    case LocalServiceRequestStatus.USER_CANCELLED:
+    case LocalServiceRequestStatus.OPS_CANCELLED:
+    case LocalServiceRequestStatus.EXPIRED:
+      return 'local.merchantInbox.statusHint.closed';
+    default:
+      return null;
   }
 }
 
@@ -207,7 +286,7 @@ export function collectLocalInboxVisibleCopy(
     : 'Waiting for merchant review';
   const confirmedNote = t
     ? t('local.merchantInbox.confirmedNote')
-    : 'Confirmed does not mean paid';
+    : 'Confirmed ≠ paid — request-only, no charge';
   const parts = [
     labels.statusLabel,
     labels.walletBadge,

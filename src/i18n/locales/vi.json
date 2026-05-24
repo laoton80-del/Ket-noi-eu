@@ -707,13 +707,25 @@
   "local": {
     "merchantInbox": {
       "title": "Hộp thư yêu cầu Local",
+      "screenSubtitle": "Duyệt và xác nhận yêu cầu — không thu phí trên pilot này.",
       "backA11y": "Quay lại dashboard merchant",
-      "safetyBanner": "Chỉ gửi yêu cầu / không thu phí. Chưa thu khoản thanh toán nào. Đây chưa phải đặt lịch đã thanh toán. Tính năng thanh toán chưa được bật cho luồng Local này.",
+      "safetyStripTitle": "Pilot không thu phí",
+      "safetyBanner": "Chỉ gửi yêu cầu · không thu phí. Chưa thu thanh toán. Xác nhận của bạn ≠ khách đã thanh toán.",
       "empty": "Chưa có yêu cầu dịch vụ Local.",
       "errorLoad": "Không tải được yêu cầu Local. Vui lòng thử lại.",
+      "retry": "Thử lại",
       "requesterFallback": "Người gửi yêu cầu",
-      "reviewPendingNote": "Đang chờ cửa hàng xem xét",
-      "confirmedNote": "Đã xác nhận không có nghĩa là đã thanh toán. Chỉ gửi yêu cầu / không thu phí.",
+      "reviewPendingNote": "Cần bạn xem xét",
+      "confirmedNote": "Đã xác nhận ≠ đã thanh toán — chỉ gửi yêu cầu, không thu phí.",
+      "statusHint": {
+        "newRequest": "Yêu cầu mới — xem xét và phản hồi",
+        "needsReview": "Cần hành động — xác nhận hoặc từ chối",
+        "confirmedNotPaid": "Bạn đã xác nhận — khách chưa bị thu phí",
+        "declined": "Yêu cầu đã từ chối",
+        "inProgress": "Đang xử lý — không thu phí trên luồng này",
+        "completed": "Hoàn tất — không thu phí trên luồng này",
+        "closed": "Yêu cầu đã đóng"
+      },
       "statusCopy": {
         "requested": "Yêu cầu đã được gửi",
         "merchantReview": "Đang chờ cửa hàng xem xét",
@@ -727,9 +739,9 @@
         "unknown": "Trạng thái không xác định"
       },
       "walletBadge": {
-        "requestOnlyNoCharge": "Chưa thu khoản thanh toán nào · Chỉ gửi yêu cầu / không thu phí · walletPhase NONE",
-        "phaseNone": "Chưa thu khoản thanh toán nào · walletPhase NONE",
-        "phaseOther": "walletPhase {{phase}}"
+        "requestOnlyNoCharge": "Chỉ gửi yêu cầu · chưa thu thanh toán",
+        "phaseNone": "Chưa thu thanh toán",
+        "phaseOther": "Giai đoạn ví {{phase}} (pilot)"
       },
       "filter": {
         "all": "Tất cả",
