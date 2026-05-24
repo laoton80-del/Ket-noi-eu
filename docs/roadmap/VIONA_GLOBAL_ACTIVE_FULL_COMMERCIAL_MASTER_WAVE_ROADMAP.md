@@ -96,7 +96,7 @@ Baseline (today) → Wave 1 → checkpoint → Wave 2 → … → Wave 12 → Gl
 
 ### Wave 3 — Consumer UX excellence
 
-**Prep:** `docs/design/VIONA_WAVE_3_CONSUMER_UX_EXCELLENCE_PREP.md` (**PREP** @ `7b8e9fd+`); surface audit pending
+**Prep:** `VIONA_WAVE_3_CONSUMER_UX_EXCELLENCE_PREP.md` · **Audit:** `VIONA_WAVE_3_CONSUMER_UX_SURFACE_AUDIT.md` (**COMPLETE** @ `e2b43ef+`); next: Premium App Tile rules doc
 
 | Pack theme | Examples |
 |------------|----------|
@@ -329,6 +329,7 @@ Cursor **must not**:
 | `VIONA_WAVE_2_NATIVE_MOBILE_CONFIDENCE_PREP.md` | Wave 2 native prep + checklist |
 | `VIONA_WAVE_2_NATIVE_MOBILE_CONFIDENCE_RUN.md` | Wave 2 run (**NOT RUN**) |
 | `VIONA_WAVE_3_CONSUMER_UX_EXCELLENCE_PREP.md` | Wave 3 consumer UX prep |
+| `VIONA_WAVE_3_CONSUMER_UX_SURFACE_AUDIT.md` | Wave 3 surface audit (**COMPLETE**) |
 | `VIONA_LOCAL_NO_CHARGE_PILOT_READINESS_REVIEW_AFTER_SESSIONS_1_4.md` | Option A through session 5+ |
 | `VIONA_LOCAL_NO_CHARGE_PILOT_READINESS_HANDOFF_1.md` | Handoff index |
 | Session runbooks 1–5 | Per-session evidence |

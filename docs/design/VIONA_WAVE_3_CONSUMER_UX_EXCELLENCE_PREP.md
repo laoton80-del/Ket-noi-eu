@@ -5,9 +5,10 @@
 **Wave 1 exit:** `docs/runbooks/VIONA_LOCAL_NO_CHARGE_WAVE_1_EXIT_PILOT_SIGNOFF_CRITERIA.md`
 **Wave 2 native:** `VIONA_WAVE_2_NATIVE_MOBILE_CONFIDENCE_PREP.md` · `VIONA_WAVE_2_NATIVE_MOBILE_CONFIDENCE_RUN.md` (**NOT RUN**)
 **Design references:** `docs/design/VIONA_GLOBAL_EXPERIENCE_MANIFESTO.md`, `VIONA_ACTION_GRID_PATTERN.md`, `VIONA_NEON_GLASS_CARD_SYSTEM.md`
-**Prep baseline HEAD:** `7b8e9fd` — `docs(native): record Wave 2 mobile confidence run`
+**Prep baseline HEAD:** `e2b43ef` — `docs(design): prepare Wave 3 consumer UX excellence`
 **Prep date (UTC):** 2026-05-24
-**Status:** **PREP** — surface audit pending (`VIONA.WAVE_3.CONSUMER_UX_SURFACE_AUDIT.1`)
+**Surface audit:** `docs/design/VIONA_WAVE_3_CONSUMER_UX_SURFACE_AUDIT.md` — **COMPLETE** (`VIONA.WAVE_3.CONSUMER_UX_SURFACE_AUDIT.1`)
+**Status:** **PREP COMPLETE** — next: `VIONA.WAVE_3.PREMIUM_APP_TILE_RULES.1`
 
 **Classification:** UX planning only — **not** production launch, **not** commercial/payment readiness, **not** Global Active / full commercial, **not** native production confidence.
 
@@ -81,7 +82,7 @@ Cross-reference: `VIONA_GLOBAL_EXPERIENCE_MANIFESTO.md`, `VIONA_ACTION_GRID_PATT
 
 | Pack | ID | Focus |
 |------|-----|--------|
-| **UX Audit Pack 1** | `WAVE_3.CONSUMER_UX_SURFACE_AUDIT.1` | Home / Local / Travel / Academy / Business surface inventory |
+| **UX Audit Pack 1** | `WAVE_3.CONSUMER_UX_SURFACE_AUDIT.1` | Home / Local / Travel / Academy / Business surface inventory — **DONE** → `VIONA_WAVE_3_CONSUMER_UX_SURFACE_AUDIT.md` |
 | **UX Standards Pack 2** | `WAVE_3.PREMIUM_APP_TILE_RULES.1` | Premium App Tile system rules + hybrid layout |
 | **Local UX Pack 3** | `WAVE_3.LOCAL_USER_STATUS_CLARITY.1` | User request status clarity (no-charge) |
 | **Local UX Pack 4** | `WAVE_3.LOCAL_MERCHANT_STATUS_CLARITY.1` | Merchant status clarity |
@@ -98,7 +99,7 @@ Cross-reference: `VIONA_GLOBAL_EXPERIENCE_MANIFESTO.md`, `VIONA_ACTION_GRID_PATT
 
 ## 6. First implementation recommendation
 
-**Start with:** `VIONA.WAVE_3.CONSUMER_UX_SURFACE_AUDIT.1`
+**Start with:** `VIONA.WAVE_3.PREMIUM_APP_TILE_RULES.1` (surface audit **complete** — `VIONA_WAVE_3_CONSUMER_UX_SURFACE_AUDIT.md`)
 
 | Item | Detail |
 |------|--------|
@@ -165,7 +166,7 @@ Native status remains **NOT RUN / NOT COMPLETED** until `VIONA_WAVE_2_NATIVE_MOB
 
 | Priority | Action |
 |----------|--------|
-| **1** | **Wave 3 Consumer UX Surface Audit** — `VIONA.WAVE_3.CONSUMER_UX_SURFACE_AUDIT.1` (docs/static) |
+| **1** | **Premium App Tile rules** — `VIONA.WAVE_3.PREMIUM_APP_TILE_RULES.1` (docs/static) |
 | **2** | **Wave 2 RUN.2** — pending stable physical device + `com.ketnoiglobal.app` install |
 | **3** | Optional Session 6+ HTTPS smoke — does not block Wave 3 audit |
 
@@ -190,6 +191,7 @@ Native status remains **NOT RUN / NOT COMPLETED** until `VIONA_WAVE_2_NATIVE_MOB
 | Doc | Role |
 |-----|------|
 | `VIONA_GLOBAL_ACTIVE_FULL_COMMERCIAL_MASTER_WAVE_ROADMAP.md` | Wave 3 map |
+| `VIONA_WAVE_3_CONSUMER_UX_SURFACE_AUDIT.md` | Surface audit (**COMPLETE**) |
 | `VIONA_LOCAL_NO_CHARGE_WAVE_1_EXIT_PILOT_SIGNOFF_CRITERIA.md` | Wave 3 entry criteria |
 | `VIONA_WAVE_2_NATIVE_MOBILE_CONFIDENCE_RUN.md` | Native **NOT RUN** |
 | `VIONA_LOCAL_NO_CHARGE_CONTROLLED_PILOT_SESSIONS_1_5_ROLLUP.md` | API/web evidence |
