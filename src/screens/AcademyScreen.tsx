@@ -16,8 +16,9 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { AcademyGlassCard, type AcademyGlassAccent } from '../components/academy/AcademyGlassCard';
+import type { AcademyGlassAccent } from '../components/academy/AcademyGlassCard';
 import { AccountNeonGlassPanel } from '../components/account/AccountNeonGlassPanel';
+import { PremiumAppTile, PremiumTileGrid } from '../components/viona';
 import { SmartTrioLanguageSheet } from '../components/smartTrio/SmartTrioLanguageSheet';
 import {
   VionaGlobalTopRail,
@@ -34,8 +35,18 @@ import { useHomeCommand } from '../context/HomeCommandContext';
 import { useFullscreenMode } from '../hooks/useFullscreenMode';
 import { useTranslation } from '../i18n';
 import { MAIN_TAB, type RootStackParamList } from '../navigation/routes';
+import type { VionaUniverseAccent } from '../design/premiumTileVisualTokens';
+import {
+  premiumTileGlass,
+  premiumUniverseAccentSpec,
+  premiumUniverseStroke,
+} from '../design/premiumTileVisualTokens';
 import { theme } from '../theme/theme';
 import { FontFamily } from '../theme/typography';
+
+function academyAccentToUniverse(accent: AcademyGlassAccent): VionaUniverseAccent {
+  return accent;
+}
 
 const GLN = VIONA_GLOBAL_LIGHT_NETWORK_TYPOGRAPHY;
 const ACADEMY_GLOBAL_BG = require('../../assets/UI/viona-academy-global-network-bg-v1.png');
@@ -339,32 +350,33 @@ export function AcademyScreen(): ReactElement {
 
           <Text style={styles.sectionLabel}>{t('academyHub.modulesKicker')}</Text>
 
-          <View
+          <PremiumTileGrid
+            columns={gridColumns}
+            wrapCells
             style={[
               styles.moduleGrid,
               {
                 gap: gridGap,
-                flexDirection: 'row',
-                flexWrap: 'wrap',
                 justifyContent: gridColumns === 1 ? 'center' : 'flex-start',
               },
             ]}
           >
             {modules.map((mod) => (
-              <View key={mod.id} style={{ width: moduleWidth, maxWidth: '100%' }}>
-                <AcademyGlassCard
-                  accent={mod.accent}
-                  icon={mod.icon}
-                  title={t(mod.titleKey)}
-                  status={t(mod.statusKey)}
-                  subtitle={t(mod.subtitleKey)}
-                  onPress={mod.onPress}
-                  accessibilityLabel={`${t(mod.titleKey)}. ${t(mod.subtitleKey)}`}
-                  testID={`academy-hub-${mod.id}`}
-                />
-              </View>
+              <PremiumAppTile
+                key={mod.id}
+                variant="academy"
+                accent={academyAccentToUniverse(mod.accent)}
+                width="100%"
+                icon={mod.icon}
+                title={t(mod.titleKey)}
+                statusLabel={t(mod.statusKey)}
+                subtitle={t(mod.subtitleKey)}
+                onPress={mod.onPress}
+                accessibilityLabel={`${t(mod.titleKey)}. ${t(mod.subtitleKey)}. ${t(mod.statusKey)}`}
+                testID={`academy-hub-${mod.id}`}
+              />
             ))}
-          </View>
+          </PremiumTileGrid>
 
           <VionaBottomEscapeBar showBack showHome onBack={bottomEscapeBack} onHome={goHomeFromLogo} />
         </ScrollView>
@@ -515,9 +527,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     paddingVertical: 6,
     borderRadius: 8,
-    borderWidth: 1,
-    borderColor: 'rgba(160, 120, 255, 0.32)',
-    backgroundColor: 'rgba(120, 60, 200, 0.12)',
+    borderWidth: premiumTileGlass.edgeWidth,
+    borderColor: premiumUniverseStroke('violet'),
+    backgroundColor: premiumUniverseAccentSpec('violet').statusFill,
     minHeight: 32,
     maxWidth: '100%',
   },

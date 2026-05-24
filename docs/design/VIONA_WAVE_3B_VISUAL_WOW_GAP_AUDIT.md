@@ -190,7 +190,8 @@ Visual wow packs must **not** introduce commercial/payment copy or behavior.
 | **`VIONA.WAVE_3B.PREMIUM_APP_TILE_COMPONENT.1`** | **COMPLETE** — `PremiumAppTile`, `PremiumIconCapsule`, `PremiumStatusChip`, `PremiumTileGrid` exported from `src/components/viona/index.ts`. **No hub screens refactored yet.** |
 | **`VIONA.WAVE_3B.LOCAL_VISUAL_WOW.1`** | **COMPLETE** — `LocalScreen` hub tiles → `PremiumAppTile` + `PremiumTileGrid`; `LocalCommerceClarityBlock` safety chips use Wave 3B glass tokens. Classified listings unchanged. Screenshots **NOT RUN**. |
 | **`WIONA.WAVE_3B.TRAVEL_VISUAL_WOW.1`** | **COMPLETE** — `TravelScreen` scenario + quick-help tiles → `PremiumAppTile` + `PremiumTileGrid`; pilot pills use cyan Wave 3B tokens. `TravelAppTile` retained for other imports only if unused in hub. Screenshots **NOT RUN**. |
-| **`WIONA.WAVE_3B.ACADEMY_VISUAL_WOW.1`** | **Next** |
+| **`WIONA.WAVE_3B.ACADEMY_VISUAL_WOW.1`** | **COMPLETE** — `AcademyScreen` module grid → `PremiumAppTile` + `PremiumTileGrid`; violet pilot pills use Wave 3B tokens. Hero/safety panels unchanged. Screenshots **NOT RUN**. |
+| **`WIONA.WAVE_3B.ACCOUNT_SOS_VISUAL_WOW.1`** | **Next** |
 
 ---
 
@@ -198,8 +199,8 @@ Visual wow packs must **not** introduce commercial/payment copy or behavior.
 
 | Priority | Action |
 |----------|--------|
-| **1** | **`VIONA.WAVE_3B.ACADEMY_VISUAL_WOW.1`** |
-| **2** | Account / SOS visual wow packs |
+| **1** | **`VIONA.WAVE_3B.ACCOUNT_SOS_VISUAL_WOW.1`** |
+| **2** | Optional manual screenshot pass; Home shell alignment (pack G) later |
 | **3** | Optional: `git restore` 11 CRLF-noise paths after leadership confirms no lost local work |
 | **4** | Manual screenshot pass (pack I) before external demo |
 
