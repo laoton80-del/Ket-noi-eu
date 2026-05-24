@@ -976,7 +976,7 @@
       },
       "business": {
         "title": "VIONA Business",
-        "subtitle": "Không gian merchant và công cụ tăng trưởng.",
+        "subtitle": "Xem trước workspace merchant — chưa ra mắt thương mại.",
         "status": "Pilot"
       }
     },
@@ -1010,8 +1010,8 @@
         "subtitle": "Học cùng gia đình, luyện AI và kỹ năng tương lai."
       },
       "business": {
-        "title": "Doanh nghiệp",
-        "subtitle": "Lễ tân AI, yêu cầu khách, tăng trưởng merchant."
+        "title": "Doanh nghiệp · Merchant",
+        "subtitle": "Xem trước workspace merchant — yêu cầu & vận hành, chưa thu tiền trong app."
       },
       "care": {
         "title": "Quỹ Trái Tim Care",

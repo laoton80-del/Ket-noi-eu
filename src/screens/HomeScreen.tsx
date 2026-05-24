@@ -240,9 +240,9 @@ const LIVING_HERO_DESKTOP_COPY: Readonly<
   },
   business: {
     eyebrow: 'VIONA BUSINESS',
-    title: 'Turn customer requests into growth.',
+    title: 'Merchant workspace entry',
     subtitle:
-      'AI receptionist, merchant tools, and service support for Vietnamese businesses.',
+      'Preview merchant tools and customer requests — pilot foundation, not commercial launch.',
   },
 };
 

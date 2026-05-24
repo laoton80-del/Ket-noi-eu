@@ -976,7 +976,7 @@
       },
       "business": {
         "title": "VIONA Business",
-        "subtitle": "Merchant workspace and growth tools.",
+        "subtitle": "Merchant workspace preview — not a commercial launch.",
         "status": "Pilot"
       }
     },
@@ -1010,8 +1010,8 @@
         "subtitle": "Family learning, AI practice, and future skills."
       },
       "business": {
-        "title": "Business",
-        "subtitle": "AI receptionist, customer requests, merchant growth."
+        "title": "Business · Merchant",
+        "subtitle": "Merchant workspace preview — requests & ops, no payouts active."
       },
       "care": {
         "title": "Care Heart Fund",
