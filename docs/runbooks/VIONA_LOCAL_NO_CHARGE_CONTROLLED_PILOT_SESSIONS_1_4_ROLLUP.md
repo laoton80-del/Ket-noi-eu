@@ -163,7 +163,7 @@ node scripts/smoke-public-staging-api.mjs https://viona-api-staging-eu.fly.dev
 
 | Priority | Option |
 |----------|--------|
-| 1 | **Session 5** controlled pilot — `VIONA_LOCAL_NO_CHARGE_CONTROLLED_PILOT_SESSION_5.md` (**PREP** @ `8601354+`); run pending |
+| 1 | **Wave 1** — Sessions 1–5 rollup + pilot exit; Session 5 **PASS** @ `d118b12` |
 | 2 | **Native manual attestation** — session 5 §8 on stable device (`com.ketnoiglobal.app`); do not claim PASS until done |
 | 3 | **Ops incident / support refinement** — playbook §7–§8 from real operator issues |
 | 4 | **Pilot readiness review** — `VIONA_LOCAL_NO_CHARGE_PILOT_READINESS_REVIEW_AFTER_SESSIONS_1_4.md` (post sessions 1–4) |
@@ -187,3 +187,4 @@ node scripts/smoke-public-staging-api.mjs https://viona-api-staging-eu.fly.dev
 | `VIONA_LOCAL_NO_CHARGE_PILOT_READINESS_REVIEW_AFTER_SESSIONS_1_4.md` | Post sessions 1–4 readiness decision |
 | `VIONA_LOCAL_NO_CHARGE_PILOT_READINESS_REVIEW_AFTER_SESSIONS_1_3.md` | Post sessions 1–3 review snapshot |
 | `VIONA_PROJECT_KERNEL.md` | Kernel money law + pilot pointers |
+| `VIONA_GLOBAL_ACTIVE_FULL_COMMERCIAL_MASTER_WAVE_ROADMAP.md` | Global Active / full commercial wave roadmap |

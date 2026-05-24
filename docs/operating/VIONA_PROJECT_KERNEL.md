@@ -253,7 +253,11 @@ Known Local lifecycle milestones:
 
 ### Kernel pointer (`KERNEL.LOCAL_NO_CHARGE_OPS_AUDIT_UI_PLAN.1`) — `40c2711`
 
-**Controlled pilot sessions 1–4:** rollup `VIONA_LOCAL_NO_CHARGE_CONTROLLED_PILOT_SESSIONS_1_4_ROLLUP.md` @ `597bddb` — sessions 1–4 **PASS**; **no pause**; native secret-tap **NOT COMPLETED**. **Readiness review (post 1–4):** `VIONA_LOCAL_NO_CHARGE_PILOT_READINESS_REVIEW_AFTER_SESSIONS_1_4.md` @ `8601354` — **Session 5+ may proceed** (Option A). **Session 5:** `VIONA_LOCAL_NO_CHARGE_CONTROLLED_PILOT_SESSION_5.md` — **PASS** @ 2026-05-24 (public HTTPS API); native §8 **NOT RUN**; **not** production/commercial. Local: `REQUEST_ONLY_NO_CHARGE`, `walletPhase` **NONE**.
+**Controlled pilot sessions 1–4:** rollup `VIONA_LOCAL_NO_CHARGE_CONTROLLED_PILOT_SESSIONS_1_4_ROLLUP.md` @ `597bddb` — sessions 1–4 **PASS**; **no pause**; native secret-tap **NOT COMPLETED**. **Readiness review (post 1–4):** `VIONA_LOCAL_NO_CHARGE_PILOT_READINESS_REVIEW_AFTER_SESSIONS_1_4.md` @ `8601354` — **Session 5+ may proceed** (Option A). **Session 5:** `VIONA_LOCAL_NO_CHARGE_CONTROLLED_PILOT_SESSION_5.md` — **PASS** @ 2026-05-24 (public HTTPS API); native §8 **NOT RUN**; **not** production/commercial. Local: `REQUEST_ONLY_NO_CHARGE`, `walletPhase` **NONE`.
+
+### Kernel pointer (`KERNEL.GLOBAL_ACTIVE_MASTER_WAVE_ROADMAP.1`) — `d118b12+`
+
+**Global Active / full commercial path:** planning only @ `docs/roadmap/VIONA_GLOBAL_ACTIVE_FULL_COMMERCIAL_MASTER_WAVE_ROADMAP.md` — **12 waves**, ~80–130 packs (estimate); **not** production/commercial yet. **Next:** Sessions 1–5 rollup, then Wave 2 (native) or Wave 3 (UX). Payment/AI/SOS/commercial **locked** until wave gates + approvals.
 
 ### Kernel sync (`KERNEL.LOCAL_NO_CHARGE_PILOT_SIGNOFF_SYNC.1`) — `5a714a8`
 

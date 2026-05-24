@@ -193,3 +193,4 @@ Options B and C can run **in parallel** with Option A if scope stays API/web-onl
 | `VIONA_LOCAL_NO_CHARGE_CONTROLLED_PILOT_SESSION_5.md` | Session 5 prep (Option A runbook) |
 | `VIONA_LOCAL_NO_CHARGE_PILOT_SIGNOFF.md` | Initial readiness sign-off |
 | `VIONA_PROJECT_KERNEL.md` | Kernel pointers |
+| `VIONA_GLOBAL_ACTIVE_FULL_COMMERCIAL_MASTER_WAVE_ROADMAP.md` | Global Active wave plan (planning only) |

@@ -6,6 +6,8 @@
 **Date:** 2026-05-21 (handoff); **2026-05-23** (public HTTPS sign-off)
 **Type:** Handoff / readiness summary only (no product, schema, or wallet changes)
 
+**Master wave roadmap:** `docs/roadmap/VIONA_GLOBAL_ACTIVE_FULL_COMMERCIAL_MASTER_WAVE_ROADMAP.md` — Global Active path in 12 waves; **not** commercial yet.
+
 ---
 
 ## Final sign-off — public HTTPS no-charge pilot (`PILOT_SIGNOFF.1`)
