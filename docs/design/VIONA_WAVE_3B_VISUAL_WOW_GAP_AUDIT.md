@@ -39,6 +39,7 @@ Wave 3 succeeded at **copy, safety, and tile anatomy** (title/subtitle/chip, `nu
 | **Shared token/component reuse** | **Landed** — `PremiumAppTile` + tokens; **governance corrected** @ SEMANTIC_COLOR_GOVERNANCE.1 (multi-color per feature, not one color per universe) | Future packs must use `accent` overrides per §5.2 |
 | **Premium App Shell foundation** | **Landed** @ `PREMIUM_APP_SHELL_FOUNDATION.1` — `PremiumAppShell`, `PremiumHubLayout`, `PremiumSection`, shell tokens; **not wired to screens yet** | Migrate Local → Travel → Academy → Account/SOS → Merchant |
 | **Semantic multicolor + luminous UI law** | **Locked** @ `SEMANTIC_MULTICOLOR_LUMINOUS_UI_LAW.1` — mapping + luminous law docs; `premiumLuminousInk`; old-UI drift ban | Hub recompose packs must cite mapping before pixel edits |
+| **Local premium shell recompose** | **Landed** @ `LOCAL_RECOMPOSE_TO_PREMIUM_SHELL.1` — reference hub on `PremiumAppShell` + `PremiumHubLayout` | Travel → Academy → Account/SOS → Merchant |
 
 **Conclusion:** Wave 3 was a **grammar pass**, not a **material system pass**. The north-star requires **shared tokens + one tile primitive + hub canvas alignment + Home restraint** — implemented in small packs, not one rewrite.
 

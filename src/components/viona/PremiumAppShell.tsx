@@ -4,7 +4,7 @@
  * COLOR: `leadingAccent` sets hub atmosphere wash only; per-tile feature accents stay multi-color semantic.
  * MEANING: text chips carry status; color is secondary (see premiumTileVisualTokens governance).
  */
-import { type ReactElement, type ReactNode } from 'react';
+import { type ReactElement, type ReactNode, type RefObject } from 'react';
 import {
   Image,
   Platform,
@@ -13,6 +13,7 @@ import {
   View,
   useWindowDimensions,
   type ImageSourcePropType,
+  type ScrollView as ScrollViewType,
   type StyleProp,
   type ViewStyle,
 } from 'react-native';
@@ -38,6 +39,7 @@ export type PremiumAppShellProps = Readonly<{
   withTabBarClearance?: boolean;
   bottomClearanceExtra?: number;
   horizontalPadOverride?: number;
+  scrollRef?: RefObject<ScrollViewType | null>;
   style?: StyleProp<ViewStyle>;
   contentStyle?: StyleProp<ViewStyle>;
   testID?: string;
@@ -54,6 +56,7 @@ export function PremiumAppShell({
   withTabBarClearance = true,
   bottomClearanceExtra = 0,
   horizontalPadOverride,
+  scrollRef,
   style,
   contentStyle,
   testID,
@@ -101,6 +104,7 @@ export function PremiumAppShell({
       ) : null}
       {scrollable ? (
         <ScrollView
+          ref={scrollRef}
           style={[styles.scroll, Platform.OS === 'web' && styles.scrollWeb]}
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}

@@ -2,22 +2,13 @@ import { Ionicons } from '@expo/vector-icons';
 import { useMemo, type ReactElement } from 'react';
 import { ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 
-import { LocalConstellationFrame } from '../local/LocalConstellationFrame';
-import { localConstellation } from '../local/localConstellationTokens';
 import { useSmartTrio } from '../../context/SmartTrioContext';
 import type { LocalBookingStatus } from '../../core/localCommerce';
 import { getAllLocalCommerceCapabilities } from '../../core/localCommerce';
-import {
-  premiumTileLayout,
-  type VionaUniverseAccent,
-} from '../../design/premiumTileVisualTokens';
+import { premiumLuminousInk, premiumTileLayout, type VionaUniverseAccent } from '../../design/premiumTileVisualTokens';
 import { useTranslation } from '../../i18n';
 import { FontFamily } from '../../theme/typography';
-import { PremiumAppTile, PremiumStatusChip, PremiumTileGrid } from '../viona';
-
-const INK = localConstellation.inkStrong;
-const INK_MUTED = localConstellation.inkMuted;
-const EMERALD = localConstellation.accentEmerald;
+import { PremiumAppTile, PremiumSection, PremiumStatusChip, PremiumTileGrid } from '../viona';
 
 const SAFETY_PILLS = [
   { key: 'pillRequestOnly', icon: 'paper-plane-outline' as const },
@@ -49,7 +40,6 @@ function resolveClarityGridColumns(width: number): number {
   if (width >= 1024) return 4;
   if (width >= 768) return 3;
   if (width < 400) return 1;
-  if (width < 480) return 2;
   return 2;
 }
 
@@ -58,7 +48,6 @@ function resolveClarityCtaColumns(width: number): number {
   return 2;
 }
 
-/** Semantic feature accent per capability — leading Local atmosphere stays emerald. */
 function localCapabilityFeatureAccent(capId: string): VionaUniverseAccent {
   switch (capId) {
     case 'localMarketplace':
@@ -129,17 +118,69 @@ function modeStatusFeatureAccent(status: LocalBookingStatus): VionaUniverseAccen
   }
 }
 
-export function LocalCommerceClarityBlock({
+/** Hub status strip — safety chips + compact commerce context (no-charge visible). */
+export function LocalCommerceHubStatusStrip(): ReactElement {
+  const { t } = useTranslation();
+  return (
+    <PremiumSection
+      kicker={t('localCommerce.title')}
+      subtitle={t('localCommerce.compactSubtitle')}
+      leadingAccent="emerald"
+      compact
+      testID="local-clarity-status-strip"
+    >
+      <View style={styles.chipRow}>
+        {SAFETY_PILLS.map((pill) => (
+          <PremiumStatusChip key={pill.key} accent="emerald" label={t(safetyKey(pill.key))} />
+        ))}
+      </View>
+    </PremiumSection>
+  );
+}
+
+/** Hub primary actions — browse + booking assist (controlled multicolor). */
+export function LocalCommerceHubPrimaryActions({
   onBrowseServices,
   onRequestBookingAssist,
 }: LocalCommerceClarityBlockProps): ReactElement {
   const { t } = useTranslation();
   const { width } = useWindowDimensions();
-  const caps = useMemo(() => getAllLocalCommerceCapabilities(), []);
-  const { customerLocale, merchantLocale, nativeLocale } = useSmartTrio();
-  const isClarityMobile = width < 480;
-  const gridColumns = resolveClarityGridColumns(width);
   const ctaColumns = resolveClarityCtaColumns(width);
+
+  return (
+    <PremiumTileGrid columns={ctaColumns} wrapCells gap={premiumTileLayout.gridGapTight}>
+      <PremiumAppTile
+        variant="local"
+        accent="emerald"
+        width="100%"
+        icon="apps-outline"
+        statusLabel={t('localCommerce.bookingStatus.lite')}
+        title={t('localCommerce.cta.browseServices')}
+        subtitle={t('localCommerce.compactBrowseSub')}
+        onPress={onBrowseServices}
+        accessibilityLabel={t('localCommerce.cta.browseServices')}
+      />
+      <PremiumAppTile
+        variant="local"
+        accent="cyan"
+        width="100%"
+        icon="chatbubble-ellipses-outline"
+        statusLabel={t('localCommerce.bookingStatus.requestOnly')}
+        title={t('localCommerce.cta.requestBooking')}
+        subtitle={t('localCommerce.compactAssistSub')}
+        onPress={onRequestBookingAssist}
+        accessibilityLabel={t('localCommerce.cta.requestBooking')}
+      />
+    </PremiumTileGrid>
+  );
+}
+
+/** Request status guide — legend tiles + mode chips (semantic multicolor). */
+export function LocalCommerceHubStatusGuide(): ReactElement {
+  const { t } = useTranslation();
+  const { width } = useWindowDimensions();
+  const gridColumns = resolveClarityGridColumns(width);
+  const { customerLocale, merchantLocale, nativeLocale } = useSmartTrio();
 
   const trioLine = useMemo(
     () =>
@@ -161,56 +202,14 @@ export function LocalCommerceClarityBlock({
   ];
 
   return (
-    <LocalConstellationFrame
-      accent="emerald"
-      tier="service"
-      radius={14}
-      style={styles.card}
-      contentStyle={[styles.cardInner, isClarityMobile && styles.cardInnerMobile]}
+    <PremiumSection
+      kicker={t('localCommerce.safety.legendTitle')}
+      subtitle={t('localCommerce.safety.bookingRequestNote')}
+      leadingAccent="emerald"
+      compact
+      testID="local-clarity-status-guide"
     >
-      <Text style={[styles.title, isClarityMobile && styles.titleMobile]}>{t('localCommerce.title')}</Text>
-      <Text style={[styles.subtitle, isClarityMobile && styles.subtitleMobile]} numberOfLines={isClarityMobile ? 3 : 2}>
-        {t('localCommerce.compactSubtitle')}
-      </Text>
-
-      <View style={[styles.chipRow, isClarityMobile && styles.chipRowMobile]}>
-        {SAFETY_PILLS.map((pill) => (
-          <PremiumStatusChip key={pill.key} accent="emerald" label={t(safetyKey(pill.key))} />
-        ))}
-      </View>
-
-      <PremiumTileGrid
-        columns={ctaColumns}
-        wrapCells
-        gap={premiumTileLayout.gridGapTight}
-        style={styles.tileSection}
-      >
-        <PremiumAppTile
-          variant="local"
-          accent="emerald"
-          width="100%"
-          icon="apps-outline"
-          statusLabel={t('localCommerce.bookingStatus.lite')}
-          title={t('localCommerce.cta.browseServices')}
-          subtitle={t('localCommerce.compactBrowseSub')}
-          onPress={onBrowseServices}
-          accessibilityLabel={t('localCommerce.cta.browseServices')}
-        />
-        <PremiumAppTile
-          variant="local"
-          accent="cyan"
-          width="100%"
-          icon="chatbubble-ellipses-outline"
-          statusLabel={t('localCommerce.bookingStatus.requestOnly')}
-          title={t('localCommerce.cta.requestBooking')}
-          subtitle={t('localCommerce.compactAssistSub')}
-          onPress={onRequestBookingAssist}
-          accessibilityLabel={t('localCommerce.cta.requestBooking')}
-        />
-      </PremiumTileGrid>
-
-      <Text style={styles.sectionKicker}>{t('localCommerce.safety.legendTitle')}</Text>
-      <PremiumTileGrid columns={gridColumns} wrapCells gap={premiumTileLayout.gridGapTight} style={styles.tileSection}>
+      <PremiumTileGrid columns={gridColumns} wrapCells gap={premiumTileLayout.gridGapTight}>
         {STATUS_LEGEND.map((item) => (
           <PremiumAppTile
             key={item.key}
@@ -224,8 +223,6 @@ export function LocalCommerceClarityBlock({
           />
         ))}
       </PremiumTileGrid>
-
-      <Text style={styles.sectionKicker}>{t('localCommerce.safety.modeChipsTitle')}</Text>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.modeScroll}>
         <View style={styles.modeRow}>
           {statusOrder.map((s) => (
@@ -233,17 +230,28 @@ export function LocalCommerceClarityBlock({
           ))}
         </View>
       </ScrollView>
-
-      <Text style={styles.safetyNote} numberOfLines={2}>
-        {t('localCommerce.safety.bookingRequestNote')}
-      </Text>
-
-      <Text style={styles.trioHint} numberOfLines={1}>
+      <Text style={styles.trioHint} numberOfLines={2}>
         {trioLine}
       </Text>
+    </PremiumSection>
+  );
+}
 
-      <Text style={styles.sectionKicker}>{t('localCommerce.compactCapabilitiesKicker')}</Text>
-      <PremiumTileGrid columns={gridColumns} wrapCells gap={premiumTileLayout.gridGapTight} style={styles.tileSectionLast}>
+/** Capability preview grid — controlled multicolor per feature meaning. */
+export function LocalCommerceHubCapabilities(): ReactElement {
+  const { t } = useTranslation();
+  const { width } = useWindowDimensions();
+  const caps = useMemo(() => getAllLocalCommerceCapabilities(), []);
+  const gridColumns = resolveClarityGridColumns(width);
+
+  return (
+    <PremiumSection
+      kicker={t('localCommerce.compactCapabilitiesKicker')}
+      leadingAccent="emerald"
+      compact
+      testID="local-clarity-capabilities"
+    >
+      <PremiumTileGrid columns={gridColumns} wrapCells gap={premiumTileLayout.gridGapTight}>
         {caps.map((c) => (
           <PremiumAppTile
             key={c.id}
@@ -258,64 +266,44 @@ export function LocalCommerceClarityBlock({
           />
         ))}
       </PremiumTileGrid>
-    </LocalConstellationFrame>
+    </PremiumSection>
+  );
+}
+
+/** @deprecated Use hub slot exports; kept for gradual migration. */
+export function LocalCommerceClarityBlock({
+  onBrowseServices,
+  onRequestBookingAssist,
+}: LocalCommerceClarityBlockProps): ReactElement {
+  return (
+    <View style={styles.legacyStack}>
+      <LocalCommerceHubStatusStrip />
+      <LocalCommerceHubPrimaryActions
+        onBrowseServices={onBrowseServices}
+        onRequestBookingAssist={onRequestBookingAssist}
+      />
+      <LocalCommerceHubStatusGuide />
+      <LocalCommerceHubCapabilities />
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  card: { marginBottom: 10 },
-  cardInner: {
-    paddingHorizontal: 12,
-    paddingVertical: 12,
-    gap: 0,
-    maxWidth: '100%',
-    width: '100%',
-  },
-  cardInnerMobile: {
-    paddingHorizontal: 10,
-    paddingVertical: 10,
-  },
-  title: { fontSize: 15, fontFamily: FontFamily.extrabold, color: INK, letterSpacing: -0.15 },
-  titleMobile: { fontSize: 14 },
-  subtitle: {
-    marginTop: 4,
-    fontSize: 11,
-    fontFamily: FontFamily.semibold,
-    color: INK_MUTED,
-    lineHeight: 15,
-  },
-  subtitleMobile: { fontSize: 10, lineHeight: 14 },
   chipRow: {
-    marginTop: 8,
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 6,
+    width: '100%',
+    maxWidth: '100%',
   },
-  chipRowMobile: { marginTop: 6, gap: 5 },
-  tileSection: { marginTop: 10, marginBottom: 4, maxWidth: '100%', width: '100%' },
-  tileSectionLast: { marginTop: 8, marginBottom: 0 },
-  sectionKicker: {
-    marginTop: 10,
-    fontSize: 9,
-    fontFamily: FontFamily.extrabold,
-    color: EMERALD,
-    letterSpacing: 0.55,
-    textTransform: 'uppercase',
-  },
-  modeScroll: { marginTop: 6, maxHeight: 36 },
+  modeScroll: { marginTop: 8, maxHeight: 40 },
   modeRow: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingRight: 8 },
-  safetyNote: {
+  trioHint: {
     marginTop: 8,
     fontSize: 10,
     fontFamily: FontFamily.semibold,
-    color: INK_MUTED,
+    color: premiumLuminousInk.subtitle,
     lineHeight: 14,
   },
-  trioHint: {
-    marginTop: 6,
-    fontSize: 10,
-    fontFamily: FontFamily.semibold,
-    color: INK_MUTED,
-    lineHeight: 14,
-  },
+  legacyStack: { width: '100%', maxWidth: '100%', gap: 10 },
 });

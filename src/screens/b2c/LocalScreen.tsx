@@ -38,17 +38,30 @@ import { useTranslation } from '../../i18n';
 import { useHomeCommand } from '../../context/HomeCommandContext';
 import { useFullscreenMode } from '../../hooks/useFullscreenMode';
 import { useVionaHomeDaylightBoost } from '../../components/viona/useVionaHomeDaylightBoost';
-import { LocalCommerceClarityBlock } from '../../components/localCommerce/LocalCommerceClarityBlock';
+import {
+  LocalCommerceHubCapabilities,
+  LocalCommerceHubPrimaryActions,
+  LocalCommerceHubStatusGuide,
+  LocalCommerceHubStatusStrip,
+} from '../../components/localCommerce/LocalCommerceClarityBlock';
 import { LocalConstellationFrame } from '../../components/local/LocalConstellationFrame';
-import { PremiumAppTile, PremiumTileGrid } from '../../components/viona';
+import {
+  PremiumAppShell,
+  PremiumAppTile,
+  PremiumHubLayout,
+  PremiumSection,
+  PremiumTileGrid,
+} from '../../components/viona';
 import { VionaBrandLockup } from '../../components/viona/VionaBrandLockup';
 import { VIONA_TABLET_MIN_WIDTH } from '../../components/viona/VionaMiniAppShell';
 import { vionaTokens } from '../../design';
 import {
+  premiumLuminousInk,
   premiumTileGlass,
   premiumTileLayout,
   premiumUniverseAccentSpec,
   premiumUniverseStroke,
+  resolvePremiumShellContentRail,
 } from '../../design/premiumTileVisualTokens';
 import {
   FASHION_HOME_COMMAND_RAIL_GRADIENT,
@@ -65,7 +78,6 @@ import {
   localAccentStroke,
   localAccentStrokeHover,
   localConstellation,
-  resolveLocalContentRail,
   resolveLocalGridColumns,
   resolveLocalGridItemWidth,
   type LocalConstellationAccent,
@@ -675,7 +687,7 @@ export function LocalScreen() {
     }
   };
 
-  const { horizontalPad, innerWidth } = resolveLocalContentRail(width);
+  const { innerWidth } = resolvePremiumShellContentRail(width);
   const isLocalMobile = width > 0 && width < 480;
   const isLocalPhone = width > 0 && width < 400;
   const useIconOnlyShellUtilities = isLocalMobile;
@@ -758,13 +770,6 @@ export function LocalScreen() {
   const backdropTop = backdropInset - localConstellation.canvasBackdropRisePercent;
   const backdropFocusY = localConstellation.canvasBackdropFocusYPercent;
   const miniappDockBottom = localConstellation.miniappDockBottomOffset + insets.bottom;
-  const bottomPadClearance =
-    miniappDockBottom +
-    localConstellation.miniappDockHeight +
-    localConstellation.tabBarClearanceBottom +
-    Math.max(insets.bottom, 12) +
-    48 +
-    (isLocalMobile ? 96 : 0);
 
   const tabletFullWidth = Platform.OS === 'web' && width >= VIONA_TABLET_MIN_WIDTH;
   const tabletBreakoutStyle = useMemo((): StyleProp<ViewStyle> | null => {
@@ -832,29 +837,14 @@ export function LocalScreen() {
         nativeID="local-hub-root"
         {...(Platform.OS === 'web' ? ({ id: 'local-hub-root' } as const) : {})}
       >
-      <ScrollView
-        ref={scrollRef}
-        style={styles.scroll}
-        contentContainerStyle={[
-          styles.content,
-          {
-            paddingHorizontal: horizontalPad,
-            paddingBottom: bottomPadClearance,
-            paddingTop: desktopWeb ? 8 : isLocalMobile ? 6 : 10,
-            width: '100%',
-            maxWidth: '100%',
-          },
-        ]}
-        showsVerticalScrollIndicator={false}
-        keyboardShouldPersistTaps="handled"
+      <PremiumAppShell
+        leadingAccent="emerald"
+        scrollRef={scrollRef}
+        withMiniappDockClearance
+        withTabBarClearance
+        testID="local-premium-shell"
       >
-        <View
-          style={[
-            styles.contentRail,
-            isLocalMobile ? styles.contentRailMobile : { width: innerWidth, maxWidth: '100%' },
-          ]}
-        >
-          <View style={styles.shellRailWrap}>
+        <View style={styles.shellRailWrap}>
             <LinearGradient
               colors={FASHION_HOME_COMMAND_RAIL_GRADIENT}
               start={{ x: 0, y: 0 }}
@@ -944,50 +934,125 @@ export function LocalScreen() {
             </LinearGradient>
           </View>
 
-        <LocalConstellationFrame
-          accent="emerald"
-          tier="service"
-          radius={14}
-          style={styles.heroIntroCard}
-          contentStyle={[styles.heroIntroInner, isLocalMobile && styles.heroIntroInnerMobile]}
+        <PremiumHubLayout
+          testID="local-premium-hub"
+          hero={
+            <LocalConstellationFrame
+              accent="emerald"
+              tier="service"
+              radius={14}
+              style={styles.heroIntroCard}
+              contentStyle={[styles.heroIntroInner, isLocalMobile && styles.heroIntroInnerMobile]}
+            >
+              <Text style={styles.hubKicker}>{t('localHub.universeKicker')}</Text>
+              <Text style={[styles.heroHeadline, isLocalMobile && styles.heroHeadlineMobile]}>
+                {t('localHub.heroHeadline')}
+              </Text>
+              <Text style={[styles.hubSub, isLocalMobile && styles.hubSubMobile]} numberOfLines={2}>
+                {t('localHub.heroSub')}
+              </Text>
+              <View style={[styles.heroChipRow, isLocalMobile && styles.heroChipRowMobile]}>
+                <View
+                  style={styles.heroChip}
+                  accessibilityRole="text"
+                  accessible
+                  accessibilityLabel={t('localCommerce.safety.heroChipRequestOnly')}
+                >
+                  <Ionicons name="paper-plane-outline" size={11} color={EMERALD} accessibilityIgnoresInvertColors />
+                  <Text style={styles.heroChipText}>{t('localCommerce.safety.heroChipRequestOnly')}</Text>
+                </View>
+                <View
+                  style={styles.heroChip}
+                  accessibilityRole="text"
+                  accessible
+                  accessibilityLabel={t('localCommerce.safety.heroChipNoPayment')}
+                >
+                  <Ionicons name="card-outline" size={11} color={EMERALD} accessibilityIgnoresInvertColors />
+                  <Text style={styles.heroChipText}>{t('localCommerce.safety.heroChipNoPayment')}</Text>
+                </View>
+                <View
+                  style={styles.heroChip}
+                  accessibilityRole="text"
+                  accessible
+                  accessibilityLabel={t('localCommerce.safety.heroChipConfirmedNotPaid')}
+                >
+                  <Ionicons name="information-circle-outline" size={11} color={EMERALD} accessibilityIgnoresInvertColors />
+                  <Text style={styles.heroChipText}>{t('localCommerce.safety.heroChipConfirmedNotPaid')}</Text>
+                </View>
+              </View>
+            </LocalConstellationFrame>
+          }
+          statusStrip={<LocalCommerceHubStatusStrip />}
+          primaryActions={
+            <LocalCommerceHubPrimaryActions
+              onBrowseServices={openServiceHub}
+              onRequestBookingAssist={() => openLeonaPrefill(t('localCommerce.leonaBookingAssistPrefill'))}
+            />
+          }
+          connectedUniverses={
+            <PremiumSection
+              kicker={t('localHub.connectedUniversesKicker')}
+              leadingAccent="emerald"
+              compact
+            >
+              <PremiumTileGrid
+                columns={Math.min(gridColumns, 3)}
+                wrapCells
+                gap={premiumTileLayout.gridGapTight}
+              >
+                {featureFlags.travelLiteEnabled ? (
+                  <PremiumAppTile
+                    variant="travel"
+                    accent="cyan"
+                    width="100%"
+                    icon="airplane-outline"
+                    statusLabel={t('localCommerce.bookingStatus.lite')}
+                    title={t('localHub.connectedTravel')}
+                    subtitle={t('localHub.connectedTravelSub')}
+                    onPress={openTravelUniverse}
+                    accessibilityLabel={t('localHub.connectedTravel')}
+                    testID="local-tile-connected-travel"
+                  />
+                ) : null}
+                <PremiumAppTile
+                  variant="business"
+                  accent="gold"
+                  width="100%"
+                  icon="briefcase-outline"
+                  statusLabel={t('localCommerce.bookingStatus.pilot')}
+                  title={t('localHub.connectedBusiness')}
+                  subtitle={t('localHub.connectedBusinessSub')}
+                  onPress={openBusinessUniverse}
+                  accessibilityLabel={t('localHub.connectedBusiness')}
+                  testID="local-tile-connected-business"
+                />
+                {featureFlags.academyLiteEnabled ? (
+                  <PremiumAppTile
+                    variant="academy"
+                    accent="violet"
+                    width="100%"
+                    icon="school-outline"
+                    statusLabel={t('localCommerce.bookingStatus.lite')}
+                    title={t('localHub.connectedAcademy')}
+                    subtitle={t('localHub.connectedAcademySub')}
+                    onPress={openAcademyUniverse}
+                    accessibilityLabel={t('localHub.connectedAcademy')}
+                    testID="local-tile-connected-academy"
+                  />
+                ) : null}
+              </PremiumTileGrid>
+            </PremiumSection>
+          }
         >
-          <Text style={styles.hubKicker}>{t('localHub.universeKicker')}</Text>
-          <Text style={[styles.heroHeadline, isLocalMobile && styles.heroHeadlineMobile]}>
-            {t('localHub.heroHeadline')}
-          </Text>
-          <Text style={[styles.hubSub, isLocalMobile && styles.hubSubMobile]} numberOfLines={isLocalMobile ? 2 : 2}>
-            {t('localHub.heroSub')}
-          </Text>
-          <View style={[styles.heroChipRow, isLocalMobile && styles.heroChipRowMobile]}>
-            <View style={styles.heroChip} accessibilityRole="text" accessible accessibilityLabel={t('localCommerce.safety.heroChipRequestOnly')}>
-              <Ionicons name="paper-plane-outline" size={11} color={EMERALD} accessibilityIgnoresInvertColors />
-              <Text style={styles.heroChipText}>{t('localCommerce.safety.heroChipRequestOnly')}</Text>
-            </View>
-            <View style={styles.heroChip} accessibilityRole="text" accessible accessibilityLabel={t('localCommerce.safety.heroChipNoPayment')}>
-              <Ionicons name="card-outline" size={11} color={EMERALD} accessibilityIgnoresInvertColors />
-              <Text style={styles.heroChipText}>{t('localCommerce.safety.heroChipNoPayment')}</Text>
-            </View>
-            <View style={styles.heroChip} accessibilityRole="text" accessible accessibilityLabel={t('localCommerce.safety.heroChipConfirmedNotPaid')}>
-              <Ionicons name="information-circle-outline" size={11} color={EMERALD} accessibilityIgnoresInvertColors />
-              <Text style={styles.heroChipText}>{t('localCommerce.safety.heroChipConfirmedNotPaid')}</Text>
-            </View>
-          </View>
-        </LocalConstellationFrame>
-
-        <LocalCommerceClarityBlock
-          onBrowseServices={openServiceHub}
-          onRequestBookingAssist={() => openLeonaPrefill(t('localCommerce.leonaBookingAssistPrefill'))}
-        />
-
-        <Text style={styles.safetyBridge}>{t('localCommerce.safety.myRequestsBridge')}</Text>
-
-        <Text style={styles.bentoSectionTitle}>{t('localHub.universeGridKicker')}</Text>
-        <PremiumTileGrid
-          columns={gridColumns}
-          wrapCells
-          gap={premiumTileLayout.gridGapTight}
-          style={styles.cardGrid}
-        >
+          <LocalCommerceHubStatusGuide />
+          <LocalCommerceHubCapabilities />
+          <PremiumSection
+            kicker={t('localHub.universeGridKicker')}
+            subtitle={t('localCommerce.safety.myRequestsBridge')}
+            leadingAccent="emerald"
+            compact
+          >
+            <PremiumTileGrid columns={gridColumns} wrapCells gap={premiumTileLayout.gridGapTight}>
           <PremiumAppTile
             variant="local"
             accent="emerald"
@@ -1026,7 +1091,7 @@ export function LocalScreen() {
           />
           <PremiumAppTile
             variant="local"
-            accent="gold"
+            accent="cyan"
             width="100%"
             icon="scale-outline"
             statusLabel={t('localCommerce.bookingStatus.demo')}
@@ -1099,84 +1164,35 @@ export function LocalScreen() {
               testID="local-tile-legal-scanner"
             />
           ) : null}
-        </PremiumTileGrid>
+            </PremiumTileGrid>
+          </PremiumSection>
 
-        <View
-          onLayout={(e) => {
-            setClassifiedsY(e.nativeEvent.layout.y);
-          }}
-          style={styles.classifiedsAnchor}
-        >
-          <View style={styles.classifiedsHeaderRow}>
-            <View style={styles.classifiedsHeaderCopy}>
-              <Text style={styles.classifiedsKicker}>{t('localHub.classifiedsKicker')}</Text>
-              <Text style={styles.sectionTitle}>{t('localHub.classifiedsTitle')}</Text>
-            </View>
-            <Text style={styles.walletHint}>{formatVioCredits(wallet.credits)}</Text>
+          <View
+            onLayout={(e) => {
+              setClassifiedsY(e.nativeEvent.layout.y);
+            }}
+            style={styles.classifiedsAnchor}
+          >
+            <PremiumSection
+              kicker={t('localHub.classifiedsKicker')}
+              title={t('localHub.classifiedsTitle')}
+              leadingAccent="gold"
+              compact
+              action={<Text style={styles.walletHint}>{formatVioCredits(wallet.credits)}</Text>}
+            >
+              <Pressable style={styles.postBtn} onPress={() => setComposerVisible(true)}>
+                <Ionicons name="add-circle-outline" size={18} color={GOLD} />
+                <Text style={styles.postBtnText}>{t('localHub.postNewListing')}</Text>
+              </Pressable>
+              <View style={styles.cardGrid}>
+                {sortedPosts.map((item) => (
+                  <LocalClassifiedCard key={item.id} cardWidth={classifiedCardWidth} item={item} />
+                ))}
+              </View>
+            </PremiumSection>
           </View>
-
-          <Pressable style={styles.postBtn} onPress={() => setComposerVisible(true)}>
-            <Ionicons name="add-circle-outline" size={18} color={GOLD} />
-            <Text style={styles.postBtnText}>{t('localHub.postNewListing')}</Text>
-          </Pressable>
-
-          <View style={styles.cardGrid}>
-            {sortedPosts.map((item) => (
-              <LocalClassifiedCard key={item.id} cardWidth={classifiedCardWidth} item={item} />
-            ))}
-          </View>
-        </View>
-
-        <Text style={styles.bentoSectionTitle}>{t('localHub.connectedUniversesKicker')}</Text>
-        <PremiumTileGrid
-          columns={Math.min(gridColumns, 3)}
-          wrapCells
-          gap={premiumTileLayout.gridGapTight}
-          style={styles.cardGrid}
-        >
-          {featureFlags.travelLiteEnabled ? (
-            <PremiumAppTile
-              variant="travel"
-              accent="cyan"
-              width="100%"
-              icon="airplane-outline"
-              statusLabel={t('localCommerce.bookingStatus.lite')}
-              title={t('localHub.connectedTravel')}
-              subtitle={t('localHub.connectedTravelSub')}
-              onPress={openTravelUniverse}
-              accessibilityLabel={t('localHub.connectedTravel')}
-              testID="local-tile-connected-travel"
-            />
-          ) : null}
-          <PremiumAppTile
-            variant="business"
-            accent="gold"
-            width="100%"
-            icon="briefcase-outline"
-            statusLabel={t('localCommerce.bookingStatus.pilot')}
-            title={t('localHub.connectedBusiness')}
-            subtitle={t('localHub.connectedBusinessSub')}
-            onPress={openBusinessUniverse}
-            accessibilityLabel={t('localHub.connectedBusiness')}
-            testID="local-tile-connected-business"
-          />
-          {featureFlags.academyLiteEnabled ? (
-            <PremiumAppTile
-              variant="academy"
-              accent="violet"
-              width="100%"
-              icon="school-outline"
-              statusLabel={t('localCommerce.bookingStatus.lite')}
-              title={t('localHub.connectedAcademy')}
-              subtitle={t('localHub.connectedAcademySub')}
-              onPress={openAcademyUniverse}
-              accessibilityLabel={t('localHub.connectedAcademy')}
-              testID="local-tile-connected-academy"
-            />
-          ) : null}
-        </PremiumTileGrid>
-        </View>
-      </ScrollView>
+        </PremiumHubLayout>
+      </PremiumAppShell>
 
       <LocalMiniappDock
         onBack={goBack}
@@ -1503,7 +1519,7 @@ const styles = StyleSheet.create({
     fontSize: 17,
     lineHeight: 21,
     fontFamily: FontFamily.extrabold,
-    color: INK_STRONG,
+    color: premiumLuminousInk.title,
     letterSpacing: -0.15,
   },
   heroHeadlineMobile: {
@@ -1513,8 +1529,8 @@ const styles = StyleSheet.create({
   hubSub: {
     fontSize: 11,
     lineHeight: 15,
-    fontFamily: FontFamily.medium,
-    color: INK_MUTED,
+    fontFamily: FontFamily.semibold,
+    color: premiumLuminousInk.subtitle,
   },
   hubSubMobile: {
     fontSize: 10,
