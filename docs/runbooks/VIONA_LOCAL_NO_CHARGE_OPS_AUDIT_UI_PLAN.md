@@ -357,7 +357,7 @@ When implemented, session 2 **optional** ops audit steps:
 | **Evidence** | `docs/runbooks/VIONA_LOCAL_NO_CHARGE_CONTROLLED_PILOT_SESSION_2.md` §5 |
 | **Platform** | Expo web + staging HTTPS API |
 | **Caveat** | Secret-tap/PIN path not exercised; deep-link + ADMIN REST login used |
-| **Next** | Operator completes native secret-tap attestation — `VIONA_LOCAL_NO_CHARGE_CONTROLLED_PILOT_SESSION_2.md` §11.3 |
+| **Next** | Session 3 prep + optional native §7 — `VIONA_LOCAL_NO_CHARGE_CONTROLLED_PILOT_SESSION_3.md` |
 
 ---
 
@@ -368,7 +368,7 @@ When implemented, session 2 **optional** ops audit steps:
 | **Preconditions probe** | **PASS** (admin debug + staging HTTPS + empty dev JWT) |
 | **Native interactive** | **NOT RUN** — no device/simulator attested |
 | **API corroboration** | **PASS** — public HTTPS smoke |
-| **Next** | Working dev client + operator §11.3 (see session 2 §11.5 blockers) |
+| **Next** | Session 2 §11.6–§11.7 — build **PASS**; native UI walkthrough **NOT COMPLETED** |
 
 ---
 
@@ -380,3 +380,16 @@ When implemented, session 2 **optional** ops audit steps:
 | **Interactive secret-tap path** | **FAIL** — Home not reached (`ExpoLocalization` native module) |
 | **Fresh dev build** | **FAIL** — Mapbox Maven resolution on `expo run:android` |
 | **API smoke** | **PASS** |
+
+---
+
+## 18. Session 2 close + session 3 prep (`CONTROLLED_PILOT_SESSION_3.PREP.1`)
+
+| Item | Result |
+|------|--------|
+| **Android build unblock** | **PASS** @ session 2 §11.6 (`85fafeb`) — Mapbox Maven + Kotlin 2.1.20 |
+| **Native attestation retry** | **NOT COMPLETED** @ session 2 §11.7 (`1b91403`) — Metro/JS OK; secret-tap/PIN UI not confirmed |
+| **Expo web ops UI** | **PASS** @ session 2 §5 (carried forward) |
+| **Public HTTPS ops API** | **PASS** @ session 2 §9 (carried forward) |
+| **Session 3 prep doc** | `VIONA_LOCAL_NO_CHARGE_CONTROLLED_PILOT_SESSION_3.md` |
+| **Next** | Operator runs session 3 evidence table; optional native §7 on stable device — **do not claim native PASS** until checklist complete |

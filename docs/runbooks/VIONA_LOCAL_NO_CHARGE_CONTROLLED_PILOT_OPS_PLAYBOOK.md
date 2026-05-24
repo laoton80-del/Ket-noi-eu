@@ -102,6 +102,9 @@ Run at **start** of each pilot session (and after any Fly deploy):
 | 4 | User B sees User A **private** request data |
 | 5 | Merchant N sees or can act on **Business M** rows |
 | 6 | Forbidden commercial wording on Local surfaces (paid booking, guaranteed booking, payout, withdraw, escrow, settlement, cash-out) |
+| 6b | **Non-admin ops access** — B2C/merchant/unauthenticated receives ops list/detail HTTP 200 |
+| 6c | **Redaction leak** — JWT, PIN, `DATABASE_URL`, or raw phone in UI or committed logs |
+| 6d | **Mutation from ops UI** — confirm, reject, cancel, refund, payout, settlement, or wallet adjustment from Ops Audit screen |
 | 7 | Public HTTPS smoke **fails** twice in a row (after deploy or config change) |
 | 8 | Fly app unhealthy / repeated 5xx on `/health` or login |
 | 9 | Auth/login regression (PIN login broken for all pilot accounts) |
@@ -177,11 +180,12 @@ Staging DB remains source of truth; rollback is **access/config**, not data dest
 
 | Priority | Item |
 |----------|------|
-| 1 | Aggregate **pilot session evidence** (privacy-safe logs per §4) |
-| 2 | Session 2 evidence complete — `VIONA_LOCAL_NO_CHARGE_CONTROLLED_PILOT_SESSION_2.md` (user/merchant + ops) |
-| 3 | Optional native iOS/Android spot-check on public HTTPS |
-| 4 | Refine support/incident playbook from real issues |
-| 5 | **Locked:** finance-approved payment/wallet ledger, settlement, payout — separate architecture packs only |
+| 1 | **Session 3** — operator execution per `VIONA_LOCAL_NO_CHARGE_CONTROLLED_PILOT_SESSION_3.md` (prep @ `1b91403+`) |
+| 2 | Aggregate **pilot session evidence** (privacy-safe logs per §4) |
+| 3 | Session 2 evidence complete — `VIONA_LOCAL_NO_CHARGE_CONTROLLED_PILOT_SESSION_2.md` (user/merchant + ops; native secret-tap **NOT COMPLETED**) |
+| 4 | Optional: native §7 secret-tap on stable device (`com.ketnoiglobal.app`) — do not claim PASS until checklist done |
+| 5 | Refine support/incident playbook from real issues |
+| 6 | **Locked:** finance-approved payment/wallet ledger, settlement, payout — separate architecture packs only |
 
 ---
 
@@ -191,7 +195,8 @@ Staging DB remains source of truth; rollback is **access/config**, not data dest
 |---------|-----|---------|
 | **1** (API + UI) | `VIONA_LOCAL_NO_CHARGE_CONTROLLED_PILOT_SESSION_1.md` | **PASS** — API @ `fece42c`; UI @ `4c26830`; **no pause** |
 | **2** (user/merchant + ops) | `VIONA_LOCAL_NO_CHARGE_CONTROLLED_PILOT_SESSION_2.md` | **PASS** — user/merchant/ops API @ `028ea9f`; Expo ops UI @ `21ec3ec`; **no pause** |
-| **2b** (native ops secret-tap) | Same doc §11.5 | **FAIL/BLOCKED** — emulator dev client `ExpoLocalization` crash; §11.3 for physical device |
+| **2b** (native ops secret-tap) | Same doc §11.5–§11.7 | **NOT COMPLETED** — build unblock §11.6 **PASS**; secret-tap UI **FAIL** on emulator (§11.7) |
+| **3** (prep) | `VIONA_LOCAL_NO_CHARGE_CONTROLLED_PILOT_SESSION_3.md` | **PREP** — re-verify HTTPS gates; native §7 still open |
 
 ---
 
