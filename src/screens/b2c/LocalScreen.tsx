@@ -957,9 +957,18 @@ export function LocalScreen() {
             {t('localHub.heroSub')}
           </Text>
           <View style={styles.heroChipRow}>
-            <Text style={styles.heroChip}>{t('localCommerce.bookingStatus.lite')}</Text>
-            <Text style={styles.heroChip}>{t('localCommerce.bookingStatus.pilot')}</Text>
-            <Text style={styles.heroChip}>{t('localCommerce.bookingStatus.requestOnly')}</Text>
+            <View style={styles.heroChip} accessibilityRole="text" accessible accessibilityLabel={t('localCommerce.safety.heroChipRequestOnly')}>
+              <Ionicons name="paper-plane-outline" size={11} color={EMERALD} accessibilityIgnoresInvertColors />
+              <Text style={styles.heroChipText}>{t('localCommerce.safety.heroChipRequestOnly')}</Text>
+            </View>
+            <View style={styles.heroChip} accessibilityRole="text" accessible accessibilityLabel={t('localCommerce.safety.heroChipNoPayment')}>
+              <Ionicons name="card-outline" size={11} color={EMERALD} accessibilityIgnoresInvertColors />
+              <Text style={styles.heroChipText}>{t('localCommerce.safety.heroChipNoPayment')}</Text>
+            </View>
+            <View style={styles.heroChip} accessibilityRole="text" accessible accessibilityLabel={t('localCommerce.safety.heroChipConfirmedNotPaid')}>
+              <Ionicons name="information-circle-outline" size={11} color={EMERALD} accessibilityIgnoresInvertColors />
+              <Text style={styles.heroChipText}>{t('localCommerce.safety.heroChipConfirmedNotPaid')}</Text>
+            </View>
           </View>
         </LocalConstellationFrame>
 
@@ -967,6 +976,8 @@ export function LocalScreen() {
           onBrowseServices={openServiceHub}
           onRequestBookingAssist={() => openLeonaPrefill(t('localCommerce.leonaBookingAssistPrefill'))}
         />
+
+        <Text style={styles.safetyBridge}>{t('localCommerce.safety.myRequestsBridge')}</Text>
 
         <View style={styles.cardGrid}>
           <LocalAppTile
@@ -1468,18 +1479,33 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   heroChip: {
-    fontSize: 9,
-    fontFamily: FontFamily.extrabold,
-    letterSpacing: 0.45,
-    textTransform: 'uppercase',
-    color: EMERALD,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    maxWidth: '100%',
     paddingHorizontal: 8,
-    paddingVertical: 4,
+    paddingVertical: 5,
     borderRadius: theme.radius.pill,
     backgroundColor: 'rgba(72, 210, 165, 0.08)',
     borderWidth: 1,
     borderColor: 'rgba(72, 210, 165, 0.28)',
     overflow: 'hidden',
+  },
+  heroChipText: {
+    flexShrink: 1,
+    fontSize: 9,
+    fontFamily: FontFamily.extrabold,
+    letterSpacing: 0.35,
+    textTransform: 'uppercase',
+    color: EMERALD,
+  },
+  safetyBridge: {
+    marginBottom: 8,
+    fontSize: 11,
+    fontFamily: FontFamily.semibold,
+    color: INK_MUTED,
+    lineHeight: 15,
+    paddingHorizontal: 2,
   },
   content: { alignItems: 'center' },
   contentRail: {

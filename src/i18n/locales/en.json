@@ -792,7 +792,7 @@
       "cancelBody": "Cancels your open request on the server. No payment has been captured. Payment is not enabled for this Local request flow.",
       "actionFailedTitle": "Action failed",
       "localTileTitle": "My requests",
-      "localTileSub": "Request-only / no-charge — no payment has been captured. Not a paid booking.",
+      "localTileSub": "Track status here. Request-only · no charge · confirmed ≠ paid.",
       "localTileA11y": "Open my Local service requests"
     },
     "opsAudit": {
@@ -1293,8 +1293,23 @@
       "gated": "Gated"
     },
     "safety": {
-      "bookingRequestNote": "Some services are in Lite/Pilot mode. Merchants confirm before an appointment is finalized.",
-      "aiPilotNote": "Lễ Tân AI Receptionist is a pilot surface — not autonomous production booking or payouts."
+      "bookingRequestNote": "Merchants confirm before your visit is final. Confirmed ≠ paid — request-only, no charge.",
+      "aiPilotNote": "Lễ Tân AI Receptionist is a pilot surface — not autonomous production booking or payouts.",
+      "trustTitle": "No-charge pilot",
+      "trustSubtitle": "Send requests only — payment is not enabled on Local.",
+      "pillRequestOnly": "Request-only · no charge",
+      "pillNoPayment": "No payment captured",
+      "pillConfirmedNotPaid": "Confirmed ≠ paid",
+      "heroChipRequestOnly": "Request-only · no charge",
+      "heroChipNoPayment": "No payment captured",
+      "heroChipConfirmedNotPaid": "Confirmed ≠ paid",
+      "legendTitle": "Request status guide",
+      "legendRequestSent": "Request sent — merchant reviewing",
+      "legendMerchantConfirmed": "Merchant confirmed — not paid yet",
+      "legendMerchantDeclined": "Merchant declined",
+      "legendConfirmedNotPaid": "Confirmed ≠ paid",
+      "modeChipsTitle": "Service modes (pilot)",
+      "myRequestsBridge": "Open My requests for live status, timeline, and safety notes."
     },
     "smartTrioContext": "Language legs (preview): customer {{customer}} · merchant {{merchant}} · native {{native}}.",
     "cta": {

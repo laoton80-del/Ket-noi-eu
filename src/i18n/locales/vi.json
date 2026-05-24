@@ -792,7 +792,7 @@
       "cancelBody": "Hủy yêu cầu đang mở trên máy chủ. Chưa thu khoản thanh toán nào. Tính năng thanh toán chưa được bật cho luồng Local này.",
       "actionFailedTitle": "Thao tác thất bại",
       "localTileTitle": "Yêu cầu của tôi",
-      "localTileSub": "Chỉ gửi yêu cầu / không thu phí — chưa thu khoản thanh toán nào. Chưa phải đặt lịch đã thanh toán.",
+      "localTileSub": "Theo dõi trạng thái tại đây. Chỉ gửi yêu cầu · không thu phí · đã xác nhận ≠ đã thanh toán.",
       "localTileA11y": "Mở yêu cầu Local của tôi"
     },
     "opsAudit": {
@@ -1293,8 +1293,23 @@
       "gated": "Giới hạn"
     },
     "safety": {
-      "bookingRequestNote": "Một số dịch vụ đang ở chế độ Lite/Pilot. Merchant sẽ xác nhận trước khi lịch được chốt.",
-      "aiPilotNote": "Lễ Tân AI Receptionist là bề mặt pilot — không phải đặt chỗ/tự động thanh toán production."
+      "bookingRequestNote": "Merchant xác nhận trước khi lịch được chốt. Đã xác nhận ≠ đã thanh toán — chỉ gửi yêu cầu, không thu phí.",
+      "aiPilotNote": "Lễ Tân AI Receptionist là bề mặt pilot — không phải đặt chỗ/tự động thanh toán production.",
+      "trustTitle": "Pilot không thu phí",
+      "trustSubtitle": "Chỉ gửi yêu cầu — thanh toán chưa bật trên Local.",
+      "pillRequestOnly": "Chỉ gửi yêu cầu · không thu phí",
+      "pillNoPayment": "Chưa thu khoản thanh toán",
+      "pillConfirmedNotPaid": "Đã xác nhận ≠ đã thanh toán",
+      "heroChipRequestOnly": "Chỉ gửi yêu cầu · không thu phí",
+      "heroChipNoPayment": "Chưa thu khoản thanh toán",
+      "heroChipConfirmedNotPaid": "Đã xác nhận ≠ đã thanh toán",
+      "legendTitle": "Hướng dẫn trạng thái yêu cầu",
+      "legendRequestSent": "Đã gửi yêu cầu — chờ merchant",
+      "legendMerchantConfirmed": "Merchant đã xác nhận — chưa thanh toán",
+      "legendMerchantDeclined": "Merchant từ chối",
+      "legendConfirmedNotPaid": "Đã xác nhận ≠ đã thanh toán",
+      "modeChipsTitle": "Chế độ dịch vụ (pilot)",
+      "myRequestsBridge": "Mở Yêu cầu của tôi để xem trạng thái, timeline và ghi chú an toàn."
     },
     "smartTrioContext": "Nhánh ngôn ngữ (xem trước): khách {{customer}} · merchant {{merchant}} · native {{native}}.",
     "cta": {
