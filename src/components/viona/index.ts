@@ -50,3 +50,12 @@ export { VionaActionGrid } from './VionaActionGrid';
 export type { VionaActionGridProps, VionaActionGridContextValue } from './VionaActionGrid';
 export { VionaActionCard, vionaActionAccentFromHex } from './VionaActionCard';
 export type { VionaActionCardProps, VionaActionAccent } from './VionaActionCard';
+
+export { PremiumAppTile, premiumUniverseVariantToAccent } from './PremiumAppTile';
+export type { PremiumAppTileProps, PremiumUniverseVariant } from './PremiumAppTile';
+export { PremiumIconCapsule } from './PremiumIconCapsule';
+export type { PremiumIconCapsuleProps } from './PremiumIconCapsule';
+export { PremiumStatusChip } from './PremiumStatusChip';
+export type { PremiumStatusChipProps } from './PremiumStatusChip';
+export { PremiumTileGrid } from './PremiumTileGrid';
+export type { PremiumTileGridProps } from './PremiumTileGrid';

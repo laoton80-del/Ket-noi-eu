@@ -187,7 +187,8 @@ Visual wow packs must **not** introduce commercial/payment copy or behavior.
 | Pack | Status |
 |------|--------|
 | **`VIONA.WAVE_3B.PREMIUM_TILE_VISUAL_TOKENS.1`** | **COMPLETE** — `src/design/premiumTileVisualTokens.ts` exported via `src/design/index.ts`. Foundation tokens only; **no surfaces refactored**. UI does **not** yet match the north-star image. |
-| **`VIONA.WAVE_3B.PREMIUM_APP_TILE_COMPONENT.1`** | **Next** — shared `PremiumAppTile` + adapters |
+| **`VIONA.WAVE_3B.PREMIUM_APP_TILE_COMPONENT.1`** | **COMPLETE** — `PremiumAppTile`, `PremiumIconCapsule`, `PremiumStatusChip`, `PremiumTileGrid` exported from `src/components/viona/index.ts`. **No hub screens refactored yet.** |
+| **`VIONA.WAVE_3B.LOCAL_VISUAL_WOW.1`** | **Next** — adopt primitives on Local hub first |
 
 ---
 
@@ -195,8 +196,8 @@ Visual wow packs must **not** introduce commercial/payment copy or behavior.
 
 | Priority | Action |
 |----------|--------|
-| **1** | **`VIONA.WAVE_3B.PREMIUM_APP_TILE_COMPONENT.1`** |
-| **2** | Local hub visual wow (pack C), then Travel/Academy/Account/SOS |
+| **1** | **`VIONA.WAVE_3B.LOCAL_VISUAL_WOW.1`** — Local hub adoption |
+| **2** | Travel / Academy / Account / SOS visual wow packs |
 | **3** | Optional: `git restore` 11 CRLF-noise paths after leadership confirms no lost local work |
 | **4** | Manual screenshot pass (pack I) before external demo |
 
