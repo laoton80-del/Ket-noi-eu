@@ -21,8 +21,8 @@ import {
 } from 'react-native';
 
 import { TravelDirectionSelector } from '../../components/travel/TravelDirectionSelector';
-import { TravelAppTile } from '../../components/travel/TravelAppTile';
 import { TravelGlassCard, type TravelSemanticAccent } from '../../components/travel/TravelGlassCard';
+import { PremiumAppTile, PremiumTileGrid } from '../../components/viona';
 import { LocalConstellationFrame } from '../../components/local/LocalConstellationFrame';
 import {
   localConstellation,
@@ -41,8 +41,18 @@ import {
 } from '../../services/compliance/sensorConsent';
 import { getTravelContext } from '../../services/context/UserContextService';
 import { listVietnameseRestaurantsByProximity, type CravingsRadarHit } from '../../services/travel/travelCravingsRadar';
+import type { VionaUniverseAccent } from '../../design/premiumTileVisualTokens';
+import {
+  premiumTileGlass,
+  premiumUniverseAccentSpec,
+  premiumUniverseStroke,
+} from '../../design/premiumTileVisualTokens';
 import { theme } from '../../theme/theme';
 import { FontFamily } from '../../theme/typography';
+
+function travelSemanticToUniverseAccent(accent: TravelSemanticAccent): VionaUniverseAccent {
+  return accent;
+}
 
 function weatherLabelKey(weatherCode: number): string {
   if (weatherCode < 20) return 'clear';
@@ -115,17 +125,6 @@ function travelScenarioGridColumns(width: number): 1 | 2 | 3 | 4 {
   return 1;
 }
 
-function scenarioCellWidthPercent(columns: 1 | 2 | 3 | 4): `${number}%` {
-  if (columns === 1) return '100%';
-  if (columns === 2) return '48.4%';
-  if (columns === 3) return '31.4%';
-  return '23.2%';
-}
-
-function scenarioCapsuleSecondary(id: TravelScenarioId): TravelSemanticAccent | undefined {
-  return SCENARIO_CAPSULE_SECONDARY[id];
-}
-
 const QUICK_HELP_IDS: readonly TravelScenarioId[] = ['translation', 'taxi', 'emergency'];
 
 const TRAVEL_PILOT_PILLS = [
@@ -182,14 +181,15 @@ function TravelQuickHelpTile({
 }>): ReactElement {
   const { t } = useTranslation();
   return (
-    <TravelAppTile
-      variant="quickHelp"
+    <PremiumAppTile
+      variant="travel"
+      accent={travelSemanticToUniverseAccent(item.accent)}
+      size="quickHelp"
+      width="100%"
       testID={`travel-quick-help-${scenarioId}`}
       title={t(`travelHub.scenario.${scenarioId}.title`)}
       subtitle={t(`travelHub.scenario.${scenarioId}.sub`)}
       icon={item.icon}
-      accent={item.accent}
-      accentSecondary={scenarioCapsuleSecondary(scenarioId)}
       onPress={item.onPress}
       statusLabel={travelScenarioStatusLabel(scenarioId, t)}
       accessibilityLabel={`${t(`travelHub.scenario.${scenarioId}.title`)}. ${t(`travelHub.scenario.${scenarioId}.sub`)}`}
@@ -204,13 +204,14 @@ function TravelScenarioCard({
 }>): ReactElement {
   const { t } = useTranslation();
   return (
-    <TravelAppTile
+    <PremiumAppTile
+      variant="travel"
+      accent={travelSemanticToUniverseAccent(item.accent)}
+      width="100%"
       testID={`travel-scenario-${item.id}`}
       title={t(`travelHub.scenario.${item.id}.title`)}
       subtitle={t(`travelHub.scenario.${item.id}.sub`)}
       icon={item.icon}
-      accent={item.accent}
-      accentSecondary={item.capsuleSecondary}
       onPress={item.onPress}
       statusLabel={travelScenarioStatusLabel(item.id, t)}
       accessibilityLabel={`${t(`travelHub.scenario.${item.id}.title`)}. ${t(`travelHub.scenario.${item.id}.sub`)}`}
@@ -222,24 +223,24 @@ function TravelScenarioGroupBlock({
   labelKey,
   scenarios,
   columns,
-  cellWidth,
 }: Readonly<{
   labelKey: 'travelHub.groupMove' | 'travelHub.groupStayEat' | 'travelHub.groupSafetyHelp';
   scenarios: readonly TravelScenario[];
   columns: 1 | 2 | 3 | 4;
-  cellWidth: `${number}%`;
 }>): ReactElement {
   const { t } = useTranslation();
   return (
     <View style={styles.groupBlock}>
       <Text style={styles.groupKicker}>{t(labelKey)}</Text>
-      <View style={[styles.scenarioGrid, columns > 1 ? styles.scenarioGridMultiCol : null]}>
+      <PremiumTileGrid
+        columns={columns}
+        wrapCells
+        style={[styles.scenarioGrid, columns > 1 ? styles.scenarioGridMultiCol : null]}
+      >
         {scenarios.map((item) => (
-          <View key={item.id} style={[styles.scenarioCell, { width: cellWidth }]}>
-            <TravelScenarioCard item={item} />
-          </View>
+          <TravelScenarioCard key={item.id} item={item} />
         ))}
-      </View>
+      </PremiumTileGrid>
     </View>
   );
 }
@@ -302,7 +303,6 @@ export function TravelScreen() {
   const [travelDirectionId, setTravelDirectionId] = useState<TravelDirectionId | null>(null);
 
   const scenarioGridColumns = travelScenarioGridColumns(width);
-  const scenarioCellWidth = scenarioCellWidthPercent(scenarioGridColumns);
 
   useEffect(() => {
     void getTravelLocationConsentState().then((state) => {
@@ -660,7 +660,6 @@ export function TravelScreen() {
               labelKey={group.labelKey}
               scenarios={groupScenarios}
               columns={scenarioGridColumns}
-              cellWidth={scenarioCellWidth}
             />
           );
         })}
@@ -917,9 +916,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     paddingVertical: 6,
     borderRadius: 8,
-    borderWidth: 1,
-    borderColor: 'rgba(92, 205, 255, 0.28)',
-    backgroundColor: 'rgba(92, 205, 255, 0.08)',
+    borderWidth: premiumTileGlass.edgeWidth,
+    borderColor: premiumUniverseStroke('cyan'),
+    backgroundColor: premiumUniverseAccentSpec('cyan').statusFill,
     minHeight: 32,
     maxWidth: '100%',
   },
