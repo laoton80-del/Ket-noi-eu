@@ -1,6 +1,7 @@
 # VIONA Local no-charge — controlled pilot session 1
 
 **Pack:** `VIONA.LOCAL.NO_CHARGE.CONTROLLED_PILOT_SESSION_1.1` + `SESSION_1.UI.OPERATOR_PASS_SYNC.1`
+**Rollup (sessions 1–3):** `docs/runbooks/VIONA_LOCAL_NO_CHARGE_CONTROLLED_PILOT_SESSIONS_1_3_ROLLUP.md`
 **Playbook:** `docs/runbooks/VIONA_LOCAL_NO_CHARGE_CONTROLLED_PILOT_OPS_PLAYBOOK.md`
 **Master at API session:** `fece42c` (API log @ `151f0fb` commit)
 **Master at UI PASS sync:** `4c26830`

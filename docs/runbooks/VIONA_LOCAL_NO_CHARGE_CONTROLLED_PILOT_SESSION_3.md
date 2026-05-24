@@ -1,6 +1,7 @@
 # VIONA Local no-charge — controlled pilot session 3 (prep)
 
 **Pack:** `VIONA.LOCAL.NO_CHARGE.CONTROLLED_PILOT_SESSION_3.PREP.1` · `VIONA.LOCAL.NO_CHARGE.CONTROLLED_PILOT_SESSION_3.RUN.1`
+**Rollup (sessions 1–3):** `docs/runbooks/VIONA_LOCAL_NO_CHARGE_CONTROLLED_PILOT_SESSIONS_1_3_ROLLUP.md`
 **Playbook:** `docs/runbooks/VIONA_LOCAL_NO_CHARGE_CONTROLLED_PILOT_OPS_PLAYBOOK.md`
 **Ops Audit UI plan:** `docs/runbooks/VIONA_LOCAL_NO_CHARGE_OPS_AUDIT_UI_PLAN.md`
 **Prior sessions:** Session 1 @ `4c26830` (API + UI) · Session 2 @ `1b91403` (user/merchant + ops API + Expo ops UI; native secret-tap **NOT COMPLETED**)

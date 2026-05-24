@@ -38,6 +38,21 @@
 
 ---
 
+## Controlled pilot sessions 1–3 rollup (`SESSIONS_1_3_ROLLUP.1`)
+
+| Item | Value |
+|------|--------|
+| **HEAD** | `1d449ac` |
+| **Rollup doc** | `docs/runbooks/VIONA_LOCAL_NO_CHARGE_CONTROLLED_PILOT_SESSIONS_1_3_ROLLUP.md` |
+| **Session 1** | API + UI **PASS** |
+| **Session 2** | User/merchant/ops API + Expo ops UI **PASS** |
+| **Session 3** | Public HTTPS API/ops **PASS** |
+| **Native secret-tap** | **NOT RUN / NOT COMPLETED** |
+| **Pause** | **No** (sessions 1–3) |
+| **Classification** | Strong PASS evidence for Local no-charge public HTTPS pilot; whole VIONA pre-commercial |
+
+---
+
 ## 1. Executive summary
 
 The **Local request-only / no-charge** pilot lane on VIONA is **automated QA-ready** on `master`: schema, APIs, merchant/user UI, EN/VI safe copy, VI runtime status labels, composed E2E runner, staging DB verification runbook, and manual device checklist are in place.

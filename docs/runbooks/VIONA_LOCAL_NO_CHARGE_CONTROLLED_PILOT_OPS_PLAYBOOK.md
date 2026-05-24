@@ -191,6 +191,8 @@ Staging DB remains source of truth; rollback is **access/config**, not data dest
 
 ## Pilot sessions index
 
+**Rollup (sessions 1–3):** `VIONA_LOCAL_NO_CHARGE_CONTROLLED_PILOT_SESSIONS_1_3_ROLLUP.md` @ `1d449ac+`
+
 | Session | Doc | Verdict |
 |---------|-----|---------|
 | **1** (API + UI) | `VIONA_LOCAL_NO_CHARGE_CONTROLLED_PILOT_SESSION_1.md` | **PASS** — API @ `fece42c`; UI @ `4c26830`; **no pause** |
@@ -214,4 +216,5 @@ Staging DB remains source of truth; rollback is **access/config**, not data dest
 | Ops audit API (read-only list) | `GET /api/local/ops/requests` — `Role.ADMIN`; test: `test-local-ops-request-list-api-1.ts` |
 | Ops audit HTTPS smoke | **PASS** — latest paced smoke; see `VIONA_LOCAL_NO_CHARGE_CONTROLLED_PILOT_SESSION_2.md` |
 | Ops audit UI session 2 | `VIONA_LOCAL_NO_CHARGE_CONTROLLED_PILOT_SESSION_2.md` |
+| Sessions 1–3 rollup | `VIONA_LOCAL_NO_CHARGE_CONTROLLED_PILOT_SESSIONS_1_3_ROLLUP.md` |
 | Ops ADMIN PIN rehash | `npx tsx scripts/provision-local-ops-admin-staging.ts` (staging only) |
