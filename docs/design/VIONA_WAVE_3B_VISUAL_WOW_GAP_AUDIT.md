@@ -188,7 +188,8 @@ Visual wow packs must **not** introduce commercial/payment copy or behavior.
 |------|--------|
 | **`VIONA.WAVE_3B.PREMIUM_TILE_VISUAL_TOKENS.1`** | **COMPLETE** — `src/design/premiumTileVisualTokens.ts` exported via `src/design/index.ts`. Foundation tokens only; **no surfaces refactored**. UI does **not** yet match the north-star image. |
 | **`VIONA.WAVE_3B.PREMIUM_APP_TILE_COMPONENT.1`** | **COMPLETE** — `PremiumAppTile`, `PremiumIconCapsule`, `PremiumStatusChip`, `PremiumTileGrid` exported from `src/components/viona/index.ts`. **No hub screens refactored yet.** |
-| **`VIONA.WAVE_3B.LOCAL_VISUAL_WOW.1`** | **Next** — adopt primitives on Local hub first |
+| **`VIONA.WAVE_3B.LOCAL_VISUAL_WOW.1`** | **COMPLETE** — `LocalScreen` hub tiles → `PremiumAppTile` + `PremiumTileGrid`; `LocalCommerceClarityBlock` safety chips use Wave 3B glass tokens. Classified listings unchanged. Screenshots **NOT RUN**. |
+| **`WIONA.WAVE_3B.TRAVEL_VISUAL_WOW.1`** | **Next** |
 
 ---
 
@@ -196,8 +197,8 @@ Visual wow packs must **not** introduce commercial/payment copy or behavior.
 
 | Priority | Action |
 |----------|--------|
-| **1** | **`VIONA.WAVE_3B.LOCAL_VISUAL_WOW.1`** — Local hub adoption |
-| **2** | Travel / Academy / Account / SOS visual wow packs |
+| **1** | **`VIONA.WAVE_3B.TRAVEL_VISUAL_WOW.1`** |
+| **2** | Academy / Account / SOS visual wow packs |
 | **3** | Optional: `git restore` 11 CRLF-noise paths after leadership confirms no lost local work |
 | **4** | Manual screenshot pass (pack I) before external demo |
 

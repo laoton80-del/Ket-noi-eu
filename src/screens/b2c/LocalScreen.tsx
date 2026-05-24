@@ -39,11 +39,16 @@ import { useHomeCommand } from '../../context/HomeCommandContext';
 import { useFullscreenMode } from '../../hooks/useFullscreenMode';
 import { useVionaHomeDaylightBoost } from '../../components/viona/useVionaHomeDaylightBoost';
 import { LocalCommerceClarityBlock } from '../../components/localCommerce/LocalCommerceClarityBlock';
-import { LocalAppTile } from '../../components/local/LocalAppTile';
 import { LocalConstellationFrame } from '../../components/local/LocalConstellationFrame';
+import { PremiumAppTile, PremiumTileGrid } from '../../components/viona';
 import { VionaBrandLockup } from '../../components/viona/VionaBrandLockup';
 import { VIONA_TABLET_MIN_WIDTH } from '../../components/viona/VionaMiniAppShell';
 import { vionaTokens } from '../../design';
+import {
+  premiumTileGlass,
+  premiumUniverseAccentSpec,
+  premiumUniverseStroke,
+} from '../../design/premiumTileVisualTokens';
 import {
   FASHION_HOME_COMMAND_RAIL_GRADIENT,
   FASHION_HOME_COMMAND_RAIL_HIGHLIGHT,
@@ -701,7 +706,6 @@ export function LocalScreen() {
 
   const { horizontalPad, innerWidth } = resolveLocalContentRail(width);
   const gridColumns = resolveLocalGridColumns(width);
-  const cardWidth = resolveLocalGridItemWidth(innerWidth, gridColumns);
   const classifiedColumns = resolveLocalGridColumns(width, {
     desktop: 3,
     tablet: 2,
@@ -979,10 +983,11 @@ export function LocalScreen() {
 
         <Text style={styles.safetyBridge}>{t('localCommerce.safety.myRequestsBridge')}</Text>
 
-        <View style={styles.cardGrid}>
-          <LocalAppTile
-            cardWidth={cardWidth}
+        <PremiumTileGrid columns={gridColumns} wrapCells style={styles.cardGrid}>
+          <PremiumAppTile
+            variant="local"
             accent="cyan"
+            width="100%"
             icon="list-outline"
             statusLabel={t('localCommerce.bookingStatus.requestOnly')}
             title={t('local.userRequestStatus.localTileTitle')}
@@ -991,13 +996,14 @@ export function LocalScreen() {
             accessibilityLabel={t('local.userRequestStatus.localTileA11y')}
             testID="local-tile-my-requests"
           />
-        </View>
+        </PremiumTileGrid>
 
         <Text style={styles.bentoSectionTitle}>{t('localHub.serviceCategoriesKicker')}</Text>
-        <View style={styles.cardGrid}>
-          <LocalAppTile
-            cardWidth={cardWidth}
+        <PremiumTileGrid columns={gridColumns} wrapCells style={styles.cardGrid}>
+          <PremiumAppTile
+            variant="local"
             accent="emerald"
+            width="100%"
             icon="sparkles-outline"
             statusLabel={t('localCommerce.bookingStatus.lite')}
             title={t('localHub.nailsTitle')}
@@ -1006,9 +1012,10 @@ export function LocalScreen() {
             accessibilityLabel="Nails và Spa"
             testID="local-tile-nails"
           />
-          <LocalAppTile
-            cardWidth={cardWidth}
+          <PremiumAppTile
+            variant="local"
             accent="cyan"
+            width="100%"
             icon="restaurant-outline"
             statusLabel={t('localCommerce.bookingStatus.requestOnly')}
             title={t('localHub.restaurantTitle')}
@@ -1017,13 +1024,14 @@ export function LocalScreen() {
             accessibilityLabel={t('localHub.restaurantTitle')}
             testID="local-tile-restaurant"
           />
-        </View>
+        </PremiumTileGrid>
 
         <Text style={styles.bentoSectionTitle}>{t('localHub.localServicesKicker')}</Text>
-        <View style={styles.cardGrid}>
-          <LocalAppTile
-            cardWidth={cardWidth}
+        <PremiumTileGrid columns={gridColumns} wrapCells style={styles.cardGrid}>
+          <PremiumAppTile
+            variant="local"
             accent="emerald"
+            width="100%"
             icon="scale-outline"
             statusLabel={t('localCommerce.bookingStatus.demo')}
             title={t('localHub.legalWealthTitle')}
@@ -1032,9 +1040,10 @@ export function LocalScreen() {
             accessibilityLabel={t('localHub.legalWealthTitle')}
             testID="local-tile-legal-wealth"
           />
-          <LocalAppTile
-            cardWidth={cardWidth}
+          <PremiumAppTile
+            variant="local"
             accent="cyan"
+            width="100%"
             icon="car-outline"
             statusLabel={t('localCommerce.bookingStatus.lite')}
             title={t('localHub.transitTitle')}
@@ -1043,9 +1052,10 @@ export function LocalScreen() {
             accessibilityLabel={t('localHub.transitTitle')}
             testID="local-tile-transit"
           />
-          <LocalAppTile
-            cardWidth={cardWidth}
+          <PremiumAppTile
+            variant="local"
             accent="emerald"
+            width="100%"
             icon="ticket-outline"
             statusLabel={t('localCommerce.bookingStatus.preview')}
             title={t('localHub.eventsTitle')}
@@ -1054,9 +1064,10 @@ export function LocalScreen() {
             accessibilityLabel={t('localHub.eventsTitle')}
             testID="local-tile-events"
           />
-          <LocalAppTile
-            cardWidth={cardWidth}
+          <PremiumAppTile
+            variant="local"
             accent="emerald"
+            width="100%"
             icon="home-outline"
             statusLabel={t('localCommerce.bookingStatus.lite')}
             title={t('localHub.classifiedsHousingTitle')}
@@ -1065,9 +1076,10 @@ export function LocalScreen() {
             accessibilityLabel={t('localHub.classifiedsHousingTitle')}
             testID="local-tile-housing"
           />
-          <LocalAppTile
-            cardWidth={cardWidth}
+          <PremiumAppTile
+            variant="local"
             accent="emerald"
+            width="100%"
             icon="pricetags-outline"
             statusLabel={t('localCommerce.bookingStatus.lite')}
             title={t('localHub.classifiedsTitle')}
@@ -1077,9 +1089,10 @@ export function LocalScreen() {
             testID="local-tile-classifieds"
           />
           {legalScanEnabled ? (
-            <LocalAppTile
-              cardWidth={cardWidth}
+            <PremiumAppTile
+              variant="local"
               accent="cyan"
+              width="100%"
               icon="scan-outline"
               statusLabel={t('localCommerce.bookingStatus.demo')}
               title={t('localHub.legalScannerLabel')}
@@ -1090,7 +1103,7 @@ export function LocalScreen() {
               testID="local-tile-legal-scanner"
             />
           ) : null}
-        </View>
+        </PremiumTileGrid>
 
         <View
           onLayout={(e) => {
@@ -1486,10 +1499,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     paddingVertical: 5,
     borderRadius: theme.radius.pill,
-    backgroundColor: 'rgba(72, 210, 165, 0.08)',
-    borderWidth: 1,
-    borderColor: 'rgba(72, 210, 165, 0.28)',
+    backgroundColor: premiumUniverseAccentSpec('emerald').statusFill,
+    borderWidth: premiumTileGlass.edgeWidth,
+    borderColor: premiumUniverseStroke('emerald'),
     overflow: 'hidden',
+    minHeight: 32,
   },
   heroChipText: {
     flexShrink: 1,

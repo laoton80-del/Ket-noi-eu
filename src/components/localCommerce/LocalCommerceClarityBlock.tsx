@@ -13,6 +13,13 @@ import {
 import { useSmartTrio } from '../../context/SmartTrioContext';
 import type { LocalBookingStatus } from '../../core/localCommerce';
 import { getAllLocalCommerceCapabilities } from '../../core/localCommerce';
+import { PremiumStatusChip } from '../viona/PremiumStatusChip';
+import {
+  premiumGlassSurface,
+  premiumTileGlass,
+  premiumUniverseAccentSpec,
+  premiumUniverseStroke,
+} from '../../design/premiumTileVisualTokens';
 import { useTranslation } from '../../i18n';
 import { FontFamily } from '../../theme/typography';
 
@@ -201,9 +208,7 @@ export function LocalCommerceClarityBlock({
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.statusScroll}>
         <View style={styles.statusRow}>
           {statusOrder.map((s) => (
-            <ClarityGlassChip key={s} accent="emerald">
-              <Text style={styles.statusChipText}>{t(bookingStatusKey(s))}</Text>
-            </ClarityGlassChip>
+            <PremiumStatusChip key={s} accent="emerald" label={t(bookingStatusKey(s))} />
           ))}
         </View>
       </ScrollView>
@@ -215,7 +220,9 @@ export function LocalCommerceClarityBlock({
           <View key={c.id} style={styles.capRow}>
             <View style={styles.capTextCol}>
               <Text style={styles.capTitle}>{t(c.titleKey)}</Text>
-              <Text style={styles.capPill}>{t(bookingStatusKey(c.status))}</Text>
+              <View style={styles.capPillWrap}>
+                <PremiumStatusChip accent="emerald" label={t(bookingStatusKey(c.status))} />
+              </View>
               <Text style={styles.capDesc} numberOfLines={1}>
                 {t(c.descriptionKey)}
               </Text>
@@ -316,7 +323,9 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     paddingHorizontal: 10,
     paddingVertical: 9,
-    backgroundColor: 'rgba(10, 14, 22, 0.48)',
+    backgroundColor: premiumGlassSurface(),
+    borderWidth: premiumTileGlass.edgeWidth,
+    borderColor: premiumUniverseStroke('emerald'),
   },
   audienceTitle: { fontSize: 12, fontFamily: FontFamily.extrabold, color: EMERALD },
   audienceSub: { marginTop: 2, fontSize: 10, fontFamily: FontFamily.semibold, color: INK_MUTED, lineHeight: 14 },
@@ -345,9 +354,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     paddingVertical: 7,
     borderRadius: 10,
-    backgroundColor: 'rgba(10, 14, 22, 0.42)',
-    borderWidth: 1,
-    borderColor: 'rgba(72, 210, 165, 0.18)',
+    backgroundColor: premiumGlassSurface(),
+    borderWidth: premiumTileGlass.edgeWidth,
+    borderColor: premiumUniverseStroke('emerald'),
   },
   legendIconWrap: {
     width: 22,
@@ -355,7 +364,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'rgba(72, 210, 165, 0.1)',
+    backgroundColor: premiumUniverseAccentSpec('emerald').iconCapsuleFill,
   },
   legendText: {
     flex: 1,
@@ -366,31 +375,13 @@ const styles = StyleSheet.create({
   },
   statusScroll: { marginTop: 6, maxHeight: 34 },
   statusRow: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingRight: 8 },
-  statusChipText: {
-    fontSize: 10,
-    fontFamily: FontFamily.extrabold,
-    color: EMERALD,
-    textTransform: 'uppercase',
-  },
   safety: { marginTop: 8, fontSize: 11, fontFamily: FontFamily.semibold, color: INK_MUTED, lineHeight: 15 },
+  capPillWrap: { marginTop: 4, alignSelf: 'flex-start' },
   capList: { marginTop: 8, gap: 6 },
   capRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 10 },
   capTextCol: { flex: 1, minWidth: 0 },
   capTitle: { fontSize: 12, fontFamily: FontFamily.extrabold, color: INK },
   capDesc: { fontSize: 10, fontFamily: FontFamily.semibold, color: INK_MUTED, marginTop: 2, lineHeight: 14 },
-  capPill: {
-    alignSelf: 'flex-start',
-    fontSize: 9,
-    fontFamily: FontFamily.extrabold,
-    color: EMERALD,
-    textTransform: 'uppercase',
-    marginTop: 2,
-    backgroundColor: 'rgba(72, 210, 165, 0.1)',
-    borderRadius: 8,
-    overflow: 'hidden',
-    paddingHorizontal: 7,
-    paddingVertical: 2,
-  },
   ctaRow: { marginTop: 10, flexDirection: 'row', flexWrap: 'wrap', gap: 7 },
   ctaChip: {
     flexDirection: 'row',
@@ -399,7 +390,10 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     paddingHorizontal: 10,
     borderRadius: 12,
-    backgroundColor: 'rgba(10, 14, 22, 0.48)',
+    backgroundColor: premiumGlassSurface(),
+    borderWidth: premiumTileGlass.edgeWidth,
+    borderColor: premiumUniverseStroke('emerald'),
+    minHeight: 44,
   },
   ctaText: { fontSize: 11, fontFamily: FontFamily.extrabold, maxWidth: 140 },
 });
