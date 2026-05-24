@@ -1112,7 +1112,20 @@
     "railSubtitle": "Travel Lite · companion & language help",
     "heroKicker": "TRAVEL LITE",
     "heroCompanion": "VIONA Travel is your on-trip companion.",
-    "heroSub": "Situation-first guidance and language help — not an OTA checkout.",
+    "heroSub": "Situation help & language — not an OTA checkout.",
+    "pilotStripTitle": "Travel Lite pilot",
+    "pilotStripBanner": "Language & situation help only — no in-app checkout or payment.",
+    "pilotPill": {
+      "lite": "Lite",
+      "demo": "Demo assist",
+      "preview": "Preview tools"
+    },
+    "tileBadge": {
+      "lite": "Lite",
+      "demo": "Demo",
+      "preview": "Preview",
+      "pilot": "Pilot"
+    },
     "quickHelpKicker": "QUICK HELP",
     "groupMove": "MOVE",
     "groupStayEat": "STAY & EAT",
@@ -1135,11 +1148,11 @@
       },
       "hotel": {
         "title": "Browse stays",
-        "sub": "Hotel help & lodging info — no confirmed booking in app"
+        "sub": "Lodging info — not a confirmed booking in app"
       },
       "taxi": {
         "title": "Rides assist",
-        "sub": "Request travel call help (demo) — not a booked ride"
+        "sub": "Call help (demo) — not a booked ride"
       },
       "restaurant": {
         "title": "Restaurant",
@@ -1168,7 +1181,7 @@
     },
     "connectedLocalHelpKicker": "CONNECTED LOCAL HELP",
     "connectedLocalHelpTitle": "Local on-ground support",
-    "connectedLocalHelpSub": "Opens Local universe — guides & fixers, not a Travel scenario.",
+    "connectedLocalHelpSub": "Local guides & fixers — separate from Travel scenarios.",
     "connectedLocalHelpCta": "Open Local guides",
     "connectedLocalHelpA11y": "Open Local on-ground support",
     "localHelpersBadge": "Local assistants",

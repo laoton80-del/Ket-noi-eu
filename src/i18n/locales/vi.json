@@ -1112,7 +1112,20 @@
     "railSubtitle": "Travel Lite · đồng hành & ngôn ngữ",
     "heroKicker": "TRAVEL LITE",
     "heroCompanion": "VIONA Travel là người bạn đồng hành trên hành trình.",
-    "heroSub": "Hướng dẫn theo tình huống & hỗ trợ ngôn ngữ — không phải đặt phòng/OTA.",
+    "heroSub": "Hỗ trợ tình huống & ngôn ngữ — không phải đặt phòng/OTA.",
+    "pilotStripTitle": "Travel Lite (thử nghiệm)",
+    "pilotStripBanner": "Chỉ hỗ trợ ngôn ngữ & tình huống — không thanh toán trong app.",
+    "pilotPill": {
+      "lite": "Lite",
+      "demo": "Hỗ trợ demo",
+      "preview": "Công cụ xem trước"
+    },
+    "tileBadge": {
+      "lite": "Lite",
+      "demo": "Demo",
+      "preview": "Xem trước",
+      "pilot": "Thử nghiệm"
+    },
     "quickHelpKicker": "TRỢ GIÚP NHANH",
     "groupMove": "DI CHUYỂN",
     "groupStayEat": "LƯU TRÚ & ĂN UỐNG",
@@ -1135,11 +1148,11 @@
       },
       "hotel": {
         "title": "Xem chỗ nghỉ",
-        "sub": "Gợi ý khách sạn — không đặt phòng xác nhận trong app"
+        "sub": "Thông tin lưu trú — không đặt phòng xác nhận trong app"
       },
       "taxi": {
         "title": "Hỗ trợ xe",
-        "sub": "Yêu cầu gọi hỗ trợ (demo) — không phải xe đã đặt"
+        "sub": "Gọi hỗ trợ (demo) — không phải xe đã đặt"
       },
       "restaurant": {
         "title": "Nhà hàng",
@@ -1168,7 +1181,7 @@
     },
     "connectedLocalHelpKicker": "HỖ TRỢ LOCAL LIÊN KẾT",
     "connectedLocalHelpTitle": "Hỗ trợ địa phương (Local)",
-    "connectedLocalHelpSub": "Mở vũ trụ Local — thổ địa & fixer, không phải thẻ tình huống Travel.",
+    "connectedLocalHelpSub": "Thổ địa & fixer Local — tách khỏi thẻ tình huống Travel.",
     "connectedLocalHelpCta": "Mở Local guides",
     "connectedLocalHelpA11y": "Mở hỗ trợ địa phương Local",
     "localHelpersBadge": "Người hỗ trợ địa phương",

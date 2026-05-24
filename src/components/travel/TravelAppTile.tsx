@@ -59,34 +59,35 @@ export function TravelAppTile({
       style={isQuickHelp ? styles.quickHelpCard : styles.tileCard}
     >
       <View style={styles.stack}>
-        <TravelIconCapsule
-          icon={icon}
-          ink={tokens.ink}
-          accent={accent}
-          accentSecondary={accentSecondary}
-          size={iconSize}
-          prominent={isQuickHelp}
-          intensity={isQuickHelp ? 'primary' : 'standard'}
-        />
-        <View style={styles.textBlock}>
-          <View style={styles.titleRow}>
-            <Text style={styles.title} numberOfLines={1}>
-              {title}
+        <View style={styles.iconRow}>
+          <TravelIconCapsule
+            icon={icon}
+            ink={tokens.ink}
+            accent={accent}
+            accentSecondary={accentSecondary}
+            size={iconSize}
+            prominent={isQuickHelp}
+            intensity={isQuickHelp ? 'primary' : 'standard'}
+          />
+          {statusLabel ? (
+            <Text
+              style={[
+                styles.statusPill,
+                accent === 'magenta' && styles.statusPillEmergency,
+                { color: tokens.ink, borderColor: tokens.stroke },
+              ]}
+              numberOfLines={1}
+            >
+              {statusLabel}
             </Text>
-            {statusLabel ? (
-              <Text
-                style={[
-                  styles.statusPill,
-                  accent === 'magenta' && styles.statusPillEmergency,
-                  { color: tokens.ink, borderColor: tokens.stroke },
-                ]}
-              >
-                {statusLabel}
-              </Text>
-            ) : null}
-          </View>
+          ) : null}
+        </View>
+        <View style={styles.textBlock}>
+          <Text style={styles.title} numberOfLines={1}>
+            {title}
+          </Text>
           {subtitle ? (
-            <Text style={styles.subtitle} numberOfLines={isQuickHelp ? 2 : 2}>
+            <Text style={styles.subtitle} numberOfLines={2}>
               {subtitle}
             </Text>
           ) : null}
@@ -121,20 +122,20 @@ const styles = StyleSheet.create({
     gap: 10,
     alignItems: 'flex-start',
   },
+  iconRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    width: '100%',
+    minHeight: 44,
+  },
   textBlock: {
     width: '100%',
     gap: 4,
     minWidth: 0,
   },
-  titleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flexWrap: 'wrap',
-    gap: 6,
-    width: '100%',
-  },
   title: {
-    flexShrink: 1,
+    width: '100%',
     fontSize: 13,
     fontFamily: FontFamily.extrabold,
     color: INK,

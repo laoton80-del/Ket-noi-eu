@@ -23,6 +23,7 @@ import {
 import { TravelDirectionSelector } from '../../components/travel/TravelDirectionSelector';
 import { TravelAppTile } from '../../components/travel/TravelAppTile';
 import { TravelGlassCard, type TravelSemanticAccent } from '../../components/travel/TravelGlassCard';
+import { LocalConstellationFrame } from '../../components/local/LocalConstellationFrame';
 import {
   localConstellation,
   localWebRailPillGlassStyle,
@@ -127,6 +128,36 @@ function scenarioCapsuleSecondary(id: TravelScenarioId): TravelSemanticAccent | 
 
 const QUICK_HELP_IDS: readonly TravelScenarioId[] = ['translation', 'taxi', 'emergency'];
 
+const TRAVEL_PILOT_PILLS = [
+  { key: 'travelHub.pilotPill.lite' as const, icon: 'compass-outline' as const },
+  { key: 'travelHub.pilotPill.demo' as const, icon: 'flask-outline' as const },
+  { key: 'travelHub.pilotPill.preview' as const, icon: 'eye-outline' as const },
+];
+
+function travelScenarioStatusLabel(
+  id: TravelScenarioId,
+  t: (key: string) => string
+): string | undefined {
+  switch (id) {
+    case 'emergency':
+      return t('travelHub.scenarioChipSafety');
+    case 'hotel':
+    case 'airport':
+      return t('travelHub.tileBadge.preview');
+    case 'taxi':
+    case 'transit':
+    case 'shopping':
+      return t('travelHub.tileBadge.demo');
+    case 'translation':
+      return t('travelHub.tileBadge.lite');
+    case 'restaurant':
+    case 'hospital':
+      return t('travelHub.tileBadge.pilot');
+    default:
+      return undefined;
+  }
+}
+
 const TRAVEL_SCENARIO_GROUPS = [
   {
     labelKey: 'travelHub.groupMove' as const,
@@ -160,7 +191,8 @@ function TravelQuickHelpTile({
       accent={item.accent}
       accentSecondary={scenarioCapsuleSecondary(scenarioId)}
       onPress={item.onPress}
-      accessibilityLabel={t(`travelHub.scenario.${scenarioId}.title`)}
+      statusLabel={travelScenarioStatusLabel(scenarioId, t)}
+      accessibilityLabel={`${t(`travelHub.scenario.${scenarioId}.title`)}. ${t(`travelHub.scenario.${scenarioId}.sub`)}`}
     />
   );
 }
@@ -180,8 +212,8 @@ function TravelScenarioCard({
       accent={item.accent}
       accentSecondary={item.capsuleSecondary}
       onPress={item.onPress}
-      accessibilityLabel={t(`travelHub.scenario.${item.id}.title`)}
-      statusLabel={item.id === 'emergency' ? t('travelHub.scenarioChipSafety') : undefined}
+      statusLabel={travelScenarioStatusLabel(item.id, t)}
+      accessibilityLabel={`${t(`travelHub.scenario.${item.id}.title`)}. ${t(`travelHub.scenario.${item.id}.sub`)}`}
     />
   );
 }
@@ -578,6 +610,31 @@ export function TravelScreen() {
           </View>
         </TravelGlassCard>
 
+        <LocalConstellationFrame accent="cyan" radius={14} contentStyle={styles.pilotStripInner}>
+          <View style={styles.pilotStripTitleRow}>
+            <Ionicons name="airplane-outline" size={16} color={CYAN} accessibilityIgnoresInvertColors />
+            <Text style={styles.pilotStripTitle}>{t('travelHub.pilotStripTitle')}</Text>
+          </View>
+          <Text style={styles.pilotStripBanner} numberOfLines={2}>
+            {t('travelHub.pilotStripBanner')}
+          </Text>
+          <View style={styles.pilotPillRow}>
+            {TRAVEL_PILOT_PILLS.map((pill) => (
+              <View
+                key={pill.key}
+                style={styles.pilotPill}
+                accessibilityRole="text"
+                accessibilityLabel={t(pill.key)}
+              >
+                <Ionicons name={pill.icon} size={12} color={CYAN} accessibilityIgnoresInvertColors />
+                <Text style={styles.pilotPillText} numberOfLines={2}>
+                  {t(pill.key)}
+                </Text>
+              </View>
+            ))}
+          </View>
+        </LocalConstellationFrame>
+
         <Text style={styles.quickHelpSectionKicker}>{t('travelHub.quickHelpKicker')}</Text>
         <View style={styles.quickHelpRow}>
           {QUICK_HELP_IDS.map((id) => {
@@ -654,8 +711,13 @@ export function TravelScreen() {
             accessibilityLabel={t('travelHub.connectedLocalHelpA11y')}
             contentStyle={styles.mapCardInner}
           >
-          <Text style={styles.kicker}>{t('travelHub.connectedLocalHelpTitle')}</Text>
-          <Text style={styles.mapHelpSub}>{t('travelHub.connectedLocalHelpSub')}</Text>
+          <View style={styles.localHelpHeader}>
+            <Text style={styles.kicker}>{t('travelHub.connectedLocalHelpTitle')}</Text>
+            <Text style={styles.localHelpChip}>{t('travelHub.tileBadge.pilot')}</Text>
+          </View>
+          <Text style={styles.mapHelpSub} numberOfLines={2}>
+            {t('travelHub.connectedLocalHelpSub')}
+          </Text>
           <View style={styles.mapShell}>
             <LinearGradient
               colors={['rgba(12, 22, 38, 0.92)', 'rgba(8, 16, 28, 0.96)']}
@@ -820,6 +882,74 @@ const styles = StyleSheet.create({
     letterSpacing: 0.95,
     marginTop: 10,
     marginBottom: 8,
+  },
+  pilotStripInner: {
+    gap: 8,
+    paddingVertical: 12,
+    paddingHorizontal: 12,
+  },
+  pilotStripTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  pilotStripTitle: {
+    fontSize: 11,
+    fontFamily: FontFamily.extrabold,
+    color: CYAN,
+    letterSpacing: 0.6,
+  },
+  pilotStripBanner: {
+    fontSize: 11,
+    fontFamily: FontFamily.medium,
+    color: INK_SUB,
+    lineHeight: 16,
+  },
+  pilotPillRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  pilotPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    paddingHorizontal: 8,
+    paddingVertical: 6,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(92, 205, 255, 0.28)',
+    backgroundColor: 'rgba(92, 205, 255, 0.08)',
+    minHeight: 32,
+    maxWidth: '100%',
+  },
+  pilotPillText: {
+    flexShrink: 1,
+    fontSize: 9,
+    fontFamily: FontFamily.extrabold,
+    color: 'rgba(210, 238, 255, 0.95)',
+    letterSpacing: 0.35,
+    textTransform: 'uppercase',
+  },
+  localHelpHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 8,
+  },
+  localHelpChip: {
+    fontSize: 8,
+    fontFamily: FontFamily.extrabold,
+    letterSpacing: 0.4,
+    textTransform: 'uppercase',
+    color: CYAN,
+    paddingHorizontal: 6,
+    paddingVertical: 3,
+    borderRadius: 5,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: 'rgba(92, 205, 255, 0.42)',
+    backgroundColor: 'rgba(92, 205, 255, 0.1)',
+    overflow: 'hidden',
   },
   quickHelpSectionKicker: {
     fontSize: 10,
@@ -1008,6 +1138,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
+    minHeight: 44,
     paddingHorizontal: 12,
     paddingVertical: 10,
     borderRadius: theme.radius.md,

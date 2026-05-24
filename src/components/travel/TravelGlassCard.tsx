@@ -499,7 +499,7 @@ export function TravelIconCapsule({
   const secondary = accentSecondary ? travelSemanticTokens(accentSecondary) : null;
   const spec = resolveIntensity(intensity, prominent ? 'quickHelp' : 'standard');
   const accentBoost = ACCENT_LIFT[accent] * CAPSULE_GLOW_BOOST;
-  const dim = prominent ? 44 : 38;
+  const dim = 44;
   const glowPx = prominent ? 22 : 15;
   const iconGlow = prominent ? 14 : 10;
 
