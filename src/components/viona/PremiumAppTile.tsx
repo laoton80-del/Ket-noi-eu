@@ -1,10 +1,14 @@
 /**
  * Wave 3B — shared Premium App Tile primitive (visual only; no business logic).
  *
- * Color governance (`docs/design/VIONA_WAVE_3_PREMIUM_APP_TILE_RULES.md` §5):
+ * Design law: `VIONA_SEMANTIC_COLOR_MAPPING_V1.md`, `VIONA_LUMINOUS_DARK_PREMIUM_UI_LAW.md`,
+ * `VIONA_WAVE_3_PREMIUM_APP_TILE_RULES.md` §5.
+ *
+ * Color governance:
  * - `variant` → **leadingUniverseAccent** (hub atmosphere) when `accent` is omitted.
- * - `accent` → **semanticFeatureAccent** override per tile (controlled multi-color inside a hub).
- * - Not one color per universe — mix accents by feature meaning; status chip text is primary, color secondary.
+ * - `accent` → **semanticFeatureAccent** per tile — may differ from universe leading color; multicolor grids are required when meanings differ.
+ * - Visual accent/glow never replaces text status meaning; chip label is mandatory.
+ * - Not one color per universe — controlled semantic multicolor by feature.
  *
  * Safety (semantic feature accents — never imply locked business state):
  * - Gold — not paid, commercial ready, payout, or settlement.

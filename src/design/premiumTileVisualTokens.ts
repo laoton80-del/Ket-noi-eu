@@ -2,11 +2,17 @@
  * VIONA Wave 3B — Premium App Tile visual foundation.
  * North-star: “Premium App Tiles — Universe Standard” (see docs/design/VIONA_WAVE_3B_VISUAL_WOW_GAP_AUDIT.md).
  *
+ * DESIGN LAW (docs — `VIONA.WAVE_3B.SEMANTIC_MULTICOLOR_LUMINOUS_UI_LAW.1`):
+ * - `docs/design/VIONA_SEMANTIC_COLOR_MAPPING_V1.md` — per-surface semantic accent tables (mandatory for packs).
+ * - `docs/design/VIONA_LUMINOUS_DARK_PREMIUM_UI_LAW.md` — dark glass + **bright luminous typography** + old-UI ban.
+ * - Reference direction: north-star overview + luminous AI/glass reference (design-time assets; not production claims).
+ *
  * COLOR GOVERNANCE (Wave 3B semantic correction — `VIONA.WAVE_3B.SEMANTIC_COLOR_GOVERNANCE.1`):
  * - **Not** one fixed color per universe. Each hub has a **leadingUniverseAccent** (atmosphere / section identity).
  * - Each feature tile uses a **semanticFeatureAccent** (`PremiumAppTile` `accent` override) based on **function meaning**.
- * - **controlledMultiAccent** grids mix accents inside a hub when semantics differ (recommended; matches north-star reference).
- * - `premiumUniverseAccentMap` = material specs for all accents. `premiumUniverseAccentByHub` = **defaults only**, not a hard lock.
+ * - **controlledMultiAccent** grids mix accents inside a hub when semantics differ (**required** when feature meaning differs).
+ * - `premiumUniverseAccentMap` = material specs (glow/stroke/ink) for **all** accents — use per **feature**, not hub name alone.
+ * - `premiumUniverseAccentByHub` / `leadingUniverseAccentByHub` = **defaults only**, not a hard color lock.
  *
  * SEMANTIC FEATURE ACCENT MEANINGS (product + safety — not optional):
  * - **Cyan** — travel / tech / navigation / interactive / focus (not autonomous AI execution).
@@ -18,6 +24,10 @@
  * - Glow encodes **feature** meaning on each tile (stroke + corner wash + semantic shadow) — not decoration-only blobs.
  * - **Text status chip carries meaning; color is secondary** — never icon-only status.
  * - Local remains REQUEST_ONLY_NO_CHARGE; SOS remains guidance-only (copy packs enforce; tokens do not imply money).
+ *
+ * LUMINOUS TYPOGRAPHY (dark glass):
+ * - Public UI text on dark glass must stay **bright and readable** — see `premiumLuminousInk` and luminous UI law.
+ * - Avoid muddy mid-gray body copy; subtitles use high-contrast cool white, not dashboard dim gray.
  *
  * This module is tokens/utilities only.
  */
@@ -74,6 +84,19 @@ export const premiumTileCanvas = {
   ambientEmerald: 'rgba(72, 210, 165, 0.06)',
   ambientCyan: 'rgba(92, 205, 255, 0.05)',
   ambientViolet: 'rgba(178, 132, 248, 0.05)',
+} as const;
+
+/**
+ * Luminous ink on dark glass — minimum contrast targets (`VIONA_LUMINOUS_DARK_PREMIUM_UI_LAW.md`).
+ * Prefer these over muddy dashboard grays when building or migrating hub screens.
+ */
+export const premiumLuminousInk = {
+  title: '#F8FAFC',
+  titleBright: '#FFFFFF',
+  subtitle: 'rgba(226, 232, 240, 0.88)',
+  subtitleMinimum: 'rgba(226, 232, 240, 0.72)',
+  sectionKicker: 'rgba(226, 232, 240, 0.96)',
+  disabledReadable: 'rgba(148, 163, 184, 0.78)',
 } as const;
 
 /** Glass slab material (tile card body). */
@@ -157,8 +180,9 @@ export const premiumTileInteraction = {
 } as const;
 
 /**
- * Material specs for every semantic feature accent (glow/stroke/ink/capsule).
- * Tiles pick an entry via `accent` prop — not via hub name alone.
+ * Material specs for every **semantic feature accent** (glow/stroke/ink/capsule).
+ * `premiumUniverseAccentMap` is **not** a universe color lock — tiles pick an entry via `accent` prop by feature meaning.
+ * When a hub grid mixes features (transit=cyan, safety=emerald, VIP=gold), each tile must set `accent` explicitly.
  */
 export const premiumUniverseAccentMap: Readonly<Record<VionaUniverseAccent, PremiumUniverseAccentSpec>> = {
   emerald: {

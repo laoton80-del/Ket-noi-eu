@@ -1,6 +1,7 @@
 /**
  * Wave 3B — text status chip (visual primitive only).
- * Label text is required (meaning is not color-only); `accent` mirrors tile semanticFeatureAccent.
+ * Label text is required — color is secondary (`VIONA_LUMINOUS_DARK_PREMIUM_UI_LAW.md`).
+ * `accent` mirrors tile semanticFeatureAccent; chip copy must stay bright/readable on dark glass.
  */
 import type { ReactElement } from 'react';
 import { StyleSheet, Text, View, type StyleProp, type ViewStyle } from 'react-native';

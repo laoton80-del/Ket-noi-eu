@@ -453,8 +453,10 @@ Do not touch Home unless explicitly scoped.
 
 Consumer design system:
 - Premium App Shell + Hub Layout (`docs/design/VIONA_WAVE_3B_PREMIUM_APP_SHELL_FOUNDATION.md`) — foundation only until hub migration packs
+- **Semantic multicolor + luminous UI law** (`docs/design/VIONA_SEMANTIC_COLOR_MAPPING_V1.md`, `docs/design/VIONA_LUMINOUS_DARK_PREMIUM_UI_LAW.md`) — mandatory before hub pixel packs; no old dashboard drift
 - Premium App Tiles
 - icon + short title + concise subtitle
+- **bright luminous typography** on dark glass (not muddy gray)
 - semantic glow per **feature** (controlled multi-color inside a hub — not one color per universe)
 - leading universe accent = hub atmosphere; per-tile `accent` = feature meaning (`docs/design/VIONA_WAVE_3_PREMIUM_APP_TILE_RULES.md` §5)
 - text status chip carries meaning; color is secondary

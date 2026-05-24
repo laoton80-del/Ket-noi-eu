@@ -128,7 +128,9 @@ Every **Premium App Tile** (compact or hero) **must** include:
 
 ## 5. Semantic glow law — leading accent + controlled multi-color
 
-**Wave 3B correction (`VIONA.WAVE_3B.SEMANTIC_COLOR_GOVERNANCE.1`):** VIONA does **not** use one fixed color per universe. Each hub has a **leading universe accent** (atmosphere / section identity). Feature tiles inside that hub use a **semantic feature accent** chosen per tile (`PremiumAppTile` `accent` prop). **Controlled multi-color** premium grids are **recommended** and match the north-star reference.
+**Wave 3B correction (`VIONA.WAVE_3B.SEMANTIC_COLOR_GOVERNANCE.1`, `VIONA.WAVE_3B.SEMANTIC_MULTICOLOR_LUMINOUS_UI_LAW.1`):** VIONA does **not** use one fixed color per universe. Each hub has a **leading universe accent** (atmosphere / section identity). Feature tiles inside that hub use a **semantic feature accent** chosen per tile (`PremiumAppTile` `accent` prop). **Controlled semantic multicolor** is **required** when feature meanings differ. Per-surface tables: `VIONA_SEMANTIC_COLOR_MAPPING_V1.md`.
+
+**Luminous typography:** titles and subtitles on dark glass must be **bright and readable** (`VIONA_LUMINOUS_DARK_PREMIUM_UI_LAW.md`, `premiumLuminousInk` in tokens) — not muddy dashboard gray.
 
 | Concept | Code / doc | Rule |
 |---------|------------|------|
@@ -381,3 +383,5 @@ Hub screens should **recompose** onto shell primitives in migration packs—not 
 | `VIONA_ACTION_GRID_PATTERN.md` | Account action grid |
 | `VIONA_NEON_GLASS_CARD_SYSTEM.md` | Glass material depth |
 | `VIONA_WAVE_3B_PREMIUM_APP_SHELL_FOUNDATION.md` | Shared hub shell + layout anatomy |
+| `VIONA_SEMANTIC_COLOR_MAPPING_V1.md` | Per-universe/feature accent tables (mandatory) |
+| `VIONA_LUMINOUS_DARK_PREMIUM_UI_LAW.md` | Dark glass + luminous type + old-UI ban |

@@ -1,6 +1,7 @@
 /**
  * Wave 3B — semantic icon capsule (visual primitive only).
- * `accent` is the tile's semanticFeatureAccent (may differ from hub leading accent in multi-color grids).
+ * `accent` = semanticFeatureAccent (see `VIONA_SEMANTIC_COLOR_MAPPING_V1.md`); not necessarily hub leading color.
+ * Feature tiles inside one universe may use different accents (controlled multicolor).
  * Emerald ≠ paid/settled. Gold ≠ commercial/payout. Magenta ≠ dispatch/rescue. Text chips carry meaning.
  */
 import { Ionicons } from '@expo/vector-icons';
