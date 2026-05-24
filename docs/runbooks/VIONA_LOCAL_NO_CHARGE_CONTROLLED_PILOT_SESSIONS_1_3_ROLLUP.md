@@ -1,6 +1,7 @@
 # VIONA Local no-charge — controlled pilot sessions 1–3 rollup
 
 **Pack:** `VIONA.LOCAL.NO_CHARGE.CONTROLLED_PILOT_SESSIONS_1_3_ROLLUP.1`
+**Superseded for current index by:** `docs/runbooks/VIONA_LOCAL_NO_CHARGE_CONTROLLED_PILOT_SESSIONS_1_4_ROLLUP.md` @ `0729e16+`
 **Playbook:** `docs/runbooks/VIONA_LOCAL_NO_CHARGE_CONTROLLED_PILOT_OPS_PLAYBOOK.md`
 **Ops Audit UI plan:** `docs/runbooks/VIONA_LOCAL_NO_CHARGE_OPS_AUDIT_UI_PLAN.md`
 **Handoff:** `docs/handoff/VIONA_LOCAL_NO_CHARGE_PILOT_READINESS_HANDOFF_1.md`
@@ -152,10 +153,10 @@ node scripts/smoke-public-staging-api.mjs https://viona-api-staging-eu.fly.dev
 
 | Priority | Option |
 |----------|--------|
-| 1 | **Session 4** controlled pilot — `VIONA_LOCAL_NO_CHARGE_CONTROLLED_PILOT_SESSION_4.md` (**PREP** @ `7f0653e+`); run pending |
-| 2 | **Native manual attestation** — session 3 §7 on stable device (`com.ketnoiglobal.app`); do not claim PASS until done |
-| 3 | **Ops incident / support refinement** — playbook §7–§8 from real operator issues |
-| 4 | **Pilot readiness review** — `VIONA_LOCAL_NO_CHARGE_PILOT_READINESS_REVIEW_AFTER_SESSIONS_1_3.md` (post sessions 1–3) |
+| 1 | **Sessions 1–4 rollup** — `VIONA_LOCAL_NO_CHARGE_CONTROLLED_PILOT_SESSIONS_1_4_ROLLUP.md` (current aggregate) |
+| 2 | **Session 5+** controlled pilot — same Option A constraints |
+| 3 | **Native manual attestation** — session 4 §8 on stable device; do not claim PASS until done |
+| 4 | **Ops incident / support refinement** — playbook §7–§8 from real operator issues |
 | 5 | **Locked** — payment/wallet/commercial packs only with explicit finance approval |
 
 ---
@@ -171,5 +172,6 @@ node scripts/smoke-public-staging-api.mjs https://viona-api-staging-eu.fly.dev
 | `VIONA_LOCAL_NO_CHARGE_OPS_AUDIT_UI_PLAN.md` | Ops Audit UI scope + packs |
 | `VIONA_LOCAL_NO_CHARGE_PILOT_SIGNOFF.md` | Readiness sign-off |
 | `VIONA_LOCAL_NO_CHARGE_PILOT_READINESS_REVIEW_AFTER_SESSIONS_1_3.md` | Post sessions 1–3 readiness decision |
-| `VIONA_LOCAL_NO_CHARGE_CONTROLLED_PILOT_SESSION_4.md` | Session 4 prep (Option A) |
+| `VIONA_LOCAL_NO_CHARGE_CONTROLLED_PILOT_SESSION_4.md` | Session 4 API re-verify |
+| `VIONA_LOCAL_NO_CHARGE_CONTROLLED_PILOT_SESSIONS_1_4_ROLLUP.md` | Sessions 1–4 aggregate (current) |
 | `VIONA_PROJECT_KERNEL.md` | Kernel money law + pilot pointers |

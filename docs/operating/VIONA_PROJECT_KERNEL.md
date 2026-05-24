@@ -253,7 +253,7 @@ Known Local lifecycle milestones:
 
 ### Kernel pointer (`KERNEL.LOCAL_NO_CHARGE_OPS_AUDIT_UI_PLAN.1`) — `40c2711`
 
-**Controlled pilot sessions 1–3:** rollup `VIONA_LOCAL_NO_CHARGE_CONTROLLED_PILOT_SESSIONS_1_3_ROLLUP.md` @ `2841d3d` — sessions 1–3 **PASS**; native secret-tap **NOT COMPLETED**. **Readiness review:** `VIONA_LOCAL_NO_CHARGE_PILOT_READINESS_REVIEW_AFTER_SESSIONS_1_3.md` @ `7f0653e` — **Session 4+ may proceed** (Option A). **Session 4:** `VIONA_LOCAL_NO_CHARGE_CONTROLLED_PILOT_SESSION_4.md` — **PASS** @ 2026-05-24 (public HTTPS API); native §8 **NOT RUN**; **not** production/commercial. Local: `REQUEST_ONLY_NO_CHARGE`, `walletPhase` **NONE**.
+**Controlled pilot sessions 1–4:** rollup `VIONA_LOCAL_NO_CHARGE_CONTROLLED_PILOT_SESSIONS_1_4_ROLLUP.md` @ `0729e16` — sessions 1–4 **PASS**; **no pause**; native secret-tap **NOT COMPLETED**. **Readiness review (post 1–3):** `VIONA_LOCAL_NO_CHARGE_PILOT_READINESS_REVIEW_AFTER_SESSIONS_1_3.md` — Option A through session 4. **Not** production/commercial. Local: `REQUEST_ONLY_NO_CHARGE`, `walletPhase` **NONE**.
 
 ### Kernel sync (`KERNEL.LOCAL_NO_CHARGE_PILOT_SIGNOFF_SYNC.1`) — `5a714a8`
 
@@ -311,7 +311,7 @@ Not production; not commercial/payment readiness; not native iOS/Android store c
 | **Pilot sign-off** | **READY_FOR_CONTROLLED_NO_CHARGE_PILOT** @ `5a714a8` |
 | **Controlled pilot session 1** | **PASS** (API + UI, no pause) @ `4c26830` |
 
-Handoff: `docs/handoff/VIONA_LOCAL_NO_CHARGE_PILOT_READINESS_HANDOFF_1.md`, `docs/runbooks/VIONA_LOCAL_NO_CHARGE_PILOT_SIGNOFF.md`, `docs/runbooks/VIONA_LOCAL_NO_CHARGE_CONTROLLED_PILOT_SESSIONS_1_3_ROLLUP.md`.
+Handoff: `docs/handoff/VIONA_LOCAL_NO_CHARGE_PILOT_READINESS_HANDOFF_1.md`, `docs/runbooks/VIONA_LOCAL_NO_CHARGE_PILOT_SIGNOFF.md`, `docs/runbooks/VIONA_LOCAL_NO_CHARGE_CONTROLLED_PILOT_SESSIONS_1_4_ROLLUP.md`.
 
 Aborted R6 background “Create staging request” task is **not** evidence.
 

@@ -393,7 +393,7 @@ When implemented, session 2 **optional** ops audit steps:
 | **Public HTTPS ops API** | **PASS** @ session 2 §9 (carried forward) |
 | **Session 3 prep doc** | `VIONA_LOCAL_NO_CHARGE_CONTROLLED_PILOT_SESSION_3.md` |
 | **Session 3 run** | **PASS** @ 2026-05-24 — public HTTPS smoke; native §7 **NOT RUN** |
-| **Sessions 1–3 rollup** | `VIONA_LOCAL_NO_CHARGE_CONTROLLED_PILOT_SESSIONS_1_3_ROLLUP.md` |
+| **Sessions 1–4 rollup** | `VIONA_LOCAL_NO_CHARGE_CONTROLLED_PILOT_SESSIONS_1_4_ROLLUP.md` |
 | **Readiness review** | `VIONA_LOCAL_NO_CHARGE_PILOT_READINESS_REVIEW_AFTER_SESSIONS_1_3.md` — Session 4+ may proceed (API/web scope) |
 | **Session 4 prep + run** | `VIONA_LOCAL_NO_CHARGE_CONTROLLED_PILOT_SESSION_4.md` — **PASS** @ 2026-05-24 (API); native §8 **NOT RUN** |
 | **Next** | Session 5+ or optional native §8 on stable device — **do not claim native PASS** until checklist complete |

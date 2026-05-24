@@ -38,11 +38,27 @@
 
 ---
 
-## Controlled pilot sessions 1–3 rollup (`SESSIONS_1_3_ROLLUP.1`)
+## Controlled pilot sessions 1–4 rollup (`SESSIONS_1_4_ROLLUP.1`)
 
 | Item | Value |
 |------|--------|
-| **HEAD** | `1d449ac` |
+| **HEAD** | `0729e16` |
+| **Rollup doc** | `docs/runbooks/VIONA_LOCAL_NO_CHARGE_CONTROLLED_PILOT_SESSIONS_1_4_ROLLUP.md` |
+| **Session 1** | API + UI **PASS** |
+| **Session 2** | User/merchant/ops API + Expo ops UI **PASS** |
+| **Session 3** | Public HTTPS API/ops **PASS** |
+| **Session 4** | Public HTTPS API/ops **PASS** |
+| **Native secret-tap** | **NOT RUN / NOT COMPLETED** |
+| **Pause** | **No** (sessions 1–4) |
+| **Classification** | Strong repeated PASS evidence (sessions 1–4); whole VIONA pre-commercial |
+
+---
+
+## Controlled pilot sessions 1–3 rollup (`SESSIONS_1_3_ROLLUP.1`) — snapshot
+
+| Item | Value |
+|------|--------|
+| **HEAD** | `2841d3d` |
 | **Rollup doc** | `docs/runbooks/VIONA_LOCAL_NO_CHARGE_CONTROLLED_PILOT_SESSIONS_1_3_ROLLUP.md` |
 | **Session 1** | API + UI **PASS** |
 | **Session 2** | User/merchant/ops API + Expo ops UI **PASS** |
