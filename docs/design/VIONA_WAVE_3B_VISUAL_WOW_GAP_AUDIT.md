@@ -50,7 +50,7 @@ Ratings vs **Premium App Tiles — Universe Standard**.
 | Surface | Quality | Gap vs reference | Required improvement | Risk | Recommended pack |
 |---------|---------|------------------|----------------------|------|------------------|
 | **Home** | **YELLOW** | Large image world cards + briefing rail; not compact 2-col tile grid; mixed daylight/glass paths | Defer broad rewrite; later **shell alignment** only (pack G) | **HIGH** scope creep | `WAVE_3B.HOME_SHELL_ALIGNMENT.1` (after hubs) |
-| **Local hub** | **YELLOW** | Best hub; glow/blur **muted** vs reference; feed/posts still row-like | Token intensity + shared tile adapter on `LocalAppTile` | MEDIUM | `WAVE_3B.LOCAL_VISUAL_WOW.1` |
+| **Local hub** | **YELLOW→GREEN (partial)** | Fix pack landed compact grids + emerald glow; classifieds still row-like | Manual screenshot pass at 4 viewports | LOW | `WAVE_3B.LOCAL_VISUAL_WOW_FIX.1` done |
 | **Local My Requests** | **YELLOW** | `theme.colors.background`; cards OK grammar, **weak glass field** | Dark canvas + constellation frame on list/cards | LOW | `WAVE_3B.LOCAL_STATUS_VISUAL.1` |
 | **Local merchant inbox** | **YELLOW** | Same legacy background as user status | Match Local hub canvas + tile frames | LOW | `WAVE_3B.MERCHANT_INBOX_VISUAL.1` |
 | **Travel** | **YELLOW** | Strong `TravelGlassCard`; 4-col @ 1024+ tight; glow busy on web | Tune glow multipliers; verify 3-col @ 768 | LOW | `WAVE_3B.TRAVEL_VISUAL_WOW.1` |
@@ -188,7 +188,8 @@ Visual wow packs must **not** introduce commercial/payment copy or behavior.
 |------|--------|
 | **`VIONA.WAVE_3B.PREMIUM_TILE_VISUAL_TOKENS.1`** | **COMPLETE** — `src/design/premiumTileVisualTokens.ts` exported via `src/design/index.ts`. Foundation tokens only; **no surfaces refactored**. UI does **not** yet match the north-star image. |
 | **`VIONA.WAVE_3B.PREMIUM_APP_TILE_COMPONENT.1`** | **COMPLETE** — `PremiumAppTile`, `PremiumIconCapsule`, `PremiumStatusChip`, `PremiumTileGrid` exported from `src/components/viona/index.ts`. **No hub screens refactored yet.** |
-| **`VIONA.WAVE_3B.LOCAL_VISUAL_WOW.1`** | **COMPLETE** — `LocalScreen` hub tiles → `PremiumAppTile` + `PremiumTileGrid`; `LocalCommerceClarityBlock` safety chips use Wave 3B glass tokens. Classified listings unchanged. Screenshots **NOT RUN**. |
+| **`VIONA.WAVE_3B.LOCAL_VISUAL_WOW.1`** | **COMPLETE** — first hub tile migration (see fix pack below). |
+| **`VIONA.WAVE_3B.LOCAL_VISUAL_WOW_FIX.1`** | **COMPLETE** — compressed hero; clarity block → compact premium tile grids; merged service grid; connected universes → semantic `PremiumAppTile` grid; stronger emerald glass tokens; extra bottom scroll clearance. Screenshots **NOT RUN**. |
 | **`WIONA.WAVE_3B.TRAVEL_VISUAL_WOW.1`** | **COMPLETE** — `TravelScreen` scenario + quick-help tiles → `PremiumAppTile` + `PremiumTileGrid`; pilot pills use cyan Wave 3B tokens. `TravelAppTile` retained for other imports only if unused in hub. Screenshots **NOT RUN**. |
 | **`WIONA.WAVE_3B.ACADEMY_VISUAL_WOW.1`** | **COMPLETE** — `AcademyScreen` module grid → `PremiumAppTile` + `PremiumTileGrid`; violet pilot pills use Wave 3B tokens. Hero/safety panels unchanged. Screenshots **NOT RUN**. |
 | **`WIONA.WAVE_3B.ACCOUNT_SOS_VISUAL_WOW.1`** | **Next** |

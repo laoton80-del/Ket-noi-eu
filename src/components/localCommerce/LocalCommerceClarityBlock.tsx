@@ -1,27 +1,15 @@
-import { Ionicons } from '@expo/vector-icons';
-import { useMemo, useState, type ReactElement, type ReactNode } from 'react';
-import { Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useMemo, type ReactElement } from 'react';
+import { ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 
 import { LocalConstellationFrame } from '../local/LocalConstellationFrame';
-import {
-  localAccentInk,
-  localAccentInkHover,
-  localConstellation,
-  localWebCompactGlassChipStyle,
-  type LocalConstellationAccent,
-} from '../local/localConstellationTokens';
+import { localConstellation } from '../local/localConstellationTokens';
 import { useSmartTrio } from '../../context/SmartTrioContext';
 import type { LocalBookingStatus } from '../../core/localCommerce';
 import { getAllLocalCommerceCapabilities } from '../../core/localCommerce';
-import { PremiumStatusChip } from '../viona/PremiumStatusChip';
-import {
-  premiumGlassSurface,
-  premiumTileGlass,
-  premiumUniverseAccentSpec,
-  premiumUniverseStroke,
-} from '../../design/premiumTileVisualTokens';
+import { premiumTileLayout } from '../../design/premiumTileVisualTokens';
 import { useTranslation } from '../../i18n';
 import { FontFamily } from '../../theme/typography';
+import { PremiumAppTile, PremiumStatusChip, PremiumTileGrid } from '../viona';
 
 const INK = localConstellation.inkStrong;
 const INK_MUTED = localConstellation.inkMuted;
@@ -53,73 +41,10 @@ function safetyKey(suffix: (typeof SAFETY_PILLS)[number]['key'] | (typeof STATUS
   return `localCommerce.safety.${suffix}`;
 }
 
-function ClarityGlassChip({
-  children,
-  accent = 'emerald',
-}: Readonly<{ children: ReactNode; accent?: LocalConstellationAccent }>) {
-  const [hovered, setHovered] = useState(false);
-  return (
-    <Pressable
-      disabled
-      onHoverIn={Platform.OS === 'web' ? () => setHovered(true) : undefined}
-      onHoverOut={Platform.OS === 'web' ? () => setHovered(false) : undefined}
-      style={[
-        styles.glassChip,
-        Platform.OS === 'web'
-          ? localWebCompactGlassChipStyle(accent, hovered)
-          : { borderColor: localConstellation.border, borderWidth: 1 },
-      ]}
-    >
-      {children}
-    </Pressable>
-  );
-}
-
-function SafetyTrustPill({
-  icon,
-  label,
-}: Readonly<{
-  icon: keyof typeof Ionicons.glyphMap;
-  label: string;
-}>) {
-  const [hovered, setHovered] = useState(false);
-  return (
-    <Pressable
-      disabled
-      onHoverIn={Platform.OS === 'web' ? () => setHovered(true) : undefined}
-      onHoverOut={Platform.OS === 'web' ? () => setHovered(false) : undefined}
-      style={[
-        styles.trustPill,
-        Platform.OS === 'web' ? localWebCompactGlassChipStyle('emerald', hovered) : { borderColor: 'rgba(72, 210, 165, 0.28)', borderWidth: 1 },
-      ]}
-      accessibilityRole="text"
-      accessibilityLabel={label}
-    >
-      <Ionicons name={icon} size={14} color={EMERALD} accessibilityIgnoresInvertColors />
-      <Text style={styles.trustPillText} numberOfLines={2}>
-        {label}
-      </Text>
-    </Pressable>
-  );
-}
-
-function StatusLegendItem({
-  icon,
-  label,
-}: Readonly<{
-  icon: keyof typeof Ionicons.glyphMap;
-  label: string;
-}>) {
-  return (
-    <View style={styles.legendItem} accessibilityRole="text" accessible accessibilityLabel={label}>
-      <View style={styles.legendIconWrap}>
-        <Ionicons name={icon} size={15} color={EMERALD} accessibilityIgnoresInvertColors />
-      </View>
-      <Text style={styles.legendText} numberOfLines={2}>
-        {label}
-      </Text>
-    </View>
-  );
+function resolveClarityGridColumns(width: number): number {
+  if (width >= 1024) return 4;
+  if (width >= 768) return 3;
+  return 2;
 }
 
 export function LocalCommerceClarityBlock({
@@ -127,8 +52,10 @@ export function LocalCommerceClarityBlock({
   onRequestBookingAssist,
 }: LocalCommerceClarityBlockProps): ReactElement {
   const { t } = useTranslation();
+  const { width } = useWindowDimensions();
   const caps = useMemo(() => getAllLocalCommerceCapabilities(), []);
   const { customerLocale, merchantLocale, nativeLocale } = useSmartTrio();
+  const gridColumns = resolveClarityGridColumns(width);
 
   const trioLine = useMemo(
     () =>
@@ -148,188 +75,121 @@ export function LocalCommerceClarityBlock({
     'comingSoon',
     'gated',
   ];
-  const audienceItems = [
-    {
-      title: t('localCommerce.vietnameseAbroadTitle'),
-      subtitle: t('localCommerce.vietnameseAbroadSubtitle'),
-    },
-    {
-      title: t('localCommerce.nativeCustomerTitle'),
-      subtitle: t('localCommerce.nativeCustomerSubtitle'),
-    },
-    {
-      title: t('localCommerce.vietnameseMerchantTitle'),
-      subtitle: t('localCommerce.vietnameseMerchantSubtitle'),
-    },
-  ];
 
   return (
-    <LocalConstellationFrame accent="emerald" tier="hero" radius={16} style={styles.card} contentStyle={styles.cardInner}>
+    <LocalConstellationFrame accent="emerald" tier="service" radius={14} style={styles.card} contentStyle={styles.cardInner}>
       <Text style={styles.title}>{t('localCommerce.title')}</Text>
-      <Text style={styles.subtitle}>{t('localCommerce.subtitle')}</Text>
+      <Text style={styles.subtitle} numberOfLines={2}>
+        {t('localCommerce.compactSubtitle')}
+      </Text>
 
-      <View style={styles.trustHeader}>
-        <Ionicons name="shield-checkmark-outline" size={18} color={EMERALD} accessibilityIgnoresInvertColors />
-        <View style={styles.trustHeaderText}>
-          <Text style={styles.trustTitle}>{t('localCommerce.safety.trustTitle')}</Text>
-          <Text style={styles.trustSubtitle} numberOfLines={2}>
-            {t('localCommerce.safety.trustSubtitle')}
-          </Text>
-        </View>
-      </View>
-
-      <View style={styles.trustPillRow}>
+      <View style={styles.chipRow}>
         {SAFETY_PILLS.map((pill) => (
-          <SafetyTrustPill key={pill.key} icon={pill.icon} label={t(safetyKey(pill.key))} />
+          <PremiumStatusChip key={pill.key} accent="emerald" label={t(safetyKey(pill.key))} />
         ))}
       </View>
 
-      <View style={styles.audienceGrid}>
-        {audienceItems.map((item) => (
-          <ClarityGlassChip key={item.title} accent="emerald">
-            <Text style={styles.audienceTitle}>{item.title}</Text>
-            <Text style={styles.audienceSub} numberOfLines={2}>
-              {item.subtitle}
-            </Text>
-          </ClarityGlassChip>
-        ))}
-      </View>
-
-      <Text style={styles.trioHint}>{trioLine}</Text>
+      <PremiumTileGrid columns={2} wrapCells gap={premiumTileLayout.gridGapTight} style={styles.tileSection}>
+        <PremiumAppTile
+          variant="local"
+          accent="emerald"
+          width="100%"
+          icon="apps-outline"
+          statusLabel={t('localCommerce.bookingStatus.lite')}
+          title={t('localCommerce.cta.browseServices')}
+          subtitle={t('localCommerce.compactBrowseSub')}
+          onPress={onBrowseServices}
+          accessibilityLabel={t('localCommerce.cta.browseServices')}
+        />
+        <PremiumAppTile
+          variant="local"
+          accent="cyan"
+          width="100%"
+          icon="chatbubble-ellipses-outline"
+          statusLabel={t('localCommerce.bookingStatus.requestOnly')}
+          title={t('localCommerce.cta.requestBooking')}
+          subtitle={t('localCommerce.compactAssistSub')}
+          onPress={onRequestBookingAssist}
+          accessibilityLabel={t('localCommerce.cta.requestBooking')}
+        />
+      </PremiumTileGrid>
 
       <Text style={styles.sectionKicker}>{t('localCommerce.safety.legendTitle')}</Text>
-      <View style={styles.legendGrid}>
+      <PremiumTileGrid columns={gridColumns} wrapCells gap={premiumTileLayout.gridGapTight} style={styles.tileSection}>
         {STATUS_LEGEND.map((item) => (
-          <StatusLegendItem key={item.key} icon={item.icon} label={t(safetyKey(item.key))} />
+          <PremiumAppTile
+            key={item.key}
+            variant="local"
+            accent="emerald"
+            width="100%"
+            icon={item.icon}
+            title={t(safetyKey(item.key))}
+            statusLabel={t('localCommerce.bookingStatus.requestOnly')}
+            accessibilityLabel={t(safetyKey(item.key))}
+          />
         ))}
-      </View>
+      </PremiumTileGrid>
 
       <Text style={styles.sectionKicker}>{t('localCommerce.safety.modeChipsTitle')}</Text>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.statusScroll}>
-        <View style={styles.statusRow}>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.modeScroll}>
+        <View style={styles.modeRow}>
           {statusOrder.map((s) => (
             <PremiumStatusChip key={s} accent="emerald" label={t(bookingStatusKey(s))} />
           ))}
         </View>
       </ScrollView>
 
-      <Text style={styles.safety}>{t('localCommerce.safety.bookingRequestNote')}</Text>
+      <Text style={styles.safetyNote} numberOfLines={2}>
+        {t('localCommerce.safety.bookingRequestNote')}
+      </Text>
 
-      <View style={styles.capList}>
+      <Text style={styles.trioHint} numberOfLines={1}>
+        {trioLine}
+      </Text>
+
+      <Text style={styles.sectionKicker}>{t('localCommerce.compactCapabilitiesKicker')}</Text>
+      <PremiumTileGrid columns={gridColumns} wrapCells gap={premiumTileLayout.gridGapTight} style={styles.tileSectionLast}>
         {caps.map((c) => (
-          <View key={c.id} style={styles.capRow}>
-            <View style={styles.capTextCol}>
-              <Text style={styles.capTitle}>{t(c.titleKey)}</Text>
-              <View style={styles.capPillWrap}>
-                <PremiumStatusChip accent="emerald" label={t(bookingStatusKey(c.status))} />
-              </View>
-              <Text style={styles.capDesc} numberOfLines={1}>
-                {t(c.descriptionKey)}
-              </Text>
-            </View>
-          </View>
+          <PremiumAppTile
+            key={c.id}
+            variant="local"
+            accent="emerald"
+            width="100%"
+            icon="ellipse-outline"
+            statusLabel={t(bookingStatusKey(c.status))}
+            title={t(c.titleKey)}
+            subtitle={t(c.descriptionKey)}
+            accessibilityLabel={`${t(c.titleKey)}. ${t(c.descriptionKey)}. ${t(bookingStatusKey(c.status))}`}
+          />
         ))}
-      </View>
-
-      <View style={styles.ctaRow}>
-        <ClarityCtaChip icon="apps-outline" label={t('localCommerce.cta.browseServices')} onPress={onBrowseServices} accent="emerald" />
-        <ClarityCtaChip
-          icon="chatbubble-ellipses-outline"
-          label={t('localCommerce.cta.requestBooking')}
-          onPress={onRequestBookingAssist}
-          accent="cyan"
-        />
-      </View>
+      </PremiumTileGrid>
     </LocalConstellationFrame>
   );
 }
 
-function ClarityCtaChip({
-  icon,
-  label,
-  onPress,
-  accent,
-}: Readonly<{
-  icon: keyof typeof Ionicons.glyphMap;
-  label: string;
-  onPress: () => void;
-  accent: LocalConstellationAccent;
-}>) {
-  const [hovered, setHovered] = useState(false);
-  const ink = hovered ? localAccentInkHover(accent) : localAccentInk(accent);
-  return (
-    <Pressable
-      onPress={onPress}
-      onHoverIn={Platform.OS === 'web' ? () => setHovered(true) : undefined}
-      onHoverOut={Platform.OS === 'web' ? () => setHovered(false) : undefined}
-      style={({ pressed }) => [
-        styles.ctaChip,
-        Platform.OS === 'web' ? localWebCompactGlassChipStyle(accent, hovered) : { borderColor: localConstellation.border, borderWidth: 1 },
-        pressed && { opacity: 0.88 },
-      ]}
-    >
-      <Ionicons name={icon} size={16} color={ink} />
-      <Text style={[styles.ctaText, { color: INK }]}>{label}</Text>
-    </Pressable>
-  );
-}
-
 const styles = StyleSheet.create({
-  card: { marginBottom: 12 },
+  card: { marginBottom: 10 },
   cardInner: {
-    paddingHorizontal: 14,
-    paddingVertical: 14,
+    paddingHorizontal: 12,
+    paddingVertical: 12,
     gap: 0,
   },
-  title: { fontSize: 17, fontFamily: FontFamily.extrabold, color: INK },
-  subtitle: { marginTop: 5, fontSize: 12, fontFamily: FontFamily.semibold, color: INK_MUTED, lineHeight: 17 },
-  trustHeader: {
-    marginTop: 10,
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: 10,
+  title: { fontSize: 15, fontFamily: FontFamily.extrabold, color: INK, letterSpacing: -0.15 },
+  subtitle: {
+    marginTop: 4,
+    fontSize: 11,
+    fontFamily: FontFamily.semibold,
+    color: INK_MUTED,
+    lineHeight: 15,
   },
-  trustHeaderText: { flex: 1, minWidth: 0, gap: 2 },
-  trustTitle: { fontSize: 12, fontFamily: FontFamily.extrabold, color: EMERALD, letterSpacing: 0.2 },
-  trustSubtitle: { fontSize: 11, fontFamily: FontFamily.semibold, color: INK_MUTED, lineHeight: 15 },
-  trustPillRow: {
+  chipRow: {
     marginTop: 8,
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 6,
   },
-  trustPill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    maxWidth: '100%',
-    flexGrow: 1,
-    flexBasis: 120,
-    borderRadius: 12,
-    paddingHorizontal: 9,
-    paddingVertical: 8,
-    backgroundColor: 'rgba(10, 14, 22, 0.48)',
-  },
-  trustPillText: {
-    flex: 1,
-    fontSize: 10,
-    fontFamily: FontFamily.extrabold,
-    color: INK,
-    lineHeight: 13,
-    letterSpacing: 0.1,
-  },
-  audienceGrid: { marginTop: 10, gap: 8 },
-  glassChip: {
-    borderRadius: 12,
-    paddingHorizontal: 10,
-    paddingVertical: 9,
-    backgroundColor: premiumGlassSurface(),
-    borderWidth: premiumTileGlass.edgeWidth,
-    borderColor: premiumUniverseStroke('emerald'),
-  },
-  audienceTitle: { fontSize: 12, fontFamily: FontFamily.extrabold, color: EMERALD },
-  audienceSub: { marginTop: 2, fontSize: 10, fontFamily: FontFamily.semibold, color: INK_MUTED, lineHeight: 14 },
-  trioHint: { marginTop: 9, fontSize: 11, fontFamily: FontFamily.semibold, color: INK_MUTED, lineHeight: 15 },
+  tileSection: { marginTop: 10, marginBottom: 4 },
+  tileSectionLast: { marginTop: 8, marginBottom: 0 },
   sectionKicker: {
     marginTop: 10,
     fontSize: 9,
@@ -338,62 +198,20 @@ const styles = StyleSheet.create({
     letterSpacing: 0.55,
     textTransform: 'uppercase',
   },
-  legendGrid: {
-    marginTop: 6,
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 6,
-  },
-  legendItem: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: 7,
-    flexBasis: '47%',
-    flexGrow: 1,
-    minWidth: 148,
-    paddingHorizontal: 8,
-    paddingVertical: 7,
-    borderRadius: 10,
-    backgroundColor: premiumGlassSurface(),
-    borderWidth: premiumTileGlass.edgeWidth,
-    borderColor: premiumUniverseStroke('emerald'),
-  },
-  legendIconWrap: {
-    width: 22,
-    height: 22,
-    borderRadius: 8,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: premiumUniverseAccentSpec('emerald').iconCapsuleFill,
-  },
-  legendText: {
-    flex: 1,
+  modeScroll: { marginTop: 6, maxHeight: 36 },
+  modeRow: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingRight: 8 },
+  safetyNote: {
+    marginTop: 8,
     fontSize: 10,
     fontFamily: FontFamily.semibold,
-    color: INK,
+    color: INK_MUTED,
     lineHeight: 14,
   },
-  statusScroll: { marginTop: 6, maxHeight: 34 },
-  statusRow: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingRight: 8 },
-  safety: { marginTop: 8, fontSize: 11, fontFamily: FontFamily.semibold, color: INK_MUTED, lineHeight: 15 },
-  capPillWrap: { marginTop: 4, alignSelf: 'flex-start' },
-  capList: { marginTop: 8, gap: 6 },
-  capRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 10 },
-  capTextCol: { flex: 1, minWidth: 0 },
-  capTitle: { fontSize: 12, fontFamily: FontFamily.extrabold, color: INK },
-  capDesc: { fontSize: 10, fontFamily: FontFamily.semibold, color: INK_MUTED, marginTop: 2, lineHeight: 14 },
-  ctaRow: { marginTop: 10, flexDirection: 'row', flexWrap: 'wrap', gap: 7 },
-  ctaChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    paddingVertical: 8,
-    paddingHorizontal: 10,
-    borderRadius: 12,
-    backgroundColor: premiumGlassSurface(),
-    borderWidth: premiumTileGlass.edgeWidth,
-    borderColor: premiumUniverseStroke('emerald'),
-    minHeight: 44,
+  trioHint: {
+    marginTop: 6,
+    fontSize: 10,
+    fontFamily: FontFamily.semibold,
+    color: INK_MUTED,
+    lineHeight: 14,
   },
-  ctaText: { fontSize: 11, fontFamily: FontFamily.extrabold, maxWidth: 140 },
 });

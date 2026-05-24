@@ -46,6 +46,7 @@ import { VIONA_TABLET_MIN_WIDTH } from '../../components/viona/VionaMiniAppShell
 import { vionaTokens } from '../../design';
 import {
   premiumTileGlass,
+  premiumTileLayout,
   premiumUniverseAccentSpec,
   premiumUniverseStroke,
 } from '../../design/premiumTileVisualTokens';
@@ -67,7 +68,6 @@ import {
   resolveLocalContentRail,
   resolveLocalGridColumns,
   resolveLocalGridItemWidth,
-  localWebRailPillGlassStyle,
   type LocalConstellationAccent,
 } from '../../components/local/localConstellationTokens';
 import { theme } from '../../theme/theme';
@@ -138,40 +138,6 @@ function LocalShellUtilityBtn({
       <Text style={styles.shellUtilLabel} numberOfLines={1}>
         {label}
       </Text>
-    </Pressable>
-  );
-}
-
-function LocalConnectedUniverseLink({
-  icon,
-  label,
-  onPress,
-  a11yLabel,
-}: Readonly<{
-  icon: keyof typeof Ionicons.glyphMap;
-  label: string;
-  onPress: () => void;
-  a11yLabel: string;
-}>) {
-  const [hovered, setHovered] = useState(false);
-  return (
-    <Pressable
-      accessibilityRole="button"
-      accessibilityLabel={a11yLabel}
-      onPress={onPress}
-      onHoverIn={Platform.OS === 'web' ? () => setHovered(true) : undefined}
-      onHoverOut={Platform.OS === 'web' ? () => setHovered(false) : undefined}
-      style={({ pressed }) => [
-        styles.connectedLink,
-        Platform.OS === 'web' ? localWebRailPillGlassStyle('cyan', hovered) : { borderColor: BORDER, borderWidth: 1 },
-        pressed && { opacity: 0.88 },
-      ]}
-    >
-      <Ionicons name={icon} size={15} color={CYAN} />
-      <Text style={styles.connectedLinkText} numberOfLines={1}>
-        {label}
-      </Text>
-      <Ionicons name="chevron-forward" size={14} color={INK_MUTED} />
     </Pressable>
   );
 }
@@ -786,7 +752,7 @@ export function LocalScreen() {
     localConstellation.miniappDockHeight +
     localConstellation.tabBarClearanceBottom +
     Math.max(insets.bottom, 12) +
-    20;
+    48;
 
   const tabletFullWidth = Platform.OS === 'web' && width >= VIONA_TABLET_MIN_WIDTH;
   const tabletBreakoutStyle = useMemo((): StyleProp<ViewStyle> | null => {
@@ -950,14 +916,14 @@ export function LocalScreen() {
 
         <LocalConstellationFrame
           accent="emerald"
-          tier="hero"
-          radius={18}
+          tier="service"
+          radius={14}
           style={styles.heroIntroCard}
           contentStyle={styles.heroIntroInner}
         >
           <Text style={styles.hubKicker}>{t('localHub.universeKicker')}</Text>
           <Text style={styles.heroHeadline}>{t('localHub.heroHeadline')}</Text>
-          <Text style={styles.hubSub} numberOfLines={3}>
+          <Text style={styles.hubSub} numberOfLines={2}>
             {t('localHub.heroSub')}
           </Text>
           <View style={styles.heroChipRow}>
@@ -983,7 +949,13 @@ export function LocalScreen() {
 
         <Text style={styles.safetyBridge}>{t('localCommerce.safety.myRequestsBridge')}</Text>
 
-        <PremiumTileGrid columns={gridColumns} wrapCells style={styles.cardGrid}>
+        <Text style={styles.bentoSectionTitle}>{t('localHub.universeGridKicker')}</Text>
+        <PremiumTileGrid
+          columns={gridColumns}
+          wrapCells
+          gap={premiumTileLayout.gridGapTight}
+          style={styles.cardGrid}
+        >
           <PremiumAppTile
             variant="local"
             accent="cyan"
@@ -996,10 +968,6 @@ export function LocalScreen() {
             accessibilityLabel={t('local.userRequestStatus.localTileA11y')}
             testID="local-tile-my-requests"
           />
-        </PremiumTileGrid>
-
-        <Text style={styles.bentoSectionTitle}>{t('localHub.serviceCategoriesKicker')}</Text>
-        <PremiumTileGrid columns={gridColumns} wrapCells style={styles.cardGrid}>
           <PremiumAppTile
             variant="local"
             accent="emerald"
@@ -1024,10 +992,6 @@ export function LocalScreen() {
             accessibilityLabel={t('localHub.restaurantTitle')}
             testID="local-tile-restaurant"
           />
-        </PremiumTileGrid>
-
-        <Text style={styles.bentoSectionTitle}>{t('localHub.localServicesKicker')}</Text>
-        <PremiumTileGrid columns={gridColumns} wrapCells style={styles.cardGrid}>
           <PremiumAppTile
             variant="local"
             accent="emerald"
@@ -1132,30 +1096,53 @@ export function LocalScreen() {
         </View>
 
         <Text style={styles.bentoSectionTitle}>{t('localHub.connectedUniversesKicker')}</Text>
-        <View style={styles.connectedStrip}>
+        <PremiumTileGrid
+          columns={Math.min(gridColumns, 3)}
+          wrapCells
+          gap={premiumTileLayout.gridGapTight}
+          style={styles.cardGrid}
+        >
           {featureFlags.travelLiteEnabled ? (
-            <LocalConnectedUniverseLink
+            <PremiumAppTile
+              variant="travel"
+              accent="cyan"
+              width="100%"
               icon="airplane-outline"
-              label={t('localHub.connectedTravel')}
+              statusLabel={t('localCommerce.bookingStatus.lite')}
+              title={t('localHub.connectedTravel')}
+              subtitle={t('localHub.connectedTravelSub')}
               onPress={openTravelUniverse}
-              a11yLabel={t('localHub.connectedTravel')}
+              accessibilityLabel={t('localHub.connectedTravel')}
+              testID="local-tile-connected-travel"
             />
           ) : null}
-          <LocalConnectedUniverseLink
+          <PremiumAppTile
+            variant="business"
+            accent="gold"
+            width="100%"
             icon="briefcase-outline"
-            label={t('localHub.connectedBusiness')}
+            statusLabel={t('localCommerce.bookingStatus.pilot')}
+            title={t('localHub.connectedBusiness')}
+            subtitle={t('localHub.connectedBusinessSub')}
             onPress={openBusinessUniverse}
-            a11yLabel={t('localHub.connectedBusiness')}
+            accessibilityLabel={t('localHub.connectedBusiness')}
+            testID="local-tile-connected-business"
           />
           {featureFlags.academyLiteEnabled ? (
-            <LocalConnectedUniverseLink
+            <PremiumAppTile
+              variant="academy"
+              accent="violet"
+              width="100%"
               icon="school-outline"
-              label={t('localHub.connectedAcademy')}
+              statusLabel={t('localCommerce.bookingStatus.lite')}
+              title={t('localHub.connectedAcademy')}
+              subtitle={t('localHub.connectedAcademySub')}
               onPress={openAcademyUniverse}
-              a11yLabel={t('localHub.connectedAcademy')}
+              accessibilityLabel={t('localHub.connectedAcademy')}
+              testID="local-tile-connected-academy"
             />
           ) : null}
-        </View>
+        </PremiumTileGrid>
         </View>
       </ScrollView>
 
@@ -1384,25 +1371,6 @@ const styles = StyleSheet.create({
   miniappDockBtnTextActive: {
     color: EMERALD,
   },
-  connectedStrip: {
-    gap: 8,
-    marginBottom: theme.spacing.lg,
-  },
-  connectedLink: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    borderRadius: theme.radius.md,
-    backgroundColor: 'rgba(10, 14, 22, 0.42)',
-  },
-  connectedLinkText: {
-    flex: 1,
-    fontSize: 12,
-    fontFamily: FontFamily.semibold,
-    color: INK,
-  },
   commandRailDivider: {
     width: 1,
     alignSelf: 'stretch',
@@ -1462,8 +1430,8 @@ const styles = StyleSheet.create({
   },
   heroIntroInner: {
     paddingHorizontal: theme.spacing.md,
-    paddingVertical: 14,
-    gap: 6,
+    paddingVertical: 10,
+    gap: 4,
   },
   hubKicker: {
     fontSize: 10,
@@ -1473,23 +1441,23 @@ const styles = StyleSheet.create({
     color: EMERALD,
   },
   heroHeadline: {
-    fontSize: 20,
-    lineHeight: 24,
+    fontSize: 17,
+    lineHeight: 21,
     fontFamily: FontFamily.extrabold,
     color: INK_STRONG,
-    letterSpacing: -0.2,
+    letterSpacing: -0.15,
   },
   hubSub: {
-    fontSize: 12,
-    lineHeight: 17,
+    fontSize: 11,
+    lineHeight: 15,
     fontFamily: FontFamily.medium,
     color: INK_MUTED,
   },
   heroChipRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 6,
-    marginTop: 8,
+    gap: 5,
+    marginTop: 6,
   },
   heroChip: {
     flexDirection: 'row',
