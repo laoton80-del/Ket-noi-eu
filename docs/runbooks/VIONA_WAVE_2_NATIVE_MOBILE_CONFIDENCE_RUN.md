@@ -118,6 +118,7 @@
 | Doc | Role |
 |-----|------|
 | `VIONA_WAVE_2_NATIVE_MOBILE_CONFIDENCE_PREP.md` | Checklist + PASS rules |
+| `VIONA_WAVE_3_CONSUMER_UX_EXCELLENCE_PREP.md` | Wave 3 UX prep (parallel track) |
 | `VIONA_LOCAL_NO_CHARGE_CONTROLLED_PILOT_SESSION_2.md` | Prior native build PASS; UI **NOT COMPLETED** |
 | `VIONA_LOCAL_NO_CHARGE_CONTROLLED_PILOT_SESSIONS_1_5_ROLLUP.md` | API/web aggregate |
 | `VIONA_LOCAL_NO_CHARGE_OPS_AUDIT_UI_PLAN.md` | Expo web PASS; native UI open |

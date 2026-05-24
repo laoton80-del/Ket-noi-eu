@@ -122,6 +122,8 @@ Wave 3 **may start** when:
 
 **May run in parallel with Wave 2** if native hardware is blocked — Wave 3 does not require native PASS.
 
+**Wave 3 prep:** `docs/design/VIONA_WAVE_3_CONSUMER_UX_EXCELLENCE_PREP.md` — surface audit next (`VIONA.WAVE_3.CONSUMER_UX_SURFACE_AUDIT.1`).
+
 ---
 
 ## 7. Locked zones (remain locked after Wave 1 exit)
@@ -203,4 +205,5 @@ Full playbook: `VIONA_LOCAL_NO_CHARGE_CONTROLLED_PILOT_OPS_PLAYBOOK.md` §5.
 | `VIONA_LOCAL_NO_CHARGE_OPS_AUDIT_UI_PLAN.md` | Ops Audit UI scope |
 | `VIONA_LOCAL_NO_CHARGE_PILOT_SIGNOFF.md` | Initial public HTTPS sign-off |
 | `VIONA_WAVE_2_NATIVE_MOBILE_CONFIDENCE_PREP.md` | Wave 2 native prep |
+| `VIONA_WAVE_3_CONSUMER_UX_EXCELLENCE_PREP.md` | Wave 3 consumer UX prep |
 | `VIONA_PROJECT_KERNEL.md` | Kernel money law |

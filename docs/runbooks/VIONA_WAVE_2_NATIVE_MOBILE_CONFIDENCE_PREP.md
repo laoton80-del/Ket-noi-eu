@@ -221,4 +221,5 @@ Wave 3 **consumer UX excellence** may start **after this prep** is published. Wa
 | `VIONA_LOCAL_NO_CHARGE_OPS_AUDIT_UI_PLAN.md` | Ops Audit UI scope + safety chips |
 | `VIONA_GLOBAL_ACTIVE_FULL_COMMERCIAL_MASTER_WAVE_ROADMAP.md` | Wave 2 map |
 | `VIONA_WAVE_2_NATIVE_MOBILE_CONFIDENCE_RUN.md` | Wave 2 attestation run (**NOT RUN**) |
+| `VIONA_WAVE_3_CONSUMER_UX_EXCELLENCE_PREP.md` | Wave 3 consumer UX prep |
 | `VIONA_PROJECT_KERNEL.md` | Kernel pointers |
