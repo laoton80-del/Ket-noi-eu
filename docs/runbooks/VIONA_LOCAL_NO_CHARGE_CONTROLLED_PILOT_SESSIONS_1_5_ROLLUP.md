@@ -166,12 +166,13 @@ node scripts/smoke-public-staging-api.mjs https://viona-api-staging-eu.fly.dev
 
 | Priority | Option |
 |----------|--------|
-| 1 | **Session 6+** controlled no-charge pilot — same Option A constraints |
-| 2 | **Global Active master wave roadmap** — `VIONA_GLOBAL_ACTIVE_FULL_COMMERCIAL_MASTER_WAVE_ROADMAP.md` (Wave 2 native or Wave 3 UX) |
-| 3 | **Native manual attestation** — session 5 §8 on stable device; do not claim PASS until done |
-| 4 | **Ops incident / support refinement** — playbook §7–§8 from real operator issues |
-| 5 | **Pilot readiness review after sessions 1–5** — optional follow-on to post–1–4 review |
-| 6 | **Locked** — payment/wallet/commercial packs only with explicit finance approval |
+| 1 | **Wave 1 exit** — `VIONA_LOCAL_NO_CHARGE_WAVE_1_EXIT_PILOT_SIGNOFF_CRITERIA.md` (**met** @ `9619886`) |
+| 2 | **Session 6+** controlled no-charge pilot — same Option A constraints |
+| 3 | **Global Active master wave roadmap** — Wave 2 native or Wave 3 UX (preferred after Wave 1 exit) |
+| 4 | **Native manual attestation** — session 5 §8 on stable device; do not claim PASS until done |
+| 5 | **Ops incident / support refinement** — playbook §7–§8 from real operator issues |
+| 6 | **Pilot readiness review after sessions 1–5** — optional follow-on |
+| 7 | **Locked** — payment/wallet/commercial packs only with explicit finance approval |
 
 ---
 
@@ -190,4 +191,5 @@ node scripts/smoke-public-staging-api.mjs https://viona-api-staging-eu.fly.dev
 | `VIONA_LOCAL_NO_CHARGE_PILOT_SIGNOFF.md` | Readiness sign-off |
 | `VIONA_LOCAL_NO_CHARGE_PILOT_READINESS_REVIEW_AFTER_SESSIONS_1_4.md` | Post sessions 1–4 readiness decision |
 | `VIONA_GLOBAL_ACTIVE_FULL_COMMERCIAL_MASTER_WAVE_ROADMAP.md` | Global Active / full commercial wave roadmap |
+| `VIONA_LOCAL_NO_CHARGE_WAVE_1_EXIT_PILOT_SIGNOFF_CRITERIA.md` | Wave 1 exit / signoff criteria |
 | `VIONA_PROJECT_KERNEL.md` | Kernel money law + pilot pointers |

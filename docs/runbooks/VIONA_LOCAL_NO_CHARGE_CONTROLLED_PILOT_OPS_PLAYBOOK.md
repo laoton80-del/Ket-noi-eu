@@ -194,6 +194,7 @@ Staging DB remains source of truth; rollback is **access/config**, not data dest
 **Rollup (sessions 1–5):** `VIONA_LOCAL_NO_CHARGE_CONTROLLED_PILOT_SESSIONS_1_5_ROLLUP.md` @ `d118b12+`
 **Readiness review (post 1–4):** `VIONA_LOCAL_NO_CHARGE_PILOT_READINESS_REVIEW_AFTER_SESSIONS_1_4.md` — Session 5+ **may proceed** (same scope)
 **Global Active roadmap:** `docs/roadmap/VIONA_GLOBAL_ACTIVE_FULL_COMMERCIAL_MASTER_WAVE_ROADMAP.md` — 12 waves; planning only; **not** commercial yet
+**Wave 1 exit:** `docs/runbooks/VIONA_LOCAL_NO_CHARGE_WAVE_1_EXIT_PILOT_SIGNOFF_CRITERIA.md` — criteria **met** @ `9619886`
 
 | Session | Doc | Verdict |
 |---------|-----|---------|

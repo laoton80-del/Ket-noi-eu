@@ -397,4 +397,5 @@ When implemented, session 2 **optional** ops audit steps:
 | **Readiness review** | `VIONA_LOCAL_NO_CHARGE_PILOT_READINESS_REVIEW_AFTER_SESSIONS_1_4.md` — Session 5+ may proceed (API/web scope) |
 | **Session 4 prep + run** | `VIONA_LOCAL_NO_CHARGE_CONTROLLED_PILOT_SESSION_4.md` — **PASS** @ 2026-05-24 (API); native §8 **NOT RUN** |
 | **Session 5 prep + run** | `VIONA_LOCAL_NO_CHARGE_CONTROLLED_PILOT_SESSION_5.md` — **PASS** @ 2026-05-24 (API); native §8 **NOT RUN** |
+| **Wave 1 exit** | `VIONA_LOCAL_NO_CHARGE_WAVE_1_EXIT_PILOT_SIGNOFF_CRITERIA.md` — criteria **met** @ `9619886` |
 | **Next** | Session 6+ or optional native §8 on stable device — **do not claim native PASS** until checklist complete |

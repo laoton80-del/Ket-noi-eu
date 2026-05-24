@@ -2,7 +2,7 @@
 
 **Pack:** `VIONA.GLOBAL_ACTIVE_FULL_COMMERCIAL.MASTER_WAVE_ROADMAP.1`
 **Kernel:** `docs/operating/VIONA_PROJECT_KERNEL.md`
-**Local pilot evidence:** `docs/runbooks/VIONA_LOCAL_NO_CHARGE_CONTROLLED_PILOT_SESSIONS_1_4_ROLLUP.md`, session runbooks 1–5
+**Local pilot evidence:** `docs/runbooks/VIONA_LOCAL_NO_CHARGE_CONTROLLED_PILOT_SESSIONS_1_5_ROLLUP.md`, session runbooks 1–5
 **Readiness review:** `docs/runbooks/VIONA_LOCAL_NO_CHARGE_PILOT_READINESS_REVIEW_AFTER_SESSIONS_1_4.md`
 **Roadmap baseline HEAD:** `d118b12` — `docs(local): record controlled pilot session 5`
 **Roadmap date (UTC):** 2026-05-24
@@ -39,7 +39,7 @@
 | Whole VIONA | Pre-commercial / staging-pilot foundation | Kernel + handoff |
 | **Global Active / full commercial** | **Not yet** | No production/commercial claim |
 
-**Gap before Wave 1 exit:** Sessions 1–5 rollup, pilot exit criteria doc, support/incident refinement from real ops load (optional parallel).
+**Wave 1 exit:** `docs/runbooks/VIONA_LOCAL_NO_CHARGE_WAVE_1_EXIT_PILOT_SIGNOFF_CRITERIA.md` @ `9619886` — criteria **met** for API/web pilot; optional: support/incident refinement from real ops load.
 
 ---
 
@@ -70,7 +70,7 @@ Baseline (today) → Wave 1 → checkpoint → Wave 2 → … → Wave 12 → Gl
 |------------|----------|
 | Session continuity | Session 5 run (**done** @ `d118b12`); optional Session 6+ under Option A |
 | Rollup | Sessions **1–5** rollup doc; sync kernel/handoff |
-| Exit criteria | Controlled pilot signoff / exit checklist (no commercial) |
+| Exit criteria | `VIONA_LOCAL_NO_CHARGE_WAVE_1_EXIT_PILOT_SIGNOFF_CRITERIA.md` (**met** @ `9619886`) |
 | Ops refinement | Support/incident playbook from real operator issues |
 | Review | Pilot readiness review after sessions 1–5 (optional) |
 
@@ -291,11 +291,11 @@ Cursor **must not**:
 
 | Priority | Action | Rationale |
 |----------|--------|-------------|
-| **1** | **Sessions 1–5 rollup** + kernel/handoff sync | Consolidate evidence before leaving Local lane |
-| **2** | Optional **Session 6** smoke (Option A) | Continued no-charge corroboration if roster active |
-| **3a** | **Wave 2** — native confidence | Unblocks native narrative; secret-tap/PIN still **NOT COMPLETED** |
-| **3b** | **Wave 3** — consumer UX excellence | Parallel if native blocked on hardware; no payment UI |
-| **Later** | Waves 4–6 docs/planning | Only after Wave 1 exit + explicit scope |
+| **1** | **Wave 1 exit signoff** — `VIONA_LOCAL_NO_CHARGE_WAVE_1_EXIT_PILOT_SIGNOFF_CRITERIA.md` (**done** @ `9619886`) |
+| **2** | **Wave 2** — native/mobile confidence | Preferred next; secret-tap/PIN **NOT COMPLETED** |
+| **3** | **Wave 3** — consumer UX excellence | May parallel Wave 2; UI-only |
+| **4** | Optional **Session 6** smoke (Option A) | Continued corroboration if roster active |
+| **Later** | Waves 4–6 docs/planning | Only with explicit scope |
 
 **Do not start Wave 7** without finance approval and Wave 6 architecture sign-off.
 
@@ -320,7 +320,8 @@ Cursor **must not**:
 |-----|------|
 | `VIONA_PROJECT_KERNEL.md` | Operating core + money law |
 | `VIONA_LOCAL_NO_CHARGE_CONTROLLED_PILOT_OPS_PLAYBOOK.md` | Pilot ops + pause |
-| `VIONA_LOCAL_NO_CHARGE_CONTROLLED_PILOT_SESSIONS_1_4_ROLLUP.md` | Sessions 1–4 aggregate |
+| `VIONA_LOCAL_NO_CHARGE_CONTROLLED_PILOT_SESSIONS_1_5_ROLLUP.md` | Sessions 1–5 aggregate |
+| `VIONA_LOCAL_NO_CHARGE_WAVE_1_EXIT_PILOT_SIGNOFF_CRITERIA.md` | Wave 1 exit criteria |
 | `VIONA_LOCAL_NO_CHARGE_PILOT_READINESS_REVIEW_AFTER_SESSIONS_1_4.md` | Option A through session 5+ |
 | `VIONA_LOCAL_NO_CHARGE_PILOT_READINESS_HANDOFF_1.md` | Handoff index |
 | Session runbooks 1–5 | Per-session evidence |

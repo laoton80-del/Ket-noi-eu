@@ -257,7 +257,7 @@ Known Local lifecycle milestones:
 
 ### Kernel pointer (`KERNEL.GLOBAL_ACTIVE_MASTER_WAVE_ROADMAP.1`) — `d118b12+`
 
-**Global Active / full commercial path:** planning only @ `docs/roadmap/VIONA_GLOBAL_ACTIVE_FULL_COMMERCIAL_MASTER_WAVE_ROADMAP.md` — **12 waves**, ~80–130 packs (estimate); **not** production/commercial yet. **Next:** Sessions 1–5 rollup, then Wave 2 (native) or Wave 3 (UX). Payment/AI/SOS/commercial **locked** until wave gates + approvals.
+**Global Active / full commercial path:** planning only @ `docs/roadmap/VIONA_GLOBAL_ACTIVE_FULL_COMMERCIAL_MASTER_WAVE_ROADMAP.md` — **12 waves**; **not** production/commercial yet. **Wave 1 exit:** `VIONA_LOCAL_NO_CHARGE_WAVE_1_EXIT_PILOT_SIGNOFF_CRITERIA.md` @ `9619886` — **met** (sessions 1–5 rollup). **Next:** Wave 2 (native) or Wave 3 (UX). Payment/AI/SOS/commercial **locked**.
 
 ### Kernel sync (`KERNEL.LOCAL_NO_CHARGE_PILOT_SIGNOFF_SYNC.1`) — `5a714a8`
 
