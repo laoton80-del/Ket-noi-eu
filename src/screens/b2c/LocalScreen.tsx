@@ -6,7 +6,6 @@ import { useCallback, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
-  Image,
   Modal,
   Platform,
   Pressable,
@@ -16,7 +15,6 @@ import {
   TextInput,
   View,
   useWindowDimensions,
-  type ImageStyle,
   type StyleProp,
   type ViewStyle,
 } from 'react-native';
@@ -94,7 +92,6 @@ type ClassifiedPost = Readonly<{
 }>;
 
 const VIP_POSTING_COST_VIG = 120;
-const LOCAL_GLOBAL_BG = require('../../../assets/UI/viona-local-global-net-bg-v2.png');
 const BG = localConstellation.canvas;
 const INK = localConstellation.ink;
 const INK_MUTED = localConstellation.inkMuted;
@@ -688,17 +685,10 @@ export function LocalScreen() {
   useLocalWebShellCompensation();
 
   const insets = useSafeAreaInsets();
-  const canvasBackdropOpacity = desktopWeb
-    ? localConstellation.canvasBackdropOpacityDesktop
-    : localConstellation.canvasBackdropOpacityMobile;
   const canvasBackdropTopBleed = desktopWeb
     ? Math.min(insets.top, localConstellation.canvasBackdropTopBleed)
     : 0;
   const useCompactCommandLogo = width > 0 && width < 1060;
-  const backdropScale = localConstellation.canvasBackdropTextureScale;
-  const backdropInset = (1 - backdropScale) * 50;
-  const backdropTop = backdropInset - localConstellation.canvasBackdropRisePercent;
-  const backdropFocusY = localConstellation.canvasBackdropFocusYPercent;
   const miniappDockBottom = localConstellation.miniappDockBottomOffset + insets.bottom;
 
   const tabletFullWidth = Platform.OS === 'web' && width >= VIONA_TABLET_MIN_WIDTH;
@@ -715,31 +705,6 @@ export function LocalScreen() {
 
   return (
     <SafeAreaView style={[styles.container, tabletBreakoutStyle]} edges={['left', 'right']}>
-      <View
-        pointerEvents="none"
-        style={[
-          styles.canvasBackdropHost,
-          { opacity: canvasBackdropOpacity, top: -canvasBackdropTopBleed },
-        ]}
-      >
-        <Image
-          source={LOCAL_GLOBAL_BG}
-          resizeMode="cover"
-          style={[
-            styles.canvasBackdrop,
-            {
-              width: `${backdropScale * 100}%`,
-              height: `${backdropScale * 100}%`,
-              left: `${backdropInset}%`,
-              top: `${backdropTop}%`,
-            },
-            Platform.OS === 'web'
-              ? ({ objectPosition: `center ${backdropFocusY}%` } as ImageStyle)
-              : null,
-          ]}
-          accessibilityIgnoresInvertColors
-        />
-      </View>
       <View
         pointerEvents="none"
         style={[
@@ -773,6 +738,8 @@ export function LocalScreen() {
         withMiniappDockClearance
         withTabBarClearance
         bottomClearanceExtra={isLocalMobile ? 32 : 16}
+        enableLuminousBackground
+        backgroundUniverse="local"
         testID="local-premium-shell"
       >
         <View style={styles.shellRailWrap}>
@@ -1235,19 +1202,6 @@ export function LocalScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: BG, position: 'relative', overflow: 'hidden' },
   root: { flex: 1, position: 'relative', zIndex: 1, backgroundColor: 'transparent' },
-  canvasBackdropHost: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    bottom: 0,
-    zIndex: 0,
-  },
-  canvasBackdrop: {
-    position: 'absolute',
-    ...(Platform.OS === 'web'
-      ? ({ objectFit: 'cover', imageRendering: '-webkit-optimize-contrast' } as ImageStyle)
-      : {}),
-  },
   canvasBackdropVeil: {
     position: 'absolute',
     left: 0,

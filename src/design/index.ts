@@ -38,6 +38,22 @@ export {
   type PremiumUniverseAccentSpec,
 } from './premiumTileVisualTokens';
 export {
+  getVionaBackgroundAsset,
+  getVionaBackgroundAssetForViewport,
+  resolveVionaBackgroundDevice,
+  resolveVionaBackgroundOrientation,
+  resolveLocalLuminousBackgroundOpacity,
+  VIONA_BACKGROUND_REGISTRY_UNIVERSES,
+  VIONA_BACKGROUND_MISSING_BY_UNIVERSE,
+  type VionaBackgroundUniverse,
+  type VionaBackgroundDevice,
+  type VionaBackgroundOrientation,
+  type VionaBackgroundVariantKey,
+  type VionaBackgroundAssetEntry,
+  type GetVionaBackgroundAssetParams,
+  type VionaBackgroundAssetResult,
+} from './vionaBackgroundAssets';
+export {
   neonGlassCard,
   neonGlassAccentGlow,
   neonGlassAccentInk,

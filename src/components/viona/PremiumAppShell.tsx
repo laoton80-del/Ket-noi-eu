@@ -4,7 +4,8 @@
  * COLOR: `leadingAccent` sets hub atmosphere wash only; per-tile feature accents stay multi-color semantic.
  * MEANING: text chips carry status; color is secondary (see premiumTileVisualTokens governance).
  */
-import { type ReactElement, type ReactNode, type RefObject } from 'react';
+import { LinearGradient } from 'expo-linear-gradient';
+import { type ReactElement, type ReactNode, type RefObject, useMemo } from 'react';
 import {
   Image,
   Platform,
@@ -20,6 +21,11 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import {
+  getVionaBackgroundAssetForViewport,
+  resolveLocalLuminousBackgroundOpacity,
+  type VionaBackgroundUniverse,
+} from '../../design/vionaBackgroundAssets';
+import {
   premiumTileCanvas,
   premiumUniverseAccentSpec,
   resolvePremiumShellBottomPadding,
@@ -33,8 +39,15 @@ export type PremiumAppShellProps = Readonly<{
   leadingAccent?: VionaUniverseAccent;
   scrollable?: boolean;
   headerOffset?: number;
+  /** Explicit background override (wins over registry). */
+  backgroundAsset?: ImageSourcePropType;
+  /** Legacy alias — same as backgroundAsset. */
   backgroundImage?: ImageSourcePropType;
   backgroundImageOpacity?: number;
+  /** When set with enableLuminousBackground, resolves asset from registry by viewport. */
+  backgroundUniverse?: VionaBackgroundUniverse;
+  /** Enables registry background + readability veil (Local-only in Wave 3B pack). */
+  enableLuminousBackground?: boolean;
   withMiniappDockClearance?: boolean;
   withTabBarClearance?: boolean;
   bottomClearanceExtra?: number;
@@ -50,8 +63,11 @@ export function PremiumAppShell({
   leadingAccent = 'emerald',
   scrollable = true,
   headerOffset = 0,
+  backgroundAsset,
   backgroundImage,
-  backgroundImageOpacity = 0.22,
+  backgroundImageOpacity,
+  backgroundUniverse,
+  enableLuminousBackground = false,
   withMiniappDockClearance = false,
   withTabBarClearance = true,
   bottomClearanceExtra = 0,
@@ -61,7 +77,7 @@ export function PremiumAppShell({
   contentStyle,
   testID,
 }: PremiumAppShellProps): ReactElement {
-  const { width } = useWindowDimensions();
+  const { width, height } = useWindowDimensions();
   const insets = useSafeAreaInsets();
   const rail = resolvePremiumShellContentRail(width);
   const horizontalPad = horizontalPadOverride ?? rail.horizontalPad;
@@ -71,6 +87,20 @@ export function PremiumAppShell({
     extra: bottomClearanceExtra,
   });
   const accentSpec = premiumUniverseAccentSpec(leadingAccent);
+
+  const registryBackground = useMemo(() => {
+    if (!enableLuminousBackground || !backgroundUniverse) return null;
+    return getVionaBackgroundAssetForViewport(backgroundUniverse, width, height);
+  }, [backgroundUniverse, enableLuminousBackground, height, width]);
+
+  const resolvedBackground =
+    backgroundAsset ?? backgroundImage ?? registryBackground?.source ?? null;
+  const resolvedOpacity =
+    backgroundImageOpacity ??
+    (enableLuminousBackground && backgroundUniverse
+      ? resolveLocalLuminousBackgroundOpacity(width)
+      : 0.22);
+  const showLuminousVeil = enableLuminousBackground && resolvedBackground != null;
 
   const contentWrapStyle: ViewStyle = {
     width: '100%',
@@ -95,12 +125,25 @@ export function PremiumAppShell({
         pointerEvents="none"
         style={[styles.ambientWash, { backgroundColor: accentSpec.cornerWash }]}
       />
-      {backgroundImage ? (
+      {resolvedBackground ? (
         <Image
-          source={backgroundImage}
+          source={resolvedBackground}
           resizeMode="cover"
-          style={[styles.backgroundImage, { opacity: backgroundImageOpacity }]}
+          style={[styles.backgroundImage, { opacity: resolvedOpacity }]}
+          accessibilityIgnoresInvertColors
         />
+      ) : null}
+      {showLuminousVeil ? (
+        <>
+          <LinearGradient
+            pointerEvents="none"
+            colors={['rgba(5, 11, 20, 0.12)', 'rgba(5, 11, 20, 0.55)']}
+            start={{ x: 0.5, y: 0 }}
+            end={{ x: 0.5, y: 1 }}
+            style={styles.readabilityVeil}
+          />
+          <View pointerEvents="none" style={styles.contentFieldVeil} />
+        </>
       ) : null}
       {scrollable ? (
         <ScrollView
@@ -143,6 +186,14 @@ const styles = StyleSheet.create({
     ...StyleSheet.absoluteFillObject,
     width: '100%',
     height: '100%',
+  },
+  readabilityVeil: {
+    ...StyleSheet.absoluteFillObject,
+  },
+  contentFieldVeil: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: premiumTileCanvas.veil,
+    opacity: 0.38,
   },
   scroll: {
     flex: 1,

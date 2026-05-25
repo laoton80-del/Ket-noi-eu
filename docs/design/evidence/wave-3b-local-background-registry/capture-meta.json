@@ -1,0 +1,40 @@
+{
+  "capturedAt": "2026-05-25T21:45:33.463Z",
+  "viewports": [
+    {
+      "name": "local-390x844",
+      "width": 390,
+      "height": 844,
+      "expected": "mobile-portrait",
+      "artifact": "C:\\KNG\\ket-noi-eu\\docs\\design\\evidence\\wave-3b-local-background-registry\\local-390x844.png"
+    },
+    {
+      "name": "local-844x390",
+      "width": 844,
+      "height": 390,
+      "expected": "mobile-landscape",
+      "artifact": "C:\\KNG\\ket-noi-eu\\docs\\design\\evidence\\wave-3b-local-background-registry\\local-844x390.png"
+    },
+    {
+      "name": "local-768x1024",
+      "width": 768,
+      "height": 1024,
+      "expected": "tablet-portrait",
+      "artifact": "C:\\KNG\\ket-noi-eu\\docs\\design\\evidence\\wave-3b-local-background-registry\\local-768x1024.png"
+    },
+    {
+      "name": "local-1024x768",
+      "width": 1024,
+      "height": 768,
+      "expected": "tablet-landscape",
+      "artifact": "C:\\KNG\\ket-noi-eu\\docs\\design\\evidence\\wave-3b-local-background-registry\\local-1024x768.png"
+    },
+    {
+      "name": "local-1366x768",
+      "width": 1366,
+      "height": 768,
+      "expected": "web-landscape",
+      "artifact": "C:\\KNG\\ket-noi-eu\\docs\\design\\evidence\\wave-3b-local-background-registry\\local-1366x768.png"
+    }
+  ]
+}
