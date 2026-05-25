@@ -7,14 +7,12 @@ import { StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 
 import {
   isPremiumShellMobile,
+  premiumLuminousInk,
   premiumShellLayout,
   premiumUniverseAccentSpec,
   type VionaUniverseAccent,
 } from '../../design/premiumTileVisualTokens';
 import { FontFamily } from '../../theme/typography';
-
-const INK = 'rgba(226, 232, 240, 0.96)';
-const INK_MUTED = 'rgba(148, 163, 184, 0.88)';
 
 export type PremiumSectionProps = Readonly<{
   kicker?: string;
@@ -108,7 +106,7 @@ const styles = StyleSheet.create({
     minWidth: 0,
     fontSize: premiumShellLayout.sectionTitleSize,
     fontFamily: FontFamily.extrabold,
-    color: INK,
+    color: premiumLuminousInk.titleBright,
     letterSpacing: -0.12,
   },
   titleCompact: {
@@ -120,7 +118,7 @@ const styles = StyleSheet.create({
   subtitle: {
     fontSize: premiumShellLayout.sectionSubtitleSize,
     fontFamily: FontFamily.semibold,
-    color: INK_MUTED,
+    color: premiumLuminousInk.subtitle,
     lineHeight: 15,
   },
   subtitleCompact: {

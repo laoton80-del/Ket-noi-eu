@@ -8,10 +8,10 @@ import { StyleSheet, Text, View, type StyleProp, type ViewStyle } from 'react-na
 
 import { FontFamily } from '../../theme/typography';
 import {
+  premiumLuminousInk,
   premiumTileLayout,
   premiumTileStatusChip,
   premiumUniverseAccentSpec,
-  premiumUniverseInk,
   premiumUniverseStroke,
   type PremiumTileState,
   type VionaUniverseAccent,
@@ -37,7 +37,7 @@ export function PremiumStatusChip({
   const hovered = resolvedState === 'hovered' || resolvedState === 'pressed';
   const fill = hovered ? spec.statusFillHover : spec.statusFill;
   const stroke = premiumUniverseStroke(accent, resolvedState);
-  const ink = premiumUniverseInk(accent, resolvedState);
+  const ink = disabled ? premiumLuminousInk.disabledReadable : premiumLuminousInk.chipLabel;
 
   return (
     <View

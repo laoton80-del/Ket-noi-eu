@@ -5,6 +5,11 @@ import { ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-n
 import { useSmartTrio } from '../../context/SmartTrioContext';
 import type { LocalBookingStatus } from '../../core/localCommerce';
 import { getAllLocalCommerceCapabilities } from '../../core/localCommerce';
+import {
+  CLARITY_CAPABILITY_MICRO_SCENES,
+  CLARITY_CTA_MICRO_SCENES,
+  CLARITY_LEGEND_MICRO_SCENES,
+} from '../../design/premiumTileMicroScene';
 import { premiumLuminousInk, premiumTileLayout, type VionaUniverseAccent } from '../../design/premiumTileVisualTokens';
 import { useTranslation } from '../../i18n';
 import { FontFamily } from '../../theme/typography';
@@ -154,22 +159,26 @@ export function LocalCommerceHubPrimaryActions({
         accent="emerald"
         width="100%"
         icon="apps-outline"
+        microScene={CLARITY_CTA_MICRO_SCENES.browse}
         statusLabel={t('localCommerce.bookingStatus.lite')}
         title={t('localCommerce.cta.browseServices')}
         subtitle={t('localCommerce.compactBrowseSub')}
         onPress={onBrowseServices}
         accessibilityLabel={t('localCommerce.cta.browseServices')}
+        testID="local-cta-browse-services"
       />
       <PremiumAppTile
         variant="local"
         accent="cyan"
         width="100%"
         icon="chatbubble-ellipses-outline"
+        microScene={CLARITY_CTA_MICRO_SCENES.assist}
         statusLabel={t('localCommerce.bookingStatus.requestOnly')}
         title={t('localCommerce.cta.requestBooking')}
         subtitle={t('localCommerce.compactAssistSub')}
         onPress={onRequestBookingAssist}
         accessibilityLabel={t('localCommerce.cta.requestBooking')}
+        testID="local-cta-booking-assist"
       />
     </PremiumTileGrid>
   );
@@ -217,9 +226,11 @@ export function LocalCommerceHubStatusGuide(): ReactElement {
             accent={statusLegendFeatureAccent(item.key)}
             width="100%"
             icon={item.icon}
+            microScene={CLARITY_LEGEND_MICRO_SCENES[item.key]}
             title={t(safetyKey(item.key))}
             statusLabel={t('localCommerce.bookingStatus.requestOnly')}
             accessibilityLabel={t(safetyKey(item.key))}
+            testID={`local-legend-${item.key}`}
           />
         ))}
       </PremiumTileGrid>
@@ -259,10 +270,12 @@ export function LocalCommerceHubCapabilities(): ReactElement {
             accent={localCapabilityFeatureAccent(c.id)}
             width="100%"
             icon={localCapabilityIcon(c.id)}
+            microScene={CLARITY_CAPABILITY_MICRO_SCENES[c.id]}
             statusLabel={t(bookingStatusKey(c.status))}
             title={t(c.titleKey)}
             subtitle={t(c.descriptionKey)}
             accessibilityLabel={`${t(c.titleKey)}. ${t(c.descriptionKey)}. ${t(bookingStatusKey(c.status))}`}
+            testID={`local-capability-${c.id}`}
           />
         ))}
       </PremiumTileGrid>

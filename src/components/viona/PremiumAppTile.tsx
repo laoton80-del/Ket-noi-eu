@@ -30,8 +30,12 @@ import {
   type ViewStyle,
 } from 'react-native';
 
+import type { PremiumTileMicroSceneKind } from '../../design/premiumTileMicroScene';
 import {
   premiumGlassSurface,
+  premiumLuminousInk,
+  premiumSemanticGlow,
+  premiumTileMicroSceneLayout,
   premiumTileGlass,
   premiumTileInteraction,
   premiumTileLayout,
@@ -47,9 +51,7 @@ import {
 import { FontFamily } from '../../theme/typography';
 import { PremiumIconCapsule } from './PremiumIconCapsule';
 import { PremiumStatusChip } from './PremiumStatusChip';
-
-const INK_STRONG = '#F8FAFC';
-const INK_SUB = 'rgba(226, 232, 240, 0.82)';
+import { PremiumTileMicroScene } from './PremiumTileMicroScene';
 
 /** Consumer hub variant → universe accent. */
 export type PremiumUniverseVariant = keyof typeof premiumUniverseAccentByHub;
@@ -73,6 +75,8 @@ export type PremiumAppTileProps = Readonly<{
   onPress?: () => void;
   accessibilityLabel?: string;
   testID?: string;
+  /** Subtle semantic interior art — must not obscure title/status chip. */
+  microScene?: PremiumTileMicroSceneKind;
   style?: StyleProp<ViewStyle>;
   contentStyle?: StyleProp<ViewStyle>;
   width?: number | `${number}%`;
@@ -93,6 +97,7 @@ export function PremiumAppTile({
   onPress,
   accessibilityLabel,
   testID,
+  microScene,
   style,
   contentStyle,
   width = '100%',
@@ -107,8 +112,6 @@ export function PremiumAppTile({
       ? 'hovered'
       : 'default';
 
-  const spec = premiumUniverseAccentSpec(accent);
-  const ink = disabled ? 'rgba(226, 232, 240, 0.55)' : spec.ink;
   const radius = size === 'hero' ? premiumTileLayout.radiusHero : premiumTileLayout.radius;
   const minInnerHeight =
     size === 'compact' ? premiumTileLayout.minHeightCompactInner : premiumTileMinHeight(size);
@@ -117,7 +120,13 @@ export function PremiumAppTile({
     (subtitle ? `${title}. ${subtitle}${statusLabel ? `. ${statusLabel}` : ''}` : title);
 
   const frame = (
-    <PremiumTileGlassFrame accent={accent} tileState={tileState} radius={radius} hovered={hovered}>
+    <PremiumTileGlassFrame
+      accent={accent}
+      tileState={tileState}
+      radius={radius}
+      hovered={hovered}
+      microScene={microScene}
+    >
       <View style={[styles.inner, { minHeight: minInnerHeight }, contentStyle]}>
         <View style={styles.iconRow}>
           <PremiumIconCapsule
@@ -134,7 +143,10 @@ export function PremiumAppTile({
         </View>
         <View style={styles.textBlock}>
           <Text
-            style={[styles.title, { color: hovered && !disabled ? ink : INK_STRONG }]}
+            style={[
+              styles.title,
+              { color: disabled ? premiumLuminousInk.disabledReadable : premiumLuminousInk.titleBright },
+            ]}
             numberOfLines={premiumTileLayout.titleMaxLines}
           >
             {title}
@@ -193,6 +205,7 @@ type PremiumTileGlassFrameProps = Readonly<{
   tileState: PremiumTileState;
   radius: number;
   hovered: boolean;
+  microScene?: PremiumTileMicroSceneKind;
   children: ReactNode;
 }>;
 
@@ -201,6 +214,7 @@ function PremiumTileGlassFrame({
   tileState,
   radius,
   hovered,
+  microScene,
   children,
 }: PremiumTileGlassFrameProps): ReactElement {
   const visualState: PremiumTileState =
@@ -246,12 +260,50 @@ function PremiumTileGlassFrame({
           },
         ]}
       />
+      <View
+        pointerEvents="none"
+        style={[
+          styles.outerHalo,
+          {
+            borderRadius: radius + 2,
+            shadowColor: premiumSemanticGlow(accent, visualState),
+            opacity: premiumTileGlass.haloOpacity,
+          },
+        ]}
+      />
+      <View
+        pointerEvents="none"
+        style={[
+          styles.frameGlow,
+          {
+            borderRadius: radius,
+            borderColor: premiumSemanticGlow(accent, visualState),
+            opacity: premiumTileGlass.frameGlowOpacity,
+          },
+        ]}
+      />
+      {microScene ? (
+        <View
+          pointerEvents="none"
+          style={[
+            styles.microSceneWash,
+            {
+              borderRadius: radius,
+              backgroundColor: premiumSemanticGlow(accent, visualState),
+              opacity: premiumTileMicroSceneLayout.backdropWashOpacity,
+            },
+          ]}
+        />
+      ) : null}
       <LinearGradient
         pointerEvents="none"
         colors={[wash, 'transparent']}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
-        style={[styles.cornerWash, { borderRadius: radius }]}
+        style={[
+          styles.cornerWash,
+          { borderRadius: radius, opacity: premiumTileGlass.cornerWashOpacity },
+        ]}
       />
       {spec.cornerWashSecondary ? (
         <LinearGradient
@@ -272,6 +324,11 @@ function PremiumTileGlassFrame({
           },
         ]}
       />
+      {microScene ? (
+        <View pointerEvents="none" style={styles.microSceneSlot}>
+          <PremiumTileMicroScene kind={microScene} accent={accent} />
+        </View>
+      ) : null}
       <View style={styles.content}>{children}</View>
     </View>
   );
@@ -312,9 +369,33 @@ const styles = StyleSheet.create({
   glassTint: {
     ...StyleSheet.absoluteFillObject,
   },
+  outerHalo: {
+    ...StyleSheet.absoluteFillObject,
+    shadowOffset: { width: 0, height: 0 },
+    shadowRadius: 24,
+    shadowOpacity: 1,
+    elevation: 6,
+  },
+  frameGlow: {
+    ...StyleSheet.absoluteFillObject,
+    borderWidth: 1.5,
+  },
+  microSceneWash: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 0,
+    height: '68%',
+  },
   cornerWash: {
     ...StyleSheet.absoluteFillObject,
-    opacity: 0.85,
+  },
+  microSceneSlot: {
+    position: 'absolute',
+    right: 4,
+    bottom: 4,
+    opacity: premiumTileMicroSceneLayout.slotOpacity,
+    zIndex: 0,
   },
   cornerWashSecondary: {
     ...StyleSheet.absoluteFillObject,
@@ -360,7 +441,6 @@ const styles = StyleSheet.create({
     fontSize: premiumTileLayout.subtitleFontSize,
     lineHeight: premiumTileLayout.subtitleLineHeight,
     fontFamily: FontFamily.medium,
-    color: INK_SUB,
-    opacity: 0.94,
+    color: premiumLuminousInk.subtitle,
   },
 });

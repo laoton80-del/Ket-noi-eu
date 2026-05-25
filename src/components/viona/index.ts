@@ -53,6 +53,8 @@ export type { VionaActionCardProps, VionaActionAccent } from './VionaActionCard'
 
 export { PremiumAppTile, premiumUniverseVariantToAccent } from './PremiumAppTile';
 export type { PremiumAppTileProps, PremiumUniverseVariant } from './PremiumAppTile';
+export { PremiumTileMicroScene } from './PremiumTileMicroScene';
+export type { PremiumTileMicroSceneProps } from './PremiumTileMicroScene';
 export { PremiumIconCapsule } from './PremiumIconCapsule';
 export type { PremiumIconCapsuleProps } from './PremiumIconCapsule';
 export { PremiumStatusChip } from './PremiumStatusChip';

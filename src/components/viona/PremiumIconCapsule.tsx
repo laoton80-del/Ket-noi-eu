@@ -10,6 +10,7 @@ import { StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 
 import {
   premiumIconCapsuleSize,
+  premiumLuminousInk,
   premiumSemanticGlow,
   premiumTileGlass,
   premiumTileIconCapsule,
@@ -21,8 +22,6 @@ import {
   type PremiumTileState,
   type VionaUniverseAccent,
 } from '../../design/premiumTileVisualTokens';
-
-const INK_MUTED = 'rgba(226, 232, 240, 0.55)';
 
 export type PremiumIconCapsuleProps = Readonly<{
   accent: VionaUniverseAccent;
@@ -56,7 +55,7 @@ export function PremiumIconCapsule({
   const side = capsuleSize ?? premiumIconCapsuleSize(size);
   const glyphSize =
     iconSize ?? (size === 'quickHelp' ? premiumTileLayout.iconSizeQuickHelp : premiumTileLayout.iconSize);
-  const ink = dimmed ? INK_MUTED : premiumUniverseInk(accent, resolvedState);
+  const ink = dimmed ? premiumLuminousInk.disabledReadable : premiumUniverseInk(accent, 'hovered');
   const stroke = dimmed ? premiumTileGlass.borderDefault : premiumUniverseStroke(accent, resolvedState);
   const fill = dimmed
     ? 'rgba(148, 163, 184, 0.08)'

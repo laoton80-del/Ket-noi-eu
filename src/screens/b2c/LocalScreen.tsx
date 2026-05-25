@@ -55,10 +55,13 @@ import {
 import { VionaBrandLockup } from '../../components/viona/VionaBrandLockup';
 import { VIONA_TABLET_MIN_WIDTH } from '../../components/viona/VionaMiniAppShell';
 import { vionaTokens } from '../../design';
+import { resolveLocalTileMicroScene } from '../../design/premiumTileMicroScene';
 import {
   premiumLuminousInk,
+  premiumModalGlass,
   premiumTileGlass,
   premiumTileLayout,
+  premiumTileWebBackdropBlur,
   premiumUniverseAccentSpec,
   premiumUniverseStroke,
   resolvePremiumShellContentRail,
@@ -71,17 +74,7 @@ import {
   fashionHomeWebCommandUtilityPressStyle,
 } from '../../components/viona/fashionHomeDesktopShell';
 import { SmartTrioLanguageSheet } from '../../components/smartTrio/SmartTrioLanguageSheet';
-import {
-  localAccentInk,
-  localAccentInkHover,
-  localAccentStatusFill,
-  localAccentStroke,
-  localAccentStrokeHover,
-  localConstellation,
-  resolveLocalGridColumns,
-  resolveLocalGridItemWidth,
-  type LocalConstellationAccent,
-} from '../../components/local/localConstellationTokens';
+import { localConstellation, resolveLocalGridColumns } from '../../components/local/localConstellationTokens';
 import { theme } from '../../theme/theme';
 import { FontFamily } from '../../theme/typography';
 
@@ -104,7 +97,6 @@ const VIP_POSTING_COST_VIG = 120;
 const LOCAL_GLOBAL_BG = require('../../../assets/UI/viona-local-global-net-bg-v2.png');
 const BG = localConstellation.canvas;
 const INK = localConstellation.ink;
-const INK_STRONG = localConstellation.inkStrong;
 const INK_MUTED = localConstellation.inkMuted;
 const BORDER = localConstellation.border;
 const GOLD = localConstellation.accentGold;
@@ -378,66 +370,6 @@ function useLocalWebShellCompensation() {
   );
 }
 
-function LocalClassifiedCard({
-  cardWidth,
-  item,
-}: Readonly<{
-  cardWidth: number;
-  item: ClassifiedPost;
-}>) {
-  const { t } = useTranslation();
-  const [hovered, setHovered] = useState(false);
-  const meta = CATEGORY_META[item.category];
-  const accent: LocalConstellationAccent = item.isVip ? 'gold' : 'emerald';
-  const ink = hovered ? localAccentInkHover(accent) : localAccentInk(accent);
-
-  return (
-    <View style={{ width: cardWidth }}>
-      <Pressable
-        onHoverIn={Platform.OS === 'web' ? () => setHovered(true) : undefined}
-        onHoverOut={Platform.OS === 'web' ? () => setHovered(false) : undefined}
-        style={[
-          styles.gridCardPressable,
-          Platform.OS === 'web' && styles.gridCardInteractive,
-          Platform.OS === 'web' && hovered && styles.gridCardHovered,
-        ]}
-      >
-        <LocalConstellationFrame accent={accent} tier="service" radius={14} hovered={hovered} contentStyle={styles.postCard}>
-          <View style={styles.postHeader}>
-            <View
-              style={[
-                styles.categoryChip,
-                {
-                  borderColor: hovered ? localAccentStrokeHover(accent) : localAccentStroke(accent),
-                  borderWidth: localConstellation.cardEdgeWidth,
-                  backgroundColor: localAccentStatusFill(accent, hovered),
-                  shadowColor: ink,
-                  shadowOpacity: hovered ? 0.2 : 0.08,
-                  shadowRadius: hovered ? 4 : 2,
-                  shadowOffset: { width: 0, height: 0 },
-                },
-              ]}
-            >
-              <Ionicons name={meta.icon} size={14} color={ink} />
-              <Text style={[styles.categoryChipText, { color: ink }]}>{meta.title}</Text>
-            </View>
-            {item.isVip ? <Text style={styles.vipBadge}>{t('localHub.vipHighlight')}</Text> : null}
-          </View>
-          <Text style={styles.postTitle} numberOfLines={2}>
-            {item.title}
-          </Text>
-          <Text style={styles.postMeta} numberOfLines={1}>
-            {item.city} · {item.priceLabel}
-          </Text>
-          <Text style={styles.postDesc} numberOfLines={3}>
-            {item.description}
-          </Text>
-        </LocalConstellationFrame>
-      </Pressable>
-    </View>
-  );
-}
-
 const CATEGORY_META: Readonly<Record<ClassifiedCategory, { title: string; icon: keyof typeof Ionicons.glyphMap }>> = {
   hiring: { title: 'Tuyển thợ', icon: 'construct-outline' },
   shop_transfer: { title: 'Sang tiệm', icon: 'storefront-outline' },
@@ -701,8 +633,6 @@ export function LocalScreen() {
     phone: 1,
     tabletMin: 600,
   });
-  const classifiedCardWidth = resolveLocalGridItemWidth(innerWidth, classifiedColumns);
-
   const openLanguageSheet = useCallback(() => {
     setLanguageSheetOpen(true);
   }, []);
@@ -842,6 +772,7 @@ export function LocalScreen() {
         scrollRef={scrollRef}
         withMiniappDockClearance
         withTabBarClearance
+        bottomClearanceExtra={isLocalMobile ? 32 : 16}
         testID="local-premium-shell"
       >
         <View style={styles.shellRailWrap}>
@@ -1006,6 +937,7 @@ export function LocalScreen() {
                     accent="cyan"
                     width="100%"
                     icon="airplane-outline"
+                    microScene={resolveLocalTileMicroScene('local-tile-connected-travel')}
                     statusLabel={t('localCommerce.bookingStatus.lite')}
                     title={t('localHub.connectedTravel')}
                     subtitle={t('localHub.connectedTravelSub')}
@@ -1019,6 +951,7 @@ export function LocalScreen() {
                   accent="gold"
                   width="100%"
                   icon="briefcase-outline"
+                  microScene={resolveLocalTileMicroScene('local-tile-connected-business')}
                   statusLabel={t('localCommerce.bookingStatus.pilot')}
                   title={t('localHub.connectedBusiness')}
                   subtitle={t('localHub.connectedBusinessSub')}
@@ -1032,6 +965,7 @@ export function LocalScreen() {
                     accent="violet"
                     width="100%"
                     icon="school-outline"
+                    microScene={resolveLocalTileMicroScene('local-tile-connected-academy')}
                     statusLabel={t('localCommerce.bookingStatus.lite')}
                     title={t('localHub.connectedAcademy')}
                     subtitle={t('localHub.connectedAcademySub')}
@@ -1058,6 +992,7 @@ export function LocalScreen() {
             accent="emerald"
             width="100%"
             icon="list-outline"
+            microScene={resolveLocalTileMicroScene('local-tile-my-requests')}
             statusLabel={t('localCommerce.bookingStatus.requestOnly')}
             title={t('local.userRequestStatus.localTileTitle')}
             subtitle={t('local.userRequestStatus.localTileSub')}
@@ -1070,6 +1005,7 @@ export function LocalScreen() {
             accent="emerald"
             width="100%"
             icon="sparkles-outline"
+            microScene={resolveLocalTileMicroScene('local-tile-nails')}
             statusLabel={t('localCommerce.bookingStatus.lite')}
             title={t('localHub.nailsTitle')}
             subtitle={t('localHub.nailsSub')}
@@ -1082,6 +1018,7 @@ export function LocalScreen() {
             accent="emerald"
             width="100%"
             icon="restaurant-outline"
+            microScene={resolveLocalTileMicroScene('local-tile-restaurant')}
             statusLabel={t('localCommerce.bookingStatus.requestOnly')}
             title={t('localHub.restaurantTitle')}
             subtitle={t('localHub.restaurantSub')}
@@ -1094,6 +1031,7 @@ export function LocalScreen() {
             accent="cyan"
             width="100%"
             icon="scale-outline"
+            microScene={resolveLocalTileMicroScene('local-tile-legal-wealth')}
             statusLabel={t('localCommerce.bookingStatus.demo')}
             title={t('localHub.legalWealthTitle')}
             subtitle={t('localHub.legalWealthSub')}
@@ -1106,6 +1044,7 @@ export function LocalScreen() {
             accent="cyan"
             width="100%"
             icon="car-outline"
+            microScene={resolveLocalTileMicroScene('local-tile-transit')}
             statusLabel={t('localCommerce.bookingStatus.lite')}
             title={t('localHub.transitTitle')}
             subtitle={t('localHub.transitSub')}
@@ -1118,6 +1057,7 @@ export function LocalScreen() {
             accent="violet"
             width="100%"
             icon="ticket-outline"
+            microScene={resolveLocalTileMicroScene('local-tile-events')}
             statusLabel={t('localCommerce.bookingStatus.preview')}
             title={t('localHub.eventsTitle')}
             subtitle={t('localHub.eventsSub')}
@@ -1130,6 +1070,7 @@ export function LocalScreen() {
             accent="cyan"
             width="100%"
             icon="home-outline"
+            microScene={resolveLocalTileMicroScene('local-tile-housing')}
             statusLabel={t('localCommerce.bookingStatus.lite')}
             title={t('localHub.classifiedsHousingTitle')}
             subtitle={t('localHub.classifiedsHousingSub')}
@@ -1142,6 +1083,7 @@ export function LocalScreen() {
             accent="gold"
             width="100%"
             icon="pricetags-outline"
+            microScene={resolveLocalTileMicroScene('local-tile-classifieds')}
             statusLabel={t('localCommerce.bookingStatus.lite')}
             title={t('localHub.classifiedsTitle')}
             subtitle={t('localHub.classifiedsRowSub', { unit: getVioCreditsLabel() })}
@@ -1155,6 +1097,7 @@ export function LocalScreen() {
               accent="violet"
               width="100%"
               icon="scan-outline"
+              microScene={resolveLocalTileMicroScene('local-tile-legal-scanner')}
               statusLabel={t('localCommerce.bookingStatus.demo')}
               title={t('localHub.legalScannerLabel')}
               subtitle={t('localHub.legalScannerSub')}
@@ -1184,11 +1127,28 @@ export function LocalScreen() {
                 <Ionicons name="add-circle-outline" size={18} color={GOLD} />
                 <Text style={styles.postBtnText}>{t('localHub.postNewListing')}</Text>
               </Pressable>
-              <View style={styles.cardGrid}>
-                {sortedPosts.map((item) => (
-                  <LocalClassifiedCard key={item.id} cardWidth={classifiedCardWidth} item={item} />
-                ))}
-              </View>
+              <PremiumTileGrid columns={classifiedColumns} wrapCells gap={premiumTileLayout.gridGapTight}>
+                {sortedPosts.map((item) => {
+                  const meta = CATEGORY_META[item.category];
+                  const accent = item.isVip ? 'gold' : 'emerald';
+                  return (
+                    <PremiumAppTile
+                      key={item.id}
+                      variant="local"
+                      accent={accent}
+                      locked
+                      width="100%"
+                      icon={meta.icon}
+                      microScene="listing-tags"
+                      statusLabel={item.isVip ? t('localHub.vipHighlight') : meta.title}
+                      title={item.title}
+                      subtitle={`${item.city} · ${item.priceLabel}`}
+                      accessibilityLabel={`${item.title}. ${item.city}. ${item.priceLabel}`}
+                      testID={`local-classified-${item.id}`}
+                    />
+                  );
+                })}
+              </PremiumTileGrid>
             </PremiumSection>
           </View>
         </PremiumHubLayout>
@@ -1203,8 +1163,19 @@ export function LocalScreen() {
 
       <Modal visible={composerVisible} transparent animationType="none" onRequestClose={() => setComposerVisible(false)}>
         <View style={styles.modalBackdrop}>
-          <Reanimated.View style={[styles.modalCardWrap, modalAnimatedStyle]}>
-            <LocalConstellationFrame accent="emerald" tier="utility" radius={theme.radius.lg} contentStyle={styles.modalCard}>
+          <Reanimated.View
+            style={[
+              styles.modalCardWrap,
+              modalAnimatedStyle,
+              premiumTileWebBackdropBlur(premiumTileGlass.backdropBlurDefault),
+            ]}
+          >
+            <View
+              style={[
+                styles.modalCardLuminous,
+                { borderColor: premiumUniverseStroke('emerald') },
+              ]}
+            >
             <Text style={styles.modalTitle}>{t('localHub.classifiedsComposerTitle')}</Text>
             <View style={styles.categoryRow}>
               {(Object.keys(CATEGORY_META) as ClassifiedCategory[]).map((category) => (
@@ -1250,7 +1221,7 @@ export function LocalScreen() {
                 {submitting ? <ActivityIndicator size="small" color={INK} /> : <Text style={styles.submitBtnText}>Đăng tin</Text>}
               </Pressable>
             </View>
-            </LocalConstellationFrame>
+            </View>
           </Reanimated.View>
         </View>
       </Modal>
@@ -1484,7 +1455,7 @@ const styles = StyleSheet.create({
   commandSubtitle: {
     fontSize: 11,
     fontFamily: FontFamily.semibold,
-    color: INK_MUTED,
+    color: premiumLuminousInk.subtitle,
     letterSpacing: 0.2,
     lineHeight: 15,
   },
@@ -1519,7 +1490,7 @@ const styles = StyleSheet.create({
     fontSize: 17,
     lineHeight: 21,
     fontFamily: FontFamily.extrabold,
-    color: premiumLuminousInk.title,
+    color: premiumLuminousInk.titleBright,
     letterSpacing: -0.15,
   },
   heroHeadlineMobile: {
@@ -1572,7 +1543,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
     fontSize: 11,
     fontFamily: FontFamily.semibold,
-    color: INK_MUTED,
+    color: premiumLuminousInk.subtitle,
     lineHeight: 15,
     paddingHorizontal: 2,
   },
@@ -1645,7 +1616,11 @@ const styles = StyleSheet.create({
     color: INK_MUTED,
   },
   sectionTitle: { fontSize: 17, fontFamily: FontFamily.extrabold, color: INK },
-  walletHint: { fontSize: 12, fontFamily: FontFamily.bold, color: GOLD },
+  walletHint: {
+    fontSize: 12,
+    fontFamily: FontFamily.bold,
+    color: premiumUniverseAccentSpec('gold').inkHover,
+  },
   postBtn: {
     alignSelf: 'flex-start',
     minHeight: 40,
@@ -1661,7 +1636,11 @@ const styles = StyleSheet.create({
     gap: 8,
     marginBottom: theme.spacing.md,
   },
-  postBtnText: { color: GOLD, fontFamily: FontFamily.bold, fontSize: 14 },
+  postBtnText: {
+    color: premiumLuminousInk.titleBright,
+    fontFamily: FontFamily.bold,
+    fontSize: 14,
+  },
   postCard: {
     padding: theme.spacing.md,
     gap: 8,
@@ -1686,66 +1665,94 @@ const styles = StyleSheet.create({
   postDesc: { fontSize: 12, color: INK_MUTED, fontFamily: FontFamily.medium, lineHeight: 18 },
   modalBackdrop: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.72)',
+    backgroundColor: premiumModalGlass.backdrop,
     justifyContent: 'center',
     padding: theme.spacing.lg,
   },
   modalCardWrap: {
     width: '100%',
+    maxWidth: 480,
+    alignSelf: 'center',
   },
-  modalCard: {
+  modalCardLuminous: {
     padding: theme.spacing.lg,
     gap: theme.spacing.sm,
+    borderRadius: theme.radius.lg,
+    borderWidth: premiumTileGlass.edgeWidth,
+    backgroundColor: premiumModalGlass.surface,
+    overflow: 'hidden',
   },
-  modalTitle: { fontSize: 16, color: INK, fontFamily: FontFamily.extrabold },
+  modalTitle: {
+    fontSize: 17,
+    color: premiumLuminousInk.titleBright,
+    fontFamily: FontFamily.extrabold,
+  },
   categoryRow: { flexDirection: 'row', gap: 6 },
   categoryBtn: {
     flex: 1,
     minHeight: 34,
     borderRadius: theme.radius.md,
     borderWidth: 1,
-    borderColor: BORDER,
+    borderColor: premiumModalGlass.optionBorder,
     alignItems: 'center',
     justifyContent: 'center',
+    backgroundColor: 'rgba(8, 14, 26, 0.55)',
   },
-  categoryBtnActive: { borderColor: GOLD, backgroundColor: localConstellation.glowGold },
-  categoryBtnText: { fontSize: 11, color: INK_MUTED, fontFamily: FontFamily.semibold },
-  categoryBtnTextActive: { color: GOLD },
+  categoryBtnActive: {
+    borderColor: premiumUniverseStroke('emerald'),
+    backgroundColor: premiumUniverseAccentSpec('emerald').statusFill,
+  },
+  categoryBtnText: {
+    fontSize: 11,
+    color: premiumLuminousInk.subtitle,
+    fontFamily: FontFamily.semibold,
+  },
+  categoryBtnTextActive: { color: premiumLuminousInk.titleBright },
   input: {
     minHeight: 42,
     borderRadius: theme.radius.md,
     borderWidth: 1,
-    borderColor: BORDER,
+    borderColor: premiumModalGlass.optionBorder,
     paddingHorizontal: theme.spacing.md,
-    color: INK,
+    color: premiumLuminousInk.titleBright,
     fontFamily: FontFamily.medium,
-    backgroundColor: localConstellation.surfaceMuted,
+    backgroundColor: 'rgba(8, 14, 26, 0.62)',
   },
   inputMultiline: { minHeight: 86, textAlignVertical: 'top', paddingTop: 10 },
   vipToggle: {
     minHeight: 40,
     borderRadius: theme.radius.md,
     borderWidth: 1,
-    borderColor: BORDER,
+    borderColor: premiumModalGlass.optionBorder,
     paddingHorizontal: theme.spacing.md,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
+    backgroundColor: 'rgba(8, 14, 26, 0.5)',
   },
-  vipToggleActive: { borderColor: GOLD },
-  vipToggleText: { fontSize: 12, color: INK, fontFamily: FontFamily.semibold },
+  vipToggleActive: { borderColor: premiumUniverseStroke('gold') },
+  vipToggleText: {
+    fontSize: 12,
+    color: premiumLuminousInk.subtitle,
+    fontFamily: FontFamily.semibold,
+  },
   modalActions: { flexDirection: 'row', justifyContent: 'flex-end', gap: 8, marginTop: 4 },
   cancelBtn: {
     minHeight: 40,
     minWidth: 84,
     borderRadius: theme.radius.md,
     borderWidth: 1,
-    borderColor: BORDER,
+    borderColor: premiumModalGlass.optionBorder,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 10,
+    backgroundColor: 'rgba(8, 14, 26, 0.45)',
   },
-  cancelBtnText: { fontSize: 13, color: INK_MUTED, fontFamily: FontFamily.semibold },
+  cancelBtnText: {
+    fontSize: 13,
+    color: premiumLuminousInk.subtitle,
+    fontFamily: FontFamily.semibold,
+  },
   submitBtn: {
     minHeight: 40,
     minWidth: 110,
