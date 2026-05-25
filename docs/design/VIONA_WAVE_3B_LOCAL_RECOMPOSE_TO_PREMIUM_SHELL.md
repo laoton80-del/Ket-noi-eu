@@ -76,7 +76,7 @@
 
 **Checks (source + prior evidence):** no intentional horizontal overflow; luminous type tokens applied; no dashboard row pattern for modules; bottom pad via shell.
 
-**Post-commit pixel pass:** NOT RUN in agent session — refresh artifacts on port 8088.
+**Post-shell pixel pass:** `VIONA_WAVE_3B.LOCAL_POST_SHELL_SCREENSHOT_QA.1` — artifacts @ `docs/design/evidence/wave-3b-local-post-shell/` · **PARTIAL** (no HIGH/BLOCKER).
 
 ---
 

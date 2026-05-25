@@ -40,6 +40,7 @@ Wave 3 succeeded at **copy, safety, and tile anatomy** (title/subtitle/chip, `nu
 | **Premium App Shell foundation** | **Landed** @ `PREMIUM_APP_SHELL_FOUNDATION.1` — `PremiumAppShell`, `PremiumHubLayout`, `PremiumSection`, shell tokens; **not wired to screens yet** | Migrate Local → Travel → Academy → Account/SOS → Merchant |
 | **Semantic multicolor + luminous UI law** | **Locked** @ `SEMANTIC_MULTICOLOR_LUMINOUS_UI_LAW.1` — mapping + luminous law docs; `premiumLuminousInk`; old-UI drift ban | Hub recompose packs must cite mapping before pixel edits |
 | **Local premium shell recompose** | **Landed** @ `LOCAL_RECOMPOSE_TO_PREMIUM_SHELL.1` — reference hub on `PremiumAppShell` + `PremiumHubLayout` | Travel → Academy → Account/SOS → Merchant |
+| **Local post-shell screenshot QA** | **PARTIAL** @ `LOCAL_POST_SHELL_SCREENSHOT_QA.1` — evidence `wave-3b-local-post-shell/`; reference-ready, no HIGH | Proceed Travel recompose |
 
 **Conclusion:** Wave 3 was a **grammar pass**, not a **material system pass**. The north-star requires **shared tokens + one tile primitive + hub canvas alignment + Home restraint** — implemented in small packs, not one rewrite.
 
