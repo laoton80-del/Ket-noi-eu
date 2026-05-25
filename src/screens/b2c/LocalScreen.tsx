@@ -2,7 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useCallback, useMemo, useRef, useState, type ReactElement } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -36,18 +36,14 @@ import { useTranslation } from '../../i18n';
 import { useHomeCommand } from '../../context/HomeCommandContext';
 import { useFullscreenMode } from '../../hooks/useFullscreenMode';
 import { useVionaHomeDaylightBoost } from '../../components/viona/useVionaHomeDaylightBoost';
-import {
-  LocalCommerceHubCapabilities,
-  LocalCommerceHubPrimaryActions,
-  LocalCommerceHubStatusGuide,
-  LocalCommerceHubStatusStrip,
-} from '../../components/localCommerce/LocalCommerceClarityBlock';
+import { LocalCommerceHubCapabilities } from '../../components/localCommerce/LocalCommerceClarityBlock';
 import { LocalConstellationFrame } from '../../components/local/LocalConstellationFrame';
 import {
   PremiumAppShell,
   PremiumAppTile,
   PremiumHubLayout,
   PremiumSection,
+  PremiumStatusChip,
   PremiumTileGrid,
 } from '../../components/viona';
 import { VionaBrandLockup } from '../../components/viona/VionaBrandLockup';
@@ -102,7 +98,43 @@ const CYAN = localConstellation.accentCyan;
 const RISK = localConstellation.risk;
 const LOCAL_LEGACY_HIDE_STYLE_ID = 'viona-local-legacy-hide';
 
+const LOCAL_STATUS_LEGEND = [
+  { key: 'legendRequestSent', icon: 'send-outline' as const },
+  { key: 'legendMerchantConfirmed', icon: 'checkmark-circle-outline' as const },
+  { key: 'legendMerchantDeclined', icon: 'close-circle-outline' as const },
+  { key: 'legendConfirmedNotPaid', icon: 'alert-circle-outline' as const },
+] as const;
+
+function localStatusLegendSafetyKey(
+  suffix: (typeof LOCAL_STATUS_LEGEND)[number]['key']
+): string {
+  return `localCommerce.safety.${suffix}`;
+}
+
 type LocalShellPressableState = { pressed: boolean; hovered?: boolean };
+
+/** Compact status strip — same copy as clarity guide, lower visual weight than action tiles. */
+function LocalHubCompactStatusGuide(): ReactElement {
+  const { t } = useTranslation();
+  return (
+    <View style={styles.compactStatusSection} testID="local-compact-status-guide">
+      <Text style={styles.compactStatusKicker}>{t('localCommerce.safety.legendTitle')}</Text>
+      <Text style={styles.compactStatusNote} numberOfLines={2}>
+        {t('localCommerce.safety.bookingRequestNote')}
+      </Text>
+      <View style={styles.compactStatusChipRow}>
+        {LOCAL_STATUS_LEGEND.map((item) => (
+          <View key={item.key} style={styles.compactStatusLegendItem}>
+            <Ionicons name={item.icon} size={12} color={EMERALD} accessibilityIgnoresInvertColors />
+            <Text style={styles.compactStatusLegendText} numberOfLines={2}>
+              {t(localStatusLegendSafetyKey(item.key))}
+            </Text>
+          </View>
+        ))}
+      </View>
+    </View>
+  );
+}
 
 function LocalShellUtilityBtn({
   icon,
@@ -624,6 +656,14 @@ export function LocalScreen() {
     if (isLocalPhone) return 1;
     return resolveLocalGridColumns(width);
   }, [isLocalPhone, width]);
+  const primaryGridColumns = useMemo(() => {
+    if (width >= 1024) return 4;
+    if (isLocalPhone) return 1;
+    return 2;
+  }, [isLocalPhone, width]);
+  const isHubWide = width >= 768;
+  const isHubDesktop = width >= 1024;
+  const bookingAssistPrefill = t('localCommerce.leonaBookingAssistPrefill');
   const classifiedColumns = resolveLocalGridColumns(width, {
     desktop: 3,
     tablet: 2,
@@ -842,52 +882,243 @@ export function LocalScreen() {
               style={styles.heroIntroCard}
               contentStyle={[styles.heroIntroInner, isLocalMobile && styles.heroIntroInnerMobile]}
             >
-              <Text style={styles.hubKicker}>{t('localHub.universeKicker')}</Text>
+              <Text style={styles.hubKicker}>{t('localCommerce.title')}</Text>
               <Text style={[styles.heroHeadline, isLocalMobile && styles.heroHeadlineMobile]}>
                 {t('localHub.heroHeadline')}
               </Text>
               <Text style={[styles.hubSub, isLocalMobile && styles.hubSubMobile]} numberOfLines={2}>
                 {t('localHub.heroSub')}
               </Text>
+              <Text style={styles.hubTrustLine} numberOfLines={2}>
+                {t('localCommerce.compactSubtitle')}
+              </Text>
               <View style={[styles.heroChipRow, isLocalMobile && styles.heroChipRowMobile]}>
-                <View
-                  style={styles.heroChip}
-                  accessibilityRole="text"
-                  accessible
-                  accessibilityLabel={t('localCommerce.safety.heroChipRequestOnly')}
-                >
-                  <Ionicons name="paper-plane-outline" size={11} color={EMERALD} accessibilityIgnoresInvertColors />
-                  <Text style={styles.heroChipText}>{t('localCommerce.safety.heroChipRequestOnly')}</Text>
-                </View>
-                <View
-                  style={styles.heroChip}
-                  accessibilityRole="text"
-                  accessible
-                  accessibilityLabel={t('localCommerce.safety.heroChipNoPayment')}
-                >
-                  <Ionicons name="card-outline" size={11} color={EMERALD} accessibilityIgnoresInvertColors />
-                  <Text style={styles.heroChipText}>{t('localCommerce.safety.heroChipNoPayment')}</Text>
-                </View>
-                <View
-                  style={styles.heroChip}
-                  accessibilityRole="text"
-                  accessible
-                  accessibilityLabel={t('localCommerce.safety.heroChipConfirmedNotPaid')}
-                >
-                  <Ionicons name="information-circle-outline" size={11} color={EMERALD} accessibilityIgnoresInvertColors />
-                  <Text style={styles.heroChipText}>{t('localCommerce.safety.heroChipConfirmedNotPaid')}</Text>
-                </View>
+                <PremiumStatusChip accent="emerald" label={t('localCommerce.safety.pillRequestOnly')} />
+                <PremiumStatusChip accent="emerald" label={t('localCommerce.safety.pillNoPayment')} />
+                <PremiumStatusChip accent="emerald" label={t('localCommerce.safety.pillConfirmedNotPaid')} />
               </View>
             </LocalConstellationFrame>
           }
-          statusStrip={<LocalCommerceHubStatusStrip />}
           primaryActions={
-            <LocalCommerceHubPrimaryActions
-              onBrowseServices={openServiceHub}
-              onRequestBookingAssist={() => openLeonaPrefill(t('localCommerce.leonaBookingAssistPrefill'))}
-            />
+            <View
+              style={[
+                styles.heroActionRow,
+                isHubWide && styles.heroActionRowWide,
+                isHubDesktop && styles.heroActionRowDesktop,
+              ]}
+              testID="local-hero-actions"
+            >
+              <View
+                style={[
+                  styles.heroActionCell,
+                  isHubDesktop && styles.heroActionCellPrimary,
+                ]}
+              >
+                <PremiumAppTile
+                  variant="local"
+                  accent="emerald"
+                  size="hero"
+                  width="100%"
+                  icon="apps-outline"
+                  microScene={resolveLocalTileMicroScene('local-tile-nails')}
+                  statusLabel={t('localCommerce.bookingStatus.lite')}
+                  title={t('localCommerce.cta.browseServices')}
+                  subtitle={t('localCommerce.compactBrowseSub')}
+                  onPress={openServiceHub}
+                  accessibilityLabel={t('localCommerce.cta.browseServices')}
+                  testID="local-cta-browse-services"
+                />
+              </View>
+              <View
+                style={[
+                  styles.heroActionCell,
+                  isHubDesktop && styles.heroActionCellSecondary,
+                ]}
+              >
+                <PremiumAppTile
+                  variant="local"
+                  accent="cyan"
+                  size="hero"
+                  width="100%"
+                  icon="chatbubble-ellipses-outline"
+                  microScene={resolveLocalTileMicroScene('local-tile-restaurant')}
+                  statusLabel={t('localCommerce.bookingStatus.requestOnly')}
+                  title={t('localCommerce.cta.requestBooking')}
+                  subtitle={t('localCommerce.compactAssistSub')}
+                  onPress={() => openLeonaPrefill(bookingAssistPrefill)}
+                  accessibilityLabel={t('localCommerce.cta.requestBooking')}
+                  testID="local-cta-booking-assist"
+                />
+              </View>
+            </View>
           }
-          connectedUniverses={
+        >
+          <PremiumSection
+            kicker={t('localHub.localServicesKicker')}
+            leadingAccent="emerald"
+            compact
+            testID="local-primary-tile-grid"
+          >
+            <PremiumTileGrid columns={primaryGridColumns} wrapCells gap={premiumTileLayout.gridGap}>
+              <PremiumAppTile
+                variant="local"
+                accent="emerald"
+                width="100%"
+                icon="restaurant-outline"
+                microScene={resolveLocalTileMicroScene('local-tile-restaurant')}
+                statusLabel={t('localCommerce.bookingStatus.requestOnly')}
+                title={t('localHub.restaurantTitle')}
+                subtitle={t('localHub.restaurantSub')}
+                onPress={() => openLeonaPrefill(t('localCommerce.leonaRestaurantPrefill'))}
+                accessibilityLabel={t('localHub.restaurantTitle')}
+                testID="local-tile-restaurant"
+              />
+              <PremiumAppTile
+                variant="local"
+                accent="cyan"
+                width="100%"
+                icon="car-outline"
+                microScene={resolveLocalTileMicroScene('local-tile-transit')}
+                statusLabel={t('localCommerce.bookingStatus.lite')}
+                title={t('localHub.transitTitle')}
+                subtitle={t('localHub.transitSub')}
+                onPress={() => openLeonaPrefill(t('localHub.transitLeonaPrefill'))}
+                accessibilityLabel={t('localHub.transitTitle')}
+                testID="local-tile-transit"
+              />
+              <PremiumAppTile
+                variant="local"
+                accent="cyan"
+                width="100%"
+                icon="scale-outline"
+                microScene={resolveLocalTileMicroScene('local-tile-legal-wealth')}
+                statusLabel={t('localCommerce.bookingStatus.demo')}
+                title={t('localHub.legalWealthTitle')}
+                subtitle={t('localHub.legalWealthSub')}
+                onPress={() => void runUltraMasterBookingWithAlerts(t('localHub.legalWealthTitle'))}
+                accessibilityLabel={t('localHub.legalWealthTitle')}
+                testID="local-tile-legal-wealth"
+              />
+              <PremiumAppTile
+                variant="local"
+                accent="emerald"
+                width="100%"
+                icon="list-outline"
+                microScene={resolveLocalTileMicroScene('local-tile-my-requests')}
+                statusLabel={t('localCommerce.bookingStatus.requestOnly')}
+                title={t('local.userRequestStatus.localTileTitle')}
+                subtitle={t('local.userRequestStatus.localTileSub')}
+                onPress={() => navigation.navigate('LocalUserRequestStatus')}
+                accessibilityLabel={t('local.userRequestStatus.localTileA11y')}
+                testID="local-tile-my-requests"
+              />
+            </PremiumTileGrid>
+          </PremiumSection>
+
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={t('localCommerce.cta.requestBooking')}
+            onPress={() => openLeonaPrefill(bookingAssistPrefill)}
+            style={({ pressed }) => [styles.quickHelpStrip, pressed && styles.quickHelpStripPressed]}
+            testID="local-quick-help-strip"
+          >
+            <Ionicons name="sparkles-outline" size={18} color={CYAN} accessibilityIgnoresInvertColors />
+            <View style={styles.quickHelpCopy}>
+              <Text style={styles.quickHelpTitle}>{t('localCommerce.cta.requestBooking')}</Text>
+              <Text style={styles.quickHelpSub} numberOfLines={2}>
+                {t('localCommerce.safety.bookingRequestNote')}
+              </Text>
+            </View>
+            <Ionicons name="chevron-forward" size={16} color={INK_MUTED} accessibilityIgnoresInvertColors />
+          </Pressable>
+
+          <LocalHubCompactStatusGuide />
+
+          <View style={styles.secondaryHubSection}>
+            <PremiumSection
+              kicker={t('localHub.universeGridKicker')}
+              subtitle={t('localCommerce.safety.myRequestsBridge')}
+              leadingAccent="emerald"
+              compact
+            >
+              <PremiumTileGrid columns={gridColumns} wrapCells gap={premiumTileLayout.gridGapTight}>
+                <PremiumAppTile
+                  variant="local"
+                  accent="emerald"
+                  width="100%"
+                  icon="sparkles-outline"
+                  microScene={resolveLocalTileMicroScene('local-tile-nails')}
+                  statusLabel={t('localCommerce.bookingStatus.lite')}
+                  title={t('localHub.nailsTitle')}
+                  subtitle={t('localHub.nailsSub')}
+                  onPress={openServiceHub}
+                  accessibilityLabel="Nails và Spa"
+                  testID="local-tile-nails"
+                />
+                <PremiumAppTile
+                  variant="local"
+                  accent="violet"
+                  width="100%"
+                  icon="ticket-outline"
+                  microScene={resolveLocalTileMicroScene('local-tile-events')}
+                  statusLabel={t('localCommerce.bookingStatus.preview')}
+                  title={t('localHub.eventsTitle')}
+                  subtitle={t('localHub.eventsSub')}
+                  onPress={() => navigation.navigate('DailyReward')}
+                  accessibilityLabel={t('localHub.eventsTitle')}
+                  testID="local-tile-events"
+                />
+                <PremiumAppTile
+                  variant="local"
+                  accent="cyan"
+                  width="100%"
+                  icon="home-outline"
+                  microScene={resolveLocalTileMicroScene('local-tile-housing')}
+                  statusLabel={t('localCommerce.bookingStatus.lite')}
+                  title={t('localHub.classifiedsHousingTitle')}
+                  subtitle={t('localHub.classifiedsHousingSub')}
+                  onPress={() => void scrollToClassifieds()}
+                  accessibilityLabel={t('localHub.classifiedsHousingTitle')}
+                  testID="local-tile-housing"
+                />
+                <PremiumAppTile
+                  variant="local"
+                  accent="gold"
+                  width="100%"
+                  icon="pricetags-outline"
+                  microScene={resolveLocalTileMicroScene('local-tile-classifieds')}
+                  statusLabel={t('localCommerce.bookingStatus.lite')}
+                  title={t('localHub.classifiedsTitle')}
+                  subtitle={t('localHub.classifiedsRowSub', { unit: getVioCreditsLabel() })}
+                  onPress={() => void scrollToClassifieds()}
+                  accessibilityLabel={t('localHub.classifiedsTitle')}
+                  testID="local-tile-classifieds"
+                />
+                {legalScanEnabled ? (
+                  <PremiumAppTile
+                    variant="local"
+                    accent="violet"
+                    width="100%"
+                    icon="scan-outline"
+                    microScene={resolveLocalTileMicroScene('local-tile-legal-scanner')}
+                    statusLabel={t('localCommerce.bookingStatus.demo')}
+                    title={t('localHub.legalScannerLabel')}
+                    subtitle={t('localHub.legalScannerSub')}
+                    onPress={() => void onLegalScannerPress()}
+                    accessibilityLabel={t('localHub.legalScannerA11y')}
+                    disabled={legalScanBusy}
+                    testID="local-tile-legal-scanner"
+                  />
+                ) : null}
+              </PremiumTileGrid>
+            </PremiumSection>
+          </View>
+
+          <View style={styles.secondaryHubSection}>
+            <LocalCommerceHubCapabilities />
+          </View>
+
+          <View style={styles.secondaryHubSection}>
             <PremiumSection
               kicker={t('localHub.connectedUniversesKicker')}
               leadingAccent="emerald"
@@ -943,139 +1174,7 @@ export function LocalScreen() {
                 ) : null}
               </PremiumTileGrid>
             </PremiumSection>
-          }
-        >
-          <LocalCommerceHubStatusGuide />
-          <LocalCommerceHubCapabilities />
-          <PremiumSection
-            kicker={t('localHub.universeGridKicker')}
-            subtitle={t('localCommerce.safety.myRequestsBridge')}
-            leadingAccent="emerald"
-            compact
-          >
-            <PremiumTileGrid columns={gridColumns} wrapCells gap={premiumTileLayout.gridGapTight}>
-          <PremiumAppTile
-            variant="local"
-            accent="emerald"
-            width="100%"
-            icon="list-outline"
-            microScene={resolveLocalTileMicroScene('local-tile-my-requests')}
-            statusLabel={t('localCommerce.bookingStatus.requestOnly')}
-            title={t('local.userRequestStatus.localTileTitle')}
-            subtitle={t('local.userRequestStatus.localTileSub')}
-            onPress={() => navigation.navigate('LocalUserRequestStatus')}
-            accessibilityLabel={t('local.userRequestStatus.localTileA11y')}
-            testID="local-tile-my-requests"
-          />
-          <PremiumAppTile
-            variant="local"
-            accent="emerald"
-            width="100%"
-            icon="sparkles-outline"
-            microScene={resolveLocalTileMicroScene('local-tile-nails')}
-            statusLabel={t('localCommerce.bookingStatus.lite')}
-            title={t('localHub.nailsTitle')}
-            subtitle={t('localHub.nailsSub')}
-            onPress={openServiceHub}
-            accessibilityLabel="Nails và Spa"
-            testID="local-tile-nails"
-          />
-          <PremiumAppTile
-            variant="local"
-            accent="emerald"
-            width="100%"
-            icon="restaurant-outline"
-            microScene={resolveLocalTileMicroScene('local-tile-restaurant')}
-            statusLabel={t('localCommerce.bookingStatus.requestOnly')}
-            title={t('localHub.restaurantTitle')}
-            subtitle={t('localHub.restaurantSub')}
-            onPress={() => openLeonaPrefill(t('localCommerce.leonaRestaurantPrefill'))}
-            accessibilityLabel={t('localHub.restaurantTitle')}
-            testID="local-tile-restaurant"
-          />
-          <PremiumAppTile
-            variant="local"
-            accent="cyan"
-            width="100%"
-            icon="scale-outline"
-            microScene={resolveLocalTileMicroScene('local-tile-legal-wealth')}
-            statusLabel={t('localCommerce.bookingStatus.demo')}
-            title={t('localHub.legalWealthTitle')}
-            subtitle={t('localHub.legalWealthSub')}
-            onPress={() => void runUltraMasterBookingWithAlerts(t('localHub.legalWealthTitle'))}
-            accessibilityLabel={t('localHub.legalWealthTitle')}
-            testID="local-tile-legal-wealth"
-          />
-          <PremiumAppTile
-            variant="local"
-            accent="cyan"
-            width="100%"
-            icon="car-outline"
-            microScene={resolveLocalTileMicroScene('local-tile-transit')}
-            statusLabel={t('localCommerce.bookingStatus.lite')}
-            title={t('localHub.transitTitle')}
-            subtitle={t('localHub.transitSub')}
-            onPress={() => openLeonaPrefill(t('localHub.transitLeonaPrefill'))}
-            accessibilityLabel={t('localHub.transitTitle')}
-            testID="local-tile-transit"
-          />
-          <PremiumAppTile
-            variant="local"
-            accent="violet"
-            width="100%"
-            icon="ticket-outline"
-            microScene={resolveLocalTileMicroScene('local-tile-events')}
-            statusLabel={t('localCommerce.bookingStatus.preview')}
-            title={t('localHub.eventsTitle')}
-            subtitle={t('localHub.eventsSub')}
-            onPress={() => navigation.navigate('DailyReward')}
-            accessibilityLabel={t('localHub.eventsTitle')}
-            testID="local-tile-events"
-          />
-          <PremiumAppTile
-            variant="local"
-            accent="cyan"
-            width="100%"
-            icon="home-outline"
-            microScene={resolveLocalTileMicroScene('local-tile-housing')}
-            statusLabel={t('localCommerce.bookingStatus.lite')}
-            title={t('localHub.classifiedsHousingTitle')}
-            subtitle={t('localHub.classifiedsHousingSub')}
-            onPress={() => void scrollToClassifieds()}
-            accessibilityLabel={t('localHub.classifiedsHousingTitle')}
-            testID="local-tile-housing"
-          />
-          <PremiumAppTile
-            variant="local"
-            accent="gold"
-            width="100%"
-            icon="pricetags-outline"
-            microScene={resolveLocalTileMicroScene('local-tile-classifieds')}
-            statusLabel={t('localCommerce.bookingStatus.lite')}
-            title={t('localHub.classifiedsTitle')}
-            subtitle={t('localHub.classifiedsRowSub', { unit: getVioCreditsLabel() })}
-            onPress={() => void scrollToClassifieds()}
-            accessibilityLabel={t('localHub.classifiedsTitle')}
-            testID="local-tile-classifieds"
-          />
-          {legalScanEnabled ? (
-            <PremiumAppTile
-              variant="local"
-              accent="violet"
-              width="100%"
-              icon="scan-outline"
-              microScene={resolveLocalTileMicroScene('local-tile-legal-scanner')}
-              statusLabel={t('localCommerce.bookingStatus.demo')}
-              title={t('localHub.legalScannerLabel')}
-              subtitle={t('localHub.legalScannerSub')}
-              onPress={() => void onLegalScannerPress()}
-              accessibilityLabel={t('localHub.legalScannerA11y')}
-              disabled={legalScanBusy}
-              testID="local-tile-legal-scanner"
-            />
-          ) : null}
-            </PremiumTileGrid>
-          </PremiumSection>
+          </View>
 
           <View
             onLayout={(e) => {
@@ -1492,6 +1591,121 @@ const styles = StyleSheet.create({
     letterSpacing: 0.35,
     textTransform: 'uppercase',
     color: EMERALD,
+  },
+  hubTrustLine: {
+    fontSize: 10,
+    lineHeight: 14,
+    fontFamily: FontFamily.semibold,
+    color: premiumLuminousInk.subtitleMinimum,
+    marginTop: 2,
+  },
+  heroActionRow: {
+    width: '100%',
+    gap: premiumTileLayout.gridGap,
+    flexDirection: 'column',
+  },
+  heroActionRowWide: {
+    flexDirection: 'row',
+    alignItems: 'stretch',
+    flexWrap: 'wrap',
+  },
+  heroActionRowDesktop: {
+    gap: 12,
+  },
+  heroActionCell: {
+    width: '100%',
+    minWidth: 0,
+  },
+  heroActionCellPrimary: {
+    flex: 1.12,
+    minWidth: '48%',
+    maxWidth: '100%',
+  },
+  heroActionCellSecondary: {
+    flex: 0.88,
+    minWidth: '40%',
+    maxWidth: '100%',
+  },
+  quickHelpStrip: {
+    width: '100%',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    borderRadius: premiumTileLayout.radius,
+    borderWidth: premiumTileGlass.edgeWidth,
+    borderColor: premiumUniverseStroke('cyan'),
+    backgroundColor: premiumModalGlass.surface,
+    ...(Platform.OS === 'web'
+      ? ({ boxShadow: '0 0 0 1px rgba(92, 205, 255, 0.12), 0 0 14px rgba(92, 205, 255, 0.08)' } as ViewStyle)
+      : {}),
+  },
+  quickHelpStripPressed: { opacity: 0.9 },
+  quickHelpCopy: {
+    flex: 1,
+    minWidth: 0,
+    gap: 2,
+  },
+  quickHelpTitle: {
+    fontSize: 13,
+    fontFamily: FontFamily.extrabold,
+    color: premiumLuminousInk.titleBright,
+    letterSpacing: -0.1,
+  },
+  quickHelpSub: {
+    fontSize: 10,
+    lineHeight: 14,
+    fontFamily: FontFamily.semibold,
+    color: premiumLuminousInk.subtitle,
+  },
+  compactStatusSection: {
+    width: '100%',
+    paddingHorizontal: 10,
+    paddingVertical: 10,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(72, 210, 165, 0.16)',
+    backgroundColor: 'rgba(5, 11, 20, 0.42)',
+    gap: 6,
+  },
+  compactStatusKicker: {
+    fontSize: 9,
+    fontFamily: FontFamily.extrabold,
+    letterSpacing: 0.6,
+    textTransform: 'uppercase',
+    color: EMERALD,
+  },
+  compactStatusNote: {
+    fontSize: 10,
+    lineHeight: 14,
+    fontFamily: FontFamily.semibold,
+    color: premiumLuminousInk.subtitleMinimum,
+  },
+  compactStatusChipRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+    marginTop: 4,
+  },
+  compactStatusLegendItem: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 5,
+    flex: 1,
+    minWidth: '46%',
+    maxWidth: '100%',
+  },
+  compactStatusLegendText: {
+    flex: 1,
+    fontSize: 9,
+    lineHeight: 12,
+    fontFamily: FontFamily.semibold,
+    color: premiumLuminousInk.subtitleMinimum,
+  },
+  secondaryHubSection: {
+    width: '100%',
+    opacity: 0.96,
   },
   safetyBridge: {
     marginBottom: 8,
