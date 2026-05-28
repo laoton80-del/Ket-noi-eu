@@ -1514,6 +1514,10 @@
     "eventsTitle": "Community events",
     "eventsSub": "Community & VIP guests",
     "classifiedsTitle": "Classifieds",
+    "classifiedsFeaturedSubtitle": "New and featured community listings",
+    "viewAllClassifieds": "View all",
+    "classifiedsPreviewMore": "+{{count}} more in full classifieds (Pilot)",
+    "classifiedsFeaturedSafety": "Preview only · Demo listings on this device · No payment captured · No sale, hire, or lease guarantee · VIP highlight is pilot-only",
     "classifiedsRowSub": "Classifieds · VIP posts use {{unit}}",
     "legalScannerLabel": "AI legal scan",
     "legalScannerA11y": "AI legal document scan",
@@ -1524,7 +1528,24 @@
     "vipPostFailBody": "Insufficient VIO Credits or a temporary service issue.",
     "vipPostSuccessTitle": "Listing posted",
     "vipPostSuccessVipBody": "VIP boost applied on this device preview. Paid listing placement only — not a booking deposit or merchant-held funds.",
-    "vipPostSuccessNormalBody": "Standard listing added on this device preview."
+    "vipPostSuccessNormalBody": "Standard listing added on this device preview.",
+    "reframe": {
+      "heroEyebrow": "VIONA LOCAL UNIVERSE",
+      "heroHeadline": "Vietnamese services, closer to you",
+      "heroSubtitle": "Local services, booking help, legal guidance, and community support — request-only, no instant fulfillment.",
+      "heroCtaBrowse": "Browse services",
+      "heroCtaBookingAssist": "Send booking assist",
+      "trustMerchantFirst": "Merchant confirms first",
+      "flagshipRowKicker": "Start here",
+      "quickAccessTitle": "Local for you",
+      "exploreMoreTools": "Explore more local tools",
+      "forVietnameseBusinesses": "For Vietnamese businesses",
+      "merchantToolsHubSub": "Dashboard and inbox handoff",
+      "merchantToolsBookingSub": "Request intake for merchants",
+      "quickActionsKicker": "Quick access",
+      "quickActionAiReceptionist": "AI Receptionist",
+      "quickActionLanguageAssist": "Language assist"
+    }
   },
   "b2bPaywallUi": {
     "kicker": "Business upgrade",

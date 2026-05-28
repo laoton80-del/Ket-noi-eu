@@ -23,7 +23,7 @@ import Reanimated, { Easing, useAnimatedStyle, useSharedValue, withTiming } from
 import { getDemoBookingPayload } from '../../config/demoRestBooking';
 import { getFeatureFlags } from '../../core/feature-flags/featureFlags';
 import { useMiniAppEntry } from '../../hooks/useMiniAppEntry';
-import { formatVioCredits, getVioCreditsLabel } from '../../core/monetization/vioDisplayLabels';
+import { formatVioCredits } from '../../core/monetization/vioDisplayLabels';
 import type { RootStackParamList } from '../../navigation/routes';
 import { MAIN_TAB } from '../../navigation/routes';
 import { previewLegalScanCostVig, scanLegalDocument } from '../../services/aiService';
@@ -36,20 +36,14 @@ import { useTranslation } from '../../i18n';
 import { useHomeCommand } from '../../context/HomeCommandContext';
 import { useFullscreenMode } from '../../hooks/useFullscreenMode';
 import { useVionaHomeDaylightBoost } from '../../components/viona/useVionaHomeDaylightBoost';
-import { LocalCommerceHubCapabilities } from '../../components/localCommerce/LocalCommerceClarityBlock';
-import { LocalConstellationFrame } from '../../components/local/LocalConstellationFrame';
-import {
-  PremiumAppShell,
-  PremiumAppTile,
-  PremiumHubLayout,
-  PremiumSection,
-  PremiumStatusChip,
-  PremiumTileGrid,
-} from '../../components/viona';
+import { LocalConnectedUniverseLinks } from '../../components/viona/local/LocalConnectedUniverseLinks';
+import { LocalClassifiedsFeaturedPreview } from '../../components/viona/local/LocalClassifiedsFeaturedPreview';
+import { LocalMerchantToolsSection } from '../../components/viona/local/LocalMerchantToolsSection';
+import { LocalOpeningStageLayout } from '../../components/viona/local/LocalOpeningStageLayout';
+import { PremiumAppShell, PremiumHubLayout } from '../../components/viona';
 import { VionaBrandLockup } from '../../components/viona/VionaBrandLockup';
 import { VIONA_TABLET_MIN_WIDTH } from '../../components/viona/VionaMiniAppShell';
 import { vionaTokens } from '../../design';
-import { resolveLocalTileMicroScene } from '../../design/premiumTileMicroScene';
 import {
   premiumLuminousInk,
   premiumModalGlass,
@@ -58,7 +52,6 @@ import {
   premiumTileWebBackdropBlur,
   premiumUniverseAccentSpec,
   premiumUniverseStroke,
-  resolvePremiumShellContentRail,
 } from '../../design/premiumTileVisualTokens';
 import {
   FASHION_HOME_COMMAND_RAIL_GRADIENT,
@@ -68,7 +61,7 @@ import {
   fashionHomeWebCommandUtilityPressStyle,
 } from '../../components/viona/fashionHomeDesktopShell';
 import { SmartTrioLanguageSheet } from '../../components/smartTrio/SmartTrioLanguageSheet';
-import { localConstellation, resolveLocalGridColumns } from '../../components/local/localConstellationTokens';
+import { localConstellation } from '../../components/local/localConstellationTokens';
 import { theme } from '../../theme/theme';
 import { FontFamily } from '../../theme/typography';
 
@@ -236,6 +229,7 @@ function useLocalWebShellCompensation() {
 
       const hiddenHosts = new Set<HTMLElement>();
       const scenePadHosts = new Set<HTMLElement>();
+      const widenedShellHosts = new Set<HTMLElement>();
       const languageTitle = t('smartTrio.switcher.title');
       const accountA11y = t('home.accountChipA11y');
       const accountChip = t('home.accountChip');
@@ -348,6 +342,11 @@ function useLocalWebShellCompensation() {
         const style = document.createElement('style');
         style.id = LOCAL_LEGACY_HIDE_STYLE_ID;
         style.textContent = `
+          html[data-viona-local-hub="true"],
+          body[data-viona-local-hub="true"] {
+            background-color: ${BG} !important;
+            overflow-x: hidden !important;
+          }
           body[data-viona-local-hub="true"] [data-viona-local-legacy-chrome="true"] {
             display: none !important;
           }
@@ -355,23 +354,56 @@ function useLocalWebShellCompensation() {
         document.head.appendChild(style);
       };
 
+      const applyWebPageCanvas = () => {
+        document.documentElement.dataset.vionaLocalHub = 'true';
+        document.body.dataset.vionaLocalHub = 'true';
+        document.documentElement.style.backgroundColor = BG;
+        document.body.style.backgroundColor = BG;
+        document.documentElement.style.overflowX = 'hidden';
+        document.body.style.overflowX = 'hidden';
+      };
+
+      const widenNarrowAppShellAncestors = () => {
+        const root = localRoot();
+        if (!root) return;
+        let current: HTMLElement | null = root.parentElement;
+        while (current && current !== document.body) {
+          const maxWidth = window.getComputedStyle(current).maxWidth;
+          if (maxWidth === '600px') {
+            if (!widenedShellHosts.has(current)) {
+              widenedShellHosts.add(current);
+              current.dataset.vionaLocalShellMaxWidthPrev = current.style.maxWidth;
+              current.dataset.vionaLocalShellWidthPrev = current.style.width;
+            }
+            current.style.maxWidth = '100%';
+            current.style.width = '100%';
+          }
+          current = current.parentElement;
+        }
+      };
+
       ensureLegacyHideStyle();
-      document.body.dataset.vionaLocalHub = 'true';
+      applyWebPageCanvas();
+      widenNarrowAppShellAncestors();
       resetSceneTopPadding();
       scanLegacyChrome();
       const t1 = window.setTimeout(() => {
+        widenNarrowAppShellAncestors();
         resetSceneTopPadding();
         scanLegacyChrome();
       }, 250);
       const t2 = window.setTimeout(() => {
+        widenNarrowAppShellAncestors();
         resetSceneTopPadding();
         scanLegacyChrome();
       }, 1200);
       const t3 = window.setTimeout(() => {
+        widenNarrowAppShellAncestors();
         resetSceneTopPadding();
         scanLegacyChrome();
       }, 3000);
       const observer = new MutationObserver(() => {
+        widenNarrowAppShellAncestors();
         resetSceneTopPadding();
         scanLegacyChrome();
       });
@@ -382,7 +414,12 @@ function useLocalWebShellCompensation() {
         window.clearTimeout(t2);
         window.clearTimeout(t3);
         observer.disconnect();
+        delete document.documentElement.dataset.vionaLocalHub;
         delete document.body.dataset.vionaLocalHub;
+        document.documentElement.style.removeProperty('background-color');
+        document.body.style.removeProperty('background-color');
+        document.documentElement.style.removeProperty('overflow-x');
+        document.body.style.removeProperty('overflow-x');
         scenePadHosts.forEach((host) => {
           host.style.paddingTop = host.dataset.localScenePadPrev ?? '';
           delete host.dataset.localScenePadPrev;
@@ -394,15 +431,22 @@ function useLocalWebShellCompensation() {
           delete host.dataset.vionaLocalLegacyChrome;
         });
         hiddenHosts.clear();
+        widenedShellHosts.forEach((host) => {
+          host.style.maxWidth = host.dataset.vionaLocalShellMaxWidthPrev ?? '';
+          host.style.width = host.dataset.vionaLocalShellWidthPrev ?? '';
+          delete host.dataset.vionaLocalShellMaxWidthPrev;
+          delete host.dataset.vionaLocalShellWidthPrev;
+        });
+        widenedShellHosts.clear();
       };
     }, [t])
   );
 }
 
-const CATEGORY_META: Readonly<Record<ClassifiedCategory, { title: string; icon: keyof typeof Ionicons.glyphMap }>> = {
-  hiring: { title: 'Tuyển thợ', icon: 'construct-outline' },
-  shop_transfer: { title: 'Sang tiệm', icon: 'storefront-outline' },
-  housing: { title: 'Thuê nhà', icon: 'home-outline' },
+const CATEGORY_META: Readonly<Record<ClassifiedCategory, { title: string }>> = {
+  hiring: { title: 'Tuyen tho' },
+  shop_transfer: { title: 'Sang tiem' },
+  housing: { title: 'Thue nha' },
 };
 
 const DEFAULT_POSTS: readonly ClassifiedPost[] = [
@@ -440,7 +484,7 @@ const DEFAULT_POSTS: readonly ClassifiedPost[] = [
 
 export function LocalScreen() {
   const { t, i18n } = useTranslation();
-  const { width } = useWindowDimensions();
+  const { width, height } = useWindowDimensions();
   const navigation = useNavigation<Nav>();
   const { openMiniApp } = useMiniAppEntry();
   const wallet = useWalletState();
@@ -648,28 +692,11 @@ export function LocalScreen() {
     }
   };
 
-  const { innerWidth } = resolvePremiumShellContentRail(width);
   const isLocalMobile = width > 0 && width < 480;
-  const isLocalPhone = width > 0 && width < 400;
   const useIconOnlyShellUtilities = isLocalMobile;
-  const gridColumns = useMemo(() => {
-    if (isLocalPhone) return 1;
-    return resolveLocalGridColumns(width);
-  }, [isLocalPhone, width]);
-  const primaryGridColumns = useMemo(() => {
-    if (width >= 1024) return 4;
-    if (isLocalPhone) return 1;
-    return 2;
-  }, [isLocalPhone, width]);
   const isHubWide = width >= 768;
-  const isHubDesktop = width >= 1024;
+  const isShortLandscape = width > height && height > 0 && height < 500;
   const bookingAssistPrefill = t('localCommerce.leonaBookingAssistPrefill');
-  const classifiedColumns = resolveLocalGridColumns(width, {
-    desktop: 3,
-    tablet: 2,
-    phone: 1,
-    tabletMin: 600,
-  });
   const openLanguageSheet = useCallback(() => {
     setLanguageSheetOpen(true);
   }, []);
@@ -731,20 +758,10 @@ export function LocalScreen() {
   const useCompactCommandLogo = width > 0 && width < 1060;
   const miniappDockBottom = localConstellation.miniappDockBottomOffset + insets.bottom;
 
-  const tabletFullWidth = Platform.OS === 'web' && width >= VIONA_TABLET_MIN_WIDTH;
-  const tabletBreakoutStyle = useMemo((): StyleProp<ViewStyle> | null => {
-    if (!tabletFullWidth) return null;
-    return {
-      width: '100vw',
-      maxWidth: '100vw',
-      alignSelf: 'center',
-      marginLeft: 'calc(50% - 50vw)',
-      marginRight: 'calc(50% - 50vw)',
-    } as unknown as ViewStyle;
-  }, [tabletFullWidth, width]);
+  const webTabletFullWidth = Platform.OS === 'web' && width >= VIONA_TABLET_MIN_WIDTH;
 
   return (
-    <SafeAreaView style={[styles.container, tabletBreakoutStyle]} edges={['left', 'right']}>
+    <SafeAreaView style={styles.container} edges={['left', 'right']}>
       <View
         pointerEvents="none"
         style={[
@@ -768,7 +785,7 @@ export function LocalScreen() {
         style={[styles.contentFieldVeil, { top: -canvasBackdropTopBleed }]}
       />
       <View
-        style={styles.root}
+        style={[styles.root, webTabletFullWidth && styles.rootWebTabletFull]}
         nativeID="local-hub-root"
         {...(Platform.OS === 'web' ? ({ id: 'local-hub-root' } as const) : {})}
       >
@@ -777,7 +794,7 @@ export function LocalScreen() {
         scrollRef={scrollRef}
         withMiniappDockClearance
         withTabBarClearance
-        bottomClearanceExtra={isLocalMobile ? 32 : 16}
+        bottomClearanceExtra={isLocalMobile ? 48 : isShortLandscape ? 36 : isHubWide ? 30 : 22}
         enableLuminousBackground
         backgroundUniverse="local"
         testID="local-premium-shell"
@@ -875,306 +892,23 @@ export function LocalScreen() {
         <PremiumHubLayout
           testID="local-premium-hub"
           hero={
-            <LocalConstellationFrame
-              accent="emerald"
-              tier="service"
-              radius={14}
-              style={styles.heroIntroCard}
-              contentStyle={[styles.heroIntroInner, isLocalMobile && styles.heroIntroInnerMobile]}
-            >
-              <Text style={styles.hubKicker}>{t('localCommerce.title')}</Text>
-              <Text style={[styles.heroHeadline, isLocalMobile && styles.heroHeadlineMobile]}>
-                {t('localHub.heroHeadline')}
-              </Text>
-              <Text style={[styles.hubSub, isLocalMobile && styles.hubSubMobile]} numberOfLines={2}>
-                {t('localHub.heroSub')}
-              </Text>
-              <Text style={styles.hubTrustLine} numberOfLines={2}>
-                {t('localCommerce.compactSubtitle')}
-              </Text>
-              <View style={[styles.heroChipRow, isLocalMobile && styles.heroChipRowMobile]}>
-                <PremiumStatusChip accent="emerald" label={t('localCommerce.safety.pillRequestOnly')} />
-                <PremiumStatusChip accent="emerald" label={t('localCommerce.safety.pillNoPayment')} />
-                <PremiumStatusChip accent="emerald" label={t('localCommerce.safety.pillConfirmedNotPaid')} />
-              </View>
-            </LocalConstellationFrame>
-          }
-          primaryActions={
-            <View
-              style={[
-                styles.heroActionRow,
-                isHubWide && styles.heroActionRowWide,
-                isHubDesktop && styles.heroActionRowDesktop,
-              ]}
-              testID="local-hero-actions"
-            >
-              <View
-                style={[
-                  styles.heroActionCell,
-                  isHubDesktop && styles.heroActionCellPrimary,
-                ]}
-              >
-                <PremiumAppTile
-                  variant="local"
-                  accent="emerald"
-                  size="hero"
-                  width="100%"
-                  icon="apps-outline"
-                  microScene={resolveLocalTileMicroScene('local-tile-nails')}
-                  statusLabel={t('localCommerce.bookingStatus.lite')}
-                  title={t('localCommerce.cta.browseServices')}
-                  subtitle={t('localCommerce.compactBrowseSub')}
-                  onPress={openServiceHub}
-                  accessibilityLabel={t('localCommerce.cta.browseServices')}
-                  testID="local-cta-browse-services"
-                />
-              </View>
-              <View
-                style={[
-                  styles.heroActionCell,
-                  isHubDesktop && styles.heroActionCellSecondary,
-                ]}
-              >
-                <PremiumAppTile
-                  variant="local"
-                  accent="cyan"
-                  size="hero"
-                  width="100%"
-                  icon="chatbubble-ellipses-outline"
-                  microScene={resolveLocalTileMicroScene('local-tile-restaurant')}
-                  statusLabel={t('localCommerce.bookingStatus.requestOnly')}
-                  title={t('localCommerce.cta.requestBooking')}
-                  subtitle={t('localCommerce.compactAssistSub')}
-                  onPress={() => openLeonaPrefill(bookingAssistPrefill)}
-                  accessibilityLabel={t('localCommerce.cta.requestBooking')}
-                  testID="local-cta-booking-assist"
-                />
-              </View>
-            </View>
+            <LocalOpeningStageLayout
+              onBrowseServices={openServiceHub}
+              onBookingAssist={() => openLeonaPrefill(bookingAssistPrefill)}
+              onMyRequests={() => navigation.navigate('LocalUserRequestStatus')}
+              onLegalWealth={() => void runUltraMasterBookingWithAlerts(t('localHub.legalWealthTitle'))}
+              onRestaurants={() => openLeonaPrefill(t('localCommerce.leonaRestaurantPrefill'))}
+              onTransit={() => openLeonaPrefill(t('localHub.transitLeonaPrefill'))}
+              onRentals={() => void scrollToClassifieds()}
+              onClassifieds={() => void scrollToClassifieds()}
+              onNailsSpa={openServiceHub}
+              onCommunityEvents={() => navigation.navigate('DailyReward')}
+              onAiReceptionist={() => navigation.navigate('AiReceptionistDemoSimulator')}
+              onLanguageAssist={openLanguageSheet}
+            />
           }
         >
-          <PremiumSection
-            kicker={t('localHub.localServicesKicker')}
-            leadingAccent="emerald"
-            compact
-            testID="local-primary-tile-grid"
-          >
-            <PremiumTileGrid columns={primaryGridColumns} wrapCells gap={premiumTileLayout.gridGap}>
-              <PremiumAppTile
-                variant="local"
-                accent="emerald"
-                width="100%"
-                icon="restaurant-outline"
-                microScene={resolveLocalTileMicroScene('local-tile-restaurant')}
-                statusLabel={t('localCommerce.bookingStatus.requestOnly')}
-                title={t('localHub.restaurantTitle')}
-                subtitle={t('localHub.restaurantSub')}
-                onPress={() => openLeonaPrefill(t('localCommerce.leonaRestaurantPrefill'))}
-                accessibilityLabel={t('localHub.restaurantTitle')}
-                testID="local-tile-restaurant"
-              />
-              <PremiumAppTile
-                variant="local"
-                accent="cyan"
-                width="100%"
-                icon="car-outline"
-                microScene={resolveLocalTileMicroScene('local-tile-transit')}
-                statusLabel={t('localCommerce.bookingStatus.lite')}
-                title={t('localHub.transitTitle')}
-                subtitle={t('localHub.transitSub')}
-                onPress={() => openLeonaPrefill(t('localHub.transitLeonaPrefill'))}
-                accessibilityLabel={t('localHub.transitTitle')}
-                testID="local-tile-transit"
-              />
-              <PremiumAppTile
-                variant="local"
-                accent="cyan"
-                width="100%"
-                icon="scale-outline"
-                microScene={resolveLocalTileMicroScene('local-tile-legal-wealth')}
-                statusLabel={t('localCommerce.bookingStatus.demo')}
-                title={t('localHub.legalWealthTitle')}
-                subtitle={t('localHub.legalWealthSub')}
-                onPress={() => void runUltraMasterBookingWithAlerts(t('localHub.legalWealthTitle'))}
-                accessibilityLabel={t('localHub.legalWealthTitle')}
-                testID="local-tile-legal-wealth"
-              />
-              <PremiumAppTile
-                variant="local"
-                accent="emerald"
-                width="100%"
-                icon="list-outline"
-                microScene={resolveLocalTileMicroScene('local-tile-my-requests')}
-                statusLabel={t('localCommerce.bookingStatus.requestOnly')}
-                title={t('local.userRequestStatus.localTileTitle')}
-                subtitle={t('local.userRequestStatus.localTileSub')}
-                onPress={() => navigation.navigate('LocalUserRequestStatus')}
-                accessibilityLabel={t('local.userRequestStatus.localTileA11y')}
-                testID="local-tile-my-requests"
-              />
-            </PremiumTileGrid>
-          </PremiumSection>
-
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel={t('localCommerce.cta.requestBooking')}
-            onPress={() => openLeonaPrefill(bookingAssistPrefill)}
-            style={({ pressed }) => [styles.quickHelpStrip, pressed && styles.quickHelpStripPressed]}
-            testID="local-quick-help-strip"
-          >
-            <Ionicons name="sparkles-outline" size={18} color={CYAN} accessibilityIgnoresInvertColors />
-            <View style={styles.quickHelpCopy}>
-              <Text style={styles.quickHelpTitle}>{t('localCommerce.cta.requestBooking')}</Text>
-              <Text style={styles.quickHelpSub} numberOfLines={2}>
-                {t('localCommerce.safety.bookingRequestNote')}
-              </Text>
-            </View>
-            <Ionicons name="chevron-forward" size={16} color={INK_MUTED} accessibilityIgnoresInvertColors />
-          </Pressable>
-
           <LocalHubCompactStatusGuide />
-
-          <View style={styles.secondaryHubSection}>
-            <PremiumSection
-              kicker={t('localHub.universeGridKicker')}
-              subtitle={t('localCommerce.safety.myRequestsBridge')}
-              leadingAccent="emerald"
-              compact
-            >
-              <PremiumTileGrid columns={gridColumns} wrapCells gap={premiumTileLayout.gridGapTight}>
-                <PremiumAppTile
-                  variant="local"
-                  accent="emerald"
-                  width="100%"
-                  icon="sparkles-outline"
-                  microScene={resolveLocalTileMicroScene('local-tile-nails')}
-                  statusLabel={t('localCommerce.bookingStatus.lite')}
-                  title={t('localHub.nailsTitle')}
-                  subtitle={t('localHub.nailsSub')}
-                  onPress={openServiceHub}
-                  accessibilityLabel="Nails và Spa"
-                  testID="local-tile-nails"
-                />
-                <PremiumAppTile
-                  variant="local"
-                  accent="violet"
-                  width="100%"
-                  icon="ticket-outline"
-                  microScene={resolveLocalTileMicroScene('local-tile-events')}
-                  statusLabel={t('localCommerce.bookingStatus.preview')}
-                  title={t('localHub.eventsTitle')}
-                  subtitle={t('localHub.eventsSub')}
-                  onPress={() => navigation.navigate('DailyReward')}
-                  accessibilityLabel={t('localHub.eventsTitle')}
-                  testID="local-tile-events"
-                />
-                <PremiumAppTile
-                  variant="local"
-                  accent="cyan"
-                  width="100%"
-                  icon="home-outline"
-                  microScene={resolveLocalTileMicroScene('local-tile-housing')}
-                  statusLabel={t('localCommerce.bookingStatus.lite')}
-                  title={t('localHub.classifiedsHousingTitle')}
-                  subtitle={t('localHub.classifiedsHousingSub')}
-                  onPress={() => void scrollToClassifieds()}
-                  accessibilityLabel={t('localHub.classifiedsHousingTitle')}
-                  testID="local-tile-housing"
-                />
-                <PremiumAppTile
-                  variant="local"
-                  accent="gold"
-                  width="100%"
-                  icon="pricetags-outline"
-                  microScene={resolveLocalTileMicroScene('local-tile-classifieds')}
-                  statusLabel={t('localCommerce.bookingStatus.lite')}
-                  title={t('localHub.classifiedsTitle')}
-                  subtitle={t('localHub.classifiedsRowSub', { unit: getVioCreditsLabel() })}
-                  onPress={() => void scrollToClassifieds()}
-                  accessibilityLabel={t('localHub.classifiedsTitle')}
-                  testID="local-tile-classifieds"
-                />
-                {legalScanEnabled ? (
-                  <PremiumAppTile
-                    variant="local"
-                    accent="violet"
-                    width="100%"
-                    icon="scan-outline"
-                    microScene={resolveLocalTileMicroScene('local-tile-legal-scanner')}
-                    statusLabel={t('localCommerce.bookingStatus.demo')}
-                    title={t('localHub.legalScannerLabel')}
-                    subtitle={t('localHub.legalScannerSub')}
-                    onPress={() => void onLegalScannerPress()}
-                    accessibilityLabel={t('localHub.legalScannerA11y')}
-                    disabled={legalScanBusy}
-                    testID="local-tile-legal-scanner"
-                  />
-                ) : null}
-              </PremiumTileGrid>
-            </PremiumSection>
-          </View>
-
-          <View style={styles.secondaryHubSection}>
-            <LocalCommerceHubCapabilities />
-          </View>
-
-          <View style={styles.secondaryHubSection}>
-            <PremiumSection
-              kicker={t('localHub.connectedUniversesKicker')}
-              leadingAccent="emerald"
-              compact
-            >
-              <PremiumTileGrid
-                columns={Math.min(gridColumns, 3)}
-                wrapCells
-                gap={premiumTileLayout.gridGapTight}
-              >
-                {featureFlags.travelLiteEnabled ? (
-                  <PremiumAppTile
-                    variant="travel"
-                    accent="cyan"
-                    width="100%"
-                    icon="airplane-outline"
-                    microScene={resolveLocalTileMicroScene('local-tile-connected-travel')}
-                    statusLabel={t('localCommerce.bookingStatus.lite')}
-                    title={t('localHub.connectedTravel')}
-                    subtitle={t('localHub.connectedTravelSub')}
-                    onPress={openTravelUniverse}
-                    accessibilityLabel={t('localHub.connectedTravel')}
-                    testID="local-tile-connected-travel"
-                  />
-                ) : null}
-                <PremiumAppTile
-                  variant="business"
-                  accent="gold"
-                  width="100%"
-                  icon="briefcase-outline"
-                  microScene={resolveLocalTileMicroScene('local-tile-connected-business')}
-                  statusLabel={t('localCommerce.bookingStatus.pilot')}
-                  title={t('localHub.connectedBusiness')}
-                  subtitle={t('localHub.connectedBusinessSub')}
-                  onPress={openBusinessUniverse}
-                  accessibilityLabel={t('localHub.connectedBusiness')}
-                  testID="local-tile-connected-business"
-                />
-                {featureFlags.academyLiteEnabled ? (
-                  <PremiumAppTile
-                    variant="academy"
-                    accent="violet"
-                    width="100%"
-                    icon="school-outline"
-                    microScene={resolveLocalTileMicroScene('local-tile-connected-academy')}
-                    statusLabel={t('localCommerce.bookingStatus.lite')}
-                    title={t('localHub.connectedAcademy')}
-                    subtitle={t('localHub.connectedAcademySub')}
-                    onPress={openAcademyUniverse}
-                    accessibilityLabel={t('localHub.connectedAcademy')}
-                    testID="local-tile-connected-academy"
-                  />
-                ) : null}
-              </PremiumTileGrid>
-            </PremiumSection>
-          </View>
 
           <View
             onLayout={(e) => {
@@ -1182,41 +916,39 @@ export function LocalScreen() {
             }}
             style={styles.classifiedsAnchor}
           >
-            <PremiumSection
-              kicker={t('localHub.classifiedsKicker')}
-              title={t('localHub.classifiedsTitle')}
-              leadingAccent="gold"
-              compact
-              action={<Text style={styles.walletHint}>{formatVioCredits(wallet.credits)}</Text>}
-            >
-              <Pressable style={styles.postBtn} onPress={() => setComposerVisible(true)}>
-                <Ionicons name="add-circle-outline" size={18} color={GOLD} />
-                <Text style={styles.postBtnText}>{t('localHub.postNewListing')}</Text>
-              </Pressable>
-              <PremiumTileGrid columns={classifiedColumns} wrapCells gap={premiumTileLayout.gridGapTight}>
-                {sortedPosts.map((item) => {
-                  const meta = CATEGORY_META[item.category];
-                  const accent = item.isVip ? 'gold' : 'emerald';
-                  return (
-                    <PremiumAppTile
-                      key={item.id}
-                      variant="local"
-                      accent={accent}
-                      locked
-                      width="100%"
-                      icon={meta.icon}
-                      microScene="listing-tags"
-                      statusLabel={item.isVip ? t('localHub.vipHighlight') : meta.title}
-                      title={item.title}
-                      subtitle={`${item.city} · ${item.priceLabel}`}
-                      accessibilityLabel={`${item.title}. ${item.city}. ${item.priceLabel}`}
-                      testID={`local-classified-${item.id}`}
-                    />
-                  );
-                })}
-              </PremiumTileGrid>
-            </PremiumSection>
+            <LocalClassifiedsFeaturedPreview
+              posts={sortedPosts}
+              totalCount={sortedPosts.length}
+              walletLabel={formatVioCredits(wallet.credits)}
+              onCreateListing={() => setComposerVisible(true)}
+              onViewAll={scrollToClassifieds}
+            />
           </View>
+
+          <View style={[styles.secondaryHubSection, styles.merchantToolsSection]}>
+            <LocalMerchantToolsSection
+              onMerchantHub={openBusinessUniverse}
+              onBookingAssist={() => openLeonaPrefill(bookingAssistPrefill)}
+              onAiReceptionist={() => navigation.navigate('AiReceptionistDemoSimulator')}
+            />
+          </View>
+
+          <View style={[styles.secondaryHubSection, styles.connectedUniversesSection]}>
+            <LocalConnectedUniverseLinks
+              travelEnabled={featureFlags.travelLiteEnabled}
+              academyEnabled={featureFlags.academyLiteEnabled}
+              onTravel={openTravelUniverse}
+              onBusiness={openBusinessUniverse}
+              onAcademy={openAcademyUniverse}
+            />
+          </View>
+          <View
+            style={[
+              styles.hubScrollTail,
+              isLocalMobile && styles.hubScrollTailMobile,
+              isShortLandscape && styles.hubScrollTailLandscape,
+            ]}
+          />
         </PremiumHubLayout>
       </PremiumAppShell>
 
@@ -1301,6 +1033,13 @@ export function LocalScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: BG, position: 'relative', overflow: 'hidden' },
   root: { flex: 1, position: 'relative', zIndex: 1, backgroundColor: 'transparent' },
+  rootWebTabletFull: {
+    width: '100%',
+    maxWidth: '100%',
+    minWidth: 0,
+    alignSelf: 'stretch',
+    ...(Platform.OS === 'web' ? ({ overflowX: 'hidden' } as const) : {}),
+  },
   canvasBackdropVeil: {
     position: 'absolute',
     left: 0,
@@ -1607,66 +1346,37 @@ const styles = StyleSheet.create({
   heroActionRowWide: {
     flexDirection: 'row',
     alignItems: 'stretch',
-    flexWrap: 'wrap',
+    flexWrap: 'nowrap',
   },
   heroActionRowDesktop: {
-    gap: 12,
+    gap: 14,
   },
   heroActionCell: {
     width: '100%',
     minWidth: 0,
   },
-  heroActionCellPrimary: {
-    flex: 1.12,
-    minWidth: '48%',
-    maxWidth: '100%',
-  },
-  heroActionCellSecondary: {
-    flex: 0.88,
-    minWidth: '40%',
-    maxWidth: '100%',
-  },
-  quickHelpStrip: {
-    width: '100%',
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    borderRadius: premiumTileLayout.radius,
-    borderWidth: premiumTileGlass.edgeWidth,
-    borderColor: premiumUniverseStroke('cyan'),
-    backgroundColor: premiumModalGlass.surface,
-    ...(Platform.OS === 'web'
-      ? ({ boxShadow: '0 0 0 1px rgba(92, 205, 255, 0.12), 0 0 14px rgba(92, 205, 255, 0.08)' } as ViewStyle)
-      : {}),
-  },
-  quickHelpStripPressed: { opacity: 0.9 },
-  quickHelpCopy: {
-    flex: 1,
+  heroActionCellPrimaryWide: {
+    flexGrow: 0,
+    flexShrink: 1,
+    flexBasis: '60%',
+    maxWidth: '60%',
     minWidth: 0,
-    gap: 2,
   },
-  quickHelpTitle: {
-    fontSize: 13,
-    fontFamily: FontFamily.extrabold,
-    color: premiumLuminousInk.titleBright,
-    letterSpacing: -0.1,
-  },
-  quickHelpSub: {
-    fontSize: 10,
-    lineHeight: 14,
-    fontFamily: FontFamily.semibold,
-    color: premiumLuminousInk.subtitle,
+  heroActionCellSecondaryWide: {
+    flexGrow: 0,
+    flexShrink: 1,
+    flexBasis: '40%',
+    maxWidth: '40%',
+    minWidth: 0,
   },
   compactStatusSection: {
     width: '100%',
     paddingHorizontal: 10,
-    paddingVertical: 10,
+    paddingVertical: 9,
     borderRadius: 12,
     borderWidth: 1,
     borderColor: 'rgba(72, 210, 165, 0.16)',
-    backgroundColor: 'rgba(5, 11, 20, 0.42)',
+    backgroundColor: 'rgba(5, 11, 20, 0.36)',
     gap: 6,
   },
   compactStatusKicker: {
@@ -1703,9 +1413,46 @@ const styles = StyleSheet.create({
     fontFamily: FontFamily.semibold,
     color: premiumLuminousInk.subtitleMinimum,
   },
+  exploreMoreWrap: {
+    width: '100%',
+    marginTop: 2,
+    marginBottom: 2,
+  },
+  exploreMoreText: {
+    fontSize: 10,
+    fontFamily: FontFamily.semibold,
+    letterSpacing: 0.8,
+    textTransform: 'uppercase',
+    color: 'rgba(172, 192, 210, 0.72)',
+  },
   secondaryHubSection: {
     width: '100%',
-    opacity: 0.96,
+    opacity: 0.88,
+  },
+  capabilitiesSection: {
+    marginTop: 6,
+    opacity: 0.86,
+  },
+  merchantToolsSection: {
+    marginTop: 8,
+    opacity: 0.82,
+  },
+  connectedUniversesSection: {
+    opacity: 0.62,
+    marginTop: 12,
+    paddingTop: 12,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: 'rgba(72, 210, 165, 0.14)',
+  },
+  hubScrollTail: {
+    width: '100%',
+    height: 16,
+  },
+  hubScrollTailMobile: {
+    height: 28,
+  },
+  hubScrollTailLandscape: {
+    height: 24,
   },
   safetyBridge: {
     marginBottom: 8,

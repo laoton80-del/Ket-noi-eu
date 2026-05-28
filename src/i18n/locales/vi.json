@@ -1514,6 +1514,10 @@
     "eventsTitle": "Sự kiện cộng đồng",
     "eventsSub": "Cộng đồng & ưu đãi",
     "classifiedsTitle": "Chợ rao vặt",
+    "classifiedsFeaturedSubtitle": "Tin mới & nổi bật trong cộng đồng",
+    "viewAllClassifieds": "Xem tất cả",
+    "classifiedsPreviewMore": "+{{count}} tin khác trong Chợ rao vặt (Pilot)",
+    "classifiedsFeaturedSafety": "Chỉ xem trước · Tin demo trên thiết bị · Không thu tiền · Không cam kết bán/thuê/tuyển · VIP chỉ là pilot",
     "classifiedsRowSub": "Chợ rao vặt · VIP đăng tin bằng {{unit}}",
     "legalScannerLabel": "Quét hồ sơ pháp lý (AI)",
     "legalScannerA11y": "Quét hồ sơ pháp lý bằng AI",
@@ -1524,7 +1528,24 @@
     "vipPostFailBody": "Số dư VIO Credits không đủ hoặc hệ thống tạm gián đoạn.",
     "vipPostSuccessTitle": "Đăng tin thành công",
     "vipPostSuccessVipBody": "Đã áp dụng VIP boost trên thiết bị (xem trước). Đây là đẩy tin trả phí — không phải ký quỹ booking hay tiền giữ cho merchant.",
-    "vipPostSuccessNormalBody": "Tin thường đã thêm trên thiết bị (xem trước)."
+    "vipPostSuccessNormalBody": "Tin thường đã thêm trên thiết bị (xem trước).",
+    "reframe": {
+      "heroEyebrow": "VŨ TRỤ VIONA ĐỊA PHƯƠNG",
+      "heroHeadline": "Dịch vụ Việt, gần bạn hơn",
+      "heroSubtitle": "Dịch vụ địa phương, hỗ trợ đặt lịch, pháp lý và cộng đồng — chỉ gửi yêu cầu, không hoàn tất tức thì.",
+      "heroCtaBrowse": "Duyệt dịch vụ",
+      "heroCtaBookingAssist": "Gửi hỗ trợ đặt lịch",
+      "trustMerchantFirst": "Merchant xác nhận trước",
+      "flagshipRowKicker": "Bắt đầu tại đây",
+      "quickAccessTitle": "Local cho bạn",
+      "exploreMoreTools": "Khám phá thêm công cụ địa phương",
+      "forVietnameseBusinesses": "Cho doanh nghiệp Việt",
+      "merchantToolsHubSub": "Đi tới dashboard và inbox",
+      "merchantToolsBookingSub": "Tiếp nhận yêu cầu cho merchant",
+      "quickActionsKicker": "Truy cập nhanh",
+      "quickActionAiReceptionist": "Lễ tân AI",
+      "quickActionLanguageAssist": "Hỗ trợ ngôn ngữ"
+    }
   },
   "b2bPaywallUi": {
     "kicker": "Gói dịch vụ doanh nghiệp",
