@@ -594,6 +594,7 @@ export function TravelGlassCard({
 
   const frame = (
     <View
+      testID={testID}
       style={[
         styles.outer,
         {

@@ -21,13 +21,15 @@ import {
 } from 'react-native';
 
 import { TravelDirectionSelector } from '../../components/travel/TravelDirectionSelector';
-import { TravelGlassCard, type TravelSemanticAccent } from '../../components/travel/TravelGlassCard';
+import {
+  TravelGlassCard,
+  travelSemanticTokens,
+  type TravelSemanticAccent,
+} from '../../components/travel/TravelGlassCard';
 import { TravelAppTile, travelAppTileMetrics } from '../../components/travel/TravelAppTile';
 import { PremiumTileGrid } from '../../components/viona';
-import { LocalConstellationFrame } from '../../components/local/LocalConstellationFrame';
 import {
   localConstellation,
-  localWebRailPillGlassStyle,
 } from '../../components/local/localConstellationTokens';
 import { VionaMiniAppShell } from '../../components/viona/VionaMiniAppShell';
 import { getFeatureFlags } from '../../core/feature-flags/featureFlags';
@@ -42,11 +44,6 @@ import {
 } from '../../services/compliance/sensorConsent';
 import { getTravelContext } from '../../services/context/UserContextService';
 import { listVietnameseRestaurantsByProximity, type CravingsRadarHit } from '../../services/travel/travelCravingsRadar';
-import {
-  premiumTileGlass,
-  premiumUniverseAccentSpec,
-  premiumUniverseStroke,
-} from '../../design/premiumTileVisualTokens';
 import { theme } from '../../theme/theme';
 import { FontFamily } from '../../theme/typography';
 
@@ -160,7 +157,7 @@ function travelTileSectionMetrics(viewportWidth: number): Readonly<{
   quickHelpGap: number;
 }> {
   if (viewportWidth >= 1024) {
-    return { gridGap: 9, groupGap: 6, quickHelpGap: 9 };
+    return { gridGap: 7, groupGap: 3, quickHelpGap: 7 };
   }
   if (viewportWidth >= 768) {
     return { gridGap: 10, groupGap: 8, quickHelpGap: 10 };
@@ -168,7 +165,116 @@ function travelTileSectionMetrics(viewportWidth: number): Readonly<{
   return { gridGap: 10, groupGap: 10, quickHelpGap: 10 };
 }
 
+/** Pack 4 patch — desktop vertical rhythm + dock clearance (>=1024 only). */
+function travelDesktopVerticalRhythmMetrics(viewportWidth: number): Readonly<{
+  pilotStripMarginBottom: number;
+  quickHelpKickerMarginTop: number;
+  quickHelpKickerMarginBottom: number;
+  quickHelpRowMarginBottom: number;
+  scenariosKickerMarginTop: number;
+  scenariosKickerMarginBottom: number;
+  groupKickerMarginBottom: number;
+  groupBlockMarginBottom: number;
+  scenarioGridMarginBottom: number;
+  secondaryZoneMarginTop: number;
+  secondaryZoneGap: number;
+  sectionKickerMarginTop: number;
+  sectionKickerMarginBottom: number;
+  scrollBottomExtra: number;
+  metaInnerGap: number;
+  mapCardInnerGap: number;
+  mapShellHeight: number;
+  metaInputMinHeight: number;
+  connectedStripMarginBottom: number;
+}> {
+  if (viewportWidth >= 1024) {
+    return {
+      pilotStripMarginBottom: 0,
+      quickHelpKickerMarginTop: 2,
+      quickHelpKickerMarginBottom: 6,
+      quickHelpRowMarginBottom: 8,
+      scenariosKickerMarginTop: 0,
+      scenariosKickerMarginBottom: 6,
+      groupKickerMarginBottom: 5,
+      groupBlockMarginBottom: 3,
+      scenarioGridMarginBottom: 4,
+      secondaryZoneMarginTop: 8,
+      secondaryZoneGap: 0,
+      sectionKickerMarginTop: 6,
+      sectionKickerMarginBottom: 6,
+      scrollBottomExtra: 72,
+      metaInnerGap: 6,
+      mapCardInnerGap: 6,
+      mapShellHeight: 96,
+      metaInputMinHeight: 40,
+      connectedStripMarginBottom: 12,
+    };
+  }
+  return {
+    pilotStripMarginBottom: 2,
+    quickHelpKickerMarginTop: 6,
+    quickHelpKickerMarginBottom: 10,
+    quickHelpRowMarginBottom: theme.spacing.md,
+    scenariosKickerMarginTop: 4,
+    scenariosKickerMarginBottom: 10,
+    groupKickerMarginBottom: 7,
+    groupBlockMarginBottom: theme.spacing.xs,
+    scenarioGridMarginBottom: theme.spacing.sm,
+    secondaryZoneMarginTop: theme.spacing.md,
+    secondaryZoneGap: 2,
+    sectionKickerMarginTop: 10,
+    sectionKickerMarginBottom: 8,
+    scrollBottomExtra: 48,
+    metaInnerGap: 8,
+    mapCardInnerGap: 8,
+    mapShellHeight: 112,
+    metaInputMinHeight: 44,
+    connectedStripMarginBottom: theme.spacing.xl,
+  };
+}
+
 const QUICK_HELP_IDS: readonly TravelScenarioId[] = ['translation', 'taxi', 'emergency'];
+
+/** Pack 4 — pilot strip + connected links rhythm at desktop. */
+function travelSecondarySurfaceMetrics(viewportWidth: number): Readonly<{
+  pilotPaddingV: number;
+  pilotPaddingH: number;
+  pilotGap: number;
+  pilotPillMinHeight: number;
+  connectedGap: number;
+  connectedMinHeight: number;
+}> {
+  if (viewportWidth >= 1024) {
+    return {
+      pilotPaddingV: 9,
+      pilotPaddingH: 11,
+      pilotGap: 6,
+      pilotPillMinHeight: 30,
+      connectedGap: 7,
+      connectedMinHeight: 40,
+    };
+  }
+  if (viewportWidth >= 768) {
+    return {
+      pilotPaddingV: 11,
+      pilotPaddingH: 12,
+      pilotGap: 8,
+      pilotPillMinHeight: 32,
+      connectedGap: 8,
+      connectedMinHeight: 42,
+    };
+  }
+  return {
+    pilotPaddingV: 12,
+    pilotPaddingH: 12,
+    pilotGap: 8,
+    pilotPillMinHeight: 32,
+    connectedGap: 8,
+    connectedMinHeight: 44,
+  };
+}
+
+const TRAVEL_PILOT_CYAN = travelSemanticTokens('cyan');
 
 const TRAVEL_PILOT_PILLS = [
   { key: 'travelHub.pilotPill.lite' as const, icon: 'compass-outline' as const },
@@ -272,22 +378,32 @@ function TravelScenarioGroupBlock({
   columns,
   gridGap,
   layoutMetrics,
+  groupKickerMarginBottom,
+  groupBlockMarginBottom,
+  scenarioGridMarginBottom,
 }: Readonly<{
   labelKey: 'travelHub.groupMove' | 'travelHub.groupStayEat' | 'travelHub.groupSafetyHelp';
   scenarios: readonly TravelScenario[];
   columns: 1 | 2 | 3 | 4;
   gridGap: number;
   layoutMetrics: ReturnType<typeof travelAppTileMetrics>;
+  groupKickerMarginBottom: number;
+  groupBlockMarginBottom: number;
+  scenarioGridMarginBottom: number;
 }>): ReactElement {
   const { t } = useTranslation();
   return (
-    <View style={styles.groupBlock}>
-      <Text style={styles.groupKicker}>{t(labelKey)}</Text>
+    <View style={[styles.groupBlock, { marginBottom: groupBlockMarginBottom }]}>
+      <Text style={[styles.groupKicker, { marginBottom: groupKickerMarginBottom }]}>{t(labelKey)}</Text>
       <PremiumTileGrid
         columns={columns}
         gap={gridGap}
         wrapCells
-        style={[styles.scenarioGrid, columns > 1 ? styles.scenarioGridMultiCol : null]}
+        style={[
+          styles.scenarioGrid,
+          { marginBottom: scenarioGridMarginBottom },
+          columns > 1 ? [styles.scenarioGridMultiCol, { rowGap: gridGap }] : null,
+        ]}
       >
         {scenarios.map((item) => (
           <TravelScenarioCard key={item.id} item={item} layoutMetrics={layoutMetrics} />
@@ -297,37 +413,143 @@ function TravelScenarioGroupBlock({
   );
 }
 
+function TravelPilotStrip({
+  surfaceMetrics,
+  marginBottom,
+}: Readonly<{
+  surfaceMetrics: ReturnType<typeof travelSecondarySurfaceMetrics>;
+  marginBottom: number;
+}>): ReactElement {
+  const { t } = useTranslation();
+  return (
+    <TravelGlassCard
+      testID="travel-pilot-strip"
+      visual="standard"
+      accent="cyan"
+      intensity="quiet"
+      compact
+      contentStyle={[
+        styles.pilotStripInner,
+        {
+          gap: surfaceMetrics.pilotGap,
+          paddingVertical: surfaceMetrics.pilotPaddingV,
+          paddingHorizontal: surfaceMetrics.pilotPaddingH,
+        },
+      ]}
+      style={[styles.pilotStripCard, { marginBottom }]}
+    >
+      <View style={styles.pilotStripTitleRow}>
+        <View style={styles.pilotStripIconWrap}>
+          <Ionicons name="airplane-outline" size={15} color={TRAVEL_PILOT_CYAN.ink} accessibilityIgnoresInvertColors />
+        </View>
+        <Text
+          style={[
+            styles.pilotStripTitle,
+            {
+              textShadowColor: TRAVEL_PILOT_CYAN.glow,
+              textShadowOffset: { width: 0, height: 0 },
+              textShadowRadius: 8,
+            },
+          ]}
+        >
+          {t('travelHub.pilotStripTitle')}
+        </Text>
+      </View>
+      <Text style={styles.pilotStripBanner} numberOfLines={2}>
+        {t('travelHub.pilotStripBanner')}
+      </Text>
+      <View style={[styles.pilotPillRow, { gap: surfaceMetrics.pilotGap }]}>
+        {TRAVEL_PILOT_PILLS.map((pill) => (
+          <View
+            key={pill.key}
+            style={[
+              styles.pilotPill,
+              {
+                minHeight: surfaceMetrics.pilotPillMinHeight,
+                borderColor: TRAVEL_PILOT_CYAN.stroke,
+                backgroundColor: TRAVEL_PILOT_CYAN.statusFill,
+              },
+            ]}
+            accessibilityRole="text"
+            accessibilityLabel={t(pill.key)}
+          >
+            <Ionicons name={pill.icon} size={11} color={TRAVEL_PILOT_CYAN.ink} accessibilityIgnoresInvertColors />
+            <Text
+              style={[
+                styles.pilotPillText,
+                {
+                  color: TRAVEL_PILOT_CYAN.ink,
+                  textShadowColor: TRAVEL_PILOT_CYAN.glow,
+                  textShadowOffset: { width: 0, height: 0 },
+                  textShadowRadius: 5,
+                },
+              ]}
+              numberOfLines={2}
+            >
+              {t(pill.key)}
+            </Text>
+          </View>
+        ))}
+      </View>
+    </TravelGlassCard>
+  );
+}
+
 function TravelConnectedLink({
   icon,
   label,
   onPress,
   a11yLabel,
+  accent,
+  testID,
+  minHeight,
 }: Readonly<{
   icon: keyof typeof Ionicons.glyphMap;
   label: string;
   onPress: () => void;
   a11yLabel: string;
-}>) {
-  const [hovered, setHovered] = useState(false);
+  accent: TravelSemanticAccent;
+  testID: string;
+  minHeight: number;
+}>): ReactElement {
+  const tokens = travelSemanticTokens(accent);
   return (
-    <Pressable
-      accessibilityRole="button"
-      accessibilityLabel={a11yLabel}
+    <TravelGlassCard
+      testID={testID}
+      visual="standard"
+      accent={accent}
+      intensity="quiet"
+      compact
       onPress={onPress}
-      onHoverIn={Platform.OS === 'web' ? () => setHovered(true) : undefined}
-      onHoverOut={Platform.OS === 'web' ? () => setHovered(false) : undefined}
-      style={({ pressed }) => [
-        styles.connectedLink,
-        Platform.OS === 'web' ? localWebRailPillGlassStyle('cyan', hovered) : { borderColor: BORDER, borderWidth: 1 },
-        pressed && { opacity: 0.88 },
-      ]}
+      accessibilityLabel={a11yLabel}
+      contentStyle={[styles.connectedLinkInner, { minHeight }]}
+      style={styles.connectedLinkCard}
     >
-      <Ionicons name={icon} size={15} color={CYAN} />
-      <Text style={styles.connectedLinkText} numberOfLines={1}>
-        {label}
-      </Text>
-      <Ionicons name="chevron-forward" size={14} color={INK_MUTED} />
-    </Pressable>
+      <View style={styles.connectedLinkRow}>
+        <View
+          style={[
+            styles.connectedLinkIconWrap,
+            { borderColor: tokens.stroke, backgroundColor: tokens.statusFill },
+          ]}
+        >
+          <Ionicons name={icon} size={14} color={tokens.ink} />
+        </View>
+        <Text
+          style={[
+            styles.connectedLinkText,
+            {
+              textShadowColor: tokens.glow,
+              textShadowOffset: { width: 0, height: 0 },
+              textShadowRadius: 6,
+            },
+          ]}
+          numberOfLines={1}
+        >
+          {label}
+        </Text>
+        <Ionicons name="chevron-forward" size={13} color={INK_MUTED} />
+      </View>
+    </TravelGlassCard>
   );
 }
 
@@ -358,6 +580,8 @@ export function TravelScreen() {
   const travelHeroStage = useMemo(() => travelHeroStageMetrics(width), [width]);
   const travelTileLayout = useMemo(() => travelAppTileMetrics(width), [width]);
   const travelTileSection = useMemo(() => travelTileSectionMetrics(width), [width]);
+  const travelSecondarySurface = useMemo(() => travelSecondarySurfaceMetrics(width), [width]);
+  const travelDesktopRhythm = useMemo(() => travelDesktopVerticalRhythmMetrics(width), [width]);
   const travelHeroImageStyle = useMemo(
     () => [
       styles.heroCinematicImage,
@@ -440,8 +664,11 @@ export function TravelScreen() {
   );
 
   const travelScrollBottomClearance = useMemo(
-    () => localConstellation.tabBarClearanceBottom + Math.max(insets.bottom, 12) + 48,
-    [insets.bottom]
+    () =>
+      localConstellation.tabBarClearanceBottom +
+      Math.max(insets.bottom, 12) +
+      travelDesktopRhythm.scrollBottomExtra,
+    [insets.bottom, travelDesktopRhythm.scrollBottomExtra]
   );
 
   const openLeona = useCallback(
@@ -550,27 +777,51 @@ export function TravelScreen() {
 
   const connectedUniversesAfterDock = (
     <>
-      <Text style={styles.sectionKicker}>{t('travelHub.connectedUniversesKicker')}</Text>
-      <View style={styles.connectedStrip}>
+      <Text
+        style={[
+          styles.sectionKicker,
+          {
+            marginTop: travelDesktopRhythm.sectionKickerMarginTop,
+            marginBottom: travelDesktopRhythm.sectionKickerMarginBottom,
+          },
+        ]}
+      >
+        {t('travelHub.connectedUniversesKicker')}
+      </Text>
+      <View
+        style={[
+          styles.connectedStrip,
+          { gap: travelSecondarySurface.connectedGap, marginBottom: travelDesktopRhythm.connectedStripMarginBottom },
+        ]}
+      >
         <TravelConnectedLink
+          testID="travel-connected-local"
+          accent="cyan"
           icon="location-outline"
           label={t('travelHub.connectedLocal')}
           onPress={openLocalUniverse}
           a11yLabel={t('travelHub.connectedLocal')}
+          minHeight={travelSecondarySurface.connectedMinHeight}
         />
         {featureFlags.academyLiteEnabled ? (
           <TravelConnectedLink
+            testID="travel-connected-academy"
+            accent="violet"
             icon="school-outline"
             label={t('travelHub.connectedAcademy')}
             onPress={openAcademyUniverse}
             a11yLabel={t('travelHub.connectedAcademy')}
+            minHeight={travelSecondarySurface.connectedMinHeight}
           />
         ) : null}
         <TravelConnectedLink
+          testID="travel-connected-business"
+          accent="gold"
           icon="briefcase-outline"
           label={t('travelHub.connectedBusiness')}
           onPress={openBusinessUniverse}
           a11yLabel={t('travelHub.connectedBusiness')}
+          minHeight={travelSecondarySurface.connectedMinHeight}
         />
       </View>
     </>
@@ -683,33 +934,28 @@ export function TravelScreen() {
           </View>
         </TravelGlassCard>
 
-        <LocalConstellationFrame accent="cyan" radius={14} contentStyle={styles.pilotStripInner}>
-          <View style={styles.pilotStripTitleRow}>
-            <Ionicons name="airplane-outline" size={16} color={CYAN} accessibilityIgnoresInvertColors />
-            <Text style={styles.pilotStripTitle}>{t('travelHub.pilotStripTitle')}</Text>
-          </View>
-          <Text style={styles.pilotStripBanner} numberOfLines={2}>
-            {t('travelHub.pilotStripBanner')}
-          </Text>
-          <View style={styles.pilotPillRow}>
-            {TRAVEL_PILOT_PILLS.map((pill) => (
-              <View
-                key={pill.key}
-                style={styles.pilotPill}
-                accessibilityRole="text"
-                accessibilityLabel={t(pill.key)}
-              >
-                <Ionicons name={pill.icon} size={12} color={CYAN} accessibilityIgnoresInvertColors />
-                <Text style={styles.pilotPillText} numberOfLines={2}>
-                  {t(pill.key)}
-                </Text>
-              </View>
-            ))}
-          </View>
-        </LocalConstellationFrame>
+        <TravelPilotStrip
+          surfaceMetrics={travelSecondarySurface}
+          marginBottom={travelDesktopRhythm.pilotStripMarginBottom}
+        />
 
-        <Text style={styles.quickHelpSectionKicker}>{t('travelHub.quickHelpKicker')}</Text>
-        <View style={[styles.quickHelpRow, { gap: travelTileSection.quickHelpGap }]}>
+        <Text
+          style={[
+            styles.quickHelpSectionKicker,
+            {
+              marginTop: travelDesktopRhythm.quickHelpKickerMarginTop,
+              marginBottom: travelDesktopRhythm.quickHelpKickerMarginBottom,
+            },
+          ]}
+        >
+          {t('travelHub.quickHelpKicker')}
+        </Text>
+        <View
+          style={[
+            styles.quickHelpRow,
+            { gap: travelTileSection.quickHelpGap, marginBottom: travelDesktopRhythm.quickHelpRowMarginBottom },
+          ]}
+        >
           {QUICK_HELP_IDS.map((id) => {
             const item = scenarioById.get(id);
             if (!item) return null;
@@ -721,7 +967,17 @@ export function TravelScreen() {
           })}
         </View>
 
-        <Text style={styles.scenariosSectionKicker}>{t('travelHub.scenariosKicker')}</Text>
+        <Text
+          style={[
+            styles.scenariosSectionKicker,
+            {
+              marginTop: travelDesktopRhythm.scenariosKickerMarginTop,
+              marginBottom: travelDesktopRhythm.scenariosKickerMarginBottom,
+            },
+          ]}
+        >
+          {t('travelHub.scenariosKicker')}
+        </Text>
 
         {TRAVEL_SCENARIO_GROUPS.map((group) => {
           const groupScenarios = group.scenarioIds
@@ -735,21 +991,37 @@ export function TravelScreen() {
               columns={scenarioGridColumns}
               gridGap={travelTileSection.gridGap}
               layoutMetrics={travelTileLayout}
+              groupKickerMarginBottom={travelDesktopRhythm.groupKickerMarginBottom}
+              groupBlockMarginBottom={travelDesktopRhythm.groupBlockMarginBottom}
+              scenarioGridMarginBottom={travelDesktopRhythm.scenarioGridMarginBottom}
             />
           );
         })}
 
-        <View style={styles.secondaryZone}>
+        <View
+          style={[
+            styles.secondaryZone,
+            {
+              marginTop: travelDesktopRhythm.secondaryZoneMarginTop,
+              gap: travelDesktopRhythm.secondaryZoneGap,
+            },
+          ]}
+        >
           <TravelDirectionSelector selectedId={travelDirectionId} onSelect={setTravelDirectionId} />
 
-          <TravelGlassCard visual="standard" accent="cyan" intensity="quiet" contentStyle={styles.metaInner}>
+          <TravelGlassCard
+            visual="standard"
+            accent="cyan"
+            intensity="quiet"
+            contentStyle={[styles.metaInner, { gap: travelDesktopRhythm.metaInnerGap }]}
+          >
           <Text style={styles.metaLabel}>{t('travelHub.destinationLabel')}</Text>
           <TextInput
             value={destinationQuery}
             onChangeText={setDestinationQuery}
             placeholder={t('travelHub.destinationPlaceholder')}
             placeholderTextColor="rgba(226, 232, 240, 0.42)"
-            style={styles.metaInput}
+            style={[styles.metaInput, { minHeight: travelDesktopRhythm.metaInputMinHeight }]}
           />
           <Text style={styles.metaHelper}>{t('travelHub.destinationHelper')}</Text>
           {loadingCtx ? (
@@ -783,7 +1055,7 @@ export function TravelScreen() {
             intensity="quiet"
             onPress={() => navigation.navigate('LocalFixer')}
             accessibilityLabel={t('travelHub.connectedLocalHelpA11y')}
-            contentStyle={styles.mapCardInner}
+            contentStyle={[styles.mapCardInner, { gap: travelDesktopRhythm.mapCardInnerGap }]}
           >
           <View style={styles.localHelpHeader}>
             <Text style={styles.kicker}>{t('travelHub.connectedLocalHelpTitle')}</Text>
@@ -792,7 +1064,7 @@ export function TravelScreen() {
           <Text style={styles.mapHelpSub} numberOfLines={2}>
             {t('travelHub.connectedLocalHelpSub')}
           </Text>
-          <View style={styles.mapShell}>
+          <View style={[styles.mapShell, { height: travelDesktopRhythm.mapShellHeight }]}>
             <LinearGradient
               colors={['rgba(12, 22, 38, 0.92)', 'rgba(8, 16, 28, 0.96)']}
               start={{ x: 0, y: 0 }}
@@ -957,52 +1229,61 @@ const styles = StyleSheet.create({
     marginTop: 10,
     marginBottom: 8,
   },
+  pilotStripCard: {
+    width: '100%',
+    marginTop: 2,
+  },
   pilotStripInner: {
-    gap: 8,
-    paddingVertical: 12,
-    paddingHorizontal: 12,
+    justifyContent: 'flex-start',
   },
   pilotStripTitleRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
   },
+  pilotStripIconWrap: {
+    width: 26,
+    height: 26,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: TRAVEL_PILOT_CYAN.stroke,
+    backgroundColor: TRAVEL_PILOT_CYAN.statusFill,
+  },
   pilotStripTitle: {
+    flex: 1,
     fontSize: 11,
     fontFamily: FontFamily.extrabold,
-    color: CYAN,
-    letterSpacing: 0.6,
+    color: TRAVEL_PILOT_CYAN.ink,
+    letterSpacing: 0.65,
   },
   pilotStripBanner: {
     fontSize: 11,
     fontFamily: FontFamily.medium,
     color: INK_SUB,
     lineHeight: 16,
+    opacity: 0.96,
   },
   pilotPillRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 8,
   },
   pilotPill: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 5,
-    paddingHorizontal: 8,
-    paddingVertical: 6,
-    borderRadius: 8,
-    borderWidth: premiumTileGlass.edgeWidth,
-    borderColor: premiumUniverseStroke('cyan'),
-    backgroundColor: premiumUniverseAccentSpec('cyan').statusFill,
-    minHeight: 32,
+    paddingHorizontal: 7,
+    paddingVertical: 5,
+    borderRadius: 7,
+    borderWidth: StyleSheet.hairlineWidth,
     maxWidth: '100%',
   },
   pilotPillText: {
     flexShrink: 1,
-    fontSize: 9,
+    fontSize: 8.5,
     fontFamily: FontFamily.extrabold,
-    color: 'rgba(210, 238, 255, 0.95)',
-    letterSpacing: 0.35,
+    letterSpacing: 0.42,
     textTransform: 'uppercase',
   },
   localHelpHeader: {
@@ -1074,7 +1355,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'space-between',
-    rowGap: 10,
   },
   scenarioCell: {
     width: '100%',
@@ -1205,22 +1485,35 @@ const styles = StyleSheet.create({
     fontFamily: FontFamily.semibold,
     color: CYAN,
   },
-  connectedStrip: { gap: 8, marginBottom: theme.spacing.xl },
-  connectedLink: {
+  connectedStrip: {},
+  connectedLinkCard: {
+    width: '100%',
+  },
+  connectedLinkInner: {
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    justifyContent: 'center',
+  },
+  connectedLinkRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    minHeight: 44,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    borderRadius: theme.radius.md,
-    backgroundColor: 'rgba(10, 14, 22, 0.42)',
+    minWidth: 0,
+  },
+  connectedLinkIconWrap: {
+    width: 28,
+    height: 28,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: StyleSheet.hairlineWidth,
   },
   connectedLinkText: {
     flex: 1,
     fontSize: 12,
     fontFamily: FontFamily.semibold,
     color: INK,
+    minWidth: 0,
   },
   consentInner: {
     alignItems: 'center',
