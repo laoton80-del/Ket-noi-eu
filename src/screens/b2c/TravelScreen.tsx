@@ -21,13 +21,15 @@ import {
 } from 'react-native';
 
 import { TravelDirectionSelector } from '../../components/travel/TravelDirectionSelector';
-import { TravelGlassCard, type TravelSemanticAccent } from '../../components/travel/TravelGlassCard';
+import {
+  TravelGlassCard,
+  travelSemanticTokens,
+  type TravelSemanticAccent,
+} from '../../components/travel/TravelGlassCard';
 import { TravelAppTile, travelAppTileMetrics } from '../../components/travel/TravelAppTile';
 import { PremiumTileGrid } from '../../components/viona';
-import { LocalConstellationFrame } from '../../components/local/LocalConstellationFrame';
 import {
   localConstellation,
-  localWebRailPillGlassStyle,
 } from '../../components/local/localConstellationTokens';
 import { VionaMiniAppShell } from '../../components/viona/VionaMiniAppShell';
 import { getFeatureFlags } from '../../core/feature-flags/featureFlags';
@@ -42,11 +44,6 @@ import {
 } from '../../services/compliance/sensorConsent';
 import { getTravelContext } from '../../services/context/UserContextService';
 import { listVietnameseRestaurantsByProximity, type CravingsRadarHit } from '../../services/travel/travelCravingsRadar';
-import {
-  premiumTileGlass,
-  premiumUniverseAccentSpec,
-  premiumUniverseStroke,
-} from '../../design/premiumTileVisualTokens';
 import { theme } from '../../theme/theme';
 import { FontFamily } from '../../theme/typography';
 
@@ -169,6 +166,47 @@ function travelTileSectionMetrics(viewportWidth: number): Readonly<{
 }
 
 const QUICK_HELP_IDS: readonly TravelScenarioId[] = ['translation', 'taxi', 'emergency'];
+
+/** Pack 4 — pilot strip + connected links rhythm at desktop. */
+function travelSecondarySurfaceMetrics(viewportWidth: number): Readonly<{
+  pilotPaddingV: number;
+  pilotPaddingH: number;
+  pilotGap: number;
+  pilotPillMinHeight: number;
+  connectedGap: number;
+  connectedMinHeight: number;
+}> {
+  if (viewportWidth >= 1024) {
+    return {
+      pilotPaddingV: 10,
+      pilotPaddingH: 11,
+      pilotGap: 7,
+      pilotPillMinHeight: 30,
+      connectedGap: 7,
+      connectedMinHeight: 40,
+    };
+  }
+  if (viewportWidth >= 768) {
+    return {
+      pilotPaddingV: 11,
+      pilotPaddingH: 12,
+      pilotGap: 8,
+      pilotPillMinHeight: 32,
+      connectedGap: 8,
+      connectedMinHeight: 42,
+    };
+  }
+  return {
+    pilotPaddingV: 12,
+    pilotPaddingH: 12,
+    pilotGap: 8,
+    pilotPillMinHeight: 32,
+    connectedGap: 8,
+    connectedMinHeight: 44,
+  };
+}
+
+const TRAVEL_PILOT_CYAN = travelSemanticTokens('cyan');
 
 const TRAVEL_PILOT_PILLS = [
   { key: 'travelHub.pilotPill.lite' as const, icon: 'compass-outline' as const },
@@ -297,37 +335,141 @@ function TravelScenarioGroupBlock({
   );
 }
 
+function TravelPilotStrip({
+  surfaceMetrics,
+}: Readonly<{
+  surfaceMetrics: ReturnType<typeof travelSecondarySurfaceMetrics>;
+}>): ReactElement {
+  const { t } = useTranslation();
+  return (
+    <TravelGlassCard
+      testID="travel-pilot-strip"
+      visual="standard"
+      accent="cyan"
+      intensity="quiet"
+      compact
+      contentStyle={[
+        styles.pilotStripInner,
+        {
+          gap: surfaceMetrics.pilotGap,
+          paddingVertical: surfaceMetrics.pilotPaddingV,
+          paddingHorizontal: surfaceMetrics.pilotPaddingH,
+        },
+      ]}
+      style={styles.pilotStripCard}
+    >
+      <View style={styles.pilotStripTitleRow}>
+        <View style={styles.pilotStripIconWrap}>
+          <Ionicons name="airplane-outline" size={15} color={TRAVEL_PILOT_CYAN.ink} accessibilityIgnoresInvertColors />
+        </View>
+        <Text
+          style={[
+            styles.pilotStripTitle,
+            {
+              textShadowColor: TRAVEL_PILOT_CYAN.glow,
+              textShadowOffset: { width: 0, height: 0 },
+              textShadowRadius: 8,
+            },
+          ]}
+        >
+          {t('travelHub.pilotStripTitle')}
+        </Text>
+      </View>
+      <Text style={styles.pilotStripBanner} numberOfLines={2}>
+        {t('travelHub.pilotStripBanner')}
+      </Text>
+      <View style={[styles.pilotPillRow, { gap: surfaceMetrics.pilotGap }]}>
+        {TRAVEL_PILOT_PILLS.map((pill) => (
+          <View
+            key={pill.key}
+            style={[
+              styles.pilotPill,
+              {
+                minHeight: surfaceMetrics.pilotPillMinHeight,
+                borderColor: TRAVEL_PILOT_CYAN.stroke,
+                backgroundColor: TRAVEL_PILOT_CYAN.statusFill,
+              },
+            ]}
+            accessibilityRole="text"
+            accessibilityLabel={t(pill.key)}
+          >
+            <Ionicons name={pill.icon} size={11} color={TRAVEL_PILOT_CYAN.ink} accessibilityIgnoresInvertColors />
+            <Text
+              style={[
+                styles.pilotPillText,
+                {
+                  color: TRAVEL_PILOT_CYAN.ink,
+                  textShadowColor: TRAVEL_PILOT_CYAN.glow,
+                  textShadowOffset: { width: 0, height: 0 },
+                  textShadowRadius: 5,
+                },
+              ]}
+              numberOfLines={2}
+            >
+              {t(pill.key)}
+            </Text>
+          </View>
+        ))}
+      </View>
+    </TravelGlassCard>
+  );
+}
+
 function TravelConnectedLink({
   icon,
   label,
   onPress,
   a11yLabel,
+  accent,
+  testID,
+  minHeight,
 }: Readonly<{
   icon: keyof typeof Ionicons.glyphMap;
   label: string;
   onPress: () => void;
   a11yLabel: string;
-}>) {
-  const [hovered, setHovered] = useState(false);
+  accent: TravelSemanticAccent;
+  testID: string;
+  minHeight: number;
+}>): ReactElement {
+  const tokens = travelSemanticTokens(accent);
   return (
-    <Pressable
-      accessibilityRole="button"
-      accessibilityLabel={a11yLabel}
+    <TravelGlassCard
+      testID={testID}
+      visual="standard"
+      accent={accent}
+      intensity="quiet"
+      compact
       onPress={onPress}
-      onHoverIn={Platform.OS === 'web' ? () => setHovered(true) : undefined}
-      onHoverOut={Platform.OS === 'web' ? () => setHovered(false) : undefined}
-      style={({ pressed }) => [
-        styles.connectedLink,
-        Platform.OS === 'web' ? localWebRailPillGlassStyle('cyan', hovered) : { borderColor: BORDER, borderWidth: 1 },
-        pressed && { opacity: 0.88 },
-      ]}
+      accessibilityLabel={a11yLabel}
+      contentStyle={[styles.connectedLinkInner, { minHeight }]}
+      style={styles.connectedLinkCard}
     >
-      <Ionicons name={icon} size={15} color={CYAN} />
-      <Text style={styles.connectedLinkText} numberOfLines={1}>
-        {label}
-      </Text>
-      <Ionicons name="chevron-forward" size={14} color={INK_MUTED} />
-    </Pressable>
+      <View style={styles.connectedLinkRow}>
+        <View
+          style={[
+            styles.connectedLinkIconWrap,
+            { borderColor: tokens.stroke, backgroundColor: tokens.statusFill },
+          ]}
+        >
+          <Ionicons name={icon} size={14} color={tokens.ink} />
+        </View>
+        <Text
+          style={[
+            styles.connectedLinkText,
+            {
+              textShadowColor: tokens.glow,
+              textShadowOffset: { width: 0, height: 0 },
+              textShadowRadius: 6,
+            },
+          ]}
+          numberOfLines={1}
+        >
+          {label}
+        </Text>
+        <Ionicons name="chevron-forward" size={13} color={INK_MUTED} />
+      </View>
+    </TravelGlassCard>
   );
 }
 
@@ -358,6 +500,7 @@ export function TravelScreen() {
   const travelHeroStage = useMemo(() => travelHeroStageMetrics(width), [width]);
   const travelTileLayout = useMemo(() => travelAppTileMetrics(width), [width]);
   const travelTileSection = useMemo(() => travelTileSectionMetrics(width), [width]);
+  const travelSecondarySurface = useMemo(() => travelSecondarySurfaceMetrics(width), [width]);
   const travelHeroImageStyle = useMemo(
     () => [
       styles.heroCinematicImage,
@@ -551,26 +694,35 @@ export function TravelScreen() {
   const connectedUniversesAfterDock = (
     <>
       <Text style={styles.sectionKicker}>{t('travelHub.connectedUniversesKicker')}</Text>
-      <View style={styles.connectedStrip}>
+      <View style={[styles.connectedStrip, { gap: travelSecondarySurface.connectedGap }]}>
         <TravelConnectedLink
+          testID="travel-connected-local"
+          accent="cyan"
           icon="location-outline"
           label={t('travelHub.connectedLocal')}
           onPress={openLocalUniverse}
           a11yLabel={t('travelHub.connectedLocal')}
+          minHeight={travelSecondarySurface.connectedMinHeight}
         />
         {featureFlags.academyLiteEnabled ? (
           <TravelConnectedLink
+            testID="travel-connected-academy"
+            accent="violet"
             icon="school-outline"
             label={t('travelHub.connectedAcademy')}
             onPress={openAcademyUniverse}
             a11yLabel={t('travelHub.connectedAcademy')}
+            minHeight={travelSecondarySurface.connectedMinHeight}
           />
         ) : null}
         <TravelConnectedLink
+          testID="travel-connected-business"
+          accent="gold"
           icon="briefcase-outline"
           label={t('travelHub.connectedBusiness')}
           onPress={openBusinessUniverse}
           a11yLabel={t('travelHub.connectedBusiness')}
+          minHeight={travelSecondarySurface.connectedMinHeight}
         />
       </View>
     </>
@@ -683,30 +835,7 @@ export function TravelScreen() {
           </View>
         </TravelGlassCard>
 
-        <LocalConstellationFrame accent="cyan" radius={14} contentStyle={styles.pilotStripInner}>
-          <View style={styles.pilotStripTitleRow}>
-            <Ionicons name="airplane-outline" size={16} color={CYAN} accessibilityIgnoresInvertColors />
-            <Text style={styles.pilotStripTitle}>{t('travelHub.pilotStripTitle')}</Text>
-          </View>
-          <Text style={styles.pilotStripBanner} numberOfLines={2}>
-            {t('travelHub.pilotStripBanner')}
-          </Text>
-          <View style={styles.pilotPillRow}>
-            {TRAVEL_PILOT_PILLS.map((pill) => (
-              <View
-                key={pill.key}
-                style={styles.pilotPill}
-                accessibilityRole="text"
-                accessibilityLabel={t(pill.key)}
-              >
-                <Ionicons name={pill.icon} size={12} color={CYAN} accessibilityIgnoresInvertColors />
-                <Text style={styles.pilotPillText} numberOfLines={2}>
-                  {t(pill.key)}
-                </Text>
-              </View>
-            ))}
-          </View>
-        </LocalConstellationFrame>
+        <TravelPilotStrip surfaceMetrics={travelSecondarySurface} />
 
         <Text style={styles.quickHelpSectionKicker}>{t('travelHub.quickHelpKicker')}</Text>
         <View style={[styles.quickHelpRow, { gap: travelTileSection.quickHelpGap }]}>
@@ -957,52 +1086,62 @@ const styles = StyleSheet.create({
     marginTop: 10,
     marginBottom: 8,
   },
+  pilotStripCard: {
+    width: '100%',
+    marginTop: 2,
+    marginBottom: 2,
+  },
   pilotStripInner: {
-    gap: 8,
-    paddingVertical: 12,
-    paddingHorizontal: 12,
+    justifyContent: 'flex-start',
   },
   pilotStripTitleRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
   },
+  pilotStripIconWrap: {
+    width: 26,
+    height: 26,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: TRAVEL_PILOT_CYAN.stroke,
+    backgroundColor: TRAVEL_PILOT_CYAN.statusFill,
+  },
   pilotStripTitle: {
+    flex: 1,
     fontSize: 11,
     fontFamily: FontFamily.extrabold,
-    color: CYAN,
-    letterSpacing: 0.6,
+    color: TRAVEL_PILOT_CYAN.ink,
+    letterSpacing: 0.65,
   },
   pilotStripBanner: {
     fontSize: 11,
     fontFamily: FontFamily.medium,
     color: INK_SUB,
     lineHeight: 16,
+    opacity: 0.96,
   },
   pilotPillRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 8,
   },
   pilotPill: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 5,
-    paddingHorizontal: 8,
-    paddingVertical: 6,
-    borderRadius: 8,
-    borderWidth: premiumTileGlass.edgeWidth,
-    borderColor: premiumUniverseStroke('cyan'),
-    backgroundColor: premiumUniverseAccentSpec('cyan').statusFill,
-    minHeight: 32,
+    paddingHorizontal: 7,
+    paddingVertical: 5,
+    borderRadius: 7,
+    borderWidth: StyleSheet.hairlineWidth,
     maxWidth: '100%',
   },
   pilotPillText: {
     flexShrink: 1,
-    fontSize: 9,
+    fontSize: 8.5,
     fontFamily: FontFamily.extrabold,
-    color: 'rgba(210, 238, 255, 0.95)',
-    letterSpacing: 0.35,
+    letterSpacing: 0.42,
     textTransform: 'uppercase',
   },
   localHelpHeader: {
@@ -1205,22 +1344,35 @@ const styles = StyleSheet.create({
     fontFamily: FontFamily.semibold,
     color: CYAN,
   },
-  connectedStrip: { gap: 8, marginBottom: theme.spacing.xl },
-  connectedLink: {
+  connectedStrip: { marginBottom: theme.spacing.xl },
+  connectedLinkCard: {
+    width: '100%',
+  },
+  connectedLinkInner: {
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    justifyContent: 'center',
+  },
+  connectedLinkRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    minHeight: 44,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    borderRadius: theme.radius.md,
-    backgroundColor: 'rgba(10, 14, 22, 0.42)',
+    minWidth: 0,
+  },
+  connectedLinkIconWrap: {
+    width: 28,
+    height: 28,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: StyleSheet.hairlineWidth,
   },
   connectedLinkText: {
     flex: 1,
     fontSize: 12,
     fontFamily: FontFamily.semibold,
     color: INK,
+    minWidth: 0,
   },
   consentInner: {
     alignItems: 'center',
