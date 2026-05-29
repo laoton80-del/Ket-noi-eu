@@ -116,12 +116,12 @@ function resolveIntensity(
     };
   }
   return {
-    glowMul: 1.28,
-    edgeMul: 0.68,
-    rimMul: 1.08,
-    washMul: 1.34,
+    glowMul: 1.36,
+    edgeMul: 0.76,
+    rimMul: 1.14,
+    washMul: 1.42,
     tier: 'service',
-    outerShadow: 0.44,
+    outerShadow: 0.48,
     edgePx: 2,
   };
 }
@@ -645,7 +645,18 @@ export function TravelGlassCard({
       onPress={onPress}
       onHoverIn={Platform.OS === 'web' ? () => setHovered(true) : undefined}
       onHoverOut={Platform.OS === 'web' ? () => setHovered(false) : undefined}
-      style={({ pressed }) => [pressed && { opacity: 0.93 }, pressed && { transform: [{ scale: 0.992 }] }]}
+      onFocus={Platform.OS === 'web' ? () => setHovered(true) : undefined}
+      onBlur={Platform.OS === 'web' ? () => setHovered(false) : undefined}
+      style={({ pressed }) => [
+        pressed && { opacity: 0.92 },
+        pressed && { transform: [{ scale: 0.988 }] },
+        Platform.OS === 'web' &&
+          hovered &&
+          !pressed &&
+          visual !== 'hero' && {
+            transform: [{ translateY: -1.5 }, { scale: 1.008 }],
+          },
+      ]}
     >
       {frame}
     </Pressable>

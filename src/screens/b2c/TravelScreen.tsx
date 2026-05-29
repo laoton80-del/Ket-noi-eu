@@ -22,7 +22,8 @@ import {
 
 import { TravelDirectionSelector } from '../../components/travel/TravelDirectionSelector';
 import { TravelGlassCard, type TravelSemanticAccent } from '../../components/travel/TravelGlassCard';
-import { PremiumAppTile, PremiumTileGrid } from '../../components/viona';
+import { TravelAppTile, travelAppTileMetrics } from '../../components/travel/TravelAppTile';
+import { PremiumTileGrid } from '../../components/viona';
 import { LocalConstellationFrame } from '../../components/local/LocalConstellationFrame';
 import {
   localConstellation,
@@ -41,7 +42,6 @@ import {
 } from '../../services/compliance/sensorConsent';
 import { getTravelContext } from '../../services/context/UserContextService';
 import { listVietnameseRestaurantsByProximity, type CravingsRadarHit } from '../../services/travel/travelCravingsRadar';
-import type { VionaUniverseAccent } from '../../design/premiumTileVisualTokens';
 import {
   premiumTileGlass,
   premiumUniverseAccentSpec,
@@ -49,10 +49,6 @@ import {
 } from '../../design/premiumTileVisualTokens';
 import { theme } from '../../theme/theme';
 import { FontFamily } from '../../theme/typography';
-
-function travelSemanticToUniverseAccent(accent: TravelSemanticAccent): VionaUniverseAccent {
-  return accent;
-}
 
 function weatherLabelKey(weatherCode: number): string {
   if (weatherCode < 20) return 'clear';
@@ -157,6 +153,21 @@ function travelScenarioGridColumns(width: number): 1 | 2 | 3 | 4 {
   return 1;
 }
 
+/** Pack 3 — tighter grid rhythm at desktop without cramping mobile. */
+function travelTileSectionMetrics(viewportWidth: number): Readonly<{
+  gridGap: number;
+  groupGap: number;
+  quickHelpGap: number;
+}> {
+  if (viewportWidth >= 1024) {
+    return { gridGap: 9, groupGap: 6, quickHelpGap: 9 };
+  }
+  if (viewportWidth >= 768) {
+    return { gridGap: 10, groupGap: 8, quickHelpGap: 10 };
+  }
+  return { gridGap: 10, groupGap: 10, quickHelpGap: 10 };
+}
+
 const QUICK_HELP_IDS: readonly TravelScenarioId[] = ['translation', 'taxi', 'emergency'];
 
 const TRAVEL_PILOT_PILLS = [
@@ -207,17 +218,19 @@ const TRAVEL_SCENARIO_GROUPS = [
 function TravelQuickHelpTile({
   scenarioId,
   item,
+  layoutMetrics,
 }: Readonly<{
   scenarioId: TravelScenarioId;
   item: TravelScenario;
+  layoutMetrics: ReturnType<typeof travelAppTileMetrics>;
 }>): ReactElement {
   const { t } = useTranslation();
   return (
-    <PremiumAppTile
-      variant="travel"
-      accent={travelSemanticToUniverseAccent(item.accent)}
-      size="quickHelp"
-      width="100%"
+    <TravelAppTile
+      variant="quickHelp"
+      accent={item.accent}
+      accentSecondary={item.capsuleSecondary}
+      layoutMetrics={layoutMetrics}
       testID={`travel-quick-help-${scenarioId}`}
       title={t(`travelHub.scenario.${scenarioId}.title`)}
       subtitle={t(`travelHub.scenario.${scenarioId}.sub`)}
@@ -231,15 +244,17 @@ function TravelQuickHelpTile({
 
 function TravelScenarioCard({
   item,
+  layoutMetrics,
 }: Readonly<{
   item: TravelScenario;
+  layoutMetrics: ReturnType<typeof travelAppTileMetrics>;
 }>): ReactElement {
   const { t } = useTranslation();
   return (
-    <PremiumAppTile
-      variant="travel"
-      accent={travelSemanticToUniverseAccent(item.accent)}
-      width="100%"
+    <TravelAppTile
+      accent={item.accent}
+      accentSecondary={item.capsuleSecondary}
+      layoutMetrics={layoutMetrics}
       testID={`travel-scenario-${item.id}`}
       title={t(`travelHub.scenario.${item.id}.title`)}
       subtitle={t(`travelHub.scenario.${item.id}.sub`)}
@@ -255,10 +270,14 @@ function TravelScenarioGroupBlock({
   labelKey,
   scenarios,
   columns,
+  gridGap,
+  layoutMetrics,
 }: Readonly<{
   labelKey: 'travelHub.groupMove' | 'travelHub.groupStayEat' | 'travelHub.groupSafetyHelp';
   scenarios: readonly TravelScenario[];
   columns: 1 | 2 | 3 | 4;
+  gridGap: number;
+  layoutMetrics: ReturnType<typeof travelAppTileMetrics>;
 }>): ReactElement {
   const { t } = useTranslation();
   return (
@@ -266,11 +285,12 @@ function TravelScenarioGroupBlock({
       <Text style={styles.groupKicker}>{t(labelKey)}</Text>
       <PremiumTileGrid
         columns={columns}
+        gap={gridGap}
         wrapCells
         style={[styles.scenarioGrid, columns > 1 ? styles.scenarioGridMultiCol : null]}
       >
         {scenarios.map((item) => (
-          <TravelScenarioCard key={item.id} item={item} />
+          <TravelScenarioCard key={item.id} item={item} layoutMetrics={layoutMetrics} />
         ))}
       </PremiumTileGrid>
     </View>
@@ -336,6 +356,8 @@ export function TravelScreen() {
 
   const scenarioGridColumns = travelScenarioGridColumns(width);
   const travelHeroStage = useMemo(() => travelHeroStageMetrics(width), [width]);
+  const travelTileLayout = useMemo(() => travelAppTileMetrics(width), [width]);
+  const travelTileSection = useMemo(() => travelTileSectionMetrics(width), [width]);
   const travelHeroImageStyle = useMemo(
     () => [
       styles.heroCinematicImage,
@@ -687,13 +709,13 @@ export function TravelScreen() {
         </LocalConstellationFrame>
 
         <Text style={styles.quickHelpSectionKicker}>{t('travelHub.quickHelpKicker')}</Text>
-        <View style={styles.quickHelpRow}>
+        <View style={[styles.quickHelpRow, { gap: travelTileSection.quickHelpGap }]}>
           {QUICK_HELP_IDS.map((id) => {
             const item = scenarioById.get(id);
             if (!item) return null;
             return (
               <View key={id} style={styles.quickHelpCell}>
-                <TravelQuickHelpTile scenarioId={id} item={item} />
+                <TravelQuickHelpTile scenarioId={id} item={item} layoutMetrics={travelTileLayout} />
               </View>
             );
           })}
@@ -711,6 +733,8 @@ export function TravelScreen() {
               labelKey={group.labelKey}
               scenarios={groupScenarios}
               columns={scenarioGridColumns}
+              gridGap={travelTileSection.gridGap}
+              layoutMetrics={travelTileLayout}
             />
           );
         })}
@@ -1006,7 +1030,7 @@ const styles = StyleSheet.create({
     fontFamily: FontFamily.extrabold,
     color: 'rgba(188, 238, 255, 1)',
     letterSpacing: 1.1,
-    marginTop: 4,
+    marginTop: 6,
     marginBottom: 10,
     textShadowColor: 'rgba(92, 205, 255, 0.68)',
     textShadowOffset: { width: 0, height: 0 },
@@ -1015,9 +1039,9 @@ const styles = StyleSheet.create({
   scenariosSectionKicker: {
     fontSize: 9,
     fontFamily: FontFamily.extrabold,
-    color: 'rgba(186, 198, 214, 0.72)',
-    letterSpacing: 0.9,
-    marginTop: 2,
+    color: 'rgba(186, 198, 214, 0.78)',
+    letterSpacing: 0.95,
+    marginTop: 4,
     marginBottom: 10,
   },
   secondaryZone: {
@@ -1027,7 +1051,6 @@ const styles = StyleSheet.create({
   },
   quickHelpRow: {
     flexDirection: 'row',
-    gap: 10,
     marginBottom: theme.spacing.md,
   },
   quickHelpCell: {
@@ -1040,12 +1063,11 @@ const styles = StyleSheet.create({
   groupKicker: {
     fontSize: 9,
     fontFamily: FontFamily.extrabold,
-    color: 'rgba(186, 198, 214, 0.9)',
-    letterSpacing: 0.85,
-    marginBottom: 8,
+    color: 'rgba(196, 210, 228, 0.92)',
+    letterSpacing: 0.88,
+    marginBottom: 7,
   },
   scenarioGrid: {
-    gap: 10,
     marginBottom: theme.spacing.sm,
   },
   scenarioGridMultiCol: {
