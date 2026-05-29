@@ -1,5 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
-import type { ReactElement } from 'react';
+import { useState, type ReactElement } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { useTranslation } from '../../../i18n';
@@ -33,6 +33,7 @@ export function LocalConnectedUniverseLinks({
   testID = 'local-connected-universe-links',
 }: LocalConnectedUniverseLinksProps): ReactElement {
   const { t } = useTranslation();
+  const [activeId, setActiveId] = useState<string | null>(null);
   const items: LinkItem[] = [
     travelEnabled
       ? {
@@ -77,10 +78,17 @@ export function LocalConnectedUniverseLinks({
             accessibilityRole="button"
             accessibilityLabel={item.title}
             onPress={item.onPress}
-            style={({ pressed }) => [styles.link, pressed && styles.linkPressed]}
+            onHoverIn={() => setActiveId(item.id)}
+            onHoverOut={() => setActiveId((current) => (current === item.id ? null : current))}
+            onFocus={() => setActiveId(item.id)}
+            onBlur={() => setActiveId((current) => (current === item.id ? null : current))}
+            style={({ pressed }) => [
+              styles.link,
+              (activeId === item.id || pressed) && styles.linkActive,
+            ]}
             testID={item.testID}
           >
-            <Ionicons name={item.icon} size={14} color={item.accent} accessibilityIgnoresInvertColors />
+            <Ionicons name={item.icon} size={15} color={item.accent} accessibilityIgnoresInvertColors />
             <View style={styles.copy}>
               <Text style={styles.title} numberOfLines={1}>
                 {item.title}
@@ -121,17 +129,34 @@ const styles = StyleSheet.create({
     minWidth: 0,
     borderRadius: 10,
     borderWidth: 1,
-    borderColor: 'rgba(148, 163, 184, 0.22)',
-    backgroundColor: 'rgba(8, 14, 24, 0.44)',
+    // Secondary, but clearly clickable in the NORMAL state (no hover needed). ROOT-CAUSE FIX:
+    // previous passes only raised the ALPHA of a near-black fill (rgba(10,16,28,…)) sitting on a
+    // near-black page canvas, which produced ~no visible contrast. The fill now uses a clearly
+    // LIGHTER elevated slate (raised luminance) so the card body separates from the canvas, plus a
+    // visible (but secondary) border + a soft normal-state depth shadow. Stays below primary cards
+    // via the small icon, single-line copy, and absence of photo/glass.
+    borderColor: 'rgba(178, 196, 222, 0.6)',
+    backgroundColor: 'rgba(30, 43, 64, 0.78)',
+    shadowColor: 'rgba(0, 0, 0, 0.45)',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 1,
+    shadowRadius: 4,
+    elevation: 1,
     paddingHorizontal: 10,
     paddingVertical: 8,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    opacity: 0.85,
   },
-  linkPressed: {
-    opacity: 0.72,
+  linkActive: {
+    // Hover / focus / press: brighten the fill + sharpen the border with a soft (non-neon) glow.
+    borderColor: 'rgba(212, 226, 246, 0.82)',
+    backgroundColor: 'rgba(42, 58, 84, 0.86)',
+    shadowColor: 'rgba(150, 180, 220, 0.5)',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 1,
+    shadowRadius: 4,
+    elevation: 2,
   },
   copy: {
     flex: 1,
@@ -142,12 +167,12 @@ const styles = StyleSheet.create({
     fontSize: 12,
     lineHeight: 15,
     fontFamily: FontFamily.semibold,
-    color: 'rgba(241, 247, 255, 0.94)',
+    color: 'rgba(247, 251, 255, 0.98)',
   },
   subtitle: {
     fontSize: 10,
     lineHeight: 13,
     fontFamily: FontFamily.medium,
-    color: 'rgba(176, 194, 218, 0.78)',
+    color: 'rgba(196, 212, 232, 0.82)',
   },
 });

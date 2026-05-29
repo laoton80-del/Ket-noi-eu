@@ -1545,6 +1545,12 @@
       "quickActionsKicker": "Quick access",
       "quickActionAiReceptionist": "AI Receptionist",
       "quickActionLanguageAssist": "Language assist"
+    },
+    "statusFlow": {
+      "sent": "Request sent",
+      "await": "Await reply",
+      "confirm": "Confirm later",
+      "note": "No payment captured · merchant confirms later"
     }
   },
   "b2bPaywallUi": {

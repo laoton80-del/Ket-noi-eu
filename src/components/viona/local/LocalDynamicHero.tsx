@@ -3,9 +3,11 @@
  * Theme-invariant premium dark-glass frame; hero images stay daylight/golden-hour assets.
  */
 import { LinearGradient } from 'expo-linear-gradient';
-import { useEffect, useMemo, useRef, type ReactElement } from 'react';
+import { useEffect, useMemo, useRef, useState, type ReactElement } from 'react';
 import {
+  AccessibilityInfo,
   Animated,
+  Easing,
   Image,
   Platform,
   Pressable,
@@ -24,11 +26,29 @@ import {
   premiumCrispEdgeStroke,
   premiumFrameEdgeOverlay,
 } from '../fashionHomeDesktopShell';
+import { LocalLightingNetworkEdge } from './LocalLightingNetworkEdge';
+import { LocalHeroNetworkPulse } from './LocalHeroNetworkPulse';
 import { FontFamily } from '../../../theme/typography';
 import { useTranslation } from '../../../i18n';
 
-/** Match the delivered 1600x520 daylight assets so cover-crop stays minimal. */
-const HERO_ASPECT = 1600 / 520;
+/** Web desktop pointer (hover + fine pointer) — gates the hover animation off touch devices. */
+function detectHoverPointer(): boolean {
+  if (Platform.OS !== 'web' || typeof window === 'undefined' || !window.matchMedia) return false;
+  try {
+    return window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Frame ratio for the dynamic hero banner. The delivered daylight assets are 1600x520
+ * (`cover` keeps the image inside the frame); the frame is intentionally a touch taller
+ * (~1600/570) for a deeper, more cinematic premium banner. This adds only a small, even
+ * crop (~4% per side) — no zoom transform and no negative inset — while preserving the
+ * width-driven aspectRatio behavior across breakpoints.
+ */
+const HERO_ASPECT = 1600 / 570;
 
 export type LocalDynamicHeroProps = Readonly<{
   onBrowseServices: () => void;
@@ -50,19 +70,70 @@ export function LocalDynamicHero({
   const isNarrow = width < 520;
   const shortViewport = height > 0 && height < 520;
   const compactHero = shortViewport || (height > 0 && width / height > 1.8);
-  // True-fit: the frame derives its height from its real rendered width via aspectRatio, so `cover`
-  // matches the 1600x520 composition (no over-crop). Floors keep copy readable on narrow frames;
-  // the max cap stops the banner from getting too tall on very wide single-column layouts.
+  // The frame derives its height from its real rendered width via aspectRatio, so `cover` keeps
+  // the 1600x520 image inside the frame with only a small, even crop. Floors keep copy readable
+  // on narrow/short frames; the max cap stops the banner from getting too tall on very wide
+  // single-column layouts. Heights are tuned deeper for a more cinematic premium banner
+  // (desktop/web ~+20px, tablet ~+14px, mobile ~+6px vs the prior pass).
   const frameSizing = {
     aspectRatio: HERO_ASPECT,
-    minHeight: compactHero ? 184 : isNarrow ? 212 : 248,
-    maxHeight: compactHero ? 300 : 440,
+    minHeight: compactHero ? 198 : isNarrow ? 228 : 276,
+    maxHeight: compactHero ? 324 : 496,
   } as const;
   const visual = getLocalHeroVisualSpec(activeHeroKey);
   const heroSource = getLocalHeroAsset(activeHeroKey);
   const fallbackHeroSource = getLocalHeroAsset('default');
   const previousSourceRef = useRef(heroSource);
   const fadeAnim = useRef(new Animated.Value(1)).current;
+
+  const supportsHover = useMemo(detectHoverPointer, []);
+  const [hovered, setHovered] = useState(false);
+  const [reduceMotion, setReduceMotion] = useState(false);
+  const hoverAnim = useRef(new Animated.Value(0)).current;
+
+  // The hero "lights up" for either of two pointer-driven reasons:
+  //  1. The user hovers the hero frame directly (`hovered`), or
+  //  2. The user hovers one of the four hero cards, which swaps `activeHeroKey` to a non-default
+  //     state (the image + semantic accent change). Previously the pulse only keyed off `hovered`,
+  //     so card-driven states swapped the image but never animated — making the pulse appear to
+  //     "only work for the default hero". Treating a non-default `activeHeroKey` as an active state
+  //     drives the network boost + pulse + rim in that state's own accent.
+  const cardActive = activeHeroKey !== 'default';
+  const heroLit = (hovered || cardActive) && supportsHover;
+
+  useEffect(() => {
+    let mounted = true;
+    AccessibilityInfo.isReduceMotionEnabled?.()
+      .then((value) => {
+        if (mounted) setReduceMotion(Boolean(value));
+      })
+      .catch(() => {});
+    const sub = AccessibilityInfo.addEventListener?.('reduceMotionChanged', (value: boolean) =>
+      setReduceMotion(Boolean(value))
+    );
+    return () => {
+      mounted = false;
+      sub?.remove?.();
+    };
+  }, []);
+
+  useEffect(() => {
+    Animated.timing(hoverAnim, {
+      toValue: heroLit ? 1 : 0,
+      duration: 240,
+      easing: Easing.out(Easing.quad),
+      useNativeDriver: true,
+    }).start();
+  }, [heroLit, hoverAnim]);
+
+  const hoverProps = supportsHover
+    ? ({
+        onMouseEnter: () => setHovered(true),
+        onMouseLeave: () => setHovered(false),
+      } as const)
+    : {};
+  const washOpacity = hoverAnim.interpolate({ inputRange: [0, 1], outputRange: [0, 0.05] });
+  const rimOpacity = hoverAnim.interpolate({ inputRange: [0, 1], outputRange: [0, 0.6] });
 
   useEffect(() => {
     if (previousSourceRef.current === heroSource) return;
@@ -91,7 +162,7 @@ export function LocalDynamicHero({
 
   return (
     <View testID={testID} style={styles.shell}>
-      <View style={[styles.frame, frameSizing]}>
+      <View style={[styles.frame, frameSizing]} {...hoverProps}>
         <LinearGradient
           pointerEvents="none"
           colors={[
@@ -123,6 +194,25 @@ export function LocalDynamicHero({
             pointerEvents="none"
             colors={['transparent', 'rgba(4, 6, 10, 0.26)']}
             style={styles.bottomHandoff}
+          />
+          <Animated.View
+            pointerEvents="none"
+            style={[styles.imageBrightenWash, { opacity: washOpacity }]}
+          />
+        </View>
+        <View pointerEvents="none" style={styles.networkLayer}>
+          <LocalLightingNetworkEdge
+            accent={visual.accent}
+            secondaryAccent={visual.secondaryAccent}
+            tier="hero"
+            boosted={heroLit}
+            radius={vionaTokens.radius.xxl}
+          />
+          <LocalHeroNetworkPulse
+            accent={visual.accent}
+            secondaryAccent={visual.secondaryAccent}
+            active={heroLit}
+            reducedMotion={reduceMotion}
           />
         </View>
         <View style={styles.copyCol} pointerEvents="box-none">
@@ -172,6 +262,10 @@ export function LocalDynamicHero({
             premiumCrispEdgeStroke(FASHION_HOME_FRAME_BORDER),
           ]}
         />
+        <Animated.View
+          pointerEvents="none"
+          style={[styles.hoverRim, { borderColor: visual.accent, opacity: rimOpacity }]}
+        />
       </View>
     </View>
   );
@@ -208,6 +302,24 @@ const styles = StyleSheet.create({
   },
   imageFadeLayer: {
     ...StyleSheet.absoluteFillObject,
+  },
+  networkLayer: {
+    // Above the image, below the copy (zIndex 4) and crisp frame (zIndex 5) so text + frame win.
+    ...StyleSheet.absoluteFillObject,
+    zIndex: 3,
+  },
+  imageBrightenWash: {
+    // Very subtle hover "activation" — a faint white wash over the image only (behind copy), so the
+    // hero reads as alive without over-brightening faces or hurting text legibility.
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: '#FFFFFF',
+  },
+  hoverRim: {
+    // Hover-only accent rim glow on top of the crisp frame; fades out smoothly on hover-out.
+    ...StyleSheet.absoluteFillObject,
+    borderRadius: vionaTokens.radius.xxl,
+    borderWidth: 1.5,
+    zIndex: 6,
   },
   bottomHandoff: {
     position: 'absolute',

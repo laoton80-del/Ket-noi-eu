@@ -1545,6 +1545,12 @@
       "quickActionsKicker": "Truy cập nhanh",
       "quickActionAiReceptionist": "Lễ tân AI",
       "quickActionLanguageAssist": "Hỗ trợ ngôn ngữ"
+    },
+    "statusFlow": {
+      "sent": "Gửi yêu cầu",
+      "await": "Chờ phản hồi",
+      "confirm": "Xác nhận sau",
+      "note": "Không thu tiền · cửa hàng xác nhận sau"
     }
   },
   "b2bPaywallUi": {

@@ -1,5 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
+import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useCallback, useMemo, useRef, useState, type ReactElement } from 'react';
@@ -18,13 +19,13 @@ import {
   type StyleProp,
   type ViewStyle,
 } from 'react-native';
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import Reanimated, { Easing, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 import { getDemoBookingPayload } from '../../config/demoRestBooking';
 import { getFeatureFlags } from '../../core/feature-flags/featureFlags';
 import { useMiniAppEntry } from '../../hooks/useMiniAppEntry';
 import { formatVioCredits } from '../../core/monetization/vioDisplayLabels';
-import type { RootStackParamList } from '../../navigation/routes';
+import type { RootStackParamList, RootTabParamList } from '../../navigation/routes';
 import { MAIN_TAB } from '../../navigation/routes';
 import { previewLegalScanCostVig, scanLegalDocument } from '../../services/aiService';
 import { confirmSecurityDepositThen } from '../../services/bookingEscrowUi';
@@ -36,6 +37,7 @@ import { useTranslation } from '../../i18n';
 import { useHomeCommand } from '../../context/HomeCommandContext';
 import { useFullscreenMode } from '../../hooks/useFullscreenMode';
 import { useVionaHomeDaylightBoost } from '../../components/viona/useVionaHomeDaylightBoost';
+import { VionaBottomEscapeBar } from '../../components/viona/VionaBottomEscapeBar';
 import { LocalConnectedUniverseLinks } from '../../components/viona/local/LocalConnectedUniverseLinks';
 import { LocalClassifiedsFeaturedPreview } from '../../components/viona/local/LocalClassifiedsFeaturedPreview';
 import { LocalMerchantToolsSection } from '../../components/viona/local/LocalMerchantToolsSection';
@@ -61,6 +63,10 @@ import {
   fashionHomeWebCommandUtilityPressStyle,
 } from '../../components/viona/fashionHomeDesktopShell';
 import { SmartTrioLanguageSheet } from '../../components/smartTrio/SmartTrioLanguageSheet';
+import { VionaSosHoldGateModal } from '../../components/viona/VionaSosHoldGateModal';
+import { VionaSosPlusInfoModal } from '../../components/viona/VionaSosPlusInfoModal';
+import { SOS_PLUS_PRODUCT_SURFACE_UI_ENABLED } from '../../config/sosPlusSurface';
+import { SOS_PLUS_PROFILE_UI_ENABLED } from '../../config/sosPlusProduction';
 import { localConstellation } from '../../components/local/localConstellationTokens';
 import { theme } from '../../theme/theme';
 import { FontFamily } from '../../theme/typography';
@@ -81,7 +87,21 @@ type ClassifiedPost = Readonly<{
 }>;
 
 const VIP_POSTING_COST_VIG = 120;
-const BG = localConstellation.canvas;
+/**
+ * Local-only Premium Glass shell canvas.
+ * A deep, premium ambient stage — deep navy easing into emerald-black — that reads brighter
+ * than the legacy near-black cyber-night (`localConstellation.canvas` = #050B14) without
+ * collapsing into a flat teal wash. A warm golden-hour radial glow lifts only the hero/top
+ * band, and a very subtle emerald/cyan network keeps the field alive while the dark-glass
+ * hero/cards remain the visual focus. Theme-invariant by design.
+ */
+const LOCAL_PREMIUM_CANVAS = '#0A1622';
+const LOCAL_PREMIUM_SKY_TOP = '#11222C';
+const LOCAL_PREMIUM_SKY_BOTTOM = '#06130F';
+const LOCAL_PREMIUM_WARM_GLOW = 'rgba(255, 210, 156, 0.10)';
+const LOCAL_PREMIUM_WARM_GLOW_SOFT = 'rgba(255, 210, 156, 0.03)';
+const LOCAL_PREMIUM_AURORA_EMERALD = 'rgba(72, 210, 165, 0.06)';
+const LOCAL_PREMIUM_AURORA_CYAN = 'rgba(98, 206, 255, 0.045)';
 const INK = localConstellation.ink;
 const INK_MUTED = localConstellation.inkMuted;
 const BORDER = localConstellation.border;
@@ -91,40 +111,58 @@ const CYAN = localConstellation.accentCyan;
 const RISK = localConstellation.risk;
 const LOCAL_LEGACY_HIDE_STYLE_ID = 'viona-local-legacy-hide';
 
-const LOCAL_STATUS_LEGEND = [
-  { key: 'legendRequestSent', icon: 'send-outline' as const },
-  { key: 'legendMerchantConfirmed', icon: 'checkmark-circle-outline' as const },
-  { key: 'legendMerchantDeclined', icon: 'close-circle-outline' as const },
-  { key: 'legendConfirmedNotPaid', icon: 'alert-circle-outline' as const },
-] as const;
+/**
+ * Fully hides the shared bottom tab bar while the Local hub is focused. The Local main page
+ * already exposes universe handoff via "Vũ trụ liên kết" plus compact Back/Home controls, so the
+ * 4-item bottom tab bar (Hub / Local / Travel Lite / Academy Lite) is redundant here. Applied only
+ * on focus and reverted on blur, so Hub / Travel / Academy tabs keep their bar untouched.
+ */
+const LOCAL_HIDDEN_TAB_BAR_STYLE = {
+  display: 'none' as const,
+  height: 0,
+  opacity: 0,
+  borderTopWidth: 0,
+  pointerEvents: 'none' as const,
+};
 
-function localStatusLegendSafetyKey(
-  suffix: (typeof LOCAL_STATUS_LEGEND)[number]['key']
-): string {
-  return `localCommerce.safety.${suffix}`;
-}
+const LOCAL_STATUS_FLOW_STEPS = [
+  'localHub.statusFlow.sent',
+  'localHub.statusFlow.await',
+  'localHub.statusFlow.confirm',
+] as const;
 
 type LocalShellPressableState = { pressed: boolean; hovered?: boolean };
 
-/** Compact status strip — same copy as clarity guide, lower visual weight than action tiles. */
+/**
+ * Compact request-flow strip — a single light line (Request sent → Await reply → Confirm
+ * later) plus a tiny no-payment note. Intentionally low visual weight so it does not compete
+ * with the hero, flagship cards, or classifieds. No fake booking/payment success.
+ */
 function LocalHubCompactStatusGuide(): ReactElement {
   const { t } = useTranslation();
   return (
-    <View style={styles.compactStatusSection} testID="local-compact-status-guide">
-      <Text style={styles.compactStatusKicker}>{t('localCommerce.safety.legendTitle')}</Text>
-      <Text style={styles.compactStatusNote} numberOfLines={2}>
-        {t('localCommerce.safety.bookingRequestNote')}
-      </Text>
-      <View style={styles.compactStatusChipRow}>
-        {LOCAL_STATUS_LEGEND.map((item) => (
-          <View key={item.key} style={styles.compactStatusLegendItem}>
-            <Ionicons name={item.icon} size={12} color={EMERALD} accessibilityIgnoresInvertColors />
-            <Text style={styles.compactStatusLegendText} numberOfLines={2}>
-              {t(localStatusLegendSafetyKey(item.key))}
+    <View style={styles.statusStrip} testID="local-compact-status-guide">
+      <View style={styles.statusStripFlow}>
+        {LOCAL_STATUS_FLOW_STEPS.map((key, idx) => (
+          <View key={key} style={styles.statusStripStep}>
+            {idx > 0 ? (
+              <Ionicons
+                name="arrow-forward"
+                size={11}
+                color="rgba(148, 210, 255, 0.7)"
+                style={styles.statusStripArrow}
+                accessibilityIgnoresInvertColors
+              />
+            ) : null}
+            <Text style={styles.statusStripStepText} numberOfLines={1}>
+              {t(key)}
             </Text>
           </View>
         ))}
       </View>
+      <Text style={styles.statusStripNote} numberOfLines={1}>
+        {t('localHub.statusFlow.note')}
+      </Text>
     </View>
   );
 }
@@ -173,49 +211,43 @@ function LocalShellUtilityBtn({
   );
 }
 
-function LocalMiniappDock({
-  onBack,
-  onHome,
-  onLocalHub,
-  bottomOffset,
-}: Readonly<{
-  onBack: () => void;
-  onHome: () => void;
-  onLocalHub: () => void;
-  bottomOffset: number;
-}>) {
-  const { t } = useTranslation();
+/**
+ * Local-only Premium Glass backdrop.
+ * Sits ABOVE the shared shell's opaque night canvas/veils and BELOW the Local content,
+ * re-tinting the page to a deep premium stage (deep navy → emerald-black) with a warm
+ * golden-hour glow confined to the hero/top band and a very subtle emerald/cyan aurora.
+ * Web uses fixed positioning so the wash stays put while scrolling; native falls back to an
+ * absolute fill. Theme-invariant.
+ */
+function LocalPremiumShellBackdrop(): ReactElement {
+  const isWeb = Platform.OS === 'web';
   return (
-    <View pointerEvents="box-none" style={[styles.miniappDockHost, { bottom: bottomOffset }]}>
-      <View style={styles.miniappDock}>
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel={t('localHub.miniappDockBack')}
-          onPress={onBack}
-          style={({ pressed }) => [styles.miniappDockBtn, pressed && styles.shellUtilBtnPressed]}
-        >
-          <Ionicons name="arrow-back" size={16} color={INK} />
-          <Text style={styles.miniappDockBtnText}>{t('localHub.miniappDockBack')}</Text>
-        </Pressable>
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel={t('localHub.miniappDockHome')}
-          onPress={onHome}
-          style={({ pressed }) => [styles.miniappDockBtn, pressed && styles.shellUtilBtnPressed]}
-        >
-          <Ionicons name="home-outline" size={16} color={EMERALD} />
-          <Text style={styles.miniappDockBtnText}>{t('localHub.miniappDockHome')}</Text>
-        </Pressable>
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel={t('localHub.miniappDockLocal')}
-          onPress={onLocalHub}
-          style={({ pressed }) => [styles.miniappDockBtn, styles.miniappDockBtnActive, pressed && styles.shellUtilBtnPressed]}
-        >
-          <Ionicons name="location-outline" size={16} color={EMERALD} />
-          <Text style={[styles.miniappDockBtnText, styles.miniappDockBtnTextActive]}>{t('localHub.miniappDockLocal')}</Text>
-        </Pressable>
-      </View>
+    <View pointerEvents="none" style={styles.premiumBackdrop}>
+      <LinearGradient
+        colors={[LOCAL_PREMIUM_SKY_TOP, LOCAL_PREMIUM_CANVAS, LOCAL_PREMIUM_SKY_BOTTOM]}
+        locations={[0, 0.55, 1]}
+        start={{ x: 0.5, y: 0 }}
+        end={{ x: 0.5, y: 1 }}
+        style={styles.premiumLayerFill}
+      />
+      {isWeb ? (
+        <View style={styles.premiumWarmGlowWeb} />
+      ) : (
+        <LinearGradient
+          colors={[LOCAL_PREMIUM_WARM_GLOW, LOCAL_PREMIUM_WARM_GLOW_SOFT, 'rgba(255, 210, 156, 0)']}
+          locations={[0, 0.26, 0.58]}
+          start={{ x: 0.72, y: 0 }}
+          end={{ x: 0.5, y: 0.7 }}
+          style={styles.premiumLayerFill}
+        />
+      )}
+      <LinearGradient
+        colors={[LOCAL_PREMIUM_AURORA_EMERALD, 'rgba(0, 0, 0, 0)', LOCAL_PREMIUM_AURORA_CYAN]}
+        locations={[0, 0.58, 1]}
+        start={{ x: 0, y: 0.1 }}
+        end={{ x: 1, y: 0.95 }}
+        style={styles.premiumLayerFill}
+      />
     </View>
   );
 }
@@ -344,7 +376,7 @@ function useLocalWebShellCompensation() {
         style.textContent = `
           html[data-viona-local-hub="true"],
           body[data-viona-local-hub="true"] {
-            background-color: ${BG} !important;
+            background-color: ${LOCAL_PREMIUM_CANVAS} !important;
             overflow-x: hidden !important;
           }
           body[data-viona-local-hub="true"] [data-viona-local-legacy-chrome="true"] {
@@ -357,8 +389,8 @@ function useLocalWebShellCompensation() {
       const applyWebPageCanvas = () => {
         document.documentElement.dataset.vionaLocalHub = 'true';
         document.body.dataset.vionaLocalHub = 'true';
-        document.documentElement.style.backgroundColor = BG;
-        document.body.style.backgroundColor = BG;
+      document.documentElement.style.backgroundColor = LOCAL_PREMIUM_CANVAS;
+      document.body.style.backgroundColor = LOCAL_PREMIUM_CANVAS;
         document.documentElement.style.overflowX = 'hidden';
         document.body.style.overflowX = 'hidden';
       };
@@ -486,6 +518,10 @@ export function LocalScreen() {
   const { t, i18n } = useTranslation();
   const { width, height } = useWindowDimensions();
   const navigation = useNavigation<Nav>();
+  // Same underlying navigation object as `navigation`, but typed as the bottom-tab navigator so we
+  // can toggle this screen's `tabBarStyle`. Used only to hide the redundant 4-item bottom nav while
+  // Local is focused; no routes/handlers/behavior change.
+  const tabBarNavigation = useNavigation<BottomTabNavigationProp<RootTabParamList>>();
   const { openMiniApp } = useMiniAppEntry();
   const wallet = useWalletState();
   const featureFlags = useMemo(() => getFeatureFlags(), []);
@@ -503,6 +539,8 @@ export function LocalScreen() {
   const [submitting, setSubmitting] = useState(false);
   const [legalScanBusy, setLegalScanBusy] = useState(false);
   const [languageSheetOpen, setLanguageSheetOpen] = useState(false);
+  const [sosHoldGateOpen, setSosHoldGateOpen] = useState(false);
+  const [sosPlusInfoOpen, setSosPlusInfoOpen] = useState(false);
   const homeCommand = useHomeCommand();
   const modalAnim = useSharedValue(0);
 
@@ -701,7 +739,15 @@ export function LocalScreen() {
     setLanguageSheetOpen(true);
   }, []);
 
+  // SOS entry parity with Home: open the shared hold-gate modal first (3s hold + safety
+  // copy), then hand off to the same in-app SOS flow Home uses. Never auto-dial/dispatch.
   const openSafetyAssist = useCallback(() => {
+    setSosPlusInfoOpen(false);
+    setSosHoldGateOpen(true);
+  }, []);
+
+  const onSosHoldGateComplete = useCallback(() => {
+    setSosHoldGateOpen(false);
     homeCommand?.triggerSafetyAssist();
   }, [homeCommand]);
 
@@ -719,22 +765,6 @@ export function LocalScreen() {
     return useCompact ? t('home.walletChipCompact', { amount: n }) : t('home.walletChipFull', { amount: n });
   }, [t, wallet.credits, width]);
 
-  const goHome = useCallback(() => {
-    openMiniApp('hub', () => navigation.navigate('Tabs', { screen: MAIN_TAB.B2C.home }));
-  }, [navigation, openMiniApp]);
-
-  const goBack = useCallback(() => {
-    if (navigation.canGoBack()) {
-      navigation.goBack();
-      return;
-    }
-    goHome();
-  }, [goHome, navigation]);
-
-  const scrollToTop = useCallback(() => {
-    scrollRef.current?.scrollTo({ y: 0, animated: true });
-  }, []);
-
   const openTravelUniverse = useCallback(() => {
     if (!featureFlags.travelLiteEnabled) return;
     openMiniApp('travel', () => navigation.navigate('Tabs', { screen: MAIN_TAB.B2C.travel }));
@@ -749,41 +779,38 @@ export function LocalScreen() {
     openMiniApp('merchantDashboard', () => navigation.navigate('MerchantDashboard'));
   }, [navigation, openMiniApp]);
 
+  // Compact contextual nav (replaces the redundant bottom tab bar on Local). Home goes to the
+  // existing Hub tab; Back uses native back, falling back to Home when there is nothing to pop.
+  const goHome = useCallback(() => {
+    navigation.navigate('Tabs', { screen: MAIN_TAB.B2C.home });
+  }, [navigation]);
+
+  const onBackPress = useCallback(() => {
+    if (navigation.canGoBack()) {
+      navigation.goBack();
+      return;
+    }
+    navigation.navigate('Tabs', { screen: MAIN_TAB.B2C.home });
+  }, [navigation]);
+
+  // Hide the shared 4-item bottom nav only while Local is focused; restore on blur.
+  useFocusEffect(
+    useCallback(() => {
+      tabBarNavigation.setOptions({ tabBarStyle: LOCAL_HIDDEN_TAB_BAR_STYLE });
+      return () => {
+        tabBarNavigation.setOptions({ tabBarStyle: undefined });
+      };
+    }, [tabBarNavigation])
+  );
+
   useLocalWebShellCompensation();
 
-  const insets = useSafeAreaInsets();
-  const canvasBackdropTopBleed = desktopWeb
-    ? Math.min(insets.top, localConstellation.canvasBackdropTopBleed)
-    : 0;
   const useCompactCommandLogo = width > 0 && width < 1060;
-  const miniappDockBottom = localConstellation.miniappDockBottomOffset + insets.bottom;
 
   const webTabletFullWidth = Platform.OS === 'web' && width >= VIONA_TABLET_MIN_WIDTH;
 
   return (
     <SafeAreaView style={styles.container} edges={['left', 'right']}>
-      <View
-        pointerEvents="none"
-        style={[
-          styles.canvasBackdropVeil,
-          { opacity: localConstellation.canvasBackdropVeilOpacity, top: -canvasBackdropTopBleed },
-        ]}
-      />
-      <LinearGradient
-        pointerEvents="none"
-        colors={[
-          localConstellation.canvasGlowEmerald,
-          localConstellation.canvasGlowMid,
-          localConstellation.canvasGlowCyan,
-        ]}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={[styles.canvasGlow, { top: -canvasBackdropTopBleed, opacity: 0.1 }]}
-      />
-      <View
-        pointerEvents="none"
-        style={[styles.contentFieldVeil, { top: -canvasBackdropTopBleed }]}
-      />
       <View
         style={[styles.root, webTabletFullWidth && styles.rootWebTabletFull]}
         nativeID="local-hub-root"
@@ -792,13 +819,13 @@ export function LocalScreen() {
       <PremiumAppShell
         leadingAccent="emerald"
         scrollRef={scrollRef}
-        withMiniappDockClearance
         withTabBarClearance
         bottomClearanceExtra={isLocalMobile ? 48 : isShortLandscape ? 36 : isHubWide ? 30 : 22}
-        enableLuminousBackground
-        backgroundUniverse="local"
+        contentStyle={desktopWeb ? styles.contentRailHomeParity : undefined}
         testID="local-premium-shell"
       >
+        <LocalPremiumShellBackdrop />
+        <View style={styles.premiumContentLift}>
         <View style={styles.shellRailWrap}>
             <LinearGradient
               colors={FASHION_HOME_COMMAND_RAIL_GRADIENT}
@@ -942,6 +969,13 @@ export function LocalScreen() {
               onAcademy={openAcademyUniverse}
             />
           </View>
+
+          <VionaBottomEscapeBar
+            showBack
+            showHome
+            onBack={onBackPress}
+            onHome={goHome}
+          />
           <View
             style={[
               styles.hubScrollTail,
@@ -950,14 +984,8 @@ export function LocalScreen() {
             ]}
           />
         </PremiumHubLayout>
+        </View>
       </PremiumAppShell>
-
-      <LocalMiniappDock
-        onBack={goBack}
-        onHome={goHome}
-        onLocalHub={scrollToTop}
-        bottomOffset={miniappDockBottom}
-      />
 
       <Modal visible={composerVisible} transparent animationType="none" onRequestClose={() => setComposerVisible(false)}>
         <View style={styles.modalBackdrop}>
@@ -1025,44 +1053,72 @@ export function LocalScreen() {
       </Modal>
 
       <SmartTrioLanguageSheet visible={languageSheetOpen} onClose={() => setLanguageSheetOpen(false)} />
+
+      <VionaSosHoldGateModal
+        visible={sosHoldGateOpen}
+        onRequestClose={() => setSosHoldGateOpen(false)}
+        onHoldComplete={onSosHoldGateComplete}
+        variant="continueToAppSos"
+        onOpenPlusInfo={
+          SOS_PLUS_PRODUCT_SURFACE_UI_ENABLED ? () => setSosPlusInfoOpen(true) : undefined
+        }
+      />
+      {SOS_PLUS_PRODUCT_SURFACE_UI_ENABLED ? (
+        <VionaSosPlusInfoModal
+          visible={sosPlusInfoOpen}
+          onRequestClose={() => setSosPlusInfoOpen(false)}
+          onPressOpenProfile={
+            SOS_PLUS_PROFILE_UI_ENABLED
+              ? () => {
+                  setSosPlusInfoOpen(false);
+                  navigation.navigate('SosPlusProfile');
+                }
+              : undefined
+          }
+        />
+      ) : null}
       </View>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: BG, position: 'relative', overflow: 'hidden' },
+  container: { flex: 1, backgroundColor: LOCAL_PREMIUM_CANVAS, position: 'relative', overflow: 'hidden' },
   root: { flex: 1, position: 'relative', zIndex: 1, backgroundColor: 'transparent' },
+  premiumBackdrop: {
+    // One continuous canvas: the premium gradient must span the FULL scroll content (not just
+    // the viewport) so it runs top-to-bottom with no mid-page seam. Web previously used
+    // position:fixed, which only paints the first viewport in a full-page render — below the
+    // fold the darker page canvas showed through, splitting the page into two bands around
+    // "Local cho bạn". Absolute fill the scroll content; bleed the sides so it still reaches the
+    // viewport edges when the content rail is narrower than the window (clipped by overflowX).
+    zIndex: 0,
+    ...(Platform.OS === 'web'
+      ? ({ position: 'absolute', top: 0, bottom: 0, left: -40, right: -40 } as unknown as ViewStyle)
+      : StyleSheet.absoluteFillObject),
+  },
+  premiumLayerFill: { ...StyleSheet.absoluteFillObject },
+  // Warm golden-hour glow stays anchored to the hero/top band (fixed-height top strip) so it
+  // does not wash down the now full-height backdrop.
+  premiumWarmGlowWeb:
+    Platform.OS === 'web'
+      ? ({
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          height: 760,
+          backgroundImage:
+            'radial-gradient(140% 150% at 74% -8%, rgba(255, 211, 156, 0.10) 0%, rgba(255, 211, 156, 0.035) 38%, rgba(255, 211, 156, 0) 70%)',
+        } as unknown as ViewStyle)
+      : {},
+  premiumContentLift: { position: 'relative', zIndex: 1 },
   rootWebTabletFull: {
     width: '100%',
     maxWidth: '100%',
     minWidth: 0,
     alignSelf: 'stretch',
     ...(Platform.OS === 'web' ? ({ overflowX: 'hidden' } as const) : {}),
-  },
-  canvasBackdropVeil: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: localConstellation.canvasVeil,
-    zIndex: 0,
-  },
-  canvasGlow: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    bottom: 0,
-    zIndex: 0,
-    opacity: 0.1,
-  },
-  contentFieldVeil: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    bottom: 0,
-    zIndex: 0,
-    backgroundColor: localConstellation.contentFieldVeil,
   },
   scroll: {
     flex: 1,
@@ -1158,51 +1214,6 @@ const styles = StyleSheet.create({
     color: INK,
     letterSpacing: 0.15,
     maxWidth: 88,
-  },
-  miniappDockHost: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    zIndex: 8,
-    alignItems: 'center',
-    pointerEvents: 'box-none',
-  },
-  miniappDock: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: theme.radius.pill,
-    backgroundColor: 'rgba(8, 14, 26, 0.88)',
-    borderWidth: 1,
-    borderColor: 'rgba(72, 210, 165, 0.28)',
-    ...(Platform.OS === 'web'
-      ? ({ boxShadow: '0 0 0 1px rgba(72, 210, 165, 0.12), 0 0 8px rgba(72, 210, 165, 0.08)' } as ViewStyle)
-      : {}),
-  },
-  miniappDockBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 5,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: theme.radius.pill,
-    borderWidth: 1,
-    borderColor: 'rgba(148, 163, 184, 0.22)',
-    backgroundColor: 'rgba(10, 14, 22, 0.45)',
-  },
-  miniappDockBtnActive: {
-    borderColor: 'rgba(72, 210, 165, 0.42)',
-    backgroundColor: 'rgba(72, 210, 165, 0.1)',
-  },
-  miniappDockBtnText: {
-    fontSize: 11,
-    fontFamily: FontFamily.extrabold,
-    color: INK_MUTED,
-  },
-  miniappDockBtnTextActive: {
-    color: EMERALD,
   },
   commandRailDivider: {
     width: 1,
@@ -1369,49 +1380,48 @@ const styles = StyleSheet.create({
     maxWidth: '40%',
     minWidth: 0,
   },
-  compactStatusSection: {
+  statusStrip: {
     width: '100%',
-    paddingHorizontal: 10,
-    paddingVertical: 9,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: 'rgba(72, 210, 165, 0.16)',
-    backgroundColor: 'rgba(5, 11, 20, 0.36)',
-    gap: 6,
-  },
-  compactStatusKicker: {
-    fontSize: 9,
-    fontFamily: FontFamily.extrabold,
-    letterSpacing: 0.6,
-    textTransform: 'uppercase',
-    color: EMERALD,
-  },
-  compactStatusNote: {
-    fontSize: 10,
-    lineHeight: 14,
-    fontFamily: FontFamily.semibold,
-    color: premiumLuminousInk.subtitleMinimum,
-  },
-  compactStatusChipRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
+    alignItems: 'center',
+    justifyContent: 'space-between',
     gap: 8,
-    marginTop: 4,
+    paddingHorizontal: 11,
+    paddingVertical: 7,
+    borderRadius: theme.radius.pill,
+    borderWidth: 1,
+    borderColor: 'rgba(72, 210, 165, 0.16)',
+    backgroundColor: 'rgba(8, 14, 26, 0.32)',
   },
-  compactStatusLegendItem: {
+  statusStripFlow: {
     flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: 5,
-    flex: 1,
-    minWidth: '46%',
-    maxWidth: '100%',
+    flexWrap: 'wrap',
+    alignItems: 'center',
+    flexShrink: 1,
+    minWidth: 0,
+    gap: 4,
   },
-  compactStatusLegendText: {
-    flex: 1,
-    fontSize: 9,
-    lineHeight: 12,
+  statusStripStep: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  statusStripArrow: {
+    marginHorizontal: 1,
+  },
+  statusStripStepText: {
+    fontSize: 11,
+    fontFamily: FontFamily.bold,
+    color: 'rgba(226, 240, 252, 0.9)',
+    letterSpacing: 0.1,
+  },
+  statusStripNote: {
+    flexShrink: 1,
+    fontSize: 9.5,
     fontFamily: FontFamily.semibold,
     color: premiumLuminousInk.subtitleMinimum,
+    letterSpacing: 0.1,
   },
   exploreMoreWrap: {
     width: '100%',
@@ -1426,19 +1436,17 @@ const styles = StyleSheet.create({
     color: 'rgba(172, 192, 210, 0.72)',
   },
   secondaryHubSection: {
+    // No whole-section opacity: dimming the entire subtree made the secondary cards read as
+    // disabled. Hierarchy is now carried by the cards' own muted fill/border/title tokens.
     width: '100%',
-    opacity: 0.88,
   },
   capabilitiesSection: {
     marginTop: 6,
-    opacity: 0.86,
   },
   merchantToolsSection: {
     marginTop: 8,
-    opacity: 0.82,
   },
   connectedUniversesSection: {
-    opacity: 0.62,
     marginTop: 12,
     paddingTop: 12,
     borderTopWidth: StyleSheet.hairlineWidth,
@@ -1467,6 +1475,13 @@ const styles = StyleSheet.create({
     width: '100%',
     maxWidth: '100%',
     alignSelf: 'stretch',
+  },
+  // Home-width parity (web desktop only): lift the PremiumAppShell content cap
+  // (contentMaxWidthDesktop 1200 / Landscape 1080) so Local spans the full viewport
+  // minus the same edge padding Home uses, instead of a narrower centered rail.
+  // The shell already applies identical horizontalPad, so this matches Home's inset.
+  contentRailHomeParity: {
+    maxWidth: '100%',
   },
   contentRail: {
     alignSelf: 'center',

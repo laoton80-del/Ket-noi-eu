@@ -22,7 +22,20 @@ import { useTranslation } from '../../../i18n';
 import { FontFamily } from '../../../theme/typography';
 import { LocalHomeParityCard } from './LocalHomeParityCard';
 
-type ClassifiedCategory = 'hiring' | 'shop_transfer' | 'housing';
+/**
+ * Defensive category union: current normalized values plus future-friendly strings.
+ * `resolveMeta` always falls back safely, so unrecognized categories never break the card.
+ */
+type ClassifiedCategory =
+  | 'hiring'
+  | 'jobs'
+  | 'shop_transfer'
+  | 'business'
+  | 'housing'
+  | 'marketplace'
+  | 'services'
+  | 'community'
+  | (string & {});
 
 export type LocalClassifiedsFeaturedPost = Readonly<{
   id: string;
@@ -31,18 +44,26 @@ export type LocalClassifiedsFeaturedPost = Readonly<{
   city: string;
   priceLabel: string;
   isVip: boolean;
+  /**
+   * Optional user-uploaded listing photo (future). When present the card uses it as the
+   * card image; otherwise a safe category fallback visual is used. No upload/storage here.
+   */
+  imageUri?: string;
+  imageUrl?: string;
 }>;
 
 type ClassifiedStyleMeta = Readonly<{
   icon: keyof typeof Ionicons.glyphMap;
-  accent: 'emerald' | 'gold' | 'cyan';
+  accent: 'emerald' | 'gold' | 'cyan' | 'violet';
   label: string;
   heroKey: LocalHeroVisualKey;
 }>;
 
+/** Safe category → fallback art / accent / icon mapping (defensive against future strings). */
 function resolveMeta(category: ClassifiedCategory): ClassifiedStyleMeta {
   switch (category) {
     case 'shop_transfer':
+    case 'business':
       return {
         icon: 'storefront-outline',
         accent: 'gold',
@@ -56,7 +77,29 @@ function resolveMeta(category: ClassifiedCategory): ClassifiedStyleMeta {
         label: 'Thue nha',
         heroKey: 'bookingAssist',
       };
+    case 'marketplace':
+      return {
+        icon: 'pricetags-outline',
+        accent: 'gold',
+        label: 'Cho',
+        heroKey: 'browseServices',
+      };
+    case 'services':
+      return {
+        icon: 'construct-outline',
+        accent: 'emerald',
+        label: 'Dich vu',
+        heroKey: 'browseServices',
+      };
+    case 'community':
+      return {
+        icon: 'people-outline',
+        accent: 'violet',
+        label: 'Cong dong',
+        heroKey: 'default',
+      };
     case 'hiring':
+    case 'jobs':
     default:
       return {
         icon: 'construct-outline',
@@ -106,11 +149,17 @@ export function LocalClassifiedsFeaturedPreview({
   const renderCard = (item: LocalClassifiedsFeaturedPost) => {
     const meta = resolveMeta(item.category);
     const visual = getLocalHeroVisualSpec(meta.heroKey);
+    // Prefer a user-uploaded listing photo when present; otherwise safe category fallback art.
+    const listingImage = item.imageUri ?? item.imageUrl;
+    const hasListingImage = typeof listingImage === 'string' && listingImage.trim().length > 0;
+    const backgroundImage = hasListingImage
+      ? { uri: listingImage.trim() }
+      : getLocalHeroCardAsset(meta.heroKey);
     const imageStyle =
       Platform.OS === 'web'
         ? ({
             objectFit: 'cover' as const,
-            objectPosition: visual.preferredObjectPosition,
+            objectPosition: hasListingImage ? 'center' : visual.preferredObjectPosition,
           } as const)
         : undefined;
 
@@ -122,12 +171,13 @@ export function LocalClassifiedsFeaturedPreview({
         statusLabel={item.isVip ? t('localHub.vipHighlight') : meta.label}
         statusTone={item.isVip ? 'demo' : 'lite'}
         icon={meta.icon}
-        backgroundImage={getLocalHeroCardAsset(meta.heroKey)}
+        backgroundImage={backgroundImage}
         imageStyle={imageStyle}
         onPress={onViewAll}
         accessibilityLabel={`${item.title}. ${item.city}. ${item.priceLabel}`}
         testID={`local-classified-${item.id}`}
         stretchInColumn={!useCarousel}
+        networkTier="classified"
       />
     );
   };
@@ -184,12 +234,7 @@ export function LocalClassifiedsFeaturedPreview({
           {visiblePosts.map((item) => (
             <View
               key={item.id}
-              style={[
-                styles.cell,
-                visiblePosts.length === 1 && styles.cellSingle,
-                visiblePosts.length === 2 && styles.cellDouble,
-                visiblePosts.length >= 3 && styles.cellTriple,
-              ]}
+              style={[styles.cell, visiblePosts.length === 1 && styles.cellSingle]}
             >
               {renderCard(item)}
             </View>
@@ -215,18 +260,18 @@ const styles = StyleSheet.create({
     width: '100%',
     maxWidth: '100%',
     minWidth: 0,
-    gap: 10,
+    gap: 14,
   },
   header: {
     flexDirection: 'row',
     alignItems: 'flex-end',
     justifyContent: 'space-between',
-    gap: 10,
+    gap: 12,
   },
   headerCopy: {
     flex: 1,
     minWidth: 0,
-    gap: 3,
+    gap: 5,
   },
   kicker: {
     fontSize: 10,
@@ -242,10 +287,10 @@ const styles = StyleSheet.create({
   },
   subtitle: {
     fontSize: 12,
-    lineHeight: 17,
+    lineHeight: 18,
     fontFamily: FontFamily.medium,
     color: 'rgba(186, 210, 235, 0.88)',
-    marginTop: 2,
+    marginTop: 4,
   },
   walletHint: {
     fontSize: 12,
@@ -256,7 +301,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     alignItems: 'center',
-    gap: 8,
+    gap: 10,
   },
   postBtn: {
     minHeight: 38,
@@ -295,23 +340,24 @@ const styles = StyleSheet.create({
   grid: {
     width: '100%',
     flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 10,
+    // Equal columns: flexBasis:0 + flexGrow:1 lets every card share the rail evenly and absorb the
+    // 12px gaps, so 2-up and 3-up both fill the row with no asymmetric dead space (the old fixed
+    // 31.5%/48.4% widths ignored the gaps and left a ragged right edge). `stretch` equalizes height.
+    alignItems: 'stretch',
+    gap: 12,
   },
   cell: {
     minWidth: 0,
+    flexGrow: 1,
+    flexShrink: 1,
+    flexBasis: 0,
   },
   cellSingle: {
-    width: '100%',
-  },
-  cellDouble: {
-    width: '48.8%',
-  },
-  cellTriple: {
-    width: '32%',
+    flexGrow: 0,
+    flexBasis: '100%',
   },
   carouselContent: {
-    gap: 10,
+    gap: 12,
     paddingRight: 8,
   },
   carouselCell: {
@@ -327,8 +373,9 @@ const styles = StyleSheet.create({
   },
   safetyCopy: {
     fontSize: 10,
-    lineHeight: 15,
+    lineHeight: 16,
     fontFamily: FontFamily.medium,
     color: 'rgba(148, 163, 184, 0.82)',
+    marginTop: 2,
   },
 });

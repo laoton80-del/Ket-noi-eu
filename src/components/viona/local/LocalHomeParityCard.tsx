@@ -12,12 +12,14 @@ import {
   FASHION_HOME_DAYLIGHT_WORLD_BOTTOM_VEIL,
   FASHION_HOME_DAYLIGHT_WORLD_CORNER_LIT_TL,
   type FashionHomeWorldCardDaylightAccent,
+  fashionHomeWebDaylightTransitionStyle,
   fashionHomeWebDaylightWorldCardInnerRimStyle,
   fashionHomeWebDaylightWorldCardMaterialStyle,
   fashionHomeWebWorldCardHostHoverMotionStyle,
   fashionHomeWorldCardGlassHostStyle,
 } from '../fashionHomeDesktopShell';
 import { VionaFashionWorldCard } from '../VionaFashionWorldCard';
+import { LocalLightingNetworkEdge, type LocalLightingNetworkTier } from './LocalLightingNetworkEdge';
 import type { ImageSourcePropType, ImageStyle, StyleProp } from 'react-native';
 
 export type LocalHomeParityAccent = 'emerald' | 'cyan' | 'gold' | 'violet';
@@ -39,6 +41,14 @@ const ICON_COLOR: Record<LocalHomeParityAccent, string> = {
   violet: '#C8A8F0',
 };
 
+/** Semantic secondary tone for the lighting-network nodes (emerald→cyan, cyan→blue, etc.). */
+const NETWORK_SECONDARY: Record<LocalHomeParityAccent, string> = {
+  emerald: '#8CD4FF',
+  cyan: '#66B6FF',
+  gold: '#F0B35D',
+  violet: '#B56DFF',
+};
+
 export type LocalHomeParityCardProps = Readonly<{
   accent: LocalHomeParityAccent;
   title: string;
@@ -55,6 +65,8 @@ export type LocalHomeParityCardProps = Readonly<{
   daylight?: boolean;
   edgeLitHoverBoost?: boolean;
   stretchInColumn?: boolean;
+  /** Lighting-network intensity: `card` (hero cards, medium) or `classified` (lighter). */
+  networkTier?: Extract<LocalLightingNetworkTier, 'card' | 'classified'>;
 }>;
 
 function LocalWorldCardGlassLayers({
@@ -101,6 +113,7 @@ export function LocalHomeParityCard({
   imageStyle,
   edgeLitHoverBoost = false,
   stretchInColumn = false,
+  networkTier = 'card',
 }: LocalHomeParityCardProps): ReactElement {
   const fashionAccent = FASHION_ACCENT[accent];
   const webPremium = Platform.OS === 'web';
@@ -116,6 +129,9 @@ export function LocalHomeParityCard({
         // Concentric corners: host clip + rim must match the inner world-card radius
         // (radius.lg) so the 1px semantic rim reads as one crisp, even edge.
         webPremium && { borderRadius: vionaTokens.radius.lg },
+        // Home parity: persistent base transition so the material glow, semantic rim and
+        // hover lift ease in AND out smoothly (matches Home's world-card tint transition).
+        webPremium && fashionHomeWebDaylightTransitionStyle(),
         webPremium && fashionHomeWebDaylightWorldCardMaterialStyle(fashionAccent, edgeLitHoverBoost),
         webPremium && fashionHomeWebDaylightWorldCardInnerRimStyle(fashionAccent, edgeLitHoverBoost),
         webPremium && fashionHomeWebWorldCardHostHoverMotionStyle(edgeLitHoverBoost),
@@ -136,6 +152,13 @@ export function LocalHomeParityCard({
         stretchInColumn={stretchInColumn}
         glassMaterialMode={webPremium ? 'edgeLit' : 'default'}
         edgeLitHoverBoost={webPremium && edgeLitHoverBoost}
+      />
+      <LocalLightingNetworkEdge
+        accent={ICON_COLOR[accent]}
+        secondaryAccent={NETWORK_SECONDARY[accent]}
+        tier={networkTier}
+        boosted={edgeLitHoverBoost}
+        radius={vionaTokens.radius.lg}
       />
     </View>
   );
