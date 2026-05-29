@@ -76,7 +76,8 @@ const INK_SUB = localConstellation.inkCardSub;
 const CYAN = localConstellation.accentCyan;
 const BORDER = localConstellation.border;
 
-const IMG_TRAVEL_HERO = require('../../assets/viona/home/viona-hero-travel-1280x428.png');
+/** Realistic cinematic daylight airport hero (night v1 retained in src/assets/viona/home/). */
+const IMG_TRAVEL_HERO = require('../../../assets/viona/travel/viona-travel-hero-default-1600x520.png');
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
 type TravelRoute = RouteProp<RootStackParamList, 'TravelHub'>;
