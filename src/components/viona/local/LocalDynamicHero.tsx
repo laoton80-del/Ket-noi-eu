@@ -21,8 +21,11 @@ import {
 import { vionaTokens } from '../../../design';
 import { getLocalHeroAsset, type LocalHeroVisualKey } from '../../../design/vionaLocalHeroAssets';
 import { getLocalHeroVisualSpec } from '../../../design/vionaLocalHeroVisuals';
+import { FASHION_HOME_DESKTOP_MIN_WIDTH } from '../../../navigation/fashionHomeDesktopShell';
 import {
   FASHION_HOME_FRAME_BORDER,
+  FASHION_HOME_WEB_OPENING_STAGE_HERO_MAX_PX,
+  FASHION_HOME_WEB_OPENING_STAGE_HERO_MIN_PX,
   premiumCrispEdgeStroke,
   premiumFrameEdgeOverlay,
 } from '../fashionHomeDesktopShell';
@@ -43,17 +46,20 @@ function detectHoverPointer(): boolean {
 
 /**
  * Frame ratio for the dynamic hero banner. The delivered daylight assets are 1600x520
- * (`cover` keeps the image inside the frame); the frame is intentionally a touch taller
- * (~1600/570) for a deeper, more cinematic premium banner. This adds only a small, even
- * crop (~4% per side) — no zoom transform and no negative inset — while preserving the
- * width-driven aspectRatio behavior across breakpoints.
+ * (`cover` keeps the image inside the frame); the frame is intentionally taller than the
+ * asset (~1600/624) for Home-like cinematic depth. This adds only a small, even crop — no
+ * zoom transform and no negative inset — while preserving width-driven aspectRatio behavior.
  */
-const HERO_ASPECT = 1600 / 570;
+const HERO_ASPECT = 1600 / 624;
+/** Desktop max lift so hero visual mass stays premium after the flagship kicker band. */
+export const LOCAL_HERO_LABEL_AWARE_MAX_BONUS_PX = 10;
 
 export type LocalDynamicHeroProps = Readonly<{
   onBrowseServices: () => void;
   onBookingAssist: () => void;
   activeHeroKey?: LocalHeroVisualKey;
+  /** Viewport-budget hero cap from opening-stage first-view lock (desktop web). */
+  openingStageHeroMaxPx?: number;
   /** @deprecated Ignored — Local hero uses theme-invariant premium dark glass. */
   daylight?: boolean;
   testID?: string;
@@ -63,6 +69,7 @@ export function LocalDynamicHero({
   onBrowseServices,
   onBookingAssist,
   activeHeroKey = 'default',
+  openingStageHeroMaxPx,
   testID = 'local-dynamic-hero',
 }: LocalDynamicHeroProps): ReactElement {
   const { t } = useTranslation();
@@ -70,16 +77,34 @@ export function LocalDynamicHero({
   const isNarrow = width < 520;
   const shortViewport = height > 0 && height < 520;
   const compactHero = shortViewport || (height > 0 && width / height > 1.8);
-  // The frame derives its height from its real rendered width via aspectRatio, so `cover` keeps
-  // the 1600x520 image inside the frame with only a small, even crop. Floors keep copy readable
-  // on narrow/short frames; the max cap stops the banner from getting too tall on very wide
-  // single-column layouts. Heights are tuned deeper for a more cinematic premium banner
-  // (desktop/web ~+20px, tablet ~+14px, mobile ~+6px vs the prior pass).
-  const frameSizing = {
-    aspectRatio: HERO_ASPECT,
-    minHeight: compactHero ? 198 : isNarrow ? 228 : 276,
-    maxHeight: compactHero ? 324 : 496,
-  } as const;
+  const desktopWebHero =
+    Platform.OS === 'web' && width >= FASHION_HOME_DESKTOP_MIN_WIDTH && !compactHero;
+  // Width-driven aspectRatio + Home opening-stage floors/caps on desktop web; moderate tablet lift;
+  // minimal mobile bump so copy stays readable without pushing For You off-screen.
+  const frameSizing = useMemo(() => {
+    if (compactHero) {
+      return { aspectRatio: HERO_ASPECT, minHeight: 202, maxHeight: 356 } as const;
+    }
+    if (desktopWebHero) {
+      const heroCap =
+        openingStageHeroMaxPx ??
+        FASHION_HOME_WEB_OPENING_STAGE_HERO_MAX_PX + LOCAL_HERO_LABEL_AWARE_MAX_BONUS_PX;
+      /** When the opening-stage lock caps hero height, min must not exceed max (RN keeps min otherwise). */
+      const heroMin =
+        openingStageHeroMaxPx != null
+          ? Math.min(FASHION_HOME_WEB_OPENING_STAGE_HERO_MIN_PX, heroCap)
+          : FASHION_HOME_WEB_OPENING_STAGE_HERO_MIN_PX;
+      return {
+        aspectRatio: HERO_ASPECT,
+        minHeight: heroMin,
+        maxHeight: heroCap,
+      } as const;
+    }
+    if (isNarrow) {
+      return { aspectRatio: HERO_ASPECT, minHeight: 236, maxHeight: 368 } as const;
+    }
+    return { aspectRatio: HERO_ASPECT, minHeight: 320, maxHeight: 432 } as const;
+  }, [compactHero, desktopWebHero, isNarrow, openingStageHeroMaxPx]);
   const visual = getLocalHeroVisualSpec(activeHeroKey);
   const heroSource = getLocalHeroAsset(activeHeroKey);
   const fallbackHeroSource = getLocalHeroAsset('default');

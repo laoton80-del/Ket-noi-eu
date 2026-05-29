@@ -920,6 +920,7 @@ export function LocalScreen() {
           testID="local-premium-hub"
           hero={
             <LocalOpeningStageLayout
+              openingStageFullscreen={desktopWeb && isFullscreen}
               onBrowseServices={openServiceHub}
               onBookingAssist={() => openLeonaPrefill(bookingAssistPrefill)}
               onMyRequests={() => navigation.navigate('LocalUserRequestStatus')}

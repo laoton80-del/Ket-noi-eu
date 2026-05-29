@@ -65,6 +65,7 @@ import {
   FASHION_HOME_LINE_GOLD,
   FASHION_HOME_HERO_TOP_GLOW,
   FASHION_HOME_HERO_COMMAND_CLEARANCE_PX,
+  HOME_FASHION_DESKTOP_LUMINOUS_MODE_LOCKED,
   FASHION_HOME_SCROLL_BOTTOM_BREATHING_EXTRA_PX,
   FASHION_HOME_WORLD_CARD_HERO_BREATHING_TOP_PX,
   FASHION_HOME_WORLD_CARD_STAGE_LAP_PX,
@@ -92,11 +93,14 @@ import {
   fashionHomeWebOpeningStageHeroForegroundStyle,
   fashionHomeWebOpeningStageHeroFrameStyle,
   fashionHomeWebOpeningStageHeroImageClipStyle,
-  fashionHomeWebOpeningStageHeroImageStyle,
   fashionHomeWebOpeningStageFullscreenHubPullUpPx,
   fashionHomeWebOpeningStageHubDockFullscreenStyle,
   fashionHomeWebOpeningStageHubPromptFullscreenStyle,
   fashionHomeWebOpeningStageQuickActionStripFullscreenStyle,
+  fashionHomeWebOpeningStageQuickActionPillFullscreenCompactStyle,
+  fashionHomeWebOpeningStageQuickActionIconCapsuleFullscreenCompactStyle,
+  fashionHomeWebOpeningStageQuickActionGridFullscreenCompactStyle,
+  fashionHomeWebOpeningStageQuickActionContentFullscreenCompactStyle,
   fashionHomeWebOpeningStageSharedRailWrapperStyle,
   fashionHomeWebOpeningStageWorldStripBelowHeroStyle,
   FASHION_HOME_DAYLIGHT_WORLD_BOTTOM_VEIL,
@@ -106,7 +110,7 @@ import {
   fashionHomeDaylightQuickActionPillStyle,
   fashionHomeDaylightQuickActionSheen,
   fashionHomeDaylightWorldCardNativeShellStyle,
-  fashionHomeWebDaylightHeroFrameDepthStyle,
+  fashionHomeWebDaylightHeroShellDepthOnlyStyle,
   fashionHomeWebDaylightHeroShellMaterialStyle,
   fashionHomeWebDaylightHeroTextScrimStyle,
   fashionHomeWebDaylightQuickActionInnerRimStyle,
@@ -130,6 +134,13 @@ import {
   resolveFashionHomeDesktopLayout,
 } from '../components/viona/fashionHomeDesktopShell';
 import { useVionaHomeDaylightBoost } from '../components/viona/useVionaHomeDaylightBoost';
+import { HomeHeroNetworkPulse } from '../components/viona/HomeHeroNetworkPulse';
+import { HomeLightingNetworkEdge } from '../components/viona/HomeLightingNetworkEdge';
+import {
+  getHomeHeroSemanticLighting,
+  homeHeroSemanticHoverRimWebStyle,
+  type HomeLivingHeroVisualKey,
+} from '../components/viona/homeHeroSemanticLighting';
 import { VionaCard } from '../components/viona/VionaCard';
 import { VionaSectionHeader } from '../components/viona/VionaSectionHeader';
 import { vionaTrust } from '../components/viona/vionaTrustTokens';
@@ -178,14 +189,16 @@ type Nav = NativeStackNavigationProp<RootStackParamList>;
 const IMG_HOME_HERO = require('../assets/viona/home/viona-hero-human-constellation-1280x428.png');
 const IMG_HERO_DESKTOP_HUMAN = IMG_HOME_HERO;
 const IMG_HERO_DESKTOP_LOCAL = require('../assets/viona/home/viona-hero-local-1280x428.png');
-const IMG_HERO_DESKTOP_TRAVEL = require('../assets/viona/home/viona-hero-travel-1280x428.png');
+/** Living hero when Travel card active (v1 retained in src/assets/viona/home/). */
+const IMG_HERO_DESKTOP_TRAVEL = require('../../assets/viona/home/viona-home-travel-hero-daylight-1600x520.png');
 const IMG_HERO_DESKTOP_ACADEMY = require('../assets/viona/home/viona-hero-academy-1280x428.png');
 const IMG_HERO_DESKTOP_BUSINESS = require('../assets/viona/home/viona-hero-business-1280x428.png');
 
-const IMG_HOME_LOCAL = require('../../assets/UI/viona-home-card-local-v1.png');
-const IMG_HOME_TRAVEL = require('../../assets/UI/viona-home-card-travel-v1.png');
-const IMG_HOME_ACADEMY = require('../../assets/UI/viona-home-card-academy-v1.png');
-const IMG_HOME_BUSINESS = require('../../assets/UI/viona-home-card-business-v1.png');
+/** Daylight world-card photos (night v1 retained in assets/UI/ as backup). */
+const IMG_HOME_LOCAL = require('../../assets/viona/home/viona-home-local-daylight-card-v1.png');
+const IMG_HOME_TRAVEL = require('../../assets/viona/home/viona-home-travel-daylight-card-v1.png');
+const IMG_HOME_ACADEMY = require('../../assets/viona/home/viona-home-academy-daylight-card-v1.png');
+const IMG_HOME_BUSINESS = require('../../assets/viona/home/viona-home-business-daylight-card-v1.png');
 
 type LivingHeroVisualKey = 'default' | 'local' | 'travel' | 'academy' | 'business';
 
@@ -428,15 +441,48 @@ function pickRawCountryForHome(user: AuthUser | null | undefined): { raw: string
   return pickLocationHeaderFromCandidates(candidates);
 }
 
-/** Desktop Living Hero: fill the frame; focal bias keeps subject/city visible on wide assets. */
-const heroDesktopLivingImageWebStyle = (
-  Platform.OS === 'web'
-    ? { objectFit: 'cover' as const, objectPosition: '40% 38%' as const }
-    : {}
-) as ImageStyle;
-const heroImageWebCoverStyle = (Platform.OS === 'web' ? { objectFit: 'cover' as const } : {}) as ImageStyle;
+/** Per-world cinematic composition — full-bleed cover; objectPosition only (no scale — scale < 1 caused side gutters). */
+const HOME_LIVING_HERO_OBJECT_POSITION: Readonly<Record<LivingHeroVisualKey, string>> = {
+  default: '44% 42%',
+  local: '48% 44%',
+  travel: '50% 46%',
+  academy: '46% 42%',
+  business: '50% 44%',
+};
+
+function homeLivingHeroCinematicImageStyle(
+  activeKey: LivingHeroVisualKey,
+  opts?: Readonly<{ isFullscreen?: boolean }>
+): ImageStyle {
+  if (Platform.OS !== 'web') return {};
+  const [xRaw, yRaw] = HOME_LIVING_HERO_OBJECT_POSITION[activeKey].split(' ');
+  const xNum = parseFloat(xRaw);
+  const xPct = Number.isFinite(xNum)
+    ? opts?.isFullscreen
+      ? Math.max(50, xNum - 1)
+      : xNum
+    : 60;
+  return {
+    objectFit: 'cover',
+    objectPosition: `${xPct}% ${yRaw}`,
+    width: '100%',
+    height: '100%',
+    maxWidth: '100%',
+  } as ImageStyle;
+}
+
+
 /** Hero shell aspect tuned for desktop viewport fit; image still covers via resizeMode/object-fit. */
 const DESKTOP_HERO_FRAME_ASPECT = FASHION_HOME_DESKTOP_HERO_ASPECT;
+/** Web desktop pointer (hover + fine pointer) — gates hero network hover off touch devices. */
+function detectHomeHoverPointer(): boolean {
+  if (Platform.OS !== 'web' || typeof window === 'undefined' || !window.matchMedia) return false;
+  try {
+    return window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+  } catch {
+    return false;
+  }
+}
 
 export function HomeScreen() {
   const { t, i18n } = useTranslation();
@@ -586,7 +632,10 @@ export function HomeScreen() {
   );
 
   const [daylightBoost, setDaylightBoost] = useVionaHomeDaylightBoost();
-  const fashionDaylight = fashionHomeDesktopShellActive && daylightBoost;
+  /** Home fashion desktop always luminous; toggle persists global preference for Local/other shells. */
+  const fashionDaylight =
+    fashionHomeDesktopShellActive &&
+    (HOME_FASHION_DESKTOP_LUMINOUS_MODE_LOCKED || daylightBoost);
 
   const isLandscapeViewport = width > height;
   const isShortViewport = height < 560;
@@ -759,6 +808,9 @@ export function HomeScreen() {
   const [webFashionChromeHeight, setWebFashionChromeHeight] = useState(0);
   const [webWorldStripHeight, setWebWorldStripHeight] = useState(FASHION_HOME_WEB_WORLD_CARD_ROW_ESTIMATE_PX);
   const [quickActionWebHoverId, setQuickActionWebHoverId] = useState<string | null>(null);
+  const [heroWebHovered, setHeroWebHovered] = useState(false);
+  const heroHoverAnim = useRef(new Animated.Value(0)).current;
+  const supportsHeroHover = useMemo(detectHomeHoverPointer, []);
 
   const [livingBaseKey, setLivingBaseKey] = useState<LivingHeroVisualKey>('default');
   const [livingOverlayKey, setLivingOverlayKey] = useState<LivingHeroVisualKey | null>(null);
@@ -958,6 +1010,35 @@ export function HomeScreen() {
 
   const desktopLivingCopyKey: LivingHeroVisualKey = livingOverlayKey ?? livingBaseKey;
   const desktopLivingCopy = LIVING_HERO_DESKTOP_COPY[desktopLivingCopyKey];
+  const heroSemanticLighting = useMemo(
+    () => getHomeHeroSemanticLighting(desktopLivingCopyKey as HomeLivingHeroVisualKey),
+    [desktopLivingCopyKey]
+  );
+
+  // Hero light-network activates on direct hero hover OR when a world card swaps the living hero
+  // image (same pattern as Local dynamic hero + hero cards).
+  const heroCardActive = desktopLivingCopyKey !== 'default';
+  const heroNetworkLit =
+    fashionHomeDesktopShellActive && supportsHeroHover && (heroWebHovered || heroCardActive);
+
+  useEffect(() => {
+    Animated.timing(heroHoverAnim, {
+      toValue: heroNetworkLit ? 1 : 0,
+      duration: 240,
+      easing: Easing.out(Easing.quad),
+      useNativeDriver: true,
+    }).start();
+  }, [heroNetworkLit, heroHoverAnim]);
+
+  const heroWashOpacity = heroHoverAnim.interpolate({ inputRange: [0, 1], outputRange: [0, 0.05] });
+  const heroRimOpacity = heroHoverAnim.interpolate({ inputRange: [0, 1], outputRange: [0, 0.55] });
+
+  const heroHoverProps = supportsHeroHover
+    ? ({
+        onMouseEnter: () => setHeroWebHovered(true),
+        onMouseLeave: () => setHeroWebHovered(false),
+      } as const)
+    : {};
 
   const desktopCardLivingHoverProps = useMemo(() => {
     if (!fashionHomeDesktopShellActive) return null;
@@ -999,6 +1080,8 @@ export function HomeScreen() {
       livingHoverPinnedRef.current = null;
       setWebWorldCardHover(null);
       setQuickActionWebHoverId(null);
+      setHeroWebHovered(false);
+      heroHoverAnim.setValue(0);
       livingHeroOverlayOpacity.stopAnimation();
       livingHeroCopyBlend.stopAnimation();
       livingOverlayKeyRef.current = null;
@@ -1008,7 +1091,7 @@ export function HomeScreen() {
       setLivingBaseKey('default');
       livingHeroOverlayOpacity.setValue(0);
       livingHeroCopyBlend.setValue(1);
-    }, [fashionHomeDesktopShellActive, livingHeroCopyBlend, livingHeroOverlayOpacity])
+    }, [fashionHomeDesktopShellActive, livingHeroCopyBlend, livingHeroOverlayOpacity, heroHoverAnim])
   );
 
   const walletChipLabel = useMemo(() => {
@@ -1224,8 +1307,8 @@ export function HomeScreen() {
 
   const daylightToggleLabel = useMemo(() => {
     const vi = typeof i18n.language === 'string' && i18n.language.toLowerCase().startsWith('vi');
-    if (daylightBoost) return vi ? 'TáşŻt Ä‘Ă¨n' : 'Night';
-    return vi ? 'Báş­t Ä‘Ă¨n' : 'Daylight';
+    if (daylightBoost) return vi ? 'Tắt đèn' : 'Night';
+    return vi ? 'Bật đèn' : 'Daylight';
   }, [daylightBoost, i18n.language]);
 
   const onPressDaylightBoost = useCallback(() => {
@@ -1427,6 +1510,8 @@ export function HomeScreen() {
         style={({ pressed }) => [
           styles.quickActionPillDaylightBase,
           fill && styles.quickActionPillDaylightFill,
+          webOpeningStageFullscreen &&
+            fashionHomeWebOpeningStageQuickActionPillFullscreenCompactStyle(true),
           Platform.OS === 'web'
             ? fashionHomeWebDaylightQuickActionPillGlassStyle(accent, hovered)
             : fashionHomeDaylightQuickActionPillStyle(accent),
@@ -1455,24 +1540,34 @@ export function HomeScreen() {
 
         <View
           style={[
-            styles.quickActionPillDaylightIconCapsule,
-            Platform.OS === 'web' ? styles.quickActionPillDaylightIconCapsuleWeb : null,
-            fashionHomeDaylightQuickActionIconCapsuleStyle(accent, hovered),
+            styles.quickActionPillDaylightContent,
+            webOpeningStageFullscreen &&
+              fashionHomeWebOpeningStageQuickActionContentFullscreenCompactStyle(true),
           ]}
         >
-          <Ionicons name={icon} size={15} color={iconColor} />
-        </View>
+          <View
+            style={[
+              styles.quickActionPillDaylightIconCapsule,
+              Platform.OS === 'web' ? styles.quickActionPillDaylightIconCapsuleWeb : null,
+              webOpeningStageFullscreen &&
+                fashionHomeWebOpeningStageQuickActionIconCapsuleFullscreenCompactStyle(true),
+              fashionHomeDaylightQuickActionIconCapsuleStyle(accent, hovered),
+            ]}
+          >
+            <Ionicons name={icon} size={21} color={iconColor} />
+          </View>
 
-        <Text
-          style={[
-            styles.quickActionPillDaylightLabel,
-            accent === 'sos' && styles.quickActionPillDaylightLabelSos,
-          ]}
-          numberOfLines={1}
-          ellipsizeMode="tail"
-        >
-          {label}
-        </Text>
+          <Text
+            style={[
+              styles.quickActionPillDaylightLabel,
+              accent === 'sos' && styles.quickActionPillDaylightLabelSos,
+            ]}
+            numberOfLines={1}
+            ellipsizeMode="tail"
+          >
+            {label}
+          </Text>
+        </View>
       </Pressable>
     );
   };
@@ -1722,7 +1817,8 @@ export function HomeScreen() {
               onPressRole={homeCommand.showRolePicker ? () => homeCommand.openRolePicker() : undefined}
               showRolePicker={homeCommand.showRolePicker}
               fullscreenControl={fullscreenControl}
-              daylightBoost={fashionDaylight}
+              daylightBoost={daylightBoost}
+              commandBarLuminous={fashionDaylight}
               onPressDaylightBoost={onPressDaylightBoost}
               daylightBoostLabel={daylightToggleLabel}
             />
@@ -1806,7 +1902,9 @@ export function HomeScreen() {
                 fashionDaylight && styles.desktopHeroShellDaylight,
                 fashionDaylight &&
                   Platform.OS === 'web' &&
-                  fashionHomeWebDaylightHeroShellMaterialStyle(),
+                  (heroNetworkLit
+                    ? fashionHomeWebDaylightHeroShellDepthOnlyStyle()
+                    : fashionHomeWebDaylightHeroShellMaterialStyle()),
                 fashionHomeWebTintTransition,
                 ...(fashionDesktopWebHomeStageLayout
                   ? [fashionHomeWebOpeningStageDeepHeroShellStyle()]
@@ -1814,6 +1912,7 @@ export function HomeScreen() {
               ]}
               accessibilityRole="image"
               accessibilityLabel={t('home.fashionTech.heroVisualA11y')}
+              {...heroHoverProps}
             >
               {fashionDaylight ? (
                 <View
@@ -1873,7 +1972,9 @@ export function HomeScreen() {
                     resizeMode="cover"
                     style={[
                       styles.desktopHeroImageFill,
-                      fashionHomeWebOpeningStageHeroImageStyle(isFullscreen),
+                      homeLivingHeroCinematicImageStyle(livingOverlayKey ?? livingBaseKey, {
+                        isFullscreen,
+                      }),
                     ]}
                   />
                 ) : (
@@ -1881,7 +1982,10 @@ export function HomeScreen() {
                     <Image
                       source={LIVING_HERO_DESKTOP_IMAGE[livingBaseKey]}
                       resizeMode="cover"
-                      style={[styles.desktopHeroImageFill, heroDesktopLivingImageWebStyle]}
+                      style={[
+                        styles.desktopHeroImageFill,
+                        homeLivingHeroCinematicImageStyle(livingBaseKey, { isFullscreen }),
+                      ]}
                     />
                     {livingOverlayKey != null ? (
                       <Animated.Image
@@ -1889,14 +1993,39 @@ export function HomeScreen() {
                         resizeMode="cover"
                         style={[
                           styles.desktopHeroImageFill,
-                          heroDesktopLivingImageWebStyle,
+                          homeLivingHeroCinematicImageStyle(livingOverlayKey, { isFullscreen }),
                           { opacity: livingHeroOverlayOpacity },
                         ]}
                       />
                     ) : null}
                   </>
                 )}
+                {Platform.OS === 'web' && fashionHomeDesktopShellActive ? (
+                  <Animated.View
+                    pointerEvents="none"
+                    style={[styles.desktopHeroImageBrightenWash, { opacity: heroWashOpacity }]}
+                  />
+                ) : null}
               </View>
+              {Platform.OS === 'web' && fashionHomeDesktopShellActive ? (
+                <View pointerEvents="none" style={styles.desktopHeroNetworkLayer}>
+                  <HomeLightingNetworkEdge
+                    accent={heroSemanticLighting.accent}
+                    secondaryAccent={heroSemanticLighting.secondaryAccent}
+                    tier="hero"
+                    boosted={heroNetworkLit}
+                    radius={vionaTokens.radius.xxl}
+                    testID="home-hero-network-edge"
+                  />
+                  <HomeHeroNetworkPulse
+                    accent={heroSemanticLighting.accent}
+                    secondaryAccent={heroSemanticLighting.secondaryAccent}
+                    active={heroNetworkLit}
+                    reducedMotion={reduceMotion}
+                    testID="home-hero-network-pulse"
+                  />
+                </View>
+              ) : null}
               {fashionDaylight && Platform.OS === 'web' ? (
                 <View
                   style={[
@@ -1950,15 +2079,17 @@ export function HomeScreen() {
                   pointerEvents="none"
                 />
               ) : null}
-              <View
-                style={[
-                  styles.desktopHeroInnerFrame,
-                  fashionDaylight &&
-                    Platform.OS === 'web' &&
-                    fashionHomeWebDaylightHeroFrameDepthStyle(),
-                ]}
-                pointerEvents="none"
-              />
+              <View style={styles.desktopHeroInnerFrame} pointerEvents="none" />
+              {Platform.OS === 'web' && fashionHomeDesktopShellActive ? (
+                <Animated.View
+                  pointerEvents="none"
+                  style={[
+                    styles.desktopHeroHoverRim,
+                    homeHeroSemanticHoverRimWebStyle(),
+                    { borderColor: heroSemanticLighting.accent, opacity: heroRimOpacity },
+                  ]}
+                />
+              ) : null}
               <View
                 style={[
                   styles.desktopHeroLivingStatusCapsule,
@@ -2304,7 +2435,10 @@ export function HomeScreen() {
                     <Image
                       source={activeHero.image}
                       resizeMode="cover"
-                      style={[styles.ftVisualImageFill, heroImageWebCoverStyle]}
+                      style={[
+                        styles.ftVisualImageFill,
+                        homeLivingHeroCinematicImageStyle('default'),
+                      ]}
                     />
                   </View>
                   <LinearGradient
@@ -2610,7 +2744,13 @@ export function HomeScreen() {
                 {quickActionItems.map((item) => renderQuickActionPill(item))}
               </ScrollView>
             ) : quickActionsGrid ? (
-              <View style={styles.quickActionGrid}>
+              <View
+                style={[
+                  styles.quickActionGrid,
+                  webOpeningStageFullscreen &&
+                    fashionHomeWebOpeningStageQuickActionGridFullscreenCompactStyle(true),
+                ]}
+              >
                 <View style={styles.quickActionGridRow}>
                   {quickActionItems.slice(0, 4).map((item) => (
                     <View key={item.id} style={styles.quickActionGridCell}>
@@ -3145,6 +3285,24 @@ const styles = StyleSheet.create({
     ...StyleSheet.absoluteFillObject,
     overflow: 'hidden',
     backgroundColor: '#0a1018',
+  },
+  desktopHeroImageBrightenWash: {
+    // Very subtle hover activation over the image only — behind copy/scrim, no zoom/crop change.
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: '#FFFFFF',
+    zIndex: 1,
+  },
+  desktopHeroNetworkLayer: {
+    // Above scrim/vignette, below hero copy (zIndex 3) — lower-right network never covers text/faces.
+    ...StyleSheet.absoluteFillObject,
+    zIndex: 2,
+  },
+  desktopHeroHoverRim: {
+    // Hover-only semantic rim — single crisp line (shell defers outer rim while lit).
+    ...StyleSheet.absoluteFillObject,
+    borderRadius: vionaTokens.radius.xxl - 1,
+    borderWidth: 1,
+    zIndex: 6,
   },
   desktopHeroImageClipDaylight: {
     backgroundColor: FASHION_HOME_DAYLIGHT_CANVAS,
@@ -3708,14 +3866,22 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 8,
-    minHeight: 36,
+    minHeight: 58,
     borderRadius: vionaTokens.radius.pill,
     borderWidth: 1,
-    paddingHorizontal: 13,
-    paddingVertical: 0,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
     elevation: 1,
     overflow: 'hidden',
+  },
+  quickActionPillDaylightContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 10,
+    minWidth: 0,
+    flexShrink: 1,
+    maxWidth: '100%',
   },
   quickActionPillDaylightFill: {
     width: '100%',
@@ -3738,9 +3904,9 @@ const styles = StyleSheet.create({
     pointerEvents: 'none',
   },
   quickActionPillDaylightIconCapsule: {
-    width: 22,
-    height: 22,
-    borderRadius: 11,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     alignItems: 'center',
     justifyContent: 'center',
     zIndex: 3,
@@ -3750,10 +3916,10 @@ const styles = StyleSheet.create({
   },
   quickActionPillDaylightLabel: {
     zIndex: 3,
-    fontSize: 12,
-    lineHeight: 16,
+    fontSize: 16,
+    lineHeight: 21,
     color: 'rgba(248, 250, 252, 0.98)',
-    fontFamily: FontFamily.semibold,
+    fontFamily: FontFamily.bold,
     textShadowColor: FASHION_HOME_DAYLIGHT_TEXT_SHADOW,
     textShadowOffset: { width: 0, height: 0.5 },
     textShadowRadius: 6,

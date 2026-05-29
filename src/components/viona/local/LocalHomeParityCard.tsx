@@ -5,18 +5,23 @@
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import type { ComponentProps, ReactElement } from 'react';
+import { useMemo, useState } from 'react';
 import { Platform, StyleSheet, View } from 'react-native';
 
 import { vionaTokens } from '../../../design';
+import type { LocalHeroVisualKey } from '../../../design/vionaLocalHeroAssets';
 import {
   FASHION_HOME_DAYLIGHT_WORLD_BOTTOM_VEIL,
   FASHION_HOME_DAYLIGHT_WORLD_CORNER_LIT_TL,
   type FashionHomeWorldCardDaylightAccent,
+  type FashionHomeWebMagneticOffset,
+  createFashionHomeWebWorldCardPointerHandlers,
   fashionHomeWebDaylightTransitionStyle,
   fashionHomeWebDaylightWorldCardInnerRimStyle,
   fashionHomeWebDaylightWorldCardMaterialStyle,
-  fashionHomeWebWorldCardHostHoverMotionStyle,
+  fashionHomeWebWorldCardHostMotionStyle,
   fashionHomeWorldCardGlassHostStyle,
+  useFashionHomePrefersReducedMotion,
 } from '../fashionHomeDesktopShell';
 import { VionaFashionWorldCard } from '../VionaFashionWorldCard';
 import { LocalLightingNetworkEdge, type LocalLightingNetworkTier } from './LocalLightingNetworkEdge';
@@ -63,7 +68,11 @@ export type LocalHomeParityCardProps = Readonly<{
   imageStyle?: StyleProp<ImageStyle>;
   /** @deprecated Ignored — Local cards use theme-invariant premium glass. */
   daylight?: boolean;
+  /** @deprecated Prefer internal pointer hover; kept for host-driven hero sync fallback. */
   edgeLitHoverBoost?: boolean;
+  /** Drives dynamic hero crossfade when this card is hovered (web). */
+  heroKey?: LocalHeroVisualKey;
+  onHeroHoverChange?: (key: LocalHeroVisualKey | null) => void;
   stretchInColumn?: boolean;
   /** Lighting-network intensity: `card` (hero cards, medium) or `classified` (lighter). */
   networkTier?: Extract<LocalLightingNetworkTier, 'card' | 'classified'>;
@@ -111,34 +120,62 @@ export function LocalHomeParityCard({
   testID,
   backgroundImage,
   imageStyle,
-  edgeLitHoverBoost = false,
+  edgeLitHoverBoost: edgeLitHoverBoostProp,
+  heroKey,
+  onHeroHoverChange,
   stretchInColumn = false,
   networkTier = 'card',
 }: LocalHomeParityCardProps): ReactElement {
   const fashionAccent = FASHION_ACCENT[accent];
   const webPremium = Platform.OS === 'web';
+  const reduceMotion = useFashionHomePrefersReducedMotion();
+  const [pointerHovered, setPointerHovered] = useState(false);
+  const [magnetic, setMagnetic] = useState<FashionHomeWebMagneticOffset | null>(null);
+  const hoverBoost = edgeLitHoverBoostProp ?? pointerHovered;
+
+  const hostHandlers = useMemo(
+    () =>
+      webPremium
+        ? createFashionHomeWebWorldCardPointerHandlers({
+            accent: fashionAccent,
+            reduceMotion,
+            onActiveAccent: (active) => {
+              const isActive = active === fashionAccent;
+              setPointerHovered(isActive);
+              if (heroKey != null && onHeroHoverChange) {
+                onHeroHoverChange(isActive ? heroKey : null);
+              }
+            },
+            onMagnetic: setMagnetic,
+          })
+        : {},
+    [webPremium, fashionAccent, reduceMotion, heroKey, onHeroHoverChange]
+  );
 
   return (
     <View
       testID={testID}
       accessibilityLabel={accessibilityLabel}
       accessible
+      {...hostHandlers}
       style={[
         { width: '100%', minWidth: 0 },
         webPremium && fashionHomeWorldCardGlassHostStyle(),
-        // Concentric corners: host clip + rim must match the inner world-card radius
-        // (radius.lg) so the 1px semantic rim reads as one crisp, even edge.
         webPremium && { borderRadius: vionaTokens.radius.lg },
-        // Home parity: persistent base transition so the material glow, semantic rim and
-        // hover lift ease in AND out smoothly (matches Home's world-card tint transition).
         webPremium && fashionHomeWebDaylightTransitionStyle(),
-        webPremium && fashionHomeWebDaylightWorldCardMaterialStyle(fashionAccent, edgeLitHoverBoost),
-        webPremium && fashionHomeWebDaylightWorldCardInnerRimStyle(fashionAccent, edgeLitHoverBoost),
-        webPremium && fashionHomeWebWorldCardHostHoverMotionStyle(edgeLitHoverBoost),
+        webPremium && fashionHomeWebDaylightWorldCardMaterialStyle(fashionAccent, hoverBoost),
+        webPremium && fashionHomeWebDaylightWorldCardInnerRimStyle(fashionAccent, hoverBoost),
+        webPremium &&
+          fashionHomeWebWorldCardHostMotionStyle(
+            fashionAccent,
+            pointerHovered ? fashionAccent : null,
+            magnetic,
+            reduceMotion
+          ),
       ]}
     >
       {webPremium ? (
-        <LocalWorldCardGlassLayers accent={fashionAccent} hoverBoost={edgeLitHoverBoost} />
+        <LocalWorldCardGlassLayers accent={fashionAccent} hoverBoost={hoverBoost} />
       ) : null}
       <VionaFashionWorldCard
         accent={fashionAccent}
@@ -151,13 +188,13 @@ export function LocalHomeParityCard({
         onPress={onPress}
         stretchInColumn={stretchInColumn}
         glassMaterialMode={webPremium ? 'edgeLit' : 'default'}
-        edgeLitHoverBoost={webPremium && edgeLitHoverBoost}
+        edgeLitHoverBoost={webPremium && hoverBoost}
       />
       <LocalLightingNetworkEdge
         accent={ICON_COLOR[accent]}
         secondaryAccent={NETWORK_SECONDARY[accent]}
         tier={networkTier}
-        boosted={edgeLitHoverBoost}
+        boosted={hoverBoost}
         radius={vionaTokens.radius.lg}
       />
     </View>
@@ -180,7 +217,7 @@ const glassStyles = StyleSheet.create({
     opacity: 0.88,
   },
   cornerBoost: {
-    opacity: 1,
+    opacity: 1.01,
   },
   bottomVeil: {
     position: 'absolute',

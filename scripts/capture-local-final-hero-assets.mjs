@@ -26,6 +26,13 @@ const VIEWPORTS = [
   { name: 'local-final-hero-assets-768x1024', width: 768, height: 1024 },
   { name: 'local-final-hero-assets-1024x768', width: 1024, height: 768 },
   { name: 'local-final-hero-assets-1366x768', width: 1366, height: 768 },
+  {
+    name: 'local-final-hero-assets-1366x768-fullscreen',
+    width: 1366,
+    height: 768,
+    fullscreen: true,
+    viewportOnly: true,
+  },
 ];
 
 async function dismissIntentModal(page) {
@@ -95,6 +102,34 @@ async function openLocalRoute(page) {
   throw new Error('Local route readiness failed on /local, /tabs/local, and /.');
 }
 
+async function enterFullscreen(page) {
+  await page.evaluate(async () => {
+    if (!document.fullscreenElement) await document.documentElement.requestFullscreen();
+  });
+  await page.waitForFunction(() => Boolean(document.fullscreenElement), { timeout: 10_000 }).catch(() => {});
+  await page.waitForTimeout(800);
+}
+
+async function countVisibleForYouRows(page) {
+  return page.evaluate(() => {
+    const grid = document.querySelector('[data-testid="local-for-you-grid"]');
+    if (!(grid instanceof HTMLElement)) return { visibleRows: 0 };
+    const pills = [...grid.querySelectorAll('[tabindex], button, [role="button"]')].filter(
+      (node) => node instanceof HTMLElement && node.getBoundingClientRect().height >= 36
+    );
+    const vh = window.innerHeight;
+    const rowTops = [...new Set(pills.map((p) => Math.round(p.getBoundingClientRect().top)))].sort(
+      (a, b) => a - b
+    );
+    const visibleRows = rowTops.filter((top) =>
+      pills
+        .filter((p) => Math.round(p.getBoundingClientRect().top) === top)
+        .every((p) => p.getBoundingClientRect().bottom <= vh + 1)
+    ).length;
+    return { visibleRows, viewport: vh };
+  });
+}
+
 async function main() {
   const { chromium } = await import('playwright');
   await mkdir(OUT_DIR, { recursive: true });
@@ -142,9 +177,15 @@ async function main() {
           current = current.parentElement;
         }
       }, LOCAL_WEB_CANVAS_BG);
+      if (vp.fullscreen) {
+        await enterFullscreen(page);
+      }
+      const metrics = vp.fullscreen ? await countVisibleForYouRows(page) : null;
       const out = path.join(OUT_DIR, `${vp.name}.png`);
-      await page.screenshot({ path: out, fullPage: true });
-      console.log(`wrote ${out}`);
+      await page.screenshot({ path: out, fullPage: !vp.viewportOnly });
+      console.log(
+        `wrote ${out}${metrics ? ` visibleForYouRows=${metrics.visibleRows}` : ''}`
+      );
       await page.close();
     }
   } finally {

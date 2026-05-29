@@ -9,6 +9,12 @@ import { vionaTokens } from '../../design';
  */
 export const FASHION_HOME_DESKTOP_HERO_ASPECT = 1280 / 540;
 
+/**
+ * WAVE_3B — Home fashion desktop shell always renders luminous (“Bật đèn”) presentation.
+ * Global `daylightBoost` toggle still persists for Local / other shells.
+ */
+export const HOME_FASHION_DESKTOP_LUMINOUS_MODE_LOCKED = true;
+
 /** Shared luminous line language for fashion home surfaces. */
 export const FASHION_HOME_LINE_GOLD = 'rgba(244, 214, 144, 0.46)';
 export const FASHION_HOME_LINE_GOLD_SOFT = 'rgba(242, 212, 136, 0.34)';
@@ -766,17 +772,23 @@ export function fashionHomeWebDaylightHeroTextScrimStyle(): ViewStyle {
   } as ViewStyle;
 }
 
-/** Web: outer hero shell — 1px rim + restrained depth (no luminous slab). */
+/** Web: outer hero shell — single 1px rim + depth (no inset duplicate). */
 export function fashionHomeWebDaylightHeroShellMaterialStyle(): ViewStyle {
   if (Platform.OS !== 'web') return {};
   return {
     boxShadow: fashionHomeGlassBoxShadow([
       `0 0 0 1px ${FASHION_HOME_DAYLIGHT_FRAME_BORDER}`,
       FASHION_HOME_DAYLIGHT_HERO_EDGE_GLOW,
-      FASHION_HOME_DAYLIGHT_HERO_INNER_RIM,
-      FASHION_HOME_DAYLIGHT_HERO_INNER_HIGHLIGHT,
       FASHION_HOME_GLASS_DEPTH_SHADOW,
     ]),
+  } as ViewStyle;
+}
+
+/** Web: depth shadow only — defers rim to semantic hover overlay (avoids double-border). */
+export function fashionHomeWebDaylightHeroShellDepthOnlyStyle(): ViewStyle {
+  if (Platform.OS !== 'web') return {};
+  return {
+    boxShadow: FASHION_HOME_GLASS_DEPTH_SHADOW,
   } as ViewStyle;
 }
 
@@ -1141,9 +1153,52 @@ export function fashionHomeWebOpeningStageQuickActionStripFullscreenStyle(
 ): ViewStyle {
   if (Platform.OS !== 'web' || !isFullscreen) return {};
   return {
-    paddingTop: 10,
-    paddingBottom: 10,
+    paddingTop: 8,
+    paddingBottom: 8,
   } as ViewStyle;
+}
+
+/** Fullscreen: compact For You pill height — objectPosition-style trim only (no scale). */
+export const FASHION_HOME_WEB_OPENING_STAGE_FULLSCREEN_QUICK_ACTION_PILL_MIN_HEIGHT_PX = 46;
+export const FASHION_HOME_WEB_OPENING_STAGE_FULLSCREEN_QUICK_ACTION_PILL_PADDING_V_PX = 5;
+export const FASHION_HOME_WEB_OPENING_STAGE_FULLSCREEN_QUICK_ACTION_ICON_SIZE_PX = 32;
+
+export function fashionHomeWebOpeningStageQuickActionPillFullscreenCompactStyle(
+  isFullscreen: boolean
+): ViewStyle {
+  if (Platform.OS !== 'web' || !isFullscreen) return {};
+  return {
+    minHeight: FASHION_HOME_WEB_OPENING_STAGE_FULLSCREEN_QUICK_ACTION_PILL_MIN_HEIGHT_PX,
+    paddingVertical: FASHION_HOME_WEB_OPENING_STAGE_FULLSCREEN_QUICK_ACTION_PILL_PADDING_V_PX,
+    paddingHorizontal: 12,
+  } as ViewStyle;
+}
+
+export function fashionHomeWebOpeningStageQuickActionIconCapsuleFullscreenCompactStyle(
+  isFullscreen: boolean
+): ViewStyle {
+  if (Platform.OS !== 'web' || !isFullscreen) return {};
+  const size = FASHION_HOME_WEB_OPENING_STAGE_FULLSCREEN_QUICK_ACTION_ICON_SIZE_PX;
+  return {
+    width: size,
+    height: size,
+    borderRadius: size / 2,
+  } as ViewStyle;
+}
+
+/** Fullscreen: tighten two-row For You grid rhythm. */
+export function fashionHomeWebOpeningStageQuickActionGridFullscreenCompactStyle(
+  isFullscreen: boolean
+): ViewStyle {
+  if (Platform.OS !== 'web' || !isFullscreen) return {};
+  return { gap: 6 } as ViewStyle;
+}
+
+export function fashionHomeWebOpeningStageQuickActionContentFullscreenCompactStyle(
+  isFullscreen: boolean
+): ViewStyle {
+  if (Platform.OS !== 'web' || !isFullscreen) return {};
+  return { gap: 8 } as ViewStyle;
 }
 
 /** Fullscreen-only grid column top breathing (applied from HomeScreen when opening stage active). */

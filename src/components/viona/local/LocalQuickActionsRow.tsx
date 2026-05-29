@@ -4,6 +4,7 @@
  * without altering the shared Home `VionaQuickActionPill`.
  */
 import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useState, type ComponentProps, type ReactElement } from 'react';
 import {
   Platform,
@@ -40,18 +41,65 @@ const ACCENT_GLOW: Record<LocalQuickAccent, string> = {
   violet: 'rgba(176, 140, 255, 0.12)',
 };
 
+/** Light utility hover — softer than Home quick-action glass stack. */
+const ACCENT_HOVER_EDGE_GLOW: Record<LocalQuickAccent, { rest: string; hover: string }> = {
+  gold: {
+    rest: '0 0 2px rgba(228, 192, 110, 0.055)',
+    hover: '0 0 4px rgba(228, 192, 110, 0.12)',
+  },
+  cyan: {
+    rest: '0 0 2px rgba(95, 195, 248, 0.05)',
+    hover: '0 0 4px rgba(95, 195, 248, 0.11)',
+  },
+  emerald: {
+    rest: '0 0 2px rgba(72, 195, 155, 0.05)',
+    hover: '0 0 4px rgba(72, 195, 155, 0.11)',
+  },
+  violet: {
+    rest: '0 0 2px rgba(168, 138, 238, 0.05)',
+    hover: '0 0 4px rgba(168, 138, 238, 0.11)',
+  },
+};
+
+const ACCENT_SHEEN: Record<LocalQuickAccent, readonly [string, string]> = {
+  gold: ['rgba(255, 236, 196, 0.1)', 'rgba(255, 236, 196, 0)'],
+  cyan: ['rgba(170, 228, 255, 0.09)', 'rgba(170, 228, 255, 0)'],
+  emerald: ['rgba(140, 236, 200, 0.09)', 'rgba(140, 236, 200, 0)'],
+  violet: ['rgba(210, 180, 255, 0.09)', 'rgba(210, 180, 255, 0)'],
+};
+
 /**
- * Utility pills stay clean: only a smooth web transition so the hover/focus rim + icon glow ease in
- * instead of snapping. No network lines, no traveling pulse (Local For You is a utility row).
+ * Utility pills: smooth web transition for rim, glow, glass lift, and micro motion
+ * (lighter than Home `fashionHomeWebQuickActionHoverMotionStyle`).
  */
 const PILL_WEB_TRANSITION: ViewStyle =
   Platform.OS === 'web'
     ? ({
-        transitionProperty: 'border-color, box-shadow',
+        transitionProperty: 'border-color, box-shadow, background-color, transform',
         transitionDuration: '160ms',
         transitionTimingFunction: 'ease-out',
       } as unknown as ViewStyle)
     : {};
+
+function localQuickActionHoverGlassStyle(accent: LocalQuickAccent, active: boolean): ViewStyle {
+  if (Platform.OS !== 'web') return {};
+  const tone = ACCENT_COLOR[accent];
+  const rim = active ? `${tone}88` : `${tone}66`;
+  const edge = active ? ACCENT_HOVER_EDGE_GLOW[accent].hover : ACCENT_HOVER_EDGE_GLOW[accent].rest;
+  return {
+    backgroundColor: active ? 'rgba(12, 18, 30, 0.84)' : 'rgba(8, 12, 20, 0.72)',
+    borderWidth: 0,
+    boxShadow: `0 0 0 1px ${rim}, inset 0 1px 0 rgba(255, 255, 255, 0.05), ${edge}`,
+  } as ViewStyle;
+}
+
+function localQuickActionHoverMotionStyle(active: boolean): ViewStyle {
+  if (Platform.OS !== 'web') return {};
+  return {
+    transform: [{ translateY: active ? -1.5 : 0 }, { scale: active ? 1.004 : 1 }],
+    transition: 'transform 160ms cubic-bezier(0.22, 1, 0.36, 1)',
+  } as ViewStyle;
+}
 
 // Fixed icon-zone width (matches the icon capsule). On wide pills the row is split into three
 // deterministic zones — [icon zone][label zone][spacer zone] — with the spacer equal to the icon
@@ -89,18 +137,24 @@ function LocalQuickActionPill({
     <View
       style={[
         styles.iconWrap,
-        { backgroundColor: `${tone}${active ? '30' : '22'}`, borderColor: `${tone}${active ? '5a' : '3a'}` },
+        {
+          backgroundColor: `${tone}${active ? '36' : '22'}`,
+          borderColor: `${tone}${active ? '66' : '3a'}`,
+        },
         active && {
           shadowColor: tone,
           shadowOffset: { width: 0, height: 0 },
-          shadowOpacity: 1,
-          shadowRadius: 6,
+          shadowOpacity: 0.32,
+          shadowRadius: 7,
+          transform: [{ scale: 1.04 }],
         },
       ]}
     >
-      <Ionicons name={icon} size={17} color={tone} />
+      <Ionicons name={icon} size={17} color={active ? tone : `${tone}ee`} />
     </View>
   );
+
+  const sheen = ACCENT_SHEEN[accent];
 
   return (
     <Pressable
@@ -112,21 +166,31 @@ function LocalQuickActionPill({
       style={({ pressed }) => [
         styles.pill,
         PILL_WEB_TRANSITION,
-        {
+        Platform.OS === 'web' ? localQuickActionHoverGlassStyle(accent, active) : null,
+        Platform.OS === 'web' ? localQuickActionHoverMotionStyle(active) : null,
+        Platform.OS !== 'web' && {
           minHeight,
-          // Resting = clean utility rim. Hover/focus = slightly sharper rim + a touch more semantic
-          // glow (no network lines, no pulse — pills stay utility-tier).
           borderColor: active ? `${tone}ff` : `${tone}ea`,
           shadowColor: active ? `${tone}55` : ACCENT_GLOW[accent],
           shadowOffset: { width: 0, height: 0 },
           shadowOpacity: 1,
           shadowRadius: active ? 6 : 3,
         },
+        Platform.OS === 'web' ? { minHeight } : null,
         pressed && styles.pillPressed,
       ]}
       accessibilityRole="button"
       accessibilityLabel={label}
     >
+      {Platform.OS === 'web' && active ? (
+        <LinearGradient
+          colors={[sheen[0], sheen[1]]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 0, y: 1 }}
+          pointerEvents="none"
+          style={styles.pillSheen}
+        />
+      ) : null}
       {balanced ? (
         // Deterministic three-zone grid: icon zone (left) + centered label zone + equal spacer zone
         // (right). Equal side zones keep the label zone centered in the pill; the label fills it and
@@ -134,7 +198,7 @@ function LocalQuickActionPill({
         // accent instead of an anchor that pulls everything left.
         <View style={styles.balancedRow}>
           <View style={styles.iconZone}>{iconNode}</View>
-          <Text style={styles.labelBalanced} numberOfLines={2}>
+          <Text style={[styles.labelBalanced, active && styles.labelActive]} numberOfLines={2}>
             {label}
           </Text>
           <View style={styles.spacerZone} />
@@ -143,7 +207,7 @@ function LocalQuickActionPill({
         // Narrow-column fallback: snug centered icon+label lockup (already fills these small pills).
         <View style={styles.content}>
           {iconNode}
-          <Text style={styles.label} numberOfLines={2}>
+          <Text style={[styles.label, active && styles.labelActive]} numberOfLines={2}>
             {label}
           </Text>
         </View>
@@ -331,7 +395,6 @@ const styles = StyleSheet.create({
     minWidth: 0,
     flexDirection: 'row',
     alignItems: 'center',
-    // The pill centers its single content lockup; the lockup itself owns icon↔label spacing.
     justifyContent: 'center',
     borderRadius: vionaTokens.radius.pill,
     borderWidth: 1,
@@ -339,13 +402,17 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     backgroundColor: 'rgba(8, 12, 20, 0.72)',
     elevation: 1,
+    overflow: 'hidden',
+    position: 'relative',
+  },
+  pillSheen: {
+    ...StyleSheet.absoluteFillObject,
+    borderRadius: vionaTokens.radius.pill,
   },
   pillPressed: {
     opacity: 0.88,
   },
   content: {
-    // Self-sizing, centered icon+label lockup: no flexGrow so it shrinks to its content and is
-    // centered by the pill; minWidth 0 + maxWidth 100% let the label wrap (max 2 lines) inside it.
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
@@ -353,14 +420,14 @@ const styles = StyleSheet.create({
     minWidth: 0,
     maxWidth: '100%',
     gap: 10,
+    zIndex: 1,
   },
   balancedRow: {
-    // Deterministic three-zone grid. Equal iconZone + spacerZone widths centre the label zone in the
-    // pill; symmetric gaps keep that true. The label fills the middle zone and centres its own text.
     width: '100%',
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
+    zIndex: 1,
   },
   iconZone: {
     width: ICON_ZONE,
@@ -378,6 +445,9 @@ const styles = StyleSheet.create({
     color: vionaTokens.fashionTech.textPrimary,
     fontFamily: FontFamily.semibold,
     textAlign: 'center',
+  },
+  labelActive: {
+    color: '#FFFFFF',
   },
   iconWrap: {
     width: 29,

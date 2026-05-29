@@ -58,6 +58,8 @@ export type VionaFashionHomeCommandBarProps = Readonly<{
   }>;
   /** Home-only Daylight Boost (Fashion desktop web). */
   daylightBoost?: boolean;
+  /** When set, command rail uses luminous styling even if `daylightBoost` is false (Home lock). */
+  commandBarLuminous?: boolean;
   onPressDaylightBoost?: () => void;
   daylightBoostLabel?: string;
 }>;
@@ -76,6 +78,7 @@ export function VionaFashionHomeCommandBar({
   showRolePicker,
   fullscreenControl,
   daylightBoost,
+  commandBarLuminous,
   onPressDaylightBoost,
   daylightBoostLabel,
 }: VionaFashionHomeCommandBarProps) {
@@ -83,9 +86,10 @@ export function VionaFashionHomeCommandBar({
   const { width: windowWidth } = useWindowDimensions();
   const compactDensity = density === 'compact';
   const useCompactLogo = compactDensity || (windowWidth > 0 && windowWidth < LOGO_COMPACT_BREAKPOINT);
-  const railGradient = daylightBoost ? FASHION_HOME_DAYLIGHT_RAIL_GRADIENT : FASHION_HOME_COMMAND_RAIL_GRADIENT;
-  const railBorder = daylightBoost ? FASHION_HOME_DAYLIGHT_RAIL_BORDER : FASHION_HOME_COMMAND_RAIL_BORDER;
-  const railTopHighlight = daylightBoost ? FASHION_HOME_DAYLIGHT_RAIL_HIGHLIGHT : FASHION_HOME_COMMAND_RAIL_HIGHLIGHT;
+  const railLuminous = commandBarLuminous ?? daylightBoost ?? false;
+  const railGradient = railLuminous ? FASHION_HOME_DAYLIGHT_RAIL_GRADIENT : FASHION_HOME_COMMAND_RAIL_GRADIENT;
+  const railBorder = railLuminous ? FASHION_HOME_DAYLIGHT_RAIL_BORDER : FASHION_HOME_COMMAND_RAIL_BORDER;
+  const railTopHighlight = railLuminous ? FASHION_HOME_DAYLIGHT_RAIL_HIGHLIGHT : FASHION_HOME_COMMAND_RAIL_HIGHLIGHT;
   const barShellWebTransition = Platform.OS === 'web' ? fashionHomeWebDaylightTransitionStyle() : null;
 
   return (
@@ -145,7 +149,7 @@ export function VionaFashionHomeCommandBar({
                     return [
                     styles.utilBtn,
                     compactDensity && styles.utilBtnCompact,
-                    Platform.OS === 'web' && fashionHomeWebCommandUtilityHoverStyle(!!hovered, !!daylightBoost),
+                    Platform.OS === 'web' && fashionHomeWebCommandUtilityHoverStyle(!!hovered, railLuminous),
                     Platform.OS === 'web' && fashionHomeWebCommandUtilityPressStyle(!!pressed),
                     pressed && styles.pressed,
                   ];
@@ -168,7 +172,7 @@ export function VionaFashionHomeCommandBar({
                   return [
                   styles.utilBtn,
                   compactDensity && styles.utilBtnCompact,
-                  Platform.OS === 'web' && fashionHomeWebCommandUtilityHoverStyle(!!hovered, !!daylightBoost),
+                  Platform.OS === 'web' && fashionHomeWebCommandUtilityHoverStyle(!!hovered, railLuminous),
                   pressed && styles.pressed,
                 ];
                 }}
@@ -194,7 +198,7 @@ export function VionaFashionHomeCommandBar({
                     compactDensity && styles.daylightBoostBtnCompact,
                     daylightBoost && styles.daylightBoostBtnActive,
                     Platform.OS === 'web' && daylightBoost && styles.daylightBoostBtnActiveWeb,
-                    Platform.OS === 'web' && fashionHomeWebCommandUtilityHoverStyle(!!hovered, !!daylightBoost),
+                    Platform.OS === 'web' && fashionHomeWebCommandUtilityHoverStyle(!!hovered, railLuminous),
                     Platform.OS === 'web' && fashionHomeWebCommandUtilityPressStyle(!!pressed),
                     pressed && styles.pressed,
                   ];
@@ -227,7 +231,7 @@ export function VionaFashionHomeCommandBar({
                     styles.utilBtn,
                     compactDensity && styles.utilBtnCompact,
                     compactDensity ? styles.fullscreenBtnCompact : styles.fullscreenBtn,
-                    Platform.OS === 'web' && fashionHomeWebCommandUtilityHoverStyle(!!hovered, !!daylightBoost),
+                    Platform.OS === 'web' && fashionHomeWebCommandUtilityHoverStyle(!!hovered, railLuminous),
                     Platform.OS === 'web' && fashionHomeWebCommandUtilityPressStyle(!!pressed),
                     pressed && styles.pressed,
                   ];
@@ -254,7 +258,7 @@ export function VionaFashionHomeCommandBar({
                   return [
                   styles.utilBtn,
                   compactDensity && styles.utilBtnCompact,
-                  Platform.OS === 'web' && fashionHomeWebCommandUtilityHoverStyle(!!hovered, !!daylightBoost),
+                  Platform.OS === 'web' && fashionHomeWebCommandUtilityHoverStyle(!!hovered, railLuminous),
                   Platform.OS === 'web' && fashionHomeWebCommandUtilityPressStyle(!!pressed),
                   pressed && styles.pressed,
                 ];
@@ -278,7 +282,7 @@ export function VionaFashionHomeCommandBar({
                     compactDensity && styles.utilBtnCompact,
                     styles.sosBtn,
                     Platform.OS === 'web' &&
-                      fashionHomeWebCommandUtilityHoverStyle(!!hovered, !!daylightBoost, { sos: true }),
+                      fashionHomeWebCommandUtilityHoverStyle(!!hovered, railLuminous, { sos: true }),
                     Platform.OS === 'web' && fashionHomeWebCommandUtilityPressStyle(!!pressed),
                     pressed && styles.pressed,
                   ];
@@ -302,7 +306,7 @@ export function VionaFashionHomeCommandBar({
                   return [
                   styles.utilBtn,
                   compactDensity && styles.utilBtnCompact,
-                  Platform.OS === 'web' && fashionHomeWebCommandUtilityHoverStyle(!!hovered, !!daylightBoost),
+                  Platform.OS === 'web' && fashionHomeWebCommandUtilityHoverStyle(!!hovered, railLuminous),
                   Platform.OS === 'web' && fashionHomeWebCommandUtilityPressStyle(!!pressed),
                   pressed && styles.pressed,
                 ];
