@@ -79,6 +79,37 @@ const BORDER = localConstellation.border;
 /** Realistic cinematic daylight airport hero (night v1 retained in src/assets/viona/home/). */
 const IMG_TRAVEL_HERO = require('../../../assets/viona/travel/viona-travel-hero-default-1600x520.png');
 
+/** Pack 2 — taller hero stage on tablet/desktop; mobile keeps compact 102px budget. */
+function travelHeroStageMetrics(viewportWidth: number): Readonly<{
+  stageMinHeight: number;
+  imageWidthPct: `${number}%`;
+  imageInset: Readonly<{ top: number; right: number; bottom: number }>;
+  objectPosition: string;
+}> {
+  if (viewportWidth >= 1024) {
+    return {
+      stageMinHeight: 144,
+      imageWidthPct: '74%',
+      imageInset: { top: -8, right: -14, bottom: -8 },
+      objectPosition: '58% 44%',
+    };
+  }
+  if (viewportWidth >= 768) {
+    return {
+      stageMinHeight: 128,
+      imageWidthPct: '73%',
+      imageInset: { top: -7, right: -13, bottom: -7 },
+      objectPosition: '56% 42%',
+    };
+  }
+  return {
+    stageMinHeight: 102,
+    imageWidthPct: '72%',
+    imageInset: { top: -6, right: -12, bottom: -6 },
+    objectPosition: '52% 40%',
+  };
+}
+
 type Nav = NativeStackNavigationProp<RootStackParamList>;
 type TravelRoute = RouteProp<RootStackParamList, 'TravelHub'>;
 
@@ -304,6 +335,20 @@ export function TravelScreen() {
   const [travelDirectionId, setTravelDirectionId] = useState<TravelDirectionId | null>(null);
 
   const scenarioGridColumns = travelScenarioGridColumns(width);
+  const travelHeroStage = useMemo(() => travelHeroStageMetrics(width), [width]);
+  const travelHeroImageStyle = useMemo(
+    () => [
+      styles.heroCinematicImage,
+      {
+        width: travelHeroStage.imageWidthPct,
+        top: travelHeroStage.imageInset.top,
+        right: travelHeroStage.imageInset.right,
+        bottom: travelHeroStage.imageInset.bottom,
+        ...(Platform.OS === 'web' ? { objectPosition: travelHeroStage.objectPosition } : {}),
+      },
+    ],
+    [travelHeroStage]
+  );
 
   useEffect(() => {
     void getTravelLocationConsentState().then((state) => {
@@ -575,9 +620,14 @@ export function TravelScreen() {
     <>
       <StatusBar style="light" />
       <VionaMiniAppShell {...shellProps}>
-        <TravelGlassCard visual="hero" accent="cyan" intensity="primary" contentStyle={styles.heroInner}>
-          <View style={styles.heroStage}>
-            <Image source={IMG_TRAVEL_HERO} style={styles.heroCinematicImage} resizeMode="cover" />
+        <TravelGlassCard
+          visual="hero"
+          accent="cyan"
+          intensity="primary"
+          contentStyle={[styles.heroInner, { minHeight: travelHeroStage.stageMinHeight }]}
+        >
+          <View style={[styles.heroStage, { minHeight: travelHeroStage.stageMinHeight }]}>
+            <Image source={IMG_TRAVEL_HERO} style={travelHeroImageStyle} resizeMode="cover" />
             <LinearGradient
               pointerEvents="none"
               colors={['rgba(4, 8, 16, 0.9)', 'rgba(4, 10, 20, 0.62)', 'transparent']}
