@@ -1,0 +1,44 @@
+{
+  "label": "after",
+  "capturedAt": "2026-05-31T23:06:44.316Z",
+  "390x844": {
+    "panelWidthPx": 358,
+    "panelHeightPx": 128,
+    "imgWidthPx": 356,
+    "imgHeightPx": 126,
+    "objectFit": "fill",
+    "objectPosition": "50% 50%"
+  },
+  "768x1024": {
+    "panelWidthPx": 736,
+    "panelHeightPx": 156,
+    "imgWidthPx": 734,
+    "imgHeightPx": 154,
+    "objectFit": "fill",
+    "objectPosition": "50% 50%"
+  },
+  "1024x768": {
+    "panelWidthPx": 992,
+    "panelHeightPx": 168,
+    "imgWidthPx": 990,
+    "imgHeightPx": 166,
+    "objectFit": "fill",
+    "objectPosition": "50% 50%"
+  },
+  "1366x768-normal": {
+    "panelWidthPx": 1334,
+    "panelHeightPx": 168,
+    "imgWidthPx": 1332,
+    "imgHeightPx": 166,
+    "objectFit": "fill",
+    "objectPosition": "50% 50%"
+  },
+  "1366x768-fullscreen": {
+    "panelWidthPx": 1334,
+    "panelHeightPx": 180,
+    "imgWidthPx": 1332,
+    "imgHeightPx": 178,
+    "objectFit": "fill",
+    "objectPosition": "50% 50%"
+  }
+}

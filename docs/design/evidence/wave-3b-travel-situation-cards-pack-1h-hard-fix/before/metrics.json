@@ -1,0 +1,128 @@
+{
+  "1366x768": {
+    "label": "1366x768",
+    "quickHelpToSituationGapPx": 40,
+    "gridTop": 294,
+    "gridHeight": 138,
+    "gridBottom": 432,
+    "viewportHeight": 768,
+    "gridFullyVisible": true,
+    "cardHeights": [
+      52,
+      52,
+      52,
+      52,
+      52,
+      52,
+      52,
+      52
+    ],
+    "avgCardHeight": 52,
+    "firstCardBg": "rgba(132, 238, 255, 0.38)",
+    "firstCardOpacity": "1",
+    "firstCardMinHeight": "52px",
+    "firstCardPadding": "0px 11px",
+    "gridBg": "rgba(0, 0, 0, 0)",
+    "parentChain": [
+      {
+        "tag": "DIV",
+        "className": "css-view-g5y9jx r-minWidth-bcqeeo r-width-13qz1uu r-marginTop-1no09lo",
+        "backgroundColor": "rgba(0, 0, 0, 0)",
+        "opacity": "1"
+      },
+      {
+        "tag": "DIV",
+        "className": "css-view-g5y9jx r-gap-1ssbvtb r-paddingInline-3pj75a r-paddingTop-tskmnb",
+        "backgroundColor": "rgba(0, 0, 0, 0)",
+        "opacity": "1"
+      },
+      {
+        "tag": "DIV",
+        "className": "css-view-g5y9jx r-WebkitOverflowScrolling-150rngu r-flexDirection-eqz5dr r-flexG",
+        "backgroundColor": "rgba(0, 0, 0, 0)",
+        "opacity": "1"
+      },
+      {
+        "tag": "DIV",
+        "className": "css-view-g5y9jx r-flex-13awgt0 r-minHeight-ifefl9 r-position-bnwqim",
+        "backgroundColor": "rgba(0, 0, 0, 0)",
+        "opacity": "1"
+      },
+      {
+        "tag": "DIV",
+        "className": "css-view-g5y9jx r-flex-13awgt0 r-overflow-1udh08x",
+        "backgroundColor": "rgb(5, 11, 20)",
+        "opacity": "1"
+      },
+      {
+        "tag": "DIV",
+        "className": "css-view-g5y9jx r-flex-13awgt0",
+        "backgroundColor": "rgba(0, 0, 0, 0)",
+        "opacity": "1"
+      }
+    ]
+  },
+  "1366x768-fullscreen": {
+    "label": "1366x768-fullscreen",
+    "quickHelpToSituationGapPx": 14,
+    "gridTop": 266,
+    "gridHeight": 138,
+    "gridBottom": 404,
+    "viewportHeight": 768,
+    "gridFullyVisible": true,
+    "cardHeights": [
+      52,
+      52,
+      52,
+      52,
+      52,
+      52,
+      52,
+      52
+    ],
+    "avgCardHeight": 52,
+    "firstCardBg": "rgba(132, 238, 255, 0.38)",
+    "firstCardOpacity": "1",
+    "firstCardMinHeight": "52px",
+    "firstCardPadding": "0px 11px",
+    "gridBg": "rgba(0, 0, 0, 0)",
+    "parentChain": [
+      {
+        "tag": "DIV",
+        "className": "css-view-g5y9jx r-minWidth-bcqeeo r-width-13qz1uu r-marginTop-1bymd8e",
+        "backgroundColor": "rgba(0, 0, 0, 0)",
+        "opacity": "1"
+      },
+      {
+        "tag": "DIV",
+        "className": "css-view-g5y9jx r-gap-1ssbvtb r-paddingInline-3pj75a r-paddingTop-tskmnb",
+        "backgroundColor": "rgba(0, 0, 0, 0)",
+        "opacity": "1"
+      },
+      {
+        "tag": "DIV",
+        "className": "css-view-g5y9jx r-WebkitOverflowScrolling-150rngu r-flexDirection-eqz5dr r-flexG",
+        "backgroundColor": "rgba(0, 0, 0, 0)",
+        "opacity": "1"
+      },
+      {
+        "tag": "DIV",
+        "className": "css-view-g5y9jx r-flex-13awgt0 r-minHeight-ifefl9 r-position-bnwqim",
+        "backgroundColor": "rgba(0, 0, 0, 0)",
+        "opacity": "1"
+      },
+      {
+        "tag": "DIV",
+        "className": "css-view-g5y9jx r-flex-13awgt0 r-overflow-1udh08x",
+        "backgroundColor": "rgb(5, 11, 20)",
+        "opacity": "1"
+      },
+      {
+        "tag": "DIV",
+        "className": "css-view-g5y9jx r-flex-13awgt0",
+        "backgroundColor": "rgba(0, 0, 0, 0)",
+        "opacity": "1"
+      }
+    ]
+  }
+}

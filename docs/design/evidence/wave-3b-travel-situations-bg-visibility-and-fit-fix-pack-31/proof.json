@@ -1,0 +1,173 @@
+{
+  "pack": 31,
+  "captures": {
+    "390": {
+      "layerOrder": [
+        "1. travel-situations-section shell (frame)",
+        "2. travel-situation-network-bg + image (zIndex 0)",
+        "3. travel-situation-section-readability-veil (zIndex 2)",
+        "4. situationSectionContent + tiles (zIndex 4+)"
+      ],
+      "removedLayers": [
+        "TravelSituationLightNetworkBackdrop (old synthetic network)",
+        "situationPremiumNetworkBgVeil horizontal dark gradient (0.34/0.22/0.30)",
+        "situationPremiumNetworkBgCyanWash"
+      ],
+      "imageFit": {
+        "resizeMode": "cover",
+        "objectFit": "cover",
+        "objectPosition": "50% 50%",
+        "width": "356px",
+        "height": "252px"
+      },
+      "overlay": {
+        "readabilityVeilPresent": true,
+        "readabilityVeilColors": "rgba(4,10,18) peak 0.20 / mid 0.12 / end 0.16",
+        "oldLightNetworkPresent": false
+      },
+      "section": {
+        "backgroundColor": "rgba(0, 0, 0, 0)",
+        "borderRadius": "11px",
+        "overflow": "hidden",
+        "width": 358,
+        "height": 254
+      },
+      "bgHost": {
+        "zIndex": "0",
+        "overflow": "hidden",
+        "borderRadius": "11px"
+      },
+      "bgImage": {
+        "srcContainsAsset": false,
+        "naturalWidth": null,
+        "fillsSection": true
+      }
+    },
+    "1024": {
+      "layerOrder": [
+        "1. travel-situations-section shell (frame)",
+        "2. travel-situation-network-bg + image (zIndex 0)",
+        "3. travel-situation-section-readability-veil (zIndex 2)",
+        "4. situationSectionContent + tiles (zIndex 4+)"
+      ],
+      "removedLayers": [
+        "TravelSituationLightNetworkBackdrop (old synthetic network)",
+        "situationPremiumNetworkBgVeil horizontal dark gradient (0.34/0.22/0.30)",
+        "situationPremiumNetworkBgCyanWash"
+      ],
+      "imageFit": {
+        "resizeMode": "cover",
+        "objectFit": "cover",
+        "objectPosition": "50% 50%",
+        "width": "990px",
+        "height": "116px"
+      },
+      "overlay": {
+        "readabilityVeilPresent": true,
+        "readabilityVeilColors": "rgba(4,10,18) peak 0.20 / mid 0.12 / end 0.16",
+        "oldLightNetworkPresent": false
+      },
+      "section": {
+        "backgroundColor": "rgba(0, 0, 0, 0)",
+        "borderRadius": "11px",
+        "overflow": "hidden",
+        "width": 992,
+        "height": 118
+      },
+      "bgHost": {
+        "zIndex": "0",
+        "overflow": "hidden",
+        "borderRadius": "11px"
+      },
+      "bgImage": {
+        "srcContainsAsset": false,
+        "naturalWidth": null,
+        "fillsSection": true
+      }
+    },
+    "1366": {
+      "layerOrder": [
+        "1. travel-situations-section shell (frame)",
+        "2. travel-situation-network-bg + image (zIndex 0)",
+        "3. travel-situation-section-readability-veil (zIndex 2)",
+        "4. situationSectionContent + tiles (zIndex 4+)"
+      ],
+      "removedLayers": [
+        "TravelSituationLightNetworkBackdrop (old synthetic network)",
+        "situationPremiumNetworkBgVeil horizontal dark gradient (0.34/0.22/0.30)",
+        "situationPremiumNetworkBgCyanWash"
+      ],
+      "imageFit": {
+        "resizeMode": "cover",
+        "objectFit": "cover",
+        "objectPosition": "50% 50%",
+        "width": "1332px",
+        "height": "116px"
+      },
+      "overlay": {
+        "readabilityVeilPresent": true,
+        "readabilityVeilColors": "rgba(4,10,18) peak 0.20 / mid 0.12 / end 0.16",
+        "oldLightNetworkPresent": false
+      },
+      "section": {
+        "backgroundColor": "rgba(0, 0, 0, 0)",
+        "borderRadius": "11px",
+        "overflow": "hidden",
+        "width": 1334,
+        "height": 118
+      },
+      "bgHost": {
+        "zIndex": "0",
+        "overflow": "hidden",
+        "borderRadius": "11px"
+      },
+      "bgImage": {
+        "srcContainsAsset": false,
+        "naturalWidth": null,
+        "fillsSection": true
+      }
+    },
+    "1366-fullscreen": {
+      "layerOrder": [
+        "1. travel-situations-section shell (frame)",
+        "2. travel-situation-network-bg + image (zIndex 0)",
+        "3. travel-situation-section-readability-veil (zIndex 2)",
+        "4. situationSectionContent + tiles (zIndex 4+)"
+      ],
+      "removedLayers": [
+        "TravelSituationLightNetworkBackdrop (old synthetic network)",
+        "situationPremiumNetworkBgVeil horizontal dark gradient (0.34/0.22/0.30)",
+        "situationPremiumNetworkBgCyanWash"
+      ],
+      "imageFit": {
+        "resizeMode": "cover",
+        "objectFit": "cover",
+        "objectPosition": "50% 50%",
+        "width": "1332px",
+        "height": "110px"
+      },
+      "overlay": {
+        "readabilityVeilPresent": true,
+        "readabilityVeilColors": "rgba(4,10,18) peak 0.20 / mid 0.12 / end 0.16",
+        "oldLightNetworkPresent": false
+      },
+      "section": {
+        "backgroundColor": "rgba(0, 0, 0, 0)",
+        "borderRadius": "11px",
+        "overflow": "hidden",
+        "width": 1334,
+        "height": 112
+      },
+      "bgHost": {
+        "zIndex": "0",
+        "overflow": "hidden",
+        "borderRadius": "11px"
+      },
+      "bgImage": {
+        "srcContainsAsset": false,
+        "naturalWidth": null,
+        "fillsSection": true
+      }
+    }
+  }
+}

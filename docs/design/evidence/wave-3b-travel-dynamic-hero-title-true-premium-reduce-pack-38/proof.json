@@ -1,0 +1,91 @@
+{
+  "pack": 38,
+  "beforeReference": {
+    "normal": {
+      "fontSizePx": 66,
+      "lineHeightPx": 68,
+      "maxWidthPx": 720
+    },
+    "fullscreen": {
+      "fontSizePx": 68,
+      "lineHeightPx": 70,
+      "maxWidthPx": 760
+    }
+  },
+  "targets": {
+    "normal": {
+      "fontSizeMin": 52,
+      "fontSizeMax": 58,
+      "lineHeightMin": 56,
+      "lineHeightMax": 62,
+      "maxWidthMin": 620,
+      "maxWidthMax": 700
+    },
+    "fullscreen": {
+      "fontSizeMin": 56,
+      "fontSizeMax": 62,
+      "lineHeightMin": 60,
+      "lineHeightMax": 66,
+      "maxWidthMin": 680,
+      "maxWidthMax": 760
+    }
+  },
+  "captures": {
+    "normal1366": {
+      "mode": "normal-1366",
+      "fontSize": "56px",
+      "lineHeight": "60px",
+      "maxWidth": "660px",
+      "fontSizePx": 56,
+      "lineHeightPx": 60,
+      "maxWidthPx": 660,
+      "renderedWidthPx": 660,
+      "lineCount": 2,
+      "inTargetBand": true,
+      "failGuardNormal": false,
+      "failGuardFullscreen": false
+    },
+    "fullscreen1366": {
+      "mode": "fullscreen-1366",
+      "fontSize": "60px",
+      "lineHeight": "64px",
+      "maxWidth": "720px",
+      "fontSizePx": 60,
+      "lineHeightPx": 64,
+      "maxWidthPx": 720,
+      "renderedWidthPx": 720,
+      "lineCount": 2,
+      "inTargetBand": true,
+      "failGuardNormal": false,
+      "failGuardFullscreen": false
+    },
+    "tablet1024": {
+      "mode": "tablet-1024",
+      "fontSize": "54px",
+      "lineHeight": "58px",
+      "maxWidth": "560px",
+      "fontSizePx": 54,
+      "lineHeightPx": 58,
+      "maxWidthPx": 560,
+      "renderedWidthPx": 560,
+      "lineCount": 2,
+      "inTargetBand": false,
+      "failGuardNormal": false,
+      "failGuardFullscreen": false
+    },
+    "mobile390": {
+      "mode": "mobile-390",
+      "fontSize": "27px",
+      "lineHeight": "32px",
+      "maxWidth": "343px",
+      "fontSizePx": 27,
+      "lineHeightPx": 32,
+      "maxWidthPx": 343,
+      "renderedWidthPx": 282,
+      "lineCount": 2,
+      "inTargetBand": false,
+      "failGuardNormal": false,
+      "failGuardFullscreen": false
+    }
+  }
+}

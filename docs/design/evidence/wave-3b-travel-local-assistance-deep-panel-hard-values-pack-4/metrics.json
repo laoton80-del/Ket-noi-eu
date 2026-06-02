@@ -1,0 +1,267 @@
+[
+  {
+    "viewport": "local-assist-pack4-390x844",
+    "metrics": {
+      "cardHeight": 519,
+      "cardMinHeight": "0px",
+      "sceneCandidates": [
+        {
+          "tag": "DIV",
+          "h": 176,
+          "w": 358
+        },
+        {
+          "tag": "DIV",
+          "h": 176,
+          "w": 358
+        },
+        {
+          "tag": "DIV",
+          "h": 218,
+          "w": 358
+        },
+        {
+          "tag": "DIV",
+          "h": 270,
+          "w": 358
+        },
+        {
+          "tag": "DIV",
+          "h": 197,
+          "w": 358
+        },
+        {
+          "tag": "DIV",
+          "h": 180,
+          "w": 358
+        },
+        {
+          "tag": "DIV",
+          "h": 180,
+          "w": 358
+        },
+        {
+          "tag": "DIV",
+          "h": 178,
+          "w": 356
+        }
+      ],
+      "sceneShellHeight": null,
+      "hasSafety": true,
+      "hasForbidden": true,
+      "searchPadding": "9px 13px"
+    }
+  },
+  {
+    "viewport": "local-assist-pack4-768x1024",
+    "metrics": {
+      "cardHeight": 528,
+      "cardMinHeight": "500px",
+      "sceneCandidates": [
+        {
+          "tag": "DIV",
+          "h": 180,
+          "w": 736
+        },
+        {
+          "tag": "DIV",
+          "h": 180,
+          "w": 736
+        },
+        {
+          "tag": "DIV",
+          "h": 222,
+          "w": 736
+        },
+        {
+          "tag": "DIV",
+          "h": 275,
+          "w": 736
+        },
+        {
+          "tag": "DIV",
+          "h": 201,
+          "w": 736
+        },
+        {
+          "tag": "DIV",
+          "h": 228,
+          "w": 736
+        },
+        {
+          "tag": "DIV",
+          "h": 228,
+          "w": 736
+        },
+        {
+          "tag": "DIV",
+          "h": 226,
+          "w": 734
+        }
+      ],
+      "sceneShellHeight": null,
+      "hasSafety": true,
+      "hasForbidden": true,
+      "searchPadding": "9px 13px"
+    }
+  },
+  {
+    "viewport": "local-assist-pack4-1024x768",
+    "metrics": {
+      "cardHeight": 666,
+      "cardMinHeight": "560px",
+      "sceneCandidates": [
+        {
+          "tag": "DIV",
+          "h": 226,
+          "w": 992
+        },
+        {
+          "tag": "DIV",
+          "h": 226,
+          "w": 992
+        },
+        {
+          "tag": "DIV",
+          "h": 280,
+          "w": 992
+        },
+        {
+          "tag": "DIV",
+          "h": 253,
+          "w": 992
+        },
+        {
+          "tag": "DIV",
+          "h": 186,
+          "w": 992
+        },
+        {
+          "tag": "DIV",
+          "h": 292,
+          "w": 992
+        },
+        {
+          "tag": "DIV",
+          "h": 292,
+          "w": 992
+        },
+        {
+          "tag": "DIV",
+          "h": 290,
+          "w": 990
+        }
+      ],
+      "sceneShellHeight": null,
+      "hasSafety": true,
+      "hasForbidden": true,
+      "searchPadding": "12px 13px"
+    }
+  },
+  {
+    "viewport": "local-assist-pack4-1366x768",
+    "metrics": {
+      "cardHeight": 666,
+      "cardMinHeight": "560px",
+      "sceneCandidates": [
+        {
+          "tag": "DIV",
+          "h": 226,
+          "w": 1334
+        },
+        {
+          "tag": "DIV",
+          "h": 226,
+          "w": 1334
+        },
+        {
+          "tag": "DIV",
+          "h": 280,
+          "w": 1334
+        },
+        {
+          "tag": "DIV",
+          "h": 253,
+          "w": 1334
+        },
+        {
+          "tag": "DIV",
+          "h": 186,
+          "w": 1334
+        },
+        {
+          "tag": "DIV",
+          "h": 292,
+          "w": 1334
+        },
+        {
+          "tag": "DIV",
+          "h": 292,
+          "w": 1334
+        },
+        {
+          "tag": "DIV",
+          "h": 290,
+          "w": 1332
+        }
+      ],
+      "sceneShellHeight": null,
+      "hasSafety": true,
+      "hasForbidden": true,
+      "searchPadding": "12px 13px"
+    }
+  },
+  {
+    "viewport": "local-assist-pack4-1366x768-fullscreen",
+    "metrics": {
+      "cardHeight": 642,
+      "cardMinHeight": "540px",
+      "sceneCandidates": [
+        {
+          "tag": "DIV",
+          "h": 218,
+          "w": 1334
+        },
+        {
+          "tag": "DIV",
+          "h": 218,
+          "w": 1334
+        },
+        {
+          "tag": "DIV",
+          "h": 270,
+          "w": 1334
+        },
+        {
+          "tag": "DIV",
+          "h": 244,
+          "w": 1334
+        },
+        {
+          "tag": "DIV",
+          "h": 180,
+          "w": 1334
+        },
+        {
+          "tag": "DIV",
+          "h": 268,
+          "w": 1334
+        },
+        {
+          "tag": "DIV",
+          "h": 268,
+          "w": 1334
+        },
+        {
+          "tag": "DIV",
+          "h": 266,
+          "w": 1332
+        }
+      ],
+      "sceneShellHeight": null,
+      "hasSafety": true,
+      "hasForbidden": true,
+      "searchPadding": "12px 13px"
+    }
+  }
+]

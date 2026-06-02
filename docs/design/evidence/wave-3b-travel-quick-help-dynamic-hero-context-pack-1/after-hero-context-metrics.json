@@ -1,0 +1,139 @@
+{
+  "label": "after",
+  "capturedAt": "2026-05-31T22:14:01.213Z",
+  "1366x768-normal-default": {
+    "title": "Đồng hành trên mọi hành trình",
+    "subtitle": "Sân bay, di chuyển, phiên dịch, an toàn và hỗ trợ địa phương — chỉ dẫn đúng lúc, không thay bạn đặt dịch vụ.",
+    "chips": [
+      "Lite sẵn sàng",
+      "Hỗ trợ demo",
+      "Công cụ xem trước"
+    ]
+  },
+  "1366x768-normal-airport": {
+    "title": "Đi qua sân bay tự tin hơn",
+    "subtitle": "Check-in, an ninh, hành lý và hướng dẫn từng bước — VIONA chỉ dẫn, không thay bạn làm thủ tục.",
+    "chips": [
+      "Check-in",
+      "An ninh",
+      "Hành lý"
+    ]
+  },
+  "1366x768-normal-interpreter": {
+    "title": "Hiểu đúng trong tình huống quan trọng",
+    "subtitle": "Gợi ý câu nói, ngữ cảnh và hỗ trợ ngôn ngữ khi gặp quầy dịch vụ, khách sạn hoặc cơ quan.",
+    "chips": [
+      "Câu nói nhanh",
+      "Ngữ cảnh",
+      "Minh Khang"
+    ]
+  },
+  "1366x768-normal-transport": {
+    "title": "Tìm cách di chuyển phù hợp",
+    "subtitle": "Gợi ý phương án đi lại, điểm đón và lưu ý an toàn — không xác nhận đặt xe.",
+    "chips": [
+      "Điểm đón",
+      "Lộ trình",
+      "Không đặt xe"
+    ]
+  },
+  "1366x768-normal-emergency": {
+    "title": "Bình tĩnh trong tình huống khẩn cấp",
+    "subtitle": "Hướng dẫn bước đầu, thông tin cần chuẩn bị và lối vào SOS an toàn — không giả điều phối cứu hộ.",
+    "chips": [
+      "SOS an toàn",
+      "Cảnh báo",
+      "Không điều phối"
+    ]
+  },
+  "1366x768-fullscreen-default": {
+    "title": "Đồng hành trên mọi hành trình",
+    "subtitle": "Sân bay, di chuyển, phiên dịch, an toàn và hỗ trợ địa phương — chỉ dẫn đúng lúc, không thay bạn đặt dịch vụ.",
+    "chips": [
+      "Lite sẵn sàng",
+      "Hỗ trợ demo",
+      "Công cụ xem trước"
+    ]
+  },
+  "1366x768-fullscreen-airport": {
+    "title": "Đi qua sân bay tự tin hơn",
+    "subtitle": "Check-in, an ninh, hành lý và hướng dẫn từng bước — VIONA chỉ dẫn, không thay bạn làm thủ tục.",
+    "chips": [
+      "Check-in",
+      "An ninh",
+      "Hành lý"
+    ]
+  },
+  "1366x768-fullscreen-interpreter": {
+    "title": "Hiểu đúng trong tình huống quan trọng",
+    "subtitle": "Gợi ý câu nói, ngữ cảnh và hỗ trợ ngôn ngữ khi gặp quầy dịch vụ, khách sạn hoặc cơ quan.",
+    "chips": [
+      "Câu nói nhanh",
+      "Ngữ cảnh",
+      "Minh Khang"
+    ]
+  },
+  "1366x768-fullscreen-transport": {
+    "title": "Tìm cách di chuyển phù hợp",
+    "subtitle": "Gợi ý phương án đi lại, điểm đón và lưu ý an toàn — không xác nhận đặt xe.",
+    "chips": [
+      "Điểm đón",
+      "Lộ trình",
+      "Không đặt xe"
+    ]
+  },
+  "1366x768-fullscreen-emergency": {
+    "title": "Bình tĩnh trong tình huống khẩn cấp",
+    "subtitle": "Hướng dẫn bước đầu, thông tin cần chuẩn bị và lối vào SOS an toàn — không giả điều phối cứu hộ.",
+    "chips": [
+      "SOS an toàn",
+      "Cảnh báo",
+      "Không điều phối"
+    ]
+  },
+  "390x844-default": {
+    "title": "Đồng hành trên mọi hành trình",
+    "subtitle": "Sân bay, di chuyển, phiên dịch, an toàn và hỗ trợ địa phương — chỉ dẫn đúng lúc, không thay bạn đặt dịch vụ.",
+    "chips": [
+      "Lite sẵn sàng",
+      "Hỗ trợ demo",
+      "Công cụ xem trước"
+    ]
+  },
+  "390x844-airport": {
+    "title": "Đi qua sân bay tự tin hơn",
+    "subtitle": "Check-in, an ninh, hành lý và hướng dẫn từng bước — VIONA chỉ dẫn, không thay bạn làm thủ tục.",
+    "chips": [
+      "Check-in",
+      "An ninh",
+      "Hành lý"
+    ]
+  },
+  "390x844-interpreter": {
+    "title": "Hiểu đúng trong tình huống quan trọng",
+    "subtitle": "Gợi ý câu nói, ngữ cảnh và hỗ trợ ngôn ngữ khi gặp quầy dịch vụ, khách sạn hoặc cơ quan.",
+    "chips": [
+      "Câu nói nhanh",
+      "Ngữ cảnh",
+      "Minh Khang"
+    ]
+  },
+  "390x844-transport": {
+    "title": "Tìm cách di chuyển phù hợp",
+    "subtitle": "Gợi ý phương án đi lại, điểm đón và lưu ý an toàn — không xác nhận đặt xe.",
+    "chips": [
+      "Điểm đón",
+      "Lộ trình",
+      "Không đặt xe"
+    ]
+  },
+  "390x844-emergency": {
+    "title": "Bình tĩnh trong tình huống khẩn cấp",
+    "subtitle": "Hướng dẫn bước đầu, thông tin cần chuẩn bị và lối vào SOS an toàn — không giả điều phối cứu hộ.",
+    "chips": [
+      "SOS an toàn",
+      "Cảnh báo",
+      "Không điều phối"
+    ]
+  }
+}

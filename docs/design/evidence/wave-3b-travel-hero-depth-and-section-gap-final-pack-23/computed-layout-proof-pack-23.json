@@ -1,0 +1,18 @@
+{
+  "normal": {
+    "fullscreen": false,
+    "viewportWidth": 1366,
+    "viewportHeight": 768,
+    "heroHeight": 378,
+    "heroImageObjectPosition": "50% 50%",
+    "quickHelpToSituationsGapPx": 60
+  },
+  "fullscreen": {
+    "fullscreen": true,
+    "viewportWidth": 1366,
+    "viewportHeight": 768,
+    "heroHeight": 368,
+    "heroImageObjectPosition": "50% 50%",
+    "quickHelpToSituationsGapPx": 34
+  }
+}

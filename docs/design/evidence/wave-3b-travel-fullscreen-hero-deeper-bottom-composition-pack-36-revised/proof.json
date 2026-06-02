@@ -1,0 +1,164 @@
+{
+  "pack": "36-revised",
+  "fullscreenBefore": {
+    "heroTargetPx": 358,
+    "bridgePx": -40,
+    "objectPositionY": "35%",
+    "coverScale": 0.845
+  },
+  "fullscreenAfter": {
+    "heroTargetPx": 414,
+    "bridgePx": -76,
+    "objectPositionY": "31%",
+    "coverScale": 0.815
+  },
+  "normalWebGuard": {
+    "heroTargetPx": 410,
+    "titleFontSize": "74px",
+    "titleLineHeight": "70px",
+    "titleMaxWidth": "820px",
+    "bridgePx": -34
+  },
+  "captures": {
+    "fullscreen1366": {
+      "mode": "fullscreen-1366",
+      "title": {
+        "fontSize": "65px",
+        "lineHeight": "63px",
+        "maxWidth": "820px",
+        "width": 800
+      },
+      "heroHeightPx": 414,
+      "heroObjectPosition": "64% 31%",
+      "quickHelpToSituationsGapPx": -20,
+      "bridgeMarginTop": null,
+      "situationsBgPresent": true,
+      "constants": {
+        "beforeFs": {
+          "heroTargetPx": 358,
+          "bridgePx": -40,
+          "objectPositionY": "35%",
+          "coverScale": 0.845
+        },
+        "afterFs": {
+          "heroTargetPx": 414,
+          "bridgePx": -76,
+          "objectPositionY": "31%",
+          "coverScale": 0.815
+        },
+        "normalGuard": {
+          "heroTargetPx": 410,
+          "titleFontSize": "74px",
+          "titleLineHeight": "70px",
+          "titleMaxWidth": "820px",
+          "bridgePx": -34
+        }
+      }
+    },
+    "normal1366": {
+      "mode": "normal-1366",
+      "title": {
+        "fontSize": "74px",
+        "lineHeight": "70px",
+        "maxWidth": "820px",
+        "width": 780
+      },
+      "heroHeightPx": 410,
+      "heroObjectPosition": "64% 34%",
+      "quickHelpToSituationsGapPx": 48,
+      "bridgeMarginTop": null,
+      "situationsBgPresent": true,
+      "constants": {
+        "beforeFs": {
+          "heroTargetPx": 358,
+          "bridgePx": -40,
+          "objectPositionY": "35%",
+          "coverScale": 0.845
+        },
+        "afterFs": {
+          "heroTargetPx": 414,
+          "bridgePx": -76,
+          "objectPositionY": "31%",
+          "coverScale": 0.815
+        },
+        "normalGuard": {
+          "heroTargetPx": 410,
+          "titleFontSize": "74px",
+          "titleLineHeight": "70px",
+          "titleMaxWidth": "820px",
+          "bridgePx": -34
+        }
+      }
+    },
+    "tablet1024": {
+      "mode": "tablet-1024",
+      "title": {
+        "fontSize": "66px",
+        "lineHeight": "62px",
+        "maxWidth": "560px",
+        "width": 560
+      },
+      "heroHeightPx": 402,
+      "heroObjectPosition": "64% 34%",
+      "quickHelpToSituationsGapPx": 56,
+      "bridgeMarginTop": null,
+      "situationsBgPresent": true,
+      "constants": {
+        "beforeFs": {
+          "heroTargetPx": 358,
+          "bridgePx": -40,
+          "objectPositionY": "35%",
+          "coverScale": 0.845
+        },
+        "afterFs": {
+          "heroTargetPx": 414,
+          "bridgePx": -76,
+          "objectPositionY": "31%",
+          "coverScale": 0.815
+        },
+        "normalGuard": {
+          "heroTargetPx": 410,
+          "titleFontSize": "74px",
+          "titleLineHeight": "70px",
+          "titleMaxWidth": "820px",
+          "bridgePx": -34
+        }
+      }
+    },
+    "mobile390": {
+      "mode": "mobile-390",
+      "title": {
+        "fontSize": "27px",
+        "lineHeight": "32px",
+        "maxWidth": "343px",
+        "width": 282
+      },
+      "heroHeightPx": 300,
+      "heroObjectPosition": "64% 34%",
+      "quickHelpToSituationsGapPx": 84,
+      "bridgeMarginTop": null,
+      "situationsBgPresent": true,
+      "constants": {
+        "beforeFs": {
+          "heroTargetPx": 358,
+          "bridgePx": -40,
+          "objectPositionY": "35%",
+          "coverScale": 0.845
+        },
+        "afterFs": {
+          "heroTargetPx": 414,
+          "bridgePx": -76,
+          "objectPositionY": "31%",
+          "coverScale": 0.815
+        },
+        "normalGuard": {
+          "heroTargetPx": 410,
+          "titleFontSize": "74px",
+          "titleLineHeight": "70px",
+          "titleMaxWidth": "820px",
+          "bridgePx": -34
+        }
+      }
+    }
+  }
+}

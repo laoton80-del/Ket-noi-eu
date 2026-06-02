@@ -1,0 +1,222 @@
+{
+  "situation-1h-390x844": {
+    "quickHelpToSituationGapPx": 24,
+    "gridTop": 730,
+    "gridHeight": 265,
+    "gridBottom": 995,
+    "viewportHeight": 844,
+    "gridFullyVisible": false,
+    "cardHeights": [
+      56,
+      56,
+      56,
+      56,
+      56,
+      56,
+      56,
+      56
+    ],
+    "avgCardHeight": 56,
+    "firstCardBg": "rgba(132, 238, 255, 0.1)",
+    "firstCardHeight": "56px",
+    "firstCardMinHeight": "56px",
+    "parentChain": [
+      {
+        "backgroundColor": "rgba(0, 0, 0, 0)",
+        "opacity": "1"
+      },
+      {
+        "backgroundColor": "rgba(0, 0, 0, 0)",
+        "opacity": "1"
+      },
+      {
+        "backgroundColor": "rgba(0, 0, 0, 0)",
+        "opacity": "1"
+      },
+      {
+        "backgroundColor": "rgba(0, 0, 0, 0)",
+        "opacity": "1"
+      },
+      {
+        "backgroundColor": "rgb(5, 11, 20)",
+        "opacity": "1"
+      }
+    ]
+  },
+  "situation-1h-768x1024": {
+    "quickHelpToSituationGapPx": 26,
+    "gridTop": 480,
+    "gridHeight": 192,
+    "gridBottom": 672,
+    "viewportHeight": 1024,
+    "gridFullyVisible": true,
+    "cardHeights": [
+      52,
+      52,
+      52,
+      52,
+      52,
+      52,
+      52,
+      52
+    ],
+    "avgCardHeight": 52,
+    "firstCardBg": "rgba(132, 238, 255, 0.1)",
+    "firstCardHeight": "52px",
+    "firstCardMinHeight": "52px",
+    "parentChain": [
+      {
+        "backgroundColor": "rgba(0, 0, 0, 0)",
+        "opacity": "1"
+      },
+      {
+        "backgroundColor": "rgba(0, 0, 0, 0)",
+        "opacity": "1"
+      },
+      {
+        "backgroundColor": "rgba(0, 0, 0, 0)",
+        "opacity": "1"
+      },
+      {
+        "backgroundColor": "rgba(0, 0, 0, 0)",
+        "opacity": "1"
+      },
+      {
+        "backgroundColor": "rgb(5, 11, 20)",
+        "opacity": "1"
+      }
+    ]
+  },
+  "situation-1h-1024x768": {
+    "quickHelpToSituationGapPx": 48,
+    "gridTop": 336,
+    "gridHeight": 127,
+    "gridBottom": 463,
+    "viewportHeight": 768,
+    "gridFullyVisible": true,
+    "cardHeights": [
+      48,
+      48,
+      48,
+      48,
+      48,
+      48,
+      48,
+      48
+    ],
+    "avgCardHeight": 48,
+    "firstCardBg": "rgba(132, 238, 255, 0.1)",
+    "firstCardHeight": "48px",
+    "firstCardMinHeight": "48px",
+    "parentChain": [
+      {
+        "backgroundColor": "rgba(0, 0, 0, 0)",
+        "opacity": "1"
+      },
+      {
+        "backgroundColor": "rgba(0, 0, 0, 0)",
+        "opacity": "1"
+      },
+      {
+        "backgroundColor": "rgba(0, 0, 0, 0)",
+        "opacity": "1"
+      },
+      {
+        "backgroundColor": "rgba(0, 0, 0, 0)",
+        "opacity": "1"
+      },
+      {
+        "backgroundColor": "rgb(5, 11, 20)",
+        "opacity": "1"
+      }
+    ]
+  },
+  "situation-1h-1366x768": {
+    "quickHelpToSituationGapPx": 12,
+    "gridTop": 266,
+    "gridHeight": 127,
+    "gridBottom": 393,
+    "viewportHeight": 768,
+    "gridFullyVisible": true,
+    "cardHeights": [
+      48,
+      48,
+      48,
+      48,
+      48,
+      48,
+      48,
+      48
+    ],
+    "avgCardHeight": 48,
+    "firstCardBg": "rgba(132, 238, 255, 0.1)",
+    "firstCardHeight": "48px",
+    "firstCardMinHeight": "48px",
+    "parentChain": [
+      {
+        "backgroundColor": "rgba(0, 0, 0, 0)",
+        "opacity": "1"
+      },
+      {
+        "backgroundColor": "rgba(0, 0, 0, 0)",
+        "opacity": "1"
+      },
+      {
+        "backgroundColor": "rgba(0, 0, 0, 0)",
+        "opacity": "1"
+      },
+      {
+        "backgroundColor": "rgba(0, 0, 0, 0)",
+        "opacity": "1"
+      },
+      {
+        "backgroundColor": "rgb(5, 11, 20)",
+        "opacity": "1"
+      }
+    ]
+  },
+  "situation-1h-1366x768-fullscreen": {
+    "quickHelpToSituationGapPx": 12,
+    "gridTop": 264,
+    "gridHeight": 127,
+    "gridBottom": 391,
+    "viewportHeight": 768,
+    "gridFullyVisible": true,
+    "cardHeights": [
+      48,
+      48,
+      48,
+      48,
+      48,
+      48,
+      48,
+      48
+    ],
+    "avgCardHeight": 48,
+    "firstCardBg": "rgba(132, 238, 255, 0.1)",
+    "firstCardHeight": "48px",
+    "firstCardMinHeight": "48px",
+    "parentChain": [
+      {
+        "backgroundColor": "rgba(0, 0, 0, 0)",
+        "opacity": "1"
+      },
+      {
+        "backgroundColor": "rgba(0, 0, 0, 0)",
+        "opacity": "1"
+      },
+      {
+        "backgroundColor": "rgba(0, 0, 0, 0)",
+        "opacity": "1"
+      },
+      {
+        "backgroundColor": "rgba(0, 0, 0, 0)",
+        "opacity": "1"
+      },
+      {
+        "backgroundColor": "rgb(5, 11, 20)",
+        "opacity": "1"
+      }
+    ]
+  }
+}

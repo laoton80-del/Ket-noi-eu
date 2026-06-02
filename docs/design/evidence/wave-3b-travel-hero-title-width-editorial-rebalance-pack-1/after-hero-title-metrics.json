@@ -1,0 +1,64 @@
+{
+  "label": "after",
+  "capturedAt": "2026-05-31T22:46:11.725Z",
+  "390x844": {
+    "titleWidthPx": 282,
+    "titleHeightPx": 68,
+    "titleFontSizePx": 29,
+    "titleLineHeightPx": 34,
+    "textStackWidthPx": 322,
+    "heroWidthPx": 358,
+    "titleWidthPercentOfHero": 79,
+    "textStackWidthPercentOfHero": 90,
+    "titleText": "Đồng hành trên mọi hành trình",
+    "lineCountEstimate": 2
+  },
+  "768x1024": {
+    "titleWidthPx": 513,
+    "titleHeightPx": 86,
+    "titleFontSizePx": 38,
+    "titleLineHeightPx": 43,
+    "textStackWidthPx": 553,
+    "heroWidthPx": 736,
+    "titleWidthPercentOfHero": 70,
+    "textStackWidthPercentOfHero": 75,
+    "titleText": "Đồng hành trên mọi hành trình",
+    "lineCountEstimate": 2
+  },
+  "1024x768": {
+    "titleWidthPx": 600,
+    "titleHeightPx": 104,
+    "titleFontSizePx": 50,
+    "titleLineHeightPx": 52,
+    "textStackWidthPx": 600,
+    "heroWidthPx": 992,
+    "titleWidthPercentOfHero": 60,
+    "textStackWidthPercentOfHero": 60,
+    "titleText": "Đồng hành trên mọi hành trình",
+    "lineCountEstimate": 2
+  },
+  "1366x768-normal": {
+    "titleWidthPx": 710,
+    "titleHeightPx": 108,
+    "titleFontSizePx": 52,
+    "titleLineHeightPx": 54,
+    "textStackWidthPx": 710,
+    "heroWidthPx": 1334,
+    "titleWidthPercentOfHero": 53,
+    "textStackWidthPercentOfHero": 53,
+    "titleText": "Đồng hành trên mọi hành trình",
+    "lineCountEstimate": 2
+  },
+  "1366x768-fullscreen": {
+    "titleWidthPx": 765,
+    "titleHeightPx": 112,
+    "titleFontSizePx": 54,
+    "titleLineHeightPx": 56,
+    "textStackWidthPx": 765,
+    "heroWidthPx": 1334,
+    "titleWidthPercentOfHero": 57,
+    "textStackWidthPercentOfHero": 57,
+    "titleText": "Đồng hành trên mọi hành trình",
+    "lineCountEstimate": 2
+  }
+}

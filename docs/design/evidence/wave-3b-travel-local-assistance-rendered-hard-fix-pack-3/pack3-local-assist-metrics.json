@@ -1,0 +1,50 @@
+{
+  "label": "pack3",
+  "capturedAt": "2026-06-01T07:52:27.703Z",
+  "base": "http://localhost:8095",
+  "390x844": {
+    "panelWidthPx": 358,
+    "panelHeightPx": 164,
+    "cardHeightPx": 503,
+    "searchRowHeightPx": 67,
+    "renderMode": "background-image",
+    "backgroundSize": "cover",
+    "backgroundPosition": "46% 40%"
+  },
+  "768x1024": {
+    "panelWidthPx": 736,
+    "panelHeightPx": 214,
+    "cardHeightPx": 517,
+    "searchRowHeightPx": 56,
+    "renderMode": "background-image",
+    "backgroundSize": "cover",
+    "backgroundPosition": "48% 38%"
+  },
+  "1024x768": {
+    "panelWidthPx": 992,
+    "panelHeightPx": 238,
+    "cardHeightPx": 570,
+    "searchRowHeightPx": 62,
+    "renderMode": "background-image",
+    "backgroundSize": "cover",
+    "backgroundPosition": "52% 36%"
+  },
+  "1366x768-normal": {
+    "panelWidthPx": 1334,
+    "panelHeightPx": 238,
+    "cardHeightPx": 570,
+    "searchRowHeightPx": 62,
+    "renderMode": "background-image",
+    "backgroundSize": "cover",
+    "backgroundPosition": "52% 36%"
+  },
+  "1366x768-fullscreen": {
+    "panelWidthPx": 1334,
+    "panelHeightPx": 224,
+    "cardHeightPx": 556,
+    "searchRowHeightPx": 62,
+    "renderMode": "background-image",
+    "backgroundSize": "cover",
+    "backgroundPosition": "54% 38%"
+  }
+}

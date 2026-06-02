@@ -1,0 +1,58 @@
+{
+  "normal": {
+    "fullscreen": false,
+    "viewportWidth": 1366,
+    "title": {
+      "fontSize": "88px",
+      "lineHeight": "82px",
+      "width": 980,
+      "height": 164
+    },
+    "textStack": {
+      "width": 980,
+      "maxWidth": "980px"
+    },
+    "heroHeight": 364,
+    "titleToHeroWidthPct": 73.5
+  },
+  "fullscreen": {
+    "fullscreen": true,
+    "viewportWidth": 1366,
+    "title": {
+      "fontSize": "71px",
+      "lineHeight": "71px",
+      "width": 900,
+      "height": 142
+    },
+    "textStack": {
+      "width": 920,
+      "maxWidth": "920px"
+    },
+    "heroHeight": 358,
+    "titleToHeroWidthPct": 67.5
+  },
+  "quickHelp": {
+    "airportDefault": {
+      "outerElement": "[data-testid=\"travel-quick-help-cell-airport\"]",
+      "transform": "none",
+      "transition": "box-shadow 0.22s ease-out, transform 0.2s ease-out",
+      "boxShadow": "rgba(130, 235, 255, 0.86) 0px 0px 0px 1.5px, rgba(96, 228, 255, 0.07) 0px 0px 6px 0px, rgba(96, 228, 255, 0.04) 0px 0px 10px 0px",
+      "zIndex": "1"
+    },
+    "airportHover": {
+      "outerElement": "[data-testid=\"travel-quick-help-cell-airport\"]",
+      "transform": "matrix(1.018, 0, 0, 1.018, 0, -4)",
+      "transition": "transform 0.2s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.22s ease-out",
+      "boxShadow": "rgba(130, 235, 255, 0.94) 0px 0px 0px 1.5px, rgba(96, 228, 255, 0.2) 0px 0px 11px 0px, rgba(96, 228, 255, 0.14) 0px 0px 17px 0px",
+      "zIndex": "6"
+    },
+    "translationHover": {
+      "outerElement": "[data-testid=\"travel-quick-help-cell-translation\"]",
+      "transform": "matrix(1.018, 0, 0, 1.018, 0, -4)",
+      "transition": "transform 0.2s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.22s ease-out",
+      "boxShadow": "rgba(216, 160, 255, 0.94) 0px 0px 0px 1.5px, rgba(210, 148, 255, 0.2) 0px 0px 10.9979px 0px, rgba(210, 148, 255, 0.14) 0px 0px 16.9971px 0px",
+      "zIndex": "6"
+    }
+  },
+  "capturedAt": "2026-06-01T21:30:39.892Z"
+}

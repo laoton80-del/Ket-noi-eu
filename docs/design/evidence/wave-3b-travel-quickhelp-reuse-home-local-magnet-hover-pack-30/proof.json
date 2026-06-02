@@ -1,0 +1,205 @@
+{
+  "pack": 30,
+  "homeLocalReference": {
+    "files": [
+      "src/components/viona/local/LocalHomeParityCard.tsx",
+      "src/components/viona/fashionHomeDesktopShell.ts"
+    ],
+    "functions": [
+      "createFashionHomeWebWorldCardPointerHandlers",
+      "fashionHomeWebMagneticMotionStyle",
+      "fashionHomeWebWorldCardHostMotionStyle",
+      "computeFashionHomeWebMagneticOffset",
+      "useFashionHomePrefersReducedMotion"
+    ],
+    "motionValues": {
+      "magneticMaxTranslatePx": 3,
+      "magneticMaxRotateDeg": 0.65,
+      "hoverTranslateY": -1,
+      "hoverScale": 1.004,
+      "transitionMs": 200
+    }
+  },
+  "captures": {
+    "1366-hover-airport": {
+      "cardId": "airport",
+      "outerWrapper": {
+        "testId": "travel-quick-help-cell-airport",
+        "tag": "div",
+        "transform": "matrix(1.004, 0, 0, 1.004, 0, -1)",
+        "transition": "transform 0.2s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.2s ease-out",
+        "zIndex": "12",
+        "boxShadow": "none",
+        "cursor": "pointer",
+        "height": 181
+      },
+      "innerPressable": {
+        "testId": "travel-quick-help-magnet-host-airport",
+        "tag": "button",
+        "transform": "none",
+        "boxShadow": "rgba(130, 235, 255, 0.94) 0px 0px 0px 1.5px, rgba(96, 228, 255, 0.2) 0px 0px 11px 0px, rgba(96, 228, 255, 0.14) 0px 0px 16px 0px",
+        "height": 173
+      },
+      "heroTitle": "Đi qua sân bay tự tin hơn",
+      "expectedHeroTitle": "Đi qua sân bay tự tin hơn",
+      "heroTitleMatches": true,
+      "homeLocalReference": {
+        "source": "fashionHomeWebMagneticMotionStyle / LocalHomeParityCard outer View",
+        "hoverTranslateY": "-1px (+ magnetic offset up to 3px)",
+        "hoverScale": "1.004",
+        "transitionMs": 200,
+        "easing": "cubic-bezier(0.22, 1, 0.36, 1)"
+      }
+    },
+    "1366-hover-translation": {
+      "cardId": "translation",
+      "outerWrapper": {
+        "testId": "travel-quick-help-cell-translation",
+        "tag": "div",
+        "transform": "matrix(1.004, 0, 0, 1.004, 0, -1)",
+        "transition": "transform 0.2s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.2s ease-out",
+        "zIndex": "12",
+        "boxShadow": "none",
+        "cursor": "pointer",
+        "height": 181
+      },
+      "innerPressable": {
+        "testId": "travel-quick-help-magnet-host-translation",
+        "tag": "button",
+        "transform": "none",
+        "boxShadow": "rgba(216, 160, 255, 0.94) 0px 0px 0px 1.5px, rgba(210, 148, 255, 0.2) 0px 0px 11px 0px, rgba(210, 148, 255, 0.14) 0px 0px 16px 0px",
+        "height": 173
+      },
+      "heroTitle": "Hiểu đúng trong tình huống quan trọng",
+      "expectedHeroTitle": "Hiểu đúng trong tình huống quan trọng",
+      "heroTitleMatches": true,
+      "homeLocalReference": {
+        "source": "fashionHomeWebMagneticMotionStyle / LocalHomeParityCard outer View",
+        "hoverTranslateY": "-1px (+ magnetic offset up to 3px)",
+        "hoverScale": "1.004",
+        "transitionMs": 200,
+        "easing": "cubic-bezier(0.22, 1, 0.36, 1)"
+      }
+    },
+    "1366-hover-taxi": {
+      "cardId": "taxi",
+      "outerWrapper": {
+        "testId": "travel-quick-help-cell-taxi",
+        "tag": "div",
+        "transform": "matrix(1.004, 0, 0, 1.004, 0, -1)",
+        "transition": "transform 0.2s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.2s ease-out",
+        "zIndex": "12",
+        "boxShadow": "none",
+        "cursor": "pointer",
+        "height": 181
+      },
+      "innerPressable": {
+        "testId": "travel-quick-help-magnet-host-taxi",
+        "tag": "button",
+        "transform": "none",
+        "boxShadow": "rgba(78, 235, 210, 0.94) 0px 0px 0px 1.5px, rgba(48, 232, 208, 0.2) 0px 0px 11px 0px, rgba(48, 232, 208, 0.14) 0px 0px 16px 0px",
+        "height": 173
+      },
+      "heroTitle": "Tìm cách di chuyển phù hợp",
+      "expectedHeroTitle": "Tìm cách di chuyển phù hợp",
+      "heroTitleMatches": true,
+      "homeLocalReference": {
+        "source": "fashionHomeWebMagneticMotionStyle / LocalHomeParityCard outer View",
+        "hoverTranslateY": "-1px (+ magnetic offset up to 3px)",
+        "hoverScale": "1.004",
+        "transitionMs": 200,
+        "easing": "cubic-bezier(0.22, 1, 0.36, 1)"
+      }
+    },
+    "1366-hover-emergency": {
+      "cardId": "emergency",
+      "outerWrapper": {
+        "testId": "travel-quick-help-cell-emergency",
+        "tag": "div",
+        "transform": "matrix(1.004, 0, 0, 1.004, 0, -1)",
+        "transition": "transform 0.2s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.2s ease-out",
+        "zIndex": "12",
+        "boxShadow": "none",
+        "cursor": "pointer",
+        "height": 181
+      },
+      "innerPressable": {
+        "testId": "travel-quick-help-magnet-host-emergency",
+        "tag": "button",
+        "transform": "none",
+        "boxShadow": "rgba(255, 92, 170, 0.94) 0px 0px 0px 1.5px, rgba(255, 88, 168, 0.2) 0px 0px 11px 0px, rgba(255, 88, 168, 0.14) 0px 0px 16px 0px",
+        "height": 173
+      },
+      "heroTitle": "Bình tĩnh trong tình huống khẩn cấp",
+      "expectedHeroTitle": "Bình tĩnh trong tình huống khẩn cấp",
+      "heroTitleMatches": true,
+      "homeLocalReference": {
+        "source": "fashionHomeWebMagneticMotionStyle / LocalHomeParityCard outer View",
+        "hoverTranslateY": "-1px (+ magnetic offset up to 3px)",
+        "hoverScale": "1.004",
+        "transitionMs": 200,
+        "easing": "cubic-bezier(0.22, 1, 0.36, 1)"
+      }
+    },
+    "1024-hover-translation": {
+      "cardId": "translation",
+      "outerWrapper": {
+        "testId": "travel-quick-help-cell-translation",
+        "tag": "div",
+        "transform": "matrix(1, 0, 0, 1, 0, 0)",
+        "transition": "transform 0.2s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.2s ease-out",
+        "zIndex": "12",
+        "boxShadow": "none",
+        "cursor": "pointer",
+        "height": 180
+      },
+      "innerPressable": {
+        "testId": "travel-quick-help-magnet-host-translation",
+        "tag": "button",
+        "transform": "none",
+        "boxShadow": "rgba(216, 160, 255, 0.86) 0px 0px 0px 1.5px, rgba(210, 148, 255, 0.07) 0px 0px 6px 0px, rgba(210, 148, 255, 0.04) 0px 0px 10px 0px",
+        "height": 172
+      },
+      "heroTitle": "Hiểu đúng trong tình huống quan trọng",
+      "expectedHeroTitle": "Hiểu đúng trong tình huống quan trọng",
+      "heroTitleMatches": true,
+      "homeLocalReference": {
+        "source": "fashionHomeWebMagneticMotionStyle / LocalHomeParityCard outer View",
+        "hoverTranslateY": "-1px (+ magnetic offset up to 3px)",
+        "hoverScale": "1.004",
+        "transitionMs": 200,
+        "easing": "cubic-bezier(0.22, 1, 0.36, 1)"
+      }
+    }
+  },
+  "default": {
+    "cardId": "airport",
+    "outerWrapper": {
+      "testId": "travel-quick-help-cell-airport",
+      "tag": "div",
+      "transform": "matrix(1, 0, 0, 1, 0, 0)",
+      "transition": "transform 0.2s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.2s ease-out",
+      "zIndex": "1",
+      "boxShadow": "none",
+      "cursor": "auto",
+      "height": 180
+    },
+    "innerPressable": {
+      "testId": "travel-quick-help-magnet-host-airport",
+      "tag": "button",
+      "transform": "none",
+      "boxShadow": "rgba(130, 235, 255, 0.86) 0px 0px 0px 1.5px, rgba(96, 228, 255, 0.07) 0px 0px 6px 0px, rgba(96, 228, 255, 0.04) 0px 0px 10px 0px",
+      "height": 172
+    },
+    "heroTitle": "Đồng hành trên mọi hành trình",
+    "expectedHeroTitle": "Đi qua sân bay tự tin hơn",
+    "heroTitleMatches": false,
+    "homeLocalReference": {
+      "source": "fashionHomeWebMagneticMotionStyle / LocalHomeParityCard outer View",
+      "hoverTranslateY": "-1px (+ magnetic offset up to 3px)",
+      "hoverScale": "1.004",
+      "transitionMs": 200,
+      "easing": "cubic-bezier(0.22, 1, 0.36, 1)"
+    }
+  }
+}

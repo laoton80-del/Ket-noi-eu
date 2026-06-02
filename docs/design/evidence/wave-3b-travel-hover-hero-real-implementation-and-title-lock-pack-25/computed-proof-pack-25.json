@@ -1,0 +1,81 @@
+{
+  "pack": 25,
+  "default": {
+    "heroTitleText": "Đồng hành trên mọi hành trình",
+    "fontSize": "88px",
+    "lineHeight": "82px",
+    "width": 940
+  },
+  "hover": {
+    "airport": {
+      "hoveredCardId": "airport",
+      "displayedHeroTitle": "Đi qua sân bay tự tin hơn",
+      "expectedTitle": "Đi qua sân bay tự tin hơn",
+      "titleMatches": true,
+      "expectedAccent": "cyan",
+      "cellTransform": "matrix(1.015, 0, 0, 1.015, 0, -3.99963)",
+      "cellTransformElement": "button",
+      "cellTestId": "travel-quick-help-cell-airport",
+      "heroBoxShadowSample": "none"
+    },
+    "translation": {
+      "hoveredCardId": "translation",
+      "displayedHeroTitle": "Hiểu đúng trong tình huống quan trọng",
+      "expectedTitle": "Hiểu đúng trong tình huống quan trọng",
+      "titleMatches": true,
+      "expectedAccent": "violet",
+      "cellTransform": "matrix(1.01495, 0, 0, 1.01495, 0, -3.98763)",
+      "cellTransformElement": "button",
+      "cellTestId": "travel-quick-help-cell-translation",
+      "heroBoxShadowSample": "none"
+    },
+    "taxi": {
+      "hoveredCardId": "taxi",
+      "displayedHeroTitle": "Tìm cách di chuyển phù hợp",
+      "expectedTitle": "Tìm cách di chuyển phù hợp",
+      "titleMatches": true,
+      "expectedAccent": "teal",
+      "cellTransform": "matrix(1.015, 0, 0, 1.015, 0, -4)",
+      "cellTransformElement": "button",
+      "cellTestId": "travel-quick-help-cell-taxi",
+      "heroBoxShadowSample": "none"
+    },
+    "emergency": {
+      "hoveredCardId": "emergency",
+      "displayedHeroTitle": "Bình tĩnh trong tình huống khẩn cấp",
+      "expectedTitle": "Bình tĩnh trong tình huống khẩn cấp",
+      "titleMatches": true,
+      "expectedAccent": "magenta",
+      "cellTransform": "matrix(1.015, 0, 0, 1.015, 0, -4)",
+      "cellTransformElement": "button",
+      "cellTestId": "travel-quick-help-cell-emergency",
+      "heroBoxShadowSample": "none"
+    }
+  },
+  "titleNormal": {
+    "heroTitleText": "Đồng hành trên mọi hành trình",
+    "fontSize": "88px",
+    "lineHeight": "82px",
+    "width": 940
+  },
+  "titleFullscreen": {
+    "heroTitleText": "Đồng hành trên mọi hành trình",
+    "fontSize": "72px",
+    "lineHeight": "72px",
+    "width": 900
+  },
+  "displayedQuickHelpId": {
+    "default": "Đồng hành trên mọi hành trình",
+    "airport": "Đi qua sân bay tự tin hơn",
+    "translation": "Hiểu đúng trong tình huống quan trọng",
+    "taxi": "Tìm cách di chuyển phù hợp",
+    "emergency": "Bình tĩnh trong tình huống khẩn cấp"
+  },
+  "capturedAt": "2026-06-01T22:20:50.976Z",
+  "hoverStateArchitecture": {
+    "hoveredQuickHelpHeroContextId": "TravelFlagshipScenarioId | null",
+    "selectedQuickHelpHeroContextId": "TravelQuickHelpHeroContextId",
+    "displayedHeroQuickHelpContextId": "hovered ?? selected ?? default",
+    "finalTitleStyle": "travelHeroFinalTitleStyle(width, openingStageFullscreen) applied last on title Text"
+  }
+}

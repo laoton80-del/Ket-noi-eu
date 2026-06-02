@@ -1,0 +1,81 @@
+{
+  "viewportWidth": 1366,
+  "rowBottom": 653,
+  "cards": [
+    {
+      "id": "airport",
+      "cell": {
+        "borderTopWidth": "0px",
+        "borderBottomWidth": "0px",
+        "paddingBottom": "3px",
+        "overflow": "visible",
+        "boxShadow": "rgba(130, 235, 255, 0.84) 0px 0px 0px 1.35px, rgba(96, 228, 255, 0.11) 0px 0px 8px 0px, rgba(96, 228, 255, 0.07) 0px 0px 12px 0px",
+        "height": 199,
+        "bottom": 647
+      },
+      "innerTile": {
+        "borderTopWidth": "0px",
+        "borderBottomWidth": "0px",
+        "boxShadow": "none",
+        "height": 196
+      }
+    },
+    {
+      "id": "translation",
+      "cell": {
+        "borderTopWidth": "0px",
+        "borderBottomWidth": "0px",
+        "paddingBottom": "3px",
+        "overflow": "visible",
+        "boxShadow": "rgba(216, 160, 255, 0.82) 0px 0px 0px 1.35px, rgba(210, 148, 255, 0.11) 0px 0px 8px 0px, rgba(210, 148, 255, 0.07) 0px 0px 12px 0px",
+        "height": 199,
+        "bottom": 647
+      },
+      "innerTile": {
+        "borderTopWidth": "0px",
+        "borderBottomWidth": "0px",
+        "boxShadow": "none",
+        "height": 196
+      }
+    },
+    {
+      "id": "taxi",
+      "cell": {
+        "borderTopWidth": "0px",
+        "borderBottomWidth": "0px",
+        "paddingBottom": "3px",
+        "overflow": "visible",
+        "boxShadow": "rgba(78, 235, 210, 0.84) 0px 0px 0px 1.35px, rgba(48, 232, 208, 0.11) 0px 0px 8px 0px, rgba(48, 232, 208, 0.07) 0px 0px 12px 0px",
+        "height": 199,
+        "bottom": 647
+      },
+      "innerTile": {
+        "borderTopWidth": "0px",
+        "borderBottomWidth": "0px",
+        "boxShadow": "none",
+        "height": 196
+      }
+    },
+    {
+      "id": "emergency",
+      "cell": {
+        "borderTopWidth": "0px",
+        "borderBottomWidth": "0px",
+        "paddingBottom": "3px",
+        "overflow": "visible",
+        "boxShadow": "rgba(255, 92, 170, 0.84) 0px 0px 0px 1.35px, rgba(255, 88, 168, 0.11) 0px 0px 8px 0px, rgba(255, 88, 168, 0.07) 0px 0px 12px 0px",
+        "height": 199,
+        "bottom": 647
+      },
+      "innerTile": {
+        "borderTopWidth": "0px",
+        "borderBottomWidth": "0px",
+        "boxShadow": "none",
+        "height": 196
+      }
+    }
+  ],
+  "capturedAt": "2026-06-01T17:41:25.736Z",
+  "cacheBust": 1780335659201,
+  "port": 8095
+}

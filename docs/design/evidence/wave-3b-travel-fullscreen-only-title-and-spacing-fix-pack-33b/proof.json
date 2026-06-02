@@ -1,0 +1,127 @@
+{
+  "pack": "33B",
+  "before": {
+    "fullscreenTitle": {
+      "fontSize": "72px",
+      "lineHeight": "72px",
+      "maxWidth": "940px"
+    },
+    "normalTitle": {
+      "fontSize": "74px",
+      "lineHeight": "70px",
+      "maxWidth": "820px"
+    },
+    "fullscreenHeroTargetPx": 376,
+    "fullscreenBridgePx": -28
+  },
+  "captures": {
+    "normal1366": {
+      "mode": "normal-1366",
+      "title": {
+        "fontSize": "74px",
+        "lineHeight": "70px",
+        "maxWidth": "820px",
+        "width": 780
+      },
+      "heroHeightPx": 410,
+      "quickHelpToSituationsGapPx": 48,
+      "bridgeMarginTop": null,
+      "situationsBgPresent": true,
+      "beforeReference": {
+        "fullscreenTitle": {
+          "fontSize": "72px",
+          "lineHeight": "72px",
+          "maxWidth": "940px"
+        },
+        "normalTitle": {
+          "fontSize": "74px",
+          "lineHeight": "70px",
+          "maxWidth": "820px"
+        },
+        "fullscreenHeroTargetPx": 376,
+        "fullscreenBridgePx": -28
+      }
+    },
+    "fullscreen1366": {
+      "mode": "fullscreen-1366",
+      "title": {
+        "fontSize": "65px",
+        "lineHeight": "63px",
+        "maxWidth": "820px",
+        "width": 800
+      },
+      "heroHeightPx": 358,
+      "quickHelpToSituationsGapPx": 16,
+      "bridgeMarginTop": null,
+      "situationsBgPresent": true,
+      "beforeReference": {
+        "fullscreenTitle": {
+          "fontSize": "72px",
+          "lineHeight": "72px",
+          "maxWidth": "940px"
+        },
+        "normalTitle": {
+          "fontSize": "74px",
+          "lineHeight": "70px",
+          "maxWidth": "820px"
+        },
+        "fullscreenHeroTargetPx": 376,
+        "fullscreenBridgePx": -28
+      }
+    },
+    "normal1024": {
+      "mode": "normal-1024",
+      "title": {
+        "fontSize": "66px",
+        "lineHeight": "62px",
+        "maxWidth": "560px",
+        "width": 560
+      },
+      "heroHeightPx": 402,
+      "quickHelpToSituationsGapPx": 56,
+      "bridgeMarginTop": null,
+      "situationsBgPresent": true,
+      "beforeReference": {
+        "fullscreenTitle": {
+          "fontSize": "72px",
+          "lineHeight": "72px",
+          "maxWidth": "940px"
+        },
+        "normalTitle": {
+          "fontSize": "74px",
+          "lineHeight": "70px",
+          "maxWidth": "820px"
+        },
+        "fullscreenHeroTargetPx": 376,
+        "fullscreenBridgePx": -28
+      }
+    },
+    "mobile390": {
+      "mode": "mobile-390",
+      "title": {
+        "fontSize": "27px",
+        "lineHeight": "32px",
+        "maxWidth": "343px",
+        "width": 282
+      },
+      "heroHeightPx": 300,
+      "quickHelpToSituationsGapPx": 84,
+      "bridgeMarginTop": null,
+      "situationsBgPresent": true,
+      "beforeReference": {
+        "fullscreenTitle": {
+          "fontSize": "72px",
+          "lineHeight": "72px",
+          "maxWidth": "940px"
+        },
+        "normalTitle": {
+          "fontSize": "74px",
+          "lineHeight": "70px",
+          "maxWidth": "820px"
+        },
+        "fullscreenHeroTargetPx": 376,
+        "fullscreenBridgePx": -28
+      }
+    }
+  }
+}

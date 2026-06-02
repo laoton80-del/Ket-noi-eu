@@ -1,0 +1,131 @@
+{
+  "pack": 34,
+  "architecture": {
+    "quickHelpIds": [
+      "airport",
+      "translation",
+      "taxi",
+      "emergency"
+    ],
+    "hoveredState": "hoveredQuickHelpHeroContextId",
+    "selectedState": "selectedQuickHelpHeroContextId",
+    "displayedId": "displayedHeroQuickHelpContextId = hovered ?? selected ?? default",
+    "heroCopy": "resolveTravelQuickHelpHeroDisplay(displayedHeroQuickHelpContextId, ...)",
+    "heroImage": "activeTravelHeroKey via TRAVEL_FLAGSHIP_DYNAMIC_HERO_KEY",
+    "heroAccent": "travelQuickHelpHeroAccent(displayedHeroQuickHelpContextId)"
+  },
+  "captures": {
+    "default": {
+      "hoveredCardId": null,
+      "displayedQuickHelpId": null,
+      "heroTitle": "Đồng hành trên mọi hành trình",
+      "expectedTitle": "Đồng hành trên mọi hành trình",
+      "titleMatches": true,
+      "heroAccent": null,
+      "expectedAccent": "cyan",
+      "accentMatches": false,
+      "heroChips": [],
+      "outerCellTransform": null,
+      "outerCellTag": null,
+      "heroEventPath": "Pressable onHoverIn/onMouseEnter + View onPointerEnter → onTravelHeroCardHover(id)"
+    },
+    "hover-airport": {
+      "hoveredCardId": "airport",
+      "displayedQuickHelpId": null,
+      "heroTitle": "Đi qua sân bay tự tin hơn",
+      "expectedTitle": "Đi qua sân bay tự tin hơn",
+      "titleMatches": true,
+      "heroAccent": null,
+      "expectedAccent": "cyan",
+      "accentMatches": false,
+      "heroChips": [],
+      "outerCellTransform": "matrix(1.004, 0, 0, 1.004, 0, -1)",
+      "outerCellTag": "div",
+      "heroEventPath": "Pressable onHoverIn/onMouseEnter + View onPointerEnter → onTravelHeroCardHover(id)"
+    },
+    "hover-translation": {
+      "hoveredCardId": "translation",
+      "displayedQuickHelpId": null,
+      "heroTitle": "Hiểu đúng trong tình huống quan trọng",
+      "expectedTitle": "Hiểu đúng trong tình huống quan trọng",
+      "titleMatches": true,
+      "heroAccent": null,
+      "expectedAccent": "violet",
+      "accentMatches": false,
+      "heroChips": [],
+      "outerCellTransform": "matrix(1.004, 0, 0, 1.004, 0, -1)",
+      "outerCellTag": "div",
+      "heroEventPath": "Pressable onHoverIn/onMouseEnter + View onPointerEnter → onTravelHeroCardHover(id)"
+    },
+    "hover-taxi": {
+      "hoveredCardId": "taxi",
+      "displayedQuickHelpId": null,
+      "heroTitle": "Tìm cách di chuyển phù hợp",
+      "expectedTitle": "Tìm cách di chuyển phù hợp",
+      "titleMatches": true,
+      "heroAccent": null,
+      "expectedAccent": "emerald",
+      "accentMatches": false,
+      "heroChips": [],
+      "outerCellTransform": "matrix(1.004, 0, 0, 1.004, 0, -1)",
+      "outerCellTag": "div",
+      "heroEventPath": "Pressable onHoverIn/onMouseEnter + View onPointerEnter → onTravelHeroCardHover(id)"
+    },
+    "hover-emergency": {
+      "hoveredCardId": "emergency",
+      "displayedQuickHelpId": null,
+      "heroTitle": "Bình tĩnh trong tình huống khẩn cấp",
+      "expectedTitle": "Bình tĩnh trong tình huống khẩn cấp",
+      "titleMatches": true,
+      "heroAccent": null,
+      "expectedAccent": "magenta",
+      "accentMatches": false,
+      "heroChips": [],
+      "outerCellTransform": "matrix(1.004, 0, 0, 1.004, 0, -1)",
+      "outerCellTag": "div",
+      "heroEventPath": "Pressable onHoverIn/onMouseEnter + View onPointerEnter → onTravelHeroCardHover(id)"
+    },
+    "fullscreen-hover-translation": {
+      "hoveredCardId": "translation",
+      "displayedQuickHelpId": null,
+      "heroTitle": "Hiểu đúng trong tình huống quan trọng",
+      "expectedTitle": "Hiểu đúng trong tình huống quan trọng",
+      "titleMatches": true,
+      "heroAccent": null,
+      "expectedAccent": "violet",
+      "accentMatches": false,
+      "heroChips": [],
+      "outerCellTransform": "matrix(1.004, 0, 0, 1.004, 0, -1)",
+      "outerCellTag": "div",
+      "heroEventPath": "Pressable onHoverIn/onMouseEnter + View onPointerEnter → onTravelHeroCardHover(id)"
+    },
+    "1024-default": {
+      "hoveredCardId": null,
+      "displayedQuickHelpId": null,
+      "heroTitle": "Đồng hành trên mọi hành trình",
+      "expectedTitle": "Đồng hành trên mọi hành trình",
+      "titleMatches": true,
+      "heroAccent": null,
+      "expectedAccent": "cyan",
+      "accentMatches": false,
+      "heroChips": [],
+      "outerCellTransform": null,
+      "outerCellTag": null,
+      "heroEventPath": "Pressable onHoverIn/onMouseEnter + View onPointerEnter → onTravelHeroCardHover(id)"
+    },
+    "390-default": {
+      "hoveredCardId": null,
+      "displayedQuickHelpId": null,
+      "heroTitle": "Đồng hành trên mọi hành trình",
+      "expectedTitle": "Đồng hành trên mọi hành trình",
+      "titleMatches": true,
+      "heroAccent": null,
+      "expectedAccent": "cyan",
+      "accentMatches": false,
+      "heroChips": [],
+      "outerCellTransform": null,
+      "outerCellTag": null,
+      "heroEventPath": "Pressable onHoverIn/onMouseEnter + View onPointerEnter → onTravelHeroCardHover(id)"
+    }
+  }
+}

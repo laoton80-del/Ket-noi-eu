@@ -1,0 +1,74 @@
+{
+  "label": "after",
+  "capturedAt": "2026-05-31T21:58:41.962Z",
+  "390x844": {
+    "fxCardHeightsPx": [
+      64,
+      64,
+      64,
+      64,
+      64
+    ],
+    "fxCardSampleHeightPx": 64,
+    "weatherCardHeightPx": 128,
+    "fxStripHeightPx": 253,
+    "safetyMicrocopyPresent": true,
+    "kickerPresent": true
+  },
+  "768x1024": {
+    "fxCardHeightsPx": [
+      62,
+      62,
+      62,
+      62,
+      62
+    ],
+    "fxCardSampleHeightPx": 62,
+    "weatherCardHeightPx": 128,
+    "fxStripHeightPx": 178,
+    "safetyMicrocopyPresent": true,
+    "kickerPresent": true
+  },
+  "1024x768": {
+    "fxCardHeightsPx": [
+      60,
+      60,
+      60,
+      60,
+      60
+    ],
+    "fxCardSampleHeightPx": 60,
+    "weatherCardHeightPx": 128,
+    "fxStripHeightPx": 107,
+    "safetyMicrocopyPresent": true,
+    "kickerPresent": true
+  },
+  "1366x768-normal": {
+    "fxCardHeightsPx": [
+      60,
+      60,
+      60,
+      60,
+      60
+    ],
+    "fxCardSampleHeightPx": 60,
+    "weatherCardHeightPx": 128,
+    "fxStripHeightPx": 107,
+    "safetyMicrocopyPresent": true,
+    "kickerPresent": true
+  },
+  "1366x768-fullscreen": {
+    "fxCardHeightsPx": [
+      60,
+      60,
+      60,
+      60,
+      60
+    ],
+    "fxCardSampleHeightPx": 60,
+    "weatherCardHeightPx": 128,
+    "fxStripHeightPx": 107,
+    "safetyMicrocopyPresent": true,
+    "kickerPresent": true
+  }
+}

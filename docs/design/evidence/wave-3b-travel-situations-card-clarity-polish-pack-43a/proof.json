@@ -1,0 +1,207 @@
+{
+  "pack": "43A",
+  "before": {
+    "sectionReadabilityVeil": [
+      "rgba(4, 10, 18, 0.20)",
+      "rgba(4, 10, 18, 0.12)",
+      "rgba(4, 10, 18, 0.16)"
+    ],
+    "tileBackgroundAlpha": 0.022,
+    "tileBorderAlphaIdle": 0.32,
+    "tileBorderAlphaActive": 0.42,
+    "tileGlowAlphaIdle": 0.075,
+    "tileGlowAlphaActive": 0.12,
+    "tileEdgeGlowBorderAlpha": 0.12,
+    "tileLabelColor": "rgba(236, 246, 255, 0.96)",
+    "tileIconCapsuleBg": "rgba(4, 10, 18, 0.28)"
+  },
+  "after": {
+    "sectionReadabilityVeil": [
+      "rgba(4, 10, 18, 0.16)",
+      "rgba(4, 10, 18, 0.09)",
+      "rgba(4, 10, 18, 0.13)"
+    ],
+    "tileBackgroundAlpha": 0.03,
+    "tileBorderAlphaIdle": 0.38,
+    "tileBorderAlphaActive": 0.46,
+    "tileGlowAlphaIdle": 0.095,
+    "tileGlowAlphaActive": 0.14,
+    "tileEdgeGlowBorderAlpha": 0.18,
+    "tileLabelColor": "rgba(240, 249, 255, 1)",
+    "tileIconCapsuleBg": "rgba(4, 10, 18, 0.22)"
+  },
+  "captures": {
+    "fullscreen1366": {
+      "mode": "fullscreen-1366",
+      "computed": {
+        "cardBackground": "rgba(0, 0, 0, 0)",
+        "cardBorder": "rgb(0, 0, 0)",
+        "labelColor": "rgb(0, 0, 0)",
+        "iconCapsuleBg": null,
+        "edgeGlowBorder": null,
+        "veilBackgroundImage": "linear-gradient(rgba(4, 10, 18, 0.16), rgba(4, 10, 18, 0.09) 55%, rgba(4, 10, 18, 0.13) 100%)"
+      },
+      "refs": {
+        "before": {
+          "sectionReadabilityVeil": [
+            "rgba(4, 10, 18, 0.20)",
+            "rgba(4, 10, 18, 0.12)",
+            "rgba(4, 10, 18, 0.16)"
+          ],
+          "tileBackgroundAlpha": 0.022,
+          "tileBorderAlphaIdle": 0.32,
+          "tileBorderAlphaActive": 0.42,
+          "tileGlowAlphaIdle": 0.075,
+          "tileGlowAlphaActive": 0.12,
+          "tileEdgeGlowBorderAlpha": 0.12,
+          "tileLabelColor": "rgba(236, 246, 255, 0.96)",
+          "tileIconCapsuleBg": "rgba(4, 10, 18, 0.28)"
+        },
+        "after": {
+          "sectionReadabilityVeil": [
+            "rgba(4, 10, 18, 0.16)",
+            "rgba(4, 10, 18, 0.09)",
+            "rgba(4, 10, 18, 0.13)"
+          ],
+          "tileBackgroundAlpha": 0.03,
+          "tileBorderAlphaIdle": 0.38,
+          "tileBorderAlphaActive": 0.46,
+          "tileGlowAlphaIdle": 0.095,
+          "tileGlowAlphaActive": 0.14,
+          "tileEdgeGlowBorderAlpha": 0.18,
+          "tileLabelColor": "rgba(240, 249, 255, 1)",
+          "tileIconCapsuleBg": "rgba(4, 10, 18, 0.22)"
+        }
+      }
+    },
+    "normal1366": {
+      "mode": "normal-1366",
+      "computed": {
+        "cardBackground": "rgba(0, 0, 0, 0)",
+        "cardBorder": "rgb(0, 0, 0)",
+        "labelColor": "rgb(0, 0, 0)",
+        "iconCapsuleBg": null,
+        "edgeGlowBorder": null,
+        "veilBackgroundImage": "linear-gradient(rgba(4, 10, 18, 0.16), rgba(4, 10, 18, 0.09) 55%, rgba(4, 10, 18, 0.13) 100%)"
+      },
+      "refs": {
+        "before": {
+          "sectionReadabilityVeil": [
+            "rgba(4, 10, 18, 0.20)",
+            "rgba(4, 10, 18, 0.12)",
+            "rgba(4, 10, 18, 0.16)"
+          ],
+          "tileBackgroundAlpha": 0.022,
+          "tileBorderAlphaIdle": 0.32,
+          "tileBorderAlphaActive": 0.42,
+          "tileGlowAlphaIdle": 0.075,
+          "tileGlowAlphaActive": 0.12,
+          "tileEdgeGlowBorderAlpha": 0.12,
+          "tileLabelColor": "rgba(236, 246, 255, 0.96)",
+          "tileIconCapsuleBg": "rgba(4, 10, 18, 0.28)"
+        },
+        "after": {
+          "sectionReadabilityVeil": [
+            "rgba(4, 10, 18, 0.16)",
+            "rgba(4, 10, 18, 0.09)",
+            "rgba(4, 10, 18, 0.13)"
+          ],
+          "tileBackgroundAlpha": 0.03,
+          "tileBorderAlphaIdle": 0.38,
+          "tileBorderAlphaActive": 0.46,
+          "tileGlowAlphaIdle": 0.095,
+          "tileGlowAlphaActive": 0.14,
+          "tileEdgeGlowBorderAlpha": 0.18,
+          "tileLabelColor": "rgba(240, 249, 255, 1)",
+          "tileIconCapsuleBg": "rgba(4, 10, 18, 0.22)"
+        }
+      }
+    },
+    "tablet1024": {
+      "mode": "tablet-1024",
+      "computed": {
+        "cardBackground": "rgba(0, 0, 0, 0)",
+        "cardBorder": "rgb(0, 0, 0)",
+        "labelColor": "rgb(0, 0, 0)",
+        "iconCapsuleBg": null,
+        "edgeGlowBorder": null,
+        "veilBackgroundImage": "linear-gradient(rgba(4, 10, 18, 0.16), rgba(4, 10, 18, 0.09) 55%, rgba(4, 10, 18, 0.13) 100%)"
+      },
+      "refs": {
+        "before": {
+          "sectionReadabilityVeil": [
+            "rgba(4, 10, 18, 0.20)",
+            "rgba(4, 10, 18, 0.12)",
+            "rgba(4, 10, 18, 0.16)"
+          ],
+          "tileBackgroundAlpha": 0.022,
+          "tileBorderAlphaIdle": 0.32,
+          "tileBorderAlphaActive": 0.42,
+          "tileGlowAlphaIdle": 0.075,
+          "tileGlowAlphaActive": 0.12,
+          "tileEdgeGlowBorderAlpha": 0.12,
+          "tileLabelColor": "rgba(236, 246, 255, 0.96)",
+          "tileIconCapsuleBg": "rgba(4, 10, 18, 0.28)"
+        },
+        "after": {
+          "sectionReadabilityVeil": [
+            "rgba(4, 10, 18, 0.16)",
+            "rgba(4, 10, 18, 0.09)",
+            "rgba(4, 10, 18, 0.13)"
+          ],
+          "tileBackgroundAlpha": 0.03,
+          "tileBorderAlphaIdle": 0.38,
+          "tileBorderAlphaActive": 0.46,
+          "tileGlowAlphaIdle": 0.095,
+          "tileGlowAlphaActive": 0.14,
+          "tileEdgeGlowBorderAlpha": 0.18,
+          "tileLabelColor": "rgba(240, 249, 255, 1)",
+          "tileIconCapsuleBg": "rgba(4, 10, 18, 0.22)"
+        }
+      }
+    },
+    "mobile390": {
+      "mode": "mobile-390",
+      "computed": {
+        "cardBackground": "rgba(0, 0, 0, 0)",
+        "cardBorder": "rgb(0, 0, 0)",
+        "labelColor": "rgb(0, 0, 0)",
+        "iconCapsuleBg": null,
+        "edgeGlowBorder": null,
+        "veilBackgroundImage": "linear-gradient(rgba(4, 10, 18, 0.16), rgba(4, 10, 18, 0.09) 55%, rgba(4, 10, 18, 0.13) 100%)"
+      },
+      "refs": {
+        "before": {
+          "sectionReadabilityVeil": [
+            "rgba(4, 10, 18, 0.20)",
+            "rgba(4, 10, 18, 0.12)",
+            "rgba(4, 10, 18, 0.16)"
+          ],
+          "tileBackgroundAlpha": 0.022,
+          "tileBorderAlphaIdle": 0.32,
+          "tileBorderAlphaActive": 0.42,
+          "tileGlowAlphaIdle": 0.075,
+          "tileGlowAlphaActive": 0.12,
+          "tileEdgeGlowBorderAlpha": 0.12,
+          "tileLabelColor": "rgba(236, 246, 255, 0.96)",
+          "tileIconCapsuleBg": "rgba(4, 10, 18, 0.28)"
+        },
+        "after": {
+          "sectionReadabilityVeil": [
+            "rgba(4, 10, 18, 0.16)",
+            "rgba(4, 10, 18, 0.09)",
+            "rgba(4, 10, 18, 0.13)"
+          ],
+          "tileBackgroundAlpha": 0.03,
+          "tileBorderAlphaIdle": 0.38,
+          "tileBorderAlphaActive": 0.46,
+          "tileGlowAlphaIdle": 0.095,
+          "tileGlowAlphaActive": 0.14,
+          "tileEdgeGlowBorderAlpha": 0.18,
+          "tileLabelColor": "rgba(240, 249, 255, 1)",
+          "tileIconCapsuleBg": "rgba(4, 10, 18, 0.22)"
+        }
+      }
+    }
+  }
+}

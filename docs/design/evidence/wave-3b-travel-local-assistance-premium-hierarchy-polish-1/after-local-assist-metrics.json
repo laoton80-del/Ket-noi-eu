@@ -1,0 +1,59 @@
+{
+  "label": "after",
+  "capturedAt": "2026-05-31T22:22:11.334Z",
+  "390x844": {
+    "cardHeightPx": 396,
+    "searchHeightPx": 49,
+    "categoryChipCount": 9,
+    "previewItemCount": 4,
+    "primaryCtaHeightPx": 32,
+    "secondaryCtaHeightPx": 23,
+    "safetyPresent": true,
+    "titlePresent": true,
+    "searchTitlePresent": true
+  },
+  "768x1024": {
+    "cardHeightPx": 399,
+    "searchHeightPx": 49,
+    "categoryChipCount": 9,
+    "previewItemCount": 4,
+    "primaryCtaHeightPx": 32,
+    "secondaryCtaHeightPx": 23,
+    "safetyPresent": true,
+    "titlePresent": true,
+    "searchTitlePresent": true
+  },
+  "1024x768": {
+    "cardHeightPx": 423,
+    "searchHeightPx": 51,
+    "categoryChipCount": 9,
+    "previewItemCount": 4,
+    "primaryCtaHeightPx": 34,
+    "secondaryCtaHeightPx": 23,
+    "safetyPresent": true,
+    "titlePresent": true,
+    "searchTitlePresent": true
+  },
+  "1366x768-normal": {
+    "cardHeightPx": 423,
+    "searchHeightPx": 51,
+    "categoryChipCount": 9,
+    "previewItemCount": 4,
+    "primaryCtaHeightPx": 34,
+    "secondaryCtaHeightPx": 23,
+    "safetyPresent": true,
+    "titlePresent": true,
+    "searchTitlePresent": true
+  },
+  "1366x768-fullscreen": {
+    "cardHeightPx": 423,
+    "searchHeightPx": 51,
+    "categoryChipCount": 9,
+    "previewItemCount": 4,
+    "primaryCtaHeightPx": 34,
+    "secondaryCtaHeightPx": 23,
+    "safetyPresent": true,
+    "titlePresent": true,
+    "searchTitlePresent": true
+  }
+}

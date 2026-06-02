@@ -1,0 +1,70 @@
+{
+  "pack": 29,
+  "assetFile": "viona-travel-situation-network-bg-premium-v1.png",
+  "assetPath": "assets/viona/travel/viona-travel-situation-network-bg-premium-v1.png",
+  "normal1366": {
+    "hasSituationsSection": true,
+    "hasNetworkBgHost": true,
+    "hasNetworkBgImage": true,
+    "bgInsideSection": true,
+    "bgImageSrcContainsAsset": false,
+    "bgImageNaturalWidth": null,
+    "bgImageObjectFit": "cover",
+    "sectionBackgroundColor": "rgba(0, 0, 0, 0)",
+    "sectionBorderRadius": "11px",
+    "sectionOverflow": "hidden",
+    "heroNotInsideSection": true,
+    "quickHelpNotInsideSection": true
+  },
+  "fullscreen1366": {
+    "hasSituationsSection": true,
+    "hasNetworkBgHost": true,
+    "hasNetworkBgImage": true,
+    "bgInsideSection": true,
+    "bgImageSrcContainsAsset": false,
+    "bgImageNaturalWidth": null,
+    "bgImageObjectFit": "cover",
+    "sectionBackgroundColor": "rgba(0, 0, 0, 0)",
+    "sectionBorderRadius": "11px",
+    "sectionOverflow": "hidden",
+    "heroNotInsideSection": true,
+    "quickHelpNotInsideSection": true
+  },
+  "travel-1024x768-sanity": {
+    "hasSituationsSection": true,
+    "hasNetworkBgHost": true,
+    "hasNetworkBgImage": true,
+    "bgInsideSection": true,
+    "bgImageSrcContainsAsset": false,
+    "bgImageNaturalWidth": null,
+    "bgImageObjectFit": "cover",
+    "sectionBackgroundColor": "rgba(0, 0, 0, 0)",
+    "sectionBorderRadius": "11px",
+    "sectionOverflow": "hidden",
+    "heroNotInsideSection": true,
+    "quickHelpNotInsideSection": true
+  },
+  "travel-390x844-sanity": {
+    "hasSituationsSection": true,
+    "hasNetworkBgHost": true,
+    "hasNetworkBgImage": true,
+    "bgInsideSection": true,
+    "bgImageSrcContainsAsset": false,
+    "bgImageNaturalWidth": null,
+    "bgImageObjectFit": "cover",
+    "sectionBackgroundColor": "rgba(0, 0, 0, 0)",
+    "sectionBorderRadius": "11px",
+    "sectionOverflow": "hidden",
+    "heroNotInsideSection": true,
+    "quickHelpNotInsideSection": true
+  },
+  "tintAdjustments": {
+    "imageOpacity": 1,
+    "horizontalVeil": "rgba(4,10,18,0.34→0.22→0.30) was 0.58→0.38→0.50",
+    "readabilityVeil": "rgba(4,10,18,0.22→0.14→0.18) was 0.42→0.28→0.36",
+    "shellBackground": "transparent was rgba(4,10,18,0.22)",
+    "gridStageBackground": "transparent was rgba(4,10,18,0.08)",
+    "removedShellBackdropFilter": true
+  },
+  "capturedAt": "2026-06-01T23:02:44.828Z"
+}

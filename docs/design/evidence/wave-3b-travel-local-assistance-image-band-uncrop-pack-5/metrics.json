@@ -1,0 +1,72 @@
+[
+  {
+    "viewport": "local-assist-pack5-390x844",
+    "metrics": {
+      "cardHeight": 551,
+      "cardMinHeight": "0px",
+      "sceneHeight": 212,
+      "sceneOverflow": "hidden",
+      "bgBackgroundPosition": "50% 45%",
+      "bgBackgroundSize": "cover",
+      "dockBottom": 376,
+      "hasSafety": true,
+      "hasForbiddenClaim": false
+    }
+  },
+  {
+    "viewport": "local-assist-pack5-768x1024",
+    "metrics": {
+      "cardHeight": 600,
+      "cardMinHeight": "560px",
+      "sceneHeight": 300,
+      "sceneOverflow": "hidden",
+      "bgBackgroundPosition": "50% 45%",
+      "bgBackgroundSize": "cover",
+      "dockBottom": 334,
+      "hasSafety": true,
+      "hasForbiddenClaim": false
+    }
+  },
+  {
+    "viewport": "local-assist-pack5-1024x768",
+    "metrics": {
+      "cardHeight": 786,
+      "cardMinHeight": "680px",
+      "sceneHeight": 412,
+      "sceneOverflow": "hidden",
+      "bgBackgroundPosition": "58% 45%",
+      "bgBackgroundSize": "cover",
+      "dockBottom": 160,
+      "hasSafety": true,
+      "hasForbiddenClaim": false
+    }
+  },
+  {
+    "viewport": "local-assist-pack5-1366x768",
+    "metrics": {
+      "cardHeight": 786,
+      "cardMinHeight": "680px",
+      "sceneHeight": 412,
+      "sceneOverflow": "hidden",
+      "bgBackgroundPosition": "58% 45%",
+      "bgBackgroundSize": "cover",
+      "dockBottom": 177,
+      "hasSafety": true,
+      "hasForbiddenClaim": false
+    }
+  },
+  {
+    "viewport": "local-assist-pack5-1366x768-fullscreen",
+    "metrics": {
+      "cardHeight": 734,
+      "cardMinHeight": "640px",
+      "sceneHeight": 360,
+      "sceneOverflow": "hidden",
+      "bgBackgroundPosition": "60% 45%",
+      "bgBackgroundSize": "cover",
+      "dockBottom": 203,
+      "hasSafety": true,
+      "hasForbiddenClaim": false
+    }
+  }
+]

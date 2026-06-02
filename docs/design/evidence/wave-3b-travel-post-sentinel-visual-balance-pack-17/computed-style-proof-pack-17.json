@@ -1,0 +1,106 @@
+{
+  "port": 8095,
+  "cacheBust": 1780335157388,
+  "modes": [
+    {
+      "mode": "normal",
+      "viewportWidth": 1366,
+      "sentinelProofLabelVisible": false,
+      "title": {
+        "fontSize": "85px",
+        "lineHeight": "82px",
+        "width": 940,
+        "height": 164,
+        "left": 72
+      },
+      "hero": {
+        "height": 364,
+        "width": 1334
+      },
+      "titleToHeroRatio": 70.5,
+      "cards": [
+        {
+          "id": "airport",
+          "borderTopWidth": "0px",
+          "borderTopColor": "rgba(0, 0, 0, 0)",
+          "boxShadow": "rgba(130, 235, 255, 0.9) 0px 0px 0px 1.75px, rgba(96, 228, 255, 0.16) 0px 0px 10px 0px, rgba(96, 228, 255, 0.1) 0px 0px 18px 0px, rgba(255, 255, 255, 0.08) 0px 1px 0px 0px inset",
+          "outline": "rgb(0, 0, 0) none 0px"
+        },
+        {
+          "id": "translation",
+          "borderTopWidth": "0px",
+          "borderTopColor": "rgba(0, 0, 0, 0)",
+          "boxShadow": "rgba(216, 160, 255, 0.88) 0px 0px 0px 1.75px, rgba(210, 148, 255, 0.16) 0px 0px 10px 0px, rgba(210, 148, 255, 0.1) 0px 0px 18px 0px, rgba(255, 255, 255, 0.08) 0px 1px 0px 0px inset",
+          "outline": "rgb(0, 0, 0) none 0px"
+        },
+        {
+          "id": "taxi",
+          "borderTopWidth": "0px",
+          "borderTopColor": "rgba(0, 0, 0, 0)",
+          "boxShadow": "rgba(78, 235, 210, 0.9) 0px 0px 0px 1.75px, rgba(48, 232, 208, 0.16) 0px 0px 10px 0px, rgba(48, 232, 208, 0.1) 0px 0px 18px 0px, rgba(255, 255, 255, 0.08) 0px 1px 0px 0px inset",
+          "outline": "rgb(0, 0, 0) none 0px"
+        },
+        {
+          "id": "emergency",
+          "borderTopWidth": "0px",
+          "borderTopColor": "rgba(0, 0, 0, 0)",
+          "boxShadow": "rgba(255, 92, 170, 0.9) 0px 0px 0px 1.75px, rgba(255, 88, 168, 0.16) 0px 0px 10px 0px, rgba(255, 88, 168, 0.1) 0px 0px 18px 0px, rgba(255, 255, 255, 0.08) 0px 1px 0px 0px inset",
+          "outline": "rgb(0, 0, 0) none 0px"
+        }
+      ],
+      "capturedAt": "2026-06-01T17:32:55.919Z",
+      "cacheBust": 1780335157388,
+      "port": 8095
+    },
+    {
+      "mode": "fullscreen",
+      "viewportWidth": 1366,
+      "sentinelProofLabelVisible": false,
+      "title": {
+        "fontSize": "70px",
+        "lineHeight": "69px",
+        "width": 880,
+        "height": 138,
+        "left": 70
+      },
+      "hero": {
+        "height": 358,
+        "width": 1334
+      },
+      "titleToHeroRatio": 66,
+      "cards": [
+        {
+          "id": "airport",
+          "borderTopWidth": "0px",
+          "borderTopColor": "rgba(0, 0, 0, 0)",
+          "boxShadow": "rgba(130, 235, 255, 0.9) 0px 0px 0px 1.75px, rgba(96, 228, 255, 0.16) 0px 0px 10px 0px, rgba(96, 228, 255, 0.1) 0px 0px 18px 0px, rgba(255, 255, 255, 0.08) 0px 1px 0px 0px inset",
+          "outline": "rgb(0, 0, 0) none 0px"
+        },
+        {
+          "id": "translation",
+          "borderTopWidth": "0px",
+          "borderTopColor": "rgba(0, 0, 0, 0)",
+          "boxShadow": "rgba(216, 160, 255, 0.88) 0px 0px 0px 1.75px, rgba(210, 148, 255, 0.16) 0px 0px 10px 0px, rgba(210, 148, 255, 0.1) 0px 0px 18px 0px, rgba(255, 255, 255, 0.08) 0px 1px 0px 0px inset",
+          "outline": "rgb(0, 0, 0) none 0px"
+        },
+        {
+          "id": "taxi",
+          "borderTopWidth": "0px",
+          "borderTopColor": "rgba(0, 0, 0, 0)",
+          "boxShadow": "rgba(78, 235, 210, 0.9) 0px 0px 0px 1.75px, rgba(48, 232, 208, 0.16) 0px 0px 10px 0px, rgba(48, 232, 208, 0.1) 0px 0px 18px 0px, rgba(255, 255, 255, 0.08) 0px 1px 0px 0px inset",
+          "outline": "rgb(0, 0, 0) none 0px"
+        },
+        {
+          "id": "emergency",
+          "borderTopWidth": "0px",
+          "borderTopColor": "rgba(0, 0, 0, 0)",
+          "boxShadow": "rgba(255, 92, 170, 0.9) 0px 0px 0px 1.75px, rgba(255, 88, 168, 0.16) 0px 0px 10px 0px, rgba(255, 88, 168, 0.1) 0px 0px 18px 0px, rgba(255, 255, 255, 0.08) 0px 1px 0px 0px inset",
+          "outline": "rgb(0, 0, 0) none 0px"
+        }
+      ],
+      "capturedAt": "2026-06-01T17:32:59.741Z",
+      "cacheBust": 1780335157388,
+      "port": 8095
+    }
+  ]
+}

@@ -1,0 +1,86 @@
+{
+  "normal": {
+    "viewportWidth": 1366,
+    "viewportHeight": 768,
+    "fullscreen": false,
+    "title": {
+      "fontSize": "84px",
+      "lineHeight": "80px",
+      "width": 960,
+      "height": 160
+    },
+    "textStack": {
+      "width": 1334,
+      "maxWidth": "none"
+    },
+    "heroHeight": 364,
+    "titleToHeroRatio": 72,
+    "cards": [
+      {
+        "id": "airport",
+        "cell": {
+          "boxShadow": "rgba(130, 235, 255, 0.86) 0px 0px 0px 1.5px, rgba(96, 228, 255, 0.07) 0px 0px 6px 0px, rgba(96, 228, 255, 0.04) 0px 0px 10px 0px",
+          "transform": "none",
+          "overflow": "visible",
+          "height": 180
+        },
+        "innerTile": {
+          "borderTopWidth": "0px",
+          "borderBottomWidth": "0px",
+          "boxShadow": "none",
+          "backgroundColor": "rgba(6, 10, 18, 0.92)"
+        }
+      },
+      {
+        "id": "translation",
+        "cell": {
+          "boxShadow": "rgba(216, 160, 255, 0.86) 0px 0px 0px 1.5px, rgba(210, 148, 255, 0.07) 0px 0px 6px 0px, rgba(210, 148, 255, 0.04) 0px 0px 10px 0px",
+          "transform": "none",
+          "overflow": "visible",
+          "height": 180
+        },
+        "innerTile": {
+          "borderTopWidth": "0px",
+          "borderBottomWidth": "0px",
+          "boxShadow": "none",
+          "backgroundColor": "rgba(6, 10, 18, 0.92)"
+        }
+      },
+      {
+        "id": "taxi",
+        "cell": {
+          "boxShadow": "rgba(78, 235, 210, 0.86) 0px 0px 0px 1.5px, rgba(48, 232, 208, 0.07) 0px 0px 6px 0px, rgba(48, 232, 208, 0.04) 0px 0px 10px 0px",
+          "transform": "none",
+          "overflow": "visible",
+          "height": 180
+        },
+        "innerTile": {
+          "borderTopWidth": "0px",
+          "borderBottomWidth": "0px",
+          "boxShadow": "none",
+          "backgroundColor": "rgba(6, 10, 18, 0.92)"
+        }
+      },
+      {
+        "id": "emergency",
+        "cell": {
+          "boxShadow": "rgba(255, 92, 170, 0.86) 0px 0px 0px 1.5px, rgba(255, 88, 168, 0.07) 0px 0px 6px 0px, rgba(255, 88, 168, 0.04) 0px 0px 10px 0px",
+          "transform": "none",
+          "overflow": "visible",
+          "height": 180
+        },
+        "innerTile": {
+          "borderTopWidth": "0px",
+          "borderBottomWidth": "0px",
+          "boxShadow": "none",
+          "backgroundColor": "rgba(6, 10, 18, 0.92)"
+        }
+      }
+    ],
+    "capturedAt": "2026-06-01T18:55:43.765Z"
+  },
+  "quickHelpHoverAirport": {
+    "transform": "matrix(1.015, 0, 0, 1.015, 0, -4)",
+    "boxShadow": "rgba(130, 235, 255, 0.94) 0px 0px 0px 1.5px, rgba(96, 228, 255, 0.18) 0px 0px 10px 0px, rgba(96, 228, 255, 0.12) 0px 0px"
+  }
+}

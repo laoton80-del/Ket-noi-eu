@@ -1,0 +1,123 @@
+{
+  "port": 8095,
+  "cacheBust": 1780331785555,
+  "hardReload": true,
+  "modes": [
+    {
+      "mode": "normal",
+      "viewportWidth": 1366,
+      "title": {
+        "innerText": "Đồng hành trên mọi hành trình",
+        "fontSize": "76px",
+        "lineHeight": "71px",
+        "width": 880,
+        "height": 142,
+        "left": 72,
+        "maxWidth": "880px"
+      },
+      "layer": {
+        "width": 880,
+        "left": 16,
+        "paddingLeft": "56px",
+        "paddingTop": "52px"
+      },
+      "heroWidth": 1334,
+      "titleToHeroRatio": 66,
+      "cards": [
+        {
+          "id": "airport",
+          "borderTopWidth": "2px",
+          "borderTopColor": "rgba(140, 245, 255, 0.98)",
+          "boxShadow": "rgba(140, 245, 255, 0.98) 0px 0px 0px 1px, rgba(96, 228, 255, 0.34) 0px 0px 18px 0px, rgba(96, 228, 255, 0.22) 0px 0px 30px 0px, rgba(255, 255, 255, 0.14) 0px 1px 0px 0px inset",
+          "outline": "rgb(0, 0, 0) none 0px",
+          "iconOrbBorder": "1px solid rgba(132, 238, 255, 0.98)"
+        },
+        {
+          "id": "translation",
+          "borderTopWidth": "2px",
+          "borderTopColor": "rgba(226, 170, 255, 0.98)",
+          "boxShadow": "rgba(226, 170, 255, 0.98) 0px 0px 0px 1px, rgba(210, 148, 255, 0.34) 0px 0px 18px 0px, rgba(210, 148, 255, 0.22) 0px 0px 30px 0px, rgba(255, 255, 255, 0.14) 0px 1px 0px 0px inset",
+          "outline": "rgb(0, 0, 0) none 0px",
+          "iconOrbBorder": "1px solid rgba(244, 230, 255, 0.96)"
+        },
+        {
+          "id": "taxi",
+          "borderTopWidth": "2px",
+          "borderTopColor": "rgba(78, 255, 218, 0.98)",
+          "boxShadow": "rgba(78, 255, 218, 0.98) 0px 0px 0px 1px, rgba(48, 232, 208, 0.34) 0px 0px 18px 0px, rgba(48, 232, 208, 0.22) 0px 0px 30px 0px, rgba(255, 255, 255, 0.14) 0px 1px 0px 0px inset",
+          "outline": "rgb(0, 0, 0) none 0px",
+          "iconOrbBorder": "1px solid rgba(98, 255, 228, 0.98)"
+        },
+        {
+          "id": "emergency",
+          "borderTopWidth": "2px",
+          "borderTopColor": "rgba(255, 92, 170, 0.98)",
+          "boxShadow": "rgba(255, 92, 170, 0.98) 0px 0px 0px 1px, rgba(255, 88, 168, 0.34) 0px 0px 18px 0px, rgba(255, 88, 168, 0.22) 0px 0px 30px 0px, rgba(255, 255, 255, 0.14) 0px 1px 0px 0px inset",
+          "outline": "rgb(0, 0, 0) none 0px",
+          "iconOrbBorder": "1px solid rgba(255, 110, 140, 0.9)"
+        }
+      ],
+      "capturedAt": "2026-06-01T16:36:37.078Z",
+      "cacheBust": 1780331785555,
+      "port": 8095
+    },
+    {
+      "mode": "fullscreen",
+      "viewportWidth": 1366,
+      "title": {
+        "innerText": "Đồng hành trên mọi hành trình",
+        "fontSize": "66px",
+        "lineHeight": "63px",
+        "width": 820,
+        "height": 126,
+        "left": 70,
+        "maxWidth": "820px"
+      },
+      "layer": {
+        "width": 820,
+        "left": 16,
+        "paddingLeft": "54px",
+        "paddingTop": "42px"
+      },
+      "heroWidth": 1334,
+      "titleToHeroRatio": 61.5,
+      "cards": [
+        {
+          "id": "airport",
+          "borderTopWidth": "2px",
+          "borderTopColor": "rgba(140, 245, 255, 0.98)",
+          "boxShadow": "rgba(140, 245, 255, 0.98) 0px 0px 0px 1px, rgba(96, 228, 255, 0.34) 0px 0px 18px 0px, rgba(96, 228, 255, 0.22) 0px 0px 30px 0px, rgba(255, 255, 255, 0.14) 0px 1px 0px 0px inset",
+          "outline": "rgb(0, 0, 0) none 0px",
+          "iconOrbBorder": "1px solid rgba(132, 238, 255, 0.98)"
+        },
+        {
+          "id": "translation",
+          "borderTopWidth": "2px",
+          "borderTopColor": "rgba(226, 170, 255, 0.98)",
+          "boxShadow": "rgba(226, 170, 255, 0.98) 0px 0px 0px 1px, rgba(210, 148, 255, 0.34) 0px 0px 18px 0px, rgba(210, 148, 255, 0.22) 0px 0px 30px 0px, rgba(255, 255, 255, 0.14) 0px 1px 0px 0px inset",
+          "outline": "rgb(0, 0, 0) none 0px",
+          "iconOrbBorder": "1px solid rgba(244, 230, 255, 0.96)"
+        },
+        {
+          "id": "taxi",
+          "borderTopWidth": "2px",
+          "borderTopColor": "rgba(78, 255, 218, 0.98)",
+          "boxShadow": "rgba(78, 255, 218, 0.98) 0px 0px 0px 1px, rgba(48, 232, 208, 0.34) 0px 0px 18px 0px, rgba(48, 232, 208, 0.22) 0px 0px 30px 0px, rgba(255, 255, 255, 0.14) 0px 1px 0px 0px inset",
+          "outline": "rgb(0, 0, 0) none 0px",
+          "iconOrbBorder": "1px solid rgba(98, 255, 228, 0.98)"
+        },
+        {
+          "id": "emergency",
+          "borderTopWidth": "2px",
+          "borderTopColor": "rgba(255, 92, 170, 0.98)",
+          "boxShadow": "rgba(255, 92, 170, 0.98) 0px 0px 0px 1px, rgba(255, 88, 168, 0.34) 0px 0px 18px 0px, rgba(255, 88, 168, 0.22) 0px 0px 30px 0px, rgba(255, 255, 255, 0.14) 0px 1px 0px 0px inset",
+          "outline": "rgb(0, 0, 0) none 0px",
+          "iconOrbBorder": "1px solid rgba(255, 110, 140, 0.9)"
+        }
+      ],
+      "capturedAt": "2026-06-01T16:36:46.595Z",
+      "cacheBust": 1780331785555,
+      "port": 8095
+    }
+  ]
+}

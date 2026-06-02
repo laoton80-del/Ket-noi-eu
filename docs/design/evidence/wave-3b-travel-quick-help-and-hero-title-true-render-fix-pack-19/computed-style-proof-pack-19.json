@@ -1,0 +1,70 @@
+{
+  "viewportWidth": 1366,
+  "title": {
+    "fontSize": "86px",
+    "lineHeight": "81px",
+    "width": 960,
+    "height": 162
+  },
+  "heroHeight": 364,
+  "titleToHeroRatio": 72,
+  "cards": [
+    {
+      "id": "airport",
+      "cell": {
+        "boxShadow": "rgba(130, 235, 255, 0.82) 0px 0px 0px 1.35px, rgba(96, 228, 255, 0.08) 0px 0px 6px 0px, rgba(96, 228, 255, 0.05) 0px 0px 9px 0px",
+        "overflow": "visible",
+        "height": 189,
+        "bottom": 637
+      },
+      "innerTile": {
+        "borderTopWidth": "0px",
+        "borderBottomWidth": "0px",
+        "boxShadow": "none"
+      }
+    },
+    {
+      "id": "translation",
+      "cell": {
+        "boxShadow": "rgba(216, 160, 255, 0.8) 0px 0px 0px 1.35px, rgba(210, 148, 255, 0.08) 0px 0px 6px 0px, rgba(210, 148, 255, 0.05) 0px 0px 9px 0px",
+        "overflow": "visible",
+        "height": 189,
+        "bottom": 637
+      },
+      "innerTile": {
+        "borderTopWidth": "0px",
+        "borderBottomWidth": "0px",
+        "boxShadow": "none"
+      }
+    },
+    {
+      "id": "taxi",
+      "cell": {
+        "boxShadow": "rgba(78, 235, 210, 0.82) 0px 0px 0px 1.35px, rgba(48, 232, 208, 0.08) 0px 0px 6px 0px, rgba(48, 232, 208, 0.05) 0px 0px 9px 0px",
+        "overflow": "visible",
+        "height": 189,
+        "bottom": 637
+      },
+      "innerTile": {
+        "borderTopWidth": "0px",
+        "borderBottomWidth": "0px",
+        "boxShadow": "none"
+      }
+    },
+    {
+      "id": "emergency",
+      "cell": {
+        "boxShadow": "rgba(255, 92, 170, 0.82) 0px 0px 0px 1.35px, rgba(255, 88, 168, 0.08) 0px 0px 6px 0px, rgba(255, 88, 168, 0.05) 0px 0px 9px 0px",
+        "overflow": "visible",
+        "height": 189,
+        "bottom": 637
+      },
+      "innerTile": {
+        "borderTopWidth": "0px",
+        "borderBottomWidth": "0px",
+        "boxShadow": "none"
+      }
+    }
+  ],
+  "capturedAt": "2026-06-01T18:26:20.547Z"
+}

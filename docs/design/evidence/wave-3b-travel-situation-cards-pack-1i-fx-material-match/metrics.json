@@ -1,0 +1,44 @@
+{
+  "1366x768-fullscreen": {
+    "fxCard": {
+      "testId": "travel-fx-reference-chip-eur-usd",
+      "height": 89,
+      "backgroundColor": "rgba(232, 196, 120, 0.14)",
+      "borderColor": "rgba(232, 196, 120, 0.32)",
+      "boxShadow": "rgba(8, 18, 32, 0.16) 0px 2px 5px 0px"
+    },
+    "situationCard": {
+      "testId": "travel-utility-airport",
+      "height": 48,
+      "backgroundColor": "rgba(132, 238, 255, 0.12)",
+      "borderColor": "rgba(132, 238, 255, 0.28)",
+      "boxShadow": "rgba(8, 18, 32, 0.2) 0px 2px 5px 0px"
+    },
+    "grid": {
+      "height": 127,
+      "bottom": 475,
+      "visible": true
+    }
+  },
+  "390x844": {
+    "fxCard": {
+      "testId": "travel-fx-reference-chip-eur-usd",
+      "height": 89,
+      "backgroundColor": "rgba(232, 196, 120, 0.14)",
+      "borderColor": "rgba(232, 196, 120, 0.32)",
+      "boxShadow": "rgba(8, 18, 32, 0.16) 0px 2px 5px 0px"
+    },
+    "situationCard": {
+      "testId": "travel-utility-airport",
+      "height": 56,
+      "backgroundColor": "rgba(132, 238, 255, 0.12)",
+      "borderColor": "rgba(132, 238, 255, 0.28)",
+      "boxShadow": "rgba(8, 18, 32, 0.2) 0px 2px 5px 0px"
+    },
+    "grid": {
+      "height": 265,
+      "bottom": 605,
+      "visible": true
+    }
+  }
+}

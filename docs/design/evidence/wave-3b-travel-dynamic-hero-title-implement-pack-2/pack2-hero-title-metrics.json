@@ -1,0 +1,104 @@
+{
+  "label": "pack2",
+  "capturedAt": "2026-06-01T08:05:18.487Z",
+  "base": "http://localhost:8095",
+  "1366-normal-default": {
+    "titleFontSizePx": 57,
+    "titleLineHeightPx": 60,
+    "titleWidthPx": 780,
+    "titleLeftPx": 58,
+    "textStackWidthPx": 780,
+    "textStackLeftPx": 16,
+    "textStackPaddingLeftPx": 42,
+    "heroStageHeightPx": 500,
+    "titleText": "Đồng hành trên mọi hành trình"
+  },
+  "1366-normal-airport": {
+    "titleFontSizePx": 57,
+    "titleLineHeightPx": 60,
+    "titleWidthPx": 780,
+    "titleLeftPx": 58,
+    "textStackWidthPx": 780,
+    "textStackLeftPx": 16,
+    "textStackPaddingLeftPx": 42,
+    "heroStageHeightPx": 500,
+    "titleText": "Đi qua sân bay tự tin hơn"
+  },
+  "1366-normal-interpreter": {
+    "titleFontSizePx": 57,
+    "titleLineHeightPx": 60,
+    "titleWidthPx": 780,
+    "titleLeftPx": 58,
+    "textStackWidthPx": 780,
+    "textStackLeftPx": 16,
+    "textStackPaddingLeftPx": 42,
+    "heroStageHeightPx": 500,
+    "titleText": "Hiểu đúng trong tình huống quan trọng"
+  },
+  "1366-normal-transport": {
+    "titleFontSizePx": 57,
+    "titleLineHeightPx": 60,
+    "titleWidthPx": 780,
+    "titleLeftPx": 58,
+    "textStackWidthPx": 780,
+    "textStackLeftPx": 16,
+    "textStackPaddingLeftPx": 42,
+    "heroStageHeightPx": 500,
+    "titleText": "Tìm cách di chuyển phù hợp"
+  },
+  "1366-normal-emergency": {
+    "titleFontSizePx": 57,
+    "titleLineHeightPx": 60,
+    "titleWidthPx": 780,
+    "titleLeftPx": 58,
+    "textStackWidthPx": 780,
+    "textStackLeftPx": 16,
+    "textStackPaddingLeftPx": 42,
+    "heroStageHeightPx": 500,
+    "titleText": "Bình tĩnh trong tình huống khẩn cấp"
+  },
+  "1366-fullscreen-default": {
+    "titleFontSizePx": 54,
+    "titleLineHeightPx": 57,
+    "titleWidthPx": 800,
+    "titleLeftPx": 60,
+    "textStackWidthPx": 800,
+    "textStackLeftPx": 16,
+    "textStackPaddingLeftPx": 44,
+    "heroStageHeightPx": 450,
+    "titleText": "Đồng hành trên mọi hành trình"
+  },
+  "1366-fullscreen-transport": {
+    "titleFontSizePx": 54,
+    "titleLineHeightPx": 57,
+    "titleWidthPx": 800,
+    "titleLeftPx": 60,
+    "textStackWidthPx": 800,
+    "textStackLeftPx": 16,
+    "textStackPaddingLeftPx": 44,
+    "heroStageHeightPx": 450,
+    "titleText": "Tìm cách di chuyển phù hợp"
+  },
+  "1366-fullscreen-interpreter": {
+    "titleFontSizePx": 54,
+    "titleLineHeightPx": 57,
+    "titleWidthPx": 800,
+    "titleLeftPx": 60,
+    "textStackWidthPx": 800,
+    "textStackLeftPx": 16,
+    "textStackPaddingLeftPx": 44,
+    "heroStageHeightPx": 450,
+    "titleText": "Hiểu đúng trong tình huống quan trọng"
+  },
+  "390-sanity": {
+    "titleFontSizePx": 29,
+    "titleLineHeightPx": 34,
+    "titleWidthPx": 282,
+    "titleLeftPx": 36,
+    "textStackWidthPx": 322,
+    "textStackLeftPx": 16,
+    "textStackPaddingLeftPx": 20,
+    "heroStageHeightPx": 236,
+    "titleText": "Đồng hành trên mọi hành trình"
+  }
+}

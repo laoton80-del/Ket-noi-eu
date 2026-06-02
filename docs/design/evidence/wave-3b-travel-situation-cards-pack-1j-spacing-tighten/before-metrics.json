@@ -1,0 +1,37 @@
+{
+  "label": "before",
+  "capturedAt": "2026-05-31T21:10:33.839Z",
+  "1366x768-fullscreen": {
+    "gapQuickHelpToSituationPx": 12,
+    "quickHelpSectionHeightPx": 196,
+    "situationSectionHeightPx": 127,
+    "situationGridBottomPx": 817,
+    "row1BottomPx": null,
+    "row2BottomPx": null,
+    "row2FullyVisible": null,
+    "viewportHeightPx": 768,
+    "scrollY": 0
+  },
+  "1366x768-normal": {
+    "gapQuickHelpToSituationPx": 12,
+    "quickHelpSectionHeightPx": 198,
+    "situationSectionHeightPx": 127,
+    "situationGridBottomPx": 903,
+    "row1BottomPx": null,
+    "row2BottomPx": null,
+    "row2FullyVisible": null,
+    "viewportHeightPx": 768,
+    "scrollY": 0
+  },
+  "390x844": {
+    "gapQuickHelpToSituationPx": 24,
+    "quickHelpSectionHeightPx": 604,
+    "situationSectionHeightPx": 265,
+    "situationGridBottomPx": 1263,
+    "row1BottomPx": null,
+    "row2BottomPx": null,
+    "row2FullyVisible": null,
+    "viewportHeightPx": 844,
+    "scrollY": 0
+  }
+}

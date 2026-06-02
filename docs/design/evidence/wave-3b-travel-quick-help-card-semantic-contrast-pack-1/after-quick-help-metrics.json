@@ -1,0 +1,149 @@
+{
+  "label": "after",
+  "capturedAt": "2026-05-31T22:56:06.680Z",
+  "390x844": {
+    "rowWidthPx": 358,
+    "cards": [
+      {
+        "id": "airport",
+        "boxShadow": "rgba(132, 228, 255, 0.56) 0px 0px 0px 1px, rgba(132, 228, 255, 0.24) 0px 0px 14px 0px, rgba(132, 228, 255, 0.11) 0px 0px",
+        "borderColor": "rgb(0, 0, 0)",
+        "titleText": "Sân bayCheck-in, an ninh, hành lýXem trước"
+      },
+      {
+        "id": "translation",
+        "boxShadow": "rgba(208, 172, 255, 0.56) 0px 0px 0px 1px, rgba(208, 172, 255, 0.24) 0px 0px 14px 0px, rgba(208, 172, 255, 0.11) 0px 0px",
+        "borderColor": "rgb(0, 0, 0)",
+        "titleText": "Hỗ trợ phiên dịchPhiên dịch trực tiếp · LeonaLite"
+      },
+      {
+        "id": "taxi",
+        "boxShadow": "rgba(52, 212, 198, 0.56) 0px 0px 0px 1px, rgba(52, 212, 198, 0.24) 0px 0px 14px 0px, rgba(52, 212, 198, 0.11) 0px 0px 22",
+        "borderColor": "rgb(0, 0, 0)",
+        "titleText": "Hỗ trợ xeGọi hỗ trợ (demo) — không phải xe đã đặtDemo"
+      },
+      {
+        "id": "emergency",
+        "boxShadow": "rgba(255, 108, 158, 0.56) 0px 0px 0px 1px, rgba(255, 108, 158, 0.24) 0px 0px 14px 0px, rgba(255, 108, 158, 0.11) 0px 0px",
+        "borderColor": "rgb(0, 0, 0)",
+        "titleText": "Khẩn cấp & cảnh sátAn toàn — gọi số khẩn cấp địa phươngAn toàn"
+      }
+    ]
+  },
+  "768x1024": {
+    "rowWidthPx": 736,
+    "cards": [
+      {
+        "id": "airport",
+        "boxShadow": "rgba(132, 228, 255, 0.56) 0px 0px 0px 1px, rgba(132, 228, 255, 0.24) 0px 0px 14px 0px, rgba(132, 228, 255, 0.11) 0px 0px",
+        "borderColor": "rgb(0, 0, 0)",
+        "titleText": "Sân bayCheck-in, an ninh, hành lýXem trước"
+      },
+      {
+        "id": "translation",
+        "boxShadow": "rgba(208, 172, 255, 0.56) 0px 0px 0px 1px, rgba(208, 172, 255, 0.24) 0px 0px 14px 0px, rgba(208, 172, 255, 0.11) 0px 0px",
+        "borderColor": "rgb(0, 0, 0)",
+        "titleText": "Hỗ trợ phiên dịchPhiên dịch trực tiếp · LeonaLite"
+      },
+      {
+        "id": "taxi",
+        "boxShadow": "rgba(52, 212, 198, 0.56) 0px 0px 0px 1px, rgba(52, 212, 198, 0.24) 0px 0px 14px 0px, rgba(52, 212, 198, 0.11) 0px 0px 22",
+        "borderColor": "rgb(0, 0, 0)",
+        "titleText": "Hỗ trợ xeGọi hỗ trợ (demo) — không phải xe đã đặtDemo"
+      },
+      {
+        "id": "emergency",
+        "boxShadow": "rgba(255, 108, 158, 0.56) 0px 0px 0px 1px, rgba(255, 108, 158, 0.24) 0px 0px 14px 0px, rgba(255, 108, 158, 0.11) 0px 0px",
+        "borderColor": "rgb(0, 0, 0)",
+        "titleText": "Khẩn cấp & cảnh sátAn toàn — gọi số khẩn cấp địa phươngAn toàn"
+      }
+    ]
+  },
+  "1024x768": {
+    "rowWidthPx": 992,
+    "cards": [
+      {
+        "id": "airport",
+        "boxShadow": "rgba(132, 228, 255, 0.56) 0px 0px 0px 1px, rgba(132, 228, 255, 0.24) 0px 0px 14px 0px, rgba(132, 228, 255, 0.11) 0px 0px",
+        "borderColor": "rgb(0, 0, 0)",
+        "titleText": "Sân bayCheck-in, an ninh, hành lýXem trước"
+      },
+      {
+        "id": "translation",
+        "boxShadow": "rgba(208, 172, 255, 0.56) 0px 0px 0px 1px, rgba(208, 172, 255, 0.24) 0px 0px 14px 0px, rgba(208, 172, 255, 0.11) 0px 0px",
+        "borderColor": "rgb(0, 0, 0)",
+        "titleText": "Hỗ trợ phiên dịchPhiên dịch trực tiếp · LeonaLite"
+      },
+      {
+        "id": "taxi",
+        "boxShadow": "rgba(52, 212, 198, 0.56) 0px 0px 0px 1px, rgba(52, 212, 198, 0.24) 0px 0px 14px 0px, rgba(52, 212, 198, 0.11) 0px 0px 22",
+        "borderColor": "rgb(0, 0, 0)",
+        "titleText": "Hỗ trợ xeGọi hỗ trợ (demo) — không phải xe đã đặtDemo"
+      },
+      {
+        "id": "emergency",
+        "boxShadow": "rgba(255, 108, 158, 0.56) 0px 0px 0px 1px, rgba(255, 108, 158, 0.24) 0px 0px 14px 0px, rgba(255, 108, 158, 0.11) 0px 0px",
+        "borderColor": "rgb(0, 0, 0)",
+        "titleText": "Khẩn cấp & cảnh sátAn toàn — gọi số khẩn cấp địa phươngAn toàn"
+      }
+    ]
+  },
+  "1366x768-normal": {
+    "rowWidthPx": 1334,
+    "cards": [
+      {
+        "id": "airport",
+        "boxShadow": "rgba(132, 228, 255, 0.56) 0px 0px 0px 1px, rgba(132, 228, 255, 0.24) 0px 0px 14px 0px, rgba(132, 228, 255, 0.11) 0px 0px",
+        "borderColor": "rgb(0, 0, 0)",
+        "titleText": "Sân bayCheck-in, an ninh, hành lýXem trước"
+      },
+      {
+        "id": "translation",
+        "boxShadow": "rgba(208, 172, 255, 0.56) 0px 0px 0px 1px, rgba(208, 172, 255, 0.24) 0px 0px 14px 0px, rgba(208, 172, 255, 0.11) 0px 0px",
+        "borderColor": "rgb(0, 0, 0)",
+        "titleText": "Hỗ trợ phiên dịchPhiên dịch trực tiếp · LeonaLite"
+      },
+      {
+        "id": "taxi",
+        "boxShadow": "rgba(52, 212, 198, 0.56) 0px 0px 0px 1px, rgba(52, 212, 198, 0.24) 0px 0px 14px 0px, rgba(52, 212, 198, 0.11) 0px 0px 22",
+        "borderColor": "rgb(0, 0, 0)",
+        "titleText": "Hỗ trợ xeGọi hỗ trợ (demo) — không phải xe đã đặtDemo"
+      },
+      {
+        "id": "emergency",
+        "boxShadow": "rgba(255, 108, 158, 0.56) 0px 0px 0px 1px, rgba(255, 108, 158, 0.24) 0px 0px 14px 0px, rgba(255, 108, 158, 0.11) 0px 0px",
+        "borderColor": "rgb(0, 0, 0)",
+        "titleText": "Khẩn cấp & cảnh sátAn toàn — gọi số khẩn cấp địa phươngAn toàn"
+      }
+    ]
+  },
+  "1366x768-fullscreen": {
+    "rowWidthPx": 1334,
+    "cards": [
+      {
+        "id": "airport",
+        "boxShadow": "rgba(132, 228, 255, 0.56) 0px 0px 0px 1px, rgba(132, 228, 255, 0.24) 0px 0px 14px 0px, rgba(132, 228, 255, 0.11) 0px 0px",
+        "borderColor": "rgb(0, 0, 0)",
+        "titleText": "Sân bayCheck-in, an ninh, hành lýXem trước"
+      },
+      {
+        "id": "translation",
+        "boxShadow": "rgba(208, 172, 255, 0.56) 0px 0px 0px 1px, rgba(208, 172, 255, 0.24) 0px 0px 14px 0px, rgba(208, 172, 255, 0.11) 0px 0px",
+        "borderColor": "rgb(0, 0, 0)",
+        "titleText": "Hỗ trợ phiên dịchPhiên dịch trực tiếp · LeonaLite"
+      },
+      {
+        "id": "taxi",
+        "boxShadow": "rgba(52, 212, 198, 0.56) 0px 0px 0px 1px, rgba(52, 212, 198, 0.24) 0px 0px 14px 0px, rgba(52, 212, 198, 0.11) 0px 0px 22",
+        "borderColor": "rgb(0, 0, 0)",
+        "titleText": "Hỗ trợ xeGọi hỗ trợ (demo) — không phải xe đã đặtDemo"
+      },
+      {
+        "id": "emergency",
+        "boxShadow": "rgba(255, 108, 158, 0.56) 0px 0px 0px 1px, rgba(255, 108, 158, 0.24) 0px 0px 14px 0px, rgba(255, 108, 158, 0.11) 0px 0px",
+        "borderColor": "rgb(0, 0, 0)",
+        "titleText": "Khẩn cấp & cảnh sátAn toàn — gọi số khẩn cấp địa phươngAn toàn"
+      }
+    ]
+  }
+}

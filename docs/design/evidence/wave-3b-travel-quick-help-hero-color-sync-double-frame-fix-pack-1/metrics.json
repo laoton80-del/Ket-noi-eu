@@ -1,0 +1,171 @@
+{
+  "capturedAt": "2026-06-01T04:57:53.883Z",
+  "1366x768-normal-default": {
+    "quickHelpCardCount": 4,
+    "cardRects": [
+      {
+        "testId": "travel-flagship-airport",
+        "width": 323,
+        "height": 182
+      },
+      {
+        "testId": "travel-flagship-translation",
+        "width": 323,
+        "height": 182
+      },
+      {
+        "testId": "travel-flagship-taxi",
+        "width": 323,
+        "height": 182
+      },
+      {
+        "testId": "travel-flagship-emergency",
+        "width": 323,
+        "height": 182
+      }
+    ],
+    "interpreterPresent": true,
+    "heroPresent": true,
+    "heroText": "TRAVEL LITEĐồng hành trên mọi hành trìnhSân bay, di chuyển, phiên dịch, an toàn và hỗ trợ địa phương — chỉ dẫn đúng lúc,"
+  },
+  "1366x768-normal-interpreter": {
+    "quickHelpCardCount": 4,
+    "cardRects": [
+      {
+        "testId": "travel-flagship-airport",
+        "width": 323,
+        "height": 182
+      },
+      {
+        "testId": "travel-flagship-translation",
+        "width": 326,
+        "height": 184
+      },
+      {
+        "testId": "travel-flagship-taxi",
+        "width": 323,
+        "height": 182
+      },
+      {
+        "testId": "travel-flagship-emergency",
+        "width": 323,
+        "height": 182
+      }
+    ],
+    "interpreterPresent": true,
+    "heroPresent": true,
+    "heroText": "TRAVEL LITEHiểu đúng trong tình huống quan trọngGợi ý câu nói, ngữ cảnh và hỗ trợ ngôn ngữ khi gặp quầy dịch vụ, khách s"
+  },
+  "1366x768-fullscreen-default": {
+    "quickHelpCardCount": 4,
+    "cardRects": [
+      {
+        "testId": "travel-flagship-airport",
+        "width": 323,
+        "height": 146
+      },
+      {
+        "testId": "travel-flagship-translation",
+        "width": 323,
+        "height": 146
+      },
+      {
+        "testId": "travel-flagship-taxi",
+        "width": 323,
+        "height": 146
+      },
+      {
+        "testId": "travel-flagship-emergency",
+        "width": 323,
+        "height": 146
+      }
+    ],
+    "interpreterPresent": true,
+    "heroPresent": true,
+    "heroText": "TRAVEL LITEĐồng hành trên mọi hành trìnhSân bay, di chuyển, phiên dịch, an toàn và hỗ trợ địa phương — chỉ dẫn đúng lúc,"
+  },
+  "1366x768-fullscreen-interpreter": {
+    "quickHelpCardCount": 4,
+    "cardRects": [
+      {
+        "testId": "travel-flagship-airport",
+        "width": 323,
+        "height": 146
+      },
+      {
+        "testId": "travel-flagship-translation",
+        "width": 326,
+        "height": 147
+      },
+      {
+        "testId": "travel-flagship-taxi",
+        "width": 323,
+        "height": 146
+      },
+      {
+        "testId": "travel-flagship-emergency",
+        "width": 323,
+        "height": 146
+      }
+    ],
+    "interpreterPresent": true,
+    "heroPresent": true,
+    "heroText": "TRAVEL LITEHiểu đúng trong tình huống quan trọngGợi ý câu nói, ngữ cảnh và hỗ trợ ngôn ngữ khi gặp quầy dịch vụ, khách s"
+  },
+  "1366x768-fullscreen-quickhelp-closeup": {
+    "quickHelpCardCount": 4,
+    "cardRects": [
+      {
+        "testId": "travel-flagship-airport",
+        "width": 323,
+        "height": 146
+      },
+      {
+        "testId": "travel-flagship-translation",
+        "width": 323,
+        "height": 146
+      },
+      {
+        "testId": "travel-flagship-taxi",
+        "width": 323,
+        "height": 146
+      },
+      {
+        "testId": "travel-flagship-emergency",
+        "width": 323,
+        "height": 146
+      }
+    ],
+    "interpreterPresent": true,
+    "heroPresent": true,
+    "heroText": "TRAVEL LITEĐồng hành trên mọi hành trìnhSân bay, di chuyển, phiên dịch, an toàn và hỗ trợ địa phương — chỉ dẫn đúng lúc,"
+  },
+  "390x844-sanity": {
+    "quickHelpCardCount": 4,
+    "cardRects": [
+      {
+        "testId": "travel-flagship-airport",
+        "width": 358,
+        "height": 138
+      },
+      {
+        "testId": "travel-flagship-translation",
+        "width": 358,
+        "height": 138
+      },
+      {
+        "testId": "travel-flagship-taxi",
+        "width": 358,
+        "height": 138
+      },
+      {
+        "testId": "travel-flagship-emergency",
+        "width": 358,
+        "height": 138
+      }
+    ],
+    "interpreterPresent": true,
+    "heroPresent": true,
+    "heroText": "TRAVEL LITEĐồng hành trên mọi hành trìnhSân bay, di chuyển, phiên dịch, an toàn và hỗ trợ địa phương — chỉ dẫn đúng lúc,"
+  }
+}

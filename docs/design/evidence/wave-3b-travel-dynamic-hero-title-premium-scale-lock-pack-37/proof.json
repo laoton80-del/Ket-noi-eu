@@ -1,0 +1,82 @@
+{
+  "pack": 37,
+  "beforeReference": {
+    "normal": {
+      "fontSizePx": 74,
+      "lineHeightPx": 70,
+      "maxWidthPx": 820
+    },
+    "fullscreen": {
+      "fontSizePx": 65,
+      "lineHeightPx": 63,
+      "maxWidthPx": 820
+    }
+  },
+  "targets": {
+    "normal": {
+      "fontSizeMin": 64,
+      "fontSizeMax": 68,
+      "lineHeightMin": 64,
+      "lineHeightMax": 70,
+      "maxWidthMax": 780
+    },
+    "fullscreen": {
+      "fontSizeMin": 66,
+      "fontSizeMax": 70,
+      "lineHeightMin": 66,
+      "lineHeightMax": 72,
+      "maxWidthMax": 820
+    },
+    "forbiddenFontSizePx": 80
+  },
+  "captures": {
+    "normal1366": {
+      "mode": "normal-1366",
+      "fontSize": "66px",
+      "lineHeight": "68px",
+      "maxWidth": "720px",
+      "fontSizePx": 66,
+      "lineHeightPx": 68,
+      "maxWidthPx": 720,
+      "renderedWidthPx": 720,
+      "inTargetBand": true,
+      "noBillboardFontSize": true
+    },
+    "fullscreen1366": {
+      "mode": "fullscreen-1366",
+      "fontSize": "68px",
+      "lineHeight": "70px",
+      "maxWidth": "760px",
+      "fontSizePx": 68,
+      "lineHeightPx": 70,
+      "maxWidthPx": 760,
+      "renderedWidthPx": 760,
+      "inTargetBand": true,
+      "noBillboardFontSize": true
+    },
+    "tablet1024": {
+      "mode": "tablet-1024",
+      "fontSize": "62px",
+      "lineHeight": "64px",
+      "maxWidth": "560px",
+      "fontSizePx": 62,
+      "lineHeightPx": 64,
+      "maxWidthPx": 560,
+      "renderedWidthPx": 560,
+      "inTargetBand": false,
+      "noBillboardFontSize": true
+    },
+    "mobile390": {
+      "mode": "mobile-390",
+      "fontSize": "27px",
+      "lineHeight": "32px",
+      "maxWidth": "343px",
+      "fontSizePx": 27,
+      "lineHeightPx": 32,
+      "maxWidthPx": 343,
+      "renderedWidthPx": 282,
+      "inTargetBand": false,
+      "noBillboardFontSize": true
+    }
+  }
+}

@@ -1,0 +1,57 @@
+[
+  {
+    "viewport": "local-assist-pack7-390x844",
+    "metrics": {
+      "previewKicker": "16px",
+      "previewChip": "9px",
+      "primaryLabel": "13.3333px",
+      "primaryIconPx": null,
+      "secondaryLabel": "13.3333px",
+      "hasSafety": true
+    }
+  },
+  {
+    "viewport": "local-assist-pack7-768x1024",
+    "metrics": {
+      "previewKicker": "16px",
+      "previewChip": "9px",
+      "primaryLabel": "13.3333px",
+      "primaryIconPx": null,
+      "secondaryLabel": "13.3333px",
+      "hasSafety": true
+    }
+  },
+  {
+    "viewport": "local-assist-pack7-1024x768",
+    "metrics": {
+      "previewKicker": "16px",
+      "previewChip": "16px",
+      "primaryLabel": "13.3333px",
+      "primaryIconPx": null,
+      "secondaryLabel": "13.3333px",
+      "hasSafety": true
+    }
+  },
+  {
+    "viewport": "local-assist-pack7-1366x768",
+    "metrics": {
+      "previewKicker": "16px",
+      "previewChip": "16px",
+      "primaryLabel": "13.3333px",
+      "primaryIconPx": null,
+      "secondaryLabel": "13.3333px",
+      "hasSafety": true
+    }
+  },
+  {
+    "viewport": "local-assist-pack7-1366x768-fullscreen",
+    "metrics": {
+      "previewKicker": "16px",
+      "previewChip": "16px",
+      "primaryLabel": "13.3333px",
+      "primaryIconPx": null,
+      "secondaryLabel": "13.3333px",
+      "hasSafety": true
+    }
+  }
+]

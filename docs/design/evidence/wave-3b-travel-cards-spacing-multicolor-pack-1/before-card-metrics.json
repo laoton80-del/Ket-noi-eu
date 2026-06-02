@@ -1,0 +1,239 @@
+{
+  "label": "before",
+  "capturedAt": "2026-05-31T21:48:33.765Z",
+  "390x844": {
+    "gridGap": "8px",
+    "situation": {
+      "airport": {
+        "height": 52,
+        "width": 160,
+        "bg": "rgba(100, 210, 255, 0.1)",
+        "border": "rgba(100, 210, 255, 0.24)"
+      },
+      "taxi": {
+        "height": 52,
+        "width": 160,
+        "bg": "rgba(72, 168, 255, 0.1)",
+        "border": "rgba(72, 168, 255, 0.24)"
+      },
+      "hotel": {
+        "height": 52,
+        "width": 160,
+        "bg": "rgba(232, 196, 120, 0.1)",
+        "border": "rgba(232, 196, 120, 0.24)"
+      },
+      "translation": {
+        "height": 52,
+        "width": 160,
+        "bg": "rgba(196, 164, 255, 0.1)",
+        "border": "rgba(196, 164, 255, 0.24)"
+      }
+    },
+    "quickHelp": {
+      "airport": {
+        "height": 138,
+        "border": "rgb(0, 0, 0)"
+      },
+      "translation": {
+        "height": 138,
+        "border": "rgb(0, 0, 0)"
+      },
+      "taxi": {
+        "height": 138,
+        "border": "rgb(0, 0, 0)"
+      },
+      "emergency": {
+        "height": 138,
+        "border": "rgb(0, 0, 0)"
+      }
+    }
+  },
+  "768x1024": {
+    "gridGap": "7px",
+    "situation": {
+      "airport": {
+        "height": 48,
+        "width": 231,
+        "bg": "rgba(100, 210, 255, 0.1)",
+        "border": "rgba(100, 210, 255, 0.24)"
+      },
+      "taxi": {
+        "height": 48,
+        "width": 231,
+        "bg": "rgba(72, 168, 255, 0.1)",
+        "border": "rgba(72, 168, 255, 0.24)"
+      },
+      "hotel": {
+        "height": 48,
+        "width": 231,
+        "bg": "rgba(232, 196, 120, 0.1)",
+        "border": "rgba(232, 196, 120, 0.24)"
+      },
+      "translation": {
+        "height": 48,
+        "width": 350,
+        "bg": "rgba(196, 164, 255, 0.1)",
+        "border": "rgba(196, 164, 255, 0.24)"
+      }
+    },
+    "quickHelp": {
+      "airport": {
+        "height": 162,
+        "border": "rgb(0, 0, 0)"
+      },
+      "translation": {
+        "height": 162,
+        "border": "rgb(0, 0, 0)"
+      },
+      "taxi": {
+        "height": 162,
+        "border": "rgb(0, 0, 0)"
+      },
+      "emergency": {
+        "height": 162,
+        "border": "rgb(0, 0, 0)"
+      }
+    }
+  },
+  "1024x768": {
+    "gridGap": "8px",
+    "situation": {
+      "airport": {
+        "height": 44,
+        "width": 235,
+        "bg": "rgba(100, 210, 255, 0.1)",
+        "border": "rgba(100, 210, 255, 0.24)"
+      },
+      "taxi": {
+        "height": 44,
+        "width": 235,
+        "bg": "rgba(72, 168, 255, 0.1)",
+        "border": "rgba(72, 168, 255, 0.24)"
+      },
+      "hotel": {
+        "height": 44,
+        "width": 235,
+        "bg": "rgba(232, 196, 120, 0.1)",
+        "border": "rgba(232, 196, 120, 0.24)"
+      },
+      "translation": {
+        "height": 44,
+        "width": 235,
+        "bg": "rgba(196, 164, 255, 0.1)",
+        "border": "rgba(196, 164, 255, 0.24)"
+      }
+    },
+    "quickHelp": {
+      "airport": {
+        "height": 182,
+        "border": "rgb(0, 0, 0)"
+      },
+      "translation": {
+        "height": 182,
+        "border": "rgb(0, 0, 0)"
+      },
+      "taxi": {
+        "height": 182,
+        "border": "rgb(0, 0, 0)"
+      },
+      "emergency": {
+        "height": 182,
+        "border": "rgb(0, 0, 0)"
+      }
+    }
+  },
+  "1366x768-normal": {
+    "gridGap": "8px",
+    "situation": {
+      "airport": {
+        "height": 44,
+        "width": 320,
+        "bg": "rgba(100, 210, 255, 0.1)",
+        "border": "rgba(100, 210, 255, 0.24)"
+      },
+      "taxi": {
+        "height": 44,
+        "width": 320,
+        "bg": "rgba(72, 168, 255, 0.1)",
+        "border": "rgba(72, 168, 255, 0.24)"
+      },
+      "hotel": {
+        "height": 44,
+        "width": 320,
+        "bg": "rgba(232, 196, 120, 0.1)",
+        "border": "rgba(232, 196, 120, 0.24)"
+      },
+      "translation": {
+        "height": 44,
+        "width": 320,
+        "bg": "rgba(196, 164, 255, 0.1)",
+        "border": "rgba(196, 164, 255, 0.24)"
+      }
+    },
+    "quickHelp": {
+      "airport": {
+        "height": 182,
+        "border": "rgb(0, 0, 0)"
+      },
+      "translation": {
+        "height": 182,
+        "border": "rgb(0, 0, 0)"
+      },
+      "taxi": {
+        "height": 182,
+        "border": "rgb(0, 0, 0)"
+      },
+      "emergency": {
+        "height": 182,
+        "border": "rgb(0, 0, 0)"
+      }
+    }
+  },
+  "1366x768-fullscreen": {
+    "gridGap": "7px",
+    "situation": {
+      "airport": {
+        "height": 40,
+        "width": 321,
+        "bg": "rgba(100, 210, 255, 0.1)",
+        "border": "rgba(100, 210, 255, 0.24)"
+      },
+      "taxi": {
+        "height": 40,
+        "width": 321,
+        "bg": "rgba(72, 168, 255, 0.1)",
+        "border": "rgba(72, 168, 255, 0.24)"
+      },
+      "hotel": {
+        "height": 40,
+        "width": 321,
+        "bg": "rgba(232, 196, 120, 0.1)",
+        "border": "rgba(232, 196, 120, 0.24)"
+      },
+      "translation": {
+        "height": 40,
+        "width": 321,
+        "bg": "rgba(196, 164, 255, 0.1)",
+        "border": "rgba(196, 164, 255, 0.24)"
+      }
+    },
+    "quickHelp": {
+      "airport": {
+        "height": 146,
+        "border": "rgb(0, 0, 0)"
+      },
+      "translation": {
+        "height": 146,
+        "border": "rgb(0, 0, 0)"
+      },
+      "taxi": {
+        "height": 146,
+        "border": "rgb(0, 0, 0)"
+      },
+      "emergency": {
+        "height": 146,
+        "border": "rgb(0, 0, 0)"
+      }
+    }
+  }
+}

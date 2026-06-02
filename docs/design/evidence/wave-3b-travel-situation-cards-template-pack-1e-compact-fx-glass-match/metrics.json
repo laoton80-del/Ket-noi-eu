@@ -1,0 +1,102 @@
+{
+  "situation-1e-390x844": {
+    "cardCount": 8,
+    "rowCount": 1,
+    "cardHeights": [
+      64,
+      64,
+      64,
+      64,
+      64,
+      64,
+      64,
+      64
+    ],
+    "minHeight": 64,
+    "maxHeight": 64,
+    "avgHeight": 64,
+    "gridHeight": 325,
+    "gridWidth": 358,
+    "columnsDesktop": 2
+  },
+  "situation-1e-768x1024": {
+    "cardCount": 8,
+    "rowCount": 1,
+    "cardHeights": [
+      60,
+      60,
+      60,
+      60,
+      60,
+      60,
+      60,
+      60
+    ],
+    "minHeight": 60,
+    "maxHeight": 60,
+    "avgHeight": 60,
+    "gridHeight": 241,
+    "gridWidth": 736,
+    "columnsDesktop": 3
+  },
+  "situation-1e-1024x768": {
+    "cardCount": 8,
+    "rowCount": 1,
+    "cardHeights": [
+      58,
+      58,
+      58,
+      58,
+      58,
+      58,
+      58,
+      58
+    ],
+    "minHeight": 58,
+    "maxHeight": 58,
+    "avgHeight": 58,
+    "gridHeight": 169,
+    "gridWidth": 992,
+    "columnsDesktop": 4
+  },
+  "situation-1e-1366x768": {
+    "cardCount": 8,
+    "rowCount": 1,
+    "cardHeights": [
+      58,
+      58,
+      58,
+      58,
+      58,
+      58,
+      58,
+      58
+    ],
+    "minHeight": 58,
+    "maxHeight": 58,
+    "avgHeight": 58,
+    "gridHeight": 169,
+    "gridWidth": 1334,
+    "columnsDesktop": 4
+  },
+  "situation-1e-1366x768-fullscreen": {
+    "cardCount": 8,
+    "rowCount": 1,
+    "cardHeights": [
+      58,
+      58,
+      58,
+      58,
+      58,
+      58,
+      58,
+      58
+    ],
+    "minHeight": 58,
+    "maxHeight": 58,
+    "avgHeight": 58,
+    "gridHeight": 169,
+    "gridWidth": 1334,
+    "columnsDesktop": 4
+  }
+}

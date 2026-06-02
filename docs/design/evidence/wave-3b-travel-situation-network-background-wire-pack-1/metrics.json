@@ -1,0 +1,49 @@
+{
+  "capturedAt": "2026-06-01T07:27:26.122Z",
+  "pack": "situation-network-bg-wire-pack-1",
+  "390-sanity": {
+    "networkBgPresent": true,
+    "networkBgWidthPx": 332,
+    "networkBgHeightPx": 236,
+    "gridTopPx": 344,
+    "cardTopPx": 424,
+    "cardAboveBg": true,
+    "bgOpacity": "1"
+  },
+  "768x1024": {
+    "networkBgPresent": true,
+    "networkBgWidthPx": 710,
+    "networkBgHeightPx": 162,
+    "gridTopPx": 832,
+    "cardTopPx": 907,
+    "cardAboveBg": true,
+    "bgOpacity": "1"
+  },
+  "1024x768": {
+    "networkBgPresent": true,
+    "networkBgWidthPx": 966,
+    "networkBgHeightPx": 100,
+    "gridTopPx": 368,
+    "cardTopPx": 388,
+    "cardAboveBg": true,
+    "bgOpacity": "1"
+  },
+  "1366-normal": {
+    "networkBgPresent": true,
+    "networkBgWidthPx": 1308,
+    "networkBgHeightPx": 100,
+    "gridTopPx": 351,
+    "cardTopPx": 371,
+    "cardAboveBg": true,
+    "bgOpacity": "1"
+  },
+  "1366-fullscreen": {
+    "networkBgPresent": true,
+    "networkBgWidthPx": 1308,
+    "networkBgHeightPx": 91,
+    "gridTopPx": 654,
+    "cardTopPx": 674,
+    "cardAboveBg": true,
+    "bgOpacity": "1"
+  }
+}

@@ -1,0 +1,47 @@
+{
+  "label": "pack3-fs-tune",
+  "base": "http://localhost:8095",
+  "capturedAt": "2026-06-01T08:34:20.692Z",
+  "1366-normal-default": {
+    "titleFontSizePx": 57,
+    "titleLineHeightPx": 60,
+    "textStackWidthPx": 780,
+    "titleText": "Đồng hành trên mọi hành trình"
+  },
+  "1366-normal-airport": {
+    "titleFontSizePx": 57,
+    "titleLineHeightPx": 60,
+    "textStackWidthPx": 780,
+    "titleText": "Đi qua sân bay tự tin hơn"
+  },
+  "1366-normal-interpreter": {
+    "titleFontSizePx": 57,
+    "titleLineHeightPx": 60,
+    "textStackWidthPx": 780,
+    "titleText": "Hiểu đúng trong tình huống quan trọng"
+  },
+  "1366-fullscreen-default": {
+    "titleFontSizePx": 50,
+    "titleLineHeightPx": 54,
+    "textStackWidthPx": 800,
+    "titleText": "Đồng hành trên mọi hành trình"
+  },
+  "1366-fullscreen-transport": {
+    "titleFontSizePx": 50,
+    "titleLineHeightPx": 54,
+    "textStackWidthPx": 800,
+    "titleText": "Tìm cách di chuyển phù hợp"
+  },
+  "1366-fullscreen-interpreter": {
+    "titleFontSizePx": 50,
+    "titleLineHeightPx": 54,
+    "textStackWidthPx": 800,
+    "titleText": "Hiểu đúng trong tình huống quan trọng"
+  },
+  "390-sanity": {
+    "titleFontSizePx": 29,
+    "titleLineHeightPx": 34,
+    "textStackWidthPx": 322,
+    "titleText": "Đồng hành trên mọi hành trình"
+  }
+}

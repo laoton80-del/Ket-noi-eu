@@ -1,0 +1,22 @@
+{
+  "label": "after",
+  "capturedAt": "2026-05-31T22:29:11.035Z",
+  "390x844": {
+    "titlePresent": true,
+    "subtitlePresent": true,
+    "pillSafe": true,
+    "pillDemo": true,
+    "pillNoPay": true,
+    "oldTitleGone": true,
+    "oldSubtitleGone": true
+  },
+  "1366x768-normal": {
+    "titlePresent": true,
+    "subtitlePresent": true,
+    "pillSafe": true,
+    "pillDemo": true,
+    "pillNoPay": true,
+    "oldTitleGone": true,
+    "oldSubtitleGone": true
+  }
+}

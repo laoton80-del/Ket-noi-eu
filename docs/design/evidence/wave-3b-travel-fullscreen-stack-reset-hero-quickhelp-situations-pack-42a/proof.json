@@ -1,0 +1,126 @@
+{
+  "pack": "42A",
+  "before": {
+    "fullscreenHeroTargetPx": 386,
+    "fullscreenHeroToCardGapPx": 0,
+    "fullscreenHeroAirBonusPx": -14,
+    "fullscreenUtilityBridgePx": -76,
+    "fullscreenTitle": {
+      "fontSizePx": 54,
+      "lineHeightPx": 58,
+      "maxWidthPx": 680
+    },
+    "normalHeroTargetPx": 410,
+    "normalUtilityBridgePx": -34
+  },
+  "captures": {
+    "normal1366": {
+      "mode": "normal-1366",
+      "heroHeightPx": 410,
+      "heroToQuickHelpGapPx": 2,
+      "quickHelpToSituationsGapPx": 48,
+      "title": {
+        "fontSize": "50px",
+        "lineHeight": "54px",
+        "maxWidth": "620px",
+        "renderedWidthPx": 620,
+        "lineCount": 2
+      },
+      "utilityBridgeMarginTop": null,
+      "beforeReference": {
+        "fullscreenHeroTargetPx": 386,
+        "fullscreenHeroToCardGapPx": 0,
+        "fullscreenHeroAirBonusPx": -14,
+        "fullscreenUtilityBridgePx": -76,
+        "fullscreenTitle": {
+          "fontSizePx": 54,
+          "lineHeightPx": 58,
+          "maxWidthPx": 680
+        },
+        "normalHeroTargetPx": 410,
+        "normalUtilityBridgePx": -34
+      }
+    },
+    "fullscreen1366": {
+      "mode": "fullscreen-1366",
+      "heroHeightPx": 376,
+      "heroToQuickHelpGapPx": 14,
+      "quickHelpToSituationsGapPx": 18,
+      "title": {
+        "fontSize": "54px",
+        "lineHeight": "58px",
+        "maxWidth": "680px",
+        "renderedWidthPx": 680,
+        "lineCount": 2
+      },
+      "utilityBridgeMarginTop": null,
+      "beforeReference": {
+        "fullscreenHeroTargetPx": 386,
+        "fullscreenHeroToCardGapPx": 0,
+        "fullscreenHeroAirBonusPx": -14,
+        "fullscreenUtilityBridgePx": -76,
+        "fullscreenTitle": {
+          "fontSizePx": 54,
+          "lineHeightPx": 58,
+          "maxWidthPx": 680
+        },
+        "normalHeroTargetPx": 410,
+        "normalUtilityBridgePx": -34
+      }
+    },
+    "tablet1024": {
+      "mode": "tablet-1024",
+      "heroHeightPx": 402,
+      "heroToQuickHelpGapPx": 2,
+      "quickHelpToSituationsGapPx": 56,
+      "title": {
+        "fontSize": "48px",
+        "lineHeight": "52px",
+        "maxWidth": "560px",
+        "renderedWidthPx": 560,
+        "lineCount": 2
+      },
+      "utilityBridgeMarginTop": null,
+      "beforeReference": {
+        "fullscreenHeroTargetPx": 386,
+        "fullscreenHeroToCardGapPx": 0,
+        "fullscreenHeroAirBonusPx": -14,
+        "fullscreenUtilityBridgePx": -76,
+        "fullscreenTitle": {
+          "fontSizePx": 54,
+          "lineHeightPx": 58,
+          "maxWidthPx": 680
+        },
+        "normalHeroTargetPx": 410,
+        "normalUtilityBridgePx": -34
+      }
+    },
+    "mobile390": {
+      "mode": "mobile-390",
+      "heroHeightPx": 300,
+      "heroToQuickHelpGapPx": 6,
+      "quickHelpToSituationsGapPx": 84,
+      "title": {
+        "fontSize": "27px",
+        "lineHeight": "32px",
+        "maxWidth": "343px",
+        "renderedWidthPx": 282,
+        "lineCount": 2
+      },
+      "utilityBridgeMarginTop": null,
+      "beforeReference": {
+        "fullscreenHeroTargetPx": 386,
+        "fullscreenHeroToCardGapPx": 0,
+        "fullscreenHeroAirBonusPx": -14,
+        "fullscreenUtilityBridgePx": -76,
+        "fullscreenTitle": {
+          "fontSizePx": 54,
+          "lineHeightPx": 58,
+          "maxWidthPx": 680
+        },
+        "normalHeroTargetPx": 410,
+        "normalUtilityBridgePx": -34
+      }
+    }
+  }
+}

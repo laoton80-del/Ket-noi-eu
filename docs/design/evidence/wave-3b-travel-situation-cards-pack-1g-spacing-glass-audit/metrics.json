@@ -1,0 +1,117 @@
+{
+  "situation-1g-390x844": {
+    "quickHelpToSituationGapPx": 24,
+    "cardCount": 8,
+    "cardHeights": [
+      58,
+      58,
+      58,
+      58,
+      58,
+      58,
+      58,
+      58
+    ],
+    "minHeight": 58,
+    "maxHeight": 58,
+    "avgHeight": 58,
+    "gridHeight": 278,
+    "gridTop": 730,
+    "gridBottom": 1008,
+    "viewportHeight": 844,
+    "gridFullyVisible": false,
+    "columns": 2
+  },
+  "situation-1g-768x1024": {
+    "quickHelpToSituationGapPx": 26,
+    "cardCount": 8,
+    "cardHeights": [
+      54,
+      54,
+      54,
+      54,
+      54,
+      54,
+      54,
+      54
+    ],
+    "minHeight": 54,
+    "maxHeight": 54,
+    "avgHeight": 54,
+    "gridHeight": 202,
+    "gridTop": 480,
+    "gridBottom": 682,
+    "viewportHeight": 1024,
+    "gridFullyVisible": true,
+    "columns": 3
+  },
+  "situation-1g-1024x768": {
+    "quickHelpToSituationGapPx": 64,
+    "cardCount": 8,
+    "cardHeights": [
+      52,
+      52,
+      52,
+      52,
+      52,
+      52,
+      52,
+      52
+    ],
+    "minHeight": 52,
+    "maxHeight": 52,
+    "avgHeight": 52,
+    "gridHeight": 138,
+    "gridTop": 352,
+    "gridBottom": 490,
+    "viewportHeight": 768,
+    "gridFullyVisible": true,
+    "columns": 4
+  },
+  "situation-1g-1366x768": {
+    "quickHelpToSituationGapPx": 40,
+    "cardCount": 8,
+    "cardHeights": [
+      52,
+      52,
+      52,
+      52,
+      52,
+      52,
+      52,
+      52
+    ],
+    "minHeight": 52,
+    "maxHeight": 52,
+    "avgHeight": 52,
+    "gridHeight": 138,
+    "gridTop": 294,
+    "gridBottom": 432,
+    "viewportHeight": 768,
+    "gridFullyVisible": true,
+    "columns": 4
+  },
+  "situation-1g-1366x768-fullscreen": {
+    "quickHelpToSituationGapPx": 14,
+    "cardCount": 8,
+    "cardHeights": [
+      52,
+      52,
+      52,
+      52,
+      52,
+      52,
+      52,
+      52
+    ],
+    "minHeight": 52,
+    "maxHeight": 52,
+    "avgHeight": 52,
+    "gridHeight": 138,
+    "gridTop": 266,
+    "gridBottom": 404,
+    "viewportHeight": 768,
+    "gridFullyVisible": true,
+    "columns": 4
+  }
+}

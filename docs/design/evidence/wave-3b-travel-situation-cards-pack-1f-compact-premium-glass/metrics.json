@@ -1,0 +1,107 @@
+{
+  "situation-1f-390x844": {
+    "cardCount": 8,
+    "rowElements": 1,
+    "cardHeights": [
+      60,
+      60,
+      60,
+      60,
+      60,
+      60,
+      60,
+      60
+    ],
+    "minHeight": 60,
+    "maxHeight": 60,
+    "avgHeight": 60,
+    "gridHeight": 295,
+    "panelHeight": 295,
+    "viewportHeight": 844,
+    "columns": 2
+  },
+  "situation-1f-768x1024": {
+    "cardCount": 8,
+    "rowElements": 1,
+    "cardHeights": [
+      56,
+      56,
+      56,
+      56,
+      56,
+      56,
+      56,
+      56
+    ],
+    "minHeight": 56,
+    "maxHeight": 56,
+    "avgHeight": 56,
+    "gridHeight": 217,
+    "panelHeight": 217,
+    "viewportHeight": 1024,
+    "columns": 3
+  },
+  "situation-1f-1024x768": {
+    "cardCount": 8,
+    "rowElements": 1,
+    "cardHeights": [
+      54,
+      54,
+      54,
+      54,
+      54,
+      54,
+      54,
+      54
+    ],
+    "minHeight": 54,
+    "maxHeight": 54,
+    "avgHeight": 54,
+    "gridHeight": 151,
+    "panelHeight": 151,
+    "viewportHeight": 768,
+    "columns": 4
+  },
+  "situation-1f-1366x768": {
+    "cardCount": 8,
+    "rowElements": 1,
+    "cardHeights": [
+      54,
+      54,
+      54,
+      54,
+      54,
+      54,
+      54,
+      54
+    ],
+    "minHeight": 54,
+    "maxHeight": 54,
+    "avgHeight": 54,
+    "gridHeight": 151,
+    "panelHeight": 151,
+    "viewportHeight": 768,
+    "columns": 4
+  },
+  "situation-1f-1366x768-fullscreen": {
+    "cardCount": 8,
+    "rowElements": 1,
+    "cardHeights": [
+      54,
+      54,
+      54,
+      54,
+      54,
+      54,
+      54,
+      54
+    ],
+    "minHeight": 54,
+    "maxHeight": 54,
+    "avgHeight": 54,
+    "gridHeight": 151,
+    "panelHeight": 151,
+    "viewportHeight": 768,
+    "columns": 4
+  }
+}

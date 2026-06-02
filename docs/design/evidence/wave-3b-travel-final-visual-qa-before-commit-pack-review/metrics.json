@@ -1,0 +1,255 @@
+[
+  {
+    "shot": "travel-390x844-default",
+    "isFullscreen": false,
+    "heroTitleFontSize": "27px",
+    "heroTitleClip": {
+      "clipped": false,
+      "bottomDelta": -206
+    },
+    "heroSubtitleClip": {
+      "clipped": false,
+      "bottomDelta": -96
+    },
+    "sceneHeight": 200,
+    "gapAssistToConnectedPx": 32,
+    "hasSituationNetworkBg": true,
+    "hasWeatherRow": true,
+    "hasFxRow": true,
+    "hasSafety": true,
+    "hasFakeLive": false,
+    "primaryHandoffFontSize": "13.3333px",
+    "secondaryHandoffColor": "rgb(0, 0, 0)",
+    "flagshipRow": true
+  },
+  {
+    "shot": "travel-768x1024-default",
+    "isFullscreen": false,
+    "heroTitleFontSize": "38px",
+    "heroTitleClip": {
+      "clipped": false,
+      "bottomDelta": -200
+    },
+    "heroSubtitleClip": {
+      "clipped": false,
+      "bottomDelta": -101
+    },
+    "sceneHeight": 276,
+    "gapAssistToConnectedPx": 36,
+    "hasSituationNetworkBg": true,
+    "hasWeatherRow": true,
+    "hasFxRow": true,
+    "hasSafety": true,
+    "hasFakeLive": false,
+    "primaryHandoffFontSize": "13.3333px",
+    "secondaryHandoffColor": "rgb(0, 0, 0)",
+    "flagshipRow": true
+  },
+  {
+    "shot": "travel-1024x768-default",
+    "isFullscreen": false,
+    "heroTitleFontSize": "52px",
+    "heroTitleClip": {
+      "clipped": false,
+      "bottomDelta": -353
+    },
+    "heroSubtitleClip": {
+      "clipped": false,
+      "bottomDelta": -263
+    },
+    "sceneHeight": 328,
+    "gapAssistToConnectedPx": 42,
+    "hasSituationNetworkBg": true,
+    "hasWeatherRow": true,
+    "hasFxRow": true,
+    "hasSafety": true,
+    "hasFakeLive": false,
+    "primaryHandoffFontSize": "13.3333px",
+    "secondaryHandoffColor": "rgb(0, 0, 0)",
+    "flagshipRow": true
+  },
+  {
+    "shot": "travel-1366x768-normal-default",
+    "isFullscreen": false,
+    "heroTitleFontSize": "57px",
+    "heroTitleClip": {
+      "clipped": false,
+      "bottomDelta": -343
+    },
+    "heroSubtitleClip": {
+      "clipped": false,
+      "bottomDelta": -247
+    },
+    "sceneHeight": 328,
+    "gapAssistToConnectedPx": 42,
+    "hasSituationNetworkBg": true,
+    "hasWeatherRow": true,
+    "hasFxRow": true,
+    "hasSafety": true,
+    "hasFakeLive": false,
+    "primaryHandoffFontSize": "13.3333px",
+    "secondaryHandoffColor": "rgb(0, 0, 0)",
+    "flagshipRow": true
+  },
+  {
+    "shot": "travel-1366x768-normal-airport",
+    "isFullscreen": false,
+    "heroTitleFontSize": "57px",
+    "heroTitleClip": {
+      "clipped": false,
+      "bottomDelta": -403
+    },
+    "heroSubtitleClip": {
+      "clipped": false,
+      "bottomDelta": -307
+    },
+    "sceneHeight": 328,
+    "gapAssistToConnectedPx": 42,
+    "hasSituationNetworkBg": true,
+    "hasWeatherRow": true,
+    "hasFxRow": true,
+    "hasSafety": true,
+    "hasFakeLive": false,
+    "primaryHandoffFontSize": "13.3333px",
+    "secondaryHandoffColor": "rgb(0, 0, 0)",
+    "flagshipRow": true
+  },
+  {
+    "shot": "travel-1366x768-normal-interpreter",
+    "isFullscreen": false,
+    "heroTitleFontSize": "57px",
+    "heroTitleClip": {
+      "clipped": false,
+      "bottomDelta": -343
+    },
+    "heroSubtitleClip": {
+      "clipped": false,
+      "bottomDelta": -247
+    },
+    "sceneHeight": 328,
+    "gapAssistToConnectedPx": 42,
+    "hasSituationNetworkBg": true,
+    "hasWeatherRow": true,
+    "hasFxRow": true,
+    "hasSafety": true,
+    "hasFakeLive": false,
+    "primaryHandoffFontSize": "13.3333px",
+    "secondaryHandoffColor": "rgb(0, 0, 0)",
+    "flagshipRow": true
+  },
+  {
+    "shot": "travel-1366x768-normal-transport",
+    "isFullscreen": false,
+    "heroTitleFontSize": "57px",
+    "heroTitleClip": {
+      "clipped": false,
+      "bottomDelta": -343
+    },
+    "heroSubtitleClip": {
+      "clipped": false,
+      "bottomDelta": -247
+    },
+    "sceneHeight": 328,
+    "gapAssistToConnectedPx": 42,
+    "hasSituationNetworkBg": true,
+    "hasWeatherRow": true,
+    "hasFxRow": true,
+    "hasSafety": true,
+    "hasFakeLive": false,
+    "primaryHandoffFontSize": "13.3333px",
+    "secondaryHandoffColor": "rgb(0, 0, 0)",
+    "flagshipRow": true
+  },
+  {
+    "shot": "travel-1366x768-normal-emergency",
+    "isFullscreen": false,
+    "heroTitleFontSize": "57px",
+    "heroTitleClip": {
+      "clipped": false,
+      "bottomDelta": -343
+    },
+    "heroSubtitleClip": {
+      "clipped": false,
+      "bottomDelta": -247
+    },
+    "sceneHeight": 328,
+    "gapAssistToConnectedPx": 42,
+    "hasSituationNetworkBg": true,
+    "hasWeatherRow": true,
+    "hasFxRow": true,
+    "hasSafety": true,
+    "hasFakeLive": false,
+    "primaryHandoffFontSize": "13.3333px",
+    "secondaryHandoffColor": "rgb(0, 0, 0)",
+    "flagshipRow": true
+  },
+  {
+    "shot": "travel-1366x768-fullscreen-default",
+    "isFullscreen": true,
+    "heroTitleFontSize": "48px",
+    "heroTitleClip": {
+      "clipped": false,
+      "bottomDelta": -361
+    },
+    "heroSubtitleClip": {
+      "clipped": false,
+      "bottomDelta": -265
+    },
+    "sceneHeight": 308,
+    "gapAssistToConnectedPx": 42,
+    "hasSituationNetworkBg": true,
+    "hasWeatherRow": true,
+    "hasFxRow": true,
+    "hasSafety": true,
+    "hasFakeLive": false,
+    "primaryHandoffFontSize": "13.3333px",
+    "secondaryHandoffColor": "rgb(0, 0, 0)",
+    "flagshipRow": true
+  },
+  {
+    "shot": "travel-1366x768-fullscreen-interpreter",
+    "isFullscreen": true,
+    "heroTitleFontSize": "48px",
+    "heroTitleClip": {
+      "clipped": false,
+      "bottomDelta": -309
+    },
+    "heroSubtitleClip": {
+      "clipped": false,
+      "bottomDelta": -213
+    },
+    "sceneHeight": 308,
+    "gapAssistToConnectedPx": 42,
+    "hasSituationNetworkBg": true,
+    "hasWeatherRow": true,
+    "hasFxRow": true,
+    "hasSafety": true,
+    "hasFakeLive": false,
+    "primaryHandoffFontSize": "13.3333px",
+    "secondaryHandoffColor": "rgb(0, 0, 0)",
+    "flagshipRow": true
+  },
+  {
+    "shot": "travel-1366x768-fullscreen-transport",
+    "isFullscreen": true,
+    "heroTitleFontSize": "48px",
+    "heroTitleClip": {
+      "clipped": false,
+      "bottomDelta": -361
+    },
+    "heroSubtitleClip": {
+      "clipped": false,
+      "bottomDelta": -265
+    },
+    "sceneHeight": 308,
+    "gapAssistToConnectedPx": 42,
+    "hasSituationNetworkBg": true,
+    "hasWeatherRow": true,
+    "hasFxRow": true,
+    "hasSafety": true,
+    "hasFakeLive": false,
+    "primaryHandoffFontSize": "13.3333px",
+    "secondaryHandoffColor": "rgb(0, 0, 0)",
+    "flagshipRow": true
+  }
+]

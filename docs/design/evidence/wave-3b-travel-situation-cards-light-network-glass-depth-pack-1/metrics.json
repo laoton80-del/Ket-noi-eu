@@ -1,0 +1,38 @@
+{
+  "capturedAt": "2026-06-01T05:05:49.467Z",
+  "390x844": {
+    "gridHeightPx": 257,
+    "cardCount": 9,
+    "firstRowHeightPx": 52,
+    "firstCardHeightPx": 257,
+    "kickerPresent": true
+  },
+  "768x1024": {
+    "gridHeightPx": 183,
+    "cardCount": 9,
+    "firstRowHeightPx": 48,
+    "firstCardHeightPx": 183,
+    "kickerPresent": true
+  },
+  "1024x768": {
+    "gridHeightPx": 121,
+    "cardCount": 9,
+    "firstRowHeightPx": 44,
+    "firstCardHeightPx": 121,
+    "kickerPresent": true
+  },
+  "1366x768-normal": {
+    "gridHeightPx": 121,
+    "cardCount": 9,
+    "firstRowHeightPx": 44,
+    "firstCardHeightPx": 121,
+    "kickerPresent": true
+  },
+  "1366x768-fullscreen": {
+    "gridHeightPx": 114,
+    "cardCount": 9,
+    "firstRowHeightPx": 40,
+    "firstCardHeightPx": 114,
+    "kickerPresent": true
+  }
+}

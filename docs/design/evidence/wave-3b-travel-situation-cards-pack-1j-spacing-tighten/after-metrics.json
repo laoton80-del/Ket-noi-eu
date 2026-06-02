@@ -1,0 +1,40 @@
+{
+  "label": "after",
+  "capturedAt": "2026-05-31T21:15:20.534Z",
+  "1366x768-fullscreen": {
+    "gapQuickHelpToSituationPx": -27,
+    "quickHelpSectionHeightPx": 196,
+    "situationSectionHeightPx": 118,
+    "situationHeaderHeightPx": 13,
+    "situationGridHeightPx": 105,
+    "situationGridBottomPx": 769,
+    "row2BottomPx": 767,
+    "row2FullyVisible": true,
+    "viewportHeightPx": 768,
+    "scrollY": 0
+  },
+  "1366x768-normal": {
+    "gapQuickHelpToSituationPx": -2,
+    "quickHelpSectionHeightPx": 198,
+    "situationSectionHeightPx": 122,
+    "situationHeaderHeightPx": 15,
+    "situationGridHeightPx": 107,
+    "situationGridBottomPx": 884,
+    "row2BottomPx": 881,
+    "row2FullyVisible": false,
+    "viewportHeightPx": 768,
+    "scrollY": 0
+  },
+  "390x844": {
+    "gapQuickHelpToSituationPx": 24,
+    "quickHelpSectionHeightPx": 604,
+    "situationSectionHeightPx": 260,
+    "situationHeaderHeightPx": 15,
+    "situationGridHeightPx": 245,
+    "situationGridBottomPx": 1258,
+    "row2BottomPx": 1255,
+    "row2FullyVisible": false,
+    "viewportHeightPx": 844,
+    "scrollY": 0
+  }
+}

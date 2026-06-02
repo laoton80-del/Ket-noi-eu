@@ -1,0 +1,62 @@
+[
+  {
+    "shot": "travel-1366x768-normal-opening",
+    "isFullscreen": false,
+    "heroTitlePresent": true,
+    "heroTitleFontSize": "46px",
+    "hasFlagshipRow": true,
+    "hasSituationNetworkBg": true,
+    "hasSafetyCopy": true,
+    "hasFakeLive": false,
+    "rawI18nKey": false,
+    "runtimeErrorBanner": false
+  },
+  {
+    "shot": "travel-1366x768-fullscreen-opening",
+    "isFullscreen": true,
+    "heroTitlePresent": true,
+    "heroTitleFontSize": "54px",
+    "hasFlagshipRow": true,
+    "hasSituationNetworkBg": true,
+    "hasSafetyCopy": true,
+    "hasFakeLive": false,
+    "rawI18nKey": false,
+    "runtimeErrorBanner": false
+  },
+  {
+    "shot": "travel-1366x768-hover-translation-assist",
+    "isFullscreen": false,
+    "heroTitlePresent": true,
+    "heroTitleFontSize": "46px",
+    "hasFlagshipRow": true,
+    "hasSituationNetworkBg": true,
+    "hasSafetyCopy": true,
+    "hasFakeLive": false,
+    "rawI18nKey": false,
+    "runtimeErrorBanner": false
+  },
+  {
+    "shot": "travel-390x844-sanity",
+    "isFullscreen": false,
+    "heroTitlePresent": true,
+    "heroTitleFontSize": "27px",
+    "hasFlagshipRow": true,
+    "hasSituationNetworkBg": true,
+    "hasSafetyCopy": true,
+    "hasFakeLive": false,
+    "rawI18nKey": false,
+    "runtimeErrorBanner": false
+  },
+  {
+    "shot": "travel-1024x768-sanity",
+    "isFullscreen": false,
+    "heroTitlePresent": true,
+    "heroTitleFontSize": "48px",
+    "hasFlagshipRow": true,
+    "hasSituationNetworkBg": true,
+    "hasSafetyCopy": true,
+    "hasFakeLive": false,
+    "rawI18nKey": false,
+    "runtimeErrorBanner": false
+  }
+]

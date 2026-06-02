@@ -1,0 +1,123 @@
+{
+  "phase": "sentinel",
+  "port": 8095,
+  "cacheBust": 1780333082656,
+  "modes": [
+    {
+      "phase": "sentinel",
+      "mode": "normal",
+      "viewportWidth": 1366,
+      "sentinelProofLabelVisible": true,
+      "title": {
+        "innerText": "Đồng hành trên mọi hành trình",
+        "fontSize": "96px",
+        "lineHeight": "90px",
+        "width": 900,
+        "height": 180,
+        "left": 75,
+        "maxWidth": "900px"
+      },
+      "layer": {
+        "width": 900,
+        "left": 16,
+        "borderTopWidth": "3px",
+        "borderTopColor": "rgb(255, 0, 0)",
+        "paddingLeft": "56px",
+        "paddingTop": "52px"
+      },
+      "heroWidth": 1334,
+      "titleToHeroRatio": 67.5,
+      "cards": [
+        {
+          "id": "airport",
+          "borderTopWidth": "4px",
+          "borderTopColor": "rgb(255, 0, 0)",
+          "boxShadow": "none",
+          "outline": "rgb(0, 0, 0) none 0px"
+        },
+        {
+          "id": "translation",
+          "borderTopWidth": "4px",
+          "borderTopColor": "rgb(255, 0, 0)",
+          "boxShadow": "none",
+          "outline": "rgb(0, 0, 0) none 0px"
+        },
+        {
+          "id": "taxi",
+          "borderTopWidth": "4px",
+          "borderTopColor": "rgb(255, 0, 0)",
+          "boxShadow": "none",
+          "outline": "rgb(0, 0, 0) none 0px"
+        },
+        {
+          "id": "emergency",
+          "borderTopWidth": "4px",
+          "borderTopColor": "rgb(255, 0, 0)",
+          "boxShadow": "none",
+          "outline": "rgb(0, 0, 0) none 0px"
+        }
+      ],
+      "capturedAt": "2026-06-01T17:01:54.651Z",
+      "cacheBust": 1780333082656,
+      "port": 8095
+    },
+    {
+      "phase": "sentinel",
+      "mode": "fullscreen",
+      "viewportWidth": 1366,
+      "sentinelProofLabelVisible": true,
+      "title": {
+        "innerText": "Đồng hành trên mọi hành trình",
+        "fontSize": "70px",
+        "lineHeight": "69px",
+        "width": 880,
+        "height": 138,
+        "left": 73,
+        "maxWidth": "880px"
+      },
+      "layer": {
+        "width": 880,
+        "left": 16,
+        "borderTopWidth": "3px",
+        "borderTopColor": "rgb(255, 0, 0)",
+        "paddingLeft": "54px",
+        "paddingTop": "42px"
+      },
+      "heroWidth": 1334,
+      "titleToHeroRatio": 66,
+      "cards": [
+        {
+          "id": "airport",
+          "borderTopWidth": "4px",
+          "borderTopColor": "rgb(255, 0, 0)",
+          "boxShadow": "none",
+          "outline": "rgb(0, 0, 0) none 0px"
+        },
+        {
+          "id": "translation",
+          "borderTopWidth": "4px",
+          "borderTopColor": "rgb(255, 0, 0)",
+          "boxShadow": "none",
+          "outline": "rgb(0, 0, 0) none 0px"
+        },
+        {
+          "id": "taxi",
+          "borderTopWidth": "4px",
+          "borderTopColor": "rgb(255, 0, 0)",
+          "boxShadow": "none",
+          "outline": "rgb(0, 0, 0) none 0px"
+        },
+        {
+          "id": "emergency",
+          "borderTopWidth": "4px",
+          "borderTopColor": "rgb(255, 0, 0)",
+          "boxShadow": "none",
+          "outline": "rgb(0, 0, 0) none 0px"
+        }
+      ],
+      "capturedAt": "2026-06-01T17:02:00.134Z",
+      "cacheBust": 1780333082656,
+      "port": 8095
+    }
+  ]
+}

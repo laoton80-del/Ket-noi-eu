@@ -1,0 +1,59 @@
+{
+  "label": "before",
+  "capturedAt": "2026-05-31T21:31:54.594Z",
+  "390x844": {
+    "fontSize": 29,
+    "lineHeight": 34,
+    "maxWidth": "343px",
+    "titleWidth": 282,
+    "titleLeftPx": 36,
+    "heroLeftPx": null,
+    "insetFromHeroLeftPx": null,
+    "layerPaddingLeft": "20px",
+    "layerLeftPx": 16
+  },
+  "768x1024": {
+    "fontSize": 38,
+    "lineHeight": 43,
+    "maxWidth": "553px",
+    "titleWidth": 513,
+    "titleLeftPx": 36,
+    "heroLeftPx": null,
+    "insetFromHeroLeftPx": null,
+    "layerPaddingLeft": "20px",
+    "layerLeftPx": 16
+  },
+  "1024x768": {
+    "fontSize": 46,
+    "lineHeight": 52,
+    "maxWidth": "680px",
+    "titleWidth": 680,
+    "titleLeftPx": 46,
+    "heroLeftPx": null,
+    "insetFromHeroLeftPx": null,
+    "layerPaddingLeft": "0px",
+    "layerLeftPx": 46
+  },
+  "1366x768-normal": {
+    "fontSize": 48,
+    "lineHeight": 54,
+    "maxWidth": "960px",
+    "titleWidth": 960,
+    "titleLeftPx": 56,
+    "heroLeftPx": null,
+    "insetFromHeroLeftPx": null,
+    "layerPaddingLeft": "0px",
+    "layerLeftPx": 56
+  },
+  "1366x768-fullscreen": {
+    "fontSize": 48,
+    "lineHeight": 54,
+    "maxWidth": "960px",
+    "titleWidth": 960,
+    "titleLeftPx": 56,
+    "heroLeftPx": null,
+    "insetFromHeroLeftPx": null,
+    "layerPaddingLeft": "0px",
+    "layerLeftPx": 56
+  }
+}

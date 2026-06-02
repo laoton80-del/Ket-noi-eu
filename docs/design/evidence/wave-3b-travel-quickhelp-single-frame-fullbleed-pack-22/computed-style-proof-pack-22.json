@@ -1,0 +1,58 @@
+{
+  "default": {
+    "airport": {
+      "outerFrameElement": "[data-testid=\"travel-quick-help-cell-airport\"]",
+      "outerBorderRadius": "14px",
+      "outerOverflow": "hidden",
+      "outerPadding": "0px",
+      "outerTransform": "none",
+      "outerTransition": "box-shadow 0.22s ease-out, transform 0.2s ease-out",
+      "outerBoxShadow": "rgba(130, 235, 255, 0.86) 0px 0px 0px 1.5px, rgba(96, 228, 255, 0.07) 0px 0px 6px 0px, rgba(96, 228, 255, 0.04) 0px 0px 10px 0px",
+      "innerTileBorderWidth": "0px",
+      "innerTileBorderRadius": "0px",
+      "innerTileBoxShadow": "none",
+      "artworkClipBorderRadius": "0px",
+      "imagePosition": "absolute",
+      "imageObjectFit": "fill",
+      "cellHeight": 180,
+      "imageBleed": true
+    }
+  },
+  "hover": {
+    "airport": {
+      "outerFrameElement": "[data-testid=\"travel-quick-help-cell-airport\"]",
+      "outerBorderRadius": "14px",
+      "outerOverflow": "hidden",
+      "outerPadding": "0px",
+      "outerTransform": "matrix(1.014, 0, 0, 1.014, 0, -4)",
+      "outerTransition": "transform 0.2s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.22s ease-out",
+      "outerBoxShadow": "rgba(130, 235, 255, 0.94) 0px 0px 0px 1.5px, rgba(96, 228, 255, 0.2) 0px 0px 11px 0px, rgba(96, 228, 255, 0.14) 0px 0px 17px 0px",
+      "innerTileBorderWidth": "0px",
+      "innerTileBorderRadius": "0px",
+      "innerTileBoxShadow": "none",
+      "artworkClipBorderRadius": "0px",
+      "imagePosition": "absolute",
+      "imageObjectFit": "fill",
+      "cellHeight": 183,
+      "imageBleed": true
+    },
+    "translation": {
+      "outerFrameElement": "[data-testid=\"travel-quick-help-cell-translation\"]",
+      "outerBorderRadius": "14px",
+      "outerOverflow": "hidden",
+      "outerPadding": "0px",
+      "outerTransform": "matrix(1.014, 0, 0, 1.014, 0, -4)",
+      "outerTransition": "transform 0.2s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.22s ease-out",
+      "outerBoxShadow": "rgba(216, 160, 255, 0.94) 0px 0px 0px 1.5px, rgba(210, 148, 255, 0.2) 0px 0px 10.9979px 0px, rgba(210, 148, 255, 0.14) 0px 0px 16.9971px 0px",
+      "innerTileBorderWidth": "0px",
+      "innerTileBorderRadius": "0px",
+      "innerTileBoxShadow": "none",
+      "artworkClipBorderRadius": "0px",
+      "imagePosition": "absolute",
+      "imageObjectFit": "fill",
+      "cellHeight": 183,
+      "imageBleed": true
+    }
+  },
+  "capturedAt": "2026-06-01T21:40:23.475Z"
+}

@@ -1,0 +1,162 @@
+[
+  {
+    "shot": "hero-pack4-390x844-default",
+    "route": "/travel",
+    "metrics": {
+      "stageHeight": 300,
+      "titleFontSize": "27px",
+      "titleLineHeight": "32px",
+      "titleClip": {
+        "clipped": false,
+        "bottomDelta": -206,
+        "topDelta": 30
+      },
+      "subtitleClip": {
+        "clipped": false,
+        "bottomDelta": -96,
+        "topDelta": 108
+      },
+      "stackHeight": 270
+    }
+  },
+  {
+    "shot": "hero-pack4-390x844-airport",
+    "route": "/travel",
+    "metrics": {
+      "stageHeight": 300,
+      "titleFontSize": "27px",
+      "titleLineHeight": "32px",
+      "titleClip": {
+        "clipped": false,
+        "bottomDelta": -206,
+        "topDelta": 30
+      },
+      "subtitleClip": {
+        "clipped": false,
+        "bottomDelta": -120,
+        "topDelta": 108
+      },
+      "stackHeight": 223
+    }
+  },
+  {
+    "shot": "hero-pack4-1366x768-normal-default",
+    "route": "/travel",
+    "metrics": {
+      "stageHeight": 500,
+      "titleFontSize": "57px",
+      "titleLineHeight": "60px",
+      "titleClip": {
+        "clipped": false,
+        "bottomDelta": -343,
+        "topDelta": 37
+      },
+      "subtitleClip": {
+        "clipped": false,
+        "bottomDelta": -247,
+        "topDelta": 181
+      },
+      "stackHeight": 500
+    }
+  },
+  {
+    "shot": "hero-pack4-1366x768-normal-airport",
+    "route": "/travel",
+    "metrics": {
+      "stageHeight": 500,
+      "titleFontSize": "57px",
+      "titleLineHeight": "60px",
+      "titleClip": {
+        "clipped": false,
+        "bottomDelta": -403,
+        "topDelta": 37
+      },
+      "subtitleClip": {
+        "clipped": false,
+        "bottomDelta": -307,
+        "topDelta": 121
+      },
+      "stackHeight": 500
+    }
+  },
+  {
+    "shot": "hero-pack4-1366x768-normal-interpreter",
+    "route": "/travel",
+    "metrics": {
+      "stageHeight": 500,
+      "titleFontSize": "57px",
+      "titleLineHeight": "60px",
+      "titleClip": {
+        "clipped": false,
+        "bottomDelta": -343,
+        "topDelta": 37
+      },
+      "subtitleClip": {
+        "clipped": false,
+        "bottomDelta": -247,
+        "topDelta": 181
+      },
+      "stackHeight": 500
+    }
+  },
+  {
+    "shot": "hero-pack4-1366x768-fullscreen-default",
+    "route": "/travel",
+    "metrics": {
+      "stageHeight": 450,
+      "titleFontSize": "48px",
+      "titleLineHeight": "52px",
+      "titleClip": {
+        "clipped": false,
+        "bottomDelta": -361,
+        "topDelta": 37
+      },
+      "subtitleClip": {
+        "clipped": false,
+        "bottomDelta": -265,
+        "topDelta": 113
+      },
+      "stackHeight": 450
+    }
+  },
+  {
+    "shot": "hero-pack4-1366x768-fullscreen-interpreter",
+    "route": "/travel",
+    "metrics": {
+      "stageHeight": 450,
+      "titleFontSize": "48px",
+      "titleLineHeight": "52px",
+      "titleClip": {
+        "clipped": false,
+        "bottomDelta": -309,
+        "topDelta": 37
+      },
+      "subtitleClip": {
+        "clipped": false,
+        "bottomDelta": -213,
+        "topDelta": 165
+      },
+      "stackHeight": 450
+    }
+  },
+  {
+    "shot": "hero-pack4-1366x768-fullscreen-transport",
+    "route": "/travel",
+    "metrics": {
+      "stageHeight": 450,
+      "titleFontSize": "48px",
+      "titleLineHeight": "52px",
+      "titleClip": {
+        "clipped": false,
+        "bottomDelta": -361,
+        "topDelta": 37
+      },
+      "subtitleClip": {
+        "clipped": false,
+        "bottomDelta": -265,
+        "topDelta": 113
+      },
+      "stackHeight": 450
+    }
+  }
+]

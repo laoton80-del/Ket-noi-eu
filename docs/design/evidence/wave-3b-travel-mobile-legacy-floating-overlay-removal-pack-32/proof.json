@@ -1,0 +1,260 @@
+{
+  "pack": 32,
+  "captures": {
+    "1024": {
+      "overlaySources": {
+        "languageMarket": "SmartTrioLanguageChip (ProfileSwitcher via MainTabNavigator)",
+        "accountPill": "ProfileSwitcher singleChip / chip (MainTabNavigator)",
+        "sosBubble": "SOSFloatingButton (MainTabNavigator)",
+        "suppression": "useVionaGlobalTopRailWebLegacySuppression in TravelScreen (mobile web)"
+      },
+      "legacyHiddenCount": 3,
+      "legacyHidden": [
+        {
+          "tag": "div",
+          "display": "none",
+          "ariaLabel": null,
+          "text": "Ngôn ngữ & thị trườngEnglish · Toàn cầu · EnglishĐổi"
+        },
+        {
+          "tag": "button",
+          "display": "none",
+          "ariaLabel": "Mở trung tâm tài khoản",
+          "text": "Tài khoản"
+        },
+        {
+          "tag": "div",
+          "display": "none",
+          "ariaLabel": null,
+          "text": ""
+        }
+      ],
+      "overlappingLegacyFloats": [
+        {
+          "tag": "div",
+          "display": "flex",
+          "position": "absolute",
+          "zIndex": "0",
+          "ariaLabel": null,
+          "text": "VIONAVIONA Du lịchTravel Lite · đồng hành & ngôn ngữNgôn ngữVIO CreditsSOST"
+        },
+        {
+          "tag": "div",
+          "display": "flex",
+          "position": "absolute",
+          "zIndex": "0",
+          "ariaLabel": null,
+          "text": "VIONAVIONA Du lịchTravel Lite · đồng hành & ngôn ngữNgôn ngữVIO CreditsSOST"
+        }
+      ],
+      "quickHelpVisible": true,
+      "topRailPresent": false,
+      "topRailButtons": [],
+      "bodyRailActive": true
+    },
+    "1366": {
+      "overlaySources": {
+        "languageMarket": "SmartTrioLanguageChip (ProfileSwitcher via MainTabNavigator)",
+        "accountPill": "ProfileSwitcher singleChip / chip (MainTabNavigator)",
+        "sosBubble": "SOSFloatingButton (MainTabNavigator)",
+        "suppression": "useVionaGlobalTopRailWebLegacySuppression in TravelScreen (mobile web)"
+      },
+      "legacyHiddenCount": 3,
+      "legacyHidden": [
+        {
+          "tag": "div",
+          "display": "none",
+          "ariaLabel": null,
+          "text": "Ngôn ngữ & thị trườngEnglish · Toàn cầu · EnglishĐổi"
+        },
+        {
+          "tag": "button",
+          "display": "none",
+          "ariaLabel": "Mở trung tâm tài khoản",
+          "text": "Tài khoản"
+        },
+        {
+          "tag": "div",
+          "display": "none",
+          "ariaLabel": null,
+          "text": ""
+        }
+      ],
+      "overlappingLegacyFloats": [
+        {
+          "tag": "div",
+          "display": "flex",
+          "position": "absolute",
+          "zIndex": "0",
+          "ariaLabel": null,
+          "text": "VIONAVIONA Du lịchTravel Lite · đồng hành & ngôn ngữNgôn ngữToàn màn hìnhVIO "
+        },
+        {
+          "tag": "div",
+          "display": "flex",
+          "position": "absolute",
+          "zIndex": "0",
+          "ariaLabel": null,
+          "text": "VIONAVIONA Du lịchTravel Lite · đồng hành & ngôn ngữNgôn ngữToàn màn hìnhVIO "
+        }
+      ],
+      "quickHelpVisible": true,
+      "topRailPresent": false,
+      "topRailButtons": [],
+      "bodyRailActive": true
+    },
+    "390-default": {
+      "overlaySources": {
+        "languageMarket": "SmartTrioLanguageChip (ProfileSwitcher via MainTabNavigator)",
+        "accountPill": "ProfileSwitcher singleChip / chip (MainTabNavigator)",
+        "sosBubble": "SOSFloatingButton (MainTabNavigator)",
+        "suppression": "useVionaGlobalTopRailWebLegacySuppression in TravelScreen (mobile web)"
+      },
+      "legacyHiddenCount": 3,
+      "legacyHidden": [
+        {
+          "tag": "div",
+          "display": "none",
+          "ariaLabel": null,
+          "text": "Ngôn ngữ & thị trườngEnglish · Toàn cầu · EnglishĐổi"
+        },
+        {
+          "tag": "button",
+          "display": "none",
+          "ariaLabel": "Mở trung tâm tài khoản",
+          "text": "Tài khoản"
+        },
+        {
+          "tag": "div",
+          "display": "none",
+          "ariaLabel": null,
+          "text": ""
+        }
+      ],
+      "overlappingLegacyFloats": [
+        {
+          "tag": "div",
+          "display": "flex",
+          "position": "absolute",
+          "zIndex": "0",
+          "ariaLabel": null,
+          "text": "VIONAVIONA Du lịchTravel Lite · đồng hành & ngôn ngữTRAVEL LITEĐồng hành trê"
+        },
+        {
+          "tag": "div",
+          "display": "flex",
+          "position": "absolute",
+          "zIndex": "0",
+          "ariaLabel": null,
+          "text": "VIONAVIONA Du lịchTravel Lite · đồng hành & ngôn ngữTRAVEL LITEĐồng hành trê"
+        }
+      ],
+      "quickHelpVisible": true,
+      "topRailPresent": false,
+      "topRailButtons": [],
+      "bodyRailActive": true
+    },
+    "390-scroll": {
+      "overlaySources": {
+        "languageMarket": "SmartTrioLanguageChip (ProfileSwitcher via MainTabNavigator)",
+        "accountPill": "ProfileSwitcher singleChip / chip (MainTabNavigator)",
+        "sosBubble": "SOSFloatingButton (MainTabNavigator)",
+        "suppression": "useVionaGlobalTopRailWebLegacySuppression in TravelScreen (mobile web)"
+      },
+      "legacyHiddenCount": 3,
+      "legacyHidden": [
+        {
+          "tag": "div",
+          "display": "none",
+          "ariaLabel": null,
+          "text": "Ngôn ngữ & thị trườngEnglish · Toàn cầu · EnglishĐổi"
+        },
+        {
+          "tag": "button",
+          "display": "none",
+          "ariaLabel": "Mở trung tâm tài khoản",
+          "text": "Tài khoản"
+        },
+        {
+          "tag": "div",
+          "display": "none",
+          "ariaLabel": null,
+          "text": ""
+        }
+      ],
+      "overlappingLegacyFloats": [
+        {
+          "tag": "div",
+          "display": "flex",
+          "position": "absolute",
+          "zIndex": "0",
+          "ariaLabel": null,
+          "text": "VIONAVIONA Du lịchTravel Lite · đồng hành & ngôn ngữTRAVEL LITEĐồng hành trê"
+        },
+        {
+          "tag": "div",
+          "display": "flex",
+          "position": "absolute",
+          "zIndex": "0",
+          "ariaLabel": null,
+          "text": "VIONAVIONA Du lịchTravel Lite · đồng hành & ngôn ngữTRAVEL LITEĐồng hành trê"
+        }
+      ],
+      "quickHelpVisible": true,
+      "topRailPresent": false,
+      "topRailButtons": [],
+      "bodyRailActive": true
+    },
+    "1366-fullscreen": {
+      "overlaySources": {
+        "languageMarket": "SmartTrioLanguageChip (ProfileSwitcher via MainTabNavigator)",
+        "accountPill": "ProfileSwitcher singleChip / chip (MainTabNavigator)",
+        "sosBubble": "SOSFloatingButton (MainTabNavigator)",
+        "suppression": "useVionaGlobalTopRailWebLegacySuppression in TravelScreen (mobile web)"
+      },
+      "legacyHiddenCount": 3,
+      "legacyHidden": [
+        {
+          "tag": "div",
+          "display": "none",
+          "ariaLabel": null,
+          "text": "Ngôn ngữ & thị trườngEnglish · Toàn cầu · EnglishĐổi"
+        },
+        {
+          "tag": "button",
+          "display": "none",
+          "ariaLabel": "Mở trung tâm tài khoản",
+          "text": "Tài khoản"
+        },
+        {
+          "tag": "div",
+          "display": "none",
+          "ariaLabel": null,
+          "text": ""
+        }
+      ],
+      "overlappingLegacyFloats": [
+        {
+          "tag": "div",
+          "display": "flex",
+          "position": "absolute",
+          "zIndex": "0",
+          "ariaLabel": null,
+          "text": "VIONAVIONA Du lịchTravel Lite · đồng hành & ngôn ngữNgôn ngữThoát toàn màn hìn"
+        },
+        {
+          "tag": "div",
+          "display": "flex",
+          "position": "absolute",
+          "zIndex": "0",
+          "ariaLabel": null,
+          "text": "VIONAVIONA Du lịchTravel Lite · đồng hành & ngôn ngữNgôn ngữThoát toàn màn hìn"
+        }
+      ],
+      "quickHelpVisible": true,
+      "topRailPresent": false,
+      "topRailButtons": [],
+      "bodyRailActive": true
+    }
+  }
+}

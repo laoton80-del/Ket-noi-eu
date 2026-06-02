@@ -1,0 +1,47 @@
+[
+  {
+    "viewport": "local-assist-pack8-390x844",
+    "metrics": {
+      "gapAssistToConnectedPx": 32,
+      "secondaryColor": "rgb(0, 0, 0)",
+      "secondaryBg": "rgba(8, 14, 24, 0.42)",
+      "hasSafety": true
+    }
+  },
+  {
+    "viewport": "local-assist-pack8-768x1024",
+    "metrics": {
+      "gapAssistToConnectedPx": 36,
+      "secondaryColor": "rgb(0, 0, 0)",
+      "secondaryBg": "rgba(8, 14, 24, 0.42)",
+      "hasSafety": true
+    }
+  },
+  {
+    "viewport": "local-assist-pack8-1024x768",
+    "metrics": {
+      "gapAssistToConnectedPx": 42,
+      "secondaryColor": "rgb(0, 0, 0)",
+      "secondaryBg": "rgba(8, 14, 24, 0.5)",
+      "hasSafety": true
+    }
+  },
+  {
+    "viewport": "local-assist-pack8-1366x768",
+    "metrics": {
+      "gapAssistToConnectedPx": 42,
+      "secondaryColor": "rgb(0, 0, 0)",
+      "secondaryBg": "rgba(8, 14, 24, 0.5)",
+      "hasSafety": true
+    }
+  },
+  {
+    "viewport": "local-assist-pack8-1366x768-fullscreen",
+    "metrics": {
+      "gapAssistToConnectedPx": 42,
+      "secondaryColor": "rgb(0, 0, 0)",
+      "secondaryBg": "rgba(8, 14, 24, 0.5)",
+      "hasSafety": true
+    }
+  }
+]

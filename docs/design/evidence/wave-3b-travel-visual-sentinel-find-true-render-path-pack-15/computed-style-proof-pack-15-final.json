@@ -1,0 +1,123 @@
+{
+  "phase": "final",
+  "port": 8095,
+  "cacheBust": 1780333837416,
+  "modes": [
+    {
+      "phase": "final",
+      "mode": "normal",
+      "viewportWidth": 1366,
+      "sentinelProofLabelVisible": false,
+      "title": {
+        "innerText": "Đồng hành trên mọi hành trình",
+        "fontSize": "80px",
+        "lineHeight": "76px",
+        "width": 900,
+        "height": 152,
+        "left": 72,
+        "maxWidth": "900px"
+      },
+      "layer": {
+        "width": 900,
+        "left": 16,
+        "borderTopWidth": "0px",
+        "borderTopColor": "rgb(0, 0, 0)",
+        "paddingLeft": "56px",
+        "paddingTop": "52px"
+      },
+      "heroWidth": 1334,
+      "titleToHeroRatio": 67.5,
+      "cards": [
+        {
+          "id": "airport",
+          "borderTopWidth": "0px",
+          "borderTopColor": "rgba(0, 0, 0, 0)",
+          "boxShadow": "rgb(120, 245, 255) 0px 0px 0px 2.5px, rgba(96, 228, 255, 0.3) 0px 0px 16px 0px, rgba(96, 228, 255, 0.2) 0px 0px 28px 0px, rgba(255, 255, 255, 0.12) 0px 1px 0px 0px inset",
+          "outline": "rgb(0, 0, 0) none 0px"
+        },
+        {
+          "id": "translation",
+          "borderTopWidth": "0px",
+          "borderTopColor": "rgba(0, 0, 0, 0)",
+          "boxShadow": "rgb(226, 160, 255) 0px 0px 0px 2.5px, rgba(210, 148, 255, 0.3) 0px 0px 16px 0px, rgba(210, 148, 255, 0.2) 0px 0px 28px 0px, rgba(255, 255, 255, 0.12) 0px 1px 0px 0px inset",
+          "outline": "rgb(0, 0, 0) none 0px"
+        },
+        {
+          "id": "taxi",
+          "borderTopWidth": "0px",
+          "borderTopColor": "rgba(0, 0, 0, 0)",
+          "boxShadow": "rgb(70, 255, 220) 0px 0px 0px 2.5px, rgba(48, 232, 208, 0.3) 0px 0px 16px 0px, rgba(48, 232, 208, 0.2) 0px 0px 28px 0px, rgba(255, 255, 255, 0.12) 0px 1px 0px 0px inset",
+          "outline": "rgb(0, 0, 0) none 0px"
+        },
+        {
+          "id": "emergency",
+          "borderTopWidth": "0px",
+          "borderTopColor": "rgba(0, 0, 0, 0)",
+          "boxShadow": "rgb(255, 80, 170) 0px 0px 0px 2.5px, rgba(255, 88, 168, 0.3) 0px 0px 16px 0px, rgba(255, 88, 168, 0.2) 0px 0px 28px 0px, rgba(255, 255, 255, 0.12) 0px 1px 0px 0px inset",
+          "outline": "rgb(0, 0, 0) none 0px"
+        }
+      ],
+      "capturedAt": "2026-06-01T17:11:20.418Z",
+      "cacheBust": 1780333837416,
+      "port": 8095
+    },
+    {
+      "phase": "final",
+      "mode": "fullscreen",
+      "viewportWidth": 1366,
+      "sentinelProofLabelVisible": false,
+      "title": {
+        "innerText": "Đồng hành trên mọi hành trình",
+        "fontSize": "70px",
+        "lineHeight": "69px",
+        "width": 880,
+        "height": 138,
+        "left": 70,
+        "maxWidth": "880px"
+      },
+      "layer": {
+        "width": 880,
+        "left": 16,
+        "borderTopWidth": "0px",
+        "borderTopColor": "rgb(0, 0, 0)",
+        "paddingLeft": "54px",
+        "paddingTop": "42px"
+      },
+      "heroWidth": 1334,
+      "titleToHeroRatio": 66,
+      "cards": [
+        {
+          "id": "airport",
+          "borderTopWidth": "0px",
+          "borderTopColor": "rgba(0, 0, 0, 0)",
+          "boxShadow": "rgb(120, 245, 255) 0px 0px 0px 2.5px, rgba(96, 228, 255, 0.3) 0px 0px 16px 0px, rgba(96, 228, 255, 0.2) 0px 0px 28px 0px, rgba(255, 255, 255, 0.12) 0px 1px 0px 0px inset",
+          "outline": "rgb(0, 0, 0) none 0px"
+        },
+        {
+          "id": "translation",
+          "borderTopWidth": "0px",
+          "borderTopColor": "rgba(0, 0, 0, 0)",
+          "boxShadow": "rgb(226, 160, 255) 0px 0px 0px 2.5px, rgba(210, 148, 255, 0.3) 0px 0px 16px 0px, rgba(210, 148, 255, 0.2) 0px 0px 28px 0px, rgba(255, 255, 255, 0.12) 0px 1px 0px 0px inset",
+          "outline": "rgb(0, 0, 0) none 0px"
+        },
+        {
+          "id": "taxi",
+          "borderTopWidth": "0px",
+          "borderTopColor": "rgba(0, 0, 0, 0)",
+          "boxShadow": "rgb(70, 255, 220) 0px 0px 0px 2.5px, rgba(48, 232, 208, 0.3) 0px 0px 16px 0px, rgba(48, 232, 208, 0.2) 0px 0px 28px 0px, rgba(255, 255, 255, 0.12) 0px 1px 0px 0px inset",
+          "outline": "rgb(0, 0, 0) none 0px"
+        },
+        {
+          "id": "emergency",
+          "borderTopWidth": "0px",
+          "borderTopColor": "rgba(0, 0, 0, 0)",
+          "boxShadow": "rgb(255, 80, 170) 0px 0px 0px 2.5px, rgba(255, 88, 168, 0.3) 0px 0px 16px 0px, rgba(255, 88, 168, 0.2) 0px 0px 28px 0px, rgba(255, 255, 255, 0.12) 0px 1px 0px 0px inset",
+          "outline": "rgb(0, 0, 0) none 0px"
+        }
+      ],
+      "capturedAt": "2026-06-01T17:11:24.585Z",
+      "cacheBust": 1780333837416,
+      "port": 8095
+    }
+  ]
+}

@@ -1,0 +1,71 @@
+{
+  "default": {
+    "heroTitleText": "Đồng hành trên mọi hành trình",
+    "heroTitleExpectedKeys": "default",
+    "title": {
+      "fontSize": "88px",
+      "lineHeight": "82px",
+      "width": 980
+    },
+    "textStackWidth": 980,
+    "heroHeight": 378
+  },
+  "hover": {
+    "airport": {
+      "hoveredCardId": "airport",
+      "heroTitleText": "Đi qua sân bay tự tin hơn",
+      "expectedTitle": "Đi qua sân bay tự tin hơn",
+      "titleMatches": true,
+      "cellTransform": "matrix(1.017, 0, 0, 1.017, 0, -4)",
+      "cellTransition": "transform 0.2s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.22s ease-out",
+      "cellBoxShadow": "rgba(130, 235, 255, 0.94) 0px 0px 0px 1.5px, rgba(96, 228, 255, 0.16) 0px 0px 10px 0px, rgba(96, 228, 255, 0.11) 0px 0px",
+      "heroOverlayImageCount": 2
+    },
+    "translation": {
+      "hoveredCardId": "translation",
+      "heroTitleText": "Hiểu đúng trong tình huống quan trọng",
+      "expectedTitle": "Hiểu đúng trong tình huống quan trọng",
+      "titleMatches": true,
+      "cellTransform": "matrix(1.017, 0, 0, 1.017, 0, -4)",
+      "cellTransition": "transform 0.2s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.22s ease-out",
+      "cellBoxShadow": "rgba(216, 160, 255, 0.94) 0px 0px 0px 1.5px, rgba(210, 148, 255, 0.16) 0px 0px 10px 0px, rgba(210, 148, 255, 0.11) 0px 0",
+      "heroOverlayImageCount": 2
+    },
+    "taxi": {
+      "hoveredCardId": "taxi",
+      "heroTitleText": "Tìm cách di chuyển phù hợp",
+      "expectedTitle": "Tìm cách di chuyển phù hợp",
+      "titleMatches": true,
+      "cellTransform": "matrix(1.017, 0, 0, 1.017, 0, -4)",
+      "cellTransition": "transform 0.2s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.22s ease-out",
+      "cellBoxShadow": "rgba(78, 235, 210, 0.94) 0px 0px 0px 1.5px, rgba(48, 232, 208, 0.16) 0px 0px 10px 0px, rgba(48, 232, 208, 0.11) 0px 0px ",
+      "heroOverlayImageCount": 2
+    },
+    "emergency": {
+      "hoveredCardId": "emergency",
+      "heroTitleText": "Bình tĩnh trong tình huống khẩn cấp",
+      "expectedTitle": "Bình tĩnh trong tình huống khẩn cấp",
+      "titleMatches": true,
+      "cellTransform": "matrix(1.017, 0, 0, 1.017, 0, -4)",
+      "cellTransition": "transform 0.2s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.22s ease-out",
+      "cellBoxShadow": "rgba(255, 92, 170, 0.94) 0px 0px 0px 1.5px, rgba(255, 88, 168, 0.16) 0px 0px 10px 0px, rgba(255, 88, 168, 0.11) 0px 0px ",
+      "heroOverlayImageCount": 2
+    }
+  },
+  "titleNormal": {
+    "fontSize": "88px",
+    "lineHeight": "82px",
+    "width": 980
+  },
+  "titleFullscreen": {
+    "fontSize": "71px",
+    "lineHeight": "71px",
+    "width": 900
+  },
+  "capturedAt": "2026-06-01T22:01:59.748Z",
+  "hoverStateArchitecture": {
+    "hoveredQuickHelpHeroContextId": "TravelFlagshipScenarioId | null",
+    "selectedQuickHelpHeroContextId": "TravelQuickHelpHeroContextId",
+    "displayedHeroQuickHelpContextId": "hovered ?? selected ?? default"
+  }
+}

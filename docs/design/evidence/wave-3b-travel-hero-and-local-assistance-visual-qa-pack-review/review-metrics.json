@@ -1,0 +1,447 @@
+{
+  "label": "review",
+  "base": "http://localhost:8095",
+  "capturedAt": "2026-06-01T08:21:47.752Z",
+  "shots": {
+    "01-1366-normal-default": {
+      "titleFontSizePx": 57,
+      "titleLineHeightPx": 60,
+      "titleWidthPx": 780,
+      "titleLeftPx": 58,
+      "textStackWidthPx": 780,
+      "textStackPaddingLeftPx": 42,
+      "heroStageHeightPx": 500,
+      "heroStageWidthPx": 1334,
+      "titleText": "Đồng hành trên mọi hành trình",
+      "sceneHeightPx": 238,
+      "sceneBgPosition": "52% 36%",
+      "flagshipCellCount": 5,
+      "flagshipCells": [
+        {
+          "testId": "travel-flagship-cards-row",
+          "borderWidth": "0px",
+          "outlineWidth": "0px",
+          "boxShadow": "none"
+        },
+        {
+          "testId": "travel-flagship-airport",
+          "borderWidth": "0px",
+          "outlineWidth": "0px",
+          "boxShadow": "none"
+        },
+        {
+          "testId": "travel-flagship-translation",
+          "borderWidth": "0px",
+          "outlineWidth": "0px",
+          "boxShadow": "none"
+        },
+        {
+          "testId": "travel-flagship-taxi",
+          "borderWidth": "0px",
+          "outlineWidth": "0px",
+          "boxShadow": "none"
+        }
+      ]
+    },
+    "02-1366-normal-airport": {
+      "titleFontSizePx": 57,
+      "titleLineHeightPx": 60,
+      "titleWidthPx": 780,
+      "titleLeftPx": 58,
+      "textStackWidthPx": 780,
+      "textStackPaddingLeftPx": 42,
+      "heroStageHeightPx": 500,
+      "heroStageWidthPx": 1334,
+      "titleText": "Đi qua sân bay tự tin hơn",
+      "sceneHeightPx": 238,
+      "sceneBgPosition": "52% 36%",
+      "flagshipCellCount": 5,
+      "flagshipCells": [
+        {
+          "testId": "travel-flagship-cards-row",
+          "borderWidth": "0px",
+          "outlineWidth": "0px",
+          "boxShadow": "none"
+        },
+        {
+          "testId": "travel-flagship-airport",
+          "borderWidth": "0px",
+          "outlineWidth": "0px",
+          "boxShadow": "none"
+        },
+        {
+          "testId": "travel-flagship-translation",
+          "borderWidth": "0px",
+          "outlineWidth": "0px",
+          "boxShadow": "none"
+        },
+        {
+          "testId": "travel-flagship-taxi",
+          "borderWidth": "0px",
+          "outlineWidth": "0px",
+          "boxShadow": "none"
+        }
+      ]
+    },
+    "03-1366-normal-interpreter": {
+      "titleFontSizePx": 57,
+      "titleLineHeightPx": 60,
+      "titleWidthPx": 780,
+      "titleLeftPx": 58,
+      "textStackWidthPx": 780,
+      "textStackPaddingLeftPx": 42,
+      "heroStageHeightPx": 500,
+      "heroStageWidthPx": 1334,
+      "titleText": "Hiểu đúng trong tình huống quan trọng",
+      "sceneHeightPx": 238,
+      "sceneBgPosition": "52% 36%",
+      "flagshipCellCount": 5,
+      "flagshipCells": [
+        {
+          "testId": "travel-flagship-cards-row",
+          "borderWidth": "0px",
+          "outlineWidth": "0px",
+          "boxShadow": "none"
+        },
+        {
+          "testId": "travel-flagship-airport",
+          "borderWidth": "0px",
+          "outlineWidth": "0px",
+          "boxShadow": "none"
+        },
+        {
+          "testId": "travel-flagship-translation",
+          "borderWidth": "0px",
+          "outlineWidth": "0px",
+          "boxShadow": "none"
+        },
+        {
+          "testId": "travel-flagship-taxi",
+          "borderWidth": "0px",
+          "outlineWidth": "0px",
+          "boxShadow": "none"
+        }
+      ]
+    },
+    "04-1366-normal-transport": {
+      "titleFontSizePx": 57,
+      "titleLineHeightPx": 60,
+      "titleWidthPx": 780,
+      "titleLeftPx": 58,
+      "textStackWidthPx": 780,
+      "textStackPaddingLeftPx": 42,
+      "heroStageHeightPx": 500,
+      "heroStageWidthPx": 1334,
+      "titleText": "Tìm cách di chuyển phù hợp",
+      "sceneHeightPx": 238,
+      "sceneBgPosition": "52% 36%",
+      "flagshipCellCount": 5,
+      "flagshipCells": [
+        {
+          "testId": "travel-flagship-cards-row",
+          "borderWidth": "0px",
+          "outlineWidth": "0px",
+          "boxShadow": "none"
+        },
+        {
+          "testId": "travel-flagship-airport",
+          "borderWidth": "0px",
+          "outlineWidth": "0px",
+          "boxShadow": "none"
+        },
+        {
+          "testId": "travel-flagship-translation",
+          "borderWidth": "0px",
+          "outlineWidth": "0px",
+          "boxShadow": "none"
+        },
+        {
+          "testId": "travel-flagship-taxi",
+          "borderWidth": "0px",
+          "outlineWidth": "0px",
+          "boxShadow": "none"
+        }
+      ]
+    },
+    "05-1366-normal-emergency": {
+      "titleFontSizePx": 57,
+      "titleLineHeightPx": 60,
+      "titleWidthPx": 780,
+      "titleLeftPx": 58,
+      "textStackWidthPx": 780,
+      "textStackPaddingLeftPx": 42,
+      "heroStageHeightPx": 500,
+      "heroStageWidthPx": 1334,
+      "titleText": "Bình tĩnh trong tình huống khẩn cấp",
+      "sceneHeightPx": 238,
+      "sceneBgPosition": "52% 36%",
+      "flagshipCellCount": 5,
+      "flagshipCells": [
+        {
+          "testId": "travel-flagship-cards-row",
+          "borderWidth": "0px",
+          "outlineWidth": "0px",
+          "boxShadow": "none"
+        },
+        {
+          "testId": "travel-flagship-airport",
+          "borderWidth": "0px",
+          "outlineWidth": "0px",
+          "boxShadow": "none"
+        },
+        {
+          "testId": "travel-flagship-translation",
+          "borderWidth": "0px",
+          "outlineWidth": "0px",
+          "boxShadow": "none"
+        },
+        {
+          "testId": "travel-flagship-taxi",
+          "borderWidth": "0px",
+          "outlineWidth": "0px",
+          "boxShadow": "none"
+        }
+      ]
+    },
+    "06-1366-fullscreen-default": {
+      "titleFontSizePx": 54,
+      "titleLineHeightPx": 57,
+      "titleWidthPx": 800,
+      "titleLeftPx": 60,
+      "textStackWidthPx": 800,
+      "textStackPaddingLeftPx": 44,
+      "heroStageHeightPx": 450,
+      "heroStageWidthPx": 1334,
+      "titleText": "Đồng hành trên mọi hành trình",
+      "sceneHeightPx": 224,
+      "sceneBgPosition": "54% 38%",
+      "flagshipCellCount": 5,
+      "flagshipCells": [
+        {
+          "testId": "travel-flagship-cards-row",
+          "borderWidth": "0px",
+          "outlineWidth": "0px",
+          "boxShadow": "none"
+        },
+        {
+          "testId": "travel-flagship-airport",
+          "borderWidth": "0px",
+          "outlineWidth": "0px",
+          "boxShadow": "none"
+        },
+        {
+          "testId": "travel-flagship-translation",
+          "borderWidth": "0px",
+          "outlineWidth": "0px",
+          "boxShadow": "none"
+        },
+        {
+          "testId": "travel-flagship-taxi",
+          "borderWidth": "0px",
+          "outlineWidth": "0px",
+          "boxShadow": "none"
+        }
+      ]
+    },
+    "07-1366-fullscreen-interpreter": {
+      "titleFontSizePx": 54,
+      "titleLineHeightPx": 57,
+      "titleWidthPx": 800,
+      "titleLeftPx": 60,
+      "textStackWidthPx": 800,
+      "textStackPaddingLeftPx": 44,
+      "heroStageHeightPx": 450,
+      "heroStageWidthPx": 1334,
+      "titleText": "Hiểu đúng trong tình huống quan trọng",
+      "sceneHeightPx": 224,
+      "sceneBgPosition": "54% 38%",
+      "flagshipCellCount": 5,
+      "flagshipCells": [
+        {
+          "testId": "travel-flagship-cards-row",
+          "borderWidth": "0px",
+          "outlineWidth": "0px",
+          "boxShadow": "none"
+        },
+        {
+          "testId": "travel-flagship-airport",
+          "borderWidth": "0px",
+          "outlineWidth": "0px",
+          "boxShadow": "none"
+        },
+        {
+          "testId": "travel-flagship-translation",
+          "borderWidth": "0px",
+          "outlineWidth": "0px",
+          "boxShadow": "none"
+        },
+        {
+          "testId": "travel-flagship-taxi",
+          "borderWidth": "0px",
+          "outlineWidth": "0px",
+          "boxShadow": "none"
+        }
+      ]
+    },
+    "08-1366-fullscreen-transport": {
+      "titleFontSizePx": 54,
+      "titleLineHeightPx": 57,
+      "titleWidthPx": 800,
+      "titleLeftPx": 60,
+      "textStackWidthPx": 800,
+      "textStackPaddingLeftPx": 44,
+      "heroStageHeightPx": 450,
+      "heroStageWidthPx": 1334,
+      "titleText": "Tìm cách di chuyển phù hợp",
+      "sceneHeightPx": 224,
+      "sceneBgPosition": "54% 38%",
+      "flagshipCellCount": 5,
+      "flagshipCells": [
+        {
+          "testId": "travel-flagship-cards-row",
+          "borderWidth": "0px",
+          "outlineWidth": "0px",
+          "boxShadow": "none"
+        },
+        {
+          "testId": "travel-flagship-airport",
+          "borderWidth": "0px",
+          "outlineWidth": "0px",
+          "boxShadow": "none"
+        },
+        {
+          "testId": "travel-flagship-translation",
+          "borderWidth": "0px",
+          "outlineWidth": "0px",
+          "boxShadow": "none"
+        },
+        {
+          "testId": "travel-flagship-taxi",
+          "borderWidth": "0px",
+          "outlineWidth": "0px",
+          "boxShadow": "none"
+        }
+      ]
+    },
+    "09-1024x768": {
+      "titleFontSizePx": 52,
+      "titleLineHeightPx": 55,
+      "titleWidthPx": 720,
+      "titleLeftPx": 58,
+      "textStackWidthPx": 720,
+      "textStackPaddingLeftPx": 42,
+      "heroStageHeightPx": 500,
+      "heroStageWidthPx": 992,
+      "titleText": "Đồng hành trên mọi hành trình",
+      "sceneHeightPx": 238,
+      "sceneBgPosition": "52% 36%",
+      "flagshipCellCount": 5,
+      "flagshipCells": [
+        {
+          "testId": "travel-flagship-cards-row",
+          "borderWidth": "0px",
+          "outlineWidth": "0px",
+          "boxShadow": "none"
+        },
+        {
+          "testId": "travel-flagship-airport",
+          "borderWidth": "0px",
+          "outlineWidth": "0px",
+          "boxShadow": "none"
+        },
+        {
+          "testId": "travel-flagship-translation",
+          "borderWidth": "0px",
+          "outlineWidth": "0px",
+          "boxShadow": "none"
+        },
+        {
+          "testId": "travel-flagship-taxi",
+          "borderWidth": "0px",
+          "outlineWidth": "0px",
+          "boxShadow": "none"
+        }
+      ]
+    },
+    "10-768x1024": {
+      "titleFontSizePx": 38,
+      "titleLineHeightPx": 43,
+      "titleWidthPx": 513,
+      "titleLeftPx": 36,
+      "textStackWidthPx": 553,
+      "textStackPaddingLeftPx": 20,
+      "heroStageHeightPx": 320,
+      "heroStageWidthPx": 736,
+      "titleText": "Đồng hành trên mọi hành trình",
+      "sceneHeightPx": 214,
+      "sceneBgPosition": "48% 38%",
+      "flagshipCellCount": 5,
+      "flagshipCells": [
+        {
+          "testId": "travel-flagship-cards-row",
+          "borderWidth": "0px",
+          "outlineWidth": "0px",
+          "boxShadow": "none"
+        },
+        {
+          "testId": "travel-flagship-airport",
+          "borderWidth": "0px",
+          "outlineWidth": "0px",
+          "boxShadow": "none"
+        },
+        {
+          "testId": "travel-flagship-translation",
+          "borderWidth": "0px",
+          "outlineWidth": "0px",
+          "boxShadow": "none"
+        },
+        {
+          "testId": "travel-flagship-taxi",
+          "borderWidth": "0px",
+          "outlineWidth": "0px",
+          "boxShadow": "none"
+        }
+      ]
+    },
+    "11-390x844": {
+      "titleFontSizePx": 29,
+      "titleLineHeightPx": 34,
+      "titleWidthPx": 282,
+      "titleLeftPx": 36,
+      "textStackWidthPx": 322,
+      "textStackPaddingLeftPx": 20,
+      "heroStageHeightPx": 236,
+      "heroStageWidthPx": 358,
+      "titleText": "Đồng hành trên mọi hành trình",
+      "sceneHeightPx": 164,
+      "sceneBgPosition": "46% 40%",
+      "flagshipCellCount": 5,
+      "flagshipCells": [
+        {
+          "testId": "travel-flagship-cards-row",
+          "borderWidth": "0px",
+          "outlineWidth": "0px",
+          "boxShadow": "none"
+        },
+        {
+          "testId": "travel-flagship-airport",
+          "borderWidth": "0px",
+          "outlineWidth": "0px",
+          "boxShadow": "none"
+        },
+        {
+          "testId": "travel-flagship-translation",
+          "borderWidth": "0px",
+          "outlineWidth": "0px",
+          "boxShadow": "none"
+        },
+        {
+          "testId": "travel-flagship-taxi",
+          "borderWidth": "0px",
+          "outlineWidth": "0px",
+          "boxShadow": "none"
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,84 @@
+{
+  "capturedAt": "2026-06-01T05:13:28.844Z",
+  "1366-normal-default": {
+    "titleFontSizePx": 56,
+    "titleMaxWidthPx": 720,
+    "titleWidthPx": 720,
+    "textLayerWidthPx": 720,
+    "heroWidthPx": 1334,
+    "titleWidthPercentOfHero": 54,
+    "titleText": "Đồng hành trên mọi hành trình"
+  },
+  "1366-normal-airport": {
+    "titleFontSizePx": 56,
+    "titleMaxWidthPx": 720,
+    "titleWidthPx": 720,
+    "textLayerWidthPx": 720,
+    "heroWidthPx": 1334,
+    "titleWidthPercentOfHero": 54,
+    "titleText": "Đi qua sân bay tự tin hơn"
+  },
+  "1366-normal-interpreter": {
+    "titleFontSizePx": 56,
+    "titleMaxWidthPx": 720,
+    "titleWidthPx": 720,
+    "textLayerWidthPx": 720,
+    "heroWidthPx": 1334,
+    "titleWidthPercentOfHero": 54,
+    "titleText": "Hiểu đúng trong tình huống quan trọng"
+  },
+  "1366-normal-transport": {
+    "titleFontSizePx": 56,
+    "titleMaxWidthPx": 720,
+    "titleWidthPx": 720,
+    "textLayerWidthPx": 720,
+    "heroWidthPx": 1334,
+    "titleWidthPercentOfHero": 54,
+    "titleText": "Tìm cách di chuyển phù hợp"
+  },
+  "1366-normal-emergency": {
+    "titleFontSizePx": 56,
+    "titleMaxWidthPx": 720,
+    "titleWidthPx": 720,
+    "textLayerWidthPx": 720,
+    "heroWidthPx": 1334,
+    "titleWidthPercentOfHero": 54,
+    "titleText": "Bình tĩnh trong tình huống khẩn cấp"
+  },
+  "1366-fullscreen-default": {
+    "titleFontSizePx": 58,
+    "titleMaxWidthPx": 760,
+    "titleWidthPx": 760,
+    "textLayerWidthPx": 760,
+    "heroWidthPx": 1334,
+    "titleWidthPercentOfHero": 57,
+    "titleText": "Đồng hành trên mọi hành trình"
+  },
+  "1366-fullscreen-interpreter": {
+    "titleFontSizePx": 58,
+    "titleMaxWidthPx": 760,
+    "titleWidthPx": 760,
+    "textLayerWidthPx": 760,
+    "heroWidthPx": 1334,
+    "titleWidthPercentOfHero": 57,
+    "titleText": "Hiểu đúng trong tình huống quan trọng"
+  },
+  "1366-fullscreen-quickhelp-closeup": {
+    "titleFontSizePx": 58,
+    "titleMaxWidthPx": 760,
+    "titleWidthPx": 760,
+    "textLayerWidthPx": 760,
+    "heroWidthPx": 1334,
+    "titleWidthPercentOfHero": 57,
+    "titleText": "Đồng hành trên mọi hành trình"
+  },
+  "390-sanity": {
+    "titleFontSizePx": 29,
+    "titleMaxWidthPx": 343,
+    "titleWidthPx": 282,
+    "textLayerWidthPx": 322,
+    "heroWidthPx": 358,
+    "titleWidthPercentOfHero": 79,
+    "titleText": "Đồng hành trên mọi hành trình"
+  }
+}

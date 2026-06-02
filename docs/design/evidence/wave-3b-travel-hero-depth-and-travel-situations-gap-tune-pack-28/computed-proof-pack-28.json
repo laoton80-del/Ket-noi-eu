@@ -1,0 +1,68 @@
+{
+  "pack": 28,
+  "before": {
+    "heroTargetNormalPx": 378,
+    "heroTargetFullscreenPx": 368,
+    "objectPositionYNormal": "31%",
+    "objectPositionYFullscreen": "33%",
+    "coverScaleNormal": 0.87,
+    "quickHelpToSituationsBridgeNormalPx": -22,
+    "flagshipRowPaddingBottomPx": 6
+  },
+  "after": {
+    "normal": {
+      "fullscreen": false,
+      "viewportWidth": 1366,
+      "viewportHeight": 768,
+      "heroHeight": 410,
+      "heroImageObjectPosition": "50% 50%",
+      "heroImageWidth": "1568.78px",
+      "quickHelpBottom": 674,
+      "situationsTop": 722,
+      "quickHelpToSituationsGapPx": 48
+    },
+    "fullscreen": {
+      "fullscreen": true,
+      "viewportWidth": 1366,
+      "viewportHeight": 768,
+      "heroHeight": 376,
+      "heroImageObjectPosition": "50% 50%",
+      "heroImageWidth": "1578.11px",
+      "quickHelpBottom": 638,
+      "situationsTop": 664,
+      "quickHelpToSituationsGapPx": 26
+    },
+    "travel-1024x768-sanity": {
+      "fullscreen": false,
+      "viewportWidth": 1024,
+      "viewportHeight": 768,
+      "heroHeight": 402,
+      "heroImageObjectPosition": "50% 50%",
+      "heroImageWidth": "1166.58px",
+      "quickHelpBottom": 700,
+      "situationsTop": 756,
+      "quickHelpToSituationsGapPx": 56
+    },
+    "travel-390x844-sanity": {
+      "fullscreen": false,
+      "viewportWidth": 390,
+      "viewportHeight": 844,
+      "heroHeight": 300,
+      "heroImageObjectPosition": "50% 50%",
+      "heroImageWidth": "358px",
+      "quickHelpBottom": 990,
+      "situationsTop": 1074,
+      "quickHelpToSituationsGapPx": 84
+    },
+    "constants": {
+      "heroTargetNormalPx": 410,
+      "heroTargetFullscreenPx": 376,
+      "objectPositionYNormal": "34%",
+      "objectPositionYFullscreen": "35%",
+      "coverScaleNormal": 0.85,
+      "quickHelpToSituationsBridgeNormalPx": -34,
+      "flagshipRowPaddingBottomPx": 0
+    }
+  },
+  "capturedAt": "2026-06-01T22:51:32.518Z"
+}
