@@ -1,0 +1,239 @@
+{
+  "pack": 44,
+  "before": {
+    "backgroundOpacity": {
+      "fullscreen": 0.72,
+      "web1366": 0.76,
+      "web1024": 0.74,
+      "mobile": 0.68
+    },
+    "tileBodyAlpha": 0.044,
+    "borderWidth": 1,
+    "borderAlpha": {
+      "idle": 0.38,
+      "active": 0.46
+    },
+    "labelColor": "rgba(244, 251, 255, 1)",
+    "iconCapsuleBorderWidth": 1,
+    "iconCapsuleBg": "rgba(4, 10, 18, 0.18)"
+  },
+  "after": {
+    "backgroundOpacity": {
+      "fullscreen": 0.16,
+      "web1366": 0.18,
+      "web1024": 0.17,
+      "mobile": 0.14
+    },
+    "tileBodyAlpha": 0.58,
+    "borderWidth": 1.35,
+    "borderAlpha": {
+      "idle": 0.78,
+      "active": 0.86
+    },
+    "labelColor": "rgba(244, 251, 255, 1)",
+    "iconCapsuleBorderWidth": 1.2,
+    "iconCapsuleBg": "rgba(4, 10, 18, 0.18)"
+  },
+  "captures": {
+    "fullscreen1366": {
+      "mode": "fullscreen-1366",
+      "computed": {
+        "bgOpacity": "0.16",
+        "veilGradient": "linear-gradient(rgba(4, 10, 18, 0.16), rgba(4, 10, 18, 0.09) 55%, rgba(4, 10, 18, 0.13) 100%)",
+        "cardBg": "rgba(0, 0, 0, 0)",
+        "cardBorderColor": "rgb(0, 0, 0)",
+        "cardBorderWidth": "0px",
+        "titleColor": "rgb(0, 0, 0)",
+        "iconCapsuleBg": null,
+        "iconCapsuleBorderWidth": null
+      },
+      "refs": {
+        "before": {
+          "backgroundOpacity": {
+            "fullscreen": 0.72,
+            "web1366": 0.76,
+            "web1024": 0.74,
+            "mobile": 0.68
+          },
+          "tileBodyAlpha": 0.044,
+          "borderWidth": 1,
+          "borderAlpha": {
+            "idle": 0.38,
+            "active": 0.46
+          },
+          "labelColor": "rgba(244, 251, 255, 1)",
+          "iconCapsuleBorderWidth": 1,
+          "iconCapsuleBg": "rgba(4, 10, 18, 0.18)"
+        },
+        "after": {
+          "backgroundOpacity": {
+            "fullscreen": 0.16,
+            "web1366": 0.18,
+            "web1024": 0.17,
+            "mobile": 0.14
+          },
+          "tileBodyAlpha": 0.58,
+          "borderWidth": 1.35,
+          "borderAlpha": {
+            "idle": 0.78,
+            "active": 0.86
+          },
+          "labelColor": "rgba(244, 251, 255, 1)",
+          "iconCapsuleBorderWidth": 1.2,
+          "iconCapsuleBg": "rgba(4, 10, 18, 0.18)"
+        }
+      },
+      "sectionPresent": true
+    },
+    "normal1366": {
+      "mode": "normal-1366",
+      "computed": {
+        "bgOpacity": "0.18",
+        "veilGradient": "linear-gradient(rgba(4, 10, 18, 0.16), rgba(4, 10, 18, 0.09) 55%, rgba(4, 10, 18, 0.13) 100%)",
+        "cardBg": "rgba(0, 0, 0, 0)",
+        "cardBorderColor": "rgb(0, 0, 0)",
+        "cardBorderWidth": "0px",
+        "titleColor": "rgb(0, 0, 0)",
+        "iconCapsuleBg": null,
+        "iconCapsuleBorderWidth": null
+      },
+      "refs": {
+        "before": {
+          "backgroundOpacity": {
+            "fullscreen": 0.72,
+            "web1366": 0.76,
+            "web1024": 0.74,
+            "mobile": 0.68
+          },
+          "tileBodyAlpha": 0.044,
+          "borderWidth": 1,
+          "borderAlpha": {
+            "idle": 0.38,
+            "active": 0.46
+          },
+          "labelColor": "rgba(244, 251, 255, 1)",
+          "iconCapsuleBorderWidth": 1,
+          "iconCapsuleBg": "rgba(4, 10, 18, 0.18)"
+        },
+        "after": {
+          "backgroundOpacity": {
+            "fullscreen": 0.16,
+            "web1366": 0.18,
+            "web1024": 0.17,
+            "mobile": 0.14
+          },
+          "tileBodyAlpha": 0.58,
+          "borderWidth": 1.35,
+          "borderAlpha": {
+            "idle": 0.78,
+            "active": 0.86
+          },
+          "labelColor": "rgba(244, 251, 255, 1)",
+          "iconCapsuleBorderWidth": 1.2,
+          "iconCapsuleBg": "rgba(4, 10, 18, 0.18)"
+        }
+      },
+      "sectionPresent": true
+    },
+    "tablet1024": {
+      "mode": "tablet-1024",
+      "computed": {
+        "bgOpacity": "0.17",
+        "veilGradient": "linear-gradient(rgba(4, 10, 18, 0.16), rgba(4, 10, 18, 0.09) 55%, rgba(4, 10, 18, 0.13) 100%)",
+        "cardBg": "rgba(0, 0, 0, 0)",
+        "cardBorderColor": "rgb(0, 0, 0)",
+        "cardBorderWidth": "0px",
+        "titleColor": "rgb(0, 0, 0)",
+        "iconCapsuleBg": null,
+        "iconCapsuleBorderWidth": null
+      },
+      "refs": {
+        "before": {
+          "backgroundOpacity": {
+            "fullscreen": 0.72,
+            "web1366": 0.76,
+            "web1024": 0.74,
+            "mobile": 0.68
+          },
+          "tileBodyAlpha": 0.044,
+          "borderWidth": 1,
+          "borderAlpha": {
+            "idle": 0.38,
+            "active": 0.46
+          },
+          "labelColor": "rgba(244, 251, 255, 1)",
+          "iconCapsuleBorderWidth": 1,
+          "iconCapsuleBg": "rgba(4, 10, 18, 0.18)"
+        },
+        "after": {
+          "backgroundOpacity": {
+            "fullscreen": 0.16,
+            "web1366": 0.18,
+            "web1024": 0.17,
+            "mobile": 0.14
+          },
+          "tileBodyAlpha": 0.58,
+          "borderWidth": 1.35,
+          "borderAlpha": {
+            "idle": 0.78,
+            "active": 0.86
+          },
+          "labelColor": "rgba(244, 251, 255, 1)",
+          "iconCapsuleBorderWidth": 1.2,
+          "iconCapsuleBg": "rgba(4, 10, 18, 0.18)"
+        }
+      },
+      "sectionPresent": true
+    },
+    "mobile390": {
+      "mode": "mobile-390",
+      "computed": {
+        "bgOpacity": "0.14",
+        "veilGradient": "linear-gradient(rgba(4, 10, 18, 0.16), rgba(4, 10, 18, 0.09) 55%, rgba(4, 10, 18, 0.13) 100%)",
+        "cardBg": "rgba(0, 0, 0, 0)",
+        "cardBorderColor": "rgb(0, 0, 0)",
+        "cardBorderWidth": "0px",
+        "titleColor": "rgb(0, 0, 0)",
+        "iconCapsuleBg": null,
+        "iconCapsuleBorderWidth": null
+      },
+      "refs": {
+        "before": {
+          "backgroundOpacity": {
+            "fullscreen": 0.72,
+            "web1366": 0.76,
+            "web1024": 0.74,
+            "mobile": 0.68
+          },
+          "tileBodyAlpha": 0.044,
+          "borderWidth": 1,
+          "borderAlpha": {
+            "idle": 0.38,
+            "active": 0.46
+          },
+          "labelColor": "rgba(244, 251, 255, 1)",
+          "iconCapsuleBorderWidth": 1,
+          "iconCapsuleBg": "rgba(4, 10, 18, 0.18)"
+        },
+        "after": {
+          "backgroundOpacity": {
+            "fullscreen": 0.16,
+            "web1366": 0.18,
+            "web1024": 0.17,
+            "mobile": 0.14
+          },
+          "tileBodyAlpha": 0.58,
+          "borderWidth": 1.35,
+          "borderAlpha": {
+            "idle": 0.78,
+            "active": 0.86
+          },
+          "labelColor": "rgba(244, 251, 255, 1)",
+          "iconCapsuleBorderWidth": 1.2,
+          "iconCapsuleBg": "rgba(4, 10, 18, 0.18)"
+        }
+      },
+      "sectionPresent": true
+    }
+  }
+}
