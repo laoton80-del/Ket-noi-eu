@@ -2829,6 +2829,12 @@ function travelDesktopVerticalRhythmMetrics(viewportWidth: number): Readonly<{
 /** Four flagship cards — Local opening row grammar (Travel soul accents). */
 const TRAVEL_FLAGSHIP_IDS = ['airport', 'translation', 'taxi', 'emergency'] as const satisfies readonly TravelScenarioId[];
 
+/** Pack 46 — web Quick Help magnetic lift (outer host only; matches Home/Local feel). */
+const TRAVEL_QUICK_HELP_WEB_HOVER_LIFT_PX = -5;
+const TRAVEL_QUICK_HELP_WEB_HOVER_SCALE = 1.015;
+const TRAVEL_QUICK_HELP_WEB_SELECTED_LIFT_PX = -2;
+const TRAVEL_QUICK_HELP_WEB_SELECTED_SCALE = 1.008;
+
 type TravelFlagshipScenarioId = (typeof TRAVEL_FLAGSHIP_IDS)[number];
 
 /** Travel dynamic hero + flagship card artwork (Travel-only). */
@@ -3104,8 +3110,16 @@ function travelQuickHelpFlagshipHostMotionStyle(
     };
   }
   if (active) {
+    const ms = FASHION_HOME_DAYLIGHT_TRANSITION_MS;
+    const o = magnetic ?? { translateX: 0, translateY: 0, rotateDeg: 0 };
     return {
-      ...fashionHomeWebMagneticMotionStyle(magnetic, true),
+      transform: [
+        { translateX: o.translateX },
+        { translateY: o.translateY + TRAVEL_QUICK_HELP_WEB_HOVER_LIFT_PX },
+        { rotate: `${o.rotateDeg}deg` },
+        { scale: TRAVEL_QUICK_HELP_WEB_HOVER_SCALE },
+      ],
+      transition: `transform ${ms}ms cubic-bezier(0.22, 1, 0.36, 1), box-shadow ${ms}ms ease-out`,
       zIndex: 12,
       position: 'relative',
       cursor: 'pointer',
@@ -3114,7 +3128,10 @@ function travelQuickHelpFlagshipHostMotionStyle(
   if (selected) {
     const ms = FASHION_HOME_DAYLIGHT_TRANSITION_MS;
     return {
-      transform: [{ translateY: -2 }, { scale: 1.008 }],
+      transform: [
+        { translateY: TRAVEL_QUICK_HELP_WEB_SELECTED_LIFT_PX },
+        { scale: TRAVEL_QUICK_HELP_WEB_SELECTED_SCALE },
+      ],
       zIndex: 6,
       position: 'relative',
       ...( {
@@ -3812,6 +3829,12 @@ function TravelQuickHelpFlagshipCell({
       testID={`travel-quick-help-cell-${id}`}
       {...pointerHandlers}
       {...webHoverHandlers}
+      {...(Platform.OS === 'web'
+        ? ({
+            'data-travel-quick-help-id': id,
+            'data-travel-quick-help-hovered': hostHovered ? 'true' : 'false',
+          } as const)
+        : null)}
       style={[
         cellStyle,
         widthStyle,
@@ -3834,11 +3857,8 @@ function TravelQuickHelpFlagshipCell({
         }}
         onPressIn={() => setPressed(true)}
         onPressOut={() => setPressed(false)}
-        onHoverIn={syncHeroHoverIn}
-        onHoverOut={syncHeroHoverOut}
-        onFocus={() => onHeroCardHover?.(id)}
-        onBlur={() => onHeroCardLeave?.()}
-        {...webHoverHandlers}
+        onFocus={syncHeroHoverIn}
+        onBlur={syncHeroHoverOut}
         style={({ pressed: pressablePressed }) => [
           travelQuickHelpFlagshipCellInteractiveStyle(
             id,
@@ -5708,6 +5728,8 @@ export function TravelScreen() {
   const travelHeroFadeAnim = useRef(new Animated.Value(1)).current;
   const travelHeroLitAnim = useRef(new Animated.Value(0)).current;
   const previousTravelHeroKeyRef = useRef<TravelDynamicHeroKey>('default');
+  /** Pack 46 — defer hover clear so moving between Quick Help cards does not flash default hero. */
+  const quickHelpHoverClearTokenRef = useRef(0);
 
   const activeTravelHeroKey = useMemo((): TravelDynamicHeroKey => {
     if (displayedHeroQuickHelpContextId === 'default') return 'default';
@@ -5956,11 +5978,18 @@ export function TravelScreen() {
   }, [activeTravelHeroKey, travelHeroFadeAnim]);
 
   const onTravelHeroCardHover = useCallback((id: TravelFlagshipScenarioId) => {
+    quickHelpHoverClearTokenRef.current += 1;
     setHoveredQuickHelpHeroContextId(id);
+    setTravelCardHoverAccent(SCENARIO_SEMANTIC[id]);
   }, []);
 
   const onTravelHeroCardLeave = useCallback(() => {
-    setHoveredQuickHelpHeroContextId(null);
+    const token = (quickHelpHoverClearTokenRef.current += 1);
+    requestAnimationFrame(() => {
+      if (quickHelpHoverClearTokenRef.current !== token) return;
+      setHoveredQuickHelpHeroContextId(null);
+      setTravelCardHoverAccent(null);
+    });
   }, []);
 
   const onQuickHelpContextSelect = useCallback((id: TravelFlagshipScenarioId) => {
@@ -6421,6 +6450,7 @@ export function TravelScreen() {
                   {travelHeroEditorialCopy.title}
                 </Text>
                 <Text
+                  testID="travel-hero-subtitle"
                   style={[
                     styles.heroSub,
                     travelHeroStage.useAbsoluteTextLayer ? styles.heroSubEditorialContrast : null,
