@@ -43,6 +43,8 @@ import { SmartTrioProvider } from './src/context/SmartTrioContext';
 import {
   isAdminDebugSurfaceEnabled,
 } from './src/config/adminDebugGate';
+import { isReferenceLabsEnabled } from './src/config/referenceLabsGate';
+import { getReferenceLabLinkingScreens } from './src/navigation/referenceLabLinking';
 import { APP_BRAND } from './src/config/appBrand';
 import type { GuidedIntentId } from './src/onboarding/guidedOnboardingStorage';
 import { resolveRootStackRoute } from './src/navigation/AppNavigator';
@@ -296,6 +298,13 @@ const VaultScreenGated = mvpGateByFlag(
 
 const navigationRef = createNavigationContainerRef<RootStackParamList>();
 
+function ReferenceLabStackScreensGate(): ReactElement | null {
+  if (!isReferenceLabsEnabled()) return null;
+  const { ReferenceLabStackScreens } =
+    require('./src/navigation/referenceLabStackScreens') as typeof import('./src/navigation/referenceLabStackScreens');
+  return <ReferenceLabStackScreens Stack={Stack} />;
+}
+
 const rootLinking: LinkingOptions<RootStackParamList> = {
   prefixes: ['/'],
   config: {
@@ -321,6 +330,7 @@ const rootLinking: LinkingOptions<RootStackParamList> = {
       },
       PersonalHub: 'account',
       DashboardB2CPreview: 'dashboard-preview',
+      ...getReferenceLabLinkingScreens(),
       B2BPaywall: 'B2BPaywall',
       MerchantDashboard: 'MerchantDashboard',
       AiReceptionistSetupChecklist: 'AiReceptionistSetupChecklist',
@@ -447,6 +457,7 @@ function AppNavigationShell({
               <Stack.Screen name="PersonalHub" component={CaNhanScreen} />
               <Stack.Screen name="LifeOSDashboard" component={LifeOSDashboard} />
               <Stack.Screen name="DashboardB2CPreview" component={DashboardB2CPreviewScreen} />
+              <ReferenceLabStackScreensGate />
               <Stack.Screen name="TravelCompanion" component={TravelHubStackScreenGated} />
               <Stack.Screen
                 name="TravelHub"

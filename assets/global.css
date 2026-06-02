@@ -36,3 +36,17 @@ body,
   background-color: rgba(0, 31, 63, 0.05) !important;
   border: 1px solid rgba(255, 215, 0, 0.1) !important;
 }
+
+/* NeonCard — gradient-wrapper rim (no border-width); Tailwind parity: rounded-2xl + backdrop-blur-md */
+.kn-neon-card-glow {
+  border-radius: 1rem !important;
+}
+
+.kn-neon-card-inner {
+  height: 100%;
+  width: 100%;
+  border-radius: calc(1rem - 1px) !important;
+  background-color: rgba(5, 8, 16, 0.85) !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+}

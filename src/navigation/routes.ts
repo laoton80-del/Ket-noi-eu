@@ -72,6 +72,18 @@ export type RootStackParamList = {
   LifeOSDashboard: undefined;
   /** AF.UI.2 — isolated dashboard grid review (`/dashboard-preview`). */
   DashboardB2CPreview: undefined;
+  /** VIONA Wave 3B — reference labs (dev/capture). Registered only when `EXPO_PUBLIC_VIONA_REFERENCE_LABS_ENABLED=true`. */
+  VionaReferenceLocalPanelLab: undefined;
+  /** VIONA Wave 3B — My Requests single-card reference replica lab (per-lab env gate). */
+  VionaReferenceSingleCardLab: undefined;
+  /** VIONA Wave 3B — crystal material lab (per-lab env gate). */
+  VionaReferenceMaterialLab: undefined;
+  /** VIONA Wave 3B — Local panel composition lab (per-lab env gate). */
+  VionaReferencePanelCompositionLab: undefined;
+  /** VIONA Wave 3B — four flagship cards lab (per-lab env gate; Phase C blocked). */
+  VionaReferenceFlagshipCardsLab: undefined;
+  /** VIONA Wave 3B — neon-prompt local card material lab (per-lab env gate). */
+  VionaNeonCardLab: undefined;
   /** Phase 4: travel hub — scenarios + quick links (no booking automation). */
   TravelCompanion: undefined;
   /** KNG Travel — dedicated premium travel mini-app (concierge, homestay, interpreter). */
