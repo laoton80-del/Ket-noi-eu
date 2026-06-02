@@ -1683,10 +1683,10 @@ function travelHeroFinalTitleStyle(
     };
   }
   return {
-    fontSize: 50,
-    lineHeight: 54,
-    width: 620,
-    maxWidth: 620,
+    fontSize: 46,
+    lineHeight: 52,
+    width: 600,
+    maxWidth: 600,
     alignSelf: 'flex-start',
     flexShrink: 0,
   };
