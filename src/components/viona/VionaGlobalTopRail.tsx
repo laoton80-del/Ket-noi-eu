@@ -11,6 +11,7 @@ import {
   FASHION_HOME_COMMAND_RAIL_BORDER,
   FASHION_HOME_COMMAND_RAIL_GRADIENT,
   FASHION_HOME_COMMAND_RAIL_HIGHLIGHT,
+  FASHION_HOME_COMMAND_RAIL_SHOW_DAYLIGHT_TOGGLE,
   FASHION_HOME_GLOW_CYAN,
   FASHION_HOME_LINE_CYAN,
   FASHION_HOME_LINE_GOLD_SOFT,
@@ -204,7 +205,7 @@ export function VionaGlobalTopRail({
                   </Text>
                 )}
               </Pressable>
-              {daylightControl ? (
+              {FASHION_HOME_COMMAND_RAIL_SHOW_DAYLIGHT_TOGGLE && daylightControl ? (
                 <Pressable
                   onPress={daylightControl.onPress}
                   style={({ pressed }) => [

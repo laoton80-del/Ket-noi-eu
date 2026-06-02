@@ -15,6 +15,9 @@ export const FASHION_HOME_DESKTOP_HERO_ASPECT = 1280 / 540;
  */
 export const HOME_FASHION_DESKTOP_LUMINOUS_MODE_LOCKED = true;
 
+/** WAVE_3B — Hide top-rail daylight toggle; premium luminous is the intended default (storage state preserved). */
+export const FASHION_HOME_COMMAND_RAIL_SHOW_DAYLIGHT_TOGGLE = false;
+
 /** Shared luminous line language for fashion home surfaces. */
 export const FASHION_HOME_LINE_GOLD = 'rgba(244, 214, 144, 0.46)';
 export const FASHION_HOME_LINE_GOLD_SOFT = 'rgba(242, 212, 136, 0.34)';

@@ -47,10 +47,16 @@ export function roleTabChrome(
       barBorder: 'rgba(245, 210, 134, 0.22)',
     };
   }
+  // B2C consumer (Hub / Local / Travel Lite / Academy Lite). Premium glass parity:
+  //  - barBg is a dark translucent navy (was the flat opaque slab #061A33) so it reads as glass —
+  //    a web backdrop-blur in MainTabNavigator turns this into frosted depth, while the high opacity
+  //    keeps it clean on native where blur is unavailable and content can sit behind the absolute bar.
+  //  - barBorder is a crisper cyan/blue top edge-light (not heavy neon).
+  //  - active is a clearer, brighter cyan-blue; inactive is a readable muted slate (not disabled-looking).
   return {
-    active: '#6EB0FF',
-    inactive: 'rgba(110, 176, 255, 0.42)',
-    barBg: '#061A33',
-    barBorder: 'rgba(79, 140, 255, 0.28)',
+    active: '#9CCBFF',
+    inactive: 'rgba(178, 200, 230, 0.64)',
+    barBg: 'rgba(8, 20, 38, 0.9)',
+    barBorder: 'rgba(124, 196, 255, 0.44)',
   };
 }

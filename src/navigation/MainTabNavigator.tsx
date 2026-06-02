@@ -3,7 +3,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { useNavigation, useNavigationState } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactElement } from 'react';
-import { Alert, Platform, StyleSheet, useWindowDimensions } from 'react-native';
+import { Alert, Platform, StyleSheet, useWindowDimensions, type ViewStyle } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { ProfileSwitcher, type ProfileSwitcherHandle } from '../components/ProfileSwitcher';
@@ -404,6 +404,7 @@ export function MainTabNavigator(): ReactElement {
                     paddingBottom: Math.max(insets.bottom, 10),
                     paddingTop: 8,
                   },
+              tabBarPosition === 'bottom' ? TAB_BAR_WEB_GLASS : null,
               tabBarPosition === 'left' && styles.tabBarDesktop,
               fashionHomeDesktopShell && fashionHomeHiddenTabBarStyle,
             ],
@@ -558,6 +559,18 @@ export function MainTabNavigator(): ReactElement {
     </>
   );
 }
+
+// Web-only frosted backdrop for the bottom tab bar. Combined with a translucent `barBg` (B2C glass
+// chrome) this turns the bar into premium frosted glass — content behind the absolute bar blurs
+// through. On opaque role chromes (B2B/Broker/Admin) the blur is a visual no-op, and on native the
+// property is simply ignored, so this is safe to apply to every bottom bar.
+const TAB_BAR_WEB_GLASS: ViewStyle =
+  Platform.OS === 'web'
+    ? ({
+        backdropFilter: 'blur(18px) saturate(135%)',
+        WebkitBackdropFilter: 'blur(18px) saturate(135%)',
+      } as unknown as ViewStyle)
+    : {};
 
 const styles = StyleSheet.create({
   tabBar: {

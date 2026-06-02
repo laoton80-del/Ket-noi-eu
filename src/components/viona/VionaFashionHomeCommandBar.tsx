@@ -13,6 +13,7 @@ import {
   FASHION_HOME_DAYLIGHT_RAIL_GRADIENT,
   FASHION_HOME_DAYLIGHT_RAIL_HIGHLIGHT,
   FASHION_HOME_DAYLIGHT_CHIP_CONTAINED_GLOW,
+  FASHION_HOME_COMMAND_RAIL_SHOW_DAYLIGHT_TOGGLE,
   FASHION_HOME_GLOW_CYAN,
   FASHION_HOME_GLOW_GOLD,
   FASHION_HOME_LINE_GOLD_SOFT,
@@ -186,7 +187,7 @@ export function VionaFashionHomeCommandBar({
                   {t('shell.utility.language')}
                 </Text>
               </Pressable>
-              {onPressDaylightBoost ? (
+              {FASHION_HOME_COMMAND_RAIL_SHOW_DAYLIGHT_TOGGLE && onPressDaylightBoost ? (
                 <Pressable
                   onPress={onPressDaylightBoost}
                   style={(s) => {
