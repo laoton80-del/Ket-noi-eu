@@ -1,0 +1,63 @@
+{
+  "pack": 45,
+  "captures": {
+    "enNormal": {
+      "checks": {
+        "railSubtitle": false,
+        "heroTitle": true,
+        "quickHelpKicker": false,
+        "scenariosKicker": false,
+        "airportCard": false,
+        "storedVi": false
+      },
+      "pass": false
+    },
+    "viNormal": {
+      "checks": {
+        "railSubtitle": true,
+        "heroTitle": true,
+        "quickHelpKicker": true,
+        "scenariosKicker": true,
+        "airportCard": false,
+        "storedVi": true
+      },
+      "pass": false
+    },
+    "viFullscreen": {
+      "checks": {
+        "railSubtitle": true,
+        "heroTitle": true,
+        "quickHelpKicker": true,
+        "scenariosKicker": true,
+        "airportCard": false,
+        "storedVi": true
+      },
+      "pass": false
+    },
+    "mobile390": {
+      "checks": {
+        "railSubtitle": false,
+        "heroTitle": false,
+        "quickHelpKicker": false,
+        "scenariosKicker": false,
+        "airportCard": false,
+        "storedVi": false
+      },
+      "pass": false
+    },
+    "tablet1024": {
+      "checks": {
+        "railSubtitle": false,
+        "heroTitle": false,
+        "quickHelpKicker": false,
+        "scenariosKicker": false,
+        "airportCard": false,
+        "storedVi": false
+      },
+      "pass": false
+    }
+  },
+  "switchUiError": "TimeoutError: locator.click: Timeout 12000ms exceeded.\nCall log:\n  - waiting for getByText('Vietnamese', { exact: true }).or(getByText('Tiếng Việt', { exact: true })).first()\n",
+  "languageSwitchPath": "storage-fallback",
+  "fullscreenEntered": true
+}

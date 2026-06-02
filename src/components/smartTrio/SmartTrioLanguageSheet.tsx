@@ -11,9 +11,19 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as Localization from 'expo-localization';
+
 import { useSmartTrio } from '../../context/SmartTrioContext';
 import type { MarketCode, SmartTrioLocale } from '../../core/i18n/smartTrioTypes';
-import { useTranslation } from '../../i18n';
+import i18n, { useTranslation } from '../../i18n';
+import {
+  APP_LANGUAGE_KEY,
+  persistUserLanguage,
+  SUPPORTED_UI_LANGUAGES,
+  type SupportedUiLanguageCode,
+} from '../../i18n/persistLanguage';
+import { setAssistantSettings } from '../../state/assistantSettings';
 
 const MARKET_OPTIONS: readonly MarketCode[] = [
   'GLOBAL',
@@ -40,6 +50,12 @@ function localeI18nKey(locale: SmartTrioLocale): string {
   return `smartTrio.language.${locale}`;
 }
 
+function resolveDeviceUiLanguage(): SupportedUiLanguageCode {
+  const code = Localization.getLocales()[0]?.languageCode?.toLowerCase() ?? 'en';
+  const hit = SUPPORTED_UI_LANGUAGES.find((lang) => code === lang || code.startsWith(`${lang}-`));
+  return hit ?? 'en';
+}
+
 export function SmartTrioLanguageSheet({ visible, onClose }: SmartTrioLanguageSheetProps): ReactElement {
   const { t } = useTranslation();
   const insets = useSafeAreaInsets();
@@ -55,6 +71,7 @@ export function SmartTrioLanguageSheet({ visible, onClose }: SmartTrioLanguageSh
   const onPickLocale = useCallback(
     (locale: SmartTrioLocale) => {
       setUserSelectedLocale(locale);
+      void persistUserLanguage(locale);
       onClose();
     },
     [onClose, setUserSelectedLocale]
@@ -62,6 +79,12 @@ export function SmartTrioLanguageSheet({ visible, onClose }: SmartTrioLanguageSh
 
   const onClearLocale = useCallback(() => {
     setUserSelectedLocale(undefined);
+    void (async () => {
+      await AsyncStorage.removeItem(APP_LANGUAGE_KEY);
+      const device = resolveDeviceUiLanguage();
+      await i18n.changeLanguage(device);
+      setAssistantSettings({ languageCode: device });
+    })();
     onClose();
   }, [onClose, setUserSelectedLocale]);
 

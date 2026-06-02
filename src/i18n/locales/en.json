@@ -1182,7 +1182,49 @@
     "railSubtitle": "Travel Lite · companion & language help",
     "heroKicker": "TRAVEL LITE",
     "heroCompanion": "VIONA Travel is your on-trip companion.",
-    "heroSub": "Situation help & language — not an OTA checkout.",
+    "heroSub": "Airport, transport, interpreter, safety, and local support — timely guidance, not booking on your behalf.",
+    "heroTrust": {
+      "lite": "Lite ready",
+      "demo": "Demo assist",
+      "preview": "Preview tools"
+    },
+    "quickHelpHero": {
+      "default": {
+        "title": "Companion on every journey",
+        "subtitle": "Airport, transport, interpreter, safety, and local support — timely guidance, not booking on your behalf.",
+        "chip1": "Lite ready",
+        "chip2": "Demo assist",
+        "chip3": "Preview tools"
+      },
+      "airport": {
+        "title": "Navigate the airport with confidence",
+        "subtitle": "Check-in, security, baggage, and step-by-step guidance — VIONA guides; it does not complete procedures for you.",
+        "chip1": "Check-in",
+        "chip2": "Security",
+        "chip3": "Baggage"
+      },
+      "translation": {
+        "title": "Understand what matters in the moment",
+        "subtitle": "Phrase suggestions, context, and language help at counters, hotels, or offices.",
+        "chip1": "Quick phrases",
+        "chip2": "Context",
+        "chip3": "Minh Khang"
+      },
+      "taxi": {
+        "title": "Find a way to get around",
+        "subtitle": "Ride options, pickup points, and safety notes — no confirmed booking.",
+        "chip1": "Pickup",
+        "chip2": "Route",
+        "chip3": "No booking"
+      },
+      "emergency": {
+        "title": "Stay calm in an emergency",
+        "subtitle": "First steps, what to prepare, and a safe path to SOS — no implied dispatch.",
+        "chip1": "Safe SOS",
+        "chip2": "Alerts",
+        "chip3": "No dispatch"
+      }
+    },
     "pilotStripTitle": "Travel Lite pilot",
     "pilotStripBanner": "Language & situation help only — no in-app checkout or payment.",
     "pilotPill": {
@@ -1206,10 +1248,19 @@
     "connectedLocal": "Local hub",
     "connectedAcademy": "Academy Lite",
     "connectedBusiness": "Business hub",
-    "consentHeadline": "Location & travel (GDPR)",
-    "consentCopy": "Weather, on-ground helpers, and nearby restaurant cues need location. You can decline and continue with default coordinates.",
+    "consentHeadline": "Prepare your journey",
+    "consentSubtitle": "Enable location so VIONA can suggest weather, reference exchange rates, and nearby support.",
+    "consentSupport": "You can continue in limited mode. VIONA does not book services, process payments, or share your location with third parties.",
+    "consentCopy": "Enable location so VIONA can suggest weather, reference exchange rates, and nearby support.",
     "consentPrimary": "Allow location for Travel",
-    "consentSecondary": "Skip — continue with limited mode",
+    "consentSecondary": "Continue without location",
+    "consentChipPrivacy": "Private",
+    "consentChipSkippable": "Optional",
+    "consentChipLimited": "Limited mode",
+    "consentBenefitsKicker": "Location helps VIONA suggest",
+    "consentBenefitWeather": "Weather near your destination",
+    "consentBenefitNearby": "Suggestions near you",
+    "consentBenefitLocal": "Local support",
     "modalClose": "Close",
     "scenario": {
       "airport": {
@@ -1274,6 +1325,74 @@
       "pl": "1 EUR ≈ 4.32 PLN · 1 USD ≈ 3.98 PLN (demo reference)",
       "vn": "1 EUR ≈ 27,500 ₫ · 1 USD ≈ 25,400 ₫ (demo reference)",
       "default": "1 EUR ≈ 1.08 USD (demo reference)"
+    },
+    "experienceZone": {
+      "destinationLens": {
+        "kicker": "DESTINATION",
+        "demoNote": "demo reference"
+      },
+      "localMapConcierge": {
+        "kicker": "LOCAL CONCIERGE",
+        "title": "Local support",
+        "subtitle": "Find services, places, and local guides around where you are."
+      }
+    },
+    "localDiscovery": {
+      "categoryOverlayKicker": "Filter by need · preview",
+      "searchTitle": "Find where you need to go",
+      "searchNote": "Suggestions near your destination — does not book for you.",
+      "previewKicker": "Near you · demo preview",
+      "previewA11ySuffix": "demo preview",
+      "nav": {
+        "directions": "Directions",
+        "openMap": "Open map",
+        "openGuides": "Open Local guides",
+        "supportRequest": "Send support request"
+      },
+      "category": {
+        "nearby-services": "Nearby services",
+        "helpers": "Local helpers",
+        "interpreter": "Interpreter",
+        "transport": "Transport",
+        "health": "Health & pharmacy",
+        "viet-food": "Vietnamese restaurants & shops",
+        "documents": "Documents / embassy",
+        "community": "Community"
+      },
+      "preview": {
+        "pharmacy": "Pharmacy near you · demo",
+        "viet-restaurant": "Vietnamese/Asian restaurant · demo",
+        "embassy": "Embassy / documents · demo"
+      }
+    },
+    "localSupport": {
+      "safetyNote": "No confirmed booking · no fixer promise · no payment · no dispatch."
+    },
+    "weatherDemo": {
+      "rowKicker": "7-day weather",
+      "contextDemoNote": "demo weather reference",
+      "daypartDemoNote": "illustrative daypart demo display",
+      "days": {
+        "today": { "dayLabel": "Today", "conditionLabel": "Clear skies" },
+        "t3": { "dayLabel": "Tue", "conditionLabel": "Partly cloudy" },
+        "t4": { "dayLabel": "Wed", "conditionLabel": "Light rain" },
+        "t5": { "dayLabel": "Thu", "conditionLabel": "Nice sun" },
+        "t6": { "dayLabel": "Fri", "conditionLabel": "Overcast" },
+        "t7": { "dayLabel": "Sat", "conditionLabel": "Light wind" },
+        "cn": { "dayLabel": "Sun", "conditionLabel": "Sunny" }
+      }
+    },
+    "fxReference": {
+      "stripKicker": "REFERENCE RATES",
+      "demoLabel": "demo reference",
+      "safetyMicrocopy": "For trip prep only. Not a currency exchange service.",
+      "items": {
+        "eur-usd": { "pairLabel": "EUR → USD", "valueText": "1 EUR ≈ 1.08 USD" },
+        "usd-local": { "pairLabel": "USD → LOCAL", "valueText": "estimate reference" },
+        "eur-local": { "pairLabel": "EUR → LOCAL", "valueText": "estimate reference" },
+        "eur-vnd": { "pairLabel": "EUR → VND", "valueText": "VND reference" },
+        "usd-vnd": { "pairLabel": "USD → VND", "valueText": "VND reference" }
+      }
     },
     "mapKicker": "Map · Local guides",
     "exploreCta": "Explore locally",

@@ -112,24 +112,6 @@ const CYAN = localConstellation.accentCyan;
 const EMERALD = localConstellation.accentEmerald;
 const BORDER = localConstellation.border;
 
-/**
- * VIONA.WAVE_3B — Local support panel clarity: contextual help around destination,
- * not confirmed fixer/booking/payment/dispatch.
- */
-const TRAVEL_LOCAL_SUPPORT_HELPER_COPY =
-  'Tìm dịch vụ, người hỗ trợ và gợi ý quanh nơi sở tại — không tự đặt dịch vụ.';
-const TRAVEL_LOCAL_SUPPORT_SAFETY_NOTE =
-  'Không xác nhận đặt chỗ · không cam kết fixer · không thanh toán · không điều phối.';
-
-const TRAVEL_LOCAL_DISCOVERY_SEARCH_TITLE = 'Tìm địa điểm cần đến';
-const TRAVEL_LOCAL_DISCOVERY_SEARCH_NOTE =
-  'Gợi ý nơi gần bạn theo điểm đến — chưa tự đặt dịch vụ.';
-const TRAVEL_LOCAL_DISCOVERY_PREVIEW_KICKER = 'Gợi ý gần bạn · xem trước demo';
-const TRAVEL_LOCAL_NAV_DIRECTIONS = 'Chỉ đường';
-const TRAVEL_LOCAL_NAV_OPEN_MAP = 'Mở bản đồ';
-const TRAVEL_LOCAL_NAV_OPEN_GUIDES = 'Mở Local guides';
-const TRAVEL_LOCAL_NAV_SUPPORT_REQUEST = 'Gửi yêu cầu hỗ trợ';
-
 type TravelLocalDiscoveryCategoryAccent = 'emerald' | 'cyan' | 'violet' | 'magenta' | 'gold';
 
 type TravelLocalDiscoveryCategory = Readonly<{
@@ -139,18 +121,6 @@ type TravelLocalDiscoveryCategory = Readonly<{
   accent: TravelLocalDiscoveryCategoryAccent;
 }>;
 
-/** Wave3b — static discovery categories; preview only, not live verified listings. */
-const TRAVEL_LOCAL_DISCOVERY_CATEGORIES: readonly TravelLocalDiscoveryCategory[] = [
-  { id: 'nearby-services', label: 'Dịch vụ gần bạn', icon: 'storefront-outline', accent: 'emerald' },
-  { id: 'helpers', label: 'Người hỗ trợ', icon: 'people-outline', accent: 'cyan' },
-  { id: 'interpreter', label: 'Phiên dịch', icon: 'language-outline', accent: 'violet' },
-  { id: 'transport', label: 'Di chuyển', icon: 'bus-outline', accent: 'cyan' },
-  { id: 'health', label: 'Y tế / thuốc', icon: 'medkit-outline', accent: 'magenta' },
-  { id: 'viet-food', label: 'Nhà hàng / cửa hàng Việt', icon: 'restaurant-outline', accent: 'emerald' },
-  { id: 'documents', label: 'Giấy tờ / đại sứ quán', icon: 'document-text-outline', accent: 'gold' },
-  { id: 'community', label: 'Cộng đồng', icon: 'people-circle-outline', accent: 'cyan' },
-];
-
 type TravelLocalDiscoveryPreviewItem = Readonly<{
   id: string;
   label: string;
@@ -159,30 +129,50 @@ type TravelLocalDiscoveryPreviewItem = Readonly<{
   accent: TravelLocalDiscoveryCategoryAccent;
 }>;
 
-/** Wave3b — static nearby preview placeholders; clearly demo, not live verified data. */
-const TRAVEL_LOCAL_DISCOVERY_PREVIEW_ITEMS: readonly TravelLocalDiscoveryPreviewItem[] = [
-  {
-    id: 'pharmacy',
-    label: 'Tiệm thuốc gần bạn · demo',
-    categoryId: 'health',
-    icon: 'medkit-outline',
-    accent: 'magenta',
-  },
-  {
-    id: 'viet-restaurant',
-    label: 'Nhà hàng Việt/Á · demo',
-    categoryId: 'viet-food',
-    icon: 'restaurant-outline',
-    accent: 'emerald',
-  },
-  {
-    id: 'embassy',
-    label: 'Đại sứ quán / giấy tờ · demo',
-    categoryId: 'documents',
-    icon: 'business-outline',
-    accent: 'gold',
-  },
-];
+/** Wave3b — static discovery categories; preview only, not live verified listings. */
+const TRAVEL_LOCAL_DISCOVERY_CATEGORY_DEFS = [
+  { id: 'nearby-services', icon: 'storefront-outline', accent: 'emerald' },
+  { id: 'helpers', icon: 'people-outline', accent: 'cyan' },
+  { id: 'interpreter', icon: 'language-outline', accent: 'violet' },
+  { id: 'transport', icon: 'bus-outline', accent: 'cyan' },
+  { id: 'health', icon: 'medkit-outline', accent: 'magenta' },
+  { id: 'viet-food', icon: 'restaurant-outline', accent: 'emerald' },
+  { id: 'documents', icon: 'document-text-outline', accent: 'gold' },
+  { id: 'community', icon: 'people-circle-outline', accent: 'cyan' },
+] as const satisfies readonly {
+  id: string;
+  icon: keyof typeof Ionicons.glyphMap;
+  accent: TravelLocalDiscoveryCategoryAccent;
+}[];
+
+const TRAVEL_LOCAL_DISCOVERY_PREVIEW_DEFS = [
+  { id: 'pharmacy', categoryId: 'health', icon: 'medkit-outline', accent: 'magenta' },
+  { id: 'viet-restaurant', categoryId: 'viet-food', icon: 'restaurant-outline', accent: 'emerald' },
+  { id: 'embassy', categoryId: 'documents', icon: 'business-outline', accent: 'gold' },
+] as const satisfies readonly {
+  id: string;
+  categoryId: string;
+  icon: keyof typeof Ionicons.glyphMap;
+  accent: TravelLocalDiscoveryCategoryAccent;
+}[];
+
+function resolveTravelLocalDiscoveryCategories(
+  t: (key: string) => string
+): readonly TravelLocalDiscoveryCategory[] {
+  return TRAVEL_LOCAL_DISCOVERY_CATEGORY_DEFS.map((category) => ({
+    ...category,
+    label: t(`travelHub.localDiscovery.category.${category.id}`),
+  }));
+}
+
+function resolveTravelLocalDiscoveryPreviewItems(
+  t: (key: string) => string
+): readonly TravelLocalDiscoveryPreviewItem[] {
+  return TRAVEL_LOCAL_DISCOVERY_PREVIEW_DEFS.map((item) => ({
+    ...item,
+    label: t(`travelHub.localDiscovery.preview.${item.id}`),
+  }));
+}
 
 function travelLocalDiscoveryAccentColors(accent: TravelLocalDiscoveryCategoryAccent): Readonly<{
   border: string;
@@ -223,25 +213,6 @@ function travelLocalDiscoveryAccentColors(accent: TravelLocalDiscoveryCategoryAc
       };
   }
 }
-
-/** Wave3b — Travel Experience Intelligence Zone (display copy; handlers unchanged). */
-const TRAVEL_EXPERIENCE_ZONE = {
-  destinationLens: {
-    kicker: 'ĐIỂM ĐẾN',
-    demoNote: 'tham chiếu demo',
-  },
-  localMapConcierge: {
-    kicker: 'LOCAL CONCIERGE',
-    title: 'Hỗ trợ địa phương',
-    subtitle: 'Tìm dịch vụ, địa điểm và local guides quanh nơi sở tại.',
-  },
-} as const;
-
-/** @deprecated Use TRAVEL_EXPERIENCE_ZONE.destinationLens.kicker */
-const TRAVEL_DESTINATION_KICKER = TRAVEL_EXPERIENCE_ZONE.destinationLens.kicker;
-/** @deprecated Use TRAVEL_EXPERIENCE_ZONE.localMapConcierge */
-const TRAVEL_LOCAL_ASSIST_DISPLAY_TITLE = TRAVEL_EXPERIENCE_ZONE.localMapConcierge.title;
-const TRAVEL_LOCAL_ASSIST_DISPLAY_SUB = TRAVEL_EXPERIENCE_ZONE.localMapConcierge.subtitle;
 
 /** Wave3b.8 — dedicated daylight cinematic cards (Experience Zone only; not opening hero). */
 const TRAVEL_DESTINATION_LENS_SCENE = require('../../../assets/viona/travel/viona-travel-destination-lens-cinematic-daylight-v1.png');
@@ -371,11 +342,14 @@ function travelLocalConciergeSceneWebBackgroundStyle(
   } as ViewStyle;
 }
 
-function travelDestinationFxDisplayParts(fxLine: string): Readonly<{ currency: string; demoNote: string }> {
-  const stripped = fxLine.replace(/\s*\(tham chiếu demo\)\s*/i, '').trim();
+function travelDestinationFxDisplayParts(
+  fxLine: string,
+  t: (key: string) => string
+): Readonly<{ currency: string; demoNote: string }> {
+  const stripped = fxLine.replace(/\s*\(tham chiếu demo\)\s*/i, '').replace(/\s*\(demo reference\)\s*/i, '').trim();
   return {
     currency: stripped.length > 0 ? stripped : fxLine,
-    demoNote: TRAVEL_EXPERIENCE_ZONE.destinationLens.demoNote,
+    demoNote: t('travelHub.experienceZone.destinationLens.demoNote'),
   };
 }
 
@@ -402,23 +376,16 @@ type DestinationWeatherDayPreview = Readonly<{
   isToday?: boolean;
 }>;
 
-const TRAVEL_DESTINATION_CONTEXT_WEATHER_DEMO_NOTE = 'thời tiết tham chiếu demo';
-const TRAVEL_WEATHER_DAYPART_DEMO_NOTE = 'hiển thị minh họa theo thời điểm demo';
-
-/**
- * Static demo weather cards — visual-only condition + daypart placeholders.
- * Future live integration may replace demo daypart using a safe weather provider + cache + fallback + timestamp.
- * Not live market, real-time clock, or production forecast data.
- */
-const TRAVEL_WEATHER_DEMO_ITEMS: readonly DestinationWeatherDayPreview[] = [
-  { id: 'today', dayLabel: 'Hôm nay', tempC: 22, conditionLabel: 'Trời quang', mood: 'clear', daypart: 'day', isToday: true },
-  { id: 't3', dayLabel: 'T3', tempC: 21, conditionLabel: 'Ít mây', mood: 'partlyCloudy', daypart: 'morning' },
-  { id: 't4', dayLabel: 'T4', tempC: 19, conditionLabel: 'Mưa nhẹ', mood: 'lightRain', daypart: 'day' },
-  { id: 't5', dayLabel: 'T5', tempC: 23, conditionLabel: 'Nắng đẹp', mood: 'goldenHour', daypart: 'goldenHour' },
-  { id: 't6', dayLabel: 'T6', tempC: 18, conditionLabel: 'Nhiều mây', mood: 'overcast', daypart: 'night' },
-  { id: 't7', dayLabel: 'T7', tempC: 17, conditionLabel: 'Gió nhẹ', mood: 'windy', daypart: 'morning' },
-  { id: 'cn', dayLabel: 'CN', tempC: 20, conditionLabel: 'Có nắng', mood: 'sunny', daypart: 'day' },
-];
+/** Static demo weather day ids — labels resolved via i18n at render time. */
+const TRAVEL_WEATHER_DEMO_DAY_DEFS = [
+  { id: 'today', tempC: 22, mood: 'clear' as const, daypart: 'day' as const, isToday: true },
+  { id: 't3', tempC: 21, mood: 'partlyCloudy' as const, daypart: 'morning' as const },
+  { id: 't4', tempC: 19, mood: 'lightRain' as const, daypart: 'day' as const },
+  { id: 't5', tempC: 23, mood: 'goldenHour' as const, daypart: 'goldenHour' as const },
+  { id: 't6', tempC: 18, mood: 'overcast' as const, daypart: 'night' as const },
+  { id: 't7', tempC: 17, mood: 'windy' as const, daypart: 'morning' as const },
+  { id: 'cn', tempC: 20, mood: 'sunny' as const, daypart: 'day' as const },
+] as const;
 
 type TravelWeatherCinematicCardTier = 'mobile' | 'tablet' | 'desktop';
 
@@ -586,18 +553,31 @@ function travelWeatherMoodVisual(mood: TravelWeatherMood): Readonly<{
 function buildDestinationWeatherPreview(
   weatherCode: number,
   liveTodayLabel: string,
-  useLiveToday: boolean
+  useLiveToday: boolean,
+  t: (key: string) => string
 ): readonly DestinationWeatherDayPreview[] {
   const liveMood = travelWeatherMoodFromCode(weatherCode);
-  return TRAVEL_WEATHER_DEMO_ITEMS.map((day) =>
-    day.isToday && useLiveToday
-      ? {
-          ...day,
-          conditionLabel: liveTodayLabel.length > 0 ? liveTodayLabel : day.conditionLabel,
-          mood: liveMood,
-        }
-      : day
-  );
+  return TRAVEL_WEATHER_DEMO_DAY_DEFS.map((day) => {
+    const dayLabel = t(`travelHub.weatherDemo.days.${day.id}.dayLabel`);
+    const conditionLabel = t(`travelHub.weatherDemo.days.${day.id}.conditionLabel`);
+    const resolved: DestinationWeatherDayPreview = {
+      id: day.id,
+      dayLabel,
+      tempC: day.tempC,
+      conditionLabel,
+      mood: day.mood,
+      daypart: day.daypart,
+      ...(day.id === 'today' ? { isToday: true } : {}),
+    };
+    if (day.id === 'today' && useLiveToday) {
+      return {
+        ...resolved,
+        conditionLabel: liveTodayLabel.length > 0 ? liveTodayLabel : conditionLabel,
+        mood: liveMood,
+      };
+    }
+    return resolved;
+  });
 }
 
 /** Wave3b Pack 2 — FX reference demo placeholders only; not live market, exchange, or payment service. */
@@ -608,43 +588,44 @@ type TravelFxReferenceDemoItem = Readonly<{
   accent: 'cyan' | 'gold';
 }>;
 
-const TRAVEL_FX_REFERENCE_STRIP_KICKER = 'TỶ GIÁ THAM KHẢO';
-const TRAVEL_FX_REFERENCE_DEMO_LABEL = 'tham chiếu demo';
-const TRAVEL_FX_REFERENCE_SAFETY_MICROCOPY =
-  'Chỉ để tham khảo khi chuẩn bị hành trình. Không phải dịch vụ đổi tiền.';
+/** Static demo FX pair ids — labels resolved via i18n at render time. */
+const TRAVEL_FX_REFERENCE_DEMO_ITEM_DEFS = [
+  { id: 'eur-usd', accent: 'gold' as const },
+  { id: 'usd-local', accent: 'cyan' as const },
+  { id: 'eur-local', accent: 'cyan' as const },
+  { id: 'eur-vnd', accent: 'gold' as const },
+  { id: 'usd-vnd', accent: 'gold' as const },
+] as const;
 
-/** Static demo FX pairs — placeholders for future safe FX reference provider integration. Not live market or payment rates. */
-const TRAVEL_FX_REFERENCE_DEMO_ITEMS: readonly TravelFxReferenceDemoItem[] = [
-  { id: 'eur-usd', pairLabel: 'EUR → USD', valueText: '1 EUR ≈ 1,08 USD', accent: 'gold' },
-  { id: 'usd-local', pairLabel: 'USD → SỞ TẠI', valueText: 'ước tính tham khảo', accent: 'cyan' },
-  { id: 'eur-local', pairLabel: 'EUR → SỞ TẠI', valueText: 'ước tính tham khảo', accent: 'cyan' },
-  { id: 'eur-vnd', pairLabel: 'EUR → VND', valueText: 'VND tham khảo', accent: 'gold' },
-  { id: 'usd-vnd', pairLabel: 'USD → VND', valueText: 'VND tham khảo', accent: 'gold' },
-];
+const TRAVEL_FX_REFERENCE_VN_ORDER = ['eur-usd', 'usd-vnd', 'eur-vnd', 'usd-local', 'eur-local'] as const;
+const TRAVEL_FX_REFERENCE_CZ_PL_ORDER = ['eur-usd', 'eur-local', 'usd-local', 'eur-vnd', 'usd-vnd'] as const;
+
+function resolveTravelFxReferenceDemoItemIds(homeCountryCode: string | undefined): readonly string[] {
+  const cc = (homeCountryCode ?? 'EU').toUpperCase();
+  if (cc === 'VN') return TRAVEL_FX_REFERENCE_VN_ORDER;
+  if (cc === 'CZ' || cc === 'PL') return TRAVEL_FX_REFERENCE_CZ_PL_ORDER;
+  return TRAVEL_FX_REFERENCE_DEMO_ITEM_DEFS.map((item) => item.id);
+}
 
 function resolveTravelFxReferenceDemoItems(
-  homeCountryCode: string | undefined
+  homeCountryCode: string | undefined,
+  t: (key: string) => string
 ): readonly TravelFxReferenceDemoItem[] {
-  const cc = (homeCountryCode ?? 'EU').toUpperCase();
-  if (cc === 'VN') {
-    return [
-      { id: 'eur-usd', pairLabel: 'EUR → USD', valueText: '1 EUR ≈ 1,08 USD', accent: 'gold' },
-      { id: 'usd-vnd', pairLabel: 'USD → VND', valueText: 'VND tham khảo', accent: 'gold' },
-      { id: 'eur-vnd', pairLabel: 'EUR → VND', valueText: 'VND tham khảo', accent: 'gold' },
-      { id: 'usd-local', pairLabel: 'USD → SỞ TẠI', valueText: 'ước tính tham khảo', accent: 'cyan' },
-      { id: 'eur-local', pairLabel: 'EUR → SỞ TẠI', valueText: 'ước tính tham khảo', accent: 'cyan' },
-    ];
-  }
-  if (cc === 'CZ' || cc === 'PL') {
-    return [
-      { id: 'eur-usd', pairLabel: 'EUR → USD', valueText: '1 EUR ≈ 1,08 USD', accent: 'gold' },
-      { id: 'eur-local', pairLabel: 'EUR → SỞ TẠI', valueText: 'ước tính tham khảo', accent: 'cyan' },
-      { id: 'usd-local', pairLabel: 'USD → SỞ TẠI', valueText: 'ước tính tham khảo', accent: 'cyan' },
-      { id: 'eur-vnd', pairLabel: 'EUR → VND', valueText: 'VND tham khảo', accent: 'gold' },
-      { id: 'usd-vnd', pairLabel: 'USD → VND', valueText: 'VND tham khảo', accent: 'gold' },
-    ];
-  }
-  return TRAVEL_FX_REFERENCE_DEMO_ITEMS;
+  const byId = new Map(
+    TRAVEL_FX_REFERENCE_DEMO_ITEM_DEFS.map((item) => [
+      item.id,
+      {
+        id: item.id,
+        accent: item.accent,
+        pairLabel: t(`travelHub.fxReference.items.${item.id}.pairLabel`),
+        valueText: t(`travelHub.fxReference.items.${item.id}.valueText`),
+      },
+    ])
+  );
+  return resolveTravelFxReferenceDemoItemIds(homeCountryCode).flatMap((id) => {
+    const item = byId.get(id as (typeof TRAVEL_FX_REFERENCE_DEMO_ITEM_DEFS)[number]['id']);
+    return item ? [item] : [];
+  });
 }
 
 type TravelFxReferenceLayoutMode = 'desktopRow' | 'tabletRow' | 'tabletWrap' | 'mobileGrid';
@@ -1337,6 +1318,7 @@ function TravelDestinationContextWeatherRow({
   loading: boolean;
   preferFitAllCards?: boolean;
 }>): ReactElement {
+  const { t } = useTranslation();
   const [rowWidth, setRowWidth] = useState(0);
   const fitLayout = useMemo(() => {
     if (!preferFitAllCards || cardTier !== 'desktop' || rowWidth <= 0) return null;
@@ -1374,10 +1356,14 @@ function TravelDestinationContextWeatherRow({
       }}
     >
       <View style={styles.destinationContextWeatherRowHeader}>
-        <Text style={styles.destinationContextWeatherRowKicker}>Thời tiết 7 ngày</Text>
+        <Text style={styles.destinationContextWeatherRowKicker}>{t('travelHub.weatherDemo.rowKicker')}</Text>
         <View style={styles.destinationContextWeatherRowDemoNotes}>
-          <Text style={styles.destinationContextWeatherRowDemoNote}>{TRAVEL_DESTINATION_CONTEXT_WEATHER_DEMO_NOTE}</Text>
-          <Text style={styles.destinationContextWeatherRowDaypartNote}>{TRAVEL_WEATHER_DAYPART_DEMO_NOTE}</Text>
+          <Text style={styles.destinationContextWeatherRowDemoNote}>
+            {t('travelHub.weatherDemo.contextDemoNote')}
+          </Text>
+          <Text style={styles.destinationContextWeatherRowDaypartNote}>
+            {t('travelHub.weatherDemo.daypartDemoNote')}
+          </Text>
         </View>
       </View>
       {loading ? (
@@ -1440,7 +1426,11 @@ function TravelDestinationContextFxRow({
   viewportWidth: number;
   twoColumn: boolean;
 }>): ReactElement {
-  const items = useMemo(() => resolveTravelFxReferenceDemoItems(homeCountryCode), [homeCountryCode]);
+  const { t, i18n } = useTranslation();
+  const items = useMemo(
+    () => resolveTravelFxReferenceDemoItems(homeCountryCode, t),
+    [homeCountryCode, t, i18n.language]
+  );
   const layoutMode = travelFxReferenceLayoutMode(viewportWidth, twoColumn);
   const cardMetrics = useMemo(
     () => travelFxReferenceCardMetrics(travelFxReferenceCardTier(viewportWidth)),
@@ -1509,11 +1499,11 @@ function TravelDestinationContextFxRow({
         style={styles.fxPremiumGlassStripSheen}
       />
       <View style={styles.fxPremiumGlassStripHeader}>
-        <Text style={styles.fxPremiumGlassStripKicker}>{TRAVEL_FX_REFERENCE_STRIP_KICKER}</Text>
-        <Text style={styles.fxPremiumGlassStripDemoLabel}>{TRAVEL_FX_REFERENCE_DEMO_LABEL}</Text>
+        <Text style={styles.fxPremiumGlassStripKicker}>{t('travelHub.fxReference.stripKicker')}</Text>
+        <Text style={styles.fxPremiumGlassStripDemoLabel}>{t('travelHub.fxReference.demoLabel')}</Text>
       </View>
       <View style={styles.fxReferenceGlassGridShell}>{cardsGrid}</View>
-      <Text style={styles.fxPremiumGlassStripSafetyNote}>{TRAVEL_FX_REFERENCE_SAFETY_MICROCOPY}</Text>
+      <Text style={styles.fxPremiumGlassStripSafetyNote}>{t('travelHub.fxReference.safetyMicrocopy')}</Text>
     </View>
   );
 }
@@ -4342,7 +4332,7 @@ function TravelPerspectiveCardsRow({
   selectedId: TravelDirectionId | null;
   onSelect: (id: TravelDirectionId) => void;
 }>): ReactElement {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { width } = useWindowDimensions();
   const directions = useMemo(() => getAllTravelDirections(), []);
   const { currentMarket, nativeLocale } = useSmartTrio();
@@ -4353,7 +4343,7 @@ function TravelPerspectiveCardsRow({
     const marketLabel = t(travelPerspectiveMarketLabelKey(currentMarket));
     const nativeLabel = t(`smartTrio.language.${nativeLocale}`);
     return t('travel.direction.contextLine', { market: marketLabel, native: nativeLabel });
-  }, [currentMarket, nativeLocale, t]);
+  }, [currentMarket, nativeLocale, t, i18n.language]);
 
   const toggleA11y = expanded ? t('travel.direction.collapseA11y') : t('travel.direction.expandA11y');
   const desktopRow = width >= TRAVEL_PERSPECTIVE_DESKTOP_ROW_MIN_WIDTH;
@@ -4586,6 +4576,11 @@ function TravelLocalDiscoveryCategoryRow({
   selectedCategoryId: string | null;
   onSelectCategory: (categoryId: string) => void;
 }>): ReactElement {
+  const { t, i18n } = useTranslation();
+  const categories = useMemo(
+    () => resolveTravelLocalDiscoveryCategories(t),
+    [t, i18n.language]
+  );
   return (
     <View style={styles.localDiscoveryCategoryDockInner} pointerEvents="box-none">
       <LinearGradient
@@ -4595,7 +4590,9 @@ function TravelLocalDiscoveryCategoryRow({
         end={{ x: 0, y: 1 }}
         style={StyleSheet.absoluteFill}
       />
-      <Text style={styles.localDiscoveryCategoryOverlayKicker}>Lọc theo nhu cầu · xem trước</Text>
+      <Text style={styles.localDiscoveryCategoryOverlayKicker}>
+        {t('travelHub.localDiscovery.categoryOverlayKicker')}
+      </Text>
       <ScrollView
         horizontal
         nestedScrollEnabled
@@ -4603,7 +4600,7 @@ function TravelLocalDiscoveryCategoryRow({
         contentContainerStyle={styles.localDiscoveryCategoryScrollContent}
         testID="travel-local-discovery-category-row"
       >
-        {TRAVEL_LOCAL_DISCOVERY_CATEGORIES.map((category) => (
+        {categories.map((category) => (
           <TravelLocalDiscoveryCategoryChip
             key={category.id}
             category={category}
@@ -4621,11 +4618,14 @@ function TravelLocalDiscoverySearchAction({
   compact,
   onPress,
 }: Readonly<{ compact: boolean; onPress: () => void }>): ReactElement {
+  const { t } = useTranslation();
+  const searchTitle = t('travelHub.localDiscovery.searchTitle');
+  const searchNote = t('travelHub.localDiscovery.searchNote');
   return (
     <Pressable
       onPress={onPress}
       accessibilityRole="button"
-      accessibilityLabel={`${TRAVEL_LOCAL_DISCOVERY_SEARCH_TITLE}. ${TRAVEL_LOCAL_DISCOVERY_SEARCH_NOTE}`}
+      accessibilityLabel={`${searchTitle}. ${searchNote}`}
       testID="travel-local-discovery-search-action"
       style={({ pressed }) => [
         styles.localDiscoverySearchAction,
@@ -4657,13 +4657,13 @@ function TravelLocalDiscoverySearchAction({
         <Text
           style={[styles.localDiscoverySearchTitle, compact ? null : styles.localDiscoverySearchTitleDesktop]}
         >
-          {TRAVEL_LOCAL_DISCOVERY_SEARCH_TITLE}
+          {searchTitle}
         </Text>
         <Text
           style={[styles.localDiscoverySearchNote, compact ? null : styles.localDiscoverySearchNoteDesktop]}
           numberOfLines={2}
         >
-          {TRAVEL_LOCAL_DISCOVERY_SEARCH_NOTE}
+          {searchNote}
         </Text>
       </View>
       <Ionicons
@@ -4687,10 +4687,16 @@ function TravelLocalDiscoveryPreviewList({
   selectedPreviewId: string | null;
   onSelectPreview: (previewId: string) => void;
 }>): ReactElement | null {
+  const { t, i18n } = useTranslation();
+  const previewA11ySuffix = t('travelHub.localDiscovery.previewA11ySuffix');
+  const allPreviewItems = useMemo(
+    () => resolveTravelLocalDiscoveryPreviewItems(t),
+    [t, i18n.language]
+  );
   const items = useMemo(() => {
-    if (!selectedCategoryId) return TRAVEL_LOCAL_DISCOVERY_PREVIEW_ITEMS;
-    return TRAVEL_LOCAL_DISCOVERY_PREVIEW_ITEMS.filter((item) => item.categoryId === selectedCategoryId);
-  }, [selectedCategoryId]);
+    if (!selectedCategoryId) return allPreviewItems;
+    return allPreviewItems.filter((item) => item.categoryId === selectedCategoryId);
+  }, [allPreviewItems, selectedCategoryId]);
 
   if (items.length === 0) return null;
 
@@ -4702,7 +4708,7 @@ function TravelLocalDiscoveryPreviewList({
         key={item.id}
         onPress={() => onSelectPreview(item.id)}
         accessibilityRole="button"
-        accessibilityLabel={`${item.label} xem trước demo`}
+        accessibilityLabel={`${item.label} ${previewA11ySuffix}`}
         testID={`travel-local-discovery-preview-${item.id}`}
         style={({ pressed }) => [
           styles.localDiscoveryPreviewItem,
@@ -4743,7 +4749,7 @@ function TravelLocalDiscoveryPreviewList({
       <Text
         style={[styles.localDiscoveryPreviewKicker, compact ? null : styles.localDiscoveryPreviewKickerDesktop]}
       >
-        {TRAVEL_LOCAL_DISCOVERY_PREVIEW_KICKER}
+        {t('travelHub.localDiscovery.previewKicker')}
       </Text>
       <ScrollView
         horizontal
@@ -4770,13 +4776,34 @@ function TravelLocalDiscoveryHandoffRow({
   onOpenGuides: () => void;
   onSupportRequest: () => void;
 }>): ReactElement {
+  const { t } = useTranslation();
   const primaryActions = [
-    { id: 'directions', label: TRAVEL_LOCAL_NAV_DIRECTIONS, icon: 'navigate-outline' as const, onPress: onDirections },
-    { id: 'map', label: TRAVEL_LOCAL_NAV_OPEN_MAP, icon: 'map-outline' as const, onPress: onOpenMap },
+    {
+      id: 'directions',
+      label: t('travelHub.localDiscovery.nav.directions'),
+      icon: 'navigate-outline' as const,
+      onPress: onDirections,
+    },
+    {
+      id: 'map',
+      label: t('travelHub.localDiscovery.nav.openMap'),
+      icon: 'map-outline' as const,
+      onPress: onOpenMap,
+    },
   ];
   const secondaryActions = [
-    { id: 'guides', label: TRAVEL_LOCAL_NAV_OPEN_GUIDES, icon: 'compass-outline' as const, onPress: onOpenGuides },
-    { id: 'support', label: TRAVEL_LOCAL_NAV_SUPPORT_REQUEST, icon: 'chatbubble-ellipses-outline' as const, onPress: onSupportRequest },
+    {
+      id: 'guides',
+      label: t('travelHub.localDiscovery.nav.openGuides'),
+      icon: 'compass-outline' as const,
+      onPress: onOpenGuides,
+    },
+    {
+      id: 'support',
+      label: t('travelHub.localDiscovery.nav.supportRequest'),
+      icon: 'chatbubble-ellipses-outline' as const,
+      onPress: onSupportRequest,
+    },
   ];
 
   const renderAction = (
@@ -5013,6 +5040,7 @@ function TravelLocalMapConciergeCard({
   onOpenLocalGuides: () => void;
   openingStageFullscreen?: boolean;
 }>): ReactElement {
+  const { t } = useTranslation();
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
   const [selectedPreviewId, setSelectedPreviewId] = useState<string | null>(null);
 
@@ -5111,15 +5139,17 @@ function TravelLocalMapConciergeCard({
               <Ionicons name="navigate-outline" size={16} color="rgba(168, 240, 255, 0.94)" accessibilityIgnoresInvertColors />
             </View>
             <View style={styles.localConciergeHeaderCopy}>
-              <Text style={styles.localConciergeKicker}>{TRAVEL_EXPERIENCE_ZONE.localMapConcierge.kicker}</Text>
+              <Text style={styles.localConciergeKicker}>
+                {t('travelHub.experienceZone.localMapConcierge.kicker')}
+              </Text>
               <Text style={[styles.localConciergeTitle, compact && styles.localSupportTitleCompact]}>
-                {TRAVEL_EXPERIENCE_ZONE.localMapConcierge.title}
+                {t('travelHub.experienceZone.localMapConcierge.title')}
               </Text>
               <Text
                 style={[styles.localConciergeSubtitle, compact && styles.localAssistHeaderSubCompact]}
                 numberOfLines={2}
               >
-                {TRAVEL_EXPERIENCE_ZONE.localMapConcierge.subtitle}
+                {t('travelHub.experienceZone.localMapConcierge.subtitle')}
               </Text>
             </View>
           </View>
@@ -5164,7 +5194,7 @@ function TravelLocalMapConciergeCard({
           compact ? styles.localSupportSafetyNoteCompact : styles.localConciergeSafetyNoteDesktop,
         ]}
       >
-        {TRAVEL_LOCAL_SUPPORT_SAFETY_NOTE}
+        {t('travelHub.localSupport.safetyNote')}
       </Text>
     </TravelGlassCard>
   );
@@ -5203,13 +5233,13 @@ function TravelDestinationLensCard({
   const useLiveToday = gpsOptIn && !loadingCtx;
   const weatherCardTier = travelWeatherCinematicCardTier(viewportWidth);
   const weatherPreviewDays = useMemo(
-    () => buildDestinationWeatherPreview(weatherCode, weatherLine, useLiveToday),
-    [weatherCode, weatherLine, useLiveToday]
+    () => buildDestinationWeatherPreview(weatherCode, weatherLine, useLiveToday, t),
+    [weatherCode, weatherLine, useLiveToday, t]
   );
 
   const lensCopy = (
     <View style={styles.destinationLensCopy}>
-      <Text style={styles.destinationKicker}>{TRAVEL_EXPERIENCE_ZONE.destinationLens.kicker}</Text>
+      <Text style={styles.destinationKicker}>{t('travelHub.experienceZone.destinationLens.kicker')}</Text>
       <Text style={styles.destinationLensTitle}>{promptTitle}</Text>
       <TextInput
         value={destinationQuery}
@@ -5507,7 +5537,7 @@ function TravelLocationConsentGate({
   onAllow: () => void;
   onDecline: () => void;
 }>): ReactElement {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const chips = useMemo(
     () =>
       [
@@ -5515,7 +5545,7 @@ function TravelLocationConsentGate({
         t('travelHub.consentChipSkippable'),
         t('travelHub.consentChipLimited'),
       ] as const,
-    [t]
+    [t, i18n.language]
   );
   const benefits = useMemo(
     () =>
@@ -5524,7 +5554,7 @@ function TravelLocationConsentGate({
         { icon: 'compass-outline' as const, label: t('travelHub.consentBenefitNearby') },
         { icon: 'navigate-outline' as const, label: t('travelHub.consentBenefitLocal') },
       ] as const,
-    [t]
+    [t, i18n.language]
   );
 
   return (
@@ -5632,7 +5662,7 @@ export function TravelScreen() {
       accountChipShort: t('home.accountChipShort'),
       sosFabLabel: t('sos.fabLabel'),
     }),
-    [t]
+    [t, i18n.language]
   );
 
   /** Pack 32 — hide tab-nav legacy floats on mobile web; shell top rail owns Language / Account / SOS. */
@@ -5946,7 +5976,7 @@ export function TravelScreen() {
     if (travelPerspectiveDirectionId == null) return undefined;
     const def = getTravelDirectionById(travelPerspectiveDirectionId);
     return def ? t(def.subtitleKey) : undefined;
-  }, [t, travelPerspectiveDirectionId]);
+  }, [t, i18n.language, travelPerspectiveDirectionId]);
 
   const onTravelPerspectiveSelect = useCallback((id: TravelDirectionId) => {
     setTravelPerspectiveMode((prev) => (prev === id ? 'overview' : id));
@@ -6021,11 +6051,11 @@ export function TravelScreen() {
 
   const weatherLine = useMemo(
     () => t(`travelHub.weather.${weatherLabelKey(weatherCode)}`),
-    [t, weatherCode]
+    [t, i18n.language, weatherCode]
   );
   const fxLine = useMemo(
     () => t(`travelHub.fx.${fxLabelKey(user?.country)}`),
-    [t, user?.country]
+    [t, i18n.language, user?.country]
   );
   const travelScrollBottomClearance = useMemo(() => {
     const mobileFloatingReserve = width < 768 ? TRAVEL_MOBILE_FLOATING_CHROME_RESERVE_PX : 0;
@@ -6152,7 +6182,7 @@ export function TravelScreen() {
         onPress: () => openInterpreter('travel'),
       },
     ];
-  }, [navigation, openInterpreter, openLeona, openTravelSosEntry, t]);
+  }, [navigation, openInterpreter, openLeona, openTravelSosEntry, t, i18n.language]);
 
   const scenarioById = useMemo(() => {
     const map = new Map<TravelScenarioId, TravelScenario>();

@@ -1179,12 +1179,54 @@
   },
   "travelHub": {
     "screenTitle": "VIONA Du lịch",
-    "railSubtitle": "Travel Lite · đồng hành & ngôn ngữ",
+    "railSubtitle": "Travel Lite · đồng hành & hỗ trợ ngôn ngữ",
     "heroKicker": "TRAVEL LITE",
     "heroCompanion": "VIONA Travel là người bạn đồng hành trên hành trình.",
-    "heroSub": "Hỗ trợ tình huống & ngôn ngữ — không phải đặt phòng/OTA.",
-    "pilotStripTitle": "Travel Lite (thử nghiệm)",
-    "pilotStripBanner": "Chỉ hỗ trợ ngôn ngữ & tình huống — không thanh toán trong app.",
+    "heroSub": "Sân bay, di chuyển, phiên dịch, an toàn và hỗ trợ địa phương — chỉ dẫn đúng lúc, không thay bạn đặt dịch vụ.",
+    "heroTrust": {
+      "lite": "Lite sẵn sàng",
+      "demo": "Hỗ trợ demo",
+      "preview": "Công cụ xem trước"
+    },
+    "quickHelpHero": {
+      "default": {
+        "title": "Đồng hành trên mọi hành trình",
+        "subtitle": "Sân bay, di chuyển, phiên dịch, an toàn và hỗ trợ địa phương — chỉ dẫn đúng lúc, không thay bạn đặt dịch vụ.",
+        "chip1": "Lite sẵn sàng",
+        "chip2": "Hỗ trợ demo",
+        "chip3": "Công cụ xem trước"
+      },
+      "airport": {
+        "title": "Đi qua sân bay tự tin hơn",
+        "subtitle": "Check-in, an ninh, hành lý và hướng dẫn từng bước — VIONA chỉ dẫn, không thay bạn làm thủ tục.",
+        "chip1": "Check-in",
+        "chip2": "An ninh",
+        "chip3": "Hành lý"
+      },
+      "translation": {
+        "title": "Hiểu đúng trong tình huống quan trọng",
+        "subtitle": "Gợi ý câu nói, ngữ cảnh và hỗ trợ ngôn ngữ khi gặp quầy dịch vụ, khách sạn hoặc cơ quan.",
+        "chip1": "Câu nói nhanh",
+        "chip2": "Ngữ cảnh",
+        "chip3": "Minh Khang"
+      },
+      "taxi": {
+        "title": "Tìm cách di chuyển phù hợp",
+        "subtitle": "Gợi ý phương án đi lại, điểm đón và lưu ý an toàn — không xác nhận đặt xe.",
+        "chip1": "Điểm đón",
+        "chip2": "Lộ trình",
+        "chip3": "Không đặt xe"
+      },
+      "emergency": {
+        "title": "Bình tĩnh trong tình huống khẩn cấp",
+        "subtitle": "Hướng dẫn bước đầu, thông tin cần chuẩn bị và lối vào SOS an toàn — không giả điều phối cứu hộ.",
+        "chip1": "SOS an toàn",
+        "chip2": "Cảnh báo",
+        "chip3": "Không điều phối"
+      }
+    },
+    "pilotStripTitle": "Travel Lite pilot",
+    "pilotStripBanner": "Chỉ hỗ trợ ngôn ngữ & tình huống — không thanh toán, không đặt hộ trong app.",
     "pilotPill": {
       "lite": "Lite",
       "demo": "Hỗ trợ demo",
@@ -1206,10 +1248,19 @@
     "connectedLocal": "Local hub",
     "connectedAcademy": "Academy Lite",
     "connectedBusiness": "Doanh nghiệp",
-    "consentHeadline": "Vị trí & du lịch (GDPR)",
-    "consentCopy": "Thời tiết, thổ địa và gợi ý quán gần bạn cần quyền vị trí. Bạn có thể từ chối và dùng tọa độ mặc định.",
-    "consentPrimary": "Đồng ý — dùng vị trí cho Travel",
-    "consentSecondary": "Không chia sẻ — tiếp tục hạn chế",
+    "consentHeadline": "Chuẩn bị hành trình của bạn",
+    "consentSubtitle": "Bật vị trí để VIONA gợi ý thời tiết, tỷ giá tham khảo và hỗ trợ gần nơi bạn đến.",
+    "consentSupport": "Bạn có thể tiếp tục với chế độ giới hạn. VIONA không tự đặt dịch vụ, không thanh toán và không chia sẻ vị trí cho bên thứ ba.",
+    "consentCopy": "Bật vị trí để VIONA gợi ý thời tiết, tỷ giá tham khảo và hỗ trợ gần nơi bạn đến.",
+    "consentPrimary": "Bật vị trí cho Travel",
+    "consentSecondary": "Tiếp tục không dùng vị trí",
+    "consentChipPrivacy": "Riêng tư",
+    "consentChipSkippable": "Có thể bỏ qua",
+    "consentChipLimited": "Chế độ giới hạn",
+    "consentBenefitsKicker": "Vị trí giúp VIONA gợi ý",
+    "consentBenefitWeather": "Thời tiết quanh điểm đến",
+    "consentBenefitNearby": "Gợi ý gần bạn",
+    "consentBenefitLocal": "Hỗ trợ địa phương",
     "modalClose": "Đóng",
     "scenario": {
       "airport": {
@@ -1222,7 +1273,7 @@
       },
       "taxi": {
         "title": "Hỗ trợ xe",
-        "sub": "Gọi hỗ trợ (demo) — không phải xe đã đặt"
+        "sub": "Gọi hỗ trợ demo — không phải xe đã đặt"
       },
       "restaurant": {
         "title": "Nhà hàng",
@@ -1246,7 +1297,7 @@
       },
       "translation": {
         "title": "Hỗ trợ phiên dịch",
-        "sub": "Phiên dịch trực tiếp · Leona"
+        "sub": "Phiên dịch trực tiếp · Leona gọi hỗ trợ"
       }
     },
     "connectedLocalHelpKicker": "HỖ TRỢ LOCAL LIÊN KẾT",
@@ -1274,6 +1325,74 @@
       "pl": "1 EUR ≈ 4,32 PLN · 1 USD ≈ 3,98 PLN (tham chiếu demo)",
       "vn": "1 EUR ≈ 27.500 ₫ · 1 USD ≈ 25.400 ₫ (tham chiếu demo)",
       "default": "1 EUR ≈ 1,08 USD (tham chiếu demo)"
+    },
+    "experienceZone": {
+      "destinationLens": {
+        "kicker": "ĐIỂM ĐẾN",
+        "demoNote": "tham chiếu demo"
+      },
+      "localMapConcierge": {
+        "kicker": "LOCAL CONCIERGE",
+        "title": "Hỗ trợ địa phương",
+        "subtitle": "Tìm dịch vụ, địa điểm và local guides quanh nơi sở tại."
+      }
+    },
+    "localDiscovery": {
+      "categoryOverlayKicker": "Lọc theo nhu cầu · xem trước",
+      "searchTitle": "Tìm địa điểm cần đến",
+      "searchNote": "Gợi ý nơi gần bạn theo điểm đến — chưa tự đặt dịch vụ.",
+      "previewKicker": "Gợi ý gần bạn · xem trước demo",
+      "previewA11ySuffix": "xem trước demo",
+      "nav": {
+        "directions": "Chỉ đường",
+        "openMap": "Mở bản đồ",
+        "openGuides": "Mở Local guides",
+        "supportRequest": "Gửi yêu cầu hỗ trợ"
+      },
+      "category": {
+        "nearby-services": "Dịch vụ gần bạn",
+        "helpers": "Người hỗ trợ",
+        "interpreter": "Phiên dịch",
+        "transport": "Di chuyển",
+        "health": "Y tế / thuốc",
+        "viet-food": "Nhà hàng / cửa hàng Việt",
+        "documents": "Giấy tờ / đại sứ quán",
+        "community": "Cộng đồng"
+      },
+      "preview": {
+        "pharmacy": "Tiệm thuốc gần bạn · demo",
+        "viet-restaurant": "Nhà hàng Việt/Á · demo",
+        "embassy": "Đại sứ quán / giấy tờ · demo"
+      }
+    },
+    "localSupport": {
+      "safetyNote": "Không xác nhận đặt chỗ · không cam kết fixer · không thanh toán · không điều phối."
+    },
+    "weatherDemo": {
+      "rowKicker": "Thời tiết 7 ngày",
+      "contextDemoNote": "thời tiết tham chiếu demo",
+      "daypartDemoNote": "hiển thị minh họa theo thời điểm demo",
+      "days": {
+        "today": { "dayLabel": "Hôm nay", "conditionLabel": "Trời quang" },
+        "t3": { "dayLabel": "T3", "conditionLabel": "Ít mây" },
+        "t4": { "dayLabel": "T4", "conditionLabel": "Mưa nhẹ" },
+        "t5": { "dayLabel": "T5", "conditionLabel": "Nắng đẹp" },
+        "t6": { "dayLabel": "T6", "conditionLabel": "Nhiều mây" },
+        "t7": { "dayLabel": "T7", "conditionLabel": "Gió nhẹ" },
+        "cn": { "dayLabel": "CN", "conditionLabel": "Có nắng" }
+      }
+    },
+    "fxReference": {
+      "stripKicker": "TỶ GIÁ THAM KHẢO",
+      "demoLabel": "tham chiếu demo",
+      "safetyMicrocopy": "Chỉ để tham khảo khi chuẩn bị hành trình. Không phải dịch vụ đổi tiền.",
+      "items": {
+        "eur-usd": { "pairLabel": "EUR → USD", "valueText": "1 EUR ≈ 1,08 USD" },
+        "usd-local": { "pairLabel": "USD → SỞ TẠI", "valueText": "ước tính tham khảo" },
+        "eur-local": { "pairLabel": "EUR → SỞ TẠI", "valueText": "ước tính tham khảo" },
+        "eur-vnd": { "pairLabel": "EUR → VND", "valueText": "VND tham khảo" },
+        "usd-vnd": { "pairLabel": "USD → VND", "valueText": "VND tham khảo" }
+      }
     },
     "mapKicker": "Bản đồ · Thổ địa",
     "exploreCta": "Khám phá địa phương",
