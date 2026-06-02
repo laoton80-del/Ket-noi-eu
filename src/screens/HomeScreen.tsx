@@ -1,4 +1,4 @@
-﻿import { Ionicons } from '@expo/vector-icons';
+import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useFocusEffect, useNavigation, useNavigationState } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -137,6 +137,7 @@ import { useVionaHomeDaylightBoost } from '../components/viona/useVionaHomeDayli
 import { HomeHeroNetworkPulse } from '../components/viona/HomeHeroNetworkPulse';
 import { HomeLightingNetworkEdge } from '../components/viona/HomeLightingNetworkEdge';
 import {
+  getHomeHeroEdgeAccents,
   getHomeHeroSemanticLighting,
   homeHeroSemanticHoverRimWebStyle,
   type HomeLivingHeroVisualKey,
@@ -1014,6 +1015,10 @@ export function HomeScreen() {
     () => getHomeHeroSemanticLighting(desktopLivingCopyKey as HomeLivingHeroVisualKey),
     [desktopLivingCopyKey]
   );
+  const heroEdgeAccents = useMemo(
+    () => getHomeHeroEdgeAccents(desktopLivingCopyKey as HomeLivingHeroVisualKey, fashionDaylight),
+    [desktopLivingCopyKey, fashionDaylight]
+  );
 
   // Hero light-network activates on direct hero hover OR when a world card swaps the living hero
   // image (same pattern as Local dynamic hero + hero cards).
@@ -1304,16 +1309,6 @@ export function HomeScreen() {
     },
     [fashionDaylight, reduceMotion, webWorldCardHover, worldCardMagnetic]
   );
-
-  const daylightToggleLabel = useMemo(() => {
-    const vi = typeof i18n.language === 'string' && i18n.language.toLowerCase().startsWith('vi');
-    if (daylightBoost) return vi ? 'Tắt đèn' : 'Night';
-    return vi ? 'Bật đèn' : 'Daylight';
-  }, [daylightBoost, i18n.language]);
-
-  const onPressDaylightBoost = useCallback(() => {
-    setDaylightBoost((v) => !v);
-  }, [setDaylightBoost]);
 
   const fashionHomeWebTintTransition =
     Platform.OS === 'web' && fashionHomeDesktopShellActive ? fashionHomeWebDaylightTransitionStyle() : null;
@@ -1819,8 +1814,6 @@ export function HomeScreen() {
               fullscreenControl={fullscreenControl}
               daylightBoost={daylightBoost}
               commandBarLuminous={fashionDaylight}
-              onPressDaylightBoost={onPressDaylightBoost}
-              daylightBoostLabel={daylightToggleLabel}
             />
           </View>
         </View>
@@ -1948,11 +1941,19 @@ export function HomeScreen() {
                 </>
               ) : null}
               <View
-                style={[styles.desktopHeroCyanEdge, fashionDaylight && styles.desktopHeroCyanEdgeDaylight]}
+                style={[
+                  styles.desktopHeroCyanEdge,
+                  { backgroundColor: heroEdgeAccents.verticalEdge },
+                  fashionHomeWebTintTransition,
+                ]}
                 pointerEvents="none"
               />
               <View
-                style={[styles.desktopHeroBottomCyanEdge, fashionDaylight && styles.desktopHeroBottomCyanEdgeDaylight]}
+                style={[
+                  styles.desktopHeroBottomCyanEdge,
+                  { backgroundColor: heroEdgeAccents.bottomEdge },
+                  fashionHomeWebTintTransition,
+                ]}
                 pointerEvents="none"
               />
               <View
@@ -2931,8 +2932,8 @@ export function HomeScreen() {
                 title={t('home.qrPayTitle')}
                 lines={[t('home.qrPaySub')]}
                 accent="gold"
-                onPress={() => openProtected('Wallet')}
-                accessibilityLabel={t('home.qrPayA11y')}
+            onPress={() => openProtected('Wallet')}
+            accessibilityLabel={t('home.qrPayA11y')}
               />
               <VionaInfoTile
                 icon="time-outline"
