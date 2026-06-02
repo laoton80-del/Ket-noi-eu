@@ -26,6 +26,8 @@ export type LocalConstellationFrameProps = Readonly<{
   contentStyle?: StyleProp<ViewStyle>;
   cinematicVeil?: boolean;
   hovered?: boolean;
+  /** When true, slab/glass remain but accent rim is owned by an outer frame (Travel quick-help). */
+  suppressAccentRim?: boolean;
 }>;
 
 export function LocalConstellationFrame({
@@ -37,14 +39,17 @@ export function LocalConstellationFrame({
   contentStyle,
   cinematicVeil = false,
   hovered = false,
+  suppressAccentRim = false,
 }: LocalConstellationFrameProps): ReactElement {
   const stroke = hovered ? localAccentStrokeHover(accent) : localAccentStroke(accent);
   const slabFill = localCardSurfaceFill(tier, hovered);
   const glassTint = localCardGlassTint(tier, hovered);
   const backdropBlur = localCardBackdropBlur(tier, hovered);
   const cornerGlint = localAccentGlow(accent, hovered);
-  const webGlass = Platform.OS === 'web' ? localWebConstellationGlassStyle(accent, hovered) : null;
-  const nativeEdge = Platform.OS !== 'web' ? localNativeConstellationEdgeStyle(accent) : null;
+  const webGlass =
+    Platform.OS === 'web' && !suppressAccentRim ? localWebConstellationGlassStyle(accent, hovered) : null;
+  const nativeEdge =
+    Platform.OS !== 'web' && !suppressAccentRim ? localNativeConstellationEdgeStyle(accent) : null;
 
   return (
     <View
@@ -134,7 +139,7 @@ export function LocalConstellationFrame({
         ) : null}
         {children}
       </View>
-      {Platform.OS !== 'web' ? (
+      {Platform.OS !== 'web' && !suppressAccentRim ? (
         <View style={[premiumFrameEdgeOverlay(radius), premiumCrispEdgeStroke(stroke), styles.edge]} />
       ) : null}
     </View>

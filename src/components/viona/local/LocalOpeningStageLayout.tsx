@@ -41,6 +41,40 @@ const LOCAL_OPENING_STAGE_FULLSCREEN_HERO_MAX_TRIM_PX = 42;
 const LOCAL_OPENING_STAGE_FULLSCREEN_HERO_FLOOR_OFFSET_PX = 96;
 /** Fullscreen visual gap hero → “Bắt đầu tại đây” (+12px vs prior 4px — pushes cards/For You down without shrinking hero). */
 const LOCAL_OPENING_STAGE_FULLSCREEN_HERO_TO_CARD_GAP_PX = 16;
+/** Local-only display bonus — hero → flagship row (lock budget unchanged; matches Travel +14 rhythm on desktop). */
+const LOCAL_HERO_TO_FLAGSHIP_AIR_GAP_BONUS_DESKTOP_PX = 14;
+const LOCAL_HERO_TO_FLAGSHIP_AIR_GAP_BONUS_FULLSCREEN_PX = 8;
+const LOCAL_HERO_TO_FLAGSHIP_AIR_GAP_BONUS_TABLET_PX = 12;
+const LOCAL_HERO_TO_FLAGSHIP_AIR_GAP_BONUS_MOBILE_PX = 8;
+
+function localOpeningStageHeroToCardGap(
+  viewportWidth: number,
+  viewportHeight: number,
+  openingStageFullscreen: boolean
+): number {
+  const compactOpening = viewportHeight < 520 || viewportWidth / viewportHeight > 1.8;
+  const scale = compactOpening ? 0.55 : 1;
+  if (openingStageFullscreen) {
+    return (
+      LOCAL_OPENING_STAGE_FULLSCREEN_HERO_TO_CARD_GAP_PX +
+      Math.round(LOCAL_HERO_TO_FLAGSHIP_AIR_GAP_BONUS_FULLSCREEN_PX * scale)
+    );
+  }
+  if (viewportWidth >= LOCAL_OPENING_STAGE_DESKTOP_ROW_MIN_WIDTH) {
+    return (
+      FASHION_HOME_WEB_OPENING_STAGE_HERO_TO_CARD_GAP_PX +
+      Math.round(LOCAL_HERO_TO_FLAGSHIP_AIR_GAP_BONUS_DESKTOP_PX * scale)
+    );
+  }
+  if (viewportWidth >= 768) {
+    return 8 + Math.round(LOCAL_HERO_TO_FLAGSHIP_AIR_GAP_BONUS_TABLET_PX * scale);
+  }
+  return (
+    FASHION_HOME_WEB_OPENING_STAGE_HERO_TO_CARD_GAP_PX +
+    Math.round(LOCAL_HERO_TO_FLAGSHIP_AIR_GAP_BONUS_MOBILE_PX * scale)
+  );
+}
+
 /** Fullscreen lock budget gap — unchanged so dynamic hero height stays fixed. */
 const LOCAL_OPENING_STAGE_FULLSCREEN_HERO_TO_CARD_LOCK_GAP_PX = 4;
 /** Fullscreen visual gap cards → Local cho bạn (dense mode — lock budget fits 2 For You rows). */
@@ -181,6 +215,10 @@ export function LocalOpeningStageLayout({
   const desktopStageLock =
     firstViewLock != null &&
     (width >= LOCAL_OPENING_STAGE_DESKTOP_ROW_MIN_WIDTH || openingStageFullscreen);
+  const heroToCardGap = useMemo(
+    () => localOpeningStageHeroToCardGap(width, height, openingStageFullscreen),
+    [width, height, openingStageFullscreen]
+  );
 
   return (
     <View testID={testID} style={[styles.root, openingStageFullscreen && styles.rootFullscreen, style]}>
@@ -196,12 +234,7 @@ export function LocalOpeningStageLayout({
           onBrowseServices={onBrowseServices}
           onBookingAssist={onBookingAssist}
         />
-        <View
-          style={[
-            styles.heroCardsBridge,
-            openingStageFullscreen && styles.heroCardsBridgeFullscreen,
-          ]}
-        >
+        <View style={[styles.heroCardsBridge, { marginTop: heroToCardGap }]}>
           <LocalHeroCardsRow
             openingStageFullscreen={openingStageFullscreen}
             hoveredHeroKey={activeHeroKey}
@@ -250,12 +283,10 @@ const styles = StyleSheet.create({
     width: '100%',
     minWidth: 0,
   },
-  /** Home opening-stage hero → flagship kicker gap (6px). */
+  /** Home opening-stage hero → flagship kicker gap (display; lock budget uses base 6px). */
   heroCardsBridge: {
-    marginTop: FASHION_HOME_WEB_OPENING_STAGE_HERO_TO_CARD_GAP_PX,
-  },
-  heroCardsBridgeFullscreen: {
-    marginTop: LOCAL_OPENING_STAGE_FULLSCREEN_HERO_TO_CARD_GAP_PX,
+    width: '100%',
+    minWidth: 0,
   },
   /** Cards → Local cho bạn — below the locked opening stage on desktop. */
   forYouBridge: {

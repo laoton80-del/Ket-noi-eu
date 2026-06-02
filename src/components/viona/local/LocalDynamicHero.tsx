@@ -3,7 +3,7 @@
  * Theme-invariant premium dark-glass frame; hero images stay daylight/golden-hour assets.
  */
 import { LinearGradient } from 'expo-linear-gradient';
-import { useEffect, useMemo, useRef, useState, type ReactElement } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactElement } from 'react';
 import {
   AccessibilityInfo,
   Animated,
@@ -54,6 +54,360 @@ const HERO_ASPECT = 1600 / 624;
 /** Desktop max lift so hero visual mass stays premium after the flagship kicker band. */
 export const LOCAL_HERO_LABEL_AWARE_MAX_BONUS_PX = 10;
 
+/** Editorial recompose — left-to-center cover layout (wave3b.dynamic-hero-editorial-recompose). */
+const LOCAL_HERO_DESKTOP_TITLE_MIN_WIDTH = 1024;
+const LOCAL_HERO_LARGE_DESKTOP_MIN_WIDTH = 1366;
+
+type LocalHeroEditorialLayout = Readonly<{
+  zoneWidthPx: number;
+  zoneWidthPercent: number;
+  zoneWidthVw: number;
+  zoneMinWidthPx: number;
+  zoneLeftInsetPercent: number;
+  titleMaxWidthPx: number;
+  subtitleMaxWidthPx: number;
+  metaRowMaxWidthPx: number;
+  leftScrimWidthPercent: number;
+  leftScrimMaxWidthPx: number;
+  useAbsoluteLayer: boolean;
+}>;
+
+function localHeroLineHeight(fontSize: number, ratio: number): number {
+  return Math.round(fontSize * ratio);
+}
+
+function localHeroKickerLetterSpacingPx(fontSize: number, em = 0.15): number {
+  return Math.round(fontSize * em * 10) / 10;
+}
+
+/** Numeric editorial wrapper width — no CSS clamp (RN Web unreliable). */
+function localHeroEditorialWrapperWidthPx(viewportWidth: number, largeDesktop: boolean): number {
+  if (largeDesktop) {
+    return Math.min(1160, Math.max(1020, Math.round(viewportWidth * 0.66)));
+  }
+  if (viewportWidth >= LOCAL_HERO_DESKTOP_TITLE_MIN_WIDTH) {
+    return Math.min(820, Math.max(680, Math.round(viewportWidth * 0.54)));
+  }
+  return Math.min(560, Math.max(440, Math.round(viewportWidth * 0.72)));
+}
+
+/** Local cover zone — wide editorial block spanning left-to-center (numeric px width). */
+function localHeroEditorialRecomposeLayout(
+  viewportWidth: number,
+  largeDesktop: boolean,
+  desktopWebHero: boolean
+): LocalHeroEditorialLayout {
+  const useAbsoluteLayer = desktopWebHero && Platform.OS === 'web';
+  const wrapperWidthPx = localHeroEditorialWrapperWidthPx(viewportWidth, largeDesktop);
+  if (largeDesktop) {
+    return {
+      zoneWidthPx: wrapperWidthPx,
+      zoneWidthPercent: 64,
+      zoneWidthVw: 0,
+      zoneMinWidthPx: wrapperWidthPx,
+      zoneLeftInsetPercent: 3,
+      titleMaxWidthPx: wrapperWidthPx,
+      subtitleMaxWidthPx: Math.min(wrapperWidthPx, 920),
+      metaRowMaxWidthPx: wrapperWidthPx,
+      leftScrimWidthPercent: 68,
+      leftScrimMaxWidthPx: wrapperWidthPx + 40,
+      useAbsoluteLayer,
+    };
+  }
+  if (viewportWidth >= LOCAL_HERO_DESKTOP_TITLE_MIN_WIDTH) {
+    return {
+      zoneWidthPx: wrapperWidthPx,
+      zoneWidthPercent: 56,
+      zoneWidthVw: 0,
+      zoneMinWidthPx: wrapperWidthPx,
+      zoneLeftInsetPercent: 3,
+      titleMaxWidthPx: wrapperWidthPx,
+      subtitleMaxWidthPx: Math.min(wrapperWidthPx, 780),
+      metaRowMaxWidthPx: wrapperWidthPx,
+      leftScrimWidthPercent: 58,
+      leftScrimMaxWidthPx: wrapperWidthPx + 40,
+      useAbsoluteLayer,
+    };
+  }
+  const zoneWidthPx = Math.min(560, Math.max(440, Math.round(viewportWidth * 0.72)));
+  return {
+    zoneWidthPx,
+    zoneWidthPercent: 76,
+    zoneWidthVw: 0,
+    zoneMinWidthPx: 0,
+    zoneLeftInsetPercent: 0,
+    titleMaxWidthPx: zoneWidthPx,
+    subtitleMaxWidthPx: zoneWidthPx,
+    metaRowMaxWidthPx: zoneWidthPx,
+    leftScrimWidthPercent: 82,
+    leftScrimMaxWidthPx: zoneWidthPx + 48,
+    useAbsoluteLayer: false,
+  };
+}
+
+function localHeroTitleDesktopOneLineStyle(widthPx: number, titleSize: number): Record<string, unknown> {
+  const lineHeightPx = localHeroLineHeight(titleSize, 1.14);
+  return {
+    width: widthPx,
+    maxWidth: widthPx,
+    minWidth: widthPx,
+    alignSelf: 'flex-start',
+    flexShrink: 0,
+    flexWrap: 'nowrap',
+    letterSpacing: -0.72,
+    fontSize: titleSize,
+    lineHeight: lineHeightPx,
+    overflow: 'visible',
+    ...(Platform.OS === 'web'
+      ? {
+          display: 'block',
+          whiteSpace: 'nowrap',
+          wordBreak: 'keep-all',
+          overflowWrap: 'normal',
+          textOverflow: 'clip',
+        }
+      : null),
+  };
+}
+
+/** RN Web can ignore Text whiteSpace — force true one-line on the DOM node. */
+function useLocalHeroTitleVisualOneLineDomForce(
+  enabled: boolean,
+  widthPx: number,
+  titleSize: number,
+  headline: string
+): void {
+  useLayoutEffect(() => {
+    if (Platform.OS !== 'web' || !enabled || typeof document === 'undefined') return;
+
+    const lineHeightPx = localHeroLineHeight(titleSize, 1.14);
+    const apply = (): boolean => {
+      const el = document.querySelector('[data-testid="local-hero-title"]') as HTMLElement | null;
+      if (!el) return false;
+      el.style.setProperty('white-space', 'nowrap', 'important');
+      el.style.setProperty('overflow', 'visible', 'important');
+      el.style.setProperty('text-overflow', 'clip', 'important');
+      el.style.setProperty('word-break', 'keep-all', 'important');
+      el.style.setProperty('overflow-wrap', 'normal', 'important');
+      el.style.setProperty('display', 'block', 'important');
+      el.style.setProperty('width', `${widthPx}px`, 'important');
+      el.style.setProperty('max-width', `${widthPx}px`, 'important');
+      el.style.setProperty('min-width', `${widthPx}px`, 'important');
+      el.style.setProperty('font-size', `${titleSize}px`, 'important');
+      el.style.setProperty('line-height', `${lineHeightPx}px`, 'important');
+      el.style.setProperty('font-weight', '900', 'important');
+      return true;
+    };
+
+    if (apply()) return;
+    const frame = requestAnimationFrame(() => {
+      apply();
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [enabled, widthPx, titleSize, headline]);
+}
+
+const LOCAL_HERO_TYPOGRAPHY = {
+  eyebrow: { fontSize: 14, letterSpacingEm: 0.15 },
+  titleDesktop: { fontSize: 40, lineHeightRatio: 1.14 },
+  titleLargeDesktop: { fontSize: 34, lineHeightRatio: 1.14 },
+  titleTablet: { fontSize: 38, lineHeightRatio: 1.14 },
+  titleMobile: { fontSize: 29, lineHeightRatio: 1.16 },
+  titleCompact: { fontSize: 29, lineHeightRatio: 1.16 },
+  subtitleDesktop: { fontSize: 21, lineHeightRatio: 1.5 },
+  subtitleLargeDesktop: { fontSize: 21, lineHeightRatio: 1.5 },
+  subtitleTablet: { fontSize: 18, lineHeightRatio: 1.48 },
+  subtitleMobile: { fontSize: 16, lineHeightRatio: 1.5 },
+  subtitleCompact: { fontSize: 16, lineHeightRatio: 1.5 },
+  spacingDesktop: { kickerToTitle: 18, titleToSubtitle: 24, subtitleToMeta: 28, metaToTrust: 18 },
+  spacingTablet: { kickerToTitle: 16, titleToSubtitle: 18, subtitleToMeta: 22, metaToTrust: 14 },
+  spacingMobile: { kickerToTitle: 14, titleToSubtitle: 16, subtitleToMeta: 20, metaToTrust: 12 },
+} as const;
+
+function localDynamicHeroCopyMetrics(
+  viewportWidth: number,
+  compactHero: boolean,
+  _isWebFullscreen: boolean
+): Readonly<{
+  eyebrowSize: number;
+  eyebrowLetterSpacing: number;
+  eyebrowMarginBottom: number;
+  titleSize: number;
+  titleLineHeight: number;
+  titleMarginBottom: number;
+  titleMaxWidth: number;
+  subtitleSize: number;
+  subtitleLineHeight: number;
+  subtitleMarginBottom: number;
+  subtitleMaxWidth: number;
+  textStackMaxWidth: number;
+  textStackWidthPx: number;
+  textStackWidthPercent: number;
+  textStackWidthVw: number;
+  textStackLeftInsetPercent: number;
+  textStackMinWidthPx: number;
+  metaRowMaxWidth: number;
+  metaToTrustMargin: number;
+  leftScrimWidthPercent: number;
+  leftScrimMaxWidth: number;
+  titleNoWrap: boolean;
+  titleSingleLineDesktop: boolean;
+  trustNoWrap: boolean;
+  useAbsoluteTextLayer: boolean;
+}> {
+  const typo = LOCAL_HERO_TYPOGRAPHY;
+  const kickerLetterSpacing = localHeroKickerLetterSpacingPx(
+    typo.eyebrow.fontSize,
+    typo.eyebrow.letterSpacingEm
+  );
+
+  if (compactHero) {
+    const title = typo.titleCompact;
+    const sub = typo.subtitleCompact;
+    const space = typo.spacingMobile;
+    const stackWidth = Math.min(360, Math.max(280, Math.round(viewportWidth * 0.82)));
+    return {
+      eyebrowSize: typo.eyebrow.fontSize,
+      eyebrowLetterSpacing: kickerLetterSpacing,
+      eyebrowMarginBottom: space.kickerToTitle,
+      titleSize: title.fontSize,
+      titleLineHeight: localHeroLineHeight(title.fontSize, title.lineHeightRatio),
+      titleMarginBottom: space.titleToSubtitle,
+      titleMaxWidth: stackWidth,
+      subtitleSize: sub.fontSize,
+      subtitleLineHeight: localHeroLineHeight(sub.fontSize, sub.lineHeightRatio),
+      subtitleMarginBottom: space.subtitleToMeta,
+      subtitleMaxWidth: stackWidth,
+      textStackMaxWidth: stackWidth,
+      textStackWidthPx: stackWidth,
+      textStackWidthPercent: 92,
+      textStackWidthVw: 0,
+      textStackLeftInsetPercent: 0,
+      textStackMinWidthPx: 0,
+      metaRowMaxWidth: stackWidth,
+      metaToTrustMargin: space.metaToTrust,
+      leftScrimWidthPercent: 88,
+      leftScrimMaxWidth: stackWidth + 48,
+      titleNoWrap: false,
+      titleSingleLineDesktop: false,
+      trustNoWrap: false,
+      useAbsoluteTextLayer: false,
+    };
+  }
+  if (viewportWidth >= LOCAL_HERO_DESKTOP_TITLE_MIN_WIDTH) {
+    const largeDesktop = viewportWidth >= LOCAL_HERO_LARGE_DESKTOP_MIN_WIDTH;
+    const title = largeDesktop ? typo.titleLargeDesktop : typo.titleDesktop;
+    const sub = largeDesktop ? typo.subtitleLargeDesktop : typo.subtitleDesktop;
+    const space = typo.spacingDesktop;
+    const desktopWebHero =
+      Platform.OS === 'web' && viewportWidth >= FASHION_HOME_DESKTOP_MIN_WIDTH && !compactHero;
+    const editorial = localHeroEditorialRecomposeLayout(viewportWidth, largeDesktop, desktopWebHero);
+    return {
+      eyebrowSize: typo.eyebrow.fontSize,
+      eyebrowLetterSpacing: kickerLetterSpacing,
+      eyebrowMarginBottom: space.kickerToTitle,
+      titleSize: title.fontSize,
+      titleLineHeight: localHeroLineHeight(title.fontSize, title.lineHeightRatio),
+      titleMarginBottom: space.titleToSubtitle,
+      titleMaxWidth: editorial.titleMaxWidthPx,
+      subtitleSize: sub.fontSize,
+      subtitleLineHeight: localHeroLineHeight(sub.fontSize, sub.lineHeightRatio),
+      subtitleMarginBottom: space.subtitleToMeta,
+      subtitleMaxWidth: editorial.subtitleMaxWidthPx,
+      textStackMaxWidth: editorial.zoneWidthPx,
+      textStackWidthPx: editorial.zoneWidthPx,
+      textStackWidthPercent: editorial.zoneWidthPercent,
+      textStackWidthVw: editorial.zoneWidthVw,
+      textStackLeftInsetPercent: editorial.zoneLeftInsetPercent,
+      textStackMinWidthPx: editorial.zoneMinWidthPx,
+      metaRowMaxWidth: editorial.metaRowMaxWidthPx,
+      metaToTrustMargin: space.metaToTrust,
+      leftScrimWidthPercent: editorial.leftScrimWidthPercent,
+      leftScrimMaxWidth: editorial.leftScrimMaxWidthPx,
+      titleNoWrap: false,
+      titleSingleLineDesktop: largeDesktop && editorial.useAbsoluteLayer,
+      trustNoWrap: true,
+      useAbsoluteTextLayer: editorial.useAbsoluteLayer,
+    };
+  }
+  if (viewportWidth < 768) {
+    const title = typo.titleMobile;
+    const sub = typo.subtitleMobile;
+    const space = typo.spacingMobile;
+    const stackWidth = Math.min(360, Math.max(300, Math.round(viewportWidth * 0.88)));
+    return {
+      eyebrowSize: typo.eyebrow.fontSize,
+      eyebrowLetterSpacing: kickerLetterSpacing,
+      eyebrowMarginBottom: space.kickerToTitle,
+      titleSize: title.fontSize,
+      titleLineHeight: localHeroLineHeight(title.fontSize, title.lineHeightRatio),
+      titleMarginBottom: space.titleToSubtitle,
+      titleMaxWidth: stackWidth,
+      subtitleSize: sub.fontSize,
+      subtitleLineHeight: localHeroLineHeight(sub.fontSize, sub.lineHeightRatio),
+      subtitleMarginBottom: space.subtitleToMeta,
+      subtitleMaxWidth: stackWidth,
+      textStackMaxWidth: stackWidth,
+      textStackWidthPx: stackWidth,
+      textStackWidthPercent: 90,
+      textStackWidthVw: 0,
+      textStackLeftInsetPercent: 0,
+      textStackMinWidthPx: 0,
+      metaRowMaxWidth: stackWidth,
+      metaToTrustMargin: space.metaToTrust,
+      leftScrimWidthPercent: 86,
+      leftScrimMaxWidth: stackWidth + 40,
+      titleNoWrap: false,
+      titleSingleLineDesktop: false,
+      trustNoWrap: false,
+      useAbsoluteTextLayer: false,
+    };
+  }
+  const title = typo.titleTablet;
+  const sub = typo.subtitleTablet;
+  const space = typo.spacingTablet;
+  const stackWidth = Math.min(560, Math.max(440, Math.round(viewportWidth * 0.72)));
+  return {
+    eyebrowSize: typo.eyebrow.fontSize,
+    eyebrowLetterSpacing: kickerLetterSpacing,
+    eyebrowMarginBottom: space.kickerToTitle,
+    titleSize: title.fontSize,
+    titleLineHeight: localHeroLineHeight(title.fontSize, title.lineHeightRatio),
+    titleMarginBottom: space.titleToSubtitle,
+    titleMaxWidth: stackWidth,
+    subtitleSize: sub.fontSize,
+    subtitleLineHeight: localHeroLineHeight(sub.fontSize, sub.lineHeightRatio),
+    subtitleMarginBottom: space.subtitleToMeta,
+    subtitleMaxWidth: stackWidth,
+    textStackMaxWidth: stackWidth,
+    textStackWidthPx: stackWidth,
+    textStackWidthPercent: 76,
+    textStackWidthVw: 0,
+    textStackLeftInsetPercent: 0,
+    textStackMinWidthPx: 0,
+    metaRowMaxWidth: stackWidth,
+    metaToTrustMargin: space.metaToTrust,
+    leftScrimWidthPercent: 80,
+    leftScrimMaxWidth: stackWidth + 48,
+    titleNoWrap: false,
+    titleSingleLineDesktop: false,
+    trustNoWrap: false,
+    useAbsoluteTextLayer: false,
+  };
+}
+
+function useWebFullscreenActive(): boolean {
+  const [active, setActive] = useState(false);
+  useEffect(() => {
+    if (Platform.OS !== 'web' || typeof document === 'undefined') return;
+    const sync = () => setActive(Boolean(document.fullscreenElement));
+    document.addEventListener('fullscreenchange', sync);
+    sync();
+    return () => document.removeEventListener('fullscreenchange', sync);
+  }, []);
+  return active;
+}
+
 export type LocalDynamicHeroProps = Readonly<{
   onBrowseServices: () => void;
   onBookingAssist: () => void;
@@ -77,6 +431,18 @@ export function LocalDynamicHero({
   const isNarrow = width < 520;
   const shortViewport = height > 0 && height < 520;
   const compactHero = shortViewport || (height > 0 && width / height > 1.8);
+  const isWebFullscreen = useWebFullscreenActive();
+  const heroCopy = useMemo(
+    () => localDynamicHeroCopyMetrics(width, compactHero, isWebFullscreen),
+    [width, compactHero, isWebFullscreen]
+  );
+  const localHeroHeadline = t('localHub.reframe.heroHeadline');
+  useLocalHeroTitleVisualOneLineDomForce(
+    heroCopy.titleSingleLineDesktop,
+    heroCopy.textStackWidthPx,
+    heroCopy.titleSize,
+    localHeroHeadline
+  );
   const desktopWebHero =
     Platform.OS === 'web' && width >= FASHION_HOME_DESKTOP_MIN_WIDTH && !compactHero;
   // Width-driven aspectRatio + Home opening-stage floors/caps on desktop web; moderate tablet lift;
@@ -198,7 +564,13 @@ export function LocalDynamicHero({
           locations={[0, 0.48, 1]}
           start={{ x: 0, y: 0.5 }}
           end={{ x: 1, y: 0.5 }}
-          style={styles.leftScrim}
+          style={[
+            styles.leftScrim,
+            {
+              width: `${heroCopy.leftScrimWidthPercent}%`,
+              maxWidth: heroCopy.leftScrimMaxWidth,
+            },
+          ]}
         />
         <View style={styles.imageClip} pointerEvents="none">
           <Image
@@ -240,13 +612,103 @@ export function LocalDynamicHero({
             reducedMotion={reduceMotion}
           />
         </View>
-        <View style={styles.copyCol} pointerEvents="box-none">
-          <Text style={styles.eyebrow}>{t('localHub.reframe.heroEyebrow')}</Text>
-          <Text style={[styles.headline, isNarrow && styles.headlineNarrow]}>
-            {t('localHub.reframe.heroHeadline')}
+        <View
+          testID="local-hero-editorial-text-layer"
+          style={[
+            heroCopy.useAbsoluteTextLayer ? styles.editorialCopyCol : styles.copyCol,
+            heroCopy.useAbsoluteTextLayer
+              ? {
+                  left: `${heroCopy.textStackLeftInsetPercent}%`,
+                  width: heroCopy.textStackWidthPx,
+                  maxWidth: heroCopy.textStackWidthPx,
+                }
+              : {
+                  width: `${heroCopy.textStackWidthPercent}%`,
+                  maxWidth: heroCopy.textStackMaxWidth,
+                },
+          ]}
+          pointerEvents="box-none"
+        >
+          <Text
+            style={[
+              styles.eyebrow,
+              {
+                fontSize: heroCopy.eyebrowSize,
+                letterSpacing: heroCopy.eyebrowLetterSpacing,
+                marginBottom: heroCopy.eyebrowMarginBottom,
+                ...(heroCopy.useAbsoluteTextLayer
+                  ? { width: heroCopy.textStackWidthPx }
+                  : null),
+              },
+            ]}
+          >
+            {t('localHub.reframe.heroEyebrow')}
           </Text>
-          <Text style={styles.subtitle}>{t('localHub.reframe.heroSubtitle')}</Text>
-          <View style={styles.ctaRow}>
+          <Text
+            testID="local-hero-title"
+            style={[
+              styles.headline,
+              {
+                marginBottom: heroCopy.titleMarginBottom,
+                ...(Platform.OS === 'web' ? ({ fontWeight: '900' } as const) : null),
+                ...(heroCopy.useAbsoluteTextLayer
+                  ? heroCopy.titleSingleLineDesktop
+                    ? localHeroTitleDesktopOneLineStyle(
+                        heroCopy.textStackWidthPx,
+                        heroCopy.titleSize
+                      )
+                    : {
+                        fontSize: heroCopy.titleSize,
+                        lineHeight: heroCopy.titleLineHeight,
+                        width: heroCopy.textStackWidthPx,
+                        maxWidth: heroCopy.textStackWidthPx,
+                        alignSelf: 'flex-start' as const,
+                        flexShrink: 0,
+                      }
+                  : {
+                      fontSize: heroCopy.titleSize,
+                      lineHeight: heroCopy.titleLineHeight,
+                      maxWidth: heroCopy.titleMaxWidth,
+                    }),
+              },
+            ]}
+          >
+            {localHeroHeadline}
+          </Text>
+          <Text
+            style={[
+              styles.subtitle,
+              {
+                fontSize: heroCopy.subtitleSize,
+                lineHeight: heroCopy.subtitleLineHeight,
+                marginBottom: heroCopy.subtitleMarginBottom,
+                ...(heroCopy.useAbsoluteTextLayer
+                  ? {
+                      width: heroCopy.textStackWidthPx,
+                      maxWidth: heroCopy.textStackWidthPx,
+                      alignSelf: 'flex-start' as const,
+                      flexShrink: 0,
+                    }
+                  : { maxWidth: heroCopy.subtitleMaxWidth }),
+              },
+            ]}
+          >
+            {t('localHub.reframe.heroSubtitle')}
+          </Text>
+          <View
+            style={[
+              styles.ctaRow,
+              heroCopy.useAbsoluteTextLayer
+                ? {
+                    width: heroCopy.textStackWidthPx,
+                    maxWidth: heroCopy.textStackWidthPx,
+                    marginBottom: 0,
+                    flexShrink: 0,
+                    alignSelf: 'flex-start' as const,
+                  }
+                : null,
+            ]}
+          >
             <Pressable
               accessibilityRole="button"
               accessibilityLabel={t('localHub.reframe.heroCtaBrowse')}
@@ -271,7 +733,20 @@ export function LocalDynamicHero({
               <Text style={styles.ctaSecondaryText}>{t('localHub.reframe.heroCtaBookingAssist')}</Text>
             </Pressable>
           </View>
-          <View style={styles.trustStrip}>
+          <View
+            style={[
+              styles.trustStrip,
+              {
+                width: heroCopy.useAbsoluteTextLayer ? heroCopy.textStackWidthPx : undefined,
+                maxWidth: heroCopy.useAbsoluteTextLayer
+                  ? heroCopy.textStackWidthPx
+                  : heroCopy.textStackMaxWidth,
+                marginTop: heroCopy.metaToTrustMargin,
+                alignSelf: heroCopy.useAbsoluteTextLayer ? 'stretch' : undefined,
+                flexWrap: heroCopy.trustNoWrap ? 'nowrap' : 'wrap',
+              },
+            ]}
+          >
             <Text style={styles.trustText}>{t('localCommerce.safety.pillRequestOnly')}</Text>
             <View style={styles.trustDivider} />
             <Text style={styles.trustText}>{t('localCommerce.safety.pillNoPayment')}</Text>
@@ -314,8 +789,6 @@ const styles = StyleSheet.create({
     left: 0,
     top: 0,
     bottom: 0,
-    width: '58%',
-    maxWidth: 420,
     zIndex: 2,
   },
   imageClip: {
@@ -353,42 +826,47 @@ const styles = StyleSheet.create({
     bottom: 0,
     height: '28%',
   },
+  /** viona.wave3b.force-editorial-text-layer — flow stack (mobile/tablet). */
   copyCol: {
     zIndex: 4,
-    paddingHorizontal: vionaTokens.spacing[16],
+    paddingHorizontal: vionaTokens.spacing[20],
     paddingVertical: vionaTokens.spacing[20],
-    maxWidth: 520,
-    gap: vionaTokens.spacing[8],
+  },
+  /** viona.wave3b.editorial-recompose — absolute cover overlay (desktop web). */
+  editorialCopyCol: {
+    position: 'absolute',
+    top: 0,
+    bottom: 0,
+    justifyContent: 'center',
+    paddingVertical: 24,
+    paddingHorizontal: 0,
   },
   eyebrow: {
     fontFamily: FontFamily.semibold,
-    fontSize: 11,
-    letterSpacing: 2,
     textTransform: 'uppercase',
     color: 'rgba(120, 255, 210, 0.92)',
   },
   headline: {
     fontFamily: FontFamily.extrabold,
-    fontSize: 26,
-    lineHeight: 32,
+    ...(Platform.OS === 'web' ? ({ fontWeight: '900' } as const) : null),
     color: '#FFFFFF',
-  },
-  headlineNarrow: {
-    fontSize: 22,
-    lineHeight: 28,
+    letterSpacing: -0.32,
+    textShadowColor: 'rgba(3, 6, 12, 0.68)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 5,
   },
   subtitle: {
     fontFamily: FontFamily.medium,
-    fontSize: 14,
-    lineHeight: 21,
-    color: 'rgba(236, 244, 255, 0.9)',
-    maxWidth: 480,
+    color: 'rgba(236, 244, 255, 0.96)',
+    textShadowColor: 'rgba(3, 6, 12, 0.42)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 4,
   },
   ctaRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: vionaTokens.spacing[8],
-    marginTop: vionaTokens.spacing[4],
+    marginTop: 0,
   },
   ctaPrimary: {
     borderRadius: vionaTokens.radius.md,
@@ -422,12 +900,11 @@ const styles = StyleSheet.create({
   },
   trustStrip: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
     alignItems: 'center',
-    gap: vionaTokens.spacing[6],
-    marginTop: vionaTokens.spacing[6],
+    gap: 10,
+    marginTop: 0,
     paddingVertical: vionaTokens.spacing[6],
-    paddingHorizontal: vionaTokens.spacing[8],
+    paddingHorizontal: vionaTokens.spacing[12],
     borderRadius: vionaTokens.radius.md,
     borderWidth: 1,
     borderColor: 'rgba(120, 255, 210, 0.28)',
@@ -438,6 +915,7 @@ const styles = StyleSheet.create({
     fontFamily: FontFamily.medium,
     fontSize: 10,
     color: 'rgba(248, 252, 255, 0.92)',
+    flexShrink: 0,
   },
   trustDivider: {
     width: 1,

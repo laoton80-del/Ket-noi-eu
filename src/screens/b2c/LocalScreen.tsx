@@ -36,7 +36,6 @@ import { reserveAndCommitCredits, useWalletState } from '../../state/wallet';
 import { useTranslation } from '../../i18n';
 import { useHomeCommand } from '../../context/HomeCommandContext';
 import { useFullscreenMode } from '../../hooks/useFullscreenMode';
-import { useVionaHomeDaylightBoost } from '../../components/viona/useVionaHomeDaylightBoost';
 import { VionaBottomEscapeBar } from '../../components/viona/VionaBottomEscapeBar';
 import { LocalConnectedUniverseLinks } from '../../components/viona/local/LocalConnectedUniverseLinks';
 import { LocalClassifiedsFeaturedPreview } from '../../components/viona/local/LocalClassifiedsFeaturedPreview';
@@ -567,7 +566,7 @@ export function LocalScreen() {
     openMiniApp('local', () => navigation.navigate('Tabs', { screen: 'TabLocal' }));
   }, [navigation, openMiniApp]);
 
-  const [daylightBoost, setDaylightBoost] = useVionaHomeDaylightBoost();
+
   const { isWeb: isWebFullscreen, isSupported: isFullscreenSupported, isFullscreen, toggleFullscreen } =
     useFullscreenMode();
   const desktopWeb = Platform.OS === 'web' && width > 768;
@@ -580,13 +579,6 @@ export function LocalScreen() {
           a11y: isFullscreen ? t('shell.fullscreen.exit') : t('shell.fullscreen.enter'),
         }
       : undefined;
-  const daylightToggleLabel = daylightBoost
-    ? i18n.language?.startsWith('vi')
-      ? 'Tắt đèn'
-      : 'Night'
-    : i18n.language?.startsWith('vi')
-      ? 'Bật đèn'
-      : 'Daylight';
 
   const resetComposer = () => {
     setTitle('');
@@ -865,16 +857,6 @@ export function LocalScreen() {
                     compact={useCompactCommandLogo}
                     iconOnly={useIconOnlyShellUtilities}
                   />
-                  {Platform.OS === 'web' ? (
-                    <LocalShellUtilityBtn
-                      icon={daylightBoost ? 'moon-outline' : 'sunny-outline'}
-                      label={daylightToggleLabel}
-                      onPress={() => setDaylightBoost((v) => !v)}
-                      a11yLabel={daylightToggleLabel}
-                      compact={useCompactCommandLogo}
-                      iconOnly={useIconOnlyShellUtilities}
-                    />
-                  ) : null}
                   {fullscreenControl ? (
                     <LocalShellUtilityBtn
                       icon={fullscreenControl.isActive ? 'contract-outline' : 'expand-outline'}
