@@ -9,8 +9,12 @@ After Travel Packs 1–3 (hero + scenario tiles), the **pilot/readiness strip** 
 ## Fix (TravelScreen only)
 
 1. **`TravelPilotStrip`** — `TravelGlassCard` quiet/standard cyan material; readiness chips use `travelSemanticTokens('cyan')`; responsive `travelSecondarySurfaceMetrics(width)`.
-2. **`TravelConnectedLink`** — compact `TravelGlassCard` rows with semantic accents (Local cyan, Academy violet, Business gold).
+2. **`TravelConnectedLink`** — compact `TravelGlassCard` rows with semantic accents:
+   - Local → **cyan**
+   - Academy → **violet**
+   - Business → **gold**
 3. **Desktop vertical rhythm patch (≥1024)** — `travelDesktopVerticalRhythmMetrics(width)` tightens section/group/grid gaps and increases scroll bottom clearance (+72px) so dock does not clip content.
+4. Web hover/focus/press inherited from `TravelGlassCard` (Pack 3 behavior).
 
 ## Unchanged
 
