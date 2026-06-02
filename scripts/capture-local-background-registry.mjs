@@ -8,7 +8,8 @@ import { fileURLToPath } from 'node:url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const OUT_DIR = path.join(__dirname, '..', 'docs', 'design', 'evidence', 'wave-3b-local-background-registry');
-const BASE = process.env.VIONA_WEB_BASE ?? 'http://localhost:8088';
+const CAPTURE_PORT = Number(process.env.EXPO_CAPTURE_PORT || process.env.CAPTURE_PORT || 8088);
+const BASE = process.env.VIONA_WEB_BASE ?? `http://localhost:${CAPTURE_PORT}`;
 
 const VIEWPORTS = [
   { name: 'local-390x844', width: 390, height: 844, expected: 'mobile-portrait' },

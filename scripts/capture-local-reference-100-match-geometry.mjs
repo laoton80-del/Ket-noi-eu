@@ -1,5 +1,5 @@
 /**
- * Local card hierarchy screenshot QA (hub-only, intent dismissed).
+ * Local reference 100% match GEOMETRY screenshot QA (hub-only).
  * Prereq: npx expo start --web --port 8088
  */
 import { mkdir } from 'node:fs/promises';
@@ -7,17 +7,24 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const OUT_DIR = path.join(__dirname, '..', 'docs', 'design', 'evidence', 'wave-3b-local-card-hierarchy');
+const OUT_DIR = path.join(
+  __dirname,
+  '..',
+  'docs',
+  'design',
+  'evidence',
+  'wave-3b-local-reference-100-match-geometry'
+);
 const CAPTURE_PORT = Number(process.env.EXPO_CAPTURE_PORT || process.env.CAPTURE_PORT || 8088);
 const BASE = process.env.VIONA_WEB_BASE ?? `http://localhost:${CAPTURE_PORT}`;
 const INTENT_KEY = 'ketnoieu.guided.intent.completed.v1';
 
 const VIEWPORTS = [
-  { name: 'local-hierarchy-390x844', width: 390, height: 844 },
-  { name: 'local-hierarchy-844x390', width: 844, height: 390 },
-  { name: 'local-hierarchy-768x1024', width: 768, height: 1024 },
-  { name: 'local-hierarchy-1024x768', width: 1024, height: 768 },
-  { name: 'local-hierarchy-1366x768', width: 1366, height: 768 },
+  { name: 'local-geo-390x844', width: 390, height: 844 },
+  { name: 'local-geo-844x390', width: 844, height: 390 },
+  { name: 'local-geo-768x1024', width: 768, height: 1024 },
+  { name: 'local-geo-1024x768', width: 1024, height: 768 },
+  { name: 'local-geo-1366x768', width: 1366, height: 768 },
 ];
 
 async function dismissIntentModal(page) {
@@ -44,7 +51,8 @@ async function main() {
       await page.goto(`${BASE}/local`, { waitUntil: 'domcontentloaded', timeout: 180_000 });
       await page.waitForSelector('[data-testid="local-premium-shell"]', { timeout: 90_000 });
       await dismissIntentModal(page);
-      await page.waitForSelector('[data-testid="local-hero-actions"]', { timeout: 60_000 });
+      await page.waitForSelector('[data-testid="local-command-center-panel"]', { timeout: 60_000 });
+      await page.waitForSelector('[data-testid="local-command-center-flagship"]', { timeout: 60_000 });
       await page.waitForSelector('[data-testid="local-primary-tile-grid"]', { timeout: 60_000 });
       const out = path.join(OUT_DIR, `${vp.name}.png`);
       await page.screenshot({ path: out, fullPage: true });
