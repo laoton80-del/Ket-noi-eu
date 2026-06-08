@@ -76,8 +76,8 @@ const TRAVEL_HERO_LIGHTING_BY_ACCENT: Readonly<
     subjectGlow: ['transparent', 'rgba(92, 205, 255, 0.07)', 'transparent'],
   },
   violet: {
-    networkPrimary: '#9AD4FF',
-    networkSecondary: VIONA_GLOBAL_LIGHT_NETWORK_ACCENT_VIOLET.ink,
+    networkPrimary: '#D294FF',
+    networkSecondary: '#B56DFF',
     textSafeWash: ['rgba(168, 141, 255, 0.09)', 'rgba(132, 238, 255, 0.04)', 'transparent'],
     bottomHandoff: ['transparent', 'rgba(168, 141, 255, 0.09)', 'rgba(4, 8, 16, 0.28)'],
     routeArcPrimary: ['transparent', 'rgba(168, 141, 255, 0.11)', 'transparent'],
@@ -87,8 +87,8 @@ const TRAVEL_HERO_LIGHTING_BY_ACCENT: Readonly<
     subjectGlow: ['transparent', 'rgba(168, 141, 255, 0.06)', 'transparent'],
   },
   magenta: {
-    networkPrimary: CYAN.ink,
-    networkSecondary: VIONA_GLOBAL_LIGHT_NETWORK_ACCENT_MAGENTA.inkHover,
+    networkPrimary: '#FF58A8',
+    networkSecondary: '#FF8CB4',
     textSafeWash: ['rgba(132, 238, 255, 0.1)', 'rgba(255, 110, 140, 0.05)', 'transparent'],
     bottomHandoff: ['transparent', 'rgba(92, 205, 255, 0.1)', 'rgba(4, 8, 16, 0.28)'],
     routeArcPrimary: ['transparent', 'rgba(92, 205, 255, 0.12)', 'transparent'],
@@ -98,8 +98,8 @@ const TRAVEL_HERO_LIGHTING_BY_ACCENT: Readonly<
     subjectGlow: ['transparent', 'rgba(255, 110, 140, 0.05)', 'transparent'],
   },
   emerald: {
-    networkPrimary: VIONA_GLOBAL_LIGHT_NETWORK_ACCENT_EMERALD.ink,
-    networkSecondary: CYAN.ink,
+    networkPrimary: '#30E8D0',
+    networkSecondary: '#8CD4FF',
     textSafeWash: ['rgba(98, 255, 228, 0.09)', 'rgba(132, 238, 255, 0.04)', 'transparent'],
     bottomHandoff: ['transparent', 'rgba(98, 255, 228, 0.1)', 'rgba(4, 8, 16, 0.28)'],
     routeArcPrimary: ['transparent', 'rgba(98, 255, 228, 0.11)', 'transparent'],

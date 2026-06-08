@@ -31,6 +31,7 @@ import {
 } from 'react-native';
 
 import { TravelAppTile, travelAppTileMetrics, travelPerspectiveCardMetrics } from '../../components/travel/TravelAppTile';
+import { resolveTravelQuickHelpHeroNetworkColors } from '../../components/travel/travelCardNetworkSemantic';
 import { TravelHeroLightingNetwork } from '../../components/travel/TravelHeroLightingNetwork';
 import { resolveTravelHeroNetworkLighting } from '../../components/travel/travelHeroSemanticLighting';
 import {
@@ -5883,6 +5884,11 @@ export function TravelScreen() {
     return null;
   }, [displayedHeroQuickHelpContextId, travelCardHoverAccent]);
 
+  const travelHeroQuickHelpNetworkHex = useMemo(() => {
+    if (displayedHeroQuickHelpContextId === 'default') return null;
+    return resolveTravelQuickHelpHeroNetworkColors(displayedHeroQuickHelpContextId);
+  }, [displayedHeroQuickHelpContextId]);
+
   const travelHeroNetworkLighting = useMemo(
     () => resolveTravelHeroNetworkLighting(travelHeroNetworkHoverAccent, travelHeroFrameLit),
     [travelHeroNetworkHoverAccent, travelHeroFrameLit]
@@ -6382,6 +6388,8 @@ export function TravelScreen() {
               <TravelHeroLightingNetwork
                 hoverAccent={travelHeroNetworkHoverAccent}
                 boosted={travelHeroFrameLit}
+                networkPrimaryHex={travelHeroQuickHelpNetworkHex?.primary}
+                networkSecondaryHex={travelHeroQuickHelpNetworkHex?.secondary}
                 radius={18}
               />
               <View

@@ -1,13 +1,10 @@
 /**
  * Travel card lighting network accent — Local card-tier grammar, Travel accents.
+ * Pack 62TRAVEL_REMOVE_ALL_CARD_DOTS — Travel cards stay dot/particle-free; rim/glow/veil only.
  */
 import type { ReactElement } from 'react';
-import { LinearGradient } from 'expo-linear-gradient';
-import { StyleSheet, View } from 'react-native';
 
-import { LocalLightingNetworkEdge } from '../viona/local/LocalLightingNetworkEdge';
 import {
-  travelSemanticTokens,
   type TravelSemanticAccent,
 } from './TravelGlassCard';
 
@@ -16,49 +13,13 @@ export type TravelCardLightingNetworkProps = Readonly<{
   accentSecondary?: TravelSemanticAccent;
   boosted?: boolean;
   radius?: number;
+  /** Card-specific network line/node hues (flagship material RGB). */
+  networkPrimaryHex?: string;
+  networkSecondaryHex?: string;
+  /** Reserved — Travel cards do not render particle nodes. */
+  showParticles?: boolean;
 }>;
 
-export function TravelCardLightingNetwork({
-  accent,
-  accentSecondary,
-  boosted = false,
-  radius = 14,
-}: TravelCardLightingNetworkProps): ReactElement {
-  const tokens = travelSemanticTokens(accent);
-  const secondary = accentSecondary ? travelSemanticTokens(accentSecondary) : null;
-
-  return (
-    <View pointerEvents="none" style={styles.root}>
-      <LinearGradient
-        pointerEvents="none"
-        colors={[`${tokens.glow}`, 'transparent']}
-        start={{ x: 0, y: 0.5 }}
-        end={{ x: 0.55, y: 0.5 }}
-        style={styles.leftWash}
-      />
-      <LocalLightingNetworkEdge
-        accent={tokens.ink}
-        secondaryAccent={secondary?.ink}
-        tier="card"
-        boosted={boosted}
-        radius={radius}
-      />
-    </View>
-  );
+export function TravelCardLightingNetwork(_props: TravelCardLightingNetworkProps): ReactElement | null {
+  return null;
 }
-
-const styles = StyleSheet.create({
-  root: {
-    ...StyleSheet.absoluteFillObject,
-    zIndex: 2,
-    overflow: 'hidden',
-  },
-  leftWash: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    bottom: 0,
-    width: '48%',
-    opacity: 0.35,
-  },
-});

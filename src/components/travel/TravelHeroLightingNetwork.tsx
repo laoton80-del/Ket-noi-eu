@@ -17,6 +17,9 @@ export type TravelHeroLightingNetworkProps = Readonly<{
   boosted: boolean;
   radius?: number;
   testID?: string;
+  /** Pack 62TRAVEL_HOVER_COLOR_MATCH — Quick Help frame/accent hex override. */
+  networkPrimaryHex?: string;
+  networkSecondaryHex?: string;
 }>;
 
 export function TravelHeroLightingNetwork({
@@ -24,12 +27,18 @@ export function TravelHeroLightingNetwork({
   boosted,
   radius = 18,
   testID = 'travel-hero-lighting-network',
+  networkPrimaryHex,
+  networkSecondaryHex,
 }: TravelHeroLightingNetworkProps): ReactElement {
   const [reduceMotion, setReduceMotion] = useState(false);
   const lighting = useMemo(
     () => resolveTravelHeroNetworkLighting(hoverAccent, boosted),
     [hoverAccent, boosted]
   );
+  const networkPrimary =
+    boosted && networkPrimaryHex ? networkPrimaryHex : lighting.networkPrimary;
+  const networkSecondary =
+    boosted && networkSecondaryHex ? networkSecondaryHex : lighting.networkSecondary;
 
   useEffect(() => {
     let mounted = true;
@@ -58,15 +67,15 @@ export function TravelHeroLightingNetwork({
         style={styles.textSafeField}
       />
       <LocalLightingNetworkEdge
-        accent={lighting.networkPrimary}
-        secondaryAccent={lighting.networkSecondary}
+        accent={networkPrimary}
+        secondaryAccent={networkSecondary}
         tier="hero"
         boosted={boosted}
         radius={radius}
       />
       <LocalHeroNetworkPulse
-        accent={lighting.networkPrimary}
-        secondaryAccent={lighting.networkSecondary}
+        accent={networkPrimary}
+        secondaryAccent={networkSecondary}
         active={boosted}
         reducedMotion={reduceMotion}
       />
