@@ -15,22 +15,44 @@ import {
   Text,
   View,
   useWindowDimensions,
-  type ImageStyle,
+  type TextStyle,
 } from 'react-native';
 
 import { vionaTokens } from '../../../design';
-import { getLocalHeroAsset, type LocalHeroVisualKey } from '../../../design/vionaLocalHeroAssets';
+import type { LocalHeroVisualKey } from '../../../design/vionaLocalHeroAssets';
 import { getLocalHeroVisualSpec } from '../../../design/vionaLocalHeroVisuals';
+import {
+  computeDynamicHeroOpeningFrameStyle,
+  dynamicHeroMediaAmbientLayerStyle,
+  dynamicHeroMediaBackgroundImageStyleList,
+  dynamicHeroMediaForegroundImageStyleList,
+  dynamicHeroMediaForegroundLayerStyle,
+  dynamicHeroMediaImageClipStyle,
+  dynamicHeroMediaImageFadeLayerStyle,
+  dynamicHeroWebNormalUsesSingleForeground,
+  dynamicHeroWebNormalIsActive,
+  isCompactHeroViewport,
+  isDesktopWebNormalViewport,
+  resolveDynamicHeroAssetMode,
+} from '../dynamicHeroMediaFit';
+import { getLocalDynamicHeroAsset, resolveLocalDynamicHeroAssetFilename, resolveLocalDynamicHeroFocal } from './localDynamicHeroAssets';
+import { resolveLocalBrightHeroCopy } from './localBrightHeroCopyMap';
+import { resolveLocalBrightHeroEditorialFit } from './localBrightHeroDisplayMode';
+import { VionaDynamicHeroWebNormalClean } from '../VionaDynamicHeroWebNormalClean';
 import { FASHION_HOME_DESKTOP_MIN_WIDTH } from '../../../navigation/fashionHomeDesktopShell';
 import {
   FASHION_HOME_FRAME_BORDER,
-  FASHION_HOME_WEB_OPENING_STAGE_HERO_MAX_PX,
-  FASHION_HOME_WEB_OPENING_STAGE_HERO_MIN_PX,
   premiumCrispEdgeStroke,
   premiumFrameEdgeOverlay,
+  isMobileHubHeroCompactContent,
 } from '../fashionHomeDesktopShell';
 import { LocalLightingNetworkEdge } from './LocalLightingNetworkEdge';
 import { LocalHeroNetworkPulse } from './LocalHeroNetworkPulse';
+import {
+  dynamicHeroMediaLayerStyles,
+  DYNAMIC_HERO_MEDIA_NATIVE_RESIZE_MODE,
+  resolveDynamicHeroImageFit,
+} from '../dynamicHeroMediaFit';
 import { FontFamily } from '../../../theme/typography';
 import { useTranslation } from '../../../i18n';
 
@@ -50,9 +72,20 @@ function detectHoverPointer(): boolean {
  * asset (~1600/624) for Home-like cinematic depth. This adds only a small, even crop — no
  * zoom transform and no negative inset — while preserving width-driven aspectRatio behavior.
  */
-const HERO_ASPECT = 1600 / 624;
 /** Desktop max lift so hero visual mass stays premium after the flagship kicker band. */
 export const LOCAL_HERO_LABEL_AWARE_MAX_BONUS_PX = 10;
+
+/** Pack 62LOCALBRIGHT_TEXT_HOVER — multi-layer web title shadow for bright sky readability. */
+const LOCAL_BRIGHT_WEB_TITLE_SHADOW =
+  Platform.OS === 'web'
+    ? ('0 2px 6px rgba(0,0,0,0.55), 0 8px 24px rgba(0,0,0,0.35), 0 0 1px rgba(255,255,255,0.5)' as const)
+    : undefined;
+
+/** Pack 62LOCALBRIGHT_TEXT_HOVER — softer subtitle shadow, still visible on bright masters. */
+const LOCAL_BRIGHT_WEB_SUBTITLE_SHADOW =
+  Platform.OS === 'web'
+    ? ('0 1px 4px rgba(0,0,0,0.48), 0 4px 14px rgba(0,0,0,0.28)' as const)
+    : undefined;
 
 /** Editorial recompose — left-to-center cover layout (wave3b.dynamic-hero-editorial-recompose). */
 const LOCAL_HERO_DESKTOP_TITLE_MIN_WIDTH = 1024;
@@ -213,12 +246,12 @@ const LOCAL_HERO_TYPOGRAPHY = {
   titleLargeDesktop: { fontSize: 34, lineHeightRatio: 1.14 },
   titleTablet: { fontSize: 38, lineHeightRatio: 1.14 },
   titleMobile: { fontSize: 29, lineHeightRatio: 1.16 },
-  titleCompact: { fontSize: 29, lineHeightRatio: 1.16 },
+  titleCompact: { fontSize: 24, lineHeightRatio: 1.18 },
   subtitleDesktop: { fontSize: 21, lineHeightRatio: 1.5 },
   subtitleLargeDesktop: { fontSize: 21, lineHeightRatio: 1.5 },
   subtitleTablet: { fontSize: 18, lineHeightRatio: 1.48 },
   subtitleMobile: { fontSize: 16, lineHeightRatio: 1.5 },
-  subtitleCompact: { fontSize: 16, lineHeightRatio: 1.5 },
+  subtitleCompact: { fontSize: 14, lineHeightRatio: 1.48 },
   spacingDesktop: { kickerToTitle: 18, titleToSubtitle: 24, subtitleToMeta: 28, metaToTrust: 18 },
   spacingTablet: { kickerToTitle: 16, titleToSubtitle: 18, subtitleToMeta: 22, metaToTrust: 14 },
   spacingMobile: { kickerToTitle: 14, titleToSubtitle: 16, subtitleToMeta: 20, metaToTrust: 12 },
@@ -265,11 +298,11 @@ function localDynamicHeroCopyMetrics(
     const title = typo.titleCompact;
     const sub = typo.subtitleCompact;
     const space = typo.spacingMobile;
-    const stackWidth = Math.min(360, Math.max(280, Math.round(viewportWidth * 0.82)));
+    const stackWidth = Math.max(200, viewportWidth - 36);
     return {
-      eyebrowSize: typo.eyebrow.fontSize,
+      eyebrowSize: 13,
       eyebrowLetterSpacing: kickerLetterSpacing,
-      eyebrowMarginBottom: space.kickerToTitle,
+      eyebrowMarginBottom: 8,
       titleSize: title.fontSize,
       titleLineHeight: localHeroLineHeight(title.fontSize, title.lineHeightRatio),
       titleMarginBottom: space.titleToSubtitle,
@@ -429,51 +462,28 @@ export function LocalDynamicHero({
   const { t } = useTranslation();
   const { width, height } = useWindowDimensions();
   const isNarrow = width < 520;
-  const shortViewport = height > 0 && height < 520;
-  const compactHero = shortViewport || (height > 0 && width / height > 1.8);
   const isWebFullscreen = useWebFullscreenActive();
+  const compactHero = isCompactHeroViewport(width, height, isWebFullscreen);
   const heroCopy = useMemo(
     () => localDynamicHeroCopyMetrics(width, compactHero, isWebFullscreen),
     [width, compactHero, isWebFullscreen]
   );
-  const localHeroHeadline = t('localHub.reframe.heroHeadline');
-  useLocalHeroTitleVisualOneLineDomForce(
-    heroCopy.titleSingleLineDesktop,
-    heroCopy.textStackWidthPx,
-    heroCopy.titleSize,
-    localHeroHeadline
+  const desktopWebHero = isDesktopWebNormalViewport(width, isWebFullscreen);
+  const heroAssetMode = useMemo(
+    () => resolveDynamicHeroAssetMode(width, height, isWebFullscreen),
+    [width, height, isWebFullscreen]
   );
-  const desktopWebHero =
-    Platform.OS === 'web' && width >= FASHION_HOME_DESKTOP_MIN_WIDTH && !compactHero;
+  const mobileHeroAbsoluteCopy = !desktopWebHero;
   // Width-driven aspectRatio + Home opening-stage floors/caps on desktop web; moderate tablet lift;
   // minimal mobile bump so copy stays readable without pushing For You off-screen.
-  const frameSizing = useMemo(() => {
-    if (compactHero) {
-      return { aspectRatio: HERO_ASPECT, minHeight: 202, maxHeight: 356 } as const;
-    }
-    if (desktopWebHero) {
-      const heroCap =
-        openingStageHeroMaxPx ??
-        FASHION_HOME_WEB_OPENING_STAGE_HERO_MAX_PX + LOCAL_HERO_LABEL_AWARE_MAX_BONUS_PX;
-      /** When the opening-stage lock caps hero height, min must not exceed max (RN keeps min otherwise). */
-      const heroMin =
-        openingStageHeroMaxPx != null
-          ? Math.min(FASHION_HOME_WEB_OPENING_STAGE_HERO_MIN_PX, heroCap)
-          : FASHION_HOME_WEB_OPENING_STAGE_HERO_MIN_PX;
-      return {
-        aspectRatio: HERO_ASPECT,
-        minHeight: heroMin,
-        maxHeight: heroCap,
-      } as const;
-    }
-    if (isNarrow) {
-      return { aspectRatio: HERO_ASPECT, minHeight: 236, maxHeight: 368 } as const;
-    }
-    return { aspectRatio: HERO_ASPECT, minHeight: 320, maxHeight: 432 } as const;
-  }, [compactHero, desktopWebHero, isNarrow, openingStageHeroMaxPx]);
+  const frameSizing = useMemo(
+    () => computeDynamicHeroOpeningFrameStyle(width, height, openingStageHeroMaxPx),
+    [height, openingStageHeroMaxPx, width]
+  );
   const visual = getLocalHeroVisualSpec(activeHeroKey);
-  const heroSource = getLocalHeroAsset(activeHeroKey);
-  const fallbackHeroSource = getLocalHeroAsset('default');
+  const heroSource = getLocalDynamicHeroAsset(activeHeroKey, heroAssetMode);
+  const fallbackHeroSource = getLocalDynamicHeroAsset('default', heroAssetMode);
+  const heroSourceFilename = resolveLocalDynamicHeroAssetFilename(activeHeroKey, heroAssetMode);
   const previousSourceRef = useRef(heroSource);
   const fadeAnim = useRef(new Animated.Value(1)).current;
 
@@ -490,7 +500,11 @@ export function LocalDynamicHero({
   //     "only work for the default hero". Treating a non-default `activeHeroKey` as an active state
   //     drives the network boost + pulse + rim in that state's own accent.
   const cardActive = activeHeroKey !== 'default';
-  const heroLit = (hovered || cardActive) && supportsHover;
+  const directHeroHover = hovered && supportsHover;
+  /** Rim / accent frame — card hover may still light the border. */
+  const heroLit = directHeroHover || cardActive;
+  /** Pack 62AC — full-frame fog layers only on direct hero hover, never card-driven switch. */
+  const heroFogLayersActive = directHeroHover;
 
   useEffect(() => {
     let mounted = true;
@@ -523,8 +537,8 @@ export function LocalDynamicHero({
         onMouseLeave: () => setHovered(false),
       } as const)
     : {};
-  const washOpacity = hoverAnim.interpolate({ inputRange: [0, 1], outputRange: [0, 0.05] });
-  const rimOpacity = hoverAnim.interpolate({ inputRange: [0, 1], outputRange: [0, 0.6] });
+  const washOpacity = hoverAnim.interpolate({ inputRange: [0, 1], outputRange: [0, 0.07] });
+  const rimOpacity = hoverAnim.interpolate({ inputRange: [0, 1], outputRange: [0.18, 0.78] });
 
   useEffect(() => {
     if (previousSourceRef.current === heroSource) return;
@@ -537,56 +551,432 @@ export function LocalDynamicHero({
     previousSourceRef.current = heroSource;
   }, [fadeAnim, heroSource]);
 
-  const imageWebStyle = useMemo(
+  const heroImageFit = useMemo(() => {
+    const scenarioFocal = resolveLocalDynamicHeroFocal(
+      activeHeroKey,
+      visual.preferredObjectPosition,
+      heroAssetMode
+    );
+    return resolveDynamicHeroImageFit('local', heroAssetMode, scenarioFocal);
+  }, [activeHeroKey, heroAssetMode, visual.preferredObjectPosition]);
+  const heroWebNormalObjectPosition = useMemo(
     () =>
-      (Platform.OS === 'web'
-        ? {
-            width: '100%',
-            height: '100%',
-            objectFit: 'cover' as const,
-            objectPosition: visual.preferredObjectPosition,
-          }
-        : {}) as ImageStyle,
-    [visual.preferredObjectPosition]
+      resolveLocalDynamicHeroFocal(
+        activeHeroKey,
+        visual.preferredObjectPosition,
+        heroAssetMode
+      ),
+    [activeHeroKey, heroAssetMode, visual.preferredObjectPosition]
   );
-  const scrimStrength = Math.max(0.44, Math.min(0.72, visual.textScrimStrength));
+  const heroMediaClipStyle = useMemo(
+    () => dynamicHeroMediaImageClipStyle(heroAssetMode, desktopWebHero),
+    [heroAssetMode, desktopWebHero]
+  );
+  const heroMediaAmbientLayerExtra = useMemo(
+    () => dynamicHeroMediaAmbientLayerStyle(heroAssetMode, desktopWebHero),
+    [heroAssetMode, desktopWebHero]
+  );
+  const heroMediaForegroundLayerExtra = useMemo(
+    () => dynamicHeroMediaForegroundLayerStyle(heroAssetMode, desktopWebHero),
+    [heroAssetMode, desktopWebHero]
+  );
+  const heroMediaFadeLayerExtra = useMemo(
+    () => dynamicHeroMediaImageFadeLayerStyle(heroAssetMode, desktopWebHero),
+    [heroAssetMode, desktopWebHero]
+  );
+  const webNormalSingleForeground = dynamicHeroWebNormalUsesSingleForeground(
+    heroAssetMode,
+    desktopWebHero
+  );
+  const heroMediaBgImageStyles = useMemo(
+    () => dynamicHeroMediaBackgroundImageStyleList(heroImageFit, heroAssetMode, desktopWebHero, styles.imageFill),
+    [heroImageFit, heroAssetMode, desktopWebHero]
+  );
+  const heroMediaFgImageStyles = useMemo(
+    () => dynamicHeroMediaForegroundImageStyleList(heroImageFit, heroAssetMode, desktopWebHero, styles.imageFill),
+    [heroImageFit, heroAssetMode, desktopWebHero]
+  );
+  const legacyScrimStrength = Math.max(0.44, Math.min(0.72, visual.textScrimStrength));
+  const webNormalHero = dynamicHeroWebNormalIsActive(heroAssetMode, desktopWebHero);
+  const brightHeroCopy = useMemo(
+    () => (webNormalHero ? resolveLocalBrightHeroCopy(activeHeroKey) : null),
+    [webNormalHero, activeHeroKey]
+  );
+  const brightEditorialFit = useMemo(
+    () => (webNormalHero ? resolveLocalBrightHeroEditorialFit(activeHeroKey) : null),
+    [webNormalHero, activeHeroKey]
+  );
+  const heroHeadline = brightHeroCopy?.title ?? t('localHub.reframe.heroHeadline');
+  useLocalHeroTitleVisualOneLineDomForce(
+    heroCopy.titleSingleLineDesktop,
+    heroCopy.textStackWidthPx,
+    heroCopy.titleSize,
+    heroHeadline
+  );
 
-  return (
-    <View testID={testID} style={styles.shell}>
-      <View style={[styles.frame, frameSizing]} {...hoverProps}>
-        <LinearGradient
-          pointerEvents="none"
-          colors={[
-            `rgba(4, 7, 12, ${scrimStrength.toFixed(2)})`,
-            `rgba(4, 7, 12, ${(scrimStrength * 0.42).toFixed(2)})`,
-            'rgba(4, 7, 12, 0)',
-          ]}
-          locations={[0, 0.48, 1]}
-          start={{ x: 0, y: 0.5 }}
-          end={{ x: 1, y: 0.5 }}
+  const webBrightTitleShadowStyle =
+    webNormalHero && LOCAL_BRIGHT_WEB_TITLE_SHADOW
+      ? ({ textShadow: LOCAL_BRIGHT_WEB_TITLE_SHADOW } as unknown as TextStyle)
+      : null;
+  const webBrightSubtitleShadowStyle =
+    webNormalHero && LOCAL_BRIGHT_WEB_SUBTITLE_SHADOW
+      ? ({ textShadow: LOCAL_BRIGHT_WEB_SUBTITLE_SHADOW } as unknown as TextStyle)
+      : null;
+  const trustChips =
+    brightHeroCopy?.chips ??
+    ([
+      t('localCommerce.safety.pillRequestOnly'),
+      t('localCommerce.safety.pillNoPayment'),
+      t('localHub.reframe.trustMerchantFirst'),
+    ] as const);
+
+  const heroEditorialLayer = (
+    <View
+      testID="local-hero-editorial-text-layer"
+      style={[
+        heroCopy.useAbsoluteTextLayer || mobileHeroAbsoluteCopy
+          ? styles.editorialCopyCol
+          : styles.copyCol,
+        heroCopy.useAbsoluteTextLayer
+          ? {
+              left: `${heroCopy.textStackLeftInsetPercent}%`,
+              width: heroCopy.textStackWidthPx,
+              maxWidth: heroCopy.textStackWidthPx,
+            }
+          : mobileHeroAbsoluteCopy
+            ? {
+                left: 0,
+                right: 0,
+                width: '100%',
+                maxWidth: '100%',
+                paddingHorizontal: vionaTokens.spacing[16],
+                paddingVertical: compactHero ? vionaTokens.spacing[8] : vionaTokens.spacing[16],
+              }
+            : {
+                width: `${heroCopy.textStackWidthPercent}%`,
+                maxWidth: heroCopy.textStackMaxWidth,
+              },
+      ]}
+      pointerEvents="box-none"
+    >
+      <Text
+        style={[
+          styles.eyebrow,
+          {
+            fontSize: heroCopy.eyebrowSize,
+            letterSpacing: heroCopy.eyebrowLetterSpacing,
+            marginBottom: heroCopy.eyebrowMarginBottom,
+            ...(heroCopy.useAbsoluteTextLayer ? { width: heroCopy.textStackWidthPx } : null),
+          },
+        ]}
+      >
+        {brightHeroCopy?.eyebrow ?? t('localHub.reframe.heroEyebrow')}
+      </Text>
+      <Text
+        testID="local-hero-title"
+        style={[
+          styles.headline,
+          webBrightTitleShadowStyle,
+          {
+            marginBottom: heroCopy.titleMarginBottom,
+            ...(Platform.OS === 'web' ? ({ fontWeight: '900' } as const) : null),
+            ...(heroCopy.useAbsoluteTextLayer
+              ? heroCopy.titleSingleLineDesktop
+                ? localHeroTitleDesktopOneLineStyle(heroCopy.textStackWidthPx, heroCopy.titleSize)
+                : {
+                    fontSize: heroCopy.titleSize,
+                    lineHeight: heroCopy.titleLineHeight,
+                    width: heroCopy.textStackWidthPx,
+                    maxWidth: heroCopy.textStackWidthPx,
+                    alignSelf: 'flex-start' as const,
+                    flexShrink: 0,
+                  }
+              : {
+                  fontSize: heroCopy.titleSize,
+                  lineHeight: heroCopy.titleLineHeight,
+                  maxWidth: heroCopy.titleMaxWidth,
+                }),
+          },
+        ]}
+        numberOfLines={mobileHeroAbsoluteCopy && compactHero ? 2 : undefined}
+      >
+        {heroHeadline}
+      </Text>
+      <Text
+        style={[
+          styles.subtitle,
+          webBrightSubtitleShadowStyle,
+          {
+            fontSize: heroCopy.subtitleSize,
+            lineHeight: heroCopy.subtitleLineHeight,
+            marginBottom: heroCopy.subtitleMarginBottom,
+            ...(heroCopy.useAbsoluteTextLayer
+              ? {
+                  width: heroCopy.textStackWidthPx,
+                  maxWidth: heroCopy.textStackWidthPx,
+                  alignSelf: 'flex-start' as const,
+                  flexShrink: 0,
+                }
+              : { maxWidth: heroCopy.subtitleMaxWidth }),
+          },
+        ]}
+        numberOfLines={mobileHeroAbsoluteCopy && compactHero ? 2 : undefined}
+      >
+        {brightHeroCopy?.subtitle ?? t('localHub.reframe.heroSubtitle')}
+      </Text>
+      <View
+        style={[
+          styles.ctaRow,
+          mobileHeroAbsoluteCopy && compactHero && styles.ctaRowMobileCompact,
+          heroCopy.useAbsoluteTextLayer || mobileHeroAbsoluteCopy
+            ? {
+                width: heroCopy.textStackWidthPx,
+                maxWidth: heroCopy.textStackWidthPx,
+                marginBottom: 0,
+                flexShrink: 0,
+                alignSelf: 'flex-start' as const,
+              }
+            : null,
+        ]}
+      >
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={t('localHub.reframe.heroCtaBrowse')}
+          onPress={onBrowseServices}
+          style={({ pressed }) => [styles.ctaPrimary, pressed && styles.ctaPressed]}
+        >
+          <LinearGradient
+            colors={['rgba(255, 232, 188, 0.98)', 'rgba(201, 169, 98, 0.98)']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.ctaPrimaryFill}
+          >
+            <Text style={styles.ctaPrimaryText}>{t('localHub.reframe.heroCtaBrowse')}</Text>
+          </LinearGradient>
+        </Pressable>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={t('localHub.reframe.heroCtaBookingAssist')}
+          onPress={onBookingAssist}
+          style={({ pressed }) => [styles.ctaSecondary, pressed && styles.ctaPressed]}
+        >
+          <Text style={styles.ctaSecondaryText}>{t('localHub.reframe.heroCtaBookingAssist')}</Text>
+        </Pressable>
+      </View>
+      {mobileHeroAbsoluteCopy && compactHero ? null : (
+        <View
           style={[
-            styles.leftScrim,
+            styles.trustStrip,
             {
-              width: `${heroCopy.leftScrimWidthPercent}%`,
-              maxWidth: heroCopy.leftScrimMaxWidth,
+              width: heroCopy.useAbsoluteTextLayer ? heroCopy.textStackWidthPx : undefined,
+              maxWidth: heroCopy.useAbsoluteTextLayer
+                ? heroCopy.textStackWidthPx
+                : heroCopy.textStackMaxWidth,
+              marginTop: heroCopy.metaToTrustMargin,
+              alignSelf: heroCopy.useAbsoluteTextLayer ? 'stretch' : undefined,
+              flexWrap: heroCopy.trustNoWrap ? 'nowrap' : 'wrap',
             },
           ]}
-        />
-        <View style={styles.imageClip} pointerEvents="none">
-          <Image
-            source={fallbackHeroSource}
-            resizeMode="cover"
-            style={[styles.imageFill, imageWebStyle]}
-            accessibilityIgnoresInvertColors
+        >
+          {trustChips.map((chip, index) => (
+            <View key={`${chip}-${index}`} style={styles.trustChipItem}>
+              {index > 0 ? <View style={styles.trustDivider} /> : null}
+              <Text style={styles.trustText}>{chip}</Text>
+            </View>
+          ))}
+        </View>
+      )}
+    </View>
+  );
+
+  if (webNormalHero) {
+    return (
+      <View
+        testID={testID}
+        style={styles.shell}
+        {...(Platform.OS === 'web'
+          ? ({
+              dataSet: {
+                heroAssetMode,
+                heroSourceFile: heroSourceFilename,
+                activeHeroKey,
+                heroCopyKey: activeHeroKey,
+                heroTitle: brightHeroCopy?.title ?? '',
+                heroDisplayMode: 'fullBleedCover',
+                heroLit: heroLit ? 'true' : 'false',
+                cardActive: cardActive ? 'true' : 'false',
+              },
+            } as const)
+          : null)}
+      >
+        <Animated.View style={[styles.webNormalHeroFadeWrap, { opacity: fadeAnim }]}>
+          <VionaDynamicHeroWebNormalClean
+            universe="local"
+            source={heroSource}
+            sourceFilename={heroSourceFilename}
+            heroAssetMode={heroAssetMode}
+            objectPosition={heroWebNormalObjectPosition}
+            overlayEnabled={false}
+            localEditorialDualLayer
+            localEditorialFit={brightEditorialFit ?? undefined}
+            frameStyle={[styles.frame, frameSizing]}
+            frameTestID="local-dynamic-hero-frame"
+            hoverProps={hoverProps}
+            frameLightingOverlay={
+              <>
+                {heroFogLayersActive ? (
+                  <>
+                    <LinearGradient
+                      pointerEvents="none"
+                      colors={[
+                        'rgba(120, 255, 210, 0)',
+                        'rgba(120, 255, 210, 0.11)',
+                        'rgba(176, 148, 255, 0.09)',
+                      ]}
+                      locations={[0, 0.62, 1]}
+                      start={{ x: 0.15, y: 0.1 }}
+                      end={{ x: 1, y: 1 }}
+                      style={StyleSheet.absoluteFillObject}
+                    />
+                    <Animated.View
+                      pointerEvents="none"
+                      style={[styles.imageBrightenWash, { opacity: washOpacity }]}
+                    />
+                  </>
+                ) : null}
+                {heroLit ? (
+                  <LocalHeroNetworkPulse
+                    accent={visual.accent}
+                    secondaryAccent={visual.secondaryAccent}
+                    active
+                    reducedMotion={reduceMotion}
+                  />
+                ) : null}
+                <LocalLightingNetworkEdge
+                  accent={visual.accent}
+                  secondaryAccent={visual.secondaryAccent}
+                  tier="hero"
+                  boosted={heroLit}
+                  radius={vionaTokens.radius.xxl}
+                  testID="local-web-normal-light-network"
+                />
+              </>
+            }
+            frameFooter={
+              <Animated.View
+                pointerEvents="none"
+                style={[styles.hoverRim, styles.webNormalHoverRim, { borderColor: visual.accent, opacity: rimOpacity }]}
+              />
+            }
+          >
+            {heroEditorialLayer}
+          </VionaDynamicHeroWebNormalClean>
+        </Animated.View>
+      </View>
+    );
+  }
+
+  return (
+    <View
+      testID={testID}
+      style={styles.shell}
+      {...(Platform.OS === 'web' ? ({ dataSet: { heroAssetMode, heroSourceFile: heroSourceFilename } } as const) : null)}
+    >
+      <View testID="local-dynamic-hero-frame" style={[styles.frame, frameSizing]} {...hoverProps}
+        {...(Platform.OS === 'web'
+          ? ({ dataSet: { heroAssetMode, heroSourceFile: heroSourceFilename } } as const)
+          : null)}
+      >
+          <>
+          <LinearGradient
+            pointerEvents="none"
+            colors={[
+              `rgba(4, 7, 12, ${legacyScrimStrength.toFixed(2)})`,
+              `rgba(4, 7, 12, ${(legacyScrimStrength * 0.42).toFixed(2)})`,
+              'rgba(4, 7, 12, 0)',
+            ]}
+            locations={[0, 0.48, 1]}
+            start={{ x: 0, y: 0.5 }}
+            end={{ x: 1, y: 0.5 }}
+            style={[
+              styles.leftScrim,
+              {
+                width: `${heroCopy.leftScrimWidthPercent}%`,
+                maxWidth: heroCopy.leftScrimMaxWidth,
+              },
+            ]}
           />
-          <Animated.View style={[styles.imageFadeLayer, { opacity: fadeAnim }]}>
-            <Image
-              source={heroSource}
-              resizeMode="cover"
-              style={[styles.imageFill, imageWebStyle]}
-              accessibilityIgnoresInvertColors
-            />
-          </Animated.View>
+        <View
+          testID="local-dynamic-hero-image-clip"
+          style={[styles.imageClip, heroMediaClipStyle]}
+          pointerEvents="none"
+        >
+          {webNormalSingleForeground ? null : (
+            <View
+              testID="local-dynamic-hero-ambient-layer"
+              style={[dynamicHeroMediaLayerStyles.ambientLayer, heroMediaAmbientLayerExtra]}
+            >
+              <Image
+                testID="local-dynamic-hero-ambient-image"
+                source={fallbackHeroSource}
+                resizeMode={DYNAMIC_HERO_MEDIA_NATIVE_RESIZE_MODE}
+                style={heroMediaBgImageStyles}
+                accessibilityIgnoresInvertColors
+              />
+              <Animated.View
+                style={[dynamicHeroMediaLayerStyles.imageFadeLayer, heroMediaFadeLayerExtra, { opacity: fadeAnim }]}
+              >
+                <Image
+                  source={heroSource}
+                  resizeMode={DYNAMIC_HERO_MEDIA_NATIVE_RESIZE_MODE}
+                  style={heroMediaBgImageStyles}
+                  accessibilityIgnoresInvertColors
+                />
+              </Animated.View>
+            </View>
+          )}
+          <View
+            testID="local-dynamic-hero-foreground-layer"
+            style={[dynamicHeroMediaLayerStyles.foregroundLayer, heroMediaForegroundLayerExtra]}
+          >
+            {webNormalSingleForeground ? (
+              <Animated.View
+                testID="local-dynamic-hero-foreground-fade-layer"
+                style={[dynamicHeroMediaLayerStyles.imageFadeLayer, heroMediaFadeLayerExtra, { opacity: fadeAnim }]}
+              >
+                <Image
+                  testID="local-dynamic-hero-foreground-image"
+                  source={heroSource}
+                  resizeMode={DYNAMIC_HERO_MEDIA_NATIVE_RESIZE_MODE}
+                  style={heroMediaFgImageStyles}
+                  accessibilityIgnoresInvertColors
+                  {...(Platform.OS === 'web'
+                    ? ({ dataSet: { heroSourceFile: heroSourceFilename } } as const)
+                    : null)}
+                />
+              </Animated.View>
+            ) : (
+              <>
+                <Image
+                  testID="local-dynamic-hero-foreground-image"
+                  source={fallbackHeroSource}
+                  resizeMode={DYNAMIC_HERO_MEDIA_NATIVE_RESIZE_MODE}
+                  style={heroMediaFgImageStyles}
+                  accessibilityIgnoresInvertColors
+                />
+                <Animated.View
+                  style={[dynamicHeroMediaLayerStyles.imageFadeLayer, heroMediaFadeLayerExtra, { opacity: fadeAnim }]}
+                >
+                  <Image
+                    source={heroSource}
+                    resizeMode={DYNAMIC_HERO_MEDIA_NATIVE_RESIZE_MODE}
+                    style={heroMediaFgImageStyles}
+                    accessibilityIgnoresInvertColors
+                  />
+                </Animated.View>
+              </>
+            )}
+          </View>
           <LinearGradient
             pointerEvents="none"
             colors={['transparent', 'rgba(4, 6, 10, 0.26)']}
@@ -594,7 +984,10 @@ export function LocalDynamicHero({
           />
           <Animated.View
             pointerEvents="none"
-            style={[styles.imageBrightenWash, { opacity: washOpacity }]}
+            style={[
+              styles.imageBrightenWash,
+              { opacity: heroFogLayersActive ? washOpacity : 0 },
+            ]}
           />
         </View>
         <View pointerEvents="none" style={styles.networkLayer}>
@@ -602,158 +995,18 @@ export function LocalDynamicHero({
             accent={visual.accent}
             secondaryAccent={visual.secondaryAccent}
             tier="hero"
-            boosted={heroLit}
+            boosted={heroFogLayersActive}
             radius={vionaTokens.radius.xxl}
           />
           <LocalHeroNetworkPulse
             accent={visual.accent}
             secondaryAccent={visual.secondaryAccent}
-            active={heroLit}
+            active={heroFogLayersActive}
             reducedMotion={reduceMotion}
           />
         </View>
-        <View
-          testID="local-hero-editorial-text-layer"
-          style={[
-            heroCopy.useAbsoluteTextLayer ? styles.editorialCopyCol : styles.copyCol,
-            heroCopy.useAbsoluteTextLayer
-              ? {
-                  left: `${heroCopy.textStackLeftInsetPercent}%`,
-                  width: heroCopy.textStackWidthPx,
-                  maxWidth: heroCopy.textStackWidthPx,
-                }
-              : {
-                  width: `${heroCopy.textStackWidthPercent}%`,
-                  maxWidth: heroCopy.textStackMaxWidth,
-                },
-          ]}
-          pointerEvents="box-none"
-        >
-          <Text
-            style={[
-              styles.eyebrow,
-              {
-                fontSize: heroCopy.eyebrowSize,
-                letterSpacing: heroCopy.eyebrowLetterSpacing,
-                marginBottom: heroCopy.eyebrowMarginBottom,
-                ...(heroCopy.useAbsoluteTextLayer
-                  ? { width: heroCopy.textStackWidthPx }
-                  : null),
-              },
-            ]}
-          >
-            {t('localHub.reframe.heroEyebrow')}
-          </Text>
-          <Text
-            testID="local-hero-title"
-            style={[
-              styles.headline,
-              {
-                marginBottom: heroCopy.titleMarginBottom,
-                ...(Platform.OS === 'web' ? ({ fontWeight: '900' } as const) : null),
-                ...(heroCopy.useAbsoluteTextLayer
-                  ? heroCopy.titleSingleLineDesktop
-                    ? localHeroTitleDesktopOneLineStyle(
-                        heroCopy.textStackWidthPx,
-                        heroCopy.titleSize
-                      )
-                    : {
-                        fontSize: heroCopy.titleSize,
-                        lineHeight: heroCopy.titleLineHeight,
-                        width: heroCopy.textStackWidthPx,
-                        maxWidth: heroCopy.textStackWidthPx,
-                        alignSelf: 'flex-start' as const,
-                        flexShrink: 0,
-                      }
-                  : {
-                      fontSize: heroCopy.titleSize,
-                      lineHeight: heroCopy.titleLineHeight,
-                      maxWidth: heroCopy.titleMaxWidth,
-                    }),
-              },
-            ]}
-          >
-            {localHeroHeadline}
-          </Text>
-          <Text
-            style={[
-              styles.subtitle,
-              {
-                fontSize: heroCopy.subtitleSize,
-                lineHeight: heroCopy.subtitleLineHeight,
-                marginBottom: heroCopy.subtitleMarginBottom,
-                ...(heroCopy.useAbsoluteTextLayer
-                  ? {
-                      width: heroCopy.textStackWidthPx,
-                      maxWidth: heroCopy.textStackWidthPx,
-                      alignSelf: 'flex-start' as const,
-                      flexShrink: 0,
-                    }
-                  : { maxWidth: heroCopy.subtitleMaxWidth }),
-              },
-            ]}
-          >
-            {t('localHub.reframe.heroSubtitle')}
-          </Text>
-          <View
-            style={[
-              styles.ctaRow,
-              heroCopy.useAbsoluteTextLayer
-                ? {
-                    width: heroCopy.textStackWidthPx,
-                    maxWidth: heroCopy.textStackWidthPx,
-                    marginBottom: 0,
-                    flexShrink: 0,
-                    alignSelf: 'flex-start' as const,
-                  }
-                : null,
-            ]}
-          >
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel={t('localHub.reframe.heroCtaBrowse')}
-              onPress={onBrowseServices}
-              style={({ pressed }) => [styles.ctaPrimary, pressed && styles.ctaPressed]}
-            >
-              <LinearGradient
-                colors={['rgba(255, 232, 188, 0.98)', 'rgba(201, 169, 98, 0.98)']}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-                style={styles.ctaPrimaryFill}
-              >
-                <Text style={styles.ctaPrimaryText}>{t('localHub.reframe.heroCtaBrowse')}</Text>
-              </LinearGradient>
-            </Pressable>
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel={t('localHub.reframe.heroCtaBookingAssist')}
-              onPress={onBookingAssist}
-              style={({ pressed }) => [styles.ctaSecondary, pressed && styles.ctaPressed]}
-            >
-              <Text style={styles.ctaSecondaryText}>{t('localHub.reframe.heroCtaBookingAssist')}</Text>
-            </Pressable>
-          </View>
-          <View
-            style={[
-              styles.trustStrip,
-              {
-                width: heroCopy.useAbsoluteTextLayer ? heroCopy.textStackWidthPx : undefined,
-                maxWidth: heroCopy.useAbsoluteTextLayer
-                  ? heroCopy.textStackWidthPx
-                  : heroCopy.textStackMaxWidth,
-                marginTop: heroCopy.metaToTrustMargin,
-                alignSelf: heroCopy.useAbsoluteTextLayer ? 'stretch' : undefined,
-                flexWrap: heroCopy.trustNoWrap ? 'nowrap' : 'wrap',
-              },
-            ]}
-          >
-            <Text style={styles.trustText}>{t('localCommerce.safety.pillRequestOnly')}</Text>
-            <View style={styles.trustDivider} />
-            <Text style={styles.trustText}>{t('localCommerce.safety.pillNoPayment')}</Text>
-            <View style={styles.trustDivider} />
-            <Text style={styles.trustText}>{t('localHub.reframe.trustMerchantFirst')}</Text>
-          </View>
-        </View>
+          </>
+        {heroEditorialLayer}
         <View
           pointerEvents="none"
           style={[
@@ -794,6 +1047,7 @@ const styles = StyleSheet.create({
   imageClip: {
     ...StyleSheet.absoluteFillObject,
     zIndex: 0,
+    overflow: 'hidden',
   },
   imageFill: {
     ...StyleSheet.absoluteFillObject,
@@ -818,6 +1072,13 @@ const styles = StyleSheet.create({
     borderRadius: vionaTokens.radius.xxl,
     borderWidth: 1.5,
     zIndex: 6,
+  },
+  webNormalHoverRim: {
+    borderWidth: 2,
+    zIndex: 7,
+  },
+  webNormalHeroFadeWrap: {
+    width: '100%',
   },
   bottomHandoff: {
     position: 'absolute',
@@ -868,6 +1129,9 @@ const styles = StyleSheet.create({
     gap: vionaTokens.spacing[8],
     marginTop: 0,
   },
+  ctaRowMobileCompact: {
+    gap: vionaTokens.spacing[6],
+  },
   ctaPrimary: {
     borderRadius: vionaTokens.radius.md,
     overflow: 'hidden',
@@ -897,6 +1161,12 @@ const styles = StyleSheet.create({
   },
   ctaPressed: {
     opacity: 0.9,
+  },
+  trustChipItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    flexShrink: 0,
   },
   trustStrip: {
     flexDirection: 'row',

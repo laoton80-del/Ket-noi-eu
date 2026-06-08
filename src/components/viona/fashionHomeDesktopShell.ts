@@ -1648,3 +1648,50 @@ export function resolveFashionHomeDesktopLayout(windowWidth: number): FashionHom
   const shellWidth = windowWidth;
   return { shellWidth, pad, inner: shellWidth - pad * 2 };
 }
+
+/** Mobile / short-viewport hub heroes — avoid fixed tall min-heights that clip above the tab bar. */
+function isMobileHubCompactViewport(viewportWidth: number, viewportHeight: number): boolean {
+  if (viewportHeight <= 0) return false;
+  return viewportHeight < 620 || viewportWidth / viewportHeight > 1.15;
+}
+
+/** Compact hero copy + frame — aligns frame height budget with typography (e.g. 399×578). */
+export function isMobileHubHeroCompactContent(viewportWidth: number, viewportHeight: number): boolean {
+  if (viewportHeight <= 0) return false;
+  return (
+    isMobileHubCompactViewport(viewportWidth, viewportHeight) ||
+    viewportHeight < 520 ||
+    viewportWidth / viewportHeight > 1.8
+  );
+}
+
+function mobileHubDynamicHeroFrameHeights(
+  viewportWidth: number,
+  viewportHeight: number
+): Readonly<{ minHeight: number; maxHeight: number }> {
+  const compact = isMobileHubCompactViewport(viewportWidth, viewportHeight);
+  if (compact) {
+    const maxHeight = Math.max(156, Math.min(216, Math.floor(viewportHeight * 0.34)));
+    const minHeight = Math.max(144, Math.min(maxHeight - 10, Math.floor(viewportHeight * 0.28)));
+    return { minHeight, maxHeight };
+  }
+  if (viewportWidth < 420) {
+    const maxHeight = Math.max(168, Math.min(260, Math.floor(viewportHeight * 0.3)));
+    const minHeight = Math.max(156, Math.min(maxHeight - 12, Math.floor(viewportHeight * 0.27)));
+    return { minHeight, maxHeight };
+  }
+  const maxHeight = Math.max(180, Math.min(280, Math.floor(viewportHeight * 0.33)));
+  const minHeight = Math.max(168, Math.min(maxHeight - 12, Math.floor(viewportHeight * 0.29)));
+  return { minHeight, maxHeight };
+}
+
+/**
+ * Mobile hub hero frame — fixed height band without width-driven aspectRatio (prevents copy+image clip).
+ */
+export function mobileHubDynamicHeroFrameStyle(
+  viewportWidth: number,
+  viewportHeight: number
+): Readonly<{ minHeight: number; maxHeight: number; height: number }> {
+  const { minHeight, maxHeight } = mobileHubDynamicHeroFrameHeights(viewportWidth, viewportHeight);
+  return { minHeight, maxHeight, height: maxHeight };
+}

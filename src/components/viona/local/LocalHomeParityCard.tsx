@@ -25,7 +25,7 @@ import {
 } from '../fashionHomeDesktopShell';
 import { VionaFashionWorldCard } from '../VionaFashionWorldCard';
 import { LocalLightingNetworkEdge, type LocalLightingNetworkTier } from './LocalLightingNetworkEdge';
-import type { ImageSourcePropType, ImageStyle, StyleProp } from 'react-native';
+import type { ImageSourcePropType, ImageStyle, StyleProp, ViewStyle } from 'react-native';
 
 export type LocalHomeParityAccent = 'emerald' | 'cyan' | 'gold' | 'violet';
 
@@ -46,13 +46,59 @@ const ICON_COLOR: Record<LocalHomeParityAccent, string> = {
   violet: '#C8A8F0',
 };
 
-/** Semantic secondary tone for the lighting-network nodes (emerald→cyan, cyan→blue, etc.). */
+/** Semantic secondary tone for the lighting-network nodes (per-card accent family). */
 const NETWORK_SECONDARY: Record<LocalHomeParityAccent, string> = {
   emerald: '#8CD4FF',
   cyan: '#66B6FF',
   gold: '#F0B35D',
-  violet: '#B56DFF',
+  violet: '#E06FD8',
 };
+
+/** Pack NEXT — per-card border glow aligned to network accent (Local flagship only). */
+const LOCAL_CARD_NETWORK_BORDER: Record<
+  LocalHomeParityAccent,
+  Readonly<{ rim: string; rimHover: string; outerGlow: string; outerGlowHover: string }>
+> = {
+  emerald: {
+    rim: 'rgba(120, 232, 196, 0.78)',
+    rimHover: 'rgba(140, 255, 220, 0.92)',
+    outerGlow: '0 0 6px rgba(72, 210, 165, 0.18)',
+    outerGlowHover: '0 0 10px rgba(88, 235, 195, 0.28)',
+  },
+  cyan: {
+    rim: 'rgba(140, 212, 255, 0.78)',
+    rimHover: 'rgba(160, 228, 255, 0.92)',
+    outerGlow: '0 0 6px rgba(92, 182, 255, 0.18)',
+    outerGlowHover: '0 0 10px rgba(102, 205, 255, 0.28)',
+  },
+  gold: {
+    rim: 'rgba(232, 200, 120, 0.8)',
+    rimHover: 'rgba(255, 220, 140, 0.94)',
+    outerGlow: '0 0 6px rgba(240, 179, 93, 0.2)',
+    outerGlowHover: '0 0 10px rgba(255, 200, 110, 0.3)',
+  },
+  violet: {
+    rim: 'rgba(200, 168, 240, 0.78)',
+    rimHover: 'rgba(224, 188, 255, 0.92)',
+    outerGlow: '0 0 6px rgba(181, 109, 255, 0.18)',
+    outerGlowHover: '0 0 10px rgba(200, 120, 255, 0.28)',
+  },
+};
+
+function localCardSemanticNetworkBorderStyle(
+  accent: LocalHomeParityAccent,
+  hovered: boolean
+): ViewStyle {
+  if (Platform.OS !== 'web') return {};
+  const border = LOCAL_CARD_NETWORK_BORDER[accent];
+  const rim = hovered ? border.rimHover : border.rim;
+  const glow = hovered ? border.outerGlowHover : border.outerGlow;
+  const ringPx = hovered ? 1.75 : 1.35;
+  return {
+    boxShadow: `0 0 0 ${ringPx}px ${rim}, ${glow}`,
+    transition: 'box-shadow 220ms ease-out',
+  } as ViewStyle;
+}
 
 export type LocalHomeParityCardProps = Readonly<{
   accent: LocalHomeParityAccent;
@@ -172,6 +218,7 @@ export function LocalHomeParityCard({
             magnetic,
             reduceMotion
           ),
+        webPremium && localCardSemanticNetworkBorderStyle(accent, hoverBoost),
       ]}
     >
       {webPremium ? (

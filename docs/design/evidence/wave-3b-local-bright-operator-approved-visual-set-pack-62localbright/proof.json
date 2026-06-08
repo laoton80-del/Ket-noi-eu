@@ -1,0 +1,173 @@
+{
+  "pack": "62LOCALBRIGHT_APPROVE",
+  "operatorDecisionDate": "2026-06-08",
+  "approvedFolder": "C:\\KNG\\ket-noi-eu\\assets\\viona\\dynamic-hero\\_incoming-local-bright-62localbright\\_operator-approved-visual-set-62localbright",
+  "filesCopiedToApproved": [
+    "local-booking-assist-web-normal-card-62localbright.png",
+    "local-booking-assist-web-normal-master-62localbright.png",
+    "local-browse-services-web-normal-card-62localbright.png",
+    "local-browse-services-web-normal-master-62localbright.png",
+    "local-legal-wealth-web-normal-card-62localbright.png",
+    "local-legal-wealth-web-normal-master-62localbright.png",
+    "local-my-requests-web-normal-card-62localbright.png",
+    "local-my-requests-web-normal-master-62localbright.png",
+    "local-overview-web-normal-master-62localbright.png"
+  ],
+  "approvedCount": 9,
+  "mastersVerified": true,
+  "cardsVerified": true,
+  "allValidPng": true,
+  "liveMatchesApproved": true,
+  "liveSyncedFiles": 0,
+  "approvedMatchesSupersededSource": true,
+  "approved": [
+    {
+      "filename": "local-booking-assist-web-normal-card-62localbright.png",
+      "width": 1672,
+      "height": 941,
+      "size": 2200577,
+      "sha256": "3bf0647bd7bcd19e0f717b1eb5a1a3b93287281f74ca0b94a248db5eae895958",
+      "validPng": true
+    },
+    {
+      "filename": "local-booking-assist-web-normal-master-62localbright.png",
+      "width": 2590,
+      "height": 607,
+      "size": 2082200,
+      "sha256": "8b57e9bd89d2c541ff1f532e30f665d2accfc79011d177294322b56e20492455",
+      "validPng": true
+    },
+    {
+      "filename": "local-browse-services-web-normal-card-62localbright.png",
+      "width": 1672,
+      "height": 941,
+      "size": 2289807,
+      "sha256": "56d26b4a0ffd39cae6de9da717b92f67c473d4431222be45ce7089762185b217",
+      "validPng": true
+    },
+    {
+      "filename": "local-browse-services-web-normal-master-62localbright.png",
+      "width": 2590,
+      "height": 607,
+      "size": 2206300,
+      "sha256": "e95d165610bc69bccac988d62d3070d9fb700a9053432dace1c380b802cfee8a",
+      "validPng": true
+    },
+    {
+      "filename": "local-legal-wealth-web-normal-card-62localbright.png",
+      "width": 1672,
+      "height": 941,
+      "size": 2228037,
+      "sha256": "26d0bb942375d05be091223f2d565c9d4e1b657cfff83db7ebbdd36f2c92782c",
+      "validPng": true
+    },
+    {
+      "filename": "local-legal-wealth-web-normal-master-62localbright.png",
+      "width": 2590,
+      "height": 607,
+      "size": 1885797,
+      "sha256": "79d28da4594b1a899a7f1fe0b7bf3c8368d6474c5c9081e2a9f5074759c960c9",
+      "validPng": true
+    },
+    {
+      "filename": "local-my-requests-web-normal-card-62localbright.png",
+      "width": 1672,
+      "height": 941,
+      "size": 2205890,
+      "sha256": "4e9a43fed8d5760821e86612f150b6771721f9461940f2186b45823c0ab62edb",
+      "validPng": true
+    },
+    {
+      "filename": "local-my-requests-web-normal-master-62localbright.png",
+      "width": 2590,
+      "height": 607,
+      "size": 2085392,
+      "sha256": "b020095ff647a6e5f63ef0bbc2d588b2c8e8984952189f58182964bf7e6ba62f",
+      "validPng": true
+    },
+    {
+      "filename": "local-overview-web-normal-master-62localbright.png",
+      "width": 2590,
+      "height": 607,
+      "size": 2929335,
+      "sha256": "9d1afd8848bd1696b3a5544e93c07f1a677ec58f251e3bb45169b1bffc547eb8",
+      "validPng": true
+    }
+  ],
+  "live": [
+    {
+      "filename": "local-booking-assist-web-normal-card-62localbright.png",
+      "width": 1672,
+      "height": 941,
+      "size": 2200577,
+      "sha256": "3bf0647bd7bcd19e0f717b1eb5a1a3b93287281f74ca0b94a248db5eae895958",
+      "validPng": true
+    },
+    {
+      "filename": "local-booking-assist-web-normal-master-62localbright.png",
+      "width": 2590,
+      "height": 607,
+      "size": 2082200,
+      "sha256": "8b57e9bd89d2c541ff1f532e30f665d2accfc79011d177294322b56e20492455",
+      "validPng": true
+    },
+    {
+      "filename": "local-browse-services-web-normal-card-62localbright.png",
+      "width": 1672,
+      "height": 941,
+      "size": 2289807,
+      "sha256": "56d26b4a0ffd39cae6de9da717b92f67c473d4431222be45ce7089762185b217",
+      "validPng": true
+    },
+    {
+      "filename": "local-browse-services-web-normal-master-62localbright.png",
+      "width": 2590,
+      "height": 607,
+      "size": 2206300,
+      "sha256": "e95d165610bc69bccac988d62d3070d9fb700a9053432dace1c380b802cfee8a",
+      "validPng": true
+    },
+    {
+      "filename": "local-legal-wealth-web-normal-card-62localbright.png",
+      "width": 1672,
+      "height": 941,
+      "size": 2228037,
+      "sha256": "26d0bb942375d05be091223f2d565c9d4e1b657cfff83db7ebbdd36f2c92782c",
+      "validPng": true
+    },
+    {
+      "filename": "local-legal-wealth-web-normal-master-62localbright.png",
+      "width": 2590,
+      "height": 607,
+      "size": 1885797,
+      "sha256": "79d28da4594b1a899a7f1fe0b7bf3c8368d6474c5c9081e2a9f5074759c960c9",
+      "validPng": true
+    },
+    {
+      "filename": "local-my-requests-web-normal-card-62localbright.png",
+      "width": 1672,
+      "height": 941,
+      "size": 2205890,
+      "sha256": "4e9a43fed8d5760821e86612f150b6771721f9461940f2186b45823c0ab62edb",
+      "validPng": true
+    },
+    {
+      "filename": "local-my-requests-web-normal-master-62localbright.png",
+      "width": 2590,
+      "height": 607,
+      "size": 2085392,
+      "sha256": "b020095ff647a6e5f63ef0bbc2d588b2c8e8984952189f58182964bf7e6ba62f",
+      "validPng": true
+    },
+    {
+      "filename": "local-overview-web-normal-master-62localbright.png",
+      "width": 2590,
+      "height": 607,
+      "size": 2929335,
+      "sha256": "9d1afd8848bd1696b3a5544e93c07f1a677ec58f251e3bb45169b1bffc547eb8",
+      "validPng": true
+    }
+  ],
+  "backupDir": "C:\\KNG\\ket-noi-eu\\assets\\viona\\dynamic-hero\\local\\_backup-before-superseded-ab-preview-62localbright",
+  "supersededDir": "C:\\KNG\\ket-noi-eu\\assets\\viona\\dynamic-hero\\_incoming-local-bright-62localbright\\_superseded-semantic-fail-do-not-wire"
+}

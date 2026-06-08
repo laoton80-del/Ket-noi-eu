@@ -72,15 +72,27 @@ const OPTIONAL_LOCAL_HERO_MOOD_ASSETS: Partial<
 
 const LOCAL_HERO_CARD_IMAGE_ASSETS: Partial<Record<LocalHeroVisualKey, ImageSourcePropType>> = {
   myRequests:
+    safeRequire(() =>
+      require('../../assets/viona/dynamic-hero/local/local-my-requests-web-normal-card-62localbright.png')
+    ) ??
     safeRequire(() => require('../../assets/viona/local/hero/local-card-my-requests-640x360.png')) ??
     undefined,
   bookingAssist:
+    safeRequire(() =>
+      require('../../assets/viona/dynamic-hero/local/local-booking-assist-web-normal-card-62localbright.png')
+    ) ??
     safeRequire(() => require('../../assets/viona/local/hero/local-card-booking-assist-640x360.png')) ??
     undefined,
   legalWealth:
+    safeRequire(() =>
+      require('../../assets/viona/dynamic-hero/local/local-legal-wealth-web-normal-card-62localbright.png')
+    ) ??
     safeRequire(() => require('../../assets/viona/local/hero/local-card-legal-wealth-640x360.png')) ??
     undefined,
   browseServices:
+    safeRequire(() =>
+      require('../../assets/viona/dynamic-hero/local/local-browse-services-web-normal-card-62localbright.png')
+    ) ??
     safeRequire(() => require('../../assets/viona/local/hero/local-card-browse-services-640x360.png')) ??
     undefined,
 };
