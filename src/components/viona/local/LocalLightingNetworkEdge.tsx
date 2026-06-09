@@ -43,8 +43,9 @@ type TierConfig = Readonly<{
 
 const TIERS: Record<LocalLightingNetworkTier, TierConfig> = {
   hero: { lineWidth: 1.1, nodeSize: 5, glowRadius: 6, lineAlpha: 0.5, nodeAlpha: 0.85, cornerAlpha: 0.1, extraNode: true },
-  card: { lineWidth: 1, nodeSize: 4.5, glowRadius: 5, lineAlpha: 0.42, nodeAlpha: 0.78, cornerAlpha: 0.08, extraNode: false },
-  classified: { lineWidth: 1, nodeSize: 4, glowRadius: 4, lineAlpha: 0.32, nodeAlpha: 0.68, cornerAlpha: 0.06, extraNode: false },
+  /** Pack 62LOCALBRIGHT_FINAL_VISUAL_FIX — card flagship: visible semantic network on hover. */
+  card: { lineWidth: 1.2, nodeSize: 5.5, glowRadius: 7, lineAlpha: 0.42, nodeAlpha: 0.58, cornerAlpha: 0.12, extraNode: true },
+  classified: { lineWidth: 1, nodeSize: 4, glowRadius: 4, lineAlpha: 0.24, nodeAlpha: 0.36, cornerAlpha: 0.05, extraNode: false },
 };
 
 /** Lower-right network vertices (viewBox 0..100), kept clear of left-aligned copy + faces. */
@@ -57,6 +58,8 @@ const NODES: readonly { x: number; y: number; secondary?: boolean; heroOnly?: bo
 
 const MAIN_PATH = 'M96,38 L91,60 L82,79 L69,90 L52,96';
 const BRANCH_PATH = 'M82,79 L94,84';
+/** Pack 62LOCALBRIGHT_FIT_HOVER — extra card-tier branches for visible hover network. */
+const CARD_BRANCH_PATHS = ['M78,72 L95,68', 'M58,88 L68,76', 'M91,60 L96,48'] as const;
 
 function withAlpha(color: string, alpha: number): string {
   if (!color.startsWith('#') || (color.length !== 7 && color.length !== 4)) return color;
@@ -84,11 +87,14 @@ export function LocalLightingNetworkEdge({
   testID,
 }: LocalLightingNetworkEdgeProps): ReactElement {
   const cfg = TIERS[tier];
-  const boost = boosted ? 1.42 : 1;
+  const boost = boosted ? (tier === 'card' ? 1.45 : tier === 'hero' ? 1.42 : 1.08) : 1;
   const secondary = secondaryAccent ?? accent;
 
   const lineColor = withAlpha(accent, clampAlpha(cfg.lineAlpha * boost));
+  const secondaryLineColor = withAlpha(secondary, clampAlpha(cfg.lineAlpha * boost * 0.92));
   const cornerColor = withAlpha(accent, clampAlpha(cfg.cornerAlpha * boost));
+  const cardRestOpacity = tier === 'card' && !boosted ? 0.88 : 1;
+  const cardHoverOpacity = tier === 'card' && boosted ? 1 : cardRestOpacity;
 
   const cornerGlowStyle: ViewStyle =
     Platform.OS === 'web'
@@ -97,8 +103,19 @@ export function LocalLightingNetworkEdge({
         } as unknown as ViewStyle)
       : { backgroundColor: 'transparent' };
 
+  const rootWebStyle: ViewStyle =
+    Platform.OS === 'web' && tier === 'card'
+      ? ({
+          opacity: cardHoverOpacity,
+          transition: 'opacity 220ms ease-out',
+          zIndex: 2,
+        } as ViewStyle)
+      : tier === 'card'
+        ? { zIndex: 2 }
+        : {};
+
   return (
-    <View pointerEvents="none" testID={testID} style={[styles.root, { borderRadius: radius }]}>
+    <View pointerEvents="none" testID={testID} style={[styles.root, { borderRadius: radius }, rootWebStyle]}>
       <View pointerEvents="none" style={[StyleSheet.absoluteFillObject, cornerGlowStyle]} />
       <Svg
         style={StyleSheet.absoluteFill}
@@ -123,6 +140,19 @@ export function LocalLightingNetworkEdge({
           fill="none"
           vectorEffect="non-scaling-stroke"
         />
+        {tier === 'card'
+          ? CARD_BRANCH_PATHS.map((d, i) => (
+              <Path
+                key={d}
+                d={d}
+                stroke={i % 2 === 1 ? secondaryLineColor : lineColor}
+                strokeWidth={cfg.lineWidth * 0.92}
+                strokeLinecap="round"
+                fill="none"
+                vectorEffect="non-scaling-stroke"
+              />
+            ))
+          : null}
       </Svg>
       {NODES.filter((node) => cfg.extraNode || !node.heroOnly).map((node) => {
         const color = withAlpha(node.secondary ? secondary : accent, clampAlpha(cfg.nodeAlpha * boost));
