@@ -1962,6 +1962,38 @@ function travelHeroToQuickHelpAirGap(baseGapPx: number, openingStageFullscreen =
   return baseGapPx + bonus;
 }
 
+/** Pack 63A — touch/tablet has no reliable hover; tap selects hero context (nav on second tap). */
+function travelQuickHelpPrefersTouchSelection(viewportWidth: number): boolean {
+  if (Platform.OS !== 'web') return true;
+  if (viewportWidth < 1024) return true;
+  if (typeof window !== 'undefined' && typeof window.matchMedia === 'function') {
+    return window.matchMedia('(hover: none), (pointer: coarse)').matches;
+  }
+  return false;
+}
+
+function useTravelQuickHelpTouchSelection(viewportWidth: number): boolean {
+  const [touchSelection, setTouchSelection] = useState(() =>
+    travelQuickHelpPrefersTouchSelection(viewportWidth)
+  );
+
+  useEffect(() => {
+    if (Platform.OS !== 'web' || typeof window === 'undefined' || typeof window.matchMedia !== 'function') {
+      setTouchSelection(travelQuickHelpPrefersTouchSelection(viewportWidth));
+      return;
+    }
+    const mq = window.matchMedia('(hover: none), (pointer: coarse)');
+    const sync = () => {
+      setTouchSelection(travelQuickHelpPrefersTouchSelection(viewportWidth));
+    };
+    sync();
+    mq.addEventListener?.('change', sync);
+    return () => mq.removeEventListener?.('change', sync);
+  }, [viewportWidth]);
+
+  return touchSelection;
+}
+
 /**
  * Hide shared bottom tab bar while Travel hub is focused — Local opening-stage parity.
  * Restored on blur so other tabs keep their bar.
@@ -3760,6 +3792,7 @@ function TravelQuickHelpFlagshipCell({
   onQuickHelpContextSelect,
   onHeroCardHover,
   onHeroCardLeave,
+  touchSelectionMode = false,
 }: Readonly<{
   id: TravelFlagshipScenarioId;
   cellStyle: StyleProp<ViewStyle>;
@@ -3773,6 +3806,7 @@ function TravelQuickHelpFlagshipCell({
   onQuickHelpContextSelect: (id: TravelFlagshipScenarioId) => void;
   onHeroCardHover?: (id: TravelFlagshipScenarioId) => void;
   onHeroCardLeave?: () => void;
+  touchSelectionMode?: boolean;
 }>): ReactElement | null {
   const { t } = useTranslation();
   const reduceMotion = useFashionHomePrefersReducedMotion();
@@ -3781,44 +3815,65 @@ function TravelQuickHelpFlagshipCell({
   const [pressed, setPressed] = useState(false);
 
   const item = scenarioById.get(id);
+  const selected = activeQuickHelpContextId === id;
+
   const syncHeroHoverIn = useCallback(() => {
     setPointerHovered(true);
     onHeroCardHover?.(id);
   }, [id, onHeroCardHover]);
 
   const syncHeroHoverOut = useCallback(() => {
+    if (touchSelectionMode && selected) return;
     setPointerHovered(false);
     setMagnetic(null);
     onHeroCardLeave?.();
-  }, [onHeroCardLeave]);
+  }, [onHeroCardLeave, selected, touchSelectionMode]);
+
+  const activateTouchSelection = useCallback(() => {
+    onQuickHelpContextSelect(id);
+    onHeroCardHover?.(id);
+  }, [id, onHeroCardHover, onQuickHelpContextSelect]);
+
+  const handleQuickHelpPress = useCallback(() => {
+    if (touchSelectionMode) {
+      if (selected) {
+        item?.onPress();
+        return;
+      }
+      activateTouchSelection();
+      return;
+    }
+    onQuickHelpContextSelect(id);
+    item?.onPress();
+  }, [activateTouchSelection, id, item, onQuickHelpContextSelect, selected, touchSelectionMode]);
 
   const pointerHandlers = useMemo(
     () =>
-      createTravelQuickHelpWebPointerHandlers({
-        cardId: id,
-        reduceMotion,
-        onHeroCardHover,
-        onHeroCardLeave,
-        onPointerHover: setPointerHovered,
-        onMagnetic: setMagnetic,
-      }),
-    [id, reduceMotion, onHeroCardHover, onHeroCardLeave]
+      touchSelectionMode
+        ? {}
+        : createTravelQuickHelpWebPointerHandlers({
+            cardId: id,
+            reduceMotion,
+            onHeroCardHover,
+            onHeroCardLeave,
+            onPointerHover: setPointerHovered,
+            onMagnetic: setMagnetic,
+          }),
+    [id, reduceMotion, onHeroCardHover, onHeroCardLeave, touchSelectionMode]
   );
 
   const webHoverHandlers = useMemo(
     () =>
-      Platform.OS === 'web'
+      Platform.OS === 'web' && !touchSelectionMode
         ? ({
             onMouseEnter: syncHeroHoverIn,
             onMouseLeave: syncHeroHoverOut,
           } as const)
         : null,
-    [syncHeroHoverIn, syncHeroHoverOut]
+    [syncHeroHoverIn, syncHeroHoverOut, touchSelectionMode]
   );
 
   if (!item) return null;
-
-  const selected = activeQuickHelpContextId === id;
   const hostHovered = hoveredQuickHelpContextId === id || pointerHovered;
   const active = selected || hostHovered;
   const title = t(`travelHub.scenario.${id}.title`);
@@ -3852,13 +3907,20 @@ function TravelQuickHelpFlagshipCell({
         testID={`travel-quick-help-magnet-host-${id}`}
         accessibilityRole="button"
         accessibilityLabel={`${title}. ${subtitle}`}
-        onPress={() => {
-          onQuickHelpContextSelect(id);
-          item.onPress();
+        accessibilityState={{ selected }}
+        onPress={handleQuickHelpPress}
+        onPressIn={() => {
+          setPressed(true);
+          if (touchSelectionMode) activateTouchSelection();
         }}
-        onPressIn={() => setPressed(true)}
         onPressOut={() => setPressed(false)}
-        onFocus={syncHeroHoverIn}
+        onFocus={() => {
+          if (touchSelectionMode) {
+            activateTouchSelection();
+            return;
+          }
+          syncHeroHoverIn();
+        }}
         onBlur={syncHeroHoverOut}
         style={({ pressed: pressablePressed }) => [
           travelQuickHelpFlagshipCellInteractiveStyle(
@@ -3907,6 +3969,7 @@ function TravelFlagshipCardsRow({
   onQuickHelpContextSelect,
   onHeroCardHover,
   onHeroCardLeave,
+  touchSelectionMode = false,
 }: Readonly<{
   scenarioById: ReadonlyMap<TravelScenarioId, TravelScenario>;
   layoutMetrics: ReturnType<typeof travelAppTileMetrics>;
@@ -3917,6 +3980,7 @@ function TravelFlagshipCardsRow({
   onQuickHelpContextSelect: (id: TravelFlagshipScenarioId) => void;
   onHeroCardHover?: (id: TravelFlagshipScenarioId) => void;
   onHeroCardLeave?: () => void;
+  touchSelectionMode?: boolean;
 }>): ReactElement {
   const { t } = useTranslation();
   const { width } = useWindowDimensions();
@@ -3951,6 +4015,7 @@ function TravelFlagshipCardsRow({
       onQuickHelpContextSelect={onQuickHelpContextSelect}
       onHeroCardHover={onHeroCardHover}
       onHeroCardLeave={onHeroCardLeave}
+      touchSelectionMode={touchSelectionMode}
     />
   );
 
@@ -5672,6 +5737,7 @@ export function TravelScreen() {
   }, [userSelectedLocale, i18n.language]);
 
   const { width, height: viewportHeight } = useWindowDimensions();
+  const quickHelpTouchSelectionMode = useTravelQuickHelpTouchSelection(width);
   const insets = useSafeAreaInsets();
   const { isFullscreen } = useFullscreenMode();
 
@@ -5876,6 +5942,10 @@ export function TravelScreen() {
     displayedHeroQuickHelpContextId !== 'default' ||
     travelCardHoverAccent != null;
 
+  /** Pack 63A — touch/tap selection gets the same hero brighten as pointer hover. */
+  const travelHeroBrightenActive =
+    travelHeroDirectHover || displayedHeroQuickHelpContextId !== 'default';
+
   const travelHeroNetworkHoverAccent = useMemo((): TravelSemanticAccent | null => {
     if (displayedHeroQuickHelpContextId !== 'default') {
       return travelQuickHelpHeroAccent(displayedHeroQuickHelpContextId);
@@ -5990,16 +6060,18 @@ export function TravelScreen() {
   }, []);
 
   const onTravelHeroCardLeave = useCallback(() => {
+    if (quickHelpTouchSelectionMode && selectedQuickHelpHeroContextId !== 'default') return;
     const token = (quickHelpHoverClearTokenRef.current += 1);
     requestAnimationFrame(() => {
       if (quickHelpHoverClearTokenRef.current !== token) return;
       setHoveredQuickHelpHeroContextId(null);
       setTravelCardHoverAccent(null);
     });
-  }, []);
+  }, [quickHelpTouchSelectionMode, selectedQuickHelpHeroContextId]);
 
   const onQuickHelpContextSelect = useCallback((id: TravelFlagshipScenarioId) => {
     setSelectedQuickHelpHeroContextId(id);
+    setTravelCardHoverAccent(SCENARIO_SEMANTIC[id]);
   }, []);
 
   const travelPerspectiveDirectionId = travelPerspectiveModeDirectionId(travelPerspectiveMode);
@@ -6343,7 +6415,7 @@ export function TravelScreen() {
                   style={[
                     StyleSheet.absoluteFillObject,
                     styles.heroBrightenWash,
-                    { opacity: travelHeroBrightenOpacity },
+                    { opacity: travelHeroBrightenActive ? travelHeroBrightenOpacity : 0 },
                   ]}
                 />
                 <LinearGradient
@@ -6562,6 +6634,7 @@ export function TravelScreen() {
               onQuickHelpContextSelect={onQuickHelpContextSelect}
               onHeroCardHover={onTravelHeroCardHover}
               onHeroCardLeave={onTravelHeroCardLeave}
+              touchSelectionMode={quickHelpTouchSelectionMode}
             />
           </View>
         </View>
