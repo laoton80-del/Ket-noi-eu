@@ -14,6 +14,7 @@ import {
   FASHION_HOME_WEB_OPENING_STAGE_HERO_MIN_PX,
   FASHION_HOME_WEB_OPENING_STAGE_HERO_TO_CARD_GAP_PX,
   FASHION_HOME_WEB_OPENING_STAGE_WORLD_CARD_MIN_HEIGHT_PX,
+  isHubTabletPortraitViewport,
 } from '../fashionHomeDesktopShell';
 import { LOCAL_HERO_LABEL_AWARE_MAX_BONUS_PX, LocalDynamicHero } from './LocalDynamicHero';
 import {
@@ -99,6 +100,7 @@ function computeLocalOpeningStageFirstViewLock(
   isFullscreen: boolean
 ): LocalOpeningStageFirstViewLock | null {
   if (Platform.OS !== 'web' || width < FASHION_HOME_DESKTOP_MIN_WIDTH || height <= 0) return null;
+  if (isHubTabletPortraitViewport(width, height)) return null;
   const compactHero = height < 520 || width / height > 1.8;
   if (compactHero) return null;
 
@@ -157,6 +159,12 @@ function computeLocalOpeningStageFirstViewLock(
   };
 
   if (width >= LOCAL_OPENING_STAGE_DESKTOP_ROW_MIN_WIDTH || isFullscreen) {
+    if (isHubTabletPortraitViewport(width, height)) {
+      return {
+        ...lock,
+        stageMinHeightPx: stackBelowHeroPx + heroMaxPx + LOCAL_OPENING_STAGE_BELOW_FOLD_BUFFER_PX,
+      };
+    }
     return lock;
   }
 
@@ -214,7 +222,8 @@ export function LocalOpeningStageLayout({
   );
   const desktopStageLock =
     firstViewLock != null &&
-    (width >= LOCAL_OPENING_STAGE_DESKTOP_ROW_MIN_WIDTH || openingStageFullscreen);
+    (width >= LOCAL_OPENING_STAGE_DESKTOP_ROW_MIN_WIDTH || openingStageFullscreen) &&
+    !isHubTabletPortraitViewport(width, height);
   const heroToCardGap = useMemo(
     () => localOpeningStageHeroToCardGap(width, height, openingStageFullscreen),
     [width, height, openingStageFullscreen]
@@ -230,7 +239,7 @@ export function LocalOpeningStageLayout({
       >
         <LocalDynamicHero
           activeHeroKey={activeHeroKey}
-          openingStageHeroMaxPx={firstViewLock?.heroMaxPx}
+          openingStageHeroMaxPx={desktopStageLock ? firstViewLock?.heroMaxPx : undefined}
           onBrowseServices={onBrowseServices}
           onBookingAssist={onBookingAssist}
         />
