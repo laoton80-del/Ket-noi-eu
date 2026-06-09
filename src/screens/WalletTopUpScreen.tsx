@@ -595,12 +595,14 @@ export function WalletTopUpScreen() {
           style={({ pressed }) => [styles.cashOutEntry, pressed && { opacity: 0.9 }]}
           className={mergeWebClassNames('kn-glass', 'kn-neon-b2b')}
           accessibilityRole="button"
-          accessibilityLabel="Quy đổi tiền mặt từ hoa hồng"
+          accessibilityLabel="Xem trước quy đổi hoa hồng — chưa phải rút tiền thật"
         >
           <Ionicons name="wallet-outline" size={22} color={theme.colors.primaryBright} />
           <View style={styles.cashOutEntryText}>
-            <Text style={styles.cashOutEntryTitle}>Quy Đổi Tiền Mặt</Text>
-            <Text style={styles.cashOutEntrySub}>Rút hoa hồng giới thiệu (Cash-Out) — kiểm soát hạn mức</Text>
+            <Text style={styles.cashOutEntryTitle}>Xem trước quy đổi</Text>
+            <Text style={styles.cashOutEntrySub}>
+              Xem trước quy đổi — chưa phải rút tiền/chuyển khoản thật
+            </Text>
           </View>
           <Ionicons name="chevron-forward" size={22} color={theme.colors.primaryBright} />
         </Pressable>

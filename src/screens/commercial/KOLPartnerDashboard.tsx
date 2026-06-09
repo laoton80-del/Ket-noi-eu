@@ -139,10 +139,13 @@ export function KOLPartnerDashboard() {
             onPress={onCashOut}
             style={({ pressed }) => [styles.cashOutBtn, pressed && { opacity: 0.9 }]}
             accessibilityRole="button"
-            accessibilityLabel="Yêu cầu rút tiền"
+            accessibilityLabel="Xem trước rút tiền — demo, chưa bật chuyển khoản thật"
           >
             <Ionicons name="cash-outline" size={22} color={theme.colors.DeepInkNavy} />
-            <Text style={styles.cashOutBtnText}>YÊU CẦU RÚT TIỀN (CASH OUT)</Text>
+            <View style={styles.cashOutBtnTextCol}>
+              <Text style={styles.cashOutBtnText}>Xem trước rút tiền</Text>
+              <Text style={styles.cashOutBtnSub}>Demo — payout rails chưa bật · không phải rút tiền thật</Text>
+            </View>
           </Pressable>
         </ScrollView>
       </SafeAreaView>
@@ -334,10 +337,20 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: theme.colors.SignatureGold,
   },
+  cashOutBtnTextCol: {
+    flex: 1,
+    gap: 2,
+  },
   cashOutBtnText: {
     fontSize: 14,
     fontFamily: FontFamily.extrabold,
     color: theme.colors.DeepInkNavy,
     letterSpacing: 0.4,
+  },
+  cashOutBtnSub: {
+    fontSize: 11,
+    fontFamily: FontFamily.medium,
+    color: theme.colors.DeepInkNavy,
+    opacity: 0.82,
   },
 });
