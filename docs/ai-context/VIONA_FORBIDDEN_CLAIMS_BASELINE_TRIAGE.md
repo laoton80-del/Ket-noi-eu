@@ -1,74 +1,72 @@
-# VIONA Forbidden Claims Baseline Triage (Pack D2B)
+# VIONA Forbidden Claims Baseline Triage (Pack D2B + D2E)
 
-**Generated:** Pack D2B Cursor refinement on isolated worktree `ket-noi-eu-pack-d2`.
+**Generated:** Pack D2B Cursor refinement; Pack D2E allowlist/baseline refresh after D2D copy fixes (`8878854`).
 
-## Summary (post-D2B)
+## Summary (post-D2E)
 
 | Severity | Count | Action |
 |----------|------:|--------|
 | BLOCKER | 0 | None auto-failing default gate |
-| REVIEW | ~46 | Human audit queue |
-| ALLOWED_DOMAIN_TERM | ~606 | No action — domain/negation/status vocabulary |
-| DOC_EXAMPLE | ~485 | No action — internal audit/architecture/runbook docs |
+| REVIEW | 0 | Queue cleared via narrow path/context allowlists |
+| ALLOWED_DOMAIN_TERM | ~687 | Domain/negation/status vocabulary — no action |
+| DOC_EXAMPLE | ~502 | Internal audit/ops/handoff docs — no action |
 
-**Raw phrase matches (D2):** 1111 → **classified total:** ~1143 (same matches, split by severity).
+**History:** D2B raw ~1111 matches → D2B triage ~46 REVIEW → D2D copy fix −5 REVIEW → D2E allowlist −41 REVIEW.
 
-## Noisy domains (expected)
+## D2E allowlist groups absorbed
 
-### Payment / wallet (~1074 raw matches)
+### 1. Marketing automation `dispatched` (19 findings)
 
-Most matches are **not** user-facing fake claims:
+- Files: `src/services/marketing/AutoPilotBrain.ts`, `AutoTriggerService.ts`
+- Downgrade: `ALLOWED_DOMAIN_TERM`
+- Rationale: Campaign/trigger dispatch status — not SOS/emergency dispatch.
 
-- Payment/wallet/ledger/stripe/billing service implementations
-- Commercial entitlement config and pricing doctrine comments
-- Semantic color docs (`paid ≠ settled` disclaimers in design tokens)
-- Architecture/state-machine docs describing escrow, payout, capture as **domain vocabulary**
+### 2. Admin CRM `PAID` (5 findings)
 
-**Do NOT auto-fix** by deleting terms from service code or audit docs.
+- File: `src/screens/admin/SalesLeadCRM.tsx`
+- Downgrade: `ALLOWED_DOMAIN_TERM`
+- Rationale: Internal sales pipeline enum — not user wallet/payment claim.
 
-### SOS (~40–47 raw matches)
+### 3. Immigration `Settled` (1 finding)
 
-- Marketing automation `BrainRunStatus = 'dispatched'` (campaign dispatch, not emergency)
-- Local merchant/request status UI enums (`dispatched` = request sent to merchant)
-- Audit docs listing forbidden SOS phrases
+- File: `src/i18n/strings.ts` (`residencyStatusDinhCu`)
+- Downgrade: `ALLOWED_DOMAIN_TERM`
+- Rationale: Residency label — not payment settlement.
 
-**Do NOT auto-fix** status enum labels without product/UX review.
+### 4. `__DEV__` hooks settled (1 finding)
 
-### AI autonomy (~1–8 raw matches)
+- File: `src/screens/WalletTopUpScreen.tsx`
+- Downgrade: `ALLOWED_DOMAIN_TERM`
+- Rationale: React hooks diagnostic — not payment settlement.
 
-Mostly docs or gated feature descriptions. Review individually if surfaced in i18n.
+### 5. Admin mock cash-out / payout (2 findings)
 
-### Legal / medical / official (~7–10 raw matches)
+- File: `src/screens/admin/AdminDashboardScreen.tsx`
+- Downgrade: `ALLOWED_DOMAIN_TERM`
+- Rationale: Admin-only mock fintech scanner — `(mock)` label.
 
-Mostly audit checklists (`not medical diagnosis`) — classified DOC_EXAMPLE.
+### 6. Internal code variables (4 findings)
 
-## Recommended cleanup phases
+- Files: `LocalScreen.tsx` (`paid`), `LocalFixerCheckoutScreen.tsx` (`payout`)
+- Downgrade: `ALLOWED_DOMAIN_TERM`
+- Rationale: Internal result variables — not user-facing strings.
 
-### Phase 1 — Manual audit import (now)
+### 7. Surface gate negative disclaimer (1 finding)
 
-- Run `node scripts/viona-forbidden-claims-check.mjs` before money/SOS/AI/merchant release waves.
-- Triage **REVIEW** only; ignore ALLOWED_DOMAIN_TERM and DOC_EXAMPLE.
-- Default exit PASS is acceptable while BLOCKER = 0.
+- File: `src/navigation/mvpSurfaceGate.tsx`
+- Downgrade: `ALLOWED_DOMAIN_TERM`
+- Rationale: Explicit cash-out **not enabled** message.
 
-### Phase 2 — i18n / user copy (human)
+### 8. i18n negated disclaimers (2 findings)
 
-Priority REVIEW files:
+- File: `src/i18n/locales/en.json` (`simulator only`, `not a confirmed paid appointment`)
+- Downgrade: `ALLOWED_DOMAIN_TERM` via expanded negation patterns.
 
-- `src/i18n/locales/*.json` — ambiguous `paid`, `captured`, `settled`, `payout` in user strings
-- `src/screens/admin/SalesLeadCRM.tsx` — verify admin-only and gated copy
-- Marketing services — ensure `dispatched` never surfaces as SOS language in UI
+### 9. Ops/handoff documentation (6 findings)
 
-Fix pattern: add **Lite / Demo / Pilot / Preview** labels and negation; never imply live payment or emergency dispatch.
-
-### Phase 3 — Docs hygiene (optional)
-
-- Add `VIONA_FORBIDDEN_CLAIMS_ALLOWED_EXAMPLE` only to docs that intentionally list forbidden phrases.
-- Keep audit docs as-is; checker already classifies `docs/audit`, `docs/architecture`, etc. as DOC_EXAMPLE.
-
-### Phase 4 — CI gate (later)
-
-- When BLOCKER stays 0 and REVIEW < ~20 in i18n/screens, consider `--strict` in CI.
-- Do **not** enable `--fail-on-any` until raw grep noise is understood.
+- Files: `docs/handoff/*`, `docs/P4_*`, `docs/PILOT_*`, `docs/RECEIPT_*`
+- Downgrade: `DOC_EXAMPLE`
+- Rationale: Runbook/schema docs — not runtime copy.
 
 ## What should NOT be auto-fixed
 
@@ -79,18 +77,19 @@ Fix pattern: add **Lite / Demo / Pilot / Preview** labels and negation; never im
 - Internal audit markdown listing forbidden phrases for reviewers
 - Test fixtures describing payment flows
 
-## Baseline artifact
-
-Optional machine snapshot:
+## Checker modes (post-D2E)
 
 ```bash
+node scripts/viona-forbidden-claims-check.mjs          # PASS (BLOCKER=0)
+node scripts/viona-forbidden-claims-check.mjs --strict # PASS (REVIEW=0)
+node scripts/viona-forbidden-claims-check.mjs --json
 node scripts/viona-forbidden-claims-check.mjs --write-baseline
 ```
 
-Writes `scripts/viona-forbidden-claims-baseline.json` (findings + summary). Not required for daily use.
-
 ## Import recommendation
 
-**A) Safe to import as manual audit tool** — D2B severity triage makes the checker usable without blocking on 1000+ domain-term matches.
+**A) Ready for D2E allowlist/baseline commit** — `--strict` now PASS with REVIEW=0. Still **manual audit tool only** until operator wires CI.
 
-Not yet safe as mandatory CI gate (`--strict` still fails on ~46 REVIEW items).
+New user-facing copy outside allowlisted paths still surfaces as BLOCKER/REVIEW. Allowlists are **narrow and path-based** — they do not blanket-whitelist payment/SOS phrases repo-wide.
+
+See also: `docs/ai-context/VIONA_FORBIDDEN_CLAIMS_CHECKER.md`

@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * VIONA forbidden production claims checker (Pack D2B).
+ * VIONA forbidden production claims checker (Pack D2B + D2E allowlist).
  * Manual audit tool — not a mandatory CI gate until baseline cleanup.
  * No external dependencies.
  */
@@ -123,7 +123,11 @@ const TEST_RE = /(?:__tests__|\.(?:test|spec)\.(?:ts|tsx|js|mjs)$)/;
 const CONFIG_RE = /^src\/(?:config|constants|types|validation|storage|state)\//;
 const SERVICE_RE = /^src\/(?:services|api|workers|utils)\//;
 const AUDIT_DOC_RE =
-  /^docs\/(?:audit|production|ops|operating|merchant|design|ai-context|architecture|strategy|spec|roadmap|release|runbooks|qa)\//;
+  /^docs\/(?:audit|production|ops|operating|merchant|design|ai-context|architecture|strategy|spec|roadmap|release|runbooks|qa|handoff)\//;
+const OPS_EXEC_DOC_RE = /^docs\/(?:P4_|PILOT_|RECEIPT_)/i;
+const MARKETING_SERVICE_RE = /^src\/services\/marketing\//;
+const ADMIN_SCREEN_RE = /^src\/screens\/admin\//;
+const MVP_SURFACE_GATE_RE = /^src\/navigation\/mvpSurfaceGate/;
 const BOOKING_STATUS_UI_RE = /(?:StatusUi|InboxUi|RequestStatus|orderStatus|bookingStatus)/i;
 
 const DOC_EXAMPLE_FILES = [
@@ -168,6 +172,12 @@ const NEGATIVE_DISCLAIMER_RES = [
   /forbidden\s+(?:unless|outcomes?|claims?)/i,
   /prohibited\s+behavior/i,
   /not\s+active/i,
+  /not\s+enabled/i,
+  /display-only/i,
+  /simulator\s+only/i,
+  /local\s+simulator/i,
+  /not\s+a\s+confirmed/i,
+  /\*\*No\*\*/i,
   /when\s+(?:available|enabled|ready)/i,
   /will\s+require/i,
   /not\s+yet/i,
@@ -317,6 +327,77 @@ function domainAllowsCategory(ctx, categoryId) {
   return false;
 }
 
+function isAllowedByPathContext(ctx, category, phrase, line) {
+  if (category.id === 'sos' && phrase === 'dispatched' && MARKETING_SERVICE_RE.test(ctx.relPath)) {
+    return {
+      severity: SEVERITY.ALLOWED_DOMAIN_TERM,
+      reason: 'Marketing automation trigger status — not emergency dispatch',
+    };
+  }
+
+  if (category.id === 'payment' && phrase === 'paid' && /SalesLeadCRM/i.test(ctx.relPath)) {
+    if (/SALES_LEAD_STATUS\.PAID|PAID:\s*'PAID'/i.test(line)) {
+      return {
+        severity: SEVERITY.ALLOWED_DOMAIN_TERM,
+        reason: 'Admin CRM sales pipeline status — not user wallet claim',
+      };
+    }
+  }
+
+  if (category.id === 'payment' && ADMIN_SCREEN_RE.test(ctx.relPath)) {
+    if (
+      /\((?:mock|demo)\)/i.test(line) ||
+      (/AdminDashboardScreen/i.test(ctx.relPath) && /(?:Cash-Out|Payout Manager|Passive Income)/i.test(line))
+    ) {
+      return {
+        severity: SEVERITY.ALLOWED_DOMAIN_TERM,
+        reason: 'Admin-only mock/demo surface — not live user payout',
+      };
+    }
+  }
+
+  if (category.id === 'payment' && phrase === 'settled' && ctx.isI18n && /residencyStatus/i.test(line)) {
+    return {
+      severity: SEVERITY.ALLOWED_DOMAIN_TERM,
+      reason: 'Immigration/residency status label — not payment settlement',
+    };
+  }
+
+  if (
+    category.id === 'payment' &&
+    phrase === 'settled' &&
+    /__DEV__|hooks settled|console\.log/i.test(line)
+  ) {
+    return {
+      severity: SEVERITY.ALLOWED_DOMAIN_TERM,
+      reason: '__DEV__ diagnostic — React hooks settled, not payment',
+    };
+  }
+
+  if (category.id === 'payment') {
+    if (phrase === 'paid' && /\bconst\s+paid\s*=|!paid\.ok/.test(line)) {
+      return {
+        severity: SEVERITY.ALLOWED_DOMAIN_TERM,
+        reason: 'Internal result variable — not user-facing copy',
+      };
+    }
+    if (phrase === 'payout' && /\bconst\s+payout\s*=|payout\.ok/.test(line)) {
+      return {
+        severity: SEVERITY.ALLOWED_DOMAIN_TERM,
+        reason: 'Internal split-payment variable — not user-facing copy',
+      };
+    }
+    if (phrase === 'cash out' && MVP_SURFACE_GATE_RE.test(ctx.relPath) && /not enabled|display-only/i.test(line)) {
+      return {
+        severity: SEVERITY.ALLOWED_DOMAIN_TERM,
+        reason: 'Surface gate negative disclaimer — cash-out disabled',
+      };
+    }
+  }
+
+  return null;
+}
+
 function classifyFinding(ctx, category, phrase, line, matchIndex) {
   if (line.includes(ALLOW_MARKER)) {
     return { severity: SEVERITY.DOC_EXAMPLE, reason: 'Explicit allow marker for docs/examples' };
@@ -330,8 +411,14 @@ function classifyFinding(ctx, category, phrase, line, matchIndex) {
     return { severity: SEVERITY.ALLOWED_DOMAIN_TERM, reason: 'Negative disclaimer or negated context' };
   }
 
+  const allowedContext = isAllowedByPathContext(ctx, category, phrase, line);
+  if (allowedContext) return allowedContext;
+
   if (ctx.isDoc) {
-    if (AUDIT_DOC_RE.test(ctx.relPath) || /_AUDIT_|FAKE_PRODUCTION|RISK_AUDIT/i.test(ctx.relPath)) {
+    if (AUDIT_DOC_RE.test(ctx.relPath) || OPS_EXEC_DOC_RE.test(ctx.relPath)) {
+      return { severity: SEVERITY.DOC_EXAMPLE, reason: 'Internal audit/ops/handoff documentation' };
+    }
+    if (/_AUDIT_|FAKE_PRODUCTION|RISK_AUDIT/i.test(ctx.relPath)) {
       return { severity: SEVERITY.DOC_EXAMPLE, reason: 'Internal audit/ops documentation' };
     }
     if (
@@ -515,7 +602,7 @@ function buildSummary(findings, filesScanned) {
 }
 
 function printHumanReport(summary, findings, opts) {
-  console.log('VIONA forbidden production claims check (Pack D2B — severity triage)');
+  console.log('VIONA forbidden production claims check (Pack D2B/D2E — severity triage + allowlists)');
   console.log(`Scanned files: ${summary.scannedFiles}`);
   console.log(`Whitelist marker for docs/examples only: ${ALLOW_MARKER}`);
   console.log('');

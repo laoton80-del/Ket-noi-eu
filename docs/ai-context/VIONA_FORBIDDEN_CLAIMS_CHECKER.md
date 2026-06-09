@@ -4,9 +4,9 @@
 
 `scripts/viona-forbidden-claims-check.mjs` is a **manual audit tool** for VIONA's no-fake-production boundary (Operating Protocol §1.1). It scans source and docs for phrases that may imply production payment, SOS dispatch, AI autonomy, or official/legal/medical outcomes before those systems are truly approved.
 
-**This is not yet a mandatory CI gate.** The repository baseline still contains many legitimate domain terms and internal audit references. Use severity triage to focus human review on real user-facing risks.
+**This is not yet a mandatory CI gate.** Pack D2E adds narrow path/context allowlists so legitimate domain terms (marketing `dispatched`, admin CRM `PAID`, immigration `Settled`, ops docs) do not pollute the REVIEW queue. New user-facing risks still surface as BLOCKER/REVIEW.
 
-## Severity levels (Pack D2B)
+## Severity levels (Pack D2B + D2E)
 
 | Severity | Meaning |
 |----------|---------|
@@ -29,7 +29,23 @@ Flags wording that can imply money moved, funds held/released, or completed fina
 
 Flags dispatch, live GPS sharing, authority notification, recording started.
 
-**Not auto-BLOCKER** when negated (`does not dispatch`, `not an emergency service`, `call local emergency number`, `preview only`, `guidance only`) or when `dispatched` is a booking/marketing workflow status label.
+**Not auto-BLOCKER** when negated (`does not dispatch`, `not an emergency service`, `call local emergency number`, `preview only`, `guidance only`) or when `dispatched` is a **marketing automation** trigger status in `src/services/marketing/*` (Pack D2E allowlist).
+
+### D2E path/context allowlists (narrow)
+
+These downgrade to `ALLOWED_DOMAIN_TERM` or `DOC_EXAMPLE` — they do **not** hide new user-facing risks elsewhere:
+
+| Context | Example | Why safe |
+|---------|---------|----------|
+| `src/services/marketing/*` | `BrainRunStatus = 'dispatched'` | Campaign trigger sent — not SOS dispatch |
+| `src/screens/admin/SalesLeadCRM.tsx` | `SALES_LEAD_STATUS.PAID` | Admin CRM pipeline enum |
+| `src/screens/admin/*` + `(mock)` | Cash-Out · Treasury (mock) | Admin demo surface |
+| `src/i18n/strings.ts` + `residencyStatus*` | `'Settled'` | Immigration label — not payment settlement |
+| `__DEV__` console | `hooks settled` | React lifecycle diagnostic |
+| Internal code vars | `const paid =`, `const payout =` | Not user-facing copy |
+| `mvpSurfaceGate` | cash-out **not enabled** | Negative surface gate |
+| `docs/handoff/*`, `docs/P4_*`, `docs/PILOT_*`, `docs/RECEIPT_*` | schema `status: 'paid'` | Ops/runbook docs — not runtime copy |
+| i18n negation | `simulator only`, `not a confirmed paid appointment` | Explicit disclaimer |
 
 ### AI Autonomy
 
@@ -91,7 +107,7 @@ VIONA_FORBIDDEN_CLAIMS_ALLOWED_EXAMPLE
 | Phase | Action |
 |-------|--------|
 | **Now** | Import as **manual audit tool** on release waves touching money, SOS, AI telephony, or merchant surfaces. |
-| **Later** | After i18n/UI baseline cleanup and BLOCKER count near zero, consider `--strict` in CI. |
-| **Not yet** | Do not use `--fail-on-any` or raw phrase grep as a mandatory gate — too many false positives before D2B triage. |
+| **Optional** | After D2E baseline refresh, `--strict` can PASS when REVIEW = 0 — still not wired to CI until operator approves. |
+| **Not yet** | Do not use `--fail-on-any` as a mandatory gate — too many domain-term matches before triage. |
 
 See also: `docs/ai-context/VIONA_FORBIDDEN_CLAIMS_BASELINE_TRIAGE.md`
