@@ -574,7 +574,7 @@ export const STRINGS_BY_LANGUAGE: Record<SupportedLanguage, AppStrings> = {
       pinWrongBody: 'Mã PIN không đúng. Vui lòng thử lại.',
       closeCheckoutTitle: 'Đóng thanh toán',
       closeCheckoutBody:
-        'Nếu bạn đã trả tiền, VIO Credits có thể vẫn đang chờ máy chủ. Kiểm tra số dư hoặc mở lại gói nạp và thử đồng bộ.',
+        'Nếu bước thanh toán này đã hoàn tất, VIO Credits có thể vẫn đang chờ máy chủ. Kiểm tra số dư hoặc mở lại gói nạp và thử đồng bộ.',
       unlockWalletTitle: 'Mở khóa Ví',
       pendingVerifyText: 'Đang xác minh thanh toán và cộng VIO Credits trên máy chủ…',
       alertClose: 'Đóng',
@@ -887,7 +887,7 @@ export const STRINGS_BY_LANGUAGE: Record<SupportedLanguage, AppStrings> = {
       pinWrongBody: 'Incorrect PIN. Please try again.',
       closeCheckoutTitle: 'Close checkout',
       closeCheckoutBody:
-        'If you already paid, Credits may still be pending on the server. Check your balance or reopen the pack and sync.',
+        'If this checkout step was already completed, Credits may still be pending on the server. Check your balance or reopen the pack and sync.',
       unlockWalletTitle: 'Unlock wallet',
       pendingVerifyText: 'Verifying payment and posting VIO Credits on the server…',
       alertClose: 'Close',
@@ -1200,7 +1200,7 @@ export const STRINGS_BY_LANGUAGE: Record<SupportedLanguage, AppStrings> = {
       pinWrongBody: 'Spatny PIN. Zkuste to znovu.',
       closeCheckoutTitle: 'Zavrit platbu',
       closeCheckoutBody:
-        'Pokud jste jiz platili, Credits mohou na serveru cekat. Zkontrolujte zustatek nebo znovu otevrite balicek.',
+        'Pokud byl tento krok platby jiz dokoncen, Credits mohou na serveru cekat. Zkontrolujte zustatek nebo znovu otevrite balicek.',
       unlockWalletTitle: 'Odemknout penezenku',
       pendingVerifyText: 'Overuji platbu a pricteni Credits na serveru…',
       alertClose: 'Zavrit',
@@ -1514,7 +1514,7 @@ export const STRINGS_BY_LANGUAGE: Record<SupportedLanguage, AppStrings> = {
       pinWrongBody: 'Falsche PIN. Bitte erneut versuchen.',
       closeCheckoutTitle: 'Checkout schliessen',
       closeCheckoutBody:
-        'Wenn Sie bereits bezahlt haben, koennen Credits noch auf den Server warten. Saldo pruefen oder Paket erneut oeffnen.',
+        'Wenn dieser Checkout-Schritt bereits abgeschlossen wurde, koennen Credits noch auf dem Server warten. Saldo pruefen oder Paket erneut oeffnen.',
       unlockWalletTitle: 'Wallet entsperren',
       pendingVerifyText: 'Zahlung wird geprueft und Credits auf dem Server gebucht…',
       alertClose: 'Schliessen',
