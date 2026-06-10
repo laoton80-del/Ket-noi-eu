@@ -47,6 +47,7 @@ import {
   premiumFrameEdgeOverlay,
   useFashionHomePrefersReducedMotion,
   isHubTabletPortraitViewport,
+  isHubWebTabletFullBleedViewport,
   hubWebEffectiveContentWidth,
   hubResponsiveContentShellStyle,
   useHubWebShellCompensation,
@@ -6373,7 +6374,7 @@ export function TravelScreen() {
     legacySuppressRootId: TRAVEL_HUB_LEGACY_SUPPRESS_ROOT_ID,
     scrollRef,
     scrollBottomClearance: travelScrollBottomClearance,
-    tabletFullWidth: Platform.OS === 'web' && width >= 768,
+    tabletFullWidth: isHubWebTabletFullBleedViewport(width),
   };
 
   if (locationGate === 'loading') {

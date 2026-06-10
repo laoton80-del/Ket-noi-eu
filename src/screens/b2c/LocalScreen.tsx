@@ -43,7 +43,6 @@ import { LocalMerchantToolsSection } from '../../components/viona/local/LocalMer
 import { LocalOpeningStageLayout } from '../../components/viona/local/LocalOpeningStageLayout';
 import { PremiumAppShell, PremiumHubLayout } from '../../components/viona';
 import { VionaBrandLockup } from '../../components/viona/VionaBrandLockup';
-import { VIONA_TABLET_MIN_WIDTH } from '../../components/viona/VionaMiniAppShell';
 import { vionaTokens } from '../../design';
 import {
   premiumLuminousInk,
@@ -63,6 +62,7 @@ import {
   hubResponsiveContentShellStyle,
   hubTabletPortraitWebBreakoutStyle,
   HUB_WEB_TABLET_FULL_BLEED_MIN_WIDTH_PX,
+  isHubWebTabletFullBleedViewport,
   useHubWebShellCompensation,
 } from '../../components/viona/fashionHomeDesktopShell';
 import { SmartTrioLanguageSheet } from '../../components/smartTrio/SmartTrioLanguageSheet';
@@ -810,7 +810,7 @@ export function LocalScreen() {
 
   const useCompactCommandLogo = width > 0 && width < 1060;
 
-  const webTabletFullWidth = Platform.OS === 'web' && width >= VIONA_TABLET_MIN_WIDTH;
+  const webTabletFullWidth = isHubWebTabletFullBleedViewport(width);
   const localResponsiveShellStyle = useMemo(
     () => hubResponsiveContentShellStyle(width, height),
     [width, height]

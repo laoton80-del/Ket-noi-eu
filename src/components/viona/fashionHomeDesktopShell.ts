@@ -1777,16 +1777,15 @@ export function hubResponsiveContentShellStyle(
 }
 
 function hubShouldWidenWebShellHost(host: HTMLElement, viewportWidth: number): boolean {
+  if (!isHubWebTabletFullBleedViewport(viewportWidth)) return false;
   const style = window.getComputedStyle(host);
   const maxWidthPx = Number.parseFloat(style.maxWidth);
   if (style.maxWidth === `${HUB_WEB_APP_NARROW_COLUMN_MAX_PX}px`) return true;
   if (!Number.isNaN(maxWidthPx) && maxWidthPx > 0 && maxWidthPx <= HUB_WEB_APP_NARROW_COLUMN_MAX_PX) {
     return true;
   }
-  if (isHubWebTabletFullBleedViewport(viewportWidth)) {
-    const rect = host.getBoundingClientRect();
-    if (rect.width > 0 && rect.width <= HUB_WEB_APP_NARROW_COLUMN_MAX_PX + 2) return true;
-  }
+  const rect = host.getBoundingClientRect();
+  if (rect.width > 0 && rect.width <= HUB_WEB_APP_NARROW_COLUMN_MAX_PX + 2) return true;
   return false;
 }
 
