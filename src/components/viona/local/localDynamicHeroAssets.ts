@@ -60,22 +60,22 @@ export const LOCAL_DYNAMIC_HERO_ASSET_FILENAMES: Readonly<
   browseServices: {
     webNormal: 'local-browse-services-web-normal-master-62localbright.png',
     webFullscreen: 'local-browse-services-web-normal-master-62localbright.png',
-    mobilePortrait: 'viona-local-dynamic-hero-mobile-browse-services-v2.png',
+    mobilePortrait: 'local-browse-services-web-normal-card-62localbright.png',
   },
   myRequests: {
     webNormal: 'local-my-requests-web-normal-master-62localbright.png',
     webFullscreen: 'local-my-requests-web-normal-master-62localbright.png',
-    mobilePortrait: 'viona-local-dynamic-hero-mobile-my-requests-v2.png',
+    mobilePortrait: 'local-my-requests-web-normal-card-62localbright.png',
   },
   bookingAssist: {
     webNormal: 'local-booking-assist-web-normal-master-62localbright.png',
     webFullscreen: 'local-booking-assist-web-normal-master-62localbright.png',
-    mobilePortrait: 'viona-local-dynamic-hero-mobile-send-booking-assist-v2.png',
+    mobilePortrait: 'local-booking-assist-web-normal-card-62localbright.png',
   },
   legalWealth: {
     webNormal: 'local-legal-wealth-web-normal-master-62localbright.png',
     webFullscreen: 'local-legal-wealth-web-normal-master-62localbright.png',
-    mobilePortrait: 'viona-local-dynamic-hero-mobile-legal-wealth-v2.png',
+    mobilePortrait: 'local-legal-wealth-web-normal-card-62localbright.png',
   },
 };
 
@@ -99,24 +99,14 @@ export function resolveLocalDynamicHeroAssetFilename(
   return LOCAL_DYNAMIC_HERO_ASSET_FILENAMES[scenarioKey].webFullscreen;
 }
 
-/** Mobile rasters unchanged — existing v2 mobile masters. */
-const LOCAL_DYNAMIC_HERO_MOBILE_V2: Readonly<
+/** Pack 62LOCALBRIGHT — operator-approved card lane for mobile portrait until dedicated mobile masters land. */
+const LOCAL_DYNAMIC_HERO_MOBILE_CARD_62LOCALBRIGHT: Readonly<
   Record<LocalDynamicHeroScenarioKey, ImageSourcePropType>
 > = {
-  browseServices: require('../../../../assets/viona/dynamic-hero/local/viona-local-dynamic-hero-mobile-browse-services-v2.png'),
-  myRequests: require('../../../../assets/viona/dynamic-hero/local/viona-local-dynamic-hero-mobile-my-requests-v2.png'),
-  bookingAssist: require('../../../../assets/viona/dynamic-hero/local/viona-local-dynamic-hero-mobile-send-booking-assist-v2.png'),
-  legalWealth: require('../../../../assets/viona/dynamic-hero/local/viona-local-dynamic-hero-mobile-legal-wealth-v2.png'),
-};
-
-/** @deprecated v1 fallback only — never primary. */
-const LOCAL_DYNAMIC_HERO_WEB_V1_FALLBACK: Readonly<
-  Record<LocalDynamicHeroScenarioKey, ImageSourcePropType>
-> = {
-  browseServices: require('../../../../assets/viona/dynamic-hero/local/viona-local-dynamic-hero-web-browse-services-v1.png'),
-  myRequests: require('../../../../assets/viona/dynamic-hero/local/viona-local-dynamic-hero-web-my-requests-v1.png'),
-  bookingAssist: require('../../../../assets/viona/dynamic-hero/local/viona-local-dynamic-hero-web-send-booking-assist-v1.png'),
-  legalWealth: require('../../../../assets/viona/dynamic-hero/local/viona-local-dynamic-hero-web-legal-wealth-v1.png'),
+  browseServices: require('../../../../assets/viona/dynamic-hero/local/local-browse-services-web-normal-card-62localbright.png'),
+  myRequests: require('../../../../assets/viona/dynamic-hero/local/local-my-requests-web-normal-card-62localbright.png'),
+  bookingAssist: require('../../../../assets/viona/dynamic-hero/local/local-booking-assist-web-normal-card-62localbright.png'),
+  legalWealth: require('../../../../assets/viona/dynamic-hero/local/local-legal-wealth-web-normal-card-62localbright.png'),
 };
 
 export const localDynamicHeroAssets: Readonly<
@@ -124,19 +114,19 @@ export const localDynamicHeroAssets: Readonly<
 > = {
   browseServices: {
     web: LOCAL_DYNAMIC_HERO_WEB_NORMAL_SOURCE.browseServices,
-    mobile: LOCAL_DYNAMIC_HERO_MOBILE_V2.browseServices,
+    mobile: LOCAL_DYNAMIC_HERO_MOBILE_CARD_62LOCALBRIGHT.browseServices,
   },
   myRequests: {
     web: LOCAL_DYNAMIC_HERO_WEB_NORMAL_SOURCE.myRequests,
-    mobile: LOCAL_DYNAMIC_HERO_MOBILE_V2.myRequests,
+    mobile: LOCAL_DYNAMIC_HERO_MOBILE_CARD_62LOCALBRIGHT.myRequests,
   },
   bookingAssist: {
     web: LOCAL_DYNAMIC_HERO_WEB_NORMAL_SOURCE.bookingAssist,
-    mobile: LOCAL_DYNAMIC_HERO_MOBILE_V2.bookingAssist,
+    mobile: LOCAL_DYNAMIC_HERO_MOBILE_CARD_62LOCALBRIGHT.bookingAssist,
   },
   legalWealth: {
     web: LOCAL_DYNAMIC_HERO_WEB_NORMAL_SOURCE.legalWealth,
-    mobile: LOCAL_DYNAMIC_HERO_MOBILE_V2.legalWealth,
+    mobile: LOCAL_DYNAMIC_HERO_MOBILE_CARD_62LOCALBRIGHT.legalWealth,
   },
 };
 
@@ -157,7 +147,7 @@ export function resolveLocalDynamicHeroScenarioKey(
 /**
  * Resolves dynamic hero raster for scenario + mode.
  * webNormal / webFullscreen → Pack 62LOCALBRIGHT Real City large-hero masters;
- * mobilePortrait → existing mobile v2.
+ * mobilePortrait → operator-approved 62localbright card lane.
  */
 export function getLocalDynamicHeroAsset(
   key: LocalHeroVisualKey,
@@ -175,7 +165,7 @@ export function getLocalDynamicHeroAsset(
   }
   const scenarioKey = resolveLocalDynamicHeroScenarioKey(key);
   if (assetMode === 'mobilePortrait') {
-    return LOCAL_DYNAMIC_HERO_MOBILE_V2[scenarioKey];
+    return LOCAL_DYNAMIC_HERO_MOBILE_CARD_62LOCALBRIGHT[scenarioKey];
   }
   if (isDynamicHeroWebAssetMode(assetMode)) {
     return LOCAL_DYNAMIC_HERO_WEB_FULLSCREEN_SOURCE[scenarioKey];
