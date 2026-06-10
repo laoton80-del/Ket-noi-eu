@@ -14,6 +14,8 @@ import {
 export type PremiumTileMicroSceneProps = Readonly<{
   kind: PremiumTileMicroSceneKind;
   accent: VionaUniverseAccent;
+  /** Lower-band large bright vector scene (Local command-center reference). */
+  prominent?: boolean;
 }>;
 
 function Dot({ x, y, size, color }: { x: number; y: number; size: number; color: string }): ReactElement {
@@ -350,7 +352,7 @@ function UniverseAcademy({ accent }: { accent: VionaUniverseAccent }): ReactElem
   return <SocialNodes accent={accent} />;
 }
 
-export function PremiumTileMicroScene({ kind, accent }: PremiumTileMicroSceneProps): ReactElement {
+function renderMicroSceneKind(kind: PremiumTileMicroSceneKind, accent: VionaUniverseAccent): ReactElement {
   switch (kind) {
     case 'marketplace-grid':
       return <MarketplaceGrid accent={accent} />;
@@ -395,7 +397,46 @@ export function PremiumTileMicroScene({ kind, accent }: PremiumTileMicroScenePro
   }
 }
 
+export function PremiumTileMicroScene({
+  kind,
+  accent,
+  prominent = false,
+}: PremiumTileMicroSceneProps): ReactElement {
+  const scene = renderMicroSceneKind(kind, accent);
+  if (!prominent) return scene;
+  const spec = premiumUniverseAccentSpec(accent);
+  return (
+    <View style={styles.prominentShell}>
+      <View
+        style={[
+          styles.prominentGlow,
+          { backgroundColor: spec.glow },
+        ]}
+      />
+      <View style={styles.prominentScale}>{scene}</View>
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
+  prominentShell: {
+    width: premiumTileMicroSceneLayout.prominentCanvasWidth,
+    height: premiumTileMicroSceneLayout.prominentCanvasHeight,
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+  },
+  prominentScale: {
+    transform: [{ scale: 1.34 }],
+  },
+  prominentGlow: {
+    position: 'absolute',
+    left: '8%',
+    right: '8%',
+    bottom: 0,
+    height: '72%',
+    borderRadius: 999,
+    opacity: 0.38,
+  },
   canvas: {
     width: premiumTileMicroSceneLayout.canvasWidth,
     height: premiumTileMicroSceneLayout.canvasHeight,

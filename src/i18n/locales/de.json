@@ -642,7 +642,12 @@
     "railSubtitle": "Travel Lite · Begleitung & Sprachhilfe",
     "heroKicker": "TRAVEL LITE",
     "heroCompanion": "VIONA Travel ist dein Begleiter unterwegs.",
-    "heroSub": "Situationsorientierte Hilfe und Sprachunterstützung — kein OTA-Checkout.",
+    "heroSub": "Flughafen, Transport, Dolmetschen, Sicherheit und lokale Hilfe — rechtzeitige Hinweise, kein Buchungsersatz.",
+    "heroTrust": {
+      "lite": "Lite bereit",
+      "demo": "Demo-Unterstützung",
+      "preview": "Vorschau-Tools"
+    },
     "quickHelpKicker": "SCHNELLHILFE",
     "groupMove": "UNTERWEGS",
     "groupStayEat": "ÜBERNACHTEN & ESSEN",

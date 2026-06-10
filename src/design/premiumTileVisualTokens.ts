@@ -104,9 +104,16 @@ export const premiumLuminousInk = {
 export const premiumTileMicroSceneLayout = {
   canvasWidth: 112,
   canvasHeight: 76,
+  prominentCanvasWidth: 148,
+  prominentCanvasHeight: 96,
+  prominentSceneHeight: '54%',
+  prominentSceneMinHeight: 72,
   slotOpacity: 0.9,
+  prominentSlotOpacity: 1,
   glowOrbOpacity: 0.58,
+  prominentGlowOrbOpacity: 0.78,
   backdropWashOpacity: 0.28,
+  prominentBackdropWashOpacity: 0.16,
 } as const;
 
 /** Dark premium modal shell — intent entry / Local-adjacent overlays. */
@@ -166,7 +173,7 @@ export const premiumTileLayout = {
   minHeightCompact: 108,
   minHeightCompactInner: 108,
   minHeightQuickHelp: 112,
-  minHeightHero: 168,
+  minHeightHero: 220,
   titleFontSize: 13,
   titleLineHeight: 17,
   subtitleFontSize: 10,

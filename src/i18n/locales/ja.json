@@ -394,7 +394,12 @@
     "railSubtitle": "Travel Lite · 旅の伴侶と言語サポート",
     "heroKicker": "TRAVEL LITE",
     "heroCompanion": "VIONA Travel は旅のコンパニオンです。",
-    "heroSub": "状況別ガイドと言語サポート — OTA決済ではありません。",
+    "heroSub": "空港・移動・通訳・安全・現地サポート — 適時の案内であり、代わりに予約しません。",
+    "heroTrust": {
+      "lite": "Lite 準備完了",
+      "demo": "デモ支援",
+      "preview": "プレビューツール"
+    },
     "quickHelpKicker": "クイックヘルプ",
     "groupMove": "移動",
     "groupStayEat": "宿泊と食事",

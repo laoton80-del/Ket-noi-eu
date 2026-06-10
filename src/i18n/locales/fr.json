@@ -394,7 +394,12 @@
     "railSubtitle": "Travel Lite · compagnon & aide linguistique",
     "heroKicker": "TRAVEL LITE",
     "heroCompanion": "VIONA Travel est votre compagnon de voyage.",
-    "heroSub": "Guidage par situation et aide linguistique — pas une caisse OTA.",
+    "heroSub": "Aéroport, transport, interprétation, sécurité et aide locale — conseils au bon moment, pas de réservation à votre place.",
+    "heroTrust": {
+      "lite": "Lite prêt",
+      "demo": "Aide démo",
+      "preview": "Outils d’aperçu"
+    },
     "quickHelpKicker": "AIDE RAPIDE",
     "groupMove": "DÉPLACEMENT",
     "groupStayEat": "SÉJOUR & REPAS",

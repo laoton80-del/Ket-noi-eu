@@ -18,6 +18,7 @@ import {
 } from 'react-native';
 
 import { vionaTokens } from '../../design';
+import { LOCAL_BRIGHT_REAL_CITY_CARD_FIT } from '../../design/vionaLocalBrightRealCityFit';
 import {
   FASHION_HOME_GLOW_CYAN,
   FASHION_HOME_GLOW_GOLD,
@@ -114,7 +115,30 @@ export type VionaFashionWorldCardProps = Readonly<{
   glassMaterialMode?: 'default' | 'edgeLit';
   /** Home Daylight web: brighter icon capsule when host cell is hovered. */
   edgeLitHoverBoost?: boolean;
+  /** Pack 62LOCALBRIGHT_FIT_HOVER — Local-only editorial dezoom (backdrop + foreground). */
+  photoFitMode?: 'default' | 'localEditorialDezoom';
 }>;
+
+function localEditorialCardBackdropStyle(): ImageStyle {
+  const f = LOCAL_BRIGHT_REAL_CITY_CARD_FIT;
+  if (Platform.OS !== 'web') return StyleSheet.absoluteFillObject as ImageStyle;
+  return {
+    objectFit: 'cover',
+    transform: `scale(${f.backdropScale})`,
+    transformOrigin: 'center center',
+    filter: `blur(${f.backdropBlurPx}px) brightness(${f.backdropBrightness}) saturate(${f.backdropSaturate})`,
+  } as unknown as ImageStyle;
+}
+
+function localEditorialCardForegroundStyle(): ImageStyle {
+  const f = LOCAL_BRIGHT_REAL_CITY_CARD_FIT;
+  if (Platform.OS !== 'web') return StyleSheet.absoluteFillObject as ImageStyle;
+  return {
+    objectFit: 'cover',
+    transform: `scale(${f.foregroundScale})`,
+    transformOrigin: 'center center',
+  } as unknown as ImageStyle;
+}
 
 export function VionaFashionWorldCard({
   title,
@@ -138,6 +162,7 @@ export function VionaFashionWorldCard({
   onBlur,
   glassMaterialMode = 'default',
   edgeLitHoverBoost = false,
+  photoFitMode = 'default',
 }: VionaFashionWorldCardProps) {
   const edgeLitGlass = glassMaterialMode === 'edgeLit';
   const fallbackGrad = FALLBACK_GRADIENT[accent];
@@ -260,11 +285,26 @@ export function VionaFashionWorldCard({
 
   const photoLayer =
     backgroundImage != null ? (
-      <Image
-        source={backgroundImage}
-        resizeMode="cover"
-        style={[styles.imageFull, imageStyle, imageHoverStyle]}
-      />
+      photoFitMode === 'localEditorialDezoom' && Platform.OS === 'web' ? (
+        <>
+          <Image
+            source={backgroundImage}
+            resizeMode="cover"
+            style={[styles.imageFull, localEditorialCardBackdropStyle(), imageStyle]}
+          />
+          <Image
+            source={backgroundImage}
+            resizeMode="cover"
+            style={[styles.imageFull, localEditorialCardForegroundStyle(), imageStyle, imageHoverStyle]}
+          />
+        </>
+      ) : (
+        <Image
+          source={backgroundImage}
+          resizeMode="cover"
+          style={[styles.imageFull, imageStyle, imageHoverStyle]}
+        />
+      )
     ) : (
       <LinearGradient colors={fallbackGrad} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={StyleSheet.absoluteFillObject} />
     );
