@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
+import { useFocusEffect } from '@react-navigation/native';
 import { AccessibilityInfo, Platform, StyleSheet, type ImageStyle, type ViewStyle } from 'react-native';
 
 import { vionaTokens } from '../../design';
@@ -1694,4 +1695,162 @@ export function mobileHubDynamicHeroFrameStyle(
 ): Readonly<{ minHeight: number; maxHeight: number; height: number }> {
   const { minHeight, maxHeight } = mobileHubDynamicHeroFrameHeights(viewportWidth, viewportHeight);
   return { minHeight, maxHeight, height: maxHeight };
+}
+
+/** Pack 63A — tablet portrait at >=768 (height > width). */
+export function isHubTabletPortraitViewport(viewportWidth: number, viewportHeight: number): boolean {
+  if (viewportHeight <= 0 || viewportWidth < 768) return false;
+  return viewportHeight > viewportWidth;
+}
+
+/** Pack 63A — desktop landscape row (preserve 1366×768 opening-stage lock). */
+export function isHubDesktopLandscapeViewport(viewportWidth: number, viewportHeight: number): boolean {
+  if (viewportHeight <= 0) return false;
+  return viewportWidth >= 1024 && viewportWidth >= viewportHeight;
+}
+
+/** App.tsx keeps maxWidth 600 until width > 768 — at 768×1024 the column is still 600px. */
+export const HUB_WEB_APP_NARROW_COLUMN_MAX_PX = 600;
+/** Matches App.tsx `isLargeScreen` gate (width > 768 → full bleed). */
+export const HUB_WEB_TABLET_FULL_BLEED_MIN_WIDTH_PX = 769;
+export const HUB_WEB_TABLET_MIN_WIDTH_PX = 768;
+
+/** Pack C2A — App.tsx full bleed starts at 769; 768 stays in the 600px column. */
+export function isHubWebTabletFullBleedViewport(viewportWidth: number): boolean {
+  return Platform.OS === 'web' && viewportWidth >= HUB_WEB_TABLET_FULL_BLEED_MIN_WIDTH_PX;
+}
+
+/** Effective hub column width on web (600px cap until App full-bleed at 769+). */
+export function hubWebAppColumnWidthPx(viewportWidth: number): number {
+  if (Platform.OS !== 'web' || viewportWidth <= 0) return viewportWidth;
+  if (isHubWebTabletFullBleedViewport(viewportWidth)) return viewportWidth;
+  return Math.min(viewportWidth, HUB_WEB_APP_NARROW_COLUMN_MAX_PX);
+}
+
+/** Content width budget inside hub column (safe horizontal pad). */
+export function hubWebEffectiveContentWidth(
+  viewportWidth: number,
+  horizontalPadPx = 16
+): number {
+  if (viewportWidth <= 0) return 320;
+  const col =
+    Platform.OS === 'web' ? hubWebAppColumnWidthPx(viewportWidth) : viewportWidth;
+  return Math.max(280, col - horizontalPadPx * 2);
+}
+
+/** Pack 63B / C2A — full tablet breakout only when App root is full-bleed (769+). */
+export function hubTabletPortraitWebBreakoutStyle(
+  viewportWidth: number,
+  viewportHeight: number
+): ViewStyle | null {
+  if (!isHubWebTabletFullBleedViewport(viewportWidth)) return null;
+  if (!isHubTabletPortraitViewport(viewportWidth, viewportHeight)) return null;
+  if (isHubDesktopLandscapeViewport(viewportWidth, viewportHeight)) return null;
+  return {
+    width: '100vw',
+    maxWidth: '100vw',
+    minWidth: 0,
+    alignSelf: 'center',
+    marginLeft: 'calc(50% - 50vw)',
+    marginRight: 'calc(50% - 50vw)',
+    overflowX: 'hidden',
+  } as unknown as ViewStyle;
+}
+
+/** Pack 63B — hub shell content stays within parent column (never pixel-max wider than 600px parent). */
+export function hubResponsiveContentShellStyle(
+  viewportWidth: number,
+  viewportHeight: number
+): ViewStyle {
+  if (Platform.OS !== 'web' || viewportWidth <= 0) return {};
+  if (isHubDesktopLandscapeViewport(viewportWidth, viewportHeight)) {
+    return { width: '100%', maxWidth: '100%', minWidth: 0, alignSelf: 'stretch' };
+  }
+  return {
+    width: '100%',
+    maxWidth: '100%',
+    minWidth: 0,
+    alignSelf: 'stretch',
+    overflowX: 'hidden',
+    boxSizing: 'border-box',
+  } as ViewStyle;
+}
+
+function hubShouldWidenWebShellHost(host: HTMLElement, viewportWidth: number): boolean {
+  if (!isHubWebTabletFullBleedViewport(viewportWidth)) return false;
+  const style = window.getComputedStyle(host);
+  const maxWidthPx = Number.parseFloat(style.maxWidth);
+  if (style.maxWidth === `${HUB_WEB_APP_NARROW_COLUMN_MAX_PX}px`) return true;
+  if (!Number.isNaN(maxWidthPx) && maxWidthPx > 0 && maxWidthPx <= HUB_WEB_APP_NARROW_COLUMN_MAX_PX) {
+    return true;
+  }
+  const rect = host.getBoundingClientRect();
+  if (rect.width > 0 && rect.width <= HUB_WEB_APP_NARROW_COLUMN_MAX_PX + 2) return true;
+  return false;
+}
+
+/** Pack 63B — widen App.tsx 600px column for Travel/Local/Home tablet portrait. */
+export function useHubWebShellCompensation(hubRootId: string): void {
+  useFocusEffect(
+    useCallback(() => {
+      if (Platform.OS !== 'web' || typeof document === 'undefined') return;
+      const widenedShellHosts = new Set<HTMLElement>();
+      const hubRoot = (): HTMLElement | null => document.getElementById(hubRootId);
+
+      const widenNarrowAppShellAncestors = () => {
+        const root = hubRoot();
+        if (!root) return;
+        const viewportWidth = window.innerWidth || 0;
+        let current: HTMLElement | null = root.parentElement;
+        while (current && current !== document.body) {
+          if (hubShouldWidenWebShellHost(current, viewportWidth)) {
+            if (!widenedShellHosts.has(current)) {
+              widenedShellHosts.add(current);
+              current.dataset.vionaHubShellMaxWidthPrev = current.style.maxWidth;
+              current.dataset.vionaHubShellWidthPrev = current.style.width;
+              current.dataset.vionaHubShellMinWidthPrev = current.style.minWidth;
+            }
+            current.style.maxWidth = '100%';
+            current.style.width = '100%';
+            current.style.minWidth = '0';
+          }
+          current = current.parentElement;
+        }
+      };
+
+      const applyPageCanvas = () => {
+        document.documentElement.style.overflowX = 'hidden';
+        document.body.style.overflowX = 'hidden';
+      };
+
+      applyPageCanvas();
+      widenNarrowAppShellAncestors();
+      const t1 = window.setTimeout(widenNarrowAppShellAncestors, 250);
+      const t2 = window.setTimeout(widenNarrowAppShellAncestors, 1200);
+      const observer = new MutationObserver(widenNarrowAppShellAncestors);
+      observer.observe(document.body, {
+        childList: true,
+        subtree: true,
+        attributes: true,
+        attributeFilter: ['style', 'class'],
+      });
+
+      return () => {
+        window.clearTimeout(t1);
+        window.clearTimeout(t2);
+        observer.disconnect();
+        document.documentElement.style.removeProperty('overflow-x');
+        document.body.style.removeProperty('overflow-x');
+        widenedShellHosts.forEach((host) => {
+          host.style.maxWidth = host.dataset.vionaHubShellMaxWidthPrev ?? '';
+          host.style.width = host.dataset.vionaHubShellWidthPrev ?? '';
+          host.style.minWidth = host.dataset.vionaHubShellMinWidthPrev ?? '';
+          delete host.dataset.vionaHubShellMaxWidthPrev;
+          delete host.dataset.vionaHubShellWidthPrev;
+          delete host.dataset.vionaHubShellMinWidthPrev;
+        });
+        widenedShellHosts.clear();
+      };
+    }, [hubRootId])
+  );
 }

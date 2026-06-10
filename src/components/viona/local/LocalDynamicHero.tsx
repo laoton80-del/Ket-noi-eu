@@ -45,6 +45,8 @@ import {
   premiumCrispEdgeStroke,
   premiumFrameEdgeOverlay,
   isMobileHubHeroCompactContent,
+  isHubTabletPortraitViewport,
+  hubWebEffectiveContentWidth,
 } from '../fashionHomeDesktopShell';
 import { LocalLightingNetworkEdge } from './LocalLightingNetworkEdge';
 import { LocalHeroNetworkPulse } from './LocalHeroNetworkPulse';
@@ -260,7 +262,8 @@ const LOCAL_HERO_TYPOGRAPHY = {
 function localDynamicHeroCopyMetrics(
   viewportWidth: number,
   compactHero: boolean,
-  _isWebFullscreen: boolean
+  _isWebFullscreen: boolean,
+  viewportHeight = 0
 ): Readonly<{
   eyebrowSize: number;
   eyebrowLetterSpacing: number;
@@ -293,6 +296,8 @@ function localDynamicHeroCopyMetrics(
     typo.eyebrow.fontSize,
     typo.eyebrow.letterSpacingEm
   );
+
+  const tabletPortrait = isHubTabletPortraitViewport(viewportWidth, viewportHeight);
 
   if (compactHero) {
     const title = typo.titleCompact;
@@ -327,7 +332,7 @@ function localDynamicHeroCopyMetrics(
       useAbsoluteTextLayer: false,
     };
   }
-  if (viewportWidth >= LOCAL_HERO_DESKTOP_TITLE_MIN_WIDTH) {
+  if (viewportWidth >= LOCAL_HERO_DESKTOP_TITLE_MIN_WIDTH && !tabletPortrait) {
     const largeDesktop = viewportWidth >= LOCAL_HERO_LARGE_DESKTOP_MIN_WIDTH;
     const title = largeDesktop ? typo.titleLargeDesktop : typo.titleDesktop;
     const sub = largeDesktop ? typo.subtitleLargeDesktop : typo.subtitleDesktop;
@@ -367,13 +372,18 @@ function localDynamicHeroCopyMetrics(
     const title = typo.titleMobile;
     const sub = typo.subtitleMobile;
     const space = typo.spacingMobile;
-    const stackWidth = Math.min(360, Math.max(300, Math.round(viewportWidth * 0.88)));
+    const stackWidth = Math.min(
+      360,
+      Math.max(280, Math.round(viewportWidth * 0.88)),
+      hubWebEffectiveContentWidth(viewportWidth, 12)
+    );
+    const titleSize = Math.min(title.fontSize, Math.max(22, Math.round(viewportWidth * 0.068)));
     return {
       eyebrowSize: typo.eyebrow.fontSize,
       eyebrowLetterSpacing: kickerLetterSpacing,
       eyebrowMarginBottom: space.kickerToTitle,
-      titleSize: title.fontSize,
-      titleLineHeight: localHeroLineHeight(title.fontSize, title.lineHeightRatio),
+      titleSize,
+      titleLineHeight: localHeroLineHeight(titleSize, title.lineHeightRatio),
       titleMarginBottom: space.titleToSubtitle,
       titleMaxWidth: stackWidth,
       subtitleSize: sub.fontSize,
@@ -399,7 +409,11 @@ function localDynamicHeroCopyMetrics(
   const title = typo.titleTablet;
   const sub = typo.subtitleTablet;
   const space = typo.spacingTablet;
-  const stackWidth = Math.min(560, Math.max(440, Math.round(viewportWidth * 0.72)));
+  const stackWidth = Math.min(
+    Math.round(viewportWidth * 0.9),
+    Math.max(440, Math.round(viewportWidth * 0.88)),
+    hubWebEffectiveContentWidth(viewportWidth, 16)
+  );
   return {
     eyebrowSize: typo.eyebrow.fontSize,
     eyebrowLetterSpacing: kickerLetterSpacing,
@@ -465,10 +479,12 @@ export function LocalDynamicHero({
   const isWebFullscreen = useWebFullscreenActive();
   const compactHero = isCompactHeroViewport(width, height, isWebFullscreen);
   const heroCopy = useMemo(
-    () => localDynamicHeroCopyMetrics(width, compactHero, isWebFullscreen),
-    [width, compactHero, isWebFullscreen]
+    () => localDynamicHeroCopyMetrics(width, compactHero, isWebFullscreen, height),
+    [width, height, compactHero, isWebFullscreen]
   );
-  const desktopWebHero = isDesktopWebNormalViewport(width, isWebFullscreen);
+  const desktopWebHero =
+    isDesktopWebNormalViewport(width, isWebFullscreen) &&
+    !isHubTabletPortraitViewport(width, height);
   const heroAssetMode = useMemo(
     () => resolveDynamicHeroAssetMode(width, height, isWebFullscreen),
     [width, height, isWebFullscreen]

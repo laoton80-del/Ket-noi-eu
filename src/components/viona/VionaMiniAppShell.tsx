@@ -25,6 +25,7 @@ import {
   useVionaGlobalTopRailWebLegacySuppression,
 } from './VionaGlobalTopRail';
 import { useMiniAppShellChrome } from './useMiniAppShellChrome';
+import { HUB_WEB_TABLET_FULL_BLEED_MIN_WIDTH_PX } from './fashionHomeDesktopShell';
 import { VIONA_GLOBAL_LIGHT_NETWORK_CANVAS } from './globalLightNetworkTokens';
 
 export type VionaMiniAppUniverse = 'local' | 'travel' | 'academy' | 'business' | 'sos';
@@ -164,7 +165,11 @@ export function VionaMiniAppShell({
   const resolvedCurrentLabel = (dockCurrentLabel ?? defaultDockLabels[universe]).trim();
 
   const tabletBreakoutStyle = useMemo((): StyleProp<ViewStyle> | null => {
-    if (!tabletFullWidth || Platform.OS !== 'web' || width < VIONA_TABLET_MIN_WIDTH) {
+    if (
+      !tabletFullWidth ||
+      Platform.OS !== 'web' ||
+      width < HUB_WEB_TABLET_FULL_BLEED_MIN_WIDTH_PX
+    ) {
       return null;
     }
     return {

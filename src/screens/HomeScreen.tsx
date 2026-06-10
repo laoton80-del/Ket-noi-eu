@@ -132,6 +132,10 @@ import {
   premiumCrispEdgeStroke,
   premiumFrameEdgeOverlay,
   resolveFashionHomeDesktopLayout,
+  hubWebAppColumnWidthPx,
+  hubResponsiveContentShellStyle,
+  hubTabletPortraitWebBreakoutStyle,
+  useHubWebShellCompensation,
 } from '../components/viona/fashionHomeDesktopShell';
 import { useVionaHomeDaylightBoost } from '../components/viona/useVionaHomeDaylightBoost';
 import { HomeHeroNetworkPulse } from '../components/viona/HomeHeroNetworkPulse';
@@ -216,6 +220,9 @@ const LIVING_HERO_CROSSFADE_MS = 800;
 const LIVING_HERO_AUTO_INTERVAL_MS = 12000;
 /** Pause while hovering/focusing cards; disabled entirely when reduced-motion is on. */
 const LIVING_HERO_AUTO_ROTATION_ENABLED = false;
+
+/** Pack 60C — web mobile Home hub root for legacy floating overlay suppression. */
+const HOME_HUB_LEGACY_SUPPRESS_ROOT_ID = 'home-hub-root';
 
 const LIVING_HERO_DESKTOP_IMAGE: Readonly<Record<LivingHeroVisualKey, ImageSourcePropType>> = {
   default: IMG_HERO_DESKTOP_HUMAN,
@@ -1109,12 +1116,22 @@ export function HomeScreen() {
     if (fashionHomeDesktopShellActive) {
       return resolveFashionHomeDesktopLayout(width);
     }
+    const columnWidth = hubWebAppColumnWidthPx(width);
     const maxShell = width > 1280 ? 860 : 760;
-    const shellWidth = Math.min(width, maxShell);
+    const shellWidth = Math.min(columnWidth, maxShell);
     const pad = theme.spacing.lg;
     const inner = shellWidth - pad * 2;
     return { shellWidth, pad, inner };
   }, [fashionHomeDesktopShellActive, width]);
+
+  const homeResponsiveShellStyle = useMemo(
+    () => hubResponsiveContentShellStyle(width, height),
+    [width, height]
+  );
+  const homeTabletPortraitBreakout = useMemo(
+    () => hubTabletPortraitWebBreakoutStyle(width, height),
+    [width, height]
+  );
 
   const scrollBottomPad = useMemo(() => {
     if (!isDesktopWeb) return 140;
@@ -1321,6 +1338,8 @@ export function HomeScreen() {
   const [sosHoldGateOpen, setSosHoldGateOpen] = useState(false);
   const [sosPlusInfoOpen, setSosPlusInfoOpen] = useState(false);
   const [legacyDashboardExpanded, setLegacyDashboardExpanded] = useState(false);
+
+  useHubWebShellCompensation(HOME_HUB_LEGACY_SUPPRESS_ROOT_ID);
 
   const scrollToCareSection = useCallback(() => {
     const y = fashionHomeDesktopShellActive ? impactCareScrollY.current : charitySectionY.current;
@@ -1758,12 +1777,15 @@ export function HomeScreen() {
 
   return (
     <View
+      nativeID={HOME_HUB_LEGACY_SUPPRESS_ROOT_ID}
+      {...(Platform.OS === 'web' ? ({ id: HOME_HUB_LEGACY_SUPPRESS_ROOT_ID } as { id: string }) : {})}
       style={[
         styles.rootFill,
         fashionHomeDesktopShellActive && styles.rootFillFashion,
         fashionDaylight && { backgroundColor: FASHION_HOME_DAYLIGHT_CANVAS },
         fashionHomeWebTintTransition,
         Platform.OS === 'web' && styles.rootFillWeb,
+        homeTabletPortraitBreakout,
       ]}
     >
       <StatusBar style={isDesktopWeb ? 'light' : 'dark'} />
@@ -1838,6 +1860,7 @@ export function HomeScreen() {
             maxWidth: '100%',
             alignSelf: fashionHomeDesktopShellActive ? 'stretch' : 'center',
           },
+          !fashionHomeDesktopShellActive ? homeResponsiveShellStyle : null,
         ]}
         showsVerticalScrollIndicator={false}
       >

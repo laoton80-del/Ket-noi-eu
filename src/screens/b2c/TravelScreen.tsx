@@ -46,6 +46,11 @@ import {
   premiumCrispEdgeStroke,
   premiumFrameEdgeOverlay,
   useFashionHomePrefersReducedMotion,
+  isHubTabletPortraitViewport,
+  isHubWebTabletFullBleedViewport,
+  hubWebEffectiveContentWidth,
+  hubResponsiveContentShellStyle,
+  useHubWebShellCompensation,
   type FashionHomeWebMagneticOffset,
 } from '../../components/viona/fashionHomeDesktopShell';
 import { useFullscreenMode } from '../../hooks/useFullscreenMode';
@@ -2018,6 +2023,7 @@ function computeTravelOpeningStageFirstViewLock(
   isFullscreen: boolean
 ): TravelOpeningStageFirstViewLock | null {
   if (Platform.OS !== 'web' || width < TRAVEL_FLAGSHIP_DESKTOP_ROW_MIN_WIDTH || height <= 0) return null;
+  if (isHubTabletPortraitViewport(width, height)) return null;
   const compactHero = height < 520 || width / height > 1.8;
   if (compactHero) return null;
 
@@ -2150,7 +2156,10 @@ function travelDynamicHeroMetrics(
   const compactHero =
     viewportHeight > 0 && (viewportHeight < 520 || viewportWidth / viewportHeight > 1.8);
   const desktopWebHero =
-    Platform.OS === 'web' && viewportWidth >= TRAVEL_FLAGSHIP_DESKTOP_ROW_MIN_WIDTH && !compactHero;
+    Platform.OS === 'web' &&
+    viewportWidth >= TRAVEL_FLAGSHIP_DESKTOP_ROW_MIN_WIDTH &&
+    !compactHero &&
+    !isHubTabletPortraitViewport(viewportWidth, viewportHeight);
   const kickerLetterSpacing = travelHeroKickerLetterSpacingPx(
     typo.kicker.fontSize,
     typo.kicker.letterSpacingEm
@@ -2279,7 +2288,12 @@ function travelDynamicHeroMetrics(
     const title = typo.titleMobile;
     const sub = typo.subtitleMobile;
     const space = typo.spacingMobile;
-    const stackWidth = Math.min(360, Math.max(300, Math.round(viewportWidth * 0.88)));
+    const stackWidth = Math.min(
+      360,
+      Math.max(300, Math.round(viewportWidth * 0.88)),
+      hubWebEffectiveContentWidth(viewportWidth, 12)
+    );
+    const titleSize = Math.min(title.fontSize, Math.max(22, Math.round(viewportWidth * 0.068)));
     return {
       aspectRatio: TRAVEL_HERO_ASPECT,
       stageMinHeight: 300,
@@ -2288,8 +2302,8 @@ function travelDynamicHeroMetrics(
       heroKickerSize: typo.kicker.fontSize,
       heroKickerLetterSpacing: kickerLetterSpacing,
       heroKickerMarginBottom: space.kickerToTitle,
-      heroTitleSize: title.fontSize,
-      heroTitleLineHeight: travelHeroLineHeight(title.fontSize, title.lineHeightRatio),
+      heroTitleSize: titleSize,
+      heroTitleLineHeight: travelHeroLineHeight(titleSize, title.lineHeightRatio),
       heroTitleMarginBottom: space.titleToSubtitle,
       heroTitleMaxWidth: stackWidth,
       heroSubSize: sub.fontSize,
@@ -2321,7 +2335,11 @@ function travelDynamicHeroMetrics(
   const title = typo.titleTablet;
   const sub = typo.subtitleTablet;
   const space = typo.spacingTablet;
-  const stackWidth = Math.min(560, Math.max(440, Math.round(viewportWidth * 0.72)));
+  const stackWidth = Math.min(
+    Math.round(viewportWidth * 0.9),
+    Math.max(440, Math.round(viewportWidth * 0.88)),
+    hubWebEffectiveContentWidth(viewportWidth, 16)
+  );
   return {
     aspectRatio: TRAVEL_HERO_ASPECT,
     stageMinHeight: 320,
@@ -2568,6 +2586,7 @@ function travelSituationFxMaterial(
 
 function travelSituationGridLayout(
   viewportWidth: number,
+  viewportHeight = 0,
   openingStageFullscreen = false
 ): Readonly<{
   columns: 2 | 3 | 4;
@@ -2590,6 +2609,17 @@ function travelSituationGridLayout(
     };
   }
   if (viewportWidth >= 1024) {
+    if (isHubTabletPortraitViewport(viewportWidth, viewportHeight)) {
+      return {
+        columns: 2,
+        gap: TRAVEL_SITUATION_GRID_ROW_GAP_TABLET_PX,
+        minCardHeight: TRAVEL_SITUATION_GRID_CARD_HEIGHT_TABLET_PX,
+        paddingHorizontal: 12,
+        capsuleSize: 26,
+        iconSize: 12,
+        titleLines: 2,
+      };
+    }
     return {
       columns: 4,
       gap: TRAVEL_SITUATION_GRID_ROW_GAP_DESKTOP_PX,
@@ -2612,6 +2642,17 @@ function travelSituationGridLayout(
     };
   }
   if (viewportWidth >= 768) {
+    if (isHubTabletPortraitViewport(viewportWidth, viewportHeight)) {
+      return {
+        columns: 2,
+        gap: TRAVEL_SITUATION_GRID_ROW_GAP_TABLET_PX,
+        minCardHeight: TRAVEL_SITUATION_GRID_CARD_HEIGHT_TABLET_PX,
+        paddingHorizontal: 12,
+        capsuleSize: 26,
+        iconSize: 12,
+        titleLines: 2,
+      };
+    }
     return {
       columns: 3,
       gap: TRAVEL_SITUATION_GRID_ROW_GAP_TABLET_PX,
@@ -2662,12 +2703,13 @@ function chunkTravelSituationRows<T>(items: readonly T[], columns: number): read
 
 function travelUtilityGridMetrics(
   viewportWidth: number,
+  viewportHeight = 0,
   openingStageFullscreen = false
 ): Readonly<{
   gridGap: number;
   flagshipGridGap: number;
 }> {
-  const { gap } = travelSituationGridLayout(viewportWidth, openingStageFullscreen);
+  const { gap } = travelSituationGridLayout(viewportWidth, viewportHeight, openingStageFullscreen);
   if (viewportWidth >= 1024) {
     return { gridGap: gap, flagshipGridGap: TRAVEL_FLAGSHIP_GRID_GAP_DESKTOP_PX };
   }
@@ -2681,7 +2723,10 @@ const TRAVEL_HUB_LEGACY_SUPPRESS_ROOT_ID = 'travel-hub-root';
 const TRAVEL_MOBILE_FLOATING_CHROME_RESERVE_PX = 0;
 
 /** Travel Experience Intelligence Zone rhythm — Destination Lens / Local Map Concierge / Universe Bridge. */
-function travelExperienceZoneRhythmMetrics(viewportWidth: number): Readonly<{
+function travelExperienceZoneRhythmMetrics(
+  viewportWidth: number,
+  viewportHeight = 0
+): Readonly<{
   secondaryZoneMarginTop: number;
   secondaryZoneGap: number;
   secondaryZonePaddingBottom: number;
@@ -2705,7 +2750,8 @@ function travelExperienceZoneRhythmMetrics(viewportWidth: number): Readonly<{
   experienceZoneMobileFloatSpacer: number;
   universeBridgeMobileClearance: number;
 }> {
-  if (viewportWidth >= 1024) {
+  const tabletPortrait = isHubTabletPortraitViewport(viewportWidth, viewportHeight);
+  if (viewportWidth >= 1024 && !tabletPortrait) {
     return {
       secondaryZoneMarginTop: 22,
       secondaryZoneGap: 14,
@@ -2784,8 +2830,8 @@ function travelExperienceZoneRhythmMetrics(viewportWidth: number): Readonly<{
 }
 
 /** @deprecated alias — Travel Experience Intelligence Zone rhythm */
-function travelSecondaryRhythmMetrics(viewportWidth: number) {
-  return travelExperienceZoneRhythmMetrics(viewportWidth);
+function travelSecondaryRhythmMetrics(viewportWidth: number, viewportHeight = 0) {
+  return travelExperienceZoneRhythmMetrics(viewportWidth, viewportHeight);
 }
 
 /** Pack 4 patch — desktop vertical rhythm + dock clearance (>=1024 only). */
@@ -3983,9 +4029,10 @@ function TravelFlagshipCardsRow({
   touchSelectionMode?: boolean;
 }>): ReactElement {
   const { t } = useTranslation();
-  const { width } = useWindowDimensions();
+  const { width, height: viewportHeight } = useWindowDimensions();
   const useCarousel = width <= TRAVEL_FLAGSHIP_CAROUSEL_MAX_WIDTH;
-  const desktopRow = width >= TRAVEL_FLAGSHIP_DESKTOP_ROW_MIN_WIDTH;
+  const tabletPortrait = Platform.OS === 'web' && isHubTabletPortraitViewport(width, viewportHeight);
+  const desktopRow = width >= TRAVEL_FLAGSHIP_DESKTOP_ROW_MIN_WIDTH && !tabletPortrait;
   const oneCol = !useCarousel && !desktopRow && width <= TRAVEL_FLAGSHIP_ONE_COL_MAX_WIDTH;
   const twoCol =
     !useCarousel && !desktopRow && !oneCol && width >= TRAVEL_FLAGSHIP_TWO_COL_MIN_WIDTH;
@@ -4311,14 +4358,14 @@ function TravelUtilityGrid({
   openingStageFullscreen?: boolean;
 }>): ReactElement {
   const { t } = useTranslation();
-  const { width } = useWindowDimensions();
+  const { width, height: viewportHeight } = useWindowDimensions();
   const situationSectionSpacing = useMemo(
     () => travelSituationSectionSpacing(openingStageFullscreen),
     [openingStageFullscreen]
   );
   const situationLayout = useMemo(
-    () => travelSituationGridLayout(width, openingStageFullscreen),
-    [width, openingStageFullscreen]
+    () => travelSituationGridLayout(width, viewportHeight, openingStageFullscreen),
+    [width, viewportHeight, openingStageFullscreen]
   );
   const situationRows = useMemo(
     () => chunkTravelSituationRows(utilityIds, situationLayout.columns),
@@ -5760,6 +5807,8 @@ export function TravelScreen() {
     scenePadMin: 40,
   });
 
+  useHubWebShellCompensation(TRAVEL_HUB_LEGACY_SUPPRESS_ROOT_ID);
+
   const desktopWeb = Platform.OS === 'web' && width >= TRAVEL_FLAGSHIP_DESKTOP_ROW_MIN_WIDTH;
   const openingStageFullscreen = desktopWeb && isFullscreen;
   const featureFlags = useMemo(() => getFeatureFlags(), []);
@@ -5814,7 +5863,8 @@ export function TravelScreen() {
   );
   const desktopStageLock =
     travelFirstViewLock != null &&
-    (width >= TRAVEL_FLAGSHIP_DESKTOP_ROW_MIN_WIDTH || openingStageFullscreen);
+    (width >= TRAVEL_FLAGSHIP_DESKTOP_ROW_MIN_WIDTH || openingStageFullscreen) &&
+    !isHubTabletPortraitViewport(width, viewportHeight);
   const travelHeroEditorialCopy = useMemo(
     () => resolveTravelQuickHelpHeroDisplay(displayedHeroQuickHelpContextId, t),
     [displayedHeroQuickHelpContextId, t, i18n.language]
@@ -5824,11 +5874,18 @@ export function TravelScreen() {
       travelDynamicHeroMetrics(
         width,
         viewportHeight,
-        travelFirstViewLock?.heroMaxPx,
+        desktopStageLock ? travelFirstViewLock?.heroMaxPx : undefined,
         openingStageFullscreen,
         travelHeroEditorialCopy.title
       ),
-    [width, viewportHeight, travelFirstViewLock?.heroMaxPx, openingStageFullscreen, travelHeroEditorialCopy.title]
+    [
+      width,
+      viewportHeight,
+      desktopStageLock,
+      travelFirstViewLock?.heroMaxPx,
+      openingStageFullscreen,
+      travelHeroEditorialCopy.title,
+    ]
   );
   const travelHeroFinalTitleStyleLock = useMemo(
     () => travelHeroFinalTitleStyle(width, openingStageFullscreen),
@@ -5850,7 +5907,9 @@ export function TravelScreen() {
   const travelTileLayout = useMemo(() => travelAppTileMetrics(width), [width]);
   const travelFlagshipLayout = useMemo(() => {
     const openingDesktopWeb =
-      Platform.OS === 'web' && width >= TRAVEL_FLAGSHIP_DESKTOP_ROW_MIN_WIDTH;
+      Platform.OS === 'web' &&
+      width >= TRAVEL_FLAGSHIP_DESKTOP_ROW_MIN_WIDTH &&
+      !isHubTabletPortraitViewport(width, viewportHeight);
     const base = openingDesktopWeb
       ? {
           ...travelTileLayout,
@@ -5881,20 +5940,29 @@ export function TravelScreen() {
       };
     }
     return base;
-  }, [openingStageFullscreen, travelTileLayout, width]);
+  }, [openingStageFullscreen, travelTileLayout, width, viewportHeight]);
   const travelUtilityGrid = useMemo(
-    () => travelUtilityGridMetrics(width, openingStageFullscreen),
-    [width, openingStageFullscreen]
+    () => travelUtilityGridMetrics(width, viewportHeight, openingStageFullscreen),
+    [width, viewportHeight, openingStageFullscreen]
   );
   const travelSecondarySurface = useMemo(() => travelSecondarySurfaceMetrics(width), [width]);
-  const travelSecondaryRhythm = useMemo(() => travelSecondaryRhythmMetrics(width), [width]);
+  const travelSecondaryRhythm = useMemo(
+    () => travelSecondaryRhythmMetrics(width, viewportHeight),
+    [width, viewportHeight]
+  );
+  const travelResponsiveShellStyle = useMemo(
+    () => hubResponsiveContentShellStyle(width, viewportHeight),
+    [width, viewportHeight]
+  );
   const travelOpeningGrammar = useMemo(
     () => travelOpeningGrammarMetrics(width, openingStageFullscreen),
     [width, openingStageFullscreen]
   );
   const travelHeroImageStyle = useMemo((): ImageStyle[] => {
     const webCover =
-      Platform.OS === 'web' && width >= TRAVEL_FLAGSHIP_DESKTOP_ROW_MIN_WIDTH;
+      Platform.OS === 'web' &&
+      width >= TRAVEL_FLAGSHIP_DESKTOP_ROW_MIN_WIDTH &&
+      !isHubTabletPortraitViewport(width, viewportHeight);
     const zoomScale = openingStageFullscreen
       ? TRAVEL_DYNAMIC_HERO_IMAGE_COVER_SCALE_FULLSCREEN
       : TRAVEL_DYNAMIC_HERO_IMAGE_COVER_SCALE_NORMAL;
@@ -5924,7 +5992,7 @@ export function TravelScreen() {
             ]
           : []),
     ];
-  }, [travelHeroObjectPosition, width, openingStageFullscreen]);
+  }, [travelHeroObjectPosition, width, viewportHeight, openingStageFullscreen]);
   const travelHeroStageStyle = useMemo(
     () => [
       styles.heroStage,
@@ -6306,7 +6374,7 @@ export function TravelScreen() {
     legacySuppressRootId: TRAVEL_HUB_LEGACY_SUPPRESS_ROOT_ID,
     scrollRef,
     scrollBottomClearance: travelScrollBottomClearance,
-    tabletFullWidth: Platform.OS === 'web' && width >= 768,
+    tabletFullWidth: isHubWebTabletFullBleedViewport(width),
   };
 
   if (locationGate === 'loading') {
@@ -6346,6 +6414,7 @@ export function TravelScreen() {
     <>
       <StatusBar style="light" />
       <VionaMiniAppShell {...shellProps}>
+        <View style={travelResponsiveShellStyle}>
         <View
           style={[
             styles.openingStage,
@@ -6809,6 +6878,7 @@ export function TravelScreen() {
             <VionaBottomEscapeBar showBack showHome onBack={onBackPress} onHome={goHome} />
           </View>
           <View style={[styles.hubScrollTail, { height: travelSecondaryRhythm.hubScrollTailHeight }]} />
+        </View>
         </View>
       </VionaMiniAppShell>
 

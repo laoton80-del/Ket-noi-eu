@@ -43,7 +43,6 @@ import { LocalMerchantToolsSection } from '../../components/viona/local/LocalMer
 import { LocalOpeningStageLayout } from '../../components/viona/local/LocalOpeningStageLayout';
 import { PremiumAppShell, PremiumHubLayout } from '../../components/viona';
 import { VionaBrandLockup } from '../../components/viona/VionaBrandLockup';
-import { VIONA_TABLET_MIN_WIDTH } from '../../components/viona/VionaMiniAppShell';
 import { vionaTokens } from '../../design';
 import {
   premiumLuminousInk,
@@ -60,6 +59,11 @@ import {
   FASHION_HOME_LINE_GOLD_SOFT,
   fashionHomeWebCommandUtilityHoverStyle,
   fashionHomeWebCommandUtilityPressStyle,
+  hubResponsiveContentShellStyle,
+  hubTabletPortraitWebBreakoutStyle,
+  HUB_WEB_TABLET_FULL_BLEED_MIN_WIDTH_PX,
+  isHubWebTabletFullBleedViewport,
+  useHubWebShellCompensation,
 } from '../../components/viona/fashionHomeDesktopShell';
 import { SmartTrioLanguageSheet } from '../../components/smartTrio/SmartTrioLanguageSheet';
 import { VionaSosHoldGateModal } from '../../components/viona/VionaSosHoldGateModal';
@@ -397,10 +401,16 @@ function useLocalWebShellCompensation() {
       const widenNarrowAppShellAncestors = () => {
         const root = localRoot();
         if (!root) return;
+        const viewportWidth = window.innerWidth || 0;
+        if (viewportWidth < HUB_WEB_TABLET_FULL_BLEED_MIN_WIDTH_PX) return;
         let current: HTMLElement | null = root.parentElement;
         while (current && current !== document.body) {
           const maxWidth = window.getComputedStyle(current).maxWidth;
-          if (maxWidth === '600px') {
+          const maxWidthPx = Number.parseFloat(maxWidth);
+          if (
+            maxWidth === '600px' ||
+            (!Number.isNaN(maxWidthPx) && maxWidthPx > 0 && maxWidthPx <= 600)
+          ) {
             if (!widenedShellHosts.has(current)) {
               widenedShellHosts.add(current);
               current.dataset.vionaLocalShellMaxWidthPrev = current.style.maxWidth;
@@ -796,15 +806,28 @@ export function LocalScreen() {
   );
 
   useLocalWebShellCompensation();
+  useHubWebShellCompensation('local-hub-root');
 
   const useCompactCommandLogo = width > 0 && width < 1060;
 
-  const webTabletFullWidth = Platform.OS === 'web' && width >= VIONA_TABLET_MIN_WIDTH;
+  const webTabletFullWidth = isHubWebTabletFullBleedViewport(width);
+  const localResponsiveShellStyle = useMemo(
+    () => hubResponsiveContentShellStyle(width, height),
+    [width, height]
+  );
+  const localTabletPortraitBreakout = useMemo(
+    () => hubTabletPortraitWebBreakoutStyle(width, height),
+    [width, height]
+  );
 
   return (
     <SafeAreaView style={styles.container} edges={['left', 'right']}>
       <View
-        style={[styles.root, webTabletFullWidth && styles.rootWebTabletFull]}
+        style={[
+          styles.root,
+          webTabletFullWidth && styles.rootWebTabletFull,
+          localTabletPortraitBreakout,
+        ]}
         nativeID="local-hub-root"
         {...(Platform.OS === 'web' ? ({ id: 'local-hub-root' } as const) : {})}
       >
@@ -817,7 +840,7 @@ export function LocalScreen() {
         testID="local-premium-shell"
       >
         <LocalPremiumShellBackdrop />
-        <View style={styles.premiumContentLift}>
+        <View style={[styles.premiumContentLift, localResponsiveShellStyle]}>
         <View style={styles.shellRailWrap}>
             <LinearGradient
               colors={FASHION_HOME_COMMAND_RAIL_GRADIENT}

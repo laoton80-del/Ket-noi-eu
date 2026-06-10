@@ -3,6 +3,7 @@ import { Platform, StyleSheet, type ImageStyle, type ViewStyle } from 'react-nat
 import {
   FASHION_HOME_WEB_OPENING_STAGE_HERO_MAX_PX,
   FASHION_HOME_WEB_OPENING_STAGE_HERO_MIN_PX,
+  isHubTabletPortraitViewport,
   mobileHubDynamicHeroFrameStyle,
 } from './fashionHomeDesktopShell';
 import { LOCAL_HERO_LABEL_AWARE_MAX_BONUS_PX } from './local/LocalDynamicHero';
@@ -102,10 +103,11 @@ export function computeDynamicHeroOpeningFrameStyle(
 ): ViewStyle {
   const compactHero = isCompactHeroViewport(viewportWidth, viewportHeight, false);
   const desktopWebHero =
-    isDesktopWebNormalViewport(viewportWidth, false) ||
-    (Platform.OS === 'web' &&
-      viewportWidth >= FASHION_HOME_DESKTOP_MIN_WIDTH &&
-      !compactHero);
+    !isHubTabletPortraitViewport(viewportWidth, viewportHeight) &&
+    (isDesktopWebNormalViewport(viewportWidth, false) ||
+      (Platform.OS === 'web' &&
+        viewportWidth >= FASHION_HOME_DESKTOP_MIN_WIDTH &&
+        !compactHero));
 
   if (desktopWebHero) {
     const heroCap =
