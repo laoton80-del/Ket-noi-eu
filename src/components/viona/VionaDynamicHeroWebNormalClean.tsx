@@ -113,18 +113,6 @@ export type WebNormalVariantPreset = Readonly<{
   assetLane: WebNormalAssetLane;
 }>;
 
-/** Pack 62E — web-normal-only copies of approved fullscreen art (canonical fullscreen files untouched). */
-const FULLSCREEN_LOOK_62E = {
-  local: {
-    source: require('../../../assets/viona/dynamic-hero/local/local-browse-services-web-normal-fullscreen-look-62e.png'),
-    filename: 'local-browse-services-web-normal-fullscreen-look-62e.png',
-  },
-  travel: {
-    source: require('../../../assets/viona/dynamic-hero/travel/travel-airport-web-normal-fullscreen-look-62e.png'),
-    filename: 'travel-airport-web-normal-fullscreen-look-62e.png',
-  },
-} as const;
-
 const VARIANT_PRESETS: Readonly<
   Record<WebNormalDesignVariant, Readonly<Record<VionaDynamicHeroWebNormalUniverse, Omit<WebNormalVariantPreset, 'variant'>>>>
 > = {
@@ -230,24 +218,12 @@ export function webNormalVariantFrameStyle(
 }
 
 function resolveEffectiveHeroSource(
-  universe: VionaDynamicHeroWebNormalUniverse,
-  preset: WebNormalVariantPreset,
+  _universe: VionaDynamicHeroWebNormalUniverse,
+  _preset: WebNormalVariantPreset,
   passedSource: ImageSourcePropType,
   passedFilename?: string
 ): Readonly<{ source: ImageSourcePropType; filename: string }> {
-  if (preset.assetLane !== 'fullscreenLook62e') {
-    return { source: passedSource, filename: passedFilename ?? '' };
-  }
-  const isLocalBrowse =
-    universe === 'local' &&
-    (!passedFilename ||
-      passedFilename.includes('browse-services') ||
-      passedFilename.includes('fullscreen-look-62e'));
-  const isTravelAirport =
-    universe === 'travel' &&
-    (!passedFilename || passedFilename.includes('airport') || passedFilename.includes('fullscreen-look-62e'));
-  if (isLocalBrowse) return FULLSCREEN_LOOK_62E.local;
-  if (isTravelAirport) return FULLSCREEN_LOOK_62E.travel;
+  // Variant B presentation presets remain; raster resolves from caller-approved passedSource only.
   return { source: passedSource, filename: passedFilename ?? '' };
 }
 
