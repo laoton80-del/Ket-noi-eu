@@ -221,10 +221,12 @@ function travelLocalDiscoveryAccentColors(accent: TravelLocalDiscoveryCategoryAc
 }
 
 /** Wave3b.8 — dedicated daylight cinematic cards (Experience Zone only; not opening hero). */
-const TRAVEL_DESTINATION_LENS_SCENE = require('../../../assets/viona/travel/viona-travel-destination-lens-cinematic-daylight-v1.png');
-const TRAVEL_LOCAL_CONCIERGE_SCENE = require('../../../assets/viona/travel/viona-travel-local-concierge-cinematic-daylight-v1.png');
+// Fallback until Travel scene assets are operator-approved and tracked.
+const TRAVEL_TRACKED_HERO_FALLBACK = require('../../../assets/viona/travel/viona-travel-hero-default-1600x520.png');
+const TRAVEL_DESTINATION_LENS_SCENE = TRAVEL_TRACKED_HERO_FALLBACK;
+const TRAVEL_LOCAL_CONCIERGE_SCENE = TRAVEL_TRACKED_HERO_FALLBACK;
 /** Pack 27/29 — Situation section premium light-network frame background (.png). */
-const TRAVEL_SITUATION_NETWORK_BG_PREMIUM = require('../../../assets/viona/travel/viona-travel-situation-network-bg-premium-v1.png');
+const TRAVEL_SITUATION_NETWORK_BG_PREMIUM = TRAVEL_TRACKED_HERO_FALLBACK;
 const TRAVEL_SITUATION_SECTION_BORDER_RADIUS_PX = 11;
 const TRAVEL_DESTINATION_LENS_SCENE_OBJECT_POSITION = '74% 46%';
 
@@ -2927,20 +2929,20 @@ type TravelDynamicHeroKey =
   | 'emergencyPolice';
 
 const TRAVEL_DYNAMIC_HERO_ASSETS: Readonly<Record<TravelDynamicHeroKey, ImageSourcePropType>> = {
-  default: require('../../../assets/viona/travel/viona-travel-dynamic-journey-airport-v1.png'),
-  journey: require('../../../assets/viona/travel/viona-travel-dynamic-journey-airport-v1.png'),
-  transit: require('../../../assets/viona/travel/viona-travel-dynamic-transit-hub-v1.png'),
-  family: require('../../../assets/viona/travel/viona-travel-dynamic-family-city-transit-v1.png'),
-  global: require('../../../assets/viona/travel/viona-travel-dynamic-global-airport-v1.png'),
-  interpreter: require('../../../assets/viona/travel/viona-travel-dynamic-interpreter-assist-v1.png'),
-  emergencyPolice: require('../../../assets/viona/travel/viona-travel-dynamic-emergency-police-v1.png'),
+  default: TRAVEL_TRACKED_HERO_FALLBACK,
+  journey: TRAVEL_TRACKED_HERO_FALLBACK,
+  transit: TRAVEL_TRACKED_HERO_FALLBACK,
+  family: TRAVEL_TRACKED_HERO_FALLBACK,
+  global: TRAVEL_TRACKED_HERO_FALLBACK,
+  interpreter: TRAVEL_TRACKED_HERO_FALLBACK,
+  emergencyPolice: TRAVEL_TRACKED_HERO_FALLBACK,
 };
 
 const TRAVEL_FLAGSHIP_CARD_ASSETS: Readonly<Record<TravelFlagshipScenarioId, ImageSourcePropType>> = {
-  airport: require('../../../assets/viona/travel/viona-travel-hero-journey-overview-v1.png'),
-  translation: require('../../../assets/viona/travel/viona-travel-hero-interpreter-assist-v1.png'),
-  taxi: require('../../../assets/viona/travel/viona-travel-hero-transport-assist-v1.png'),
-  emergency: require('../../../assets/viona/travel/viona-travel-hero-emergency-safety-v1.png'),
+  airport: TRAVEL_TRACKED_HERO_FALLBACK,
+  translation: TRAVEL_TRACKED_HERO_FALLBACK,
+  taxi: TRAVEL_TRACKED_HERO_FALLBACK,
+  emergency: TRAVEL_TRACKED_HERO_FALLBACK,
 };
 
 const TRAVEL_FLAGSHIP_DYNAMIC_HERO_KEY: Readonly<Record<TravelFlagshipScenarioId, TravelDynamicHeroKey>> = {
@@ -3385,9 +3387,9 @@ function travelFlagshipCardWebImageStyle(scenarioId: TravelFlagshipScenarioId): 
 
 /** Perspective hero cards — Góc nhìn du lịch (Travel-only assets). */
 const TRAVEL_PERSPECTIVE_CARD_ASSETS: Readonly<Record<TravelDirectionId, ImageSourcePropType>> = {
-  vietnameseAbroad: require('../../../assets/viona/travel/viona-travel-perspective-vietnamese-abroad-v1.png'),
-  inboundVietnam: require('../../../assets/viona/travel/viona-travel-perspective-foreigner-to-vietnam-v1.png'),
-  returnVietnam: require('../../../assets/viona/travel/viona-travel-perspective-overseas-vietnamese-return-v1.png'),
+  vietnameseAbroad: TRAVEL_TRACKED_HERO_FALLBACK,
+  inboundVietnam: TRAVEL_TRACKED_HERO_FALLBACK,
+  returnVietnam: TRAVEL_TRACKED_HERO_FALLBACK,
 };
 
 const TRAVEL_PERSPECTIVE_CARD_OBJECT_POSITION: Readonly<Record<TravelDirectionId, string>> = {
