@@ -236,7 +236,7 @@ const TRAVEL_LOCAL_CONCIERGE_SCENE = TRAVEL_DYN_HERO_AIRPORT_MASTER;
 /** Pack 27/29 — Situation section premium light-network frame background (.png). */
 const TRAVEL_SITUATION_NETWORK_BG_PREMIUM = require('../../../assets/viona/travel/viona-travel-situation-network-bg-premium-v1.png');
 const TRAVEL_SITUATION_SECTION_BORDER_RADIUS_PX = 11;
-const TRAVEL_DESTINATION_LENS_SCENE_OBJECT_POSITION = '58% 50%';
+const TRAVEL_DESTINATION_LENS_SCENE_OBJECT_POSITION = '62% 48%';
 
 /** Pack 6 — deep cinematic band without over-dominating panel (300–340px desktop). */
 function travelLocalConciergeSceneShellHeight(
@@ -349,11 +349,10 @@ function travelLocalConciergeSceneWebBackgroundStyle(
   objectPosition: string,
   assetUri: string
 ): ViewStyle {
-  const bgSizePercent = Math.round((1 / TRAVEL_LOCAL_CONCIERGE_SCENE_BACKGROUND_COVER_SCALE) * 1000) / 10;
   return {
     ...StyleSheet.absoluteFillObject,
     backgroundImage: `url("${assetUri}")`,
-    backgroundSize: `${bgSizePercent}% auto`,
+    backgroundSize: 'cover',
     backgroundPosition: objectPosition,
     backgroundRepeat: 'no-repeat',
   } as ViewStyle;
@@ -1577,17 +1576,13 @@ const TRAVEL_OPENING_STAGE_HERO_CARD_SHELL_SLACK_PX = 78;
 const TRAVEL_OPENING_STAGE_FULLSCREEN_HERO_CARD_SHELL_SLACK_PX = 58;
 /** Pack 9 — opening lock gaps (Travel-only; display gap may add air bonus). */
 const TRAVEL_OPENING_STAGE_NORMAL_WEB_HERO_TO_CARD_LOCK_GAP_PX = 4;
-/** Pack 7–11 — web cover zoom-out so shorter hero keeps cinematic scene. */
-/** Pack dezoom-pass2 — visibly stronger breathing room; semantics/assets unchanged. */
-const TRAVEL_DYNAMIC_HERO_IMAGE_COVER_SCALE_NORMAL = 0.62;
-const TRAVEL_DYNAMIC_HERO_IMAGE_COVER_SCALE_FULLSCREEN = 0.6;
-const TRAVEL_DYNAMIC_HERO_OBJECT_POSITION_Y_NORMAL = '48%';
-const TRAVEL_DYNAMIC_HERO_OBJECT_POSITION_Y_FULLSCREEN = '46%';
-const TRAVEL_FLAGSHIP_CARD_WEB_COVER_SCALE = 0.72;
-const TRAVEL_DESTINATION_LENS_WEB_COVER_SCALE = 0.74;
-const TRAVEL_LOCAL_CONCIERGE_SCENE_BACKGROUND_COVER_SCALE = 0.7;
+/** Pack 7–11 — desktop-wide hero cover zoom-out (default/master hero only). */
+const TRAVEL_DYNAMIC_HERO_IMAGE_COVER_SCALE_NORMAL = 0.72;
+const TRAVEL_DYNAMIC_HERO_IMAGE_COVER_SCALE_FULLSCREEN = 0.7;
+const TRAVEL_DYNAMIC_HERO_OBJECT_POSITION_Y_NORMAL = '46%';
+const TRAVEL_DYNAMIC_HERO_OBJECT_POSITION_Y_FULLSCREEN = '44%';
 
-/** Web cover dezoom: smaller scale → larger raster → more scene visible (no contain letterboxing). */
+/** Web cover dezoom: smaller scale → larger raster → more scene visible (hero desktop-wide only). */
 function travelWebCoverDezoomImageStyle(coverScale: number, objectPosition: string): ImageStyle {
   const zoomOutPercent = Math.round((1 / coverScale) * 1000) / 10;
   const zoomInsetPercent = Math.round(((zoomOutPercent - 100) / 2) * 10) / 10;
@@ -3031,7 +3026,7 @@ function travelHeroQuickHelpAccentStageOverlayStyle(
     zIndex: 7,
     ...(Platform.OS === 'web'
       ? ({
-          boxShadow: `inset 0 0 36px rgba(${r}, ${g}, ${b}, 0.14), 0 0 28px rgba(${r}, ${g}, ${b}, 0.24)`,
+          boxShadow: `0 0 18px rgba(${r}, ${g}, ${b}, 0.12)`,
           pointerEvents: 'none',
           transition: 'box-shadow 220ms ease-out, border-color 220ms ease-out',
         } as ViewStyle)
@@ -3053,10 +3048,10 @@ function travelHeroQuickHelpAccentNetworkBoost(
   const [r, g, b] = material.glowRgb;
   const [br, bg, bb] = material.borderRgb;
   return {
-    routeArcPrimary: ['transparent', `rgba(${r}, ${g}, ${b}, 0.18)`, 'transparent'],
-    routeArcSecondary: ['transparent', `rgba(${br}, ${bg}, ${bb}, 0.12)`, 'transparent'],
-    bottomHandoff: ['transparent', `rgba(${r}, ${g}, ${b}, 0.14)`, 'rgba(4, 8, 16, 0.28)'],
-    subjectGlow: ['transparent', `rgba(${r}, ${g}, ${b}, 0.08)`, 'transparent'],
+    routeArcPrimary: ['transparent', `rgba(${r}, ${g}, ${b}, 0.06)`, 'transparent'],
+    routeArcSecondary: ['transparent', `rgba(${br}, ${bg}, ${bb}, 0.04)`, 'transparent'],
+    bottomHandoff: ['transparent', `rgba(${r}, ${g}, ${b}, 0.05)`, 'rgba(4, 8, 16, 0.22)'],
+    subjectGlow: ['transparent', `rgba(${r}, ${g}, ${b}, 0.02)`, 'transparent'],
   };
 }
 
@@ -3066,23 +3061,23 @@ function travelQuickHelpHeroAccentRgb(contextId: TravelQuickHelpHeroContextId): 
 }
 
 const TRAVEL_DYNAMIC_HERO_OBJECT_POSITION: Readonly<Record<TravelDynamicHeroKey, string>> = {
-  default: `52% ${TRAVEL_DYNAMIC_HERO_OBJECT_POSITION_Y_NORMAL}`,
-  journey: `52% ${TRAVEL_DYNAMIC_HERO_OBJECT_POSITION_Y_NORMAL}`,
-  rides: `52% ${TRAVEL_DYNAMIC_HERO_OBJECT_POSITION_Y_NORMAL}`,
-  transit: `52% ${TRAVEL_DYNAMIC_HERO_OBJECT_POSITION_Y_NORMAL}`,
-  family: `50% ${TRAVEL_DYNAMIC_HERO_OBJECT_POSITION_Y_NORMAL}`,
-  global: `52% ${TRAVEL_DYNAMIC_HERO_OBJECT_POSITION_Y_NORMAL}`,
-  interpreter: `50% ${TRAVEL_DYNAMIC_HERO_OBJECT_POSITION_Y_NORMAL}`,
-  cityConcierge: `50% ${TRAVEL_DYNAMIC_HERO_OBJECT_POSITION_Y_NORMAL}`,
-  localGuide: `52% ${TRAVEL_DYNAMIC_HERO_OBJECT_POSITION_Y_NORMAL}`,
-  emergencyPolice: `50% ${TRAVEL_DYNAMIC_HERO_OBJECT_POSITION_Y_NORMAL}`,
+  default: `58% ${TRAVEL_DYNAMIC_HERO_OBJECT_POSITION_Y_NORMAL}`,
+  journey: `58% ${TRAVEL_DYNAMIC_HERO_OBJECT_POSITION_Y_NORMAL}`,
+  rides: `54% ${TRAVEL_DYNAMIC_HERO_OBJECT_POSITION_Y_NORMAL}`,
+  transit: `56% ${TRAVEL_DYNAMIC_HERO_OBJECT_POSITION_Y_NORMAL}`,
+  family: `54% ${TRAVEL_DYNAMIC_HERO_OBJECT_POSITION_Y_NORMAL}`,
+  global: `56% ${TRAVEL_DYNAMIC_HERO_OBJECT_POSITION_Y_NORMAL}`,
+  interpreter: `56% ${TRAVEL_DYNAMIC_HERO_OBJECT_POSITION_Y_NORMAL}`,
+  cityConcierge: `54% ${TRAVEL_DYNAMIC_HERO_OBJECT_POSITION_Y_NORMAL}`,
+  localGuide: `56% ${TRAVEL_DYNAMIC_HERO_OBJECT_POSITION_Y_NORMAL}`,
+  emergencyPolice: `56% ${TRAVEL_DYNAMIC_HERO_OBJECT_POSITION_Y_NORMAL}`,
 };
 
 const TRAVEL_FLAGSHIP_CARD_OBJECT_POSITION: Readonly<Record<TravelFlagshipScenarioId, string>> = {
-  airport: '52% 48%',
-  translation: '50% 50%',
-  taxi: '52% 48%',
-  emergency: '50% 50%',
+  airport: '56% 48%',
+  translation: '56% 48%',
+  taxi: '54% 48%',
+  emergency: '56% 46%',
 };
 
 /** Pack 14 — Quick Help flagship semantic accents (hard-visible rims; Situation palette separate). */
@@ -3360,33 +3355,35 @@ function TravelQuickHelpFlagshipSemanticVeil({
   openingStageFullscreen?: boolean;
 }>): ReactElement {
   const material = TRAVEL_QUICK_HELP_FLAGSHIP_MATERIAL[id];
-  const cornerPeak = active ? (selected ? 0.22 : 0.16) : 0.08;
-  const edgePeak = openingStageFullscreen || !active ? 0 : selected ? 0.04 : 0;
+  const cornerPeak = active ? (selected ? 0.05 : 0.03) : 0.015;
+  const edgePeak = openingStageFullscreen || !active ? 0 : selected ? 0.025 : 0;
   return (
     <View pointerEvents="none" style={styles.quickHelpFlagshipSemanticVeilHost}>
-      <LinearGradient
-        pointerEvents="none"
-        colors={[
-          travelQuickHelpFlagshipRgbAlpha(material.cornerGlowRgb, cornerPeak),
-          travelQuickHelpFlagshipRgbAlpha(material.glowRgb, cornerPeak * 0.42),
-          'transparent',
-        ]}
-        locations={[0, 0.38, 1]}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 0.72, y: 0.82 }}
-        style={StyleSheet.absoluteFillObject}
-      />
+      {active && selected ? (
+        <LinearGradient
+          pointerEvents="none"
+          colors={[
+            travelQuickHelpFlagshipRgbAlpha(material.cornerGlowRgb, cornerPeak),
+            travelQuickHelpFlagshipRgbAlpha(material.glowRgb, cornerPeak * 0.5),
+            'transparent',
+          ]}
+          locations={[0, 0.28, 1]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 0.42, y: 0.38 }}
+          style={styles.quickHelpFlagshipSemanticEdgeHint}
+        />
+      ) : null}
       {selected ? (
         <LinearGradient
           pointerEvents="none"
           colors={[
-            travelQuickHelpFlagshipRgbAlpha(material.edgeLightRgb, active ? 0.4 : 0.28),
-            travelQuickHelpFlagshipRgbAlpha(material.glowRgb, active ? 0.14 : 0.08),
+            travelQuickHelpFlagshipRgbAlpha(material.edgeLightRgb, active ? 0.14 : 0.1),
+            travelQuickHelpFlagshipRgbAlpha(material.glowRgb, active ? 0.05 : 0.03),
             'transparent',
           ]}
           locations={[0, 0.45, 1]}
           start={{ x: 0.5, y: 0 }}
-          end={{ x: 0.5, y: 0.22 }}
+          end={{ x: 0.5, y: 0.16 }}
           style={styles.quickHelpFlagshipSelectedTopAccent}
         />
       ) : null}
@@ -3421,10 +3418,12 @@ function travelDynamicHeroAsset(key: TravelDynamicHeroKey): ImageSourcePropType 
 
 function travelFlagshipCardWebImageStyle(scenarioId: TravelFlagshipScenarioId): ImageStyle | undefined {
   if (Platform.OS !== 'web') return undefined;
-  return travelWebCoverDezoomImageStyle(
-    TRAVEL_FLAGSHIP_CARD_WEB_COVER_SCALE,
-    TRAVEL_FLAGSHIP_CARD_OBJECT_POSITION[scenarioId]
-  );
+  return {
+    width: '100%',
+    height: '100%',
+    objectFit: 'cover',
+    objectPosition: TRAVEL_FLAGSHIP_CARD_OBJECT_POSITION[scenarioId],
+  } as ImageStyle;
 }
 
 /** Perspective hero cards — Góc nhìn du lịch (Travel-only assets). */
@@ -3710,14 +3709,7 @@ function TravelQuickHelpFlagshipTile({
   testID: string;
 }>): ReactElement {
   const tokens = travelSemanticTokens(accent);
-  const material = travelQuickHelpFlagshipMaterial(scenarioId);
   const minHeight = layoutMetrics.flagshipMinHeight;
-  const scrimPeak = accent === 'magenta' ? 0.2 : accent === 'violet' ? 0.17 : 0.16;
-  const scrimColors = [
-    travelQuickHelpFlagshipRgbAlpha(material.glowRgb, scrimPeak),
-    travelQuickHelpFlagshipRgbAlpha(material.glowRgb, scrimPeak * 0.42),
-    'transparent',
-  ] as const;
 
   return (
     <View
@@ -3737,22 +3729,12 @@ function TravelQuickHelpFlagshipTile({
         />
         <LinearGradient
           pointerEvents="none"
-          colors={scrimColors}
-          start={{ x: 0, y: 0.5 }}
-          end={{ x: 0.72, y: 0.5 }}
-          style={styles.quickHelpFlagshipTileAccentScrim}
-        />
-        <LinearGradient
-          pointerEvents="none"
-          colors={['rgba(4, 7, 12, 0.84)', 'rgba(4, 7, 12, 0.46)', 'rgba(4, 7, 12, 0)']}
-          locations={[0, 0.44, 1]}
+          colors={['rgba(4, 7, 12, 0.78)', 'rgba(4, 7, 12, 0.38)', 'rgba(4, 7, 12, 0)']}
+          locations={[0, 0.4, 1]}
           start={{ x: 0, y: 0.5 }}
           end={{ x: 1, y: 0.5 }}
           style={styles.quickHelpFlagshipTileTextScrim}
         />
-        {active ? (
-          <View pointerEvents="none" style={[StyleSheet.absoluteFillObject, styles.quickHelpFlagshipTileHoverBrighten]} />
-        ) : null}
       </View>
       <View pointerEvents="none" style={styles.quickHelpFlagshipTileStack}>
         <View style={styles.quickHelpFlagshipTileHeader}>
@@ -4644,10 +4626,7 @@ function TravelPerspectiveCard({
   );
 }
 
-function travelExperienceSceneImageStyle(objectPosition: string, webCoverScale = 1): ImageStyle {
-  if (Platform.OS === 'web' && webCoverScale < 1) {
-    return travelWebCoverDezoomImageStyle(webCoverScale, objectPosition);
-  }
+function travelExperienceSceneImageStyle(objectPosition: string): ImageStyle {
   return {
     ...StyleSheet.absoluteFillObject,
     width: '100%',
@@ -4663,10 +4642,7 @@ function TravelDestinationLensSceneLayer({ compact = false }: Readonly<{ compact
     <>
       <Image
         source={TRAVEL_DESTINATION_LENS_SCENE}
-        style={travelExperienceSceneImageStyle(
-          TRAVEL_DESTINATION_LENS_SCENE_OBJECT_POSITION,
-          TRAVEL_DESTINATION_LENS_WEB_COVER_SCALE
-        )}
+        style={travelExperienceSceneImageStyle(TRAVEL_DESTINATION_LENS_SCENE_OBJECT_POSITION)}
         resizeMode="cover"
         accessibilityIgnoresInvertColors
       />
@@ -4680,7 +4656,7 @@ function TravelDestinationLensSceneLayer({ compact = false }: Readonly<{ compact
       />
       <LinearGradient
         pointerEvents="none"
-        colors={['rgba(92, 205, 255, 0.22)', 'rgba(132, 238, 255, 0.1)', 'transparent']}
+        colors={['rgba(92, 205, 255, 0.08)', 'rgba(132, 238, 255, 0.04)', 'transparent']}
         locations={[0, 0.38, 1]}
         start={{ x: 0.1, y: 0.58 }}
         end={{ x: 0.96, y: 0.34 }}
@@ -5960,7 +5936,7 @@ export function TravelScreen() {
   const travelHeroObjectPosition =
     activeTravelHeroKey === 'default' || activeTravelHeroKey === 'journey'
       ? openingStageFullscreen
-        ? `52% ${TRAVEL_DYNAMIC_HERO_OBJECT_POSITION_Y_FULLSCREEN}`
+        ? `58% ${TRAVEL_DYNAMIC_HERO_OBJECT_POSITION_Y_FULLSCREEN}`
         : (TRAVEL_DYNAMIC_HERO_OBJECT_POSITION[activeTravelHeroKey] ??
             TRAVEL_DYNAMIC_HERO_OBJECT_POSITION.default)
       : (TRAVEL_DYNAMIC_HERO_OBJECT_POSITION[activeTravelHeroKey] ??
@@ -6020,17 +5996,29 @@ export function TravelScreen() {
     [width, openingStageFullscreen]
   );
   const travelHeroImageStyle = useMemo((): ImageStyle[] => {
-    const webDezoom = Platform.OS === 'web';
+    const webCover =
+      Platform.OS === 'web' &&
+      width >= TRAVEL_FLAGSHIP_DESKTOP_ROW_MIN_WIDTH &&
+      !isHubTabletPortraitViewport(width, viewportHeight);
     const zoomScale = openingStageFullscreen
       ? TRAVEL_DYNAMIC_HERO_IMAGE_COVER_SCALE_FULLSCREEN
       : TRAVEL_DYNAMIC_HERO_IMAGE_COVER_SCALE_NORMAL;
     return [
       styles.heroCinematicImage,
-      ...(webDezoom
+      ...(webCover
         ? [travelWebCoverDezoomImageStyle(zoomScale, travelHeroObjectPosition)]
-        : []),
+        : Platform.OS === 'web'
+          ? [
+              {
+                width: '100%',
+                height: '100%',
+                objectFit: 'cover',
+                objectPosition: travelHeroObjectPosition,
+              } as ImageStyle,
+            ]
+          : []),
     ];
-  }, [travelHeroObjectPosition, openingStageFullscreen]);
+  }, [travelHeroObjectPosition, width, viewportHeight, openingStageFullscreen]);
   const travelHeroStageStyle = useMemo(
     () => [
       styles.heroStage,
@@ -7034,7 +7022,7 @@ const styles = StyleSheet.create({
     width: '58%',
     height: '46%',
     zIndex: 1,
-    opacity: 0.62,
+    opacity: 0.28,
   },
   heroRouteArcSecondary: {
     position: 'absolute',
@@ -7043,10 +7031,10 @@ const styles = StyleSheet.create({
     width: '44%',
     height: '52%',
     zIndex: 1,
-    opacity: 0.48,
+    opacity: 0.2,
   },
   heroBrightenWash: {
-    backgroundColor: 'rgba(255, 255, 255, 0.28)',
+    backgroundColor: 'rgba(255, 255, 255, 0.12)',
     zIndex: 1,
   },
   heroSubjectGlow: {
@@ -9328,6 +9316,14 @@ const styles = StyleSheet.create({
   quickHelpFlagshipSemanticVeilHost: {
     ...StyleSheet.absoluteFillObject,
     zIndex: 3,
+  },
+  quickHelpFlagshipSemanticEdgeHint: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    width: '42%',
+    height: '38%',
+    zIndex: 1,
   },
   quickHelpFlagshipSelectedTopAccent: {
     position: 'absolute',
