@@ -2920,19 +2920,25 @@ type TravelFlagshipScenarioId = (typeof TRAVEL_FLAGSHIP_IDS)[number];
 type TravelDynamicHeroKey =
   | 'default'
   | 'journey'
+  | 'rides'
   | 'transit'
   | 'family'
   | 'global'
   | 'interpreter'
+  | 'cityConcierge'
+  | 'localGuide'
   | 'emergencyPolice';
 
 const TRAVEL_DYNAMIC_HERO_ASSETS: Readonly<Record<TravelDynamicHeroKey, ImageSourcePropType>> = {
   default: require('../../../assets/viona/travel/viona-travel-dynamic-journey-airport-v1.png'),
   journey: require('../../../assets/viona/travel/viona-travel-dynamic-journey-airport-v1.png'),
+  rides: require('../../../assets/viona/travel/viona-travel-hero-transport-assist-v1.png'),
   transit: require('../../../assets/viona/travel/viona-travel-dynamic-transit-hub-v1.png'),
   family: require('../../../assets/viona/travel/viona-travel-dynamic-family-city-transit-v1.png'),
   global: require('../../../assets/viona/travel/viona-travel-dynamic-global-airport-v1.png'),
-  interpreter: require('../../../assets/viona/travel/viona-travel-dynamic-interpreter-assist-v1.png'),
+  interpreter: require('../../../assets/viona/travel/viona-travel-hero-interpreter-assist-v1.png'),
+  cityConcierge: require('../../../assets/viona/travel/viona-travel-local-concierge-cinematic-daylight-v1.png'),
+  localGuide: require('../../../assets/viona/travel/viona-travel-dynamic-interpreter-assist-v1.png'),
   emergencyPolice: require('../../../assets/viona/travel/viona-travel-dynamic-emergency-police-v1.png'),
 };
 
@@ -2946,7 +2952,20 @@ const TRAVEL_FLAGSHIP_CARD_ASSETS: Readonly<Record<TravelFlagshipScenarioId, Ima
 const TRAVEL_FLAGSHIP_DYNAMIC_HERO_KEY: Readonly<Record<TravelFlagshipScenarioId, TravelDynamicHeroKey>> = {
   airport: 'journey',
   translation: 'interpreter',
-  taxi: 'transit',
+  taxi: 'rides',
+  emergency: 'emergencyPolice',
+};
+
+/** Situation utility hover → dynamic hero (approved scene set; glass pills stay icon-only). */
+const TRAVEL_SCENARIO_DYNAMIC_HERO_KEY: Readonly<Partial<Record<TravelScenarioId, TravelDynamicHeroKey>>> = {
+  airport: 'journey',
+  taxi: 'rides',
+  transit: 'transit',
+  hotel: 'family',
+  restaurant: 'cityConcierge',
+  shopping: 'global',
+  hospital: 'journey',
+  translation: 'interpreter',
   emergency: 'emergencyPolice',
 };
 
@@ -3025,10 +3044,13 @@ function travelQuickHelpHeroAccentRgb(contextId: TravelQuickHelpHeroContextId): 
 const TRAVEL_DYNAMIC_HERO_OBJECT_POSITION: Readonly<Record<TravelDynamicHeroKey, string>> = {
   default: `64% ${TRAVEL_DYNAMIC_HERO_OBJECT_POSITION_Y_NORMAL}`,
   journey: `64% ${TRAVEL_DYNAMIC_HERO_OBJECT_POSITION_Y_NORMAL}`,
+  rides: '70% 40%',
   transit: '68% 36%',
   family: '56% 36%',
   global: '70% 34%',
-  interpreter: '60% 32%',
+  interpreter: '62% 36%',
+  cityConcierge: '58% 40%',
+  localGuide: '60% 32%',
   emergencyPolice: '62% 36%',
 };
 
@@ -5832,6 +5854,9 @@ export function TravelScreen() {
     useState<TravelQuickHelpHeroContextId>('default');
   const [hoveredQuickHelpHeroContextId, setHoveredQuickHelpHeroContextId] =
     useState<TravelFlagshipScenarioId | null>(null);
+  const [hoveredUtilityScenarioId, setHoveredUtilityScenarioId] = useState<TravelScenarioId | null>(
+    null
+  );
   const displayedHeroQuickHelpContextId = useMemo(
     (): TravelQuickHelpHeroContextId =>
       hoveredQuickHelpHeroContextId ?? selectedQuickHelpHeroContextId,
@@ -5848,9 +5873,17 @@ export function TravelScreen() {
   const quickHelpHoverClearTokenRef = useRef(0);
 
   const activeTravelHeroKey = useMemo((): TravelDynamicHeroKey => {
-    if (displayedHeroQuickHelpContextId === 'default') return 'default';
-    return TRAVEL_FLAGSHIP_DYNAMIC_HERO_KEY[displayedHeroQuickHelpContextId];
-  }, [displayedHeroQuickHelpContextId]);
+    if (hoveredQuickHelpHeroContextId != null) {
+      return TRAVEL_FLAGSHIP_DYNAMIC_HERO_KEY[hoveredQuickHelpHeroContextId];
+    }
+    if (hoveredUtilityScenarioId != null) {
+      return TRAVEL_SCENARIO_DYNAMIC_HERO_KEY[hoveredUtilityScenarioId] ?? 'default';
+    }
+    if (displayedHeroQuickHelpContextId !== 'default') {
+      return TRAVEL_FLAGSHIP_DYNAMIC_HERO_KEY[displayedHeroQuickHelpContextId];
+    }
+    return 'default';
+  }, [displayedHeroQuickHelpContextId, hoveredQuickHelpHeroContextId, hoveredUtilityScenarioId]);
 
   const activeTravelHeroFrameAccent = useMemo(
     () => travelQuickHelpHeroAccent(displayedHeroQuickHelpContextId),
@@ -6158,6 +6191,7 @@ export function TravelScreen() {
   }, []);
 
   const onTravelUtilityHover = useCallback((scenarioId: TravelScenarioId | null) => {
+    setHoveredUtilityScenarioId(scenarioId);
     if (scenarioId == null) {
       setTravelCardHoverAccent(null);
       return;
