@@ -220,9 +220,19 @@ function travelLocalDiscoveryAccentColors(accent: TravelLocalDiscoveryCategoryAc
   }
 }
 
+/** Operator-approved dynamic-hero Travel lane (main repo source of truth). */
+const TRAVEL_DYN_HERO_AIRPORT_MASTER = require('../../../assets/viona/dynamic-hero/travel/travel-airport-web-normal-master-62h.png');
+const TRAVEL_DYN_HERO_AIRPORT_CARD = require('../../../assets/viona/dynamic-hero/travel/travel-airport-web-normal-card-62y.png');
+const TRAVEL_DYN_HERO_TRANSLATION_CARD = require('../../../assets/viona/dynamic-hero/travel/travel-translation-assist-web-normal-card-62y.png');
+const TRAVEL_DYN_HERO_TRANSLATION_SOURCE = require('../../../assets/viona/dynamic-hero/travel/travel-translation-assist-web-normal-source.png');
+const TRAVEL_DYN_HERO_RIDES_CARD = require('../../../assets/viona/dynamic-hero/travel/travel-rides-assist-web-normal-card-62y.png');
+const TRAVEL_DYN_HERO_RIDES_SOURCE = require('../../../assets/viona/dynamic-hero/travel/travel-rides-assist-web-normal-source.png');
+const TRAVEL_DYN_HERO_EMERGENCY_CARD = require('../../../assets/viona/dynamic-hero/travel/travel-emergency-police-web-normal-card-62y.png');
+const TRAVEL_DYN_HERO_EMERGENCY_SOURCE = require('../../../assets/viona/dynamic-hero/travel/travel-emergency-police-web-normal-source.png');
+
 /** Wave3b.8 — dedicated daylight cinematic cards (Experience Zone only; not opening hero). */
 const TRAVEL_DESTINATION_LENS_SCENE = require('../../../assets/viona/travel/viona-travel-destination-lens-cinematic-daylight-v1.png');
-const TRAVEL_LOCAL_CONCIERGE_SCENE = require('../../../assets/viona/travel/viona-travel-local-concierge-cinematic-daylight-v1.png');
+const TRAVEL_LOCAL_CONCIERGE_SCENE = TRAVEL_DYN_HERO_AIRPORT_MASTER;
 /** Pack 27/29 — Situation section premium light-network frame background (.png). */
 const TRAVEL_SITUATION_NETWORK_BG_PREMIUM = require('../../../assets/viona/travel/viona-travel-situation-network-bg-premium-v1.png');
 const TRAVEL_SITUATION_SECTION_BORDER_RADIUS_PX = 11;
@@ -2930,23 +2940,23 @@ type TravelDynamicHeroKey =
   | 'emergencyPolice';
 
 const TRAVEL_DYNAMIC_HERO_ASSETS: Readonly<Record<TravelDynamicHeroKey, ImageSourcePropType>> = {
-  default: require('../../../assets/viona/travel/viona-travel-dynamic-journey-airport-v1.png'),
-  journey: require('../../../assets/viona/travel/viona-travel-dynamic-journey-airport-v1.png'),
-  rides: require('../../../assets/viona/travel/viona-travel-hero-transport-assist-v1.png'),
-  transit: require('../../../assets/viona/travel/viona-travel-dynamic-transit-hub-v1.png'),
-  family: require('../../../assets/viona/travel/viona-travel-dynamic-family-city-transit-v1.png'),
-  global: require('../../../assets/viona/travel/viona-travel-dynamic-global-airport-v1.png'),
-  interpreter: require('../../../assets/viona/travel/viona-travel-hero-interpreter-assist-v1.png'),
-  cityConcierge: require('../../../assets/viona/travel/viona-travel-local-concierge-cinematic-daylight-v1.png'),
-  localGuide: require('../../../assets/viona/travel/viona-travel-dynamic-interpreter-assist-v1.png'),
-  emergencyPolice: require('../../../assets/viona/travel/viona-travel-dynamic-emergency-police-v1.png'),
+  default: TRAVEL_DYN_HERO_AIRPORT_MASTER,
+  journey: TRAVEL_DYN_HERO_AIRPORT_MASTER,
+  rides: TRAVEL_DYN_HERO_RIDES_SOURCE,
+  transit: TRAVEL_DYN_HERO_AIRPORT_MASTER,
+  family: TRAVEL_DYN_HERO_AIRPORT_MASTER,
+  global: TRAVEL_DYN_HERO_AIRPORT_MASTER,
+  interpreter: TRAVEL_DYN_HERO_TRANSLATION_SOURCE,
+  cityConcierge: TRAVEL_DYN_HERO_AIRPORT_MASTER,
+  localGuide: TRAVEL_DYN_HERO_TRANSLATION_SOURCE,
+  emergencyPolice: TRAVEL_DYN_HERO_EMERGENCY_SOURCE,
 };
 
 const TRAVEL_FLAGSHIP_CARD_ASSETS: Readonly<Record<TravelFlagshipScenarioId, ImageSourcePropType>> = {
-  airport: require('../../../assets/viona/travel/viona-travel-hero-journey-overview-v1.png'),
-  translation: require('../../../assets/viona/travel/viona-travel-hero-interpreter-assist-v1.png'),
-  taxi: require('../../../assets/viona/travel/viona-travel-hero-transport-assist-v1.png'),
-  emergency: require('../../../assets/viona/travel/viona-travel-hero-emergency-safety-v1.png'),
+  airport: TRAVEL_DYN_HERO_AIRPORT_CARD,
+  translation: TRAVEL_DYN_HERO_TRANSLATION_CARD,
+  taxi: TRAVEL_DYN_HERO_RIDES_CARD,
+  emergency: TRAVEL_DYN_HERO_EMERGENCY_CARD,
 };
 
 const TRAVEL_FLAGSHIP_DYNAMIC_HERO_KEY: Readonly<Record<TravelFlagshipScenarioId, TravelDynamicHeroKey>> = {
