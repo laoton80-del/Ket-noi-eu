@@ -11,23 +11,25 @@ import type { RootStackParamList } from './routes';
 
 type RootStack = ReturnType<typeof createNativeStackNavigator<RootStackParamList>>;
 
-type Props = Readonly<{
-  Stack: RootStack;
-}>;
-
-/** Dev/reference lab stack screens — only loaded when master env gate is enabled. */
-export function ReferenceLabStackScreens({ Stack }: Props): ReactElement {
-  return (
-    <>
-      <Stack.Screen name="VionaReferenceLocalPanelLab" component={VionaReferenceLocalPanelLabScreen} />
-      <Stack.Screen name="VionaReferenceSingleCardLab" component={VionaReferenceSingleCardLabScreen} />
-      <Stack.Screen name="VionaReferenceMaterialLab" component={VionaReferenceMaterialLabScreen} />
-      <Stack.Screen
-        name="VionaReferencePanelCompositionLab"
-        component={VionaReferencePanelCompositionLabScreen}
-      />
-      <Stack.Screen name="VionaReferenceFlagshipCardsLab" component={VionaReferenceFlagshipCardsLabScreen} />
-      <Stack.Screen name="VionaNeonCardLab" component={VionaNeonCardLabScreen} />
-    </>
-  );
+/**
+ * Reference lab stack screens for App.tsx — only call when `isReferenceLabsEnabled()` is true.
+ * Returns plain `Stack.Screen` elements (valid direct children of `Stack.Navigator` / `Stack.Group`).
+ */
+export function getReferenceLabStackScreens(Stack: RootStack): readonly ReactElement[] {
+  return [
+    <Stack.Screen key="VionaReferenceLocalPanelLab" name="VionaReferenceLocalPanelLab" component={VionaReferenceLocalPanelLabScreen} />,
+    <Stack.Screen key="VionaReferenceSingleCardLab" name="VionaReferenceSingleCardLab" component={VionaReferenceSingleCardLabScreen} />,
+    <Stack.Screen key="VionaReferenceMaterialLab" name="VionaReferenceMaterialLab" component={VionaReferenceMaterialLabScreen} />,
+    <Stack.Screen
+      key="VionaReferencePanelCompositionLab"
+      name="VionaReferencePanelCompositionLab"
+      component={VionaReferencePanelCompositionLabScreen}
+    />,
+    <Stack.Screen
+      key="VionaReferenceFlagshipCardsLab"
+      name="VionaReferenceFlagshipCardsLab"
+      component={VionaReferenceFlagshipCardsLabScreen}
+    />,
+    <Stack.Screen key="VionaNeonCardLab" name="VionaNeonCardLab" component={VionaNeonCardLabScreen} />,
+  ];
 }
