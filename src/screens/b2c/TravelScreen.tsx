@@ -1582,6 +1582,14 @@ const TRAVEL_DYNAMIC_HERO_IMAGE_COVER_SCALE_FULLSCREEN = 0.7;
 const TRAVEL_DYNAMIC_HERO_OBJECT_POSITION_Y_NORMAL = '46%';
 const TRAVEL_DYNAMIC_HERO_OBJECT_POSITION_Y_FULLSCREEN = '44%';
 
+/** Non-default master heroes use contain inside a right media frame (default/journey stay full-bleed cover). */
+const TRAVEL_HERO_FRAMED_CONTAIN_MAX_WIDTH_PERCENT = 92;
+const TRAVEL_HERO_FRAMED_CONTAIN_MAX_HEIGHT_PERCENT = 88;
+
+function travelHeroUsesFramedContainPresentation(heroKey: TravelDynamicHeroKey): boolean {
+  return heroKey !== 'default' && heroKey !== 'journey';
+}
+
 /** Web cover dezoom: smaller scale → larger raster → more scene visible (hero desktop-wide only). */
 function travelWebCoverDezoomImageStyle(coverScale: number, objectPosition: string): ImageStyle {
   const zoomOutPercent = Math.round((1 / coverScale) * 1000) / 10;
@@ -3072,6 +3080,34 @@ const TRAVEL_DYNAMIC_HERO_OBJECT_POSITION: Readonly<Record<TravelDynamicHeroKey,
   localGuide: `56% ${TRAVEL_DYNAMIC_HERO_OBJECT_POSITION_Y_NORMAL}`,
   emergencyPolice: `56% ${TRAVEL_DYNAMIC_HERO_OBJECT_POSITION_Y_NORMAL}`,
 };
+
+/** Framed contain alignment — full original composition visible inside media frame. */
+const TRAVEL_DYNAMIC_HERO_FRAMED_OBJECT_POSITION: Readonly<
+  Partial<Record<TravelDynamicHeroKey, string>>
+> = {
+  interpreter: 'center center',
+  rides: '56% 50%',
+  emergencyPolice: '54% 48%',
+  transit: 'center center',
+  family: 'center center',
+  global: 'center center',
+  cityConcierge: 'center center',
+  localGuide: 'center center',
+};
+
+function buildTravelHeroFramedContainImageStyle(heroKey: TravelDynamicHeroKey): ImageStyle {
+  const objectPosition = TRAVEL_DYNAMIC_HERO_FRAMED_OBJECT_POSITION[heroKey] ?? 'center center';
+  return {
+    width: `${TRAVEL_HERO_FRAMED_CONTAIN_MAX_WIDTH_PERCENT}%`,
+    height: `${TRAVEL_HERO_FRAMED_CONTAIN_MAX_HEIGHT_PERCENT}%`,
+    maxWidth: '100%',
+    maxHeight: '100%',
+    alignSelf: 'center',
+    ...(Platform.OS === 'web'
+      ? ({ objectFit: 'contain', objectPosition } as ImageStyle)
+      : null),
+  };
+}
 
 const TRAVEL_FLAGSHIP_CARD_OBJECT_POSITION: Readonly<Record<TravelFlagshipScenarioId, string>> = {
   airport: '56% 48%',
@@ -5933,14 +5969,10 @@ export function TravelScreen() {
     [activeTravelHeroKey]
   );
   const defaultTravelHeroSource = useMemo(() => travelDynamicHeroAsset('default'), []);
-  const travelHeroObjectPosition =
-    activeTravelHeroKey === 'default' || activeTravelHeroKey === 'journey'
-      ? openingStageFullscreen
-        ? `58% ${TRAVEL_DYNAMIC_HERO_OBJECT_POSITION_Y_FULLSCREEN}`
-        : (TRAVEL_DYNAMIC_HERO_OBJECT_POSITION[activeTravelHeroKey] ??
-            TRAVEL_DYNAMIC_HERO_OBJECT_POSITION.default)
-      : (TRAVEL_DYNAMIC_HERO_OBJECT_POSITION[activeTravelHeroKey] ??
-          TRAVEL_DYNAMIC_HERO_OBJECT_POSITION.default);
+  const travelHeroUsesFramedContain = travelHeroUsesFramedContainPresentation(activeTravelHeroKey);
+  const travelHeroDefaultObjectPosition = openingStageFullscreen
+    ? `58% ${TRAVEL_DYNAMIC_HERO_OBJECT_POSITION_Y_FULLSCREEN}`
+    : TRAVEL_DYNAMIC_HERO_OBJECT_POSITION.default;
   const travelTileLayout = useMemo(() => travelAppTileMetrics(width), [width]);
   const travelFlagshipLayout = useMemo(() => {
     const openingDesktopWeb =
@@ -5995,7 +6027,7 @@ export function TravelScreen() {
     () => travelOpeningGrammarMetrics(width, openingStageFullscreen),
     [width, openingStageFullscreen]
   );
-  const travelHeroImageStyle = useMemo((): ImageStyle[] => {
+  const travelHeroDefaultImageStyle = useMemo((): ImageStyle[] => {
     const webCover =
       Platform.OS === 'web' &&
       width >= TRAVEL_FLAGSHIP_DESKTOP_ROW_MIN_WIDTH &&
@@ -6006,19 +6038,47 @@ export function TravelScreen() {
     return [
       styles.heroCinematicImage,
       ...(webCover
-        ? [travelWebCoverDezoomImageStyle(zoomScale, travelHeroObjectPosition)]
+        ? [travelWebCoverDezoomImageStyle(zoomScale, travelHeroDefaultObjectPosition)]
         : Platform.OS === 'web'
           ? [
               {
                 width: '100%',
                 height: '100%',
                 objectFit: 'cover',
-                objectPosition: travelHeroObjectPosition,
+                objectPosition: travelHeroDefaultObjectPosition,
               } as ImageStyle,
             ]
           : []),
     ];
-  }, [travelHeroObjectPosition, width, viewportHeight, openingStageFullscreen]);
+  }, [travelHeroDefaultObjectPosition, width, viewportHeight, openingStageFullscreen]);
+  const travelHeroFramedContainImageStyle = useMemo(
+    () => buildTravelHeroFramedContainImageStyle(activeTravelHeroKey),
+    [activeTravelHeroKey]
+  );
+  const travelHeroFramedMediaZoneLayout = useMemo((): ViewStyle => {
+    if (width < 768) {
+      return {
+        left: '5%',
+        right: '5%',
+        top: '42%',
+        bottom: '7%',
+      };
+    }
+    if (width < TRAVEL_FLAGSHIP_DESKTOP_ROW_MIN_WIDTH) {
+      return {
+        left: `${Math.min(travelHeroStage.textVeilWidthPercent + 2, 50)}%`,
+        right: '3%',
+        top: '6%',
+        bottom: '6%',
+      };
+    }
+    return {
+      left: `${Math.max(travelHeroStage.textVeilWidthPercent - 2, 36)}%`,
+      right: '2%',
+      top: '5%',
+      bottom: '5%',
+    };
+  }, [width, travelHeroStage.textVeilWidthPercent]);
   const travelHeroStageStyle = useMemo(
     () => [
       styles.heroStage,
@@ -6038,7 +6098,8 @@ export function TravelScreen() {
 
   /** Pack 63A — touch/tap selection gets the same hero brighten as pointer hover. */
   const travelHeroBrightenActive =
-    travelHeroDirectHover || displayedHeroQuickHelpContextId !== 'default';
+    !travelHeroUsesFramedContain &&
+    (travelHeroDirectHover || displayedHeroQuickHelpContextId !== 'default');
 
   const travelHeroNetworkHoverAccent = useMemo((): TravelSemanticAccent | null => {
     if (displayedHeroQuickHelpContextId !== 'default') {
@@ -6059,19 +6120,23 @@ export function TravelScreen() {
   );
   const travelHeroQuickHelpNetworkBoost = useMemo(
     () =>
-      travelHeroQuickHelpAccentNetworkBoost(
-        displayedHeroQuickHelpContextId,
-        displayedHeroQuickHelpContextId !== 'default' || travelHeroFrameLit
-      ),
-    [displayedHeroQuickHelpContextId, travelHeroFrameLit]
+      travelHeroUsesFramedContain
+        ? null
+        : travelHeroQuickHelpAccentNetworkBoost(
+            displayedHeroQuickHelpContextId,
+            displayedHeroQuickHelpContextId !== 'default' || travelHeroFrameLit
+          ),
+    [displayedHeroQuickHelpContextId, travelHeroFrameLit, travelHeroUsesFramedContain]
   );
   const travelHeroQuickHelpAccentOverlay = useMemo(
     () =>
-      travelHeroQuickHelpAccentStageOverlayStyle(
-        displayedHeroQuickHelpContextId,
-        displayedHeroQuickHelpContextId !== 'default'
-      ),
-    [displayedHeroQuickHelpContextId]
+      travelHeroUsesFramedContain
+        ? null
+        : travelHeroQuickHelpAccentStageOverlayStyle(
+            displayedHeroQuickHelpContextId,
+            displayedHeroQuickHelpContextId !== 'default'
+          ),
+    [displayedHeroQuickHelpContextId, travelHeroUsesFramedContain]
   );
   const travelHeroResolvedNetworkLighting = useMemo(
     () =>
@@ -6086,6 +6151,7 @@ export function TravelScreen() {
         : travelHeroNetworkLighting,
     [travelHeroNetworkLighting, travelHeroQuickHelpNetworkBoost]
   );
+  const travelHeroShowImageOverlays = !travelHeroUsesFramedContain;
 
   useEffect(() => {
     Animated.timing(travelHeroLitAnim, {
@@ -6472,55 +6538,79 @@ export function TravelScreen() {
               <View style={styles.heroImageClip} pointerEvents="none">
                 <Image
                   source={defaultTravelHeroSource}
-                  style={travelHeroImageStyle}
+                  style={travelHeroDefaultImageStyle}
                   resizeMode="cover"
                   accessibilityIgnoresInvertColors
                 />
-                {activeTravelHeroKey !== 'default' ? (
-                  <Animated.View style={[StyleSheet.absoluteFillObject, { opacity: travelHeroFadeAnim }]}>
-                    <Image
-                      source={activeTravelHeroSource}
-                      style={travelHeroImageStyle}
-                      resizeMode="cover"
-                      accessibilityIgnoresInvertColors
-                    />
-                  </Animated.View>
+                {travelHeroUsesFramedContain ? (
+                  <>
+                    <View pointerEvents="none" style={styles.heroFramedBackdropWash} />
+                    <Animated.View
+                      style={[StyleSheet.absoluteFillObject, { opacity: travelHeroFadeAnim }]}
+                    >
+                      <View style={[styles.heroFramedMediaZone, travelHeroFramedMediaZoneLayout]}>
+                        <LinearGradient
+                          pointerEvents="none"
+                          colors={[
+                            'rgba(8, 14, 24, 0.52)',
+                            'rgba(10, 18, 30, 0.38)',
+                            'rgba(12, 20, 32, 0.28)',
+                          ]}
+                          locations={[0, 0.55, 1]}
+                          start={{ x: 0, y: 0.5 }}
+                          end={{ x: 1, y: 0.5 }}
+                          style={styles.heroFramedMediaSurface}
+                        >
+                          <Image
+                            source={activeTravelHeroSource}
+                            style={travelHeroFramedContainImageStyle}
+                            resizeMode="contain"
+                            accessibilityIgnoresInvertColors
+                          />
+                        </LinearGradient>
+                      </View>
+                    </Animated.View>
+                  </>
                 ) : null}
-                <LinearGradient
-                  pointerEvents="none"
-                  colors={[...travelHeroResolvedNetworkLighting.bottomHandoff]}
-                  locations={[0, 0.72, 1]}
-                  style={styles.heroBottomHandoff}
-                />
-                <LinearGradient
-                  pointerEvents="none"
-                  colors={[...travelHeroResolvedNetworkLighting.routeArcPrimary]}
-                  start={{ x: 0.18, y: 0.62 }}
-                  end={{ x: 0.72, y: 0.38 }}
-                  style={styles.heroRouteArcPrimary}
-                />
-                <LinearGradient
-                  pointerEvents="none"
-                  colors={[...travelHeroResolvedNetworkLighting.routeArcSecondary]}
-                  start={{ x: 0.82, y: 0.28 }}
-                  end={{ x: 0.42, y: 0.72 }}
-                  style={styles.heroRouteArcSecondary}
-                />
-                <Animated.View
-                  pointerEvents="none"
-                  style={[
-                    StyleSheet.absoluteFillObject,
-                    styles.heroBrightenWash,
-                    { opacity: travelHeroBrightenActive ? travelHeroBrightenOpacity : 0 },
-                  ]}
-                />
-                <LinearGradient
-                  pointerEvents="none"
-                  colors={[...travelHeroResolvedNetworkLighting.subjectGlow]}
-                  start={{ x: 0.72, y: 0.22 }}
-                  end={{ x: 0.92, y: 0.78 }}
-                  style={styles.heroSubjectGlow}
-                />
+                {travelHeroShowImageOverlays ? (
+                  <>
+                    <LinearGradient
+                      pointerEvents="none"
+                      colors={[...travelHeroResolvedNetworkLighting.bottomHandoff]}
+                      locations={[0, 0.72, 1]}
+                      style={styles.heroBottomHandoff}
+                    />
+                    <LinearGradient
+                      pointerEvents="none"
+                      colors={[...travelHeroResolvedNetworkLighting.routeArcPrimary]}
+                      start={{ x: 0.18, y: 0.62 }}
+                      end={{ x: 0.72, y: 0.38 }}
+                      style={styles.heroRouteArcPrimary}
+                    />
+                    <LinearGradient
+                      pointerEvents="none"
+                      colors={[...travelHeroResolvedNetworkLighting.routeArcSecondary]}
+                      start={{ x: 0.82, y: 0.28 }}
+                      end={{ x: 0.42, y: 0.72 }}
+                      style={styles.heroRouteArcSecondary}
+                    />
+                    <Animated.View
+                      pointerEvents="none"
+                      style={[
+                        StyleSheet.absoluteFillObject,
+                        styles.heroBrightenWash,
+                        { opacity: travelHeroBrightenActive ? travelHeroBrightenOpacity : 0 },
+                      ]}
+                    />
+                    <LinearGradient
+                      pointerEvents="none"
+                      colors={[...travelHeroResolvedNetworkLighting.subjectGlow]}
+                      start={{ x: 0.72, y: 0.22 }}
+                      end={{ x: 0.92, y: 0.78 }}
+                      style={styles.heroSubjectGlow}
+                    />
+                  </>
+                ) : null}
               </View>
               <LinearGradient
                 pointerEvents="none"
@@ -7006,6 +7096,24 @@ const styles = StyleSheet.create({
     bottom: 0,
     width: '100%',
     height: '100%',
+  },
+  heroFramedBackdropWash: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(4, 8, 16, 0.28)',
+    zIndex: 0,
+  },
+  heroFramedMediaZone: {
+    position: 'absolute',
+    zIndex: 1,
+  },
+  heroFramedMediaSurface: {
+    flex: 1,
+    borderRadius: 14,
+    overflow: 'hidden',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: 'rgba(255, 255, 255, 0.1)',
   },
   heroBottomHandoff: {
     position: 'absolute',
