@@ -236,7 +236,7 @@ const TRAVEL_LOCAL_CONCIERGE_SCENE = TRAVEL_DYN_HERO_AIRPORT_MASTER;
 /** Pack 27/29 — Situation section premium light-network frame background (.png). */
 const TRAVEL_SITUATION_NETWORK_BG_PREMIUM = require('../../../assets/viona/travel/viona-travel-situation-network-bg-premium-v1.png');
 const TRAVEL_SITUATION_SECTION_BORDER_RADIUS_PX = 11;
-const TRAVEL_DESTINATION_LENS_SCENE_OBJECT_POSITION = '62% 48%';
+const TRAVEL_DESTINATION_LENS_SCENE_OBJECT_POSITION = '58% 50%';
 
 /** Pack 6 — deep cinematic band without over-dominating panel (300–340px desktop). */
 function travelLocalConciergeSceneShellHeight(
@@ -280,15 +280,15 @@ function travelLocalConciergeSceneObjectPosition(
 ): string {
   const portrait = viewportHeight > viewportWidth;
   if (openingStageFullscreen && viewportWidth >= 1024) {
-    return portrait ? '52% 42%' : '56% 42%';
+    return portrait ? '50% 46%' : '52% 46%';
   }
   if (viewportWidth >= 1024) {
-    return portrait ? '50% 42%' : '54% 42%';
+    return portrait ? '50% 46%' : '52% 46%';
   }
   if (viewportWidth >= 768) {
-    return portrait ? '50% 42%' : '52% 42%';
+    return portrait ? '50% 46%' : '52% 46%';
   }
-  return portrait ? '50% 42%' : '52% 42%';
+  return portrait ? '50% 46%' : '52% 46%';
 }
 
 function travelLocalConciergeMapShellHeight(
@@ -1578,19 +1578,29 @@ const TRAVEL_OPENING_STAGE_FULLSCREEN_HERO_CARD_SHELL_SLACK_PX = 58;
 /** Pack 9 — opening lock gaps (Travel-only; display gap may add air bonus). */
 const TRAVEL_OPENING_STAGE_NORMAL_WEB_HERO_TO_CARD_LOCK_GAP_PX = 4;
 /** Pack 7–11 — web cover zoom-out so shorter hero keeps cinematic scene. */
-/** Pack dezoom-premium — more breathing room; semantics unchanged, assets unchanged. */
-const TRAVEL_DYNAMIC_HERO_IMAGE_COVER_SCALE_NORMAL = 0.72;
-/** Pack 36 — fullscreen zoom-out for more open scene. */
-const TRAVEL_DYNAMIC_HERO_IMAGE_COVER_SCALE_FULLSCREEN = 0.7;
-/** Hero crop anchor — center-weighted Y for headroom above subjects. */
-const TRAVEL_DYNAMIC_HERO_OBJECT_POSITION_Y_NORMAL = '46%';
-const TRAVEL_DYNAMIC_HERO_OBJECT_POSITION_Y_FULLSCREEN = '44%';
-/** Quick Help card web cover zoom-out (cover only; no contain letterboxing). */
-const TRAVEL_FLAGSHIP_CARD_WEB_COVER_SCALE = 0.82;
-/** Destination / weather mini scene dezoom. */
-const TRAVEL_DESTINATION_LENS_WEB_COVER_SCALE = 0.86;
-/** Local support band background dezoom. */
-const TRAVEL_LOCAL_CONCIERGE_SCENE_BACKGROUND_COVER_SCALE = 0.82;
+/** Pack dezoom-pass2 — visibly stronger breathing room; semantics/assets unchanged. */
+const TRAVEL_DYNAMIC_HERO_IMAGE_COVER_SCALE_NORMAL = 0.62;
+const TRAVEL_DYNAMIC_HERO_IMAGE_COVER_SCALE_FULLSCREEN = 0.6;
+const TRAVEL_DYNAMIC_HERO_OBJECT_POSITION_Y_NORMAL = '48%';
+const TRAVEL_DYNAMIC_HERO_OBJECT_POSITION_Y_FULLSCREEN = '46%';
+const TRAVEL_FLAGSHIP_CARD_WEB_COVER_SCALE = 0.72;
+const TRAVEL_DESTINATION_LENS_WEB_COVER_SCALE = 0.74;
+const TRAVEL_LOCAL_CONCIERGE_SCENE_BACKGROUND_COVER_SCALE = 0.7;
+
+/** Web cover dezoom: smaller scale → larger raster → more scene visible (no contain letterboxing). */
+function travelWebCoverDezoomImageStyle(coverScale: number, objectPosition: string): ImageStyle {
+  const zoomOutPercent = Math.round((1 / coverScale) * 1000) / 10;
+  const zoomInsetPercent = Math.round(((zoomOutPercent - 100) / 2) * 10) / 10;
+  return {
+    ...StyleSheet.absoluteFillObject,
+    width: `${zoomOutPercent}%`,
+    height: `${zoomOutPercent}%`,
+    left: `${-zoomInsetPercent}%`,
+    top: `${-zoomInsetPercent}%`,
+    objectFit: 'cover',
+    objectPosition,
+  } as ImageStyle;
+}
 
 /** Editorial recompose — left-to-center cover layout (wave3b.dynamic-hero-editorial-recompose). */
 const TRAVEL_HERO_LARGE_DESKTOP_MIN_WIDTH = 1366;
@@ -3056,23 +3066,23 @@ function travelQuickHelpHeroAccentRgb(contextId: TravelQuickHelpHeroContextId): 
 }
 
 const TRAVEL_DYNAMIC_HERO_OBJECT_POSITION: Readonly<Record<TravelDynamicHeroKey, string>> = {
-  default: `58% ${TRAVEL_DYNAMIC_HERO_OBJECT_POSITION_Y_NORMAL}`,
-  journey: `58% ${TRAVEL_DYNAMIC_HERO_OBJECT_POSITION_Y_NORMAL}`,
-  rides: `58% ${TRAVEL_DYNAMIC_HERO_OBJECT_POSITION_Y_NORMAL}`,
-  transit: `56% ${TRAVEL_DYNAMIC_HERO_OBJECT_POSITION_Y_NORMAL}`,
-  family: `54% ${TRAVEL_DYNAMIC_HERO_OBJECT_POSITION_Y_NORMAL}`,
-  global: `56% ${TRAVEL_DYNAMIC_HERO_OBJECT_POSITION_Y_NORMAL}`,
-  interpreter: `56% ${TRAVEL_DYNAMIC_HERO_OBJECT_POSITION_Y_NORMAL}`,
-  cityConcierge: `54% ${TRAVEL_DYNAMIC_HERO_OBJECT_POSITION_Y_NORMAL}`,
-  localGuide: `56% ${TRAVEL_DYNAMIC_HERO_OBJECT_POSITION_Y_NORMAL}`,
-  emergencyPolice: `56% ${TRAVEL_DYNAMIC_HERO_OBJECT_POSITION_Y_NORMAL}`,
+  default: `52% ${TRAVEL_DYNAMIC_HERO_OBJECT_POSITION_Y_NORMAL}`,
+  journey: `52% ${TRAVEL_DYNAMIC_HERO_OBJECT_POSITION_Y_NORMAL}`,
+  rides: `52% ${TRAVEL_DYNAMIC_HERO_OBJECT_POSITION_Y_NORMAL}`,
+  transit: `52% ${TRAVEL_DYNAMIC_HERO_OBJECT_POSITION_Y_NORMAL}`,
+  family: `50% ${TRAVEL_DYNAMIC_HERO_OBJECT_POSITION_Y_NORMAL}`,
+  global: `52% ${TRAVEL_DYNAMIC_HERO_OBJECT_POSITION_Y_NORMAL}`,
+  interpreter: `50% ${TRAVEL_DYNAMIC_HERO_OBJECT_POSITION_Y_NORMAL}`,
+  cityConcierge: `50% ${TRAVEL_DYNAMIC_HERO_OBJECT_POSITION_Y_NORMAL}`,
+  localGuide: `52% ${TRAVEL_DYNAMIC_HERO_OBJECT_POSITION_Y_NORMAL}`,
+  emergencyPolice: `50% ${TRAVEL_DYNAMIC_HERO_OBJECT_POSITION_Y_NORMAL}`,
 };
 
 const TRAVEL_FLAGSHIP_CARD_OBJECT_POSITION: Readonly<Record<TravelFlagshipScenarioId, string>> = {
-  airport: '56% 46%',
-  translation: '54% 46%',
-  taxi: '56% 46%',
-  emergency: '54% 48%',
+  airport: '52% 48%',
+  translation: '50% 50%',
+  taxi: '52% 48%',
+  emergency: '50% 50%',
 };
 
 /** Pack 14 — Quick Help flagship semantic accents (hard-visible rims; Situation palette separate). */
@@ -3411,16 +3421,10 @@ function travelDynamicHeroAsset(key: TravelDynamicHeroKey): ImageSourcePropType 
 
 function travelFlagshipCardWebImageStyle(scenarioId: TravelFlagshipScenarioId): ImageStyle | undefined {
   if (Platform.OS !== 'web') return undefined;
-  const zoomOutPercent = Math.round((1 / TRAVEL_FLAGSHIP_CARD_WEB_COVER_SCALE) * 1000) / 10;
-  const zoomInsetPercent = Math.round(((zoomOutPercent - 100) / 2) * 10) / 10;
-  return {
-    width: `${zoomOutPercent}%`,
-    height: `${zoomOutPercent}%`,
-    left: `${-zoomInsetPercent}%`,
-    top: `${-zoomInsetPercent}%`,
-    objectFit: 'cover',
-    objectPosition: TRAVEL_FLAGSHIP_CARD_OBJECT_POSITION[scenarioId],
-  } as ImageStyle;
+  return travelWebCoverDezoomImageStyle(
+    TRAVEL_FLAGSHIP_CARD_WEB_COVER_SCALE,
+    TRAVEL_FLAGSHIP_CARD_OBJECT_POSITION[scenarioId]
+  );
 }
 
 /** Perspective hero cards — Góc nhìn du lịch (Travel-only assets). */
@@ -4642,17 +4646,7 @@ function TravelPerspectiveCard({
 
 function travelExperienceSceneImageStyle(objectPosition: string, webCoverScale = 1): ImageStyle {
   if (Platform.OS === 'web' && webCoverScale < 1) {
-    const zoomOutPercent = Math.round((1 / webCoverScale) * 1000) / 10;
-    const zoomInsetPercent = Math.round(((zoomOutPercent - 100) / 2) * 10) / 10;
-    return {
-      ...StyleSheet.absoluteFillObject,
-      width: `${zoomOutPercent}%`,
-      height: `${zoomOutPercent}%`,
-      left: `${-zoomInsetPercent}%`,
-      top: `${-zoomInsetPercent}%`,
-      objectFit: 'cover',
-      objectPosition,
-    } as ImageStyle;
+    return travelWebCoverDezoomImageStyle(webCoverScale, objectPosition);
   }
   return {
     ...StyleSheet.absoluteFillObject,
@@ -5966,7 +5960,7 @@ export function TravelScreen() {
   const travelHeroObjectPosition =
     activeTravelHeroKey === 'default' || activeTravelHeroKey === 'journey'
       ? openingStageFullscreen
-        ? `58% ${TRAVEL_DYNAMIC_HERO_OBJECT_POSITION_Y_FULLSCREEN}`
+        ? `52% ${TRAVEL_DYNAMIC_HERO_OBJECT_POSITION_Y_FULLSCREEN}`
         : (TRAVEL_DYNAMIC_HERO_OBJECT_POSITION[activeTravelHeroKey] ??
             TRAVEL_DYNAMIC_HERO_OBJECT_POSITION.default)
       : (TRAVEL_DYNAMIC_HERO_OBJECT_POSITION[activeTravelHeroKey] ??
@@ -6026,40 +6020,17 @@ export function TravelScreen() {
     [width, openingStageFullscreen]
   );
   const travelHeroImageStyle = useMemo((): ImageStyle[] => {
-    const webCover =
-      Platform.OS === 'web' &&
-      width >= TRAVEL_FLAGSHIP_DESKTOP_ROW_MIN_WIDTH &&
-      !isHubTabletPortraitViewport(width, viewportHeight);
+    const webDezoom = Platform.OS === 'web';
     const zoomScale = openingStageFullscreen
       ? TRAVEL_DYNAMIC_HERO_IMAGE_COVER_SCALE_FULLSCREEN
       : TRAVEL_DYNAMIC_HERO_IMAGE_COVER_SCALE_NORMAL;
-    const zoomOutPercent = webCover ? Math.round((1 / zoomScale) * 1000) / 10 : 100;
-    const zoomInsetPercent = webCover ? Math.round(((zoomOutPercent - 100) / 2) * 10) / 10 : 0;
     return [
       styles.heroCinematicImage,
-      ...(webCover
-        ? [
-            {
-              width: `${zoomOutPercent}%`,
-              height: `${zoomOutPercent}%`,
-              left: `${-zoomInsetPercent}%`,
-              top: `${-zoomInsetPercent}%`,
-              objectFit: 'cover',
-              objectPosition: travelHeroObjectPosition,
-            } as ImageStyle,
-          ]
-        : Platform.OS === 'web'
-          ? [
-              {
-                width: '100%',
-                height: '100%',
-                objectFit: 'cover',
-                objectPosition: travelHeroObjectPosition,
-              } as ImageStyle,
-            ]
-          : []),
+      ...(webDezoom
+        ? [travelWebCoverDezoomImageStyle(zoomScale, travelHeroObjectPosition)]
+        : []),
     ];
-  }, [travelHeroObjectPosition, width, viewportHeight, openingStageFullscreen]);
+  }, [travelHeroObjectPosition, openingStageFullscreen]);
   const travelHeroStageStyle = useMemo(
     () => [
       styles.heroStage,
