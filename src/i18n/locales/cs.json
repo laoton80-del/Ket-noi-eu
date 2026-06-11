@@ -642,7 +642,12 @@
     "railSubtitle": "Travel Lite · průvodce a jazyková pomoc",
     "heroKicker": "TRAVEL LITE",
     "heroCompanion": "VIONA Travel je váš průvodce na cestách.",
-    "heroSub": "Pomoc podle situace a jazyk — ne OTA pokladna.",
+    "heroSub": "Letiště, doprava, tlumočení, bezpečí a místní podpora — včasné rady, ne rezervace za vás.",
+    "heroTrust": {
+      "lite": "Lite připraveno",
+      "demo": "Demo podpora",
+      "preview": "Náhledové nástroje"
+    },
     "quickHelpKicker": "RYCHLÁ POMOC",
     "groupMove": "POHYB",
     "groupStayEat": "UBYTOVÁNÍ A JÍDLO",

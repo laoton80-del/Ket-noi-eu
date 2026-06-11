@@ -54,6 +54,35 @@ export {
   type VionaBackgroundAssetResult,
 } from './vionaBackgroundAssets';
 export {
+  getVionaMicroSceneAsset,
+  getVionaMicroSceneImageSource,
+  listMissingVionaMicroSceneAssets,
+  resolveLocalHubMicroSceneKey,
+  VIONA_LOCAL_MICRO_SCENE_KEYS,
+  VIONA_MICRO_SCENE_FILENAMES,
+  LOCAL_HUB_MICRO_SCENE_KEYS_BY_TEST_ID,
+  vionaMicroSceneTileLayout,
+  type VionaMicroSceneKey,
+  type VionaMicroSceneAssetResult,
+} from './vionaMicroSceneAssets';
+export {
+  getVionaLocalCardArtworkImageSource,
+  shouldUseLocalLuminousMicroSceneArtDirection,
+  VIONA_LOCAL_FULL_CARD_ARTWORK_RENDER_ENABLED,
+  listMissingVionaLocalCardArtworkAssets,
+  resolveLocalHubCardArtworkKey,
+  LOCAL_HUB_CARD_ARTWORK_KEYS_BY_TEST_ID,
+  LOCAL_STATUS_LEGEND_CARD_ARTWORK_KEYS,
+  VIONA_LOCAL_CARD_ARTWORK_KEYS,
+  VIONA_LOCAL_CARD_ARTWORK_FILENAMES,
+  VIONA_LOCAL_CARD_ARTWORK_TIER_BY_KEY,
+  resolveLocalCardArtworkMinHeight,
+  resolveLocalCardArtworkTier,
+  vionaLocalCardArtworkLayout,
+  type VionaLocalCardArtworkKey,
+  type VionaLocalCardArtworkTier,
+} from './vionaLocalCardArtworkAssets';
+export {
   neonGlassCard,
   neonGlassAccentGlow,
   neonGlassAccentInk,

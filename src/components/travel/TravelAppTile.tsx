@@ -619,6 +619,12 @@ export function TravelAppTile({
           {flagshipHovered ? (
             <View pointerEvents="none" style={[StyleSheet.absoluteFillObject, styles.flagshipHoverBrighten]} />
           ) : null}
+          <TravelCardLightingNetwork
+            accent={accent}
+            accentSecondary={accentSecondary}
+            boosted={flagshipHovered}
+            radius={14}
+          />
         </View>
       ) : null}
       <View style={styles.flagshipStack}>
