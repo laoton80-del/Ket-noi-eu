@@ -1,0 +1,29 @@
+{
+  "generatedAt": "2026-06-11T12:03:04.715Z",
+  "shots": [
+    "C:\\KNG\\ket-noi-eu-travel-multi-scene-restore\\docs\\design\\evidence\\travel-dezoom-premium-polish-20260611-1346\\screenshot-1366x768.png",
+    "C:\\KNG\\ket-noi-eu-travel-multi-scene-restore\\docs\\design\\evidence\\travel-dezoom-premium-polish-20260611-1346\\screenshot-1024x768.png",
+    "C:\\KNG\\ket-noi-eu-travel-multi-scene-restore\\docs\\design\\evidence\\travel-dezoom-premium-polish-20260611-1346\\screenshot-768x1024.png",
+    "C:\\KNG\\ket-noi-eu-travel-multi-scene-restore\\docs\\design\\evidence\\travel-dezoom-premium-polish-20260611-1346\\screenshot-390x844.png"
+  ],
+  "tuningSummary": {
+    "TRAVEL_DYNAMIC_HERO_IMAGE_COVER_SCALE_NORMAL": "0.85 -> 0.77",
+    "TRAVEL_DYNAMIC_HERO_IMAGE_COVER_SCALE_FULLSCREEN": "0.815 -> 0.74",
+    "TRAVEL_DYNAMIC_HERO_OBJECT_POSITION_Y_NORMAL": "34% -> 42%",
+    "TRAVEL_FLAGSHIP_CARD_WEB_COVER_SCALE": "new 0.88",
+    "TRAVEL_DESTINATION_LENS_WEB_COVER_SCALE": "new 0.90",
+    "TRAVEL_LOCAL_CONCIERGE_SCENE_BACKGROUND_COVER_SCALE": "new 0.86",
+    "heroObjectPositionX": "64-70% -> 54-58%",
+    "flagshipCardObjectPosition": "relaxed to 56-58% X, 40-44% Y",
+    "destinationLensObjectPosition": "74% 46% -> 62% 48%"
+  },
+  "semanticPreserved": true,
+  "premiumBreathingImproved": true,
+  "noLetterboxing": true,
+  "viewports": [
+    "1366x768",
+    "1024x768",
+    "768x1024",
+    "390x844"
+  ]
+}

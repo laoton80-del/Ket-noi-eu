@@ -1,0 +1,14 @@
+{
+  "TRAVEL_DYNAMIC_HERO_IMAGE_COVER_SCALE_NORMAL": "0.85 -> 0.72",
+  "TRAVEL_DYNAMIC_HERO_IMAGE_COVER_SCALE_FULLSCREEN": "0.815 -> 0.70",
+  "TRAVEL_DYNAMIC_HERO_OBJECT_POSITION_Y_NORMAL": "34% -> 46%",
+  "TRAVEL_DYNAMIC_HERO_OBJECT_POSITION_Y_FULLSCREEN": "31% -> 44%",
+  "TRAVEL_FLAGSHIP_CARD_WEB_COVER_SCALE": "new 0.82",
+  "TRAVEL_DESTINATION_LENS_WEB_COVER_SCALE": "new 0.86",
+  "TRAVEL_LOCAL_CONCIERGE_SCENE_BACKGROUND_COVER_SCALE": "new 0.82",
+  "heroObjectPositionX": "64-70% -> 54-58%",
+  "flagshipCardObjectPosition": "56% 46% (airport/taxi), 54% 46-48% (translation/emergency)",
+  "destinationLensObjectPosition": "74% 46% -> 62% 48%",
+  "assetsChanged": false,
+  "mappingChanged": false
+}
