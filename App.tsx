@@ -298,13 +298,6 @@ const VaultScreenGated = mvpGateByFlag(
 
 const navigationRef = createNavigationContainerRef<RootStackParamList>();
 
-function ReferenceLabStackScreensGate(): ReactElement | null {
-  if (!isReferenceLabsEnabled()) return null;
-  const { ReferenceLabStackScreens } =
-    require('./src/navigation/referenceLabStackScreens') as typeof import('./src/navigation/referenceLabStackScreens');
-  return <ReferenceLabStackScreens Stack={Stack} />;
-}
-
 const rootLinking: LinkingOptions<RootStackParamList> = {
   prefixes: ['/'],
   config: {
@@ -457,7 +450,9 @@ function AppNavigationShell({
               <Stack.Screen name="PersonalHub" component={CaNhanScreen} />
               <Stack.Screen name="LifeOSDashboard" component={LifeOSDashboard} />
               <Stack.Screen name="DashboardB2CPreview" component={DashboardB2CPreviewScreen} />
-              <ReferenceLabStackScreensGate />
+              {isReferenceLabsEnabled()
+                ? require('./src/navigation/referenceLabStackScreens').getReferenceLabStackScreens(Stack)
+                : null}
               <Stack.Screen name="TravelCompanion" component={TravelHubStackScreenGated} />
               <Stack.Screen
                 name="TravelHub"
