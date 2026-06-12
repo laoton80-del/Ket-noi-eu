@@ -1582,19 +1582,69 @@ const TRAVEL_DYNAMIC_HERO_IMAGE_COVER_SCALE_FULLSCREEN = 0.7;
 const TRAVEL_DYNAMIC_HERO_OBJECT_POSITION_Y_NORMAL = '46%';
 const TRAVEL_DYNAMIC_HERO_OBJECT_POSITION_Y_FULLSCREEN = '44%';
 
-/** Web cover dezoom: smaller scale → larger raster → more scene visible (hero desktop-wide only). */
+/** Web cover dezoom: smaller coverScale → larger raster → more scene visible inside heroImageClip. */
 function travelWebCoverDezoomImageStyle(coverScale: number, objectPosition: string): ImageStyle {
   const zoomOutPercent = Math.round((1 / coverScale) * 1000) / 10;
   const zoomInsetPercent = Math.round(((zoomOutPercent - 100) / 2) * 10) / 10;
+  if (Platform.OS === 'web') {
+    return {
+      position: 'absolute',
+      width: `${zoomOutPercent}%`,
+      height: `${zoomOutPercent}%`,
+      left: `${-zoomInsetPercent}%`,
+      top: `${-zoomInsetPercent}%`,
+      margin: 0,
+      padding: 0,
+      objectFit: 'cover',
+      objectPosition,
+    } as ImageStyle;
+  }
   return {
     ...StyleSheet.absoluteFillObject,
     width: `${zoomOutPercent}%`,
     height: `${zoomOutPercent}%`,
     left: `${-zoomInsetPercent}%`,
     top: `${-zoomInsetPercent}%`,
-    objectFit: 'cover',
-    objectPosition,
-  } as ImageStyle;
+  };
+}
+
+function travelHeroLayerImageStyle(
+  heroKey: TravelDynamicHeroKey,
+  objectPosition: string,
+  viewportWidth: number,
+  viewportHeight: number,
+  openingStageFullscreen: boolean
+): ImageStyle[] {
+  const altFraming = isTravelAltMasterHeroKey(heroKey) ? TRAVEL_ALT_MASTER_HERO_FRAMING[heroKey] : null;
+  const defaultDesktopWeb =
+    Platform.OS === 'web' &&
+    (heroKey === 'default' || heroKey === 'journey') &&
+    viewportWidth >= TRAVEL_FLAGSHIP_DESKTOP_ROW_MIN_WIDTH &&
+    !isHubTabletPortraitViewport(viewportWidth, viewportHeight);
+  const altWebCover = Platform.OS === 'web' && altFraming != null;
+  const webCover = altWebCover || defaultDesktopWeb;
+  const zoomScale = altFraming
+    ? openingStageFullscreen
+      ? altFraming.coverScaleFullscreen
+      : altFraming.coverScaleNormal
+    : openingStageFullscreen
+      ? TRAVEL_DYNAMIC_HERO_IMAGE_COVER_SCALE_FULLSCREEN
+      : TRAVEL_DYNAMIC_HERO_IMAGE_COVER_SCALE_NORMAL;
+  if (webCover) {
+    return [travelWebCoverDezoomImageStyle(zoomScale, objectPosition)];
+  }
+  if (Platform.OS === 'web') {
+    return [
+      styles.heroCinematicImage,
+      {
+        width: '100%',
+        height: '100%',
+        objectFit: 'cover',
+        objectPosition,
+      } as ImageStyle,
+    ];
+  }
+  return [styles.heroCinematicImage];
 }
 
 /** Editorial recompose — left-to-center cover layout (wave3b.dynamic-hero-editorial-recompose). */
@@ -3094,20 +3144,20 @@ const TRAVEL_ALT_MASTER_HERO_LOCAL_FOCAL_X = '48%';
 
 const TRAVEL_ALT_MASTER_HERO_FRAMING: Readonly<Record<TravelAltMasterHeroKey, TravelAltMasterHeroFraming>> = {
   interpreter: {
-    coverScaleNormal: 0.5,
-    coverScaleFullscreen: 0.48,
+    coverScaleNormal: 0.44,
+    coverScaleFullscreen: 0.42,
     objectPosition: `${TRAVEL_ALT_MASTER_HERO_LOCAL_FOCAL_X} 44%`,
     objectPositionFullscreen: `${TRAVEL_ALT_MASTER_HERO_LOCAL_FOCAL_X} 42%`,
   },
   rides: {
-    coverScaleNormal: 0.48,
-    coverScaleFullscreen: 0.46,
+    coverScaleNormal: 0.42,
+    coverScaleFullscreen: 0.4,
     objectPosition: `${TRAVEL_ALT_MASTER_HERO_LOCAL_FOCAL_X} 46%`,
     objectPositionFullscreen: `${TRAVEL_ALT_MASTER_HERO_LOCAL_FOCAL_X} 44%`,
   },
   emergencyPolice: {
-    coverScaleNormal: 0.5,
-    coverScaleFullscreen: 0.48,
+    coverScaleNormal: 0.44,
+    coverScaleFullscreen: 0.42,
     objectPosition: `${TRAVEL_ALT_MASTER_HERO_LOCAL_FOCAL_X} 48%`,
     objectPositionFullscreen: `${TRAVEL_ALT_MASTER_HERO_LOCAL_FOCAL_X} 46%`,
   },
@@ -5987,22 +6037,25 @@ export function TravelScreen() {
     [activeTravelHeroKey]
   );
   const defaultTravelHeroSource = useMemo(() => travelDynamicHeroAsset('default'), []);
-  const travelHeroObjectPosition = useMemo((): string => {
+  const travelHeroDefaultObjectPosition = useMemo((): string => {
+    return openingStageFullscreen
+      ? `58% ${TRAVEL_DYNAMIC_HERO_OBJECT_POSITION_Y_FULLSCREEN}`
+      : TRAVEL_DYNAMIC_HERO_OBJECT_POSITION.default;
+  }, [openingStageFullscreen]);
+
+  const travelHeroOverlayObjectPosition = useMemo((): string => {
     if (isTravelAltMasterHeroKey(activeTravelHeroKey)) {
       const framing = TRAVEL_ALT_MASTER_HERO_FRAMING[activeTravelHeroKey];
       return openingStageFullscreen ? framing.objectPositionFullscreen : framing.objectPosition;
     }
     if (activeTravelHeroKey === 'default' || activeTravelHeroKey === 'journey') {
-      return openingStageFullscreen
-        ? `58% ${TRAVEL_DYNAMIC_HERO_OBJECT_POSITION_Y_FULLSCREEN}`
-        : (TRAVEL_DYNAMIC_HERO_OBJECT_POSITION[activeTravelHeroKey] ??
-            TRAVEL_DYNAMIC_HERO_OBJECT_POSITION.default);
+      return travelHeroDefaultObjectPosition;
     }
     return (
       TRAVEL_DYNAMIC_HERO_OBJECT_POSITION[activeTravelHeroKey] ??
       TRAVEL_DYNAMIC_HERO_OBJECT_POSITION.default
     );
-  }, [activeTravelHeroKey, openingStageFullscreen]);
+  }, [activeTravelHeroKey, openingStageFullscreen, travelHeroDefaultObjectPosition]);
   const travelTileLayout = useMemo(() => travelAppTileMetrics(width), [width]);
   const travelFlagshipLayout = useMemo(() => {
     const openingDesktopWeb =
@@ -6057,38 +6110,31 @@ export function TravelScreen() {
     () => travelOpeningGrammarMetrics(width, openingStageFullscreen),
     [width, openingStageFullscreen]
   );
-  const travelHeroImageStyle = useMemo((): ImageStyle[] => {
-    const altFraming = isTravelAltMasterHeroKey(activeTravelHeroKey)
-      ? TRAVEL_ALT_MASTER_HERO_FRAMING[activeTravelHeroKey]
-      : null;
-    const webCover =
-      Platform.OS === 'web' &&
-      (altFraming != null ||
-        (width >= TRAVEL_FLAGSHIP_DESKTOP_ROW_MIN_WIDTH &&
-          !isHubTabletPortraitViewport(width, viewportHeight)));
-    const zoomScale = altFraming
-      ? openingStageFullscreen
-        ? altFraming.coverScaleFullscreen
-        : altFraming.coverScaleNormal
-      : openingStageFullscreen
-        ? TRAVEL_DYNAMIC_HERO_IMAGE_COVER_SCALE_FULLSCREEN
-        : TRAVEL_DYNAMIC_HERO_IMAGE_COVER_SCALE_NORMAL;
-    return [
-      styles.heroCinematicImage,
-      ...(webCover
-        ? [travelWebCoverDezoomImageStyle(zoomScale, travelHeroObjectPosition)]
-        : Platform.OS === 'web'
-          ? [
-              {
-                width: '100%',
-                height: '100%',
-                objectFit: 'cover',
-                objectPosition: travelHeroObjectPosition,
-              } as ImageStyle,
-            ]
-          : []),
-    ];
-  }, [activeTravelHeroKey, travelHeroObjectPosition, width, viewportHeight, openingStageFullscreen]);
+  /** Base/default airport layer — always default framing (accepted hero). */
+  const travelHeroDefaultLayerImageStyle = useMemo(
+    (): ImageStyle[] =>
+      travelHeroLayerImageStyle(
+        'default',
+        travelHeroDefaultObjectPosition,
+        width,
+        viewportHeight,
+        openingStageFullscreen
+      ),
+    [travelHeroDefaultObjectPosition, width, viewportHeight, openingStageFullscreen]
+  );
+
+  /** Active overlay layer — alternate heroes use dedicated framing on this node only. */
+  const travelHeroActiveOverlayImageStyle = useMemo(
+    (): ImageStyle[] =>
+      travelHeroLayerImageStyle(
+        activeTravelHeroKey,
+        travelHeroOverlayObjectPosition,
+        width,
+        viewportHeight,
+        openingStageFullscreen
+      ),
+    [activeTravelHeroKey, travelHeroOverlayObjectPosition, width, viewportHeight, openingStageFullscreen]
+  );
   const travelHeroStageStyle = useMemo(
     () => [
       styles.heroStage,
@@ -6526,18 +6572,28 @@ export function TravelScreen() {
             >
               <View style={styles.heroImageClip} pointerEvents="none">
                 <Image
+                  testID="travel-dynamic-hero-default-image"
                   source={defaultTravelHeroSource}
-                  style={travelHeroImageStyle}
-                  resizeMode="cover"
+                  style={travelHeroDefaultLayerImageStyle}
+                  resizeMode={Platform.OS === 'web' ? undefined : 'cover'}
                   accessibilityIgnoresInvertColors
                 />
                 {activeTravelHeroKey !== 'default' ? (
                   <Animated.View style={[StyleSheet.absoluteFillObject, { opacity: travelHeroFadeAnim }]}>
                     <Image
+                      testID="travel-dynamic-hero-active-overlay-image"
                       source={activeTravelHeroSource}
-                      style={travelHeroImageStyle}
-                      resizeMode="cover"
+                      style={travelHeroActiveOverlayImageStyle}
+                      resizeMode={Platform.OS === 'web' ? undefined : 'cover'}
                       accessibilityIgnoresInvertColors
+                      {...(Platform.OS === 'web'
+                        ? ({
+                            dataSet: {
+                              travelHeroKey: activeTravelHeroKey,
+                              travelHeroLayer: 'active-overlay',
+                            },
+                          } as const)
+                        : null)}
                     />
                   </Animated.View>
                 ) : null}
