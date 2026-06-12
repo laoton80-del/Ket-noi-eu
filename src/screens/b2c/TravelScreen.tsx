@@ -230,11 +230,13 @@ const TRAVEL_DYN_HERO_RIDES_SOURCE = require('../../../assets/viona/dynamic-hero
 const TRAVEL_DYN_HERO_EMERGENCY_CARD = require('../../../assets/viona/dynamic-hero/travel/travel-emergency-police-web-normal-card-62y.png');
 const TRAVEL_DYN_HERO_EMERGENCY_SOURCE = require('../../../assets/viona/dynamic-hero/travel/travel-emergency-police-web-normal-source.png');
 
-/** Location master v2 — 2600×800 premium destination heroes (hero background only; cards unchanged). */
-const TRAVEL_DYN_HERO_AIRPORT_MASTER_V2 = require('../../../assets/viona/dynamic-hero/travel/travel-airport-web-normal-master-v2.png');
-const TRAVEL_DYN_HERO_PRAGUE_MASTER_V2 = require('../../../assets/viona/dynamic-hero/travel/travel-prague-charles-bridge-castle-web-normal-master-v2.png');
-const TRAVEL_DYN_HERO_PARIS_MASTER_V2 = require('../../../assets/viona/dynamic-hero/travel/travel-paris-eiffel-web-normal-master-v2.png');
-const TRAVEL_DYN_HERO_BERLIN_MASTER_V2 = require('../../../assets/viona/dynamic-hero/travel/travel-berlin-city-web-normal-master-v2.png');
+/** Location master v2 — top hero background / active overlay ONLY (never Quick Help cards or lower panels). */
+const TRAVEL_HERO_LOCATION_MASTER_V2_IMAGES = {
+  airport: require('../../../assets/viona/dynamic-hero/travel/travel-airport-web-normal-master-v2.png'),
+  prague: require('../../../assets/viona/dynamic-hero/travel/travel-prague-charles-bridge-castle-web-normal-master-v2.png'),
+  paris: require('../../../assets/viona/dynamic-hero/travel/travel-paris-eiffel-web-normal-master-v2.png'),
+  berlin: require('../../../assets/viona/dynamic-hero/travel/travel-berlin-city-web-normal-master-v2.png'),
+} as const satisfies Readonly<Record<'airport' | 'prague' | 'paris' | 'berlin', ImageSourcePropType>>;
 
 /** Wave3b.8 — dedicated daylight cinematic cards (Experience Zone only; not opening hero). */
 const TRAVEL_DESTINATION_LENS_SCENE = require('../../../assets/viona/travel/viona-travel-destination-lens-cinematic-daylight-v1.png');
@@ -3045,7 +3047,7 @@ const TRAVEL_QUICK_HELP_WEB_SELECTED_SCALE = 1.008;
 
 type TravelFlagshipScenarioId = (typeof TRAVEL_FLAGSHIP_IDS)[number];
 
-/** Travel dynamic hero + flagship card artwork (Travel-only). */
+/** Travel dynamic hero keys — top hero + utility hover context (legacy scene set). */
 type TravelDynamicHeroKey =
   | 'default'
   | 'journey'
@@ -3058,25 +3060,29 @@ type TravelDynamicHeroKey =
   | 'localGuide'
   | 'emergencyPolice';
 
+/** Legacy dynamic-hero scenes — utility hovers and non-location contexts (not location master v2). */
 const TRAVEL_DYNAMIC_HERO_ASSETS: Readonly<Record<TravelDynamicHeroKey, ImageSourcePropType>> = {
-  default: TRAVEL_DYN_HERO_AIRPORT_MASTER_V2,
-  journey: TRAVEL_DYN_HERO_AIRPORT_MASTER_V2,
-  rides: TRAVEL_DYN_HERO_PARIS_MASTER_V2,
-  transit: TRAVEL_DYN_HERO_AIRPORT_MASTER_V2,
-  family: TRAVEL_DYN_HERO_AIRPORT_MASTER_V2,
-  global: TRAVEL_DYN_HERO_AIRPORT_MASTER_V2,
-  interpreter: TRAVEL_DYN_HERO_PRAGUE_MASTER_V2,
-  cityConcierge: TRAVEL_DYN_HERO_AIRPORT_MASTER_V2,
-  localGuide: TRAVEL_DYN_HERO_PRAGUE_MASTER_V2,
-  emergencyPolice: TRAVEL_DYN_HERO_BERLIN_MASTER_V2,
+  default: TRAVEL_DYN_HERO_AIRPORT_MASTER,
+  journey: TRAVEL_DYN_HERO_AIRPORT_MASTER,
+  rides: TRAVEL_DYN_HERO_RIDES_SOURCE,
+  transit: TRAVEL_DYN_HERO_AIRPORT_MASTER,
+  family: TRAVEL_DYN_HERO_AIRPORT_MASTER,
+  global: TRAVEL_DYN_HERO_AIRPORT_MASTER,
+  interpreter: TRAVEL_DYN_HERO_TRANSLATION_SOURCE,
+  cityConcierge: TRAVEL_DYN_HERO_AIRPORT_MASTER,
+  localGuide: TRAVEL_DYN_HERO_TRANSLATION_SOURCE,
+  emergencyPolice: TRAVEL_DYN_HERO_EMERGENCY_SOURCE,
 };
 
-const TRAVEL_FLAGSHIP_CARD_ASSETS: Readonly<Record<TravelFlagshipScenarioId, ImageSourcePropType>> = {
+/** Quick Help card tile artwork only — semantic card images, never location master v2. */
+const TRAVEL_QUICK_HELP_CARD_IMAGES: Readonly<Record<TravelFlagshipScenarioId, ImageSourcePropType>> = {
   airport: TRAVEL_DYN_HERO_AIRPORT_CARD,
   translation: TRAVEL_DYN_HERO_TRANSLATION_CARD,
   taxi: TRAVEL_DYN_HERO_RIDES_CARD,
   emergency: TRAVEL_DYN_HERO_EMERGENCY_CARD,
 };
+
+const TRAVEL_FLAGSHIP_CARD_ASSETS = TRAVEL_QUICK_HELP_CARD_IMAGES;
 
 const TRAVEL_FLAGSHIP_DYNAMIC_HERO_KEY: Readonly<Record<TravelFlagshipScenarioId, TravelDynamicHeroKey>> = {
   airport: 'journey',
@@ -3586,8 +3592,26 @@ function TravelQuickHelpFlagshipSemanticVeil({
   );
 }
 
-function travelDynamicHeroAsset(key: TravelDynamicHeroKey): ImageSourcePropType {
+/** Top-hero location master v2 — only Quick Help flagship city scenes (not utility/transit keys). */
+const TRAVEL_HERO_LOCATION_MASTER_V2_BY_KEY: Readonly<
+  Partial<Record<TravelDynamicHeroKey, (typeof TRAVEL_HERO_LOCATION_MASTER_V2_IMAGES)[keyof typeof TRAVEL_HERO_LOCATION_MASTER_V2_IMAGES]>>
+> = {
+  default: TRAVEL_HERO_LOCATION_MASTER_V2_IMAGES.airport,
+  journey: TRAVEL_HERO_LOCATION_MASTER_V2_IMAGES.airport,
+  interpreter: TRAVEL_HERO_LOCATION_MASTER_V2_IMAGES.prague,
+  localGuide: TRAVEL_HERO_LOCATION_MASTER_V2_IMAGES.prague,
+  rides: TRAVEL_HERO_LOCATION_MASTER_V2_IMAGES.paris,
+  emergencyPolice: TRAVEL_HERO_LOCATION_MASTER_V2_IMAGES.berlin,
+};
+
+function travelTopHeroImageSource(key: TravelDynamicHeroKey): ImageSourcePropType {
+  const locationMaster = TRAVEL_HERO_LOCATION_MASTER_V2_BY_KEY[key];
+  if (locationMaster != null) return locationMaster;
   return TRAVEL_DYNAMIC_HERO_ASSETS[key] ?? TRAVEL_DYNAMIC_HERO_ASSETS.default;
+}
+
+function travelDynamicHeroAsset(key: TravelDynamicHeroKey): ImageSourcePropType {
+  return travelTopHeroImageSource(key);
 }
 
 function travelFlagshipCardWebImageStyle(scenarioId: TravelFlagshipScenarioId): ImageStyle | undefined {
@@ -6106,7 +6130,10 @@ export function TravelScreen() {
     () => travelDynamicHeroAsset(activeTravelHeroKey),
     [activeTravelHeroKey]
   );
-  const defaultTravelHeroSource = useMemo(() => travelDynamicHeroAsset('default'), []);
+  const defaultTravelHeroSource = useMemo(
+    () => TRAVEL_HERO_LOCATION_MASTER_V2_IMAGES.airport,
+    []
+  );
   const travelAltMasterHeroOverlayActive = isTravelAltMasterHeroKey(activeTravelHeroKey);
   const travelHeroDefaultObjectPosition = useMemo((): string => {
     return openingStageFullscreen
@@ -6615,13 +6642,15 @@ export function TravelScreen() {
                 : null)}
             >
               <View style={styles.heroImageClip} pointerEvents="none">
-                <Image
-                  testID="travel-dynamic-hero-default-image"
-                  source={defaultTravelHeroSource}
-                  style={travelHeroDefaultLayerImageStyle}
-                  resizeMode={Platform.OS === 'web' ? undefined : 'cover'}
-                  accessibilityIgnoresInvertColors
-                />
+                {!travelAltMasterHeroOverlayActive ? (
+                  <Image
+                    testID="travel-dynamic-hero-default-image"
+                    source={defaultTravelHeroSource}
+                    style={travelHeroDefaultLayerImageStyle}
+                    resizeMode={Platform.OS === 'web' ? undefined : 'cover'}
+                    accessibilityIgnoresInvertColors
+                  />
+                ) : null}
                 {travelAltMasterHeroOverlayActive && travelHeroActiveOverlayLayer != null ? (
                   <Animated.View style={[StyleSheet.absoluteFillObject, { opacity: travelHeroFadeAnim }]}>
                     <Image
