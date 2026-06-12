@@ -1,0 +1,40 @@
+{
+  "generatedAt": "2026-06-12T15:55:46.163Z",
+  "port": 8291,
+  "noAppWorkaround": true,
+  "shots": [
+    "airport-1366",
+    "screenshot-travel-prague-1366x768.png",
+    "screenshot-travel-paris-1366x768.png",
+    "screenshot-travel-berlin-1366x768.png",
+    "1024x768",
+    "768x1024",
+    "390x844"
+  ],
+  "proofs": [
+    {
+      "cardSrcDistinct": 4,
+      "cardSrcs": {
+        "airport": "http://localhost:8291/assets/?unstable_path=.%2Fassets%2Fviona%2Fdynamic-hero%2Ftravel/travel-airport-web-normal-card-62y.png",
+        "translation": "http://localhost:8291/assets/?unstable_path=.%2Fassets%2Fviona%2Fdynamic-hero%2Ftravel/travel-translation-assist-web-normal-card-62y.png",
+        "taxi": "http://localhost:8291/assets/?unstable_path=.%2Fassets%2Fviona%2Fdynamic-hero%2Ftravel/travel-rides-assist-web-normal-card-62y.png",
+        "emergency": "http://localhost:8291/assets/?unstable_path=.%2Fassets%2Fviona%2Fdynamic-hero%2Ftravel/travel-emergency-police-web-normal-card-62y.png"
+      }
+    },
+    {
+      "route": "/home",
+      "textLen": 1006,
+      "refLabErr": false
+    },
+    {
+      "route": "/local",
+      "textLen": 1604,
+      "refLabErr": false
+    },
+    {
+      "route": "/ai",
+      "textLen": 994,
+      "refLabErr": false
+    }
+  ]
+}
