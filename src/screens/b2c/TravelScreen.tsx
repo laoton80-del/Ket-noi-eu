@@ -220,15 +220,31 @@ function travelLocalDiscoveryAccentColors(accent: TravelLocalDiscoveryCategoryAc
   }
 }
 
+/** Operator-approved dynamic-hero Travel lane (main repo source of truth). */
+const TRAVEL_DYN_HERO_AIRPORT_MASTER = require('../../../assets/viona/dynamic-hero/travel/travel-airport-web-normal-master-62h.png');
+const TRAVEL_DYN_HERO_AIRPORT_CARD = require('../../../assets/viona/dynamic-hero/travel/travel-airport-web-normal-card-62y.png');
+const TRAVEL_DYN_HERO_TRANSLATION_CARD = require('../../../assets/viona/dynamic-hero/travel/travel-translation-assist-web-normal-card-62y.png');
+const TRAVEL_DYN_HERO_TRANSLATION_SOURCE = require('../../../assets/viona/dynamic-hero/travel/travel-translation-assist-web-normal-source.png');
+const TRAVEL_DYN_HERO_RIDES_CARD = require('../../../assets/viona/dynamic-hero/travel/travel-rides-assist-web-normal-card-62y.png');
+const TRAVEL_DYN_HERO_RIDES_SOURCE = require('../../../assets/viona/dynamic-hero/travel/travel-rides-assist-web-normal-source.png');
+const TRAVEL_DYN_HERO_EMERGENCY_CARD = require('../../../assets/viona/dynamic-hero/travel/travel-emergency-police-web-normal-card-62y.png');
+const TRAVEL_DYN_HERO_EMERGENCY_SOURCE = require('../../../assets/viona/dynamic-hero/travel/travel-emergency-police-web-normal-source.png');
+
+/** Location master v2 — top hero background / active overlay ONLY (never Quick Help cards or lower panels). */
+const TRAVEL_HERO_LOCATION_MASTER_V2_IMAGES = {
+  airport: require('../../../assets/viona/dynamic-hero/travel/travel-airport-web-normal-master-v2.png'),
+  prague: require('../../../assets/viona/dynamic-hero/travel/travel-prague-charles-bridge-castle-web-normal-master-v2.png'),
+  paris: require('../../../assets/viona/dynamic-hero/travel/travel-paris-eiffel-web-normal-master-v2.png'),
+  berlin: require('../../../assets/viona/dynamic-hero/travel/travel-berlin-city-web-normal-master-v2.png'),
+} as const satisfies Readonly<Record<'airport' | 'prague' | 'paris' | 'berlin', ImageSourcePropType>>;
+
 /** Wave3b.8 — dedicated daylight cinematic cards (Experience Zone only; not opening hero). */
-// Fallback until Travel scene assets are operator-approved and tracked.
-const TRAVEL_TRACKED_HERO_FALLBACK = require('../../../assets/viona/travel/viona-travel-hero-default-1600x520.png');
-const TRAVEL_DESTINATION_LENS_SCENE = TRAVEL_TRACKED_HERO_FALLBACK;
-const TRAVEL_LOCAL_CONCIERGE_SCENE = TRAVEL_TRACKED_HERO_FALLBACK;
+const TRAVEL_DESTINATION_LENS_SCENE = require('../../../assets/viona/travel/viona-travel-destination-lens-cinematic-daylight-v1.png');
+const TRAVEL_LOCAL_CONCIERGE_SCENE = TRAVEL_DYN_HERO_AIRPORT_MASTER;
 /** Pack 27/29 — Situation section premium light-network frame background (.png). */
-const TRAVEL_SITUATION_NETWORK_BG_PREMIUM = TRAVEL_TRACKED_HERO_FALLBACK;
+const TRAVEL_SITUATION_NETWORK_BG_PREMIUM = require('../../../assets/viona/travel/viona-travel-situation-network-bg-premium-v1.png');
 const TRAVEL_SITUATION_SECTION_BORDER_RADIUS_PX = 11;
-const TRAVEL_DESTINATION_LENS_SCENE_OBJECT_POSITION = '74% 46%';
+const TRAVEL_DESTINATION_LENS_SCENE_OBJECT_POSITION = '62% 48%';
 
 /** Pack 6 — deep cinematic band without over-dominating panel (300–340px desktop). */
 function travelLocalConciergeSceneShellHeight(
@@ -272,15 +288,15 @@ function travelLocalConciergeSceneObjectPosition(
 ): string {
   const portrait = viewportHeight > viewportWidth;
   if (openingStageFullscreen && viewportWidth >= 1024) {
-    return portrait ? '54% 45%' : '60% 45%';
+    return portrait ? '50% 46%' : '52% 46%';
   }
   if (viewportWidth >= 1024) {
-    return portrait ? '52% 45%' : '58% 45%';
+    return portrait ? '50% 46%' : '52% 46%';
   }
   if (viewportWidth >= 768) {
-    return portrait ? '50% 45%' : '56% 45%';
+    return portrait ? '50% 46%' : '52% 46%';
   }
-  return portrait ? '50% 45%' : '52% 45%';
+  return portrait ? '50% 46%' : '52% 46%';
 }
 
 function travelLocalConciergeMapShellHeight(
@@ -1568,17 +1584,128 @@ const TRAVEL_OPENING_STAGE_HERO_CARD_SHELL_SLACK_PX = 78;
 const TRAVEL_OPENING_STAGE_FULLSCREEN_HERO_CARD_SHELL_SLACK_PX = 58;
 /** Pack 9 — opening lock gaps (Travel-only; display gap may add air bonus). */
 const TRAVEL_OPENING_STAGE_NORMAL_WEB_HERO_TO_CARD_LOCK_GAP_PX = 4;
-/** Pack 7–11 — web cover zoom-out so shorter hero keeps cinematic scene. */
-/** Pack 23 — slightly more zoom-out to reveal traveler lower body. */
-/** Pack 28 — further zoom-out for airy cinematic crop. */
-const TRAVEL_DYNAMIC_HERO_IMAGE_COVER_SCALE_NORMAL = 0.85;
-/** Pack 36 — fullscreen zoom-out for more open scene (normal scale unchanged). */
-const TRAVEL_DYNAMIC_HERO_IMAGE_COVER_SCALE_FULLSCREEN = 0.815;
-/** Pack 23 — hero crop anchor (lower Y = more legs/body visible). */
-/** Pack 28 — lower anchor for more body/legs in frame. */
-const TRAVEL_DYNAMIC_HERO_OBJECT_POSITION_Y_NORMAL = '34%';
-/** Pack 36 — lower anchor shows more body/scene in fullscreen only. */
-const TRAVEL_DYNAMIC_HERO_OBJECT_POSITION_Y_FULLSCREEN = '31%';
+/** Location master v2 — 2600×800 matches audited ~3.25:1 clip; native cover without dezoom. */
+const TRAVEL_DYNAMIC_HERO_IMAGE_COVER_SCALE_NORMAL = 1;
+const TRAVEL_DYNAMIC_HERO_IMAGE_COVER_SCALE_FULLSCREEN = 1;
+const TRAVEL_DYNAMIC_HERO_OBJECT_POSITION_Y_NORMAL = '46%';
+const TRAVEL_DYNAMIC_HERO_OBJECT_POSITION_Y_FULLSCREEN = '44%';
+
+/** Web cover dezoom: smaller coverScale → larger raster → more scene visible inside heroImageClip. */
+function travelWebCoverDezoomImageStyle(
+  coverScale: number,
+  objectPosition: string,
+  nudgeXPercent = 0,
+  nudgeYPercent = 0
+): ImageStyle {
+  const zoomOutPercent = Math.round((1 / coverScale) * 1000) / 10;
+  const zoomInsetPercent = Math.round(((zoomOutPercent - 100) / 2) * 10) / 10;
+  const leftPercent = -zoomInsetPercent + nudgeXPercent;
+  const topPercent = -zoomInsetPercent + nudgeYPercent;
+  if (Platform.OS === 'web') {
+    return {
+      position: 'absolute',
+      width: `${zoomOutPercent}%`,
+      height: `${zoomOutPercent}%`,
+      left: `${leftPercent}%`,
+      top: `${topPercent}%`,
+      margin: 0,
+      padding: 0,
+      objectFit: 'cover',
+      objectPosition,
+    } as ImageStyle;
+  }
+  return {
+    ...StyleSheet.absoluteFillObject,
+    width: `${zoomOutPercent}%`,
+    height: `${zoomOutPercent}%`,
+    left: `${leftPercent}%`,
+    top: `${topPercent}%`,
+  };
+}
+
+function travelHeroLayerImageStyle(
+  objectPosition: string,
+  viewportWidth: number,
+  viewportHeight: number,
+  openingStageFullscreen: boolean
+): ImageStyle[] {
+  const defaultDesktopWeb =
+    Platform.OS === 'web' &&
+    viewportWidth >= TRAVEL_FLAGSHIP_DESKTOP_ROW_MIN_WIDTH &&
+    !isHubTabletPortraitViewport(viewportWidth, viewportHeight);
+  const zoomScale = openingStageFullscreen
+    ? TRAVEL_DYNAMIC_HERO_IMAGE_COVER_SCALE_FULLSCREEN
+    : TRAVEL_DYNAMIC_HERO_IMAGE_COVER_SCALE_NORMAL;
+  if (defaultDesktopWeb) {
+    return [travelWebCoverDezoomImageStyle(zoomScale, objectPosition)];
+  }
+  if (Platform.OS === 'web') {
+    return [
+      styles.heroCinematicImage,
+      {
+        width: '100%',
+        height: '100%',
+        objectFit: 'cover',
+        objectPosition,
+      } as ImageStyle,
+    ];
+  }
+  return [styles.heroCinematicImage];
+}
+
+type TravelAltHeroArtDirectedLayer = Readonly<{
+  imageStyles: ImageStyle[];
+}>;
+
+/** Art-directed alternate master heroes — cover dezoom + focal nudge on the active overlay layer only. */
+function travelAltHeroArtDirectedLayer(
+  artDirection: TravelAltMasterHeroArtDirection,
+  objectPosition: string,
+  viewportWidth: number,
+  viewportHeight: number,
+  openingStageFullscreen: boolean
+): TravelAltHeroArtDirectedLayer {
+  const coverScale = openingStageFullscreen
+    ? artDirection.coverScaleFullscreen
+    : artDirection.coverScaleNormal;
+  const desktopWeb =
+    Platform.OS === 'web' &&
+    viewportWidth >= TRAVEL_FLAGSHIP_DESKTOP_ROW_MIN_WIDTH &&
+    !isHubTabletPortraitViewport(viewportWidth, viewportHeight);
+
+  if (desktopWeb) {
+    return {
+      imageStyles: [
+        travelWebCoverDezoomImageStyle(
+          coverScale,
+          objectPosition,
+          artDirection.translateXPercent,
+          artDirection.translateYPercent
+        ),
+      ],
+    };
+  }
+
+  if (Platform.OS === 'web') {
+    const zoomOutPercent = Math.round((1 / coverScale) * 1000) / 10;
+    const zoomInsetPercent = Math.round(((zoomOutPercent - 100) / 2) * 10) / 10;
+    return {
+      imageStyles: [
+        {
+          position: 'absolute',
+          width: `${zoomOutPercent}%`,
+          height: `${zoomOutPercent}%`,
+          left: `${-zoomInsetPercent + artDirection.translateXPercent}%`,
+          top: `${-zoomInsetPercent + artDirection.translateYPercent}%`,
+          objectFit: 'cover',
+          objectPosition,
+        } as ImageStyle,
+      ],
+    };
+  }
+
+  return { imageStyles: [styles.heroCinematicImage] };
+}
 
 /** Editorial recompose — left-to-center cover layout (wave3b.dynamic-hero-editorial-recompose). */
 const TRAVEL_HERO_LARGE_DESKTOP_MIN_WIDTH = 1366;
@@ -2918,37 +3045,60 @@ const TRAVEL_QUICK_HELP_WEB_SELECTED_SCALE = 1.008;
 
 type TravelFlagshipScenarioId = (typeof TRAVEL_FLAGSHIP_IDS)[number];
 
-/** Travel dynamic hero + flagship card artwork (Travel-only). */
+/** Travel dynamic hero keys — top hero + utility hover context (legacy scene set). */
 type TravelDynamicHeroKey =
   | 'default'
   | 'journey'
+  | 'rides'
   | 'transit'
   | 'family'
   | 'global'
   | 'interpreter'
+  | 'cityConcierge'
+  | 'localGuide'
   | 'emergencyPolice';
 
+/** Legacy dynamic-hero scenes — utility hovers and non-location contexts (not location master v2). */
 const TRAVEL_DYNAMIC_HERO_ASSETS: Readonly<Record<TravelDynamicHeroKey, ImageSourcePropType>> = {
-  default: TRAVEL_TRACKED_HERO_FALLBACK,
-  journey: TRAVEL_TRACKED_HERO_FALLBACK,
-  transit: TRAVEL_TRACKED_HERO_FALLBACK,
-  family: TRAVEL_TRACKED_HERO_FALLBACK,
-  global: TRAVEL_TRACKED_HERO_FALLBACK,
-  interpreter: TRAVEL_TRACKED_HERO_FALLBACK,
-  emergencyPolice: TRAVEL_TRACKED_HERO_FALLBACK,
+  default: TRAVEL_DYN_HERO_AIRPORT_MASTER,
+  journey: TRAVEL_DYN_HERO_AIRPORT_MASTER,
+  rides: TRAVEL_DYN_HERO_RIDES_SOURCE,
+  transit: TRAVEL_DYN_HERO_AIRPORT_MASTER,
+  family: TRAVEL_DYN_HERO_AIRPORT_MASTER,
+  global: TRAVEL_DYN_HERO_AIRPORT_MASTER,
+  interpreter: TRAVEL_DYN_HERO_TRANSLATION_SOURCE,
+  cityConcierge: TRAVEL_DYN_HERO_AIRPORT_MASTER,
+  localGuide: TRAVEL_DYN_HERO_TRANSLATION_SOURCE,
+  emergencyPolice: TRAVEL_DYN_HERO_EMERGENCY_SOURCE,
 };
 
-const TRAVEL_FLAGSHIP_CARD_ASSETS: Readonly<Record<TravelFlagshipScenarioId, ImageSourcePropType>> = {
-  airport: TRAVEL_TRACKED_HERO_FALLBACK,
-  translation: TRAVEL_TRACKED_HERO_FALLBACK,
-  taxi: TRAVEL_TRACKED_HERO_FALLBACK,
-  emergency: TRAVEL_TRACKED_HERO_FALLBACK,
+/** Quick Help card tile artwork only — semantic card images, never location master v2. */
+const TRAVEL_QUICK_HELP_CARD_IMAGES: Readonly<Record<TravelFlagshipScenarioId, ImageSourcePropType>> = {
+  airport: TRAVEL_DYN_HERO_AIRPORT_CARD,
+  translation: TRAVEL_DYN_HERO_TRANSLATION_CARD,
+  taxi: TRAVEL_DYN_HERO_RIDES_CARD,
+  emergency: TRAVEL_DYN_HERO_EMERGENCY_CARD,
 };
+
+const TRAVEL_FLAGSHIP_CARD_ASSETS = TRAVEL_QUICK_HELP_CARD_IMAGES;
 
 const TRAVEL_FLAGSHIP_DYNAMIC_HERO_KEY: Readonly<Record<TravelFlagshipScenarioId, TravelDynamicHeroKey>> = {
   airport: 'journey',
   translation: 'interpreter',
-  taxi: 'transit',
+  taxi: 'rides',
+  emergency: 'emergencyPolice',
+};
+
+/** Situation utility hover → dynamic hero (approved scene set; glass pills stay icon-only). */
+const TRAVEL_SCENARIO_DYNAMIC_HERO_KEY: Readonly<Partial<Record<TravelScenarioId, TravelDynamicHeroKey>>> = {
+  airport: 'journey',
+  taxi: 'rides',
+  transit: 'transit',
+  hotel: 'family',
+  restaurant: 'cityConcierge',
+  shopping: 'global',
+  hospital: 'journey',
+  translation: 'interpreter',
   emergency: 'emergencyPolice',
 };
 
@@ -2990,7 +3140,7 @@ function travelHeroQuickHelpAccentStageOverlayStyle(
     zIndex: 7,
     ...(Platform.OS === 'web'
       ? ({
-          boxShadow: `inset 0 0 36px rgba(${r}, ${g}, ${b}, 0.14), 0 0 28px rgba(${r}, ${g}, ${b}, 0.24)`,
+          boxShadow: `0 0 18px rgba(${r}, ${g}, ${b}, 0.12)`,
           pointerEvents: 'none',
           transition: 'box-shadow 220ms ease-out, border-color 220ms ease-out',
         } as ViewStyle)
@@ -3012,10 +3162,10 @@ function travelHeroQuickHelpAccentNetworkBoost(
   const [r, g, b] = material.glowRgb;
   const [br, bg, bb] = material.borderRgb;
   return {
-    routeArcPrimary: ['transparent', `rgba(${r}, ${g}, ${b}, 0.18)`, 'transparent'],
-    routeArcSecondary: ['transparent', `rgba(${br}, ${bg}, ${bb}, 0.12)`, 'transparent'],
-    bottomHandoff: ['transparent', `rgba(${r}, ${g}, ${b}, 0.14)`, 'rgba(4, 8, 16, 0.28)'],
-    subjectGlow: ['transparent', `rgba(${r}, ${g}, ${b}, 0.08)`, 'transparent'],
+    routeArcPrimary: ['transparent', `rgba(${r}, ${g}, ${b}, 0.06)`, 'transparent'],
+    routeArcSecondary: ['transparent', `rgba(${br}, ${bg}, ${bb}, 0.04)`, 'transparent'],
+    bottomHandoff: ['transparent', `rgba(${r}, ${g}, ${b}, 0.05)`, 'rgba(4, 8, 16, 0.22)'],
+    subjectGlow: ['transparent', `rgba(${r}, ${g}, ${b}, 0.02)`, 'transparent'],
   };
 }
 
@@ -3025,20 +3175,166 @@ function travelQuickHelpHeroAccentRgb(contextId: TravelQuickHelpHeroContextId): 
 }
 
 const TRAVEL_DYNAMIC_HERO_OBJECT_POSITION: Readonly<Record<TravelDynamicHeroKey, string>> = {
-  default: `64% ${TRAVEL_DYNAMIC_HERO_OBJECT_POSITION_Y_NORMAL}`,
-  journey: `64% ${TRAVEL_DYNAMIC_HERO_OBJECT_POSITION_Y_NORMAL}`,
-  transit: '68% 36%',
-  family: '56% 36%',
-  global: '70% 34%',
-  interpreter: '60% 32%',
-  emergencyPolice: '62% 36%',
+  default: `58% ${TRAVEL_DYNAMIC_HERO_OBJECT_POSITION_Y_NORMAL}`,
+  journey: `58% ${TRAVEL_DYNAMIC_HERO_OBJECT_POSITION_Y_NORMAL}`,
+  rides: `54% ${TRAVEL_DYNAMIC_HERO_OBJECT_POSITION_Y_NORMAL}`,
+  transit: `56% ${TRAVEL_DYNAMIC_HERO_OBJECT_POSITION_Y_NORMAL}`,
+  family: `54% ${TRAVEL_DYNAMIC_HERO_OBJECT_POSITION_Y_NORMAL}`,
+  global: `56% ${TRAVEL_DYNAMIC_HERO_OBJECT_POSITION_Y_NORMAL}`,
+  interpreter: `56% ${TRAVEL_DYNAMIC_HERO_OBJECT_POSITION_Y_NORMAL}`,
+  cityConcierge: `54% ${TRAVEL_DYNAMIC_HERO_OBJECT_POSITION_Y_NORMAL}`,
+  localGuide: `56% ${TRAVEL_DYNAMIC_HERO_OBJECT_POSITION_Y_NORMAL}`,
+  emergencyPolice: `56% ${TRAVEL_DYNAMIC_HERO_OBJECT_POSITION_Y_NORMAL}`,
 };
 
+/** Location master v2 — responsive hero crop tiers (top hero only; cards unchanged). */
+type TravelLocationMasterV2Id = 'airport' | 'prague' | 'paris' | 'berlin';
+
+type TravelLocationMasterV2CropTier =
+  | 'mobilePortrait'
+  | 'tabletPortrait'
+  | 'tabletLandscape'
+  | 'desktop'
+  | 'largeDesktop'
+  | 'fullscreen';
+
+type TravelLocationMasterV2CropProfile = Readonly<Record<TravelLocationMasterV2CropTier, string>>;
+
+const TRAVEL_LOCATION_MASTER_V2_HERO_CROP: Readonly<
+  Record<TravelLocationMasterV2Id, TravelLocationMasterV2CropProfile>
+> = {
+  airport: {
+    mobilePortrait: '82% 40%',
+    tabletPortrait: '72% 43%',
+    tabletLandscape: '66% 44%',
+    desktop: '58% 46%',
+    largeDesktop: '58% 46%',
+    fullscreen: '58% 44%',
+  },
+  prague: {
+    mobilePortrait: '64% 48%',
+    tabletPortrait: '62% 50%',
+    tabletLandscape: '60% 50%',
+    desktop: '58% 50%',
+    largeDesktop: '58% 50%',
+    fullscreen: '58% 48%',
+  },
+  paris: {
+    mobilePortrait: '70% 48%',
+    tabletPortrait: '66% 50%',
+    tabletLandscape: '62% 50%',
+    desktop: '60% 50%',
+    largeDesktop: '60% 50%',
+    fullscreen: '60% 48%',
+  },
+  berlin: {
+    mobilePortrait: '68% 48%',
+    tabletPortrait: '64% 50%',
+    tabletLandscape: '60% 50%',
+    desktop: '58% 50%',
+    largeDesktop: '58% 50%',
+    fullscreen: '58% 48%',
+  },
+};
+
+function travelLocationMasterV2CropTier(
+  viewportWidth: number,
+  viewportHeight: number,
+  openingStageFullscreen: boolean
+): TravelLocationMasterV2CropTier {
+  if (openingStageFullscreen) return 'fullscreen';
+  if (viewportWidth < 768) return 'mobilePortrait';
+  if (isHubTabletPortraitViewport(viewportWidth, viewportHeight)) return 'tabletPortrait';
+  if (viewportWidth < TRAVEL_FLAGSHIP_DESKTOP_ROW_MIN_WIDTH) return 'tabletLandscape';
+  if (viewportWidth >= TRAVEL_HERO_LARGE_DESKTOP_MIN_WIDTH) return 'largeDesktop';
+  return 'desktop';
+}
+
+function travelLocationMasterV2HeroObjectPosition(
+  locationId: TravelLocationMasterV2Id,
+  viewportWidth: number,
+  viewportHeight: number,
+  openingStageFullscreen: boolean
+): string {
+  const tier = travelLocationMasterV2CropTier(viewportWidth, viewportHeight, openingStageFullscreen);
+  return TRAVEL_LOCATION_MASTER_V2_HERO_CROP[locationId][tier];
+}
+
+function travelLocationMasterV2IdForAltHeroKey(key: TravelAltMasterHeroKey): TravelLocationMasterV2Id {
+  if (key === 'interpreter') return 'prague';
+  if (key === 'rides') return 'paris';
+  return 'berlin';
+}
+
+/**
+ * Location master v2 overlays — Prague / Paris / Berlin on active layer (2600×800 native cover).
+ * Translation → Prague, rides → Paris, emergency → Berlin; default/journey stays airport v2 base.
+ */
+const TRAVEL_ALT_MASTER_HERO_KEYS = ['interpreter', 'rides', 'emergencyPolice'] as const satisfies readonly TravelDynamicHeroKey[];
+
+type TravelAltMasterHeroKey = (typeof TRAVEL_ALT_MASTER_HERO_KEYS)[number];
+
+type TravelAltMasterHeroArtDirection = Readonly<{
+  coverScaleNormal: number;
+  coverScaleFullscreen: number;
+  objectPosition: string;
+  objectPositionFullscreen: string;
+  translateXPercent: number;
+  translateYPercent: number;
+  wrapperScale: number;
+}>;
+
+const TRAVEL_ALT_MASTER_HERO_ART_DIRECTION: Readonly<
+  Record<TravelAltMasterHeroKey, TravelAltMasterHeroArtDirection>
+> = {
+  interpreter: {
+    coverScaleNormal: 1,
+    coverScaleFullscreen: 1,
+    objectPosition: '58% 50%',
+    objectPositionFullscreen: '58% 48%',
+    translateXPercent: 0,
+    translateYPercent: 0,
+    wrapperScale: 1,
+  },
+  rides: {
+    coverScaleNormal: 1,
+    coverScaleFullscreen: 1,
+    objectPosition: '60% 50%',
+    objectPositionFullscreen: '60% 48%',
+    translateXPercent: 0,
+    translateYPercent: 0,
+    wrapperScale: 1,
+  },
+  emergencyPolice: {
+    coverScaleNormal: 1,
+    coverScaleFullscreen: 1,
+    objectPosition: '58% 50%',
+    objectPositionFullscreen: '58% 48%',
+    translateXPercent: 0,
+    translateYPercent: 0,
+    wrapperScale: 1,
+  },
+};
+
+/** Local Bright left text scrim — readability only; does not veil the full hero image. */
+const TRAVEL_ALT_MASTER_HERO_LEFT_TEXT_SCRIM_COLORS = [
+  'rgba(2, 10, 16, 0.58)',
+  'rgba(2, 10, 16, 0.34)',
+  'rgba(2, 10, 16, 0.10)',
+  'rgba(2, 10, 16, 0)',
+] as const;
+
+const TRAVEL_ALT_MASTER_HERO_LEFT_TEXT_SCRIM_LOCATIONS = [0, 0.38, 0.62, 1] as const;
+
+function isTravelAltMasterHeroKey(key: TravelDynamicHeroKey): key is TravelAltMasterHeroKey {
+  return (TRAVEL_ALT_MASTER_HERO_KEYS as readonly string[]).includes(key);
+}
+
 const TRAVEL_FLAGSHIP_CARD_OBJECT_POSITION: Readonly<Record<TravelFlagshipScenarioId, string>> = {
-  airport: '66% 38%',
-  translation: '62% 36%',
-  taxi: '70% 40%',
-  emergency: '64% 42%',
+  airport: '56% 48%',
+  translation: '56% 48%',
+  taxi: '54% 48%',
+  emergency: '56% 46%',
 };
 
 /** Pack 14 — Quick Help flagship semantic accents (hard-visible rims; Situation palette separate). */
@@ -3316,33 +3612,35 @@ function TravelQuickHelpFlagshipSemanticVeil({
   openingStageFullscreen?: boolean;
 }>): ReactElement {
   const material = TRAVEL_QUICK_HELP_FLAGSHIP_MATERIAL[id];
-  const cornerPeak = active ? (selected ? 0.22 : 0.16) : 0.08;
-  const edgePeak = openingStageFullscreen || !active ? 0 : selected ? 0.04 : 0;
+  const cornerPeak = active ? (selected ? 0.05 : 0.03) : 0.015;
+  const edgePeak = openingStageFullscreen || !active ? 0 : selected ? 0.025 : 0;
   return (
     <View pointerEvents="none" style={styles.quickHelpFlagshipSemanticVeilHost}>
-      <LinearGradient
-        pointerEvents="none"
-        colors={[
-          travelQuickHelpFlagshipRgbAlpha(material.cornerGlowRgb, cornerPeak),
-          travelQuickHelpFlagshipRgbAlpha(material.glowRgb, cornerPeak * 0.42),
-          'transparent',
-        ]}
-        locations={[0, 0.38, 1]}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 0.72, y: 0.82 }}
-        style={StyleSheet.absoluteFillObject}
-      />
+      {active && selected ? (
+        <LinearGradient
+          pointerEvents="none"
+          colors={[
+            travelQuickHelpFlagshipRgbAlpha(material.cornerGlowRgb, cornerPeak),
+            travelQuickHelpFlagshipRgbAlpha(material.glowRgb, cornerPeak * 0.5),
+            'transparent',
+          ]}
+          locations={[0, 0.28, 1]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 0.42, y: 0.38 }}
+          style={styles.quickHelpFlagshipSemanticEdgeHint}
+        />
+      ) : null}
       {selected ? (
         <LinearGradient
           pointerEvents="none"
           colors={[
-            travelQuickHelpFlagshipRgbAlpha(material.edgeLightRgb, active ? 0.4 : 0.28),
-            travelQuickHelpFlagshipRgbAlpha(material.glowRgb, active ? 0.14 : 0.08),
+            travelQuickHelpFlagshipRgbAlpha(material.edgeLightRgb, active ? 0.14 : 0.1),
+            travelQuickHelpFlagshipRgbAlpha(material.glowRgb, active ? 0.05 : 0.03),
             'transparent',
           ]}
           locations={[0, 0.45, 1]}
           start={{ x: 0.5, y: 0 }}
-          end={{ x: 0.5, y: 0.22 }}
+          end={{ x: 0.5, y: 0.16 }}
           style={styles.quickHelpFlagshipSelectedTopAccent}
         />
       ) : null}
@@ -3371,8 +3669,26 @@ function TravelQuickHelpFlagshipSemanticVeil({
   );
 }
 
-function travelDynamicHeroAsset(key: TravelDynamicHeroKey): ImageSourcePropType {
+/** Top-hero location master v2 — only Quick Help flagship city scenes (not utility/transit keys). */
+const TRAVEL_HERO_LOCATION_MASTER_V2_BY_KEY: Readonly<
+  Partial<Record<TravelDynamicHeroKey, (typeof TRAVEL_HERO_LOCATION_MASTER_V2_IMAGES)[keyof typeof TRAVEL_HERO_LOCATION_MASTER_V2_IMAGES]>>
+> = {
+  default: TRAVEL_HERO_LOCATION_MASTER_V2_IMAGES.airport,
+  journey: TRAVEL_HERO_LOCATION_MASTER_V2_IMAGES.airport,
+  interpreter: TRAVEL_HERO_LOCATION_MASTER_V2_IMAGES.prague,
+  localGuide: TRAVEL_HERO_LOCATION_MASTER_V2_IMAGES.prague,
+  rides: TRAVEL_HERO_LOCATION_MASTER_V2_IMAGES.paris,
+  emergencyPolice: TRAVEL_HERO_LOCATION_MASTER_V2_IMAGES.berlin,
+};
+
+function travelTopHeroImageSource(key: TravelDynamicHeroKey): ImageSourcePropType {
+  const locationMaster = TRAVEL_HERO_LOCATION_MASTER_V2_BY_KEY[key];
+  if (locationMaster != null) return locationMaster;
   return TRAVEL_DYNAMIC_HERO_ASSETS[key] ?? TRAVEL_DYNAMIC_HERO_ASSETS.default;
+}
+
+function travelDynamicHeroAsset(key: TravelDynamicHeroKey): ImageSourcePropType {
+  return travelTopHeroImageSource(key);
 }
 
 function travelFlagshipCardWebImageStyle(scenarioId: TravelFlagshipScenarioId): ImageStyle | undefined {
@@ -3387,9 +3703,9 @@ function travelFlagshipCardWebImageStyle(scenarioId: TravelFlagshipScenarioId): 
 
 /** Perspective hero cards — Góc nhìn du lịch (Travel-only assets). */
 const TRAVEL_PERSPECTIVE_CARD_ASSETS: Readonly<Record<TravelDirectionId, ImageSourcePropType>> = {
-  vietnameseAbroad: TRAVEL_TRACKED_HERO_FALLBACK,
-  inboundVietnam: TRAVEL_TRACKED_HERO_FALLBACK,
-  returnVietnam: TRAVEL_TRACKED_HERO_FALLBACK,
+  vietnameseAbroad: require('../../../assets/viona/travel/viona-travel-perspective-vietnamese-abroad-v1.png'),
+  inboundVietnam: require('../../../assets/viona/travel/viona-travel-perspective-foreigner-to-vietnam-v1.png'),
+  returnVietnam: require('../../../assets/viona/travel/viona-travel-perspective-overseas-vietnamese-return-v1.png'),
 };
 
 const TRAVEL_PERSPECTIVE_CARD_OBJECT_POSITION: Readonly<Record<TravelDirectionId, string>> = {
@@ -3668,14 +3984,7 @@ function TravelQuickHelpFlagshipTile({
   testID: string;
 }>): ReactElement {
   const tokens = travelSemanticTokens(accent);
-  const material = travelQuickHelpFlagshipMaterial(scenarioId);
   const minHeight = layoutMetrics.flagshipMinHeight;
-  const scrimPeak = accent === 'magenta' ? 0.2 : accent === 'violet' ? 0.17 : 0.16;
-  const scrimColors = [
-    travelQuickHelpFlagshipRgbAlpha(material.glowRgb, scrimPeak),
-    travelQuickHelpFlagshipRgbAlpha(material.glowRgb, scrimPeak * 0.42),
-    'transparent',
-  ] as const;
 
   return (
     <View
@@ -3695,22 +4004,12 @@ function TravelQuickHelpFlagshipTile({
         />
         <LinearGradient
           pointerEvents="none"
-          colors={scrimColors}
-          start={{ x: 0, y: 0.5 }}
-          end={{ x: 0.72, y: 0.5 }}
-          style={styles.quickHelpFlagshipTileAccentScrim}
-        />
-        <LinearGradient
-          pointerEvents="none"
-          colors={['rgba(4, 7, 12, 0.84)', 'rgba(4, 7, 12, 0.46)', 'rgba(4, 7, 12, 0)']}
-          locations={[0, 0.44, 1]}
+          colors={['rgba(4, 7, 12, 0.78)', 'rgba(4, 7, 12, 0.38)', 'rgba(4, 7, 12, 0)']}
+          locations={[0, 0.4, 1]}
           start={{ x: 0, y: 0.5 }}
           end={{ x: 1, y: 0.5 }}
           style={styles.quickHelpFlagshipTileTextScrim}
         />
-        {active ? (
-          <View pointerEvents="none" style={[StyleSheet.absoluteFillObject, styles.quickHelpFlagshipTileHoverBrighten]} />
-        ) : null}
       </View>
       <View pointerEvents="none" style={styles.quickHelpFlagshipTileStack}>
         <View style={styles.quickHelpFlagshipTileHeader}>
@@ -4632,7 +4931,7 @@ function TravelDestinationLensSceneLayer({ compact = false }: Readonly<{ compact
       />
       <LinearGradient
         pointerEvents="none"
-        colors={['rgba(92, 205, 255, 0.22)', 'rgba(132, 238, 255, 0.1)', 'transparent']}
+        colors={['rgba(92, 205, 255, 0.08)', 'rgba(132, 238, 255, 0.04)', 'transparent']}
         locations={[0, 0.38, 1]}
         start={{ x: 0.1, y: 0.58 }}
         end={{ x: 0.96, y: 0.34 }}
@@ -5834,6 +6133,9 @@ export function TravelScreen() {
     useState<TravelQuickHelpHeroContextId>('default');
   const [hoveredQuickHelpHeroContextId, setHoveredQuickHelpHeroContextId] =
     useState<TravelFlagshipScenarioId | null>(null);
+  const [hoveredUtilityScenarioId, setHoveredUtilityScenarioId] = useState<TravelScenarioId | null>(
+    null
+  );
   const displayedHeroQuickHelpContextId = useMemo(
     (): TravelQuickHelpHeroContextId =>
       hoveredQuickHelpHeroContextId ?? selectedQuickHelpHeroContextId,
@@ -5850,9 +6152,17 @@ export function TravelScreen() {
   const quickHelpHoverClearTokenRef = useRef(0);
 
   const activeTravelHeroKey = useMemo((): TravelDynamicHeroKey => {
-    if (displayedHeroQuickHelpContextId === 'default') return 'default';
-    return TRAVEL_FLAGSHIP_DYNAMIC_HERO_KEY[displayedHeroQuickHelpContextId];
-  }, [displayedHeroQuickHelpContextId]);
+    if (hoveredQuickHelpHeroContextId != null) {
+      return TRAVEL_FLAGSHIP_DYNAMIC_HERO_KEY[hoveredQuickHelpHeroContextId];
+    }
+    if (hoveredUtilityScenarioId != null) {
+      return TRAVEL_SCENARIO_DYNAMIC_HERO_KEY[hoveredUtilityScenarioId] ?? 'default';
+    }
+    if (displayedHeroQuickHelpContextId !== 'default') {
+      return TRAVEL_FLAGSHIP_DYNAMIC_HERO_KEY[displayedHeroQuickHelpContextId];
+    }
+    return 'default';
+  }, [displayedHeroQuickHelpContextId, hoveredQuickHelpHeroContextId, hoveredUtilityScenarioId]);
 
   const activeTravelHeroFrameAccent = useMemo(
     () => travelQuickHelpHeroAccent(displayedHeroQuickHelpContextId),
@@ -5897,15 +6207,16 @@ export function TravelScreen() {
     () => travelDynamicHeroAsset(activeTravelHeroKey),
     [activeTravelHeroKey]
   );
-  const defaultTravelHeroSource = useMemo(() => travelDynamicHeroAsset('default'), []);
-  const travelHeroObjectPosition =
-    activeTravelHeroKey === 'default' || activeTravelHeroKey === 'journey'
-      ? openingStageFullscreen
-        ? `64% ${TRAVEL_DYNAMIC_HERO_OBJECT_POSITION_Y_FULLSCREEN}`
-        : (TRAVEL_DYNAMIC_HERO_OBJECT_POSITION[activeTravelHeroKey] ??
-            TRAVEL_DYNAMIC_HERO_OBJECT_POSITION.default)
-      : (TRAVEL_DYNAMIC_HERO_OBJECT_POSITION[activeTravelHeroKey] ??
-          TRAVEL_DYNAMIC_HERO_OBJECT_POSITION.default);
+  const defaultTravelHeroSource = useMemo(
+    () => TRAVEL_HERO_LOCATION_MASTER_V2_IMAGES.airport,
+    []
+  );
+  const travelAltMasterHeroOverlayActive = isTravelAltMasterHeroKey(activeTravelHeroKey);
+  const travelHeroDefaultObjectPosition = useMemo(
+    (): string =>
+      travelLocationMasterV2HeroObjectPosition('airport', width, viewportHeight, openingStageFullscreen),
+    [width, viewportHeight, openingStageFullscreen]
+  );
   const travelTileLayout = useMemo(() => travelAppTileMetrics(width), [width]);
   const travelFlagshipLayout = useMemo(() => {
     const openingDesktopWeb =
@@ -5960,41 +6271,36 @@ export function TravelScreen() {
     () => travelOpeningGrammarMetrics(width, openingStageFullscreen),
     [width, openingStageFullscreen]
   );
-  const travelHeroImageStyle = useMemo((): ImageStyle[] => {
-    const webCover =
-      Platform.OS === 'web' &&
-      width >= TRAVEL_FLAGSHIP_DESKTOP_ROW_MIN_WIDTH &&
-      !isHubTabletPortraitViewport(width, viewportHeight);
-    const zoomScale = openingStageFullscreen
-      ? TRAVEL_DYNAMIC_HERO_IMAGE_COVER_SCALE_FULLSCREEN
-      : TRAVEL_DYNAMIC_HERO_IMAGE_COVER_SCALE_NORMAL;
-    const zoomOutPercent = webCover ? Math.round((1 / zoomScale) * 1000) / 10 : 100;
-    const zoomInsetPercent = webCover ? Math.round(((zoomOutPercent - 100) / 2) * 10) / 10 : 0;
-    return [
-      styles.heroCinematicImage,
-      ...(webCover
-        ? [
-            {
-              width: `${zoomOutPercent}%`,
-              height: `${zoomOutPercent}%`,
-              left: `${-zoomInsetPercent}%`,
-              top: `${-zoomInsetPercent}%`,
-              objectFit: 'cover',
-              objectPosition: travelHeroObjectPosition,
-            } as ImageStyle,
-          ]
-        : Platform.OS === 'web'
-          ? [
-              {
-                width: '100%',
-                height: '100%',
-                objectFit: 'cover',
-                objectPosition: travelHeroObjectPosition,
-              } as ImageStyle,
-            ]
-          : []),
-    ];
-  }, [travelHeroObjectPosition, width, viewportHeight, openingStageFullscreen]);
+  /** Base default/journey layer — accepted master framing (unchanged). */
+  const travelHeroDefaultLayerImageStyle = useMemo(
+    (): ImageStyle[] =>
+      travelHeroLayerImageStyle(
+        travelHeroDefaultObjectPosition,
+        width,
+        viewportHeight,
+        openingStageFullscreen
+      ),
+    [travelHeroDefaultObjectPosition, width, viewportHeight, openingStageFullscreen]
+  );
+
+  /** Active overlay — art-directed alternate masters only (translation / rides / emergency). */
+  const travelHeroActiveOverlayLayer = useMemo((): TravelAltHeroArtDirectedLayer | null => {
+    if (!isTravelAltMasterHeroKey(activeTravelHeroKey)) return null;
+    const locationId = travelLocationMasterV2IdForAltHeroKey(activeTravelHeroKey);
+    const objectPosition = travelLocationMasterV2HeroObjectPosition(
+      locationId,
+      width,
+      viewportHeight,
+      openingStageFullscreen
+    );
+    return travelAltHeroArtDirectedLayer(
+      TRAVEL_ALT_MASTER_HERO_ART_DIRECTION[activeTravelHeroKey],
+      objectPosition,
+      width,
+      viewportHeight,
+      openingStageFullscreen
+    );
+  }, [activeTravelHeroKey, width, viewportHeight, openingStageFullscreen]);
   const travelHeroStageStyle = useMemo(
     () => [
       styles.heroStage,
@@ -6012,9 +6318,13 @@ export function TravelScreen() {
     displayedHeroQuickHelpContextId !== 'default' ||
     travelCardHoverAccent != null;
 
-  /** Pack 63A — touch/tap selection gets the same hero brighten as pointer hover. */
-  const travelHeroBrightenActive =
-    travelHeroDirectHover || displayedHeroQuickHelpContextId !== 'default';
+  /** Pack 63A / Local parity — brighten wash only on direct hero hover, never card-driven switch. */
+  const travelHeroBrightenActive = travelHeroDirectHover;
+
+  /** Alt masters — suppress heavy route arcs / subject glow / editorial fog; keep lighting network + left scrim. */
+  const travelAltHeroHeavyWashSuppressed = travelAltMasterHeroOverlayActive;
+
+  const travelHeroNetworkBoostActive = travelHeroDirectHover || travelHeroFrameLit;
 
   const travelHeroNetworkHoverAccent = useMemo((): TravelSemanticAccent | null => {
     if (displayedHeroQuickHelpContextId !== 'default') {
@@ -6030,39 +6340,10 @@ export function TravelScreen() {
   }, [displayedHeroQuickHelpContextId]);
 
   const travelHeroNetworkLighting = useMemo(
-    () => resolveTravelHeroNetworkLighting(travelHeroNetworkHoverAccent, travelHeroFrameLit),
-    [travelHeroNetworkHoverAccent, travelHeroFrameLit]
+    () => resolveTravelHeroNetworkLighting(travelHeroNetworkHoverAccent, travelHeroNetworkBoostActive),
+    [travelHeroNetworkHoverAccent, travelHeroNetworkBoostActive]
   );
-  const travelHeroQuickHelpNetworkBoost = useMemo(
-    () =>
-      travelHeroQuickHelpAccentNetworkBoost(
-        displayedHeroQuickHelpContextId,
-        displayedHeroQuickHelpContextId !== 'default' || travelHeroFrameLit
-      ),
-    [displayedHeroQuickHelpContextId, travelHeroFrameLit]
-  );
-  const travelHeroQuickHelpAccentOverlay = useMemo(
-    () =>
-      travelHeroQuickHelpAccentStageOverlayStyle(
-        displayedHeroQuickHelpContextId,
-        displayedHeroQuickHelpContextId !== 'default'
-      ),
-    [displayedHeroQuickHelpContextId]
-  );
-  const travelHeroResolvedNetworkLighting = useMemo(
-    () =>
-      travelHeroQuickHelpNetworkBoost
-        ? {
-            ...travelHeroNetworkLighting,
-            routeArcPrimary: travelHeroQuickHelpNetworkBoost.routeArcPrimary,
-            routeArcSecondary: travelHeroQuickHelpNetworkBoost.routeArcSecondary,
-            bottomHandoff: travelHeroQuickHelpNetworkBoost.bottomHandoff,
-            subjectGlow: travelHeroQuickHelpNetworkBoost.subjectGlow,
-          }
-        : travelHeroNetworkLighting,
-    [travelHeroNetworkLighting, travelHeroQuickHelpNetworkBoost]
-  );
-
+  const travelHeroResolvedNetworkLighting = travelHeroNetworkLighting;
   useEffect(() => {
     Animated.timing(travelHeroLitAnim, {
       toValue: travelHeroFrameLit ? 1 : 0,
@@ -6160,6 +6441,7 @@ export function TravelScreen() {
   }, []);
 
   const onTravelUtilityHover = useCallback((scenarioId: TravelScenarioId | null) => {
+    setHoveredUtilityScenarioId(scenarioId);
     if (scenarioId == null) {
       setTravelCardHoverAccent(null);
       return;
@@ -6445,19 +6727,31 @@ export function TravelScreen() {
                 : null)}
             >
               <View style={styles.heroImageClip} pointerEvents="none">
-                <Image
-                  source={defaultTravelHeroSource}
-                  style={travelHeroImageStyle}
-                  resizeMode="cover"
-                  accessibilityIgnoresInvertColors
-                />
-                {activeTravelHeroKey !== 'default' ? (
+                {!travelAltMasterHeroOverlayActive ? (
+                  <Image
+                    testID="travel-dynamic-hero-default-image"
+                    source={defaultTravelHeroSource}
+                    style={travelHeroDefaultLayerImageStyle}
+                    resizeMode={Platform.OS === 'web' ? undefined : 'cover'}
+                    accessibilityIgnoresInvertColors
+                  />
+                ) : null}
+                {travelAltMasterHeroOverlayActive && travelHeroActiveOverlayLayer != null ? (
                   <Animated.View style={[StyleSheet.absoluteFillObject, { opacity: travelHeroFadeAnim }]}>
                     <Image
+                      testID="travel-dynamic-hero-active-overlay-image"
                       source={activeTravelHeroSource}
-                      style={travelHeroImageStyle}
-                      resizeMode="cover"
+                      style={travelHeroActiveOverlayLayer.imageStyles}
+                      resizeMode={Platform.OS === 'web' ? undefined : 'cover'}
                       accessibilityIgnoresInvertColors
+                      {...(Platform.OS === 'web'
+                        ? ({
+                            dataSet: {
+                              travelHeroKey: activeTravelHeroKey,
+                              travelHeroLayer: 'active-overlay',
+                            },
+                          } as const)
+                        : null)}
                     />
                   </Animated.View>
                 ) : null}
@@ -6467,20 +6761,24 @@ export function TravelScreen() {
                   locations={[0, 0.72, 1]}
                   style={styles.heroBottomHandoff}
                 />
-                <LinearGradient
-                  pointerEvents="none"
-                  colors={[...travelHeroResolvedNetworkLighting.routeArcPrimary]}
-                  start={{ x: 0.18, y: 0.62 }}
-                  end={{ x: 0.72, y: 0.38 }}
-                  style={styles.heroRouteArcPrimary}
-                />
-                <LinearGradient
-                  pointerEvents="none"
-                  colors={[...travelHeroResolvedNetworkLighting.routeArcSecondary]}
-                  start={{ x: 0.82, y: 0.28 }}
-                  end={{ x: 0.42, y: 0.72 }}
-                  style={styles.heroRouteArcSecondary}
-                />
+                {!travelAltHeroHeavyWashSuppressed ? (
+                  <LinearGradient
+                    pointerEvents="none"
+                    colors={[...travelHeroResolvedNetworkLighting.routeArcPrimary]}
+                    start={{ x: 0.18, y: 0.62 }}
+                    end={{ x: 0.72, y: 0.38 }}
+                    style={styles.heroRouteArcPrimary}
+                  />
+                ) : null}
+                {!travelAltHeroHeavyWashSuppressed ? (
+                  <LinearGradient
+                    pointerEvents="none"
+                    colors={[...travelHeroResolvedNetworkLighting.routeArcSecondary]}
+                    start={{ x: 0.82, y: 0.28 }}
+                    end={{ x: 0.42, y: 0.72 }}
+                    style={styles.heroRouteArcSecondary}
+                  />
+                ) : null}
                 <Animated.View
                   pointerEvents="none"
                   style={[
@@ -6489,22 +6787,32 @@ export function TravelScreen() {
                     { opacity: travelHeroBrightenActive ? travelHeroBrightenOpacity : 0 },
                   ]}
                 />
-                <LinearGradient
-                  pointerEvents="none"
-                  colors={[...travelHeroResolvedNetworkLighting.subjectGlow]}
-                  start={{ x: 0.72, y: 0.22 }}
-                  end={{ x: 0.92, y: 0.78 }}
-                  style={styles.heroSubjectGlow}
-                />
+                {!travelAltHeroHeavyWashSuppressed ? (
+                  <LinearGradient
+                    pointerEvents="none"
+                    colors={[...travelHeroResolvedNetworkLighting.subjectGlow]}
+                    start={{ x: 0.72, y: 0.22 }}
+                    end={{ x: 0.92, y: 0.78 }}
+                    style={styles.heroSubjectGlow}
+                  />
+                ) : null}
               </View>
               <LinearGradient
                 pointerEvents="none"
                 colors={
-                  travelHeroStage.useAbsoluteTextLayer
-                    ? ['rgba(2, 6, 14, 0.97)', 'rgba(4, 10, 20, 0.78)', 'rgba(4, 10, 20, 0)']
-                    : ['rgba(4, 8, 16, 0.92)', 'rgba(4, 10, 20, 0.58)', 'rgba(4, 10, 20, 0)']
+                  travelAltHeroHeavyWashSuppressed
+                    ? [...TRAVEL_ALT_MASTER_HERO_LEFT_TEXT_SCRIM_COLORS]
+                    : travelHeroStage.useAbsoluteTextLayer
+                      ? ['rgba(2, 6, 14, 0.97)', 'rgba(4, 10, 20, 0.78)', 'rgba(4, 10, 20, 0)']
+                      : ['rgba(4, 8, 16, 0.92)', 'rgba(4, 10, 20, 0.58)', 'rgba(4, 10, 20, 0)']
                 }
-                locations={travelHeroStage.useAbsoluteTextLayer ? [0, 0.48, 1] : [0, 0.52, 1]}
+                locations={
+                  travelAltHeroHeavyWashSuppressed
+                    ? [...TRAVEL_ALT_MASTER_HERO_LEFT_TEXT_SCRIM_LOCATIONS]
+                    : travelHeroStage.useAbsoluteTextLayer
+                      ? [0, 0.48, 1]
+                      : [0, 0.52, 1]
+                }
                 start={{ x: 0, y: 0.5 }}
                 end={{ x: 1, y: 0.5 }}
                 style={[
@@ -6512,7 +6820,7 @@ export function TravelScreen() {
                   { width: `${travelHeroStage.textVeilWidthPercent}%` },
                 ]}
               />
-              {travelHeroStage.useAbsoluteTextLayer ? (
+              {travelHeroStage.useAbsoluteTextLayer && !travelAltHeroHeavyWashSuppressed ? (
                 <LinearGradient
                   pointerEvents="none"
                   colors={['rgba(2, 6, 14, 0.55)', 'rgba(2, 6, 14, 0.28)', 'transparent']}
@@ -6530,7 +6838,7 @@ export function TravelScreen() {
               ) : null}
               <TravelHeroLightingNetwork
                 hoverAccent={travelHeroNetworkHoverAccent}
-                boosted={travelHeroFrameLit}
+                boosted={travelHeroNetworkBoostActive}
                 networkPrimaryHex={travelHeroQuickHelpNetworkHex?.primary}
                 networkSecondaryHex={travelHeroQuickHelpNetworkHex?.secondary}
                 radius={18}
@@ -6682,9 +6990,6 @@ export function TravelScreen() {
                   },
                 ]}
               />
-              {travelHeroQuickHelpAccentOverlay ? (
-                <View pointerEvents="none" style={travelHeroQuickHelpAccentOverlay} />
-              ) : null}
             </View>
           </TravelGlassCard>
 
@@ -6997,7 +7302,7 @@ const styles = StyleSheet.create({
     width: '58%',
     height: '46%',
     zIndex: 1,
-    opacity: 0.62,
+    opacity: 0.28,
   },
   heroRouteArcSecondary: {
     position: 'absolute',
@@ -7006,10 +7311,10 @@ const styles = StyleSheet.create({
     width: '44%',
     height: '52%',
     zIndex: 1,
-    opacity: 0.48,
+    opacity: 0.2,
   },
   heroBrightenWash: {
-    backgroundColor: 'rgba(255, 255, 255, 0.28)',
+    backgroundColor: 'rgba(255, 255, 255, 0.12)',
     zIndex: 1,
   },
   heroSubjectGlow: {
@@ -9291,6 +9596,14 @@ const styles = StyleSheet.create({
   quickHelpFlagshipSemanticVeilHost: {
     ...StyleSheet.absoluteFillObject,
     zIndex: 3,
+  },
+  quickHelpFlagshipSemanticEdgeHint: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    width: '42%',
+    height: '38%',
+    zIndex: 1,
   },
   quickHelpFlagshipSelectedTopAccent: {
     position: 'absolute',

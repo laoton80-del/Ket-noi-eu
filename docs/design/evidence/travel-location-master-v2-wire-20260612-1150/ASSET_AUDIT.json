@@ -1,0 +1,46 @@
+{
+  "pack": "PACK_TRAVEL_LOCATION_MASTER_V2_WIRE",
+  "generatedAt": "2026-06-12T11:50:00.000Z",
+  "targetSize": [2600, 800],
+  "aspectRatio": 3.25,
+  "incomingDir": "assets/viona/dynamic-hero/_incoming-travel-master-v2-local-standard",
+  "liveDir": "assets/viona/dynamic-hero/travel",
+  "assets": [
+    {
+      "file": "travel-airport-web-normal-master-v2.png",
+      "heroKeys": ["default", "journey", "transit", "family", "global", "cityConcierge"],
+      "width": 2600,
+      "height": 800,
+      "bytes": 2251012,
+      "sha256": "964628167313ff648f78a7e86a6d9aca6448fceb0776cb430057a4b3fe3f1c9c",
+      "resizeRequired": false
+    },
+    {
+      "file": "travel-prague-charles-bridge-castle-web-normal-master-v2.png",
+      "heroKeys": ["interpreter", "localGuide"],
+      "width": 2600,
+      "height": 800,
+      "bytes": 3082881,
+      "sha256": "de9bddadf2f2fb139cce7645a4d2df66b1a8c26b5f739c97d3f5cfdab684d3f3",
+      "resizeRequired": false
+    },
+    {
+      "file": "travel-paris-eiffel-web-normal-master-v2.png",
+      "heroKeys": ["rides"],
+      "width": 2600,
+      "height": 800,
+      "bytes": 2592036,
+      "sha256": "a6151cad4f24b1f908b1e6a511c753dce7c24701aee31fc93d205cec0568a30a",
+      "resizeRequired": false
+    },
+    {
+      "file": "travel-berlin-city-web-normal-master-v2.png",
+      "heroKeys": ["emergencyPolice"],
+      "width": 2600,
+      "height": 800,
+      "bytes": 2812887,
+      "sha256": "dce5e90ba347297269027bfdab6d478aadc13ddd13f0d4d14c8d5694e993fd26",
+      "resizeRequired": false
+    }
+  ]
+}

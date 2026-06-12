@@ -1,0 +1,25 @@
+{
+  "generatedAt": "2026-06-12T11:19:05.121Z",
+  "port": 8285,
+  "shots": [
+    "C:\\KNG\\ket-noi-eu-travel-multi-scene-restore\\docs\\design\\evidence\\travel-location-master-v2-wiring-fix-hero-only-20260612-1311\\screenshot-hero-airport-1366x768.png",
+    "quick-help-cards",
+    "C:\\KNG\\ket-noi-eu-travel-multi-scene-restore\\docs\\design\\evidence\\travel-location-master-v2-wiring-fix-hero-only-20260612-1311\\screenshot-hero-prague-1366x768.png",
+    "C:\\KNG\\ket-noi-eu-travel-multi-scene-restore\\docs\\design\\evidence\\travel-location-master-v2-wiring-fix-hero-only-20260612-1311\\screenshot-hero-paris-1366x768.png",
+    "C:\\KNG\\ket-noi-eu-travel-multi-scene-restore\\docs\\design\\evidence\\travel-location-master-v2-wiring-fix-hero-only-20260612-1311\\screenshot-hero-berlin-1366x768.png",
+    "C:\\KNG\\ket-noi-eu-travel-multi-scene-restore\\docs\\design\\evidence\\travel-location-master-v2-wiring-fix-hero-only-20260612-1311\\screenshot-default-1024x768.png",
+    "C:\\KNG\\ket-noi-eu-travel-multi-scene-restore\\docs\\design\\evidence\\travel-location-master-v2-wiring-fix-hero-only-20260612-1311\\screenshot-default-768x1024.png",
+    "C:\\KNG\\ket-noi-eu-travel-multi-scene-restore\\docs\\design\\evidence\\travel-location-master-v2-wiring-fix-hero-only-20260612-1311\\screenshot-default-390x844.png"
+  ],
+  "proofs": [
+    {
+      "cardSrcs": {
+        "airport": "http://localhost:8285/assets/?unstable_path=.%2Fassets%2Fviona%2Fdynamic-hero%2Ftravel/travel-airport-web-normal-card-62y.png",
+        "translation": "http://localhost:8285/assets/?unstable_path=.%2Fassets%2Fviona%2Fdynamic-hero%2Ftravel/travel-translation-assist-web-normal-card-62y.png",
+        "taxi": "http://localhost:8285/assets/?unstable_path=.%2Fassets%2Fviona%2Fdynamic-hero%2Ftravel/travel-rides-assist-web-normal-card-62y.png",
+        "emergency": "http://localhost:8285/assets/?unstable_path=.%2Fassets%2Fviona%2Fdynamic-hero%2Ftravel/travel-emergency-police-web-normal-card-62y.png"
+      },
+      "cardSrcDistinct": 4
+    }
+  ]
+}

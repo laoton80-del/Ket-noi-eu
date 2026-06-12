@@ -1,0 +1,29 @@
+{
+  "finalSelection": {
+    "airport": {
+      "card": "travel-airport-web-normal-card-62y.png",
+      "master": "travel-airport-web-normal-master-62h.png"
+    },
+    "translation": {
+      "card": "travel-translation-assist-web-normal-card-62y.png",
+      "master": "travel-translation-assist-web-normal-source.png"
+    },
+    "rides": {
+      "card": "travel-rides-assist-web-normal-card-62y.png",
+      "master": "travel-rides-assist-web-normal-source.png"
+    },
+    "emergencyPolice": {
+      "card": "travel-emergency-police-web-normal-card-62y.png",
+      "master": "travel-emergency-police-web-normal-source.png"
+    }
+  },
+  "missingDedicatedCategories": [
+    "transit/MHD",
+    "hotel/stay",
+    "hospital/pharmacy",
+    "shopping/market",
+    "restaurant dining",
+    "local concierge (non-airport)"
+  ],
+  "neutralFallback": "travel-airport-web-normal-master-62h.png"
+}

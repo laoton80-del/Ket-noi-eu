@@ -1,0 +1,42 @@
+[
+  {
+    "file": "travel-airport-web-normal-master-v2.png",
+    "source": "/mnt/data/futuristic_airport_terminal_with_digital_flow.png",
+    "size": [
+      2600,
+      800
+    ],
+    "sha256": "964628167313ff648f78a7e86a6d9aca6448fceb0776cb430057a4b3fe3f1c9c",
+    "bytes": 2251012
+  },
+  {
+    "file": "travel-prague-charles-bridge-castle-web-normal-master-v2.png",
+    "source": "/mnt/data/contemplative_stroll_by_the_riverside.png",
+    "size": [
+      2600,
+      800
+    ],
+    "sha256": "de9bddadf2f2fb139cce7645a4d2df66b1a8c26b5f739c97d3f5cfdab684d3f3",
+    "bytes": 3082881
+  },
+  {
+    "file": "travel-paris-eiffel-web-normal-master-v2.png",
+    "source": "/mnt/data/sci_fi_sunset_along_the_seine.png",
+    "size": [
+      2600,
+      800
+    ],
+    "sha256": "a6151cad4f24b1f908b1e6a511c753dce7c24701aee31fc93d205cec0568a30a",
+    "bytes": 2592036
+  },
+  {
+    "file": "travel-berlin-city-web-normal-master-v2.png",
+    "source": "/mnt/data/sunset_stroll_by_the_river.png",
+    "size": [
+      2600,
+      800
+    ],
+    "sha256": "dce5e90ba347297269027bfdab6d478aadc13ddd13f0d4d14c8d5694e993fd26",
+    "bytes": 2812887
+  }
+]

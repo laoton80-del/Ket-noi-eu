@@ -1,0 +1,70 @@
+{
+  "generatedAt": "2026-06-11T11:16:49.519Z",
+  "branch": "viona/travel-existing-dyn-hero-stacked-qa",
+  "port": 8099,
+  "shots": [
+    "C:\\KNG\\ket-noi-eu-travel-multi-scene-restore\\docs\\design\\evidence\\travel-existing-dynamic-hero-assets-qa-20260611-1255\\screenshot-1366x768.png",
+    "C:\\KNG\\ket-noi-eu-travel-multi-scene-restore\\docs\\design\\evidence\\travel-existing-dynamic-hero-assets-qa-20260611-1255\\screenshot-1024x768.png",
+    "C:\\KNG\\ket-noi-eu-travel-multi-scene-restore\\docs\\design\\evidence\\travel-existing-dynamic-hero-assets-qa-20260611-1255\\screenshot-768x1024.png",
+    "C:\\KNG\\ket-noi-eu-travel-multi-scene-restore\\docs\\design\\evidence\\travel-existing-dynamic-hero-assets-qa-20260611-1255\\screenshot-390x844.png"
+  ],
+  "checks": {
+    "viewports": {
+      "1366x768": {
+        "ok": true,
+        "imgCount": 17
+      },
+      "1024x768": {
+        "ok": true,
+        "imgCount": 17
+      },
+      "768x1024": {
+        "ok": true,
+        "imgCount": 17
+      },
+      "390x844": {
+        "ok": true,
+        "imgCount": 17
+      }
+    },
+    "imgSrc": [
+      "http://localhost:8099/assets/?unstable_path=.%2Fassets%2Fviona%2Fdynamic-hero%2Ftravel/travel-airport-web-normal-master-62h.png",
+      "http://localhost:8099/assets/?unstable_path=.%2Fassets%2Fviona%2Fdynamic-hero%2Ftravel/travel-airport-web-normal-card-62y.png",
+      "http://localhost:8099/assets/?unstable_path=.%2Fassets%2Fviona%2Fdynamic-hero%2Ftravel/travel-translation-assist-web-normal-card-62y.png",
+      "http://localhost:8099/assets/?unstable_path=.%2Fassets%2Fviona%2Fdynamic-hero%2Ftravel/travel-rides-assist-web-normal-card-62y.png",
+      "http://localhost:8099/assets/?unstable_path=.%2Fassets%2Fviona%2Fdynamic-hero%2Ftravel/travel-emergency-police-web-normal-card-62y.png",
+      "http://localhost:8099/assets/?unstable_path=.%2Fassets%2Fviona%2Ftravel/viona-travel-situation-network-bg-premium-v1.png",
+      "http://localhost:8099/assets/?unstable_path=.%2Fassets%2Fviona%2Ftravel/viona-travel-perspective-vietnamese-abroad-v1.png",
+      "http://localhost:8099/assets/?unstable_path=.%2Fassets%2Fviona%2Ftravel/viona-travel-perspective-foreigner-to-vietnam-v1.png",
+      "http://localhost:8099/assets/?unstable_path=.%2Fassets%2Fviona%2Ftravel/viona-travel-perspective-overseas-vietnamese-return-v1.png",
+      "http://localhost:8099/assets/?unstable_path=.%2Fassets%2Fviona%2Ftravel/viona-travel-destination-lens-cinematic-daylight-v1.png",
+      "http://localhost:8099/assets/?unstable_path=.%2Fassets%2Fviona%2Ftravel/viona-travel-destination-lens-cinematic-daylight-v1.png",
+      "http://localhost:8099/assets/?unstable_path=.%2Fassets%2Fviona%2Ftravel/viona-travel-destination-lens-cinematic-daylight-v1.png",
+      "http://localhost:8099/assets/?unstable_path=.%2Fassets%2Fviona%2Ftravel/viona-travel-destination-lens-cinematic-daylight-v1.png",
+      "http://localhost:8099/assets/?unstable_path=.%2Fassets%2Fviona%2Ftravel/viona-travel-destination-lens-cinematic-daylight-v1.png",
+      "http://localhost:8099/assets/?unstable_path=.%2Fassets%2Fviona%2Ftravel/viona-travel-destination-lens-cinematic-daylight-v1.png",
+      "http://localhost:8099/assets/?unstable_path=.%2Fassets%2Fviona%2Ftravel/viona-travel-destination-lens-cinematic-daylight-v1.png",
+      "http://localhost:8099/assets/?unstable_path=.%2Fassets%2Fviona%2Ftravel/viona-travel-destination-lens-cinematic-daylight-v1.png"
+    ]
+  },
+  "semanticChecks": {
+    "dynamicHeroAssetsLoaded": true,
+    "ridesSourceLoaded": true,
+    "translationSourceInHover": true,
+    "noHeroDefaultFallback": true
+  },
+  "viewportsPass": true,
+  "flagshipSemanticPass": {
+    "airport": true,
+    "translation": true,
+    "ridesTaxi": true,
+    "emergency": true,
+    "wideHeroUsed": true
+  },
+  "wrongImageFixed": "YES",
+  "wrongZoomFixed": "YES",
+  "remainingIssues": [
+    "Transit/hotel/hospital/shopping use airport master neutral fallback — no dedicated source assets",
+    "Destination lens and perspective cards still use HOLD assets/viona/travel/"
+  ]
+}
