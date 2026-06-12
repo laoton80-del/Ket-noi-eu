@@ -1609,28 +1609,19 @@ function travelWebCoverDezoomImageStyle(coverScale: number, objectPosition: stri
 }
 
 function travelHeroLayerImageStyle(
-  heroKey: TravelDynamicHeroKey,
   objectPosition: string,
   viewportWidth: number,
   viewportHeight: number,
   openingStageFullscreen: boolean
 ): ImageStyle[] {
-  const altFraming = isTravelAltMasterHeroKey(heroKey) ? TRAVEL_ALT_MASTER_HERO_FRAMING[heroKey] : null;
   const defaultDesktopWeb =
     Platform.OS === 'web' &&
-    (heroKey === 'default' || heroKey === 'journey') &&
     viewportWidth >= TRAVEL_FLAGSHIP_DESKTOP_ROW_MIN_WIDTH &&
     !isHubTabletPortraitViewport(viewportWidth, viewportHeight);
-  const altWebCover = Platform.OS === 'web' && altFraming != null;
-  const webCover = altWebCover || defaultDesktopWeb;
-  const zoomScale = altFraming
-    ? openingStageFullscreen
-      ? altFraming.coverScaleFullscreen
-      : altFraming.coverScaleNormal
-    : openingStageFullscreen
-      ? TRAVEL_DYNAMIC_HERO_IMAGE_COVER_SCALE_FULLSCREEN
-      : TRAVEL_DYNAMIC_HERO_IMAGE_COVER_SCALE_NORMAL;
-  if (webCover) {
+  const zoomScale = openingStageFullscreen
+    ? TRAVEL_DYNAMIC_HERO_IMAGE_COVER_SCALE_FULLSCREEN
+    : TRAVEL_DYNAMIC_HERO_IMAGE_COVER_SCALE_NORMAL;
+  if (defaultDesktopWeb) {
     return [travelWebCoverDezoomImageStyle(zoomScale, objectPosition)];
   }
   if (Platform.OS === 'web') {
@@ -3124,44 +3115,12 @@ const TRAVEL_DYNAMIC_HERO_OBJECT_POSITION: Readonly<Record<TravelDynamicHeroKey,
 };
 
 /**
- * Quick Help alternate master heroes — Local Bright hero standard (Pack TRAVEL_MATCH_LOCAL).
- * Local reference: foregroundScale 1.0, objectPosition ~48% X, no full-image semantic wash on card switch.
+ * Premium Travel hero — approved default master stays stable for full-bleed quality.
+ * Alternate full-hero masters (translation / rides / emergency via TRAVEL_FLAGSHIP_DYNAMIC_HERO_KEY)
+ * are disabled until Local-standard ultra-wide Travel masters exist; card/tile artwork may still use
+ * those assets. Scenario hover/select only updates copy, chips, rim/glow — not the hero background.
  */
-const TRAVEL_ALT_MASTER_HERO_KEYS = ['interpreter', 'rides', 'emergencyPolice'] as const satisfies readonly TravelDynamicHeroKey[];
-
-type TravelAltMasterHeroKey = (typeof TRAVEL_ALT_MASTER_HERO_KEYS)[number];
-
-type TravelAltMasterHeroFraming = Readonly<{
-  /** Web cover dezoom — smaller scale → larger raster → more scene visible (full-bleed, not contain). */
-  coverScaleNormal: number;
-  coverScaleFullscreen: number;
-  objectPosition: string;
-  objectPositionFullscreen: string;
-}>;
-
-/** Local Bright baseline focal — center-weighted X, moderate Y headroom. */
-const TRAVEL_ALT_MASTER_HERO_LOCAL_FOCAL_X = '48%';
-
-const TRAVEL_ALT_MASTER_HERO_FRAMING: Readonly<Record<TravelAltMasterHeroKey, TravelAltMasterHeroFraming>> = {
-  interpreter: {
-    coverScaleNormal: 0.44,
-    coverScaleFullscreen: 0.42,
-    objectPosition: `${TRAVEL_ALT_MASTER_HERO_LOCAL_FOCAL_X} 44%`,
-    objectPositionFullscreen: `${TRAVEL_ALT_MASTER_HERO_LOCAL_FOCAL_X} 42%`,
-  },
-  rides: {
-    coverScaleNormal: 0.42,
-    coverScaleFullscreen: 0.4,
-    objectPosition: `${TRAVEL_ALT_MASTER_HERO_LOCAL_FOCAL_X} 46%`,
-    objectPositionFullscreen: `${TRAVEL_ALT_MASTER_HERO_LOCAL_FOCAL_X} 44%`,
-  },
-  emergencyPolice: {
-    coverScaleNormal: 0.44,
-    coverScaleFullscreen: 0.42,
-    objectPosition: `${TRAVEL_ALT_MASTER_HERO_LOCAL_FOCAL_X} 48%`,
-    objectPositionFullscreen: `${TRAVEL_ALT_MASTER_HERO_LOCAL_FOCAL_X} 46%`,
-  },
-};
+const TRAVEL_DISABLED_ALT_FULL_HERO_CONTEXTS = ['translation', 'taxi', 'emergency'] as const satisfies readonly TravelFlagshipScenarioId[];
 
 /** Local Bright left text scrim — readability only; does not veil the full hero image. */
 const TRAVEL_ALT_MASTER_HERO_LEFT_TEXT_SCRIM_COLORS = [
@@ -3173,8 +3132,8 @@ const TRAVEL_ALT_MASTER_HERO_LEFT_TEXT_SCRIM_COLORS = [
 
 const TRAVEL_ALT_MASTER_HERO_LEFT_TEXT_SCRIM_LOCATIONS = [0, 0.38, 0.62, 1] as const;
 
-function isTravelAltMasterHeroKey(key: TravelDynamicHeroKey): key is TravelAltMasterHeroKey {
-  return (TRAVEL_ALT_MASTER_HERO_KEYS as readonly string[]).includes(key);
+function isTravelDisabledAltFullHeroContext(contextId: TravelQuickHelpHeroContextId): boolean {
+  return (TRAVEL_DISABLED_ALT_FULL_HERO_CONTEXTS as readonly string[]).includes(contextId);
 }
 
 const TRAVEL_FLAGSHIP_CARD_OBJECT_POSITION: Readonly<Record<TravelFlagshipScenarioId, string>> = {
@@ -5974,24 +5933,9 @@ export function TravelScreen() {
   const [travelCardHoverAccent, setTravelCardHoverAccent] = useState<TravelSemanticAccent | null>(
     null
   );
-  const travelHeroFadeAnim = useRef(new Animated.Value(1)).current;
   const travelHeroLitAnim = useRef(new Animated.Value(0)).current;
-  const previousTravelHeroKeyRef = useRef<TravelDynamicHeroKey>('default');
   /** Pack 46 — defer hover clear so moving between Quick Help cards does not flash default hero. */
   const quickHelpHoverClearTokenRef = useRef(0);
-
-  const activeTravelHeroKey = useMemo((): TravelDynamicHeroKey => {
-    if (hoveredQuickHelpHeroContextId != null) {
-      return TRAVEL_FLAGSHIP_DYNAMIC_HERO_KEY[hoveredQuickHelpHeroContextId];
-    }
-    if (hoveredUtilityScenarioId != null) {
-      return TRAVEL_SCENARIO_DYNAMIC_HERO_KEY[hoveredUtilityScenarioId] ?? 'default';
-    }
-    if (displayedHeroQuickHelpContextId !== 'default') {
-      return TRAVEL_FLAGSHIP_DYNAMIC_HERO_KEY[displayedHeroQuickHelpContextId];
-    }
-    return 'default';
-  }, [displayedHeroQuickHelpContextId, hoveredQuickHelpHeroContextId, hoveredUtilityScenarioId]);
 
   const activeTravelHeroFrameAccent = useMemo(
     () => travelQuickHelpHeroAccent(displayedHeroQuickHelpContextId),
@@ -6032,30 +5976,12 @@ export function TravelScreen() {
     () => travelHeroFinalTitleStyle(width, openingStageFullscreen),
     [width, openingStageFullscreen]
   );
-  const activeTravelHeroSource = useMemo(
-    () => travelDynamicHeroAsset(activeTravelHeroKey),
-    [activeTravelHeroKey]
-  );
   const defaultTravelHeroSource = useMemo(() => travelDynamicHeroAsset('default'), []);
   const travelHeroDefaultObjectPosition = useMemo((): string => {
     return openingStageFullscreen
       ? `58% ${TRAVEL_DYNAMIC_HERO_OBJECT_POSITION_Y_FULLSCREEN}`
       : TRAVEL_DYNAMIC_HERO_OBJECT_POSITION.default;
   }, [openingStageFullscreen]);
-
-  const travelHeroOverlayObjectPosition = useMemo((): string => {
-    if (isTravelAltMasterHeroKey(activeTravelHeroKey)) {
-      const framing = TRAVEL_ALT_MASTER_HERO_FRAMING[activeTravelHeroKey];
-      return openingStageFullscreen ? framing.objectPositionFullscreen : framing.objectPosition;
-    }
-    if (activeTravelHeroKey === 'default' || activeTravelHeroKey === 'journey') {
-      return travelHeroDefaultObjectPosition;
-    }
-    return (
-      TRAVEL_DYNAMIC_HERO_OBJECT_POSITION[activeTravelHeroKey] ??
-      TRAVEL_DYNAMIC_HERO_OBJECT_POSITION.default
-    );
-  }, [activeTravelHeroKey, openingStageFullscreen, travelHeroDefaultObjectPosition]);
   const travelTileLayout = useMemo(() => travelAppTileMetrics(width), [width]);
   const travelFlagshipLayout = useMemo(() => {
     const openingDesktopWeb =
@@ -6110,30 +6036,16 @@ export function TravelScreen() {
     () => travelOpeningGrammarMetrics(width, openingStageFullscreen),
     [width, openingStageFullscreen]
   );
-  /** Base/default airport layer — always default framing (accepted hero). */
+  /** Approved default master — stable full-bleed hero background (no alternate full-hero swap). */
   const travelHeroDefaultLayerImageStyle = useMemo(
     (): ImageStyle[] =>
       travelHeroLayerImageStyle(
-        'default',
         travelHeroDefaultObjectPosition,
         width,
         viewportHeight,
         openingStageFullscreen
       ),
     [travelHeroDefaultObjectPosition, width, viewportHeight, openingStageFullscreen]
-  );
-
-  /** Active overlay layer — alternate heroes use dedicated framing on this node only. */
-  const travelHeroActiveOverlayImageStyle = useMemo(
-    (): ImageStyle[] =>
-      travelHeroLayerImageStyle(
-        activeTravelHeroKey,
-        travelHeroOverlayObjectPosition,
-        width,
-        viewportHeight,
-        openingStageFullscreen
-      ),
-    [activeTravelHeroKey, travelHeroOverlayObjectPosition, width, viewportHeight, openingStageFullscreen]
   );
   const travelHeroStageStyle = useMemo(
     () => [
@@ -6155,14 +6067,14 @@ export function TravelScreen() {
   /** Pack 63A / Local parity — brighten wash only on direct hero hover, never card-driven switch. */
   const travelHeroBrightenActive = travelHeroDirectHover;
 
-  const travelAltMasterHeroActive = isTravelAltMasterHeroKey(activeTravelHeroKey);
-
-  /** Local parity — no full-image semantic color wash on alternate master heroes. */
-  const travelAltHeroImageAtmosphereSuppressed = travelAltMasterHeroActive;
+  /** Local parity — no full-image semantic color wash when alt scenarios are active (copy-only). */
+  const travelAltHeroImageAtmosphereSuppressed = isTravelDisabledAltFullHeroContext(
+    displayedHeroQuickHelpContextId
+  );
 
   const travelHeroNetworkBoostActive =
     travelHeroDirectHover ||
-    (travelHeroFrameLit && !travelAltMasterHeroActive);
+    (travelHeroFrameLit && !travelAltHeroImageAtmosphereSuppressed);
 
   const travelHeroNetworkHoverAccent = useMemo((): TravelSemanticAccent | null => {
     if (displayedHeroQuickHelpContextId !== 'default') {
@@ -6235,18 +6147,6 @@ export function TravelScreen() {
       };
     }, [tabBarNavigation, width])
   );
-
-  useEffect(() => {
-    if (previousTravelHeroKeyRef.current === activeTravelHeroKey) return;
-    travelHeroFadeAnim.setValue(0);
-    Animated.timing(travelHeroFadeAnim, {
-      toValue: 1,
-      duration: 220,
-      easing: Easing.out(Easing.quad),
-      useNativeDriver: true,
-    }).start();
-    previousTravelHeroKeyRef.current = activeTravelHeroKey;
-  }, [activeTravelHeroKey, travelHeroFadeAnim]);
 
   const onTravelHeroCardHover = useCallback((id: TravelFlagshipScenarioId) => {
     quickHelpHoverClearTokenRef.current += 1;
@@ -6578,25 +6478,6 @@ export function TravelScreen() {
                   resizeMode={Platform.OS === 'web' ? undefined : 'cover'}
                   accessibilityIgnoresInvertColors
                 />
-                {activeTravelHeroKey !== 'default' ? (
-                  <Animated.View style={[StyleSheet.absoluteFillObject, { opacity: travelHeroFadeAnim }]}>
-                    <Image
-                      testID="travel-dynamic-hero-active-overlay-image"
-                      source={activeTravelHeroSource}
-                      style={travelHeroActiveOverlayImageStyle}
-                      resizeMode={Platform.OS === 'web' ? undefined : 'cover'}
-                      accessibilityIgnoresInvertColors
-                      {...(Platform.OS === 'web'
-                        ? ({
-                            dataSet: {
-                              travelHeroKey: activeTravelHeroKey,
-                              travelHeroLayer: 'active-overlay',
-                            },
-                          } as const)
-                        : null)}
-                    />
-                  </Animated.View>
-                ) : null}
                 <LinearGradient
                   pointerEvents="none"
                   colors={[...travelHeroResolvedNetworkLighting.bottomHandoff]}
