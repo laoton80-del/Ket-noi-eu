@@ -1660,13 +1660,11 @@ type TravelAltHeroArtDirectedLayer = Readonly<{
 /** Art-directed alternate master heroes — cover dezoom + focal nudge on the active overlay layer only. */
 function travelAltHeroArtDirectedLayer(
   artDirection: TravelAltMasterHeroArtDirection,
+  objectPosition: string,
   viewportWidth: number,
   viewportHeight: number,
   openingStageFullscreen: boolean
 ): TravelAltHeroArtDirectedLayer {
-  const objectPosition = openingStageFullscreen
-    ? artDirection.objectPositionFullscreen
-    : artDirection.objectPosition;
   const coverScale = openingStageFullscreen
     ? artDirection.coverScaleFullscreen
     : artDirection.coverScaleNormal;
@@ -3188,6 +3186,85 @@ const TRAVEL_DYNAMIC_HERO_OBJECT_POSITION: Readonly<Record<TravelDynamicHeroKey,
   localGuide: `56% ${TRAVEL_DYNAMIC_HERO_OBJECT_POSITION_Y_NORMAL}`,
   emergencyPolice: `56% ${TRAVEL_DYNAMIC_HERO_OBJECT_POSITION_Y_NORMAL}`,
 };
+
+/** Location master v2 — responsive hero crop tiers (top hero only; cards unchanged). */
+type TravelLocationMasterV2Id = 'airport' | 'prague' | 'paris' | 'berlin';
+
+type TravelLocationMasterV2CropTier =
+  | 'mobilePortrait'
+  | 'tabletPortrait'
+  | 'tabletLandscape'
+  | 'desktop'
+  | 'largeDesktop'
+  | 'fullscreen';
+
+type TravelLocationMasterV2CropProfile = Readonly<Record<TravelLocationMasterV2CropTier, string>>;
+
+const TRAVEL_LOCATION_MASTER_V2_HERO_CROP: Readonly<
+  Record<TravelLocationMasterV2Id, TravelLocationMasterV2CropProfile>
+> = {
+  airport: {
+    mobilePortrait: '82% 40%',
+    tabletPortrait: '72% 43%',
+    tabletLandscape: '66% 44%',
+    desktop: '58% 46%',
+    largeDesktop: '58% 46%',
+    fullscreen: '58% 44%',
+  },
+  prague: {
+    mobilePortrait: '64% 48%',
+    tabletPortrait: '62% 50%',
+    tabletLandscape: '60% 50%',
+    desktop: '58% 50%',
+    largeDesktop: '58% 50%',
+    fullscreen: '58% 48%',
+  },
+  paris: {
+    mobilePortrait: '70% 48%',
+    tabletPortrait: '66% 50%',
+    tabletLandscape: '62% 50%',
+    desktop: '60% 50%',
+    largeDesktop: '60% 50%',
+    fullscreen: '60% 48%',
+  },
+  berlin: {
+    mobilePortrait: '68% 48%',
+    tabletPortrait: '64% 50%',
+    tabletLandscape: '60% 50%',
+    desktop: '58% 50%',
+    largeDesktop: '58% 50%',
+    fullscreen: '58% 48%',
+  },
+};
+
+function travelLocationMasterV2CropTier(
+  viewportWidth: number,
+  viewportHeight: number,
+  openingStageFullscreen: boolean
+): TravelLocationMasterV2CropTier {
+  if (openingStageFullscreen) return 'fullscreen';
+  if (viewportWidth < 768) return 'mobilePortrait';
+  if (isHubTabletPortraitViewport(viewportWidth, viewportHeight)) return 'tabletPortrait';
+  if (viewportWidth < TRAVEL_FLAGSHIP_DESKTOP_ROW_MIN_WIDTH) return 'tabletLandscape';
+  if (viewportWidth >= TRAVEL_HERO_LARGE_DESKTOP_MIN_WIDTH) return 'largeDesktop';
+  return 'desktop';
+}
+
+function travelLocationMasterV2HeroObjectPosition(
+  locationId: TravelLocationMasterV2Id,
+  viewportWidth: number,
+  viewportHeight: number,
+  openingStageFullscreen: boolean
+): string {
+  const tier = travelLocationMasterV2CropTier(viewportWidth, viewportHeight, openingStageFullscreen);
+  return TRAVEL_LOCATION_MASTER_V2_HERO_CROP[locationId][tier];
+}
+
+function travelLocationMasterV2IdForAltHeroKey(key: TravelAltMasterHeroKey): TravelLocationMasterV2Id {
+  if (key === 'interpreter') return 'prague';
+  if (key === 'rides') return 'paris';
+  return 'berlin';
+}
 
 /**
  * Location master v2 overlays — Prague / Paris / Berlin on active layer (2600×800 native cover).
@@ -6135,11 +6212,11 @@ export function TravelScreen() {
     []
   );
   const travelAltMasterHeroOverlayActive = isTravelAltMasterHeroKey(activeTravelHeroKey);
-  const travelHeroDefaultObjectPosition = useMemo((): string => {
-    return openingStageFullscreen
-      ? `58% ${TRAVEL_DYNAMIC_HERO_OBJECT_POSITION_Y_FULLSCREEN}`
-      : TRAVEL_DYNAMIC_HERO_OBJECT_POSITION.default;
-  }, [openingStageFullscreen]);
+  const travelHeroDefaultObjectPosition = useMemo(
+    (): string =>
+      travelLocationMasterV2HeroObjectPosition('airport', width, viewportHeight, openingStageFullscreen),
+    [width, viewportHeight, openingStageFullscreen]
+  );
   const travelTileLayout = useMemo(() => travelAppTileMetrics(width), [width]);
   const travelFlagshipLayout = useMemo(() => {
     const openingDesktopWeb =
@@ -6209,8 +6286,16 @@ export function TravelScreen() {
   /** Active overlay — art-directed alternate masters only (translation / rides / emergency). */
   const travelHeroActiveOverlayLayer = useMemo((): TravelAltHeroArtDirectedLayer | null => {
     if (!isTravelAltMasterHeroKey(activeTravelHeroKey)) return null;
+    const locationId = travelLocationMasterV2IdForAltHeroKey(activeTravelHeroKey);
+    const objectPosition = travelLocationMasterV2HeroObjectPosition(
+      locationId,
+      width,
+      viewportHeight,
+      openingStageFullscreen
+    );
     return travelAltHeroArtDirectedLayer(
       TRAVEL_ALT_MASTER_HERO_ART_DIRECTION[activeTravelHeroKey],
+      objectPosition,
       width,
       viewportHeight,
       openingStageFullscreen
