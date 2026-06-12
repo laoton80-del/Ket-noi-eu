@@ -3073,42 +3073,55 @@ const TRAVEL_DYNAMIC_HERO_OBJECT_POSITION: Readonly<Record<TravelDynamicHeroKey,
   emergencyPolice: `56% ${TRAVEL_DYNAMIC_HERO_OBJECT_POSITION_Y_NORMAL}`,
 };
 
-/** Quick Help alternate master heroes — stronger cover dezoom; default/journey hero unchanged. */
+/**
+ * Quick Help alternate master heroes — Local Bright hero standard (Pack TRAVEL_MATCH_LOCAL).
+ * Local reference: foregroundScale 1.0, objectPosition ~48% X, no full-image semantic wash on card switch.
+ */
 const TRAVEL_ALT_MASTER_HERO_KEYS = ['interpreter', 'rides', 'emergencyPolice'] as const satisfies readonly TravelDynamicHeroKey[];
 
 type TravelAltMasterHeroKey = (typeof TRAVEL_ALT_MASTER_HERO_KEYS)[number];
 
 type TravelAltMasterHeroFraming = Readonly<{
+  /** Web cover dezoom — smaller scale → larger raster → more scene visible (full-bleed, not contain). */
   coverScaleNormal: number;
   coverScaleFullscreen: number;
   objectPosition: string;
   objectPositionFullscreen: string;
-  overlayIntensity: number;
 }>;
+
+/** Local Bright baseline focal — center-weighted X, moderate Y headroom. */
+const TRAVEL_ALT_MASTER_HERO_LOCAL_FOCAL_X = '48%';
 
 const TRAVEL_ALT_MASTER_HERO_FRAMING: Readonly<Record<TravelAltMasterHeroKey, TravelAltMasterHeroFraming>> = {
   interpreter: {
-    coverScaleNormal: 0.58,
-    coverScaleFullscreen: 0.56,
-    objectPosition: '50% 48%',
-    objectPositionFullscreen: '50% 46%',
-    overlayIntensity: 0.5,
+    coverScaleNormal: 0.5,
+    coverScaleFullscreen: 0.48,
+    objectPosition: `${TRAVEL_ALT_MASTER_HERO_LOCAL_FOCAL_X} 44%`,
+    objectPositionFullscreen: `${TRAVEL_ALT_MASTER_HERO_LOCAL_FOCAL_X} 42%`,
   },
   rides: {
-    coverScaleNormal: 0.56,
-    coverScaleFullscreen: 0.54,
-    objectPosition: '48% 48%',
-    objectPositionFullscreen: '48% 46%',
-    overlayIntensity: 0.5,
+    coverScaleNormal: 0.48,
+    coverScaleFullscreen: 0.46,
+    objectPosition: `${TRAVEL_ALT_MASTER_HERO_LOCAL_FOCAL_X} 46%`,
+    objectPositionFullscreen: `${TRAVEL_ALT_MASTER_HERO_LOCAL_FOCAL_X} 44%`,
   },
   emergencyPolice: {
-    coverScaleNormal: 0.58,
-    coverScaleFullscreen: 0.56,
-    objectPosition: '50% 50%',
-    objectPositionFullscreen: '50% 48%',
-    overlayIntensity: 0.5,
+    coverScaleNormal: 0.5,
+    coverScaleFullscreen: 0.48,
+    objectPosition: `${TRAVEL_ALT_MASTER_HERO_LOCAL_FOCAL_X} 48%`,
+    objectPositionFullscreen: `${TRAVEL_ALT_MASTER_HERO_LOCAL_FOCAL_X} 46%`,
   },
 };
+
+/** Local Bright left text scrim — readability only; does not veil the full hero image. */
+const TRAVEL_ALT_MASTER_HERO_LEFT_TEXT_SCRIM_COLORS = [
+  'rgba(2, 10, 16, 0.58)',
+  'rgba(2, 10, 16, 0.34)',
+  'rgba(2, 10, 16, 0.10)',
+  'rgba(2, 10, 16, 0)',
+] as const;
+
+const TRAVEL_ALT_MASTER_HERO_LEFT_TEXT_SCRIM_LOCATIONS = [0, 0.38, 0.62, 1] as const;
 
 function isTravelAltMasterHeroKey(key: TravelDynamicHeroKey): key is TravelAltMasterHeroKey {
   return (TRAVEL_ALT_MASTER_HERO_KEYS as readonly string[]).includes(key);
@@ -6093,18 +6106,17 @@ export function TravelScreen() {
     displayedHeroQuickHelpContextId !== 'default' ||
     travelCardHoverAccent != null;
 
-  /** Pack 63A — brighten only on direct hero hover (not full-image wash on card-driven context). */
+  /** Pack 63A / Local parity — brighten wash only on direct hero hover, never card-driven switch. */
   const travelHeroBrightenActive = travelHeroDirectHover;
 
-  const travelHeroOverlayIntensity = useMemo((): number => {
-    if (!isTravelAltMasterHeroKey(activeTravelHeroKey)) return 1;
-    const base = TRAVEL_ALT_MASTER_HERO_FRAMING[activeTravelHeroKey].overlayIntensity;
-    return travelHeroDirectHover ? Math.min(1, base + 0.22) : base;
-  }, [activeTravelHeroKey, travelHeroDirectHover]);
+  const travelAltMasterHeroActive = isTravelAltMasterHeroKey(activeTravelHeroKey);
+
+  /** Local parity — no full-image semantic color wash on alternate master heroes. */
+  const travelAltHeroImageAtmosphereSuppressed = travelAltMasterHeroActive;
 
   const travelHeroNetworkBoostActive =
     travelHeroDirectHover ||
-    (travelHeroFrameLit && !isTravelAltMasterHeroKey(activeTravelHeroKey));
+    (travelHeroFrameLit && !travelAltMasterHeroActive);
 
   const travelHeroNetworkHoverAccent = useMemo((): TravelSemanticAccent | null => {
     if (displayedHeroQuickHelpContextId !== 'default') {
@@ -6123,7 +6135,13 @@ export function TravelScreen() {
     () => resolveTravelHeroNetworkLighting(travelHeroNetworkHoverAccent, travelHeroNetworkBoostActive),
     [travelHeroNetworkHoverAccent, travelHeroNetworkBoostActive]
   );
-  const travelHeroResolvedNetworkLighting = travelHeroNetworkLighting;
+  const travelHeroResolvedNetworkLighting = useMemo(
+    () =>
+      travelAltHeroImageAtmosphereSuppressed
+        ? resolveTravelHeroNetworkLighting(null, false)
+        : travelHeroNetworkLighting,
+    [travelAltHeroImageAtmosphereSuppressed, travelHeroNetworkLighting]
+  );
   useEffect(() => {
     Animated.timing(travelHeroLitAnim, {
       toValue: travelHeroFrameLit ? 1 : 0,
@@ -6529,20 +6547,24 @@ export function TravelScreen() {
                   locations={[0, 0.72, 1]}
                   style={styles.heroBottomHandoff}
                 />
-                <LinearGradient
-                  pointerEvents="none"
-                  colors={[...travelHeroResolvedNetworkLighting.routeArcPrimary]}
-                  start={{ x: 0.18, y: 0.62 }}
-                  end={{ x: 0.72, y: 0.38 }}
-                  style={[styles.heroRouteArcPrimary, { opacity: 0.28 * travelHeroOverlayIntensity }]}
-                />
-                <LinearGradient
-                  pointerEvents="none"
-                  colors={[...travelHeroResolvedNetworkLighting.routeArcSecondary]}
-                  start={{ x: 0.82, y: 0.28 }}
-                  end={{ x: 0.42, y: 0.72 }}
-                  style={[styles.heroRouteArcSecondary, { opacity: 0.2 * travelHeroOverlayIntensity }]}
-                />
+                {!travelAltHeroImageAtmosphereSuppressed ? (
+                  <LinearGradient
+                    pointerEvents="none"
+                    colors={[...travelHeroResolvedNetworkLighting.routeArcPrimary]}
+                    start={{ x: 0.18, y: 0.62 }}
+                    end={{ x: 0.72, y: 0.38 }}
+                    style={styles.heroRouteArcPrimary}
+                  />
+                ) : null}
+                {!travelAltHeroImageAtmosphereSuppressed ? (
+                  <LinearGradient
+                    pointerEvents="none"
+                    colors={[...travelHeroResolvedNetworkLighting.routeArcSecondary]}
+                    start={{ x: 0.82, y: 0.28 }}
+                    end={{ x: 0.42, y: 0.72 }}
+                    style={styles.heroRouteArcSecondary}
+                  />
+                ) : null}
                 <Animated.View
                   pointerEvents="none"
                   style={[
@@ -6551,22 +6573,32 @@ export function TravelScreen() {
                     { opacity: travelHeroBrightenActive ? travelHeroBrightenOpacity : 0 },
                   ]}
                 />
-                <LinearGradient
-                  pointerEvents="none"
-                  colors={[...travelHeroResolvedNetworkLighting.subjectGlow]}
-                  start={{ x: 0.72, y: 0.22 }}
-                  end={{ x: 0.92, y: 0.78 }}
-                  style={[styles.heroSubjectGlow, { opacity: travelHeroOverlayIntensity }]}
-                />
+                {!travelAltHeroImageAtmosphereSuppressed ? (
+                  <LinearGradient
+                    pointerEvents="none"
+                    colors={[...travelHeroResolvedNetworkLighting.subjectGlow]}
+                    start={{ x: 0.72, y: 0.22 }}
+                    end={{ x: 0.92, y: 0.78 }}
+                    style={styles.heroSubjectGlow}
+                  />
+                ) : null}
               </View>
               <LinearGradient
                 pointerEvents="none"
                 colors={
-                  travelHeroStage.useAbsoluteTextLayer
-                    ? ['rgba(2, 6, 14, 0.97)', 'rgba(4, 10, 20, 0.78)', 'rgba(4, 10, 20, 0)']
-                    : ['rgba(4, 8, 16, 0.92)', 'rgba(4, 10, 20, 0.58)', 'rgba(4, 10, 20, 0)']
+                  travelAltHeroImageAtmosphereSuppressed
+                    ? [...TRAVEL_ALT_MASTER_HERO_LEFT_TEXT_SCRIM_COLORS]
+                    : travelHeroStage.useAbsoluteTextLayer
+                      ? ['rgba(2, 6, 14, 0.97)', 'rgba(4, 10, 20, 0.78)', 'rgba(4, 10, 20, 0)']
+                      : ['rgba(4, 8, 16, 0.92)', 'rgba(4, 10, 20, 0.58)', 'rgba(4, 10, 20, 0)']
                 }
-                locations={travelHeroStage.useAbsoluteTextLayer ? [0, 0.48, 1] : [0, 0.52, 1]}
+                locations={
+                  travelAltHeroImageAtmosphereSuppressed
+                    ? [...TRAVEL_ALT_MASTER_HERO_LEFT_TEXT_SCRIM_LOCATIONS]
+                    : travelHeroStage.useAbsoluteTextLayer
+                      ? [0, 0.48, 1]
+                      : [0, 0.52, 1]
+                }
                 start={{ x: 0, y: 0.5 }}
                 end={{ x: 1, y: 0.5 }}
                 style={[
@@ -6574,7 +6606,7 @@ export function TravelScreen() {
                   { width: `${travelHeroStage.textVeilWidthPercent}%` },
                 ]}
               />
-              {travelHeroStage.useAbsoluteTextLayer ? (
+              {travelHeroStage.useAbsoluteTextLayer && !travelAltHeroImageAtmosphereSuppressed ? (
                 <LinearGradient
                   pointerEvents="none"
                   colors={['rgba(2, 6, 14, 0.55)', 'rgba(2, 6, 14, 0.28)', 'transparent']}
@@ -6590,13 +6622,15 @@ export function TravelScreen() {
                   ]}
                 />
               ) : null}
-              <TravelHeroLightingNetwork
-                hoverAccent={travelHeroNetworkHoverAccent}
-                boosted={travelHeroNetworkBoostActive}
-                networkPrimaryHex={travelHeroQuickHelpNetworkHex?.primary}
-                networkSecondaryHex={travelHeroQuickHelpNetworkHex?.secondary}
-                radius={18}
-              />
+              {!travelAltHeroImageAtmosphereSuppressed ? (
+                <TravelHeroLightingNetwork
+                  hoverAccent={travelHeroNetworkHoverAccent}
+                  boosted={travelHeroNetworkBoostActive}
+                  networkPrimaryHex={travelHeroQuickHelpNetworkHex?.primary}
+                  networkSecondaryHex={travelHeroQuickHelpNetworkHex?.secondary}
+                  radius={18}
+                />
+              ) : null}
               <View
                 testID="travel-hero-editorial-text-layer"
                 style={[
