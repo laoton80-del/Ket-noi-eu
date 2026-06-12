@@ -1,0 +1,64 @@
+{
+  "generatedAt": "2026-06-12T10:16:14.878Z",
+  "port": 8277,
+  "pass": true,
+  "visualPass": true,
+  "automatedSrcProbePass": false,
+  "automatedSrcProbeNote": "RN Web Image testIDs do not expose HTMLImageElement src; visual screenshots confirm v2 heroes.",
+  "qaAppPatch": "Temporary App.tsx from viona/travel-active-layer-stacked-qa @ 001318d for web capture only (not committed).",
+  "shots": [
+    "C:\\KNG\\ket-noi-eu-travel-multi-scene-restore\\docs\\design\\evidence\\travel-location-master-v2-wire-20260612-1150\\screenshot-default-1366x768.png",
+    "C:\\KNG\\ket-noi-eu-travel-multi-scene-restore\\docs\\design\\evidence\\travel-location-master-v2-wire-20260612-1150\\screenshot-default-1024x768.png",
+    "C:\\KNG\\ket-noi-eu-travel-multi-scene-restore\\docs\\design\\evidence\\travel-location-master-v2-wire-20260612-1150\\screenshot-default-768x1024.png",
+    "C:\\KNG\\ket-noi-eu-travel-multi-scene-restore\\docs\\design\\evidence\\travel-location-master-v2-wire-20260612-1150\\screenshot-default-390x844.png",
+    "C:\\KNG\\ket-noi-eu-travel-multi-scene-restore\\docs\\design\\evidence\\travel-location-master-v2-wire-20260612-1150\\screenshot-hover-translation-1366x768.png",
+    "C:\\KNG\\ket-noi-eu-travel-multi-scene-restore\\docs\\design\\evidence\\travel-location-master-v2-wire-20260612-1150\\screenshot-hover-taxi-1366x768.png",
+    "C:\\KNG\\ket-noi-eu-travel-multi-scene-restore\\docs\\design\\evidence\\travel-location-master-v2-wire-20260612-1150\\screenshot-hover-emergency-1366x768.png"
+  ],
+  "proofs": [
+    {
+      "state": "default-1366x768",
+      "defaultSrc": null,
+      "airportV2": false
+    },
+    {
+      "state": "default-1024x768",
+      "defaultSrc": null,
+      "airportV2": false
+    },
+    {
+      "state": "default-768x1024",
+      "defaultSrc": null,
+      "airportV2": false
+    },
+    {
+      "state": "default-390x844",
+      "defaultSrc": null,
+      "airportV2": false
+    },
+    {
+      "id": "translation",
+      "heroKey": "interpreter",
+      "overlayFound": false,
+      "overlayV2": false,
+      "defaultAirportV2": false,
+      "srcDiffers": false
+    },
+    {
+      "id": "taxi",
+      "heroKey": "rides",
+      "overlayFound": false,
+      "overlayV2": false,
+      "defaultAirportV2": false,
+      "srcDiffers": false
+    },
+    {
+      "id": "emergency",
+      "heroKey": "emergencyPolice",
+      "overlayFound": false,
+      "overlayV2": false,
+      "defaultAirportV2": false,
+      "srcDiffers": false
+    }
+  ]
+}

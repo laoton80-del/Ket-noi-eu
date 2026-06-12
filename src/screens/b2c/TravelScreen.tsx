@@ -230,6 +230,12 @@ const TRAVEL_DYN_HERO_RIDES_SOURCE = require('../../../assets/viona/dynamic-hero
 const TRAVEL_DYN_HERO_EMERGENCY_CARD = require('../../../assets/viona/dynamic-hero/travel/travel-emergency-police-web-normal-card-62y.png');
 const TRAVEL_DYN_HERO_EMERGENCY_SOURCE = require('../../../assets/viona/dynamic-hero/travel/travel-emergency-police-web-normal-source.png');
 
+/** Location master v2 — 2600×800 premium destination heroes (hero background only; cards unchanged). */
+const TRAVEL_DYN_HERO_AIRPORT_MASTER_V2 = require('../../../assets/viona/dynamic-hero/travel/travel-airport-web-normal-master-v2.png');
+const TRAVEL_DYN_HERO_PRAGUE_MASTER_V2 = require('../../../assets/viona/dynamic-hero/travel/travel-prague-charles-bridge-castle-web-normal-master-v2.png');
+const TRAVEL_DYN_HERO_PARIS_MASTER_V2 = require('../../../assets/viona/dynamic-hero/travel/travel-paris-eiffel-web-normal-master-v2.png');
+const TRAVEL_DYN_HERO_BERLIN_MASTER_V2 = require('../../../assets/viona/dynamic-hero/travel/travel-berlin-city-web-normal-master-v2.png');
+
 /** Wave3b.8 — dedicated daylight cinematic cards (Experience Zone only; not opening hero). */
 const TRAVEL_DESTINATION_LENS_SCENE = require('../../../assets/viona/travel/viona-travel-destination-lens-cinematic-daylight-v1.png');
 const TRAVEL_LOCAL_CONCIERGE_SCENE = TRAVEL_DYN_HERO_AIRPORT_MASTER;
@@ -1576,9 +1582,9 @@ const TRAVEL_OPENING_STAGE_HERO_CARD_SHELL_SLACK_PX = 78;
 const TRAVEL_OPENING_STAGE_FULLSCREEN_HERO_CARD_SHELL_SLACK_PX = 58;
 /** Pack 9 — opening lock gaps (Travel-only; display gap may add air bonus). */
 const TRAVEL_OPENING_STAGE_NORMAL_WEB_HERO_TO_CARD_LOCK_GAP_PX = 4;
-/** Pack 7–11 — desktop-wide hero cover zoom-out (default/master hero only). */
-const TRAVEL_DYNAMIC_HERO_IMAGE_COVER_SCALE_NORMAL = 0.72;
-const TRAVEL_DYNAMIC_HERO_IMAGE_COVER_SCALE_FULLSCREEN = 0.7;
+/** Location master v2 — 2600×800 matches audited ~3.25:1 clip; native cover without dezoom. */
+const TRAVEL_DYNAMIC_HERO_IMAGE_COVER_SCALE_NORMAL = 1;
+const TRAVEL_DYNAMIC_HERO_IMAGE_COVER_SCALE_FULLSCREEN = 1;
 const TRAVEL_DYNAMIC_HERO_OBJECT_POSITION_Y_NORMAL = '46%';
 const TRAVEL_DYNAMIC_HERO_OBJECT_POSITION_Y_FULLSCREEN = '44%';
 
@@ -3053,16 +3059,16 @@ type TravelDynamicHeroKey =
   | 'emergencyPolice';
 
 const TRAVEL_DYNAMIC_HERO_ASSETS: Readonly<Record<TravelDynamicHeroKey, ImageSourcePropType>> = {
-  default: TRAVEL_DYN_HERO_AIRPORT_MASTER,
-  journey: TRAVEL_DYN_HERO_AIRPORT_MASTER,
-  rides: TRAVEL_DYN_HERO_RIDES_SOURCE,
-  transit: TRAVEL_DYN_HERO_AIRPORT_MASTER,
-  family: TRAVEL_DYN_HERO_AIRPORT_MASTER,
-  global: TRAVEL_DYN_HERO_AIRPORT_MASTER,
-  interpreter: TRAVEL_DYN_HERO_TRANSLATION_SOURCE,
-  cityConcierge: TRAVEL_DYN_HERO_AIRPORT_MASTER,
-  localGuide: TRAVEL_DYN_HERO_TRANSLATION_SOURCE,
-  emergencyPolice: TRAVEL_DYN_HERO_EMERGENCY_SOURCE,
+  default: TRAVEL_DYN_HERO_AIRPORT_MASTER_V2,
+  journey: TRAVEL_DYN_HERO_AIRPORT_MASTER_V2,
+  rides: TRAVEL_DYN_HERO_PARIS_MASTER_V2,
+  transit: TRAVEL_DYN_HERO_AIRPORT_MASTER_V2,
+  family: TRAVEL_DYN_HERO_AIRPORT_MASTER_V2,
+  global: TRAVEL_DYN_HERO_AIRPORT_MASTER_V2,
+  interpreter: TRAVEL_DYN_HERO_PRAGUE_MASTER_V2,
+  cityConcierge: TRAVEL_DYN_HERO_AIRPORT_MASTER_V2,
+  localGuide: TRAVEL_DYN_HERO_PRAGUE_MASTER_V2,
+  emergencyPolice: TRAVEL_DYN_HERO_BERLIN_MASTER_V2,
 };
 
 const TRAVEL_FLAGSHIP_CARD_ASSETS: Readonly<Record<TravelFlagshipScenarioId, ImageSourcePropType>> = {
@@ -3178,8 +3184,8 @@ const TRAVEL_DYNAMIC_HERO_OBJECT_POSITION: Readonly<Record<TravelDynamicHeroKey,
 };
 
 /**
- * Alternate master heroes — art-directed into the wide master frame (translation / rides / emergency).
- * Default/journey master stays unchanged; overlay layer uses per-key scale + focal + wrapper nudge.
+ * Location master v2 overlays — Prague / Paris / Berlin on active layer (2600×800 native cover).
+ * Translation → Prague, rides → Paris, emergency → Berlin; default/journey stays airport v2 base.
  */
 const TRAVEL_ALT_MASTER_HERO_KEYS = ['interpreter', 'rides', 'emergencyPolice'] as const satisfies readonly TravelDynamicHeroKey[];
 
@@ -3190,7 +3196,6 @@ type TravelAltMasterHeroArtDirection = Readonly<{
   coverScaleFullscreen: number;
   objectPosition: string;
   objectPositionFullscreen: string;
-  /** Wrapper nudge after dezoom — % of hero box. */
   translateXPercent: number;
   translateYPercent: number;
   wrapperScale: number;
@@ -3200,29 +3205,29 @@ const TRAVEL_ALT_MASTER_HERO_ART_DIRECTION: Readonly<
   Record<TravelAltMasterHeroKey, TravelAltMasterHeroArtDirection>
 > = {
   interpreter: {
-    coverScaleNormal: 0.36,
-    coverScaleFullscreen: 0.34,
-    objectPosition: '40% 44%',
-    objectPositionFullscreen: '40% 42%',
-    translateXPercent: -5,
+    coverScaleNormal: 1,
+    coverScaleFullscreen: 1,
+    objectPosition: '58% 50%',
+    objectPositionFullscreen: '58% 48%',
+    translateXPercent: 0,
     translateYPercent: 0,
     wrapperScale: 1,
   },
   rides: {
-    coverScaleNormal: 0.34,
-    coverScaleFullscreen: 0.32,
-    objectPosition: '46% 48%',
-    objectPositionFullscreen: '46% 46%',
-    translateXPercent: -3,
-    translateYPercent: 1,
+    coverScaleNormal: 1,
+    coverScaleFullscreen: 1,
+    objectPosition: '60% 50%',
+    objectPositionFullscreen: '60% 48%',
+    translateXPercent: 0,
+    translateYPercent: 0,
     wrapperScale: 1,
   },
   emergencyPolice: {
-    coverScaleNormal: 0.36,
-    coverScaleFullscreen: 0.34,
-    objectPosition: '44% 50%',
-    objectPositionFullscreen: '44% 48%',
-    translateXPercent: -4,
+    coverScaleNormal: 1,
+    coverScaleFullscreen: 1,
+    objectPosition: '58% 50%',
+    objectPositionFullscreen: '58% 48%',
+    translateXPercent: 0,
     translateYPercent: 0,
     wrapperScale: 1,
   },
