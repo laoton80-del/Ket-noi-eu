@@ -33,7 +33,7 @@ Required gates for this job:
 - `git diff --check`
 - `npx tsc --noEmit`
 - `npm run smoke`
-- `git grep -n "<<<<<<<|=======|>>>>>>>" -- . ":(exclude)node_modules" ":(exclude).git"`
+- dispatch conflict-marker grep
 
 ## Results
 
@@ -50,4 +50,4 @@ Validated from isolated worktree `C:\KNG\ket-noi-eu-capability-readiness`.
 | `git diff --check` | PASS | No whitespace errors. |
 | `npx tsc --noEmit` | PASS | Ran through `cmd /c npx` with ignored local `node_modules` junction. |
 | `npm run smoke` | PASS | Release smoke OK. |
-| conflict marker grep | PASS | Anchored text scan found no conflict markers. The broad dispatch grep pattern matches existing decorative separators and binary bytes on base, so it is not a reliable conflict signal without anchors/excludes. |
+| conflict marker grep | PASS | Anchored text scan found no conflict markers. The broad dispatch grep pattern can match existing decorative separators and binary bytes on base, so it is not a reliable conflict signal without anchors/excludes. |
