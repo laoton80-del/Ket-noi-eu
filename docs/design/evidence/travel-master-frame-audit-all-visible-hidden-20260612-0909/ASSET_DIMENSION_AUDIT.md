@@ -1,6 +1,6 @@
 # Travel PNG asset dimension audit
 
-**Source:** `ASSET_DIMENSION_AUDIT.json` (29 files)  
+**Source:** `ASSET_DIMENSION_AUDIT.json` (29 files)
 **Scanned:** `assets/viona/dynamic-hero/travel/`, `assets/viona/travel/`, `_incoming-travel-master-v2-local-standard/` (README only; no v2 PNGs yet)
 
 ## Wired runtime assets (8)

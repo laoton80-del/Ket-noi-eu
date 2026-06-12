@@ -1,6 +1,6 @@
 # Wiring root cause — location master v2 bleed
 
-**Pack:** `PACK_TRAVEL_LOCATION_MASTER_V2_WIRING_FIX_HERO_ONLY`  
+**Pack:** `PACK_TRAVEL_LOCATION_MASTER_V2_WIRING_FIX_HERO_ONLY`
 **Branch:** `viona/travel-multi-scene-restore` @ `0e0bea9` (before fix)
 
 ## Cause of repeated airport image
@@ -39,5 +39,5 @@ Utility keys (`transit`, `family`, `global`, `cityConcierge`) fall back to legac
 
 ## Lower panels
 
-`TRAVEL_LOCAL_CONCIERGE_SCENE` → legacy `master-62h` (unchanged).  
+`TRAVEL_LOCAL_CONCIERGE_SCENE` → legacy `master-62h` (unchanged).
 `TRAVEL_SITUATION_NETWORK_BG_PREMIUM` → dedicated situation network PNG (unchanged).

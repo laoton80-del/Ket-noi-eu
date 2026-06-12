@@ -1,8 +1,8 @@
 # Clean rebase after ReferenceLab merge — summary
 
-**Pack:** `PACK_TRAVEL_REBASE_AFTER_REFERENCE_LAB_MERGE`  
-**Branch:** `viona/travel-multi-scene-restore`  
-**Rebased onto:** `origin/master` @ `1979b99`  
+**Pack:** `PACK_TRAVEL_REBASE_AFTER_REFERENCE_LAB_MERGE`
+**Branch:** `viona/travel-multi-scene-restore`
+**Rebased onto:** `origin/master` @ `1979b99`
 **HEAD after rebase:** `05f6060`
 
 ## Rebase

@@ -1,7 +1,7 @@
 # Travel master v2 asset spec prep — evidence note
 
-**Pack:** `PACK_TRAVEL_MASTER_V2_ASSET_SPEC_PREP`  
-**Date:** 2026-06-12  
+**Pack:** `PACK_TRAVEL_MASTER_V2_ASSET_SPEC_PREP`
+**Date:** 2026-06-12
 **Branch context:** `viona/travel-multi-scene-restore` @ `8ace3ea` (restore art-directed alternate hero scenes)
 
 ## Summary

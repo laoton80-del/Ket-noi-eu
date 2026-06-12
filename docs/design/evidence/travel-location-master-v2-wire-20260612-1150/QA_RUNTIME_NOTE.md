@@ -1,6 +1,6 @@
 # Runtime QA note
 
-**Port:** 8277 (`npx expo start --web --clear`)  
+**Port:** 8277 (`npx expo start --web --clear`)
 **Capture:** `_capture-qa.mjs` — 7 screenshots, 4 viewports
 
 ## Web navigator prerequisite

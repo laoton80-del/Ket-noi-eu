@@ -1,6 +1,6 @@
 # Recommended Travel master v2 generation sizes
 
-Based on static code audit + runtime DOM measurements + on-disk asset dimensions.  
+Based on static code audit + runtime DOM measurements + on-disk asset dimensions.
 **Do not use Local Bright 2590×607 blindly for Travel** — measured Travel desktop clip is **~3.25:1**, not **~4.27:1**.
 
 ## 1. Best web/desktop master generation size
@@ -46,7 +46,7 @@ Measured clip: **358 × 300** (1.19:1 — very tall/narrow effective frame).
 | Fullscreen mode | **No separate asset** — code dezoom 0.70 on same master |
 | Mobile | **No separate asset** |
 
-**One-size ultra-wide master sufficient for hero:** YES, at **~3.25:1** (not 2590×607).  
+**One-size ultra-wide master sufficient for hero:** YES, at **~3.25:1** (not 2590×607).
 **Separate responsive crops needed:** YES for **card tiles only**; optional later for marketing.
 
 ## 6. Safe-zone coordinates (for 2600 × 800 master)

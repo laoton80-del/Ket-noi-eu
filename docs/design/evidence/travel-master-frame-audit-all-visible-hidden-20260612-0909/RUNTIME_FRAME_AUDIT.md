@@ -1,8 +1,8 @@
 # Travel master hero frame — runtime DOM audit
 
-**Port:** 8275 (fresh `expo start --web --clear`)  
-**URL:** `http://localhost:8275/travel`  
-**Runtime branch:** `viona/travel-active-layer-stacked-qa` (RefLab gate; hero frame metrics match `TravelScreen.tsx` on `05cfb19`)  
+**Port:** 8275 (fresh `expo start --web --clear`)
+**URL:** `http://localhost:8275/travel`
+**Runtime branch:** `viona/travel-active-layer-stacked-qa` (RefLab gate; hero frame metrics match `TravelScreen.tsx` on `05cfb19`)
 **Captured:** 2026-06-12 — see `RUNTIME_FRAME_AUDIT.json`
 
 ## Measured hero stage clip (`travel-dynamic-hero-stage`)
@@ -57,7 +57,7 @@ Cards use 2172×724 PNGs with `objectFit: cover` — heavy crop at mobile/narrow
 
 ## Fullscreen
 
-**Not testable in automated run** — fullscreen shell button not matched by Playwright text selector.  
+**Not testable in automated run** — fullscreen shell button not matched by Playwright text selector.
 **Code path:** browser document fullscreen → `openingStageFullscreen` → hero target **376px** height, cover scale **0.70** (see `STATIC_CODE_AUDIT.md`).
 
 ## Screenshots

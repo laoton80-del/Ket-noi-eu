@@ -1,7 +1,7 @@
 # Travel master hero frame — static code audit
 
-**Pack:** `PACK_TRAVEL_MASTER_FRAME_AUDIT_ALL_VISIBLE_AND_HIDDEN`  
-**Branch audited:** `viona/travel-multi-scene-restore` @ `05cfb19` (code); runtime DOM on `viona/travel-active-layer-stacked-qa` (RefLab gate for `/travel`)  
+**Pack:** `PACK_TRAVEL_MASTER_FRAME_AUDIT_ALL_VISIBLE_AND_HIDDEN`
+**Branch audited:** `viona/travel-multi-scene-restore` @ `05cfb19` (code); runtime DOM on `viona/travel-active-layer-stacked-qa` (RefLab gate for `/travel`)
 **Date:** 2026-06-12
 
 ## Primary files (Travel hero / image frame logic)

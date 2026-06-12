@@ -1,6 +1,6 @@
 # Travel location master v2 — wiring summary
 
-**Pack:** `PACK_TRAVEL_LOCATION_MASTER_V2_WIRE`  
+**Pack:** `PACK_TRAVEL_LOCATION_MASTER_V2_WIRE`
 **File:** `src/screens/b2c/TravelScreen.tsx`
 
 ## Hero mapping (`TRAVEL_DYNAMIC_HERO_ASSETS`)

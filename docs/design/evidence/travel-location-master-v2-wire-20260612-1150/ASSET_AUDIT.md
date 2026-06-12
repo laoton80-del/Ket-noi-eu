@@ -1,7 +1,7 @@
 # Travel location master v2 — asset audit
 
-**Pack:** `PACK_TRAVEL_LOCATION_MASTER_V2_WIRE`  
-**Branch:** `viona/travel-multi-scene-restore`  
+**Pack:** `PACK_TRAVEL_LOCATION_MASTER_V2_WIRE`
+**Branch:** `viona/travel-multi-scene-restore`
 **Generated:** 2026-06-12
 
 ## Incoming verification

@@ -1,7 +1,7 @@
 # Location master v2 — responsive crop config
 
-**Pack:** `PACK_TRAVEL_LOCATION_MASTER_V2_RESPONSIVE_CROP_POLISH`  
-**File:** `src/screens/b2c/TravelScreen.tsx`  
+**Pack:** `PACK_TRAVEL_LOCATION_MASTER_V2_RESPONSIVE_CROP_POLISH`
+**File:** `src/screens/b2c/TravelScreen.tsx`
 **Scope:** Top hero `objectPosition` only (default airport layer + Prague/Paris/Berlin overlays)
 
 ## Tiers

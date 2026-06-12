@@ -1,7 +1,7 @@
 # Travel dynamic-hero existing assets — approval manifest
 
-**Pack:** PACK_TRAVEL_USE_EXISTING_DYNAMIC_HERO_ASSETS  
-**Date:** 2026-06-11  
+**Pack:** PACK_TRAVEL_USE_EXISTING_DYNAMIC_HERO_ASSETS
+**Date:** 2026-06-11
 **Branch:** `viona/travel-multi-scene-restore`
 
 ## Operator statement
