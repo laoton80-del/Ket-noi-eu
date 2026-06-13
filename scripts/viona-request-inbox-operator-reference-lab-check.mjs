@@ -16,6 +16,10 @@ const ALLOWED_FILES = [
   'scripts/viona-request-inbox-readonly-check.mjs',
   'scripts/viona-request-inbox-reference-lab-check.mjs',
   'docs/design/evidence/codex-request-operator-inbox-reference-lab-pack4/README.md',
+  'src/config/vionaOperatorInboxAdminReadiness.ts',
+  'docs/product/VIONA_OPERATOR_INBOX_ADMIN_ROUTE_READINESS.md',
+  'scripts/viona-operator-inbox-admin-route-readiness-check.mjs',
+  'docs/design/evidence/codex-operator-inbox-admin-route-readiness-pack5/README.md',
 ];
 
 const REQUIRED_SAFETY_PHRASES = [
