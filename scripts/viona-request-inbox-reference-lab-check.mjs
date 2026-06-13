@@ -13,6 +13,7 @@ const ALLOWED_FILES = [
   'src/navigation/routes.ts',
   'docs/product/VIONA_REQUEST_INBOX_REFERENCE_LAB.md',
   'scripts/viona-request-inbox-reference-lab-check.mjs',
+  'scripts/viona-request-inbox-readonly-check.mjs',
   'docs/design/evidence/codex-request-inbox-reference-lab-pack3/README.md',
 ];
 

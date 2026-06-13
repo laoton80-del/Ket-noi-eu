@@ -36,3 +36,9 @@ Gates run:
 
 Final result:
 - PASS in the isolated Pack3 branch.
+
+## Check script refinement
+
+- Cursor review found a Pack2 check scope mismatch: `viona-request-inbox-readonly-check.mjs` false-failed Pack3 because ReferenceLab route files were treated as forbidden navigation drift.
+- The check script was refined to allow only the known gated ReferenceLab preview route files listed above.
+- Safety boundaries remain unchanged: App.tsx, live consumer UI, API, DB, payment, booking, SOS, wallet, merchant execution, and live AI runtime remain forbidden.
