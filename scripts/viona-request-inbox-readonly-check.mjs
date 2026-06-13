@@ -35,7 +35,19 @@ const GATED_REFERENCE_LAB_PREVIEW_DIFF_FILES = [
   'docs/design/evidence/codex-request-operator-inbox-reference-lab-pack4/README.md',
 ];
 
-const ALLOWED_DIFF_FILES = [...PACK2_ALLOWED_DIFF_FILES, ...GATED_REFERENCE_LAB_PREVIEW_DIFF_FILES];
+// Pack5 admin route readiness contract only; does not allow routes, navigation, or live runtime behavior.
+const PACK5_ADMIN_ROUTE_READINESS_DIFF_FILES = [
+  'src/config/vionaOperatorInboxAdminReadiness.ts',
+  'docs/product/VIONA_OPERATOR_INBOX_ADMIN_ROUTE_READINESS.md',
+  'scripts/viona-operator-inbox-admin-route-readiness-check.mjs',
+  'docs/design/evidence/codex-operator-inbox-admin-route-readiness-pack5/README.md',
+];
+
+const ALLOWED_DIFF_FILES = [
+  ...PACK2_ALLOWED_DIFF_FILES,
+  ...GATED_REFERENCE_LAB_PREVIEW_DIFF_FILES,
+  ...PACK5_ADMIN_ROUTE_READINESS_DIFF_FILES,
+];
 
 const REQUIRED_FILES = PACK2_ALLOWED_DIFF_FILES;
 
