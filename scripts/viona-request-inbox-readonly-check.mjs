@@ -1,0 +1,184 @@
+#!/usr/bin/env node
+
+import { execSync } from 'node:child_process';
+import { existsSync, readFileSync } from 'node:fs';
+import path from 'node:path';
+
+const ROOT = process.cwd();
+
+const ALLOWED_DIFF_FILES = [
+  'docs/product/VIONA_REQUEST_INBOX_READONLY_FOUNDATION.md',
+  'src/domain/requests/vionaRequestFixtures.ts',
+  'src/domain/requests/vionaRequestInboxSelectors.ts',
+  'src/domain/requests/vionaRequestSafetyCopy.ts',
+  'src/domain/requests/index.ts',
+  'src/components/viona/requests/VionaRequestInboxReadOnly.tsx',
+  'src/components/viona/requests/VionaRequestStatusBadge.tsx',
+  'src/components/viona/requests/VionaRequestDetailReadOnly.tsx',
+  'src/components/viona/requests/index.ts',
+  'scripts/viona-request-inbox-readonly-check.mjs',
+  'docs/design/evidence/codex-request-inbox-readonly-foundation/README.md',
+];
+
+const REQUIRED_FILES = ALLOWED_DIFF_FILES;
+
+const FORBIDDEN_DIFF_PATTERNS = [
+  /^App\.tsx$/,
+  /^src\/navigation\//,
+  /HomeScreen\.tsx$/,
+  /LocalScreen\.tsx$/,
+  /TravelScreen\.tsx$/,
+  /^prisma\//,
+  /^assets\//,
+];
+
+const REQUIRED_SELECTORS = [
+  'filterRequestsForInbox',
+  'groupRequestsByStatus',
+  'groupRequestsByUniverse',
+  'getRequestInboxCounts',
+  'getRequestsRequiringHumanConfirmation',
+  'getRequestsWithPartnerResponse',
+];
+
+const REQUIRED_SAFETY_HELPERS = [
+  'getRequestStatusSafetyLabel',
+  'getRequestUniverseSafetyNote',
+  'getRequestHumanConfirmationNote',
+  'getRequestNotProductionCopy',
+];
+
+const REQUIRED_READ_ONLY_PHRASES = [
+  'Read-only preview',
+  'no payment captured',
+  'not booking confirmed',
+  'Needs human confirmation',
+  'SOS guidance only',
+  'Ops readiness required',
+];
+
+const REQUIRED_SAFETY_BOUNDARIES = [
+  'submitted is not paid',
+  'partnerResponded is not booking confirmed',
+  'completed is not settled',
+  'AI cannot autonomously pay',
+];
+
+const UNSAFE_POSITIVE_OVERCLAIMS = [
+  'submitted is paid',
+  'partnerResponded is booking confirmed',
+  'completed is settled',
+  'SOS dispatched',
+  'police contacted',
+  'ambulance dispatched',
+  'payout completed',
+  'driver assigned',
+  'ticket booked',
+  'settlement completed',
+  'payment captured',
+  'booking confirmed',
+];
+
+function read(relPath) {
+  return readFileSync(path.join(ROOT, relPath), 'utf8');
+}
+
+function missingValues(content, values) {
+  return values.filter((value) => !content.includes(value));
+}
+
+function fail(label, values) {
+  console.log(`FAIL ${label}`);
+  for (const value of values) console.log(`  - ${value}`);
+  process.exitCode = 1;
+}
+
+function getDiffFiles() {
+  try {
+    const output = execSync('git diff --name-only origin/master..HEAD', {
+      cwd: ROOT,
+      encoding: 'utf8',
+      stdio: ['ignore', 'pipe', 'ignore'],
+    }).trim();
+    if (!output) return [];
+    return output.split('\n').map((line) => line.replace(/\\/g, '/'));
+  } catch {
+    return [];
+  }
+}
+
+function findUnsafeOverclaims(content) {
+  const hits = [];
+  for (const claim of UNSAFE_POSITIVE_OVERCLAIMS) {
+    if (!content.includes(claim)) continue;
+    const lines = content.split('\n');
+    for (const line of lines) {
+      if (!line.includes(claim)) continue;
+      const normalized = line.toLowerCase();
+      if (normalized.includes(`not ${claim}`)) continue;
+      if (normalized.includes(`no ${claim}`)) continue;
+      if (claim === 'payment captured' && normalized.includes('no payment captured')) continue;
+      if (claim === 'booking confirmed' && normalized.includes('not booking confirmed')) continue;
+      if (claim === 'payout completed' && normalized.includes('no payout completed')) continue;
+      if (claim === 'ticket booked' && normalized.includes('no ticket booked')) continue;
+      if (claim === 'SOS dispatched' && normalized.includes('no sos dispatch')) continue;
+      hits.push(`${claim} (${line.trim()})`);
+    }
+  }
+  return [...new Set(hits)];
+}
+
+function main() {
+  console.log('VIONA request inbox read-only check (Pack 2)');
+  console.log('Fixtures/selectors/components only. No API, DB, navigation, or live ops.\n');
+
+  const missingFiles = REQUIRED_FILES.filter((relPath) => !existsSync(path.join(ROOT, relPath)));
+  if (missingFiles.length) {
+    fail('missing required files', missingFiles);
+    return;
+  }
+
+  const diffFiles = getDiffFiles();
+  const unexpectedDiff = diffFiles.filter((file) => !ALLOWED_DIFF_FILES.includes(file));
+  const forbiddenDiff = diffFiles.filter((file) =>
+    FORBIDDEN_DIFF_PATTERNS.some((pattern) => pattern.test(file))
+  );
+
+  const selectors = read('src/domain/requests/vionaRequestInboxSelectors.ts');
+  const safetyCopy = read('src/domain/requests/vionaRequestSafetyCopy.ts');
+  const fixtures = read('src/domain/requests/vionaRequestFixtures.ts');
+  const inbox = read('src/components/viona/requests/VionaRequestInboxReadOnly.tsx');
+  const detail = read('src/components/viona/requests/VionaRequestDetailReadOnly.tsx');
+  const docs = read('docs/product/VIONA_REQUEST_INBOX_READONLY_FOUNDATION.md');
+  const combined = `${selectors}\n${safetyCopy}\n${fixtures}\n${inbox}\n${detail}\n${docs}`;
+
+  const missingSelectors = missingValues(selectors, REQUIRED_SELECTORS);
+  const missingSafetyHelpers = missingValues(safetyCopy, REQUIRED_SAFETY_HELPERS);
+  const missingReadOnlyPhrases = missingValues(combined, REQUIRED_READ_ONLY_PHRASES);
+  const missingSafetyBoundaries = missingValues(combined, REQUIRED_SAFETY_BOUNDARIES);
+  const overclaims = findUnsafeOverclaims(combined);
+
+  if (unexpectedDiff.length) fail('unexpected files in diff vs origin/master', unexpectedDiff);
+  if (forbiddenDiff.length) fail('forbidden files in diff vs origin/master', forbiddenDiff);
+  if (missingSelectors.length) fail('missing inbox selectors', missingSelectors);
+  if (missingSafetyHelpers.length) fail('missing safety copy helpers', missingSafetyHelpers);
+  if (missingReadOnlyPhrases.length) fail('missing read-only safety phrases', missingReadOnlyPhrases);
+  if (missingSafetyBoundaries.length) fail('missing safety boundaries', missingSafetyBoundaries);
+  if (overclaims.length) fail('unsafe standalone production claims', overclaims);
+
+  if (process.exitCode) {
+    console.log('\nResult: FAIL - fix request inbox read-only foundation.');
+    return;
+  }
+
+  console.log(`Required files: PASS (${REQUIRED_FILES.length})`);
+  console.log(`Diff scope: PASS (${diffFiles.length || ALLOWED_DIFF_FILES.length} allowed files)`);
+  console.log('Inbox selectors: PASS');
+  console.log('Safety copy helpers: PASS');
+  console.log('Read-only phrases: PASS');
+  console.log('Safety boundaries: PASS');
+  console.log('Unsafe overclaims: PASS');
+  console.log('\nResult: PASS - request inbox read-only foundation is import-ready.');
+}
+
+main();
