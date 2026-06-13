@@ -86,6 +86,8 @@ export type RootStackParamList = {
   VionaNeonCardLab: undefined;
   /** VIONA Request Inbox — read-only ReferenceLab preview (master + per-lab env gates). */
   VionaReferenceRequestInboxLab: undefined;
+  /** VIONA Operator Request Inbox — read-only ReferenceLab triage preview (master + per-lab env gates). */
+  VionaReferenceRequestOperatorInboxLab: undefined;
   /** Phase 4: travel hub — scenarios + quick links (no booking automation). */
   TravelCompanion: undefined;
   /** KNG Travel — dedicated premium travel mini-app (concierge, homestay, interpreter). */
