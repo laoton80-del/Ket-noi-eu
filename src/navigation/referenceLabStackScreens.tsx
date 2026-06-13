@@ -7,6 +7,7 @@ import { VionaReferenceLocalPanelLabScreen } from '../components/viona/reference
 import { VionaReferenceMaterialLabScreen } from '../components/viona/reference/VionaReferenceMaterialLab';
 import { VionaReferencePanelCompositionLabScreen } from '../components/viona/reference/VionaReferencePanelCompositionLab';
 import { VionaReferenceRequestInboxLabScreen } from '../components/viona/reference/VionaReferenceRequestInboxLab';
+import { VionaReferenceRequestOperatorInboxLabScreen } from '../components/viona/reference/VionaReferenceRequestOperatorInboxLab';
 import { VionaReferenceSingleCardLabScreen } from '../components/viona/reference/VionaReferenceSingleCardLab';
 import type { RootStackParamList } from './routes';
 
@@ -36,6 +37,11 @@ export function getReferenceLabStackScreens(Stack: RootStack): readonly ReactEle
       key="VionaReferenceRequestInboxLab"
       name="VionaReferenceRequestInboxLab"
       component={VionaReferenceRequestInboxLabScreen}
+    />,
+    <Stack.Screen
+      key="VionaReferenceRequestOperatorInboxLab"
+      name="VionaReferenceRequestOperatorInboxLab"
+      component={VionaReferenceRequestOperatorInboxLabScreen}
     />,
   ];
 }

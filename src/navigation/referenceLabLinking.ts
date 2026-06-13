@@ -9,6 +9,7 @@ export const REFERENCE_LAB_LINKING_SCREENS = {
   VionaReferenceFlagshipCardsLab: 'viona-reference-flagship-cards-lab',
   VionaNeonCardLab: 'viona-neon-card-lab',
   VionaReferenceRequestInboxLab: 'viona-reference-request-inbox-lab',
+  VionaReferenceRequestOperatorInboxLab: 'viona-reference-request-operator-inbox-lab',
 } as const;
 
 export function getReferenceLabLinkingScreens(): Record<string, string> {

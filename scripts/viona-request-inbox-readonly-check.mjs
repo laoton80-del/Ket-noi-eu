@@ -26,9 +26,13 @@ const GATED_REFERENCE_LAB_PREVIEW_DIFF_FILES = [
   'src/navigation/referenceLabLinking.ts',
   'src/navigation/routes.ts',
   'src/components/viona/reference/VionaReferenceRequestInboxLab.tsx',
+  'src/components/viona/reference/VionaReferenceRequestOperatorInboxLab.tsx',
   'docs/product/VIONA_REQUEST_INBOX_REFERENCE_LAB.md',
+  'docs/product/VIONA_REQUEST_INBOX_OPERATOR_REFERENCE_LAB.md',
   'scripts/viona-request-inbox-reference-lab-check.mjs',
+  'scripts/viona-request-inbox-operator-reference-lab-check.mjs',
   'docs/design/evidence/codex-request-inbox-reference-lab-pack3/README.md',
+  'docs/design/evidence/codex-request-operator-inbox-reference-lab-pack4/README.md',
 ];
 
 const ALLOWED_DIFF_FILES = [...PACK2_ALLOWED_DIFF_FILES, ...GATED_REFERENCE_LAB_PREVIEW_DIFF_FILES];
