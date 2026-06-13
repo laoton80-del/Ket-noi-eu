@@ -6,7 +6,7 @@ import path from 'node:path';
 
 const ROOT = process.cwd();
 
-const ALLOWED_DIFF_FILES = [
+const PACK2_ALLOWED_DIFF_FILES = [
   'docs/product/VIONA_REQUEST_INBOX_READONLY_FOUNDATION.md',
   'src/domain/requests/vionaRequestFixtures.ts',
   'src/domain/requests/vionaRequestInboxSelectors.ts',
@@ -20,16 +20,33 @@ const ALLOWED_DIFF_FILES = [
   'docs/design/evidence/codex-request-inbox-readonly-foundation/README.md',
 ];
 
-const REQUIRED_FILES = ALLOWED_DIFF_FILES;
+// This exception allows later gated ReferenceLab preview wiring only; it does not allow live consumer UI or runtime actions.
+const GATED_REFERENCE_LAB_PREVIEW_DIFF_FILES = [
+  'src/navigation/referenceLabStackScreens.tsx',
+  'src/navigation/referenceLabLinking.ts',
+  'src/navigation/routes.ts',
+  'src/components/viona/reference/VionaReferenceRequestInboxLab.tsx',
+  'docs/product/VIONA_REQUEST_INBOX_REFERENCE_LAB.md',
+  'scripts/viona-request-inbox-reference-lab-check.mjs',
+  'docs/design/evidence/codex-request-inbox-reference-lab-pack3/README.md',
+];
+
+const ALLOWED_DIFF_FILES = [...PACK2_ALLOWED_DIFF_FILES, ...GATED_REFERENCE_LAB_PREVIEW_DIFF_FILES];
+
+const REQUIRED_FILES = PACK2_ALLOWED_DIFF_FILES;
 
 const FORBIDDEN_DIFF_PATTERNS = [
   /^App\.tsx$/,
-  /^src\/navigation\//,
   /HomeScreen\.tsx$/,
   /LocalScreen\.tsx$/,
   /TravelScreen\.tsx$/,
+  /AcademyScreen\.tsx$/,
   /^prisma\//,
   /^assets\//,
+  /^src\/api\//,
+  /^api\//,
+  /\/migrations\//,
+  /MainTabNavigator/,
 ];
 
 const REQUIRED_SELECTORS = [
