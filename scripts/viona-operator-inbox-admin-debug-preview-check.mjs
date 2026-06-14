@@ -19,6 +19,12 @@ const ALLOWED_FILES = [
   'scripts/viona-request-inbox-readonly-check.mjs',
   'scripts/viona-request-inbox-reference-lab-check.mjs',
   'scripts/viona-request-inbox-operator-reference-lab-check.mjs',
+  'docs/product/VIONA_REQUEST_PERSISTENCE_AUDIT_READINESS.md',
+  'src/config/vionaRequestPersistenceAuditReadiness.ts',
+  'src/domain/requests/vionaRequestAuditEventTypes.ts',
+  'src/domain/requests/vionaRequestPersistenceContract.ts',
+  'scripts/viona-request-persistence-audit-readiness-check.mjs',
+  'docs/design/evidence/cursor-request-persistence-audit-readiness-pack7/README.md',
 ];
 
 const REQUIRED_SAFE_COPY = [

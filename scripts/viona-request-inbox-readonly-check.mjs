@@ -56,11 +56,21 @@ const PACK6_ADMIN_DEBUG_PREVIEW_DIFF_FILES = [
   'src/navigation/routes.ts',
 ];
 
+const PACK7_PERSISTENCE_AUDIT_READINESS_DIFF_FILES = [
+  'docs/product/VIONA_REQUEST_PERSISTENCE_AUDIT_READINESS.md',
+  'src/config/vionaRequestPersistenceAuditReadiness.ts',
+  'src/domain/requests/vionaRequestAuditEventTypes.ts',
+  'src/domain/requests/vionaRequestPersistenceContract.ts',
+  'scripts/viona-request-persistence-audit-readiness-check.mjs',
+  'docs/design/evidence/cursor-request-persistence-audit-readiness-pack7/README.md',
+];
+
 const ALLOWED_DIFF_FILES = [
   ...PACK2_ALLOWED_DIFF_FILES,
   ...GATED_REFERENCE_LAB_PREVIEW_DIFF_FILES,
   ...PACK5_ADMIN_ROUTE_READINESS_DIFF_FILES,
   ...PACK6_ADMIN_DEBUG_PREVIEW_DIFF_FILES,
+  ...PACK7_PERSISTENCE_AUDIT_READINESS_DIFF_FILES,
 ];
 
 const REQUIRED_FILES = PACK2_ALLOWED_DIFF_FILES;
