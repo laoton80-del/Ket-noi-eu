@@ -25,6 +25,12 @@ const ALLOWED_FILES = [
   'src/domain/requests/vionaRequestRoleTenantAccessMatrix.ts',
   'scripts/viona-request-source-of-truth-auth-tenant-mapping-check.mjs',
   'docs/design/evidence/cursor-request-source-of-truth-auth-tenant-pack8/README.md',
+  'docs/product/VIONA_REQUEST_SOT_SIGNOFF_PHASE_PROMOTION_READINESS.md',
+  'src/config/vionaRequestSotSignoffPhasePromotionReadiness.ts',
+  'src/domain/requests/vionaRequestPhasePromotionContract.ts',
+  'src/domain/requests/vionaRequestDedicatedStoreFieldManifest.ts',
+  'scripts/viona-request-sot-signoff-phase-promotion-readiness-check.mjs',
+  'docs/design/evidence/cursor-request-sot-signoff-phase-promotion-pack9/README.md',
 ];
 
 const REQUIRED_FILES = [
@@ -81,6 +87,7 @@ const REQUIRED_CONFIG_TOKENS = [
   'requestMutationActive: false',
   'productionLiveOpsActive: false',
   'sourceOfTruthMappingContractActive: true',
+  'sotSignoffPhasePromotionReadinessContractActive: true',
   'autonomousProtectedAiActionProhibited',
   'LocalServiceRequest',
   'LocalOpsAudit',
@@ -122,6 +129,7 @@ const REQUIRED_PERSISTENCE_CONTRACT_TOKENS = [
 const REQUIRED_OPERATOR_READINESS_TOKENS = [
   'persistenceAuditReadinessContractActive: true',
   'sourceOfTruthMappingContractActive: true',
+  'sotSignoffPhasePromotionReadinessContractActive: true',
   'persistenceApiActive: false',
   'productionLiveOpsActive: false',
   'mutationsBlocked: true',

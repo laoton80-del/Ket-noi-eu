@@ -42,6 +42,12 @@ const ALLOWED_FILES = [
   'src/domain/requests/vionaRequestRoleTenantAccessMatrix.ts',
   'scripts/viona-request-source-of-truth-auth-tenant-mapping-check.mjs',
   'docs/design/evidence/cursor-request-source-of-truth-auth-tenant-pack8/README.md',
+  'docs/product/VIONA_REQUEST_SOT_SIGNOFF_PHASE_PROMOTION_READINESS.md',
+  'src/config/vionaRequestSotSignoffPhasePromotionReadiness.ts',
+  'src/domain/requests/vionaRequestPhasePromotionContract.ts',
+  'src/domain/requests/vionaRequestDedicatedStoreFieldManifest.ts',
+  'scripts/viona-request-sot-signoff-phase-promotion-readiness-check.mjs',
+  'docs/design/evidence/cursor-request-sot-signoff-phase-promotion-pack9/README.md',
 ];
 
 const REQUIRED_SAFETY_PHRASES = [

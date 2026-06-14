@@ -7,20 +7,25 @@ import path from 'node:path';
 const ROOT = process.cwd();
 
 const ALLOWED_FILES = [
-  'docs/product/VIONA_REQUEST_SOURCE_OF_TRUTH_AUTH_TENANT_MAPPING.md',
+  'docs/product/VIONA_REQUEST_SOT_SIGNOFF_PHASE_PROMOTION_READINESS.md',
+  'src/config/vionaRequestSotSignoffPhasePromotionReadiness.ts',
+  'src/domain/requests/vionaRequestPhasePromotionContract.ts',
+  'src/domain/requests/vionaRequestDedicatedStoreFieldManifest.ts',
+  'scripts/viona-request-sot-signoff-phase-promotion-readiness-check.mjs',
+  'docs/design/evidence/cursor-request-sot-signoff-phase-promotion-pack9/README.md',
   'src/config/vionaRequestSourceOfTruthAuthTenantReadiness.ts',
-  'src/domain/requests/vionaRequestSourceOfTruthMappingContract.ts',
-  'src/domain/requests/vionaRequestRoleTenantAccessMatrix.ts',
-  'scripts/viona-request-source-of-truth-auth-tenant-mapping-check.mjs',
-  'docs/design/evidence/cursor-request-source-of-truth-auth-tenant-pack8/README.md',
   'src/config/vionaRequestPersistenceAuditReadiness.ts',
   'src/config/vionaOperatorInboxAdminReadiness.ts',
+  'scripts/viona-request-source-of-truth-auth-tenant-mapping-check.mjs',
   'scripts/viona-request-persistence-audit-readiness-check.mjs',
   'scripts/viona-operator-inbox-admin-debug-preview-check.mjs',
   'scripts/viona-operator-inbox-admin-route-readiness-check.mjs',
   'scripts/viona-request-inbox-readonly-check.mjs',
   'scripts/viona-request-inbox-reference-lab-check.mjs',
   'scripts/viona-request-inbox-operator-reference-lab-check.mjs',
+];
+
+const REQUIRED_FILES = [
   'docs/product/VIONA_REQUEST_SOT_SIGNOFF_PHASE_PROMOTION_READINESS.md',
   'src/config/vionaRequestSotSignoffPhasePromotionReadiness.ts',
   'src/domain/requests/vionaRequestPhasePromotionContract.ts',
@@ -29,17 +34,9 @@ const ALLOWED_FILES = [
   'docs/design/evidence/cursor-request-sot-signoff-phase-promotion-pack9/README.md',
 ];
 
-const REQUIRED_FILES = [
-  'docs/product/VIONA_REQUEST_SOURCE_OF_TRUTH_AUTH_TENANT_MAPPING.md',
-  'src/config/vionaRequestSourceOfTruthAuthTenantReadiness.ts',
-  'src/domain/requests/vionaRequestSourceOfTruthMappingContract.ts',
-  'src/domain/requests/vionaRequestRoleTenantAccessMatrix.ts',
-  'scripts/viona-request-source-of-truth-auth-tenant-mapping-check.mjs',
-  'docs/design/evidence/cursor-request-source-of-truth-auth-tenant-pack8/README.md',
-];
-
 const REQUIRED_SAFE_COPY = [
-  'Source-of-truth mapping contract',
+  'Source-of-truth sign-off phase promotion readiness contract',
+  'Sign-off status pending',
   'Fixture-only Admin Debug preview remains unchanged',
   'API and persistence are future gates',
   'No database schema or migration in this pack',
@@ -50,105 +47,108 @@ const REQUIRED_SAFE_COPY = [
   'Human confirmation required before any future protected action',
   'Audit log is not a ledger',
   'LocalServiceRequest is reference-only',
-  'Source-of-truth decision requires founder/architect sign-off',
+  'Direct LocalServiceRequest reuse is not allowed',
+  'Client-only role checks are not sufficient for persistence APIs',
+  'Cursor/agent cannot flip source-of-truth sign-off',
 ];
 
 const REQUIRED_DOC_PHRASES = [
-  'Why Pack8 exists',
-  '3f28073',
-  'PR #62',
-  'fixture-only',
-  'LocalServiceRequest',
-  'reference-only',
+  'Why Pack9 exists',
+  '26d6018',
+  'PR #63',
+  'Sign-off status pending',
   'dedicatedVionaRequestStore',
-  'mappedFromLocalServiceRequest',
-  'hybridWithMappingContract',
-  'founder/architect sign-off',
+  'Direct LocalServiceRequest reuse rejected',
+  'Cursor/agent cannot flip',
   'OPERATOR',
+  'ADMIN-equivalent',
+  'auditRead',
+  'field manifest',
+  'not Prisma schema',
   'No API',
   'No DB',
   'No Prisma migration',
-  'No request writes',
-  'No Admin Debug preview data-source change',
-  'LocalOpsAudit',
-  'LocalMerchantRequestInbox',
-  'TourismMerchantInbox',
-  'auditRead',
-  'mapping contract',
+  'No persistence adapter',
+  'Fixture-only Admin Debug',
+  'sourceOfTruthDecisionSignedOff: false',
 ];
 
 const REQUIRED_CONFIG_TOKENS = [
-  'export const VIONA_REQUEST_SOURCE_OF_TRUTH_AUTH_TENANT_READINESS',
-  'export const VIONA_REQUEST_SOURCE_OF_TRUTH_OPTIONS',
-  'export const VIONA_REQUEST_AUTH_TENANT_PHASES',
-  'export function getVionaRequestSourceOfTruthAuthTenantReadiness',
-  'sourceOfTruthMappingContractActive: true',
+  'export const VIONA_REQUEST_SOT_SIGNOFF_PHASE_PROMOTION_READINESS',
+  'export const VIONA_REQUEST_SOT_SIGNOFF_CHECKLIST',
+  'export { VIONA_REQUEST_PHASE_PROMOTION_STAGES }',
+  'export function getVionaRequestSotSignoffPhasePromotionReadiness',
+  'export function isVionaRequestSotSignoffPromotionBlocked',
+  'sotSignoffReadinessContractActive: true',
+  "signOffStatus: 'pending'",
   'sourceOfTruthDecisionSignedOff: false',
-  'authSessionSourceOfTruthApproved: false',
-  'tenantAccessMatrixApproved: false',
-  'operatorRoleResolved: false',
-  'localStatusMappingApproved: false',
+  'selectedSourceOfTruthOptionId: null',
+  "recommendedSourceOfTruthOptionId: 'dedicatedVionaRequestStore'",
+  'founderSignoffRecorded: false',
+  'architectSignoffRecorded: false',
+  'operatorRoleAddedToAuth: false',
+  'readOnlyApiPhasePromoted: false',
+  'schemaDesignApproved: false',
   'persistenceApiActive: false',
   'prismaSchemaActive: false',
   'auditLogActive: false',
   'requestMutationActive: false',
   'productionLiveOpsActive: false',
   'adminDebugUsesFixturesOnly: true',
-  'dedicatedVionaRequestStore',
-  'mappedFromLocalServiceRequest',
-  'hybridWithMappingContract',
-  'noLocalOpsAuditApiReuse',
-  'noLocalServiceRequestDirectReuse',
+  'agentMayFlipSignoff: false',
 ];
 
-const REQUIRED_MAPPING_TOKENS = [
-  'VionaRequestSourceOfTruthOption',
-  'VionaRequestSourceOfTruthRecommendation',
-  'VionaRequestExternalSourceKind',
-  'VionaRequestExternalSourceLink',
-  'VionaRequestLocalStatusReference',
-  'VionaRequestLocalToVionaStatusMapping',
-  'VionaRequestHybridMappingContract',
-  'VionaRequestSourceOfTruthSignoffRequirement',
-  'VIONA_REQUEST_LOCAL_STATUS_REFERENCE_VALUES',
-  'VIONA_REQUEST_SOURCE_OF_TRUTH_RECOMMENDATION',
-  'VIONA_REQUEST_LOCAL_TO_VIONA_STATUS_MAPPINGS',
-  'directReuseSafe: false',
-  'DRAFT',
-  'MERCHANT_REVIEW',
-  'needsHumanConfirmation',
-  'partnerResponded',
+const REQUIRED_PHASE_CONTRACT_TOKENS = [
+  'VionaRequestPhasePromotionStage',
+  'VionaRequestPhasePromotionStatus',
+  'VionaRequestPhasePromotionGate',
+  'VionaRequestSotSignoffRole',
+  'VionaRequestSotSignoffChecklistItem',
+  'VionaRequestSotSignoffRecord',
+  'VionaRequestPhasePromotionContract',
+  'VIONA_REQUEST_PHASE_PROMOTION_CONTRACT',
+  'VIONA_REQUEST_SOT_SIGNOFF_ROLES',
+  'agentSignoffForbidden: true',
+  'sourceOfTruthDecisionSignedOff: false',
+  'agentOrCursorMayFlipSignoff: false',
+  'founder',
+  'principalArchitect',
+  'opsRunbookOwner',
 ];
 
-const REQUIRED_ACCESS_MATRIX_TOKENS = [
-  'VionaRequestRoleTenantAccessRule',
-  'VIONA_REQUEST_ROLE_TENANT_ACCESS_MATRIX',
-  'VIONA_REQUEST_OPERATOR_ROLE_POLICY',
-  'VionaRequestCrossUniverseLeakRisk',
-  'globalOps',
-  'merchantBusinessOwned',
-  'requesterOwned',
-  'partnerAssigned',
-  'operatorRoleResolved: false',
-  'universeFilter',
-  'auditRead',
-  'LocalMerchantRequestInbox',
-  'TourismMerchantInbox',
+const REQUIRED_FIELD_MANIFEST_TOKENS = [
+  'VionaRequestDedicatedStoreFieldCategory',
+  'VionaRequestDedicatedStoreFieldRequirement',
+  'VionaRequestDedicatedStoreField',
+  'VIONA_REQUEST_DEDICATED_STORE_FIELD_MANIFEST',
+  'VIONA_REQUEST_LOCAL_FIELD_COPY_BLOCKLIST',
+  'isPrismaSchema: false',
+  'migrationInThisPack: false',
+  'walletMode',
+  'walletPhase',
+  'requesterUserId',
+  'createdAt',
+  'updatedAt',
+  'idempotencyKey',
+];
+
+const REQUIRED_PACK8_POINTER_TOKENS = [
+  'sotSignoffPhasePromotionReadinessContractActive: true',
+  'sourceOfTruthDecisionSignedOff: false',
+  'persistenceApiActive: false',
 ];
 
 const REQUIRED_PERSISTENCE_POINTER_TOKENS = [
-  'sourceOfTruthMappingContractActive: true',
   'sotSignoffPhasePromotionReadinessContractActive: true',
   'persistenceApiActive: false',
-  'prismaSchemaActive: false',
+  'sourceOfTruthMappingContractActive: true',
 ];
 
 const REQUIRED_OPERATOR_POINTER_TOKENS = [
-  'sourceOfTruthMappingContractActive: true',
   'sotSignoffPhasePromotionReadinessContractActive: true',
+  'adminDebugUsesFixturesOnly: true',
   'persistenceApiActive: false',
   'mutationsBlocked: true',
-  'adminDebugUsesFixturesOnly',
 ];
 
 const FORBIDDEN_DIFF_PATTERNS = [
@@ -181,6 +181,7 @@ const FORBIDDEN_RUNTIME_IMPORTS = [
   'axios.',
   'AsyncStorage',
   '@prisma/client',
+  'PrismaClient',
   'getPrisma',
   'supabase',
   'useNavigation',
@@ -246,9 +247,9 @@ function findUnsafeStandaloneClaims(paths) {
 }
 
 function main() {
-  console.log('VIONA request source-of-truth auth tenant mapping check (Pack8)');
+  console.log('VIONA request SoT sign-off phase promotion readiness check (Pack9)');
   console.log(
-    'Docs/config/domain contracts only. No API, DB, Prisma migration, adapter, mutation, or Admin Debug data-source change.\n'
+    'Docs/config/domain contracts only. No API, DB, Prisma migration, adapter, sign-off flip, or Admin Debug data-source change.\n'
   );
 
   const missingFiles = REQUIRED_FILES.filter((relPath) => !existsSync(path.join(ROOT, relPath)));
@@ -258,14 +259,15 @@ function main() {
     FORBIDDEN_DIFF_PATTERNS.some((pattern) => pattern.test(file))
   );
 
-  const config = read('src/config/vionaRequestSourceOfTruthAuthTenantReadiness.ts');
-  const mapping = read('src/domain/requests/vionaRequestSourceOfTruthMappingContract.ts');
-  const matrix = read('src/domain/requests/vionaRequestRoleTenantAccessMatrix.ts');
+  const config = read('src/config/vionaRequestSotSignoffPhasePromotionReadiness.ts');
+  const phaseContract = read('src/domain/requests/vionaRequestPhasePromotionContract.ts');
+  const fieldManifest = read('src/domain/requests/vionaRequestDedicatedStoreFieldManifest.ts');
+  const pack8 = read('src/config/vionaRequestSourceOfTruthAuthTenantReadiness.ts');
   const persistence = read('src/config/vionaRequestPersistenceAuditReadiness.ts');
   const operator = read('src/config/vionaOperatorInboxAdminReadiness.ts');
-  const docs = read('docs/product/VIONA_REQUEST_SOURCE_OF_TRUTH_AUTH_TENANT_MAPPING.md');
-  const evidence = read('docs/design/evidence/cursor-request-source-of-truth-auth-tenant-pack8/README.md');
-  const combined = `${config}\n${mapping}\n${matrix}\n${persistence}\n${operator}\n${docs}\n${evidence}`;
+  const docs = read('docs/product/VIONA_REQUEST_SOT_SIGNOFF_PHASE_PROMOTION_READINESS.md');
+  const evidence = read('docs/design/evidence/cursor-request-sot-signoff-phase-promotion-pack9/README.md');
+  const combined = `${config}\n${phaseContract}\n${fieldManifest}\n${pack8}\n${persistence}\n${operator}\n${docs}\n${evidence}`;
 
   const appChanged = run('git diff --name-only origin/master -- App.tsx');
   const routesChanged = run('git diff --name-only origin/master -- src/navigation/routes.ts');
@@ -275,28 +277,34 @@ function main() {
   const missingSafeCopy = missingValues(combined, REQUIRED_SAFE_COPY);
   const missingDocPhrases = missingValues(docs, REQUIRED_DOC_PHRASES);
   const missingConfigTokens = missingValues(config, REQUIRED_CONFIG_TOKENS);
-  const missingMappingTokens = missingValues(mapping, REQUIRED_MAPPING_TOKENS);
-  const missingMatrixTokens = missingValues(matrix, REQUIRED_ACCESS_MATRIX_TOKENS);
+  const missingPhaseTokens = missingValues(phaseContract, REQUIRED_PHASE_CONTRACT_TOKENS);
+  const missingManifestTokens = missingValues(fieldManifest, REQUIRED_FIELD_MANIFEST_TOKENS);
+  const missingPack8Tokens = missingValues(pack8, REQUIRED_PACK8_POINTER_TOKENS);
   const missingPersistenceTokens = missingValues(persistence, REQUIRED_PERSISTENCE_POINTER_TOKENS);
   const missingOperatorTokens = missingValues(operator, REQUIRED_OPERATOR_POINTER_TOKENS);
   const unsafeClaims = findUnsafeStandaloneClaims([
-    'docs/product/VIONA_REQUEST_SOURCE_OF_TRUTH_AUTH_TENANT_MAPPING.md',
-    'src/config/vionaRequestSourceOfTruthAuthTenantReadiness.ts',
-    'src/domain/requests/vionaRequestSourceOfTruthMappingContract.ts',
-    'src/domain/requests/vionaRequestRoleTenantAccessMatrix.ts',
+    'docs/product/VIONA_REQUEST_SOT_SIGNOFF_PHASE_PROMOTION_READINESS.md',
+    'src/config/vionaRequestSotSignoffPhasePromotionReadiness.ts',
+    'src/domain/requests/vionaRequestPhasePromotionContract.ts',
+    'src/domain/requests/vionaRequestDedicatedStoreFieldManifest.ts',
   ]);
 
   const forbiddenImports = FORBIDDEN_RUNTIME_IMPORTS.filter((token) =>
-    [config, mapping, matrix].some((file) => file.includes(token))
+    [config, phaseContract, fieldManifest].some((file) => file.includes(token))
   );
 
+  const signoffFlipped =
+    config.includes('sourceOfTruthDecisionSignedOff: true') ||
+    config.includes('founderSignoffRecorded: true') ||
+    config.includes('architectSignoffRecorded: true') ||
+    config.includes('agentMayFlipSignoff: true');
+
   const hasImplementation =
-    /\bclass\s+\w+/.test(mapping) ||
-    /\bclass\s+\w+/.test(matrix) ||
-    (/\bfunction\s+\w+/.test(mapping) && !mapping.includes('export function')) ||
-    combined.includes('fetch(') ||
+    /\bclass\s+\w+/.test(phaseContract) ||
+    /\bclass\s+\w+/.test(fieldManifest) ||
+    combined.includes('implements VionaRequestRepositoryContract') ||
     combined.includes('getPrisma(') ||
-    combined.includes('implements VionaRequestRepositoryContract');
+    combined.includes('fetch(');
 
   if (missingFiles.length) fail('missing required files', missingFiles);
   if (unexpectedFiles.length) fail('unexpected files changed', unexpectedFiles);
@@ -308,32 +316,34 @@ function main() {
   if (missingSafeCopy.length) fail('missing required safe copy', missingSafeCopy);
   if (missingDocPhrases.length) fail('missing doc requirements', missingDocPhrases);
   if (missingConfigTokens.length) fail('missing config tokens', missingConfigTokens);
-  if (missingMappingTokens.length) fail('missing mapping contract tokens', missingMappingTokens);
-  if (missingMatrixTokens.length) fail('missing access matrix tokens', missingMatrixTokens);
-  if (missingPersistenceTokens.length) fail('persistence readiness Pack8 pointer missing', missingPersistenceTokens);
-  if (missingOperatorTokens.length) fail('operator readiness Pack8 pointer missing', missingOperatorTokens);
+  if (missingPhaseTokens.length) fail('missing phase promotion contract tokens', missingPhaseTokens);
+  if (missingManifestTokens.length) fail('missing field manifest tokens', missingManifestTokens);
+  if (missingPack8Tokens.length) fail('Pack8 readiness Pack9 pointer missing', missingPack8Tokens);
+  if (missingPersistenceTokens.length) fail('persistence readiness Pack9 pointer missing', missingPersistenceTokens);
+  if (missingOperatorTokens.length) fail('operator readiness Pack9 pointer missing', missingOperatorTokens);
   if (unsafeClaims.length) fail('unsafe standalone production claims', unsafeClaims);
   if (forbiddenImports.length) fail('forbidden runtime imports in new files', forbiddenImports);
+  if (signoffFlipped) fail('sign-off must remain false in Pack9', ['sourceOfTruthDecisionSignedOff or agent flip detected']);
   if (hasImplementation) fail('implementation detected in contract pack', ['types/contracts only']);
 
   if (process.exitCode) {
-    console.log('\nResult: FAIL - fix Pack8 source-of-truth auth tenant mapping before import.');
+    console.log('\nResult: FAIL - fix Pack9 sign-off phase promotion readiness before import.');
     return;
   }
 
   console.log(`Required files: PASS (${REQUIRED_FILES.length})`);
   console.log(`Changed file scope: PASS (${changedFiles.length || ALLOWED_FILES.length} allowed files)`);
   console.log('Config readiness flags: PASS');
-  console.log('Mapping contract: PASS');
-  console.log('Access matrix: PASS');
-  console.log('Persistence readiness pointer: PASS');
-  console.log('Operator readiness pointer: PASS');
+  console.log('Phase promotion contract: PASS');
+  console.log('Dedicated store field manifest: PASS');
+  console.log('Pack8/Pack7/Pack6 pointers: PASS');
   console.log('Required safe copy: PASS');
+  console.log('Sign-off remains false: PASS');
   console.log('No App.tsx/navigation/screen changes: PASS');
   console.log('No Prisma/API/server changes: PASS');
   console.log('No implementation added: PASS');
   console.log('No unsafe standalone claims: PASS');
-  console.log('\nResult: PASS - source-of-truth auth tenant mapping contract is import-ready.');
+  console.log('\nResult: PASS - SoT sign-off phase promotion readiness contract is import-ready.');
 }
 
 main();
