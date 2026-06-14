@@ -43,10 +43,24 @@ const PACK5_ADMIN_ROUTE_READINESS_DIFF_FILES = [
   'docs/design/evidence/codex-operator-inbox-admin-route-readiness-pack5/README.md',
 ];
 
+// Pack6 Admin Debug read-only preview route only; does not allow API, DB, payment, booking, SOS, wallet, live AI, or merchant execution.
+// Pack6 App.tsx exception is limited to the Admin Debug operator inbox preview route/gate/linking.
+// It does not allow consumer UI, merchant ops, runtime actions, or broad App.tsx edits.
+const PACK6_ADMIN_DEBUG_PREVIEW_DIFF_FILES = [
+  'src/config/vionaOperatorInboxAdminDebugGate.ts',
+  'src/screens/admin/VionaAdminDebugOperatorInboxPreviewScreen.tsx',
+  'docs/product/VIONA_OPERATOR_INBOX_ADMIN_DEBUG_PREVIEW.md',
+  'scripts/viona-operator-inbox-admin-debug-preview-check.mjs',
+  'docs/design/evidence/codex-operator-inbox-admin-debug-preview-pack6/README.md',
+  'App.tsx',
+  'src/navigation/routes.ts',
+];
+
 const ALLOWED_DIFF_FILES = [
   ...PACK2_ALLOWED_DIFF_FILES,
   ...GATED_REFERENCE_LAB_PREVIEW_DIFF_FILES,
   ...PACK5_ADMIN_ROUTE_READINESS_DIFF_FILES,
+  ...PACK6_ADMIN_DEBUG_PREVIEW_DIFF_FILES,
 ];
 
 const REQUIRED_FILES = PACK2_ALLOWED_DIFF_FILES;
@@ -161,6 +175,26 @@ function findUnsafeOverclaims(content) {
   return [...new Set(hits)];
 }
 
+function isPack6AppOnlyDiff(diffFiles) {
+  if (!diffFiles.includes('App.tsx')) return false;
+  if (!diffFiles.every((file) => ALLOWED_DIFF_FILES.includes(file))) return false;
+
+  const app = read('App.tsx');
+  const hasGateHelper = app.includes('isVionaOperatorInboxAdminDebugPreviewEnabled()');
+  const hasRouteScreen =
+    app.includes('name="VionaAdminDebugOperatorInboxPreview"') &&
+    app.includes('VionaAdminDebugOperatorInboxPreviewScreen');
+  const hasLinking = app.includes(
+    "VionaAdminDebugOperatorInboxPreview: 'admin/operator-inbox-preview'"
+  );
+  const underDemoMetricsOnly =
+    app.includes('adminDemoMetricsEnabled') &&
+    app.includes('VionaAdminDebugOperatorInboxPreview') &&
+    /adminDemoMetricsEnabled[\s\S]{0,400}VionaAdminDebugOperatorInboxPreview/.test(app);
+
+  return hasGateHelper && hasRouteScreen && hasLinking && !underDemoMetricsOnly;
+}
+
 function main() {
   console.log('VIONA request inbox read-only check (Pack 2)');
   console.log('Fixtures/selectors/components only. No API, DB, navigation, or live ops.\n');
@@ -172,10 +206,12 @@ function main() {
   }
 
   const diffFiles = getDiffFiles();
+  const pack6AppOnly = isPack6AppOnlyDiff(diffFiles);
   const unexpectedDiff = diffFiles.filter((file) => !ALLOWED_DIFF_FILES.includes(file));
-  const forbiddenDiff = diffFiles.filter((file) =>
-    FORBIDDEN_DIFF_PATTERNS.some((pattern) => pattern.test(file))
-  );
+  const forbiddenDiff = diffFiles.filter((file) => {
+    if (file === 'App.tsx' && pack6AppOnly) return false;
+    return FORBIDDEN_DIFF_PATTERNS.some((pattern) => pattern.test(file));
+  });
 
   const selectors = read('src/domain/requests/vionaRequestInboxSelectors.ts');
   const safetyCopy = read('src/domain/requests/vionaRequestSafetyCopy.ts');
@@ -192,6 +228,9 @@ function main() {
   const overclaims = findUnsafeOverclaims(combined);
 
   if (unexpectedDiff.length) fail('unexpected files in diff vs origin/master', unexpectedDiff);
+  if (diffFiles.includes('App.tsx') && !pack6AppOnly) {
+    fail('App.tsx changed without valid Pack6 admin debug preview exception', ['App.tsx']);
+  }
   if (forbiddenDiff.length) fail('forbidden files in diff vs origin/master', forbiddenDiff);
   if (missingSelectors.length) fail('missing inbox selectors', missingSelectors);
   if (missingSafetyHelpers.length) fail('missing safety copy helpers', missingSafetyHelpers);
@@ -206,6 +245,7 @@ function main() {
 
   console.log(`Required files: PASS (${REQUIRED_FILES.length})`);
   console.log(`Diff scope: PASS (${diffFiles.length || ALLOWED_DIFF_FILES.length} allowed files)`);
+  if (pack6AppOnly) console.log('App.tsx Pack6 admin debug preview exception: PASS');
   console.log('Inbox selectors: PASS');
   console.log('Safety copy helpers: PASS');
   console.log('Read-only phrases: PASS');

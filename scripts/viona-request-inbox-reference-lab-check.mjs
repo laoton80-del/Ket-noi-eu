@@ -23,6 +23,13 @@ const ALLOWED_FILES = [
   'docs/product/VIONA_OPERATOR_INBOX_ADMIN_ROUTE_READINESS.md',
   'scripts/viona-operator-inbox-admin-route-readiness-check.mjs',
   'docs/design/evidence/codex-operator-inbox-admin-route-readiness-pack5/README.md',
+  'src/config/vionaOperatorInboxAdminDebugGate.ts',
+  'src/screens/admin/VionaAdminDebugOperatorInboxPreviewScreen.tsx',
+  'docs/product/VIONA_OPERATOR_INBOX_ADMIN_DEBUG_PREVIEW.md',
+  'scripts/viona-operator-inbox-admin-debug-preview-check.mjs',
+  'docs/design/evidence/codex-operator-inbox-admin-debug-preview-pack6/README.md',
+  'App.tsx',
+  'src/navigation/routes.ts',
 ];
 
 const REQUIRED_SAFETY_PHRASES = [
@@ -57,7 +64,6 @@ const REQUIRED_LAB_TOKENS = [
 ];
 
 const FORBIDDEN_DIFF_PATTERNS = [
-  /^App\.tsx$/,
   /HomeScreen\.tsx$/,
   /LocalScreen\.tsx$/,
   /TravelScreen\.tsx$/,
@@ -188,6 +194,11 @@ function main() {
   const combined = `${lab}\n${stack}\n${linking}\n${routes}\n${docs}\n${evidence}`;
 
   const appChanged = run('git diff --name-only origin/master -- App.tsx');
+  const pack6AppOnly =
+    appChanged &&
+    changedFiles.every((file) => ALLOWED_FILES.includes(file)) &&
+    changedFiles.includes('App.tsx');
+
   const missingLabTokens = missingValues(lab, REQUIRED_LAB_TOKENS);
   const missingSafetyPhrases = missingValues(combined, REQUIRED_SAFETY_PHRASES);
   const missingDocPhrases = missingValues(docs, REQUIRED_DOC_PHRASES);
@@ -216,7 +227,7 @@ function main() {
 
   if (unexpectedFiles.length) fail('unexpected files changed', unexpectedFiles);
   if (forbiddenFiles.length) fail('forbidden live-action paths changed', forbiddenFiles);
-  if (appChanged) fail('App.tsx changed vs origin/master', [appChanged]);
+  if (appChanged && !pack6AppOnly) fail('App.tsx changed vs origin/master', [appChanged]);
   if (missingLabTokens.length) fail('missing lab exports/imports/tokens', missingLabTokens);
   if (missingSafetyPhrases.length) fail('missing read-only safety phrases', missingSafetyPhrases);
   if (missingDocPhrases.length) fail('missing doc requirements', missingDocPhrases);
