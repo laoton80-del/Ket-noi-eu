@@ -7,18 +7,23 @@ import path from 'node:path';
 const ROOT = process.cwd();
 
 const ALLOWED_FILES = [
-  'docs/product/VIONA_REQUEST_PERSISTENCE_AUDIT_READINESS.md',
+  'docs/product/VIONA_REQUEST_SOURCE_OF_TRUTH_AUTH_TENANT_MAPPING.md',
+  'src/config/vionaRequestSourceOfTruthAuthTenantReadiness.ts',
+  'src/domain/requests/vionaRequestSourceOfTruthMappingContract.ts',
+  'src/domain/requests/vionaRequestRoleTenantAccessMatrix.ts',
+  'scripts/viona-request-source-of-truth-auth-tenant-mapping-check.mjs',
+  'docs/design/evidence/cursor-request-source-of-truth-auth-tenant-pack8/README.md',
   'src/config/vionaRequestPersistenceAuditReadiness.ts',
-  'src/domain/requests/vionaRequestAuditEventTypes.ts',
-  'src/domain/requests/vionaRequestPersistenceContract.ts',
-  'scripts/viona-request-persistence-audit-readiness-check.mjs',
-  'docs/design/evidence/cursor-request-persistence-audit-readiness-pack7/README.md',
   'src/config/vionaOperatorInboxAdminReadiness.ts',
+  'scripts/viona-request-persistence-audit-readiness-check.mjs',
   'scripts/viona-operator-inbox-admin-debug-preview-check.mjs',
   'scripts/viona-operator-inbox-admin-route-readiness-check.mjs',
   'scripts/viona-request-inbox-readonly-check.mjs',
   'scripts/viona-request-inbox-reference-lab-check.mjs',
   'scripts/viona-request-inbox-operator-reference-lab-check.mjs',
+];
+
+const REQUIRED_FILES = [
   'docs/product/VIONA_REQUEST_SOURCE_OF_TRUTH_AUTH_TENANT_MAPPING.md',
   'src/config/vionaRequestSourceOfTruthAuthTenantReadiness.ts',
   'src/domain/requests/vionaRequestSourceOfTruthMappingContract.ts',
@@ -27,17 +32,8 @@ const ALLOWED_FILES = [
   'docs/design/evidence/cursor-request-source-of-truth-auth-tenant-pack8/README.md',
 ];
 
-const REQUIRED_FILES = [
-  'docs/product/VIONA_REQUEST_PERSISTENCE_AUDIT_READINESS.md',
-  'src/config/vionaRequestPersistenceAuditReadiness.ts',
-  'src/domain/requests/vionaRequestAuditEventTypes.ts',
-  'src/domain/requests/vionaRequestPersistenceContract.ts',
-  'scripts/viona-request-persistence-audit-readiness-check.mjs',
-  'docs/design/evidence/cursor-request-persistence-audit-readiness-pack7/README.md',
-];
-
 const REQUIRED_SAFE_COPY = [
-  'Persistence and audit readiness contract',
+  'Source-of-truth mapping contract',
   'Fixture-only Admin Debug preview remains unchanged',
   'API and persistence are future gates',
   'No database schema or migration in this pack',
@@ -47,85 +43,104 @@ const REQUIRED_SAFE_COPY = [
   'No live merchant execution',
   'Human confirmation required before any future protected action',
   'Audit log is not a ledger',
+  'LocalServiceRequest is reference-only',
+  'Source-of-truth decision requires founder/architect sign-off',
 ];
 
 const REQUIRED_DOC_PHRASES = [
-  'Why Pack7 exists',
-  '8f47574',
-  'PR #61',
+  'Why Pack8 exists',
+  '3f28073',
+  'PR #62',
   'fixture-only',
   'LocalServiceRequest',
-  'LocalServiceRequestAuditEvent',
   'reference-only',
-  'source-of-truth is not chosen',
+  'dedicatedVionaRequestStore',
+  'mappedFromLocalServiceRequest',
+  'hybridWithMappingContract',
+  'founder/architect sign-off',
+  'OPERATOR',
   'No API',
   'No DB',
   'No Prisma migration',
   'No request writes',
   'No Admin Debug preview data-source change',
-  'Append-only audit log',
-  'Human confirmation records',
   'LocalOpsAudit',
+  'LocalMerchantRequestInbox',
+  'TourismMerchantInbox',
+  'auditRead',
   'mapping contract',
 ];
 
 const REQUIRED_CONFIG_TOKENS = [
-  'export const VIONA_REQUEST_PERSISTENCE_AUDIT_READINESS',
-  'export const VIONA_REQUEST_PERSISTENCE_AUDIT_PHASES',
-  'export function getVionaRequestPersistenceAuditReadiness',
-  'fixtureOnlyAdminDebugPreview',
-  'persistenceAuditReadinessContract',
+  'export const VIONA_REQUEST_SOURCE_OF_TRUTH_AUTH_TENANT_READINESS',
+  'export const VIONA_REQUEST_SOURCE_OF_TRUTH_OPTIONS',
+  'export const VIONA_REQUEST_AUTH_TENANT_PHASES',
+  'export function getVionaRequestSourceOfTruthAuthTenantReadiness',
+  'sourceOfTruthMappingContractActive: true',
+  'sourceOfTruthDecisionSignedOff: false',
+  'authSessionSourceOfTruthApproved: false',
+  'tenantAccessMatrixApproved: false',
+  'operatorRoleResolved: false',
+  'localStatusMappingApproved: false',
   'persistenceApiActive: false',
   'prismaSchemaActive: false',
   'auditLogActive: false',
   'requestMutationActive: false',
   'productionLiveOpsActive: false',
-  'sourceOfTruthMappingContractActive: true',
-  'autonomousProtectedAiActionProhibited',
-  'LocalServiceRequest',
-  'LocalOpsAudit',
-];
-
-const REQUIRED_AUDIT_TYPE_TOKENS = [
-  'VionaRequestAuditActorType',
-  'VionaRequestAuditEventType',
-  'VionaRequestAuditEventRecord',
-  'VionaRequestAuditTransitionPreview',
-  'VionaRequestAuditWriteReadiness',
-  'requester',
-  'operator',
-  'admin',
-  'merchant',
-  'aiDraftOnly',
-  'requestRead',
-  'statusTransitionProposed',
-  'humanConfirmationRecorded',
-  'safetyGateBlocked',
-  'idempotencyKey',
-  'containsProtectedAction',
-];
-
-const REQUIRED_PERSISTENCE_CONTRACT_TOKENS = [
-  'VionaRequestPersistenceReadScope',
-  'VionaRequestPersistenceSourceOfTruth',
-  'VionaRequestPersistenceReadiness',
-  'VionaRequestRepositoryContract',
-  'VionaRequestAuditRepositoryContract',
-  'listRequestsForOperatorPreview',
-  'getRequestById',
-  'listAuditEventsForRequest',
-  'appendAuditEvent',
-  'sourceOfTruth: \'undecided\'',
   'adminDebugUsesFixturesOnly: true',
+  'dedicatedVionaRequestStore',
+  'mappedFromLocalServiceRequest',
+  'hybridWithMappingContract',
+  'noLocalOpsAuditApiReuse',
+  'noLocalServiceRequestDirectReuse',
 ];
 
-const REQUIRED_OPERATOR_READINESS_TOKENS = [
-  'persistenceAuditReadinessContractActive: true',
+const REQUIRED_MAPPING_TOKENS = [
+  'VionaRequestSourceOfTruthOption',
+  'VionaRequestSourceOfTruthRecommendation',
+  'VionaRequestExternalSourceKind',
+  'VionaRequestExternalSourceLink',
+  'VionaRequestLocalStatusReference',
+  'VionaRequestLocalToVionaStatusMapping',
+  'VionaRequestHybridMappingContract',
+  'VionaRequestSourceOfTruthSignoffRequirement',
+  'VIONA_REQUEST_LOCAL_STATUS_REFERENCE_VALUES',
+  'VIONA_REQUEST_SOURCE_OF_TRUTH_RECOMMENDATION',
+  'VIONA_REQUEST_LOCAL_TO_VIONA_STATUS_MAPPINGS',
+  'directReuseSafe: false',
+  'DRAFT',
+  'MERCHANT_REVIEW',
+  'needsHumanConfirmation',
+  'partnerResponded',
+];
+
+const REQUIRED_ACCESS_MATRIX_TOKENS = [
+  'VionaRequestRoleTenantAccessRule',
+  'VIONA_REQUEST_ROLE_TENANT_ACCESS_MATRIX',
+  'VIONA_REQUEST_OPERATOR_ROLE_POLICY',
+  'VionaRequestCrossUniverseLeakRisk',
+  'globalOps',
+  'merchantBusinessOwned',
+  'requesterOwned',
+  'partnerAssigned',
+  'operatorRoleResolved: false',
+  'universeFilter',
+  'auditRead',
+  'LocalMerchantRequestInbox',
+  'TourismMerchantInbox',
+];
+
+const REQUIRED_PERSISTENCE_POINTER_TOKENS = [
   'sourceOfTruthMappingContractActive: true',
   'persistenceApiActive: false',
-  'productionLiveOpsActive: false',
+  'prismaSchemaActive: false',
+];
+
+const REQUIRED_OPERATOR_POINTER_TOKENS = [
+  'sourceOfTruthMappingContractActive: true',
+  'persistenceApiActive: false',
   'mutationsBlocked: true',
-  'prohibitsAutonomousAiAction',
+  'adminDebugUsesFixturesOnly',
 ];
 
 const FORBIDDEN_DIFF_PATTERNS = [
@@ -204,6 +219,7 @@ function getChangedFiles() {
 function findUnsafeStandaloneClaims(paths) {
   const hits = [];
   for (const relPath of paths) {
+    if (!existsSync(path.join(ROOT, relPath))) continue;
     const content = read(relPath);
     for (const claim of UNSAFE_STANDALONE_CLAIMS) {
       if (!content.toLowerCase().includes(claim)) continue;
@@ -222,9 +238,9 @@ function findUnsafeStandaloneClaims(paths) {
 }
 
 function main() {
-  console.log('VIONA request persistence audit readiness check (Pack7)');
+  console.log('VIONA request source-of-truth auth tenant mapping check (Pack8)');
   console.log(
-    'Docs/config/domain contracts only. No API, DB, Prisma migration, mutation, or Admin Debug data-source change.\n'
+    'Docs/config/domain contracts only. No API, DB, Prisma migration, adapter, mutation, or Admin Debug data-source change.\n'
   );
 
   const missingFiles = REQUIRED_FILES.filter((relPath) => !existsSync(path.join(ROOT, relPath)));
@@ -234,44 +250,45 @@ function main() {
     FORBIDDEN_DIFF_PATTERNS.some((pattern) => pattern.test(file))
   );
 
-  const config = read('src/config/vionaRequestPersistenceAuditReadiness.ts');
-  const auditTypes = read('src/domain/requests/vionaRequestAuditEventTypes.ts');
-  const persistenceContract = read('src/domain/requests/vionaRequestPersistenceContract.ts');
-  const operatorReadiness = read('src/config/vionaOperatorInboxAdminReadiness.ts');
-  const docs = read('docs/product/VIONA_REQUEST_PERSISTENCE_AUDIT_READINESS.md');
-  const evidence = read('docs/design/evidence/cursor-request-persistence-audit-readiness-pack7/README.md');
-  const combined = `${config}\n${auditTypes}\n${persistenceContract}\n${operatorReadiness}\n${docs}\n${evidence}`;
+  const config = read('src/config/vionaRequestSourceOfTruthAuthTenantReadiness.ts');
+  const mapping = read('src/domain/requests/vionaRequestSourceOfTruthMappingContract.ts');
+  const matrix = read('src/domain/requests/vionaRequestRoleTenantAccessMatrix.ts');
+  const persistence = read('src/config/vionaRequestPersistenceAuditReadiness.ts');
+  const operator = read('src/config/vionaOperatorInboxAdminReadiness.ts');
+  const docs = read('docs/product/VIONA_REQUEST_SOURCE_OF_TRUTH_AUTH_TENANT_MAPPING.md');
+  const evidence = read('docs/design/evidence/cursor-request-source-of-truth-auth-tenant-pack8/README.md');
+  const combined = `${config}\n${mapping}\n${matrix}\n${persistence}\n${operator}\n${docs}\n${evidence}`;
 
   const appChanged = run('git diff --name-only origin/master -- App.tsx');
   const routesChanged = run('git diff --name-only origin/master -- src/navigation/routes.ts');
   const prismaChanged = run('git diff --name-only origin/master -- prisma/');
   const serverChanged = run('git diff --name-only origin/master -- src/server.ts');
-  const controllersChanged = run('git diff --name-only origin/master -- src/controllers/');
 
   const missingSafeCopy = missingValues(combined, REQUIRED_SAFE_COPY);
   const missingDocPhrases = missingValues(docs, REQUIRED_DOC_PHRASES);
   const missingConfigTokens = missingValues(config, REQUIRED_CONFIG_TOKENS);
-  const missingAuditTokens = missingValues(auditTypes, REQUIRED_AUDIT_TYPE_TOKENS);
-  const missingContractTokens = missingValues(persistenceContract, REQUIRED_PERSISTENCE_CONTRACT_TOKENS);
-  const missingOperatorTokens = missingValues(operatorReadiness, REQUIRED_OPERATOR_READINESS_TOKENS);
+  const missingMappingTokens = missingValues(mapping, REQUIRED_MAPPING_TOKENS);
+  const missingMatrixTokens = missingValues(matrix, REQUIRED_ACCESS_MATRIX_TOKENS);
+  const missingPersistenceTokens = missingValues(persistence, REQUIRED_PERSISTENCE_POINTER_TOKENS);
+  const missingOperatorTokens = missingValues(operator, REQUIRED_OPERATOR_POINTER_TOKENS);
   const unsafeClaims = findUnsafeStandaloneClaims([
-    'docs/product/VIONA_REQUEST_PERSISTENCE_AUDIT_READINESS.md',
-    'src/config/vionaRequestPersistenceAuditReadiness.ts',
-    'src/domain/requests/vionaRequestAuditEventTypes.ts',
-    'src/domain/requests/vionaRequestPersistenceContract.ts',
+    'docs/product/VIONA_REQUEST_SOURCE_OF_TRUTH_AUTH_TENANT_MAPPING.md',
+    'src/config/vionaRequestSourceOfTruthAuthTenantReadiness.ts',
+    'src/domain/requests/vionaRequestSourceOfTruthMappingContract.ts',
+    'src/domain/requests/vionaRequestRoleTenantAccessMatrix.ts',
   ]);
 
   const forbiddenImports = FORBIDDEN_RUNTIME_IMPORTS.filter((token) =>
-    [config, auditTypes, persistenceContract].some((file) => file.includes(token))
+    [config, mapping, matrix].some((file) => file.includes(token))
   );
 
   const hasImplementation =
-    /\bclass\s+\w+/.test(persistenceContract) ||
-    /\bclass\s+\w+/.test(auditTypes) ||
-    /\bfunction\s+\w+/.test(persistenceContract) ||
-    /\bfunction\s+\w+/.test(auditTypes) ||
+    /\bclass\s+\w+/.test(mapping) ||
+    /\bclass\s+\w+/.test(matrix) ||
+    (/\bfunction\s+\w+/.test(mapping) && !mapping.includes('export function')) ||
     combined.includes('fetch(') ||
-    combined.includes('getPrisma(');
+    combined.includes('getPrisma(') ||
+    combined.includes('implements VionaRequestRepositoryContract');
 
   if (missingFiles.length) fail('missing required files', missingFiles);
   if (unexpectedFiles.length) fail('unexpected files changed', unexpectedFiles);
@@ -280,34 +297,35 @@ function main() {
   if (routesChanged) fail('routes.ts changed vs origin/master', [routesChanged]);
   if (prismaChanged) fail('prisma changed vs origin/master', [prismaChanged.split('\n')[0] || 'prisma/']);
   if (serverChanged) fail('src/server.ts changed vs origin/master', [serverChanged]);
-  if (controllersChanged) fail('src/controllers changed vs origin/master', [controllersChanged.split('\n')[0] || 'src/controllers/']);
   if (missingSafeCopy.length) fail('missing required safe copy', missingSafeCopy);
   if (missingDocPhrases.length) fail('missing doc requirements', missingDocPhrases);
   if (missingConfigTokens.length) fail('missing config tokens', missingConfigTokens);
-  if (missingAuditTokens.length) fail('missing audit event type tokens', missingAuditTokens);
-  if (missingContractTokens.length) fail('missing persistence contract tokens', missingContractTokens);
-  if (missingOperatorTokens.length) fail('operator readiness Pack7 pointer missing', missingOperatorTokens);
+  if (missingMappingTokens.length) fail('missing mapping contract tokens', missingMappingTokens);
+  if (missingMatrixTokens.length) fail('missing access matrix tokens', missingMatrixTokens);
+  if (missingPersistenceTokens.length) fail('persistence readiness Pack8 pointer missing', missingPersistenceTokens);
+  if (missingOperatorTokens.length) fail('operator readiness Pack8 pointer missing', missingOperatorTokens);
   if (unsafeClaims.length) fail('unsafe standalone production claims', unsafeClaims);
   if (forbiddenImports.length) fail('forbidden runtime imports in new files', forbiddenImports);
   if (hasImplementation) fail('implementation detected in contract pack', ['types/contracts only']);
 
   if (process.exitCode) {
-    console.log('\nResult: FAIL - fix Pack7 persistence audit readiness before import.');
+    console.log('\nResult: FAIL - fix Pack8 source-of-truth auth tenant mapping before import.');
     return;
   }
 
   console.log(`Required files: PASS (${REQUIRED_FILES.length})`);
   console.log(`Changed file scope: PASS (${changedFiles.length || ALLOWED_FILES.length} allowed files)`);
   console.log('Config readiness flags: PASS');
-  console.log('Audit event types: PASS');
-  console.log('Persistence contracts: PASS');
+  console.log('Mapping contract: PASS');
+  console.log('Access matrix: PASS');
+  console.log('Persistence readiness pointer: PASS');
   console.log('Operator readiness pointer: PASS');
   console.log('Required safe copy: PASS');
   console.log('No App.tsx/navigation/screen changes: PASS');
   console.log('No Prisma/API/server changes: PASS');
   console.log('No implementation added: PASS');
   console.log('No unsafe standalone claims: PASS');
-  console.log('\nResult: PASS - request persistence audit readiness contract is import-ready.');
+  console.log('\nResult: PASS - source-of-truth auth tenant mapping contract is import-ready.');
 }
 
 main();

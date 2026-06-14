@@ -44,6 +44,9 @@ export type VionaOperatorInboxAdminReadiness = Readonly<{
   adminRouteActive: boolean;
   adminDebugPreviewRouteActive: boolean;
   persistenceAuditReadinessContractActive: boolean;
+  /** Pack8 pointer — SoT/auth/tenant mapping contract; Admin Debug stays fixture-only. */
+  sourceOfTruthMappingContractActive: boolean;
+  adminDebugUsesFixturesOnly: boolean;
   productionLiveOpsActive: boolean;
   nextSafeTarget: string;
   appTsxRouteDeferred: boolean;
@@ -144,8 +147,11 @@ export const VIONA_OPERATOR_INBOX_ADMIN_READINESS = {
   adminRouteActive: true,
   adminDebugPreviewRouteActive: true,
   persistenceAuditReadinessContractActive: true,
+  sourceOfTruthMappingContractActive: true,
+  adminDebugUsesFixturesOnly: true,
   productionLiveOpsActive: false,
-  nextSafeTarget: 'Persistence and audit readiness contract (Pack7); Admin Debug remains fixture-only',
+  nextSafeTarget:
+    'Source-of-truth/auth/tenant mapping contract (Pack8); Admin Debug remains fixture-only until SoT sign-off',
   appTsxRouteDeferred: false,
   persistenceApiActive: false,
   mutationsBlocked: true,
@@ -186,7 +192,7 @@ export const VIONA_OPERATOR_INBOX_ADMIN_READINESS = {
     'No mutations in Pack6',
   ],
   futurePack6Recommendation:
-    'Admin Debug read-only operator route is active behind flags; see Pack7 persistence/audit readiness contract for future persistence/API and audit log gates.',
+    'Admin Debug read-only operator route is active behind flags; see Pack7 persistence/audit and Pack8 source-of-truth/auth/tenant mapping contracts for future persistence/API gates.',
 } as const satisfies VionaOperatorInboxAdminReadiness;
 
 export function getVionaOperatorInboxAdminReadiness(): VionaOperatorInboxAdminReadiness {

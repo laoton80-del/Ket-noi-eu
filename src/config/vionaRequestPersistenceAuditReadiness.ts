@@ -45,6 +45,8 @@ export type VionaRequestPersistenceAuditReadiness = Readonly<{
   currentPhaseId: VionaRequestPersistenceAuditPhaseId;
   fixtureOnlyAdminDebugPreview: boolean;
   persistenceAuditReadinessContract: boolean;
+  /** Pack8 pointer — mapping contract active; SoT decision not signed off. */
+  sourceOfTruthMappingContractActive: boolean;
   persistenceApiActive: boolean;
   prismaSchemaActive: boolean;
   auditLogActive: boolean;
@@ -84,7 +86,7 @@ export const VIONA_REQUEST_PERSISTENCE_AUDIT_PHASES = [
       'Source-of-truth decision documented',
       'Auth/session SoT documented',
       'Append-only audit log requirements documented',
-      'Local-to-VIONA mapping contract deferred to future pack',
+      'Pack8 source-of-truth/auth/tenant mapping contract merged',
     ],
     forbiddenPromotions: [
       'Must not add API routes in Pack7',
@@ -149,6 +151,7 @@ export const VIONA_REQUEST_PERSISTENCE_AUDIT_READINESS = {
   currentPhaseId: 'persistenceAuditReadinessContract',
   fixtureOnlyAdminDebugPreview: true,
   persistenceAuditReadinessContract: true,
+  sourceOfTruthMappingContractActive: true,
   persistenceApiActive: false,
   prismaSchemaActive: false,
   auditLogActive: false,
@@ -206,7 +209,7 @@ export const VIONA_REQUEST_PERSISTENCE_AUDIT_READINESS = {
     'No merchant execution in Pack7',
   ],
   localAuditReferenceOnlyNote:
-    'LocalServiceRequest and LocalServiceRequestAuditEvent are reference models only; VIONA Request Engine source-of-truth is not chosen yet.',
+    'LocalServiceRequest and LocalServiceRequestAuditEvent are reference models only. Pack8 mapping contract documents SoT candidates; founder/architect sign-off required before persistence activation.',
 } as const satisfies VionaRequestPersistenceAuditReadiness;
 
 export function getVionaRequestPersistenceAuditReadiness(): VionaRequestPersistenceAuditReadiness {
