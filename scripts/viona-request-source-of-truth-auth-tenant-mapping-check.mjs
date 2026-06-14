@@ -27,6 +27,10 @@ const ALLOWED_FILES = [
   'src/domain/requests/vionaRequestDedicatedStoreFieldManifest.ts',
   'scripts/viona-request-sot-signoff-phase-promotion-readiness-check.mjs',
   'docs/design/evidence/cursor-request-sot-signoff-phase-promotion-pack9/README.md',
+  'docs/product/VIONA_REQUEST_SOT_FOUNDER_ARCHITECT_SIGNOFF_PACKET.md',
+  'src/config/vionaRequestSotFounderArchitectSignoffPacketReadiness.ts',
+  'scripts/viona-request-sot-founder-architect-signoff-packet-check.mjs',
+  'docs/design/evidence/cursor-request-sot-signoff-packet-pack10/README.md',
 ];
 
 const REQUIRED_FILES = [
@@ -83,6 +87,8 @@ const REQUIRED_CONFIG_TOKENS = [
   'export const VIONA_REQUEST_AUTH_TENANT_PHASES',
   'export function getVionaRequestSourceOfTruthAuthTenantReadiness',
   'sourceOfTruthMappingContractActive: true',
+  'sotSignoffPhasePromotionReadinessContractActive: true',
+  'founderArchitectSignoffPacketActive: true',
   'sourceOfTruthDecisionSignedOff: false',
   'authSessionSourceOfTruthApproved: false',
   'tenantAccessMatrixApproved: false',
@@ -139,6 +145,7 @@ const REQUIRED_ACCESS_MATRIX_TOKENS = [
 const REQUIRED_PERSISTENCE_POINTER_TOKENS = [
   'sourceOfTruthMappingContractActive: true',
   'sotSignoffPhasePromotionReadinessContractActive: true',
+  'founderArchitectSignoffPacketActive: true',
   'persistenceApiActive: false',
   'prismaSchemaActive: false',
 ];
@@ -146,6 +153,7 @@ const REQUIRED_PERSISTENCE_POINTER_TOKENS = [
 const REQUIRED_OPERATOR_POINTER_TOKENS = [
   'sourceOfTruthMappingContractActive: true',
   'sotSignoffPhasePromotionReadinessContractActive: true',
+  'founderArchitectSignoffPacketActive: true',
   'persistenceApiActive: false',
   'mutationsBlocked: true',
   'adminDebugUsesFixturesOnly',
