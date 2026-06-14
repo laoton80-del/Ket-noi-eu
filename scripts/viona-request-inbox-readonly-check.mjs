@@ -43,10 +43,22 @@ const PACK5_ADMIN_ROUTE_READINESS_DIFF_FILES = [
   'docs/design/evidence/codex-operator-inbox-admin-route-readiness-pack5/README.md',
 ];
 
+// Pack6 Admin Debug read-only preview route only; does not allow API, DB, payment, booking, SOS, wallet, live AI, or merchant execution.
+const PACK6_ADMIN_DEBUG_PREVIEW_DIFF_FILES = [
+  'src/config/vionaOperatorInboxAdminDebugGate.ts',
+  'src/screens/admin/VionaAdminDebugOperatorInboxPreviewScreen.tsx',
+  'docs/product/VIONA_OPERATOR_INBOX_ADMIN_DEBUG_PREVIEW.md',
+  'scripts/viona-operator-inbox-admin-debug-preview-check.mjs',
+  'docs/design/evidence/codex-operator-inbox-admin-debug-preview-pack6/README.md',
+  'App.tsx',
+  'src/navigation/routes.ts',
+];
+
 const ALLOWED_DIFF_FILES = [
   ...PACK2_ALLOWED_DIFF_FILES,
   ...GATED_REFERENCE_LAB_PREVIEW_DIFF_FILES,
   ...PACK5_ADMIN_ROUTE_READINESS_DIFF_FILES,
+  ...PACK6_ADMIN_DEBUG_PREVIEW_DIFF_FILES,
 ];
 
 const REQUIRED_FILES = PACK2_ALLOWED_DIFF_FILES;

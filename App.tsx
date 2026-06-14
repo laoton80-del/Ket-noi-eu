@@ -43,6 +43,7 @@ import { SmartTrioProvider } from './src/context/SmartTrioContext';
 import {
   isAdminDebugSurfaceEnabled,
 } from './src/config/adminDebugGate';
+import { isVionaOperatorInboxAdminDebugPreviewEnabled } from './src/config/vionaOperatorInboxAdminDebugGate';
 import { isReferenceLabsEnabled } from './src/config/referenceLabsGate';
 import { getReferenceLabLinkingScreens } from './src/navigation/referenceLabLinking';
 import { APP_BRAND } from './src/config/appBrand';
@@ -67,6 +68,7 @@ import { SalesLeadCRM } from './src/screens/admin/SalesLeadCRM';
 import { OutboundCampaignScreen } from './src/screens/admin/OutboundCampaignScreen';
 import { FacebookWarRoomScreen } from './src/screens/admin/FacebookWarRoomScreen';
 import { MarketingApprovalScreen } from './src/screens/admin/MarketingApprovalScreen';
+import { VionaAdminDebugOperatorInboxPreviewScreen } from './src/screens/admin/VionaAdminDebugOperatorInboxPreviewScreen';
 import { VaultScreen } from './src/screens/VaultScreen';
 import { ReferralRewardScreen } from './src/screens/ReferralRewardScreen';
 import { CashOutScreen } from './src/screens/b2c/CashOutScreen';
@@ -379,6 +381,7 @@ const rootLinking: LinkingOptions<RootStackParamList> = {
       AdContentFactory: 'AdContentFactory',
       OutboundCampaign: 'OutboundCampaign',
       FacebookWarRoom: 'FacebookWarRoom',
+      VionaAdminDebugOperatorInboxPreview: 'admin/operator-inbox-preview',
       Login: 'Login',
       Otp: 'Otp',
       RoleSelection: 'RoleSelection',
@@ -640,6 +643,12 @@ function AppNavigationShell({
                 <Stack.Screen name="FacebookWarRoom" component={FacebookWarRoomScreen} />
                 <Stack.Screen name="MarketingApproval" component={MarketingApprovalScreen} />
               </>
+            ) : null}
+            {isVionaOperatorInboxAdminDebugPreviewEnabled() ? (
+              <Stack.Screen
+                name="VionaAdminDebugOperatorInboxPreview"
+                component={VionaAdminDebugOperatorInboxPreviewScreen}
+              />
             ) : null}
             <Stack.Screen name="Login" component={LoginScreen} options={{ presentation: 'modal' }} />
             <Stack.Screen name="Otp" component={OtpScreen} options={{ presentation: 'modal' }} />

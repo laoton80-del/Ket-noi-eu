@@ -35,16 +35,19 @@ export type VionaOperatorInboxAdminRoutePhase = Readonly<{
 }>;
 
 export type VionaOperatorInboxAdminReadiness = Readonly<{
-  pack: 'pack5';
-  masterBaselineCommit: '35220c8';
-  masterBaselinePr: '#59';
+  pack: 'pack6';
+  masterBaselineCommit: 'baa15b9';
+  masterBaselinePr: '#60';
   currentMaturity: VionaOperatorInboxAdminMaturityLabel;
   currentPhaseId: string;
   referenceLabPreviewMerged: boolean;
   adminRouteActive: boolean;
+  adminDebugPreviewRouteActive: boolean;
   productionLiveOpsActive: boolean;
   nextSafeTarget: string;
   appTsxRouteDeferred: boolean;
+  persistenceApiActive: boolean;
+  mutationsBlocked: boolean;
   safetyFlags: readonly VionaOperatorInboxAdminSafetyFlag[];
   requiredSafeCopy: readonly string[];
   forbiddenMerchantRouteTargets: readonly string[];
@@ -57,7 +60,7 @@ export const VIONA_OPERATOR_INBOX_ADMIN_ROUTE_PHASES = [
     id: 'referenceLabPreviewMerged',
     label: 'ReferenceLab operator preview merged',
     maturity: 'referenceLabOnly',
-    active: true,
+    active: false,
     summary:
       'Pack4 merged on master. Operator queue preview is ReferenceLab-only behind master and per-lab gates.',
     requiredBeforePromotion: [
@@ -75,9 +78,9 @@ export const VIONA_OPERATOR_INBOX_ADMIN_ROUTE_PHASES = [
     id: 'adminDebugPreviewCandidate',
     label: 'Admin Debug read-only preview candidate',
     maturity: 'adminDebugPreviewCandidate',
-    active: false,
+    active: true,
     summary:
-      'Future Pack6 may add an Admin Debug read-only operator route behind a dedicated feature flag. Still no mutations.',
+      'Pack6 adds Admin Debug read-only operator route behind admin debug + dedicated preview flag + ADMIN role guard. Still no mutations.',
     requiredBeforePromotion: [
       'Dedicated feature flag required',
       'Admin role gate required',
@@ -131,16 +134,19 @@ export const VIONA_OPERATOR_INBOX_ADMIN_ROUTE_PHASES = [
 ] as const satisfies readonly VionaOperatorInboxAdminRoutePhase[];
 
 export const VIONA_OPERATOR_INBOX_ADMIN_READINESS = {
-  pack: 'pack5',
-  masterBaselineCommit: '35220c8',
-  masterBaselinePr: '#59',
-  currentMaturity: 'referenceLabOnly',
-  currentPhaseId: 'referenceLabPreviewMerged',
+  pack: 'pack6',
+  masterBaselineCommit: 'baa15b9',
+  masterBaselinePr: '#60',
+  currentMaturity: 'adminDebugPreviewCandidate',
+  currentPhaseId: 'adminDebugPreviewCandidate',
   referenceLabPreviewMerged: true,
-  adminRouteActive: false,
+  adminRouteActive: true,
+  adminDebugPreviewRouteActive: true,
   productionLiveOpsActive: false,
-  nextSafeTarget: 'Admin Debug read-only operator preview route (Pack6 candidate)',
-  appTsxRouteDeferred: true,
+  nextSafeTarget: 'Admin Debug read-only preview with fixture data only',
+  appTsxRouteDeferred: false,
+  persistenceApiActive: false,
+  mutationsBlocked: true,
   safetyFlags: [
     'requiresFeatureFlag',
     'requiresAdminRoleGate',
@@ -154,8 +160,9 @@ export const VIONA_OPERATOR_INBOX_ADMIN_READINESS = {
     'prohibitsAutonomousAiAction',
   ],
   requiredSafeCopy: [
+    'Admin Debug preview',
     'Read-only operator preview',
-    'Admin route not active in this pack',
+    'Fixture data only',
     'No payment captured',
     'Not booking confirmed',
     'No SOS dispatch',
@@ -165,18 +172,19 @@ export const VIONA_OPERATOR_INBOX_ADMIN_READINESS = {
   ],
   forbiddenMerchantRouteTargets: ['LocalMerchantRequestInbox', 'TourismMerchantInbox'],
   nonGoals: [
-    'No live admin route in Pack5',
-    'No API in Pack5',
-    'No DB in Pack5',
-    'No payment in Pack5',
-    'No booking in Pack5',
-    'No SOS dispatch in Pack5',
-    'No wallet in Pack5',
-    'No live AI in Pack5',
-    'No merchant execution in Pack5',
+    'No live admin operations in Pack6',
+    'No API in Pack6',
+    'No DB in Pack6',
+    'No payment in Pack6',
+    'No booking in Pack6',
+    'No SOS dispatch in Pack6',
+    'No wallet in Pack6',
+    'No live AI in Pack6',
+    'No merchant execution in Pack6',
+    'No mutations in Pack6',
   ],
   futurePack6Recommendation:
-    'Add admin debug read-only operator route behind feature flag only, still no mutations.',
+    'Admin Debug read-only operator route is active behind flags; persistence/API and audit log remain future gates.',
 } as const satisfies VionaOperatorInboxAdminReadiness;
 
 export function getVionaOperatorInboxAdminReadiness(): VionaOperatorInboxAdminReadiness {
@@ -196,9 +204,10 @@ export function hasVionaOperatorInboxAdminSafetyFlag(
 }
 
 export function isVionaOperatorInboxAdminRoutePromotionBlocked(): boolean {
-  return (
-    VIONA_OPERATOR_INBOX_ADMIN_READINESS.currentMaturity === 'referenceLabOnly' ||
-    VIONA_OPERATOR_INBOX_ADMIN_READINESS.currentMaturity === 'productionBlocked' ||
-    !VIONA_OPERATOR_INBOX_ADMIN_READINESS.adminRouteActive
-  );
+  const readiness: VionaOperatorInboxAdminReadiness = VIONA_OPERATOR_INBOX_ADMIN_READINESS;
+  if (readiness.productionLiveOpsActive) return true;
+  if (readiness.currentMaturity === 'productionBlocked') return true;
+  if (readiness.mutationsBlocked !== true) return true;
+  if (readiness.persistenceApiActive) return true;
+  return readiness.currentMaturity === 'referenceLabOnly';
 }

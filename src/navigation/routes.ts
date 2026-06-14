@@ -88,6 +88,8 @@ export type RootStackParamList = {
   VionaReferenceRequestInboxLab: undefined;
   /** VIONA Operator Request Inbox — read-only ReferenceLab triage preview (master + per-lab env gates). */
   VionaReferenceRequestOperatorInboxLab: undefined;
+  /** VIONA Operator Inbox — Admin Debug read-only preview (admin debug + dedicated env flag + ADMIN role). */
+  VionaAdminDebugOperatorInboxPreview: undefined;
   /** Phase 4: travel hub — scenarios + quick links (no booking automation). */
   TravelCompanion: undefined;
   /** KNG Travel — dedicated premium travel mini-app (concierge, homestay, interpreter). */
