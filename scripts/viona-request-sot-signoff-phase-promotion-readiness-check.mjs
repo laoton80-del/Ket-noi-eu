@@ -27,6 +27,8 @@ const ALLOWED_FILES = [
   'src/config/vionaRequestSotFounderArchitectSignoffPacketReadiness.ts',
   'scripts/viona-request-sot-founder-architect-signoff-packet-check.mjs',
   'docs/design/evidence/cursor-request-sot-signoff-packet-pack10/README.md',
+  'docs/product/VIONA_REQUEST_SOT_HUMAN_SIGNOFF_TEMPLATE.md',
+  'docs/design/evidence/cursor-request-sot-signoff-template-pack10b/README.md',
 ];
 
 const REQUIRED_FILES = [
