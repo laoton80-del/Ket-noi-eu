@@ -49,6 +49,8 @@ export type VionaRequestPersistenceAuditReadiness = Readonly<{
   sourceOfTruthMappingContractActive: boolean;
   /** Pack9 pointer — sign-off readiness contract; sign-off remains false. */
   sotSignoffPhasePromotionReadinessContractActive: boolean;
+  /** Pack10 pointer — founder/architect sign-off packet; sign-off remains false. */
+  founderArchitectSignoffPacketActive: boolean;
   persistenceApiActive: boolean;
   prismaSchemaActive: boolean;
   auditLogActive: boolean;
@@ -155,6 +157,7 @@ export const VIONA_REQUEST_PERSISTENCE_AUDIT_READINESS = {
   persistenceAuditReadinessContract: true,
   sourceOfTruthMappingContractActive: true,
   sotSignoffPhasePromotionReadinessContractActive: true,
+  founderArchitectSignoffPacketActive: true,
   persistenceApiActive: false,
   prismaSchemaActive: false,
   auditLogActive: false,

@@ -23,6 +23,10 @@ const ALLOWED_FILES = [
   'scripts/viona-request-inbox-readonly-check.mjs',
   'scripts/viona-request-inbox-reference-lab-check.mjs',
   'scripts/viona-request-inbox-operator-reference-lab-check.mjs',
+  'docs/product/VIONA_REQUEST_SOT_FOUNDER_ARCHITECT_SIGNOFF_PACKET.md',
+  'src/config/vionaRequestSotFounderArchitectSignoffPacketReadiness.ts',
+  'scripts/viona-request-sot-founder-architect-signoff-packet-check.mjs',
+  'docs/design/evidence/cursor-request-sot-signoff-packet-pack10/README.md',
 ];
 
 const REQUIRED_FILES = [
@@ -32,6 +36,10 @@ const REQUIRED_FILES = [
   'src/domain/requests/vionaRequestDedicatedStoreFieldManifest.ts',
   'scripts/viona-request-sot-signoff-phase-promotion-readiness-check.mjs',
   'docs/design/evidence/cursor-request-sot-signoff-phase-promotion-pack9/README.md',
+  'docs/product/VIONA_REQUEST_SOT_FOUNDER_ARCHITECT_SIGNOFF_PACKET.md',
+  'src/config/vionaRequestSotFounderArchitectSignoffPacketReadiness.ts',
+  'scripts/viona-request-sot-founder-architect-signoff-packet-check.mjs',
+  'docs/design/evidence/cursor-request-sot-signoff-packet-pack10/README.md',
 ];
 
 const REQUIRED_SAFE_COPY = [
@@ -80,6 +88,7 @@ const REQUIRED_CONFIG_TOKENS = [
   'export function getVionaRequestSotSignoffPhasePromotionReadiness',
   'export function isVionaRequestSotSignoffPromotionBlocked',
   'sotSignoffReadinessContractActive: true',
+  'founderArchitectSignoffPacketActive: true',
   "signOffStatus: 'pending'",
   'sourceOfTruthDecisionSignedOff: false',
   'selectedSourceOfTruthOptionId: null',
@@ -134,18 +143,21 @@ const REQUIRED_FIELD_MANIFEST_TOKENS = [
 
 const REQUIRED_PACK8_POINTER_TOKENS = [
   'sotSignoffPhasePromotionReadinessContractActive: true',
+  'founderArchitectSignoffPacketActive: true',
   'sourceOfTruthDecisionSignedOff: false',
   'persistenceApiActive: false',
 ];
 
 const REQUIRED_PERSISTENCE_POINTER_TOKENS = [
   'sotSignoffPhasePromotionReadinessContractActive: true',
+  'founderArchitectSignoffPacketActive: true',
   'persistenceApiActive: false',
   'sourceOfTruthMappingContractActive: true',
 ];
 
 const REQUIRED_OPERATOR_POINTER_TOKENS = [
   'sotSignoffPhasePromotionReadinessContractActive: true',
+  'founderArchitectSignoffPacketActive: true',
   'adminDebugUsesFixturesOnly: true',
   'persistenceApiActive: false',
   'mutationsBlocked: true',

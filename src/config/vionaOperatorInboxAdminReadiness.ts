@@ -48,6 +48,8 @@ export type VionaOperatorInboxAdminReadiness = Readonly<{
   sourceOfTruthMappingContractActive: boolean;
   /** Pack9 pointer — sign-off readiness contract; Admin Debug stays fixture-only. */
   sotSignoffPhasePromotionReadinessContractActive: boolean;
+  /** Pack10 pointer — founder/architect sign-off packet; Admin Debug stays fixture-only. */
+  founderArchitectSignoffPacketActive: boolean;
   adminDebugUsesFixturesOnly: boolean;
   productionLiveOpsActive: boolean;
   nextSafeTarget: string;
@@ -151,10 +153,11 @@ export const VIONA_OPERATOR_INBOX_ADMIN_READINESS = {
   persistenceAuditReadinessContractActive: true,
   sourceOfTruthMappingContractActive: true,
   sotSignoffPhasePromotionReadinessContractActive: true,
+  founderArchitectSignoffPacketActive: true,
   adminDebugUsesFixturesOnly: true,
   productionLiveOpsActive: false,
   nextSafeTarget:
-    'SoT sign-off phase promotion readiness contract (Pack9); Admin Debug remains fixture-only until founder/architect sign-off',
+    'Founder/architect sign-off packet (Pack10); Admin Debug remains fixture-only until human sign-off recorded',
   appTsxRouteDeferred: false,
   persistenceApiActive: false,
   mutationsBlocked: true,

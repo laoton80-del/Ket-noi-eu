@@ -39,6 +39,8 @@ export type VionaRequestSotSignoffPhasePromotionReadiness = Readonly<{
   masterBaselinePr: '#63';
   currentPhaseId: 'sotSignoffPhasePromotionReadinessContract';
   sotSignoffReadinessContractActive: boolean;
+  /** Pack10 pointer — founder/architect sign-off packet prepared; sign-off remains false. */
+  founderArchitectSignoffPacketActive: boolean;
   signOffStatus: 'pending';
   sourceOfTruthDecisionSignedOff: false;
   selectedSourceOfTruthOptionId: null;
@@ -164,6 +166,7 @@ export const VIONA_REQUEST_SOT_SIGNOFF_PHASE_PROMOTION_READINESS = {
   masterBaselinePr: '#63',
   currentPhaseId: 'sotSignoffPhasePromotionReadinessContract',
   sotSignoffReadinessContractActive: true,
+  founderArchitectSignoffPacketActive: true,
   signOffStatus: 'pending',
   sourceOfTruthDecisionSignedOff: false,
   selectedSourceOfTruthOptionId: null,
