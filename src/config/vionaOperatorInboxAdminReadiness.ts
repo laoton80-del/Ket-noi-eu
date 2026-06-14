@@ -43,6 +43,7 @@ export type VionaOperatorInboxAdminReadiness = Readonly<{
   referenceLabPreviewMerged: boolean;
   adminRouteActive: boolean;
   adminDebugPreviewRouteActive: boolean;
+  persistenceAuditReadinessContractActive: boolean;
   productionLiveOpsActive: boolean;
   nextSafeTarget: string;
   appTsxRouteDeferred: boolean;
@@ -142,8 +143,9 @@ export const VIONA_OPERATOR_INBOX_ADMIN_READINESS = {
   referenceLabPreviewMerged: true,
   adminRouteActive: true,
   adminDebugPreviewRouteActive: true,
+  persistenceAuditReadinessContractActive: true,
   productionLiveOpsActive: false,
-  nextSafeTarget: 'Admin Debug read-only preview with fixture data only',
+  nextSafeTarget: 'Persistence and audit readiness contract (Pack7); Admin Debug remains fixture-only',
   appTsxRouteDeferred: false,
   persistenceApiActive: false,
   mutationsBlocked: true,
@@ -184,7 +186,7 @@ export const VIONA_OPERATOR_INBOX_ADMIN_READINESS = {
     'No mutations in Pack6',
   ],
   futurePack6Recommendation:
-    'Admin Debug read-only operator route is active behind flags; persistence/API and audit log remain future gates.',
+    'Admin Debug read-only operator route is active behind flags; see Pack7 persistence/audit readiness contract for future persistence/API and audit log gates.',
 } as const satisfies VionaOperatorInboxAdminReadiness;
 
 export function getVionaOperatorInboxAdminReadiness(): VionaOperatorInboxAdminReadiness {

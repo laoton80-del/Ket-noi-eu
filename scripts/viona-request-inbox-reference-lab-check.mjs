@@ -30,6 +30,12 @@ const ALLOWED_FILES = [
   'docs/design/evidence/codex-operator-inbox-admin-debug-preview-pack6/README.md',
   'App.tsx',
   'src/navigation/routes.ts',
+  'docs/product/VIONA_REQUEST_PERSISTENCE_AUDIT_READINESS.md',
+  'src/config/vionaRequestPersistenceAuditReadiness.ts',
+  'src/domain/requests/vionaRequestAuditEventTypes.ts',
+  'src/domain/requests/vionaRequestPersistenceContract.ts',
+  'scripts/viona-request-persistence-audit-readiness-check.mjs',
+  'docs/design/evidence/cursor-request-persistence-audit-readiness-pack7/README.md',
 ];
 
 const REQUIRED_SAFETY_PHRASES = [
