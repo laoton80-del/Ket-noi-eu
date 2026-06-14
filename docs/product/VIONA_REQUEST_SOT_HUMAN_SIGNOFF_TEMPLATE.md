@@ -1,7 +1,7 @@
 # VIONA Request Engine — Founder/Architect Source-of-Truth Sign-off Decision
 
-**Document type:** Human decision record template (fillable companion to Pack10 sign-off packet).  
-**Baseline:** `origin/master @ 4b3a1d5` — Pack10 merged (PR #65).  
+**Document type:** Human decision record template (fillable companion to Pack10 sign-off packet).
+**Baseline:** `origin/master @ 4b3a1d5` — Pack10 merged (PR #65).
 **Related:** `docs/product/VIONA_REQUEST_SOT_FOUNDER_ARCHITECT_SIGNOFF_PACKET.md`
 
 ---

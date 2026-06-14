@@ -1,6 +1,6 @@
 # Pack10B evidence — SoT human sign-off template companion
 
-**Branch:** `viona/cursor-request-sot-signoff-template-companion`  
+**Branch:** `viona/cursor-request-sot-signoff-template-companion`
 **Baseline:** `origin/master @ 4b3a1d5` (PR #65 — Pack10 merged)
 
 ## Scope
