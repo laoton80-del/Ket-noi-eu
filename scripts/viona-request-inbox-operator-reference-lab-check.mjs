@@ -33,6 +33,12 @@ const ALLOWED_FILES = [
   'src/domain/requests/vionaRequestPersistenceContract.ts',
   'scripts/viona-request-persistence-audit-readiness-check.mjs',
   'docs/design/evidence/cursor-request-persistence-audit-readiness-pack7/README.md',
+  'docs/product/VIONA_REQUEST_SOURCE_OF_TRUTH_AUTH_TENANT_MAPPING.md',
+  'src/config/vionaRequestSourceOfTruthAuthTenantReadiness.ts',
+  'src/domain/requests/vionaRequestSourceOfTruthMappingContract.ts',
+  'src/domain/requests/vionaRequestRoleTenantAccessMatrix.ts',
+  'scripts/viona-request-source-of-truth-auth-tenant-mapping-check.mjs',
+  'docs/design/evidence/cursor-request-source-of-truth-auth-tenant-pack8/README.md',
 ];
 
 const REQUIRED_SAFETY_PHRASES = [

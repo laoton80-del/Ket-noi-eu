@@ -65,12 +65,22 @@ const PACK7_PERSISTENCE_AUDIT_READINESS_DIFF_FILES = [
   'docs/design/evidence/cursor-request-persistence-audit-readiness-pack7/README.md',
 ];
 
+const PACK8_SOURCE_OF_TRUTH_AUTH_TENANT_DIFF_FILES = [
+  'docs/product/VIONA_REQUEST_SOURCE_OF_TRUTH_AUTH_TENANT_MAPPING.md',
+  'src/config/vionaRequestSourceOfTruthAuthTenantReadiness.ts',
+  'src/domain/requests/vionaRequestSourceOfTruthMappingContract.ts',
+  'src/domain/requests/vionaRequestRoleTenantAccessMatrix.ts',
+  'scripts/viona-request-source-of-truth-auth-tenant-mapping-check.mjs',
+  'docs/design/evidence/cursor-request-source-of-truth-auth-tenant-pack8/README.md',
+];
+
 const ALLOWED_DIFF_FILES = [
   ...PACK2_ALLOWED_DIFF_FILES,
   ...GATED_REFERENCE_LAB_PREVIEW_DIFF_FILES,
   ...PACK5_ADMIN_ROUTE_READINESS_DIFF_FILES,
   ...PACK6_ADMIN_DEBUG_PREVIEW_DIFF_FILES,
   ...PACK7_PERSISTENCE_AUDIT_READINESS_DIFF_FILES,
+  ...PACK8_SOURCE_OF_TRUTH_AUTH_TENANT_DIFF_FILES,
 ];
 
 const REQUIRED_FILES = PACK2_ALLOWED_DIFF_FILES;
