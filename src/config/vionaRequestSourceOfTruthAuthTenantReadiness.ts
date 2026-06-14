@@ -66,6 +66,8 @@ export type VionaRequestSourceOfTruthAuthTenantReadiness = Readonly<{
   masterBaselinePr: '#62';
   currentPhaseId: VionaRequestAuthTenantPhaseId;
   sourceOfTruthMappingContractActive: boolean;
+  /** Pack9 pointer — sign-off readiness contract; sign-off remains false. */
+  sotSignoffPhasePromotionReadinessContractActive: boolean;
   sourceOfTruthDecisionSignedOff: boolean;
   authSessionSourceOfTruthApproved: boolean;
   tenantAccessMatrixApproved: boolean;
@@ -237,6 +239,7 @@ export const VIONA_REQUEST_SOURCE_OF_TRUTH_AUTH_TENANT_READINESS = {
   masterBaselinePr: '#62',
   currentPhaseId: 'sourceOfTruthMappingContract',
   sourceOfTruthMappingContractActive: true,
+  sotSignoffPhasePromotionReadinessContractActive: true,
   sourceOfTruthDecisionSignedOff: false,
   authSessionSourceOfTruthApproved: false,
   tenantAccessMatrixApproved: false,

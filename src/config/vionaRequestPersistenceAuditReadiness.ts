@@ -45,8 +45,10 @@ export type VionaRequestPersistenceAuditReadiness = Readonly<{
   currentPhaseId: VionaRequestPersistenceAuditPhaseId;
   fixtureOnlyAdminDebugPreview: boolean;
   persistenceAuditReadinessContract: boolean;
-  /** Pack8 pointer — mapping contract active; SoT decision not signed off. */
+  /** Pack7 pointer — Pack8 mapping contract active. */
   sourceOfTruthMappingContractActive: boolean;
+  /** Pack9 pointer — sign-off readiness contract; sign-off remains false. */
+  sotSignoffPhasePromotionReadinessContractActive: boolean;
   persistenceApiActive: boolean;
   prismaSchemaActive: boolean;
   auditLogActive: boolean;
@@ -152,6 +154,7 @@ export const VIONA_REQUEST_PERSISTENCE_AUDIT_READINESS = {
   fixtureOnlyAdminDebugPreview: true,
   persistenceAuditReadinessContract: true,
   sourceOfTruthMappingContractActive: true,
+  sotSignoffPhasePromotionReadinessContractActive: true,
   persistenceApiActive: false,
   prismaSchemaActive: false,
   auditLogActive: false,
