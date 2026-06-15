@@ -55,6 +55,10 @@ const ALLOWED_FILES = [
   'src/config/vionaRequestPack12PrismaSchemaReadinessBoundary.ts',
   'scripts/viona-request-pack12-prisma-schema-readiness-boundary-check.mjs',
   'docs/design/evidence/cursor-request-pack12-prisma-schema-readiness-boundary/README.md',
+  'docs/product/VIONA_REQUEST_PACK13_PRISMA_SCHEMA_IMPLEMENTATION_APPROVAL_PACKET.md',
+  'src/config/vionaRequestPack13PrismaSchemaImplementationApprovalPacketReadiness.ts',
+  'scripts/viona-request-pack13-prisma-schema-implementation-approval-packet-check.mjs',
+  'docs/design/evidence/cursor-request-pack13a-prisma-schema-implementation-approval-packet/README.md',
 ];
 
 const REQUIRED_FILES = [
