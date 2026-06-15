@@ -38,6 +38,10 @@ const ALLOWED_FILES = [
   'src/config/vionaRequestDedicatedStoreSchemaDesignReadiness.ts',
   'scripts/viona-request-dedicated-store-schema-design-contract-check.mjs',
   'docs/design/evidence/cursor-request-dedicated-store-schema-design-pack11/README.md',
+  'docs/product/VIONA_REQUEST_SCHEMA_DESIGN_HUMAN_APPROVAL_RECORD.md',
+  'src/config/vionaRequestSchemaDesignHumanApprovalReadiness.ts',
+  'scripts/viona-request-schema-design-human-approval-recording-check.mjs',
+  'docs/design/evidence/cursor-request-schema-design-human-approval-pack11b/README.md',
 ];
 
 const REQUIRED_FILES = [
@@ -144,6 +148,16 @@ const REQUIRED_CONFIG_TOKENS_APPROVED = [
   'productionLiveOpsActive: false',
   'adminDebugUsesFixturesOnly: true',
   'agentMayFlipSignoff: false',
+];
+
+const REQUIRED_CONFIG_TOKENS_SCHEMA_DESIGN_APPROVED = [
+  ...REQUIRED_CONFIG_TOKENS_APPROVED.filter((token) => token !== 'schemaDesignApproved: false'),
+  'schemaDesignHumanApprovalRecorded: true',
+  'schemaDesignApproved: true',
+  'pack12PlanningPermitted: true',
+  'pack12PlanningReadinessBoundaryOnly: true',
+  'pack12Started: false',
+  'schemaDesignReviewRequired: false',
 ];
 
 const REQUIRED_CONFIG_TOKENS = REQUIRED_CONFIG_TOKENS_PENDING;
@@ -314,6 +328,11 @@ function isHumanApprovalRecorded() {
   return existsSync(path.join(ROOT, rel)) && read(rel).includes('humanApprovalRecorded: true');
 }
 
+function isSchemaDesignHumanApprovalRecorded() {
+  const rel = 'src/config/vionaRequestSchemaDesignHumanApprovalReadiness.ts';
+  return existsSync(path.join(ROOT, rel)) && read(rel).includes('schemaDesignHumanApprovalRecorded: true');
+}
+
 function main() {
   console.log('VIONA request SoT sign-off phase promotion readiness check (Pack9)');
   console.log(
@@ -321,9 +340,12 @@ function main() {
   );
 
   const humanApprovalRecorded = isHumanApprovalRecorded();
-  const requiredConfigTokens = humanApprovalRecorded
-    ? REQUIRED_CONFIG_TOKENS_APPROVED
-    : REQUIRED_CONFIG_TOKENS_PENDING;
+  const schemaDesignHumanApprovalRecorded = isSchemaDesignHumanApprovalRecorded();
+  const requiredConfigTokens = schemaDesignHumanApprovalRecorded
+    ? REQUIRED_CONFIG_TOKENS_SCHEMA_DESIGN_APPROVED
+    : humanApprovalRecorded
+      ? REQUIRED_CONFIG_TOKENS_APPROVED
+      : REQUIRED_CONFIG_TOKENS_PENDING;
   const requiredPack8Tokens = humanApprovalRecorded
     ? REQUIRED_PACK8_POINTER_TOKENS_APPROVED
     : REQUIRED_PACK8_POINTER_TOKENS_PENDING;

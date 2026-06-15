@@ -12,6 +12,10 @@ const ALLOWED_FILES = [
   'src/config/vionaRequestDedicatedStoreSchemaDesignReadiness.ts',
   'scripts/viona-request-dedicated-store-schema-design-contract-check.mjs',
   'docs/design/evidence/cursor-request-dedicated-store-schema-design-pack11/README.md',
+  'docs/product/VIONA_REQUEST_SCHEMA_DESIGN_HUMAN_APPROVAL_RECORD.md',
+  'src/config/vionaRequestSchemaDesignHumanApprovalReadiness.ts',
+  'scripts/viona-request-schema-design-human-approval-recording-check.mjs',
+  'docs/design/evidence/cursor-request-schema-design-human-approval-pack11b/README.md',
   'src/config/vionaRequestSotHumanApprovalReadiness.ts',
   'src/config/vionaRequestSotSignoffPhasePromotionReadiness.ts',
   'src/config/vionaRequestSourceOfTruthAuthTenantReadiness.ts',
@@ -104,7 +108,7 @@ const FORBIDDEN_LIFECYCLE_NAMES = [
   'refundGuaranteed',
 ];
 
-const REQUIRED_CONFIG_TOKENS = [
+const REQUIRED_CONFIG_TOKENS_REVIEW = [
   'export const VIONA_REQUEST_DEDICATED_STORE_SCHEMA_DESIGN_READINESS',
   'export const VIONA_REQUEST_DEDICATED_STORE_SCHEMA_DESIGN_CHECKLIST',
   'export function getVionaRequestDedicatedStoreSchemaDesignReadiness',
@@ -131,11 +135,54 @@ const REQUIRED_CONFIG_TOKENS = [
   'adminDebugUsesFixturesOnly: true',
 ];
 
-const REQUIRED_POINTER_TOKENS = [
+const REQUIRED_CONFIG_TOKENS_APPROVED = [
+  'export const VIONA_REQUEST_DEDICATED_STORE_SCHEMA_DESIGN_READINESS',
+  'export const VIONA_REQUEST_DEDICATED_STORE_SCHEMA_DESIGN_CHECKLIST',
+  'export function getVionaRequestDedicatedStoreSchemaDesignReadiness',
+  'export function isVionaRequestDedicatedStoreSchemaDesignReadyForReview',
+  'humanSotApprovalRecorded: true',
+  'sourceOfTruthDecisionSignedOff: true',
+  "selectedSourceOfTruthOptionId: 'dedicatedVionaRequestStore'",
+  'pack11DedicatedStoreSchemaDesignContractActive: true',
+  'schemaDesignContractCreated: true',
+  'schemaDesignReviewRequired: false',
+  'schemaDesignHumanApprovalRecorded: true',
+  'schemaDesignApproved: true',
+  'pack12PlanningPermitted: true',
+  'pack12PlanningReadinessBoundaryOnly: true',
+  'pack12Started: false',
+  'prismaSchemaPermitted: false',
+  'prismaMigrationPermitted: false',
+  'readOnlyApiPermitted: false',
+  'persistenceAdapterPermitted: false',
+  'requestMutationPermitted: false',
+  'agentMayFlipSignoff: false',
+  'prismaSchemaActive: false',
+  'persistenceApiActive: false',
+  'requestMutationActive: false',
+  'adminDebugLiveDataActive: false',
+  'operatorRoleAddedToAuth: false',
+  'adminDebugUsesFixturesOnly: true',
+];
+
+const REQUIRED_POINTER_TOKENS_REVIEW = [
   'pack11DedicatedStoreSchemaDesignContractActive: true',
   'schemaDesignContractCreated: true',
   'schemaDesignReviewRequired: true',
   'schemaDesignApproved: false',
+  'persistenceApiActive: false',
+  'prismaSchemaActive: false',
+  'adminDebugUsesFixturesOnly: true',
+];
+
+const REQUIRED_POINTER_TOKENS_APPROVED = [
+  'pack11DedicatedStoreSchemaDesignContractActive: true',
+  'schemaDesignContractCreated: true',
+  'schemaDesignHumanApprovalRecorded: true',
+  'schemaDesignApproved: true',
+  'pack12PlanningPermitted: true',
+  'pack12PlanningReadinessBoundaryOnly: true',
+  'pack12Started: false',
   'persistenceApiActive: false',
   'prismaSchemaActive: false',
   'adminDebugUsesFixturesOnly: true',
@@ -234,11 +281,24 @@ function findUnsafeStandaloneClaims(paths) {
   return [...new Set(hits)];
 }
 
+function isSchemaDesignHumanApprovalRecorded() {
+  const rel = 'src/config/vionaRequestSchemaDesignHumanApprovalReadiness.ts';
+  return existsSync(path.join(ROOT, rel)) && read(rel).includes('schemaDesignHumanApprovalRecorded: true');
+}
+
 function main() {
   console.log('VIONA request dedicated store schema design contract check (Pack11)');
   console.log(
     'Schema-design contract only. No Prisma, migration, API, adapter, mutation, or Admin Debug data-source change.\n'
   );
+
+  const schemaDesignHumanApprovalRecorded = isSchemaDesignHumanApprovalRecorded();
+  const requiredConfigTokens = schemaDesignHumanApprovalRecorded
+    ? REQUIRED_CONFIG_TOKENS_APPROVED
+    : REQUIRED_CONFIG_TOKENS_REVIEW;
+  const requiredPointerTokens = schemaDesignHumanApprovalRecorded
+    ? REQUIRED_POINTER_TOKENS_APPROVED
+    : REQUIRED_POINTER_TOKENS_REVIEW;
 
   const missingFiles = REQUIRED_FILES.filter((relPath) => !existsSync(path.join(ROOT, relPath)));
   const changedFiles = getChangedFiles();
@@ -264,8 +324,8 @@ function main() {
 
   const missingDocPhrases = missingValues(docs, REQUIRED_DOC_PHRASES);
   const missingDomainTokens = missingValues(domain, REQUIRED_DOMAIN_TOKENS);
-  const missingConfigTokens = missingValues(config, REQUIRED_CONFIG_TOKENS);
-  const missingPointerTokens = missingValues(pointerCombined, REQUIRED_POINTER_TOKENS);
+  const missingConfigTokens = missingValues(config, requiredConfigTokens);
+  const missingPointerTokens = missingValues(pointerCombined, requiredPointerTokens);
   const forbiddenFields = FORBIDDEN_FIELD_TOKENS.filter((token) => domain.includes(token));
   const forbiddenLifecycle = FORBIDDEN_LIFECYCLE_NAMES.filter((name) => domain.includes(name));
   const unsafeClaims = findUnsafeStandaloneClaims([
@@ -278,8 +338,9 @@ function main() {
     (token) => config.includes(token) || domain.includes(token)
   );
 
-  const schemaApproved =
-    config.includes('schemaDesignApproved: true') || pointerCombined.includes('schemaDesignApproved: true');
+  const schemaApprovedWithoutHuman =
+    (config.includes('schemaDesignApproved: true') || pointerCombined.includes('schemaDesignApproved: true')) &&
+    !schemaDesignHumanApprovalRecorded;
   const prismaActive =
     config.includes('prismaSchemaActive: true') || config.includes('prismaMigrationActive: true');
   const apiActive =
@@ -304,7 +365,9 @@ function main() {
   if (forbiddenLifecycle.length) fail('forbidden lifecycle names in domain contract', forbiddenLifecycle);
   if (unsafeClaims.length) fail('unsafe standalone production claims', unsafeClaims);
   if (forbiddenImports.length) fail('forbidden runtime imports', forbiddenImports);
-  if (schemaApproved) fail('schemaDesignApproved must remain false', ['schemaDesignApproved: true']);
+  if (schemaApprovedWithoutHuman) {
+    fail('schemaDesignApproved true requires human approval recorded', ['schemaDesignHumanApprovalRecorded missing']);
+  }
   if (prismaActive) fail('Prisma must remain inactive', ['prisma active']);
   if (apiActive) fail('API must remain inactive', ['persistence API active']);
   if (mutationActive) fail('mutation must remain inactive', ['requestMutationActive: true']);
@@ -325,7 +388,11 @@ function main() {
   console.log('Lifecycle states safe: PASS');
   console.log('Readiness config: PASS');
   console.log('Pointer configs updated: PASS');
-  console.log('schemaDesignApproved remains false: PASS');
+  console.log(
+    schemaDesignHumanApprovalRecorded
+      ? 'schemaDesignApproved recorded with human approval: PASS'
+      : 'schemaDesignApproved remains false: PASS'
+  );
   console.log('Prisma/API/adapter/mutation remain blocked: PASS');
   console.log('Admin Debug fixture-only: PASS');
   console.log('No forbidden runtime paths: PASS');
