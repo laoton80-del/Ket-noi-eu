@@ -88,7 +88,7 @@ The following field families must **not** appear in future Prisma schema as VION
 - booking confirmation truth
 - SOS dispatch truth
 - live AI execution truth
-- merchant payout truth
+- merchant settlement/disbursement truth
 - LocalServiceRequest direct reuse truth
 
 ---

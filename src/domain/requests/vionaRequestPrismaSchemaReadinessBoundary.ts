@@ -60,7 +60,7 @@ export type VionaRequestPrismaSchemaForbiddenFieldFamilyId =
   | 'bookingConfirmationTruth'
   | 'sosDispatchTruth'
   | 'liveAiExecutionTruth'
-  | 'merchantPayoutTruth'
+  | 'merchantSettlementDisbursementTruth'
   | 'localServiceRequestDirectReuseTruth';
 
 export type VionaRequestPrismaSchemaForbiddenFieldFamily = Readonly<{
@@ -274,7 +274,11 @@ export const VIONA_REQUEST_PRISMA_SCHEMA_FORBIDDEN_FIELD_FAMILIES = [
   { id: 'bookingConfirmationTruth', label: 'booking confirmation truth', disallowed: true },
   { id: 'sosDispatchTruth', label: 'SOS dispatch truth', disallowed: true },
   { id: 'liveAiExecutionTruth', label: 'live AI execution truth', disallowed: true },
-  { id: 'merchantPayoutTruth', label: 'merchant payout truth', disallowed: true },
+  {
+    id: 'merchantSettlementDisbursementTruth',
+    label: 'merchant settlement/disbursement truth',
+    disallowed: true,
+  },
   {
     id: 'localServiceRequestDirectReuseTruth',
     label: 'LocalServiceRequest direct reuse truth',
