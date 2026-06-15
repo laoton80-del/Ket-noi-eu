@@ -46,6 +46,10 @@ export type VionaRequestSotSignoffPhasePromotionReadiness = Readonly<{
   pack11DiscoveryPermitted: boolean;
   pack11SchemaDesignContractOnly: boolean;
   pack11Started: false;
+  /** Pack11 pointer — dedicated store schema design contract; review required. */
+  pack11DedicatedStoreSchemaDesignContractActive: boolean;
+  schemaDesignContractCreated: boolean;
+  schemaDesignReviewRequired: boolean;
   signOffStatus: 'approved';
   sourceOfTruthDecisionSignedOff: true;
   selectedSourceOfTruthOptionId: 'dedicatedVionaRequestStore';
@@ -176,6 +180,9 @@ export const VIONA_REQUEST_SOT_SIGNOFF_PHASE_PROMOTION_READINESS = {
   pack11DiscoveryPermitted: true,
   pack11SchemaDesignContractOnly: true,
   pack11Started: false,
+  pack11DedicatedStoreSchemaDesignContractActive: true,
+  schemaDesignContractCreated: true,
+  schemaDesignReviewRequired: true,
   signOffStatus: 'approved',
   sourceOfTruthDecisionSignedOff: true,
   selectedSourceOfTruthOptionId: 'dedicatedVionaRequestStore',

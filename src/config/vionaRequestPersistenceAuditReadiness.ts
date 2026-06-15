@@ -56,6 +56,10 @@ export type VionaRequestPersistenceAuditReadiness = Readonly<{
   pack11DiscoveryPermitted: boolean;
   pack11SchemaDesignContractOnly: boolean;
   pack11Started: false;
+  /** Pack11 pointer — dedicated store schema design contract. */
+  pack11DedicatedStoreSchemaDesignContractActive: boolean;
+  schemaDesignContractCreated: boolean;
+  schemaDesignReviewRequired: boolean;
   sourceOfTruthDecisionSignedOff: true;
   persistenceApiActive: boolean;
   prismaSchemaActive: boolean;
@@ -168,6 +172,9 @@ export const VIONA_REQUEST_PERSISTENCE_AUDIT_READINESS = {
   pack11DiscoveryPermitted: true,
   pack11SchemaDesignContractOnly: true,
   pack11Started: false,
+  pack11DedicatedStoreSchemaDesignContractActive: true,
+  schemaDesignContractCreated: true,
+  schemaDesignReviewRequired: true,
   sourceOfTruthDecisionSignedOff: true,
   persistenceApiActive: false,
   prismaSchemaActive: false,
