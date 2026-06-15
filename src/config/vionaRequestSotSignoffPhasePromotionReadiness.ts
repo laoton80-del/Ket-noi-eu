@@ -85,6 +85,9 @@ export type VionaRequestSotSignoffPhasePromotionReadiness = Readonly<{
   pack14PrismaMigrationApprovalSource: 'human-chat-instruction';
   pack14PrismaMigrationApprovedBy: 'Nong Si Buong';
   pack14PrismaMigrationApprovalDate: '2026-06-15';
+  pack14MigrationCreationOnly: true;
+  migrationCreated: true;
+  dbApplied: false;
 
   prismaSchemaPermitted: true;
   prismaMigrationPermitted: true;
@@ -102,6 +105,7 @@ export type VionaRequestSotSignoffPhasePromotionReadiness = Readonly<{
   readOnlyApiPhasePromoted: false;
   persistenceApiActive: false;
   prismaSchemaActive: true;
+  prismaMigrationActive: true;
   auditLogActive: false;
   requestMutationActive: false;
   productionLiveOpsActive: false;
@@ -256,6 +260,9 @@ export const VIONA_REQUEST_SOT_SIGNOFF_PHASE_PROMOTION_READINESS = {
   pack14PrismaMigrationApprovalSource: 'human-chat-instruction',
   pack14PrismaMigrationApprovedBy: 'Nong Si Buong',
   pack14PrismaMigrationApprovalDate: '2026-06-15',
+  pack14MigrationCreationOnly: true,
+  migrationCreated: true,
+  dbApplied: false,
 
   prismaSchemaPermitted: true,
   prismaMigrationPermitted: true,
@@ -273,6 +280,7 @@ export const VIONA_REQUEST_SOT_SIGNOFF_PHASE_PROMOTION_READINESS = {
   readOnlyApiPhasePromoted: false,
   persistenceApiActive: false,
   prismaSchemaActive: true,
+  prismaMigrationActive: true,
   auditLogActive: false,
   requestMutationActive: false,
   productionLiveOpsActive: false,

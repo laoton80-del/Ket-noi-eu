@@ -62,6 +62,9 @@ export type VionaRequestPack12PrismaSchemaReadinessBoundaryConfig = Readonly<{
   pack14PrismaMigrationApprovalSource: 'human-chat-instruction';
   pack14PrismaMigrationApprovedBy: 'Nong Si Buong';
   pack14PrismaMigrationApprovalDate: '2026-06-15';
+  pack14MigrationCreationOnly: true;
+  migrationCreated: true;
+  dbApplied: false;
 
   futurePrismaMigrationRequiresHumanApproval: true;
   futureApiImplementationRequiresHumanApproval: true;
@@ -75,7 +78,7 @@ export type VionaRequestPack12PrismaSchemaReadinessBoundaryConfig = Readonly<{
   requestMutationPermitted: false;
   agentMayFlipSignoff: false;
   prismaSchemaActive: true;
-  prismaMigrationActive: false;
+  prismaMigrationActive: true;
   persistenceApiActive: false;
   readOnlyApiActive: false;
   persistenceAdapterActive: false;
@@ -204,6 +207,9 @@ export const VIONA_REQUEST_PACK12_PRISMA_SCHEMA_READINESS_BOUNDARY = {
   pack14PrismaMigrationApprovalSource: 'human-chat-instruction',
   pack14PrismaMigrationApprovedBy: 'Nong Si Buong',
   pack14PrismaMigrationApprovalDate: '2026-06-15',
+  pack14MigrationCreationOnly: true,
+  migrationCreated: true,
+  dbApplied: false,
 
   futurePrismaMigrationRequiresHumanApproval: true,
   futureApiImplementationRequiresHumanApproval: true,
@@ -217,7 +223,7 @@ export const VIONA_REQUEST_PACK12_PRISMA_SCHEMA_READINESS_BOUNDARY = {
   requestMutationPermitted: false,
   agentMayFlipSignoff: false,
   prismaSchemaActive: true,
-  prismaMigrationActive: false,
+  prismaMigrationActive: true,
   persistenceApiActive: false,
   readOnlyApiActive: false,
   persistenceAdapterActive: false,

@@ -180,6 +180,11 @@ const ALLOWED_DIFF_FILES = [
   ...PACK13C_PRISMA_SCHEMA_IMPLEMENTATION_DIFF_FILES,
   ...PACK14A_PRISMA_MIGRATION_READINESS_APPROVAL_PACKET_DIFF_FILES,
   ...PACK14B_PRISMA_MIGRATION_HUMAN_APPROVAL_DIFF_FILES,
+  'docs/product/VIONA_REQUEST_PACK14C_PRISMA_MIGRATION_CREATION_ONLY.md',
+  'src/config/vionaRequestPack14CPrismaMigrationCreationReadiness.ts',
+  'scripts/viona-request-pack14c-prisma-migration-creation-check.mjs',
+  'docs/design/evidence/cursor-request-pack14c-prisma-migration-creation-only/README.md',
+  'prisma/migrations/20260615120000_add_viona_request_models/migration.sql',
 ];
 
 const REQUIRED_FILES = PACK2_ALLOWED_DIFF_FILES;
@@ -190,7 +195,7 @@ const FORBIDDEN_DIFF_PATTERNS = [
   /LocalScreen\.tsx$/,
   /TravelScreen\.tsx$/,
   /AcademyScreen\.tsx$/,
-  /^prisma\//,
+  /^prisma\/(?!migrations\/\d+_add_viona_request_models\/migration\.sql$)/,
   /^assets\//,
   /^src\/api\//,
   /^api\//,

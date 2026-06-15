@@ -27,6 +27,43 @@ const PACK14B_CORE_FILES = [
   'scripts/viona-request-pack14-prisma-migration-human-approval-recording-check.mjs',
   'docs/design/evidence/cursor-request-pack14b-prisma-migration-human-approval/README.md',
 ];
+const PACK14C_CORE_FILES = [
+  'docs/product/VIONA_REQUEST_PACK14C_PRISMA_MIGRATION_CREATION_ONLY.md',
+  'src/config/vionaRequestPack14CPrismaMigrationCreationReadiness.ts',
+  'scripts/viona-request-pack14c-prisma-migration-creation-check.mjs',
+  'docs/design/evidence/cursor-request-pack14c-prisma-migration-creation-only/README.md',
+  'prisma/migrations/20260615120000_add_viona_request_models/migration.sql',
+];
+
+const POST_PACK14C_POINTER_TOKENS = [
+  'pack14MigrationCreationOnly: true',
+  'prismaMigrationActive: true',
+  'migrationCreated: true',
+  'dbApplied: false',
+];
+
+function isPack14cMigrationCreated() {
+  const configPath = 'src/config/vionaRequestPack14CPrismaMigrationCreationReadiness.ts';
+  if (!existsSync(path.join(ROOT, configPath))) return false;
+  return read(configPath).includes('migrationCreated: true');
+}
+
+function augmentPointerTokensForPack14c(tokens, pack14cActive) {
+  if (!pack14cActive) return tokens;
+  const filtered = tokens.filter(
+    (token) => token !== 'prismaMigrationActive: false' && token !== 'migrationCreated: false'
+  );
+  return [...filtered, ...POST_PACK14C_POINTER_TOKENS];
+}
+
+function augmentConfigTokensForPack14c(tokens, pack14cActive) {
+  return augmentPointerTokensForPack14c(tokens, pack14cActive);
+}
+
+function isPack14cMigrationDiffFile(file) {
+  return /^prisma\/migrations\/\d+_add_viona_request_models\/migration\.sql$/.test(file);
+}
+
 
 const POST_PACK13C_POINTER_TOKENS = [
   'pack13Started: true',
@@ -64,6 +101,7 @@ function augmentConfigTokensForPack13c(tokens, pack13cActive) {
 }
 
 function matchesForbiddenDiff(file, pack13cActive) {
+  if (isPack14cMigrationDiffFile(file)) return false;
   if (pack13cActive && file === 'prisma/schema.prisma') return false;
   return FORBIDDEN_DIFF_PATTERNS.some((pattern) => pattern.test(file));
 }
@@ -80,6 +118,7 @@ const ALLOWED_FILES = [
   ...PACK13C_CORE_FILES,
   ...PACK14A_CORE_FILES,
   ...PACK14B_CORE_FILES,
+  ...PACK14C_CORE_FILES,
   'src/components/viona/reference/VionaReferenceRequestInboxLab.tsx',
   'src/components/viona/reference/VionaReferenceRequestOperatorInboxLab.tsx',
   'src/navigation/referenceLabStackScreens.tsx',
@@ -294,6 +333,7 @@ function findUnsafeStandaloneClaims(files) {
 
 function main() {
   const pack13cActive = isPack13cSchemaOnlyActive();
+  const pack14cActive = isPack14cMigrationCreated();
   console.log('VIONA request inbox ReferenceLab check (Pack3)');
   console.log('ReferenceLab-only route. No App.tsx, live UI, API, DB, payment, booking, SOS, wallet, or live AI.\n');
 
@@ -304,7 +344,7 @@ function main() {
   }
 
   const changedFiles = collectChangedFiles();
-  const unexpectedFiles = changedFiles.filter((file) => !ALLOWED_FILES.includes(file));
+  const unexpectedFiles = changedFiles.filter((file) => !ALLOWED_FILES.includes(file) && !isPack14cMigrationDiffFile(file));
   const forbiddenFiles = changedFiles.filter((file) => matchesForbiddenDiff(file, pack13cActive));
 
   const lab = read('src/components/viona/reference/VionaReferenceRequestInboxLab.tsx');

@@ -95,6 +95,9 @@ export type VionaRequestPersistenceAuditReadiness = Readonly<{
   pack14PrismaMigrationApprovalSource: 'human-chat-instruction';
   pack14PrismaMigrationApprovedBy: 'Nong Si Buong';
   pack14PrismaMigrationApprovalDate: '2026-06-15';
+  pack14MigrationCreationOnly: true;
+  migrationCreated: true;
+  dbApplied: false;
 
   prismaSchemaPermitted: true;
   prismaMigrationPermitted: true;
@@ -102,6 +105,7 @@ export type VionaRequestPersistenceAuditReadiness = Readonly<{
   sourceOfTruthDecisionSignedOff: true;
   persistenceApiActive: boolean;
   prismaSchemaActive: boolean;
+  prismaMigrationActive: boolean;
   auditLogActive: boolean;
   requestMutationActive: boolean;
   productionLiveOpsActive: boolean;
@@ -249,6 +253,9 @@ export const VIONA_REQUEST_PERSISTENCE_AUDIT_READINESS = {
   pack14PrismaMigrationApprovalSource: 'human-chat-instruction',
   pack14PrismaMigrationApprovedBy: 'Nong Si Buong',
   pack14PrismaMigrationApprovalDate: '2026-06-15',
+  pack14MigrationCreationOnly: true,
+  migrationCreated: true,
+  dbApplied: false,
 
   prismaSchemaPermitted: true,
   prismaMigrationPermitted: true,
@@ -256,6 +263,7 @@ export const VIONA_REQUEST_PERSISTENCE_AUDIT_READINESS = {
   sourceOfTruthDecisionSignedOff: true,
   persistenceApiActive: false,
   prismaSchemaActive: true,
+  prismaMigrationActive: true,
   auditLogActive: false,
   requestMutationActive: false,
   productionLiveOpsActive: false,

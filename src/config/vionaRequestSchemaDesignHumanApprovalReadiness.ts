@@ -66,6 +66,9 @@ export type VionaRequestSchemaDesignHumanApprovalReadiness = Readonly<{
   pack14PrismaMigrationApprovalSource: 'human-chat-instruction';
   pack14PrismaMigrationApprovedBy: 'Nong Si Buong';
   pack14PrismaMigrationApprovalDate: '2026-06-15';
+  pack14MigrationCreationOnly: true;
+  migrationCreated: true;
+  dbApplied: false;
 
   selectedSourceOfTruthOptionId: 'dedicatedVionaRequestStore';
   directLocalServiceRequestReuseAllowed: false;
@@ -79,7 +82,7 @@ export type VionaRequestSchemaDesignHumanApprovalReadiness = Readonly<{
   requestMutationPermitted: false;
   agentMayFlipSignoff: false;
   prismaSchemaActive: true;
-  prismaMigrationActive: false;
+  prismaMigrationActive: true;
   persistenceApiActive: false;
   readOnlyApiActive: false;
   persistenceAdapterActive: false;
@@ -205,6 +208,9 @@ export const VIONA_REQUEST_SCHEMA_DESIGN_HUMAN_APPROVAL_READINESS = {
   pack14PrismaMigrationApprovalSource: 'human-chat-instruction',
   pack14PrismaMigrationApprovedBy: 'Nong Si Buong',
   pack14PrismaMigrationApprovalDate: '2026-06-15',
+  pack14MigrationCreationOnly: true,
+  migrationCreated: true,
+  dbApplied: false,
 
   selectedSourceOfTruthOptionId: 'dedicatedVionaRequestStore',
   directLocalServiceRequestReuseAllowed: false,
@@ -218,7 +224,7 @@ export const VIONA_REQUEST_SCHEMA_DESIGN_HUMAN_APPROVAL_READINESS = {
   requestMutationPermitted: false,
   agentMayFlipSignoff: false,
   prismaSchemaActive: true,
-  prismaMigrationActive: false,
+  prismaMigrationActive: true,
   persistenceApiActive: false,
   readOnlyApiActive: false,
   persistenceAdapterActive: false,

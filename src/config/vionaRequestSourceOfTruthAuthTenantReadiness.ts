@@ -114,6 +114,9 @@ export type VionaRequestSourceOfTruthAuthTenantReadiness = Readonly<{
   pack14PrismaMigrationApprovalSource: 'human-chat-instruction';
   pack14PrismaMigrationApprovedBy: 'Nong Si Buong';
   pack14PrismaMigrationApprovalDate: '2026-06-15';
+  pack14MigrationCreationOnly: true;
+  migrationCreated: true;
+  dbApplied: false;
 
   prismaSchemaPermitted: true;
   prismaMigrationPermitted: true;
@@ -125,6 +128,7 @@ export type VionaRequestSourceOfTruthAuthTenantReadiness = Readonly<{
   localStatusMappingApproved: boolean;
   persistenceApiActive: boolean;
   prismaSchemaActive: boolean;
+  prismaMigrationActive: boolean;
   auditLogActive: boolean;
   requestMutationActive: boolean;
   productionLiveOpsActive: boolean;
@@ -333,6 +337,9 @@ export const VIONA_REQUEST_SOURCE_OF_TRUTH_AUTH_TENANT_READINESS = {
   pack14PrismaMigrationApprovalSource: 'human-chat-instruction',
   pack14PrismaMigrationApprovedBy: 'Nong Si Buong',
   pack14PrismaMigrationApprovalDate: '2026-06-15',
+  pack14MigrationCreationOnly: true,
+  migrationCreated: true,
+  dbApplied: false,
 
   prismaSchemaPermitted: true,
   prismaMigrationPermitted: true,
@@ -344,6 +351,7 @@ export const VIONA_REQUEST_SOURCE_OF_TRUTH_AUTH_TENANT_READINESS = {
   localStatusMappingApproved: false,
   persistenceApiActive: false,
   prismaSchemaActive: true,
+  prismaMigrationActive: true,
   auditLogActive: false,
   requestMutationActive: false,
   productionLiveOpsActive: false,

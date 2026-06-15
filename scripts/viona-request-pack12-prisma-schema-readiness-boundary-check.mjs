@@ -27,6 +27,43 @@ const PACK14B_CORE_FILES = [
   'scripts/viona-request-pack14-prisma-migration-human-approval-recording-check.mjs',
   'docs/design/evidence/cursor-request-pack14b-prisma-migration-human-approval/README.md',
 ];
+const PACK14C_CORE_FILES = [
+  'docs/product/VIONA_REQUEST_PACK14C_PRISMA_MIGRATION_CREATION_ONLY.md',
+  'src/config/vionaRequestPack14CPrismaMigrationCreationReadiness.ts',
+  'scripts/viona-request-pack14c-prisma-migration-creation-check.mjs',
+  'docs/design/evidence/cursor-request-pack14c-prisma-migration-creation-only/README.md',
+  'prisma/migrations/20260615120000_add_viona_request_models/migration.sql',
+];
+
+const POST_PACK14C_POINTER_TOKENS = [
+  'pack14MigrationCreationOnly: true',
+  'prismaMigrationActive: true',
+  'migrationCreated: true',
+  'dbApplied: false',
+];
+
+function isPack14cMigrationCreated() {
+  const configPath = 'src/config/vionaRequestPack14CPrismaMigrationCreationReadiness.ts';
+  if (!existsSync(path.join(ROOT, configPath))) return false;
+  return read(configPath).includes('migrationCreated: true');
+}
+
+function augmentPointerTokensForPack14c(tokens, pack14cActive) {
+  if (!pack14cActive) return tokens;
+  const filtered = tokens.filter(
+    (token) => token !== 'prismaMigrationActive: false' && token !== 'migrationCreated: false'
+  );
+  return [...filtered, ...POST_PACK14C_POINTER_TOKENS];
+}
+
+function augmentConfigTokensForPack14c(tokens, pack14cActive) {
+  return augmentPointerTokensForPack14c(tokens, pack14cActive);
+}
+
+function isPack14cMigrationDiffFile(file) {
+  return /^prisma\/migrations\/\d+_add_viona_request_models\/migration\.sql$/.test(file);
+}
+
 
 const POST_PACK14B_POINTER_TOKENS = [
   'pack14HumanApprovalRecorded: true',
@@ -93,6 +130,7 @@ function augmentConfigTokensForPack13c(tokens, pack13cActive) {
 }
 
 function matchesForbiddenDiff(file, pack13cActive) {
+  if (isPack14cMigrationDiffFile(file)) return false;
   if (pack13cActive && file === 'prisma/schema.prisma') return false;
   return FORBIDDEN_DIFF_PATTERNS.some((pattern) => pattern.test(file));
 }
@@ -108,6 +146,7 @@ const ALLOWED_FILES = [
   ...PACK13C_CORE_FILES,
   ...PACK14A_CORE_FILES,
   ...PACK14B_CORE_FILES,
+  ...PACK14C_CORE_FILES,
   'docs/product/VIONA_REQUEST_PACK12_PRISMA_SCHEMA_READINESS_BOUNDARY.md',
   'src/domain/requests/vionaRequestPrismaSchemaReadinessBoundary.ts',
   'src/config/vionaRequestPack12PrismaSchemaReadinessBoundary.ts',
@@ -340,6 +379,7 @@ function findUnsafeStandaloneClaims(paths) {
 function main() {
   const pack13cActive = isPack13cSchemaOnlyActive();
   const pack14bRecorded = isPack14bRecorded();
+  const pack14cActive = isPack14cMigrationCreated();
   console.log('VIONA request Pack12 Prisma schema readiness boundary check');
   console.log(
     'Planning/readiness only. No Prisma schema, migration, API, adapter, mutation, or Admin Debug data-source change.\n'
@@ -347,7 +387,7 @@ function main() {
 
   const missingFiles = REQUIRED_FILES.filter((relPath) => !existsSync(path.join(ROOT, relPath)));
   const changedFiles = getChangedFiles();
-  const unexpectedFiles = changedFiles.filter((file) => !ALLOWED_FILES.includes(file));
+  const unexpectedFiles = changedFiles.filter((file) => !ALLOWED_FILES.includes(file) && !isPack14cMigrationDiffFile(file));
   const forbiddenFiles = changedFiles.filter((file) => matchesForbiddenDiff(file, pack13cActive));
 
   const boundaryDoc = read('docs/product/VIONA_REQUEST_PACK12_PRISMA_SCHEMA_READINESS_BOUNDARY.md');
@@ -371,9 +411,11 @@ function main() {
   const missingDomainTokens = missingValues(domain, REQUIRED_DOMAIN_TOKENS);
   let configTokens = augmentConfigTokensForPack13c(REQUIRED_CONFIG_TOKENS, pack13cActive);
   configTokens = augmentConfigTokensForPack14b(configTokens, pack14bRecorded);
+  configTokens = augmentConfigTokensForPack14c(configTokens, pack14cActive);
   const missingConfigTokens = missingValues(config, configTokens);
   let pointerTokens = augmentPointerTokensForPack13c(REQUIRED_POINTER_TOKENS, pack13cActive);
   pointerTokens = augmentPointerTokensForPack14b(pointerTokens, pack14bRecorded);
+  pointerTokens = augmentPointerTokensForPack14c(pointerTokens, pack14cActive);
   const missingPointerTokens = missingValues(pointerCombined, pointerTokens);
   const unsafeClaims = findUnsafeStandaloneClaims([
     'docs/product/VIONA_REQUEST_PACK12_PRISMA_SCHEMA_READINESS_BOUNDARY.md',

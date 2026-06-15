@@ -94,10 +94,14 @@ export type VionaOperatorInboxAdminReadiness = Readonly<{
   pack14PrismaMigrationApprovalSource: 'human-chat-instruction';
   pack14PrismaMigrationApprovedBy: 'Nong Si Buong';
   pack14PrismaMigrationApprovalDate: '2026-06-15';
+  pack14MigrationCreationOnly: true;
+  migrationCreated: true;
+  dbApplied: false;
 
   prismaSchemaPermitted: true;
   prismaMigrationPermitted: true;
   prismaSchemaActive: true;
+  prismaMigrationActive: true;
   pack12Started: false;
   sourceOfTruthDecisionSignedOff: true;
   adminDebugUsesFixturesOnly: boolean;
@@ -246,10 +250,14 @@ export const VIONA_OPERATOR_INBOX_ADMIN_READINESS = {
   pack14PrismaMigrationApprovalSource: 'human-chat-instruction',
   pack14PrismaMigrationApprovedBy: 'Nong Si Buong',
   pack14PrismaMigrationApprovalDate: '2026-06-15',
+  pack14MigrationCreationOnly: true,
+  migrationCreated: true,
+  dbApplied: false,
 
   prismaSchemaPermitted: true,
   prismaMigrationPermitted: true,
   prismaSchemaActive: true,
+  prismaMigrationActive: true,
   pack12Started: false,
   sourceOfTruthDecisionSignedOff: true,
   adminDebugUsesFixturesOnly: true,
