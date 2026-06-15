@@ -21,6 +21,13 @@ const PACK14A_CORE_FILES = [
   'docs/design/evidence/cursor-request-pack14a-prisma-migration-readiness-approval-packet/README.md',
 ];
 
+const PACK14B_CORE_FILES = [
+  'docs/product/VIONA_REQUEST_PACK14B_PRISMA_MIGRATION_HUMAN_APPROVAL_RECORD.md',
+  'src/config/vionaRequestPack14PrismaMigrationHumanApprovalReadiness.ts',
+  'scripts/viona-request-pack14-prisma-migration-human-approval-recording-check.mjs',
+  'docs/design/evidence/cursor-request-pack14b-prisma-migration-human-approval/README.md',
+];
+
 const POST_PACK13C_POINTER_TOKENS = [
   'pack13Started: true',
   'pack13SchemaOnlyImplementation: true',
@@ -72,6 +79,7 @@ function isPrismaDiffBlocked(pack13cActive, prismaChanged) {
 const ALLOWED_FILES = [
   ...PACK13C_CORE_FILES,
   ...PACK14A_CORE_FILES,
+  ...PACK14B_CORE_FILES,
   'docs/product/VIONA_REQUEST_SOURCE_OF_TRUTH_AUTH_TENANT_MAPPING.md',
   'src/config/vionaRequestSourceOfTruthAuthTenantReadiness.ts',
   'src/domain/requests/vionaRequestSourceOfTruthMappingContract.ts',

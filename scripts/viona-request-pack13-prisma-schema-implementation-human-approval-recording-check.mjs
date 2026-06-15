@@ -17,9 +17,47 @@ const PACK13C_CORE_FILES = [
 const PACK14A_CORE_FILES = [
   'docs/product/VIONA_REQUEST_PACK14A_PRISMA_MIGRATION_READINESS_APPROVAL_PACKET.md',
   'src/config/vionaRequestPack14PrismaMigrationReadinessApprovalPacket.ts',
+  'src/config/vionaRequestPack14PrismaMigrationHumanApprovalReadiness.ts',
   'scripts/viona-request-pack14-prisma-migration-readiness-approval-packet-check.mjs',
+  'scripts/viona-request-pack14-prisma-migration-human-approval-recording-check.mjs',
   'docs/design/evidence/cursor-request-pack14a-prisma-migration-readiness-approval-packet/README.md',
 ];
+
+const PACK14B_CORE_FILES = [
+  'docs/product/VIONA_REQUEST_PACK14B_PRISMA_MIGRATION_HUMAN_APPROVAL_RECORD.md',
+  'src/config/vionaRequestPack14PrismaMigrationHumanApprovalReadiness.ts',
+  'scripts/viona-request-pack14-prisma-migration-human-approval-recording-check.mjs',
+  'docs/design/evidence/cursor-request-pack14b-prisma-migration-human-approval/README.md',
+];
+
+const POST_PACK14B_POINTER_TOKENS = [
+  'pack14HumanApprovalRecorded: true',
+  'pack14PrismaMigrationApproved: true',
+  'pack14PrismaMigrationApprovalRecordingOnly: true',
+  'pack14MigrationCreationMayBePlannedNext: true',
+  "pack14PrismaMigrationApprovalSource: 'human-chat-instruction'",
+  "pack14PrismaMigrationApprovedBy: 'Nong Si Buong'",
+  "pack14PrismaMigrationApprovalDate: '2026-06-15'",
+  'prismaMigrationPermitted: true',
+];
+
+function isPack14bRecorded() {
+  const configPath = 'src/config/vionaRequestPack14PrismaMigrationHumanApprovalReadiness.ts';
+  if (!existsSync(path.join(ROOT, configPath))) return false;
+  return read(configPath).includes('pack14HumanApprovalRecorded: true');
+}
+
+function augmentPointerTokensForPack14b(tokens, pack14bRecorded) {
+  if (!pack14bRecorded) return tokens;
+  const filtered = tokens.filter((token) => token !== 'prismaMigrationPermitted: false');
+  return [...filtered, ...POST_PACK14B_POINTER_TOKENS];
+}
+
+function augmentConfigTokensForPack14b(tokens, pack14bRecorded) {
+  if (!pack14bRecorded) return tokens;
+  const filtered = tokens.filter((token) => token !== 'prismaMigrationPermitted: false');
+  return [...filtered, 'prismaMigrationPermitted: true', ...POST_PACK14B_POINTER_TOKENS];
+}
 
 const POST_PACK13C_POINTER_TOKENS = [
   'pack13Started: true',
@@ -124,6 +162,7 @@ const GATE_SCRIPT_FILES = [
 const ALLOWED_FILES = [
   ...PACK13C_CORE_FILES,
   ...PACK14A_CORE_FILES,
+  ...PACK14B_CORE_FILES,
   ...PACK13B_CORE_FILES,
   ...PACK13A_CORE_FILES,
   ...PACK12_CORE_FILES,
@@ -340,6 +379,7 @@ function findUnsafeStandaloneClaims(paths) {
 
 function main() {
   const pack13cActive = isPack13cSchemaOnlyActive();
+  const pack14bRecorded = isPack14bRecorded();
   console.log('VIONA request Pack13B Prisma schema implementation human approval recording check');
   console.log(
     pack13cActive
@@ -376,8 +416,10 @@ function main() {
   const typesChanged = run('git diff --name-only origin/master -- src/domain/requests/vionaRequestTypes.ts');
 
   const missingDocPhrases = missingValues(approvalDoc, REQUIRED_DOC_PHRASES);
-  const configTokens = augmentConfigTokensForPack13c(REQUIRED_CONFIG_TOKENS, pack13cActive);
-  const pointerTokens = augmentPointerTokensForPack13c(REQUIRED_POINTER_TOKENS, pack13cActive);
+  let configTokens = augmentConfigTokensForPack13c(REQUIRED_CONFIG_TOKENS, pack13cActive);
+  configTokens = augmentConfigTokensForPack14b(configTokens, pack14bRecorded);
+  let pointerTokens = augmentPointerTokensForPack13c(REQUIRED_POINTER_TOKENS, pack13cActive);
+  pointerTokens = augmentPointerTokensForPack14b(pointerTokens, pack14bRecorded);
   const missingConfigTokens = missingValues(approvalConfig, configTokens);
   const missingPointerTokens = missingValues(pointerCombined, pointerTokens);
   const unsafeClaims = findUnsafeStandaloneClaims([
@@ -430,7 +472,7 @@ function main() {
   if (forbiddenImports.length) fail('forbidden runtime imports in Pack13B config', forbiddenImports);
   if (!pack13cActive && pack13Started) fail('pack13Started must remain false', ['pack13Started: true']);
   if (!pack13cActive && prismaActive) fail('Prisma must remain inactive', ['prisma active flag true']);
-  if (migrationPermitted) fail('migration must remain unauthorized', ['prismaMigrationPermitted: true']);
+  if (migrationPermitted && !pack14bRecorded) fail('migration must remain unauthorized', ['prismaMigrationPermitted: true']);
   if (apiPermitted) fail('API/adapter must remain unauthorized', ['API/adapter permitted']);
   if (mutationPermitted) fail('mutation must remain unauthorized', ['requestMutationPermitted: true']);
   if (apiActive) fail('API/adapter must remain inactive', ['persistence API/adapter active']);

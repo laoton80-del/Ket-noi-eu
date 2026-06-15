@@ -88,10 +88,16 @@ export type VionaRequestPersistenceAuditReadiness = Readonly<{
   pack14MigrationApprovalPacketPrepared: true;
   pack14HumanApprovalRequired: true;
   pack14MigrationPlanningReadyForHumanReview: true;
-  pack14HumanApprovalRecorded: false;
-  pack14PrismaMigrationApproved: false;
+  pack14HumanApprovalRecorded: true;
+  pack14PrismaMigrationApproved: true;
+  pack14PrismaMigrationApprovalRecordingOnly: true;
+  pack14MigrationCreationMayBePlannedNext: true;
+  pack14PrismaMigrationApprovalSource: 'human-chat-instruction';
+  pack14PrismaMigrationApprovedBy: 'Nong Si Buong';
+  pack14PrismaMigrationApprovalDate: '2026-06-15';
 
   prismaSchemaPermitted: true;
+  prismaMigrationPermitted: true;
   pack12Started: false;
   sourceOfTruthDecisionSignedOff: true;
   persistenceApiActive: boolean;
@@ -236,10 +242,16 @@ export const VIONA_REQUEST_PERSISTENCE_AUDIT_READINESS = {
   pack14MigrationApprovalPacketPrepared: true,
   pack14HumanApprovalRequired: true,
   pack14MigrationPlanningReadyForHumanReview: true,
-  pack14HumanApprovalRecorded: false,
-  pack14PrismaMigrationApproved: false,
+  pack14HumanApprovalRecorded: true,
+  pack14PrismaMigrationApproved: true,
+  pack14PrismaMigrationApprovalRecordingOnly: true,
+  pack14MigrationCreationMayBePlannedNext: true,
+  pack14PrismaMigrationApprovalSource: 'human-chat-instruction',
+  pack14PrismaMigrationApprovedBy: 'Nong Si Buong',
+  pack14PrismaMigrationApprovalDate: '2026-06-15',
 
   prismaSchemaPermitted: true,
+  prismaMigrationPermitted: true,
   pack12Started: false,
   sourceOfTruthDecisionSignedOff: true,
   persistenceApiActive: false,
