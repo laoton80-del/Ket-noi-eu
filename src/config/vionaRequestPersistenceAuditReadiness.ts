@@ -49,8 +49,14 @@ export type VionaRequestPersistenceAuditReadiness = Readonly<{
   sourceOfTruthMappingContractActive: boolean;
   /** Pack9 pointer — sign-off readiness contract; sign-off remains false. */
   sotSignoffPhasePromotionReadinessContractActive: boolean;
-  /** Pack10 pointer — founder/architect sign-off packet; sign-off remains false. */
+  /** Pack10 pointer — founder/architect sign-off packet. */
   founderArchitectSignoffPacketActive: boolean;
+  /** Pack10C pointer — offline human approval recorded; Pack11 discovery only. */
+  humanApprovalRecordActive: boolean;
+  pack11DiscoveryPermitted: boolean;
+  pack11SchemaDesignContractOnly: boolean;
+  pack11Started: false;
+  sourceOfTruthDecisionSignedOff: true;
   persistenceApiActive: boolean;
   prismaSchemaActive: boolean;
   auditLogActive: boolean;
@@ -158,6 +164,11 @@ export const VIONA_REQUEST_PERSISTENCE_AUDIT_READINESS = {
   sourceOfTruthMappingContractActive: true,
   sotSignoffPhasePromotionReadinessContractActive: true,
   founderArchitectSignoffPacketActive: true,
+  humanApprovalRecordActive: true,
+  pack11DiscoveryPermitted: true,
+  pack11SchemaDesignContractOnly: true,
+  pack11Started: false,
+  sourceOfTruthDecisionSignedOff: true,
   persistenceApiActive: false,
   prismaSchemaActive: false,
   auditLogActive: false,
@@ -215,7 +226,7 @@ export const VIONA_REQUEST_PERSISTENCE_AUDIT_READINESS = {
     'No merchant execution in Pack7',
   ],
   localAuditReferenceOnlyNote:
-    'LocalServiceRequest and LocalServiceRequestAuditEvent are reference models only. Pack8 mapping contract documents SoT candidates; founder/architect sign-off required before persistence activation.',
+    'LocalServiceRequest and LocalServiceRequestAuditEvent are reference models only. Pack8 mapping contract documents SoT candidates; human approval recorded in Pack10C — Pack11 discovery only before persistence activation.',
 } as const satisfies VionaRequestPersistenceAuditReadiness;
 
 export function getVionaRequestPersistenceAuditReadiness(): VionaRequestPersistenceAuditReadiness {

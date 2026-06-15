@@ -11,8 +11,8 @@ export type VionaRequestSotFounderArchitectSignoffRoleBlank = Readonly<{
     | 'safetyOwner'
     | 'opsRunbookOwner';
   operatingProtocolRole: string;
-  signOffStatus: 'pending';
-  signOffRecorded: false;
+  signOffStatus: 'pending' | 'approved';
+  signOffRecorded: boolean;
 }>;
 
 export type VionaRequestSotFounderArchitectSignoffPacketReadiness = Readonly<{
@@ -22,15 +22,20 @@ export type VionaRequestSotFounderArchitectSignoffPacketReadiness = Readonly<{
   currentPhaseId: 'founderArchitectSignoffPacket';
   founderArchitectSignoffPacketActive: boolean;
   signOffPacketPrepared: boolean;
-  signOffStatus: 'pending';
-  sourceOfTruthDecisionSignedOff: false;
+  /** Pack10C pointer — offline human approval recorded; Pack11 discovery only. */
+  humanApprovalRecordActive: boolean;
+  pack11DiscoveryPermitted: boolean;
+  pack11SchemaDesignContractOnly: boolean;
+  pack11Started: false;
+  signOffStatus: 'approved';
+  sourceOfTruthDecisionSignedOff: true;
   agentMayFlipSignoff: false;
-  founderSignoffRecorded: false;
-  architectSignoffRecorded: false;
-  productOwnerSignoffRecorded: false;
-  safetyOwnerSignoffRecorded: false;
-  opsRunbookOwnerSignoffRecorded: false;
-  selectedSourceOfTruthOptionId: null;
+  founderSignoffRecorded: true;
+  architectSignoffRecorded: true;
+  productOwnerSignoffRecorded: true;
+  safetyOwnerSignoffRecorded: true;
+  opsRunbookOwnerSignoffRecorded: true;
+  selectedSourceOfTruthOptionId: 'dedicatedVionaRequestStore';
   recommendedSourceOfTruthOptionId: 'dedicatedVionaRequestStore';
   operatorRoleAddedToAuth: false;
   operatorPolicyResolvedForImplementation: false;
@@ -56,32 +61,32 @@ export const VIONA_REQUEST_SOT_FOUNDER_ARCHITECT_HUMAN_SIGNOFF_BLANKS = [
   {
     roleId: 'founder',
     operatingProtocolRole: 'Executive Sponsor / Founder Delegate',
-    signOffStatus: 'pending',
-    signOffRecorded: false,
+    signOffStatus: 'approved',
+    signOffRecorded: true,
   },
   {
     roleId: 'principalArchitect',
     operatingProtocolRole: 'Principal Architect',
-    signOffStatus: 'pending',
-    signOffRecorded: false,
+    signOffStatus: 'approved',
+    signOffRecorded: true,
   },
   {
     roleId: 'productOwner',
     operatingProtocolRole: 'Chief Product Officer (CPO) Surface Owner',
-    signOffStatus: 'pending',
-    signOffRecorded: false,
+    signOffStatus: 'approved',
+    signOffRecorded: true,
   },
   {
     roleId: 'safetyOwner',
     operatingProtocolRole: 'Trust & Safety Lead (Product + UX)',
-    signOffStatus: 'pending',
-    signOffRecorded: false,
+    signOffStatus: 'approved',
+    signOffRecorded: true,
   },
   {
     roleId: 'opsRunbookOwner',
     operatingProtocolRole: 'Operations / Incident Commander',
-    signOffStatus: 'pending',
-    signOffRecorded: false,
+    signOffStatus: 'approved',
+    signOffRecorded: true,
   },
 ] as const satisfies readonly VionaRequestSotFounderArchitectSignoffRoleBlank[];
 
@@ -92,15 +97,19 @@ export const VIONA_REQUEST_SOT_FOUNDER_ARCHITECT_SIGNOFF_PACKET_READINESS = {
   currentPhaseId: 'founderArchitectSignoffPacket',
   founderArchitectSignoffPacketActive: true,
   signOffPacketPrepared: true,
-  signOffStatus: 'pending',
-  sourceOfTruthDecisionSignedOff: false,
+  humanApprovalRecordActive: true,
+  pack11DiscoveryPermitted: true,
+  pack11SchemaDesignContractOnly: true,
+  pack11Started: false,
+  signOffStatus: 'approved',
+  sourceOfTruthDecisionSignedOff: true,
   agentMayFlipSignoff: false,
-  founderSignoffRecorded: false,
-  architectSignoffRecorded: false,
-  productOwnerSignoffRecorded: false,
-  safetyOwnerSignoffRecorded: false,
-  opsRunbookOwnerSignoffRecorded: false,
-  selectedSourceOfTruthOptionId: null,
+  founderSignoffRecorded: true,
+  architectSignoffRecorded: true,
+  productOwnerSignoffRecorded: true,
+  safetyOwnerSignoffRecorded: true,
+  opsRunbookOwnerSignoffRecorded: true,
+  selectedSourceOfTruthOptionId: 'dedicatedVionaRequestStore',
   recommendedSourceOfTruthOptionId: 'dedicatedVionaRequestStore',
   operatorRoleAddedToAuth: false,
   operatorPolicyResolvedForImplementation: false,
@@ -116,10 +125,11 @@ export const VIONA_REQUEST_SOT_FOUNDER_ARCHITECT_SIGNOFF_PACKET_READINESS = {
   signoffChecklist: VIONA_REQUEST_SOT_FOUNDER_ARCHITECT_SIGNOFF_PACKET_CHECKLIST,
   requiredSafeCopy: [
     'Founder/Architect Source-of-Truth Sign-off Packet',
-    'This packet does not record sign-off',
-    'sourceOfTruthDecisionSignedOff remains false',
-    'Founder/architect sign-off is pending',
-    'Cursor/agent cannot record source-of-truth sign-off',
+    'Human approval recorded in Pack10C offline record',
+    'Pack11 discovery / schema-design contract only',
+    'sourceOfTruthDecisionSignedOff recorded by human approval',
+    'agentMayFlipSignoff remains false',
+    'Cursor/agent cannot fabricate source-of-truth sign-off',
     'Dedicated VIONA Request Store is the recommended long-term candidate',
     'Direct LocalServiceRequest reuse is not allowed',
     'Hybrid bridge remains future-only',

@@ -37,6 +37,10 @@ const ALLOWED_FILES = [
   'docs/design/evidence/cursor-request-sot-signoff-packet-pack10/README.md',
   'docs/product/VIONA_REQUEST_SOT_HUMAN_SIGNOFF_TEMPLATE.md',
   'docs/design/evidence/cursor-request-sot-signoff-template-pack10b/README.md',
+  'docs/product/VIONA_REQUEST_SOT_HUMAN_APPROVAL_RECORD.md',
+  'src/config/vionaRequestSotHumanApprovalReadiness.ts',
+  'scripts/viona-request-sot-human-approval-recording-check.mjs',
+  'docs/design/evidence/cursor-request-sot-human-approval-pack10c/README.md',
 ];
 
 const REQUIRED_FILES = [

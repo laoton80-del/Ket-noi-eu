@@ -48,8 +48,14 @@ export type VionaOperatorInboxAdminReadiness = Readonly<{
   sourceOfTruthMappingContractActive: boolean;
   /** Pack9 pointer — sign-off readiness contract; Admin Debug stays fixture-only. */
   sotSignoffPhasePromotionReadinessContractActive: boolean;
-  /** Pack10 pointer — founder/architect sign-off packet; Admin Debug stays fixture-only. */
+  /** Pack10 pointer — founder/architect sign-off packet. */
   founderArchitectSignoffPacketActive: boolean;
+  /** Pack10C pointer — offline human approval recorded; Pack11 discovery only. */
+  humanApprovalRecordActive: boolean;
+  pack11DiscoveryPermitted: boolean;
+  pack11SchemaDesignContractOnly: boolean;
+  pack11Started: false;
+  sourceOfTruthDecisionSignedOff: true;
   adminDebugUsesFixturesOnly: boolean;
   productionLiveOpsActive: boolean;
   nextSafeTarget: string;
@@ -154,10 +160,15 @@ export const VIONA_OPERATOR_INBOX_ADMIN_READINESS = {
   sourceOfTruthMappingContractActive: true,
   sotSignoffPhasePromotionReadinessContractActive: true,
   founderArchitectSignoffPacketActive: true,
+  humanApprovalRecordActive: true,
+  pack11DiscoveryPermitted: true,
+  pack11SchemaDesignContractOnly: true,
+  pack11Started: false,
+  sourceOfTruthDecisionSignedOff: true,
   adminDebugUsesFixturesOnly: true,
   productionLiveOpsActive: false,
   nextSafeTarget:
-    'Founder/architect sign-off packet (Pack10); Admin Debug remains fixture-only until human sign-off recorded',
+    'Pack11 Dedicated Store Schema Design Contract discovery (human approval recorded); Admin Debug remains fixture-only',
   appTsxRouteDeferred: false,
   persistenceApiActive: false,
   mutationsBlocked: true,

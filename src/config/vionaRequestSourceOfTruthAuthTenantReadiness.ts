@@ -66,11 +66,16 @@ export type VionaRequestSourceOfTruthAuthTenantReadiness = Readonly<{
   masterBaselinePr: '#62';
   currentPhaseId: VionaRequestAuthTenantPhaseId;
   sourceOfTruthMappingContractActive: boolean;
-  /** Pack9 pointer — sign-off readiness contract; sign-off remains false. */
+  /** Pack9 pointer — sign-off readiness contract. */
   sotSignoffPhasePromotionReadinessContractActive: boolean;
-  /** Pack10 pointer — founder/architect sign-off packet; sign-off remains false. */
+  /** Pack10 pointer — founder/architect sign-off packet. */
   founderArchitectSignoffPacketActive: boolean;
-  sourceOfTruthDecisionSignedOff: boolean;
+  /** Pack10C pointer — offline human approval recorded; Pack11 discovery only. */
+  humanApprovalRecordActive: boolean;
+  pack11DiscoveryPermitted: boolean;
+  pack11SchemaDesignContractOnly: boolean;
+  pack11Started: false;
+  sourceOfTruthDecisionSignedOff: true;
   authSessionSourceOfTruthApproved: boolean;
   tenantAccessMatrixApproved: boolean;
   operatorRoleResolved: boolean;
@@ -243,7 +248,11 @@ export const VIONA_REQUEST_SOURCE_OF_TRUTH_AUTH_TENANT_READINESS = {
   sourceOfTruthMappingContractActive: true,
   sotSignoffPhasePromotionReadinessContractActive: true,
   founderArchitectSignoffPacketActive: true,
-  sourceOfTruthDecisionSignedOff: false,
+  humanApprovalRecordActive: true,
+  pack11DiscoveryPermitted: true,
+  pack11SchemaDesignContractOnly: true,
+  pack11Started: false,
+  sourceOfTruthDecisionSignedOff: true,
   authSessionSourceOfTruthApproved: false,
   tenantAccessMatrixApproved: false,
   operatorRoleResolved: false,
@@ -286,7 +295,7 @@ export const VIONA_REQUEST_SOURCE_OF_TRUTH_AUTH_TENANT_READINESS = {
     'Human confirmation required before any future protected action',
     'Audit log is not a ledger',
     'LocalServiceRequest is reference-only',
-    'Source-of-truth decision requires founder/architect sign-off',
+    'Source-of-truth decision signed off — Pack11 discovery only',
   ],
   forbiddenPromotions: [
     'Do not map LocalServiceRequest directly to VIONA Request Engine without mapping contract',

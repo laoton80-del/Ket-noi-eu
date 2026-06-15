@@ -33,6 +33,10 @@ const ALLOWED_FILES = [
   'docs/design/evidence/cursor-request-sot-signoff-packet-pack10/README.md',
   'docs/product/VIONA_REQUEST_SOT_HUMAN_SIGNOFF_TEMPLATE.md',
   'docs/design/evidence/cursor-request-sot-signoff-template-pack10b/README.md',
+  'docs/product/VIONA_REQUEST_SOT_HUMAN_APPROVAL_RECORD.md',
+  'src/config/vionaRequestSotHumanApprovalReadiness.ts',
+  'scripts/viona-request-sot-human-approval-recording-check.mjs',
+  'docs/design/evidence/cursor-request-sot-human-approval-pack10c/README.md',
 ];
 
 const REQUIRED_FILES = [
@@ -83,7 +87,7 @@ const REQUIRED_DOC_PHRASES = [
   'mapping contract',
 ];
 
-const REQUIRED_CONFIG_TOKENS = [
+const REQUIRED_CONFIG_TOKENS_PENDING = [
   'export const VIONA_REQUEST_SOURCE_OF_TRUTH_AUTH_TENANT_READINESS',
   'export const VIONA_REQUEST_SOURCE_OF_TRUTH_OPTIONS',
   'export const VIONA_REQUEST_AUTH_TENANT_PHASES',
@@ -108,6 +112,38 @@ const REQUIRED_CONFIG_TOKENS = [
   'noLocalOpsAuditApiReuse',
   'noLocalServiceRequestDirectReuse',
 ];
+
+const REQUIRED_CONFIG_TOKENS_APPROVED = [
+  'export const VIONA_REQUEST_SOURCE_OF_TRUTH_AUTH_TENANT_READINESS',
+  'export const VIONA_REQUEST_SOURCE_OF_TRUTH_OPTIONS',
+  'export const VIONA_REQUEST_AUTH_TENANT_PHASES',
+  'export function getVionaRequestSourceOfTruthAuthTenantReadiness',
+  'sourceOfTruthMappingContractActive: true',
+  'sotSignoffPhasePromotionReadinessContractActive: true',
+  'founderArchitectSignoffPacketActive: true',
+  'humanApprovalRecordActive: true',
+  'pack11DiscoveryPermitted: true',
+  'pack11SchemaDesignContractOnly: true',
+  'pack11Started: false',
+  'sourceOfTruthDecisionSignedOff: true',
+  'authSessionSourceOfTruthApproved: false',
+  'tenantAccessMatrixApproved: false',
+  'operatorRoleResolved: false',
+  'localStatusMappingApproved: false',
+  'persistenceApiActive: false',
+  'prismaSchemaActive: false',
+  'auditLogActive: false',
+  'requestMutationActive: false',
+  'productionLiveOpsActive: false',
+  'adminDebugUsesFixturesOnly: true',
+  'dedicatedVionaRequestStore',
+  'mappedFromLocalServiceRequest',
+  'hybridWithMappingContract',
+  'noLocalOpsAuditApiReuse',
+  'noLocalServiceRequestDirectReuse',
+];
+
+const REQUIRED_CONFIG_TOKENS = REQUIRED_CONFIG_TOKENS_PENDING;
 
 const REQUIRED_MAPPING_TOKENS = [
   'VionaRequestSourceOfTruthOption',
@@ -255,11 +291,21 @@ function findUnsafeStandaloneClaims(paths) {
   return [...new Set(hits)];
 }
 
+function isHumanApprovalRecorded() {
+  const rel = 'src/config/vionaRequestSotHumanApprovalReadiness.ts';
+  return existsSync(path.join(ROOT, rel)) && read(rel).includes('humanApprovalRecorded: true');
+}
+
 function main() {
   console.log('VIONA request source-of-truth auth tenant mapping check (Pack8)');
   console.log(
     'Docs/config/domain contracts only. No API, DB, Prisma migration, adapter, mutation, or Admin Debug data-source change.\n'
   );
+
+  const humanApprovalRecorded = isHumanApprovalRecorded();
+  const requiredConfigTokens = humanApprovalRecorded
+    ? REQUIRED_CONFIG_TOKENS_APPROVED
+    : REQUIRED_CONFIG_TOKENS_PENDING;
 
   const missingFiles = REQUIRED_FILES.filter((relPath) => !existsSync(path.join(ROOT, relPath)));
   const changedFiles = getChangedFiles();
@@ -284,7 +330,7 @@ function main() {
 
   const missingSafeCopy = missingValues(combined, REQUIRED_SAFE_COPY);
   const missingDocPhrases = missingValues(docs, REQUIRED_DOC_PHRASES);
-  const missingConfigTokens = missingValues(config, REQUIRED_CONFIG_TOKENS);
+  const missingConfigTokens = missingValues(config, requiredConfigTokens);
   const missingMappingTokens = missingValues(mapping, REQUIRED_MAPPING_TOKENS);
   const missingMatrixTokens = missingValues(matrix, REQUIRED_ACCESS_MATRIX_TOKENS);
   const missingPersistenceTokens = missingValues(persistence, REQUIRED_PERSISTENCE_POINTER_TOKENS);
