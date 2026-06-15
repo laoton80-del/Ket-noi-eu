@@ -3,6 +3,13 @@
 import { execSync } from 'node:child_process';
 import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
+import {
+  isPack14cMigrationCreated,
+  isPack14cMigrationSqlPath,
+  isPrismaDiffBlocked,
+  PACK14D_BRANCH_ALLOWED_FILES,
+} from './lib/vionaPackDiffAllowlist.mjs';
+
 
 const ROOT = process.cwd();
 
@@ -42,12 +49,6 @@ const POST_PACK14C_POINTER_TOKENS = [
   'dbApplied: false',
 ];
 
-function isPack14cMigrationCreated() {
-  const configPath = 'src/config/vionaRequestPack14CPrismaMigrationCreationReadiness.ts';
-  if (!existsSync(path.join(ROOT, configPath))) return false;
-  return read(configPath).includes('migrationCreated: true');
-}
-
 function augmentPointerTokensForPack14c(tokens, pack14cActive) {
   if (!pack14cActive) return tokens;
   const filtered = tokens.filter(
@@ -59,11 +60,6 @@ function augmentPointerTokensForPack14c(tokens, pack14cActive) {
 function augmentConfigTokensForPack14c(tokens, pack14cActive) {
   return augmentPointerTokensForPack14c(tokens, pack14cActive);
 }
-
-function isPack14cMigrationDiffFile(file) {
-  return /^prisma\/migrations\/\d+_add_viona_request_models\/migration\.sql$/.test(file);
-}
-
 
 const POST_PACK13C_POINTER_TOKENS = [
   'pack13Started: true',
@@ -101,23 +97,13 @@ function augmentConfigTokensForPack13c(tokens, pack13cActive) {
 }
 
 function matchesForbiddenDiff(file, pack13cActive) {
-  if (isPack14cMigrationDiffFile(file)) return false;
+  if (isPack14cMigrationSqlPath(file)) return false;
   if (pack13cActive && file === 'prisma/schema.prisma') return false;
   return FORBIDDEN_DIFF_PATTERNS.some((pattern) => pattern.test(file));
 }
 
-function isPrismaDiffBlocked(pack13cActive, pack14cActive, prismaChanged) {
-  if (!prismaChanged) return false;
-  const files = prismaChanged.split('\n').map((line) => line.replace(/\\/g, '/')).filter(Boolean);
-  return files.some((file) => {
-    if (pack14cActive && isPack14cMigrationDiffFile(file)) return false;
-    if (pack13cActive && file === 'prisma/schema.prisma') return false;
-    return true;
-  });
-}
-
-
 const ALLOWED_FILES = [
+  ...PACK14D_BRANCH_ALLOWED_FILES,
   ...PACK13C_CORE_FILES,
   ...PACK14A_CORE_FILES,
   ...PACK14B_CORE_FILES,
@@ -448,7 +434,7 @@ function main() {
 
   const missingFiles = REQUIRED_FILES.filter((relPath) => !existsSync(path.join(ROOT, relPath)));
   const changedFiles = getChangedFiles();
-  const unexpectedFiles = changedFiles.filter((file) => !ALLOWED_FILES.includes(file) && !isPack14cMigrationDiffFile(file));
+  const unexpectedFiles = changedFiles.filter((file) => !ALLOWED_FILES.includes(file) && !isPack14cMigrationSqlPath(file));
   const forbiddenFiles = changedFiles.filter((file) => matchesForbiddenDiff(file, pack13cActive));
 
   const config = read('src/config/vionaRequestSourceOfTruthAuthTenantReadiness.ts');

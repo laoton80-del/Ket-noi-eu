@@ -3,6 +3,12 @@
 import { execSync } from 'node:child_process';
 import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
+import {
+  isPack14cMigrationCreated,
+  isPack14cMigrationSqlPath,
+  PACK14D_BRANCH_ALLOWED_FILES,
+} from './lib/vionaPackDiffAllowlist.mjs';
+
 
 const ROOT = process.cwd();
 
@@ -162,6 +168,7 @@ const PACK13B_PRISMA_SCHEMA_IMPLEMENTATION_HUMAN_APPROVAL_DIFF_FILES = [
 ];
 
 const ALLOWED_DIFF_FILES = [
+  ...PACK14D_BRANCH_ALLOWED_FILES,
   ...PACK2_ALLOWED_DIFF_FILES,
   ...GATED_REFERENCE_LAB_PREVIEW_DIFF_FILES,
   ...PACK5_ADMIN_ROUTE_READINESS_DIFF_FILES,
@@ -188,16 +195,6 @@ const ALLOWED_DIFF_FILES = [
 ];
 
 const REQUIRED_FILES = PACK2_ALLOWED_DIFF_FILES;
-
-function isPack14cMigrationCreated() {
-  const configPath = 'src/config/vionaRequestPack14CPrismaMigrationCreationReadiness.ts';
-  if (!existsSync(path.join(ROOT, configPath))) return false;
-  return read(configPath).includes('migrationCreated: true');
-}
-
-function isPack14cMigrationDiffFile(file) {
-  return /^prisma\/migrations\/\d+_add_viona_request_models\/migration\.sql$/.test(file);
-}
 
 const FORBIDDEN_DIFF_PATTERNS = [
   /^App\.tsx$/,
@@ -345,7 +342,7 @@ function main() {
   const unexpectedDiff = diffFiles.filter((file) => !ALLOWED_DIFF_FILES.includes(file));
   const forbiddenDiff = diffFiles.filter((file) => {
     if (file === 'App.tsx' && pack6AppOnly) return false;
-    if (pack14cActive && isPack14cMigrationDiffFile(file)) return false;
+    if (pack14cActive && isPack14cMigrationSqlPath(file)) return false;
     if (
       file === 'prisma/schema.prisma' &&
       ALLOWED_DIFF_FILES.includes('prisma/schema.prisma') &&
