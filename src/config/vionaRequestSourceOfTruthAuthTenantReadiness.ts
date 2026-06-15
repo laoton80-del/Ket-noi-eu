@@ -100,7 +100,9 @@ export type VionaRequestSourceOfTruthAuthTenantReadiness = Readonly<{
   pack13PrismaSchemaImplementationApprovalSource: 'human-chat-instruction';
   pack13PrismaSchemaImplementationApprovedBy: 'Nong Si Buong';
   pack13PrismaSchemaImplementationApprovalDate: '2026-06-15';
-  pack13Started: false;
+  pack13Started: true;
+  pack13SchemaOnlyImplementation: true;
+  vionaRequestPrismaModelsAdded: true;
   prismaSchemaPermitted: true;
   pack12Started: false;
   sourceOfTruthDecisionSignedOff: true;
@@ -304,7 +306,9 @@ export const VIONA_REQUEST_SOURCE_OF_TRUTH_AUTH_TENANT_READINESS = {
   pack13PrismaSchemaImplementationApprovalSource: 'human-chat-instruction',
   pack13PrismaSchemaImplementationApprovedBy: 'Nong Si Buong',
   pack13PrismaSchemaImplementationApprovalDate: '2026-06-15',
-  pack13Started: false,
+  pack13Started: true,
+  pack13SchemaOnlyImplementation: true,
+  vionaRequestPrismaModelsAdded: true,
   prismaSchemaPermitted: true,
   pack12Started: false,
   sourceOfTruthDecisionSignedOff: true,
@@ -313,7 +317,7 @@ export const VIONA_REQUEST_SOURCE_OF_TRUTH_AUTH_TENANT_READINESS = {
   operatorRoleResolved: false,
   localStatusMappingApproved: false,
   persistenceApiActive: false,
-  prismaSchemaActive: false,
+  prismaSchemaActive: true,
   auditLogActive: false,
   requestMutationActive: false,
   productionLiveOpsActive: false,

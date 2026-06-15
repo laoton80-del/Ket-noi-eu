@@ -132,6 +132,14 @@ const PACK13A_PRISMA_SCHEMA_IMPLEMENTATION_APPROVAL_PACKET_DIFF_FILES = [
   'docs/design/evidence/cursor-request-pack13a-prisma-schema-implementation-approval-packet/README.md',
 ];
 
+const PACK13C_PRISMA_SCHEMA_IMPLEMENTATION_DIFF_FILES = [
+  'prisma/schema.prisma',
+  'docs/product/VIONA_REQUEST_PACK13C_PRISMA_SCHEMA_IMPLEMENTATION_SCHEMA_ONLY.md',
+  'src/config/vionaRequestPack13CPrismaSchemaImplementationReadiness.ts',
+  'scripts/viona-request-pack13c-prisma-schema-implementation-check.mjs',
+  'docs/design/evidence/cursor-request-pack13c-prisma-schema-implementation-schema-only/README.md',
+];
+
 const PACK13B_PRISMA_SCHEMA_IMPLEMENTATION_HUMAN_APPROVAL_DIFF_FILES = [
   'docs/product/VIONA_REQUEST_PACK13_PRISMA_SCHEMA_IMPLEMENTATION_HUMAN_APPROVAL_RECORD.md',
   'src/config/vionaRequestPack13PrismaSchemaImplementationHumanApprovalReadiness.ts',
@@ -155,6 +163,7 @@ const ALLOWED_DIFF_FILES = [
   ...PACK12_PRISMA_SCHEMA_READINESS_BOUNDARY_DIFF_FILES,
   ...PACK13A_PRISMA_SCHEMA_IMPLEMENTATION_APPROVAL_PACKET_DIFF_FILES,
   ...PACK13B_PRISMA_SCHEMA_IMPLEMENTATION_HUMAN_APPROVAL_DIFF_FILES,
+  ...PACK13C_PRISMA_SCHEMA_IMPLEMENTATION_DIFF_FILES,
 ];
 
 const REQUIRED_FILES = PACK2_ALLOWED_DIFF_FILES;
@@ -304,6 +313,13 @@ function main() {
   const unexpectedDiff = diffFiles.filter((file) => !ALLOWED_DIFF_FILES.includes(file));
   const forbiddenDiff = diffFiles.filter((file) => {
     if (file === 'App.tsx' && pack6AppOnly) return false;
+    if (
+      file === 'prisma/schema.prisma' &&
+      ALLOWED_DIFF_FILES.includes('prisma/schema.prisma') &&
+      !file.includes('migrations')
+    ) {
+      return false;
+    }
     return FORBIDDEN_DIFF_PATTERNS.some((pattern) => pattern.test(file));
   });
 

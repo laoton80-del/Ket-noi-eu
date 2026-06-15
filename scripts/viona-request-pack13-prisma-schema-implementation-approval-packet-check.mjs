@@ -6,6 +6,62 @@ import path from 'node:path';
 
 const ROOT = process.cwd();
 
+const PACK13C_CORE_FILES = [
+  'prisma/schema.prisma',
+  'docs/product/VIONA_REQUEST_PACK13C_PRISMA_SCHEMA_IMPLEMENTATION_SCHEMA_ONLY.md',
+  'src/config/vionaRequestPack13CPrismaSchemaImplementationReadiness.ts',
+  'scripts/viona-request-pack13c-prisma-schema-implementation-check.mjs',
+  'docs/design/evidence/cursor-request-pack13c-prisma-schema-implementation-schema-only/README.md',
+];
+
+const POST_PACK13C_POINTER_TOKENS = [
+  'pack13Started: true',
+  'pack13SchemaOnlyImplementation: true',
+  'prismaSchemaActive: true',
+  'vionaRequestPrismaModelsAdded: true',
+];
+
+function isPack13cSchemaOnlyActive() {
+  const configPath = 'src/config/vionaRequestPack13CPrismaSchemaImplementationReadiness.ts';
+  if (!existsSync(path.join(ROOT, configPath))) return false;
+  return read(configPath).includes('pack13SchemaOnlyImplementation: true');
+}
+
+function augmentPointerTokensForPack13c(tokens, pack13cActive) {
+  if (!pack13cActive) return tokens;
+  const filtered = tokens.filter(
+    (token) => token !== 'prismaSchemaActive: false' && token !== 'pack13Started: false'
+  );
+  return [...filtered, ...POST_PACK13C_POINTER_TOKENS];
+}
+
+function augmentConfigTokensForPack13c(tokens, pack13cActive) {
+  if (!pack13cActive) return tokens;
+  const filtered = tokens.filter(
+    (token) => token !== 'prismaSchemaActive: false' && token !== 'pack13Started: false'
+  );
+  const additions = [];
+  if (tokens.includes('prismaSchemaActive: false')) additions.push('prismaSchemaActive: true');
+  if (tokens.includes('pack13Started: false')) additions.push('pack13Started: true');
+  if (tokens.includes('pack13SchemaOnlyImplementation: true') || tokens.includes('vionaRequestPrismaModelsAdded: true')) {
+    additions.push('pack13SchemaOnlyImplementation: true', 'vionaRequestPrismaModelsAdded: true');
+  }
+  return [...filtered, ...additions];
+}
+
+function matchesForbiddenDiff(file, pack13cActive) {
+  if (pack13cActive && file === 'prisma/schema.prisma') return false;
+  return FORBIDDEN_DIFF_PATTERNS.some((pattern) => pattern.test(file));
+}
+
+function isPrismaDiffBlocked(pack13cActive, prismaChanged) {
+  if (!prismaChanged) return false;
+  if (!pack13cActive) return true;
+  const files = prismaChanged.split('\n').map((line) => line.replace(/\\/g, '/')).filter(Boolean);
+  return files.some((file) => file !== 'prisma/schema.prisma');
+}
+
+
 const PACK13B_CORE_FILES = [
   'docs/product/VIONA_REQUEST_PACK13_PRISMA_SCHEMA_IMPLEMENTATION_HUMAN_APPROVAL_RECORD.md',
   'src/config/vionaRequestPack13PrismaSchemaImplementationHumanApprovalReadiness.ts',
@@ -56,6 +112,7 @@ const GATE_SCRIPT_FILES = [
 ];
 
 const ALLOWED_FILES = [
+  ...PACK13C_CORE_FILES,
   ...PACK13B_CORE_FILES,
   ...PACK13A_CORE_FILES,
   ...PACK12_CORE_FILES,
@@ -216,6 +273,24 @@ const POST_APPROVAL_REQUIRED_POINTER_TOKENS = [
   'prismaSchemaActive: false',
 ];
 
+const POST_PACK13C_APPROVAL_POINTER_TOKENS = [
+  'pack13PrismaSchemaImplementationApprovalPacketActive: true',
+  'pack13ApprovalPacketPrepared: true',
+  'pack13HumanApprovalRequired: true',
+  'pack13HumanApprovalRecorded: true',
+  'pack13PrismaSchemaImplementationApproved: true',
+  'pack13PrismaSchemaImplementationRecordingOnly: true',
+  'pack13PrismaSchemaImplementationMayBePlannedNext: true',
+  "pack13PrismaSchemaImplementationApprovalSource: 'human-chat-instruction'",
+  "pack13PrismaSchemaImplementationApprovedBy: 'Nong Si Buong'",
+  "pack13PrismaSchemaImplementationApprovalDate: '2026-06-15'",
+  'prismaSchemaPermitted: true',
+  'pack13Started: true',
+  'pack13SchemaOnlyImplementation: true',
+  'prismaSchemaActive: true',
+  'vionaRequestPrismaModelsAdded: true',
+];
+
 const POST_APPROVAL_FORBIDDEN_POINTER_TOKENS = [
   'pack13Started: true',
   'pack12ImplementationApproved: true',
@@ -315,20 +390,21 @@ function isPack13bRecorded() {
 }
 
 function main() {
+  const pack13cActive = isPack13cSchemaOnlyActive();
   const pack13bRecorded = isPack13bRecorded();
   console.log('VIONA request Pack13A Prisma schema implementation approval packet check');
   console.log(
-    pack13bRecorded
-      ? 'Pack13B human approval recorded. Packet doc remains historical blank/pending.\n'
-      : 'Approval packet only. No approval recorded. No Prisma schema, migration, API, adapter, mutation, or runtime.\n'
+    pack13cActive
+      ? 'Pack13C schema-only active. Pack13A packet doc remains historical blank/pending.\n'
+      : pack13bRecorded
+        ? 'Pack13B human approval recorded. Packet doc remains historical blank/pending.\n'
+        : 'Approval packet only. No approval recorded. No Prisma schema, migration, API, adapter, mutation, or runtime.\n'
   );
 
   const missingFiles = REQUIRED_FILES.filter((relPath) => !existsSync(path.join(ROOT, relPath)));
   const changedFiles = getChangedFiles();
   const unexpectedFiles = changedFiles.filter((file) => !ALLOWED_FILES.includes(file));
-  const forbiddenFiles = changedFiles.filter((file) =>
-    FORBIDDEN_DIFF_PATTERNS.some((pattern) => pattern.test(file))
-  );
+  const forbiddenFiles = changedFiles.filter((file) => matchesForbiddenDiff(file, pack13cActive));
 
   const packetDoc = read(
     'docs/product/VIONA_REQUEST_PACK13_PRISMA_SCHEMA_IMPLEMENTATION_APPROVAL_PACKET.md'
@@ -353,11 +429,21 @@ function main() {
 
   const missingDocPhrases = missingValues(packetDoc, REQUIRED_DOC_PHRASES);
   const forbiddenDocPhrases = FORBIDDEN_DOC_PHRASES.filter((phrase) => packetDoc.includes(phrase));
-  const configTokens = pack13bRecorded ? POST_APPROVAL_REQUIRED_CONFIG_TOKENS : REQUIRED_CONFIG_TOKENS;
-  const pointerTokens = pack13bRecorded ? POST_APPROVAL_REQUIRED_POINTER_TOKENS : REQUIRED_POINTER_TOKENS;
-  const forbiddenPointerTokens = pack13bRecorded
-    ? POST_APPROVAL_FORBIDDEN_POINTER_TOKENS
-    : FORBIDDEN_POINTER_TOKENS;
+  const configTokens = pack13cActive
+    ? augmentConfigTokensForPack13c(
+        pack13bRecorded ? POST_APPROVAL_REQUIRED_CONFIG_TOKENS : REQUIRED_CONFIG_TOKENS,
+        true
+      )
+    : pack13bRecorded
+      ? POST_APPROVAL_REQUIRED_CONFIG_TOKENS
+      : REQUIRED_CONFIG_TOKENS;
+  const pointerTokens = pack13cActive
+    ? augmentPointerTokensForPack13c(POST_PACK13C_APPROVAL_POINTER_TOKENS, true)
+    : pack13bRecorded
+      ? POST_APPROVAL_REQUIRED_POINTER_TOKENS
+      : REQUIRED_POINTER_TOKENS;
+  const forbiddenPointerTokens =
+    pack13cActive || !pack13bRecorded ? [] : POST_APPROVAL_FORBIDDEN_POINTER_TOKENS;
   const missingConfigTokens = missingValues(config, configTokens);
   const missingPointerTokens = missingValues(pointerCombined, pointerTokens);
   const forbiddenPointerHits = forbiddenPointerTokens.filter((token) =>
@@ -374,7 +460,9 @@ function main() {
   if (unexpectedFiles.length) fail('unexpected files changed', unexpectedFiles);
   if (forbiddenFiles.length) fail('forbidden paths changed', forbiddenFiles);
   if (appChanged) fail('App.tsx changed vs origin/master', [appChanged]);
-  if (prismaChanged) fail('prisma changed vs origin/master', [prismaChanged.split('\n')[0] || 'prisma/']);
+  if (isPrismaDiffBlocked(pack13cActive, prismaChanged)) {
+    fail('prisma changed vs origin/master', [prismaChanged.split('\n')[0] || 'prisma/']);
+  }
   if (serverChanged) fail('src/server.ts changed vs origin/master', [serverChanged]);
   if (typesChanged) fail('vionaRequestTypes.ts changed vs origin/master', [typesChanged]);
   if (missingDocPhrases.length) fail('missing approval packet doc requirements', missingDocPhrases);

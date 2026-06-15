@@ -824,3 +824,129 @@ model MarketingTranslation {
   @@unique([postId, languageCode])
   @@index([postId])
 }
+
+// --- VIONA Request Engine (Dedicated Request Store) — Pack13C schema only ---
+// NOT wired to runtime. NOT migration. NOT payment/booking/SOS/wallet truth.
+// See docs/product/VIONA_REQUEST_PACK13C_PRISMA_SCHEMA_IMPLEMENTATION_SCHEMA_ONLY.md
+
+enum VionaRequestSourceLinkStatus {
+  PENDING
+  ACTIVE
+  BROKEN
+  SUPERSEDED
+}
+
+/// Core VIONA request aggregate — lifecycle status does not imply payment, booking, or SOS truth.
+model VionaRequest {
+  id              String    @id @default(uuid())
+  tenantId        String
+  requesterUserId String?
+  ownerUserId     String?
+  sourceUniverse  String
+  sourceFeature   String?
+  requestType     String
+  /// Domain lifecycle string (draft, submitted, triage, …) — not payment or booking confirmation.
+  status          String    @default("draft")
+  title           String
+  summary         String    @default("")
+  locale          String?
+  countryCode     String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  closedAt        DateTime?
+  metadataJson    Json?
+
+  participants          VionaRequestParticipant[]
+  sourceLinks           VionaRequestSourceLink[]
+  statusEvents          VionaRequestStatusEvent[]
+  auditEvents           VionaRequestAuditEvent[]
+  attachmentReferences  VionaRequestAttachmentReference[]
+
+  @@index([tenantId])
+  @@index([status])
+  @@index([sourceUniverse])
+  @@index([createdAt])
+}
+
+/// Request participants — participantRoleLabel is local to the request, not Prisma/Auth OPERATOR.
+model VionaRequestParticipant {
+  id                   String   @id @default(uuid())
+  requestId            String
+  userRef              String?
+  participantRoleLabel String?
+  displayName          String?
+  contactEmail         String?
+  contactPhone         String?
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  request VionaRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
+
+  @@index([requestId])
+}
+
+/// Future bridge mapping metadata — not legacy local-service-request SoT; no payment/booking/SOS truth.
+model VionaRequestSourceLink {
+  id               String                      @id @default(uuid())
+  requestId        String
+  sourceSystem     String
+  sourceEntityType String
+  sourceEntityId   String
+  linkStatus       VionaRequestSourceLinkStatus @default(PENDING)
+  createdAt        DateTime                    @default(now())
+  updatedAt        DateTime                    @updatedAt
+
+  request VionaRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
+
+  @@index([requestId])
+  @@index([sourceSystem, sourceEntityType, sourceEntityId])
+}
+
+/// Append-only lifecycle transition events — no payment/booking/SOS confirmation truth.
+model VionaRequestStatusEvent {
+  id              String   @id @default(uuid())
+  requestId       String
+  fromStatus      String?
+  toStatus        String
+  changedByUserId String?
+  reason          String?
+  createdAt       DateTime @default(now())
+
+  request VionaRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
+
+  @@index([requestId])
+  @@index([createdAt])
+}
+
+/// Append-only audit events — not a payment ledger.
+model VionaRequestAuditEvent {
+  id             String   @id @default(uuid())
+  requestId      String
+  eventType      String
+  actorUserId    String?
+  actorRoleLabel String?
+  message        String?
+  payloadJson    Json?
+  createdAt      DateTime @default(now())
+
+  request VionaRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
+
+  @@index([requestId])
+  @@index([createdAt])
+}
+
+/// Opaque attachment metadata/reference only — no OCR or live action execution.
+model VionaRequestAttachmentReference {
+  id          String   @id @default(uuid())
+  requestId   String
+  storageKey  String?
+  externalRef String?
+  filename    String?
+  mimeType    String?
+  sizeBytes   Int?
+  createdAt   DateTime @default(now())
+
+  request VionaRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
+
+  @@index([requestId])
+}
