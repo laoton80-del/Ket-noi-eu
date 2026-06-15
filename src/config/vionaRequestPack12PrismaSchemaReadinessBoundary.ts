@@ -55,8 +55,13 @@ export type VionaRequestPack12PrismaSchemaReadinessBoundaryConfig = Readonly<{
   pack14MigrationApprovalPacketPrepared: true;
   pack14HumanApprovalRequired: true;
   pack14MigrationPlanningReadyForHumanReview: true;
-  pack14HumanApprovalRecorded: false;
-  pack14PrismaMigrationApproved: false;
+  pack14HumanApprovalRecorded: true;
+  pack14PrismaMigrationApproved: true;
+  pack14PrismaMigrationApprovalRecordingOnly: true;
+  pack14MigrationCreationMayBePlannedNext: true;
+  pack14PrismaMigrationApprovalSource: 'human-chat-instruction';
+  pack14PrismaMigrationApprovedBy: 'Nong Si Buong';
+  pack14PrismaMigrationApprovalDate: '2026-06-15';
 
   futurePrismaMigrationRequiresHumanApproval: true;
   futureApiImplementationRequiresHumanApproval: true;
@@ -64,7 +69,7 @@ export type VionaRequestPack12PrismaSchemaReadinessBoundaryConfig = Readonly<{
   futureMutationRequiresHumanApproval: true;
   pack12Started: false;
   prismaSchemaPermitted: true;
-  prismaMigrationPermitted: false;
+  prismaMigrationPermitted: true;
   readOnlyApiPermitted: false;
   persistenceAdapterPermitted: false;
   requestMutationPermitted: false;
@@ -192,8 +197,13 @@ export const VIONA_REQUEST_PACK12_PRISMA_SCHEMA_READINESS_BOUNDARY = {
   pack14MigrationApprovalPacketPrepared: true,
   pack14HumanApprovalRequired: true,
   pack14MigrationPlanningReadyForHumanReview: true,
-  pack14HumanApprovalRecorded: false,
-  pack14PrismaMigrationApproved: false,
+  pack14HumanApprovalRecorded: true,
+  pack14PrismaMigrationApproved: true,
+  pack14PrismaMigrationApprovalRecordingOnly: true,
+  pack14MigrationCreationMayBePlannedNext: true,
+  pack14PrismaMigrationApprovalSource: 'human-chat-instruction',
+  pack14PrismaMigrationApprovedBy: 'Nong Si Buong',
+  pack14PrismaMigrationApprovalDate: '2026-06-15',
 
   futurePrismaMigrationRequiresHumanApproval: true,
   futureApiImplementationRequiresHumanApproval: true,
@@ -201,7 +211,7 @@ export const VIONA_REQUEST_PACK12_PRISMA_SCHEMA_READINESS_BOUNDARY = {
   futureMutationRequiresHumanApproval: true,
   pack12Started: false,
   prismaSchemaPermitted: true,
-  prismaMigrationPermitted: false,
+  prismaMigrationPermitted: true,
   readOnlyApiPermitted: false,
   persistenceAdapterPermitted: false,
   requestMutationPermitted: false,

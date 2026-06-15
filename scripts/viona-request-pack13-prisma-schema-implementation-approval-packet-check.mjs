@@ -17,9 +17,47 @@ const PACK13C_CORE_FILES = [
 const PACK14A_CORE_FILES = [
   'docs/product/VIONA_REQUEST_PACK14A_PRISMA_MIGRATION_READINESS_APPROVAL_PACKET.md',
   'src/config/vionaRequestPack14PrismaMigrationReadinessApprovalPacket.ts',
+  'src/config/vionaRequestPack14PrismaMigrationHumanApprovalReadiness.ts',
   'scripts/viona-request-pack14-prisma-migration-readiness-approval-packet-check.mjs',
+  'scripts/viona-request-pack14-prisma-migration-human-approval-recording-check.mjs',
   'docs/design/evidence/cursor-request-pack14a-prisma-migration-readiness-approval-packet/README.md',
 ];
+
+const PACK14B_CORE_FILES = [
+  'docs/product/VIONA_REQUEST_PACK14B_PRISMA_MIGRATION_HUMAN_APPROVAL_RECORD.md',
+  'src/config/vionaRequestPack14PrismaMigrationHumanApprovalReadiness.ts',
+  'scripts/viona-request-pack14-prisma-migration-human-approval-recording-check.mjs',
+  'docs/design/evidence/cursor-request-pack14b-prisma-migration-human-approval/README.md',
+];
+
+const POST_PACK14B_POINTER_TOKENS = [
+  'pack14HumanApprovalRecorded: true',
+  'pack14PrismaMigrationApproved: true',
+  'pack14PrismaMigrationApprovalRecordingOnly: true',
+  'pack14MigrationCreationMayBePlannedNext: true',
+  "pack14PrismaMigrationApprovalSource: 'human-chat-instruction'",
+  "pack14PrismaMigrationApprovedBy: 'Nong Si Buong'",
+  "pack14PrismaMigrationApprovalDate: '2026-06-15'",
+  'prismaMigrationPermitted: true',
+];
+
+function isPack14bRecorded() {
+  const configPath = 'src/config/vionaRequestPack14PrismaMigrationHumanApprovalReadiness.ts';
+  if (!existsSync(path.join(ROOT, configPath))) return false;
+  return read(configPath).includes('pack14HumanApprovalRecorded: true');
+}
+
+function augmentPointerTokensForPack14b(tokens, pack14bRecorded) {
+  if (!pack14bRecorded) return tokens;
+  const filtered = tokens.filter((token) => token !== 'prismaMigrationPermitted: false');
+  return [...filtered, ...POST_PACK14B_POINTER_TOKENS];
+}
+
+function augmentConfigTokensForPack14b(tokens, pack14bRecorded) {
+  if (!pack14bRecorded) return tokens;
+  const filtered = tokens.filter((token) => token !== 'prismaMigrationPermitted: false');
+  return [...filtered, 'prismaMigrationPermitted: true', ...POST_PACK14B_POINTER_TOKENS];
+}
 
 const POST_PACK13C_POINTER_TOKENS = [
   'pack13Started: true',
@@ -122,6 +160,7 @@ const GATE_SCRIPT_FILES = [
 const ALLOWED_FILES = [
   ...PACK13C_CORE_FILES,
   ...PACK14A_CORE_FILES,
+  ...PACK14B_CORE_FILES,
   ...PACK13B_CORE_FILES,
   ...PACK13A_CORE_FILES,
   ...PACK12_CORE_FILES,
@@ -401,6 +440,7 @@ function isPack13bRecorded() {
 function main() {
   const pack13cActive = isPack13cSchemaOnlyActive();
   const pack13bRecorded = isPack13bRecorded();
+  const pack14bRecorded = isPack14bRecorded();
   console.log('VIONA request Pack13A Prisma schema implementation approval packet check');
   console.log(
     pack13cActive
@@ -438,7 +478,7 @@ function main() {
 
   const missingDocPhrases = missingValues(packetDoc, REQUIRED_DOC_PHRASES);
   const forbiddenDocPhrases = FORBIDDEN_DOC_PHRASES.filter((phrase) => packetDoc.includes(phrase));
-  const configTokens = pack13cActive
+  let configTokens = pack13cActive
     ? augmentConfigTokensForPack13c(
         pack13bRecorded ? POST_APPROVAL_REQUIRED_CONFIG_TOKENS : REQUIRED_CONFIG_TOKENS,
         true
@@ -446,11 +486,13 @@ function main() {
     : pack13bRecorded
       ? POST_APPROVAL_REQUIRED_CONFIG_TOKENS
       : REQUIRED_CONFIG_TOKENS;
-  const pointerTokens = pack13cActive
+  configTokens = augmentConfigTokensForPack14b(configTokens, pack14bRecorded);
+  let pointerTokens = pack13cActive
     ? augmentPointerTokensForPack13c(POST_PACK13C_APPROVAL_POINTER_TOKENS, true)
     : pack13bRecorded
       ? POST_APPROVAL_REQUIRED_POINTER_TOKENS
       : REQUIRED_POINTER_TOKENS;
+  pointerTokens = augmentPointerTokensForPack14b(pointerTokens, pack14bRecorded);
   const forbiddenPointerTokens =
     pack13cActive || !pack13bRecorded ? [] : POST_APPROVAL_FORBIDDEN_POINTER_TOKENS;
   const missingConfigTokens = missingValues(config, configTokens);

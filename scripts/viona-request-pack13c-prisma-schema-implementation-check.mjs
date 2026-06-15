@@ -21,6 +21,47 @@ const PACK14A_CORE_FILES = [
   'docs/design/evidence/cursor-request-pack14a-prisma-migration-readiness-approval-packet/README.md',
 ];
 
+const PACK14B_CORE_FILES = [
+  'docs/product/VIONA_REQUEST_PACK14B_PRISMA_MIGRATION_HUMAN_APPROVAL_RECORD.md',
+  'src/config/vionaRequestPack14PrismaMigrationHumanApprovalReadiness.ts',
+  'scripts/viona-request-pack14-prisma-migration-human-approval-recording-check.mjs',
+  'docs/design/evidence/cursor-request-pack14b-prisma-migration-human-approval/README.md',
+];
+
+const POST_PACK14B_POINTER_TOKENS = [
+  'pack14HumanApprovalRecorded: true',
+  'pack14PrismaMigrationApproved: true',
+  'pack14PrismaMigrationApprovalRecordingOnly: true',
+  'pack14MigrationCreationMayBePlannedNext: true',
+  "pack14PrismaMigrationApprovalSource: 'human-chat-instruction'",
+  "pack14PrismaMigrationApprovedBy: 'Nong Si Buong'",
+  "pack14PrismaMigrationApprovalDate: '2026-06-15'",
+  'prismaMigrationPermitted: true',
+];
+
+function isPack13cSchemaOnlyActive() {
+  const configPath = 'src/config/vionaRequestPack13CPrismaSchemaImplementationReadiness.ts';
+  if (!existsSync(path.join(ROOT, configPath))) return false;
+  return read(configPath).includes('pack13SchemaOnlyImplementation: true');
+}
+
+function isPack14bRecorded() {
+  const configPath = 'src/config/vionaRequestPack14PrismaMigrationHumanApprovalReadiness.ts';
+  if (!existsSync(path.join(ROOT, configPath))) return false;
+  return read(configPath).includes('pack14HumanApprovalRecorded: true');
+}
+
+function augmentPointerTokensForPack14b(tokens, pack14bRecorded) {
+  if (!pack14bRecorded) return tokens;
+  const filtered = tokens.filter((token) => token !== 'prismaMigrationPermitted: false');
+  return [...filtered, ...POST_PACK14B_POINTER_TOKENS];
+}
+
+function augmentConfigTokensForPack14b(tokens, pack14bRecorded) {
+  if (!pack14bRecorded) return tokens;
+  const filtered = tokens.filter((token) => token !== 'prismaMigrationPermitted: false');
+  return [...filtered, 'prismaMigrationPermitted: true', ...POST_PACK14B_POINTER_TOKENS];
+}
 
 const PACK13B_CORE_FILES = [
   'docs/product/VIONA_REQUEST_PACK13_PRISMA_SCHEMA_IMPLEMENTATION_HUMAN_APPROVAL_RECORD.md',
@@ -74,11 +115,13 @@ const GATE_SCRIPT_FILES = [
   'scripts/viona-request-inbox-reference-lab-check.mjs',
   'scripts/viona-request-inbox-operator-reference-lab-check.mjs',
   'scripts/viona-request-pack14-prisma-migration-readiness-approval-packet-check.mjs',
+  'scripts/viona-request-pack14-prisma-migration-human-approval-recording-check.mjs',
 ];
 
 const ALLOWED_FILES = [
   ...PACK13C_CORE_FILES,
   ...PACK14A_CORE_FILES,
+  ...PACK14B_CORE_FILES,
   ...PACK13B_CORE_FILES,
   ...PACK13A_CORE_FILES,
   ...PACK12_CORE_FILES,
@@ -283,9 +326,13 @@ function findUnsafeStandaloneClaims(paths) {
 }
 
 function main() {
+  const pack13cActive = isPack13cSchemaOnlyActive();
+  const pack14bRecorded = isPack14bRecorded();
   console.log('VIONA request Pack13C Prisma schema implementation check (schema only)');
   console.log(
-    'Schema-only pack. Prisma models in schema.prisma. No migration, API, adapter, mutation, or runtime.\n'
+    pack14bRecorded
+      ? 'Pack14B migration approval recorded. Pack13C schema-only state remains valid.\n'
+      : 'Schema-only pack. Prisma models in schema.prisma. No migration, API, adapter, mutation, or runtime.\n'
   );
 
   const missingFiles = REQUIRED_FILES.filter((relPath) => !existsSync(path.join(ROOT, relPath)));
@@ -317,8 +364,10 @@ function main() {
   const schemaChanged = run('git diff --name-only origin/master -- prisma/schema.prisma');
 
   const missingDocPhrases = missingValues(implDoc, REQUIRED_DOC_PHRASES);
-  const missingConfigTokens = missingValues(config, REQUIRED_CONFIG_TOKENS);
-  const missingPointerTokens = missingValues(pointerCombined, REQUIRED_POINTER_TOKENS);
+  const configTokens = augmentConfigTokensForPack14b(REQUIRED_CONFIG_TOKENS, pack14bRecorded);
+  const pointerTokens = augmentPointerTokensForPack14b(REQUIRED_POINTER_TOKENS, pack14bRecorded);
+  const missingConfigTokens = missingValues(config, configTokens);
+  const missingPointerTokens = missingValues(pointerCombined, pointerTokens);
   const missingModels = missingValues(schema, REQUIRED_PRISMA_MODELS);
   const forbiddenSchemaFields = FORBIDDEN_SCHEMA_FIELD_TOKENS.filter((token) => {
     const vionaSection = schema.split('VIONA Request Engine')[1] || '';
@@ -363,7 +412,7 @@ function main() {
   if (migrationsChanged) fail('prisma/migrations changed vs origin/master', [migrationsChanged.split('\n')[0] || 'prisma/migrations']);
   if (serverChanged) fail('src/server.ts changed vs origin/master', [serverChanged]);
   if (typesChanged) fail('vionaRequestTypes.ts changed vs origin/master', [typesChanged]);
-  if (!schemaChanged) fail('prisma/schema.prisma must change in Pack13C', ['no schema diff']);
+  if (!schemaChanged && !pack13cActive) fail('prisma/schema.prisma must change in Pack13C', ['no schema diff']);
   if (missingDocPhrases.length) fail('missing implementation doc requirements', missingDocPhrases);
   if (missingConfigTokens.length) fail('missing readiness config tokens', missingConfigTokens);
   if (missingPointerTokens.length) fail('missing pointer config tokens', missingPointerTokens);
@@ -373,7 +422,7 @@ function main() {
   if (unsafeClaims.length) fail('unsafe standalone production claims', unsafeClaims);
   if (forbiddenImports.length) fail('forbidden runtime imports in Pack13C config', forbiddenImports);
   if (migrationCreated) fail('migration files must not be created', ['prisma/migrations changed']);
-  if (migrationPermitted) fail('migration must remain unauthorized', ['prismaMigrationPermitted: true']);
+  if (migrationPermitted && !pack14bRecorded) fail('migration must remain unauthorized', ['prismaMigrationPermitted: true']);
   if (apiPermitted) fail('API/adapter must remain unauthorized', ['API/adapter permitted']);
   if (mutationPermitted) fail('mutation must remain unauthorized', ['requestMutationPermitted: true']);
   if (apiActive) fail('API/adapter must remain inactive', ['persistence API/adapter active']);

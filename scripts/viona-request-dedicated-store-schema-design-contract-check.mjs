@@ -21,6 +21,42 @@ const PACK14A_CORE_FILES = [
   'docs/design/evidence/cursor-request-pack14a-prisma-migration-readiness-approval-packet/README.md',
 ];
 
+const PACK14B_CORE_FILES = [
+  'docs/product/VIONA_REQUEST_PACK14B_PRISMA_MIGRATION_HUMAN_APPROVAL_RECORD.md',
+  'src/config/vionaRequestPack14PrismaMigrationHumanApprovalReadiness.ts',
+  'scripts/viona-request-pack14-prisma-migration-human-approval-recording-check.mjs',
+  'docs/design/evidence/cursor-request-pack14b-prisma-migration-human-approval/README.md',
+];
+
+const POST_PACK14B_POINTER_TOKENS = [
+  'pack14HumanApprovalRecorded: true',
+  'pack14PrismaMigrationApproved: true',
+  'pack14PrismaMigrationApprovalRecordingOnly: true',
+  'pack14MigrationCreationMayBePlannedNext: true',
+  "pack14PrismaMigrationApprovalSource: 'human-chat-instruction'",
+  "pack14PrismaMigrationApprovedBy: 'Nong Si Buong'",
+  "pack14PrismaMigrationApprovalDate: '2026-06-15'",
+  'prismaMigrationPermitted: true',
+];
+
+function isPack14bRecorded() {
+  const configPath = 'src/config/vionaRequestPack14PrismaMigrationHumanApprovalReadiness.ts';
+  if (!existsSync(path.join(ROOT, configPath))) return false;
+  return read(configPath).includes('pack14HumanApprovalRecorded: true');
+}
+
+function augmentPointerTokensForPack14b(tokens, pack14bRecorded) {
+  if (!pack14bRecorded) return tokens;
+  const filtered = tokens.filter((token) => token !== 'prismaMigrationPermitted: false');
+  return [...filtered, ...POST_PACK14B_POINTER_TOKENS];
+}
+
+function augmentConfigTokensForPack14b(tokens, pack14bRecorded) {
+  if (!pack14bRecorded) return tokens;
+  const filtered = tokens.filter((token) => token !== 'prismaMigrationPermitted: false');
+  return [...filtered, 'prismaMigrationPermitted: true', ...POST_PACK14B_POINTER_TOKENS];
+}
+
 const POST_PACK13C_POINTER_TOKENS = [
   'pack13Started: true',
   'pack13SchemaOnlyImplementation: true',
@@ -72,6 +108,7 @@ function isPrismaDiffBlocked(pack13cActive, prismaChanged) {
 const ALLOWED_FILES = [
   ...PACK13C_CORE_FILES,
   ...PACK14A_CORE_FILES,
+  ...PACK14B_CORE_FILES,
   'docs/product/VIONA_REQUEST_DEDICATED_STORE_SCHEMA_DESIGN_CONTRACT.md',
   'src/domain/requests/vionaRequestDedicatedStoreSchemaDesignContract.ts',
   'src/config/vionaRequestDedicatedStoreSchemaDesignReadiness.ts',
@@ -374,6 +411,7 @@ function isSchemaDesignHumanApprovalRecorded() {
 
 function main() {
   const pack13cActive = isPack13cSchemaOnlyActive();
+  const pack14bRecorded = isPack14bRecorded();
   console.log('VIONA request dedicated store schema design contract check (Pack11)');
   console.log(
     'Schema-design contract only. No Prisma, migration, API, adapter, mutation, or Admin Debug data-source change.\n'
@@ -409,9 +447,11 @@ function main() {
 
   const missingDocPhrases = missingValues(docs, REQUIRED_DOC_PHRASES);
   const missingDomainTokens = missingValues(domain, REQUIRED_DOMAIN_TOKENS);
-  const configTokens = augmentConfigTokensForPack13c(requiredConfigTokens, pack13cActive);
+  let configTokens = augmentConfigTokensForPack13c(requiredConfigTokens, pack13cActive);
+  configTokens = augmentConfigTokensForPack14b(configTokens, pack14bRecorded);
   const missingConfigTokens = missingValues(config, configTokens);
-  const pointerTokens = augmentPointerTokensForPack13c(requiredPointerTokens, pack13cActive);
+  let pointerTokens = augmentPointerTokensForPack13c(requiredPointerTokens, pack13cActive);
+  pointerTokens = augmentPointerTokensForPack14b(pointerTokens, pack14bRecorded);
   const missingPointerTokens = missingValues(pointerCombined, pointerTokens);
   const forbiddenFields = FORBIDDEN_FIELD_TOKENS.filter((token) => domain.includes(token));
   const forbiddenLifecycle = FORBIDDEN_LIFECYCLE_NAMES.filter((name) => domain.includes(name));
