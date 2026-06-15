@@ -137,11 +137,21 @@ function matchesForbiddenDiff(file, pack13cActive) {
   return FORBIDDEN_DIFF_PATTERNS.some((pattern) => pattern.test(file));
 }
 
-function isPrismaDiffBlocked(pack13cActive, prismaChanged) {
+function isPrismaDiffBlocked(pack13cActive, pack14cActive, prismaChanged) {
   if (!prismaChanged) return false;
-  if (!pack13cActive) return true;
   const files = prismaChanged.split('\n').map((line) => line.replace(/\\/g, '/')).filter(Boolean);
-  return files.some((file) => file !== 'prisma/schema.prisma');
+  return files.some((file) => {
+    if (pack14cActive && isPack14cMigrationDiffFile(file)) return false;
+    if (pack13cActive && file === 'prisma/schema.prisma') return false;
+    return true;
+  });
+}
+
+function isMigrationsDiffBlocked(pack14cActive, migrationsChanged) {
+  if (!migrationsChanged) return false;
+  if (!pack14cActive) return true;
+  const files = migrationsChanged.split('\n').map((line) => line.replace(/\\/g, '/')).filter(Boolean);
+  return files.some((file) => !isPack14cMigrationDiffFile(file));
 }
 
 const PACK13B_CORE_FILES = [
@@ -501,10 +511,12 @@ function main() {
   if (unexpectedFiles.length) fail('unexpected files changed', unexpectedFiles);
   if (forbiddenFiles.length) fail('forbidden paths changed', forbiddenFiles);
   if (appChanged) fail('App.tsx changed vs origin/master', [appChanged]);
-  if (isPrismaDiffBlocked(pack13cActive, prismaChanged)) {
+  if (isPrismaDiffBlocked(pack13cActive, pack14cActive, prismaChanged)) {
     fail('prisma changed vs origin/master', [prismaChanged.split('\n')[0] || 'prisma/']);
   }
-  if (migrationsChanged) fail('migrations changed vs origin/master', [migrationsChanged.split('\n')[0] || 'prisma/migrations']);
+  if (isMigrationsDiffBlocked(pack14cActive, migrationsChanged)) {
+    fail('migrations changed vs origin/master', [migrationsChanged.split('\n')[0] || 'prisma/migrations']);
+  }
   if (serverChanged) fail('src/server.ts changed vs origin/master', [serverChanged]);
   if (typesChanged) fail('vionaRequestTypes.ts changed vs origin/master', [typesChanged]);
   if (missingDocPhrases.length) fail('missing approval record doc requirements', missingDocPhrases);
