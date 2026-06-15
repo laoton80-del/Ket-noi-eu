@@ -44,6 +44,10 @@ export type VionaRequestSotHumanApprovalReadiness = Readonly<{
   recommendedSourceOfTruthOptionId: 'dedicatedVionaRequestStore';
   pack11DiscoveryPermitted: true;
   pack11SchemaDesignContractOnly: true;
+  /** Pack11 pointer — dedicated store schema design contract active; review required. */
+  pack11DedicatedStoreSchemaDesignContractActive: boolean;
+  schemaDesignContractCreated: boolean;
+  schemaDesignReviewRequired: boolean;
   agentMayFlipSignoff: false;
   pack11Started: false;
   schemaDesignApproved: false;
@@ -153,6 +157,9 @@ export const VIONA_REQUEST_SOT_HUMAN_APPROVAL_READINESS = {
   recommendedSourceOfTruthOptionId: 'dedicatedVionaRequestStore',
   pack11DiscoveryPermitted: true,
   pack11SchemaDesignContractOnly: true,
+  pack11DedicatedStoreSchemaDesignContractActive: true,
+  schemaDesignContractCreated: true,
+  schemaDesignReviewRequired: true,
   agentMayFlipSignoff: false,
   pack11Started: false,
   schemaDesignApproved: false,

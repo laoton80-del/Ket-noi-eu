@@ -75,6 +75,10 @@ export type VionaRequestSourceOfTruthAuthTenantReadiness = Readonly<{
   pack11DiscoveryPermitted: boolean;
   pack11SchemaDesignContractOnly: boolean;
   pack11Started: false;
+  /** Pack11 pointer — dedicated store schema design contract. */
+  pack11DedicatedStoreSchemaDesignContractActive: boolean;
+  schemaDesignContractCreated: boolean;
+  schemaDesignReviewRequired: boolean;
   sourceOfTruthDecisionSignedOff: true;
   authSessionSourceOfTruthApproved: boolean;
   tenantAccessMatrixApproved: boolean;
@@ -252,6 +256,9 @@ export const VIONA_REQUEST_SOURCE_OF_TRUTH_AUTH_TENANT_READINESS = {
   pack11DiscoveryPermitted: true,
   pack11SchemaDesignContractOnly: true,
   pack11Started: false,
+  pack11DedicatedStoreSchemaDesignContractActive: true,
+  schemaDesignContractCreated: true,
+  schemaDesignReviewRequired: true,
   sourceOfTruthDecisionSignedOff: true,
   authSessionSourceOfTruthApproved: false,
   tenantAccessMatrixApproved: false,
