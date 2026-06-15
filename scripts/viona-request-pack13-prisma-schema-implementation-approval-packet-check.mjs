@@ -14,6 +14,13 @@ const PACK13C_CORE_FILES = [
   'docs/design/evidence/cursor-request-pack13c-prisma-schema-implementation-schema-only/README.md',
 ];
 
+const PACK14A_CORE_FILES = [
+  'docs/product/VIONA_REQUEST_PACK14A_PRISMA_MIGRATION_READINESS_APPROVAL_PACKET.md',
+  'src/config/vionaRequestPack14PrismaMigrationReadinessApprovalPacket.ts',
+  'scripts/viona-request-pack14-prisma-migration-readiness-approval-packet-check.mjs',
+  'docs/design/evidence/cursor-request-pack14a-prisma-migration-readiness-approval-packet/README.md',
+];
+
 const POST_PACK13C_POINTER_TOKENS = [
   'pack13Started: true',
   'pack13SchemaOnlyImplementation: true',
@@ -109,10 +116,12 @@ const GATE_SCRIPT_FILES = [
   'scripts/viona-request-inbox-readonly-check.mjs',
   'scripts/viona-request-inbox-reference-lab-check.mjs',
   'scripts/viona-request-inbox-operator-reference-lab-check.mjs',
+  'scripts/viona-request-pack14-prisma-migration-readiness-approval-packet-check.mjs',
 ];
 
 const ALLOWED_FILES = [
   ...PACK13C_CORE_FILES,
+  ...PACK14A_CORE_FILES,
   ...PACK13B_CORE_FILES,
   ...PACK13A_CORE_FILES,
   ...PACK12_CORE_FILES,

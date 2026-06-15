@@ -83,6 +83,13 @@ export type VionaOperatorInboxAdminReadiness = Readonly<{
   pack13Started: true;
   pack13SchemaOnlyImplementation: true;
   vionaRequestPrismaModelsAdded: true;
+  pack14MigrationReadinessApprovalPacketActive: true;
+  pack14MigrationApprovalPacketPrepared: true;
+  pack14HumanApprovalRequired: true;
+  pack14MigrationPlanningReadyForHumanReview: true;
+  pack14HumanApprovalRecorded: false;
+  pack14PrismaMigrationApproved: false;
+
   prismaSchemaPermitted: true;
   prismaSchemaActive: true;
   pack12Started: false;
@@ -222,6 +229,13 @@ export const VIONA_OPERATOR_INBOX_ADMIN_READINESS = {
   pack13Started: true,
   pack13SchemaOnlyImplementation: true,
   vionaRequestPrismaModelsAdded: true,
+  pack14MigrationReadinessApprovalPacketActive: true,
+  pack14MigrationApprovalPacketPrepared: true,
+  pack14HumanApprovalRequired: true,
+  pack14MigrationPlanningReadyForHumanReview: true,
+  pack14HumanApprovalRecorded: false,
+  pack14PrismaMigrationApproved: false,
+
   prismaSchemaPermitted: true,
   prismaSchemaActive: true,
   pack12Started: false,

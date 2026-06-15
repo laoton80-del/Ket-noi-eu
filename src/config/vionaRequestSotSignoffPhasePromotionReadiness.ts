@@ -74,6 +74,13 @@ export type VionaRequestSotSignoffPhasePromotionReadiness = Readonly<{
   pack13Started: true;
   pack13SchemaOnlyImplementation: true;
   vionaRequestPrismaModelsAdded: true;
+  pack14MigrationReadinessApprovalPacketActive: true;
+  pack14MigrationApprovalPacketPrepared: true;
+  pack14HumanApprovalRequired: true;
+  pack14MigrationPlanningReadyForHumanReview: true;
+  pack14HumanApprovalRecorded: false;
+  pack14PrismaMigrationApproved: false;
+
   prismaSchemaPermitted: true;
   pack12Started: false;
   signOffStatus: 'approved';
@@ -232,6 +239,13 @@ export const VIONA_REQUEST_SOT_SIGNOFF_PHASE_PROMOTION_READINESS = {
   pack13Started: true,
   pack13SchemaOnlyImplementation: true,
   vionaRequestPrismaModelsAdded: true,
+  pack14MigrationReadinessApprovalPacketActive: true,
+  pack14MigrationApprovalPacketPrepared: true,
+  pack14HumanApprovalRequired: true,
+  pack14MigrationPlanningReadyForHumanReview: true,
+  pack14HumanApprovalRecorded: false,
+  pack14PrismaMigrationApproved: false,
+
   prismaSchemaPermitted: true,
   pack12Started: false,
   signOffStatus: 'approved',

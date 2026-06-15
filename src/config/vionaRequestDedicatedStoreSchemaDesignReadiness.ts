@@ -57,6 +57,13 @@ export type VionaRequestDedicatedStoreSchemaDesignReadiness = Readonly<{
   pack13Started: true;
   pack13SchemaOnlyImplementation: true;
   vionaRequestPrismaModelsAdded: true;
+  pack14MigrationReadinessApprovalPacketActive: true;
+  pack14MigrationApprovalPacketPrepared: true;
+  pack14HumanApprovalRequired: true;
+  pack14MigrationPlanningReadyForHumanReview: true;
+  pack14HumanApprovalRecorded: false;
+  pack14PrismaMigrationApproved: false;
+
   pack12Started: false;
   prismaSchemaPermitted: true;
   prismaMigrationPermitted: false;
@@ -189,6 +196,13 @@ export const VIONA_REQUEST_DEDICATED_STORE_SCHEMA_DESIGN_READINESS = {
   pack13Started: true,
   pack13SchemaOnlyImplementation: true,
   vionaRequestPrismaModelsAdded: true,
+  pack14MigrationReadinessApprovalPacketActive: true,
+  pack14MigrationApprovalPacketPrepared: true,
+  pack14HumanApprovalRequired: true,
+  pack14MigrationPlanningReadyForHumanReview: true,
+  pack14HumanApprovalRecorded: false,
+  pack14PrismaMigrationApproved: false,
+
   pack12Started: false,
   prismaSchemaPermitted: true,
   prismaMigrationPermitted: false,
