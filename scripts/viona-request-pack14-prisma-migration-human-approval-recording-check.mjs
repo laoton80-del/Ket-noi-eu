@@ -12,6 +12,43 @@ const PACK14B_CORE_FILES = [
   'scripts/viona-request-pack14-prisma-migration-human-approval-recording-check.mjs',
   'docs/design/evidence/cursor-request-pack14b-prisma-migration-human-approval/README.md',
 ];
+const PACK14C_CORE_FILES = [
+  'docs/product/VIONA_REQUEST_PACK14C_PRISMA_MIGRATION_CREATION_ONLY.md',
+  'src/config/vionaRequestPack14CPrismaMigrationCreationReadiness.ts',
+  'scripts/viona-request-pack14c-prisma-migration-creation-check.mjs',
+  'docs/design/evidence/cursor-request-pack14c-prisma-migration-creation-only/README.md',
+  'prisma/migrations/20260615120000_add_viona_request_models/migration.sql',
+];
+
+const POST_PACK14C_POINTER_TOKENS = [
+  'pack14MigrationCreationOnly: true',
+  'prismaMigrationActive: true',
+  'migrationCreated: true',
+  'dbApplied: false',
+];
+
+function isPack14cMigrationCreated() {
+  const configPath = 'src/config/vionaRequestPack14CPrismaMigrationCreationReadiness.ts';
+  if (!existsSync(path.join(ROOT, configPath))) return false;
+  return read(configPath).includes('migrationCreated: true');
+}
+
+function augmentPointerTokensForPack14c(tokens, pack14cActive) {
+  if (!pack14cActive) return tokens;
+  const filtered = tokens.filter(
+    (token) => token !== 'prismaMigrationActive: false' && token !== 'migrationCreated: false'
+  );
+  return [...filtered, ...POST_PACK14C_POINTER_TOKENS];
+}
+
+function augmentConfigTokensForPack14c(tokens, pack14cActive) {
+  return augmentPointerTokensForPack14c(tokens, pack14cActive);
+}
+
+function isPack14cMigrationDiffFile(file) {
+  return /^prisma\/migrations\/\d+_add_viona_request_models\/migration\.sql$/.test(file);
+}
+
 
 const PACK14A_CORE_FILES = [
   'docs/product/VIONA_REQUEST_PACK14A_PRISMA_MIGRATION_READINESS_APPROVAL_PACKET.md',
@@ -87,6 +124,7 @@ const GATE_SCRIPT_FILES = [
 
 const ALLOWED_FILES = [
   ...PACK14B_CORE_FILES,
+  ...PACK14C_CORE_FILES,
   ...PACK14A_CORE_FILES,
   ...PACK13C_CORE_FILES,
   ...PACK13B_CORE_FILES,
@@ -306,14 +344,17 @@ function findUnsafeStandaloneClaims(paths) {
 }
 
 function main() {
+  const pack14cActive = isPack14cMigrationCreated();
   console.log('VIONA request Pack14B Prisma migration human approval recording check');
   console.log('Recording-only pack. Human approval recorded. No migration, DB apply, API, adapter, mutation, or runtime.\n');
 
   const missingFiles = REQUIRED_FILES.filter((relPath) => !existsSync(path.join(ROOT, relPath)));
   const changedFiles = getChangedFiles();
-  const unexpectedFiles = changedFiles.filter((file) => !ALLOWED_FILES.includes(file));
-  const forbiddenFiles = changedFiles.filter((file) =>
-    FORBIDDEN_DIFF_PATTERNS.some((pattern) => pattern.test(file))
+  const unexpectedFiles = changedFiles.filter((file) => !ALLOWED_FILES.includes(file) && !isPack14cMigrationDiffFile(file));
+  const forbiddenFiles = changedFiles.filter(
+    (file) =>
+      !isPack14cMigrationDiffFile(file) &&
+      FORBIDDEN_DIFF_PATTERNS.some((pattern) => pattern.test(file))
   );
 
   const approvalDoc = read('docs/product/VIONA_REQUEST_PACK14B_PRISMA_MIGRATION_HUMAN_APPROVAL_RECORD.md');
@@ -339,8 +380,10 @@ function main() {
   const typesChanged = run('git diff --name-only origin/master..HEAD -- src/domain/requests/vionaRequestTypes.ts');
 
   const missingDocPhrases = missingValues(approvalDoc, REQUIRED_DOC_PHRASES);
-  const missingConfigTokens = missingValues(approvalConfig, REQUIRED_CONFIG_TOKENS);
-  const missingPointerTokens = missingValues(pointerCombined, REQUIRED_POINTER_TOKENS);
+  let configTokens = augmentConfigTokensForPack14c(REQUIRED_CONFIG_TOKENS, pack14cActive);
+  const missingConfigTokens = missingValues(approvalConfig, configTokens);
+  let pointerTokens = augmentPointerTokensForPack14c(REQUIRED_POINTER_TOKENS, pack14cActive);
+  const missingPointerTokens = missingValues(pointerCombined, pointerTokens);
   const unsafeClaims = findUnsafeStandaloneClaims([
     'docs/product/VIONA_REQUEST_PACK14B_PRISMA_MIGRATION_HUMAN_APPROVAL_RECORD.md',
     'src/config/vionaRequestPack14PrismaMigrationHumanApprovalReadiness.ts',
@@ -379,8 +422,8 @@ function main() {
   if (unexpectedFiles.length) fail('unexpected changed files (scope drift)', unexpectedFiles);
   if (forbiddenFiles.length) fail('forbidden changed files', forbiddenFiles);
   if (appChanged) fail('App.tsx must not change', [appChanged]);
-  if (prismaChanged) fail('prisma/ must not change in Pack14B', prismaChanged.split('\n'));
-  if (migrationsChanged) fail('prisma/migrations/ must not be added in Pack14B', migrationsChanged.split('\n'));
+  if (prismaChanged && !pack14cActive) fail('prisma/ must not change in Pack14B', prismaChanged.split('\n'));
+  if (migrationsChanged && !pack14cActive) fail('prisma/migrations/ must not be added in Pack14B', migrationsChanged.split('\n'));
   if (serverChanged) fail('src/server.ts must not change', [serverChanged]);
   if (typesChanged) fail('vionaRequestTypes.ts must not change', [typesChanged]);
   if (missingDocPhrases.length) fail('approval record doc missing required phrases', missingDocPhrases);
@@ -391,8 +434,8 @@ function main() {
   if (!humanApprovalRecorded) fail('pack14HumanApprovalRecorded must be true', ['pack14HumanApprovalRecorded: false']);
   if (!migrationApproved) fail('pack14PrismaMigrationApproved must be true', ['pack14PrismaMigrationApproved: false']);
   if (!migrationPermitted) fail('prismaMigrationPermitted must be true for future Pack14C', ['prismaMigrationPermitted: false']);
-  if (migrationActive) fail('prismaMigrationActive must remain false', ['prismaMigrationActive: true']);
-  if (migrationCreated) fail('migrationCreated must remain false', ['migrationCreated: true']);
+  if (migrationActive && !pack14cActive) fail('prismaMigrationActive must remain false', ['prismaMigrationActive: true']);
+  if (migrationCreated && !pack14cActive) fail('migrationCreated must remain false', ['migrationCreated: true']);
   if (dbApplied) fail('dbApplied must remain false', ['dbApplied: true']);
   if (apiPermitted) fail('API/adapter must remain unauthorized', ['API/adapter permitted']);
   if (mutationPermitted) fail('mutation must remain unauthorized', ['requestMutationPermitted: true']);

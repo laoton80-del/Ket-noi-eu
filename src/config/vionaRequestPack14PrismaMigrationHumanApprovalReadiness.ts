@@ -50,11 +50,12 @@ export type VionaRequestPack14PrismaMigrationHumanApprovalReadiness = Readonly<{
   pack14PrismaMigrationApprovedBy: 'Nong Si Buong';
   pack14PrismaMigrationApproverRole: 'Founder / Executive Sponsor + Acting Principal Architect';
   pack14PrismaMigrationApprovalDate: '2026-06-15';
+  pack14MigrationCreationOnly: true;
   pack14PrismaMigrationApprovalDecision: 'approved';
   prismaMigrationPermitted: true;
-  migrationCreated: false;
+  migrationCreated: true;
   dbApplied: false;
-  prismaMigrationActive: false;
+  prismaMigrationActive: true;
   readOnlyApiPermitted: false;
   persistenceAdapterPermitted: false;
   requestMutationPermitted: false;
@@ -174,11 +175,12 @@ export const VIONA_REQUEST_PACK14_PRISMA_MIGRATION_HUMAN_APPROVAL_READINESS = {
   pack14PrismaMigrationApprovedBy: 'Nong Si Buong',
   pack14PrismaMigrationApproverRole: 'Founder / Executive Sponsor + Acting Principal Architect',
   pack14PrismaMigrationApprovalDate: '2026-06-15',
+  pack14MigrationCreationOnly: true,
   pack14PrismaMigrationApprovalDecision: 'approved',
   prismaMigrationPermitted: true,
-  migrationCreated: false,
+  migrationCreated: true,
   dbApplied: false,
-  prismaMigrationActive: false,
+  prismaMigrationActive: true,
   readOnlyApiPermitted: false,
   persistenceAdapterPermitted: false,
   requestMutationPermitted: false,

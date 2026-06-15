@@ -19,6 +19,43 @@ const PACK14B_CORE_FILES = [
   'scripts/viona-request-pack14-prisma-migration-human-approval-recording-check.mjs',
   'docs/design/evidence/cursor-request-pack14b-prisma-migration-human-approval/README.md',
 ];
+const PACK14C_CORE_FILES = [
+  'docs/product/VIONA_REQUEST_PACK14C_PRISMA_MIGRATION_CREATION_ONLY.md',
+  'src/config/vionaRequestPack14CPrismaMigrationCreationReadiness.ts',
+  'scripts/viona-request-pack14c-prisma-migration-creation-check.mjs',
+  'docs/design/evidence/cursor-request-pack14c-prisma-migration-creation-only/README.md',
+  'prisma/migrations/20260615120000_add_viona_request_models/migration.sql',
+];
+
+const POST_PACK14C_POINTER_TOKENS = [
+  'pack14MigrationCreationOnly: true',
+  'prismaMigrationActive: true',
+  'migrationCreated: true',
+  'dbApplied: false',
+];
+
+function isPack14cMigrationCreated() {
+  const configPath = 'src/config/vionaRequestPack14CPrismaMigrationCreationReadiness.ts';
+  if (!existsSync(path.join(ROOT, configPath))) return false;
+  return read(configPath).includes('migrationCreated: true');
+}
+
+function augmentPointerTokensForPack14c(tokens, pack14cActive) {
+  if (!pack14cActive) return tokens;
+  const filtered = tokens.filter(
+    (token) => token !== 'prismaMigrationActive: false' && token !== 'migrationCreated: false'
+  );
+  return [...filtered, ...POST_PACK14C_POINTER_TOKENS];
+}
+
+function augmentConfigTokensForPack14c(tokens, pack14cActive) {
+  return augmentPointerTokensForPack14c(tokens, pack14cActive);
+}
+
+function isPack14cMigrationDiffFile(file) {
+  return /^prisma\/migrations\/\d+_add_viona_request_models\/migration\.sql$/.test(file);
+}
+
 
 const POST_PACK14B_APPROVAL_POINTER_TOKENS = [
   'pack14MigrationReadinessApprovalPacketActive: true',
@@ -113,6 +150,7 @@ const GATE_SCRIPT_FILES = [
 const ALLOWED_FILES = [
   ...PACK14A_CORE_FILES,
   ...PACK14B_CORE_FILES,
+  ...PACK14C_CORE_FILES,
   ...PACK13C_CORE_FILES,
   ...PACK13B_CORE_FILES,
   ...PACK13A_CORE_FILES,
@@ -383,18 +421,23 @@ function findUnsafeStandaloneClaims(paths) {
 
 function main() {
   const pack14bRecorded = isPack14bRecorded();
+  const pack14cActive = isPack14cMigrationCreated();
   console.log('VIONA request Pack14A Prisma migration readiness approval packet check');
   console.log(
-    pack14bRecorded
-      ? 'Pack14B human approval recorded. Pack14A packet doc remains historical blank/pending.\n'
-      : 'Migration readiness / approval packet only. No migration, DB apply, API, adapter, mutation, or runtime.\n'
+    pack14cActive
+      ? 'Pack14C migration files created. Pack14A packet doc remains historical blank/pending.\n'
+      : pack14bRecorded
+        ? 'Pack14B human approval recorded. Pack14A packet doc remains historical blank/pending.\n'
+        : 'Migration readiness / approval packet only. No migration, DB apply, API, adapter, mutation, or runtime.\n'
   );
 
   const missingFiles = REQUIRED_FILES.filter((relPath) => !existsSync(path.join(ROOT, relPath)));
   const changedFiles = getChangedFiles();
-  const unexpectedFiles = changedFiles.filter((file) => !ALLOWED_FILES.includes(file));
-  const forbiddenFiles = changedFiles.filter((file) =>
-    FORBIDDEN_DIFF_PATTERNS.some((pattern) => pattern.test(file))
+  const unexpectedFiles = changedFiles.filter((file) => !ALLOWED_FILES.includes(file) && !isPack14cMigrationDiffFile(file));
+  const forbiddenFiles = changedFiles.filter(
+    (file) =>
+      !isPack14cMigrationDiffFile(file) &&
+      FORBIDDEN_DIFF_PATTERNS.some((pattern) => pattern.test(file))
   );
 
   const packetDoc = read(
@@ -417,12 +460,12 @@ function main() {
 
   const missingDocPhrases = missingValues(packetDoc, REQUIRED_DOC_PHRASES);
   const forbiddenDocPhrases = FORBIDDEN_DOC_PHRASES.filter((phrase) => packetDoc.includes(phrase));
-  const missingConfigTokens = missingValues(
-    config,
-    pack14bRecorded ? POST_APPROVAL_REQUIRED_CONFIG_TOKENS : REQUIRED_CONFIG_TOKENS
-  );
-  const pointerTokens = pack14bRecorded ? POST_PACK14B_APPROVAL_POINTER_TOKENS : REQUIRED_POINTER_TOKENS;
+  let configTokens = pack14bRecorded ? POST_APPROVAL_REQUIRED_CONFIG_TOKENS : REQUIRED_CONFIG_TOKENS;
+  configTokens = augmentConfigTokensForPack14c(configTokens, pack14cActive);
+  let pointerTokens = pack14bRecorded ? POST_PACK14B_APPROVAL_POINTER_TOKENS : REQUIRED_POINTER_TOKENS;
+  pointerTokens = augmentPointerTokensForPack14c(pointerTokens, pack14cActive);
   const forbiddenPointerTokens = pack14bRecorded ? [] : FORBIDDEN_POINTER_TOKENS;
+  const missingConfigTokens = missingValues(config, configTokens);
   const missingPointerTokens = missingValues(pointerCombined, pointerTokens);
   const forbiddenPointerHits = forbiddenPointerTokens.filter((token) =>
     pointerCombined.includes(token)
@@ -436,8 +479,10 @@ function main() {
   if (missingFiles.length) fail('missing required Pack14A files', missingFiles);
   if (unexpectedFiles.length) fail('unexpected changed files (scope drift)', unexpectedFiles);
   if (forbiddenFiles.length) fail('forbidden changed files', forbiddenFiles);
-  if (prismaChanged) fail('prisma/ must not change in Pack14A', prismaChanged.split('\n'));
-  if (migrationsAdded) fail('prisma/migrations/ must not be added in Pack14A', migrationsAdded.split('\n'));
+  if (prismaChanged && !pack14cActive) fail('prisma/ must not change in Pack14A', prismaChanged.split('\n'));
+  if (migrationsAdded && !pack14cActive) {
+    fail('prisma/migrations/ must not be added in Pack14A', migrationsAdded.split('\n'));
+  }
   if (missingPrismaModels.length)
     fail('six VionaRequest* models must exist on master (grep schema.prisma)', missingPrismaModels);
   if (missingDocPhrases.length) fail('product doc missing required phrases', missingDocPhrases);

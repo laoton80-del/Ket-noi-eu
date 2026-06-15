@@ -49,11 +49,12 @@ export type VionaRequestPack13CPrismaSchemaImplementationReadiness = Readonly<{
   pack14PrismaMigrationApprovalSource: 'human-chat-instruction';
   pack14PrismaMigrationApprovedBy: 'Nong Si Buong';
   pack14PrismaMigrationApprovalDate: '2026-06-15';
+  pack14MigrationCreationOnly: true;
 
-  migrationCreated: false;
+  migrationCreated: true;
   dbApplied: false;
   prismaMigrationPermitted: true;
-  prismaMigrationActive: false;
+  prismaMigrationActive: true;
   readOnlyApiPermitted: false;
   persistenceAdapterPermitted: false;
   requestMutationPermitted: false;
@@ -168,11 +169,12 @@ export const VIONA_REQUEST_PACK13C_PRISMA_SCHEMA_IMPLEMENTATION_READINESS = {
   pack14PrismaMigrationApprovalSource: 'human-chat-instruction',
   pack14PrismaMigrationApprovedBy: 'Nong Si Buong',
   pack14PrismaMigrationApprovalDate: '2026-06-15',
+  pack14MigrationCreationOnly: true,
 
-  migrationCreated: false,
+  migrationCreated: true,
   dbApplied: false,
   prismaMigrationPermitted: true,
-  prismaMigrationActive: false,
+  prismaMigrationActive: true,
   readOnlyApiPermitted: false,
   persistenceAdapterPermitted: false,
   requestMutationPermitted: false,
