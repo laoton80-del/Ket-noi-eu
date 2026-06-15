@@ -95,6 +95,13 @@ const PACK10B_SOT_SIGNOFF_TEMPLATE_DIFF_FILES = [
   'docs/design/evidence/cursor-request-sot-signoff-template-pack10b/README.md',
 ];
 
+const PACK10C_SOT_HUMAN_APPROVAL_DIFF_FILES = [
+  'docs/product/VIONA_REQUEST_SOT_HUMAN_APPROVAL_RECORD.md',
+  'src/config/vionaRequestSotHumanApprovalReadiness.ts',
+  'scripts/viona-request-sot-human-approval-recording-check.mjs',
+  'docs/design/evidence/cursor-request-sot-human-approval-pack10c/README.md',
+];
+
 const ALLOWED_DIFF_FILES = [
   ...PACK2_ALLOWED_DIFF_FILES,
   ...GATED_REFERENCE_LAB_PREVIEW_DIFF_FILES,
@@ -105,6 +112,7 @@ const ALLOWED_DIFF_FILES = [
   ...PACK9_SOT_SIGNOFF_PHASE_PROMOTION_DIFF_FILES,
   ...PACK10_FOUNDER_ARCHITECT_SIGNOFF_PACKET_DIFF_FILES,
   ...PACK10B_SOT_SIGNOFF_TEMPLATE_DIFF_FILES,
+  ...PACK10C_SOT_HUMAN_APPROVAL_DIFF_FILES,
 ];
 
 const REQUIRED_FILES = PACK2_ALLOWED_DIFF_FILES;

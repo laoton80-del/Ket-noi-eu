@@ -39,14 +39,19 @@ export type VionaRequestSotSignoffPhasePromotionReadiness = Readonly<{
   masterBaselinePr: '#63';
   currentPhaseId: 'sotSignoffPhasePromotionReadinessContract';
   sotSignoffReadinessContractActive: boolean;
-  /** Pack10 pointer — founder/architect sign-off packet prepared; sign-off remains false. */
+  /** Pack10 pointer — founder/architect sign-off packet prepared. */
   founderArchitectSignoffPacketActive: boolean;
-  signOffStatus: 'pending';
-  sourceOfTruthDecisionSignedOff: false;
-  selectedSourceOfTruthOptionId: null;
+  /** Pack10C pointer — offline human approval recorded; Pack11 discovery only. */
+  humanApprovalRecordActive: boolean;
+  pack11DiscoveryPermitted: boolean;
+  pack11SchemaDesignContractOnly: boolean;
+  pack11Started: false;
+  signOffStatus: 'approved';
+  sourceOfTruthDecisionSignedOff: true;
+  selectedSourceOfTruthOptionId: 'dedicatedVionaRequestStore';
   recommendedSourceOfTruthOptionId: 'dedicatedVionaRequestStore';
-  founderSignoffRecorded: false;
-  architectSignoffRecorded: false;
+  founderSignoffRecorded: true;
+  architectSignoffRecorded: true;
   authSessionSourceOfTruthApproved: false;
   tenantAccessMatrixApprovedForLiveApi: false;
   operatorPolicyResolved: false;
@@ -167,12 +172,16 @@ export const VIONA_REQUEST_SOT_SIGNOFF_PHASE_PROMOTION_READINESS = {
   currentPhaseId: 'sotSignoffPhasePromotionReadinessContract',
   sotSignoffReadinessContractActive: true,
   founderArchitectSignoffPacketActive: true,
-  signOffStatus: 'pending',
-  sourceOfTruthDecisionSignedOff: false,
-  selectedSourceOfTruthOptionId: null,
+  humanApprovalRecordActive: true,
+  pack11DiscoveryPermitted: true,
+  pack11SchemaDesignContractOnly: true,
+  pack11Started: false,
+  signOffStatus: 'approved',
+  sourceOfTruthDecisionSignedOff: true,
+  selectedSourceOfTruthOptionId: 'dedicatedVionaRequestStore',
   recommendedSourceOfTruthOptionId: 'dedicatedVionaRequestStore',
-  founderSignoffRecorded: false,
-  architectSignoffRecorded: false,
+  founderSignoffRecorded: true,
+  architectSignoffRecorded: true,
   authSessionSourceOfTruthApproved: false,
   tenantAccessMatrixApprovedForLiveApi: false,
   operatorPolicyResolved: false,
@@ -190,7 +199,7 @@ export const VIONA_REQUEST_SOT_SIGNOFF_PHASE_PROMOTION_READINESS = {
   phasePromotionStages: VIONA_REQUEST_PHASE_PROMOTION_STAGES,
   requiredSafeCopy: [
     'Source-of-truth sign-off phase promotion readiness contract',
-    'Sign-off status pending',
+    'Human approval recorded — Pack11 discovery only',
     'Fixture-only Admin Debug preview remains unchanged',
     'API and persistence are future gates',
     'No database schema or migration in this pack',

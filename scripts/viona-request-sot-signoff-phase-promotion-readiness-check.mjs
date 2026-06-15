@@ -29,6 +29,10 @@ const ALLOWED_FILES = [
   'docs/design/evidence/cursor-request-sot-signoff-packet-pack10/README.md',
   'docs/product/VIONA_REQUEST_SOT_HUMAN_SIGNOFF_TEMPLATE.md',
   'docs/design/evidence/cursor-request-sot-signoff-template-pack10b/README.md',
+  'docs/product/VIONA_REQUEST_SOT_HUMAN_APPROVAL_RECORD.md',
+  'src/config/vionaRequestSotHumanApprovalReadiness.ts',
+  'scripts/viona-request-sot-human-approval-recording-check.mjs',
+  'docs/design/evidence/cursor-request-sot-human-approval-pack10c/README.md',
 ];
 
 const REQUIRED_FILES = [
@@ -83,7 +87,7 @@ const REQUIRED_DOC_PHRASES = [
   'sourceOfTruthDecisionSignedOff: false',
 ];
 
-const REQUIRED_CONFIG_TOKENS = [
+const REQUIRED_CONFIG_TOKENS_PENDING = [
   'export const VIONA_REQUEST_SOT_SIGNOFF_PHASE_PROMOTION_READINESS',
   'export const VIONA_REQUEST_SOT_SIGNOFF_CHECKLIST',
   'export { VIONA_REQUEST_PHASE_PROMOTION_STAGES }',
@@ -108,6 +112,36 @@ const REQUIRED_CONFIG_TOKENS = [
   'adminDebugUsesFixturesOnly: true',
   'agentMayFlipSignoff: false',
 ];
+
+const REQUIRED_CONFIG_TOKENS_APPROVED = [
+  'export const VIONA_REQUEST_SOT_SIGNOFF_PHASE_PROMOTION_READINESS',
+  'export const VIONA_REQUEST_SOT_SIGNOFF_CHECKLIST',
+  'export { VIONA_REQUEST_PHASE_PROMOTION_STAGES }',
+  'export function getVionaRequestSotSignoffPhasePromotionReadiness',
+  'export function isVionaRequestSotSignoffPromotionBlocked',
+  'sotSignoffReadinessContractActive: true',
+  'founderArchitectSignoffPacketActive: true',
+  'humanApprovalRecordActive: true',
+  'pack11DiscoveryPermitted: true',
+  'pack11SchemaDesignContractOnly: true',
+  'pack11Started: false',
+  "signOffStatus: 'approved'",
+  'sourceOfTruthDecisionSignedOff: true',
+  "selectedSourceOfTruthOptionId: 'dedicatedVionaRequestStore'",
+  'founderSignoffRecorded: true',
+  'architectSignoffRecorded: true',
+  'operatorRoleAddedToAuth: false',
+  'schemaDesignApproved: false',
+  'persistenceApiActive: false',
+  'prismaSchemaActive: false',
+  'auditLogActive: false',
+  'requestMutationActive: false',
+  'productionLiveOpsActive: false',
+  'adminDebugUsesFixturesOnly: true',
+  'agentMayFlipSignoff: false',
+];
+
+const REQUIRED_CONFIG_TOKENS = REQUIRED_CONFIG_TOKENS_PENDING;
 
 const REQUIRED_PHASE_CONTRACT_TOKENS = [
   'VionaRequestPhasePromotionStage',
@@ -143,12 +177,22 @@ const REQUIRED_FIELD_MANIFEST_TOKENS = [
   'idempotencyKey',
 ];
 
-const REQUIRED_PACK8_POINTER_TOKENS = [
+const REQUIRED_PACK8_POINTER_TOKENS_PENDING = [
   'sotSignoffPhasePromotionReadinessContractActive: true',
   'founderArchitectSignoffPacketActive: true',
   'sourceOfTruthDecisionSignedOff: false',
   'persistenceApiActive: false',
 ];
+
+const REQUIRED_PACK8_POINTER_TOKENS_APPROVED = [
+  'sotSignoffPhasePromotionReadinessContractActive: true',
+  'founderArchitectSignoffPacketActive: true',
+  'humanApprovalRecordActive: true',
+  'sourceOfTruthDecisionSignedOff: true',
+  'persistenceApiActive: false',
+];
+
+const REQUIRED_PACK8_POINTER_TOKENS = REQUIRED_PACK8_POINTER_TOKENS_PENDING;
 
 const REQUIRED_PERSISTENCE_POINTER_TOKENS = [
   'sotSignoffPhasePromotionReadinessContractActive: true',
@@ -260,11 +304,24 @@ function findUnsafeStandaloneClaims(paths) {
   return [...new Set(hits)];
 }
 
+function isHumanApprovalRecorded() {
+  const rel = 'src/config/vionaRequestSotHumanApprovalReadiness.ts';
+  return existsSync(path.join(ROOT, rel)) && read(rel).includes('humanApprovalRecorded: true');
+}
+
 function main() {
   console.log('VIONA request SoT sign-off phase promotion readiness check (Pack9)');
   console.log(
     'Docs/config/domain contracts only. No API, DB, Prisma migration, adapter, sign-off flip, or Admin Debug data-source change.\n'
   );
+
+  const humanApprovalRecorded = isHumanApprovalRecorded();
+  const requiredConfigTokens = humanApprovalRecorded
+    ? REQUIRED_CONFIG_TOKENS_APPROVED
+    : REQUIRED_CONFIG_TOKENS_PENDING;
+  const requiredPack8Tokens = humanApprovalRecorded
+    ? REQUIRED_PACK8_POINTER_TOKENS_APPROVED
+    : REQUIRED_PACK8_POINTER_TOKENS_PENDING;
 
   const missingFiles = REQUIRED_FILES.filter((relPath) => !existsSync(path.join(ROOT, relPath)));
   const changedFiles = getChangedFiles();
@@ -290,10 +347,10 @@ function main() {
 
   const missingSafeCopy = missingValues(combined, REQUIRED_SAFE_COPY);
   const missingDocPhrases = missingValues(docs, REQUIRED_DOC_PHRASES);
-  const missingConfigTokens = missingValues(config, REQUIRED_CONFIG_TOKENS);
+  const missingConfigTokens = missingValues(config, requiredConfigTokens);
   const missingPhaseTokens = missingValues(phaseContract, REQUIRED_PHASE_CONTRACT_TOKENS);
   const missingManifestTokens = missingValues(fieldManifest, REQUIRED_FIELD_MANIFEST_TOKENS);
-  const missingPack8Tokens = missingValues(pack8, REQUIRED_PACK8_POINTER_TOKENS);
+  const missingPack8Tokens = missingValues(pack8, requiredPack8Tokens);
   const missingPersistenceTokens = missingValues(persistence, REQUIRED_PERSISTENCE_POINTER_TOKENS);
   const missingOperatorTokens = missingValues(operator, REQUIRED_OPERATOR_POINTER_TOKENS);
   const unsafeClaims = findUnsafeStandaloneClaims([
@@ -307,11 +364,12 @@ function main() {
     [config, phaseContract, fieldManifest].some((file) => file.includes(token))
   );
 
-  const signoffFlipped =
-    config.includes('sourceOfTruthDecisionSignedOff: true') ||
-    config.includes('founderSignoffRecorded: true') ||
-    config.includes('architectSignoffRecorded: true') ||
-    config.includes('agentMayFlipSignoff: true');
+  const signoffFlipped = humanApprovalRecorded
+    ? config.includes('agentMayFlipSignoff: true')
+    : config.includes('sourceOfTruthDecisionSignedOff: true') ||
+      config.includes('founderSignoffRecorded: true') ||
+      config.includes('architectSignoffRecorded: true') ||
+      config.includes('agentMayFlipSignoff: true');
 
   const hasImplementation =
     /\bclass\s+\w+/.test(phaseContract) ||
@@ -337,7 +395,12 @@ function main() {
   if (missingOperatorTokens.length) fail('operator readiness Pack9 pointer missing', missingOperatorTokens);
   if (unsafeClaims.length) fail('unsafe standalone production claims', unsafeClaims);
   if (forbiddenImports.length) fail('forbidden runtime imports in new files', forbiddenImports);
-  if (signoffFlipped) fail('sign-off must remain false in Pack9', ['sourceOfTruthDecisionSignedOff or agent flip detected']);
+  if (signoffFlipped) {
+    fail(
+      humanApprovalRecorded ? 'agentMayFlipSignoff must remain false' : 'sign-off must remain false in Pack9',
+      [humanApprovalRecorded ? 'agentMayFlipSignoff: true' : 'sourceOfTruthDecisionSignedOff or agent flip detected']
+    );
+  }
   if (hasImplementation) fail('implementation detected in contract pack', ['types/contracts only']);
 
   if (process.exitCode) {
@@ -352,7 +415,7 @@ function main() {
   console.log('Dedicated store field manifest: PASS');
   console.log('Pack8/Pack7/Pack6 pointers: PASS');
   console.log('Required safe copy: PASS');
-  console.log('Sign-off remains false: PASS');
+  console.log(humanApprovalRecorded ? 'Human approval recorded: PASS' : 'Sign-off remains false: PASS');
   console.log('No App.tsx/navigation/screen changes: PASS');
   console.log('No Prisma/API/server changes: PASS');
   console.log('No implementation added: PASS');
