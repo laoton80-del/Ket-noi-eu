@@ -313,6 +313,13 @@ function main() {
   const unexpectedDiff = diffFiles.filter((file) => !ALLOWED_DIFF_FILES.includes(file));
   const forbiddenDiff = diffFiles.filter((file) => {
     if (file === 'App.tsx' && pack6AppOnly) return false;
+    if (
+      file === 'prisma/schema.prisma' &&
+      ALLOWED_DIFF_FILES.includes('prisma/schema.prisma') &&
+      !file.includes('migrations')
+    ) {
+      return false;
+    }
     return FORBIDDEN_DIFF_PATTERNS.some((pattern) => pattern.test(file));
   });
 

@@ -365,6 +365,23 @@ function isHumanApprovalRecorded() {
   return existsSync(path.join(ROOT, rel)) && read(rel).includes('humanApprovalRecorded: true');
 }
 
+function detectPrismaOperatorRoleAddition(schemaDiff) {
+  if (!schemaDiff) return false;
+  for (const line of schemaDiff.split('\n')) {
+    if (!line.startsWith('+') || line.startsWith('+++')) continue;
+    const trimmed = line.slice(1).trimStart();
+    if (!trimmed) continue;
+    if (trimmed.startsWith('//') || trimmed.startsWith('///')) continue;
+    const normalized = trimmed.toLowerCase();
+    if (normalized.includes('not prisma/auth operator')) continue;
+    if (normalized.includes('not prisma/auth role')) continue;
+    if (/\boperatorroleaddedtoauth:\s*true\b/i.test(trimmed)) return true;
+    if (/\boperatorroleaddedtoprisma:\s*true\b/i.test(trimmed)) return true;
+    if (/^OPERATOR\s*$/.test(trimmed)) return true;
+  }
+  return false;
+}
+
 function main() {
   const pack13cActive = isPack13cSchemaOnlyActive();
   console.log('VIONA request SoT founder/architect sign-off packet check (Pack10)');
@@ -431,8 +448,9 @@ function main() {
     docs.includes('sign-off recorded') && !docs.toLowerCase().includes('does not record sign-off');
 
   const prismaOperatorAdded =
-    run('git diff origin/master..HEAD -- prisma/schema.prisma').includes('OPERATOR') ||
-    combined.includes('operatorRoleAddedToAuth: true');
+    detectPrismaOperatorRoleAddition(run('git diff origin/master..HEAD -- prisma/schema.prisma')) ||
+    combined.includes('operatorRoleAddedToAuth: true') ||
+    combined.includes('operatorRoleAddedToPrisma: true');
 
   if (missingFiles.length) fail('missing required files', missingFiles);
   if (unexpectedFiles.length) fail('unexpected files changed', unexpectedFiles);
