@@ -59,6 +59,13 @@ export type VionaOperatorInboxAdminReadiness = Readonly<{
   pack11DedicatedStoreSchemaDesignContractActive: boolean;
   schemaDesignContractCreated: boolean;
   schemaDesignReviewRequired: boolean;
+  schemaDesignHumanApprovalRecorded: boolean;
+  schemaDesignApprovedBy: 'Nong Si Buong';
+  schemaDesignApprovalDate: '2026-06-15';
+  schemaDesignApproved: boolean;
+  pack12PlanningPermitted: boolean;
+  pack12PlanningReadinessBoundaryOnly: boolean;
+  pack12Started: false;
   sourceOfTruthDecisionSignedOff: true;
   adminDebugUsesFixturesOnly: boolean;
   productionLiveOpsActive: boolean;
@@ -170,12 +177,19 @@ export const VIONA_OPERATOR_INBOX_ADMIN_READINESS = {
   pack11Started: false,
   pack11DedicatedStoreSchemaDesignContractActive: true,
   schemaDesignContractCreated: true,
-  schemaDesignReviewRequired: true,
+  schemaDesignReviewRequired: false,
+  schemaDesignHumanApprovalRecorded: true,
+  schemaDesignApprovedBy: 'Nong Si Buong',
+  schemaDesignApprovalDate: '2026-06-15',
+  schemaDesignApproved: true,
+  pack12PlanningPermitted: true,
+  pack12PlanningReadinessBoundaryOnly: true,
+  pack12Started: false,
   sourceOfTruthDecisionSignedOff: true,
   adminDebugUsesFixturesOnly: true,
   productionLiveOpsActive: false,
   nextSafeTarget:
-    'Pack11 Dedicated Store Schema Design Contract active — human review required; Admin Debug remains fixture-only',
+    'Pack12 planning/readiness boundary permitted — schema design approved; Admin Debug remains fixture-only',
   appTsxRouteDeferred: false,
   persistenceApiActive: false,
   mutationsBlocked: true,

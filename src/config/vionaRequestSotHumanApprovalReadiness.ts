@@ -48,9 +48,15 @@ export type VionaRequestSotHumanApprovalReadiness = Readonly<{
   pack11DedicatedStoreSchemaDesignContractActive: boolean;
   schemaDesignContractCreated: boolean;
   schemaDesignReviewRequired: boolean;
-  agentMayFlipSignoff: false;
+  schemaDesignHumanApprovalRecorded: boolean;
+  schemaDesignApprovedBy: 'Nong Si Buong';
+  schemaDesignApprovalDate: '2026-06-15';
+  schemaDesignApproved: boolean;
+  pack12PlanningPermitted: boolean;
+  pack12PlanningReadinessBoundaryOnly: boolean;
+  pack12Started: false;
   pack11Started: false;
-  schemaDesignApproved: false;
+  agentMayFlipSignoff: false;
   prismaSchemaActive: false;
   prismaMigrationActive: false;
   persistenceApiActive: false;
@@ -159,10 +165,16 @@ export const VIONA_REQUEST_SOT_HUMAN_APPROVAL_READINESS = {
   pack11SchemaDesignContractOnly: true,
   pack11DedicatedStoreSchemaDesignContractActive: true,
   schemaDesignContractCreated: true,
-  schemaDesignReviewRequired: true,
+  schemaDesignReviewRequired: false,
+  schemaDesignHumanApprovalRecorded: true,
+  schemaDesignApprovedBy: 'Nong Si Buong',
+  schemaDesignApprovalDate: '2026-06-15',
+  schemaDesignApproved: true,
+  pack12PlanningPermitted: true,
+  pack12PlanningReadinessBoundaryOnly: true,
+  pack12Started: false,
   agentMayFlipSignoff: false,
   pack11Started: false,
-  schemaDesignApproved: false,
   prismaSchemaActive: false,
   prismaMigrationActive: false,
   persistenceApiActive: false,

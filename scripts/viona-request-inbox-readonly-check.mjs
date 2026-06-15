@@ -110,6 +110,13 @@ const PACK11_DEDICATED_STORE_SCHEMA_DESIGN_DIFF_FILES = [
   'docs/design/evidence/cursor-request-dedicated-store-schema-design-pack11/README.md',
 ];
 
+const PACK11B_SCHEMA_DESIGN_HUMAN_APPROVAL_DIFF_FILES = [
+  'docs/product/VIONA_REQUEST_SCHEMA_DESIGN_HUMAN_APPROVAL_RECORD.md',
+  'src/config/vionaRequestSchemaDesignHumanApprovalReadiness.ts',
+  'scripts/viona-request-schema-design-human-approval-recording-check.mjs',
+  'docs/design/evidence/cursor-request-schema-design-human-approval-pack11b/README.md',
+];
+
 const ALLOWED_DIFF_FILES = [
   ...PACK2_ALLOWED_DIFF_FILES,
   ...GATED_REFERENCE_LAB_PREVIEW_DIFF_FILES,
@@ -122,6 +129,7 @@ const ALLOWED_DIFF_FILES = [
   ...PACK10B_SOT_SIGNOFF_TEMPLATE_DIFF_FILES,
   ...PACK10C_SOT_HUMAN_APPROVAL_DIFF_FILES,
   ...PACK11_DEDICATED_STORE_SCHEMA_DESIGN_DIFF_FILES,
+  ...PACK11B_SCHEMA_DESIGN_HUMAN_APPROVAL_DIFF_FILES,
 ];
 
 const REQUIRED_FILES = PACK2_ALLOWED_DIFF_FILES;

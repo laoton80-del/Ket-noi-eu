@@ -50,6 +50,13 @@ export type VionaRequestSotSignoffPhasePromotionReadiness = Readonly<{
   pack11DedicatedStoreSchemaDesignContractActive: boolean;
   schemaDesignContractCreated: boolean;
   schemaDesignReviewRequired: boolean;
+  schemaDesignHumanApprovalRecorded: boolean;
+  schemaDesignApprovedBy: 'Nong Si Buong';
+  schemaDesignApprovalDate: '2026-06-15';
+  schemaDesignApproved: boolean;
+  pack12PlanningPermitted: boolean;
+  pack12PlanningReadinessBoundaryOnly: boolean;
+  pack12Started: false;
   signOffStatus: 'approved';
   sourceOfTruthDecisionSignedOff: true;
   selectedSourceOfTruthOptionId: 'dedicatedVionaRequestStore';
@@ -61,7 +68,6 @@ export type VionaRequestSotSignoffPhasePromotionReadiness = Readonly<{
   operatorPolicyResolved: false;
   operatorRoleAddedToAuth: false;
   readOnlyApiPhasePromoted: false;
-  schemaDesignApproved: false;
   persistenceApiActive: false;
   prismaSchemaActive: false;
   auditLogActive: false;
@@ -182,7 +188,14 @@ export const VIONA_REQUEST_SOT_SIGNOFF_PHASE_PROMOTION_READINESS = {
   pack11Started: false,
   pack11DedicatedStoreSchemaDesignContractActive: true,
   schemaDesignContractCreated: true,
-  schemaDesignReviewRequired: true,
+  schemaDesignReviewRequired: false,
+  schemaDesignHumanApprovalRecorded: true,
+  schemaDesignApprovedBy: 'Nong Si Buong',
+  schemaDesignApprovalDate: '2026-06-15',
+  schemaDesignApproved: true,
+  pack12PlanningPermitted: true,
+  pack12PlanningReadinessBoundaryOnly: true,
+  pack12Started: false,
   signOffStatus: 'approved',
   sourceOfTruthDecisionSignedOff: true,
   selectedSourceOfTruthOptionId: 'dedicatedVionaRequestStore',
@@ -194,7 +207,6 @@ export const VIONA_REQUEST_SOT_SIGNOFF_PHASE_PROMOTION_READINESS = {
   operatorPolicyResolved: false,
   operatorRoleAddedToAuth: false,
   readOnlyApiPhasePromoted: false,
-  schemaDesignApproved: false,
   persistenceApiActive: false,
   prismaSchemaActive: false,
   auditLogActive: false,

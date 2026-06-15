@@ -32,8 +32,14 @@ export type VionaRequestDedicatedStoreSchemaDesignReadiness = Readonly<{
   pack11DiscoveryPermitted: true;
   pack11DedicatedStoreSchemaDesignContractActive: true;
   schemaDesignContractCreated: true;
-  schemaDesignReviewRequired: true;
-  schemaDesignApproved: false;
+  schemaDesignReviewRequired: boolean;
+  schemaDesignHumanApprovalRecorded: boolean;
+  schemaDesignApprovedBy: 'Nong Si Buong';
+  schemaDesignApprovalDate: '2026-06-15';
+  schemaDesignApproved: boolean;
+  pack12PlanningPermitted: boolean;
+  pack12PlanningReadinessBoundaryOnly: boolean;
+  pack12Started: false;
   prismaSchemaPermitted: false;
   prismaMigrationPermitted: false;
   readOnlyApiPermitted: false;
@@ -123,9 +129,9 @@ export const VIONA_REQUEST_DEDICATED_STORE_SCHEMA_DESIGN_CHECKLIST = [
   },
   {
     id: 'schemaDesignReviewRequired',
-    label: 'Schema design human review required before implementation',
+    label: 'Schema design human review completed before implementation planning',
     satisfied: true,
-    requiresHumanSignoff: true,
+    requiresHumanSignoff: false,
   },
 ] as const satisfies readonly VionaRequestDedicatedStoreSchemaDesignChecklistItem[];
 
@@ -140,8 +146,14 @@ export const VIONA_REQUEST_DEDICATED_STORE_SCHEMA_DESIGN_READINESS = {
   pack11DiscoveryPermitted: true,
   pack11DedicatedStoreSchemaDesignContractActive: true,
   schemaDesignContractCreated: true,
-  schemaDesignReviewRequired: true,
-  schemaDesignApproved: false,
+  schemaDesignReviewRequired: false,
+  schemaDesignHumanApprovalRecorded: true,
+  schemaDesignApprovedBy: 'Nong Si Buong',
+  schemaDesignApprovalDate: '2026-06-15',
+  schemaDesignApproved: true,
+  pack12PlanningPermitted: true,
+  pack12PlanningReadinessBoundaryOnly: true,
+  pack12Started: false,
   prismaSchemaPermitted: false,
   prismaMigrationPermitted: false,
   readOnlyApiPermitted: false,
@@ -184,7 +196,8 @@ export const VIONA_REQUEST_DEDICATED_STORE_SCHEMA_DESIGN_READINESS = {
     'No payment captured',
     'Not booking confirmed',
     'No SOS dispatch',
-    'schemaDesignApproved remains false',
+    'schemaDesignApproved recorded with human approval',
+    'Pack12 planning readiness boundary only',
   ],
   forbiddenPromotions: [
     'Do not add Prisma schema in Pack11',
@@ -194,7 +207,7 @@ export const VIONA_REQUEST_DEDICATED_STORE_SCHEMA_DESIGN_READINESS = {
     'Do not add request mutation in Pack11',
     'Do not wire Admin Debug preview to live data in Pack11',
     'Do not add OPERATOR to Prisma or client auth in Pack11',
-    'Do not flip schemaDesignApproved in Pack11',
+    'Do not start Pack12 implementation from Pack11 contract alone',
     'Do not add payment/booking/SOS/wallet/live AI behavior in Pack11',
   ],
   nonGoals: [

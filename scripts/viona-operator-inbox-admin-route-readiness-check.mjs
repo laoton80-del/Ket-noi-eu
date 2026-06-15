@@ -54,6 +54,10 @@ const ALLOWED_FILES = [
   'src/config/vionaRequestDedicatedStoreSchemaDesignReadiness.ts',
   'scripts/viona-request-dedicated-store-schema-design-contract-check.mjs',
   'docs/design/evidence/cursor-request-dedicated-store-schema-design-pack11/README.md',
+  'docs/product/VIONA_REQUEST_SCHEMA_DESIGN_HUMAN_APPROVAL_RECORD.md',
+  'src/config/vionaRequestSchemaDesignHumanApprovalReadiness.ts',
+  'scripts/viona-request-schema-design-human-approval-recording-check.mjs',
+  'docs/design/evidence/cursor-request-schema-design-human-approval-pack11b/README.md',
 ];
 
 const REQUIRED_MATURITY_LABELS = [
