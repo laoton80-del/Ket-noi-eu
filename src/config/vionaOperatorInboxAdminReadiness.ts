@@ -69,6 +69,9 @@ export type VionaOperatorInboxAdminReadiness = Readonly<{
   pack12PlanningStarted: boolean;
   pack12PlanningOnly: boolean;
   pack12ImplementationApproved: false;
+  pack13PrismaSchemaImplementationApprovalPacketActive: boolean;
+  pack13ApprovalPacketPrepared: boolean;
+  pack13HumanApprovalRequired: boolean;
   futurePrismaSchemaImplementationRequiresHumanApproval: boolean;
   pack12Started: false;
   sourceOfTruthDecisionSignedOff: true;
@@ -193,13 +196,16 @@ export const VIONA_OPERATOR_INBOX_ADMIN_READINESS = {
   pack12PlanningStarted: true,
   pack12PlanningOnly: true,
   pack12ImplementationApproved: false,
+  pack13PrismaSchemaImplementationApprovalPacketActive: true,
+  pack13ApprovalPacketPrepared: true,
+  pack13HumanApprovalRequired: true,
   futurePrismaSchemaImplementationRequiresHumanApproval: true,
   pack12Started: false,
   sourceOfTruthDecisionSignedOff: true,
   adminDebugUsesFixturesOnly: true,
   productionLiveOpsActive: false,
   nextSafeTarget:
-    'Pack12 Prisma schema readiness boundary active — planning only; Admin Debug remains fixture-only',
+    'Pack13A Prisma schema implementation approval packet prepared — human review pending; Admin Debug remains fixture-only',
   appTsxRouteDeferred: false,
   persistenceApiActive: false,
   mutationsBlocked: true,

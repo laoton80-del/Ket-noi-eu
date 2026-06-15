@@ -37,6 +37,9 @@ export type VionaRequestPack12PrismaSchemaReadinessBoundaryConfig = Readonly<{
   pack12PlanningStarted: true;
   pack12PlanningOnly: true;
   pack12ImplementationApproved: false;
+  pack13PrismaSchemaImplementationApprovalPacketActive: true;
+  pack13ApprovalPacketPrepared: true;
+  pack13HumanApprovalRequired: true;
   futurePrismaSchemaImplementationRequiresHumanApproval: true;
   futurePrismaMigrationRequiresHumanApproval: true;
   futureApiImplementationRequiresHumanApproval: true;
@@ -154,6 +157,9 @@ export const VIONA_REQUEST_PACK12_PRISMA_SCHEMA_READINESS_BOUNDARY = {
   pack12PlanningStarted: true,
   pack12PlanningOnly: true,
   pack12ImplementationApproved: false,
+  pack13PrismaSchemaImplementationApprovalPacketActive: true,
+  pack13ApprovalPacketPrepared: true,
+  pack13HumanApprovalRequired: true,
   futurePrismaSchemaImplementationRequiresHumanApproval: true,
   futurePrismaMigrationRequiresHumanApproval: true,
   futureApiImplementationRequiresHumanApproval: true,

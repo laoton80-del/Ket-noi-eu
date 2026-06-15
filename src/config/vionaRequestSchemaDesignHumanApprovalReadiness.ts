@@ -41,6 +41,9 @@ export type VionaRequestSchemaDesignHumanApprovalReadiness = Readonly<{
   pack12PlanningStarted: boolean;
   pack12PlanningOnly: boolean;
   pack12ImplementationApproved: false;
+  pack13PrismaSchemaImplementationApprovalPacketActive: boolean;
+  pack13ApprovalPacketPrepared: boolean;
+  pack13HumanApprovalRequired: boolean;
   futurePrismaSchemaImplementationRequiresHumanApproval: boolean;
   selectedSourceOfTruthOptionId: 'dedicatedVionaRequestStore';
   directLocalServiceRequestReuseAllowed: false;
@@ -155,6 +158,9 @@ export const VIONA_REQUEST_SCHEMA_DESIGN_HUMAN_APPROVAL_READINESS = {
   pack12PlanningStarted: true,
   pack12PlanningOnly: true,
   pack12ImplementationApproved: false,
+  pack13PrismaSchemaImplementationApprovalPacketActive: true,
+  pack13ApprovalPacketPrepared: true,
+  pack13HumanApprovalRequired: true,
   futurePrismaSchemaImplementationRequiresHumanApproval: true,
   selectedSourceOfTruthOptionId: 'dedicatedVionaRequestStore',
   directLocalServiceRequestReuseAllowed: false,
