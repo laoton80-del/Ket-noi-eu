@@ -38,6 +38,13 @@ export type VionaRequestPack13CPrismaSchemaImplementationReadiness = Readonly<{
   pack13SchemaOnlyImplementation: true;
   prismaSchemaActive: true;
   vionaRequestPrismaModelsAdded: true;
+  pack14MigrationReadinessApprovalPacketActive: true;
+  pack14MigrationApprovalPacketPrepared: true;
+  pack14HumanApprovalRequired: true;
+  pack14MigrationPlanningReadyForHumanReview: true;
+  pack14HumanApprovalRecorded: false;
+  pack14PrismaMigrationApproved: false;
+
   migrationCreated: false;
   dbApplied: false;
   prismaMigrationPermitted: false;
@@ -145,6 +152,13 @@ export const VIONA_REQUEST_PACK13C_PRISMA_SCHEMA_IMPLEMENTATION_READINESS = {
   pack13SchemaOnlyImplementation: true,
   prismaSchemaActive: true,
   vionaRequestPrismaModelsAdded: true,
+  pack14MigrationReadinessApprovalPacketActive: true,
+  pack14MigrationApprovalPacketPrepared: true,
+  pack14HumanApprovalRequired: true,
+  pack14MigrationPlanningReadyForHumanReview: true,
+  pack14HumanApprovalRecorded: false,
+  pack14PrismaMigrationApproved: false,
+
   migrationCreated: false,
   dbApplied: false,
   prismaMigrationPermitted: false,
