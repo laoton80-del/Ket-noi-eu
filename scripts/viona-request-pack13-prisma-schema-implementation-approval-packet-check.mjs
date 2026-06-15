@@ -6,6 +6,13 @@ import path from 'node:path';
 
 const ROOT = process.cwd();
 
+const PACK13B_CORE_FILES = [
+  'docs/product/VIONA_REQUEST_PACK13_PRISMA_SCHEMA_IMPLEMENTATION_HUMAN_APPROVAL_RECORD.md',
+  'src/config/vionaRequestPack13PrismaSchemaImplementationHumanApprovalReadiness.ts',
+  'scripts/viona-request-pack13-prisma-schema-implementation-human-approval-recording-check.mjs',
+  'docs/design/evidence/cursor-request-pack13b-prisma-schema-implementation-human-approval/README.md',
+];
+
 const PACK13A_CORE_FILES = [
   'docs/product/VIONA_REQUEST_PACK13_PRISMA_SCHEMA_IMPLEMENTATION_APPROVAL_PACKET.md',
   'src/config/vionaRequestPack13PrismaSchemaImplementationApprovalPacketReadiness.ts',
@@ -49,6 +56,7 @@ const GATE_SCRIPT_FILES = [
 ];
 
 const ALLOWED_FILES = [
+  ...PACK13B_CORE_FILES,
   ...PACK13A_CORE_FILES,
   ...PACK12_CORE_FILES,
   ...POINTER_CONFIG_FILES,
@@ -92,6 +100,50 @@ const FORBIDDEN_DOC_PHRASES = [
   'pack13PrismaSchemaImplementationApproved: true',
   'prismaSchemaPermitted: true',
   'Final decision** | **APPROVED**',
+];
+
+const POST_APPROVAL_REQUIRED_CONFIG_TOKENS = [
+  'export const VIONA_REQUEST_PACK13_PRISMA_SCHEMA_IMPLEMENTATION_APPROVAL_PACKET_READINESS',
+  'export const VIONA_REQUEST_PACK13_PRISMA_SCHEMA_IMPLEMENTATION_APPROVAL_PACKET_CHECKLIST',
+  'export function getVionaRequestPack13PrismaSchemaImplementationApprovalPacketReadiness',
+  'export function isVionaRequestPack13PrismaSchemaImplementationApprovalPacketReadyForHumanReview',
+  'pack13PrismaSchemaImplementationApprovalPacketActive: true',
+  'pack13ApprovalPacketPrepared: true',
+  'pack13HumanApprovalRequired: true',
+  'futurePrismaSchemaImplementationRequiresHumanApproval: true',
+  'pack12PrismaSchemaReadinessBoundaryActive: true',
+  'pack12PlanningStarted: true',
+  'pack12PlanningOnly: true',
+  'schemaDesignApproved: true',
+  "selectedSourceOfTruthOptionId: 'dedicatedVionaRequestStore'",
+  'pack13HumanApprovalRecorded: true',
+  'pack13PrismaSchemaImplementationApproved: true',
+  'pack13PrismaSchemaImplementationRecordingOnly: true',
+  'pack13PrismaSchemaImplementationMayBePlannedNext: true',
+  "pack13PrismaSchemaImplementationApprovalSource: 'human-chat-instruction'",
+  "pack13PrismaSchemaImplementationApprovedBy: 'Nong Si Buong'",
+  "pack13PrismaSchemaImplementationApprovalDate: '2026-06-15'",
+  'pack12ImplementationApproved: false',
+  'pack13Started: false',
+  'pack12Started: false',
+  'prismaSchemaPermitted: true',
+  'prismaSchemaActive: false',
+  'prismaMigrationPermitted: false',
+  'prismaMigrationActive: false',
+  'readOnlyApiPermitted: false',
+  'persistenceAdapterPermitted: false',
+  'requestMutationPermitted: false',
+  'persistenceApiActive: false',
+  'readOnlyApiActive: false',
+  'persistenceAdapterActive: false',
+  'auditLogActive: false',
+  'requestMutationActive: false',
+  'adminDebugLiveDataActive: false',
+  'operatorRoleAddedToAuth: false',
+  'operatorRoleAddedToPrisma: false',
+  'productionLiveOpsActive: false',
+  'adminDebugUsesFixturesOnly: true',
+  'agentMayFlipSignoff: false',
 ];
 
 const REQUIRED_CONFIG_TOKENS = [
@@ -145,6 +197,28 @@ const FORBIDDEN_POINTER_TOKENS = [
   'pack13Started: true',
   'pack12ImplementationApproved: true',
   'prismaSchemaPermitted: true',
+  'prismaSchemaActive: true',
+];
+
+const POST_APPROVAL_REQUIRED_POINTER_TOKENS = [
+  'pack13PrismaSchemaImplementationApprovalPacketActive: true',
+  'pack13ApprovalPacketPrepared: true',
+  'pack13HumanApprovalRequired: true',
+  'pack13HumanApprovalRecorded: true',
+  'pack13PrismaSchemaImplementationApproved: true',
+  'pack13PrismaSchemaImplementationRecordingOnly: true',
+  'pack13PrismaSchemaImplementationMayBePlannedNext: true',
+  "pack13PrismaSchemaImplementationApprovalSource: 'human-chat-instruction'",
+  "pack13PrismaSchemaImplementationApprovedBy: 'Nong Si Buong'",
+  "pack13PrismaSchemaImplementationApprovalDate: '2026-06-15'",
+  'prismaSchemaPermitted: true',
+  'pack13Started: false',
+  'prismaSchemaActive: false',
+];
+
+const POST_APPROVAL_FORBIDDEN_POINTER_TOKENS = [
+  'pack13Started: true',
+  'pack12ImplementationApproved: true',
   'prismaSchemaActive: true',
 ];
 
@@ -234,10 +308,19 @@ function findUnsafeStandaloneClaims(paths) {
   return [...new Set(hits)];
 }
 
+function isPack13bRecorded() {
+  const configPath = 'src/config/vionaRequestPack13PrismaSchemaImplementationHumanApprovalReadiness.ts';
+  if (!existsSync(path.join(ROOT, configPath))) return false;
+  return read(configPath).includes('pack13HumanApprovalRecorded: true');
+}
+
 function main() {
+  const pack13bRecorded = isPack13bRecorded();
   console.log('VIONA request Pack13A Prisma schema implementation approval packet check');
   console.log(
-    'Approval packet only. No approval recorded. No Prisma schema, migration, API, adapter, mutation, or runtime.\n'
+    pack13bRecorded
+      ? 'Pack13B human approval recorded. Packet doc remains historical blank/pending.\n'
+      : 'Approval packet only. No approval recorded. No Prisma schema, migration, API, adapter, mutation, or runtime.\n'
   );
 
   const missingFiles = REQUIRED_FILES.filter((relPath) => !existsSync(path.join(ROOT, relPath)));
@@ -270,9 +353,14 @@ function main() {
 
   const missingDocPhrases = missingValues(packetDoc, REQUIRED_DOC_PHRASES);
   const forbiddenDocPhrases = FORBIDDEN_DOC_PHRASES.filter((phrase) => packetDoc.includes(phrase));
-  const missingConfigTokens = missingValues(config, REQUIRED_CONFIG_TOKENS);
-  const missingPointerTokens = missingValues(pointerCombined, REQUIRED_POINTER_TOKENS);
-  const forbiddenPointerHits = FORBIDDEN_POINTER_TOKENS.filter((token) =>
+  const configTokens = pack13bRecorded ? POST_APPROVAL_REQUIRED_CONFIG_TOKENS : REQUIRED_CONFIG_TOKENS;
+  const pointerTokens = pack13bRecorded ? POST_APPROVAL_REQUIRED_POINTER_TOKENS : REQUIRED_POINTER_TOKENS;
+  const forbiddenPointerTokens = pack13bRecorded
+    ? POST_APPROVAL_FORBIDDEN_POINTER_TOKENS
+    : FORBIDDEN_POINTER_TOKENS;
+  const missingConfigTokens = missingValues(config, configTokens);
+  const missingPointerTokens = missingValues(pointerCombined, pointerTokens);
+  const forbiddenPointerHits = forbiddenPointerTokens.filter((token) =>
     pointerCombined.includes(token)
   );
   const unsafeClaims = findUnsafeStandaloneClaims([
@@ -308,17 +396,27 @@ function main() {
   console.log('Human approval required: PASS');
   console.log('Readiness config: PASS');
   console.log('Pointer configs updated: PASS');
-  console.log('pack13HumanApprovalRecorded remains false: PASS');
-  console.log('pack13PrismaSchemaImplementationApproved remains false: PASS');
+  if (pack13bRecorded) {
+    console.log('pack13HumanApprovalRecorded true in Pack13B: PASS');
+    console.log('pack13PrismaSchemaImplementationApproved true: PASS');
+    console.log('prismaSchemaPermitted true for future pack: PASS');
+  } else {
+    console.log('pack13HumanApprovalRecorded remains false: PASS');
+    console.log('pack13PrismaSchemaImplementationApproved remains false: PASS');
+    console.log('Prisma schema remains not permitted: PASS');
+  }
   console.log('pack13Started remains false: PASS');
   console.log('pack12ImplementationApproved remains false: PASS');
-  console.log('Prisma schema remains not permitted: PASS');
   console.log('Migration/API/adapter/mutation remain blocked: PASS');
   console.log('Admin Debug fixture-only: PASS');
   console.log('OPERATOR Prisma/Auth not added: PASS');
   console.log('No forbidden runtime paths: PASS');
   console.log('No unsafe standalone claims: PASS');
-  console.log('\nResult: PASS - Pack13A Prisma schema implementation approval packet is import-ready.');
+  console.log(
+    pack13bRecorded
+      ? '\nResult: PASS - Pack13A approval packet remains valid with Pack13B human approval recorded.'
+      : '\nResult: PASS - Pack13A Prisma schema implementation approval packet is import-ready.'
+  );
 }
 
 main();

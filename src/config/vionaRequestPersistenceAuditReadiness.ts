@@ -74,6 +74,15 @@ export type VionaRequestPersistenceAuditReadiness = Readonly<{
   pack13ApprovalPacketPrepared: boolean;
   pack13HumanApprovalRequired: boolean;
   futurePrismaSchemaImplementationRequiresHumanApproval: boolean;
+  pack13HumanApprovalRecorded: true;
+  pack13PrismaSchemaImplementationApproved: true;
+  pack13PrismaSchemaImplementationRecordingOnly: true;
+  pack13PrismaSchemaImplementationMayBePlannedNext: true;
+  pack13PrismaSchemaImplementationApprovalSource: 'human-chat-instruction';
+  pack13PrismaSchemaImplementationApprovedBy: 'Nong Si Buong';
+  pack13PrismaSchemaImplementationApprovalDate: '2026-06-15';
+  pack13Started: false;
+  prismaSchemaPermitted: true;
   pack12Started: false;
   sourceOfTruthDecisionSignedOff: true;
   persistenceApiActive: boolean;
@@ -204,6 +213,15 @@ export const VIONA_REQUEST_PERSISTENCE_AUDIT_READINESS = {
   pack13ApprovalPacketPrepared: true,
   pack13HumanApprovalRequired: true,
   futurePrismaSchemaImplementationRequiresHumanApproval: true,
+  pack13HumanApprovalRecorded: true,
+  pack13PrismaSchemaImplementationApproved: true,
+  pack13PrismaSchemaImplementationRecordingOnly: true,
+  pack13PrismaSchemaImplementationMayBePlannedNext: true,
+  pack13PrismaSchemaImplementationApprovalSource: 'human-chat-instruction',
+  pack13PrismaSchemaImplementationApprovedBy: 'Nong Si Buong',
+  pack13PrismaSchemaImplementationApprovalDate: '2026-06-15',
+  pack13Started: false,
+  prismaSchemaPermitted: true,
   pack12Started: false,
   sourceOfTruthDecisionSignedOff: true,
   persistenceApiActive: false,

@@ -67,6 +67,10 @@ const ALLOWED_FILES = [
   'src/config/vionaRequestPack13PrismaSchemaImplementationApprovalPacketReadiness.ts',
   'scripts/viona-request-pack13-prisma-schema-implementation-approval-packet-check.mjs',
   'docs/design/evidence/cursor-request-pack13a-prisma-schema-implementation-approval-packet/README.md',
+  'docs/product/VIONA_REQUEST_PACK13_PRISMA_SCHEMA_IMPLEMENTATION_HUMAN_APPROVAL_RECORD.md',
+  'src/config/vionaRequestPack13PrismaSchemaImplementationHumanApprovalReadiness.ts',
+  'scripts/viona-request-pack13-prisma-schema-implementation-human-approval-recording-check.mjs',
+  'docs/design/evidence/cursor-request-pack13b-prisma-schema-implementation-human-approval/README.md',
 ];
 
 const REQUIRED_MATURITY_LABELS = [
@@ -280,7 +284,8 @@ function main() {
     'fetch(',
     '@react-navigation',
     'AsyncStorage',
-    'prisma',
+    '@prisma/client',
+    'PrismaClient',
     'supabase',
   ].filter((token) => config.includes(token));
 

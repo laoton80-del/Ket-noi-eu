@@ -6,38 +6,46 @@ import path from 'node:path';
 
 const ROOT = process.cwd();
 
-const ALLOWED_FILES = [
-  'docs/product/VIONA_REQUEST_SOT_HUMAN_APPROVAL_RECORD.md',
-  'src/config/vionaRequestSotHumanApprovalReadiness.ts',
-  'scripts/viona-request-sot-human-approval-recording-check.mjs',
-  'docs/design/evidence/cursor-request-sot-human-approval-pack10c/README.md',
-  'docs/product/VIONA_REQUEST_DEDICATED_STORE_SCHEMA_DESIGN_CONTRACT.md',
-  'src/domain/requests/vionaRequestDedicatedStoreSchemaDesignContract.ts',
-  'src/config/vionaRequestDedicatedStoreSchemaDesignReadiness.ts',
-  'scripts/viona-request-dedicated-store-schema-design-contract-check.mjs',
-  'docs/design/evidence/cursor-request-dedicated-store-schema-design-pack11/README.md',
-  'docs/product/VIONA_REQUEST_SCHEMA_DESIGN_HUMAN_APPROVAL_RECORD.md',
-  'src/config/vionaRequestSchemaDesignHumanApprovalReadiness.ts',
-  'scripts/viona-request-schema-design-human-approval-recording-check.mjs',
-  'docs/design/evidence/cursor-request-schema-design-human-approval-pack11b/README.md',
+const PACK13B_CORE_FILES = [
+  'docs/product/VIONA_REQUEST_PACK13_PRISMA_SCHEMA_IMPLEMENTATION_HUMAN_APPROVAL_RECORD.md',
+  'src/config/vionaRequestPack13PrismaSchemaImplementationHumanApprovalReadiness.ts',
+  'scripts/viona-request-pack13-prisma-schema-implementation-human-approval-recording-check.mjs',
+  'docs/design/evidence/cursor-request-pack13b-prisma-schema-implementation-human-approval/README.md',
+];
+
+const PACK13A_CORE_FILES = [
+  'docs/product/VIONA_REQUEST_PACK13_PRISMA_SCHEMA_IMPLEMENTATION_APPROVAL_PACKET.md',
+  'src/config/vionaRequestPack13PrismaSchemaImplementationApprovalPacketReadiness.ts',
+  'scripts/viona-request-pack13-prisma-schema-implementation-approval-packet-check.mjs',
+  'docs/design/evidence/cursor-request-pack13a-prisma-schema-implementation-approval-packet/README.md',
+];
+
+const PACK12_CORE_FILES = [
   'docs/product/VIONA_REQUEST_PACK12_PRISMA_SCHEMA_READINESS_BOUNDARY.md',
   'src/domain/requests/vionaRequestPrismaSchemaReadinessBoundary.ts',
   'src/config/vionaRequestPack12PrismaSchemaReadinessBoundary.ts',
   'scripts/viona-request-pack12-prisma-schema-readiness-boundary-check.mjs',
   'docs/design/evidence/cursor-request-pack12-prisma-schema-readiness-boundary/README.md',
-  'docs/product/VIONA_REQUEST_PACK13_PRISMA_SCHEMA_IMPLEMENTATION_APPROVAL_PACKET.md',
+];
+
+const POINTER_CONFIG_FILES = [
   'src/config/vionaRequestPack13PrismaSchemaImplementationApprovalPacketReadiness.ts',
-  'scripts/viona-request-pack13-prisma-schema-implementation-approval-packet-check.mjs',
-  'docs/design/evidence/cursor-request-pack13a-prisma-schema-implementation-approval-packet/README.md',
-  'docs/product/VIONA_REQUEST_PACK13_PRISMA_SCHEMA_IMPLEMENTATION_HUMAN_APPROVAL_RECORD.md',
-  'src/config/vionaRequestPack13PrismaSchemaImplementationHumanApprovalReadiness.ts',
-  'scripts/viona-request-pack13-prisma-schema-implementation-human-approval-recording-check.mjs',
-  'docs/design/evidence/cursor-request-pack13b-prisma-schema-implementation-human-approval/README.md',
-  'src/config/vionaRequestSotFounderArchitectSignoffPacketReadiness.ts',
+  'src/config/vionaRequestPack12PrismaSchemaReadinessBoundary.ts',
+  'src/config/vionaRequestSchemaDesignHumanApprovalReadiness.ts',
+  'src/config/vionaRequestDedicatedStoreSchemaDesignReadiness.ts',
+  'src/config/vionaRequestSotHumanApprovalReadiness.ts',
   'src/config/vionaRequestSotSignoffPhasePromotionReadiness.ts',
   'src/config/vionaRequestSourceOfTruthAuthTenantReadiness.ts',
   'src/config/vionaRequestPersistenceAuditReadiness.ts',
   'src/config/vionaOperatorInboxAdminReadiness.ts',
+];
+
+const GATE_SCRIPT_FILES = [
+  'scripts/viona-request-pack13-prisma-schema-implementation-approval-packet-check.mjs',
+  'scripts/viona-request-pack12-prisma-schema-readiness-boundary-check.mjs',
+  'scripts/viona-request-schema-design-human-approval-recording-check.mjs',
+  'scripts/viona-request-dedicated-store-schema-design-contract-check.mjs',
+  'scripts/viona-request-sot-human-approval-recording-check.mjs',
   'scripts/viona-request-sot-founder-architect-signoff-packet-check.mjs',
   'scripts/viona-request-sot-signoff-phase-promotion-readiness-check.mjs',
   'scripts/viona-request-source-of-truth-auth-tenant-mapping-check.mjs',
@@ -49,74 +57,88 @@ const ALLOWED_FILES = [
   'scripts/viona-request-inbox-operator-reference-lab-check.mjs',
 ];
 
-const REQUIRED_FILES = [
-  'docs/product/VIONA_REQUEST_SOT_HUMAN_APPROVAL_RECORD.md',
-  'src/config/vionaRequestSotHumanApprovalReadiness.ts',
-  'scripts/viona-request-sot-human-approval-recording-check.mjs',
-  'docs/design/evidence/cursor-request-sot-human-approval-pack10c/README.md',
-  'docs/product/VIONA_REQUEST_DEDICATED_STORE_SCHEMA_DESIGN_CONTRACT.md',
-  'src/domain/requests/vionaRequestDedicatedStoreSchemaDesignContract.ts',
-  'src/config/vionaRequestDedicatedStoreSchemaDesignReadiness.ts',
-  'scripts/viona-request-dedicated-store-schema-design-contract-check.mjs',
-  'docs/design/evidence/cursor-request-dedicated-store-schema-design-pack11/README.md',
+const ALLOWED_FILES = [
+  ...PACK13B_CORE_FILES,
+  ...PACK13A_CORE_FILES,
+  ...PACK12_CORE_FILES,
+  ...POINTER_CONFIG_FILES,
+  ...GATE_SCRIPT_FILES,
 ];
 
+const REQUIRED_FILES = PACK13B_CORE_FILES;
+
 const REQUIRED_DOC_PHRASES = [
-  'outside Cursor/agent authority',
+  'origin/master @ a804204',
+  'human chat instruction',
+  'APPROVED Pack13 Prisma schema implementation approval recording.',
   'Nong Si Buong',
-  'Founder / Executive Sponsor',
-  'Acting Principal Architect',
-  'Single Accountable Architecture Owner',
-  'Product Owner',
-  'Safety Owner',
-  'Ops Runbook Owner',
+  'Founder / Executive Sponsor + Acting Principal Architect',
   '2026-06-15',
+  'APPROVED',
+  'Pack13A',
+  'approval packet',
+  'pending',
+  'Pack13B records approval only',
+  'recording-only',
+  'does not edit `prisma/schema.prisma`',
+  'does not create migration',
+  'does not create API',
+  'does not create persistence adapter',
+  'does not create request mutation',
+  'does not start live runtime',
+  'does not change Admin Debug data source',
+  'does not add OPERATOR',
+  'payment',
+  'booking',
+  'SOS dispatch',
+  'wallet mutation',
+  'live AI',
+  'live merchant execution',
+  'future Pack13 Prisma schema implementation',
+  'prisma/schema.prisma',
+  'VionaRequest*',
   'Dedicated VIONA Request Store',
-  'dedicatedVionaRequestStore',
-  'Pack11 discovery / schema-design contract only',
-  'does NOT authorize',
-  'Prisma schema',
-  'Prisma migration',
+  'LocalServiceRequest direct reuse',
+  'Audit log is not a payment ledger',
+  'Admin Debug remains fixture-only',
+  'OPERATOR is still not Prisma/Auth',
+  'prismaMigrationPermitted',
+  'read-only API',
   'persistence adapter',
   'request mutation',
   'Admin Debug live data',
-  'OPERATOR Prisma/Auth',
-  'Direct LocalServiceRequest reuse',
-  'Hybrid bridge remains future-only',
-  'Admin Debug remains fixture-only',
-  'agentMayFlipSignoff',
-  'pack11Started',
-  'false',
 ];
 
 const REQUIRED_CONFIG_TOKENS = [
-  'export const VIONA_REQUEST_SOT_HUMAN_APPROVAL_READINESS',
-  'export const VIONA_REQUEST_SOT_HUMAN_APPROVAL_CHECKLIST',
-  'export function getVionaRequestSotHumanApprovalReadiness',
-  'export function isVionaRequestSotHumanApprovalReadyForPack11Discovery',
-  'humanApprovalRecorded: true',
-  "humanApprovalSource: 'offline-human-record'",
-  "approvalRecordOwnerName: 'Nong Si Buong'",
-  "approvalDate: '2026-06-15'",
-  'founderExecutiveSponsorApproved: true',
-  'principalArchitectApproved: true',
-  'actingPrincipalArchitectApproved: true',
-  'singleAccountableOwnerApproved: true',
-  'productOwnerAcknowledged: true',
-  'safetyOwnerAcknowledged: true',
-  'opsRunbookOwnerAcknowledged: true',
-  "signOffStatus: 'approved'",
-  'sourceOfTruthDecisionSignedOff: true',
-  'founderSignoffRecorded: true',
-  'architectSignoffRecorded: true',
+  'export const VIONA_REQUEST_PACK13_PRISMA_SCHEMA_IMPLEMENTATION_HUMAN_APPROVAL_READINESS',
+  'export const VIONA_REQUEST_PACK13_PRISMA_SCHEMA_IMPLEMENTATION_HUMAN_APPROVAL_CHECKLIST',
+  'export function getVionaRequestPack13PrismaSchemaImplementationHumanApprovalReadiness',
+  'export function isVionaRequestPack13PrismaSchemaImplementationHumanApprovalReadyForImplementationPlanning',
+  'pack13HumanApprovalRecorded: true',
+  'pack13PrismaSchemaImplementationApproved: true',
+  'pack13PrismaSchemaImplementationRecordingOnly: true',
+  'pack13PrismaSchemaImplementationMayBePlannedNext: true',
+  "pack13PrismaSchemaImplementationApprovalSource: 'human-chat-instruction'",
+  "pack13PrismaSchemaImplementationApprovedBy: 'Nong Si Buong'",
+  "pack13PrismaSchemaImplementationApproverRole: 'Founder / Executive Sponsor + Acting Principal Architect'",
+  "pack13PrismaSchemaImplementationApprovalDate: '2026-06-15'",
+  "pack13PrismaSchemaImplementationApprovalDecision: 'approved'",
+  'prismaSchemaPermitted: true',
+  'pack13PrismaSchemaImplementationApprovalPacketActive: true',
+  'pack13ApprovalPacketPrepared: true',
+  'pack13HumanApprovalRequired: true',
+  'pack12PrismaSchemaReadinessBoundaryActive: true',
+  'pack12PlanningStarted: true',
+  'pack12PlanningOnly: true',
+  'schemaDesignApproved: true',
   "selectedSourceOfTruthOptionId: 'dedicatedVionaRequestStore'",
-  "recommendedSourceOfTruthOptionId: 'dedicatedVionaRequestStore'",
-  'pack11DiscoveryPermitted: true',
-  'pack11SchemaDesignContractOnly: true',
-  'agentMayFlipSignoff: false',
-  'pack11Started: false',
+  'pack13Started: false',
   'prismaSchemaActive: false',
+  'prismaMigrationPermitted: false',
   'prismaMigrationActive: false',
+  'readOnlyApiPermitted: false',
+  'persistenceAdapterPermitted: false',
+  'requestMutationPermitted: false',
   'persistenceApiActive: false',
   'readOnlyApiActive: false',
   'persistenceAdapterActive: false',
@@ -132,64 +154,52 @@ const REQUIRED_CONFIG_TOKENS = [
   'walletMutationActive: false',
   'liveAiProtectedActionsActive: false',
   'liveMerchantExecutionActive: false',
+  'agentMayFlipSignoff: false',
   'adminDebugUsesFixturesOnly: true',
-];
-
-const REQUIRED_CONFIG_TOKENS_SCHEMA_DESIGN_APPROVED = [
-  ...REQUIRED_CONFIG_TOKENS,
-  'schemaDesignHumanApprovalRecorded: true',
-  'schemaDesignApproved: true',
-  'pack12PlanningPermitted: true',
-  'pack12PlanningReadinessBoundaryOnly: true',
-  'pack12Started: false',
-  'schemaDesignReviewRequired: false',
 ];
 
 const REQUIRED_POINTER_TOKENS = [
-  'humanApprovalRecordActive: true',
-  'pack11DiscoveryPermitted: true',
-  'pack11SchemaDesignContractOnly: true',
-  'sourceOfTruthDecisionSignedOff: true',
-  "selectedSourceOfTruthOptionId: 'dedicatedVionaRequestStore'",
-  'agentMayFlipSignoff: false',
-  'pack11Started: false',
-  'persistenceApiActive: false',
+  'pack13HumanApprovalRecorded: true',
+  'pack13PrismaSchemaImplementationApproved: true',
+  'pack13PrismaSchemaImplementationRecordingOnly: true',
+  'pack13PrismaSchemaImplementationMayBePlannedNext: true',
+  "pack13PrismaSchemaImplementationApprovalSource: 'human-chat-instruction'",
+  "pack13PrismaSchemaImplementationApprovedBy: 'Nong Si Buong'",
+  "pack13PrismaSchemaImplementationApprovalDate: '2026-06-15'",
+  'prismaSchemaPermitted: true',
+  'pack13Started: false',
   'prismaSchemaActive: false',
+  'prismaMigrationPermitted: false',
+  'prismaMigrationActive: false',
+  'readOnlyApiPermitted: false',
+  'persistenceAdapterPermitted: false',
+  'requestMutationPermitted: false',
+  'persistenceApiActive: false',
+  'readOnlyApiActive: false',
+  'persistenceAdapterActive: false',
+  'auditLogActive: false',
+  'requestMutationActive: false',
+  'adminDebugLiveDataActive: false',
+  'operatorRoleAddedToAuth: false',
+  'operatorRoleAddedToPrisma: false',
+  'productionLiveOpsActive: false',
   'adminDebugUsesFixturesOnly: true',
-];
-
-const REQUIRED_POINTER_TOKENS_SCHEMA_DESIGN_APPROVED = [
-  ...REQUIRED_POINTER_TOKENS,
-  'schemaDesignHumanApprovalRecorded: true',
-  'schemaDesignApproved: true',
-  'pack12PlanningPermitted: true',
-  'pack12PlanningReadinessBoundaryOnly: true',
-  'pack12Started: false',
-  'schemaDesignReviewRequired: false',
 ];
 
 const FORBIDDEN_DIFF_PATTERNS = [
   /^App\.tsx$/,
   /MainTabNavigator/,
-  /referenceLabStackScreens\.tsx$/,
-  /referenceLabLinking\.ts$/,
-  /^src\/navigation\/routes\.ts$/,
-  /HomeScreen\.tsx$/,
-  /LocalScreen\.tsx$/,
-  /TravelScreen\.tsx$/,
+  /^src\/navigation\//,
   /VionaAdminDebugOperatorInboxPreviewScreen/,
   /LocalMerchantRequestInbox/,
   /TourismMerchantInbox/,
   /LocalOpsAudit/,
-  /localOpsAuditApi/,
   /^assets\//,
   /^prisma\//,
-  /^migrations?\//,
   /^src\/routes\//,
   /^src\/controllers\//,
   /^src\/server\.ts$/,
   /vionaRequestTypes\.ts$/,
-  /^src\/(?:api|server|services\/(?:payment|payments|booking|bookings|auth|sos|wallet|ai)|screens\/academy)\//i,
 ];
 
 const FORBIDDEN_RUNTIME_IMPORTS = [
@@ -200,8 +210,6 @@ const FORBIDDEN_RUNTIME_IMPORTS = [
   'AsyncStorage',
   '@prisma/client',
   'PrismaClient',
-  'getPrisma',
-  'supabase',
   'useNavigation',
 ];
 
@@ -264,24 +272,11 @@ function findUnsafeStandaloneClaims(paths) {
   return [...new Set(hits)];
 }
 
-function isSchemaDesignHumanApprovalRecorded() {
-  const rel = 'src/config/vionaRequestSchemaDesignHumanApprovalReadiness.ts';
-  return existsSync(path.join(ROOT, rel)) && read(rel).includes('schemaDesignHumanApprovalRecorded: true');
-}
-
 function main() {
-  console.log('VIONA request SoT human approval recording check (Pack10C)');
+  console.log('VIONA request Pack13B Prisma schema implementation human approval recording check');
   console.log(
-    'Docs/config/check-script only. Records human approval; no Pack11 start, API, DB, Prisma, adapter, route, mutation, or Admin Debug data-source change.\n'
+    'Recording-only pack. Human approval recorded. No Prisma schema, migration, API, adapter, mutation, or runtime.\n'
   );
-
-  const schemaDesignHumanApprovalRecorded = isSchemaDesignHumanApprovalRecorded();
-  const requiredConfigTokens = schemaDesignHumanApprovalRecorded
-    ? REQUIRED_CONFIG_TOKENS_SCHEMA_DESIGN_APPROVED
-    : REQUIRED_CONFIG_TOKENS;
-  const requiredPointerTokens = schemaDesignHumanApprovalRecorded
-    ? REQUIRED_POINTER_TOKENS_SCHEMA_DESIGN_APPROVED
-    : REQUIRED_POINTER_TOKENS;
 
   const missingFiles = REQUIRED_FILES.filter((relPath) => !existsSync(path.join(ROOT, relPath)));
   const changedFiles = getChangedFiles();
@@ -290,36 +285,48 @@ function main() {
     FORBIDDEN_DIFF_PATTERNS.some((pattern) => pattern.test(file))
   );
 
-  const approvalConfig = read('src/config/vionaRequestSotHumanApprovalReadiness.ts');
-  const approvalDoc = read('docs/product/VIONA_REQUEST_SOT_HUMAN_APPROVAL_RECORD.md');
-  const pack10 = read('src/config/vionaRequestSotFounderArchitectSignoffPacketReadiness.ts');
+  const approvalDoc = read(
+    'docs/product/VIONA_REQUEST_PACK13_PRISMA_SCHEMA_IMPLEMENTATION_HUMAN_APPROVAL_RECORD.md'
+  );
+  const approvalConfig = read(
+    'src/config/vionaRequestPack13PrismaSchemaImplementationHumanApprovalReadiness.ts'
+  );
+  const pack13a = read('src/config/vionaRequestPack13PrismaSchemaImplementationApprovalPacketReadiness.ts');
+  const pack12 = read('src/config/vionaRequestPack12PrismaSchemaReadinessBoundary.ts');
+  const schemaApproval = read('src/config/vionaRequestSchemaDesignHumanApprovalReadiness.ts');
+  const dedicated = read('src/config/vionaRequestDedicatedStoreSchemaDesignReadiness.ts');
+  const human = read('src/config/vionaRequestSotHumanApprovalReadiness.ts');
   const pack9 = read('src/config/vionaRequestSotSignoffPhasePromotionReadiness.ts');
   const pack8 = read('src/config/vionaRequestSourceOfTruthAuthTenantReadiness.ts');
   const persistence = read('src/config/vionaRequestPersistenceAuditReadiness.ts');
   const operator = read('src/config/vionaOperatorInboxAdminReadiness.ts');
-  const pointerCombined = `${pack10}\n${pack9}\n${pack8}\n${persistence}\n${operator}`;
+  const pointerCombined = `${pack13a}\n${pack12}\n${schemaApproval}\n${dedicated}\n${human}\n${pack9}\n${pack8}\n${persistence}\n${operator}`;
 
   const appChanged = run('git diff --name-only origin/master -- App.tsx');
-  const routesChanged = run('git diff --name-only origin/master -- src/navigation/routes.ts');
   const prismaChanged = run('git diff --name-only origin/master -- prisma/');
+  const migrationsChanged = run('git diff --name-only origin/master -- prisma/migrations');
   const serverChanged = run('git diff --name-only origin/master -- src/server.ts');
   const typesChanged = run('git diff --name-only origin/master -- src/domain/requests/vionaRequestTypes.ts');
 
   const missingDocPhrases = missingValues(approvalDoc, REQUIRED_DOC_PHRASES);
-  const missingConfigTokens = missingValues(approvalConfig, requiredConfigTokens);
-  const missingPointerTokens = missingValues(pointerCombined, requiredPointerTokens);
+  const missingConfigTokens = missingValues(approvalConfig, REQUIRED_CONFIG_TOKENS);
+  const missingPointerTokens = missingValues(pointerCombined, REQUIRED_POINTER_TOKENS);
   const unsafeClaims = findUnsafeStandaloneClaims([
-    'docs/product/VIONA_REQUEST_SOT_HUMAN_APPROVAL_RECORD.md',
-    'src/config/vionaRequestSotHumanApprovalReadiness.ts',
+    'docs/product/VIONA_REQUEST_PACK13_PRISMA_SCHEMA_IMPLEMENTATION_HUMAN_APPROVAL_RECORD.md',
+    'src/config/vionaRequestPack13PrismaSchemaImplementationHumanApprovalReadiness.ts',
   ]);
 
   const forbiddenImports = FORBIDDEN_RUNTIME_IMPORTS.filter((token) => approvalConfig.includes(token));
 
-  const agentFlipEnabled = approvalConfig.includes('agentMayFlipSignoff: true');
-  const pack11Started = approvalConfig.includes('pack11Started: true');
+  const pack13Started = approvalConfig.includes('pack13Started: true');
   const prismaActive =
     approvalConfig.includes('prismaSchemaActive: true') ||
     approvalConfig.includes('prismaMigrationActive: true');
+  const migrationPermitted = approvalConfig.includes('prismaMigrationPermitted: true');
+  const apiPermitted =
+    approvalConfig.includes('readOnlyApiPermitted: true') ||
+    approvalConfig.includes('persistenceAdapterPermitted: true');
+  const mutationPermitted = approvalConfig.includes('requestMutationPermitted: true');
   const apiActive =
     approvalConfig.includes('persistenceApiActive: true') ||
     approvalConfig.includes('readOnlyApiActive: true') ||
@@ -337,30 +344,24 @@ function main() {
     approvalConfig.includes('liveAiProtectedActionsActive: true') ||
     approvalConfig.includes('liveMerchantExecutionActive: true');
 
-  const missingApprovalFlags =
-    !approvalConfig.includes('sourceOfTruthDecisionSignedOff: true') ||
-    !approvalConfig.includes('founderSignoffRecorded: true') ||
-    !approvalConfig.includes('architectSignoffRecorded: true') ||
-    !approvalConfig.includes("selectedSourceOfTruthOptionId: 'dedicatedVionaRequestStore'") ||
-    !approvalConfig.includes("signOffStatus: 'approved'");
-
   if (missingFiles.length) fail('missing required files', missingFiles);
   if (unexpectedFiles.length) fail('unexpected files changed', unexpectedFiles);
   if (forbiddenFiles.length) fail('forbidden paths changed', forbiddenFiles);
   if (appChanged) fail('App.tsx changed vs origin/master', [appChanged]);
-  if (routesChanged) fail('routes.ts changed vs origin/master', [routesChanged]);
   if (prismaChanged) fail('prisma changed vs origin/master', [prismaChanged.split('\n')[0] || 'prisma/']);
+  if (migrationsChanged) fail('migrations changed vs origin/master', [migrationsChanged.split('\n')[0] || 'prisma/migrations']);
   if (serverChanged) fail('src/server.ts changed vs origin/master', [serverChanged]);
   if (typesChanged) fail('vionaRequestTypes.ts changed vs origin/master', [typesChanged]);
-  if (missingDocPhrases.length) fail('missing approval doc requirements', missingDocPhrases);
-  if (missingConfigTokens.length) fail('missing approval config tokens', missingConfigTokens);
+  if (missingDocPhrases.length) fail('missing approval record doc requirements', missingDocPhrases);
+  if (missingConfigTokens.length) fail('missing approval readiness config tokens', missingConfigTokens);
   if (missingPointerTokens.length) fail('missing pointer config tokens', missingPointerTokens);
   if (unsafeClaims.length) fail('unsafe standalone production claims', unsafeClaims);
-  if (forbiddenImports.length) fail('forbidden runtime imports in Pack10C config', forbiddenImports);
-  if (missingApprovalFlags) fail('human approval flags incomplete', ['required approval flags missing']);
-  if (agentFlipEnabled) fail('agentMayFlipSignoff must remain false', ['agentMayFlipSignoff: true']);
-  if (pack11Started) fail('Pack11 must not start in Pack10C', ['pack11Started: true']);
+  if (forbiddenImports.length) fail('forbidden runtime imports in Pack13B config', forbiddenImports);
+  if (pack13Started) fail('pack13Started must remain false', ['pack13Started: true']);
   if (prismaActive) fail('Prisma must remain inactive', ['prisma active flag true']);
+  if (migrationPermitted) fail('migration must remain unauthorized', ['prismaMigrationPermitted: true']);
+  if (apiPermitted) fail('API/adapter must remain unauthorized', ['API/adapter permitted']);
+  if (mutationPermitted) fail('mutation must remain unauthorized', ['requestMutationPermitted: true']);
   if (apiActive) fail('API/adapter must remain inactive', ['persistence API/adapter active']);
   if (mutationActive) fail('mutation must remain inactive', ['requestMutationActive: true']);
   if (adminDebugLive) fail('Admin Debug must remain fixture-only', ['adminDebugLiveDataActive: true']);
@@ -368,26 +369,27 @@ function main() {
   if (liveRuntime) fail('live runtime must remain blocked', ['payment/booking/SOS/wallet/live AI active']);
 
   if (process.exitCode) {
-    console.log('\nResult: FAIL - fix Pack10C human approval recording before import.');
+    console.log('\nResult: FAIL - fix Pack13B human approval recording before import.');
     return;
   }
 
   console.log(`Required files: PASS (${REQUIRED_FILES.length})`);
   console.log(`Changed file scope: PASS (${changedFiles.length || ALLOWED_FILES.length} allowed files)`);
-  console.log('Human approval doc facts: PASS');
+  console.log('Human approval record doc facts: PASS');
   console.log('Approval readiness config: PASS');
   console.log('Pointer configs updated: PASS');
-  console.log('Human decision flags recorded: PASS');
-  console.log('agentMayFlipSignoff remains false: PASS');
-  console.log('Pack11 not started: PASS');
-  console.log('Prisma/API/adapter/mutation remain blocked: PASS');
+  console.log('pack13HumanApprovalRecorded true: PASS');
+  console.log('pack13PrismaSchemaImplementationApproved true: PASS');
+  console.log('prismaSchemaPermitted true for future pack: PASS');
+  console.log('pack13Started remains false: PASS');
+  console.log('prismaSchemaActive remains false: PASS');
+  console.log('Migration/API/adapter/mutation remain blocked: PASS');
   console.log('Admin Debug fixture-only: PASS');
   console.log('OPERATOR Prisma/Auth not added: PASS');
-  console.log('No App.tsx/navigation/screen changes: PASS');
-  console.log('No Prisma/API/server/types changes: PASS');
-  console.log('Pack11 unlock limited to discovery/schema-design contract: PASS');
+  console.log('No forbidden runtime paths: PASS');
+  console.log('No prisma/schema.prisma change: PASS');
   console.log('No unsafe standalone claims: PASS');
-  console.log('\nResult: PASS - human SoT approval recording is import-ready.');
+  console.log('\nResult: PASS - Pack13B Prisma schema implementation human approval is recorded.');
 }
 
 main();

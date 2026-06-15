@@ -41,12 +41,20 @@ export type VionaRequestPack12PrismaSchemaReadinessBoundaryConfig = Readonly<{
   pack13ApprovalPacketPrepared: true;
   pack13HumanApprovalRequired: true;
   futurePrismaSchemaImplementationRequiresHumanApproval: true;
+  pack13HumanApprovalRecorded: true;
+  pack13PrismaSchemaImplementationApproved: true;
+  pack13PrismaSchemaImplementationRecordingOnly: true;
+  pack13PrismaSchemaImplementationMayBePlannedNext: true;
+  pack13PrismaSchemaImplementationApprovalSource: 'human-chat-instruction';
+  pack13PrismaSchemaImplementationApprovedBy: 'Nong Si Buong';
+  pack13PrismaSchemaImplementationApprovalDate: '2026-06-15';
+  pack13Started: false;
   futurePrismaMigrationRequiresHumanApproval: true;
   futureApiImplementationRequiresHumanApproval: true;
   futurePersistenceAdapterRequiresHumanApproval: true;
   futureMutationRequiresHumanApproval: true;
   pack12Started: false;
-  prismaSchemaPermitted: false;
+  prismaSchemaPermitted: true;
   prismaMigrationPermitted: false;
   readOnlyApiPermitted: false;
   persistenceAdapterPermitted: false;
@@ -161,12 +169,20 @@ export const VIONA_REQUEST_PACK12_PRISMA_SCHEMA_READINESS_BOUNDARY = {
   pack13ApprovalPacketPrepared: true,
   pack13HumanApprovalRequired: true,
   futurePrismaSchemaImplementationRequiresHumanApproval: true,
+  pack13HumanApprovalRecorded: true,
+  pack13PrismaSchemaImplementationApproved: true,
+  pack13PrismaSchemaImplementationRecordingOnly: true,
+  pack13PrismaSchemaImplementationMayBePlannedNext: true,
+  pack13PrismaSchemaImplementationApprovalSource: 'human-chat-instruction',
+  pack13PrismaSchemaImplementationApprovedBy: 'Nong Si Buong',
+  pack13PrismaSchemaImplementationApprovalDate: '2026-06-15',
+  pack13Started: false,
   futurePrismaMigrationRequiresHumanApproval: true,
   futureApiImplementationRequiresHumanApproval: true,
   futurePersistenceAdapterRequiresHumanApproval: true,
   futureMutationRequiresHumanApproval: true,
   pack12Started: false,
-  prismaSchemaPermitted: false,
+  prismaSchemaPermitted: true,
   prismaMigrationPermitted: false,
   readOnlyApiPermitted: false,
   persistenceAdapterPermitted: false,
