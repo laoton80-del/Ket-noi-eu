@@ -11,6 +11,11 @@ const ALLOWED_FILES = [
   'src/config/vionaRequestSchemaDesignHumanApprovalReadiness.ts',
   'scripts/viona-request-schema-design-human-approval-recording-check.mjs',
   'docs/design/evidence/cursor-request-schema-design-human-approval-pack11b/README.md',
+  'docs/product/VIONA_REQUEST_PACK12_PRISMA_SCHEMA_READINESS_BOUNDARY.md',
+  'src/domain/requests/vionaRequestPrismaSchemaReadinessBoundary.ts',
+  'src/config/vionaRequestPack12PrismaSchemaReadinessBoundary.ts',
+  'scripts/viona-request-pack12-prisma-schema-readiness-boundary-check.mjs',
+  'docs/design/evidence/cursor-request-pack12-prisma-schema-readiness-boundary/README.md',
   'src/config/vionaRequestDedicatedStoreSchemaDesignReadiness.ts',
   'src/config/vionaRequestSotHumanApprovalReadiness.ts',
   'src/config/vionaRequestSotSignoffPhasePromotionReadiness.ts',
@@ -35,6 +40,11 @@ const REQUIRED_FILES = [
   'src/config/vionaRequestSchemaDesignHumanApprovalReadiness.ts',
   'scripts/viona-request-schema-design-human-approval-recording-check.mjs',
   'docs/design/evidence/cursor-request-schema-design-human-approval-pack11b/README.md',
+  'docs/product/VIONA_REQUEST_PACK12_PRISMA_SCHEMA_READINESS_BOUNDARY.md',
+  'src/domain/requests/vionaRequestPrismaSchemaReadinessBoundary.ts',
+  'src/config/vionaRequestPack12PrismaSchemaReadinessBoundary.ts',
+  'scripts/viona-request-pack12-prisma-schema-readiness-boundary-check.mjs',
+  'docs/design/evidence/cursor-request-pack12-prisma-schema-readiness-boundary/README.md',
 ];
 
 const REQUIRED_DOC_PHRASES = [

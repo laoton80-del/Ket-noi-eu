@@ -39,6 +39,11 @@ export type VionaRequestDedicatedStoreSchemaDesignReadiness = Readonly<{
   schemaDesignApproved: boolean;
   pack12PlanningPermitted: boolean;
   pack12PlanningReadinessBoundaryOnly: boolean;
+  pack12PrismaSchemaReadinessBoundaryActive: boolean;
+  pack12PlanningStarted: boolean;
+  pack12PlanningOnly: boolean;
+  pack12ImplementationApproved: false;
+  futurePrismaSchemaImplementationRequiresHumanApproval: boolean;
   pack12Started: false;
   prismaSchemaPermitted: false;
   prismaMigrationPermitted: false;
@@ -153,6 +158,11 @@ export const VIONA_REQUEST_DEDICATED_STORE_SCHEMA_DESIGN_READINESS = {
   schemaDesignApproved: true,
   pack12PlanningPermitted: true,
   pack12PlanningReadinessBoundaryOnly: true,
+  pack12PrismaSchemaReadinessBoundaryActive: true,
+  pack12PlanningStarted: true,
+  pack12PlanningOnly: true,
+  pack12ImplementationApproved: false,
+  futurePrismaSchemaImplementationRequiresHumanApproval: true,
   pack12Started: false,
   prismaSchemaPermitted: false,
   prismaMigrationPermitted: false,

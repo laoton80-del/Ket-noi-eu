@@ -117,6 +117,14 @@ const PACK11B_SCHEMA_DESIGN_HUMAN_APPROVAL_DIFF_FILES = [
   'docs/design/evidence/cursor-request-schema-design-human-approval-pack11b/README.md',
 ];
 
+const PACK12_PRISMA_SCHEMA_READINESS_BOUNDARY_DIFF_FILES = [
+  'docs/product/VIONA_REQUEST_PACK12_PRISMA_SCHEMA_READINESS_BOUNDARY.md',
+  'src/domain/requests/vionaRequestPrismaSchemaReadinessBoundary.ts',
+  'src/config/vionaRequestPack12PrismaSchemaReadinessBoundary.ts',
+  'scripts/viona-request-pack12-prisma-schema-readiness-boundary-check.mjs',
+  'docs/design/evidence/cursor-request-pack12-prisma-schema-readiness-boundary/README.md',
+];
+
 const ALLOWED_DIFF_FILES = [
   ...PACK2_ALLOWED_DIFF_FILES,
   ...GATED_REFERENCE_LAB_PREVIEW_DIFF_FILES,
@@ -130,6 +138,7 @@ const ALLOWED_DIFF_FILES = [
   ...PACK10C_SOT_HUMAN_APPROVAL_DIFF_FILES,
   ...PACK11_DEDICATED_STORE_SCHEMA_DESIGN_DIFF_FILES,
   ...PACK11B_SCHEMA_DESIGN_HUMAN_APPROVAL_DIFF_FILES,
+  ...PACK12_PRISMA_SCHEMA_READINESS_BOUNDARY_DIFF_FILES,
 ];
 
 const REQUIRED_FILES = PACK2_ALLOWED_DIFF_FILES;
