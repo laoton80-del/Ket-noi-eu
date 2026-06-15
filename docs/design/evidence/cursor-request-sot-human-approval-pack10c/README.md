@@ -1,6 +1,6 @@
 # Pack10C evidence — Human SoT approval record
 
-**Branch:** `viona/cursor-request-record-human-sot-approval-pack10c`  
+**Branch:** `viona/cursor-request-record-human-sot-approval-pack10c`
 **Baseline:** `origin/master @ 17de026` (PR #66 — Pack10B merged)
 
 ## Scope

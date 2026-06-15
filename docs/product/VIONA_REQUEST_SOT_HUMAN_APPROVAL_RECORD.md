@@ -1,7 +1,7 @@
 # VIONA Request Engine — Human Source-of-Truth Approval Record
 
-**Document type:** Human approval record (offline decision imported into repository).  
-**Baseline:** `origin/master @ 17de026` — Pack10B merged (PR #66).  
+**Document type:** Human approval record (offline decision imported into repository).
+**Baseline:** `origin/master @ 17de026` — Pack10B merged (PR #66).
 **Related:** `docs/product/VIONA_REQUEST_SOT_FOUNDER_ARCHITECT_SIGNOFF_PACKET.md`, `docs/product/VIONA_REQUEST_SOT_HUMAN_SIGNOFF_TEMPLATE.md`
 
 ---
