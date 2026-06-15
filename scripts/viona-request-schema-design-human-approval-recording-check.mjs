@@ -20,6 +20,10 @@ const ALLOWED_FILES = [
   'src/config/vionaRequestPack13PrismaSchemaImplementationApprovalPacketReadiness.ts',
   'scripts/viona-request-pack13-prisma-schema-implementation-approval-packet-check.mjs',
   'docs/design/evidence/cursor-request-pack13a-prisma-schema-implementation-approval-packet/README.md',
+  'docs/product/VIONA_REQUEST_PACK13_PRISMA_SCHEMA_IMPLEMENTATION_HUMAN_APPROVAL_RECORD.md',
+  'src/config/vionaRequestPack13PrismaSchemaImplementationHumanApprovalReadiness.ts',
+  'scripts/viona-request-pack13-prisma-schema-implementation-human-approval-recording-check.mjs',
+  'docs/design/evidence/cursor-request-pack13b-prisma-schema-implementation-human-approval/README.md',
   'src/config/vionaRequestDedicatedStoreSchemaDesignReadiness.ts',
   'src/config/vionaRequestSotHumanApprovalReadiness.ts',
   'src/config/vionaRequestSotSignoffPhasePromotionReadiness.ts',
@@ -105,7 +109,7 @@ const REQUIRED_CONFIG_TOKENS = [
   'hybridBridgeFutureOnly: true',
   'adminDebugUsesFixturesOnly: true',
   'pack12Started: false',
-  'prismaSchemaPermitted: false',
+  'prismaSchemaPermitted: true',
   'prismaMigrationPermitted: false',
   'readOnlyApiPermitted: false',
   'persistenceAdapterPermitted: false',
@@ -139,7 +143,7 @@ const REQUIRED_POINTER_TOKENS = [
   'pack12PlanningReadinessBoundaryOnly: true',
   'schemaDesignReviewRequired: false',
   'pack12Started: false',
-  'prismaSchemaPermitted: false',
+  'prismaSchemaPermitted: true',
   'prismaMigrationPermitted: false',
   'persistenceApiActive: false',
   'prismaSchemaActive: false',
@@ -275,7 +279,6 @@ function main() {
     pointerCombined.includes('schemaDesignApproved: true') &&
     !approvalConfig.includes('schemaDesignHumanApprovalRecorded: true');
   const pack12Started = approvalConfig.includes('pack12Started: true');
-  const prismaPermitted = approvalConfig.includes('prismaSchemaPermitted: true');
   const prismaActive =
     approvalConfig.includes('prismaSchemaActive: true') ||
     approvalConfig.includes('prismaMigrationActive: true');
@@ -314,7 +317,6 @@ function main() {
   }
   if (agentFlipEnabled) fail('agentMayFlipSignoff must remain false', ['agentMayFlipSignoff: true']);
   if (pack12Started) fail('Pack12 must not start in Pack11B', ['pack12Started: true']);
-  if (prismaPermitted) fail('Prisma schema must remain unauthorized', ['prismaSchemaPermitted: true']);
   if (prismaActive) fail('Prisma must remain inactive', ['prisma active flag true']);
   if (apiActive) fail('API/adapter must remain inactive', ['persistence API/adapter active']);
   if (mutationActive) fail('mutation must remain inactive', ['requestMutationActive: true']);

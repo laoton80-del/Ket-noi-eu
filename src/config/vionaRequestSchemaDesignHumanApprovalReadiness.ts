@@ -45,12 +45,20 @@ export type VionaRequestSchemaDesignHumanApprovalReadiness = Readonly<{
   pack13ApprovalPacketPrepared: boolean;
   pack13HumanApprovalRequired: boolean;
   futurePrismaSchemaImplementationRequiresHumanApproval: boolean;
+  pack13HumanApprovalRecorded: true;
+  pack13PrismaSchemaImplementationApproved: true;
+  pack13PrismaSchemaImplementationRecordingOnly: true;
+  pack13PrismaSchemaImplementationMayBePlannedNext: true;
+  pack13PrismaSchemaImplementationApprovalSource: 'human-chat-instruction';
+  pack13PrismaSchemaImplementationApprovedBy: 'Nong Si Buong';
+  pack13PrismaSchemaImplementationApprovalDate: '2026-06-15';
+  pack13Started: false;
   selectedSourceOfTruthOptionId: 'dedicatedVionaRequestStore';
   directLocalServiceRequestReuseAllowed: false;
   hybridBridgeFutureOnly: true;
   adminDebugUsesFixturesOnly: true;
   pack12Started: false;
-  prismaSchemaPermitted: false;
+  prismaSchemaPermitted: true;
   prismaMigrationPermitted: false;
   readOnlyApiPermitted: false;
   persistenceAdapterPermitted: false;
@@ -162,12 +170,20 @@ export const VIONA_REQUEST_SCHEMA_DESIGN_HUMAN_APPROVAL_READINESS = {
   pack13ApprovalPacketPrepared: true,
   pack13HumanApprovalRequired: true,
   futurePrismaSchemaImplementationRequiresHumanApproval: true,
+  pack13HumanApprovalRecorded: true,
+  pack13PrismaSchemaImplementationApproved: true,
+  pack13PrismaSchemaImplementationRecordingOnly: true,
+  pack13PrismaSchemaImplementationMayBePlannedNext: true,
+  pack13PrismaSchemaImplementationApprovalSource: 'human-chat-instruction',
+  pack13PrismaSchemaImplementationApprovedBy: 'Nong Si Buong',
+  pack13PrismaSchemaImplementationApprovalDate: '2026-06-15',
+  pack13Started: false,
   selectedSourceOfTruthOptionId: 'dedicatedVionaRequestStore',
   directLocalServiceRequestReuseAllowed: false,
   hybridBridgeFutureOnly: true,
   adminDebugUsesFixturesOnly: true,
   pack12Started: false,
-  prismaSchemaPermitted: false,
+  prismaSchemaPermitted: true,
   prismaMigrationPermitted: false,
   readOnlyApiPermitted: false,
   persistenceAdapterPermitted: false,

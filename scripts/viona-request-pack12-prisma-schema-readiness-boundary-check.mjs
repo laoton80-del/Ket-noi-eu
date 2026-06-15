@@ -16,6 +16,10 @@ const ALLOWED_FILES = [
   'src/config/vionaRequestPack13PrismaSchemaImplementationApprovalPacketReadiness.ts',
   'scripts/viona-request-pack13-prisma-schema-implementation-approval-packet-check.mjs',
   'docs/design/evidence/cursor-request-pack13a-prisma-schema-implementation-approval-packet/README.md',
+  'docs/product/VIONA_REQUEST_PACK13_PRISMA_SCHEMA_IMPLEMENTATION_HUMAN_APPROVAL_RECORD.md',
+  'src/config/vionaRequestPack13PrismaSchemaImplementationHumanApprovalReadiness.ts',
+  'scripts/viona-request-pack13-prisma-schema-implementation-human-approval-recording-check.mjs',
+  'docs/design/evidence/cursor-request-pack13b-prisma-schema-implementation-human-approval/README.md',
   'src/config/vionaRequestSchemaDesignHumanApprovalReadiness.ts',
   'src/config/vionaRequestDedicatedStoreSchemaDesignReadiness.ts',
   'src/config/vionaRequestSotHumanApprovalReadiness.ts',
@@ -111,7 +115,7 @@ const REQUIRED_CONFIG_TOKENS = [
   'pack12ImplementationApproved: false',
   'futurePrismaSchemaImplementationRequiresHumanApproval: true',
   'pack12Started: false',
-  'prismaSchemaPermitted: false',
+  'prismaSchemaPermitted: true',
   'prismaMigrationPermitted: false',
   'persistenceAdapterPermitted: false',
   'requestMutationPermitted: false',
@@ -130,13 +134,20 @@ const REQUIRED_POINTER_TOKENS = [
   'pack12ImplementationApproved: false',
   'futurePrismaSchemaImplementationRequiresHumanApproval: true',
   'pack12Started: false',
-  'prismaSchemaPermitted: false',
+  'prismaSchemaPermitted: true',
   'prismaSchemaActive: false',
   'persistenceApiActive: false',
   'adminDebugUsesFixturesOnly: true',
   'pack13PrismaSchemaImplementationApprovalPacketActive: true',
   'pack13ApprovalPacketPrepared: true',
   'pack13HumanApprovalRequired: true',
+  'pack13HumanApprovalRecorded: true',
+  'pack13PrismaSchemaImplementationApproved: true',
+  'pack13PrismaSchemaImplementationRecordingOnly: true',
+  'pack13PrismaSchemaImplementationMayBePlannedNext: true',
+  "pack13PrismaSchemaImplementationApprovalSource: 'human-chat-instruction'",
+  "pack13PrismaSchemaImplementationApprovedBy: 'Nong Si Buong'",
+  "pack13PrismaSchemaImplementationApprovalDate: '2026-06-15'",
 ];
 
 const FORBIDDEN_DIFF_PATTERNS = [
@@ -271,7 +282,6 @@ function main() {
 
   const implementationApproved = config.includes('pack12ImplementationApproved: true');
   const pack12Started = config.includes('pack12Started: true');
-  const prismaPermitted = config.includes('prismaSchemaPermitted: true');
   const prismaActive =
     config.includes('prismaSchemaActive: true') || config.includes('prismaMigrationActive: true');
   const apiActive =
@@ -299,7 +309,6 @@ function main() {
   if (forbiddenImports.length) fail('forbidden runtime imports', forbiddenImports);
   if (implementationApproved) fail('pack12ImplementationApproved must remain false', ['pack12ImplementationApproved: true']);
   if (pack12Started) fail('pack12Started must remain false', ['pack12Started: true']);
-  if (prismaPermitted) fail('prismaSchemaPermitted must remain false', ['prismaSchemaPermitted: true']);
   if (prismaActive) fail('Prisma must remain inactive', ['prisma active']);
   if (apiActive) fail('API must remain inactive', ['persistence API active']);
   if (mutationActive) fail('mutation must remain inactive', ['requestMutationActive: true']);
