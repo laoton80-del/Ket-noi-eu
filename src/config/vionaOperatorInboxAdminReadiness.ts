@@ -80,8 +80,11 @@ export type VionaOperatorInboxAdminReadiness = Readonly<{
   pack13PrismaSchemaImplementationApprovalSource: 'human-chat-instruction';
   pack13PrismaSchemaImplementationApprovedBy: 'Nong Si Buong';
   pack13PrismaSchemaImplementationApprovalDate: '2026-06-15';
-  pack13Started: false;
+  pack13Started: true;
+  pack13SchemaOnlyImplementation: true;
+  vionaRequestPrismaModelsAdded: true;
   prismaSchemaPermitted: true;
+  prismaSchemaActive: true;
   pack12Started: false;
   sourceOfTruthDecisionSignedOff: true;
   adminDebugUsesFixturesOnly: boolean;
@@ -216,8 +219,11 @@ export const VIONA_OPERATOR_INBOX_ADMIN_READINESS = {
   pack13PrismaSchemaImplementationApprovalSource: 'human-chat-instruction',
   pack13PrismaSchemaImplementationApprovedBy: 'Nong Si Buong',
   pack13PrismaSchemaImplementationApprovalDate: '2026-06-15',
-  pack13Started: false,
+  pack13Started: true,
+  pack13SchemaOnlyImplementation: true,
+  vionaRequestPrismaModelsAdded: true,
   prismaSchemaPermitted: true,
+  prismaSchemaActive: true,
   pack12Started: false,
   sourceOfTruthDecisionSignedOff: true,
   adminDebugUsesFixturesOnly: true,

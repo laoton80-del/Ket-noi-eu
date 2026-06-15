@@ -14,53 +14,6 @@ const PACK13C_CORE_FILES = [
   'docs/design/evidence/cursor-request-pack13c-prisma-schema-implementation-schema-only/README.md',
 ];
 
-const POST_PACK13C_POINTER_TOKENS = [
-  'pack13Started: true',
-  'pack13SchemaOnlyImplementation: true',
-  'prismaSchemaActive: true',
-  'vionaRequestPrismaModelsAdded: true',
-];
-
-function isPack13cSchemaOnlyActive() {
-  const configPath = 'src/config/vionaRequestPack13CPrismaSchemaImplementationReadiness.ts';
-  if (!existsSync(path.join(ROOT, configPath))) return false;
-  return read(configPath).includes('pack13SchemaOnlyImplementation: true');
-}
-
-function augmentPointerTokensForPack13c(tokens, pack13cActive) {
-  if (!pack13cActive) return tokens;
-  const filtered = tokens.filter(
-    (token) => token !== 'prismaSchemaActive: false' && token !== 'pack13Started: false'
-  );
-  return [...filtered, ...POST_PACK13C_POINTER_TOKENS];
-}
-
-function augmentConfigTokensForPack13c(tokens, pack13cActive) {
-  if (!pack13cActive) return tokens;
-  const filtered = tokens.filter(
-    (token) => token !== 'prismaSchemaActive: false' && token !== 'pack13Started: false'
-  );
-  const additions = [];
-  if (tokens.includes('prismaSchemaActive: false')) additions.push('prismaSchemaActive: true');
-  if (tokens.includes('pack13Started: false')) additions.push('pack13Started: true');
-  if (tokens.includes('pack13SchemaOnlyImplementation: true') || tokens.includes('vionaRequestPrismaModelsAdded: true')) {
-    additions.push('pack13SchemaOnlyImplementation: true', 'vionaRequestPrismaModelsAdded: true');
-  }
-  return [...filtered, ...additions];
-}
-
-function matchesForbiddenDiff(file, pack13cActive) {
-  if (pack13cActive && file === 'prisma/schema.prisma') return false;
-  return FORBIDDEN_DIFF_PATTERNS.some((pattern) => pattern.test(file));
-}
-
-function isPrismaDiffBlocked(pack13cActive, prismaChanged) {
-  if (!prismaChanged) return false;
-  if (!pack13cActive) return true;
-  const files = prismaChanged.split('\n').map((line) => line.replace(/\\/g, '/')).filter(Boolean);
-  return files.some((file) => file !== 'prisma/schema.prisma');
-}
-
 const PACK13B_CORE_FILES = [
   'docs/product/VIONA_REQUEST_PACK13_PRISMA_SCHEMA_IMPLEMENTATION_HUMAN_APPROVAL_RECORD.md',
   'src/config/vionaRequestPack13PrismaSchemaImplementationHumanApprovalReadiness.ts',
@@ -84,6 +37,7 @@ const PACK12_CORE_FILES = [
 ];
 
 const POINTER_CONFIG_FILES = [
+  'src/config/vionaRequestPack13PrismaSchemaImplementationHumanApprovalReadiness.ts',
   'src/config/vionaRequestPack13PrismaSchemaImplementationApprovalPacketReadiness.ts',
   'src/config/vionaRequestPack12PrismaSchemaReadinessBoundary.ts',
   'src/config/vionaRequestSchemaDesignHumanApprovalReadiness.ts',
@@ -96,6 +50,7 @@ const POINTER_CONFIG_FILES = [
 ];
 
 const GATE_SCRIPT_FILES = [
+  'scripts/viona-request-pack13-prisma-schema-implementation-human-approval-recording-check.mjs',
   'scripts/viona-request-pack13-prisma-schema-implementation-approval-packet-check.mjs',
   'scripts/viona-request-pack12-prisma-schema-readiness-boundary-check.mjs',
   'scripts/viona-request-schema-design-human-approval-recording-check.mjs',
@@ -110,7 +65,6 @@ const GATE_SCRIPT_FILES = [
   'scripts/viona-request-inbox-readonly-check.mjs',
   'scripts/viona-request-inbox-reference-lab-check.mjs',
   'scripts/viona-request-inbox-operator-reference-lab-check.mjs',
-  'scripts/viona-request-pack13c-prisma-schema-implementation-check.mjs',
 ];
 
 const ALLOWED_FILES = [
@@ -122,75 +76,67 @@ const ALLOWED_FILES = [
   ...GATE_SCRIPT_FILES,
 ];
 
-const REQUIRED_FILES = PACK13B_CORE_FILES;
+const REQUIRED_FILES = PACK13C_CORE_FILES;
+
+const REQUIRED_PRISMA_MODELS = [
+  'model VionaRequest {',
+  'model VionaRequestParticipant {',
+  'model VionaRequestSourceLink {',
+  'model VionaRequestStatusEvent {',
+  'model VionaRequestAuditEvent {',
+  'model VionaRequestAttachmentReference {',
+];
+
+const FORBIDDEN_SCHEMA_FIELD_TOKENS = [
+  'paymentConfirmed',
+  'bookingConfirmed',
+  'sosDispatched',
+  'walletSettled',
+  'payoutConfirmed',
+  'settlementConfirmed',
+  'liveAiExecuted',
+  'LocalServiceRequest',
+];
+
+const FORBIDDEN_OPERATOR_TOKENS = ['OPERATOR', 'operatorRoleAddedToAuth', 'operatorRoleAddedToPrisma'];
 
 const REQUIRED_DOC_PHRASES = [
-  'origin/master @ a804204',
-  'human chat instruction',
-  'APPROVED Pack13 Prisma schema implementation approval recording.',
-  'Nong Si Buong',
-  'Founder / Executive Sponsor + Acting Principal Architect',
-  '2026-06-15',
-  'APPROVED',
-  'Pack13A',
-  'approval packet',
-  'pending',
-  'Pack13B records approval only',
-  'recording-only',
-  'does not edit `prisma/schema.prisma`',
-  'does not create migration',
-  'does not create API',
-  'does not create persistence adapter',
-  'does not create request mutation',
-  'does not start live runtime',
-  'does not change Admin Debug data source',
-  'does not add OPERATOR',
-  'payment',
-  'booking',
-  'SOS dispatch',
-  'wallet mutation',
-  'live AI',
-  'live merchant execution',
-  'future Pack13 Prisma schema implementation',
+  'origin/master @ 3f4625f',
+  'Pack13C implements Prisma schema only',
+  'Pack13B human approval',
   'prisma/schema.prisma',
-  'VionaRequest*',
+  'no migration',
+  'no DB apply',
+  'no API',
+  'no adapter',
+  'no mutation',
+  'Admin Debug remains fixture-only',
+  'OPERATOR is still not Prisma/Auth',
   'Dedicated VIONA Request Store',
   'LocalServiceRequest direct reuse',
   'Audit log is not a payment ledger',
-  'Admin Debug remains fixture-only',
-  'OPERATOR is still not Prisma/Auth',
-  'prismaMigrationPermitted',
-  'read-only API',
-  'persistence adapter',
-  'request mutation',
-  'Admin Debug live data',
+  'VionaRequest',
+  'VionaRequestParticipant',
+  'VionaRequestSourceLink',
+  'VionaRequestStatusEvent',
+  'VionaRequestAuditEvent',
+  'VionaRequestAttachmentReference',
 ];
 
 const REQUIRED_CONFIG_TOKENS = [
-  'export const VIONA_REQUEST_PACK13_PRISMA_SCHEMA_IMPLEMENTATION_HUMAN_APPROVAL_READINESS',
-  'export const VIONA_REQUEST_PACK13_PRISMA_SCHEMA_IMPLEMENTATION_HUMAN_APPROVAL_CHECKLIST',
-  'export function getVionaRequestPack13PrismaSchemaImplementationHumanApprovalReadiness',
-  'export function isVionaRequestPack13PrismaSchemaImplementationHumanApprovalReadyForImplementationPlanning',
+  'export const VIONA_REQUEST_PACK13C_PRISMA_SCHEMA_IMPLEMENTATION_READINESS',
+  'export const VIONA_REQUEST_PACK13C_PRISMA_SCHEMA_IMPLEMENTATION_CHECKLIST',
+  'export function getVionaRequestPack13CPrismaSchemaImplementationReadiness',
+  'export function isVionaRequestPack13CPrismaSchemaImplementationReadyForReview',
   'pack13HumanApprovalRecorded: true',
   'pack13PrismaSchemaImplementationApproved: true',
-  'pack13PrismaSchemaImplementationRecordingOnly: true',
-  'pack13PrismaSchemaImplementationMayBePlannedNext: true',
-  "pack13PrismaSchemaImplementationApprovalSource: 'human-chat-instruction'",
-  "pack13PrismaSchemaImplementationApprovedBy: 'Nong Si Buong'",
-  "pack13PrismaSchemaImplementationApproverRole: 'Founder / Executive Sponsor + Acting Principal Architect'",
-  "pack13PrismaSchemaImplementationApprovalDate: '2026-06-15'",
-  "pack13PrismaSchemaImplementationApprovalDecision: 'approved'",
   'prismaSchemaPermitted: true',
-  'pack13PrismaSchemaImplementationApprovalPacketActive: true',
-  'pack13ApprovalPacketPrepared: true',
-  'pack13HumanApprovalRequired: true',
-  'pack12PrismaSchemaReadinessBoundaryActive: true',
-  'pack12PlanningStarted: true',
-  'pack12PlanningOnly: true',
-  'schemaDesignApproved: true',
-  "selectedSourceOfTruthOptionId: 'dedicatedVionaRequestStore'",
-  'pack13Started: false',
-  'prismaSchemaActive: false',
+  'pack13Started: true',
+  'pack13SchemaOnlyImplementation: true',
+  'prismaSchemaActive: true',
+  'vionaRequestPrismaModelsAdded: true',
+  'migrationCreated: false',
+  'dbApplied: false',
   'prismaMigrationPermitted: false',
   'prismaMigrationActive: false',
   'readOnlyApiPermitted: false',
@@ -218,14 +164,11 @@ const REQUIRED_CONFIG_TOKENS = [
 const REQUIRED_POINTER_TOKENS = [
   'pack13HumanApprovalRecorded: true',
   'pack13PrismaSchemaImplementationApproved: true',
-  'pack13PrismaSchemaImplementationRecordingOnly: true',
-  'pack13PrismaSchemaImplementationMayBePlannedNext: true',
-  "pack13PrismaSchemaImplementationApprovalSource: 'human-chat-instruction'",
-  "pack13PrismaSchemaImplementationApprovedBy: 'Nong Si Buong'",
-  "pack13PrismaSchemaImplementationApprovalDate: '2026-06-15'",
   'prismaSchemaPermitted: true',
-  'pack13Started: false',
-  'prismaSchemaActive: false',
+  'pack13Started: true',
+  'pack13SchemaOnlyImplementation: true',
+  'prismaSchemaActive: true',
+  'vionaRequestPrismaModelsAdded: true',
   'prismaMigrationPermitted: false',
   'prismaMigrationActive: false',
   'readOnlyApiPermitted: false',
@@ -252,7 +195,7 @@ const FORBIDDEN_DIFF_PATTERNS = [
   /TourismMerchantInbox/,
   /LocalOpsAudit/,
   /^assets\//,
-  /^prisma\//,
+  /^prisma\/migrations\//,
   /^src\/routes\//,
   /^src\/controllers\//,
   /^src\/server\.ts$/,
@@ -330,25 +273,22 @@ function findUnsafeStandaloneClaims(paths) {
 }
 
 function main() {
-  const pack13cActive = isPack13cSchemaOnlyActive();
-  console.log('VIONA request Pack13B Prisma schema implementation human approval recording check');
+  console.log('VIONA request Pack13C Prisma schema implementation check (schema only)');
   console.log(
-    pack13cActive
-      ? 'Pack13C schema-only active. Pack13B approval record remains valid.\n'
-      : 'Recording-only pack. Human approval recorded. No Prisma schema, migration, API, adapter, mutation, or runtime.\n'
+    'Schema-only pack. Prisma models in schema.prisma. No migration, API, adapter, mutation, or runtime.\n'
   );
 
   const missingFiles = REQUIRED_FILES.filter((relPath) => !existsSync(path.join(ROOT, relPath)));
   const changedFiles = getChangedFiles();
   const unexpectedFiles = changedFiles.filter((file) => !ALLOWED_FILES.includes(file));
-  const forbiddenFiles = changedFiles.filter((file) => matchesForbiddenDiff(file, pack13cActive));
+  const forbiddenFiles = changedFiles.filter((file) =>
+    FORBIDDEN_DIFF_PATTERNS.some((pattern) => pattern.test(file))
+  );
 
-  const approvalDoc = read(
-    'docs/product/VIONA_REQUEST_PACK13_PRISMA_SCHEMA_IMPLEMENTATION_HUMAN_APPROVAL_RECORD.md'
-  );
-  const approvalConfig = read(
-    'src/config/vionaRequestPack13PrismaSchemaImplementationHumanApprovalReadiness.ts'
-  );
+  const schema = read('prisma/schema.prisma');
+  const implDoc = read('docs/product/VIONA_REQUEST_PACK13C_PRISMA_SCHEMA_IMPLEMENTATION_SCHEMA_ONLY.md');
+  const config = read('src/config/vionaRequestPack13CPrismaSchemaImplementationReadiness.ts');
+  const pack13b = read('src/config/vionaRequestPack13PrismaSchemaImplementationHumanApprovalReadiness.ts');
   const pack13a = read('src/config/vionaRequestPack13PrismaSchemaImplementationApprovalPacketReadiness.ts');
   const pack12 = read('src/config/vionaRequestPack12PrismaSchemaReadinessBoundary.ts');
   const schemaApproval = read('src/config/vionaRequestSchemaDesignHumanApprovalReadiness.ts');
@@ -358,69 +298,71 @@ function main() {
   const pack8 = read('src/config/vionaRequestSourceOfTruthAuthTenantReadiness.ts');
   const persistence = read('src/config/vionaRequestPersistenceAuditReadiness.ts');
   const operator = read('src/config/vionaOperatorInboxAdminReadiness.ts');
-  const pointerCombined = `${pack13a}\n${pack12}\n${schemaApproval}\n${dedicated}\n${human}\n${pack9}\n${pack8}\n${persistence}\n${operator}`;
+  const pointerCombined = `${pack13b}\n${pack13a}\n${pack12}\n${schemaApproval}\n${dedicated}\n${human}\n${pack9}\n${pack8}\n${persistence}\n${operator}`;
 
   const appChanged = run('git diff --name-only origin/master -- App.tsx');
-  const prismaChanged = run('git diff --name-only origin/master -- prisma/');
   const migrationsChanged = run('git diff --name-only origin/master -- prisma/migrations');
   const serverChanged = run('git diff --name-only origin/master -- src/server.ts');
   const typesChanged = run('git diff --name-only origin/master -- src/domain/requests/vionaRequestTypes.ts');
+  const schemaChanged = run('git diff --name-only origin/master -- prisma/schema.prisma');
 
-  const missingDocPhrases = missingValues(approvalDoc, REQUIRED_DOC_PHRASES);
-  const configTokens = augmentConfigTokensForPack13c(REQUIRED_CONFIG_TOKENS, pack13cActive);
-  const pointerTokens = augmentPointerTokensForPack13c(REQUIRED_POINTER_TOKENS, pack13cActive);
-  const missingConfigTokens = missingValues(approvalConfig, configTokens);
-  const missingPointerTokens = missingValues(pointerCombined, pointerTokens);
+  const missingDocPhrases = missingValues(implDoc, REQUIRED_DOC_PHRASES);
+  const missingConfigTokens = missingValues(config, REQUIRED_CONFIG_TOKENS);
+  const missingPointerTokens = missingValues(pointerCombined, REQUIRED_POINTER_TOKENS);
+  const missingModels = missingValues(schema, REQUIRED_PRISMA_MODELS);
+  const forbiddenSchemaFields = FORBIDDEN_SCHEMA_FIELD_TOKENS.filter((token) => {
+    const vionaSection = schema.split('VIONA Request Engine')[1] || '';
+    return vionaSection.includes(token);
+  });
+  const operatorInRoleEnum = schema.includes('enum Role {') && /\bOPERATOR\b/.test(schema.split('enum Role {')[1]?.split('}')[0] || '');
   const unsafeClaims = findUnsafeStandaloneClaims([
-    'docs/product/VIONA_REQUEST_PACK13_PRISMA_SCHEMA_IMPLEMENTATION_HUMAN_APPROVAL_RECORD.md',
-    'src/config/vionaRequestPack13PrismaSchemaImplementationHumanApprovalReadiness.ts',
+    'docs/product/VIONA_REQUEST_PACK13C_PRISMA_SCHEMA_IMPLEMENTATION_SCHEMA_ONLY.md',
+    'src/config/vionaRequestPack13CPrismaSchemaImplementationReadiness.ts',
   ]);
 
-  const forbiddenImports = FORBIDDEN_RUNTIME_IMPORTS.filter((token) => approvalConfig.includes(token));
+  const forbiddenImports = FORBIDDEN_RUNTIME_IMPORTS.filter((token) => config.includes(token));
 
-  const pack13Started = approvalConfig.includes('pack13Started: true');
-  const prismaActive =
-    approvalConfig.includes('prismaSchemaActive: true') ||
-    approvalConfig.includes('prismaMigrationActive: true');
-  const migrationPermitted = approvalConfig.includes('prismaMigrationPermitted: true');
+  const migrationCreated = existsSync(path.join(ROOT, 'prisma/migrations')) &&
+    run('git diff --name-only origin/master -- prisma/migrations').length > 0;
+  const migrationPermitted = config.includes('prismaMigrationPermitted: true');
   const apiPermitted =
-    approvalConfig.includes('readOnlyApiPermitted: true') ||
-    approvalConfig.includes('persistenceAdapterPermitted: true');
-  const mutationPermitted = approvalConfig.includes('requestMutationPermitted: true');
+    config.includes('readOnlyApiPermitted: true') ||
+    config.includes('persistenceAdapterPermitted: true');
+  const mutationPermitted = config.includes('requestMutationPermitted: true');
   const apiActive =
-    approvalConfig.includes('persistenceApiActive: true') ||
-    approvalConfig.includes('readOnlyApiActive: true') ||
-    approvalConfig.includes('persistenceAdapterActive: true');
-  const mutationActive = approvalConfig.includes('requestMutationActive: true');
-  const adminDebugLive = approvalConfig.includes('adminDebugLiveDataActive: true');
+    config.includes('persistenceApiActive: true') ||
+    config.includes('readOnlyApiActive: true') ||
+    config.includes('persistenceAdapterActive: true');
+  const mutationActive = config.includes('requestMutationActive: true');
+  const adminDebugLive = config.includes('adminDebugLiveDataActive: true');
   const operatorAdded =
-    approvalConfig.includes('operatorRoleAddedToAuth: true') ||
-    approvalConfig.includes('operatorRoleAddedToPrisma: true');
+    config.includes('operatorRoleAddedToAuth: true') ||
+    config.includes('operatorRoleAddedToPrisma: true');
   const liveRuntime =
-    approvalConfig.includes('paymentCaptureActive: true') ||
-    approvalConfig.includes('bookingConfirmationActive: true') ||
-    approvalConfig.includes('sosDispatchActive: true') ||
-    approvalConfig.includes('walletMutationActive: true') ||
-    approvalConfig.includes('liveAiProtectedActionsActive: true') ||
-    approvalConfig.includes('liveMerchantExecutionActive: true');
+    config.includes('paymentCaptureActive: true') ||
+    config.includes('bookingConfirmationActive: true') ||
+    config.includes('sosDispatchActive: true') ||
+    config.includes('walletMutationActive: true') ||
+    config.includes('liveAiProtectedActionsActive: true') ||
+    config.includes('liveMerchantExecutionActive: true');
 
   if (missingFiles.length) fail('missing required files', missingFiles);
   if (unexpectedFiles.length) fail('unexpected files changed', unexpectedFiles);
   if (forbiddenFiles.length) fail('forbidden paths changed', forbiddenFiles);
   if (appChanged) fail('App.tsx changed vs origin/master', [appChanged]);
-  if (isPrismaDiffBlocked(pack13cActive, prismaChanged)) {
-    fail('prisma changed vs origin/master', [prismaChanged.split('\n')[0] || 'prisma/']);
-  }
-  if (migrationsChanged) fail('migrations changed vs origin/master', [migrationsChanged.split('\n')[0] || 'prisma/migrations']);
+  if (migrationsChanged) fail('prisma/migrations changed vs origin/master', [migrationsChanged.split('\n')[0] || 'prisma/migrations']);
   if (serverChanged) fail('src/server.ts changed vs origin/master', [serverChanged]);
   if (typesChanged) fail('vionaRequestTypes.ts changed vs origin/master', [typesChanged]);
-  if (missingDocPhrases.length) fail('missing approval record doc requirements', missingDocPhrases);
-  if (missingConfigTokens.length) fail('missing approval readiness config tokens', missingConfigTokens);
+  if (!schemaChanged) fail('prisma/schema.prisma must change in Pack13C', ['no schema diff']);
+  if (missingDocPhrases.length) fail('missing implementation doc requirements', missingDocPhrases);
+  if (missingConfigTokens.length) fail('missing readiness config tokens', missingConfigTokens);
   if (missingPointerTokens.length) fail('missing pointer config tokens', missingPointerTokens);
+  if (missingModels.length) fail('missing required Prisma models', missingModels);
+  if (forbiddenSchemaFields.length) fail('forbidden truth fields in VIONA schema section', forbiddenSchemaFields);
+  if (operatorInRoleEnum) fail('OPERATOR must not be added to Role enum', ['OPERATOR in Role enum']);
   if (unsafeClaims.length) fail('unsafe standalone production claims', unsafeClaims);
-  if (forbiddenImports.length) fail('forbidden runtime imports in Pack13B config', forbiddenImports);
-  if (!pack13cActive && pack13Started) fail('pack13Started must remain false', ['pack13Started: true']);
-  if (!pack13cActive && prismaActive) fail('Prisma must remain inactive', ['prisma active flag true']);
+  if (forbiddenImports.length) fail('forbidden runtime imports in Pack13C config', forbiddenImports);
+  if (migrationCreated) fail('migration files must not be created', ['prisma/migrations changed']);
   if (migrationPermitted) fail('migration must remain unauthorized', ['prismaMigrationPermitted: true']);
   if (apiPermitted) fail('API/adapter must remain unauthorized', ['API/adapter permitted']);
   if (mutationPermitted) fail('mutation must remain unauthorized', ['requestMutationPermitted: true']);
@@ -431,27 +373,27 @@ function main() {
   if (liveRuntime) fail('live runtime must remain blocked', ['payment/booking/SOS/wallet/live AI active']);
 
   if (process.exitCode) {
-    console.log('\nResult: FAIL - fix Pack13B human approval recording before import.');
+    console.log('\nResult: FAIL - fix Pack13C Prisma schema implementation before import.');
     return;
   }
 
   console.log(`Required files: PASS (${REQUIRED_FILES.length})`);
   console.log(`Changed file scope: PASS (${changedFiles.length || ALLOWED_FILES.length} allowed files)`);
-  console.log('Human approval record doc facts: PASS');
-  console.log('Approval readiness config: PASS');
+  console.log('prisma/schema.prisma changed: PASS');
+  console.log('All six VionaRequest* models present: PASS');
+  console.log('No forbidden truth fields: PASS');
+  console.log('No OPERATOR Prisma/Auth role: PASS');
+  console.log('Implementation doc: PASS');
+  console.log('Readiness config: PASS');
   console.log('Pointer configs updated: PASS');
-  console.log('pack13HumanApprovalRecorded true: PASS');
-  console.log('pack13PrismaSchemaImplementationApproved true: PASS');
-  console.log('prismaSchemaPermitted true for future pack: PASS');
-  console.log('pack13Started remains false: PASS');
-  console.log('prismaSchemaActive remains false: PASS');
-  console.log('Migration/API/adapter/mutation remain blocked: PASS');
+  console.log('pack13Started true: PASS');
+  console.log('pack13SchemaOnlyImplementation true: PASS');
+  console.log('prismaSchemaActive true: PASS');
+  console.log('No migration/API/adapter/mutation/live runtime: PASS');
   console.log('Admin Debug fixture-only: PASS');
-  console.log('OPERATOR Prisma/Auth not added: PASS');
   console.log('No forbidden runtime paths: PASS');
-  console.log('No prisma/schema.prisma change: PASS');
   console.log('No unsafe standalone claims: PASS');
-  console.log('\nResult: PASS - Pack13B Prisma schema implementation human approval is recorded.');
+  console.log('\nResult: PASS - Pack13C Prisma schema implementation (schema only) is import-ready.');
 }
 
 main();

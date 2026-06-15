@@ -47,9 +47,11 @@ export type VionaRequestPack13PrismaSchemaImplementationHumanApprovalReadiness =
   pack13PrismaSchemaImplementationApprovalDate: '2026-06-15';
   pack13PrismaSchemaImplementationApprovalDecision: 'approved';
   prismaSchemaPermitted: true;
-  pack13Started: false;
+  pack13Started: true;
+  pack13SchemaOnlyImplementation: true;
+  vionaRequestPrismaModelsAdded: true;
   pack12Started: false;
-  prismaSchemaActive: false;
+  prismaSchemaActive: true;
   prismaMigrationPermitted: false;
   prismaMigrationActive: false;
   readOnlyApiPermitted: false;
@@ -163,9 +165,11 @@ export const VIONA_REQUEST_PACK13_PRISMA_SCHEMA_IMPLEMENTATION_HUMAN_APPROVAL_RE
   pack13PrismaSchemaImplementationApprovalDate: '2026-06-15',
   pack13PrismaSchemaImplementationApprovalDecision: 'approved',
   prismaSchemaPermitted: true,
-  pack13Started: false,
+  pack13Started: true,
+  pack13SchemaOnlyImplementation: true,
+  vionaRequestPrismaModelsAdded: true,
   pack12Started: false,
-  prismaSchemaActive: false,
+  prismaSchemaActive: true,
   prismaMigrationPermitted: false,
   prismaMigrationActive: false,
   readOnlyApiPermitted: false,

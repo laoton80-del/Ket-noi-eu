@@ -71,7 +71,9 @@ export type VionaRequestSotSignoffPhasePromotionReadiness = Readonly<{
   pack13PrismaSchemaImplementationApprovalSource: 'human-chat-instruction';
   pack13PrismaSchemaImplementationApprovedBy: 'Nong Si Buong';
   pack13PrismaSchemaImplementationApprovalDate: '2026-06-15';
-  pack13Started: false;
+  pack13Started: true;
+  pack13SchemaOnlyImplementation: true;
+  vionaRequestPrismaModelsAdded: true;
   prismaSchemaPermitted: true;
   pack12Started: false;
   signOffStatus: 'approved';
@@ -86,7 +88,7 @@ export type VionaRequestSotSignoffPhasePromotionReadiness = Readonly<{
   operatorRoleAddedToAuth: false;
   readOnlyApiPhasePromoted: false;
   persistenceApiActive: false;
-  prismaSchemaActive: false;
+  prismaSchemaActive: true;
   auditLogActive: false;
   requestMutationActive: false;
   productionLiveOpsActive: false;
@@ -227,7 +229,9 @@ export const VIONA_REQUEST_SOT_SIGNOFF_PHASE_PROMOTION_READINESS = {
   pack13PrismaSchemaImplementationApprovalSource: 'human-chat-instruction',
   pack13PrismaSchemaImplementationApprovedBy: 'Nong Si Buong',
   pack13PrismaSchemaImplementationApprovalDate: '2026-06-15',
-  pack13Started: false,
+  pack13Started: true,
+  pack13SchemaOnlyImplementation: true,
+  vionaRequestPrismaModelsAdded: true,
   prismaSchemaPermitted: true,
   pack12Started: false,
   signOffStatus: 'approved',
@@ -242,7 +246,7 @@ export const VIONA_REQUEST_SOT_SIGNOFF_PHASE_PROMOTION_READINESS = {
   operatorRoleAddedToAuth: false,
   readOnlyApiPhasePromoted: false,
   persistenceApiActive: false,
-  prismaSchemaActive: false,
+  prismaSchemaActive: true,
   auditLogActive: false,
   requestMutationActive: false,
   productionLiveOpsActive: false,

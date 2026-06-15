@@ -6,7 +6,64 @@ import path from 'node:path';
 
 const ROOT = process.cwd();
 
+const PACK13C_CORE_FILES = [
+  'prisma/schema.prisma',
+  'docs/product/VIONA_REQUEST_PACK13C_PRISMA_SCHEMA_IMPLEMENTATION_SCHEMA_ONLY.md',
+  'src/config/vionaRequestPack13CPrismaSchemaImplementationReadiness.ts',
+  'scripts/viona-request-pack13c-prisma-schema-implementation-check.mjs',
+  'docs/design/evidence/cursor-request-pack13c-prisma-schema-implementation-schema-only/README.md',
+];
+
+const POST_PACK13C_POINTER_TOKENS = [
+  'pack13Started: true',
+  'pack13SchemaOnlyImplementation: true',
+  'prismaSchemaActive: true',
+  'vionaRequestPrismaModelsAdded: true',
+];
+
+function isPack13cSchemaOnlyActive() {
+  const configPath = 'src/config/vionaRequestPack13CPrismaSchemaImplementationReadiness.ts';
+  if (!existsSync(path.join(ROOT, configPath))) return false;
+  return read(configPath).includes('pack13SchemaOnlyImplementation: true');
+}
+
+function augmentPointerTokensForPack13c(tokens, pack13cActive) {
+  if (!pack13cActive) return tokens;
+  const filtered = tokens.filter(
+    (token) => token !== 'prismaSchemaActive: false' && token !== 'pack13Started: false'
+  );
+  return [...filtered, ...POST_PACK13C_POINTER_TOKENS];
+}
+
+function augmentConfigTokensForPack13c(tokens, pack13cActive) {
+  if (!pack13cActive) return tokens;
+  const filtered = tokens.filter(
+    (token) => token !== 'prismaSchemaActive: false' && token !== 'pack13Started: false'
+  );
+  const additions = [];
+  if (tokens.includes('prismaSchemaActive: false')) additions.push('prismaSchemaActive: true');
+  if (tokens.includes('pack13Started: false')) additions.push('pack13Started: true');
+  if (tokens.includes('pack13SchemaOnlyImplementation: true') || tokens.includes('vionaRequestPrismaModelsAdded: true')) {
+    additions.push('pack13SchemaOnlyImplementation: true', 'vionaRequestPrismaModelsAdded: true');
+  }
+  return [...filtered, ...additions];
+}
+
+function matchesForbiddenDiff(file, pack13cActive) {
+  if (pack13cActive && file === 'prisma/schema.prisma') return false;
+  return FORBIDDEN_DIFF_PATTERNS.some((pattern) => pattern.test(file));
+}
+
+function isPrismaDiffBlocked(pack13cActive, prismaChanged) {
+  if (!prismaChanged) return false;
+  if (!pack13cActive) return true;
+  const files = prismaChanged.split('\n').map((line) => line.replace(/\\/g, '/')).filter(Boolean);
+  return files.some((file) => file !== 'prisma/schema.prisma');
+}
+
+
 const ALLOWED_FILES = [
+  ...PACK13C_CORE_FILES,
   'src/config/vionaOperatorInboxAdminDebugGate.ts',
   'src/screens/admin/VionaAdminDebugOperatorInboxPreviewScreen.tsx',
   'docs/product/VIONA_OPERATOR_INBOX_ADMIN_DEBUG_PREVIEW.md',
@@ -230,6 +287,7 @@ function findUnsafeStandaloneClaims(files) {
 }
 
 function main() {
+  const pack13cActive = isPack13cSchemaOnlyActive();
   console.log('VIONA operator inbox Admin Debug preview check (Pack6)');
   console.log(
     'Admin Debug read-only route. Minimal App.tsx only. No API, DB, payment, booking, SOS, wallet, live AI, or merchant execution.\n'
@@ -243,9 +301,7 @@ function main() {
 
   const changedFiles = collectChangedFiles();
   const unexpectedFiles = changedFiles.filter((file) => !ALLOWED_FILES.includes(file));
-  const forbiddenFiles = changedFiles.filter((file) =>
-    FORBIDDEN_DIFF_PATTERNS.some((pattern) => pattern.test(file))
-  );
+  const forbiddenFiles = changedFiles.filter((file) => matchesForbiddenDiff(file, pack13cActive));
 
   const gate = read('src/config/vionaOperatorInboxAdminDebugGate.ts');
   const screen = read('src/screens/admin/VionaAdminDebugOperatorInboxPreviewScreen.tsx');

@@ -6,7 +6,64 @@ import path from 'node:path';
 
 const ROOT = process.cwd();
 
+const PACK13C_CORE_FILES = [
+  'prisma/schema.prisma',
+  'docs/product/VIONA_REQUEST_PACK13C_PRISMA_SCHEMA_IMPLEMENTATION_SCHEMA_ONLY.md',
+  'src/config/vionaRequestPack13CPrismaSchemaImplementationReadiness.ts',
+  'scripts/viona-request-pack13c-prisma-schema-implementation-check.mjs',
+  'docs/design/evidence/cursor-request-pack13c-prisma-schema-implementation-schema-only/README.md',
+];
+
+const POST_PACK13C_POINTER_TOKENS = [
+  'pack13Started: true',
+  'pack13SchemaOnlyImplementation: true',
+  'prismaSchemaActive: true',
+  'vionaRequestPrismaModelsAdded: true',
+];
+
+function isPack13cSchemaOnlyActive() {
+  const configPath = 'src/config/vionaRequestPack13CPrismaSchemaImplementationReadiness.ts';
+  if (!existsSync(path.join(ROOT, configPath))) return false;
+  return read(configPath).includes('pack13SchemaOnlyImplementation: true');
+}
+
+function augmentPointerTokensForPack13c(tokens, pack13cActive) {
+  if (!pack13cActive) return tokens;
+  const filtered = tokens.filter(
+    (token) => token !== 'prismaSchemaActive: false' && token !== 'pack13Started: false'
+  );
+  return [...filtered, ...POST_PACK13C_POINTER_TOKENS];
+}
+
+function augmentConfigTokensForPack13c(tokens, pack13cActive) {
+  if (!pack13cActive) return tokens;
+  const filtered = tokens.filter(
+    (token) => token !== 'prismaSchemaActive: false' && token !== 'pack13Started: false'
+  );
+  const additions = [];
+  if (tokens.includes('prismaSchemaActive: false')) additions.push('prismaSchemaActive: true');
+  if (tokens.includes('pack13Started: false')) additions.push('pack13Started: true');
+  if (tokens.includes('pack13SchemaOnlyImplementation: true') || tokens.includes('vionaRequestPrismaModelsAdded: true')) {
+    additions.push('pack13SchemaOnlyImplementation: true', 'vionaRequestPrismaModelsAdded: true');
+  }
+  return [...filtered, ...additions];
+}
+
+function matchesForbiddenDiff(file, pack13cActive) {
+  if (pack13cActive && file === 'prisma/schema.prisma') return false;
+  return FORBIDDEN_DIFF_PATTERNS.some((pattern) => pattern.test(file));
+}
+
+function isPrismaDiffBlocked(pack13cActive, prismaChanged) {
+  if (!prismaChanged) return false;
+  if (!pack13cActive) return true;
+  const files = prismaChanged.split('\n').map((line) => line.replace(/\\/g, '/')).filter(Boolean);
+  return files.some((file) => file !== 'prisma/schema.prisma');
+}
+
+
 const ALLOWED_FILES = [
+  ...PACK13C_CORE_FILES,
   'docs/product/VIONA_REQUEST_PERSISTENCE_AUDIT_READINESS.md',
   'src/config/vionaRequestPersistenceAuditReadiness.ts',
   'src/domain/requests/vionaRequestAuditEventTypes.ts',
@@ -264,6 +321,7 @@ function findUnsafeStandaloneClaims(paths) {
 }
 
 function main() {
+  const pack13cActive = isPack13cSchemaOnlyActive();
   console.log('VIONA request persistence audit readiness check (Pack7)');
   console.log(
     'Docs/config/domain contracts only. No API, DB, Prisma migration, mutation, or Admin Debug data-source change.\n'
@@ -272,9 +330,7 @@ function main() {
   const missingFiles = REQUIRED_FILES.filter((relPath) => !existsSync(path.join(ROOT, relPath)));
   const changedFiles = getChangedFiles();
   const unexpectedFiles = changedFiles.filter((file) => !ALLOWED_FILES.includes(file));
-  const forbiddenFiles = changedFiles.filter((file) =>
-    FORBIDDEN_DIFF_PATTERNS.some((pattern) => pattern.test(file))
-  );
+  const forbiddenFiles = changedFiles.filter((file) => matchesForbiddenDiff(file, pack13cActive));
 
   const config = read('src/config/vionaRequestPersistenceAuditReadiness.ts');
   const auditTypes = read('src/domain/requests/vionaRequestAuditEventTypes.ts');
@@ -292,7 +348,8 @@ function main() {
 
   const missingSafeCopy = missingValues(combined, REQUIRED_SAFE_COPY);
   const missingDocPhrases = missingValues(docs, REQUIRED_DOC_PHRASES);
-  const missingConfigTokens = missingValues(config, REQUIRED_CONFIG_TOKENS);
+  const configTokens = augmentConfigTokensForPack13c(REQUIRED_CONFIG_TOKENS, pack13cActive);
+  const missingConfigTokens = missingValues(config, configTokens);
   const missingAuditTokens = missingValues(auditTypes, REQUIRED_AUDIT_TYPE_TOKENS);
   const missingContractTokens = missingValues(persistenceContract, REQUIRED_PERSISTENCE_CONTRACT_TOKENS);
   const missingOperatorTokens = missingValues(operatorReadiness, REQUIRED_OPERATOR_READINESS_TOKENS);
@@ -320,7 +377,9 @@ function main() {
   if (forbiddenFiles.length) fail('forbidden paths changed', forbiddenFiles);
   if (appChanged) fail('App.tsx changed vs origin/master', [appChanged]);
   if (routesChanged) fail('routes.ts changed vs origin/master', [routesChanged]);
-  if (prismaChanged) fail('prisma changed vs origin/master', [prismaChanged.split('\n')[0] || 'prisma/']);
+  if (isPrismaDiffBlocked(pack13cActive, prismaChanged)) {
+    fail('prisma changed vs origin/master', [prismaChanged.split('\n')[0] || 'prisma/']);
+  }
   if (serverChanged) fail('src/server.ts changed vs origin/master', [serverChanged]);
   if (controllersChanged) fail('src/controllers changed vs origin/master', [controllersChanged.split('\n')[0] || 'src/controllers/']);
   if (missingSafeCopy.length) fail('missing required safe copy', missingSafeCopy);

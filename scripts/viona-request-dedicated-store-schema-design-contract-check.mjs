@@ -6,7 +6,64 @@ import path from 'node:path';
 
 const ROOT = process.cwd();
 
+const PACK13C_CORE_FILES = [
+  'prisma/schema.prisma',
+  'docs/product/VIONA_REQUEST_PACK13C_PRISMA_SCHEMA_IMPLEMENTATION_SCHEMA_ONLY.md',
+  'src/config/vionaRequestPack13CPrismaSchemaImplementationReadiness.ts',
+  'scripts/viona-request-pack13c-prisma-schema-implementation-check.mjs',
+  'docs/design/evidence/cursor-request-pack13c-prisma-schema-implementation-schema-only/README.md',
+];
+
+const POST_PACK13C_POINTER_TOKENS = [
+  'pack13Started: true',
+  'pack13SchemaOnlyImplementation: true',
+  'prismaSchemaActive: true',
+  'vionaRequestPrismaModelsAdded: true',
+];
+
+function isPack13cSchemaOnlyActive() {
+  const configPath = 'src/config/vionaRequestPack13CPrismaSchemaImplementationReadiness.ts';
+  if (!existsSync(path.join(ROOT, configPath))) return false;
+  return read(configPath).includes('pack13SchemaOnlyImplementation: true');
+}
+
+function augmentPointerTokensForPack13c(tokens, pack13cActive) {
+  if (!pack13cActive) return tokens;
+  const filtered = tokens.filter(
+    (token) => token !== 'prismaSchemaActive: false' && token !== 'pack13Started: false'
+  );
+  return [...filtered, ...POST_PACK13C_POINTER_TOKENS];
+}
+
+function augmentConfigTokensForPack13c(tokens, pack13cActive) {
+  if (!pack13cActive) return tokens;
+  const filtered = tokens.filter(
+    (token) => token !== 'prismaSchemaActive: false' && token !== 'pack13Started: false'
+  );
+  const additions = [];
+  if (tokens.includes('prismaSchemaActive: false')) additions.push('prismaSchemaActive: true');
+  if (tokens.includes('pack13Started: false')) additions.push('pack13Started: true');
+  if (tokens.includes('pack13SchemaOnlyImplementation: true') || tokens.includes('vionaRequestPrismaModelsAdded: true')) {
+    additions.push('pack13SchemaOnlyImplementation: true', 'vionaRequestPrismaModelsAdded: true');
+  }
+  return [...filtered, ...additions];
+}
+
+function matchesForbiddenDiff(file, pack13cActive) {
+  if (pack13cActive && file === 'prisma/schema.prisma') return false;
+  return FORBIDDEN_DIFF_PATTERNS.some((pattern) => pattern.test(file));
+}
+
+function isPrismaDiffBlocked(pack13cActive, prismaChanged) {
+  if (!prismaChanged) return false;
+  if (!pack13cActive) return true;
+  const files = prismaChanged.split('\n').map((line) => line.replace(/\\/g, '/')).filter(Boolean);
+  return files.some((file) => file !== 'prisma/schema.prisma');
+}
+
+
 const ALLOWED_FILES = [
+  ...PACK13C_CORE_FILES,
   'docs/product/VIONA_REQUEST_DEDICATED_STORE_SCHEMA_DESIGN_CONTRACT.md',
   'src/domain/requests/vionaRequestDedicatedStoreSchemaDesignContract.ts',
   'src/config/vionaRequestDedicatedStoreSchemaDesignReadiness.ts',
@@ -308,6 +365,7 @@ function isSchemaDesignHumanApprovalRecorded() {
 }
 
 function main() {
+  const pack13cActive = isPack13cSchemaOnlyActive();
   console.log('VIONA request dedicated store schema design contract check (Pack11)');
   console.log(
     'Schema-design contract only. No Prisma, migration, API, adapter, mutation, or Admin Debug data-source change.\n'
@@ -324,9 +382,7 @@ function main() {
   const missingFiles = REQUIRED_FILES.filter((relPath) => !existsSync(path.join(ROOT, relPath)));
   const changedFiles = getChangedFiles();
   const unexpectedFiles = changedFiles.filter((file) => !ALLOWED_FILES.includes(file));
-  const forbiddenFiles = changedFiles.filter((file) =>
-    FORBIDDEN_DIFF_PATTERNS.some((pattern) => pattern.test(file))
-  );
+  const forbiddenFiles = changedFiles.filter((file) => matchesForbiddenDiff(file, pack13cActive));
 
   const docs = read('docs/product/VIONA_REQUEST_DEDICATED_STORE_SCHEMA_DESIGN_CONTRACT.md');
   const domain = read('src/domain/requests/vionaRequestDedicatedStoreSchemaDesignContract.ts');
@@ -345,8 +401,10 @@ function main() {
 
   const missingDocPhrases = missingValues(docs, REQUIRED_DOC_PHRASES);
   const missingDomainTokens = missingValues(domain, REQUIRED_DOMAIN_TOKENS);
-  const missingConfigTokens = missingValues(config, requiredConfigTokens);
-  const missingPointerTokens = missingValues(pointerCombined, requiredPointerTokens);
+  const configTokens = augmentConfigTokensForPack13c(requiredConfigTokens, pack13cActive);
+  const missingConfigTokens = missingValues(config, configTokens);
+  const pointerTokens = augmentPointerTokensForPack13c(requiredPointerTokens, pack13cActive);
+  const missingPointerTokens = missingValues(pointerCombined, pointerTokens);
   const forbiddenFields = FORBIDDEN_FIELD_TOKENS.filter((token) => domain.includes(token));
   const forbiddenLifecycle = FORBIDDEN_LIFECYCLE_NAMES.filter((name) => domain.includes(name));
   const unsafeClaims = findUnsafeStandaloneClaims([
@@ -375,7 +433,9 @@ function main() {
   if (unexpectedFiles.length) fail('unexpected files changed', unexpectedFiles);
   if (forbiddenFiles.length) fail('forbidden paths changed', forbiddenFiles);
   if (appChanged) fail('App.tsx changed vs origin/master', [appChanged]);
-  if (prismaChanged) fail('prisma changed vs origin/master', [prismaChanged.split('\n')[0] || 'prisma/']);
+  if (isPrismaDiffBlocked(pack13cActive, prismaChanged)) {
+    fail('prisma changed vs origin/master', [prismaChanged.split('\n')[0] || 'prisma/']);
+  }
   if (serverChanged) fail('src/server.ts changed vs origin/master', [serverChanged]);
   if (typesChanged) fail('vionaRequestTypes.ts changed vs origin/master', [typesChanged]);
   if (missingDocPhrases.length) fail('missing doc requirements', missingDocPhrases);
@@ -389,7 +449,7 @@ function main() {
   if (schemaApprovedWithoutHuman) {
     fail('schemaDesignApproved true requires human approval recorded', ['schemaDesignHumanApprovalRecorded missing']);
   }
-  if (prismaActive) fail('Prisma must remain inactive', ['prisma active']);
+  if (!pack13cActive && prismaActive) fail('Prisma must remain inactive', ['prisma active']);
   if (apiActive) fail('API must remain inactive', ['persistence API active']);
   if (mutationActive) fail('mutation must remain inactive', ['requestMutationActive: true']);
   if (adminDebugLive) fail('Admin Debug must remain fixture-only', ['adminDebugLiveDataActive: true']);
