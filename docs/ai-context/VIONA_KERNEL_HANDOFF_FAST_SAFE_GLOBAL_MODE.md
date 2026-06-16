@@ -2,7 +2,7 @@
 
 **Document type:** Canonical kernel and session handoff for VIONA engineering, product, and AI agents.
 **Audience:** New ChatGPT / Cursor windows, staff, contractors, and automation executors.
-**Baseline:** `origin/master @ cd92428` — `docs(requests): add Pack17 live read-only inbox planning packet (#88)`
+**Baseline:** `origin/master @ 32a5826` — `docs(requests): record Pack15C Supabase DB secret audit (#90)`
 **Supersedes for Request Engine sequencing:** prior scattered pack pointers when this doc conflicts on pack order or blocked state — align to this handoff.
 **Subordinate to:** `docs/ai-context/VIONA_OPERATING_PROTOCOL.md` and founder-signed **Master Blueprint** (`VIONA_FINAL_MASTER_BLUEPRINT_V2.md`). If conflict, stop and report drift risk.
 
@@ -156,14 +156,14 @@ Canonical checker: `node scripts/viona-forbidden-claims-check.mjs` (strict mode 
 | Field | Value |
 |-------|--------|
 | Remote | `origin/master` |
-| Commit | `cd92428` |
-| Message | `docs(requests): add Pack17 live read-only inbox planning packet (#88)` |
-| Previous master | `fab30f4` — `docs(kernel): sync handoff after Pack16 planning packet (#87)` |
-| Previous latest (prior to #87) | `a885425` — `docs(requests): add Pack16 read-only persistence API planning packet (#86)` |
+| Commit | `32a5826` |
+| Message | `docs(requests): record Pack15C Supabase DB secret audit (#90)` |
+| Previous master | `5876b94` — `docs(kernel): sync handoff after Pack17 planning packet (#89)` |
+| Previous latest (prior to #89) | `cd92428` — `docs(requests): add Pack17 live read-only inbox planning packet (#88)` |
 
-All new work branches from `cd92428` unless a later pack explicitly updates this handoff.
+All new work branches from `32a5826` unless a later pack explicitly updates this handoff.
 
-Pack15C execution readiness decision remains **`B) NOT READY`**. Pack16 read-only persistence API **planning packet** is **fully complete and green** on master. Pack17 live read-only request inbox **planning packet** is **fully complete and green** on master. Pack16 is **planning-only / future-only** — runtime/API is **not implemented**. Pack17 is **planning-only / future-only** — runtime/UI/inbox is **not implemented**. All 15 execution inputs currently default to **`Missing`**. Intake template is **not** execution approval. DB apply is **not performed**. DB apply, Pack16 runtime/API, and Pack17 runtime/UI/inbox remain **blocked**.
+Pack15C Supabase DB secret location audit evidence is **complete and green** on master (PR #90). Pack15C execution readiness decision remains **`B) NOT READY`**. Pack16 read-only persistence API **planning packet** is **fully complete and green** on master. Pack17 live read-only request inbox **planning packet** is **fully complete and green** on master. Pack17 kernel/handoff sync is **complete and green** on master (PR #89). Pack16 is **planning-only / future-only** — runtime/API is **not implemented**. Pack17 is **planning-only / future-only** — runtime/UI/inbox is **not implemented**. DB secret **key-name presence** is confirmed; secret **values** are **not verified**. DB apply is **not performed**. DB apply, Pack15D, Pack16 runtime/API, and Pack17 runtime/UI/inbox remain **blocked**.
 
 ---
 
@@ -193,6 +193,8 @@ Pack15C execution readiness decision remains **`B) NOT READY`**. Pack16 read-onl
 | Pack16 | Read-only persistence API planning packet | `a885425` (PR #86) |
 | Pack16 | Kernel/handoff sync after planning packet | `fab30f4` (PR #87) |
 | Pack17 | Live read-only request inbox planning packet | `cd92428` (PR #88) |
+| Pack17 | Kernel/handoff sync after planning packet | `5876b94` (PR #89) |
+| Pack15C | Supabase DB secret location audit evidence | `32a5826` (PR #90) |
 
 ---
 
@@ -213,6 +215,41 @@ Pack15C execution readiness decision remains **`B) NOT READY`**. Pack16 read-onl
 | Pack17 runtime/UI/inbox | **Blocked** — implementation not started |
 | DB apply | **Blocked** |
 
+### Pack15C DB secret location audit state (no values)
+
+Earlier `.env.local`-only check was **incomplete**. Read-only audit evidence (PR #90) records key-name presence only.
+
+| Item | State |
+|------|--------|
+| `.env.local` | `PRESENT` |
+| `.env.local::DATABASE_URL` | `MISSING` |
+| `.env.local::DIRECT_URL` | `MISSING` |
+| `.env` | `PRESENT` |
+| `.env::DATABASE_URL` | `PRESENT` |
+| `.env::DIRECT_URL` | `PRESENT` |
+| Fly staging app | `viona-api-staging-eu` |
+| Fly secret name `DATABASE_URL` | `Deployed` |
+| Fly secret name `DIRECT_URL` | `Deployed` |
+| Values printed | **No** |
+| Values copied into docs | **No** |
+| `.env` modified | **No** |
+| DB connection attempted | **No** |
+| Prisma command run | **No** |
+| Supabase DB command run | **No** |
+
+### Current classification
+
+| Item | State |
+|------|--------|
+| Pack15C DB secret presence | `PRESENT` by key name only |
+| Secret value validity | `NOT VERIFIED` |
+| DB connection | `NOT ATTEMPTED` |
+| Classification | **A) LOCAL PRESENT** plus **B) HOST SECRET NAME PRESENT** |
+| Execution readiness | `NO-GO` |
+| DB apply remains blocked | `true` |
+
+Evidence: `docs/product/VIONA_REQUEST_PACK15C_SUPABASE_DB_SECRET_LOCATION_AUDIT_EVIDENCE.md`, `docs/design/evidence/cursor-pack15c-supabase-db-secret-location-audit-evidence/README.md`
+
 ### Current flags
 
 | Flag | Value |
@@ -230,6 +267,9 @@ Pack15C execution readiness decision remains **`B) NOT READY`**. Pack16 read-onl
 | `dbApplied` | `false` |
 | `pack15ExecutionInputsIntakeTemplateActive` | `true` |
 | `pack15ExecutionInputsComplete` | `false` |
+| `pack15DbSecretPresenceByKeyNameOnly` | `true` |
+| `pack15DbSecretValuesVerified` | `false` |
+| `pack15DbConnectionAttempted` | `false` |
 | `pack16ReadOnlyPersistenceApiPlanningPacketActive` | `true` |
 | `pack16RuntimeImplementationStarted` | `false` |
 | `pack16ReadOnlyApiImplemented` | `false` |
@@ -237,7 +277,7 @@ Pack15C execution readiness decision remains **`B) NOT READY`**. Pack16 read-onl
 | `pack17RuntimeImplementationStarted` | `false` |
 | `pack17LiveReadOnlyInboxImplemented` | `false` |
 
-Product docs: `docs/product/VIONA_REQUEST_PACK14C_PRISMA_MIGRATION_CREATION_ONLY.md`, `docs/product/VIONA_REQUEST_PACK15C_DB_APPLY_PRE_APPLY_PLANNING_PACKET.md`, `docs/product/VIONA_REQUEST_PACK15C_EXECUTION_READINESS_DECISION_PACKET.md`, `docs/product/VIONA_REQUEST_PACK15C_EXECUTION_INPUTS_INTAKE_TEMPLATE.md`, `docs/product/VIONA_REQUEST_PACK16_READ_ONLY_PERSISTENCE_API_PLANNING_PACKET.md`, `docs/product/VIONA_REQUEST_PACK17_LIVE_READ_ONLY_REQUEST_INBOX_PLANNING_PACKET.md`
+Product docs: `docs/product/VIONA_REQUEST_PACK14C_PRISMA_MIGRATION_CREATION_ONLY.md`, `docs/product/VIONA_REQUEST_PACK15C_DB_APPLY_PRE_APPLY_PLANNING_PACKET.md`, `docs/product/VIONA_REQUEST_PACK15C_EXECUTION_READINESS_DECISION_PACKET.md`, `docs/product/VIONA_REQUEST_PACK15C_EXECUTION_INPUTS_INTAKE_TEMPLATE.md`, `docs/product/VIONA_REQUEST_PACK15C_SUPABASE_DB_SECRET_LOCATION_AUDIT_EVIDENCE.md`, `docs/product/VIONA_REQUEST_PACK16_READ_ONLY_PERSISTENCE_API_PLANNING_PACKET.md`, `docs/product/VIONA_REQUEST_PACK17_LIVE_READ_ONLY_REQUEST_INBOX_PLANNING_PACKET.md`
 
 Gate Factory (Pack14D): `scripts/lib/vionaPackDiffAllowlist.mjs`, `scripts/viona-request-pack14d-gate-factory-check.mjs`
 
@@ -247,11 +287,33 @@ Gate Factory (Pack14D): `scripts/lib/vionaPackDiffAllowlist.mjs`, `scripts/viona
 
 **Decision (read-only audit):** `B) NOT READY — missing target environment / backup / restore / operator go-no-go`
 
+**Updated reason:** DB secret key-name presence is now confirmed (`DATABASE_URL` and `DIRECT_URL` in local `.env` and as Fly staging secret names on `viona-api-staging-eu`), but execution readiness remains **NO-GO** because target environment/provider/host confirmation, backup/snapshot, restore/rollback, named operator, operator go/no-go, and distinct execution approval phrase are still incomplete. Secret **values** were not printed, copied, or verified.
+
 Execution remains **blocked** because the 15 required execution inputs are **not complete**.
 
 Pack15B approval permits **planning only** — it is **not** execution approval. DB apply remains **blocked** until all 15 execution inputs are complete **outside repo**, reviewed by ChatGPT, and separately approved in an **execution-only pack**. A separate execution-only pack must **not** be created or run until those conditions are satisfied.
 
-Evidence: `docs/design/evidence/cursor-request-pack15c-execution-readiness-decision-packet/README.md`
+### Required before DB apply can proceed
+
+DB apply cannot proceed until **all** are true:
+
+1. Target environment explicitly selected.
+2. DB provider/host explicitly confirmed.
+3. Execution context selected: local `.env`, Fly secrets, or another controlled context.
+4. Valid server-side DB secret values confirmed without exposing them.
+5. Backup/snapshot completed.
+6. Restore/rollback procedure documented.
+7. Restore owner confirmed.
+8. Restore confidence confirmed.
+9. Named execution operator confirmed.
+10. Stop-on-error behavior confirmed.
+11. Post-apply verification plan confirmed.
+12. Operator go/no-go confirmed.
+13. Separate execution approval phrase provided.
+14. ChatGPT reviews completed intake.
+15. Separate execution-only DB apply pack is authorized.
+
+Evidence: `docs/design/evidence/cursor-request-pack15c-execution-readiness-decision-packet/README.md`, `docs/design/evidence/cursor-pack15c-supabase-db-secret-location-audit-evidence/README.md`
 
 ---
 
@@ -350,16 +412,22 @@ Still **blocked** until future approved packs and missing execution inputs are s
 
 Execute in order — do not skip:
 
-1. **Keep DB apply blocked** until all 15 execution inputs are provided (§9)
-2. **Human/operator fills intake template** without secrets (non-secret confirmations only in docs)
-3. **ChatGPT reviews completed intake**
-4. **Pack15C execution-only DB apply pack** — only after target environment + backup/restore + operator go/no-go + execution approval phrase are complete
-5. **Pack15D** — DB schema verification (only after successful DB apply)
-6. **Pack16** — Read-only persistence API implementation (only after Pack15D)
-7. **Pack17** — Live read-only request inbox implementation (only after Pack16 read-only API)
-8. **Pack18** — Request mutation planning / implementation (only after read-only inbox is verified)
-9. **Pack19** — Merchant / operator workflow
-10. **Pack20+** — AI request assistant / AI action foundation
+1. Human confirms target environment, likely **staging**.
+2. Human confirms DB provider/host, likely **Supabase**.
+3. Human confirms execution context: local `.env`, Fly secrets, or another controlled environment.
+4. Human confirms named operator and execution machine.
+5. Human takes real DB backup/snapshot and records timestamp/evidence location without secrets.
+6. Human documents restore/rollback owner and procedure.
+7. Human confirms stop-on-error and post-apply verification plan.
+8. Human provides target-specific execution approval phrase only after all above are ready.
+9. **ChatGPT reviews GO/NO-GO** on completed intake (§9).
+10. **Pack15C execution-only DB apply pack** — only after §8 required-before-apply list is satisfied
+11. **Pack15D** — DB schema verification (only after successful DB apply)
+12. **Pack16** — Read-only persistence API implementation (only after Pack15D)
+13. **Pack17** — Live read-only request inbox implementation (only after Pack16 read-only API)
+14. **Pack18** — Request mutation planning / implementation (only after read-only inbox is verified)
+15. **Pack19** — Merchant / operator workflow
+16. **Pack20+** — AI request assistant / AI action foundation
 
 Safe parallel lanes (docs, audits, UI polish without DB/runtime/API/mutation) may continue while the above remains blocked.
 
@@ -378,6 +446,7 @@ May run in parallel when allowlisted and gate-clean:
 - i18n copy safety review
 - Non-runtime planning packets
 - Filling intake template only with **non-secret** confirmations
+- Backup/restore planning docs without secrets
 - AI product contracts
 - GTM / business docs
 - Country launch matrix
@@ -388,10 +457,16 @@ May run in parallel when allowlisted and gate-clean:
 - No broad refactor
 - No architecture rewrite
 - No DB apply
+- No DB connection test
 - No Prisma schema/migration edits
-- No Prisma DB commands
+- No Prisma migration/apply/status command
+- No Supabase DB command
+- No `.env` value printing
+- No `.env` modification
 - No API/routes/controllers/server implementation
 - No persistence adapter implementation
+- No Pack16 runtime/API
+- No Pack17 runtime/UI/inbox
 - No UI/screens/components implementation for Pack17
 - No request mutation
 - No payment/booking/SOS/wallet truth changes
@@ -420,7 +495,7 @@ Stop immediately and report if asked to:
 ## Quick start for a new session
 
 1. Read this file and `docs/ai-context/VIONA_OPERATING_PROTOCOL.md`.
-2. Confirm baseline: `git rev-parse origin/master` → expect `cd92428` until updated.
+2. Confirm baseline: `git rev-parse origin/master` → expect `32a5826` until updated.
 3. Read the active pack prompt allowlist and forbidden list.
 4. Branch from `origin/master`; run gates before commit.
 5. Cursor executes; ChatGPT reviews report and PR safety.
@@ -445,4 +520,6 @@ Stop immediately and report if asked to:
 
 **Pack16 handoff sync (planning packet):** Updated after Pack16 read-only persistence API planning packet merged @ `a885425` (PR #86) and kernel sync @ `fab30f4` (PR #87). Evidence: `docs/design/evidence/cursor-pack16-kernel-handoff-sync-after-planning-packet/README.md`.
 
-**Pack17 handoff sync (planning packet):** This document updated after Pack17 live read-only request inbox planning packet merged @ `cd92428` (PR #88). Decision remains `B) NOT READY`. Pack17 is planning-only; runtime/UI/inbox not implemented. DB apply remains blocked. Evidence: `docs/design/evidence/cursor-pack17-kernel-handoff-sync-after-planning-packet/README.md`.
+**Pack17 handoff sync (planning packet):** Updated after Pack17 live read-only request inbox planning packet merged @ `cd92428` (PR #88) and kernel sync @ `5876b94` (PR #89). Evidence: `docs/design/evidence/cursor-pack17-kernel-handoff-sync-after-planning-packet/README.md`.
+
+**Pack15C handoff sync (Supabase DB secret audit):** This document updated after Pack15C Supabase DB secret location audit evidence merged @ `32a5826` (PR #90). DB secret presence is `PRESENT` by key name only; secret values `NOT VERIFIED`; DB connection `NOT ATTEMPTED`. Decision remains `B) NOT READY`. DB apply, Pack15D, Pack16 runtime/API, and Pack17 runtime/UI/inbox remain blocked. Evidence: `docs/design/evidence/cursor-pack15c-kernel-handoff-sync-after-supabase-db-secret-audit/README.md`.
