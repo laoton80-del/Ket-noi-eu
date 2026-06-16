@@ -3,6 +3,7 @@
 import { execSync } from 'node:child_process';
 import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
+import { PACK14D_BRANCH_ALLOWED_FILES } from './lib/vionaPackDiffAllowlist.mjs';
 
 const ROOT = process.cwd();
 
@@ -123,6 +124,7 @@ const GATE_SCRIPT_FILES = [
 ];
 
 const ALLOWED_FILES = [
+  ...PACK14D_BRANCH_ALLOWED_FILES,
   ...PACK14B_CORE_FILES,
   ...PACK14C_CORE_FILES,
   ...PACK14A_CORE_FILES,
