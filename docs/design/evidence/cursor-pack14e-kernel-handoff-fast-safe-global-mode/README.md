@@ -26,18 +26,18 @@ No `docs/ai-context/README.md` existed; index not added.
 
 The canonical handoff document includes:
 
-1. **Strategy** — Fast Safe Global Mode, pipeline packs, Gate Factory, Cursor-first law, parallel lanes, sequential critical path  
-2. **Cursor-first execution law** — executor vs decision-owner split  
-3. **Product kernel** — universes, AI pillars, monetization design targets  
-4. **Safety doctrine** — no fake production, dedicated request store, high-risk gates  
-5. **Verified master** — `3de7667`  
-6. **Milestone chain** — Pack10C through Pack14D  
-7. **Pack14C state** — migration file only, `dbApplied: false`  
-8. **Pack14D state** — Gate Factory helper and checks  
-9. **Blocked list** — DB apply through live merchant execution  
-10. **Next sequence** — Pack15A through Pack20+  
-11. **Parallel lanes** — low-risk work allowed in parallel  
-12. **Stop list** — hard stops for agents  
+1. **Strategy** — Fast Safe Global Mode, pipeline packs, Gate Factory, Cursor-first law, parallel lanes, sequential critical path
+2. **Cursor-first execution law** — executor vs decision-owner split
+3. **Product kernel** — universes, AI pillars, monetization design targets
+4. **Safety doctrine** — no fake production, dedicated request store, high-risk gates
+5. **Verified master** — `3de7667`
+6. **Milestone chain** — Pack10C through Pack14D
+7. **Pack14C state** — migration file only, `dbApplied: false`
+8. **Pack14D state** — Gate Factory helper and checks
+9. **Blocked list** — DB apply through live merchant execution
+10. **Next sequence** — Pack15A through Pack20+
+11. **Parallel lanes** — low-risk work allowed in parallel
+12. **Stop list** — hard stops for agents
 
 ## Docs-only confirmation
 
@@ -52,11 +52,11 @@ The canonical handoff document includes:
 
 ## Safety boundaries
 
-- No fake production claims added  
-- No DB apply claim  
-- No API/mutation/live claim  
-- No high-risk automation overclaim  
-- Aligns with `docs/ai-context/VIONA_OPERATING_PROTOCOL.md`  
+- No fake production claims added
+- No DB apply claim
+- No API/mutation/live claim
+- No high-risk automation overclaim
+- Aligns with `docs/ai-context/VIONA_OPERATING_PROTOCOL.md`
 
 ## Checks run
 

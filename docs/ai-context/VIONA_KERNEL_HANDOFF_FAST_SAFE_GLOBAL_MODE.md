@@ -1,9 +1,9 @@
 # VIONA Kernel + Handoff — Fast Safe Global Mode
 
-**Document type:** Canonical kernel and session handoff for VIONA engineering, product, and AI agents.  
-**Audience:** New ChatGPT / Cursor windows, staff, contractors, and automation executors.  
-**Baseline:** `origin/master @ 3de7667` — `chore(requests): add Gate Factory for request gates (#77)`  
-**Supersedes for Request Engine sequencing:** prior scattered pack pointers when this doc conflicts on pack order or blocked state — align to this handoff.  
+**Document type:** Canonical kernel and session handoff for VIONA engineering, product, and AI agents.
+**Audience:** New ChatGPT / Cursor windows, staff, contractors, and automation executors.
+**Baseline:** `origin/master @ 3de7667` — `chore(requests): add Gate Factory for request gates (#77)`
+**Supersedes for Request Engine sequencing:** prior scattered pack pointers when this doc conflicts on pack order or blocked state — align to this handoff.
 **Subordinate to:** `docs/ai-context/VIONA_OPERATING_PROTOCOL.md` and founder-signed **Master Blueprint** (`VIONA_FINAL_MASTER_BLUEPRINT_V2.md`). If conflict, stop and report drift risk.
 
 ---
@@ -195,8 +195,8 @@ All new work branches from this SHA unless a later pack explicitly updates this 
 | API / adapter / mutation / runtime | None |
 | DB apply | **Blocked** |
 
-Product doc: `docs/product/VIONA_REQUEST_PACK14C_PRISMA_MIGRATION_CREATION_ONLY.md`  
-Evidence: `docs/design/evidence/cursor-request-pack14c-prisma-migration-creation-only/README.md`  
+Product doc: `docs/product/VIONA_REQUEST_PACK14C_PRISMA_MIGRATION_CREATION_ONLY.md`
+Evidence: `docs/design/evidence/cursor-request-pack14c-prisma-migration-creation-only/README.md`
 Gate: `node scripts/viona-request-pack14c-prisma-migration-creation-check.mjs`
 
 ---
@@ -243,15 +243,15 @@ Still **blocked** until future approved packs:
 
 Execute in order — do not skip:
 
-1. **Pack15A** — DB apply readiness approval packet  
-2. **Pack15B** — Record DB apply human approval  
-3. **Pack15C** — DB apply only, if approved  
-4. **Pack15D** — DB schema verification  
-5. **Pack16** — Read-only persistence API  
-6. **Pack17** — Live read-only request inbox  
-7. **Pack18** — Request mutation  
-8. **Pack19** — Merchant / operator workflow  
-9. **Pack20+** — AI request assistant / AI action foundation  
+1. **Pack15A** — DB apply readiness approval packet
+2. **Pack15B** — Record DB apply human approval
+3. **Pack15C** — DB apply only, if approved
+4. **Pack15D** — DB schema verification
+5. **Pack16** — Read-only persistence API
+6. **Pack17** — Live read-only request inbox
+7. **Pack18** — Request mutation
+8. **Pack19** — Merchant / operator workflow
+9. **Pack20+** — AI request assistant / AI action foundation
 
 ---
 
