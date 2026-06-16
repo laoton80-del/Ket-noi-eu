@@ -2,7 +2,7 @@
 
 **Document type:** Canonical kernel and session handoff for VIONA engineering, product, and AI agents.
 **Audience:** New ChatGPT / Cursor windows, staff, contractors, and automation executors.
-**Baseline:** `origin/master @ 64ccd56` — `docs(requests): record Pack15C execution readiness decision (#82)`
+**Baseline:** `origin/master @ 13793af` — `docs(requests): add Pack15C execution inputs intake template (#84)`
 **Supersedes for Request Engine sequencing:** prior scattered pack pointers when this doc conflicts on pack order or blocked state — align to this handoff.
 **Subordinate to:** `docs/ai-context/VIONA_OPERATING_PROTOCOL.md` and founder-signed **Master Blueprint** (`VIONA_FINAL_MASTER_BLUEPRINT_V2.md`). If conflict, stop and report drift risk.
 
@@ -156,13 +156,13 @@ Canonical checker: `node scripts/viona-forbidden-claims-check.mjs` (strict mode 
 | Field | Value |
 |-------|--------|
 | Remote | `origin/master` |
-| Commit | `64ccd56` |
-| Message | `docs(requests): record Pack15C execution readiness decision (#82)` |
-| Previous master | `70d747a` — `docs(requests): add Pack15C DB apply planning packet (#81)` |
+| Commit | `13793af` |
+| Message | `docs(requests): add Pack15C execution inputs intake template (#84)` |
+| Previous master | `eca97e4` — `docs(kernel): sync handoff after Pack15C readiness decision (#83)` |
 
-All new work branches from `64ccd56` unless a later pack explicitly updates this handoff.
+All new work branches from `13793af` unless a later pack explicitly updates this handoff.
 
-Pack15C execution readiness decision is **fully complete and green** on master. DB apply is **not performed**. DB apply remains **blocked**.
+Pack15C execution readiness decision remains **`B) NOT READY`**. Pack15C execution inputs intake template is **fully complete and green** on master. All 15 execution inputs currently default to **`Missing`**. Intake template is **not** execution approval. DB apply is **not performed**. DB apply remains **blocked**.
 
 ---
 
@@ -186,6 +186,8 @@ Pack15C execution readiness decision is **fully complete and green** on master. 
 | Pack15B | Human approval recording (planning only) | `0a7d1a2` (PR #80) |
 | Pack15C | DB apply pre-apply planning packet | `70d747a` (PR #81) |
 | Pack15C | Execution readiness decision packet | `64ccd56` (PR #82) |
+| Pack15C | Kernel/handoff sync after readiness decision | `eca97e4` (PR #83) |
+| Pack15C | Execution inputs intake template | `13793af` (PR #84) |
 
 ---
 
@@ -219,8 +221,10 @@ Pack15C execution readiness decision is **fully complete and green** on master. 
 | `pack15ExecutionReady` | `false` |
 | `pack15DbApplyPerformed` | `false` |
 | `dbApplied` | `false` |
+| `pack15ExecutionInputsIntakeTemplateActive` | `true` |
+| `pack15ExecutionInputsComplete` | `false` |
 
-Product docs: `docs/product/VIONA_REQUEST_PACK14C_PRISMA_MIGRATION_CREATION_ONLY.md`, `docs/product/VIONA_REQUEST_PACK15C_DB_APPLY_PRE_APPLY_PLANNING_PACKET.md`, `docs/product/VIONA_REQUEST_PACK15C_EXECUTION_READINESS_DECISION_PACKET.md`
+Product docs: `docs/product/VIONA_REQUEST_PACK14C_PRISMA_MIGRATION_CREATION_ONLY.md`, `docs/product/VIONA_REQUEST_PACK15C_DB_APPLY_PRE_APPLY_PLANNING_PACKET.md`, `docs/product/VIONA_REQUEST_PACK15C_EXECUTION_READINESS_DECISION_PACKET.md`, `docs/product/VIONA_REQUEST_PACK15C_EXECUTION_INPUTS_INTAKE_TEMPLATE.md`
 
 Gate Factory (Pack14D): `scripts/lib/vionaPackDiffAllowlist.mjs`, `scripts/viona-request-pack14d-gate-factory-check.mjs`
 
@@ -230,31 +234,50 @@ Gate Factory (Pack14D): `scripts/lib/vionaPackDiffAllowlist.mjs`, `scripts/viona
 
 **Decision (read-only audit):** `B) NOT READY — missing target environment / backup / restore / operator go-no-go`
 
-Pack15B approval permits **planning only** — it is **not** execution approval. A separate execution-only pack must **not** be created or run until all missing execution inputs below are provided.
+Execution remains **blocked** because the 15 required execution inputs are **not complete**.
 
-### Missing execution inputs (human/operator must provide)
-
-1. Target environment: local / staging / production / other
-2. Database provider/host confirmed outside repo
-3. `DATABASE_URL` / secret confirmed outside repo, not committed
-4. Named responsible execution operator
-5. Execution machine/context
-6. Maintenance window / user impact decision
-7. Explicit execution go/no-go
-8. Backup/snapshot method for chosen environment
-9. Backup owner
-10. Pre-apply backup timestamp evidence
-11. Restore procedure for chosen environment
-12. Restore test or confidence level
-13. Rollback limitations
-14. Restore/rollback operator
-15. Distinct execution approval phrase authorizing actual `npx prisma migrate deploy` on the named target
+Pack15B approval permits **planning only** — it is **not** execution approval. A separate execution-only pack must **not** be created or run until all execution inputs are complete, reviewed by ChatGPT, and explicitly authorized.
 
 Evidence: `docs/design/evidence/cursor-request-pack15c-execution-readiness-decision-packet/README.md`
 
 ---
 
-## 9. Current blocked list
+## 9. Execution inputs intake template
+
+**Template on master:** `docs/product/VIONA_REQUEST_PACK15C_EXECUTION_INPUTS_INTAKE_TEMPLATE.md`
+
+All 15 inputs default to **`Missing`** until human/operator completes them outside repo (no secrets in docs):
+
+1. Target environment: local / staging / production / other
+2. Database provider/host
+3. `DATABASE_URL` / secret confirmed outside repo, not committed
+4. Named responsible execution operator
+5. Execution machine/context
+6. Maintenance window / user impact
+7. Explicit execution go/no-go
+8. Backup/snapshot method
+9. Backup owner
+10. Pre-apply backup timestamp evidence
+11. Restore procedure
+12. Restore test/confidence level
+13. Rollback limitations
+14. Restore/rollback operator
+15. Distinct execution approval phrase for actual `npx prisma migrate deploy` on named target
+
+### Intake boundaries
+
+- Intake template is **not** execution approval
+- Pack15B phrase remains **planning only**
+- Execution approval must be **distinct**, **explicit**, and **target-specific**
+- Secrets must be confirmed **outside repo only**
+- `DATABASE_URL` must **not** be pasted into docs
+- `.env` must **not** be committed or printed
+
+Evidence: `docs/design/evidence/cursor-pack15c-execution-inputs-intake-template/README.md`
+
+---
+
+## 10. Current blocked list
 
 Still **blocked** until future approved packs and missing execution inputs are satisfied:
 
@@ -275,24 +298,26 @@ Still **blocked** until future approved packs and missing execution inputs are s
 
 ---
 
-## 10. Next sequence (critical path)
+## 11. Next sequence (critical path)
 
 Execute in order — do not skip:
 
-1. **Keep DB apply blocked** until human/operator provides all 15 execution inputs (§8)
-2. **Optional safe docs-only handoff sync** — Pack15C kernel/handoff sync (this pack)
-3. **Optional safe UI/design/read-only audit lanes** — no DB/runtime/API/mutation drift
-4. **Pack15C execution-only DB apply pack** — only after all execution inputs and execution approval phrase are provided
-5. **Pack15D** — DB schema verification (only after successful DB apply)
-6. **Pack16** — Read-only persistence API
-7. **Pack17** — Live read-only request inbox
-8. **Pack18** — Request mutation
-9. **Pack19** — Merchant / operator workflow
-10. **Pack20+** — AI request assistant / AI action foundation
+1. **Keep DB apply blocked** until all 15 execution inputs are provided (§9)
+2. **Human/operator fills intake template** without secrets (non-secret confirmations only in docs)
+3. **ChatGPT reviews completed intake**
+4. **Optional safe docs-only handoff sync** — Pack15C kernel/handoff sync after intake template (this pack)
+5. **Optional safe UI/design/read-only audit lanes** — no DB/runtime/API/mutation drift
+6. **Pack15C execution-only DB apply pack** — only after target environment + backup/restore + operator go/no-go + execution approval phrase are complete
+7. **Pack15D** — DB schema verification (only after successful DB apply)
+8. **Pack16** — Read-only persistence API
+9. **Pack17** — Live read-only request inbox
+10. **Pack18** — Request mutation
+11. **Pack19** — Merchant / operator workflow
+12. **Pack20+** — AI request assistant / AI action foundation
 
 ---
 
-## 11. Parallel lanes (low risk)
+## 12. Parallel lanes (low risk)
 
 May run in parallel when allowlisted and gate-clean:
 
@@ -304,6 +329,7 @@ May run in parallel when allowlisted and gate-clean:
 - Design evidence cleanup
 - i18n copy safety review
 - Non-runtime planning packets
+- Filling intake template only with **non-secret** confirmations
 - AI product contracts
 - GTM / business docs
 - Country launch matrix
@@ -320,14 +346,15 @@ May run in parallel when allowlisted and gate-clean:
 - No fake production claims
 - No OPERATOR Prisma/Auth changes
 - No live AI protected action unlocks
+- No secrets in docs/logs
 
 ---
 
-## 12. Stop list (hard stops)
+## 13. Stop list (hard stops)
 
 Stop immediately and report if asked to:
 
-- Apply DB before all 15 execution inputs (§8) and a separate execution-only pack are authorized
+- Apply DB before all 15 execution inputs (§9) are complete, reviewed by ChatGPT, and a separate execution-only pack is explicitly authorized
 - Run any of: `prisma migrate dev`, `prisma migrate deploy`, `prisma migrate status`, `prisma db push`, `prisma db execute`, or any command that connects to or mutates a database (outside an authorized execution-only pack with confirmed environment and backup/restore)
 - Add API or mutation ahead of Pack16–18 sequence
 - Add OPERATOR role ahead of pack
@@ -341,7 +368,7 @@ Stop immediately and report if asked to:
 ## Quick start for a new session
 
 1. Read this file and `docs/ai-context/VIONA_OPERATING_PROTOCOL.md`.
-2. Confirm baseline: `git rev-parse origin/master` → expect `64ccd56` until updated.
+2. Confirm baseline: `git rev-parse origin/master` → expect `13793af` until updated.
 3. Read the active pack prompt allowlist and forbidden list.
 4. Branch from `origin/master`; run gates before commit.
 5. Cursor executes; ChatGPT reviews report and PR safety.
@@ -360,4 +387,6 @@ Stop immediately and report if asked to:
 
 **Pack14E:** Initial kernel + handoff sync after Pack14C migration-file-only, Pack14D Gate Factory, Fast Safe Global Mode, and Cursor-first execution law. Evidence: `docs/design/evidence/cursor-pack14e-kernel-handoff-fast-safe-global-mode/README.md`.
 
-**Pack15C handoff sync:** This document updated after Pack15C execution readiness decision merged @ `64ccd56` (PR #82). Decision: `B) NOT READY`. DB apply remains blocked. Evidence: `docs/design/evidence/cursor-pack15c-kernel-handoff-sync-after-readiness-decision/README.md`.
+**Pack15C handoff sync (readiness decision):** Updated after Pack15C execution readiness decision merged @ `64ccd56` (PR #82). Evidence: `docs/design/evidence/cursor-pack15c-kernel-handoff-sync-after-readiness-decision/README.md`.
+
+**Pack15C handoff sync (intake template):** This document updated after Pack15C execution inputs intake template merged @ `13793af` (PR #84). Decision remains `B) NOT READY`. All 15 inputs default `Missing`. DB apply remains blocked. Evidence: `docs/design/evidence/cursor-pack15c-kernel-handoff-sync-after-intake-template/README.md`.
