@@ -2,7 +2,7 @@
 
 **Document type:** Canonical kernel and session handoff for VIONA engineering, product, and AI agents.
 **Audience:** New ChatGPT / Cursor windows, staff, contractors, and automation executors.
-**Baseline:** `origin/master @ 3de7667` — `chore(requests): add Gate Factory for request gates (#77)`
+**Baseline:** `origin/master @ 64ccd56` — `docs(requests): record Pack15C execution readiness decision (#82)`
 **Supersedes for Request Engine sequencing:** prior scattered pack pointers when this doc conflicts on pack order or blocked state — align to this handoff.
 **Subordinate to:** `docs/ai-context/VIONA_OPERATING_PROTOCOL.md` and founder-signed **Master Blueprint** (`VIONA_FINAL_MASTER_BLUEPRINT_V2.md`). If conflict, stop and report drift risk.
 
@@ -156,78 +156,114 @@ Canonical checker: `node scripts/viona-forbidden-claims-check.mjs` (strict mode 
 | Field | Value |
 |-------|--------|
 | Remote | `origin/master` |
-| Commit | `3de7667` |
-| Message | `chore(requests): add Gate Factory for request gates (#77)` |
+| Commit | `64ccd56` |
+| Message | `docs(requests): record Pack15C execution readiness decision (#82)` |
+| Previous master | `70d747a` — `docs(requests): add Pack15C DB apply planning packet (#81)` |
 
-All new work branches from this SHA unless a later pack explicitly updates this handoff.
+All new work branches from `64ccd56` unless a later pack explicitly updates this handoff.
 
----
-
-## 6. Completed milestones (Request Engine chain)
-
-| Pack | Milestone | Notes |
-|------|-----------|--------|
-| Pack10C | Human SoT approval recorded | Source-of-truth signoff path |
-| Pack11 | Dedicated store schema design contract | No LocalServiceRequest SoT reuse |
-| Pack11B | Schema-design human approval | Recording only |
-| Pack12 | Prisma schema readiness boundary | Gates for schema work |
-| Pack13A | Prisma schema implementation approval packet | Human packet prepared |
-| Pack13B | Prisma schema implementation approval recorded | Human approval on file |
-| Pack13C | VIONA Request Prisma schema models added | Schema in `prisma/schema.prisma` |
-| Pack14A | Migration readiness approval packet | Blank/pending → human review |
-| Pack14B | Migration human approval recorded | Enables migration **file** planning only |
-| Pack14C | Migration file creation complete | `origin/master @ 2c15ba9` |
-| Pack14D | Gate Factory no-product-change complete | `origin/master @ 3de7667` |
+Pack15C execution readiness decision is **fully complete and green** on master. DB apply is **not performed**. DB apply remains **blocked**.
 
 ---
 
-## 7. Pack14C state (current)
+## 6. Completed milestones (Request Engine chain — green)
+
+| Pack | Milestone | SHA / PR |
+|------|-----------|----------|
+| Pack10C | Human SoT approval recorded | — |
+| Pack11 | Dedicated store schema design contract | — |
+| Pack11B | Schema-design human approval | — |
+| Pack12 | Prisma schema readiness boundary | — |
+| Pack13A | Prisma schema implementation approval packet | — |
+| Pack13B | Prisma schema implementation approval recorded | — |
+| Pack13C | VIONA Request Prisma schema models added | — |
+| Pack14A | Migration readiness approval packet | — |
+| Pack14B | Migration human approval recorded | — |
+| Pack14C | Migration file creation complete | `2c15ba9` |
+| Pack14D | Gate Factory no-product-change complete | `3de7667` |
+| Pack14E | Fast Safe Global Mode kernel + handoff | `8517da6` (PR #78) |
+| Pack15A | DB apply readiness approval packet | `5196f8a` (PR #79) |
+| Pack15B | Human approval recording (planning only) | `0a7d1a2` (PR #80) |
+| Pack15C | DB apply pre-apply planning packet | `70d747a` (PR #81) |
+| Pack15C | Execution readiness decision packet | `64ccd56` (PR #82) |
+
+---
+
+## 7. Current DB state
 
 | Item | State |
 |------|--------|
 | Migration file | `prisma/migrations/20260615120000_add_viona_request_models/migration.sql` |
-| Migration SQL | Additive-only |
-| `prisma/schema.prisma` in Pack14C | Unchanged |
-| `migrationCreated` | `true` |
-| `prismaMigrationActive` | `true` |
-| `pack14MigrationCreationOnly` | `true` |
-| `dbApplied` | `false` |
+| Migration SQL (read-only audit) | Additive-only — **not** DB apply evidence |
+| CREATE TYPE enum count | `1` |
+| CREATE TABLE count | `6` |
+| CREATE INDEX count | `12` |
+| ALTER TABLE count | `5` (FK `ADD CONSTRAINT` only) |
+| DROP count | `0` |
+| DELETE/TRUNCATE count | `0` |
 | API / adapter / mutation / runtime | None |
 | DB apply | **Blocked** |
 
-Product doc: `docs/product/VIONA_REQUEST_PACK14C_PRISMA_MIGRATION_CREATION_ONLY.md`
-Evidence: `docs/design/evidence/cursor-request-pack14c-prisma-migration-creation-only/README.md`
-Gate: `node scripts/viona-request-pack14c-prisma-migration-creation-check.mjs`
+### Current flags
+
+| Flag | Value |
+|------|--------|
+| `migrationCreated` | `true` |
+| `prismaMigrationActive` | `true` |
+| `pack14MigrationCreationOnly` | `true` |
+| `pack15DbApplyReadinessPacketActive` | `true` |
+| `pack15DbApplyApproved` | `true` |
+| `pack15DbApplyPermitted` | `true` |
+| `pack15DbApplyPlanningPacketActive` | `true` |
+| `pack15ExecutionReadinessAudited` | `true` |
+| `pack15ExecutionReady` | `false` |
+| `pack15DbApplyPerformed` | `false` |
+| `dbApplied` | `false` |
+
+Product docs: `docs/product/VIONA_REQUEST_PACK14C_PRISMA_MIGRATION_CREATION_ONLY.md`, `docs/product/VIONA_REQUEST_PACK15C_DB_APPLY_PRE_APPLY_PLANNING_PACKET.md`, `docs/product/VIONA_REQUEST_PACK15C_EXECUTION_READINESS_DECISION_PACKET.md`
+
+Gate Factory (Pack14D): `scripts/lib/vionaPackDiffAllowlist.mjs`, `scripts/viona-request-pack14d-gate-factory-check.mjs`
 
 ---
 
-## 8. Pack14D state (current)
+## 8. Pack15C execution readiness decision
 
-| Item | Path / note |
-|------|-------------|
-| Gate Factory helper | `scripts/lib/vionaPackDiffAllowlist.mjs` |
-| Pack14D check | `scripts/viona-request-pack14d-gate-factory-check.mjs` |
-| Product doc | `docs/product/VIONA_REQUEST_PACK14D_GATE_FACTORY_NO_PRODUCT_CHANGE.md` |
-| Evidence | `docs/design/evidence/cursor-request-pack14d-gate-factory/README.md` |
+**Decision (read-only audit):** `B) NOT READY — missing target environment / backup / restore / operator go-no-go`
 
-**Purpose:**
+Pack15B approval permits **planning only** — it is **not** execution approval. A separate execution-only pack must **not** be created or run until all missing execution inputs below are provided.
 
-- Centralize Pack14C migration allowlist logic
-- Reduce repeated legacy gate false positives
-- Preserve gate semantics (schema always forbidden in Pack14D context; only exact Pack14C migration SQL path may be allowed when recognized)
+### Missing execution inputs (human/operator must provide)
 
-**Pack14D did NOT change:** product/runtime, `prisma/schema.prisma`, migration SQL, or DB apply. Full gates PASS on master @ `3de7667`.
+1. Target environment: local / staging / production / other
+2. Database provider/host confirmed outside repo
+3. `DATABASE_URL` / secret confirmed outside repo, not committed
+4. Named responsible execution operator
+5. Execution machine/context
+6. Maintenance window / user impact decision
+7. Explicit execution go/no-go
+8. Backup/snapshot method for chosen environment
+9. Backup owner
+10. Pre-apply backup timestamp evidence
+11. Restore procedure for chosen environment
+12. Restore test or confidence level
+13. Rollback limitations
+14. Restore/rollback operator
+15. Distinct execution approval phrase authorizing actual `npx prisma migrate deploy` on the named target
+
+Evidence: `docs/design/evidence/cursor-request-pack15c-execution-readiness-decision-packet/README.md`
 
 ---
 
 ## 9. Current blocked list
 
-Still **blocked** until future approved packs:
+Still **blocked** until future approved packs and missing execution inputs are satisfied:
 
 - DB apply
-- Read-only API
-- Persistence adapter
-- Request mutation
+- Pack15C execution-only DB apply pack
+- Pack15D DB schema verification
+- Read-only persistence API (Pack16)
+- Live read-only request inbox (Pack17)
+- Request mutation (Pack18)
 - Admin Debug live data
 - OPERATOR Prisma / Auth
 - Payment capture
@@ -243,15 +279,16 @@ Still **blocked** until future approved packs:
 
 Execute in order — do not skip:
 
-1. **Pack15A** — DB apply readiness approval packet
-2. **Pack15B** — Record DB apply human approval
-3. **Pack15C** — DB apply only, if approved
-4. **Pack15D** — DB schema verification
-5. **Pack16** — Read-only persistence API
-6. **Pack17** — Live read-only request inbox
-7. **Pack18** — Request mutation
-8. **Pack19** — Merchant / operator workflow
-9. **Pack20+** — AI request assistant / AI action foundation
+1. **Keep DB apply blocked** until human/operator provides all 15 execution inputs (§8)
+2. **Optional safe docs-only handoff sync** — Pack15C kernel/handoff sync (this pack)
+3. **Optional safe UI/design/read-only audit lanes** — no DB/runtime/API/mutation drift
+4. **Pack15C execution-only DB apply pack** — only after all execution inputs and execution approval phrase are provided
+5. **Pack15D** — DB schema verification (only after successful DB apply)
+6. **Pack16** — Read-only persistence API
+7. **Pack17** — Live read-only request inbox
+8. **Pack18** — Request mutation
+9. **Pack19** — Merchant / operator workflow
+10. **Pack20+** — AI request assistant / AI action foundation
 
 ---
 
@@ -259,13 +296,30 @@ Execute in order — do not skip:
 
 May run in parallel when allowlisted and gate-clean:
 
-- UI polish (no routing/money/auth semantic drift)
-- Docs / specs (including this handoff)
+- Docs / kernel / handoff updates (including this handoff)
+- Read-only audits
+- Product specs
+- Evidence docs
+- UI polish packs that avoid DB/runtime/API/mutation and preserve existing routes
+- Design evidence cleanup
+- i18n copy safety review
+- Non-runtime planning packets
 - AI product contracts
 - GTM / business docs
-- i18n / safety copy
 - Country launch matrix
 - Consent / do-not-call / audit policies
+
+### Forbidden safe-lane drift
+
+- No broad refactor
+- No architecture rewrite
+- No DB apply
+- No Prisma schema/migration edits
+- No API/mutation implementation
+- No payment/booking/SOS/wallet truth changes
+- No fake production claims
+- No OPERATOR Prisma/Auth changes
+- No live AI protected action unlocks
 
 ---
 
@@ -273,7 +327,8 @@ May run in parallel when allowlisted and gate-clean:
 
 Stop immediately and report if asked to:
 
-- Apply DB without Pack15B approval and Pack15C scope
+- Apply DB before all 15 execution inputs (§8) and a separate execution-only pack are authorized
+- Run any of: `prisma migrate dev`, `prisma migrate deploy`, `prisma migrate status`, `prisma db push`, `prisma db execute`, or any command that connects to or mutates a database (outside an authorized execution-only pack with confirmed environment and backup/restore)
 - Add API or mutation ahead of Pack16–18 sequence
 - Add OPERATOR role ahead of pack
 - Enable live AI call, SOS, payment, or booking ahead of gates
@@ -286,7 +341,7 @@ Stop immediately and report if asked to:
 ## Quick start for a new session
 
 1. Read this file and `docs/ai-context/VIONA_OPERATING_PROTOCOL.md`.
-2. Confirm baseline: `git rev-parse origin/master` → expect `3de7667` until updated.
+2. Confirm baseline: `git rev-parse origin/master` → expect `64ccd56` until updated.
 3. Read the active pack prompt allowlist and forbidden list.
 4. Branch from `origin/master`; run gates before commit.
 5. Cursor executes; ChatGPT reviews report and PR safety.
@@ -299,8 +354,10 @@ Stop immediately and report if asked to:
 | `VIONA_FINAL_MASTER_BLUEPRINT_V2.md` | Founder product blueprint |
 | `docs/operating/VIONA_PROJECT_KERNEL.md` | Commercial / Local pilot kernel (parallel track) |
 | `docs/ai-context/TASK_HANDOFF_TEMPLATE.md` | Per-task handoff template |
-| `docs/product/VIONA_REQUEST_PACK14C_*` / `PACK14D_*` | Pack14C/14D boundaries |
+| `docs/product/VIONA_REQUEST_PACK14C_*` / `PACK14D_*` / `PACK15C_*` | Pack14C–15C boundaries |
 
 ---
 
-**Pack14E:** This document — kernel + handoff sync after Pack14C migration-file-only, Pack14D Gate Factory, Fast Safe Global Mode, and Cursor-first execution law. Evidence: `docs/design/evidence/cursor-pack14e-kernel-handoff-fast-safe-global-mode/README.md`.
+**Pack14E:** Initial kernel + handoff sync after Pack14C migration-file-only, Pack14D Gate Factory, Fast Safe Global Mode, and Cursor-first execution law. Evidence: `docs/design/evidence/cursor-pack14e-kernel-handoff-fast-safe-global-mode/README.md`.
+
+**Pack15C handoff sync:** This document updated after Pack15C execution readiness decision merged @ `64ccd56` (PR #82). Decision: `B) NOT READY`. DB apply remains blocked. Evidence: `docs/design/evidence/cursor-pack15c-kernel-handoff-sync-after-readiness-decision/README.md`.
