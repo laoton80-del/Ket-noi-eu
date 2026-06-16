@@ -2,7 +2,7 @@
 
 **Document type:** Canonical kernel and session handoff for VIONA engineering, product, and AI agents.
 **Audience:** New ChatGPT / Cursor windows, staff, contractors, and automation executors.
-**Baseline:** `origin/master @ a885425` — `docs(requests): add Pack16 read-only persistence API planning packet (#86)`
+**Baseline:** `origin/master @ cd92428` — `docs(requests): add Pack17 live read-only inbox planning packet (#88)`
 **Supersedes for Request Engine sequencing:** prior scattered pack pointers when this doc conflicts on pack order or blocked state — align to this handoff.
 **Subordinate to:** `docs/ai-context/VIONA_OPERATING_PROTOCOL.md` and founder-signed **Master Blueprint** (`VIONA_FINAL_MASTER_BLUEPRINT_V2.md`). If conflict, stop and report drift risk.
 
@@ -43,7 +43,7 @@ UI polish, docs/specs, AI product contracts, GTM/business docs, i18n/safety copy
 
 ### Critical path remains sequential
 
-DB apply → schema verification → read-only API → read-only inbox → mutation → operator workflow → AI action foundation must follow the pack sequence in §12. No API/mutation/runtime ahead of approval.
+DB apply → schema verification → read-only API → read-only inbox → mutation → operator workflow → AI action foundation must follow the pack sequence in §13. No API/mutation/runtime ahead of approval.
 
 ---
 
@@ -156,14 +156,14 @@ Canonical checker: `node scripts/viona-forbidden-claims-check.mjs` (strict mode 
 | Field | Value |
 |-------|--------|
 | Remote | `origin/master` |
-| Commit | `a885425` |
-| Message | `docs(requests): add Pack16 read-only persistence API planning packet (#86)` |
-| Previous master | `61293b9` — `docs(kernel): sync handoff after Pack15C intake template (#85)` |
-| Previous latest (prior to #85) | `13793af` — `docs(requests): add Pack15C execution inputs intake template (#84)` |
+| Commit | `cd92428` |
+| Message | `docs(requests): add Pack17 live read-only inbox planning packet (#88)` |
+| Previous master | `fab30f4` — `docs(kernel): sync handoff after Pack16 planning packet (#87)` |
+| Previous latest (prior to #87) | `a885425` — `docs(requests): add Pack16 read-only persistence API planning packet (#86)` |
 
-All new work branches from `a885425` unless a later pack explicitly updates this handoff.
+All new work branches from `cd92428` unless a later pack explicitly updates this handoff.
 
-Pack15C execution readiness decision remains **`B) NOT READY`**. Pack15C execution inputs intake template is **fully complete and green** on master. Pack16 read-only persistence API **planning packet** is **fully complete and green** on master. Pack16 is **planning-only / future-only** — runtime/API is **not implemented**. All 15 execution inputs currently default to **`Missing`**. Intake template is **not** execution approval. DB apply is **not performed**. DB apply and Pack16 runtime/API remain **blocked**.
+Pack15C execution readiness decision remains **`B) NOT READY`**. Pack16 read-only persistence API **planning packet** is **fully complete and green** on master. Pack17 live read-only request inbox **planning packet** is **fully complete and green** on master. Pack16 is **planning-only / future-only** — runtime/API is **not implemented**. Pack17 is **planning-only / future-only** — runtime/UI/inbox is **not implemented**. All 15 execution inputs currently default to **`Missing`**. Intake template is **not** execution approval. DB apply is **not performed**. DB apply, Pack16 runtime/API, and Pack17 runtime/UI/inbox remain **blocked**.
 
 ---
 
@@ -191,6 +191,8 @@ Pack15C execution readiness decision remains **`B) NOT READY`**. Pack15C executi
 | Pack15C | Execution inputs intake template | `13793af` (PR #84) |
 | Pack15C | Kernel/handoff sync after intake template | `61293b9` (PR #85) |
 | Pack16 | Read-only persistence API planning packet | `a885425` (PR #86) |
+| Pack16 | Kernel/handoff sync after planning packet | `fab30f4` (PR #87) |
+| Pack17 | Live read-only request inbox planning packet | `cd92428` (PR #88) |
 
 ---
 
@@ -206,8 +208,9 @@ Pack15C execution readiness decision remains **`B) NOT READY`**. Pack15C executi
 | ALTER TABLE count | `5` (FK `ADD CONSTRAINT` only) |
 | DROP count | `0` |
 | DELETE/TRUNCATE count | `0` |
-| API / adapter / mutation / runtime | None — Pack16 planning only; no read-only API live |
+| API / adapter / mutation / runtime | None — Pack16/Pack17 planning only; no read-only API or live inbox |
 | Pack16 runtime/API | **Blocked** — implementation not started |
+| Pack17 runtime/UI/inbox | **Blocked** — implementation not started |
 | DB apply | **Blocked** |
 
 ### Current flags
@@ -230,8 +233,11 @@ Pack15C execution readiness decision remains **`B) NOT READY`**. Pack15C executi
 | `pack16ReadOnlyPersistenceApiPlanningPacketActive` | `true` |
 | `pack16RuntimeImplementationStarted` | `false` |
 | `pack16ReadOnlyApiImplemented` | `false` |
+| `pack17LiveReadOnlyInboxPlanningPacketActive` | `true` |
+| `pack17RuntimeImplementationStarted` | `false` |
+| `pack17LiveReadOnlyInboxImplemented` | `false` |
 
-Product docs: `docs/product/VIONA_REQUEST_PACK14C_PRISMA_MIGRATION_CREATION_ONLY.md`, `docs/product/VIONA_REQUEST_PACK15C_DB_APPLY_PRE_APPLY_PLANNING_PACKET.md`, `docs/product/VIONA_REQUEST_PACK15C_EXECUTION_READINESS_DECISION_PACKET.md`, `docs/product/VIONA_REQUEST_PACK15C_EXECUTION_INPUTS_INTAKE_TEMPLATE.md`, `docs/product/VIONA_REQUEST_PACK16_READ_ONLY_PERSISTENCE_API_PLANNING_PACKET.md`
+Product docs: `docs/product/VIONA_REQUEST_PACK14C_PRISMA_MIGRATION_CREATION_ONLY.md`, `docs/product/VIONA_REQUEST_PACK15C_DB_APPLY_PRE_APPLY_PLANNING_PACKET.md`, `docs/product/VIONA_REQUEST_PACK15C_EXECUTION_READINESS_DECISION_PACKET.md`, `docs/product/VIONA_REQUEST_PACK15C_EXECUTION_INPUTS_INTAKE_TEMPLATE.md`, `docs/product/VIONA_REQUEST_PACK16_READ_ONLY_PERSISTENCE_API_PLANNING_PACKET.md`, `docs/product/VIONA_REQUEST_PACK17_LIVE_READ_ONLY_REQUEST_INBOX_PLANNING_PACKET.md`
 
 Gate Factory (Pack14D): `scripts/lib/vionaPackDiffAllowlist.mjs`, `scripts/viona-request-pack14d-gate-factory-check.mjs`
 
@@ -300,7 +306,24 @@ Evidence: `docs/design/evidence/cursor-pack16-read-only-persistence-api-planning
 
 ---
 
-## 11. Current blocked list
+## 11. Pack17 planning packet status
+
+**Planning packet on master:** `docs/product/VIONA_REQUEST_PACK17_LIVE_READ_ONLY_REQUEST_INBOX_PLANNING_PACKET.md`
+
+| Item | State |
+|------|--------|
+| Pack17 scope | **Future-only** — planning packet complete; **not** runtime/UI/inbox implementation |
+| Pack17 implementation gate | **Blocked** until Pack16 read-only persistence API exists and is **verified** |
+| Pack16 implementation gate | **Blocked** until DB apply succeeds and **Pack15D** schema verification passes |
+| Live read-only request inbox | **Not implemented** — no live inbox |
+| UI / screens / components | **Unchanged** — no files modified by Pack17 planning |
+| API / routes / controllers / server | **Unchanged** — no files modified by Pack17 planning |
+
+Evidence: `docs/design/evidence/cursor-pack17-live-read-only-request-inbox-planning-packet/README.md`
+
+---
+
+## 12. Current blocked list
 
 Still **blocked** until future approved packs and missing execution inputs are satisfied:
 
@@ -308,8 +331,9 @@ Still **blocked** until future approved packs and missing execution inputs are s
 - Pack15C execution-only DB apply pack
 - Pack15D DB schema verification
 - Pack16 runtime implementation
-- Read-only persistence API
-- Live read-only request inbox (Pack17)
+- Pack16 read-only persistence API
+- Pack17 runtime implementation
+- Live read-only request inbox
 - Request mutation (Pack18)
 - Admin Debug live data
 - OPERATOR Prisma / Auth
@@ -322,7 +346,7 @@ Still **blocked** until future approved packs and missing execution inputs are s
 
 ---
 
-## 12. Next sequence (critical path)
+## 13. Next sequence (critical path)
 
 Execute in order — do not skip:
 
@@ -332,8 +356,8 @@ Execute in order — do not skip:
 4. **Pack15C execution-only DB apply pack** — only after target environment + backup/restore + operator go/no-go + execution approval phrase are complete
 5. **Pack15D** — DB schema verification (only after successful DB apply)
 6. **Pack16** — Read-only persistence API implementation (only after Pack15D)
-7. **Pack17** — Live read-only request inbox
-8. **Pack18** — Request mutation
+7. **Pack17** — Live read-only request inbox implementation (only after Pack16 read-only API)
+8. **Pack18** — Request mutation planning / implementation (only after read-only inbox is verified)
 9. **Pack19** — Merchant / operator workflow
 10. **Pack20+** — AI request assistant / AI action foundation
 
@@ -341,7 +365,7 @@ Safe parallel lanes (docs, audits, UI polish without DB/runtime/API/mutation) ma
 
 ---
 
-## 13. Parallel lanes (low risk)
+## 14. Parallel lanes (low risk)
 
 May run in parallel when allowlisted and gate-clean:
 
@@ -368,6 +392,7 @@ May run in parallel when allowlisted and gate-clean:
 - No Prisma DB commands
 - No API/routes/controllers/server implementation
 - No persistence adapter implementation
+- No UI/screens/components implementation for Pack17
 - No request mutation
 - No payment/booking/SOS/wallet truth changes
 - No fake production claims
@@ -377,7 +402,7 @@ May run in parallel when allowlisted and gate-clean:
 
 ---
 
-## 14. Stop list (hard stops)
+## 15. Stop list (hard stops)
 
 Stop immediately and report if asked to:
 
@@ -395,7 +420,7 @@ Stop immediately and report if asked to:
 ## Quick start for a new session
 
 1. Read this file and `docs/ai-context/VIONA_OPERATING_PROTOCOL.md`.
-2. Confirm baseline: `git rev-parse origin/master` → expect `a885425` until updated.
+2. Confirm baseline: `git rev-parse origin/master` → expect `cd92428` until updated.
 3. Read the active pack prompt allowlist and forbidden list.
 4. Branch from `origin/master`; run gates before commit.
 5. Cursor executes; ChatGPT reviews report and PR safety.
@@ -408,7 +433,7 @@ Stop immediately and report if asked to:
 | `VIONA_FINAL_MASTER_BLUEPRINT_V2.md` | Founder product blueprint |
 | `docs/operating/VIONA_PROJECT_KERNEL.md` | Commercial / Local pilot kernel (parallel track) |
 | `docs/ai-context/TASK_HANDOFF_TEMPLATE.md` | Per-task handoff template |
-| `docs/product/VIONA_REQUEST_PACK14C_*` / `PACK14D_*` / `PACK15C_*` / `PACK16_*` | Pack14C–16 boundaries |
+| `docs/product/VIONA_REQUEST_PACK14C_*` / `PACK14D_*` / `PACK15C_*` / `PACK16_*` / `PACK17_*` | Pack14C–17 boundaries |
 
 ---
 
@@ -418,4 +443,6 @@ Stop immediately and report if asked to:
 
 **Pack15C handoff sync (intake template):** Updated after Pack15C execution inputs intake template merged @ `13793af` (PR #84) and kernel sync @ `61293b9` (PR #85). Evidence: `docs/design/evidence/cursor-pack15c-kernel-handoff-sync-after-intake-template/README.md`.
 
-**Pack16 handoff sync (planning packet):** This document updated after Pack16 read-only persistence API planning packet merged @ `a885425` (PR #86). Decision remains `B) NOT READY`. Pack16 is planning-only; runtime/API not implemented. DB apply remains blocked. Evidence: `docs/design/evidence/cursor-pack16-kernel-handoff-sync-after-planning-packet/README.md`.
+**Pack16 handoff sync (planning packet):** Updated after Pack16 read-only persistence API planning packet merged @ `a885425` (PR #86) and kernel sync @ `fab30f4` (PR #87). Evidence: `docs/design/evidence/cursor-pack16-kernel-handoff-sync-after-planning-packet/README.md`.
+
+**Pack17 handoff sync (planning packet):** This document updated after Pack17 live read-only request inbox planning packet merged @ `cd92428` (PR #88). Decision remains `B) NOT READY`. Pack17 is planning-only; runtime/UI/inbox not implemented. DB apply remains blocked. Evidence: `docs/design/evidence/cursor-pack17-kernel-handoff-sync-after-planning-packet/README.md`.
