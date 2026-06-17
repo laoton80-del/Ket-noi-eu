@@ -2,7 +2,7 @@
 
 **Document type:** Canonical kernel and session handoff for VIONA engineering, product, and AI agents.
 **Audience:** New ChatGPT / Cursor windows, staff, contractors, and automation executors.
-**Baseline:** `origin/master @ 5df9477` — `docs(requests): record Pack15C target confirmation (#92)`
+**Baseline:** `origin/master @ d042bac` — `docs(requests): record Pack15C backup restore blocker evidence (#94)`
 **Supersedes for Request Engine sequencing:** prior scattered pack pointers when this doc conflicts on pack order or blocked state — align to this handoff.
 **Subordinate to:** `docs/ai-context/VIONA_OPERATING_PROTOCOL.md` and founder-signed **Master Blueprint** (`VIONA_FINAL_MASTER_BLUEPRINT_V2.md`). If conflict, stop and report drift risk.
 
@@ -156,14 +156,14 @@ Canonical checker: `node scripts/viona-forbidden-claims-check.mjs` (strict mode 
 | Field | Value |
 |-------|--------|
 | Remote | `origin/master` |
-| Commit | `5df9477` |
-| Message | `docs(requests): record Pack15C target confirmation (#92)` |
-| Previous master | `75bf9c8` — `docs(kernel): sync handoff after Pack15C Supabase DB secret audit (#91)` |
-| Previous latest (prior to #91) | `32a5826` — `docs(requests): record Pack15C Supabase DB secret audit (#90)` |
+| Commit | `d042bac` |
+| Message | `docs(requests): record Pack15C backup restore blocker evidence (#94)` |
+| Previous master | `9f0fea7` — `docs(kernel): sync handoff after Pack15C target confirmation (#93)` |
+| Previous latest (prior to #93) | `5df9477` — `docs(requests): record Pack15C target confirmation (#92)` |
 
-All new work branches from `5df9477` unless a later pack explicitly updates this handoff.
+All new work branches from `d042bac` unless a later pack explicitly updates this handoff.
 
-Pack15C target confirmation intake update evidence is **complete and green** on master (PR #92). Pack15C Supabase DB secret location audit evidence is **complete and green** (PR #90). Pack15C Kernel/Handoff sync after Supabase DB secret audit is **complete and green** (PR #91). Pack15C execution readiness is **`PARTIAL — target confirmed, but not GO`**. Decision remains **`B) NOT READY`**. Pack16 read-only persistence API **planning packet** is **fully complete and green** on master. Pack17 live read-only request inbox **planning packet** is **fully complete and green** on master. Pack16 is **planning-only / future-only** — runtime/API is **not implemented**. Pack17 is **planning-only / future-only** — runtime/UI/inbox is **not implemented**. Target environment and Supabase project are **confirmed** at non-secret level; secret **values** are **not verified**. DB apply is **not performed**. DB apply, Pack15D, Pack16 runtime/API, and Pack17 runtime/UI/inbox remain **blocked**.
+Pack15C backup/restore dashboard evidence is **complete and green** on master (PR #94). Pack15C Kernel/Handoff sync after target confirmation is **complete and green** (PR #93). Pack15C target confirmation intake update evidence is **complete and green** (PR #92). Pack15C execution readiness is **`PARTIAL — target confirmed, backup blocker confirmed, not GO`**. Decision remains **`B) NOT READY`**. Pack16 read-only persistence API **planning packet** is **fully complete and green** on master. Pack17 live read-only request inbox **planning packet** is **fully complete and green** on master. Pack16 is **planning-only / future-only** — runtime/API is **not implemented**. Pack17 is **planning-only / future-only** — runtime/UI/inbox is **not implemented**. Target environment and Supabase project remain **confirmed** at non-secret level; dashboard backup is **unavailable on Free Plan**; secret **values** are **not verified**. DB apply is **not performed**. DB apply, Pack15D, Pack16 runtime/API, and Pack17 runtime/UI/inbox remain **blocked**.
 
 ---
 
@@ -197,6 +197,8 @@ Pack15C target confirmation intake update evidence is **complete and green** on 
 | Pack15C | Supabase DB secret location audit evidence | `32a5826` (PR #90) |
 | Pack15C | Kernel/handoff sync after Supabase DB secret audit | `75bf9c8` (PR #91) |
 | Pack15C | Target confirmation intake update evidence | `5df9477` (PR #92) |
+| Pack15C | Kernel/handoff sync after target confirmation | `9f0fea7` (PR #93) |
+| Pack15C | Backup/restore dashboard evidence | `d042bac` (PR #94) |
 
 ---
 
@@ -217,6 +219,7 @@ Pack15C target confirmation intake update evidence is **complete and green** on 
 | Pack17 runtime/UI/inbox | **Blocked** — implementation not started |
 | DB apply | **Blocked** |
 | DB apply performed | **No** |
+| Backup blocker | **Free Plan** — dashboard backups unavailable; prevents execution readiness GO |
 
 ### Pack15C target confirmation state (non-secret)
 
@@ -256,6 +259,28 @@ Earlier `.env.local`-only check was **incomplete**. Read-only audit evidence (PR
 | Prisma command run | **No** |
 | Supabase DB command run | **No** |
 
+### Pack15C backup/restore dashboard state (non-secret)
+
+Human-provided Supabase Dashboard screenshot observation recorded (PR #94):
+
+| Item | State |
+|------|--------|
+| Source | Human-provided Supabase Dashboard screenshot / non-secret visual observation |
+| Cursor logged into Supabase Dashboard | **No** |
+| Backup page available | `YES` |
+| Backup available | `NO` |
+| Backup type | `Dashboard backup unavailable on Free Plan` |
+| Backup timestamp | `MISSING / N/A` |
+| Evidence location/name | `Supabase Dashboard > Database > Backups > Scheduled backups — Free Plan does not include project backups` |
+| Restore option visible | `YES` |
+| Restore procedure | `PLANNED_ONLY — not executable without backup method` |
+| Restore owner | `Nong Si Buong` |
+| Restore confidence | `low` |
+| Restore tested | `NO` |
+| Operator go/no-go | `NO-GO` |
+
+Evidence: `docs/product/VIONA_REQUEST_PACK15C_BACKUP_RESTORE_DASHBOARD_EVIDENCE.md`, `docs/design/evidence/cursor-pack15c-backup-restore-dashboard-evidence/README.md`
+
 ### Current classification
 
 | Item | State |
@@ -264,7 +289,7 @@ Earlier `.env.local`-only check was **incomplete**. Read-only audit evidence (PR
 | Secret value validity | `NOT VERIFIED` |
 | DB connection | `NOT ATTEMPTED` |
 | Classification | **A) LOCAL PRESENT** plus **B) HOST SECRET NAME PRESENT** |
-| Execution readiness | `PARTIAL — target confirmed, but not GO` |
+| Execution readiness | `PARTIAL — target confirmed, backup blocker confirmed, not GO` |
 | DB apply remains blocked | `true` |
 
 ### Current 15-input state
@@ -276,18 +301,20 @@ Earlier `.env.local`-only check was **incomplete**. Read-only audit evidence (PR
 | 3 | Execution context | `CONFIRMED CANDIDATE — local operator machine using local .env` |
 | 4 | Server-side DB secret presence | `PRESENT_BY_KEY_NAME_ONLY` |
 | 5 | Secret value validity evidence | `NOT_VERIFIED` |
-| 6 | Backup / snapshot evidence | `MISSING` |
-| 7 | Restore / rollback procedure | `PLANNED_ONLY / MISSING` |
-| 8 | Restore owner | `MISSING` |
-| 9 | Restore confidence | `MISSING` |
+| 6 | Backup / snapshot evidence | `MISSING — dashboard confirms NO backup on Free Plan` |
+| 7 | Restore / rollback procedure | `PLANNED_ONLY — not executable without backup` |
+| 8 | Restore owner | `CONFIRMED CANDIDATE — Nong Si Buong` |
+| 9 | Restore confidence | `CONFIRMED — low` |
 | 10 | Named execution operator | `CANDIDATE_FROM_CHAT` |
 | 11 | Stop-on-error behavior | `PLANNED_ONLY` |
 | 12 | Post-apply verification plan | `PLANNED_ONLY` |
-| 13 | Operator go/no-go | `NO-GO / MISSING` |
+| 13 | Operator go/no-go | `NO-GO` |
 | 14 | Separate execution approval phrase | `MISSING` |
 | 15 | Separate execution-only DB apply pack authorization | `BLOCKED` |
 
 Evidence: `docs/product/VIONA_REQUEST_PACK15C_TARGET_CONFIRMATION_INTAKE_UPDATE_EVIDENCE.md`
+
+Evidence (backup/restore dashboard): `docs/product/VIONA_REQUEST_PACK15C_BACKUP_RESTORE_DASHBOARD_EVIDENCE.md`, `docs/design/evidence/cursor-pack15c-backup-restore-dashboard-evidence/README.md`
 
 Evidence (secret audit): `docs/product/VIONA_REQUEST_PACK15C_SUPABASE_DB_SECRET_LOCATION_AUDIT_EVIDENCE.md`, `docs/design/evidence/cursor-pack15c-supabase-db-secret-location-audit-evidence/README.md`
 
@@ -315,9 +342,18 @@ Evidence (secret audit): `docs/product/VIONA_REQUEST_PACK15C_SUPABASE_DB_SECRET_
 | `pack15SupabaseTargetProjectRef` | `euqbfanilcssjiwwtcby` |
 | `pack15LegacyPausedProjectDoNotUse` | `true` |
 | `pack15ExecutionContextSelected` | `local operator machine using local .env` |
+| `pack15BackupPageAvailable` | `true` |
 | `pack15BackupSnapshotConfirmed` | `false` |
+| `pack15DashboardBackupAvailable` | `false` |
+| `pack15DashboardBackupUnavailableReason` | `Free Plan` |
+| `pack15BackupTimestamp` | `MISSING / N/A` |
+| `pack15RestoreOptionVisible` | `true` |
 | `pack15RestoreRollbackConfirmed` | `false` |
-| `pack15RestoreOwnerConfirmed` | `false` |
+| `pack15RestoreProcedureExecutable` | `false` |
+| `pack15RestoreOwnerConfirmed` | `true` |
+| `pack15RestoreOwner` | `Nong Si Buong` |
+| `pack15RestoreConfidence` | `low` |
+| `pack15RestoreTested` | `false` |
 | `pack15OperatorGoNoGo` | `false` |
 | `pack15ExecutionApprovalPhraseProvided` | `false` |
 | `pack15ExecutionOnlyDbApplyPackAuthorized` | `false` |
@@ -331,7 +367,7 @@ Evidence (secret audit): `docs/product/VIONA_REQUEST_PACK15C_SUPABASE_DB_SECRET_
 | `pack17RuntimeImplementationStarted` | `false` |
 | `pack17LiveReadOnlyInboxImplemented` | `false` |
 
-Product docs: `docs/product/VIONA_REQUEST_PACK14C_PRISMA_MIGRATION_CREATION_ONLY.md`, `docs/product/VIONA_REQUEST_PACK15C_DB_APPLY_PRE_APPLY_PLANNING_PACKET.md`, `docs/product/VIONA_REQUEST_PACK15C_EXECUTION_READINESS_DECISION_PACKET.md`, `docs/product/VIONA_REQUEST_PACK15C_EXECUTION_INPUTS_INTAKE_TEMPLATE.md`, `docs/product/VIONA_REQUEST_PACK15C_SUPABASE_DB_SECRET_LOCATION_AUDIT_EVIDENCE.md`, `docs/product/VIONA_REQUEST_PACK15C_TARGET_CONFIRMATION_INTAKE_UPDATE_EVIDENCE.md`, `docs/product/VIONA_REQUEST_PACK16_READ_ONLY_PERSISTENCE_API_PLANNING_PACKET.md`, `docs/product/VIONA_REQUEST_PACK17_LIVE_READ_ONLY_REQUEST_INBOX_PLANNING_PACKET.md`
+Product docs: `docs/product/VIONA_REQUEST_PACK14C_PRISMA_MIGRATION_CREATION_ONLY.md`, `docs/product/VIONA_REQUEST_PACK15C_DB_APPLY_PRE_APPLY_PLANNING_PACKET.md`, `docs/product/VIONA_REQUEST_PACK15C_EXECUTION_READINESS_DECISION_PACKET.md`, `docs/product/VIONA_REQUEST_PACK15C_EXECUTION_INPUTS_INTAKE_TEMPLATE.md`, `docs/product/VIONA_REQUEST_PACK15C_SUPABASE_DB_SECRET_LOCATION_AUDIT_EVIDENCE.md`, `docs/product/VIONA_REQUEST_PACK15C_TARGET_CONFIRMATION_INTAKE_UPDATE_EVIDENCE.md`, `docs/product/VIONA_REQUEST_PACK15C_BACKUP_RESTORE_DASHBOARD_EVIDENCE.md`, `docs/product/VIONA_REQUEST_PACK16_READ_ONLY_PERSISTENCE_API_PLANNING_PACKET.md`, `docs/product/VIONA_REQUEST_PACK17_LIVE_READ_ONLY_REQUEST_INBOX_PLANNING_PACKET.md`
 
 Gate Factory (Pack14D): `scripts/lib/vionaPackDiffAllowlist.mjs`, `scripts/viona-request-pack14d-gate-factory-check.mjs`
 
@@ -339,35 +375,35 @@ Gate Factory (Pack14D): `scripts/lib/vionaPackDiffAllowlist.mjs`, `scripts/viona
 
 ## 8. Pack15C execution readiness decision
 
-**Decision (read-only audit):** `B) NOT READY — missing backup / restore / operator go-no-go / execution approval`
+**Decision (read-only audit):** `B) NOT READY`
 
-**Pack15C execution readiness:** `PARTIAL — target confirmed, but not GO`
+**Pack15C execution readiness:** `PARTIAL — target confirmed, backup blocker confirmed, not GO`
 
 **DB apply remains blocked:** `true`
 
-**Updated reason:** Target environment and Supabase target are now confirmed (`staging`, `viona-staging-eu` / `euqbfanilcssjiwwtcby`, execution context `local operator machine using local .env`), but execution readiness remains **not GO** because backup/snapshot, restore/rollback, restore owner/confidence, operator go/no-go, distinct execution approval phrase, and execution-only DB apply pack authorization remain incomplete. DB secret key-name presence remains confirmed; secret **values** were not printed, copied, or verified.
+**Updated reason:** Dashboard backup is unavailable on Free Plan. No real backup timestamp exists. Restore UI is visible, but restore is not executable without an actual backup method. Restore confidence is low, restore has not been tested, and operator go/no-go is NO-GO. Target environment and Supabase target remain confirmed (`staging`, `viona-staging-eu` / `euqbfanilcssjiwwtcby`, execution context `local operator machine using local .env`). Distinct execution approval phrase and execution-only DB apply pack authorization remain incomplete. DB secret key-name presence remains confirmed; secret **values** were not printed, copied, or verified.
 
 Execution remains **blocked** because required execution inputs are **not complete**.
 
-Pack15B approval permits **planning only** — it is **not** execution approval. Target confirmation (PR #92) is **not** execution approval. DB apply remains **blocked** until backup/restore, operator go/no-go, execution approval phrase, ChatGPT intake review, and separate execution-only pack authorization are complete.
+Pack15B approval permits **planning only** — it is **not** execution approval. Target confirmation (PR #92) and backup/restore dashboard evidence (PR #94) are **not** execution approval. DB apply remains **blocked** until a real backup method exists, restore is executable, operator GO, execution approval phrase, ChatGPT intake review, and separate execution-only pack authorization are complete.
 
 ### Required before DB apply can proceed
 
 DB apply cannot proceed until **all** are true:
 
-1. Create/confirm real DB backup or Supabase snapshot.
-2. Record backup timestamp/evidence location without secrets.
-3. Document restore/rollback procedure.
-4. Confirm restore owner.
-5. Confirm restore confidence.
-6. Confirm stop-on-error behavior for the specific execution run.
-7. Confirm post-apply verification plan / Pack15D.
-8. Provide explicit operator go/no-go.
-9. Provide distinct execution approval phrase.
-10. ChatGPT reviews completed intake.
+1. Obtain a real backup method: plan upgrade / manual pg_dump / other approved method.
+2. Record backup timestamp and evidence label without secrets.
+3. Document executable restore/rollback procedure.
+4. Confirm restore owner for the actual restore method.
+5. Raise restore confidence from low only after real backup/restore path is verified.
+6. Confirm restore tested status.
+7. Confirm stop-on-error behavior for the execution run.
+8. Confirm post-apply verification / Pack15D plan.
+9. Human provides explicit operator GO.
+10. Human provides distinct execution approval phrase.
 11. Separate execution-only DB apply pack is created and authorized.
 
-Evidence: `docs/design/evidence/cursor-request-pack15c-execution-readiness-decision-packet/README.md`, `docs/design/evidence/cursor-pack15c-supabase-db-secret-location-audit-evidence/README.md`, `docs/design/evidence/cursor-pack15c-target-confirmation-intake-update-evidence/README.md`
+Evidence: `docs/design/evidence/cursor-request-pack15c-execution-readiness-decision-packet/README.md`, `docs/design/evidence/cursor-pack15c-supabase-db-secret-location-audit-evidence/README.md`, `docs/design/evidence/cursor-pack15c-target-confirmation-intake-update-evidence/README.md`, `docs/design/evidence/cursor-pack15c-backup-restore-dashboard-evidence/README.md`
 
 ---
 
@@ -466,23 +502,25 @@ Still **blocked** until future approved packs and missing execution inputs are s
 
 Execute in order — do not skip:
 
-1. Human creates/confirms real DB backup or Supabase snapshot for `viona-staging-eu`.
-2. Human records backup timestamp/evidence location without secrets.
-3. Human documents restore/rollback procedure.
-4. Human confirms restore owner.
-5. Human confirms restore confidence.
-6. Human confirms stop-on-error for the specific execution run.
-7. Human confirms post-apply verification / Pack15D plan.
-8. Human provides explicit operator go/no-go.
-9. Human provides distinct execution approval phrase only after all above are ready.
-10. **ChatGPT reviews GO/NO-GO** on completed intake (§9).
-11. **Pack15C execution-only DB apply pack** — only after §8 required-before-apply list is satisfied
-12. **Pack15D** — DB schema verification (only after successful DB apply)
-13. **Pack16** — Read-only persistence API implementation (only after Pack15D)
-14. **Pack17** — Live read-only request inbox implementation (only after Pack16 read-only API)
-15. **Pack18** — Request mutation planning / implementation (only after read-only inbox is verified)
-16. **Pack19** — Merchant / operator workflow
-17. **Pack20+** — AI request assistant / AI action foundation
+1. Human chooses real backup method for `viona-staging-eu`: plan upgrade / manual pg_dump / other approved path.
+2. Human creates or confirms real backup.
+3. Human records backup timestamp and evidence location/name without URL/secret.
+4. Human documents executable restore/rollback procedure.
+5. Human confirms restore owner for the chosen restore method.
+6. Human confirms restore confidence after backup/restore path exists.
+7. Human confirms whether restore is tested.
+8. Human confirms stop-on-error for the specific execution run.
+9. Human confirms post-apply verification / Pack15D plan.
+10. Human provides explicit operator GO.
+11. Human provides distinct execution approval phrase only after all above are ready.
+12. **ChatGPT reviews GO/NO-GO** on completed intake (§9).
+13. **Pack15C execution-only DB apply pack** — only after §8 required-before-apply list is satisfied
+14. **Pack15D** — DB schema verification (only after successful DB apply)
+15. **Pack16** — Read-only persistence API implementation (only after Pack15D)
+16. **Pack17** — Live read-only request inbox implementation (only after Pack16 read-only API)
+17. **Pack18** — Request mutation planning / implementation (only after read-only inbox is verified)
+18. **Pack19** — Merchant / operator workflow
+19. **Pack20+** — AI request assistant / AI action foundation
 
 Safe parallel lanes (docs, audits, UI polish without DB/runtime/API/mutation) may continue while the above remains blocked.
 
@@ -492,8 +530,10 @@ Safe parallel lanes (docs, audits, UI polish without DB/runtime/API/mutation) ma
 
 May run in parallel when allowlisted and gate-clean:
 
-- Docs / kernel / handoff updates (including this handoff; sync after #92)
-- Backup/snapshot planning evidence without secrets
+- Docs / kernel / handoff updates (including this handoff; sync after #94)
+- Backup method selection evidence without secrets
+- Plan upgrade evidence without secrets, if chosen
+- Manual pg_dump planning evidence without secrets, if chosen
 - Restore/rollback planning evidence without secrets
 - Pack15C intake filling only with **non-secret** confirmations
 - Read-only audits
@@ -517,6 +557,7 @@ May run in parallel when allowlisted and gate-clean:
 - No Supabase DB command
 - No `.env` value printing
 - No `.env` modification
+- No dashboard login automation
 - No API/routes/controllers/server implementation
 - No persistence adapter implementation
 - No Pack16 runtime/API
@@ -549,7 +590,7 @@ Stop immediately and report if asked to:
 ## Quick start for a new session
 
 1. Read this file and `docs/ai-context/VIONA_OPERATING_PROTOCOL.md`.
-2. Confirm baseline: `git rev-parse origin/master` → expect `5df9477` until updated.
+2. Confirm baseline: `git rev-parse origin/master` → expect `d042bac` until updated.
 3. Read the active pack prompt allowlist and forbidden list.
 4. Branch from `origin/master`; run gates before commit.
 5. Cursor executes; ChatGPT reviews report and PR safety.
@@ -578,4 +619,6 @@ Stop immediately and report if asked to:
 
 **Pack15C handoff sync (Supabase DB secret audit):** Updated after Pack15C Supabase DB secret location audit evidence merged @ `32a5826` (PR #90) and kernel sync @ `75bf9c8` (PR #91). Evidence: `docs/design/evidence/cursor-pack15c-kernel-handoff-sync-after-supabase-db-secret-audit/README.md`.
 
-**Pack15C handoff sync (target confirmation):** This document updated after Pack15C target confirmation intake update evidence merged @ `5df9477` (PR #92). Target environment `staging` and Supabase `viona-staging-eu` / `euqbfanilcssjiwwtcby` confirmed; execution context `local operator machine using local .env`. Readiness `PARTIAL — target confirmed, but not GO`. Decision remains `B) NOT READY`. DB apply, Pack15D, Pack16 runtime/API, and Pack17 runtime/UI/inbox remain blocked. Evidence: `docs/design/evidence/cursor-pack15c-kernel-handoff-sync-after-target-confirmation/README.md`.
+**Pack15C handoff sync (target confirmation):** Updated after Pack15C target confirmation intake update evidence merged @ `5df9477` (PR #92) and kernel sync @ `9f0fea7` (PR #93). Evidence: `docs/design/evidence/cursor-pack15c-kernel-handoff-sync-after-target-confirmation/README.md`.
+
+**Pack15C handoff sync (backup/restore dashboard):** This document updated after Pack15C backup/restore dashboard evidence merged @ `d042bac` (PR #94). Dashboard backup unavailable on Free Plan for `viona-staging-eu`; restore owner `Nong Si Buong`; restore confidence `low`; operator NO-GO. Readiness `PARTIAL — target confirmed, backup blocker confirmed, not GO`. Decision remains `B) NOT READY`. DB apply, Pack15D, Pack16 runtime/API, and Pack17 runtime/UI/inbox remain blocked. Evidence: `docs/design/evidence/cursor-pack15c-kernel-handoff-sync-after-backup-restore-dashboard-evidence/README.md`.
