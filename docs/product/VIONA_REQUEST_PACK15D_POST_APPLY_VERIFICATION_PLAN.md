@@ -123,7 +123,7 @@ Future verification **must** confirm:
 - [ ] The Supabase project ref is `euqbfanilcssjiwwtcby`.
 - [ ] The migration target path matches the canonical Pack14C migration path above.
 - [ ] No unexpected migration files are applied as part of the DB apply.
-- [ ] Migration output is captured without secrets.
+- [ ] Migration output summary is documented without secrets.
 - [ ] Any failure stops the execution immediately.
 
 ### B. Schema/table verification
