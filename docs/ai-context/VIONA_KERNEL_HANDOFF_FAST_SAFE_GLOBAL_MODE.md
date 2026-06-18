@@ -2,7 +2,7 @@
 
 **Document type:** Canonical kernel and session handoff for VIONA engineering, product, and AI agents.
 **Audience:** New ChatGPT / Cursor windows, staff, contractors, and automation executors.
-**Baseline:** `origin/master @ 382f196` — `docs(kernel): sync handoff after Pack15C post-click restore evidence (#103)`
+**Baseline:** `origin/master @ 2a56259` — `docs(requests): record Pack15C restore risk intake (#105)`
 **Supersedes for Request Engine sequencing:** prior scattered pack pointers when this doc conflicts on pack order or blocked state — align to this handoff.
 **Subordinate to:** `docs/ai-context/VIONA_OPERATING_PROTOCOL.md` and founder-signed **Master Blueprint** (`VIONA_FINAL_MASTER_BLUEPRINT_V2.md`). If conflict, stop and report drift risk.
 
@@ -156,14 +156,14 @@ Canonical checker: `node scripts/viona-forbidden-claims-check.mjs` (strict mode 
 | Field | Value |
 |-------|--------|
 | Remote | `origin/master` |
-| Commit | `382f196` |
-| Message | `docs(kernel): sync handoff after Pack15C post-click restore evidence (#103)` |
-| Previous master | `220c636` — `docs(requests): record Pack15C post-click restore flow evidence (#102)` |
-| Previous latest (prior to #102) | `37ff973` — `docs(kernel): sync handoff after Pack15C restore rollback evidence (#101)` |
+| Commit | `2a56259` |
+| Message | `docs(requests): record Pack15C restore risk intake (#105)` |
+| Previous master | `ba0f877` — `docs(kernel): housekeeping after Pack15C post-click handoff sync (#104)` |
+| Previous latest (prior to #104) | `382f196` — `docs(kernel): sync handoff after Pack15C post-click restore evidence (#103)` |
 
-All new work branches from `382f196` unless a later pack explicitly updates this handoff.
+All new work branches from `2a56259` unless a later pack explicitly updates this handoff.
 
-Pack15C Kernel/Handoff sync after post-click restore flow evidence is **complete and green** on master (PR #103). Pack15C post-click restore flow evidence is **complete and green** on master (PR #102). Pack15C Kernel/Handoff sync after restore/rollback procedure evidence is **complete and green** (PR #101). Pack15C restore/rollback procedure evidence is **complete and green** on master (PR #100). Pack15C execution readiness is **`PARTIAL — backup available and timestamp confirmed; dashboard restore path and post-click warnings documented; stop-on-error candidate confirmed; but restore remains not submitted/run/tested, Pack15D plan / operator GO / execution approval are still missing; not GO`**. Decision remains **`B) NOT READY`**. Pack16 read-only persistence API **planning packet** is **fully complete and green** on master. Pack17 live read-only request inbox **planning packet** is **fully complete and green** on master. Pack16 is **planning-only / future-only** — runtime/API is **not implemented**. Pack17 is **planning-only / future-only** — runtime/UI/inbox is **not implemented**. Human screenshot evidence confirms post-click **`Restore from backup`** modal for `viona-staging-eu` with irreversible, downtime, and data-loss warnings; restore click authority **`Nong Si Buong only`**; final Restore **not submitted**; restore **not run** or **tested**; restore procedure **`PARTIAL — dashboard path and post-click confirmation/warnings documented; restore not submitted/run/tested`**; stop-on-error **`CONFIRMED CANDIDATE — stop immediately on any error; no extra Prisma/DB commands`**; restore confidence **`medium, not high`**. Operator go/no-go remains **NO-GO for now**. DB apply approval **NO**. Secret **values** are **not verified**. DB apply is **not performed**. DB apply, Pack15D, Pack16 runtime/API, and Pack17 runtime/UI/inbox remain **blocked**.
+Pack15C restore test status / risk acceptance intake evidence is **complete and green** on master (PR #105). Pack15C Kernel/Handoff post-merge housekeeping after #103 is **complete and green** (PR #104 @ `ba0f877`). Pack15C Kernel/Handoff sync after post-click restore flow evidence is **complete and green** (PR #103). Pack15C post-click restore flow evidence is **complete and green** on master (PR #102). Pack15C execution readiness is **`PARTIAL — backup available, restore path and post-click warnings documented, but restore is not tested/run, not-tested risk acceptance is not provided, Pack15D plan / operator GO / execution approval phrase are still missing; not GO`**. Decision remains **`B) NOT READY`**. Pack16 read-only persistence API **planning packet** is **fully complete and green** on master. Pack17 live read-only request inbox **planning packet** is **fully complete and green** on master. Pack16 is **planning-only / future-only** — runtime/API is **not implemented**. Pack17 is **planning-only / future-only** — runtime/UI/inbox is **not implemented**. Target **`viona-staging-eu`**; backup rollback reference **`18 Jun 2026 02:04:53 (+0000)`**; restore click authority **`Nong Si Buong only`**; final Restore **not submitted**; restore **not run** or **tested**; risk classification **`RESTORE_NOT_TESTED_AND_RISK_NOT_ACCEPTED_YET`**; not-tested risk acceptance **NO**; human risk acceptance **not invented**; restore procedure **`PARTIAL — dashboard path and post-click confirmation/warnings documented; restore not submitted/run/tested`**; restore confidence **`medium, not high`**; stop-on-error **`CONFIRMED CANDIDATE — stop immediately on any error; no extra Prisma/DB commands`**. Operator go/no-go remains **NO-GO for now**. DB apply approval **NO**. Execution approval phrase **MISSING**. Execution-only DB apply pack **BLOCKED**. Secret **values** are **not verified**. DB apply is **not performed**. DB apply, Pack15D, Pack16 runtime/API, and Pack17 runtime/UI/inbox remain **blocked**.
 
 ---
 
@@ -208,6 +208,8 @@ Pack15C Kernel/Handoff sync after post-click restore flow evidence is **complete
 | Pack15C | Kernel/handoff sync after restore/rollback procedure evidence | `37ff973` (PR #101) |
 | Pack15C | Post-click restore flow evidence | `220c636` (PR #102) |
 | Pack15C | Kernel/handoff sync after post-click restore flow evidence | `382f196` (PR #103) |
+| Pack15C | Kernel/handoff post-merge housekeeping after #103 | `ba0f877` (PR #104) |
+| Pack15C | Restore test status / risk acceptance intake evidence | `2a56259` (PR #105) |
 
 ---
 
@@ -419,9 +421,32 @@ Remaining restore gaps (still missing):
 
 - In-place vs cloned project behavior
 - Post-restore verification steps
-- Restore test evidence or explicit not-tested risk acknowledgement
+- Explicit restore test evidence **or** explicit not-tested risk acceptance (intake recorded as **not accepted yet** — PR #105)
 
 Evidence: `docs/product/VIONA_REQUEST_PACK15C_POST_CLICK_RESTORE_FLOW_EVIDENCE.md`, `docs/design/evidence/cursor-pack15c-post-click-restore-flow-evidence/README.md`
+
+### Pack15C restore test status / risk acceptance intake state (updated after #105)
+
+| Item | State |
+|------|--------|
+| Target | `viona-staging-eu` |
+| Backup rollback reference | `18 Jun 2026 02:04:53 (+0000)` |
+| Restore click authority | `Nong Si Buong only` |
+| Final Restore submitted | `NO` |
+| Restore run | `NO` |
+| Restore tested | `NO` |
+| Restore procedure state | `PARTIAL — dashboard path and post-click confirmation/warnings documented; restore not submitted/run/tested` |
+| Restore confidence | `medium, not high` |
+| Risk decision classification | `RESTORE_NOT_TESTED_AND_RISK_NOT_ACCEPTED_YET` |
+| Not-tested risk acceptance | `NO` |
+| Human risk acceptance invented | `NO` |
+| Operator go/no-go | `NO-GO for now` |
+| DB apply approval | `NO` |
+| Execution approval phrase | `MISSING` |
+| Execution-only DB apply pack authorization | `BLOCKED` |
+| DB apply remains blocked | `YES` |
+
+Evidence: `docs/product/VIONA_REQUEST_PACK15C_RESTORE_TEST_STATUS_RISK_ACCEPTANCE_INTAKE_EVIDENCE.md`, `docs/design/evidence/cursor-pack15c-restore-test-status-risk-acceptance-intake-evidence/README.md`
 
 ### Current classification
 
@@ -431,7 +456,7 @@ Evidence: `docs/product/VIONA_REQUEST_PACK15C_POST_CLICK_RESTORE_FLOW_EVIDENCE.m
 | Secret value validity | `NOT VERIFIED` |
 | DB connection | `NOT ATTEMPTED` |
 | Classification | **A) LOCAL PRESENT** plus **B) HOST SECRET NAME PRESENT** |
-| Execution readiness | `PARTIAL — backup available and timestamp confirmed; dashboard restore path and post-click warnings documented; stop-on-error candidate confirmed; but restore remains not submitted/run/tested, Pack15D plan / operator GO / execution approval are still missing; not GO` |
+| Execution readiness | `PARTIAL — backup available, restore path and post-click warnings documented, but restore is not tested/run, not-tested risk acceptance is not provided, Pack15D plan / operator GO / execution approval phrase are still missing; not GO` |
 | DB apply remains blocked | `true` |
 
 ### Current 15-input state
@@ -444,7 +469,7 @@ Evidence: `docs/product/VIONA_REQUEST_PACK15C_POST_CLICK_RESTORE_FLOW_EVIDENCE.m
 | 4 | Server-side DB secret presence | `PRESENT_BY_KEY_NAME_ONLY` |
 | 5 | Secret value validity evidence | `NOT_VERIFIED` |
 | 6 | Backup / snapshot evidence | `CONFIRMED — dashboard backup available; latest visible backup timestamp 18 Jun 2026 02:04:53 (+0000)` |
-| 7 | Restore / rollback procedure | `PARTIAL — dashboard path and post-click confirmation/warnings documented; restore not submitted/run/tested` |
+| 7 | Restore / rollback procedure | `PARTIAL — dashboard path and post-click confirmation/warnings documented; restore not submitted/run/tested; restore risk acceptance not provided` |
 | 8 | Restore owner | `CONFIRMED — Nong Si Buong only as restore click authority` |
 | 9 | Restore confidence | `CONFIRMED — medium, not high` |
 | 10 | Named execution operator | `CANDIDATE_FROM_CHAT — Nong Si Buong` |
@@ -455,6 +480,8 @@ Evidence: `docs/product/VIONA_REQUEST_PACK15C_POST_CLICK_RESTORE_FLOW_EVIDENCE.m
 | 15 | Separate execution-only DB apply pack authorization | `BLOCKED` |
 
 Evidence: `docs/product/VIONA_REQUEST_PACK15C_TARGET_CONFIRMATION_INTAKE_UPDATE_EVIDENCE.md`
+
+Evidence (restore risk intake): `docs/product/VIONA_REQUEST_PACK15C_RESTORE_TEST_STATUS_RISK_ACCEPTANCE_INTAKE_EVIDENCE.md`, `docs/design/evidence/cursor-pack15c-restore-test-status-risk-acceptance-intake-evidence/README.md`
 
 Evidence (post-click restore flow): `docs/product/VIONA_REQUEST_PACK15C_POST_CLICK_RESTORE_FLOW_EVIDENCE.md`, `docs/design/evidence/cursor-pack15c-post-click-restore-flow-evidence/README.md`
 
@@ -526,6 +553,10 @@ Evidence (secret audit): `docs/product/VIONA_REQUEST_PACK15C_SUPABASE_DB_SECRET_
 | `pack15RestoreOwner` | `Nong Si Buong` |
 | `pack15RestoreConfidence` | `medium_not_high` |
 | `pack15RestoreTested` | `false` |
+| `pack15RestoreRiskIntakeEvidenceRecorded` | `true` |
+| `pack15RestoreRiskDecisionClassification` | `RESTORE_NOT_TESTED_AND_RISK_NOT_ACCEPTED_YET` |
+| `pack15RestoreNotTestedRiskAccepted` | `false` |
+| `pack15HumanRiskAcceptanceInvented` | `false` |
 | `pack15StopOnErrorCandidateConfirmed` | `true` |
 | `pack15StopOnErrorBehavior` | `stop_immediately_no_extra_prisma_or_db_commands` |
 | `pack15OperatorGoNoGo` | `false` |
@@ -542,7 +573,7 @@ Evidence (secret audit): `docs/product/VIONA_REQUEST_PACK15C_SUPABASE_DB_SECRET_
 | `pack17RuntimeImplementationStarted` | `false` |
 | `pack17LiveReadOnlyInboxImplemented` | `false` |
 
-Product docs: `docs/product/VIONA_REQUEST_PACK14C_PRISMA_MIGRATION_CREATION_ONLY.md`, `docs/product/VIONA_REQUEST_PACK15C_DB_APPLY_PRE_APPLY_PLANNING_PACKET.md`, `docs/product/VIONA_REQUEST_PACK15C_EXECUTION_READINESS_DECISION_PACKET.md`, `docs/product/VIONA_REQUEST_PACK15C_EXECUTION_INPUTS_INTAKE_TEMPLATE.md`, `docs/product/VIONA_REQUEST_PACK15C_SUPABASE_DB_SECRET_LOCATION_AUDIT_EVIDENCE.md`, `docs/product/VIONA_REQUEST_PACK15C_TARGET_CONFIRMATION_INTAKE_UPDATE_EVIDENCE.md`, `docs/product/VIONA_REQUEST_PACK15C_BACKUP_RESTORE_DASHBOARD_EVIDENCE.md`, `docs/product/VIONA_REQUEST_PACK15C_BACKUP_METHOD_SELECTION_PLAN_UPGRADE_EVIDENCE.md`, `docs/product/VIONA_REQUEST_PACK15C_BACKUP_AVAILABILITY_TIMESTAMP_EVIDENCE.md`, `docs/product/VIONA_REQUEST_PACK15C_RESTORE_ROLLBACK_PROCEDURE_EVIDENCE.md`, `docs/product/VIONA_REQUEST_PACK15C_POST_CLICK_RESTORE_FLOW_EVIDENCE.md`, `docs/product/VIONA_REQUEST_PACK16_READ_ONLY_PERSISTENCE_API_PLANNING_PACKET.md`, `docs/product/VIONA_REQUEST_PACK17_LIVE_READ_ONLY_REQUEST_INBOX_PLANNING_PACKET.md`
+Product docs: `docs/product/VIONA_REQUEST_PACK14C_PRISMA_MIGRATION_CREATION_ONLY.md`, `docs/product/VIONA_REQUEST_PACK15C_DB_APPLY_PRE_APPLY_PLANNING_PACKET.md`, `docs/product/VIONA_REQUEST_PACK15C_EXECUTION_READINESS_DECISION_PACKET.md`, `docs/product/VIONA_REQUEST_PACK15C_EXECUTION_INPUTS_INTAKE_TEMPLATE.md`, `docs/product/VIONA_REQUEST_PACK15C_SUPABASE_DB_SECRET_LOCATION_AUDIT_EVIDENCE.md`, `docs/product/VIONA_REQUEST_PACK15C_TARGET_CONFIRMATION_INTAKE_UPDATE_EVIDENCE.md`, `docs/product/VIONA_REQUEST_PACK15C_BACKUP_RESTORE_DASHBOARD_EVIDENCE.md`, `docs/product/VIONA_REQUEST_PACK15C_BACKUP_METHOD_SELECTION_PLAN_UPGRADE_EVIDENCE.md`, `docs/product/VIONA_REQUEST_PACK15C_BACKUP_AVAILABILITY_TIMESTAMP_EVIDENCE.md`, `docs/product/VIONA_REQUEST_PACK15C_RESTORE_ROLLBACK_PROCEDURE_EVIDENCE.md`, `docs/product/VIONA_REQUEST_PACK15C_POST_CLICK_RESTORE_FLOW_EVIDENCE.md`, `docs/product/VIONA_REQUEST_PACK15C_RESTORE_TEST_STATUS_RISK_ACCEPTANCE_INTAKE_EVIDENCE.md`, `docs/product/VIONA_REQUEST_PACK16_READ_ONLY_PERSISTENCE_API_PLANNING_PACKET.md`, `docs/product/VIONA_REQUEST_PACK17_LIVE_READ_ONLY_REQUEST_INBOX_PLANNING_PACKET.md`
 
 Gate Factory (Pack14D): `scripts/lib/vionaPackDiffAllowlist.mjs`, `scripts/viona-request-pack14d-gate-factory-check.mjs`
 
@@ -552,21 +583,21 @@ Gate Factory (Pack14D): `scripts/lib/vionaPackDiffAllowlist.mjs`, `scripts/viona
 
 **Decision (read-only audit):** `B) NOT READY`
 
-**Pack15C execution readiness:** `PARTIAL — backup available and timestamp confirmed; dashboard restore path and post-click warnings documented; stop-on-error candidate confirmed; but restore remains not submitted/run/tested, Pack15D plan / operator GO / execution approval are still missing; not GO`
+**Pack15C execution readiness:** `PARTIAL — backup available, restore path and post-click warnings documented, but restore is not tested/run, not-tested risk acceptance is not provided, Pack15D plan / operator GO / execution approval phrase are still missing; not GO`
 
 **DB apply remains blocked:** `true`
 
-**Updated reason:** Post-click restore confirmation flow is now documented at UI/warning level, including irreversible action, downtime, and data-loss warnings, but final Restore was not submitted, restore was not run or tested, Pack15D post-apply verification plan remains planned-only, operator go/no-go remains NO-GO, and no distinct execution approval phrase has been provided. Target environment and Supabase target remain confirmed (`staging`, `viona-staging-eu` / `euqbfanilcssjiwwtcby`, execution context `local operator machine using local .env`). Execution-only DB apply pack authorization remains incomplete. DB secret key-name presence remains confirmed; secret **values** were not printed, copied, or verified.
+**Updated reason:** Restore remains not submitted/run/tested, not-tested risk acceptance is explicitly NO, human risk acceptance was not invented, Pack15D post-apply verification plan remains planned-only, operator go/no-go remains NO-GO, and no distinct execution approval phrase has been provided. Target environment and Supabase target remain confirmed (`staging`, `viona-staging-eu` / `euqbfanilcssjiwwtcby`, execution context `local operator machine using local .env`). Execution-only DB apply pack authorization remains incomplete. DB secret key-name presence remains confirmed; secret **values** were not printed, copied, or verified.
 
 Execution remains **blocked** because required execution inputs are **not complete**.
 
-Pack15B approval permits **planning only** — it is **not** execution approval. Target confirmation (PR #92), backup/restore dashboard evidence (PR #94), backup method selection (PR #96), backup availability/timestamp evidence (PR #98), restore/rollback procedure evidence (PR #100), and post-click restore flow evidence (PR #102) are **not** execution approval. DB apply remains **blocked** until restore test status or risk acknowledgement is confirmed, operator GO, execution approval phrase, ChatGPT intake review, and separate execution-only pack authorization are complete.
+Pack15B approval permits **planning only** — it is **not** execution approval. Target confirmation (PR #92), backup/restore dashboard evidence (PR #94), backup method selection (PR #96), backup availability/timestamp evidence (PR #98), restore/rollback procedure evidence (PR #100), post-click restore flow evidence (PR #102), and restore test status / risk acceptance intake evidence (PR #105) are **not** execution approval. DB apply remains **blocked** until explicit restore test evidence or explicit not-tested risk acceptance, operator GO, execution approval phrase, ChatGPT intake review, and separate execution-only pack authorization are complete.
 
 ### Required before DB apply can proceed
 
 DB apply cannot proceed until **all** are true:
 
-1. Restore test status or explicit not-tested risk acknowledgement.
+1. Explicit restore test evidence **OR** explicit not-tested risk acceptance.
 2. Pack15D post-apply verification plan.
 3. Final stop-on-error confirmation in the execution pack.
 4. Human explicit operator GO.
@@ -575,7 +606,7 @@ DB apply cannot proceed until **all** are true:
 7. ChatGPT GO/NO-GO review before any execution pack.
 8. Pack15D DB schema verification only after successful DB apply.
 
-Evidence: `docs/design/evidence/cursor-request-pack15c-execution-readiness-decision-packet/README.md`, `docs/design/evidence/cursor-pack15c-supabase-db-secret-location-audit-evidence/README.md`, `docs/design/evidence/cursor-pack15c-target-confirmation-intake-update-evidence/README.md`, `docs/design/evidence/cursor-pack15c-backup-restore-dashboard-evidence/README.md`, `docs/design/evidence/cursor-pack15c-backup-method-selection-plan-upgrade-evidence/README.md`, `docs/design/evidence/cursor-pack15c-backup-availability-timestamp-evidence/README.md`, `docs/design/evidence/cursor-pack15c-restore-rollback-procedure-evidence/README.md`, `docs/design/evidence/cursor-pack15c-post-click-restore-flow-evidence/README.md`
+Evidence: `docs/design/evidence/cursor-request-pack15c-execution-readiness-decision-packet/README.md`, `docs/design/evidence/cursor-pack15c-supabase-db-secret-location-audit-evidence/README.md`, `docs/design/evidence/cursor-pack15c-target-confirmation-intake-update-evidence/README.md`, `docs/design/evidence/cursor-pack15c-backup-restore-dashboard-evidence/README.md`, `docs/design/evidence/cursor-pack15c-backup-method-selection-plan-upgrade-evidence/README.md`, `docs/design/evidence/cursor-pack15c-backup-availability-timestamp-evidence/README.md`, `docs/design/evidence/cursor-pack15c-restore-rollback-procedure-evidence/README.md`, `docs/design/evidence/cursor-pack15c-post-click-restore-flow-evidence/README.md`, `docs/design/evidence/cursor-pack15c-restore-test-status-risk-acceptance-intake-evidence/README.md`
 
 ---
 
@@ -674,7 +705,7 @@ Still **blocked** until future approved packs and missing execution inputs are s
 
 Execute in order — do not skip:
 
-1. Human confirms restore test status or explicit not-tested risk acceptance.
+1. Human provides explicit not-tested risk acceptance **OR** restore test evidence.
 2. Human confirms Pack15D post-apply verification plan.
 3. Human confirms final stop-on-error behavior for execution run.
 4. Human gives explicit operator GO.
@@ -694,7 +725,9 @@ Safe parallel lanes (docs, audits, UI polish without DB/runtime/API/mutation) ma
 May run in parallel when allowlisted and gate-clean:
 
 - Docs / kernel / handoff updates (including this handoff)
-- Restore test status or explicit not-tested risk acknowledgement evidence
+- Kernel/Handoff sync after #105
+- Explicit not-tested risk acceptance by human/operator
+- Restore test evidence if human chooses to test restore
 - Pack15D post-apply verification plan docs-only
 - Final stop-on-error confirmation in future execution pack
 - Operator GO intake only after restore risk/test status and Pack15D plan are documented
@@ -723,22 +756,19 @@ May run in parallel when allowlisted and gate-clean:
 - No final Restore click/run by Cursor
 - No restore-executed claim
 - No restore-tested claim without human evidence
+- No human risk acceptance claim without explicit human/operator phrase
 - No restore confidence high without test/equivalent evidence
 - No execution GO claim
 - No backup timestamp changes without human evidence
-- No broad refactor
-- No architecture rewrite
 - No API/routes/controllers/server implementation
 - No persistence adapter implementation
 - No Pack16 runtime/API
 - No Pack17 runtime/UI/inbox
-- No UI/screens/components implementation for Pack17
 - No request mutation
 - No payment/booking/SOS/wallet truth changes
 - No fake production claims
 - No OPERATOR Prisma/Auth changes
 - No live AI protected action unlocks
-- No secrets in docs/logs
 
 ---
 
@@ -760,7 +790,7 @@ Stop immediately and report if asked to:
 ## Quick start for a new session
 
 1. Read this file and `docs/ai-context/VIONA_OPERATING_PROTOCOL.md`.
-2. Confirm baseline: `git rev-parse origin/master` → expect `382f196` until updated.
+2. Confirm baseline: `git rev-parse origin/master` → expect `2a56259` until updated.
 3. Read the active pack prompt allowlist and forbidden list.
 4. Branch from `origin/master`; run gates before commit.
 5. Cursor executes; ChatGPT reviews report and PR safety.
@@ -808,3 +838,5 @@ Stop immediately and report if asked to:
 **Pack15C handoff sync (post-click restore flow):** This document updated after Pack15C post-click restore flow evidence merged @ `220c636` (PR #102). Target `viona-staging-eu`; restore click authority `Nong Si Buong only`; backup rollback reference `18 Jun 2026 02:04:53 (+0000)`; modal `Restore from backup`; final Restore submitted **NO**; restore run **NO**; restore tested **NO**; restore procedure `PARTIAL — dashboard path and post-click confirmation/warnings documented; restore not submitted/run/tested`; restore confidence `medium, not high`; operator go/no-go `NO-GO for now`; DB apply approval **NO**. Readiness `PARTIAL — backup available and timestamp confirmed; dashboard restore path and post-click warnings documented; stop-on-error candidate confirmed; but restore remains not submitted/run/tested, Pack15D plan / operator GO / execution approval are still missing; not GO`. Decision remains `B) NOT READY`. DB apply, Pack15D, Pack16 runtime/API, and Pack17 runtime/UI/inbox remain blocked. Evidence: `docs/design/evidence/cursor-pack15c-kernel-handoff-sync-after-post-click-restore-flow-evidence/README.md`.
 
 **Pack15C handoff housekeeping (post-#103):** Minor handoff housekeeping after kernel sync merged @ `382f196` (PR #103). Updated §5 current verified master, §6 green chain (#103), and §13 next sequence (removed stale pending kernel sync step). All Pack15C restore/execution safety states unchanged — restore not submitted/run/tested; operator NO-GO; DB apply blocked. Evidence: `docs/design/evidence/cursor-pack15c-kernel-handoff-post-merge-housekeeping-after-103/README.md`.
+
+**Pack15C handoff sync (restore risk intake):** This document updated after Pack15C restore test status / risk acceptance intake evidence merged @ `2a56259` (PR #105). Target `viona-staging-eu`; restore click authority `Nong Si Buong only`; backup rollback reference `18 Jun 2026 02:04:53 (+0000)`; final Restore submitted **NO**; restore run **NO**; restore tested **NO**; risk classification **`RESTORE_NOT_TESTED_AND_RISK_NOT_ACCEPTED_YET`**; not-tested risk acceptance **NO**; human risk acceptance **not invented**; restore procedure **`PARTIAL — dashboard path and post-click confirmation/warnings documented; restore not submitted/run/tested`**; restore confidence **`medium, not high`**; operator go/no-go **`NO-GO for now`**; DB apply approval **NO**; execution approval phrase **MISSING**; execution-only DB apply pack **BLOCKED**. Readiness **`PARTIAL — backup available, restore path and post-click warnings documented, but restore is not tested/run, not-tested risk acceptance is not provided, Pack15D plan / operator GO / execution approval phrase are still missing; not GO`**. Decision remains **`B) NOT READY`**. DB apply, Pack15D, Pack16 runtime/API, and Pack17 runtime/UI/inbox remain blocked. Evidence: `docs/design/evidence/cursor-pack15c-kernel-handoff-sync-after-restore-risk-intake-evidence/README.md`.
