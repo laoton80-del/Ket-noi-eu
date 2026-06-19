@@ -2,7 +2,7 @@
 
 **Document type:** Canonical kernel and session handoff for VIONA engineering, product, and AI agents.
 **Audience:** New ChatGPT / Cursor windows, staff, contractors, and automation executors.
-**Baseline:** `origin/master @ a50f79c` — `docs(requests): record Pack15C distinct execution approval phrase intake (#115)`
+**Baseline:** `origin/master @ 6880bda` — `docs(requests): record Pack15C execution approval phrase provided (#117)`
 **Supersedes for Request Engine sequencing:** prior scattered pack pointers when this doc conflicts on pack order or blocked state — align to this handoff.
 **Subordinate to:** `docs/ai-context/VIONA_OPERATING_PROTOCOL.md` and founder-signed **Master Blueprint** (`VIONA_FINAL_MASTER_BLUEPRINT_V2.md`). If conflict, stop and report drift risk.
 
@@ -156,14 +156,14 @@ Canonical checker: `node scripts/viona-forbidden-claims-check.mjs` (strict mode 
 | Field | Value |
 |-------|--------|
 | Remote | `origin/master` |
-| Commit | `a50f79c` |
-| Message | `docs(requests): record Pack15C distinct execution approval phrase intake (#115)` |
-| Previous master | `26c7dff` — `docs(kernel): sync handoff after Pack15C operator GO intake (#114)` |
-| Previous latest (prior to #114) | `7c14b57` — `docs(requests): record Pack15C separate operator GO intake (#113)` |
+| Commit | `6880bda` |
+| Message | `docs(requests): record Pack15C execution approval phrase provided (#117)` |
+| Previous master | `62e2117` — `docs(kernel): sync handoff after Pack15C execution phrase intake (#116)` |
+| Previous latest (prior to #116) | `a50f79c` — `docs(requests): record Pack15C distinct execution approval phrase intake (#115)` |
 
-All new work branches from `a50f79c` unless a later pack explicitly updates this handoff.
+All new work branches from `6880bda` unless a later pack explicitly updates this handoff.
 
-Pack15C distinct execution approval phrase intake evidence is **complete and green** on master (PR #115 @ `a50f79c`) — execution approval phrase gate **documented** as a separate gate; execution approval phrase status **`MISSING`**; execution approval phrase **not invented** (`pack15ExecutionApprovalPhraseInvented: false`). Pack15C Kernel/Handoff sync after separate operator GO intake is **complete and green** (PR #114 @ `26c7dff`). Pack15C separate operator GO intake evidence is **complete and green** on master (PR #113 @ `7c14b57`) — operator GO gate **documented**; operator GO status **`NO-GO / MISSING`**; operator GO phrase **not invented** (`pack15OperatorGoPhraseInvented: false`). Pack15C final stop-on-error confirmation intake is **complete and green** on master (PR #111 @ `718a024`) — stop-on-error status **`CONFIRMED_FINAL_INTAKE`** (planning gate satisfied; **not** operator GO, **not** DB apply approval, **not** execution approval phrase, **not** restore/rollback authorization). Pack15D post-apply verification plan is **complete and green** on master (PR #109 @ `e3c4b95`) — status **`PLAN_ON_MASTER_NOT_EXECUTED`** (plan on master; verification **not** executed). Pack15C execution readiness is **`PARTIAL — stop-on-error final intake recorded, separate operator GO intake recorded, distinct execution approval phrase intake recorded (operator GO remains NO-GO / MISSING; execution approval phrase remains MISSING; neither invented), backup available, restore path and warnings documented, restore risk accepted for planning readiness only, Pack15D plan on master; but explicit operator GO is still missing, execution approval phrase is still missing, execution-only DB apply pack is blocked, DB apply has not run, and Pack15D verification has not executed; not GO`**. Decision remains **`B) NOT READY`**. Pack16 read-only persistence API **planning packet** is **fully complete and green** on master. Pack17 live read-only request inbox **planning packet** is **fully complete and green** on master. Pack16 is **planning-only / future-only** — runtime/API is **not implemented**. Pack17 is **planning-only / future-only** — runtime/UI/inbox is **not implemented**. Target **`viona-staging-eu`**; human/operator **`Nong Si Buong`**; backup rollback reference **`18 Jun 2026 02:04:53 (+0000)`**; restore click authority **`Nong Si Buong only`**; final Restore **not submitted**; restore **not run** or **tested**; risk classification **`RESTORE_NOT_TESTED_BUT_RISK_ACCEPTED_BY_HUMAN_OPERATOR`**; not-tested risk acceptance **YES** (planning readiness only — **not** operator GO, **not** DB apply approval, **not** Prisma/Supabase/DB command authorization, **not** restore execution or restore test evidence); restore procedure **`PARTIAL — dashboard path and post-click confirmation/warnings documented; restore not submitted/run/tested`**; restore confidence **`medium, not high`**; stop-on-error **`CONFIRMED_FINAL_INTAKE — stop immediately on any DB apply / Prisma / Supabase / SQL / migration / schema verification / Pack15D verification error; do not continue with extra commands; capture non-secret output only; wait for human review; no restore/rollback unless separately authorized by Nong Si Buong`**. Restore/rollback **not authorized** by #111, #113, or #115 intake. Operator go/no-go remains **`NO-GO / MISSING`**. DB apply approval **NO**. Execution approval phrase **MISSING**. Execution-only DB apply pack **BLOCKED**. Pack15D verification execution **NO**. Pack15D schema verification **NO**. Secret **values** are **not verified**. DB apply is **not performed**. DB apply, Pack15D verification execution, Pack16 runtime/API, and Pack17 runtime/UI/inbox remain **blocked**.
+Pack15C distinct execution approval phrase provided intake evidence is **complete and green** on master (PR #117 @ `6880bda`) — human-provided execution approval phrase **recorded verbatim**; execution approval phrase status **`PROVIDED`**; execution approval phrase **not invented** (`pack15ExecutionApprovalPhraseInvented: false`); target **`viona-staging-eu` / `euqbfanilcssjiwwtcby`**; **not** operator GO; **not** execution-only DB apply pack authorization. Pack15C Kernel/Handoff sync after distinct execution approval phrase intake is **complete and green** (PR #116 @ `62e2117`). Pack15C distinct execution approval phrase intake evidence is **complete and green** on master (PR #115 @ `a50f79c`) — gate documented; prior phrase status was **`MISSING`**. Pack15C separate operator GO intake evidence is **complete and green** on master (PR #113 @ `7c14b57`) — operator GO **`NO-GO / MISSING`**; operator GO **not invented** (`pack15OperatorGoPhraseInvented: false`). Pack15C final stop-on-error confirmation intake is **complete and green** on master (PR #111 @ `718a024`) — stop-on-error status **`CONFIRMED_FINAL_INTAKE`**. Pack15D post-apply verification plan is **complete and green** on master (PR #109 @ `e3c4b95`) — status **`PLAN_ON_MASTER_NOT_EXECUTED`**. Pack15C execution readiness is **`PARTIAL — stop-on-error final intake recorded, separate operator GO intake recorded, distinct execution approval phrase now PROVIDED (not invented), but operator GO is still missing, execution-only DB apply pack is blocked, DB apply has not run, and Pack15D verification has not executed; not GO`**. Decision remains **`B) NOT READY`**. Pack16 read-only persistence API **planning packet** is **fully complete and green** on master. Pack17 live read-only request inbox **planning packet** is **fully complete and green** on master. Pack16 is **planning-only / future-only** — runtime/API is **not implemented**. Pack17 is **planning-only / future-only** — runtime/UI/inbox is **not implemented**. Target **`viona-staging-eu`**; human/operator **`Nong Si Buong`**; backup rollback reference **`18 Jun 2026 02:04:53 (+0000)`**; restore click authority **`Nong Si Buong only`**; final Restore **not submitted**; restore **not run** or **tested**; risk classification **`RESTORE_NOT_TESTED_BUT_RISK_ACCEPTED_BY_HUMAN_OPERATOR`**; not-tested risk acceptance **YES** (planning readiness only — **not** operator GO, **not** DB apply approval, **not** Prisma/Supabase/DB command authorization, **not** restore execution or restore test evidence); restore procedure **`PARTIAL — dashboard path and post-click confirmation/warnings documented; restore not submitted/run/tested`**; restore confidence **`medium, not high`**; stop-on-error **`CONFIRMED_FINAL_INTAKE — stop immediately on any DB apply / Prisma / Supabase / SQL / migration / schema verification / Pack15D verification error; do not continue with extra commands; capture non-secret output only; wait for human review; no restore/rollback unless separately authorized by Nong Si Buong`**. Restore/rollback **not authorized** by #111, #113, #115, or #117 intake. Operator go/no-go remains **`NO-GO / MISSING`**. DB apply approval **NO**. Execution approval phrase **PROVIDED** (human/operator; not invented). Execution-only DB apply pack **BLOCKED**. Pack15D verification execution **NO**. Pack15D schema verification **NO**. Secret **values** are **not verified**. DB apply is **not performed**. DB apply, Pack15D verification execution, Pack16 runtime/API, and Pack17 runtime/UI/inbox remain **blocked**.
 
 ---
 
@@ -220,6 +220,8 @@ Pack15C distinct execution approval phrase intake evidence is **complete and gre
 | Pack15C | Separate operator GO intake evidence | `7c14b57` (PR #113) |
 | Pack15C | Kernel/handoff sync after separate operator GO intake | `26c7dff` (PR #114) |
 | Pack15C | Distinct execution approval phrase intake evidence | `a50f79c` (PR #115) |
+| Pack15C | Kernel/handoff sync after distinct execution approval phrase intake | `62e2117` (PR #116) |
+| Pack15C | Distinct execution approval phrase provided intake evidence | `6880bda` (PR #117) |
 
 ---
 
@@ -553,6 +555,34 @@ This intake documents the **distinct execution approval phrase gate only**. It i
 
 Evidence: `docs/product/VIONA_REQUEST_PACK15C_DISTINCT_EXECUTION_APPROVAL_PHRASE_INTAKE_EVIDENCE.md`, `docs/design/evidence/cursor-pack15c-distinct-execution-approval-phrase-intake-evidence/README.md`
 
+### Pack15C distinct execution approval phrase provided intake state (updated after #117)
+
+| Item | State |
+|------|--------|
+| Distinct execution approval phrase provided intake recorded | **YES** |
+| Master commit | `6880bda` (PR #117) |
+| Human-provided execution approval phrase recorded verbatim | **YES** |
+| Execution approval phrase status | **`PROVIDED`** |
+| Execution approval phrase invented | **NO** (`pack15ExecutionApprovalPhraseInvented: false`) |
+| Provided by | `human/operator` |
+| Target | `viona-staging-eu` / `euqbfanilcssjiwwtcby` |
+| Operator GO status | **`NO-GO / MISSING`** (unchanged) |
+| Stop-on-error status (prior gate) | `CONFIRMED_FINAL_INTAKE` — satisfied; **not** execution approval phrase authorization for DB apply |
+| DB apply approval | **NO** |
+| Execution-only DB apply pack authorization | **BLOCKED** |
+| DB apply performed | **NO** |
+| Pack15D verification executed | **NO** |
+
+**Human-provided execution approval phrase (verbatim):**
+
+```text
+APPROVED Pack15C execution approval phrase for the existing VIONA Request migration targeting staging Supabase project `viona-staging-eu` / `euqbfanilcssjiwwtcby`. I confirm DB apply may be planned in a separate execution-only DB apply pack, but must not be performed in this intake pack.
+```
+
+This intake records the **provided execution approval phrase only**. It is **not** operator GO. It is **not** DB apply. It is **not** DB apply approval. It is **not** execution-only DB apply pack authorization. It is **not** Prisma/Supabase/SQL/DB command authorization. It is **not** restore/rollback authorization. It does **not** make execution ready. It does **not** itself authorize the execution-only DB apply pack — ChatGPT GO/NO-GO review is still required after operator GO is recorded.
+
+Evidence: `docs/product/VIONA_REQUEST_PACK15C_DISTINCT_EXECUTION_APPROVAL_PHRASE_PROVIDED_INTAKE_EVIDENCE.md`, `docs/design/evidence/cursor-pack15c-distinct-execution-approval-phrase-provided-intake-evidence/README.md`
+
 ### Current classification
 
 | Item | State |
@@ -561,7 +591,7 @@ Evidence: `docs/product/VIONA_REQUEST_PACK15C_DISTINCT_EXECUTION_APPROVAL_PHRASE
 | Secret value validity | `NOT VERIFIED` |
 | DB connection | `NOT ATTEMPTED` |
 | Classification | **A) LOCAL PRESENT** plus **B) HOST SECRET NAME PRESENT** |
-| Execution readiness | `PARTIAL — stop-on-error final intake recorded, separate operator GO intake recorded, distinct execution approval phrase intake recorded (operator GO remains NO-GO / MISSING; execution approval phrase remains MISSING; neither invented), backup available, restore path and warnings documented, restore risk accepted for planning readiness only, Pack15D plan on master; but explicit operator GO is still missing, execution approval phrase is still missing, execution-only DB apply pack is blocked, DB apply has not run, and Pack15D verification has not executed; not GO` |
+| Execution readiness | `PARTIAL — stop-on-error final intake recorded, separate operator GO intake recorded, distinct execution approval phrase now PROVIDED (not invented), but operator GO is still missing, execution-only DB apply pack is blocked, DB apply has not run, and Pack15D verification has not executed; not GO` |
 | DB apply remains blocked | `true` |
 
 ### Current 15-input state
@@ -581,7 +611,7 @@ Evidence: `docs/product/VIONA_REQUEST_PACK15C_DISTINCT_EXECUTION_APPROVAL_PHRASE
 | 11 | Stop-on-error behavior | `CONFIRMED_FINAL_INTAKE — stop immediately on any DB apply / Prisma / Supabase / SQL / migration / schema verification / Pack15D verification error; do not continue with extra commands; capture non-secret output only; wait for human review; no restore/rollback unless separately authorized by Nong Si Buong` |
 | 12 | Post-apply verification plan | `PLAN_ON_MASTER_NOT_EXECUTED — Pack15D post-apply verification plan merged on master at e3c4b95 / #109; execution remains blocked until future successful DB apply` |
 | 13 | Operator go/no-go | **`NO-GO / MISSING — separate operator GO intake recorded (PR #113); explicit human/operator GO phrase not provided; operator GO not invented`** |
-| 14 | Separate execution approval phrase | **`MISSING — distinct execution approval phrase intake recorded (PR #115); explicit phrase not provided; phrase not invented`** |
+| 14 | Separate execution approval phrase | **`PROVIDED — human/operator phrase recorded verbatim (PR #117); targets viona-staging-eu / euqbfanilcssjiwwtcby; phrase not invented; not operator GO; not execution-only DB apply pack authorization`** |
 | 15 | Separate execution-only DB apply pack authorization | `BLOCKED` |
 
 Evidence: `docs/product/VIONA_REQUEST_PACK15C_TARGET_CONFIRMATION_INTAKE_UPDATE_EVIDENCE.md`
@@ -609,6 +639,8 @@ Evidence (Pack15C final stop-on-error confirmation intake): `docs/product/VIONA_
 Evidence (Pack15C separate operator GO intake): `docs/product/VIONA_REQUEST_PACK15C_SEPARATE_OPERATOR_GO_INTAKE_EVIDENCE.md`, `docs/design/evidence/cursor-pack15c-separate-operator-go-intake-evidence/README.md`
 
 Evidence (Pack15C distinct execution approval phrase intake): `docs/product/VIONA_REQUEST_PACK15C_DISTINCT_EXECUTION_APPROVAL_PHRASE_INTAKE_EVIDENCE.md`, `docs/design/evidence/cursor-pack15c-distinct-execution-approval-phrase-intake-evidence/README.md`
+
+Evidence (Pack15C distinct execution approval phrase provided intake): `docs/product/VIONA_REQUEST_PACK15C_DISTINCT_EXECUTION_APPROVAL_PHRASE_PROVIDED_INTAKE_EVIDENCE.md`, `docs/design/evidence/cursor-pack15c-distinct-execution-approval-phrase-provided-intake-evidence/README.md`
 
 ### Current flags
 
@@ -699,9 +731,14 @@ Evidence (Pack15C distinct execution approval phrase intake): `docs/product/VION
 | `pack15DistinctExecutionApprovalPhraseIntakeRecorded` | `true` |
 | `pack15DistinctExecutionApprovalPhraseIntakeMasterCommit` | `a50f79c` |
 | `pack15DistinctExecutionApprovalPhraseIntakePr` | `#115` |
-| `pack15ExecutionApprovalPhraseProvided` | `false` |
-| `pack15ExecutionApprovalPhraseStatus` | `MISSING` |
+| `pack15ExecutionApprovalPhraseProvidedIntakeRecorded` | `true` |
+| `pack15ExecutionApprovalPhraseProvidedIntakeMasterCommit` | `6880bda` |
+| `pack15ExecutionApprovalPhraseProvidedIntakePr` | `#117` |
+| `pack15ExecutionApprovalPhraseProvided` | `true` |
+| `pack15ExecutionApprovalPhraseStatus` | `PROVIDED` |
 | `pack15ExecutionApprovalPhraseInvented` | `false` |
+| `pack15ExecutionApprovalPhraseProvidedBy` | `human/operator` |
+| `pack15ExecutionApprovalPhraseTarget` | `viona-staging-eu / euqbfanilcssjiwwtcby` |
 | `pack15DbApplyApproval` | `false` |
 | `pack15ExecutionOnlyDbApplyPackAuthorized` | `false` |
 | `pack15DPostApplyVerificationPlanOnMaster` | `true` |
@@ -721,7 +758,7 @@ Evidence (Pack15C distinct execution approval phrase intake): `docs/product/VION
 | `pack17RuntimeImplementationStarted` | `false` |
 | `pack17LiveReadOnlyInboxImplemented` | `false` |
 
-Product docs: `docs/product/VIONA_REQUEST_PACK14C_PRISMA_MIGRATION_CREATION_ONLY.md`, `docs/product/VIONA_REQUEST_PACK15C_DB_APPLY_PRE_APPLY_PLANNING_PACKET.md`, `docs/product/VIONA_REQUEST_PACK15C_EXECUTION_READINESS_DECISION_PACKET.md`, `docs/product/VIONA_REQUEST_PACK15C_EXECUTION_INPUTS_INTAKE_TEMPLATE.md`, `docs/product/VIONA_REQUEST_PACK15C_SUPABASE_DB_SECRET_LOCATION_AUDIT_EVIDENCE.md`, `docs/product/VIONA_REQUEST_PACK15C_TARGET_CONFIRMATION_INTAKE_UPDATE_EVIDENCE.md`, `docs/product/VIONA_REQUEST_PACK15C_BACKUP_RESTORE_DASHBOARD_EVIDENCE.md`, `docs/product/VIONA_REQUEST_PACK15C_BACKUP_METHOD_SELECTION_PLAN_UPGRADE_EVIDENCE.md`, `docs/product/VIONA_REQUEST_PACK15C_BACKUP_AVAILABILITY_TIMESTAMP_EVIDENCE.md`, `docs/product/VIONA_REQUEST_PACK15C_RESTORE_ROLLBACK_PROCEDURE_EVIDENCE.md`, `docs/product/VIONA_REQUEST_PACK15C_POST_CLICK_RESTORE_FLOW_EVIDENCE.md`, `docs/product/VIONA_REQUEST_PACK15C_RESTORE_TEST_STATUS_RISK_ACCEPTANCE_INTAKE_EVIDENCE.md`, `docs/product/VIONA_REQUEST_PACK15C_RESTORE_NOT_TESTED_RISK_ACCEPTANCE_HUMAN_OPERATOR_EVIDENCE.md`, `docs/product/VIONA_REQUEST_PACK15C_FINAL_STOP_ON_ERROR_CONFIRMATION_INTAKE.md`, `docs/product/VIONA_REQUEST_PACK15C_SEPARATE_OPERATOR_GO_INTAKE_EVIDENCE.md`, `docs/product/VIONA_REQUEST_PACK15C_DISTINCT_EXECUTION_APPROVAL_PHRASE_INTAKE_EVIDENCE.md`, `docs/product/VIONA_REQUEST_PACK15D_POST_APPLY_VERIFICATION_PLAN.md`, `docs/product/VIONA_REQUEST_PACK16_READ_ONLY_PERSISTENCE_API_PLANNING_PACKET.md`, `docs/product/VIONA_REQUEST_PACK17_LIVE_READ_ONLY_REQUEST_INBOX_PLANNING_PACKET.md`
+Product docs: `docs/product/VIONA_REQUEST_PACK14C_PRISMA_MIGRATION_CREATION_ONLY.md`, `docs/product/VIONA_REQUEST_PACK15C_DB_APPLY_PRE_APPLY_PLANNING_PACKET.md`, `docs/product/VIONA_REQUEST_PACK15C_EXECUTION_READINESS_DECISION_PACKET.md`, `docs/product/VIONA_REQUEST_PACK15C_EXECUTION_INPUTS_INTAKE_TEMPLATE.md`, `docs/product/VIONA_REQUEST_PACK15C_SUPABASE_DB_SECRET_LOCATION_AUDIT_EVIDENCE.md`, `docs/product/VIONA_REQUEST_PACK15C_TARGET_CONFIRMATION_INTAKE_UPDATE_EVIDENCE.md`, `docs/product/VIONA_REQUEST_PACK15C_BACKUP_RESTORE_DASHBOARD_EVIDENCE.md`, `docs/product/VIONA_REQUEST_PACK15C_BACKUP_METHOD_SELECTION_PLAN_UPGRADE_EVIDENCE.md`, `docs/product/VIONA_REQUEST_PACK15C_BACKUP_AVAILABILITY_TIMESTAMP_EVIDENCE.md`, `docs/product/VIONA_REQUEST_PACK15C_RESTORE_ROLLBACK_PROCEDURE_EVIDENCE.md`, `docs/product/VIONA_REQUEST_PACK15C_POST_CLICK_RESTORE_FLOW_EVIDENCE.md`, `docs/product/VIONA_REQUEST_PACK15C_RESTORE_TEST_STATUS_RISK_ACCEPTANCE_INTAKE_EVIDENCE.md`, `docs/product/VIONA_REQUEST_PACK15C_RESTORE_NOT_TESTED_RISK_ACCEPTANCE_HUMAN_OPERATOR_EVIDENCE.md`, `docs/product/VIONA_REQUEST_PACK15C_FINAL_STOP_ON_ERROR_CONFIRMATION_INTAKE.md`, `docs/product/VIONA_REQUEST_PACK15C_SEPARATE_OPERATOR_GO_INTAKE_EVIDENCE.md`, `docs/product/VIONA_REQUEST_PACK15C_DISTINCT_EXECUTION_APPROVAL_PHRASE_INTAKE_EVIDENCE.md`, `docs/product/VIONA_REQUEST_PACK15C_DISTINCT_EXECUTION_APPROVAL_PHRASE_PROVIDED_INTAKE_EVIDENCE.md`, `docs/product/VIONA_REQUEST_PACK15D_POST_APPLY_VERIFICATION_PLAN.md`, `docs/product/VIONA_REQUEST_PACK16_READ_ONLY_PERSISTENCE_API_PLANNING_PACKET.md`, `docs/product/VIONA_REQUEST_PACK17_LIVE_READ_ONLY_REQUEST_INBOX_PLANNING_PACKET.md`
 
 Gate Factory (Pack14D): `scripts/lib/vionaPackDiffAllowlist.mjs`, `scripts/viona-request-pack14d-gate-factory-check.mjs`
 
@@ -731,17 +768,17 @@ Gate Factory (Pack14D): `scripts/lib/vionaPackDiffAllowlist.mjs`, `scripts/viona
 
 **Decision (read-only audit):** `B) NOT READY`
 
-**Pack15C/15D execution readiness:** `PARTIAL — stop-on-error final intake recorded, separate operator GO intake recorded, distinct execution approval phrase intake recorded (operator GO remains NO-GO / MISSING; execution approval phrase remains MISSING; neither invented), backup available, restore path and warnings documented, restore risk accepted for planning readiness only, Pack15D plan on master; but explicit operator GO is still missing, execution approval phrase is still missing, execution-only DB apply pack is blocked, DB apply has not run, and Pack15D verification has not executed; not GO`
+**Pack15C/15D execution readiness:** `PARTIAL — stop-on-error final intake recorded, separate operator GO intake recorded, distinct execution approval phrase now PROVIDED (not invented), but operator GO is still missing, execution-only DB apply pack is blocked, DB apply has not run, and Pack15D verification has not executed; not GO`
 
 **DB apply remains blocked:** `true`
 
-**Updated reason:** Pack15C distinct execution approval phrase intake is now recorded on master (PR #115 @ `a50f79c` — execution approval phrase gate documented; execution approval phrase status **`MISSING`**; execution approval phrase **not invented**). Pack15C separate operator GO intake remains recorded (PR #113 @ `7c14b57` — operator GO **`NO-GO / MISSING`**; operator GO **not invented**). Pack15C final stop-on-error confirmation intake remains recorded (PR #111 @ `718a024` — `CONFIRMED_FINAL_INTAKE`). Pack15D post-apply verification plan remains on master as a future-only plan (PR #109). DB apply has not happened, Pack15D verification has not executed, explicit operator GO remains **missing**, distinct execution approval phrase remains **missing**, and no execution-only DB apply pack is authorized. Restore/rollback is **not** authorized by #111, #113, or #115. Target environment and Supabase target remain confirmed (`staging`, `viona-staging-eu` / `euqbfanilcssjiwwtcby`, execution context `local operator machine using local .env`). Execution-only DB apply pack authorization remains incomplete. DB secret key-name presence remains confirmed; secret **values** were not printed, copied, or verified.
+**Updated reason:** Pack15C distinct execution approval phrase provided intake is now recorded on master (PR #117 @ `6880bda` — human-provided phrase **recorded verbatim**; execution approval phrase status **`PROVIDED`**; execution approval phrase **not invented**; target **`viona-staging-eu` / `euqbfanilcssjiwwtcby`**). Pack15C distinct execution approval phrase intake gate remains recorded (PR #115 @ `a50f79c` — prior status **`MISSING`**). Pack15C separate operator GO intake remains recorded (PR #113 @ `7c14b57` — operator GO **`NO-GO / MISSING`**; operator GO **not invented**). Pack15C final stop-on-error confirmation intake remains recorded (PR #111 @ `718a024` — `CONFIRMED_FINAL_INTAKE`). Pack15D post-apply verification plan remains on master as a future-only plan (PR #109). DB apply has not happened, Pack15D verification has not executed, explicit operator GO remains **missing**, and no execution-only DB apply pack is authorized. Restore/rollback is **not** authorized by #111, #113, #115, or #117. Target environment and Supabase target remain confirmed (`staging`, `viona-staging-eu` / `euqbfanilcssjiwwtcby`, execution context `local operator machine using local .env`). Execution-only DB apply pack authorization remains incomplete. DB secret key-name presence remains confirmed; secret **values** were not printed, copied, or verified.
 
-**Planning prerequisite note:** Stop-on-error final intake is **satisfied**. Separate operator GO intake gate is **documented** (PR #113) but explicit operator GO is **still missing**. Distinct execution approval phrase intake gate is **documented** (PR #115) but explicit execution approval phrase is **still missing**. Pack15D post-apply verification **plan** is on master. Execution is still **not ready**.
+**Planning prerequisite note:** Stop-on-error final intake is **satisfied**. Execution approval phrase is now **PROVIDED** (PR #117). Separate operator GO intake gate is **documented** (PR #113) but explicit operator GO is **still missing**. Pack15D post-apply verification **plan** is on master. Execution is still **not ready**.
 
 Execution remains **blocked** because required execution inputs are **not complete**.
 
-Pack15B approval permits **planning only** — it is **not** execution approval. Target confirmation (PR #92), backup/restore dashboard evidence (PR #94), backup method selection (PR #96), backup availability/timestamp evidence (PR #98), restore/rollback procedure evidence (PR #100), post-click restore flow evidence (PR #102), restore test status / risk acceptance intake evidence (PR #105), not-tested restore risk acceptance human operator evidence (PR #107), Pack15D post-apply verification plan (PR #109), Pack15C final stop-on-error confirmation intake (PR #111), Pack15C separate operator GO intake (PR #113), and Pack15C distinct execution approval phrase intake (PR #115) are **not** execution approval. Not-tested risk acceptance (PR #107) is **planning readiness only** — it is **not** operator GO, **not** DB apply approval, and **not** Prisma/Supabase/DB command authorization. Pack15D plan (PR #109) is **plan on master only** — it is **not** Pack15D verification execution and **not** DB apply. Stop-on-error intake (PR #111) is **planning gate only** — it is **not** operator GO, **not** DB apply approval, **not** the execution approval phrase, **not** restore/rollback authorization, and **not** execution-ready. Separate operator GO intake (PR #113) documents the operator GO gate only — it is **not** operator GO, **not** DB apply approval, **not** the execution approval phrase, **not** execution-only DB apply pack authorization, and **not** execution-ready. Distinct execution approval phrase intake (PR #115) documents the execution approval phrase gate only — it is **not** the execution approval phrase, **not** operator GO, **not** DB apply approval, **not** execution-only DB apply pack authorization, and **not** execution-ready. DB apply remains **blocked** until explicit operator GO, distinct execution approval phrase, ChatGPT GO/NO-GO review, and separate execution-only pack authorization are complete.
+Pack15B approval permits **planning only** — it is **not** execution approval. Target confirmation (PR #92), backup/restore dashboard evidence (PR #94), backup method selection (PR #96), backup availability/timestamp evidence (PR #98), restore/rollback procedure evidence (PR #100), post-click restore flow evidence (PR #102), restore test status / risk acceptance intake evidence (PR #105), not-tested restore risk acceptance human operator evidence (PR #107), Pack15D post-apply verification plan (PR #109), Pack15C final stop-on-error confirmation intake (PR #111), Pack15C separate operator GO intake (PR #113), Pack15C distinct execution approval phrase intake (PR #115), and Pack15C distinct execution approval phrase provided intake (PR #117) are **not** execution approval. Not-tested risk acceptance (PR #107) is **planning readiness only** — it is **not** operator GO, **not** DB apply approval, and **not** Prisma/Supabase/DB command authorization. Pack15D plan (PR #109) is **plan on master only** — it is **not** Pack15D verification execution and **not** DB apply. Stop-on-error intake (PR #111) is **planning gate only** — it is **not** operator GO, **not** DB apply approval, **not** the execution approval phrase, **not** restore/rollback authorization, and **not** execution-ready. Separate operator GO intake (PR #113) documents the operator GO gate only — it is **not** operator GO, **not** DB apply approval, **not** the execution approval phrase, **not** execution-only DB apply pack authorization, and **not** execution-ready. Distinct execution approval phrase intake (PR #115) documented the gate only — it is **not** the execution approval phrase. Distinct execution approval phrase provided intake (PR #117) records the **provided phrase only** — it is **not** operator GO, **not** DB apply approval, **not** execution-only DB apply pack authorization, and **not** execution-ready. DB apply remains **blocked** until explicit operator GO, ChatGPT GO/NO-GO review, and separate execution-only pack authorization are complete.
 
 ### Required before DB apply can proceed
 
@@ -751,12 +788,12 @@ DB apply cannot proceed until **all** are true:
 2. ~~Pack15D post-apply verification plan.~~ **Satisfied:** plan merged on master (PR #109 @ `e3c4b95`); Pack15D verification execution remains blocked until after future successful DB apply.
 3. ~~Final stop-on-error confirmation.~~ **Satisfied:** final intake recorded on master (PR #111 @ `718a024` — `CONFIRMED_FINAL_INTAKE`); rule must still be copied into the future execution-only DB apply pack before any execution.
 4. Human explicit operator GO — **still missing** (`NO-GO / MISSING`; separate operator GO intake recorded PR #113; operator GO not invented).
-5. Distinct execution approval phrase — **still missing** (`MISSING`; distinct execution approval phrase intake recorded PR #115; phrase not invented).
+5. ~~Distinct execution approval phrase.~~ **Partially satisfied:** human-provided phrase recorded verbatim on master (PR #117 @ `6880bda` — `PROVIDED`; not invented; not operator GO; not execution-only pack authorization).
 6. Separate execution-only DB apply pack authorization — **still blocked**.
-7. ChatGPT GO/NO-GO review before any execution pack — **still required**.
+7. ChatGPT GO/NO-GO review before any execution pack — **still required** (after operator GO is recorded).
 8. Pack15D DB schema verification only after successful DB apply — **blocked until DB apply succeeds**.
 
-Evidence: `docs/design/evidence/cursor-request-pack15c-execution-readiness-decision-packet/README.md`, `docs/design/evidence/cursor-pack15c-supabase-db-secret-location-audit-evidence/README.md`, `docs/design/evidence/cursor-pack15c-target-confirmation-intake-update-evidence/README.md`, `docs/design/evidence/cursor-pack15c-backup-restore-dashboard-evidence/README.md`, `docs/design/evidence/cursor-pack15c-backup-method-selection-plan-upgrade-evidence/README.md`, `docs/design/evidence/cursor-pack15c-backup-availability-timestamp-evidence/README.md`, `docs/design/evidence/cursor-pack15c-restore-rollback-procedure-evidence/README.md`, `docs/design/evidence/cursor-pack15c-post-click-restore-flow-evidence/README.md`, `docs/design/evidence/cursor-pack15c-restore-test-status-risk-acceptance-intake-evidence/README.md`, `docs/design/evidence/cursor-pack15c-restore-not-tested-risk-acceptance-human-operator-evidence/README.md`, `docs/design/evidence/cursor-pack15d-post-apply-verification-plan/README.md`, `docs/design/evidence/cursor-pack15c-final-stop-on-error-confirmation-intake/README.md`, `docs/design/evidence/cursor-pack15c-separate-operator-go-intake-evidence/README.md`, `docs/design/evidence/cursor-pack15c-distinct-execution-approval-phrase-intake-evidence/README.md`
+Evidence: `docs/design/evidence/cursor-request-pack15c-execution-readiness-decision-packet/README.md`, `docs/design/evidence/cursor-pack15c-supabase-db-secret-location-audit-evidence/README.md`, `docs/design/evidence/cursor-pack15c-target-confirmation-intake-update-evidence/README.md`, `docs/design/evidence/cursor-pack15c-backup-restore-dashboard-evidence/README.md`, `docs/design/evidence/cursor-pack15c-backup-method-selection-plan-upgrade-evidence/README.md`, `docs/design/evidence/cursor-pack15c-backup-availability-timestamp-evidence/README.md`, `docs/design/evidence/cursor-pack15c-restore-rollback-procedure-evidence/README.md`, `docs/design/evidence/cursor-pack15c-post-click-restore-flow-evidence/README.md`, `docs/design/evidence/cursor-pack15c-restore-test-status-risk-acceptance-intake-evidence/README.md`, `docs/design/evidence/cursor-pack15c-restore-not-tested-risk-acceptance-human-operator-evidence/README.md`, `docs/design/evidence/cursor-pack15d-post-apply-verification-plan/README.md`, `docs/design/evidence/cursor-pack15c-final-stop-on-error-confirmation-intake/README.md`, `docs/design/evidence/cursor-pack15c-separate-operator-go-intake-evidence/README.md`, `docs/design/evidence/cursor-pack15c-distinct-execution-approval-phrase-intake-evidence/README.md`, `docs/design/evidence/cursor-pack15c-distinct-execution-approval-phrase-provided-intake-evidence/README.md`
 
 ---
 
@@ -857,16 +894,16 @@ Still **blocked** until future approved packs and missing execution inputs are s
 
 Execute in order — do not skip:
 
-1. Human explicit operator GO intake — **if** human provides explicit operator GO phrase (still **missing** at time of #115).
-2. Human distinct execution approval phrase intake — **if** human provides explicit, distinct, target-specific execution approval phrase (still **missing** at time of #115).
-3. ChatGPT performs GO/NO-GO review on completed intake (§9) — only after **both** human gates in steps 1–2 are complete.
+1. Human explicit operator GO intake — still **required** (`NO-GO / MISSING` at time of #117).
+2. Kernel/Handoff sync after operator GO intake — when operator GO is provided.
+3. ChatGPT performs GO/NO-GO review on completed intake (§9) — only after **both** human gates are complete (operator GO **and** execution approval phrase).
 4. **Pack15C execution-only DB apply pack** — only after ChatGPT review says GO and §8 required-before-apply list is satisfied; include verbatim stop-on-error rule from PR #111
 5. If DB apply succeeds, execute **Pack15D** verification
 6. **Pack15D** — DB schema verification (only after successful DB apply)
 7. **Pack16** — Read-only persistence API implementation (only after Pack15D)
 8. **Pack17** — Live read-only request inbox implementation (only after Pack16 read-only API)
 
-Note: explicit not-tested restore risk acceptance is **partially satisfied** (PR #107 — planning readiness only); restore test evidence still not provided. Pack15D post-apply verification plan is **satisfied on master** (PR #109 @ `e3c4b95` — `PLAN_ON_MASTER_NOT_EXECUTED`); Pack15D verification execution remains blocked until after future successful DB apply. Stop-on-error final intake is **satisfied on master** (PR #111 @ `718a024` — `CONFIRMED_FINAL_INTAKE`); rule must still be copied into the future execution-only DB apply pack before any execution. Separate operator GO intake is **satisfied on master** (PR #113 @ `7c14b57` — gate documented; operator GO remains **`NO-GO / MISSING`**; operator GO **not invented**); explicit operator GO phrase remains **missing**. Distinct execution approval phrase intake is **satisfied on master** (PR #115 @ `a50f79c` — gate documented; execution approval phrase remains **`MISSING`**; phrase **not invented**); explicit execution approval phrase remains **missing**.
+Note: explicit not-tested restore risk acceptance is **partially satisfied** (PR #107 — planning readiness only); restore test evidence still not provided. Pack15D post-apply verification plan is **satisfied on master** (PR #109 @ `e3c4b95` — `PLAN_ON_MASTER_NOT_EXECUTED`); Pack15D verification execution remains blocked until after future successful DB apply. Stop-on-error final intake is **satisfied on master** (PR #111 @ `718a024` — `CONFIRMED_FINAL_INTAKE`); rule must still be copied into the future execution-only DB apply pack before any execution. Separate operator GO intake is **satisfied on master** (PR #113 @ `7c14b57` — gate documented; operator GO remains **`NO-GO / MISSING`**; operator GO **not invented**); explicit operator GO phrase remains **missing**. Distinct execution approval phrase provided intake is **satisfied on master** (PR #117 @ `6880bda` — phrase **`PROVIDED`** verbatim; phrase **not invented**); execution-only DB apply pack authorization remains **blocked**.
 
 Safe parallel lanes (docs, audits, UI polish without DB/runtime/API/mutation) may continue while the above remains blocked.
 
@@ -877,8 +914,8 @@ Safe parallel lanes (docs, audits, UI polish without DB/runtime/API/mutation) ma
 May run in parallel when allowlisted and gate-clean:
 
 - Docs / kernel / handoff updates (including this handoff)
-- Human explicit operator GO intake (if human provides phrase)
-- Human distinct execution approval phrase intake (if human provides phrase)
+- Human explicit operator GO intake (still required)
+- Kernel/Handoff sync after operator GO intake (when provided)
 - ChatGPT GO/NO-GO review only after both human gates are complete
 - Execution-only DB apply pack only after ChatGPT review says GO
 - Pack15C intake filling only with **non-secret** confirmations
@@ -944,7 +981,7 @@ Stop immediately and report if asked to:
 ## Quick start for a new session
 
 1. Read this file and `docs/ai-context/VIONA_OPERATING_PROTOCOL.md`.
-2. Confirm baseline: `git rev-parse origin/master` → expect `a50f79c` until this handoff sync merges.
+2. Confirm baseline: `git rev-parse origin/master` → expect `6880bda` until this handoff sync merges.
 3. Read the active pack prompt allowlist and forbidden list.
 4. Branch from `origin/master`; run gates before commit.
 5. Cursor executes; ChatGPT reviews report and PR safety.
@@ -1008,3 +1045,7 @@ Stop immediately and report if asked to:
 **Pack15C handoff sync (operator GO kernel sync #114):** Kernel/handoff sync after separate operator GO intake merged @ `26c7dff` (PR #114). Stop-on-error **`CONFIRMED_FINAL_INTAKE`** preserved. Operator GO gate and blockers propagated; execution approval phrase and DB apply remain blocked. Evidence: `docs/design/evidence/cursor-pack15c-kernel-handoff-sync-after-separate-operator-go-intake/README.md`.
 
 **Pack15C handoff sync (distinct execution approval phrase intake):** This document updated after Pack15C distinct execution approval phrase intake evidence merged @ `a50f79c` (PR #115). Distinct execution approval phrase intake recorded; execution approval phrase gate documented as separate gate; execution approval phrase status **`MISSING`**; execution approval phrase **not invented** (`pack15ExecutionApprovalPhraseInvented: false`). Operator GO **`NO-GO / MISSING`** preserved (PR #113). Stop-on-error **`CONFIRMED_FINAL_INTAKE`** preserved (PR #111). Pack15D plan status **`PLAN_ON_MASTER_NOT_EXECUTED`** preserved. DB apply performed **NO**; Pack15D verification execution **NO**; DB apply approval **NO**; execution-only DB apply pack **BLOCKED**. Restore/risk state preserved — target **`viona-staging-eu`**; risk classification **`RESTORE_NOT_TESTED_BUT_RISK_ACCEPTED_BY_HUMAN_OPERATOR`**; not-tested risk acceptance **YES** (planning readiness only); restore tested/run/final Restore submitted **NO / NO / NO**; restore confidence **`medium, not high`**. Readiness **`PARTIAL — stop-on-error final intake recorded, separate operator GO intake recorded, distinct execution approval phrase intake recorded (operator GO remains NO-GO / MISSING; execution approval phrase remains MISSING; neither invented), backup available, restore path and warnings documented, restore risk accepted for planning readiness only, Pack15D plan on master; but explicit operator GO is still missing, execution approval phrase is still missing, execution-only DB apply pack is blocked, DB apply has not run, and Pack15D verification has not executed; not GO`**. Decision remains **`B) NOT READY`**. DB apply, Pack15D verification execution, Pack16 runtime/API, and Pack17 runtime/UI/inbox remain blocked. Next lane: human explicit operator GO and/or distinct execution approval phrase when provided; then ChatGPT GO/NO-GO review. Evidence: `docs/design/evidence/cursor-pack15c-distinct-execution-approval-phrase-intake-evidence/README.md`.
+
+**Pack15C handoff sync (execution phrase kernel sync #116):** Kernel/handoff sync after distinct execution approval phrase intake merged @ `62e2117` (PR #116). Stop-on-error **`CONFIRMED_FINAL_INTAKE`** preserved. Phrase gate **`MISSING`** and blockers propagated; operator GO and DB apply remain blocked. Evidence: `docs/design/evidence/cursor-pack15c-kernel-handoff-sync-after-distinct-execution-approval-phrase-intake/README.md`.
+
+**Pack15C handoff sync (execution approval phrase provided intake):** This document updated after Pack15C distinct execution approval phrase provided intake evidence merged @ `6880bda` (PR #117). Human-provided execution approval phrase **recorded verbatim**; execution approval phrase status **`PROVIDED`**; execution approval phrase **not invented** (`pack15ExecutionApprovalPhraseInvented: false`); provided by **`human/operator`**; target **`viona-staging-eu` / `euqbfanilcssjiwwtcby`**. Operator GO **`NO-GO / MISSING`** preserved (PR #113). Stop-on-error **`CONFIRMED_FINAL_INTAKE`** preserved (PR #111). Pack15D plan status **`PLAN_ON_MASTER_NOT_EXECUTED`** preserved. DB apply performed **NO**; Pack15D verification execution **NO**; DB apply approval **NO**; execution-only DB apply pack **BLOCKED**. Restore/risk state preserved — target **`viona-staging-eu`**; risk classification **`RESTORE_NOT_TESTED_BUT_RISK_ACCEPTED_BY_HUMAN_OPERATOR`**; not-tested risk acceptance **YES** (planning readiness only); restore tested/run/final Restore submitted **NO / NO / NO**; restore confidence **`medium, not high`**. Readiness **`PARTIAL — stop-on-error final intake recorded, separate operator GO intake recorded, distinct execution approval phrase now PROVIDED (not invented), but operator GO is still missing, execution-only DB apply pack is blocked, DB apply has not run, and Pack15D verification has not executed; not GO`**. Decision remains **`B) NOT READY`**. DB apply, Pack15D verification execution, Pack16 runtime/API, and Pack17 runtime/UI/inbox remain blocked. Next lane: human explicit operator GO intake; then Kernel/Handoff sync after operator GO; then ChatGPT GO/NO-GO review. Evidence: `docs/design/evidence/cursor-pack15c-distinct-execution-approval-phrase-provided-intake-evidence/README.md`.
