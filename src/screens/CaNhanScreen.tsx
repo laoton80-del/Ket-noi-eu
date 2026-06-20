@@ -550,6 +550,18 @@ export function CaNhanScreen() {
           ) : null}
           <PremiumAppTile
             variant="account"
+            accent="cyan"
+            width="100%"
+            icon="documents-outline"
+            statusLabel="Read-only"
+            title="VIONA requests"
+            subtitle="Live read-only inbox · no write/actions"
+            onPress={() => navigation.navigate('VionaRequestLiveInbox')}
+            accessibilityLabel="VIONA requests live read-only inbox"
+            testID="account-action-viona-requests-live-inbox"
+          />
+          <PremiumAppTile
+            variant="account"
             accent="emerald"
             width="100%"
             icon="shield-checkmark"
