@@ -1,0 +1,16 @@
+import { Router } from 'express';
+
+import * as VionaRequestController from '../controllers/VionaRequestController';
+import { authMiddleware } from '../middleware/authMiddleware';
+
+export const vionaRouter = Router();
+
+vionaRouter.use(authMiddleware);
+
+vionaRouter.get('/requests', (req, res, next) => {
+  void VionaRequestController.getVionaRequests(req, res).catch(next);
+});
+
+vionaRouter.get('/requests/:id', (req, res, next) => {
+  void VionaRequestController.getVionaRequestDetail(req, res).catch(next);
+});
