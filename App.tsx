@@ -69,6 +69,7 @@ import { OutboundCampaignScreen } from './src/screens/admin/OutboundCampaignScre
 import { FacebookWarRoomScreen } from './src/screens/admin/FacebookWarRoomScreen';
 import { MarketingApprovalScreen } from './src/screens/admin/MarketingApprovalScreen';
 import { VionaAdminDebugOperatorInboxPreviewScreen } from './src/screens/admin/VionaAdminDebugOperatorInboxPreviewScreen';
+import { VionaRequestLiveInboxScreen } from './src/screens/viona/VionaRequestLiveInboxScreen';
 import { VaultScreen } from './src/screens/VaultScreen';
 import { ReferralRewardScreen } from './src/screens/ReferralRewardScreen';
 import { CashOutScreen } from './src/screens/b2c/CashOutScreen';
@@ -347,6 +348,7 @@ const rootLinking: LinkingOptions<RootStackParamList> = {
       TravelHub: 'TravelHub',
       LocalUniverse: 'LocalUniverse',
       LocalUserRequestStatus: 'LocalUserRequestStatus',
+      VionaRequestLiveInbox: 'viona-requests-live-inbox',
       VietnamHub: 'VietnamHub',
       TourismCheckout: 'tourism-checkout',
       TourismBookingConfirmed: 'tourism-booking-confirmed',
@@ -478,6 +480,15 @@ function AppNavigationShell({
               <Stack.Screen
                 name="LocalUserRequestStatus"
                 component={LocalUserRequestStatusScreen}
+                options={{
+                  headerShown: false,
+                  animation: 'slide_from_right',
+                  fullScreenGestureEnabled: true,
+                }}
+              />
+              <Stack.Screen
+                name="VionaRequestLiveInbox"
+                component={VionaRequestLiveInboxScreen}
                 options={{
                   headerShown: false,
                   animation: 'slide_from_right',

@@ -98,6 +98,8 @@ export type RootStackParamList = {
   LocalUniverse: undefined;
   /** B2C Local request-only status list (authenticated requester). */
   LocalUserRequestStatus: undefined;
+  /** VIONA live read-only request inbox (Pack17 — GET /api/viona/requests only). */
+  VionaRequestLiveInbox: undefined;
   /** V6.3 Vietnam inbound tourism hub — +84 merchants ↔ tourists / expats. */
   VietnamHub: undefined;
   /** B2C VIG checkout — quote from `/api/tourism/quote`, pay via `/api/tourism/book`. */
