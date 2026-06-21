@@ -1,5 +1,6 @@
 import type { Request, Response } from 'express';
 
+import { appendVionaRequestNote } from '../services/viona/vionaRequestNoteActionService';
 import {
   getVionaRequestById,
   listVionaRequests,
@@ -28,6 +29,20 @@ function readOptionalLimitQuery(raw: unknown): number | undefined {
   return n;
 }
 
+function readOptionalTrimmedBody(value: unknown): string | undefined {
+  if (typeof value !== 'string') return undefined;
+  const trimmed = value.trim();
+  return trimmed.length > 0 ? trimmed : undefined;
+}
+
+function readRequiredNoteBody(body: unknown): string | null {
+  if (body == null || typeof body !== 'object' || Array.isArray(body)) {
+    return null;
+  }
+  const record = body as Record<string, unknown>;
+  const raw = record.note ?? record.noteText;
+  return typeof raw === 'string' ? raw : null;
+}
 function readOptionalSkipQuery(raw: unknown): number | undefined {
   if (raw == null) return undefined;
   const n = typeof raw === 'string' ? Number(raw) : typeof raw === 'number' ? raw : NaN;
@@ -113,6 +128,69 @@ export async function getVionaRequestDetail(req: Request, res: Response): Promis
     }
 
     jsonOk(res, result.data, 200);
+  } catch {
+    jsonFail(res, 'Internal server error', 500);
+  }
+}
+
+/** `POST /api/viona/requests/:id/actions/note` — append note audit event only (no status change). */
+export async function postVionaRequestNoteAction(req: Request, res: Response): Promise<void> {
+  try {
+    const authUserId = readAuthUserId(req);
+    if (!authUserId) {
+      jsonFail(res, 'Unauthorized', 401);
+      return;
+    }
+
+    const requestId = readString(req.params.id);
+    if (!requestId || requestId.trim().length === 0) {
+      jsonFail(res, 'Request id is required', 400);
+      return;
+    }
+
+    const note = readRequiredNoteBody(req.body);
+    if (note == null) {
+      jsonFail(res, 'Note is required', 400);
+      return;
+    }
+
+    const body =
+      req.body != null && typeof req.body === 'object' && !Array.isArray(req.body)
+        ? (req.body as Record<string, unknown>)
+        : {};
+
+    const result = await appendVionaRequestNote({
+      authUserId,
+      requestId: requestId.trim(),
+      note,
+      idempotencyKey: readOptionalTrimmedBody(body.idempotencyKey),
+      clientCorrelationId: readOptionalTrimmedBody(body.clientCorrelationId),
+    });
+
+    if (!result.ok) {
+      const statusMap: Record<typeof result.reason, number> = {
+        invalid_input: 400,
+        request_not_found: 404,
+        unsafe_note: 400,
+      };
+      const msgMap: Record<typeof result.reason, string> = {
+        invalid_input: 'Invalid note request',
+        request_not_found: 'Request not found',
+        unsafe_note: 'Invalid note content',
+      };
+      jsonFail(res, msgMap[result.reason], statusMap[result.reason]);
+      return;
+    }
+
+    jsonOk(
+      res,
+      {
+        ...result.data,
+        action: result.action,
+        safety: result.safety,
+      },
+      result.action.idempotentReplay ? 200 : 201
+    );
   } catch {
     jsonFail(res, 'Internal server error', 500);
   }

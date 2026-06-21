@@ -1,6 +1,7 @@
 import type { Prisma } from '@prisma/client';
 
 import { getPrisma } from '../../lib/prisma';
+import { buildAuthorizedVionaRequestWhere } from './vionaRequestAccessScope';
 import type {
   GetVionaRequestByIdInput,
   GetVionaRequestByIdResult,
@@ -18,22 +19,8 @@ import {
 const DEFAULT_LIMIT = 50;
 const MAX_LIMIT = 100;
 
-/**
- * Requester-owned read scope: caller may read requests they created, own, or participate in.
- * Does not expose admin/global ops reads (separate future pack).
- */
-function buildAuthorizedReadWhere(authUserId: string): Prisma.VionaRequestWhereInput {
-  return {
-    OR: [
-      { requesterUserId: authUserId },
-      { ownerUserId: authUserId },
-      { participants: { some: { userRef: authUserId } } },
-    ],
-  };
-}
-
 function buildListWhere(input: ListVionaRequestsInput): Prisma.VionaRequestWhereInput {
-  const where: Prisma.VionaRequestWhereInput = buildAuthorizedReadWhere(input.authUserId);
+  const where: Prisma.VionaRequestWhereInput = buildAuthorizedVionaRequestWhere(input.authUserId);
 
   if (input.status != null) {
     where.status = input.status;
@@ -105,7 +92,7 @@ export async function getVionaRequestById(
   const row = await getPrisma().vionaRequest.findFirst({
     where: {
       id: requestId,
-      ...buildAuthorizedReadWhere(authUserId),
+      ...buildAuthorizedVionaRequestWhere(authUserId),
     },
     select: VIONA_REQUEST_DETAIL_SELECT,
   });
