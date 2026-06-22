@@ -5,6 +5,11 @@ import type { VionaRequestDetail } from '../../../services/vionaRequestApi';
 import { FontFamily } from '../../../theme/typography';
 import { vionaSpacing } from '../vionaDesignTokens';
 import { vionaTrust } from '../vionaTrustTokens';
+import {
+  filterNonNoteAuditEvents,
+  mapVionaRequestNoteAuditTimelineItems,
+} from './vionaRequestNoteAuditDisplay';
+import { VionaRequestNoteAuditTimelineReadOnly } from './VionaRequestNoteAuditTimelineReadOnly';
 
 export type VionaRequestLiveDetailReadOnlyProps = Readonly<{
   detail: VionaRequestDetail | null;
@@ -59,6 +64,8 @@ export function VionaRequestLiveDetailReadOnly({
   }
 
   const { request } = detail;
+  const noteTimelineItems = mapVionaRequestNoteAuditTimelineItems(detail.auditEvents);
+  const otherAuditEvents = filterNonNoteAuditEvents(detail.auditEvents);
 
   return (
     <ScrollView style={styles.root} contentContainerStyle={styles.content}>
@@ -108,11 +115,16 @@ export function VionaRequestLiveDetailReadOnly({
         )}
       </Section>
 
+      <Section title="Notes">
+        <Text style={styles.readOnlyHint}>Read-only note timeline · no write actions</Text>
+        <VionaRequestNoteAuditTimelineReadOnly items={noteTimelineItems} />
+      </Section>
+
       <Section title="Audit events">
-        {detail.auditEvents.length === 0 ? (
-          <EmptySectionText text="No audit events returned." />
+        {otherAuditEvents.length === 0 ? (
+          <EmptySectionText text="No other audit events returned." />
         ) : (
-          detail.auditEvents.map((event) => (
+          otherAuditEvents.map((event) => (
             <Text key={event.id} style={styles.itemLine}>
               {event.eventType}
               {event.message ? ` · ${event.message}` : ''}
@@ -208,6 +220,12 @@ const styles = StyleSheet.create({
     fontFamily: FontFamily.regular,
     fontSize: 12,
     color: vionaTrust.inkMuted,
+  },
+  readOnlyHint: {
+    fontFamily: FontFamily.regular,
+    fontSize: 11,
+    color: vionaTrust.inkMuted,
+    marginBottom: 4,
   },
   hint: {
     fontFamily: FontFamily.regular,
