@@ -127,3 +127,46 @@ export async function fetchVionaRequestById(
     { method: 'GET' }
   );
 }
+
+export type VionaRequestNoteActionMeta = Readonly<{
+  auditEventId: string;
+  eventType: 'action.note';
+  idempotentReplay: boolean;
+}>;
+
+export type VionaRequestNoteActionResponse = VionaRequestDetail &
+  Readonly<{
+    action: VionaRequestNoteActionMeta;
+    safety: Readonly<{
+      noteActionOnly: boolean;
+      noStatusChange: boolean;
+      noPaymentSettlement: boolean;
+      noBookingFulfillment: boolean;
+      noEmergencyEscalation: boolean;
+      notProductionReady: boolean;
+    }>;
+  }>;
+
+export type AppendVionaRequestNoteInput = Readonly<{
+  note: string;
+  idempotencyKey?: string;
+  clientCorrelationId?: string;
+}>;
+
+/** `POST /api/viona/requests/:id/actions/note` — Pack20 note action (Pack24 UI only). */
+export async function appendVionaRequestNote(
+  requestId: string,
+  body: AppendVionaRequestNoteInput
+): Promise<ApiRequestResult<VionaRequestNoteActionResponse>> {
+  return restApiFetchJson<VionaRequestNoteActionResponse>(
+    `/api/viona/requests/${encodeURIComponent(requestId)}/actions/note`,
+    {
+      method: 'POST',
+      body: {
+        note: body.note,
+        ...(body.idempotencyKey != null ? { idempotencyKey: body.idempotencyKey } : {}),
+        ...(body.clientCorrelationId != null ? { clientCorrelationId: body.clientCorrelationId } : {}),
+      },
+    }
+  );
+}

@@ -1,4 +1,4 @@
-import { type ReactElement } from 'react';
+import { type ReactElement, type ReactNode } from 'react';
 import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import type { VionaRequestDetail } from '../../../services/vionaRequestApi';
@@ -10,17 +10,19 @@ import {
   mapVionaRequestNoteAuditTimelineItems,
 } from './vionaRequestNoteAuditDisplay';
 import { VionaRequestNoteAuditTimelineReadOnly } from './VionaRequestNoteAuditTimelineReadOnly';
+import { VionaRequestNoteInputWrite } from './VionaRequestNoteInputWrite';
 
 export type VionaRequestLiveDetailReadOnlyProps = Readonly<{
   detail: VionaRequestDetail | null;
   loading: boolean;
   error: string | null;
+  onNoteSubmitted?: () => Promise<boolean>;
 }>;
 
 function Section({
   title,
   children,
-}: Readonly<{ title: string; children: ReactElement | ReactElement[] | null }>): ReactElement {
+}: Readonly<{ title: string; children: ReactNode }>): ReactElement {
   return (
     <View style={styles.section}>
       <Text style={styles.sectionLabel}>{title}</Text>
@@ -37,6 +39,7 @@ export function VionaRequestLiveDetailReadOnly({
   detail,
   loading,
   error,
+  onNoteSubmitted,
 }: VionaRequestLiveDetailReadOnlyProps): ReactElement {
   if (loading) {
     return (
@@ -69,7 +72,7 @@ export function VionaRequestLiveDetailReadOnly({
 
   return (
     <ScrollView style={styles.root} contentContainerStyle={styles.content}>
-      <Text style={styles.banner}>Live read-only inbox · no actions</Text>
+      <Text style={styles.banner}>Live inbox · note submit below read-only history</Text>
       <Text style={styles.title}>{request.title}</Text>
       <Text style={styles.meta}>
         {request.sourceUniverse} · {request.requestType} · {request.status}
@@ -116,8 +119,14 @@ export function VionaRequestLiveDetailReadOnly({
       </Section>
 
       <Section title="Notes">
-        <Text style={styles.readOnlyHint}>Read-only note timeline · no write actions</Text>
+        <Text style={styles.readOnlyHint}>Read-only note history above · audited submit below</Text>
         <VionaRequestNoteAuditTimelineReadOnly items={noteTimelineItems} />
+        {onNoteSubmitted != null ? (
+          <VionaRequestNoteInputWrite
+            requestId={request.id}
+            onNoteSubmitted={onNoteSubmitted}
+          />
+        ) : null}
       </Section>
 
       <Section title="Audit events">
@@ -147,7 +156,8 @@ export function VionaRequestLiveDetailReadOnly({
       </Section>
 
       <Text style={styles.footer}>
-        No payment captured · Not booking confirmed · SOS guidance only · Write/actions blocked
+        Note submit only · No status change · Not booking confirmed · SOS guidance only · Other
+        write/actions blocked
       </Text>
     </ScrollView>
   );

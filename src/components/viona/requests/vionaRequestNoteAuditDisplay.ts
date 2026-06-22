@@ -84,3 +84,22 @@ export function filterNonNoteAuditEvents(
 ): readonly VionaRequestAuditEvent[] {
   return auditEvents.filter((event) => event.eventType !== VIONA_REQUEST_NOTE_AUDIT_EVENT_TYPE);
 }
+
+export type VionaRequestNoteInputValidationFailure = 'empty' | 'too_long' | 'unsafe';
+
+export function validateVionaRequestNoteInput(
+  note: string
+): { ok: true; value: string } | { ok: false; reason: VionaRequestNoteInputValidationFailure } {
+  const trimmed = note.trim();
+  if (trimmed.length === 0) {
+    return { ok: false, reason: 'empty' };
+  }
+  if (trimmed.length > VIONA_REQUEST_NOTE_DISPLAY_MAX_LENGTH) {
+    return { ok: false, reason: 'too_long' };
+  }
+  const normalized = trimmed.toLowerCase();
+  if (UNSAFE_NOTE_SUBSTRINGS.some((fragment) => normalized.includes(fragment))) {
+    return { ok: false, reason: 'unsafe' };
+  }
+  return { ok: true, value: trimmed };
+}
