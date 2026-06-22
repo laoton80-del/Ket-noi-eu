@@ -117,4 +117,22 @@
 
 ---
 
+## 9. Verification checks (5b631a5..HEAD)
+
+| Check | Result |
+| --- | --- |
+| `git diff --check` | **PASS** |
+| Allowed-scope grep | **PASS** — 8 files only |
+| Forbidden routes grep | **PASS** |
+| POST usage grep | **PASS** — note endpoint only |
+| `viona-forbidden-claims-check.mjs` | **PASS** |
+| `viona-forbidden-claims-check.mjs --strict` | **PASS** |
+| `npx tsc --noEmit` | **PASS** |
+| `npm run smoke` | **PASS** |
+| Conflict markers | **PASS** |
+
+**HEAD:** `2dbdecd`
+
+---
+
 **Evidence:** `docs/design/evidence/cursor-pack24-first-note-input-write-ui-implementation/README.md`

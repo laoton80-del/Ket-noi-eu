@@ -7,6 +7,7 @@
 | **Base** | `origin/master @ 5b631a5` |
 | **Base commit message** | `docs(requests): prepare Pack23 note input/write UI planning (#142)` |
 | **Branch** | `viona/cursor-pack24-first-note-input-write-ui-implementation` |
+| **HEAD** | `2dbdecd` — `feat(pack24): add first user-triggered note input UI to Pack17 live detail` |
 | **Pack** | Pack24 — first user-triggered note input/write UI |
 
 ## Operator authorization
@@ -55,15 +56,15 @@
 
 | Check | Result |
 | --- | --- |
-| `git diff --check` | *(run after commit)* |
-| Allowed-scope grep | *(run after commit)* |
-| Forbidden routes grep | *(run after commit)* |
-| POST usage grep | *(run after commit)* |
-| `node scripts/viona-forbidden-claims-check.mjs` | *(run after commit)* |
-| `node scripts/viona-forbidden-claims-check.mjs --strict` | *(run after commit)* |
-| `npx tsc --noEmit` | *(run after commit)* |
-| `npm run smoke` | *(run after commit)* |
-| Conflict grep | *(run after commit)* |
+| `git diff --check` (5b631a5..HEAD) | **PASS** |
+| Allowed-scope grep (8 files only) | **PASS** |
+| Forbidden routes grep (`/actions/status\|assign\|confirm\|cancel`) | **PASS** — none |
+| POST usage grep | **PASS** — only `POST /api/viona/requests/:id/actions/note` in `vionaRequestApi.ts` |
+| `node scripts/viona-forbidden-claims-check.mjs` | **PASS** |
+| `node scripts/viona-forbidden-claims-check.mjs --strict` | **PASS** |
+| `npx tsc --noEmit` | **PASS** |
+| `npm run smoke` | **PASS** |
+| Conflict marker grep | **PASS** — none |
 
 ## Recommendation
 
