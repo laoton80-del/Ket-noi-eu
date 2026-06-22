@@ -69,7 +69,7 @@ export function VionaRequestLiveInboxScreen(): ReactElement {
     setLoading(false);
   }, []);
 
-  const loadDetail = useCallback(async (requestId: string): Promise<void> => {
+  const loadDetail = useCallback(async (requestId: string): Promise<boolean> => {
     setSelectedId(requestId);
     setDetailLoading(true);
     setDetailError(null);
@@ -80,11 +80,26 @@ export function VionaRequestLiveInboxScreen(): ReactElement {
 
     if (result.ok) {
       setDetail(result.data);
-      return;
+      return true;
     }
 
     setDetailError(result.error || 'Unable to load read-only request detail.');
+    return false;
   }, []);
+
+  const refreshDetailAfterNote = useCallback(async (): Promise<boolean> => {
+    if (selectedId == null) {
+      return false;
+    }
+    const result = await fetchVionaRequestById(selectedId);
+    if (result.ok) {
+      setDetail(result.data);
+      setDetailError(null);
+      return true;
+    }
+    setDetailError(result.error || 'Unable to refresh request detail.');
+    return false;
+  }, [selectedId]);
 
   const onRefresh = useCallback(async (): Promise<void> => {
     setRefreshing(true);
@@ -118,15 +133,16 @@ export function VionaRequestLiveInboxScreen(): ReactElement {
           </Pressable>
           <View style={styles.titleBlock}>
             <Text style={styles.title}>VIONA requests</Text>
-            <Text style={styles.subtitle}>Live read-only inbox · Pack16 API · no write/actions</Text>
+            <Text style={styles.subtitle}>Live inbox · Pack16 GET · note submit (Pack24)</Text>
           </View>
         </View>
 
         <View style={styles.safetyBanner}>
           <Ionicons name="eye-outline" size={16} color={vionaTrust.inkMuted} />
           <Text style={styles.safetyText}>
-            Read-only preview wired to GET /api/viona/requests. Not production-ready. No payment,
-            booking, SOS dispatch, or live actions.
+            Read-only preview wired to GET /api/viona/requests. Note submit uses verified Pack20
+            note action only. Not production-ready. No payment, booking, SOS dispatch, or other
+            live actions.
           </Text>
         </View>
 
@@ -163,6 +179,7 @@ export function VionaRequestLiveInboxScreen(): ReactElement {
                 detail={detail}
                 loading={detailLoading}
                 error={detailError}
+                onNoteSubmitted={refreshDetailAfterNote}
               />
             </View>
           </>
