@@ -1,6 +1,7 @@
 import type { Request, Response } from 'express';
 
 import { appendVionaRequestNote } from '../services/viona/vionaRequestNoteActionService';
+import { transitionVionaRequestStatus } from '../services/viona/vionaRequestStatusActionService';
 import {
   getVionaRequestById,
   listVionaRequests,
@@ -41,6 +42,14 @@ function readRequiredNoteBody(body: unknown): string | null {
   }
   const record = body as Record<string, unknown>;
   const raw = record.note ?? record.noteText;
+  return typeof raw === 'string' ? raw : null;
+}
+
+function readRequiredTargetStatusBody(body: unknown): string | null {
+  if (body == null || typeof body !== 'object' || Array.isArray(body)) {
+    return null;
+  }
+  const raw = (body as Record<string, unknown>).targetStatus;
   return typeof raw === 'string' ? raw : null;
 }
 function readOptionalSkipQuery(raw: unknown): number | undefined {
@@ -177,6 +186,73 @@ export async function postVionaRequestNoteAction(req: Request, res: Response): P
         invalid_input: 'Invalid note request',
         request_not_found: 'Request not found',
         unsafe_note: 'Invalid note content',
+      };
+      jsonFail(res, msgMap[result.reason], statusMap[result.reason]);
+      return;
+    }
+
+    jsonOk(
+      res,
+      {
+        ...result.data,
+        action: result.action,
+        safety: result.safety,
+      },
+      result.action.idempotentReplay ? 200 : 201
+    );
+  } catch {
+    jsonFail(res, 'Internal server error', 500);
+  }
+}
+
+/** `POST /api/viona/requests/:id/actions/status` — narrow owner-only status transition (Pack25). */
+export async function postVionaRequestStatusAction(req: Request, res: Response): Promise<void> {
+  try {
+    const authUserId = readAuthUserId(req);
+    if (!authUserId) {
+      jsonFail(res, 'Unauthorized', 401);
+      return;
+    }
+
+    const requestId = readString(req.params.id);
+    if (!requestId || requestId.trim().length === 0) {
+      jsonFail(res, 'Request id is required', 400);
+      return;
+    }
+
+    const targetStatus = readRequiredTargetStatusBody(req.body);
+    if (targetStatus == null) {
+      jsonFail(res, 'targetStatus is required', 400);
+      return;
+    }
+
+    const body =
+      req.body != null && typeof req.body === 'object' && !Array.isArray(req.body)
+        ? (req.body as Record<string, unknown>)
+        : {};
+
+    const result = await transitionVionaRequestStatus({
+      authUserId,
+      requestId: requestId.trim(),
+      targetStatus,
+      reason: typeof body.reason === 'string' ? body.reason : undefined,
+      note: typeof body.note === 'string' ? body.note : undefined,
+      idempotencyKey: readOptionalTrimmedBody(body.idempotencyKey),
+      clientCorrelationId: readOptionalTrimmedBody(body.clientCorrelationId),
+    });
+
+    if (!result.ok) {
+      const statusMap: Record<typeof result.reason, number> = {
+        invalid_input: 400,
+        request_not_found: 404,
+        invalid_transition: 400,
+        unsafe_content: 400,
+      };
+      const msgMap: Record<typeof result.reason, string> = {
+        invalid_input: 'Invalid status request',
+        request_not_found: 'Request not found',
+        invalid_transition: 'Invalid status transition',
+        unsafe_content: 'Invalid status content',
       };
       jsonFail(res, msgMap[result.reason], statusMap[result.reason]);
       return;

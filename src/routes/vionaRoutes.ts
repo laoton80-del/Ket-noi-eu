@@ -18,3 +18,7 @@ vionaRouter.get('/requests/:id', (req, res, next) => {
 vionaRouter.post('/requests/:id/actions/note', (req, res, next) => {
   void VionaRequestController.postVionaRequestNoteAction(req, res).catch(next);
 });
+
+vionaRouter.post('/requests/:id/actions/status', (req, res, next) => {
+  void VionaRequestController.postVionaRequestStatusAction(req, res).catch(next);
+});
