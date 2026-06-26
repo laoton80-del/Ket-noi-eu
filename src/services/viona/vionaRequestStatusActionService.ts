@@ -100,7 +100,7 @@ async function findIdempotentStatusAuditEvent(
   requestId: string,
   idempotencyKey: string,
   targetStatus: string
-): Promise<{ id: string; statusEventId: string | null } | null> {
+): Promise<{ id: string; statusEventId: string | null; fromStatus?: string } | null> {
   const existing = await getPrisma().vionaRequestAuditEvent.findFirst({
     where: {
       requestId,
@@ -132,7 +132,12 @@ async function findIdempotentStatusAuditEvent(
       ? record.statusEventId
       : null;
 
-  return { id: existing.id, statusEventId };
+  const fromStatus =
+    typeof record.fromStatus === 'string' && record.fromStatus.length > 0
+      ? record.fromStatus
+      : undefined;
+
+  return { id: existing.id, statusEventId, fromStatus };
 }
 
 function isPack25AllowedTransition(fromStatus: string, toStatus: string): boolean {
@@ -212,37 +217,13 @@ export async function transitionVionaRequestStatus(
     return { ok: false, reason: 'invalid_transition' };
   }
 
-  if (!isPack25AllowedTransition(fromStatus, targetStatus)) {
-    return { ok: false, reason: 'invalid_transition' };
-  }
-
-  if (!canTransitionRequestStatus(fromStatus, targetStatus)) {
-    return { ok: false, reason: 'invalid_transition' };
-  }
-
   if (idempotencyKey != null) {
-    const existingAudit = await getPrisma().vionaRequestAuditEvent.findFirst({
-      where: {
-        requestId,
-        eventType: VIONA_REQUEST_STATUS_AUDIT_EVENT_TYPE,
-        payloadJson: {
-          path: ['idempotencyKey'],
-          equals: idempotencyKey,
-        },
-      },
-      select: { id: true, payloadJson: true },
-    });
-
-    if (existingAudit != null) {
-      const existing = await findIdempotentStatusAuditEvent(
-        requestId,
-        idempotencyKey,
-        targetStatus
-      );
-      if (existing == null) {
-        return { ok: false, reason: 'invalid_input' };
-      }
-
+    const existing = await findIdempotentStatusAuditEvent(
+      requestId,
+      idempotencyKey,
+      targetStatus
+    );
+    if (existing != null) {
       const detail = await getVionaRequestById({ authUserId, requestId });
       if (!detail.ok) {
         return { ok: false, reason: 'request_not_found' };
@@ -254,13 +235,37 @@ export async function transitionVionaRequestStatus(
           statusEventId: existing.statusEventId ?? existing.id,
           auditEventId: existing.id,
           eventType: 'action.status',
-          fromStatus,
+          fromStatus: existing.fromStatus ?? fromStatus,
           toStatus: targetStatus,
           idempotentReplay: true,
         },
         safety: VIONA_REQUEST_STATUS_ACTION_SAFETY,
       };
     }
+
+    const existingAudit = await getPrisma().vionaRequestAuditEvent.findFirst({
+      where: {
+        requestId,
+        eventType: VIONA_REQUEST_STATUS_AUDIT_EVENT_TYPE,
+        payloadJson: {
+          path: ['idempotencyKey'],
+          equals: idempotencyKey,
+        },
+      },
+      select: { id: true },
+    });
+
+    if (existingAudit != null) {
+      return { ok: false, reason: 'invalid_input' };
+    }
+  }
+
+  if (!isPack25AllowedTransition(fromStatus, targetStatus)) {
+    return { ok: false, reason: 'invalid_transition' };
+  }
+
+  if (!canTransitionRequestStatus(fromStatus, targetStatus)) {
+    return { ok: false, reason: 'invalid_transition' };
   }
 
   const reason = reasonResult.value;
