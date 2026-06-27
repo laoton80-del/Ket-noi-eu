@@ -18,7 +18,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import type { AcademyGlassAccent } from '../components/academy/AcademyGlassCard';
 import { AccountNeonGlassPanel } from '../components/account/AccountNeonGlassPanel';
-import { PremiumAppTile, PremiumTileGrid } from '../components/viona';
+import { PremiumTileGrid, VionaCompactSituationTile } from '../components/viona';
+import { vionaCompactSituationSectionStyles } from '../components/viona/vionaCompactSituationSectionStyles';
 import { SmartTrioLanguageSheet } from '../components/smartTrio/SmartTrioLanguageSheet';
 import {
   VionaGlobalTopRail,
@@ -41,6 +42,7 @@ import {
   premiumUniverseAccentSpec,
   premiumUniverseStroke,
 } from '../design/premiumTileVisualTokens';
+import { resolveVionaCompactSituationTileLayout } from '../design/vionaCompactSituationTileLayout';
 import { theme } from '../theme/theme';
 import { FontFamily } from '../theme/typography';
 
@@ -81,7 +83,7 @@ const ACADEMY_PILOT_PILLS = [
 export function AcademyScreen(): ReactElement {
   const navigation = useNavigation<Nav>();
   const { t } = useTranslation();
-  const { width } = useWindowDimensions();
+  const { width, height: viewportHeight } = useWindowDimensions();
   const homeCommand = useHomeCommand();
   const [languageSheetOpen, setLanguageSheetOpen] = useState(false);
   const desktopWeb = Platform.OS === 'web' && width >= TABLET_MIN;
@@ -95,6 +97,11 @@ export function AcademyScreen(): ReactElement {
     gridColumns === 1
       ? innerTrackWidth
       : (innerTrackWidth - gridGap * (gridColumns - 1)) / gridColumns;
+
+  const moduleTileLayout = useMemo(
+    () => resolveVionaCompactSituationTileLayout(width, viewportHeight, false),
+    [width, viewportHeight]
+  );
 
   const { isWeb: isWebFs, isSupported: fsSupported, isFullscreen, toggleFullscreen } = useFullscreenMode();
 
@@ -348,7 +355,9 @@ export function AcademyScreen(): ReactElement {
             </View>
           </AccountNeonGlassPanel>
 
-          <Text style={styles.sectionLabel}>{t('academyHub.modulesKicker')}</Text>
+          <Text style={[styles.sectionLabel, vionaCompactSituationSectionStyles.kicker, vionaCompactSituationSectionStyles.kickerViolet]}>
+            {t('academyHub.modulesKicker')}
+          </Text>
 
           <PremiumTileGrid
             columns={gridColumns}
@@ -362,18 +371,20 @@ export function AcademyScreen(): ReactElement {
             ]}
           >
             {modules.map((mod) => (
-              <PremiumAppTile
+              <VionaCompactSituationTile
                 key={mod.id}
-                variant="academy"
-                accent={academyAccentToUniverse(mod.accent)}
-                width="100%"
-                icon={mod.icon}
-                title={t(mod.titleKey)}
-                statusLabel={t(mod.statusKey)}
-                subtitle={t(mod.subtitleKey)}
-                onPress={mod.onPress}
-                accessibilityLabel={`${t(mod.titleKey)}. ${t(mod.subtitleKey)}. ${t(mod.statusKey)}`}
                 testID={`academy-hub-${mod.id}`}
+                label={t(mod.titleKey)}
+                icon={mod.icon}
+                accent={academyAccentToUniverse(mod.accent)}
+                onPress={mod.onPress}
+                fill
+                minHeight={moduleTileLayout.minCardHeight}
+                paddingHorizontal={moduleTileLayout.paddingHorizontal}
+                capsuleSize={moduleTileLayout.capsuleSize}
+                iconSize={moduleTileLayout.iconSize}
+                titleLines={moduleTileLayout.titleLines}
+                accessibilityLabel={`${t(mod.titleKey)}. ${t(mod.subtitleKey)}. ${t(mod.statusKey)}`}
               />
             ))}
           </PremiumTileGrid>

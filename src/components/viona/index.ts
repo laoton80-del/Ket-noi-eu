@@ -31,6 +31,12 @@ export { VionaFashionHomeCommandBar } from './VionaFashionHomeCommandBar';
 export type { VionaFashionHomeCommandBarProps } from './VionaFashionHomeCommandBar';
 export { VionaQuickActionPill } from './VionaQuickActionPill';
 export type { VionaQuickActionPillProps } from './VionaQuickActionPill';
+export { VionaCompactSituationTile, vionaCompactSituationQuickAccentToUniverse } from './VionaCompactSituationTile';
+export type {
+  VionaCompactSituationTileProps,
+  VionaCompactSituationQuickAccent,
+} from './VionaCompactSituationTile';
+export { vionaCompactSituationSectionStyles } from './vionaCompactSituationSectionStyles';
 export { VionaSosHoldButton } from './VionaSosHoldButton';
 export type { VionaSosHoldButtonProps } from './VionaSosHoldButton';
 export { VionaSosHoldGateModal } from './VionaSosHoldGateModal';
