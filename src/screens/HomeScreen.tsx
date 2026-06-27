@@ -1,4 +1,4 @@
-import { Ionicons } from '@expo/vector-icons';
+﻿import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useFocusEffect, useNavigation, useNavigationState } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -221,7 +221,7 @@ const LIVING_HERO_AUTO_INTERVAL_MS = 12000;
 /** Pause while hovering/focusing cards; disabled entirely when reduced-motion is on. */
 const LIVING_HERO_AUTO_ROTATION_ENABLED = false;
 
-/** Pack 60C — web mobile Home hub root for legacy floating overlay suppression. */
+/** Pack 60C â€” web mobile Home hub root for legacy floating overlay suppression. */
 const HOME_HUB_LEGACY_SUPPRESS_ROOT_ID = 'home-hub-root';
 
 const LIVING_HERO_DESKTOP_IMAGE: Readonly<Record<LivingHeroVisualKey, ImageSourcePropType>> = {
@@ -239,13 +239,13 @@ const LIVING_HERO_DESKTOP_COPY: Readonly<
     eyebrow: 'VIONA HUMAN CONSTELLATION',
     title: 'Your global companion, wherever life moves.',
     subtitle:
-      'Local life, travel support, learning, and AI assistance — designed for Vietnamese people worldwide.',
+      'Local life, travel support, learning, and AI assistance â€” designed for Vietnamese people worldwide.',
   },
   local: {
     eyebrow: 'VIONA LOCAL',
     title: 'Find trusted support around where you live.',
     subtitle:
-      'Local services, community connection, and daily life abroad — built for Vietnamese people worldwide.',
+      'Local services, community connection, and daily life abroad â€” built for Vietnamese people worldwide.',
   },
   travel: {
     eyebrow: 'VIONA TRAVEL',
@@ -263,18 +263,18 @@ const LIVING_HERO_DESKTOP_COPY: Readonly<
     eyebrow: 'VIONA BUSINESS',
     title: 'Merchant workspace entry',
     subtitle:
-      'Preview merchant tools and customer requests — pilot foundation, not commercial launch.',
+      'Preview merchant tools and customer requests â€” pilot foundation, not commercial launch.',
   },
 };
 
-/** Left band only â€” keeps center/right hero art bright; copy stays on the left rail. */
+/** Left band only Ă˘â‚¬â€ť keeps center/right hero art bright; copy stays on the left rail. */
 const DESKTOP_HERO_SCRIM_LEFT_COLORS = [
   'rgba(4, 7, 12, 0.45)',
   'rgba(4, 7, 12, 0.16)',
   'rgba(4, 7, 12, 0)',
 ] as const;
 const ADMIN_UNLOCK_KEY = STORAGE_KEYS.adminUnlock;
-/** World Stage â€” light canvas (aurora gradient applied in hero). */
+/** World Stage Ă˘â‚¬â€ť light canvas (aurora gradient applied in hero). */
 const SCREEN_BG = vionaTokens.gradients.multiverseHero[0];
 const CARD_BG = vionaTrust.surface;
 const GOLD_ACCENT = vionaTrust.accentGold;
@@ -298,7 +298,7 @@ function isLikelyPhoneOnlyName(s: string): boolean {
 
 function isPlaceholderRegionLabel(s: string): boolean {
   const lower = s.trim().toLowerCase();
-  return lower === 'your region' || lower === 'khu vá»±c cá»§a báşˇn';
+  return lower === 'your region' || lower === 'khu vĂˇÂ»Â±c cĂˇÂ»Â§a bĂˇĹźË‡n';
 }
 
 function pickRawDisplayNameForHome(user: AuthUser | null | undefined): { raw: string; field: string } | null {
@@ -340,7 +340,7 @@ function firstTokenFromPersonName(raw: string): string {
 
 type HeaderHintPick = Readonly<{ raw: string; field: string }>;
 
-/** ISO2 first; then freeform location/country label (length â‰Ą 3), never ZZ-only or placeholder. */
+/** ISO2 first; then freeform location/country label (length Ă˘â€°Ä„ 3), never ZZ-only or placeholder. */
 function pickLocationHeaderFromCandidates(
   candidates: readonly { field: string; value: unknown }[]
 ): HeaderHintPick | null {
@@ -449,7 +449,7 @@ function pickRawCountryForHome(user: AuthUser | null | undefined): { raw: string
   return pickLocationHeaderFromCandidates(candidates);
 }
 
-/** Per-world cinematic composition — full-bleed cover; objectPosition only (no scale — scale < 1 caused side gutters). */
+/** Per-world cinematic composition â€” full-bleed cover; objectPosition only (no scale â€” scale < 1 caused side gutters). */
 const HOME_LIVING_HERO_OBJECT_POSITION: Readonly<Record<LivingHeroVisualKey, string>> = {
   default: '44% 42%',
   local: '48% 44%',
@@ -482,7 +482,7 @@ function homeLivingHeroCinematicImageStyle(
 
 /** Hero shell aspect tuned for desktop viewport fit; image still covers via resizeMode/object-fit. */
 const DESKTOP_HERO_FRAME_ASPECT = FASHION_HOME_DESKTOP_HERO_ASPECT;
-/** Web desktop pointer (hover + fine pointer) — gates hero network hover off touch devices. */
+/** Web desktop pointer (hover + fine pointer) â€” gates hero network hover off touch devices. */
 function detectHomeHoverPointer(): boolean {
   if (Platform.OS !== 'web' || typeof window === 'undefined' || !window.matchMedia) return false;
   try {
@@ -657,7 +657,7 @@ export function HomeScreen() {
     !useWorldCardCarousel &&
     !worldCardsDesktopSingleRow &&
     width <= FASHION_HOME_WORLD_ONE_COL_GRID_MAX_WIDTH;
-  /** Equal card heights within each flex row (1-col, 2Ă—2, or 4Ă—1). */
+  /** Equal card heights within each flex row (1-col, 2Ä‚â€”2, or 4Ä‚â€”1). */
   const stretchWorldCardsInGrid =
     !useWorldCardCarousel &&
     !worldCardsOneColumnGrid &&
@@ -696,7 +696,7 @@ export function HomeScreen() {
 
   const fashionDesktopHeaderBlock = useMemo(() => {
     const h = clockTick.getHours();
-    /** Late night 23:00â€“04:59; evening through 22:59. */
+    /** Late night 23:00Ă˘â‚¬â€ś04:59; evening through 22:59. */
     const slot =
       h >= 23 || h < 5 ? 'lateNight' : h < 12 ? 'morning' : h < 18 ? 'afternoon' : 'evening';
     const namePick = pickRawDisplayNameForHome(user) ?? sessionHeaderHints.name;
@@ -733,7 +733,7 @@ export function HomeScreen() {
       wish,
       timeLocation,
       a11y,
-      /** One line: `12:26 Â· Czech Republic` (see `shell.header.timeAtLocation`); region omitted when unknown. */
+      /** One line: `12:26 Ă‚Â· Czech Republic` (see `shell.header.timeAtLocation`); region omitted when unknown. */
       clockLine: timeLocation,
       regionLine: null,
     };
@@ -808,14 +808,13 @@ export function HomeScreen() {
   const [webWorldCardHover, setWebWorldCardHover] = useState<FashionHomeWorldCardDaylightAccent | null>(null);
   const [exploreCtaWebHover, setExploreCtaWebHover] = useState(false);
   const [exploreCtaWebPressed, setExploreCtaWebPressed] = useState(false);
-  /** GLASS.HOME.ROOT â€” visible viewport height on web (accounts for browser chrome). */
+  /** GLASS.HOME.ROOT Ă˘â‚¬â€ť visible viewport height on web (accounts for browser chrome). */
   const [webVisualViewportHeight, setWebVisualViewportHeight] = useState<number | null>(null);
-  /** LAYOUT.HOME â€” measured command bar + world row (web opening stage). */
+  /** LAYOUT.HOME Ă˘â‚¬â€ť measured command bar + world row (web opening stage). */
   const [webCommandBarHeight, setWebCommandBarHeight] = useState(0);
   /** Measured fashion shell chrome (padding + command bar) for cinematic stage height. */
   const [webFashionChromeHeight, setWebFashionChromeHeight] = useState(0);
   const [webWorldStripHeight, setWebWorldStripHeight] = useState(FASHION_HOME_WEB_WORLD_CARD_ROW_ESTIMATE_PX);
-  const [quickActionWebHoverId, setQuickActionWebHoverId] = useState<string | null>(null);
   const [heroWebHovered, setHeroWebHovered] = useState(false);
   const heroHoverAnim = useRef(new Animated.Value(0)).current;
   const supportsHeroHover = useMemo(detectHomeHoverPointer, []);
@@ -893,7 +892,7 @@ export function HomeScreen() {
       if (!fashionHomeDesktopShellActive) return;
       flushLivingHeroOverlay();
 
-      /** GLASS.HOME.HARD â€” web: snap to global companion on revert (no 800ms crossfade â€śstuck Academyâ€ť). */
+      /** GLASS.HOME.HARD Ă˘â‚¬â€ť web: snap to global companion on revert (no 800ms crossfade Ă˘â‚¬Ĺ›stuck AcademyĂ˘â‚¬ĹĄ). */
       if (Platform.OS === 'web' && next === 'default' && !reduceMotion) {
         livingHeroOverlayOpacity.stopAnimation();
         livingHeroCopyBlend.stopAnimation();
@@ -1054,7 +1053,7 @@ export function HomeScreen() {
 
   const desktopCardLivingHoverProps = useMemo(() => {
     if (!fashionHomeDesktopShellActive) return null;
-    /** GLASS.HOME.FINAL â€” web: pointer hover preview only (focus was sticking Academy hero after Tab / a11y). */
+    /** GLASS.HOME.FINAL Ă˘â‚¬â€ť web: pointer hover preview only (focus was sticking Academy hero after Tab / a11y). */
     const pointerOnly = Platform.OS === 'web';
     const mk = (key: LivingHeroVisualKey) =>
       pointerOnly
@@ -1081,7 +1080,7 @@ export function HomeScreen() {
     scheduleDesktopLivingHeroRevert,
   ]);
 
-  /** GLASS.HOME.2C â€” snap living hero + hover chrome when Home regains focus (fixes stuck Academy desktop preview). */
+  /** GLASS.HOME.2C Ă˘â‚¬â€ť snap living hero + hover chrome when Home regains focus (fixes stuck Academy desktop preview). */
   useFocusEffect(
     useCallback(() => {
       if (Platform.OS !== 'web' || !fashionHomeDesktopShellActive) return;
@@ -1091,7 +1090,6 @@ export function HomeScreen() {
       }
       livingHoverPinnedRef.current = null;
       setWebWorldCardHover(null);
-      setQuickActionWebHoverId(null);
       setHeroWebHovered(false);
       heroHoverAnim.setValue(0);
       livingHeroOverlayOpacity.stopAnimation();
@@ -1247,7 +1245,7 @@ export function HomeScreen() {
   ]);
 
   /**
-   * HOME.OPENING.STAGE.ALIGNMENT.FINAL â€” shared grid, in-hero cards, tall/fullscreen hub peek budget.
+   * HOME.OPENING.STAGE.ALIGNMENT.FINAL Ă˘â‚¬â€ť shared grid, in-hero cards, tall/fullscreen hub peek budget.
    */
   const fashionDesktopWebHomeStageLayout = useMemo(() => {
     if (!fashionHomeDesktopShellActive || Platform.OS !== 'web') return null;
@@ -1286,7 +1284,7 @@ export function HomeScreen() {
     webWorldStripHeight,
   ]);
 
-  /** TRUE_COMPACT_LAYOUT — explicit fullscreen branch for opening-stage geometry (web fashion home). */
+  /** TRUE_COMPACT_LAYOUT â€” explicit fullscreen branch for opening-stage geometry (web fashion home). */
   const webOpeningStageFullscreen =
     fashionHomeDesktopShellActive &&
     Platform.OS === 'web' &&
@@ -1477,116 +1475,7 @@ export function HomeScreen() {
     [goUniverseAcademy, goUniverseLocal, goUniverseTravel, openInterpreter, openProtected, openSosEntry, t]
   );
 
-  const FashionHomeDaylightQuickActionPill = ({
-    pillId,
-    label,
-    icon,
-    onPress,
-    accent,
-    fill,
-    webTransition,
-  }: {
-    pillId: string;
-    label: string;
-    // Ionicons name union is cumbersome here; keep it permissive.
-    icon: any;
-    onPress: () => void;
-    accent: FashionHomeQuickActionAccent;
-    fill: boolean;
-    webTransition?: any;
-  }) => {
-    const hovered = Platform.OS === 'web' && quickActionWebHoverId === pillId;
-
-    const iconColor =
-      accent === 'gold'
-        ? vionaTokens.fashionTech.accentGold
-        : accent === 'cyan'
-          ? vionaTokens.fashionTech.accentCyan
-          : accent === 'emerald'
-            ? vionaTokens.fashionTech.accentEmerald
-            : accent === 'violet'
-              ? vionaTokens.fashionTech.accentViolet
-              : accent === 'blue'
-                ? vionaTokens.fashionTech.statusLite
-                : vionaTokens.fashionTech.sosNeon;
-
-    const sheen = fashionHomeDaylightQuickActionSheen(accent);
-
-    return (
-      <Pressable
-        onPress={onPress}
-        onPointerEnter={Platform.OS === 'web' ? () => setQuickActionWebHoverId(pillId) : undefined}
-        onPointerLeave={
-          Platform.OS === 'web'
-            ? () => setQuickActionWebHoverId((cur) => (cur === pillId ? null : cur))
-            : undefined
-        }
-        style={({ pressed }) => [
-          styles.quickActionPillDaylightBase,
-          fill && styles.quickActionPillDaylightFill,
-          webOpeningStageFullscreen &&
-            fashionHomeWebOpeningStageQuickActionPillFullscreenCompactStyle(true),
-          Platform.OS === 'web'
-            ? fashionHomeWebDaylightQuickActionPillGlassStyle(accent, hovered)
-            : fashionHomeDaylightQuickActionPillStyle(accent),
-          Platform.OS === 'web' && !reduceMotion && fashionHomeWebQuickActionHoverMotionStyle(hovered),
-          webTransition,
-          pressed && styles.quickActionPillDaylightPressed,
-        ]}
-        accessibilityRole="button"
-        accessibilityLabel={label}
-      >
-        {Platform.OS !== 'web' ? (
-          <LinearGradient
-            colors={[sheen[0], sheen[1]]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 0, y: 1 }}
-            pointerEvents="none"
-            style={styles.quickActionPillDaylightSheen}
-          />
-        ) : null}
-        {Platform.OS !== 'web' ? (
-          <View
-            pointerEvents="none"
-            style={[styles.quickActionPillDaylightInnerRimWrap, fashionHomeWebDaylightQuickActionInnerRimStyle(accent)]}
-          />
-        ) : null}
-
-        <View
-          style={[
-            styles.quickActionPillDaylightContent,
-            webOpeningStageFullscreen &&
-              fashionHomeWebOpeningStageQuickActionContentFullscreenCompactStyle(true),
-          ]}
-        >
-          <View
-            style={[
-              styles.quickActionPillDaylightIconCapsule,
-              Platform.OS === 'web' ? styles.quickActionPillDaylightIconCapsuleWeb : null,
-              webOpeningStageFullscreen &&
-                fashionHomeWebOpeningStageQuickActionIconCapsuleFullscreenCompactStyle(true),
-              fashionHomeDaylightQuickActionIconCapsuleStyle(accent, hovered),
-            ]}
-          >
-            <Ionicons name={icon} size={21} color={iconColor} />
-          </View>
-
-          <Text
-            style={[
-              styles.quickActionPillDaylightLabel,
-              accent === 'sos' && styles.quickActionPillDaylightLabelSos,
-            ]}
-            numberOfLines={1}
-            ellipsizeMode="tail"
-          >
-            {label}
-          </Text>
-        </View>
-      </Pressable>
-    );
-  };
-
-  /** GLASS.HOME.ROOT â€” edge-lit stack only (no full-card sheen/glow wash; card fog removed in VionaFashionWorldCard). */
+  /** GLASS.HOME.ROOT Ă˘â‚¬â€ť edge-lit stack only (no full-card sheen/glow wash; card fog removed in VionaFashionWorldCard). */
   const FashionHomeWorldCardGlassLayers = ({
     accent,
     hoverBoost,
@@ -1618,28 +1507,16 @@ export function HomeScreen() {
     </View>
   );
 
-  const renderQuickActionPill = (item: (typeof quickActionItems)[number], fill = false) =>
-    fashionDaylight && fashionHomeDesktopShellActive ? (
-      <FashionHomeDaylightQuickActionPill
-        key={item.id}
-        pillId={item.id}
-        label={item.label}
-        icon={item.icon}
-        accent={item.accent}
-        onPress={item.onPress}
-        fill={fill}
-        webTransition={fashionHomeWebTintTransition}
-      />
-    ) : (
-      <VionaQuickActionPill
-        key={item.id}
-        label={item.label}
-        icon={item.icon}
-        accent={item.accent}
-        onPress={item.onPress}
-        fill={fill}
-      />
-    );
+  const renderQuickActionPill = (item: (typeof quickActionItems)[number], fill = false) => (
+    <VionaQuickActionPill
+      key={item.id}
+      label={item.label}
+      icon={item.icon}
+      accent={item.accent}
+      onPress={item.onPress}
+      fill={fill}
+    />
+  );
 
   const renderWorldCardGlassLayers = (
     accent: FashionHomeWorldCardDaylightAccent,
@@ -3118,7 +2995,7 @@ export function HomeScreen() {
           <View style={[styles.pinCard, { maxWidth: Math.min(width - 48, 400) }]}>
             <Text style={styles.pinTitle}>Super Admin</Text>
             <Text style={styles.pinHint}>
-              Nháş­p mĂŁ PIN cáşĄu hĂ¬nh qua biáşżn mĂ´i trĆ°á»ťng build (khĂ´ng dĂąng máş·c Ä‘á»‹nh trong mĂŁ nguá»“n).
+              NhĂˇĹźÂ­p mÄ‚Ĺ PIN cĂˇĹźÄ„u hÄ‚Â¬nh qua biĂˇĹźĹĽn mÄ‚Â´i trÄ†Â°ĂˇÂ»ĹĄng build (khÄ‚Â´ng dÄ‚Ä…ng mĂˇĹźÂ·c Ă„â€ĂˇÂ»â€ąnh trong mÄ‚Ĺ nguĂˇÂ»â€śn).
             </Text>
             <TextInput
               value={pinInput}
@@ -3134,12 +3011,12 @@ export function HomeScreen() {
             />
             {pinError ? <Text style={styles.pinError}>{pinError}</Text> : null}
             <AppButton
-              label="Má»ź Dashboard"
+              label="MĂˇÂ»Ĺş Dashboard"
               variant="danger"
               onPress={() => {
                 if (!isAdminDebugPinConfigured()) {
                   setPinError(
-                    'Admin PIN chá»‰ há»— trá»Ł trong build dev vĂ  yĂŞu cáş§u EXPO_PUBLIC_ADMIN_PIN >= 12 kĂ˝ tá»±.'
+                    'Admin PIN chĂˇÂ»â€° hĂˇÂ»â€” trĂˇÂ»Ĺ trong build dev vÄ‚Â  yÄ‚Ĺžu cĂˇĹźÂ§u EXPO_PUBLIC_ADMIN_PIN >= 12 kÄ‚Ëť tĂˇÂ»Â±.'
                   );
                   return;
                 }
@@ -3154,7 +3031,7 @@ export function HomeScreen() {
                 setPinError('Sai PIN');
               }}
             />
-            <AppButton label="Há»§y" variant="ghost" onPress={() => setShowPin(false)} />
+            <AppButton label="HĂˇÂ»Â§y" variant="ghost" onPress={() => setShowPin(false)} />
           </View>
         </View>
       ) : null}
@@ -3311,18 +3188,18 @@ const styles = StyleSheet.create({
     backgroundColor: '#0a1018',
   },
   desktopHeroImageBrightenWash: {
-    // Very subtle hover activation over the image only — behind copy/scrim, no zoom/crop change.
+    // Very subtle hover activation over the image only â€” behind copy/scrim, no zoom/crop change.
     ...StyleSheet.absoluteFillObject,
     backgroundColor: '#FFFFFF',
     zIndex: 1,
   },
   desktopHeroNetworkLayer: {
-    // Above scrim/vignette, below hero copy (zIndex 3) — lower-right network never covers text/faces.
+    // Above scrim/vignette, below hero copy (zIndex 3) â€” lower-right network never covers text/faces.
     ...StyleSheet.absoluteFillObject,
     zIndex: 2,
   },
   desktopHeroHoverRim: {
-    // Hover-only semantic rim — single crisp line (shell defers outer rim while lit).
+    // Hover-only semantic rim â€” single crisp line (shell defers outer rim while lit).
     ...StyleSheet.absoluteFillObject,
     borderRadius: vionaTokens.radius.xxl - 1,
     borderWidth: 1,
@@ -3872,13 +3749,13 @@ const styles = StyleSheet.create({
     shadowRadius: 3,
   },
   quickActionPrompt: {
-    fontSize: 13,
-    lineHeight: 18,
-    color: vionaTokens.fashionTech.champagne,
-    fontFamily: FontFamily.extrabold,
-    letterSpacing: 0.35,
+    fontSize: 9.5,
+    lineHeight: 12,
+    color: 'rgba(255, 232, 188, 0.9)',
+    fontFamily: FontFamily.semibold,
+    letterSpacing: 0.95,
     textTransform: 'uppercase',
-    marginBottom: vionaTokens.spacing[12],
+    marginBottom: vionaTokens.spacing[8],
   },
   quickActionPromptDaylight: {
     color: 'rgba(255, 244, 220, 0.98)',
