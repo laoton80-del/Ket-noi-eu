@@ -9,6 +9,7 @@ import { vionaTrust } from '../vionaTrustTokens';
 
 export type VionaRequestStatusBadgeProps = Readonly<{
   status: VionaRequestStatus;
+  displayLabel?: string;
 }>;
 
 function toneForStatus(
@@ -49,16 +50,20 @@ function toneForStatus(
   };
 }
 
-export function VionaRequestStatusBadge({ status }: VionaRequestStatusBadgeProps): ReactElement {
+export function VionaRequestStatusBadge({
+  status,
+  displayLabel,
+}: VionaRequestStatusBadgeProps): ReactElement {
   const pal = toneForStatus(status);
   const label = getRequestStatusSafetyLabel(status);
+  const visibleLabel = displayLabel ?? status;
   return (
     <View style={[styles.wrap, { backgroundColor: pal.bg, borderColor: pal.border }]}>
       <Text
         style={[styles.text, { color: pal.text }]}
         accessibilityLabel={`Request status: ${label}`}
       >
-        {status}
+        {visibleLabel}
       </Text>
     </View>
   );

@@ -6,11 +6,16 @@ import { FontFamily } from '../../../theme/typography';
 import { vionaSpacing } from '../vionaDesignTokens';
 import { vionaTrust } from '../vionaTrustTokens';
 import {
-  filterNonNoteAuditEvents,
-  mapVionaRequestNoteAuditTimelineItems,
-} from './vionaRequestNoteAuditDisplay';
+  buildReadOnlyTimelineItems,
+  formatVionaRequestUpdatedLabel,
+  isKnownVionaRequestStatus,
+  normalizeStatusLabel,
+} from './vionaRequestActivityTimelineDisplay';
+import { VionaRequestActivityTimelineReadOnly } from './VionaRequestActivityTimelineReadOnly';
+import { mapVionaRequestNoteAuditTimelineItems } from './vionaRequestNoteAuditDisplay';
 import { VionaRequestNoteAuditTimelineReadOnly } from './VionaRequestNoteAuditTimelineReadOnly';
 import { VionaRequestNoteInputWrite } from './VionaRequestNoteInputWrite';
+import { VionaRequestStatusBadge } from './VionaRequestStatusBadge';
 
 export type VionaRequestLiveDetailReadOnlyProps = Readonly<{
   detail: VionaRequestDetail | null;
@@ -68,17 +73,39 @@ export function VionaRequestLiveDetailReadOnly({
 
   const { request } = detail;
   const noteTimelineItems = mapVionaRequestNoteAuditTimelineItems(detail.auditEvents);
-  const otherAuditEvents = filterNonNoteAuditEvents(detail.auditEvents);
+  const activityTimelineItems = buildReadOnlyTimelineItems(
+    detail.statusEvents ?? [],
+    detail.auditEvents ?? []
+  );
+  const statusKnown = isKnownVionaRequestStatus(request.status);
 
   return (
     <ScrollView style={styles.root} contentContainerStyle={styles.content}>
-      <Text style={styles.banner}>Live inbox · note submit below read-only history</Text>
-      <Text style={styles.title}>{request.title}</Text>
+      <Text style={styles.banner}>Live inbox · read-only status and activity</Text>
+      <View style={styles.headerRow}>
+        <Text style={styles.title}>{request.title}</Text>
+        {statusKnown ? (
+          <VionaRequestStatusBadge
+            status={request.status}
+            displayLabel={normalizeStatusLabel(request.status)}
+          />
+        ) : (
+          <Text style={styles.statusFallback}>{normalizeStatusLabel(request.status)}</Text>
+        )}
+      </View>
+      <Text style={styles.statusLabel}>{request.display.statusLabel}</Text>
       <Text style={styles.meta}>
-        {request.sourceUniverse} · {request.requestType} · {request.status}
+        {request.sourceUniverse} · {request.requestType}
+      </Text>
+      <Text style={styles.updated}>
+        Updated · {formatVionaRequestUpdatedLabel(request.updatedAt)}
       </Text>
       <Text style={styles.note}>{request.display.notProductionCopy}</Text>
       <Text style={styles.body}>{request.summary}</Text>
+
+      <Section title="Timeline">
+        <VionaRequestActivityTimelineReadOnly items={activityTimelineItems} />
+      </Section>
 
       <Section title="Participants">
         {detail.participants.length === 0 ? (
@@ -105,21 +132,8 @@ export function VionaRequestLiveDetailReadOnly({
         )}
       </Section>
 
-      <Section title="Status events">
-        {detail.statusEvents.length === 0 ? (
-          <EmptySectionText text="No status events returned." />
-        ) : (
-          detail.statusEvents.map((event) => (
-            <Text key={event.id} style={styles.itemLine}>
-              {event.fromStatus ?? '—'} → {event.toStatus}
-              {event.reason ? ` · ${event.reason}` : ''}
-            </Text>
-          ))
-        )}
-      </Section>
-
       <Section title="Notes">
-        <Text style={styles.readOnlyHint}>Read-only note history above · audited submit below</Text>
+        <Text style={styles.readOnlyHint}>Read-only note history · audited submit below</Text>
         <VionaRequestNoteAuditTimelineReadOnly items={noteTimelineItems} />
         {onNoteSubmitted != null ? (
           <VionaRequestNoteInputWrite
@@ -127,19 +141,6 @@ export function VionaRequestLiveDetailReadOnly({
             onNoteSubmitted={onNoteSubmitted}
           />
         ) : null}
-      </Section>
-
-      <Section title="Audit events">
-        {otherAuditEvents.length === 0 ? (
-          <EmptySectionText text="No other audit events returned." />
-        ) : (
-          otherAuditEvents.map((event) => (
-            <Text key={event.id} style={styles.itemLine}>
-              {event.eventType}
-              {event.message ? ` · ${event.message}` : ''}
-            </Text>
-          ))
-        )}
       </Section>
 
       <Section title="Attachment references">
@@ -156,8 +157,8 @@ export function VionaRequestLiveDetailReadOnly({
       </Section>
 
       <Text style={styles.footer}>
-        Note submit only · No status change · Not booking confirmed · SOS guidance only · Other
-        write/actions blocked
+        Read-only status and activity · Note submit only · No status change · Not booking
+        confirmed · SOS guidance only · Other write/actions blocked
       </Text>
     </ScrollView>
   );
@@ -187,14 +188,39 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
     color: vionaTrust.inkMuted,
   },
+  headerRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
+    gap: vionaSpacing.sm,
+  },
   title: {
+    flex: 1,
     fontFamily: FontFamily.bold,
     fontSize: 16,
+    color: vionaTrust.ink,
+  },
+  statusLabel: {
+    fontFamily: FontFamily.regular,
+    fontSize: 12,
+    lineHeight: 17,
     color: vionaTrust.ink,
   },
   meta: {
     fontFamily: FontFamily.regular,
     fontSize: 12,
+    color: vionaTrust.inkMuted,
+  },
+  updated: {
+    fontFamily: FontFamily.regular,
+    fontSize: 11,
+    color: vionaTrust.inkMuted,
+  },
+  statusFallback: {
+    fontFamily: FontFamily.extrabold,
+    fontSize: 10,
+    letterSpacing: 0.4,
+    textTransform: 'uppercase',
     color: vionaTrust.inkMuted,
   },
   note: {
