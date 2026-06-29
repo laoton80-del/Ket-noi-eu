@@ -133,16 +133,16 @@ export function VionaRequestLiveInboxScreen(): ReactElement {
           </Pressable>
           <View style={styles.titleBlock}>
             <Text style={styles.title}>VIONA requests</Text>
-            <Text style={styles.subtitle}>Live inbox · Pack16 GET · note submit (Pack24)</Text>
+            <Text style={styles.subtitle}>Live inbox · Pack16 GET · note + status action (Pack25)</Text>
           </View>
         </View>
 
         <View style={styles.safetyBanner}>
           <Ionicons name="eye-outline" size={16} color={vionaTrust.inkMuted} />
           <Text style={styles.safetyText}>
-            Read-only preview wired to GET /api/viona/requests. Note submit uses verified Pack20
-            note action only. Not production-ready. No payment, booking, SOS dispatch, or other
-            live actions.
+            Read-only preview wired to GET /api/viona/requests. Note submit and owner status action
+            (submitted→review) use verified Pack25 routes only. Not production-ready. No payment,
+            booking fulfillment, SOS dispatch, or other live actions.
           </Text>
         </View>
 
@@ -180,6 +180,7 @@ export function VionaRequestLiveInboxScreen(): ReactElement {
                 loading={detailLoading}
                 error={detailError}
                 onNoteSubmitted={refreshDetailAfterNote}
+                onStatusActionCompleted={refreshDetailAfterNote}
               />
             </View>
           </>

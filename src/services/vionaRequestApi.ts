@@ -170,3 +170,51 @@ export async function appendVionaRequestNote(
     }
   );
 }
+
+/** Pack25 narrow owner-only transition — UI must send `triage` only. */
+export const VIONA_REQUEST_STATUS_ACTION_TARGET_TRIAGE = 'triage' as const;
+
+export type VionaRequestStatusActionMeta = Readonly<{
+  statusEventId: string;
+  auditEventId: string;
+  eventType: 'action.status';
+  fromStatus: string;
+  toStatus: string;
+  idempotentReplay: boolean;
+}>;
+
+export type VionaRequestStatusActionResponse = VionaRequestDetail &
+  Readonly<{
+    action: VionaRequestStatusActionMeta;
+    safety: Readonly<{
+      statusActionOnly: boolean;
+      noPaymentSettlement: boolean;
+      noBookingFulfillment: boolean;
+      noEmergencyEscalation: boolean;
+      notProductionReady: boolean;
+    }>;
+  }>;
+
+export type TransitionVionaRequestStatusInput = Readonly<{
+  targetStatus: typeof VIONA_REQUEST_STATUS_ACTION_TARGET_TRIAGE;
+  idempotencyKey?: string;
+  clientCorrelationId?: string;
+}>;
+
+/** `POST /api/viona/requests/:id/actions/status` — Pack25 owner-only status action (UI only). */
+export async function transitionVionaRequestStatus(
+  requestId: string,
+  body: TransitionVionaRequestStatusInput
+): Promise<ApiRequestResult<VionaRequestStatusActionResponse>> {
+  return restApiFetchJson<VionaRequestStatusActionResponse>(
+    `/api/viona/requests/${encodeURIComponent(requestId)}/actions/status`,
+    {
+      method: 'POST',
+      body: {
+        targetStatus: body.targetStatus,
+        ...(body.idempotencyKey != null ? { idempotencyKey: body.idempotencyKey } : {}),
+        ...(body.clientCorrelationId != null ? { clientCorrelationId: body.clientCorrelationId } : {}),
+      },
+    }
+  );
+}

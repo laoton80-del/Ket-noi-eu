@@ -15,6 +15,7 @@ import { VionaRequestActivityTimelineReadOnly } from './VionaRequestActivityTime
 import { mapVionaRequestNoteAuditTimelineItems } from './vionaRequestNoteAuditDisplay';
 import { VionaRequestNoteAuditTimelineReadOnly } from './VionaRequestNoteAuditTimelineReadOnly';
 import { VionaRequestNoteInputWrite } from './VionaRequestNoteInputWrite';
+import { VionaRequestStatusActionWrite } from './VionaRequestStatusActionWrite';
 import { VionaRequestStatusBadge } from './VionaRequestStatusBadge';
 
 export type VionaRequestLiveDetailReadOnlyProps = Readonly<{
@@ -22,6 +23,7 @@ export type VionaRequestLiveDetailReadOnlyProps = Readonly<{
   loading: boolean;
   error: string | null;
   onNoteSubmitted?: () => Promise<boolean>;
+  onStatusActionCompleted?: () => Promise<boolean>;
 }>;
 
 function Section({
@@ -45,6 +47,7 @@ export function VionaRequestLiveDetailReadOnly({
   loading,
   error,
   onNoteSubmitted,
+  onStatusActionCompleted,
 }: VionaRequestLiveDetailReadOnlyProps): ReactElement {
   if (loading) {
     return (
@@ -103,6 +106,13 @@ export function VionaRequestLiveDetailReadOnly({
       <Text style={styles.note}>{request.display.notProductionCopy}</Text>
       <Text style={styles.body}>{request.summary}</Text>
 
+      {request.status === 'submitted' && onStatusActionCompleted != null ? (
+        <VionaRequestStatusActionWrite
+          requestId={request.id}
+          onStatusActionCompleted={onStatusActionCompleted}
+        />
+      ) : null}
+
       <Section title="Timeline">
         <VionaRequestActivityTimelineReadOnly items={activityTimelineItems} />
       </Section>
@@ -157,8 +167,11 @@ export function VionaRequestLiveDetailReadOnly({
       </Section>
 
       <Text style={styles.footer}>
-        Read-only status and activity · Note submit only · No status change · Not booking
-        confirmed · SOS guidance only · Other write/actions blocked
+        {onStatusActionCompleted != null && request.status === 'submitted'
+          ? 'Owner status action (submitted→review) when shown · '
+          : ''}
+        Read-only status and activity · Note submit when shown · Pilot only · Not booking
+        fulfillment · SOS guidance only · Other write/actions blocked
       </Text>
     </ScrollView>
   );
