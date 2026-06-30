@@ -146,6 +146,7 @@ console.log('SELECTOR_SMOKE_OK');
   const result = spawnSync('npx', ['tsx', '-e', script], {
     cwd: ROOT,
     encoding: 'utf8',
+    shell: process.platform === 'win32',
   });
 
   if (result.status !== 0) {
