@@ -2,7 +2,7 @@
 
 **Document type:** Canonical kernel and session handoff for VIONA engineering, product, and AI agents.
 **Audience:** New ChatGPT / Cursor windows, staff, contractors, and automation executors.
-**Baseline:** `origin/master @ f72e074` — `docs(pack25): record status action ui visual closure evidence (#182)`
+**Baseline:** `origin/master @ 93a11ca` — `docs(pack25): record post-hoc triage ui evidence (#187)`
 **Supersedes for Request Engine sequencing:** prior scattered pack pointers when this doc conflicts on pack order or blocked state — align to this handoff.
 **Subordinate to:** `docs/ai-context/VIONA_OPERATING_PROTOCOL.md` and founder-signed **Master Blueprint** (`VIONA_FINAL_MASTER_BLUEPRINT_V2.md`). If conflict, stop and report drift risk.
 
@@ -156,12 +156,12 @@ Canonical checker: `node scripts/viona-forbidden-claims-check.mjs` (strict mode 
 | Field | Value |
 |-------|--------|
 | Remote | `origin/master` |
-| Commit | `f72e074` |
-| Message | `docs(pack25): record status action ui visual closure evidence (#182)` |
-| Previous master | `b9c3015` — `docs(pack25): prepare submitted row authorization for status ui visual qa (#181)` |
-| Previous latest (prior to #181) | `736e260` — `feat(pack25): add controlled status action ui on request detail (#180)` |
+| Commit | `93a11ca` |
+| Message | `docs(pack25): record post-hoc triage ui evidence (#187)` |
+| Previous master | `e04ddb5` — `docs(pack25): record live qa transition blocked click gate evidence (#186)` |
+| Previous latest (prior to #186) | `46d6eeb` — `docs(pack25): record staging deploy evidence (#185)` |
 
-All new work branches from `f72e074` unless a later pack explicitly updates this handoff.
+All new work branches from `93a11ca` unless a later pack explicitly updates this handoff.
 
 ### Pack25 controlled status-action UI visual confirmation (CLOSED/GREEN)
 
@@ -174,12 +174,31 @@ All new work branches from `f72e074` unless a later pack explicitly updates this
 | Owner-auth visual pass (positive + negative) | **PASS** — submitted affordance visible; `triage` rows hide action; 390 / 768 / 1440px |
 | Visual closure evidence | **CLOSED / GREEN** — PR #182 @ `f72e074` |
 | Pack25 controlled status-action UI visual confirmation | **CLOSED / GREEN** @ `f72e074` |
+| Pack25 visual-closure kernel/handoff sync | **CLOSED / GREEN** — PR #183 @ `6fe6da9` |
+| Staging deploy/redeploy evidence | **CLOSED / GREEN** — PR #185 @ `46d6eeb` |
+| Live QA transition + blocked click gate evidence | **CLOSED / GREEN** — PR #186 @ `e04ddb5` |
+| Post-hoc triage UI evidence | **CLOSED / GREEN** — PR #187 @ `93a11ca` |
+| Option A (post-hoc triage UI evidence) | **COMPLETE / CLOSED / GREEN** |
+| Option C (current visual-QA row) | **HOLD** — no further Send to review click or status POST on current row |
+| Option B (literal UI click proof) | **Only if explicitly required** — fresh scoped `submitted` row for `submitted` → `triage` UI click proof |
 | Pack26 | **NOT opened** |
-| Further Pack25 UI visual work | **Not required** unless operator explicitly reopens scope |
 
-**Deferred / not authorized (Pack25 post-visual-closure):** status action live QA POST; deploy; additional transitions; assign / confirm / cancel; payment / booking / SOS / wallet / live AI; Pack26.
+### Pack25 visual-QA row post-state (current — read-only record)
 
-Evidence: `docs/product/VIONA_REQUEST_PACK25_STATUS_ACTION_UI_VISUAL_CLOSURE_EVIDENCE.md`, `docs/design/evidence/cursor-pack25-status-action-ui-visual-closure-evidence/README.md`
+| Field | Value |
+|-------|--------|
+| Visual-QA row id (non-secret label) | `ec9a8b69-8a60-45aa-99ba-fc805a101dcc` |
+| Current status | **`triage`** / detail badge **IN REVIEW** |
+| Status action affordance | **Hidden** (post-triage) |
+| Timeline / audit | **Safe** |
+| Status event count | **1** (`submitted` → `triage`) |
+| Audit event count | **1** (`action.status`) |
+| Duplicate events | **NO** |
+| Further click / status POST on this row | **NO** — Option C hold |
+
+**Deferred / not authorized (Pack25 post post-hoc triage evidence):** further Send to review click or status POST on current visual-QA row (Option C hold); additional transitions on current row; assign / confirm / cancel; payment / booking / SOS / wallet / live AI; Pack26. **Option B** only if literal new `submitted` → `triage` UI click proof is explicitly required on a fresh scoped row.
+
+Evidence: `docs/product/VIONA_REQUEST_PACK25_STATUS_ACTION_UI_VISUAL_CLOSURE_EVIDENCE.md`, `docs/design/evidence/cursor-pack25-status-action-ui-visual-closure-evidence/README.md`, `docs/product/VIONA_REQUEST_PACK25_STAGING_DEPLOY_REDEPLOY_EVIDENCE.md`, `docs/design/evidence/cursor-pack25-staging-deploy-redeploy-evidence/README.md`, `docs/product/VIONA_REQUEST_PACK25_LIVE_QA_POST_TRANSITION_BLOCKED_CLICK_GATE_EVIDENCE.md`, `docs/design/evidence/cursor-pack25-live-qa-post-transition-blocked-click-gate-evidence/README.md`, `docs/product/VIONA_REQUEST_PACK25_POST_HOC_TRIAGE_UI_EVIDENCE.md`, `docs/design/evidence/cursor-pack25-post-hoc-triage-ui-evidence/README.md`
 
 Pack15C operator GO provided intake evidence is **complete and green** on master (PR #119 @ `5b868ce`) — human-provided operator GO phrase **recorded verbatim**; operator GO status **`PROVIDED`**; operator GO **not invented** (`pack15OperatorGoPhraseInvented: false`); provided by **`Nong Si Buong`**; target **`viona-staging-eu` / `euqbfanilcssjiwwtcby`**; **not** DB apply; **not** execution-only DB apply pack authorization. Pack15C Kernel/Handoff sync after execution approval phrase provided intake is **complete and green** (PR #118 @ `259e31d`). Pack15C distinct execution approval phrase provided intake evidence is **complete and green** on master (PR #117 @ `6880bda`) — execution approval phrase **`PROVIDED`**; execution approval phrase **not invented** (`pack15ExecutionApprovalPhraseInvented: false`). Pack15C Kernel/Handoff sync after distinct execution approval phrase intake is **complete and green** (PR #116 @ `62e2117`). Pack15C separate operator GO intake evidence is **complete and green** on master (PR #113 @ `7c14b57`) — gate documented; prior operator GO status was **`NO-GO / MISSING`**. Pack15C final stop-on-error confirmation intake is **complete and green** on master (PR #111 @ `718a024`) — stop-on-error status **`CONFIRMED_FINAL_INTAKE`**. Pack15D post-apply verification plan is **complete and green** on master (PR #109 @ `e3c4b95`) — status **`PLAN_ON_MASTER_NOT_EXECUTED`**. Pack15C execution readiness is **`PARTIAL — stop-on-error final intake recorded, operator GO now PROVIDED (not invented), execution approval phrase PROVIDED (not invented), but ChatGPT GO/NO-GO review is still required, execution-only DB apply pack is blocked, DB apply has not run, and Pack15D verification has not executed; not GO`**. Decision remains **`B) NOT READY`** until ChatGPT review updates it. Pack16 read-only persistence API **planning packet** is **fully complete and green** on master. Pack17 live read-only request inbox **planning packet** is **fully complete and green** on master. Pack16 is **planning-only / future-only** — runtime/API is **not implemented**. Pack17 is **planning-only / future-only** — runtime/UI/inbox is **not implemented**. Target **`viona-staging-eu`**; human/operator **`Nong Si Buong`**; backup rollback reference **`18 Jun 2026 02:04:53 (+0000)`**; restore click authority **`Nong Si Buong only`**; final Restore **not submitted**; restore **not run** or **tested**; risk classification **`RESTORE_NOT_TESTED_BUT_RISK_ACCEPTED_BY_HUMAN_OPERATOR`**; not-tested risk acceptance **YES** (planning readiness only — **not** operator GO, **not** DB apply approval, **not** Prisma/Supabase/DB command authorization, **not** restore execution or restore test evidence); restore procedure **`PARTIAL — dashboard path and post-click confirmation/warnings documented; restore not submitted/run/tested`**; restore confidence **`medium, not high`**; stop-on-error **`CONFIRMED_FINAL_INTAKE — stop immediately on any DB apply / Prisma / Supabase / SQL / migration / schema verification / Pack15D verification error; do not continue with extra commands; capture non-secret output only; wait for human review; no restore/rollback unless separately authorized by Nong Si Buong`**. Restore/rollback **not authorized** by #111, #113, #115, #117, or #119 intake. Operator go/no-go is **`PROVIDED`** (Nong Si Buong; not invented). DB apply approval **NO**. Execution approval phrase **PROVIDED** (human/operator; not invented). Execution-only DB apply pack **BLOCKED**. Pack15D verification execution **NO**. Pack15D schema verification **NO**. Secret **values** are **not verified**. DB apply is **not performed**. DB apply, Pack15D verification execution, Pack16 runtime/API, and Pack17 runtime/UI/inbox remain **blocked**.
 
@@ -247,6 +266,12 @@ Pack15C operator GO provided intake evidence is **complete and green** on master
 | Pack25 | Fresh submitted row execution (staging) | **PASS** |
 | Pack25 | Owner-auth visual pass closure | **PASS** |
 | Pack25 | Visual closure evidence | `f72e074` (PR #182) |
+| Pack25 | Visual-closure kernel/handoff sync | `6fe6da9` (PR #183) |
+| Pack25 | Staging deploy/redeploy evidence | `46d6eeb` (PR #185) |
+| Pack25 | Live QA transition + blocked click gate evidence | `e04ddb5` (PR #186) |
+| Pack25 | Post-hoc triage UI evidence | `93a11ca` (PR #187) |
+| Pack25 | Option A post-hoc triage UI evidence | **COMPLETE** |
+| Pack25 | Option C current-row hold | **HOLD** |
 
 ---
 
@@ -1038,7 +1063,7 @@ Stop immediately and report if asked to:
 ## Quick start for a new session
 
 1. Read this file and `docs/ai-context/VIONA_OPERATING_PROTOCOL.md`.
-2. Confirm baseline: `git rev-parse origin/master` → expect `f72e074` until this handoff sync merges.
+2. Confirm baseline: `git rev-parse origin/master` → expect `93a11ca` until this handoff sync merges.
 3. Read the active pack prompt allowlist and forbidden list.
 4. Branch from `origin/master`; run gates before commit.
 5. Cursor executes; ChatGPT reviews report and PR safety.
@@ -1112,3 +1137,5 @@ Stop immediately and report if asked to:
 **Pack15C handoff sync (operator GO provided intake):** This document updated after Pack15C operator GO provided intake evidence merged @ `5b868ce` (PR #119). Human-provided operator GO phrase **recorded verbatim**; operator GO status **`PROVIDED`**; operator GO **not invented** (`pack15OperatorGoPhraseInvented: false`); provided by **`Nong Si Buong`**; target **`viona-staging-eu` / `euqbfanilcssjiwwtcby`**. Execution approval phrase **`PROVIDED`** preserved (PR #117). Stop-on-error **`CONFIRMED_FINAL_INTAKE`** preserved (PR #111). Pack15D plan status **`PLAN_ON_MASTER_NOT_EXECUTED`** preserved. DB apply performed **NO**; Pack15D verification execution **NO**; DB apply approval **NO**; execution-only DB apply pack **BLOCKED**. Restore/risk state preserved — target **`viona-staging-eu`**; risk classification **`RESTORE_NOT_TESTED_BUT_RISK_ACCEPTED_BY_HUMAN_OPERATOR`**; not-tested risk acceptance **YES** (planning readiness only); restore tested/run/final Restore submitted **NO / NO / NO**; restore confidence **`medium, not high`**. Readiness **`PARTIAL — stop-on-error final intake recorded, operator GO now PROVIDED (not invented), execution approval phrase PROVIDED (not invented), but ChatGPT GO/NO-GO review is still required, execution-only DB apply pack is blocked, DB apply has not run, and Pack15D verification has not executed; not GO`**. Decision remains **`B) NOT READY`** until ChatGPT review updates it. DB apply, Pack15D verification execution, Pack16 runtime/API, and Pack17 runtime/UI/inbox remain blocked. Next lane: ChatGPT GO/NO-GO review. Evidence: `docs/design/evidence/cursor-pack15c-operator-go-provided-intake-evidence/README.md`.
 
 **Pack25 handoff sync (status-action UI visual closure):** This document updated after Pack25 visual closure evidence merged @ `f72e074` (PR #182). Pack25 controlled status-action UI implementation **CLOSED / GREEN** (PR #180 @ `736e260`). Fresh submitted row authorization **CLOSED / GREEN** (PR #181 @ `b9c3015`). Fresh submitted row execution **PASS**; owner-auth visual pass **PASS**; Pack25 controlled status-action UI visual confirmation **CLOSED / GREEN**. Pack26 **NOT opened**. No further Pack25 UI visual work required unless operator explicitly reopens scope. **Deferred / not authorized:** status action live QA POST; deploy; additional transitions; assign / confirm / cancel; payment / booking / SOS / wallet / live AI; Pack26. Prior Pack15C–Pack17 historical milestones and blockers **unchanged** in this sync. Evidence: `docs/design/evidence/cursor-pack25-status-action-ui-visual-closure-kernel-handoff-sync/README.md`.
+
+**Pack25 handoff sync (post-hoc triage UI evidence):** This document updated after Pack25 post-hoc triage UI evidence merged @ `93a11ca` (PR #187). Pack25 visual-closure kernel/handoff sync **CLOSED / GREEN** (PR #183 @ `6fe6da9`). Staging deploy/redeploy evidence **CLOSED / GREEN** (PR #185 @ `46d6eeb`). Live QA transition + blocked click gate evidence **CLOSED / GREEN** (PR #186 @ `e04ddb5`). Post-hoc triage UI evidence **CLOSED / GREEN** (PR #187 @ `93a11ca`). Visual-QA row `ec9a8b69-8a60-45aa-99ba-fc805a101dcc` now **`triage` / IN REVIEW**; action **hidden**; timeline/audit **safe**; status events **1**; audit events **1**; duplicate events **NO**. Option A post-hoc triage UI evidence **COMPLETE**. Option C **HOLD** — no further Send to review click or status POST on current row. Option B **only if explicitly required** — fresh scoped `submitted` row for literal `submitted` → `triage` UI click proof. Pack26 **NOT opened**. Prior Pack15C–Pack17 historical milestones and blockers **unchanged** in this sync. Evidence: `docs/design/evidence/cursor-pack25-post-hoc-triage-ui-kernel-handoff-sync/README.md`.
