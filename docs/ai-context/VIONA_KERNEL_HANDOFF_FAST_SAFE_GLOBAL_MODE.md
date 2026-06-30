@@ -2,7 +2,7 @@
 
 **Document type:** Canonical kernel and session handoff for VIONA engineering, product, and AI agents.
 **Audience:** New ChatGPT / Cursor windows, staff, contractors, and automation executors.
-**Baseline:** `origin/master @ 9f09089` — `docs(pack26b): authorize action registry capability flags (#191)`
+**Baseline:** `origin/master @ fefa664` — `Feat/pack26b action registry capability flags (#193)`
 **Supersedes for Request Engine sequencing:** prior scattered pack pointers when this doc conflicts on pack order or blocked state — align to this handoff.
 **Subordinate to:** `docs/ai-context/VIONA_OPERATING_PROTOCOL.md` and founder-signed **Master Blueprint** (`VIONA_FINAL_MASTER_BLUEPRINT_V2.md`). If conflict, stop and report drift risk.
 
@@ -156,12 +156,12 @@ Canonical checker: `node scripts/viona-forbidden-claims-check.mjs` (strict mode 
 | Field | Value |
 |-------|--------|
 | Remote | `origin/master` |
-| Commit | `9f09089` |
-| Message | `docs(pack26b): authorize action registry capability flags (#191)` |
-| Previous master | `9b6857d` — `docs(pack26a): sync kernel handoff after automation spine planning (#190)` |
-| Previous latest (prior to #190) | `56cc18c` — `docs(pack26a): define global action automation spine (#189)` |
+| Commit | `fefa664` |
+| Message | `Feat/pack26b action registry capability flags (#193)` |
+| Previous master | `82e2153` — `docs(pack26b): sync kernel handoff after authorization packet (#192)` |
+| Previous latest (prior to #192) | `9f09089` — `docs(pack26b): authorize action registry capability flags (#191)` |
 
-All new work branches from `9f09089` unless a later pack explicitly updates this handoff.
+All new work branches from `fefa664` unless a later pack explicitly updates this handoff.
 
 ### Pack25 controlled status-action UI visual confirmation (CLOSED/GREEN)
 
@@ -202,7 +202,7 @@ All new work branches from `9f09089` unless a later pack explicitly updates this
 | Market / legal gates | **Defined** |
 | Forbidden automation claims | **Recorded** |
 | Next ladder | **Recorded** — Pack26B → 26C → 26D → Pack27 → Pack28+ → payment/SOS/wallet/live AI (highest gates) |
-| Next recommended lane | **Pack26B implementation** — Action Registry + capability flags (requires operator phrase; see Pack26B authorization) |
+| Next recommended lane | **Pack26C** — unified audit/timeline contract (separate authorized pack) |
 | Pack26 implementation | **NOT opened** |
 | Pack27 / Pack28 | **NOT opened** |
 
@@ -225,13 +225,55 @@ Evidence: `docs/product/VIONA_REQUEST_PACK26A_GLOBAL_ACTION_AUTOMATION_SPINE_REA
 | Future implementation test gates | **Recorded** |
 | Explicit non-authorization | **Recorded** |
 | Required implementation phrase | `APPROVE_PACK26B_ACTION_REGISTRY_CAPABILITY_FLAGS_IMPLEMENTATION_STAGING_SAFE` |
-| Pack26B implementation | **NOT opened** |
+| Pack26B implementation | **CLOSED / GREEN** — PR #193 @ `fefa664` (see implementation section below) |
 | Pack26 implementation | **NOT opened** |
 | Pack27 / Pack28 | **NOT opened** |
 
-**Pack26B non-authorization (preserved):** implementation; code changes; new routes/write endpoints; new actions/transitions; assign / confirm / cancel; booking / payment / SOS / wallet / live AI; deploy; live QA; status POST; DB/schema/migration; data mutation; production or global automation claims; Pack27/Pack28 execution; further Pack25 click/status POST on current visual-QA row (Option C hold). **Implementation requires** separate pack with verbatim operator phrase above.
+**Pack26B authorization non-authorization (preserved):** implementation without operator phrase; code changes outside allowlist; new routes/write endpoints; new actions/transitions; assign / confirm / cancel; booking / payment / SOS / wallet / live AI; deploy; live QA; status POST; DB/schema/migration; data mutation; production or global automation claims; Pack27/Pack28 execution; further Pack25 click/status POST on current visual-QA row (Option C hold).
 
-Evidence: `docs/product/VIONA_REQUEST_PACK26B_ACTION_REGISTRY_CAPABILITY_FLAGS_AUTHORIZATION_PACKET.md`, `docs/design/evidence/cursor-pack26b-action-registry-capability-flags-authorization-packet/README.md`
+Evidence: `docs/product/VIONA_REQUEST_PACK26B_ACTION_REGISTRY_CAPABILITY_FLAGS_AUTHORIZATION_PACKET.md`, `docs/design/evidence/cursor-pack26b-action-registry-capability-flags-authorization-packet/README.md`, `docs/design/evidence/cursor-pack26b-authorization-kernel-handoff-sync/README.md`
+
+### Pack26B Action Registry + capability flags implementation (CLOSED/GREEN — read-only registry layer)
+
+| Field | Value |
+|-------|--------|
+| Pack26B implementation | **CLOSED / GREEN** — PR #193 @ `fefa664` |
+| Document type | **Read-only registry layer** — no execution, no UI wiring |
+| Operator phrase | **`APPROVE_PACK26B_ACTION_REGISTRY_CAPABILITY_FLAGS_IMPLEMENTATION_STAGING_SAFE`** — received |
+| Action definitions | **9** — registry entries |
+| Capability readiness/types | **Implemented** |
+| Pure read-only selectors | **8** |
+| Unknown action IDs | **Safe disabled summary** — no throw in UI-facing helpers |
+| All registry `executionEnabled` | **false** |
+| All registry `uiAffordanceAllowed` | **false** |
+| Future-blocked actions | **Non-executable** |
+| Registry consistency check | **PASS** — `node scripts/viona-pack26b-action-registry-check.mjs` |
+| Pack25 runtime | **Unchanged and unwired** — registry does not control Pack25 |
+| UI/backend route wiring | **NO** |
+| New routes / write endpoints / status POST changes | **NO** |
+| New transitions | **NO** |
+| assign / confirm / cancel execution | **NO** |
+| booking / payment / SOS / wallet / live AI execution | **NO** |
+| DB / schema / migration | **NO** |
+| deploy / live QA / staging / auth / data activity | **NO** |
+| Pack26C implementation | **NOT opened** |
+| Pack27 / Pack28 | **NOT opened** |
+
+**Implementation files:**
+
+| Path |
+|------|
+| `src/lib/viona/actions/vionaActionCapabilityTypes.ts` |
+| `src/lib/viona/actions/vionaActionRegistry.ts` |
+| `src/lib/viona/actions/vionaActionRegistrySelectors.ts` |
+| `src/lib/viona/actions/index.ts` |
+| `scripts/viona-pack26b-action-registry-check.mjs` |
+| `docs/product/VIONA_REQUEST_PACK26B_ACTION_REGISTRY_CAPABILITY_FLAGS_IMPLEMENTATION.md` |
+| `docs/design/evidence/cursor-pack26b-action-registry-capability-flags-implementation/README.md` |
+
+**Pack26B implementation non-authorization (preserved):** UI wiring; execution enablement; new routes/write endpoints; status POST changes; Pack25 behavior changes; assign / confirm / cancel; booking / payment / SOS / wallet / live AI; deploy; live QA; DB/schema/migration; data mutation; production or global automation claims; Pack26C implementation without authorization; Pack27/Pack28 execution; further Pack25 click/status POST on current visual-QA row (Option C hold).
+
+Evidence: `docs/product/VIONA_REQUEST_PACK26B_ACTION_REGISTRY_CAPABILITY_FLAGS_IMPLEMENTATION.md`, `docs/design/evidence/cursor-pack26b-action-registry-capability-flags-implementation/README.md`
 
 ### Pack25 visual-QA row post-state (current — read-only record)
 
@@ -246,7 +288,7 @@ Evidence: `docs/product/VIONA_REQUEST_PACK26B_ACTION_REGISTRY_CAPABILITY_FLAGS_A
 | Duplicate events | **NO** |
 | Further click / status POST on this row | **NO** — Option C hold |
 
-**Deferred / not authorized (Pack25 + Pack26A + Pack26B authorization):** further Send to review click or status POST on current visual-QA row (Option C hold); additional transitions on current row; assign / confirm / cancel; payment / booking / SOS / wallet / live AI; Pack26B implementation (without operator phrase); Pack26 implementation; Pack27 / Pack28. **Option B** only if literal new `submitted` → `triage` UI click proof is explicitly required on a fresh scoped row. **Next lane:** Pack26B implementation — Action Registry + capability flags (requires `APPROVE_PACK26B_ACTION_REGISTRY_CAPABILITY_FLAGS_IMPLEMENTATION_STAGING_SAFE` in separate authorized pack).
+**Deferred / not authorized (Pack25 + Pack26A + Pack26B):** further Send to review click or status POST on current visual-QA row (Option C hold); additional transitions on current row; assign / confirm / cancel; payment / booking / SOS / wallet / live AI; UI registry wiring; execution enablement; Pack26C implementation without authorization; Pack26 implementation; Pack27 / Pack28. **Option B** only if literal new `submitted` → `triage` UI click proof is explicitly required on a fresh scoped row. **Next lane:** Pack26C — unified audit/timeline contract (separate authorized pack).
 
 Evidence: `docs/product/VIONA_REQUEST_PACK25_STATUS_ACTION_UI_VISUAL_CLOSURE_EVIDENCE.md`, `docs/design/evidence/cursor-pack25-status-action-ui-visual-closure-evidence/README.md`, `docs/product/VIONA_REQUEST_PACK25_STAGING_DEPLOY_REDEPLOY_EVIDENCE.md`, `docs/design/evidence/cursor-pack25-staging-deploy-redeploy-evidence/README.md`, `docs/product/VIONA_REQUEST_PACK25_LIVE_QA_POST_TRANSITION_BLOCKED_CLICK_GATE_EVIDENCE.md`, `docs/design/evidence/cursor-pack25-live-qa-post-transition-blocked-click-gate-evidence/README.md`, `docs/product/VIONA_REQUEST_PACK25_POST_HOC_TRIAGE_UI_EVIDENCE.md`, `docs/design/evidence/cursor-pack25-post-hoc-triage-ui-evidence/README.md`
 
@@ -326,6 +368,8 @@ Pack15C operator GO provided intake evidence is **complete and green** on master
 | Pack26A | Global Action Automation Spine & Readiness Matrix (planning) | `56cc18c` (PR #189) |
 | Pack26A | Kernel/handoff sync after automation spine planning | `9b6857d` (PR #190) |
 | Pack26B | Action Registry + capability flags authorization packet | `9f09089` (PR #191) |
+| Pack26B | Authorization Kernel/Handoff sync | `82e2153` (PR #192) |
+| Pack26B | Action Registry + capability flags implementation (read-only) | `fefa664` (PR #193) |
 
 ---
 
@@ -1117,7 +1161,7 @@ Stop immediately and report if asked to:
 ## Quick start for a new session
 
 1. Read this file and `docs/ai-context/VIONA_OPERATING_PROTOCOL.md`.
-2. Confirm baseline: `git rev-parse origin/master` → expect `9f09089` until this handoff sync merges.
+2. Confirm baseline: `git rev-parse origin/master` → expect `fefa664` until this handoff sync merges.
 3. Read the active pack prompt allowlist and forbidden list.
 4. Branch from `origin/master`; run gates before commit.
 5. Cursor executes; ChatGPT reviews report and PR safety.
@@ -1196,4 +1240,6 @@ Stop immediately and report if asked to:
 
 **Pack26A handoff sync (automation spine planning):** This document updated after Pack26A Global Action Automation Spine & Readiness Matrix merged @ `56cc18c` (PR #189). Pack25 closure chain **CLOSED / GREEN** through PR #188 @ `2f111d6`. Pack26A docs-only planning **CLOSED / GREEN** — spine, action taxonomy, role model, permission matrix, automation state model, audit/timeline contract, idempotency rules, readiness matrix, market/legal gates, forbidden automation claims, next ladder (26B→26C→26D→Pack27→Pack28+), and non-authorization boundaries **recorded**. Pack26 implementation **NOT opened**. Pack27 / Pack28 **NOT opened**. Pack25 Option C **HOLD** preserved — no further click/status POST on current visual-QA row. **Next lane:** Pack26B — Action Registry + capability flags (separate authorized pack). Prior Pack15C–Pack17 historical milestones and blockers **unchanged** in this sync. Evidence: `docs/design/evidence/cursor-pack26a-kernel-handoff-sync/README.md`.
 
-**Pack26B handoff sync (authorization packet):** This document updated after Pack26B Action Registry + capability flags authorization packet merged @ `9f09089` (PR #191). Pack25 closure chain **CLOSED / GREEN** through PR #188 preserved. Pack26A **CLOSED / GREEN** through PR #189 @ `56cc18c` and PR #190 @ `9b6857d` preserved. Pack26B docs-only authorization **CLOSED / GREEN** — objective, future implementation boundaries, capability flag model, Action Registry model, initial action families (definitions only), read-only exposure rule, future implementation test gates, and explicit non-authorization **recorded**. Required implementation phrase **`APPROVE_PACK26B_ACTION_REGISTRY_CAPABILITY_FLAGS_IMPLEMENTATION_STAGING_SAFE`** recorded. Pack26B implementation **NOT opened**. Pack26 implementation **NOT opened**. Pack27 / Pack28 **NOT opened**. Pack25 Option C **HOLD** preserved — no further click/status POST on current visual-QA row. **Next lane:** Pack26B implementation (separate pack with operator phrase). Prior Pack15C–Pack17 historical milestones and blockers **unchanged** in this sync. Evidence: `docs/design/evidence/cursor-pack26b-authorization-kernel-handoff-sync/README.md`.
+**Pack26B handoff sync (authorization packet):** This document updated after Pack26B Action Registry + capability flags authorization packet merged @ `9f09089` (PR #191). Pack25 closure chain **CLOSED / GREEN** through PR #188 preserved. Pack26A **CLOSED / GREEN** through PR #189 @ `56cc18c` and PR #190 @ `9b6857d` preserved. Pack26B docs-only authorization **CLOSED / GREEN** — objective, future implementation boundaries, capability flag model, Action Registry model, initial action families (definitions only), read-only exposure rule, future implementation test gates, and explicit non-authorization **recorded**. Required implementation phrase **`APPROVE_PACK26B_ACTION_REGISTRY_CAPABILITY_FLAGS_IMPLEMENTATION_STAGING_SAFE`** recorded. Pack26B implementation **NOT opened** at time of #191. Pack26 implementation **NOT opened**. Pack27 / Pack28 **NOT opened**. Pack25 Option C **HOLD** preserved — no further click/status POST on current visual-QA row. **Next lane:** Pack26B implementation (separate pack with operator phrase). Prior Pack15C–Pack17 historical milestones and blockers **unchanged** in this sync. Evidence: `docs/design/evidence/cursor-pack26b-authorization-kernel-handoff-sync/README.md`.
+
+**Pack26B handoff sync (registry implementation):** This document updated after Pack26B Action Registry + capability flags implementation merged @ `fefa664` (PR #193). Pack25 closure chain **CLOSED / GREEN** through PR #188 preserved. Pack26A **CLOSED / GREEN** through PR #189 / #190 preserved. Pack26B authorization **CLOSED / GREEN** through PR #191 @ `9f09089` and PR #192 @ `82e2153` preserved. Pack26B read-only registry implementation **CLOSED / GREEN** — 9 action definitions; capability readiness/types; 8 pure selectors; unknown action IDs return safe disabled summary; all registry actions `executionEnabled === false` and `uiAffordanceAllowed === false`; future-blocked actions non-executable; consistency check **PASS**. Pack25 runtime **unchanged and unwired**. No UI/backend route wiring; no new routes/write endpoints/status POST changes; no new transitions; no assign/confirm/cancel/booking/payment/SOS/wallet/live AI execution; no DB/schema/migration; no deploy/live QA/staging/auth/data activity. Pack26C implementation **NOT opened**. Pack27 / Pack28 **NOT opened**. Pack25 Option C **HOLD** preserved — no further click/status POST on current visual-QA row. **Next lane:** Pack26C — unified audit/timeline contract (separate authorized pack). Prior Pack15C–Pack17 historical milestones and blockers **unchanged** in this sync. Evidence: `docs/design/evidence/cursor-pack26b-implementation-kernel-handoff-sync/README.md`.
