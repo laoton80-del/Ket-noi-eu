@@ -2,7 +2,7 @@
 
 **Document type:** Canonical kernel and session handoff for VIONA engineering, product, and AI agents.
 **Audience:** New ChatGPT / Cursor windows, staff, contractors, and automation executors.
-**Baseline:** `origin/master @ d2a0510` — `docs(pack26d): add operator approval authorization packet (#199)`
+**Baseline:** `origin/master @ 60e9bcb` — `feat(pack26d): add operator approval contract utilities (#201)`
 **Supersedes for Request Engine sequencing:** prior scattered pack pointers when this doc conflicts on pack order or blocked state — align to this handoff.
 **Subordinate to:** `docs/ai-context/VIONA_OPERATING_PROTOCOL.md` and founder-signed **Master Blueprint** (`VIONA_FINAL_MASTER_BLUEPRINT_V2.md`). If conflict, stop and report drift risk.
 
@@ -156,12 +156,12 @@ Canonical checker: `node scripts/viona-forbidden-claims-check.mjs` (strict mode 
 | Field | Value |
 |-------|--------|
 | Remote | `origin/master` |
-| Commit | `d2a0510` |
-| Message | `docs(pack26d): add operator approval authorization packet (#199)` |
-| Previous master | `f690544` — `docs(pack26c): sync kernel handoff after audit timeline implementation (#198)` |
-| Previous latest (prior to #198) | `de9e127` — `feat(pack26c): add audit timeline contract utilities (#197)` |
+| Commit | `60e9bcb` |
+| Message | `feat(pack26d): add operator approval contract utilities (#201)` |
+| Previous master | `297f299` — `docs(pack26d): sync kernel handoff after operator approval authorization (#200)` |
+| Previous latest (prior to #200) | `d2a0510` — `docs(pack26d): add operator approval authorization packet (#199)` |
 
-All new work branches from `d2a0510` unless a later pack explicitly updates this handoff.
+All new work branches from `60e9bcb` unless a later pack explicitly updates this handoff.
 
 ### Pack25 controlled status-action UI visual confirmation (CLOSED/GREEN)
 
@@ -202,7 +202,7 @@ All new work branches from `d2a0510` unless a later pack explicitly updates this
 | Market / legal gates | **Defined** |
 | Forbidden automation claims | **Recorded** |
 | Next ladder | **Recorded** — Pack26B → 26C → 26D → Pack27 → Pack28+ → payment/SOS/wallet/live AI (highest gates) |
-| Next recommended lane | **Pack26D implementation** — operator approval / human-in-loop layer (requires operator phrase; see Pack26D authorization) |
+| Next recommended lane | **Pack27** — future execution lane (separate authorized pack; **NOT opened**) |
 | Pack26 implementation | **NOT opened** |
 | Pack27 / Pack28 | **NOT opened** |
 
@@ -334,7 +334,7 @@ Evidence: `docs/product/VIONA_REQUEST_PACK26C_UNIFIED_AUDIT_TIMELINE_CONTRACT_AU
 | booking / payment / SOS / wallet / live AI execution | **NO** |
 | DB / schema / migration | **NO** |
 | deploy / live QA / staging / auth / data activity | **NO** |
-| Pack26D implementation | **NOT opened** |
+| Pack26D implementation | **CLOSED / GREEN** — PR #201 @ `60e9bcb` (see implementation section below) |
 | Pack27 / Pack28 | **NOT opened** |
 
 **Implementation files:**
@@ -358,6 +358,7 @@ Evidence: `docs/product/VIONA_REQUEST_PACK26C_UNIFIED_AUDIT_TIMELINE_CONTRACT_IM
 | Field | Value |
 |-------|--------|
 | Pack26D authorization packet | **CLOSED / GREEN** — PR #199 @ `d2a0510` |
+| Pack26D authorization Kernel/Handoff sync | **CLOSED / GREEN** — PR #200 @ `297f299` |
 | Document type | **Docs-only authorization** — no implementation |
 | Pack26D objective | **Recorded** — operator approval / human-in-loop layer for action safety |
 | Operator approval / human-in-loop purpose | **Recorded** |
@@ -372,7 +373,7 @@ Evidence: `docs/product/VIONA_REQUEST_PACK26C_UNIFIED_AUDIT_TIMELINE_CONTRACT_IM
 | Future implementation evidence requirements | **Recorded** |
 | Explicit non-authorization | **Recorded** |
 | Required implementation phrase | `APPROVE_PACK26D_OPERATOR_APPROVAL_HUMAN_LOOP_IMPLEMENTATION_STAGING_SAFE` |
-| Pack26D implementation | **NOT opened** |
+| Pack26D implementation | **CLOSED / GREEN** — PR #201 @ `60e9bcb` (see implementation section below) |
 | Pack26B registry | **Read-only / unwired / non-executing** — all `executionEnabled === false`, all `uiAffordanceAllowed === false` |
 | Pack26C contract | **Pure / non-persistent / non-executing** — no DB writes, no runtime wiring |
 | Pack26 implementation | **NOT opened** |
@@ -380,7 +381,63 @@ Evidence: `docs/product/VIONA_REQUEST_PACK26C_UNIFIED_AUDIT_TIMELINE_CONTRACT_IM
 
 **Pack26D authorization non-authorization (preserved):** implementation without operator phrase; code changes outside allowlist; approval DB writes; audit/timeline DB writes; new routes/write endpoints; new actions/transitions; assign / confirm / cancel; booking / payment / SOS / wallet / live AI; deploy; live QA; status POST; DB/schema/migration; data mutation; production or global automation claims; registry execution; UI/backend wiring; execution enablement; Pack27/Pack28 execution; further Pack25 click/status POST on current visual-QA row (Option C hold). **Implementation requires** separate pack with verbatim operator phrase above.
 
-Evidence: `docs/product/VIONA_REQUEST_PACK26D_OPERATOR_APPROVAL_HUMAN_LOOP_AUTHORIZATION_PACKET.md`, `docs/design/evidence/cursor-pack26d-operator-approval-human-loop-authorization-packet/README.md`
+Evidence: `docs/product/VIONA_REQUEST_PACK26D_OPERATOR_APPROVAL_HUMAN_LOOP_AUTHORIZATION_PACKET.md`, `docs/design/evidence/cursor-pack26d-operator-approval-human-loop-authorization-packet/README.md`, `docs/design/evidence/cursor-pack26d-authorization-kernel-handoff-sync/README.md`
+
+### Pack26D Operator Approval / Human-in-the-loop implementation (CLOSED/GREEN — pure contract-policy layer)
+
+| Field | Value |
+|-------|--------|
+| Pack26D implementation | **CLOSED / GREEN** — PR #201 @ `60e9bcb` |
+| Document type | **Pure, non-persistent, non-executing operator approval / human-in-loop contract-policy layer** — no DB writes, no UI wiring |
+| Operator phrase | **`APPROVE_PACK26D_OPERATOR_APPROVAL_HUMAN_LOOP_IMPLEMENTATION_STAGING_SAFE`** — received |
+| Approval requirement taxonomy | **Implemented** — 10 categories |
+| Human-in-loop roles | **Implemented** — 9 roles |
+| Approval decision envelope | **Implemented** |
+| Gate outcomes | **Implemented** — 7 outcomes |
+| Action-to-approval mappings | **Implemented** — 9 Pack26B action IDs |
+| Pure policy helpers | **Implemented** |
+| Pure decision builders | **Implemented** — 7 builders |
+| Pure validators | **Implemented** — 4 validators |
+| Index exports | **Implemented** |
+| Pack26D operator approval check | **PASS** — `node scripts/viona-pack26d-operator-approval-check.mjs` |
+| Pack26B registry check | **PASS** — `node scripts/viona-pack26b-action-registry-check.mjs` |
+| Pack26C audit/timeline check | **PASS** — `node scripts/viona-pack26c-audit-timeline-contract-check.mjs` |
+| All policies `executionAuthorized` | **false** |
+| All policies `uiAffordanceAuthorized` | **false** |
+| Approved decisions | **Non-executing** — `executionEnabledSnapshot` / `uiAffordanceAllowedSnapshot` remain false |
+| Unknown action IDs | **Safe blocked** policy |
+| Builders | **Pure / non-persistent / non-executing** |
+| Validators | **Pure / non-persistent / non-executing** |
+| Imports into App/UI/backend/Prisma/Supabase/Pack25 runtime | **NO** |
+| Pack26B registry behavior | **Unchanged** |
+| Pack26C contract behavior | **Unchanged** |
+| Pack25 runtime | **Unchanged** |
+| UI/backend route wiring | **NO** |
+| Approval/audit/timeline DB writes | **NO** |
+| New routes / write endpoints / status POST changes | **NO** |
+| New transitions | **NO** |
+| assign / confirm / cancel execution | **NO** |
+| booking / payment / SOS / wallet / live AI execution | **NO** |
+| DB / schema / migration | **NO** |
+| deploy / live QA / staging / auth / data activity | **NO** |
+| Pack27 / Pack28 | **NOT opened** |
+
+**Implementation files:**
+
+| Path |
+|------|
+| `src/lib/viona/operatorApproval/vionaOperatorApprovalTypes.ts` |
+| `src/lib/viona/operatorApproval/vionaOperatorApprovalPolicy.ts` |
+| `src/lib/viona/operatorApproval/vionaOperatorApprovalBuilders.ts` |
+| `src/lib/viona/operatorApproval/vionaOperatorApprovalValidators.ts` |
+| `src/lib/viona/operatorApproval/index.ts` |
+| `scripts/viona-pack26d-operator-approval-check.mjs` |
+| `docs/product/VIONA_REQUEST_PACK26D_OPERATOR_APPROVAL_HUMAN_LOOP_IMPLEMENTATION.md` |
+| `docs/design/evidence/cursor-pack26d-operator-approval-human-loop-implementation/README.md` |
+
+**Pack26D implementation non-authorization (preserved):** approval/audit/timeline DB writes; UI/backend wiring; operator approval runtime wiring; registry execution; execution enablement; new routes/write endpoints; status POST changes; Pack25 behavior changes; assign / confirm / cancel; booking / payment / SOS / wallet / live AI; deploy; live QA; DB/schema/migration; data mutation; production or global automation claims; Pack27/Pack28 execution; further Pack25 click/status POST on current visual-QA row (Option C hold).
+
+Evidence: `docs/product/VIONA_REQUEST_PACK26D_OPERATOR_APPROVAL_HUMAN_LOOP_IMPLEMENTATION.md`, `docs/design/evidence/cursor-pack26d-operator-approval-human-loop-implementation/README.md`
 
 ### Pack25 visual-QA row post-state (current — read-only record)
 
@@ -395,7 +452,7 @@ Evidence: `docs/product/VIONA_REQUEST_PACK26D_OPERATOR_APPROVAL_HUMAN_LOOP_AUTHO
 | Duplicate events | **NO** |
 | Further click / status POST on this row | **NO** — Option C hold |
 
-**Deferred / not authorized (Pack25 + Pack26A + Pack26B + Pack26C + Pack26D authorization):** further Send to review click or status POST on current visual-QA row (Option C hold); additional transitions on current row; assign / confirm / cancel; payment / booking / SOS / wallet / live AI; UI registry/contract wiring; execution enablement; audit/timeline/approval DB writes; Pack26D implementation (without operator phrase); Pack26 implementation; Pack27 / Pack28. **Option B** only if literal new `submitted` → `triage` UI click proof is explicitly required on a fresh scoped row. **Next lane:** Pack26D implementation — operator approval / human-in-loop layer (requires `APPROVE_PACK26D_OPERATOR_APPROVAL_HUMAN_LOOP_IMPLEMENTATION_STAGING_SAFE` in separate authorized pack).
+**Deferred / not authorized (Pack25 + Pack26A + Pack26B + Pack26C + Pack26D):** further Send to review click or status POST on current visual-QA row (Option C hold); additional transitions on current row; assign / confirm / cancel; payment / booking / SOS / wallet / live AI; UI registry/contract/operator-approval wiring; execution enablement; audit/timeline/approval DB writes; Pack26 implementation; Pack27 / Pack28. **Option B** only if literal new `submitted` → `triage` UI click proof is explicitly required on a fresh scoped row. **Next lane:** Pack27 — future execution lane (separate authorized pack; **NOT opened**).
 
 Evidence: `docs/product/VIONA_REQUEST_PACK25_STATUS_ACTION_UI_VISUAL_CLOSURE_EVIDENCE.md`, `docs/design/evidence/cursor-pack25-status-action-ui-visual-closure-evidence/README.md`, `docs/product/VIONA_REQUEST_PACK25_STAGING_DEPLOY_REDEPLOY_EVIDENCE.md`, `docs/design/evidence/cursor-pack25-staging-deploy-redeploy-evidence/README.md`, `docs/product/VIONA_REQUEST_PACK25_LIVE_QA_POST_TRANSITION_BLOCKED_CLICK_GATE_EVIDENCE.md`, `docs/design/evidence/cursor-pack25-live-qa-post-transition-blocked-click-gate-evidence/README.md`, `docs/product/VIONA_REQUEST_PACK25_POST_HOC_TRIAGE_UI_EVIDENCE.md`, `docs/design/evidence/cursor-pack25-post-hoc-triage-ui-evidence/README.md`
 
@@ -483,6 +540,8 @@ Pack15C operator GO provided intake evidence is **complete and green** on master
 | Pack26C | Unified audit/timeline contract implementation (pure contract layer) | `de9e127` (PR #197) |
 | Pack26C | Implementation Kernel/Handoff sync | `f690544` (PR #198) |
 | Pack26D | Operator approval / human-in-loop authorization packet | `d2a0510` (PR #199) |
+| Pack26D | Authorization Kernel/Handoff sync | `297f299` (PR #200) |
+| Pack26D | Operator approval / human-in-loop implementation (pure contract-policy layer) | `60e9bcb` (PR #201) |
 
 ---
 
@@ -1274,7 +1333,7 @@ Stop immediately and report if asked to:
 ## Quick start for a new session
 
 1. Read this file and `docs/ai-context/VIONA_OPERATING_PROTOCOL.md`.
-2. Confirm baseline: `git rev-parse origin/master` → expect `d2a0510` until this handoff sync merges.
+2. Confirm baseline: `git rev-parse origin/master` → expect `60e9bcb` until this handoff sync merges.
 3. Read the active pack prompt allowlist and forbidden list.
 4. Branch from `origin/master`; run gates before commit.
 5. Cursor executes; ChatGPT reviews report and PR safety.
@@ -1361,4 +1420,6 @@ Stop immediately and report if asked to:
 
 **Pack26C handoff sync (contract implementation):** This document updated after Pack26C Unified Audit/Timeline Contract implementation merged @ `de9e127` (PR #197). Pack25 closure chain **CLOSED / GREEN** through PR #188 preserved. Pack26A **CLOSED / GREEN** through PR #189 / #190 preserved. Pack26B **CLOSED / GREEN** through PR #191–#194 preserved. Pack26C authorization **CLOSED / GREEN** through PR #195 @ `79ad17a` and PR #196 @ `67dad74` preserved. Pack26C pure contract implementation **CLOSED / GREEN** — audit event contract; timeline event contract; action result envelope; 16 taxonomy categories; 6 pure builders; 4 pure validators; index exports; Pack26C check **PASS**; Pack26B registry check **PASS**; builders/validators pure/non-persistent/non-executing; all `executionEnabled` / `uiAffordanceAllowed` false and validated; no imports into App/UI/backend/Prisma/Pack25 runtime; Pack26B registry behavior unchanged; Pack25 runtime unchanged. No audit/timeline DB writes; no UI/backend route wiring; no execution enablement; no new routes/write endpoints/status POST changes; no new transitions; no assign/confirm/cancel/booking/payment/SOS/wallet/live AI execution; no DB/schema/migration; no deploy/live QA/staging/auth/data activity. Pack26D implementation **NOT opened**. Pack27 / Pack28 **NOT opened**. Pack25 Option C **HOLD** preserved — no further click/status POST on current visual-QA row. **Next lane:** Pack26D — operator approval / human-in-loop layer (separate authorized pack). Prior Pack15C–Pack17 historical milestones and blockers **unchanged** in this sync. Evidence: `docs/design/evidence/cursor-pack26c-implementation-kernel-handoff-sync/README.md`.
 
-**Pack26D handoff sync (authorization packet):** This document updated after Pack26D Operator Approval / Human-in-the-loop authorization packet merged @ `d2a0510` (PR #199). Pack25 closure chain **CLOSED / GREEN** through PR #188 preserved. Pack26A **CLOSED / GREEN** through PR #189 / #190 preserved. Pack26B **CLOSED / GREEN** through PR #191–#194 preserved. Pack26C **CLOSED / GREEN** through PR #195–#198 preserved. Pack26D docs-only authorization **CLOSED / GREEN** — operator approval / human-in-loop purpose; Pack26B relationship; Pack26C relationship; approval taxonomy; human roles; approval decision envelope; gate semantics; action-to-approval mapping plan; redaction/safety rules; future implementation evidence requirements; and explicit non-authorization **recorded**. Required implementation phrase **`APPROVE_PACK26D_OPERATOR_APPROVAL_HUMAN_LOOP_IMPLEMENTATION_STAGING_SAFE`** recorded. Pack26D implementation **NOT opened**. Pack26B registry **read-only / unwired / non-executing** — all execution/UI affordance flags false. Pack26C contract **pure / non-persistent / non-executing** — no DB writes, no runtime wiring. Pack26 implementation **NOT opened**. Pack27 / Pack28 **NOT opened**. Pack25 Option C **HOLD** preserved — no further click/status POST on current visual-QA row `ec9a8b69-8a60-45aa-99ba-fc805a101dcc`. **Next lane:** Pack26D implementation (separate pack with operator phrase). Prior Pack15C–Pack17 historical milestones and blockers **unchanged** in this sync. Evidence: `docs/design/evidence/cursor-pack26d-authorization-kernel-handoff-sync/README.md`.
+**Pack26D handoff sync (authorization packet):** This document updated after Pack26D Operator Approval / Human-in-the-loop authorization packet merged @ `d2a0510` (PR #199). Pack25 closure chain **CLOSED / GREEN** through PR #188 preserved. Pack26A **CLOSED / GREEN** through PR #189 / #190 preserved. Pack26B **CLOSED / GREEN** through PR #191–#194 preserved. Pack26C **CLOSED / GREEN** through PR #195–#198 preserved. Pack26D docs-only authorization **CLOSED / GREEN** — operator approval / human-in-loop purpose; Pack26B relationship; Pack26C relationship; approval taxonomy; human roles; approval decision envelope; gate semantics; action-to-approval mapping plan; redaction/safety rules; future implementation evidence requirements; and explicit non-authorization **recorded**. Required implementation phrase **`APPROVE_PACK26D_OPERATOR_APPROVAL_HUMAN_LOOP_IMPLEMENTATION_STAGING_SAFE`** recorded. Pack26D implementation **NOT opened** at time of #199. Pack26B registry **read-only / unwired / non-executing** — all execution/UI affordance flags false. Pack26C contract **pure / non-persistent / non-executing** — no DB writes, no runtime wiring. Pack26 implementation **NOT opened**. Pack27 / Pack28 **NOT opened**. Pack25 Option C **HOLD** preserved — no further click/status POST on current visual-QA row `ec9a8b69-8a60-45aa-99ba-fc805a101dcc`. **Next lane:** Pack26D implementation (separate pack with operator phrase). Prior Pack15C–Pack17 historical milestones and blockers **unchanged** in this sync. Evidence: `docs/design/evidence/cursor-pack26d-authorization-kernel-handoff-sync/README.md`.
+
+**Pack26D handoff sync (operator approval implementation):** This document updated after Pack26D Operator Approval / Human-in-the-loop pure contract-policy implementation merged @ `60e9bcb` (PR #201). Pack25 closure chain **CLOSED / GREEN** through PR #188 preserved. Pack26A **CLOSED / GREEN** through PR #189 / #190 preserved. Pack26B **CLOSED / GREEN** through PR #191–#194 preserved. Pack26C **CLOSED / GREEN** through PR #195–#198 preserved. Pack26D authorization **CLOSED / GREEN** through PR #199 @ `d2a0510` and PR #200 @ `297f299` preserved. Pack26D pure operator approval / human-in-loop implementation **CLOSED / GREEN** — 10 approval requirements; 9 human roles; approval decision envelope; 7 gate outcomes; 9 Pack26B action-to-approval mappings; pure policy helpers; 7 pure decision builders; 4 pure validators; index exports; Pack26D check **PASS**; Pack26B registry check **PASS**; Pack26C audit/timeline check **PASS**; all policies `executionAuthorized` / `uiAffordanceAuthorized` false; approved decisions remain non-executing; unknown action IDs safe-blocked; builders/validators pure/non-persistent/non-executing; no imports into App/UI/backend/Prisma/Supabase/Pack25 runtime; Pack26B registry behavior unchanged; Pack26C contract behavior unchanged; Pack25 runtime unchanged. No approval/audit/timeline DB writes; no UI/backend/operator-approval route wiring; no execution enablement; no new routes/write endpoints/status POST changes; no new transitions; no assign/confirm/cancel/booking/payment/SOS/wallet/live AI execution; no DB/schema/migration; no deploy/live QA/staging/auth/data activity. Pack27 / Pack28 **NOT opened**. Pack25 Option C **HOLD** preserved — no further click/status POST on current visual-QA row. **Next lane:** Pack27 — future execution lane (separate authorized pack; **NOT opened**). Prior Pack15C–Pack17 historical milestones and blockers **unchanged** in this sync. Evidence: `docs/design/evidence/cursor-pack26d-implementation-kernel-handoff-sync/README.md`.
