@@ -156,12 +156,12 @@ Canonical checker: `node scripts/viona-forbidden-claims-check.mjs` (strict mode 
 | Field | Value |
 |-------|--------|
 | Remote | `origin/master` |
-| Commit | `93408f4` |
-| Message | `docs(pack15c): record conditional db apply result (#215)` |
-| Previous master | `6f45b38` — `docs(pack15c): sync kernel handoff after db connectivity diagnostic (#214)` |
-| Previous latest (prior to #214) | `7102de5` — `docs(pack15c): record bounded db connectivity diagnostic result (#213)` |
+| Commit | `e73844e` |
+| Message | `docs(pack16): add read-only persistence api authorization packet (#217)` |
+| Previous master | `9b99a7c` — `docs(pack15c): sync kernel handoff after conditional db no-op (#216)` |
+| Previous latest (prior to #216) | `93408f4` — `docs(pack15c): record conditional db apply result (#215)` |
 
-All new work branches from `93408f4` unless a later pack explicitly updates this handoff.
+All new work branches from `e73844e` unless a later pack explicitly updates this handoff.
 
 ### Pack25 controlled status-action UI visual confirmation (CLOSED/GREEN)
 
@@ -202,7 +202,7 @@ All new work branches from `93408f4` unless a later pack explicitly updates this
 | Market / legal gates | **Defined** |
 | Forbidden automation claims | **Recorded** |
 | Next ladder | **Recorded** — Pack26B → 26C → 26D → Pack27 → Pack28+ → payment/SOS/wallet/live AI (highest gates) |
-| Next recommended lane | **Pack16 read-only persistence API** — human review required before implementation lane; Pack29 **NOT opened**; Pack28 layer remains pure/non-persistent/non-executing/not wired |
+| Next recommended lane | **Pack16 implementation** — blocked until `APPROVE_PACK16_READ_ONLY_PERSISTENCE_API_IMPLEMENTATION_STAGING_SAFE`; Pack29 **NOT opened**; Pack28 layer remains pure/non-persistent/non-executing/not wired |
 | Pack26 spine | **COMPLETE / GREEN** |
 | Pack27 authorization | **CLOSED / GREEN** — PR #203 @ `56d0499`; kernel sync PR #204 @ `9e7567a` |
 | Pack27 implementation | **CLOSED / GREEN** — PR #205 @ `b963294`; kernel sync PR #206 @ `7b6cba5` |
@@ -218,7 +218,10 @@ All new work branches from `93408f4` unless a later pack explicitly updates this
 | Pack15C conditional DB apply / no-op | **CLOSED / GREEN** — PR #215 @ `93408f4` (see Pack15C conditional DB apply section below) |
 | Pack15C conditional apply result | **`NO_OP_SCHEMA_ALREADY_UP_TO_DATE`** |
 | Pack15C DB apply path | **CLOSED / NO-OP** — schema already up to date; `migrate deploy` not required |
-| Pack15C current status | **`db_apply_no_op_closed`** — human review before Pack16 |
+| Pack15C current status | **`db_apply_no_op_closed`** |
+| Pack16 Human Review Authorization packet | **CLOSED / GREEN** — PR #217 @ `e73844e` (see Pack16 authorization section below) |
+| Pack16 current status | **`human_review_authorization_planning_only`** |
+| Pack16 next safe runtime foundation | **Read-only persistence API** — GET-only; not authorized for implementation in this sync |
 | Pack26 implementation | **NOT opened** |
 | Pack29 | **NOT opened** |
 
@@ -806,6 +809,55 @@ Evidence: `docs/product/VIONA_REQUEST_PACK15C_BOUNDED_DB_CONNECTIVITY_DIAGNOSTIC
 
 Evidence: `docs/product/VIONA_REQUEST_PACK15C_CONDITIONAL_DB_APPLY_OR_NO_OP_STAGING_ONLY_RESULT.md`, `docs/design/evidence/cursor-pack15c-conditional-db-apply-or-no-op-staging-only/README.md`
 
+### Pack16 Read-Only Persistence API Human Review Authorization (CLOSED/GREEN — authorization planning only)
+
+| Field | Value |
+|-------|--------|
+| Pack16 Human Review Authorization packet | **CLOSED / GREEN** — PR #217 @ `e73844e` |
+| Packet name | `VIONA_REQUEST_PACK16_READ_ONLY_PERSISTENCE_API_HUMAN_REVIEW_AUTHORIZATION_PACKET` |
+| Document type | **Human review / authorization packet** — docs-only; no implementation |
+| Pack16 current status | **`human_review_authorization_planning_only`** |
+| Global Active / Full automation | **Long-term strategic target** — not current production claim |
+| Runtime foundation path | Safety-gated: Pack16 read-only API → Pack17 inbox → write/status gates → pilots → automation |
+| Pack15C DB apply path | **CLOSED / NO-OP** — `NO_OP_SCHEMA_ALREADY_UP_TO_DATE` (preserved) |
+
+**Candidate future endpoints (review only — not implemented):**
+
+| Endpoint | Method |
+| --- | --- |
+| `GET /api/viona/requests` | GET |
+| `GET /api/viona/requests/:id` | GET |
+
+**Data safety review checklist:** **Recorded** — auth source; user identity; tenant/pilot scope; row ownership; visibility rules; pagination; empty state; errors; redaction; audit decision; no secrets in logs; no PII overexposure; no cross-user leakage; no production automation claims.
+
+**Future authorization phrases (separate gates):**
+
+| Gate | Phrase | Authorizes |
+| --- | --- | --- |
+| Implementation | `APPROVE_PACK16_READ_ONLY_PERSISTENCE_API_IMPLEMENTATION_STAGING_SAFE` | Staging-safe read-only API implementation in a **future** pack — **not** writes/status POST/Pack17 |
+| Staging QA (separate) | `APPROVE_PACK16_READ_ONLY_API_STAGING_QA` | Bounded authenticated read-only staging API verification — **not** writes/data mutation |
+
+| Pack16 implementation authorized | **NO** |
+| API route implementation authorized | **NO** |
+| DB read implementation authorized | **NO** |
+| DB write authorized | **NO** |
+| status POST authorized | **NO** |
+| execution authorized | **NO** |
+| automation authorized | **NO** |
+| Pack17 authorized / opened | **NO** |
+| Pack29 authorized / opened | **NO** |
+
+| Pack25 Option C hold | **PRESERVED** — row `ec9a8b69-8a60-45aa-99ba-fc805a101dcc` |
+| Pack26B registry | **Read-only / unwired / non-executing** — unchanged |
+| Pack26C contract | **Pure / non-persistent / non-executing** — unchanged |
+| Pack26D operator approval | **Pure / non-persistent / non-executing** — unchanged |
+| Pack27 execution lane | **Pure / non-persistent / non-executing / not wired** — unchanged |
+| Pack28 execution integration | **Pure / non-persistent / non-executing / not wired** — unchanged |
+
+**Pack16 authorization non-authorization (preserved):** API implementation; DB read code; DB writes; Prisma migration/schema change; status POST; transitions; request mutation; assignment/confirm/cancel/payment/booking/SOS; execution; automation; Pack17; Pack29; live QA; staging endpoint calls; deploy/restart; production claims; secrets/env printing; re-running DB commands in this handoff sync.
+
+Evidence: `docs/product/VIONA_REQUEST_PACK16_READ_ONLY_PERSISTENCE_API_HUMAN_REVIEW_AUTHORIZATION_PACKET.md`, `docs/design/evidence/cursor-pack16-read-only-persistence-api-human-review-authorization-packet/README.md`
+
 ### Pack25 visual-QA row post-state (current — read-only record)
 
 | Field | Value |
@@ -819,7 +871,7 @@ Evidence: `docs/product/VIONA_REQUEST_PACK15C_CONDITIONAL_DB_APPLY_OR_NO_OP_STAG
 | Duplicate events | **NO** |
 | Further click / status POST on this row | **NO** — Option C hold |
 
-**Deferred / not authorized (Pack25 + Pack26A + Pack26B + Pack26C + Pack26D + Pack27 + Pack28A + Pack28 implementation + Pack15C chain):** further Send to review click or status POST on current visual-QA row (Option C hold); additional transitions on current row; assign / confirm / cancel; payment / booking / SOS / wallet / live AI; UI registry/contract/operator-approval/execution-lane/integration wiring; execution enablement; audit/timeline/approval/execution DB writes; Pack26 implementation; Pack29; Pack16 read-only API without human review; Pack17 without verified Pack16. **Option B** only if literal new `submitted` → `triage` UI click proof is explicitly required on a fresh scoped row. **Next lane:** Pack16 read-only persistence API — **human review required** before implementation; Pack29 **NOT opened**; Pack28 layer remains pure/non-persistent/non-executing/not wired.
+**Deferred / not authorized (Pack25 + Pack26A + Pack26B + Pack26C + Pack26D + Pack27 + Pack28A + Pack28 implementation + Pack15C chain + Pack16 authorization):** further Send to review click or status POST on current visual-QA row (Option C hold); additional transitions on current row; assign / confirm / cancel; payment / booking / SOS / wallet / live AI; UI registry/contract/operator-approval/execution-lane/integration wiring; execution enablement; audit/timeline/approval/execution DB writes; Pack26 implementation; Pack29; Pack16 implementation without `APPROVE_PACK16_READ_ONLY_PERSISTENCE_API_IMPLEMENTATION_STAGING_SAFE`; Pack16 staging QA without `APPROVE_PACK16_READ_ONLY_API_STAGING_QA`; Pack17 without verified Pack16. **Option B** only if literal new `submitted` → `triage` UI click proof is explicitly required on a fresh scoped row. **Next lane:** Pack16 implementation — blocked until `APPROVE_PACK16_READ_ONLY_PERSISTENCE_API_IMPLEMENTATION_STAGING_SAFE`; Pack29 **NOT opened**; Pack28 layer remains pure/non-persistent/non-executing/not wired.
 
 Evidence: `docs/product/VIONA_REQUEST_PACK25_STATUS_ACTION_UI_VISUAL_CLOSURE_EVIDENCE.md`, `docs/design/evidence/cursor-pack25-status-action-ui-visual-closure-evidence/README.md`, `docs/product/VIONA_REQUEST_PACK25_STAGING_DEPLOY_REDEPLOY_EVIDENCE.md`, `docs/design/evidence/cursor-pack25-staging-deploy-redeploy-evidence/README.md`, `docs/product/VIONA_REQUEST_PACK25_LIVE_QA_POST_TRANSITION_BLOCKED_CLICK_GATE_EVIDENCE.md`, `docs/design/evidence/cursor-pack25-live-qa-post-transition-blocked-click-gate-evidence/README.md`, `docs/product/VIONA_REQUEST_PACK25_POST_HOC_TRIAGE_UI_EVIDENCE.md`, `docs/design/evidence/cursor-pack25-post-hoc-triage-ui-evidence/README.md`
 
@@ -928,7 +980,11 @@ Pack15C operator GO provided intake evidence is **complete and green** on master
 | Pack15C | Conditional DB apply / no-op result | `93408f4` (PR #215) |
 | Pack15C | Conditional apply result | **`NO_OP_SCHEMA_ALREADY_UP_TO_DATE`** |
 | Pack15C | DB apply path | **CLOSED / NO-OP** |
-| Pack15C | Current status | **`db_apply_no_op_closed`** — human review before Pack16 |
+| Pack15C | Conditional DB apply / no-op kernel/handoff sync | `9b99a7c` (PR #216) |
+| Pack15C | Current status | **`db_apply_no_op_closed`** |
+| Pack16 | Human Review Authorization packet | `e73844e` (PR #217) |
+| Pack16 | Current status | **`human_review_authorization_planning_only`** |
+| Pack16 | Implementation authorized | **NO** |
 | Pack29 | | **NOT opened** |
 
 ---
@@ -945,8 +1001,8 @@ Pack15C operator GO provided intake evidence is **complete and green** on master
 | ALTER TABLE count | `5` (FK `ADD CONSTRAINT` only) |
 | DROP count | `0` |
 | DELETE/TRUNCATE count | `0` |
-| API / adapter / mutation / runtime | None — Pack16/Pack17 planning only; no read-only API or live inbox |
-| Pack16 runtime/API | **Blocked** — implementation not started |
+| API / adapter / mutation / runtime | None — Pack16 authorization planning only; Pack17 planning only; no read-only API or live inbox implementation |
+| Pack16 runtime/API | **Authorization planning only** — PR #217 on master; implementation **NOT started** |
 | Pack17 runtime/UI/inbox | **Blocked** — implementation not started |
 | DB apply | **Closed / no-op** — `NO_OP_SCHEMA_ALREADY_UP_TO_DATE` (PR #215); schema already up to date |
 | DB apply performed | **No** |
@@ -1824,4 +1880,6 @@ Stop immediately and report if asked to:
 
 **Pack15C handoff sync (bounded DB connectivity diagnostic):** This document updated after Pack15C bounded DB connectivity diagnostic result merged @ `7102de5` (PR #213). Pack25 closure chain **CLOSED / GREEN** through PR #188 preserved. Pack26 spine **COMPLETE / GREEN**. Pack26B **read-only / unwired / non-executing** preserved. Pack26C **pure / non-persistent / non-executing** preserved. Pack26D **pure / non-persistent / non-executing** preserved. Pack27 **CLOSED / GREEN** through PR #203–#206 preserved. Pack28 **CLOSED / GREEN** through PR #207–#210 preserved. Pack15C DB re-entry **CLOSED / GREEN** through PR #211 @ `dcb80df` and PR #212 @ `c0f88e2` preserved. Pack15C bounded DB connectivity diagnostic **CLOSED / GREEN** — diagnostic phrase **`APPROVE_PACK15C_DB_CONNECTIVITY_DIAGNOSTIC_STAGING_ONLY`** provided and consumed in PR #213; result **`PASS_MIGRATE_STATUS_REACHABLE`**; PostgreSQL reachable **YES**; **10** migrations found; schema up to date **YES**; no **P1001** in this run; no timeout in this run; bounded timeout **45 seconds** (~**10.5s** actual); bounded `migrate status` only; `migrate deploy` **NOT RUN**; DB apply authorized **NO**; DB apply performed **NO**; Prisma schema/migration changed **NO**; DB/schema/migration changed **NO**; staging data mutated **NO**; secrets/DB URLs/env values printed **NO**; `.env*` changed **NO**; stop-on-error **preserved**. DB apply remains separately blocked until **`APPROVE_PACK15C_DB_APPLY_STAGING_ONLY`**. Pack16 **NOT opened**. Pack17 **NOT opened**. Pack29 **NOT opened**. Pack25 Option C **HOLD** preserved — no further click/status POST on current visual-QA row `ec9a8b69-8a60-45aa-99ba-fc805a101dcc`. PR #213 post-merge verification trailing whitespace in product result doc noted as **cosmetic / non-blocking**; prior result doc **not** edited in this sync. **Next lane:** Pack15C DB apply — blocked until `APPROVE_PACK15C_DB_APPLY_STAGING_ONLY`. Prior Pack15C–Pack17 historical milestones and blockers **unchanged** except diagnostic pass recorded. Evidence: `docs/design/evidence/cursor-pack15c-db-connectivity-diagnostic-kernel-handoff-sync/README.md`.
 
-**Pack15C handoff sync (conditional DB apply / no-op):** This document updated after Pack15C conditional DB apply / no-op result merged @ `93408f4` (PR #215). Pack25 closure chain **CLOSED / GREEN** through PR #188 preserved. Pack26 spine **COMPLETE / GREEN**. Pack26B **read-only / unwired / non-executing** preserved. Pack26C **pure / non-persistent / non-executing** preserved. Pack26D **pure / non-persistent / non-executing** preserved. Pack27 **CLOSED / GREEN** through PR #203–#206 preserved. Pack28 **CLOSED / GREEN** through PR #207–#210 preserved. Pack15C DB re-entry **CLOSED / GREEN** through PR #211–#212 preserved. Pack15C bounded DB connectivity diagnostic **CLOSED / GREEN** through PR #213 @ `7102de5` and PR #214 @ `6f45b38` preserved. Pack15C conditional DB apply / no-op **CLOSED / GREEN** — DB apply phrase **`APPROVE_PACK15C_DB_APPLY_STAGING_ONLY`** provided and consumed in PR #215; DB apply authorized **YES**; DB apply performed **NO**; result **`NO_OP_SCHEMA_ALREADY_UP_TO_DATE`**; PostgreSQL reachable **YES**; **10** migrations found; pending migrations **NO**; schema up to date **YES**; no **P1001**; no timeout; preflight timeout **60 seconds** (~**9.8s** actual); preflight `migrate status` only; `migrate deploy` **NOT RUN**; post-apply status **NOT RUN**; Pack15C DB apply path **CLOSED / NO-OP**; Prisma schema/migration changed **NO**; DB/schema/migration source files changed **NO**; staging data manually mutated **NO**; deploy/restart **NO**; staging HTTP/status POST/live QA **NO**; secrets/DB URLs/env values printed **NO**; `.env*` changed **NO**; stop-on-error **preserved**. Pack16 **NOT opened** — human review required before read-only persistence API lane. Pack17 **NOT opened**. Pack29 **NOT opened**. Pack25 Option C **HOLD** preserved — no further click/status POST on current visual-QA row `ec9a8b69-8a60-45aa-99ba-fc805a101dcc`. PR #215 post-merge verification trailing whitespace in product result doc noted as **cosmetic / non-blocking**; prior result doc **not** edited in this sync. **Next lane:** Pack16 read-only persistence API — human review required. Prior Pack15C–Pack17 historical milestones and blockers **unchanged** except conditional apply no-op recorded. Evidence: `docs/design/evidence/cursor-pack15c-conditional-db-apply-no-op-kernel-handoff-sync/README.md`.
+**Pack15C handoff sync (conditional DB apply / no-op):** This document updated after Pack15C conditional DB apply / no-op result merged @ `93408f4` (PR #215). Pack25 closure chain **CLOSED / GREEN** through PR #188 preserved. Pack26 spine **COMPLETE / GREEN**. Pack26B **read-only / unwired / non-executing** preserved. Pack26C **pure / non-persistent / non-executing** preserved. Pack26D **pure / non-persistent / non-executing** preserved. Pack27 **CLOSED / GREEN** through PR #203–#206 preserved. Pack28 **CLOSED / GREEN** through PR #207–#210 preserved. Pack15C DB re-entry **CLOSED / GREEN** through PR #211–#212 preserved. Pack15C bounded DB connectivity diagnostic **CLOSED / GREEN** through PR #213 @ `7102de5` and PR #214 @ `6f45b38` preserved. Pack15C conditional DB apply / no-op **CLOSED / GREEN** — DB apply phrase **`APPROVE_PACK15C_DB_APPLY_STAGING_ONLY`** provided and consumed in PR #215; DB apply authorized **YES**; DB apply performed **NO**; result **`NO_OP_SCHEMA_ALREADY_UP_TO_DATE`**; PostgreSQL reachable **YES**; **10** migrations found; pending migrations **NO**; schema up to date **YES**; no **P1001**; no timeout; preflight timeout **60 seconds** (~**9.8s** actual); preflight `migrate status` only; `migrate deploy` **NOT RUN**; post-apply status **NOT RUN**; Pack15C DB apply path **CLOSED / NO-OP**; Prisma schema/migration changed **NO**; DB/schema/migration source files changed **NO**; staging data manually mutated **NO**; deploy/restart **NO**; staging HTTP/status POST/live QA **NO**; secrets/DB URLs/env values printed **NO**; `.env*` changed **NO**; stop-on-error **preserved**. Pack16 **NOT opened**. Pack17 **NOT opened**. Pack29 **NOT opened**. Pack25 Option C **HOLD** preserved — no further click/status POST on current visual-QA row `ec9a8b69-8a60-45aa-99ba-fc805a101dcc`. PR #215 post-merge verification trailing whitespace in product result doc noted as **cosmetic / non-blocking**; prior result doc **not** edited in this sync. **Next lane:** Pack16 human review authorization packet. Prior Pack15C–Pack17 historical milestones and blockers **unchanged** except conditional apply no-op recorded. Evidence: `docs/design/evidence/cursor-pack15c-conditional-db-apply-no-op-kernel-handoff-sync/README.md`.
+
+**Pack16 handoff sync (read-only persistence API human review authorization):** This document updated after Pack16 Read-only Persistence API Human Review Authorization packet merged @ `e73844e` (PR #217). Pack25 closure chain **CLOSED / GREEN** through PR #188 preserved. Pack26 spine **COMPLETE / GREEN**. Pack26B **read-only / unwired / non-executing** preserved. Pack26C **pure / non-persistent / non-executing** preserved. Pack26D **pure / non-persistent / non-executing** preserved. Pack27 **CLOSED / GREEN** through PR #203–#206 preserved. Pack28 **CLOSED / GREEN** through PR #207–#210 preserved. Pack15C chain **CLOSED / GREEN** through PR #211–#216 preserved; DB apply path **CLOSED / NO-OP** — `NO_OP_SCHEMA_ALREADY_UP_TO_DATE`. Pack16 Human Review Authorization **CLOSED / GREEN** — status **`human_review_authorization_planning_only`**; Global Active / Full automation **long-term target only** — not current production claim; next safe runtime foundation **Pack16 read-only persistence API**; candidate endpoints **`GET /api/viona/requests`**, **`GET /api/viona/requests/:id`** (review only); data safety review checklist **recorded**; future implementation phrase **`APPROVE_PACK16_READ_ONLY_PERSISTENCE_API_IMPLEMENTATION_STAGING_SAFE`**; future staging QA phrase **`APPROVE_PACK16_READ_ONLY_API_STAGING_QA`** (separate gate); Pack16 implementation authorized **NO**; API route implementation authorized **NO**; DB read implementation authorized **NO**; DB write authorized **NO**; status POST authorized **NO**; execution authorized **NO**; automation authorized **NO**; Pack17 **NOT opened**; Pack29 **NOT opened**; no API/DB/UI/backend implementation in this sync; no staging endpoint calls; no deploy/restart; no secrets printed. Pack25 Option C **HOLD** preserved — no further click/status POST on current visual-QA row `ec9a8b69-8a60-45aa-99ba-fc805a101dcc`. **Next lane:** Pack16 implementation — blocked until `APPROVE_PACK16_READ_ONLY_PERSISTENCE_API_IMPLEMENTATION_STAGING_SAFE`. Prior Pack15C–Pack17 historical milestones and blockers **unchanged** except Pack16 authorization recorded. Evidence: `docs/design/evidence/cursor-pack16-read-only-persistence-api-authorization-kernel-handoff-sync/README.md`.
