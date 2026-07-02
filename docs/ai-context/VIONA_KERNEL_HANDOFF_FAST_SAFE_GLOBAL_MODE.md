@@ -2,7 +2,7 @@
 
 **Document type:** Canonical kernel and session handoff for VIONA engineering, product, and AI agents.
 **Audience:** New ChatGPT / Cursor windows, staff, contractors, and automation executors.
-**Baseline:** `origin/master @ 2145c2d` — `feat(pack28): add execution integration readiness utilities (#209)`
+**Baseline:** `origin/master @ dcb80df` — `docs(pack15c): add db apply remediation verification reentry packet (#211)`
 **Supersedes for Request Engine sequencing:** prior scattered pack pointers when this doc conflicts on pack order or blocked state — align to this handoff.
 **Subordinate to:** `docs/ai-context/VIONA_OPERATING_PROTOCOL.md` and founder-signed **Master Blueprint** (`VIONA_FINAL_MASTER_BLUEPRINT_V2.md`). If conflict, stop and report drift risk.
 
@@ -156,12 +156,12 @@ Canonical checker: `node scripts/viona-forbidden-claims-check.mjs` (strict mode 
 | Field | Value |
 |-------|--------|
 | Remote | `origin/master` |
-| Commit | `2145c2d` |
-| Message | `feat(pack28): add execution integration readiness utilities (#209)` |
-| Previous master | `5c6bf20` — `docs(pack28): sync kernel handoff after execution integration authorization (#208)` |
-| Previous latest (prior to #208) | `dbd7fe9` — `docs(pack28): add execution integration readiness authorization packet (#207)` |
+| Commit | `dcb80df` |
+| Message | `docs(pack15c): add db apply remediation verification reentry packet (#211)` |
+| Previous master | `d472722` — `docs(pack28): sync kernel handoff after execution integration implementation (#210)` |
+| Previous latest (prior to #210) | `2145c2d` — `feat(pack28): add execution integration readiness utilities (#209)` |
 
-All new work branches from `2145c2d` unless a later pack explicitly updates this handoff.
+All new work branches from `dcb80df` unless a later pack explicitly updates this handoff.
 
 ### Pack25 controlled status-action UI visual confirmation (CLOSED/GREEN)
 
@@ -202,14 +202,16 @@ All new work branches from `2145c2d` unless a later pack explicitly updates this
 | Market / legal gates | **Defined** |
 | Forbidden automation claims | **Recorded** |
 | Next ladder | **Recorded** — Pack26B → 26C → 26D → Pack27 → Pack28+ → payment/SOS/wallet/live AI (highest gates) |
-| Next recommended lane | **No Pack29** — Pack29 **NOT opened**; Pack28 execution integration layer remains pure/non-persistent/non-executing/not wired; UI/backend wiring requires separate authorization |
+| Next recommended lane | **Pack15C diagnostic** — blocked until `APPROVE_PACK15C_DB_CONNECTIVITY_DIAGNOSTIC_STAGING_ONLY`; Pack29 **NOT opened**; Pack28 layer remains pure/non-persistent/non-executing/not wired |
 | Pack26 spine | **COMPLETE / GREEN** |
 | Pack27 authorization | **CLOSED / GREEN** — PR #203 @ `56d0499`; kernel sync PR #204 @ `9e7567a` |
 | Pack27 implementation | **CLOSED / GREEN** — PR #205 @ `b963294`; kernel sync PR #206 @ `7b6cba5` |
 | Pack27 current status | **`planning_only`** |
 | Pack28A authorization | **CLOSED / GREEN** — PR #207 @ `dbd7fe9`; kernel sync PR #208 @ `5c6bf20` (see Pack28A section below) |
 | Pack28A current status | **`authorization_planning_only`** |
-| Pack28 implementation | **CLOSED / GREEN** — PR #209 @ `2145c2d` (see Pack28 implementation section below) |
+| Pack28 implementation | **CLOSED / GREEN** — PR #209 @ `2145c2d`; kernel sync PR #210 @ `d472722` (see Pack28 implementation section below) |
+| Pack15C DB re-entry packet | **CLOSED / GREEN** — PR #211 @ `dcb80df` (see Pack15C DB re-entry section below) |
+| Pack15C current status | **`remediation_verification_planning_only`** |
 | Pack26 implementation | **NOT opened** |
 | Pack29 | **NOT opened** |
 
@@ -651,6 +653,53 @@ Evidence: `docs/product/VIONA_REQUEST_PACK28_EXECUTION_INTEGRATION_READINESS_AUT
 
 Evidence: `docs/product/VIONA_REQUEST_PACK28_EXECUTION_INTEGRATION_READINESS_IMPLEMENTATION.md`, `docs/design/evidence/cursor-pack28-execution-integration-readiness-implementation/README.md`
 
+### Pack15C DB Apply Path Remediation / Verification Re-entry (CLOSED/GREEN — planning only)
+
+| Field | Value |
+|-------|--------|
+| Pack15C DB re-entry packet | **CLOSED / GREEN** — PR #211 @ `dcb80df` |
+| Packet name | `VIONA_REQUEST_PACK15C_DB_APPLY_PATH_REMEDIATION_VERIFICATION_REENTRY_PACKET` |
+| Document type | **Docs-only remediation / verification re-entry planning** — no DB commands, no diagnostics execution |
+| Current status | **`remediation_verification_planning_only`** |
+| DB diagnostics authorized | **NO** |
+| DB apply authorized | **NO** |
+| DB apply performed | **NO** |
+| Target (non-secret label) | `viona-staging-eu` / `euqbfanilcssjiwwtcby` (staging only) |
+
+**Historical blockers (recorded):**
+
+| Blocker | State |
+| --- | --- |
+| Previous DB apply attempts | **Stopped on error** |
+| Pooler `npx prisma migrate status` | **Hung >120s** |
+| Direct staging retry | **FAILED** — Prisma **P1001** / database unreachable |
+| `npx prisma migrate deploy` | **NOT RUN** in failed attempts |
+| Stop-on-error | **Preserved** |
+| Production DB targeted | **NO** |
+| Unauthorized direct retry | **NO** |
+| Secret values printed | **NO** |
+
+**Future authorization phrases (separate gates):**
+
+| Gate | Phrase | Authorizes |
+| --- | --- | --- |
+| Diagnostic only | `APPROVE_PACK15C_DB_CONNECTIVITY_DIAGNOSTIC_STAGING_ONLY` | Bounded read-only connectivity diagnostic; bounded `migrate status` — **not** `migrate deploy` |
+| DB apply only | `APPROVE_PACK15C_DB_APPLY_STAGING_ONLY` | `migrate deploy` on staging — **separate** from diagnostic phrase |
+
+| Pack25 Option C hold | **PRESERVED** — row `ec9a8b69-8a60-45aa-99ba-fc805a101dcc` |
+| Pack26B registry | **Read-only / unwired / non-executing** — unchanged |
+| Pack26C contract | **Pure / non-persistent / non-executing** — unchanged |
+| Pack26D operator approval | **Pure / non-persistent / non-executing** — unchanged |
+| Pack27 execution lane | **Pure / non-persistent / non-executing / not wired** — unchanged |
+| Pack28 execution integration | **Pure / non-persistent / non-executing / not wired** — unchanged |
+| Pack16 | **NOT opened** |
+| Pack17 | **NOT opened** |
+| Pack29 | **NOT opened** |
+
+**Pack15C re-entry non-authorization (preserved):** DB diagnostic commands; DB apply; `npx prisma migrate deploy`; `npx prisma migrate status`; Supabase SQL; direct DB retry without separate pack; production DB access; schema/migration edits; seed/reset/rollback; staging data mutation; deploy/restart; live QA; status POST; Pack16; Pack17; Pack29; UI/backend wiring; Request Engine execution enablement; secrets/env printing.
+
+Evidence: `docs/product/VIONA_REQUEST_PACK15C_DB_APPLY_PATH_REMEDIATION_VERIFICATION_REENTRY_PACKET.md`, `docs/design/evidence/cursor-pack15c-db-apply-path-remediation-verification-reentry/README.md`
+
 ### Pack25 visual-QA row post-state (current — read-only record)
 
 | Field | Value |
@@ -664,7 +713,7 @@ Evidence: `docs/product/VIONA_REQUEST_PACK28_EXECUTION_INTEGRATION_READINESS_IMP
 | Duplicate events | **NO** |
 | Further click / status POST on this row | **NO** — Option C hold |
 
-**Deferred / not authorized (Pack25 + Pack26A + Pack26B + Pack26C + Pack26D + Pack27 + Pack28A + Pack28 implementation):** further Send to review click or status POST on current visual-QA row (Option C hold); additional transitions on current row; assign / confirm / cancel; payment / booking / SOS / wallet / live AI; UI registry/contract/operator-approval/execution-lane/integration wiring; execution enablement; audit/timeline/approval/execution DB writes; Pack26 implementation; Pack29. **Option B** only if literal new `submitted` → `triage` UI click proof is explicitly required on a fresh scoped row. **Next lane:** Pack29 **NOT opened** — no further Request Engine pack without separate authorization; Pack28 execution integration layer remains pure/non-persistent/non-executing/not wired.
+**Deferred / not authorized (Pack25 + Pack26A + Pack26B + Pack26C + Pack26D + Pack27 + Pack28A + Pack28 implementation + Pack15C re-entry):** further Send to review click or status POST on current visual-QA row (Option C hold); additional transitions on current row; assign / confirm / cancel; payment / booking / SOS / wallet / live AI; UI registry/contract/operator-approval/execution-lane/integration wiring; execution enablement; audit/timeline/approval/execution DB writes; Pack26 implementation; Pack29; DB diagnostics without `APPROVE_PACK15C_DB_CONNECTIVITY_DIAGNOSTIC_STAGING_ONLY`; DB apply without `APPROVE_PACK15C_DB_APPLY_STAGING_ONLY`. **Option B** only if literal new `submitted` → `triage` UI click proof is explicitly required on a fresh scoped row. **Next lane:** Pack15C diagnostic pack — blocked until diagnostic phrase; Pack29 **NOT opened**; Pack28 layer remains pure/non-persistent/non-executing/not wired.
 
 Evidence: `docs/product/VIONA_REQUEST_PACK25_STATUS_ACTION_UI_VISUAL_CLOSURE_EVIDENCE.md`, `docs/design/evidence/cursor-pack25-status-action-ui-visual-closure-evidence/README.md`, `docs/product/VIONA_REQUEST_PACK25_STAGING_DEPLOY_REDEPLOY_EVIDENCE.md`, `docs/design/evidence/cursor-pack25-staging-deploy-redeploy-evidence/README.md`, `docs/product/VIONA_REQUEST_PACK25_LIVE_QA_POST_TRANSITION_BLOCKED_CLICK_GATE_EVIDENCE.md`, `docs/design/evidence/cursor-pack25-live-qa-post-transition-blocked-click-gate-evidence/README.md`, `docs/product/VIONA_REQUEST_PACK25_POST_HOC_TRIAGE_UI_EVIDENCE.md`, `docs/design/evidence/cursor-pack25-post-hoc-triage-ui-evidence/README.md`
 
@@ -764,7 +813,10 @@ Pack15C operator GO provided intake evidence is **complete and green** on master
 | Pack28A | Authorization Kernel/Handoff sync | `5c6bf20` (PR #208) |
 | Pack28A | Current status | **`authorization_planning_only`** |
 | Pack28 | Execution integration readiness implementation (pure contract-policy layer) | `2145c2d` (PR #209) |
+| Pack28 | Implementation Kernel/Handoff sync | `d472722` (PR #210) |
 | Pack28 | Current status | **`planning_only`** — pure/non-persistent/non-executing/not wired |
+| Pack15C | DB apply path remediation / verification re-entry packet | `dcb80df` (PR #211) |
+| Pack15C | Current status | **`remediation_verification_planning_only`** |
 | Pack29 | | **NOT opened** |
 
 ---
@@ -1655,3 +1707,5 @@ Stop immediately and report if asked to:
 **Pack28A handoff sync (authorization packet):** This document updated after Pack28A Execution Integration Readiness authorization packet merged @ `dbd7fe9` (PR #207). Pack25 closure chain **CLOSED / GREEN** through PR #188 preserved. Pack26A **CLOSED / GREEN** through PR #189 / #190 preserved. Pack26B **CLOSED / GREEN** through PR #191–#194 preserved. Pack26C **CLOSED / GREEN** through PR #195–#198 preserved. Pack26D **CLOSED / GREEN** through PR #199–#202 preserved. Pack27 **CLOSED / GREEN** through PR #203–#206 preserved. Pack28A docs-only authorization **CLOSED / GREEN** — integration readiness boundaries; 9 integration readiness buckets; Pack27 relationship; Pack26B relationship; Pack26C relationship; Pack26D relationship; initial integration readiness matrix for 9 action families (`request.status.submitted_to_triage`, `request.assign`, `request.confirm`, `request.cancel`, `booking.request`, `payment.intent`, `sos.assist`, `wallet.adjustment`, `live_ai.action`); all UI/backend wiring / execution / DB write / status POST / live QA authorization **NO**; future implementation gates; explicit non-authorization **recorded**. Required implementation phrase **`APPROVE_PACK28_EXECUTION_INTEGRATION_READINESS_IMPLEMENTATION_STAGING_SAFE`** recorded. Pack28A status **`authorization_planning_only`**. Pack28 implementation **NOT opened**. Pack28 runtime wiring **NOT authorized**. Pack28 execution **NOT authorized**. Pack26B registry **read-only / unwired / non-executing**. Pack26C contract **pure / non-persistent / non-executing**. Pack26D operator approval **pure / non-persistent / non-executing**. Pack27 execution lane layer **pure / non-persistent / non-executing / not wired**. Pack29 **NOT opened**. Pack25 Option C **HOLD** preserved — no further click/status POST on current visual-QA row `ec9a8b69-8a60-45aa-99ba-fc805a101dcc`. **Next lane:** Pack28 implementation (separate pack with operator phrase). Prior Pack15C–Pack17 historical milestones and blockers **unchanged** in this sync. Evidence: `docs/design/evidence/cursor-pack28a-authorization-kernel-handoff-sync/README.md`.
 
 **Pack28 handoff sync (execution integration implementation):** This document updated after Pack28 Execution Integration Readiness pure contract-policy implementation merged @ `2145c2d` (PR #209). Pack25 closure chain **CLOSED / GREEN** through PR #188 preserved. Pack26A **CLOSED / GREEN** through PR #189 / #190 preserved. Pack26B **CLOSED / GREEN** through PR #191–#194 preserved. Pack26C **CLOSED / GREEN** through PR #195–#198 preserved. Pack26D **CLOSED / GREEN** through PR #199–#202 preserved. Pack27 **CLOSED / GREEN** through PR #203–#206 preserved. Pack28A authorization **CLOSED / GREEN** through PR #207 @ `dbd7fe9` and PR #208 @ `5c6bf20` preserved. Pack28 pure execution integration readiness implementation **CLOSED / GREEN** — 9 integration readiness buckets; 9 integration lane classifications; 9 Pack26B action-family policy mappings; 3 pure gate evaluation helpers; 7 pure plan builders; 4 pure validators; index exports; Pack28 check **PASS**; Pack27 check **PASS**; Pack26B registry check **PASS**; Pack26C audit/timeline check **PASS**; Pack26D operator approval check **PASS**; all policies `uiBackendWiringAuthorized` / `executionAuthorized` / `dbWriteAuthorized` / `statusPostAuthorized` / `liveQaAuthorized` false; unknown action IDs safe-blocked; preview/dry-run planning remains non-executing; builders/validators pure/non-persistent/non-executing; no forbidden runtime imports; no imports into App/UI/backend/Prisma/Supabase/Pack25/Pack27 runtime; Pack26B registry behavior unchanged; Pack26C contract behavior unchanged; Pack26D operator approval behavior unchanged; Pack27 execution lane behavior unchanged; Pack25 runtime unchanged. No audit/timeline/approval/execution DB writes; no UI/backend/integration route wiring; no execution enablement; no new routes/write endpoints/status POST changes; no new transitions; no sensitive lane execution; no assign/confirm/cancel/booking/payment/SOS/wallet/live AI execution; no DB/schema/migration; no deploy/live QA/staging/auth/data activity. Pack29 **NOT opened**. Pack25 Option C **HOLD** preserved — no further click/status POST on current visual-QA row `ec9a8b69-8a60-45aa-99ba-fc805a101dcc`. **Next lane:** Pack29 **NOT opened** — no further Request Engine pack without separate authorization. Prior Pack15C–Pack17 historical milestones and blockers **unchanged** in this sync. Evidence: `docs/design/evidence/cursor-pack28-implementation-kernel-handoff-sync/README.md`.
+
+**Pack15C handoff sync (DB re-entry packet):** This document updated after Pack15C DB Apply Path Remediation / Verification Re-entry packet merged @ `dcb80df` (PR #211). Pack25 closure chain **CLOSED / GREEN** through PR #188 preserved. Pack26 spine **COMPLETE / GREEN**. Pack26B **read-only / unwired / non-executing** preserved. Pack26C **pure / non-persistent / non-executing** preserved. Pack26D **pure / non-persistent / non-executing** preserved. Pack27 **CLOSED / GREEN** through PR #203–#206 preserved. Pack28 **CLOSED / GREEN** through PR #207–#210 preserved. Pack15C docs-only re-entry **CLOSED / GREEN** — status **`remediation_verification_planning_only`**; DB diagnostics authorized **NO**; DB apply authorized **NO**; DB apply performed **NO**; historical blockers recorded (pooler `migrate status` hang **>120s**; direct staging **P1001** / database unreachable; `migrate deploy` **NOT RUN**; stop-on-error **preserved**); future diagnostic phrase **`APPROVE_PACK15C_DB_CONNECTIVITY_DIAGNOSTIC_STAGING_ONLY`** recorded; future DB apply phrase **`APPROVE_PACK15C_DB_APPLY_STAGING_ONLY`** recorded (separate gate); operator input checklist; diagnostic plan outline; stop-on-error rules; explicit non-authorization **recorded**. Pack16 **NOT opened**. Pack17 **NOT opened**. Pack29 **NOT opened**. Pack25 Option C **HOLD** preserved — no further click/status POST on current visual-QA row `ec9a8b69-8a60-45aa-99ba-fc805a101dcc`. **Next lane:** Pack15C diagnostic pack — blocked until `APPROVE_PACK15C_DB_CONNECTIVITY_DIAGNOSTIC_STAGING_ONLY`. Prior Pack15C–Pack17 historical milestones and blockers **unchanged** except re-entry planning recorded. Evidence: `docs/design/evidence/cursor-pack15c-db-reentry-kernel-handoff-sync/README.md`.
