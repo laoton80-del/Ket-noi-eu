@@ -156,12 +156,13 @@ Canonical checker: `node scripts/viona-forbidden-claims-check.mjs` (strict mode 
 | Field | Value |
 |-------|--------|
 | Remote | `origin/master` |
-| Commit | `e73844e` |
-| Message | `docs(pack16): add read-only persistence api authorization packet (#217)` |
-| Previous master | `9b99a7c` — `docs(pack15c): sync kernel handoff after conditional db no-op (#216)` |
-| Previous latest (prior to #216) | `93408f4` — `docs(pack15c): record conditional db apply result (#215)` |
+| Commit | `c86fb99` |
+| Full hash | `c86fb9997a48c82b14759e51f173f8c6fad56a6b` |
+| Message | `feat(pack16): add read-only persistence api (#219)` |
+| Previous master | `0117aab` — `docs(pack16): sync kernel handoff after read-only api authorization (#218)` |
+| Previous latest (prior to #218) | `e73844e` — `docs(pack16): add read-only persistence api authorization packet (#217)` |
 
-All new work branches from `e73844e` unless a later pack explicitly updates this handoff.
+All new work branches from `c86fb99` unless a later pack explicitly updates this handoff.
 
 ### Pack25 controlled status-action UI visual confirmation (CLOSED/GREEN)
 
@@ -202,7 +203,7 @@ All new work branches from `e73844e` unless a later pack explicitly updates this
 | Market / legal gates | **Defined** |
 | Forbidden automation claims | **Recorded** |
 | Next ladder | **Recorded** — Pack26B → 26C → 26D → Pack27 → Pack28+ → payment/SOS/wallet/live AI (highest gates) |
-| Next recommended lane | **Pack16 implementation** — blocked until `APPROVE_PACK16_READ_ONLY_PERSISTENCE_API_IMPLEMENTATION_STAGING_SAFE`; Pack29 **NOT opened**; Pack28 layer remains pure/non-persistent/non-executing/not wired |
+| Next recommended lane | **Pack16 staging QA** — blocked until `APPROVE_PACK16_READ_ONLY_API_STAGING_QA`; Pack17 **NOT opened**; Pack29 **NOT opened**; Pack28 layer remains pure/non-persistent/non-executing/not wired |
 | Pack26 spine | **COMPLETE / GREEN** |
 | Pack27 authorization | **CLOSED / GREEN** — PR #203 @ `56d0499`; kernel sync PR #204 @ `9e7567a` |
 | Pack27 implementation | **CLOSED / GREEN** — PR #205 @ `b963294`; kernel sync PR #206 @ `7b6cba5` |
@@ -220,8 +221,10 @@ All new work branches from `e73844e` unless a later pack explicitly updates this
 | Pack15C DB apply path | **CLOSED / NO-OP** — schema already up to date; `migrate deploy` not required |
 | Pack15C current status | **`db_apply_no_op_closed`** |
 | Pack16 Human Review Authorization packet | **CLOSED / GREEN** — PR #217 @ `e73844e` (see Pack16 authorization section below) |
-| Pack16 current status | **`human_review_authorization_planning_only`** |
-| Pack16 next safe runtime foundation | **Read-only persistence API** — GET-only; not authorized for implementation in this sync |
+| Pack16 authorization kernel/handoff sync | **CLOSED / GREEN** — PR #218 @ `0117aab` |
+| Pack16 implementation | **CLOSED / GREEN** — PR #219 @ `c86fb99` (see Pack16 implementation section below) |
+| Pack16 current status | **`implemented_local_only`** |
+| Pack16 next gate | **Staging QA** — blocked until `APPROVE_PACK16_READ_ONLY_API_STAGING_QA` |
 | Pack26 implementation | **NOT opened** |
 | Pack29 | **NOT opened** |
 
@@ -858,6 +861,71 @@ Evidence: `docs/product/VIONA_REQUEST_PACK15C_CONDITIONAL_DB_APPLY_OR_NO_OP_STAG
 
 Evidence: `docs/product/VIONA_REQUEST_PACK16_READ_ONLY_PERSISTENCE_API_HUMAN_REVIEW_AUTHORIZATION_PACKET.md`, `docs/design/evidence/cursor-pack16-read-only-persistence-api-human-review-authorization-packet/README.md`
 
+### Pack16 Read-Only Persistence API Implementation (CLOSED/GREEN — implemented local only)
+
+| Field | Value |
+|-------|--------|
+| Pack16 implementation | **CLOSED / GREEN** — PR #219 @ `c86fb99` |
+| Full master hash | `c86fb9997a48c82b14759e51f173f8c6fad56a6b` |
+| Packet name | `VIONA_REQUEST_PACK16_READ_ONLY_PERSISTENCE_API_IMPLEMENTATION` |
+| Operator implementation phrase | `APPROVE_PACK16_READ_ONLY_PERSISTENCE_API_IMPLEMENTATION_STAGING_SAFE` |
+| Pack16 current status | **`implemented_local_only`** |
+| Runtime route changes in PR #219 | **NO** — endpoints already existed on baseline via `src/routes/vionaRoutes.ts`, `VionaRequestController`, read service / scope / serializer |
+
+**Endpoints verified/documented:**
+
+| Endpoint | Method | Status |
+| --- | --- | --- |
+| `GET /api/viona/requests` | GET | **Verified** — authenticated; scoped; read-only |
+| `GET /api/viona/requests/:id` | GET | **Verified** — authenticated; scoped; read-only |
+
+**Four files added in PR #219:**
+
+| Path |
+| --- |
+| `scripts/viona-pack16-read-only-api-check.mjs` |
+| `scripts/test-viona-read-only-persistence-api.ts` |
+| `docs/product/VIONA_REQUEST_PACK16_READ_ONLY_PERSISTENCE_API_IMPLEMENTATION.md` |
+| `docs/design/evidence/cursor-pack16-read-only-persistence-api-implementation/README.md` |
+
+| Auth required | **YES** |
+| Tenant/user scoped | **YES** — `buildAuthorizedVionaRequestWhere` |
+| Safe empty state | **YES** |
+| Cross-user leakage guarded | **YES** — 404 when row not visible |
+| DB writes | **NO** |
+| status POST | **NO** (in this pack) |
+| Transitions | **NO** |
+| Execution | **NO** |
+| Staging QA run | **NO** |
+| Staging endpoint calls | **NO** |
+| DB/Prisma/Supabase/SQL commands run | **NO** |
+| Prisma schema/migration changed | **NO** |
+| `.env*` changed | **NO** |
+| Secrets / DB URLs / env values printed | **NO** |
+| Pack16 check script | **Added / PASS** — `node scripts/viona-pack16-read-only-api-check.mjs` |
+
+**Future staging QA gate (separate — still required):**
+
+| Gate | Phrase | Status |
+| --- | --- | --- |
+| Staging QA | `APPROVE_PACK16_READ_ONLY_API_STAGING_QA` | **Required** — bounded authenticated staging API verification only |
+
+| Pack17 authorized / opened | **NO** |
+| Pack29 authorized / opened | **NO** |
+| Pack15C DB apply path | **CLOSED / NO-OP** — `NO_OP_SCHEMA_ALREADY_UP_TO_DATE` (preserved) |
+| Pack25 Option C hold | **PRESERVED** — row `ec9a8b69-8a60-45aa-99ba-fc805a101dcc` |
+| Pack26B registry | **Read-only / unwired / non-executing** — unchanged |
+| Pack26C contract | **Pure / non-persistent / non-executing** — unchanged |
+| Pack26D operator approval | **Pure / non-persistent / non-executing** — unchanged |
+| Pack27 execution lane | **Pure / non-persistent / non-executing / not wired** — unchanged |
+| Pack28 execution integration | **Pure / non-persistent / non-executing / not wired** — unchanged |
+
+**Pack16 implementation non-authorization (preserved):** staging QA without `APPROVE_PACK16_READ_ONLY_API_STAGING_QA`; authenticated staging endpoint calls; DB writes; status POST; transitions; execution; automation; Pack17; Pack29; deploy/restart; live QA; staging data mutation; production claims; secrets/env printing; re-running DB commands in this handoff sync.
+
+**Next recommendation:** Pack16 staging QA only after operator provides separate phrase `APPROVE_PACK16_READ_ONLY_API_STAGING_QA`.
+
+Evidence: `docs/product/VIONA_REQUEST_PACK16_READ_ONLY_PERSISTENCE_API_IMPLEMENTATION.md`, `docs/design/evidence/cursor-pack16-read-only-persistence-api-implementation/README.md`
+
 ### Pack25 visual-QA row post-state (current — read-only record)
 
 | Field | Value |
@@ -871,7 +939,7 @@ Evidence: `docs/product/VIONA_REQUEST_PACK16_READ_ONLY_PERSISTENCE_API_HUMAN_REV
 | Duplicate events | **NO** |
 | Further click / status POST on this row | **NO** — Option C hold |
 
-**Deferred / not authorized (Pack25 + Pack26A + Pack26B + Pack26C + Pack26D + Pack27 + Pack28A + Pack28 implementation + Pack15C chain + Pack16 authorization):** further Send to review click or status POST on current visual-QA row (Option C hold); additional transitions on current row; assign / confirm / cancel; payment / booking / SOS / wallet / live AI; UI registry/contract/operator-approval/execution-lane/integration wiring; execution enablement; audit/timeline/approval/execution DB writes; Pack26 implementation; Pack29; Pack16 implementation without `APPROVE_PACK16_READ_ONLY_PERSISTENCE_API_IMPLEMENTATION_STAGING_SAFE`; Pack16 staging QA without `APPROVE_PACK16_READ_ONLY_API_STAGING_QA`; Pack17 without verified Pack16. **Option B** only if literal new `submitted` → `triage` UI click proof is explicitly required on a fresh scoped row. **Next lane:** Pack16 implementation — blocked until `APPROVE_PACK16_READ_ONLY_PERSISTENCE_API_IMPLEMENTATION_STAGING_SAFE`; Pack29 **NOT opened**; Pack28 layer remains pure/non-persistent/non-executing/not wired.
+**Deferred / not authorized (Pack25 + Pack26A + Pack26B + Pack26C + Pack26D + Pack27 + Pack28A + Pack28 implementation + Pack15C chain + Pack16 authorization + Pack16 implementation):** further Send to review click or status POST on current visual-QA row (Option C hold); additional transitions on current row; assign / confirm / cancel; payment / booking / SOS / wallet / live AI; UI registry/contract/operator-approval/execution-lane/integration wiring; execution enablement; audit/timeline/approval/execution DB writes; Pack26 implementation; Pack29; Pack16 staging QA without `APPROVE_PACK16_READ_ONLY_API_STAGING_QA`; Pack17 without verified Pack16 staging QA. **Option B** only if literal new `submitted` → `triage` UI click proof is explicitly required on a fresh scoped row. **Next lane:** Pack16 staging QA — blocked until `APPROVE_PACK16_READ_ONLY_API_STAGING_QA`; Pack17 **NOT opened**; Pack29 **NOT opened**; Pack28 layer remains pure/non-persistent/non-executing/not wired.
 
 Evidence: `docs/product/VIONA_REQUEST_PACK25_STATUS_ACTION_UI_VISUAL_CLOSURE_EVIDENCE.md`, `docs/design/evidence/cursor-pack25-status-action-ui-visual-closure-evidence/README.md`, `docs/product/VIONA_REQUEST_PACK25_STAGING_DEPLOY_REDEPLOY_EVIDENCE.md`, `docs/design/evidence/cursor-pack25-staging-deploy-redeploy-evidence/README.md`, `docs/product/VIONA_REQUEST_PACK25_LIVE_QA_POST_TRANSITION_BLOCKED_CLICK_GATE_EVIDENCE.md`, `docs/design/evidence/cursor-pack25-live-qa-post-transition-blocked-click-gate-evidence/README.md`, `docs/product/VIONA_REQUEST_PACK25_POST_HOC_TRIAGE_UI_EVIDENCE.md`, `docs/design/evidence/cursor-pack25-post-hoc-triage-ui-evidence/README.md`
 
@@ -983,8 +1051,10 @@ Pack15C operator GO provided intake evidence is **complete and green** on master
 | Pack15C | Conditional DB apply / no-op kernel/handoff sync | `9b99a7c` (PR #216) |
 | Pack15C | Current status | **`db_apply_no_op_closed`** |
 | Pack16 | Human Review Authorization packet | `e73844e` (PR #217) |
-| Pack16 | Current status | **`human_review_authorization_planning_only`** |
-| Pack16 | Implementation authorized | **NO** |
+| Pack16 | Authorization kernel/handoff sync | `0117aab` (PR #218) |
+| Pack16 | Read-only persistence API implementation | `c86fb99` (PR #219) |
+| Pack16 | Current status | **`implemented_local_only`** |
+| Pack16 | Staging QA authorized | **NO** — separate phrase required |
 | Pack29 | | **NOT opened** |
 
 ---
@@ -1001,9 +1071,10 @@ Pack15C operator GO provided intake evidence is **complete and green** on master
 | ALTER TABLE count | `5` (FK `ADD CONSTRAINT` only) |
 | DROP count | `0` |
 | DELETE/TRUNCATE count | `0` |
-| API / adapter / mutation / runtime | None — Pack16 authorization planning only; Pack17 planning only; no read-only API or live inbox implementation |
-| Pack16 runtime/API | **Authorization planning only** — PR #217 on master; implementation **NOT started** |
-| Pack17 runtime/UI/inbox | **Blocked** — implementation not started |
+| API / adapter / mutation / runtime | Pack16 read-only GET endpoints verified on baseline — `GET /api/viona/requests`, `GET /api/viona/requests/:id`; no new runtime routes in PR #219 |
+| Pack16 runtime/API | **`implemented_local_only`** — PR #219 @ `c86fb99`; auth + user scope + read-only verified; staging QA **NOT run** |
+| Pack16 staging QA | **Blocked** — requires `APPROVE_PACK16_READ_ONLY_API_STAGING_QA` |
+| Pack17 runtime/UI/inbox | **Blocked** — **NOT opened** |
 | DB apply | **Closed / no-op** — `NO_OP_SCHEMA_ALREADY_UP_TO_DATE` (PR #215); schema already up to date |
 | DB apply performed | **No** |
 | Backup blocker (historical) | **Free Plan** — superseded by PR #98 human dashboard evidence showing PRO plan and scheduled backups |
@@ -1883,3 +1954,5 @@ Stop immediately and report if asked to:
 **Pack15C handoff sync (conditional DB apply / no-op):** This document updated after Pack15C conditional DB apply / no-op result merged @ `93408f4` (PR #215). Pack25 closure chain **CLOSED / GREEN** through PR #188 preserved. Pack26 spine **COMPLETE / GREEN**. Pack26B **read-only / unwired / non-executing** preserved. Pack26C **pure / non-persistent / non-executing** preserved. Pack26D **pure / non-persistent / non-executing** preserved. Pack27 **CLOSED / GREEN** through PR #203–#206 preserved. Pack28 **CLOSED / GREEN** through PR #207–#210 preserved. Pack15C DB re-entry **CLOSED / GREEN** through PR #211–#212 preserved. Pack15C bounded DB connectivity diagnostic **CLOSED / GREEN** through PR #213 @ `7102de5` and PR #214 @ `6f45b38` preserved. Pack15C conditional DB apply / no-op **CLOSED / GREEN** — DB apply phrase **`APPROVE_PACK15C_DB_APPLY_STAGING_ONLY`** provided and consumed in PR #215; DB apply authorized **YES**; DB apply performed **NO**; result **`NO_OP_SCHEMA_ALREADY_UP_TO_DATE`**; PostgreSQL reachable **YES**; **10** migrations found; pending migrations **NO**; schema up to date **YES**; no **P1001**; no timeout; preflight timeout **60 seconds** (~**9.8s** actual); preflight `migrate status` only; `migrate deploy` **NOT RUN**; post-apply status **NOT RUN**; Pack15C DB apply path **CLOSED / NO-OP**; Prisma schema/migration changed **NO**; DB/schema/migration source files changed **NO**; staging data manually mutated **NO**; deploy/restart **NO**; staging HTTP/status POST/live QA **NO**; secrets/DB URLs/env values printed **NO**; `.env*` changed **NO**; stop-on-error **preserved**. Pack16 **NOT opened**. Pack17 **NOT opened**. Pack29 **NOT opened**. Pack25 Option C **HOLD** preserved — no further click/status POST on current visual-QA row `ec9a8b69-8a60-45aa-99ba-fc805a101dcc`. PR #215 post-merge verification trailing whitespace in product result doc noted as **cosmetic / non-blocking**; prior result doc **not** edited in this sync. **Next lane:** Pack16 human review authorization packet. Prior Pack15C–Pack17 historical milestones and blockers **unchanged** except conditional apply no-op recorded. Evidence: `docs/design/evidence/cursor-pack15c-conditional-db-apply-no-op-kernel-handoff-sync/README.md`.
 
 **Pack16 handoff sync (read-only persistence API human review authorization):** This document updated after Pack16 Read-only Persistence API Human Review Authorization packet merged @ `e73844e` (PR #217). Pack25 closure chain **CLOSED / GREEN** through PR #188 preserved. Pack26 spine **COMPLETE / GREEN**. Pack26B **read-only / unwired / non-executing** preserved. Pack26C **pure / non-persistent / non-executing** preserved. Pack26D **pure / non-persistent / non-executing** preserved. Pack27 **CLOSED / GREEN** through PR #203–#206 preserved. Pack28 **CLOSED / GREEN** through PR #207–#210 preserved. Pack15C chain **CLOSED / GREEN** through PR #211–#216 preserved; DB apply path **CLOSED / NO-OP** — `NO_OP_SCHEMA_ALREADY_UP_TO_DATE`. Pack16 Human Review Authorization **CLOSED / GREEN** — status **`human_review_authorization_planning_only`**; Global Active / Full automation **long-term target only** — not current production claim; next safe runtime foundation **Pack16 read-only persistence API**; candidate endpoints **`GET /api/viona/requests`**, **`GET /api/viona/requests/:id`** (review only); data safety review checklist **recorded**; future implementation phrase **`APPROVE_PACK16_READ_ONLY_PERSISTENCE_API_IMPLEMENTATION_STAGING_SAFE`**; future staging QA phrase **`APPROVE_PACK16_READ_ONLY_API_STAGING_QA`** (separate gate); Pack16 implementation authorized **NO**; API route implementation authorized **NO**; DB read implementation authorized **NO**; DB write authorized **NO**; status POST authorized **NO**; execution authorized **NO**; automation authorized **NO**; Pack17 **NOT opened**; Pack29 **NOT opened**; no API/DB/UI/backend implementation in this sync; no staging endpoint calls; no deploy/restart; no secrets printed. Pack25 Option C **HOLD** preserved — no further click/status POST on current visual-QA row `ec9a8b69-8a60-45aa-99ba-fc805a101dcc`. **Next lane:** Pack16 implementation — blocked until `APPROVE_PACK16_READ_ONLY_PERSISTENCE_API_IMPLEMENTATION_STAGING_SAFE`. Prior Pack15C–Pack17 historical milestones and blockers **unchanged** except Pack16 authorization recorded. Evidence: `docs/design/evidence/cursor-pack16-read-only-persistence-api-authorization-kernel-handoff-sync/README.md`.
+
+**Pack16 handoff sync (read-only persistence API implementation):** This document updated after Pack16 Read-only Persistence API Implementation merged @ `c86fb99` (PR #219). Pack25 closure chain **CLOSED / GREEN** through PR #188 preserved. Pack26 spine **COMPLETE / GREEN**. Pack26B **read-only / unwired / non-executing** preserved. Pack26C **pure / non-persistent / non-executing** preserved. Pack26D **pure / non-persistent / non-executing** preserved. Pack27 **CLOSED / GREEN** through PR #203–#206 preserved. Pack28 **CLOSED / GREEN** through PR #207–#210 preserved. Pack15C chain **CLOSED / GREEN** through PR #211–#216 preserved; DB apply path **CLOSED / NO-OP** — `NO_OP_SCHEMA_ALREADY_UP_TO_DATE`. Pack16 authorization chain **CLOSED / GREEN** through PR #217 @ `e73844e` and PR #218 @ `0117aab` preserved. Pack16 implementation **CLOSED / GREEN** — status **`implemented_local_only`**; operator phrase **`APPROVE_PACK16_READ_ONLY_PERSISTENCE_API_IMPLEMENTATION_STAGING_SAFE`** recorded; four files added (check script, optional local test, product doc, evidence README); endpoints **`GET /api/viona/requests`**, **`GET /api/viona/requests/:id`** verified/documented on baseline via `src/routes/vionaRoutes.ts`, `VionaRequestController`, read service / scope / serializer; **no runtime route changes required** in PR #219; auth required **YES**; tenant/user scoped **YES**; safe empty state **YES**; cross-user leakage guarded **YES**; DB writes **NO**; status POST **NO**; transitions **NO**; execution **NO**; staging QA run **NO**; staging endpoint calls **NO**; DB/Prisma/Supabase/SQL commands run **NO**; Prisma schema/migration changed **NO**; `.env*` changed **NO**; secrets/DB URLs/env values printed **NO**; Pack16 check script **PASS**; future staging QA phrase **`APPROVE_PACK16_READ_ONLY_API_STAGING_QA`** still required (separate gate); Pack17 **NOT opened**; Pack29 **NOT opened**. Pack25 Option C **HOLD** preserved — no further click/status POST on current visual-QA row `ec9a8b69-8a60-45aa-99ba-fc805a101dcc`. **Next lane:** Pack16 staging QA — blocked until `APPROVE_PACK16_READ_ONLY_API_STAGING_QA`. Prior Pack15C–Pack17 historical milestones and blockers **unchanged** except Pack16 implementation recorded. Evidence: `docs/design/evidence/cursor-pack16-read-only-api-implementation-kernel-handoff-sync/README.md`.
