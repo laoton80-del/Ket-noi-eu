@@ -6,6 +6,7 @@
 | --- | --- |
 | **Source master** | `origin/master @ 2f21023` (`2f210236d68d052641ed143fa5ece9912d500f70`) |
 | **Branch** | `feature/pack17-read-only-inbox-implementation` |
+| **HEAD commit** | `754f5a4` |
 | **Pack** | Pack17 — authorized read-only inbox implementation |
 | **Operator phrase** | `APPROVE_PACK17_READ_ONLY_INBOX_IMPLEMENTATION_STAGING_SAFE` |
 | **Status after pack** | `implemented_local_read_only_inbox` |
@@ -50,21 +51,21 @@
 
 | Check | Result |
 | --- | --- |
-| `git status --short` | (recorded at commit time) |
-| `git diff --check` | (recorded at commit time) |
-| Forbidden paths safety grep on diff | (recorded at commit time) |
-| `node scripts/viona-pack17-read-only-inbox-check.mjs` | (recorded at commit time) |
-| `node scripts/viona-forbidden-claims-check.mjs` | (recorded at commit time) |
-| `node scripts/viona-forbidden-claims-check.mjs --strict` | (recorded at commit time) |
-| `node scripts/viona-pack26b-action-registry-check.mjs` | (recorded at commit time) |
-| `node scripts/viona-pack26c-audit-timeline-contract-check.mjs` | (recorded at commit time) |
-| `node scripts/viona-pack26d-operator-approval-check.mjs` | (recorded at commit time) |
-| `node scripts/viona-pack27-execution-lane-check.mjs` | (recorded at commit time) |
-| `node scripts/viona-pack28-execution-integration-readiness-check.mjs` | (recorded at commit time) |
-| `node scripts/viona-pack16-read-only-api-check.mjs` | (recorded at commit time) |
-| `npx tsc --noEmit` | (recorded at commit time) |
-| `npm run smoke` | (recorded at commit time) |
-| Conflict marker grep | (recorded at commit time) |
+| `git status --short` | PASS — 7 Pack17 files only |
+| `git diff --check` | PASS |
+| Forbidden paths safety grep on diff | PASS — no prisma/.env/pack29/kernel handoff |
+| `node scripts/viona-pack17-read-only-inbox-check.mjs` | PASS |
+| `node scripts/viona-forbidden-claims-check.mjs` | PASS |
+| `node scripts/viona-forbidden-claims-check.mjs --strict` | PASS |
+| `node scripts/viona-pack26b-action-registry-check.mjs` | PASS |
+| `node scripts/viona-pack26c-audit-timeline-contract-check.mjs` | PASS |
+| `node scripts/viona-pack26d-operator-approval-check.mjs` | PASS |
+| `node scripts/viona-pack27-execution-lane-check.mjs` | PASS |
+| `node scripts/viona-pack28-execution-integration-readiness-check.mjs` | PASS |
+| `node scripts/viona-pack16-read-only-api-check.mjs` | PASS |
+| `npx tsc --noEmit` | PASS |
+| `npm run smoke` | PASS |
+| Conflict marker grep | PASS — none |
 
 ## Scope confirmation
 
