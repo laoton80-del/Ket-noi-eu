@@ -1,7 +1,7 @@
 import { type ReactElement } from 'react';
 import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
 
-import type { VionaRequestListItem } from '../../../services/vionaRequestApi';
+import type { VionaRequestListItem } from '../../../services/vionaRequestReadOnlyApi';
 import { FontFamily } from '../../../theme/typography';
 import { vionaSpacing } from '../vionaDesignTokens';
 import { vionaTrust } from '../vionaTrustTokens';
