@@ -1,7 +1,8 @@
+import { Ionicons } from '@expo/vector-icons';
 import { type ReactElement, type ReactNode } from 'react';
 import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from 'react-native';
 
-import type { VionaRequestDetail } from '../../../services/vionaRequestApi';
+import type { VionaRequestDetail } from '../../../services/vionaRequestReadOnlyApi';
 import { FontFamily } from '../../../theme/typography';
 import { vionaSpacing } from '../vionaDesignTokens';
 import { vionaTrust } from '../vionaTrustTokens';
@@ -14,16 +15,13 @@ import {
 import { VionaRequestActivityTimelineReadOnly } from './VionaRequestActivityTimelineReadOnly';
 import { mapVionaRequestNoteAuditTimelineItems } from './vionaRequestNoteAuditDisplay';
 import { VionaRequestNoteAuditTimelineReadOnly } from './VionaRequestNoteAuditTimelineReadOnly';
-import { VionaRequestNoteInputWrite } from './VionaRequestNoteInputWrite';
-import { VionaRequestStatusActionWrite } from './VionaRequestStatusActionWrite';
 import { VionaRequestStatusBadge } from './VionaRequestStatusBadge';
 
 export type VionaRequestLiveDetailReadOnlyProps = Readonly<{
   detail: VionaRequestDetail | null;
   loading: boolean;
+  unauthorized?: boolean;
   error: string | null;
-  onNoteSubmitted?: () => Promise<boolean>;
-  onStatusActionCompleted?: () => Promise<boolean>;
 }>;
 
 function Section({
@@ -45,15 +43,26 @@ function EmptySectionText({ text }: Readonly<{ text: string }>): ReactElement {
 export function VionaRequestLiveDetailReadOnly({
   detail,
   loading,
+  unauthorized = false,
   error,
-  onNoteSubmitted,
-  onStatusActionCompleted,
 }: VionaRequestLiveDetailReadOnlyProps): ReactElement {
   if (loading) {
     return (
       <View style={styles.centered}>
         <ActivityIndicator color={vionaTrust.inkMuted} />
         <Text style={styles.hint}>Loading read-only detail…</Text>
+      </View>
+    );
+  }
+
+  if (unauthorized) {
+    return (
+      <View style={styles.centered}>
+        <Ionicons name="lock-closed-outline" size={20} color={vionaTrust.inkMuted} />
+        <Text style={styles.unauthorizedTitle}>Sign in required</Text>
+        <Text style={styles.hint}>
+          {error ?? 'Sign in required to view this request.'}
+        </Text>
       </View>
     );
   }
@@ -84,7 +93,7 @@ export function VionaRequestLiveDetailReadOnly({
 
   return (
     <ScrollView style={styles.root} contentContainerStyle={styles.content}>
-      <Text style={styles.banner}>Live inbox · read-only status and activity</Text>
+      <Text style={styles.banner}>Read-only · status display only</Text>
       <View style={styles.headerRow}>
         <Text style={styles.title}>{request.title}</Text>
         {statusKnown ? (
@@ -106,13 +115,6 @@ export function VionaRequestLiveDetailReadOnly({
       <Text style={styles.note}>{request.display.notProductionCopy}</Text>
       <Text style={styles.body}>{request.summary}</Text>
 
-      {request.status === 'submitted' && onStatusActionCompleted != null ? (
-        <VionaRequestStatusActionWrite
-          requestId={request.id}
-          onStatusActionCompleted={onStatusActionCompleted}
-        />
-      ) : null}
-
       <Section title="Timeline">
         <VionaRequestActivityTimelineReadOnly items={activityTimelineItems} />
       </Section>
@@ -123,7 +125,7 @@ export function VionaRequestLiveDetailReadOnly({
         ) : (
           detail.participants.map((p) => (
             <Text key={p.id} style={styles.itemLine}>
-              {p.displayName ?? p.userRef ?? p.id}
+              {p.displayName ?? p.participantRoleLabel ?? 'Participant'}
               {p.participantRoleLabel ? ` · ${p.participantRoleLabel}` : ''}
             </Text>
           ))
@@ -143,14 +145,8 @@ export function VionaRequestLiveDetailReadOnly({
       </Section>
 
       <Section title="Notes">
-        <Text style={styles.readOnlyHint}>Read-only note history · audited submit below</Text>
+        <Text style={styles.readOnlyHint}>Read-only note history</Text>
         <VionaRequestNoteAuditTimelineReadOnly items={noteTimelineItems} />
-        {onNoteSubmitted != null ? (
-          <VionaRequestNoteInputWrite
-            requestId={request.id}
-            onNoteSubmitted={onNoteSubmitted}
-          />
-        ) : null}
       </Section>
 
       <Section title="Attachment references">
@@ -159,7 +155,7 @@ export function VionaRequestLiveDetailReadOnly({
         ) : (
           detail.attachmentReferences.map((ref) => (
             <Text key={ref.id} style={styles.itemLine}>
-              {ref.filename ?? ref.externalRef ?? ref.id}
+              {ref.filename ?? ref.externalRef ?? 'Attachment'}
               {ref.mimeType ? ` · ${ref.mimeType}` : ''}
             </Text>
           ))
@@ -167,11 +163,8 @@ export function VionaRequestLiveDetailReadOnly({
       </Section>
 
       <Text style={styles.footer}>
-        {onStatusActionCompleted != null && request.status === 'submitted'
-          ? 'Owner status action (submitted→review) when shown · '
-          : ''}
-        Read-only status and activity · Note submit when shown · Pilot only · Not booking
-        fulfillment · SOS guidance only · Other write/actions blocked
+        Read-only status and activity display · No write or action controls · Pilot only · Not
+        booking fulfillment · SOS guidance only
       </Text>
     </ScrollView>
   );
@@ -281,6 +274,11 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: vionaTrust.inkMuted,
     textAlign: 'center',
+  },
+  unauthorizedTitle: {
+    fontFamily: FontFamily.extrabold,
+    fontSize: 14,
+    color: vionaTrust.ink,
   },
   error: {
     fontFamily: FontFamily.semibold,

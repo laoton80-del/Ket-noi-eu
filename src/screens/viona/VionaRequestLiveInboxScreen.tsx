@@ -21,16 +21,33 @@ import { vionaTrust } from '../../components/viona/vionaTrustTokens';
 import type { RootStackParamList } from '../../navigation/routes';
 import { isRestApiConfigured } from '../../services/apiClient';
 import {
-  fetchVionaRequestById,
-  fetchVionaRequests,
+  fetchVionaRequestByIdReadOnly,
+  fetchVionaRequestsReadOnly,
   type VionaRequestDetail,
   type VionaRequestListItem,
-} from '../../services/vionaRequestApi';
+} from '../../services/vionaRequestReadOnlyApi';
 import { theme } from '../../theme/theme';
 import { FontFamily } from '../../theme/typography';
 import { applyWebStyles } from '../../utils/applyWebStyles';
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
+
+function mapListLoadError(status: number, fallback: string): string {
+  if (status === 401 || status === 403) {
+    return 'Sign in required to view your read-only request inbox.';
+  }
+  return fallback;
+}
+
+function mapDetailLoadError(status: number, fallback: string): string {
+  if (status === 401 || status === 403) {
+    return 'Sign in required to view this request.';
+  }
+  if (status === 404) {
+    return 'Request not found or not visible for your account.';
+  }
+  return fallback;
+}
 
 export function VionaRequestLiveInboxScreen(): ReactElement {
   const navigation = useNavigation<Nav>();
@@ -38,22 +55,26 @@ export function VionaRequestLiveInboxScreen(): ReactElement {
   const [requests, setRequests] = useState<readonly VionaRequestListItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [unauthorized, setUnauthorized] = useState(false);
   const [listError, setListError] = useState<string | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [detail, setDetail] = useState<VionaRequestDetail | null>(null);
   const [detailLoading, setDetailLoading] = useState(false);
+  const [detailUnauthorized, setDetailUnauthorized] = useState(false);
   const [detailError, setDetailError] = useState<string | null>(null);
 
   const loadList = useCallback(async (): Promise<void> => {
     if (!isRestApiConfigured()) {
-      setListError('REST API is not configured. Set EXPO_PUBLIC_REST_API_BASE for live read-only inbox.');
+      setListError('REST API is not configured. Set EXPO_PUBLIC_REST_API_BASE to view requests.');
+      setUnauthorized(false);
       setRequests([]);
       setLoading(false);
       return;
     }
 
     setListError(null);
-    const result = await fetchVionaRequests({ limit: 50, skip: 0 });
+    setUnauthorized(false);
+    const result = await fetchVionaRequestsReadOnly({ limit: 50, skip: 0 });
     if (result.ok) {
       setRequests(result.data.requests);
       if (result.data.requests.length === 0) {
@@ -61,7 +82,11 @@ export function VionaRequestLiveInboxScreen(): ReactElement {
         setDetail(null);
       }
     } else {
-      setListError(result.error || 'Unable to load read-only request inbox.');
+      const isAuthError = result.status === 401 || result.status === 403;
+      setUnauthorized(isAuthError);
+      setListError(
+        mapListLoadError(result.status, result.error || 'Unable to load read-only request inbox.')
+      );
       setRequests([]);
       setSelectedId(null);
       setDetail(null);
@@ -73,9 +98,10 @@ export function VionaRequestLiveInboxScreen(): ReactElement {
     setSelectedId(requestId);
     setDetailLoading(true);
     setDetailError(null);
+    setDetailUnauthorized(false);
     setDetail(null);
 
-    const result = await fetchVionaRequestById(requestId);
+    const result = await fetchVionaRequestByIdReadOnly(requestId);
     setDetailLoading(false);
 
     if (result.ok) {
@@ -83,32 +109,22 @@ export function VionaRequestLiveInboxScreen(): ReactElement {
       return true;
     }
 
-    setDetailError(result.error || 'Unable to load read-only request detail.');
+    const isAuthError = result.status === 401 || result.status === 403;
+    setDetailUnauthorized(isAuthError);
+    setDetailError(
+      mapDetailLoadError(result.status, result.error || 'Unable to load read-only request detail.')
+    );
     return false;
   }, []);
-
-  const refreshDetailAfterNote = useCallback(async (): Promise<boolean> => {
-    if (selectedId == null) {
-      return false;
-    }
-    const result = await fetchVionaRequestById(selectedId);
-    if (result.ok) {
-      setDetail(result.data);
-      setDetailError(null);
-      return true;
-    }
-    setDetailError(result.error || 'Unable to refresh request detail.');
-    return false;
-  }, [selectedId]);
 
   const onRefresh = useCallback(async (): Promise<void> => {
     setRefreshing(true);
     await loadList();
-    if (selectedId != null) {
+    if (selectedId != null && !unauthorized) {
       await loadDetail(selectedId);
     }
     setRefreshing(false);
-  }, [loadDetail, loadList, selectedId]);
+  }, [loadDetail, loadList, selectedId, unauthorized]);
 
   useEffect(() => {
     void loadList();
@@ -133,22 +149,31 @@ export function VionaRequestLiveInboxScreen(): ReactElement {
           </Pressable>
           <View style={styles.titleBlock}>
             <Text style={styles.title}>VIONA requests</Text>
-            <Text style={styles.subtitle}>Live inbox · Pack16 GET · note + status action (Pack25)</Text>
+            <Text style={styles.subtitle}>Read-only inbox · view requests · status display only</Text>
           </View>
         </View>
 
         <View style={styles.safetyBanner}>
           <Ionicons name="eye-outline" size={16} color={vionaTrust.inkMuted} />
           <Text style={styles.safetyText}>
-            Read-only preview wired to GET /api/viona/requests. Note submit and owner status action
-            (submitted→review) use verified Pack25 routes only. Not production-ready. No payment,
-            booking fulfillment, SOS dispatch, or other live actions.
+            Read-only view wired to GET /api/viona/requests. Status is display-only — no send to
+            review, approve, deny, assign, confirm, cancel, payment, booking, or SOS actions. Not
+            production-ready.
           </Text>
         </View>
 
         {loading ? (
           <View style={styles.centered}>
             <ActivityIndicator color={vionaTrust.ink} />
+            <Text style={styles.hint}>Loading read-only inbox…</Text>
+          </View>
+        ) : unauthorized ? (
+          <View style={styles.unauthorizedBox}>
+            <Ionicons name="lock-closed-outline" size={20} color={vionaTrust.inkMuted} />
+            <Text style={styles.unauthorizedTitle}>Sign in required</Text>
+            <Text style={styles.unauthorizedText}>
+              {listError ?? 'Sign in required to view your read-only request inbox.'}
+            </Text>
           </View>
         ) : listError ? (
           <View style={styles.errorBox}>
@@ -178,9 +203,8 @@ export function VionaRequestLiveInboxScreen(): ReactElement {
               <VionaRequestLiveDetailReadOnly
                 detail={detail}
                 loading={detailLoading}
+                unauthorized={detailUnauthorized}
                 error={detailError}
-                onNoteSubmitted={refreshDetailAfterNote}
-                onStatusActionCompleted={refreshDetailAfterNote}
               />
             </View>
           </>
@@ -255,6 +279,33 @@ const styles = StyleSheet.create({
   centered: {
     paddingVertical: 32,
     alignItems: 'center',
+    gap: 8,
+  },
+  hint: {
+    fontFamily: FontFamily.regular,
+    fontSize: 13,
+    color: vionaTrust.inkMuted,
+  },
+  unauthorizedBox: {
+    padding: 16,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: vionaTrust.border,
+    backgroundColor: vionaTrust.surfaceMuted,
+    alignItems: 'center',
+    gap: 8,
+  },
+  unauthorizedTitle: {
+    fontFamily: FontFamily.extrabold,
+    fontSize: 14,
+    color: vionaTrust.ink,
+  },
+  unauthorizedText: {
+    fontFamily: FontFamily.regular,
+    fontSize: 13,
+    color: vionaTrust.inkMuted,
+    textAlign: 'center',
+    lineHeight: 18,
   },
   errorBox: {
     padding: 16,
