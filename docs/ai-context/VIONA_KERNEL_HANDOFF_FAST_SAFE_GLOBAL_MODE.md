@@ -2,7 +2,7 @@
 
 **Document type:** Canonical kernel and session handoff for VIONA engineering, product, and AI agents.
 **Audience:** New ChatGPT / Cursor windows, staff, contractors, and automation executors.
-**Baseline:** `origin/master @ c843111` — `docs(pack18): add controlled write authorization packet (#229)`
+**Baseline:** `origin/master @ ebe58a9` — `feat(pack18): add controlled request inbox writes (#231)`
 **Supersedes for Request Engine sequencing:** prior scattered pack pointers when this doc conflicts on pack order or blocked state — align to this handoff.
 **Subordinate to:** `docs/ai-context/VIONA_OPERATING_PROTOCOL.md` and founder-signed **Master Blueprint** (`VIONA_FINAL_MASTER_BLUEPRINT_V2.md`). If conflict, stop and report drift risk.
 
@@ -203,7 +203,7 @@ All new work branches from `c843111` unless a later pack explicitly updates this
 | Market / legal gates | **Defined** |
 | Forbidden automation claims | **Recorded** |
 | Next ladder | **Recorded** — Pack26B → 26C → 26D → Pack27 → Pack28+ → payment/SOS/wallet/live AI (highest gates) |
-| Next recommended lane | **Pack18 implementation** — blocked until `APPROVE_PACK18_CONTROLLED_WRITE_IMPLEMENTATION_STAGING_SAFE`; Pack18 authorization **CLOSED / GREEN** @ `c843111`; no Pack29; no Pack24/25 write wiring into inbox until separate implementation pack; Pack28 layer remains pure/non-persistent/non-executing/not wired |
+| Next recommended lane | **Pack18 staging QA** — blocked until `APPROVE_PACK18_CONTROLLED_WRITE_STAGING_QA`; Pack18 implementation **CLOSED / GREEN** @ `ebe58a9` (PR #231); Pack18 authorization **CLOSED / GREEN** @ `c843111`; no Pack29; no execution wiring; Pack28 layer remains pure/non-persistent/non-executing/not wired |
 | Pack26 spine | **COMPLETE / GREEN** |
 | Pack27 authorization | **CLOSED / GREEN** — PR #203 @ `56d0499`; kernel sync PR #204 @ `9e7567a` |
 | Pack27 implementation | **CLOSED / GREEN** — PR #205 @ `b963294`; kernel sync PR #206 @ `7b6cba5` |
@@ -237,8 +237,11 @@ All new work branches from `c843111` unless a later pack explicitly updates this
 | Pack17 current status | **`staging_read_only_qa_passed`** |
 | Pack17 staging QA result | **`PASS_READ_ONLY_INBOX_LIST_AND_DETAIL`** |
 | Pack18 controlled write authorization packet | **CLOSED / GREEN** — PR #229 @ `c843111` (see Pack18 authorization section below) |
-| Pack18 current status | **`pack18_controlled_write_authorization_planning_only`** |
-| Pack18 next gate | **Implementation** — blocked until `APPROVE_PACK18_CONTROLLED_WRITE_IMPLEMENTATION_STAGING_SAFE` |
+| Pack18 authorization kernel/handoff sync | **CLOSED / GREEN** — PR #230 @ `a3cf5dd` |
+| Pack18 controlled write implementation | **CLOSED / GREEN** — PR #231 @ `ebe58a9` (see Pack18 implementation section below) |
+| Pack18 current status | **`implemented_local_controlled_write`** |
+| Pack18 implementation phrase used | `APPROVE_PACK18_CONTROLLED_WRITE_IMPLEMENTATION_STAGING_SAFE` |
+| Pack18 next gate | **Staging QA** — blocked until `APPROVE_PACK18_CONTROLLED_WRITE_STAGING_QA` |
 | Pack26 implementation | **NOT opened** |
 | Pack29 | **NOT opened** |
 
@@ -1266,6 +1269,91 @@ Evidence: `docs/product/VIONA_REQUEST_PACK17_READ_ONLY_INBOX_STAGING_QA_RESULT.m
 
 Evidence: `docs/product/VIONA_REQUEST_PACK18_CONTROLLED_WRITE_AUTHORIZATION_PACKET.md`, `docs/design/evidence/cursor-pack18-controlled-write-authorization-packet/README.md`
 
+### Pack18 Controlled Write Implementation (CLOSED/GREEN — implemented local controlled write)
+
+| Field | Value |
+|-------|--------|
+| Pack18 implementation | **CLOSED / GREEN** — PR #231 @ `ebe58a9` |
+| Full master hash | `ebe58a98d986ea32deee186104a3b8390c3609a0` |
+| Branch commit before squash | `aabc2eb` |
+| Previous verified master (before #231) | `a3cf5dd` (PR #230) |
+| Packet name | `VIONA_REQUEST_PACK18_CONTROLLED_WRITE_IMPLEMENTATION` |
+| Operator implementation phrase | `APPROVE_PACK18_CONTROLLED_WRITE_IMPLEMENTATION_STAGING_SAFE` |
+| Pack18 current status | **`implemented_local_controlled_write`** |
+| Pack16 baseline | **`staging_read_only_qa_passed`** |
+| Pack16 staging QA result | **`PASS_READ_ONLY_LIST_AND_DETAIL`** (PR #221 @ `5b87f26`) |
+| Pack17 baseline | **`staging_read_only_qa_passed`** |
+| Pack17 staging QA result | **`PASS_READ_ONLY_INBOX_LIST_AND_DETAIL`** (PR #227 @ `1e64317`) |
+
+**Controlled write policy / capability layer:**
+
+| Item | Record |
+| --- | --- |
+| Policy module | `src/lib/viona/requests/vionaRequestControlledWritePolicy.ts` |
+| Rollback/disable path | `VIONA_PACK18_CONTROLLED_WRITE_ENABLED = false` → inbox reverts to **`VionaRequestLiveDetailReadOnly`** (Pack17 recoverable) |
+| Controlled write API adapter | `src/services/vionaRequestControlledWriteApi.ts` |
+| Gated functions | `appendVionaRequestNoteControlled`, `transitionVionaRequestStatusControlled` |
+| `writePolicyContext` required | **YES** — on `VionaRequestNoteInputWrite` and `VionaRequestStatusActionWrite` |
+
+**Endpoint / method inventory (Pack18 client layer):**
+
+| Method | Route | Usage |
+| --- | --- | --- |
+| `GET` | `/api/viona/requests` | Inbox list — Pack17 read-only client (unchanged) |
+| `GET` | `/api/viona/requests/:id` | Detail refresh after write — Pack17 read-only client (unchanged) |
+| `POST` | `/api/viona/requests/:id/actions/note` | Controlled note submit (existing Pack20 backend route) |
+| `POST` | `/api/viona/requests/:id/actions/status` | Controlled status action — **`targetStatus: triage` only** (existing Pack25 backend route) |
+
+**Write surfaces implemented:**
+
+| Surface | Status |
+| --- | --- |
+| Note submit | **IMPLEMENTED** — policy-gated via `VionaRequestNoteInputWrite` |
+| Status action | **IMPLEMENTED** — **`submitted` → `triage` only** via `VionaRequestStatusActionWrite` |
+| Gated inbox detail | **YES** — `VionaRequestLiveDetailControlledWrite` wired in `VionaRequestLiveInboxScreen` |
+| Assign / confirm / cancel / payment / booking / SOS | **NOT IMPLEMENTED** |
+
+**Pack17 read-only modules unchanged:**
+
+| Module | Changed in PR #231 |
+| --- | --- |
+| `src/services/vionaRequestReadOnlyApi.ts` | **NO** |
+| `src/components/viona/requests/VionaRequestLiveDetailReadOnly.tsx` | **NO** |
+
+| No new backend routes | **YES** — client/UI wiring only |
+| In-flight / duplicate-submit guard | **YES** — `submitting` lock + attempt-scoped idempotency key; success only after server `result.ok` |
+| Auth/session | Existing REST JWT via `restApiFetchJson` — no token/header logging |
+| DB schema/migration writes | **NO** |
+| DB/Prisma/Supabase/SQL commands run | **NO** |
+| Staging QA run | **NO** |
+| Staging endpoint calls | **NO** |
+| Deploy/restart | **NO** |
+| `.env*` changed | **NO** |
+| Secrets printed | **NO** |
+| Pack18 check script | **Added / PASS** — `node scripts/viona-pack18-controlled-write-check.mjs` |
+
+**Future staging QA gate (separate — still required):**
+
+| Gate | Phrase | Status |
+| --- | --- | --- |
+| Staging QA | `APPROVE_PACK18_CONTROLLED_WRITE_STAGING_QA` | **Required** — bounded authenticated controlled-write staging verification |
+
+| Pack29 authorized / opened | **NO** |
+| Execution wired | **NO** |
+| Pack15C DB apply path | **CLOSED / NO-OP** — `NO_OP_SCHEMA_ALREADY_UP_TO_DATE` (preserved) |
+| Pack25 Option C hold | **PRESERVED** — row `ec9a8b69-8a60-45aa-99ba-fc805a101dcc` |
+| Pack26B registry | **Read-only / unwired / non-executing** — unchanged |
+| Pack26C contract | **Pure / non-persistent / non-executing** — unchanged |
+| Pack26D operator approval | **Pure / non-persistent / non-executing** — unchanged |
+| Pack27 execution lane | **Pure / non-persistent / non-executing / not wired** — unchanged |
+| Pack28 execution integration | **Pure / non-persistent / non-executing / not wired** — unchanged |
+
+**Pack18 implementation non-authorization (preserved):** staging QA without `APPROVE_PACK18_CONTROLLED_WRITE_STAGING_QA`; new backend write routes; assign / confirm / cancel; payment / booking / SOS execution; Pack29; execution lane runtime wiring; automation / production claims; DB writes; deploy/restart; live QA mutation; staging data mutation; secrets/env printing; re-running DB commands in this handoff sync.
+
+**Next recommendation:** Pack18 staging QA only after exact phrase `APPROVE_PACK18_CONTROLLED_WRITE_STAGING_QA` — **NOT opened** in this sync.
+
+Evidence: `docs/product/VIONA_REQUEST_PACK18_CONTROLLED_WRITE_IMPLEMENTATION.md`, `docs/design/evidence/cursor-pack18-controlled-write-implementation/README.md`
+
 ### Pack25 visual-QA row post-state (current — read-only record)
 
 | Field | Value |
@@ -1279,7 +1367,7 @@ Evidence: `docs/product/VIONA_REQUEST_PACK18_CONTROLLED_WRITE_AUTHORIZATION_PACK
 | Duplicate events | **NO** |
 | Further click / status POST on this row | **NO** — Option C hold |
 
-**Deferred / not authorized (Pack25 + Pack26A + Pack26B + Pack26C + Pack26D + Pack27 + Pack28A + Pack28 implementation + Pack15C chain + Pack16 authorization + Pack16 implementation + Pack16 staging QA + Pack17 authorization + Pack17 implementation + Pack17 staging QA + Pack18 authorization):** further Send to review click or status POST on current visual-QA row (Option C hold); additional transitions on current row; assign / confirm / cancel; payment / booking / SOS / wallet / live AI; UI registry/contract/operator-approval/execution-lane/integration wiring; execution enablement; audit/timeline/approval/execution DB writes; Pack26 implementation; Pack29; Pack24/25 write wiring into Pack17 inbox surface; Pack18 implementation without `APPROVE_PACK18_CONTROLLED_WRITE_IMPLEMENTATION_STAGING_SAFE`. **Option B** only if literal new `submitted` → `triage` UI click proof is explicitly required on a fresh scoped row. **Next lane:** Pack18 implementation — blocked until `APPROVE_PACK18_CONTROLLED_WRITE_IMPLEMENTATION_STAGING_SAFE`; Pack18 authorization **CLOSED / GREEN** @ `c843111`; no Pack29; no Pack24/25 write wiring until separate implementation pack; Pack28 layer remains pure/non-persistent/non-executing/not wired.
+**Deferred / not authorized (Pack25 + Pack26A + Pack26B + Pack26C + Pack26D + Pack27 + Pack28A + Pack28 implementation + Pack15C chain + Pack16 authorization + Pack16 implementation + Pack16 staging QA + Pack17 authorization + Pack17 implementation + Pack17 staging QA + Pack18 authorization + Pack18 implementation):** further Send to review click or status POST on current visual-QA row (Option C hold); additional transitions on current row; assign / confirm / cancel; payment / booking / SOS / wallet / live AI; UI registry/contract/operator-approval/execution-lane/integration wiring; execution enablement; audit/timeline/approval/execution DB writes; Pack26 implementation; Pack29; Pack18 staging QA without `APPROVE_PACK18_CONTROLLED_WRITE_STAGING_QA`. **Option B** only if literal new `submitted` → `triage` UI click proof is explicitly required on a fresh scoped row. **Next lane:** Pack18 staging QA — blocked until `APPROVE_PACK18_CONTROLLED_WRITE_STAGING_QA`; Pack18 implementation **CLOSED / GREEN** @ `ebe58a9` (PR #231); no Pack29; no execution wiring; Pack28 layer remains pure/non-persistent/non-executing/not wired.
 
 Evidence: `docs/product/VIONA_REQUEST_PACK25_STATUS_ACTION_UI_VISUAL_CLOSURE_EVIDENCE.md`, `docs/design/evidence/cursor-pack25-status-action-ui-visual-closure-evidence/README.md`, `docs/product/VIONA_REQUEST_PACK25_STAGING_DEPLOY_REDEPLOY_EVIDENCE.md`, `docs/design/evidence/cursor-pack25-staging-deploy-redeploy-evidence/README.md`, `docs/product/VIONA_REQUEST_PACK25_LIVE_QA_POST_TRANSITION_BLOCKED_CLICK_GATE_EVIDENCE.md`, `docs/design/evidence/cursor-pack25-live-qa-post-transition-blocked-click-gate-evidence/README.md`, `docs/product/VIONA_REQUEST_PACK25_POST_HOC_TRIAGE_UI_EVIDENCE.md`, `docs/design/evidence/cursor-pack25-post-hoc-triage-ui-evidence/README.md`
 
@@ -1408,8 +1496,10 @@ Pack15C operator GO provided intake evidence is **complete and green** on master
 | Pack17 | Implementation phrase used | `APPROVE_PACK17_READ_ONLY_INBOX_IMPLEMENTATION_STAGING_SAFE` |
 | Pack17 | Staging QA phrase used | `APPROVE_PACK17_READ_ONLY_INBOX_STAGING_QA` |
 | Pack18 | Controlled write authorization packet | `c843111` (PR #229) |
-| Pack18 | Current status | **`pack18_controlled_write_authorization_planning_only`** |
-| Pack18 | Future implementation phrase | `APPROVE_PACK18_CONTROLLED_WRITE_IMPLEMENTATION_STAGING_SAFE` |
+| Pack18 | Authorization kernel/handoff sync | `a3cf5dd` (PR #230) |
+| Pack18 | Controlled write implementation | `ebe58a9` (PR #231) |
+| Pack18 | Current status | **`implemented_local_controlled_write`** |
+| Pack18 | Implementation phrase used | `APPROVE_PACK18_CONTROLLED_WRITE_IMPLEMENTATION_STAGING_SAFE` |
 | Pack18 | Future staging QA phrase | `APPROVE_PACK18_CONTROLLED_WRITE_STAGING_QA` |
 | Pack29 | | **NOT opened** |
 
@@ -1430,10 +1520,10 @@ Pack15C operator GO provided intake evidence is **complete and green** on master
 | API / adapter / mutation / runtime | Pack16 read-only GET endpoints verified on baseline and staging — `GET /api/viona/requests`, `GET /api/viona/requests/:id`; no new runtime routes in PR #219 |
 | Pack16 runtime/API | **`staging_read_only_qa_passed`** — PR #219 @ `c86fb99` implementation; PR #221 @ `5b87f26` staging QA **PASS** |
 | Pack16 staging QA | **PASS** — `PASS_READ_ONLY_LIST_AND_DETAIL` against `viona-api-staging-eu` |
-| Pack17 runtime/UI/inbox | **`staging_read_only_qa_passed`** — PR #225 @ `07bdae8` implementation; PR #227 @ `1e64317` staging QA **PASS**; GET-only list/detail; write components **not wired** into inbox surface |
+| Pack17 runtime/UI/inbox | **`staging_read_only_qa_passed`** — PR #225 @ `07bdae8` implementation; PR #227 @ `1e64317` staging QA **PASS**; GET list/detail via read-only client; Pack18 controlled write detail when enabled |
 | Pack17 staging QA | **PASS** — `PASS_READ_ONLY_INBOX_LIST_AND_DETAIL` against `viona-api-staging-eu`; local Expo route `/viona-requests-live-inbox` **REACHABLE** |
-| Pack18 controlled write | **`pack18_controlled_write_authorization_planning_only`** — PR #229 @ `c843111`; write components **not wired** into Pack17 inbox |
-| Pack18 implementation authorized | **NO** |
+| Pack18 controlled write | **`implemented_local_controlled_write`** — PR #231 @ `ebe58a9`; policy-gated POST note + narrow `submitted`→`triage` status action; Pack17 read-only modules unchanged; rollback via `VIONA_PACK18_CONTROLLED_WRITE_ENABLED = false` |
+| Pack18 staging QA authorized | **NO** — blocked until `APPROVE_PACK18_CONTROLLED_WRITE_STAGING_QA` |
 | DB apply | **Closed / no-op** — `NO_OP_SCHEMA_ALREADY_UP_TO_DATE` (PR #215); schema already up to date |
 | DB apply performed | **No** |
 | Backup blocker (historical) | **Free Plan** — superseded by PR #98 human dashboard evidence showing PRO plan and scheduled backups |
@@ -2102,24 +2192,40 @@ Evidence: `docs/design/evidence/cursor-pack17-live-read-only-request-inbox-plann
 
 ---
 
-## 12. Pack18 authorization packet status
+## 12. Pack18 authorization and implementation status
 
 **Authorization packet on master:** `docs/product/VIONA_REQUEST_PACK18_CONTROLLED_WRITE_AUTHORIZATION_PACKET.md` (PR #229 @ `c843111`)
 
 | Item | State |
 |------|--------|
-| Pack18 scope | **Controlled write authorization planning only** — **not** implementation |
-| Pack18 current status | **`pack18_controlled_write_authorization_planning_only`** |
-| Pack18 implementation authorized | **NO** |
-| Pack18 staging QA authorized | **NO** |
+| Pack18 authorization scope | **Controlled write authorization planning only** — PR #229 |
+| Pack18 authorization status | **`pack18_controlled_write_authorization_planning_only`** (historical — authorization packet) |
+
+**Implementation on master:** `docs/product/VIONA_REQUEST_PACK18_CONTROLLED_WRITE_IMPLEMENTATION.md` (PR #231 @ `ebe58a9`)
+
+| Item | State |
+|------|--------|
+| Pack18 implementation scope | **Bounded controlled write UI/client layer** — local implementation verified |
+| Pack18 current status | **`implemented_local_controlled_write`** |
+| Pack18 implementation phrase used | `APPROVE_PACK18_CONTROLLED_WRITE_IMPLEMENTATION_STAGING_SAFE` |
+| Pack18 staging QA authorized | **NO** — requires `APPROVE_PACK18_CONTROLLED_WRITE_STAGING_QA` |
 | Pack16 baseline | **`staging_read_only_qa_passed`** — preserved |
 | Pack17 baseline | **`staging_read_only_qa_passed`** — preserved |
-| Future implementation phrase | `APPROVE_PACK18_CONTROLLED_WRITE_IMPLEMENTATION_STAGING_SAFE` |
-| Future staging QA phrase | `APPROVE_PACK18_CONTROLLED_WRITE_STAGING_QA` |
-| Candidate write surfaces | `VionaRequestNoteInputWrite`, `VionaRequestStatusActionWrite` — **NOT wired** into Pack17 inbox |
-| UI / backend / runtime | **Unchanged** — no write wiring in PR #229 |
+| Controlled write policy | `src/lib/viona/requests/vionaRequestControlledWritePolicy.ts` |
+| Rollback/disable | `VIONA_PACK18_CONTROLLED_WRITE_ENABLED = false` → `VionaRequestLiveDetailReadOnly` |
+| Controlled write API | `appendVionaRequestNoteControlled`, `transitionVionaRequestStatusControlled` |
+| Note submit | **IMPLEMENTED** — policy-gated |
+| Status action | **IMPLEMENTED** — **`submitted` → `triage` only** |
+| `writePolicyContext` required | **YES** |
+| In-flight / idempotency guard | **YES** |
+| Endpoints | `GET /api/viona/requests`, `GET /api/viona/requests/:id`, `POST .../actions/note`, `POST .../actions/status` (`triage` only) |
+| No new backend routes | **YES** |
+| Pack17 read-only modules unchanged | **YES** — `vionaRequestReadOnlyApi.ts`, `VionaRequestLiveDetailReadOnly.tsx` |
+| DB schema/migration writes | **NO** |
+| Pack29 opened | **NO** |
+| Execution wired | **NO** |
 
-Evidence: `docs/design/evidence/cursor-pack18-controlled-write-authorization-packet/README.md`
+Evidence: `docs/design/evidence/cursor-pack18-controlled-write-authorization-packet/README.md`, `docs/design/evidence/cursor-pack18-controlled-write-implementation/README.md`
 
 ---
 
@@ -2133,7 +2239,7 @@ Still **blocked** until future approved packs and missing execution inputs are s
 - Pack15D DB schema verification
 - Pack16 read-only persistence API — **implemented and staging QA passed** (PR #219 + PR #221)
 - Pack17 read-only inbox — **staging read-only QA passed** (PR #225 + PR #227 — `PASS_READ_ONLY_INBOX_LIST_AND_DETAIL`)
-- Pack18 controlled write — **authorization planning only** (PR #229); implementation **blocked** until `APPROVE_PACK18_CONTROLLED_WRITE_IMPLEMENTATION_STAGING_SAFE`
+- Pack18 controlled write — **implemented locally** (PR #231 — `implemented_local_controlled_write`); staging QA **blocked** until `APPROVE_PACK18_CONTROLLED_WRITE_STAGING_QA`
 - Admin Debug live data
 - OPERATOR Prisma / Auth
 - Payment capture
@@ -2156,7 +2262,7 @@ Execute in order — do not skip:
 4. **Pack15D** — DB schema verification (only after successful DB apply)
 5. **Pack16** — Read-only persistence API implementation — **COMPLETE** (PR #219); staging QA **PASS** (PR #221 — `PASS_READ_ONLY_LIST_AND_DETAIL`)
 6. **Pack17** — Read-only inbox implementation **COMPLETE** (PR #225); staging QA **PASS** (PR #227 — `PASS_READ_ONLY_INBOX_LIST_AND_DETAIL` — `staging_read_only_qa_passed`)
-7. **Pack18** — Controlled write authorization **COMPLETE** (PR #229 — `pack18_controlled_write_authorization_planning_only`); implementation **blocked** until `APPROVE_PACK18_CONTROLLED_WRITE_IMPLEMENTATION_STAGING_SAFE`
+7. **Pack18** — Controlled write authorization **COMPLETE** (PR #229 — `pack18_controlled_write_authorization_planning_only`); implementation **COMPLETE** (PR #231 — `implemented_local_controlled_write`); staging QA **blocked** until `APPROVE_PACK18_CONTROLLED_WRITE_STAGING_QA`
 
 Note: explicit not-tested restore risk acceptance is **partially satisfied** (PR #107 — planning readiness only); restore test evidence still not provided. Pack15D post-apply verification plan is **satisfied on master** (PR #109 @ `e3c4b95` — `PLAN_ON_MASTER_NOT_EXECUTED`); Pack15D verification execution remains blocked until after future successful DB apply. Stop-on-error final intake is **satisfied on master** (PR #111 @ `718a024` — `CONFIRMED_FINAL_INTAKE`); rule must still be copied into the future execution-only DB apply pack before any execution. Operator GO provided intake is **satisfied on master** (PR #119 @ `5b868ce` — operator GO **`PROVIDED`** verbatim; operator GO **not invented**). Distinct execution approval phrase provided intake is **satisfied on master** (PR #117 @ `6880bda` — phrase **`PROVIDED`** verbatim; phrase **not invented**); execution-only DB apply pack authorization remains **blocked**. ChatGPT GO/NO-GO review is the **next required gate**.
 
@@ -2352,3 +2458,5 @@ Stop immediately and report if asked to:
 **Pack17 handoff sync (read-only inbox staging QA):** This document updated after Pack17 read-only inbox staging QA result merged @ `1e64317` (PR #227). Pack25 closure chain **CLOSED / GREEN** through PR #188 preserved. Pack26 spine **COMPLETE / GREEN**. Pack26B **read-only / unwired / non-executing** preserved. Pack26C **pure / non-persistent / non-executing** preserved. Pack26D **pure / non-persistent / non-executing** preserved. Pack27 **CLOSED / GREEN** through PR #203–#206 preserved. Pack28 **CLOSED / GREEN** through PR #207–#210 preserved. Pack15C chain **CLOSED / GREEN** through PR #211–#216 preserved; DB apply path **CLOSED / NO-OP** — `NO_OP_SCHEMA_ALREADY_UP_TO_DATE`. Pack16 chain **CLOSED / GREEN** through PR #217–#222 preserved; Pack16 status **`staging_read_only_qa_passed`** preserved. Pack17 authorization chain **CLOSED / GREEN** through PR #223–#224 preserved. Pack17 implementation chain **CLOSED / GREEN** through PR #225 @ `07bdae8` and PR #226 @ `a165ec8` preserved. Pack17 staging QA **CLOSED / GREEN** — operator phrase **`APPROVE_PACK17_READ_ONLY_INBOX_STAGING_QA`** recorded; result **`PASS_READ_ONLY_INBOX_LIST_AND_DETAIL`**; status **`staging_read_only_qa_passed`**; staging target **`viona-api-staging-eu`** / **`viona-api-staging-eu.fly.dev`**; staging build contains Pack17 inbox **YES** (master `@ a165ec8` + local Expo web; no separate deployed staging web host in runbooks); inbox route **`/viona-requests-live-inbox`** **REACHABLE** on local Expo web; authentication performed **YES** (login POST for auth only); secrets/tokens printed **NO**; unauth guard **`GET /api/viona/requests`** → HTTP **401** **PASS**; authenticated list **`GET /api/viona/requests`** → HTTP **200**, count **3**, `safety.readOnly: true` **PASS**; detail **`GET /api/viona/requests/:id`** → HTTP **200**, `safety.readOnly: true` **PASS** (raw id **not recorded**); loading/empty/error **PARTIAL** / not triggered; VIONA request methods **`GET` only** on `/api/viona/*`; write controls absent **YES** (source + HTML probe); read-only confirmed **YES**; DB writes **NO**; status POST **NO**; transitions **NO**; execution **NO**; staging data mutated **NO**; DB/Prisma/Supabase/SQL commands run **NO**; deploy/restart **NO**; `.env*` changed **NO**; Pack24/25 write controls wired **NO**; no staging/auth/data mutation in this sync; Pack29 **NOT opened**. Pack25 Option C **HOLD** preserved — no further click/status POST on current visual-QA row `ec9a8b69-8a60-45aa-99ba-fc805a101dcc`. **Next lane:** Next Request Engine work **separately authorized** — **no Pack29** and **no write/status/execution wiring** until separate pack. Prior Pack15C–Pack17 historical milestones and blockers **unchanged** except Pack17 staging QA PASS recorded. Evidence: `docs/design/evidence/cursor-pack17-read-only-inbox-staging-qa-kernel-handoff-sync/README.md`.
 
 **Pack18 handoff sync (controlled write authorization):** This document updated after Pack18 Controlled Write Authorization packet merged @ `c843111` (PR #229). Pack25 closure chain **CLOSED / GREEN** through PR #188 preserved. Pack26 spine **COMPLETE / GREEN**. Pack26B **read-only / unwired / non-executing** preserved. Pack26C **pure / non-persistent / non-executing** preserved. Pack26D **pure / non-persistent / non-executing** preserved. Pack27 **CLOSED / GREEN** through PR #203–#206 preserved. Pack28 **CLOSED / GREEN** through PR #207–#210 preserved. Pack15C chain **CLOSED / GREEN** through PR #211–#216 preserved; DB apply path **CLOSED / NO-OP** — `NO_OP_SCHEMA_ALREADY_UP_TO_DATE`. Pack16 chain **CLOSED / GREEN** through PR #217–#222 preserved; Pack16 status **`staging_read_only_qa_passed`** preserved. Pack17 chain **CLOSED / GREEN** through PR #223–#228 preserved; Pack17 status **`staging_read_only_qa_passed`**; Pack17 staging QA result **`PASS_READ_ONLY_INBOX_LIST_AND_DETAIL`** preserved. Pack18 authorization **CLOSED / GREEN** — status **`pack18_controlled_write_authorization_planning_only`**; future implementation phrase **`APPROVE_PACK18_CONTROLLED_WRITE_IMPLEMENTATION_STAGING_SAFE`** recorded; future staging QA phrase **`APPROVE_PACK18_CONTROLLED_WRITE_STAGING_QA`** recorded (separate gate); Pack18 implementation authorized **NO**; UI write wiring authorized **NO**; backend write authorized **NO**; DB writes **NO**; status POST **NO**; transitions **NO**; execution **NO**; Pack24/25 write controls wired into Pack17 inbox **NO**; candidate surfaces **`VionaRequestNoteInputWrite`**, **`VionaRequestStatusActionWrite`** remain **NOT wired**; no UI/backend/runtime implementation in this sync; no staging endpoint calls; no deploy/restart; no secrets printed; Pack29 **NOT opened**. Pack25 Option C **HOLD** preserved — no further click/status POST on current visual-QA row `ec9a8b69-8a60-45aa-99ba-fc805a101dcc`. **Next lane:** Pack18 implementation — blocked until `APPROVE_PACK18_CONTROLLED_WRITE_IMPLEMENTATION_STAGING_SAFE`. Prior Pack15C–Pack18 historical milestones and blockers **unchanged** except Pack18 authorization recorded. Evidence: `docs/design/evidence/cursor-pack18-controlled-write-authorization-kernel-handoff-sync/README.md`.
+
+**Pack18 handoff sync (controlled write implementation):** This document updated after Pack18 Controlled Write Implementation merged @ `ebe58a9` (PR #231). Pack25 closure chain **CLOSED / GREEN** through PR #188 preserved. Pack26 spine **COMPLETE / GREEN**. Pack26B **read-only / unwired / non-executing** preserved. Pack26C **pure / non-persistent / non-executing** preserved. Pack26D **pure / non-persistent / non-executing** preserved. Pack27 **CLOSED / GREEN** through PR #203–#206 preserved. Pack28 **CLOSED / GREEN** through PR #207–#210 preserved. Pack15C chain **CLOSED / GREEN** through PR #211–#216 preserved; DB apply path **CLOSED / NO-OP** — `NO_OP_SCHEMA_ALREADY_UP_TO_DATE`. Pack16 chain **CLOSED / GREEN** through PR #217–#222 preserved; Pack16 status **`staging_read_only_qa_passed`** preserved. Pack17 chain **CLOSED / GREEN** through PR #223–#228 preserved; Pack17 status **`staging_read_only_qa_passed`**; Pack17 staging QA result **`PASS_READ_ONLY_INBOX_LIST_AND_DETAIL`** preserved. Pack18 authorization chain **CLOSED / GREEN** through PR #229 @ `c843111` and PR #230 @ `a3cf5dd` preserved. Pack18 implementation **CLOSED / GREEN** — status **`implemented_local_controlled_write`**; operator phrase **`APPROVE_PACK18_CONTROLLED_WRITE_IMPLEMENTATION_STAGING_SAFE`** recorded; controlled write policy **`vionaRequestControlledWritePolicy.ts`**; rollback **`VIONA_PACK18_CONTROLLED_WRITE_ENABLED = false`** → **`VionaRequestLiveDetailReadOnly`**; controlled write API **`appendVionaRequestNoteControlled`**, **`transitionVionaRequestStatusControlled`**; note submit **IMPLEMENTED**; status action **IMPLEMENTED** — **`submitted` → `triage` only**; **`writePolicyContext` required**; in-flight/idempotency guards **YES**; endpoints **`GET /api/viona/requests`**, **`GET /api/viona/requests/:id`**, **`POST /api/viona/requests/:id/actions/note`**, **`POST /api/viona/requests/:id/actions/status`** (`triage` only); no new backend routes **YES**; Pack17 read-only modules unchanged **`vionaRequestReadOnlyApi.ts`**, **`VionaRequestLiveDetailReadOnly.tsx`**; DB schema/migration writes **NO**; DB/Prisma/Supabase/SQL commands run **NO**; staging QA run **NO**; staging endpoint calls **NO**; deploy/restart **NO**; `.env*` changed **NO**; secrets printed **NO**; Pack18 check script **PASS**; future staging QA phrase **`APPROVE_PACK18_CONTROLLED_WRITE_STAGING_QA`** still required (separate gate); Pack29 **NOT opened**; execution wired **NO**. Pack25 Option C **HOLD** preserved — no further click/status POST on current visual-QA row `ec9a8b69-8a60-45aa-99ba-fc805a101dcc`. **Next lane:** Pack18 staging QA — blocked until `APPROVE_PACK18_CONTROLLED_WRITE_STAGING_QA`. Prior Pack15C–Pack18 historical milestones and blockers **unchanged** except Pack18 implementation recorded. Evidence: `docs/design/evidence/cursor-pack18-controlled-write-implementation-kernel-handoff-sync/README.md`.
