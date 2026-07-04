@@ -2,6 +2,8 @@ export { VionaRequestActivityTimelineReadOnly } from './VionaRequestActivityTime
 export type { VionaRequestActivityTimelineReadOnlyProps } from './VionaRequestActivityTimelineReadOnly';
 export { VionaRequestDetailReadOnly } from './VionaRequestDetailReadOnly';
 export type { VionaRequestDetailReadOnlyProps } from './VionaRequestDetailReadOnly';
+export { VionaRequestLiveDetailControlledWrite } from './VionaRequestLiveDetailControlledWrite';
+export type { VionaRequestLiveDetailControlledWriteProps } from './VionaRequestLiveDetailControlledWrite';
 export { VionaRequestLiveDetailReadOnly } from './VionaRequestLiveDetailReadOnly';
 export type { VionaRequestLiveDetailReadOnlyProps } from './VionaRequestLiveDetailReadOnly';
 export { VionaRequestNoteAuditTimelineReadOnly } from './VionaRequestNoteAuditTimelineReadOnly';

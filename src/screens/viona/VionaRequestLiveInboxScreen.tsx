@@ -14,9 +14,11 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import {
+  VionaRequestLiveDetailControlledWrite,
   VionaRequestLiveDetailReadOnly,
   VionaRequestLiveListReadOnly,
 } from '../../components/viona/requests';
+import { isVionaPack18ControlledWriteEnabled } from '../../lib/viona/requests/vionaRequestControlledWritePolicy';
 import { vionaTrust } from '../../components/viona/vionaTrustTokens';
 import type { RootStackParamList } from '../../navigation/routes';
 import { isRestApiConfigured } from '../../services/apiClient';
@@ -51,6 +53,7 @@ function mapDetailLoadError(status: number, fallback: string): string {
 
 export function VionaRequestLiveInboxScreen(): ReactElement {
   const navigation = useNavigation<Nav>();
+  const pack18ControlledWriteEnabled = isVionaPack18ControlledWriteEnabled();
 
   const [requests, setRequests] = useState<readonly VionaRequestListItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -149,16 +152,20 @@ export function VionaRequestLiveInboxScreen(): ReactElement {
           </Pressable>
           <View style={styles.titleBlock}>
             <Text style={styles.title}>VIONA requests</Text>
-            <Text style={styles.subtitle}>Read-only inbox · view requests · status display only</Text>
+            <Text style={styles.subtitle}>
+              {pack18ControlledWriteEnabled
+                ? 'Controlled write inbox · GET list/detail · POST note + narrow status action'
+                : 'Read-only inbox · view requests · status display only'}
+            </Text>
           </View>
         </View>
 
         <View style={styles.safetyBanner}>
           <Ionicons name="eye-outline" size={16} color={vionaTrust.inkMuted} />
           <Text style={styles.safetyText}>
-            Read-only view wired to GET /api/viona/requests. Status is display-only — no send to
-            review, approve, deny, assign, confirm, cancel, payment, booking, or SOS actions. Not
-            production-ready.
+            {pack18ControlledWriteEnabled
+              ? 'Pack18 controlled write: GET /api/viona/requests for list/detail refresh; POST note and submitted→triage status only via policy-gated controls. No assign, confirm, cancel, payment, booking, SOS, execution, or Pack29. Set VIONA_PACK18_CONTROLLED_WRITE_ENABLED=false to revert to Pack17 read-only detail. Not production-ready.'
+              : 'Read-only view wired to GET /api/viona/requests. Status is display-only — no send to review, approve, deny, assign, confirm, cancel, payment, booking, or SOS actions. Not production-ready.'}
           </Text>
         </View>
 
@@ -198,14 +205,27 @@ export function VionaRequestLiveInboxScreen(): ReactElement {
               selectedId={selectedId}
               onSelect={(id) => void loadDetail(id)}
             />
-            <Text style={styles.sectionTitle}>Read-only detail</Text>
+            <Text style={styles.sectionTitle}>
+              {pack18ControlledWriteEnabled ? 'Controlled write detail' : 'Read-only detail'}
+            </Text>
             <View style={styles.detailPanel}>
-              <VionaRequestLiveDetailReadOnly
-                detail={detail}
-                loading={detailLoading}
-                unauthorized={detailUnauthorized}
-                error={detailError}
-              />
+              {pack18ControlledWriteEnabled ? (
+                <VionaRequestLiveDetailControlledWrite
+                  detail={detail}
+                  loading={detailLoading}
+                  unauthorized={detailUnauthorized}
+                  error={detailError}
+                  onNoteSubmitted={() => loadDetail(selectedId ?? '')}
+                  onStatusActionCompleted={() => loadDetail(selectedId ?? '')}
+                />
+              ) : (
+                <VionaRequestLiveDetailReadOnly
+                  detail={detail}
+                  loading={detailLoading}
+                  unauthorized={detailUnauthorized}
+                  error={detailError}
+                />
+              )}
             </View>
           </>
         )}
