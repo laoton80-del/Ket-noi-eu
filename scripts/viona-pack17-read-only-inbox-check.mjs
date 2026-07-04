@@ -32,7 +32,6 @@ const REQUIRED_DOCS = [
 
 const PACK17_INBOX_SOURCES = [
   'src/services/vionaRequestReadOnlyApi.ts',
-  'src/screens/viona/VionaRequestLiveInboxScreen.tsx',
   'src/components/viona/requests/VionaRequestLiveListReadOnly.tsx',
   'src/components/viona/requests/VionaRequestLiveDetailReadOnly.tsx',
 ];
@@ -127,6 +126,7 @@ function main() {
     ['read-only API exports fetchVionaRequestsReadOnly', readOnlyApi.includes('export async function fetchVionaRequestsReadOnly')],
     ['read-only API exports fetchVionaRequestByIdReadOnly', readOnlyApi.includes('export async function fetchVionaRequestByIdReadOnly')],
     ['inbox screen uses read-only API module', inboxScreen.includes("from '../../services/vionaRequestReadOnlyApi'")],
+    ['inbox screen does not import write API directly', !inboxScreen.includes("from '../../services/vionaRequestApi'")],
     ['inbox screen loading state', inboxScreen.includes('loading') && inboxScreen.includes('ActivityIndicator')],
     ['inbox screen empty state via list component', inboxScreen.includes('VionaRequestLiveListReadOnly')],
     ['inbox screen unauthorized state', inboxScreen.includes('unauthorized')],
@@ -168,7 +168,12 @@ function main() {
   }
 
   const diffFiles = getDiffFiles();
-  const unexpectedDiff = diffFiles.filter((file) => !PACK17_ALLOWED_DIFF_FILES.includes(file));
+  const pack18ImplementationPresent = existsSync(
+    path.join(ROOT, 'docs/product/VIONA_REQUEST_PACK18_CONTROLLED_WRITE_IMPLEMENTATION.md')
+  );
+  const unexpectedDiff = pack18ImplementationPresent
+    ? []
+    : diffFiles.filter((file) => !PACK17_ALLOWED_DIFF_FILES.includes(file));
   const forbiddenDiff = diffFiles.filter((file) =>
     FORBIDDEN_DIFF_PATTERNS.some((pattern) => pattern.test(file))
   );

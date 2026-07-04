@@ -8,7 +8,8 @@ import {
   View,
 } from 'react-native';
 
-import { appendVionaRequestNote } from '../../../services/vionaRequestApi';
+import type { VionaPack18WriteCapabilityContext } from '../../../lib/viona/requests/vionaRequestControlledWritePolicy';
+import { appendVionaRequestNoteControlled } from '../../../services/vionaRequestControlledWriteApi';
 import { FontFamily } from '../../../theme/typography';
 import { vionaSpacing } from '../vionaDesignTokens';
 import { vionaTrust } from '../vionaTrustTokens';
@@ -19,6 +20,7 @@ import {
 
 export type VionaRequestNoteInputWriteProps = Readonly<{
   requestId: string;
+  writePolicyContext: VionaPack18WriteCapabilityContext;
   onNoteSubmitted: () => Promise<boolean>;
 }>;
 
@@ -44,6 +46,7 @@ function validationMessage(reason: 'empty' | 'too_long' | 'unsafe'): string {
 
 export function VionaRequestNoteInputWrite({
   requestId,
+  writePolicyContext,
   onNoteSubmitted,
 }: VionaRequestNoteInputWriteProps): ReactElement {
   const [noteText, setNoteText] = useState('');
@@ -75,10 +78,14 @@ export function VionaRequestNoteInputWrite({
     }
 
     setSubmitting(true);
-    const result = await appendVionaRequestNote(requestId, {
-      note: validation.value,
-      idempotencyKey: attemptIdempotencyKeyRef.current,
-    });
+    const result = await appendVionaRequestNoteControlled(
+      requestId,
+      {
+        note: validation.value,
+        idempotencyKey: attemptIdempotencyKeyRef.current,
+      },
+      writePolicyContext
+    );
     setSubmitting(false);
 
     if (!result.ok) {
@@ -108,7 +115,7 @@ export function VionaRequestNoteInputWrite({
         'Note recorded. Pull to refresh or re-open detail if the timeline does not update.'
       );
     }
-  }, [noteText, onNoteSubmitted, requestId, submitting]);
+  }, [noteText, onNoteSubmitted, requestId, submitting, writePolicyContext]);
 
   const trimmedLength = noteText.trim().length;
   const submitDisabled = submitting || trimmedLength === 0;

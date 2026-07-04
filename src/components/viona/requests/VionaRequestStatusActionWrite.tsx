@@ -1,16 +1,18 @@
 import { useCallback, useRef, useState, type ReactElement } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 
+import type { VionaPack18WriteCapabilityContext } from '../../../lib/viona/requests/vionaRequestControlledWritePolicy';
 import {
-  transitionVionaRequestStatus,
+  transitionVionaRequestStatusControlled,
   VIONA_REQUEST_STATUS_ACTION_TARGET_TRIAGE,
-} from '../../../services/vionaRequestApi';
+} from '../../../services/vionaRequestControlledWriteApi';
 import { FontFamily } from '../../../theme/typography';
 import { vionaSpacing } from '../vionaDesignTokens';
 import { vionaTrust } from '../vionaTrustTokens';
 
 export type VionaRequestStatusActionWriteProps = Readonly<{
   requestId: string;
+  writePolicyContext: VionaPack18WriteCapabilityContext;
   onStatusActionCompleted: () => Promise<boolean>;
 }>;
 
@@ -23,6 +25,7 @@ function createStatusActionIdempotencyKey(): string {
 
 export function VionaRequestStatusActionWrite({
   requestId,
+  writePolicyContext,
   onStatusActionCompleted,
 }: VionaRequestStatusActionWriteProps): ReactElement {
   const [submitting, setSubmitting] = useState(false);
@@ -43,10 +46,14 @@ export function VionaRequestStatusActionWrite({
     }
 
     setSubmitting(true);
-    const result = await transitionVionaRequestStatus(requestId, {
-      targetStatus: VIONA_REQUEST_STATUS_ACTION_TARGET_TRIAGE,
-      idempotencyKey: attemptIdempotencyKeyRef.current,
-    });
+    const result = await transitionVionaRequestStatusControlled(
+      requestId,
+      {
+        targetStatus: VIONA_REQUEST_STATUS_ACTION_TARGET_TRIAGE,
+        idempotencyKey: attemptIdempotencyKeyRef.current,
+      },
+      writePolicyContext
+    );
     setSubmitting(false);
 
     if (!result.ok) {
@@ -79,7 +86,7 @@ export function VionaRequestStatusActionWrite({
         'Status updated. Pull to refresh or re-open detail if the badge does not update.'
       );
     }
-  }, [onStatusActionCompleted, requestId, submitting]);
+  }, [onStatusActionCompleted, requestId, submitting, writePolicyContext]);
 
   return (
     <View style={styles.root}>
