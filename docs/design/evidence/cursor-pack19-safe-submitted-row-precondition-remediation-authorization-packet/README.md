@@ -12,7 +12,7 @@
 
 ## Purpose
 
-Docs-only **Option B** authorization/preparation packet documenting the exact method, owner, and safety labels for a future safe staging `submitted`-row precondition — so Pack19's bounded `submitted → triage` QA can eventually proceed. **No remediation executed.**
+Docs-only **Option B** authorization packet documenting the exact method, owner, and safety labels for a future safe staging `submitted`-row precondition — so Pack19's bounded `submitted → triage` QA can eventually proceed. **This update records that the operator approval phrase has now been provided. No remediation executed.**
 
 ## Confirmed state (recorded in packet)
 
@@ -22,7 +22,7 @@ Docs-only **Option B** authorization/preparation packet documenting the exact me
 | Previous Pack19 state | **`BLOCKED_NO_SAFE_SUBMITTED_REQUEST`** |
 | Meaning | Pack19 **did not fail** — blocked-safe; no safe non-hold `submitted` row existed |
 | PR #239 | **merged / verified PASS** at `origin/master @ 37e1553` |
-| Result classification (this packet) | **`AUTHORIZATION_PACKET_PREPARED_ONLY`** |
+| Result classification (this update) | **`AUTHORIZATION_APPROVAL_RECORDED_ONLY`** |
 | Pack25 hold row | **HARD EXCLUSION** — `ec9a8b69-8a60-45aa-99ba-fc805a101dcc` |
 | Pack29 | **NOT opened / forbidden** |
 | Execution | **NOT wired / forbidden** |
@@ -46,12 +46,15 @@ Create or identify **exactly one** staging-only, non-production, non-Pack25-hold
 
 **Operator-authorized staging remediation owner only** (named in a future execution packet — not named/authorized here).
 
-## Future approval phrase
+## Operator approval phrase
 
 | Field | Value |
 |-------|--------|
-| Phrase proposed / required | `APPROVE_PACK19_SAFE_SUBMITTED_ROW_PRECONDITION_REMEDIATION` |
-| Provided in this packet | **NO** |
+| Phrase required | **YES** |
+| Phrase provided | **YES** — recorded verbatim in this update |
+| Phrase (verbatim) | `APPROVE_PACK19_SAFE_SUBMITTED_ROW_PRECONDITION_REMEDIATION` |
+
+**Recording note:** approval recorded only — no remediation executed; row create/seed did not occur; staging/auth/data mutation did not occur; DB/Prisma/Supabase/SQL did not run; deploy/restart did not occur; Pack29 remains blocked; execution remains blocked.
 
 ## Guardrails (this packet)
 
@@ -59,6 +62,7 @@ Create or identify **exactly one** staging-only, non-production, non-Pack25-hold
 | --- | --- |
 | Docs-only | **YES** |
 | Allowed files only | **YES** |
+| Approval phrase recorded (approval only) | **YES** |
 | Runtime/API/UI/backend modified | **NO** |
 | Kernel/Handoff modified | **NO** |
 | Remediation executed | **NO** |
@@ -72,7 +76,8 @@ Create or identify **exactly one** staging-only, non-production, non-Pack25-hold
 | Execution wired | **NO** |
 | Production touched | **NO** |
 | Pack25 hold row used/modified | **NO** — hard exclusion |
-| Future approval phrase provided | **NO** |
+| Future approval phrase required | **YES** |
+| Future approval phrase provided | **YES** — approval only, no execution |
 | Secrets printed | **NO** |
 
 ## Files changed (this pack)
@@ -88,6 +93,6 @@ Create or identify **exactly one** staging-only, non-production, non-Pack25-hold
 
 ## Recommendation
 
-**Safe to push branch** — docs-only Option B preparation packet; documents method/owner/labels only, executes no remediation, creates no rows, opens no Pack29, wires no execution, provides no approval phrase.
+**Safe to push branch / open PR** — docs-only update; records the operator approval phrase only. Executes no remediation, creates no rows, opens no Pack29, wires no execution.
 
-**Next step:** Post-merge sync (separate pack) after merge. Operator provides `APPROVE_PACK19_SAFE_SUBMITTED_ROW_PRECONDITION_REMEDIATION` only when ready, then a separate execution packet defines the specific bounded method. Pack29 and execution remain blocked.
+**Next step after merge:** Prepare a **separate execution-only remediation pack**, still bounded to the exact safe staging precondition method (§4), with named owner and safety labels. Only after the safe `submitted` precondition exists, re-run Pack19 bounded staging QA under `APPROVE_PACK19_SCOPED_SUBMITTED_ROW_STATUS_TRIAGE_QA`. Pack29 and execution remain blocked.
