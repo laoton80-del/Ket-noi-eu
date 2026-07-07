@@ -14,6 +14,8 @@
 
 Docs-only authorization packet for a **future staging-only redeploy** of `viona-api-staging-eu` so the merged `POST /api/viona/requests` route becomes available at runtime. **Records authorization intent only — no deploy performed.**
 
+> **Approval update:** operator has **now provided** the redeploy phrase `APPROVE_PACK19_R1_STAGING_API_REDEPLOY_FOR_CREATE_SUBMIT_ROUTE`. This update records **approval only** — no deploy/restart executed; no staging QA; no row create/seed; no `POST /api/viona/requests`; no status POST; no DB/Prisma/Supabase/SQL; Pack19 QA remains held; Pack29 remains blocked; execution remains blocked.
+
 ## Context
 
 | Item | Value |
@@ -29,11 +31,11 @@ Docs-only authorization packet for a **future staging-only redeploy** of `viona-
 |-------|--------|
 | Phrase required | **YES** |
 | Phrase (verbatim) | `APPROVE_PACK19_R1_STAGING_API_REDEPLOY_FOR_CREATE_SUBMIT_ROUTE` |
-| Phrase provided in this packet | **NO** |
+| Phrase provided | **YES** — recorded verbatim (approval update) |
 
 ## Result classification
 
-**`PACK19_R1_STAGING_REDEPLOY_AUTHORIZATION_PACKET_PREPARED_ONLY`**
+**`PACK19_R1_STAGING_REDEPLOY_APPROVAL_RECORDED_ONLY`**
 
 ## Guardrails (this packet)
 
@@ -42,6 +44,7 @@ Docs-only authorization packet for a **future staging-only redeploy** of `viona-
 | Docs-only | **YES** |
 | Exactly the two allowed files changed | **YES** |
 | Source master recorded | **YES** — `ef17d84` |
+| Approval phrase recorded (approval only) | **YES** |
 | Deploy/restart performed | **NO** |
 | Staging QA performed | **NO** |
 | Row create/seed | **NO** |
@@ -54,8 +57,9 @@ Docs-only authorization packet for a **future staging-only redeploy** of `viona-
 | Production touched | **NO** |
 | Pack29 opened | **NO** |
 | Execution wired | **NO** |
+| Pack19 QA rerun | **NO** — remains held |
 | Future redeploy phrase required | **YES** |
-| Future redeploy phrase provided | **NO** |
+| Future redeploy phrase provided | **YES** — approval only, no deploy |
 | Conflict markers present | **NO** |
 | Secrets printed | **NO** |
 
@@ -72,4 +76,4 @@ Docs-only authorization packet for a **future staging-only redeploy** of `viona-
 
 ## Recommendation
 
-**Safe to push branch** — docs-only authorization intent. Operator provides `APPROVE_PACK19_R1_STAGING_API_REDEPLOY_FOR_CREATE_SUBMIT_ROUTE` in a separate execution pack to authorize the staging-only redeploy. No Pack29, no execution wiring, no deploy in this packet.
+**Safe to push branch / open PR** — docs-only approval record. Records the operator redeploy phrase only. Next step: a **separate staging-only redeploy execution pack** performs the redeploy under the now-provided phrase `APPROVE_PACK19_R1_STAGING_API_REDEPLOY_FOR_CREATE_SUBMIT_ROUTE`. No Pack29, no execution wiring, no deploy in this packet.

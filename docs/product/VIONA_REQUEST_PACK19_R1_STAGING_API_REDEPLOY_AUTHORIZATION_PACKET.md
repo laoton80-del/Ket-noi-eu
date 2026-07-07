@@ -1,10 +1,12 @@
 # VIONA Request — Pack19 R1 staging API redeploy authorization packet
 
 **Document type:** Authorization packet (docs-only — no deploy).
-**Status:** `pack19_r1_staging_api_redeploy_authorization_planning_only`
-**Result classification:** `PACK19_R1_STAGING_REDEPLOY_AUTHORIZATION_PACKET_PREPARED_ONLY`
+**Status:** `pack19_r1_staging_api_redeploy_approval_recorded`
+**Result classification:** `PACK19_R1_STAGING_REDEPLOY_APPROVAL_RECORDED_ONLY`
 
 > Read `docs/ai-context/VIONA_OPERATING_PROTOCOL.md` first. This packet records **authorization intent only**. It performs **no** deploy/restart, **no** staging QA, **no** row create/seed, **no** status POST, **no** DB/Prisma/Supabase/SQL, **no** `.env*` change, **no** Pack29, and **no** execution wiring. No secrets printed.
+
+> **Approval update:** The operator has **now provided** the redeploy phrase `APPROVE_PACK19_R1_STAGING_API_REDEPLOY_FOR_CREATE_SUBMIT_ROUTE`. This update records **approval only** — no deploy/restart was executed; no staging QA was run; no row was created or seeded; no `POST /api/viona/requests` was called; no status POST was called; no DB/Prisma/Supabase/SQL ran; Pack19 QA remains held; Pack29 remains blocked; execution remains blocked.
 
 ---
 
@@ -60,15 +62,15 @@ Authorize a **future staging-only redeploy** of `viona-api-staging-eu` so the al
 
 ---
 
-## 5. Future redeploy phrase (required — NOT provided here)
+## 5. Future redeploy phrase (required — NOW PROVIDED)
 
 | Field | Value |
 |-------|--------|
 | Phrase required | **YES** |
 | Phrase (verbatim) | `APPROVE_PACK19_R1_STAGING_API_REDEPLOY_FOR_CREATE_SUBMIT_ROUTE` |
-| Phrase provided in this packet | **NO** |
+| Phrase provided | **YES** — recorded verbatim in this approval update |
 
-No redeploy may begin until the phrase above is explicitly provided in a separate execution pack.
+**Recording note:** approval recorded only — no redeploy has begun. The redeploy must be executed in a **separate staging-only redeploy execution pack** subject to the scope (§4) and all guardrails in this document.
 
 ---
 
@@ -93,12 +95,12 @@ This packet does **NOT**:
 
 ## 7. Result classification
 
-**`PACK19_R1_STAGING_REDEPLOY_AUTHORIZATION_PACKET_PREPARED_ONLY`**
+**`PACK19_R1_STAGING_REDEPLOY_APPROVAL_RECORDED_ONLY`**
 
-Assertions: authorization recorded only; deploy/restart not performed; row create/seed not performed; Pack19 QA not rerun; Pack29 remains blocked; execution remains blocked; future redeploy phrase required but **not** provided.
+Assertions (this approval update): approval recorded only; **no deploy/restart executed**; **no staging QA run**; **no row created or seeded**; **no `POST /api/viona/requests` called**; **no status POST called**; **no DB/Prisma/Supabase/SQL ran**; **Pack19 QA remains held**; **Pack29 remains blocked**; **execution remains blocked**; future redeploy phrase required and **now provided** verbatim.
 
 ---
 
 ## 8. Recommended next step
 
-An operator provides `APPROVE_PACK19_R1_STAGING_API_REDEPLOY_FOR_CREATE_SUBMIT_ROUTE` to authorize a **separate staging-only redeploy execution pack**. After redeploy, verify `POST /api/viona/requests` responds on staging, then re-run the Pack19 safe submitted-row precondition remediation execution pack, then Pack19 bounded QA under `APPROVE_PACK19_SCOPED_SUBMITTED_ROW_STATUS_TRIAGE_QA`. Pack29 and execution remain blocked throughout.
+The redeploy phrase `APPROVE_PACK19_R1_STAGING_API_REDEPLOY_FOR_CREATE_SUBMIT_ROUTE` is now provided. The next step is a **separate staging-only redeploy execution pack**. After redeploy, verify `POST /api/viona/requests` responds on staging, then re-run the Pack19 safe submitted-row precondition remediation execution pack, then Pack19 bounded QA under `APPROVE_PACK19_SCOPED_SUBMITTED_ROW_STATUS_TRIAGE_QA`. Pack29 and execution remain blocked throughout.
