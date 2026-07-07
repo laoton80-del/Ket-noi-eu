@@ -1,10 +1,12 @@
 # VIONA Request — Pack19 R1 create/submit path authorization/design packet
 
 **Document type:** Authorization / design packet (docs-only — no implementation).
-**Status:** `pack19_r1_viona_request_create_submit_path_authorization_planning_only`
-**Result classification:** `R1_CREATE_SUBMIT_PATH_AUTHORIZATION_PACKET_PREPARED_ONLY`
+**Status:** `pack19_r1_viona_request_create_submit_path_implementation_approval_recorded`
+**Result classification:** `R1_CREATE_SUBMIT_PATH_IMPLEMENTATION_APPROVAL_RECORDED_ONLY`
 
 > Read `docs/ai-context/VIONA_OPERATING_PROTOCOL.md` first. This packet records **design and approval intent only**. It authorizes **no** implementation, **no** endpoint code, **no** staging mutation, **no** row creation, **no** DB/Prisma/SQL, **no** deploy/restart, **no** Pack29, and **no** execution wiring. No secrets printed.
+
+> **Approval update (source master `443706adea6b38e8e6b09d31774b5dbd9aee9e1a` / `443706a`):** The operator has **now provided** the future implementation phrase `APPROVE_PACK19_R1_VIONA_REQUEST_CREATE_SUBMIT_PATH_IMPLEMENTATION`. This update records **approval only** — no endpoint was implemented; no row was created or seeded; no staging/auth/data mutation occurred; no status POST occurred; no DB/Prisma/Supabase/SQL ran; no deploy/restart occurred; Pack29 remains blocked; execution remains blocked.
 
 ---
 
@@ -100,15 +102,15 @@ It does **not** expose a VIONA request create/submit endpoint. Therefore Pack19'
 
 ---
 
-## 5. Future implementation phrase (required — NOT provided here)
+## 5. Future implementation phrase (required — NOW PROVIDED)
 
 | Field | Value |
 |-------|--------|
 | Phrase required | **YES** |
 | Phrase (verbatim) | `APPROVE_PACK19_R1_VIONA_REQUEST_CREATE_SUBMIT_PATH_IMPLEMENTATION` |
-| Phrase provided in this pack | **NO** |
+| Phrase provided | **YES** — recorded verbatim in this approval update (source master `443706a`) |
 
-No implementation may begin until the phrase above is explicitly provided in a separate execution/implementation pack.
+**Recording note:** approval recorded only — no implementation has begun. Implementation must proceed in a **separate implementation pack** subject to the design (§3), change-class/reviews (§4), and all guardrails in this document; it remains staging-testable only with no production-readiness claim.
 
 ---
 
@@ -132,12 +134,12 @@ This packet does **NOT**:
 
 ## 7. Result classification
 
-**`R1_CREATE_SUBMIT_PATH_AUTHORIZATION_PACKET_PREPARED_ONLY`**
+**`R1_CREATE_SUBMIT_PATH_IMPLEMENTATION_APPROVAL_RECORDED_ONLY`**
 
-Assertions: design/approval recorded only; no endpoint implemented; no row create/seed; no staging/auth/data mutation; no DB/Prisma/Supabase/SQL run; no deploy/restart; Pack29 remains blocked; execution remains blocked; future implementation phrase required but **not** provided.
+Assertions (this approval update): approval recorded only; **no endpoint implemented**; **no row created or seeded**; **no staging/auth/data mutation** occurred; **no status POST** occurred; **no DB/Prisma/Supabase/SQL** ran; **no deploy/restart** occurred; **Pack29 remains blocked**; **execution remains blocked**; future implementation phrase required and **now provided** verbatim.
 
 ---
 
 ## 8. Recommended next step
 
-After this packet merges, an operator may provide `APPROVE_PACK19_R1_VIONA_REQUEST_CREATE_SUBMIT_PATH_IMPLEMENTATION` to authorize a **separate implementation pack** that builds `POST /api/viona/requests` per §3, with reviews per §4, staging-testable only. Once the safe `submitted` precondition can be produced, re-run the Pack19 execution-only precondition remediation, then Pack19 bounded QA under `APPROVE_PACK19_SCOPED_SUBMITTED_ROW_STATUS_TRIAGE_QA`. Pack29 and execution remain blocked throughout.
+The implementation phrase `APPROVE_PACK19_R1_VIONA_REQUEST_CREATE_SUBMIT_PATH_IMPLEMENTATION` is now provided. The next step is a **separate implementation pack** that builds `POST /api/viona/requests` per §3, with reviews per §4, staging-testable only (no production-readiness claim). Once the safe `submitted` precondition can be produced, re-run the Pack19 execution-only precondition remediation, then Pack19 bounded QA under `APPROVE_PACK19_SCOPED_SUBMITTED_ROW_STATUS_TRIAGE_QA`. Pack29 and execution remain blocked throughout.
