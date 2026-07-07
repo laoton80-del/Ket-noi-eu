@@ -11,6 +11,10 @@ vionaRouter.get('/requests', (req, res, next) => {
   void VionaRequestController.getVionaRequests(req, res).catch(next);
 });
 
+vionaRouter.post('/requests', (req, res, next) => {
+  void VionaRequestController.postCreateVionaRequest(req, res).catch(next);
+});
+
 vionaRouter.get('/requests/:id', (req, res, next) => {
   void VionaRequestController.getVionaRequestDetail(req, res).catch(next);
 });

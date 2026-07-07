@@ -1,5 +1,9 @@
 import type { Request, Response } from 'express';
 
+import {
+  createVionaRequest,
+  screenCreateVionaRequestRawBody,
+} from '../services/viona/vionaRequestCreateService';
 import { appendVionaRequestNote } from '../services/viona/vionaRequestNoteActionService';
 import { transitionVionaRequestStatus } from '../services/viona/vionaRequestStatusActionService';
 import {
@@ -98,6 +102,94 @@ export async function getVionaRequests(req: Request, res: Response): Promise<voi
     });
 
     jsonOk(res, data, 200);
+  } catch {
+    jsonFail(res, 'Internal server error', 500);
+  }
+}
+
+function readRequiredStringBody(value: unknown): string {
+  return typeof value === 'string' ? value : '';
+}
+
+function readOptionalStringBody(value: unknown): string | undefined {
+  return typeof value === 'string' ? value : undefined;
+}
+
+function readStringArrayBody(value: unknown): readonly string[] {
+  return Array.isArray(value) ? value.filter((v): v is string => typeof v === 'string') : [];
+}
+
+/**
+ * `POST /api/viona/requests` — Pack19 R1 bounded create-submit path.
+ * Creates exactly one VionaRequest row with initial status `submitted`. No status transition,
+ * no note/execution/payment/booking/SOS/AI/merchant/notification/external side effect.
+ * Requires auth and the exact Pack19 staging safety labels. Staging-testable only; not production-ready.
+ */
+export async function postCreateVionaRequest(req: Request, res: Response): Promise<void> {
+  try {
+    const authUserId = readAuthUserId(req);
+    if (!authUserId) {
+      jsonFail(res, 'Unauthorized', 401);
+      return;
+    }
+
+    const screenReason = screenCreateVionaRequestRawBody(req.body);
+    if (screenReason != null) {
+      const screenMsgMap: Record<typeof screenReason, string> = {
+        invalid_input: 'Invalid create request',
+        unsafe_content: 'Invalid create content',
+        unsafe_request_type: 'Unsupported request type',
+        unsafe_universe: 'Unsupported source universe',
+        missing_safety_labels: 'Required safety labels missing',
+        forbidden_labels: 'Forbidden safety labels',
+        forbidden_side_effect: 'Side-effect fields are not allowed on create',
+        bulk_forbidden: 'Bulk creation is not allowed',
+      };
+      jsonFail(res, screenMsgMap[screenReason], 400);
+      return;
+    }
+
+    const body = req.body as Record<string, unknown>;
+
+    const result = await createVionaRequest({
+      authUserId,
+      tenantId: readRequiredStringBody(body.tenantId),
+      sourceUniverse: readRequiredStringBody(body.sourceUniverse),
+      requestType: readRequiredStringBody(body.requestType),
+      title: readRequiredStringBody(body.title),
+      summary: readOptionalStringBody(body.summary),
+      locale: readOptionalStringBody(body.locale),
+      countryCode: readOptionalStringBody(body.countryCode),
+      sourceFeature: readOptionalStringBody(body.sourceFeature),
+      safetyLabels: readStringArrayBody(body.safetyLabels),
+      idempotencyKey: readOptionalTrimmedBody(body.idempotencyKey),
+      clientCorrelationId: readOptionalTrimmedBody(body.clientCorrelationId),
+    });
+
+    if (!result.ok) {
+      const msgMap: Record<typeof result.reason, string> = {
+        invalid_input: 'Invalid create request',
+        unsafe_content: 'Invalid create content',
+        unsafe_request_type: 'Unsupported request type',
+        unsafe_universe: 'Unsupported source universe',
+        missing_safety_labels: 'Required safety labels missing',
+        forbidden_labels: 'Forbidden safety labels',
+        forbidden_side_effect: 'Side-effect fields are not allowed on create',
+        bulk_forbidden: 'Bulk creation is not allowed',
+      };
+      jsonFail(res, msgMap[result.reason], 400);
+      return;
+    }
+
+    jsonOk(
+      res,
+      {
+        ...result.data,
+        action: result.action,
+        safety: result.safety,
+      },
+      result.action.idempotentReplay ? 200 : 201
+    );
   } catch {
     jsonFail(res, 'Internal server error', 500);
   }
