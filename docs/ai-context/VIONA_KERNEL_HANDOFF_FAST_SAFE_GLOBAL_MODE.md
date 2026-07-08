@@ -2,7 +2,7 @@
 
 **Document type:** Canonical kernel and session handoff for VIONA engineering, product, and AI agents.
 **Audience:** New ChatGPT / Cursor windows, staff, contractors, and automation executors.
-**Baseline:** `origin/master @ 11500aa` — `docs(pack19): record scoped submitted-row status triage qa result (#237)`
+**Baseline:** `origin/master @ ecc1b45` — `docs(requests): record Pack19 submitted to triage status QA after remediation (#249)`
 **Supersedes for Request Engine sequencing:** prior scattered pack pointers when this doc conflicts on pack order or blocked state — align to this handoff.
 **Subordinate to:** `docs/ai-context/VIONA_OPERATING_PROTOCOL.md` and founder-signed **Master Blueprint** (`VIONA_FINAL_MASTER_BLUEPRINT_V2.md`). If conflict, stop and report drift risk.
 
@@ -203,7 +203,7 @@ All new work branches from `c843111` unless a later pack explicitly updates this
 | Market / legal gates | **Defined** |
 | Forbidden automation claims | **Recorded** |
 | Next ladder | **Recorded** — Pack26B → 26C → 26D → Pack27 → Pack28+ → payment/SOS/wallet/live AI (highest gates) |
-| Next recommended lane | **Pack19 remediation / re-run hold** — Pack19 staging QA **CLOSED / GREEN (blocked-safe)** @ `11500aa` (PR #237 — `BLOCKED_NO_SAFE_SUBMITTED_REQUEST`); hold or create separate remediation authorization; do not create/seed staging rows without separate authorization; re-run Pack19 bounded QA only when safe non-hold **`submitted`** row available; Pack18 staging QA **CLOSED / GREEN** @ `1c90e2b`; no Pack29; no execution wiring; Pack28 layer remains pure/non-persistent/non-executing/not wired |
+| Next recommended lane | **Pack19 COMPLETE / PASS** — bounded **`submitted` → `triage`** staging QA **CLOSED / GREEN** @ `ecc1b45` (PR #249 — `PASS_SUBMITTED_TO_TRIAGE_STATUS_QA`); remediation chain **CLOSED / GREEN** through PR #244–#248; Pack19 **no longer blocked**; Pack29 remains **blocked** until separate authorization/design packet; no execution wiring; Pack28 layer remains pure/non-persistent/non-executing/not wired |
 | Pack26 spine | **COMPLETE / GREEN** |
 | Pack27 authorization | **CLOSED / GREEN** — PR #203 @ `56d0499`; kernel sync PR #204 @ `9e7567a` |
 | Pack27 implementation | **CLOSED / GREEN** — PR #205 @ `b963294`; kernel sync PR #206 @ `7b6cba5` |
@@ -247,10 +247,17 @@ All new work branches from `c843111` unless a later pack explicitly updates this
 | Pack18 staging QA phrase used | `APPROVE_PACK18_CONTROLLED_WRITE_STAGING_QA` |
 | Pack19 scoped submitted-row status triage QA authorization | **CLOSED / GREEN** — PR #235 @ `faaad28` (see Pack19 authorization section below) |
 | Pack19 authorization kernel/handoff sync | **CLOSED / GREEN** — PR #236 @ `b218ca4` |
-| Pack19 scoped submitted-row status triage QA result | **CLOSED / GREEN (blocked-safe)** — PR #237 @ `11500aa` (see Pack19 staging QA section below) |
-| Pack19 current status | **`pack19_staging_qa_blocked_no_safe_submitted_request`** |
-| Pack19 staging QA result | **`BLOCKED_NO_SAFE_SUBMITTED_REQUEST`** |
+| Pack19 scoped submitted-row status triage QA result (initial) | **CLOSED / GREEN (blocked-safe)** — PR #237 @ `11500aa` — `BLOCKED_NO_SAFE_SUBMITTED_REQUEST` |
+| Pack19 R1 create-submit path implementation | **CLOSED / GREEN** — PR #244 |
+| Pack19 R1 staging redeploy approval | **CLOSED / GREEN** — PR #245 |
+| Pack19 R1 staging redeploy execution result | **CLOSED / GREEN** — PR #247 — `STAGING_REDEPLOY_COMPLETED_ROUTE_AVAILABLE` |
+| Pack19 safe submitted-row precondition remediation | **CLOSED / GREEN** — PR #248 — `PRECONDITION_REMEDIATED_SAFE_SUBMITTED_ROW_CREATED` |
+| Pack19 scoped submitted-row status triage QA (after remediation) | **CLOSED / GREEN** — PR #249 @ `ecc1b45` — `PASS_SUBMITTED_TO_TRIAGE_STATUS_QA` |
+| Pack19 current status | **`pack19_staging_qa_pass_submitted_to_triage_after_precondition_remediation`** |
+| Pack19 staging QA result | **`PASS_SUBMITTED_TO_TRIAGE_STATUS_QA`** |
 | Pack19 staging QA phrase used | `APPROVE_PACK19_SCOPED_SUBMITTED_ROW_STATUS_TRIAGE_QA` |
+| Pack19 candidate reference (safe redacted) | **`5e759ca9…`** |
+| Pack19 status transition | **`submitted` → `triage`** — status POST count **1** |
 | Pack26 implementation | **NOT opened** |
 | Pack29 | **NOT opened** |
 
@@ -1548,9 +1555,57 @@ Evidence: `docs/product/VIONA_REQUEST_PACK19_SCOPED_SUBMITTED_ROW_STATUS_TRIAGE_
 
 **Pack19 staging QA non-authorization (preserved):** re-running staging QA in this handoff sync; staging endpoint calls in this sync; creating/seed/deleting request rows; status POST; note POST; assign / confirm / cancel; payment / booking / SOS execution; Pack29; execution lane runtime wiring; automation / production claims; DB writes; deploy/restart; secrets/env printing; re-running DB commands in this handoff sync.
 
-**Next recommendation:** Hold or create separate remediation authorization. Do **not** create/seed staging rows without separate authorization. Re-run Pack19 bounded QA only when a safe existing non-hold **`submitted`** row is available on staging. Pack29 and execution remain **blocked**.
+**Next recommendation (historical — superseded by remediation chain):** Hold or create separate remediation authorization. Do **not** create/seed staging rows without separate authorization. Re-run Pack19 bounded QA only when a safe existing non-hold **`submitted`** row is available on staging. Pack29 and execution remain **blocked**.
 
 Evidence: `docs/product/VIONA_REQUEST_PACK19_SCOPED_SUBMITTED_ROW_STATUS_TRIAGE_QA_RESULT.md`, `docs/design/evidence/cursor-pack19-scoped-submitted-row-status-triage-qa/README.md`
+
+### Pack19 Request Engine readiness — remediation chain + bounded status QA PASS (CLOSED/GREEN)
+
+| Field | Value |
+|-------|--------|
+| Current verified master | **`ecc1b454ff16e02f3d99e5b1f4a1a35afde6a53e`** (`ecc1b45`) |
+| Pack19 bounded status QA result | **`PASS_SUBMITTED_TO_TRIAGE_STATUS_QA`** — PR #249 @ `ecc1b45` |
+| Pack19 current status | **`pack19_staging_qa_pass_submitted_to_triage_after_precondition_remediation`** |
+| Pack19 blocked status | **NO** — Pack19 **no longer blocked** |
+| Operator staging QA phrase | `APPROVE_PACK19_SCOPED_SUBMITTED_ROW_STATUS_TRIAGE_QA` (recorded on master) |
+| Staging target label (non-secret) | **`viona-api-staging-eu`** / **`viona-api-staging-eu.fly.dev`** |
+| Create-submit path on master | **YES** — `POST /api/viona/requests` (PR #244) |
+| Staging route redeployed and available | **YES** — PR #247 — `STAGING_REDEPLOY_COMPLETED_ROUTE_AVAILABLE` |
+| Safe submitted precondition remediated | **YES** — PR #248 — `PRECONDITION_REMEDIATED_SAFE_SUBMITTED_ROW_CREATED` |
+| Candidate reference (safe redacted) | **`5e759ca9…`** |
+| Candidate status before QA | **`submitted`** |
+| Candidate status after QA | **`triage`** |
+| Status endpoint | `POST /api/viona/requests/:id/actions/status` |
+| Status POST called | **YES** |
+| Status POST count | **1** |
+| Status POST HTTP result | **201** |
+| Post-verify GET | Candidate status **`triage`**; all six safety labels present |
+| Pack25 hold row | **excluded and untouched** — `ec9a8b69-8a60-45aa-99ba-fc805a101dcc` |
+| Row create/seed during Pack19 QA | **NO** |
+| `POST /api/viona/requests` create during Pack19 QA | **NO** |
+| Production | **NO** |
+| Pack29 opened | **NO** |
+| Execution wiring | **NO** |
+| Deploy/restart during QA | **NO** |
+| DB/Prisma/Supabase/SQL migration/apply | **NO** |
+| Secrets printed | **NO** |
+
+**Request Engine readiness (Pack19 lane):**
+
+| Readiness item | State |
+| --- | --- |
+| Create-submit path exists and was used safely in remediation | **YES** — PR #244 + PR #248 |
+| Staging route redeployed and available | **YES** — PR #247 |
+| Safe submitted precondition remediated | **YES** — PR #248 |
+| Bounded status transition `submitted` → `triage` passed | **YES** — PR #249 |
+| Pack19 blocked | **NO** |
+| Pack29 blocked | **YES** — until separate authorization/design packet |
+
+**Pack19 kernel/handoff sync non-authorization (preserved):** re-running staging QA in this sync; staging endpoint calls in this sync; status POST in this sync; row create/seed in this sync; `POST /api/viona/requests` create in this sync; deploy/restart in this sync; DB/Prisma/Supabase/SQL in this sync; Pack29 implementation; execution wiring; secrets/env printing.
+
+**Next recommendation:** Pack29 remains **blocked** until separate authorization/design packet. No further Pack19 bounded status QA rerun without separate authorization. Idempotency replay or additional status transitions are out of scope unless separately authorized.
+
+Evidence: `docs/product/VIONA_REQUEST_PACK19_SCOPED_SUBMITTED_ROW_STATUS_TRIAGE_QA_AFTER_PRECONDITION_REMEDIATION.md`, `docs/design/evidence/cursor-pack19-scoped-submitted-row-status-triage-qa-after-precondition-remediation/README.md`, `docs/product/VIONA_REQUEST_PACK19_SAFE_SUBMITTED_ROW_PRECONDITION_REMEDIATION_AFTER_REDEPLOY.md`, `docs/product/VIONA_REQUEST_PACK19_R1_STAGING_API_REDEPLOY_EXECUTION_RESULT.md`, `docs/product/VIONA_REQUEST_PACK19_R1_VIONA_REQUEST_CREATE_SUBMIT_PATH_IMPLEMENTATION.md`
 
 ### Pack25 visual-QA row post-state (current — read-only record)
 
@@ -1565,7 +1620,7 @@ Evidence: `docs/product/VIONA_REQUEST_PACK19_SCOPED_SUBMITTED_ROW_STATUS_TRIAGE_
 | Duplicate events | **NO** |
 | Further click / status POST on this row | **NO** — Option C hold |
 
-**Deferred / not authorized (Pack25 + Pack26A + Pack26B + Pack26C + Pack26D + Pack27 + Pack28A + Pack28 implementation + Pack15C chain + Pack16 authorization + Pack16 implementation + Pack16 staging QA + Pack17 authorization + Pack17 implementation + Pack17 staging QA + Pack18 authorization + Pack18 implementation + Pack18 staging QA + Pack19 authorization + Pack19 staging QA):** further Send to review click or status POST on current visual-QA row (Option C hold); additional transitions on current row; assign / confirm / cancel; payment / booking / SOS / wallet / live AI; UI registry/contract/operator-approval/execution-lane/integration wiring; execution enablement; audit/timeline/approval/execution DB writes; Pack26 implementation; Pack29; broad/uncontrolled write surfaces beyond separately authorized packs. **Option B** only if literal new `submitted` → `triage` UI click proof is explicitly required on a fresh scoped row. **Next lane:** Pack19 remediation / re-run hold — PR #237 **`BLOCKED_NO_SAFE_SUBMITTED_REQUEST`** @ `11500aa`; do not create/seed rows without separate authorization; Pack18 staging QA **CLOSED / GREEN** @ `1c90e2b`; no Pack29; no execution wiring; Pack28 layer remains pure/non-persistent/non-executing/not wired.
+**Deferred / not authorized (Pack25 + Pack26A + Pack26B + Pack26C + Pack26D + Pack27 + Pack28A + Pack28 implementation + Pack15C chain + Pack16 authorization + Pack16 implementation + Pack16 staging QA + Pack17 authorization + Pack17 implementation + Pack17 staging QA + Pack18 authorization + Pack18 implementation + Pack18 staging QA + Pack19 authorization + Pack19 staging QA + Pack19 remediation + Pack19 re-run QA):** further Send to review click or status POST on current visual-QA row (Option C hold); additional transitions on current row; assign / confirm / cancel; payment / booking / SOS / wallet / live AI; UI registry/contract/operator-approval/execution-lane/integration wiring; execution enablement; audit/timeline/approval/execution DB writes; Pack26 implementation; Pack29; broad/uncontrolled write surfaces beyond separately authorized packs. **Option B** only if literal new `submitted` → `triage` UI click proof is explicitly required on a fresh scoped row. **Next lane:** Pack19 **COMPLETE / PASS** @ `ecc1b45` (PR #249 — `PASS_SUBMITTED_TO_TRIAGE_STATUS_QA`); Pack29 remains **blocked** until separate authorization/design packet; no execution wiring; Pack28 layer remains pure/non-persistent/non-executing/not wired.
 
 Evidence: `docs/product/VIONA_REQUEST_PACK25_STATUS_ACTION_UI_VISUAL_CLOSURE_EVIDENCE.md`, `docs/design/evidence/cursor-pack25-status-action-ui-visual-closure-evidence/README.md`, `docs/product/VIONA_REQUEST_PACK25_STAGING_DEPLOY_REDEPLOY_EVIDENCE.md`, `docs/design/evidence/cursor-pack25-staging-deploy-redeploy-evidence/README.md`, `docs/product/VIONA_REQUEST_PACK25_LIVE_QA_POST_TRANSITION_BLOCKED_CLICK_GATE_EVIDENCE.md`, `docs/design/evidence/cursor-pack25-live-qa-post-transition-blocked-click-gate-evidence/README.md`, `docs/product/VIONA_REQUEST_PACK25_POST_HOC_TRIAGE_UI_EVIDENCE.md`, `docs/design/evidence/cursor-pack25-post-hoc-triage-ui-evidence/README.md`
 
@@ -1704,10 +1759,17 @@ Pack15C operator GO provided intake evidence is **complete and green** on master
 | Pack18 | Staging QA phrase used | `APPROVE_PACK18_CONTROLLED_WRITE_STAGING_QA` |
 | Pack19 | Scoped submitted-row status triage QA authorization packet | `faaad28` (PR #235) |
 | Pack19 | Authorization kernel/handoff sync | `b218ca4` (PR #236) |
-| Pack19 | Scoped submitted-row status triage QA result | `11500aa` (PR #237) |
-| Pack19 | Current status | **`pack19_staging_qa_blocked_no_safe_submitted_request`** |
-| Pack19 | Staging QA result | **`BLOCKED_NO_SAFE_SUBMITTED_REQUEST`** |
+| Pack19 | Scoped submitted-row status triage QA result (initial) | `11500aa` (PR #237) — `BLOCKED_NO_SAFE_SUBMITTED_REQUEST` |
+| Pack19 | R1 create-submit path implementation | PR #244 |
+| Pack19 | R1 staging redeploy approval | PR #245 |
+| Pack19 | R1 staging redeploy execution result | PR #247 — `STAGING_REDEPLOY_COMPLETED_ROUTE_AVAILABLE` |
+| Pack19 | Safe submitted-row precondition remediation | PR #248 — `PRECONDITION_REMEDIATED_SAFE_SUBMITTED_ROW_CREATED` |
+| Pack19 | Scoped submitted-row status triage QA (after remediation) | `ecc1b45` (PR #249) |
+| Pack19 | Kernel/handoff sync after status QA pass | *(this sync)* |
+| Pack19 | Current status | **`pack19_staging_qa_pass_submitted_to_triage_after_precondition_remediation`** |
+| Pack19 | Staging QA result | **`PASS_SUBMITTED_TO_TRIAGE_STATUS_QA`** |
 | Pack19 | Staging QA phrase used | `APPROVE_PACK19_SCOPED_SUBMITTED_ROW_STATUS_TRIAGE_QA` |
+| Pack19 | Candidate reference (safe redacted) | **`5e759ca9…`** |
 | Pack29 | | **NOT opened** |
 
 ---
@@ -1731,8 +1793,8 @@ Pack15C operator GO provided intake evidence is **complete and green** on master
 | Pack17 staging QA | **PASS** — `PASS_READ_ONLY_INBOX_LIST_AND_DETAIL` against `viona-api-staging-eu`; local Expo route `/viona-requests-live-inbox` **REACHABLE** |
 | Pack18 controlled write | **`staging_controlled_write_qa_passed_note_only_status_skipped`** — PR #231 @ `ebe58a9` implementation; PR #233 @ `1c90e2b` staging QA **PASS** (`PASS_CONTROLLED_WRITE_NOTE_ONLY_STATUS_SKIPPED`); policy-gated POST note + narrow `submitted`→`triage` status action; Pack17 read-only modules unchanged; rollback via `VIONA_PACK18_CONTROLLED_WRITE_ENABLED = false` |
 | Pack18 staging QA | **PASS** — note POST **201**; status POST **SKIPPED** (`STATUS_QA_SKIPPED_NO_SAFE_SUBMITTED_REQUEST`); controlled write confirmed; unauthorized writes **NO**; against `viona-api-staging-eu` |
-| Pack19 scoped status triage QA | **`pack19_staging_qa_blocked_no_safe_submitted_request`** — PR #237 @ `11500aa` staging QA **BLOCKED-SAFE** (`BLOCKED_NO_SAFE_SUBMITTED_REQUEST`); bounded **`submitted` → `triage`** status POST **NOT RUN** — no safe non-hold **`submitted`** row; Pack25 hold row avoided; zero status POSTs; row create/seed **NO** |
-| Pack19 staging QA | **BLOCKED-SAFE** — `BLOCKED_NO_SAFE_SUBMITTED_REQUEST` against `viona-api-staging-eu`; list **200** count **3** `safety.readOnly: true`; visible rows **1** hold **`triage`**, **2** non-hold **`triage`**; detail **NOT RUN**; status POST **NOT RUN**; unauthorized writes **NO** |
+| Pack19 scoped status triage QA | **`pack19_staging_qa_pass_submitted_to_triage_after_precondition_remediation`** — PR #249 @ `ecc1b45` staging QA **PASS** (`PASS_SUBMITTED_TO_TRIAGE_STATUS_QA`); remediation chain PR #244–#248 **CLOSED / GREEN**; bounded **`submitted` → `triage`** status POST **201** × **1** on safe candidate **`5e759ca9…`**; Pack25 hold row excluded/untouched; row create/seed during QA **NO**; create endpoint during QA **NO** |
+| Pack19 staging QA | **PASS** — `PASS_SUBMITTED_TO_TRIAGE_STATUS_QA` against `viona-api-staging-eu`; candidate **`submitted` → `triage`**; status POST count **1**; post-verify GET confirms **`triage`** and six safety labels present |
 | DB apply | **Closed / no-op** — `NO_OP_SCHEMA_ALREADY_UP_TO_DATE` (PR #215); schema already up to date |
 | DB apply performed | **No** |
 | Backup blocker (historical) | **Free Plan** — superseded by PR #98 human dashboard evidence showing PRO plan and scheduled backups |
@@ -2442,7 +2504,7 @@ Evidence: `docs/design/evidence/cursor-pack17-live-read-only-request-inbox-plann
 
 Evidence: `docs/design/evidence/cursor-pack18-controlled-write-authorization-packet/README.md`, `docs/design/evidence/cursor-pack18-controlled-write-implementation/README.md`, `docs/product/VIONA_REQUEST_PACK18_CONTROLLED_WRITE_STAGING_QA_RESULT.md`, `docs/design/evidence/cursor-pack18-controlled-write-staging-qa/README.md`
 
-**Next recommendation:** Hold or create separate Pack19 remediation authorization. Do **not** create/seed staging rows without separate authorization. Re-run Pack19 bounded QA only when a safe existing non-hold **`submitted`** row is available on staging. Pack29 and execution remain **blocked**.
+**Next recommendation:** Pack19 **COMPLETE / PASS** @ `ecc1b45` (PR #249). Pack29 remains **blocked** until separate authorization/design packet. No further Pack19 bounded status QA rerun without separate authorization.
 
 **Authorization packet on master:** `docs/product/VIONA_REQUEST_PACK19_SCOPED_SUBMITTED_ROW_STATUS_TRIAGE_QA_AUTHORIZATION_PACKET.md` (PR #235 @ `faaad28`)
 
@@ -2491,6 +2553,33 @@ Evidence: `docs/design/evidence/cursor-pack19-scoped-submitted-row-status-triage
 
 Evidence: `docs/product/VIONA_REQUEST_PACK19_SCOPED_SUBMITTED_ROW_STATUS_TRIAGE_QA_RESULT.md`, `docs/design/evidence/cursor-pack19-scoped-submitted-row-status-triage-qa/README.md`
 
+**Staging QA result on master (after precondition remediation):** `docs/product/VIONA_REQUEST_PACK19_SCOPED_SUBMITTED_ROW_STATUS_TRIAGE_QA_AFTER_PRECONDITION_REMEDIATION.md` (PR #249 @ `ecc1b45`)
+
+| Item | State |
+|------|--------|
+| Pack19 staging QA scope (after remediation) | **Bounded `submitted` → `triage` status POST QA** — PR #249 |
+| Pack19 current status | **`pack19_staging_qa_pass_submitted_to_triage_after_precondition_remediation`** |
+| Pack19 staging QA result | **`PASS_SUBMITTED_TO_TRIAGE_STATUS_QA`** |
+| Candidate reference (safe redacted) | **`5e759ca9…`** |
+| Candidate status before | **`submitted`** |
+| Candidate status after | **`triage`** |
+| Status endpoint | `POST /api/viona/requests/:id/actions/status` |
+| Status POST called | **YES** |
+| Status POST count | **1** |
+| Status POST HTTP result | **201** |
+| Post-verify GET | Candidate status **`triage`**; all six safety labels present |
+| Pack25 hold row excluded/untouched | **YES** — `ec9a8b69-8a60-45aa-99ba-fc805a101dcc` |
+| Row create/seed during QA | **NO** |
+| `POST /api/viona/requests` create during QA | **NO** |
+| Production | **NO** |
+| Pack29 opened | **NO** |
+| Execution wiring | **NO** |
+| Deploy/restart during QA | **NO** |
+| DB/Prisma/Supabase/SQL | **NO** |
+| Secrets printed | **NO** |
+
+Evidence: `docs/product/VIONA_REQUEST_PACK19_SCOPED_SUBMITTED_ROW_STATUS_TRIAGE_QA_AFTER_PRECONDITION_REMEDIATION.md`, `docs/design/evidence/cursor-pack19-scoped-submitted-row-status-triage-qa-after-precondition-remediation/README.md`
+
 ---
 
 ## 13. Current blocked list
@@ -2504,7 +2593,7 @@ Still **blocked** until future approved packs and missing execution inputs are s
 - Pack16 read-only persistence API — **implemented and staging QA passed** (PR #219 + PR #221)
 - Pack17 read-only inbox — **staging read-only QA passed** (PR #225 + PR #227 — `PASS_READ_ONLY_INBOX_LIST_AND_DETAIL`)
 - Pack18 controlled write — **staging controlled write QA passed** (PR #231 + PR #233 — `PASS_CONTROLLED_WRITE_NOTE_ONLY_STATUS_SKIPPED` — note POST **201**; status POST **SKIPPED** — `STATUS_QA_SKIPPED_NO_SAFE_SUBMITTED_REQUEST`)
-- Pack19 scoped submitted-row status triage QA — **staging QA blocked-safe complete** (PR #235 authorization + PR #237 result — `pack19_staging_qa_blocked_no_safe_submitted_request` / `BLOCKED_NO_SAFE_SUBMITTED_REQUEST`); status POST **NOT RUN**; re-run only when safe non-hold **`submitted`** row available; row create/seed **without separate authorization blocked**
+- Pack19 scoped submitted-row status triage QA — **staging QA PASS complete** (PR #235 authorization + PR #237 initial blocked-safe + remediation chain PR #244–#248 + PR #249 — `PASS_SUBMITTED_TO_TRIAGE_STATUS_QA` — `pack19_staging_qa_pass_submitted_to_triage_after_precondition_remediation`); bounded **`submitted` → `triage`** status POST **201** × **1** on safe candidate **`5e759ca9…`**; Pack19 **no longer blocked**; Pack29 remains **blocked**
 - Admin Debug live data
 - OPERATOR Prisma / Auth
 - Payment capture
@@ -2528,7 +2617,7 @@ Execute in order — do not skip:
 5. **Pack16** — Read-only persistence API implementation — **COMPLETE** (PR #219); staging QA **PASS** (PR #221 — `PASS_READ_ONLY_LIST_AND_DETAIL`)
 6. **Pack17** — Read-only inbox implementation **COMPLETE** (PR #225); staging QA **PASS** (PR #227 — `PASS_READ_ONLY_INBOX_LIST_AND_DETAIL` — `staging_read_only_qa_passed`)
 7. **Pack18** — Controlled write authorization **COMPLETE** (PR #229); implementation **COMPLETE** (PR #231); staging QA **PASS** (PR #233 — `PASS_CONTROLLED_WRITE_NOTE_ONLY_STATUS_SKIPPED` — `staging_controlled_write_qa_passed_note_only_status_skipped`)
-8. **Pack19** — Scoped submitted-row status triage QA authorization **COMPLETE** (PR #235); staging QA **BLOCKED-SAFE COMPLETE** (PR #237 — `BLOCKED_NO_SAFE_SUBMITTED_REQUEST` — `pack19_staging_qa_blocked_no_safe_submitted_request`); no safe non-hold **`submitted`** row on staging; status POST **NOT RUN**; hold or create separate remediation authorization; do not create/seed rows without separate authorization; re-run Pack19 bounded QA only when safe **`submitted`** row available; Pack29 and execution remain **blocked**
+8. **Pack19** — Scoped submitted-row status triage QA authorization **COMPLETE** (PR #235); initial staging QA **BLOCKED-SAFE COMPLETE** (PR #237 — `BLOCKED_NO_SAFE_SUBMITTED_REQUEST`); remediation chain **COMPLETE** (PR #244–#248); bounded status QA **PASS COMPLETE** (PR #249 — `PASS_SUBMITTED_TO_TRIAGE_STATUS_QA` — `pack19_staging_qa_pass_submitted_to_triage_after_precondition_remediation`); candidate **`5e759ca9…`** transitioned **`submitted` → `triage`**; status POST count **1**; Pack19 **no longer blocked**; Pack29 and execution remain **blocked**
 
 Note: explicit not-tested restore risk acceptance is **partially satisfied** (PR #107 — planning readiness only); restore test evidence still not provided. Pack15D post-apply verification plan is **satisfied on master** (PR #109 @ `e3c4b95` — `PLAN_ON_MASTER_NOT_EXECUTED`); Pack15D verification execution remains blocked until after future successful DB apply. Stop-on-error final intake is **satisfied on master** (PR #111 @ `718a024` — `CONFIRMED_FINAL_INTAKE`); rule must still be copied into the future execution-only DB apply pack before any execution. Operator GO provided intake is **satisfied on master** (PR #119 @ `5b868ce` — operator GO **`PROVIDED`** verbatim; operator GO **not invented**). Distinct execution approval phrase provided intake is **satisfied on master** (PR #117 @ `6880bda` — phrase **`PROVIDED`** verbatim; phrase **not invented**); execution-only DB apply pack authorization remains **blocked**. ChatGPT GO/NO-GO review is the **next required gate**.
 
@@ -2732,3 +2821,5 @@ Stop immediately and report if asked to:
 **Pack19 handoff sync (scoped submitted-row status triage QA authorization):** This document updated after Pack19 Scoped Submitted-Row Status Triage QA Authorization packet merged @ `faaad28` (PR #235). Pack25 closure chain **CLOSED / GREEN** through PR #188 preserved. Pack26 spine **COMPLETE / GREEN**. Pack26B **read-only / unwired / non-executing** preserved. Pack26C **pure / non-persistent / non-executing** preserved. Pack26D **pure / non-persistent / non-executing** preserved. Pack27 **CLOSED / GREEN** through PR #203–#206 preserved. Pack28 **CLOSED / GREEN** through PR #207–#210 preserved. Pack15C chain **CLOSED / GREEN** through PR #211–#216 preserved; DB apply path **CLOSED / NO-OP** — `NO_OP_SCHEMA_ALREADY_UP_TO_DATE`. Pack16 chain **CLOSED / GREEN** through PR #217–#222 preserved; Pack16 status **`staging_read_only_qa_passed`** preserved. Pack17 chain **CLOSED / GREEN** through PR #223–#228 preserved; Pack17 status **`staging_read_only_qa_passed`** preserved. Pack18 chain **CLOSED / GREEN** through PR #229–#234 preserved; Pack18 status **`staging_controlled_write_qa_passed_note_only_status_skipped`**; Pack18 staging QA result **`PASS_CONTROLLED_WRITE_NOTE_ONLY_STATUS_SKIPPED`**; Pack18 status POST staging QA **SKIPPED** — **`STATUS_QA_SKIPPED_NO_SAFE_SUBMITTED_REQUEST`** preserved. Pack19 authorization **CLOSED / GREEN** — status **`pack19_authorization_planning_only`**; future staging QA phrase **`APPROVE_PACK19_SCOPED_SUBMITTED_ROW_STATUS_TRIAGE_QA`** recorded; future goal **`POST /api/viona/requests/:id/actions/status`** with **`targetStatus: triage`** only when request already **`submitted`**; allowed future routes **`GET /api/viona/requests`**, **`GET /api/viona/requests/:id`**, **`POST /api/viona/requests/:id/actions/status`** (`triage` only); safe request rules **existing rows only**, prefer non-hold **`submitted`**, exclude Pack25 hold row **`ec9a8b69-8a60-45aa-99ba-fc805a101dcc`**, no secrets/tokens/full payloads, no create/seed; stop condition **`BLOCKED_NO_SAFE_SUBMITTED_REQUEST`**; Pack19 staging QA authorized **NO**; row create/seed authorized **NO**; status POST authorized **NO**; assign/confirm/cancel/payment/booking/SOS **NO**; new backend routes **NO**; no staging QA run in this sync; no staging endpoint calls; no staging/auth/data mutation; DB/Prisma/Supabase/SQL commands run **NO**; deploy/restart **NO**; `.env*` changed **NO**; secrets printed **NO**; Pack29 **NOT opened**; execution wired **NO**. Pack25 Option C **HOLD** preserved — no further click/status POST on current visual-QA row `ec9a8b69-8a60-45aa-99ba-fc805a101dcc`. **Next lane:** Pack19 staging QA — blocked until `APPROVE_PACK19_SCOPED_SUBMITTED_ROW_STATUS_TRIAGE_QA`; if no safe **`submitted`** row, stop with **`BLOCKED_NO_SAFE_SUBMITTED_REQUEST`** — do not create/seed rows without separate authorization. Prior Pack15C–Pack19 historical milestones and blockers **unchanged** except Pack19 authorization recorded. Evidence: `docs/design/evidence/cursor-pack19-authorization-kernel-handoff-sync/README.md`.
 
 **Pack19 handoff sync (scoped submitted-row status triage QA blocked-safe result):** This document updated after Pack19 Scoped Submitted-Row Status Triage QA result merged @ `11500aa` (PR #237). Pack25 closure chain **CLOSED / GREEN** through PR #188 preserved. Pack26 spine **COMPLETE / GREEN**. Pack26B **read-only / unwired / non-executing** preserved. Pack26C **pure / non-persistent / non-executing** preserved. Pack26D **pure / non-persistent / non-executing** preserved. Pack27 **CLOSED / GREEN** through PR #203–#206 preserved. Pack28 **CLOSED / GREEN** through PR #207–#210 preserved. Pack15C chain **CLOSED / GREEN** through PR #211–#216 preserved; DB apply path **CLOSED / NO-OP** — `NO_OP_SCHEMA_ALREADY_UP_TO_DATE`. Pack16 chain **CLOSED / GREEN** through PR #217–#222 preserved; Pack16 status **`staging_read_only_qa_passed`** preserved. Pack17 chain **CLOSED / GREEN** through PR #223–#228 preserved; Pack17 status **`staging_read_only_qa_passed`** preserved. Pack18 chain **CLOSED / GREEN** through PR #229–#234 preserved; Pack18 status **`staging_controlled_write_qa_passed_note_only_status_skipped`** preserved. Pack19 authorization chain **CLOSED / GREEN** through PR #235 @ `faaad28` and PR #236 @ `b218ca4` preserved. Pack19 staging QA **CLOSED / GREEN (blocked-safe)** — operator phrase **`APPROVE_PACK19_SCOPED_SUBMITTED_ROW_STATUS_TRIAGE_QA`** recorded; result **`BLOCKED_NO_SAFE_SUBMITTED_REQUEST`**; status **`pack19_staging_qa_blocked_no_safe_submitted_request`**; blocked-safe interpretation **YES** — correct safe outcome, **not a failure**; staging target **`viona-api-staging-eu`** / **`viona-api-staging-eu.fly.dev`**; authentication performed **YES** (User A roster login); secrets/tokens printed **NO**; Pack25 hold row **`ec9a8b69-8a60-45aa-99ba-fc805a101dcc` avoided** **YES**; unauth guard **`GET /api/viona/requests`** → HTTP **401** **PASS**; authenticated list **`GET /api/viona/requests`** → HTTP **200**, count **3**, `safety.readOnly: true` **PASS**; visible rows **1** hold **`triage`**, **2** non-hold **`triage`**; safe non-hold **`submitted`** request selected **NO**; detail **`GET /api/viona/requests/:id`** **NOT RUN** — no safe candidate; status **`POST /api/viona/requests/:id/actions/status`** (`targetStatus: triage`) **NOT RUN** — stop reason `no_non_hold_submitted_row`; zero status POSTs; status target limited to **`triage`** **YES** (N/A); controlled transition **`submitted` → `triage`** confirmed **NO**; row create/seed **NO**; unauthorized writes observed **NO**; Pack29 observed **NO**; execution observed **NO**; DB/Prisma/Supabase/SQL commands run **NO**; deploy/restart **NO**; `.env*` changed **NO**; staging QA re-run in this sync **NO**; staging endpoint calls in this sync **NO**; no staging/auth/data mutation in this sync. Pack25 Option C **HOLD** preserved — no further click/status POST on current visual-QA row `ec9a8b69-8a60-45aa-99ba-fc805a101dcc`. **Next lane:** Hold or create separate remediation authorization; do not create/seed staging rows without separate authorization; re-run Pack19 bounded QA only when safe existing non-hold **`submitted`** row available on staging; Pack29 and execution remain **blocked**. Prior Pack15C–Pack19 historical milestones and blockers **unchanged** except Pack19 blocked-safe staging QA result recorded. Evidence: `docs/design/evidence/cursor-pack19-blocked-status-triage-qa-kernel-handoff-sync/README.md`.
+
+**Pack19 handoff sync (bounded submitted-row status triage QA PASS after remediation):** This document updated after Pack19 bounded submitted-row status triage QA result merged @ `ecc1b45` (PR #249). Current verified master **`ecc1b454ff16e02f3d99e5b1f4a1a35afde6a53e`**. Pack25 closure chain **CLOSED / GREEN** through PR #188 preserved. Pack26 spine **COMPLETE / GREEN**. Pack26B **read-only / unwired / non-executing** preserved. Pack26C **pure / non-persistent / non-executing** preserved. Pack26D **pure / non-persistent / non-executing** preserved. Pack27 **CLOSED / GREEN** through PR #203–#206 preserved. Pack28 **CLOSED / GREEN** through PR #207–#210 preserved. Pack15C chain **CLOSED / GREEN** through PR #211–#216 preserved; DB apply path **CLOSED / NO-OP** — `NO_OP_SCHEMA_ALREADY_UP_TO_DATE`. Pack16 chain **CLOSED / GREEN** through PR #217–#222 preserved; Pack16 status **`staging_read_only_qa_passed`** preserved. Pack17 chain **CLOSED / GREEN** through PR #223–#228 preserved; Pack17 status **`staging_read_only_qa_passed`** preserved. Pack18 chain **CLOSED / GREEN** through PR #229–#234 preserved; Pack18 status **`staging_controlled_write_qa_passed_note_only_status_skipped`** preserved. Pack19 authorization chain **CLOSED / GREEN** through PR #235–#236 preserved. Pack19 initial staging QA **CLOSED / GREEN (blocked-safe)** through PR #237 @ `11500aa` preserved — **`BLOCKED_NO_SAFE_SUBMITTED_REQUEST`**. Pack19 remediation chain **CLOSED / GREEN** — PR #244 create-submit path; PR #245 staging redeploy approval; PR #247 staging redeploy result **`STAGING_REDEPLOY_COMPLETED_ROUTE_AVAILABLE`**; PR #248 safe submitted-row precondition remediation **`PRECONDITION_REMEDIATED_SAFE_SUBMITTED_ROW_CREATED`**. Pack19 bounded status QA **CLOSED / GREEN** — PR #249 @ `ecc1b45`; result **`PASS_SUBMITTED_TO_TRIAGE_STATUS_QA`**; status **`pack19_staging_qa_pass_submitted_to_triage_after_precondition_remediation`**; operator phrase **`APPROVE_PACK19_SCOPED_SUBMITTED_ROW_STATUS_TRIAGE_QA`** recorded on master; candidate **`5e759ca9…`** (safe redacted); status before **`submitted`**; status after **`triage`**; status endpoint **`POST /api/viona/requests/:id/actions/status`**; status POST count **1**; status POST HTTP **201**; post-verify GET confirms **`triage`** and all six safety labels present; Pack25 hold row **`ec9a8b69-8a60-45aa-99ba-fc805a101dcc` excluded and untouched** **YES**; row create/seed during Pack19 QA **NO**; `POST /api/viona/requests` create during Pack19 QA **NO**; production **NO**; Pack29 **NOT opened**; execution wiring **NO**; deploy/restart during QA **NO**; DB/Prisma/Supabase/SQL **NO**; secrets printed **NO**; Pack19 **no longer blocked**; Request Engine readiness — create-submit path exists and was used safely in remediation **YES**; staging route redeployed and available **YES**; safe submitted precondition remediated **YES**; bounded status transition **`submitted` → `triage` passed** **YES**; Pack29 remains **blocked** until separate authorization/design packet. No staging QA re-run in this sync; no staging endpoint calls in this sync; no status POST in this sync; no row create/seed in this sync. **Next lane:** Pack29 remains **blocked** until separate authorization/design packet; no further Pack19 bounded status QA rerun without separate authorization. Prior Pack15C–Pack28 historical milestones **unchanged** except Pack19 PASS and remediation chain recorded. Result classification for this sync: **`PACK19_KERNEL_HANDOFF_SYNC_AFTER_STATUS_QA_PASS`**. Evidence: `docs/design/evidence/cursor-pack19-kernel-handoff-sync-after-status-qa-pass/README.md`.
