@@ -2,7 +2,7 @@
 
 **Document type:** Canonical kernel and session handoff for VIONA engineering, product, and AI agents.
 **Audience:** New ChatGPT / Cursor windows, staff, contractors, and automation executors.
-**Baseline:** `origin/master @ 7864430` — `feat(requests): add staging-first execution gate (#255)`
+**Baseline:** `origin/master @ 444d5e4` — `docs(requests): prepare Pack29 staging QA authorization packet (#257)`
 **Supersedes for Request Engine sequencing:** prior scattered pack pointers when this doc conflicts on pack order or blocked state — align to this handoff.
 **Subordinate to:** `docs/ai-context/VIONA_OPERATING_PROTOCOL.md` and founder-signed **Master Blueprint** (`VIONA_FINAL_MASTER_BLUEPRINT_V2.md`). If conflict, stop and report drift risk.
 
@@ -203,7 +203,7 @@ All new work branches from `c843111` unless a later pack explicitly updates this
 | Market / legal gates | **Defined** |
 | Forbidden automation claims | **Recorded** |
 | Next ladder | **Recorded** — Pack26B → 26C → 26D → Pack27 → Pack28+ → payment/SOS/wallet/live AI (highest gates) |
-| Next recommended lane | **Pack29 staging-first execution gate ON MASTER — dry-run preview only; real execution BLOCKED** — PR #255 @ `7864430` — `PACK29_STAGING_FIRST_EXECUTION_GATE_IMPLEMENTED_NO_EXTERNAL_SIDE_EFFECTS`; endpoint `POST /api/viona/requests/:id/actions/execution-preview` (dry-run/no-op); `operatorApprovalRequired` **true**; `externalExecutionBlocked` **true**; `persistentAuditWritten` **false**; separate Pack29 staging QA authorization/result pack still required; no external side effects without separate consent/audit gates; Pack28 layer remains pure/non-persistent/non-executing/not wired |
+| Next recommended lane | **Pack29 staging QA authorization ON MASTER — staging QA NOT EXECUTED; phrase PENDING** — PR #257 @ `444d5e4` — `PACK29_STAGING_QA_AUTHORIZATION_PACKET_PREPARED_ONLY`; endpoint `POST /api/viona/requests/:id/actions/execution-preview` (dry-run/no-op); staging target **`viona-api-staging-eu`**; required phrase `APPROVE_PACK29_EXECUTION_PREVIEW_STAGING_QA` **NOT provided**; Pack29 **real execution BLOCKED**; separate staging QA execution/result pack after phrase; 404 → redeploy required; auth missing → **401 not 404**; no external side effects without separate consent/audit gates; Pack28 layer remains pure/non-persistent/non-executing/not wired |
 | Pack26 spine | **COMPLETE / GREEN** |
 | Pack27 authorization | **CLOSED / GREEN** — PR #203 @ `56d0499`; kernel sync PR #204 @ `9e7567a` |
 | Pack27 implementation | **CLOSED / GREEN** — PR #205 @ `b963294`; kernel sync PR #206 @ `7b6cba5` |
@@ -264,12 +264,18 @@ All new work branches from `c843111` unless a later pack explicitly updates this
 | Pack29 implementation approval phrase intake | **CLOSED / GREEN** — PR #253 @ `2e92c30` — `PACK29_IMPLEMENTATION_APPROVAL_PHRASE_RECORDED_NO_IMPLEMENTATION` |
 | Pack29 Kernel/Handoff sync after implementation phrase intake | **CLOSED / GREEN** — PR #254 @ `e1d83ea` |
 | Pack29 staging-first execution gate implementation | **CLOSED / GREEN** — PR #255 @ `7864430` — `PACK29_STAGING_FIRST_EXECUTION_GATE_IMPLEMENTED_NO_EXTERNAL_SIDE_EFFECTS` |
-| Pack29 current status | **`pack29_staging_first_execution_gate_implemented_no_external_side_effects`** |
+| Pack29 Kernel/Handoff sync after execution gate merge | **CLOSED / GREEN** — PR #256 @ `4065d83` — `PACK29_KERNEL_HANDOFF_SYNC_AFTER_STAGING_FIRST_EXECUTION_GATE_IMPLEMENTED` |
+| Pack29 staging QA authorization packet | **CLOSED / GREEN** — PR #257 @ `444d5e4` — `PACK29_STAGING_QA_AUTHORIZATION_PACKET_PREPARED_ONLY` |
+| Pack29 current status | **`pack29_staging_qa_authorization_packet_prepared_only`** |
 | Pack29 execution preview endpoint | **`POST /api/viona/requests/:id/actions/execution-preview`** — dry-run/no-op only |
+| Pack29 staging QA target | **`viona-api-staging-eu`** |
+| Pack29 staging QA minimum source | **`4065d83`** or later verified master |
 | Pack29 real execution | **BLOCKED** |
 | Pack29 persistent audit write | **NO** |
 | Pack29 external provider calls | **NO** |
 | Pack29 staging QA executed | **NO** |
+| Pack29 staging QA authorized | **NO** — blocked until operator phrase provided |
+| Pack29 staging QA phrase | `APPROVE_PACK29_EXECUTION_PREVIEW_STAGING_QA` — required **YES**; provided **NO** |
 | Pack29 deploy/restart executed | **NO** |
 | Pack29 implementation approval phrase | `APPROVE_PACK29_REQUEST_ENGINE_EXECUTION_DESIGN_TO_IMPLEMENTATION` — required **YES**; provided **YES** |
 | Pack26 implementation | **NOT opened** |
@@ -1727,6 +1733,42 @@ Evidence: `docs/product/VIONA_REQUEST_PACK29_IMPLEMENTATION_APPROVAL_PHRASE_INTA
 
 Evidence: `docs/product/VIONA_REQUEST_PACK29_STAGING_FIRST_EXECUTION_GATE_IMPLEMENTATION.md`, `docs/design/evidence/cursor-pack29-staging-first-execution-gate-implementation/README.md`, `docs/design/evidence/cursor-pack29-kernel-handoff-sync-after-staging-first-execution-gate-implementation/README.md`
 
+### Pack29 staging QA authorization packet (CLOSED/GREEN — planning on master; staging QA not executed)
+
+| Field | Value |
+|-------|--------|
+| Current verified master | **`444d5e427982092eae5caabc946bebe7d6753fe3`** (`444d5e4`) |
+| Pack29 staging QA authorization PR #257 | **CLOSED / GREEN** @ `444d5e4` |
+| Pack29 staging QA authorization result | **`PACK29_STAGING_QA_AUTHORIZATION_PACKET_PREPARED_ONLY`** |
+| Pack29 current status | **`pack29_staging_qa_authorization_packet_prepared_only`** |
+| Pack29 authorization/design PR #251 (preserved) | **CLOSED / GREEN** @ `e56aff9` |
+| Pack29 Kernel/Handoff sync PR #252 (preserved) | **CLOSED / GREEN** @ `300c897` |
+| Pack29 implementation approval phrase intake PR #253 (preserved) | **CLOSED / GREEN** @ `2e92c30` |
+| Pack29 Kernel/Handoff sync after phrase intake PR #254 (preserved) | **CLOSED / GREEN** @ `e1d83ea` |
+| Pack29 staging-first execution gate PR #255 (preserved) | **CLOSED / GREEN** @ `7864430` |
+| Pack29 Kernel/Handoff sync after execution gate PR #256 (preserved) | **CLOSED / GREEN** @ `4065d83` |
+| Execution preview endpoint | **`POST /api/viona/requests/:id/actions/execution-preview`** |
+| Execution preview mode | **dry-run / no-op only** |
+| Staging QA target | **`viona-api-staging-eu`** |
+| Staging QA minimum source | **`4065d83`** or later verified master |
+| Staging QA executed | **NO** |
+| Staging QA authorized | **NO** — blocked until operator phrase |
+| Required future staging QA phrase | `APPROVE_PACK29_EXECUTION_PREVIEW_STAGING_QA` |
+| Phrase required | **YES** |
+| Phrase provided | **NO** |
+| Staging QA may proceed only via | **separate execution/result pack after phrase recorded** |
+| Route 404 | **Redeploy required** — stop |
+| Auth missing/invalid | Expect **401**, not **404** |
+| No safe post-triage row | **`BLOCKED_NO_SAFE_POST_TRIAGE_REQUEST`** — stop |
+| Pack29 real execution | **BLOCKED** |
+| No external side effects without gates | **YES** |
+
+**Pack29 kernel/handoff sync non-authorization (preserved):** staging QA execution; API calls in this sync; staging mutation; deploy/restart; DB/Prisma/Supabase/SQL; production; real execution wiring; payment/booking/SOS/live AI/merchant outbound/email/SMS/push; secrets/env printing; persistent audit writes; external provider calls.
+
+**Next recommendation:** Operator must provide `APPROVE_PACK29_EXECUTION_PREVIEW_STAGING_QA` before any Pack29 staging QA execution. Confirm staging API runs **`4065d83`** or later before QA. Prepare **separate Pack29 staging QA result pack** after phrase intake. Pack29 **real execution remains blocked**.
+
+Evidence: `docs/product/VIONA_REQUEST_PACK29_STAGING_QA_AUTHORIZATION_PACKET_EXECUTION_PREVIEW.md`, `docs/design/evidence/cursor-pack29-staging-qa-authorization-packet-execution-preview/README.md`, `docs/design/evidence/cursor-pack29-kernel-handoff-sync-after-staging-qa-authorization-packet/README.md`
+
 ### Pack25 visual-QA row post-state (current — read-only record)
 
 | Field | Value |
@@ -1740,7 +1782,7 @@ Evidence: `docs/product/VIONA_REQUEST_PACK29_STAGING_FIRST_EXECUTION_GATE_IMPLEM
 | Duplicate events | **NO** |
 | Further click / status POST on this row | **NO** — Option C hold |
 
-**Deferred / not authorized (Pack25 + Pack26A + Pack26B + Pack26C + Pack26D + Pack27 + Pack28A + Pack28 implementation + Pack15C chain + Pack16 authorization + Pack16 implementation + Pack16 staging QA + Pack17 authorization + Pack17 implementation + Pack17 staging QA + Pack18 authorization + Pack18 implementation + Pack18 staging QA + Pack19 authorization + Pack19 staging QA + Pack19 remediation + Pack19 re-run QA + Pack29 real execution + Pack29 staging QA):** further Send to review click or status POST on current visual-QA row (Option C hold); additional transitions on current row; assign / confirm / cancel; payment / booking / SOS / wallet / live AI; UI registry/contract/operator-approval/execution-lane/integration wiring beyond dry-run preview; execution enablement; audit/timeline/approval/execution persistent DB writes; Pack26 implementation; Pack29 **real execution**; Pack29 **staging QA** without separate authorization; broad/uncontrolled write surfaces beyond separately authorized packs. **Option B** only if literal new `submitted` → `triage` UI click proof is explicitly required on a fresh scoped row. **Next lane:** Pack29 staging-first execution gate **ON MASTER** @ `7864430` (PR #255 — `PACK29_STAGING_FIRST_EXECUTION_GATE_IMPLEMENTED_NO_EXTERNAL_SIDE_EFFECTS`); endpoint `POST /api/viona/requests/:id/actions/execution-preview` (dry-run/no-op only); Pack29 **real execution blocked**; separate Pack29 staging QA authorization/result pack still required; no external side effects without separate consent/audit gates; Pack28 layer remains pure/non-persistent/non-executing/not wired.
+**Deferred / not authorized (Pack25 + Pack26A + Pack26B + Pack26C + Pack26D + Pack27 + Pack28A + Pack28 implementation + Pack15C chain + Pack16 authorization + Pack16 implementation + Pack16 staging QA + Pack17 authorization + Pack17 implementation + Pack17 staging QA + Pack18 authorization + Pack18 implementation + Pack18 staging QA + Pack19 authorization + Pack19 staging QA + Pack19 remediation + Pack19 re-run QA + Pack29 real execution + Pack29 staging QA execution):** further Send to review click or status POST on current visual-QA row (Option C hold); additional transitions on current row; assign / confirm / cancel; payment / booking / SOS / wallet / live AI; UI registry/contract/operator-approval/execution-lane/integration wiring beyond dry-run preview; execution enablement; audit/timeline/approval/execution persistent DB writes; Pack26 implementation; Pack29 **real execution**; Pack29 **staging QA execution** without operator phrase `APPROVE_PACK29_EXECUTION_PREVIEW_STAGING_QA`; broad/uncontrolled write surfaces beyond separately authorized packs. **Option B** only if literal new `submitted` → `triage` UI click proof is explicitly required on a fresh scoped row. **Next lane:** Pack29 staging QA authorization **ON MASTER** @ `444d5e4` (PR #257 — `PACK29_STAGING_QA_AUTHORIZATION_PACKET_PREPARED_ONLY`); endpoint `POST /api/viona/requests/:id/actions/execution-preview` (dry-run/no-op only); staging target **`viona-api-staging-eu`**; required phrase `APPROVE_PACK29_EXECUTION_PREVIEW_STAGING_QA` **NOT provided**; Pack29 **staging QA not executed**; Pack29 **real execution blocked**; 404 → redeploy required; auth missing → **401 not 404**; separate staging QA execution/result pack after phrase; no external side effects without separate consent/audit gates; Pack28 layer remains pure/non-persistent/non-executing/not wired.
 
 Evidence: `docs/product/VIONA_REQUEST_PACK25_STATUS_ACTION_UI_VISUAL_CLOSURE_EVIDENCE.md`, `docs/design/evidence/cursor-pack25-status-action-ui-visual-closure-evidence/README.md`, `docs/product/VIONA_REQUEST_PACK25_STAGING_DEPLOY_REDEPLOY_EVIDENCE.md`, `docs/design/evidence/cursor-pack25-staging-deploy-redeploy-evidence/README.md`, `docs/product/VIONA_REQUEST_PACK25_LIVE_QA_POST_TRANSITION_BLOCKED_CLICK_GATE_EVIDENCE.md`, `docs/design/evidence/cursor-pack25-live-qa-post-transition-blocked-click-gate-evidence/README.md`, `docs/product/VIONA_REQUEST_PACK25_POST_HOC_TRIAGE_UI_EVIDENCE.md`, `docs/design/evidence/cursor-pack25-post-hoc-triage-ui-evidence/README.md`
 
@@ -1895,11 +1937,15 @@ Pack15C operator GO provided intake evidence is **complete and green** on master
 | Pack29 | Implementation approval phrase intake | `2e92c30` (PR #253) — `PACK29_IMPLEMENTATION_APPROVAL_PHRASE_RECORDED_NO_IMPLEMENTATION` |
 | Pack29 | Kernel/handoff sync after implementation phrase intake | PR #254 @ `e1d83ea` |
 | Pack29 | Staging-first execution gate implementation | `7864430` (PR #255) — `PACK29_STAGING_FIRST_EXECUTION_GATE_IMPLEMENTED_NO_EXTERNAL_SIDE_EFFECTS` |
-| Pack29 | Kernel/handoff sync after execution gate merge | *(this sync)* |
-| Pack29 | Current status | **`pack29_staging_first_execution_gate_implemented_no_external_side_effects`** |
+| Pack29 | Kernel/handoff sync after execution gate merge | PR #256 @ `4065d83` |
+| Pack29 | Staging QA authorization packet | `444d5e4` (PR #257) — `PACK29_STAGING_QA_AUTHORIZATION_PACKET_PREPARED_ONLY` |
+| Pack29 | Kernel/handoff sync after staging QA authorization | *(this sync)* |
+| Pack29 | Current status | **`pack29_staging_qa_authorization_packet_prepared_only`** |
 | Pack29 | Execution preview endpoint | **`POST /api/viona/requests/:id/actions/execution-preview`** — dry-run/no-op only |
+| Pack29 | Staging QA target | **`viona-api-staging-eu`** |
 | Pack29 | Real execution | **BLOCKED** |
 | Pack29 | Staging QA executed | **NO** |
+| Pack29 | Staging QA phrase | `APPROVE_PACK29_EXECUTION_PREVIEW_STAGING_QA` — required **YES**; provided **NO** |
 | Pack29 | Implementation approval phrase | `APPROVE_PACK29_REQUEST_ENGINE_EXECUTION_DESIGN_TO_IMPLEMENTATION` — required **YES**; provided **YES** |
 
 ---
@@ -1928,8 +1974,9 @@ Pack15C operator GO provided intake evidence is **complete and green** on master
 | Pack29 authorization/design | **`pack29_authorization_design_planning_only`** — PR #251 @ `e56aff9` — `PACK29_REQUEST_ENGINE_EXECUTION_AUTHORIZATION_DESIGN_PACKET_PREPARED_ONLY`; design boundary on master |
 | Pack29 implementation approval phrase | **`pack29_implementation_approval_phrase_recorded_no_implementation`** — PR #253 @ `2e92c30` — `PACK29_IMPLEMENTATION_APPROVAL_PHRASE_RECORDED_NO_IMPLEMENTATION`; phrase `APPROVE_PACK29_REQUEST_ENGINE_EXECUTION_DESIGN_TO_IMPLEMENTATION` required **YES** / provided **YES** |
 | Pack29 staging-first execution gate | **`pack29_staging_first_execution_gate_implemented_no_external_side_effects`** — PR #255 @ `7864430` — `PACK29_STAGING_FIRST_EXECUTION_GATE_IMPLEMENTED_NO_EXTERNAL_SIDE_EFFECTS`; endpoint `POST /api/viona/requests/:id/actions/execution-preview` (dry-run/no-op); `operatorApprovalRequired` **true**; `externalExecutionBlocked` **true**; `persistentAuditWritten` **false**; `stagingFirst` **true**; `notProductionReady` **true** |
+| Pack29 staging QA authorization | **`pack29_staging_qa_authorization_packet_prepared_only`** — PR #257 @ `444d5e4` — `PACK29_STAGING_QA_AUTHORIZATION_PACKET_PREPARED_ONLY`; staging target **`viona-api-staging-eu`**; minimum staging source **`4065d83`**+; required phrase `APPROVE_PACK29_EXECUTION_PREVIEW_STAGING_QA` required **YES** / provided **NO** |
 | Pack29 real execution | **BLOCKED** — no payment/booking/SOS/live AI/merchant outbound/email/SMS/push; no external provider calls; no persistent audit write |
-| Pack29 staging QA | **NOT executed** — separate staging QA authorization/result pack still required |
+| Pack29 staging QA execution | **NOT executed** — blocked until operator phrase; separate staging QA result pack required after phrase; 404 → redeploy required; auth missing → **401 not 404** |
 | DB apply | **Closed / no-op** — `NO_OP_SCHEMA_ALREADY_UP_TO_DATE` (PR #215); schema already up to date |
 | DB apply performed | **No** |
 | Backup blocker (historical) | **Free Plan** — superseded by PR #98 human dashboard evidence showing PRO plan and scheduled backups |
