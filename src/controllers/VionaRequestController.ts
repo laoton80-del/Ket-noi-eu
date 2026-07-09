@@ -5,6 +5,7 @@ import {
   screenCreateVionaRequestRawBody,
 } from '../services/viona/vionaRequestCreateService';
 import { appendVionaRequestNote } from '../services/viona/vionaRequestNoteActionService';
+import { previewVionaRequestExecutionGate } from '../services/viona/vionaRequestExecutionGateService';
 import { transitionVionaRequestStatus } from '../services/viona/vionaRequestStatusActionService';
 import {
   getVionaRequestById,
@@ -291,6 +292,71 @@ export async function postVionaRequestNoteAction(req: Request, res: Response): P
         safety: result.safety,
       },
       result.action.idempotentReplay ? 200 : 201
+    );
+  } catch {
+    jsonFail(res, 'Internal server error', 500);
+  }
+}
+
+/**
+ * `POST /api/viona/requests/:id/actions/execution-preview` — Pack29 staging-first dry-run gate.
+ * Read-only eligibility + no-op execution envelope; no status change, no external side effects.
+ */
+export async function postVionaRequestExecutionPreviewAction(
+  req: Request,
+  res: Response,
+): Promise<void> {
+  try {
+    const authUserId = readAuthUserId(req);
+    if (!authUserId) {
+      jsonFail(res, 'Unauthorized', 401);
+      return;
+    }
+
+    const requestId = readString(req.params.id);
+    if (!requestId || requestId.trim().length === 0) {
+      jsonFail(res, 'Request id is required', 400);
+      return;
+    }
+
+    const body =
+      req.body != null && typeof req.body === 'object' && !Array.isArray(req.body)
+        ? (req.body as Record<string, unknown>)
+        : {};
+
+    const result = await previewVionaRequestExecutionGate({
+      authUserId,
+      requestId: requestId.trim(),
+      actionId: readOptionalTrimmedBody(body.actionId),
+      idempotencyKey: readOptionalTrimmedBody(body.idempotencyKey),
+      clientCorrelationId: readOptionalTrimmedBody(body.clientCorrelationId),
+    });
+
+    if (!result.ok) {
+      const statusMap: Record<typeof result.reason, number> = {
+        invalid_input: 400,
+        request_not_found: 404,
+        status_not_eligible: 400,
+        unsupported_action: 400,
+      };
+      const msgMap: Record<typeof result.reason, string> = {
+        invalid_input: 'Invalid execution preview request',
+        request_not_found: 'Request not found',
+        status_not_eligible: 'Request not eligible for execution preview',
+        unsupported_action: 'Unsupported execution action',
+      };
+      jsonFail(res, msgMap[result.reason], statusMap[result.reason]);
+      return;
+    }
+
+    jsonOk(
+      res,
+      {
+        ...result.data,
+        action: result.action,
+        safety: result.safety,
+      },
+      200,
     );
   } catch {
     jsonFail(res, 'Internal server error', 500);

@@ -26,3 +26,7 @@ vionaRouter.post('/requests/:id/actions/note', (req, res, next) => {
 vionaRouter.post('/requests/:id/actions/status', (req, res, next) => {
   void VionaRequestController.postVionaRequestStatusAction(req, res).catch(next);
 });
+
+vionaRouter.post('/requests/:id/actions/execution-preview', (req, res, next) => {
+  void VionaRequestController.postVionaRequestExecutionPreviewAction(req, res).catch(next);
+});
