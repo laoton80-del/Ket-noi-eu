@@ -6,6 +6,7 @@ import {
 } from '../services/viona/vionaRequestCreateService';
 import { appendVionaRequestNote } from '../services/viona/vionaRequestNoteActionService';
 import { previewVionaRequestExecutionGate } from '../services/viona/vionaRequestExecutionGateService';
+import { previewVionaExecutionPlanRoute } from '../services/viona/vionaExecutionPlanRouteService';
 import { transitionVionaRequestStatus } from '../services/viona/vionaRequestStatusActionService';
 import {
   getVionaRequestById,
@@ -344,6 +345,72 @@ export async function postVionaRequestExecutionPreviewAction(
         request_not_found: 'Request not found',
         status_not_eligible: 'Request not eligible for execution preview',
         unsupported_action: 'Unsupported execution action',
+      };
+      jsonFail(res, msgMap[result.reason], statusMap[result.reason]);
+      return;
+    }
+
+    jsonOk(
+      res,
+      {
+        ...result.data,
+        action: result.action,
+        safety: result.safety,
+      },
+      200,
+    );
+  } catch {
+    jsonFail(res, 'Internal server error', 500);
+  }
+}
+
+/**
+ * `POST /api/viona/requests/:id/actions/execution-plan-preview` — Pack30B mock-only route wiring.
+ * Wires the Pack30A pure decision layer + mock adapter (unmodified) to a read-only preview.
+ * No status change, no persistent audit write, no external side effects, no real provider calls.
+ */
+export async function postVionaRequestExecutionPlanPreviewAction(
+  req: Request,
+  res: Response,
+): Promise<void> {
+  try {
+    const authUserId = readAuthUserId(req);
+    if (!authUserId) {
+      jsonFail(res, 'Unauthorized', 401);
+      return;
+    }
+
+    const requestId = readString(req.params.id);
+    if (!requestId || requestId.trim().length === 0) {
+      jsonFail(res, 'Request id is required', 400);
+      return;
+    }
+
+    const body =
+      req.body != null && typeof req.body === 'object' && !Array.isArray(req.body)
+        ? (req.body as Record<string, unknown>)
+        : {};
+
+    const result = await previewVionaExecutionPlanRoute({
+      authUserId,
+      requestId: requestId.trim(),
+      actionId: readOptionalTrimmedBody(body.actionId),
+      operatorApprovalGranted: body.operatorApprovalGranted === true,
+      userConsentGranted: body.userConsentGranted === true,
+      requestSafetyLabels: readStringArrayBody(body.requestSafetyLabels),
+      idempotencyKey: readOptionalTrimmedBody(body.idempotencyKey),
+      clientCorrelationId: readOptionalTrimmedBody(body.clientCorrelationId),
+      invokeMockAdapter: body.invokeMockAdapter === true,
+    });
+
+    if (!result.ok) {
+      const statusMap: Record<typeof result.reason, number> = {
+        invalid_input: 400,
+        request_not_found: 404,
+      };
+      const msgMap: Record<typeof result.reason, string> = {
+        invalid_input: 'Invalid execution plan preview request',
+        request_not_found: 'Request not found',
       };
       jsonFail(res, msgMap[result.reason], statusMap[result.reason]);
       return;
