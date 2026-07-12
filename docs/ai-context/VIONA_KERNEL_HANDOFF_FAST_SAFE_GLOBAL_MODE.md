@@ -4383,120 +4383,54 @@ Phiên dịch nhận thức cảm xúc (cognitive-empathy interpretation): kết
 
 ---
 
-## 17. Unit Economics & Dual-Sided Monetization Strategy
+## 17. VIONA Master Economy & Monetization Architecture
 
-**Document type (this section):** Docs-only strategic/commercial direction record. **Not** an authorization, design lock, implementation plan, or file allowlist for any payment/checkout/split-payment module. **No payment or checkout code exists as a result of this section.** Placed at **§17** (not §12) because §12 is already in use by "Pack18 authorization, implementation, staging QA, and Pack19 authorization + staging QA status", following the same next-available-top-level-number convention already used for §16 (Visionary Roadmap).
+**Numbering note:** Requested by the operator as "Mục 12. VIONA Master Economy & Monetization Architecture" — kept at **§17** (not §12, already in use by "Pack18 authorization, implementation, staging QA, and Pack19 authorization + staging QA status"), since the entire monetization doctrine already lived at §17 (PR #297, #298). Per explicit operator instruction ("TỔNG HỢP VÀ THAY THẾ / overwrite"), this edit **replaces and consolidates** the prior fragmented §17.1–§17.7 subsections (Zero-Loss doctrine, dual-sided fee table, Split Payment note, Master-Tier models, Ecosystem Pricing Matrix — each recorded piecemeal across PR #297/#298) into a single, sharp, non-contradictory 3-pillar architecture below. No renumbering of any other section occurred.
 
-**Why recorded here:** Per operator instruction, this section preserves the platform's unit-economics and dual-sided monetization doctrine in the canonical Kernel/Handoff memory so future payment/checkout implementation packs (whichever universe they land in) have a single, consistent commercial reference point, without pre-authorizing any payment code, checkout flow, or production readiness now.
+**Document type (unchanged):** Docs-only strategic/commercial reference. **Not** an authorization, design lock, implementation plan, or file allowlist for any payment/checkout/split-payment/escrow module. **No payment, checkout, billing, escrow, FX, or credits-ledger code exists as a result of this section.**
 
-**Section status:** §17.1–§17.4 (core Zero-Loss doctrine + dual-sided fee structure + Split Payment code direction + non-authorization boundary) recorded first; §17.5 (Master-Tier Ultimate Monetization Models — Invisible FinTech/FX Spread, Value-Based Pricing, AI-Native Contextual Placements/CPA, B2B AI White-Labeling) added next as an API-cost-erosion defense layer; §17.6 declares the underlying **revenue-mechanism** doctrine (§17.1–§17.5) **strategically/financially complete per explicit operator instruction — no further theoretical revenue mechanism is to be added**; §17.7 (VIONA Service Tiers — Ecosystem Pricing Matrix) then packages those already-closed mechanisms into a concrete, customer-facing subscription menu (B2C Essential/Citizen, B2B Merchant/Enterprise, PAYG Credits) mapped to the 6 universes — a packaging/SKU record, not a reopening of the §17.6 revenue-mechanism closure. None of §17.1–§17.7 authorizes or implements anything; Pack 30D-1 (Audit Ledger Writer) remains the unaffected near-term code-implementation priority.
+### 17.1 Core Philosophy — Zero-Loss & Unit Economics
 
-### 17.1 Core principle — Zero-Loss ≠ Free
+- **Zero Negative Margin:** nền tảng (VIONA) tuyệt đối không chịu biên lợi nhuận âm trên bất kỳ giao dịch nào nó trung gian; treasury của nền tảng **không bao giờ** được dùng để bù lỗ, trợ giá, hay đền bù cho người dùng/merchant.
+- **Fair-Use Quota:** mỗi gói cước trả phí mang một hạn mức sử dụng ngầm (voice minutes, số cuộc gọi AI…), khóa trần chi phí API bên thứ 3 (Twilio, OpenAI…) đã được tính vào giá gói đó.
+- **PAYG overflow:** mọi chi phí vượt hạn mức Fair-Use Quota **bắt buộc** trả bằng **VIONA Credits** (pay-as-you-go markup) — không bao giờ do nền tảng gánh.
+- Restates, không thay thế, Zero-Loss Rules hiện hữu cho Catalog Import AI (`VIONA_OPERATING_PROTOCOL.md` §15.1) và B2B Wholesale Financial Fortress Rules (§14.1).
+- **Status:** `VISIONARY / STRATEGY_ONLY`.
 
-**Zero-Loss không có nghĩa là miễn phí. Zero-Loss nghĩa là nền tảng không bao giờ chịu biên lợi nhuận âm (Zero Negative Margin).**
+### 17.2 Ecosystem Pricing Matrix — Cái Menu 6 Vũ Trụ
 
-- The platform (VIONA) must never carry a negative margin on any transaction it mediates.
-- The platform must **never** use its own treasury/platform funds to subsidize, bail out, discount-fund, or compensate for a loss on a user-facing or merchant-facing transaction.
-- This principle governs monetization design only — it does **not** relax or replace the existing Zero-Loss Rules for Catalog Import AI (`VIONA_OPERATING_PROTOCOL.md` §15.1) or the B2B Wholesale Financial Fortress Rules (`VIONA_OPERATING_PROTOCOL.md` §14.1); it is the general commercial restatement of the same doctrine, applied platform-wide.
-- **Status:** `VISIONARY / STRATEGY_ONLY` — no fee-collection code, no billing code, no checkout code exists because of this section.
+| Segment | Tier | Giá | Nội dung chính |
+| --- | --- | --- | --- |
+| B2C | **Essential** | Free | Chỉ thu phí nền tảng lẻ (platform fee) khi gọi xe/đặt lịch/nhờ vả (Local/Travel) |
+| B2C | **Citizen** | **~9.99€/tháng** | Cảnh báo SOS thông minh; Luyện Voice Academy có giới hạn; AI gọi hộ hành chính/y tế |
+| B2B | **Merchant** | **~29.99€/tháng** | Lễ Tân AI nghe máy đa ngữ (có hạn mức cuộc gọi); Báo cáo thuế tự động; thu **3–5%** hoa hồng chốt đơn |
+| B2B | **Enterprise** | **~99.99€/tháng** | Mở khóa Smart Escrow xuyên biên giới (thu **1–1.5%** phí giữ tiền); Chuỗi cung ứng tự động |
+| PAYG | **VIONA Credits** | Pay-as-you-go | "Ví nhiên liệu" cho phần vượt Fair-Use Quota ở bất kỳ tier/universe nào trên |
 
-### 17.2 Dual-Sided Fee Structure (Cấu trúc Thu phí Thuận nghịch) — per-universe reference table
+- Giá, hạn mức, và tỷ lệ % ở trên là **tham chiếu chiến lược duy nhất** — chưa final, chưa qua rà soát pháp lý/thuế, chưa phải cấu hình billing-system.
+- **Status:** `VISIONARY / STRATEGY_ONLY`.
 
-| Universe | Demand side (thường miễn phí / phí thấp) | Supply side (thu phí chính) |
-| --- | --- | --- |
-| **Local** | Miễn phí đặt lịch cho khách (booking free for the customer) | Hoa hồng chốt đơn (closed-order commission) **3–5%** từ Merchant |
-| **Travel** | Phí nền tảng cố định (fixed platform fee) từ khách | Phí môi giới (brokerage fee) **5–8%** từ Local Helper/Tài xế |
-| **Business (B2B)** | Phí Ký quỹ Escrow (escrow deposit fee) từ người mua | Phí Khớp lệnh (sourcing/matching fee) từ nhà cung cấp |
-| **Academy** | (không quy định thu phí ở phía học viên trong bảng này) | Phí nền tảng phân phối (platform cut) trên mỗi khóa học/giờ tư vấn bán ra |
-| **SOS / Hub** | — | Subscription trả phí định kỳ (**SOS Plus**) |
+### 17.3 Master-Tier Revenue — Lợi Nhuận Ngầm
 
-- This table is a **strategic reference structure**, not a finalized pricing sheet, tax treatment, or legal fee schedule — exact percentages, currencies, and thresholds remain subject to future, separately authorized commercial/legal/finance review (`VIONA_OPERATING_PROTOCOL.md` §2 Payments & Ledger Integrity Owner sign-off, §3 rule 5 "money moves only through governed rails").
-- No universe's fee structure above authorizes any real charge, real payout, real escrow custody, or real subscription billing today.
-- **Status:** `VISIONARY / STRATEGY_ONLY` — reference structure for future, separately authorized payment/billing implementation packs.
+| Mô hình | Cơ chế |
+| --- | --- |
+| **FinTech & FX** | Lãi suất từ Bể tiền Ký quỹ (Escrow Float) + chênh lệch tỷ giá ngoại tệ (FX Markup **0.5–1%**) |
+| **Value-Based** | **10–20%** hoa hồng trên số tiền đòi bồi thường chuyến bay hoặc đàm phán giảm giá B2B thành công |
+| **CPA & White-Labeling** | Phí hiển thị ngữ cảnh theo hành động chốt đơn (Cost-Per-Action) + cho thuê AI Lễ Tân đa ngữ dưới dạng SaaS (B2B AI White-Labeling) |
 
-### 17.3 Code-direction note for future implementation packs (Split Payment architecture)
+- Tách biệt khỏi biến động chi phí API theo lượng sử dụng — lớp phòng thủ biên lợi nhuận chống AI/API-cost erosion, độc lập với phí thuận-nghịch ở §17.2.
+- **Status:** `VISIONARY / STRATEGY_ONLY`.
 
-**Ghi chú định hướng Code (dành cho Agent ở các Pack sau):** khi một Pack tương lai được **riêng biệt ủy quyền** để implement thanh toán thật cho bất kỳ universe nào ở §17.2, kiến trúc **BẮT BUỘC** phải là:
-
-- **Split Payment** — tại thời điểm giao dịch, tự động chia tách khoản thu thành phần của VIONA (fee/commission/margin) và phần của bên thứ ba (merchant/helper/supplier/instructor), theo đúng cấu trúc §17.2 cho universe đó.
-- VIONA giữ lại phần của mình **ngay lập tức** tại thời điểm split (never held-then-clawed-back from the platform's own margin).
-- Phần còn lại của bên thứ ba **chỉ được giải ngân (payout) sau khi giao dịch được xác nhận hoàn tất** (delivery confirmed / service completed / milestone reached, per the existing controlled-execution and Human-in-the-Loop consent doctrine — §16.23) — never disbursed upfront on an unconfirmed transaction.
-- This split/hold/release flow must reuse, not duplicate, the existing controlled real-execution and persistent audit ledger architecture (Pack 30 chain, §5/§6 above) once that ledger is implemented and separately authorized for payment-adjacent events.
-- **This note does not authorize writing any Split Payment code now.** It is a mandatory design constraint for whichever future pack is explicitly authorized to implement real payment/checkout for any universe.
-
-### 17.4 Explicit non-authorization boundary (this section)
+### 17.4 Explicit non-authorization boundary & closure
 
 | Item | Status |
 | --- | --- |
-| Payment module code | **NOT WRITTEN** — forbidden by this section |
-| Checkout flow code | **NOT WRITTEN** — forbidden by this section |
-| Split Payment implementation | **NOT WRITTEN** — design direction only (§17.3) |
-| Real fee collection / real commission charge | **NOT AUTHORIZED** |
-| Real escrow custody / real payout | **NOT AUTHORIZED** |
-| Real subscription billing (SOS Plus) | **NOT AUTHORIZED** |
-| Fee percentages/amounts in §17.2 | **STRATEGIC REFERENCE ONLY** — not final, not legally reviewed, not billing-system configuration |
+| Payment / checkout / split-payment code | **NOT WRITTEN** |
+| Escrow float, FX markup, entitlement-gating, credits-ledger code | **NOT WRITTEN** |
+| Real fee collection / commission / subscription billing | **NOT AUTHORIZED** |
+| Prices, quotas, and percentages in §17.1–§17.3 | **STRATEGIC REFERENCE ONLY** — not final, not legally/tax reviewed |
 | Real execution | **BLOCKED** (unchanged, same doctrine as §4/§5/§16.23) |
-| Production | **NOT AUTHORIZED** (unchanged) |
-| Near-term code focus | **UNCHANGED — Pack 30D-1 (Audit Ledger Writer)** remains the sole near-term critical-path implementation priority; this section does not compete with or defer it |
-
-### 17.5 Master-Tier Ultimate Monetization Models (Bảo vệ lợi nhuận API / API-Cost-Erosion Defense)
-
-**Numbering note:** Requested by the operator as "Mục 12.2" — placed at **§17.5** instead, because this entire monetization doctrine already lives at **§17** (not §12, which is "Pack18 authorization, implementation, staging QA..."), and §17.1–§17.4 already occupy the ".1"–".4" slots. Same next-available-subsection-number convention used throughout this document.
-
-**Purpose:** A fourth layer of the monetization doctrine, specifically aimed at defending VIONA's margin against AI/API cost erosion (LLM inference cost, translation cost, third-party data cost) by adding revenue models that are **structurally decoupled** from per-call API cost, rather than relying solely on the dual-sided fees in §17.2.
-
-| # | Model | Mechanism | API-cost relationship |
-| --- | --- | --- | --- |
-| 1 | **Invisible FinTech & FX Spread** | Sinh lời từ lãi tiền gửi trên Bể thanh khoản Ký quỹ (Escrow Float Interest) và chênh lệch tỷ giá ngoại tệ khi chuyển đổi tiền xuyên biên giới (FX Markup, đề xuất **0.5–1%**) | Không tốn thêm chi phí API/AI — lợi nhuận sinh ra từ dòng tiền đã đi qua nền tảng, không phải từ một lệnh gọi AI mới |
-| 2 | **Value-Based Pricing (thu phí theo giá trị sinh lời)** | Trích tỷ lệ hoa hồng trên số tiền cụ thể mà AI giúp người dùng tiết kiệm hoặc đòi được (ví dụ: **15–20%** trên tiền bồi thường delay chuyến bay đòi thành công; **10%** trên số tiền đàm phán giảm giá B2B thành công) | Phí chỉ phát sinh khi có giá trị thực tế được tạo ra và xác nhận — tương xứng tự nhiên với chi phí AI đã bỏ ra để tạo giá trị đó |
-| 3 | **AI-Native Contextual Placements (Cost-Per-Action)** | Bán quyền ưu tiên đề xuất trong kết quả AI theo ngữ cảnh (ví dụ: gợi ý quán ăn/khách sạn), chỉ thu phí khi người dùng **chốt đơn thành công** — thay thế mô hình quảng cáo hiển thị truyền thống (CPM/CPC) | Phí gắn với hành động chuyển đổi thành công, không gắn với số lượt gọi AI, giúp việc gọi AI nhiều hơn không tự động làm tăng chi phí ròng cho nền tảng |
-| 4 | **B2B AI White-Labeling (nhượng quyền AI đa ngữ)** | Cho doanh nghiệp bản địa (Séc, Đức, Ba Lan…) thuê "Agent Lễ Tân" nói tiếng Việt dưới dạng SaaS phí cố định hàng tháng (ví dụ đề xuất **299€/tháng**) để tiếp cận tệp khách kiều bào | Doanh thu cố định, có thể dự báo trước (predictable recurring revenue), tách biệt hoàn toàn khỏi biến động chi phí API theo lượng sử dụng cuối |
-
-**Explicit non-authorization boundary (§17.5, in addition to §17.4):**
-
-| Item | Status |
-| --- | --- |
-| Escrow float / interest-bearing account code | **NOT WRITTEN** — no real fund custody exists |
-| FX markup / conversion billing code | **NOT WRITTEN** |
-| Value-based / success-fee billing code | **NOT WRITTEN** |
-| Contextual-placement / CPA ranking or billing code | **NOT WRITTEN** |
-| White-label SaaS billing / multi-tenant agent code | **NOT WRITTEN** |
-| Any of the 4 models' percentages/prices (0.5–1%, 15–20%, 10%, 299€/mo) | **STRATEGIC REFERENCE ONLY** — not final, not legally/regulatorily reviewed (escrow float and FX markup in particular may require financial-license review per `VIONA_OPERATING_PROTOCOL.md` §2/§3 before any real implementation) |
-| Real execution | **BLOCKED** (unchanged) |
-| Production | **NOT AUTHORIZED** (unchanged) |
-| Near-term code focus | **UNCHANGED — Pack 30D-1 (Audit Ledger Writer)** |
-
-### 17.6 Unit Economics design closure (operator-declared, scope-limited to §17.1–§17.5 revenue mechanisms)
-
-Per explicit operator instruction, the Unit Economics & Dual-Sided Monetization Strategy **revenue-mechanism** doctrine (§17.1–§17.5 — the underlying fee/commission/spread/success-fee/SaaS **mechanisms**) was declared **strategically and financially complete** — **no further theoretical revenue mechanism is to be added** to §17.1–§17.5. This closure is a **scope lock on further revenue-mechanism design/strategy additions only**; it does **not** authorize, design-in-detail, or implement any of the models in §17.2 or §17.5. **§17.7 below (customer-facing packaging/SKU tiers) is a distinct kind of content — it packages the already-closed §17.1–§17.5 mechanisms into a concrete pricing menu, and does not reopen or extend the revenue-mechanism doctrine itself.** The system remains **100% ready** to receive the next **code-implementation** instruction, which remains **Pack 30D-1 (Audit Ledger Writer)** — already implemented in PR #296 (mock-only, on master) — or its next staging-QA/closure step; this monetization section does not introduce, compete with, or defer that priority.
-
-**Next lane:** No payment/checkout/FinTech/white-label implementation pack may begin using §17.1–§17.5 as its authorization basis. Any future implementation pack for any of these models must (a) cite this section as the commercial-strategy reference only, (b) obtain its own separate design → phrase-intake → implementation-plan → staged-authorization ladder (mirroring the Pack29/Pack30 precedent), and (c) route through `VIONA_OPERATING_PROTOCOL.md` §2/§3 payment-governance review — with additional financial/legal review for escrow-float and FX-markup specifically — before any real charge, escrow, FX conversion, success-fee billing, CPA billing, or SaaS billing is implemented. Real execution remains **BLOCKED**; production remains **NOT AUTHORIZED**. Pack 30D-1 (Audit Ledger Writer) remains the immediate next code-implementation priority, unaffected by this docs-only commercial-strategy record.
-
-### 17.7 VIONA Service Tiers — Ecosystem Pricing Matrix (Ma trận Gói Dịch Vụ 6 Vũ Trụ)
-
-**Numbering note:** Requested by the operator as "Mục 12.3" — placed at **§17.7** (next available subsection number within the existing §17 Unit Economics section), for the same reason §17.5/§17.6 were placed there instead of "§12.2"/"§12.3": §12 is already "Pack18 authorization..." and §17.1–§17.6 already occupy the prior subsection slots.
-
-**Purpose:** The official, user-facing "menu" — a concrete packaging of the §17.1–§17.5 revenue mechanisms into named subscription tiers mapped directly to features across the 6 VIONA universes (Hub, Local, Travel, Academy, Business, SOS). This is a **product/pricing packaging record**, not a new revenue mechanism — see §17.6 scope note above.
-
-| Segment | Tier | Indicative price | Included (feature → universe mapping) |
-| --- | --- | --- | --- |
-| B2C | **VIONA Essential** | **Free** | Dịch thuật text (Academy/Smart Trio); đặt xe/đặt lịch với phí nền tảng tính theo từng lượt lẻ (Local/Travel, per §17.2 dual-sided fee); SOS thủ công (SOS/Hub, user-initiated only, no automation) |
-| B2C | **VIONA Citizen** | **~9.99€/tháng** | Miễn phí phí nền tảng gọi xe/giao hàng (Local/Travel); SOS tự động cảnh báo (SOS, within existing pre-consent/Human-in-the-Loop boundary — §16.23); AI gọi hộ hành chính có hạn mức (Hub/Academy voice-agent minutes, capped); Academy Voice **15h/tháng** |
-| B2B | **VIONA Merchant** | **~29.99€/tháng** | Lễ tân AI nghe máy 24/7, **200 cuộc/tháng** (Business/Local voice-agent minutes, capped); Báo cáo thuế tự động (Business — relates to §17.5 model 4 direction, packaged here as a merchant-tier feature) |
-| B2B | **VIONA Enterprise** | **~99.99€/tháng** | Mở khóa Smart Escrow (Business — §17.2 escrow deposit fee mechanism, gated behind this tier); Chuỗi cung ứng tự chữa lành (Business — Self-Healing Supply Chain, Visionary §16.21, still `VISIONARY/FUTURE_ROADMAP`, not implemented); Quyền kích hoạt AI Telesales (Business — outbound AI calling capability gate) |
-| PAYG | **VIONA Credits** | Pay-as-you-go top-up | "Ví nhiên liệu" — người dùng trả thêm cho các tác vụ vượt hạn mức gói (Voice minutes, gọi điện quốc tế/telephony, other high-API-cost actions) across any universe/tier above |
-
-**Explicit non-authorization boundary (§17.7):**
-
-| Item | Status |
-| --- | --- |
-| Subscription billing / recurring-payment code | **NOT WRITTEN** |
-| Feature-gating / entitlement-check code for any tier | **NOT WRITTEN** |
-| VIONA Credits ledger/wallet top-up code | **NOT WRITTEN** — distinct from, and does not imply, any change to existing Wallet/Ledger services |
-| Smart Escrow unlock, Self-Healing Supply Chain, AI Telesales activation | **NOT IMPLEMENTED** — Enterprise-tier items referencing Visionary/§17.5 concepts remain exactly as blocked/未authorized as recorded there |
-| Prices (Free / 9.99€ / 29.99€ / 99.99€) and quotas (15h, 200 calls) | **STRATEGIC REFERENCE ONLY** — not final, not legally/tax reviewed, not billing-system configuration |
-| Real execution | **BLOCKED** (unchanged) |
 | Production | **NOT AUTHORIZED** (unchanged) |
 | Near-term code focus | **UNCHANGED — Pack 30D-1 (Audit Ledger Writer)**, already implemented in PR #296 |
 
-**Next lane:** This pricing matrix may be used as the commercial reference for a future, **separately authorized** entitlements/subscription implementation pack (its own design → phrase-intake → implementation-plan → staged-authorization ladder, per §17.6). It does **not** itself authorize any billing, entitlement-gating, or ledger/credits code. Real execution remains **BLOCKED**; production remains **NOT AUTHORIZED**. Pack 30D-1 (Audit Ledger Writer) remains the immediate next code-implementation priority.
+Per explicit operator instruction, this §17 unification **supersedes and replaces** all prior fragmented §17.1–§17.7 content from PR #297/#298 in full — the Master Economy doctrine is now **strategically and financially complete, docs-debt cleaned**; no further theoretical monetization content is to be added. Any future real implementation of §17.1–§17.3 requires its own separate design → phrase-intake → implementation-plan → staged-authorization ladder (Pack29/Pack30 precedent), plus `VIONA_OPERATING_PROTOCOL.md` §2/§3 payment-governance review. Real execution remains **BLOCKED**; production remains **NOT AUTHORIZED**; Pack 30D-1 (Audit Ledger Writer) remains the immediate next code-implementation priority, unaffected by this docs-only record.
