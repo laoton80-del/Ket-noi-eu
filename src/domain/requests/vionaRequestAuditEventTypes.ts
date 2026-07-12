@@ -36,6 +36,12 @@ export const vionaRequestAuditEventTypes = [
   'executionBlockedOperator',
   'executionRolledBack',
   'executionKilled',
+  // Pack30D-2 — durable audit hook fired by the existing, narrowly-scoped Pack25 request
+  // status state machine (`vionaRequestStatusActionService.ts`) on every *committed* status
+  // transition. Mock-only: this event is never emitted for a real-provider call, never emitted
+  // for an idempotent replay (no new transition occurred), and never changes the transition's
+  // existing response shape or the pre-existing `action.status` audit row written alongside it.
+  'stateTransition',
 ] as const;
 
 export type VionaRequestAuditEventType = (typeof vionaRequestAuditEventTypes)[number];

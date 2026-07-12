@@ -16,6 +16,8 @@ import {
   VIONA_REQUEST_STATUS_ACTION_SAFETY,
 } from './vionaRequestStatusActionDto';
 import { getVionaRequestById } from './vionaRequestReadService';
+import { appendVionaExecutionAuditEvent } from './vionaExecutionAuditWriteService';
+import type { AppendVionaExecutionAuditEventInput } from './vionaExecutionAuditWriteService';
 
 export const VIONA_REQUEST_STATUS_AUDIT_EVENT_TYPE = 'action.status';
 export const VIONA_REQUEST_STATUS_REASON_MAX_LENGTH = 500;
@@ -94,6 +96,44 @@ function buildStatusPayloadJson(input: {
   if (input.idempotencyKey != null) payload.idempotencyKey = input.idempotencyKey;
   if (input.clientCorrelationId != null) payload.clientCorrelationId = input.clientCorrelationId;
   return payload;
+}
+
+export type BuildVionaStateTransitionAuditEventInput = Readonly<{
+  requestId: string;
+  fromStatus: string;
+  toStatus: string;
+  actorUserId: string;
+  actorRoleLabel: string;
+  statusEventId: string;
+  idempotencyKey?: string;
+  clientCorrelationId?: string;
+}>;
+
+/**
+ * Pack30D-2 — pure builder for the durable `stateTransition` audit-hook event fired by the
+ * request status state machine on every *committed* status transition. No DB access; fully
+ * unit-testable in isolation, mirroring the Pack30D-1 `buildVionaExecutionAuditPayload` pattern
+ * in `vionaExecutionPlanRouteService.ts`. This hook is separate from, and additional to, the
+ * existing, unmodified Pack25 `action.status` audit row written inside the same transaction —
+ * it does not replace or alter that row.
+ */
+export function buildVionaStateTransitionAuditEventInput(
+  input: BuildVionaStateTransitionAuditEventInput
+): AppendVionaExecutionAuditEventInput {
+  return {
+    requestId: input.requestId,
+    eventType: 'stateTransition',
+    actorUserId: input.actorUserId,
+    actorRoleLabel: input.actorRoleLabel,
+    message: 'Request status state machine transition hook fired (mock-only, no real execution).',
+    payloadJson: {
+      fromStatus: input.fromStatus,
+      toStatus: input.toStatus,
+      statusEventId: input.statusEventId,
+      idempotencyKey: input.idempotencyKey ?? null,
+      clientCorrelationId: input.clientCorrelationId ?? null,
+    },
+  };
 }
 
 async function findIdempotentStatusAuditEvent(
@@ -326,6 +366,30 @@ export async function transitionVionaRequestStatus(
 
   if (transition == null) {
     return { ok: false, reason: 'invalid_transition' };
+  }
+
+  // Pack30D-2 — durable audit-ledger hook (mock-only, additive). Fired only after the status
+  // transition has already committed above; never fired for an idempotent replay (no new
+  // transition occurred). A hook-write failure is logged and never thrown back to the caller —
+  // it must never turn an already-successful status transition into an error response, and it
+  // never touches the pre-existing `action.status` audit row or the transition result below.
+  const auditHookResult = await appendVionaExecutionAuditEvent(
+    buildVionaStateTransitionAuditEventInput({
+      requestId,
+      fromStatus,
+      toStatus: targetStatus,
+      actorUserId: authUserId,
+      actorRoleLabel: 'owner',
+      statusEventId: transition.statusEvent.id,
+      idempotencyKey,
+      clientCorrelationId,
+    })
+  );
+
+  if (!auditHookResult.ok) {
+    console.error(
+      `[pack30d2-state-machine-audit-hook] failed to append stateTransition audit event for request ${requestId}: ${auditHookResult.error}`
+    );
   }
 
   const detail = await getVionaRequestById({ authUserId, requestId });
