@@ -190,9 +190,14 @@ function testNewEventTypesRegisteredWithoutRemovingExisting(): void {
       `vionaRequestAuditEventTypes must include ${type}`,
     );
   }
+  // Pack30D-2 (see scripts/test-viona-pack30d2-state-machine-audit-hooks.ts) deliberately adds
+  // exactly one more value, `stateTransition`, on top of this Pack30D-1 set — accounted for here
+  // as a fixed, documented +1 rather than an open-ended tolerance, so this assertion still
+  // catches any *other* accidental extra/removed value.
+  const pack30d2AdditionsCount = 1;
   assert(
-    vionaRequestAuditEventTypes.length === preExisting.length + newTypes.length,
-    'vionaRequestAuditEventTypes must contain exactly the pre-existing + Pack30D-1 new types (no accidental extra/removed values)',
+    vionaRequestAuditEventTypes.length === preExisting.length + newTypes.length + pack30d2AdditionsCount,
+    'vionaRequestAuditEventTypes must contain exactly the pre-existing + Pack30D-1 + Pack30D-2 types (no accidental extra/removed values)',
   );
 }
 
