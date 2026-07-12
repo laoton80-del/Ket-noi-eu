@@ -36,6 +36,12 @@ import {
   executeVionaTwilioTestPocReal,
   type VionaTwilioRealExecutionResult,
 } from '../../lib/viona/realProviderAdapter/vionaTwilioTestRealProviderAdapter';
+import {
+  holdVionaRequestExecutionCost,
+  settleVionaRequestExecutionHold,
+  type HoldVionaRequestExecutionCostFailureReason,
+  type VionaRequestEscrowHoldResolvedStatus,
+} from './vionaRequestEscrowHoldService';
 
 const IDEMPOTENCY_KEY_MAX_LENGTH = 128;
 const CLIENT_CORRELATION_ID_MAX_LENGTH = 128;
@@ -276,6 +282,24 @@ export type PreviewVionaExecutionPlanRealProviderPocInput = Readonly<{
 
 export type PreviewVionaExecutionPlanRealProviderPocFailure = 'invalid_input' | 'request_not_found';
 
+/**
+ * Pack31 — VIO Credits escrow outcome for this specific real-provider POC call. `attempted: false`
+ * means the plan was denied before any hold was ever attempted (mirrors the pre-existing
+ * `planAllowed: false` early-return, unchanged). See vionaRequestEscrowHoldService.ts.
+ */
+export type PreviewVionaExecutionPlanRealProviderPocEscrowOutcome =
+  | Readonly<{ attempted: false }>
+  | Readonly<{ attempted: true; holdOk: false; reason: HoldVionaRequestExecutionCostFailureReason }>
+  | Readonly<{
+      attempted: true;
+      holdOk: true;
+      holdId: string;
+      heldAmountVIO: number;
+      resolvedStatus: VionaRequestEscrowHoldResolvedStatus | null;
+      settledAmountVIO: number | null;
+      refundedAmountVIO: number | null;
+    }>;
+
 export type PreviewVionaExecutionPlanRealProviderPocResult =
   | Readonly<{
       ok: true;
@@ -283,6 +307,7 @@ export type PreviewVionaExecutionPlanRealProviderPocResult =
       actionId: string;
       planAllowed: boolean;
       denialReason: VionaExecutionPlanDenialReasonForRealProviderPoc;
+      escrow: PreviewVionaExecutionPlanRealProviderPocEscrowOutcome;
       realProviderResult: VionaTwilioRealExecutionResult | null;
     }>
   | Readonly<{ ok: false; reason: PreviewVionaExecutionPlanRealProviderPocFailure }>;
@@ -291,12 +316,29 @@ export type PreviewVionaExecutionPlanRealProviderPocResult =
 type VionaExecutionPlanDenialReasonForRealProviderPoc = ReturnType<typeof buildVionaExecutionPlan>['denialReason'];
 
 /**
+ * Pack31 — fixed, symbolic estimated cost (VIO Credits) used to exercise the Zero-Loss hold/settle
+ * gate for this Twilio Test-Credentials POC. This is a **business charge placeholder**, not a
+ * pass-through of Twilio's real invoice cost (Test Credentials are guaranteed zero-cost by Twilio,
+ * §docs/product/VIONA_REQUEST_PACK30D_REAL_EXECUTION_PLAN.md §3) — a future genuinely-billable
+ * provider would compute `estimatedAmountVIO` from that provider's own cost model instead of this
+ * constant. Policy: the user is charged the full estimate only if the call actually **succeeded**
+ * (service delivered); any blocked/failed outcome is refunded in full (§5 of the escrow plan).
+ */
+export const VIONA_TWILIO_TEST_POC_ESTIMATED_COST_VIO = 0.01;
+
+/**
  * Builds the same Pack30A execution plan used by the mock-only path, then — **only if the plan
  * is allowed** — delegates to the Pack30D-4 Twilio Test-Credentials adapter's `executeReal()`
  * (which itself re-checks the feature flag, validates the magic-number-only intent, and binds
  * every outcome to the audit ledger). If the plan is denied, `executeReal()` is never called and
  * a `executionBlockedOperator`/`executionBlockedPolicy` audit row is written directly, mirroring
  * the existing Pack30D-1 denial-audit pattern used by `previewVionaExecutionPlanRoute` above.
+ *
+ * Pack31 adds a mandatory VIO Credits escrow hold **between** the plan-allowed check and the
+ * `executeVionaTwilioTestPocReal()` call: if `holdVionaRequestExecutionCost()` does not return
+ * `ok: true`, `executeReal()` is never reached (see docs/product/VIONA_PACK31_FINANCIAL_ESCROW_PLAN.md
+ * §5, the Zero-Loss gate). After the real outcome is known, the hold is settled (full charge on
+ * `succeeded`, full refund on any blocked/failed outcome) via `settleVionaRequestExecutionHold()`.
  */
 export async function previewVionaExecutionPlanRealProviderPocRoute(
   input: PreviewVionaExecutionPlanRealProviderPocInput,
@@ -365,6 +407,35 @@ export async function previewVionaExecutionPlanRealProviderPocRoute(
       actionId: plan.actionId,
       planAllowed: false,
       denialReason: plan.denialReason,
+      escrow: { attempted: false },
+      realProviderResult: null,
+    };
+  }
+
+  // Pack31 Zero-Loss gate: hold BEFORE calling executeReal(). If the hold does not return
+  // `ok: true`, `executeVionaTwilioTestPocReal()` is never reached — mirrors exactly how
+  // `executeReal()` itself never falls through its own feature-flag check by accident.
+  const escrowIdempotencyKey = input.idempotencyKey ?? `pack31-hold-${requestId}-${plan.actionId}`;
+  const hold = await holdVionaRequestExecutionCost({
+    requestId,
+    actionId: plan.actionId,
+    userId: authUserId,
+    estimatedAmountVIO: VIONA_TWILIO_TEST_POC_ESTIMATED_COST_VIO,
+    idempotencyKey: escrowIdempotencyKey,
+    auditActorRoleLabel: actorRoleLabel,
+  });
+
+  if (!hold.ok) {
+    console.error(
+      `[pack31-escrow] hold denied for request ${requestId}, action ${plan.actionId}: ${hold.reason}`,
+    );
+    return {
+      ok: true,
+      requestId,
+      actionId: plan.actionId,
+      planAllowed: true,
+      denialReason: plan.denialReason,
+      escrow: { attempted: true, holdOk: false, reason: hold.reason },
       realProviderResult: null,
     };
   }
@@ -378,12 +449,48 @@ export async function previewVionaExecutionPlanRealProviderPocRoute(
     actorRoleLabel,
   });
 
+  // Zero-Loss settle: full charge only if the call actually succeeded; any blocked/failed
+  // outcome is refunded in full (no real cost was ever incurred by the platform). A settle
+  // failure (typed `ok: false`, or an unexpected throw) is logged and flagged for
+  // reconciliation — it must never overwrite or lose the already-known `realProviderResult`
+  // returned above (test plan case 9).
+  const actualCostVIO = realProviderResult.outcome.outcome === 'succeeded' ? hold.heldAmountVIO : 0;
+  let resolved: Awaited<ReturnType<typeof settleVionaRequestExecutionHold>>;
+  try {
+    resolved = await settleVionaRequestExecutionHold({
+      holdId: hold.holdId,
+      requestId,
+      actualCostVIO,
+      auditActorUserId: authUserId,
+      auditActorRoleLabel: actorRoleLabel,
+    });
+  } catch (error) {
+    console.error(
+      `[pack31-escrow] settle threw for hold ${hold.holdId} on request ${requestId}: ${error instanceof Error ? error.message : 'unknown_error'}`,
+    );
+    resolved = { ok: false, reason: 'settle_error' };
+  }
+  if (!resolved.ok) {
+    console.error(
+      `[pack31-escrow] settle failed for hold ${hold.holdId} on request ${requestId}: ${resolved.reason}`,
+    );
+  }
+
   return {
     ok: true,
     requestId,
     actionId: plan.actionId,
     planAllowed: true,
     denialReason: plan.denialReason,
+    escrow: {
+      attempted: true,
+      holdOk: true,
+      holdId: hold.holdId,
+      heldAmountVIO: hold.heldAmountVIO,
+      resolvedStatus: resolved.ok ? resolved.status : null,
+      settledAmountVIO: resolved.ok ? resolved.settledAmountVIO : null,
+      refundedAmountVIO: resolved.ok ? resolved.refundedAmountVIO : null,
+    },
     realProviderResult,
   };
 }

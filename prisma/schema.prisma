@@ -44,6 +44,10 @@ enum TxType {
   PLATFORM_FEE
   /// Tourist → VN merchant QR settlement (split: platform fee + vendor net).
   QR_MERCHANT
+  /// Pack31 — VionaRequest execution-hold settle leg (VIO Credits actually consumed after a real-provider
+  /// call resolves). Distinct from the generic `PLATFORM_FEE` so VionaRequest ledger reporting stays
+  /// separable from other verticals' platform-fee legs.
+  VIONA_REQUEST_EXECUTION_SETTLED
   /// Broker commission credit (Mica / affiliate) paid from treasury on fulfilled inbound tourism.
   BROKER_COMMISSION
 }
@@ -862,6 +866,7 @@ model VionaRequest {
   statusEvents          VionaRequestStatusEvent[]
   auditEvents           VionaRequestAuditEvent[]
   attachmentReferences  VionaRequestAttachmentReference[]
+  escrowHolds           VionaRequestEscrowHold[]
 
   @@index([tenantId])
   @@index([status])
@@ -950,4 +955,50 @@ model VionaRequestAttachmentReference {
   request VionaRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
 
   @@index([requestId])
+}
+
+/// Pack31 — Financial Gateway & Escrow. Links a VionaRequest execution attempt to the existing,
+/// unmodified `Wallet`/`Transaction` ledger (see docs/product/VIONA_PACK31_FINANCIAL_ESCROW_PLAN.md
+/// §4.1). Deliberately NOT a second wallet — `Wallet.balanceVIG`/`lockedBalanceVIG` remain the one
+/// and only balance source of truth; this table only tracks the hold's own lifecycle and links to
+/// the `Transaction` legs that actually move `Wallet` balances. New fields on this NEW table use the
+/// "VIO Credits" naming convention (operator terminology correction); the legacy `Wallet`/`Transaction`
+/// fields referenced by id here are intentionally left unrenamed (would break Tourism/AI-gateway).
+model VionaRequestEscrowHold {
+  id                   String                        @id @default(uuid())
+  requestId            String
+  actionId             String
+  userId               String
+  /// Computed at (1) ESTIMATE — never written to after HOLD.
+  estimatedAmountVIO   Float
+  /// Written at (2) HOLD — the amount actually moved into `Wallet.lockedBalanceVIG`.
+  heldAmountVIO        Float
+  /// Written at (4) SETTLE — the real, final cost (<= heldAmountVIO always; never negative).
+  settledAmountVIO     Float?
+  /// Written at (4) REFUND — heldAmountVIO - settledAmountVIO once resolved.
+  refundedAmountVIO    Float?
+  status               VionaRequestEscrowHoldStatus @default(HELD)
+  /// The `ESCROW_LOCK`-type `Transaction.id` created at (2) HOLD (existing `Transaction` table, id only — no Prisma relation).
+  holdTransactionId    String                        @unique
+  /// The `VIONA_REQUEST_EXECUTION_SETTLED`-type `Transaction.id` created at (4), if any real cost was incurred.
+  settleTransactionId  String?                       @unique
+  /// The `ESCROW_REFUND`-type `Transaction.id` created at (4), if any refund occurred.
+  refundTransactionId  String?                       @unique
+  /// Prevents a caller retry from double-holding for the same requestId+actionId attempt.
+  idempotencyKey       String                        @unique
+  createdAt            DateTime                      @default(now())
+  settledAt            DateTime?
+
+  request VionaRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
+
+  @@index([requestId, actionId])
+  @@index([userId, status])
+}
+
+enum VionaRequestEscrowHoldStatus {
+  HELD
+  SETTLED
+  REFUNDED
+  PARTIALLY_REFUNDED
+  FAILED
 }

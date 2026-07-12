@@ -42,6 +42,14 @@ export const vionaRequestAuditEventTypes = [
   // for an idempotent replay (no new transition occurred), and never changes the transition's
   // existing response shape or the pre-existing `action.status` audit row written alongside it.
   'stateTransition',
+  // Pack31 — VIO Credits escrow hold/settle/refund lifecycle for a VionaRequest execution
+  // attempt (see docs/product/VIONA_PACK31_FINANCIAL_ESCROW_PLAN.md §4.3). Written by
+  // `vionaRequestEscrowHoldService.ts` alongside (never instead of) the existing `Transaction`
+  // ledger row for the same movement — this audit event documents the *attempt*, the
+  // `Transaction`/`Wallet` rows remain the one and only financial source of truth.
+  'escrowHoldPlaced',
+  'escrowSettled',
+  'escrowRefunded',
 ] as const;
 
 export type VionaRequestAuditEventType = (typeof vionaRequestAuditEventTypes)[number];

@@ -172,9 +172,13 @@ function testStateTransitionEventTypeRegisteredWithoutRemovingExisting(): void {
     'vionaRequestAuditEventTypes must include the new stateTransition type',
   );
 
+  // Pack31 (see scripts/test-viona-pack31-financial-escrow.ts) deliberately adds exactly three
+  // more values on top of this set — `escrowHoldPlaced`/`escrowSettled`/`escrowRefunded` —
+  // accounted for here as a fixed, documented +3 rather than an open-ended tolerance.
+  const pack31AdditionsCount = 3;
   assert(
-    vionaRequestAuditEventTypes.length === preExisting.length + 1,
-    `vionaRequestAuditEventTypes must contain exactly the ${preExisting.length} pre-existing types plus the new stateTransition type (no accidental extra/removed values); got ${vionaRequestAuditEventTypes.length}`,
+    vionaRequestAuditEventTypes.length === preExisting.length + 1 + pack31AdditionsCount,
+    `vionaRequestAuditEventTypes must contain exactly the ${preExisting.length} pre-existing types plus stateTransition plus the ${pack31AdditionsCount} Pack31 types (no accidental extra/removed values); got ${vionaRequestAuditEventTypes.length}`,
   );
 }
 
