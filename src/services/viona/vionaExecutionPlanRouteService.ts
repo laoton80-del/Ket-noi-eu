@@ -32,6 +32,10 @@ import type {
   PreviewVionaExecutionPlanRouteResult,
 } from './vionaExecutionPlanRouteDto';
 import { VIONA_EXECUTION_PLAN_ROUTE_SAFETY } from './vionaExecutionPlanRouteDto';
+import {
+  executeVionaTwilioTestPocReal,
+  type VionaTwilioRealExecutionResult,
+} from '../../lib/viona/realProviderAdapter/vionaTwilioTestRealProviderAdapter';
 
 const IDEMPOTENCY_KEY_MAX_LENGTH = 128;
 const CLIENT_CORRELATION_ID_MAX_LENGTH = 128;
@@ -237,5 +241,149 @@ export async function previewVionaExecutionPlanRoute(
     data: detail.data,
     action,
     safety: VIONA_EXECUTION_PLAN_ROUTE_SAFETY,
+  };
+}
+
+/**
+ * Pack30D-4 — Twilio Test-Credentials real-provider POC route wiring.
+ *
+ * Deliberately a **brand-new, additive** function, not a modification of
+ * `previewVionaExecutionPlanRoute` above: this keeps that existing function, its DTO
+ * (`vionaExecutionPlanRouteDto.ts`), and its static `VIONA_EXECUTION_PLAN_ROUTE_SAFETY` constant
+ * byte-for-byte unchanged, and guarantees the pre-existing mock-only HTTP route
+ * (`POST /api/viona/requests/:id/actions/execution-plan-preview`) can never accidentally return a
+ * misleading `mockOnly: true` / `noExternalSideEffects: true` safety label for a call that
+ * actually reached a real provider. This function is **not** wired to any Express controller or
+ * route in this change — it exists as a directly unit-testable service-layer capability only
+ * (see the evidence README for the explicit rationale for this narrower-than-planned scope).
+ *
+ * Reuses, unmodified: `buildVionaExecutionPlan` (Pack30A), `getVionaRequestById` (Pack19/29),
+ * `appendVionaExecutionAuditEvent` (Pack30D-1), `resolveVionaExecutionAuditActorRoleLabel`
+ * (Pack30D-1). Never mutates `VionaRequest.status`. Never touches the Pack30A mock adapter.
+ */
+export type PreviewVionaExecutionPlanRealProviderPocInput = Readonly<{
+  authUserId: string;
+  requestId: string;
+  actionId?: string;
+  operatorApprovalGranted?: boolean;
+  userConsentGranted?: boolean;
+  requestSafetyLabels?: readonly string[];
+  idempotencyKey?: string | null;
+  fromNumber: string;
+  toNumber: string;
+  body: string;
+}>;
+
+export type PreviewVionaExecutionPlanRealProviderPocFailure = 'invalid_input' | 'request_not_found';
+
+export type PreviewVionaExecutionPlanRealProviderPocResult =
+  | Readonly<{
+      ok: true;
+      requestId: string;
+      actionId: string;
+      planAllowed: boolean;
+      denialReason: VionaExecutionPlanDenialReasonForRealProviderPoc;
+      realProviderResult: VionaTwilioRealExecutionResult | null;
+    }>
+  | Readonly<{ ok: false; reason: PreviewVionaExecutionPlanRealProviderPocFailure }>;
+
+/** Re-exported narrowly to avoid a second import of the Pack30A executionPlan module's type. */
+type VionaExecutionPlanDenialReasonForRealProviderPoc = ReturnType<typeof buildVionaExecutionPlan>['denialReason'];
+
+/**
+ * Builds the same Pack30A execution plan used by the mock-only path, then — **only if the plan
+ * is allowed** — delegates to the Pack30D-4 Twilio Test-Credentials adapter's `executeReal()`
+ * (which itself re-checks the feature flag, validates the magic-number-only intent, and binds
+ * every outcome to the audit ledger). If the plan is denied, `executeReal()` is never called and
+ * a `executionBlockedOperator`/`executionBlockedPolicy` audit row is written directly, mirroring
+ * the existing Pack30D-1 denial-audit pattern used by `previewVionaExecutionPlanRoute` above.
+ */
+export async function previewVionaExecutionPlanRealProviderPocRoute(
+  input: PreviewVionaExecutionPlanRealProviderPocInput,
+): Promise<PreviewVionaExecutionPlanRealProviderPocResult> {
+  const authUserId = input.authUserId.trim();
+  const requestId = input.requestId.trim();
+  const actionId = input.actionId?.trim();
+  const fromNumber = input.fromNumber.trim();
+  const toNumber = input.toNumber.trim();
+
+  if (
+    authUserId.length === 0 ||
+    requestId.length === 0 ||
+    fromNumber.length === 0 ||
+    toNumber.length === 0 ||
+    input.body.trim().length === 0
+  ) {
+    return { ok: false, reason: 'invalid_input' };
+  }
+
+  const detail = await getVionaRequestById({ authUserId, requestId });
+  if (!detail.ok) {
+    return { ok: false, reason: 'request_not_found' };
+  }
+
+  const plan = buildVionaExecutionPlan({
+    planId: `pack30d4-real-poc-plan-${requestId}-${actionId ?? 'default'}`,
+    createdAt: new Date().toISOString(),
+    requestId,
+    requestStatus: detail.data.request.status,
+    actionId,
+    requestSafetyLabels: input.requestSafetyLabels,
+    operatorApprovalGranted: input.operatorApprovalGranted === true,
+    userConsentGranted: input.userConsentGranted === true,
+    idempotencyKey: input.idempotencyKey ?? null,
+  });
+
+  const actorRoleLabel = resolveVionaExecutionAuditActorRoleLabel(detail.data.request, authUserId);
+
+  if (!plan.allowed) {
+    const eventType: VionaRequestAuditEventType =
+      plan.denialReason === 'missing_operator_approval' ? 'executionBlockedOperator' : 'executionBlockedPolicy';
+    const auditResult = await appendVionaExecutionAuditEvent({
+      requestId,
+      eventType,
+      actorUserId: authUserId,
+      actorRoleLabel,
+      message:
+        'Pack30D-4 Twilio Test-Credentials real-provider POC: execution plan denied before any provider call.',
+      payloadJson: {
+        provider: 'twilio_test_credentials',
+        actionId: plan.actionId,
+        planId: plan.planId,
+        planState: plan.state,
+        denialReason: plan.denialReason,
+      },
+    });
+    if (!auditResult.ok) {
+      console.error(
+        `[pack30d4-real-provider-poc] failed to append plan-denied audit event for request ${requestId}: ${auditResult.error}`,
+      );
+    }
+    return {
+      ok: true,
+      requestId,
+      actionId: plan.actionId,
+      planAllowed: false,
+      denialReason: plan.denialReason,
+      realProviderResult: null,
+    };
+  }
+
+  const realProviderResult = await executeVionaTwilioTestPocReal({
+    requestId,
+    actionId: plan.actionId,
+    intent: { fromNumber, toNumber, body: input.body },
+    idempotencyKey: input.idempotencyKey ?? null,
+    actorUserId: authUserId,
+    actorRoleLabel,
+  });
+
+  return {
+    ok: true,
+    requestId,
+    actionId: plan.actionId,
+    planAllowed: true,
+    denialReason: plan.denialReason,
+    realProviderResult,
   };
 }
