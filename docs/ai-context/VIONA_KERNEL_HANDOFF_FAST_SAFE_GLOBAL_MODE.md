@@ -3915,11 +3915,13 @@ Stop immediately and report if asked to:
 
 ## 16. Visionary Roadmap & Next-Gen Architecture (Coming Soon / Pilot)
 
-**Document type (this section):** Docs-only strategic direction record. **Not** an authorization, design lock, implementation plan, or file allowlist for any of the four pillars below. **No code exists for any of them.** Status for all four: **`VISIONARY / FUTURE_ROADMAP`** — internally labeled **Pilot / Coming Soon / Beta** per §1.1's readiness-label doctrine; none may be presented as live, production-ready, or currently available.
+**Document type (this section):** Docs-only strategic direction record. **Not** an authorization, design lock, implementation plan, or file allowlist for any of the eight pillars below (four Phase 1 + four Phase 2). **No code exists for any of them.** Status for all eight: **`VISIONARY / FUTURE_ROADMAP`** — internally labeled **Pilot / Coming Soon / Beta** per §1.1's readiness-label doctrine; none may be presented as live, production-ready, or currently available.
 
-**Why recorded here:** Per operator instruction, this section preserves four next-generation architecture pillars in the canonical Kernel/Handoff memory so they are not lost between sessions, while making unmistakably clear that **none of them are scheduled, authorized, designed, or implemented** ahead of the current critical path.
+**Why recorded here:** Per operator instruction, this section preserves next-generation architecture pillars in the canonical Kernel/Handoff memory so they are not lost between sessions, while making unmistakably clear that **none of them are scheduled, authorized, designed, or implemented** ahead of the current critical path.
 
-**Mandatory launchpad dependency:** All four pillars below **require** the **Pack 30D persistent Audit Ledger** (append-only writes to the existing `VionaRequestAuditEvent` table, per PR #289's design) as their common prerequisite — every pillar involves either autonomous/semi-autonomous action, cross-party financial commitment, or AI-to-AI arbitration that **must** be independently auditable before any real-execution gate can ever be requested for it. **The Audit Ledger writer itself (Pack 30D-1) is not yet implemented** — see §5/§6 "Pack30D-1 implementation readiness: READY (not yet opened)". No pillar below may begin its own design phase before Pack 30D-1 is implemented, staging-QA'd, and closed.
+**Mandatory launchpad dependency:** All eight pillars below **require** the **Pack 30D persistent Audit Ledger** (append-only writes to the existing `VionaRequestAuditEvent` table, per PR #289's design) as their common prerequisite — every pillar involves either autonomous/semi-autonomous action, cross-party financial commitment, cross-universe data linkage, or AI-to-AI arbitration that **must** be independently auditable before any real-execution gate can ever be requested for it. **The Audit Ledger writer itself (Pack 30D-1) is not yet implemented** — see §5/§6 "Pack30D-1 implementation readiness: READY (not yet opened)". No pillar below may begin its own design phase before Pack 30D-1 is implemented, staging-QA'd, and closed.
+
+**Phase status:** Phase 1 (§16.1-§16.4) recorded first; Phase 2 (§16.5-§16.8) added in this update — same classification, same dependency, same non-authorization boundary.
 
 ### 16.1 Business / Local — Automated Escrow & Milestone Payout
 
@@ -3957,20 +3959,57 @@ Hội đồng AI (AI Board) thực hiện kiểm duyệt chéo (cross-review) n�
 - **Forbidden until separately authorized:** any AI Board decision that itself constitutes real execution, any silent mutation of protected domains (§3 non-negotiable rule 6), any claim that the Board "approves" real money/SOS/production actions — the Board concept is itself subordinate to, not a replacement for, human operator approval phrases
 - **No design, code, or file allowlist exists yet.**
 
-### 16.5 Explicit boundary (this section)
+### 16.5 Cross-Universe Semantic Memory Vault (Phase 2)
+
+Ký ức ngữ nghĩa mã hóa end-to-end (end-to-end encrypted semantic memory), tự động liên kết ngữ cảnh xuyên phân khu (cross-universe context linking) — ví dụ: dữ liệu sức khỏe khai báo ở Academy tự động thành cảnh báo dị ứng ở Local/Travel.
+
+- **Status:** `VISIONARY / FUTURE_ROADMAP` — Pilot/Coming Soon only
+- **Depends on:** Pack 30D persistent Audit Ledger (every cross-universe read/write of a user's semantic memory must be append-only audited — this is a privacy-sensitive data-linkage feature, so auditability is non-negotiable); Security & Tenant Isolation doctrine (`VIONA_OPERATING_PROTOCOL.md` §2 role 8; §3 non-negotiable rule 4 tenant isolation); Compliance & Privacy Owner review (data minimization, consent)
+- **Forbidden until separately authorized:** any cross-universe data sharing without explicit user consent, any health/medical data inference presented as a diagnosis, any silent write of inferred data into another universe's records, any claim of "encrypted" without a verified E2E implementation
+- **No design, code, schema, encryption scheme, or file allowlist exists yet.**
+
+### 16.6 Cross-Lingual Voice Preserving — Smart Trio Upgrade (Phase 2)
+
+Dịch thuật thời gian thực (real-time translation) tích hợp Voice Cloning giữ nguyên âm sắc và cảm xúc giọng nói gốc (original timbre/emotion-preserving voice cloning) để duy trì tính con người trong giao dịch B2B/Local.
+
+- **Status:** `VISIONARY / FUTURE_ROADMAP` — Pilot/Coming Soon/Beta only
+- **Depends on:** Pack 30D persistent Audit Ledger (every voice-cloning session and its consent record must be append-only audited); Smart Trio language-layer doctrine (§1 Purpose; `VIONA_OPERATING_PROTOCOL.md` §10.6 Smart Trio requirements); explicit voice-likeness consent per §2.13-style consent doctrine
+- **Forbidden until separately authorized:** any voice cloning without the speaker's explicit recorded consent, any claim that cloned voice output is the real person speaking without disclosure, any use of a cloned voice for content the original speaker did not approve, any impersonation risk left unmitigated
+- **No design, code, model, or file allowlist exists yet.**
+
+### 16.7 Predictive Wealth Guardian — Zero-Loss Expansion (Phase 2)
+
+AI phân tích chéo dòng tiền (cross-flow analysis) giữa B2B Wholesale và Local Booking để chủ động cảnh báo thâm hụt (proactive deficit alerts) và đề xuất chiến dịch giải cứu (rescue campaign suggestions: khuyến mãi, marketing).
+
+- **Status:** `VISIONARY / FUTURE_ROADMAP` — Pilot/Coming Soon only
+- **Depends on:** Pack 30D persistent Audit Ledger (every predictive alert and every AI-suggested campaign must be append-only audited before any auto-triggered action could ever be considered); Zero-loss monetization doctrine (§3 non-negotiable rule 8); B2B Wholesale Financial Fortress Rules and Zero-Loss Rules (`VIONA_OPERATING_PROTOCOL.md` §14.1, §15.1); Payments & Ledger Integrity Owner review
+- **Forbidden until separately authorized:** any AI-triggered promotion, discount, or marketing spend without merchant/operator approval, any claim of a "guaranteed" financial outcome, any automatic reallocation of funds between B2B and Local ledgers, any prediction presented as certain rather than probabilistic guidance
+- **No design, code, model, or file allowlist exists yet.**
+
+### 16.8 Ambient Vision & Spatial Awareness — SOS/Minh Khang Upgrade (Phase 2)
+
+Phân tích AR/Camera thời gian thực (real-time AR/camera analysis) để highlight "Red flags" trong hợp đồng hoặc tự động nhận diện nguy hiểm từ môi trường (ambient danger detection) để kích hoạt SOS sớm (early SOS activation).
+
+- **Status:** `VISIONARY / FUTURE_ROADMAP` — Pilot only, country-by-country (mirrors §10.5 SOS Live Automation gating)
+- **Depends on:** Pack 30D persistent Audit Ledger (every camera-triggered red-flag highlight and every ambient-danger-triggered SOS pre-alert must be append-only audited); SOS/Global Lifeline Universe rules and Do Not Touch list (`VIONA_OPERATING_PROTOCOL.md` §10.5, §18.1); explicit camera/microphone consent doctrine (§2.13 consent requirements: location, recording, video)
+- **Forbidden until separately authorized:** any camera/AR access without explicit, revocable consent, any claim of legal contract review/advice from AR "red flag" highlighting, any automatic SOS dispatch triggered purely by ambient AI inference without human confirmation, any background camera use, any bypass of the existing §18.1 "Do Not Touch — SOS" list
+- **No design, code, model, or file allowlist exists yet.**
+
+### 16.9 Explicit boundary (this section, Phase 1 + Phase 2)
 
 | Assertion | Value |
 | --- | --- |
-| Any pillar implemented in this section | **NO** |
+| Any pillar implemented in this section (Phase 1 or Phase 2) | **NO** |
 | Any pillar designed (docs/architecture) in this section | **NO** |
 | Any file allowlist defined for any pillar | **NO** |
 | Any operator phrase requested for any pillar | **NO** |
 | Real execution | **BLOCKED** (unchanged) |
 | Production | **NOT AUTHORIZED** (unchanged) |
-| Current critical-path focus after this update | **Pack 30D-1 (Audit Ledger Writer) implementation** — unchanged, still the sole near-term priority |
+| Current critical-path focus after this update | **Pack 30D-1 (Audit Ledger Writer) implementation** — unchanged, still the sole near-term priority, now READY to be opened |
 | This section changes pack sequencing or priority | **NO** — purely an addendum recording long-range direction |
+| Total visionary pillars recorded | **8** (4 Phase 1: §16.1-§16.4; 4 Phase 2: §16.5-§16.8) |
 
-**Next lane (unchanged by this section):** Pack 30D-1 (Audit Ledger Writer) implementation remains the immediate next actionable pack once separately opened, using the file allowlist and test plan already defined in PR #289 §8-§9. None of the four visionary pillars above may begin their own design phase before Pack 30D-1 is implemented, staging-QA'd, and closed.
+**Next lane (unchanged by this section):** Pack 30D-1 (Audit Ledger Writer) implementation remains the immediate next actionable pack, ready to be opened, using the file allowlist and test plan already defined in PR #289 §8-§9. None of the eight visionary pillars above may begin their own design phase before Pack 30D-1 is implemented, staging-QA'd, and closed.
 
 ---
 
