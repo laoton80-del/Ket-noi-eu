@@ -4389,7 +4389,7 @@ Phiên dịch nhận thức cảm xúc (cognitive-empathy interpretation): kết
 
 **Why recorded here:** Per operator instruction, this section preserves the platform's unit-economics and dual-sided monetization doctrine in the canonical Kernel/Handoff memory so future payment/checkout implementation packs (whichever universe they land in) have a single, consistent commercial reference point, without pre-authorizing any payment code, checkout flow, or production readiness now.
 
-**Section status:** §17.1–§17.4 (core Zero-Loss doctrine + dual-sided fee structure + Split Payment code direction + non-authorization boundary) recorded first; §17.5 (Master-Tier Ultimate Monetization Models — Invisible FinTech/FX Spread, Value-Based Pricing, AI-Native Contextual Placements/CPA, B2B AI White-Labeling) added next as an API-cost-erosion defense layer; §17.6 declares the entire Unit Economics doctrine (§17.1–§17.5) **strategically/financially complete per explicit operator instruction — no further theoretical monetization models are to be added**. This closure does not authorize or implement anything; Pack 30D-1 (Audit Ledger Writer) remains the unaffected near-term code-implementation priority.
+**Section status:** §17.1–§17.4 (core Zero-Loss doctrine + dual-sided fee structure + Split Payment code direction + non-authorization boundary) recorded first; §17.5 (Master-Tier Ultimate Monetization Models — Invisible FinTech/FX Spread, Value-Based Pricing, AI-Native Contextual Placements/CPA, B2B AI White-Labeling) added next as an API-cost-erosion defense layer; §17.6 declares the underlying **revenue-mechanism** doctrine (§17.1–§17.5) **strategically/financially complete per explicit operator instruction — no further theoretical revenue mechanism is to be added**; §17.7 (VIONA Service Tiers — Ecosystem Pricing Matrix) then packages those already-closed mechanisms into a concrete, customer-facing subscription menu (B2C Essential/Citizen, B2B Merchant/Enterprise, PAYG Credits) mapped to the 6 universes — a packaging/SKU record, not a reopening of the §17.6 revenue-mechanism closure. None of §17.1–§17.7 authorizes or implements anything; Pack 30D-1 (Audit Ledger Writer) remains the unaffected near-term code-implementation priority.
 
 ### 17.1 Core principle — Zero-Loss ≠ Free
 
@@ -4466,8 +4466,37 @@ Phiên dịch nhận thức cảm xúc (cognitive-empathy interpretation): kết
 | Production | **NOT AUTHORIZED** (unchanged) |
 | Near-term code focus | **UNCHANGED — Pack 30D-1 (Audit Ledger Writer)** |
 
-### 17.6 Unit Economics design closure (operator-declared)
+### 17.6 Unit Economics design closure (operator-declared, scope-limited to §17.1–§17.5 revenue mechanisms)
 
-Per explicit operator instruction, the Unit Economics & Dual-Sided Monetization Strategy doctrine (§17.1–§17.5) is now declared **strategically and financially complete** — **no further theoretical monetization models are to be added** to this section going forward. This closure is a **scope lock on further design/strategy additions only**; it does **not** authorize, design-in-detail, or implement any of the models in §17.2 or §17.5. The system is now **100% ready** to receive the next **code-implementation** instruction, which remains **Pack 30D-1 (Audit Ledger Writer)** — already implemented in PR #296 (mock-only, on master) — or its next staging-QA/closure step; this monetization section does not introduce, compete with, or defer that priority.
+Per explicit operator instruction, the Unit Economics & Dual-Sided Monetization Strategy **revenue-mechanism** doctrine (§17.1–§17.5 — the underlying fee/commission/spread/success-fee/SaaS **mechanisms**) was declared **strategically and financially complete** — **no further theoretical revenue mechanism is to be added** to §17.1–§17.5. This closure is a **scope lock on further revenue-mechanism design/strategy additions only**; it does **not** authorize, design-in-detail, or implement any of the models in §17.2 or §17.5. **§17.7 below (customer-facing packaging/SKU tiers) is a distinct kind of content — it packages the already-closed §17.1–§17.5 mechanisms into a concrete pricing menu, and does not reopen or extend the revenue-mechanism doctrine itself.** The system remains **100% ready** to receive the next **code-implementation** instruction, which remains **Pack 30D-1 (Audit Ledger Writer)** — already implemented in PR #296 (mock-only, on master) — or its next staging-QA/closure step; this monetization section does not introduce, compete with, or defer that priority.
 
 **Next lane:** No payment/checkout/FinTech/white-label implementation pack may begin using §17.1–§17.5 as its authorization basis. Any future implementation pack for any of these models must (a) cite this section as the commercial-strategy reference only, (b) obtain its own separate design → phrase-intake → implementation-plan → staged-authorization ladder (mirroring the Pack29/Pack30 precedent), and (c) route through `VIONA_OPERATING_PROTOCOL.md` §2/§3 payment-governance review — with additional financial/legal review for escrow-float and FX-markup specifically — before any real charge, escrow, FX conversion, success-fee billing, CPA billing, or SaaS billing is implemented. Real execution remains **BLOCKED**; production remains **NOT AUTHORIZED**. Pack 30D-1 (Audit Ledger Writer) remains the immediate next code-implementation priority, unaffected by this docs-only commercial-strategy record.
+
+### 17.7 VIONA Service Tiers — Ecosystem Pricing Matrix (Ma trận Gói Dịch Vụ 6 Vũ Trụ)
+
+**Numbering note:** Requested by the operator as "Mục 12.3" — placed at **§17.7** (next available subsection number within the existing §17 Unit Economics section), for the same reason §17.5/§17.6 were placed there instead of "§12.2"/"§12.3": §12 is already "Pack18 authorization..." and §17.1–§17.6 already occupy the prior subsection slots.
+
+**Purpose:** The official, user-facing "menu" — a concrete packaging of the §17.1–§17.5 revenue mechanisms into named subscription tiers mapped directly to features across the 6 VIONA universes (Hub, Local, Travel, Academy, Business, SOS). This is a **product/pricing packaging record**, not a new revenue mechanism — see §17.6 scope note above.
+
+| Segment | Tier | Indicative price | Included (feature → universe mapping) |
+| --- | --- | --- | --- |
+| B2C | **VIONA Essential** | **Free** | Dịch thuật text (Academy/Smart Trio); đặt xe/đặt lịch với phí nền tảng tính theo từng lượt lẻ (Local/Travel, per §17.2 dual-sided fee); SOS thủ công (SOS/Hub, user-initiated only, no automation) |
+| B2C | **VIONA Citizen** | **~9.99€/tháng** | Miễn phí phí nền tảng gọi xe/giao hàng (Local/Travel); SOS tự động cảnh báo (SOS, within existing pre-consent/Human-in-the-Loop boundary — §16.23); AI gọi hộ hành chính có hạn mức (Hub/Academy voice-agent minutes, capped); Academy Voice **15h/tháng** |
+| B2B | **VIONA Merchant** | **~29.99€/tháng** | Lễ tân AI nghe máy 24/7, **200 cuộc/tháng** (Business/Local voice-agent minutes, capped); Báo cáo thuế tự động (Business — relates to §17.5 model 4 direction, packaged here as a merchant-tier feature) |
+| B2B | **VIONA Enterprise** | **~99.99€/tháng** | Mở khóa Smart Escrow (Business — §17.2 escrow deposit fee mechanism, gated behind this tier); Chuỗi cung ứng tự chữa lành (Business — Self-Healing Supply Chain, Visionary §16.21, still `VISIONARY/FUTURE_ROADMAP`, not implemented); Quyền kích hoạt AI Telesales (Business — outbound AI calling capability gate) |
+| PAYG | **VIONA Credits** | Pay-as-you-go top-up | "Ví nhiên liệu" — người dùng trả thêm cho các tác vụ vượt hạn mức gói (Voice minutes, gọi điện quốc tế/telephony, other high-API-cost actions) across any universe/tier above |
+
+**Explicit non-authorization boundary (§17.7):**
+
+| Item | Status |
+| --- | --- |
+| Subscription billing / recurring-payment code | **NOT WRITTEN** |
+| Feature-gating / entitlement-check code for any tier | **NOT WRITTEN** |
+| VIONA Credits ledger/wallet top-up code | **NOT WRITTEN** — distinct from, and does not imply, any change to existing Wallet/Ledger services |
+| Smart Escrow unlock, Self-Healing Supply Chain, AI Telesales activation | **NOT IMPLEMENTED** — Enterprise-tier items referencing Visionary/§17.5 concepts remain exactly as blocked/未authorized as recorded there |
+| Prices (Free / 9.99€ / 29.99€ / 99.99€) and quotas (15h, 200 calls) | **STRATEGIC REFERENCE ONLY** — not final, not legally/tax reviewed, not billing-system configuration |
+| Real execution | **BLOCKED** (unchanged) |
+| Production | **NOT AUTHORIZED** (unchanged) |
+| Near-term code focus | **UNCHANGED — Pack 30D-1 (Audit Ledger Writer)**, already implemented in PR #296 |
+
+**Next lane:** This pricing matrix may be used as the commercial reference for a future, **separately authorized** entitlements/subscription implementation pack (its own design → phrase-intake → implementation-plan → staged-authorization ladder, per §17.6). It does **not** itself authorize any billing, entitlement-gating, or ledger/credits code. Real execution remains **BLOCKED**; production remains **NOT AUTHORIZED**. Pack 30D-1 (Audit Ledger Writer) remains the immediate next code-implementation priority.
