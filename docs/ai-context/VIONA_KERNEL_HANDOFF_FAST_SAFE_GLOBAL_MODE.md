@@ -3915,13 +3915,13 @@ Stop immediately and report if asked to:
 
 ## 16. Visionary Roadmap & Next-Gen Architecture (Coming Soon / Pilot)
 
-**Document type (this section):** Docs-only strategic direction record. **Not** an authorization, design lock, implementation plan, or file allowlist for any of the eight pillars below (four Phase 1 + four Phase 2). **No code exists for any of them.** Status for all eight: **`VISIONARY / FUTURE_ROADMAP`** — internally labeled **Pilot / Coming Soon / Beta** per §1.1's readiness-label doctrine; none may be presented as live, production-ready, or currently available.
+**Document type (this section):** Docs-only strategic direction record. **Not** an authorization, design lock, implementation plan, or file allowlist for any of the fourteen pillars below (four Phase 1 + four Phase 2 + six Phase 3 "Ultimate"). **No code exists for any of them.** Status for all fourteen: **`VISIONARY / FUTURE_ROADMAP`** — internally labeled **Pilot / Coming Soon / Beta** per §1.1's readiness-label doctrine; none may be presented as live, production-ready, or currently available.
 
 **Why recorded here:** Per operator instruction, this section preserves next-generation architecture pillars in the canonical Kernel/Handoff memory so they are not lost between sessions, while making unmistakably clear that **none of them are scheduled, authorized, designed, or implemented** ahead of the current critical path.
 
-**Mandatory launchpad dependency:** All eight pillars below **require** the **Pack 30D persistent Audit Ledger** (append-only writes to the existing `VionaRequestAuditEvent` table, per PR #289's design) as their common prerequisite — every pillar involves either autonomous/semi-autonomous action, cross-party financial commitment, cross-universe data linkage, or AI-to-AI arbitration that **must** be independently auditable before any real-execution gate can ever be requested for it. **The Audit Ledger writer itself (Pack 30D-1) is not yet implemented** — see §5/§6 "Pack30D-1 implementation readiness: READY (not yet opened)". No pillar below may begin its own design phase before Pack 30D-1 is implemented, staging-QA'd, and closed.
+**Mandatory launchpad dependency:** All fourteen pillars below **require** the **Pack 30D persistent Audit Ledger** (append-only writes to the existing `VionaRequestAuditEvent` table, per PR #289's design) as their common prerequisite — every pillar involves either autonomous/semi-autonomous action, cross-party financial commitment, cross-universe data linkage, biometric/health data handling, or AI-to-AI/AI-to-physical-world arbitration that **must** be independently auditable before any real-execution gate can ever be requested for it. **The Audit Ledger writer itself (Pack 30D-1) is not yet implemented** — see §5/§6 "Pack30D-1 implementation readiness: READY (not yet opened)". No pillar below may begin its own design phase before Pack 30D-1 is implemented, staging-QA'd, and closed.
 
-**Phase status:** Phase 1 (§16.1-§16.4) recorded first; Phase 2 (§16.5-§16.8) added in this update — same classification, same dependency, same non-authorization boundary.
+**Phase status:** Phase 1 (§16.1-§16.4) recorded first; Phase 2 (§16.5-§16.8) added next; Phase 3 "Ultimate Next-Gen Architecture — full 6-universe coverage" (§16.10-§16.15) added in this update — same classification, same dependency, same non-authorization boundary. With Phase 3, **all six VIONA universes** (Hub/LifeOS, Local, Travel, Academy, Business/B2B, SOS/Global Lifeline) now have at least one recorded visionary pillar.
 
 ### 16.1 Business / Local — Automated Escrow & Milestone Payout
 
@@ -3995,11 +3995,71 @@ Phân tích AR/Camera thời gian thực (real-time AR/camera analysis) để hi
 - **Forbidden until separately authorized:** any camera/AR access without explicit, revocable consent, any claim of legal contract review/advice from AR "red flag" highlighting, any automatic SOS dispatch triggered purely by ambient AI inference without human confirmation, any background camera use, any bypass of the existing §18.1 "Do Not Touch — SOS" list
 - **No design, code, model, or file allowlist exists yet.**
 
-### 16.9 Explicit boundary (this section, Phase 1 + Phase 2)
+### 16.10 Hub (LifeOS) — Biometric & Routine Digital Twin (Phase 3 — Ultimate)
+
+Trợ lý sinh học (biometric digital-twin assistant), tự động kích hoạt Zen Mode dựa trên dữ liệu từ API sức khỏe (health API signals) như nhịp tim/giấc ngủ (heart rate / sleep).
+
+- **Universe:** Hub / LifeOS
+- **Status:** `VISIONARY / FUTURE_ROADMAP` — Pilot/Coming Soon only
+- **Depends on:** Pack 30D persistent Audit Ledger (every biometric-triggered automated mode change must be append-only audited — this is health-adjacent automation and must remain reviewable); Compliance & Privacy Owner review (health data is highly sensitive; data minimization mandatory); explicit third-party health-API consent flow
+- **Forbidden until separately authorized:** any claim of medical monitoring or diagnosis, any silent background collection of biometric data, any sharing of biometric data across universes without the Cross-Universe Semantic Memory Vault's own separate consent gate (§16.5), any auto-action beyond passive UI mode switching (e.g. no auto-messaging others, no auto-booking)
+- **No design, code, integration, or file allowlist exists yet.**
+
+### 16.11 Local (Commerce) — Hyper-Local Group Pooling (Phase 3 — Ultimate)
+
+Gom đơn cộng đồng vi mô (hyper-local community order pooling) qua cơ chế smart-contract-style để tối ưu giá sỉ và vận chuyển (wholesale pricing + shipping optimization).
+
+- **Universe:** Local (Commerce)
+- **Status:** `VISIONARY / FUTURE_ROADMAP` — Pilot/Coming Soon only
+- **Depends on:** Pack 30D persistent Audit Ledger (every pooled-order commitment, price lock, and payout split must be append-only audited); B2B Wholesale Financial Fortress + Zero-Loss Rules (`VIONA_OPERATING_PROTOCOL.md` §14.1, §15.1) by analogy, since pooling is itself a multi-party financial commitment; Payments & Ledger Integrity Owner review
+- **Forbidden until separately authorized:** any claim of a guaranteed pooled price before the pool closes, any automatic charge/capture before all participants confirm, any silent participant substitution, any fake "X people already joined" pressure tactic without real data
+- **No design, code, contract logic, or file allowlist exists yet.**
+
+### 16.12 Travel — Autonomous Micro-Logistics (Phase 3 — Ultimate)
+
+Hậu cần tự trị (autonomous micro-logistics): tự động thương lượng đổi chuyến, dời phòng, và gọi xe (auto-negotiate flight rebooking, hotel room changes, ride-hailing) khi phát hiện delay.
+
+- **Universe:** Travel
+- **Status:** `VISIONARY / FUTURE_ROADMAP` — Pilot/Coming Soon only
+- **Depends on:** Pack 30D persistent Audit Ledger (every autonomous negotiation attempt, and especially every autonomous booking/rebooking action, must be append-only audited — this pillar is one of the highest-risk since it involves AI acting on a user's behalf with third parties); AI cannot silently mutate protected domains doctrine (§3 non-negotiable rule 6); explicit per-action user approval gate (no fire-and-forget autonomous booking)
+- **Forbidden until separately authorized:** any autonomous booking/payment/cancellation without explicit per-action user confirmation, any claim of "already rebooked for you" without a real confirmed transaction, any AI negotiation presented as binding without the counterparty's real system confirming it, any bypass of existing booking-confirmation safety gates
+- **No design, code, negotiation-agent, or file allowlist exists yet.**
+
+### 16.13 Academy — Generative Heritage AR (Phase 3 — Ultimate)
+
+Lưu trữ di sản (heritage preservation): tái tạo Avatar 3D và giọng nói của người thân (3D avatar + voice reconstruction of family members) từ tư liệu cũ (archival material) để giao tiếp/học văn hóa (cultural communication/learning).
+
+- **Universe:** Academy
+- **Status:** `VISIONARY / FUTURE_ROADMAP` — Pilot/Coming Soon/Beta only
+- **Depends on:** Pack 30D persistent Audit Ledger (every generated avatar/voice session and its source-material consent must be append-only audited — this is emotionally sensitive, likeness-of-deceased-or-living-relative content); explicit consent from the person depicted (or, if deceased, documented next-of-kin authorization) mirroring the Cross-Lingual Voice Preserving consent doctrine (§16.6); Compliance & Privacy Owner review
+- **Forbidden until separately authorized:** any generation of a deceased or living person's likeness/voice without documented consent/authorization, any claim that the AI reconstruction "is" the real person, any use of generated heritage content outside the consenting family's own private context without separate authorization, any monetization of a person's likeness without their/their estate's consent
+- **No design, code, model, or file allowlist exists yet.**
+
+### 16.14 Business (B2B) — Predictive Tax & Hedging (Phase 3 — Ultimate)
+
+Phòng vệ dòng tiền (cashflow hedging): đề xuất thời điểm ký quỹ chênh lệch tỷ giá (FX hedging timing suggestions), tự động chuẩn hóa báo cáo thuế sở tại (local tax report normalization).
+
+- **Universe:** Business (B2B)
+- **Status:** `VISIONARY / FUTURE_ROADMAP` — Pilot/Coming Soon only
+- **Depends on:** Pack 30D persistent Audit Ledger (every tax-normalization output and every hedging suggestion must be append-only audited before any merchant could ever act on it); B2B Wholesale Financial Fortress Rules (`VIONA_OPERATING_PROTOCOL.md` §14.1); Compliance & Privacy Owner + Payments & Ledger Integrity Owner joint review (tax and FX advice carries regulatory risk)
+- **Forbidden until separately authorized:** any claim of certified tax filing or legal tax advice, any automatic FX hedge execution without explicit merchant approval, any guarantee of hedging outcome, any tax report presented as filed/submitted when it is only a draft/suggestion
+- **No design, code, model, or file allowlist exists yet.**
+
+### 16.15 SOS (Global Lifeline) — Mesh-Network P2P Rescue (Phase 3 — Ultimate)
+
+Cứu hộ ngoại tuyến (offline rescue): phát tín hiệu cầu cứu nhảy cóc (hop-relay distress signal) qua Bluetooth/WiFi Direct khi mất hoàn toàn sóng di động (complete cellular network loss).
+
+- **Universe:** SOS (Global Lifeline)
+- **Status:** `VISIONARY / FUTURE_ROADMAP` — Pilot only, country-by-country (mirrors §10.5 SOS Live Automation gating — this is the highest-risk pillar of all fourteen, since it targets life-safety scenarios with zero network connectivity)
+- **Depends on:** Pack 30D persistent Audit Ledger (every mesh-relay distress signal, hop, and eventual delivery/failure must be append-only audited once connectivity resumes, for post-incident review); SOS/Global Lifeline Universe rules and Do Not Touch list (`VIONA_OPERATING_PROTOCOL.md` §10.5, §18.1); local legal review per country (mesh emergency signaling may have telecom-regulatory implications)
+- **Forbidden until separately authorized:** any claim that a mesh-relayed distress signal reached real emergency services, any claim of guaranteed delivery over an unmanaged peer mesh, any background Bluetooth/WiFi Direct broadcasting without explicit opt-in, any bypass of the existing §18.1 "Do Not Touch — SOS" list, any implication that this replaces calling local emergency numbers when any connectivity exists
+- **No design, code, protocol, or file allowlist exists yet.**
+
+### 16.16 Explicit boundary (this section, Phase 1 + Phase 2 + Phase 3)
 
 | Assertion | Value |
 | --- | --- |
-| Any pillar implemented in this section (Phase 1 or Phase 2) | **NO** |
+| Any pillar implemented in this section (Phase 1, 2, or 3) | **NO** |
 | Any pillar designed (docs/architecture) in this section | **NO** |
 | Any file allowlist defined for any pillar | **NO** |
 | Any operator phrase requested for any pillar | **NO** |
@@ -4007,9 +4067,10 @@ Phân tích AR/Camera thời gian thực (real-time AR/camera analysis) để hi
 | Production | **NOT AUTHORIZED** (unchanged) |
 | Current critical-path focus after this update | **Pack 30D-1 (Audit Ledger Writer) implementation** — unchanged, still the sole near-term priority, now READY to be opened |
 | This section changes pack sequencing or priority | **NO** — purely an addendum recording long-range direction |
-| Total visionary pillars recorded | **8** (4 Phase 1: §16.1-§16.4; 4 Phase 2: §16.5-§16.8) |
+| Total visionary pillars recorded | **14** (4 Phase 1: §16.1-§16.4; 4 Phase 2: §16.5-§16.8; 6 Phase 3 "Ultimate": §16.10-§16.15) |
+| Universe coverage | **All 6 VIONA universes** now have at least one recorded pillar — Hub/LifeOS (§16.10), Local (§16.11, §16.5-partial), Travel (§16.2, §16.12), Academy (§16.3, §16.13), Business/B2B (§16.1, §16.7, §16.14), SOS/Global Lifeline (§16.2-partial, §16.4-partial, §16.8, §16.15) |
 
-**Next lane (unchanged by this section):** Pack 30D-1 (Audit Ledger Writer) implementation remains the immediate next actionable pack, ready to be opened, using the file allowlist and test plan already defined in PR #289 §8-§9. None of the eight visionary pillars above may begin their own design phase before Pack 30D-1 is implemented, staging-QA'd, and closed.
+**Next lane (unchanged by this section):** Pack 30D-1 (Audit Ledger Writer) implementation remains the immediate next actionable pack, ready to be opened, using the file allowlist and test plan already defined in PR #289 §8-§9. None of the fourteen visionary pillars above may begin their own design phase before Pack 30D-1 is implemented, staging-QA'd, and closed. This "Ultimate Next-Gen Architecture" picture is now considered **theory-complete** for planning purposes — the near-term execution focus does not change.
 
 ---
 
