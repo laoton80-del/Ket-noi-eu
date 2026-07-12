@@ -22,6 +22,20 @@ export const vionaRequestAuditEventTypes = [
   'terminalStateMarked',
   'safetyGateBlocked',
   'auditRead',
+  // Pack30D-1 — durable audit trail for the existing, unmodified, mock-only Pack30B
+  // execution-plan-preview route. See docs/product/VIONA_REQUEST_PACK30D_REAL_EXECUTION_DESIGN_PLAN_PACKET.md §6.2.
+  // `executionRealAttempted`/`executionRealSucceeded`/`executionRealFailedBounded`/
+  // `executionRolledBack`/`executionKilled` are reserved for a future, separately authorized
+  // real-provider stage (Pack30D-2) and are never emitted by Pack30D-1.
+  'executionPlanBuilt',
+  'executionMockInvoked',
+  'executionRealAttempted',
+  'executionRealSucceeded',
+  'executionRealFailedBounded',
+  'executionBlockedPolicy',
+  'executionBlockedOperator',
+  'executionRolledBack',
+  'executionKilled',
 ] as const;
 
 export type VionaRequestAuditEventType = (typeof vionaRequestAuditEventTypes)[number];
