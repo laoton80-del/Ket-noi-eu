@@ -191,13 +191,17 @@ function testNewEventTypesRegisteredWithoutRemovingExisting(): void {
     );
   }
   // Pack30D-2 (see scripts/test-viona-pack30d2-state-machine-audit-hooks.ts) deliberately adds
-  // exactly one more value, `stateTransition`, on top of this Pack30D-1 set — accounted for here
-  // as a fixed, documented +1 rather than an open-ended tolerance, so this assertion still
-  // catches any *other* accidental extra/removed value.
+  // exactly one more value, `stateTransition`, on top of this Pack30D-1 set. Pack31 (see
+  // scripts/test-viona-pack31-financial-escrow.ts) adds exactly three more —
+  // `escrowHoldPlaced`/`escrowSettled`/`escrowRefunded`. Both are accounted for here as fixed,
+  // documented additions rather than an open-ended tolerance, so this assertion still catches any
+  // *other* accidental extra/removed value.
   const pack30d2AdditionsCount = 1;
+  const pack31AdditionsCount = 3;
   assert(
-    vionaRequestAuditEventTypes.length === preExisting.length + newTypes.length + pack30d2AdditionsCount,
-    'vionaRequestAuditEventTypes must contain exactly the pre-existing + Pack30D-1 + Pack30D-2 types (no accidental extra/removed values)',
+    vionaRequestAuditEventTypes.length ===
+      preExisting.length + newTypes.length + pack30d2AdditionsCount + pack31AdditionsCount,
+    'vionaRequestAuditEventTypes must contain exactly the pre-existing + Pack30D-1 + Pack30D-2 + Pack31 types (no accidental extra/removed values)',
   );
 }
 

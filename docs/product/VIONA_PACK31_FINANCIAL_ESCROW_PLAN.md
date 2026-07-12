@@ -15,6 +15,32 @@ file touched in this pack).
 
 ---
 
+## 0.1 Terminology correction (applied retroactively to this document)
+
+**Operator directive (this session, after this packet's original merge as PR #304):** the platform's
+internal-currency brand name is now **"VIO Credits" (VIO)**, not "VIG". This document has been
+edited in place to apply that correction:
+
+- Every **generic/conceptual** reference to the currency ("VIG is EUR-pegged", "VIG closed-loop
+  policy", "VIG fiat withdrawal", "VIG-only ledger movements", etc.) now reads **"VIO Credits
+  (VIO)"**.
+- The **new** table proposed in §4.1 (`VionaRequestEscrowHold`, not yet created by any migration
+  until §8's future implementation) now uses **`estimatedAmountVIO`/`heldAmountVIO`/
+  `settledAmountVIO`/`refundedAmountVIO`** field names — this table does not exist yet, so it can
+  use the new naming with zero legacy risk.
+- The **existing, live** `Wallet.balanceVIG` / `Wallet.lockedBalanceVIG` / `Transaction.amountVIG`
+  Prisma fields, and the existing exported function names that reference them
+  (`debitSpendableVigForAiGateway`, `calculateVigBurnForService`,
+  `assertVigFiatWithdrawalForbidden`, `getWalletBalanceByUserId`, etc.), are **intentionally left
+  unrenamed** below — renaming a live, shared column used by Tourism/AI-gateway/other verticals
+  would require its own migration and is out of scope for a terminology-only correction. The future
+  Pack31 implementation (§8) reads these legacy fields through one narrow adapter
+  (`vionaWalletVioBalanceAdapter.ts`, added to the §8 allowlist) that maps them to a `VIO`-named
+  interface at the boundary — so every new VionaRequest-facing type/variable name is `VIO`, while
+  the underlying legacy column names stay `VIG`, unchanged, by design.
+
+---
+
 ## 0. Why this packet now
 
 Pack30D-4 (PR #303) proved the full audit-bound path to a real provider (Twilio Test Credentials)
@@ -40,7 +66,7 @@ explicit review of this document.**
 | Phrase `APPROVE_PACK31_FINANCIAL_ESCROW_PLANNING` | **Required: YES \| Provided: YES (operator chat, this session) \| Recorded: YES — this document + evidence + Handoff** |
 | Pack31 **implementation** authorized | **NO** — requires a **separate**, future implementation PR scoped to §8 below, with its own operator phrase |
 | Prisma schema change / migration | **NO** — §4 is a description of a proposed future change only; `prisma/schema.prisma` is untouched by this packet |
-| Real money movement (VIG debit/credit, Stripe charge) | **NO** — this packet contains no code |
+| Real money movement (VIO Credits debit/credit, Stripe charge) | **NO** — this packet contains no code |
 | `.ts`/`.tsx` file changes in this packet | **NO — zero, verified in §11 Drift Report** |
 
 **This packet authorizes planning only.** It does not authorize implementation, any schema
@@ -58,7 +84,7 @@ competing one — is the single most important design decision in this packet.
 
 | Existing primitive | File | What it already does |
 | --- | --- | --- |
-| `model Wallet` | `prisma/schema.prisma` | One row per `User` (`@unique` on `userId`). `balanceVIG` (spendable) + `lockedBalanceVIG` (held). VIG is EUR-pegged 1:1 by policy. |
+| `model Wallet` | `prisma/schema.prisma` | One row per `User` (`@unique` on `userId`). `balanceVIG` (spendable) + `lockedBalanceVIG` (held) — legacy Prisma field names, unchanged (§0.1). VIO Credits (VIO) is EUR-pegged 1:1 by policy. |
 | `model Transaction` | `prisma/schema.prisma` | Append-style ledger row per wallet movement. `senderId`/`receiverId`, `amountVIG`, `feeAmount`, `type: TxType`, `status: TxStatus`, and a **`@unique idempotencyKey`** — the exact same idempotent-write pattern this repo's Pack30D-1 audit ledger later mirrored for a different table. |
 | `enum TxType` | `prisma/schema.prisma` | Already includes `BOOKING_LOCK`, `ESCROW_LOCK`, `ESCROW_REFUND`, `PLATFORM_FEE`, `PENALTY_FEE`, `TOPUP`, `WITHDRAW`, `P2P`, `CHARITY_FEE`, `AI_LEGAL_SCAN`, `QR_MERCHANT`, `LESSON_REWARD` — **`ESCROW_LOCK`/`ESCROW_REFUND` are already generic, not tourism-specific.** |
 | `enum TxStatus` | `prisma/schema.prisma` | `PENDING \| SUCCESS \| FAILED` |
@@ -66,7 +92,7 @@ competing one — is the single most important design decision in this packet.
 | `debitSpendableVigForAiGateway()` | `src/services/WalletService.ts` | **This is the closest existing precedent to what Pack31 needs.** Atomic (`Prisma.$transaction`, `Serializable` isolation), idempotent (dedupes on `idempotencyKey`, returns the prior result instead of double-debiting), conditional (`updateMany` with `balanceVIG: { gte: amount }` — fails closed with `insufficient_funds` if the conditional update affects 0 rows, never a negative balance), and writes exactly one `Transaction` leg (`PLATFORM_FEE`) per debit. |
 | `processTourismBookingHold()` / `confirmTourismHeldBookingAsMerchant()` / `cancelTourismHeldBooking()` | `src/services/WalletService.ts` | **A complete, already-shipped Hold -> Settle / Hold -> Refund pattern** for a different vertical (Tourism bookings): hold moves `balanceVIG -> lockedBalanceVIG` via a `BOOKING_LOCK` leg; settle finalizes and clears the lock; cancel writes an `ESCROW_REFUND` leg and decrements `lockedBalanceVIG` back. This is the **template** Pack31 reuses (§3), applied to `VionaRequest` instead of a tourism booking. |
 | `creditWalletFromStripePaymentSucceeded()` | `src/services/WalletService.ts` | Real fiat top-up path, driven **only** by a verified `payment_intent.succeeded` Stripe webhook (never client input), idempotent via `ProcessedStripeEvent.stripeEventId @unique`. **Unchanged, not touched by this plan.** |
-| `calculateVigBurnForService()` / VIG closed-loop policy | `src/services/billing/VigTokenService.ts` | VIG is a **closed-loop** utility token: fiat purchase -> in-app burn only; `assertVigFiatWithdrawalForbidden()` blocks any cash-out path. **Pack31 must never introduce a withdrawal path for VionaRequest refunds — a refund returns VIG to `balanceVIG` (spendable in-app), never to fiat/Stripe.** |
+| `calculateVigBurnForService()` / VIO Credits closed-loop policy | `src/services/billing/VigTokenService.ts` (legacy filename/function names unchanged, §0.1) | VIO Credits is a **closed-loop** utility token: fiat purchase -> in-app burn only; `assertVigFiatWithdrawalForbidden()` blocks any cash-out path. **Pack31 must never introduce a withdrawal path for VionaRequest refunds — a refund returns VIO to `balanceVIG` (legacy field name, spendable in-app), never to fiat/Stripe.** |
 | `VionaRequest` state machine (Pack25/29/30A/30B) | `src/domain/requests/vionaRequestStatusMachine.ts`, `vionaRequestStatusActionService.ts` | 9 states (`draft…failed`); no financial state today. `vionaRequestStatusActionService.ts` already has a durable audit-hook injection point (Pack30D-2, `appendVionaExecutionAuditEvent` called after every committed transition) — the template for how a future escrow hook would be wired in without touching the core transition logic. |
 | Pack30D-4 `executeReal()` (Twilio Test Credentials POC) | `src/lib/viona/realProviderAdapter/vionaTwilioTestRealProviderAdapter.ts` | **Has no financial gate today.** `executeVionaTwilioTestPocReal()` checks the feature flag and the magic-number-only intent, then calls the provider — it does **not** check any wallet balance, and does **not** hold or debit anything. This is the exact gap Pack31 closes (§5). |
 
@@ -77,7 +103,7 @@ above, this plan explicitly recommends **against** that: a second, parallel wall
 create two independent sources of truth for "how much money does this user have" — precisely the
 kind of double-ledger bug class that causes real financial loss (a request could be allowed to
 spend from a `VionaUserWallet` balance that has no relationship to the real `Wallet.balanceVIG`
-already enforced everywhere else in the app). **Every existing precedent in this repo (Pack30D-1's
+(the real VIO Credits balance, legacy field name) already enforced everywhere else in the app). **Every existing precedent in this repo (Pack30D-1's
 reuse of `VionaRequestAuditEvent` instead of a new audit table; this session's own discovery) points
 the same direction: reuse the single existing `Wallet`, extend narrowly.** See §4 for the one,
 narrow, additive table this plan proposes instead of `VionaUserWallet`.
@@ -99,22 +125,23 @@ lifecycle and the existing `Wallet`/`Transaction` primitives (§2), and gated in
         │  (existing Pack30B route, UNCHANGED)
         ▼
  ┌─────────────────┐
- │ (1) ESTIMATE     │  Pure function — no DB write. Computes `estimatedAmountVIG` for the
+ │ (1) ESTIMATE     │  Pure function — no DB write. Computes `estimatedAmountVIO` for the
  │                  │  requested action (e.g. one Twilio Test-Credentials SMS send has a
  │                  │  deterministic, tiny estimated cost in the real-money POC; a future
  │                  │  token-metered provider would estimate from a max-token ceiling).
  └────────┬─────────┘  Reuses the existing Pack30A `VionaExecutionPlan` — adds one new,
-          │             optional field, `estimatedAmountVIG`, computed alongside the plan.
+          │             optional field, `estimatedAmountVIO`, computed alongside the plan.
           ▼
  ┌─────────────────┐   Row created: status = 'held'
- │ (2) HOLD / LOCK  │──────────────────────────────────────▶ estimatedAmountVIG, heldAmountVIG,
+ │ (2) HOLD / LOCK  │──────────────────────────────────────▶ estimatedAmountVIO, heldAmountVIO,
  │                  │   Atomic, idempotent (mirrors           idempotencyKey, walletHoldTxId
  │                  │   `debitSpendableVigForAiGateway`):
  │                  │   `balanceVIG -gte-check-> decrement`,   Underlying `Transaction` leg:
- │                  │   `lockedBalanceVIG increment`, ONE       type = ESCROW_LOCK (existing
- │                  │   `Transaction` row (`ESCROW_LOCK`).      enum value, reused as-is)
+ │                  │   `lockedBalanceVIG increment` (legacy   type = ESCROW_LOCK (existing
+ │                  │   field names, §0.1), ONE `Transaction`   enum value, reused as-is)
+ │                  │   row (`ESCROW_LOCK`).
  │                  │   Fails closed (`insufficient_funds`)
- │                  │   if `balanceVIG < estimatedAmountVIG`
+ │                  │   if `balanceVIG < estimatedAmountVIO`
  │                  │   — Pack31's core Zero-Loss gate (§5).
  └────────┬─────────┘
           │  hold succeeded (`ok: true`) — REQUIRED before the next step is ever reachable
@@ -126,21 +153,22 @@ lifecycle and the existing `Wallet`/`Transaction` primitives (§2), and gated in
           │  real outcome known: succeeded / failedBounded / blockedOperator / blockedPolicy
           ▼
  ┌─────────────────┐   Row updated: status = 'settled' | 'refunded' | 'partiallyRefunded'
- │ (4) SETTLE /     │──────────────────────────────────────▶ settledAmountVIG, refundedAmountVIG,
+ │ (4) SETTLE /     │──────────────────────────────────────▶ settledAmountVIO, refundedAmountVIO,
  │     REFUND       │   Atomic: `lockedBalanceVIG decrement`   settledAt
- │                  │   by `heldAmountVIG`; if the real call
- │                  │   cost less than the hold (or failed/   Underlying `Transaction` leg(s):
- │                  │   was blocked before any provider cost   - succeeded, cost == hold:
- │                  │   was incurred), the difference is        one PLATFORM_FEE-equivalent
- │                  │   refunded back to `balanceVIG` via an     settle leg (existing type)
- │                  │   `ESCROW_REFUND` leg (existing enum      - failed/blocked before any
- │                  │   value, reused as-is) — VIG only ever     provider cost: 100% refund,
- │                  │   returns to **spendable in-app balance**, one ESCROW_REFUND leg
- │                  │   never to fiat (closed-loop policy,       - succeeded, cost < hold:
- │                  │   §2, `VigTokenService.ts`, unchanged).    one settle leg (actual cost)
- └──────────────────┘                                            + one ESCROW_REFUND leg
-                                                                   (the difference)
-```
+ │                  │   (legacy field name, §0.1) by
+ │                  │   `heldAmountVIO`; if the real call      Underlying `Transaction` leg(s):
+ │                  │   cost less than the hold (or failed/     - succeeded, cost == hold:
+ │                  │   was blocked before any provider cost     one PLATFORM_FEE-equivalent
+ │                  │   was incurred), the difference is         settle leg (existing type)
+ │                  │   refunded back to `balanceVIG` via an    - failed/blocked before any
+ │                  │   `ESCROW_REFUND` leg (existing enum       provider cost: 100% refund,
+ │                  │   value, reused as-is) — VIO Credits        one ESCROW_REFUND leg
+ │                  │   only ever returns to **spendable        - succeeded, cost < hold:
+ │                  │   in-app balance**, never to fiat           one settle leg (actual cost)
+ │                  │   (closed-loop policy, §2,                  + one ESCROW_REFUND leg
+ │                  │   `VigTokenService.ts`, unchanged).          (the difference)
+ └──────────────────┘
+ ```
 
 ### 3.1 Mapping to `VionaRequest.status` — no change to the core enum
 
@@ -155,7 +183,7 @@ unchanged.
 
 | Hook point | Existing file | Change (future, not this packet) |
 | --- | --- | --- |
-| Compute `estimatedAmountVIG` alongside the plan | `src/lib/viona/executionPlan/vionaExecutionPlanBuilder.ts` | Additive: one new, optional field on the existing `VionaExecutionPlan` type; no existing field removed or renamed |
+| Compute `estimatedAmountVIO` alongside the plan | `src/lib/viona/executionPlan/vionaExecutionPlanBuilder.ts` | Additive: one new, optional field on the existing `VionaExecutionPlan` type; no existing field removed or renamed |
 | Hold before `executeReal()` | `src/services/viona/vionaExecutionPlanRouteService.ts` (`previewVionaExecutionPlanRealProviderPocRoute`, Pack30D-4) | Additive: call the new `holdVionaRequestExecutionCost()` function; only call `executeVionaTwilioTestPocReal()` if the hold returned `ok: true` — see §5 |
 | Settle/refund after the real outcome | Same file, same function | Additive: call the new `settleVionaRequestExecutionHold()` after `executeVionaTwilioTestPocReal()` returns, passing its outcome |
 | Audit trail of hold/settle/refund | `appendVionaExecutionAuditEvent()` (Pack30D-1, unmodified) | Reused as-is — new `eventType` values proposed in §4.3 |
@@ -170,20 +198,22 @@ unchanged.
 
 ```prisma
 // PROPOSED — illustrative only, NOT applied by this packet. No migration run.
+// Field names use "VIO" (VIO Credits, §0.1) — this is a brand-new table, so it can adopt the
+// corrected terminology directly with zero legacy risk.
 model VionaRequestEscrowHold {
   id                   String    @id @default(uuid())
   requestId            String
   actionId             String
   userId               String
   /// Computed at (1) ESTIMATE — never written to after HOLD.
-  estimatedAmountVIG   Float
-  /// Written at (2) HOLD — the amount actually moved into `Wallet.lockedBalanceVIG`.
-  heldAmountVIG        Float
-  /// Written at (4) SETTLE — the real, final cost (<= heldAmountVIG always; never negative).
-  settledAmountVIG     Float?
-  /// Written at (4) REFUND — heldAmountVIG - settledAmountVIG when settled, or heldAmountVIG in full
+  estimatedAmountVIO   Float
+  /// Written at (2) HOLD — the amount actually moved into `Wallet.lockedBalanceVIG` (legacy field name, §0.1).
+  heldAmountVIO        Float
+  /// Written at (4) SETTLE — the real, final cost (<= heldAmountVIO always; never negative).
+  settledAmountVIO     Float?
+  /// Written at (4) REFUND — heldAmountVIO - settledAmountVIO when settled, or heldAmountVIO in full
   /// if the call never reached the provider (blockedOperator/blockedPolicy after the hold).
-  refundedAmountVIG    Float?
+  refundedAmountVIO    Float?
   status               VionaRequestEscrowHoldStatus @default(HELD)
   /// The `ESCROW_LOCK`-type `Transaction.id` created at (2) HOLD (existing `Transaction` table).
   holdTransactionId    String    @unique
@@ -279,9 +309,9 @@ gate, not a convention callers must remember to follow:
    **existing** hold's result rather than placing a second hold — mirroring the exact dedup branch
    already in `debitSpendableVigForAiGateway`.
 5. **Refund-only reversal — never a new debit:** if `executeReal()` fails, is blocked, or costs less
-   than estimated, the difference moves back to `balanceVIG` via an `ESCROW_REFUND` leg — VIG is
-   never re-debited from a user for the same `(requestId, actionId)` outside of a brand-new,
-   distinct hold with its own idempotency key.
+   than estimated, the difference moves back to `balanceVIG` (legacy field name, §0.1) via an
+   `ESCROW_REFUND` leg — VIO Credits is never re-debited from a user for the same
+   `(requestId, actionId)` outside of a brand-new, distinct hold with its own idempotency key.
 
 This gate is what makes "call a real, billable provider" and "the user's VIONA Credits/Escrow can
 go negative or be silently skipped" **structurally impossible** in the future implementation,
@@ -292,7 +322,7 @@ mirroring exactly how Pack30D-4's feature flag makes "call a real provider outsi
 
 ## 6. Dummy Payment Adapter (Mock Stripe) — dev/test environment only
 
-**Important clarification, grounded in §2:** VIG debits/holds/refunds for a `VionaRequest`
+**Important clarification, grounded in §2:** VIO Credits debits/holds/refunds for a `VionaRequest`
 execution are **internal ledger movements** against the existing `Wallet`/`Transaction` tables —
 they do **not** call Stripe at all, in dev or in production (exactly like the existing
 `debitSpendableVigForAiGateway` AI-gateway debit, which never touches Stripe). Stripe is only
@@ -308,6 +338,8 @@ explicit safety-flag object):
 
 ```ts
 // PROPOSED shape — illustrative only, NOT implemented by this packet.
+// Function/type names use "VIO Credits" (VIO) naming (§0.1) — this is a brand-new function, so it
+// adopts the corrected terminology directly.
 export const VIONA_MOCK_PAYMENT_ADAPTER_SAFETY = {
   providerCalled: false,
   stripeCalled: false,
@@ -315,15 +347,15 @@ export const VIONA_MOCK_PAYMENT_ADAPTER_SAFETY = {
   devTestOnly: true,
 } as const;
 
-export type VionaMockPaymentTopUpInput = Readonly<{ userId: string; amountVIG: number }>;
+export type VionaMockPaymentTopUpInput = Readonly<{ userId: string; amountVIO: number }>;
 
 // Simulates exactly what `creditWalletFromStripePaymentSucceeded` does for a REAL webhook, but
-// without any Stripe call — writes directly to `Wallet.balanceVIG` + one `Transaction` (`TOPUP`)
-// row, tagged with a `mock_topup_` idempotency-key prefix so it can never be mistaken for a real
-// Stripe-verified top-up in a ledger audit.
-export declare function simulateVionaMockWalletTopUp(
+// without any Stripe call — writes directly to `Wallet.balanceVIG` (legacy field name, §0.1) + one
+// `Transaction` (`TOPUP`) row, tagged with a `mock_topup_` idempotency-key prefix so it can never
+// be mistaken for a real Stripe-verified top-up in a ledger audit.
+export declare function simulateVioCreditsMockTopUp(
   input: VionaMockPaymentTopUpInput,
-): Promise<Readonly<{ ok: true; newBalanceVIG: number } | { ok: false; reason: string }>>;
+): Promise<Readonly<{ ok: true; newBalanceVIO: number } | { ok: false; reason: string }>>;
 ```
 
 **Hard-blocked outside dev/test, by design (future implementation, not this packet):** this
@@ -339,7 +371,7 @@ the opposite direction (this flag gates a *convenience* path, not a *real* one, 
 
 | # | Test case | Category | Expected outcome |
 | --- | --- | --- | --- |
-| 1 | Sufficient balance, valid estimate | Happy path | Hold succeeds; `lockedBalanceVIG` increases by exactly `estimatedAmountVIG`; one `ESCROW_LOCK` `Transaction` row created |
+| 1 | Sufficient balance, valid estimate | Happy path | Hold succeeds; `lockedBalanceVIG` (legacy field name, §0.1) increases by exactly `estimatedAmountVIO`; one `ESCROW_LOCK` `Transaction` row created |
 | 2 | Insufficient balance | Zero-Loss gate | Hold fails closed with `insufficient_funds`; `executeReal()` is **never called** (verified by a spy that throws if invoked); `Wallet` unchanged |
 | 3 | Hold succeeds, `executeReal()` succeeds at the estimated cost | Happy path settle | Lock fully converted to a settle leg; `lockedBalanceVIG` returns to pre-hold value; no refund leg created |
 | 4 | Hold succeeds, `executeReal()` succeeds at **less** than the estimated cost | Partial refund | One settle leg (actual cost) + one `ESCROW_REFUND` leg (the difference); `balanceVIG` increases by exactly the difference; `lockedBalanceVIG` fully cleared |
@@ -350,7 +382,7 @@ the opposite direction (this flag gates a *convenience* path, not a *real* one, 
 | 9 | Simulated DB error during settle/refund | Fail-closed, non-blocking to the already-known real outcome | The real provider outcome (already returned by `executeReal()`) is never lost or altered; a settle/refund failure is logged and flagged for reconciliation, never silently dropped |
 | 10 | Mock payment adapter (§6) invoked with `NODE_ENV=production` | Hard block | Throws immediately; zero `Wallet` mutation |
 | 11 | Mock payment adapter invoked without the dev/test opt-in flag | Hard block | Throws immediately; zero `Wallet` mutation |
-| 12 | Source-scan: no `fetch`/`axios`/Stripe SDK call anywhere in the new hold/settle/refund functions | Credential/side-effect isolation | Confirms VIG movements never call Stripe (§6) |
+| 12 | Source-scan: no `fetch`/`axios`/Stripe SDK call anywhere in the new hold/settle/refund functions | Credential/side-effect isolation | Confirms VIO Credits movements never call Stripe (§6) |
 | 13 | Existing Pack25/29/30A/30B/30D-1/30D-2/30D-3/30D-4 regression scripts | Regression | **PASS** unchanged |
 | 14 | `tsc --noEmit` / `npm run lint` | Quality gate | **PASS**, 0 errors |
 
@@ -368,9 +400,10 @@ operator phrase for implementation (not yet requested or provided).
 | 2 | `src/services/viona/vionaRequestEscrowHoldService.ts` | **NEW** | `holdVionaRequestExecutionCost()`, `settleVionaRequestExecutionHold()`, `refundVionaRequestExecutionHold()` — atomic, idempotent, mirroring `debitSpendableVigForAiGateway`'s exact contract (§5) |
 | 3 | `src/domain/requests/vionaRequestAuditEventTypes.ts` | **MODIFY (additive)** | Add `escrowHoldPlaced`/`escrowSettled`/`escrowRefunded` per §4.3 |
 | 4 | `src/services/viona/vionaExecutionPlanRouteService.ts` | **MODIFY (narrow)** | Insert the hold call before, and the settle/refund call after, the existing `executeVionaTwilioTestPocReal()` call in `previewVionaExecutionPlanRealProviderPocRoute()` — the **only** touch point into Pack30D-4's code |
-| 5 | `src/lib/viona/mockPaymentAdapter/vionaMockPaymentAdapter.ts` | **NEW** | `simulateVionaMockWalletTopUp()` per §6, dev/test-only, hard-blocked in production |
+| 5 | `src/lib/viona/mockPaymentAdapter/vionaMockPaymentAdapter.ts` | **NEW** | `simulateVioCreditsMockTopUp()` per §6, dev/test-only, hard-blocked in production |
 | 6 | `scripts/test-viona-pack31-financial-escrow.ts` | **NEW** | 14 test cases per §7 |
 | 7 | `docs/design/evidence/cursor-pack31-financial-escrow-implementation/README.md` | **NEW** | Evidence doc for that future implementation PR |
+| 8 | `src/services/viona/vionaWalletVioBalanceAdapter.ts` | **NEW (added at implementation time, not in the original §8 list)** | The one, narrow "read a legacy `Wallet` row, map it to a `VIO`-named interface" boundary function required by the operator's terminology-correction Adapter Pattern instruction (§0.1) — item 2's service imports this instead of reading `Wallet.balanceVIG`/`lockedBalanceVIG` inline |
 
 **No other files may be touched.** In particular: **no changes** to `Wallet`/`Transaction` model
 fields (only new rows, via existing fields), `src/services/WalletService.ts`'s existing exported
@@ -386,8 +419,8 @@ credential.
 | Real Stripe call from the new hold/settle/refund code | **NO — NEVER** (§6) |
 | Real Twilio/other real-provider call | **NO** — reuses Pack30D-4's existing, unmodified `executeReal()` |
 | New HTTP route | **NO** — service-layer only, matching Pack30D-4 |
-| VIG fiat withdrawal / cash-out path | **NO — FORBIDDEN**, closed-loop policy unchanged (§2) |
-| Production real-money movement | **NO** — this plan only ever describes VIG (internal, closed-loop) ledger movements, never a live card charge |
+| VIO Credits fiat withdrawal / cash-out path | **NO — FORBIDDEN**, closed-loop policy unchanged (§2) |
+| Production real-money movement | **NO** — this plan only ever describes VIO Credits (internal, closed-loop) ledger movements, never a live card charge |
 
 ---
 
@@ -397,8 +430,8 @@ credential.
 | --- | --- | --- | --- |
 | 1 | Pack31 planning (**THIS PACKET**) | Flow design, schema proposal (description only), mock adapter design, file allowlist, test plan | **NO — planning only** |
 | 2 | Pack31 Kernel/Handoff sync | Docs-only record on master | NO |
-| 3 | Pack31 implementation (future, separate PR, exact allowlist in §8, own operator phrase) | `VionaRequestEscrowHold` table (migration), hold/settle/refund functions, wired in front of Pack30D-4's `executeReal()` | **NO real Stripe/card call** — VIG-only internal ledger movements, using the existing, already-live `Wallet`/`Transaction` tables |
-| 4 | Pack31 staging QA (future, separate pack) | Verify insufficient-funds/race-condition/idempotency behavior against a staging DB | VIG-only, same as step 3 |
+| 3 | Pack31 implementation (future, separate PR, exact allowlist in §8, own operator phrase) | `VionaRequestEscrowHold` table (migration), hold/settle/refund functions, wired in front of Pack30D-4's `executeReal()` | **NO real Stripe/card call** — VIO Credits-only internal ledger movements, using the existing, already-live `Wallet`/`Transaction` tables |
+| 4 | Pack31 staging QA (future, separate pack) | Verify insufficient-funds/race-condition/idempotency behavior against a staging DB | VIO Credits-only, same as step 3 |
 | 5 | Production readiness review for real-provider spend (separate legal/ops/finance review, per `VIONA_OPERATING_PROTOCOL.md` §1.1/§2/§3, and per Pack30D's own §10 step 9/8) | The only step that could ever authorize a **live, billable** real-provider call to run behind this gate | Only after this step, if separately authorized — **not proposed or scheduled by this packet** |
 
 ---
@@ -410,7 +443,7 @@ credential.
 | Prisma migration / schema change applied | **FORBIDDEN in this packet** — §4 is description only |
 | Real Stripe / card charge | **FORBIDDEN** |
 | Real Twilio/other real-provider call | **FORBIDDEN** — unchanged from Pack30D-4 |
-| VIG fiat withdrawal / cash-out | **FORBIDDEN — always**, per closed-loop policy |
+| VIO Credits fiat withdrawal / cash-out | **FORBIDDEN — always**, per closed-loop policy |
 | `Wallet`/`Transaction` write of any kind | **FORBIDDEN in this packet** |
 | `VionaRequest.status` mutation | **FORBIDDEN** |
 | New HTTP route | **FORBIDDEN in this packet** |
@@ -481,12 +514,27 @@ credential.
 4. Only then prepare a **separate Pack31 implementation pack** with exactly the file allowlist in
    §8, the test plan in §7, and its own, distinct operator phrase — implementing
    `VionaRequestEscrowHold` and the hold/settle/refund functions, wired in front of Pack30D-4's
-   existing `executeReal()`, using **VIG-only internal ledger movements** against the existing
-   `Wallet`/`Transaction` tables — never a real Stripe/card charge.
+   existing `executeReal()`, using **VIO Credits-only internal ledger movements** against the
+   existing `Wallet`/`Transaction` tables — never a real Stripe/card charge.
 5. **Do not implement any part of §4/§6/§8 from this packet.** Do not run any Prisma migration
    from this packet.
 
 Real execution against live providers remains **BLOCKED** (Pack30D-4's production hard-block,
 unchanged). Production remains **NOT AUTHORIZED**. PR chain **#251 → #303** preserved.
 
-Evidence: `docs/design/evidence/cursor-pack31-financial-escrow-planning-packet/README.md`
+Evidence (planning packet, PR #304): `docs/design/evidence/cursor-pack31-financial-escrow-planning-packet/README.md`
+
+---
+
+## 15. Terminology correction + implementation record (this session, after PR #304 merged)
+
+This section is added retroactively, in the same PR that applies the §0.1 terminology correction.
+
+| Field | Value |
+| --- | --- |
+| Terminology correction (§0.1) | Applied — "VIG" → "VIO Credits (VIO)" for every new/generic reference in this document; legacy `Wallet`/`Transaction` field names left unrenamed |
+| Phrase `APPROVE_PACK31_FINANCIAL_ESCROW_IMPLEMENTATION` | **Required: YES \| Provided: YES — this session, in the same message that ordered the terminology correction \| Recorded: YES — this document + evidence + Handoff.** Correction of record: the operator's message referred to this phrase as "already given" (`đã giao trước đó`); no earlier message in this chat contained it — only `APPROVE_PACK31_FINANCIAL_ESCROW_PLANNING` (§1) had been given before. It is recorded here as provided **in this session**, not earlier, for an accurate audit trail. |
+| Pack31 implementation | Proceeded in the same branch/PR as the terminology fix, per explicit operator order (§0.1 + this section) — see the implementation evidence README at `docs/design/evidence/cursor-pack31-financial-escrow-implementation/README.md` for the full file list, deviations, and test results |
+| §9 step 2 ("Pack31 Kernel/Handoff sync") | Not yet done — remains a future, separate docs-only pack |
+| Real Stripe / real Twilio (billable) call enabled by this implementation | **NO — still unchanged.** This implementation only adds VIO Credits hold/settle/refund around the existing Pack30D-4 Twilio **Test-Credentials** POC; no billable provider call exists in this repo |
+| Production | **Still NOT AUTHORIZED** |
