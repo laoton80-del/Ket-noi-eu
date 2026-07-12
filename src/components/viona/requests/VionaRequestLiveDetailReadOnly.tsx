@@ -13,6 +13,8 @@ import {
   normalizeStatusLabel,
 } from './vionaRequestActivityTimelineDisplay';
 import { VionaRequestActivityTimelineReadOnly } from './VionaRequestActivityTimelineReadOnly';
+import { buildVionaRequestAuditTrailTimelineItems } from './vionaRequestAuditTrailTimelineDisplay';
+import { VionaRequestAuditTrailTimeline } from './VionaRequestAuditTrailTimeline';
 import { mapVionaRequestNoteAuditTimelineItems } from './vionaRequestNoteAuditDisplay';
 import { VionaRequestNoteAuditTimelineReadOnly } from './VionaRequestNoteAuditTimelineReadOnly';
 import { VionaRequestStatusBadge } from './VionaRequestStatusBadge';
@@ -89,6 +91,9 @@ export function VionaRequestLiveDetailReadOnly({
     detail.statusEvents ?? [],
     detail.auditEvents ?? []
   );
+  const auditTrailTimelineItems = buildVionaRequestAuditTrailTimelineItems(
+    detail.auditEvents ?? []
+  );
   const statusKnown = isKnownVionaRequestStatus(request.status);
 
   return (
@@ -117,6 +122,13 @@ export function VionaRequestLiveDetailReadOnly({
 
       <Section title="Timeline">
         <VionaRequestActivityTimelineReadOnly items={activityTimelineItems} />
+      </Section>
+
+      <Section title="Audit trail">
+        <Text style={styles.readOnlyHint}>
+          Full audit ledger · read-only · mock-only execution data
+        </Text>
+        <VionaRequestAuditTrailTimeline items={auditTrailTimelineItems} />
       </Section>
 
       <Section title="Participants">
