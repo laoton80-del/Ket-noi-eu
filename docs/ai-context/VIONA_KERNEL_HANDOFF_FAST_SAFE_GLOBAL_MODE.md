@@ -3919,9 +3919,9 @@ Stop immediately and report if asked to:
 
 **Why recorded here:** Per operator instruction, this section preserves next-generation architecture pillars in the canonical Kernel/Handoff memory so they are not lost between sessions, while making unmistakably clear that **none of them are scheduled, authorized, designed, or implemented** ahead of the current critical path.
 
-**Mandatory launchpad dependency:** All fourteen pillars below **require** the **Pack 30D persistent Audit Ledger** (append-only writes to the existing `VionaRequestAuditEvent` table, per PR #289's design) as their common prerequisite — every pillar involves either autonomous/semi-autonomous action, cross-party financial commitment, cross-universe data linkage, biometric/health data handling, or AI-to-AI/AI-to-physical-world arbitration that **must** be independently auditable before any real-execution gate can ever be requested for it. **The Audit Ledger writer itself (Pack 30D-1) is not yet implemented** — see §5/§6 "Pack30D-1 implementation readiness: READY (not yet opened)". No pillar below may begin its own design phase before Pack 30D-1 is implemented, staging-QA'd, and closed.
+**Mandatory launchpad dependency:** All twenty pillars below **require** the **Pack 30D persistent Audit Ledger** (append-only writes to the existing `VionaRequestAuditEvent` table, per PR #289's design) as their common prerequisite — every pillar involves either autonomous/semi-autonomous action, cross-party financial commitment, cross-universe data linkage, biometric/health data handling, or AI-to-AI/AI-to-physical-world arbitration that **must** be independently auditable before any real-execution gate can ever be requested for it. **The Audit Ledger writer itself (Pack 30D-1) is not yet implemented** — see §5/§6 "Pack30D-1 implementation readiness: READY (not yet opened)". No pillar below may begin its own design phase before Pack 30D-1 is implemented, staging-QA'd, and closed.
 
-**Phase status:** Phase 1 (§16.1-§16.4) recorded first; Phase 2 (§16.5-§16.8) added next; Phase 3 "Ultimate Next-Gen Architecture — full 6-universe coverage" (§16.10-§16.15) added in this update — same classification, same dependency, same non-authorization boundary. With Phase 3, **all six VIONA universes** (Hub/LifeOS, Local, Travel, Academy, Business/B2B, SOS/Global Lifeline) now have at least one recorded visionary pillar.
+**Phase status:** Phase 1 (§16.1-§16.4) recorded first; Phase 2 (§16.5-§16.8) added next; Phase 3 "Ultimate Next-Gen Architecture — full 6-universe coverage" (§16.10-§16.15) added next — same classification, same dependency, same non-authorization boundary. With Phase 3, **all six VIONA universes** (Hub/LifeOS, Local, Travel, Academy, Business/B2B, SOS/Global Lifeline) had at least one recorded visionary pillar. **Level 3 "Ultimate Autonomous Capabilities"** (§16.17-§16.22, added in this update) now layers one additional, even-more-autonomous pillar onto each of the same six universes, together with a governing cross-cutting doctrine at §16.23: the **"Human-in-the-Loop" Consent Principle**, which formally caps the autonomy of every pillar in this entire §16 (Phase 1 through Level 3) short of unattended real-world execution, with a narrowly-scoped, pre-consented exception for SOS emergencies only.
 
 ### 16.1 Business / Local — Automated Escrow & Milestone Payout
 
@@ -4055,22 +4055,100 @@ Cứu hộ ngoại tuyến (offline rescue): phát tín hiệu cầu cứu nhả
 - **Forbidden until separately authorized:** any claim that a mesh-relayed distress signal reached real emergency services, any claim of guaranteed delivery over an unmanaged peer mesh, any background Bluetooth/WiFi Direct broadcasting without explicit opt-in, any bypass of the existing §18.1 "Do Not Touch — SOS" list, any implication that this replaces calling local emergency numbers when any connectivity exists
 - **No design, code, protocol, or file allowlist exists yet.**
 
-### 16.16 Explicit boundary (this section, Phase 1 + Phase 2 + Phase 3)
+### Level 3: Ultimate Autonomous Capabilities (Ý tưởng tối cao)
+
+**Framing note:** every pillar in this Level 3 tier is deliberately more autonomous/predictive than its Phase 1-3 counterpart in the same universe. Precisely **because** of that higher autonomy, every pillar in this tier is bound, without exception (other than the single narrowly-scoped SOS pre-consent case), by the **"Human-in-the-Loop" Consent Principle** recorded immediately below at §16.23. None of these six pillars may ever be read as authorizing unattended real-world action.
+
+### 16.17 Hub (LifeOS) — Subconscious OS (Level 3 — Ultimate)
+
+Đề xuất giao diện/hành động (UI & action suggestions) dựa trên dự đoán thói quen (routine/habit prediction) của người dùng — hệ điều hành "tiềm thức" học và dự đoán, không tự thực thi.
+
+- **Universe:** Hub / LifeOS
+- **Status:** `VISIONARY / FUTURE_ROADMAP` — Ý tưởng tối cao / Level 3, no pilot scheduled
+- **Depends on:** Pack 30D persistent Audit Ledger (every predictive suggestion surfaced and every user response to it must be append-only audited); §16.10 Biometric & Routine Digital Twin (shares the same routine-inference substrate); the §16.23 Human-in-the-Loop Consent Principle (this pillar may only ever *suggest*, never act, without explicit per-suggestion consent)
+- **Forbidden until separately authorized:** any autonomous execution of a predicted action without explicit user confirmation of that specific suggestion, any claim that a suggestion was "done for you," any background data collection beyond what the user has explicitly opted into
+- **No design, code, model, or file allowlist exists yet.**
+
+### 16.18 Local (Commerce) — Hyper-Local Autonomous Guilds (Level 3 — Ultimate)
+
+Mạng lưới mượn/nhập hàng vi mô tự động (automated micro-borrowing/restocking network) giữa các điểm bán lân cận (peer-to-peer merchant guild network) khi một điểm bán thiếu hàng.
+
+- **Universe:** Local (Commerce)
+- **Status:** `VISIONARY / FUTURE_ROADMAP` — Ý tưởng tối cao / Level 3, no pilot scheduled
+- **Depends on:** Pack 30D persistent Audit Ledger (every inter-merchant stock transfer/loan proposal and its acceptance must be append-only audited); §16.11 Hyper-Local Group Pooling (shares the same multi-merchant coordination substrate); B2B Wholesale Financial Fortress + Zero-Loss Rules (`VIONA_OPERATING_PROTOCOL.md` §14.1, §15.1); the §16.23 Human-in-the-Loop Consent Principle (each participating merchant must explicitly confirm before any stock/fund transfer executes)
+- **Forbidden until separately authorized:** any automatic inventory transfer or fund settlement between merchants without each merchant's explicit per-transaction confirmation, any claim of a completed inter-merchant transfer that has not actually settled, any AI-brokered "guild" membership without opt-in
+- **No design, code, contract logic, or file allowlist exists yet.**
+
+### 16.19 Travel — Fluid Multimodal Routing (Level 3 — Ultimate)
+
+Định tuyến lượng tử (so named for its combinatorial, real-time re-optimization ambition): tự động tìm kiếm chuỗi phương tiện thay thế (alternative multi-modal transport chain search — flight/train/bus/ride-share combinations) khi có sự cố (disruption).
+
+- **Universe:** Travel
+- **Status:** `VISIONARY / FUTURE_ROADMAP` — Ý tưởng tối cao / Level 3, no pilot scheduled
+- **Depends on:** Pack 30D persistent Audit Ledger (every alternative-route computation and every routing recommendation must be append-only audited); §16.12 Autonomous Micro-Logistics (this pillar is the routing/search layer that feeds that pillar's negotiation layer); the §16.23 Human-in-the-Loop Consent Principle (routing chains may be *computed and proposed*, never auto-booked, without explicit per-leg confirmation)
+- **Forbidden until separately authorized:** any autonomous booking/purchase of any leg in a proposed route without explicit user confirmation of that specific leg, any claim of a "guaranteed" alternative route before third-party systems confirm availability, any silent cancellation of an existing booking to free budget for a proposed route
+- **No design, code, routing-model, or file allowlist exists yet.**
+
+### 16.20 Academy — Neural Cultural Simulation (Level 3 — Ultimate)
+
+Mô phỏng đàm phán đa chiều (multi-dimensional negotiation simulation) với âm thanh không gian (spatial audio) và phân tích vi biểu cảm (micro-expression analysis).
+
+- **Universe:** Academy
+- **Status:** `VISIONARY / FUTURE_ROADMAP` — Ý tưởng tối cao / Level 3, no pilot scheduled
+- **Depends on:** Pack 30D persistent Audit Ledger (every micro-expression/biometric-adjacent analysis session must be append-only audited given its sensitivity); §16.3 Real-time Generative Roleplay & Etiquette AI (this pillar is a sensory-fidelity upgrade to that same simulation substrate); Compliance & Privacy Owner review (facial/micro-expression analysis is biometric-adjacent and requires explicit, revocable consent); the §16.23 Human-in-the-Loop Consent Principle
+- **Forbidden until separately authorized:** any camera-based micro-expression capture without explicit, revocable, per-session consent, any claim of a certified psychological/emotional assessment, any storage of raw facial-analysis data beyond the minimum needed for the session, any use of this analysis outside the consenting user's own private training session
+- **No design, code, model, or file allowlist exists yet.**
+
+### 16.21 Business (B2B) — Self-Healing Supply Chain (Level 3 — Ultimate)
+
+Tự động dò tìm nhà cung cấp thay thế (autonomous alternative-supplier discovery) và phác thảo hợp đồng mới (draft new contract) khi chuỗi cung ứng đứt gãy (supply chain disruption).
+
+- **Universe:** Business (B2B)
+- **Status:** `VISIONARY / FUTURE_ROADMAP` — Ý tưởng tối cao / Level 3, no pilot scheduled
+- **Depends on:** Pack 30D persistent Audit Ledger (every alternative-supplier search and every draft-contract generation must be append-only audited); §16.14 Predictive Tax & Hedging + §16.11/§16.18 (shares the same multi-party commerce substrate); B2B Wholesale Financial Fortress Rules (`VIONA_OPERATING_PROTOCOL.md` §14.1); the §16.23 Human-in-the-Loop Consent Principle (supplier discovery and contract *drafting* only — no autonomous contract execution/signature)
+- **Forbidden until separately authorized:** any autonomous execution/signature of a contract with a new supplier without explicit merchant confirmation, any claim that a supply-chain gap has already been "resolved" when only a draft/proposal exists, any legal-advice claim about the drafted contract's enforceability, any autonomous cancellation of an existing supplier relationship
+- **No design, code, model, or file allowlist exists yet.**
+
+### 16.22 SOS (Global Lifeline) — Omniscient Preventive Shield & Mesh-Network (Level 3 — Ultimate)
+
+Phân tích camera/dữ liệu thành phố (camera/city-data analysis) để cảnh báo trước rủi ro (predictive risk pre-alert); cứu hộ qua sóng Bluetooth/WiFi nội bộ (local Bluetooth/WiFi mesh rescue) khi mất mạng — this pillar extends §16.15 Mesh-Network P2P Rescue with a predictive/preventive layer.
+
+- **Universe:** SOS (Global Lifeline)
+- **Status:** `VISIONARY / FUTURE_ROADMAP` — Ý tưởng tối cao / Level 3, Pilot only, country-by-country (highest sensitivity tier of the entire §16 roadmap — combines ambient surveillance-adjacent inference with life-safety mesh rescue)
+- **Depends on:** Pack 30D persistent Audit Ledger (every predictive risk pre-alert and every mesh-relay rescue event must be append-only audited); §16.15 Mesh-Network P2P Rescue and §16.8 Ambient Vision & Spatial Awareness (this pillar combines both); SOS/Global Lifeline Universe rules and Do Not Touch list (`VIONA_OPERATING_PROTOCOL.md` §10.5, §18.1); local legal review per country (city-data/camera analysis carries surveillance-regulatory implications distinct from telecom-regulatory ones); the §16.23 Human-in-the-Loop Consent Principle's **sole carve-out** (see below)
+- **Forbidden until separately authorized:** any camera/city-data ingestion without explicit, revocable, jurisdiction-compliant consent, any claim of guaranteed risk prediction or guaranteed rescue delivery, any autonomous SOS dispatch to real emergency services without either explicit real-time confirmation or documented advance pre-consent for the emergency-only carve-out, any bypass of the existing §18.1 "Do Not Touch — SOS" list, any use of this pillar's city-data analysis outside a declared, consented emergency-safety purpose
+- **No design, code, model, protocol, or file allowlist exists yet.**
+
+### 16.23 The "Human-in-the-Loop" Consent Principle
+
+**This is the cross-cutting governing doctrine for the entire §16 Visionary Roadmap (Phase 1 through Level 3, all twenty pillars) — not itself a pillar, a design, or an implementation.** It is recorded here, per explicit operator instruction, as a permanent boundary that any future design or implementation of any §16 pillar **must** satisfy before it may ever request a real-execution operator phrase.
+
+- **General rule (applies to all pillars except the single SOS carve-out below):** every "ultimate"/autonomous-sounding pillar in this section is authorized, at the *visionary/future-roadmap* level, to **predict and plan (pre-computation) only**. No pillar may skip from prediction/planning directly to unattended real-world execution.
+- **Mandatory "Execution Plan" gate:** before executing **any** change to data, finances, or contracts, the system **must** present the user with an explicit, human-readable **"Execution Plan"** (mirroring the existing Pack 29/Pack 30B `execution-plan-preview` dry-run pattern already implemented and staging-QA'd on master) and **must** wait for the user to press an explicit **"Đồng ý / Xác nhận" (Confirm/Consent)** action before that plan may ever be executed for real.
+- **Single carve-out — SOS emergencies only:** the **only** exception to the above is the SOS/Global Lifeline universe (§16.2, §16.4 partial, §16.8, §16.15, §16.22), and only for **genuine emergency dispatch/rescue actions**, and only when the affected user has given **documented, revocable, advance pre-consent** (opt-in, before the emergency, per `VIONA_OPERATING_PROTOCOL.md` §10.5's SOS Live Automation gating) authorizing exactly that class of automated emergency action. Outside of that narrow, pre-consented emergency case, SOS pillars are bound by the same Execution Plan + explicit confirmation gate as every other universe.
+- **Relationship to Pack 30D:** the persistent Audit Ledger (Pack 30D-1) is what makes this principle enforceable and reviewable in practice — every Execution Plan shown, every explicit confirmation given, and every SOS pre-consent record must itself be append-only audited once implemented. This principle does **not** change Pack 30D-1's own scope, file allowlist, or test plan (PR #289 §8-§9) — it is recorded here as a design constraint that any *future* pillar-specific implementation packet must honor, not as new work for Pack 30D-1 itself.
+- **No design, code, UI, or file allowlist exists yet for the "Execution Plan" consent-gate pattern as applied to any Level 3 (or Phase 1-3) pillar** — the only real, already-implemented instance of an execution-plan-preview dry-run pattern in the codebase today is the Pack 29/Pack 30B route, which remains mock-only and is unrelated to any pillar in this section.
+
+### 16.24 Explicit boundary (this section, Phase 1 + Phase 2 + Phase 3 + Level 3 + Human-in-the-Loop Principle)
 
 | Assertion | Value |
 | --- | --- |
-| Any pillar implemented in this section (Phase 1, 2, or 3) | **NO** |
+| Any pillar implemented in this section (Phase 1, 2, 3, or Level 3) | **NO** |
 | Any pillar designed (docs/architecture) in this section | **NO** |
 | Any file allowlist defined for any pillar | **NO** |
 | Any operator phrase requested for any pillar | **NO** |
+| Human-in-the-Loop Consent Principle implemented (Execution Plan + confirm gate built for any §16 pillar) | **NO** — recorded as a governing doctrine only; the only real execution-plan-preview in the codebase is the unrelated Pack 29/Pack 30B mock-only route |
+| SOS pre-consent emergency carve-out implemented | **NO** |
 | Real execution | **BLOCKED** (unchanged) |
 | Production | **NOT AUTHORIZED** (unchanged) |
 | Current critical-path focus after this update | **Pack 30D-1 (Audit Ledger Writer) implementation** — unchanged, still the sole near-term priority, now READY to be opened |
-| This section changes pack sequencing or priority | **NO** — purely an addendum recording long-range direction |
+| This section changes pack sequencing or priority | **NO** — purely an addendum recording long-range direction and a governing consent doctrine |
+| Total visionary pillars recorded | **20** (4 Phase 1: §16.1-§16.4; 4 Phase 2: §16.5-§16.8; 6 Phase 3 "Ultimate": §16.10-§16.15; 6 Level 3 "Ultimate Autonomous Capabilities": §16.17-§16.22) |
+| Universe coverage | **All 6 VIONA universes** now have at least two recorded pillars each (one Phase 1-3, one Level 3) |
 | Total visionary pillars recorded | **14** (4 Phase 1: §16.1-§16.4; 4 Phase 2: §16.5-§16.8; 6 Phase 3 "Ultimate": §16.10-§16.15) |
 | Universe coverage | **All 6 VIONA universes** now have at least one recorded pillar — Hub/LifeOS (§16.10), Local (§16.11, §16.5-partial), Travel (§16.2, §16.12), Academy (§16.3, §16.13), Business/B2B (§16.1, §16.7, §16.14), SOS/Global Lifeline (§16.2-partial, §16.4-partial, §16.8, §16.15) |
 
-**Next lane (unchanged by this section):** Pack 30D-1 (Audit Ledger Writer) implementation remains the immediate next actionable pack, ready to be opened, using the file allowlist and test plan already defined in PR #289 §8-§9. None of the fourteen visionary pillars above may begin their own design phase before Pack 30D-1 is implemented, staging-QA'd, and closed. This "Ultimate Next-Gen Architecture" picture is now considered **theory-complete** for planning purposes — the near-term execution focus does not change.
+**Next lane (unchanged by this section):** Pack 30D-1 (Audit Ledger Writer) implementation remains the immediate next actionable pack, ready to be opened, using the file allowlist and test plan already defined in PR #289 §8-§9. None of the twenty visionary pillars above — and no part of the Human-in-the-Loop Consent Principle — may begin their own design/implementation phase before Pack 30D-1 is implemented, staging-QA'd, and closed. This "Ultimate Autonomous Capabilities" picture, together with its governing consent doctrine, is now considered **theory-complete** for planning purposes — the near-term execution focus does not change.
 
 ---
 
