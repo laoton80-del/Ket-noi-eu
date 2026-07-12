@@ -174,11 +174,14 @@ function testStateTransitionEventTypeRegisteredWithoutRemovingExisting(): void {
 
   // Pack31 (see scripts/test-viona-pack31-financial-escrow.ts) deliberately adds exactly three
   // more values on top of this set — `escrowHoldPlaced`/`escrowSettled`/`escrowRefunded` —
-  // accounted for here as a fixed, documented +3 rather than an open-ended tolerance.
+  // accounted for here as a fixed, documented +3 rather than an open-ended tolerance. Pack32
+  // (see scripts/test-viona-pack32-autonomous-dispatcher.ts) adds a further, separately
+  // documented +3 — `dispatcherIntentRejected`/`dispatcherToolSelected`/`dispatcherHallucinationBlocked`.
   const pack31AdditionsCount = 3;
+  const pack32AdditionsCount = 3;
   assert(
-    vionaRequestAuditEventTypes.length === preExisting.length + 1 + pack31AdditionsCount,
-    `vionaRequestAuditEventTypes must contain exactly the ${preExisting.length} pre-existing types plus stateTransition plus the ${pack31AdditionsCount} Pack31 types (no accidental extra/removed values); got ${vionaRequestAuditEventTypes.length}`,
+    vionaRequestAuditEventTypes.length === preExisting.length + 1 + pack31AdditionsCount + pack32AdditionsCount,
+    `vionaRequestAuditEventTypes must contain exactly the ${preExisting.length} pre-existing types plus stateTransition plus the ${pack31AdditionsCount} Pack31 types plus the ${pack32AdditionsCount} Pack32 types (no accidental extra/removed values); got ${vionaRequestAuditEventTypes.length}`,
   );
 }
 
