@@ -47,7 +47,20 @@ export const VIONA_TOOL_REGISTRY: readonly VionaToolRegistryEntry[] = [
     name: 'twilio_test_sms_poc',
     description:
       'Send exactly one SMS via Twilio Test Credentials (sandbox-only — never a real SMS, never a real handset, never a real cost). Use only when the user message clearly asks to send/test an SMS notification.',
-    linkedActionId: 'live_ai.action',
+    // Pack32.5 — Core System Integration Audit finding: this previously pointed at `live_ai.action`,
+    // which is permanently hard-blocked at the Pack28 execution-integration-readiness layer
+    // (`vionaExecutionIntegrationPolicy.ts`: `blocked_sensitive_integration`, "Live AI autonomy
+    // blocked in Pack28") — meaning every real dispatch through this tool would have been denied
+    // with `blocked_lane` at the very first plan-eligibility gate, regardless of feature flag,
+    // operator approval, or user consent; `executeReal()` could never have been reached. No prior
+    // Pack30D-4/Pack32 unit test caught this because each one faked away this exact layer (see
+    // scripts/test-viona-pack32-5-core-integration-audit.ts, the first test to exercise the real,
+    // unfaked `buildVionaExecutionPlan()` eligibility+readiness chain end-to-end). `request.assign`
+    // is the same action id the original Pack32 planning packet (§4) used as its own worked
+    // example, is Pack29-eligible, and is only `operator_review_planning_candidate` at the Pack28
+    // layer (not blocked) — restoring the intended, already-designed data flow without loosening
+    // any safety gate.
+    linkedActionId: 'request.assign',
     inputSchema: { fromNumber: 'string', toNumber: 'string', body: 'string' },
     requiresOperatorApproval: true,
   },

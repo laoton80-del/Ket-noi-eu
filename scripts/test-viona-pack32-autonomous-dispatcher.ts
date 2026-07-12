@@ -145,7 +145,7 @@ async function testOrchestratorNeverOverridesHumanApprovalFlags(): Promise<void>
   const fakeResult: PreviewVionaExecutionPlanRealProviderPocResult = {
     ok: true,
     requestId: 'req-pack32-1',
-    actionId: 'live_ai.action',
+    actionId: 'request.assign',
     planAllowed: false,
     denialReason: 'missing_operator_approval',
     escrow: { attempted: false },
@@ -251,7 +251,7 @@ async function testFullHappyPathPassesThroughRouteResultUnchanged(): Promise<voi
   const fakeResult: PreviewVionaExecutionPlanRealProviderPocResult = {
     ok: true,
     requestId: 'req-pack32-1',
-    actionId: 'live_ai.action',
+    actionId: 'request.assign',
     planAllowed: true,
     denialReason: 'not_denied',
     escrow: {
@@ -265,7 +265,7 @@ async function testFullHappyPathPassesThroughRouteResultUnchanged(): Promise<voi
     },
     realProviderResult: {
       requestId: 'req-pack32-1',
-      actionId: 'live_ai.action',
+      actionId: 'request.assign',
       outcome: { outcome: 'succeeded', providerMessageSid: 'SMfake', attempts: 1, latencyMs: 12 },
       auditWritten: true,
     },
@@ -290,7 +290,7 @@ async function testInsufficientFundsPassthroughUnchanged(): Promise<void> {
   const fakeResult: PreviewVionaExecutionPlanRealProviderPocResult = {
     ok: true,
     requestId: 'req-pack32-1',
-    actionId: 'live_ai.action',
+    actionId: 'request.assign',
     planAllowed: true,
     denialReason: 'not_denied',
     escrow: { attempted: true, holdOk: false, reason: 'insufficient_funds' },
@@ -314,7 +314,7 @@ async function testTwilioFailureRefundPassthroughUnchanged(): Promise<void> {
   const fakeResult: PreviewVionaExecutionPlanRealProviderPocResult = {
     ok: true,
     requestId: 'req-pack32-1',
-    actionId: 'live_ai.action',
+    actionId: 'request.assign',
     planAllowed: true,
     denialReason: 'not_denied',
     escrow: {
@@ -328,7 +328,7 @@ async function testTwilioFailureRefundPassthroughUnchanged(): Promise<void> {
     },
     realProviderResult: {
       requestId: 'req-pack32-1',
-      actionId: 'live_ai.action',
+      actionId: 'request.assign',
       outcome: { outcome: 'failedBounded', errorClass: 'provider_unavailable', providerErrorCode: null, attempts: 2, latencyMs: 900 },
       auditWritten: true,
     },
