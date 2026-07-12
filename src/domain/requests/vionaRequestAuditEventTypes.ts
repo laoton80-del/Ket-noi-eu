@@ -50,6 +50,16 @@ export const vionaRequestAuditEventTypes = [
   'escrowHoldPlaced',
   'escrowSettled',
   'escrowRefunded',
+  // Pack32 — Agentic Autonomous Dispatcher (see docs/product/VIONA_PACK32_AUTONOMOUS_DISPATCHER_PLAN.md
+  // §5.3). Written by `vionaAutonomousDispatchService.ts` for every dispatch attempt, before any
+  // downstream Pack31/Pack30D call. `dispatcherHallucinationBlocked` is the specific `unknown_tool`
+  // case, kept distinct from other rejections for observability/alerting; `dispatcherIntentRejected`
+  // covers every other fail-closed reason (llm_call_failed/response_not_valid_json/
+  // tool_input_schema_invalid/low_confidence). Never emitted for a downstream Pack31/Pack30D-4
+  // outcome — those already have their own event types above, unmodified.
+  'dispatcherIntentRejected',
+  'dispatcherToolSelected',
+  'dispatcherHallucinationBlocked',
 ] as const;
 
 export type VionaRequestAuditEventType = (typeof vionaRequestAuditEventTypes)[number];
