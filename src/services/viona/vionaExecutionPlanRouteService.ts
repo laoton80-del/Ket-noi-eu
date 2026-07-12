@@ -327,6 +327,27 @@ type VionaExecutionPlanDenialReasonForRealProviderPoc = ReturnType<typeof buildV
 export const VIONA_TWILIO_TEST_POC_ESTIMATED_COST_VIO = 0.01;
 
 /**
+ * Pack32.5 — Core System Integration Audit finding: this function previously had **zero**
+ * dependency-injection surface, meaning no test in this repo could ever exercise its full
+ * plan -> hold -> executeReal -> settle chain without a live database (via `getVionaRequestById`)
+ * and, if the feature flag were ever enabled, a live Twilio call. Every other function in this
+ * chain (`holdVionaRequestExecutionCost`, `executeVionaTwilioTestPocReal`,
+ * `settleVionaRequestExecutionHold`) already accepts injectable deps — this was the one missing
+ * seam. Adding it is a narrow, additive, backward-compatible bug-fix (every field is optional and
+ * defaults to the exact pre-existing real function, so omitting `deps` reproduces byte-for-byte
+ * the pre-Pack32.5 behavior) — not new business logic. See
+ * scripts/test-viona-pack32-5-core-integration-audit.ts and the evidence README for the audit that
+ * discovered this gap and the true end-to-end tests it now enables.
+ */
+export type PreviewVionaExecutionPlanRealProviderPocDeps = Readonly<{
+  getVionaRequestByIdFn?: typeof getVionaRequestById;
+  holdFn?: typeof holdVionaRequestExecutionCost;
+  executeRealFn?: typeof executeVionaTwilioTestPocReal;
+  settleFn?: typeof settleVionaRequestExecutionHold;
+  auditWriter?: typeof appendVionaExecutionAuditEvent;
+}>;
+
+/**
  * Builds the same Pack30A execution plan used by the mock-only path, then — **only if the plan
  * is allowed** — delegates to the Pack30D-4 Twilio Test-Credentials adapter's `executeReal()`
  * (which itself re-checks the feature flag, validates the magic-number-only intent, and binds
@@ -339,10 +360,20 @@ export const VIONA_TWILIO_TEST_POC_ESTIMATED_COST_VIO = 0.01;
  * `ok: true`, `executeReal()` is never reached (see docs/product/VIONA_PACK31_FINANCIAL_ESCROW_PLAN.md
  * §5, the Zero-Loss gate). After the real outcome is known, the hold is settled (full charge on
  * `succeeded`, full refund on any blocked/failed outcome) via `settleVionaRequestExecutionHold()`.
+ *
+ * Pack32.5 — a hold failure (e.g. `insufficient_funds`) now also writes an `executionBlockedPolicy`
+ * audit row before returning (audit-ledger integration gap found by the Core System Integration
+ * Audit — previously a hold failure was only `console.error`-logged, never durably recorded).
  */
 export async function previewVionaExecutionPlanRealProviderPocRoute(
   input: PreviewVionaExecutionPlanRealProviderPocInput,
+  deps: PreviewVionaExecutionPlanRealProviderPocDeps = {},
 ): Promise<PreviewVionaExecutionPlanRealProviderPocResult> {
+  const getVionaRequestByIdFn = deps.getVionaRequestByIdFn ?? getVionaRequestById;
+  const holdFn = deps.holdFn ?? holdVionaRequestExecutionCost;
+  const executeRealFn = deps.executeRealFn ?? executeVionaTwilioTestPocReal;
+  const settleFn = deps.settleFn ?? settleVionaRequestExecutionHold;
+  const auditWriter = deps.auditWriter ?? appendVionaExecutionAuditEvent;
   const authUserId = input.authUserId.trim();
   const requestId = input.requestId.trim();
   const actionId = input.actionId?.trim();
@@ -359,7 +390,7 @@ export async function previewVionaExecutionPlanRealProviderPocRoute(
     return { ok: false, reason: 'invalid_input' };
   }
 
-  const detail = await getVionaRequestById({ authUserId, requestId });
+  const detail = await getVionaRequestByIdFn({ authUserId, requestId });
   if (!detail.ok) {
     return { ok: false, reason: 'request_not_found' };
   }
@@ -381,7 +412,7 @@ export async function previewVionaExecutionPlanRealProviderPocRoute(
   if (!plan.allowed) {
     const eventType: VionaRequestAuditEventType =
       plan.denialReason === 'missing_operator_approval' ? 'executionBlockedOperator' : 'executionBlockedPolicy';
-    const auditResult = await appendVionaExecutionAuditEvent({
+    const auditResult = await auditWriter({
       requestId,
       eventType,
       actorUserId: authUserId,
@@ -416,7 +447,7 @@ export async function previewVionaExecutionPlanRealProviderPocRoute(
   // `ok: true`, `executeVionaTwilioTestPocReal()` is never reached — mirrors exactly how
   // `executeReal()` itself never falls through its own feature-flag check by accident.
   const escrowIdempotencyKey = input.idempotencyKey ?? `pack31-hold-${requestId}-${plan.actionId}`;
-  const hold = await holdVionaRequestExecutionCost({
+  const hold = await holdFn({
     requestId,
     actionId: plan.actionId,
     userId: authUserId,
@@ -429,6 +460,27 @@ export async function previewVionaExecutionPlanRealProviderPocRoute(
     console.error(
       `[pack31-escrow] hold denied for request ${requestId}, action ${plan.actionId}: ${hold.reason}`,
     );
+    // Pack32.5 — audit-ledger integration gap fix: a hold failure must be durably recorded, not
+    // just console-logged, so the Core System Integration Audit's "ledger records the error"
+    // requirement holds for every denial path, not only the plan-denied path above.
+    const holdFailureAuditResult = await auditWriter({
+      requestId,
+      eventType: 'executionBlockedPolicy',
+      actorUserId: authUserId,
+      actorRoleLabel,
+      message: `Pack31 escrow hold denied (${hold.reason}) — executeReal() never called (Zero-Loss gate).`,
+      payloadJson: {
+        provider: 'twilio_test_credentials',
+        actionId: plan.actionId,
+        planId: plan.planId,
+        holdFailureReason: hold.reason,
+      },
+    });
+    if (!holdFailureAuditResult.ok) {
+      console.error(
+        `[pack31-escrow] failed to append hold-denied audit event for request ${requestId}: ${holdFailureAuditResult.error}`,
+      );
+    }
     return {
       ok: true,
       requestId,
@@ -440,7 +492,7 @@ export async function previewVionaExecutionPlanRealProviderPocRoute(
     };
   }
 
-  const realProviderResult = await executeVionaTwilioTestPocReal({
+  const realProviderResult = await executeRealFn({
     requestId,
     actionId: plan.actionId,
     intent: { fromNumber, toNumber, body: input.body },
@@ -457,7 +509,7 @@ export async function previewVionaExecutionPlanRealProviderPocRoute(
   const actualCostVIO = realProviderResult.outcome.outcome === 'succeeded' ? hold.heldAmountVIO : 0;
   let resolved: Awaited<ReturnType<typeof settleVionaRequestExecutionHold>>;
   try {
-    resolved = await settleVionaRequestExecutionHold({
+    resolved = await settleFn({
       holdId: hold.holdId,
       requestId,
       actualCostVIO,
