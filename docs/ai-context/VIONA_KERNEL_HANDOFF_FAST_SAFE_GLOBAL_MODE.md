@@ -3913,6 +3913,67 @@ Stop immediately and report if asked to:
 
 ---
 
+## 16. Visionary Roadmap & Next-Gen Architecture (Coming Soon / Pilot)
+
+**Document type (this section):** Docs-only strategic direction record. **Not** an authorization, design lock, implementation plan, or file allowlist for any of the four pillars below. **No code exists for any of them.** Status for all four: **`VISIONARY / FUTURE_ROADMAP`** — internally labeled **Pilot / Coming Soon / Beta** per §1.1's readiness-label doctrine; none may be presented as live, production-ready, or currently available.
+
+**Why recorded here:** Per operator instruction, this section preserves four next-generation architecture pillars in the canonical Kernel/Handoff memory so they are not lost between sessions, while making unmistakably clear that **none of them are scheduled, authorized, designed, or implemented** ahead of the current critical path.
+
+**Mandatory launchpad dependency:** All four pillars below **require** the **Pack 30D persistent Audit Ledger** (append-only writes to the existing `VionaRequestAuditEvent` table, per PR #289's design) as their common prerequisite — every pillar involves either autonomous/semi-autonomous action, cross-party financial commitment, or AI-to-AI arbitration that **must** be independently auditable before any real-execution gate can ever be requested for it. **The Audit Ledger writer itself (Pack 30D-1) is not yet implemented** — see §5/§6 "Pack30D-1 implementation readiness: READY (not yet opened)". No pillar below may begin its own design phase before Pack 30D-1 is implemented, staging-QA'd, and closed.
+
+### 16.1 Business / Local — Automated Escrow & Milestone Payout
+
+Hợp đồng thông minh (smart-contract-style), ký quỹ (escrow) xuyên biên giới, và giải ngân (payout) theo trạm mốc vận đơn (milestone/shipment checkpoints) cho các giao dịch Business/Local và B2B Wholesale.
+
+- **Status:** `VISIONARY / FUTURE_ROADMAP` — Pilot/Coming Soon only
+- **Depends on:** Pack 30D persistent Audit Ledger (every escrow state transition and payout release must be append-only audited); Pack 30 controlled real-execution state machine (§ design docs PR #273); B2B Wholesale Financial Fortress Rules (`VIONA_OPERATING_PROTOCOL.md` §14.1)
+- **Forbidden until separately authorized:** real fund custody, real escrow release, real cross-border payout, real milestone-triggered disbursement, any claim of "funds held" or "payout sent"
+- **No design, code, schema, or file allowlist exists yet.**
+
+### 16.2 SOS / Travel — Edge AI & Offline Survival Resilience
+
+Tích hợp SLM (Small Language Model) chạy nội bộ trên thiết bị (on-device), dịch thuật sinh tồn ngoại tuyến (offline survival translation), và nhận diện giọng nói khẩn cấp không cần mạng (network-independent emergency voice detection).
+
+- **Status:** `VISIONARY / FUTURE_ROADMAP` — Pilot/Coming Soon only
+- **Depends on:** Pack 30D persistent Audit Ledger (on-device emergency detection events must still produce an auditable trail once connectivity resumes); SOS/Global Lifeline Universe rules (`VIONA_OPERATING_PROTOCOL.md` §10.5, §18.1 Do Not Touch — SOS)
+- **Forbidden until separately authorized:** any claim of real offline emergency dispatch, real on-device model shipped to users, real background voice keyword detection, any bypass of the existing §18.1 "Do Not Touch — SOS" list
+- **No design, code, model, or file allowlist exists yet.**
+
+### 16.3 Academy — Real-time Generative Roleplay & Etiquette AI
+
+Trợ lý nhập vai đàm phán thời gian thực (real-time negotiation roleplay assistant) và cố vấn văn hóa/etiquette theo ngữ cảnh địa lý (geo-contextual cultural advisor).
+
+- **Status:** `VISIONARY / FUTURE_ROADMAP` — Pilot/Coming Soon/Beta only
+- **Depends on:** Pack 30D persistent Audit Ledger (AI-generated roleplay/advice sessions touching real negotiation content should be auditable for safety review); existing AI cost-firewall doctrine (§3 non-negotiable rule 7)
+- **Forbidden until separately authorized:** any claim that roleplay outcomes are binding advice, any autonomous negotiation on the user's behalf, any AI cost scaling without cap/auto-pause
+- **No design, code, or file allowlist exists yet.**
+
+### 16.4 Core OS — Multi-Agent Swarm / AI Board of Directors
+
+Hội đồng AI (AI Board) thực hiện kiểm duyệt chéo (cross-review) nội bộ giữa nhiều agent trước khi cấp phép thực thi các tác vụ rủi ro cao (high-risk task execution authorization).
+
+- **Status:** `VISIONARY / FUTURE_ROADMAP` — Pilot/Coming Soon only
+- **Depends on:** Pack 30D persistent Audit Ledger (every cross-review vote/decision by the AI Board must itself be append-only audited — this pillar is the most directly dependent on Pack 30D, since it is fundamentally a governance layer *for* real-execution authorization); Pack 30 controlled real-execution design (kill switch / rollback / incident response, per PR #273 topic 7)
+- **Forbidden until separately authorized:** any AI Board decision that itself constitutes real execution, any silent mutation of protected domains (§3 non-negotiable rule 6), any claim that the Board "approves" real money/SOS/production actions — the Board concept is itself subordinate to, not a replacement for, human operator approval phrases
+- **No design, code, or file allowlist exists yet.**
+
+### 16.5 Explicit boundary (this section)
+
+| Assertion | Value |
+| --- | --- |
+| Any pillar implemented in this section | **NO** |
+| Any pillar designed (docs/architecture) in this section | **NO** |
+| Any file allowlist defined for any pillar | **NO** |
+| Any operator phrase requested for any pillar | **NO** |
+| Real execution | **BLOCKED** (unchanged) |
+| Production | **NOT AUTHORIZED** (unchanged) |
+| Current critical-path focus after this update | **Pack 30D-1 (Audit Ledger Writer) implementation** — unchanged, still the sole near-term priority |
+| This section changes pack sequencing or priority | **NO** — purely an addendum recording long-range direction |
+
+**Next lane (unchanged by this section):** Pack 30D-1 (Audit Ledger Writer) implementation remains the immediate next actionable pack once separately opened, using the file allowlist and test plan already defined in PR #289 §8-§9. None of the four visionary pillars above may begin their own design phase before Pack 30D-1 is implemented, staging-QA'd, and closed.
+
+---
+
 ## Quick start for a new session
 
 1. Read this file and `docs/ai-context/VIONA_OPERATING_PROTOCOL.md`.
