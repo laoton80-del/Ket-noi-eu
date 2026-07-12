@@ -5,7 +5,14 @@
  * `getVionaRequestById` lookup, then delegates entirely to the Pack30A pure decision layer
  * (`buildVionaExecutionPlan`) and, only if explicitly requested by the caller, the Pack30A mock
  * adapter (`invokeVionaMockExecutionAdapter`). This module never calls a real provider, never
- * mutates request status, never writes a persistent audit record, and never adds DB schema.
+ * mutates request status, and never adds DB schema.
+ *
+ * Pack30D-1 (see docs/product/VIONA_REQUEST_PACK30D_REAL_EXECUTION_DESIGN_PLAN_PACKET.md §6, §8)
+ * adds a durable, append-only audit-ledger write for every call, via
+ * `vionaExecutionAuditWriteService.ts`. This does not change the response shape, status codes,
+ * or existing mock-adapter behavior described above — it only makes the already-happening
+ * mock-only preview call durably auditable. An audit-write failure is logged and never thrown
+ * back to the caller (see `previewVionaExecutionPlanRoute`).
  *
  * See docs/product/VIONA_REQUEST_PACK30B_EXECUTION_PLAN_ROUTE_WIRING_IMPLEMENTATION_PLAN_PACKET.md.
  */
@@ -15,7 +22,10 @@ import {
   createInMemoryVionaMockIdempotencyStore,
   invokeVionaMockExecutionAdapter,
 } from '../../lib/viona/mockAdapter';
+import type { VionaRequestAuditEventType } from '../../domain/requests/vionaRequestAuditEventTypes';
 import { getVionaRequestById } from './vionaRequestReadService';
+import { appendVionaExecutionAuditEvent } from './vionaExecutionAuditWriteService';
+import type { VionaExecutionAuditPayloadJson } from './vionaExecutionAuditWriteService';
 import type {
   PreviewVionaExecutionPlanRouteActionMeta,
   PreviewVionaExecutionPlanRouteInput,
@@ -98,8 +108,66 @@ export function buildVionaExecutionPlanPreviewAction(
 }
 
 /**
+ * Pack30D-1 — pure mapping from an already-computed execution-plan-preview action outcome to the
+ * `VionaRequestAuditEventType` that must be durably recorded for it. No DB access; fully
+ * unit-testable in isolation, mirroring §6.2 of the Pack30D design packet:
+ *   - denied for missing operator approval  -> `executionBlockedOperator`
+ *   - denied for any other policy reason    -> `executionBlockedPolicy`
+ *   - allowed, mock adapter invoked          -> `executionMockInvoked` (including replays)
+ *   - allowed, mock adapter not invoked      -> `executionPlanBuilt`
+ */
+export function resolveVionaExecutionAuditEventType(
+  action: PreviewVionaExecutionPlanRouteActionMeta,
+): VionaRequestAuditEventType {
+  if (!action.plan.allowed) {
+    return action.denialReason === 'missing_operator_approval'
+      ? 'executionBlockedOperator'
+      : 'executionBlockedPolicy';
+  }
+  return action.mockAdapterCalled ? 'executionMockInvoked' : 'executionPlanBuilt';
+}
+
+/**
+ * Pack30D-1 — pure helper resolving a human-readable actor role label for the audit row, reusing
+ * fields already present on the read-only request detail DTO (no extra DB query). Mirrors the
+ * existing `resolveActorRoleLabel` pattern used by `vionaRequestNoteActionService.ts`.
+ */
+export function resolveVionaExecutionAuditActorRoleLabel(
+  request: Readonly<{ requesterUserId: string | null; ownerUserId: string | null }>,
+  authUserId: string,
+): string {
+  if (request.requesterUserId === authUserId) return 'requester';
+  if (request.ownerUserId === authUserId) return 'owner';
+  return 'participant';
+}
+
+/**
+ * Pack30D-1 — pure builder for the audit-event payload recorded alongside every execution-plan
+ * preview evaluation. No DB access; fully unit-testable in isolation.
+ */
+export function buildVionaExecutionAuditPayload(
+  action: PreviewVionaExecutionPlanRouteActionMeta,
+): VionaExecutionAuditPayloadJson {
+  return {
+    actionId: action.actionId,
+    planId: action.plan.planId,
+    planState: action.plan.state,
+    denialReason: action.denialReason,
+    mockAdapterCalled: action.mockAdapterCalled,
+    clientCorrelationId: action.clientCorrelationId ?? null,
+    metadata: {
+      replay: action.mockResult?.replay ?? false,
+    },
+  };
+}
+
+/**
  * Pack30B staging-first mock-only execution-plan preview — read-only eligibility + mock-only
- * envelope. No status change, no persistent audit write, no external/provider side effects.
+ * envelope. No status change, no external/provider side effects.
+ *
+ * Pack30D-1 adds a durable, append-only audit-ledger write (see module header) after the
+ * response is computed. A failure of that write is logged and never thrown back to the caller —
+ * the response returned below is always the pre-existing, unmodified Pack30B response shape.
  */
 export async function previewVionaExecutionPlanRoute(
   input: PreviewVionaExecutionPlanRouteInput,
@@ -146,6 +214,23 @@ export async function previewVionaExecutionPlanRoute(
     clientCorrelationId,
     invokeMockAdapter: input.invokeMockAdapter,
   });
+
+  const auditWriteResult = await appendVionaExecutionAuditEvent({
+    requestId,
+    eventType: resolveVionaExecutionAuditEventType(action),
+    actorUserId: authUserId,
+    actorRoleLabel: resolveVionaExecutionAuditActorRoleLabel(detail.data.request, authUserId),
+    message: 'Pack30B execution-plan preview evaluated (mock-only, durable audit record).',
+    payloadJson: buildVionaExecutionAuditPayload(action),
+  });
+
+  if (!auditWriteResult.ok) {
+    // Pack30D-1: an audit-write failure must never turn this side-effect-free, mock-only
+    // response into a 5xx — log and continue with the pre-existing Pack30B response shape.
+    console.error(
+      `[pack30d1-audit-write] failed to append execution-plan-preview audit event for request ${requestId}: ${auditWriteResult.error}`,
+    );
+  }
 
   return {
     ok: true,
