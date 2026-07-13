@@ -2,7 +2,7 @@
 
 **Document type:** Canonical kernel and session handoff for VIONA engineering, product, and AI agents.
 **Audience:** New ChatGPT / Cursor windows, staff, contractors, and automation executors.
-**Baseline:** `origin/master @ c0c3214` — `feat(viona): implement Pack32.1 marketing content generator tool expansion (#312)` — see §5 "Pack32.2 Kernel/Handoff sync" narrative section below for the full PR #292–#312 catch-up (Pack30D-2/3/4, Pack31, Pack32, Pack32.5, Pack33, Pack32.1; real execution/production/auto-posting remain BLOCKED/NOT AUTHORIZED)
+**Baseline:** `origin/master @ dc79017` — `feat(admin): implement Pack32.4 marketing admin dashboard UI integration (#317)` — see §5 "Pack32.6 Marketing Agent Closure & Kernel Sync" narrative section below for the full PR #313–#317 catch-up (Pack32.3 marketing content API route wiring, Pack32.4 marketing admin dashboard UI integration; real execution/production/auto-posting remain BLOCKED/NOT AUTHORIZED). Prior baseline `c0c3214` (PR #312) — see §5 "Pack32.2 Kernel/Handoff sync" narrative section for the PR #292–#312 catch-up (Pack30D-2/3/4, Pack31, Pack32, Pack32.5, Pack33, Pack32.1).
 **Supersedes for Request Engine sequencing:** prior scattered pack pointers when this doc conflicts on pack order or blocked state — align to this handoff.
 **Subordinate to:** `docs/ai-context/VIONA_OPERATING_PROTOCOL.md` and founder-signed **Master Blueprint** (`VIONA_FINAL_MASTER_BLUEPRINT_V2.md`). If conflict, stop and report drift risk.
 
@@ -349,6 +349,10 @@ All new work branches from `c843111` unless a later pack explicitly updates this
 | Pack33 global omni-compliance & localization (implementation) | **CLOSED / GREEN** — PR #310 @ `e0ec740` — see dedicated "Pack32.2 Kernel/Handoff sync" narrative section below for full detail |
 | Pack32.1 marketing content generator tool expansion (planning) | **CLOSED / GREEN** — PR #311 @ `364b648` — see dedicated "Pack32.2 Kernel/Handoff sync" narrative section below for full detail |
 | Pack32.1 marketing content generator tool expansion (implementation) | **CLOSED / GREEN** — PR #312 @ `c0c3214` — see dedicated "Pack32.2 Kernel/Handoff sync" narrative section below for full detail |
+| Pack32.3 marketing content API route wiring (planning) | **CLOSED / GREEN** — PR #314 @ `5f173fe` — see dedicated "Pack32.6 Marketing Agent Closure & Kernel Sync" narrative section below for full detail |
+| Pack32.3 marketing content API route wiring (implementation) | **CLOSED / GREEN** — PR #315 @ `41098fe` — new `POST /api/admin/marketing/generate-draft` route, RBAC via existing `authMiddleware` + `superAdminMiddleware` (`Role.ADMIN`), Deterministic Templating in the Controller to preserve the Pack32.1 Core Service (`dispatchVionaMarketingContentRequest()`) as a **zero-modification kernel**; see dedicated "Pack32.6 Marketing Agent Closure & Kernel Sync" narrative section below for full detail |
+| Pack32.4 marketing admin dashboard UI integration (planning) | **CLOSED / GREEN** — PR #316 @ `b6d030d` — see dedicated "Pack32.6 Marketing Agent Closure & Kernel Sync" narrative section below for full detail |
+| Pack32.4 marketing admin dashboard UI integration (implementation) | **CLOSED / GREEN** — PR #317 @ `dc79017` — new `AdminMarketingDraftGenerator` component embedded (purely additive diff, zero existing lines changed) directly into the existing `MarketingApprovalScreen.tsx`; read-only result display only; no publish/share control of any kind — Human-in-the-Loop Level 3 fully preserved; see dedicated "Pack32.6 Marketing Agent Closure & Kernel Sync" narrative section below for full detail |
 | Pack26 implementation | **NOT opened** |
 
 **Pack26A non-authorization (preserved):** code implementation; new routes/actions/transitions; assign / confirm / cancel; booking / payment / SOS / wallet / live AI; deploy; live QA; DB/schema/migration; data mutation; production or global automation claims; Pack27/Pack28 execution; further Pack25 click/status POST on current visual-QA row (Option C hold).
@@ -2816,6 +2820,57 @@ Evidence: `docs/design/evidence/cursor-pack30d-real-execution-design-plan-packet
 **Next recommendation:** Before opening an HTTP route for the new marketing-content dispatcher (Operator's own stated next candidate), a **separate, explicit planning/implementation pack** should define the route's auth/role gating and confirm it stays Draft-only with no auto-publish path. Independently, the real-provider ladder (Pack30D-4 Twilio POC) and Pack31 escrow remain fully mock/test-credentials-only pending any future, separately-authorized real-provider phrase. Do **not** open any new HTTP route, wire real execution, or unblock production from this sync.
 
 Evidence: `docs/design/evidence/cursor-pack33-global-omni-compliance-implementation/README.md` (PR #310), `docs/design/evidence/cursor-pack32-1-marketing-content-poc-planning-packet/README.md` (PR #311), `docs/design/evidence/cursor-pack32-1-marketing-content-poc-implementation/README.md` (PR #312)
+
+### Pack32.6 Marketing Agent Closure & Kernel Sync — Pack32.3 + Pack32.4 catch-up, PR #313–#317 (CLOSED/GREEN — docs-only, this sync)
+
+| Field | Value |
+|-------|--------|
+| Operator phrase (this sync) | `APPROVE_PACK32_5_MARKETING_CLOSURE_SYNC` — provided via operator chat approval this session, recorded verbatim |
+| Naming clarification (documented deviation) | The Operator's phrase names this sync "Pack 32.5", but this Kernel's own sequential milestone-numbering already has a distinct, unrelated, already-recorded **"Pack32.5 core system integration audit" (PR #308, §5 above)**. To avoid ambiguity/collision in this doc's own pack index, **this sync's narrative section and milestone-table cross-references use the label "Pack32.6"** instead. The Operator-provided phrase text itself is preserved exactly as given (`APPROVE_PACK32_5_MARKETING_CLOSURE_SYNC`) — only the section label was adjusted for internal consistency. |
+| Current verified master (before this sync) | **`c0c32141f826be9f98db191725e48c766c6abfcb`** (`c0c3214`) — PR #312 |
+| Current verified master (after this sync's baseline bump) | **`dc790179…`** (`dc79017`) — PR #317 — see updated top-of-doc **Baseline** line |
+| PR chain #251 → #317 | **PRESERVED** |
+| Scope | Docs-only. Records PR #313 (this doc's own prior Pack32.2 sync, already reflected above), PR #314–#315 (Pack32.3), and PR #316–#317 (Pack32.4). No `.ts`/`.tsx`/schema file touched by this sync itself. |
+
+**PR #314 — Pack32.3 Marketing Content API Route Wiring, PLANNING (CLOSED/GREEN @ `5f173fe`):**
+
+- Docs-only plan (`docs/internal-ops/VIONA_PACK32_3_MARKETING_ROUTE_PLAN.md`) designing a thin HTTP route + Controller in front of the existing, unmodified Pack32.1 `dispatchVionaMarketingContentRequest()` service.
+- RBAC decision: reuse the existing `adminRouter` (already gated by `authMiddleware` + `superAdminMiddleware`, `Role.ADMIN`) rather than introduce new middleware or mount under the role-less `vionaRouter` — there is no `OPERATOR` role in Prisma today, so the plan scoped this endpoint to `ADMIN`-only.
+- Data-flow decision: the Controller deterministically templates the structured `{topic, tone, targetLanguageCode}` request body into a natural-language `userMessage` string for the existing, unmodified Intent Router to classify — preserving the Pack32.1 Core Service as a **zero-modification kernel**.
+
+**PR #315 — Pack32.3 Marketing Content API Route Wiring, IMPLEMENTATION (CLOSED/GREEN @ `41098fe`):**
+
+- `AdminMarketingController.ts` (MODIFY, additive) — new `postAdminMarketingGenerateDraft()`: validates `{topic, tone, targetLanguageCode}`, builds the deterministic `userMessage`, calls the existing, unmodified `dispatchVionaMarketingContentRequest()`, maps its result onto the existing `jsonOk`/`jsonFail` envelope (400 invalid input, 422 classification rejection, 502 upstream failure, 500 defensive catch-all).
+- `adminRoutes.ts` (MODIFY, additive) — new `adminRouter.post('/marketing/generate-draft', ...)`, registered after the existing `authMiddleware`/`superAdminMiddleware` chain (verified by source-scan test).
+- Test suite `scripts/test-viona-pack32-3-marketing-route-wiring.ts` — **14/14 PASS**, including a CRITICAL source-scan proving the new controller code never calls `publishToFacebookPage`/`FacebookGraphAPI`/references TikTok, and a CRITICAL 0-line-diff check across 7 core Pack32.1/middleware files.
+- No Prisma schema change. No new `package.json` dependency. `dispatchVionaMarketingContentRequest()` itself: **0-line diff**.
+
+**PR #316 — Pack32.4 Marketing Admin Dashboard UI Integration, PLANNING (CLOSED/GREEN @ `b6d030d`):**
+
+- Docs-only plan (`docs/internal-ops/VIONA_PACK32_4_MARKETING_ADMIN_UI_PLAN.md`) surveying the existing frontend architecture (Expo + React Native + `react-native-web`; admin UI already exists on the frontend, not backend-only) and the existing marketing admin screen (`MarketingApprovalScreen.tsx`).
+- Key design decision: embed a new, self-contained `AdminMarketingDraftGenerator` component directly into the **existing** `MarketingApprovalScreen.tsx`, rather than create a new screen + new navigation route — smaller/more auditable diff, and the new draft appears in the same review list the operator already uses. No new UI/CSS library dependency proposed.
+
+**PR #317 — Pack32.4 Marketing Admin Dashboard UI Integration, IMPLEMENTATION (CLOSED/GREEN @ `dc79017`):**
+
+- `viGlobalAdminApi.ts` (MODIFY, additive, +29 lines) — new `postAdminMarketingGenerateDraft()` wrapper calling the existing, unmodified `restApiFetchJson('/api/admin/marketing/generate-draft', ...)` (Pack32.3).
+- `AdminMarketingDraftGenerator.tsx` (NEW) — form (Topic/Tone/Target language) → API call → **read-only** (`editable={false}`) result display. Zero publish/Facebook/TikTok/Share reference of any kind (CRITICAL source-scan verified).
+- `MarketingApprovalScreen.tsx` (MODIFY, **purely additive**, +3 lines — 1 import + 1 render call) — verified via `git diff` line-prefix parsing that **zero existing lines were removed or modified**; the old approve/publish/delete flow is byte-for-byte untouched.
+- Test suite `scripts/test-viona-pack32-4-marketing-admin-ui.ts` — **10/10 PASS**. Repo-testing-constraint note: this repo has no React Native component-rendering harness, and any file importing `react-native` (even transitively) cannot be executed under the `tsx` script runner outside Metro — confirmed this session via a throwaway import-check. All 10 tests are therefore static source-scans / `git diff`-based checks, extending the same pattern already used by the Pack32.3 test suite.
+- Full regression, **100% PASS**: Pack32.1 (14/14), Pack32.3 (14/14), Pack32 dispatcher (13/13), Pack32.5 core integration audit (4/4) — all unaffected (backend diff is zero).
+- No backend file touched (0-line diff verified across 11 core files). No Prisma schema change. No new `package.json` dependency. No new navigation route registered.
+
+| Field (status, this sync) | Value |
+|-------|--------|
+| Real execution (Pack30D-4 Twilio POC) | **BLOCKED** — `PACK30_REAL_PROVIDER_EXECUTION_ENABLED` still default `false`, hard-blocked on Production; unaffected by Pack32.3/32.4 |
+| Automated social-media posting | **FORBIDDEN** — Pack32.3's route and Pack32.4's UI both terminate at a `DRAFT`-status `MarketingPost` row; the only path to `PUBLISHED` remains the pre-existing, separate, human-operated `publish` button in `MarketingApprovalScreen.tsx`, unchanged by either pack |
+| Production | **NOT AUTHORIZED** |
+| Code/schema changed by this sync itself | **NONE** — this sync touches only this Kernel/Handoff file and the local, untracked `Handoff_VIONA11726.txt` |
+
+**Explicit NO assertions (this sync):** app/runtime `.ts`/`.tsx` code touched by this sync NO (only pre-existing, already-merged PR #314/#315/#316/#317 code is *described*, not modified, here); Prisma/DB/route touched by this sync NO; real execution NO; automated posting enabled NO; deploy/restart NO; production NO; secrets printed NO.
+
+**Next recommendation:** Pack32 (Autonomous Dispatcher/Marketing Agent) lifecycle from 32.1 → 32.4 is now **fully closed**: planning, implementation, backend route, and admin UI are all merged and evidenced. Candidate next lanes, none opened by this sync: (a) resume the Pack30D real-provider ladder (Pack30D-2 real-provider phrase `APPROVE_PACK30D_REAL_PROVIDER_EXECUTION_STAGING_QA` remains unrequested/unprovided); (b) a new Pack34+ initiative per Operator direction; (c) a Fly staging redeploy packet (still independently pending, unrelated to Pack32). Do **not** open any new HTTP route, wire real execution, or unblock production from this sync.
+
+Evidence: `docs/internal-ops/VIONA_PACK32_3_MARKETING_ROUTE_PLAN.md` (PR #314), `docs/design/evidence/cursor-pack32-3-marketing-content-route-implementation/README.md` (PR #315), `docs/internal-ops/VIONA_PACK32_4_MARKETING_ADMIN_UI_PLAN.md` (PR #316), `docs/design/evidence/cursor-pack32-4-marketing-admin-ui-implementation/README.md` (PR #317)
 
 ### Pack25 visual-QA row post-state (current — read-only record)
 
