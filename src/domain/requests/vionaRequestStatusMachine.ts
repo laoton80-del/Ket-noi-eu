@@ -3,10 +3,13 @@ import { vionaRequestStatuses, type VionaRequestStatus } from './vionaRequestTyp
 const transitionMap = {
   draft: ['submitted', 'cancelled'],
   submitted: ['triage', 'needsHumanConfirmation', 'cancelled', 'failed'],
-  triage: ['needsHumanConfirmation', 'sentToPartner', 'completed', 'cancelled', 'failed'],
+  triage: ['needsHumanConfirmation', 'sentToPartner', 'completed', 'cancelled', 'failed', 'inProgress'],
   needsHumanConfirmation: ['triage', 'sentToPartner', 'cancelled', 'failed'],
   sentToPartner: ['partnerResponded', 'triage', 'cancelled', 'failed'],
   partnerResponded: ['needsHumanConfirmation', 'completed', 'sentToPartner', 'cancelled', 'failed'],
+  // Pack31 orchestrator (vionaRequestExecutionOrchestrator.ts) — atomic execution-lock state,
+  // additive only. Terminal from here: real-provider outcome decides completed vs failed.
+  inProgress: ['completed', 'failed'],
   completed: [],
   cancelled: [],
   failed: ['draft'],

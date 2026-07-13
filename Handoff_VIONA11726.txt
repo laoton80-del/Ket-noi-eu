@@ -1,0 +1,87 @@
+VIONA — KERNEL/HANDOFF SNAPSHOT (local notes, not committed to git)
+Last updated: 2026-07-13 (Pack30D chain 1-8: routing/wiring DEPLOYED and VERIFIED on Fly staging;
+Twilio real-call end-to-end still BLOCKED by a separate, pre-existing gap — see below)
+
+=== LATEST STATE ===
+- PR #319 (Pack30D-5 Circuit Breaker), #321 (Pack30D-6 Kernel Sync), #322 (Pack30D-7 Deployment-Stage
+  Gate), #323 (Pack30D-8 Internal Route Wiring) — ALL MERGED into master.
+- Current master head: 57d23c8 (Pack30D-8 merge commit).
+- Operator phrases recorded across this chain:
+  - APPROVE_PACK30D_REAL_PROVIDER_EXECUTION_STAGING_QA
+  - APPROVE_PACK30D_7_STAGING_DEPLOYMENT_STAGE_FIX
+  - APPROVE_PACK30D_8_STAGING_WIRING_INTERNAL_ROUTE
+
+=== PACK30D CHAIN STATUS (1 -> 8) ===
+| Pack     | Scope                                              | Status               |
+|----------|-----------------------------------------------------|----------------------|
+| 30D-1    | Execution audit-ledger writer                        | MERGED               |
+| 30D-2    | Twilio Test-Credentials real-provider POC (adapter)   | MERGED (unwired)     |
+| 30D-3    | Frontend audit-trail timeline                         | MERGED               |
+| 30D-4    | previewVionaExecutionPlanRealProviderPocRoute() (svc)| MERGED (unwired)     |
+| 30D-5    | Real-provider spend Circuit Breaker                   | MERGED               |
+| 30D-6    | Kernel sync + Web3 removal + Dual-Engine pivot (docs) | MERGED               |
+| 30D-7    | VIONA_DEPLOYMENT_STAGE gate (fixes Fly NODE_ENV trap) | MERGED + DEPLOYED    |
+| 30D-8    | Internal HTTP route wiring (staging/local only)       | MERGED + DEPLOYED    |
+
+Routing/infrastructure for this chain is COMPLETE. Verified live against
+https://viona-api-staging-eu.fly.dev this session (see below) — NOT just asserted.
+
+=== LIVE VERIFICATION PERFORMED THIS SESSION (evidence, not just operator claim) ===
+1. `gh pr view 323` -> state MERGED, mergeCommit 57d23c8.
+2. `curl /health` -> HTTP 200.
+3. `curl -X POST /api/internal/viona/trigger-real-twilio-poc` (no auth) -> HTTP 401 (route exists,
+   not 404 — confirms deployed build contains Pack30D-8).
+4. `flyctl secrets list -a viona-api-staging-eu` -> PACK30_REAL_PROVIDER_EXECUTION_ENABLED,
+   TWILIO_TEST_ACCOUNT_SID, TWILIO_TEST_AUTH_TOKEN, PACK30D5_TWILIO_DAILY_CAP_USD_CENTS all
+   present, status "Deployed".
+5. Authenticated call via `scripts/test-staging-ping.ts` (PilotA login, real request id) ->
+   HTTP 200, `planAllowed: true`, `denialReason: "not_denied"`, safety payload exactly as coded.
+6. Raw JSON dump of the same call showed:
+   `"escrow": { "attempted": true, "holdOk": false, "reason": "wallet_not_found" }`,
+   `"realProviderResult": null`.
+
+=== IMPORTANT — WHAT IS *NOT* YET TRUE ===
+Twilio was **never actually called** in this verification. The Pack31 Zero-Loss escrow gate
+(mandatory, by design) blocked the call one step before `executeVionaTwilioTestPocReal()` because
+the authenticated pilot test user (PilotA / `+420910000001`) has **no VIO Credits wallet**
+(`wallet_not_found`). This is correct fail-closed behavior, not a bug in Pack30D-1..8 — but it
+means:
+- The full plan -> hold -> execute -> settle chain has NOT been exercised end-to-end on staging.
+- No real (test-credentials) Twilio SMS has been sent yet via this route.
+- "Pack30D chain successful" == routing/gates/deploy verified. "Real Twilio SMS sent" == NOT YET.
+
+=== SAFETY BOUNDARIES CONFIRMED HELD (this session) ===
+- Production deployment stage: still hard-blocked (403 at middleware, unchanged).
+- Real execution flag + Circuit Breaker: both still required and both confirmed set on Fly, but
+  never reached in this call because escrow hold failed first (Zero-Loss gate did its job).
+- Magic-number-only enforcement: confirmed present in returned safety payload
+  (`forcedFromNumber`/`forcedToNumber`: "+15005550006").
+- No status mutation, no bypass of vionaRequestStatusActionService.ts observed or introduced.
+
+=== CANDIDATE NEXT STEP (discovered by this session's verification, not yet authorized) ===
+Root cause of `wallet_not_found`: the pilot/test user used for staging QA has no VIO Credits
+wallet row. Before any further "real Twilio send" QA can complete end-to-end, one of the following
+must happen (none authorized yet — separate operator decision required):
+  (a) provision/top-up a VIO Credits wallet for the staging pilot test user (ops/data task, not
+      code), or
+  (b) a separate, explicitly authorized pack to review/adjust the wallet-provisioning path for
+      pilot/staging test accounts.
+This is NOT the same thing as a "Pack 31 Business Flow Integration" status-mutation orchestrator
+(see caution note below) — Pack31 in this codebase already means the Financial Escrow / VIO
+Credits hold-settle plan (`docs/product/VIONA_PACK31_FINANCIAL_ESCROW_PLAN.md`), already
+implemented and merged. A new, differently-scoped "Pack 31" name would collide with this.
+
+=== CAUTION — REQUEST RECEIVED THIS SESSION, NOT IMPLEMENTED ===
+A request arrived asking to create `src/services/viona/vionaRequestExecutionOrchestrator.ts` that
+would (1) mutate `VionaRequest.status` directly via Prisma, bypassing the existing sanctioned
+`vionaRequestStatusActionService.ts` transition service, (2) call the real-provider POC route, and
+(3) mutate status again based on the outcome — all with NO operator approval phrase provided.
+This was NOT implemented pending explicit operator clarification: it conflicts with this
+project's established pattern (every status-mutation and real-execution change to date is narrow,
+additive, and requires an explicit phrase), and duplicating/bypassing the owner-only,
+safety-label-aware transition logic in `vionaRequestStatusActionService.ts` is exactly the kind of
+architectural drift the Operating Protocol's Principal Architect role exists to block. Awaiting
+Operator decision (see chat).
+
+Do NOT claim "real Twilio SMS confirmed sent" until the wallet gap is resolved and a fresh
+end-to-end run shows a non-null `realProviderResult.outcome`.
