@@ -1,87 +1,174 @@
 VIONA — KERNEL/HANDOFF SNAPSHOT (local notes, not committed to git)
-Last updated: 2026-07-13 (Pack30D chain 1-8: routing/wiring DEPLOYED and VERIFIED on Fly staging;
-Twilio real-call end-to-end still BLOCKED by a separate, pre-existing gap — see below)
+Last updated: 2026-07-14 00:29 — Canonical Sync: Pack33 discovered ALREADY MERGED (planning +
+implementation + Kernel sync), verified independently this session. Pack31 orchestrator merged
+(PR #324). Wallet gap fixed + E2E pipeline run end-to-end locally (blocked only by missing local
+Twilio Test Credentials secret values, not a bug).
 
-=== LATEST STATE ===
-- PR #319 (Pack30D-5 Circuit Breaker), #321 (Pack30D-6 Kernel Sync), #322 (Pack30D-7 Deployment-Stage
-  Gate), #323 (Pack30D-8 Internal Route Wiring) — ALL MERGED into master.
-- Current master head: 57d23c8 (Pack30D-8 merge commit).
-- Operator phrases recorded across this chain:
-  - APPROVE_PACK30D_REAL_PROVIDER_EXECUTION_STAGING_QA
-  - APPROVE_PACK30D_7_STAGING_DEPLOYMENT_STAGE_FIX
-  - APPROVE_PACK30D_8_STAGING_WIRING_INTERNAL_ROUTE
+=== CURRENT MASTER HEAD ===
+f02d458 — "feat(viona): implement Pack 31 execution orchestrator and inProgress domain state (#324)"
 
-=== PACK30D CHAIN STATUS (1 -> 8) ===
-| Pack     | Scope                                              | Status               |
-|----------|-----------------------------------------------------|----------------------|
-| 30D-1    | Execution audit-ledger writer                        | MERGED               |
-| 30D-2    | Twilio Test-Credentials real-provider POC (adapter)   | MERGED (unwired)     |
-| 30D-3    | Frontend audit-trail timeline                         | MERGED               |
-| 30D-4    | previewVionaExecutionPlanRealProviderPocRoute() (svc)| MERGED (unwired)     |
-| 30D-5    | Real-provider spend Circuit Breaker                   | MERGED               |
-| 30D-6    | Kernel sync + Web3 removal + Dual-Engine pivot (docs) | MERGED               |
-| 30D-7    | VIONA_DEPLOYMENT_STAGE gate (fixes Fly NODE_ENV trap) | MERGED + DEPLOYED    |
-| 30D-8    | Internal HTTP route wiring (staging/local only)       | MERGED + DEPLOYED    |
+=== PACK30D CHAIN STATUS (1 -> 8) — unchanged from last sync, still accurate ===
+| Pack  | Scope                                                  | Status            |
+|-------|---------------------------------------------------------|-------------------|
+| 30D-1 | Execution audit-ledger writer                            | MERGED            |
+| 30D-2 | Twilio Test-Credentials real-provider POC (adapter)       | MERGED (unwired)  |
+| 30D-3 | Frontend audit-trail timeline                             | MERGED            |
+| 30D-4 | previewVionaExecutionPlanRealProviderPocRoute() (svc)     | MERGED (unwired)  |
+| 30D-5 | Real-provider spend Circuit Breaker                       | MERGED            |
+| 30D-6 | Kernel sync + Web3 removal + Dual-Engine pivot (docs)     | MERGED            |
+| 30D-7 | VIONA_DEPLOYMENT_STAGE gate (fixes Fly NODE_ENV trap)     | MERGED + DEPLOYED |
+| 30D-8 | Internal HTTP route wiring (staging/local only)           | MERGED + DEPLOYED |
 
-Routing/infrastructure for this chain is COMPLETE. Verified live against
-https://viona-api-staging-eu.fly.dev this session (see below) — NOT just asserted.
+=== PACK31 — Financial Escrow + Business Flow Orchestrator — MERGED ===
+- Financial Escrow (hold/settle/refund, VIO Credits): already implemented, MERGED — see
+  docs/product/VIONA_PACK31_FINANCIAL_ESCROW_PLAN.md, src/services/viona/vionaRequestEscrowHoldService.ts.
+- Business Flow Orchestrator (`executeVionaRequestBusinessFlow`), PR #324, branch
+  feat/pack31-orchestrator-review, MERGED @ f02d458:
+  - New file src/services/viona/vionaRequestExecutionOrchestrator.ts — State Lock (Prisma
+    atomic updateMany on status+ownerUserId) -> Real Execution (delegates unmodified to
+    previewVionaExecutionPlanRealProviderPocRoute) -> Finalize -> Audit.
+  - vionaRequestStatusActionService.ts left 100% untouched (verified zero diff vs master) per
+    explicit operator instruction (network call must never run inside its existing $transaction).
+  - Additive-only domain fix: added new valid status 'inProgress' across vionaRequestTypes.ts,
+    vionaRequestStatusMachine.ts, vionaRequestExecutionEligibilityGuard.ts,
+    vionaRequestSafetyCopy.ts — because the originally-requested 'in_progress' literal does not
+    exist in the domain and Wallet/VionaRequest.status is a plain String column (would have
+    silently corrupted data, not thrown).
+  - Operator phrase: APPROVE_PACK31_ORCHESTRATOR_DIRECT_PRISMA.
+  - Evidence: docs/product/VIONA_PACK31_ORCHESTRATOR_EVIDENCE.md.
+  - Tests: scripts/test-viona-pack31-execution-orchestrator.ts — 10/10 PASS.
 
-=== LIVE VERIFICATION PERFORMED THIS SESSION (evidence, not just operator claim) ===
-1. `gh pr view 323` -> state MERGED, mergeCommit 57d23c8.
-2. `curl /health` -> HTTP 200.
-3. `curl -X POST /api/internal/viona/trigger-real-twilio-poc` (no auth) -> HTTP 401 (route exists,
-   not 404 — confirms deployed build contains Pack30D-8).
-4. `flyctl secrets list -a viona-api-staging-eu` -> PACK30_REAL_PROVIDER_EXECUTION_ENABLED,
-   TWILIO_TEST_ACCOUNT_SID, TWILIO_TEST_AUTH_TOKEN, PACK30D5_TWILIO_DAILY_CAP_USD_CENTS all
-   present, status "Deployed".
-5. Authenticated call via `scripts/test-staging-ping.ts` (PilotA login, real request id) ->
-   HTTP 200, `planAllowed: true`, `denialReason: "not_denied"`, safety payload exactly as coded.
-6. Raw JSON dump of the same call showed:
-   `"escrow": { "attempted": true, "holdOk": false, "reason": "wallet_not_found" }`,
-   `"realProviderResult": null`.
+=== WALLET GAP — RESOLVED (this session) ===
+Root cause identified previously: pilot test user (PilotA / +420910000001) had no VIO Credits
+Wallet row -> `wallet_not_found` on escrow hold.
+Fix: scripts/provision-test-wallet.ts (standalone, no core code touched) — idempotently creates
+a Wallet via the existing createWalletForUser() and tops up to 1000 VIO Credits via a real
+ledgered TOPUP Transaction (never a raw balance overwrite).
+Result of running it this session: Wallet 981d2132-... created, balanceVIO = 1000, confirmed.
 
-=== IMPORTANT — WHAT IS *NOT* YET TRUE ===
-Twilio was **never actually called** in this verification. The Pack31 Zero-Loss escrow gate
-(mandatory, by design) blocked the call one step before `executeVionaTwilioTestPocReal()` because
-the authenticated pilot test user (PilotA / `+420910000001`) has **no VIO Credits wallet**
-(`wallet_not_found`). This is correct fail-closed behavior, not a bug in Pack30D-1..8 — but it
-means:
-- The full plan -> hold -> execute -> settle chain has NOT been exercised end-to-end on staging.
-- No real (test-credentials) Twilio SMS has been sent yet via this route.
-- "Pack30D chain successful" == routing/gates/deploy verified. "Real Twilio SMS sent" == NOT YET.
+=== E2E ORCHESTRATOR RUN — PERFORMED LOCALLY THIS SESSION (real DB, real ledger) ===
+Script: scripts/test-e2e-real-flow.ts (created + run this session; standalone, no core code
+touched). Created a real `triage` VionaRequest for the pilot user, called
+executeVionaRequestBusinessFlow() with Twilio magic number +15005550006.
 
-=== SAFETY BOUNDARIES CONFIRMED HELD (this session) ===
+Result:
+- Step 1 State Lock: claimed triage -> inProgress successfully (implicit in result.fromStatus).
+- Step 2 Real Execution: plan ALLOWED (planAllowed: true) -> escrow HOLD placed (0.01 VIO,
+  holdOk: true) -> real-provider adapter reached and called -> BLOCKED at the last defensive
+  layer: outcome "blockedOperator" / reason "missing_test_credentials" (TWILIO_TEST_ACCOUNT_SID/
+  TWILIO_TEST_AUTH_TOKEN exist ONLY as Fly secrets on viona-api-staging-eu; values were never
+  available locally — not fabricated/guessed).
+- Escrow auto-REFUNDED the full 0.01 VIO hold (Zero-Loss confirmed: wallet balance returned to
+  1000, locked = 0).
+- Step 3 Finalize: VionaRequest.status -> 'failed' (correct — outcome was not 'succeeded').
+- Step 4 Audit: stateTransition audit event written.
+
+=== WHAT IS STILL *NOT* YET TRUE ===
+No real (test-credentials) Twilio SMS has actually been sent end-to-end yet — the ONLY remaining
+blocker is the local absence of TWILIO_TEST_ACCOUNT_SID/TWILIO_TEST_AUTH_TOKEN secret VALUES
+(Twilio Console -> Test Credentials). Everything else in the pipeline (state lock, plan
+eligibility, Circuit Breaker, escrow hold+refund, finalize, audit) is verified working correctly
+against the real database. Getting a "completed" outcome requires either (a) the operator
+supplying those two secret values locally, or (b) running the equivalent flow against the
+deployed Staging Fly app where the secrets already exist (not yet wired to any HTTP route today
+— the orchestrator is service-layer only).
+
+=== PACK33 — GLOBAL OMNI-COMPLIANCE & LOCALIZATION — DISCOVERED ALREADY MERGED (this session) ===
+IMPORTANT: an Operator request arrived this session asking to (1) sync-record Pack33 planning as
+merged, (2) authorize implementation, (3) execute Pack33 code. Verification (not assumption)
+found ALL THREE were already done, in an earlier session, before this conversation started:
+- PR #309 "docs(product): Pack33 global omni-compliance & localization planning packet" —
+  MERGED 2026-07-12T19:14:58Z.
+- PR #310 "feat(viona): implement Pack33 global omni-compliance & localization" — MERGED
+  2026-07-13T07:22:49Z @ e0ec740. Full implementation: src/lib/viona/compliance/vionaPiiScrubber.ts,
+  vionaAuditRetentionPolicy.ts, src/lib/viona/i18n/vionaServiceMessageDictionary.ts,
+  scripts/viona-pack33-audit-retention-job.ts (dry-run by default, not scheduled anywhere),
+  scripts/test-viona-pack33-global-compliance.ts (16/16 PASS). Prisma schema: additive-only
+  `retentionRegion`/`anonymizedAt` on VionaRequestAuditEvent (migration.sql hand-authored,
+  committed, NOT applied to any DB per that PR).
+- PR #313 "docs(ai-context): sync Kernel Handoff for Pack33 + Pack32.1 (#310, #311, #312)" —
+  MERGED 2026-07-13T08:15:50Z. The canonical docs/ai-context/VIONA_KERNEL_HANDOFF_FAST_SAFE_GLOBAL_MODE.md
+  ALREADY records Pack33 planning+implementation as CLOSED/GREEN with full narrative detail.
+
+Independently re-verified this session (not just trusting the commit message):
+- Ran scripts/test-viona-pack33-global-compliance.ts fresh -> 16/16 PASS.
+- grep for "vionaPiiScrubber"/"scrubVionaPii" across src/lib/viona/realProviderAdapter/** and
+  src/services/viona/vionaExecutionPlanRouteService.ts -> ZERO matches. Confirms the STRICT RULE
+  (scrubber only ever touches VionaRequestAuditEvent message/payloadJson) and the ABSOLUTE
+  FORBIDDEN constraint (real Twilio provider payload is never scrubbed) are both true right now,
+  independent of the PR's own claims.
+
+Conclusion: NO new code was written for Pack33 this session — writing new/duplicate code for an
+already-merged, already-tested, already-verified implementation would have been pure drift risk
+with zero benefit. The operator's local handoff record (this file) was simply out of date; this
+sync corrects that. This file's local record now matches the canonical, already-committed
+Kernel Handoff.
+
+=== FULL REGRESSION RUN THIS SESSION (all scripts/test-viona-pack*.ts, 18 files) ===
+16/18 suites: 100% PASS, zero failures (Pack29, 30A, 30B, 30D-1, 30D-2(poc), 30D-2(state-machine),
+30D-3, 30D-7, 30D-8, 31-orchestrator, 31-financial-escrow, 32.1, 32.3, 32.5, 32-dispatcher, 33).
+
+2 pre-existing, unrelated, known-benign failures found (NOT caused by this session's work, NOT
+fixed — out of scope, flagged for a future dedicated cleanup pack):
+- scripts/test-viona-pack30d-5-real-provider-circuit-breaker.ts — "expected a non-empty diff for
+  the modified Twilio adapter file vs origin/master".
+- scripts/test-viona-pack32-4-marketing-admin-ui.ts — "expected MarketingApprovalScreen.tsx to
+  have a non-empty diff vs origin/master".
+Root cause (confirmed by reading both files): both tests run `git diff origin/master -- <file>`
+and assert the diff is NON-empty, i.e. "this PR's own file differs from master". This check is
+only meaningful *before* that PR is merged; now that both PRs are long merged, master==HEAD for
+those files, the diff is empty by construction, and the assertion self-invalidates. Not a
+functional/runtime regression in either pack — confirmed by reading the failing assertion in
+context in both files.
+
+=== SAFETY BOUNDARIES CONFIRMED HELD (this session, cumulative) ===
 - Production deployment stage: still hard-blocked (403 at middleware, unchanged).
-- Real execution flag + Circuit Breaker: both still required and both confirmed set on Fly, but
-  never reached in this call because escrow hold failed first (Zero-Loss gate did its job).
-- Magic-number-only enforcement: confirmed present in returned safety payload
-  (`forcedFromNumber`/`forcedToNumber`: "+15005550006").
-- No status mutation, no bypass of vionaRequestStatusActionService.ts observed or introduced.
+- vionaRequestStatusActionService.ts: still zero diff vs origin/master (untouched by Pack31 orchestrator).
+- Real-provider adapter payload: still never scrubbed (Pack33 separation of concerns independently reverified).
+- No Prisma migration applied to any database this session (Pack33's migration.sql remains unapplied, as designed).
+- Magic-number-only enforcement: still the only phone number used in every local test this session.
 
-=== CANDIDATE NEXT STEP (discovered by this session's verification, not yet authorized) ===
-Root cause of `wallet_not_found`: the pilot/test user used for staging QA has no VIO Credits
-wallet row. Before any further "real Twilio send" QA can complete end-to-end, one of the following
-must happen (none authorized yet — separate operator decision required):
-  (a) provision/top-up a VIO Credits wallet for the staging pilot test user (ops/data task, not
-      code), or
-  (b) a separate, explicitly authorized pack to review/adjust the wallet-provisioning path for
-      pilot/staging test accounts.
-This is NOT the same thing as a "Pack 31 Business Flow Integration" status-mutation orchestrator
-(see caution note below) — Pack31 in this codebase already means the Financial Escrow / VIO
-Credits hold-settle plan (`docs/product/VIONA_PACK31_FINANCIAL_ESCROW_PLAN.md`), already
-implemented and merged. A new, differently-scoped "Pack 31" name would collide with this.
+=== PACK34 — B2B MERCHANT GATEWAY & AI WHITE-LABELING — PLANNING PACKET CREATED (this session) ===
+Operator initiated "Pack 34: B2B Merchant Gateway & AI White-Labeling" as a docs-only planning
+packet (no code, no schema change authorized). Created:
+- docs/product/VIONA_PACK34_B2B_MERCHANT_GATEWAY_PLAN.md — designs (types/schema description only,
+  nothing applied): a new `MerchantProfile` model for strict multi-tenant isolation (closes the
+  `VionaRequest.tenantId` free-text-with-zero-enforcement gap this session's baseline audit found —
+  `buildAuthorizedVionaRequestWhere()` today does not filter by tenantId at all); per-merchant AI
+  Persona storage (system-prompt addendum + locale + tone, additive-only to the existing dispatch
+  prompt, never overriding its safety-relevant tool-list/JSON-contract section); an additive
+  `'merchant_read_only_query'` Tool Registry category with 2 illustrative read-only tools
+  (schedule/inventory check — structurally incapable of any write side effect); and how a future
+  write-capable merchant tool would reuse the existing, unmodified Pack31 escrow
+  hold/settle/refund with the merchant's own ownerUserId/Wallet (never a second wallet/escrow
+  concept).
+- Explicit boundary documented: `MerchantProfile` (this packet) vs. the existing `Business` model
+  (Tourism/Local booking listing) — structurally independent, zero changes to `Business` proposed.
+- Exact file allowlist (§8) + "explicitly NOT touched" list (vionaRequestStatusActionService.ts,
+  vionaRequestExecutionOrchestrator.ts, vionaRequestEscrowHoldService.ts,
+  vionaExecutionPlanRouteService.ts, dispatchVionaAutonomousRequest(), realProviderAdapter/**,
+  compliance/**, Business/BizType) + required test plan (§10) for a future implementation pack.
+- Deferred/non-goals: write-capable booking tool, MerchantProfile activation workflow,
+  Schedule/Inventory data model, per-merchant pricing formula values — none designed in
+  implementation detail, all explicitly flagged as future, separately-reviewed scope.
+- Status: PLANNING ONLY. Future implementation requires its own operator phrase
+  (proposed: APPROVE_PACK34_B2B_MERCHANT_GATEWAY_IMPLEMENTATION), not yet granted.
+- Branch: docs/pack34-b2b-merchant-gateway-planning. PR #325:
+  https://github.com/laoton80-del/Ket-noi-eu/pull/325
+- docs/ai-context/VIONA_KERNEL_HANDOFF_FAST_SAFE_GLOBAL_MODE.md was also synced in the same PR:
+  added the Pack34 planning row, plus 3 gap-fill rows this session found missing (Pack30D-7 #322,
+  Pack30D-8 #323, Pack31 orchestrator #324 — all already merged before this session but never
+  recorded in that table).
+- STRICT RULES honored: zero .ts/.tsx files created or modified by this task; zero Prisma
+  migrations run.
 
-=== CAUTION — REQUEST RECEIVED THIS SESSION, NOT IMPLEMENTED ===
-A request arrived asking to create `src/services/viona/vionaRequestExecutionOrchestrator.ts` that
-would (1) mutate `VionaRequest.status` directly via Prisma, bypassing the existing sanctioned
-`vionaRequestStatusActionService.ts` transition service, (2) call the real-provider POC route, and
-(3) mutate status again based on the outcome — all with NO operator approval phrase provided.
-This was NOT implemented pending explicit operator clarification: it conflicts with this
-project's established pattern (every status-mutation and real-execution change to date is narrow,
-additive, and requires an explicit phrase), and duplicating/bypassing the owner-only,
-safety-label-aware transition logic in `vionaRequestStatusActionService.ts` is exactly the kind of
-architectural drift the Operating Protocol's Principal Architect role exists to block. Awaiting
-Operator decision (see chat).
-
-Do NOT claim "real Twilio SMS confirmed sent" until the wallet gap is resolved and a fresh
-end-to-end run shows a non-null `realProviderResult.outcome`.
+=== CANDIDATE NEXT STEPS (discovered, none authorized yet) ===
+1. Supply TWILIO_TEST_ACCOUNT_SID/TWILIO_TEST_AUTH_TOKEN locally (or run the equivalent flow on
+   Staging where they already exist) to get a real, non-blocked realProviderResult outcome.
+2. Pack33 explicitly-deferred follow-ups (per docs/product/VIONA_PACK33_GLOBAL_COMPLIANCE_PLAN.md
+   §9): migrate existing hardcoded English strings to vionaServiceMessageDictionary.ts one call
+   site at a time; schedule scripts/viona-pack33-audit-retention-job.ts for real (currently
+   dry-run, unscheduled); legal/compliance review of region-specific retention windows and PII
+   rule values (explicitly not claimed by PR #310).
+3. Cleanup pack for the 2 stale self-referential diff-check test failures above (Pack30D-5,
+   Pack32.4 test scripts) — low priority, cosmetic/test-hygiene only.
