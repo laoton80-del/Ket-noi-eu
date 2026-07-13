@@ -2,7 +2,7 @@
 
 **Document type:** Canonical kernel and session handoff for VIONA engineering, product, and AI agents.
 **Audience:** New ChatGPT / Cursor windows, staff, contractors, and automation executors.
-**Baseline:** `origin/master @ dc79017` — `feat(admin): implement Pack32.4 marketing admin dashboard UI integration (#317)` — see §5 "Pack32.6 Marketing Agent Closure & Kernel Sync" narrative section below for the full PR #313–#317 catch-up (Pack32.3 marketing content API route wiring, Pack32.4 marketing admin dashboard UI integration; real execution/production/auto-posting remain BLOCKED/NOT AUTHORIZED). Prior baseline `c0c3214` (PR #312) — see §5 "Pack32.2 Kernel/Handoff sync" narrative section for the PR #292–#312 catch-up (Pack30D-2/3/4, Pack31, Pack32, Pack32.5, Pack33, Pack32.1).
+**Baseline:** `origin/master @ 5b75114` — `feat(viona): implement Pack30D-5 real-provider spend circuit breaker (mock-only, both flags off) (#320)` — see §5 "Pack30D-6 Kernel Sync & Strategic Financial Pivot" narrative section below for the full PR #319–#320 catch-up (Circuit Breaker planning + implementation) plus the formal, permanent removal of Web3/Crypto/Smart Contracts from every visionary pillar and monetization section (real execution/production remain BLOCKED/NOT AUTHORIZED). Prior baseline `dc79017` (PR #317) — see §5 "Pack32.6 Marketing Agent Closure & Kernel Sync" narrative section for the PR #313–#317 catch-up. Prior baseline `c0c3214` (PR #312) — see §5 "Pack32.2 Kernel/Handoff sync" narrative section for the PR #292–#312 catch-up (Pack30D-2/3/4, Pack31, Pack32, Pack32.5, Pack33, Pack32.1).
 **Supersedes for Request Engine sequencing:** prior scattered pack pointers when this doc conflicts on pack order or blocked state — align to this handoff.
 **Subordinate to:** `docs/ai-context/VIONA_OPERATING_PROTOCOL.md` and founder-signed **Master Blueprint** (`VIONA_FINAL_MASTER_BLUEPRINT_V2.md`). If conflict, stop and report drift risk.
 
@@ -353,6 +353,8 @@ All new work branches from `c843111` unless a later pack explicitly updates this
 | Pack32.3 marketing content API route wiring (implementation) | **CLOSED / GREEN** — PR #315 @ `41098fe` — new `POST /api/admin/marketing/generate-draft` route, RBAC via existing `authMiddleware` + `superAdminMiddleware` (`Role.ADMIN`), Deterministic Templating in the Controller to preserve the Pack32.1 Core Service (`dispatchVionaMarketingContentRequest()`) as a **zero-modification kernel**; see dedicated "Pack32.6 Marketing Agent Closure & Kernel Sync" narrative section below for full detail |
 | Pack32.4 marketing admin dashboard UI integration (planning) | **CLOSED / GREEN** — PR #316 @ `b6d030d` — see dedicated "Pack32.6 Marketing Agent Closure & Kernel Sync" narrative section below for full detail |
 | Pack32.4 marketing admin dashboard UI integration (implementation) | **CLOSED / GREEN** — PR #317 @ `dc79017` — new `AdminMarketingDraftGenerator` component embedded (purely additive diff, zero existing lines changed) directly into the existing `MarketingApprovalScreen.tsx`; read-only result display only; no publish/share control of any kind — Human-in-the-Loop Level 3 fully preserved; see dedicated "Pack32.6 Marketing Agent Closure & Kernel Sync" narrative section below for full detail |
+| Pack30D-5 real-provider execution unlock & circuit breaker (planning) | **CLOSED / GREEN** — PR #319 @ `5f4042f` — docs-only plan for a zero-infra (no Redis, no new DB table), fail-closed (missing cap ⇒ breaker OPEN) spend Circuit Breaker computed from existing `VionaRequestAuditEvent`/`LlmApiUsageLog` tables; designed to wrap Twilio real execution and a **future, symmetric, unwired** OpenAI real-provider adapter — never the existing, already-live OpenAI chat/translation/marketing-draft/legal-scan call sites; see dedicated "Pack30D-6 Kernel Sync & Strategic Financial Pivot" narrative section below for full detail |
+| Pack30D-5 real-provider execution unlock & circuit breaker (implementation) | **CLOSED / GREEN** — PR #320 @ `5b75114` — `vionaProviderSpendCircuitBreaker.ts` (pure decision logic) + `vionaProviderSpendWindowQueryService.ts` (read-only DB-backed spend aggregation, UTC-day window) wired additively into `vionaTwilioTestRealProviderAdapter.ts`'s `executeVionaTwilioTestPocReal()`; new **unwired** `vionaOpenAiRealProviderAdapter.ts` + `PACK30D_OPENAI_REAL_EXECUTION_ENABLED` flag scaffolded for a future pack, isolated via a dedicated, unused `LlmRouterTaskType.VIONA_REAL_EXECUTION_CONTENT` enum value (additive schema change, migration authored but **not applied**); 12/12 new tests PASS + all regressions PASS after patching 3 pre-existing test files' mock `deps` to bypass the new breaker; both real-execution flags remain `false`; see dedicated "Pack30D-6 Kernel Sync & Strategic Financial Pivot" narrative section below for full detail |
 | Pack26 implementation | **NOT opened** |
 
 **Pack26A non-authorization (preserved):** code implementation; new routes/actions/transitions; assign / confirm / cancel; booking / payment / SOS / wallet / live AI; deploy; live QA; DB/schema/migration; data mutation; production or global automation claims; Pack27/Pack28 execution; further Pack25 click/status POST on current visual-QA row (Option C hold).
@@ -2872,6 +2874,60 @@ Evidence: `docs/design/evidence/cursor-pack33-global-omni-compliance-implementat
 
 Evidence: `docs/internal-ops/VIONA_PACK32_3_MARKETING_ROUTE_PLAN.md` (PR #314), `docs/design/evidence/cursor-pack32-3-marketing-content-route-implementation/README.md` (PR #315), `docs/internal-ops/VIONA_PACK32_4_MARKETING_ADMIN_UI_PLAN.md` (PR #316), `docs/design/evidence/cursor-pack32-4-marketing-admin-ui-implementation/README.md` (PR #317)
 
+### Pack30D-6 Kernel Sync & Strategic Financial Pivot — PR #319–#320 catch-up + Web3/Crypto removal (CLOSED/GREEN — docs-only, this sync)
+
+| Field | Value |
+|-------|--------|
+| Operator phrase (this sync) | `APPROVE_PACK30D_6_KERNEL_SYNC_AND_FINANCIAL_PIVOT` — provided via operator chat approval this session, recorded verbatim |
+| Current verified master (before this sync) | **`dc79017`** (PR #317) |
+| Current verified master (after this sync's baseline bump) | **`5b75114`** (PR #320) — see updated top-of-doc **Baseline** line |
+| PR chain #251 → #320 | **PRESERVED** |
+| Scope | Docs-only. Records PR #319 (Pack30D-5 planning) and PR #320 (Pack30D-5 implementation), and formally, permanently removes Web3/Crypto/Smart Contracts from every visionary/monetization section of this Kernel. No `.ts`/`.tsx`/schema file touched by this sync itself. |
+
+**PR #319 — Pack30D-5 Real-Provider Execution Unlock & Circuit Breaker, PLANNING (CLOSED/GREEN @ `5f4042f`):**
+
+- Docs-only plan (`docs/internal-ops/VIONA_PACK30D_5_REAL_PROVIDER_PLAN.md`) designing a **zero-infra** (no Redis, no new DB table — computed from existing `VionaRequestAuditEvent`/`LlmApiUsageLog` rows), **fail-closed** (missing/non-numeric cap env var ⇒ breaker `OPEN`, blocks 100% of real-provider calls) Circuit Breaker.
+- Explicitly designed to wrap Twilio real execution (already-built, off-by-default Pack30D-4 adapter) **and** a new, future, symmetric OpenAI real-provider adapter — deliberately **not** retrofitted onto the existing, already-live OpenAI chat/translation/marketing-draft/legal-scan call sites, to avoid regressing any shipped product feature.
+- Named a 9-file allowlist and a 12-case test plan; no code/schema touched by the planning packet itself.
+
+**PR #320 — Pack30D-5 Real-Provider Execution Unlock & Circuit Breaker, IMPLEMENTATION (CLOSED/GREEN @ `5b75114`):**
+
+- `vionaProviderSpendCircuitBreaker.ts` (NEW) — pure decision logic: `evaluateVionaProviderCircuitBreaker()` returns `closed`/`open` given a spend window + configured cap; `readVionaProviderSpendCapUsdCentsFromEnv()` resolves the cap from `PACK30D5_TWILIO_DAILY_CAP_USD_CENTS`/`PACK30D5_OPENAI_DAILY_CAP_USD_CENTS`, defaulting to `0` (always-open/fail-closed) when unset or non-numeric.
+- `vionaProviderSpendWindowQueryService.ts` (NEW) — read-only aggregation over existing tables, UTC-day window (`computeVionaProviderSpendUtcDayWindow()`), isolated per-provider queries (`queryVionaTwilioSpendWindow()`, `queryVionaOpenAiRealExecutionSpendWindow()`) using illustrative per-call/per-1000-token cost constants (no live pricing API call).
+- `vionaTwilioTestRealProviderAdapter.ts` (MODIFY, additive) — `executeVionaTwilioTestPocReal()` now checks the Circuit Breaker before calling Twilio's Test API; `VionaTwilioRealExecutionOutcome`'s `reason` union additively gains `circuit_breaker_open_daily_cap_exceeded` (no existing union member removed/renamed).
+- `vionaRealProviderExecutionFlag.ts` (MODIFY, additive) — new `VIONA_OPENAI_REAL_EXECUTION_ENV_FLAG` + `isOpenAiRealExecutionEnabled()`, default `false`, hard-blocked in production, for a **future, still-unwired** OpenAI real-provider adapter.
+- `prisma/schema.prisma` (MODIFY, additive) — new `LlmRouterTaskType.VIONA_REAL_EXECUTION_CONTENT` enum value, dedicated and unused by any existing OpenAI call site, so a future adapter's usage can be isolated by the spend-window query; migration file authored (`20260713120000_add_llm_router_task_type_viona_real_execution_content`) but **not applied** by this sync — Operator applied it separately, per Operator's own confirmation, before requesting this Pack30D-6 sync.
+- `scripts/test-viona-pack30d-5-real-provider-circuit-breaker.ts` (NEW) — 12/12 PASS (breaker logic, UTC-day reset, per-provider query isolation, fail-closed on missing cap, production hard-block independence, no half-open probe, critical source-scan assertions).
+- Three pre-existing regression suites (`test-viona-pack30d2-real-provider-execution-poc.ts`, `test-viona-pack32-5-core-integration-audit.ts`, `test-viona-pack33-global-compliance.ts`) patched additively — each affected mock `deps` object gained `circuitBreakerCheck: async () => ({ state: 'closed' })` so their original happy-path assertions keep passing under the new, now-mandatory breaker check; **no assertion logic changed**, only the mock dependency shape extended.
+- `npm run typecheck` / `npm run lint` — **0 new errors**. Both real-execution flags (`PACK30_REAL_PROVIDER_EXECUTION_ENABLED`, `PACK30D_OPENAI_REAL_EXECUTION_ENABLED`) remain `false` by default.
+
+**Strategic Financial Pivot — Web3/Crypto/Smart Contracts formally, permanently removed:**
+
+- Per explicit Operator directive, blockchain/Web3/cryptocurrency/on-chain-token/smart-contract technology is **excluded from VIONA's architecture, permanently**, to comply with Apple App Store payment policy.
+- Repo-wide survey (this sync) found **zero** production blockchain/crypto code — no `web3`/`ethers`/`hardhat`-class dependency, no on-chain wallet field on any Prisma model. One pre-existing, inert `enableWeb3Vault` feature-flag-style symbol was found with no live call site — **flagged, not removed**, as a candidate for a future, separately authorized code-cleanup pack (out of scope for this docs-only sync).
+- Two visionary pillars previously used blockchain-adjacent phrasing and were corrected **in place, without changing scope**: §16.1 (Automated Escrow & Milestone Payout — was "Hợp đồng thông minh (smart-contract-style)") and §16.11 (Hyper-Local Group Pooling — was "smart-contract-style"). One pillar was renamed and reframed: §16.26, "Decentralized Global Trust Score" → **"Global Trust Score"**, removing "decentralized"/"cryptographic scheme" framing in favor of a conventional, centrally-computed, VIONA-controlled score.
+- New §16 intro paragraph and new §16.28 boundary-table row record this exclusion as a standing, cross-cutting constraint on **every** current and future §16 pillar, not only the three corrected above.
+- New **§17.5 "Payment Rail Architecture — Dual-Engine (BaaS + VIO Credits)"** subsection formally introduces the two, and only two, authorized future payment technologies: **BaaS** (Banking-as-a-Service, e.g. Stripe/Mangopay-style — real fiat custody/escrow for large-value transactions) and **VIO Credits** (closed-loop, IAP-based ledger — already partially implemented via Pack31's `VionaRequestEscrowHold`/wallet adapter, PR #305 — for micro-transactions). No BaaS integration code exists; VIO Credits' existing Pack31 code is unaffected by this docs-only sync.
+
+| Field (status, this sync) | Value |
+|-------|--------|
+| Pack30D-5 Circuit Breaker | **IMPLEMENTED** (PR #320) — fail-closed, zero-infra, wraps Twilio only; does not touch existing OpenAI chat/translation/marketing-draft/legal-scan flows |
+| `PACK30_REAL_PROVIDER_EXECUTION_ENABLED` (Twilio) | **`false`** (default, hard-blocked on Production) — unaffected by this sync |
+| `PACK30D_OPENAI_REAL_EXECUTION_ENABLED` (new, unwired) | **`false`** (default, hard-blocked on Production) — unaffected by this sync |
+| Web3 / Crypto / Blockchain / Smart Contracts | **PERMANENTLY EXCLUDED** from VIONA's entire architecture (new, this sync) |
+| BaaS (Stripe/Mangopay-style) integration | **NOT WRITTEN** — provider not selected/contracted |
+| VIO Credits (Pack31) | **UNCHANGED, UNAFFECTED** — already merged (PR #305), mock-only |
+| Real execution | **BLOCKED** — both flags remain `false` by default, hard-blocked on Production, **regardless** of Circuit Breaker state |
+| Circuit Breaker readiness for a future Staging unlock | **READY, NOT YET USED** — the fail-closed Circuit Breaker (PR #320) is a **precondition** the Operator could rely on if a future, separately authorized pack ever flips `PACK30_REAL_PROVIDER_EXECUTION_ENABLED`/`PACK30D_OPENAI_REAL_EXECUTION_ENABLED` to `true` on Staging; this sync does **not** flip either flag and does **not** itself authorize that future step |
+| Production | **NOT AUTHORIZED** (unchanged) |
+| Code/schema changed by this sync itself | **NONE** — this sync touches only this Kernel/Handoff file and the local, untracked `Handoff_VIONA11726.txt` |
+
+**Explicit NO assertions (this sync):** app/runtime `.ts`/`.tsx`/`.prisma` code touched by this sync NO (only pre-existing, already-merged PR #319/#320 code is *described*, not modified, here); new Prisma/DB/route touched by this sync NO; real execution NO; Web3/crypto/blockchain code added or removed NO (only docs text corrected); deploy/restart NO; production NO; secrets printed NO.
+
+**Next recommendation:** Pack30D-5's Circuit Breaker is implemented and the financial-architecture direction (Dual-Engine, Web3-free) is now formally locked in the Kernel. Candidate next lanes, none opened by this sync: (a) a Pack30D-7 packet to design/select a real BaaS provider (Stripe/Mangopay) — still fully unauthorized/unopened; (b) resume the Pack30D-2 real-provider staging-QA ladder (`APPROVE_PACK30D_REAL_PROVIDER_EXECUTION_STAGING_QA` remains unrequested/unprovided) — now that a Circuit Breaker exists to gate it; (c) a future, separately authorized cleanup pack to remove the inert `enableWeb3Vault` flag from source; (d) a new Pack34+ initiative per Operator direction. Do **not** open any new HTTP route, wire real execution, unblock production, or write any BaaS/crypto code from this sync.
+
+Evidence: `docs/internal-ops/VIONA_PACK30D_5_REAL_PROVIDER_PLAN.md` (PR #319), `docs/design/evidence/cursor-pack30d-5-real-provider-unlock-implementation/README.md` (PR #320)
+
 ### Pack25 visual-QA row post-state (current — read-only record)
 
 | Field | Value |
@@ -4062,17 +4118,20 @@ Stop immediately and report if asked to:
 
 **Why recorded here:** Per operator instruction, this section preserves next-generation architecture pillars in the canonical Kernel/Handoff memory so they are not lost between sessions, while making unmistakably clear that **none of them are scheduled, authorized, designed, or implemented** ahead of the current critical path.
 
+**Financial-architecture boundary (Pack30D-6 pivot — see §17.5 for full detail):** effective this update, **no pillar in this entire §16 roadmap may ever be designed, prototyped, or implemented using blockchain, Web3, cryptocurrency, on-chain tokens, or smart contracts of any kind** — this is an explicit App Store compliance boundary, not a mere naming preference. Any pillar that requires real financial custody, escrow, or a portable/collateral-grade value representation **must** use the **Dual-Engine** architecture instead: **BaaS** (Banking-as-a-Service, e.g. Stripe/Mangopay-style) for real fiat-denominated custody/escrow, and **VIO Credits** (closed-loop, in-app-purchase-based) for micro-transactions. Two pillars previously used blockchain-adjacent phrasing ("smart-contract-style", "decentralized") and have been corrected in place at §16.1, §16.11, and §16.26 respectively — no pillar's *scope* changed, only the excluded/replacement technology framing.
+
 **Mandatory launchpad dependency:** All twenty pillars below **require** the **Pack 30D persistent Audit Ledger** (append-only writes to the existing `VionaRequestAuditEvent` table, per PR #289's design) as their common prerequisite — every pillar involves either autonomous/semi-autonomous action, cross-party financial commitment, cross-universe data linkage, biometric/health data handling, or AI-to-AI/AI-to-physical-world arbitration that **must** be independently auditable before any real-execution gate can ever be requested for it. **The Audit Ledger writer itself (Pack 30D-1) is not yet implemented** — see §5/§6 "Pack30D-1 implementation readiness: READY (not yet opened)". No pillar below may begin its own design phase before Pack 30D-1 is implemented, staging-QA'd, and closed.
 
-**Phase status:** Phase 1 (§16.1-§16.4) recorded first; Phase 2 (§16.5-§16.8) added next; Phase 3 "Ultimate Next-Gen Architecture — full 6-universe coverage" (§16.10-§16.15) added next — same classification, same dependency, same non-authorization boundary. With Phase 3, **all six VIONA universes** (Hub/LifeOS, Local, Travel, Academy, Business/B2B, SOS/Global Lifeline) had at least one recorded visionary pillar. **Level 3 "Ultimate Autonomous Capabilities"** (§16.17-§16.22) layered one additional, even-more-autonomous pillar onto each of the same six universes, together with a governing cross-cutting doctrine at §16.23: the **"Human-in-the-Loop" Consent Principle**, which formally caps the autonomy of every pillar in this entire §16 short of unattended real-world execution, with a narrowly-scoped, pre-consented exception for SOS emergencies only. **Level 4 "Invisible Identity & Economy Ecosystem"** (§16.25-§16.27, added in this update) is the final, cross-universe (not per-universe) tier: three macro pillars — cross-border micro-trade arbitrage, a decentralized global trust score, and a cognitive-empathy interpreter — that sit **above** all six universes rather than inside any single one, completing the visionary architecture picture. **This closes the theoretical/strategic design of the entire Visionary Roadmap at 100%** per explicit operator instruction; no further visionary tier is anticipated. The near-term execution focus (Pack 30D-1) is unaffected.
+**Phase status:** Phase 1 (§16.1-§16.4) recorded first; Phase 2 (§16.5-§16.8) added next; Phase 3 "Ultimate Next-Gen Architecture — full 6-universe coverage" (§16.10-§16.15) added next — same classification, same dependency, same non-authorization boundary. With Phase 3, **all six VIONA universes** (Hub/LifeOS, Local, Travel, Academy, Business/B2B, SOS/Global Lifeline) had at least one recorded visionary pillar. **Level 3 "Ultimate Autonomous Capabilities"** (§16.17-§16.22) layered one additional, even-more-autonomous pillar onto each of the same six universes, together with a governing cross-cutting doctrine at §16.23: the **"Human-in-the-Loop" Consent Principle**, which formally caps the autonomy of every pillar in this entire §16 short of unattended real-world execution, with a narrowly-scoped, pre-consented exception for SOS emergencies only. **Level 4 "Invisible Identity & Economy Ecosystem"** (§16.25-§16.27, added in this update) is the final, cross-universe (not per-universe) tier: three macro pillars — cross-border micro-trade arbitrage, a (centrally-computed, non-blockchain — see §16.26's Pack30D-6 naming/architecture correction) global trust score, and a cognitive-empathy interpreter — that sit **above** all six universes rather than inside any single one, completing the visionary architecture picture. **This closes the theoretical/strategic design of the entire Visionary Roadmap at 100%** per explicit operator instruction; no further visionary tier is anticipated. The near-term execution focus (Pack 30D-1) is unaffected.
 
 ### 16.1 Business / Local — Automated Escrow & Milestone Payout
 
-Hợp đồng thông minh (smart-contract-style), ký quỹ (escrow) xuyên biên giới, và giải ngân (payout) theo trạm mốc vận đơn (milestone/shipment checkpoints) cho các giao dịch Business/Local và B2B Wholesale.
+Ký quỹ (escrow) xuyên biên giới và giải ngân (payout) theo trạm mốc vận đơn (milestone/shipment checkpoints) cho các giao dịch Business/Local và B2B Wholesale, vận hành trên rule-engine điều kiện (conditional payout logic) ở tầng ứng dụng — **không** dùng blockchain/smart-contract/Web3.
 
 - **Status:** `VISIONARY / FUTURE_ROADMAP` — Pilot/Coming Soon only
+- **Payment rail (Pack30D-6 pivot, see §17.5):** **Dual-Engine** — BaaS (Stripe/Mangopay-style Banking-as-a-Service) custodies the real fiat escrow float for this pillar; **VIO Credits** (closed-loop in-app economy) covers any micro-transaction leg. **Web3/crypto/blockchain/on-chain smart contracts are explicitly excluded** from this pillar's architecture — App Store compliance boundary, not merely a naming change.
 - **Depends on:** Pack 30D persistent Audit Ledger (every escrow state transition and payout release must be append-only audited); Pack 30 controlled real-execution state machine (§ design docs PR #273); B2B Wholesale Financial Fortress Rules (`VIONA_OPERATING_PROTOCOL.md` §14.1)
-- **Forbidden until separately authorized:** real fund custody, real escrow release, real cross-border payout, real milestone-triggered disbursement, any claim of "funds held" or "payout sent"
+- **Forbidden until separately authorized:** real fund custody, real escrow release, real cross-border payout, real milestone-triggered disbursement, any claim of "funds held" or "payout sent"; any blockchain/crypto/Web3/on-chain implementation of any kind
 - **No design, code, schema, or file allowlist exists yet.**
 
 ### 16.2 SOS / Travel — Edge AI & Offline Survival Resilience
@@ -4150,13 +4209,14 @@ Trợ lý sinh học (biometric digital-twin assistant), tự động kích ho�
 
 ### 16.11 Local (Commerce) — Hyper-Local Group Pooling (Phase 3 — Ultimate)
 
-Gom đơn cộng đồng vi mô (hyper-local community order pooling) qua cơ chế smart-contract-style để tối ưu giá sỉ và vận chuyển (wholesale pricing + shipping optimization).
+Gom đơn cộng đồng vi mô (hyper-local community order pooling) qua rule-engine điều kiện ở tầng ứng dụng (application-layer conditional pooling logic — **không** blockchain/smart-contract/Web3) để tối ưu giá sỉ và vận chuyển (wholesale pricing + shipping optimization).
 
 - **Universe:** Local (Commerce)
 - **Status:** `VISIONARY / FUTURE_ROADMAP` — Pilot/Coming Soon only
+- **Payment rail (Pack30D-6 pivot, see §17.5):** **Dual-Engine** — BaaS handles any real fiat charge/capture for the pooled order; **VIO Credits** covers participant-side micro-transactions (deposits, price-lock holds). No on-chain/crypto component of any kind.
 - **Depends on:** Pack 30D persistent Audit Ledger (every pooled-order commitment, price lock, and payout split must be append-only audited); B2B Wholesale Financial Fortress + Zero-Loss Rules (`VIONA_OPERATING_PROTOCOL.md` §14.1, §15.1) by analogy, since pooling is itself a multi-party financial commitment; Payments & Ledger Integrity Owner review
-- **Forbidden until separately authorized:** any claim of a guaranteed pooled price before the pool closes, any automatic charge/capture before all participants confirm, any silent participant substitution, any fake "X people already joined" pressure tactic without real data
-- **No design, code, contract logic, or file allowlist exists yet.**
+- **Forbidden until separately authorized:** any claim of a guaranteed pooled price before the pool closes, any automatic charge/capture before all participants confirm, any silent participant substitution, any fake "X people already joined" pressure tactic without real data; any blockchain/crypto/Web3/on-chain implementation of any kind
+- **No design, code, pooling-rule logic, or file allowlist exists yet.**
 
 ### 16.12 Travel — Autonomous Micro-Logistics (Phase 3 — Ultimate)
 
@@ -4286,15 +4346,18 @@ Giao thương vi mô xuyên biên giới (cross-border micro-trade): AI tự đ�
 - **Forbidden until separately authorized:** any autonomous cross-border purchase, customs filing, or fund transfer without explicit per-transaction merchant confirmation, any claim of certified customs/tax compliance advice, any guarantee of an arbitrage margin before real supplier/logistics pricing is confirmed, any bypass of destination-country import regulations
 - **No design, code, model, or file allowlist exists yet.**
 
-### 16.26 Decentralized Global Trust Score (Level 4 — Invisible Identity & Economy Ecosystem)
+### 16.26 Global Trust Score (Level 4 — Invisible Identity & Economy Ecosystem)
 
-Danh tính tín nhiệm phi tập trung (decentralized trust identity): xây dựng "Hộ chiếu tín nhiệm" (Trust Passport) mã hóa (encrypted) từ lịch sử giao dịch/cứu hộ (transaction/rescue history), dùng làm tài sản thế chấp kỹ thuật số xuyên biên giới (cross-border digital collateral).
+**Naming/architecture correction (Pack30D-6 pivot, see §17.5):** this pillar was previously recorded as "Decentralized Global Trust Score" with "encrypted"/decentralized-identity framing that reads as blockchain/Web3-adjacent. Per the explicit Pack30D-6 Web3/Crypto removal directive, this pillar is **not**, and will **never be**, blockchain-based, on-chain, or a decentralized-identity/DID/verifiable-credential construct of any kind. It is a conventional, centrally-computed, VIONA-controlled score — portable in the sense that a user can *export/disclose* it to a third party with consent, not in the sense of a self-sovereign/on-chain identity object.
+
+Tín nhiệm tổng hợp toàn hệ sinh thái (cross-ecosystem trust score): xây dựng "Hộ chiếu tín nhiệm" (Trust Passport) — một hồ sơ tín nhiệm được VIONA tính toán và lưu trữ tập trung (centrally computed and stored, standard database encryption at rest, **không** phi tập trung/blockchain) từ lịch sử giao dịch/cứu hộ (transaction/rescue history), dùng làm tài sản thế chấp kỹ thuật số xuyên biên giới (cross-border digital collateral) khi được chia sẻ có sự đồng ý (with consent) tới một đối tác tài chính được cấp phép.
 
 - **Cross-universe scope:** Local (Commerce) + Business (B2B) + SOS (Global Lifeline, rescue history) + Travel — this is the most cross-cutting pillar in the entire roadmap, since it aggregates behavioral signal from every universe into a single portable score
 - **Status:** `VISIONARY / FUTURE_ROADMAP` — Ý tưởng tối cao / Level 4, no pilot scheduled (highest data-governance sensitivity of the entire §16 roadmap alongside §16.22, since it aggregates cross-universe personal history into a single portable, collateral-grade identity artifact)
+- **Payment/collateral rail (Pack30D-6 pivot, see §17.5):** if this score is ever used as real collateral, the collateral mechanics run through the **BaaS** engine (licensed financial partner), never a smart contract/crypto-collateral mechanism; **VIO Credits** is unaffected by this pillar. **Web3/crypto/blockchain/decentralized-identity architecture is explicitly excluded.**
 - **Depends on:** Pack 30D persistent Audit Ledger (every score computation input, update, and disclosure must be append-only audited — a trust score used as collateral must be fully explainable/appealable); §16.5 Cross-Universe Semantic Memory Vault (shares the same cross-universe data-linkage substrate and its consent gate); Compliance & Privacy Owner review (a portable credit/trust-like score used as collateral is a regulated-adjacent financial identity construct in most jurisdictions); the §16.23 Human-in-the-Loop Consent Principle (users must explicitly opt in to score aggregation and explicitly consent each time it is disclosed to a third party as collateral)
-- **Forbidden until separately authorized:** any claim that this score is a regulated credit score/credit bureau product, any use of the score as real collateral without a licensed financial partner and explicit user consent, any aggregation of a user's cross-universe history into the score without opt-in, any sale/sharing of the underlying history data itself (only the derived score, if ever authorized, could be shared, and only with consent), any score computed from SOS rescue history in a way that could be read as penalizing someone for having needed rescue
-- **No design, code, model, cryptographic scheme, or file allowlist exists yet.**
+- **Forbidden until separately authorized:** any claim that this score is a regulated credit score/credit bureau product, any use of the score as real collateral without a licensed financial partner and explicit user consent, any aggregation of a user's cross-universe history into the score without opt-in, any sale/sharing of the underlying history data itself (only the derived score, if ever authorized, could be shared, and only with consent), any score computed from SOS rescue history in a way that could be read as penalizing someone for having needed rescue; any blockchain, Web3, cryptocurrency, smart-contract, or decentralized-identity/DID implementation of any kind
+- **No design, code, model, or file allowlist exists yet.**
 
 ### 16.27 Cognitive Empathy Interpreter (Level 4 — Invisible Identity & Economy Ecosystem)
 
@@ -4316,6 +4379,7 @@ Phiên dịch nhận thức cảm xúc (cognitive-empathy interpretation): kết
 | Any operator phrase requested for any pillar | **NO** |
 | Human-in-the-Loop Consent Principle implemented (Execution Plan + confirm gate built for any §16 pillar) | **NO** — recorded as a governing doctrine only; the only real execution-plan-preview in the codebase is the unrelated Pack 29/Pack 30B mock-only route |
 | SOS pre-consent emergency carve-out implemented | **NO** |
+| Web3 / Crypto / Blockchain / Smart Contracts anywhere in this §16 roadmap | **EXPLICITLY EXCLUDED** (Pack30D-6 pivot) — replaced by the Dual-Engine (BaaS + VIO Credits) architecture at §17.5; §16.1/§16.11/§16.26 corrected in place |
 | Real execution | **BLOCKED** (unchanged) |
 | Production | **NOT AUTHORIZED** (unchanged) |
 | Current critical-path focus after this update | **Pack 30D-1 (Audit Ledger Writer) implementation** — unchanged, still the sole near-term priority, now READY to be opened |
@@ -4552,4 +4616,34 @@ Phiên dịch nhận thức cảm xúc (cognitive-empathy interpretation): kết
 | Production | **NOT AUTHORIZED** (unchanged) |
 | Near-term code focus | **UNCHANGED — Pack 30D-1 (Audit Ledger Writer)**, already implemented in PR #296 |
 
-Per explicit operator instruction, this §17 unification **supersedes and replaces** all prior fragmented §17.1–§17.7 content from PR #297/#298 in full — the Master Economy doctrine is now **strategically and financially complete, docs-debt cleaned**; no further theoretical monetization content is to be added. Any future real implementation of §17.1–§17.3 requires its own separate design → phrase-intake → implementation-plan → staged-authorization ladder (Pack29/Pack30 precedent), plus `VIONA_OPERATING_PROTOCOL.md` §2/§3 payment-governance review. Real execution remains **BLOCKED**; production remains **NOT AUTHORIZED**; Pack 30D-1 (Audit Ledger Writer) remains the immediate next code-implementation priority, unaffected by this docs-only record.
+Per explicit operator instruction, this §17 unification **supersedes and replaces** all prior fragmented §17.1–§17.7 content from PR #297/#298 in full — the Master Economy doctrine is now **strategically and financially complete, docs-debt cleaned**; no further theoretical monetization content is to be added, **except** the §17.5 payment-rail architecture pivot below, added under a distinct, explicit Pack30D-6 operator directive (a payment-*rail technology* clarification, not new pricing/monetization theory — §17.1–§17.3 are otherwise unchanged). Any future real implementation of §17.1–§17.3 requires its own separate design → phrase-intake → implementation-plan → staged-authorization ladder (Pack29/Pack30 precedent), plus `VIONA_OPERATING_PROTOCOL.md` §2/§3 payment-governance review. Real execution remains **BLOCKED**; production remains **NOT AUTHORIZED**; Pack 30D-1 (Audit Ledger Writer) remains the immediate next code-implementation priority, unaffected by this docs-only record.
+
+### 17.5 Payment Rail Architecture — Dual-Engine (BaaS + VIO Credits), Web3/Crypto/Smart Contracts Explicitly Removed (Pack30D-6 pivot)
+
+**Operator phrase (this pivot):** `APPROVE_PACK30D_6_KERNEL_SYNC_AND_FINANCIAL_PIVOT`. **Document type:** docs-only strategic architecture record — same non-authorization boundary as the rest of §17 (no payment/checkout/escrow code is written as a result of this subsection).
+
+**Why:** to comply with Apple App Store policy (which restricts/forbids cryptocurrency, blockchain-token, and certain smart-contract-based payment mechanisms for in-app digital goods/services), VIONA's entire visionary and monetization architecture **formally, permanently excludes** blockchain, Web3, cryptocurrency, on-chain tokens, and smart contracts as a payment/settlement/collateral mechanism — for every universe, every tier, and every visionary pillar, not merely the ones already flagged (§16.1, §16.11, §16.26).
+
+**Verified survey (this pivot):** a repo-wide search found **zero** production blockchain/crypto/Web3 code — no `web3`/`ethers`/`hardhat`/similar dependency in `package.json`, no smart-contract source, no on-chain wallet-address field on any Prisma model. The only artifact found was a single, already-inert `enableWeb3Vault` feature-flag-style symbol with no live call site — flagged here as a **known, pre-existing, dead-code item** for a future, separately authorized, code-level cleanup pack (not touched by this docs-only pivot, which modifies no `.ts`/`.tsx` file).
+
+**Replacement: the Dual-Engine architecture (both engines are the ONLY authorized payment technologies for any future VIONA financial feature):**
+
+| Engine | Role | Used for | Status |
+| --- | --- | --- | --- |
+| **BaaS** (Banking-as-a-Service — e.g. Stripe/Mangopay-style provider) | Real, regulated fiat custody and movement | Large-value transactions: cross-border escrow (§16.1), Smart Escrow tier fees (§17.2 Enterprise), FinTech/FX float (§17.3), any future real refund/payout/settlement | `VISIONARY / STRATEGY_ONLY` — **no BaaS integration code exists**; provider not selected/contracted |
+| **VIO Credits** | Closed-loop, in-app-purchase-based ledger (Apple/Google IAP-compliant) | Micro-transactions: Fair-Use Quota PAYG overflow (§17.1), per-request execution cost holds (Pack31 escrow, already implemented, mock-only), any pillar's small-value participant deposit/hold | **Partially implemented** — Pack31's `VionaRequestEscrowHold`/wallet adapter (PR #305) already models VIO Credits hold/settle/refund; this is the *existing*, unaffected implementation this pivot formally endorses as the permanent micro-transaction rail |
+
+- **Explicit exclusion (applies retroactively to every prior §16/§17 mention):** no blockchain ledger, no on-chain token, no smart contract, no wallet-address-as-identity, no cryptocurrency of any kind, anywhere in VIONA's architecture, present or future, unless a future, separately authorized pack explicitly revisits this boundary (not anticipated).
+- **Relationship to Pack30D-5 (§ narrative section above):** unrelated engines — the Pack30D-5 Circuit Breaker governs *API spend* (Twilio/OpenAI call budget), not payment rails; both are independent safety layers that may one day compose (e.g. a future real-execution pack could require both an under-cap Circuit Breaker state **and** a successful BaaS/VIO Credits hold before calling a real provider), but neither depends on or was modified by the other in this pivot.
+- **No code, schema, provider contract, or file allowlist exists yet for BaaS integration.** VIO Credits' existing Pack31 implementation is unaffected — no code touched by this pivot.
+
+| Item (this pivot) | Status |
+| --- | --- |
+| Web3 / Crypto / Blockchain / Smart Contracts anywhere in VIONA's architecture | **PERMANENTLY EXCLUDED** |
+| BaaS provider selected/contracted | **NO** |
+| BaaS integration code | **NOT WRITTEN** |
+| VIO Credits (Pack31) implementation | **UNCHANGED, UNAFFECTED** — already merged (PR #305), mock-only, real execution still BLOCKED |
+| `enableWeb3Vault` dead-code flag | **FLAGGED** for a future, separately authorized cleanup pack — **not removed by this docs-only pivot** |
+| Real execution | **BLOCKED** (unchanged) |
+| Production | **NOT AUTHORIZED** (unchanged) |
+| Near-term code focus | **UNCHANGED** — Pack 30D-5 Circuit Breaker is implemented (PR #319/#320); Pack 30D-1 Audit Ledger Writer remains implemented (PR #296); no new code opened by this pivot |
