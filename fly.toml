@@ -7,6 +7,9 @@ primary_region = 'fra'
 
 [env]
   NODE_ENV = 'production'
+  # Pack30D-7 — identifies this Fly app as staging so real-provider gates can allow Twilio Test
+  # Credentials execution when PACK30_REAL_PROVIDER_EXECUTION_ENABLED=true (Fly secret only).
+  VIONA_DEPLOYMENT_STAGE = 'staging'
   MARKETING_AUTO_POSTER_ENABLED = '0'
   TRUST_PROXY_HOPS = '1'
   JWT_EXPIRES_IN = '7d'
