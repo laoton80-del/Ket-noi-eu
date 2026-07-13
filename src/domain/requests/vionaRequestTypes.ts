@@ -28,6 +28,7 @@ export const vionaRequestStatuses = [
   'needsHumanConfirmation',
   'sentToPartner',
   'partnerResponded',
+  'inProgress',
   'completed',
   'cancelled',
   'failed',

@@ -18,6 +18,8 @@ export function getRequestStatusSafetyLabel(status: VionaRequestStatus): string 
       return 'Sent to partner — preview only';
     case 'partnerResponded':
       return 'Partner response received — not booking confirmed';
+    case 'inProgress':
+      return 'Execution in progress — real-provider call attempted, outcome pending';
     case 'completed':
       return 'Workflow completed — not settled';
     case 'cancelled':

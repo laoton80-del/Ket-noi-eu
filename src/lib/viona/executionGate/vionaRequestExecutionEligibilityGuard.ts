@@ -12,6 +12,10 @@ export const VIONA_PACK29_POST_TRIAGE_ELIGIBLE_STATUSES = [
   'needsHumanConfirmation',
   'sentToPartner',
   'partnerResponded',
+  // Pack31 orchestrator (vionaRequestExecutionOrchestrator.ts) — a request already atomically
+  // claimed for real-provider execution remains eligible for the same execution-plan check the
+  // orchestrator itself re-runs after the claim; additive only, no existing status affected.
+  'inProgress',
   'completed',
 ] as const satisfies readonly VionaRequestStatus[];
 
