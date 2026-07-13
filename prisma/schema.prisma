@@ -934,6 +934,13 @@ model VionaRequestAuditEvent {
   message        String?
   payloadJson    Json?
   createdAt      DateTime @default(now())
+  /// Pack33 — resolved VionaPiiScrubRegion at write time (see vionaPiiScrubber.ts), frozen so a
+  /// later change to the parent VionaRequest.countryCode never silently changes a past row's
+  /// retention policy. Nullable/additive — existing rows read null until backfilled.
+  retentionRegion String?
+  /// Pack33 — set once by the (not-yet-scheduled) retention batch job when this row's PII content
+  /// has been anonymized in place; null = not yet anonymized. Never cleared once set.
+  anonymizedAt    DateTime?
 
   request VionaRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
 
