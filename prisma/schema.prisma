@@ -840,6 +840,42 @@ model MarketingTranslation {
 // NOT wired to runtime. NOT migration. NOT payment/booking/SOS/wallet truth.
 // See docs/product/VIONA_REQUEST_PACK13C_PRISMA_SCHEMA_IMPLEMENTATION_SCHEMA_ONLY.md
 
+/// Pack34 — B2B Merchant Gateway & AI White-Labeling: per-merchant tenant-isolation anchor.
+/// See docs/product/VIONA_PACK34_B2B_MERCHANT_GATEWAY_PLAN.md §3. `tenantId` is `@unique` — a
+/// strict 1:1 mapping onto the pre-existing, free-text `VionaRequest.tenantId` column, closing the
+/// gap where that column had zero enforcement (no FK, no isolation check at the query layer).
+/// Deliberately independent of the existing `Business`/`BizType` model (§3.4 of the plan) — that
+/// model answers "where can a customer discover/book this merchant"; this one answers "which AI
+/// context/tools/wallet may this merchant's AI Receptionist use." No relation between them is
+/// added by this pack.
+model MerchantProfile {
+  id            String   @id @default(uuid())
+  /// The B2B `User` (`Role.B2B` / `B2B_EU` / `B2B_VN`) that owns/administers this profile. Reuses
+  /// that user's existing, single `Wallet` row for any future escrow hold — never a second wallet.
+  ownerUserId   String   @unique
+  /// Must equal the exact `VionaRequest.tenantId` string this merchant's requests carry.
+  tenantId      String   @unique
+  displayName   String
+  countryCode   String?
+  defaultLocale String?
+  /// `VionaMerchantAiPersona` shape (src/lib/viona/merchant/vionaMerchantAiPersonaTypes.ts).
+  /// Nullable by design — `resolveMerchantAiPersona()` treats a missing/malformed value as the
+  /// documented, safe default persona; it never throws and never leaves "no persona" undefined.
+  aiPersona     Json?
+  /// Allowlist of `VIONA_TOOL_REGISTRY` `name`s this merchant may invoke. Empty array (the
+  /// default) = no tools — fail-closed.
+  toolScope     String[] @default([])
+  /// Fail-closed default: provisioning a row grants no AI capability until explicitly activated.
+  /// The activation workflow itself (who may flip this, under what approval) is explicitly NOT
+  /// designed by Pack34 — see the plan's §9 non-goals — so no public setter for this field ships
+  /// in this increment; it is only ever `false` at creation.
+  isActive      Boolean  @default(false)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([tenantId])
+}
+
 enum VionaRequestSourceLinkStatus {
   PENDING
   ACTIVE
