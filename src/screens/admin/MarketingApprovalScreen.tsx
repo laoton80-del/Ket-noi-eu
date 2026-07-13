@@ -16,6 +16,7 @@ import {
   useWindowDimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { AdminMarketingDraftGenerator } from '../../components/admin/AdminMarketingDraftGenerator';
 import type { RootStackParamList } from '../../navigation/routes';
 import {
   deleteAdminMarketingDraft,
@@ -304,6 +305,8 @@ export function MarketingApprovalScreen() {
             <Text style={styles.warn}>Chưa cấu hình EXPO_PUBLIC_REST_API_BASE — không gọi được máy chủ.</Text>
           ) : null}
         </View>
+
+        <AdminMarketingDraftGenerator onDraftGenerated={() => void loadDrafts()} />
 
         {loading ? (
           <View style={styles.loadingBox}>

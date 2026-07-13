@@ -131,3 +131,32 @@ export async function triggerAdminMarketingDraft(): Promise<
     method: 'POST',
   });
 }
+
+export type AdminMarketingGenerateDraftInput = Readonly<{
+  topic: string;
+  tone: string;
+  targetLanguageCode: string;
+}>;
+
+export type AdminMarketingGenerateDraftPayload = Readonly<{
+  marketingPostId: string;
+  content: string;
+  toolName: string;
+  confidence: number;
+}>;
+
+/**
+ * `POST /api/admin/marketing/generate-draft` (Pack32.3, PR #315) — routes a structured
+ * `{topic, tone, targetLanguageCode}` request through the existing, unmodified Intent Router +
+ * `marketing_content_generator` tool. Never posts anywhere — the only possible side effect is one
+ * new `MarketingPost` row with status `DRAFT`, awaiting the existing, separate,
+ * human-operated `publish`/`approve-and-translate`/`delete` actions above.
+ */
+export async function postAdminMarketingGenerateDraft(
+  input: AdminMarketingGenerateDraftInput
+): Promise<ApiRequestResult<AdminMarketingGenerateDraftPayload>> {
+  return restApiFetchJson<AdminMarketingGenerateDraftPayload>('/api/admin/marketing/generate-draft', {
+    method: 'POST',
+    body: input,
+  });
+}
