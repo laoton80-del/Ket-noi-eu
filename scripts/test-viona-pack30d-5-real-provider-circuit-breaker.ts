@@ -51,7 +51,11 @@ import {
   type VionaTwilioHttpTransport,
   type VionaTwilioHttpTransportResult,
 } from '../src/lib/viona/realProviderAdapter/vionaTwilioTestRealProviderAdapter';
-import { isProductionEnvironment } from '../src/lib/viona/realProviderAdapter/vionaRealProviderExecutionFlag';
+import {
+  isRealProviderExecutionEnabled,
+  VIONA_DEPLOYMENT_STAGE_ENV,
+  VIONA_REAL_PROVIDER_EXECUTION_ENV_FLAG,
+} from '../src/lib/viona/realProviderAdapter/vionaRealProviderExecutionFlag';
 import type { appendVionaExecutionAuditEvent } from '../src/services/viona/vionaExecutionAuditWriteService';
 
 function assert(condition: boolean, message: string): void {
@@ -264,17 +268,22 @@ function testMissingOrInvalidCapFailsClosedToZero(): void {
   assert(decision.reason === 'daily_cap_exceeded', 'a 0 cap decision reason must be daily_cap_exceeded');
 }
 
-/** Test 7 (CRITICAL): production hard-block still forces false independently of the breaker's state. */
+/** Test 7 (CRITICAL): production deployment-stage hard-block still forces false independently of the breaker's state. */
 async function testProductionHardBlockIndependentOfBreakerState(): Promise<void> {
-  assert(isProductionEnvironment({ NODE_ENV: 'production' }) === true, 'production env must be detected');
+  const productionStageEnv = {
+    [VIONA_DEPLOYMENT_STAGE_ENV]: 'production',
+    [VIONA_REAL_PROVIDER_EXECUTION_ENV_FLAG]: 'true',
+    NODE_ENV: 'production',
+  };
+  assert(isRealProviderExecutionEnabled(productionStageEnv) === false, 'production deployment stage must hard-block even when flag is true');
 
   const { transport, callCount } = createSpyTransport(async () => {
-    throw new Error('transport must never be called under the production hard-block, even if the breaker reports closed');
+    throw new Error('transport must never be called under the production deployment-stage hard-block, even if the breaker reports closed');
   });
   const { writer, rows } = createFakeAuditWriter();
 
   const result = await executeVionaTwilioTestPocReal(BASE_INPUT, {
-    isEnabled: () => false, // production hard-block always resolves isRealProviderExecutionEnabled() to false
+    isEnabled: () => isRealProviderExecutionEnabled(productionStageEnv),
     transport,
     auditWriter: writer,
     sleepMs: fakeSleep(),
@@ -283,12 +292,12 @@ async function testProductionHardBlockIndependentOfBreakerState(): Promise<void>
     circuitBreakerCheck: async () => ({ state: 'closed' }),
   });
 
-  assert(result.outcome.outcome === 'blockedOperator', 'production hard-block must still yield blockedOperator even with a closed breaker');
+  assert(result.outcome.outcome === 'blockedOperator', 'production deployment-stage hard-block must still yield blockedOperator even with a closed breaker');
   assert(
     result.outcome.outcome === 'blockedOperator' && result.outcome.reason === 'flag_disabled',
-    'the flag gate, not the breaker, must be the reported reason under the production hard-block',
+    'the flag gate, not the breaker, must be the reported reason under the production deployment-stage hard-block',
   );
-  assert(callCount() === 0, 'transport must not be called under the production hard-block');
+  assert(callCount() === 0, 'transport must not be called under the production deployment-stage hard-block');
   assert(rows.length === 1, 'exactly one audit row expected for the hard-blocked attempt');
 }
 

@@ -50,7 +50,8 @@ import {
 } from '../src/lib/viona/realProviderAdapter/vionaTwilioTestRealProviderAdapter';
 import {
   isRealProviderExecutionEnabled,
-  isProductionEnvironment,
+  isVionaProductionDeploymentStage,
+  VIONA_DEPLOYMENT_STAGE_ENV,
   VIONA_REAL_PROVIDER_EXECUTION_ENV_FLAG,
 } from '../src/lib/viona/realProviderAdapter/vionaRealProviderExecutionFlag';
 import type { appendVionaExecutionAuditEvent } from '../src/services/viona/vionaExecutionAuditWriteService';
@@ -155,28 +156,33 @@ async function testFlagDisabledBlocksWithZeroTransportCalls(): Promise<void> {
   assert(rows.length === 1 && rows[0]!.eventType === 'executionBlockedOperator', 'exactly one executionBlockedOperator row expected');
 }
 
-/** Test 2: flag "true" AND production -> still blockedOperator (hard block cannot be overridden). */
+/** Test 2: flag "true" AND production deployment stage -> still blockedOperator (hard block cannot be overridden). */
 async function testProductionHardBlockCannotBeOverridden(): Promise<void> {
-  assert(isProductionEnvironment({ NODE_ENV: 'production' }) === true, 'production env must be detected');
+  const productionStageEnv = {
+    [VIONA_DEPLOYMENT_STAGE_ENV]: 'production',
+    [VIONA_REAL_PROVIDER_EXECUTION_ENV_FLAG]: 'true',
+    NODE_ENV: 'production',
+  };
+  assert(isVionaProductionDeploymentStage(productionStageEnv) === true, 'production deployment stage must be detected');
   assert(
-    isRealProviderExecutionEnabled({ NODE_ENV: 'production', [VIONA_REAL_PROVIDER_EXECUTION_ENV_FLAG]: 'true' }) === false,
-    'flag must resolve to false in production even when the raw env value is "true"',
+    isRealProviderExecutionEnabled(productionStageEnv) === false,
+    'flag must resolve to false when VIONA_DEPLOYMENT_STAGE=production even when the raw flag value is "true"',
   );
 
   const { transport, callCount } = createSpyTransport(async () => {
-    throw new Error('transport must never be called under the production hard-block');
+    throw new Error('transport must never be called under the production deployment-stage hard-block');
   });
   const { writer, rows } = createFakeAuditWriter();
 
   const result = await executeVionaTwilioTestPocReal(BASE_INPUT, {
-    isEnabled: () => isRealProviderExecutionEnabled({ NODE_ENV: 'production', [VIONA_REAL_PROVIDER_EXECUTION_ENV_FLAG]: 'true' }),
+    isEnabled: () => isRealProviderExecutionEnabled(productionStageEnv),
     transport,
     auditWriter: writer,
     sleepMs: fakeSleep(),
   });
 
-  assert(result.outcome.outcome === 'blockedOperator', 'production hard-block must still yield blockedOperator');
-  assert(callCount() === 0, 'transport must not be called under the production hard-block');
+  assert(result.outcome.outcome === 'blockedOperator', 'production deployment-stage hard-block must still yield blockedOperator');
+  assert(callCount() === 0, 'transport must not be called under the production deployment-stage hard-block');
   assert(rows.length === 1, 'exactly one audit row expected for the hard-blocked attempt');
 }
 

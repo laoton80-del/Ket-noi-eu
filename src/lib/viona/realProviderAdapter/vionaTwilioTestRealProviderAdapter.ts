@@ -16,6 +16,11 @@
  * existing, unmodified Pack30D-1 writer (`appendVionaExecutionAuditEvent`) on every exit path —
  * flag-blocked, policy-blocked, attempted, succeeded, and failed — before returning.
  *
+ * Pack30D-7 — staging deployment-stage fix: real execution is allowed only when
+ * `VIONA_DEPLOYMENT_STAGE=staging` and `PACK30_REAL_PROVIDER_EXECUTION_ENABLED=true`; production
+ * deployment stage always hard-blocks regardless of `NODE_ENV` (Fly staging runs
+ * `NODE_ENV=production` by design).
+ *
  * This module never touches `VionaRequest.status`, never writes outside the existing
  * `VionaRequestAuditEvent` table, and never imports Prisma directly (payload typing is imported
  * from the existing writer, mirroring the Pack30D-1 pattern used by
