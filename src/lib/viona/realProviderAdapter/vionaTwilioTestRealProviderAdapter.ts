@@ -20,12 +20,25 @@
  * `VionaRequestAuditEvent` table, and never imports Prisma directly (payload typing is imported
  * from the existing writer, mirroring the Pack30D-1 pattern used by
  * `vionaExecutionPlanRouteService.ts`).
+ *
+ * Pack30D-5 — Real-Provider spend Circuit Breaker (see
+ * docs/internal-ops/VIONA_PACK30D_5_REAL_PROVIDER_PLAN.md §3, §5). Checked immediately after the
+ * feature-flag gate above and before validation/credentials/transport — a second, independent,
+ * fail-closed layer on top of (never a replacement for) the flag + production hard-block. This
+ * check is purely additive: every existing exit path, audit-payload shape, and return type is
+ * unchanged; only a new `blockedOperator` reason
+ * (`circuit_breaker_open_daily_cap_exceeded`) and one new early-return branch are added.
  */
 
 import {
   appendVionaExecutionAuditEvent,
   type VionaExecutionAuditPayloadJson,
 } from '../../../services/viona/vionaExecutionAuditWriteService';
+import {
+  evaluateVionaProviderCircuitBreaker,
+  readVionaProviderSpendCapUsdCentsFromEnv,
+} from '../circuitBreaker/vionaProviderSpendCircuitBreaker';
+import { queryVionaTwilioSpendWindow } from '../../../services/viona/vionaProviderSpendWindowQueryService';
 import { isRealProviderExecutionEnabled } from './vionaRealProviderExecutionFlag';
 
 export const VIONA_TWILIO_TEST_POC_SAFETY = {
@@ -166,6 +179,10 @@ export function readVionaTwilioTestCredentialsFromEnv(
 
 export type VionaTwilioRealExecutionOutcome =
   | Readonly<{ outcome: 'blockedOperator'; reason: 'flag_disabled' | 'missing_test_credentials' }>
+  // Pack30D-5 — additive variant sharing the same `outcome: 'blockedOperator'` discriminant as the
+  // line above (never edited); TypeScript merges both variants' `reason` literals on narrowing, so
+  // `outcome.outcome === 'blockedOperator'` still exposes all three reasons via `outcome.reason`.
+  | Readonly<{ outcome: 'blockedOperator'; reason: 'circuit_breaker_open_daily_cap_exceeded' }>
   | Readonly<{ outcome: 'blockedPolicy'; reason: 'invalid_from_number' | 'invalid_to_number' | 'empty_body' }>
   | Readonly<{
       outcome: 'succeeded';
@@ -208,7 +225,22 @@ export type ExecuteVionaTwilioTestPocDeps = Readonly<{
   sleepMs?: (ms: number) => Promise<void>;
   /** Non-persistent, process-local idempotency placeholder — see the store type above. */
   idempotencyStore?: VionaTwilioRealExecutionIdempotencyStore;
+  /**
+   * Pack30D-5 — injectable Circuit Breaker check, encapsulating the read-only spend-window query
+   * (`queryVionaTwilioSpendWindow`) and the pure decision function
+   * (`evaluateVionaProviderCircuitBreaker`). Defaults to the real, DB-backed check; unit tests
+   * override this to force `open`/`closed` deterministically without a database.
+   */
+  circuitBreakerCheck?: () => Promise<{ state: 'closed' | 'open' }>;
 }>;
+
+/** Default, DB-backed Circuit Breaker check — read-only query + pure decision, no writes. */
+async function defaultVionaTwilioCircuitBreakerCheck(): Promise<{ state: 'closed' | 'open' }> {
+  const window = await queryVionaTwilioSpendWindow();
+  const capUsdCents = readVionaProviderSpendCapUsdCentsFromEnv('twilio');
+  const decision = evaluateVionaProviderCircuitBreaker(window, capUsdCents);
+  return { state: decision.state };
+}
 
 const DEFAULT_TIMEOUT_MS = 8_000;
 const RETRY_BACKOFF_MS = 250;
@@ -317,6 +349,17 @@ export async function executeVionaTwilioTestPocReal(
 
   if (!isEnabled()) {
     const outcome: VionaTwilioRealExecutionOutcome = { outcome: 'blockedOperator', reason: 'flag_disabled' };
+    const auditWritten = await writeOutcomeAudit(input, 'executionBlockedOperator', outcome, auditWriter);
+    return { requestId: input.requestId, actionId: input.actionId, outcome, auditWritten };
+  }
+
+  const circuitBreakerCheck = deps.circuitBreakerCheck ?? defaultVionaTwilioCircuitBreakerCheck;
+  const breakerResult = await circuitBreakerCheck();
+  if (breakerResult.state === 'open') {
+    const outcome: VionaTwilioRealExecutionOutcome = {
+      outcome: 'blockedOperator',
+      reason: 'circuit_breaker_open_daily_cap_exceeded',
+    };
     const auditWritten = await writeOutcomeAudit(input, 'executionBlockedOperator', outcome, auditWriter);
     return { requestId: input.requestId, actionId: input.actionId, outcome, auditWritten };
   }

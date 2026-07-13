@@ -190,6 +190,7 @@ async function testHappyPathSucceedsWithMagicNumbers(): Promise<void> {
 
   const result = await executeVionaTwilioTestPocReal(BASE_INPUT, {
     isEnabled: () => true,
+    circuitBreakerCheck: async () => ({ state: 'closed' }),
     credentials: { accountSid: 'ACtest_fake_sid', authToken: 'test_fake_token' },
     transport,
     auditWriter: writer,
@@ -219,6 +220,7 @@ async function testDocumentedFailureMagicNumberFailsBoundedWithoutRetry(): Promi
 
   const result = await executeVionaTwilioTestPocReal(input, {
     isEnabled: () => true,
+    circuitBreakerCheck: async () => ({ state: 'closed' }),
     credentials: { accountSid: 'ACtest_fake_sid', authToken: 'test_fake_token' },
     transport,
     auditWriter: writer,
@@ -245,6 +247,7 @@ async function testSimulatedTimeoutRetriesOnceThenFailsBounded(): Promise<void> 
 
   const result = await executeVionaTwilioTestPocReal(BASE_INPUT, {
     isEnabled: () => true,
+    circuitBreakerCheck: async () => ({ state: 'closed' }),
     credentials: { accountSid: 'ACtest_fake_sid', authToken: 'test_fake_token' },
     transport,
     auditWriter: writer,
@@ -278,6 +281,7 @@ async function testIdempotentReplaySkipsSecondTransportCall(): Promise<void> {
     { ...BASE_INPUT, idempotencyKey: key },
     {
       isEnabled: () => true,
+    circuitBreakerCheck: async () => ({ state: 'closed' }),
       credentials: { accountSid: 'ACtest_fake_sid', authToken: 'test_fake_token' },
       transport,
       auditWriter: writer,
@@ -289,6 +293,7 @@ async function testIdempotentReplaySkipsSecondTransportCall(): Promise<void> {
     { ...BASE_INPUT, idempotencyKey: key },
     {
       isEnabled: () => true,
+    circuitBreakerCheck: async () => ({ state: 'closed' }),
       credentials: { accountSid: 'ACtest_fake_sid', authToken: 'test_fake_token' },
       transport,
       auditWriter: writer,
@@ -331,6 +336,7 @@ async function testAuditWriteFailureNeverAffectsReturnValue(): Promise<void> {
   try {
     result = await executeVionaTwilioTestPocReal(BASE_INPUT, {
       isEnabled: () => true,
+    circuitBreakerCheck: async () => ({ state: 'closed' }),
       credentials: { accountSid: 'ACtest_fake_sid', authToken: 'test_fake_token' },
       transport,
       auditWriter: writer,

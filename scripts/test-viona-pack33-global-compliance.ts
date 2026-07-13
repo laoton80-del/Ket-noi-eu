@@ -296,7 +296,13 @@ async function testFakeTwilioTransportReceivesUnscrubbedRealPhoneNumber(): Promi
       actorUserId: 'user-1',
       actorRoleLabel: 'requester',
     },
-    { isEnabled: () => true, credentials: { accountSid: 'ACfake', authToken: 'tokenfake' }, transport, auditWriter: fakeAuditWriter },
+    {
+      isEnabled: () => true,
+      circuitBreakerCheck: async () => ({ state: 'closed' }),
+      credentials: { accountSid: 'ACfake', authToken: 'tokenfake' },
+      transport,
+      auditWriter: fakeAuditWriter,
+    },
   );
 
   assert(result.outcome.outcome === 'succeeded', 'test 16: the fake transport call must succeed');
