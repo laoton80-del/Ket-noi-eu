@@ -47,3 +47,33 @@ export function isRealProviderExecutionEnabled(
     return false;
   }
 }
+
+/**
+ * Pack30D-5 — symmetric flag for the new, **unwired** OpenAI real-execution adapter (see
+ * docs/internal-ops/VIONA_PACK30D_5_REAL_PROVIDER_PLAN.md §4). Reuses {@link isProductionEnvironment}
+ * unchanged — no duplicated production-detection logic. This flag governs only
+ * `vionaOpenAiRealProviderAdapter.ts`'s `executeReal()`; it has no effect on, and is never read
+ * by, any existing, already-shipped OpenAI call site (`AIRouterService.ts`'s
+ * `createRoutedChatCompletion()` remains ungated by this flag, exactly as before this pack).
+ */
+export const VIONA_OPENAI_REAL_EXECUTION_ENV_FLAG = 'PACK30D_OPENAI_REAL_EXECUTION_ENABLED';
+
+/**
+ * Returns `true` only when the OpenAI real-execution flag is explicitly `"true"` **and** the
+ * environment is not production. Same fail-closed semantics as
+ * {@link isRealProviderExecutionEnabled}, kept as a separate function (rather than a shared
+ * parameterized one) so each provider's flag can be independently named, read, and — in a future
+ * pack — independently deprecated without touching the other.
+ */
+export function isOpenAiRealExecutionEnabled(
+  env: VionaRealProviderExecutionEnvLike = process.env,
+): boolean {
+  try {
+    if (isProductionEnvironment(env)) {
+      return false;
+    }
+    return env[VIONA_OPENAI_REAL_EXECUTION_ENV_FLAG] === 'true';
+  } catch {
+    return false;
+  }
+}

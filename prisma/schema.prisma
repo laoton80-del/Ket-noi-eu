@@ -242,6 +242,12 @@ enum LlmRouterTaskType {
   ROUTING_INQUIRY
   COMPLEX_MARKETING
   DEEP_CONTEXT
+  /// Pack30D-5 — dedicated, isolated task type for the new, unwired
+  /// `vionaOpenAiRealProviderAdapter.ts` (see docs/internal-ops/VIONA_PACK30D_5_REAL_PROVIDER_PLAN.md
+  /// §4). Never used by any existing, already-shipped OpenAI call site (chat/translation/legal-scan/
+  /// marketing-draft) — this isolation lets the Circuit Breaker's spend-window query count only
+  /// this adapter's own usage.
+  VIONA_REAL_EXECUTION_CONTENT
 }
 
 model User {

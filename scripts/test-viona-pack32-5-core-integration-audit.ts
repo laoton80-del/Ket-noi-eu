@@ -324,6 +324,7 @@ function buildFullyWiredDispatch(options: {
             executeRealFn: (execInput) =>
               executeVionaTwilioTestPocReal(execInput, {
                 isEnabled: () => true,
+                circuitBreakerCheck: async () => ({ state: 'closed' }),
                 credentials: { accountSid: 'ACfaketestaccount', authToken: 'fake-test-token' },
                 transport: options.transport,
                 auditWriter: options.auditWriter,
@@ -503,6 +504,7 @@ async function testScenario4SettleThrowNeverLosesRealProviderResult(): Promise<v
           executeRealFn: (execInput) =>
             executeVionaTwilioTestPocReal(execInput, {
               isEnabled: () => true,
+                circuitBreakerCheck: async () => ({ state: 'closed' }),
               credentials: { accountSid: 'ACfaketestaccount', authToken: 'fake-test-token' },
               transport: successTransport(callCount),
               auditWriter: writer,
