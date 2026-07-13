@@ -30,6 +30,12 @@ adminRouter.post('/marketing/posts/:id/approve-and-translate', (req, res, next) 
   void AdminMarketingController.postMarketingApproveAndTranslate(req, res).catch(next);
 });
 
+// Pack32.3 — Marketing Content API Route Wiring (docs/internal-ops/VIONA_PACK32_3_MARKETING_ROUTE_PLAN.md).
+// Behind the router-level authMiddleware + superAdminMiddleware above (Role.ADMIN required).
+adminRouter.post('/marketing/generate-draft', (req, res, next) => {
+  void AdminMarketingController.postAdminMarketingGenerateDraft(req, res).catch(next);
+});
+
 adminRouter.delete('/marketing/posts/:id', (req, res, next) => {
   void AdminMarketingController.deleteMarketingDraft(req, res).catch(next);
 });

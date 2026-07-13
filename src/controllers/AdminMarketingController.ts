@@ -8,6 +8,10 @@ import { generateTranslations } from '../services/marketing/AIPostGenerator';
 import { DEFAULT_MARKETING_POLYGLOT_TARGETS } from '../services/marketing/marketingPolyglotTargets';
 import { publishToFacebookPage } from '../services/marketing/FacebookGraphAPI';
 import { jsonFail, jsonOk } from '../utils/apiEnvelope';
+import {
+  dispatchVionaMarketingContentRequest,
+  type VionaMarketingContentDispatchRejectionReason,
+} from '../services/viona/vionaMarketingContentDispatchService';
 
 export type MarketingTranslationDto = Readonly<{
   id: string;
@@ -325,5 +329,86 @@ export async function postTriggerAutoPost(_req: Request, res: Response): Promise
   } catch (err) {
     console.error('[AdminMarketingController] trigger-auto-post failed:', err);
     jsonFail(res, err instanceof Error ? err.message : 'Draft generation failed', 500);
+  }
+}
+
+/** HTTP status mapping for the 4 rejection-reason buckets — see plan §3.2. */
+const CONTENT_GENERATOR_CLASSIFICATION_REJECTION_REASONS: ReadonlySet<VionaMarketingContentDispatchRejectionReason> =
+  new Set(['unknown_tool', 'tool_input_schema_invalid', 'low_confidence', 'wrong_tool_category']);
+const CONTENT_GENERATOR_UPSTREAM_REJECTION_REASONS: ReadonlySet<VionaMarketingContentDispatchRejectionReason> =
+  new Set(['llm_call_failed', 'response_not_valid_json', 'content_generation_failed']);
+
+function requiredTrimmedStringField(value: unknown, maxLength: number): string | null {
+  if (typeof value !== 'string') return null;
+  const trimmed = value.trim();
+  if (trimmed.length === 0 || trimmed.length > maxLength) return null;
+  return trimmed;
+}
+
+/**
+ * Pack32.3 — Marketing Content API Route Wiring (see
+ * docs/internal-ops/VIONA_PACK32_3_MARKETING_ROUTE_PLAN.md §3/§4). A thin Controller wrapper
+ * ONLY — `dispatchVionaMarketingContentRequest()` itself (Pack32.1, PR #312) is never modified;
+ * this function only (a) validates the structured `{topic, tone, targetLanguageCode}` request
+ * body, (b) builds a deterministic, templated `userMessage` string for the existing, unmodified
+ * Intent Router to classify, and (c) maps the existing, unmodified dispatch result onto the
+ * existing `jsonOk`/`jsonFail` HTTP envelope. `deps.dispatch` is injectable for tests only —
+ * production callers (see `adminRoutes.ts`) never pass it, so production always uses the real,
+ * unmodified `dispatchVionaMarketingContentRequest`.
+ *
+ * `POST /api/admin/marketing/generate-draft` — mounted on `adminRouter`, behind the existing,
+ * unmodified `authMiddleware` + `superAdminMiddleware` (`Role.ADMIN` required) chain applied to
+ * every route in that router. Never posts anywhere — the only possible side effect is exactly the
+ * one Pack32.1 already guarantees: one `MarketingPost` row with status `DRAFT`, awaiting the
+ * existing, separate, human-operated `publish`/`approve-and-translate`/`delete` actions above.
+ */
+export async function postAdminMarketingGenerateDraft(
+  req: Request,
+  res: Response,
+  deps: Readonly<{ dispatch?: typeof dispatchVionaMarketingContentRequest }> = {}
+): Promise<void> {
+  try {
+    const body = req.body as { topic?: unknown; tone?: unknown; targetLanguageCode?: unknown };
+    const topic = requiredTrimmedStringField(body.topic, 500);
+    const tone = requiredTrimmedStringField(body.tone, 100);
+    const targetLanguageCode = requiredTrimmedStringField(body.targetLanguageCode, 10);
+    if (topic === null || tone === null || targetLanguageCode === null) {
+      jsonFail(res, 'topic, tone, and targetLanguageCode are all required', 400);
+      return;
+    }
+
+    const userMessage = `Draft a ${tone} marketing/social post about "${topic}" in the language identified by ISO code "${targetLanguageCode}".`;
+
+    const dispatch = deps.dispatch ?? dispatchVionaMarketingContentRequest;
+    const result = await dispatch({ userMessage });
+
+    if (!result.ok) {
+      if (result.reason === 'invalid_input') {
+        jsonFail(res, 'Invalid marketing content generation request', 400);
+        return;
+      }
+      if (CONTENT_GENERATOR_CLASSIFICATION_REJECTION_REASONS.has(result.reason)) {
+        jsonFail(res, `Marketing content generation request could not be classified (${result.reason})`, 422);
+        return;
+      }
+      if (CONTENT_GENERATOR_UPSTREAM_REJECTION_REASONS.has(result.reason)) {
+        jsonFail(res, `Marketing content generation upstream failure (${result.reason})`, 502);
+        return;
+      }
+      // Defensive, never-expected-to-trigger fallback — a future new rejection reason added to
+      // the dispatcher without a matching branch here fails closed as 422, never a silent 200.
+      jsonFail(res, `Marketing content generation request rejected (${result.reason})`, 422);
+      return;
+    }
+
+    jsonOk(res, {
+      marketingPostId: result.marketingPostId,
+      content: result.content,
+      toolName: result.toolName,
+      confidence: result.confidence,
+    });
+  } catch (err) {
+    console.error('[AdminMarketingController] postAdminMarketingGenerateDraft', err);
+    jsonFail(res, 'Internal server error', 500);
   }
 }
