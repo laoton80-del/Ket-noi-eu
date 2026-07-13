@@ -117,6 +117,84 @@ export async function createMarketingDraftFromOpenAI(): Promise<{
   return { draft: row, stats };
 }
 
+/**
+ * Pack32.1 — Marketing Content Generator Tool Expansion (see
+ * docs/internal-ops/VIONA_PACK32_1_MARKETING_CONTENT_POC_PLAN.md §3.4). A narrow,
+ * topic/tone/language-parameterized sibling of `generateViGlobalFacebookPost()` above — same
+ * `LlmRouterTaskType.COMPLEX_MARKETING` task type (no new Prisma enum), same `MarketingPost`
+ * model, same `DRAFT` status default. Never calls Facebook/any social API; only ever persists a
+ * `DRAFT` row. Never persists a row for a failed/empty generation — the Prisma write only happens
+ * after the generated text is confirmed non-empty.
+ */
+export type GenerateVionaMarketingContentDraftInput = Readonly<{
+  topic: string;
+  tone: string;
+  targetLanguageCode: string;
+}>;
+
+export type GenerateVionaMarketingContentDraftResult = Readonly<{
+  marketingPostId: string;
+  content: string;
+}>;
+
+function buildVionaMarketingContentDraftSystemPrompt(targetLanguageCode: string): string {
+  return [
+    'You are a marketing copywriter for VIONA, a European inbound-tourism/local-services super-app.',
+    `Write a short, engaging social/marketing post in the language identified by ISO code "${targetLanguageCode}".`,
+    'Match the requested tone exactly. Keep it concise (2-4 sentences), no more than one hashtag block at the end.',
+    'This is an internal DRAFT for human review only — never claim it has been published anywhere.',
+  ].join(' ');
+}
+
+/**
+ * Generates one topic/tone/language-parameterized marketing draft and persists it as a `DRAFT`
+ * `MarketingPost` row. Throws (never persists a row) if `topic`/`tone`/`targetLanguageCode` is
+ * empty, or if the underlying LLM call fails or returns an empty message — callers (see
+ * `vionaMarketingContentDispatchService.ts`) are expected to catch and map this to a typed
+ * `content_generation_failed` result rather than let it propagate as an unhandled rejection.
+ */
+export async function generateVionaMarketingContentDraft(
+  input: GenerateVionaMarketingContentDraftInput
+): Promise<GenerateVionaMarketingContentDraftResult> {
+  const topic = input.topic.trim();
+  const tone = input.tone.trim();
+  const targetLanguageCode = input.targetLanguageCode.trim();
+  if (topic.length === 0 || tone.length === 0 || targetLanguageCode.length === 0) {
+    throw new Error(
+      'generateVionaMarketingContentDraft: topic, tone, and targetLanguageCode are all required'
+    );
+  }
+
+  const systemPrompt = buildVionaMarketingContentDraftSystemPrompt(targetLanguageCode);
+  const userPayload = [`Topic: ${topic}`, `Tone: ${tone}`, `Target language (ISO code): ${targetLanguageCode}`].join(
+    '\n'
+  );
+
+  const completion = await createRoutedChatCompletion({
+    taskType: LlmRouterTaskType.COMPLEX_MARKETING,
+    params: {
+      temperature: 0.7,
+      max_tokens: 500,
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: userPayload },
+      ],
+    },
+  });
+
+  const text = completion.choices[0]?.message?.content?.trim();
+  if (!text || text.length === 0) {
+    throw new Error('generateVionaMarketingContentDraft: OpenAI returned an empty message');
+  }
+
+  const row = await getPrisma().marketingPost.create({
+    data: { content: text, status: MarketingPostStatus.DRAFT },
+    select: { id: true, content: true },
+  });
+
+  return { marketingPostId: row.id, content: row.content };
+}
+
 const TRANSLATION_JSON_INSTRUCTION = [
   'You are a senior social media localization lead for VIONA (inbound tourism super-app).',
   'Translate and culturally adapt the base Facebook post for each target market.',
