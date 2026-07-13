@@ -2,7 +2,7 @@
 
 **Document type:** Canonical kernel and session handoff for VIONA engineering, product, and AI agents.
 **Audience:** New ChatGPT / Cursor windows, staff, contractors, and automation executors.
-**Baseline:** `origin/master @ d7e7f84` — `docs(requests): sync Kernel Handoff for Pack30D design + audit-ledger-writer phrase intake (#289, #290) (#291)`
+**Baseline:** `origin/master @ c0c3214` — `feat(viona): implement Pack32.1 marketing content generator tool expansion (#312)` — see §5 "Pack32.2 Kernel/Handoff sync" narrative section below for the full PR #292–#312 catch-up (Pack30D-2/3/4, Pack31, Pack32, Pack32.5, Pack33, Pack32.1; real execution/production/auto-posting remain BLOCKED/NOT AUTHORIZED)
 **Supersedes for Request Engine sequencing:** prior scattered pack pointers when this doc conflicts on pack order or blocked state — align to this handoff.
 **Subordinate to:** `docs/ai-context/VIONA_OPERATING_PROTOCOL.md` and founder-signed **Master Blueprint** (`VIONA_FINAL_MASTER_BLUEPRINT_V2.md`). If conflict, stop and report drift risk.
 
@@ -334,6 +334,21 @@ All new work branches from `c843111` unless a later pack explicitly updates this
 | Pack30D-1 audit-ledger-writer approval phrase | `APPROVE_PACK30D_AUDIT_LEDGER_WRITER_DESIGN_TO_IMPLEMENTATION` — required **YES**; provided **YES** (operator chat approval); recorded **YES** on master via PR #290; canonical Kernel/Handoff sync of this phrase **MERGED** via PR #291; requested in PR #289 §7.1, **not invented by Cursor**; Pack30D-1 implementation **NOT opened** (readiness confirmed; opening remains a separate, future action) |
 | Pack30D-2 real-provider approval phrase | `APPROVE_PACK30D_REAL_PROVIDER_EXECUTION_STAGING_QA` — named in PR #289 §7.2; required **YES**; provided **NO**; recorded **NO** — real-provider stage remains a fully separate, unopened gate |
 | Pack29 implementation approval phrase | `APPROVE_PACK29_REQUEST_ENGINE_EXECUTION_DESIGN_TO_IMPLEMENTATION` — required **YES**; provided **YES** |
+| Pack30D-1 canonical readiness re-confirmation | **CLOSED / GREEN** — PR #292 @ `a19dfeb` — re-confirmed Pack30D-1 implementation readiness and that the Protocol's SOS/B2B sections were already complete (no Protocol edit made); docs-only |
+| Pack30D-1 implementation (Audit Ledger Writer) | **CLOSED / GREEN** — PR #296 @ `1b80cba` — `appendVionaExecutionAuditEvent()` append-only writer to the existing `VionaRequestAuditEvent` table; new event types added (additive); no schema migration; mock-only |
+| Pack30D-2 state-machine audit hooks | **CLOSED / GREEN** — PR #300 @ `441047c` — `vionaRequestStatusActionService.ts` now calls the Pack30D-1 audit writer on every status transition (`stateTransition` event, `from_state`/`to_state` payload); mock-only |
+| Pack30D-3 frontend audit trail timeline UI | **CLOSED / GREEN** — PR #301 @ `c161ee0` — read-only Audit Trail Timeline component on the VionaRequest detail screen; reuses the existing detail API (no new tRPC endpoint needed); mock-only data only |
+| Pack30D-2 (planning) real-provider execution plan | **CLOSED / GREEN** — PR #302 @ `717bfab` — docs-only plan for a Twilio Test-Credentials POC; `PACK30_REAL_PROVIDER_EXECUTION_ENABLED` feature-flag design (default `false`, hard-blocked on Production); no code |
+| Pack30D-4 Twilio Test-Credentials real-provider POC | **CLOSED / GREEN** — PR #303 @ `1dd35c0` — `executeReal()` implemented against Twilio's Test API only (native `fetch`, no SDK dependency added); feature-flag + hard production block; every call (success/failure/timeout) audit-bound; **not wired to any HTTP route** — service-layer only |
+| Pack31 financial escrow (planning) | **CLOSED / GREEN** — PR #304 @ `daf6851` — docs-only Zero-Loss escrow design: Estimate → Hold/Lock → Execute (Pack30D) → Settle/Refund; reuses existing `Wallet`/`Transaction` infra plus a new `VionaRequestEscrowHold` linking table (design only) |
+| Pack31 financial escrow (implementation) + VIG→VIO terminology correction | **CLOSED / GREEN** — PR #305 @ `20c6db4` — `vionaRequestEscrowHoldService.ts` (hold/settle/refund, atomic + idempotent); `vionaWalletVioBalanceAdapter.ts` (legacy `balanceVIG` → `VIO` adapter, zero breakage to existing modules); `vionaMockPaymentAdapter.ts` (dev-only, hard-blocked in production); additive `VionaRequestEscrowHold`/`VionaRequestEscrowHoldStatus` schema + hand-authored migration (**applied** by Operator after merge); escrow wired as a Zero-Loss gate in front of Pack30D-4 `executeReal()`; all new code uses **VIO**, never **VIG** |
+| Pack32 agentic autonomous dispatcher (planning) | **CLOSED / GREEN** — PR #306 @ `f93cdbe` — docs-only design for an Intent Router (LLM JSON-mode classification) + Tool Registry (exact-match only) + 6 documented hallucination-failure modes; explicitly no LangChain/LlamaIndex; connects Dispatcher → Pack31 hold → Pack30D-4 execute → Pack31 settle |
+| Pack32 agentic autonomous dispatcher (implementation) | **CLOSED / GREEN** — PR #307 @ `7d3a4f6` — `vionaIntentRouter.ts` (reuses existing `createRoutedChatCompletion()` with `LlmRouterTaskType.ROUTING_INQUIRY`, no new Prisma enum), `vionaToolRegistry.ts` (one entry at launch: `twilio_test_sms_poc`), `vionaAutonomousDispatchService.ts` orchestrator; `operatorApprovalGranted`/`userConsentGranted` always forwarded from the human caller, never self-granted; not wired to any HTTP route |
+| Pack32.5 core system integration audit | **CLOSED / GREEN** — PR #308 @ `48b4187` — end-to-end integration test (Dispatcher → Escrow Hold → ExecuteReal → Settle → Audit Logs) across 4 scenarios (happy path, hold-fail, network-timeout, settle-throw race); **found and fixed** two real integration bugs: (1) the Tool Registry's `linkedActionId` (`live_ai.action`) was permanently hard-blocked by the Pack28 policy layer, meaning real dispatch could never have succeeded — corrected to `request.assign`; (2) escrow-hold failures were not being audit-logged — added |
+| Pack33 global omni-compliance & localization (planning) | **CLOSED / GREEN** — PR #309 @ `e39fd13` — docs-only design for a Region-Aware PII Scrubber (mask PII in the Audit Ledger only, never the real-provider payload) and a static, code-shipped i18n dictionary; no code, no schema |
+| Pack33 global omni-compliance & localization (implementation) | **CLOSED / GREEN** — PR #310 @ `e0ec740` — see dedicated "Pack32.2 Kernel/Handoff sync" narrative section below for full detail |
+| Pack32.1 marketing content generator tool expansion (planning) | **CLOSED / GREEN** — PR #311 @ `364b648` — see dedicated "Pack32.2 Kernel/Handoff sync" narrative section below for full detail |
+| Pack32.1 marketing content generator tool expansion (implementation) | **CLOSED / GREEN** — PR #312 @ `c0c3214` — see dedicated "Pack32.2 Kernel/Handoff sync" narrative section below for full detail |
 | Pack26 implementation | **NOT opened** |
 
 **Pack26A non-authorization (preserved):** code implementation; new routes/actions/transitions; assign / confirm / cancel; booking / payment / SOS / wallet / live AI; deploy; live QA; DB/schema/migration; data mutation; production or global automation claims; Pack27/Pack28 execution; further Pack25 click/status POST on current visual-QA row (Option C hold).
@@ -2752,6 +2767,55 @@ Evidence: `docs/design/evidence/cursor-pack30d-real-execution-design-plan-packet
 **Explicit NO assertions (this sync):** implementation NO; Audit Ledger code written NO; Protocol content edited NO (already complete); app/runtime code touched NO; Prisma/DB/route touched NO; real provider code written NO; deploy/restart NO; Fly staging redeploy NO; QA run NO; staging API calls NO; real execution NO; external side effects NO; persistent audit write NO; DB/Prisma/Supabase/SQL NO; migration/schema change NO; package/lockfile changes NO; `.env*` changes NO; production NO; secrets printed NO; Pack30D-2 real-provider phrase requested/provided NO.
 
 **Next recommendation:** A **separate Pack30D-1 implementation pack** may now be prepared and executed using exactly the file allowlist (5 files) and test plan (10 cases) already defined in PR #289 §8-§9 — mock-only, append-only audit write to the existing `VionaRequestAuditEvent` table, no real provider, no schema/migration. Do **not** implement Pack30D-1, wire a real provider, unblock real execution, or unblock production from this sync itself — readiness is a **confirmation**, not an **execution**. Pack29 execution-preview dry-run gate remains **CLOSED_GREEN**.
+
+### Pack32.2 Kernel/Handoff sync — Pack33 + Pack32.1 catch-up, PR #292–#312 bridge (CLOSED/GREEN — docs-only, this sync)
+
+| Field | Value |
+|-------|--------|
+| Operator phrase (this sync) | `APPROVE_PACK32_2_KERNEL_SYNC` — provided via operator chat approval this session |
+| Current verified master (before this sync) | **`c0c32141f826be9f98db191725e48c766c6abfcb`** (`c0c3214`) — PR #312 |
+| Source verified master before this sync's branch point | same, `c0c3214` |
+| PR chain #251 → #312 | **PRESERVED** |
+| Bridge scope note | PR #292–#309 (Visionary Roadmap Phases 2–4 in §16, Master Economy in §17, and the Pack30D-1/30D-2/30D-3/30D-4/31/32/32.5 code implementations) were **already merged to master** but had not yet received a dedicated milestone-table entry in this file before this sync — one-line summary rows were added to the table above (§5, under "Pack26A…") for completeness/traceability. **Full narrative detail below is scoped to exactly what this sync's Operator instructions requested: PR #310 (Pack33 implementation), PR #311 (Pack32.1 planning), PR #312 (Pack32.1 implementation).** A future, separately-requested sync may expand the PR #292–#309 rows into their own dedicated narrative sections if desired — not done here to stay inside this sync's explicit docs-only scope. |
+
+**PR #310 — Pack33 Global Omni-Compliance & Localization, IMPLEMENTATION (CLOSED/GREEN @ `e0ec740`):**
+
+- Region-Aware PII Scrubber (`src/lib/viona/compliance/vionaPiiScrubber.ts`) — pure regex/internal-logic only, no external API. Masks email, E.164 phone numbers, Luhn-validated card PANs, and region-scoped US SSN-shaped strings. `resolveVionaPiiScrubRegion(countryCode)` resolves to `eu_gdpr | us_ccpa | br_lgpd | jp_appi | default`; unknown/missing country code always resolves to the strictest region (`default`), never "skip scrubbing".
+- **Separation of concerns (verified by source-scan + functional test):** the Scrubber touches ONLY the `VionaRequestAuditEvent` write path (`vionaExecutionAuditWriteService.ts`, which now scrubs `message` and every string leaf of `payloadJson` via `scrubVionaPiiDeep()` before `Prisma.create()`, and stores a frozen `retentionRegion` on the row). The real-provider adapter (`vionaTwilioTestRealProviderAdapter.ts`, Pack30D-4) was **not modified** and does **not** import the scrubber — the real outbound Twilio payload keeps the raw, unscrubbed phone number.
+- Global Data Retention Policy (`src/lib/viona/compliance/vionaAuditRetentionPolicy.ts`) — pure, illustrative (not legally reviewed) per-region retention windows; anonymize-in-place model (never hard-delete). Batch job `scripts/viona-pack33-audit-retention-job.ts` is dry-run-by-default; **not wired to any cron/scheduler**.
+- Static i18n dictionary (`src/lib/viona/i18n/vionaServiceMessageDictionary.ts`) — 7 locales (en/vi/cs/de/fr/ja/ko), code-shipped, no new DB table; additive only, no existing call site migrated onto it yet.
+- Prisma schema (additive only): `VionaRequestAuditEvent` gained `retentionRegion` (`String?`) and `anonymizedAt` (`DateTime?`). Migration hand-authored at `prisma/migrations/20260713080000_add_viona_request_audit_event_retention_fields/migration.sql`. **Operator applied this migration after merge** (confirmed in chat).
+- Test suite `scripts/test-viona-pack33-global-compliance.ts` — **16/16 PASS**, including the critical scrubber/real-payload separation-of-concerns test.
+- No new HTTP route/controller. No new `.tsx`/UI file. No new `package.json` dependency.
+
+**PR #311 — Pack32.1 Marketing Content Generator Tool Expansion, PLANNING (CLOSED/GREEN @ `364b648`):**
+
+- Docs-only plan (`docs/internal-ops/VIONA_PACK32_1_MARKETING_CONTENT_POC_PLAN.md`) framing the integration as a **Tool Expansion of the existing Pack32 Dispatcher**, not a new core-product feature — does not reopen the core-product roadmap freeze.
+- Discovery: VIONA already ships a complete marketing-draft pipeline (`MarketingPost`/`MarketingTranslation`/`MarketingPostStatus` models, `AIPostGenerator.ts`'s `COMPLEX_MARKETING` LLM calls, existing admin review/approve/publish UI) — this plan reuses it end-to-end; **zero new Prisma migration** proposed anywhere.
+- Design: additive `category` field on the Tool Registry entry; a new **sibling** orchestrator (never touching the existing Twilio dispatch path); Human-in-the-Loop enforced via `DRAFT`-only persistence, reusing the existing admin approval UI — no auto-posting logic anywhere in the design.
+
+**PR #312 — Pack32.1 Marketing Content Generator Tool Expansion, IMPLEMENTATION (CLOSED/GREEN @ `c0c3214`):**
+
+- `vionaToolRegistry.ts` (MODIFY, additive) — new `category` field (`'viona_request_execution' | 'content_generation_draft'`); existing `twilio_test_sms_poc` entry tagged, unchanged otherwise; new `marketing_content_generator` entry added (category `content_generation_draft`).
+- `AIPostGenerator.ts` (MODIFY, additive) — new `generateVionaMarketingContentDraft()`; reuses `COMPLEX_MARKETING` task type + `MarketingPost` model; always persists `DRAFT` status only; never persists on empty/failed generation.
+- `vionaMarketingContentDispatchService.ts` (NEW) — `dispatchVionaMarketingContentRequest()`, a **sibling** orchestrator to Pack32's `dispatchVionaAutonomousRequest()` (which has a **0-line diff** — verified). Reuses the existing, unmodified Intent Router; hard-stops with `wrong_tool_category` if a real-execution tool is ever matched via this content-only entrypoint (dedicated CRITICAL test). Never imports `vionaExecutionPlanRouteService`/`vionaRequestEscrowHoldService`/`vionaTwilioTestRealProviderAdapter`/`buildVionaExecutionPlan` (source-scan-verified). Not wired to any HTTP route/controller.
+- **Documented deviation:** the plan's illustrative sketch showed `linkedActionId` becoming optional; the implementation kept it **required/unchanged** instead (using a non-functional sentinel value for the new entry, and skipping that entry in the registry integrity check) specifically so the plan's own forbidden-to-modify file (`vionaAutonomousDispatchService.ts`) needed zero changes. Same documented-deviation pattern as Pack32's `ROUTING_INQUIRY` reuse and Pack32.5's `live_ai.action` → `request.assign` fix.
+- Test suite `scripts/test-viona-pack32-1-marketing-content-generator.ts` — **14/14 PASS**, including source-scans proving no automated social-media posting path exists anywhere in the new code.
+- Full regression, **100% PASS**: Pack30A/30B/30D-1/30D-2/30D-3/30D-4/31/32/32.5/33, all unaffected by the additive registry change.
+- No Prisma schema change. No new HTTP route/controller. No new `package.json` dependency.
+
+| Field (status, this sync) | Value |
+|-------|--------|
+| Real execution (Pack30D-4 Twilio POC) | **BLOCKED** — `PACK30_REAL_PROVIDER_EXECUTION_ENABLED` still default `false`, hard-blocked on Production; unchanged by this sync |
+| Automated social-media posting | **FORBIDDEN** — no code path in Pack32.1 calls `publishToFacebookPage()`/`FacebookGraphAPI`/any social API; the only side effect possible is one `MarketingPost` row with status `DRAFT`, awaiting human review in the existing admin UI |
+| Production | **NOT AUTHORIZED** |
+| Code/schema changed by this sync itself | **NONE** — this sync touches only this Kernel/Handoff file and the local, untracked `Handoff_VIONA11726.txt` |
+
+**Explicit NO assertions (this sync):** app/runtime `.ts`/`.tsx` code touched by this sync NO (only pre-existing, already-merged PR #310/#311/#312 code is *described*, not modified, here); Prisma/DB/route touched by this sync NO; real execution NO; automated posting enabled NO; deploy/restart NO; production NO; secrets printed NO.
+
+**Next recommendation:** Before opening an HTTP route for the new marketing-content dispatcher (Operator's own stated next candidate), a **separate, explicit planning/implementation pack** should define the route's auth/role gating and confirm it stays Draft-only with no auto-publish path. Independently, the real-provider ladder (Pack30D-4 Twilio POC) and Pack31 escrow remain fully mock/test-credentials-only pending any future, separately-authorized real-provider phrase. Do **not** open any new HTTP route, wire real execution, or unblock production from this sync.
+
+Evidence: `docs/design/evidence/cursor-pack33-global-omni-compliance-implementation/README.md` (PR #310), `docs/design/evidence/cursor-pack32-1-marketing-content-poc-planning-packet/README.md` (PR #311), `docs/design/evidence/cursor-pack32-1-marketing-content-poc-implementation/README.md` (PR #312)
 
 ### Pack25 visual-QA row post-state (current — read-only record)
 
