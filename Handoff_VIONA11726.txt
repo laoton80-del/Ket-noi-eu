@@ -153,7 +153,8 @@ packet (no code, no schema change authorized). Created:
   implementation detail, all explicitly flagged as future, separately-reviewed scope.
 - Status: PLANNING ONLY. Future implementation requires its own operator phrase
   (proposed: APPROVE_PACK34_B2B_MERCHANT_GATEWAY_IMPLEMENTATION), not yet granted.
-- Branch: docs/pack34-b2b-merchant-gateway-planning. PR: see chat for the live link once opened.
+- Branch: docs/pack34-b2b-merchant-gateway-planning. PR #325:
+  https://github.com/laoton80-del/Ket-noi-eu/pull/325
 - docs/ai-context/VIONA_KERNEL_HANDOFF_FAST_SAFE_GLOBAL_MODE.md was also synced in the same PR:
   added the Pack34 planning row, plus 3 gap-fill rows this session found missing (Pack30D-7 #322,
   Pack30D-8 #323, Pack31 orchestrator #324 — all already merged before this session but never
