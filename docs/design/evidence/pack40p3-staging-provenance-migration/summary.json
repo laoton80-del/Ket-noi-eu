@@ -1,0 +1,39 @@
+{
+  "pack": "Pack40P3",
+  "operatorPhrase": "APPROVE_PACK40P3_STAGING_PROVENANCE_MIGRATION_APPLY",
+  "verifiedMasterSha": "958b7645bc87b2c5b690598751f4eb199d645d32",
+  "pr345MergeCommit": "958b7645bc87b2c5b690598751f4eb199d645d32",
+  "stagingApp": "viona-api-staging-eu",
+  "stagingDatabaseRef": "euqbfanilcssjiwwtcby",
+  "migrationApplied": "20260714120000_pack40p1_add_viona_request_provenance",
+  "migrationFileSha256": "D1AEFAF9E5FB1401C4021219949D39AD3ECF20F18139C67993C6628604D738E5",
+  "preApply": {
+    "pendingMigrationCount": 1,
+    "pendingMigrations": ["20260714120000_pack40p1_add_viona_request_provenance"],
+    "totalVionaRequestRows": 10,
+    "provenanceColumnsPresent": false,
+    "provenanceEnumPresent": false
+  },
+  "postApply": {
+    "pendingMigrationCount": 0,
+    "totalVionaRequestRows": 10,
+    "scopeKindDistribution": {
+      "legacyUnresolved": 10,
+      "consumer": 0,
+      "merchant": 0
+    },
+    "merchantProfileIdNonNullCount": 0,
+    "enumValues": ["consumer", "merchant", "legacyUnresolved"],
+    "indexesPresent": ["VionaRequest_scopeKind_idx", "VionaRequest_merchantProfileId_idx"],
+    "foreignKeyDeleteRule": "RESTRICT"
+  },
+  "applicationHealth": {
+    "preApplyHttpStatus": 200,
+    "postApplyHttpStatus": 200,
+    "flyReleaseVersionPre": "v22",
+    "flyReleaseVersionPost": "v22",
+    "deployOccurred": false
+  },
+  "deploymentLockTransition": "STAGING_SCHEMA_READY_APPLICATION_DEPLOY_STILL_SEPARATELY_AUTHORIZED",
+  "classification": "READY_FOR_PACK40P3_MIGRATION_EVIDENCE_PR_REVIEW"
+}
