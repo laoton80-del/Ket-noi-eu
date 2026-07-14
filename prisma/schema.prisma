@@ -876,6 +876,40 @@ model MerchantProfile {
   @@index([tenantId])
 }
 
+/// Pack35 — B2B Omni-Channel Webhook & Agent Routing: maps an external channel identity (a
+/// WhatsApp Business phone_number_id, a custom client's own channel id, etc.) to exactly one
+/// MerchantProfile, so an inbound webhook payload's own claimed identity is never trusted — only
+/// this table's row, resolved by (channelType, channelExternalId), determines which tenantId a
+/// webhook message may create a VionaRequest under. See
+/// docs/product/VIONA_PACK35_B2B_WEBHOOK_ROUTING_PLAN.md §4.3.
+model VionaMerchantWebhookChannel {
+  id                String   @id @default(uuid())
+  /// References MerchantProfile.id by id only — no Prisma relation, mirroring the existing
+  /// VionaRequestEscrowHold.holdTransactionId "id only, no Prisma relation" pattern already used
+  /// in this same schema. Adds zero modification to the existing MerchantProfile model.
+  merchantProfileId String
+  /// 'whatsapp' | 'custom_client' today — plain String, mirrors MerchantProfile.toolScope's own
+  /// "no new enum for an evolving, additive value set" convention.
+  channelType       String
+  /// e.g. a WhatsApp Business phone_number_id, or a client-issued channel id.
+  channelExternalId String
+  /// Hashed at rest — the raw signing secret is never stored/logged in plaintext.
+  signingSecretHash String
+  /// Fail-closed default, same convention as MerchantProfile.isActive — provisioning a channel
+  /// binding must never, by itself, accept a live webhook until explicitly activated.
+  isActive          Boolean  @default(false)
+  /// Fail-closed default. Only when true may this channel's resolved tool be auto-approved — and
+  /// only for a tool that is merchantScopedOnly + category 'merchant_read_only_query' + present
+  /// in the merchant's own toolScope (see vionaMerchantWebhookApprovalGate.ts). A human (the
+  /// merchant admin) sets this once, in advance — never inferred, never defaulted to true.
+  standingApprovalForReadOnlyToolsOnly Boolean @default(false)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@unique([channelType, channelExternalId])
+  @@index([merchantProfileId])
+}
+
 enum VionaRequestSourceLinkStatus {
   PENDING
   ACTIVE

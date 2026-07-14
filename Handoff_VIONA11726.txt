@@ -1,12 +1,11 @@
 VIONA — KERNEL/HANDOFF SNAPSHOT (local notes, not committed to git)
-Last updated: 2026-07-14 09:43 — PR #327 (Pack34.5) MERGED. Pack35 B2B Omni-Channel Webhook & Agent
-Routing PLANNING PACKET created (docs-only): the missing HTTP front door into the AI Gateway —
-webhook endpoint + signature verification + channel-to-tenant mapping + dispatcher wiring +
-idempotency/rate-limiting design. No code, no schema change.
+Last updated: 2026-07-14 10:11 — Pack35 B2B Webhook Routing IMPLEMENTATION complete (operator phrase
+APPROVE_PACK35_B2B_WEBHOOK_ROUTING_IMPLEMENTATION): webhook endpoint + signature verification +
+channel resolution + standing-approval gate + idempotency/rate-limiting shipped; 21/21 regression
+PASS.
 
-=== CURRENT MASTER HEAD (at Pack35 planning branch-cut) ===
-a011b28 — "chore(viona): Pack34.5 tech debt eradication - stable content-scan tests + Prisma
-ledger sync (#327)"
+=== CURRENT MASTER HEAD (at Pack35 implementation branch-cut) ===
+025fead — "docs(product): add Pack 35 B2B Webhook Routing planning packet (#328)"
 
 === PACK30D CHAIN STATUS (1 -> 8) — unchanged from last sync, still accurate ===
 | Pack  | Scope                                                  | Status            |
@@ -320,9 +319,43 @@ New file: docs/product/VIONA_PACK35_B2B_WEBHOOK_ROUTING_PLAN.md — full design 
 Docs updated same session: this file + docs/ai-context/VIONA_KERNEL_HANDOFF_FAST_SAFE_GLOBAL_MODE.md
 (new Pack35 planning table row).
 
-Status: planning packet complete, PR opened (see chat for link), targeting master. Awaiting
-operator review + a future, separate implementation-authorization phrase before any code in the
-plan's file allowlist may be written.
+Status: planning packet complete, PR #328 merged. Implementation complete, PR opened (see chat).
+
+=== PACK35 IMPLEMENTATION — B2B WEBHOOK ROUTING (this session) — COMPLETE ===
+Operator phrase: APPROVE_PACK35_B2B_WEBHOOK_ROUTING_IMPLEMENTATION.
+Branch: feat/pack35-b2b-webhook-routing-implementation (based on origin/master @ 025fead).
+
+What shipped (strictly per plan §8 allowlist):
+- prisma/schema.prisma: new VionaMerchantWebhookChannel model (merchantProfileId id-only ref,
+  channelType, channelExternalId @@unique, signingSecretHash, isActive, standingApprovalForReadOnlyToolsOnly).
+  Migration 20260714100000_pack35_add_merchant_webhook_channel applied (ledger already up to date).
+- src/controllers/VionaWebhookMerchantAgentController.ts — POST handler with injectable deps;
+  ordering: parse -> resolve channel -> verify signature (401) -> gate (403) -> create -> idempotent
+  short-circuit (200, no dispatch) -> pre-route Intent Router -> deriveVionaWebhookStandingApprovalFlags
+  -> dispatchVionaAutonomousRequest (unmodified).
+- src/services/viona/vionaWebhookSignatureVerificationService.ts — verifyVionaWebhookSignature +
+  buildVionaWebhookSignatureHeader (Stripe-shaped HMAC, 5-min window).
+- src/services/viona/vionaWebhookChannelResolutionService.ts — resolveVionaWebhookChannel +
+  assertVionaWebhookChannelGate.
+- src/services/viona/vionaRequestCreateFromWebhookService.ts — createVionaRequestFromWebhookMessage
+  (parallel to createVionaRequest; idempotency via webhookMessageAccepted audit event +
+  externalMessageId).
+- src/lib/viona/merchant/vionaMerchantWebhookApprovalGate.ts — deriveVionaWebhookStandingApprovalFlags
+  (CRITICAL: only read-only merchant-scoped in-toolScope tools can ever get true/true).
+- src/middleware/vionaWebhookRateLimitMiddleware.ts — global (50/s) + per-channel (20/10s) buckets.
+- src/routes/vionaWebhookRoutes.ts — raw-body route + rate limiter, no authMiddleware.
+- src/app.ts — mount /api/viona/webhooks before express.json().
+- src/middleware/RateLimitMiddleware.ts — bypass /api/viona/webhooks/merchant-agent.
+- src/domain/requests/vionaRequestAuditEventTypes.ts — additive webhookMessageAccepted/Rejected.
+- scripts/test-viona-pack35-b2b-webhook-routing.ts — 30/30 PASS (content-scans, no git diff).
+- Pack30D-1/Pack30D-2 regression tests updated (+2 Pack35 audit event types in ledger counts).
+
+Test results: typecheck 0 errors; lint 0 errors (180 pre-existing warnings); Pack35 30/30;
+full regression 21/21 PASS (was 20 + new Pack35 suite).
+
+Explicitly NOT touched (per plan §7): dispatchVionaAutonomousRequest, createVionaRequest,
+vionaIntentRouter, vionaToolRegistry, vionaMerchantProfileService, vionaMerchantTenantScope,
+escrow/execution route services, Stripe webhook files.
 
 === CANDIDATE NEXT STEPS (discovered, none authorized yet) ===
 1. Supply TWILIO_TEST_ACCOUNT_SID/TWILIO_TEST_AUTH_TOKEN locally (or run the equivalent flow on

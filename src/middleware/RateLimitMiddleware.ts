@@ -91,6 +91,11 @@ export function pathAwareApiRateLimiter(req: Request, res: Response, next: NextF
     next();
     return;
   }
+  /** Pack35 — provider IPs are shared/rotating; per-channel limiter runs inside the webhook router. */
+  if (path === '/api/viona/webhooks/merchant-agent') {
+    next();
+    return;
+  }
   if (path.startsWith('/api/ai/')) {
     aiGatewayRateLimiter(req, res, next);
     return;

@@ -179,9 +179,10 @@ function testStateTransitionEventTypeRegisteredWithoutRemovingExisting(): void {
   // documented +3 — `dispatcherIntentRejected`/`dispatcherToolSelected`/`dispatcherHallucinationBlocked`.
   const pack31AdditionsCount = 3;
   const pack32AdditionsCount = 3;
+  const pack35AdditionsCount = 2;
   assert(
-    vionaRequestAuditEventTypes.length === preExisting.length + 1 + pack31AdditionsCount + pack32AdditionsCount,
-    `vionaRequestAuditEventTypes must contain exactly the ${preExisting.length} pre-existing types plus stateTransition plus the ${pack31AdditionsCount} Pack31 types plus the ${pack32AdditionsCount} Pack32 types (no accidental extra/removed values); got ${vionaRequestAuditEventTypes.length}`,
+    vionaRequestAuditEventTypes.length === preExisting.length + 1 + pack31AdditionsCount + pack32AdditionsCount + pack35AdditionsCount,
+    `vionaRequestAuditEventTypes must contain exactly the ${preExisting.length} pre-existing types plus stateTransition plus the ${pack31AdditionsCount} Pack31 types plus the ${pack32AdditionsCount} Pack32 types plus the ${pack35AdditionsCount} Pack35 types (no accidental extra/removed values); got ${vionaRequestAuditEventTypes.length}`,
   );
 }
 

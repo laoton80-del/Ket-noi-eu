@@ -21,6 +21,7 @@ import { vionaRouter } from './routes/vionaRoutes';
 import { walletRouter } from './routes/walletRoutes';
 import { aiReceptionistLeadRouter } from './routes/aiReceptionistLeadRoutes';
 import { internalRouter } from './routes/internalRoutes';
+import { vionaWebhookRouter } from './routes/vionaWebhookRoutes';
 import { jsonFail } from './utils/apiEnvelope';
 import { logger } from './utils/Logger';
 
@@ -41,6 +42,13 @@ export function createApp(): express.Application {
     (req, res, next) => {
       void StripeWebhookController.postStripeWebhook(req, res).catch(next);
     }
+  );
+
+  /** Pack35 — raw body + per-channel rate limit; mounted before JSON parser (plan §3.2/§6.2). */
+  app.use(
+    '/api/viona/webhooks',
+    express.raw({ type: 'application/json', limit: '256kb' }),
+    vionaWebhookRouter,
   );
 
   app.use(express.json({ limit: '512kb' }));

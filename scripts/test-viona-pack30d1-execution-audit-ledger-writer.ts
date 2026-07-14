@@ -199,10 +199,11 @@ function testNewEventTypesRegisteredWithoutRemovingExisting(): void {
   const pack30d2AdditionsCount = 1;
   const pack31AdditionsCount = 3;
   const pack32AdditionsCount = 3;
+  const pack35AdditionsCount = 2;
   assert(
     vionaRequestAuditEventTypes.length ===
-      preExisting.length + newTypes.length + pack30d2AdditionsCount + pack31AdditionsCount + pack32AdditionsCount,
-    'vionaRequestAuditEventTypes must contain exactly the pre-existing + Pack30D-1 + Pack30D-2 + Pack31 + Pack32 types (no accidental extra/removed values)',
+      preExisting.length + newTypes.length + pack30d2AdditionsCount + pack31AdditionsCount + pack32AdditionsCount + pack35AdditionsCount,
+    'vionaRequestAuditEventTypes must contain exactly the pre-existing + Pack30D-1 + Pack30D-2 + Pack31 + Pack32 + Pack35 types (no accidental extra/removed values)',
   );
 }
 
