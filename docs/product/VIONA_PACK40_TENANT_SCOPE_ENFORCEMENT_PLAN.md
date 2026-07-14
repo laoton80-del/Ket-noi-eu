@@ -5,8 +5,9 @@ schema/migration, database action, deployment, staging call, or secret change is
 
 **Pack40A status:** **BLOCKED behind Pack40P** — see
 `docs/product/VIONA_PACK40P_REQUEST_PROVENANCE_MODEL_PLAN.md` for server-owned `scopeKind` +
-`merchantProfileId` schema/remediation plan. Inventory complete (PR #342); consumer provenance requires
-Pack40P1–P5 before `APPROVE_PACK40A_TENANT_CONTEXT_AND_READ_ENFORCEMENT`.
+`merchantProfileId` schema/remediation plan, **P1 deployment lock**, and **P1→P3→P2→P2D** rollout order.
+Inventory complete (PR #342); consumer provenance requires Pack40P1–P5 (+ P2D) before
+`APPROVE_PACK40A_TENANT_CONTEXT_AND_READ_ENFORCEMENT`.
 
 **Planning lineage:**
 
@@ -19,8 +20,8 @@ Pack40P1–P5 before `APPROVE_PACK40A_TENANT_CONTEXT_AND_READ_ENFORCEMENT`.
 Operator context: closes the Pack34-deferred `expectedTenantId` wiring gap before Pack36B Merchant
 Admin UI — **only after** tenant provenance is established.
 
-Verified planning baseline: `origin/master` @ `a4619a13ce8bab5d170c3f4a730e9bbaa25298b3` (includes
-Pack40A inventory via PR #342).
+Verified planning baseline: `origin/master` @ `1af07e7e2009b44a21bef660d9b63f8778e0080a` (includes
+Pack40P initial plan via PR #343).
 
 ---
 
