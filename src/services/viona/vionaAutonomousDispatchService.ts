@@ -23,6 +23,15 @@
  *
  * Not wired to any HTTP route/controller in this increment — service-layer only, mirroring
  * Pack30D-4's own scope decision (plan §5.1, §9).
+ *
+ * Pack37 — B2B Dispatcher Realization (see
+ * docs/product/VIONA_PACK37_B2B_DISPATCHER_REALIZATION_PLAN.md §3) adds 2 new, additive switch
+ * cases for the 2 Pack34 `'merchant_read_only_query'` tools, delegating to the new, sibling
+ * `executeMerchantReadOnlyQuery()` (`vionaMerchantReadOnlyQueryExecutionService.ts`) — never to
+ * `previewVionaExecutionPlanRealProviderPocRoute()`. `route`'s type is broadened from a single
+ * Twilio/escrow-shaped result to a `kind`-tagged union (`VionaDispatchRoute` below); the existing
+ * `'twilio_test_sms_poc'` case's own inner logic and downstream call are byte-for-byte unchanged —
+ * only its returned `route` value is now wrapped as `{ kind: 'twilioTestSmsPoc', result: ... }`.
  */
 
 import { appendVionaExecutionAuditEvent } from './vionaExecutionAuditWriteService';
@@ -30,6 +39,11 @@ import {
   previewVionaExecutionPlanRealProviderPocRoute,
   type PreviewVionaExecutionPlanRealProviderPocResult,
 } from './vionaExecutionPlanRouteService';
+import {
+  executeMerchantReadOnlyQuery,
+  type VionaMerchantReadOnlyQueryResult,
+  type VionaMerchantReadOnlyQueryToolName,
+} from './vionaMerchantReadOnlyQueryExecutionService';
 import { findVionaToolRegistryEntry } from '../../lib/viona/dispatcher/vionaToolRegistry';
 import {
   routeVionaDispatchIntent,
@@ -52,21 +66,38 @@ export type DispatchVionaAutonomousRequestInput = Readonly<{
   /** Human-supplied only — see module header. Never inferred from the LLM's output. */
   userConsentGranted: boolean;
   idempotencyKey?: string | null;
+  /** Pack37, additive, optional. Required only to accept a `'merchant_read_only_query'` tool —
+   *  omitted (`undefined`) preserves every existing caller's behavior exactly: the
+   *  `'twilio_test_sms_poc'` case never reads this field, and a merchant-tool dispatch with no
+   *  `merchantContext` fails closed (`merchant_context_missing`) rather than guessing a tenant. */
+  merchantContext?: Readonly<{ tenantId: string; merchantProfileId: string }> | null;
 }>;
 
 export type DispatchVionaAutonomousRequestFailure = 'invalid_input';
+
+/** Pack37, additive: every existing `VionaDispatchRejectionReason` value, plus one new,
+ *  dispatch-time-only reason for a merchant-tool match with no `merchantContext` supplied. */
+export type VionaDispatchExecutionRejectionReason = VionaDispatchRejectionReason | 'merchant_context_missing';
+
+/** Pack37, additive: tags which downstream execution path produced `route`, so a future caller
+ *  can distinguish the Twilio/escrow shape from the merchant-read-only-query shape without an
+ *  unsafe cast. The existing `'twilio_test_sms_poc'` case's own result type is unchanged — only
+ *  wrapped. */
+export type VionaDispatchRoute =
+  | Readonly<{ kind: 'twilioTestSmsPoc'; result: PreviewVionaExecutionPlanRealProviderPocResult }>
+  | Readonly<{ kind: 'merchantReadOnlyQuery'; result: VionaMerchantReadOnlyQueryResult }>;
 
 export type DispatchVionaAutonomousRequestResult =
   | Readonly<{
       ok: true;
       requestId: string;
       dispatch: Readonly<{ accepted: true; toolName: string; confidence: number }>;
-      route: PreviewVionaExecutionPlanRealProviderPocResult;
+      route: VionaDispatchRoute;
     }>
   | Readonly<{
       ok: true;
       requestId: string;
-      dispatch: Readonly<{ accepted: false; reason: VionaDispatchRejectionReason }>;
+      dispatch: Readonly<{ accepted: false; reason: VionaDispatchExecutionRejectionReason }>;
       route: null;
     }>
   | Readonly<{ ok: false; reason: DispatchVionaAutonomousRequestFailure }>;
@@ -75,6 +106,8 @@ export type VionaAutonomousDispatchServiceDeps = Readonly<{
   callLlm?: VionaIntentRouterCallLlm;
   auditWriter?: typeof appendVionaExecutionAuditEvent;
   routeExecutor?: typeof previewVionaExecutionPlanRealProviderPocRoute;
+  /** Pack37, additive — injectable for tests, mirrors `routeExecutor`'s own shape. */
+  executeMerchantQuery?: typeof executeMerchantReadOnlyQuery;
 }>;
 
 function resolveRejectionAuditEventType(
@@ -110,6 +143,7 @@ export async function dispatchVionaAutonomousRequest(
   const callLlm = deps.callLlm ?? defaultVionaDispatchCallLlm;
   const auditWriter = deps.auditWriter ?? appendVionaExecutionAuditEvent;
   const routeExecutor = deps.routeExecutor ?? previewVionaExecutionPlanRealProviderPocRoute;
+  const executeMerchantQuery = deps.executeMerchantQuery ?? executeMerchantReadOnlyQuery;
 
   const decision = await routeVionaDispatchIntent(
     {
@@ -180,9 +214,11 @@ export async function dispatchVionaAutonomousRequest(
     );
   }
 
-  // Exactly one tool is registered today (plan §9 — multi-tool dispatch is out of scope for this
-  // increment). This switch is the single, explicit place a second tool's `toolInput` mapping
-  // onto its own downstream call would be added in a future, separate pack.
+  // This switch is the single, explicit place each registered tool's `toolInput` mapping onto its
+  // own downstream call is added. `'twilio_test_sms_poc'` (Pack32) delegates to the existing
+  // Pack31 escrow / Pack30D-4 pipeline; the 2 `'merchant_read_only_query'` tools (Pack37) delegate
+  // to the new, sibling `executeMerchantQuery()` instead — structurally isolated from that
+  // pipeline (module header).
   switch (entry.name) {
     case 'twilio_test_sms_poc': {
       const toolInput = decision.toolInput as Readonly<{
@@ -190,7 +226,7 @@ export async function dispatchVionaAutonomousRequest(
         toNumber: string;
         body: string;
       }>;
-      const route = await routeExecutor({
+      const twilioRoute = await routeExecutor({
         authUserId,
         requestId,
         actionId: entry.linkedActionId,
@@ -206,13 +242,58 @@ export async function dispatchVionaAutonomousRequest(
         ok: true,
         requestId,
         dispatch: { accepted: true, toolName: entry.name, confidence: decision.confidence },
-        route,
+        route: { kind: 'twilioTestSmsPoc', result: twilioRoute },
+      };
+    }
+    case 'merchant_schedule_availability_check':
+    case 'merchant_inventory_stock_check': {
+      // Defensive re-check, mirroring this file's own existing discipline (see the entry-lookup
+      // re-check above): this switch is keyed on `entry.name`, but a future registry edit that
+      // repurposes one of these 2 names without updating this switch must fail loudly here, never
+      // silently execute a merchant query for a tool that is not actually
+      // `'merchant_read_only_query'`.
+      if (entry.category !== 'merchant_read_only_query') {
+        return { ok: true, requestId, dispatch: { accepted: false, reason: 'unknown_tool' }, route: null };
+      }
+      if (!input.merchantContext) {
+        const auditResult = await auditWriter({
+          requestId,
+          eventType: 'dispatcherIntentRejected',
+          actorUserId: authUserId,
+          actorRoleLabel: null,
+          message:
+            'Pack37 dispatcher: merchant read-only query tool matched but no merchantContext was supplied — hard stop.',
+          payloadJson: { toolName: entry.name },
+        });
+        if (!auditResult.ok) {
+          console.error(
+            `[pack37-dispatcher] failed to append merchant-context-missing audit event for request ${requestId}: ${auditResult.error}`,
+          );
+        }
+        return {
+          ok: true,
+          requestId,
+          dispatch: { accepted: false, reason: 'merchant_context_missing' },
+          route: null,
+        };
+      }
+      const merchantQueryResult = await executeMerchantQuery({
+        toolName: entry.name as VionaMerchantReadOnlyQueryToolName,
+        tenantId: input.merchantContext.tenantId,
+        merchantProfileId: input.merchantContext.merchantProfileId,
+        toolInput: decision.toolInput,
+      });
+      return {
+        ok: true,
+        requestId,
+        dispatch: { accepted: true, toolName: entry.name, confidence: decision.confidence },
+        route: { kind: 'merchantReadOnlyQuery', result: merchantQueryResult },
       };
     }
     default:
-      // Unreachable while the registry has exactly one entry — kept as a defensive hard stop
-      // rather than an unchecked `never` cast, so a future registry addition without a matching
-      // switch branch fails loudly here instead of silently falling through.
+      // Unreachable while every registry entry has a matching case above — kept as a defensive
+      // hard stop rather than an unchecked `never` cast, so a future registry addition without a
+      // matching switch branch fails loudly here instead of silently falling through.
       return { ok: true, requestId, dispatch: { accepted: false, reason: 'unknown_tool' }, route: null };
   }
 }

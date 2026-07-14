@@ -1,11 +1,11 @@
 VIONA — KERNEL/HANDOFF SNAPSHOT (local notes, not committed to git)
-Last updated: 2026-07-14 11:20 — Pack37 B2B Dispatcher Realization PLANNING complete (docs-only):
-design to close the dispatchAccepted:false gap Pack36A's live QA found (dispatcher switch wiring,
-AI persona injection, OPENAI_API_KEY secrets management, sync response contract) + 4 named
-authorization phrases for the next (implementation) phase. No code, no schema, no Fly secret change.
+Last updated: 2026-07-14 11:48 — Pack37 B2B Dispatcher Realization IMPLEMENTATION complete
+(operator phrase APPROVE_PACK37_B2B_DISPATCHER_REALIZATION_IMPLEMENTATION, Option A zero-new-tables
+MVP): the dispatchAccepted:false gap Pack36A's live QA found is now CLOSED for both Pack34 merchant
+read-only tools. 27/27 new tests PASS + 22/22 full regression PASS + typecheck/lint 0 errors.
 
-=== CURRENT MASTER HEAD (at Pack37 planning branch-cut) ===
-471818f — "chore(ops): execute Pack 36A staging deployment and QA (#331)"
+=== CURRENT MASTER HEAD (at Pack37 implementation branch-cut) ===
+74a92bb — "docs(product): add Pack 37 B2B Dispatcher Realization planning packet (#332)"
 
 === PACK30D CHAIN STATUS (1 -> 8) — unchanged from last sync, still accurate ===
 | Pack  | Scope                                                  | Status            |
@@ -507,6 +507,88 @@ Docs updated same session: this file + docs/ai-context/VIONA_KERNEL_HANDOFF_FAST
 
 Status: planning packet complete, PR opened (see chat).
 
+=== PACK37 IMPLEMENTATION — B2B DISPATCHER REALIZATION (this session) — COMPLETE ===
+Operator phrase: APPROVE_PACK37_B2B_DISPATCHER_REALIZATION_IMPLEMENTATION (Option A zero-new-tables
+MVP). Branch: feat/pack37-b2b-dispatcher-realization-implementation (cut from origin/master @
+74a92bb, PR #332 merged).
+
+Closes the exact dispatchAccepted:false gap Pack36A's live QA found, for both Pack34 merchant
+read-only tools, with zero new Prisma tables:
+
+1. vionaAutonomousDispatchService.ts's switch gains 2 new, additive cases for
+   merchant_schedule_availability_check / merchant_inventory_stock_check, delegating to NEW sibling
+   service executeMerchantReadOnlyQuery() (vionaMerchantReadOnlyQueryExecutionService.ts) -
+   content-scan-verified to never import holdVionaRequestExecutionCost /
+   executeVionaTwilioTestPocReal / settleVionaRequestExecutionHold /
+   previewVionaExecutionPlanRealProviderPocRoute. route's type broadened to a kind-tagged union
+   ({kind:'twilioTestSmsPoc'|'merchantReadOnlyQuery', result}) - twilio_test_sms_poc's own inner
+   logic/return payload byte-for-byte unchanged, only wrapped (3 pre-existing Pack32/Pack32.5 test
+   files mechanically updated to unwrap it - test-viona-pack32-autonomous-dispatcher.ts,
+   test-viona-pack32-5-core-integration-audit.ts - zero behavior change, pure unwrap).
+2. New, optional merchantContext:{tenantId, merchantProfileId} dispatch-input field required to
+   accept a merchant-tool match; omitted -> new, honest merchant_context_missing rejection reason
+   (never a silent tenant guess, never conflated with unknown_tool). Webhook controller now passes
+   channel.tenantId/channel.merchantProfileId (already resolved by Pack35) as this field.
+3. Option A data layer: every call deterministically returns dataAvailable:false with a fixed,
+   honest summary ("has not configured real-time schedule/inventory data yet") - zero fabrication,
+   zero new tables, matches the plan's recommended default exactly.
+4. resolveMerchantAiPersona() (Pack34, previously zero callers anywhere) is now called exactly
+   once, from the new executeMerchantReadOnlyQuery() - gated on the resolved MerchantProfile's own
+   tenantId matching the caller's tenantId (mismatch/missing row -> safe default persona, never a
+   different tenant's persona - dedicated adversarial test written and passing). Used ONLY in a
+   new, second, non-tool-calling reply-formatting step (formatVionaMerchantReadOnlyQueryReply(),
+   new file vionaMerchantReadOnlyQueryReplyFormatter.ts): Tier-1 deterministic template (default,
+   zero LLM dependency) / Tier-2 optional persona-phrased LLM call with NO function-calling ability
+   (content-scan-verified: no tools:/tool_choice/functions: param ever passed). vionaIntentRouter.ts
+   verified byte-for-byte free of every persona-related identifier (content-scan) - persona never
+   reaches classification, exactly per plan §4.2.
+5. OPENAI_API_KEY added to fly-staging-sync-secrets.mjs's SECRET_KEYS + documented in .env.example.
+   Tier-2 pre-checks the key and silently falls back to Tier-1 on ANY missing-key/thrown-error/
+   empty-response condition - dedicated end-to-end test confirms a fully-unset OPENAI_API_KEY still
+   yields dispatchAccepted:true for a merchant query (this pack's own new success path can never
+   regress on a missing key; the pre-existing classification call's own llm_call_failed behavior is
+   completely untouched).
+6. Webhook's existing 200 JSON response gains one new, additive, optional merchantQueryResult field
+   ({toolName, dataAvailable, replyText} | null) - null for every pre-existing path (twilio,
+   rejected, idempotent-replay), populated only for an accepted merchant-tool dispatch; every
+   existing field/value byte-for-byte preserved (3 dedicated response-contract regression tests).
+7. New test suite scripts/test-viona-pack37-b2b-dispatcher-realization.ts: 27/27 PASS, covering all
+   8 required dynamic/structural test-plan items (switch wiring, category isolation, persona
+   resolution, classification-prompt non-contamination, secrets graceful degradation,
+   response-contract regression, no-write-capable-path structural scan, tenant isolation).
+8. Full regression: 22/22 PASS (21 pre-existing + this pack's own new suite; the live-staging-only
+   test-viona-pack36a-staging-webhook-qa.ts is excluded from local regression by design - it
+   requires live network + staging DB, same as prior sessions). Typecheck 0 errors. Lint 0 errors
+   (180 pre-existing warnings, unchanged).
+9. File allowlist adherence: every file touched matches plan §8 exactly - 3 new files
+   (vionaMerchantReadOnlyQueryExecutionService.ts, vionaMerchantReadOnlyQueryReplyFormatter.ts,
+   the new test script) + 6 additive-only modified files (vionaAutonomousDispatchService.ts,
+   vionaMerchantProfileService.ts [+findMerchantProfileById], VionaWebhookMerchantAgentController.ts,
+   fly-staging-sync-secrets.mjs, .env.example, this Kernel doc) + 2 pre-existing test files patched
+   for the route-wrapping change (not in the original allowlist text verbatim, but a mechanical,
+   zero-behavior-change consequence of item 1 above, needed to keep regression at 100%). Nothing
+   outside this set was touched.
+
+Docs updated same session: this file + docs/ai-context/VIONA_KERNEL_HANDOFF_FAST_SAFE_GLOBAL_MODE.md
+(new Pack37 implementation table row + new DEFERRED/BACKLOG section, see below).
+
+Status: implementation complete, PR opened (see chat).
+
+=== DEFERRED / BACKLOG (recorded, not authorized — logged during Pack37 sync per operator instruction) ===
+1. Pack36B: Merchant Admin UI (Frontend AI Persona & Webhook Secret configuration) - Deferred to
+   prioritize backend E2E. No merchant-facing UI exists to configure MerchantProfile.aiPersona,
+   rotate a VionaMerchantWebhookChannel.signingSecretHash, or manage toolScope - every write so far
+   has gone through a standalone script or a future admin-only backend endpoint, never a
+   merchant-operated screen. Candidate next planning packet once the backend chain (Pack35 webhook
+   routing -> Pack36A staging QA -> Pack37 dispatcher realization) is fully E2E-verified.
+2. TourismBooking Prisma migration shadow-DB replay issue - Deferred tech debt from Pack34/Pack34.5.
+   20250430120000_tourism_net_gross_platform_fields is correctly marked APPLIED in the live
+   database's own ledger (re-verified in Pack34.5), but `prisma migrate dev`'s shadow-DB replay of
+   the full migration history still fails against this file - its SQL doesn't match the live
+   TourismBooking table's actual shape (pre-existing drift, predates Pack34). Live data/schema are
+   unaffected; only the shadow-DB dev workflow is impacted. Left for a future, dedicated fix - never
+   touched by Pack34, Pack34.5, Pack35, Pack36A, or Pack37 (none needed a shadow-DB replay).
+
 === CANDIDATE NEXT STEPS (discovered, none authorized yet) ===
 1. Supply TWILIO_TEST_ACCOUNT_SID/TWILIO_TEST_AUTH_TOKEN locally (or run the equivalent flow on
    Staging where they already exist) to get a real, non-blocked realProviderResult outcome.
@@ -518,13 +600,13 @@ Status: planning packet complete, PR opened (see chat).
 3. Wire buildAuthorizedVionaRequestWhere()'s new expectedTenantId param into the 3 existing
    VionaRequest call sites (read/note/status-action services) — explicitly deferred by Pack34's
    own plan, still outstanding.
-4. The underlying `20250430120000_tourism_net_gross_platform_fields` migration file itself still
-   references a TourismBooking table shape that doesn't match reality, which will keep breaking
-   `prisma migrate dev`'s shadow-DB replay for any future contributor who runs it locally. Not
-   fixed by Pack34.5 (ledger for it was already consistent; fixing the migration file's SQL itself
-   is a separate, riskier task requiring careful review — out of scope here).
-5. Pack37's own implementation phase (operator phrase required - see the 4 phrases defined above:
-   APPROVE_PACK37_DISPATCHER_WIRING_MVP / APPROVE_PACK37_OPENAI_STAGING_SECRET /
-   APPROVE_PACK37_LLM_REPLY_PHRASING / APPROVE_PACK37_REAL_DATA_LAYER) - not requested yet,
-   planning-only per this session's explicit instruction. This is the fully-designed follow-up to
-   the gap Pack36A found and Pack37's planning packet now has a complete design for.
+4. TourismBooking shadow-DB replay issue — see DEFERRED/BACKLOG section above (item 2).
+5. Pack37's remaining, not-yet-issued authorization phrases (Option A MVP is now DONE — see above):
+   APPROVE_PACK37_OPENAI_STAGING_SECRET (push the local OPENAI_API_KEY value to Fly staging — code
+   change is done, only the actual `fly secrets set`/sync run is still outstanding),
+   APPROVE_PACK37_LLM_REPLY_PHRASING (turn on Tier-2 persona-phrased replies — code already
+   supports this today whenever a key is present, so this phrase is really just an operator
+   go-ahead to configure a real key, not further implementation), APPROVE_PACK37_REAL_DATA_LAYER
+   (Option B — real, tenant-scoped schedule/inventory Prisma models — a separate, larger future
+   planning packet, not started).
+6. Pack36B: Merchant Admin UI — see DEFERRED/BACKLOG section above (item 1).

@@ -354,9 +354,13 @@ async function testScenario1HappyPathFullChain(): Promise<void> {
   if (!result.ok) return;
   assert(result.dispatch.accepted === true, 'scenario 1: dispatch must be accepted');
   if (!result.dispatch.accepted || result.route == null) return;
-  assert(result.route.ok === true, 'scenario 1: the route pipeline must report ok:true');
-  if (!result.route.ok) return;
-  const route = result.route;
+  // Pack37: `route` is now a `{ kind, result }` wrapper — unwrap to the existing Twilio/escrow
+  // pipeline's own result shape before asserting on its fields, exactly as before.
+  assert(result.route.kind === 'twilioTestSmsPoc', 'scenario 1: the accepted tool must route through the Twilio/escrow pipeline');
+  if (result.route.kind !== 'twilioTestSmsPoc') return;
+  assert(result.route.result.ok === true, 'scenario 1: the route pipeline must report ok:true');
+  if (!result.route.result.ok) return;
+  const route = result.route.result;
   assert(route.planAllowed === true, 'scenario 1: the execution plan must be allowed');
   assert(route.escrow.attempted === true && route.escrow.holdOk === true, 'scenario 1: the escrow hold must succeed');
   if (!route.escrow.attempted || !route.escrow.holdOk) return;
@@ -407,9 +411,11 @@ async function testScenario2HoldFailBlocksBeforeAnyRealCall(): Promise<void> {
   if (!result.ok) return;
   assert(result.dispatch.accepted === true, 'scenario 2: the dispatcher itself must still accept the (valid) tool call');
   if (!result.dispatch.accepted || result.route == null) return;
-  assert(result.route.ok === true, 'scenario 2: the route pipeline must report ok:true');
-  if (!result.route.ok) return;
-  const route = result.route;
+  assert(result.route.kind === 'twilioTestSmsPoc', 'scenario 2: the accepted tool must route through the Twilio/escrow pipeline');
+  if (result.route.kind !== 'twilioTestSmsPoc') return;
+  assert(result.route.result.ok === true, 'scenario 2: the route pipeline must report ok:true');
+  if (!result.route.result.ok) return;
+  const route = result.route.result;
   assert(route.planAllowed === true, 'scenario 2: the execution plan itself must still be allowed');
   assert(
     route.escrow.attempted === true && route.escrow.holdOk === false && route.escrow.reason === 'insufficient_funds',
@@ -447,9 +453,11 @@ async function testScenario3NetworkTimeoutTriggersFullRefund(): Promise<void> {
   if (!result.ok) return;
   assert(result.dispatch.accepted === true, 'scenario 3: dispatch must be accepted');
   if (!result.dispatch.accepted || result.route == null) return;
-  assert(result.route.ok === true, 'scenario 3: the route pipeline must report ok:true');
-  if (!result.route.ok) return;
-  const route = result.route;
+  assert(result.route.kind === 'twilioTestSmsPoc', 'scenario 3: the accepted tool must route through the Twilio/escrow pipeline');
+  if (result.route.kind !== 'twilioTestSmsPoc') return;
+  assert(result.route.result.ok === true, 'scenario 3: the route pipeline must report ok:true');
+  if (!result.route.result.ok) return;
+  const route = result.route.result;
   assert(route.escrow.attempted === true && route.escrow.holdOk === true, 'scenario 3: the hold must succeed before the network timeout occurs');
   if (!route.escrow.attempted || !route.escrow.holdOk) return;
   assert(
@@ -518,9 +526,11 @@ async function testScenario4SettleThrowNeverLosesRealProviderResult(): Promise<v
   if (!result.ok) return;
   assert(result.dispatch.accepted === true, 'scenario 4: dispatch must be accepted');
   if (!result.dispatch.accepted || result.route == null) return;
-  assert(result.route.ok === true, 'scenario 4: the route pipeline must report ok:true');
-  if (!result.route.ok) return;
-  const route = result.route;
+  assert(result.route.kind === 'twilioTestSmsPoc', 'scenario 4: the accepted tool must route through the Twilio/escrow pipeline');
+  if (result.route.kind !== 'twilioTestSmsPoc') return;
+  assert(result.route.result.ok === true, 'scenario 4: the route pipeline must report ok:true');
+  if (!result.route.result.ok) return;
+  const route = result.route.result;
   assert(
     route.realProviderResult?.outcome.outcome === 'succeeded',
     'scenario 4: the already-known, already-succeeded realProviderResult must still be returned even though settle threw',
