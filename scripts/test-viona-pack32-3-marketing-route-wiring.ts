@@ -24,16 +24,25 @@
  *   11. Fake dispatch ok:false, reason content_generation_failed         -> 502
  *   12. Fake dispatch throws synchronously                               -> 500, never crashes the process
  *   13. Source-scan (CRITICAL): new controller code never references publishToFacebookPage/FacebookGraphAPI/tiktok
- *   14. Source-scan (CRITICAL): 7 core Pack32.1/middleware files have a 0-line diff vs origin/master
+ *   14. Source-scan (CRITICAL): 7 core Pack32.1/middleware files this pack depends on but never
+ *       modifies still expose the exact contract this pack relies on
  *   15. Regression: existing Pack32.1 (14/14) and Pack32 (13/13) test suites still pass unmodified
  *   16. `npm run typecheck` / `npm run lint` — run separately via those npm scripts
+ *
+ * Pack34.5 tech-debt note (see docs/product/VIONA_PACK34_5_TECH_DEBT_ERADICATION_EVIDENCE.md):
+ * test 14 previously asserted `git diff --stat origin/master -- <file>` is empty for each of the 7
+ * files. That moving-target baseline meant it broke permanently the instant *any* future,
+ * unrelated, legitimate change touched any of those 7 shared files — exactly what happened when
+ * Pack34 additively extended `vionaToolRegistry.ts`. Rewritten as a pure content-scan asserting
+ * each file still contains the specific exported symbol(s) this pack actually depends on, which
+ * protects the real invariant ("this pack's dependencies still work") without caring how many
+ * *other*, unrelated, legitimate lines those files accumulate over time.
  *
  * Run: npx tsx scripts/test-viona-pack32-3-marketing-route-wiring.ts
  */
 
 import * as fs from 'node:fs';
 import * as path from 'node:path';
-import { execSync } from 'node:child_process';
 
 import { postAdminMarketingGenerateDraft } from '../src/controllers/AdminMarketingController';
 import type {
@@ -250,21 +259,27 @@ function testNewControllerCodeNeverReferencesFacebookOrTiktok(): void {
   assert(!/MarketingPostStatus\.PUBLISHED/.test(fnBody), 'the new controller must never set MarketingPostStatus.PUBLISHED');
 }
 
-/** Test 14 (CRITICAL): 7 core Pack32.1/middleware files have a 0-line diff vs origin/master. */
-function testCoreFilesHaveZeroLineDiffVsMaster(): void {
-  const coreFiles = [
-    'src/services/viona/vionaMarketingContentDispatchService.ts',
-    'src/services/marketing/AIPostGenerator.ts',
-    'src/lib/viona/dispatcher/vionaToolRegistry.ts',
-    'src/lib/viona/dispatcher/vionaIntentRouter.ts',
-    'src/middleware/authMiddleware.ts',
-    'src/middleware/superAdminMiddleware.ts',
-    'src/utils/apiEnvelope.ts',
+/** Test 14 (CRITICAL, structural): 7 core Pack32.1/middleware files this pack depends on but
+ * never modifies still expose the exact contract this pack relies on. Pure content-scan — see
+ * Pack34.5 tech-debt note in the module header for why this no longer uses `git diff`. */
+function testCoreFilesStillExposeExpectedContract(): void {
+  const expectations: ReadonlyArray<readonly [string, readonly string[]]> = [
+    ['../src/services/viona/vionaMarketingContentDispatchService.ts', ['export async function dispatchVionaMarketingContentRequest']],
+    ['../src/services/marketing/AIPostGenerator.ts', ['export async function generateVionaMarketingContentDraft']],
+    [
+      '../src/lib/viona/dispatcher/vionaToolRegistry.ts',
+      ["export function findVionaToolRegistryEntry", "name: 'marketing_content_generator'", "name: 'twilio_test_sms_poc'"],
+    ],
+    ['../src/lib/viona/dispatcher/vionaIntentRouter.ts', ['export async function routeVionaDispatchIntent']],
+    ['../src/middleware/authMiddleware.ts', ['export function authMiddleware']],
+    ['../src/middleware/superAdminMiddleware.ts', ['export async function superAdminMiddleware']],
+    ['../src/utils/apiEnvelope.ts', ['export function jsonOk', 'export function jsonFail']],
   ];
-  const repoRoot = path.resolve(__dirname, '..');
-  for (const file of coreFiles) {
-    const diff = execSync(`git diff --stat origin/master -- "${file}"`, { cwd: repoRoot, encoding: 'utf8' });
-    assert(diff.trim().length === 0, `${file} must have a 0-line diff vs origin/master (got: ${diff.trim()})`);
+  for (const [file, markers] of expectations) {
+    const source = readSourceNoComments(file);
+    for (const marker of markers) {
+      assert(source.includes(marker), `${file} must still contain "${marker}" (this pack must never break this shared file's contract)`);
+    }
   }
 }
 
@@ -282,13 +297,13 @@ async function main(): Promise<void> {
   await testContentGenerationFailedReturns502();
   await testDispatchThrowingReturns500NeverCrashes();
   testNewControllerCodeNeverReferencesFacebookOrTiktok();
-  testCoreFilesHaveZeroLineDiffVsMaster();
+  testCoreFilesStillExposeExpectedContract();
   assertNoneMatch(
     ['../src/controllers/AdminMarketingController.ts', '../src/routes/adminRoutes.ts'],
     [/langchain/i, /llamaindex/i, /llama-index/i],
     'Pack32.3 files must never import an agent-framework dependency',
   );
-  console.log('PASS Pack32.3 marketing content API route wiring tests (14/14 runnable cases + 0-diff core-file check)');
+  console.log('PASS Pack32.3 marketing content API route wiring tests (14/14 runnable cases + core-file contract check)');
 }
 
 main().catch((error) => {
