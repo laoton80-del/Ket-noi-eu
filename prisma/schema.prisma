@@ -874,6 +874,7 @@ model MerchantProfile {
   updatedAt     DateTime @updatedAt
 
   @@index([tenantId])
+  vionaRequests VionaRequest[]
 }
 
 /// Pack35 — B2B Omni-Channel Webhook & Agent Routing: maps an external channel identity (a
@@ -917,6 +918,13 @@ enum VionaRequestSourceLinkStatus {
   SUPERSEDED
 }
 
+/// Pack40P — server-owned request provenance (creation-path classification, not actor account type).
+enum VionaRequestScopeKind {
+  consumer
+  merchant
+  legacyUnresolved
+}
+
 /// Core VIONA request aggregate — lifecycle status does not imply payment, booking, or SOS truth.
 model VionaRequest {
   id              String    @id @default(uuid())
@@ -936,6 +944,10 @@ model VionaRequest {
   updatedAt       DateTime  @updatedAt
   closedAt        DateTime?
   metadataJson    Json?
+  /// Pack40P — server-owned provenance; DB default fail-safe until create paths assign explicitly.
+  scopeKind         VionaRequestScopeKind @default(legacyUnresolved)
+  merchantProfileId String?
+  merchantProfile   MerchantProfile?      @relation(fields: [merchantProfileId], references: [id], onDelete: Restrict)
 
   participants          VionaRequestParticipant[]
   sourceLinks           VionaRequestSourceLink[]
@@ -948,6 +960,8 @@ model VionaRequest {
   @@index([status])
   @@index([sourceUniverse])
   @@index([createdAt])
+  @@index([scopeKind])
+  @@index([merchantProfileId])
 }
 
 /// Request participants — participantRoleLabel is local to the request, not Prisma/Auth OPERATOR.
