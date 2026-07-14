@@ -942,19 +942,30 @@ Evidence doc: docs/product/VIONA_PACK39_POST_MERGE_STAGING_VERIFICATION_EVIDENCE
 
 Status: staging verification complete — docs-only evidence PR #339 MERGED @ 587dcd1.
 
-=== PACK40 MULTI-TENANT VIONA REQUEST ACCESS ENFORCEMENT (this session) — PLANNING ONLY ===
-Branch: docs/pack40-tenant-scope-enforcement-planning (from verified origin/master @ 587dcd1).
-Planning only — no product code, no schema/migration, no DB action, no staging call, no deploy,
-no secret action, no product behavior changed. No implementation authorized.
+=== PACK40 MULTI-TENANT VIONA REQUEST ACCESS ENFORCEMENT — PLANNING (v3 PROVENANCE-HARDENED) ===
+Branch: docs/pack40-tenant-scope-enforcement-refinement (from origin/master @ 95031be).
+PR #340 (planning v1) already MERGED. This corrective refinement supersedes unsafe v2 semantics
+(registry-absence consumer inference). Planning only — no code/schema/DB/staging/deploy/secret action.
+No implementation authorized.
 
-Source audit (merged master): buildAuthorizedVionaRequestWhere() optional expectedTenantId exists
-but is NOT passed at any production call site — vionaRequestReadService.ts (list + detail),
-vionaRequestNoteActionService.ts, vionaRequestStatusActionService.ts (all 1-arg only). assertVionaRequestTenantMatchesMerchant() is used on webhook channel resolution only, not on JWT
-request access paths. Cross-user denial exists; cross-tenant merchant-owner denial does not.
+Three-state row classification:
+  1. Consumer-classified — positive canonical proof only (UNKNOWN from source today).
+  2. Merchant-classified — exact trusted MerchantProfile.tenantId equality + user scope.
+  3. Unresolved-tenant — fail closed (request_not_found / 404); never consumer fallback.
 
-Plan: docs/product/VIONA_PACK40_TENANT_SCOPE_ENFORCEMENT_PLAN.md — tagged server-side access
-context, layered enforcement, no schema change, adversarial test matrix, staging QA design.
-Future implementation phrase: APPROVE_PACK40_TENANT_SCOPE_ENFORCEMENT_IMPLEMENTATION (not granted).
+Rejected: tenantId not in MerchantProfile set => consumer. Reasons: legacy rows, post-dated profiles,
+malformed tenants, mutable registry, silent downgrade to owner-only auth.
+
+Canonical consumer representation: NOT VERIFIED (schema tenantId String non-null; Pack19 client
+free-text; no sentinel). Pack40A BLOCKED until read-only provenance inventory
+(APPROVE_PACK40A_READ_ONLY_TENANT_PROVENANCE_INVENTORY) or source-verified rule added.
+
+Dual-role VionaRequestPrincipalContext retained. Inactive merchant: may read own merchant rows (Pack40A
+default); note/status require active (Pack40B/C). Bounded query: tenantId = M.tenantId OR tenantId = C
+(no global NOT IN scan, no per-row profile lookup).
+
+Slices: Pack40A (read, blocked), Pack40B (note), Pack40C (status), Pack40D (indirect), Pack40S (staging).
+Plan: docs/product/VIONA_PACK40_TENANT_SCOPE_ENFORCEMENT_PLAN.md
 
 === DEFERRED / BACKLOG (recorded, not authorized — logged during Pack37 sync per operator instruction; items 3-4 from the Pack38 sync addressed by Pack39 implementation above and removed from this list) ===
 1. Pack36B: Merchant Admin UI (Frontend AI Persona & Webhook Secret configuration) - Deferred to
@@ -979,8 +990,10 @@ Future implementation phrase: APPROVE_PACK40_TENANT_SCOPE_ENFORCEMENT_IMPLEMENTA
    site at a time; schedule scripts/viona-pack33-audit-retention-job.ts for real (currently
    dry-run, unscheduled); legal/compliance review of region-specific retention windows and PII
    rule values (explicitly not claimed by PR #310).
-3. Wire buildAuthorizedVionaRequestWhere()'s new expectedTenantId param into the existing
-   VionaRequest call sites — **Pack40 planning packet opened** (docs/product/VIONA_PACK40_TENANT_SCOPE_ENFORCEMENT_PLAN.md); implementation NOT authorized yet.
+3. Wire tenant enforcement into VionaRequest call sites — Pack40 planning v3 (provenance-hardened,
+   three-state classification, Pack40A–D slices). **Pack40A BLOCKED** — canonical consumer tenant
+   unknown from source; next step is provenance inventory phrase
+   APPROVE_PACK40A_READ_ONLY_TENANT_PROVENANCE_INVENTORY (read-only discovery, not enforcement).
 4. TourismBooking shadow-DB replay issue — see DEFERRED/BACKLOG section above (item 2).
 5. Pack37's remaining, not-yet-issued authorization phrases:
    APPROVE_PACK37_OPENAI_STAGING_SECRET — DONE this session (see dedicated section above): key
