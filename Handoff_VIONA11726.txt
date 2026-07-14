@@ -1,11 +1,12 @@
 VIONA — KERNEL/HANDOFF SNAPSHOT (local notes, not committed to git)
-Last updated: 2026-07-14 10:30 — Pack36A Staging Deployment & Webhook QA PLANNING complete (docs-only):
-deploy strategy + staging data provisioning script design + webhook QA script design + 3 named
-authorization phrases for the next (execution) phase. No deploy, no staging DB write, no HTTP call
-performed.
+Last updated: 2026-07-14 11:10 — Pack36A Staging Deployment & Webhook QA EXECUTION complete (operator
+phrase APPROVE_PACK36A_STAGING_DEPLOY_AND_QA_EXECUTION): master deployed to viona-api-staging-eu,
+staging DB provisioned with a synthetic MerchantProfile + VionaMerchantWebhookChannel, live webhook
+QA script fired at the real staging URL — 5/5 checks PASSED (accept/audit + idempotency + negative
+signature control). Staging webhook endpoint is now LIVE and VERIFIED.
 
-=== CURRENT MASTER HEAD (at Pack36A planning branch-cut) ===
-b3134d2 — "feat(viona): implement Pack35 B2B webhook routing and merchant-agent endpoint (#329)"
+=== CURRENT MASTER HEAD (at Pack36A execution branch-cut) ===
+d7a624c — "docs(ops): add Pack 36A Staging Deploy & Webhook QA planning packet (#330)"
 
 === PACK30D CHAIN STATUS (1 -> 8) — unchanged from last sync, still accurate ===
 | Pack  | Scope                                                  | Status            |
@@ -393,7 +394,66 @@ What it designs (no code, no migration, no deploy, no staging HTTP call, no stag
 Docs updated same session: this file + docs/ai-context/VIONA_KERNEL_HANDOFF_FAST_SAFE_GLOBAL_MODE.md
 (new Pack36A planning table row).
 
-Status: planning packet complete, PR opened (see chat).
+Status: planning packet complete, PR #330 merged.
+
+=== PACK36A EXECUTION — STAGING DEPLOYMENT & WEBHOOK QA (this session) — COMPLETE ===
+Operator phrase: APPROVE_PACK36A_STAGING_DEPLOY_AND_QA_EXECUTION.
+Branch: chore/pack36a-staging-deploy-and-qa (based on origin/master @ d7a624c, PR #330 merged).
+
+What shipped (strictly per plan §7 allowlist — 2 new standalone scripts only, zero production
+.ts/.tsx file touched):
+- scripts/provision-staging-webhook-test-channel.ts — idempotent create+activate of one synthetic
+  MerchantProfile (tenantId=pack36a-qa-tenant, toolScope=[merchant_schedule_availability_check,
+  merchant_inventory_stock_check]) + one active VionaMerchantWebhookChannel
+  (custom_client/pack36a-qa-channel, standingApprovalForReadOnlyToolsOnly:true). Reuses existing,
+  unmodified createMerchantProfile()/updateMerchantProfileToolScope() (Pack34). Writes a plaintext
+  32-byte hex secret into signingSecretHash (verbatim HMAC key, per Pack35's own design) and prints
+  it once; idempotent re-run keeps the existing secret unless --rotate-secret passed.
+- scripts/test-viona-pack36a-staging-webhook-qa.ts — reuses buildVionaWebhookSignatureHeader()
+  unmodified; reads the channel's secret directly from the staging DB (no manual copy/paste); POSTs
+  a signed mock message to the LIVE staging URL; verifies HTTP 200 + accepted:true +
+  idempotentReplay:false + a matching webhookMessageAccepted VionaRequestAuditEvent row via an
+  independent DB read; --check-idempotency and --check-negative opt-in flags for replay + mis-signed
+  401 checks.
+- Both scripts: typecheck 0 errors, lint 0 errors/0 warnings (npx eslint on the 2 files directly).
+- Full local regression BEFORE touching staging: 21/21 existing scripts/test-viona-*.ts PASS,
+  npm run lint (expo lint, the project's real convention) 0 errors / 180 pre-existing warnings,
+  tsc --noEmit 0 errors.
+
+Deployment + migration (real actions performed):
+- `fly deploy --app viona-api-staging-eu --remote-only` — image version 18 -> 19, both machines
+  updated, GET /health -> 200 post-deploy. Zero Fly secret added/changed/removed (real-provider
+  flags PACK30_REAL_PROVIDER_EXECUTION_ENABLED etc. untouched, confirmed via `fly secrets list`
+  before and unchanged after).
+- `npx prisma migrate status` then `npx prisma migrate deploy` against the staging Supabase DB
+  (DATABASE_URL/DIRECT_URL in local .env already point at ref euqbfanilcssjiwwtcby, confirmed) —
+  both reported "Database schema is up to date!" / "No pending migrations to apply." The Pack35
+  VionaMerchantWebhookChannel table already existed from an earlier session's ledger-sync work —
+  this execution's migration step is a verified, evidence-backed no-op, not skipped.
+
+Live QA result (npx tsx scripts/test-viona-pack36a-staging-webhook-qa.ts --check-idempotency
+--check-negative), exact terminal evidence:
+  PASS health: HTTP 200
+  PASS provisioning: channel + merchant both isActive=true
+  PASS webhook: HTTP 200, accepted=true, idempotentReplay=false, requestId=<uuid>,
+    dispatchAccepted=false
+  PASS audit-verify: VionaRequestAuditEvent <uuid> confirms the round trip on the live staging
+    system
+  PASS idempotency: replay short-circuited (idempotentReplay:true), exactly 1 audit row total
+  PASS negative-control: mis-signed request correctly rejected with HTTP 401
+  ================ ALL CHECKS PASSED ================
+
+Finding surfaced, NOT fixed (out of this packet's allowlist, flagged for a future pack):
+dispatchAccepted is false on every run — vionaAutonomousDispatchService.ts's dispatch switch has a
+case for 'twilio_test_sms_poc' only; the 2 Pack34 merchant-read-only-query tools the Intent Router
+could route a webhook message to have no execution branch yet. OPENAI_API_KEY is also not currently
+a Fly secret on viona-api-staging-eu (checked via `fly secrets list`). Neither blocks or affects the
+webhook layer itself (accept -> create -> audit), which is fully verified live end-to-end; both are
+real, pre-existing gaps for a future, separately-authorized pack (wiring the merchant tool branch(es)
+into the dispatcher switch + adding OPENAI_API_KEY as a Fly secret, if/when real LLM-classified
+merchant-tool dispatch on staging is desired).
+
+Status: execution complete. Staging webhook endpoint is LIVE and independently verified end-to-end.
 
 === CANDIDATE NEXT STEPS (discovered, none authorized yet) ===
 1. Supply TWILIO_TEST_ACCOUNT_SID/TWILIO_TEST_AUTH_TOKEN locally (or run the equivalent flow on
@@ -411,7 +471,9 @@ Status: planning packet complete, PR opened (see chat).
    `prisma migrate dev`'s shadow-DB replay for any future contributor who runs it locally. Not
    fixed by Pack34.5 (ledger for it was already consistent; fixing the migration file's SQL itself
    is a separate, riskier task requiring careful review — out of scope here).
-5. Pack36A's own execution phase (operator phrase required — see the 3 phrases defined above:
-   APPROVE_PACK36A_STAGING_DEPLOY / APPROVE_PACK36A_WEBHOOK_QA_EXECUTION /
-   APPROVE_PACK36A_STAGING_DEPLOY_AND_QA_EXECUTION) - not requested yet, planning-only per this
-   session's explicit instruction.
+5. Wire the 2 Pack34 merchant-read-only-query tools into vionaAutonomousDispatchService.ts's
+   dispatch switch statement (currently only handles 'twilio_test_sms_poc') so a webhook message
+   the Intent Router correctly classifies to merchant_schedule_availability_check /
+   merchant_inventory_stock_check can actually produce dispatchAccepted:true end-to-end on staging,
+   plus add OPENAI_API_KEY as a Fly secret on viona-api-staging-eu (neither exists today - found,
+   not fixed, by this session's live Pack36A QA run).
