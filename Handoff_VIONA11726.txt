@@ -1000,6 +1000,19 @@ P2 phrase does NOT authorize deploy; P3 does NOT authorize app deploy.
 
 Plan: docs/product/VIONA_PACK40P_REQUEST_PROVENANCE_MODEL_PLAN.md
 
+=== PACK40P1 PROVENANCE SCHEMA (this session) — IMPLEMENTATION, MIGRATION NOT APPLIED ===
+Branch: feat/pack40p1-provenance-schema-implementation (from master @ 764cb16). PR #344 MERGED.
+Operator phrase: APPROVE_PACK40P1_PROVENANCE_SCHEMA_IMPLEMENTATION.
+
+Implemented: VionaRequestScopeKind enum; VionaRequest.scopeKind @default(legacyUnresolved);
+merchantProfileId FK (onDelete Restrict); MerchantProfile.vionaRequests back relation;
+migration 20260714120000_pack40p1_add_viona_request_provenance (unapplied).
+State: SCHEMA_COMMITTED_MIGRATION_NOT_APPLIED / DEPLOYMENT_BLOCKED_FOR_ENVIRONMENTS_WITHOUT_MIGRATION.
+No DB access, no create-path wiring, no deploy, no backfill, no Pack40A.
+Tests: Pack40P1 22/22 PASS; full local pack regression 24/24 PASS.
+Evidence: docs/product/VIONA_PACK40P1_PROVENANCE_SCHEMA_EVIDENCE.md
+Next after P1 merge: APPROVE_PACK40P3_STAGING_PROVENANCE_MIGRATION_APPLY (staging migrate only).
+
 === DEFERRED / BACKLOG (recorded, not authorized — logged during Pack37 sync per operator instruction; items 3-4 from the Pack38 sync addressed by Pack39 implementation above and removed from this list) ===
 1. Pack36B: Merchant Admin UI (Frontend AI Persona & Webhook Secret configuration) - Deferred to
    prioritize backend E2E. No merchant-facing UI exists to configure MerchantProfile.aiPersona,
@@ -1024,8 +1037,8 @@ Plan: docs/product/VIONA_PACK40P_REQUEST_PROVENANCE_MODEL_PLAN.md
    dry-run, unscheduled); legal/compliance review of region-specific retention windows and PII
    rule values (explicitly not claimed by PR #310).
 3. Wire tenant enforcement into VionaRequest call sites — **Pack40A BLOCKED behind Pack40P**
-   (docs/product/VIONA_PACK40P_REQUEST_PROVENANCE_MODEL_PLAN.md). Next: merge Pack40P rollout-amendment
-   PR, then APPROVE_PACK40P1_PROVENANCE_SCHEMA_IMPLEMENTATION when ready.
+   (docs/product/VIONA_PACK40P_REQUEST_PROVENANCE_MODEL_PLAN.md). Pack40P1 schema PR review/merge,
+   then APPROVE_PACK40P3_STAGING_PROVENANCE_MIGRATION_APPLY (staging migrate only).
 4. TourismBooking shadow-DB replay issue — see DEFERRED/BACKLOG section above (item 2).
 5. Pack37's remaining, not-yet-issued authorization phrases:
    APPROVE_PACK37_OPENAI_STAGING_SECRET — DONE this session (see dedicated section above): key
