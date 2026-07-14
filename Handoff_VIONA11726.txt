@@ -940,7 +940,21 @@ Audit (redacted IDs only): webhookMessageAccepted c4f522d1-..., dispatcherToolSe
 Final staging result: CLOSED_GREEN_SINGLE_CLASSIFICATION_VERIFIED.
 Evidence doc: docs/product/VIONA_PACK39_POST_MERGE_STAGING_VERIFICATION_EVIDENCE.md
 
-Status: staging verification complete, docs-only evidence PR opened (see chat) — NOT merged.
+Status: staging verification complete — docs-only evidence PR #339 MERGED @ 587dcd1.
+
+=== PACK40 MULTI-TENANT VIONA REQUEST ACCESS ENFORCEMENT (this session) — PLANNING ONLY ===
+Branch: docs/pack40-tenant-scope-enforcement-planning (from verified origin/master @ 587dcd1).
+Planning only — no product code, no schema/migration, no DB action, no staging call, no deploy,
+no secret action, no product behavior changed. No implementation authorized.
+
+Source audit (merged master): buildAuthorizedVionaRequestWhere() optional expectedTenantId exists
+but is NOT passed at any production call site — vionaRequestReadService.ts (list + detail),
+vionaRequestNoteActionService.ts, vionaRequestStatusActionService.ts (all 1-arg only). assertVionaRequestTenantMatchesMerchant() is used on webhook channel resolution only, not on JWT
+request access paths. Cross-user denial exists; cross-tenant merchant-owner denial does not.
+
+Plan: docs/product/VIONA_PACK40_TENANT_SCOPE_ENFORCEMENT_PLAN.md — tagged server-side access
+context, layered enforcement, no schema change, adversarial test matrix, staging QA design.
+Future implementation phrase: APPROVE_PACK40_TENANT_SCOPE_ENFORCEMENT_IMPLEMENTATION (not granted).
 
 === DEFERRED / BACKLOG (recorded, not authorized — logged during Pack37 sync per operator instruction; items 3-4 from the Pack38 sync addressed by Pack39 implementation above and removed from this list) ===
 1. Pack36B: Merchant Admin UI (Frontend AI Persona & Webhook Secret configuration) - Deferred to
@@ -965,9 +979,8 @@ Status: staging verification complete, docs-only evidence PR opened (see chat) �
    site at a time; schedule scripts/viona-pack33-audit-retention-job.ts for real (currently
    dry-run, unscheduled); legal/compliance review of region-specific retention windows and PII
    rule values (explicitly not claimed by PR #310).
-3. Wire buildAuthorizedVionaRequestWhere()'s new expectedTenantId param into the 3 existing
-   VionaRequest call sites (read/note/status-action services) — explicitly deferred by Pack34's
-   own plan, still outstanding.
+3. Wire buildAuthorizedVionaRequestWhere()'s new expectedTenantId param into the existing
+   VionaRequest call sites — **Pack40 planning packet opened** (docs/product/VIONA_PACK40_TENANT_SCOPE_ENFORCEMENT_PLAN.md); implementation NOT authorized yet.
 4. TourismBooking shadow-DB replay issue — see DEFERRED/BACKLOG section above (item 2).
 5. Pack37's remaining, not-yet-issued authorization phrases:
    APPROVE_PACK37_OPENAI_STAGING_SECRET — DONE this session (see dedicated section above): key
