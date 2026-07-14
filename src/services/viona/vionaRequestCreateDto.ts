@@ -108,6 +108,8 @@ export const VIONA_REQUEST_CREATE_FORBIDDEN_SIDE_EFFECT_KEYS = [
   'cancel',
   'merchant',
   'merchantaction',
+  'scopekind',
+  'merchantprofileid',
 ] as const;
 
 export type CreateVionaRequestInput = Readonly<{

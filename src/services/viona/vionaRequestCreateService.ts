@@ -1,4 +1,5 @@
 import type { Prisma } from '@prisma/client';
+import { VionaRequestScopeKind } from '@prisma/client';
 
 import { vionaRequestUniverses } from '../../domain/requests/vionaRequestTypes';
 import { getPrisma } from '../../lib/prisma';
@@ -332,6 +333,8 @@ export async function createVionaRequest(
         locale: localeResult.value ?? null,
         countryCode: countryCodeResult.value ?? null,
         metadataJson,
+        scopeKind: VionaRequestScopeKind.consumer,
+        merchantProfileId: null,
       },
       select: { id: true },
     });

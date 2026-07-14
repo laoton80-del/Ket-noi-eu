@@ -1025,6 +1025,18 @@ State: STAGING_SCHEMA_READY_APPLICATION_DEPLOY_STILL_SEPARATELY_AUTHORIZED.
 Evidence: docs/product/VIONA_PACK40P3_STAGING_PROVENANCE_MIGRATION_EVIDENCE.md
 Next: APPROVE_PACK40P2_CREATE_PATH_PROVENANCE_WIRING.
 
+=== PACK40P2 CREATE-PATH PROVENANCE WIRING (this session) — IMPLEMENTATION, NO DEPLOY ===
+Branch: feat/pack40p2-create-path-provenance-wiring (from master @ 4ec4e42). PR #346 MERGED.
+Operator phrase: APPROVE_PACK40P2_CREATE_PATH_PROVENANCE_WIRING.
+
+Pack19: scopeKind=consumer, merchantProfileId=null (server-assigned; dual-role safe).
+Pack35: scopeKind=merchant, merchantProfileId=channel.merchantProfileId, tenantId=channel.tenantId.
+Client scopeKind/merchantProfileId forbidden on Pack19 body.
+No DB, deploy, backfill, Pack40A. Tests: P2 14/14 PASS; full pack regression 25/25 PASS.
+Staging remains: STAGING_SCHEMA_READY_APPLICATION_DEPLOY_STILL_SEPARATELY_AUTHORIZED.
+Evidence: docs/product/VIONA_PACK40P2_CREATE_PATH_PROVENANCE_EVIDENCE.md
+Next after merge: APPROVE_PACK40P2D_STAGING_CREATE_PATH_PROVENANCE_DEPLOY.
+
 === DEFERRED / BACKLOG (recorded, not authorized — logged during Pack37 sync per operator instruction; items 3-4 from the Pack38 sync addressed by Pack39 implementation above and removed from this list) ===
 1. Pack36B: Merchant Admin UI (Frontend AI Persona & Webhook Secret configuration) - Deferred to
    prioritize backend E2E. No merchant-facing UI exists to configure MerchantProfile.aiPersona,
@@ -1049,8 +1061,8 @@ Next: APPROVE_PACK40P2_CREATE_PATH_PROVENANCE_WIRING.
    dry-run, unscheduled); legal/compliance review of region-specific retention windows and PII
    rule values (explicitly not claimed by PR #310).
 3. Wire tenant enforcement into VionaRequest call sites — **Pack40A BLOCKED behind Pack40P**
-   (docs/product/VIONA_PACK40P_REQUEST_PROVENANCE_MODEL_PLAN.md). Pack40P3 staging migration applied;
-   next APPROVE_PACK40P2_CREATE_PATH_PROVENANCE_WIRING (create paths, merge only — no deploy).
+   (docs/product/VIONA_PACK40P_REQUEST_PROVENANCE_MODEL_PLAN.md). Pack40P2 create-path PR review/merge,
+   then APPROVE_PACK40P2D_STAGING_CREATE_PATH_PROVENANCE_DEPLOY when ready.
 4. TourismBooking shadow-DB replay issue — see DEFERRED/BACKLOG section above (item 2).
 5. Pack37's remaining, not-yet-issued authorization phrases:
    APPROVE_PACK37_OPENAI_STAGING_SECRET — DONE this session (see dedicated section above): key

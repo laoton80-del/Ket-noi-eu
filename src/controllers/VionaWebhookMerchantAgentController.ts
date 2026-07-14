@@ -158,6 +158,7 @@ export async function postVionaWebhookMerchantAgent(
 
   const created = await createFromWebhookFn({
     tenantId: channel.tenantId,
+    merchantProfileId: channel.merchantProfileId,
     merchantOwnerUserId: channel.merchantOwnerUserId,
     channelType: channel.channelType,
     channelExternalId: channel.channelExternalId,
