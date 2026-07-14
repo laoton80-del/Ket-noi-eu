@@ -27,21 +27,31 @@
  *       (`editable={false}`) — never an editable field for AI-generated content
  *   6.  Source-scan (CRITICAL): none of the 3 new/modified frontend files import a new UI/CSS
  *       framework (tailwind, bootstrap, @mui, native-base, styled-components, etc.)
- *   7.  Source-scan (CRITICAL): every backend Pack32.1/32.3 core file has a 0-line diff vs
- *       origin/master (this pack is frontend-only)
- *   8.  git-diff-based (CRITICAL): MarketingApprovalScreen.tsx's diff vs origin/master contains
- *       ONLY added lines — zero removed/modified lines (existing approve/publish/delete flow
- *       untouched)
+ *   7.  Structural (CRITICAL): every backend Pack32.1/32.3 file this pack depends on but never
+ *       modifies still exposes the exact contract this pack relies on (this pack is frontend-only)
+ *   8.  Structural (CRITICAL): MarketingApprovalScreen.tsx still renders the embedded
+ *       AdminMarketingDraftGenerator AND every pre-existing approve/publish/reject/save action
+ *       handler (existing approve/publish/delete flow untouched)
  *   9.  Client-side validation: AdminMarketingDraftGenerator.tsx disables submission unless all
  *       3 fields are non-empty after trim (source-scan of the `isFormValid` gate)
- *   10. package.json has a 0-line diff vs origin/master (no new dependency added)
+ *
+ * Pack34.5 tech-debt note (see docs/product/VIONA_PACK34_5_TECH_DEBT_ERADICATION_EVIDENCE.md):
+ * tests 7, 8, and the former test 10 (`package.json` 0-line diff) previously shelled out to
+ * `git diff` against `origin/master`, a moving-target baseline. Test 7 and 8 broke permanently the
+ * instant *any* future, unrelated, legitimate change touched any of those shared files (exactly
+ * what Pack34 did to `vionaToolRegistry.ts` and `prisma/schema.prisma`) — rewritten as pure
+ * content-scans asserting each file still contains the specific marker(s) this pack actually
+ * depends on. The former test 10 asserted `package.json` would never change again, ever, which
+ * was never a real ongoing invariant this repo wants (dependencies do legitimately get added over
+ * time for unrelated features) — it was a one-time proof for this pack's own original PR, already
+ * historically true and of no further protective value, so it was removed outright rather than
+ * converted, per the operator's explicit "remove if no longer serving a security purpose" option.
  *
  * Run: npx tsx scripts/test-viona-pack32-4-marketing-admin-ui.ts
  */
 
 import * as fs from 'node:fs';
 import * as path from 'node:path';
-import { execSync } from 'node:child_process';
 
 function assert(condition: boolean, message: string): void {
   if (!condition) {
@@ -125,42 +135,54 @@ function testNoNewUiLibraryImported(): void {
   }
 }
 
-/** Test 7 (CRITICAL): every backend Pack32.1/32.3 core file has a 0-line diff vs origin/master. */
-function testBackendCoreFilesHaveZeroLineDiffVsMaster(): void {
-  const coreFiles = [
-    'src/controllers/AdminMarketingController.ts',
-    'src/routes/adminRoutes.ts',
-    'src/services/viona/vionaMarketingContentDispatchService.ts',
-    'src/services/marketing/AIPostGenerator.ts',
-    'src/services/marketing/FacebookGraphAPI.ts',
-    'src/lib/viona/dispatcher/vionaToolRegistry.ts',
-    'src/lib/viona/dispatcher/vionaIntentRouter.ts',
-    'src/middleware/authMiddleware.ts',
-    'src/middleware/superAdminMiddleware.ts',
-    'src/utils/apiEnvelope.ts',
-    'prisma/schema.prisma',
+/** Test 7 (CRITICAL, structural): every backend Pack32.1/32.3 file this pack depends on but never
+ * modifies still exposes the exact contract this pack relies on. Pure content-scan — see
+ * Pack34.5 tech-debt note in the module header for why this no longer uses `git diff`. */
+function testBackendCoreFilesStillExposeExpectedContract(): void {
+  const expectations: ReadonlyArray<readonly [string, readonly string[]]> = [
+    ['../src/controllers/AdminMarketingController.ts', ['export async function postAdminMarketingGenerateDraft', 'export async function postMarketingPostPublish']],
+    ['../src/routes/adminRoutes.ts', ['adminRouter.use(authMiddleware)', 'adminRouter.use(superAdminMiddleware)']],
+    ['../src/services/viona/vionaMarketingContentDispatchService.ts', ['export async function dispatchVionaMarketingContentRequest']],
+    ['../src/services/marketing/AIPostGenerator.ts', ['export async function generateVionaMarketingContentDraft']],
+    ['../src/services/marketing/FacebookGraphAPI.ts', ['export async function publishToFacebookPage']],
+    ['../src/lib/viona/dispatcher/vionaToolRegistry.ts', ['export function findVionaToolRegistryEntry']],
+    ['../src/lib/viona/dispatcher/vionaIntentRouter.ts', ['export async function routeVionaDispatchIntent']],
+    ['../src/middleware/authMiddleware.ts', ['export function authMiddleware']],
+    ['../src/middleware/superAdminMiddleware.ts', ['export async function superAdminMiddleware']],
+    ['../src/utils/apiEnvelope.ts', ['export function jsonOk', 'export function jsonFail']],
   ];
-  const repoRoot = path.resolve(__dirname, '..');
-  for (const file of coreFiles) {
-    const diff = execSync(`git diff --stat origin/master -- "${file}"`, { cwd: repoRoot, encoding: 'utf8' });
-    assert(diff.trim().length === 0, `${file} must have a 0-line diff vs origin/master (got: ${diff.trim()})`);
+  for (const [file, markers] of expectations) {
+    const source = readSourceNoComments(file);
+    for (const marker of markers) {
+      assert(source.includes(marker), `${file} must still contain "${marker}" (this pack must never break this shared file's contract)`);
+    }
   }
+
+  // prisma/schema.prisma: rather than a frozen 0-diff check (which this repo's own Pack34 already
+  // legitimately broke by adding an unrelated MerchantProfile model), assert the specific models
+  // this frontend-only pack does not own are still present, unchanged in name/shape.
+  const schemaSource = fs.readFileSync(path.resolve(__dirname, '../prisma/schema.prisma'), 'utf8');
+  assert(schemaSource.includes('model MarketingPost {'), 'schema.prisma must still declare model MarketingPost');
+  assert(schemaSource.includes('model MarketingTranslation {'), 'schema.prisma must still declare model MarketingTranslation');
 }
 
-/** Test 8 (CRITICAL): MarketingApprovalScreen.tsx diff vs origin/master contains ONLY added lines. */
-function testHostScreenDiffIsPurelyAdditive(): void {
-  const repoRoot = path.resolve(__dirname, '..');
-  const diff = execSync('git diff origin/master -- "src/screens/admin/MarketingApprovalScreen.tsx"', {
-    cwd: repoRoot,
-    encoding: 'utf8',
-  });
-  assert(diff.trim().length > 0, 'expected MarketingApprovalScreen.tsx to have a non-empty diff (the embed change)');
-  const lines = diff.split('\n');
-  const removedLines = lines.filter((l) => l.startsWith('-') && !l.startsWith('---'));
+/** Test 8 (CRITICAL, structural): MarketingApprovalScreen.tsx still renders the embedded
+ * AdminMarketingDraftGenerator AND every pre-existing approve/publish/reject/save action handler.
+ * Pure content-scan — see Pack34.5 tech-debt note in the module header for why this no longer
+ * uses `git diff`. */
+function testHostScreenStillEmbedsGeneratorAndPreservesExistingActions(): void {
+  const source = readSourceNoComments(HOST_SCREEN_FILE);
   assert(
-    removedLines.length === 0,
-    `MarketingApprovalScreen.tsx diff must contain zero removed/modified lines, found ${removedLines.length}: ${removedLines.join(' | ')}`
+    /import\s*\{\s*AdminMarketingDraftGenerator\s*\}\s*from\s*'\.\.\/\.\.\/components\/admin\/AdminMarketingDraftGenerator'/.test(source),
+    'MarketingApprovalScreen.tsx must still import AdminMarketingDraftGenerator',
   );
+  assert(source.includes('<AdminMarketingDraftGenerator'), 'MarketingApprovalScreen.tsx must still render <AdminMarketingDraftGenerator');
+  for (const marker of ['onApprovePolyglot', 'onApprovePublish', 'onReject', 'onSave', 'onForceDraft']) {
+    assert(
+      source.includes(marker),
+      `MarketingApprovalScreen.tsx must still reference its pre-existing ${marker} handler (existing approve/publish/reject/save flow untouched)`,
+    );
+  }
 }
 
 /** Test 9: client-side validation gates submission on all 3 fields being non-empty after trim. */
@@ -178,13 +200,6 @@ function testClientSideValidationGatesAllThreeFields(): void {
   assert(source.includes('disabled={!isFormValid || submitting}'), 'the Generate button must be disabled unless isFormValid');
 }
 
-/** Test 10: package.json has a 0-line diff vs origin/master (no new dependency added). */
-function testPackageJsonHasZeroLineDiff(): void {
-  const repoRoot = path.resolve(__dirname, '..');
-  const diff = execSync('git diff --stat origin/master -- "package.json"', { cwd: repoRoot, encoding: 'utf8' });
-  assert(diff.trim().length === 0, `package.json must have a 0-line diff vs origin/master (got: ${diff.trim()})`);
-}
-
 function main(): void {
   testApiWrapperCallsCorrectEndpoint();
   testPayloadTypeShapeMatchesController();
@@ -192,11 +207,10 @@ function main(): void {
   testComponentNeverReferencesPublishOrSocialPlatforms();
   testResultFieldIsReadOnly();
   testNoNewUiLibraryImported();
-  testBackendCoreFilesHaveZeroLineDiffVsMaster();
-  testHostScreenDiffIsPurelyAdditive();
+  testBackendCoreFilesStillExposeExpectedContract();
+  testHostScreenStillEmbedsGeneratorAndPreservesExistingActions();
   testClientSideValidationGatesAllThreeFields();
-  testPackageJsonHasZeroLineDiff();
-  console.log('PASS Pack32.4 marketing admin dashboard UI integration tests (10/10)');
+  console.log('PASS Pack32.4 marketing admin dashboard UI integration tests (9/9 — former test 10, a package.json 0-diff check with no ongoing protective value, was removed in Pack34.5)');
 }
 
 main();

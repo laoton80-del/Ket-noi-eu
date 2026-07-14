@@ -1,11 +1,12 @@
 VIONA — KERNEL/HANDOFF SNAPSHOT (local notes, not committed to git)
-Last updated: 2026-07-14 00:29 — Canonical Sync: Pack33 discovered ALREADY MERGED (planning +
-implementation + Kernel sync), verified independently this session. Pack31 orchestrator merged
-(PR #324). Wallet gap fixed + E2E pipeline run end-to-end locally (blocked only by missing local
-Twilio Test Credentials secret values, not a bug).
+Last updated: 2026-07-14 09:22 — Pack34.5 Tech Debt Eradication COMPLETE: eradicated all brittle
+git-diff-vs-origin/master test assertions across the 3 known-broken regression scripts (converted
+to stable content/structural scans), synced the 3 drifted Prisma migration ledger rows, 20/20
+viona regression scripts now 100% PASS.
 
-=== CURRENT MASTER HEAD ===
-f02d458 — "feat(viona): implement Pack 31 execution orchestrator and inProgress domain state (#324)"
+=== CURRENT MASTER HEAD (at Pack34.5 branch-cut) ===
+92ab026 — "feat(viona): implement Pack 34 B2B Merchant Gateway MerchantProfile, AI persona, and
+read-only tool registry (#326)"
 
 === PACK30D CHAIN STATUS (1 -> 8) — unchanged from last sync, still accurate ===
 | Pack  | Scope                                                  | Status            |
@@ -223,6 +224,62 @@ for ANY future change to the file they assert-frozen, not real regressions):
 
 Status: implementation complete, PR opened (see chat for link), targeting master.
 
+=== PACK34.5 — TECH DEBT ERADICATION (this session) — COMPLETE ===
+Operator-initiated cleanup pass, no new features. Branch: chore/pack34-5-tech-debt-eradication
+(cut from origin/master @ 92ab026, i.e. AFTER Pack34's PR #326 merge).
+
+Phase 1 — Eradicate brittle tests (all 3 known-broken scripts fixed, 0 test files added/removed):
+- scripts/test-viona-pack30d-5-real-provider-circuit-breaker.ts — test 11
+  (testTwilioAdapterDiffIsPurelyAdditive) asserted `git diff origin/master -- <file>` is non-empty
+  with zero removed lines. Broken by design the instant the file's own diff vs. an ever-moving
+  origin/master settles to empty post-merge. Replaced with
+  testTwilioAdapterPreservesOriginalContractAndBreakerWiring() — pure content-scan asserting the
+  original Pack30D-4 exports/reason-literals AND the new Pack30D-5 breaker markers are still
+  present. Test 10's existing-live-file git-diff-must-be-empty half was also converted to a
+  content-scan (existing live files must never reference the new breaker/adapter symbols) for the
+  same forward-compatibility reason, and the now-unused `execSync` import was removed.
+- scripts/test-viona-pack32-3-marketing-route-wiring.ts — test 14
+  (testCoreFilesHaveZeroLineDiffVsMaster) asserted 7 shared files have a 0-line diff vs
+  origin/master forever; broke the moment Pack34 legitimately extended vionaToolRegistry.ts.
+  Replaced with testCoreFilesStillExposeExpectedContract() — per-file assertion that each of the 7
+  files still contains the exact exported symbol(s)/markers this pack depends on (e.g.
+  findVionaToolRegistryEntry + the 2 pre-existing tool-registry entries, authMiddleware,
+  superAdminMiddleware, jsonOk/jsonFail, etc.), regardless of what else legitimately changes in
+  those files over time. `execSync` import removed (no longer used anywhere in this file).
+- scripts/test-viona-pack32-4-marketing-admin-ui.ts — test 7
+  (testBackendCoreFilesHaveZeroLineDiffVsMaster, 11 files incl. vionaToolRegistry.ts AND
+  prisma/schema.prisma — the latter also newly broken by Pack34's MerchantProfile addition) and
+  test 8 (testHostScreenDiffIsPurelyAdditive, same ">0 diff forever" bug as Pack30D-5's test 11)
+  both converted to content-scans the same way (per-file expected-symbol checks; schema.prisma
+  checked for `model MarketingPost {` / `model MarketingTranslation {` presence instead of a
+  frozen diff; the host screen checked for the AdminMarketingDraftGenerator embed + every
+  pre-existing action handler name). The former test 10 (package.json 0-line diff forever) was
+  REMOVED outright rather than converted — it was a one-time proof for Pack32.4's own original PR
+  (already historically true), asserting "no dependency is ever added again" is not a real ongoing
+  invariant this repo wants, and it had no residual security/architectural value. `execSync`
+  import removed (no longer used anywhere in this file). Test count in the pass banner corrected
+  from 10/10 to 9/9 accordingly.
+Verified: all 20 scripts/test-viona-*.ts regression scripts now 20/20 PASS (see full list in
+Pack34.5 evidence doc). typecheck: 0 errors. lint: 0 errors, 180 pre-existing warnings (unchanged
+count, none newly introduced).
+
+Phase 2 — Prisma migration ledger sync (metadata-only, zero DDL executed, zero data touched):
+`npx prisma migrate status` on the working DATABASE_URL showed 3 migrations "not yet applied":
+20260712150000_add_viona_request_escrow_hold, 20260713080000_add_viona_request_audit_event_
+retention_fields, 20260713120000_add_llm_router_task_type_viona_real_execution_content. Verified
+via direct information_schema/pg_enum queries that ALL 3 migrations' underlying DB objects
+(VionaRequestEscrowHold table + VionaRequestEscrowHoldStatus enum + TxType.
+VIONA_REQUEST_EXECUTION_SETTLED; VionaRequestAuditEvent.retentionRegion/anonymizedAt columns;
+LlmRouterTaskType.VIONA_REAL_EXECUTION_CONTENT enum value) already exist in the live database —
+confirming this was pure ledger bookkeeping drift, not missing schema. Ran
+`npx prisma migrate resolve --applied <dir>` for each of the 3 (no `migrate dev`, no `db push`, no
+table drop, no data touched). `npx prisma migrate status` now reports "Database schema is up to
+date!" with all 14 migrations reconciled. The previously-flagged
+20250430120000_tourism_net_gross_platform_fields (TourismBooking) row was re-checked and confirmed
+already APPLIED in this exact database's ledger — its earlier P3006 failure was a `prisma migrate
+dev` shadow-DB replay issue (unrelated to the real DATABASE_URL's ledger state), already
+worked around during Pack34 and requiring no further action here.
+
 === CANDIDATE NEXT STEPS (discovered, none authorized yet) ===
 1. Supply TWILIO_TEST_ACCOUNT_SID/TWILIO_TEST_AUTH_TOKEN locally (or run the equivalent flow on
    Staging where they already exist) to get a real, non-blocked realProviderResult outcome.
@@ -231,5 +288,11 @@ Status: implementation complete, PR opened (see chat for link), targeting master
    site at a time; schedule scripts/viona-pack33-audit-retention-job.ts for real (currently
    dry-run, unscheduled); legal/compliance review of region-specific retention windows and PII
    rule values (explicitly not claimed by PR #310).
-3. Cleanup pack for the 2 stale self-referential diff-check test failures above (Pack30D-5,
-   Pack32.4 test scripts) — low priority, cosmetic/test-hygiene only.
+3. Wire buildAuthorizedVionaRequestWhere()'s new expectedTenantId param into the 3 existing
+   VionaRequest call sites (read/note/status-action services) — explicitly deferred by Pack34's
+   own plan, still outstanding.
+4. The underlying `20250430120000_tourism_net_gross_platform_fields` migration file itself still
+   references a TourismBooking table shape that doesn't match reality, which will keep breaking
+   `prisma migrate dev`'s shadow-DB replay for any future contributor who runs it locally. Not
+   fixed by Pack34.5 (ledger for it was already consistent; fixing the migration file's SQL itself
+   is a separate, riskier task requiring careful review — out of scope here).
