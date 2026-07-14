@@ -68,8 +68,12 @@ function main() {
   console.log(`[fly-staging-sync-secrets] Importing secrets to app ${APP} (keys only):`);
   console.log(lines.map((l) => l.split('=')[0]).join(', '));
 
-  const r = spawnSync(bin, ['secrets', 'import', '--app', APP, tmp], {
-    stdio: 'inherit',
+  // `flyctl secrets import` reads NAME=VALUE pairs from stdin — it does NOT accept a file
+  // path positional argument. Passing a file path there is silently ignored and flyctl then
+  // blocks forever waiting on stdin, so the secrets payload must be piped in via `input`.
+  const r = spawnSync(bin, ['secrets', 'import', '--app', APP], {
+    input: fs.readFileSync(tmp),
+    stdio: ['pipe', 'inherit', 'inherit'],
     shell: process.platform === 'win32',
   });
 

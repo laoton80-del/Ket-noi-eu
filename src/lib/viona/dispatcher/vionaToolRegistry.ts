@@ -146,8 +146,16 @@ export const VIONA_TOOL_REGISTRY: readonly VionaToolRegistryEntry[] = [
   },
   {
     name: 'merchant_schedule_availability_check',
+    // Pack38 — B2B Intent Tuning: broadened (text-only, zero inputSchema change) to explicitly
+    // cover "opening/business/operating hours" and "are you open [today/now]"-style phrasing —
+    // the live-staging finding this pack fixes (docs/product/VIONA_PACK38_B2B_INTENT_TUNING_PLAN.md
+    // §2) was a real customer message ("What are your opening hours today?") the model declined to
+    // match because the description previously spoke ONLY of "open appointment slots in a date
+    // range", never hours/open-status framing. Also adds an explicit, safe same-day fallback
+    // instruction so the model never has to guess how to fill the still-unchanged
+    // dateRangeStart/dateRangeEnd schema for a bare "today"/"now" question.
     description:
-      "Read-only: check a merchant's own appointment/booking schedule for open slots in a given date range. Never creates, modifies, or cancels any booking.",
+      "Read-only: check a merchant's own appointment/booking schedule for open slots in a given date range, OR answer a general opening/business/operating-hours question (e.g. \"what are your hours\", \"are you open today\", \"are you open now\"). Never creates, modifies, or cancels any booking. For a same-day/general-hours question with no explicit date range given, use today's date for both dateRangeStart and dateRangeEnd.",
     category: 'merchant_read_only_query',
     merchantScopedOnly: true,
     // Same traceability-anchor pattern as the existing entries above — no new Pack26B action id
@@ -158,8 +166,11 @@ export const VIONA_TOOL_REGISTRY: readonly VionaToolRegistryEntry[] = [
   },
   {
     name: 'merchant_inventory_stock_check',
+    // Pack38 — B2B Intent Tuning: broadened (text-only, zero inputSchema change) with 2 additional
+    // common real-world phrasings ("do you have X in stock", "is X available") alongside the
+    // existing framing — same rationale as the sibling entry above.
     description:
-      "Read-only: check a merchant's own inventory/stock count for a named item or SKU. Never reserves, decrements, or modifies stock.",
+      "Read-only: check a merchant's own inventory/stock count for a named item or SKU (e.g. \"do you have <item> in stock\", \"is <item> available\"). Never reserves, decrements, or modifies stock.",
     category: 'merchant_read_only_query',
     merchantScopedOnly: true,
     linkedActionId: 'request.assign',
