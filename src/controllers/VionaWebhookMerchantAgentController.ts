@@ -202,6 +202,10 @@ export async function postVionaWebhookMerchantAgent(
         operatorApprovalGranted: approvalFlags.operatorApprovalGranted,
         userConsentGranted: approvalFlags.userConsentGranted,
         idempotencyKey: body.externalMessageId.trim(),
+        // Pack37 — required for the 2 merchant-read-only-query tools' own new switch cases
+        // (`vionaAutonomousDispatchService.ts`); the pre-existing `twilio_test_sms_poc` case never
+        // reads this field, so this is purely additive from that case's point of view.
+        merchantContext: { tenantId: channel.tenantId, merchantProfileId: channel.merchantProfileId },
       },
       { callLlm },
     );
@@ -215,10 +219,23 @@ export async function postVionaWebhookMerchantAgent(
     return;
   }
 
+  // Pack37 — additive, optional field: present only when the accepted tool was a merchant
+  // read-only query; `null` for every other path (including `twilio_test_sms_poc` and every
+  // rejected dispatch) — see docs/product/VIONA_PACK37_B2B_DISPATCHER_REALIZATION_PLAN.md §6.2.
+  const merchantQueryResult =
+    dispatchResult.route !== null && dispatchResult.route.kind === 'merchantReadOnlyQuery'
+      ? {
+          toolName: dispatchResult.route.result.toolName,
+          dataAvailable: dispatchResult.route.result.dataAvailable,
+          replyText: dispatchResult.route.result.replyText,
+        }
+      : null;
+
   res.status(200).json({
     accepted: true,
     idempotentReplay: false,
     requestId: created.requestId,
     dispatchAccepted: dispatchResult.dispatch.accepted === true,
+    merchantQueryResult,
   });
 }

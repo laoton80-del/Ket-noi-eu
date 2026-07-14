@@ -280,7 +280,12 @@ async function testFullHappyPathPassesThroughRouteResultUnchanged(): Promise<voi
   });
 
   assert(result.ok && result.dispatch.accepted === true, 'a valid dispatch must be accepted');
-  assert(result.ok && result.dispatch.accepted === true && result.route === fakeResult, 'the existing pipeline result must be returned byte-for-byte unchanged, never re-wrapped or mutated');
+  // Pack37: `route` is now a `{ kind, result }` wrapper — the existing pipeline's own result is
+  // still returned byte-for-byte unchanged, just addressed via `.result` instead of directly.
+  assert(
+    result.ok && result.route !== null && result.route.kind === 'twilioTestSmsPoc' && result.route.result === fakeResult,
+    'the existing pipeline result must be returned byte-for-byte unchanged, never re-wrapped or mutated',
+  );
   assert(rows.some((r) => r.eventType === 'dispatcherToolSelected'), 'a dispatcherToolSelected audit row must be written before the downstream call');
   assert(spy.calls.length === 1, 'the existing pipeline must be invoked exactly once');
 }
@@ -305,7 +310,10 @@ async function testInsufficientFundsPassthroughUnchanged(): Promise<void> {
     routeExecutor: spy.executor,
   });
 
-  assert(result.ok && result.dispatch.accepted === true && result.route === fakeResult, 'an insufficient-funds hold failure from the existing pipeline must be surfaced unchanged, never retried or bypassed');
+  assert(
+    result.ok && result.route !== null && result.route.kind === 'twilioTestSmsPoc' && result.route.result === fakeResult,
+    'an insufficient-funds hold failure from the existing pipeline must be surfaced unchanged, never retried or bypassed',
+  );
   assert(spy.calls.length === 1, 'the dispatcher must never call the existing pipeline more than once per dispatch');
 }
 
@@ -342,7 +350,10 @@ async function testTwilioFailureRefundPassthroughUnchanged(): Promise<void> {
     routeExecutor: spy.executor,
   });
 
-  assert(result.ok && result.dispatch.accepted === true && result.route === fakeResult, 'a provider failure + refund outcome must be surfaced unchanged');
+  assert(
+    result.ok && result.route !== null && result.route.kind === 'twilioTestSmsPoc' && result.route.result === fakeResult,
+    'a provider failure + refund outcome must be surfaced unchanged',
+  );
 }
 
 /** Test 11: source-scan — no LangChain/LlamaIndex/agent-framework import in any new Pack32 file. */

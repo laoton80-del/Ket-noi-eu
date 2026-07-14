@@ -25,6 +25,12 @@ const SECRET_KEYS = [
   'AWS_SES_SENDER_EMAIL',
   'MAIL_FROM',
   'SES_FROM_EMAIL',
+  // Pack37 — B2B Dispatcher Realization: required for real LLM classification/reply-phrasing on
+  // staging. Additive only — the loop below already skips any key with an empty local value, so
+  // an operator with no local OPENAI_API_KEY configured sees this simply never synced, never a
+  // failure (see docs/product/VIONA_PACK37_B2B_DISPATCHER_REALIZATION_PLAN.md §5.2). Operator must
+  // confirm the local value pushed here is the one intended for staging LLM spend/quota.
+  'OPENAI_API_KEY',
 ];
 
 const CORS_ORIGINS =

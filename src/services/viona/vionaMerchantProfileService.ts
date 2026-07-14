@@ -96,6 +96,19 @@ export async function findMerchantProfileByOwnerUserId(ownerUserId: string): Pro
   return getPrisma().merchantProfile.findUnique({ where: { ownerUserId: trimmed } });
 }
 
+/**
+ * Pack37 — B2B Dispatcher Realization: additive, id-keyed read lookup (see
+ * docs/product/VIONA_PACK37_B2B_DISPATCHER_REALIZATION_PLAN.md §4.4/§8). Added because
+ * `ResolvedVionaWebhookChannel` (Pack35) already carries `merchantProfileId` all the way to the
+ * dispatcher's input, so a future persona-resolution call site can look the row up directly by id
+ * without requiring any change to `vionaWebhookChannelResolutionService.ts`.
+ */
+export async function findMerchantProfileById(id: string): Promise<MerchantProfile | null> {
+  const trimmed = id.trim();
+  if (!isNonEmptyTrimmed(trimmed)) return null;
+  return getPrisma().merchantProfile.findUnique({ where: { id: trimmed } });
+}
+
 export type UpdateMerchantProfileAiPersonaResult =
   | Readonly<{ ok: true }>
   | Readonly<{ ok: false; reason: 'not_found' }>;
