@@ -473,6 +473,7 @@ async function runOptionalLiveDbTests(): Promise<void> {
     const externalMessageId = `pack35-live-${Date.now()}`;
     const input = {
       tenantId: `tenant-pack35-live-${Date.now()}`,
+      merchantProfileId: `mp-pack35-live-${Date.now()}`,
       merchantOwnerUserId: `user-pack35-live-${Date.now()}`,
       channelType: 'custom_client',
       channelExternalId: `ext-live-${Date.now()}`,

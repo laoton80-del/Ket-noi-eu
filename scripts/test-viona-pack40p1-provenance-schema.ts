@@ -18,21 +18,18 @@ const MIGRATION_DIR = path.join(
 );
 const MIGRATION_PATH = path.join(MIGRATION_DIR, 'migration.sql');
 
-const PROTECTED_PATHS = [
+const PROTECTED_PATHS_NO_PROVENANCE = [
   'src/controllers/VionaRequestController.ts',
-  'src/services/viona/vionaRequestCreateService.ts',
-  'src/services/viona/vionaRequestCreateDto.ts',
-  'src/controllers/VionaWebhookMerchantAgentController.ts',
-  'src/services/viona/vionaRequestCreateFromWebhookService.ts',
   'src/services/viona/vionaRequestAccessScope.ts',
+] as const;
+
+const CREATE_PATHS_EXPECT_PROVENANCE = [
+  'src/services/viona/vionaRequestCreateService.ts',
+  'src/services/viona/vionaRequestCreateFromWebhookService.ts',
 ] as const;
 
 const FORBIDDEN_RUNTIME_ENUM_REFS = [
   'src/controllers/VionaRequestController.ts',
-  'src/services/viona/vionaRequestCreateService.ts',
-  'src/services/viona/vionaRequestCreateDto.ts',
-  'src/controllers/VionaWebhookMerchantAgentController.ts',
-  'src/services/viona/vionaRequestCreateFromWebhookService.ts',
   'src/services/viona/vionaRequestAccessScope.ts',
   'src/services/viona/vionaRequestReadService.ts',
   'src/services/viona/vionaRequestNoteActionService.ts',
@@ -210,15 +207,28 @@ function main(): void {
     assert(fs.existsSync(MIGRATION_PATH), 'migration.sql must exist at expected path');
   });
 
-  for (const relativePath of PROTECTED_PATHS) {
-    runTest(`protected create/access path unchanged by P1 provenance wiring: ${relativePath}`, () => {
+  for (const relativePath of PROTECTED_PATHS_NO_PROVENANCE) {
+    runTest(`protected path without provenance wiring: ${relativePath}`, () => {
       const source = readUtf8(relativePath);
-      assert(!source.includes('VionaRequestScopeKind'), `${relativePath} must not reference VionaRequestScopeKind in P1`);
-      assert(!source.includes('scopeKind'), `${relativePath} must not reference scopeKind in P1`);
+      assert(!source.includes('VionaRequestScopeKind'), `${relativePath} must not reference VionaRequestScopeKind`);
+      assert(!source.includes('scopeKind'), `${relativePath} must not reference scopeKind`);
     });
   }
 
-  runTest('no runtime production file references VionaRequestScopeKind or scopeKind', () => {
+  for (const relativePath of CREATE_PATHS_EXPECT_PROVENANCE) {
+    runTest(`create path assigns provenance after Pack40P2: ${relativePath}`, () => {
+      const source = readUtf8(relativePath);
+      assert(source.includes('scopeKind'), `${relativePath} must assign scopeKind after Pack40P2`);
+    });
+  }
+
+  runTest('Pack19 DTO forbids client provenance keys', () => {
+    const source = readUtf8('src/services/viona/vionaRequestCreateDto.ts');
+    assert(source.includes("'scopekind'"), 'scopekind must be forbidden in Pack19 DTO');
+    assert(source.includes("'merchantprofileid'"), 'merchantprofileid must be forbidden in Pack19 DTO');
+  });
+
+  runTest('no access-policy file references scopeKind', () => {
     for (const relativePath of FORBIDDEN_RUNTIME_ENUM_REFS) {
       const source = readUtf8(relativePath);
       assert(!source.includes('VionaRequestScopeKind'), `${relativePath} must not reference VionaRequestScopeKind`);

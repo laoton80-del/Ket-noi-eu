@@ -22,6 +22,7 @@
  */
 
 import type { Prisma } from '@prisma/client';
+import { VionaRequestScopeKind } from '@prisma/client';
 
 import { getPrisma } from '../../lib/prisma';
 
@@ -37,6 +38,7 @@ export const VIONA_WEBHOOK_CREATE_AUDIT_EVENT_TYPE = 'webhookMessageAccepted' as
 
 export type CreateVionaRequestFromWebhookMessageInput = Readonly<{
   tenantId: string;
+  merchantProfileId: string;
   merchantOwnerUserId: string;
   channelType: string;
   channelExternalId: string;
@@ -90,6 +92,7 @@ export async function createVionaRequestFromWebhookMessage(
   input: CreateVionaRequestFromWebhookMessageInput,
 ): Promise<CreateVionaRequestFromWebhookMessageResult> {
   const tenantId = input.tenantId.trim();
+  const merchantProfileId = input.merchantProfileId.trim();
   const merchantOwnerUserId = input.merchantOwnerUserId.trim();
   const channelType = input.channelType.trim();
   const channelExternalId = input.channelExternalId.trim();
@@ -99,6 +102,7 @@ export async function createVionaRequestFromWebhookMessage(
 
   if (
     !isNonEmptyTrimmed(tenantId) ||
+    !isNonEmptyTrimmed(merchantProfileId) ||
     !isNonEmptyTrimmed(merchantOwnerUserId) ||
     !isNonEmptyTrimmed(channelType) ||
     !isNonEmptyTrimmed(channelExternalId) ||
@@ -147,6 +151,8 @@ export async function createVionaRequestFromWebhookMessage(
         title: deriveTitle(messageText),
         summary: messageText,
         metadataJson,
+        scopeKind: VionaRequestScopeKind.merchant,
+        merchantProfileId,
       },
       select: { id: true },
     });
