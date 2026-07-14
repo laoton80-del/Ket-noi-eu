@@ -1,12 +1,12 @@
 VIONA — KERNEL/HANDOFF SNAPSHOT (local notes, not committed to git)
-Last updated: 2026-07-14 14:27 — Pack39 B2B Routing Performance & Test Isolation Fixes
-IMPLEMENTATION complete: double-LLM-call dedup via precomputedIntentDecision + test-isolation
-Layers 1-2 (fake executeMerchantQuery in test #19 + withOpenAiApiKeyDeeplyUnsetAsync Proxy guard).
-Layer 3 (AIRouterService.ts circuit breaker) explicitly NOT authorized — production kept pure.
-Full regression 23/23 PASS, Pack37 suite ~7s (no real network calls). See new IMPLEMENTATION section.
+Last updated: 2026-07-14 14:54 — Pack39 POST-MERGE CANONICAL CLOSURE SYNC (docs-only): PR #337
+MERGED @ 3ae223a; post-merge verification from clean worktree @ origin/master re-confirmed
+15/15 Pack39, 27/27 Pack37, 23/23 full local regression, typecheck + lint PASS; Layer 3 absent;
+no staging deploy/live QA in this closure task. Final Pack39 state: CLOSED/GREEN.
 
-=== CURRENT MASTER HEAD (at Pack39 implementation branch-cut) ===
-b41aceb — "docs(product): add Pack 39 Tech Debt Eradication planning packet (#336)"
+=== CURRENT MASTER HEAD (verified post-merge) ===
+3ae223a — "chore(viona): implement Pack39 routing dedup and test isolation fixes (#337)"
+(implementation commit pre-merge: 67f7160)
 
 === PACK30D CHAIN STATUS (1 -> 8) — unchanged from last sync, still accurate ===
 | Pack  | Scope                                                  | Status            |
@@ -877,7 +877,33 @@ Docs updated: this file + docs/ai-context/VIONA_KERNEL_HANDOFF_FAST_SAFE_GLOBAL_
 implementation table row; DEFERRED/BACKLOG items 1-2 explicitly kept — Pack36B Merchant Admin UI,
 TourismBooking shadow-DB replay issue).
 
-Status: implementation complete, PR opened (see chat).
+Status: **PR #337 MERGED** @ merge commit `3ae223a8d03b87839861ad24f4132a506af01595` (2026-07-14).
+Implementation commit pre-merge: `67f7160dc19318cd7347e0164ae03c36d4038a38`. Release Discipline on
+PR #337: SUCCESS. Final Pack39 product state: **CLOSED/GREEN**.
+
+=== PACK39 POST-MERGE CANONICAL CLOSURE SYNC (this session) — DOCS-ONLY ===
+Branch: docs/pack39-post-merge-closure-sync (clean worktree cut from verified origin/master @
+3ae223a). Purpose: correct stale "PR opened" wording and record post-merge verification evidence.
+No runtime/schema/migration/deploy/staging/DB/secret/provider action authorized or performed.
+
+Post-merge verification (clean worktree @ origin/master, npm ci + prisma generate only — no .env
+read/modify, no staging HTTP, no Fly, no OpenAI/Twilio):
+  - Typecheck: 0 errors
+  - ESLint (Pack39 touched files): 0 new errors/warnings
+  - scripts/test-viona-pack39-routing-performance-and-test-isolation.ts: 15/15 PASS (~2.2s)
+  - scripts/test-viona-pack37-b2b-dispatcher-realization.ts: 27/27 PASS (~1.9s)
+  - Full local scripts/test-viona-pack*.ts regression: 23/23 PASS (Pack36A live-staging QA excluded)
+  - No OpenAI/provider network logs observed; Pack37 timing confirms no real billed call
+  - Layer 3 VIONA_TEST_BLOCK_REAL_OPENAI_CALLS: absent from production code (verified)
+  - AIRouterService.ts: zero Pack39 diff
+
+PR references (both MERGED):
+  - Planning PR #336 @ b41aceb (merged 2026-07-14T12:09:07Z)
+  - Implementation PR #337 @ 67f7160 -> merge 3ae223a (merged 2026-07-14T12:36:56Z)
+
+This closure docs PR does NOT authorize any new product pack.
+
+Status: docs-only closure PR opened (see chat) — NOT merged by this task.
 
 === DEFERRED / BACKLOG (recorded, not authorized — logged during Pack37 sync per operator instruction; items 3-4 from the Pack38 sync addressed by Pack39 implementation above and removed from this list) ===
 1. Pack36B: Merchant Admin UI (Frontend AI Persona & Webhook Secret configuration) - Deferred to
