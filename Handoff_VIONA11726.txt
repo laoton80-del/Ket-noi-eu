@@ -903,7 +903,44 @@ PR references (both MERGED):
 
 This closure docs PR does NOT authorize any new product pack.
 
-Status: docs-only closure PR opened (see chat) — NOT merged by this task.
+Status: docs-only closure PR #338 MERGED @ `2866e6594decb433dd5b87bff48271acda821af0`.
+
+=== PACK39 POST-MERGE STAGING SINGLE-CLASSIFICATION VERIFICATION (this session) — COMPLETE ===
+Branch: docs/pack39-post-merge-staging-verification (from verified origin/master @ 2866e659).
+Operator phrase: APPROVE_PACK39_POST_MERGE_STAGING_VERIFICATION. Execution-only — no product-code
+edit, no migration, no secret change, no remediation.
+
+Local pre-deploy gates (master): Pack39 15/15, Pack37 27/27, full regression 23/23, typecheck 0,
+lint 0 on Pack39 touched files.
+
+Staging deploy: fly deploy --app viona-api-staging-eu --remote-only — SUCCESS.
+  Pre-deploy image: deployment-01KXG6G8Y1780EQNNWTMVKVM29 (v21)
+  Post-deploy image: deployment-01KXGC1AZ87H5B6D0DN2F6KH1K
+  Health: HTTP 200 pre and post deploy.
+
+Live QA (scripts/test-viona-pack36a-staging-webhook-qa.ts --check-idempotency --check-negative):
+  ALL CHECKS PASSED
+  externalMessageId: pack36a-qa-1784034901332-9advwz
+  requestId: e7759dbf-e078-4fa9-8c33-be4cfaf0af41
+  Positive: HTTP 200, accepted=true, idempotentReplay=false, dispatchAccepted=true,
+    merchantQueryResult.toolName=merchant_schedule_availability_check, dataAvailable=false,
+    non-empty replyText (Tier-2 phrased).
+  Idempotency: HTTP 200, idempotentReplay=true, exactly 1 webhookMessageAccepted audit row.
+  Negative: HTTP 401 Invalid signature.
+
+Single-classification verification (read-only LlmApiUsageLog, QA window 13:14:50–13:15:30Z):
+  classificationCallCount (promptTokens=1008): 1
+  duplicateClassificationCallCount: 0
+  replyFormattingCallCount (promptTokens=103, Tier-2 allowed): 1
+  Pre-Pack39 baseline for same flow was 2x ~1008 + optional Tier-2.
+
+Audit (redacted IDs only): webhookMessageAccepted c4f522d1-..., dispatcherToolSelected 94670739-...
+  (merchant_schedule_availability_check, confidence 0.85) — exactly one tool-selected row.
+
+Final staging result: CLOSED_GREEN_SINGLE_CLASSIFICATION_VERIFIED.
+Evidence doc: docs/product/VIONA_PACK39_POST_MERGE_STAGING_VERIFICATION_EVIDENCE.md
+
+Status: staging verification complete, docs-only evidence PR opened (see chat) — NOT merged.
 
 === DEFERRED / BACKLOG (recorded, not authorized — logged during Pack37 sync per operator instruction; items 3-4 from the Pack38 sync addressed by Pack39 implementation above and removed from this list) ===
 1. Pack36B: Merchant Admin UI (Frontend AI Persona & Webhook Secret configuration) - Deferred to
