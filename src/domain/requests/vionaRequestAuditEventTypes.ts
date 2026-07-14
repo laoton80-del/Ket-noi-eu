@@ -60,6 +60,15 @@ export const vionaRequestAuditEventTypes = [
   'dispatcherIntentRejected',
   'dispatcherToolSelected',
   'dispatcherHallucinationBlocked',
+  // Pack35 — B2B Omni-Channel Webhook & Agent Routing (see
+  // docs/product/VIONA_PACK35_B2B_WEBHOOK_ROUTING_PLAN.md §5.2/§6.1). Written by
+  // `vionaRequestCreateFromWebhookService.ts` for every signature-verified, tenant-resolved
+  // inbound webhook message — `webhookMessageAccepted` on first-time creation (also the row this
+  // increment's idempotency scan matches on, keyed by `externalMessageId` in `payloadJson`),
+  // `webhookMessageRejected` for a validation failure. Never emitted for the underlying dispatch
+  // outcome itself — that already has its own Pack32 event types above, unmodified.
+  'webhookMessageAccepted',
+  'webhookMessageRejected',
 ] as const;
 
 export type VionaRequestAuditEventType = (typeof vionaRequestAuditEventTypes)[number];
