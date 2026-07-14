@@ -1,8 +1,10 @@
 VIONA — KERNEL/HANDOFF SNAPSHOT (local notes, not committed to git)
-Last updated: 2026-07-14 11:48 — Pack37 B2B Dispatcher Realization IMPLEMENTATION complete
-(operator phrase APPROVE_PACK37_B2B_DISPATCHER_REALIZATION_IMPLEMENTATION, Option A zero-new-tables
-MVP): the dispatchAccepted:false gap Pack36A's live QA found is now CLOSED for both Pack34 merchant
-read-only tools. 27/27 new tests PASS + 22/22 full regression PASS + typecheck/lint 0 errors.
+Last updated: 2026-07-14 13:10 — Pack38 B2B Intent Routing & Confidence Tuning PLANNING complete
+(docs-only): designs closing the low_confidence finding the APPROVE_PACK37_OPENAI_STAGING_SECRET
+session surfaced (tool description phrasing + zero few-shot examples in the classification prompt),
+tracks committing the still-pending fly-staging-sync-secrets.mjs stdin fix, and defines 2 separate
+authorization phrases (Option A description/example tuning vs. Option B confidence-threshold
+review) so they can never be silently bundled. See new section below.
 
 === CURRENT MASTER HEAD (at Pack37 implementation branch-cut) ===
 74a92bb — "docs(product): add Pack 37 B2B Dispatcher Realization planning packet (#332)"
@@ -574,6 +576,105 @@ Docs updated same session: this file + docs/ai-context/VIONA_KERNEL_HANDOFF_FAST
 
 Status: implementation complete, PR opened (see chat).
 
+=== APPROVE_PACK37_OPENAI_STAGING_SECRET — EXECUTED (this session) — COMPLETE ===
+Operator phrase: APPROVE_PACK37_OPENAI_STAGING_SECRET. No new branch/PR — Fly secret + local script
+fix only, per the operator's own scoped instructions (verify -> inject -> QA -> state sync).
+
+1. Secret verification: local .env's OPENAI_API_KEY was found EMPTY on first read this session
+   (blocked, asked operator rather than proceeding with a fake/missing key). Operator manually
+   updated .env with a real `sk-proj-...` key; re-read confirmed a real, non-placeholder value before
+   any Fly action was taken.
+2. Bug found + fixed in scripts/fly-staging-sync-secrets.mjs: `flyctl secrets import` reads
+   NAME=VALUE pairs from STDIN — it does NOT accept a file-path positional argument. The script was
+   passing the temp secrets file as a positional arg (spawnSync(bin, ['secrets','import','--app',APP,
+   tmp], {stdio:'inherit'})), which flyctl silently ignores, then blocks forever waiting on stdin that
+   never arrives. This caused 3 separate real hangs this session (7+ min each, zero output, confirmed
+   via Get-Process/tasklist that no flyctl.exe was even doing any work) before the root cause was
+   isolated via `flyctl secrets import --help`. Fixed by piping the file's contents in via
+   `spawnSync(..., { input: fs.readFileSync(tmp), stdio: ['pipe','inherit','inherit'] })` — same
+   secrets payload, correct transport. Verified fixed by running the corrected flow manually via
+   stdin redirection first, then confirming the logic change is equivalent.
+3. Fly.io secrets injection (real action performed): imported the full existing secret set plus the
+   now-present OPENAI_API_KEY to viora-api-staging-eu via `flyctl secrets import` (stdin-fed). Both
+   machines rolling-restarted successfully (one machine's health-check reported the pre-existing,
+   unrelated "not listening on 0.0.0.0:8080 / found hallpass process" warning during the restart
+   window — a known, benign fly-proxy probe-timing artifact, NOT a new regression: `flyctl status`
+   immediately after showed 1 machine `started`/1 `stopped` (normal Fly autoscale-to-zero idle
+   behavior), and GET /health returned 200 `{"status":"ok"}`. `flyctl secrets list` confirms
+   OPENAI_API_KEY now shows `Deployed` alongside all 15 pre-existing secrets — zero secrets
+   removed/changed.
+4. Live E2E QA re-run (npx tsx scripts/test-viona-pack36a-staging-webhook-qa.ts, no extra flags):
+   HTTP 200, accepted=true, idempotentReplay=false, audit-verify PASS — identical webhook-layer
+   result to every prior run. dispatchAccepted is still `false` for this specific run, BUT the
+   recorded rejection reason (read directly from the staging DB's own VionaRequestAuditEvent,
+   dispatcherIntentRejected, payloadJson.reason) changed from what an unset key would produce
+   (llm_call_failed) to `low_confidence` — i.e. the LLM call itself now completes successfully
+   end-to-end on staging (proof the key + secret plumbing works); the model itself judged the QA
+   script's own fixed test message ("What are your opening hours today?") below the dispatcher's
+   confidence threshold for a hard tool match. This is a prompt/message-tuning finding, not an
+   infra/secret failure — flagged below as a candidate follow-up, NOT fixed in this task (out of the
+   4-step scope the operator authorized).
+5. State sync: this file updated (this section + header line); Kernel doc
+   (docs/ai-context/VIONA_KERNEL_HANDOFF_FAST_SAFE_GLOBAL_MODE.md) intentionally NOT touched this
+   step — operator's instructions for this specific task named only this local file for step 4.
+
+=== PACK38 PLANNING — B2B INTENT ROUTING & CONFIDENCE TUNING (this session) — COMPLETE ===
+Docs-only. Branch: docs/pack38-b2b-intent-tuning-planning (cut from origin/master @ c597812, PR #333
+merged). Doc: docs/product/VIONA_PACK38_B2B_INTENT_TUNING_PLAN.md.
+
+Trigger: the APPROVE_PACK37_OPENAI_STAGING_SECRET session's live QA re-run (see dedicated section
+above) confirmed the LLM call itself now succeeds on staging, but the QA script's fixed test
+message ("What are your opening hours today?") still returns low_confidence — read directly from
+the staging DB's own VionaRequestAuditEvent (dispatcherIntentRejected, reason:"low_confidence"),
+not guessed from the HTTP response.
+
+Root-cause read directly from shipped source (vionaToolRegistry.ts / vionaIntentRouter.ts):
+- merchant_schedule_availability_check's description only talks about "open appointment slots in a
+  date range" — never "opening/business hours" phrasing a real customer message would use.
+- The tool's inputSchema requires dateRangeStart/dateRangeEnd; a bare "today" question gives no
+  explicit range, so the model may be conservatively declining rather than guessing a
+  schema-invalid shape.
+- buildVionaDispatchClassificationPrompt() has ZERO few-shot examples for any of the 4 registered
+  tools (twilio_test_sms_poc, marketing_content_generator, both merchant tools) — a real, addressable
+  gap independent of the description wording itself.
+- VIONA_DISPATCH_MIN_CONFIDENCE (0.6) itself is NOT implicated by this evidence alone — low_confidence
+  collapses both "toolName:null" and "below-threshold real match" into one reason by design; the
+  implementation phase's test plan requires distinguishing the two before ever touching the constant.
+
+Design (no code, no schema, no Fly secret change):
+1. Option A (RECOMMENDED default scope) — broaden both merchant tools' description strings
+   (text-only, zero inputSchema change) to cover common real-world phrasings ("opening/business/
+   operating hours", "are you open today", "do you have X in stock") + add exactly 1 few-shot
+   example per registered tool (4) + 1 explicit negative (toolName:null) example to the
+   classification prompt. Same Pack37 classification-prompt persona-non-contamination rule
+   re-asserted/re-tested (examples are static, generic, tool-registry-derived only — never a real
+   tenant/persona value).
+2. Option B (named only, NOT designed in detail, separate authorization) — a possible future
+   VIONA_DISPATCH_MIN_CONFIDENCE threshold review, explicitly deferred until Option A's own staging
+   evidence shows a correctly-matched-but-under-threshold toolName (not a toolName:null case, which
+   no threshold change could ever fix). Kept as its own phrase specifically so it can never be
+   silently bundled into the smaller, lower-risk Option A scope.
+3. Script fix tracking (§5 of the plan): the scripts/fly-staging-sync-secrets.mjs stdin-pipe fix
+   from the OpenAI-secret session (see section above) is still uncommitted on this machine's working
+   tree. The plan's implementation phase names committing this already-written, already-verified fix
+   as its literal first step, so it is not lost to a future stash/branch-switch/machine change.
+4. Exact file allowlist (2 modified: vionaToolRegistry.ts descriptions, vionaIntentRouter.ts
+   few-shot examples; 1 pending script-fix commit; 1 new test file
+   scripts/test-viona-pack38-b2b-intent-tuning.ts) + 8-item test plan (description content-scan,
+   few-shot structural check, classification-prompt non-contamination re-assert, fake-LLM regression,
+   new fake-LLM "opening hours" scenario, VIONA_DISPATCH_MIN_CONFIDENCE-unchanged guard, full
+   regression, optional live-staging re-run) + 2 named authorization phrases:
+   APPROVE_PACK38_INTENT_TUNING_IMPLEMENTATION (Option A) and
+   APPROVE_PACK38_CONFIDENCE_THRESHOLD_ADJUSTMENT (Option B, never implied by the first).
+5. Explicitly NOT touched: dispatchVionaAutonomousRequest, vionaMerchantReadOnlyQueryExecutionService.ts,
+   vionaMerchantReadOnlyQueryReplyFormatter.ts, VIONA_DISPATCH_MIN_CONFIDENCE value itself, any
+   inputSchema field, any Prisma schema/migration, any Fly secret, persona-resolution files.
+
+Docs updated same session: this file + docs/ai-context/VIONA_KERNEL_HANDOFF_FAST_SAFE_GLOBAL_MODE.md
+(new Pack38 planning table row).
+
+Status: planning packet complete, PR opened (see chat).
+
 === DEFERRED / BACKLOG (recorded, not authorized — logged during Pack37 sync per operator instruction) ===
 1. Pack36B: Merchant Admin UI (Frontend AI Persona & Webhook Secret configuration) - Deferred to
    prioritize backend E2E. No merchant-facing UI exists to configure MerchantProfile.aiPersona,
@@ -601,12 +702,25 @@ Status: implementation complete, PR opened (see chat).
    VionaRequest call sites (read/note/status-action services) — explicitly deferred by Pack34's
    own plan, still outstanding.
 4. TourismBooking shadow-DB replay issue — see DEFERRED/BACKLOG section above (item 2).
-5. Pack37's remaining, not-yet-issued authorization phrases (Option A MVP is now DONE — see above):
-   APPROVE_PACK37_OPENAI_STAGING_SECRET (push the local OPENAI_API_KEY value to Fly staging — code
-   change is done, only the actual `fly secrets set`/sync run is still outstanding),
+5. Pack37's remaining, not-yet-issued authorization phrases:
+   APPROVE_PACK37_OPENAI_STAGING_SECRET — DONE this session (see dedicated section above): key
+   verified, Fly secret injected + deployed, live QA re-confirmed the LLM call itself now succeeds
+   on staging.
    APPROVE_PACK37_LLM_REPLY_PHRASING (turn on Tier-2 persona-phrased replies — code already
-   supports this today whenever a key is present, so this phrase is really just an operator
-   go-ahead to configure a real key, not further implementation), APPROVE_PACK37_REAL_DATA_LAYER
-   (Option B — real, tenant-scoped schedule/inventory Prisma models — a separate, larger future
-   planning packet, not started).
+   supports this today whenever a key is present AND a merchant tool is actually dispatched; still
+   blocked in practice by finding #7 below, not by the key itself anymore),
+   APPROVE_PACK37_REAL_DATA_LAYER (Option B — real, tenant-scoped schedule/inventory Prisma models —
+   a separate, larger future planning packet, not started).
 6. Pack36B: Merchant Admin UI — see DEFERRED/BACKLOG section above (item 1).
+7. NEW finding (this session) — NOW HAS A PLANNING PACKET (Pack38, see dedicated section above):
+   the staging QA script's own fixed test message ("What are your opening hours today?") is
+   classified by the LLM as `low_confidence` (toolName:null or below the dispatcher's confidence
+   threshold) rather than matching `merchant_schedule_availability_check` — confirmed via a direct
+   staging-DB audit-event read (dispatcherIntentRejected, reason:"low_confidence"), not a guess.
+   Pack38's Option A (tool description + few-shot example tuning) is the recommended next
+   implementation phase; authorization phrase APPROVE_PACK38_INTENT_TUNING_IMPLEMENTATION, not yet
+   granted. Option B (confidence threshold review) is named but not designed in detail; phrase
+   APPROVE_PACK38_CONFIDENCE_THRESHOLD_ADJUSTMENT, not yet granted.
+8. Pack38's implementation phase's own first step (once authorized) is committing the still-pending
+   scripts/fly-staging-sync-secrets.mjs stdin-pipe fix (see APPROVE_PACK37_OPENAI_STAGING_SECRET
+   section above) — tracked so it is not lost across sessions/machines.
