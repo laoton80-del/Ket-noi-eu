@@ -942,19 +942,26 @@ Evidence doc: docs/product/VIONA_PACK39_POST_MERGE_STAGING_VERIFICATION_EVIDENCE
 
 Status: staging verification complete — docs-only evidence PR #339 MERGED @ 587dcd1.
 
-=== PACK40 MULTI-TENANT VIONA REQUEST ACCESS ENFORCEMENT (this session) — PLANNING ONLY ===
-Branch: docs/pack40-tenant-scope-enforcement-planning (from verified origin/master @ 587dcd1).
-Planning only — no product code, no schema/migration, no DB action, no staging call, no deploy,
-no secret action, no product behavior changed. No implementation authorized.
+=== PACK40 MULTI-TENANT VIONA REQUEST ACCESS ENFORCEMENT — PLANNING (REFINED) ===
+Branch: docs/pack40-tenant-scope-enforcement-planning. Initial PR #340 MERGED @ 95031be.
+Planning refinement only — no product code, no schema/migration, no DB, no staging, no deploy,
+no secret/provider action. No implementation authorized.
 
-Source audit (merged master): buildAuthorizedVionaRequestWhere() optional expectedTenantId exists
-but is NOT passed at any production call site — vionaRequestReadService.ts (list + detail),
-vionaRequestNoteActionService.ts, vionaRequestStatusActionService.ts (all 1-arg only). assertVionaRequestTenantMatchesMerchant() is used on webhook channel resolution only, not on JWT
-request access paths. Cross-user denial exists; cross-tenant merchant-owner denial does not.
+v1 plan gap corrected: dual-role accounts (MerchantProfile + personal consumer-classified requests)
+must NOT use blanket tenantId filter on all routes. Revised invariant: row-classification policy —
+consumer-classified rows (tenantId not in registered MerchantProfile set) keep user-scope-only access;
+registered-merchant-tenant rows require trusted profile + exact tenant equality + active merchant
+where applicable.
 
-Plan: docs/product/VIONA_PACK40_TENANT_SCOPE_ENFORCEMENT_PLAN.md — tagged server-side access
-context, layered enforcement, no schema change, adversarial test matrix, staging QA design.
-Future implementation phrase: APPROVE_PACK40_TENANT_SCOPE_ENFORCEMENT_IMPLEMENTATION (not granted).
+Implementation divided into separately authorized increments:
+  Pack40A — principal context + read enforcement (APPROVE_PACK40A_TENANT_CONTEXT_AND_READ_ENFORCEMENT)
+  Pack40B — note enforcement (requires A merged)
+  Pack40C — status enforcement (requires A merged)
+  Pack40D — indirect paths, separate review (APPROVE_PACK40D_TENANT_INDIRECT_PATH_REVIEW_AND_IMPLEMENTATION)
+  Pack40S — staging QA (provisioning + adversarial phrases, separate)
+
+Retired broad phrase: APPROVE_PACK40_TENANT_SCOPE_ENFORCEMENT_IMPLEMENTATION.
+Plan: docs/product/VIONA_PACK40_TENANT_SCOPE_ENFORCEMENT_PLAN.md
 
 === DEFERRED / BACKLOG (recorded, not authorized — logged during Pack37 sync per operator instruction; items 3-4 from the Pack38 sync addressed by Pack39 implementation above and removed from this list) ===
 1. Pack36B: Merchant Admin UI (Frontend AI Persona & Webhook Secret configuration) - Deferred to
@@ -979,8 +986,10 @@ Future implementation phrase: APPROVE_PACK40_TENANT_SCOPE_ENFORCEMENT_IMPLEMENTA
    site at a time; schedule scripts/viona-pack33-audit-retention-job.ts for real (currently
    dry-run, unscheduled); legal/compliance review of region-specific retention windows and PII
    rule values (explicitly not claimed by PR #310).
-3. Wire buildAuthorizedVionaRequestWhere()'s new expectedTenantId param into the existing
-   VionaRequest call sites — **Pack40 planning packet opened** (docs/product/VIONA_PACK40_TENANT_SCOPE_ENFORCEMENT_PLAN.md); implementation NOT authorized yet.
+3. Wire buildAuthorizedVionaRequestWhere()'s tenant enforcement into VionaRequest call sites —
+   **Pack40 planning refined** (dual-role + Pack40A–D slices); implementation NOT authorized —
+   start with Pack40A read enforcement when phrase APPROVE_PACK40A_TENANT_CONTEXT_AND_READ_ENFORCEMENT
+   is granted.
 4. TourismBooking shadow-DB replay issue — see DEFERRED/BACKLOG section above (item 2).
 5. Pack37's remaining, not-yet-issued authorization phrases:
    APPROVE_PACK37_OPENAI_STAGING_SECRET — DONE this session (see dedicated section above): key

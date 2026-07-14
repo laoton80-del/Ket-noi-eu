@@ -1,14 +1,17 @@
 # Pack40 — Multi-Tenant VionaRequest Access Enforcement Plan
 
-Status: **PLANNING ONLY** — docs-only architecture packet. No product code, schema/migration,
+Status: **PLANNING ONLY (refined)** — docs-only architecture packet. No product code, schema/migration,
 database action, deployment, staging call, or secret change is authorized by this document.
+
+**Planning history:** initial packet merged via PR #340 @ `95031be8f5cf53e68f46548ca382ad9656cbe8b7`.
+This revision resolves **dual-role account compatibility** and replaces the single broad implementation
+increment with **separately authorized Pack40A–D slices**.
 
 Operator context: closes the remaining tenant-isolation gap in existing **authenticated**
 `VionaRequest` read, note, and status-action paths before Pack36B Merchant Admin UI or any broader
 merchant-management surface is introduced.
 
-Verified planning baseline: `origin/master` @ `587dcd195e5bf5fd66415576e2a6cbd621cc2eed` (includes
-Pack39 staging evidence via PR #339 merge).
+Verified planning baseline: `origin/master` @ `95031be8f5cf53e68f46548ca382ad9656cbe8b7`.
 
 ---
 
@@ -19,552 +22,475 @@ Pack34 added an **optional** `expectedTenantId` second parameter to
 Prisma where-clause is byte-identical to pre-Pack34 behavior. Pack34 deliberately **did not wire**
 this parameter into any production call site.
 
-A read-only source audit of merged `origin/master` confirms the handoff claim is **still accurate**:
-`expectedTenantId` is **never passed** in production. All three direct call sites — read (list +
-detail), note append, and status transition — scope access by authenticated user identity only
-(`requesterUserId` / `ownerUserId` / participant `userRef`). They do **not** constrain
-`VionaRequest.tenantId`.
+**Source audit (accepted):** `expectedTenantId` is **never passed** in production. All four direct
+call sites — read list, read detail, note append, status transition — scope access by authenticated
+user identity only. Cross-**user** denial works; cross-**tenant** merchant denial does **not** when
+the actor is owner/requester/participant on a row stamped with another merchant's registered
+`tenantId`.
 
-This leaves a real cross-tenant isolation gap for merchant owners:
+**Initial planning gap (corrected in this revision):** the first plan draft recommended applying
+`buildAuthorizedVionaRequestWhere(authUserId, merchantTenantId)` whenever the authenticated user
+has a `MerchantProfile`. That rule is **unsafe** — it would hide valid personal consumer requests
+for dual-role accounts.
 
-- `VionaRequest.tenantId` is a required string on every row (including Pack19 create and Pack35
-  webhook create).
-- Pack19 create accepts `tenantId` from the **client request body** (unauthenticated shape aside,
-  the value is not validated against `MerchantProfile`).
-- An authenticated user who is `ownerUserId` on requests under **multiple** `tenantId` values can
-  read, note, and status-act on all of them — including rows whose `tenantId` does not match their
-  own `MerchantProfile.tenantId`.
-- Cross-**user** denial already works (`request_not_found`); cross-**tenant** denial for a
-  merchant-context owner does **not**.
+**Revised approach:**
 
-Pack40 proposes the **smallest safe increment**: resolve a trusted server-side merchant access
-context once per authenticated HTTP entry, thread it through the existing request access services,
-and pass the merchant's `MerchantProfile.tenantId` into `buildAuthorizedVionaRequestWhere()` as
-`expectedTenantId`. Consumer paths (no `MerchantProfile` for the authenticated user) remain
-byte-identical. Webhook routing, dispatch, approval/consent, escrow, status-machine, and audit
-semantics are untouched.
+1. Resolve a **server-owned principal context** once per authenticated HTTP entry (`authUserId` +
+   optional trusted `MerchantProfile` facts). Never branch on client-supplied tenant values.
+2. Apply **row-classification tenant policy** — not a blanket merchant filter on every route:
+   - **Consumer-classified requests** (logical non-tenant / personal): existing user authorization
+     only.
+   - **Merchant-classified requests** (registered merchant `tenantId` on the row): user
+     authorization **plus** trusted merchant tenant equality; active merchant required only where
+     route policy says so.
+3. Implement in **merge-gated increments Pack40A → B → C**, with **Pack40D** (indirect paths) and
+   **Pack40S** (staging QA) separately authorized.
 
-**No Prisma schema change is required.** Existing fields (`VionaRequest.tenantId`,
-`MerchantProfile.tenantId`, `MerchantProfile.ownerUserId`, `MerchantProfile.isActive`) are
-structurally sufficient.
+**No Prisma schema change is required** for Pack40A–C. Existing fields are structurally sufficient
+when consumer-classified rows are identified without SQL `NULL` (see §6.1).
 
 ---
 
 ## 2. Verified current-state source audit
 
-Audit performed read-only against merged `origin/master` @ `587dcd195e5bf5fd66415576e2a6cbd621cc2eed`.
+Audit performed read-only against merged `origin/master` @ `95031be8f5cf53e68f46548ca382ad9656cbe8b7`.
 
 ### 2.1 Tenant-scope helper files (existing)
 
 | File | Role |
 |---|---|
-| `src/services/viona/vionaRequestAccessScope.ts` | `buildAuthorizedVionaRequestWhere(authUserId, expectedTenantId?)` — optional tenant clause when 2nd arg is non-empty trimmed string |
-| `src/lib/viona/merchant/vionaMerchantTenantScope.ts` | Pure `assertVionaRequestTenantMatchesMerchant()` — used by webhook channel resolution, **not** by request read/note/status paths |
-| `src/services/viona/vionaMerchantProfileService.ts` | `findMerchantProfileByOwnerUserId()`, `findMerchantProfileByTenantId()`, CRUD |
+| `src/services/viona/vionaRequestAccessScope.ts` | `buildAuthorizedVionaRequestWhere(authUserId, expectedTenantId?)` |
+| `src/lib/viona/merchant/vionaMerchantTenantScope.ts` | Pure `assertVionaRequestTenantMatchesMerchant()` — webhook channel resolution only |
+| `src/services/viona/vionaMerchantProfileService.ts` | `findMerchantProfileByOwnerUserId()`, etc. |
 
-### 2.2 `buildAuthorizedVionaRequestWhere()` — every call site
+### 2.2 `buildAuthorizedVionaRequestWhere()` — every production call site
 
-| # | File | Line context | `expectedTenantId` passed? |
+| # | File | Usage | `expectedTenantId` passed? |
 |---|---|---|---|
-| 1 | `src/services/viona/vionaRequestReadService.ts` | `buildListWhere()` → list query | **No** (1 arg) |
-| 2 | `src/services/viona/vionaRequestReadService.ts` | `getVionaRequestById()` detail query | **No** (1 arg) |
-| 3 | `src/services/viona/vionaRequestNoteActionService.ts` | `appendVionaRequestNote()` scope lookup | **No** (1 arg) |
-| 4 | `src/services/viona/vionaRequestStatusActionService.ts` | `transitionVionaRequestStatus()` scope lookup | **No** (1 arg) |
+| 1 | `vionaRequestReadService.ts` | List | **No** |
+| 2 | `vionaRequestReadService.ts` | Detail | **No** |
+| 3 | `vionaRequestNoteActionService.ts` | Note scope lookup | **No** |
+| 4 | `vionaRequestStatusActionService.ts` | Status scope lookup | **No** |
 
-**Test-only usage:** `scripts/test-viona-pack34-b2b-merchant-gateway.ts` exercises the 2nd parameter
-(regression that omitting it preserves pre-Pack34 where-shape).
+### 2.3 Entry points and indirect `getVionaRequestById()` callers
 
-**No other production imports** of `buildAuthorizedVionaRequestWhere()` exist.
-
-### 2.3 VionaRequest read, note, and status-action entry points
-
-| Entry | Route / caller | Service | Tenant scope today |
-|---|---|---|---|
-| List | `GET /api/viona/requests` → `getVionaRequests()` | `listVionaRequests()` | User scope only |
-| Detail | `GET /api/viona/requests/:id` → `getVionaRequestDetail()` | `getVionaRequestById()` | User scope only |
-| Note | `POST /api/viona/requests/:id/actions/note` → `postVionaRequestNoteAction()` | `appendVionaRequestNote()` | User scope only |
-| Status | `POST /api/viona/requests/:id/actions/status` → `postVionaRequestStatusAction()` | `transitionVionaRequestStatus()` | User scope only + owner-only actor check |
-| Execution preview | `POST .../actions/execution-preview` | `previewVionaRequestExecutionGate()` → **`getVionaRequestById()`** | User scope only (inherits read gap) |
-| Execution plan preview | `POST .../actions/execution-plan-preview` | `previewVionaExecutionPlanRoute()` → **`getVionaRequestById()`** | User scope only (inherits read gap) |
-| Create idempotent replay | `POST /api/viona/requests` (internal) | `createVionaRequest()` → **`getVionaRequestById()`** | User scope only (inherits read gap) |
-
-Frontend client wrappers (`vionaRequestApi.ts`, `vionaRequestControlledWriteApi.ts`) call the HTTP
-API; they do not perform server-side scoping.
-
-**Webhook path (out of scope for modification):** `POST /api/viona/webhooks/merchant-agent` uses
-`createVionaRequestFromWebhookMessage()` and `dispatchVionaAutonomousRequest()` — does **not** call
-`buildAuthorizedVionaRequestWhere()`.
-
-### 2.4 Trusted tenant ID sources (server-side)
-
-| Source | Mechanism | Trust level |
+| Entry | Service | Pack40 slice |
 |---|---|---|
-| `MerchantProfile.tenantId` for `ownerUserId === authUserId` | `findMerchantProfileByOwnerUserId(authUserId)` | **Trusted** — DB row keyed by authenticated user |
-| `VionaMerchantWebhookChannel.tenantId` | Channel resolution after signature verify | **Trusted** — webhook-only; Pack40 does not modify |
-| `VionaRequest.tenantId` on an row being accessed | DB column | **Trusted as stored data**, but **must not** be supplied by client as the access gate input |
-| Request body `tenantId` on Pack19 create | Client-supplied | **Untrusted** — accepted at create time; not re-used as access gate |
-| Query string / header / LLM output | None wired today | **Untrusted** — must never become access gate input |
+| `GET /api/viona/requests` | `listVionaRequests()` | **Pack40A** |
+| `GET /api/viona/requests/:id` | `getVionaRequestById()` | **Pack40A** |
+| `POST .../actions/note` | `appendVionaRequestNote()` | **Pack40B** (after A) |
+| `POST .../actions/status` | `transitionVionaRequestStatus()` | **Pack40C** (after A) |
+| `POST .../actions/execution-preview` | `previewVionaRequestExecutionGate()` → `getVionaRequestById()` | **Pack40D** (separate review) |
+| `POST .../actions/execution-plan-preview` | `previewVionaExecutionPlanRoute()` → `getVionaRequestById()` | **Pack40D** |
+| `POST /api/viona/requests` idempotent replay | `createVionaRequest()` → `getVionaRequestById()` | **Pack40D** |
 
-### 2.5 Paths operating without trusted tenant identifier today
+Webhook path unchanged — does not use `buildAuthorizedVionaRequestWhere()`.
 
-**All authenticated request access paths** listed in §2.3 operate without resolving
-`MerchantProfile` or passing `expectedTenantId`. They rely solely on user-participation scope.
+### 2.4 Trusted vs untrusted tenant sources
 
-This is acceptable for **consumer** users (no `MerchantProfile`) but insufficient for **merchant**
-users who will soon manage requests through admin UI surfaces.
+**Trusted:** `MerchantProfile.tenantId` via `findMerchantProfileByOwnerUserId(authUserId)`; webhook
+channel tenant (unchanged).
 
-### 2.6 Cross-tenant tests today
-
-| Suite | Coverage |
-|---|---|
-| `scripts/test-viona-read-only-persistence-api.ts` | Cross-**user** detail denial (`request_not_found`) |
-| `scripts/test-viona-pack34-b2b-merchant-gateway.ts` | Pure `assertVionaRequestTenantMatchesMerchant()` + where-clause shape |
-| `scripts/test-viona-pack35-b2b-webhook-routing.ts` | Webhook channel cross-tenant gate |
-| **None** | Cross-tenant denial on read / note / status-action HTTP-equivalent service paths |
-
-### 2.7 Audit answers (planning questions)
-
-1. **`expectedTenantId` wired anywhere in production?** **No.**
-2. **Which call sites omit it?** All four production call sites (§2.2).
-3. **Do callers possess a trusted tenant ID?** Controllers have `authUserId` only; services never
-   load `MerchantProfile`.
-4. **Tenant ID origins in play:** see §2.4.
-5. **Trustworthy vs never-trusted:** see §2.4.
-6. **Free-text client tenant ID on access paths?** **No** — but Pack19 create accepts body
-   `tenantId` (create-path concern, not read-path gate input).
-7. **Owner-user authorization alone sufficient?** **No** for merchant-context isolation — same
-   owner can hold rows under multiple `tenantId` strings.
-8. **Consumer requests without MerchantProfile?** **Must remain supported** — consumer context
-   omits tenant filter.
-9. **Global mandatory tenant filter break non-B2B flows?** **Yes** — universal mandatory filter
-   would incorrectly narrow consumer users who legitimately own rows under arbitrary staging
-   `tenantId` values. Enforcement must be **conditional by access context**.
-10. **Conditional vs universal?** **Conditional** — merchant profile present ⇒ tenant filter;
-    absent ⇒ existing user scope only.
+**Never trusted:** request body, query string, headers, route params, LLM output, client session
+tenant picker, or `VionaRequest.tenantId` supplied before access is authorized.
 
 ---
 
 ## 3. Exact gap statement
 
-**Gap:** Authenticated merchant owners can read, append notes to, and perform Pack25 status actions
-on `VionaRequest` rows whose `tenantId` does not match their `MerchantProfile.tenantId`, whenever
-they appear as requester, owner, or participant — because `buildAuthorizedVionaRequestWhere()` is
-invoked with one argument only.
+Authenticated users can read, note, and status-act on `VionaRequest` rows whose `tenantId` equals a
+**registered merchant tenant** belonging to another merchant, whenever user-participation scope
+matches — because no query-layer tenant policy runs today.
 
-**Not in gap (explicitly unchanged by Pack40):**
-
-- Webhook signature verification, rate limiting, channel resolution, dispatch, classification,
-  reply formatting.
-- Pack19 create accepting client `tenantId` (separate future hardening if desired).
-- Admin/global ops access (future pack).
-- Participant invitation semantics across tenants.
+**Not in gap:** webhook/dispatch paths; admin/global ops (future pack).
 
 ---
 
-## 4. Threat model
+## 4. Architectural review A — dual-role accounts
 
-| Threat | Current state | After Pack40 (merchant context) |
+### 4.1 Explicitly rejected unsafe rule
+
+The following rule **must not** be implemented:
+
+```text
+If an authenticated user has any MerchantProfile,
+always apply an exact tenantId filter to all generic VionaRequest routes.
+```
+
+That would block or hide valid consumer/personal requests for merchant-account holders.
+
+### 4.2 Schema reality vs logical invariant
+
+| Layer | Fact |
+|---|---|
+| **Prisma today** | `VionaRequest.tenantId` is required `String` (non-null). Pack19 create requires non-empty trimmed text. |
+| **Logical invariant (target)** | Consumer/personal requests may be modeled as `tenantId = null` in policy prose. |
+| **Pack40 implementation equivalent (no DDL)** | **Consumer-classified row:** `tenantId` is **not** equal to any `MerchantProfile.tenantId` currently registered in the database. **Merchant-classified row:** `tenantId` equals some registered `MerchantProfile.tenantId`. |
+
+This preserves dual-role behavior without a nullable-column migration. A future nullable `tenantId`
+column would align storage with the logical invariant but is **not** required for Pack40A–C.
+
+### 4.3 Durable tenant-access invariant
+
+For every Pack40-gated path, after existing user authorization (`requester` / `owner` / `participant`):
+
+1. **Consumer-classified request** (logical `tenantId = null`, or schema equivalent above):
+   - Preserve existing owner/requester/participant authorization.
+   - Do **not** require `MerchantProfile` tenant equality merely because the account also has a
+     `MerchantProfile`.
+
+2. **Merchant-classified request** (non-null `tenantId` registered to a `MerchantProfile`):
+   - Preserve existing owner/requester/participant authorization.
+   - Additionally require a **trusted server-resolved** `MerchantProfile` for the actor.
+   - Require exact equality: `MerchantProfile.tenantId === VionaRequest.tenantId`.
+   - Require `MerchantProfile.isActive === true` **only** when accessing the actor's **own**
+     merchant-tenant rows (read/note/status merchant operations). Inactive merchants retain access
+     to consumer-classified personal rows under user scope.
+
+3. **Cross-merchant row** (`tenantId` registered to merchant B, actor is merchant A or dual-role
+   owner): **deny** → `request_not_found` (non-leaking), even when user-scope would otherwise
+   match.
+
+4. **MerchantProfile existence alone** must **not** convert all of the user's requests into
+   merchant-only requests.
+
+5. **Client-supplied tenant values** must never determine trusted scope.
+
+6. **Cross-tenant mismatch** and **inaccessible request** remain externally indistinguishable
+   (`request_not_found` / HTTP 404).
+
+### 4.4 Principal context representation (replaces insufficient tagged union)
+
+The initial `{ kind: 'consumer' } | { kind: 'merchant' }` union is **insufficient** for dual-role
+accounts on the same generic API surface — it forces a single mode per request.
+
+**Recommended server-owned type (planning name only — not implemented here):**
+
+```typescript
+type VionaRequestPrincipalContext = Readonly<{
+  authUserId: string;
+  merchant:
+    | null
+    | Readonly<{
+        merchantProfileId: string;
+        tenantId: string;
+        isActive: boolean;
+      }>;
+  /** Loaded once per HTTP request; server-resolved only. */
+  registeredMerchantTenantIds: readonly string[];
+}>;
+```
+
+- `merchant: null` → actor has no profile; policy reduces to today's user scope only.
+- `merchant` present → dual-role capable; **row classification** decides whether merchant equality
+  applies on each row.
+- `registeredMerchantTenantIds` → read-only set of all `MerchantProfile.tenantId` values (used for
+  consumer vs merchant row classification in list/detail policy). Loaded server-side; never from
+  client.
+
+### 4.5 Query policy — not blanket `expectedTenantId`
+
+**Do not** always pass `buildAuthorizedVionaRequestWhere(authUserId, merchantTenantId)` for
+merchant-profile owners.
+
+**Recommended additive policy helper** (new, narrow — Pack40A):
+
+`buildAuthorizedVionaRequestWhereForPrincipal(principal)` returns a `Prisma.VionaRequestWhereInput`
+that composes:
+
+1. Existing user-participation `OR` clause (unchanged semantics from
+   `buildAuthorizedVionaRequestWhere(authUserId)`).
+2. **Plus** tenant policy when `principal.merchant != null`:
+
+```text
+AND NOT (
+  tenantId IN registeredMerchantTenantIds
+  AND tenantId != principal.merchant.tenantId
+)
+```
+
+**Interpretation:**
+
+| Row class | `tenantId` vs registry | Dual-role actor with merchant M | Result |
+|---|---|---|---|
+| Consumer-classified | Not in `registeredMerchantTenantIds` | any | Allowed under user scope |
+| Own merchant | Equals `M.tenantId` | active M | Allowed |
+| Own merchant | Equals `M.tenantId` | inactive M | **Denied** (merchant row requires active) |
+| Cross-merchant | In registry, ≠ `M.tenantId` | any | **Denied** (non-leaking) |
+| No profile actor | any | `merchant: null` | User scope only (unchanged) |
+
+**Detail path:** same classification evaluated on the fetched row (or equivalent single-row where).
+
+**Post-fetch helper (pure):** `evaluateVionaRequestTenantAccessForPrincipal(principal, requestTenantId)`
+implements the row-level decision for note/status scope lookups in Pack40B/C.
+
+Keep existing `buildAuthorizedVionaRequestWhere()` export byte-identical for callers not yet migrated.
+
+### 4.6 Dual-role compatibility matrix
+
+| Case | Expected |
+|---|---|
+| User, no `MerchantProfile`, own consumer-classified request | Allowed (unchanged) |
+| User, active `MerchantProfile`, own consumer-classified request | Allowed — **must not** require tenant equality |
+| Same user, own merchant-classified request (`tenantId === profile.tenantId`) | Allowed |
+| Same user, merchant-classified request for another merchant's registered `tenantId` | Denied |
+| Inactive merchant, consumer-classified personal request | Allowed under user scope |
+| Inactive merchant, own merchant-classified request | Denied |
+| List for dual-role user | May include **both** consumer-classified and matching merchant rows |
+| Client `?tenantId=` probe | Ignored for access gate |
+
+---
+
+## 5. Threat model
+
+| Threat | Today | After Pack40A–C |
 |---|---|---|
-| Merchant A owner reads Merchant B's request (different owner) | Blocked (user scope) | Blocked (user scope) |
-| Merchant A owner reads own-owned request stamped with Merchant B's `tenantId` | **Allowed** (gap) | **Blocked** (tenant filter) |
-| Merchant A owner notes/status-acts on cross-tenant-owned row | **Allowed** (gap) | **Blocked** |
-| Attacker probes request IDs across tenants | Returns `request_not_found` for wrong user | Same — tenant mismatch also returns `request_not_found` (non-leaking) |
-| Attacker supplies `tenantId` in query/body to widen access | No effect today (ignored) | Still ignored; gate uses server-resolved profile only |
-| Inactive merchant accesses tenant rows | Allowed today (user scope) | **Blocked** (`request_not_found`) |
-| Consumer user without profile | Works today | Unchanged (consumer context) |
-| Webhook-created merchant request accessed by wrong merchant via JWT API | Blocked if different user | Still blocked; if same merchant owner, tenant filter aligns |
+| Merchant A reads Merchant B's registered-tenant row (different owner) | Blocked by user scope | Blocked |
+| Merchant A reads own-owned row stamped with Merchant B's registered `tenantId` | **Allowed** | **Blocked** |
+| Dual-role user loses personal consumer-classified rows | N/A | **Must remain visible** |
+| Cross-tenant probe | `request_not_found` | Same surface |
 
 ---
 
-## 5. Trusted versus untrusted tenant sources
+## 6. Recommended enforcement architecture
 
-### Trusted (may drive access gate)
-
-- `MerchantProfile.tenantId` loaded server-side where `MerchantProfile.ownerUserId === authUserId`.
-- Optional future: admin-impersonation context ( **not** in Pack40 scope).
-
-### Never trusted (must not drive access gate)
-
-- HTTP request body fields.
-- Query string parameters (including hypothetical `?tenantId=`).
-- Headers (`X-Tenant-Id`, etc.).
-- LLM classification output.
-- `VionaRequest.tenantId` read from a row **before** access is authorized (would leak existence).
-- Client-side session/localStorage tenant selection.
-
----
-
-## 6. Consumer compatibility rules
-
-| Case | Access context | Behavior |
-|---|---|---|
-| Ordinary consumer — no `MerchantProfile` | `{ kind: 'consumer' }` | **Unchanged** — user-participation scope only; no `tenantId` where clause |
-| Merchant owner — active profile, request `tenantId` matches | `{ kind: 'merchant', tenantId, isActive: true }` | Allowed when user scope also matches |
-| Merchant owner — active profile, request `tenantId` differs | merchant context | **`request_not_found`** (non-leaking) |
-| Authenticated owner, user ID matches, tenant does not | merchant context | **`request_not_found`** |
-| Request has `tenantId` but no `MerchantProfile` for actor | consumer context | **Unchanged** — user scope only (typical Pack19 staging user) |
-| Inactive merchant profile | `{ kind: 'merchant', isActive: false }` | **`request_not_found`** on all Pack40-gated paths (fail closed; do not expose inactive state) |
-| Missing trusted merchant context on merchant-required path | N/A at HTTP layer — resolved per request | If profile lookup returns null → consumer context (not an error) |
-| Webhook-created merchant request | Webhook path unchanged | JWT access by merchant owner uses merchant context + user scope |
-| Legacy row before `MerchantProfile` existed | Consumer actor or merchant actor | Merchant actor with profile: tenant filter applies. Consumer actor: unchanged. Rows always have a `tenantId` string (column required); "non-tenant" means **no merchant profile association**, not null column. |
-
----
-
-## 7. Recommended enforcement architecture
-
-### A. Enforcement boundary — **layered combination (recommended)**
+### A. Enforcement boundary — layered combination
 
 | Layer | Responsibility |
 |---|---|
-| **HTTP controller** (`VionaRequestController.ts`) | Authenticate user (existing). Call **one** `resolveVionaRequestAccessContext(authUserId)` per request. Pass result into service inputs. Never read tenant ID from client input. |
-| **Access-context helper** (new, pure + small I/O) | Load `MerchantProfile` by owner. Return tagged `VionaRequestAccessContext`. |
-| **Service layer** (read / note / status / execution preview services) | Require `accessContext` on inputs. Evaluate inactive merchant **before** query. Map context → `expectedTenantId` for where-builder. Unified denial mapping. |
-| **Where-builder** (`vionaRequestAccessScope.ts`) | Keep existing function; optionally add thin wrapper `buildAuthorizedVionaRequestWhereFromContext(authUserId, ctx)` to avoid ambiguous optional-string omission at call sites. |
+| **Controller** | Authenticate; `resolveVionaRequestPrincipalContext(authUserId)` once; pass to services; never read client tenant |
+| **Principal + policy helpers** (new) | Resolve profile; load registered tenant IDs; build where-clause / row evaluator |
+| **Service layer** | Apply principal-aware policy per slice (read / note / status) |
+| **Existing where-builder** | Preserved; extended additively |
 
-**Why not controller-only:** Internal service callers (`createVionaRequest` idempotent replay,
-execution previews) also call `getVionaRequestById()` — controller-only enforcement would leave bypass
-paths.
+### B–F. Error, transaction, audit
 
-**Why not repository-only:** Repository layer cannot know merchant vs consumer mode without context;
-context resolution belongs in services with explicit inputs.
-
-### B. Tenant-context representation — **tagged context object (recommended)**
-
-```typescript
-/** Server-resolved only — never constructed from client input. */
-export type VionaRequestAccessContext =
-  | Readonly<{ kind: 'consumer' }>
-  | Readonly<{
-      kind: 'merchant';
-      tenantId: string;
-      merchantProfileId: string;
-      isActive: boolean;
-    }>;
-```
-
-Avoid bare `expectedTenantId?: string` at service boundaries — omission silently disables merchant
-gate. The where-builder may still accept the string internally.
-
-**Mapping to where-clause:**
-
-- `consumer` → `buildAuthorizedVionaRequestWhere(authUserId)` (1 arg — byte-identical)
-- `merchant` + `isActive: true` → `buildAuthorizedVionaRequestWhere(authUserId, tenantId)`
-- `merchant` + `isActive: false` → fail closed **before** DB read (`request_not_found`)
-
-### C. Consumer compatibility — see §6.
-
-### D. Error behavior — stable, non-leaking
-
-| Condition | Service reason | HTTP status | HTTP message (existing pattern) |
-|---|---|---|---|
-| Unauthorized (no JWT) | N/A | 401 | `Unauthorized` |
-| Invalid input | `invalid_input` | 400 | Existing per-route message |
-| User not in scope **or** tenant mismatch **or** inactive merchant **or** row missing | `request_not_found` | 404 | `Request not found` |
-| Owner required but user is participant only (status action) | `request_not_found` | 404 | `Request not found` (existing Pack25 behavior) |
-| Invalid transition / note content | existing reasons | existing | unchanged |
-
-**Non-disclosure rule:** Tenant mismatch MUST NOT return a distinct error code or message that
-reveals another tenant's request exists. Use the same `request_not_found` surface as cross-user
-denial.
-
-### E. Transaction behavior — **no change**
-
-- Tenant check is a **where-clause predicate** on existing `findFirst` / `findMany` — no extra round
-  trip inside `transitionVionaRequestStatus()`'s `$transaction`.
-- No network calls inside the transaction.
-- `vionaRequestExecutionOrchestrator.ts` — **not modified** (protected).
-- Escrow hold/settle — **not modified** (protected).
-- Status-action transaction shape (updateMany + audit create) — unchanged; tenant already enforced
-  on the preceding `findFirst`.
-
-### F. Audit behavior — **no new audit type (recommended default)**
-
-Cross-tenant denial does **not** require a new audit event for the smallest safe increment:
-
-- Denial occurs before mutation.
-- Logging raw request IDs in a denial audit risks operational leakage.
-- Existing HTTP 404 surface is sufficient for Pack40.
-
-If operational security monitoring later requires denial telemetry, that is a **separate,
-explicitly-authorized** increment with its own audit type allowlist and redaction tests.
+- **Errors:** tenant denial → `request_not_found` / HTTP 404 (same as cross-user).
+- **Transactions:** tenant check remains in pre-transaction lookups; no widening of status `$transaction`.
+- **Audit:** no new audit type in Pack40A–C default scope.
 
 ---
 
-## 8. Request-flow diagrams (text)
+## 7. Request-flow diagrams (dual-role)
 
-### 8.1 Consumer user (no MerchantProfile)
+### 7.1 Dual-role merchant owner — list
 
 ```text
-Client JWT → VionaRequestController
-  → resolveVionaRequestAccessContext(authUserId)
-      → findMerchantProfileByOwnerUserId → null
-      → { kind: 'consumer' }
-  → listVionaRequests / getVionaRequestById / appendNote / transitionStatus
-      → buildAuthorizedVionaRequestWhere(authUserId)   // no tenantId key
-      → Prisma query
-  → 200/404/... (unchanged from today)
+JWT → resolveVionaRequestPrincipalContext
+  → { authUserId, merchant: { tenantId: M, isActive: true }, registeredMerchantTenantIds: [...] }
+→ listVionaRequests({ principal })
+  → WHERE userScope
+     AND NOT (tenantId IN registered AND tenantId != M)
+  → returns: personal consumer-classified rows + merchant-M rows
+  → excludes: rows stamped with other merchants' registered tenantIds
 ```
 
-### 8.2 Merchant owner (active MerchantProfile)
+### 7.2 Cross-merchant adversarial read
 
 ```text
-Client JWT → VionaRequestController
-  → resolveVionaRequestAccessContext(authUserId)
-      → findMerchantProfileByOwnerUserId → profile
-      → { kind: 'merchant', tenantId: profile.tenantId, isActive: profile.isActive }
-  → if isActive === false → immediate { ok: false, reason: 'request_not_found' }
-  → service call with accessContext
-      → buildAuthorizedVionaRequestWhere(authUserId, profile.tenantId)
-      → Prisma query adds AND tenantId = profile.tenantId
-  → match → proceed (note/status/read)
-  → no match → { ok: false, reason: 'request_not_found' } → HTTP 404
-```
-
-### 8.3 Cross-tenant adversarial attempt (Merchant B → Merchant A request)
-
-```text
-Merchant B owner JWT
-  → accessContext { kind: 'merchant', tenantId: 'tenant-b', isActive: true }
-  → getVionaRequestById(requestId belonging to tenant-a, owner may even be B on a mis-stamped row)
-      → where: user-scope OR ... AND tenantId = 'tenant-b'
-      → row with tenant-a → not returned
-  → request_not_found (404) — no body field reveals tenant-a existence
+Merchant B owner → principal.merchant.tenantId = B
+→ GET request row with tenantId = A (registered to merchant A), B is owner (mis-stamped)
+→ row is merchant-classified (in registry) and tenantId != B
+→ request_not_found (404)
 ```
 
 ---
 
-## 9. Smallest-safe implementation recommendation
+## 8. Implementation slicing (Pack40A–D + Pack40S)
 
-1. **No schema change. No migration.**
-2. **New** `src/services/viona/vionaRequestAccessContext.ts`:
-   - `VionaRequestAccessContext` type.
-   - `resolveVionaRequestAccessContext(authUserId)` — single DB read (`findMerchantProfileByOwnerUserId`).
-   - `expectedTenantIdForWhere(context)` — pure mapper (returns `undefined` for consumer / inactive).
-   - `assertMerchantAccessContextAllowsRequestAccess(context)` — pure; returns `request_not_found` for inactive merchant.
-3. **Modify** read / note / status services + DTOs to accept `accessContext: VionaRequestAccessContext`.
-4. **Modify** `VionaRequestController.ts` — resolve context once per handler; pass through.
-5. **Modify** execution preview services + controller handlers — same context (inherit read policy).
-6. **Modify** `createVionaRequest()` idempotent-replay detail fetch — resolve context from same
-   `authUserId` (internal parity).
-7. **Optional thin wrapper** in `vionaRequestAccessScope.ts` — keeps second arg internal.
-8. **New test suite** `scripts/test-viona-pack40-tenant-scope-enforcement.ts` — adversarial matrix
-   (§12).
-9. **Do not modify** webhook, dispatch, orchestrator, escrow, AIRouter, tool registry, Prisma schema.
+**No single broad Pack40 implementation increment.** Each slice requires its own operator phrase,
+passes its own tests, merges, and is verified before the next slice may begin. **No automatic
+continuation.**
 
-**Public API contract:** No new request fields. Response shapes unchanged. HTTP status codes
-unchanged.
+### Pack40A — Principal context and read enforcement
+
+**Authorization:** `APPROVE_PACK40A_TENANT_CONTEXT_AND_READ_ENFORCEMENT`
+
+**Scope:**
+
+- Trusted server-side `VionaRequestPrincipalContext` + resolver
+- Registered-merchant-tenant ID loader (read-only)
+- Additive access policy helper(s) in `vionaRequestAccessScope.ts` (or sibling file)
+- **List and detail read paths only**
+- Dual-role preservation; cross-tenant read denial; non-disclosure
+
+**Must not modify:** note, status-action, execution preview, create replay, dispatcher, escrow,
+webhook, Prisma, Fly, staging.
+
+**Maximum behavioral change:** read list/detail only; dual-role list composition; cross-registered-tenant
+read denial.
+
+#### Pack40A — file allowlist
+
+| Category | Files |
+|---|---|
+| **New production** | `src/services/viona/vionaRequestPrincipalContext.ts` |
+| **Modified production (max 4)** | `src/services/viona/vionaRequestAccessScope.ts` (additive policy helper); `src/services/viona/vionaRequestReadDto.ts`; `src/services/viona/vionaRequestReadService.ts`; `src/controllers/VionaRequestController.ts` (**list + detail handlers only**) |
+| **New tests** | `scripts/test-viona-pack40a-tenant-read-enforcement.ts` |
+| **Mechanical test updates** | `scripts/test-viona-read-only-persistence-api.ts` (pass principal / consumer regression) |
+| **Optional (separate auth)** | `vionaMerchantProfileService.ts` — only if tenant-ID loader must live there instead of principal module |
+| **Forbidden** | Note/status services, execution services, create service, orchestrator, escrow, webhook, dispatch, Prisma, Fly |
+
+**Why ~5 production files:** principal resolver (1), policy helper (1), read DTO+service (2), controller
+read handlers (1). Indivisible without leaving read paths unprotected or splitting policy from reads.
 
 ---
 
-## 10. Future implementation file allowlist
+### Pack40B — Note enforcement
 
-### 10.1 Required production modifications
+**Authorization:** `APPROVE_PACK40B_TENANT_NOTE_ENFORCEMENT`
 
-| File | Why |
+**Requires:** Pack40A merged and verified on `master`.
+
+**Scope:** note lookup + mutation only; reuse Pack40A principal + policy; same-tenant success;
+cross-tenant denial; consumer note regression; **no status mutation**.
+
+#### Pack40B — file allowlist
+
+| Category | Files |
 |---|---|
-| `src/services/viona/vionaRequestAccessContext.ts` | **NEW** — tagged context type + resolver + inactive gate |
-| `src/services/viona/vionaRequestAccessScope.ts` | Optional `...FromContext()` wrapper; keep existing export byte-identical |
-| `src/services/viona/vionaRequestReadDto.ts` | Add `accessContext` to list/detail inputs |
-| `src/services/viona/vionaRequestReadService.ts` | Wire context → where-builder (2 call sites) |
-| `src/services/viona/vionaRequestNoteActionDto.ts` | Add `accessContext` to note input |
-| `src/services/viona/vionaRequestNoteActionService.ts` | Wire context on scope lookup + pass through on nested `getVionaRequestById` |
-| `src/services/viona/vionaRequestStatusActionDto.ts` | Add `accessContext` to status input |
-| `src/services/viona/vionaRequestStatusActionService.ts` | Wire context on scope lookup + nested detail fetch |
-| `src/controllers/VionaRequestController.ts` | Resolve context in all authenticated request handlers (list, detail, note, status, both execution previews) |
-| `src/services/viona/vionaRequestExecutionGateDto.ts` | Add `accessContext` |
-| `src/services/viona/vionaRequestExecutionGateService.ts` | Pass context into `getVionaRequestById` |
-| `src/services/viona/vionaExecutionPlanRouteService.ts` | Pass context into `getVionaRequestById` (preview path only — no orchestrator change) |
-| `src/services/viona/vionaRequestCreateService.ts` | Idempotent-replay detail fetch — resolve + pass context (internal parity) |
+| **Modified production** | `vionaRequestNoteActionDto.ts`; `vionaRequestNoteActionService.ts`; `VionaRequestController.ts` (**note handler only**) |
+| **New tests** | `scripts/test-viona-pack40b-tenant-note-enforcement.ts` |
+| **Forbidden** | Read service policy changes (except import reuse), status, execution, orchestrator, escrow, webhook, Prisma |
 
-### 10.2 Required test modifications
+---
 
-| File | Why |
+### Pack40C — Status-action enforcement
+
+**Authorization:** `APPROVE_PACK40C_TENANT_STATUS_ENFORCEMENT`
+
+**Requires:** Pack40A merged and verified. Does **not** require Pack40B, but B should land first in
+recommended order.
+
+**Scope:** status scope lookup + mutation only; reuse Pack40A principal + policy; no transaction
+widening; no network inside `$transaction`; no orchestrator/escrow change.
+
+#### Pack40C — file allowlist
+
+| Category | Files |
 |---|---|
-| `scripts/test-viona-pack40-tenant-scope-enforcement.ts` | **NEW** — primary adversarial suite |
-| `scripts/test-viona-read-only-persistence-api.ts` | Assert consumer-context regression still passes (mechanical: pass `{ kind: 'consumer' }` or use helper default) |
+| **Modified production** | `vionaRequestStatusActionDto.ts`; `vionaRequestStatusActionService.ts`; `VionaRequestController.ts` (**status handler only**) |
+| **New tests** | `scripts/test-viona-pack40c-tenant-status-enforcement.ts` |
+| **Forbidden** | Orchestrator, escrow, execution plan real-provider path, webhook, Prisma |
 
-### 10.3 New test files
+---
 
-- `scripts/test-viona-pack40-tenant-scope-enforcement.ts` (listed above)
+### Pack40D — Indirect internal access paths
 
-### 10.4 Optional — separate operator authorization
+**Authorization:** `APPROVE_PACK40D_TENANT_INDIRECT_PATH_REVIEW_AND_IMPLEMENTATION`
 
-| File | Why |
-|---|---|
-| `src/services/vionaRequestApi.ts` | Only if frontend client types must mirror new server inputs — **not required** (HTTP API unchanged; server resolves context) |
-| `src/services/vionaRequestControlledWriteApi.ts` | Same — likely **no change** |
-| Denial audit instrumentation | Separate pack — §7.F |
+**Requires:** Pack40A merged. **Not implied by Pack40A/B/C authorization.**
 
-### 10.5 Explicitly forbidden files
+**Pre-implementation source review** (mandatory per path):
 
-- `src/services/viona/vionaRequestExecutionOrchestrator.ts`
-- `src/services/viona/vionaRequestEscrowHoldService.ts`
-- `src/services/viona/vionaExecutionPlanRouteService.ts` — **except** preview-path context pass-through listed above; **no** change to real-provider POC route, Twilio adapter wiring, or orchestrator invoke path
-- `src/lib/viona/realProviderAdapter/**`
-- `src/services/ai/AIRouterService.ts`
-- `src/lib/viona/dispatcher/vionaIntentRouter.ts`
-- `src/lib/viona/dispatcher/vionaToolRegistry.ts`
-- `src/controllers/VionaWebhookMerchantAgentController.ts`
-- Webhook signature / rate-limit modules
-- `src/services/viona/vionaAutonomousDispatchService.ts`
-- `src/lib/viona/merchant/vionaMerchantReadOnlyQueryReplyFormatter.ts`
-- `prisma/schema.prisma` and `prisma/migrations/**`
-- Fly / secret scripts
-- Marketing modules
-- Tourism/Business booking models
-- SOS modules
+| Indirect caller | Externally reachable? | Likely context | Tenant available? | Risk if mechanical pass-through |
+|---|---|---|---|---|
+| `previewVionaRequestExecutionGate` | Yes (HTTP preview) | Same JWT principal as read | Yes, after Pack40A | Low — should mirror read policy |
+| `previewVionaExecutionPlanRoute` (preview fn) | Yes | Same JWT principal | Yes | Low — mirror read |
+| `createVionaRequest` idempotent replay detail | Yes (create endpoint) | Creator `authUserId` | Yes | Medium — verify replay idempotency unchanged |
+| Note/status nested `getVionaRequestById` | Internal after B/C | Same principal as outer call | Yes | Should inherit from Pack40B/C inputs |
+
+Pack40D allowlist is **provisional** until review completes. Default minimum:
+
+- `vionaRequestExecutionGateService.ts` + DTO + controller execution-preview handler
+- `vionaExecutionPlanRouteService.ts` preview path + controller execution-plan-preview handler
+- `vionaRequestCreateService.ts` replay detail fetch **only if review confirms**
+
+**Forbidden without separate justification:** orchestrator invoke path, real-provider POC route,
+escrow, webhook.
+
+---
+
+### Pack40S — Staging adversarial QA
+
+**Authorization (separate):**
+
+- `APPROVE_PACK40_STAGING_TENANT_QA_PROVISIONING`
+- `APPROVE_PACK40_STAGING_TENANT_ADVERSARIAL_QA`
+
+Requires Pack40A–C (minimum A–C) merged. Does **not** authorize remediation on failure.
+
+Design unchanged from original §13 staging section: two synthetic merchants, JWT adversarial
+read/note/status checks, dual-role consumer row preserved, non-leaking 404s.
+
+---
+
+## 9. Authorization phrases
+
+| Phase | Phrase | Does **not** imply |
+|---|---|---|
+| Pack40A | `APPROVE_PACK40A_TENANT_CONTEXT_AND_READ_ENFORCEMENT` | B, C, D, provisioning, deploy, QA |
+| Pack40B | `APPROVE_PACK40B_TENANT_NOTE_ENFORCEMENT` | C, D, staging |
+| Pack40C | `APPROVE_PACK40C_TENANT_STATUS_ENFORCEMENT` | D, staging |
+| Pack40D | `APPROVE_PACK40D_TENANT_INDIRECT_PATH_REVIEW_AND_IMPLEMENTATION` | staging, deploy |
+| Staging provision | `APPROVE_PACK40_STAGING_TENANT_QA_PROVISIONING` | implementation, remediation |
+| Staging QA | `APPROVE_PACK40_STAGING_TENANT_ADVERSARIAL_QA` | remediation, deploy |
+
+**Retired phrase:** `APPROVE_PACK40_TENANT_SCOPE_ENFORCEMENT_IMPLEMENTATION` (too broad — do not use).
+
+No increment may begin automatically after another increment passes.
+
+---
+
+## 10. Test matrix (by slice)
+
+### 10.1 Dual-role tests (required — primarily Pack40A)
+
+| # | Test | Slice |
+|---|---|---|
+| D1 | User with no `MerchantProfile` accessing own consumer-classified request | A |
+| D2 | User with active `MerchantProfile` accessing own consumer-classified request | A |
+| D3 | Same user accessing matching merchant-classified request | A |
+| D4 | Same user denied non-matching registered-tenant request despite user-scope match | A |
+| D5 | Inactive merchant accessing own consumer-classified request | A |
+| D6 | Inactive merchant denied own merchant-classified request | A |
+| D7 | Merchant profile existence alone does not hide consumer-classified list rows | A |
+| D8 | Consumer-classified + matching merchant rows coexist in one authorized list | A |
+| D9 | Cross-tenant response indistinguishable from not-found | A–C |
+| D10 | No client-supplied tenant value expands access | A |
+
+### 10.2 Original matrix (still valid, mapped)
+
+| # | Test | Slice |
+|---|---|---|
+| 1 | Same owner, same merchant tenant | A/B/C |
+| 2 | Same owner, different registered merchant tenant | A/B/C |
+| 3 | Different owner, same tenant | A |
+| 4 | Different owner, different tenant | A |
+| 7 | Consumer, no profile | A |
+| 9–12 | Read/note/status non-leakage | A / B / C respectively |
+| 13–17 | Regressions, typecheck, lint, full local regression | Each slice + final |
 
 ---
 
 ## 11. Explicitly protected areas
 
-Same list as §10.5. Implementation must not touch protected files unless a future audit proves a
-direct unavoidable dependency — none identified in this planning audit.
+Unchanged from original plan: orchestrator, escrow, real-provider adapters, AIRouter, intent router,
+tool registry, webhook controller/signature/rate-limit, autonomous dispatch, reply formatter,
+Prisma schema/migrations, Fly/secret scripts, marketing, Tourism/Business booking, SOS.
 
 ---
 
-## 12. Test matrix (future implementation)
+## 12. Stop-on-error, rollback, deferred, definition of done
 
-| # | Test | Assertion |
-|---|---|---|
-| 1 | Same owner, same tenant | Read / note / status allowed |
-| 2 | Same owner, different tenant (merchant context) | Denied → `request_not_found` |
-| 3 | Different owner, same tenant | Denied → `request_not_found` (user scope) |
-| 4 | Different owner, different tenant | Denied → `request_not_found` |
-| 5 | Merchant context required path with inactive profile | Denied → `request_not_found` |
-| 6 | Inactive merchant | Denied on read/note/status |
-| 7 | Consumer context, no profile, ordinary request | Existing behavior preserved |
-| 8 | Legacy staging tenant string, consumer actor | Still visible under user scope |
-| 9 | Read path — cross-tenant request ID probe | No data returned; 404-equivalent reason |
-| 10 | Note path — cross-tenant write | No audit row created |
-| 11 | Status path — cross-tenant mutation | No status change |
-| 12 | Tenant mismatch response shape | Same reason/message as missing request (no existence leak) |
-| 13 | Existing owner-only / cross-user tests | Remain green |
-| 14 | Pack31 orchestrator + escrow regressions | Green — protected files untouched |
-| 15 | Pack35–Pack39 webhook/dispatcher regressions | Green — webhook path untouched |
-| 16 | Typecheck + lint | 0 errors |
-| 17 | Full local `scripts/test-viona-pack*.ts` regression | All pass (Pack36A live QA excluded) |
-| 18 | Contract scan: `buildAuthorizedVionaRequestWhere` 1-arg call sites | Zero remaining in gated services after implementation |
+Stop-on-error rules apply per slice. Rollback = revert that slice's merge commit.
 
-Tests use **behavioral assertions** (service-level with test DB) and **structural scans** — not
-permanent git diff vs `origin/master`.
+**Deferred:** Pack36B UI; Pack19 create `tenantId` validation; nullable `tenantId` DDL; denial audit
+type; automatic implementation.
+
+**Planning done when:** this revision merged to `master`; kernel/handoff updated.
+
+**Implementation done when:** Pack40A–C slices merged with tests green; Pack40D and Pack40S only if
+separately authorized and executed.
 
 ---
 
-## 13. Staging adversarial QA design (do not execute in planning)
-
-Separate phase after implementation merge. Requires its own authorization phrases (§15).
-
-### 13.1 Synthetic tenants
-
-| Actor | Tenant ID | Notes |
-|---|---|---|
-| Merchant A | `pack40-qa-tenant-a` | Active `MerchantProfile` + owner User A |
-| Merchant B | `pack40-qa-tenant-b` | Active `MerchantProfile` + owner User B |
-
-Provision via idempotent script (similar to `provision-staging-webhook-test-channel.ts`) — **not**
-part of implementation phrase.
-
-### 13.2 Adversarial checks (JWT-authenticated API)
-
-1. Seed one `VionaRequest` owned by User A with `tenantId=pack40-qa-tenant-a` (staging-safe create path).
-2. User A can `GET /api/viona/requests/:id` — **200**.
-3. User B `GET` same id — **404** `Request not found`.
-4. User B `POST .../actions/note` — **404**, no new audit row.
-5. User B `POST .../actions/status` — **404**, no status change.
-6. Failure bodies do not reveal title/summary/tenant of User A's row.
-7. Consumer test user (no profile) with own staging request — behavior unchanged.
-8. No webhook dispatch, real provider, payment, escrow, SMS, or write-capable merchant tool invoked.
-
-### 13.3 Authorization phrases (staging)
-
-- `APPROVE_PACK40_STAGING_TENANT_QA_PROVISIONING`
-- `APPROVE_PACK40_STAGING_TENANT_ADVERSARIAL_QA`
-
-Staging QA phrase does **not** authorize remediation on failure.
-
----
-
-## 14. Stop-on-error rules (implementation phase)
-
-Stop and report blocked-safe if:
-
-- Any protected file (§10.5) appears in the diff.
-- Prisma schema or migration is introduced without proven structural insufficiency.
-- Client-supplied `tenantId` is used as access gate input.
-- Tenant mismatch returns a distinct error code/message from `request_not_found`.
-- Webhook or dispatch files change.
-- Consumer-context regression fails.
-- Cross-tenant adversarial test fails.
-- Full local regression fails.
-
-No automatic remediation within the implementation task.
-
----
-
-## 15. Rollback strategy
-
-- Implementation is additive context plumbing + where-clause wiring — no migration.
-- Rollback = revert merge commit; behavior returns to user-scope-only access.
-- Staging rollback = redeploy prior Fly image (standard project rollback).
-- No data backfill required.
-
----
-
-## 16. Authorization phrases
-
-| Phase | Phrase |
-|---|---|
-| Implementation (code + local tests only) | `APPROVE_PACK40_TENANT_SCOPE_ENFORCEMENT_IMPLEMENTATION` |
-| Staging tenant provisioning | `APPROVE_PACK40_STAGING_TENANT_QA_PROVISIONING` |
-| Staging adversarial QA | `APPROVE_PACK40_STAGING_TENANT_ADVERSARIAL_QA` |
-
-The implementation phrase does **not** authorize provisioning, deployment, migration, staging QA, or
-production action.
-
----
-
-## 17. Deferred / non-goals
-
-- Pack36B Merchant Admin UI implementation.
-- Pack19 create-path validation tying body `tenantId` to `MerchantProfile`.
-- Admin/global cross-tenant ops console.
-- New audit type for denial events.
-- `AIRouterService.ts` test circuit breaker (Pack39 Layer 3).
-- Pack37 Option B real schedule/inventory data layer.
-- TourismBooking shadow-DB migration fix.
-- Multi-profile-per-owner (schema today: `ownerUserId @unique` on `MerchantProfile`).
-- Automatic Pack40 implementation from this planning PR.
-
----
-
-## 18. Definition of done
-
-**Planning (this packet):**
-
-- [x] Source audit verified against merged master.
-- [x] Gap, threat model, architecture, allowlist, tests, staging QA design documented.
-- [x] Kernel + handoff updated (planning row only).
-- [x] Docs-only PR opened — **not merged**.
-
-**Implementation (future, separately authorized):**
-
-- [ ] All §10.1 files wired; §10.5 files untouched.
-- [ ] §12 test matrix green + full local regression.
-- [ ] Consumer paths byte-identical behavior verified.
-- [ ] Cross-tenant adversarial tests pass.
-- [ ] Typecheck/lint clean.
-- [ ] Optional staging QA (`§13`) executed under its own phrases.
-
----
-
-## Appendix — Planning task verification record
+## Appendix — refinement verification record
 
 | Check | Result |
 |---|---|
-| PR #339 merged | **Yes** @ `587dcd195e5bf5fd66415576e2a6cbd621cc2eed` |
-| Duplicate Pack40 doc | **None** |
-| Overlapping open implementation PR | **None** |
-| Historical 3-call-site claim | **Confirmed accurate** (4 call sites counting list+detail separately; all omit 2nd arg) |
-| No-schema design feasible | **Yes** |
-| Product code required for planning | **No** |
+| PR #340 | **MERGED** @ `95031be` — branch updated post-merge with this refinement |
+| Dual-role unsafe rule in v1 plan | **Identified and corrected** |
+| Single 13-file increment | **Replaced by Pack40A–D** |
+| Schema change required for dual-role | **No** — consumer-classified ≡ not in registered merchant tenant set |
+| Overlapping implementation PR | **None** |
