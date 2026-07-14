@@ -1,12 +1,12 @@
 VIONA — KERNEL/HANDOFF SNAPSHOT (local notes, not committed to git)
-Last updated: 2026-07-14 09:22 — Pack34.5 Tech Debt Eradication COMPLETE: eradicated all brittle
-git-diff-vs-origin/master test assertions across the 3 known-broken regression scripts (converted
-to stable content/structural scans), synced the 3 drifted Prisma migration ledger rows, 20/20
-viona regression scripts now 100% PASS.
+Last updated: 2026-07-14 09:43 — PR #327 (Pack34.5) MERGED. Pack35 B2B Omni-Channel Webhook & Agent
+Routing PLANNING PACKET created (docs-only): the missing HTTP front door into the AI Gateway —
+webhook endpoint + signature verification + channel-to-tenant mapping + dispatcher wiring +
+idempotency/rate-limiting design. No code, no schema change.
 
-=== CURRENT MASTER HEAD (at Pack34.5 branch-cut) ===
-92ab026 — "feat(viona): implement Pack 34 B2B Merchant Gateway MerchantProfile, AI persona, and
-read-only tool registry (#326)"
+=== CURRENT MASTER HEAD (at Pack35 planning branch-cut) ===
+a011b28 — "chore(viona): Pack34.5 tech debt eradication - stable content-scan tests + Prisma
+ledger sync (#327)"
 
 === PACK30D CHAIN STATUS (1 -> 8) — unchanged from last sync, still accurate ===
 | Pack  | Scope                                                  | Status            |
@@ -280,6 +280,50 @@ already APPLIED in this exact database's ledger — its earlier P3006 failure wa
 dev` shadow-DB replay issue (unrelated to the real DATABASE_URL's ledger state), already
 worked around during Pack34 and requiring no further action here.
 
+=== PACK35 — B2B OMNI-CHANNEL WEBHOOK & AGENT ROUTING (PLANNING ONLY, this session) ===
+Operator-initiated, docs-only planning packet (no phrase required for planning-only packets, per
+existing Pack30D-2/31/32/33/34 precedent). Branch: docs/pack35-b2b-webhook-routing-planning, cut
+from origin/master @ a011b28 (post-Pack34.5 merge).
+
+New file: docs/product/VIONA_PACK35_B2B_WEBHOOK_ROUTING_PLAN.md — full design for:
+- Webhook endpoint: POST /api/viona/webhooks/merchant-agent, raw-body + signature-verified
+  (mirrors StripeWebhookService.ts's exact HMAC-SHA256 + timingSafeEqual + timestamp-window
+  shape), mounted before express.json() same as the Stripe webhook. No authMiddleware/JWT - the
+  signature IS the auth.
+- New proposed model VionaMerchantWebhookChannel (channelType, channelExternalId,
+  signingSecretHash, isActive, @@unique([channelType, channelExternalId])) mapping an external
+  channel (WhatsApp Business number / custom client) to a Pack34 MerchantProfile.tenantId. A
+  separate model, not a new MerchantProfile field bag - same "keep it narrow" precedent Pack34
+  used for Business vs. MerchantProfile.
+- New, parallel createVionaRequestFromWebhookMessage() creation path - the existing
+  createVionaRequest()/Pack19 staging-only constraints (6 mandatory safety labels, forbidden body
+  keys) are explicitly left untouched, not loosened.
+- Routes into the existing, unmodified dispatchVionaAutonomousRequest() (Pack32) - zero change to
+  that file.
+- Idempotency: provider externalMessageId reused as idempotencyKey (already supported end-to-end
+  by the dispatcher); Rate limiting: new per-channel (not per-IP) in-memory sliding-window
+  limiter, same shape as the existing RateLimitMiddleware.ts / localRateLimitGuard.ts.
+- THE hard design question: dispatchVionaAutonomousRequest()'s module header requires
+  operatorApprovalGranted/userConsentGranted to be human-supplied only, never LLM-inferred - but a
+  webhook has no human in the loop per-message. Resolved via a proposed, fail-closed "standing
+  approval" flag a human (merchant admin) sets once, in advance - structurally guarded so it can
+  ONLY ever auto-derive true for tools that are merchantScopedOnly + category
+  'merchant_read_only_query' + present in the merchant's toolScope; every other tool (including
+  both existing registry entries, checked by name in the test plan) always derives false/false
+  regardless of the standing flag. No write-capable tool is ever reachable from this path, in this
+  or the first future implementation increment.
+- Exact file allowlist (7 new files, 4 additive-only modified files) + 8-item test plan for a
+  future implementation phase - explicitly including a note to use content-scans, not
+  git-diff-vs-origin/master checks, per the Pack34.5 lesson learned this same session.
+- Zero .ts/.tsx files created or modified; zero schema/migration change; zero HTTP route created.
+
+Docs updated same session: this file + docs/ai-context/VIONA_KERNEL_HANDOFF_FAST_SAFE_GLOBAL_MODE.md
+(new Pack35 planning table row).
+
+Status: planning packet complete, PR opened (see chat for link), targeting master. Awaiting
+operator review + a future, separate implementation-authorization phrase before any code in the
+plan's file allowlist may be written.
+
 === CANDIDATE NEXT STEPS (discovered, none authorized yet) ===
 1. Supply TWILIO_TEST_ACCOUNT_SID/TWILIO_TEST_AUTH_TOKEN locally (or run the equivalent flow on
    Staging where they already exist) to get a real, non-blocked realProviderResult outcome.
@@ -296,3 +340,6 @@ worked around during Pack34 and requiring no further action here.
    `prisma migrate dev`'s shadow-DB replay for any future contributor who runs it locally. Not
    fixed by Pack34.5 (ledger for it was already consistent; fixing the migration file's SQL itself
    is a separate, riskier task requiring careful review — out of scope here).
+5. Pack35's own implementation phase (operator phrase required, e.g.
+   APPROVE_PACK35_B2B_WEBHOOK_ROUTING_IMPLEMENTATION) - not requested yet, planning-only per this
+   session's explicit instruction.
