@@ -984,17 +984,20 @@ Next: docs-only consumer-provenance model / remediation plan before Pack40A impl
 Evidence: docs/product/VIONA_PACK40A_TENANT_PROVENANCE_INVENTORY_EVIDENCE.md
 
 === PACK40P SERVER-OWNED REQUEST PROVENANCE MODEL (this session) — PLANNING ONLY ===
-Branch: docs/pack40p-request-provenance-model-planning (from master @ a4619a1). PR #342 MERGED.
+Branch: docs/pack40p-request-provenance-model-planning. PR #343 MERGED @ 1af07e7; rollout amendment pending.
 Planning only — no schema/migration/product code/DB/staging/deploy/backfill. No implementation authorized.
 
 Recommended model: additive VionaRequestScopeKind (consumer | merchant | legacyUnresolved),
 scopeKind column (DB default legacyUnresolved), optional merchantProfileId FK to MerchantProfile.
-Reject tenant sentinel as primary provenance. Pack19 -> scopeKind=consumer; Pack35 -> scopeKind=merchant
-+ FK. Existing rows -> legacyUnresolved at migration; no auto-consumer/merchant from registry match.
-Backfill: merchant-only with positive webhook evidence + tenant match + owner alignment; no consumer backfill.
+Reject tenant sentinel as primary provenance. Pack19 -> scopeKind=consumer (creation path, NOT actor
+profile — dual-role owners still get consumer); Pack35 -> scopeKind=merchant + FK.
+Existing rows -> legacyUnresolved at migration; no auto-consumer/merchant from registry match.
 
-Sliced execution: Pack40P1 (schema files) -> P2 (create paths) -> P3 (staging migrate) -> P4D/P4W (backfill)
--> P5 (verify) -> then Pack40A. Phrases: APPROVE_PACK40P1_PROVENANCE_SCHEMA_IMPLEMENTATION, etc.
+Rollout order (refined): P1 (schema, deployment lock) -> P3 (staging migrate) -> P2 (create paths,
+merge only) -> P2D (staging deploy, new phrase) -> P4D/P4W (merchant backfill) -> P5 (verify) -> Pack40A.
+P1 state: SCHEMA_COMMITTED_MIGRATION_NOT_APPLIED / DEPLOYMENT_BLOCKED_FOR_ENVIRONMENTS_WITHOUT_MIGRATION.
+P2 phrase does NOT authorize deploy; P3 does NOT authorize app deploy.
+
 Plan: docs/product/VIONA_PACK40P_REQUEST_PROVENANCE_MODEL_PLAN.md
 
 === DEFERRED / BACKLOG (recorded, not authorized — logged during Pack37 sync per operator instruction; items 3-4 from the Pack38 sync addressed by Pack39 implementation above and removed from this list) ===
@@ -1021,8 +1024,8 @@ Plan: docs/product/VIONA_PACK40P_REQUEST_PROVENANCE_MODEL_PLAN.md
    dry-run, unscheduled); legal/compliance review of region-specific retention windows and PII
    rule values (explicitly not claimed by PR #310).
 3. Wire tenant enforcement into VionaRequest call sites — **Pack40A BLOCKED behind Pack40P**
-   (docs/product/VIONA_PACK40P_REQUEST_PROVENANCE_MODEL_PLAN.md). Next: review Pack40P planning PR,
-   then APPROVE_PACK40P1_PROVENANCE_SCHEMA_IMPLEMENTATION when ready.
+   (docs/product/VIONA_PACK40P_REQUEST_PROVENANCE_MODEL_PLAN.md). Next: merge Pack40P rollout-amendment
+   PR, then APPROVE_PACK40P1_PROVENANCE_SCHEMA_IMPLEMENTATION when ready.
 4. TourismBooking shadow-DB replay issue — see DEFERRED/BACKLOG section above (item 2).
 5. Pack37's remaining, not-yet-issued authorization phrases:
    APPROVE_PACK37_OPENAI_STAGING_SECRET — DONE this session (see dedicated section above): key

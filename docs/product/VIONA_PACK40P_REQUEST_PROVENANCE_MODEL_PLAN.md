@@ -37,8 +37,9 @@ Pack40A staging inventory (`APPROVE_PACK40A_READ_ONLY_TENANT_PROVENANCE_INVENTOR
 client `tenantId`.** Existing rows migrate to `legacyUnresolved` only — **never auto-consumer,
 never auto-merchant from registry match alone.**
 
-Execution is sliced into **Pack40P1–P5** (schema → create paths → staging migrate → backfill dry-run
-→ backfill write → verification). **Pack40A remains blocked** until Pack40P definition-of-ready is met.
+Execution is sliced into **Pack40P1 → P3 → P2 → P2D → P4D/P4W → P5** with explicit
+**deployment locks** (schema-dependent application must not deploy before migration apply on each
+environment). **Pack40A remains blocked** until Pack40P definition-of-ready is met.
 
 ---
 
@@ -92,7 +93,7 @@ read-only inventory and migration review before any apply/backfill.
 | Infer consumer from unmatched tenant | Pack40 v2 rejected | `legacyUnresolved` fail closed |
 | Backfill mislabels consumer | N/A | **No consumer backfill path** |
 | Merchant profile deleted | No delete API today | `onDelete: Restrict` — deletion blocked while requests reference profile |
-| Rolling deploy old code without column | N/A | Ordering plan: migrate before deploy of create-path code |
+| Rolling deploy old code without column | N/A | **P1 deployment lock:** no app deploy until migration applied per environment; old instances write `legacyUnresolved` during P2D window |
 
 ---
 
@@ -229,16 +230,38 @@ unreadable until positive backfill or support intervention under Pack40P4W rules
 
 ## 9. Create-path behavior
 
+### 9.0 Core rule — `scopeKind` reflects creation path, not actor account type
+
+`scopeKind` is **creation-path provenance**, not a classification of the authenticated user's account.
+
+| Rule | Requirement |
+|---|---|
+| Dual-role users | A user may simultaneously be a consumer/direct user **and** the owner of a `MerchantProfile`. |
+| MerchantProfile possession | Owning a `MerchantProfile` **does not** cause every request that user creates to become merchant-scoped. |
+| Pack19 path | Always assigns `scopeKind = consumer`, `merchantProfileId = null` — **even when** the authenticated user also owns a `MerchantProfile`. |
+| Client `tenantId` | Non-authoritative compatibility metadata during transition; **can never** elevate a Pack19 row to merchant provenance. |
+| Merchant provenance | Requires a creation path that **positively resolves** `MerchantProfile` server-side (Pack35 today). |
+| Future merchant UI | A separately reviewed server-side merchant creation path is required; must **never** convert Pack19 consumer creation into merchant merely because the actor has a `MerchantProfile`. |
+
+**Source verification:** only two production `vionaRequest.create` paths exist — Pack19 JWT
+(`VionaRequestController` → `createVionaRequest`) and Pack35 webhook
+(`createVionaRequestFromWebhookMessage`). No established merchant-scoped Pack19 business flow was found.
+
 ### 9.1 Pack19 JWT create (`createVionaRequest`)
 
-**Verified:** Pack19 is the **only authenticated consumer create path** (staging-testable; not
-production-ready per existing safety labels).
+**Verified:** Pack19 is the **only authenticated direct-user (consumer-path) create endpoint**
+(staging-testable; not production-ready per existing safety labels). It is **not** a merchant-scoped
+creation path.
 
 | Field | Server assignment |
 |---|---|
-| `scopeKind` | **`consumer`** |
-| `merchantProfileId` | **`null`** |
-| `tenantId` | **Compatibility:** continue accepting client body value **as non-authoritative metadata** stored in existing column; **must not** drive access after Pack40A. Document deprecation in API contract; removal is separate pack. **Do not** silently change response shape in Pack40P2. |
+| `scopeKind` | **`consumer`** — assigned by server based on **route/path**, regardless of whether `ownerUserId` also owns a `MerchantProfile` |
+| `merchantProfileId` | **`null`** — always for Pack19 |
+| `tenantId` | **Compatibility:** continue accepting client body value **as non-authoritative metadata** stored in existing column; **must not** drive access after Pack40A; **must not** imply merchant scope even when value matches a registry tenant. Document deprecation in API contract; removal is separate pack. **Do not** silently change response shape in Pack40P2. |
+
+**Dual-role invariant (Pack40P2 tests must prove):** merchant-profile owner calling Pack19 receives
+`scopeKind = consumer`, `merchantProfileId = null`. Client-supplied `tenantId` matching a merchant
+registry value does **not** create `scopeKind = merchant`.
 
 Client body must **not** accept `scopeKind` or `merchantProfileId` keys (screen via existing
 forbidden-key patterns if added).
@@ -335,40 +358,122 @@ A row may be backfilled to `scopeKind = merchant` **only if all** hold:
 
 ## 13. Safe rollout ordering
 
-| Step | Action | Notes |
-|---|---|---|
-| 1 | Merge **Pack40P1** (schema + migration file) | Migration **not applied** |
-| 2 | Merge **Pack40P2** (create-path wiring) | Code writes new columns when present |
-| 3 | **`prisma migrate deploy` on staging** (Pack40P3) | All existing rows `legacyUnresolved` |
-| 4 | Deploy application to staging (if not co-deployed) | New creates get correct scope |
-| 5 | **Pack40P5** verification | New Pack19 → consumer; new webhook → merchant; old → unresolved |
-| 6 | **Pack40P4D** dry-run backfill | Read-only candidates |
-| 7 | **Pack40P4W** staging backfill write | Merchant only |
-| 8 | Re-verify Pack40P5 | Backfilled merchant rows readable under future Pack40A rules |
-| 9 | **Pack40A** enforcement (separate phrase) | After definition-of-ready |
+### 13.1 Prisma schema deployment hazard
 
-**Rolling deploy compatibility:**
+After Pack40P1 merges, `schema.prisma` and generated Prisma Client expectations include the new
+provenance fields (`scopeKind`, `merchantProfileId`) while a target environment database may still
+lack those columns.
 
-- **Apply migration before deploying P2 code** — old app instances ignore new columns (Postgres allows); new columns have defaults.
-- Old instances writing requests during rollout: new rows get `legacyUnresolved` default until old code replaced — **acceptable fail-safe**; minimize rollout window.
-- **Do not deploy P2 to production before migration applied** on that environment.
-- Rollback after migrate, before P2 deploy: revert deploy only; columns remain with safe defaults.
+Deploying application code built from that master state **before** applying the Pack40P1 migration
+to the **same environment** may cause runtime queries to reference columns that do not yet exist.
 
-**P2 before P1 applied:** code may guard with feature-detect or remain unmerged until P3 — **prefer: P2 merges after P1 but deploy blocked until P3 migrate on each environment.**
+**Required invariant (per environment):**
+
+```text
+After Pack40P1 merges, no application deployment from that master
+is allowed to an environment until the Pack40P1 migration has been
+successfully applied and verified on that same environment.
+```
+
+Staging and production are **independent**. A migration applied to staging does **not** authorize
+deploying the same schema-dependent application to production.
+
+**Repository deploy model:** master merge does **not** auto-deploy. Fly staging deploys require
+explicit operator authorization (`fly deploy --app viona-api-staging-eu --remote-only` per Pack36A/39
+precedent). The P1 deployment lock is therefore **process-enforced** via authorization phrases and
+evidence docs — not CI-blocked today.
+
+### 13.2 Pack40P1 state markers (required in P1 PR body + evidence doc)
+
+After P1 merge, canonical state:
+
+```text
+SCHEMA_COMMITTED_MIGRATION_NOT_APPLIED
+DEPLOYMENT_BLOCKED_FOR_ENVIRONMENTS_WITHOUT_MIGRATION
+```
+
+After successful P3 staging migration apply:
+
+```text
+STAGING_SCHEMA_READY_APPLICATION_DEPLOY_STILL_SEPARATELY_AUTHORIZED
+```
+
+This marker does **not** imply production readiness.
+
+### 13.3 Exact safe staging sequence
+
+| Step | Slice | Action | Deploy? | Migrate? | Backfill? |
+|---|---|---|---|---|---|
+| **1** | **P1** | Merge additive Prisma schema + migration file; activate deployment lock | **No** | **No apply** | No |
+| **2** | **P3** | Apply merged migration to **staging only**; verify ledger, columns, enum, indexes; verify all existing rows `legacyUnresolved`; verify currently deployed **old** application remains healthy | **No** | **Yes (staging)** | No |
+| **3** | **P2** | Implement Pack19/Pack35 provenance assignment; local tests; merge code | **No** | No | No |
+| **4** | **P2D** | Deploy verified merged master (contains P2) to `viona-api-staging-eu`; health + bounded logs | **Yes (staging only)** | No | No |
+| **5** | **P4D** | Merchant positive-evidence backfill dry run | No | No | No (read-only) |
+| **6** | **P4W** | Approved staging merchant backfill write | No | No | Yes (staging) |
+| **7** | **P5** | Post-rollout verification (creates, backfill, rolling window) | No | No | No |
+| **8** | **Pack40A review** | Readiness review only — separate phrase | — | — | — |
+
+**Merge-order recommendation (safest for this repository):**
+
+1. **P1 merge** → deployment lock active.
+2. **P3 execute on staging** → release staging deployment lock for schema readiness only.
+3. **P2 merge** → code on master but **not deployed** until P2D phrase.
+4. **P2D deploy staging** → explicit application rollout.
+
+P2 **may be prepared** (branch/PR) before P3, but **must not merge to master until P3 staging
+migration succeeds**, unless release discipline explicitly prevents accidental deploy to unmigrated
+environments. Because deploy is manual and not CI-gated, **prefer P3 before P2 merge**.
+
+Production follows the same per-environment invariant independently (future phrases; not authorized here).
+
+### 13.4 Rolling deployment window (P2D)
+
+While old and new application instances coexist after P2D begins:
+
+| Actor | Behavior |
+|---|---|
+| **Old instance** | Does not explicitly assign `scopeKind`; DB default → `legacyUnresolved` |
+| **New instance — Pack19** | Assigns `scopeKind = consumer`, `merchantProfileId = null` |
+| **New instance — Pack35** | Assigns `scopeKind = merchant`, `merchantProfileId = resolved profile.id` |
+
+**Policy:**
+
+1. DB default remains `legacyUnresolved` (fail-safe).
+2. Old-instance writes during rollout remain fail-safe unresolved.
+3. **No** old-instance row is automatically classified as consumer.
+4. Webhook rows created by old instances may later qualify for positive-evidence merchant backfill (P4).
+5. Direct-user rows created by old instances remain unresolved unless separately authorized remediation obtains positive provenance.
+6. P5 must record the bounded deployment window (timestamps, machine count if available).
+7. P5 must verify requests created **after all machines run the new version** receive explicit provenance.
+8. **Pack40A must not be enabled** while newly created rows continue unexpectedly defaulting to unresolved after rollout completion.
+
+### 13.5 Authorization vs deployment (explicit non-implication)
+
+| Phrase | Does **NOT** authorize |
+|---|---|
+| `APPROVE_PACK40P1_PROVENANCE_SCHEMA_IMPLEMENTATION` | Migration apply; application deploy |
+| `APPROVE_PACK40P2_CREATE_PATH_PROVENANCE_WIRING` | **Application deployment**; migration apply; backfill |
+| `APPROVE_PACK40P3_STAGING_PROVENANCE_MIGRATION_APPLY` | **Application deployment**; backfill; production |
+| `APPROVE_PACK40P2D_STAGING_CREATE_PATH_PROVENANCE_DEPLOY` | Migration; secrets; backfill; Pack40A; production |
+| `APPROVE_PACK40P5_STAGING_PROVENANCE_VERIFICATION` | Missing P2D deployment; Pack40A; backfill writes |
+
+**Pre-P2D deploy is explicitly blocked:** deploying P1 schema-generated application before migration
+apply on the target environment violates the deployment lock.
 
 ---
 
-## 14. Implementation slicing (Pack40P1–P5)
+## 14. Implementation slicing (Pack40P1–P5 + P2D)
 
-| Slice | Phrase | Scope |
-|---|---|---|
-| **P1** | `APPROVE_PACK40P1_PROVENANCE_SCHEMA_IMPLEMENTATION` | Prisma enum/fields/relation/indexes + migration SQL file; schema tests; **no apply** |
-| **P2** | `APPROVE_PACK40P2_CREATE_PATH_PROVENANCE_WIRING` | Pack19 consumer + Pack35 merchant assignment; DTO screening; local tests; **no migrate apply, no backfill** |
-| **P3** | `APPROVE_PACK40P3_STAGING_PROVENANCE_MIGRATION_APPLY` | Staging `migrate deploy` only; verify all existing `legacyUnresolved` |
-| **P4D** | `APPROVE_PACK40P4_MERCHANT_BACKFILL_DRY_RUN` | Read-only candidate calc + evidence |
-| **P4W** | `APPROVE_PACK40P4_STAGING_MERCHANT_BACKFILL_WRITE` | Staging idempotent merchant backfill |
-| **P5** | `APPROVE_PACK40P5_STAGING_PROVENANCE_VERIFICATION` | Post-migrate + post-backfill verification |
-| **Pack40A** | `APPROVE_PACK40A_TENANT_CONTEXT_AND_READ_ENFORCEMENT` | **Only after P1–P5 ready** |
+| Slice | Phrase | Scope | Deploy? |
+|---|---|---|---|
+| **P1** | `APPROVE_PACK40P1_PROVENANCE_SCHEMA_IMPLEMENTATION` | Prisma enum/fields/relation/indexes + migration SQL file; schema tests; state markers; **no apply, no deploy** | **No** |
+| **P3** | `APPROVE_PACK40P3_STAGING_PROVENANCE_MIGRATION_APPLY` | Staging `migrate deploy` only; verify all existing `legacyUnresolved`; old app health; **does not authorize app deploy** | **No** |
+| **P2** | `APPROVE_PACK40P2_CREATE_PATH_PROVENANCE_WIRING` | Pack19 consumer + Pack35 merchant assignment; DTO screening; dual-role tests; local tests; **does not authorize deploy, migrate apply, or backfill** | **No** |
+| **P2D** | `APPROVE_PACK40P2D_STAGING_CREATE_PATH_PROVENANCE_DEPLOY` | Deploy verified merged master to `viona-api-staging-eu`; pre/post health; image evidence; **no migrate, secrets, backfill, Pack40A** | **Yes (staging only)** |
+| **P4D** | `APPROVE_PACK40P4_MERCHANT_BACKFILL_DRY_RUN` | Read-only candidate calc + evidence | No |
+| **P4W** | `APPROVE_PACK40P4_STAGING_MERCHANT_BACKFILL_WRITE` | Staging idempotent merchant backfill | No |
+| **P5** | `APPROVE_PACK40P5_STAGING_PROVENANCE_VERIFICATION` | Post-P2D + post-backfill verification; rolling window inventory; **does not perform missing P2D deploy** | No |
+| **Pack40A** | `APPROVE_PACK40A_TENANT_CONTEXT_AND_READ_ENFORCEMENT` | **Only after P1, P3, P2, P2D, P4D/P4W (if approved), P5 ready** | — |
 
 No Pack40P phrase implies Pack40A. No Pack40P phrase implies production.
 
@@ -383,7 +488,8 @@ No Pack40P phrase implies Pack40A. No Pack40P phrase implies production.
 | **Schema** | `prisma/schema.prisma` (additive enum, 2 columns, relation, indexes on `VionaRequest`; reverse relation on `MerchantProfile`) |
 | **Migration** | `prisma/migrations/20260714120000_pack40p_add_viona_request_scope_provenance/migration.sql` (new) |
 | **Tests** | `scripts/test-viona-pack40p1-provenance-schema.ts` (new — enum values, default, relation metadata scan) |
-| **Docs** | `docs/product/VIONA_PACK40P1_PROVENANCE_SCHEMA_EVIDENCE.md` (new, optional evidence) |
+| **Docs** | `docs/product/VIONA_PACK40P1_PROVENANCE_SCHEMA_EVIDENCE.md` (new — must record `SCHEMA_COMMITTED_MIGRATION_NOT_APPLIED` + `DEPLOYMENT_BLOCKED_FOR_ENVIRONMENTS_WITHOUT_MIGRATION`) |
+| **PR body** | Must include same state markers and deployment-lock invariant |
 | **Forbidden** | All create services, access scope, controllers, backfill scripts, Fly, orchestrator, escrow, webhook |
 
 ### Pack40P2 — Create-path wiring
@@ -393,13 +499,23 @@ No Pack40P phrase implies Pack40A. No Pack40P phrase implies production.
 | **Production** | `src/services/viona/vionaRequestCreateService.ts`; `src/services/viona/vionaRequestCreateDto.ts`; `src/services/viona/vionaRequestCreateFromWebhookService.ts`; `src/controllers/VionaWebhookMerchantAgentController.ts` (pass `merchantProfileId` if not already in webhook create input chain) |
 | **Tests** | `scripts/test-viona-pack40p2-create-path-provenance.ts` (new) |
 | **Mechanical** | Existing Pack19/Pack35 tests if create payloads need assertion updates |
-| **Forbidden** | `vionaRequestAccessScope.ts`, read/note/status services, migration apply, backfill |
+| **Forbidden** | `vionaRequestAccessScope.ts`, read/note/status services, migration apply, backfill, **Fly deploy** |
+
+### Pack40P2D — Staging create-path deploy (execution-only)
+
+| Category | Files / actions |
+|---|---|
+| **Code changes** | **None** |
+| **Execution** | `fly deploy --app viona-api-staging-eu --remote-only` (verified merged master containing P2); pre-deploy local gates (typecheck, lint, Pack40P2 tests, full regression); pre/post `GET /health`; bounded logs |
+| **Evidence** | `docs/product/VIONA_PACK40P2D_STAGING_CREATE_PATH_DEPLOY_EVIDENCE.md` (new — image/release ID, health, deploy window start) |
+| **Docs sync** | Kernel + Handoff state updates (evidence-only follow-up commit if needed) |
+| **Forbidden** | Prisma commands; secret access/change; production; backfill; schema edit; Pack40A; automatic remediation |
 
 ### Pack40P3 — Staging migration apply
 
 | Category | Files |
 |---|---|
-| **Evidence only** | `docs/product/VIONA_PACK40P3_STAGING_MIGRATION_APPLY_EVIDENCE.md` (new) |
+| **Evidence only** | `docs/product/VIONA_PACK40P3_STAGING_MIGRATION_APPLY_EVIDENCE.md` (new — must record `STAGING_SCHEMA_READY_APPLICATION_DEPLOY_STILL_SEPARATELY_AUTHORIZED`) |
 | **Forbidden** | Product code changes beyond evidence; production; backfill |
 
 ### Pack40P4D — Backfill dry run
@@ -433,12 +549,12 @@ No Pack40P phrase implies Pack40A. No Pack40P phrase implies production.
 | # | Test | Slice |
 |---|---|---|
 | 1 | Existing row → `legacyUnresolved` after migration | P1/P3 |
-| 2 | New Pack19 → `consumer` | P2 |
+| 2 | New Pack19 → `consumer` | P2/P2D/P5 |
 | 3 | Client cannot set `scopeKind` | P2 |
 | 4 | Client cannot set `merchantProfileId` | P2 |
-| 5 | New Pack35 → `merchant` | P2 |
-| 6 | Pack35 FK = resolved profile | P2 |
-| 7 | Pack35 `tenantId` = profile tenant | P2 |
+| 5 | New Pack35 → `merchant` | P2/P2D/P5 |
+| 6 | Pack35 FK = resolved profile | P2/P5 |
+| 7 | Pack35 `tenantId` = profile tenant | P2/P5 |
 | 8 | Omitted assignment → `legacyUnresolved` | P1/P2 |
 | 9 | Registry absence ≠ consumer | P2/P5 |
 | 10 | Registry match alone ≠ auto backfill | P4D |
@@ -447,12 +563,23 @@ No Pack40P phrase implies Pack40A. No Pack40P phrase implies production.
 | 13 | No consumer backfill path exists | P4D/P4W |
 | 14 | Ambiguous mapping stops | P4W |
 | 15 | Deactivation doesn't rewrite scope | P2 |
-| 16 | Pack19/Pack35 regressions green | P2 |
-| 17 | Pack31 orchestrator unchanged | all |
-| 18 | Pack35–Pack39 webhook/dispatcher green | P2 |
-| 19 | Typecheck, lint, full regression | each |
-| 20 | Migration rollback doc verified | P1 |
-| 21 | No permanent git-diff-vs-master tests | all |
+| 16 | **Merchant-profile owner using Pack19 still receives `consumer`** | P2 |
+| 17 | **Client `tenantId` cannot create `merchant` scope on Pack19** | P2 |
+| 18 | Pack19/Pack35 regressions green | P2 |
+| 19 | Pack31 orchestrator unchanged | all |
+| 20 | Pack35–Pack39 webhook/dispatcher green | P2/P2D |
+| 21 | Typecheck, lint, full regression | each |
+| 22 | Migration rollback doc verified | P1 |
+| 23 | **Deploying P1 app before migration explicitly blocked (process + docs)** | P1/P3 |
+| 24 | **Old application healthy immediately after additive migration (P3)** | P3 |
+| 25 | **Old instance writes receive default `legacyUnresolved` (P2D window)** | P2D/P5 |
+| 26 | **Rolling-window rows inventoried in P5** | P5 |
+| 27 | **After rollout completion, no expected create path silently defaults to unresolved** | P5 |
+| 28 | **P2 phrase does not deploy app** | P2 |
+| 29 | **P3 phrase does not deploy app** | P3 |
+| 30 | **P2D deploy does not migrate or backfill** | P2D |
+| 31 | **P5 does not perform missing rollout actions** | P5 |
+| 32 | No permanent git-diff-vs-master tests | all |
 
 ---
 
@@ -460,9 +587,10 @@ No Pack40P phrase implies Pack40A. No Pack40P phrase implies production.
 
 | Stage | Rollback |
 |---|---|
-| P1 merged, migration not applied | Revert PR; delete migration folder |
-| P3 applied, P2 not deployed | DB has harmless default columns; old app continues |
-| P3 + P2 deployed | Revert app; columns remain; new rows get `legacyUnresolved` until redeploy |
+| P1 merged, migration not applied | Revert PR; delete migration folder; deployment lock clears with revert |
+| P3 applied, P2 not merged | DB has harmless default columns; old app continues; **do not deploy P1+ client until P2D or revert** |
+| P3 applied, P2 merged, P2D not executed | Old staging app continues; new code on master undeployed — safe |
+| P2D deployed | Revert Fly release to prior image; columns remain; new rows from old code → `legacyUnresolved` |
 | P4W backfill wrong | Idempotent script + manual correction under ops phrase; no auto consumer revert |
 | Full rollback | Drop FK, columns, enum (destructive — staging only under explicit phrase) |
 
@@ -472,21 +600,24 @@ No Pack40P phrase implies Pack40A. No Pack40P phrase implies production.
 
 Stop if: migration sets any row to consumer/merchant; consumer backfill attempted; client can set scope;
 Pack40A code in P1–P5; orchestrator/escrow/webhook signature changed; production targeted without
-phrase; ambiguous backfill proceeds; shadow-DB replay attempted as part of P1 without separate ops plan.
+phrase; ambiguous backfill proceeds; shadow-DB replay attempted as part of P1 without separate ops plan;
+**application deployed to environment before P1 migration applied on that environment**; P2D executed
+without P3 success on staging.
 
 ---
 
 ## 19. Authorization phrases
 
-| Phrase | Authorizes |
-|---|---|
-| `APPROVE_PACK40P1_PROVENANCE_SCHEMA_IMPLEMENTATION` | P1 files only |
-| `APPROVE_PACK40P2_CREATE_PATH_PROVENANCE_WIRING` | P2 files only |
-| `APPROVE_PACK40P3_STAGING_PROVENANCE_MIGRATION_APPLY` | Staging migrate deploy |
-| `APPROVE_PACK40P4_MERCHANT_BACKFILL_DRY_RUN` | P4D read-only |
-| `APPROVE_PACK40P4_STAGING_MERCHANT_BACKFILL_WRITE` | P4W staging writes |
-| `APPROVE_PACK40P5_STAGING_PROVENANCE_VERIFICATION` | P5 verify |
-| `APPROVE_PACK40A_TENANT_CONTEXT_AND_READ_ENFORCEMENT` | Pack40A — **only after §21 ready** |
+| Phrase | Authorizes | Does **NOT** authorize |
+|---|---|---|
+| `APPROVE_PACK40P1_PROVENANCE_SCHEMA_IMPLEMENTATION` | P1 files only | Migration apply; deploy |
+| `APPROVE_PACK40P3_STAGING_PROVENANCE_MIGRATION_APPLY` | Staging migrate deploy + P3 evidence | **Application deploy**; backfill; production |
+| `APPROVE_PACK40P2_CREATE_PATH_PROVENANCE_WIRING` | P2 files only | **Application deploy**; migration apply; backfill |
+| `APPROVE_PACK40P2D_STAGING_CREATE_PATH_PROVENANCE_DEPLOY` | Staging app deploy (`viona-api-staging-eu`) | Migration; secrets; backfill; Pack40A; production |
+| `APPROVE_PACK40P4_MERCHANT_BACKFILL_DRY_RUN` | P4D read-only | Writes |
+| `APPROVE_PACK40P4_STAGING_MERCHANT_BACKFILL_WRITE` | P4W staging writes | Consumer backfill; production |
+| `APPROVE_PACK40P5_STAGING_PROVENANCE_VERIFICATION` | P5 verify | Missing P2D; Pack40A; backfill writes |
+| `APPROVE_PACK40A_TENANT_CONTEXT_AND_READ_ENFORCEMENT` | Pack40A — **only after §21 ready** | — |
 
 ---
 
@@ -508,14 +639,15 @@ Pack40A (`APPROVE_PACK40A_TENANT_CONTEXT_AND_READ_ENFORCEMENT`) may be authorize
 
 | # | Criterion |
 |---|---|
-| 1 | Pack40P1 merged — schema + migration file exist |
-| 2 | Pack40P2 merged — create paths assign scope |
-| 3 | Pack40P3 executed on staging — migration applied |
-| 4 | Pack40P5 passed — new creates verified consumer/merchant; legacy unresolved |
-| 5 | Pack40P4W executed (staging) — webhook-positive merchant rows backfilled where candidates exist |
-| 6 | Pack40 plan access policy updated to use `scopeKind` + FK (docs sync) |
-| 7 | No canonical consumer ambiguity — **`scopeKind = consumer`** is the positive predicate |
-| 8 | Full local regression green after P2 |
+| 1 | Pack40P1 merged — schema + migration file exist; deployment lock documented |
+| 2 | Pack40P3 executed on staging — migration applied; state `STAGING_SCHEMA_READY_APPLICATION_DEPLOY_STILL_SEPARATELY_AUTHORIZED` |
+| 3 | Pack40P2 merged — create paths assign scope by **creation path** (Pack19 → consumer even for dual-role owners) |
+| 4 | Pack40P2D executed on staging — create-path code deployed; rolling window closed |
+| 5 | Pack40P5 passed — post-P2D creates verified consumer/merchant; legacy unresolved preserved; no silent unresolved defaults after rollout |
+| 6 | Pack40P4W executed (staging) where approved — webhook-positive merchant rows backfilled |
+| 7 | Pack40 plan access policy updated to use `scopeKind` + FK (docs sync) |
+| 8 | No canonical consumer ambiguity — **`scopeKind = consumer`** is the positive predicate |
+| 9 | Full local regression green after P2 |
 
 Until then: **Pack40A BLOCKED.**
 
@@ -526,6 +658,9 @@ Until then: **Pack40A BLOCKED.**
 | Check | Result |
 |---|---|
 | PR #342 merged | **Yes** @ `a4619a1` |
+| PR #343 merged (initial Pack40P plan) | **Yes** @ `1af07e7` |
 | Overlapping implementation PR | **None** |
 | Safe additive model | **Yes** |
+| Pack19 merchant-scoped create conflict | **None found** |
+| Auto-deploy on master merge | **No** — manual Fly deploy |
 | Product code in this task | **None** |
