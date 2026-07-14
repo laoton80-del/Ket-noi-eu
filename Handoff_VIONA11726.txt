@@ -1,17 +1,18 @@
 VIONA — KERNEL/HANDOFF SNAPSHOT (local notes, not committed to git)
-Last updated: 2026-07-14 13:45 — Pack38 B2B Intent Routing & Confidence Tuning IMPLEMENTATION
-(Option A) complete and LIVE-VERIFIED on staging: broadened both merchant tools' descriptions
-(opening/business-hours + in-stock phrasing) and added the exact 4-positive+1-negative few-shot
-block to buildVionaDispatchClassificationPrompt(). Deployed this branch to viona-api-staging-eu and
-re-ran the live QA script: the QA script's own fixed test message ("What are your opening hours
-today?") now returns dispatchAccepted:true (was low_confidence before this pack) AND
-merchantQueryResult.replyText is a genuine Tier-2 LLM-phrased sentence (confirmed by diffing it
-against the Tier-1 template — they differ — and by a live `fly logs` capture showing 3 real
-AIRouter calls for the one request, the last one a 103-prompt/15-completion-token call matching the
-Tier-2 reply-formatter's prompt shape). See new IMPLEMENTATION section below.
+Last updated: 2026-07-14 13:56 — Pack39 B2B Routing Performance & Test Isolation Fixes PLANNING
+complete (docs-only): designs fixing the 2 findings Pack38 logged but did not fix — (1) the
+webhook controller + dispatcher's double real-LLM classification call per message (elevated to a
+structural safety finding: a decision-drift window between the consent-flag decision and the
+actually-executed-tool decision, not just a cost issue), fixed via a new, optional
+`precomputedIntentDecision` field so the dispatcher can reuse the controller's own already-computed
+decision instead of reclassifying; and (2) the real, billed OpenAI call test-viona-pack37's own
+test #19 makes during local regression (root-caused this session to @prisma/client's own bundled
+.env auto-load silently undoing that test's `delete process.env.OPENAI_API_KEY`), fixed via a
+3-layer defense-in-depth design (mechanical test fix + a reusable "deeply unset" env-guard helper +
+an optional, off-by-default AIRouterService.ts circuit breaker). See new section below.
 
-=== CURRENT MASTER HEAD (at Pack38 implementation branch-cut) ===
-986e2ac — "docs(product): add Pack 38 B2B Intent Tuning planning packet (#334)"
+=== CURRENT MASTER HEAD (at Pack39 planning branch-cut) ===
+f495062 — "feat(viona): implement Pack38 B2B Intent Routing & Confidence Tuning (Option A) (#335)"
 
 === PACK30D CHAIN STATUS (1 -> 8) — unchanged from last sync, still accurate ===
 | Pack  | Scope                                                  | Status            |
@@ -776,7 +777,73 @@ Docs updated same session: this file + docs/ai-context/VIONA_KERNEL_HANDOFF_FAST
 
 Status: implementation complete, PR opened (see chat), DEFERRED/BACKLOG section maintained below.
 
-=== DEFERRED / BACKLOG (recorded, not authorized — logged during Pack37 sync per operator instruction) ===
+=== PACK39 PLANNING — B2B ROUTING PERFORMANCE & TEST ISOLATION FIXES (this session) — COMPLETE ===
+Docs-only. Branch: docs/pack39-tech-debt-eradication-planning (cut from origin/master @ f495062,
+PR #335 merged). Doc: docs/product/VIONA_PACK39_TECH_DEBT_ERADICATION_PLAN.md.
+
+Trigger: closes the exact 2 findings the Pack38 session logged in DEFERRED/BACKLOG but did not fix
+(see the now-removed items 3-4 below — moved here, not lost).
+
+Finding 1 — double LLM classification call per webhook message, re-analyzed and ELEVATED to a
+structural safety finding (not just cost): VionaWebhookMerchantAgentController.ts's own pre-dispatch
+routeIntentFn() call (needed to derive operatorApprovalGranted/userConsentGranted BEFORE dispatch,
+since dispatchVionaAutonomousRequest() never infers consent from the LLM by design) plus that same
+function's own unconditional internal routeVionaDispatchIntent() call are 2 independent real-model
+calls for the identical message. Because both are independent non-deterministic model calls, the
+consent flags (from call #1) and the actually-executed tool (from call #2) are not guaranteed to
+agree — a decision-drift window, closed by construction by this pack's fix, not merely a cost
+optimization.
+Design: a new, optional, additive `precomputedIntentDecision?: VionaDispatchDecision` field on
+DispatchVionaAutonomousRequestInput (VionaDispatchDecision already exists, exported by
+vionaIntentRouter.ts — zero new types needed). When supplied, dispatchVionaAutonomousRequest() skips
+its own internal classification call and uses the caller's decision directly (its existing
+defensive findVionaToolRegistryEntry() re-check still runs unconditionally either way — a
+precomputed decision is never trusted more than a freshly-computed one). The webhook controller then
+passes its own already-computed decision through as precomputedIntentDecision, making its own
+routeIntentFn call the ONLY real classification call per message. Omitted (every existing
+non-webhook caller — Pack32/32.5/35/37/38 test files): behavior byte-for-byte unchanged.
+
+Finding 2 — financial leak in local regression, root-caused this session (not fixed, planning only):
+scripts/test-viona-pack37-b2b-dispatcher-realization.ts's own pre-existing test #19 `delete`s
+process.env.OPENAI_API_KEY, but @prisma/client's own bundled runtime (confirmed by inspecting
+node_modules/@prisma/client/runtime/library.js's embedded dotenv-merge logic and
+node_modules/.prisma/client/index.js's "schemaEnvPath":"../../../.env" config, plus a throwaway
+repro script run and deleted this session) auto-loads .env internally the first time getPrisma()
+runs in a process — silently re-injecting the real key mid-test, because that one test (unlike its
+own siblings #1-4 in the same file) never injects a fake executeMerchantQuery, so it is the only
+test that reaches a real, first-ever getPrisma() call.
+Design: 3-layer defense-in-depth, Layers 1-2 required (test-only, zero production files):
+  Layer 1 (mechanical) — inject a fake executeMerchantQuery into test #19, mirroring its own
+  siblings, closing the actual trigger at its root.
+  Layer 2 (reusable test-infra) — a new withOpenAiApiKeyDeeplyUnsetAsync() helper that traps
+  process.env.OPENAI_API_KEY behind a getter/setter pair so any later silent re-write (Prisma's own)
+  is absorbed and never visible to a later read — directly satisfies "deeply unset... even if Prisma
+  silently reloads the .env file".
+  Layer 3 (optional, separate authorization — the only layer touching a shared production file) —
+  an off-by-default VIONA_TEST_BLOCK_REAL_OPENAI_CALLS circuit breaker inside AIRouterService.ts
+  that throws instead of making a real call when set, true defense-in-depth for a future test
+  repeating the same mistake; unset (default) in every real environment, zero effect.
+
+Exact file allowlist (2 additive production files for the dedup fix -
+vionaAutonomousDispatchService.ts + VionaWebhookMerchantAgentController.ts; 1 modified + 1 new
+test-infra file for the leak fix; 1 optional production file — AIRouterService.ts — for Layer 3
+only; 1 new test suite scripts/test-viona-pack39-routing-performance-and-test-isolation.ts) + 8-item
+test plan + 2 named authorization phrases: APPROVE_PACK39_TECH_DEBT_ERADICATION_IMPLEMENTATION
+(dedup fix + Layers 1-2, recommended default scope) and APPROVE_PACK39_NETWORK_CIRCUIT_BREAKER
+(Layer 3 only, never implied by the first).
+
+Explicitly NOT touched: vionaIntentRouter.ts's own classification logic/prompt/few-shot
+examples/VIONA_DISPATCH_MIN_CONFIDENCE (Pack38, unmodified — this pack only changes HOW MANY TIMES
+it's called, never HOW it classifies), vionaToolRegistry.ts, vionaMerchantReadOnlyQueryExecutionService.ts,
+vionaMerchantReadOnlyQueryReplyFormatter.ts, any Prisma schema/migration, any Fly secret, persona-
+resolution files.
+
+Docs updated same session: this file + docs/ai-context/VIONA_KERNEL_HANDOFF_FAST_SAFE_GLOBAL_MODE.md
+(new Pack39 planning table row; DEFERRED/BACKLOG items 3-4 removed — now tracked here instead).
+
+Status: planning packet complete, PR opened (see chat).
+
+=== DEFERRED / BACKLOG (recorded, not authorized — logged during Pack37 sync per operator instruction; items 3-4 from the Pack38 sync moved into their own Pack39 planning packet above and removed from this list) ===
 1. Pack36B: Merchant Admin UI (Frontend AI Persona & Webhook Secret configuration) - Deferred to
    prioritize backend E2E. No merchant-facing UI exists to configure MerchantProfile.aiPersona,
    rotate a VionaMerchantWebhookChannel.signingSecretHash, or manage toolScope - every write so far
@@ -790,23 +857,6 @@ Status: implementation complete, PR opened (see chat), DEFERRED/BACKLOG section 
    TourismBooking table's actual shape (pre-existing drift, predates Pack34). Live data/schema are
    unaffected; only the shadow-DB dev workflow is impacted. Left for a future, dedicated fix - never
    touched by Pack34, Pack34.5, Pack35, Pack36A, or Pack37 (none needed a shadow-DB replay).
-3. Test-isolation gap in scripts/test-viona-pack37-b2b-dispatcher-realization.ts test #19 (found
-   during Pack38's full regression run) - that pre-existing test's `delete
-   process.env.OPENAI_API_KEY` is silently defeated mid-test by `@prisma/client`'s own internal
-   `.env` auto-load (triggered by that test's own first real `getPrisma()` call), causing an
-   unintended REAL, billed OpenAI API call on every local regression run now that .env's key is real.
-   Functional assertions still pass either way; fix would be a small, mechanical
-   fake-executeMerchantQuery injection mirroring that same file's own sibling tests 1-4. Not fixed by
-   Pack38 (kept its own file-allowlist deviation to exactly 1 mechanical readSourceNoComments fix,
-   already needed to keep regression green).
-4. Double LLM classification call per webhook message (found during Pack38's live QA `fly logs`
-   capture) - the merchant-agent webhook controller's own `routeIntent()` pre-check and
-   `dispatchVionaAutonomousRequest()`'s internal re-classification are 2 independent, identical-input
-   LLM calls for the same single message (pre-existing Pack35/37 design, not introduced by Pack38 -
-   only became visible because Pack38's larger, few-shot-bearing prompt made the 2 calls'
-   token cost obvious in the logs). Minor cost-efficiency backlog item, not a correctness bug;
-   candidate future fix would thread the already-computed classification decision from
-   `routeIntent()` into `dispatch()` instead of re-deriving it.
 
 === CANDIDATE NEXT STEPS (discovered, none authorized yet) ===
 1. Supply TWILIO_TEST_ACCOUNT_SID/TWILIO_TEST_AUTH_TOKEN locally (or run the equivalent flow on
@@ -840,10 +890,11 @@ Status: implementation complete, PR opened (see chat), DEFERRED/BACKLOG section 
    for, not a threshold change).
 8. Pack38's pending scripts/fly-staging-sync-secrets.mjs stdin-pipe fix — DONE this session (commit
    bb3d822, first commit on the implementation branch, before any other change).
-9. Pack38's own 2 NEW findings from this session — see DEFERRED/BACKLOG items 3-4 above: the
-   test-viona-pack37 test #19 real-OpenAI-call test-isolation gap, and the double
-   classification-call-per-message cost-efficiency observation. Neither fixed this session; both
-   flagged for a future, dedicated, small follow-up.
+9. Pack38's own 2 NEW findings from that session (test-viona-pack37 test #19 real-OpenAI-call
+   test-isolation gap, and the double-classification-call-per-message finding) — PLANNED this
+   session as Pack39 (see PACK39 PLANNING section above); implementation not yet authorized.
+   Authorization phrases: APPROVE_PACK39_TECH_DEBT_ERADICATION_IMPLEMENTATION (recommended default
+   scope) and APPROVE_PACK39_NETWORK_CIRCUIT_BREAKER (optional Layer 3 only).
 10. This session's deviation from the "deploy only from merged master" pattern (deploying the
     pre-merge feat/pack38-b2b-intent-tuning-implementation branch directly to viona-api-staging-eu
     for live QA) was NOT covered by its own dedicated authorization phrase, unlike every prior
