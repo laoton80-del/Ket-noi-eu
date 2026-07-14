@@ -372,10 +372,18 @@ async function runPersonaResolutionTests(): Promise<void> {
 
 function runClassificationPromptNonContaminationTests(): void {
   runTest('classification prompt: vionaIntentRouter.ts source contains zero persona-related identifiers', () => {
-    const source = readSource('../src/lib/viona/dispatcher/vionaIntentRouter.ts');
+    // Pack38 — B2B Intent Tuning added doc comments to this same file that *name* these exact
+    // identifiers to explain, in prose, why they must never appear in real code (the same
+    // "explain the forbidden thing in a comment" pattern this repo's own `readSourceNoComments()`
+    // helper already exists to tolerate elsewhere in this file — see the module header of
+    // scripts/test-viona-pack38-b2b-intent-tuning.ts for the newer, equivalent check). Switched
+    // from `readSource` to `readSourceNoComments` here too so this check keeps its full original
+    // protective intent (the identifiers must never appear in real, executable code) without a
+    // false positive on a documentation comment — mechanical, zero-behavior-change fix.
+    const source = readSourceNoComments('../src/lib/viona/dispatcher/vionaIntentRouter.ts');
     const forbiddenIdentifiers = ['aiPersona', 'systemPromptAddendum', 'resolveMerchantAiPersona', 'MerchantProfile', 'preferredLocale', 'vionaMerchantAiPersonaTypes'];
     for (const identifier of forbiddenIdentifiers) {
-      assert(!source.includes(identifier), `vionaIntentRouter.ts must never reference "${identifier}" — the classification prompt must stay merchant-content-free (plan §4.2)`);
+      assert(!source.includes(identifier), `vionaIntentRouter.ts must never reference "${identifier}" in real code — the classification prompt must stay merchant-content-free (plan §4.2)`);
     }
   });
 
