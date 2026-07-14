@@ -3,6 +3,11 @@
 Status: **PLANNING ONLY (provenance-hardened refinement)** — docs-only. No product code,
 schema/migration, database action, deployment, staging call, or secret change is authorized.
 
+**Pack40A status:** **BLOCKED behind Pack40P** — see
+`docs/product/VIONA_PACK40P_REQUEST_PROVENANCE_MODEL_PLAN.md` for server-owned `scopeKind` +
+`merchantProfileId` schema/remediation plan. Inventory complete (PR #342); consumer provenance requires
+Pack40P1–P5 before `APPROVE_PACK40A_TENANT_CONTEXT_AND_READ_ENFORCEMENT`.
+
 **Planning lineage:**
 
 | Version | PR / commit | Notes |
@@ -14,7 +19,8 @@ schema/migration, database action, deployment, staging call, or secret change is
 Operator context: closes the Pack34-deferred `expectedTenantId` wiring gap before Pack36B Merchant
 Admin UI — **only after** tenant provenance is established.
 
-Verified planning baseline: `origin/master` @ `95031be8f5cf53e68f46548ca382ad9656cbe8b7`.
+Verified planning baseline: `origin/master` @ `a4619a13ce8bab5d170c3f4a730e9bbaa25298b3` (includes
+Pack40A inventory via PR #342).
 
 ---
 
@@ -371,8 +377,9 @@ Plus dual-role tests D1–D10 and original adversarial matrix from v2 (mapped to
 | 7 | No client tenant expansion | **MET** |
 | 8 | No schema migration requirement | **MET** for enforcement; consumer marker may require future create-path or DDL pack if no inventory pattern found |
 
-**Pack40A implementation authorization:** **BLOCKED** until criterion 1 resolved via inventory or
-new source-verified rule incorporated into this plan.
+**Pack40A implementation authorization:** **BLOCKED** until Pack40P definition-of-ready (see
+`docs/product/VIONA_PACK40P_REQUEST_PROVENANCE_MODEL_PLAN.md` §21). Inventory confirmed
+`canonicalConsumerProvenanceConfirmed: false` — schema remediation required.
 
 ### Discovery gate design (not executed here)
 
