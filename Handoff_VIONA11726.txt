@@ -1,12 +1,11 @@
 VIONA — KERNEL/HANDOFF SNAPSHOT (local notes, not committed to git)
-Last updated: 2026-07-14 11:10 — Pack36A Staging Deployment & Webhook QA EXECUTION complete (operator
-phrase APPROVE_PACK36A_STAGING_DEPLOY_AND_QA_EXECUTION): master deployed to viona-api-staging-eu,
-staging DB provisioned with a synthetic MerchantProfile + VionaMerchantWebhookChannel, live webhook
-QA script fired at the real staging URL — 5/5 checks PASSED (accept/audit + idempotency + negative
-signature control). Staging webhook endpoint is now LIVE and VERIFIED.
+Last updated: 2026-07-14 11:20 — Pack37 B2B Dispatcher Realization PLANNING complete (docs-only):
+design to close the dispatchAccepted:false gap Pack36A's live QA found (dispatcher switch wiring,
+AI persona injection, OPENAI_API_KEY secrets management, sync response contract) + 4 named
+authorization phrases for the next (implementation) phase. No code, no schema, no Fly secret change.
 
-=== CURRENT MASTER HEAD (at Pack36A execution branch-cut) ===
-d7a624c — "docs(ops): add Pack 36A Staging Deploy & Webhook QA planning packet (#330)"
+=== CURRENT MASTER HEAD (at Pack37 planning branch-cut) ===
+471818f — "chore(ops): execute Pack 36A staging deployment and QA (#331)"
 
 === PACK30D CHAIN STATUS (1 -> 8) — unchanged from last sync, still accurate ===
 | Pack  | Scope                                                  | Status            |
@@ -455,6 +454,59 @@ merchant-tool dispatch on staging is desired).
 
 Status: execution complete. Staging webhook endpoint is LIVE and independently verified end-to-end.
 
+=== PACK37 PLANNING — B2B DISPATCHER REALIZATION (this session) — COMPLETE ===
+Docs-only. Branch: docs/pack37-b2b-dispatcher-realization-planning (cut from origin/master @
+471818f, PR #331 merged). Doc: docs/product/VIONA_PACK37_B2B_DISPATCHER_REALIZATION_PLAN.md.
+
+Closes the exact finding Pack36A surfaced: dispatchVionaAutonomousRequest()'s switch has ONE case
+(twilio_test_sms_poc); both Pack34 merchant read-only tools fall to default/unknown_tool even when
+correctly classified + standing-approved. No backing data source or persona call site exists for
+either tool today either (confirmed via repo-wide search - pure registry placeholders).
+
+Design (no code, no schema, no Fly secret change):
+1. Dispatcher Switch Wiring — 2 new switch cases delegating to a NEW sibling execution service
+   (executeMerchantReadOnlyQuery(), proposed file vionaMerchantReadOnlyQueryExecutionService.ts),
+   mirroring vionaMarketingContentDispatchService.ts's own category-isolation shape (structurally
+   cannot import escrow/Twilio real-execution code). route's type broadened to a kind-tagged union
+   ({kind:'twilioTestSmsPoc'|'merchantReadOnlyQuery', result}) - twilio_test_sms_poc's own inner
+   logic/return payload byte-for-byte unchanged, only wrapped. Data-layer choice left EXPLICITLY to
+   the operator: Option A (recommended, default) = deterministic "not yet configured" honest answer,
+   zero new Prisma tables; Option B (named, not designed in schema detail) = real tenant-scoped
+   MerchantScheduleSlot/MerchantInventoryItem models, bigger scope, own authorization phrase.
+2. LLM Context Injection — resolveMerchantAiPersona() (Pack34, already fail-safe, zero callers
+   today) reused verbatim in a NEW, SECOND, non-tool-calling reply-formatting step (proposed
+   formatVionaMerchantReadOnlyQueryReply()) that runs AFTER the query result is already computed -
+   Tier 1 deterministic template (default, zero LLM cost) or Tier 2 optional persona-driven LLM
+   phrasing (no function-calling ability, can only paraphrase already-safe data). Explicitly NEVER
+   appended to buildVionaDispatchClassificationPrompt() - persona content must never influence which
+   tool gets picked, closing a prompt-injection-shaped risk before it exists.
+3. Secrets Management — additive OPENAI_API_KEY entry proposed for fly-staging-sync-secrets.mjs's
+   SECRET_KEYS array + .env.example (confirmed absent from both today - a pre-existing gap
+   independent of these 2 tools; real LLM classification for ANY tool currently fails closed on
+   staging). Tier-2 phrasing pre-checks the key and silently falls back to Tier-1 template if
+   missing - can never fail the webhook's own new success path. Classification's own existing
+   llm_call_failed graceful-degradation (already correct, already shipped) is reused verbatim, not
+   redesigned.
+4. Sync vs Async Response — confirmed NO outbound-channel-send mechanism exists anywhere in this
+   codebase (webhook is inbound-ack-only today). So this section only designs the webhook's own HTTP
+   response, not a real WhatsApp reply. Recommended: synchronous, one new additive optional
+   `merchantQueryResult` field on the existing 200 JSON response; every existing field/path
+   byte-for-byte unchanged. Async (job queue + real outbound-send) named but explicitly NOT designed
+   - a separate, much larger future pack.
+5. Exact file allowlist (3 new files, 6 additive-only modified files) + 9-item test plan, including
+   a CRITICAL "classification-prompt non-contamination" test proving persona content never reaches
+   the classifier, and a CRITICAL "secrets graceful degradation" test proving a missing
+   OPENAI_API_KEY can never regress this pack's own new dispatchAccepted:true success path.
+6. 4 named authorization phrases: APPROVE_PACK37_DISPATCHER_WIRING_MVP (recommended smallest scope),
+   APPROVE_PACK37_OPENAI_STAGING_SECRET, APPROVE_PACK37_LLM_REPLY_PHRASING,
+   APPROVE_PACK37_REAL_DATA_LAYER (each composable, each independently authorizable).
+7. Zero .ts/.tsx files created or modified; zero schema/migration change; zero Fly secret change.
+
+Docs updated same session: this file + docs/ai-context/VIONA_KERNEL_HANDOFF_FAST_SAFE_GLOBAL_MODE.md
+(new Pack37 planning table row).
+
+Status: planning packet complete, PR opened (see chat).
+
 === CANDIDATE NEXT STEPS (discovered, none authorized yet) ===
 1. Supply TWILIO_TEST_ACCOUNT_SID/TWILIO_TEST_AUTH_TOKEN locally (or run the equivalent flow on
    Staging where they already exist) to get a real, non-blocked realProviderResult outcome.
@@ -471,9 +523,8 @@ Status: execution complete. Staging webhook endpoint is LIVE and independently v
    `prisma migrate dev`'s shadow-DB replay for any future contributor who runs it locally. Not
    fixed by Pack34.5 (ledger for it was already consistent; fixing the migration file's SQL itself
    is a separate, riskier task requiring careful review — out of scope here).
-5. Wire the 2 Pack34 merchant-read-only-query tools into vionaAutonomousDispatchService.ts's
-   dispatch switch statement (currently only handles 'twilio_test_sms_poc') so a webhook message
-   the Intent Router correctly classifies to merchant_schedule_availability_check /
-   merchant_inventory_stock_check can actually produce dispatchAccepted:true end-to-end on staging,
-   plus add OPENAI_API_KEY as a Fly secret on viona-api-staging-eu (neither exists today - found,
-   not fixed, by this session's live Pack36A QA run).
+5. Pack37's own implementation phase (operator phrase required - see the 4 phrases defined above:
+   APPROVE_PACK37_DISPATCHER_WIRING_MVP / APPROVE_PACK37_OPENAI_STAGING_SECRET /
+   APPROVE_PACK37_LLM_REPLY_PHRASING / APPROVE_PACK37_REAL_DATA_LAYER) - not requested yet,
+   planning-only per this session's explicit instruction. This is the fully-designed follow-up to
+   the gap Pack36A found and Pack37's planning packet now has a complete design for.
