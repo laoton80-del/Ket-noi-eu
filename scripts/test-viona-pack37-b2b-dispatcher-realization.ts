@@ -45,6 +45,7 @@ import {
 } from '../src/controllers/VionaWebhookMerchantAgentController';
 import type { ResolvedVionaWebhookChannel } from '../src/services/viona/vionaWebhookChannelResolutionService';
 import { buildVionaWebhookSignatureHeader } from '../src/services/viona/vionaWebhookSignatureVerificationService';
+import { withOpenAiApiKeyDeeplyUnsetAsync } from './_testHelpers/vionaTestEnvGuard';
 
 function assert(condition: boolean, message: string): void {
   if (!condition) {
@@ -132,24 +133,6 @@ function makeMerchantProfileRow(overrides: Partial<MerchantProfile> = {}): Merch
     updatedAt: new Date(),
     ...overrides,
   } as MerchantProfile;
-}
-
-async function withOpenAiApiKeyAsync<T>(value: string | undefined, fn: () => Promise<T>): Promise<T> {
-  const original = process.env.OPENAI_API_KEY;
-  if (value === undefined) {
-    delete process.env.OPENAI_API_KEY;
-  } else {
-    process.env.OPENAI_API_KEY = value;
-  }
-  try {
-    return await fn();
-  } finally {
-    if (original === undefined) {
-      delete process.env.OPENAI_API_KEY;
-    } else {
-      process.env.OPENAI_API_KEY = original;
-    }
-  }
 }
 
 // ---------------------------------------------------------------------------
@@ -415,7 +398,7 @@ function runClassificationPromptNonContaminationTests(): void {
 
 async function runSecretsGracefulDegradationTests(): Promise<void> {
   await runAsyncTest('secrets: OPENAI_API_KEY unset -> formatVionaMerchantReadOnlyQueryReply returns the Tier-1 template, never throws', async () => {
-    await withOpenAiApiKeyAsync(undefined, async () => {
+    await withOpenAiApiKeyDeeplyUnsetAsync(undefined, async () => {
       const reply = await formatVionaMerchantReadOnlyQueryReply(
         { toolName: 'merchant_schedule_availability_check', dataAvailable: false, summary: 'This merchant has not configured real-time schedule data yet.' },
         VIONA_MERCHANT_AI_PERSONA_DEFAULT,
@@ -426,7 +409,7 @@ async function runSecretsGracefulDegradationTests(): Promise<void> {
   });
 
   await runAsyncTest('secrets: OPENAI_API_KEY set but injected callLlm throws -> silently falls back to Tier-1, never throws out', async () => {
-    await withOpenAiApiKeyAsync('sk-fake-test-key-for-pack37', async () => {
+    await withOpenAiApiKeyDeeplyUnsetAsync('sk-fake-test-key-for-pack37', async () => {
       const deps: VionaMerchantReadOnlyQueryReplyFormatterDeps = {
         callLlm: async () => {
           throw new Error('simulated OpenAI outage');
@@ -442,7 +425,7 @@ async function runSecretsGracefulDegradationTests(): Promise<void> {
   });
 
   await runAsyncTest('secrets: OPENAI_API_KEY set + callLlm returns empty string -> falls back to Tier-1', async () => {
-    await withOpenAiApiKeyAsync('sk-fake-test-key-for-pack37', async () => {
+    await withOpenAiApiKeyDeeplyUnsetAsync('sk-fake-test-key-for-pack37', async () => {
       const deps: VionaMerchantReadOnlyQueryReplyFormatterDeps = { callLlm: async () => '   ' };
       const reply = await formatVionaMerchantReadOnlyQueryReply(
         { toolName: 'merchant_schedule_availability_check', dataAvailable: false, summary: 'x' },
@@ -454,7 +437,7 @@ async function runSecretsGracefulDegradationTests(): Promise<void> {
   });
 
   await runAsyncTest('secrets: OPENAI_API_KEY set + callLlm returns real text -> Tier-2 phrased reply is used', async () => {
-    await withOpenAiApiKeyAsync('sk-fake-test-key-for-pack37', async () => {
+    await withOpenAiApiKeyDeeplyUnsetAsync('sk-fake-test-key-for-pack37', async () => {
       const deps: VionaMerchantReadOnlyQueryReplyFormatterDeps = { callLlm: async () => 'Custom Tier-2 phrased answer.' };
       const reply = await formatVionaMerchantReadOnlyQueryReply(
         { toolName: 'merchant_schedule_availability_check', dataAvailable: false, summary: 'x' },
@@ -466,13 +449,30 @@ async function runSecretsGracefulDegradationTests(): Promise<void> {
   });
 
   await runAsyncTest('secrets: end-to-end dispatch with OPENAI_API_KEY unset still yields dispatchAccepted:true (this pack\'s own new success path must never regress on a missing key)', async () => {
-    await withOpenAiApiKeyAsync(undefined, async () => {
+    await withOpenAiApiKeyDeeplyUnsetAsync(undefined, async () => {
       const { writer } = createFakeAuditWriter();
       const result = await dispatchVionaAutonomousRequest(
         { ...BASE_DISPATCH_INPUT, merchantContext: MERCHANT_CONTEXT },
         {
           callLlm: jsonLlm({ toolName: 'merchant_schedule_availability_check', toolInputRaw: { dateRangeStart: '2026-07-15', dateRangeEnd: '2026-07-20' }, confidence: 0.9, rationale: 'ok' }),
           auditWriter: writer,
+          // Pack39 — B2B Routing Performance & Test Isolation Fixes, Layer 1 (plan §4.2): this test
+          // used to omit `executeMerchantQuery`, reaching the real, unmocked
+          // `executeMerchantReadOnlyQuery()` -> `findMerchantProfileById()` -> the process's
+          // first-ever `getPrisma()` call, whose own internal `.env` auto-load silently restored a
+          // real OPENAI_API_KEY mid-test and fired a real, billed OpenAI network call. Injecting a
+          // fake here (mirroring this same file's own sibling switch-wiring tests 1-4) closes that
+          // trigger at its root — this test still exercises the *real*, unmocked
+          // `formatVionaMerchantReadOnlyQueryReply()` (imported above) so it keeps its original
+          // intent (a real, no-network Tier-1 reply is produced with no API key at all), it just no
+          // longer reaches the DB to look up a MerchantProfile row to do so.
+          executeMerchantQuery: async (input) => {
+            const replyText = await formatVionaMerchantReadOnlyQueryReply(
+              { toolName: input.toolName, dataAvailable: false, summary: 'This merchant has not configured real-time schedule data yet.' },
+              VIONA_MERCHANT_AI_PERSONA_DEFAULT,
+            );
+            return { toolName: input.toolName, dataAvailable: false, summary: 'stub', replyText, detailJson: {} };
+          },
         },
       );
       assert(result.ok === true, 'dispatch must not fail invalid_input');
@@ -481,6 +481,7 @@ async function runSecretsGracefulDegradationTests(): Promise<void> {
       assert(result.route !== null && result.route.kind === 'merchantReadOnlyQuery', 'route must still be produced');
       if (result.route === null || result.route.kind !== 'merchantReadOnlyQuery') return;
       assert(result.route.result.replyText.length > 0, 'a non-empty (Tier-1) replyText must still be produced with no API key configured at all');
+      assert(result.route.result.replyText.includes('schedule'), 'with no API key at all, the real formatVionaMerchantReadOnlyQueryReply() must still return its real Tier-1 deterministic template, never a stub');
     });
   });
 }
