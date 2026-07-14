@@ -33,6 +33,17 @@
  * change.
  *
  * No DB access, no network call, no LLM call — pure data + pure functions only.
+ *
+ * Pack34 — B2B Merchant Gateway (see docs/product/VIONA_PACK34_B2B_MERCHANT_GATEWAY_PLAN.md §5)
+ * adds one further, additive `category` value, `'merchant_read_only_query'`, plus an optional
+ * `merchantScopedOnly` field, and 2 new, structurally read-only entries. Both new entries share
+ * every existing safety property of this file (exact-match lookup, `requiresOperatorApproval:
+ * true`) and are excluded from `assertVionaToolRegistryLinkedActionIdsAreKnown()`'s check for the
+ * exact same reason the existing `'content_generation_draft'` entry already is (see that
+ * function's own doc comment) — their `linkedActionId` is a traceability anchor only, not a
+ * dispatch-time claim that this exact action id will be invoked. Neither new tool has an
+ * `inputSchema` field or handler capable of any write side effect (no booking/order/stock
+ * mutation) — see the plan §5.3 for why this increment is scoped to read-only tools only.
  */
 
 import { isVionaActionKnown } from '../actions';
@@ -45,8 +56,16 @@ export type VionaToolRegistryInputFieldType = 'string' | 'number' | 'boolean';
  * the separate, sibling `dispatchVionaMarketingContentRequest()` orchestrator (Pack32.1); never
  * touches Pack31 escrow or any real-provider `executeReal()` call, and always persists its output
  * as a `DRAFT`-status row awaiting human review, never auto-published anywhere.
+ *
+ * Pack34 — `'merchant_read_only_query'`: a merchant-scoped, structurally read-only tool (schedule
+ * or inventory check). Never touches Pack31 escrow or any write path in this increment; a future,
+ * separately-reviewed increment would be required before any *write*-capable merchant tool could
+ * be added to this registry.
  */
-export type VionaToolRegistryCategory = 'viona_request_execution' | 'content_generation_draft';
+export type VionaToolRegistryCategory =
+  | 'viona_request_execution'
+  | 'content_generation_draft'
+  | 'merchant_read_only_query';
 
 export type VionaToolRegistryEntry = Readonly<{
   /** Stable, exact-match key the LLM must reproduce verbatim. Never reused for a different tool. */
@@ -71,16 +90,27 @@ export type VionaToolRegistryEntry = Readonly<{
    * unmodified `buildVionaExecutionPlan()` policy function.
    */
   requiresOperatorApproval: true;
+  /**
+   * Pack34, additive, optional. Omitted (`undefined`) preserves every existing entry's current
+   * behavior exactly: visible to every dispatch call, regardless of merchant context. `true` =
+   * a future dispatch call site must only consider this tool eligible when the resolved
+   * `MerchantProfile.toolScope` (see `vionaMerchantProfileService.ts`) includes this entry's
+   * `name` — enforced entirely by that future caller; this pure registry file never reaches into
+   * a `MerchantProfile` itself.
+   */
+  merchantScopedOnly?: true;
 }>;
 
 /** Non-functional sentinel `linkedActionId` for `'content_generation_draft'` entries — see module header. */
 export const VIONA_TOOL_REGISTRY_CONTENT_DRAFT_SENTINEL_ACTION_ID = 'n/a_content_generation_draft';
 
 /**
- * Two entries: the existing Pack30D-4 Twilio Test-Credentials POC
- * (`category: 'viona_request_execution'`), and the new Pack32.1 marketing content generator
- * (`category: 'content_generation_draft'`). Adding a third tool of either category is out of
- * scope for this implementation increment and requires its own, separate planning packet.
+ * Four entries: the existing Pack30D-4 Twilio Test-Credentials POC
+ * (`category: 'viona_request_execution'`), the Pack32.1 marketing content generator
+ * (`category: 'content_generation_draft'`), and 2 new Pack34 merchant-scoped, read-only query
+ * tools (`category: 'merchant_read_only_query'`, `merchantScopedOnly: true`). Adding a
+ * write-capable merchant tool, or any other new tool, is out of scope for this implementation
+ * increment and requires its own, separate planning packet.
  */
 export const VIONA_TOOL_REGISTRY: readonly VionaToolRegistryEntry[] = [
   {
@@ -112,6 +142,28 @@ export const VIONA_TOOL_REGISTRY: readonly VionaToolRegistryEntry[] = [
     category: 'content_generation_draft',
     linkedActionId: VIONA_TOOL_REGISTRY_CONTENT_DRAFT_SENTINEL_ACTION_ID,
     inputSchema: { topic: 'string', tone: 'string', targetLanguageCode: 'string' },
+    requiresOperatorApproval: true,
+  },
+  {
+    name: 'merchant_schedule_availability_check',
+    description:
+      "Read-only: check a merchant's own appointment/booking schedule for open slots in a given date range. Never creates, modifies, or cancels any booking.",
+    category: 'merchant_read_only_query',
+    merchantScopedOnly: true,
+    // Same traceability-anchor pattern as the existing entries above — no new Pack26B action id
+    // is proposed by Pack34 (see docs/product/VIONA_PACK34_B2B_MERCHANT_GATEWAY_PLAN.md §5.2).
+    linkedActionId: 'request.assign',
+    inputSchema: { dateRangeStart: 'string', dateRangeEnd: 'string' },
+    requiresOperatorApproval: true,
+  },
+  {
+    name: 'merchant_inventory_stock_check',
+    description:
+      "Read-only: check a merchant's own inventory/stock count for a named item or SKU. Never reserves, decrements, or modifies stock.",
+    category: 'merchant_read_only_query',
+    merchantScopedOnly: true,
+    linkedActionId: 'request.assign',
+    inputSchema: { itemName: 'string' },
     requiresOperatorApproval: true,
   },
 ] as const;
@@ -158,6 +210,10 @@ export function validateVionaToolInputAgainstSchema(
  * Pack32.1 — `'content_generation_draft'` entries are deliberately **excluded** from this check:
  * their `linkedActionId` is a documented, non-functional sentinel (module header), never a real
  * Pack26B action, so `isVionaActionKnown()` would always (correctly) return `false` for it.
+ *
+ * Pack34 — `'merchant_read_only_query'` entries are also excluded (same `!== 'viona_request_execution'`
+ * guard, no change needed): their `linkedActionId` is a traceability anchor only (module header),
+ * never a claim that this action id is what actually dispatches.
  */
 export function assertVionaToolRegistryLinkedActionIdsAreKnown(): void {
   for (const entry of VIONA_TOOL_REGISTRY) {

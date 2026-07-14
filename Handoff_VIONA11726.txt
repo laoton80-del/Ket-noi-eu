@@ -162,6 +162,67 @@ packet (no code, no schema change authorized). Created:
 - STRICT RULES honored: zero .ts/.tsx files created or modified by this task; zero Prisma
   migrations run.
 
+=== PACK34 IMPLEMENTATION — MERCHANTPROFILE + TOOL REGISTRY + TENANT SCOPE (this session) ===
+Operator authorized implementation with phrase APPROVE_PACK34_B2B_MERCHANT_GATEWAY_IMPLEMENTATION.
+Branch: feat/pack34-b2b-merchant-gateway-implementation (based cleanly on origin/master after
+PR #325 merged).
+
+What shipped (all additive, strictly per the approved plan's file allowlist):
+- prisma/schema.prisma: new `MerchantProfile` model (ownerUserId @unique, tenantId @unique,
+  displayName, countryCode?, defaultLocale?, aiPersona Json?, toolScope String[] @default([]),
+  isActive Boolean @default(false)). Migration 20260714000000_pack34_add_merchant_profile applied
+  to the working DATABASE_URL.
+- src/lib/viona/merchant/vionaMerchantTenantScope.ts (NEW) — pure
+  assertVionaRequestTenantMatchesMerchant() gate; tenant_mismatch always reported before
+  merchant_inactive.
+- src/lib/viona/merchant/vionaMerchantAiPersonaTypes.ts (NEW) — VionaMerchantAiPersona type +
+  resolveMerchantAiPersona(), fail-safe default for null/inactive/malformed input, never throws.
+- src/services/viona/vionaMerchantProfileService.ts (NEW) — createMerchantProfile (idempotent,
+  mirrors createWalletForUser), findMerchantProfileByTenantId/ByOwnerUserId,
+  updateMerchantProfileAiPersona, updateMerchantProfileToolScope (validates every tool name
+  against the existing VIONA_TOOL_REGISTRY). No public "activate" setter — deferred per plan §9.
+- src/lib/viona/dispatcher/vionaToolRegistry.ts (MODIFIED, additive only) — new category
+  'merchant_read_only_query', optional merchantScopedOnly field, 2 new read-only entries
+  (merchant_schedule_availability_check, merchant_inventory_stock_check). The 2 pre-existing
+  entries are byte-for-byte unchanged (regression-tested).
+- src/services/viona/vionaRequestAccessScope.ts (MODIFIED, additive only) —
+  buildAuthorizedVionaRequestWhere() gained an optional expectedTenantId 2nd param; omitting it
+  (every existing call site today) returns a byte-identical where-clause to before (regression-
+  tested). Wiring this into the 3 existing call sites (read/note/status-action services) was NOT
+  done — explicitly out of scope per the plan's own file allowlist.
+- scripts/test-viona-pack34-b2b-merchant-gateway.ts (NEW) — 30/30 PASS (24 pure/source-scan +
+  6 live-DB CRUD smoke tests behind --with-db).
+
+Gotcha found + fixed during implementation (documented, not silently worked around):
+`npx prisma format` reformats/realigns the ENTIRE schema.prisma file's column spacing, which
+broke 3 unrelated, pre-existing Pack30D-1/2/3 regression tests that strictly assert the
+VionaRequestAuditEvent model block is byte-for-byte unchanged. Fixed by reverting schema.prisma to
+origin/master and re-inserting only the new MerchantProfile block by hand (no formatter run) —
+diff vs origin/master is now purely additive (+36/-0). All 3 previously-broken tests pass again.
+
+`prisma migrate dev` failed on an unrelated, PRE-EXISTING broken migration
+(20250430120000_tourism_net_gross_platform_fields references a `TourismBooking` table that no
+longer exists under that name) when replaying full history against the shadow DB — not caused by
+this task. Worked around by generating the MerchantProfile-only SQL by hand, applying it directly
+via `prisma db execute`, then `prisma migrate resolve --applied` to keep migration bookkeeping
+consistent. Also discovered, incidentally: 3 OTHER pre-existing migrations
+(escrow hold, audit-event retention fields, LLM router task type) are already marked
+"not yet applied" in this exact DATABASE_URL's _prisma_migrations table, even though their actual
+tables/columns already exist (confirmed via to_regclass()) — a pre-existing bookkeeping-only drift,
+NOT touched or fixed by this task (out of scope; flagging for a future dedicated cleanup).
+
+Test/regression results: typecheck 0 errors; lint 0 errors (180 pre-existing warnings, none in
+Pack34 files); 20/22 pre-existing viona regression scripts PASS. The 2 failures are both
+pre-existing test-design flaws (self-referential "0-line diff vs origin/master" checks that break
+for ANY future change to the file they assert-frozen, not real regressions):
+  - test-viona-pack30d-5-real-provider-circuit-breaker.ts — fails on an unrelated Twilio adapter
+    file (already known/flagged before Pack34 started this session).
+  - test-viona-pack32-3-marketing-route-wiring.ts + test-viona-pack32-4-marketing-admin-ui.ts —
+    now fail specifically because vionaToolRegistry.ts differs from origin/master, which is the
+    exact, intended, operator-authorized Pack34 change to that file (adding 2 read-only tools).
+
+Status: implementation complete, PR opened (see chat for link), targeting master.
+
 === CANDIDATE NEXT STEPS (discovered, none authorized yet) ===
 1. Supply TWILIO_TEST_ACCOUNT_SID/TWILIO_TEST_AUTH_TOKEN locally (or run the equivalent flow on
    Staging where they already exist) to get a real, non-blocked realProviderResult outcome.
