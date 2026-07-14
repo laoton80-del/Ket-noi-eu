@@ -32,6 +32,20 @@
  * Twilio/escrow-shaped result to a `kind`-tagged union (`VionaDispatchRoute` below); the existing
  * `'twilio_test_sms_poc'` case's own inner logic and downstream call are byte-for-byte unchanged —
  * only its returned `route` value is now wrapped as `{ kind: 'twilioTestSmsPoc', result: ... }`.
+ *
+ * Pack39 — B2B Routing Performance & Test Isolation Fixes (see
+ * docs/product/VIONA_PACK39_TECH_DEBT_ERADICATION_PLAN.md §4.1) adds one new, optional,
+ * additive input field — `precomputedIntentDecision` — so a caller that already ran its own
+ * `routeVionaDispatchIntent()` call for this exact message (e.g. the webhook controller, which
+ * must classify *before* calling this function to derive `operatorApprovalGranted`/
+ * `userConsentGranted`) can pass that decision straight through instead of this function
+ * re-classifying internally. This closes both the double-real-LLM-call cost issue AND the
+ * decision-drift window (consent flags computed from one model call, execution driven by a
+ * second, independent model call) described in the plan's §2.1. Omitted (`undefined`, the
+ * default): behavior is byte-for-byte unchanged — this function classifies internally exactly as
+ * it always has. The existing defensive `findVionaToolRegistryEntry()` re-check below still runs
+ * unconditionally either way — a precomputed decision is never trusted more than a
+ * freshly-computed one.
  */
 
 import { appendVionaExecutionAuditEvent } from './vionaExecutionAuditWriteService';
@@ -48,6 +62,7 @@ import { findVionaToolRegistryEntry } from '../../lib/viona/dispatcher/vionaTool
 import {
   routeVionaDispatchIntent,
   defaultVionaDispatchCallLlm,
+  type VionaDispatchDecision,
   type VionaDispatchRejectionReason,
   type VionaIntentRouterCallLlm,
 } from '../../lib/viona/dispatcher/vionaIntentRouter';
@@ -71,6 +86,12 @@ export type DispatchVionaAutonomousRequestInput = Readonly<{
    *  `'twilio_test_sms_poc'` case never reads this field, and a merchant-tool dispatch with no
    *  `merchantContext` fails closed (`merchant_context_missing`) rather than guessing a tenant. */
   merchantContext?: Readonly<{ tenantId: string; merchantProfileId: string }> | null;
+  /** Pack39, additive, optional — see module header. When supplied, this function skips its own
+   *  internal `routeVionaDispatchIntent()` call and uses this decision directly (still subject to
+   *  the existing, unconditional `findVionaToolRegistryEntry()` defensive re-check below). Omitted
+   *  (`undefined`) preserves every existing caller's behavior exactly: this function classifies
+   *  internally, exactly as it always has. */
+  precomputedIntentDecision?: VionaDispatchDecision;
 }>;
 
 export type DispatchVionaAutonomousRequestFailure = 'invalid_input';
@@ -145,16 +166,20 @@ export async function dispatchVionaAutonomousRequest(
   const routeExecutor = deps.routeExecutor ?? previewVionaExecutionPlanRealProviderPocRoute;
   const executeMerchantQuery = deps.executeMerchantQuery ?? executeMerchantReadOnlyQuery;
 
-  const decision = await routeVionaDispatchIntent(
-    {
-      requestId,
-      requestStatus,
-      actionId: input.actionId,
-      requestSafetyLabels: input.requestSafetyLabels,
-      userMessage,
-    },
-    { callLlm },
-  );
+  // Pack39 — see module header: reuse the caller's own already-computed decision when supplied,
+  // instead of re-classifying. This is the single point where the double-LLM-call is eliminated.
+  const decision =
+    input.precomputedIntentDecision ??
+    (await routeVionaDispatchIntent(
+      {
+        requestId,
+        requestStatus,
+        actionId: input.actionId,
+        requestSafetyLabels: input.requestSafetyLabels,
+        userMessage,
+      },
+      { callLlm },
+    ));
 
   if (!decision.ok) {
     const auditResult = await auditWriter({

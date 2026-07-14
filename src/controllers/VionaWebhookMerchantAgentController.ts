@@ -206,6 +206,12 @@ export async function postVionaWebhookMerchantAgent(
         // (`vionaAutonomousDispatchService.ts`); the pre-existing `twilio_test_sms_poc` case never
         // reads this field, so this is purely additive from that case's point of view.
         merchantContext: { tenantId: channel.tenantId, merchantProfileId: channel.merchantProfileId },
+        // Pack39 — reuse the exact decision `routeIntentFn` (above) already computed for this same
+        // message instead of letting `dispatchFn` reclassify internally: this is the *only* real
+        // classification call for the whole request now, and it eliminates the decision-drift
+        // window between the consent flags above and the tool that actually executes (see
+        // docs/product/VIONA_PACK39_TECH_DEBT_ERADICATION_PLAN.md §2.1/§4.1).
+        precomputedIntentDecision: intentDecision,
       },
       { callLlm },
     );
