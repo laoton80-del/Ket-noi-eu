@@ -1,0 +1,31 @@
+{
+  "environment": "staging-redacted",
+  "stagingProjectRefPresent": true,
+  "inventoryRowBoundary": 50000,
+  "sizeGatePassed": true,
+  "totalRequests": 10,
+  "distinctTenantCount": 4,
+  "totalMerchantProfiles": 1,
+  "activeMerchantProfiles": 1,
+  "inactiveMerchantProfiles": 0,
+  "merchantTenantMatchedRequests": 5,
+  "merchantTenantMatchedActiveProfileRequests": 5,
+  "merchantTenantMatchedInactiveProfileRequests": 0,
+  "merchantTenantUnmatchedRequests": 5,
+  "distinctUnmatchedTenantCount": 3,
+  "webhookAssociatedRequests": 5,
+  "webhookAssociatedMatchedRequests": 5,
+  "webhookAssociatedUnmatchedRequests": 0,
+  "nonWebhookMerchantMatchedRequests": 0,
+  "nonWebhookUnmatchedRequests": 5,
+  "merchantMatchedOwnerAlignedRequests": 5,
+  "merchantMatchedOwnerMisalignedRequests": 0,
+  "duplicateMerchantTenantMappings": 0,
+  "knownSyntheticFixtures": {
+    "pack36aQaTenant": 5,
+    "pack31E2eTenant": 1
+  },
+  "unresolvedRequests": 5,
+  "canonicalConsumerProvenanceConfirmed": false,
+  "dataModified": false
+}
