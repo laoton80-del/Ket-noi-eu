@@ -1129,9 +1129,15 @@ Post-QA: all counts/provenance unchanged; 0 mutation
 Limitations: inactive merchant + malformed provenance live — local Pack40A tests only
 Fly logs not used as gate
 Classification: READY_FOR_PACK40AS_QA_EVIDENCE_PR_REVIEW
-QA result: PACK40A_STAGING_ADVERSARIAL_QA_GREEN (Pack40A CLOSED/GREEN pending evidence merge)
-Evidence: docs/product/VIONA_PACK40AS_STAGING_TENANT_ADVERSARIAL_QA_EVIDENCE.md
-Next: merge Pack40AS evidence PR; then separately authorize Pack40B
+QA result: PACK40A_STAGING_ADVERSARIAL_QA_GREEN
+PR #354 MERGED @ f5d78f5e5f40f9e77eaf72b0c270e544087205cc (2026-07-15T09:49:56Z).
+Pack40A read enforcement: CLOSED/GREEN.
+
+=== PACK40A POST-MERGE CLOSURE (this sync) ===
+Verified origin/master @ f5d78f5 contains Pack40A implementation (#352 @ ef6172e),
+Pack40AD deploy evidence (#353 @ 3d96f83), Pack40AS adversarial QA (#354 @ f5d78f5).
+Source read-path enforcement unchanged. Pack40B/C/D/S unimplemented.
+Next: separately authorize Pack40B planning/implementation review.
 
 === DEFERRED / BACKLOG (recorded, not authorized — logged during Pack37 sync per operator instruction; items 3-4 from the Pack38 sync addressed by Pack39 implementation above and removed from this list) ===
 1. Pack36B: Merchant Admin UI (Frontend AI Persona & Webhook Secret configuration) - Deferred to
@@ -1156,9 +1162,9 @@ Next: merge Pack40AS evidence PR; then separately authorize Pack40B
    site at a time; schedule scripts/viona-pack33-audit-retention-job.ts for real (currently
    dry-run, unscheduled); legal/compliance review of region-specific retention windows and PII
    rule values (explicitly not claimed by PR #310).
-3. Wire tenant enforcement into VionaRequest call sites — **Pack40A read path MERGED (#352),
-   DEPLOYED (Pack40AD v24), STAGING QA GREEN (Pack40AS)**. Closure pending Pack40AS evidence
-   merge. Pack40B/C/D remain blocked.
+3. Wire tenant enforcement into VionaRequest call sites — **Pack40A CLOSED/GREEN**
+   (implementation #352 @ ef6172e, staging deploy Pack40AD v24, adversarial QA Pack40AS
+   #354 @ f5d78f5). Pack40B/C/D remain separately authorized; no Pack40B authorization granted.
 4. TourismBooking shadow-DB replay issue — see DEFERRED/BACKLOG section above (item 2).
 5. Pack37's remaining, not-yet-issued authorization phrases:
    APPROVE_PACK37_OPENAI_STAGING_SECRET — DONE this session (see dedicated section above): key
