@@ -251,56 +251,56 @@ enum LlmRouterTaskType {
 }
 
 model User {
-  id              String   @id @default(uuid())
-  phoneNumber     String   @unique // E.164 prefix checks: +84, +49, +420, …
-  role            Role     @default(B2C)
-  pinCode         String // App / transaction gate — store hash only at application layer
-  tier            UserTier @default(STANDARD)
-  createdAt       DateTime @default(now())
-  viStarPoints    Int      @default(0) // ViStar: kid-facing virtual points (no cash value)
+  id                 String    @id @default(uuid())
+  phoneNumber        String    @unique // E.164 prefix checks: +84, +49, +420, …
+  role               Role      @default(B2C)
+  pinCode            String // App / transaction gate — store hash only at application layer
+  tier               UserTier  @default(STANDARD)
+  createdAt          DateTime  @default(now())
+  viStarPoints       Int       @default(0) // ViStar: kid-facing virtual points (no cash value)
   /// Anti-fraud fiat cashout: future Withdrawal API MUST allow initiation only when
   /// `userType === "B2B"` AND `isKYCVerified === true` (never for unverified B2C).
-  isKYCVerified Boolean @default(false)
+  isKYCVerified      Boolean   @default(false)
   /// Segment label aligned with product (e.g. `"B2C"` | `"B2B"`). Enforce at withdrawal time with `isKYCVerified`.
-  userType      String  @default("B2C")
+  userType           String    @default("B2C")
   /// B2B subscription tier: `"BASIC"` | `"ELITE"`.
   subscriptionPlan   String    @default("BASIC")
   subscriptionExpiry DateTime?
   /// Product routing: diaspora vs inbound Vietnam travel (`EXPAT` | `TOURIST`).
-  persona              String    @default("EXPAT")
+  persona            String    @default("EXPAT")
   /// VN B2B vendor vertical: `TAXI` | `HOMESTAY` | `FOOD` | … (free text for reporting).
-  businessCategory     String?
+  businessCategory   String?
   /// GDPR erasure completed — no PII processing beyond legal retention.
-  gdprErasedAt         DateTime?
+  gdprErasedAt       DateTime?
 
   /// Expo / FCM device push token (Expo abstracts native FCM/APNs). Nullable until client registers.
-  fcmToken             String?
+  fcmToken        String?
   /// Verified contact for Zero-SMS auth and transactional email (optional until linked).
-  email                String?   @unique
-  emailVerifiedAt      DateTime?
+  email           String?   @unique
+  emailVerifiedAt DateTime?
 
-  profile            Profile?
-  wallet             Wallet?
-  businesses         Business[]
-  bookings           Booking[]
-  tourismBookings    TourismBooking[]
-  localServiceRequestsRequested LocalServiceRequest[] @relation("LocalServiceRequestRequester")
-  localServiceRequestsAssigned  LocalServiceRequest[] @relation("LocalRequestAssignedProvider")
-  secureVaults       SecureVault[]
-  travelOrders       TravelOrder[]
-  aiLogs             AILog[]
-  llmApiUsageLogs    LlmApiUsageLog[]
-  piggyBanksFunded   PiggyBank[] @relation("PiggyBankParentUser")
-  piggyBanksForChild PiggyBank[] @relation("PiggyBankChildUser")
+  profile                       Profile?
+  wallet                        Wallet?
+  businesses                    Business[]
+  bookings                      Booking[]
+  tourismBookings               TourismBooking[]
+  localServiceRequestsRequested LocalServiceRequest[]    @relation("LocalServiceRequestRequester")
+  localServiceRequestsAssigned  LocalServiceRequest[]    @relation("LocalRequestAssignedProvider")
+  secureVaults                  SecureVault[]
+  travelOrders                  TravelOrder[]
+  aiLogs                        AILog[]
+  llmApiUsageLogs               LlmApiUsageLog[]
+  piggyBanksFunded              PiggyBank[]              @relation("PiggyBankParentUser")
+  piggyBanksForChild            PiggyBank[]              @relation("PiggyBankChildUser")
   /// Businesses acquired via Mica / broker field kit (`Business.brokerId`).
-  brokeredBusinesses Business[] @relation("BrokerAcquiredBusiness")
+  brokeredBusinesses            Business[]               @relation("BrokerAcquiredBusiness")
   /// Optional upline (master broker) for leadership bonus — enforce `Role.BROKER` in app layer.
-  masterBrokerId String?
-  masterBroker     User?   @relation("BrokerHierarchy", fields: [masterBrokerId], references: [id], onDelete: SetNull)
-  subBrokers       User[]  @relation("BrokerHierarchy")
-  brokerEscrows    BrokerCommissionEscrow[] @relation("EscrowBeneficiary")
+  masterBrokerId                String?
+  masterBroker                  User?                    @relation("BrokerHierarchy", fields: [masterBrokerId], references: [id], onDelete: SetNull)
+  subBrokers                    User[]                   @relation("BrokerHierarchy")
+  brokerEscrows                 BrokerCommissionEscrow[] @relation("EscrowBeneficiary")
   /// Opaque refresh sessions (hash-only); cascade on user delete (GDPR).
-  authRefreshSessions AuthRefreshSession[]
+  authRefreshSessions           AuthRefreshSession[]
 
   @@index([masterBrokerId])
 }
@@ -320,9 +320,9 @@ model AuthRefreshSession {
   revokedAt  DateTime?
 
   /// After rotation: this row points to the new session. Null = active tail or not yet rotated-from.
-  replacedBySessionId String? @unique
+  replacedBySessionId String?              @unique
   replacementSession  AuthRefreshSession?  @relation("AuthRefreshRotation", fields: [replacedBySessionId], references: [id], onDelete: SetNull)
-  supersededSessions    AuthRefreshSession[] @relation("AuthRefreshRotation")
+  supersededSessions  AuthRefreshSession[] @relation("AuthRefreshRotation")
 
   @@index([userId, expiresAt])
   @@index([userId, revokedAt])
@@ -399,13 +399,13 @@ model BrokerCommissionEscrow {
 
 /// Parent-pre-funded lesson rewards (VIG never minted by treasury — only released from `lockedVigAmount`).
 model PiggyBank {
-  id               String    @id @default(uuid())
-  parentId         String
-  childId          String
-  lockedVigAmount  Float     @default(0)
-  rewardPerLesson  Float     @default(0)
+  id              String    @id @default(uuid())
+  parentId        String
+  childId         String
+  lockedVigAmount Float     @default(0)
+  rewardPerLesson Float     @default(0)
   /// Set on create (e.g. now + 30 days). Expired piggy blocks lesson VIG; cron refunds remainder to parent wallet.
-  expiresAt        DateTime?
+  expiresAt       DateTime?
 
   parent User @relation("PiggyBankParentUser", fields: [parentId], references: [id], onDelete: Cascade)
   child  User @relation("PiggyBankChildUser", fields: [childId], references: [id], onDelete: Cascade)
@@ -442,17 +442,17 @@ model Wallet {
 /// Ledger line stored against the wallet whose history UI/API loads (`walletId`).
 /// For P2P you may write two rows (debit/credit) sharing a correlation id in app layer, or one row per party.
 model Transaction {
-  id         String   @id @default(uuid())
-  walletId   String
-  senderId   String // User id or sentinel e.g. `System` for top-ups
-  receiverId String
-  amountVIG  Float
-  feeAmount  Float    @default(0) // ViGlobal fee (e.g. 2.5% or split-fee)
-  type       TxType
-  status     TxStatus
-  createdAt  DateTime @default(now())
+  id             String   @id @default(uuid())
+  walletId       String
+  senderId       String // User id or sentinel e.g. `System` for top-ups
+  receiverId     String
+  amountVIG      Float
+  feeAmount      Float    @default(0) // ViGlobal fee (e.g. 2.5% or split-fee)
+  type           TxType
+  status         TxStatus
+  createdAt      DateTime @default(now())
   /// Prevents double AI / billing debits when clients retry the same request id.
-  idempotencyKey String? @unique
+  idempotencyKey String?  @unique
 
   wallet Wallet @relation(fields: [walletId], references: [id], onDelete: Cascade)
 
@@ -478,53 +478,53 @@ model CharityFund {
 
 /// Immutable audit trail: **1% of KNG net revenue** per settled platform event (source of truth for Hub charity UI).
 model CharityLedgerEntry {
-  id                 String   @id @default(uuid())
-  idempotencyKey     String   @unique
-  kngNetRevenueVig   Float
-  charityAccrualVig  Float
-  sourceKind         String
-  createdAt          DateTime @default(now())
+  id                String   @id @default(uuid())
+  idempotencyKey    String   @unique
+  kngNetRevenueVig  Float
+  charityAccrualVig Float
+  sourceKind        String
+  createdAt         DateTime @default(now())
 
   @@index([createdAt])
 }
 
 model Business {
-  id           String    @id @default(uuid())
-  ownerId      String // B2B User id
+  id                      String    @id @default(uuid())
+  ownerId                 String // B2B User id
   /// Optional broker (`Role.BROKER`) who placed the Mica gold QR / acquired this merchant.
-  brokerId     String?
+  brokerId                String?
   /// Dynamic deep-link / universal URL encoded on the merchant’s physical Mica sign.
-  qrCodeUrl    String?
-  name         String
-  category     BizType
-  locationLat  Float
-  locationLng  Float
-  description  String    @default("")
-  isTopAd      Boolean   @default(false) // 90-day featured placement
-  adExpiryDate DateTime?
+  qrCodeUrl               String?
+  name                    String
+  category                BizType
+  locationLat             Float
+  locationLng             Float
+  description             String    @default("")
+  isTopAd                 Boolean   @default(false) // 90-day featured placement
+  adExpiryDate            DateTime?
   /// Omniversal Prime: anchor for 90-day free top-rank trial + paid lock-in ladder.
-  joinedAt                 DateTime  @default(now())
+  joinedAt                DateTime  @default(now())
   /// High placement in discovery / ad slots (trial or paid credits).
-  isPremiumRank            Boolean   @default(true)
+  isPremiumRank           Boolean   @default(true)
   /// VIG balance reserved for sponsored ranking after trial (burned daily while active).
-  paidAdCredits            Float     @default(0)
+  paidAdCredits           Float     @default(0)
   /// UTC anchor for idempotent daily `paidAdCredits` burn (post–day-90 only).
-  lastAdCreditDeductionAt  DateTime?
+  lastAdCreditDeductionAt DateTime?
   /// NAPAS acquirer BIN (6 digits) for VietQR EMV — e.g. VietinBank `970415`.
-  vietQrBankBin         String?
+  vietQrBankBin           String?
   /// Domestic bank account number printed on VietQR.
-  vietQrAccountNumber   String?
+  vietQrAccountNumber     String?
   /// Beneficiary name as registered with the bank (VietQR display / NAPAS).
-  vietQrAccountName     String?
+  vietQrAccountName       String?
 
-  owner            User              @relation(fields: [ownerId], references: [id], onDelete: Cascade)
-  broker           User?             @relation("BrokerAcquiredBusiness", fields: [brokerId], references: [id], onDelete: SetNull)
-  services         Service[]
-  bookings         Booking[]
-  tourismServices  TourismService[]
-  tourismBookings  TourismBooking[]
+  owner                User                      @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  broker               User?                     @relation("BrokerAcquiredBusiness", fields: [brokerId], references: [id], onDelete: SetNull)
+  services             Service[]
+  bookings             Booking[]
+  tourismServices      TourismService[]
+  tourismBookings      TourismBooking[]
   localServiceRequests LocalServiceRequest[]
-  brokerActivation MerchantBrokerActivation?
+  brokerActivation     MerchantBrokerActivation?
 
   @@index([ownerId])
   @@index([category, locationLat, locationLng])
@@ -537,40 +537,40 @@ model Service {
   name       String
   priceVIG   Float  @default(0) // List price (VIG 1:1 EUR); booking locks 100% at create time
 
-  business Business  @relation(fields: [businessId], references: [id], onDelete: Cascade)
-  bookings Booking[]
+  business             Business              @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  bookings             Booking[]
   localServiceRequests LocalServiceRequest[]
 
   @@index([businessId])
 }
 
 model Booking {
-  id                     String     @id @default(uuid())
-  userId                 String // B2C booker
-  businessId             String
-  serviceId              String
+  id                       String     @id @default(uuid())
+  userId                   String // B2C booker
+  businessId               String
+  serviceId                String
   /// GLOBAL STANDARD: stored as UTC instant only. API accepts ISO 8601 with `Z` or explicit offset — never naive local strings.
-  timeSlot               DateTime
-  status                 BookStatus
-  paymentStatus          PayStatus
+  timeSlot                 DateTime
+  status                   BookStatus
+  paymentStatus            PayStatus
   /// Full list-price VIG pre-authorized at booking (moved from wallet `balanceVIG` → `lockedBalanceVIG`).
-  lockedAmountVIG        Float      @default(0)
+  lockedAmountVIG          Float      @default(0)
   /// 10% platform commission (VIG) collected from B2B on successful QR completion — persisted for reporting.
-  platformFeeVIG        Float      @default(0)
+  platformFeeVIG           Float      @default(0)
   /// SHA-256 hex of one-time QR completion token (issued when `lockedAmountVIG > 0`). Never store plaintext token.
-  completionQrTokenHash String?
+  completionQrTokenHash    String?
   /// Set if a card rail later disputes / refunds (broker bounty fraud checks).
-  refundedAt DateTime?
+  refundedAt               DateTime?
   /// Optional Stripe PI when checkout is card-backed (chargeback verification on escrow release).
-  stripePaymentIntentId String?
+  stripePaymentIntentId    String?
   /// Stripe `payment_method` fingerprint or synthetic `VIG_BOOKER:<userId>` for wallet-only QR.
   paymentMethodFingerprint String?
   /// Set when `status` becomes `COMPLETED` (activation bounty + audit).
-  completedAt DateTime?
+  completedAt              DateTime?
 
-  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
-  service  Service  @relation(fields: [serviceId], references: [id], onDelete: Restrict)
+  user                User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  business            Business             @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  service             Service              @relation(fields: [serviceId], references: [id], onDelete: Restrict)
   localServiceRequest LocalServiceRequest?
 
   @@index([userId, timeSlot])
@@ -585,22 +585,22 @@ model LocalServiceRequest {
   requesterUserId String
   businessId      String
 
-  serviceId            String?
-  fixerProfileKey      String?
+  serviceId              String?
+  fixerProfileKey        String?
   assignedProviderUserId String?
-  legacyBookingId      String? @unique
+  legacyBookingId        String? @unique
 
-  serviceType LocalServiceType
-  category    BizType?
-  title       String
-  description String  @default("")
+  serviceType  LocalServiceType
+  category     BizType?
+  title        String
+  description  String           @default("")
   locationText String?
   city         String?
   countryCode  String?
 
-  scheduledStartAt DateTime?
-  scheduledEndAt   DateTime?
-  requestedAt      DateTime @default(now())
+  scheduledStartAt         DateTime?
+  scheduledEndAt           DateTime?
+  requestedAt              DateTime  @default(now())
   merchantReviewDeadlineAt DateTime?
 
   confirmedAt       DateTime?
@@ -610,9 +610,9 @@ model LocalServiceRequest {
   expiredAt         DateTime?
   providerSettledAt DateTime?
 
-  status     LocalServiceRequestStatus @default(REQUESTED)
-  walletMode LocalWalletMode           @default(REQUEST_ONLY_NO_CHARGE)
-  walletPhase LocalWalletPhase         @default(NONE)
+  status      LocalServiceRequestStatus @default(REQUESTED)
+  walletMode  LocalWalletMode           @default(REQUEST_ONLY_NO_CHARGE)
+  walletPhase LocalWalletPhase          @default(NONE)
 
   totalVioCredits            Float?
   heldVioCredits             Float?
@@ -629,11 +629,11 @@ model LocalServiceRequest {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  requester        User     @relation("LocalServiceRequestRequester", fields: [requesterUserId], references: [id], onDelete: Cascade)
-  business         Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
-  service          Service? @relation(fields: [serviceId], references: [id], onDelete: SetNull)
-  assignedProvider User?    @relation("LocalRequestAssignedProvider", fields: [assignedProviderUserId], references: [id], onDelete: SetNull)
-  legacyBooking    Booking? @relation(fields: [legacyBookingId], references: [id], onDelete: SetNull)
+  requester        User                            @relation("LocalServiceRequestRequester", fields: [requesterUserId], references: [id], onDelete: Cascade)
+  business         Business                        @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  service          Service?                        @relation(fields: [serviceId], references: [id], onDelete: SetNull)
+  assignedProvider User?                           @relation("LocalRequestAssignedProvider", fields: [assignedProviderUserId], references: [id], onDelete: SetNull)
+  legacyBooking    Booking?                        @relation(fields: [legacyBookingId], references: [id], onDelete: SetNull)
   auditEvents      LocalServiceRequestAuditEvent[]
 
   @@index([requesterUserId, createdAt])
@@ -660,14 +660,14 @@ model LocalServiceRequestAuditEvent {
   fromStatus LocalServiceRequestStatus?
   toStatus   LocalServiceRequestStatus?
 
-  reason      String?
-  safeMessage String?
+  reason       String?
+  safeMessage  String?
   metadataJson Json?
 
-  noWalletAction               Boolean @default(true)
-  walletPhaseSnapshot          LocalWalletPhase?
-  walletModeSnapshot           LocalWalletMode?
-  requestOnlyNoChargeSnapshot  Boolean @default(true)
+  noWalletAction              Boolean           @default(true)
+  walletPhaseSnapshot         LocalWalletPhase?
+  walletModeSnapshot          LocalWalletMode?
+  requestOnlyNoChargeSnapshot Boolean           @default(true)
 
   idempotencyKey String?
   runId          String?
@@ -685,58 +685,58 @@ model LocalServiceRequestAuditEvent {
 
 /// Inbound tourism catalog line (hotels, tours, fixers, F&B) — distinct from legacy `Service` / `Booking`.
 model TourismService {
-  id          String   @id @default(uuid())
+  id          String @id @default(uuid())
   businessId  String
   title       String
-  priceVIG    Float    @default(0)
-  description String   @default("")
+  priceVIG    Float  @default(0)
+  description String @default("")
 
-  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  business        Business         @relation(fields: [businessId], references: [id], onDelete: Cascade)
   tourismBookings TourismBooking[]
 
   @@index([businessId])
 }
 
 model TourismBooking {
-  id         String                 @id @default(uuid())
-  userId     String
-  businessId String
-  serviceId  String
-  startDate  DateTime
-  endDate    DateTime
-  guestCount Int
-  status     TourismBookingStatus
+  id                       String               @id @default(uuid())
+  userId                   String
+  businessId               String
+  serviceId                String
+  startDate                DateTime
+  endDate                  DateTime
+  guestCount               Int
+  status                   TourismBookingStatus
   /// 5% ViGlobal commission taken from the Vietnamese provider’s share of list base.
-  providerFeeVIG Float @default(0)
+  providerFeeVIG           Float                @default(0)
   /// 5–7% “Trust & AI Shield” fee on the tourist (applied to base list amount).
-  touristFeeVIG Float @default(0)
+  touristFeeVIG            Float                @default(0)
   /// Gross deducted from tourist spendable wallet: base list + `touristFeeVIG`.
-  totalPaidVIG Float @default(0)
+  totalPaidVIG             Float                @default(0)
   /// Provider wallet credit: base list − `providerFeeVIG`.
-  netProviderEarningsVIG Float @default(0)
+  netProviderEarningsVIG   Float                @default(0)
   /// Share of platform fees routed to `Business.brokerId` when booking is marked COMPLETED.
-  brokerCommissionVIG    Float     @default(0)
-  brokerCommissionPaidAt DateTime?
+  brokerCommissionVIG      Float                @default(0)
+  brokerCommissionPaidAt   DateTime?
   /// Snapshot: `providerFeeVIG + touristFeeVIG` at completion (gross platform fee pool on the booking).
-  grossPlatformFeePoolVIG  Float @default(0)
+  grossPlatformFeePoolVIG  Float                @default(0)
   /// After estimated acquirer allocation — ViGlobal net platform revenue attributable to this booking (audit; broker payout uses net-revenue-share outside tourism).
-  kngNetPlatformRevenueVIG Float @default(0)
+  kngNetPlatformRevenueVIG Float                @default(0)
   /// EUR→VND spot locked at booking time (VIG ≡ EUR) — cash / VietQR off-ramp reconciliation.
-  lockedEurVndRate Float?
-  fxLockedAt       DateTime?
+  lockedEurVndRate         Float?
+  fxLockedAt               DateTime?
   /// Rounded VND equivalent of `totalPaidVIG` at `fxLockedAt` (display + local bank transfer hint).
-  offRampVndHint   Int?
+  offRampVndHint           Int?
 
   /// Row creation time; backfill from `fxLockedAt` for pre-migration rows (`LEGACY_SETTLED_BACKFILL.1`).
-  createdAt DateTime?
-  updatedAt DateTime? @updatedAt
+  createdAt         DateTime?
+  updatedAt         DateTime?             @updatedAt
   /// Non-null when provider/treasury wallet credits have executed.
   providerSettledAt DateTime?
   /// Merchant ACK timestamp when `status` becomes CONFIRMED.
-  confirmedAt DateTime?
-  cancelledAt   DateTime?
-  cancelReason  String?
-  settlementMode TourismSettlementMode @default(UNKNOWN)
+  confirmedAt       DateTime?
+  cancelledAt       DateTime?
+  cancelReason      String?
+  settlementMode    TourismSettlementMode @default(UNKNOWN)
 
   user     User           @relation(fields: [userId], references: [id], onDelete: Cascade)
   business Business       @relation(fields: [businessId], references: [id], onDelete: Cascade)
@@ -810,12 +810,12 @@ model AILog {
 
 /// Facebook / social copy drafted by cron or manual trigger — admin approves before Graph API publish.
 model MarketingPost {
-  id                  String              @id @default(uuid())
+  id                  String                 @id @default(uuid())
   content             String
   /// Human-approved source text for polyglot translation + optional official Page publish.
   approvedBaseContent String?
-  status              MarketingPostStatus @default(DRAFT)
-  createdAt           DateTime            @default(now())
+  status              MarketingPostStatus    @default(DRAFT)
+  createdAt           DateTime               @default(now())
   publishedAt         DateTime?
   translations        MarketingTranslation[]
 
@@ -824,11 +824,11 @@ model MarketingPost {
 
 /// Localized ammunition for manual paste into third-party Facebook Groups (no automated group posting).
 model MarketingTranslation {
-  id                 String @id @default(uuid())
-  postId             String
-  languageCode       String
-  translatedContent  String
-  targetAudience     String
+  id                String @id @default(uuid())
+  postId            String
+  languageCode      String
+  translatedContent String
+  targetAudience    String
 
   post MarketingPost @relation(fields: [postId], references: [id], onDelete: Cascade)
 
@@ -884,28 +884,28 @@ model MerchantProfile {
 /// webhook message may create a VionaRequest under. See
 /// docs/product/VIONA_PACK35_B2B_WEBHOOK_ROUTING_PLAN.md §4.3.
 model VionaMerchantWebhookChannel {
-  id                String   @id @default(uuid())
+  id                                   String   @id @default(uuid())
   /// References MerchantProfile.id by id only — no Prisma relation, mirroring the existing
   /// VionaRequestEscrowHold.holdTransactionId "id only, no Prisma relation" pattern already used
   /// in this same schema. Adds zero modification to the existing MerchantProfile model.
-  merchantProfileId String
+  merchantProfileId                    String
   /// 'whatsapp' | 'custom_client' today — plain String, mirrors MerchantProfile.toolScope's own
   /// "no new enum for an evolving, additive value set" convention.
-  channelType       String
+  channelType                          String
   /// e.g. a WhatsApp Business phone_number_id, or a client-issued channel id.
-  channelExternalId String
+  channelExternalId                    String
   /// Hashed at rest — the raw signing secret is never stored/logged in plaintext.
-  signingSecretHash String
+  signingSecretHash                    String
   /// Fail-closed default, same convention as MerchantProfile.isActive — provisioning a channel
   /// binding must never, by itself, accept a live webhook until explicitly activated.
-  isActive          Boolean  @default(false)
+  isActive                             Boolean  @default(false)
   /// Fail-closed default. Only when true may this channel's resolved tool be auto-approved — and
   /// only for a tool that is merchantScopedOnly + category 'merchant_read_only_query' + present
   /// in the merchant's own toolScope (see vionaMerchantWebhookApprovalGate.ts). A human (the
   /// merchant admin) sets this once, in advance — never inferred, never defaulted to true.
-  standingApprovalForReadOnlyToolsOnly Boolean @default(false)
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
+  standingApprovalForReadOnlyToolsOnly Boolean  @default(false)
+  createdAt                            DateTime @default(now())
+  updatedAt                            DateTime @updatedAt
 
   @@unique([channelType, channelExternalId])
   @@index([merchantProfileId])
@@ -927,34 +927,35 @@ enum VionaRequestScopeKind {
 
 /// Core VIONA request aggregate — lifecycle status does not imply payment, booking, or SOS truth.
 model VionaRequest {
-  id              String    @id @default(uuid())
-  tenantId        String
-  requesterUserId String?
-  ownerUserId     String?
-  sourceUniverse  String
-  sourceFeature   String?
-  requestType     String
+  id                String                @id @default(uuid())
+  tenantId          String
+  requesterUserId   String?
+  ownerUserId       String?
+  sourceUniverse    String
+  sourceFeature     String?
+  requestType       String
   /// Domain lifecycle string (draft, submitted, triage, …) — not payment or booking confirmation.
-  status          String    @default("draft")
-  title           String
-  summary         String    @default("")
-  locale          String?
-  countryCode     String?
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
-  closedAt        DateTime?
-  metadataJson    Json?
+  status            String                @default("draft")
+  title             String
+  summary           String                @default("")
+  locale            String?
+  countryCode       String?
+  createdAt         DateTime              @default(now())
+  updatedAt         DateTime              @updatedAt
+  closedAt          DateTime?
+  metadataJson      Json?
   /// Pack40P — server-owned provenance; DB default fail-safe until create paths assign explicitly.
   scopeKind         VionaRequestScopeKind @default(legacyUnresolved)
   merchantProfileId String?
   merchantProfile   MerchantProfile?      @relation(fields: [merchantProfileId], references: [id], onDelete: Restrict)
 
-  participants          VionaRequestParticipant[]
-  sourceLinks           VionaRequestSourceLink[]
-  statusEvents          VionaRequestStatusEvent[]
-  auditEvents           VionaRequestAuditEvent[]
-  attachmentReferences  VionaRequestAttachmentReference[]
-  escrowHolds           VionaRequestEscrowHold[]
+  participants         VionaRequestParticipant[]
+  sourceLinks          VionaRequestSourceLink[]
+  statusEvents         VionaRequestStatusEvent[]
+  auditEvents          VionaRequestAuditEvent[]
+  attachmentReferences VionaRequestAttachmentReference[]
+  escrowHolds          VionaRequestEscrowHold[]
+  executionAttempts    VionaRequestExecutionAttempt[]
 
   @@index([tenantId])
   @@index([status])
@@ -983,14 +984,14 @@ model VionaRequestParticipant {
 
 /// Future bridge mapping metadata — not legacy local-service-request SoT; no payment/booking/SOS truth.
 model VionaRequestSourceLink {
-  id               String                      @id @default(uuid())
+  id               String                       @id @default(uuid())
   requestId        String
   sourceSystem     String
   sourceEntityType String
   sourceEntityId   String
   linkStatus       VionaRequestSourceLinkStatus @default(PENDING)
-  createdAt        DateTime                    @default(now())
-  updatedAt        DateTime                    @updatedAt
+  createdAt        DateTime                     @default(now())
+  updatedAt        DateTime                     @updatedAt
 
   request VionaRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
 
@@ -1016,14 +1017,14 @@ model VionaRequestStatusEvent {
 
 /// Append-only audit events — not a payment ledger.
 model VionaRequestAuditEvent {
-  id             String   @id @default(uuid())
-  requestId      String
-  eventType      String
-  actorUserId    String?
-  actorRoleLabel String?
-  message        String?
-  payloadJson    Json?
-  createdAt      DateTime @default(now())
+  id              String    @id @default(uuid())
+  requestId       String
+  eventType       String
+  actorUserId     String?
+  actorRoleLabel  String?
+  message         String?
+  payloadJson     Json?
+  createdAt       DateTime  @default(now())
   /// Pack33 — resolved VionaPiiScrubRegion at write time (see vionaPiiScrubber.ts), frozen so a
   /// later change to the parent VionaRequest.countryCode never silently changes a past row's
   /// retention policy. Nullable/additive — existing rows read null until backfilled.
@@ -1062,29 +1063,29 @@ model VionaRequestAttachmentReference {
 /// "VIO Credits" naming convention (operator terminology correction); the legacy `Wallet`/`Transaction`
 /// fields referenced by id here are intentionally left unrenamed (would break Tourism/AI-gateway).
 model VionaRequestEscrowHold {
-  id                   String                        @id @default(uuid())
-  requestId            String
-  actionId             String
-  userId               String
+  id                  String                       @id @default(uuid())
+  requestId           String
+  actionId            String
+  userId              String
   /// Computed at (1) ESTIMATE — never written to after HOLD.
-  estimatedAmountVIO   Float
+  estimatedAmountVIO  Float
   /// Written at (2) HOLD — the amount actually moved into `Wallet.lockedBalanceVIG`.
-  heldAmountVIO        Float
+  heldAmountVIO       Float
   /// Written at (4) SETTLE — the real, final cost (<= heldAmountVIO always; never negative).
-  settledAmountVIO     Float?
+  settledAmountVIO    Float?
   /// Written at (4) REFUND — heldAmountVIO - settledAmountVIO once resolved.
-  refundedAmountVIO    Float?
-  status               VionaRequestEscrowHoldStatus @default(HELD)
+  refundedAmountVIO   Float?
+  status              VionaRequestEscrowHoldStatus @default(HELD)
   /// The `ESCROW_LOCK`-type `Transaction.id` created at (2) HOLD (existing `Transaction` table, id only — no Prisma relation).
-  holdTransactionId    String                        @unique
+  holdTransactionId   String                       @unique
   /// The `VIONA_REQUEST_EXECUTION_SETTLED`-type `Transaction.id` created at (4), if any real cost was incurred.
-  settleTransactionId  String?                       @unique
+  settleTransactionId String?                      @unique
   /// The `ESCROW_REFUND`-type `Transaction.id` created at (4), if any refund occurred.
-  refundTransactionId  String?                       @unique
+  refundTransactionId String?                      @unique
   /// Prevents a caller retry from double-holding for the same requestId+actionId attempt.
-  idempotencyKey       String                        @unique
-  createdAt            DateTime                      @default(now())
-  settledAt            DateTime?
+  idempotencyKey      String                       @unique
+  createdAt           DateTime                     @default(now())
+  settledAt           DateTime?
 
   request VionaRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
 
@@ -1098,4 +1099,69 @@ enum VionaRequestEscrowHoldStatus {
   REFUNDED
   PARTIALLY_REFUNDED
   FAILED
+}
+
+/// Pack40D1 — durable execution-attempt lifecycle for indirect VionaRequest execution (schema only in D1).
+enum VionaRequestExecutionAttemptState {
+  claimed
+  providerPending
+  providerSucceeded
+  providerFailed
+  outcomeUncertain
+  completed
+  failed
+  abandoned
+}
+
+/// Pack40D1 — persisted execution principal category (initial merchant-service scope only).
+enum VionaRequestExecutionPrincipalType {
+  merchantService
+}
+
+/// Pack40D1 — trusted production trigger that created the execution principal.
+enum VionaRequestExecutionTriggerType {
+  signedMerchantWebhook
+  internalAuthenticatedController
+  approvedInternalDispatch
+}
+
+/// Pack40D1 — one durable execution attempt bound to a single VionaRequest (audit/recovery record).
+model VionaRequestExecutionAttempt {
+  id                              String                             @id @default(uuid())
+  requestId                       String
+  attemptNumber                   Int
+  executionKey                    String                             @unique
+  state                           VionaRequestExecutionAttemptState
+  correlationId                   String
+  principalType                   VionaRequestExecutionPrincipalType
+  triggerType                     VionaRequestExecutionTriggerType
+  triggeringUserId                String?
+  ownerUserIdSnapshot             String
+  scopeKindSnapshot               VionaRequestScopeKind
+  merchantProfileIdSnapshot       String?
+  tenantIdSnapshot                String
+  leaseOwner                      String?
+  leaseExpiresAt                  DateTime?
+  claimedAt                       DateTime?
+  providerName                    String?
+  operationCategory               String?
+  providerIdempotencyKey          String?                            @unique
+  providerStartedAt               DateTime?
+  providerFinishedAt              DateTime?
+  providerResultDigest            String?
+  providerExternalReferenceDigest String?
+  failureClass                    String?
+  failureReasonDigest             String?
+  finalizedAt                     DateTime?
+  abandonedAt                     DateTime?
+  createdAt                       DateTime                           @default(now())
+  updatedAt                       DateTime                           @updatedAt
+
+  request VionaRequest @relation(fields: [requestId], references: [id], onDelete: Restrict)
+
+  @@unique([requestId, attemptNumber])
+  @@index([requestId])
+  @@index([requestId, state])
+  @@index([state, leaseExpiresAt])
+  @@index([correlationId])
 }
