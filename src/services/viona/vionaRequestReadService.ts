@@ -1,7 +1,12 @@
 import type { Prisma } from '@prisma/client';
 
 import { getPrisma } from '../../lib/prisma';
-import { buildAuthorizedVionaRequestWhere } from './vionaRequestAccessScope';
+import {
+  buildAuthorizedVionaRequestReadWhere,
+} from './vionaRequestReadAccessScope';
+import {
+  buildAuthorizedVionaRequestWhere,
+} from './vionaRequestAccessScope';
 import type {
   GetVionaRequestByIdInput,
   GetVionaRequestByIdResult,
@@ -9,6 +14,7 @@ import type {
   ListVionaRequestsResult,
 } from './vionaRequestReadDto';
 import { VIONA_REQUEST_READ_SAFETY } from './vionaRequestReadDto';
+import { resolveVionaRequestReadPrincipalContext } from './vionaRequestReadPrincipalContext';
 import {
   mapVionaRequestDetail,
   mapVionaRequestListItem,
@@ -19,8 +25,22 @@ import {
 const DEFAULT_LIMIT = 50;
 const MAX_LIMIT = 100;
 
-function buildListWhere(input: ListVionaRequestsInput): Prisma.VionaRequestWhereInput {
-  const where: Prisma.VionaRequestWhereInput = buildAuthorizedVionaRequestWhere(input.authUserId);
+async function buildAuthorizedReadWhere(
+  authUserId: string,
+  directReadPolicy: ListVionaRequestsInput['directReadPolicy'],
+): Promise<Prisma.VionaRequestWhereInput> {
+  if (directReadPolicy !== 'pack40a_provenance') {
+    return buildAuthorizedVionaRequestWhere(authUserId);
+  }
+  const principal = await resolveVionaRequestReadPrincipalContext(authUserId);
+  return buildAuthorizedVionaRequestReadWhere(principal);
+}
+
+function buildListWhere(
+  input: ListVionaRequestsInput,
+  authorizedWhere: Prisma.VionaRequestWhereInput,
+): Prisma.VionaRequestWhereInput {
+  const where: Prisma.VionaRequestWhereInput = { ...authorizedWhere };
 
   if (input.status != null) {
     where.status = input.status;
@@ -58,9 +78,10 @@ export async function listVionaRequests(
 
   const limit = Math.min(MAX_LIMIT, Math.max(1, input.limit ?? DEFAULT_LIMIT));
   const skip = Math.max(0, input.skip ?? 0);
+  const authorizedWhere = await buildAuthorizedReadWhere(authUserId, input.directReadPolicy);
 
   const rows = await getPrisma().vionaRequest.findMany({
-    where: buildListWhere({ ...input, authUserId }),
+    where: buildListWhere({ ...input, authUserId }, authorizedWhere),
     orderBy: { createdAt: 'desc' },
     take: limit,
     skip,
@@ -89,10 +110,12 @@ export async function getVionaRequestById(
     return { ok: false, reason: 'invalid_input' };
   }
 
+  const authorizedWhere = await buildAuthorizedReadWhere(authUserId, input.directReadPolicy);
+
   const row = await getPrisma().vionaRequest.findFirst({
     where: {
       id: requestId,
-      ...buildAuthorizedVionaRequestWhere(authUserId),
+      ...authorizedWhere,
     },
     select: VIONA_REQUEST_DETAIL_SELECT,
   });

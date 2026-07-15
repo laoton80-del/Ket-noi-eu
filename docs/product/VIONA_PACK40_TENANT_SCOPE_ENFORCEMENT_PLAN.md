@@ -3,7 +3,7 @@
 Status: **PLANNING ONLY (provenance-hardened refinement)** — docs-only. No product code,
 schema/migration, database action, deployment, staging call, or secret change is authorized.
 
-**Pack40A status:** **BLOCKED behind Pack40P** — see
+**Pack40A status:** **IMPLEMENTED locally (PR review)** — Pack40P definition-of-ready met (PR #351 @ `13efae8`); see `docs/product/VIONA_PACK40A_TENANT_CONTEXT_READ_ENFORCEMENT_EVIDENCE.md`. Staging deploy/QA **not authorized** by Pack40A implementation phrase.
 `docs/product/VIONA_PACK40P_REQUEST_PROVENANCE_MODEL_PLAN.md` for server-owned `scopeKind` +
 `merchantProfileId` schema/remediation plan, **P1 deployment lock**, and **P1→P3→P2→P2D** rollout order.
 Inventory complete (PR #342); consumer provenance requires Pack40P1–P5 (+ P2D) before
@@ -299,7 +299,7 @@ Unchanged structure. **No phrase implies another slice. No automatic continuatio
 
 | Slice | Scope | Authorized? |
 |---|---|---|
-| **Pack40A** | Principal context + read list/detail + three-state policy | **BLOCKED** — see §12 |
+| **Pack40A** | Principal context + read list/detail + three-state policy | **IMPLEMENTED (local, PR review)** — staging deploy separately authorized |
 | **Pack40B** | Note enforcement | **Not authorized** — requires A merged |
 | **Pack40C** | Status enforcement | **Not authorized** — requires A merged |
 | **Pack40D** | Indirect paths after per-path review | **Not authorized** |
@@ -369,18 +369,16 @@ Plus dual-role tests D1–D10 and original adversarial matrix from v2 (mapped to
 
 | # | Criterion | Status |
 |---|---|---|
-| 1 | Canonical consumer row representation | **NOT MET** — unknown from source |
+| 1 | Canonical consumer row representation | **MET** — `scopeKind=consumer` + `merchantProfileId=null` (Pack40P2/P5) |
 | 2 | Merchant row representation | **MET** — exact profile tenant equality |
 | 3 | Unresolved-tenant fail-closed behavior | **MET** — specified |
-| 4 | Dual-role list semantics | **MET** — conditional on criterion 1 |
+| 4 | Dual-role list semantics | **MET** — consumer + merchant branches coexist |
 | 5 | Inactive-merchant read semantics | **MET** — §6.2 default |
-| 6 | Bounded query design | **MET** — §7.2 (requires `C`) |
+| 6 | Bounded query design | **MET** — §7.2 |
 | 7 | No client tenant expansion | **MET** |
-| 8 | No schema migration requirement | **MET** for enforcement; consumer marker may require future create-path or DDL pack if no inventory pattern found |
+| 8 | No schema migration requirement | **MET** |
 
-**Pack40A implementation authorization:** **BLOCKED** until Pack40P definition-of-ready (see
-`docs/product/VIONA_PACK40P_REQUEST_PROVENANCE_MODEL_PLAN.md` §21). Inventory confirmed
-`canonicalConsumerProvenanceConfirmed: false` — schema remediation required.
+**Pack40A implementation:** **COMPLETE locally** under `APPROVE_PACK40A_TENANT_CONTEXT_AND_READ_ENFORCEMENT`. Pack40P definition-of-ready met (PR #351). Staging deploy/QA remains separately authorized.
 
 ### Discovery gate design (not executed here)
 
@@ -420,5 +418,5 @@ requires); denial audit type; automatic implementation.
 | v2 unsafe registry rule | **Rejected in v3** |
 | Consumer provenance from source | **Unknown** |
 | Three-state model | **Defined** |
-| Pack40A ready | **Blocked** |
+| Pack40A ready | **Implemented locally — PR review** |
 | Overlapping implementation | **None** |

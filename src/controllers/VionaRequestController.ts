@@ -101,6 +101,7 @@ export async function getVionaRequests(req: Request, res: Response): Promise<voi
       createdTo,
       limit: readOptionalLimitQuery(req.query.limit),
       skip: readOptionalSkipQuery(req.query.skip),
+      directReadPolicy: 'pack40a_provenance',
     });
 
     jsonOk(res, data, 200);
@@ -215,6 +216,7 @@ export async function getVionaRequestDetail(req: Request, res: Response): Promis
     const result = await getVionaRequestById({
       authUserId,
       requestId: requestId.trim(),
+      directReadPolicy: 'pack40a_provenance',
     });
 
     if (!result.ok) {
