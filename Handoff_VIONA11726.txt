@@ -1160,21 +1160,51 @@ Pack40C direct status enforcement: CLOSED/GREEN
   No second POST matrix; requester-only live fixture unavailable (owner-only locally proven)
   Pack40A/B CLOSED/GREEN; Pack40D/S unimplemented
 
+=== PACK40D INITIAL CONTROLLED MERCHANT EXECUTION CLOSURE ===
+Post-merge closure after Pack40DS evidence PR #375 MERGED @ ab5f607 (2026-07-15T21:42:07Z)
+Master baseline for QA evidence: bd72de5 (Pack40DD #374); evidence merge ends master @ ab5f607
+Staging release tested: v27 (deployment-01KXKSKRTN49GJW82A1ZAA8PXQ)
+Live matrix: 5 execution POSTs; other write-capable HTTP 0
+  1 successful merchant execution (triage -> inProgress -> completed)
+  1 Twilio test-SMS; 1 completed attempt; 2 transitions/events/indirect audits
+  1 attempt-scoped escrow hold settled
+  consumer/legacy/nonexistent/duplicate denials: 0 side effects
+  transport certain; no blind retry; Twilio SID lookup not performed; no cleanup/recovery
+Canonical narrow closure:
+  Pack40A: CLOSED/GREEN
+  Pack40B: CLOSED/GREEN
+  Pack40C: CLOSED/GREEN
+  Pack40D initial controlled merchant execution: CLOSED/GREEN
+  Pack40D signed-webhook execution: DISABLED
+  Pack40D approved internal dispatch: UNWIRED
+  Pack40D consumer execution: UNSUPPORTED
+  Pack40D legacy execution: UNSUPPORTED
+  Pack40D recovery/reconciliation: UNIMPLEMENTED
+  Pack40S: UNIMPLEMENTED / NOT AUTHORIZED
+Does NOT close future Pack40D triggers, provider categories, or recovery paths.
+Evidence: docs/product/VIONA_PACK40DS_STAGING_CONTROLLED_INDIRECT_EXECUTION_QA_EVIDENCE.md
+Next: merge this docs-only closure-sync PR; do not enable additional triggers, recovery, or Pack40S
+
+=== PACK40DS STAGING CONTROLLED INDIRECT EXECUTION QA ===
+Operator phrase: APPROVE_PACK40DS_STAGING_CONTROLLED_INDIRECT_EXECUTION_QA
+PR #375 MERGED @ ab5f607 (2026-07-15T21:42:07Z)
+Staging v27; sole enabled trigger internalAuthenticatedController
+5 POSTs / 1 Twilio send / denials+duplicate zero side effects
+Evidence: docs/product/VIONA_PACK40DS_STAGING_CONTROLLED_INDIRECT_EXECUTION_QA_EVIDENCE.md
+
 === PACK40DD STAGING CONTROLLED INDIRECT EXECUTION DEPLOY ===
 Operator phrase: APPROVE_PACK40DD_STAGING_INDIRECT_EXECUTION_DEPLOY
+PR #374 MERGED @ bd72de5
 Master baseline: 548b6ec (PR #373 MERGED — Pack40D3B)
 App: viona-api-staging-eu release v27
 Image: deployment-01KXKSKRTN49GJW82A1ZAA8PXQ
 Pre/post GET /health HTTP 200
-No authenticated execution POST; no Twilio/escrow/DB/migration/secret/production
-Markers:
+Deploy integrity only at DD time; live QA completed in Pack40DS (#375)
+Markers remaining in force for extra triggers/recovery:
   PACK40D_CONTROLLED_INDIRECT_EXECUTION_DEPLOYED_TO_STAGING
-  PACK40D_LIVE_EXECUTION_QA_STILL_REQUIRED
   PACK40D_SIGNED_WEBHOOK_EXECUTION_DISABLED
   PACK40D_RECOVERY_RECONCILIATION_NOT_IMPLEMENTED
-Pack40A/B/C CLOSED/GREEN; Pack40D not CLOSED/GREEN; Pack40S unauthorized
 Evidence: docs/product/VIONA_PACK40DD_STAGING_INDIRECT_EXECUTION_DEPLOYMENT_EVIDENCE.md
-Next: separately authorize Pack40D live execution QA
 
 === PACK40D3B CONTROLLED RUNTIME WIRING + BYPASS CLOSURE ===
 Operator phrase: APPROVE_PACK40D3B_CONTROLLED_RUNTIME_WIRING_AND_BYPASS_CLOSURE
@@ -1281,13 +1311,11 @@ Next: APPROVE_PACK40CS_STAGING_TENANT_STATUS_ADVERSARIAL_QA (QA-only, separate)
    (implementation #356+#357, staging deploy Pack40BD v25, adversarial QA Pack40BS
    #359 @ 8c038de; closure sync #360 @ 107be5f). **Pack40C CLOSED/GREEN**
    (implementation #363, deploy #364 v26, QA #365, closure sync #366 @ e9ee2d7).
-   **Pack40D:** readiness PR #367; foundation refinement PR #368 @ 79bddbe;
-   Pack40D1 schema PR #369 @ 85bff59; staging migration evidence PR #370 @ a4dc273
-   (APPLIED/GREEN, table empty); Pack40D2 PR #371 @ a3be6ae; Pack40D3A PR #372 @ fb957ee;
-   Pack40D3B PR #373 @ 548b6ec; Pack40DD staged on viona-api-staging-eu **v27**
-   (deploy integrity only; live execution QA still required);
-   Pack40D not CLOSED/GREEN.
-   **Pack40S:** unimplemented.
+   **Pack40D initial controlled merchant execution: CLOSED/GREEN** — D1–D3B + DD #374 +
+   DS evidence #375 @ ab5f607; staging v27; sole trigger internalAuthenticatedController;
+   signed-webhook DISABLED; approvedInternalDispatch UNWIRED; consumer/legacy UNSUPPORTED;
+   recovery/reconciliation UNIMPLEMENTED. Other Pack40D paths not closed.
+   **Pack40S:** UNIMPLEMENTED / NOT AUTHORIZED.
 4. TourismBooking shadow-DB replay issue — see DEFERRED/BACKLOG section above (item 2).
 5. Pack37's remaining, not-yet-issued authorization phrases:
    APPROVE_PACK37_OPENAI_STAGING_SECRET — DONE this session (see dedicated section above): key
