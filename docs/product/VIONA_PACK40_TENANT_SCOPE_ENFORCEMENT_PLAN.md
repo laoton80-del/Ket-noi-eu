@@ -3,7 +3,7 @@
 Status: **PLANNING ONLY (provenance-hardened refinement)** — docs-only. No product code,
 schema/migration, database action, deployment, staging call, or secret change is authorized.
 
-**Pack40A status:** **CLOSED / GREEN** — closure sync PR #355 @ `fa67491`. **Pack40B:** **CLOSED / GREEN** — implementation PR #356 @ `a165ca9` + transactional correction PR #357 @ `45c8f29`; Pack40BD deployed staging **v25** (PR #358 @ `44ff2f7`); Pack40BS adversarial note QA **GREEN** on v25 (PR #359 @ `8c038de`); closure sync PR #360 @ `107be5f`. **Pack40C:** implementation complete under `APPROVE_PACK40C_TENANT_STATUS_ENFORCEMENT` — owner-only direct status enforcement (`submitted → triage`); Serializable auth-before-replay; **local tests only — not deployed, not CLOSED/GREEN**; evidence `docs/product/VIONA_PACK40C_TENANT_STATUS_ENFORCEMENT_EVIDENCE.md`; next deploy phrase `APPROVE_PACK40CD_STAGING_STATUS_ENFORCEMENT_DEPLOY`. **Pack40D/S:** separately authorized, unimplemented.
+**Pack40A status:** **CLOSED / GREEN** — closure sync PR #355 @ `fa67491`. **Pack40B:** **CLOSED / GREEN** — implementation PR #356 @ `a165ca9` + transactional correction PR #357 @ `45c8f29`; Pack40BD deployed staging **v25** (PR #358 @ `44ff2f7`); Pack40BS adversarial note QA **GREEN** on v25 (PR #359 @ `8c038de`); closure sync PR #360 @ `107be5f`. **Pack40C:** implementation merged (PR #363 @ `9eb7714`); deployed staging **v26** (Pack40CD PR #364 @ `92244f4`); staging adversarial QA **GREEN** (`APPROVE_PACK40CS_STAGING_TENANT_STATUS_ADVERSARIAL_QA`) — **not CLOSED/GREEN** until evidence PR merge. **Pack40D/S:** separately authorized, unimplemented.
 `docs/product/VIONA_PACK40P_REQUEST_PROVENANCE_MODEL_PLAN.md` for server-owned `scopeKind` +
 `merchantProfileId` schema/remediation plan, **P1 deployment lock**, and **P1→P3→P2→P2D** rollout order.
 Inventory complete (PR #342); consumer provenance requires Pack40P1–P5 (+ P2D) before
@@ -301,7 +301,7 @@ Unchanged structure. **No phrase implies another slice. No automatic continuatio
 |---|---|---|
 | **Pack40A** | Principal context + read list/detail + three-state policy | **CLOSED / GREEN** — implementation merged; staging deploy v24; adversarial QA green |
 | **Pack40B** | Note enforcement | **CLOSED / GREEN** — PR #356+#357 merged; Pack40BD deployed v25; Pack40BS adversarial QA green (PR #359 @ `8c038de`); exactly **2** successful notes; replay idempotent (**0** duplicates); non-owner/legacy/spoof denied; existence-leak-safe **404** normalization |
-| **Pack40C** | Status enforcement | **Implementation complete (local)** — `APPROVE_PACK40C_TENANT_STATUS_ENFORCEMENT`; owner-only DB predicate; consumer/merchant/legacy semantics; Serializable auth-before-replay; **not deployed / not CLOSED/GREEN** |
+| **Pack40C** | Status enforcement | **Staging QA GREEN** — implementation + deploy v26 + adversarial QA; **closure pending evidence merge** |
 | **Pack40D** | Indirect paths after per-path review | **Not authorized** |
 | **Pack40S** | Staging adversarial QA | **Not authorized** |
 | **Discovery** | Read-only tenant provenance inventory | **Not authorized** — phrase below |
