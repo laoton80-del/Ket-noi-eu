@@ -1155,11 +1155,10 @@ Pack40C/D/S remain unimplemented — separately authorized
 === PACK40C STATUS ENFORCEMENT READINESS AUDIT ===
 Operator phrase: APPROVE_PACK40C_STATUS_ENFORCEMENT_READINESS_AUDIT
 Classification: READY_FOR_PACK40C_DIRECT_STATUS_IMPLEMENTATION
-Direct surface: POST /api/viona/requests/:id/actions/status only (transitionVionaRequestStatus)
-Indirect: vionaRequestExecutionOrchestrator deferred to Pack40D (Option A split)
-Approved transition preserved: submitted -> triage (owner-only effective scope)
-Gaps: no provenance today; pre-tx idempotency fast path; default isolation (not Serializable)
-Required: Serializable in-tx principal + auth-before-idempotency (mirror Pack40B correction)
+Refinement (post-PR #361): owner-only DB predicate; replay-safe Serializable ordering
+Direct surface: POST /api/viona/requests/:id/actions/status only
+Replay: auth before replay; replay before new-mutation submitted->triage validation
+Post-tx stateTransition hook: best-effort observability only (not Pack40D)
 No implementation, DB, staging, deploy, migration, or secret action performed
 Next: APPROVE_PACK40C_TENANT_STATUS_ENFORCEMENT (implementation only; no deploy/DB)
 

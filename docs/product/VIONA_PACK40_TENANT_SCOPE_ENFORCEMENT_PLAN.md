@@ -301,7 +301,7 @@ Unchanged structure. **No phrase implies another slice. No automatic continuatio
 |---|---|---|
 | **Pack40A** | Principal context + read list/detail + three-state policy | **CLOSED / GREEN** — implementation merged; staging deploy v24; adversarial QA green |
 | **Pack40B** | Note enforcement | **CLOSED / GREEN** — PR #356+#357 merged; Pack40BD deployed v25; Pack40BS adversarial QA green (PR #359 @ `8c038de`); exactly **2** successful notes; replay idempotent (**0** duplicates); non-owner/legacy/spoof denied; existence-leak-safe **404** normalization |
-| **Pack40C** | Status enforcement | **Readiness audit GREEN** — `APPROVE_PACK40C_STATUS_ENFORCEMENT_READINESS_AUDIT`; direct surface `POST …/actions/status` only; Option A direct/indirect split; owner-only effective scope + provenance predicate; Serializable in-tx design required; **not implemented** |
+| **Pack40C** | Status enforcement | **Readiness audit GREEN (refined)** — owner-only DB predicate + replay-safe Serializable ordering; direct surface only; **not implemented** |
 | **Pack40D** | Indirect paths after per-path review | **Not authorized** |
 | **Pack40S** | Staging adversarial QA | **Not authorized** |
 | **Discovery** | Read-only tenant provenance inventory | **Not authorized** — phrase below |
