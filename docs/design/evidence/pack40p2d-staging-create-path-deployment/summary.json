@@ -1,0 +1,25 @@
+{
+  "pack": "Pack40P2D",
+  "operatorPhrase": "APPROVE_PACK40P2D_STAGING_CREATE_PATH_PROVENANCE_DEPLOY",
+  "masterSha": "37d5bb3bd31cd637b486840877045f9ba796231a",
+  "pr347MergeCommit": "37d5bb3bd31cd637b486840877045f9ba796231a",
+  "stagingApp": "viona-api-staging-eu",
+  "preDeployRelease": "v22",
+  "preDeployImage": "deployment-01KXGC1AZ87H5B6D0DN2F6KH1K",
+  "postDeployRelease": "v23",
+  "postDeployImage": "deployment-01KXH70SC5G1KKJYWG5KYB5SDX",
+  "preDeployHealthHttp": 200,
+  "postDeployHealthHttp": 200,
+  "deployStartUtc": "2026-07-14T21:02:40Z",
+  "machinesHealthyUtc": "2026-07-14T21:05:59Z",
+  "migrationRan": false,
+  "databaseAccessed": false,
+  "requestQaPerformed": false,
+  "secretChanged": false,
+  "productionTouched": false,
+  "deployedState": [
+    "STAGING_SCHEMA_AND_CREATE_PATH_CODE_DEPLOYED",
+    "PROVENANCE_DATA_VERIFICATION_STILL_REQUIRED"
+  ],
+  "classification": "READY_FOR_PACK40P2D_DEPLOYMENT_EVIDENCE_PR_REVIEW"
+}
