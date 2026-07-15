@@ -1150,14 +1150,14 @@ Pack40BS ADVERSARIAL QA GREEN on v25; evidence PR #359 merged @ 8c038de:
   - read-only DB otherwise; no deploy, migration, secret, or production action
   - transactional race scenarios locally proven (81-test suite), not manufactured on staging
 Pack40B note enforcement: CLOSED/GREEN
-Pack40C direct status enforcement: STAGING QA GREEN (closure pending evidence merge)
-  Operator phrase: APPROVE_PACK40CS_STAGING_TENANT_STATUS_ADVERSARIAL_QA
-  Release v26-verified; 10 status POSTs; 2 submitted->triage transitions
-  Replay-safe idempotency; owner-only + provenance; non-owner/legacy/spoof denied
-  Existence-leak-safe 404 normalization; zero denied side effects
-  No DB mutation, deploy, migration, secret or production action
-  Classification: PACK40C_STAGING_STATUS_ADVERSARIAL_QA_GREEN
-  Pack40C CLOSED/GREEN pending evidence PR merge + canonical sync
+Pack40C direct status enforcement: CLOSED/GREEN
+  PR #363 MERGED @ 9eb7714 (implementation)
+  PR #364 MERGED @ 92244f4 (staging deploy v26)
+  PR #365 MERGED @ 97d6ccc (adversarial status QA GREEN)
+  10 status POSTs; 2 submitted->triage transitions; 2 transition events; 2 action.status audits
+  0 replay duplicates; 0 denied/conflicting/invalid-target side effects
+  Post-QA verify metric corrected (action.status only, not hook rows); read-only resume validation
+  No second POST matrix; requester-only live fixture unavailable (owner-only locally proven)
   Pack40A/B CLOSED/GREEN; Pack40D/S unimplemented
 
 === PACK40C STATUS ENFORCEMENT READINESS AUDIT ===
