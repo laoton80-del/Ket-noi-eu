@@ -247,11 +247,17 @@ async function runSwitchWiringTests(): Promise<void> {
 // ---------------------------------------------------------------------------
 
 function runCategoryIsolationTests(): void {
-  runTest('category isolation: dispatcher source still has exactly one twilio_test_sms_poc case delegating to previewVionaExecutionPlanRealProviderPocRoute', () => {
+  runTest('category isolation: dispatcher Twilio case closed by Pack40D3B (no routeExecutor provider bypass)', () => {
     const source = readSource('../src/services/viona/vionaAutonomousDispatchService.ts');
     assert(source.includes("case 'twilio_test_sms_poc':"), 'the existing twilio_test_sms_poc case must still exist');
-    assert(source.includes('await routeExecutor({'), 'the existing case must still delegate to the injectable routeExecutor (previewVionaExecutionPlanRealProviderPocRoute by default)');
-    assert(source.includes("kind: 'twilioTestSmsPoc'"), 'the existing case result must now be wrapped with the twilioTestSmsPoc tag, per plan §3.2');
+    assert(
+      source.includes('pack40d_provider_execution_disabled'),
+      'Pack40D3B must disable Twilio/provider execution on dispatch',
+    );
+    const twilioIdx = source.indexOf("case 'twilio_test_sms_poc':");
+    const nextCaseIdx = source.indexOf("case 'merchant_schedule_availability_check':", twilioIdx);
+    const twilioBlock = source.slice(twilioIdx, nextCaseIdx >= 0 ? nextCaseIdx : undefined);
+    assert(!twilioBlock.includes('await routeExecutor('), 'Twilio case must not call routeExecutor after Pack40D3B');
   });
 
   runTest('category isolation: merchant read-only tools never delegate to routeExecutor/previewVionaExecutionPlanRealProviderPocRoute', () => {
@@ -271,7 +277,7 @@ function runCategoryIsolationTests(): void {
 }
 
 async function runTwilioPassthroughDynamicTest(): Promise<void> {
-  await runAsyncTest('category isolation (dynamic): twilio_test_sms_poc result is wrapped byte-for-byte unchanged inside { kind, result }', async () => {
+  await runAsyncTest('category isolation (dynamic): Pack40D3B disables Twilio dispatch before routeExecutor', async () => {
     const fakeResult: PreviewVionaExecutionPlanRealProviderPocResult = {
       ok: true,
       requestId: 'req-pack37-1',
@@ -290,9 +296,12 @@ async function runTwilioPassthroughDynamicTest(): Promise<void> {
     });
     assert(result.ok === true, 'dispatch must not fail invalid_input');
     if (!result.ok) return;
-    assert(result.dispatch.accepted === true, 'twilio dispatch must still be accepted');
-    assert(result.route !== null && result.route.kind === 'twilioTestSmsPoc' && result.route.result === fakeResult, 'the wrapped route.result must be the exact, unmodified object returned by routeExecutor');
-    assert(spy.calls.length === 1, 'routeExecutor must still be called exactly once');
+    assert(
+      result.dispatch.accepted === false && result.dispatch.reason === 'pack40d_provider_execution_disabled',
+      'Twilio dispatch must be disabled by Pack40D3B',
+    );
+    assert(result.route === null, 'no provider route result');
+    assert(spy.calls.length === 0, 'routeExecutor must not be called for Twilio after Pack40D3B');
   });
 }
 

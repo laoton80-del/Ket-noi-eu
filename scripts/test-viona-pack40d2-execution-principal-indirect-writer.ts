@@ -1609,26 +1609,24 @@ async function main(): Promise<void> {
   ] as const;
 
   for (const [n, rel, label] of runtimeFiles) {
-    runTest(`${n}. ${label} does not import Pack40D2`, () => {
+    runTest(`${n}. ${label} Pack40D2 import boundary`, () => {
       const sourcePath = path.resolve(__dirname, rel);
       if (!fs.existsSync(sourcePath)) {
-        // Fall back to glob-tolerant names used in this repo
-        const alt = fs
-          .readdirSync(path.resolve(__dirname, '../src'), { recursive: true })
-          .map(String)
-          .find((f) => f.replace(/\\/g, '/').endsWith(rel.replace('../src/', '')));
-        assert(alt != null || true, `${label} path optional`);
-        if (alt == null) {
-          // Search imports across src for Pack40D2 symbols from runtime-ish folders
-          return;
-        }
+        return;
       }
-      if (fs.existsSync(sourcePath)) {
-        const source = fs.readFileSync(sourcePath, 'utf8');
-        assert(!source.includes('vionaRequestIndirectStatusActionService'), `${label} unused`);
-        assert(!source.includes('claimVionaRequestExecution'), `${label} no claim`);
-        assert(!source.includes('finalizeVionaRequestExecutionCompleted'), `${label} no finalize`);
+      const source = fs.readFileSync(sourcePath, 'utf8');
+      // Pack40D3B: only the Pack40D coordinator may import the D2 writer.
+      if (rel.endsWith('vionaRequestExecutionOrchestrator.ts')) {
+        assert(source.includes('claimVionaRequestExecution'), 'coordinator claims via D2');
+        assert(
+          source.includes('finalizeVionaRequestExecutionCompleted'),
+          'coordinator finalizes via D2',
+        );
+        return;
       }
+      assert(!source.includes('vionaRequestIndirectStatusActionService'), `${label} unused`);
+      assert(!source.includes('claimVionaRequestExecution'), `${label} no claim`);
+      assert(!source.includes('finalizeVionaRequestExecutionCompleted'), `${label} no finalize`);
     });
   }
 
@@ -1709,14 +1707,15 @@ async function main(): Promise<void> {
     assert(!writer.includes('VionaWebhook'), 'no webhook controller');
   });
 
-  runTest('97. Orchestrator behavior unchanged', () => {
+  runTest('97. Orchestrator Pack40D3B coordinator uses D2 without direct Prisma status writes', () => {
     const orchPath = path.resolve(
       __dirname,
       '../src/services/viona/vionaRequestExecutionOrchestrator.ts',
     );
     if (fs.existsSync(orchPath)) {
       const orch = fs.readFileSync(orchPath, 'utf8');
-      assert(!orch.includes('vionaRequestIndirectStatusActionService'), 'orchestrator untouched');
+      assert(orch.includes('claimVionaRequestExecution'), 'coordinator uses D2 claim');
+      assert(!orch.includes('vionaRequest.updateMany'), 'no direct status updateMany');
     }
   });
 
@@ -1783,20 +1782,25 @@ async function main(): Promise<void> {
       'vionaRequestExecutionGatewayService',
       'runVionaRequestExecutionProviderGateway',
     ];
-    const allow = [
+    // Pack40D3B may wire the dormant gateway through the coordinator only.
+    const gatewayCallers = files.filter((file) => {
+      if (!file.endsWith('.ts')) return false;
+      const source = fs.readFileSync(path.join(srcRoot, file), 'utf8');
+      return banned.some((token) => source.includes(token));
+    });
+    const allowedGatewayFiles = [
       path.normalize('services/viona/vionaRequestExecutionGatewayService.ts'),
       path.normalize('services/viona/vionaRequestExecutionProviderContract.ts'),
       path.normalize('repositories/vionaRequestExecutionAttemptRepository.ts'),
-      path.normalize('services/viona/vionaRequestIndirectStatusActionService.ts'),
+      path.normalize('services/viona/vionaRequestExecutionOrchestrator.ts'),
+      path.normalize('services/viona/vionaPack40D3TwilioGatewayAdapter.ts'),
     ];
-    for (const file of files) {
-      if (!file.endsWith('.ts')) continue;
+    for (const file of gatewayCallers) {
       const norm = path.normalize(file);
-      if (allow.some((a) => norm.endsWith(a))) continue;
-      const source = fs.readFileSync(path.join(srcRoot, file), 'utf8');
-      for (const token of banned) {
-        assert(!source.includes(token), `${file} must not import ${token}`);
-      }
+      assert(
+        allowedGatewayFiles.some((a) => norm.endsWith(a)),
+        `${file} must not import Pack40D gateway outside coordinator allowlist`,
+      );
     }
   });
 
@@ -1926,6 +1930,8 @@ async function main(): Promise<void> {
       path.normalize('services/viona/vionaRequestExecutionPrincipalContext.ts'),
       path.normalize('services/viona/vionaRequestIndirectExecutionAccessScope.ts'),
       path.normalize('repositories/vionaRequestExecutionAttemptRepository.ts'),
+      // Pack40D3B: sole production importer of D2 claim/finalize.
+      path.normalize('services/viona/vionaRequestExecutionOrchestrator.ts'),
     ]);
     const files = fs.readdirSync(srcRoot, { recursive: true }).map(String);
     for (const file of files) {

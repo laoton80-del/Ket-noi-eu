@@ -17,8 +17,6 @@ import {
   isVionaInternalRealTwilioPocRouteAllowed,
 } from '../src/lib/viona/internalRoute/vionaInternalRealTwilioPocRouteGate';
 import { vionaInternalDeploymentStageGateMiddleware } from '../src/middleware/vionaInternalDeploymentStageGateMiddleware';
-import type { PreviewVionaExecutionPlanRealProviderPocResult } from '../src/services/viona/vionaExecutionPlanRouteService';
-
 function assert(condition: boolean, message: string): void {
   if (!condition) {
     throw new Error(message);
@@ -164,8 +162,8 @@ await runTest('gate middleware returns 403 on production deployment', () => {
 await runTest('unauthenticated request -> 401', async () => {
   const { res, state } = createFakeResponse();
   await postVionaInternalTriggerRealTwilioPoc(createFakeRequest({ authUserId: undefined }), res, {
-    routeExecutor: async () => {
-      throw new Error('routeExecutor must not be called');
+    coordinator: async () => {
+      throw new Error('coordinator must not be called');
     },
   });
   assert(state.statusCode === 401, 'expected 401');
@@ -181,13 +179,13 @@ await runTest('missing requestId -> 400', async () => {
     }),
     res,
     {
-      routeExecutor: async () => {
+      coordinator: async () => {
         called = true;
         return { ok: false, reason: 'invalid_input' };
       },
     },
   );
-  assert(!called, 'routeExecutor must not be called');
+  assert(!called, 'coordinator must not be called');
   assert(state.statusCode === 400, 'expected 400');
 });
 
@@ -201,28 +199,19 @@ await runTest('missing approval flags -> 400', async () => {
     }),
     res,
     {
-      routeExecutor: async () => {
+      coordinator: async () => {
         called = true;
         return { ok: false, reason: 'invalid_input' };
       },
     },
   );
-  assert(!called, 'routeExecutor must not be called');
+  assert(!called, 'coordinator must not be called');
   assert(state.statusCode === 400, 'expected 400');
 });
 
-await runTest('happy path -> 200 and forced magic numbers passed to route executor', async () => {
+await runTest('happy path -> 200 and forced magic numbers passed to coordinator', async () => {
   const { res, state } = createFakeResponse();
   let capturedInput: Record<string, unknown> | null = null;
-  const fakeResult: PreviewVionaExecutionPlanRealProviderPocResult = {
-    ok: true,
-    requestId: 'req-1',
-    actionId: 'request.assign',
-    planAllowed: true,
-    denialReason: 'not_denied',
-    escrow: { attempted: false },
-    realProviderResult: null,
-  };
   await postVionaInternalTriggerRealTwilioPoc(
     createFakeRequest({
       authUserId: 'user-1',
@@ -235,14 +224,21 @@ await runTest('happy path -> 200 and forced magic numbers passed to route execut
     }),
     res,
     {
-      routeExecutor: async (input) => {
+      coordinator: async (input) => {
         capturedInput = { ...input };
-        return fakeResult;
+        return {
+          ok: true,
+          requestId: 'req-1',
+          attemptId: 'attempt-1',
+          fromStatus: 'triage',
+          finalStatus: 'completed',
+          providerInvoked: true,
+        };
       },
     },
   );
   assert(state.statusCode === 200, 'expected 200');
-  assert(capturedInput != null, 'routeExecutor must be called');
+  assert(capturedInput != null, 'coordinator must be called');
   assert(
     capturedInput!.fromNumber === VIONA_INTERNAL_REAL_TWILIO_POC_FORCED_MAGIC_NUMBER,
     'fromNumber must be forced magic number',
@@ -253,7 +249,7 @@ await runTest('happy path -> 200 and forced magic numbers passed to route execut
   );
   assert(capturedInput!.body === 'hello staging', 'messageBody must pass through');
   const data = (state.body as { success?: boolean; data?: Record<string, unknown> }).data;
-  assert(data?.planAllowed === true, 'planAllowed must be returned');
+  assert(data?.finalStatus === 'completed', 'finalStatus must be returned');
   assert(
     (data?.safety as { forcedToNumber?: string })?.forcedToNumber ===
       VIONA_INTERNAL_REAL_TWILIO_POC_FORCED_MAGIC_NUMBER,
@@ -261,7 +257,7 @@ await runTest('happy path -> 200 and forced magic numbers passed to route execut
   );
 });
 
-await runTest('route executor request_not_found -> 404', async () => {
+await runTest('coordinator invalid_state -> 404', async () => {
   const { res, state } = createFakeResponse();
   await postVionaInternalTriggerRealTwilioPoc(
     createFakeRequest({
@@ -274,7 +270,7 @@ await runTest('route executor request_not_found -> 404', async () => {
     }),
     res,
     {
-      routeExecutor: async () => ({ ok: false, reason: 'request_not_found' }),
+      coordinator: async () => ({ ok: false, reason: 'invalid_state' }),
     },
   );
   assert(state.statusCode === 404, 'expected 404');
@@ -284,11 +280,15 @@ await runTest('route executor request_not_found -> 404', async () => {
 // 13–15. Source scan — no bypass of service-layer protections
 // ---------------------------------------------------------------------------
 
-await runTest('controller delegates to previewVionaExecutionPlanRealProviderPocRoute only', () => {
+await runTest('controller delegates to Pack40D coordinator only', () => {
   const source = readSourceNoComments('../src/controllers/VionaInternalRealTwilioPocController.ts');
   assert(
-    source.includes('previewVionaExecutionPlanRealProviderPocRoute'),
-    'must call previewVionaExecutionPlanRealProviderPocRoute',
+    source.includes('executeVionaRequestBusinessFlow'),
+    'must call Pack40D coordinator',
+  );
+  assert(
+    !source.includes('previewVionaExecutionPlanRealProviderPocRoute'),
+    'must not call legacy real-provider POC route directly',
   );
   assert(
     !source.includes('executeVionaTwilioTestPocReal('),

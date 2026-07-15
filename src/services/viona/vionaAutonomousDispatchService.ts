@@ -98,7 +98,11 @@ export type DispatchVionaAutonomousRequestFailure = 'invalid_input';
 
 /** Pack37, additive: every existing `VionaDispatchRejectionReason` value, plus one new,
  *  dispatch-time-only reason for a merchant-tool match with no `merchantContext` supplied. */
-export type VionaDispatchExecutionRejectionReason = VionaDispatchRejectionReason | 'merchant_context_missing';
+export type VionaDispatchExecutionRejectionReason =
+  | VionaDispatchRejectionReason
+  | 'merchant_context_missing'
+  /** Pack40D3B — Twilio/provider execution disabled on dispatch (webhook + autonomous). */
+  | 'pack40d_provider_execution_disabled';
 
 /** Pack37, additive: tags which downstream execution path produced `route`, so a future caller
  *  can distinguish the Twilio/escrow shape from the merchant-read-only-query shape without an
@@ -246,28 +250,32 @@ export async function dispatchVionaAutonomousRequest(
   // pipeline (module header).
   switch (entry.name) {
     case 'twilio_test_sms_poc': {
-      const toolInput = decision.toolInput as Readonly<{
-        fromNumber: string;
-        toNumber: string;
-        body: string;
-      }>;
-      const twilioRoute = await routeExecutor({
-        authUserId,
+      // Pack40D3B — provider execution disabled on autonomous/webhook dispatch.
+      // Sole enabled runtime trigger is internalAuthenticatedController via Pack40D coordinator.
+      void routeExecutor;
+      void decision.toolInput;
+      const auditResult = await auditWriter({
         requestId,
-        actionId: entry.linkedActionId,
-        operatorApprovalGranted: input.operatorApprovalGranted === true,
-        userConsentGranted: input.userConsentGranted === true,
-        requestSafetyLabels: input.requestSafetyLabels,
-        idempotencyKey: input.idempotencyKey,
-        fromNumber: toolInput.fromNumber,
-        toNumber: toolInput.toNumber,
-        body: toolInput.body,
+        eventType: 'dispatcherIntentRejected',
+        actorUserId: authUserId,
+        actorRoleLabel: null,
+        message:
+          'Pack40D3B: twilio_test_sms_poc provider execution disabled — route through Pack40D coordinator only.',
+        payloadJson: {
+          toolName: entry.name,
+          reason: 'pack40d_provider_execution_disabled',
+        },
       });
+      if (!auditResult.ok) {
+        console.error(
+          `[pack40d3b-dispatcher] failed to append provider-disabled audit for request ${requestId}: ${auditResult.error}`,
+        );
+      }
       return {
         ok: true,
         requestId,
-        dispatch: { accepted: true, toolName: entry.name, confidence: decision.confidence },
-        route: { kind: 'twilioTestSmsPoc', result: twilioRoute },
+        dispatch: { accepted: false, reason: 'pack40d_provider_execution_disabled' },
+        route: null,
       };
     }
     case 'merchant_schedule_availability_check':

@@ -280,7 +280,11 @@ export type PreviewVionaExecutionPlanRealProviderPocInput = Readonly<{
   body: string;
 }>;
 
-export type PreviewVionaExecutionPlanRealProviderPocFailure = 'invalid_input' | 'request_not_found';
+export type PreviewVionaExecutionPlanRealProviderPocFailure =
+  | 'invalid_input'
+  | 'request_not_found'
+  /** Pack40D3B — direct POC bypass closed; use Pack40D coordinator. */
+  | 'provider_bypass_closed';
 
 /**
  * Pack31 — VIO Credits escrow outcome for this specific real-provider POC call. `attempted: false`
@@ -345,6 +349,12 @@ export type PreviewVionaExecutionPlanRealProviderPocDeps = Readonly<{
   executeRealFn?: typeof executeVionaTwilioTestPocReal;
   settleFn?: typeof settleVionaRequestExecutionHold;
   auditWriter?: typeof appendVionaExecutionAuditEvent;
+  /**
+   * Pack40D3B — direct Twilio/escrow POC path is closed by default.
+   * Local unit tests that exercise the legacy hold→execute→settle chain must pass
+   * `allowDirectProviderBypass: true` (or inject test doubles).
+   */
+  allowDirectProviderBypass?: boolean;
 }>;
 
 /**
@@ -388,6 +398,17 @@ export async function previewVionaExecutionPlanRealProviderPocRoute(
     input.body.trim().length === 0
   ) {
     return { ok: false, reason: 'invalid_input' };
+  }
+
+  // Pack40D3B — close direct provider bypass. Injected test doubles or an explicit opt-in reopen
+  // the legacy chain for local fake-provider suites only.
+  const hasInjectedTestDoubles =
+    deps.getVionaRequestByIdFn != null ||
+    deps.holdFn != null ||
+    deps.executeRealFn != null ||
+    deps.settleFn != null;
+  if (deps.allowDirectProviderBypass !== true && !hasInjectedTestDoubles) {
+    return { ok: false, reason: 'provider_bypass_closed' };
   }
 
   const detail = await getVionaRequestByIdFn({ authUserId, requestId });

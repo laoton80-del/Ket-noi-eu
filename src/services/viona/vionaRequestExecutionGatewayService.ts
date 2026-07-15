@@ -3,7 +3,7 @@
  *
  * Owns provider preparation (claimed → providerPending) and durable outcome recording.
  * Does not finalize VionaRequest status (Pack40D2). Does not call live Twilio/escrow.
- * Not imported by production runtime until a separately authorized wiring pack.
+ * Pack40D3B may invoke this only through the Pack40D coordinator (no direct controller/Twilio path).
  */
 
 import {
