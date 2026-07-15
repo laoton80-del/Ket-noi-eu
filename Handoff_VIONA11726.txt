@@ -1150,15 +1150,15 @@ Pack40BS ADVERSARIAL QA GREEN on v25; evidence PR #359 merged @ 8c038de:
   - read-only DB otherwise; no deploy, migration, secret, or production action
   - transactional race scenarios locally proven (81-test suite), not manufactured on staging
 Pack40B note enforcement: CLOSED/GREEN
-Pack40C direct status enforcement: DEPLOYED TO STAGING v26 (not CLOSED/GREEN)
-  Operator phrase: APPROVE_PACK40CD_STAGING_STATUS_ENFORCEMENT_DEPLOY
-  PR #363 MERGED @ 9eb7714; deployed merged master to viona-api-staging-eu v26
-  Image: deployment-01KXK0CRXQ4KXVK719EQ5EZ532; pre/post health HTTP 200
-  Markers: PACK40C_DIRECT_STATUS_ENFORCEMENT_DEPLOYED_TO_STAGING
-           PACK40C_STAGING_ADVERSARIAL_QA_STILL_REQUIRED
-  No authenticated QA, status POST, DB, migration, secret or production action
+Pack40C direct status enforcement: STAGING QA GREEN (closure pending evidence merge)
+  Operator phrase: APPROVE_PACK40CS_STAGING_TENANT_STATUS_ADVERSARIAL_QA
+  Release v26-verified; 10 status POSTs; 2 submitted->triage transitions
+  Replay-safe idempotency; owner-only + provenance; non-owner/legacy/spoof denied
+  Existence-leak-safe 404 normalization; zero denied side effects
+  No DB mutation, deploy, migration, secret or production action
+  Classification: PACK40C_STAGING_STATUS_ADVERSARIAL_QA_GREEN
+  Pack40C CLOSED/GREEN pending evidence PR merge + canonical sync
   Pack40A/B CLOSED/GREEN; Pack40D/S unimplemented
-  Next: APPROVE_PACK40CS_STAGING_TENANT_STATUS_ADVERSARIAL_QA
 
 === PACK40C STATUS ENFORCEMENT READINESS AUDIT ===
 Operator phrase: APPROVE_PACK40C_STATUS_ENFORCEMENT_READINESS_AUDIT
