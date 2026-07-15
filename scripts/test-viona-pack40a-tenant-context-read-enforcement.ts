@@ -638,9 +638,9 @@ async function main(): Promise<void> {
     assert(!readServiceSource.includes('legacyUnresolved'), 'no external legacy label');
   });
 
-  runTest('30: note service behavior is unchanged', () => {
-    assert(noteSource.includes('buildAuthorizedVionaRequestWhere(authUserId)'), 'note uses legacy scope');
-    assert(!noteSource.includes('pack40a_provenance'), 'note has no pack40a flag');
+  runTest('30: note service uses Pack40B mutation scope not Pack40A read policy', () => {
+    assert(noteSource.includes('buildAuthorizedVionaRequestNoteWhere(principal)'), 'note uses pack40b scope');
+    assert(!noteSource.includes('pack40a_provenance'), 'note has no pack40a read flag');
   });
 
   runTest('31: status service behavior is unchanged', () => {
@@ -663,12 +663,13 @@ async function main(): Promise<void> {
     assert(!readAccessScopeSource.includes('.delete('), 'no delete in read access scope');
   });
 
-  runTest('35: no Pack40B/C/D implementation exists', () => {
+  runTest('35: Pack40B note scope is separate from Pack40A read enforcement', () => {
     assert(
-      !fs.existsSync(path.resolve(__dirname, '../src/services/viona/vionaRequestNoteAccessScope.ts')),
-      'no pack40b note scope file',
+      fs.existsSync(path.resolve(__dirname, '../src/services/viona/vionaRequestNoteAccessScope.ts')),
+      'pack40b note scope file exists',
     );
-    assert(!readServiceSource.includes('Pack40B'), 'no pack40b in read service');
+    assert(!readServiceSource.includes('buildAuthorizedVionaRequestNoteWhere'), 'read service has no note scope');
+    assert(!readAccessScopeSource.includes('isActive'), 'read scope has no isActive gate');
   });
 
   runTest('36: no deploy, Fly, database or provider path in new read files', () => {
