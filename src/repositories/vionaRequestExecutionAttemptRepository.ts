@@ -101,6 +101,36 @@ export type RecordVionaRequestExecutionAttemptProviderOutcomeInput = Readonly<{
   failureReasonDigest?: string | null;
 }>;
 
+/** Pack40D3A — claimed → providerPending with persisted provider identity + key. */
+export type PrepareVionaRequestExecutionAttemptForProviderInput = Readonly<{
+  attemptId: string;
+  expectedRequestId: string;
+  expectedLeaseOwner: string;
+  providerName: string;
+  operationCategory: string;
+  providerIdempotencyKey: string;
+  providerStartedAt: Date;
+}>;
+
+/** Pack40D3A — record outcome against a prepared providerPending attempt. */
+export type RecordPreparedVionaRequestExecutionAttemptProviderOutcomeInput = Readonly<{
+  attemptId: string;
+  expectedRequestId: string;
+  expectedLeaseOwner: string;
+  expectedProviderName: string;
+  expectedOperationCategory: string;
+  expectedProviderIdempotencyKey: string;
+  nextState:
+    | typeof VionaRequestExecutionAttemptState.providerSucceeded
+    | typeof VionaRequestExecutionAttemptState.providerFailed
+    | typeof VionaRequestExecutionAttemptState.outcomeUncertain;
+  providerFinishedAt: Date;
+  providerResultDigest?: string | null;
+  providerExternalReferenceDigest?: string | null;
+  failureClass?: string | null;
+  failureReasonDigest?: string | null;
+}>;
+
 const ATTEMPT_SELECT_MINIMAL = {
   id: true,
   requestId: true,
@@ -280,6 +310,89 @@ export async function recordVionaRequestExecutionAttemptProviderOutcome(
       providerExternalReferenceDigest: input.providerExternalReferenceDigest ?? null,
       failureClass: input.failureClass ?? null,
       failureReasonDigest: input.failureReasonDigest ?? null,
+    },
+  });
+
+  if (result.count !== 1) {
+    return { updated: false, attempt: null };
+  }
+
+  const attempt = await client.vionaRequestExecutionAttempt.findUnique({
+    where: { id: input.attemptId },
+    select: ATTEMPT_SELECT_MINIMAL,
+  });
+
+  return { updated: true, attempt };
+}
+
+/**
+ * Pack40D3A — conditionally prepare claim → providerPending and persist key before invoke.
+ * Requires providerIdempotencyKey IS NULL so conflicting keys fail closed (zero-row update).
+ */
+export async function prepareVionaRequestExecutionAttemptForProvider(
+  client: VionaRequestExecutionAttemptClient,
+  input: PrepareVionaRequestExecutionAttemptForProviderInput,
+): Promise<{ updated: boolean; attempt: VionaRequestExecutionAttemptMinimal | null }> {
+  const result = await client.vionaRequestExecutionAttempt.updateMany({
+    where: {
+      id: input.attemptId,
+      requestId: input.expectedRequestId,
+      state: VionaRequestExecutionAttemptState.claimed,
+      leaseOwner: input.expectedLeaseOwner,
+      providerIdempotencyKey: null,
+    },
+    data: {
+      state: VionaRequestExecutionAttemptState.providerPending,
+      providerName: input.providerName,
+      operationCategory: input.operationCategory,
+      providerIdempotencyKey: input.providerIdempotencyKey,
+      providerStartedAt: input.providerStartedAt,
+    },
+  });
+
+  if (result.count !== 1) {
+    return { updated: false, attempt: null };
+  }
+
+  const attempt = await client.vionaRequestExecutionAttempt.findUnique({
+    where: { id: input.attemptId },
+    select: ATTEMPT_SELECT_MINIMAL,
+  });
+
+  return { updated: true, attempt };
+}
+
+/**
+ * Pack40D3A — record provider outcome against prepared providerPending row.
+ * Matches persisted provider name/operation/key; does not invent a new key.
+ */
+export async function recordPreparedVionaRequestExecutionAttemptProviderOutcome(
+  client: VionaRequestExecutionAttemptClient,
+  input: RecordPreparedVionaRequestExecutionAttemptProviderOutcomeInput,
+): Promise<{ updated: boolean; attempt: VionaRequestExecutionAttemptMinimal | null }> {
+  const result = await client.vionaRequestExecutionAttempt.updateMany({
+    where: {
+      id: input.attemptId,
+      requestId: input.expectedRequestId,
+      state: VionaRequestExecutionAttemptState.providerPending,
+      leaseOwner: input.expectedLeaseOwner,
+      providerName: input.expectedProviderName,
+      operationCategory: input.expectedOperationCategory,
+      providerIdempotencyKey: input.expectedProviderIdempotencyKey,
+    },
+    data: {
+      state: input.nextState,
+      providerFinishedAt: input.providerFinishedAt,
+      ...(input.providerResultDigest !== undefined
+        ? { providerResultDigest: input.providerResultDigest }
+        : {}),
+      ...(input.providerExternalReferenceDigest !== undefined
+        ? { providerExternalReferenceDigest: input.providerExternalReferenceDigest }
+        : {}),
+      ...(input.failureClass !== undefined ? { failureClass: input.failureClass } : {}),
+      ...(input.failureReasonDigest !== undefined
+        ? { failureReasonDigest: input.failureReasonDigest }
+        : {}),
     },
   });
 

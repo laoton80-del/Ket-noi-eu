@@ -1767,13 +1767,37 @@ async function main(): Promise<void> {
     );
   });
 
-  runTest('103. Pack40D3 remains unimplemented', () => {
+  runTest('103. Pack40D3 runtime wiring / Pack40D3B remain unimplemented', () => {
     const srcRoot = path.resolve(__dirname, '../src');
-    const hit = fs
-      .readdirSync(srcRoot, { recursive: true })
-      .map(String)
-      .some((f) => f.toLowerCase().includes('pack40d3') || f.includes('ExecutionGateway'));
-    assert(!hit, 'no D3 gateway file');
+    const files = fs.readdirSync(srcRoot, { recursive: true }).map(String);
+    assert(
+      !files.some((f) => f.toLowerCase().includes('pack40d3b')),
+      'no Pack40D3B implementation file',
+    );
+    // Pack40D3A may add a dormant gateway service; it must not be imported by D2 writer.
+    const d2 = readSource('../src/services/viona/vionaRequestIndirectStatusActionService.ts');
+    assert(!d2.includes('vionaRequestExecutionGatewayService'), 'D2 does not import gateway');
+    assert(!d2.includes('runVionaRequestExecutionProviderGateway'), 'D2 does not run gateway');
+    // No production runtime caller may import the gateway outside its own module + repository.
+    const banned = [
+      'vionaRequestExecutionGatewayService',
+      'runVionaRequestExecutionProviderGateway',
+    ];
+    const allow = [
+      path.normalize('services/viona/vionaRequestExecutionGatewayService.ts'),
+      path.normalize('services/viona/vionaRequestExecutionProviderContract.ts'),
+      path.normalize('repositories/vionaRequestExecutionAttemptRepository.ts'),
+      path.normalize('services/viona/vionaRequestIndirectStatusActionService.ts'),
+    ];
+    for (const file of files) {
+      if (!file.endsWith('.ts')) continue;
+      const norm = path.normalize(file);
+      if (allow.some((a) => norm.endsWith(a))) continue;
+      const source = fs.readFileSync(path.join(srcRoot, file), 'utf8');
+      for (const token of banned) {
+        assert(!source.includes(token), `${file} must not import ${token}`);
+      }
+    }
   });
 
   runTest('104. Pack40S remains unimplemented', () => {
