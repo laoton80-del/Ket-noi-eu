@@ -1160,6 +1160,16 @@ Pack40C direct status enforcement: CLOSED/GREEN
   No second POST matrix; requester-only live fixture unavailable (owner-only locally proven)
   Pack40A/B CLOSED/GREEN; Pack40D/S unimplemented
 
+=== PACK40D INDIRECT-PATH READINESS AUDIT ===
+Operator phrase: APPROVE_PACK40D_INDIRECT_PATH_READINESS_AUDIT
+Classification: PACK40D_REQUIRES_DIRECT_INDIRECT_STATE_WRITER_SPLIT
+Co-requisites: execution-principal refinement; execution-lease design; side-effect idempotency plan; possible execution-record schema
+Indirect status writer: vionaRequestExecutionOrchestrator only (triage->inProgress->completed|failed); not production-wired
+Provider side effects: previewVionaExecutionPlanRealProviderPocRoute + webhook dispatch (no orchestrator claim)
+Legacy unresolved: BLOCKED_LEGACY_EXECUTION_PATH in current source (orchestrator lacks scopeKind gate)
+No implementation, DB, staging, provider, deploy, migration, or secret action performed
+Next: review readiness PR; then bounded refinement or APPROVE_PACK40D_TENANT_INDIRECT_PATH_REVIEW_AND_IMPLEMENTATION
+
 === PACK40C STATUS ENFORCEMENT READINESS AUDIT ===
 Operator phrase: APPROVE_PACK40C_STATUS_ENFORCEMENT_READINESS_AUDIT
 Classification: READY_FOR_PACK40C_DIRECT_STATUS_IMPLEMENTATION
@@ -1197,8 +1207,9 @@ Next: APPROVE_PACK40CS_STAGING_TENANT_STATUS_ADVERSARIAL_QA (QA-only, separate)
    (implementation #352 @ ef6172e, staging deploy Pack40AD v24, adversarial QA Pack40AS
    #354 @ f5d78f5, closure sync #355 @ fa67491). **Pack40B CLOSED/GREEN**
    (implementation #356+#357, staging deploy Pack40BD v25, adversarial QA Pack40BS
-   #359 @ 8c038de; closure sync #360 @ 107be5f). **Pack40C:** readiness audit
-   READY_FOR_PACK40C_DIRECT_STATUS_IMPLEMENTATION; not implemented. Pack40D separately authorized.
+   #359 @ 8c038de; closure sync #360 @ 107be5f). **Pack40C CLOSED/GREEN**
+   (implementation #363, deploy #364 v26, QA #365, closure sync #366 @ e9ee2d7).
+   **Pack40D:** readiness audit complete; not implemented. **Pack40S:** unimplemented.
 4. TourismBooking shadow-DB replay issue — see DEFERRED/BACKLOG section above (item 2).
 5. Pack37's remaining, not-yet-issued authorization phrases:
    APPROVE_PACK37_OPENAI_STAGING_SECRET — DONE this session (see dedicated section above): key
