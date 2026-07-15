@@ -1,0 +1,21 @@
+{
+  "environment": "staging-redacted",
+  "migration": "20260715120000_pack40d1_add_viona_request_execution_attempt",
+  "migrationApplied": true,
+  "migrationFailedRecordExists": false,
+  "executionAttemptTableExists": true,
+  "executionAttemptRowCount": 0,
+  "partialActiveAttemptIndexExists": true,
+  "activeAttemptPredicateVerified": true,
+  "requestCountChanged": false,
+  "requestProvenanceChanged": false,
+  "requestStatusDistributionChanged": false,
+  "merchantProfileCountChanged": false,
+  "escrowCountChanged": false,
+  "applicationDeployed": false,
+  "apiRequestPerformed": false,
+  "providerCalled": false,
+  "productionTouched": false,
+  "pack40D2Implemented": false,
+  "pack40D3Implemented": false
+}
