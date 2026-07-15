@@ -1,0 +1,48 @@
+{
+  "pack": "Pack40CD",
+  "operatorPhrase": "APPROVE_PACK40CD_STAGING_STATUS_ENFORCEMENT_DEPLOY",
+  "classification": "READY_FOR_PACK40CD_DEPLOYMENT_EVIDENCE_PR_REVIEW",
+  "verifiedMasterSha": "9eb77144b9084733b385f3dea5e7d8a76515ae3d",
+  "implementationPr": {
+    "number": 363,
+    "state": "MERGED",
+    "mergedAt": "2026-07-15T13:40:12Z",
+    "mergeCommit": "9eb77144b9084733b385f3dea5e7d8a76515ae3d"
+  },
+  "stagingApp": "viona-api-staging-eu",
+  "stagingHostname": "https://viona-api-staging-eu.fly.dev",
+  "deployCommand": "fly deploy --app viona-api-staging-eu --remote-only",
+  "deploySourceSha": "9eb77144b9084733b385f3dea5e7d8a76515ae3d",
+  "previousRelease": {
+    "version": "v25",
+    "image": "deployment-01KXJTWQZCWPCTRK3B0SPKYJAT",
+    "contents": "Pack40B transactional note enforcement"
+  },
+  "newRelease": {
+    "version": "v26",
+    "image": "deployment-01KXK0CRXQ4KXVK719EQ5EZ532",
+    "contents": "Pack40C direct status enforcement on merged master"
+  },
+  "preDeployHealth": { "endpoint": "/health", "httpStatus": 200 },
+  "postDeployHealth": { "endpoint": "/health", "httpStatus": 200, "bodyStatus": "ok" },
+  "deployExitCode": 0,
+  "rollingStrategy": "rolling update (2 machines)",
+  "machineStatePostDeploy": "1 started (v26), 1 stopped (v26)",
+  "deployStartUtcApprox": "2026-07-15T13:45:10Z",
+  "machinesHealthyUtcApprox": "2026-07-15T13:46:14Z",
+  "releaseOverlap": true,
+  "flyLogLimitation": "fly logs not collected; existing environment may return 401 or hang on Windows",
+  "migrationCount": 16,
+  "latestMigration": "20260714120000_pack40p1_add_viona_request_provenance",
+  "newMigrationAdded": false,
+  "deployedStateMarkers": [
+    "PACK40C_DIRECT_STATUS_ENFORCEMENT_DEPLOYED_TO_STAGING",
+    "PACK40C_STAGING_ADVERSARIAL_QA_STILL_REQUIRED"
+  ],
+  "authenticatedQaPerformed": false,
+  "statusPostPerformed": false,
+  "databaseAccessed": false,
+  "migrationExecuted": false,
+  "secretChanged": false,
+  "productionTouched": false
+}
