@@ -3,7 +3,7 @@
 Status: **PLANNING ONLY (provenance-hardened refinement)** — docs-only. No product code,
 schema/migration, database action, deployment, staging call, or secret change is authorized.
 
-**Pack40A status:** **CLOSED / GREEN** — closure sync PR #355 @ `fa67491`. **Pack40B:** **CLOSED / GREEN** — implementation PR #356 @ `a165ca9` + transactional correction PR #357 @ `45c8f29`; Pack40BD deployed staging **v25** (PR #358 @ `44ff2f7`); Pack40BS adversarial note QA **GREEN** on v25 (PR #359 @ `8c038de`); closure sync PR #360 @ `107be5f`. **Pack40C:** **CLOSED / GREEN** — implementation PR #363 @ `9eb7714`; deployed staging **v26** (Pack40CD PR #364 @ `92244f4`); adversarial status QA **GREEN** (Pack40CS PR #365 @ `97d6ccc`; closure sync PR #366 @ `e9ee2d7`); **10** status POSTs; **2** `submitted→triage` transitions; **0** replay duplicates; **0** denied side effects. **Pack40D:** readiness audit authorized (`APPROVE_PACK40D_INDIRECT_PATH_READINESS_AUDIT`); **not implemented**. **Pack40S:** unimplemented.
+**Pack40A status:** **CLOSED / GREEN** — closure sync PR #355 @ `fa67491`. **Pack40B:** **CLOSED / GREEN** — implementation PR #356 @ `a165ca9` + transactional correction PR #357 @ `45c8f29`; Pack40BD deployed staging **v25** (PR #358 @ `44ff2f7`); Pack40BS adversarial note QA **GREEN** on v25 (PR #359 @ `8c038de`); closure sync PR #360 @ `107be5f`. **Pack40C:** **CLOSED / GREEN** — implementation PR #363 @ `9eb7714`; deployed staging **v26** (Pack40CD PR #364 @ `92244f4`); adversarial status QA **GREEN** (Pack40CS PR #365 @ `97d6ccc`; closure sync PR #366 @ `e9ee2d7`); **10** status POSTs; **2** `submitted→triage` transitions; **0** replay duplicates; **0** denied side effects. **Pack40D:** readiness audit PR #367 @ `21e7663`; execution-foundation refinement (`APPROVE_PACK40D_EXECUTION_FOUNDATION_REFINEMENT`); schema decision **`PACK40D_EXECUTION_ATTEMPT_SCHEMA_REQUIRED`**; merchant-only initial eligibility; **not implemented**. **Pack40S:** unimplemented.
 `docs/product/VIONA_PACK40P_REQUEST_PROVENANCE_MODEL_PLAN.md` for server-owned `scopeKind` +
 `merchantProfileId` schema/remediation plan, **P1 deployment lock**, and **P1→P3→P2→P2D** rollout order.
 Inventory complete (PR #342); consumer provenance requires Pack40P1–P5 (+ P2D) before
@@ -302,7 +302,7 @@ Unchanged structure. **No phrase implies another slice. No automatic continuatio
 | **Pack40A** | Principal context + read list/detail + three-state policy | **CLOSED / GREEN** — implementation merged; staging deploy v24; adversarial QA green |
 | **Pack40B** | Note enforcement | **CLOSED / GREEN** — PR #356+#357 merged; Pack40BD deployed v25; Pack40BS adversarial QA green (PR #359 @ `8c038de`); exactly **2** successful notes; replay idempotent (**0** duplicates); non-owner/legacy/spoof denied; existence-leak-safe **404** normalization |
 | **Pack40C** | Status enforcement | **CLOSED / GREEN** — PR #363+#364+#365; deploy v26; adversarial QA green; owner-only `submitted→triage`; 10 POSTs / 2 transitions / 0 duplicates |
-| **Pack40D** | Indirect paths after per-path review | **Readiness audit complete** — classification `PACK40D_REQUIRES_DIRECT_INDIRECT_STATE_WRITER_SPLIT`; **not implemented** |
+| **Pack40D** | Indirect paths after per-path review | **Foundation refined** — readiness PR #367; classification `READY_FOR_PACK40D1_EXECUTION_ATTEMPT_SCHEMA_PACKET`; merchant-only initial eligibility; consumer not supported; **not implemented** |
 | **Pack40S** | Staging adversarial QA | **Not authorized** |
 | **Discovery** | Read-only tenant provenance inventory | **Not authorized** — phrase below |
 
@@ -317,7 +317,9 @@ Unchanged structure. **No phrase implies another slice. No automatic continuatio
 | `APPROVE_PACK40B_TENANT_NOTE_ENFORCEMENT` | Pack40B only | C, D, staging |
 | `APPROVE_PACK40C_TENANT_STATUS_ENFORCEMENT` | Pack40C only | D, staging |
 | `APPROVE_PACK40D_INDIRECT_PATH_READINESS_AUDIT` | Pack40D read-only readiness audit (docs only) | implementation, DB, staging, deploy |
-| `APPROVE_PACK40D_TENANT_INDIRECT_PATH_REVIEW_AND_IMPLEMENTATION` | Pack40D after review | staging |
+| `APPROVE_PACK40D_EXECUTION_FOUNDATION_REFINEMENT` | Pack40D architecture refinement (docs only) | implementation, schema, DB, staging, deploy |
+| `APPROVE_PACK40D1_EXECUTION_ATTEMPT_SCHEMA` | Pack40D1 schema + repository only | D2+, provider, staging, deploy |
+| `APPROVE_PACK40D_TENANT_INDIRECT_PATH_REVIEW_AND_IMPLEMENTATION` | Legacy combined phrase — prefer D1→D2→D3 sequence | staging |
 | `APPROVE_PACK40_STAGING_TENANT_QA_PROVISIONING` | Staging data | impl, remediation |
 | `APPROVE_PACK40_STAGING_TENANT_ADVERSARIAL_QA` | Staging QA | remediation, deploy |
 
