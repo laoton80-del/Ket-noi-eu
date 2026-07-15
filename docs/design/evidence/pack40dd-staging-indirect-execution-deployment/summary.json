@@ -1,0 +1,34 @@
+{
+  "pack": "Pack40DD",
+  "authorization": "APPROVE_PACK40DD_STAGING_INDIRECT_EXECUTION_DEPLOY",
+  "classification": "READY_FOR_PACK40DD_DEPLOYMENT_EVIDENCE_PR_REVIEW",
+  "verifiedMasterSha": "548b6ecc4c19e124e729de069bbe283938b70040",
+  "pr373": {
+    "state": "MERGED",
+    "mergedAt": "2026-07-15T21:01:54Z",
+    "mergeCommit": "548b6ecc4c19e124e729de069bbe283938b70040"
+  },
+  "app": "viona-api-staging-eu",
+  "deployCommand": "fly deploy --app viona-api-staging-eu --remote-only",
+  "previousRelease": "v26",
+  "previousImageTag": "deployment-01KXK0CRXQ4KXVK719EQ5EZ532",
+  "newRelease": "v27",
+  "newImageTag": "deployment-01KXKSKRTN49GJW82A1ZAA8PXQ",
+  "newImageDigest": "sha256:5e227e5bb5753ae4202564323aad12226151c40572cd9e7937bd9ea577723fb8",
+  "preDeployHealth": 200,
+  "postDeployHealth": 200,
+  "deployExitCode": 0,
+  "markers": [
+    "PACK40D_CONTROLLED_INDIRECT_EXECUTION_DEPLOYED_TO_STAGING",
+    "PACK40D_LIVE_EXECUTION_QA_STILL_REQUIRED",
+    "PACK40D_SIGNED_WEBHOOK_EXECUTION_DISABLED",
+    "PACK40D_RECOVERY_RECONCILIATION_NOT_IMPLEMENTED"
+  ],
+  "executionInvoked": false,
+  "providerCalled": false,
+  "escrowMutated": false,
+  "databaseTouched": false,
+  "migrationRun": false,
+  "secretsChanged": false,
+  "productionTouched": false
+}

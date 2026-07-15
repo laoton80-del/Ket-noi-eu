@@ -1160,19 +1160,29 @@ Pack40C direct status enforcement: CLOSED/GREEN
   No second POST matrix; requester-only live fixture unavailable (owner-only locally proven)
   Pack40A/B CLOSED/GREEN; Pack40D/S unimplemented
 
+=== PACK40DD STAGING CONTROLLED INDIRECT EXECUTION DEPLOY ===
+Operator phrase: APPROVE_PACK40DD_STAGING_INDIRECT_EXECUTION_DEPLOY
+Master baseline: 548b6ec (PR #373 MERGED — Pack40D3B)
+App: viona-api-staging-eu release v27
+Image: deployment-01KXKSKRTN49GJW82A1ZAA8PXQ
+Pre/post GET /health HTTP 200
+No authenticated execution POST; no Twilio/escrow/DB/migration/secret/production
+Markers:
+  PACK40D_CONTROLLED_INDIRECT_EXECUTION_DEPLOYED_TO_STAGING
+  PACK40D_LIVE_EXECUTION_QA_STILL_REQUIRED
+  PACK40D_SIGNED_WEBHOOK_EXECUTION_DISABLED
+  PACK40D_RECOVERY_RECONCILIATION_NOT_IMPLEMENTED
+Pack40A/B/C CLOSED/GREEN; Pack40D not CLOSED/GREEN; Pack40S unauthorized
+Evidence: docs/product/VIONA_PACK40DD_STAGING_INDIRECT_EXECUTION_DEPLOYMENT_EVIDENCE.md
+Next: separately authorize Pack40D live execution QA
+
 === PACK40D3B CONTROLLED RUNTIME WIRING + BYPASS CLOSURE ===
 Operator phrase: APPROVE_PACK40D3B_CONTROLLED_RUNTIME_WIRING_AND_BYPASS_CLOSURE
-Master baseline: fb957ee (PR #372 MERGED — Pack40D3A)
+PR #373 MERGED @ 548b6ec
 Sole enabled trigger: internalAuthenticatedController
 Coordinator: D2 claim -> attempt-scoped escrow -> D3A gateway -> D2 finalize
-Single-shot Twilio adapter (no blind retry after uncertain)
-Signed webhook + approvedInternalDispatch execution disabled
-Direct POC route + dispatch Twilio bypasses closed
-Preview routes remain preview-only
-No staging deploy / live Twilio/escrow / recovery / Pack40S
-Pack40A/B/C CLOSED/GREEN; Pack40D not CLOSED/GREEN
+Single-shot Twilio adapter; signed webhook + approvedInternalDispatch disabled
 Evidence: docs/product/VIONA_PACK40D3B_CONTROLLED_RUNTIME_WIRING_EVIDENCE.md
-Next after D3B merge: separately authorize staging deployment
 
 === PACK40D3A PROVIDER GATEWAY FOUNDATION ===
 Operator phrase: APPROVE_PACK40D3A_PROVIDER_GATEWAY_FOUNDATION
@@ -1274,7 +1284,8 @@ Next: APPROVE_PACK40CS_STAGING_TENANT_STATUS_ADVERSARIAL_QA (QA-only, separate)
    **Pack40D:** readiness PR #367; foundation refinement PR #368 @ 79bddbe;
    Pack40D1 schema PR #369 @ 85bff59; staging migration evidence PR #370 @ a4dc273
    (APPLIED/GREEN, table empty); Pack40D2 PR #371 @ a3be6ae; Pack40D3A PR #372 @ fb957ee;
-   Pack40D3B controlled runtime wiring (single internal trigger; bypasses closed; not deployed);
+   Pack40D3B PR #373 @ 548b6ec; Pack40DD staged on viona-api-staging-eu **v27**
+   (deploy integrity only; live execution QA still required);
    Pack40D not CLOSED/GREEN.
    **Pack40S:** unimplemented.
 4. TourismBooking shadow-DB replay issue — see DEFERRED/BACKLOG section above (item 2).
