@@ -3,7 +3,7 @@
 Status: **PLANNING ONLY (provenance-hardened refinement)** — docs-only. No product code,
 schema/migration, database action, deployment, staging call, or secret change is authorized.
 
-**Pack40A status:** **CLOSED / GREEN** — closure sync PR #355 @ `fa67491`. **Pack40B:** PR #356 **MERGED** @ `a165ca9`; initial implementation had pre-transaction auth gap; **transactional refinement** under `APPROVE_PACK40B_TRANSACTIONAL_NOTE_AUTHORIZATION_REFINEMENT` — corrective PR review; **not** CLOSED/GREEN; **deploy BLOCKED pending transactional refinement merge**. Pack40C/D separately authorized.
+**Pack40A status:** **CLOSED / GREEN** — closure sync PR #355 @ `fa67491`. **Pack40B:** PR #356 **MERGED** @ `a165ca9` + corrective PR #357 @ `45c8f29`; Pack40BD deployed staging **v25**; Pack40BS adversarial QA **PASS** on v25 (`APPROVE_PACK40BS_STAGING_TENANT_NOTE_ADVERSARIAL_QA`) — **closure pending evidence PR merge**; Pack40C/D separately authorized.
 `docs/product/VIONA_PACK40P_REQUEST_PROVENANCE_MODEL_PLAN.md` for server-owned `scopeKind` +
 `merchantProfileId` schema/remediation plan, **P1 deployment lock**, and **P1→P3→P2→P2D** rollout order.
 Inventory complete (PR #342); consumer provenance requires Pack40P1–P5 (+ P2D) before
@@ -300,7 +300,7 @@ Unchanged structure. **No phrase implies another slice. No automatic continuatio
 | Slice | Scope | Authorized? |
 |---|---|---|
 | **Pack40A** | Principal context + read list/detail + three-state policy | **CLOSED / GREEN** — implementation merged; staging deploy v24; adversarial QA green |
-| **Pack40B** | Note enforcement | **TRANSACTIONAL REFINEMENT PR REVIEW** — PR #356 merged; `APPROVE_PACK40B_TRANSACTIONAL_NOTE_AUTHORIZATION_REFINEMENT`; Serializable in-tx principal; deploy blocked pending refinement merge |
+| **Pack40B** | Note enforcement | **QA PASS (closure pending evidence merge)** — PR #356+#357 merged; Pack40BD deployed v25; Pack40BS adversarial QA green on staging; exactly **2** successful notes; replay idempotent; non-owner/legacy/spoof denied; **not yet CLOSED/GREEN** until evidence PR merge |
 | **Pack40C** | Status enforcement | **Not authorized** — requires A merged |
 | **Pack40D** | Indirect paths after per-path review | **Not authorized** |
 | **Pack40S** | Staging adversarial QA | **Not authorized** |
