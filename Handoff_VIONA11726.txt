@@ -1150,7 +1150,13 @@ Pack40BS ADVERSARIAL QA GREEN on v25; evidence PR #359 merged @ 8c038de:
   - read-only DB otherwise; no deploy, migration, secret, or production action
   - transactional race scenarios locally proven (81-test suite), not manufactured on staging
 Pack40B note enforcement: CLOSED/GREEN
-Pack40C/D/S remain unimplemented — separately authorized
+Pack40C direct status enforcement: IMPLEMENTATION COMPLETE (local, not deployed)
+  Operator phrase: APPROVE_PACK40C_TENANT_STATUS_ENFORCEMENT
+  Owner-only DB predicate; submitted->triage only; Serializable auth-before-replay
+  93/93 Pack40C tests + full local pack regression PASS
+  No DB, staging, deploy, schema, or migration action
+  Pack40A/B unchanged; orchestrator unchanged; Pack40D/S unimplemented
+  Next: APPROVE_PACK40CD_STAGING_STATUS_ENFORCEMENT_DEPLOY (deploy-only, separate)
 
 === PACK40C STATUS ENFORCEMENT READINESS AUDIT ===
 Operator phrase: APPROVE_PACK40C_STATUS_ENFORCEMENT_READINESS_AUDIT
@@ -1160,7 +1166,7 @@ Direct surface: POST /api/viona/requests/:id/actions/status only
 Replay: auth before replay; replay before new-mutation submitted->triage validation
 Post-tx stateTransition hook: best-effort observability only (not Pack40D)
 No implementation, DB, staging, deploy, migration, or secret action performed
-Next: APPROVE_PACK40C_TENANT_STATUS_ENFORCEMENT (implementation only; no deploy/DB)
+Next: APPROVE_PACK40CD_STAGING_STATUS_ENFORCEMENT_DEPLOY (deploy-only; no QA)
 
 === DEFERRED / BACKLOG (recorded, not authorized — logged during Pack37 sync per operator instruction; items 3-4 from the Pack38 sync addressed by Pack39 implementation above and removed from this list) ===
 1. Pack36B: Merchant Admin UI (Frontend AI Persona & Webhook Secret configuration) - Deferred to

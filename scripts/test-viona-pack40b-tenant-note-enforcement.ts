@@ -1347,8 +1347,8 @@ async function main(): Promise<void> {
     assert(!readAccessScopeSource.includes('isActive'), 'read merchant branch unchanged');
   });
 
-  runTest('52: status-action service remains unchanged', () => {
-    assert(statusSource.includes('buildAuthorizedVionaRequestWhere(authUserId)'), 'status legacy scope');
+  runTest('52: status-action service uses Pack40C scope separate from note scope', () => {
+    assert(statusSource.includes('buildAuthorizedVionaRequestStatusWhere(principal)'), 'status pack40c scope');
     assert(!statusSource.includes('buildAuthorizedVionaRequestNoteWhere'), 'status has no note scope');
   });
 

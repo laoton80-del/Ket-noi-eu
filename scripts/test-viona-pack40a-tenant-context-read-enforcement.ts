@@ -643,9 +643,10 @@ async function main(): Promise<void> {
     assert(!noteSource.includes('pack40a_provenance'), 'note has no pack40a read flag');
   });
 
-  runTest('31: status service behavior is unchanged', () => {
-    assert(statusSource.includes('buildAuthorizedVionaRequestWhere(authUserId)'), 'status uses legacy scope');
-    assert(!statusSource.includes('pack40a_provenance'), 'status has no pack40a flag');
+  runTest('31: status service uses Pack40C mutation scope not Pack40A read policy', () => {
+    assert(statusSource.includes('buildAuthorizedVionaRequestStatusWhere(principal)'), 'status uses pack40c scope');
+    assert(statusSource.includes('resolveVionaRequestStatusPrincipalContext'), 'status resolves principal in tx');
+    assert(!statusSource.includes('pack40a_provenance'), 'status has no pack40a read flag');
   });
 
   runTest('32: request creation behavior is unchanged', () => {
