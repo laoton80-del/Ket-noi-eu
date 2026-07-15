@@ -1066,7 +1066,26 @@ Operator phrase: APPROVE_PACK40P4_STAGING_MERCHANT_BACKFILL_WRITE.
 Approved digest revalidated; exactly 5 rows updated (scopeKind + merchantProfileId only).
 Post-state: 5 merchant / 5 legacyUnresolved / 0 consumer. No consumer backfill, deploy, migration, secret, Pack40A.
 Evidence: docs/product/VIONA_PACK40P4_STAGING_MERCHANT_BACKFILL_WRITE_EVIDENCE.md
-Next: APPROVE_PACK40P5_STAGING_PROVENANCE_VERIFICATION (separately authorized).
+Next: Pack40A blocked until P5 evidence reviewed (see P5 section below).
+
+=== PACK40P5 STAGING PROVENANCE VERIFICATION (this session) — VERIFICATION ONLY ===
+Branch: chore/pack40p5-staging-provenance-verification (from master @ ee22193). PR #350 MERGED.
+Operator phrase: APPROVE_PACK40P5_STAGING_PROVENANCE_VERIFICATION.
+
+Pre-state: 5 legacyUnresolved / 5 merchant / 0 consumer / 10 total. Original backfill digest
+aa74f63813af18e26afca268175b2b40246159619cda5438aaf40c6d5f930213 verified. Five excluded
+non-webhook legacy rows preserved.
+
+Controlled creates: exactly 1 Pack19 row (consumer, merchantProfileId null, synthetic tenant
+marker pack40p5-consumer-ee22193) + exactly 1 Pack35 webhook row (merchant, trusted profile
+relation, marker pack40p5-webhook-ee22193). Pack36A-safe read-only fixture only; real tools 0;
+real outbound 0. No existing-row mutation, deploy, migration, backfill, secret change, production.
+Fly logs not used as gate (P2D limitation).
+
+Post-state: 5 legacyUnresolved / 6 merchant / 1 consumer / 12 total.
+Result: PACK40P_PROVENANCE_DEFINITION_OF_READY_MET. Pack40A not implemented.
+Evidence: docs/product/VIONA_PACK40P5_STAGING_PROVENANCE_VERIFICATION_EVIDENCE.md
+Next: review/merge P5 evidence PR; then separately authorize Pack40A.
 
 === DEFERRED / BACKLOG (recorded, not authorized — logged during Pack37 sync per operator instruction; items 3-4 from the Pack38 sync addressed by Pack39 implementation above and removed from this list) ===
 1. Pack36B: Merchant Admin UI (Frontend AI Persona & Webhook Secret configuration) - Deferred to
@@ -1092,8 +1111,9 @@ Next: APPROVE_PACK40P5_STAGING_PROVENANCE_VERIFICATION (separately authorized).
    dry-run, unscheduled); legal/compliance review of region-specific retention windows and PII
    rule values (explicitly not claimed by PR #310).
 3. Wire tenant enforcement into VionaRequest call sites — **Pack40A BLOCKED behind Pack40P**
-   (docs/product/VIONA_PACK40P_REQUEST_PROVENANCE_MODEL_PLAN.md). Pack40P4W staging write complete
-   (5 merchant rows backfilled); Pack40P5 provenance verification next (separately authorized).
+   (docs/product/VIONA_PACK40P_REQUEST_PROVENANCE_MODEL_PLAN.md). Pack40P5 staging provenance
+   verification complete (PACK40P_PROVENANCE_DEFINITION_OF_READY_MET); Pack40A requires separate
+   authorization after P5 evidence PR review/merge.
 4. TourismBooking shadow-DB replay issue — see DEFERRED/BACKLOG section above (item 2).
 5. Pack37's remaining, not-yet-issued authorization phrases:
    APPROVE_PACK37_OPENAI_STAGING_SECRET — DONE this session (see dedicated section above): key

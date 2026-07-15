@@ -1,0 +1,19 @@
+{
+  "environment": "staging-redacted",
+  "startingRelease": "v23-or-later-verified",
+  "originalBackfillCount": 5,
+  "originalBackfillDigestMatches": true,
+  "excludedLegacyRowsPreserved": 5,
+  "pack19RequestsCreated": 1,
+  "pack19ConsumerRowsVerified": 1,
+  "pack19MerchantProfileLinks": 0,
+  "pack35RequestsCreated": 1,
+  "pack35MerchantRowsVerified": 1,
+  "pack35MerchantProfileLinksVerified": 1,
+  "realToolExecutions": 0,
+  "realOutboundCommunications": 0,
+  "dataRowsCreated": 2,
+  "existingRowsModified": 0,
+  "pack40AImplemented": false,
+  "productionTouched": false
+}
