@@ -38,6 +38,8 @@ export type VionaRequestExecutionAttemptClient = Pick<
 >;
 
 export type CreateVionaRequestExecutionAttemptInput = Readonly<{
+  /** Optional server-generated id (deterministic tests / injected factories). */
+  id?: string;
   requestId: string;
   attemptNumber: number;
   executionKey: string;
@@ -59,6 +61,10 @@ export type TransitionVionaRequestExecutionAttemptStateInput = Readonly<{
   attemptId: string;
   expectedStates: readonly VionaRequestExecutionAttemptState[];
   nextState: VionaRequestExecutionAttemptState;
+  /** When set, the attempt must belong to this request (stale-/cross-request protection). */
+  expectedRequestId?: string;
+  /** When set, the attempt leaseOwner must match exactly. */
+  expectedLeaseOwner?: string | null;
   leaseOwner?: string | null;
   leaseExpiresAt?: Date | null;
   claimedAt?: Date | null;
@@ -117,6 +123,7 @@ export async function createVionaRequestExecutionAttempt(
 ): Promise<VionaRequestExecutionAttempt> {
   return client.vionaRequestExecutionAttempt.create({
     data: {
+      ...(input.id != null && input.id.length > 0 ? { id: input.id } : {}),
       requestId: input.requestId,
       attemptNumber: input.attemptNumber,
       executionKey: input.executionKey,
@@ -168,6 +175,22 @@ export async function findActiveVionaRequestExecutionAttemptForRequest(
   });
 }
 
+/**
+ * Pack40D2 — transaction-scoped max attemptNumber for one request.
+ * Callers must allocate next = max + 1 inside the same Serializable transaction.
+ */
+export async function findMaxAttemptNumberForRequest(
+  client: VionaRequestExecutionAttemptClient,
+  requestId: string,
+): Promise<number> {
+  const latest = await client.vionaRequestExecutionAttempt.findFirst({
+    where: { requestId },
+    select: { attemptNumber: true },
+    orderBy: { attemptNumber: 'desc' },
+  });
+  return latest?.attemptNumber ?? 0;
+}
+
 export async function findVionaRequestExecutionAttemptByProviderIdempotencyKey(
   client: VionaRequestExecutionAttemptClient,
   providerIdempotencyKey: string,
@@ -186,6 +209,10 @@ export async function transitionVionaRequestExecutionAttemptState(
     where: {
       id: input.attemptId,
       state: { in: [...input.expectedStates] },
+      ...(input.expectedRequestId != null ? { requestId: input.expectedRequestId } : {}),
+      ...(input.expectedLeaseOwner !== undefined
+        ? { leaseOwner: input.expectedLeaseOwner }
+        : {}),
     },
     data: {
       state: input.nextState,
@@ -193,7 +220,9 @@ export async function transitionVionaRequestExecutionAttemptState(
       ...(input.leaseExpiresAt !== undefined ? { leaseExpiresAt: input.leaseExpiresAt } : {}),
       ...(input.claimedAt !== undefined ? { claimedAt: input.claimedAt } : {}),
       ...(input.failureClass !== undefined ? { failureClass: input.failureClass } : {}),
-      ...(input.failureReasonDigest !== undefined ? { failureReasonDigest: input.failureReasonDigest } : {}),
+      ...(input.failureReasonDigest !== undefined
+        ? { failureReasonDigest: input.failureReasonDigest }
+        : {}),
       ...(input.finalizedAt !== undefined ? { finalizedAt: input.finalizedAt } : {}),
       ...(input.abandonedAt !== undefined ? { abandonedAt: input.abandonedAt } : {}),
     },
