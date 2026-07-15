@@ -3,7 +3,7 @@
 Status: **PLANNING ONLY (provenance-hardened refinement)** — docs-only. No product code,
 schema/migration, database action, deployment, staging call, or secret change is authorized.
 
-**Pack40A status:** **IMPLEMENTED locally (PR review)** — Pack40P definition-of-ready met (PR #351 @ `13efae8`); see `docs/product/VIONA_PACK40A_TENANT_CONTEXT_READ_ENFORCEMENT_EVIDENCE.md`. Staging deploy/QA **not authorized** by Pack40A implementation phrase.
+**Pack40A status:** **STAGING QA GREEN — closure pending evidence PR merge** — implementation PR #352 @ `ef6172e`; deployed Pack40AD **v24**; adversarial GET-only QA Pack40AS **`PACK40A_STAGING_ADVERSARIAL_QA_GREEN`**. Evidence: `docs/product/VIONA_PACK40AS_STAGING_TENANT_ADVERSARIAL_QA_EVIDENCE.md`. Pack40B/C/D remain blocked.
 `docs/product/VIONA_PACK40P_REQUEST_PROVENANCE_MODEL_PLAN.md` for server-owned `scopeKind` +
 `merchantProfileId` schema/remediation plan, **P1 deployment lock**, and **P1→P3→P2→P2D** rollout order.
 Inventory complete (PR #342); consumer provenance requires Pack40P1–P5 (+ P2D) before
@@ -299,7 +299,7 @@ Unchanged structure. **No phrase implies another slice. No automatic continuatio
 
 | Slice | Scope | Authorized? |
 |---|---|---|
-| **Pack40A** | Principal context + read list/detail + three-state policy | **IMPLEMENTED (local, PR review)** — staging deploy separately authorized |
+| **Pack40A** | Principal context + read list/detail + three-state policy | **STAGING QA GREEN** — deploy v24 + Pack40AS adversarial QA pass; closure pending evidence merge |
 | **Pack40B** | Note enforcement | **Not authorized** — requires A merged |
 | **Pack40C** | Status enforcement | **Not authorized** — requires A merged |
 | **Pack40D** | Indirect paths after per-path review | **Not authorized** |
@@ -418,5 +418,5 @@ requires); denial audit type; automatic implementation.
 | v2 unsafe registry rule | **Rejected in v3** |
 | Consumer provenance from source | **Unknown** |
 | Three-state model | **Defined** |
-| Pack40A ready | **Implemented locally — PR review** |
+| Pack40A ready | **Staging adversarial QA green — closure pending evidence merge** |
 | Overlapping implementation | **None** |
