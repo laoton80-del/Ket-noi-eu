@@ -18,7 +18,7 @@ import {
   VIONA_REQUEST_NOTE_EVENT_TYPE,
 } from '../src/services/viona/vionaRequestNoteActionService';
 import { buildAuthorizedVionaRequestReadWhere } from '../src/services/viona/vionaRequestReadAccessScope';
-import type { VionaRequestReadPrincipalContext } from '../src/services/viona/vionaRequestReadPrincipalContext';
+import type { VionaRequestNotePrincipalContext } from '../src/services/viona/vionaRequestNotePrincipalContext';
 
 type TestRow = Readonly<{
   id: string;
@@ -89,7 +89,7 @@ function userScopeMatches(row: TestRow, authUserId: string): boolean {
   );
 }
 
-function noteProvenanceMatches(row: TestRow, principal: VionaRequestReadPrincipalContext): boolean {
+function noteProvenanceMatches(row: TestRow, principal: VionaRequestNotePrincipalContext): boolean {
   if (row.scopeKind === VionaRequestScopeKind.consumer && row.merchantProfileId === null) {
     return true;
   }
@@ -106,7 +106,7 @@ function noteProvenanceMatches(row: TestRow, principal: VionaRequestReadPrincipa
   return false;
 }
 
-function rowAuthorizedForNote(row: TestRow, authUserId: string, principal: VionaRequestReadPrincipalContext): boolean {
+function rowAuthorizedForNote(row: TestRow, authUserId: string, principal: VionaRequestNotePrincipalContext): boolean {
   return userScopeMatches(row, authUserId) && noteProvenanceMatches(row, principal);
 }
 
@@ -144,7 +144,7 @@ function matchesRequestWhere(
   row: TestRow,
   authUserId: string,
   where: Prisma.VionaRequestWhereInput,
-  principal: VionaRequestReadPrincipalContext,
+  principal: VionaRequestNotePrincipalContext,
 ): boolean {
   if (where.id != null && row.id !== where.id) {
     return false;
@@ -156,11 +156,12 @@ function matchesRequestWhere(
   return userScopeMatches(row, authUserId);
 }
 
-function dualRolePrincipal(isActive: boolean): VionaRequestReadPrincipalContext {
+function dualRolePrincipal(isActive: boolean): VionaRequestNotePrincipalContext {
   return {
     authUserId: USER_DUAL,
     merchantProfile: {
       id: PROFILE_DUAL,
+      ownerUserId: USER_DUAL,
       tenantId: TENANT_DUAL,
       isActive,
     },
@@ -168,11 +169,12 @@ function dualRolePrincipal(isActive: boolean): VionaRequestReadPrincipalContext 
   };
 }
 
-function merchantPrincipal(isActive: boolean): VionaRequestReadPrincipalContext {
+function merchantPrincipal(isActive: boolean): VionaRequestNotePrincipalContext {
   return {
     authUserId: USER_MERCHANT,
     merchantProfile: {
       id: PROFILE_MERCHANT,
+      ownerUserId: USER_MERCHANT,
       tenantId: TENANT_MERCHANT,
       isActive,
     },
@@ -182,13 +184,16 @@ function merchantPrincipal(isActive: boolean): VionaRequestReadPrincipalContext 
 
 type FakeNotePrismaState = {
   rows: TestRow[];
-  principal: VionaRequestReadPrincipalContext;
+  transactionalPrincipal: VionaRequestNotePrincipalContext;
   auditEvents: AuditRow[];
-  profileLookups: number;
+  preTxProfileLookups: number;
+  txProfileLookups: number;
   requestFindFirstCalls: number;
   auditCreates: number;
   failAuditCreate: boolean;
+  failTransaction: boolean;
   transactionCount: number;
+  transactionIsolationLevel?: string;
 };
 
 function installFakeNotePrisma(state: FakeNotePrismaState): void {
@@ -226,15 +231,18 @@ function installFakeNotePrisma(state: FakeNotePrismaState): void {
   const self: FakeTx = {
     merchantProfile: {
       findUnique: async () => {
-        state.profileLookups += 1;
-        if (state.principal.merchantProfileResolution !== 'single' || state.principal.merchantProfile == null) {
+        state.txProfileLookups += 1;
+        if (
+          state.transactionalPrincipal.merchantProfileResolution !== 'single' ||
+          state.transactionalPrincipal.merchantProfile == null
+        ) {
           return null;
         }
         return {
-          id: state.principal.merchantProfile.id,
-          tenantId: state.principal.merchantProfile.tenantId,
-          ownerUserId: state.principal.authUserId,
-          isActive: state.principal.merchantProfile.isActive,
+          id: state.transactionalPrincipal.merchantProfile.id,
+          tenantId: state.transactionalPrincipal.merchantProfile.tenantId,
+          ownerUserId: state.transactionalPrincipal.merchantProfile.ownerUserId,
+          isActive: state.transactionalPrincipal.merchantProfile.isActive,
         } satisfies Partial<MerchantProfile>;
       },
       findMany: async () => {
@@ -245,7 +253,7 @@ function installFakeNotePrisma(state: FakeNotePrismaState): void {
       findFirst: async ({ where }: { where: Prisma.VionaRequestWhereInput & { id?: string } }) => {
         state.requestFindFirstCalls += 1;
         const match = state.rows.find((row) =>
-          matchesRequestWhere(row, state.principal.authUserId, where, state.principal),
+          matchesRequestWhere(row, state.transactionalPrincipal.authUserId, where, state.transactionalPrincipal),
         );
         if (!match) return null;
         const detail = makeDetailRow(match);
@@ -308,8 +316,15 @@ function installFakeNotePrisma(state: FakeNotePrismaState): void {
         return { id: created.id };
       },
     },
-    $transaction: async <T>(fn: (tx: typeof self) => Promise<T>): Promise<T> => {
+    $transaction: async <T>(
+      fn: (tx: FakeTx) => Promise<T>,
+      options?: { isolationLevel?: string },
+    ): Promise<T> => {
       state.transactionCount += 1;
+      state.transactionIsolationLevel = options?.isolationLevel;
+      if (state.failTransaction) {
+        throw new Error('transaction rejected');
+      }
       return fn(self);
     },
     _state: state,
@@ -413,9 +428,11 @@ async function main(): Promise<void> {
   await runAsyncTest('1: consumer owner without MerchantProfile can create a note', async () => {
     const state: FakeNotePrismaState = {
       rows: [consumerRow],
-      principal: { authUserId: USER_CONSUMER, merchantProfile: null, merchantProfileResolution: 'none' },
+      transactionalPrincipal: { authUserId: USER_CONSUMER, merchantProfile: null, merchantProfileResolution: 'none' },
       auditEvents: [],
-      profileLookups: 0,
+      preTxProfileLookups: 0,
+      txProfileLookups: 0,
+      failTransaction: false,
       requestFindFirstCalls: 0,
       auditCreates: 0,
       failAuditCreate: false,
@@ -435,7 +452,7 @@ async function main(): Promise<void> {
   await runAsyncTest('2: consumer owner replay preserves idempotency', async () => {
     const state: FakeNotePrismaState = {
       rows: [consumerRow],
-      principal: { authUserId: USER_CONSUMER, merchantProfile: null, merchantProfileResolution: 'none' },
+      transactionalPrincipal: { authUserId: USER_CONSUMER, merchantProfile: null, merchantProfileResolution: 'none' },
       auditEvents: [
         {
           id: 'audit-existing',
@@ -444,7 +461,9 @@ async function main(): Promise<void> {
           payloadJson: { idempotencyKey: 'key-1', note: 'prior' },
         },
       ],
-      profileLookups: 0,
+      preTxProfileLookups: 0,
+      txProfileLookups: 0,
+      failTransaction: false,
       requestFindFirstCalls: 0,
       auditCreates: 0,
       failAuditCreate: false,
@@ -465,9 +484,11 @@ async function main(): Promise<void> {
   await runAsyncTest('3: dual-role actor can create note on consumer request', async () => {
     const state: FakeNotePrismaState = {
       rows: [dualConsumerRow],
-      principal: dualRolePrincipal(true),
+      transactionalPrincipal: dualRolePrincipal(true),
       auditEvents: [],
-      profileLookups: 0,
+      preTxProfileLookups: 0,
+      txProfileLookups: 0,
+      failTransaction: false,
       requestFindFirstCalls: 0,
       auditCreates: 0,
       failAuditCreate: false,
@@ -486,9 +507,11 @@ async function main(): Promise<void> {
   await runAsyncTest('4: inactive merchant ownership does not block consumer note', async () => {
     const state: FakeNotePrismaState = {
       rows: [dualConsumerRow],
-      principal: dualRolePrincipal(false),
+      transactionalPrincipal: dualRolePrincipal(false),
       auditEvents: [],
-      profileLookups: 0,
+      preTxProfileLookups: 0,
+      txProfileLookups: 0,
+      failTransaction: false,
       requestFindFirstCalls: 0,
       auditCreates: 0,
       failAuditCreate: false,
@@ -517,9 +540,11 @@ async function main(): Promise<void> {
   await runAsyncTest('6: consumer row with non-null merchantProfileId is denied', async () => {
     const state: FakeNotePrismaState = {
       rows: [malformedConsumerRow],
-      principal: { authUserId: USER_CONSUMER, merchantProfile: null, merchantProfileResolution: 'none' },
+      transactionalPrincipal: { authUserId: USER_CONSUMER, merchantProfile: null, merchantProfileResolution: 'none' },
       auditEvents: [],
-      profileLookups: 0,
+      preTxProfileLookups: 0,
+      txProfileLookups: 0,
+      failTransaction: false,
       requestFindFirstCalls: 0,
       auditCreates: 0,
       failAuditCreate: false,
@@ -538,9 +563,11 @@ async function main(): Promise<void> {
   await runAsyncTest('7: another user consumer request is denied', async () => {
     const state: FakeNotePrismaState = {
       rows: [otherConsumerRow],
-      principal: { authUserId: USER_CONSUMER, merchantProfile: null, merchantProfileResolution: 'none' },
+      transactionalPrincipal: { authUserId: USER_CONSUMER, merchantProfile: null, merchantProfileResolution: 'none' },
       auditEvents: [],
-      profileLookups: 0,
+      preTxProfileLookups: 0,
+      txProfileLookups: 0,
+      failTransaction: false,
       requestFindFirstCalls: 0,
       auditCreates: 0,
       failAuditCreate: false,
@@ -559,9 +586,11 @@ async function main(): Promise<void> {
   await runAsyncTest('8: denied consumer attempt creates no note audit', async () => {
     const state: FakeNotePrismaState = {
       rows: [otherConsumerRow],
-      principal: { authUserId: USER_CONSUMER, merchantProfile: null, merchantProfileResolution: 'none' },
+      transactionalPrincipal: { authUserId: USER_CONSUMER, merchantProfile: null, merchantProfileResolution: 'none' },
       auditEvents: [],
-      profileLookups: 0,
+      preTxProfileLookups: 0,
+      txProfileLookups: 0,
+      failTransaction: false,
       requestFindFirstCalls: 0,
       auditCreates: 0,
       failAuditCreate: false,
@@ -580,9 +609,11 @@ async function main(): Promise<void> {
   await runAsyncTest('9: active merchant owner can create note on exact merchant request', async () => {
     const state: FakeNotePrismaState = {
       rows: [merchantRow],
-      principal: merchantPrincipal(true),
+      transactionalPrincipal: merchantPrincipal(true),
       auditEvents: [],
-      profileLookups: 0,
+      preTxProfileLookups: 0,
+      txProfileLookups: 0,
+      failTransaction: false,
       requestFindFirstCalls: 0,
       auditCreates: 0,
       failAuditCreate: false,
@@ -601,7 +632,7 @@ async function main(): Promise<void> {
   await runAsyncTest('10: active merchant replay preserves idempotency', async () => {
     const state: FakeNotePrismaState = {
       rows: [merchantRow],
-      principal: merchantPrincipal(true),
+      transactionalPrincipal: merchantPrincipal(true),
       auditEvents: [
         {
           id: 'audit-merchant',
@@ -610,7 +641,9 @@ async function main(): Promise<void> {
           payloadJson: { idempotencyKey: 'm-key', note: 'prior' },
         },
       ],
-      profileLookups: 0,
+      preTxProfileLookups: 0,
+      txProfileLookups: 0,
+      failTransaction: false,
       requestFindFirstCalls: 0,
       auditCreates: 0,
       failAuditCreate: false,
@@ -630,9 +663,11 @@ async function main(): Promise<void> {
   await runAsyncTest('11: inactive merchant owner is denied', async () => {
     const state: FakeNotePrismaState = {
       rows: [merchantRow],
-      principal: merchantPrincipal(false),
+      transactionalPrincipal: merchantPrincipal(false),
       auditEvents: [],
-      profileLookups: 0,
+      preTxProfileLookups: 0,
+      txProfileLookups: 0,
+      failTransaction: false,
       requestFindFirstCalls: 0,
       auditCreates: 0,
       failAuditCreate: false,
@@ -651,9 +686,11 @@ async function main(): Promise<void> {
   await runAsyncTest('12: same tenant wrong MerchantProfile ID is denied', async () => {
     const state: FakeNotePrismaState = {
       rows: [wrongProfileMerchantRow],
-      principal: merchantPrincipal(true),
+      transactionalPrincipal: merchantPrincipal(true),
       auditEvents: [],
-      profileLookups: 0,
+      preTxProfileLookups: 0,
+      txProfileLookups: 0,
+      failTransaction: false,
       requestFindFirstCalls: 0,
       auditCreates: 0,
       failAuditCreate: false,
@@ -672,9 +709,11 @@ async function main(): Promise<void> {
   await runAsyncTest('13: same profile ID tenant mismatch is denied', async () => {
     const state: FakeNotePrismaState = {
       rows: [tenantMismatchRow],
-      principal: merchantPrincipal(true),
+      transactionalPrincipal: merchantPrincipal(true),
       auditEvents: [],
-      profileLookups: 0,
+      preTxProfileLookups: 0,
+      txProfileLookups: 0,
+      failTransaction: false,
       requestFindFirstCalls: 0,
       auditCreates: 0,
       failAuditCreate: false,
@@ -693,9 +732,11 @@ async function main(): Promise<void> {
   await runAsyncTest('14: merchant row with null merchantProfileId is denied', async () => {
     const state: FakeNotePrismaState = {
       rows: [nullProfileMerchantRow],
-      principal: merchantPrincipal(true),
+      transactionalPrincipal: merchantPrincipal(true),
       auditEvents: [],
-      profileLookups: 0,
+      preTxProfileLookups: 0,
+      txProfileLookups: 0,
+      failTransaction: false,
       requestFindFirstCalls: 0,
       auditCreates: 0,
       failAuditCreate: false,
@@ -714,9 +755,11 @@ async function main(): Promise<void> {
   await runAsyncTest('15: merchant owner cannot mutate another merchant request', async () => {
     const state: FakeNotePrismaState = {
       rows: [otherMerchantRow],
-      principal: merchantPrincipal(true),
+      transactionalPrincipal: merchantPrincipal(true),
       auditEvents: [],
-      profileLookups: 0,
+      preTxProfileLookups: 0,
+      txProfileLookups: 0,
+      failTransaction: false,
       requestFindFirstCalls: 0,
       auditCreates: 0,
       failAuditCreate: false,
@@ -749,9 +792,11 @@ async function main(): Promise<void> {
   await runAsyncTest('17: no-profile actor cannot mutate merchant request', async () => {
     const state: FakeNotePrismaState = {
       rows: [merchantRow],
-      principal: { authUserId: USER_CONSUMER, merchantProfile: null, merchantProfileResolution: 'none' },
+      transactionalPrincipal: { authUserId: USER_CONSUMER, merchantProfile: null, merchantProfileResolution: 'none' },
       auditEvents: [],
-      profileLookups: 0,
+      preTxProfileLookups: 0,
+      txProfileLookups: 0,
+      failTransaction: false,
       requestFindFirstCalls: 0,
       auditCreates: 0,
       failAuditCreate: false,
@@ -770,9 +815,11 @@ async function main(): Promise<void> {
   await runAsyncTest('18: ambiguous profile resolution cannot authorize merchant mutation', async () => {
     const state: FakeNotePrismaState = {
       rows: [merchantRow],
-      principal: { authUserId: USER_MERCHANT, merchantProfile: null, merchantProfileResolution: 'ambiguous' },
+      transactionalPrincipal: { authUserId: USER_MERCHANT, merchantProfile: null, merchantProfileResolution: 'ambiguous' },
       auditEvents: [],
-      profileLookups: 0,
+      preTxProfileLookups: 0,
+      txProfileLookups: 0,
+      failTransaction: false,
       requestFindFirstCalls: 0,
       auditCreates: 0,
       failAuditCreate: false,
@@ -799,9 +846,11 @@ async function main(): Promise<void> {
   await runAsyncTest('19: denied merchant attempt creates no note audit', async () => {
     const state: FakeNotePrismaState = {
       rows: [merchantRow],
-      principal: merchantPrincipal(false),
+      transactionalPrincipal: merchantPrincipal(false),
       auditEvents: [],
-      profileLookups: 0,
+      preTxProfileLookups: 0,
+      txProfileLookups: 0,
+      failTransaction: false,
       requestFindFirstCalls: 0,
       auditCreates: 0,
       failAuditCreate: false,
@@ -820,9 +869,11 @@ async function main(): Promise<void> {
   await runAsyncTest('20: legacy unresolved owner is denied', async () => {
     const state: FakeNotePrismaState = {
       rows: [legacyRow],
-      principal: dualRolePrincipal(true),
+      transactionalPrincipal: dualRolePrincipal(true),
       auditEvents: [],
-      profileLookups: 0,
+      preTxProfileLookups: 0,
+      txProfileLookups: 0,
+      failTransaction: false,
       requestFindFirstCalls: 0,
       auditCreates: 0,
       failAuditCreate: false,
@@ -848,9 +899,11 @@ async function main(): Promise<void> {
     });
     const state: FakeNotePrismaState = {
       rows: [row],
-      principal: dualRolePrincipal(true),
+      transactionalPrincipal: dualRolePrincipal(true),
       auditEvents: [],
-      profileLookups: 0,
+      preTxProfileLookups: 0,
+      txProfileLookups: 0,
+      failTransaction: false,
       requestFindFirstCalls: 0,
       auditCreates: 0,
       failAuditCreate: false,
@@ -876,9 +929,11 @@ async function main(): Promise<void> {
     });
     const state: FakeNotePrismaState = {
       rows: [row],
-      principal: dualRolePrincipal(true),
+      transactionalPrincipal: dualRolePrincipal(true),
       auditEvents: [],
-      profileLookups: 0,
+      preTxProfileLookups: 0,
+      txProfileLookups: 0,
+      failTransaction: false,
       requestFindFirstCalls: 0,
       auditCreates: 0,
       failAuditCreate: false,
@@ -904,9 +959,11 @@ async function main(): Promise<void> {
     });
     const state: FakeNotePrismaState = {
       rows: [row],
-      principal: dualRolePrincipal(true),
+      transactionalPrincipal: dualRolePrincipal(true),
       auditEvents: [],
-      profileLookups: 0,
+      preTxProfileLookups: 0,
+      txProfileLookups: 0,
+      failTransaction: false,
       requestFindFirstCalls: 0,
       auditCreates: 0,
       failAuditCreate: false,
@@ -936,9 +993,11 @@ async function main(): Promise<void> {
   await runAsyncTest('25: denied unresolved attempt creates no mutation', async () => {
     const state: FakeNotePrismaState = {
       rows: [legacyRow],
-      principal: dualRolePrincipal(true),
+      transactionalPrincipal: dualRolePrincipal(true),
       auditEvents: [],
-      profileLookups: 0,
+      preTxProfileLookups: 0,
+      txProfileLookups: 0,
+      failTransaction: false,
       requestFindFirstCalls: 0,
       auditCreates: 0,
       failAuditCreate: false,
@@ -979,7 +1038,7 @@ async function main(): Promise<void> {
   await runAsyncTest('31: idempotency key cannot bypass provenance enforcement', async () => {
     const state: FakeNotePrismaState = {
       rows: [legacyRow],
-      principal: dualRolePrincipal(true),
+      transactionalPrincipal: dualRolePrincipal(true),
       auditEvents: [
         {
           id: 'audit-bypass',
@@ -988,7 +1047,9 @@ async function main(): Promise<void> {
           payloadJson: { idempotencyKey: 'bypass-key', note: 'prior' },
         },
       ],
-      profileLookups: 0,
+      preTxProfileLookups: 0,
+      txProfileLookups: 0,
+      failTransaction: false,
       requestFindFirstCalls: 0,
       auditCreates: 0,
       failAuditCreate: false,
@@ -1008,9 +1069,11 @@ async function main(): Promise<void> {
   await runAsyncTest('32: exactly one MerchantProfile resolution occurs per note request', async () => {
     const state: FakeNotePrismaState = {
       rows: [consumerRow],
-      principal: { authUserId: USER_CONSUMER, merchantProfile: null, merchantProfileResolution: 'none' },
+      transactionalPrincipal: { authUserId: USER_CONSUMER, merchantProfile: null, merchantProfileResolution: 'none' },
       auditEvents: [],
-      profileLookups: 0,
+      preTxProfileLookups: 0,
+      txProfileLookups: 0,
+      failTransaction: false,
       requestFindFirstCalls: 0,
       auditCreates: 0,
       failAuditCreate: false,
@@ -1022,7 +1085,8 @@ async function main(): Promise<void> {
       requestId: consumerRow.id,
       note: 'one lookup',
     });
-    assert(state.profileLookups === 1, 'one profile lookup');
+    assert(state.preTxProfileLookups === 0, 'no pre-transaction profile lookup');
+    assert(state.txProfileLookups === 1, 'one in-transaction profile lookup');
     clearFakePrisma();
   });
 
@@ -1055,9 +1119,11 @@ async function main(): Promise<void> {
   await runAsyncTest('38: note-write failure rolls back via transaction rejection', async () => {
     const state: FakeNotePrismaState = {
       rows: [consumerRow],
-      principal: { authUserId: USER_CONSUMER, merchantProfile: null, merchantProfileResolution: 'none' },
+      transactionalPrincipal: { authUserId: USER_CONSUMER, merchantProfile: null, merchantProfileResolution: 'none' },
       auditEvents: [],
-      profileLookups: 0,
+      preTxProfileLookups: 0,
+      txProfileLookups: 0,
+      failTransaction: false,
       requestFindFirstCalls: 0,
       auditCreates: 0,
       failAuditCreate: true,
@@ -1079,8 +1145,24 @@ async function main(): Promise<void> {
     clearFakePrisma();
   });
 
-  runTest('39: audit and note share one transaction wrapper', () => {
+  runTest('39: audit and note share one Serializable transaction wrapper', () => {
     assert(noteServiceSource.includes('$transaction'), 'uses transaction');
+    assert(
+      noteServiceSource.includes('TransactionIsolationLevel.Serializable'),
+      'uses Serializable isolation',
+    );
+    assert(
+      !noteServiceSource.includes('resolveVionaRequestReadPrincipalContext'),
+      'no pre-transaction Pack40A read resolver',
+    );
+    assert(
+      noteServiceSource.includes('resolveVionaRequestNotePrincipalContext'),
+      'uses note-specific transactional resolver',
+    );
+    assert(
+      !noteServiceSource.includes('findIdempotentNoteAuditEvent(prisma,'),
+      'no pre-transaction idempotency fast path',
+    );
   });
 
   runTest('40: existing transaction/idempotency contract remains intact', () => {
@@ -1115,9 +1197,11 @@ async function main(): Promise<void> {
   await runAsyncTest('43: wrong owner returns not-found-safe result', async () => {
     const state: FakeNotePrismaState = {
       rows: [otherConsumerRow],
-      principal: { authUserId: USER_CONSUMER, merchantProfile: null, merchantProfileResolution: 'none' },
+      transactionalPrincipal: { authUserId: USER_CONSUMER, merchantProfile: null, merchantProfileResolution: 'none' },
       auditEvents: [],
-      profileLookups: 0,
+      preTxProfileLookups: 0,
+      txProfileLookups: 0,
+      failTransaction: false,
       requestFindFirstCalls: 0,
       auditCreates: 0,
       failAuditCreate: false,
@@ -1136,9 +1220,11 @@ async function main(): Promise<void> {
   await runAsyncTest('44: wrong profile returns same result', async () => {
     const state: FakeNotePrismaState = {
       rows: [wrongProfileMerchantRow],
-      principal: merchantPrincipal(true),
+      transactionalPrincipal: merchantPrincipal(true),
       auditEvents: [],
-      profileLookups: 0,
+      preTxProfileLookups: 0,
+      txProfileLookups: 0,
+      failTransaction: false,
       requestFindFirstCalls: 0,
       auditCreates: 0,
       failAuditCreate: false,
@@ -1157,9 +1243,11 @@ async function main(): Promise<void> {
   await runAsyncTest('45: inactive merchant returns same result', async () => {
     const state: FakeNotePrismaState = {
       rows: [merchantRow],
-      principal: merchantPrincipal(false),
+      transactionalPrincipal: merchantPrincipal(false),
       auditEvents: [],
-      profileLookups: 0,
+      preTxProfileLookups: 0,
+      txProfileLookups: 0,
+      failTransaction: false,
       requestFindFirstCalls: 0,
       auditCreates: 0,
       failAuditCreate: false,
@@ -1178,9 +1266,11 @@ async function main(): Promise<void> {
   await runAsyncTest('46: tenant mismatch returns same result', async () => {
     const state: FakeNotePrismaState = {
       rows: [tenantMismatchRow],
-      principal: merchantPrincipal(true),
+      transactionalPrincipal: merchantPrincipal(true),
       auditEvents: [],
-      profileLookups: 0,
+      preTxProfileLookups: 0,
+      txProfileLookups: 0,
+      failTransaction: false,
       requestFindFirstCalls: 0,
       auditCreates: 0,
       failAuditCreate: false,
@@ -1199,9 +1289,11 @@ async function main(): Promise<void> {
   await runAsyncTest('47: legacy unresolved returns same result', async () => {
     const state: FakeNotePrismaState = {
       rows: [legacyRow],
-      principal: dualRolePrincipal(true),
+      transactionalPrincipal: dualRolePrincipal(true),
       auditEvents: [],
-      profileLookups: 0,
+      preTxProfileLookups: 0,
+      txProfileLookups: 0,
+      failTransaction: false,
       requestFindFirstCalls: 0,
       auditCreates: 0,
       failAuditCreate: false,
@@ -1220,9 +1312,11 @@ async function main(): Promise<void> {
   await runAsyncTest('48: nonexistent request returns same result', async () => {
     const state: FakeNotePrismaState = {
       rows: [],
-      principal: merchantPrincipal(true),
+      transactionalPrincipal: merchantPrincipal(true),
       auditEvents: [],
-      profileLookups: 0,
+      preTxProfileLookups: 0,
+      txProfileLookups: 0,
+      failTransaction: false,
       requestFindFirstCalls: 0,
       auditCreates: 0,
       failAuditCreate: false,
@@ -1289,12 +1383,398 @@ async function main(): Promise<void> {
     assert(!noteServiceSource.includes('git diff'), 'no git diff assertion');
   });
 
+  console.log('\nPack40B transactional refinement tests\n');
+
+  runTest('tx-1: profile lookup uses transaction client', () => {
+    assert(
+      readSource('../src/services/viona/vionaRequestNotePrincipalContext.ts').includes(
+        'tx.merchantProfile.findUnique',
+      ),
+      'transaction client lookup',
+    );
+  });
+
+  runTest('tx-2: no authorization profile lookup occurs before transaction', () => {
+    const appendFn =
+      noteServiceSource.match(/export async function appendVionaRequestNote[\s\S]*?\n}\s*$/)?.[0] ?? '';
+    assert(!appendFn.includes('resolveVionaRequestNotePrincipalContext'), 'append does not resolve pre-tx');
+    assert(appendFn.includes('$transaction'), 'append enters transaction before mutation');
+  });
+
+  await runAsyncTest('tx-3: transaction uses Serializable isolation', async () => {
+    const state: FakeNotePrismaState = {
+      rows: [consumerRow],
+      transactionalPrincipal: { authUserId: USER_CONSUMER, merchantProfile: null, merchantProfileResolution: 'none' },
+      auditEvents: [],
+      preTxProfileLookups: 0,
+      txProfileLookups: 0,
+      failTransaction: false,
+      requestFindFirstCalls: 0,
+      auditCreates: 0,
+      failAuditCreate: false,
+      transactionCount: 0,
+    };
+    installFakeNotePrisma(state);
+    await appendVionaRequestNote({
+      authUserId: USER_CONSUMER,
+      requestId: consumerRow.id,
+      note: 'serializable',
+    });
+    assert(state.transactionIsolationLevel === 'Serializable', 'Serializable isolation');
+    clearFakePrisma();
+  });
+
+  await runAsyncTest('tx-4: inactive transactional state denies merchant note', async () => {
+    const state: FakeNotePrismaState = {
+      rows: [merchantRow],
+      transactionalPrincipal: merchantPrincipal(false),
+      auditEvents: [],
+      preTxProfileLookups: 0,
+      txProfileLookups: 0,
+      failTransaction: false,
+      requestFindFirstCalls: 0,
+      auditCreates: 0,
+      failAuditCreate: false,
+      transactionCount: 0,
+    };
+    installFakeNotePrisma(state);
+    const result = await appendVionaRequestNote({
+      authUserId: USER_MERCHANT,
+      requestId: merchantRow.id,
+      note: 'denied inactive',
+    });
+    assert(!result.ok && result.reason === deniedReason, 'inactive denied');
+    assert(state.auditCreates === 0, 'no audit');
+    clearFakePrisma();
+  });
+
+  await runAsyncTest('tx-5: changed transactional tenant denies merchant note', async () => {
+    const state: FakeNotePrismaState = {
+      rows: [merchantRow],
+      transactionalPrincipal: {
+        authUserId: USER_MERCHANT,
+        merchantProfile: {
+          id: PROFILE_MERCHANT,
+          ownerUserId: USER_MERCHANT,
+          tenantId: TENANT_OTHER,
+          isActive: true,
+        },
+        merchantProfileResolution: 'single',
+      },
+      auditEvents: [],
+      preTxProfileLookups: 0,
+      txProfileLookups: 0,
+      failTransaction: false,
+      requestFindFirstCalls: 0,
+      auditCreates: 0,
+      failAuditCreate: false,
+      transactionCount: 0,
+    };
+    installFakeNotePrisma(state);
+    const result = await appendVionaRequestNote({
+      authUserId: USER_MERCHANT,
+      requestId: merchantRow.id,
+      note: 'denied tenant drift',
+    });
+    assert(!result.ok && result.reason === deniedReason, 'tenant drift denied');
+    clearFakePrisma();
+  });
+
+  await runAsyncTest('tx-6: missing transactional profile denies merchant note', async () => {
+    const state: FakeNotePrismaState = {
+      rows: [merchantRow],
+      transactionalPrincipal: { authUserId: USER_MERCHANT, merchantProfile: null, merchantProfileResolution: 'none' },
+      auditEvents: [],
+      preTxProfileLookups: 0,
+      txProfileLookups: 0,
+      failTransaction: false,
+      requestFindFirstCalls: 0,
+      auditCreates: 0,
+      failAuditCreate: false,
+      transactionCount: 0,
+    };
+    installFakeNotePrisma(state);
+    const result = await appendVionaRequestNote({
+      authUserId: USER_MERCHANT,
+      requestId: merchantRow.id,
+      note: 'denied no profile',
+    });
+    assert(!result.ok && result.reason === deniedReason, 'missing profile denied');
+    clearFakePrisma();
+  });
+
+  await runAsyncTest('tx-7: consumer note succeeds when MerchantProfile transactionally inactive', async () => {
+    const state: FakeNotePrismaState = {
+      rows: [dualConsumerRow],
+      transactionalPrincipal: dualRolePrincipal(false),
+      auditEvents: [],
+      preTxProfileLookups: 0,
+      txProfileLookups: 0,
+      failTransaction: false,
+      requestFindFirstCalls: 0,
+      auditCreates: 0,
+      failAuditCreate: false,
+      transactionCount: 0,
+    };
+    installFakeNotePrisma(state);
+    const result = await appendVionaRequestNote({
+      authUserId: USER_DUAL,
+      requestId: dualConsumerRow.id,
+      note: 'consumer independent',
+    });
+    assert(result.ok, 'consumer still ok');
+    clearFakePrisma();
+  });
+
+  await runAsyncTest('tx-8: consumer note succeeds when merchant tenant changes transactionally', async () => {
+    const state: FakeNotePrismaState = {
+      rows: [dualConsumerRow],
+      transactionalPrincipal: {
+        authUserId: USER_DUAL,
+        merchantProfile: {
+          id: PROFILE_DUAL,
+          ownerUserId: USER_DUAL,
+          tenantId: TENANT_OTHER,
+          isActive: true,
+        },
+        merchantProfileResolution: 'single',
+      },
+      auditEvents: [],
+      preTxProfileLookups: 0,
+      txProfileLookups: 0,
+      failTransaction: false,
+      requestFindFirstCalls: 0,
+      auditCreates: 0,
+      failAuditCreate: false,
+      transactionCount: 0,
+    };
+    installFakeNotePrisma(state);
+    const result = await appendVionaRequestNote({
+      authUserId: USER_DUAL,
+      requestId: dualConsumerRow.id,
+      note: 'consumer unaffected by tenant drift',
+    });
+    assert(result.ok, 'consumer unaffected');
+    clearFakePrisma();
+  });
+
+  await runAsyncTest('tx-9: active merchant note remains green', async () => {
+    const state: FakeNotePrismaState = {
+      rows: [merchantRow],
+      transactionalPrincipal: merchantPrincipal(true),
+      auditEvents: [],
+      preTxProfileLookups: 0,
+      txProfileLookups: 0,
+      failTransaction: false,
+      requestFindFirstCalls: 0,
+      auditCreates: 0,
+      failAuditCreate: false,
+      transactionCount: 0,
+    };
+    installFakeNotePrisma(state);
+    const result = await appendVionaRequestNote({
+      authUserId: USER_MERCHANT,
+      requestId: merchantRow.id,
+      note: 'merchant ok',
+    });
+    assert(result.ok, 'merchant note ok');
+    clearFakePrisma();
+  });
+
+  await runAsyncTest('tx-10: replay after merchant deactivation is denied', async () => {
+    const state: FakeNotePrismaState = {
+      rows: [merchantRow],
+      transactionalPrincipal: merchantPrincipal(false),
+      auditEvents: [
+        {
+          id: 'audit-replay-inactive',
+          requestId: merchantRow.id,
+          eventType: VIONA_REQUEST_NOTE_EVENT_TYPE,
+          payloadJson: { idempotencyKey: 'inactive-replay', note: 'prior' },
+        },
+      ],
+      preTxProfileLookups: 0,
+      txProfileLookups: 0,
+      failTransaction: false,
+      requestFindFirstCalls: 0,
+      auditCreates: 0,
+      failAuditCreate: false,
+      transactionCount: 0,
+    };
+    installFakeNotePrisma(state);
+    const result = await appendVionaRequestNote({
+      authUserId: USER_MERCHANT,
+      requestId: merchantRow.id,
+      note: 'replay denied',
+      idempotencyKey: 'inactive-replay',
+    });
+    assert(!result.ok && result.reason === deniedReason, 'inactive replay denied');
+    assert(state.auditCreates === 0, 'no new audit');
+    clearFakePrisma();
+  });
+
+  await runAsyncTest('tx-11: replay after tenant change is denied', async () => {
+    const state: FakeNotePrismaState = {
+      rows: [merchantRow],
+      transactionalPrincipal: {
+        authUserId: USER_MERCHANT,
+        merchantProfile: {
+          id: PROFILE_MERCHANT,
+          ownerUserId: USER_MERCHANT,
+          tenantId: TENANT_OTHER,
+          isActive: true,
+        },
+        merchantProfileResolution: 'single',
+      },
+      auditEvents: [
+        {
+          id: 'audit-replay-tenant',
+          requestId: merchantRow.id,
+          eventType: VIONA_REQUEST_NOTE_EVENT_TYPE,
+          payloadJson: { idempotencyKey: 'tenant-replay', note: 'prior' },
+        },
+      ],
+      preTxProfileLookups: 0,
+      txProfileLookups: 0,
+      failTransaction: false,
+      requestFindFirstCalls: 0,
+      auditCreates: 0,
+      failAuditCreate: false,
+      transactionCount: 0,
+    };
+    installFakeNotePrisma(state);
+    const result = await appendVionaRequestNote({
+      authUserId: USER_MERCHANT,
+      requestId: merchantRow.id,
+      note: 'replay denied',
+      idempotencyKey: 'tenant-replay',
+    });
+    assert(!result.ok && result.reason === deniedReason, 'tenant replay denied');
+    clearFakePrisma();
+  });
+
+  await runAsyncTest('tx-12: replay by wrong-profile owner is denied', async () => {
+    const state: FakeNotePrismaState = {
+      rows: [wrongProfileMerchantRow],
+      transactionalPrincipal: merchantPrincipal(true),
+      auditEvents: [
+        {
+          id: 'audit-replay-wrong-profile',
+          requestId: wrongProfileMerchantRow.id,
+          eventType: VIONA_REQUEST_NOTE_EVENT_TYPE,
+          payloadJson: { idempotencyKey: 'wrong-profile-replay', note: 'prior' },
+        },
+      ],
+      preTxProfileLookups: 0,
+      txProfileLookups: 0,
+      failTransaction: false,
+      requestFindFirstCalls: 0,
+      auditCreates: 0,
+      failAuditCreate: false,
+      transactionCount: 0,
+    };
+    installFakeNotePrisma(state);
+    const result = await appendVionaRequestNote({
+      authUserId: USER_MERCHANT,
+      requestId: wrongProfileMerchantRow.id,
+      note: 'replay denied',
+      idempotencyKey: 'wrong-profile-replay',
+    });
+    assert(!result.ok && result.reason === deniedReason, 'wrong profile replay denied');
+    clearFakePrisma();
+  });
+
+  await runAsyncTest('tx-13: replay against legacy unresolved is denied', async () => {
+    const state: FakeNotePrismaState = {
+      rows: [legacyRow],
+      transactionalPrincipal: dualRolePrincipal(true),
+      auditEvents: [
+        {
+          id: 'audit-replay-legacy',
+          requestId: legacyRow.id,
+          eventType: VIONA_REQUEST_NOTE_EVENT_TYPE,
+          payloadJson: { idempotencyKey: 'legacy-replay', note: 'prior' },
+        },
+      ],
+      preTxProfileLookups: 0,
+      txProfileLookups: 0,
+      failTransaction: false,
+      requestFindFirstCalls: 0,
+      auditCreates: 0,
+      failAuditCreate: false,
+      transactionCount: 0,
+    };
+    installFakeNotePrisma(state);
+    const result = await appendVionaRequestNote({
+      authUserId: USER_DUAL,
+      requestId: legacyRow.id,
+      note: 'replay denied',
+      idempotencyKey: 'legacy-replay',
+    });
+    assert(!result.ok && result.reason === deniedReason, 'legacy replay denied');
+    clearFakePrisma();
+  });
+
+  runTest('tx-14: authorization occurs before idempotency replay in source order', () => {
+    const mutationFn =
+      noteServiceSource.match(/async function executeAuthorizedNoteMutation[\s\S]*?\n}/)?.[0] ?? '';
+    const authIndex = mutationFn.indexOf('requestRow == null');
+    const idempotencyIndex = mutationFn.indexOf('findIdempotentNoteAuditEvent');
+    assert(authIndex > 0 && idempotencyIndex > authIndex, 'auth before idempotency');
+  });
+
+  await runAsyncTest('tx-15: transaction rejection produces no partial write', async () => {
+    const state: FakeNotePrismaState = {
+      rows: [consumerRow],
+      transactionalPrincipal: { authUserId: USER_CONSUMER, merchantProfile: null, merchantProfileResolution: 'none' },
+      auditEvents: [],
+      preTxProfileLookups: 0,
+      txProfileLookups: 0,
+      failTransaction: true,
+      requestFindFirstCalls: 0,
+      auditCreates: 0,
+      failAuditCreate: false,
+      transactionCount: 0,
+    };
+    installFakeNotePrisma(state);
+    let threw = false;
+    try {
+      await appendVionaRequestNote({
+        authUserId: USER_CONSUMER,
+        requestId: consumerRow.id,
+        note: 'tx rejected',
+      });
+    } catch {
+      threw = true;
+    }
+    assert(threw, 'transaction rejection throws');
+    assert(state.auditEvents.length === 0, 'no partial audit');
+    clearFakePrisma();
+  });
+
+  runTest('tx-16: no pre-transaction stale authorizedWhere survives in service', () => {
+    const appendFn =
+      noteServiceSource.match(/export async function appendVionaRequestNote[\s\S]*?\n}\s*$/)?.[0] ?? '';
+    assert(!appendFn.includes('buildAuthorizedVionaRequestNoteWhere'), 'append does not build where pre-tx');
+    assert(
+      /async \(tx\) =>[\s\S]*executeAuthorizedNoteMutation\(\s*tx,/.test(noteServiceSource),
+      'mutation executes only with transaction client',
+    );
+  });
+
+  runTest('tx-17: Pack40A read behavior remains unchanged', () => {
+    assert(readServiceSource.includes("directReadPolicy !== 'pack40a_provenance'"), 'read opt-in preserved');
+    assert(!readServiceSource.includes('resolveVionaRequestNotePrincipalContext'), 'read has no note resolver');
+  });
+
   await runAsyncTest('dual-role: consumer note succeeds through consumer provenance', async () => {
     const state: FakeNotePrismaState = {
       rows: [dualConsumerRow, dualMerchantRow],
-      principal: dualRolePrincipal(true),
+      transactionalPrincipal: dualRolePrincipal(true),
       auditEvents: [],
-      profileLookups: 0,
+      preTxProfileLookups: 0,
+      txProfileLookups: 0,
+      failTransaction: false,
       requestFindFirstCalls: 0,
       auditCreates: 0,
       failAuditCreate: false,
@@ -1313,9 +1793,11 @@ async function main(): Promise<void> {
   await runAsyncTest('dual-role: merchant note succeeds while profile active and exact', async () => {
     const state: FakeNotePrismaState = {
       rows: [dualConsumerRow, dualMerchantRow],
-      principal: dualRolePrincipal(true),
+      transactionalPrincipal: dualRolePrincipal(true),
       auditEvents: [],
-      profileLookups: 0,
+      preTxProfileLookups: 0,
+      txProfileLookups: 0,
+      failTransaction: false,
       requestFindFirstCalls: 0,
       auditCreates: 0,
       failAuditCreate: false,
@@ -1334,9 +1816,11 @@ async function main(): Promise<void> {
   await runAsyncTest('dual-role: deactivating profile blocks only merchant note', async () => {
     const state: FakeNotePrismaState = {
       rows: [dualMerchantRow],
-      principal: dualRolePrincipal(false),
+      transactionalPrincipal: dualRolePrincipal(false),
       auditEvents: [],
-      profileLookups: 0,
+      preTxProfileLookups: 0,
+      txProfileLookups: 0,
+      failTransaction: false,
       requestFindFirstCalls: 0,
       auditCreates: 0,
       failAuditCreate: false,
@@ -1355,9 +1839,11 @@ async function main(): Promise<void> {
   await runAsyncTest('dual-role: consumer note remains permitted after merchant deactivation', async () => {
     const state: FakeNotePrismaState = {
       rows: [dualConsumerRow],
-      principal: dualRolePrincipal(false),
+      transactionalPrincipal: dualRolePrincipal(false),
       auditEvents: [],
-      profileLookups: 0,
+      preTxProfileLookups: 0,
+      txProfileLookups: 0,
+      failTransaction: false,
       requestFindFirstCalls: 0,
       auditCreates: 0,
       failAuditCreate: false,

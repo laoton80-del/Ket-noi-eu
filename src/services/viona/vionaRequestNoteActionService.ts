@@ -1,4 +1,4 @@
-import type { Prisma } from '@prisma/client';
+import { Prisma, type Prisma as PrismaTypes } from '@prisma/client';
 
 import { getPrisma } from '../../lib/prisma';
 import { buildAuthorizedVionaRequestNoteWhere } from './vionaRequestNoteAccessScope';
@@ -7,11 +7,11 @@ import type {
   AppendVionaRequestNoteResult,
 } from './vionaRequestNoteActionDto';
 import { VIONA_REQUEST_NOTE_ACTION_SAFETY } from './vionaRequestNoteActionDto';
-import { getVionaRequestById } from './vionaRequestReadService';
 import {
-  resolveVionaRequestReadPrincipalContext,
-  type ResolveVionaRequestReadPrincipalContextDeps,
-} from './vionaRequestReadPrincipalContext';
+  resolveVionaRequestNotePrincipalContext,
+  type ResolveVionaRequestNotePrincipalContextDeps,
+} from './vionaRequestNotePrincipalContext';
+import { getVionaRequestById } from './vionaRequestReadService';
 
 export const VIONA_REQUEST_NOTE_EVENT_TYPE = 'action.note';
 export const VIONA_REQUEST_NOTE_MAX_LENGTH = 4000;
@@ -38,22 +38,30 @@ const REQUEST_SCOPE_SELECT = {
       participantRoleLabel: true,
     },
   },
-} as const satisfies Prisma.VionaRequestSelect;
+} as const satisfies PrismaTypes.VionaRequestSelect;
 
-type RequestScopeRow = Prisma.VionaRequestGetPayload<{
+type RequestScopeRow = PrismaTypes.VionaRequestGetPayload<{
   select: typeof REQUEST_SCOPE_SELECT;
 }>;
 
 type NoteMutationPrisma = Pick<
   ReturnType<typeof getPrisma>,
-  'vionaRequest' | 'vionaRequestAuditEvent'
+  'vionaRequest' | 'vionaRequestAuditEvent' | 'merchantProfile'
 >;
 
 export type AppendVionaRequestNoteDeps = Readonly<
-  ResolveVionaRequestReadPrincipalContextDeps & {
-    prisma?: NoteMutationPrisma & Pick<ReturnType<typeof getPrisma>, '$transaction'>;
+  ResolveVionaRequestNotePrincipalContextDeps & {
+    prisma?: NoteMutationPrisma &
+      Pick<ReturnType<typeof getPrisma>, '$transaction'>;
   }
 >;
+
+type NoteTxClient = NoteMutationPrisma;
+
+type NoteTxResult =
+  | Readonly<{ kind: 'denied' }>
+  | Readonly<{ kind: 'replay'; auditEventId: string }>
+  | Readonly<{ kind: 'created'; auditEventId: string }>;
 
 function resolveActorRoleLabel(row: RequestScopeRow, authUserId: string): string {
   if (row.requesterUserId === authUserId) {
@@ -95,7 +103,7 @@ function buildNotePayloadJson(input: {
   note: string;
   idempotencyKey?: string;
   clientCorrelationId?: string;
-}): Prisma.InputJsonValue {
+}): PrismaTypes.InputJsonValue {
   const payload: Record<string, string> = { note: input.note };
   if (input.idempotencyKey != null) {
     payload.idempotencyKey = input.idempotencyKey;
@@ -107,7 +115,7 @@ function buildNotePayloadJson(input: {
 }
 
 async function findIdempotentNoteAuditEvent(
-  prisma: NoteMutationPrisma,
+  prisma: Pick<NoteTxClient, 'vionaRequestAuditEvent'>,
   requestId: string,
   idempotencyKey: string
 ): Promise<{ id: string } | null> {
@@ -122,6 +130,68 @@ async function findIdempotentNoteAuditEvent(
     },
     select: { id: true },
   });
+}
+
+async function executeAuthorizedNoteMutation(
+  tx: NoteTxClient,
+  input: Readonly<{
+    authUserId: string;
+    requestId: string;
+    note: string;
+    idempotencyKey?: string;
+    clientCorrelationId?: string;
+  }>,
+  deps: ResolveVionaRequestNotePrincipalContextDeps,
+): Promise<NoteTxResult> {
+  const principal = await resolveVionaRequestNotePrincipalContext(
+    input.authUserId,
+    tx,
+    deps,
+  );
+  const authorizedWhere = buildAuthorizedVionaRequestNoteWhere(principal);
+
+  const requestRow = await tx.vionaRequest.findFirst({
+    where: {
+      id: input.requestId,
+      ...authorizedWhere,
+    },
+    select: REQUEST_SCOPE_SELECT,
+  });
+
+  if (requestRow == null) {
+    return { kind: 'denied' };
+  }
+
+  if (input.idempotencyKey != null) {
+    const existing = await findIdempotentNoteAuditEvent(
+      tx,
+      input.requestId,
+      input.idempotencyKey,
+    );
+    if (existing != null) {
+      return { kind: 'replay', auditEventId: existing.id };
+    }
+  }
+
+  const payloadJson = buildNotePayloadJson({
+    note: input.note,
+    idempotencyKey: input.idempotencyKey,
+    clientCorrelationId: input.clientCorrelationId,
+  });
+
+  const auditEvent = await tx.vionaRequestAuditEvent.create({
+    data: {
+      requestId: input.requestId,
+      eventType: VIONA_REQUEST_NOTE_EVENT_TYPE,
+      actorUserId: input.authUserId,
+      actorRoleLabel: resolveActorRoleLabel(requestRow, input.authUserId),
+      message: 'Request note appended.',
+      payloadJson,
+    },
+    select: { id: true },
+  });
+
+  return { kind: 'created', auditEventId: auditEvent.id };
 }
 
 /**
@@ -163,88 +233,27 @@ export async function appendVionaRequestNote(
     return { ok: false, reason: 'invalid_input' };
   }
 
-  const principal = await resolveVionaRequestReadPrincipalContext(authUserId, deps);
-  const authorizedWhere = buildAuthorizedVionaRequestNoteWhere(principal);
   const prisma = deps.prisma ?? getPrisma();
 
-  if (idempotencyKey != null) {
-    const existing = await findIdempotentNoteAuditEvent(prisma, requestId, idempotencyKey);
-    if (existing != null) {
-      const authorizedRow = await prisma.vionaRequest.findFirst({
-        where: {
-          id: requestId,
-          ...authorizedWhere,
+  const txResult = await prisma.$transaction(
+    async (tx) =>
+      executeAuthorizedNoteMutation(
+        tx,
+        {
+          authUserId,
+          requestId,
+          note,
+          idempotencyKey,
+          clientCorrelationId,
         },
-        select: { id: true },
-      });
-      if (authorizedRow == null) {
-        return { ok: false, reason: 'request_not_found' };
-      }
-      const detail = await getVionaRequestById({ authUserId, requestId });
-      if (!detail.ok) {
-        return { ok: false, reason: 'request_not_found' };
-      }
-      return {
-        ok: true,
-        data: detail.data,
-        action: {
-          auditEventId: existing.id,
-          eventType: 'action.note',
-          idempotentReplay: true,
-        },
-        safety: VIONA_REQUEST_NOTE_ACTION_SAFETY,
-      };
-    }
-  }
+        deps,
+      ),
+    {
+      isolationLevel: Prisma.TransactionIsolationLevel.Serializable,
+    },
+  );
 
-  const txResult = await prisma.$transaction(async (tx) => {
-    const requestRow = await tx.vionaRequest.findFirst({
-      where: {
-        id: requestId,
-        ...authorizedWhere,
-      },
-      select: REQUEST_SCOPE_SELECT,
-    });
-
-    if (requestRow == null) {
-      return null;
-    }
-
-    if (idempotencyKey != null) {
-      const existingInTx = await findIdempotentNoteAuditEvent(tx, requestId, idempotencyKey);
-      if (existingInTx != null) {
-        return {
-          auditEventId: existingInTx.id,
-          idempotentReplay: true as const,
-        };
-      }
-    }
-
-    const payloadJson = buildNotePayloadJson({
-      note,
-      idempotencyKey,
-      clientCorrelationId,
-    });
-
-    const auditEvent = await tx.vionaRequestAuditEvent.create({
-      data: {
-        requestId,
-        eventType: VIONA_REQUEST_NOTE_EVENT_TYPE,
-        actorUserId: authUserId,
-        actorRoleLabel: resolveActorRoleLabel(requestRow, authUserId),
-        message: 'Request note appended.',
-        payloadJson,
-      },
-      select: { id: true },
-    });
-
-    return {
-      auditEventId: auditEvent.id,
-      idempotentReplay: false as const,
-    };
-  });
-
-  if (txResult == null) {
+  if (txResult.kind === 'denied') {
     return { ok: false, reason: 'request_not_found' };
   }
 
@@ -259,7 +268,7 @@ export async function appendVionaRequestNote(
     action: {
       auditEventId: txResult.auditEventId,
       eventType: 'action.note',
-      idempotentReplay: txResult.idempotentReplay,
+      idempotentReplay: txResult.kind === 'replay',
     },
     safety: VIONA_REQUEST_NOTE_ACTION_SAFETY,
   };
