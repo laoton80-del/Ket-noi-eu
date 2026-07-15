@@ -1,63 +1,46 @@
 /**
- * Pack31 — Business Flow Orchestrator: State Lock -> Real Execution -> Finalize State -> Audit.
+ * Pack40D3B — thin Pack40D execution coordinator.
  *
- * Operator phrase: APPROVE_PACK31_ORCHESTRATOR_DIRECT_PRISMA.
+ * Operator phrase: APPROVE_PACK40D3B_CONTROLLED_RUNTIME_WIRING_AND_BYPASS_CLOSURE
  *
- * WHY A NEW FILE (not a change to `vionaRequestStatusActionService.ts`, by explicit operator
- * instruction): that service's `transitionVionaRequestStatus()` wraps its status update inside a
- * single Prisma `$transaction()` alongside its audit writes. A real-provider network call
- * (Twilio) must never execute while a DB transaction/row lock is held open for the duration of an
- * external HTTP round-trip. This orchestrator therefore issues its own, separate,
- * non-transactional Prisma statements before and after the network call. Per operator
- * instruction, `vionaRequestStatusActionService.ts` is not imported, read, or modified by this
- * file.
+ * Sequences only:
+ *   Pack40D2 claim → attempt-scoped escrow hold → Pack40D3A gateway → escrow resolve → Pack40D2 finalize
  *
- * DOMAIN NOTE: the pre-existing `VionaRequestStatus` enum had no "currently executing" value.
- * Rather than write an unrecognized string into `VionaRequest.status` (a plain `String` column —
- * see prisma/schema.prisma — so an invalid value would silently corrupt every other reader of
- * that column instead of failing loudly), this pack additively introduced exactly one new, valid
- * status, `'inProgress'`, across 3 domain files: `vionaRequestTypes.ts`,
- * `vionaRequestStatusMachine.ts`, `vionaRequestExecutionEligibilityGuard.ts`. Zero existing
- * statuses or transitions were changed or removed — see each file's Pack31-orchestrator comment.
- *
- * SAFETY BOUNDARIES PRESERVED (raw Prisma is used only for the two status writes below; every
- * other protection this codebase already relies on remains fully intact and is never bypassed):
- *   - Owner-only: every write is scoped by `ownerUserId: authUserId`, mirroring the exact
- *     ownership check `vionaRequestStatusActionService.ts` itself enforces.
- *   - Valid-transition-only: every status change is checked against the same, unmodified
- *     `canTransitionRequestStatus()` state machine before being attempted.
- *   - Atomic claim, fail-closed: the Step 1 lock is a single conditional `updateMany`
- *     (`WHERE status = 'triage' AND ownerUserId = :authUserId`). A concurrent second call, a
- *     wrong owner, or a request not in `triage` all see 0 rows updated and return `invalid_state`
- *     — never a guess, never a retry, never a partial claim.
- *   - Real execution is delegated, unmodified, to `previewVionaExecutionPlanRealProviderPocRoute()`
- *     — the feature-flag gate, Circuit Breaker, Twilio magic-number allowlist, and Zero-Loss VIO
- *     Credits escrow hold/settle are all still enforced exactly as before. This orchestrator adds
- *     a request-level state machine *around* that call; it never reaches into or bypasses what
- *     happens inside it.
- *   - Every terminal outcome (`completed` or `failed`) is durably recorded — both a
- *     `VionaRequestStatusEvent` row and a `stateTransition` audit-ledger row — before returning,
- *     mirroring the dual-write pattern `vionaRequestStatusActionService.ts` itself uses.
- *
- * KNOWN, PRE-EXISTING LIMITATION INHERITED (not introduced by this file): the underlying
- * `previewVionaExecutionPlanRealProviderPocRoute()`'s Pack25 hold/safety-label check
- * (`blocked_safety_label`) only evaluates labels the *caller* supplies via `requestSafetyLabels` —
- * `VionaRequest` has no persisted safety-labels column today (see Pack19/25 design docs), so no
- * caller of this route, including this orchestrator, can look them up from the database. This
- * orchestrator omits `requestSafetyLabels` exactly as every other existing caller of this route
- * does today — it does not weaken any check that exists, and does not invent one that doesn't.
+ * Does not perform direct Prisma request-status writes, provider-key generation, or Twilio calls.
+ * Never holds a DB transaction across network/escrow calls.
  */
 
-import { canTransitionRequestStatus } from '../../domain/requests/vionaRequestStatusMachine';
-import { getPrisma } from '../../lib/prisma';
-import { appendVionaExecutionAuditEvent } from './vionaExecutionAuditWriteService';
-import {
-  previewVionaExecutionPlanRealProviderPocRoute,
-  type PreviewVionaExecutionPlanRealProviderPocResult,
-} from './vionaExecutionPlanRouteService';
+import { randomUUID } from 'node:crypto';
 
-const CLAIM_FROM_STATUS = 'triage' as const;
-const CLAIMED_STATUS = 'inProgress' as const;
+import { VionaRequestExecutionTriggerType } from '@prisma/client';
+
+import {
+  claimVionaRequestExecution,
+  finalizeVionaRequestExecutionCompleted,
+  finalizeVionaRequestExecutionFailed,
+  VionaRequestIndirectExecutionError,
+  type ClaimVionaRequestExecutionResult,
+} from './vionaRequestIndirectStatusActionService';
+import {
+  runVionaRequestExecutionProviderGateway,
+  VionaRequestExecutionGatewayError,
+  type RunVionaRequestExecutionProviderGatewayResult,
+} from './vionaRequestExecutionGatewayService';
+import {
+  holdVionaRequestExecutionCost,
+  refundVionaRequestExecutionHold,
+  settleVionaRequestExecutionHold,
+  type HoldVionaRequestExecutionCostResult,
+  type ResolveVionaRequestEscrowHoldResult,
+} from './vionaRequestEscrowHoldService';
+import {
+  buildVionaPack40D3EscrowIdempotencyKey,
+  VIONA_PACK40D3_ESCROW_ACTION_ID,
+  VIONA_PACK40D3_TWILIO_TEST_ESTIMATED_COST_VIO,
+} from './vionaPack40D3EscrowCoordination';
+import { createPack40D3TwilioGatewayAdapter } from './vionaPack40D3TwilioGatewayAdapter';
+import type { PreviewVionaExecutionPlanRealProviderPocResult } from './vionaExecutionPlanRouteService';
+import type { VionaExecutionProviderAdapter } from './vionaRequestExecutionProviderContract';
 
 export type ExecuteVionaRequestBusinessFlowInput = Readonly<{
   authUserId: string;
@@ -65,127 +48,62 @@ export type ExecuteVionaRequestBusinessFlowInput = Readonly<{
   fromNumber: string;
   toNumber: string;
   body: string;
+  correlationId?: string;
 }>;
 
 export type ExecuteVionaRequestBusinessFlowFailureReason =
   | 'invalid_input'
   | 'invalid_state'
-  | 'execution_error';
+  | 'execution_error'
+  | 'reconciliation_required'
+  | 'provider_uncertain';
 
 export type ExecuteVionaRequestBusinessFlowResult =
   | Readonly<{
       ok: true;
       requestId: string;
-      fromStatus: typeof CLAIM_FROM_STATUS;
+      attemptId: string;
+      fromStatus: 'triage';
       finalStatus: 'completed' | 'failed';
-      executionResult: PreviewVionaExecutionPlanRealProviderPocResult;
+      providerInvoked: true;
     }>
-  | Readonly<{ ok: false; reason: ExecuteVionaRequestBusinessFlowFailureReason }>;
+  | Readonly<{
+      ok: false;
+      reason: ExecuteVionaRequestBusinessFlowFailureReason;
+      attemptId?: string;
+      requestStatus?: 'inProgress' | 'triage';
+    }>;
+
+export type ExecuteVionaRequestBusinessFlowDeps = Readonly<{
+  claimFn?: typeof claimVionaRequestExecution;
+  holdFn?: typeof holdVionaRequestExecutionCost;
+  settleFn?: typeof settleVionaRequestExecutionHold;
+  refundFn?: typeof refundVionaRequestExecutionHold;
+  runGatewayFn?: typeof runVionaRequestExecutionProviderGateway;
+  finalizeCompletedFn?: typeof finalizeVionaRequestExecutionCompleted;
+  finalizeFailedFn?: typeof finalizeVionaRequestExecutionFailed;
+  createAdapter?: (input: {
+    fromNumber: string;
+    toNumber: string;
+    body: string;
+    actorUserId: string;
+  }) => VionaExecutionProviderAdapter;
+  createExecutionKey?: () => string;
+  createLeaseOwner?: () => string;
+  createCorrelationId?: () => string;
+  clock?: () => Date;
+  leaseDurationMs?: number;
+  estimatedAmountVIO?: number;
+}>;
 
 function isNonEmptyTrimmed(value: string): boolean {
   return value.trim().length > 0;
 }
 
-async function writeVionaRequestStatusEvent(input: {
-  requestId: string;
-  fromStatus: string;
-  toStatus: string;
-  authUserId: string;
-  reason: string;
-}): Promise<void> {
-  try {
-    await getPrisma().vionaRequestStatusEvent.create({
-      data: {
-        requestId: input.requestId,
-        fromStatus: input.fromStatus,
-        toStatus: input.toStatus,
-        changedByUserId: input.authUserId,
-        reason: input.reason,
-      },
-    });
-  } catch (error) {
-    console.error(
-      `[pack31-orchestrator] failed to write VionaRequestStatusEvent (${input.fromStatus} -> ${input.toStatus}) for request ${input.requestId}: ${
-        error instanceof Error ? error.message : 'unknown_error'
-      }`,
-    );
-  }
-}
-
-async function writeOrchestratorStateTransitionAudit(input: {
-  requestId: string;
-  authUserId: string;
-  fromStatus: string;
-  toStatus: string;
-  committed: boolean;
-}): Promise<void> {
-  const result = await appendVionaExecutionAuditEvent({
-    requestId: input.requestId,
-    eventType: 'stateTransition',
-    actorUserId: input.authUserId,
-    actorRoleLabel: 'owner',
-    message: `Pack31 orchestrator: ${input.fromStatus} -> ${input.toStatus} (${
-      input.committed ? 'committed' : 'FAILED TO COMMIT'
-    }).`,
-    payloadJson: {
-      fromStatus: input.fromStatus,
-      toStatus: input.toStatus,
-      committed: input.committed,
-    },
-  });
-  if (!result.ok) {
-    console.error(
-      `[pack31-orchestrator] failed to append stateTransition audit event for request ${input.requestId}: ${result.error}`,
-    );
-  }
-}
-
 /**
- * Step 1 — State Lock. Atomically claims the request for execution by conditionally moving it
- * from `triage` to `inProgress`. Returns `false` (never throws) if the request does not exist, is
- * not owned by `authUserId`, or is not currently in the one eligible pre-execution state.
+ * Legacy Pack31 pure helper retained for historical unit tests.
+ * Pack40D3B coordinator does not use this for terminal decisions (D2/D3A state owns that).
  */
-async function claimVionaRequestForExecution(requestId: string, authUserId: string): Promise<boolean> {
-  if (!canTransitionRequestStatus(CLAIM_FROM_STATUS, CLAIMED_STATUS)) {
-    // Defensive — unreachable given the additive state-machine wiring, but never assumed.
-    return false;
-  }
-  const updated = await getPrisma().vionaRequest.updateMany({
-    where: {
-      id: requestId,
-      status: CLAIM_FROM_STATUS,
-      ownerUserId: authUserId,
-    },
-    data: { status: CLAIMED_STATUS },
-  });
-  return updated.count === 1;
-}
-
-/**
- * Step 3 — Finalize State. Atomically moves the request out of `inProgress` into a terminal
- * status, scoped by the same owner + expected-current-status guard as the claim above, so this
- * can never finalize a request this orchestrator did not itself just claim.
- */
-async function finalizeVionaRequestStatus(
-  requestId: string,
-  authUserId: string,
-  toStatus: 'completed' | 'failed',
-): Promise<boolean> {
-  if (!canTransitionRequestStatus(CLAIMED_STATUS, toStatus)) {
-    return false;
-  }
-  const updated = await getPrisma().vionaRequest.updateMany({
-    where: {
-      id: requestId,
-      status: CLAIMED_STATUS,
-      ownerUserId: authUserId,
-    },
-    data: { status: toStatus },
-  });
-  return updated.count === 1;
-}
-
-/** Pure — decides the terminal status from the real-provider route's own result, never guesses. */
 export function resolveVionaRequestBusinessFlowFinalStatus(
   executionResult: PreviewVionaExecutionPlanRealProviderPocResult,
 ): 'completed' | 'failed' {
@@ -196,13 +114,11 @@ export function resolveVionaRequestBusinessFlowFinalStatus(
 }
 
 /**
- * Business-flow orchestrator: State Lock -> Real Execution -> Finalize State -> Audit.
- * Fails closed at every step; a thrown/unexpected error during Step 2 is caught and still routed
- * through Step 3 (finalize to `failed`) + Step 4 (audit), so a request is never left stranded in
- * `inProgress` without at least one attempt to close it out and durably record why.
+ * Pack40D coordinator: claim → escrow hold → gateway → escrow resolve → finalize.
  */
 export async function executeVionaRequestBusinessFlow(
   input: ExecuteVionaRequestBusinessFlowInput,
+  deps: ExecuteVionaRequestBusinessFlowDeps = {},
 ): Promise<ExecuteVionaRequestBusinessFlowResult> {
   const authUserId = input.authUserId.trim();
   const requestId = input.requestId.trim();
@@ -220,89 +136,226 @@ export async function executeVionaRequestBusinessFlow(
     return { ok: false, reason: 'invalid_input' };
   }
 
-  // Step 1 — State Lock.
-  const claimed = await claimVionaRequestForExecution(requestId, authUserId);
-  if (!claimed) {
-    return { ok: false, reason: 'invalid_state' };
-  }
-  await writeVionaRequestStatusEvent({
-    requestId,
-    fromStatus: CLAIM_FROM_STATUS,
-    toStatus: CLAIMED_STATUS,
-    authUserId,
-    reason: 'Pack31 orchestrator: claimed for real-provider execution.',
-  });
+  const claimFn = deps.claimFn ?? claimVionaRequestExecution;
+  const holdFn = deps.holdFn ?? holdVionaRequestExecutionCost;
+  const settleFn = deps.settleFn ?? settleVionaRequestExecutionHold;
+  const refundFn = deps.refundFn ?? refundVionaRequestExecutionHold;
+  const runGatewayFn = deps.runGatewayFn ?? runVionaRequestExecutionProviderGateway;
+  const finalizeCompletedFn = deps.finalizeCompletedFn ?? finalizeVionaRequestExecutionCompleted;
+  const finalizeFailedFn = deps.finalizeFailedFn ?? finalizeVionaRequestExecutionFailed;
+  const createExecutionKey = deps.createExecutionKey ?? (() => `exec-${randomUUID()}`);
+  const createLeaseOwner = deps.createLeaseOwner ?? (() => `lease-${randomUUID()}`);
+  const createCorrelationId = deps.createCorrelationId ?? (() => `corr-${randomUUID()}`);
+  const clock = deps.clock ?? (() => new Date());
+  const leaseDurationMs = deps.leaseDurationMs ?? 15 * 60 * 1000;
+  const estimatedAmountVIO =
+    deps.estimatedAmountVIO ?? VIONA_PACK40D3_TWILIO_TEST_ESTIMATED_COST_VIO;
 
-  // Step 2 — Real Execution. Never wrapped in a DB transaction — the claim above already
-  // committed independently. `previewVionaExecutionPlanRealProviderPocRoute()` itself still
-  // enforces the feature flag, Circuit Breaker, magic-number allowlist, and Zero-Loss escrow hold.
-  let executionResult: PreviewVionaExecutionPlanRealProviderPocResult;
+  // Phase 1 — Claim (Pack40D2). No escrow/provider on failure.
+  let claim: ClaimVionaRequestExecutionResult;
   try {
-    executionResult = await previewVionaExecutionPlanRealProviderPocRoute({
-      authUserId,
-      requestId,
-      operatorApprovalGranted: true,
-      userConsentGranted: true,
-      idempotencyKey: `pack31-orchestrator-${requestId}`,
-      fromNumber,
-      toNumber,
-      body,
+    claim = await claimFn({
+      trigger: {
+        triggerType: VionaRequestExecutionTriggerType.internalAuthenticatedController,
+        triggeringUserId: authUserId,
+        requestId,
+        correlationId: input.correlationId?.trim() || createCorrelationId(),
+      },
+      executionKey: createExecutionKey(),
+      leaseOwner: createLeaseOwner(),
+      leaseDurationMs,
     });
   } catch (error) {
-    console.error(
-      `[pack31-orchestrator] previewVionaExecutionPlanRealProviderPocRoute threw for request ${requestId}: ${
-        error instanceof Error ? error.message : 'unknown_error'
-      }`,
-    );
-    const finalizedToFailed = await finalizeVionaRequestStatus(requestId, authUserId, 'failed');
-    await writeVionaRequestStatusEvent({
-      requestId,
-      fromStatus: CLAIMED_STATUS,
-      toStatus: 'failed',
-      authUserId,
-      reason: 'Pack31 orchestrator: real-provider execution threw unexpectedly.',
-    });
-    await writeOrchestratorStateTransitionAudit({
-      requestId,
-      authUserId,
-      fromStatus: CLAIMED_STATUS,
-      toStatus: 'failed',
-      committed: finalizedToFailed,
-    });
+    if (error instanceof VionaRequestIndirectExecutionError) {
+      return { ok: false, reason: 'invalid_state' };
+    }
     return { ok: false, reason: 'execution_error' };
   }
 
-  // Step 3 — Finalize State.
-  const finalStatus = resolveVionaRequestBusinessFlowFinalStatus(executionResult);
-  const finalized = await finalizeVionaRequestStatus(requestId, authUserId, finalStatus);
-  await writeVionaRequestStatusEvent({
+  const attemptId = claim.attemptId;
+  const leaseOwner = claim.leaseOwner;
+  const escrowKey = buildVionaPack40D3EscrowIdempotencyKey({
     requestId,
-    fromStatus: CLAIMED_STATUS,
-    toStatus: finalStatus,
-    authUserId,
-    reason: `Pack31 orchestrator: real-provider execution ${finalStatus === 'completed' ? 'succeeded' : 'did not succeed'}.`,
+    executionAttemptId: attemptId,
   });
 
-  // Step 4 — Audit (always — including the unexpected case where `finalized` is false, e.g. a
-  // concurrent out-of-band status change raced this call; that gap must be durably recorded, not
-  // silently swallowed).
-  await writeOrchestratorStateTransitionAudit({
-    requestId,
-    authUserId,
-    fromStatus: CLAIMED_STATUS,
-    toStatus: finalStatus,
-    committed: finalized,
-  });
+  // Phase 2 — Escrow hold (after claim, before provider).
+  let hold: HoldVionaRequestExecutionCostResult;
+  try {
+    hold = await holdFn({
+      requestId,
+      actionId: VIONA_PACK40D3_ESCROW_ACTION_ID,
+      userId: authUserId,
+      estimatedAmountVIO,
+      idempotencyKey: escrowKey,
+      auditActorRoleLabel: 'execution_service',
+    });
+  } catch {
+    return {
+      ok: false,
+      reason: 'reconciliation_required',
+      attemptId,
+      requestStatus: 'inProgress',
+    };
+  }
+  if (!hold.ok) {
+    return {
+      ok: false,
+      reason: 'reconciliation_required',
+      attemptId,
+      requestStatus: 'inProgress',
+    };
+  }
 
-  if (!finalized) {
-    return { ok: false, reason: 'execution_error' };
+  // Phase 3 — Provider gateway (Pack40D3A). Coordinator never calls Twilio directly.
+  const adapter =
+    deps.createAdapter?.({ fromNumber, toNumber, body, actorUserId: authUserId }) ??
+    createPack40D3TwilioGatewayAdapter({
+      message: { fromNumber, toNumber, body },
+      actorUserId: authUserId,
+    });
+
+  let gatewayResult: RunVionaRequestExecutionProviderGatewayResult;
+  try {
+    gatewayResult = await runGatewayFn(
+      {
+        attemptId,
+        expectedLeaseOwner: leaseOwner,
+        operationCategory: 'send',
+      },
+      { adapter, clock },
+    );
+  } catch (error) {
+    if (error instanceof VionaRequestExecutionGatewayError) {
+      if (
+        error.code === 'uncertain_outcome_requires_review' ||
+        error.code === 'already_prepared' ||
+        error.code === 'outcome_already_recorded'
+      ) {
+        return {
+          ok: false,
+          reason:
+            error.code === 'uncertain_outcome_requires_review'
+              ? 'provider_uncertain'
+              : 'reconciliation_required',
+          attemptId,
+          requestStatus: 'inProgress',
+        };
+      }
+      return { ok: false, reason: 'execution_error', attemptId, requestStatus: 'inProgress' };
+    }
+    return { ok: false, reason: 'execution_error', attemptId, requestStatus: 'inProgress' };
+  }
+
+  // Phase 4 — Escrow resolve + Pack40D2 finalization (no provider retry).
+  if (gatewayResult.attemptState === 'outcomeUncertain' || gatewayResult.adapterKind === 'uncertain') {
+    return {
+      ok: false,
+      reason: 'provider_uncertain',
+      attemptId,
+      requestStatus: 'inProgress',
+    };
+  }
+
+  if (gatewayResult.attemptState === 'providerSucceeded') {
+    let settle: ResolveVionaRequestEscrowHoldResult;
+    try {
+      settle = await settleFn({
+        holdId: hold.holdId,
+        requestId,
+        actualCostVIO: estimatedAmountVIO,
+        auditActorUserId: authUserId,
+        auditActorRoleLabel: 'execution_service',
+      });
+    } catch {
+      return {
+        ok: false,
+        reason: 'reconciliation_required',
+        attemptId,
+        requestStatus: 'inProgress',
+      };
+    }
+    if (!settle.ok) {
+      return {
+        ok: false,
+        reason: 'reconciliation_required',
+        attemptId,
+        requestStatus: 'inProgress',
+      };
+    }
+
+    try {
+      await finalizeCompletedFn({
+        attemptId,
+        requestId,
+        expectedLeaseOwner: leaseOwner,
+      });
+    } catch {
+      return {
+        ok: false,
+        reason: 'reconciliation_required',
+        attemptId,
+        requestStatus: 'inProgress',
+      };
+    }
+
+    return {
+      ok: true,
+      requestId,
+      attemptId,
+      fromStatus: 'triage',
+      finalStatus: 'completed',
+      providerInvoked: true,
+    };
+  }
+
+  // providerFailed
+  let refund: ResolveVionaRequestEscrowHoldResult;
+  try {
+    refund = await refundFn({
+      holdId: hold.holdId,
+      requestId,
+      auditActorUserId: authUserId,
+      auditActorRoleLabel: 'execution_service',
+    });
+  } catch {
+    return {
+      ok: false,
+      reason: 'reconciliation_required',
+      attemptId,
+      requestStatus: 'inProgress',
+    };
+  }
+  if (!refund.ok) {
+    return {
+      ok: false,
+      reason: 'reconciliation_required',
+      attemptId,
+      requestStatus: 'inProgress',
+    };
+  }
+
+  try {
+    await finalizeFailedFn({
+      attemptId,
+      requestId,
+      expectedLeaseOwner: leaseOwner,
+    });
+  } catch {
+    return {
+      ok: false,
+      reason: 'reconciliation_required',
+      attemptId,
+      requestStatus: 'inProgress',
+    };
   }
 
   return {
     ok: true,
     requestId,
-    fromStatus: CLAIM_FROM_STATUS,
-    finalStatus,
-    executionResult,
+    attemptId,
+    fromStatus: 'triage',
+    finalStatus: 'failed',
+    providerInvoked: true,
   };
 }

@@ -240,7 +240,7 @@ export type ExecuteVionaTwilioTestPocDeps = Readonly<{
 }>;
 
 /** Default, DB-backed Circuit Breaker check — read-only query + pure decision, no writes. */
-async function defaultVionaTwilioCircuitBreakerCheck(): Promise<{ state: 'closed' | 'open' }> {
+export async function defaultVionaTwilioCircuitBreakerCheck(): Promise<{ state: 'closed' | 'open' }> {
   const window = await queryVionaTwilioSpendWindow();
   const capUsdCents = readVionaProviderSpendCapUsdCentsFromEnv('twilio');
   const decision = evaluateVionaProviderCircuitBreaker(window, capUsdCents);
@@ -255,7 +255,8 @@ function isRetryableErrorClass(errorClass: 'provider_rejected' | 'provider_timeo
   return errorClass === 'provider_timeout' || errorClass === 'provider_unavailable';
 }
 
-function classifyTwilioTransportResult(
+/** Exported for Pack40D3B single-shot gateway adapter (no retry loop). */
+export function classifyTwilioTransportResult(
   result: VionaTwilioHttpTransportResult,
 ): Readonly<{ ok: true; providerMessageSid: string } | { ok: false; errorClass: 'provider_rejected' | 'provider_unavailable'; providerErrorCode: number | null }> {
   const body = result.json as { sid?: unknown; code?: unknown } | null;

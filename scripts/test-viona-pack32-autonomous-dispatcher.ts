@@ -168,11 +168,25 @@ async function testOrchestratorNeverOverridesHumanApprovalFlags(): Promise<void>
     },
   );
 
-  assert(result.ok && result.dispatch.accepted === true, 'a valid, registered tool call must still be accepted by the dispatcher itself');
-  assert(spy.calls.length === 1, 'the existing route pipeline must still be invoked exactly once');
-  const forwarded = spy.calls[0] as { operatorApprovalGranted: boolean; userConsentGranted: boolean };
-  assert(forwarded.operatorApprovalGranted === false, 'operatorApprovalGranted must be forwarded exactly as the human supplied it — never overridden to true');
-  assert(forwarded.userConsentGranted === false, 'userConsentGranted must be forwarded exactly as the human supplied it — never overridden to true');
+  // Pack40D3B: Twilio dispatch execution is disabled before consent flags reach the POC route.
+  assert(
+    result.ok && !result.dispatch.accepted && result.dispatch.reason === 'pack40d_provider_execution_disabled',
+    'Twilio dispatch must be disabled by Pack40D3B (consent flags never reach provider)',
+  );
+  assert(spy.calls.length === 0, 'legacy routeExecutor must not be called for Twilio after Pack40D3B');
+  // Consent override protection remains for any future re-enablement path: never hardcode true.
+  const dispatchSource = fs
+    .readFileSync(path.resolve(__dirname, '../src/services/viona/vionaAutonomousDispatchService.ts'), 'utf8')
+    .replace(/\/\*[\s\S]*?\*\//g, '')
+    .replace(/\/\/.*$/gm, '');
+  assert(
+    !/operatorApprovalGranted\s*:\s*true/.test(dispatchSource),
+    'operatorApprovalGranted must never be hardcoded true',
+  );
+  assert(
+    !/userConsentGranted\s*:\s*true/.test(dispatchSource),
+    'userConsentGranted must never be hardcoded true',
+  );
 }
 
 /** Test 3: hallucinated/unregistered toolName -> unknown_tool, zero downstream calls, hallucination-blocked audit. */
@@ -246,31 +260,17 @@ async function testLlmCallFailureNeverThrowsOut(): Promise<void> {
   assert(decision != null && !decision.ok && decision.reason === 'llm_call_failed', 'an injected callLlm failure must resolve to llm_call_failed');
 }
 
-/** Test 8: full happy path via a fake routeExecutor — dispatch accepted, route result passed through unchanged. */
+/** Test 8: Pack40D3B — Twilio dispatch path is disabled (no provider bypass). */
 async function testFullHappyPathPassesThroughRouteResultUnchanged(): Promise<void> {
-  const fakeResult: PreviewVionaExecutionPlanRealProviderPocResult = {
+  const spy = fakeRouteExecutorSpy({
     ok: true,
     requestId: 'req-pack32-1',
     actionId: 'request.assign',
     planAllowed: true,
     denialReason: 'not_denied',
-    escrow: {
-      attempted: true,
-      holdOk: true,
-      holdId: 'hold-1',
-      heldAmountVIO: 0.01,
-      resolvedStatus: 'SETTLED',
-      settledAmountVIO: 0.01,
-      refundedAmountVIO: 0,
-    },
-    realProviderResult: {
-      requestId: 'req-pack32-1',
-      actionId: 'request.assign',
-      outcome: { outcome: 'succeeded', providerMessageSid: 'SMfake', attempts: 1, latencyMs: 12 },
-      auditWritten: true,
-    },
-  };
-  const spy = fakeRouteExecutorSpy(fakeResult);
+    escrow: { attempted: false },
+    realProviderResult: null,
+  });
   const { writer, rows } = createFakeAuditWriter();
 
   const result = await dispatchVionaAutonomousRequest(BASE_DISPATCH_INPUT, {
@@ -279,20 +279,22 @@ async function testFullHappyPathPassesThroughRouteResultUnchanged(): Promise<voi
     routeExecutor: spy.executor,
   });
 
-  assert(result.ok && result.dispatch.accepted === true, 'a valid dispatch must be accepted');
-  // Pack37: `route` is now a `{ kind, result }` wrapper — the existing pipeline's own result is
-  // still returned byte-for-byte unchanged, just addressed via `.result` instead of directly.
+  assert(result.ok && result.dispatch.accepted === false, 'Pack40D3B disables Twilio dispatch execution');
   assert(
-    result.ok && result.route !== null && result.route.kind === 'twilioTestSmsPoc' && result.route.result === fakeResult,
-    'the existing pipeline result must be returned byte-for-byte unchanged, never re-wrapped or mutated',
+    result.ok && !result.dispatch.accepted && result.dispatch.reason === 'pack40d_provider_execution_disabled',
+    'must return pack40d_provider_execution_disabled',
   );
-  assert(rows.some((r) => r.eventType === 'dispatcherToolSelected'), 'a dispatcherToolSelected audit row must be written before the downstream call');
-  assert(spy.calls.length === 1, 'the existing pipeline must be invoked exactly once');
+  assert(result.ok && result.route === null, 'no provider route result');
+  assert(spy.calls.length === 0, 'legacy routeExecutor must not be called');
+  assert(
+    rows.some((r) => r.eventType === 'dispatcherIntentRejected'),
+    'disabled Twilio path must write rejection audit',
+  );
 }
 
-/** Test 9: fake routeExecutor simulates an insufficient-funds hold failure -> passthrough unchanged. */
+/** Test 9: Pack40D3B — Twilio dispatch remains disabled even when routeExecutor would fail closed. */
 async function testInsufficientFundsPassthroughUnchanged(): Promise<void> {
-  const fakeResult: PreviewVionaExecutionPlanRealProviderPocResult = {
+  const spy = fakeRouteExecutorSpy({
     ok: true,
     requestId: 'req-pack32-1',
     actionId: 'request.assign',
@@ -300,8 +302,7 @@ async function testInsufficientFundsPassthroughUnchanged(): Promise<void> {
     denialReason: 'not_denied',
     escrow: { attempted: true, holdOk: false, reason: 'insufficient_funds' },
     realProviderResult: null,
-  };
-  const spy = fakeRouteExecutorSpy(fakeResult);
+  });
   const { writer } = createFakeAuditWriter();
 
   const result = await dispatchVionaAutonomousRequest(BASE_DISPATCH_INPUT, {
@@ -311,37 +312,23 @@ async function testInsufficientFundsPassthroughUnchanged(): Promise<void> {
   });
 
   assert(
-    result.ok && result.route !== null && result.route.kind === 'twilioTestSmsPoc' && result.route.result === fakeResult,
-    'an insufficient-funds hold failure from the existing pipeline must be surfaced unchanged, never retried or bypassed',
+    result.ok && !result.dispatch.accepted && result.dispatch.reason === 'pack40d_provider_execution_disabled',
+    'Twilio dispatch must stay disabled under Pack40D3B',
   );
-  assert(spy.calls.length === 1, 'the dispatcher must never call the existing pipeline more than once per dispatch');
+  assert(spy.calls.length === 0, 'routeExecutor must never be called for Twilio after Pack40D3B');
 }
 
-/** Test 10: fake routeExecutor simulates a Twilio failure + full refund -> passthrough unchanged. */
+/** Test 10: Pack40D3B — Twilio failure/refund path unreachable via dispatch (disabled first). */
 async function testTwilioFailureRefundPassthroughUnchanged(): Promise<void> {
-  const fakeResult: PreviewVionaExecutionPlanRealProviderPocResult = {
+  const spy = fakeRouteExecutorSpy({
     ok: true,
     requestId: 'req-pack32-1',
     actionId: 'request.assign',
     planAllowed: true,
     denialReason: 'not_denied',
-    escrow: {
-      attempted: true,
-      holdOk: true,
-      holdId: 'hold-2',
-      heldAmountVIO: 0.01,
-      resolvedStatus: 'REFUNDED',
-      settledAmountVIO: 0,
-      refundedAmountVIO: 0.01,
-    },
-    realProviderResult: {
-      requestId: 'req-pack32-1',
-      actionId: 'request.assign',
-      outcome: { outcome: 'failedBounded', errorClass: 'provider_unavailable', providerErrorCode: null, attempts: 2, latencyMs: 900 },
-      auditWritten: true,
-    },
-  };
-  const spy = fakeRouteExecutorSpy(fakeResult);
+    escrow: { attempted: false },
+    realProviderResult: null,
+  });
   const { writer } = createFakeAuditWriter();
 
   const result = await dispatchVionaAutonomousRequest(BASE_DISPATCH_INPUT, {
@@ -351,9 +338,10 @@ async function testTwilioFailureRefundPassthroughUnchanged(): Promise<void> {
   });
 
   assert(
-    result.ok && result.route !== null && result.route.kind === 'twilioTestSmsPoc' && result.route.result === fakeResult,
-    'a provider failure + refund outcome must be surfaced unchanged',
+    result.ok && !result.dispatch.accepted && result.dispatch.reason === 'pack40d_provider_execution_disabled',
+    'Twilio dispatch remains disabled; no provider failure path via dispatch',
   );
+  assert(spy.calls.length === 0, 'no legacy provider call');
 }
 
 /** Test 11: source-scan — no LangChain/LlamaIndex/agent-framework import in any new Pack32 file. */

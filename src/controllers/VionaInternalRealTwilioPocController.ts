@@ -5,9 +5,10 @@ import {
   VIONA_INTERNAL_REAL_TWILIO_POC_ROUTE_SAFETY,
 } from '../lib/viona/internalRoute/vionaInternalRealTwilioPocRouteGate';
 import {
-  previewVionaExecutionPlanRealProviderPocRoute,
-  type PreviewVionaExecutionPlanRealProviderPocResult,
-} from '../services/viona/vionaExecutionPlanRouteService';
+  executeVionaRequestBusinessFlow,
+  type ExecuteVionaRequestBusinessFlowDeps,
+  type ExecuteVionaRequestBusinessFlowResult,
+} from '../services/viona/vionaRequestExecutionOrchestrator';
 import { jsonFail, jsonOk } from '../utils/apiEnvelope';
 
 function readAuthUserId(req: Request): string | null {
@@ -29,18 +30,28 @@ function readRequiredRequestIdBody(body: Record<string, unknown>): string | null
 }
 
 export type PostVionaInternalTriggerRealTwilioPocDeps = Readonly<{
-  routeExecutor?: typeof previewVionaExecutionPlanRealProviderPocRoute;
+  /** Pack40D3B — coordinator injection for local tests. */
+  coordinator?: (
+    input: {
+      authUserId: string;
+      requestId: string;
+      fromNumber: string;
+      toNumber: string;
+      body: string;
+    },
+    deps?: ExecuteVionaRequestBusinessFlowDeps,
+  ) => Promise<ExecuteVionaRequestBusinessFlowResult>;
+  coordinatorDeps?: ExecuteVionaRequestBusinessFlowDeps;
 }>;
 
 /**
- * Pack30D-8 — Internal HTTP wiring for `previewVionaExecutionPlanRealProviderPocRoute()`.
+ * Pack40D3B — sole enabled Pack40D runtime trigger (`internalAuthenticatedController`).
  *
- * `POST /api/internal/viona/trigger-real-twilio-poc` — staging/local only (see gate middleware),
- * authenticated, magic-number-only (`+15005550006`), delegates to the existing Pack30D-4/31 service
- * chain (plan → hold → executeReal → settle) without bypassing feature-flag or circuit-breaker
- * gates inside `executeVionaTwilioTestPocReal()`.
+ * `POST /api/internal/viona/trigger-real-twilio-poc` — staging/local gate + JWT auth unchanged.
+ * Routes through the Pack40D coordinator (claim → escrow → gateway → finalize).
+ * Does not call Twilio or the legacy real-provider POC route directly.
  *
- * Operator authorization: `APPROVE_PACK30D_8_STAGING_WIRING_INTERNAL_ROUTE`.
+ * Operator authorization: `APPROVE_PACK40D3B_CONTROLLED_RUNTIME_WIRING_AND_BYPASS_CLOSURE`.
  */
 export async function postVionaInternalTriggerRealTwilioPoc(
   req: Request,
@@ -59,6 +70,12 @@ export async function postVionaInternalTriggerRealTwilioPoc(
         ? (req.body as Record<string, unknown>)
         : {};
 
+    // Envelope/spoof fields are ignored for authority.
+    void body.tenantId;
+    void body.merchantProfileId;
+    void body.scopeKind;
+    void body.ownerUserId;
+
     const requestId = readRequiredRequestIdBody(body);
     if (!requestId) {
       jsonFail(res, 'requestId is required', 400);
@@ -74,40 +91,46 @@ export async function postVionaInternalTriggerRealTwilioPoc(
       readOptionalTrimmedBody(body.messageBody) ??
       `VIONA internal real Twilio POC ${new Date().toISOString()} (Test Credentials, magic numbers only).`;
 
-    const routeExecutor = deps.routeExecutor ?? previewVionaExecutionPlanRealProviderPocRoute;
-    const result: PreviewVionaExecutionPlanRealProviderPocResult = await routeExecutor({
-      authUserId,
-      requestId,
-      actionId: readOptionalTrimmedBody(body.actionId),
-      operatorApprovalGranted: true,
-      userConsentGranted: true,
-      idempotencyKey: readOptionalTrimmedBody(body.idempotencyKey),
-      fromNumber: VIONA_INTERNAL_REAL_TWILIO_POC_FORCED_MAGIC_NUMBER,
-      toNumber: VIONA_INTERNAL_REAL_TWILIO_POC_FORCED_MAGIC_NUMBER,
-      body: messageBody,
-    });
+    const coordinator = deps.coordinator ?? executeVionaRequestBusinessFlow;
+    const result = await coordinator(
+      {
+        authUserId,
+        requestId,
+        fromNumber: VIONA_INTERNAL_REAL_TWILIO_POC_FORCED_MAGIC_NUMBER,
+        toNumber: VIONA_INTERNAL_REAL_TWILIO_POC_FORCED_MAGIC_NUMBER,
+        body: messageBody,
+      },
+      deps.coordinatorDeps,
+    );
 
     if (!result.ok) {
-      const statusMap: Record<typeof result.reason, number> = {
-        invalid_input: 400,
-        request_not_found: 404,
-      };
-      const msgMap: Record<typeof result.reason, string> = {
-        invalid_input: 'Invalid internal real Twilio POC request',
-        request_not_found: 'Request not found',
-      };
-      jsonFail(res, msgMap[result.reason], statusMap[result.reason]);
+      if (result.reason === 'invalid_input') {
+        jsonFail(res, 'Invalid internal real Twilio POC request', 400);
+        return;
+      }
+      if (result.reason === 'invalid_state') {
+        // Safe not-found / unavailable — do not reveal tenant/profile/lease details.
+        jsonFail(res, 'Request not found', 404);
+        return;
+      }
+      if (result.reason === 'provider_uncertain' || result.reason === 'reconciliation_required') {
+        jsonFail(res, 'Execution requires reconciliation', 409);
+        return;
+      }
+      jsonFail(res, 'Execution unavailable', 503);
       return;
     }
 
     jsonOk(res, {
       requestId: result.requestId,
-      actionId: result.actionId,
-      planAllowed: result.planAllowed,
-      denialReason: result.denialReason,
-      escrow: result.escrow,
-      realProviderResult: result.realProviderResult,
+      attemptId: result.attemptId,
+      finalStatus: result.finalStatus,
+      providerInvoked: result.providerInvoked,
       safety: VIONA_INTERNAL_REAL_TWILIO_POC_ROUTE_SAFETY,
+      pack40d: {
+        triggerType: 'internalAuthenticatedController',
+        coordinator: true,
+      },
     });
   } catch {
     jsonFail(res, 'Internal server error', 500);

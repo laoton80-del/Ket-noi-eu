@@ -283,8 +283,12 @@ function neverCalledTransport(callCount: { count: number }): VionaTwilioHttpTran
 }
 
 /**
- * Builds a fully-wired `dispatchVionaAutonomousRequest` call using ONLY real business-logic
- * functions, with fakes injected exclusively at the DB / network / LLM edges.
+ * Builds a fully-wired legacy POC-route call using ONLY real business-logic functions, with
+ * fakes injected exclusively at the DB / network edges.
+ *
+ * Pack40D3B: autonomous Twilio dispatch is disabled. This suite continues to verify the
+ * hold → executeReal → settle chain via the POC route with injected doubles
+ * (`allowDirectProviderBypass` effectively granted by injected deps).
  */
 function buildFullyWiredDispatch(options: {
   wallet: FakeWalletRow;
@@ -295,42 +299,38 @@ function buildFullyWiredDispatch(options: {
   const idempotencyStore = createInMemoryVionaTwilioRealExecutionIdempotencyStore();
 
   const call = () =>
-    dispatchVionaAutonomousRequest(
+    previewVionaExecutionPlanRealProviderPocRoute(
       {
         authUserId: USER_ID,
         requestId: REQUEST_ID,
-        requestStatus: 'triage',
-        userMessage: 'Please send a test SMS to confirm the request.',
         operatorApprovalGranted: true,
         userConsentGranted: true,
+        fromNumber: '+15005550006',
+        toNumber: '+15005550006',
+        body: 'Please send a test SMS to confirm the request.',
       },
       {
-        callLlm: jsonLlm(),
+        getVionaRequestByIdFn: fakeGetVionaRequestByIdFn(),
         auditWriter: options.auditWriter,
-        routeExecutor: (routeInput) =>
-          previewVionaExecutionPlanRealProviderPocRoute(routeInput, {
-            getVionaRequestByIdFn: fakeGetVionaRequestByIdFn(),
+        holdFn: (holdInput) =>
+          holdVionaRequestExecutionCost(holdInput, {
+            prismaClient: escrow.client,
             auditWriter: options.auditWriter,
-            holdFn: (holdInput) =>
-              holdVionaRequestExecutionCost(holdInput, {
-                prismaClient: escrow.client,
-                auditWriter: options.auditWriter,
-              }),
-            settleFn: (settleInput) =>
-              settleVionaRequestExecutionHold(settleInput, {
-                prismaClient: escrow.client,
-                auditWriter: options.auditWriter,
-              }),
-            executeRealFn: (execInput) =>
-              executeVionaTwilioTestPocReal(execInput, {
-                isEnabled: () => true,
-                circuitBreakerCheck: async () => ({ state: 'closed' }),
-                credentials: { accountSid: 'ACfaketestaccount', authToken: 'fake-test-token' },
-                transport: options.transport,
-                auditWriter: options.auditWriter,
-                idempotencyStore,
-                sleepMs: async () => undefined, // skip the real retry backoff delay in tests
-              }),
+          }),
+        settleFn: (settleInput) =>
+          settleVionaRequestExecutionHold(settleInput, {
+            prismaClient: escrow.client,
+            auditWriter: options.auditWriter,
+          }),
+        executeRealFn: (execInput) =>
+          executeVionaTwilioTestPocReal(execInput, {
+            isEnabled: () => true,
+            circuitBreakerCheck: async () => ({ state: 'closed' }),
+            credentials: { accountSid: 'ACfaketestaccount', authToken: 'fake-test-token' },
+            transport: options.transport,
+            auditWriter: options.auditWriter,
+            idempotencyStore,
+            sleepMs: async () => undefined, // skip the real retry backoff delay in tests
           }),
       },
     );
@@ -350,17 +350,9 @@ async function testScenario1HappyPathFullChain(): Promise<void> {
 
   const result = await call();
 
-  assert(result.ok, 'scenario 1: dispatch call itself must not fail invalid_input');
+  assert(result.ok, 'scenario 1: POC route call itself must not fail invalid_input');
   if (!result.ok) return;
-  assert(result.dispatch.accepted === true, 'scenario 1: dispatch must be accepted');
-  if (!result.dispatch.accepted || result.route == null) return;
-  // Pack37: `route` is now a `{ kind, result }` wrapper — unwrap to the existing Twilio/escrow
-  // pipeline's own result shape before asserting on its fields, exactly as before.
-  assert(result.route.kind === 'twilioTestSmsPoc', 'scenario 1: the accepted tool must route through the Twilio/escrow pipeline');
-  if (result.route.kind !== 'twilioTestSmsPoc') return;
-  assert(result.route.result.ok === true, 'scenario 1: the route pipeline must report ok:true');
-  if (!result.route.result.ok) return;
-  const route = result.route.result;
+  const route = result;
   assert(route.planAllowed === true, 'scenario 1: the execution plan must be allowed');
   assert(route.escrow.attempted === true && route.escrow.holdOk === true, 'scenario 1: the escrow hold must succeed');
   if (!route.escrow.attempted || !route.escrow.holdOk) return;
@@ -383,7 +375,6 @@ async function testScenario1HappyPathFullChain(): Promise<void> {
 
   const eventTypes = rows.map((r) => r.eventType);
   const requiredEvents = [
-    'dispatcherToolSelected',
     'escrowHoldPlaced',
     'executionRealAttempted',
     'executionRealSucceeded',
@@ -392,7 +383,7 @@ async function testScenario1HappyPathFullChain(): Promise<void> {
   for (const eventType of requiredEvents) {
     assert(eventTypes.includes(eventType), `scenario 1: the audit ledger must include a "${eventType}" row`);
   }
-  assert(rows.length >= 5, `scenario 1: the audit ledger must record at least 5 events, got ${rows.length}`);
+  assert(rows.length >= 4, `scenario 1: the audit ledger must record at least 4 events, got ${rows.length}`);
 }
 
 /** Scenario 2: hold fails (insufficient VIO Credits) -> immediate fail-closed denial, zero network calls. */
@@ -407,15 +398,9 @@ async function testScenario2HoldFailBlocksBeforeAnyRealCall(): Promise<void> {
 
   const result = await call();
 
-  assert(result.ok, 'scenario 2: dispatch call itself must not fail invalid_input');
+  assert(result.ok, 'scenario 2: POC route call itself must not fail invalid_input');
   if (!result.ok) return;
-  assert(result.dispatch.accepted === true, 'scenario 2: the dispatcher itself must still accept the (valid) tool call');
-  if (!result.dispatch.accepted || result.route == null) return;
-  assert(result.route.kind === 'twilioTestSmsPoc', 'scenario 2: the accepted tool must route through the Twilio/escrow pipeline');
-  if (result.route.kind !== 'twilioTestSmsPoc') return;
-  assert(result.route.result.ok === true, 'scenario 2: the route pipeline must report ok:true');
-  if (!result.route.result.ok) return;
-  const route = result.route.result;
+  const route = result;
   assert(route.planAllowed === true, 'scenario 2: the execution plan itself must still be allowed');
   assert(
     route.escrow.attempted === true && route.escrow.holdOk === false && route.escrow.reason === 'insufficient_funds',
@@ -428,7 +413,6 @@ async function testScenario2HoldFailBlocksBeforeAnyRealCall(): Promise<void> {
   assert(wallet.balanceVIG === 0 && wallet.lockedBalanceVIG === 0, 'scenario 2: the wallet must be completely untouched by a failed hold');
 
   const eventTypes = rows.map((r) => r.eventType);
-  assert(eventTypes.includes('dispatcherToolSelected'), 'scenario 2: the dispatcher must still record which tool it selected');
   assert(
     eventTypes.includes('executionBlockedPolicy'),
     'scenario 2 (Pack32.5 fix verification): the hold failure must be durably recorded in the ledger, not just console-logged',
@@ -449,15 +433,9 @@ async function testScenario3NetworkTimeoutTriggersFullRefund(): Promise<void> {
 
   const result = await call();
 
-  assert(result.ok, 'scenario 3: dispatch call itself must not fail invalid_input');
+  assert(result.ok, 'scenario 3: POC route call itself must not fail invalid_input');
   if (!result.ok) return;
-  assert(result.dispatch.accepted === true, 'scenario 3: dispatch must be accepted');
-  if (!result.dispatch.accepted || result.route == null) return;
-  assert(result.route.kind === 'twilioTestSmsPoc', 'scenario 3: the accepted tool must route through the Twilio/escrow pipeline');
-  if (result.route.kind !== 'twilioTestSmsPoc') return;
-  assert(result.route.result.ok === true, 'scenario 3: the route pipeline must report ok:true');
-  if (!result.route.result.ok) return;
-  const route = result.route.result;
+  const route = result;
   assert(route.escrow.attempted === true && route.escrow.holdOk === true, 'scenario 3: the hold must succeed before the network timeout occurs');
   if (!route.escrow.attempted || !route.escrow.holdOk) return;
   assert(
@@ -486,51 +464,40 @@ async function testScenario4SettleThrowNeverLosesRealProviderResult(): Promise<v
   const escrow = createFakeEscrowPrismaClient([freshWallet(10)]);
   const idempotencyStore = createInMemoryVionaTwilioRealExecutionIdempotencyStore();
 
-  const result = await dispatchVionaAutonomousRequest(
+  const result = await previewVionaExecutionPlanRealProviderPocRoute(
     {
       authUserId: USER_ID,
       requestId: REQUEST_ID,
-      requestStatus: 'triage',
-      userMessage: 'Please send a test SMS to confirm the request.',
       operatorApprovalGranted: true,
       userConsentGranted: true,
+      fromNumber: '+15005550006',
+      toNumber: '+15005550006',
+      body: 'Please send a test SMS to confirm the request.',
     },
     {
-      callLlm: jsonLlm(),
+      getVionaRequestByIdFn: fakeGetVionaRequestByIdFn(),
       auditWriter: writer,
-      routeExecutor: (routeInput) =>
-        previewVionaExecutionPlanRealProviderPocRoute(routeInput, {
-          getVionaRequestByIdFn: fakeGetVionaRequestByIdFn(),
+      holdFn: (holdInput) => holdVionaRequestExecutionCost(holdInput, { prismaClient: escrow.client, auditWriter: writer }),
+      // Simulated mid-settle DB error — the route service's own try/catch must convert this
+      // to an unresolved escrow outcome and still return the already-known realProviderResult.
+      settleFn: async () => {
+        throw new Error('simulated DB error during settle');
+      },
+      executeRealFn: (execInput) =>
+        executeVionaTwilioTestPocReal(execInput, {
+          isEnabled: () => true,
+          circuitBreakerCheck: async () => ({ state: 'closed' }),
+          credentials: { accountSid: 'ACfaketestaccount', authToken: 'fake-test-token' },
+          transport: successTransport(callCount),
           auditWriter: writer,
-          holdFn: (holdInput) => holdVionaRequestExecutionCost(holdInput, { prismaClient: escrow.client, auditWriter: writer }),
-          // Simulated mid-settle DB error — the route service's own try/catch must convert this
-          // to `{ ok: false, reason: 'settle_error' }` internally and still return the
-          // already-known `realProviderResult` untouched.
-          settleFn: async () => {
-            throw new Error('simulated DB error during settle');
-          },
-          executeRealFn: (execInput) =>
-            executeVionaTwilioTestPocReal(execInput, {
-              isEnabled: () => true,
-                circuitBreakerCheck: async () => ({ state: 'closed' }),
-              credentials: { accountSid: 'ACfaketestaccount', authToken: 'fake-test-token' },
-              transport: successTransport(callCount),
-              auditWriter: writer,
-              idempotencyStore,
-            }),
+          idempotencyStore,
         }),
     },
   );
 
-  assert(result.ok, 'scenario 4: dispatch call itself must not fail invalid_input');
+  assert(result.ok, 'scenario 4: POC route call itself must not fail invalid_input');
   if (!result.ok) return;
-  assert(result.dispatch.accepted === true, 'scenario 4: dispatch must be accepted');
-  if (!result.dispatch.accepted || result.route == null) return;
-  assert(result.route.kind === 'twilioTestSmsPoc', 'scenario 4: the accepted tool must route through the Twilio/escrow pipeline');
-  if (result.route.kind !== 'twilioTestSmsPoc') return;
-  assert(result.route.result.ok === true, 'scenario 4: the route pipeline must report ok:true');
-  if (!result.route.result.ok) return;
-  const route = result.route.result;
+  const route = result;
   assert(
     route.realProviderResult?.outcome.outcome === 'succeeded',
     'scenario 4: the already-known, already-succeeded realProviderResult must still be returned even though settle threw',

@@ -1000,27 +1000,52 @@ async function main(): Promise<void> {
   });
 
   // --- Runtime isolation ---
-  const runtimeFiles = [
-    ['43', '../src/services/viona/vionaRequestExecutionOrchestrator.ts', 'Orchestrator'],
-    ['44', '../src/controllers/VionaInternalRealTwilioPocController.ts', 'Controller'],
-    ['45', '../src/controllers/VionaWebhookMerchantAgentController.ts', 'Webhook'],
-    [
-      '46',
+  // Pack40D3B wires the gateway only through the coordinator. Controllers/webhooks/adapters must not.
+  runTest('43. Coordinator may import gateway; bypass surfaces must not', () => {
+    const orch = readSource('../src/services/viona/vionaRequestExecutionOrchestrator.ts');
+    assert(orch.includes('runVionaRequestExecutionProviderGateway'), 'coordinator wires gateway');
+    for (const rel of [
+      '../src/controllers/VionaInternalRealTwilioPocController.ts',
+      '../src/controllers/VionaWebhookMerchantAgentController.ts',
       '../src/lib/viona/realProviderAdapter/vionaTwilioTestRealProviderAdapter.ts',
-      'Twilio adapter',
-    ],
-    ['47', '../src/services/viona/vionaRequestEscrowHoldService.ts', 'Escrow'],
-  ] as const;
-
-  for (const [n, rel, label] of runtimeFiles) {
-    runTest(`${n}. ${label} does not import gateway`, () => {
+      '../src/services/viona/vionaRequestEscrowHoldService.ts',
+      '../src/services/viona/vionaAutonomousDispatchService.ts',
+    ]) {
       const p = path.resolve(__dirname, rel);
-      if (!fs.existsSync(p)) return;
+      if (!fs.existsSync(p)) continue;
       const source = fs.readFileSync(p, 'utf8');
-      assert(!source.includes('vionaRequestExecutionGatewayService'), `${label} no gateway`);
-      assert(!source.includes('runVionaRequestExecutionProviderGateway'), `${label} no run`);
-    });
-  }
+      assert(!source.includes('vionaRequestExecutionGatewayService'), `${rel} no gateway`);
+      assert(!source.includes('runVionaRequestExecutionProviderGateway'), `${rel} no run`);
+    }
+  });
+
+  runTest('44. Controller does not call gateway directly', () => {
+    const source = readSource('../src/controllers/VionaInternalRealTwilioPocController.ts');
+    assert(source.includes('executeVionaRequestBusinessFlow'), 'uses coordinator');
+    assert(!source.includes('runVionaRequestExecutionProviderGateway'), 'no direct gateway');
+  });
+
+  runTest('45. Webhook does not import gateway', () => {
+    const p = path.resolve(
+      __dirname,
+      '../src/controllers/VionaWebhookMerchantAgentController.ts',
+    );
+    if (!fs.existsSync(p)) return;
+    const source = fs.readFileSync(p, 'utf8');
+    assert(!source.includes('vionaRequestExecutionGatewayService'), 'webhook clean');
+  });
+
+  runTest('46. Twilio live adapter does not import gateway', () => {
+    const source = readSource(
+      '../src/lib/viona/realProviderAdapter/vionaTwilioTestRealProviderAdapter.ts',
+    );
+    assert(!source.includes('vionaRequestExecutionGatewayService'), 'adapter clean');
+  });
+
+  runTest('47. Escrow does not import gateway', () => {
+    const source = readSource('../src/services/viona/vionaRequestEscrowHoldService.ts');
+    assert(!source.includes('vionaRequestExecutionGatewayService'), 'escrow clean');
+  });
 
   // Fix numbering: 43-47 above; need 48 for DB path
   runTest('48. No database or staging path exists', () => {
@@ -1103,17 +1128,19 @@ async function main(): Promise<void> {
     assert(!gateway.includes('VionaRequestScopeKind.consumer'), 'no consumer allow');
   });
 
-  runTest('56. Pack40D3B and Pack40S remain unimplemented', () => {
+  runTest('56. Pack40S remains unimplemented; Pack40D3B coordinator wiring is allowed', () => {
     const srcRoot = path.resolve(__dirname, '../src');
     const files = fs.readdirSync(srcRoot, { recursive: true }).map(String);
-    assert(
-      !files.some((f) => f.toLowerCase().includes('pack40d3b')),
-      'no D3B',
-    );
     assert(!files.some((f) => f.toLowerCase().includes('pack40s')), 'no Pack40S');
+    // Pack40D3B may exist as coordinator/adapter files; gateway itself remains attempt-scoped.
+    const orch = readSource('../src/services/viona/vionaRequestExecutionOrchestrator.ts');
+    assert(
+      orch.includes('runVionaRequestExecutionProviderGateway'),
+      'D3B coordinator may wire the D3A gateway',
+    );
   });
 
-  runTest('57. Runtime src scan — no gateway callers outside D3A files', () => {
+  runTest('57. Runtime src scan — gateway callers only coordinator/D3A allowlist', () => {
     const srcRoot = path.resolve(__dirname, '../src');
     const banned = [
       'vionaRequestExecutionGatewayService',
@@ -1124,6 +1151,8 @@ async function main(): Promise<void> {
       path.normalize('services/viona/vionaRequestExecutionGatewayService.ts'),
       path.normalize('services/viona/vionaRequestExecutionProviderContract.ts'),
       path.normalize('repositories/vionaRequestExecutionAttemptRepository.ts'),
+      path.normalize('services/viona/vionaRequestExecutionOrchestrator.ts'),
+      path.normalize('services/viona/vionaPack40D3TwilioGatewayAdapter.ts'),
     ];
     for (const file of fs.readdirSync(srcRoot, { recursive: true }).map(String)) {
       if (!file.endsWith('.ts')) continue;
