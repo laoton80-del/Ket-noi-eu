@@ -955,6 +955,7 @@ model VionaRequest {
   auditEvents           VionaRequestAuditEvent[]
   attachmentReferences  VionaRequestAttachmentReference[]
   escrowHolds           VionaRequestEscrowHold[]
+  executionAttempts    VionaRequestExecutionAttempt[]
 
   @@index([tenantId])
   @@index([status])
@@ -1098,4 +1099,69 @@ enum VionaRequestEscrowHoldStatus {
   REFUNDED
   PARTIALLY_REFUNDED
   FAILED
+}
+
+/// Pack40D1 — durable execution-attempt lifecycle for indirect VionaRequest execution (schema only in D1).
+enum VionaRequestExecutionAttemptState {
+  claimed
+  providerPending
+  providerSucceeded
+  providerFailed
+  outcomeUncertain
+  completed
+  failed
+  abandoned
+}
+
+/// Pack40D1 — persisted execution principal category (initial merchant-service scope only).
+enum VionaRequestExecutionPrincipalType {
+  merchantService
+}
+
+/// Pack40D1 — trusted production trigger that created the execution principal.
+enum VionaRequestExecutionTriggerType {
+  signedMerchantWebhook
+  internalAuthenticatedController
+  approvedInternalDispatch
+}
+
+/// Pack40D1 — one durable execution attempt bound to a single VionaRequest (audit/recovery record).
+model VionaRequestExecutionAttempt {
+  id                              String                              @id @default(uuid())
+  requestId                       String
+  attemptNumber                   Int
+  executionKey                    String                              @unique
+  state                           VionaRequestExecutionAttemptState
+  correlationId                   String
+  principalType                   VionaRequestExecutionPrincipalType
+  triggerType                     VionaRequestExecutionTriggerType
+  triggeringUserId                String?
+  ownerUserIdSnapshot             String
+  scopeKindSnapshot               VionaRequestScopeKind
+  merchantProfileIdSnapshot       String?
+  tenantIdSnapshot                String
+  leaseOwner                      String?
+  leaseExpiresAt                  DateTime?
+  claimedAt                       DateTime?
+  providerName                    String?
+  operationCategory               String?
+  providerIdempotencyKey          String?                             @unique
+  providerStartedAt               DateTime?
+  providerFinishedAt              DateTime?
+  providerResultDigest            String?
+  providerExternalReferenceDigest String?
+  failureClass                    String?
+  failureReasonDigest             String?
+  finalizedAt                     DateTime?
+  abandonedAt                     DateTime?
+  createdAt                       DateTime                            @default(now())
+  updatedAt                       DateTime                            @updatedAt
+
+  request VionaRequest @relation(fields: [requestId], references: [id], onDelete: Restrict)
+
+  @@unique([requestId, attemptNumber])
+  @@index([requestId])
+  @@index([requestId, state])
+  @@index([state, leaseExpiresAt])
+  @@index([correlationId])
 }
