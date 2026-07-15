@@ -1152,6 +1152,17 @@ Pack40BS ADVERSARIAL QA GREEN on v25; evidence PR #359 merged @ 8c038de:
 Pack40B note enforcement: CLOSED/GREEN
 Pack40C/D/S remain unimplemented — separately authorized
 
+=== PACK40C STATUS ENFORCEMENT READINESS AUDIT ===
+Operator phrase: APPROVE_PACK40C_STATUS_ENFORCEMENT_READINESS_AUDIT
+Classification: READY_FOR_PACK40C_DIRECT_STATUS_IMPLEMENTATION
+Direct surface: POST /api/viona/requests/:id/actions/status only (transitionVionaRequestStatus)
+Indirect: vionaRequestExecutionOrchestrator deferred to Pack40D (Option A split)
+Approved transition preserved: submitted -> triage (owner-only effective scope)
+Gaps: no provenance today; pre-tx idempotency fast path; default isolation (not Serializable)
+Required: Serializable in-tx principal + auth-before-idempotency (mirror Pack40B correction)
+No implementation, DB, staging, deploy, migration, or secret action performed
+Next: APPROVE_PACK40C_TENANT_STATUS_ENFORCEMENT (implementation only; no deploy/DB)
+
 === DEFERRED / BACKLOG (recorded, not authorized — logged during Pack37 sync per operator instruction; items 3-4 from the Pack38 sync addressed by Pack39 implementation above and removed from this list) ===
 1. Pack36B: Merchant Admin UI (Frontend AI Persona & Webhook Secret configuration) - Deferred to
    prioritize backend E2E. No merchant-facing UI exists to configure MerchantProfile.aiPersona,
@@ -1179,7 +1190,8 @@ Pack40C/D/S remain unimplemented — separately authorized
    (implementation #352 @ ef6172e, staging deploy Pack40AD v24, adversarial QA Pack40AS
    #354 @ f5d78f5, closure sync #355 @ fa67491). **Pack40B CLOSED/GREEN**
    (implementation #356+#357, staging deploy Pack40BD v25, adversarial QA Pack40BS
-   #359 @ 8c038de). Pack40C/D separately authorized.
+   #359 @ 8c038de; closure sync #360 @ 107be5f). **Pack40C:** readiness audit
+   READY_FOR_PACK40C_DIRECT_STATUS_IMPLEMENTATION; not implemented. Pack40D separately authorized.
 4. TourismBooking shadow-DB replay issue — see DEFERRED/BACKLOG section above (item 2).
 5. Pack37's remaining, not-yet-issued authorization phrases:
    APPROVE_PACK37_OPENAI_STAGING_SECRET — DONE this session (see dedicated section above): key
