@@ -1,0 +1,17 @@
+{
+  "environment": "staging-redacted",
+  "approvedCandidateCount": 5,
+  "approvedCandidateDigestAlgorithm": "sha256-v1",
+  "approvedCandidateDigest": "aa74f63813af18e26afca268175b2b40246159619cda5438aaf40c6d5f930213",
+  "candidateSetRevalidated": true,
+  "rowsUpdated": 5,
+  "postWriteMerchantRowsFromApprovedSet": 5,
+  "postWriteLegacyRowsFromApprovedSet": 0,
+  "consumerRowsModified": 0,
+  "tenantIdsModified": 0,
+  "requestCountChanged": false,
+  "auditEventCountChanged": false,
+  "merchantProfileCountChanged": false,
+  "dataModified": true,
+  "productionTouched": false
+}

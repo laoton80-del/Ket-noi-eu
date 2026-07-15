@@ -1059,6 +1059,15 @@ No write, no consumer backfill, no deploy, no secret change, no Pack40A.
 Evidence: docs/product/VIONA_PACK40P4_MERCHANT_BACKFILL_DRY_RUN_EVIDENCE.md
 Next: APPROVE_PACK40P4_STAGING_MERCHANT_BACKFILL_WRITE (separate) or Pack40P5 verification.
 
+=== PACK40P4W STAGING MERCHANT BACKFILL WRITE (this session) — EXACT POPULATION WRITE ===
+Branch: chore/pack40p4-staging-merchant-backfill-write (from master @ f97e0b5). PR #349 MERGED.
+Operator phrase: APPROVE_PACK40P4_STAGING_MERCHANT_BACKFILL_WRITE.
+
+Approved digest revalidated; exactly 5 rows updated (scopeKind + merchantProfileId only).
+Post-state: 5 merchant / 5 legacyUnresolved / 0 consumer. No consumer backfill, deploy, migration, secret, Pack40A.
+Evidence: docs/product/VIONA_PACK40P4_STAGING_MERCHANT_BACKFILL_WRITE_EVIDENCE.md
+Next: APPROVE_PACK40P5_STAGING_PROVENANCE_VERIFICATION (separately authorized).
+
 === DEFERRED / BACKLOG (recorded, not authorized — logged during Pack37 sync per operator instruction; items 3-4 from the Pack38 sync addressed by Pack39 implementation above and removed from this list) ===
 1. Pack36B: Merchant Admin UI (Frontend AI Persona & Webhook Secret configuration) - Deferred to
    prioritize backend E2E. No merchant-facing UI exists to configure MerchantProfile.aiPersona,
@@ -1083,8 +1092,8 @@ Next: APPROVE_PACK40P4_STAGING_MERCHANT_BACKFILL_WRITE (separate) or Pack40P5 ve
    dry-run, unscheduled); legal/compliance review of region-specific retention windows and PII
    rule values (explicitly not claimed by PR #310).
 3. Wire tenant enforcement into VionaRequest call sites — **Pack40A BLOCKED behind Pack40P**
-   (docs/product/VIONA_PACK40P_REQUEST_PROVENANCE_MODEL_PLAN.md). Pack40P4D dry run complete
-   (5 merchant candidates, digest recorded); P4W write or Pack40P5 verification next (separately authorized).
+   (docs/product/VIONA_PACK40P_REQUEST_PROVENANCE_MODEL_PLAN.md). Pack40P4W staging write complete
+   (5 merchant rows backfilled); Pack40P5 provenance verification next (separately authorized).
 4. TourismBooking shadow-DB replay issue — see DEFERRED/BACKLOG section above (item 2).
 5. Pack37's remaining, not-yet-issued authorization phrases:
    APPROVE_PACK37_OPENAI_STAGING_SECRET — DONE this session (see dedicated section above): key
