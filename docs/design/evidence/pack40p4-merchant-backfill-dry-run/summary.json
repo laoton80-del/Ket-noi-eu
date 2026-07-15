@@ -1,0 +1,21 @@
+{
+  "environment": "staging-redacted",
+  "totalRequests": 10,
+  "legacyUnresolvedRequests": 10,
+  "consumerRequests": 0,
+  "merchantRequests": 0,
+  "webhookPositiveUnresolvedRequests": 5,
+  "fullyQualifiedMerchantCandidates": 5,
+  "activeMerchantCandidates": 5,
+  "inactiveMerchantCandidates": 0,
+  "ambiguousCandidates": 0,
+  "ownerMismatchCandidates": 0,
+  "ownerAlignmentUnprovableCandidates": 0,
+  "duplicateOrContradictoryWebhookEvidence": 0,
+  "registryMatchedUnresolvedWithoutWebhook": 0,
+  "candidateDigestAlgorithm": "sha256-v1",
+  "candidateDigest": "aa74f63813af18e26afca268175b2b40246159619cda5438aaf40c6d5f930213",
+  "p4wDesignReady": true,
+  "dataModified": false,
+  "p4wAuthorized": false
+}
