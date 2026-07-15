@@ -1142,6 +1142,8 @@ model VionaRequestExecutionAttempt {
   tenantIdSnapshot                String
   leaseOwner                      String?
   leaseExpiresAt                  DateTime?
+  /// Pack40DR1 — monotonic lease fence for future recovery ownership CAS (runtime unused in DR1).
+  leaseGeneration                 Int                                 @default(0)
   claimedAt                       DateTime?
   providerName                    String?
   operationCategory               String?
@@ -1150,6 +1152,9 @@ model VionaRequestExecutionAttempt {
   providerFinishedAt              DateTime?
   providerResultDigest            String?
   providerExternalReferenceDigest String?
+  /// Pack40DR1 — exact opaque provider-issued reference for future exact-message reconciliation.
+  /// Durable DB value; never expose in public APIs/logs/evidence. Partial unique index is migration-managed.
+  providerExternalReference       String?                             @db.VarChar(191)
   failureClass                    String?
   failureReasonDigest             String?
   finalizedAt                     DateTime?
