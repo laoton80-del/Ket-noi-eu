@@ -352,18 +352,16 @@ function testHookWiredAfterTransactionCommitInSourceOrder(): void {
 
   const transactionStartMatch = /\$transaction\s*\(\s*async\s*\(\s*tx\s*\)\s*=>/.exec(source);
   const transactionStartIdx = transactionStartMatch?.index ?? -1;
-  const transactionEndMarkerIdx = source.indexOf('if (transition == null) {', transactionStartIdx);
-  const hookCallMatch = /appendVionaExecutionAuditEvent\s*\(\s*buildVionaStateTransitionAuditEventInput\s*\(/.exec(
-    source,
-  );
+  const commitGuardIdx = source.indexOf("txResult.kind === 'created'", transactionStartIdx);
+  const hookCallMatch = /await appendHook\s*\(\s*\n?\s*buildVionaStateTransitionAuditEventInput\s*\(/.exec(source);
   const hookCallIdx = hookCallMatch?.index ?? -1;
 
   assert(transactionStartIdx !== -1, 'expected to find the existing $transaction call');
-  assert(transactionEndMarkerIdx !== -1, 'expected to find the existing transition == null guard after the transaction');
+  assert(commitGuardIdx !== -1, 'expected to find the post-commit created-kind guard after the transaction');
   assert(hookCallIdx !== -1, 'expected to find the new hook call site');
   assert(
-    hookCallIdx > transactionEndMarkerIdx,
-    'the new stateTransition hook call must appear after the transition == null guard (i.e. after the transaction has committed), not inside the transaction and not before it',
+    hookCallIdx > commitGuardIdx,
+    'the new stateTransition hook call must appear after the created-kind guard (i.e. after the transaction has committed), not inside the transaction and not before it',
   );
 }
 
