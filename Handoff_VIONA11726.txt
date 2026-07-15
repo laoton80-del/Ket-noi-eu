@@ -1136,20 +1136,16 @@ Pack40A read enforcement: CLOSED/GREEN.
 === PACK40A POST-MERGE CLOSURE (PR #355 merged @ fa67491) ===
 Pack40A read enforcement: CLOSED/GREEN.
 
-=== PACK40B TENANT NOTE ENFORCEMENT (this implementation) ===
-Authorization: APPROVE_PACK40B_TENANT_NOTE_ENFORCEMENT
-Branch: feat/pack40b-tenant-note-enforcement
-Surface: POST /api/viona/requests/:id/actions/note only (appendVionaRequestNote)
-Principal: reuses resolveVionaRequestReadPrincipalContext (one bounded ownerUserId lookup)
-Mutation predicate: buildAuthorizedVionaRequestNoteWhere — consumer (scopeKind=consumer, merchantProfileId=null)
-  OR active merchant (scopeKind=merchant, exact profile ID + tenant snapshot, isActive=true)
-legacyUnresolved: fail-closed (request_not_found); inactive merchant blocks merchant notes only
-Atomicity: $transaction — authorized findFirst then audit create
-Tests: 64/64 Pack40B + Pack40A 39/39 regression PASS; tsc PASS; Pack18 note wiring PASS
-No schema/migration/DB/staging/deploy/secret action
-Pack40B NOT CLOSED/GREEN — implementation PR review only
-Next after merge: separately authorize APPROVE_PACK40BD_STAGING_NOTE_ENFORCEMENT_DEPLOY
-Pack40C/D/S remain unimplemented
+=== PACK40B TENANT NOTE ENFORCEMENT ===
+PR #356 MERGED @ a165ca9 (initial implementation).
+Gap: pre-transaction MerchantProfile + idempotency fast path.
+Corrective: APPROVE_PACK40B_TRANSACTIONAL_NOTE_AUTHORIZATION_REFINEMENT
+Branch: fix/pack40b-transactional-note-authorization
+In-tx resolveVionaRequestNotePrincipalContext + Serializable isolation
+Auth-before-idempotency; stale active/tenant/owner cannot authorize
+Tests: 81/81 Pack40B + Pack40A 39/39 PASS
+Pack40B NOT CLOSED/GREEN — deploy blocked pending refinement PR merge
+Next: merge corrective PR; then APPROVE_PACK40BD_STAGING_NOTE_ENFORCEMENT_DEPLOY
 
 === DEFERRED / BACKLOG (recorded, not authorized — logged during Pack37 sync per operator instruction; items 3-4 from the Pack38 sync addressed by Pack39 implementation above and removed from this list) ===
 1. Pack36B: Merchant Admin UI (Frontend AI Persona & Webhook Secret configuration) - Deferred to
@@ -1176,9 +1172,9 @@ Pack40C/D/S remain unimplemented
    rule values (explicitly not claimed by PR #310).
 3. Wire tenant enforcement into VionaRequest call sites — **Pack40A CLOSED/GREEN**
    (implementation #352 @ ef6172e, staging deploy Pack40AD v24, adversarial QA Pack40AS
-   #354 @ f5d78f5, closure sync #355 @ fa67491). **Pack40B note enforcement:**
-   local implementation under APPROVE_PACK40B_TENANT_NOTE_ENFORCEMENT (PR review).
-   Pack40C/D remain separately authorized.
+   #354 @ f5d78f5, closure sync #355 @ fa67491). **Pack40B:** PR #356 merged;
+   transactional refinement PR review (APPROVE_PACK40B_TRANSACTIONAL_NOTE_AUTHORIZATION_REFINEMENT).
+   Pack40C/D separately authorized.
 4. TourismBooking shadow-DB replay issue — see DEFERRED/BACKLOG section above (item 2).
 5. Pack37's remaining, not-yet-issued authorization phrases:
    APPROVE_PACK37_OPENAI_STAGING_SECRET — DONE this session (see dedicated section above): key

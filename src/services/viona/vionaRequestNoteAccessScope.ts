@@ -2,7 +2,7 @@ import type { Prisma } from '@prisma/client';
 import { VionaRequestScopeKind } from '@prisma/client';
 
 import { buildAuthorizedVionaRequestWhere } from './vionaRequestAccessScope';
-import type { VionaRequestReadPrincipalContext } from './vionaRequestReadPrincipalContext';
+import type { VionaRequestNotePrincipalContext } from './vionaRequestNotePrincipalContext';
 
 /**
  * Pack40B — provenance-aware note mutation scope layered on existing user/participation predicate.
@@ -10,7 +10,7 @@ import type { VionaRequestReadPrincipalContext } from './vionaRequestReadPrincip
  * Never uses client tenant input, registry scans, or tenant-pattern inference.
  */
 export function buildAuthorizedVionaRequestNoteWhere(
-  principal: VionaRequestReadPrincipalContext,
+  principal: VionaRequestNotePrincipalContext,
 ): Prisma.VionaRequestWhereInput {
   const userScope = buildAuthorizedVionaRequestWhere(principal.authUserId);
 
