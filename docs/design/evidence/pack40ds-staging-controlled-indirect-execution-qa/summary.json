@@ -1,0 +1,23 @@
+{
+  "environment": "staging-redacted",
+  "release": "v27-or-later-verified",
+  "enabledTrigger": "internalAuthenticatedController",
+  "signedWebhookExecutionEnabled": false,
+  "internalDispatchExecutionEnabled": false,
+  "successfulExecutionCount": 1,
+  "providerInvocationCount": 1,
+  "executionAttemptDelta": 1,
+  "completedAttemptDelta": 1,
+  "requestTransitionCount": 2,
+  "transitionEventDelta": 2,
+  "executionAuditDelta": 2,
+  "escrowHoldDelta": 1,
+  "escrowSettlementDelta": 1,
+  "deniedSideEffectCount": 0,
+  "duplicateExecutionSideEffectCount": 0,
+  "consumerExecutionAllowed": false,
+  "legacyExecutionAllowed": false,
+  "cleanupPerformed": false,
+  "recoveryPerformed": false,
+  "productionTouched": false
+}
