@@ -1160,17 +1160,28 @@ Pack40C direct status enforcement: CLOSED/GREEN
   No second POST matrix; requester-only live fixture unavailable (owner-only locally proven)
   Pack40A/B CLOSED/GREEN; Pack40D/S unimplemented
 
+=== PACK40D2 EXECUTION PRINCIPAL + INDIRECT WRITER ===
+Operator phrase: APPROVE_PACK40D2_EXECUTION_PRINCIPAL_INDIRECT_WRITER
+Master baseline: a4dc273 (PR #370 MERGED — Pack40D1 staging migration evidence)
+Merchant execution principal (tx-scoped MerchantProfile by trusted owner)
+Dedicated indirect writer (not Pack40C): triage->inProgress->completed|failed
+Merchant-only eligibility; consumer + legacy fail closed
+Atomic claim + terminal finalization; attempt/lease/event/audit binding
+No runtime wiring; no orchestrator/controller/webhook/provider change
+No schema/migration/DB/staging/deploy; Pack40A/B/C CLOSED/GREEN unchanged
+Pack40D3 and Pack40S remain unimplemented; Pack40D not CLOSED/GREEN
+Evidence: docs/product/VIONA_PACK40D2_EXECUTION_PRINCIPAL_INDIRECT_WRITER_EVIDENCE.md
+Next after D2 merge: separately authorize Pack40D3 gateway/provider integration
+
 === PACK40D1 STAGING EXECUTION ATTEMPT MIGRATION APPLY ===
 Operator phrase: APPROVE_PACK40D1_STAGING_EXECUTION_ATTEMPT_MIGRATION_APPLY
-PR #369 MERGED @ 85bff59
+PR #369 MERGED @ 85bff59; evidence PR #370 MERGED @ a4dc273
 Migration 20260715120000_pack40d1_add_viona_request_execution_attempt applied to staging
 Attempt table empty (0); partial unique active-attempt index verified
 No app deploy, API, provider, status mutation, backfill, or secret action
 Markers: PACK40D1_EXECUTION_ATTEMPT_SCHEMA_APPLIED_TO_STAGING
          PACK40D1_RUNTIME_WIRING_NOT_STARTED
          PACK40D2_D3_STILL_REQUIRED
-Evidence merge pending; Pack40D2/D3 and Pack40S unimplemented
-Next: merge evidence PR; then separately authorize Pack40D2
 
 === PACK40D1 EXECUTION ATTEMPT SCHEMA FOUNDATION ===
 Operator phrase: APPROVE_PACK40D1_EXECUTION_ATTEMPT_SCHEMA
@@ -1245,8 +1256,9 @@ Next: APPROVE_PACK40CS_STAGING_TENANT_STATUS_ADVERSARIAL_QA (QA-only, separate)
    #359 @ 8c038de; closure sync #360 @ 107be5f). **Pack40C CLOSED/GREEN**
    (implementation #363, deploy #364 v26, QA #365, closure sync #366 @ e9ee2d7).
    **Pack40D:** readiness PR #367; foundation refinement PR #368 @ 79bddbe;
-   Pack40D1 schema PR #369 @ 85bff59; staging migration applied (table empty;
-   no runtime wiring; evidence merge pending); D2/D3 unimplemented.
+   Pack40D1 schema PR #369 @ 85bff59; staging migration evidence PR #370 @ a4dc273
+   (APPLIED/GREEN, table empty); Pack40D2 dormant principal+indirect writer
+   (merchant-only; no runtime wiring/provider/DB); D3 unimplemented.
    **Pack40S:** unimplemented.
 4. TourismBooking shadow-DB replay issue — see DEFERRED/BACKLOG section above (item 2).
 5. Pack37's remaining, not-yet-issued authorization phrases:
