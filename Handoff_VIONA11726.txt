@@ -1160,17 +1160,34 @@ Pack40C direct status enforcement: CLOSED/GREEN
   No second POST matrix; requester-only live fixture unavailable (owner-only locally proven)
   Pack40A/B CLOSED/GREEN; Pack40D/S unimplemented
 
+=== PACK40DR RECOVERY/RECONCILIATION READINESS AUDIT ===
+Operator phrase: APPROVE_PACK40DR_RECOVERY_RECONCILIATION_READINESS_AUDIT
+Master baseline: 5667824 (PR #376 MERGED — Pack40D controlled-execution closure)
+Classification: READY_FOR_PACK40DR1_SCHEMA_PACKET
+Schema decision: PACK40DR_REQUIRES_RECOVERY_SCHEMA_PACKET
+  - leaseGeneration (or equivalent) required to fence stale workers after recovery acquire
+  - durable redacted Twilio reference required; digests alone cannot exact-reconcile outcomeUncertain
+Stage-1 model: operator-invoked internal recovery endpoint (SYSTEM_RECOVERY_PRINCIPAL)
+No scheduler/worker enabled; no blind provider retry; no second SMS per attempt
+No implementation, DB, staging, provider, escrow, deploy, migration, or Pack40S action
+Pack40A/B/C CLOSED/GREEN; initial Pack40D controlled merchant execution CLOSED/GREEN (unchanged)
+Signed-webhook DISABLED; approvedInternalDispatch UNWIRED; consumer/legacy UNSUPPORTED
+Evidence: docs/product/VIONA_PACK40DR_RECOVERY_RECONCILIATION_READINESS_AUDIT.md
+Matrix: docs/design/VIONA_PACK40DR_RECOVERY_STATE_MATRIX.md
+Next: APPROVE_PACK40DR1_RECOVERY_SCHEMA_PACKET (schema only)
+
 === PACK40D INITIAL CONTROLLED MERCHANT EXECUTION CLOSURE ===
-Post-merge closure after Pack40DS evidence PR #375 MERGED @ ab5f607 (2026-07-15T21:42:07Z)
-Master baseline for QA evidence: bd72de5 (Pack40DD #374); evidence merge ends master @ ab5f607
+Post-merge closure PR #376 MERGED @ 5667824 (2026-07-15T21:49:45Z)
+After Pack40DS evidence PR #375 MERGED @ ab5f607 (2026-07-15T21:42:07Z)
+Master baseline for QA evidence: bd72de5 (Pack40DD #374)
 Staging release tested: v27 (deployment-01KXKSKRTN49GJW82A1ZAA8PXQ)
 Live matrix: 5 execution POSTs; other write-capable HTTP 0
   1 successful merchant execution (triage -> inProgress -> completed)
   1 Twilio test-SMS; 1 completed attempt; 2 transitions/events/indirect audits
   1 attempt-scoped escrow hold settled
   consumer/legacy/nonexistent/duplicate denials: 0 side effects
-  transport certain; no blind retry; Twilio SID lookup not performed; no cleanup/recovery
-Canonical narrow closure:
+  transport certain; no blind retry; Twilio SID lookup not performed; no cleanup
+Canonical narrow closure (remains in force):
   Pack40A: CLOSED/GREEN
   Pack40B: CLOSED/GREEN
   Pack40C: CLOSED/GREEN
@@ -1179,11 +1196,11 @@ Canonical narrow closure:
   Pack40D approved internal dispatch: UNWIRED
   Pack40D consumer execution: UNSUPPORTED
   Pack40D legacy execution: UNSUPPORTED
-  Pack40D recovery/reconciliation: UNIMPLEMENTED
+  Pack40D recovery/reconciliation: AUDITED (unimplemented; Pack40DR1 schema next)
   Pack40S: UNIMPLEMENTED / NOT AUTHORIZED
-Does NOT close future Pack40D triggers, provider categories, or recovery paths.
+Does NOT close future Pack40D triggers, provider categories, or recovery runtime.
 Evidence: docs/product/VIONA_PACK40DS_STAGING_CONTROLLED_INDIRECT_EXECUTION_QA_EVIDENCE.md
-Next: merge this docs-only closure-sync PR; do not enable additional triggers, recovery, or Pack40S
+Next: Pack40DR1 schema packet authorization (separate)
 
 === PACK40DS STAGING CONTROLLED INDIRECT EXECUTION QA ===
 Operator phrase: APPROVE_PACK40DS_STAGING_CONTROLLED_INDIRECT_EXECUTION_QA
@@ -1312,9 +1329,10 @@ Next: APPROVE_PACK40CS_STAGING_TENANT_STATUS_ADVERSARIAL_QA (QA-only, separate)
    #359 @ 8c038de; closure sync #360 @ 107be5f). **Pack40C CLOSED/GREEN**
    (implementation #363, deploy #364 v26, QA #365, closure sync #366 @ e9ee2d7).
    **Pack40D initial controlled merchant execution: CLOSED/GREEN** — D1–D3B + DD #374 +
-   DS evidence #375 @ ab5f607; staging v27; sole trigger internalAuthenticatedController;
-   signed-webhook DISABLED; approvedInternalDispatch UNWIRED; consumer/legacy UNSUPPORTED;
-   recovery/reconciliation UNIMPLEMENTED. Other Pack40D paths not closed.
+   DS evidence #375 @ ab5f607 + closure #376 @ 5667824; staging v27; sole trigger
+   internalAuthenticatedController; signed-webhook DISABLED; approvedInternalDispatch UNWIRED;
+   consumer/legacy UNSUPPORTED. **Pack40DR audit complete** → next Pack40DR1 schema packet;
+   recovery runtime still unimplemented. Other Pack40D paths not closed.
    **Pack40S:** UNIMPLEMENTED / NOT AUTHORIZED.
 4. TourismBooking shadow-DB replay issue — see DEFERRED/BACKLOG section above (item 2).
 5. Pack37's remaining, not-yet-issued authorization phrases:
