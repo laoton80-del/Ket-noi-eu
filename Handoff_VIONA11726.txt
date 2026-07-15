@@ -1085,7 +1085,22 @@ Fly logs not used as gate (P2D limitation).
 Post-state: 5 legacyUnresolved / 6 merchant / 1 consumer / 12 total.
 Result: PACK40P_PROVENANCE_DEFINITION_OF_READY_MET. Pack40A not implemented.
 Evidence: docs/product/VIONA_PACK40P5_STAGING_PROVENANCE_VERIFICATION_EVIDENCE.md
-Next: review/merge P5 evidence PR; then separately authorize Pack40A.
+PR #351 MERGED @ 13efae8d6849c94584e8c78efe91c2a82c210d14.
+
+=== PACK40A — TENANT PRINCIPAL CONTEXT + READ ENFORCEMENT (LOCAL IMPLEMENTATION) ===
+Operator phrase: APPROVE_PACK40A_TENANT_CONTEXT_AND_READ_ENFORCEMENT
+Branch: feat/pack40a-tenant-context-read-enforcement (from origin/master @ 13efae8)
+Scope: direct read list/detail only — GET /api/viona/requests, GET /api/viona/requests/:id
+Principal: VionaRequestReadPrincipalContext (authUserId + bounded MerchantProfile by ownerUserId)
+Read policy: existingUserScope AND (consumer branch OR merchant branch); legacyUnresolved excluded
+Inactive merchant: may read own merchant-classified rows; isActive not in read predicate
+Dual-role: consumer and merchant branches coexist; test 38 verifies both paths
+Mutation paths unchanged: note, status, create, webhook, execution — no directReadPolicy flag
+Tests: 39/39 Pack40A PASS; full local pack regression PASS; tsc + lint PASS
+No schema, migration, DB, staging, deploy, secret, or Pack40B/C/D/S action
+Evidence: docs/product/VIONA_PACK40A_TENANT_CONTEXT_READ_ENFORCEMENT_EVIDENCE.md
+Classification: READY_FOR_PACK40A_READ_ENFORCEMENT_PR_REVIEW
+Next: merge implementation PR; then separately authorize Pack40A staging deploy/QA
 
 === DEFERRED / BACKLOG (recorded, not authorized — logged during Pack37 sync per operator instruction; items 3-4 from the Pack38 sync addressed by Pack39 implementation above and removed from this list) ===
 1. Pack36B: Merchant Admin UI (Frontend AI Persona & Webhook Secret configuration) - Deferred to
@@ -1110,10 +1125,9 @@ Next: review/merge P5 evidence PR; then separately authorize Pack40A.
    site at a time; schedule scripts/viona-pack33-audit-retention-job.ts for real (currently
    dry-run, unscheduled); legal/compliance review of region-specific retention windows and PII
    rule values (explicitly not claimed by PR #310).
-3. Wire tenant enforcement into VionaRequest call sites — **Pack40A BLOCKED behind Pack40P**
-   (docs/product/VIONA_PACK40P_REQUEST_PROVENANCE_MODEL_PLAN.md). Pack40P5 staging provenance
-   verification complete (PACK40P_PROVENANCE_DEFINITION_OF_READY_MET); Pack40A requires separate
-   authorization after P5 evidence PR review/merge.
+3. Wire tenant enforcement into VionaRequest call sites — **Pack40A read path implemented locally**
+   (feat/pack40a-tenant-context-read-enforcement); PR review pending. Staging deploy/QA requires
+   separate authorization. Pack40B/C/D remain blocked.
 4. TourismBooking shadow-DB replay issue — see DEFERRED/BACKLOG section above (item 2).
 5. Pack37's remaining, not-yet-issued authorization phrases:
    APPROVE_PACK37_OPENAI_STAGING_SECRET — DONE this session (see dedicated section above): key

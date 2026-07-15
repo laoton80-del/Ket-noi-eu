@@ -87,6 +87,8 @@ export type VionaRequestDetailDto = Readonly<{
   safety: typeof VIONA_REQUEST_READ_SAFETY;
 }>;
 
+export type VionaRequestDirectReadPolicy = 'pack40a_provenance';
+
 export type ListVionaRequestsInput = Readonly<{
   authUserId: string;
   status?: string;
@@ -95,6 +97,7 @@ export type ListVionaRequestsInput = Readonly<{
   createdTo?: Date;
   limit?: number;
   skip?: number;
+  directReadPolicy?: VionaRequestDirectReadPolicy;
 }>;
 
 export type ListVionaRequestsResult = Readonly<{
@@ -106,6 +109,7 @@ export type ListVionaRequestsResult = Readonly<{
 export type GetVionaRequestByIdInput = Readonly<{
   authUserId: string;
   requestId: string;
+  directReadPolicy?: VionaRequestDirectReadPolicy;
 }>;
 
 export type GetVionaRequestByIdFailure = 'invalid_input' | 'request_not_found';
