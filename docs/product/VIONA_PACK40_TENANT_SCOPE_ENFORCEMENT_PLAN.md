@@ -3,7 +3,7 @@
 Status: **PLANNING ONLY (provenance-hardened refinement)** — docs-only. No product code,
 schema/migration, database action, deployment, staging call, or secret change is authorized.
 
-**Pack40A status:** **CLOSED / GREEN** — closure sync PR #355 @ `fa67491`. **Pack40B:** PR #356 **MERGED** @ `a165ca9` + corrective PR #357 @ `45c8f29`; Pack40BD deployed staging **v25**; Pack40BS adversarial QA **PASS** on v25 (`APPROVE_PACK40BS_STAGING_TENANT_NOTE_ADVERSARIAL_QA`) — **closure pending evidence PR merge**; Pack40C/D separately authorized.
+**Pack40A status:** **CLOSED / GREEN** — closure sync PR #355 @ `fa67491`. **Pack40B:** **CLOSED / GREEN** — implementation PR #356 @ `a165ca9` + transactional correction PR #357 @ `45c8f29`; Pack40BD deployed staging **v25** (PR #358 @ `44ff2f7`); Pack40BS adversarial note QA **GREEN** on v25 (PR #359 @ `8c038de`); exactly **2** successful note/audit events; **0** replay duplicates; **0** denied side effects; transactional race scenarios locally proven (Pack40B **81-test** suite), not manufactured on staging; Pack40C/D separately authorized.
 `docs/product/VIONA_PACK40P_REQUEST_PROVENANCE_MODEL_PLAN.md` for server-owned `scopeKind` +
 `merchantProfileId` schema/remediation plan, **P1 deployment lock**, and **P1→P3→P2→P2D** rollout order.
 Inventory complete (PR #342); consumer provenance requires Pack40P1–P5 (+ P2D) before
@@ -300,7 +300,7 @@ Unchanged structure. **No phrase implies another slice. No automatic continuatio
 | Slice | Scope | Authorized? |
 |---|---|---|
 | **Pack40A** | Principal context + read list/detail + three-state policy | **CLOSED / GREEN** — implementation merged; staging deploy v24; adversarial QA green |
-| **Pack40B** | Note enforcement | **QA PASS (closure pending evidence merge)** — PR #356+#357 merged; Pack40BD deployed v25; Pack40BS adversarial QA green on staging; exactly **2** successful notes; replay idempotent; non-owner/legacy/spoof denied; **not yet CLOSED/GREEN** until evidence PR merge |
+| **Pack40B** | Note enforcement | **CLOSED / GREEN** — PR #356+#357 merged; Pack40BD deployed v25; Pack40BS adversarial QA green (PR #359 @ `8c038de`); exactly **2** successful notes; replay idempotent (**0** duplicates); non-owner/legacy/spoof denied; existence-leak-safe **404** normalization |
 | **Pack40C** | Status enforcement | **Not authorized** — requires A merged |
 | **Pack40D** | Indirect paths after per-path review | **Not authorized** |
 | **Pack40S** | Staging adversarial QA | **Not authorized** |
