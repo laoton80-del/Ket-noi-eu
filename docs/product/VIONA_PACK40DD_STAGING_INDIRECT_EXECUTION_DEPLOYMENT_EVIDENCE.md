@@ -29,7 +29,8 @@ PACK40D_RECOVERY_RECONCILIATION_NOT_IMPLEMENTED
 
 - Branch: `docs/pack40dd-staging-indirect-execution-deployment`
 - Starting HEAD = verified master: `548b6ec`
-- Evidence commit: recorded at PR open time (docs-only)
+- Evidence commit: `5d84174694938050a1f823ca50068edfb266f3da`
+- Evidence PR: #374 (not merged)
 
 ## 4. Source-boundary verification
 
