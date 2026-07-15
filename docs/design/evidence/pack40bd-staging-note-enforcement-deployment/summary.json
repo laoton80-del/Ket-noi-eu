@@ -1,0 +1,35 @@
+{
+  "pack": "Pack40BD",
+  "operatorPhrase": "APPROVE_PACK40BD_STAGING_NOTE_ENFORCEMENT_DEPLOY",
+  "verifiedMasterSha": "45c8f2945e4237bd5c20a76d36e0e566ffa5667d",
+  "pr356MergeCommit": "a165ca96316080164b34707c44ff57bea8e09697",
+  "pr357MergeCommit": "45c8f2945e4237bd5c20a76d36e0e566ffa5667d",
+  "pr357MergedAt": "2026-07-15T12:03:21Z",
+  "stagingApp": "viona-api-staging-eu",
+  "previousRelease": {
+    "version": 24,
+    "image": "deployment-01KXJH9CGSNBQ5H0JDWG89MMBM"
+  },
+  "newRelease": {
+    "version": 25,
+    "image": "deployment-01KXJTWQZCWPCTRK3B0SPKYJAT"
+  },
+  "preDeployHealthHttp": 200,
+  "postDeployHealthHttp": 200,
+  "deployCommand": "fly deploy --app viona-api-staging-eu --remote-only",
+  "deployStartUtc": "2026-07-15T12:08:46Z",
+  "deployEndUtc": "2026-07-15T12:10:12Z",
+  "deployExitCode": 0,
+  "authenticatedQaPerformed": false,
+  "notePostPerformed": false,
+  "databaseAccessed": false,
+  "migrationRan": false,
+  "secretChanged": false,
+  "productionTouched": false,
+  "flyLogsUsedAsGate": false,
+  "stateMarkers": [
+    "PACK40B_TRANSACTIONAL_NOTE_ENFORCEMENT_DEPLOYED_TO_STAGING",
+    "PACK40B_STAGING_ADVERSARIAL_QA_STILL_REQUIRED"
+  ],
+  "classification": "READY_FOR_PACK40BD_DEPLOYMENT_EVIDENCE_PR_REVIEW"
+}
