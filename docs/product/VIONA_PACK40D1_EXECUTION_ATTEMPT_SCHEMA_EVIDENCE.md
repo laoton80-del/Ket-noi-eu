@@ -149,7 +149,7 @@ New table only. Existing `VionaRequest` rows unchanged. No backfill required.
 | Pack40D1 suite | **47/47 PASS** |
 | `prisma validate` | **PASS** |
 | `prisma generate` | **PASS** |
-| `prisma format` | **PASS** (MerchantProfile spacing restored to master to keep Pack40P1 string contracts) |
+| `prisma format` | **Skipped as committed form** — full-file format rewrites unrelated models and breaks Pack40P1 spacing contracts; schema validated + generated without commit-time format churn |
 | `tsc --noEmit` | **PASS** |
 | ESLint (touched TS) | **PASS** |
 | Pack40A | **39/39 PASS** |
