@@ -1160,21 +1160,34 @@ Pack40C direct status enforcement: CLOSED/GREEN
   No second POST matrix; requester-only live fixture unavailable (owner-only locally proven)
   Pack40A/B CLOSED/GREEN; Pack40D/S unimplemented
 
+=== PACK40DR1 RECOVERY FENCING + PROVIDER REFERENCE SCHEMA ===
+Operator phrase: APPROVE_PACK40DR1_RECOVERY_SCHEMA_PACKET
+Master baseline: e505359 (PR #377 MERGED — Pack40DR readiness audit)
+Additive fields on VionaRequestExecutionAttempt:
+  - leaseGeneration Int NOT NULL DEFAULT 0
+  - providerExternalReference VARCHAR(191) NULL (exact opaque provider id)
+Partial unique index (migration-managed):
+  (providerName, providerExternalReference) WHERE providerExternalReference IS NOT NULL
+Migration: 20260716010000_pack40dr1_add_recovery_fencing_and_provider_reference
+Migration applied: NO
+No recovery principal/service/endpoint/scheduler; no D2/D3/Twilio/escrow runtime change
+No DB/staging/provider/escrow/deploy/secret/production action
+Pack40A/B/C CLOSED/GREEN; initial Pack40D controlled merchant execution CLOSED/GREEN
+Signed-webhook DISABLED; approvedInternalDispatch UNWIRED; consumer/legacy UNSUPPORTED
+Pack40S: UNIMPLEMENTED / NOT AUTHORIZED
+Evidence: docs/product/VIONA_PACK40DR1_RECOVERY_SCHEMA_FOUNDATION_EVIDENCE.md
+Next after schema PR merge: separate staging migration-apply authorization (then Pack40DR2)
+
 === PACK40DR RECOVERY/RECONCILIATION READINESS AUDIT ===
 Operator phrase: APPROVE_PACK40DR_RECOVERY_RECONCILIATION_READINESS_AUDIT
+PR #377 MERGED @ e505359 (2026-07-15T22:05:40Z)
 Master baseline: 5667824 (PR #376 MERGED — Pack40D controlled-execution closure)
 Classification: READY_FOR_PACK40DR1_SCHEMA_PACKET
 Schema decision: PACK40DR_REQUIRES_RECOVERY_SCHEMA_PACKET
-  - leaseGeneration (or equivalent) required to fence stale workers after recovery acquire
-  - durable redacted Twilio reference required; digests alone cannot exact-reconcile outcomeUncertain
 Stage-1 model: operator-invoked internal recovery endpoint (SYSTEM_RECOVERY_PRINCIPAL)
-No scheduler/worker enabled; no blind provider retry; no second SMS per attempt
-No implementation, DB, staging, provider, escrow, deploy, migration, or Pack40S action
-Pack40A/B/C CLOSED/GREEN; initial Pack40D controlled merchant execution CLOSED/GREEN (unchanged)
-Signed-webhook DISABLED; approvedInternalDispatch UNWIRED; consumer/legacy UNSUPPORTED
 Evidence: docs/product/VIONA_PACK40DR_RECOVERY_RECONCILIATION_READINESS_AUDIT.md
 Matrix: docs/design/VIONA_PACK40DR_RECOVERY_STATE_MATRIX.md
-Next: APPROVE_PACK40DR1_RECOVERY_SCHEMA_PACKET (schema only)
+Next: Pack40DR1 schema foundation (this session)
 
 === PACK40D INITIAL CONTROLLED MERCHANT EXECUTION CLOSURE ===
 Post-merge closure PR #376 MERGED @ 5667824 (2026-07-15T21:49:45Z)
@@ -1196,11 +1209,11 @@ Canonical narrow closure (remains in force):
   Pack40D approved internal dispatch: UNWIRED
   Pack40D consumer execution: UNSUPPORTED
   Pack40D legacy execution: UNSUPPORTED
-  Pack40D recovery/reconciliation: AUDITED (unimplemented; Pack40DR1 schema next)
+  Pack40D recovery/reconciliation: AUDITED; DR1 schema foundation authored (migration unapplied)
   Pack40S: UNIMPLEMENTED / NOT AUTHORIZED
 Does NOT close future Pack40D triggers, provider categories, or recovery runtime.
 Evidence: docs/product/VIONA_PACK40DS_STAGING_CONTROLLED_INDIRECT_EXECUTION_QA_EVIDENCE.md
-Next: Pack40DR1 schema packet authorization (separate)
+Next: merge Pack40DR1 schema PR; then separate staging migrate-apply authorization
 
 === PACK40DS STAGING CONTROLLED INDIRECT EXECUTION QA ===
 Operator phrase: APPROVE_PACK40DS_STAGING_CONTROLLED_INDIRECT_EXECUTION_QA
@@ -1331,8 +1344,9 @@ Next: APPROVE_PACK40CS_STAGING_TENANT_STATUS_ADVERSARIAL_QA (QA-only, separate)
    **Pack40D initial controlled merchant execution: CLOSED/GREEN** — D1–D3B + DD #374 +
    DS evidence #375 @ ab5f607 + closure #376 @ 5667824; staging v27; sole trigger
    internalAuthenticatedController; signed-webhook DISABLED; approvedInternalDispatch UNWIRED;
-   consumer/legacy UNSUPPORTED. **Pack40DR audit complete** → next Pack40DR1 schema packet;
-   recovery runtime still unimplemented. Other Pack40D paths not closed.
+   consumer/legacy UNSUPPORTED. **Pack40DR audit #377**; **Pack40DR1 schema foundation**
+   (leaseGeneration + exact providerExternalReference; migration unapplied); recovery runtime
+   still unimplemented. Other Pack40D paths not closed.
    **Pack40S:** UNIMPLEMENTED / NOT AUTHORIZED.
 4. TourismBooking shadow-DB replay issue — see DEFERRED/BACKLOG section above (item 2).
 5. Pack37's remaining, not-yet-issued authorization phrases:
