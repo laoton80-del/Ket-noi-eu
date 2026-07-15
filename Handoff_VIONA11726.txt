@@ -1160,15 +1160,25 @@ Pack40C direct status enforcement: CLOSED/GREEN
   No second POST matrix; requester-only live fixture unavailable (owner-only locally proven)
   Pack40A/B CLOSED/GREEN; Pack40D/S unimplemented
 
+=== PACK40D1 STAGING EXECUTION ATTEMPT MIGRATION APPLY ===
+Operator phrase: APPROVE_PACK40D1_STAGING_EXECUTION_ATTEMPT_MIGRATION_APPLY
+PR #369 MERGED @ 85bff59
+Migration 20260715120000_pack40d1_add_viona_request_execution_attempt applied to staging
+Attempt table empty (0); partial unique active-attempt index verified
+No app deploy, API, provider, status mutation, backfill, or secret action
+Markers: PACK40D1_EXECUTION_ATTEMPT_SCHEMA_APPLIED_TO_STAGING
+         PACK40D1_RUNTIME_WIRING_NOT_STARTED
+         PACK40D2_D3_STILL_REQUIRED
+Evidence merge pending; Pack40D2/D3 and Pack40S unimplemented
+Next: merge evidence PR; then separately authorize Pack40D2
+
 === PACK40D1 EXECUTION ATTEMPT SCHEMA FOUNDATION ===
 Operator phrase: APPROVE_PACK40D1_EXECUTION_ATTEMPT_SCHEMA
-Refinement PR #368 merged @ 79bddbe
-Additive VionaRequestExecutionAttempt + enums; migration unapplied
+Refinement PR #368 merged @ 79bddbe; schema PR #369 merged @ 85bff59
+Additive VionaRequestExecutionAttempt + enums
 Repository foundation unwired (no runtime callers)
 Partial unique one-active-attempt index migration-managed
-47/47 Pack40D1 tests; Pack40A/B/C regressions PASS
-No DB apply, staging, provider, orchestrator, or deploy action
-Next after merge: separately authorize staging migration application; then Pack40D2
+Staging migrate deploy completed under separate authorization above
 
 === PACK40D EXECUTION FOUNDATION REFINEMENT ===
 Operator phrase: APPROVE_PACK40D_EXECUTION_FOUNDATION_REFINEMENT
@@ -1235,8 +1245,9 @@ Next: APPROVE_PACK40CS_STAGING_TENANT_STATUS_ADVERSARIAL_QA (QA-only, separate)
    #359 @ 8c038de; closure sync #360 @ 107be5f). **Pack40C CLOSED/GREEN**
    (implementation #363, deploy #364 v26, QA #365, closure sync #366 @ e9ee2d7).
    **Pack40D:** readiness PR #367; foundation refinement PR #368 @ 79bddbe;
-   Pack40D1 schema foundation local (migration unapplied; repository unwired);
-   D2/D3 unimplemented. **Pack40S:** unimplemented.
+   Pack40D1 schema PR #369 @ 85bff59; staging migration applied (table empty;
+   no runtime wiring; evidence merge pending); D2/D3 unimplemented.
+   **Pack40S:** unimplemented.
 4. TourismBooking shadow-DB replay issue — see DEFERRED/BACKLOG section above (item 2).
 5. Pack37's remaining, not-yet-issued authorization phrases:
    APPROVE_PACK37_OPENAI_STAGING_SECRET — DONE this session (see dedicated section above): key
