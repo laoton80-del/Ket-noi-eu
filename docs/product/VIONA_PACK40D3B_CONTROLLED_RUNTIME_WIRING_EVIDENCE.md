@@ -19,7 +19,8 @@ Classification target: `READY_FOR_PACK40D3B_RUNTIME_WIRING_PR_REVIEW`
 
 - Branch: `feat/pack40d3b-controlled-runtime-wiring`
 - Starting HEAD: `fb957ee914c33c0d7d42bdb5956b91e9ba0d86bb`
-- Implementation commit: recorded at PR open time
+- Implementation commit: `0dcd8957936283358897312e5c1994e94b9b794d`
+- Implementation PR: #373 (not merged)
 
 ## 4. Single enabled trigger
 
