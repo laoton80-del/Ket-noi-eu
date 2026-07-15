@@ -24,7 +24,15 @@ Pack40C is **not** implemented or CLOSED/GREEN. This document records readiness 
 ## 3. Branch and audit commit
 
 - Branch: `docs/pack40c-status-enforcement-readiness-audit`
-- Commit: recorded at PR open time
+- Initial audit: PR #361 @ `d64b782` (merged to master)
+- Refinement commit: recorded at push time
+
+## 3A. Refinement summary (replay-safe + owner-only DB predicate)
+
+Corrective refinements applied after PR #361 merge:
+
+1. **Owner-only authorization** enforced in the **database predicate** (`ownerUserId = authUserId` + provenance), not primarily via post-fetch `isOwnerActor()`.
+2. **Replay-safe ordering** — state-aware in-transaction flow; replay after current authorization, **before** new-mutation `submitted→triage` validation.
 
 ## 4. Complete status surface inventory
 
@@ -91,9 +99,9 @@ This is the **only** transition the direct status endpoint can commit. Additiona
 
 | Property | Value |
 |---|---|
-| Actor requirement | **Owner only** — `isOwnerActor(row, authUserId)` after legacy user-scope lookup |
-| User-scope lookup | `buildAuthorizedVionaRequestWhere(authUserId)` (requester \| owner \| participant) |
-| Effective authorization | **Owner-only** — non-owners matching user scope still receive `request_not_found` |
+| Actor requirement | **Owner only** — `ownerUserId = authUserId` in authorized DB lookup (primary boundary) |
+| User-scope lookup (live) | `buildAuthorizedVionaRequestWhere` + post-fetch `isOwnerActor()` — **Pack40C must replace this** |
+| Effective authorization (Pack40C target) | **Owner-only in DB predicate** — requester/participant never match authorized lookup |
 | Idempotency key source | Client body `idempotencyKey` (optional) |
 | Uniqueness boundary | `(requestId, eventType=action.status, payloadJson.idempotencyKey)` with matching `targetStatus` |
 | First-write HTTP | **201** when `idempotentReplay: false` |
@@ -107,18 +115,50 @@ Pack40C must **not** authorize or introduce a new transition.
 
 ---
 
-## 7. Existing user scope
+## 7. Existing user scope (live) and Pack40C owner-only DB predicate
 
-**Effective direct status scope today:**
+### 7.1 Live behavior today (must not be replicated as primary boundary)
 
 ```text
-buildAuthorizedVionaRequestWhere(authUserId)
-AND ownerUserId = authUserId   // enforced by isOwnerActor after findFirst
+findFirst where buildAuthorizedVionaRequestWhere(authUserId)   // requester | owner | participant
+→ isOwnerActor(row, authUserId) in application memory
+→ request_not_found if not owner
 ```
 
-Underlying `buildAuthorizedVionaRequestWhere` OR-clause includes requester and participants, but the service rejects any row where `ownerUserId !== authUserId`. Pack40C must preserve this **owner-only** effective semantics while layering provenance — it must not broaden to requester/participant mutation.
+This pattern is **not** the Pack40C target. Requester-only and participant-only actors must **never** fetch an authorized row.
 
-No support/admin role, no merchant-owner shortcut outside owner check, no client-supplied tenant filter on the status path today.
+### 7.2 Required Pack40C authorized lookup (primary boundary)
+
+```text
+id = requestId
+AND ownerUserId = authUserId
+AND provenance branch (consumer | active merchant)
+```
+
+Conceptual full predicate:
+
+```text
+AND: [
+  { id: requestId, ownerUserId: authUserId },
+  OR: [
+    { scopeKind: consumer, merchantProfileId: null },
+    { scopeKind: merchant, merchantProfileId: M.id, tenantId: M.tenantId, M.isActive: true }
+  ]
+]
+```
+
+### 7.3 Required conclusions
+
+1. **Requester-only** actors cannot transition status.
+2. **Participant-only** actors cannot transition status.
+3. **MerchantProfile ownership** does not replace request `ownerUserId` equality.
+4. **Tenant equality** does not replace request ownership.
+5. Owner scope and provenance are applied in the **same database query**.
+6. Unauthorized rows remain **not-found-safe** (`request_not_found` / HTTP 404).
+
+### 7.4 Defensive assertion (optional, not primary)
+
+Implementation **may** retain `isOwnerActor()` after retrieval as a defensive invariant check. It must **not** be the primary authorization boundary.
 
 ---
 
@@ -163,26 +203,120 @@ Write `$transaction` uses **Prisma default** (PostgreSQL Read Committed). **Not 
 
 ---
 
-## 9. Recommended Pack40C transactional design
+## 9. Recommended Pack40C transactional design (replay-safe)
 
-Mirror corrected Pack40B pattern:
+### 9.1 In-transaction ordering (authoritative)
 
 ```text
-Serializable $transaction
-→ resolveVionaRequestStatusPrincipalContext(tx, authUserId)
-→ buildAuthorizedVionaRequestStatusWhere(principal)
-→ findFirst authorized request row (includes current status)
-→ owner check (preserve existing effective scope)
-→ Pack25 allowlist + state machine on current fromStatus
-→ idempotency lookup/replay (only after authorization passes)
-→ conditional updateMany (id + fromStatus + authorized where)
-→ VionaRequestStatusEvent.create
-→ action.status audit create
+Serializable transaction begins
+→ resolve current MerchantProfile using transaction client
+→ provenance-aware owner-only authorized request lookup
+   (id + ownerUserId + provenance branch in same WHERE)
+→ look up idempotency record for current actor/request/action/key
+→ IF matching authorized replay exists:
+     verify actor, request, action category, idempotency key, targetStatus binding
+     verify payload fingerprint / equivalent existing binding (reason, note)
+     verify replay state consistency (see §9.3)
+     return existing replay result (HTTP 200, idempotentReplay: true)
+→ ELSE validate new direct transition:
+     confirm current request status
+     enforce submitted → triage only (Pack25 allowlist + state machine)
+     conditional updateMany (id + ownerUserId + fromStatus + authorized where)
+     require exactly one updated row
+     create VionaRequestStatusEvent + action.status audit atomically
 → commit
-→ (optional) post-commit stateTransition hook unchanged
+→ (post-tx) best-effort stateTransition hook (§9.6)
 ```
 
-**Authorization-before-idempotency** is mandatory. An old successful idempotency key must not bypass current provenance authorization.
+### 9.2 Authorization-before-replay (mandatory)
+
+**Current** provenance and owner authorization must pass **before** any idempotency replay return.
+
+A prior successful key must **not** bypass:
+
+- a different actor;
+- a different request;
+- a different target status;
+- a different action category;
+- materially conflicting reason/note payload;
+- inactive merchant profile;
+- wrong-profile or tenant-mismatched merchant;
+- legacy-unresolved request.
+
+### 9.3 Why transition validation cannot always precede replay
+
+**Concrete replay case:**
+
+```text
+First call:  submitted → triage  (commit)
+Replay call: current row already triage; same authorized owner; same key/payload
+```
+
+If implementation requires `fromStatus === submitted` **before** checking the committed idempotency record, a **legitimate replay would incorrectly fail** (`invalid_transition`).
+
+The implementation must distinguish:
+
+| Outcome | Meaning |
+|---|---|
+| Valid replay | Authorized actor + bound key + state consistent with recorded target |
+| New mutation | No valid replay; current status allows submitted → triage |
+| Key conflict | Same key, different target/payload/request/actor → existing `invalid_input` |
+| Unauthorized replay | Current authorization fails → `request_not_found` |
+
+**New-mutation** transition validation (`submitted → triage`) runs **only after** confirming no valid authorized replay exists.
+
+### 9.4 Replay state-consistency requirements
+
+For an existing successful `action.status` record, safe replay requires:
+
+```text
+recorded fromStatus = submitted
+recorded toStatus   = triage
+current request.status = triage
+```
+
+**Must not silently return replay success when:**
+
+- current status differs from recorded committed `toStatus`;
+- linked `VionaRequestStatusEvent` is missing or disagrees;
+- `action.status` payload binding incomplete;
+- key bound to conflicting payload/target.
+
+Classify inconsistencies using **existing** safe contracts:
+
+- `invalid_input` — key exists with conflicting target/payload (already live for mismatched targetStatus);
+- `invalid_transition` — authorized row present but state/event inconsistency prevents safe replay;
+- `request_not_found` — current authorization fails (including replay after profile deactivation).
+
+Do **not** invent new public error codes during readiness.
+
+### 9.5 Concurrency requirements
+
+- **Serializable** interactive transaction throughout authorization, idempotency, and mutation paths.
+- MerchantProfile resolution, authorized lookup, idempotency lookup, conditional update, status event, and audit in the **same** transaction.
+- No silent retry of write-capable transactions unless an already-approved bounded retry exists (none today).
+
+Concurrent status transition must yield:
+
+- one valid commit; or
+- the other operation becomes valid replay or safe conflict;
+- **never** two transition events for one logical operation.
+
+### 9.6 Post-transaction `stateTransition` hook (Pack30D-2)
+
+Current live behavior in `transitionVionaRequestStatus`:
+
+| Property | Conclusion |
+|---|---|
+| Purpose | **Observability / audit-ledger hook** — additive `stateTransition` event; mock-only messaging |
+| Atomicity boundary | **Outside** committed status/event transaction |
+| Failure handling | Logged; **does not roll back** committed transition |
+| Product side effect | **None mandatory** — failure must not make transition incomplete |
+| Pack40D | Hook must **not** be broadened into execution/orchestration; indirect effects remain Pack40D |
+
+**Conclusion:** Hook is **best-effort, non-mandatory**. Pack40C does **not** require `PACK40C_REQUIRES_TRANSACTIONAL_REFINEMENT_PLAN` on this basis.
+
+Hook is **not fired** on idempotent replay (no new transition occurred) — preserve this.
 
 ---
 
@@ -191,7 +325,7 @@ Serializable $transaction
 ### 10.1 Consumer status mutation
 
 ```text
-existingStatusUserScope (owner-only effective)
+ownerUserId = authUserId                    // DB predicate (primary)
 AND scopeKind = consumer
 AND merchantProfileId = null
 ```
@@ -201,7 +335,7 @@ Semantics: dual-role consumer transition allowed; inactive MerchantProfile does 
 ### 10.2 Merchant status mutation
 
 ```text
-existingStatusUserScope (owner-only effective)
+ownerUserId = authUserId                    // DB predicate (primary)
 AND scopeKind = merchant
 AND merchantProfileId = currentMerchantProfile.id
 AND tenantId = currentMerchantProfile.tenantId
@@ -276,75 +410,94 @@ No schema change required.
 | `src/services/viona/vionaRequestStatusActionService.ts` | **MODIFY** — Serializable in-tx flow, auth-before-idempotency |
 | `src/controllers/VionaRequestController.ts` | **UNCHANGED** expected |
 | `src/services/viona/vionaRequestStatusActionDto.ts` | **UNCHANGED** expected |
-| `scripts/test-viona-pack40c-tenant-status-enforcement.ts` | **NEW** — local fake-client suite (41+ tests per §15) |
+| `scripts/test-viona-pack40c-tenant-status-enforcement.ts` | **NEW** — local fake-client suite (50 tests per §15) |
 | Evidence + canonical docs | Post-implementation only |
 
 **Must not modify for Pack40C:** `vionaRequestExecutionOrchestrator.ts`, state machine transition map, Prisma schema, Pack40A read scope, Pack40B note services.
 
 ---
 
-## 15. Required local test plan (41 cases)
+## 15. Required local test plan (50 cases)
 
-### Consumer (1–6)
+### Owner-only DB predicate (O1–O3)
 
-1. Consumer owner performs approved `submitted→triage`.
-2. Consumer replay idempotent (200, no duplicate events).
-3. Dual-role consumer transition succeeds.
-4. Inactive merchant profile does not block consumer transition.
-5. Wrong-owner consumer denied (`request_not_found`).
-6. Malformed consumer provenance denied.
+O1. Owner-only predicate applied in DB authorization (no requester/participant branch in status where builder).
+O2. Requester-only actor denied (`request_not_found`).
+O3. Participant-only actor denied (`request_not_found`).
 
-### Merchant (7–14)
+### Consumer (C1–C6)
 
-7. Active exact merchant performs approved transition.
-8. Merchant replay idempotent.
-9. Inactive merchant denied.
-10. Wrong profile denied.
-11. Tenant mismatch denied.
-12. Missing MerchantProfile denied.
-13. Merchant relation without owner scope denied.
-14. Ambiguous profile resolution denied.
+C1. Consumer owner performs approved `submitted→triage`.
+C2. Consumer replay idempotent (200, no duplicate events).
+C3. Dual-role consumer transition succeeds.
+C4. Inactive merchant profile does not block consumer transition.
+C5. Wrong-owner consumer denied.
+C6. Malformed consumer provenance denied.
 
-### Legacy (15–17)
+### Merchant (M1–M8)
 
-15. Legacy unresolved owner denied.
-16. Registry presence does not expose legacy.
-17. Webhook-looking legacy row remains denied.
+M1. Active exact merchant performs approved transition.
+M2. Merchant replay idempotent.
+M3. Inactive merchant denied.
+M4. Wrong profile denied.
+M5. Tenant mismatch denied.
+M6. Missing MerchantProfile denied.
+M7. Merchant relation without owner scope denied.
+M8. Ambiguous profile resolution denied.
 
-### State machine (18–23)
+### Legacy (L1–L3)
 
-18. Only `submitted→triage` succeeds on direct path.
-19. Invalid from-status rejected.
-20. Unapproved target rejected.
-21. Concurrent-state drift cannot produce invalid transition.
-22. Event from/to match committed state.
-23. Request update + event + audit atomic.
+L1. Legacy unresolved owner denied.
+L2. Registry presence does not expose legacy.
+L3. Webhook-looking legacy row remains denied.
 
-### Idempotency (24–29)
+### State machine (S1–S6)
 
-24. Authorization before replay.
-25. Inactive merchant cannot use prior successful key.
-26. Wrong-profile actor cannot use another actor's key.
-27. Legacy actor cannot use prior key.
-28. Replay creates no duplicate status event.
-29. Conflicting payload under same key → `invalid_input`.
+S1. Only `submitted→triage` succeeds on direct path for new mutation.
+S2. Invalid from-status rejected (new mutation path).
+S3. Unapproved target rejected.
+S4. Concurrent-state drift cannot produce invalid transition.
+S5. Event from/to match committed state.
+S6. Request update + event + audit atomic rollback on failure.
 
-### Client control (30–34)
+### Replay-safe idempotency (I1–I14)
 
-30–33. Client tenant/profile/scopeKind/policy fields cannot expand access.
-34. Client cannot request unauthorized transition target.
+I1. Valid first transition succeeds (201).
+I2. Valid replay succeeds when current status is already `triage` (200).
+I3. Replay checked only **after** current authorization passes.
+I4. Inactive merchant cannot replay old successful transition.
+I5. Wrong-profile actor cannot replay.
+I6. Legacy-unresolved owner cannot replay.
+I7. Same key + different target status → `invalid_input`.
+I8. Same key + different request → no match / safe denial.
+I9. Same key + different actor → no match / `request_not_found`.
+I10. Same key + materially different payload → existing conflict behavior.
+I11. Replay record present but current status ≠ recorded target → safe failure (not silent success).
+I12. Incomplete event/audit linkage → safe failure.
+I13. New mutation validates `submitted→triage` only when no valid replay exists.
+I14. Concurrent conditional update cannot create duplicate transition events.
 
-### Preservation (35–41)
+### Post-transaction hook (H1–H2)
 
-35. Pack40A reads unchanged.
-36. Pack40B notes unchanged.
-37. Request creation unchanged.
-38. Webhook creation unchanged.
-39. Pack40D/S unimplemented.
-40. No schema/migration change.
-41. No deployment/DB path in tests.
+H1. Hook failure does not roll back committed transition or change HTTP success.
+H2. Hook does not fire on idempotent replay; cannot implement Pack40D execution.
 
----
+### Client control (X1–X5)
+
+X1–X4. Client tenant/profile/scopeKind/policy fields cannot expand access.
+X5. Client cannot request unauthorized transition target.
+
+### Preservation (P1–P7)
+
+P1. Pack40A reads unchanged.
+P2. Pack40B notes unchanged.
+P3. Request creation unchanged.
+P4. Webhook creation unchanged.
+P5. Pack40D/S unimplemented.
+P6. No schema/migration change.
+P7. No deployment/DB path in tests.
+
+**Total: 50 tests** (O3 + C6 + M8 + L3 + S6 + I14 + H2 + X5 + P7 = 50).
 
 ## 16. No-schema conclusion
 
@@ -376,17 +529,18 @@ No schema change required.
 
 **`READY_FOR_PACK40C_DIRECT_STATUS_IMPLEMENTATION`**
 
-Rationale:
+Refinement confirms:
 
-- Complete direct status surface enumerated.
-- Existing owner-only effective scope is unambiguous.
-- Direct and indirect callers safely separable (Option A).
-- Transaction/idempotency gaps are bounded and correctable using proven Pack40B Serializable pattern without schema change.
-- Approved transition remains single `submitted→triage`.
+1. Owner-only DB predicate is explicit (§7.2).
+2. Replay-safe ordering is explicit (§9.1–§9.3).
+3. Idempotency binding is sufficient (§9.2).
+4. Replay state-consistency behavior is defined (§9.4).
+5. Serializable transaction design is bounded (§9.5).
+6. Post-transaction hook is confirmed non-mandatory/best-effort (§9.6).
+7. No schema change required (§16).
+8. Direct and indirect callers remain separated (§5).
 
-Implementation should include transactional refinement as part of the initial Pack40C PR (not a separate undocumented gap).
-
----
+Implementation must include replay-safe transactional design in the initial Pack40C PR.
 
 ## 20. Recommended next authorization phrase
 
