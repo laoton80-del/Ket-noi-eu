@@ -426,7 +426,7 @@ Deployment + migration (real actions performed):
   flags PACK30_REAL_PROVIDER_EXECUTION_ENABLED etc. untouched, confirmed via `fly secrets list`
   before and unchanged after).
 - `npx prisma migrate status` then `npx prisma migrate deploy` against the staging Supabase DB
-  (DATABASE_URL/DIRECT_URL in local .env already point at ref euqbfanilcssjiwwtcby, confirmed) —
+  (DATABASE_URL/DIRECT_URL in local .env already point at ref staging-redacted, confirmed) —
   both reported "Database schema is up to date!" / "No pending migrations to apply." The Pack35
   VionaMerchantWebhookChannel table already existed from an earlier session's ledger-sync work —
   this execution's migration step is a verified, evidence-backed no-op, not skipped.
@@ -972,7 +972,7 @@ Branch: chore/pack40a-read-only-tenant-provenance-inventory (from master @ 43e79
 Operator phrase: APPROVE_PACK40A_READ_ONLY_TENANT_PROVENANCE_INVENTORY. Read-only staging DB only —
 no mutation, no enforcement, no deploy, no production access, no raw identifiers in evidence.
 
-Staging identity: Supabase project ref euqbfanilcssjiwwtcby verified in DATABASE_URL/DIRECT_URL
+Staging identity: Supabase project ref staging-redacted verified in DATABASE_URL/DIRECT_URL
 (redacted host in logs). Size gate PASSED (10 requests <= 50,000 boundary).
 
 Aggregates (sanitized): totalRequests=10, distinctTenantCount=4, merchantProfiles=1 (active=1),
@@ -1017,7 +1017,7 @@ Next after P1 merge: APPROVE_PACK40P3_STAGING_PROVENANCE_MIGRATION_APPLY (stagin
 Branch: chore/pack40p3-staging-provenance-migration-apply (from master @ 958b764). PR #345 MERGED.
 Operator phrase: APPROVE_PACK40P3_STAGING_PROVENANCE_MIGRATION_APPLY.
 
-Applied migration 20260714120000_pack40p1_add_viona_request_provenance to staging DB (ref euqbfanilcssjiwwtcby)
+Applied migration 20260714120000_pack40p1_add_viona_request_provenance to staging DB (ref staging-redacted)
 via npx prisma migrate deploy. Pre/post VionaRequest count: 10/10. All rows scopeKind=legacyUnresolved only.
 Zero consumer/merchant; zero merchantProfileId set. Health HTTP 200 pre/post. Fly release v22 unchanged.
 No app deploy, no backfill, no P2, no Pack40A.
@@ -1166,7 +1166,7 @@ Master baseline: 0e05f15 (PR #378 MERGED — Pack40DR1 schema)
 Command: npx prisma migrate deploy --schema prisma/schema.prisma
 Applied: 20260716010000_pack40dr1_add_recovery_fencing_and_provider_reference
 SHA-256: 5e4d5d8e7d81c43c033919ab58e4671552023848a19db50b848f0e4acfe05118
-Staging host: db.euqbfanilcssjiwwtcby.supabase.co
+Staging host: db.staging-redacted.supabase.co
 finished_at: 2026-07-15T22:27:11.756Z
 Post-verify:
   leaseGeneration integer NOT NULL default 0; existing nonzero=0

@@ -72,7 +72,7 @@ No later source change weakened these invariants.
 ## 5. Read-only discovery method
 
 - Prisma `count` / `groupBy` / `findMany` only (ephemeral local script; not committed).
-- Staging DB identity verified via project ref `euqbfanilcssjiwwtcby` (URL redacted).
+- Staging database identity was verified using a redacted environment reference.
 - Staging API target: `viona-api-staging-eu` only; production not selected.
 - No recovery HTTP, provider lookup/send, escrow mutation, lease acquire, or writes.
 
