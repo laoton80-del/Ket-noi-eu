@@ -302,7 +302,7 @@ Unchanged structure. **No phrase implies another slice. No automatic continuatio
 | **Pack40A** | Principal context + read list/detail + three-state policy | **CLOSED / GREEN** — implementation merged; staging deploy v24; adversarial QA green |
 | **Pack40B** | Note enforcement | **CLOSED / GREEN** — PR #356+#357 merged; Pack40BD deployed v25; Pack40BS adversarial QA green (PR #359 @ `8c038de`); exactly **2** successful notes; replay idempotent (**0** duplicates); non-owner/legacy/spoof denied; existence-leak-safe **404** normalization |
 | **Pack40C** | Status enforcement | **CLOSED / GREEN** — PR #363+#364+#365; deploy v26; adversarial QA green; owner-only `submitted→triage`; 10 POSTs / 2 transitions / 0 duplicates |
-| **Pack40D** | Indirect paths after per-path review | **Initial controlled merchant execution CLOSED/GREEN** (staging **v28**); signed-webhook DISABLED; internal dispatch UNWIRED; consumer/legacy UNSUPPORTED; Pack40DR recovery **deployed**; Pack40DRS0 safety QA **PASS** (PR #384); Pack40DRS1 **BLOCKED_NO_SAFE_RECOVERABLE_ATTEMPT_FIXTURE** (PR #385); Pack40DRF design = **WAIT_FOR_NATURAL_STRANDED_ATTEMPT** (no artificial fixture without Method-5 pause; no fixture created); functional non-terminal recovery **untested**; recovery **not** CLOSED/GREEN; Pack40S unauthorized |
+| **Pack40D** | Indirect paths after per-path review | **Initial controlled merchant execution CLOSED/GREEN** (staging **v28**); signed-webhook DISABLED; internal dispatch UNWIRED; consumer/legacy UNSUPPORTED; Pack40DR recovery **deployed**; Pack40DRS0 safety QA **PASS**; Pack40DRF = **WAIT_FOR_NATURAL_STRANDED_ATTEMPT**; Pack40DRS1 original + **re-inventory** = **BLOCKED_NO_SAFE_RECOVERABLE_ATTEMPT_FIXTURE** (still **0** non-terminal attempts); functional non-terminal recovery **untested**; recovery **not** CLOSED/GREEN; Pack40S unauthorized |
 | **Pack40S** | Staging adversarial QA | **UNIMPLEMENTED / NOT AUTHORIZED** |
 | **Discovery** | Read-only tenant provenance inventory | **Not authorized** — phrase below |
 
@@ -335,6 +335,7 @@ Unchanged structure. **No phrase implies another slice. No automatic continuatio
 | `APPROVE_PACK40DRS0_STAGING_RECOVERY_ENDPOINT_SAFETY_QA` | Staging recovery endpoint safety matrix (denials + completed terminal no-op) + evidence | non-terminal recovery, lease acquire, provider lookup/send, escrow mutation, cleanup, deploy, Pack40S |
 | `APPROVE_PACK40DRS1_STRANDED_ATTEMPT_FIXTURE_READINESS_AUDIT` | Read-only staging inventory for safe non-terminal recovery fixture + docs | fixture creation, recovery POST, provider/escrow mutation, Pack40DRS2, Pack40S |
 | `APPROVE_PACK40DRF_STRANDED_FIXTURE_CONSTRUCTION_DESIGN_AUDIT` | Design-only analysis of safe stranded fixture construction methods | fixture creation, source/schema change, recovery/provider/escrow action, Pack40DRF1, Pack40S |
+| `APPROVE_PACK40DRS1_REINVENTORY_NATURAL_STRANDED_ATTEMPT` | Read-only re-inventory for natural non-terminal recovery fixture + docs | recovery POST, fixture creation, provider/escrow mutation, Pack40DRS2, Pack40S |
 | `APPROVE_PACK40D_TENANT_INDIRECT_PATH_REVIEW_AND_IMPLEMENTATION` | Legacy combined phrase — prefer D1→D2→D3 sequence | staging |
 | `APPROVE_PACK40_STAGING_TENANT_QA_PROVISIONING` | Staging data | impl, remediation |
 | `APPROVE_PACK40_STAGING_TENANT_ADVERSARIAL_QA` | Staging QA | remediation, deploy |

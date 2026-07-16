@@ -1336,6 +1336,25 @@ Evidence: docs/product/VIONA_PACK40DRF_SAFE_STRANDED_FIXTURE_CONSTRUCTION_DESIGN
 Matrix: docs/design/VIONA_PACK40DRF_FIXTURE_CONSTRUCTION_DESIGN_MATRIX.md
 Next: wait for natural non-terminal residual, then authorize Pack40DRS1 re-inventory (or separately authorize Method-5 pause architecture)
 
+=== PACK40DRS1 RE-INVENTORY NATURAL STRANDED ATTEMPT ===
+Operator phrase: APPROVE_PACK40DRS1_REINVENTORY_NATURAL_STRANDED_ATTEMPT
+Master baseline: e7a7320 (PR #386 MERGED — Pack40DRF wait-state)
+Branch: docs/pack40drs1-reinventory-natural-stranded-attempt
+Staging: v28 / deployment-01KXN3M9E6NWTFAE5YMW60T9FH
+Read-only re-inventory:
+  totalAttempts=1; nonTerminal=0; completed=1
+  candidate A/B/C/D = 0/0/0/0
+Classification: BLOCKED_NO_SAFE_RECOVERABLE_ATTEMPT_FIXTURE
+No recovery POST / provider / escrow / lease / DB mutation / fixture creation
+Markers:
+  PACK40DRS1_REINVENTORY_NATURAL_STRANDED_ATTEMPT_COMPLETE
+  PACK40DR_NO_SAFE_RECOVERABLE_ATTEMPT_FIXTURE
+  PACK40DR_LIVE_NONTERMINAL_RECOVERY_QA_STILL_REQUIRED
+  PACK40D_INITIAL_CONTROLLED_MERCHANT_EXECUTION_REMAINS_CLOSED_GREEN
+Recovery NOT CLOSED/GREEN; Pack40S unauthorized
+Evidence: docs/product/VIONA_PACK40DRS1_REINVENTORY_NATURAL_STRANDED_ATTEMPT_EVIDENCE.md
+Next: continue wait; re-authorize re-inventory only when a natural strand may exist; do not start Pack40DRS2
+
 === PACK40DR2 DORMANT RECOVERY SERVICES ===
 Operator phrase: APPROVE_PACK40DR2_DORMANT_RECOVERY_SERVICES
 Master baseline: f184120 (PR #379 MERGED — Pack40DR1 staging migrate-apply evidence)

@@ -1,0 +1,41 @@
+{
+  "environment": "staging-redacted",
+  "release": "v28",
+  "image": "deployment-01KXN3M9E6NWTFAE5YMW60T9FH",
+  "totalAttempts": 1,
+  "nonTerminalAttempts": 0,
+  "attemptCountsByState": {
+    "claimed": 0,
+    "providerPending": 0,
+    "providerSucceeded": 0,
+    "providerFailed": 0,
+    "outcomeUncertain": 0,
+    "completed": 1,
+    "failed": 0,
+    "abandoned": 0
+  },
+  "requestStatusCounts": {
+    "submitted": 5,
+    "triage": 5,
+    "completed": 1,
+    "failed": 1
+  },
+  "activeLeaseCount": 0,
+  "expiredOrUnownedLeaseCount": 0,
+  "providerReferencePresentCount": 0,
+  "candidateCounts": {
+    "providerSucceeded": 0,
+    "providerFailed": 0,
+    "exactLookup": 0,
+    "claimedOperatorReview": 0
+  },
+  "safeCandidateAvailable": false,
+  "selectedCandidateClassification": null,
+  "recoveryEndpointInvoked": false,
+  "providerOperationPerformed": false,
+  "escrowActionPerformed": false,
+  "leaseAcquired": false,
+  "databaseMutated": false,
+  "productionTouched": false,
+  "classification": "BLOCKED_NO_SAFE_RECOVERABLE_ATTEMPT_FIXTURE"
+}
