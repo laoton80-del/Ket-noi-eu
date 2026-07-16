@@ -42,8 +42,22 @@ const PACK40DR3A_WIRED_RUNTIME_PATHS = [
   'src/repositories/vionaRequestExecutionAttemptRepository.ts',
 ] as const;
 
+/** Pack40DR3B operator recovery endpoint wiring (no scheduler/worker). */
+const PACK40DR3B_WIRED_RUNTIME_PATHS = [
+  'src/controllers/VionaInternalExecutionAttemptRecoveryController.ts',
+  'src/services/viona/vionaRequestExecutionRecoveryCoordinator.ts',
+  'src/services/viona/vionaPack40DR3TwilioExactStatusLookupAdapter.ts',
+  'src/services/viona/vionaPack40DR3RecoveryEscrowAdapter.ts',
+  'src/lib/viona/internalRoute/vionaInternalRecoveryRouteGate.ts',
+  'src/routes/internalRoutes.ts',
+] as const;
+
 function isPack40Dr3aWiredRuntime(rel: string): boolean {
   return PACK40DR3A_WIRED_RUNTIME_PATHS.some((p) => rel === p || rel.replace(/\\/g, '/') === p);
+}
+
+function isPack40Dr3bWiredRuntime(rel: string): boolean {
+  return PACK40DR3B_WIRED_RUNTIME_PATHS.some((p) => rel === p || rel.replace(/\\/g, '/') === p);
 }
 
 /** Dormant Pack40DR2 modules (and repo CAS helpers) may use recovery symbols. */
@@ -275,7 +289,8 @@ function main(): void {
         /\bproviderExternalReference\b/.test(text) &&
         !rel.includes('test-viona-pack40dr1') &&
         !isPack40Dr2DormantAllowlisted(rel) &&
-        !isPack40Dr3aWiredRuntime(rel)
+        !isPack40Dr3aWiredRuntime(rel) &&
+        !isPack40Dr3bWiredRuntime(rel)
       ) {
         // Wired runtime must not import exact providerExternalReference yet
         // (Pack40DR2 dormant modules/repo helpers are allowlisted).
@@ -283,11 +298,15 @@ function main(): void {
       }
       if (
         (/vionaRequestExecutionRecovery/i.test(rel) || /RecoveryService/.test(text)) &&
-        !isPack40Dr2DormantAllowlisted(rel)
+        !isPack40Dr2DormantAllowlisted(rel) &&
+        !isPack40Dr3bWiredRuntime(rel)
       ) {
         recoveryServiceExists = true;
       }
-      if (/RecoveryController/.test(text) || /recover-execution/.test(text)) {
+      if (
+        (/RecoveryController/.test(text) || /recover-execution/.test(text)) &&
+        !isPack40Dr3bWiredRuntime(rel)
+      ) {
         recoveryControllerExists = true;
       }
       if (
@@ -300,7 +319,7 @@ function main(): void {
       for (const sym of FORBIDDEN_SYMBOLS) {
         if (text.includes(sym) && !rel.includes('test-viona-pack40dr1')) {
           // Forbidden in wired runtime; dormant Pack40DR2 modules are allowlisted.
-          if (rel.startsWith('src/') && !isPack40Dr2DormantAllowlisted(rel)) {
+          if (rel.startsWith('src/') && !isPack40Dr2DormantAllowlisted(rel) && !isPack40Dr3bWiredRuntime(rel)) {
             failures.push(`forbidden symbol ${sym} in ${rel}`);
             console.error(`FAIL: forbidden symbol ${sym} in ${rel}`);
           }
@@ -315,9 +334,9 @@ function main(): void {
   );
   assert(
     !recoveryServiceExists,
-    'no wired recovery service exists outside Pack40DR2 dormant allowlist',
+    'no wired recovery service exists outside Pack40DR2 dormant + Pack40DR3B allowlist',
   );
-  assert(!recoveryControllerExists, 'no recovery controller or route exists');
+  assert(!recoveryControllerExists, 'no recovery controller outside Pack40DR3B allowlist');
   assert(!schedulerExists, 'no scheduler, queue or worker exists for expired-lease recovery');
 
   for (const rel of UNCHANGED_RUNTIME_PATHS) {
@@ -370,7 +389,21 @@ function main(): void {
     'Twilio adapter returns exact providerExternalReference on success',
   );
   assert(
-    !readUtf8('src/services/viona/vionaRequestEscrowHoldService.ts').includes('leaseGeneration'),
+    readUtf8('src/routes/internalRoutes.ts').includes('execution-attempts/:attemptId/recovery'),
+    'Pack40DR3B internal recovery route wired',
+  );
+  assert(
+    readUtf8('src/services/viona/vionaRequestExecutionRecoveryCoordinator.ts').includes(
+      'recoverVionaExecutionAttempt',
+    ),
+    'Pack40DR3B recovery coordinator exists',
+  );
+  assert(
+    !readUtf8('src/services/viona/vionaRequestExecutionRecoveryCoordinator.ts').includes('findMany'),
+    'Pack40DR3B coordinator does not scan attempts',
+  );
+  assert(
+    readUtf8('src/services/viona/vionaRequestEscrowHoldService.ts').includes('leaseGeneration') === false,
     'Escrow runtime unchanged',
   );
 

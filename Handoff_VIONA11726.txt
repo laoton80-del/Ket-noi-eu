@@ -1209,7 +1209,34 @@ No schema/migration/DB/staging/live provider/escrow/deploy/secret/production
 Signed-webhook DISABLED; approvedInternalDispatch UNWIRED
 Consumer/legacy UNSUPPORTED; Pack40S UNIMPLEMENTED / NOT AUTHORIZED
 Evidence: docs/product/VIONA_PACK40DR3A_LIVE_FENCING_PROVIDER_REFERENCE_EVIDENCE.md
-Next: separately authorize Pack40DR3B operator recovery endpoint (do not auto-continue)
+Next: separately authorize Pack40DRD staging deployment (do not auto-continue)
+
+=== PACK40DR3B OPERATOR INTERNAL RECOVERY ENDPOINT ===
+Operator phrase: APPROVE_PACK40DR3B_OPERATOR_INTERNAL_RECOVERY_ENDPOINT
+Master baseline: 219f47b (PR #381 MERGED — Pack40DR3A live hardening)
+Branch: feat/pack40dr3b-operator-internal-recovery-endpoint
+Implemented:
+  POST /api/internal/viona/execution-attempts/:attemptId/recovery
+  JWT auth + Role.ADMIN (superAdminMiddleware)
+  system-recovery principal from operator auth context only
+  DR2 coordinator: lease → provider recon → escrow recon → recovered finalize
+  read-only Twilio exact-status lookup adapter (isolated from send)
+  attempt-scoped escrow recovery adapter (injectable)
+Local gates:
+  Pack40DR3B 68/68 PASS
+  Pack40DR3A 40/40, Pack40DR2 87/87, Pack40DR1 95/95
+  D3B 54/54, D3A 62/62, D2 112/112, D1 47/47
+  prisma validate, tsc, eslint PASS
+Markers:
+  PACK40DR3B_OPERATOR_INTERNAL_RECOVERY_ENDPOINT_WIRED
+  PACK40DR2_RECOVERY_RUNTIME_WIRED
+  PACK40D_INITIAL_CONTROLLED_MERCHANT_EXECUTION_REMAINS_CLOSED_GREEN
+No scheduler/worker/scan; no schema/migration/DB/staging/live provider/escrow/deploy
+Signed-webhook DISABLED; approvedInternalDispatch UNWIRED
+Consumer/legacy UNSUPPORTED; Pack40S UNIMPLEMENTED / NOT AUTHORIZED
+Recovery NOT CLOSED/GREEN (local wiring only)
+Evidence: docs/product/VIONA_PACK40DR3B_OPERATOR_INTERNAL_RECOVERY_ENDPOINT_EVIDENCE.md
+Next: separately authorize Pack40DRD staging deployment only
 
 === PACK40DR2 DORMANT RECOVERY SERVICES ===
 Operator phrase: APPROVE_PACK40DR2_DORMANT_RECOVERY_SERVICES

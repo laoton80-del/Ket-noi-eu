@@ -1453,6 +1453,12 @@ async function main(): Promise<void> {
     'src/services/viona/vionaRequestEscrowReconciliationService.ts',
     'src/services/viona/vionaRequestRecoveredFinalizationService.ts',
     'src/repositories/vionaRequestExecutionAttemptRepository.ts',
+    'src/services/viona/vionaRequestExecutionRecoveryCoordinator.ts',
+    'src/controllers/VionaInternalExecutionAttemptRecoveryController.ts',
+    'src/routes/internalRoutes.ts',
+    'src/services/viona/vionaPack40DR3TwilioExactStatusLookupAdapter.ts',
+    'src/services/viona/vionaPack40DR3RecoveryEscrowAdapter.ts',
+    'src/lib/viona/internalRoute/vionaInternalRecoveryRouteGate.ts',
   ]);
   let leaked = false;
   for (const rel of srcFiles) {
@@ -1463,7 +1469,19 @@ async function main(): Promise<void> {
       failures.push(`recovery import leak in ${rel}`);
     }
   }
-  assert(!leaked, '79–84. no route/controller/orchestrator/webhook/scheduler/entry imports DR2');
+  assert(!leaked, '79–84. DR2 imports confined to dormant services + Pack40DR3B endpoint wiring');
+  assert(
+    readUtf8('src/services/viona/vionaRequestExecutionRecoveryCoordinator.ts').includes(
+      'acquireRecoveryLease',
+    ),
+    '79b. Pack40DR3B coordinator wires DR2 lease acquisition',
+  );
+  assert(
+    !readUtf8('src/services/viona/vionaRequestExecutionOrchestrator.ts').includes(
+      'acquireRecoveryLease',
+    ),
+    '80. Pack40D live orchestrator does not import DR2 recovery',
+  );
   assert(
     !readUtf8('src/services/viona/vionaRequestProviderReconciliationService.ts').includes(
       'vionaPack40D3TwilioGatewayAdapter',
