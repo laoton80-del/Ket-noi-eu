@@ -1294,6 +1294,27 @@ Recovery NOT CLOSED/GREEN
 Evidence: docs/product/VIONA_PACK40DRS0_STAGING_RECOVERY_ENDPOINT_SAFETY_QA_EVIDENCE.md
 Next: separately authorize non-terminal stranded recovery QA when fixture pack approved
 
+=== PACK40DRS1 STRANDED ATTEMPT FIXTURE READINESS AUDIT ===
+Operator phrase: APPROVE_PACK40DRS1_STRANDED_ATTEMPT_FIXTURE_READINESS_AUDIT
+Master baseline: 8542f23 (PR #384 MERGED — Pack40DRS0 safety QA evidence)
+Branch: docs/pack40drs1-stranded-attempt-fixture-readiness-audit
+Staging: v28 / deployment-01KXN3M9E6NWTFAE5YMW60T9FH
+Read-only inventory (no mutation / no recovery POST):
+  totalAttempts=1
+  completed=1; nonTerminal=0
+  candidate A/B/C/D = 0/0/0/0
+Classification: BLOCKED_NO_SAFE_RECOVERABLE_ATTEMPT_FIXTURE
+No fixture created; functional non-terminal recovery untested
+Markers:
+  PACK40DRS1_STRANDED_ATTEMPT_FIXTURE_READINESS_AUDIT_COMPLETE
+  PACK40DRS0_STAGING_RECOVERY_ENDPOINT_SAFETY_QA_PASS
+  PACK40DR_LIVE_NONTERMINAL_RECOVERY_QA_STILL_REQUIRED
+  PACK40DR_NO_SAFE_RECOVERABLE_ATTEMPT_FIXTURE
+  PACK40D_INITIAL_CONTROLLED_MERCHANT_EXECUTION_REMAINS_CLOSED_GREEN
+Recovery NOT CLOSED/GREEN; Pack40S unauthorized
+Evidence: docs/product/VIONA_PACK40DRS1_STRANDED_ATTEMPT_FIXTURE_READINESS_AUDIT.md
+Next: do not open Pack40DRS2 until a safe stranded fixture exists (separate authorization)
+
 === PACK40DR2 DORMANT RECOVERY SERVICES ===
 Operator phrase: APPROVE_PACK40DR2_DORMANT_RECOVERY_SERVICES
 Master baseline: f184120 (PR #379 MERGED — Pack40DR1 staging migrate-apply evidence)

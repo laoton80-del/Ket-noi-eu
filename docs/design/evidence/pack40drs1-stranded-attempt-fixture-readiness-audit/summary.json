@@ -1,0 +1,23 @@
+{
+  "environment": "staging-redacted",
+  "stagingRelease": 28,
+  "totalAttempts": 1,
+  "nonTerminalCount": 0,
+  "completedCount": 1,
+  "candidateCounts": {
+    "A_safeCompletion": 0,
+    "B_safeFailure": 0,
+    "C_exactLookup": 0,
+    "D_claimedOperatorDecision": 0
+  },
+  "rejectedCandidateCount": 0,
+  "selectedAnonymousFixture": null,
+  "recoveryEndpointInvoked": false,
+  "providerLookupPerformed": false,
+  "providerSendPerformed": false,
+  "escrowActionPerformed": false,
+  "leaseAcquisitionPerformed": false,
+  "databaseMutated": false,
+  "fixtureCreated": false,
+  "classification": "BLOCKED_NO_SAFE_RECOVERABLE_ATTEMPT_FIXTURE"
+}
