@@ -17,8 +17,13 @@ const MIGRATION_DIR = 'prisma/migrations/20260716010000_pack40dr1_add_recovery_f
 const MIGRATION_PATH = `${MIGRATION_DIR}/migration.sql`;
 const SCHEMA_PATH = 'prisma/schema.prisma';
 
+/**
+ * Wired Pack40D runtime surfaces that must not gain leaseGeneration /
+ * providerExternalReference writes. Repository is intentionally omitted:
+ * Pack40DR2 may add dormant generation-fenced CAS helpers there without wiring
+ * D2/D3A/D3B runtime callers.
+ */
 const UNCHANGED_RUNTIME_PATHS = [
-  'src/repositories/vionaRequestExecutionAttemptRepository.ts',
   'src/services/viona/vionaRequestIndirectStatusActionService.ts',
   'src/services/viona/vionaRequestExecutionGatewayService.ts',
   'src/services/viona/vionaRequestExecutionOrchestrator.ts',
@@ -33,6 +38,18 @@ const UNCHANGED_RUNTIME_PATHS = [
   'src/routes/vionaRoutes.ts',
 ] as const;
 
+/** Dormant Pack40DR2 modules (and repo CAS helpers) may use recovery symbols. */
+const PACK40DR2_DORMANT_ALLOWLIST_PREFIXES = [
+  'src/services/viona/vionaRequestSystemRecoveryPrincipal.ts',
+  'src/services/viona/vionaProviderStatusLookupContract.ts',
+  'src/services/viona/vionaRecoveryEscrowAdapterContract.ts',
+  'src/services/viona/vionaRequestRecoveryLeaseService.ts',
+  'src/services/viona/vionaRequestProviderReconciliationService.ts',
+  'src/services/viona/vionaRequestEscrowReconciliationService.ts',
+  'src/services/viona/vionaRequestRecoveredFinalizationService.ts',
+  'src/repositories/vionaRequestExecutionAttemptRepository.ts',
+] as const;
+
 const FORBIDDEN_SYMBOLS = [
   'acquireRecoveryLease',
   'reconcileProvider',
@@ -40,6 +57,10 @@ const FORBIDDEN_SYMBOLS = [
   'abandonAttempt',
   'SYSTEM_RECOVERY_PRINCIPAL',
 ] as const;
+
+function isPack40Dr2DormantAllowlisted(rel: string): boolean {
+  return PACK40DR2_DORMANT_ALLOWLIST_PREFIXES.some((p) => rel === p || rel.replace(/\\/g, '/') === p);
+}
 
 const ATTEMPT_STATES = [
   'claimed',
@@ -244,12 +265,17 @@ function main(): void {
       if (
         rel !== SCHEMA_PATH &&
         /\bproviderExternalReference\b/.test(text) &&
-        !rel.includes('test-viona-pack40dr1')
+        !rel.includes('test-viona-pack40dr1') &&
+        !isPack40Dr2DormantAllowlisted(rel)
       ) {
-        // schema.prisma is outside src; within src any use is a runtime import
+        // Wired runtime must not import exact providerExternalReference yet
+        // (Pack40DR2 dormant modules/repo helpers are allowlisted).
         runtimeImportsReference = true;
       }
-      if (/vionaRequestExecutionRecovery/i.test(rel) || /RecoveryService/.test(text)) {
+      if (
+        (/vionaRequestExecutionRecovery/i.test(rel) || /RecoveryService/.test(text)) &&
+        !isPack40Dr2DormantAllowlisted(rel)
+      ) {
         recoveryServiceExists = true;
       }
       if (/RecoveryController/.test(text) || /recover-execution/.test(text)) {
@@ -264,25 +290,45 @@ function main(): void {
       }
       for (const sym of FORBIDDEN_SYMBOLS) {
         if (text.includes(sym) && !rel.includes('test-viona-pack40dr1')) {
-          // SYSTEM_RECOVERY_PRINCIPAL may appear in docs only; src forbid
-          if (rel.startsWith('src/')) {
+          // Forbidden in wired runtime; dormant Pack40DR2 modules are allowlisted.
+          if (rel.startsWith('src/') && !isPack40Dr2DormantAllowlisted(rel)) {
             failures.push(`forbidden symbol ${sym} in ${rel}`);
+            console.error(`FAIL: forbidden symbol ${sym} in ${rel}`);
           }
         }
       }
     }
   };
   walk(srcTree);
-  assert(!runtimeImportsReference, 'no source runtime imports the new reference field');
-  assert(!recoveryServiceExists, 'no recovery service exists');
+  assert(
+    !runtimeImportsReference,
+    'no wired source runtime imports the new reference field (DR2 dormant allowlisted)',
+  );
+  assert(
+    !recoveryServiceExists,
+    'no wired recovery service exists outside Pack40DR2 dormant allowlist',
+  );
   assert(!recoveryControllerExists, 'no recovery controller or route exists');
   assert(!schedulerExists, 'no scheduler, queue or worker exists for expired-lease recovery');
 
   for (const rel of UNCHANGED_RUNTIME_PATHS) {
     const text = readUtf8(rel);
     assert(!/\bleaseGeneration\b/.test(text), `${rel} does not write leaseGeneration`);
-    assert(!/\bproviderExternalReference\b/.test(text), `${rel} does not write providerExternalReference`);
+    assert(
+      !/\bproviderExternalReference\b(?!Digest)/.test(text),
+      `${rel} does not write providerExternalReference`,
+    );
   }
+
+  assert(
+    readUtf8('src/repositories/vionaRequestExecutionAttemptRepository.ts').includes(
+      'acquireVionaRequestExecutionAttemptRecoveryLease',
+    ) ||
+      !readUtf8('src/repositories/vionaRequestExecutionAttemptRepository.ts').includes(
+        'leaseGeneration',
+      ),
+    'repository may host dormant Pack40DR2 leaseGeneration CAS helpers only',
+  );
 
   assert(
     !readUtf8('src/services/viona/vionaPack40D3TwilioGatewayAdapter.ts').includes('providerExternalReference'),

@@ -1182,6 +1182,36 @@ Pack40A/B/C CLOSED/GREEN; Pack40S UNIMPLEMENTED / NOT AUTHORIZED
 Evidence: docs/product/VIONA_PACK40DR1_STAGING_RECOVERY_SCHEMA_MIGRATION_APPLY_EVIDENCE.md
 Next: separately authorize Pack40DR2 dormant recovery services
 
+=== PACK40DR2 DORMANT RECOVERY SERVICES ===
+Operator phrase: APPROVE_PACK40DR2_DORMANT_RECOVERY_SERVICES
+Master baseline: f184120 (PR #379 MERGED — Pack40DR1 staging migrate-apply evidence)
+Branch: feat/pack40dr2-dormant-recovery-services
+Implemented (dormant, not wired):
+  system-recovery principal (systemRecovery / operatorInternalRecovery)
+  generation-fenced recovery lease CAS (leaseGeneration increment)
+  exact-reference provider reconciliation (injected read-only adapter contract)
+  attempt-scoped escrow reconciliation (injected adapter contract)
+  generation-fenced recovered completion/failure finalization
+  narrow repository CAS helpers
+Local gates:
+  Pack40DR2 85/85 PASS
+  Pack40DR1 99/99 PASS (isolation narrowed for dormant DR2 allowlist only)
+  Pack40D3B 54/54, D3A 62/62, D2 112/112, D1 47/47
+  Pack40A/B/C, Pack40P, Pack31/30 regressions PASS
+  non-staging test-viona-pack*.ts 35/35 PASS
+  prisma validate/generate, tsc, eslint PASS
+Markers:
+  PACK40DR2_DORMANT_RECOVERY_SERVICES_IMPLEMENTED
+  PACK40DR2_RECOVERY_RUNTIME_NOT_WIRED
+  PACK40DR2_PROVIDER_REFERENCE_RUNTIME_POPULATION_NOT_WIRED
+  PACK40D_INITIAL_CONTROLLED_MERCHANT_EXECUTION_REMAINS_CLOSED_GREEN
+No route/controller/orchestrator/webhook/scheduler/worker wiring
+No schema/migration/DB/staging/provider/escrow/deploy/secret/production
+Signed-webhook DISABLED; approvedInternalDispatch UNWIRED
+Consumer/legacy UNSUPPORTED; Pack40S UNIMPLEMENTED / NOT AUTHORIZED
+Evidence: docs/product/VIONA_PACK40DR2_DORMANT_RECOVERY_SERVICES_EVIDENCE.md
+Next: separately authorize Pack40DR3 (do not auto-continue)
+
 === PACK40DR1 RECOVERY FENCING + PROVIDER REFERENCE SCHEMA ===
 Operator phrase: APPROVE_PACK40DR1_RECOVERY_SCHEMA_PACKET
 PR #378 MERGED @ 0e05f15 (2026-07-15T22:20:58Z)
@@ -1356,8 +1386,9 @@ Next: APPROVE_PACK40CS_STAGING_TENANT_STATUS_ADVERSARIAL_QA (QA-only, separate)
    **Pack40D initial controlled merchant execution: CLOSED/GREEN** — D1–D3B + DD #374 +
    DS evidence #375 @ ab5f607 + closure #376 @ 5667824; staging v27; sole trigger
    internalAuthenticatedController; signed-webhook DISABLED; approvedInternalDispatch UNWIRED;
-   consumer/legacy UNSUPPORTED.    **Pack40DR audit #377**; **Pack40DR1 schema #378 APPLIED to staging**;
-   recovery runtime still unimplemented (`PACK40DR2_RECOVERY_RUNTIME_NOT_STARTED`).
+   consumer/legacy UNSUPPORTED.    **Pack40DR audit #377**; **Pack40DR1 schema #378+#379 APPLIED to staging**;
+   **Pack40DR2 dormant recovery services implemented locally (not wired)** —
+   `PACK40DR2_RECOVERY_RUNTIME_NOT_WIRED`; `providerExternalReference` runtime population not wired.
    Other Pack40D paths not closed.
    **Pack40S:** UNIMPLEMENTED / NOT AUTHORIZED.
 4. TourismBooking shadow-DB replay issue — see DEFERRED/BACKLOG section above (item 2).
