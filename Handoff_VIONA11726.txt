@@ -1238,6 +1238,39 @@ Recovery NOT CLOSED/GREEN (local wiring only)
 Evidence: docs/product/VIONA_PACK40DR3B_OPERATOR_INTERNAL_RECOVERY_ENDPOINT_EVIDENCE.md
 Next: separately authorize Pack40DRD staging deployment only
 
+=== PACK40DRD STAGING OPERATOR RECOVERY DEPLOYMENT ===
+Operator phrase: APPROVE_PACK40DRD_STAGING_RECOVERY_DEPLOY
+Master baseline: a84f46d (PR #382 MERGED — Pack40DR3B operator recovery endpoint)
+Branch: docs/pack40drd-staging-recovery-deployment (docs/evidence only)
+Deployed:
+  fly deploy --app viona-api-staging-eu --remote-only
+  release v27 → v28
+  image deployment-01KXN3M9E6NWTFAE5YMW60T9FH
+  pre/post GET /health → HTTP 200
+  smoke checks passed; no crash loop in deploy output
+NOT performed:
+  recovery endpoint POST
+  provider lookup/send
+  escrow action
+  DB/Prisma/migration/secret/production
+Local pre-deploy gates:
+  DR3B 68/68, DR3A 40/40, DR2 87/87, DR1 95/95
+  D3B/D3A/D2/D1, Pack40A/B/C PASS
+  prisma validate/generate, tsc PASS
+Markers:
+  PACK40DR_OPERATOR_RECOVERY_DEPLOYED_TO_STAGING
+  PACK40DR_LIVE_RECOVERY_QA_STILL_REQUIRED
+  PACK40DR_PROVIDER_SEND_DISABLED
+  PACK40DR_SCHEDULER_WORKER_NOT_IMPLEMENTED
+  PACK40D_INITIAL_CONTROLLED_MERCHANT_EXECUTION_REMAINS_CLOSED_GREEN
+Recovery NOT CLOSED/GREEN
+Pack40A/B/C CLOSED/GREEN
+Signed-webhook DISABLED; approvedInternalDispatch UNWIRED
+Consumer/legacy UNSUPPORTED; Pack40S UNIMPLEMENTED
+Fly logs not collected (CLI limitation)
+Evidence: docs/product/VIONA_PACK40DRD_STAGING_RECOVERY_DEPLOYMENT_EVIDENCE.md
+Next: separately authorize Pack40DRS staging live recovery QA only
+
 === PACK40DR2 DORMANT RECOVERY SERVICES ===
 Operator phrase: APPROVE_PACK40DR2_DORMANT_RECOVERY_SERVICES
 Master baseline: f184120 (PR #379 MERGED — Pack40DR1 staging migrate-apply evidence)

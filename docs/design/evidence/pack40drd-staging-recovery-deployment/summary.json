@@ -1,0 +1,17 @@
+{
+  "environment": "staging-redacted",
+  "recoveryEndpointDeployed": true,
+  "recoveryEndpointInvoked": false,
+  "operatorAuthorizationVerified": true,
+  "exactAttemptBoundaryVerified": true,
+  "generationFencingVerified": true,
+  "providerLookupReadOnly": true,
+  "providerSendAvailable": false,
+  "providerLookupPerformed": false,
+  "escrowActionPerformed": false,
+  "schedulerOrWorkerExists": false,
+  "databaseTouched": false,
+  "migrationRun": false,
+  "productionTouched": false,
+  "liveRecoveryQaRequired": true
+}
