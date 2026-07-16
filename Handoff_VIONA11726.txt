@@ -1407,6 +1407,23 @@ Evidence: docs/product/VIONA_CURRENT_MASTER_ACTIVE_LANE_SELECTION_AUDIT.md
 Matrix: docs/product/VIONA_CURRENT_MASTER_ACTIVE_LANE_DECISION_MATRIX.md
 Next: authorize Wave 2 operator run separately; do not auto-execute; do not start Pack40DRS2/Pack40S
 
+=== WAVE 2 NATIVE MOBILE CONFIDENCE OPERATOR RUN ===
+Operator phrase: APPROVE_WAVE_2_NATIVE_MOBILE_CONFIDENCE_OPERATOR_RUN
+Master baseline: ac6ed66 (PR #390 MERGED — active lane selection)
+Branch: docs/wave-2-native-mobile-confidence-operator-run
+Device class: physical-mobile-unavailable (adb attached list empty)
+Build identity: not verified installed on device
+Backend: staging intended; not exercised
+Checklist: 18 items — PASS=0 FAIL=0 NOT_RUN=18 N/A=0
+Run result: NOT RUN
+Blocking product defects: 0
+Setup gates: no physical device; no verified installed native build
+Implementation changed: NO
+Pack40DR wait-state preserved; Pack40S unauthorized
+Evidence: docs/product/VIONA_WAVE_2_NATIVE_MOBILE_CONFIDENCE_OPERATOR_RUN_EVIDENCE.md
+Summary: docs/design/evidence/wave-2-native-mobile-confidence-operator-run/summary.json
+Next: human operator re-run on stable physical device with app installed; do not treat as product FAIL; do not auto-start monetization or Pack40DRS2
+
 === PACK40DR2 DORMANT RECOVERY SERVICES ===
 Operator phrase: APPROVE_PACK40DR2_DORMANT_RECOVERY_SERVICES
 Master baseline: f184120 (PR #379 MERGED — Pack40DR1 staging migrate-apply evidence)
