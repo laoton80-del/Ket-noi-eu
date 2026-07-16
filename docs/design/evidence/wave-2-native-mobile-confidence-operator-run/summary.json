@@ -1,0 +1,21 @@
+{
+  "platform": "unavailable",
+  "deviceClass": "physical-mobile-unavailable",
+  "buildChannel": "not-verified-on-device",
+  "backendEnvironment": "staging-intended-not-exercised",
+  "checklistItems": 18,
+  "passed": 0,
+  "failed": 0,
+  "notRun": 18,
+  "notApplicable": 0,
+  "blockingDefects": 0,
+  "setupGatesBlockingStart": 2,
+  "runResult": "NOT_RUN",
+  "implementationChanged": false,
+  "databaseAccessedDirectly": false,
+  "deploymentPerformed": false,
+  "productionTouched": false,
+  "pack40drWaitStatePreserved": true,
+  "pack40sAuthorized": false,
+  "classification": "WAVE_2_NATIVE_MOBILE_CONFIDENCE_RUN_NOT_RUN"
+}
