@@ -423,3 +423,154 @@ export async function findExpiredActiveVionaRequestExecutionAttemptLeases(
     take: limit,
   });
 }
+
+/** Pack40DR2 — recovery projection (includes leaseGeneration + exact provider reference). */
+export const VIONA_REQUEST_EXECUTION_RECOVERY_ATTEMPT_SELECT = {
+  id: true,
+  requestId: true,
+  attemptNumber: true,
+  executionKey: true,
+  state: true,
+  correlationId: true,
+  principalType: true,
+  triggerType: true,
+  triggeringUserId: true,
+  ownerUserIdSnapshot: true,
+  scopeKindSnapshot: true,
+  merchantProfileIdSnapshot: true,
+  tenantIdSnapshot: true,
+  leaseOwner: true,
+  leaseExpiresAt: true,
+  leaseGeneration: true,
+  claimedAt: true,
+  providerName: true,
+  operationCategory: true,
+  providerIdempotencyKey: true,
+  providerStartedAt: true,
+  providerFinishedAt: true,
+  providerResultDigest: true,
+  providerExternalReferenceDigest: true,
+  providerExternalReference: true,
+  failureClass: true,
+  failureReasonDigest: true,
+  finalizedAt: true,
+  abandonedAt: true,
+} as const satisfies Prisma.VionaRequestExecutionAttemptSelect;
+
+export type VionaRequestExecutionRecoveryAttempt = Prisma.VionaRequestExecutionAttemptGetPayload<{
+  select: typeof VIONA_REQUEST_EXECUTION_RECOVERY_ATTEMPT_SELECT;
+}>;
+
+export async function findVionaRequestExecutionAttemptForRecovery(
+  client: VionaRequestExecutionAttemptClient,
+  attemptId: string,
+): Promise<VionaRequestExecutionRecoveryAttempt | null> {
+  return client.vionaRequestExecutionAttempt.findUnique({
+    where: { id: attemptId },
+    select: VIONA_REQUEST_EXECUTION_RECOVERY_ATTEMPT_SELECT,
+  });
+}
+
+export type AcquireVionaRequestExecutionAttemptRecoveryLeaseInput = Readonly<{
+  attemptId: string;
+  expectedLeaseGeneration: number;
+  expectedStates: readonly VionaRequestExecutionAttemptState[];
+  newLeaseOwner: string;
+  newLeaseExpiresAt: Date;
+  now: Date;
+}>;
+
+/**
+ * Pack40DR2 — CAS recovery lease acquisition with monotonic leaseGeneration increment.
+ * Succeeds only when generation matches and lease is expired or unowned.
+ */
+export async function acquireVionaRequestExecutionAttemptRecoveryLease(
+  client: VionaRequestExecutionAttemptClient,
+  input: AcquireVionaRequestExecutionAttemptRecoveryLeaseInput,
+): Promise<{
+  updated: boolean;
+  leaseGeneration: number | null;
+  attempt: VionaRequestExecutionRecoveryAttempt | null;
+}> {
+  const result = await client.vionaRequestExecutionAttempt.updateMany({
+    where: {
+      id: input.attemptId,
+      state: { in: [...input.expectedStates] },
+      leaseGeneration: input.expectedLeaseGeneration,
+      OR: [{ leaseExpiresAt: { lte: input.now } }, { leaseOwner: null }],
+    },
+    data: {
+      leaseOwner: input.newLeaseOwner,
+      leaseExpiresAt: input.newLeaseExpiresAt,
+      leaseGeneration: { increment: 1 },
+    },
+  });
+
+  if (result.count !== 1) {
+    return { updated: false, leaseGeneration: null, attempt: null };
+  }
+
+  const attempt = await findVionaRequestExecutionAttemptForRecovery(client, input.attemptId);
+  return {
+    updated: true,
+    leaseGeneration: attempt?.leaseGeneration ?? null,
+    attempt,
+  };
+}
+
+export type TransitionVionaRequestExecutionAttemptStateWithGenerationInput = Readonly<{
+  attemptId: string;
+  expectedRequestId: string;
+  expectedStates: readonly VionaRequestExecutionAttemptState[];
+  expectedLeaseOwner: string;
+  expectedLeaseGeneration: number;
+  nextState: VionaRequestExecutionAttemptState;
+  providerFinishedAt?: Date | null;
+  providerResultDigest?: string | null;
+  providerExternalReferenceDigest?: string | null;
+  failureClass?: string | null;
+  failureReasonDigest?: string | null;
+  finalizedAt?: Date | null;
+}>;
+
+/**
+ * Pack40DR2 — generation-fenced attempt state transition (stale workers → zero-row).
+ */
+export async function transitionVionaRequestExecutionAttemptStateWithGeneration(
+  client: VionaRequestExecutionAttemptClient,
+  input: TransitionVionaRequestExecutionAttemptStateWithGenerationInput,
+): Promise<{ updated: boolean; attempt: VionaRequestExecutionRecoveryAttempt | null }> {
+  const result = await client.vionaRequestExecutionAttempt.updateMany({
+    where: {
+      id: input.attemptId,
+      requestId: input.expectedRequestId,
+      state: { in: [...input.expectedStates] },
+      leaseOwner: input.expectedLeaseOwner,
+      leaseGeneration: input.expectedLeaseGeneration,
+    },
+    data: {
+      state: input.nextState,
+      ...(input.providerFinishedAt !== undefined
+        ? { providerFinishedAt: input.providerFinishedAt }
+        : {}),
+      ...(input.providerResultDigest !== undefined
+        ? { providerResultDigest: input.providerResultDigest }
+        : {}),
+      ...(input.providerExternalReferenceDigest !== undefined
+        ? { providerExternalReferenceDigest: input.providerExternalReferenceDigest }
+        : {}),
+      ...(input.failureClass !== undefined ? { failureClass: input.failureClass } : {}),
+      ...(input.failureReasonDigest !== undefined
+        ? { failureReasonDigest: input.failureReasonDigest }
+        : {}),
+      ...(input.finalizedAt !== undefined ? { finalizedAt: input.finalizedAt } : {}),
+    },
+  });
+
+  if (result.count !== 1) {
+    return { updated: false, attempt: null };
+  }
+
+  const attempt = await findVionaRequestExecutionAttemptForRecovery(client, input.attemptId);
+  return { updated: true, attempt };
+}
