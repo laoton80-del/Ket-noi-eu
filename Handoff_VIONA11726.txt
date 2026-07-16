@@ -1271,6 +1271,29 @@ Fly logs not collected (CLI limitation)
 Evidence: docs/product/VIONA_PACK40DRD_STAGING_RECOVERY_DEPLOYMENT_EVIDENCE.md
 Next: separately authorize Pack40DRS staging live recovery QA only
 
+=== PACK40DRS0 STAGING RECOVERY ENDPOINT SAFETY QA ===
+Operator phrase: APPROVE_PACK40DRS0_STAGING_RECOVERY_ENDPOINT_SAFETY_QA
+Master baseline: a12c7a6 (PR #383 MERGED — Pack40DRD deployment evidence)
+Branch: docs/pack40drs0-staging-recovery-endpoint-safety-qa
+Staging: v28 / deployment-01KXN3M9E6NWTFAE5YMW60T9FH
+Live matrix (4 recovery POSTs max):
+  A unauthenticated → HTTP 401
+  B non-admin B2C → HTTP 403
+  C ADMIN nonexistent → HTTP 404 sanitized not found
+  D ADMIN completed → already_terminal no-op
+Deltas all 0: attempt/request/event/audit/escrow/provider lookup/send/leaseGeneration
+Static suite: 16/16 PASS
+NOT performed: non-terminal recovery, lease acquire, provider lookup/send, escrow mutation, cleanup, deploy, migration
+Markers:
+  PACK40DRS0_STAGING_RECOVERY_ENDPOINT_SAFETY_QA_PASS
+  PACK40DR_LIVE_NONTERMINAL_RECOVERY_QA_STILL_REQUIRED
+  PACK40DR_PROVIDER_SEND_DISABLED
+  PACK40DR_SCHEDULER_WORKER_NOT_IMPLEMENTED
+  PACK40D_INITIAL_CONTROLLED_MERCHANT_EXECUTION_REMAINS_CLOSED_GREEN
+Recovery NOT CLOSED/GREEN
+Evidence: docs/product/VIONA_PACK40DRS0_STAGING_RECOVERY_ENDPOINT_SAFETY_QA_EVIDENCE.md
+Next: separately authorize non-terminal stranded recovery QA when fixture pack approved
+
 === PACK40DR2 DORMANT RECOVERY SERVICES ===
 Operator phrase: APPROVE_PACK40DR2_DORMANT_RECOVERY_SERVICES
 Master baseline: f184120 (PR #379 MERGED — Pack40DR1 staging migrate-apply evidence)
