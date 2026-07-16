@@ -1477,12 +1477,10 @@ async function main(): Promise<void> {
     '86. no live escrow implementation invoked',
   );
   assert(
-    PACK40DR2_PROVIDER_REFERENCE_RUNTIME_POPULATION_NOT_WIRED ===
-      'PACK40DR2_PROVIDER_REFERENCE_RUNTIME_POPULATION_NOT_WIRED' &&
-      !readUtf8('src/services/viona/vionaRequestExecutionGatewayService.ts').includes(
-        'providerExternalReference:',
-      ),
-    '87. provider-reference population remains unwired',
+    readUtf8('src/services/viona/vionaRequestExecutionGatewayService.ts').includes(
+      'providerExternalReference',
+    ),
+    '87. live Pack40D3A gateway persists providerExternalReference (DR3A wired)',
   );
   assert(
     !/\b(?:npx|prisma)\s+migrate\s+deploy\b|\bprocess\.env\.DATABASE_URL\b|\bhttps?:\/\/[^"'`]+\.fly\.dev\b/.test(

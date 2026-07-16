@@ -174,6 +174,7 @@ export async function executeVionaRequestBusinessFlow(
 
   const attemptId = claim.attemptId;
   const leaseOwner = claim.leaseOwner;
+  const leaseGeneration = claim.leaseGeneration;
   const escrowKey = buildVionaPack40D3EscrowIdempotencyKey({
     requestId,
     executionAttemptId: attemptId,
@@ -221,12 +222,21 @@ export async function executeVionaRequestBusinessFlow(
       {
         attemptId,
         expectedLeaseOwner: leaseOwner,
+        expectedLeaseGeneration: leaseGeneration,
         operationCategory: 'send',
       },
       { adapter, clock },
     );
   } catch (error) {
     if (error instanceof VionaRequestExecutionGatewayError) {
+      if (error.code === 'stale_lease_generation' || error.code === 'stale_lease_owner') {
+        return {
+          ok: false,
+          reason: 'reconciliation_required',
+          attemptId,
+          requestStatus: 'inProgress',
+        };
+      }
       if (
         error.code === 'uncertain_outcome_requires_review' ||
         error.code === 'already_prepared' ||
@@ -289,8 +299,20 @@ export async function executeVionaRequestBusinessFlow(
         attemptId,
         requestId,
         expectedLeaseOwner: leaseOwner,
+        expectedLeaseGeneration: leaseGeneration,
       });
-    } catch {
+    } catch (error) {
+      if (
+        error instanceof VionaRequestIndirectExecutionError &&
+        (error.code === 'stale_lease_generation' || error.code === 'stale_lease_owner')
+      ) {
+        return {
+          ok: false,
+          reason: 'reconciliation_required',
+          attemptId,
+          requestStatus: 'inProgress',
+        };
+      }
       return {
         ok: false,
         reason: 'reconciliation_required',
@@ -340,8 +362,20 @@ export async function executeVionaRequestBusinessFlow(
       attemptId,
       requestId,
       expectedLeaseOwner: leaseOwner,
+      expectedLeaseGeneration: leaseGeneration,
     });
-  } catch {
+  } catch (error) {
+    if (
+      error instanceof VionaRequestIndirectExecutionError &&
+      (error.code === 'stale_lease_generation' || error.code === 'stale_lease_owner')
+    ) {
+      return {
+        ok: false,
+        reason: 'reconciliation_required',
+        attemptId,
+        requestStatus: 'inProgress',
+      };
+    }
     return {
       ok: false,
       reason: 'reconciliation_required',

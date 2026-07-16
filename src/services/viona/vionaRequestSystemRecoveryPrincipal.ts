@@ -9,6 +9,10 @@ export const VIONA_SYSTEM_RECOVERY_PRINCIPAL_TYPE = 'systemRecovery' as const;
 export const VIONA_SYSTEM_RECOVERY_TRIGGER_TYPE = 'operatorInternalRecovery' as const;
 export const VIONA_RECOVERY_AUDIT_ACTOR_ROLE = 'execution_recovery_service' as const;
 
+export const PACK40DR3A_PROVIDER_REFERENCE_RUNTIME_POPULATION_WIRED =
+  'PACK40DR3A_PROVIDER_REFERENCE_RUNTIME_POPULATION_WIRED' as const;
+
+/** Historical DR2 marker — superseded by Pack40DR3A live gateway persistence. */
 export const PACK40DR2_PROVIDER_REFERENCE_RUNTIME_POPULATION_NOT_WIRED =
   'PACK40DR2_PROVIDER_REFERENCE_RUNTIME_POPULATION_NOT_WIRED' as const;
 

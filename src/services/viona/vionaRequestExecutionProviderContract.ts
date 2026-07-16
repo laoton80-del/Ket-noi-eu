@@ -48,18 +48,22 @@ export type VionaExecutionProviderAdapterSucceeded = Readonly<{
   kind: 'succeeded';
   resultDigest: string;
   externalReferenceDigest?: string | null;
+  /** Exact opaque provider-issued reference (e.g. Twilio MessageSid). Never logged or returned on API. */
+  providerExternalReference?: string | null;
 }>;
 
 export type VionaExecutionProviderAdapterFailed = Readonly<{
   kind: 'failed';
   failureClass: string;
   failureReasonDigest: string;
+  providerExternalReference?: string | null;
 }>;
 
 export type VionaExecutionProviderAdapterUncertain = Readonly<{
   kind: 'uncertain';
   uncertaintyClass: 'timeout' | 'response_loss' | 'malformed_after_submit' | 'local_record_risk';
   failureReasonDigest?: string | null;
+  providerExternalReference?: string | null;
 }>;
 
 export type VionaExecutionProviderAdapterResult =

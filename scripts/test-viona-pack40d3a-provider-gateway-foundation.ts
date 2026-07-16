@@ -66,6 +66,7 @@ type AttemptRow = {
   tenantIdSnapshot: string;
   leaseOwner: string | null;
   leaseExpiresAt: Date | null;
+  leaseGeneration: number;
   claimedAt: Date | null;
   providerName: string | null;
   operationCategory: string | null;
@@ -74,6 +75,7 @@ type AttemptRow = {
   providerFinishedAt: Date | null;
   providerResultDigest: string | null;
   providerExternalReferenceDigest: string | null;
+  providerExternalReference: string | null;
   failureClass: string | null;
   failureReasonDigest: string | null;
   finalizedAt: Date | null;
@@ -168,6 +170,7 @@ function makeAttempt(overrides: Partial<AttemptRow> = {}): AttemptRow {
     tenantIdSnapshot: TENANT_ID,
     leaseOwner: LEASE_OWNER,
     leaseExpiresAt: new Date(FIXED_NOW.getTime() + 60_000),
+    leaseGeneration: 0,
     claimedAt: FIXED_NOW,
     providerName: null,
     operationCategory: null,
@@ -176,6 +179,7 @@ function makeAttempt(overrides: Partial<AttemptRow> = {}): AttemptRow {
     providerFinishedAt: null,
     providerResultDigest: null,
     providerExternalReferenceDigest: null,
+    providerExternalReference: null,
     failureClass: null,
     failureReasonDigest: null,
     finalizedAt: null,
@@ -247,6 +251,16 @@ function installFakePrisma(state: FakeState): VionaRequestExecutionGatewayDeps['
     if (where.id != null && attempt.id !== where.id) return false;
     if (where.requestId != null && attempt.requestId !== where.requestId) return false;
     if (where.leaseOwner !== undefined && attempt.leaseOwner !== where.leaseOwner) return false;
+    if (
+      where.leaseGeneration !== undefined &&
+      attempt.leaseGeneration !== where.leaseGeneration
+    ) {
+      return false;
+    }
+    if (Array.isArray(where.OR)) {
+      const ok = where.OR.some((clause) => matchesAttemptWhere(attempt, clause as Record<string, unknown>));
+      if (!ok) return false;
+    }
     if (where.providerName != null && attempt.providerName !== where.providerName) return false;
     if (
       where.operationCategory != null &&
@@ -323,6 +337,7 @@ function installFakePrisma(state: FakeState): VionaRequestExecutionGatewayDeps['
             correlationId: hit.correlationId,
             leaseOwner: hit.leaseOwner,
             leaseExpiresAt: hit.leaseExpiresAt,
+            leaseGeneration: hit.leaseGeneration,
             providerIdempotencyKey: hit.providerIdempotencyKey,
           };
         }
@@ -391,6 +406,22 @@ function installFakePrisma(state: FakeState): VionaRequestExecutionGatewayDeps['
   } as unknown as VionaRequestExecutionGatewayDeps['prisma'];
 }
 
+const SYNTHETIC_PROVIDER_REFERENCE = 'SMbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb';
+
+function withDefaultProviderReference(
+  result: VionaExecutionProviderAdapterResult,
+): VionaExecutionProviderAdapterResult {
+  if (result.kind === 'succeeded') {
+    return {
+      ...result,
+      providerExternalReference:
+        result.providerExternalReference?.trim() || SYNTHETIC_PROVIDER_REFERENCE,
+      externalReferenceDigest: result.externalReferenceDigest ?? 'ext-digest',
+    };
+  }
+  return result;
+}
+
 function makeAdapter(
   result: VionaExecutionProviderAdapterResult | (() => VionaExecutionProviderAdapterResult),
   tracker: { calls: number; lastKey?: string; lastInput?: unknown } = { calls: 0 },
@@ -400,7 +431,8 @@ function makeAdapter(
       tracker.calls += 1;
       tracker.lastKey = input.providerIdempotencyKey;
       tracker.lastInput = input;
-      return typeof result === 'function' ? result() : result;
+      const resolved = typeof result === 'function' ? result() : result;
+      return withDefaultProviderReference(resolved);
     },
   };
 }
@@ -435,7 +467,7 @@ async function main(): Promise<void> {
   await runAsyncTest('1. Exact active merchant attempt prepares successfully', async () => {
     const state = blankState();
     const result = await prepareVionaRequestExecutionProvider(
-      { attemptId: ATTEMPT_ID, expectedLeaseOwner: LEASE_OWNER, operationCategory: OPERATION },
+      { attemptId: ATTEMPT_ID, expectedLeaseOwner: LEASE_OWNER, expectedLeaseGeneration: 0, operationCategory: OPERATION },
       makeDeps(state, makeAdapter({ kind: 'succeeded', resultDigest: 'd' })),
     );
     assert(result.kind === 'prepared', 'prepared');
@@ -455,7 +487,7 @@ async function main(): Promise<void> {
     });
     await expectCode('merchant_execution_not_authorized', () =>
       prepareVionaRequestExecutionProvider(
-        { attemptId: ATTEMPT_ID, expectedLeaseOwner: LEASE_OWNER, operationCategory: OPERATION },
+        { attemptId: ATTEMPT_ID, expectedLeaseOwner: LEASE_OWNER, expectedLeaseGeneration: 0, operationCategory: OPERATION },
         makeDeps(state, makeAdapter({ kind: 'succeeded', resultDigest: 'd' })),
       ),
     );
@@ -472,7 +504,7 @@ async function main(): Promise<void> {
     });
     await expectCode('merchant_execution_not_authorized', () =>
       prepareVionaRequestExecutionProvider(
-        { attemptId: ATTEMPT_ID, expectedLeaseOwner: LEASE_OWNER, operationCategory: OPERATION },
+        { attemptId: ATTEMPT_ID, expectedLeaseOwner: LEASE_OWNER, expectedLeaseGeneration: 0, operationCategory: OPERATION },
         makeDeps(state, makeAdapter({ kind: 'succeeded', resultDigest: 'd' })),
       ),
     );
@@ -484,7 +516,7 @@ async function main(): Promise<void> {
     });
     await expectCode('merchant_execution_not_authorized', () =>
       prepareVionaRequestExecutionProvider(
-        { attemptId: ATTEMPT_ID, expectedLeaseOwner: LEASE_OWNER, operationCategory: OPERATION },
+        { attemptId: ATTEMPT_ID, expectedLeaseOwner: LEASE_OWNER, expectedLeaseGeneration: 0, operationCategory: OPERATION },
         makeDeps(state, makeAdapter({ kind: 'succeeded', resultDigest: 'd' })),
       ),
     );
@@ -496,7 +528,7 @@ async function main(): Promise<void> {
     });
     await expectCode('merchant_execution_not_authorized', () =>
       prepareVionaRequestExecutionProvider(
-        { attemptId: ATTEMPT_ID, expectedLeaseOwner: LEASE_OWNER, operationCategory: OPERATION },
+        { attemptId: ATTEMPT_ID, expectedLeaseOwner: LEASE_OWNER, expectedLeaseGeneration: 0, operationCategory: OPERATION },
         makeDeps(state, makeAdapter({ kind: 'succeeded', resultDigest: 'd' })),
       ),
     );
@@ -508,7 +540,7 @@ async function main(): Promise<void> {
     });
     await expectCode('merchant_execution_not_authorized', () =>
       prepareVionaRequestExecutionProvider(
-        { attemptId: ATTEMPT_ID, expectedLeaseOwner: LEASE_OWNER, operationCategory: OPERATION },
+        { attemptId: ATTEMPT_ID, expectedLeaseOwner: LEASE_OWNER, expectedLeaseGeneration: 0, operationCategory: OPERATION },
         makeDeps(state, makeAdapter({ kind: 'succeeded', resultDigest: 'd' })),
       ),
     );
@@ -518,7 +550,7 @@ async function main(): Promise<void> {
     const state = blankState({ profiles: [makeProfile({ isActive: false })] });
     await expectCode('merchant_execution_not_authorized', () =>
       prepareVionaRequestExecutionProvider(
-        { attemptId: ATTEMPT_ID, expectedLeaseOwner: LEASE_OWNER, operationCategory: OPERATION },
+        { attemptId: ATTEMPT_ID, expectedLeaseOwner: LEASE_OWNER, expectedLeaseGeneration: 0, operationCategory: OPERATION },
         makeDeps(state, makeAdapter({ kind: 'succeeded', resultDigest: 'd' })),
       ),
     );
@@ -529,7 +561,7 @@ async function main(): Promise<void> {
     const state = blankState({ requests: [makeRequest({ status: 'triage' })] });
     await expectCode('invalid_attempt_state', () =>
       prepareVionaRequestExecutionProvider(
-        { attemptId: ATTEMPT_ID, expectedLeaseOwner: LEASE_OWNER, operationCategory: OPERATION },
+        { attemptId: ATTEMPT_ID, expectedLeaseOwner: LEASE_OWNER, expectedLeaseGeneration: 0, operationCategory: OPERATION },
         makeDeps(state, makeAdapter({ kind: 'succeeded', resultDigest: 'd' })),
       ),
     );
@@ -544,7 +576,7 @@ async function main(): Promise<void> {
     state.requests = [makeRequest({ id: REQUEST_ID })];
     await expectCode('request_attempt_mismatch', () =>
       prepareVionaRequestExecutionProvider(
-        { attemptId: ATTEMPT_ID, expectedLeaseOwner: LEASE_OWNER, operationCategory: OPERATION },
+        { attemptId: ATTEMPT_ID, expectedLeaseOwner: LEASE_OWNER, expectedLeaseGeneration: 0, operationCategory: OPERATION },
         makeDeps(state, makeAdapter({ kind: 'succeeded', resultDigest: 'd' })),
       ),
     );
@@ -554,7 +586,7 @@ async function main(): Promise<void> {
     const state = blankState();
     await expectCode('stale_lease_owner', () =>
       prepareVionaRequestExecutionProvider(
-        { attemptId: ATTEMPT_ID, expectedLeaseOwner: 'worker-other', operationCategory: OPERATION },
+        { attemptId: ATTEMPT_ID, expectedLeaseOwner: 'worker-other', expectedLeaseGeneration: 0, operationCategory: OPERATION },
         makeDeps(state, makeAdapter({ kind: 'succeeded', resultDigest: 'd' })),
       ),
     );
@@ -569,7 +601,7 @@ async function main(): Promise<void> {
     });
     await expectCode('stale_lease_owner', () =>
       prepareVionaRequestExecutionProvider(
-        { attemptId: ATTEMPT_ID, expectedLeaseOwner: LEASE_OWNER, operationCategory: OPERATION },
+        { attemptId: ATTEMPT_ID, expectedLeaseOwner: LEASE_OWNER, expectedLeaseGeneration: 0, operationCategory: OPERATION },
         makeDeps(state, makeAdapter({ kind: 'succeeded', resultDigest: 'd' })),
       ),
     );
@@ -578,7 +610,7 @@ async function main(): Promise<void> {
   await runAsyncTest('12. Authority reload occurs inside transaction', async () => {
     const state = blankState();
     await prepareVionaRequestExecutionProvider(
-      { attemptId: ATTEMPT_ID, expectedLeaseOwner: LEASE_OWNER, operationCategory: OPERATION },
+      { attemptId: ATTEMPT_ID, expectedLeaseOwner: LEASE_OWNER, expectedLeaseGeneration: 0, operationCategory: OPERATION },
       makeDeps(state, makeAdapter({ kind: 'succeeded', resultDigest: 'd' })),
     );
     assert(state.txProfileLookups === 1, 'tx profile');
@@ -588,7 +620,7 @@ async function main(): Promise<void> {
   await runAsyncTest('13. No profile lookup before transaction', async () => {
     const state = blankState();
     await prepareVionaRequestExecutionProvider(
-      { attemptId: ATTEMPT_ID, expectedLeaseOwner: LEASE_OWNER, operationCategory: OPERATION },
+      { attemptId: ATTEMPT_ID, expectedLeaseOwner: LEASE_OWNER, expectedLeaseGeneration: 0, operationCategory: OPERATION },
       makeDeps(state, makeAdapter({ kind: 'succeeded', resultDigest: 'd' })),
     );
     assert(state.preTxProfileLookups === 0, 'no pre-tx');
@@ -600,6 +632,7 @@ async function main(): Promise<void> {
       {
         attemptId: ATTEMPT_ID,
         expectedLeaseOwner: LEASE_OWNER,
+        expectedLeaseGeneration: 0,
         operationCategory: OPERATION,
         envelopeTenantId: OTHER_TENANT,
         envelopeMerchantProfileId: OTHER_PROFILE,
@@ -619,7 +652,7 @@ async function main(): Promise<void> {
   await runAsyncTest('16. Same attempt reuses key', async () => {
     const state = blankState();
     const first = await prepareVionaRequestExecutionProvider(
-      { attemptId: ATTEMPT_ID, expectedLeaseOwner: LEASE_OWNER, operationCategory: OPERATION },
+      { attemptId: ATTEMPT_ID, expectedLeaseOwner: LEASE_OWNER, expectedLeaseGeneration: 0, operationCategory: OPERATION },
       makeDeps(state, makeAdapter({ kind: 'succeeded', resultDigest: 'd' })),
     );
     // Roll back to claimed manually and clear key to prove derivation stability
@@ -653,7 +686,7 @@ async function main(): Promise<void> {
     });
     await expectCode('provider_key_conflict', () =>
       prepareVionaRequestExecutionProvider(
-        { attemptId: ATTEMPT_ID, expectedLeaseOwner: LEASE_OWNER, operationCategory: OPERATION },
+        { attemptId: ATTEMPT_ID, expectedLeaseOwner: LEASE_OWNER, expectedLeaseGeneration: 0, operationCategory: OPERATION },
         makeDeps(state, makeAdapter({ kind: 'succeeded', resultDigest: 'd' })),
       ),
     );
@@ -668,11 +701,15 @@ async function main(): Promise<void> {
         tracker.calls += 1;
         keyDuringInvoke = state.attempts[0]!.providerIdempotencyKey;
         tracker.lastKey = input.providerIdempotencyKey;
-        return { kind: 'succeeded', resultDigest: 'digest-ok' };
+        return {
+          kind: 'succeeded',
+          resultDigest: 'digest-ok',
+          providerExternalReference: SYNTHETIC_PROVIDER_REFERENCE,
+        };
       },
     };
     await runVionaRequestExecutionProviderGateway(
-      { attemptId: ATTEMPT_ID, expectedLeaseOwner: LEASE_OWNER, operationCategory: OPERATION },
+      { attemptId: ATTEMPT_ID, expectedLeaseOwner: LEASE_OWNER, expectedLeaseGeneration: 0, operationCategory: OPERATION },
       makeDeps(state, adapter),
     );
     assert(keyDuringInvoke === expectedKey(), 'persisted before invoke');
@@ -691,7 +728,7 @@ async function main(): Promise<void> {
   await runAsyncTest('23. Serializable isolation used', async () => {
     const state = blankState();
     await prepareVionaRequestExecutionProvider(
-      { attemptId: ATTEMPT_ID, expectedLeaseOwner: LEASE_OWNER, operationCategory: OPERATION },
+      { attemptId: ATTEMPT_ID, expectedLeaseOwner: LEASE_OWNER, expectedLeaseGeneration: 0, operationCategory: OPERATION },
       makeDeps(state, makeAdapter({ kind: 'succeeded', resultDigest: 'd' })),
     );
     assert(
@@ -704,7 +741,7 @@ async function main(): Promise<void> {
   await runAsyncTest('24. claimed → providerPending conditional', async () => {
     const state = blankState();
     await prepareVionaRequestExecutionProvider(
-      { attemptId: ATTEMPT_ID, expectedLeaseOwner: LEASE_OWNER, operationCategory: OPERATION },
+      { attemptId: ATTEMPT_ID, expectedLeaseOwner: LEASE_OWNER, expectedLeaseGeneration: 0, operationCategory: OPERATION },
       makeDeps(state, makeAdapter({ kind: 'succeeded', resultDigest: 'd' })),
     );
     assert(state.attempts[0]!.state === VionaRequestExecutionAttemptState.providerPending, 'pending');
@@ -714,7 +751,7 @@ async function main(): Promise<void> {
     const state = blankState({ forcePrepareZero: true });
     await expectCode('preparation_conflict', () =>
       prepareVionaRequestExecutionProvider(
-        { attemptId: ATTEMPT_ID, expectedLeaseOwner: LEASE_OWNER, operationCategory: OPERATION },
+        { attemptId: ATTEMPT_ID, expectedLeaseOwner: LEASE_OWNER, expectedLeaseGeneration: 0, operationCategory: OPERATION },
         makeDeps(state, makeAdapter({ kind: 'succeeded', resultDigest: 'd' })),
       ),
     );
@@ -726,7 +763,7 @@ async function main(): Promise<void> {
     const state = blankState({ forceKeyUniqueConflict: true });
     await expectCode('provider_key_conflict', () =>
       prepareVionaRequestExecutionProvider(
-        { attemptId: ATTEMPT_ID, expectedLeaseOwner: LEASE_OWNER, operationCategory: OPERATION },
+        { attemptId: ATTEMPT_ID, expectedLeaseOwner: LEASE_OWNER, expectedLeaseGeneration: 0, operationCategory: OPERATION },
         makeDeps(state, makeAdapter({ kind: 'succeeded', resultDigest: 'd' })),
       ),
     );
@@ -736,7 +773,7 @@ async function main(): Promise<void> {
   await runAsyncTest('27. No request status change', async () => {
     const state = blankState();
     await runVionaRequestExecutionProviderGateway(
-      { attemptId: ATTEMPT_ID, expectedLeaseOwner: LEASE_OWNER, operationCategory: OPERATION },
+      { attemptId: ATTEMPT_ID, expectedLeaseOwner: LEASE_OWNER, expectedLeaseGeneration: 0, operationCategory: OPERATION },
       makeDeps(state, makeAdapter({ kind: 'succeeded', resultDigest: 'digest' })),
     );
     assert(state.requests[0]!.status === 'inProgress', 'still inProgress');
@@ -759,7 +796,7 @@ async function main(): Promise<void> {
   await runAsyncTest('30. Known success records providerSucceeded', async () => {
     const state = blankState();
     const result = await runVionaRequestExecutionProviderGateway(
-      { attemptId: ATTEMPT_ID, expectedLeaseOwner: LEASE_OWNER, operationCategory: OPERATION },
+      { attemptId: ATTEMPT_ID, expectedLeaseOwner: LEASE_OWNER, expectedLeaseGeneration: 0, operationCategory: OPERATION },
       makeDeps(state, makeAdapter({ kind: 'succeeded', resultDigest: 'ok-digest', externalReferenceDigest: 'ext' })),
     );
     assert(result.attemptState === VionaRequestExecutionAttemptState.providerSucceeded, 'succeeded');
@@ -771,7 +808,7 @@ async function main(): Promise<void> {
   await runAsyncTest('31. Known failure records providerFailed', async () => {
     const state = blankState();
     const result = await runVionaRequestExecutionProviderGateway(
-      { attemptId: ATTEMPT_ID, expectedLeaseOwner: LEASE_OWNER, operationCategory: OPERATION },
+      { attemptId: ATTEMPT_ID, expectedLeaseOwner: LEASE_OWNER, expectedLeaseGeneration: 0, operationCategory: OPERATION },
       makeDeps(
         state,
         makeAdapter({
@@ -788,7 +825,7 @@ async function main(): Promise<void> {
   await runAsyncTest('32. Timeout records outcomeUncertain', async () => {
     const state = blankState();
     const result = await runVionaRequestExecutionProviderGateway(
-      { attemptId: ATTEMPT_ID, expectedLeaseOwner: LEASE_OWNER, operationCategory: OPERATION },
+      { attemptId: ATTEMPT_ID, expectedLeaseOwner: LEASE_OWNER, expectedLeaseGeneration: 0, operationCategory: OPERATION },
       makeDeps(
         state,
         makeAdapter({
@@ -810,7 +847,7 @@ async function main(): Promise<void> {
       },
     };
     const result = await runVionaRequestExecutionProviderGateway(
-      { attemptId: ATTEMPT_ID, expectedLeaseOwner: LEASE_OWNER, operationCategory: OPERATION },
+      { attemptId: ATTEMPT_ID, expectedLeaseOwner: LEASE_OWNER, expectedLeaseGeneration: 0, operationCategory: OPERATION },
       makeDeps(state, adapter),
     );
     assert(result.attemptState === VionaRequestExecutionAttemptState.outcomeUncertain, 'uncertain');
@@ -820,7 +857,7 @@ async function main(): Promise<void> {
   await runAsyncTest('34. Success digest stored without raw payload', async () => {
     const state = blankState();
     await runVionaRequestExecutionProviderGateway(
-      { attemptId: ATTEMPT_ID, expectedLeaseOwner: LEASE_OWNER, operationCategory: OPERATION },
+      { attemptId: ATTEMPT_ID, expectedLeaseOwner: LEASE_OWNER, expectedLeaseGeneration: 0, operationCategory: OPERATION },
       makeDeps(state, makeAdapter({ kind: 'succeeded', resultDigest: 'sha256:abc' })),
     );
     const a = state.attempts[0]!;
@@ -831,7 +868,7 @@ async function main(): Promise<void> {
   await runAsyncTest('35. Failure digest bounded', async () => {
     const state = blankState();
     await runVionaRequestExecutionProviderGateway(
-      { attemptId: ATTEMPT_ID, expectedLeaseOwner: LEASE_OWNER, operationCategory: OPERATION },
+      { attemptId: ATTEMPT_ID, expectedLeaseOwner: LEASE_OWNER, expectedLeaseGeneration: 0, operationCategory: OPERATION },
       makeDeps(
         state,
         makeAdapter({
@@ -862,9 +899,10 @@ async function main(): Promise<void> {
           attemptId: 'missing',
           requestId: REQUEST_ID,
           expectedLeaseOwner: LEASE_OWNER,
+          expectedLeaseGeneration: 0,
           operationCategory: OPERATION,
           providerIdempotencyKey: expectedKey(),
-          adapterResult: { kind: 'succeeded', resultDigest: 'd' },
+          adapterResult: { kind: 'succeeded', resultDigest: 'd', providerExternalReference: SYNTHETIC_PROVIDER_REFERENCE },
         },
         { prisma: installFakePrisma(state), clock: () => FIXED_NOW },
       ),
@@ -889,9 +927,10 @@ async function main(): Promise<void> {
           attemptId: ATTEMPT_ID,
           requestId: REQUEST_ID,
           expectedLeaseOwner: LEASE_OWNER,
+          expectedLeaseGeneration: 0,
           operationCategory: OPERATION,
           providerIdempotencyKey: 'wrong-key',
-          adapterResult: { kind: 'succeeded', resultDigest: 'd' },
+          adapterResult: { kind: 'succeeded', resultDigest: 'd', providerExternalReference: SYNTHETIC_PROVIDER_REFERENCE },
         },
         { prisma: installFakePrisma(state), clock: () => FIXED_NOW },
       ),
@@ -917,9 +956,10 @@ async function main(): Promise<void> {
           attemptId: ATTEMPT_ID,
           requestId: REQUEST_ID,
           expectedLeaseOwner: LEASE_OWNER,
+          expectedLeaseGeneration: 0,
           operationCategory: OPERATION,
           providerIdempotencyKey: expectedKey(),
-          adapterResult: { kind: 'succeeded', resultDigest: 'd' },
+          adapterResult: { kind: 'succeeded', resultDigest: 'd', providerExternalReference: SYNTHETIC_PROVIDER_REFERENCE },
         },
         { prisma: installFakePrisma(state), clock: () => FIXED_NOW },
       ),
@@ -931,12 +971,12 @@ async function main(): Promise<void> {
     const tracker = { calls: 0 };
     const adapter = makeAdapter({ kind: 'succeeded', resultDigest: 'd' }, tracker);
     await runVionaRequestExecutionProviderGateway(
-      { attemptId: ATTEMPT_ID, expectedLeaseOwner: LEASE_OWNER, operationCategory: OPERATION },
+      { attemptId: ATTEMPT_ID, expectedLeaseOwner: LEASE_OWNER, expectedLeaseGeneration: 0, operationCategory: OPERATION },
       makeDeps(state, adapter),
     );
     await expectCode('outcome_already_recorded', () =>
       runVionaRequestExecutionProviderGateway(
-        { attemptId: ATTEMPT_ID, expectedLeaseOwner: LEASE_OWNER, operationCategory: OPERATION },
+        { attemptId: ATTEMPT_ID, expectedLeaseOwner: LEASE_OWNER, expectedLeaseGeneration: 0, operationCategory: OPERATION },
         makeDeps(state, adapter),
       ),
     );
@@ -951,12 +991,12 @@ async function main(): Promise<void> {
       tracker,
     );
     await runVionaRequestExecutionProviderGateway(
-      { attemptId: ATTEMPT_ID, expectedLeaseOwner: LEASE_OWNER, operationCategory: OPERATION },
+      { attemptId: ATTEMPT_ID, expectedLeaseOwner: LEASE_OWNER, expectedLeaseGeneration: 0, operationCategory: OPERATION },
       makeDeps(state, adapter),
     );
     await expectCode('outcome_already_recorded', () =>
       runVionaRequestExecutionProviderGateway(
-        { attemptId: ATTEMPT_ID, expectedLeaseOwner: LEASE_OWNER, operationCategory: OPERATION },
+        { attemptId: ATTEMPT_ID, expectedLeaseOwner: LEASE_OWNER, expectedLeaseGeneration: 0, operationCategory: OPERATION },
         makeDeps(state, adapter),
       ),
     );
@@ -971,12 +1011,12 @@ async function main(): Promise<void> {
       tracker,
     );
     await runVionaRequestExecutionProviderGateway(
-      { attemptId: ATTEMPT_ID, expectedLeaseOwner: LEASE_OWNER, operationCategory: OPERATION },
+      { attemptId: ATTEMPT_ID, expectedLeaseOwner: LEASE_OWNER, expectedLeaseGeneration: 0, operationCategory: OPERATION },
       makeDeps(state, adapter),
     );
     await expectCode('uncertain_outcome_requires_review', () =>
       runVionaRequestExecutionProviderGateway(
-        { attemptId: ATTEMPT_ID, expectedLeaseOwner: LEASE_OWNER, operationCategory: OPERATION },
+        { attemptId: ATTEMPT_ID, expectedLeaseOwner: LEASE_OWNER, expectedLeaseGeneration: 0, operationCategory: OPERATION },
         makeDeps(state, adapter),
       ),
     );
@@ -992,7 +1032,7 @@ async function main(): Promise<void> {
     const tracker = { calls: 0 };
     await expectCode('terminal_attempt', () =>
       runVionaRequestExecutionProviderGateway(
-        { attemptId: ATTEMPT_ID, expectedLeaseOwner: LEASE_OWNER, operationCategory: OPERATION },
+        { attemptId: ATTEMPT_ID, expectedLeaseOwner: LEASE_OWNER, expectedLeaseGeneration: 0, operationCategory: OPERATION },
         makeDeps(state, makeAdapter({ kind: 'succeeded', resultDigest: 'd' }, tracker)),
       ),
     );
@@ -1180,7 +1220,7 @@ async function main(): Promise<void> {
     const tracker = { calls: 0 };
     await expectCode('already_prepared', () =>
       runVionaRequestExecutionProviderGateway(
-        { attemptId: ATTEMPT_ID, expectedLeaseOwner: LEASE_OWNER, operationCategory: OPERATION },
+        { attemptId: ATTEMPT_ID, expectedLeaseOwner: LEASE_OWNER, expectedLeaseGeneration: 0, operationCategory: OPERATION },
         makeDeps(state, makeAdapter({ kind: 'succeeded', resultDigest: 'd' }, tracker)),
       ),
     );
@@ -1194,6 +1234,7 @@ async function main(): Promise<void> {
         {
           attemptId: ATTEMPT_ID,
           expectedLeaseOwner: LEASE_OWNER,
+          expectedLeaseGeneration: 0,
           operationCategory: 'booking' as VionaPack40D3AOperationCategory,
         },
         makeDeps(state, makeAdapter({ kind: 'succeeded', resultDigest: 'd' })),
