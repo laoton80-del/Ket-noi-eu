@@ -30,9 +30,13 @@ import {
   type VionaPack40D3AOperationCategory,
 } from './vionaRequestExecutionProviderContract';
 
+export const PACK40DR3A_PROVIDER_REFERENCE_RUNTIME_POPULATION_WIRED =
+  'PACK40DR3A_PROVIDER_REFERENCE_RUNTIME_POPULATION_WIRED' as const;
+
 export type Pack40D3AGatewayErrorCode =
   | 'attempt_not_found'
   | 'stale_lease_owner'
+  | 'stale_lease_generation'
   | 'invalid_attempt_state'
   | 'request_attempt_mismatch'
   | 'merchant_execution_not_authorized'
@@ -72,6 +76,7 @@ export type Pack40D3AProviderKeyFactory = (input: {
 export type RunVionaRequestExecutionProviderGatewayInput = Readonly<{
   attemptId: string;
   expectedLeaseOwner: string;
+  expectedLeaseGeneration: number;
   operationCategory: VionaPack40D3AOperationCategory;
   /** Ignored for authority — accepted only to prove envelope spoofing cannot authorize. */
   envelopeTenantId?: string;
@@ -173,10 +178,14 @@ async function revalidateMerchantAuthorityForProvider(
   tx: GatewayPrisma,
   attempt: VionaRequestExecutionAttempt,
   expectedLeaseOwner: string,
+  expectedLeaseGeneration: number,
   now: Date,
 ): Promise<{ requestId: string }> {
   if (attempt.leaseOwner !== expectedLeaseOwner) {
     throwGateway('stale_lease_owner');
+  }
+  if (attempt.leaseGeneration !== expectedLeaseGeneration) {
+    throwGateway('stale_lease_generation');
   }
   if (attempt.leaseExpiresAt != null && attempt.leaseExpiresAt.getTime() <= now.getTime()) {
     throwGateway('stale_lease_owner');
@@ -241,7 +250,11 @@ export async function prepareVionaRequestExecutionProvider(
 ): Promise<PrepareVionaRequestExecutionProviderResult> {
   const attemptId = input.attemptId.trim();
   const expectedLeaseOwner = input.expectedLeaseOwner.trim();
-  if (attemptId.length === 0 || expectedLeaseOwner.length === 0) {
+  if (
+    attemptId.length === 0 ||
+    expectedLeaseOwner.length === 0 ||
+    !Number.isInteger(input.expectedLeaseGeneration)
+  ) {
     throwGateway('invalid_attempt_state');
   }
   if (!isVionaPack40D3AOperationCategory(input.operationCategory)) {
@@ -272,6 +285,7 @@ export async function prepareVionaRequestExecutionProvider(
           tx,
           attempt,
           expectedLeaseOwner,
+          input.expectedLeaseGeneration,
           now,
         );
 
@@ -303,6 +317,7 @@ export async function prepareVionaRequestExecutionProvider(
             attemptId,
             expectedRequestId: requestId,
             expectedLeaseOwner,
+            expectedLeaseGeneration: input.expectedLeaseGeneration,
             providerName: VIONA_PACK40D3A_PROVIDER_NAME,
             operationCategory: input.operationCategory,
             providerIdempotencyKey,
@@ -343,10 +358,29 @@ export type RecordVionaRequestExecutionProviderOutcomeInput = Readonly<{
   attemptId: string;
   requestId: string;
   expectedLeaseOwner: string;
+  expectedLeaseGeneration: number;
   operationCategory: VionaPack40D3AOperationCategory;
   providerIdempotencyKey: string;
   adapterResult: VionaExecutionProviderAdapterResult;
 }>;
+
+function resolveProviderExternalReference(
+  adapterResult: VionaExecutionProviderAdapterResult,
+): string | null | undefined {
+  if (adapterResult.kind === 'succeeded') {
+    const ref = adapterResult.providerExternalReference?.trim();
+    if (ref == null || ref.length === 0) {
+      throwGateway('outcome_record_conflict');
+    }
+    return ref;
+  }
+  if (adapterResult.kind === 'uncertain') {
+    const ref = adapterResult.providerExternalReference?.trim();
+    return ref != null && ref.length > 0 ? ref : null;
+  }
+  const ref = adapterResult.providerExternalReference?.trim();
+  return ref != null && ref.length > 0 ? ref : null;
+}
 
 export async function recordVionaRequestExecutionProviderOutcome(
   input: RecordVionaRequestExecutionProviderOutcomeInput,
@@ -372,6 +406,7 @@ export async function recordVionaRequestExecutionProviderOutcome(
           providerResultDigest: input.adapterResult.resultDigest,
           providerExternalReferenceDigest:
             input.adapterResult.externalReferenceDigest ?? null,
+          providerExternalReference: resolveProviderExternalReference(input.adapterResult),
           failureClass: null as string | null,
           failureReasonDigest: null as string | null,
         }
@@ -380,6 +415,7 @@ export async function recordVionaRequestExecutionProviderOutcome(
             nextState: VionaRequestExecutionAttemptState.providerFailed,
             providerResultDigest: null as string | null,
             providerExternalReferenceDigest: null as string | null,
+            providerExternalReference: resolveProviderExternalReference(input.adapterResult),
             failureClass: input.adapterResult.failureClass,
             failureReasonDigest: input.adapterResult.failureReasonDigest,
           }
@@ -387,6 +423,7 @@ export async function recordVionaRequestExecutionProviderOutcome(
             nextState: VionaRequestExecutionAttemptState.outcomeUncertain,
             providerResultDigest: null as string | null,
             providerExternalReferenceDigest: null as string | null,
+            providerExternalReference: resolveProviderExternalReference(input.adapterResult),
             failureClass: input.adapterResult.uncertaintyClass,
             failureReasonDigest: input.adapterResult.failureReasonDigest ?? null,
           };
@@ -401,6 +438,7 @@ export async function recordVionaRequestExecutionProviderOutcome(
             attemptId: input.attemptId,
             expectedRequestId: input.requestId,
             expectedLeaseOwner: input.expectedLeaseOwner,
+            expectedLeaseGeneration: input.expectedLeaseGeneration,
             expectedProviderName: VIONA_PACK40D3A_PROVIDER_NAME,
             expectedOperationCategory: input.operationCategory,
             expectedProviderIdempotencyKey: input.providerIdempotencyKey,
@@ -408,6 +446,7 @@ export async function recordVionaRequestExecutionProviderOutcome(
             providerFinishedAt: now,
             providerResultDigest: next.providerResultDigest,
             providerExternalReferenceDigest: next.providerExternalReferenceDigest,
+            providerExternalReference: next.providerExternalReference,
             failureClass: next.failureClass,
             failureReasonDigest: next.failureReasonDigest,
           },
@@ -475,6 +514,7 @@ export async function runVionaRequestExecutionProviderGateway(
       attemptId: prepared.attemptId,
       requestId: prepared.requestId,
       expectedLeaseOwner: input.expectedLeaseOwner.trim(),
+      expectedLeaseGeneration: input.expectedLeaseGeneration,
       operationCategory: prepared.operationCategory,
       providerIdempotencyKey: prepared.providerIdempotencyKey,
       adapterResult,

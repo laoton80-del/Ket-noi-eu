@@ -121,6 +121,7 @@ export function createPack40D3TwilioGatewayAdapter(
             externalReferenceDigest: classified.providerMessageSid
               ? digest(classified.providerMessageSid)
               : null,
+            providerExternalReference: classified.providerMessageSid,
           };
         }
         if (classified.errorClass === 'provider_unavailable') {

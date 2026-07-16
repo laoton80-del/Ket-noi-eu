@@ -65,6 +65,8 @@ export type TransitionVionaRequestExecutionAttemptStateInput = Readonly<{
   expectedRequestId?: string;
   /** When set, the attempt leaseOwner must match exactly. */
   expectedLeaseOwner?: string | null;
+  /** When set, attempt leaseGeneration must match exactly (Pack40DR3A stale-worker fence). */
+  expectedLeaseGeneration?: number;
   leaseOwner?: string | null;
   leaseExpiresAt?: Date | null;
   claimedAt?: Date | null;
@@ -106,6 +108,7 @@ export type PrepareVionaRequestExecutionAttemptForProviderInput = Readonly<{
   attemptId: string;
   expectedRequestId: string;
   expectedLeaseOwner: string;
+  expectedLeaseGeneration: number;
   providerName: string;
   operationCategory: string;
   providerIdempotencyKey: string;
@@ -117,6 +120,7 @@ export type RecordPreparedVionaRequestExecutionAttemptProviderOutcomeInput = Rea
   attemptId: string;
   expectedRequestId: string;
   expectedLeaseOwner: string;
+  expectedLeaseGeneration: number;
   expectedProviderName: string;
   expectedOperationCategory: string;
   expectedProviderIdempotencyKey: string;
@@ -127,6 +131,8 @@ export type RecordPreparedVionaRequestExecutionAttemptProviderOutcomeInput = Rea
   providerFinishedAt: Date;
   providerResultDigest?: string | null;
   providerExternalReferenceDigest?: string | null;
+  /** Exact opaque provider reference from trusted adapter only. */
+  providerExternalReference?: string | null;
   failureClass?: string | null;
   failureReasonDigest?: string | null;
 }>;
@@ -140,6 +146,7 @@ const ATTEMPT_SELECT_MINIMAL = {
   correlationId: true,
   leaseOwner: true,
   leaseExpiresAt: true,
+  leaseGeneration: true,
   providerIdempotencyKey: true,
 } as const satisfies Prisma.VionaRequestExecutionAttemptSelect;
 
@@ -243,6 +250,9 @@ export async function transitionVionaRequestExecutionAttemptState(
       ...(input.expectedLeaseOwner !== undefined
         ? { leaseOwner: input.expectedLeaseOwner }
         : {}),
+      ...(input.expectedLeaseGeneration !== undefined
+        ? { leaseGeneration: input.expectedLeaseGeneration }
+        : {}),
     },
     data: {
       state: input.nextState,
@@ -339,6 +349,7 @@ export async function prepareVionaRequestExecutionAttemptForProvider(
       requestId: input.expectedRequestId,
       state: VionaRequestExecutionAttemptState.claimed,
       leaseOwner: input.expectedLeaseOwner,
+      leaseGeneration: input.expectedLeaseGeneration,
       providerIdempotencyKey: null,
     },
     data: {
@@ -370,15 +381,26 @@ export async function recordPreparedVionaRequestExecutionAttemptProviderOutcome(
   client: VionaRequestExecutionAttemptClient,
   input: RecordPreparedVionaRequestExecutionAttemptProviderOutcomeInput,
 ): Promise<{ updated: boolean; attempt: VionaRequestExecutionAttemptMinimal | null }> {
+  const reference =
+    input.providerExternalReference !== undefined
+      ? input.providerExternalReference?.trim() || null
+      : undefined;
+
   const result = await client.vionaRequestExecutionAttempt.updateMany({
     where: {
       id: input.attemptId,
       requestId: input.expectedRequestId,
       state: VionaRequestExecutionAttemptState.providerPending,
       leaseOwner: input.expectedLeaseOwner,
+      leaseGeneration: input.expectedLeaseGeneration,
       providerName: input.expectedProviderName,
       operationCategory: input.expectedOperationCategory,
       providerIdempotencyKey: input.expectedProviderIdempotencyKey,
+      ...(reference != null && reference.length > 0
+        ? {
+            OR: [{ providerExternalReference: null }, { providerExternalReference: reference }],
+          }
+        : {}),
     },
     data: {
       state: input.nextState,
@@ -389,6 +411,7 @@ export async function recordPreparedVionaRequestExecutionAttemptProviderOutcome(
       ...(input.providerExternalReferenceDigest !== undefined
         ? { providerExternalReferenceDigest: input.providerExternalReferenceDigest }
         : {}),
+      ...(reference !== undefined ? { providerExternalReference: reference } : {}),
       ...(input.failureClass !== undefined ? { failureClass: input.failureClass } : {}),
       ...(input.failureReasonDigest !== undefined
         ? { failureReasonDigest: input.failureReasonDigest }

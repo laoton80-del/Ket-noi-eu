@@ -57,6 +57,7 @@ export type Pack40D2IndirectErrorCode =
   | 'claim_conflict'
   | 'attempt_not_found'
   | 'stale_lease_owner'
+  | 'stale_lease_generation'
   | 'invalid_attempt_state'
   | 'request_attempt_mismatch'
   | 'terminal_transition_conflict'
@@ -119,6 +120,7 @@ export type FinalizeVionaRequestExecutionInput = Readonly<{
   attemptId: string;
   requestId: string;
   expectedLeaseOwner: string;
+  expectedLeaseGeneration: number;
 }>;
 
 export type ClaimVionaRequestExecutionResult = Readonly<{
@@ -132,6 +134,7 @@ export type ClaimVionaRequestExecutionResult = Readonly<{
   auditEventId: string;
   leaseOwner: string;
   leaseExpiresAt: Date;
+  leaseGeneration: number;
 }>;
 
 export type FinalizeVionaRequestExecutionResult = Readonly<{
@@ -419,6 +422,7 @@ export async function claimVionaRequestExecution(
           auditEventId,
           leaseOwner,
           leaseExpiresAt,
+          leaseGeneration: attempt.leaseGeneration,
         };
       },
       { isolationLevel: Prisma.TransactionIsolationLevel.Serializable },
@@ -453,7 +457,12 @@ async function finalizeTerminal(
   const attemptId = input.attemptId.trim();
   const requestId = input.requestId.trim();
   const expectedLeaseOwner = input.expectedLeaseOwner.trim();
-  if (attemptId.length === 0 || requestId.length === 0 || expectedLeaseOwner.length === 0) {
+  if (
+    attemptId.length === 0 ||
+    requestId.length === 0 ||
+    expectedLeaseOwner.length === 0 ||
+    !Number.isInteger(input.expectedLeaseGeneration)
+  ) {
     throwIndirect('invalid_attempt_state');
   }
 
@@ -497,6 +506,10 @@ async function finalizeTerminal(
           throwIndirect('stale_lease_owner');
         }
 
+        if (attempt.leaseGeneration !== input.expectedLeaseGeneration) {
+          throwIndirect('stale_lease_generation');
+        }
+
         if (attempt.leaseExpiresAt != null && attempt.leaseExpiresAt.getTime() <= now.getTime()) {
           throwIndirect('stale_lease_owner');
         }
@@ -530,6 +543,7 @@ async function finalizeTerminal(
             expectedRequestId: requestId,
             expectedStates: [outcome.expectedAttemptState],
             expectedLeaseOwner,
+            expectedLeaseGeneration: input.expectedLeaseGeneration,
             nextState: outcome.nextAttemptState,
             finalizedAt: now,
           },

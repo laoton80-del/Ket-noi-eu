@@ -19,15 +19,9 @@ const SCHEMA_PATH = 'prisma/schema.prisma';
 
 /**
  * Wired Pack40D runtime surfaces that must not gain leaseGeneration /
- * providerExternalReference writes. Repository is intentionally omitted:
- * Pack40DR2 may add dormant generation-fenced CAS helpers there without wiring
- * D2/D3A/D3B runtime callers.
+ * providerExternalReference writes. Pack40DR3A live-hardening paths are allowlisted separately.
  */
 const UNCHANGED_RUNTIME_PATHS = [
-  'src/services/viona/vionaRequestIndirectStatusActionService.ts',
-  'src/services/viona/vionaRequestExecutionGatewayService.ts',
-  'src/services/viona/vionaRequestExecutionOrchestrator.ts',
-  'src/services/viona/vionaPack40D3TwilioGatewayAdapter.ts',
   'src/services/viona/vionaRequestEscrowHoldService.ts',
   'src/controllers/VionaInternalRealTwilioPocController.ts',
   'src/services/viona/vionaAutonomousDispatchService.ts',
@@ -37,6 +31,20 @@ const UNCHANGED_RUNTIME_PATHS = [
   'src/services/viona/vionaRequestAccessScope.ts',
   'src/routes/vionaRoutes.ts',
 ] as const;
+
+/** Pack40DR3A live runtime may read/write generation + exact provider reference. */
+const PACK40DR3A_WIRED_RUNTIME_PATHS = [
+  'src/services/viona/vionaRequestIndirectStatusActionService.ts',
+  'src/services/viona/vionaRequestExecutionGatewayService.ts',
+  'src/services/viona/vionaRequestExecutionOrchestrator.ts',
+  'src/services/viona/vionaPack40D3TwilioGatewayAdapter.ts',
+  'src/services/viona/vionaRequestExecutionProviderContract.ts',
+  'src/repositories/vionaRequestExecutionAttemptRepository.ts',
+] as const;
+
+function isPack40Dr3aWiredRuntime(rel: string): boolean {
+  return PACK40DR3A_WIRED_RUNTIME_PATHS.some((p) => rel === p || rel.replace(/\\/g, '/') === p);
+}
 
 /** Dormant Pack40DR2 modules (and repo CAS helpers) may use recovery symbols. */
 const PACK40DR2_DORMANT_ALLOWLIST_PREFIXES = [
@@ -266,7 +274,8 @@ function main(): void {
         rel !== SCHEMA_PATH &&
         /\bproviderExternalReference\b/.test(text) &&
         !rel.includes('test-viona-pack40dr1') &&
-        !isPack40Dr2DormantAllowlisted(rel)
+        !isPack40Dr2DormantAllowlisted(rel) &&
+        !isPack40Dr3aWiredRuntime(rel)
       ) {
         // Wired runtime must not import exact providerExternalReference yet
         // (Pack40DR2 dormant modules/repo helpers are allowlisted).
@@ -331,26 +340,38 @@ function main(): void {
   );
 
   assert(
-    !readUtf8('src/services/viona/vionaPack40D3TwilioGatewayAdapter.ts').includes('providerExternalReference'),
-    'Twilio wrapper unchanged wrt new reference field',
+    readUtf8('src/services/viona/vionaRequestIndirectStatusActionService.ts').includes(
+      'leaseGeneration',
+    ),
+    'Pack40D2 returns leaseGeneration on claim',
+  );
+  assert(
+    readUtf8('src/services/viona/vionaRequestExecutionGatewayService.ts').includes(
+      'expectedLeaseGeneration',
+    ),
+    'Pack40D3A requires leaseGeneration on live mutations',
+  );
+  assert(
+    /\bproviderExternalReference\b(?!Digest)/.test(
+      readUtf8('src/services/viona/vionaRequestExecutionGatewayService.ts'),
+    ),
+    'Pack40D3A persists exact providerExternalReference on outcome record',
+  );
+  assert(
+    readUtf8('src/services/viona/vionaRequestExecutionOrchestrator.ts').includes(
+      'leaseGeneration',
+    ),
+    'Pack40D3B coordinator propagates leaseGeneration',
+  );
+  assert(
+    readUtf8('src/services/viona/vionaPack40D3TwilioGatewayAdapter.ts').includes(
+      'providerExternalReference',
+    ),
+    'Twilio adapter returns exact providerExternalReference on success',
   );
   assert(
     !readUtf8('src/services/viona/vionaRequestEscrowHoldService.ts').includes('leaseGeneration'),
     'Escrow runtime unchanged',
-  );
-  assert(
-    !readUtf8('src/services/viona/vionaRequestIndirectStatusActionService.ts').includes('leaseGeneration'),
-    'Pack40D2 unchanged',
-  );
-  assert(
-    !/\bproviderExternalReference\b(?!Digest)/.test(
-      readUtf8('src/services/viona/vionaRequestExecutionGatewayService.ts'),
-    ),
-    'Pack40D3A unchanged',
-  );
-  assert(
-    !readUtf8('src/services/viona/vionaRequestExecutionOrchestrator.ts').includes('leaseGeneration'),
-    'Pack40D3B unchanged',
   );
 
   // 38–41 triggers / provenance

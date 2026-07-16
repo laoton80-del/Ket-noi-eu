@@ -83,6 +83,7 @@ type AttemptRow = {
   tenantIdSnapshot: string;
   leaseOwner: string | null;
   leaseExpiresAt: Date | null;
+  leaseGeneration: number;
   claimedAt: Date | null;
   providerName: string | null;
   operationCategory: string | null;
@@ -227,6 +228,7 @@ function makeAttempt(overrides: Partial<AttemptRow> & Pick<AttemptRow, 'id' | 's
     tenantIdSnapshot: TENANT_ID,
     leaseOwner: LEASE_OWNER,
     leaseExpiresAt: new Date(FIXED_NOW.getTime() + 60_000),
+    leaseGeneration: 0,
     claimedAt: FIXED_NOW,
     providerName: null,
     operationCategory: null,
@@ -391,6 +393,7 @@ function installFakePrisma(state: FakeState): VionaRequestIndirectStatusActionDe
             correlationId: hit.correlationId,
             leaseOwner: hit.leaseOwner,
             leaseExpiresAt: hit.leaseExpiresAt,
+            leaseGeneration: hit.leaseGeneration,
             providerIdempotencyKey: hit.providerIdempotencyKey,
           };
         }
@@ -421,6 +424,7 @@ function installFakePrisma(state: FakeState): VionaRequestIndirectStatusActionDe
           tenantIdSnapshot: String(data.tenantIdSnapshot),
           leaseOwner: (data.leaseOwner as string | null) ?? null,
           leaseExpiresAt: (data.leaseExpiresAt as Date | null) ?? null,
+          leaseGeneration: 0,
           claimedAt: (data.claimedAt as Date | null) ?? null,
           providerName: null,
           operationCategory: null,
@@ -443,6 +447,12 @@ function installFakePrisma(state: FakeState): VionaRequestIndirectStatusActionDe
           if (where.id != null && attempt.id !== where.id) continue;
           if (where.requestId != null && attempt.requestId !== where.requestId) continue;
           if (where.leaseOwner !== undefined && attempt.leaseOwner !== where.leaseOwner) continue;
+          if (
+            where.leaseGeneration !== undefined &&
+            attempt.leaseGeneration !== where.leaseGeneration
+          ) {
+            continue;
+          }
           if (
             where.state != null &&
             typeof where.state === 'object' &&
@@ -969,6 +979,7 @@ async function main(): Promise<void> {
     );
     assert(result.leaseOwner === LEASE_OWNER, 'lease owner');
     assert(result.leaseExpiresAt.getTime() === FIXED_NOW.getTime() + 60_000, 'lease expiry');
+    assert(result.leaseGeneration === 0, 'lease generation starts at zero');
   });
 
   await runAsyncTest('40. Execution key is server generated', async () => {
@@ -1117,7 +1128,7 @@ async function main(): Promise<void> {
       {
         attemptId: before.id,
         requestId: REQUEST_ID,
-        expectedLeaseOwner: LEASE_OWNER,
+        expectedLeaseOwner: LEASE_OWNER, expectedLeaseGeneration: 0,
       },
       makeDeps(state),
     );
@@ -1144,7 +1155,7 @@ async function main(): Promise<void> {
         {
           attemptId: 'wrong-key-as-id',
           requestId: REQUEST_ID,
-          expectedLeaseOwner: LEASE_OWNER,
+          expectedLeaseOwner: LEASE_OWNER, expectedLeaseGeneration: 0,
         },
         makeDeps(state),
       ),
@@ -1189,7 +1200,7 @@ async function main(): Promise<void> {
         {
           attemptId: ATTEMPT_ID,
           requestId: REQUEST_ID,
-          expectedLeaseOwner: LEASE_OWNER,
+          expectedLeaseOwner: LEASE_OWNER, expectedLeaseGeneration: 0,
         },
         makeDeps(state),
       ),
@@ -1205,7 +1216,7 @@ async function main(): Promise<void> {
       ],
     });
     const result = await finalizeVionaRequestExecutionCompleted(
-      { attemptId: ATTEMPT_ID, requestId: REQUEST_ID, expectedLeaseOwner: LEASE_OWNER },
+      { attemptId: ATTEMPT_ID, requestId: REQUEST_ID, expectedLeaseOwner: LEASE_OWNER, expectedLeaseGeneration: 0 },
       makeDeps(state),
     );
     assert(result.requestStatus === VIONA_REQUEST_INDIRECT_COMPLETED_STATUS, 'completed');
@@ -1220,7 +1231,7 @@ async function main(): Promise<void> {
       ],
     });
     await finalizeVionaRequestExecutionCompleted(
-      { attemptId: ATTEMPT_ID, requestId: REQUEST_ID, expectedLeaseOwner: LEASE_OWNER },
+      { attemptId: ATTEMPT_ID, requestId: REQUEST_ID, expectedLeaseOwner: LEASE_OWNER, expectedLeaseGeneration: 0 },
       makeDeps(state),
     );
     assert(state.attempts[0]!.state === VionaRequestExecutionAttemptState.completed, 'completed');
@@ -1234,7 +1245,7 @@ async function main(): Promise<void> {
       ],
     });
     await finalizeVionaRequestExecutionCompleted(
-      { attemptId: ATTEMPT_ID, requestId: REQUEST_ID, expectedLeaseOwner: LEASE_OWNER },
+      { attemptId: ATTEMPT_ID, requestId: REQUEST_ID, expectedLeaseOwner: LEASE_OWNER, expectedLeaseGeneration: 0 },
       makeDeps(state),
     );
     assert(
@@ -1254,7 +1265,7 @@ async function main(): Promise<void> {
     });
     try {
       await finalizeVionaRequestExecutionCompleted(
-        { attemptId: ATTEMPT_ID, requestId: REQUEST_ID, expectedLeaseOwner: LEASE_OWNER },
+        { attemptId: ATTEMPT_ID, requestId: REQUEST_ID, expectedLeaseOwner: LEASE_OWNER, expectedLeaseGeneration: 0 },
         makeDeps(state),
       );
       throw new Error('should fail');
@@ -1275,7 +1286,7 @@ async function main(): Promise<void> {
       ],
     });
     await finalizeVionaRequestExecutionCompleted(
-      { attemptId: ATTEMPT_ID, requestId: REQUEST_ID, expectedLeaseOwner: LEASE_OWNER },
+      { attemptId: ATTEMPT_ID, requestId: REQUEST_ID, expectedLeaseOwner: LEASE_OWNER, expectedLeaseGeneration: 0 },
       makeDeps(state),
     );
     const event = state.statusEvents[0]!;
@@ -1290,7 +1301,7 @@ async function main(): Promise<void> {
       ],
     });
     await finalizeVionaRequestExecutionCompleted(
-      { attemptId: ATTEMPT_ID, requestId: REQUEST_ID, expectedLeaseOwner: LEASE_OWNER },
+      { attemptId: ATTEMPT_ID, requestId: REQUEST_ID, expectedLeaseOwner: LEASE_OWNER, expectedLeaseGeneration: 0 },
       makeDeps(state),
     );
     assert(
@@ -1315,7 +1326,7 @@ async function main(): Promise<void> {
         ],
       });
       const result = await finalizeVionaRequestExecutionCompleted(
-        { attemptId: ATTEMPT_ID, requestId: REQUEST_ID, expectedLeaseOwner: LEASE_OWNER },
+        { attemptId: ATTEMPT_ID, requestId: REQUEST_ID, expectedLeaseOwner: LEASE_OWNER, expectedLeaseGeneration: 0 },
         makeDeps(state),
       );
       assert(result.requestStatus === 'completed', 'completed despite inactive profile');
@@ -1339,7 +1350,7 @@ async function main(): Promise<void> {
         ],
       });
       await finalizeVionaRequestExecutionCompleted(
-        { attemptId: ATTEMPT_ID, requestId: REQUEST_ID, expectedLeaseOwner: LEASE_OWNER },
+        { attemptId: ATTEMPT_ID, requestId: REQUEST_ID, expectedLeaseOwner: LEASE_OWNER, expectedLeaseGeneration: 0 },
         makeDeps(state),
       );
       assert(state.attempts[0]!.merchantProfileIdSnapshot === PROFILE_ID, 'snap profile');
@@ -1356,7 +1367,7 @@ async function main(): Promise<void> {
     });
     await expectCode('stale_lease_owner', () =>
       finalizeVionaRequestExecutionCompleted(
-        { attemptId: ATTEMPT_ID, requestId: REQUEST_ID, expectedLeaseOwner: 'worker-other' },
+        { attemptId: ATTEMPT_ID, requestId: REQUEST_ID, expectedLeaseOwner: 'worker-other', expectedLeaseGeneration: 0 },
         makeDeps(state),
       ),
     );
@@ -1371,7 +1382,7 @@ async function main(): Promise<void> {
     });
     await expectCode('attempt_not_found', () =>
       finalizeVionaRequestExecutionCompleted(
-        { attemptId: 'missing', requestId: REQUEST_ID, expectedLeaseOwner: LEASE_OWNER },
+        { attemptId: 'missing', requestId: REQUEST_ID, expectedLeaseOwner: LEASE_OWNER, expectedLeaseGeneration: 0 },
         makeDeps(state),
       ),
     );
@@ -1390,7 +1401,7 @@ async function main(): Promise<void> {
     });
     await expectCode('request_attempt_mismatch', () =>
       finalizeVionaRequestExecutionCompleted(
-        { attemptId: ATTEMPT_ID, requestId: REQUEST_ID, expectedLeaseOwner: LEASE_OWNER },
+        { attemptId: ATTEMPT_ID, requestId: REQUEST_ID, expectedLeaseOwner: LEASE_OWNER, expectedLeaseGeneration: 0 },
         makeDeps(state),
       ),
     );
@@ -1405,7 +1416,7 @@ async function main(): Promise<void> {
     });
     await expectCode('terminal_transition_conflict', () =>
       finalizeVionaRequestExecutionCompleted(
-        { attemptId: ATTEMPT_ID, requestId: REQUEST_ID, expectedLeaseOwner: LEASE_OWNER },
+        { attemptId: ATTEMPT_ID, requestId: REQUEST_ID, expectedLeaseOwner: LEASE_OWNER, expectedLeaseGeneration: 0 },
         makeDeps(state),
       ),
     );
@@ -1421,7 +1432,7 @@ async function main(): Promise<void> {
       ],
     });
     const result = await finalizeVionaRequestExecutionFailed(
-      { attemptId: ATTEMPT_ID, requestId: REQUEST_ID, expectedLeaseOwner: LEASE_OWNER },
+      { attemptId: ATTEMPT_ID, requestId: REQUEST_ID, expectedLeaseOwner: LEASE_OWNER, expectedLeaseGeneration: 0 },
       makeDeps(state),
     );
     assert(result.requestStatus === VIONA_REQUEST_INDIRECT_FAILED_STATUS, 'failed');
@@ -1435,7 +1446,7 @@ async function main(): Promise<void> {
       ],
     });
     await finalizeVionaRequestExecutionFailed(
-      { attemptId: ATTEMPT_ID, requestId: REQUEST_ID, expectedLeaseOwner: LEASE_OWNER },
+      { attemptId: ATTEMPT_ID, requestId: REQUEST_ID, expectedLeaseOwner: LEASE_OWNER, expectedLeaseGeneration: 0 },
       makeDeps(state),
     );
     assert(state.attempts[0]!.state === VionaRequestExecutionAttemptState.failed, 'failed');
@@ -1449,7 +1460,7 @@ async function main(): Promise<void> {
       ],
     });
     await finalizeVionaRequestExecutionFailed(
-      { attemptId: ATTEMPT_ID, requestId: REQUEST_ID, expectedLeaseOwner: LEASE_OWNER },
+      { attemptId: ATTEMPT_ID, requestId: REQUEST_ID, expectedLeaseOwner: LEASE_OWNER, expectedLeaseGeneration: 0 },
       makeDeps(state),
     );
     assert(
@@ -1467,7 +1478,7 @@ async function main(): Promise<void> {
       ],
     });
     await finalizeVionaRequestExecutionFailed(
-      { attemptId: ATTEMPT_ID, requestId: REQUEST_ID, expectedLeaseOwner: LEASE_OWNER },
+      { attemptId: ATTEMPT_ID, requestId: REQUEST_ID, expectedLeaseOwner: LEASE_OWNER, expectedLeaseGeneration: 0 },
       makeDeps(state),
     );
     assert(
@@ -1486,7 +1497,7 @@ async function main(): Promise<void> {
     });
     await expectCode('stale_lease_owner', () =>
       finalizeVionaRequestExecutionFailed(
-        { attemptId: ATTEMPT_ID, requestId: REQUEST_ID, expectedLeaseOwner: 'stale' },
+        { attemptId: ATTEMPT_ID, requestId: REQUEST_ID, expectedLeaseOwner: 'stale', expectedLeaseGeneration: 0 },
         makeDeps(state),
       ),
     );
@@ -1501,7 +1512,7 @@ async function main(): Promise<void> {
     });
     await expectCode('terminal_transition_conflict', () =>
       finalizeVionaRequestExecutionFailed(
-        { attemptId: ATTEMPT_ID, requestId: REQUEST_ID, expectedLeaseOwner: LEASE_OWNER },
+        { attemptId: ATTEMPT_ID, requestId: REQUEST_ID, expectedLeaseOwner: LEASE_OWNER, expectedLeaseGeneration: 0 },
         makeDeps(state),
       ),
     );
@@ -1517,7 +1528,7 @@ async function main(): Promise<void> {
     });
     try {
       await finalizeVionaRequestExecutionFailed(
-        { attemptId: ATTEMPT_ID, requestId: REQUEST_ID, expectedLeaseOwner: LEASE_OWNER },
+        { attemptId: ATTEMPT_ID, requestId: REQUEST_ID, expectedLeaseOwner: LEASE_OWNER, expectedLeaseGeneration: 0 },
         makeDeps(state),
       );
       throw new Error('should fail');
@@ -1540,7 +1551,7 @@ async function main(): Promise<void> {
     });
     try {
       await finalizeVionaRequestExecutionFailed(
-        { attemptId: ATTEMPT_ID, requestId: REQUEST_ID, expectedLeaseOwner: LEASE_OWNER },
+        { attemptId: ATTEMPT_ID, requestId: REQUEST_ID, expectedLeaseOwner: LEASE_OWNER, expectedLeaseGeneration: 0 },
         makeDeps(state),
       );
       throw new Error('should fail');
@@ -1570,7 +1581,7 @@ async function main(): Promise<void> {
       });
       await expectCode(code, () =>
         finalizeVionaRequestExecutionCompleted(
-          { attemptId: ATTEMPT_ID, requestId: REQUEST_ID, expectedLeaseOwner: LEASE_OWNER },
+          { attemptId: ATTEMPT_ID, requestId: REQUEST_ID, expectedLeaseOwner: LEASE_OWNER, expectedLeaseGeneration: 0 },
           makeDeps(state),
         ),
       );
@@ -1833,7 +1844,7 @@ async function main(): Promise<void> {
     });
     await expectCode('stale_lease_owner', () =>
       finalizeVionaRequestExecutionCompleted(
-        { attemptId: ATTEMPT_ID, requestId: REQUEST_ID, expectedLeaseOwner: LEASE_OWNER },
+        { attemptId: ATTEMPT_ID, requestId: REQUEST_ID, expectedLeaseOwner: LEASE_OWNER, expectedLeaseGeneration: 0 },
         makeDeps(state),
       ),
     );

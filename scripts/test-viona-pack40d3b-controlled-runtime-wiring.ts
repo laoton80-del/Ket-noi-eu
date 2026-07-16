@@ -73,6 +73,7 @@ function baseClaim(overrides: Partial<ClaimVionaRequestExecutionResult> = {}): C
     auditEventId: 'ae-1',
     leaseOwner: LEASE_OWNER,
     leaseExpiresAt: new Date('2026-07-15T16:00:00.000Z'),
+    leaseGeneration: 0,
     ...overrides,
   };
 }
