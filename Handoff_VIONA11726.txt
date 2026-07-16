@@ -1315,6 +1315,27 @@ Recovery NOT CLOSED/GREEN; Pack40S unauthorized
 Evidence: docs/product/VIONA_PACK40DRS1_STRANDED_ATTEMPT_FIXTURE_READINESS_AUDIT.md
 Next: do not open Pack40DRS2 until a safe stranded fixture exists (separate authorization)
 
+=== PACK40DRF SAFE STRANDED FIXTURE CONSTRUCTION DESIGN AUDIT ===
+Operator phrase: APPROVE_PACK40DRF_STRANDED_FIXTURE_CONSTRUCTION_DESIGN_AUDIT
+Master baseline: b8ad8fe (PR #385 MERGED — Pack40DRS1 fixture readiness)
+Branch: docs/pack40drf-safe-stranded-fixture-construction-design-audit
+Design-only (no fixture / no staging POST / no recovery / no provider / no escrow / no source):
+  A natural wait → SELECTED
+  B claimed app-path stop → unavailable without source change; insufficient for closure
+  C known-failure → durable fail exists but coordinator refunds+finalizes (terminal)
+  D post-outcome pause → Method 5; no existing hook
+  E direct DB → PROHIBITED
+Classification: WAIT_FOR_NATURAL_STRANDED_ATTEMPT
+Markers:
+  PACK40DRF_SAFE_STRANDED_FIXTURE_CONSTRUCTION_DESIGN_COMPLETE
+  PACK40DRS1_BLOCKED_NO_SAFE_RECOVERABLE_ATTEMPT_FIXTURE
+  PACK40DR_LIVE_NONTERMINAL_RECOVERY_QA_STILL_REQUIRED
+  PACK40D_INITIAL_CONTROLLED_MERCHANT_EXECUTION_REMAINS_CLOSED_GREEN
+Recovery NOT CLOSED/GREEN; Pack40S unauthorized
+Evidence: docs/product/VIONA_PACK40DRF_SAFE_STRANDED_FIXTURE_CONSTRUCTION_DESIGN_AUDIT.md
+Matrix: docs/design/VIONA_PACK40DRF_FIXTURE_CONSTRUCTION_DESIGN_MATRIX.md
+Next: wait for natural non-terminal residual, then authorize Pack40DRS1 re-inventory (or separately authorize Method-5 pause architecture)
+
 === PACK40DR2 DORMANT RECOVERY SERVICES ===
 Operator phrase: APPROVE_PACK40DR2_DORMANT_RECOVERY_SERVICES
 Master baseline: f184120 (PR #379 MERGED — Pack40DR1 staging migrate-apply evidence)
