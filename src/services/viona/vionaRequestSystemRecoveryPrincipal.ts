@@ -16,6 +16,17 @@ export const PACK40DR3A_PROVIDER_REFERENCE_RUNTIME_POPULATION_WIRED =
 export const PACK40DR2_PROVIDER_REFERENCE_RUNTIME_POPULATION_NOT_WIRED =
   'PACK40DR2_PROVIDER_REFERENCE_RUNTIME_POPULATION_NOT_WIRED' as const;
 
+/** Pack40DR3B — operator internal recovery endpoint wired (no scheduler/worker). */
+export const PACK40DR3B_OPERATOR_INTERNAL_RECOVERY_ENDPOINT_WIRED =
+  'PACK40DR3B_OPERATOR_INTERNAL_RECOVERY_ENDPOINT_WIRED' as const;
+
+/** Pack40DR2 recovery services are now wired through the DR3B endpoint only. */
+export const PACK40DR2_RECOVERY_RUNTIME_WIRED = 'PACK40DR2_RECOVERY_RUNTIME_WIRED' as const;
+
+/** Historical DR2 marker — superseded by Pack40DR3B endpoint wiring. */
+export const PACK40DR2_RECOVERY_RUNTIME_NOT_WIRED =
+  'PACK40DR2_RECOVERY_RUNTIME_NOT_WIRED' as const;
+
 export type VionaRequestSystemRecoveryPrincipal = Readonly<{
   principalType: typeof VIONA_SYSTEM_RECOVERY_PRINCIPAL_TYPE;
   triggerType: typeof VIONA_SYSTEM_RECOVERY_TRIGGER_TYPE;

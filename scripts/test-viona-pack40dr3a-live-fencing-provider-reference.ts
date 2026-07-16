@@ -1575,14 +1575,15 @@ async function main(): Promise<void> {
     assert(!gateway.includes('VionaRequestScopeKind.legacyUnresolved'), 'no legacy allow');
   });
 
-  runTest('36. Pack40DR2 recovery route dormant (no live wiring)', () => {
+  runTest('36. Pack40D live orchestrator remains recovery-free (DR3B endpoint separate)', () => {
     const orch = readSource('../src/services/viona/vionaRequestExecutionOrchestrator.ts');
-    const controller = readSource('../src/controllers/VionaInternalRealTwilioPocController.ts');
+    const pocController = readSource('../src/controllers/VionaInternalRealTwilioPocController.ts');
     assert(!orch.includes('acquireRecoveryLease'), 'coordinator no recovery');
     assert(!orch.includes('vionaRequestRecoveryLeaseService'), 'no recovery lease import');
-    assert(!controller.includes('recovery'), 'controller no recovery route');
-    const routes = readSource('../src/routes/vionaRoutes.ts');
-    assert(!routes.includes('recovery-finalize'), 'no recovery route');
+    assert(!pocController.includes('execution-attempts'), 'POC controller no recovery route');
+    const internalRoutes = readSource('../src/routes/internalRoutes.ts');
+    assert(internalRoutes.includes('execution-attempts/:attemptId/recovery'), 'DR3B recovery route wired');
+    assert(internalRoutes.includes('superAdminMiddleware'), 'recovery requires operator admin');
   });
 
   runTest('37. Schema/migration unchanged in DR3A production sources', () => {
