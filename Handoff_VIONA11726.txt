@@ -1424,6 +1424,21 @@ Evidence: docs/product/VIONA_WAVE_2_NATIVE_MOBILE_CONFIDENCE_OPERATOR_RUN_EVIDEN
 Summary: docs/design/evidence/wave-2-native-mobile-confidence-operator-run/summary.json
 Next: human operator re-run on stable physical device with app installed; do not treat as product FAIL; do not auto-start monetization or Pack40DRS2
 
+=== MOBILE SOS SHELL CONSOLIDATION PHASE 1 ===
+Operator phrase: APPROVE_VIONA_MOBILE_SOS_SHELL_CONSOLIDATION_PHASE_1
+Master baseline: 5cd9436 (origin/master at branch start)
+Branch: feat/viona-mobile-sos-shell-consolidation-phase-1
+Prior audit: MOBILE_UI_LEGACY_IS_CURRENT_SOURCE (floating SOS was current-source)
+Result: floating absolute SOS FAB removed; tab-bar integrated VionaGlobalSosShellAction
+Hold behavior: preserved (V7_SOS_HOLD_TO_TRIGGER_MS)
+Canonical modal: src/screens/b2c/SOSModal.tsx (single mount)
+EmergencySOS route: preserved
+Profile/language floating chrome: unchanged (later phase)
+Wave 2 native-device confidence: remains NOT RUN
+Pack40DR wait-state preserved; Pack40S unauthorized
+Evidence: docs/product/VIONA_MOBILE_SOS_SHELL_CONSOLIDATION_PHASE_1_EVIDENCE.md
+Next: review/merge Phase 1 PR; do not auto-start Phase 2 or physical-device QA
+
 === PACK40DR2 DORMANT RECOVERY SERVICES ===
 Operator phrase: APPROVE_PACK40DR2_DORMANT_RECOVERY_SERVICES
 Master baseline: f184120 (PR #379 MERGED — Pack40DR1 staging migrate-apply evidence)
