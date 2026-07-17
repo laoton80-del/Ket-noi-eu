@@ -1,9 +1,13 @@
 import { Ionicons } from '@expo/vector-icons';
-import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import {
+  BottomTabBar,
+  createBottomTabNavigator,
+  type BottomTabBarProps,
+} from '@react-navigation/bottom-tabs';
 import { useNavigation, useNavigationState } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactElement } from 'react';
-import { Alert, Platform, StyleSheet, useWindowDimensions, type ViewStyle } from 'react-native';
+import { Alert, Platform, StyleSheet, View, useWindowDimensions, type ViewStyle } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { ProfileSwitcher, type ProfileSwitcherHandle } from '../components/ProfileSwitcher';
@@ -39,6 +43,10 @@ import {
   readFocusedTabRouteFromRootState,
 } from './fashionHomeDesktopShell';
 import { roleTabChrome } from './tabRoleTheme';
+import {
+  shouldMountSosInTabBarShell,
+  shouldShowGlobalLifelineSos,
+} from './vionaGlobalSosShellVisibility';
 
 import { HomeScreen } from '../screens/HomeScreen';
 import { AcademyScreen } from '../screens/AcademyScreen';
@@ -55,7 +63,7 @@ import { BrokerCommissionsTabScreen } from '../screens/broker/BrokerCommissionsT
 import { BrokerMerchantsTabScreen } from '../screens/broker/BrokerMerchantsTabScreen';
 import { WalletScreen } from '../screens/WalletScreen';
 import { AdminCommandCenter } from '../screens/admin/AdminCommandCenter';
-import { SOSFloatingButton } from '../components/SOSFloatingButton';
+import { VionaGlobalSosShellAction } from '../components/viona/VionaGlobalSosShellAction';
 import { SOSModal } from '../screens/b2c/SOSModal';
 const Tab = createBottomTabNavigator<RootTabParamList>();
 
@@ -186,11 +194,8 @@ export function MainTabNavigator(): ReactElement {
 
   const focusedTabRoute = useNavigationState(readFocusedTabRouteFromRootState);
 
-  /** V7 “Global Lifeline”: all roles; B2C hides only on Academy tab (voice shell). */
-  const showGlobalLifelineSos =
-    currentActiveRole !== 'B2C' ||
-    focusedTabRoute == null ||
-    focusedTabRoute !== MAIN_TAB.B2C.ai;
+  /** V7 “Global Lifeline”: all roles; B2C hides global shell SOS only on Academy tab (voice shell). */
+  const showGlobalLifelineSos = shouldShowGlobalLifelineSos(currentActiveRole, focusedTabRoute);
 
   useEffect(() => {
     syncFromMainTab(currentActiveRole, focusedTabRoute);
@@ -245,12 +250,48 @@ export function MainTabNavigator(): ReactElement {
     [currentActiveRole, focusedTabRoute, width]
   );
 
+  const mountSosInTabBarShell = shouldMountSosInTabBarShell({
+    role: currentActiveRole,
+    focusedTabRoute,
+    fashionHomeDesktopShell,
+  });
+
   useEffect(() => {
     if (!fashionHomeDesktopShell) setLanguageSheetOpen(false);
   }, [fashionHomeDesktopShell]);
 
   const b2cDesktopBottomTabs = isDesktopWeb && currentActiveRole === 'B2C' && !fashionHomeDesktopShell;
   const tabBarPosition = b2cDesktopBottomTabs ? 'bottom' : isDesktopWeb ? 'left' : 'bottom';
+
+  const renderTabBar = useCallback(
+    (props: BottomTabBarProps) => {
+      // Left rail (desktop) and surfaces without tab-bar SOS keep the stock bar.
+      if (tabBarPosition === 'left' || !mountSosInTabBarShell) {
+        return <BottomTabBar {...props} />;
+      }
+
+      return (
+        <View style={styles.tabBarHost} testID="viona-sos-tab-bar-host">
+          <View style={styles.tabBarMain}>
+            <BottomTabBar {...props} />
+          </View>
+          <View
+            style={[
+              styles.sosShellSlot,
+              {
+                paddingBottom: Math.max(props.insets.bottom, 10),
+                paddingRight: Math.max(props.insets.right, 8),
+              },
+            ]}
+            pointerEvents="box-none"
+          >
+            <VionaGlobalSosShellAction onHoldComplete={onSosHoldComplete} />
+          </View>
+        </View>
+      );
+    },
+    [mountSosInTabBarShell, onSosHoldComplete, tabBarPosition]
+  );
 
   const b2cHomeDesktopScene = fashionHomeDesktopShell;
   const sceneTopPadding = !isDesktopWeb
@@ -370,6 +411,7 @@ export function MainTabNavigator(): ReactElement {
       <HomeCommandProvider value={homeCommandValue}>
         <Tab.Navigator
           key={currentActiveRole}
+          tabBar={renderTabBar}
           screenOptions={({ route }) => ({
             headerShown: false,
             tabBarPosition,
@@ -403,6 +445,8 @@ export function MainTabNavigator(): ReactElement {
                     height: tabSizing.tabBarBaseHeight + insets.bottom,
                     paddingBottom: Math.max(insets.bottom, 10),
                     paddingTop: 8,
+                    paddingRight:
+                      mountSosInTabBarShell && tabBarPosition === 'bottom' ? 104 : undefined,
                   },
               tabBarPosition === 'bottom' ? TAB_BAR_WEB_GLASS : null,
               tabBarPosition === 'left' && styles.tabBarDesktop,
@@ -531,20 +575,17 @@ export function MainTabNavigator(): ReactElement {
         />
       ) : null}
 
-      {showGlobalLifelineSos ? (
-        <>
-          {!fashionHomeDesktopShell ? (
-            <SOSFloatingButton tabBarLift={tabBarLift} onHoldComplete={onSosHoldComplete} />
-          ) : null}
-          <SOSModal
-            visible={sosSheetOpen}
-            onRequestClose={() => {
-              setSosSheetOpen(false);
-            }}
-            stackNavigation={navigation}
-          />
-        </>
-      ) : null}
+      {/*
+        Canonical consumer SOS modal — mounted once for all tab surfaces (including Academy rail).
+        Shell action visibility remains gated; modal ownership stays singular.
+      */}
+      <SOSModal
+        visible={sosSheetOpen}
+        onRequestClose={() => {
+          setSosSheetOpen(false);
+        }}
+        stackNavigation={navigation}
+      />
 
       <AuthPaywallModal
         visible={!!paywallTarget}
@@ -573,6 +614,25 @@ const TAB_BAR_WEB_GLASS: ViewStyle =
     : {};
 
 const styles = StyleSheet.create({
+  tabBarHost: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 0,
+  },
+  tabBarMain: {
+    flexGrow: 1,
+  },
+  sosShellSlot: {
+    position: 'absolute',
+    right: 0,
+    bottom: 0,
+    zIndex: 2,
+    justifyContent: 'center',
+    alignItems: 'center',
+    minWidth: 96,
+    minHeight: 44,
+  },
   tabBar: {
     position: 'absolute',
     borderTopWidth: 1,
