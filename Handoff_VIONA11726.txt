@@ -1428,16 +1428,20 @@ Next: human operator re-run on stable physical device with app installed; do not
 Operator phrase: APPROVE_VIONA_MOBILE_SOS_SHELL_CONSOLIDATION_PHASE_1
 Master baseline: 5cd9436 (origin/master at branch start)
 Branch: feat/viona-mobile-sos-shell-consolidation-phase-1
+Feature HEAD: acbc607
+PR #392: MERGED to master (squash 95c41d2 @ 2026-07-17T08:34:57Z)
 Prior audit: MOBILE_UI_LEGACY_IS_CURRENT_SOURCE (floating SOS was current-source)
 Result: floating absolute SOS FAB removed; tab-bar integrated VionaGlobalSosShellAction
 Hold behavior: preserved (V7_SOS_HOLD_TO_TRIGGER_MS)
 Canonical modal: src/screens/b2c/SOSModal.tsx (single mount)
 EmergencySOS route: preserved
+Final gate: BLOCKED_GLOBAL_SOS_REACHABILITY — desktop left-rail B2B/Broker/Admin have 0 SOS entry
+B2C primary Home/Local/Travel/Academy: one shell/rail/command entry retained (browser QA)
 Profile/language floating chrome: unchanged (later phase)
 Wave 2 native-device confidence: remains NOT RUN
 Pack40DR wait-state preserved; Pack40S unauthorized
 Evidence: docs/product/VIONA_MOBILE_SOS_SHELL_CONSOLIDATION_PHASE_1_EVIDENCE.md
-Next: review/merge Phase 1 PR; do not auto-start Phase 2 or physical-device QA
+Next: authorized follow-up for left-rail operator SOS host; do not start Phase 2; do not physical Wave 2
 
 === PACK40DR2 DORMANT RECOVERY SERVICES ===
 Operator phrase: APPROVE_PACK40DR2_DORMANT_RECOVERY_SERVICES
