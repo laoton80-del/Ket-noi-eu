@@ -3,6 +3,7 @@ import { Platform } from 'react-native';
 
 import type { ActiveRole } from '../store/userStore';
 import { MAIN_TAB, type RootTabParamList } from './routes';
+import { resolveFashionHomeShellMode } from './fashionHomeShellMode';
 
 /** Web B2C Home uses the integrated Fashion-Tech shell at this width and above. */
 export const FASHION_HOME_DESKTOP_MIN_WIDTH = 769;
@@ -92,19 +93,12 @@ export type FashionHomeDesktopShellInput = Readonly<{
 /**
  * Single predicate for B2C Fashion-Tech Home **desktop web** shell: integrated command bar, no legacy floating chrome.
  * Admin / B2B / Broker keep existing shells (different roles or tab sets).
+ *
+ * Phase A: delegates to `resolveFashionHomeShellMode` — true iff mode === `desktop`.
+ * Mobile/tablet modes are metadata only and do not activate Fashion-Tech rendering.
  */
 export function isFashionHomeDesktopShell(input: FashionHomeDesktopShellInput): boolean {
-  if (input.platform !== 'web') return false;
-  if (input.windowWidth < FASHION_HOME_DESKTOP_MIN_WIDTH) return false;
-  if (input.activeRole !== 'B2C') return false;
-  if (input.focusedTabRoute == null) {
-    const maybeLocation = (globalThis as { location?: { pathname?: string } }).location;
-    const pathname = maybeLocation?.pathname?.toLowerCase() ?? '';
-    if (pathname === '/home' || pathname.endsWith('/home')) return true;
-    return false;
-  }
-  if (input.focusedTabRoute !== MAIN_TAB.B2C.home) return false;
-  return true;
+  return resolveFashionHomeShellMode(input) === 'desktop';
 }
 
 /** Style fragment to fully hide the bottom tab bar (web + native). */
