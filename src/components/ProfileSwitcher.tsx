@@ -61,7 +61,11 @@ function triggerHaptic(style: 'light' | 'medium' = 'medium'): void {
 
 export type ProfileSwitcherProps = Readonly<{
   tabBarLift: number;
-  /** When true, floating language/account chips are hidden (e.g. B2C Home desktop command shell). */
+  /**
+   * When true, absolute floating language/account/role chips are hidden.
+   * Phase 2: MainTabNavigator always suppresses floating chrome; account/language/role
+   * live in tab chrome (or fashion command bar / surface rails).
+   */
   suppressFloatingChrome?: boolean;
 }>;
 
