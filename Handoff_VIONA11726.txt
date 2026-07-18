@@ -1470,15 +1470,20 @@ Cause: Fashion-Tech Home on master gated to web + width>=769 + B2C Home; native 
 Historical worktree recovery: NOT REQUIRED
 Architecture recommendation: MOBILE_WEB_FIRST_THEN_NATIVE_ADAPTATION
 Plan PR #396: MERGED @ a51a633 (2026-07-18T15:15:33Z); plan verified on master
-Phase A (resolver foundation): AUTHORIZED / IMPLEMENTATION on branch feat/viona-modern-home-shell-mode-resolver-foundation
+Phase A (resolver foundation): MERGED + VERIFIED ON MASTER
+  Classification: VIONA_MODERN_HOME_SHELL_MODE_RESOLVER_FOUNDATION_VERIFIED_ON_MASTER
+  PR #397: MERGED @ 5a98082 (2026-07-18T22:09:38Z) into master
+  Historical implementation branch (pre-merge): feat/viona-modern-home-shell-mode-resolver-foundation @ e2e667c
   resolveFashionHomeShellMode → legacy|mobile|tablet|desktop
   isFashionHomeDesktopShell ≡ mode === desktop (compat)
-  ZERO visual activation; 769/web/native render paths unchanged
-  mobile/tablet modes = metadata only
+  ZERO visual activation; web B2C Home <769 legacy/hybrid; >=769 Fashion-Tech desktop; native legacy/hybrid
+  mobile/tablet modes = metadata only (Phase A)
+  HomeScreen / MainTabNavigator render behavior unchanged by Phase A
 Evidence: docs/product/VIONA_MODERN_HOME_SHELL_MODE_RESOLVER_FOUNDATION_EVIDENCE.md
-PR #395 preserved; SOS Phase 1 preserved
+PR #395 preserved; SOS Phase 1 closed green / preserved
 Do NOT flip FASHION_HOME_DESKTOP_MIN_WIDTH or remove platform!==web without chrome contract
 Phase B mobile-web activation: NOT AUTHORIZED
+Phase C native adaptation: NOT AUTHORIZED
 Wave 2 physical native: NOT RUN
 Pack40DR wait-state preserved; Pack40S unauthorized
 Next optional phrase (NOT authorized here):
