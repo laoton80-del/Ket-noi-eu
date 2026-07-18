@@ -65,8 +65,7 @@ const cases: Case[] = [
   { label: 'web B2C Home 769 → desktop', platform: 'web', role: 'B2C', width: 769, mode: 'desktop', adaptive: false, desktop: true },
   { label: 'web B2C Home 1024 → desktop', platform: 'web', role: 'B2C', width: 1024, mode: 'desktop', adaptive: false, desktop: true },
   { label: 'web B2C Home 1366 → desktop', platform: 'web', role: 'B2C', width: 1366, mode: 'desktop', adaptive: false, desktop: true },
-  { label: 'ios B2C Home 390 → legacy', platform: 'ios', role: 'B2C', width: 390, mode: 'legacy', adaptive: false, desktop: false },
-  { label: 'android B2C Home 390 → legacy', platform: 'android', role: 'B2C', width: 390, mode: 'legacy', adaptive: false, desktop: false },
+  // Phase B web matrix only — native covered by Phase C tests.
   { label: 'web B2B 1366 → legacy', platform: 'web', role: 'B2B', width: 1366, route: MAIN_TAB.B2B.merchant, mode: 'legacy', adaptive: false, desktop: false },
   { label: 'web Broker 1366 → legacy', platform: 'web', role: 'BROKER', width: 1366, route: MAIN_TAB.BROKER.radar, mode: 'legacy', adaptive: false, desktop: false },
   { label: 'web Admin 1366 → legacy', platform: 'web', role: 'ADMIN', width: 1366, route: MAIN_TAB.ADMIN.deck, mode: 'legacy', adaptive: false, desktop: false },
@@ -113,7 +112,7 @@ assert('HomeScreen mounts adaptive composition', home.includes('VionaFashionHome
 assert('HomeScreen adaptive root testID', home.includes('viona-fashion-home-adaptive-root'));
 assert('HomeScreen legacy hybrid root testID', home.includes('viona-home-legacy-hybrid-root'));
 assert('Command bar still desktop-gated', home.includes('fashionHomeDesktopShellActive && homeCommand'));
-assert('Adaptive does not hide via desktop predicate alone', home.includes('fashionHomeAdaptiveWebActive'));
+assert('Adaptive does not hide via desktop predicate alone', home.includes('fashionHomeAdaptiveActive'));
 assert('MainTabNavigator untouched by Phase B import of adaptive composition', !mainTab.includes('VionaFashionHomeAdaptiveComposition'));
 assert('MainTabNavigator still uses isFashionHomeDesktopShell only for fashion hide', mainTab.includes('isFashionHomeDesktopShell'));
 assert('SOS shell action file present (freeze)', sosAction.includes('VionaGlobalSosShellAction'));

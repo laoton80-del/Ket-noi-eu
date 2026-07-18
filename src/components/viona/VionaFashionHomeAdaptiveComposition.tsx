@@ -14,7 +14,7 @@ import { FontFamily } from '../../theme/typography';
 import type { FashionHomeShellMode } from '../../navigation/fashionHomeShellMode';
 
 export type VionaFashionHomeAdaptiveCompositionProps = Readonly<{
-  /** Phase-B web modes only — never `desktop` / `legacy`. */
+  /** Phase B/C modes — never `desktop` / `legacy`. */
   mode: Extract<FashionHomeShellMode, 'mobile' | 'tablet'>;
   brandLabel: string;
   greetingLine1: string;
@@ -30,10 +30,11 @@ export type VionaFashionHomeAdaptiveCompositionProps = Readonly<{
 }>;
 
 /**
- * Phase B — adaptive Fashion-Tech Home opening for mobile/tablet **web**.
+ * Phase B/C — adaptive Fashion-Tech Home opening for mobile/tablet **web and native**.
  *
  * Does not own SOS / Account / Language (global shell hosts remain exact-one).
  * Does not mount the desktop command bar. Safe cover-crop of approved master assets.
+ * Architecture: SHARED_ADAPTIVE_NATIVE_REUSE (pure React Native primitives).
  */
 export function VionaFashionHomeAdaptiveComposition({
   mode,

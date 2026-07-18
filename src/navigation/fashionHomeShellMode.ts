@@ -5,16 +5,29 @@ import { MAIN_TAB } from './routes';
 /**
  * Explicit Fashion-Tech Home shell mode classification.
  *
- * Phase A: `desktop` drives Fashion-Tech desktop rendering via `isFashionHomeDesktopShell`.
- * Phase B: `mobile` / `tablet` activate adaptive Fashion-Tech **web** composition in HomeScreen
+ * Phase A: `desktop` drives Fashion-Tech desktop rendering via `isFashionHomeDesktopShell`
+ * (web-only, width ≥ 769).
+ * Phase B: `mobile` / `tablet` activate adaptive Fashion-Tech on eligible **web** B2C Home
  * while keeping `isFashionHomeDesktopShell` false (tabs + SOS/Profile chrome remain).
- * Native and non-B2C Home remain `legacy`.
+ * Phase C: eligible **native** iOS/Android B2C Home also resolve to `mobile` / `tablet`
+ * and reuse the same adaptive composition (SHARED_ADAPTIVE_NATIVE_REUSE).
  */
 export type FashionHomeShellMode = 'legacy' | 'mobile' | 'tablet' | 'desktop';
 
-/** Phase B — adaptive Fashion-Tech Home composition on eligible mobile/tablet **web**. */
-export function isFashionHomeAdaptiveWebComposition(mode: FashionHomeShellMode): boolean {
+/**
+ * Adaptive Fashion-Tech Home composition (Phase B web + Phase C native).
+ * True when mode is `mobile` or `tablet` — never `desktop` / `legacy`.
+ */
+export function isFashionHomeAdaptiveComposition(mode: FashionHomeShellMode): boolean {
   return mode === 'mobile' || mode === 'tablet';
+}
+
+/**
+ * @deprecated Prefer `isFashionHomeAdaptiveComposition` (Phase C). Same predicate.
+ * Kept for Phase-B test / call-site compatibility.
+ */
+export function isFashionHomeAdaptiveWebComposition(mode: FashionHomeShellMode): boolean {
+  return isFashionHomeAdaptiveComposition(mode);
 }
 
 /**
@@ -25,8 +38,8 @@ export function isFashionHomeAdaptiveWebComposition(mode: FashionHomeShellMode):
 const FASHION_HOME_DESKTOP_RENDER_MIN_WIDTH = 769;
 
 /**
- * Tablet-band start for web B2C Home metadata (activation plan + Phase-A matrix).
- * Desktop rendering remains gated at 769.
+ * Tablet-band start for B2C Home adaptive composition (activation plan + Phase-A matrix).
+ * Desktop rendering remains gated at 769 and **web-only**.
  */
 export const FASHION_HOME_TABLET_MIN_WIDTH = 768;
 
@@ -48,10 +61,15 @@ function isB2CHomeSurface(input: Readonly<{
   return input.focusedTabRoute === MAIN_TAB.B2C.home;
 }
 
+function isAdaptivePlatform(platform: string): boolean {
+  return platform === 'web' || platform === 'ios' || platform === 'android';
+}
+
 /**
  * Whether the **current** Fashion-Tech **desktop** render path is eligible.
  * Preserves pre-Phase-A `isFashionHomeDesktopShell` semantics exactly
  * (including `NaN` width not failing the `< 769` check).
+ * Desktop remains **web-only** after Phase C.
  */
 function isFashionHomeDesktopEligible(input: FashionHomeShellModeInput): boolean {
   if (input.platform !== 'web') return false;
@@ -63,18 +81,23 @@ function isFashionHomeDesktopEligible(input: FashionHomeShellModeInput): boolean
 /**
  * Semantic Home shell-mode resolver.
  *
- * - `desktop` — Fashion-Tech desktop web render (width ≥ 769, web, B2C Home)
- * - `tablet` — adaptive Fashion-Tech tablet web (typically width 768); tabs remain visible
- * - `mobile` — adaptive Fashion-Tech mobile web (width &lt; 768); tabs remain visible
- * - `legacy` — native, non-B2C, non-Home, or otherwise ineligible
+ * - `desktop` — Fashion-Tech desktop **web** render (width ≥ 769, web, B2C Home)
+ * - `tablet` — adaptive Fashion-Tech (web or native) at width ≥ 768 when not desktop
+ * - `mobile` — adaptive Fashion-Tech (web or native) below 768
+ * - `legacy` — non-B2C, non-Home, or otherwise ineligible
  */
 export function resolveFashionHomeShellMode(input: FashionHomeShellModeInput): FashionHomeShellMode {
   if (isFashionHomeDesktopEligible(input)) {
     return 'desktop';
   }
 
-  // Phase B: mobile/tablet modes classify eligible web B2C Home for adaptive composition.
-  if (input.platform === 'web' && input.activeRole === 'B2C' && isB2CHomeSurface(input)) {
+  // Phase B (web) + Phase C (native): adaptive mobile/tablet for eligible B2C Home.
+  // Desktop remains web-only; native never enters `desktop`.
+  if (
+    isAdaptivePlatform(input.platform) &&
+    input.activeRole === 'B2C' &&
+    isB2CHomeSurface(input)
+  ) {
     if (input.windowWidth >= FASHION_HOME_TABLET_MIN_WIDTH) {
       return 'tablet';
     }

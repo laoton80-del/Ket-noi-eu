@@ -1472,22 +1472,29 @@ Phase A (resolver foundation): MERGED + VERIFIED ON MASTER
   PR #397: MERGED @ 5a98082; PR #398 docs sync MERGED @ a569f08
 Phase B (mobile-web activation): MERGED + VERIFIED ON MASTER
   Classification: VIONA_MODERN_HOME_MOBILE_WEB_ACTIVATION_VERIFIED_ON_MASTER
-  PR #399: MERGED @ 8407363 (2026-07-18T23:04:10Z) into master
-  Historical implementation branch (pre-merge): feat/viona-modern-home-mobile-web-activation-phase-b @ a2c7199
-  Adaptive: VionaFashionHomeAdaptiveComposition for web B2C Home mobile/tablet
-  Render: 390/430 mobile adaptive; 768 tablet adaptive; >=769 desktop Fashion-Tech preserved
-  Native iOS/Android: legacy/hybrid unchanged (no native activation)
-  Single Home composition at a time; legacy capability parity retained
-  Exact-one hosts: SOS / Profile / Language / canonical SOS modal
+  PR #399: MERGED @ 8407363 (2026-07-18T23:04:10Z) into master; PR #400 docs sync @ 1c9acc3
+  Adaptive web: VionaFashionHomeAdaptiveComposition for B2C Home mobile/tablet
+  Render web: 390/430 mobile adaptive; 768 tablet adaptive; >=769 desktop Fashion-Tech preserved
+  Evidence: docs/product/VIONA_MODERN_HOME_MOBILE_WEB_ACTIVATION_PHASE_B_EVIDENCE.md
+Phase C (native adaptation): ON BRANCH — NOT CLOSED ON MASTER
+  Operator phrase: APPROVE_VIONA_MODERN_HOME_NATIVE_ADAPTATION_IMPLEMENTATION
+  Branch: feat/viona-modern-home-native-adaptation-phase-c
+  Baseline master: 1c9acc3c9d2520fa92f7775f9296de4e29cd392c
+  Architecture: SHARED_ADAPTIVE_NATIVE_REUSE
+  Native iOS/Android eligible B2C Home: mobile/tablet adaptive (never desktop)
+  Web Phase B + desktop Fashion-Tech: preserved
+  Legacy native fallback: retained (centralized resolver rollback)
+  Exact-one hosts: SOS / Profile / Language / canonical SOS modal (shell)
   MainTabNavigator untouched; SOS Phase 1 preserved; PR #395 preserved
-  Browser QA: 390/430/768/769/1024/1366 green; SOS modal open @390
-Evidence: docs/product/VIONA_MODERN_HOME_MOBILE_WEB_ACTIVATION_PHASE_B_EVIDENCE.md
-Screens: docs/design/evidence/viona-modern-home-mobile-web-activation-phase-b/
-Phase C native adaptation: NOT AUTHORIZED
-Wave 2 physical native: NOT RUN
-Pack40DR wait-state preserved; Pack40S unauthorized
-Next optional phrase (NOT authorized here):
-  APPROVE_VIONA_MODERN_HOME_NATIVE_ADAPTATION_IMPLEMENTATION
+  Android emulator: PASS (Small_Phone / com.ketnoiglobal.app) — not physical PASS
+  iOS simulator: IOS_SIMULATOR_NOT_RUN_ENVIRONMENT_UNAVAILABLE
+  Physical Wave 2: NOT RUN
+  Phase D: NOT AUTHORIZED
+  Pack40DR wait-state preserved; Pack40S unauthorized
+  Evidence: docs/product/VIONA_MODERN_HOME_NATIVE_ADAPTATION_PHASE_C_EVIDENCE.md
+  Screens: docs/design/evidence/viona-modern-home-native-adaptation-phase-c/
+  Classification (branch): READY_FOR_VIONA_MODERN_HOME_NATIVE_ADAPTATION_PR_REVIEW
+  Do not mark Phase C closed on master before merge + post-merge verify
 
 === PACK40DR2 DORMANT RECOVERY SERVICES ===
 Operator phrase: APPROVE_PACK40DR2_DORMANT_RECOVERY_SERVICES

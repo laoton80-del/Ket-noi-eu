@@ -52,11 +52,17 @@ export function CharityWidget({ layoutVariant = 'default' }: CharityWidgetProps)
   const lockRef = useRef(false);
   const lastRefreshAtRef = useRef(0);
 
+  // Native Reanimated/worklets require formatUsd to run on JS — do not call it inside the reaction body.
+  const updateDisplayAmount = useCallback((value: number) => {
+    setDisplayAmount(formatUsd(value));
+  }, []);
+
   useAnimatedReaction(
     () => animatedValue.value,
     (value) => {
-      runOnJS(setDisplayAmount)(formatUsd(value));
-    }
+      runOnJS(updateDisplayAmount)(value);
+    },
+    [updateDisplayAmount]
   );
 
   useEffect(() => {
