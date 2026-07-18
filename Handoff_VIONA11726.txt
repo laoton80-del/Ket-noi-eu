@@ -1469,14 +1469,20 @@ Recovery diagnosis: MODERN_MOBILE_UI_ALREADY_ON_MASTER_BUT_NOT_ACTIVE
 Cause: Fashion-Tech Home on master gated to web + width>=769 + B2C Home; native never enters
 Historical worktree recovery: NOT REQUIRED
 Architecture recommendation: MOBILE_WEB_FIRST_THEN_NATIVE_ADAPTATION
+Plan PR #396: MERGED @ a51a633 (2026-07-18T15:15:33Z); plan verified on master
+Phase A (resolver foundation): AUTHORIZED / IMPLEMENTATION on branch feat/viona-modern-home-shell-mode-resolver-foundation
+  resolveFashionHomeShellMode → legacy|mobile|tablet|desktop
+  isFashionHomeDesktopShell ≡ mode === desktop (compat)
+  ZERO visual activation; 769/web/native render paths unchanged
+  mobile/tablet modes = metadata only
+Evidence: docs/product/VIONA_MODERN_HOME_SHELL_MODE_RESOLVER_FOUNDATION_EVIDENCE.md
+PR #395 preserved; SOS Phase 1 preserved
 Do NOT flip FASHION_HOME_DESKTOP_MIN_WIDTH or remove platform!==web without chrome contract
-Implementation: NOT AUTHORIZED
-Plan: docs/product/VIONA_MODERN_HOME_FASHION_SHELL_MOBILE_ACTIVATION_PLAN.md
-Evidence README: docs/design/evidence/viona-modern-home-fashion-shell-mobile-activation-plan/README.md
+Phase B mobile-web activation: NOT AUTHORIZED
 Wave 2 physical native: NOT RUN
 Pack40DR wait-state preserved; Pack40S unauthorized
-Next implementation phrase (NOT authorized here):
-  APPROVE_VIONA_MODERN_HOME_SHELL_MODE_RESOLVER_FOUNDATION
+Next optional phrase (NOT authorized here):
+  APPROVE_VIONA_MODERN_HOME_MOBILE_WEB_ACTIVATION_IMPLEMENTATION
 
 === PACK40DR2 DORMANT RECOVERY SERVICES ===
 Operator phrase: APPROVE_PACK40DR2_DORMANT_RECOVERY_SERVICES
