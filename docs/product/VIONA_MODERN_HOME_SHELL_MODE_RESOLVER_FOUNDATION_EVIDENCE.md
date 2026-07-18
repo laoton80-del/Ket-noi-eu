@@ -2,29 +2,32 @@
 
 Operator authorization: `APPROVE_VIONA_MODERN_HOME_SHELL_MODE_RESOLVER_FOUNDATION`
 
-Packet classification: `READY_FOR_VIONA_MODERN_HOME_SHELL_MODE_RESOLVER_PR_REVIEW`
+Packet classification (canonical, post-merge): `VIONA_MODERN_HOME_SHELL_MODE_RESOLVER_FOUNDATION_VERIFIED_ON_MASTER`
 
 ## Markers
 
 ```text
 VIONA_MODERN_HOME_SHELL_MODE_RESOLVER_FOUNDATION
+VIONA_MODERN_HOME_SHELL_MODE_RESOLVER_FOUNDATION_VERIFIED_ON_MASTER
 PHASE_A_ZERO_VISUAL_ACTIVATION
 COMPATIBILITY_WRAPPER_DESKTOP_PARITY
 MOBILE_TABLET_METADATA_ONLY
 PR395_PRESERVED
 SOS_PHASE_1_PRESERVED
 PHASE_B_NOT_AUTHORIZED
+PHASE_C_NOT_AUTHORIZED
 WAVE_2_NATIVE_NOT_RUN
 PACK40DR_PRESERVED
 PACK40S_NOT_AUTHORIZED
 ```
 
-## 1. Baseline
+## 1. Baseline (historical — feature-branch era)
 
 | Field | Value |
 |---|---|
-| origin/master | `a51a633dc572eacfa5ed4898be7ff13fe5e734d0` (contains PR #392–#396) |
-| Branch | `feat/viona-modern-home-shell-mode-resolver-foundation` |
+| origin/master at pack start | `a51a633dc572eacfa5ed4898be7ff13fe5e734d0` (contains PR #392–#396) |
+| Historical implementation branch | `feat/viona-modern-home-shell-mode-resolver-foundation` |
+| Historical feature HEAD (pre-merge) | `e2e667cb759bd310642c8a2e5ae5a89c9c16bd28` |
 | Phase A authorization | `APPROVE_VIONA_MODERN_HOME_SHELL_MODE_RESOLVER_FOUNDATION` |
 | Plan | `docs/product/VIONA_MODERN_HOME_FASHION_SHELL_MOBILE_ACTIVATION_PLAN.md` (PR #396) |
 
@@ -131,8 +134,38 @@ No changed hero family, tab visibility contract, command-bar gate, or SOS/profil
 
 - Physical native **NOT RUN**
 - Phase B mobile-web activation **NOT AUTHORIZED**
+- Phase C native adaptation **NOT AUTHORIZED**
 - Pack40DR preserved; Pack40S unauthorized
 
-## 15. Final classification
+## 15. Final classification (historical — branch-era PR packet)
+
+At PR open time the packet classification was:
 
 `READY_FOR_VIONA_MODERN_HOME_SHELL_MODE_RESOLVER_PR_REVIEW`
+
+That classification is **historical** only. Closure became canonical after merge + post-merge verification.
+
+## 16. Post-merge canonical marker
+
+| Field | Value |
+|---|---|
+| PR #397 | **MERGED** into `master` |
+| Merge commit | `5a98082c097a96b331d27bae6bd003530fbab21f` |
+| Merged at | `2026-07-18T22:09:38Z` |
+| Verified origin/master (post-merge) | `5a98082c097a96b331d27bae6bd003530fbab21f` (contains PR #392–#397) |
+| Historical feature HEAD | `e2e667cb759bd310642c8a2e5ae5a89c9c16bd28` on `feat/viona-modern-home-shell-mode-resolver-foundation` |
+| Zero-UX-diff | **Preserved** — Phase A produced **zero visual activation**; mobile/tablet modes remain metadata only |
+| Render behavior | web B2C Home &lt;769 legacy/hybrid; ≥769 Fashion-Tech desktop; native legacy/hybrid; non-B2C/non-Home not desktop-activated |
+| HomeScreen / MainTabNavigator | Render paths **unchanged** by Phase A |
+| SOS Phase 1 | Closed green / preserved |
+| Profile/Language Phase 2 (PR #395) | Merged / preserved |
+| Phase B mobile-web activation | **NOT AUTHORIZED** |
+| Phase C native adaptation | **NOT AUTHORIZED** |
+| Physical / Wave 2 native | **NOT RUN** |
+| Pack40DR | Preserved |
+| Pack40S | Unauthorized |
+| Canonical classification | `VIONA_MODERN_HOME_SHELL_MODE_RESOLVER_FOUNDATION_VERIFIED_ON_MASTER` |
+
+Next optional authorization (explicitly **NOT AUTHORIZED** here):
+
+`APPROVE_VIONA_MODERN_HOME_MOBILE_WEB_ACTIVATION_IMPLEMENTATION`
