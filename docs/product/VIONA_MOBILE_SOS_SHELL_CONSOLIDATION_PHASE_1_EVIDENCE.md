@@ -3,6 +3,21 @@
 Operator authorization: `APPROVE_VIONA_MOBILE_SOS_SHELL_CONSOLIDATION_PHASE_1`
 
 Packet classification: `READY_FOR_VIONA_MOBILE_SOS_SHELL_CONSOLIDATION_PR_REVIEW`
+**(historical)** — PR #392 merged before final reachability gate; see post-merge note below.
+
+## Post-merge reachability note (do not erase)
+
+PR #392 squash-merged to master as `95c41d2` @ `2026-07-17T08:34:57Z` **before** the final
+gate recorded `BLOCKED_GLOBAL_SOS_REACHABILITY` for desktop left-rail B2B/Broker/Admin
+(zero SOS entries when `tabBarPosition === 'left'`).
+
+Docs-only gate commit `490a075` was **not** on master.
+
+Corrected state requires remediation:
+`APPROVE_VIONA_MOBILE_SOS_LEFT_RAIL_REACHABILITY_REMEDIATION`
+→ evidence `docs/product/VIONA_MOBILE_SOS_LEFT_RAIL_REACHABILITY_REMEDIATION_EVIDENCE.md`.
+
+Final corrected left-rail reachability exists only after that remediation merges.
 
 ## Markers
 
@@ -89,7 +104,7 @@ Narrow correction: canonical `SOSModal` remains mounted on Academy so rail-trigg
 | Web tablet | one integrated SOS entry | Visibility helper + shell/rail ownership |
 | Standard web desktop | one shell/top-rail SOS entry | Fashion/command or rail; no floating FAB |
 | Fashion desktop Home | one shell-owned SOS entry | Command bar SOS; tab-bar SOS suppressed |
-| B2B/admin shell | preserve source-derived reachability | Tab-bar shell SOS mounted |
+| B2B/admin shell | preserve source-derived reachability | **Initial merge gap:** desktop left rail had 0 SOS (bottom tabs OK). See left-rail remediation. |
 
 No surface mounts both floating FAB and integrated shell entry (floating FAB removed).
 
