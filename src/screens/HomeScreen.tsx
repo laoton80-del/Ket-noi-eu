@@ -41,6 +41,7 @@ import {
   VionaSosHoldGateModal,
   VionaSosPlusInfoModal,
 } from '../components/viona';
+import { VionaFashionHomeAdaptiveComposition } from '../components/viona/VionaFashionHomeAdaptiveComposition';
 import {
   FASHION_HOME_DESKTOP_HERO_ASPECT,
   FASHION_HOME_DAYLIGHT_CANVAS,
@@ -171,6 +172,11 @@ import {
   isFashionHomeDesktopShell,
   readFocusedTabRouteFromRootState,
 } from '../navigation/fashionHomeDesktopShell';
+import {
+  isFashionHomeAdaptiveWebComposition,
+  resolveFashionHomeShellMode,
+  type FashionHomeShellMode,
+} from '../navigation/fashionHomeShellMode';
 import { MAIN_TAB, type RootStackParamList } from '../navigation/routes';
 import { normalizeCountryCodeOrSentinel } from '../config/countryPacks';
 import { vionaTokens } from '../design';
@@ -638,6 +644,18 @@ export function HomeScreen() {
       }),
     [currentActiveRole, focusedTabRoute, width]
   );
+  const fashionHomeShellMode: FashionHomeShellMode = useMemo(
+    () =>
+      resolveFashionHomeShellMode({
+        platform: Platform.OS,
+        windowWidth: width,
+        activeRole: currentActiveRole,
+        focusedTabRoute,
+      }),
+    [currentActiveRole, focusedTabRoute, width]
+  );
+  /** Phase B: adaptive Fashion-Tech on mobile/tablet web only — desktop predicate stays false. */
+  const fashionHomeAdaptiveWebActive = isFashionHomeAdaptiveWebComposition(fashionHomeShellMode);
 
   const [daylightBoost, setDaylightBoost] = useVionaHomeDaylightBoost();
   /** Home fashion desktop always luminous; toggle persists global preference for Local/other shells. */
@@ -2294,7 +2312,27 @@ export function HomeScreen() {
           </View>
           </View>
         ) : (
-          <View style={[styles.ftHeroBleed, { marginHorizontal: -layout.pad }]}>
+          <View
+            style={[styles.ftHeroBleed, { marginHorizontal: -layout.pad }]}
+            testID={
+              fashionHomeAdaptiveWebActive ? 'viona-fashion-home-adaptive-root' : 'viona-home-legacy-hybrid-root'
+            }
+          >
+            {fashionHomeAdaptiveWebActive ? (
+              <View style={{ paddingHorizontal: layout.pad, marginBottom: vionaTokens.spacing[12] }}>
+                <VionaFashionHomeAdaptiveComposition
+                  mode={fashionHomeShellMode === 'tablet' ? 'tablet' : 'mobile'}
+                  brandLabel="VIONA"
+                  greetingLine1={fashionDesktopHeaderBlock.line1}
+                  greetingWish={fashionDesktopHeaderBlock.wish}
+                  eyebrow={activeHero.eyebrow}
+                  title={activeHero.title}
+                  subtitle={activeHero.subtitle}
+                  heroImage={activeHero.image}
+                  heroA11yLabel={t('home.fashionTech.heroVisualA11y')}
+                />
+              </View>
+            ) : null}
             <LinearGradient
               colors={[...vionaTokens.fashionTech.heroGradient]}
               start={{ x: 0, y: 0 }}
@@ -2302,12 +2340,15 @@ export function HomeScreen() {
               style={[
                 styles.ftHero,
                 {
-                  paddingVertical: ftHeroPaddingV,
+                  paddingVertical: fashionHomeAdaptiveWebActive
+                    ? vionaTokens.spacing[12]
+                    : ftHeroPaddingV,
                   paddingHorizontal:
                     width < 400 ? vionaTokens.spacing[16] : vionaTokens.spacing[24],
                 },
               ]}
             >
+              {!fashionHomeAdaptiveWebActive ? (
               <View
                 style={[
                   styles.ftHeroMain,
@@ -2351,6 +2392,11 @@ export function HomeScreen() {
                   />
                 </View>
               </View>
+              ) : (
+                <Text style={styles.adaptiveUniverseKicker} accessibilityRole="header">
+                  {t('home.fashionTech.ctaExplore')}
+                </Text>
+              )}
 
               {useWorldCardCarousel ? (
                 <ScrollView
@@ -3526,6 +3572,14 @@ const styles = StyleSheet.create({
   },
   ftHeroBleed: {
     marginBottom: vionaTokens.spacing[20],
+  },
+  adaptiveUniverseKicker: {
+    fontFamily: FontFamily.semibold,
+    fontSize: 12,
+    letterSpacing: 1.6,
+    textTransform: 'uppercase',
+    color: vionaTokens.fashionTech.champagne,
+    marginBottom: vionaTokens.spacing[12],
   },
   ftHero: {
     borderRadius: vionaTokens.radius.xxl,

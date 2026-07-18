@@ -5,11 +5,17 @@ import { MAIN_TAB } from './routes';
 /**
  * Explicit Fashion-Tech Home shell mode classification.
  *
- * Phase A: only `desktop` drives rendering (via `isFashionHomeDesktopShell`).
- * `mobile` / `tablet` are source-derived metadata for later activation packs —
- * they must not change visible Home composition in this foundation.
+ * Phase A: `desktop` drives Fashion-Tech desktop rendering via `isFashionHomeDesktopShell`.
+ * Phase B: `mobile` / `tablet` activate adaptive Fashion-Tech **web** composition in HomeScreen
+ * while keeping `isFashionHomeDesktopShell` false (tabs + SOS/Profile chrome remain).
+ * Native and non-B2C Home remain `legacy`.
  */
 export type FashionHomeShellMode = 'legacy' | 'mobile' | 'tablet' | 'desktop';
+
+/** Phase B — adaptive Fashion-Tech Home composition on eligible mobile/tablet **web**. */
+export function isFashionHomeAdaptiveWebComposition(mode: FashionHomeShellMode): boolean {
+  return mode === 'mobile' || mode === 'tablet';
+}
 
 /**
  * Desktop Fashion-Tech render gate — must stay equal to
@@ -57,9 +63,9 @@ function isFashionHomeDesktopEligible(input: FashionHomeShellModeInput): boolean
 /**
  * Semantic Home shell-mode resolver.
  *
- * - `desktop` — current Fashion-Tech desktop web render (width ≥ 769, web, B2C Home)
- * - `tablet` — web B2C Home metadata at width ≥ 768 when not desktop (typically 768); non-rendering in Phase A
- * - `mobile` — web B2C Home metadata below 768; non-rendering in Phase A
+ * - `desktop` — Fashion-Tech desktop web render (width ≥ 769, web, B2C Home)
+ * - `tablet` — adaptive Fashion-Tech tablet web (typically width 768); tabs remain visible
+ * - `mobile` — adaptive Fashion-Tech mobile web (width &lt; 768); tabs remain visible
  * - `legacy` — native, non-B2C, non-Home, or otherwise ineligible
  */
 export function resolveFashionHomeShellMode(input: FashionHomeShellModeInput): FashionHomeShellMode {
@@ -67,7 +73,7 @@ export function resolveFashionHomeShellMode(input: FashionHomeShellModeInput): F
     return 'desktop';
   }
 
-  // Metadata-only classifications for future mobile-web / tablet packs.
+  // Phase B: mobile/tablet modes classify eligible web B2C Home for adaptive composition.
   if (input.platform === 'web' && input.activeRole === 'B2C' && isB2CHomeSurface(input)) {
     if (input.windowWidth >= FASHION_HOME_TABLET_MIN_WIDTH) {
       return 'tablet';

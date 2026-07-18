@@ -163,18 +163,24 @@ for (const c of cases) {
   }
 }
 
-// Source contract: HomeScreen still uses desktop boolean; no mobile mode render wiring.
+// Source contract: desktop boolean remains the MainTab / desktop activation gate.
 const home = readFileSync(path.join(root, 'src/screens/HomeScreen.tsx'), 'utf8');
 const mainTab = readFileSync(path.join(root, 'src/navigation/MainTabNavigator.tsx'), 'utf8');
 const desktopHelper = readFileSync(path.join(root, 'src/navigation/fashionHomeDesktopShell.ts'), 'utf8');
 const resolver = readFileSync(path.join(root, 'src/navigation/fashionHomeShellMode.ts'), 'utf8');
 
 assert('HomeScreen still calls isFashionHomeDesktopShell', home.includes('isFashionHomeDesktopShell('));
-assert('HomeScreen does not import resolveFashionHomeShellMode', !home.includes('resolveFashionHomeShellMode'));
+assert(
+  'HomeScreen uses resolveFashionHomeShellMode for Phase B adaptive selection',
+  home.includes('resolveFashionHomeShellMode')
+);
 assert('MainTabNavigator unchanged API (isFashionHomeDesktopShell)', mainTab.includes('isFashionHomeDesktopShell'));
 assert('MainTabNavigator does not import resolveFashionHomeShellMode', !mainTab.includes('resolveFashionHomeShellMode'));
 assert('Compat wrapper delegates to resolver', desktopHelper.includes("resolveFashionHomeShellMode(input) === 'desktop'"));
-assert('Resolver documents Phase-A non-rendering metadata', resolver.includes('non-rendering'));
+assert(
+  'Resolver keeps desktop eligibility helper for Phase-A parity',
+  resolver.includes('isFashionHomeDesktopEligible')
+);
 assert('No SOS source edits in this pack contract', true);
 assert('No ProfileSwitcher path required in this pack', true);
 
