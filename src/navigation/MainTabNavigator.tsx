@@ -64,6 +64,7 @@ import { BrokerMerchantsTabScreen } from '../screens/broker/BrokerMerchantsTabSc
 import { WalletScreen } from '../screens/WalletScreen';
 import { AdminCommandCenter } from '../screens/admin/AdminCommandCenter';
 import { VionaGlobalSosShellAction } from '../components/viona/VionaGlobalSosShellAction';
+import { VionaShellAccountLanguageActions } from '../components/viona/VionaShellAccountLanguageActions';
 import { SOSModal } from '../screens/b2c/SOSModal';
 const Tab = createBottomTabNavigator<RootTabParamList>();
 
@@ -256,21 +257,36 @@ export function MainTabNavigator(): ReactElement {
     fashionHomeDesktopShell,
   });
 
+  /** Shell language sheet: fashion command bar + tab-chrome account/language hosts. */
+  const mountShellLanguageSheet = fashionHomeDesktopShell || mountSosInTabBarShell;
+
   useEffect(() => {
-    if (!fashionHomeDesktopShell) setLanguageSheetOpen(false);
-  }, [fashionHomeDesktopShell]);
+    if (!mountShellLanguageSheet) setLanguageSheetOpen(false);
+  }, [mountShellLanguageSheet]);
+
+  const openShellAccount = useCallback(() => {
+    profileSwitcherRef.current?.openPersonalHub();
+  }, []);
+
+  const openShellLanguage = useCallback(() => {
+    setLanguageSheetOpen(true);
+  }, []);
+
+  const openShellRole = useCallback(() => {
+    profileSwitcherRef.current?.openRolePicker();
+  }, []);
 
   const b2cDesktopBottomTabs = isDesktopWeb && currentActiveRole === 'B2C' && !fashionHomeDesktopShell;
   const tabBarPosition = b2cDesktopBottomTabs ? 'bottom' : isDesktopWeb ? 'left' : 'bottom';
 
   const renderTabBar = useCallback(
     (props: BottomTabBarProps) => {
-      // Surfaces that own in-screen SOS (or fashion Home) keep the stock bar.
+      // Surfaces that own in-screen SOS/account/language (or fashion Home) keep the stock bar.
       if (!mountSosInTabBarShell) {
         return <BottomTabBar {...props} />;
       }
 
-      // Desktop left rail — integrate SOS into rail chrome (not a content-elevated FAB).
+      // Desktop left rail — account/language + SOS in rail chrome (not content-elevated FAB).
       if (tabBarPosition === 'left') {
         return (
           <View
@@ -279,6 +295,23 @@ export function MainTabNavigator(): ReactElement {
           >
             <View style={styles.leftRailMain}>
               <BottomTabBar {...props} />
+            </View>
+            <View
+              style={[
+                styles.leftRailUtilitySlot,
+                {
+                  borderTopColor: chrome.barBorder,
+                },
+              ]}
+              testID="viona-shell-account-language-left-rail-slot"
+            >
+              <VionaShellAccountLanguageActions
+                layout="leftRail"
+                showRolePicker={showRolePicker}
+                onPressAccount={openShellAccount}
+                onPressLanguage={openShellLanguage}
+                onPressRole={openShellRole}
+              />
             </View>
             <View
               style={[
@@ -303,6 +336,25 @@ export function MainTabNavigator(): ReactElement {
           </View>
           <View
             style={[
+              styles.accountLanguageShellSlot,
+              {
+                paddingBottom: Math.max(props.insets.bottom, 10),
+                paddingLeft: Math.max(props.insets.left, 8),
+              },
+            ]}
+            pointerEvents="box-none"
+            testID="viona-shell-account-language-bottom-slot"
+          >
+            <VionaShellAccountLanguageActions
+              layout="bottomChip"
+              showRolePicker={showRolePicker}
+              onPressAccount={openShellAccount}
+              onPressLanguage={openShellLanguage}
+              onPressRole={openShellRole}
+            />
+          </View>
+          <View
+            style={[
               styles.sosShellSlot,
               {
                 paddingBottom: Math.max(props.insets.bottom, 10),
@@ -316,7 +368,17 @@ export function MainTabNavigator(): ReactElement {
         </View>
       );
     },
-    [chrome.barBg, chrome.barBorder, mountSosInTabBarShell, onSosHoldComplete, tabBarPosition]
+    [
+      chrome.barBg,
+      chrome.barBorder,
+      mountSosInTabBarShell,
+      onSosHoldComplete,
+      openShellAccount,
+      openShellLanguage,
+      openShellRole,
+      showRolePicker,
+      tabBarPosition,
+    ]
   );
 
   const b2cHomeDesktopScene = fashionHomeDesktopShell;
@@ -473,6 +535,12 @@ export function MainTabNavigator(): ReactElement {
                     height: tabSizing.tabBarBaseHeight + insets.bottom,
                     paddingBottom: Math.max(insets.bottom, 10),
                     paddingTop: 8,
+                    paddingLeft:
+                      mountSosInTabBarShell && tabBarPosition === 'bottom'
+                        ? showRolePicker
+                          ? 168
+                          : 120
+                        : undefined,
                     paddingRight:
                       mountSosInTabBarShell && tabBarPosition === 'bottom' ? 104 : undefined,
                   },
@@ -593,10 +661,10 @@ export function MainTabNavigator(): ReactElement {
       <ProfileSwitcher
         ref={profileSwitcherRef}
         tabBarLift={tabBarLift}
-        suppressFloatingChrome={fashionHomeDesktopShell}
+        suppressFloatingChrome
       />
 
-      {fashionHomeDesktopShell ? (
+      {mountShellLanguageSheet ? (
         <SmartTrioLanguageSheet
           visible={languageSheetOpen}
           onClose={() => setLanguageSheetOpen(false)}
@@ -651,6 +719,16 @@ const styles = StyleSheet.create({
   tabBarMain: {
     flexGrow: 1,
   },
+  accountLanguageShellSlot: {
+    position: 'absolute',
+    left: 0,
+    bottom: 0,
+    zIndex: 2,
+    justifyContent: 'center',
+    alignItems: 'center',
+    minWidth: 96,
+    minHeight: 44,
+  },
   sosShellSlot: {
     position: 'absolute',
     right: 0,
@@ -661,7 +739,7 @@ const styles = StyleSheet.create({
     minWidth: 96,
     minHeight: 44,
   },
-  /** Desktop left-rail chrome host — column layout; SOS sits in the rail foot, not over scene content. */
+  /** Desktop left-rail chrome host — column layout; utilities + SOS in rail foot, not over scene content. */
   leftRailHost: {
     width: 94,
     height: '100%',
@@ -671,6 +749,15 @@ const styles = StyleSheet.create({
   leftRailMain: {
     flex: 1,
     minHeight: 0,
+  },
+  leftRailUtilitySlot: {
+    flexShrink: 0,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 6,
+    paddingTop: 8,
+    paddingBottom: 6,
+    borderTopWidth: StyleSheet.hairlineWidth,
   },
   leftRailSosSlot: {
     flexShrink: 0,
