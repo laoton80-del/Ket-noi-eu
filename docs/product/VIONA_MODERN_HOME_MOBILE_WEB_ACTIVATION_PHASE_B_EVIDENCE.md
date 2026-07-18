@@ -2,12 +2,13 @@
 
 Operator authorization: `APPROVE_VIONA_MODERN_HOME_MOBILE_WEB_ACTIVATION_IMPLEMENTATION`
 
-Packet classification (PR review): `READY_FOR_VIONA_MODERN_HOME_MOBILE_WEB_ACTIVATION_PR_REVIEW`
+Packet classification (canonical, post-merge): `VIONA_MODERN_HOME_MOBILE_WEB_ACTIVATION_VERIFIED_ON_MASTER`
 
 ## Markers
 
 ```text
 VIONA_MODERN_HOME_MOBILE_WEB_ACTIVATION_PHASE_B
+VIONA_MODERN_HOME_MOBILE_WEB_ACTIVATION_VERIFIED_ON_MASTER
 ADAPTIVE_FASHION_HOME_MOBILE_TABLET_WEB
 DESKTOP_FASHION_PRESERVED
 NATIVE_LEGACY_FREEZE
@@ -19,12 +20,13 @@ PACK40DR_PRESERVED
 PACK40S_NOT_AUTHORIZED
 ```
 
-## 1. Baseline
+## 1. Baseline (historical — feature-branch era)
 
 | Field | Value |
 |---|---|
-| origin/master | `a569f08ba777fea9703560a22bae8b33d6cd4e2b` (PR #392–#398) |
-| Branch | `feat/viona-modern-home-mobile-web-activation-phase-b` |
+| origin/master at pack start | `a569f08ba777fea9703560a22bae8b33d6cd4e2b` (PR #392–#398) |
+| Historical implementation branch | `feat/viona-modern-home-mobile-web-activation-phase-b` |
+| Historical feature HEAD (pre-merge) | `a2c7199aab994400ce293f8a981556aff3cf1486` |
 | Phase A | `VIONA_MODERN_HOME_SHELL_MODE_RESOLVER_FOUNDATION_CLOSED_GREEN_VERIFIED_ON_MASTER` |
 | Architecture | `MOBILE_WEB_FIRST_THEN_NATIVE_ADAPTATION` |
 
@@ -138,9 +140,47 @@ Screenshots: `docs/design/evidence/viona-modern-home-mobile-web-activation-phase
 
 Disable adaptive by removing `fashionHomeAdaptiveWebActive` branch (or forcing non-adaptive); desktop + SOS/Profile/Language packs remain.
 
-## 15. Limitations
+## 15. Limitations (historical — branch-era note)
+
+At PR open time the packet also stated Phase B should not be marked closed on master until merge + post-merge verification. That gate is now satisfied.
 
 - Physical native **NOT RUN**
 - Phase C **NOT AUTHORIZED**
 - Pack40DR preserved; Pack40S unauthorized
-- Do not mark Phase B closed on master until merge + post-merge verification
+
+## 16. Final classification (historical — branch-era PR packet)
+
+At PR open time the packet classification was:
+
+`READY_FOR_VIONA_MODERN_HOME_MOBILE_WEB_ACTIVATION_PR_REVIEW`
+
+That classification is **historical** only. Closure became canonical after merge + post-merge verification.
+
+## 17. Post-merge canonical marker
+
+| Field | Value |
+|---|---|
+| PR #399 | **MERGED** into `master` |
+| Merge commit | `840736369801e1d52667b42c603d928fdcf72b57` |
+| Merged at | `2026-07-18T23:04:10Z` |
+| Verified origin/master | `840736369801e1d52667b42c603d928fdcf72b57` (contains PR #396–#399) |
+| Historical feature HEAD | `a2c7199aab994400ce293f8a981556aff3cf1486` on `feat/viona-modern-home-mobile-web-activation-phase-b` |
+| Final render matrix | 390/430 adaptive mobile; 768 adaptive tablet; ≥769 desktop Fashion-Tech; native legacy/hybrid |
+| Single-tree | **PASS** — one Home composition at a time |
+| Legacy capability parity | **PASS** — worlds, ProactiveSuggestions, quick actions, trust, Care, Dashboard accordion, tools, wallet/account, AI/Leona, Lite/Beta |
+| Exact-one hosts | SOS×1, Profile/Account×1, Language×1, canonical SOS modal×1 |
+| Desktop | **Preserved** |
+| Native | **Unchanged** (no Fashion-Tech activation) |
+| Hero/asset | Master constellation cover-crop; no historical-worktree import |
+| Browser QA | 390/430/768/769/1024/1366 green |
+| Phase C | **NOT AUTHORIZED** |
+| Physical / Wave 2 native | **NOT RUN** |
+| Pack40DR | Preserved |
+| Pack40S | Unauthorized |
+| Canonical classification | `VIONA_MODERN_HOME_MOBILE_WEB_ACTIVATION_VERIFIED_ON_MASTER` |
+
+Qualifications: mobile/tablet web activation merged and verified; desktop preserved; native unchanged; browser QA green; physical native QA not run; Phase C not authorized.
+
+Next optional authorization (explicitly **NOT AUTHORIZED** here):
+
+`APPROVE_VIONA_MODERN_HOME_NATIVE_ADAPTATION_IMPLEMENTATION`

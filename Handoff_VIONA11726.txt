@@ -1465,27 +1465,29 @@ Evidence: docs/product/VIONA_MOBILE_PROFILE_LANGUAGE_CONTEXTUALIZATION_PHASE_2_E
 Do not claim physical-native Phase-2 PASS
 
 === MODERN HOME FASHION SHELL MOBILE ACTIVATION ===
-Recovery diagnosis: MODERN_MOBILE_UI_ALREADY_ON_MASTER_BUT_NOT_ACTIVE (Phase A closed; Phase B activates mobile-web composition)
-Architecture recommendation: MOBILE_WEB_FIRST_THEN_NATIVE_ADAPTATION
+Architecture: MOBILE_WEB_FIRST_THEN_NATIVE_ADAPTATION
 Plan PR #396: MERGED @ a51a633; plan verified on master
 Phase A (resolver foundation): MERGED + VERIFIED ON MASTER
   Classification: VIONA_MODERN_HOME_SHELL_MODE_RESOLVER_FOUNDATION_VERIFIED_ON_MASTER
   PR #397: MERGED @ 5a98082; PR #398 docs sync MERGED @ a569f08
-Phase B (mobile-web activation): IMPLEMENTATION on branch feat/viona-modern-home-mobile-web-activation-phase-b
-  Packet: READY_FOR_VIONA_MODERN_HOME_MOBILE_WEB_ACTIVATION_PR_REVIEW (not closed on master until merge+verify)
+Phase B (mobile-web activation): MERGED + VERIFIED ON MASTER
+  Classification: VIONA_MODERN_HOME_MOBILE_WEB_ACTIVATION_VERIFIED_ON_MASTER
+  PR #399: MERGED @ 8407363 (2026-07-18T23:04:10Z) into master
+  Historical implementation branch (pre-merge): feat/viona-modern-home-mobile-web-activation-phase-b @ a2c7199
   Adaptive: VionaFashionHomeAdaptiveComposition for web B2C Home mobile/tablet
-  Desktop >=769 Fashion-Tech preserved; MainTabNavigator untouched
-  Native iOS/Android: legacy/hybrid unchanged
-  SOS Phase 1 preserved; PR #395 Profile/Language preserved; legacy fallback retained
-  Browser QA: 390/430/768 adaptive; 769/1024/1366 desktop; SOS modal open @390
+  Render: 390/430 mobile adaptive; 768 tablet adaptive; >=769 desktop Fashion-Tech preserved
+  Native iOS/Android: legacy/hybrid unchanged (no native activation)
+  Single Home composition at a time; legacy capability parity retained
+  Exact-one hosts: SOS / Profile / Language / canonical SOS modal
+  MainTabNavigator untouched; SOS Phase 1 preserved; PR #395 preserved
+  Browser QA: 390/430/768/769/1024/1366 green; SOS modal open @390
 Evidence: docs/product/VIONA_MODERN_HOME_MOBILE_WEB_ACTIVATION_PHASE_B_EVIDENCE.md
 Screens: docs/design/evidence/viona-modern-home-mobile-web-activation-phase-b/
 Phase C native adaptation: NOT AUTHORIZED
 Wave 2 physical native: NOT RUN
 Pack40DR wait-state preserved; Pack40S unauthorized
-Next after Phase B merge+verify (NOT authorized here):
-  APPROVE_VIONA_MODERN_HOME_NATIVE_ADAPTATION_PHASE_C
-  (or post-merge Phase B verification phrase as operator directs)
+Next optional phrase (NOT authorized here):
+  APPROVE_VIONA_MODERN_HOME_NATIVE_ADAPTATION_IMPLEMENTATION
 
 === PACK40DR2 DORMANT RECOVERY SERVICES ===
 Operator phrase: APPROVE_PACK40DR2_DORMANT_RECOVERY_SERVICES
