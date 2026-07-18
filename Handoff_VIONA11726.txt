@@ -1465,29 +1465,27 @@ Evidence: docs/product/VIONA_MOBILE_PROFILE_LANGUAGE_CONTEXTUALIZATION_PHASE_2_E
 Do not claim physical-native Phase-2 PASS
 
 === MODERN HOME FASHION SHELL MOBILE ACTIVATION ===
-Recovery diagnosis: MODERN_MOBILE_UI_ALREADY_ON_MASTER_BUT_NOT_ACTIVE
-Cause: Fashion-Tech Home on master gated to web + width>=769 + B2C Home; native never enters
-Historical worktree recovery: NOT REQUIRED
+Recovery diagnosis: MODERN_MOBILE_UI_ALREADY_ON_MASTER_BUT_NOT_ACTIVE (Phase A closed; Phase B activates mobile-web composition)
 Architecture recommendation: MOBILE_WEB_FIRST_THEN_NATIVE_ADAPTATION
-Plan PR #396: MERGED @ a51a633 (2026-07-18T15:15:33Z); plan verified on master
+Plan PR #396: MERGED @ a51a633; plan verified on master
 Phase A (resolver foundation): MERGED + VERIFIED ON MASTER
   Classification: VIONA_MODERN_HOME_SHELL_MODE_RESOLVER_FOUNDATION_VERIFIED_ON_MASTER
-  PR #397: MERGED @ 5a98082 (2026-07-18T22:09:38Z) into master
-  Historical implementation branch (pre-merge): feat/viona-modern-home-shell-mode-resolver-foundation @ e2e667c
-  resolveFashionHomeShellMode → legacy|mobile|tablet|desktop
-  isFashionHomeDesktopShell ≡ mode === desktop (compat)
-  ZERO visual activation; web B2C Home <769 legacy/hybrid; >=769 Fashion-Tech desktop; native legacy/hybrid
-  mobile/tablet modes = metadata only (Phase A)
-  HomeScreen / MainTabNavigator render behavior unchanged by Phase A
-Evidence: docs/product/VIONA_MODERN_HOME_SHELL_MODE_RESOLVER_FOUNDATION_EVIDENCE.md
-PR #395 preserved; SOS Phase 1 closed green / preserved
-Do NOT flip FASHION_HOME_DESKTOP_MIN_WIDTH or remove platform!==web without chrome contract
-Phase B mobile-web activation: NOT AUTHORIZED
+  PR #397: MERGED @ 5a98082; PR #398 docs sync MERGED @ a569f08
+Phase B (mobile-web activation): IMPLEMENTATION on branch feat/viona-modern-home-mobile-web-activation-phase-b
+  Packet: READY_FOR_VIONA_MODERN_HOME_MOBILE_WEB_ACTIVATION_PR_REVIEW (not closed on master until merge+verify)
+  Adaptive: VionaFashionHomeAdaptiveComposition for web B2C Home mobile/tablet
+  Desktop >=769 Fashion-Tech preserved; MainTabNavigator untouched
+  Native iOS/Android: legacy/hybrid unchanged
+  SOS Phase 1 preserved; PR #395 Profile/Language preserved; legacy fallback retained
+  Browser QA: 390/430/768 adaptive; 769/1024/1366 desktop; SOS modal open @390
+Evidence: docs/product/VIONA_MODERN_HOME_MOBILE_WEB_ACTIVATION_PHASE_B_EVIDENCE.md
+Screens: docs/design/evidence/viona-modern-home-mobile-web-activation-phase-b/
 Phase C native adaptation: NOT AUTHORIZED
 Wave 2 physical native: NOT RUN
 Pack40DR wait-state preserved; Pack40S unauthorized
-Next optional phrase (NOT authorized here):
-  APPROVE_VIONA_MODERN_HOME_MOBILE_WEB_ACTIVATION_IMPLEMENTATION
+Next after Phase B merge+verify (NOT authorized here):
+  APPROVE_VIONA_MODERN_HOME_NATIVE_ADAPTATION_PHASE_C
+  (or post-merge Phase B verification phrase as operator directs)
 
 === PACK40DR2 DORMANT RECOVERY SERVICES ===
 Operator phrase: APPROVE_PACK40DR2_DORMANT_RECOVERY_SERVICES
