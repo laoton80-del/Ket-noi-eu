@@ -1447,17 +1447,36 @@ B2B/Broker/Admin desktop left rail: exactly one integrated SOS; hold opens canon
 Consumer Phase-1 bottom-tab / fashion / Local-Travel-Academy: preserved (no duplicates)
 No floating SOS overlay restored
 Legacy emergency SOSModal: untouched / unmounted
-Profile/language Phase 2: NOT STARTED
+Profile/language Phase 2: MERGED_ON_MASTER_VIA_PR395 (see below)
 Wave 2 native-device confidence: remains NOT RUN
 Browser responsive QA: 390/430/768/1024/1366 green (local/web only)
 Pack40DR wait-state preserved; Pack40S unauthorized
 Evidence: docs/product/VIONA_MOBILE_SOS_LEFT_RAIL_REACHABILITY_REMEDIATION_EVIDENCE.md
 Canonical classification: VIONA_MOBILE_SOS_SHELL_PHASE_1_CLOSED_GREEN_ON_MASTER
-  (source merged+verified; left-rail restored; browser gates green; native NOT RUN; Phase 2 not started)
-Current master (at sync): 1eab439
-Next optional lane (NOT authorized / NOT started):
-  APPROVE_VIONA_MOBILE_PROFILE_LANGUAGE_CONTEXTUALIZATION_PHASE_2
-Do not auto-start Phase 2; do not physical Wave 2
+  (source merged+verified; left-rail restored; browser gates green; native NOT RUN)
+Current master (at Phase-2 merge tip): fec4a74 (includes #392 #393 #394 #395)
+
+=== MOBILE PROFILE/LANGUAGE CONTEXTUALIZATION PHASE 2 ===
+Operator phrase: APPROVE_VIONA_MOBILE_PROFILE_LANGUAGE_CONTEXTUALIZATION_PHASE_2
+PR #395: MERGED squash fec4a74 @ 2026-07-18T14:26:49Z
+Feature commit OID: 7f70b77
+Disposition: KEEP_MERGED_PHASE2_UNCHANGED
+Evidence: docs/product/VIONA_MOBILE_PROFILE_LANGUAGE_CONTEXTUALIZATION_PHASE_2_EVIDENCE.md
+Do not claim physical-native Phase-2 PASS
+
+=== MODERN HOME FASHION SHELL MOBILE ACTIVATION ===
+Recovery diagnosis: MODERN_MOBILE_UI_ALREADY_ON_MASTER_BUT_NOT_ACTIVE
+Cause: Fashion-Tech Home on master gated to web + width>=769 + B2C Home; native never enters
+Historical worktree recovery: NOT REQUIRED
+Architecture recommendation: MOBILE_WEB_FIRST_THEN_NATIVE_ADAPTATION
+Do NOT flip FASHION_HOME_DESKTOP_MIN_WIDTH or remove platform!==web without chrome contract
+Implementation: NOT AUTHORIZED
+Plan: docs/product/VIONA_MODERN_HOME_FASHION_SHELL_MOBILE_ACTIVATION_PLAN.md
+Evidence README: docs/design/evidence/viona-modern-home-fashion-shell-mobile-activation-plan/README.md
+Wave 2 physical native: NOT RUN
+Pack40DR wait-state preserved; Pack40S unauthorized
+Next implementation phrase (NOT authorized here):
+  APPROVE_VIONA_MODERN_HOME_SHELL_MODE_RESOLVER_FOUNDATION
 
 === PACK40DR2 DORMANT RECOVERY SERVICES ===
 Operator phrase: APPROVE_PACK40DR2_DORMANT_RECOVERY_SERVICES
