@@ -265,9 +265,35 @@ export function MainTabNavigator(): ReactElement {
 
   const renderTabBar = useCallback(
     (props: BottomTabBarProps) => {
-      // Left rail (desktop) and surfaces without tab-bar SOS keep the stock bar.
-      if (tabBarPosition === 'left' || !mountSosInTabBarShell) {
+      // Surfaces that own in-screen SOS (or fashion Home) keep the stock bar.
+      if (!mountSosInTabBarShell) {
         return <BottomTabBar {...props} />;
+      }
+
+      // Desktop left rail — integrate SOS into rail chrome (not a content-elevated FAB).
+      if (tabBarPosition === 'left') {
+        return (
+          <View
+            style={[styles.leftRailHost, { backgroundColor: chrome.barBg, borderRightColor: chrome.barBorder }]}
+            testID="viona-sos-left-rail-host"
+          >
+            <View style={styles.leftRailMain}>
+              <BottomTabBar {...props} />
+            </View>
+            <View
+              style={[
+                styles.leftRailSosSlot,
+                {
+                  paddingBottom: Math.max(props.insets.bottom, 12),
+                  borderTopColor: chrome.barBorder,
+                },
+              ]}
+              testID="viona-sos-left-rail-slot"
+            >
+              <VionaGlobalSosShellAction layout="leftRail" onHoldComplete={onSosHoldComplete} />
+            </View>
+          </View>
+        );
       }
 
       return (
@@ -285,12 +311,12 @@ export function MainTabNavigator(): ReactElement {
             ]}
             pointerEvents="box-none"
           >
-            <VionaGlobalSosShellAction onHoldComplete={onSosHoldComplete} />
+            <VionaGlobalSosShellAction layout="bottomChip" onHoldComplete={onSosHoldComplete} />
           </View>
         </View>
       );
     },
-    [mountSosInTabBarShell, onSosHoldComplete, tabBarPosition]
+    [chrome.barBg, chrome.barBorder, mountSosInTabBarShell, onSosHoldComplete, tabBarPosition]
   );
 
   const b2cHomeDesktopScene = fashionHomeDesktopShell;
@@ -436,9 +462,11 @@ export function MainTabNavigator(): ReactElement {
               tabBarPosition === 'left'
                 ? {
                     width: 94,
-                    height: '100%',
+                    // When SOS occupies the rail foot, let the host column size the bar (not full viewport height).
+                    height: mountSosInTabBarShell ? undefined : '100%',
+                    flex: mountSosInTabBarShell ? 1 : undefined,
                     paddingTop: insets.top + 12,
-                    paddingBottom: Math.max(insets.bottom, 16),
+                    paddingBottom: mountSosInTabBarShell ? 8 : Math.max(insets.bottom, 16),
                     paddingHorizontal: 8,
                   }
                 : {
@@ -632,6 +660,26 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     minWidth: 96,
     minHeight: 44,
+  },
+  /** Desktop left-rail chrome host — column layout; SOS sits in the rail foot, not over scene content. */
+  leftRailHost: {
+    width: 94,
+    height: '100%',
+    flexDirection: 'column',
+    borderRightWidth: 1,
+  },
+  leftRailMain: {
+    flex: 1,
+    minHeight: 0,
+  },
+  leftRailSosSlot: {
+    flexShrink: 0,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 6,
+    paddingTop: 10,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    minHeight: 56,
   },
   tabBar: {
     position: 'absolute',

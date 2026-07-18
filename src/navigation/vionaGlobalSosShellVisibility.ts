@@ -14,10 +14,12 @@ export function shouldShowGlobalLifelineSos(
 }
 
 /**
- * Whether the bottom-tab chrome should host the integrated SOS shell action.
+ * Whether tab chrome (bottom bar **or** desktop left rail) should host the integrated SOS action.
  *
  * Surfaces that already own an in-screen shell SOS (Local utility rail, Travel/Academy
- * top rail, fashion desktop command bar) must not also mount a tab-bar SOS entry.
+ * top rail, fashion desktop command bar) must not also mount a chrome SOS entry.
+ *
+ * B2B / Broker / Admin always mount chrome SOS — including desktop `tabBarPosition === 'left'`.
  */
 export function shouldMountSosInTabBarShell(input: Readonly<{
   role: ActiveRole;
@@ -34,6 +36,6 @@ export function shouldMountSosInTabBarShell(input: Readonly<{
     return true;
   }
 
-  // B2B / Broker / Admin — preserve prior global SOS reachability via tab-bar shell.
+  // B2B / Broker / Admin — preserve prior global SOS reachability via tab chrome (bottom or left rail).
   return true;
 }

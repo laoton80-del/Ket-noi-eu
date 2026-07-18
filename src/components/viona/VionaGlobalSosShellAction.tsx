@@ -15,9 +15,16 @@ import { FontFamily } from '../../theme/typography';
 import { vionaTokens } from '../../design';
 import { V7_SOS_HOLD_TO_TRIGGER_MS } from '../premium/SOSShieldComponent';
 
+export type VionaGlobalSosShellLayout = 'bottomChip' | 'leftRail';
+
 export type VionaGlobalSosShellActionProps = Readonly<{
   /** After hold completes — parent opens the canonical SOS modal (no auto-dial). */
   onHoldComplete: () => void;
+  /**
+   * `bottomChip` — bottom-tab chrome slot.
+   * `leftRail` — compact control in desktop left-rail chrome (not a content overlay).
+   */
+  layout?: VionaGlobalSosShellLayout;
 }>;
 
 const NEON = vionaTokens.fashionTech.sosNeon;
@@ -25,12 +32,13 @@ const NEON_GLOW = vionaTokens.fashionTech.sosNeonGlow;
 const MIN_TOUCH = 44;
 
 /**
- * Shell-integrated SOS control for the bottom-tab chrome.
+ * Shell-integrated SOS control for tab chrome (bottom bar or desktop left rail).
  * Preserves hold-to-trigger safety (same duration as {@link SOSShieldComponent}).
- * Not an absolute floating overlay.
+ * Not an absolute floating overlay over application content.
  */
 export function VionaGlobalSosShellAction({
   onHoldComplete,
+  layout = 'bottomChip',
 }: VionaGlobalSosShellActionProps): ReactElement {
   const { t, i18n } = useTranslation();
   const [progress, setProgress] = useState(0);
@@ -88,20 +96,27 @@ export function VionaGlobalSosShellAction({
     }
   }, [resetHoldUi]);
 
+  const isLeftRail = layout === 'leftRail';
+
   return (
     <Pressable
-      key={`sos-shell-${i18n.language}`}
-      testID="viona-global-sos-shell-action"
+      key={`sos-shell-${layout}-${i18n.language}`}
+      testID={isLeftRail ? 'viona-global-sos-left-rail-action' : 'viona-global-sos-shell-action'}
       onPressIn={onPressIn}
       onPressOut={onPressOut}
       accessibilityRole="button"
       accessibilityLabel={t('sos.a11yChip')}
       accessibilityHint={t('sos.holdHelper')}
-      style={({ pressed }) => [styles.hit, pressed && styles.hitPressed]}
+      style={({ pressed }) => [styles.hit, isLeftRail && styles.hitRail, pressed && styles.hitPressed]}
     >
-      <View style={styles.chip}>
-        <Ionicons name="shield" size={18} color={NEON} accessibilityIgnoresInvertColors />
-        <Text style={styles.label} numberOfLines={1}>
+      <View style={[styles.chip, isLeftRail && styles.chipRail]}>
+        <Ionicons
+          name="shield"
+          size={isLeftRail ? 16 : 18}
+          color={NEON}
+          accessibilityIgnoresInvertColors
+        />
+        <Text style={[styles.label, isLeftRail && styles.labelRail]} numberOfLines={1}>
           {t('sos.chip')}
         </Text>
         <View style={styles.track} accessibilityElementsHidden>
@@ -120,6 +135,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingHorizontal: 4,
   },
+  hitRail: {
+    width: '100%',
+    paddingHorizontal: 2,
+  },
   hitPressed: {
     opacity: 0.9,
   },
@@ -137,12 +156,24 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 2,
   },
+  chipRail: {
+    minWidth: MIN_TOUCH,
+    maxWidth: 78,
+    width: '100%',
+    paddingHorizontal: 6,
+    paddingVertical: 8,
+    borderRadius: 12,
+  },
   label: {
     fontFamily: FontFamily.extrabold,
     fontSize: 10,
     letterSpacing: 0.4,
     color: NEON,
     textTransform: 'uppercase',
+  },
+  labelRail: {
+    fontSize: 9,
+    letterSpacing: 0.3,
   },
   track: {
     alignSelf: 'stretch',
