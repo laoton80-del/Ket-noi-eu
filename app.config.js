@@ -75,6 +75,7 @@ module.exports = () => {
     'expo-localization',
     'expo-font',
     '@sentry/react-native',
+    '@config-plugins/react-native-webrtc',
   ];
 
   // Only enable Stripe config plugin when merchant identifier is provided.

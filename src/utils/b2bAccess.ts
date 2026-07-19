@@ -13,7 +13,8 @@ export function hasB2BWorkspaceAccess(user: AuthUser | null): boolean {
  * Server-side merchant ownership still enforced by JWT on `/api/local/merchant/*`.
  * Not a production or commercial unlock.
  *
- * Requires (all): `__DEV__`, `EXPO_PUBLIC_DEV_REST_JWT`, `EXPO_PUBLIC_LOCAL_STAGING_WALKTHROUGH_UNLOCK=true`.
+ * Requires (all): `__DEV__`, `EXPO_PUBLIC_LOCAL_STAGING_WALKTHROUGH_UNLOCK=true`.
+ * (Public env JWT client fallbacks are removed; use REST login session JWT.)
  */
 export function hasLocalStagingWalkthroughUnlock(): boolean {
   if (!__DEV__) return false;

@@ -1540,6 +1540,22 @@ Phase C closed green preserved; iOS Phase D2 NOT AUTHORIZED
 Pack40DR preserved; Pack40S unauthorized
 Evidence: docs/product/VIONA_IOS_DEVELOPMENT_BUILD_READINESS_IMPORT_GRAPH_AUDIT.md
 
+=== IOS DEVELOPMENT BUILD READINESS REMEDIATION IMPLEMENTATION ===
+Operator phrase: APPROVE_VIONA_IOS_DEVELOPMENT_BUILD_READINESS_REMEDIATION_IMPLEMENTATION
+Master baseline: 211536f2deb9d9c1061a29b5b5b9065454eecfed
+Branch: feat/viona-ios-development-build-readiness-remediation
+Primary classification: READY_FOR_VIONA_IOS_BUILD_READINESS_REMEDIATION_PR_REVIEW
+Client contract: src/domain/local/localServiceRequestClientContract.ts
+Mobile Prisma: direct+indirect Local UI/eligibility paths retargeted (6 modules)
+Public JWT: EXPO_PUBLIC_DEV_REST_JWT fallback removed from apiClient (fail-closed)
+WebRTC: @config-plugins/react-native-webrtc@13.0.0 in app.config.js plugins
+Expo: expo@54.0.36; expo-updates@29.0.19
+Doctor: 16/18 — Directory advisory + expo-localization 17.0.8→~17.0.9 (out of scope)
+No Prebuild / EAS build / device registration / Phase D2
+Phase C closed green preserved
+Pack40DR preserved; Pack40S unauthorized
+Evidence: docs/product/VIONA_IOS_DEVELOPMENT_BUILD_READINESS_REMEDIATION_IMPLEMENTATION_EVIDENCE.md
+
 === PACK40DR2 DORMANT RECOVERY SERVICES ===
 Operator phrase: APPROVE_PACK40DR2_DORMANT_RECOVERY_SERVICES
 Master baseline: f184120 (PR #379 MERGED — Pack40DR1 staging migrate-apply evidence)

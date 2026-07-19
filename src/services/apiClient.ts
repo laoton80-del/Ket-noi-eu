@@ -23,17 +23,14 @@ export function isRestApiConfigured(): boolean {
   return getRestApiBaseUrl().length > 0;
 }
 
-/** Dev-only: bypass storage when set (never ship real JWTs in client env). */
-function getDevJwtOverride(): string | null {
-  const t = process.env.EXPO_PUBLIC_DEV_REST_JWT?.trim() ?? '';
-  return t.length > 0 ? t : null;
-}
-
+/**
+ * Runtime/session REST JWT from secure storage only.
+ * Public env bearer fallbacks (including historical EXPO_PUBLIC_* JWT vars) are not used.
+ */
 export async function getRestApiJwt(): Promise<string | null> {
   const stored = await AsyncStorage.getItem(STORAGE_KEYS.restApiJwt);
   const fromStorage = stored?.trim() ?? '';
-  if (fromStorage.length > 0) return fromStorage;
-  return getDevJwtOverride();
+  return fromStorage.length > 0 ? fromStorage : null;
 }
 
 export async function setRestApiJwt(token: string): Promise<void> {

@@ -8,15 +8,15 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 import {
-  LocalServiceRequestStatus,
-  LocalWalletMode,
-  LocalWalletPhase,
-} from '@prisma/client';
-
+  LOCAL_SERVICE_REQUEST_STATUS,
+  LOCAL_WALLET_MODE,
+  LOCAL_WALLET_PHASE,
+} from '../src/domain/local/localServiceRequestClientContract';
 import {
   buildLocalUserRequestDisplayLabels,
   collectLocalUserStatusVisibleCopy,
   LOCAL_USER_STATUS_FORBIDDEN_COPY,
+  localUserWalletBadgeLabel,
 } from '../src/screens/b2c/localUserRequestStatusUi';
 import type { LocalUserRequestListItem } from '../src/services/localUserRequestApi';
 
@@ -52,7 +52,7 @@ function localeTranslate(
 function fixture(overrides: Partial<LocalUserRequestListItem>): LocalUserRequestListItem {
   return {
     id: 'req-user-1',
-    status: LocalServiceRequestStatus.REQUESTED,
+    status: LOCAL_SERVICE_REQUEST_STATUS.REQUESTED,
     serviceType: 'GENERIC_REQUEST',
     category: null,
     title: 'Nails appointment',
@@ -62,8 +62,8 @@ function fixture(overrides: Partial<LocalUserRequestListItem>): LocalUserRequest
     locationText: 'District 3',
     city: 'Ho Chi Minh City',
     countryCode: 'VN',
-    walletMode: LocalWalletMode.REQUEST_ONLY_NO_CHARGE,
-    walletPhase: LocalWalletPhase.NONE,
+    walletMode: LOCAL_WALLET_MODE.REQUEST_ONLY_NO_CHARGE,
+    walletPhase: LOCAL_WALLET_PHASE.NONE,
     requestedAt: '2026-05-02T10:00:00.000Z',
     createdAt: '2026-05-02T10:00:00.000Z',
     updatedAt: '2026-05-02T10:00:00.000Z',
@@ -85,47 +85,46 @@ function run(): void {
   const tEn = localeTranslate(loadLocale('en.json'));
   const tVi = localeTranslate(loadLocale('vi.json'));
 
-  const requested = fixture({ status: LocalServiceRequestStatus.REQUESTED });
+  const requested = fixture({ status: LOCAL_SERVICE_REQUEST_STATUS.REQUESTED });
   const requestedLabels = buildLocalUserRequestDisplayLabels(requested, tEn);
   assert.equal(requestedLabels.showReviewPendingNote, true);
-  assert.match(requestedLabels.walletBadge, /No payment has been captured/);
+  assert.equal(requestedLabels.walletBadge, 'Request-only · no payment captured');
   assert.equal(requestedLabels.actions.canCancel, true);
   assertNoForbiddenCopy(collectLocalUserStatusVisibleCopy(requestedLabels, tEn));
 
   const requestedVi = buildLocalUserRequestDisplayLabels(requested, tVi);
   assert.match(requestedVi.statusLabel, /Yêu cầu đã được gửi/);
-  assert.match(requestedVi.walletBadge, /Chưa thu khoản thanh toán nào/);
-  assert.match(requestedVi.walletBadge, /Chỉ gửi yêu cầu \/ không thu phí/);
+  assert.equal(requestedVi.walletBadge, 'Chỉ gửi yêu cầu · chưa thu thanh toán');
 
-  const confirmed = fixture({ status: LocalServiceRequestStatus.CONFIRMED });
+  const confirmed = fixture({ status: LOCAL_SERVICE_REQUEST_STATUS.CONFIRMED });
   const confirmedLabels = buildLocalUserRequestDisplayLabels(confirmed, tEn);
   assert.equal(confirmedLabels.showConfirmedNote, true);
   assert.match(confirmedLabels.statusLabel, /Merchant confirmed your request/);
-  assert.match(collectLocalUserStatusVisibleCopy(confirmedLabels, tEn), /does not mean paid/i);
+  assert.match(collectLocalUserStatusVisibleCopy(confirmedLabels, tEn), /Confirmed ≠ paid/i);
   assert.equal(confirmedLabels.actions.canCancel, false);
   assertNoForbiddenCopy(collectLocalUserStatusVisibleCopy(confirmedLabels, tEn));
 
   const confirmedVi = buildLocalUserRequestDisplayLabels(confirmed, tVi);
   assert.match(confirmedVi.statusLabel, /Cửa hàng đã xác nhận yêu cầu/);
-  assert.match(collectLocalUserStatusVisibleCopy(confirmedVi, tVi), /Đã xác nhận không có nghĩa là đã thanh toán/);
+  assert.match(collectLocalUserStatusVisibleCopy(confirmedVi, tVi), /Đã xác nhận ≠ đã thanh toán/);
 
-  const rejected = fixture({ status: LocalServiceRequestStatus.REJECTED });
+  const rejected = fixture({ status: LOCAL_SERVICE_REQUEST_STATUS.REJECTED });
   const rejectedLabels = buildLocalUserRequestDisplayLabels(rejected, tEn);
   assert.match(rejectedLabels.statusLabel, /Merchant declined this request/);
   assert.equal(rejectedLabels.actions.canCancel, false);
   assert.match(buildLocalUserRequestDisplayLabels(rejected, tVi).statusLabel, /Cửa hàng đã từ chối yêu cầu này/);
 
-  const expired = fixture({ status: LocalServiceRequestStatus.EXPIRED });
+  const expired = fixture({ status: LOCAL_SERVICE_REQUEST_STATUS.EXPIRED });
   const expiredLabels = buildLocalUserRequestDisplayLabels(expired, tEn);
   assert.match(expiredLabels.statusLabel, /This request expired/);
   assert.equal(expiredLabels.actions.canCancel, false);
   assert.match(buildLocalUserRequestDisplayLabels(expired, tVi).statusLabel, /Yêu cầu này đã hết hạn/);
 
-  const completed = fixture({ status: LocalServiceRequestStatus.COMPLETED });
+  const completed = fixture({ status: LOCAL_SERVICE_REQUEST_STATUS.COMPLETED });
   assert.equal(buildLocalUserRequestDisplayLabels(completed, tEn).actions.canCancel, false);
   assert.match(buildLocalUserRequestDisplayLabels(completed, tVi).statusLabel, /Hoàn tất/);
 
-  const review = fixture({ status: LocalServiceRequestStatus.MERCHANT_REVIEW });
+  const review = fixture({ status: LOCAL_SERVICE_REQUEST_STATUS.MERCHANT_REVIEW });
   assert.equal(buildLocalUserRequestDisplayLabels(review, tEn).actions.canCancel, true);
   assert.match(
     buildLocalUserRequestDisplayLabels(review, tVi).statusLabel,
@@ -134,13 +133,19 @@ function run(): void {
 
   const walletOk = buildLocalUserRequestDisplayLabels(
     fixture({
-      walletMode: LocalWalletMode.REQUEST_ONLY_NO_CHARGE,
-      walletPhase: LocalWalletPhase.NONE,
+      walletMode: LOCAL_WALLET_MODE.REQUEST_ONLY_NO_CHARGE,
+      walletPhase: LOCAL_WALLET_PHASE.NONE,
     }),
     tEn
   );
-  assert.match(walletOk.walletBadge, /Request-only \/ no-charge/);
-  assert.match(walletOk.walletBadge, /walletPhase NONE/);
+  assert.equal(walletOk.walletBadge, 'Request-only · no payment captured');
+  assert.equal(
+    localUserWalletBadgeLabel(
+      LOCAL_WALLET_MODE.REQUEST_ONLY_NO_CHARGE,
+      LOCAL_WALLET_PHASE.NONE
+    ),
+    'No payment has been captured · Request-only / no-charge · walletPhase NONE'
+  );
 
   console.log('test-local-user-request-status-ui-display: OK');
 }
