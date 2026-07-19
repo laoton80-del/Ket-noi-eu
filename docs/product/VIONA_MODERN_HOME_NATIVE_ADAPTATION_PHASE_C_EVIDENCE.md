@@ -245,7 +245,7 @@ Operator authorization (docs sync): `APPROVE_VIONA_MODERN_HOME_NATIVE_ADAPTATION
 | Merge commit (squash) | `fba383fb17101c1233c085213915c401d0f38cf4` |
 | Merged at | `2026-07-19T00:31:32Z` |
 | Historical feature HEAD (pre-squash) | `4d96feffde31684c54f4ffe98a90ef20da04a05a` on `feat/viona-modern-home-native-adaptation-phase-c` |
-| origin/master verification baseline | contains PR #396–#401; Phase-C source at merge `fba383f` |
+| origin/master verification baseline (at #402 sync authoring) | contains PR #396–#401; Phase-C source at merge `fba383f` |
 | Canonical classification | `VIONA_MODERN_HOME_NATIVE_ADAPTATION_VERIFIED_ON_MASTER` |
 | Native render matrix | eligible iOS/Android B2C Home → adaptive Fashion-Tech (`mobile`/`tablet`); **native never desktop** |
 | Resolver | centralized `resolveFashionHomeShellMode`; `isFashionHomeDesktopShell` ≡ `mode === 'desktop'` |
@@ -263,3 +263,38 @@ Operator authorization (docs sync): `APPROVE_VIONA_MODERN_HOME_NATIVE_ADAPTATION
 | Deployment / production validation | **none** |
 | Pack40DR | preserved |
 | Pack40S | **NOT AUTHORIZED** |
+
+## 24. PR #402 citation addendum
+
+Operator authorization: `APPROVE_VIONA_MODERN_HOME_NATIVE_CANONICAL_CITATION_ADDENDUM`
+
+| Field | Value |
+|---|---|
+| PR #401 | **Implementation** merge — squash `fba383fb17101c1233c085213915c401d0f38cf4` @ `2026-07-19T00:31:32Z` |
+| PR #402 | **Canonical docs-sync** merge — squash `4e060f744c6c5479215bc3db4fa41e62f1031020` @ `2026-07-19T20:32:14Z` |
+| PR #402 purpose | Phase-C post-merge canonical sync |
+| PR #402 state | **MERGED** into `master` |
+| PR #402 scope | docs-only: Kernel + Handoff + Phase-C evidence |
+| PR #402 result | Kernel, Handoff and Phase-C evidence synchronized to `VIONA_MODERN_HOME_NATIVE_ADAPTATION_VERIFIED_ON_MASTER` |
+| Phase-C classification after #402 | `VIONA_MODERN_HOME_NATIVE_ADAPTATION_VERIFIED_ON_MASTER` |
+| Historical feature HEAD | `4d96feffde31684c54f4ffe98a90ef20da04a05a` (pre-squash; not a merge commit) |
+| Current citation-addendum | **not merged yet** — branch `docs/viona-modern-home-native-canonical-citation-addendum`; do not treat this addendum as merged inside the pre-merge diff |
+| Physical Wave 2 | **NOT RUN** |
+| Phase D | **NOT AUTHORIZED** |
+| Deployment | **NONE** |
+
+### TERMINAL_CANONICAL_SYNC_RULE
+
+1. A pull request cannot truthfully record its own final merge commit before it is merged.
+2. This citation-addendum PR is therefore **not** required to self-record its own future merge commit inside the same pre-merge diff.
+3. Its merge status will be verified directly through Git/GitHub during the final read-only post-merge verification.
+4. Once that external merge verification passes, **no further docs-only self-citation PR** is required solely to record this addendum PR.
+5. This rule does **not** waive source verification, changed-path verification, canonical contradiction checks, Phase D authorization requirements, or physical-device disclosure requirements.
+
+Equivalent marker:
+
+```text
+TERMINAL_CANONICAL_SYNC_RULE:
+The final citation-addendum PR is closed through external Git/GitHub merge
+verification and does not require a further self-referential docs PR.
+```
