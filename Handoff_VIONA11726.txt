@@ -1524,6 +1524,22 @@ Pack40DR wait-state preserved; Pack40S unauthorized
 Evidence: docs/product/VIONA_MODERN_HOME_ANDROID_PHYSICAL_DEVICE_CONFIDENCE_PHASE_D1_EVIDENCE.md
 Classification: BLOCKED_NO_STABLE_PHYSICAL_ANDROID_DEVICE
 
+=== IOS DEVELOPMENT BUILD READINESS IMPORT-GRAPH AUDIT ===
+Operator phrase: APPROVE_VIONA_IOS_DEVELOPMENT_BUILD_READINESS_IMPORT_GRAPH_AUDIT
+Master baseline: f5a070652d57d659cb12cc9740d8ae19444c394f
+Branch: docs/viona-ios-development-build-readiness-import-graph-audit
+Primary classification: READY_FOR_VIONA_IOS_DEVELOPMENT_BUILD_READINESS_REMEDIATION_IMPLEMENTATION
+Mobile Prisma: CLIENT_RUNTIME_PRISMA_IMPORT via Local B2C/B2B UI + eligibility (6 modules);
+  REST APIs CLIENT_SAFE_NO_PRISMA; replacing two screen files alone NOT sufficient
+Public JWT: EXPO_PUBLIC_DEV_REST_JWT_EMPTY; PUBLIC_DEV_JWT_REFERENCED_BY_CLIENT (apiClient)
+WebRTC: IOS_WEBRTC_CONFIG_PLUGIN_REQUIRED (@config-plugins/react-native-webrtc@13 for Expo 54 CNG)
+Permission copy: IOS_PERMISSION_COPY_UTF8_VALID
+Expo patch: expo 54.0.35→~54.0.36; expo-updates 29.0.18→~29.0.19 (future install only)
+No npm install / prebuild / eas build / deploy
+Phase C closed green preserved; iOS Phase D2 NOT AUTHORIZED
+Pack40DR preserved; Pack40S unauthorized
+Evidence: docs/product/VIONA_IOS_DEVELOPMENT_BUILD_READINESS_IMPORT_GRAPH_AUDIT.md
+
 === PACK40DR2 DORMANT RECOVERY SERVICES ===
 Operator phrase: APPROVE_PACK40DR2_DORMANT_RECOVERY_SERVICES
 Master baseline: f184120 (PR #379 MERGED — Pack40DR1 staging migrate-apply evidence)
