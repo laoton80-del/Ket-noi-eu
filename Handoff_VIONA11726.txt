@@ -1479,8 +1479,10 @@ Phase B (mobile-web activation): MERGED + VERIFIED ON MASTER
 Phase C (native adaptation): MERGED + VERIFIED ON MASTER
   Classification: VIONA_MODERN_HOME_NATIVE_ADAPTATION_VERIFIED_ON_MASTER
   Operator phrase (historical implementation): APPROVE_VIONA_MODERN_HOME_NATIVE_ADAPTATION_IMPLEMENTATION
-  PR #401: MERGED squash fba383fb17101c1233c085213915c401d0f38cf4 @ 2026-07-19T00:31:32Z into master
-  Historical implementation branch (pre-squash): feat/viona-modern-home-native-adaptation-phase-c @ 4d96feffde31684c54f4ffe98a90ef20da04a05a
+  PR #401 (implementation): MERGED squash fba383fb17101c1233c085213915c401d0f38cf4 @ 2026-07-19T00:31:32Z into master
+  PR #402 (canonical docs-sync): MERGED squash 4e060f744c6c5479215bc3db4fa41e62f1031020 @ 2026-07-19T20:32:14Z into master
+    purpose: Phase-C post-merge canonical sync; docs-only (Kernel + Handoff + Phase-C evidence)
+  Historical implementation branch HEAD (pre-squash): feat/viona-modern-home-native-adaptation-phase-c @ 4d96feffde31684c54f4ffe98a90ef20da04a05a
   Baseline master at Phase-C start: 1c9acc3c9d2520fa92f7775f9296de4e29cd392c
   Architecture: SHARED_ADAPTIVE_NATIVE_REUSE
   Resolver: resolveFashionHomeShellMode (centralized); desktop helper = mode === desktop
@@ -1500,6 +1502,11 @@ Phase C (native adaptation): MERGED + VERIFIED ON MASTER
   Pack40DR wait-state preserved; Pack40S unauthorized
   Evidence: docs/product/VIONA_MODERN_HOME_NATIVE_ADAPTATION_PHASE_C_EVIDENCE.md
   Screens: docs/design/evidence/viona-modern-home-native-adaptation-phase-c/
+  TERMINAL_CANONICAL_SYNC_RULE:
+    The final citation-addendum PR is closed through external Git/GitHub merge
+    verification and does not require a further self-referential docs PR.
+    (This citation-addendum branch is not merged until external merge verification;
+     do not mark it merged inside the pre-merge diff.)
 
 === PACK40DR2 DORMANT RECOVERY SERVICES ===
 Operator phrase: APPROVE_PACK40DR2_DORMANT_RECOVERY_SERVICES
