@@ -1,9 +1,11 @@
 import {
-  LocalServiceRequestStatus,
-  LocalWalletMode,
-  LocalWalletPhase,
-} from '@prisma/client';
-
+  LOCAL_SERVICE_REQUEST_STATUS,
+  LOCAL_WALLET_MODE,
+  LOCAL_WALLET_PHASE,
+  type LocalServiceRequestStatusClient,
+  type LocalWalletModeClient,
+  type LocalWalletPhaseClient,
+} from '../../domain/local/localServiceRequestClientContract';
 import type { LocalConstellationAccent } from '../../components/local/localConstellationTokens';
 import { evaluateLocalUserRequestCancelEligibility } from '../../services/local/localUserRequestCancelEligibility';
 import type { LocalUserRequestListItem } from '../../services/localUserRequestApi';
@@ -64,23 +66,23 @@ export const LOCAL_USER_STATUS_FORBIDDEN_COPY = [
 /** English fallback labels for tests without i18n bootstrap. */
 export function localUserRequestStatusLabel(status: string): string {
   switch (status) {
-    case LocalServiceRequestStatus.REQUESTED:
+    case LOCAL_SERVICE_REQUEST_STATUS.REQUESTED:
       return 'Request submitted';
-    case LocalServiceRequestStatus.MERCHANT_REVIEW:
+    case LOCAL_SERVICE_REQUEST_STATUS.MERCHANT_REVIEW:
       return 'Waiting for merchant review';
-    case LocalServiceRequestStatus.CONFIRMED:
+    case LOCAL_SERVICE_REQUEST_STATUS.CONFIRMED:
       return 'Merchant confirmed your request';
-    case LocalServiceRequestStatus.IN_PROGRESS:
+    case LOCAL_SERVICE_REQUEST_STATUS.IN_PROGRESS:
       return 'In progress';
-    case LocalServiceRequestStatus.COMPLETED:
+    case LOCAL_SERVICE_REQUEST_STATUS.COMPLETED:
       return 'Completed';
-    case LocalServiceRequestStatus.REJECTED:
+    case LOCAL_SERVICE_REQUEST_STATUS.REJECTED:
       return 'Merchant declined this request';
-    case LocalServiceRequestStatus.USER_CANCELLED:
+    case LOCAL_SERVICE_REQUEST_STATUS.USER_CANCELLED:
       return 'Cancelled';
-    case LocalServiceRequestStatus.OPS_CANCELLED:
+    case LOCAL_SERVICE_REQUEST_STATUS.OPS_CANCELLED:
       return 'Cancelled by support';
-    case LocalServiceRequestStatus.EXPIRED:
+    case LOCAL_SERVICE_REQUEST_STATUS.EXPIRED:
       return 'This request expired';
     default:
       return 'Request updated';
@@ -90,17 +92,17 @@ export function localUserRequestStatusLabel(status: string): string {
 /** Semantic accent for request status rows — display mapping only. */
 export function localUserRequestStatusAccent(status: string): LocalConstellationAccent {
   switch (status) {
-    case LocalServiceRequestStatus.REJECTED:
-    case LocalServiceRequestStatus.USER_CANCELLED:
-    case LocalServiceRequestStatus.OPS_CANCELLED:
-    case LocalServiceRequestStatus.EXPIRED:
+    case LOCAL_SERVICE_REQUEST_STATUS.REJECTED:
+    case LOCAL_SERVICE_REQUEST_STATUS.USER_CANCELLED:
+    case LOCAL_SERVICE_REQUEST_STATUS.OPS_CANCELLED:
+    case LOCAL_SERVICE_REQUEST_STATUS.EXPIRED:
       return 'violet';
-    case LocalServiceRequestStatus.CONFIRMED:
-    case LocalServiceRequestStatus.COMPLETED:
-    case LocalServiceRequestStatus.IN_PROGRESS:
+    case LOCAL_SERVICE_REQUEST_STATUS.CONFIRMED:
+    case LOCAL_SERVICE_REQUEST_STATUS.COMPLETED:
+    case LOCAL_SERVICE_REQUEST_STATUS.IN_PROGRESS:
       return 'emerald';
-    case LocalServiceRequestStatus.REQUESTED:
-    case LocalServiceRequestStatus.MERCHANT_REVIEW:
+    case LOCAL_SERVICE_REQUEST_STATUS.REQUESTED:
+    case LOCAL_SERVICE_REQUEST_STATUS.MERCHANT_REVIEW:
     default:
       return 'cyan';
   }
@@ -108,22 +110,22 @@ export function localUserRequestStatusAccent(status: string): LocalConstellation
 
 export function localUserRequestStatusIcon(status: string): LocalUserRequestStatusIconName {
   switch (status) {
-    case LocalServiceRequestStatus.REQUESTED:
+    case LOCAL_SERVICE_REQUEST_STATUS.REQUESTED:
       return 'paper-plane-outline';
-    case LocalServiceRequestStatus.MERCHANT_REVIEW:
+    case LOCAL_SERVICE_REQUEST_STATUS.MERCHANT_REVIEW:
       return 'hourglass-outline';
-    case LocalServiceRequestStatus.CONFIRMED:
+    case LOCAL_SERVICE_REQUEST_STATUS.CONFIRMED:
       return 'checkmark-circle-outline';
-    case LocalServiceRequestStatus.IN_PROGRESS:
+    case LOCAL_SERVICE_REQUEST_STATUS.IN_PROGRESS:
       return 'sync-outline';
-    case LocalServiceRequestStatus.COMPLETED:
+    case LOCAL_SERVICE_REQUEST_STATUS.COMPLETED:
       return 'checkmark-done-outline';
-    case LocalServiceRequestStatus.REJECTED:
+    case LOCAL_SERVICE_REQUEST_STATUS.REJECTED:
       return 'close-circle-outline';
-    case LocalServiceRequestStatus.USER_CANCELLED:
-    case LocalServiceRequestStatus.OPS_CANCELLED:
+    case LOCAL_SERVICE_REQUEST_STATUS.USER_CANCELLED:
+    case LOCAL_SERVICE_REQUEST_STATUS.OPS_CANCELLED:
       return 'ban-outline';
-    case LocalServiceRequestStatus.EXPIRED:
+    case LOCAL_SERVICE_REQUEST_STATUS.EXPIRED:
       return 'time-outline';
     default:
       return 'help-circle-outline';
@@ -133,21 +135,21 @@ export function localUserRequestStatusIcon(status: string): LocalUserRequestStat
 /** Compact status hint i18n key, or null when redundant with chips. */
 export function localUserRequestStatusHintKey(status: string): string | null {
   switch (status) {
-    case LocalServiceRequestStatus.REQUESTED:
+    case LOCAL_SERVICE_REQUEST_STATUS.REQUESTED:
       return 'local.userRequestStatus.statusHint.sent';
-    case LocalServiceRequestStatus.MERCHANT_REVIEW:
+    case LOCAL_SERVICE_REQUEST_STATUS.MERCHANT_REVIEW:
       return 'local.userRequestStatus.statusHint.review';
-    case LocalServiceRequestStatus.CONFIRMED:
+    case LOCAL_SERVICE_REQUEST_STATUS.CONFIRMED:
       return 'local.userRequestStatus.statusHint.confirmedNotPaid';
-    case LocalServiceRequestStatus.REJECTED:
+    case LOCAL_SERVICE_REQUEST_STATUS.REJECTED:
       return 'local.userRequestStatus.statusHint.declined';
-    case LocalServiceRequestStatus.IN_PROGRESS:
+    case LOCAL_SERVICE_REQUEST_STATUS.IN_PROGRESS:
       return 'local.userRequestStatus.statusHint.inProgress';
-    case LocalServiceRequestStatus.COMPLETED:
+    case LOCAL_SERVICE_REQUEST_STATUS.COMPLETED:
       return 'local.userRequestStatus.statusHint.completed';
-    case LocalServiceRequestStatus.USER_CANCELLED:
-    case LocalServiceRequestStatus.OPS_CANCELLED:
-    case LocalServiceRequestStatus.EXPIRED:
+    case LOCAL_SERVICE_REQUEST_STATUS.USER_CANCELLED:
+    case LOCAL_SERVICE_REQUEST_STATUS.OPS_CANCELLED:
+    case LOCAL_SERVICE_REQUEST_STATUS.EXPIRED:
       return 'local.userRequestStatus.statusHint.closed';
     default:
       return null;
@@ -156,23 +158,23 @@ export function localUserRequestStatusHintKey(status: string): string | null {
 
 export function localUserRequestStatusI18nKey(status: string): string {
   switch (status) {
-    case LocalServiceRequestStatus.REQUESTED:
+    case LOCAL_SERVICE_REQUEST_STATUS.REQUESTED:
       return `${USER_STATUS_PREFIX}requested`;
-    case LocalServiceRequestStatus.MERCHANT_REVIEW:
+    case LOCAL_SERVICE_REQUEST_STATUS.MERCHANT_REVIEW:
       return `${USER_STATUS_PREFIX}merchantReview`;
-    case LocalServiceRequestStatus.CONFIRMED:
+    case LOCAL_SERVICE_REQUEST_STATUS.CONFIRMED:
       return `${USER_STATUS_PREFIX}confirmed`;
-    case LocalServiceRequestStatus.IN_PROGRESS:
+    case LOCAL_SERVICE_REQUEST_STATUS.IN_PROGRESS:
       return `${USER_STATUS_PREFIX}inProgress`;
-    case LocalServiceRequestStatus.COMPLETED:
+    case LOCAL_SERVICE_REQUEST_STATUS.COMPLETED:
       return `${USER_STATUS_PREFIX}completed`;
-    case LocalServiceRequestStatus.REJECTED:
+    case LOCAL_SERVICE_REQUEST_STATUS.REJECTED:
       return `${USER_STATUS_PREFIX}rejected`;
-    case LocalServiceRequestStatus.USER_CANCELLED:
+    case LOCAL_SERVICE_REQUEST_STATUS.USER_CANCELLED:
       return `${USER_STATUS_PREFIX}userCancelled`;
-    case LocalServiceRequestStatus.OPS_CANCELLED:
+    case LOCAL_SERVICE_REQUEST_STATUS.OPS_CANCELLED:
       return `${USER_STATUS_PREFIX}opsCancelled`;
-    case LocalServiceRequestStatus.EXPIRED:
+    case LOCAL_SERVICE_REQUEST_STATUS.EXPIRED:
       return `${USER_STATUS_PREFIX}expired`;
     default:
       return `${USER_STATUS_PREFIX}unknown`;
@@ -184,12 +186,12 @@ export function localUserWalletBadgeI18nKey(
   walletPhase: string
 ): { key: string; options?: Record<string, unknown> } {
   if (
-    walletMode === LocalWalletMode.REQUEST_ONLY_NO_CHARGE &&
-    walletPhase === LocalWalletPhase.NONE
+    walletMode === LOCAL_WALLET_MODE.REQUEST_ONLY_NO_CHARGE &&
+    walletPhase === LOCAL_WALLET_PHASE.NONE
   ) {
     return { key: `${USER_WALLET_PREFIX}requestOnlyNoCharge` };
   }
-  if (walletPhase === LocalWalletPhase.NONE) {
+  if (walletPhase === LOCAL_WALLET_PHASE.NONE) {
     return { key: `${USER_WALLET_PREFIX}phaseNone` };
   }
   return { key: `${USER_WALLET_PREFIX}phaseOther`, options: { phase: walletPhase } };
@@ -197,12 +199,12 @@ export function localUserWalletBadgeI18nKey(
 
 export function localUserWalletBadgeLabel(walletMode: string, walletPhase: string): string {
   if (
-    walletMode === LocalWalletMode.REQUEST_ONLY_NO_CHARGE &&
-    walletPhase === LocalWalletPhase.NONE
+    walletMode === LOCAL_WALLET_MODE.REQUEST_ONLY_NO_CHARGE &&
+    walletPhase === LOCAL_WALLET_PHASE.NONE
   ) {
     return 'No payment has been captured · Request-only / no-charge · walletPhase NONE';
   }
-  if (walletPhase === LocalWalletPhase.NONE) {
+  if (walletPhase === LOCAL_WALLET_PHASE.NONE) {
     return 'No payment has been captured · walletPhase NONE';
   }
   return `walletPhase ${walletPhase}`;
@@ -212,22 +214,22 @@ export function deriveLocalUserRequestActions(
   row: Pick<LocalUserRequestListItem, 'status' | 'walletMode' | 'walletPhase'>
 ): LocalUserRequestActions {
   const eligibility = evaluateLocalUserRequestCancelEligibility({
-    status: row.status as LocalServiceRequestStatus,
-    walletMode: row.walletMode as LocalWalletMode,
-    walletPhase: row.walletPhase as LocalWalletPhase,
+    status: row.status as LocalServiceRequestStatusClient,
+    walletMode: row.walletMode as LocalWalletModeClient,
+    walletPhase: row.walletPhase as LocalWalletPhaseClient,
   });
   return { canCancel: eligibility.kind === 'cancel' };
 }
 
 export function shouldShowLocalUserReviewPendingNote(status: string): boolean {
   return (
-    status === LocalServiceRequestStatus.REQUESTED ||
-    status === LocalServiceRequestStatus.MERCHANT_REVIEW
+    status === LOCAL_SERVICE_REQUEST_STATUS.REQUESTED ||
+    status === LOCAL_SERVICE_REQUEST_STATUS.MERCHANT_REVIEW
   );
 }
 
 export function shouldShowLocalUserConfirmedNote(status: string): boolean {
-  return status === LocalServiceRequestStatus.CONFIRMED;
+  return status === LOCAL_SERVICE_REQUEST_STATUS.CONFIRMED;
 }
 
 export function shouldShowLocalUserCancelHint(actions: LocalUserRequestActions): boolean {
@@ -265,25 +267,25 @@ export function filterLocalUserRequests(
   if (chip === 'pending') {
     return requests.filter(
       (r) =>
-        r.status === LocalServiceRequestStatus.REQUESTED ||
-        r.status === LocalServiceRequestStatus.MERCHANT_REVIEW
+        r.status === LOCAL_SERVICE_REQUEST_STATUS.REQUESTED ||
+        r.status === LOCAL_SERVICE_REQUEST_STATUS.MERCHANT_REVIEW
     );
   }
   if (chip === 'confirmed') {
-    return requests.filter((r) => r.status === LocalServiceRequestStatus.CONFIRMED);
+    return requests.filter((r) => r.status === LOCAL_SERVICE_REQUEST_STATUS.CONFIRMED);
   }
   if (chip === 'active') {
-    return requests.filter((r) => r.status === LocalServiceRequestStatus.IN_PROGRESS);
+    return requests.filter((r) => r.status === LOCAL_SERVICE_REQUEST_STATUS.IN_PROGRESS);
   }
   if (chip === 'completed') {
-    return requests.filter((r) => r.status === LocalServiceRequestStatus.COMPLETED);
+    return requests.filter((r) => r.status === LOCAL_SERVICE_REQUEST_STATUS.COMPLETED);
   }
   return requests.filter(
     (r) =>
-      r.status === LocalServiceRequestStatus.REJECTED ||
-      r.status === LocalServiceRequestStatus.USER_CANCELLED ||
-      r.status === LocalServiceRequestStatus.OPS_CANCELLED ||
-      r.status === LocalServiceRequestStatus.EXPIRED
+      r.status === LOCAL_SERVICE_REQUEST_STATUS.REJECTED ||
+      r.status === LOCAL_SERVICE_REQUEST_STATUS.USER_CANCELLED ||
+      r.status === LOCAL_SERVICE_REQUEST_STATUS.OPS_CANCELLED ||
+      r.status === LOCAL_SERVICE_REQUEST_STATUS.EXPIRED
   );
 }
 

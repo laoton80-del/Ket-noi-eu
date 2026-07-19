@@ -1,8 +1,11 @@
 import {
-  LocalServiceRequestStatus,
-  LocalWalletMode,
-  LocalWalletPhase,
-} from '@prisma/client';
+  LOCAL_SERVICE_REQUEST_STATUS,
+  LOCAL_WALLET_MODE,
+  LOCAL_WALLET_PHASE,
+  type LocalServiceRequestStatusClient,
+  type LocalWalletModeClient,
+  type LocalWalletPhaseClient,
+} from '../../domain/local/localServiceRequestClientContract';
 
 export type LocalUserRequestCancelRejectCode =
   | 'invalid_status'
@@ -19,14 +22,14 @@ export type LocalUserRequestCancelEligibility =
     }>;
 
 export type LocalUserRequestCancelEligibilityRow = Readonly<{
-  status: LocalServiceRequestStatus;
-  walletMode: LocalWalletMode;
-  walletPhase: LocalWalletPhase;
+  status: LocalServiceRequestStatusClient;
+  walletMode: LocalWalletModeClient;
+  walletPhase: LocalWalletPhaseClient;
 }>;
 
-const CANCELLABLE_STATUSES: ReadonlySet<LocalServiceRequestStatus> = new Set([
-  LocalServiceRequestStatus.REQUESTED,
-  LocalServiceRequestStatus.MERCHANT_REVIEW,
+const CANCELLABLE_STATUSES: ReadonlySet<LocalServiceRequestStatusClient> = new Set([
+  LOCAL_SERVICE_REQUEST_STATUS.REQUESTED,
+  LOCAL_SERVICE_REQUEST_STATUS.MERCHANT_REVIEW,
 ]);
 
 /**
@@ -35,7 +38,7 @@ const CANCELLABLE_STATUSES: ReadonlySet<LocalServiceRequestStatus> = new Set([
 export function evaluateLocalUserRequestCancelEligibility(
   row: LocalUserRequestCancelEligibilityRow
 ): LocalUserRequestCancelEligibility {
-  if (row.walletMode !== LocalWalletMode.REQUEST_ONLY_NO_CHARGE) {
+  if (row.walletMode !== LOCAL_WALLET_MODE.REQUEST_ONLY_NO_CHARGE) {
     return {
       kind: 'reject',
       code: 'invalid_wallet_mode',
@@ -43,7 +46,7 @@ export function evaluateLocalUserRequestCancelEligibility(
     };
   }
 
-  if (row.walletPhase !== LocalWalletPhase.NONE) {
+  if (row.walletPhase !== LOCAL_WALLET_PHASE.NONE) {
     return {
       kind: 'reject',
       code: 'invalid_wallet_phase',
@@ -51,7 +54,7 @@ export function evaluateLocalUserRequestCancelEligibility(
     };
   }
 
-  if (row.status === LocalServiceRequestStatus.USER_CANCELLED) {
+  if (row.status === LOCAL_SERVICE_REQUEST_STATUS.USER_CANCELLED) {
     return { kind: 'idempotent' };
   }
 

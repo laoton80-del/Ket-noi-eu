@@ -1,16 +1,16 @@
 import {
-  LocalServiceRequestStatus,
-  LocalWalletMode,
-  LocalWalletPhase,
-} from '@prisma/client';
+  type LocalServiceRequestStatusClient,
+  type LocalWalletModeClient,
+  type LocalWalletPhaseClient,
+} from '../../domain/local/localServiceRequestClientContract';
 
 import { evaluateLocalMerchantRequestConfirmEligibility } from './localMerchantRequestConfirmEligibility';
 import { evaluateLocalMerchantRequestRejectEligibility } from './localMerchantRequestRejectEligibility';
 
 export type LocalMerchantInboxRow = Readonly<{
-  status: LocalServiceRequestStatus;
-  walletMode: LocalWalletMode;
-  walletPhase: LocalWalletPhase;
+  status: LocalServiceRequestStatusClient;
+  walletMode: LocalWalletModeClient;
+  walletPhase: LocalWalletPhaseClient;
 }>;
 
 export type LocalMerchantInboxActions = Readonly<{

@@ -677,7 +677,7 @@ export function LocalScreen() {
       }
       const jwt = await getRestApiJwt();
       if (!jwt?.trim()) {
-        Alert.alert('AI Trạng Sư', 'Cần JWT REST (đăng nhập API hoặc EXPO_PUBLIC_DEV_REST_JWT).');
+        Alert.alert('AI Trạng Sư', 'Cần JWT REST (đăng nhập API).');
         return;
       }
 

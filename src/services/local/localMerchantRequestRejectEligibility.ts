@@ -1,8 +1,11 @@
 import {
-  LocalServiceRequestStatus,
-  LocalWalletMode,
-  LocalWalletPhase,
-} from '@prisma/client';
+  LOCAL_SERVICE_REQUEST_STATUS,
+  LOCAL_WALLET_MODE,
+  LOCAL_WALLET_PHASE,
+  type LocalServiceRequestStatusClient,
+  type LocalWalletModeClient,
+  type LocalWalletPhaseClient,
+} from '../../domain/local/localServiceRequestClientContract';
 
 export type LocalMerchantRequestRejectRejectCode =
   | 'invalid_status'
@@ -19,14 +22,14 @@ export type LocalMerchantRequestRejectEligibility =
     }>;
 
 export type LocalMerchantRequestRejectEligibilityRow = Readonly<{
-  status: LocalServiceRequestStatus;
-  walletMode: LocalWalletMode;
-  walletPhase: LocalWalletPhase;
+  status: LocalServiceRequestStatusClient;
+  walletMode: LocalWalletModeClient;
+  walletPhase: LocalWalletPhaseClient;
 }>;
 
-const REJECTABLE_STATUSES: ReadonlySet<LocalServiceRequestStatus> = new Set([
-  LocalServiceRequestStatus.REQUESTED,
-  LocalServiceRequestStatus.MERCHANT_REVIEW,
+const REJECTABLE_STATUSES: ReadonlySet<LocalServiceRequestStatusClient> = new Set([
+  LOCAL_SERVICE_REQUEST_STATUS.REQUESTED,
+  LOCAL_SERVICE_REQUEST_STATUS.MERCHANT_REVIEW,
 ]);
 
 /**
@@ -35,7 +38,7 @@ const REJECTABLE_STATUSES: ReadonlySet<LocalServiceRequestStatus> = new Set([
 export function evaluateLocalMerchantRequestRejectEligibility(
   row: LocalMerchantRequestRejectEligibilityRow
 ): LocalMerchantRequestRejectEligibility {
-  if (row.walletMode !== LocalWalletMode.REQUEST_ONLY_NO_CHARGE) {
+  if (row.walletMode !== LOCAL_WALLET_MODE.REQUEST_ONLY_NO_CHARGE) {
     return {
       kind: 'reject_ineligible',
       code: 'invalid_wallet_mode',
@@ -43,7 +46,7 @@ export function evaluateLocalMerchantRequestRejectEligibility(
     };
   }
 
-  if (row.walletPhase !== LocalWalletPhase.NONE) {
+  if (row.walletPhase !== LOCAL_WALLET_PHASE.NONE) {
     return {
       kind: 'reject_ineligible',
       code: 'invalid_wallet_phase',
@@ -51,7 +54,7 @@ export function evaluateLocalMerchantRequestRejectEligibility(
     };
   }
 
-  if (row.status === LocalServiceRequestStatus.REJECTED) {
+  if (row.status === LOCAL_SERVICE_REQUEST_STATUS.REJECTED) {
     return { kind: 'idempotent' };
   }
 

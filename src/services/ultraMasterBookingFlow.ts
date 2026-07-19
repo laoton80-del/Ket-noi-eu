@@ -18,7 +18,7 @@ export async function runUltraMasterBookingWithAlerts(featureLabel: string): Pro
   if (!jwt) {
     Alert.alert(
       featureLabel,
-      'Chưa có JWT REST. Đăng nhập API (loginRestApi) hoặc EXPO_PUBLIC_DEV_REST_JWT khi dev.'
+      'Chưa có JWT REST. Đăng nhập API (loginRestApi).'
     );
     return;
   }
