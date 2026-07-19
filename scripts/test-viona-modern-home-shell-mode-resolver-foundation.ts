@@ -79,8 +79,9 @@ const cases: Case[] = [
   { label: 'web B2C Home 769 → desktop', platform: 'web', role: 'B2C', width: 769, mode: 'desktop', desktop: true },
   { label: 'web B2C Home 1024 → desktop', platform: 'web', role: 'B2C', width: 1024, mode: 'desktop', desktop: true },
   { label: 'web B2C Home 1366 → desktop', platform: 'web', role: 'B2C', width: 1366, mode: 'desktop', desktop: true },
-  { label: 'ios B2C Home 390 → legacy', platform: 'ios', role: 'B2C', width: 390, mode: 'legacy', desktop: false },
-  { label: 'android B2C Home 390 → legacy', platform: 'android', role: 'B2C', width: 390, mode: 'legacy', desktop: false },
+  // Phase C: native B2C Home is adaptive (desktop helper remains false — web-only desktop).
+  { label: 'ios B2C Home 390 → mobile (Phase C)', platform: 'ios', role: 'B2C', width: 390, mode: 'mobile', desktop: false },
+  { label: 'android B2C Home 390 → mobile (Phase C)', platform: 'android', role: 'B2C', width: 390, mode: 'mobile', desktop: false },
   { label: 'web B2B 1366 → legacy', platform: 'web', role: 'B2B', width: 1366, route: MAIN_TAB.B2B.merchant, mode: 'legacy', desktop: false },
   { label: 'web Broker 1366 → legacy', platform: 'web', role: 'BROKER', width: 1366, route: MAIN_TAB.BROKER.radar, mode: 'legacy', desktop: false },
   { label: 'web Admin 1366 → legacy', platform: 'web', role: 'ADMIN', width: 1366, route: MAIN_TAB.ADMIN.deck, mode: 'legacy', desktop: false },

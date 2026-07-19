@@ -173,7 +173,7 @@ import {
   readFocusedTabRouteFromRootState,
 } from '../navigation/fashionHomeDesktopShell';
 import {
-  isFashionHomeAdaptiveWebComposition,
+  isFashionHomeAdaptiveComposition,
   resolveFashionHomeShellMode,
   type FashionHomeShellMode,
 } from '../navigation/fashionHomeShellMode';
@@ -654,8 +654,8 @@ export function HomeScreen() {
       }),
     [currentActiveRole, focusedTabRoute, width]
   );
-  /** Phase B: adaptive Fashion-Tech on mobile/tablet web only — desktop predicate stays false. */
-  const fashionHomeAdaptiveWebActive = isFashionHomeAdaptiveWebComposition(fashionHomeShellMode);
+  /** Phase B/C: adaptive Fashion-Tech on mobile/tablet (web + native) — desktop predicate stays false. */
+  const fashionHomeAdaptiveActive = isFashionHomeAdaptiveComposition(fashionHomeShellMode);
 
   const [daylightBoost, setDaylightBoost] = useVionaHomeDaylightBoost();
   /** Home fashion desktop always luminous; toggle persists global preference for Local/other shells. */
@@ -2315,10 +2315,10 @@ export function HomeScreen() {
           <View
             style={[styles.ftHeroBleed, { marginHorizontal: -layout.pad }]}
             testID={
-              fashionHomeAdaptiveWebActive ? 'viona-fashion-home-adaptive-root' : 'viona-home-legacy-hybrid-root'
+              fashionHomeAdaptiveActive ? 'viona-fashion-home-adaptive-root' : 'viona-home-legacy-hybrid-root'
             }
           >
-            {fashionHomeAdaptiveWebActive ? (
+            {fashionHomeAdaptiveActive ? (
               <View style={{ paddingHorizontal: layout.pad, marginBottom: vionaTokens.spacing[12] }}>
                 <VionaFashionHomeAdaptiveComposition
                   mode={fashionHomeShellMode === 'tablet' ? 'tablet' : 'mobile'}
@@ -2340,7 +2340,7 @@ export function HomeScreen() {
               style={[
                 styles.ftHero,
                 {
-                  paddingVertical: fashionHomeAdaptiveWebActive
+                  paddingVertical: fashionHomeAdaptiveActive
                     ? vionaTokens.spacing[12]
                     : ftHeroPaddingV,
                   paddingHorizontal:
@@ -2348,7 +2348,7 @@ export function HomeScreen() {
                 },
               ]}
             >
-              {!fashionHomeAdaptiveWebActive ? (
+              {!fashionHomeAdaptiveActive ? (
               <View
                 style={[
                   styles.ftHeroMain,
