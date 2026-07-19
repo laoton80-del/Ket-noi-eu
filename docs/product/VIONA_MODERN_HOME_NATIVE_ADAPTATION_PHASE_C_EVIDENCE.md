@@ -2,13 +2,16 @@
 
 Operator authorization: `APPROVE_VIONA_MODERN_HOME_NATIVE_ADAPTATION_IMPLEMENTATION`
 
-Packet classification (on feature branch — **not** closed on master until merge + post-merge verify):  
-`READY_FOR_VIONA_MODERN_HOME_NATIVE_ADAPTATION_PR_REVIEW`
+Packet classification (canonical, post-merge):  
+`VIONA_MODERN_HOME_NATIVE_ADAPTATION_VERIFIED_ON_MASTER`
+
+Qualifiers: native source implementation merged and verified; Android emulator **PASS** (**NOT PHYSICAL DEVICE PASS**); iOS simulator **not run** (`IOS_SIMULATOR_NOT_RUN_ENVIRONMENT_UNAVAILABLE`); physical-device Wave 2 **NOT RUN**; deployment **none**; Phase D **NOT AUTHORIZED**.
 
 ## Markers
 
 ```text
 VIONA_MODERN_HOME_NATIVE_ADAPTATION_PHASE_C
+VIONA_MODERN_HOME_NATIVE_ADAPTATION_VERIFIED_ON_MASTER
 SHARED_ADAPTIVE_NATIVE_REUSE
 NATIVE_FASHION_HOME_MOBILE_TABLET
 WEB_PHASE_B_PRESERVED
@@ -24,12 +27,13 @@ PACK40DR_PRESERVED
 PACK40S_NOT_AUTHORIZED
 ```
 
-## 1. Baseline
+## 1. Baseline (historical — feature-branch era)
 
 | Field | Value |
 |---|---|
 | origin/master at pack start | `1c9acc3c9d2520fa92f7775f9296de4e29cd392c` (PR #392–#400) |
-| Branch | `feat/viona-modern-home-native-adaptation-phase-c` |
+| Historical implementation branch | `feat/viona-modern-home-native-adaptation-phase-c` |
+| Historical feature HEAD (pre-squash) | `4d96feffde31684c54f4ffe98a90ef20da04a05a` |
 | Phase A | `VIONA_MODERN_HOME_SHELL_MODE_RESOLVER_FOUNDATION_CLOSED_GREEN_VERIFIED_ON_MASTER` |
 | Phase B | `VIONA_MODERN_HOME_MOBILE_WEB_ACTIVATION_CLOSED_GREEN_VERIFIED_ON_MASTER` |
 | Architecture | `SHARED_ADAPTIVE_NATIVE_REUSE` |
@@ -226,6 +230,36 @@ Centralized resolver: revert native platforms from adaptive eligibility → nati
 
 **NOT AUTHORIZED.**
 
-## 22. Final classification
+## 22. Final classification (historical — feature-branch era)
 
+Historical pre-merge packet classification (superseded by §23):  
 `READY_FOR_VIONA_MODERN_HOME_NATIVE_ADAPTATION_PR_REVIEW`
+
+## 23. Post-merge canonical marker
+
+Operator authorization (docs sync): `APPROVE_VIONA_MODERN_HOME_NATIVE_ADAPTATION_POST_MERGE_CANONICAL_SYNC`
+
+| Field | Value |
+|---|---|
+| PR #401 | **MERGED** into `master` |
+| Merge commit (squash) | `fba383fb17101c1233c085213915c401d0f38cf4` |
+| Merged at | `2026-07-19T00:31:32Z` |
+| Historical feature HEAD (pre-squash) | `4d96feffde31684c54f4ffe98a90ef20da04a05a` on `feat/viona-modern-home-native-adaptation-phase-c` |
+| origin/master verification baseline | contains PR #396–#401; Phase-C source at merge `fba383f` |
+| Canonical classification | `VIONA_MODERN_HOME_NATIVE_ADAPTATION_VERIFIED_ON_MASTER` |
+| Native render matrix | eligible iOS/Android B2C Home → adaptive Fashion-Tech (`mobile`/`tablet`); **native never desktop** |
+| Resolver | centralized `resolveFashionHomeShellMode`; `isFashionHomeDesktopShell` ≡ `mode === 'desktop'` |
+| Single-tree | exactly one of legacy / adaptive / desktop mounts |
+| Exact-one shell ownership | SOS=1, Profile/Account=1, Language=1, canonical SOS modal=1, bottom tab shell=1 |
+| Legacy capability parity | six universes, proactive, trust/safety, Care, Dashboard accordion, tools, wallet/account, AI/Leona, tourist-survival, Lite/Beta — preserved |
+| Web Phase B | 390/430 mobile + 768 tablet adaptive **preserved** |
+| Desktop | ≥769 Fashion-Tech **preserved** |
+| CharityWidget boundary | worklet/native compatibility only (`runOnJS(updateDisplayAmount)`); no CTA/nav/network/business-domain change |
+| Assets | current-master constellation only |
+| Android emulator | **PASS** — **NOT PHYSICAL DEVICE PASS** |
+| iOS simulator | `IOS_SIMULATOR_NOT_RUN_ENVIRONMENT_UNAVAILABLE` |
+| Physical Wave 2 | **NOT RUN** |
+| Phase D / physical-device operator run | **NOT AUTHORIZED** |
+| Deployment / production validation | **none** |
+| Pack40DR | preserved |
+| Pack40S | **NOT AUTHORIZED** |

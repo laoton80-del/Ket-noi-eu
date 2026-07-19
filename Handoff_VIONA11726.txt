@@ -1476,25 +1476,30 @@ Phase B (mobile-web activation): MERGED + VERIFIED ON MASTER
   Adaptive web: VionaFashionHomeAdaptiveComposition for B2C Home mobile/tablet
   Render web: 390/430 mobile adaptive; 768 tablet adaptive; >=769 desktop Fashion-Tech preserved
   Evidence: docs/product/VIONA_MODERN_HOME_MOBILE_WEB_ACTIVATION_PHASE_B_EVIDENCE.md
-Phase C (native adaptation): ON BRANCH — NOT CLOSED ON MASTER
-  Operator phrase: APPROVE_VIONA_MODERN_HOME_NATIVE_ADAPTATION_IMPLEMENTATION
-  Branch: feat/viona-modern-home-native-adaptation-phase-c
-  Baseline master: 1c9acc3c9d2520fa92f7775f9296de4e29cd392c
+Phase C (native adaptation): MERGED + VERIFIED ON MASTER
+  Classification: VIONA_MODERN_HOME_NATIVE_ADAPTATION_VERIFIED_ON_MASTER
+  Operator phrase (historical implementation): APPROVE_VIONA_MODERN_HOME_NATIVE_ADAPTATION_IMPLEMENTATION
+  PR #401: MERGED squash fba383fb17101c1233c085213915c401d0f38cf4 @ 2026-07-19T00:31:32Z into master
+  Historical implementation branch (pre-squash): feat/viona-modern-home-native-adaptation-phase-c @ 4d96feffde31684c54f4ffe98a90ef20da04a05a
+  Baseline master at Phase-C start: 1c9acc3c9d2520fa92f7775f9296de4e29cd392c
   Architecture: SHARED_ADAPTIVE_NATIVE_REUSE
-  Native iOS/Android eligible B2C Home: mobile/tablet adaptive (never desktop)
-  Web Phase B + desktop Fashion-Tech: preserved
-  Legacy native fallback: retained (centralized resolver rollback)
-  Exact-one hosts: SOS / Profile / Language / canonical SOS modal (shell)
-  MainTabNavigator untouched; SOS Phase 1 preserved; PR #395 preserved
-  Android emulator: PASS (Small_Phone / com.ketnoiglobal.app) — not physical PASS
+  Resolver: resolveFashionHomeShellMode (centralized); desktop helper = mode === desktop
+  Native iOS/Android eligible B2C Home: mobile/tablet adaptive Fashion-Tech (never desktop)
+  Web Phase B: 390/430 mobile adaptive; 768 tablet adaptive — preserved
+  Desktop web >=769: Fashion-Tech preserved
+  Single Home composition at a time; legacy native fallback retained
+  Exact-one hosts: SOS / Profile / Language / canonical SOS modal / bottom tabs (shell)
+  MainTabNavigator untouched; SOS Phase 1 preserved; PR #395 Profile/Language preserved
+  CharityWidget: worklet/native compatibility only (runOnJS(updateDisplayAmount)); no CTA/nav/network change
+  Assets: current-master constellation only
+  Android emulator: PASS (Small_Phone / com.ketnoiglobal.app) — NOT PHYSICAL DEVICE PASS
   iOS simulator: IOS_SIMULATOR_NOT_RUN_ENVIRONMENT_UNAVAILABLE
   Physical Wave 2: NOT RUN
-  Phase D: NOT AUTHORIZED
+  Phase D / physical-device operator run: NOT AUTHORIZED
+  No deployment / production validation
   Pack40DR wait-state preserved; Pack40S unauthorized
   Evidence: docs/product/VIONA_MODERN_HOME_NATIVE_ADAPTATION_PHASE_C_EVIDENCE.md
   Screens: docs/design/evidence/viona-modern-home-native-adaptation-phase-c/
-  Classification (branch): READY_FOR_VIONA_MODERN_HOME_NATIVE_ADAPTATION_PR_REVIEW
-  Do not mark Phase C closed on master before merge + post-merge verify
 
 === PACK40DR2 DORMANT RECOVERY SERVICES ===
 Operator phrase: APPROVE_PACK40DR2_DORMANT_RECOVERY_SERVICES
