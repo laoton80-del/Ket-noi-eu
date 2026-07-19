@@ -1505,8 +1505,24 @@ Phase C (native adaptation): MERGED + VERIFIED ON MASTER
   TERMINAL_CANONICAL_SYNC_RULE:
     The final citation-addendum PR is closed through external Git/GitHub merge
     verification and does not require a further self-referential docs PR.
-    (This citation-addendum branch is not merged until external merge verification;
-     do not mark it merged inside the pre-merge diff.)
+  Phase C post-merge verify: CLOSED GREEN VERIFIED ON MASTER
+    (NO_FURTHER_SELF_REFERENTIAL_DOCS_PR_REQUIRED)
+
+=== MODERN HOME ANDROID PHYSICAL CONFIDENCE PHASE D1 ===
+Operator phrase: APPROVE_VIONA_MODERN_HOME_ANDROID_PHYSICAL_DEVICE_CONFIDENCE_RUN_PHASE_D1
+Master baseline: cb3b54dfcee6e9663af1f4078284cb7de4a473b8 (PR #396–#403)
+Branch: chore/viona-modern-home-android-physical-confidence-phase-d1
+Physical device gate: BLOCKED_NO_STABLE_PHYSICAL_ANDROID_DEVICE
+  adb devices -l: only emulator-5554 (sdk_gphone16k_x86_64) — rejected as substitute
+  Physical handset: NONE
+  Redacted serial: N/A (no physical device)
+Build identity / Home / SOS / Profile physical checks: NOT RUN
+IOS_PHYSICAL_DEVICE_NOT_RUN
+No source change; no deployment; no emulator substitution claimed as physical PASS
+Phase A/B/C closed-green preserved
+Pack40DR wait-state preserved; Pack40S unauthorized
+Evidence: docs/product/VIONA_MODERN_HOME_ANDROID_PHYSICAL_DEVICE_CONFIDENCE_PHASE_D1_EVIDENCE.md
+Classification: BLOCKED_NO_STABLE_PHYSICAL_ANDROID_DEVICE
 
 === PACK40DR2 DORMANT RECOVERY SERVICES ===
 Operator phrase: APPROVE_PACK40DR2_DORMANT_RECOVERY_SERVICES
