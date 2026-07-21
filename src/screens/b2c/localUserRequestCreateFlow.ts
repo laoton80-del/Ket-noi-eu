@@ -11,6 +11,10 @@ import {
   type LocalUserRequestCreateResult,
 } from '../../domain/local/localServiceRequestClientContract';
 import type { ApiRequestResult } from '../../services/apiClient';
+import {
+  isLocalCreateBusinessSelected,
+  type LocalCreateBusinessOption,
+} from '../../services/local/localCreateBusinessOptionModel';
 
 export type LocalCreateUiState =
   | 'IDLE'
@@ -54,11 +58,14 @@ export function defaultLocalCreateFormValues(): LocalCreateFormValues {
 }
 
 export function validateLocalCreateForm(
-  form: LocalCreateFormValues
+  form: LocalCreateFormValues,
+  options?: readonly LocalCreateBusinessOption[]
 ): LocalCreateFieldErrors | null {
   const errors: { businessId?: string; serviceType?: string; title?: string } = {};
   if (form.businessId.trim().length === 0) {
     errors.businessId = 'required';
+  } else if (options && !isLocalCreateBusinessSelected(form.businessId, options)) {
+    errors.businessId = 'unavailable';
   }
   if (!isLocalServiceTypeClient(form.serviceType)) {
     errors.serviceType = 'required';
@@ -97,12 +104,13 @@ export function assertLocalCreateBodySafe(body: LocalUserRequestCreateBody): voi
 
 export function canSubmitLocalCreate(
   uiState: LocalCreateUiState,
-  form: LocalCreateFormValues
+  form: LocalCreateFormValues,
+  options?: readonly LocalCreateBusinessOption[]
 ): boolean {
   if (uiState === 'SUBMITTING') return false;
   if (uiState === 'CREATED_SUCCESS') return false;
   if (uiState === 'NETWORK_RESULT_UNKNOWN') return false;
-  return validateLocalCreateForm(form) === null;
+  return validateLocalCreateForm(form, options) === null;
 }
 
 export function fieldsEditableInLocalCreateState(uiState: LocalCreateUiState): boolean {
@@ -133,7 +141,10 @@ export type LocalCreateFeedbackKey =
   | 'networkUnknown'
   | 'serverError'
   | 'success'
-  | 'refreshWarning';
+  | 'refreshWarning'
+  | 'providerUnavailable'
+  | 'providersEmpty'
+  | 'providersLoadError';
 
 export function feedbackKeyForCreateState(uiState: LocalCreateUiState): LocalCreateFeedbackKey | null {
   switch (uiState) {
@@ -177,4 +188,62 @@ export function findLikelyCreatedRequestId(input: Readonly<{
     (row) => row.title === title && row.businessId === businessId
   );
   return match?.id ?? null;
+}
+
+export type LocalCreateSubmitDeps = Readonly<{
+  getJwt: () => Promise<string | null>;
+  createRequest: (
+    body: LocalUserRequestCreateBody
+  ) => Promise<ApiRequestResult<LocalUserRequestCreateResult>>;
+}>;
+
+export type LocalCreateSubmitResult = Readonly<{
+  uiState: LocalCreateUiState;
+  created: LocalUserRequestCreateResult | null;
+  bodyPosted: LocalUserRequestCreateBody | null;
+}>;
+
+/**
+ * Single-flight create runner.
+ * Sets `inFlight.current = true` synchronously BEFORE any await (JWT / POST).
+ */
+export async function runLocalCreateSubmit(input: Readonly<{
+  form: LocalCreateFormValues;
+  options: readonly LocalCreateBusinessOption[];
+  inFlight: { current: boolean };
+  deps: LocalCreateSubmitDeps;
+}>): Promise<LocalCreateSubmitResult> {
+  if (input.inFlight.current) {
+    return { uiState: 'SUBMITTING', created: null, bodyPosted: null };
+  }
+
+  const fieldErrors = validateLocalCreateForm(input.form, input.options);
+  if (fieldErrors) {
+    return { uiState: 'VALIDATION_ERROR', created: null, bodyPosted: null };
+  }
+
+  input.inFlight.current = true;
+
+  try {
+    const jwt = await input.deps.getJwt();
+    if (!jwt) {
+      return { uiState: 'AUTH_REQUIRED_OR_EXPIRED', created: null, bodyPosted: null };
+    }
+
+    if (!isLocalCreateBusinessSelected(input.form.businessId, input.options)) {
+      return { uiState: 'VALIDATION_ERROR', created: null, bodyPosted: null };
+    }
+
+    const body = buildLocalCreateRequestBody(input.form);
+    assertLocalCreateBodySafe(body);
+
+    const result = await input.deps.createRequest(body);
+    const uiState = mapCreateApiResultToUiState(result);
+    if (uiState === 'CREATED_SUCCESS' && result.ok) {
+      return { uiState, created: result.data, bodyPosted: body };
+    }
+    return { uiState, created: null, bodyPosted: body };
+  } finally {
+    input.inFlight.current = false;
+  }
 }
