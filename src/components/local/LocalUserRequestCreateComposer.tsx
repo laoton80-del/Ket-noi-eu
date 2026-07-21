@@ -21,10 +21,11 @@ import { createUserLocalServiceRequest } from '../../services/localUserRequestAp
 import { getRestApiJwt } from '../../services/apiClient';
 import {
   findLocalCreateBusinessOption,
-  loadLocalCreateBusinessOptionsFromTourismDiscover,
-  mergeHistoryBusinessHints,
+  loadLocalCreateBusinessOptions,
+  localCreateProviderSelectionEnabled,
   type LocalCreateBusinessOption,
   type LocalCreateBusinessSourceLoader,
+  type LocalCreateProviderSourceStatus,
 } from '../../services/local/localCreateBusinessSource';
 import {
   canSubmitLocalCreate,
@@ -48,7 +49,10 @@ export type LocalKnownBusinessOption = Readonly<{
 }>;
 
 export type LocalUserRequestCreateComposerProps = Readonly<{
-  /** History hints only — never the sole first-time source. */
+  /**
+   * Retained for host compatibility. Path 2 does NOT use history as a provider
+   * authority (not sole first-time source; not a substitute for Local eligibility).
+   */
   knownBusinesses: readonly LocalKnownBusinessOption[];
   t: (key: string, options?: Record<string, unknown>) => string;
   onCreated: (result: LocalUserRequestCreateResult) => Promise<void>;
@@ -60,12 +64,12 @@ export type LocalUserRequestCreateComposerProps = Readonly<{
 }>;
 
 export function LocalUserRequestCreateComposer({
-  knownBusinesses,
+  knownBusinesses: _knownBusinesses,
   t,
   onCreated,
   onRefreshListForUnknownResult,
   onAuthRequired,
-  loadBusinessOptions = loadLocalCreateBusinessOptionsFromTourismDiscover,
+  loadBusinessOptions = loadLocalCreateBusinessOptions,
   submitDeps,
 }: LocalUserRequestCreateComposerProps): ReactElement {
   const [open, setOpen] = useState(false);
@@ -74,8 +78,8 @@ export function LocalUserRequestCreateComposer({
   const [refreshWarning, setRefreshWarning] = useState(false);
   const [createdId, setCreatedId] = useState<string | null>(null);
   const [options, setOptions] = useState<readonly LocalCreateBusinessOption[]>([]);
-  const [optionsLoading, setOptionsLoading] = useState(false);
-  const [optionsError, setOptionsError] = useState(false);
+  const [providerStatus, setProviderStatus] =
+    useState<LocalCreateProviderSourceStatus>('PROVIDER_SELECTION_UNAVAILABLE');
   const inFlightRef = useRef(false);
   const mountedRef = useRef(true);
 
@@ -86,8 +90,10 @@ export function LocalUserRequestCreateComposer({
     };
   }, []);
 
-  const editable = fieldsEditableInLocalCreateState(uiState);
-  const canSubmit = canSubmitLocalCreate(uiState, form, options);
+  const selectionEnabled = localCreateProviderSelectionEnabled(providerStatus, options);
+  const editable = fieldsEditableInLocalCreateState(uiState) && selectionEnabled;
+  const canSubmit =
+    selectionEnabled && canSubmitLocalCreate(uiState, form, options);
   const feedbackKey = feedbackKeyForCreateState(uiState);
   const selected = findLocalCreateBusinessOption(form.businessId, options);
 
@@ -95,10 +101,13 @@ export function LocalUserRequestCreateComposer({
     if (refreshWarning) {
       return t('local.userRequestStatus.create.refreshWarning');
     }
-    if (optionsError) {
+    if (providerStatus === 'PROVIDER_SELECTION_UNAVAILABLE') {
+      return t('local.userRequestStatus.create.feedback.providerSelectionUnavailable');
+    }
+    if (providerStatus === 'PROVIDERS_LOAD_ERROR') {
       return t('local.userRequestStatus.create.feedback.providersLoadError');
     }
-    if (!optionsLoading && open && options.length === 0) {
+    if (providerStatus === 'PROVIDERS_EMPTY') {
       return t('local.userRequestStatus.create.feedback.providersEmpty');
     }
     if (feedbackKey === 'validation' && form.businessId && !selected) {
@@ -109,10 +118,7 @@ export function LocalUserRequestCreateComposer({
   }, [
     feedbackKey,
     form.businessId,
-    open,
-    options.length,
-    optionsError,
-    optionsLoading,
+    providerStatus,
     refreshWarning,
     selected,
     t,
@@ -120,6 +126,9 @@ export function LocalUserRequestCreateComposer({
 
   const patchForm = useCallback((patch: Partial<LocalCreateFormValues>) => {
     if (!fieldsEditableInLocalCreateState(uiState)) return;
+    if (!localCreateProviderSelectionEnabled(providerStatus, options) && patch.businessId) {
+      return;
+    }
     setForm((prev) => ({ ...prev, ...patch }));
     setUiState((prev) =>
       prev === 'VALIDATION_ERROR' ||
@@ -131,7 +140,7 @@ export function LocalUserRequestCreateComposer({
         : prev
     );
     setRefreshWarning(false);
-  }, [uiState]);
+  }, [options, providerStatus, uiState]);
 
   const resetComposer = useCallback(() => {
     setForm(defaultLocalCreateFormValues());
@@ -142,28 +151,17 @@ export function LocalUserRequestCreateComposer({
   }, []);
 
   const loadOptions = useCallback(async () => {
-    setOptionsLoading(true);
-    setOptionsError(false);
+    setProviderStatus('PROVIDERS_LOADING');
+    setOptions([]);
     const result = await loadBusinessOptions();
     if (!mountedRef.current) return;
-    setOptionsLoading(false);
-    if (!result.ok) {
-      setOptionsError(true);
-      setOptions(
-        mergeHistoryBusinessHints(
-          [],
-          knownBusinesses.map((b) => ({ id: b.id, name: b.name }))
-        )
-      );
-      return;
+    setProviderStatus(result.status);
+    setOptions(result.options);
+    // Clear any stale selection when authority does not yield options.
+    if (!localCreateProviderSelectionEnabled(result.status, result.options)) {
+      setForm((prev) => ({ ...prev, businessId: '' }));
     }
-    setOptions(
-      mergeHistoryBusinessHints(
-        result.data,
-        knownBusinesses.map((b) => ({ id: b.id, name: b.name }))
-      )
-    );
-  }, [knownBusinesses, loadBusinessOptions]);
+  }, [loadBusinessOptions]);
 
   const openComposer = useCallback(() => {
     resetComposer();
@@ -185,6 +183,7 @@ export function LocalUserRequestCreateComposer({
     // synchronously before any await (JWT / POST).
     if (inFlightRef.current || uiState === 'SUBMITTING') return;
     if (uiState === 'NETWORK_RESULT_UNKNOWN') return;
+    if (!localCreateProviderSelectionEnabled(providerStatus, options)) return;
 
     setUiState('SUBMITTING');
     setRefreshWarning(false);
@@ -238,6 +237,7 @@ export function LocalUserRequestCreateComposer({
     onCreated,
     onRefreshListForUnknownResult,
     options,
+    providerStatus,
     resolvedSubmitDeps,
     uiState,
   ]);
@@ -262,6 +262,10 @@ export function LocalUserRequestCreateComposer({
     );
   }
 
+  const showRetry =
+    providerStatus === 'PROVIDERS_LOAD_ERROR' ||
+    providerStatus === 'PROVIDER_SELECTION_UNAVAILABLE';
+
   return (
     <View style={styles.panel} testID="local-user-request-create-composer">
       <View style={styles.panelHeader}>
@@ -284,12 +288,12 @@ export function LocalUserRequestCreateComposer({
       </Text>
 
       <Text style={styles.label}>{t('local.userRequestStatus.create.providerLabel')}</Text>
-      {optionsLoading ? (
+      {providerStatus === 'PROVIDERS_LOADING' ? (
         <ActivityIndicator
           color={EMERALD}
           accessibilityLabel={t('local.userRequestStatus.create.providersLoading')}
         />
-      ) : (
+      ) : selectionEnabled ? (
         <View style={styles.chipWrap} testID="local-create-provider-list">
           {options.map((biz) => {
             const active = form.businessId === biz.businessId;
@@ -306,12 +310,20 @@ export function LocalUserRequestCreateComposer({
                 <Text style={[styles.bizChipText, active && styles.bizChipTextActive]} numberOfLines={1}>
                   {biz.displayName}
                 </Text>
-                <Text style={styles.bizChipCat} numberOfLines={1}>
-                  {biz.categoryLabel}
-                </Text>
+                {biz.categoryLabel ? (
+                  <Text style={styles.bizChipCat} numberOfLines={1}>
+                    {biz.categoryLabel}
+                  </Text>
+                ) : null}
               </Pressable>
             );
           })}
+        </View>
+      ) : (
+        <View testID="local-create-provider-unavailable" style={styles.unavailableBox}>
+          <Text style={styles.unavailableText}>
+            {t('local.userRequestStatus.create.feedback.providerSelectionUnavailable')}
+          </Text>
         </View>
       )}
       {selected ? (
@@ -324,14 +336,15 @@ export function LocalUserRequestCreateComposer({
       <View style={styles.chipWrap}>
         {LOCAL_CREATE_SERVICE_TYPE_OPTIONS.map((value) => {
           const active = form.serviceType === value;
+          const typeEditable = fieldsEditableInLocalCreateState(uiState);
           return (
             <Pressable
               key={value}
-              disabled={!editable}
+              disabled={!typeEditable}
               onPress={() => patchForm({ serviceType: value })}
               accessibilityRole="button"
               accessibilityLabel={value}
-              style={[styles.typeChip, active && styles.typeChipActive, !editable && styles.disabled]}
+              style={[styles.typeChip, active && styles.typeChipActive, !typeEditable && styles.disabled]}
             >
               <Text style={[styles.typeChipText, active && styles.typeChipTextActive]}>
                 {t(`local.userRequestStatus.create.serviceType.${value}`)}
@@ -345,11 +358,11 @@ export function LocalUserRequestCreateComposer({
       <TextInput
         testID="local-create-title"
         value={form.title}
-        editable={editable}
+        editable={fieldsEditableInLocalCreateState(uiState)}
         onChangeText={(title) => patchForm({ title })}
         placeholder={t('local.userRequestStatus.create.titlePlaceholder')}
         placeholderTextColor={INK_MUTED}
-        style={[styles.input, !editable && styles.disabled]}
+        style={[styles.input, !fieldsEditableInLocalCreateState(uiState) && styles.disabled]}
         accessibilityLabel={t('local.userRequestStatus.create.titleLabel')}
       />
 
@@ -357,16 +370,20 @@ export function LocalUserRequestCreateComposer({
       <TextInput
         testID="local-create-description"
         value={form.description}
-        editable={editable}
+        editable={fieldsEditableInLocalCreateState(uiState)}
         onChangeText={(description) => patchForm({ description })}
         placeholder={t('local.userRequestStatus.create.descriptionPlaceholder')}
         placeholderTextColor={INK_MUTED}
         multiline
-        style={[styles.input, styles.inputMultiline, !editable && styles.disabled]}
+        style={[
+          styles.input,
+          styles.inputMultiline,
+          !fieldsEditableInLocalCreateState(uiState) && styles.disabled,
+        ]}
         accessibilityLabel={t('local.userRequestStatus.create.descriptionLabel')}
       />
 
-      {feedbackText ? (
+      {feedbackText && providerStatus !== 'PROVIDER_SELECTION_UNAVAILABLE' ? (
         <Text
           testID="local-create-feedback"
           style={[
@@ -376,6 +393,24 @@ export function LocalUserRequestCreateComposer({
         >
           {feedbackText}
         </Text>
+      ) : null}
+      {providerStatus === 'PROVIDER_SELECTION_UNAVAILABLE' ? (
+        <Text testID="local-create-feedback" style={[styles.feedback, styles.feedbackErr]}>
+          {t('local.userRequestStatus.create.feedback.providerSelectionUnavailable')}
+        </Text>
+      ) : null}
+
+      {showRetry ? (
+        <Pressable
+          testID="local-create-retry-providers"
+          onPress={() => void loadOptions()}
+          accessibilityRole="button"
+          style={({ pressed }) => [styles.secondaryBtn, pressed && { opacity: 0.88 }]}
+        >
+          <Text style={styles.secondaryBtnText}>
+            {t('local.userRequestStatus.create.retryProviders')}
+          </Text>
+        </Pressable>
       ) : null}
 
       {uiState === 'NETWORK_RESULT_UNKNOWN' ? (
@@ -393,17 +428,18 @@ export function LocalUserRequestCreateComposer({
 
       <Pressable
         testID="local-create-submit"
-        disabled={!canSubmit || uiState === 'SUBMITTING' || optionsLoading}
+        disabled={!canSubmit || uiState === 'SUBMITTING' || providerStatus === 'PROVIDERS_LOADING'}
         onPress={() => void submit()}
         accessibilityRole="button"
         accessibilityState={{
-          disabled: !canSubmit || uiState === 'SUBMITTING' || optionsLoading,
+          disabled: !canSubmit || uiState === 'SUBMITTING' || providerStatus === 'PROVIDERS_LOADING',
           busy: uiState === 'SUBMITTING',
         }}
         accessibilityLabel={t('local.userRequestStatus.create.submitA11y')}
         style={({ pressed }) => [
           styles.submitBtn,
-          (!canSubmit || uiState === 'SUBMITTING' || optionsLoading) && styles.submitDisabled,
+          (!canSubmit || uiState === 'SUBMITTING' || providerStatus === 'PROVIDERS_LOADING') &&
+            styles.submitDisabled,
           pressed && canSubmit && uiState !== 'SUBMITTING' && { opacity: 0.9 },
         ]}
       >
@@ -514,6 +550,21 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 6,
+  },
+  unavailableBox: {
+    minHeight: 44,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: localConstellation.border,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    justifyContent: 'center',
+  },
+  unavailableText: {
+    fontFamily: FontFamily.semibold,
+    fontSize: 12,
+    color: INK_MUTED,
+    lineHeight: 16,
   },
   bizChip: {
     maxWidth: '100%',

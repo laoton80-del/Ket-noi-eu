@@ -892,11 +892,12 @@
         "openA11y": "Mở biểu mẫu tạo yêu cầu Local",
         "closeA11y": "Đóng biểu mẫu tạo yêu cầu",
         "title": "Yêu cầu Local mới",
-        "hint": "Chỉ gửi yêu cầu · không thu phí. Chọn nhà cung cấp rồi gửi yêu cầu. Merchant xác nhận trước khi lịch được chốt.",
+        "hint": "Chỉ gửi yêu cầu · không thu phí. Chọn nhà cung cấp khi Local có sẵn. Merchant xác nhận trước khi lịch được chốt.",
         "sourceFixed": "Nguồn cố định: {{source}}",
         "knownBusinesses": "Từ merchant gần đây của bạn",
-        "providerLabel": "Chọn nhà cung cấp",
+        "providerLabel": "Nhà cung cấp",
         "providersLoading": "Đang tải nhà cung cấp",
+        "retryProviders": "Thử lại kiểm tra nhà cung cấp",
         "selectedProvider": "Gửi tới: {{name}}",
         "serviceTypeLabel": "Loại dịch vụ",
         "titleLabel": "Tiêu đề",
@@ -919,7 +920,8 @@
           "success": "Yêu cầu đã gửi để merchant xem xét.",
           "providerUnavailable": "Nhà cung cấp này không còn khả dụng. Hãy chọn nhà khác.",
           "providersEmpty": "Hiện chưa có nhà cung cấp. Vui lòng thử lại sau.",
-          "providersLoadError": "Không tải được danh sách nhà cung cấp. Vui lòng thử lại."
+          "providersLoadError": "Không tải được danh sách nhà cung cấp. Vui lòng thử lại.",
+          "providerSelectionUnavailable": "Chọn nhà cung cấp chưa khả dụng."
         },
         "serviceType": {
           "GENERIC_REQUEST": "Chung",

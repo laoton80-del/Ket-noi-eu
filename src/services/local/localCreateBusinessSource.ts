@@ -1,42 +1,44 @@
 /**
- * Source-backed Local create business options for first-time B2C users.
- * Reuses existing public GET /api/tourism/discover (Postgres Business.id + name).
+ * Local create provider-source loader.
+ *
+ * Path 2 containment: no VALID_LOCAL_PROVIDER_AUTHORITY exists in active source.
+ * Does NOT call Travel/discover endpoints.
  */
-import type { ApiRequestResult } from '../apiClient';
-import { fetchTourismDiscover } from '../viGlobalTourismApi';
 import {
-  mapTourismDiscoverToLocalCreateOptions,
+  sanitizeLocalCreateBusinessOptions,
   type LocalCreateBusinessOption,
+  type LocalCreateProviderSourceStatus,
 } from './localCreateBusinessOptionModel';
 
-export type { LocalCreateBusinessOption };
+export type { LocalCreateBusinessOption, LocalCreateProviderSourceStatus };
 export {
-  mapTourismDiscoverToLocalCreateOptions,
-  mergeHistoryBusinessHints,
+  sanitizeLocalCreateBusinessOptions,
   isLocalCreateBusinessSelected,
   findLocalCreateBusinessOption,
 } from './localCreateBusinessOptionModel';
 
-export type LocalCreateBusinessSourceLoader = () => Promise<
-  ApiRequestResult<readonly LocalCreateBusinessOption[]>
->;
+export type LocalCreateBusinessSourceResult = Readonly<{
+  status: LocalCreateProviderSourceStatus;
+  options: readonly LocalCreateBusinessOption[];
+}>;
 
-/** Default loader — existing tourism discover adapter (no new backend). */
-export async function loadLocalCreateBusinessOptionsFromTourismDiscover(): Promise<
-  ApiRequestResult<readonly LocalCreateBusinessOption[]>
-> {
-  const result = await fetchTourismDiscover();
-  if (!result.ok) {
-    return {
-      ok: false,
-      status: result.status,
-      error: result.error,
-      unreachable: result.unreachable,
-    };
-  }
+export type LocalCreateBusinessSourceLoader = () => Promise<LocalCreateBusinessSourceResult>;
+
+/**
+ * Default loader — honest containment until a Local eligibility authority exists.
+ * Synchronous authority absence (no network); never imports Travel discover APIs.
+ */
+export async function loadLocalCreateBusinessOptions(): Promise<LocalCreateBusinessSourceResult> {
   return {
-    ok: true,
-    status: result.status,
-    data: mapTourismDiscoverToLocalCreateOptions(result.data),
+    status: 'PROVIDER_SELECTION_UNAVAILABLE',
+    options: sanitizeLocalCreateBusinessOptions([]),
   };
+}
+
+/** True only when an eligible selectable list is ready. */
+export function localCreateProviderSelectionEnabled(
+  status: LocalCreateProviderSourceStatus,
+  options: readonly LocalCreateBusinessOption[]
+): boolean {
+  return status === 'PROVIDERS_READY' && options.length > 0;
 }

@@ -1640,19 +1640,25 @@ Evidence: docs/product/VIONA_FC_P0_LOCAL_REQUEST_CREATE_CLIENT_IMPLEMENTATION_EV
 
 === FC-P0 LOCAL CREATE BUSINESS CONTEXT + SUBMIT GUARD REMEDIATION ===
 Operator phrase: APPROVE_VIONA_FC_P0_LOCAL_CREATE_BUSINESS_CONTEXT_AND_SUBMIT_GUARD_REMEDIATION
-Baseline: origin/master @ 028187cbe6d9bd78890ca1d56f7001bf73b772f4 (PR #412 merge)
-Branch: feat/viona-fc-p0-local-create-business-context-submit-guard-remediation
-Mode: IMPLEMENTATION_ONLY_NO_DEPLOY
-Gate A source: GET /api/tourism/discover → Business.id + name (zero-history; no new backend)
-Architecture: in-screen provider selector on LocalUserRequestCreateComposer
-Raw UUID TextInput / paste instructions removed; displayName only in UI
-Submit guard: runLocalCreateSubmit sets inFlight BEFORE await getJwt/POST
-Executed DI behavioral tests: scripts/test-local-user-request-create-client.ts
-No backend/schema/payment/wallet/AI/Pack40/deploy; REQUEST_ONLY_NO_CHARGE preserved
-Primary classification: READY_FOR_VIONA_FC_P0_LOCAL_CREATE_BUSINESS_CONTEXT_AND_SUBMIT_GUARD_REMEDIATION_PR_REVIEW
-Apple/EAS/Phase D2 deferred; Pack40S NOT AUTHORIZED; Phase C closed green
+MERGED ON MASTER: PR #413 @ 8bc568b0404981d19c9e9579646acac0af276af6
+Reviewed PR head: 72771f42fddcefa8f3f9e9b210124f16b7428b1d
+Post-merge strict review: BLOCKED_TOURISM_DISCOVER_NOT_VALID_LOCAL_PROVIDER_SOURCE
+  (MIXED_BUSINESS_SOURCE_WITHOUT_LOCAL_ELIGIBILITY; cross-universe Tourism coupling)
 Evidence: docs/product/VIONA_FC_P0_LOCAL_CREATE_BUSINESS_CONTEXT_AND_SUBMIT_GUARD_REMEDIATION_EVIDENCE.md
-Next: strict read-only review of remediation PR — do not auto-authorize staging/live create QA
+
+=== FC-P0 LOCAL PROVIDER ELIGIBILITY + TOURISM COUPLING REMEDIATION ===
+Operator phrase: APPROVE_VIONA_FC_P0_LOCAL_PROVIDER_ELIGIBILITY_AUTHORITY_AND_TOURISM_COUPLING_REMEDIATION
+Baseline: origin/master @ 8bc568b0404981d19c9e9579646acac0af276af6 (PR #413 merge)
+Branch: feat/viona-fc-p0-local-provider-eligibility-tourism-coupling-remediation
+Mode: IMPLEMENTATION_ONLY_NO_DEPLOY
+Path: Path 2 SAFE CONTAINMENT — NO_CANONICAL_LOCAL_PROVIDER_ELIGIBILITY_AUTHORITY
+Actions: remove GET /api/tourism/discover from Local create; PROVIDER_SELECTION_UNAVAILABLE UX
+Preserve: raw UUID removal; submit guard before JWT await; POST /api/local/requests contract
+FC-P0 Local create: STILL BLOCKED (await separate Local provider eligibility authority pack)
+Primary classification: READY_FOR_VIONA_LOCAL_TOURISM_COUPLING_CONTAINMENT_PR_REVIEW_WITH_FC_P0_STILL_BLOCKED
+Apple/EAS/Phase D2 deferred; Pack40S NOT AUTHORIZED; Phase C closed green
+Evidence: docs/product/VIONA_FC_P0_LOCAL_PROVIDER_ELIGIBILITY_AUTHORITY_AND_TOURISM_COUPLING_REMEDIATION_EVIDENCE.md
+Next: strict read-only review of containment PR — do not treat FC-P0 as closed; no live create QA
 
 === PACK40DR2 DORMANT RECOVERY SERVICES ===
 Operator phrase: APPROVE_PACK40DR2_DORMANT_RECOVERY_SERVICES
