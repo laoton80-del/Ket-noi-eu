@@ -268,7 +268,7 @@ Numeric % = `(sum of universe scores) / 24 × 100`, rounded to nearest integer.
 
 | ID | Class | Item | Proof |
 |---|---|---|---|
-| M1 | UNWIRED | Local request create client | No POST in `localUserRequestApi.ts` |
+| M1 | UNWIRED / CONTAINED | Local request create client | Create client + UUID/guard on master; Tourism coupling contained (PR #414); **provider eligibility authority missing** → `PROVIDER_SELECTION_UNAVAILABLE` |
 | M2 | UNWIRED | Local expiry apply job | Service only |
 | M3 | UNWIRED | AssistantChat / Concierge / Discover / Services stack | Not in `App.tsx` |
 | M4 | MOCK_OR_FIXTURE_ONLY | Broker / war room / admin profit | Mock dashboards |
@@ -294,23 +294,39 @@ Numeric % = `(sum of universe scores) / 24 × 100`, rounded to nearest integer.
 
 | Order | Pack | Priority | Scope | Size | Parallel? | Auth phrase |
 |---|---|---|---|---|---|---|
-| 1 | **FC-P0-LOCAL-REQUEST-CREATE-CLIENT** | P0 | Local | M | No (blocks Local journey) | `APPROVE_VIONA_FC_P0_LOCAL_REQUEST_CREATE_CLIENT` |
-| 2 | **FC-P0-AI-RUNTIME-COST-HARD-STOP** | P0 | Shared AI | L | After or parallel to 1 (careful) | `APPROVE_VIONA_FC_P0_AI_RUNTIME_COST_HARD_STOP` |
-| 3 | **FC-P0-ACCOUNT-GDPR-EXPORT** | P0 | Account | S | Yes with 2 | `APPROVE_VIONA_FC_P0_ACCOUNT_GDPR_EXPORT` |
-| 4 | **FC-P1-LOCAL-EXPIRY-AND-RATE-LIMIT** | P1 | Local | M | After 1 | `APPROVE_VIONA_FC_P1_LOCAL_EXPIRY_AND_RATE_LIMIT` |
+| 0a | **FC-P0 Local create client + containment lineage** | P0 (done partial) | Local | — | MERGED | PR #412 create client; #413 UUID/guard; #414 Tourism coupling containment **verified on master** — create UI still `PROVIDER_SELECTION_UNAVAILABLE` |
+| 0b | **FC-P0-LOCAL-PROVIDER-ELIGIBILITY-AUTHORITY-BOUNDARY** | P0 (docs) | Local | S | This plan | `APPROVE_VIONA_FC_P0_LOCAL_PROVIDER_ELIGIBILITY_AUTHORITY_BOUNDARY_AND_IMPLEMENTATION_PLAN` |
+| 1 | **FC-P0-LOCAL-PROVIDER-ELIGIBILITY-AUTHORITY-SCHEMA-BACKEND** | P0 | Local | M | After 0b merge+verify | `APPROVE_VIONA_FC_P0_LOCAL_PROVIDER_ELIGIBILITY_AUTHORITY_SCHEMA_BACKEND` |
+| 1b | **FC-P0-LOCAL-PROVIDER-AUTHORITY-CLIENT-WIRING** | P0 | Local | M | After 1 merge+verify | `APPROVE_VIONA_FC_P0_LOCAL_PROVIDER_AUTHORITY_CLIENT_WIRING` |
+| 2 | **FC-P0-AI-RUNTIME-COST-HARD-STOP** | P0 | Shared AI | L | After Local FC-P0 closure (1b verified) | `APPROVE_VIONA_FC_P0_AI_RUNTIME_COST_HARD_STOP` |
+| 3 | **FC-P0-ACCOUNT-GDPR-EXPORT** | P0 | Account | S | After or with 2 | `APPROVE_VIONA_FC_P0_ACCOUNT_GDPR_EXPORT` |
+| 4 | **FC-P1-LOCAL-EXPIRY-AND-RATE-LIMIT** | P1 | Local | M | After Local create closed | `APPROVE_VIONA_FC_P1_LOCAL_EXPIRY_AND_RATE_LIMIT` |
 | 5 | **FC-P1-CORE-JOURNEY-MOCK-REMOVAL** | P1 | Local/Business UI honesty | M | Parallel with 4 | `APPROVE_VIONA_FC_P1_CORE_JOURNEY_MOCK_REMOVAL` |
 | 6 | **FC-P1-TRAVEL-DISCOVERY-PRIMARY-JOURNEY** | P1 | Travel (non-paid or held path) | M | Parallel | `APPROVE_VIONA_FC_P1_TRAVEL_PRIMARY_JOURNEY` |
 | 7 | **FC-P1-ACADEMY-PRIMARY-LEARNER-SLICE** | P1 | Academy | M | Parallel | `APPROVE_VIONA_FC_P1_ACADEMY_PRIMARY_LEARNER_SLICE` |
-| 8 | **FC-P1-BUSINESS-MERCHANT-VALUE-SLICE** | P1 | Business | L | After Local create | `APPROVE_VIONA_FC_P1_BUSINESS_MERCHANT_VALUE_SLICE` |
+| 8 | **FC-P1-BUSINESS-MERCHANT-VALUE-SLICE** | P1 | Business | L | After Local create closed | `APPROVE_VIONA_FC_P1_BUSINESS_MERCHANT_VALUE_SLICE` |
 | 9 | **FC-P1-MONETIZATION-BOUNDARY-WIRE** | P1 | Shared | L | After AI hard-stop | `APPROVE_VIONA_FC_P1_MONETIZATION_BOUNDARY_WIRE` |
 | 10 | **FC-P2-SOS-PLUS-BILLING-OR-DEFER** | P2 | SOS | M | Later | `APPROVE_VIONA_FC_P2_SOS_PLUS_BILLING_OR_EXPLICIT_DEFER` |
 | 11 | **FC-P2-WEB-ANDROID-FC-QA** | P2 | Shared QA | M | After P0/P1 | `APPROVE_VIONA_FC_P2_WEB_ANDROID_FEATURE_COMPLETE_QA` |
 
 iOS/Apple packs remain **out of this critical path** until operator reopens the lane.
 
+**FC-P0 Local create status:** **STILL BLOCKED** — Tourism coupling contained (PR #414); missing Local provider eligibility authority. AI hard-stop and GDPR export remain **after** Local FC-P0 closure. No deploy/live QA authorized. Apple/EAS/Phase D2 deferred.
+
 ### Pack cards (P0–P1 detail)
 
-#### FC-P0-LOCAL-REQUEST-CREATE-CLIENT (recommended next)
+#### FC-P0-LOCAL-PROVIDER-ELIGIBILITY-AUTHORITY (current critical blocker)
+
+| Field | Value |
+|---|---|
+| Universe | Local |
+| Problem | First-time B2C create cannot select a Local-eligible provider; Tourism discover rejected; no schema/route authority |
+| Boundary plan | `docs/product/VIONA_FC_P0_LOCAL_PROVIDER_ELIGIBILITY_AUTHORITY_BOUNDARY_AND_IMPLEMENTATION_PLAN.md` |
+| Architecture | Minimal `LocalProviderEligibility` 1:1 Business; ops/superAdmin owner; `GET /api/local/providers`; create-service enforcement |
+| Next impl phrase | `APPROVE_VIONA_FC_P0_LOCAL_PROVIDER_ELIGIBILITY_AUTHORITY_SCHEMA_BACKEND` (**unauthorized** until this plan is reviewed, merged, verified) |
+| Client wiring phrase | `APPROVE_VIONA_FC_P0_LOCAL_PROVIDER_AUTHORITY_CLIENT_WIRING` (after schema/backend verified) |
+
+#### FC-P0-LOCAL-REQUEST-CREATE-CLIENT (lineage — partial)
 
 | Field | Value |
 |---|---|
@@ -325,7 +341,8 @@ iOS/Apple packs remain **out of this critical path** until operator reopens the 
 | UI states | `IDLE` → `VALIDATION_ERROR` / `SUBMITTING` / `CREATED_SUCCESS` / `AUTH_REQUIRED_OR_EXPIRED` / `RATE_LIMITED` / `SERVER_VALIDATION_ERROR` / `NETWORK_RESULT_UNKNOWN` / `SERVER_ERROR` |
 | Duplicate-submit | Rate limit ≠ idempotency; one in-flight POST; no auto-retry; `NETWORK_RESULT_UNKNOWN` → refresh list before any manual resubmit; no schema idempotency key in FC-P0 |
 | Post-create | Stay on `LocalUserRequestStatusScreen`; refresh list; expand created `id` (exactly one destination) |
-| Dependencies | Master with Local API + client contract (current); boundary addendum merged |
+| Lineage | PR #412 MERGED; #413 MERGED (UUID/guard); #414 MERGED+VERIFIED (Tourism containment). **Provider authority still missing** → FC-P0 still blocked |
+| Dependencies | Provider eligibility Pack A then Pack B (see boundary plan) |
 | Allowed | Paths listed in boundary addendum §10 |
 | Forbidden / non-goals | Boundary addendum §11 (payment, schema, Pack40S, Apple/EAS/D2, deploy, AI create path, etc.) |
 | Required tests | Boundary addendum §12 (18 focused items) |
@@ -399,13 +416,18 @@ iOS/Apple packs remain **out of this critical path** until operator reopens the 
 
 ## 14. Recommended single next implementation pack
 
-**`FC-P0-LOCAL-REQUEST-CREATE-CLIENT`**  
-Boundary addendum phrase: `APPROVE_VIONA_FC_P0_LOCAL_REQUEST_CREATE_CLIENT_BOUNDARY_ADDENDUM`  
-Implementation phrase (unauthorized until boundary addendum is reviewed, merged, and verified): `APPROVE_VIONA_FC_P0_LOCAL_REQUEST_CREATE_CLIENT`
+**Immediate docs gate (this pack):** Local provider eligibility authority boundary plan.  
+Phrase: `APPROVE_VIONA_FC_P0_LOCAL_PROVIDER_ELIGIBILITY_AUTHORITY_BOUNDARY_AND_IMPLEMENTATION_PLAN`
 
-Canonical boundary: `docs/product/VIONA_FC_P0_LOCAL_REQUEST_CREATE_CLIENT_IMPLEMENTATION_BOUNDARY_ADDENDUM.md`
+**Immediate next implementation pack (unauthorized until this plan is reviewed, merged, and verified):**  
+**`FC-P0-LOCAL-PROVIDER-ELIGIBILITY-AUTHORITY-SCHEMA-BACKEND`**  
+Phrase: `APPROVE_VIONA_FC_P0_LOCAL_PROVIDER_ELIGIBILITY_AUTHORITY_SCHEMA_BACKEND`
 
-Rationale: Local is a flagship universe; list/inbox/cancel already exist; create is the single largest reachability hole (`BACKEND_ONLY` + client `UNWIRED`) and unlocks a true primary journey without reopening money, Apple, or Pack40S.
+Canonical plan: `docs/product/VIONA_FC_P0_LOCAL_PROVIDER_ELIGIBILITY_AUTHORITY_BOUNDARY_AND_IMPLEMENTATION_PLAN.md`
+
+Rationale: Tourism coupling is contained (PR #414 verified). FC-P0 Local create remains blocked solely by missing Local provider eligibility authority. AI hard-stop and GDPR export stay **after** Local FC-P0 closure. No Apple/Pack40S/deploy.
+
+Lineage (do not reopen as “create client missing”): PR #412 create client; #413 UUID/guard; #414 containment. Client wiring is Pack B after schema/backend.
 
 ---
 
