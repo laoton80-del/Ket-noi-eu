@@ -316,14 +316,23 @@ iOS/Apple packs remain **out of this critical path** until operator reopens the 
 |---|---|
 | Universe | Local |
 | Problem | Backend create exists; mobile/web user cannot submit LocalServiceRequest via product UI/API client |
-| Exact outcome | User can create a no-charge Local request from reachable UI; list/timeline/cancel continue to work; merchant can confirm/reject |
-| Dependencies | Master with Local API + client contract (current) |
-| Allowed | `src/services/localUserRequestApi.ts`, Local create UI components/screens under Local universe, tests for create client, Local evidence docs |
-| Forbidden | Prisma on mobile; paid wallet conversion; Pack40; Apple/EAS; deploy; Functions TSC debt fix |
-| Required tests | Unit + API client contract tests; smoke nav reachability; no Prisma import on client |
-| Deploy boundary | No production deploy required for merge; staging optional under separate auth |
+| Exact outcome | User can create a no-charge Local request from the locked host surface; list/timeline/cancel continue to work; merchant can confirm/reject |
+| **Implementation boundary** | **LOCKED** — see `docs/product/VIONA_FC_P0_LOCAL_REQUEST_CREATE_CLIENT_IMPLEMENTATION_BOUNDARY_ADDENDUM.md` (resolves `BLOCKED_LOCAL_CREATE_IMPLEMENTATION_BOUNDARY_UNRESOLVED`) |
+| Exact entry surface | Reach: `TabLocal`/`LocalScreen` → `local-tile-my-requests` → stack `LocalUserRequestStatus`. Host: `LocalUserRequestStatusScreen` in-screen create composer (**no new Stack.Screen**). Reject Leona booking-assist, classifieds VIP, merchant inbox, VionaRequest inbox |
+| Exact endpoint | `POST /api/local/requests` — `authMiddleware` → `createLocalMutationRateLimiter('create_request')` → `postCreateLocalServiceRequest` → `createLocalServiceRequest`; success **201** |
+| Exact DTO | Required: `businessId`, `serviceType`, `title`, `source: "LOCAL_SCREEN"`; optional fields per controller; forbidden keys = `DANGEROUS_LOCAL_REQUEST_CREATE_BODY_KEYS`; identity/status/wallet server-derived |
+| Auth | Session JWT via `getRestApiJwt` / `restApiFetchJson`; no `EXPO_PUBLIC_DEV_REST_JWT`; server `req.authUserId` only |
+| UI states | `IDLE` → `VALIDATION_ERROR` / `SUBMITTING` / `CREATED_SUCCESS` / `AUTH_REQUIRED_OR_EXPIRED` / `RATE_LIMITED` / `SERVER_VALIDATION_ERROR` / `NETWORK_RESULT_UNKNOWN` / `SERVER_ERROR` |
+| Duplicate-submit | Rate limit ≠ idempotency; one in-flight POST; no auto-retry; `NETWORK_RESULT_UNKNOWN` → refresh list before any manual resubmit; no schema idempotency key in FC-P0 |
+| Post-create | Stay on `LocalUserRequestStatusScreen`; refresh list; expand created `id` (exactly one destination) |
+| Dependencies | Master with Local API + client contract (current); boundary addendum merged |
+| Allowed | Paths listed in boundary addendum §10 |
+| Forbidden / non-goals | Boundary addendum §11 (payment, schema, Pack40S, Apple/EAS/D2, deploy, AI create path, etc.) |
+| Required tests | Boundary addendum §12 (18 focused items) |
+| Deploy boundary | `IMPLEMENTATION_ONLY_NO_DEPLOY` — staging live create QA needs separate auth |
 | Size | **M** |
 | Parallel | No (first) |
+| Implementation phrase | `APPROVE_VIONA_FC_P0_LOCAL_REQUEST_CREATE_CLIENT` — **still unauthorized** until boundary addendum review + merge + verify |
 
 #### FC-P0-AI-RUNTIME-COST-HARD-STOP
 
@@ -391,7 +400,10 @@ iOS/Apple packs remain **out of this critical path** until operator reopens the 
 ## 14. Recommended single next implementation pack
 
 **`FC-P0-LOCAL-REQUEST-CREATE-CLIENT`**  
-Authorization phrase: `APPROVE_VIONA_FC_P0_LOCAL_REQUEST_CREATE_CLIENT`
+Boundary addendum phrase: `APPROVE_VIONA_FC_P0_LOCAL_REQUEST_CREATE_CLIENT_BOUNDARY_ADDENDUM`  
+Implementation phrase (unauthorized until boundary addendum is reviewed, merged, and verified): `APPROVE_VIONA_FC_P0_LOCAL_REQUEST_CREATE_CLIENT`
+
+Canonical boundary: `docs/product/VIONA_FC_P0_LOCAL_REQUEST_CREATE_CLIENT_IMPLEMENTATION_BOUNDARY_ADDENDUM.md`
 
 Rationale: Local is a flagship universe; list/inbox/cancel already exist; create is the single largest reachability hole (`BACKEND_ONLY` + client `UNWIRED`) and unlocks a true primary journey without reopening money, Apple, or Pack40S.
 

@@ -1617,17 +1617,26 @@ Next: link/create Apple Developer team on Expo account, then re-authorize EAS iO
 
 === FEATURE COMPLETE GAP AUDIT + CRITICAL PATH PLAN ===
 Operator phrase: APPROVE_VIONA_FEATURE_COMPLETE_GAP_AUDIT_AND_CRITICAL_PATH_PLAN
-Baseline: origin/master @ 3d9fe752b567060f99de9ce3576e6d6d56f2af93 (PR #406–#409)
-Mode: docs-only; no runtime/src/deploy; Apple/EAS/Phase D2 not reopened
-ci:expo-readiness: PASS; ci:release-discipline: PASS
-Scorecard: 16/24 (~67%) — not feature-complete
+MERGED: PR #410 @ 86fb9fba9d94cae19f37af0469263c9e05785ff2
+Scorecard: 16/24 (~67%) — not feature-complete; audit remains canonical
 P0: Local create client UNWIRED; AI cost hard-stop; Account GDPR export
-P1: Local expiry/rate-limit; mock removal; Travel/Academy/Business primary slices; monetization wire
 Deferred: APPLE_DEVELOPER_ACCESS; IOS_EAS_DEVELOPMENT_BUILD; IOS_PHYSICAL_PHASE_D2
 Pack40DR wait-state preserved; Pack40S NOT AUTHORIZED; Phase C closed green
-Primary classification: READY_FOR_VIONA_FEATURE_COMPLETE_CRITICAL_PATH_IMPLEMENTATION
-Next pack: FC-P0-LOCAL-REQUEST-CREATE-CLIENT / APPROVE_VIONA_FC_P0_LOCAL_REQUEST_CREATE_CLIENT
 Evidence: docs/product/VIONA_FEATURE_COMPLETE_GAP_AUDIT_AND_CRITICAL_PATH_PLAN.md
+
+=== FC-P0 LOCAL REQUEST CREATE CLIENT BOUNDARY ADDENDUM ===
+Operator phrase: APPROVE_VIONA_FC_P0_LOCAL_REQUEST_CREATE_CLIENT_BOUNDARY_ADDENDUM
+Baseline: origin/master @ 86fb9fba9d94cae19f37af0469263c9e05785ff2 (PR #410 merged)
+Resolves: BLOCKED_LOCAL_CREATE_IMPLEMENTATION_BOUNDARY_UNRESOLVED
+Entry: LocalScreen my-requests tile → LocalUserRequestStatus → in-screen create composer (no new Stack.Screen)
+Endpoint: POST /api/local/requests (authMiddleware → create_request rate limit → postCreateLocalServiceRequest)
+DTO: businessId + serviceType + title + source=LOCAL_SCREEN; dangerous keys forbidden; JWT identity only
+Duplicate-submit: rate limit ≠ idempotency; one in-flight POST; NETWORK_RESULT_UNKNOWN → refresh before manual resubmit
+Post-create: stay on LocalUserRequestStatusScreen; refresh list; expand created id
+Deploy: IMPLEMENTATION_ONLY_NO_DEPLOY
+FC-P0 implementation: STILL UNAUTHORIZED (APPROVE_VIONA_FC_P0_LOCAL_REQUEST_CREATE_CLIENT not granted)
+Apple/EAS/Phase D2 deferred; Pack40S NOT AUTHORIZED; no runtime/src/deploy in this pack
+Evidence: docs/product/VIONA_FC_P0_LOCAL_REQUEST_CREATE_CLIENT_IMPLEMENTATION_BOUNDARY_ADDENDUM.md
 
 === PACK40DR2 DORMANT RECOVERY SERVICES ===
 Operator phrase: APPROVE_PACK40DR2_DORMANT_RECOVERY_SERVICES
