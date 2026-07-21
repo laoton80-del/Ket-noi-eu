@@ -1,5 +1,5 @@
 /**
- * FC-P0 Local create remediation — executed behavioral tests (DI), not source-scan only.
+ * FC-P0 Local create — Tourism coupling containment + preserved guard/auth tests.
  *
  * Run: npx tsx scripts/test-local-user-request-create-client.ts
  */
@@ -16,13 +16,15 @@ import {
   type LocalUserRequestCreateResult,
 } from '../src/domain/local/localServiceRequestClientContract';
 import {
-  mapTourismDiscoverToLocalCreateOptions,
-  mergeHistoryBusinessHints,
-  isLocalCreateBusinessSelected,
   findLocalCreateBusinessOption,
+  isLocalCreateBusinessSelected,
+  sanitizeLocalCreateBusinessOptions,
   type LocalCreateBusinessOption,
 } from '../src/services/local/localCreateBusinessOptionModel';
-import type { TourismDiscoverPayload } from '../src/services/viGlobalTourismApi';
+import {
+  loadLocalCreateBusinessOptions,
+  localCreateProviderSelectionEnabled,
+} from '../src/services/local/localCreateBusinessSource';
 import type { ApiRequestResult } from '../src/services/apiClient';
 import {
   assertLocalCreateBodySafe,
@@ -41,31 +43,18 @@ function read(rel: string): string {
   return fs.readFileSync(path.join(ROOT, rel), 'utf8');
 }
 
-function sampleDiscover(): TourismDiscoverPayload {
-  return {
-    stays: [{ id: 'stay-1', name: 'Stay One', category: 'HOTEL', locationLat: 0, locationLng: 0, description: '', isTopAd: false, tourismServices: [] }],
-    tours: [],
-    gastronomy: [{ id: 'food-1', name: 'Pho House', category: 'RESTAURANT', locationLat: 0, locationLng: 0, description: '', isTopAd: false, tourismServices: [] }],
-    localFixers: [
-      {
-        id: 'fix-1',
-        name: 'Local Fixer A',
-        category: 'LOCAL_EXPERIENCE',
-        locationLat: 0,
-        locationLng: 0,
-        description: '',
-        isTopAd: false,
-        tourismServices: [],
-      },
-    ],
-  };
+/** Synthetic Local-eligible options for guard/auth tests only (not a product authority). */
+function sampleEligibleOptions(): readonly LocalCreateBusinessOption[] {
+  return sanitizeLocalCreateBusinessOptions([
+    { businessId: 'biz-eligible-1', displayName: 'Eligible Local Merchant', categoryLabel: 'LOCAL' },
+  ]);
 }
 
 function okCreate(id: string): LocalUserRequestCreateResult {
   return {
     id,
     requesterUserId: 'u1',
-    businessId: 'fix-1',
+    businessId: 'biz-eligible-1',
     serviceId: null,
     serviceType: 'GENERIC_REQUEST',
     title: 'Need help',
@@ -82,27 +71,62 @@ function okCreate(id: string): LocalUserRequestCreateResult {
 }
 
 async function run(): Promise<void> {
-  // 1–4: zero-history source-backed options (no request history)
-  const mapped = mapTourismDiscoverToLocalCreateOptions(sampleDiscover());
-  assert.ok(mapped.length >= 1);
-  assert.equal(mapped[0]?.businessId, 'fix-1');
-  assert.equal(mapped[0]?.displayName, 'Local Fixer A');
-  assert.ok(mapped.every((o) => o.businessId && o.displayName));
-  assert.equal(
-    mapped.some((o) => /uuid|UUID/i.test(o.displayName)),
-    false
-  );
+  // Path 2: default loader → PROVIDER_SELECTION_UNAVAILABLE; no Tourism
+  const authority = await loadLocalCreateBusinessOptions();
+  assert.equal(authority.status, 'PROVIDER_SELECTION_UNAVAILABLE');
+  assert.equal(authority.options.length, 0);
+  assert.equal(localCreateProviderSelectionEnabled(authority.status, authority.options), false);
 
-  // History merge does not remove discover options for first-time (empty history)
-  const zeroHistory = mergeHistoryBusinessHints(mapped, []);
-  assert.deepEqual(zeroHistory, mapped);
+  // No POST without valid selected provider (empty authority)
+  const emptyForm = {
+    ...defaultLocalCreateFormValues(),
+    businessId: 'any-id',
+    title: 'Need help',
+  };
+  assert.equal(canSubmitLocalCreate('IDLE', emptyForm, authority.options), false);
+  const blocked = await runLocalCreateSubmit({
+    form: emptyForm,
+    options: authority.options,
+    inFlight: { current: false },
+    deps: {
+      getJwt: async () => 'tok',
+      createRequest: async () => {
+        throw new Error('POST must not run without eligible options');
+      },
+    },
+  });
+  assert.equal(blocked.uiState, 'VALIDATION_ERROR');
+  assert.equal(blocked.bodyPosted, null);
 
-  // 5–6: selection stores internal id; human name available
+  // Source files: no Tourism coupling in Local create path
+  const sourceTs = read('src/services/local/localCreateBusinessSource.ts');
+  const modelTs = read('src/services/local/localCreateBusinessOptionModel.ts');
+  const composer = read('src/components/local/LocalUserRequestCreateComposer.tsx');
+  assert.equal(sourceTs.includes('viGlobalTourismApi'), false);
+  assert.equal(sourceTs.includes('fetchTourismDiscover'), false);
+  assert.equal(sourceTs.includes('/api/tourism/discover'), false);
+  assert.equal(/from ['"].*viGlobalTourismApi['"]/.test(sourceTs), false);
+  assert.equal(modelTs.includes('mapTourismDiscover'), false);
+  assert.equal(/from ['"].*viGlobalTourismApi['"]/.test(modelTs), false);
+  assert.equal(composer.includes('viGlobalTourismApi'), false);
+  assert.equal(composer.includes('fetchTourismDiscover'), false);
+  assert.equal(composer.includes('loadLocalCreateBusinessOptionsFromTourismDiscover'), false);
+  assert.match(composer, /loadLocalCreateBusinessOptions/);
+  assert.match(composer, /PROVIDER_SELECTION_UNAVAILABLE|providerSelectionUnavailable/);
+  assert.match(composer, /local-create-provider-unavailable/);
+
+  // Raw UUID remains absent
+  assert.equal(composer.includes('local-create-business-id'), false);
+  assert.equal(composer.includes('Paste business UUID'), false);
+  assert.equal(composer.includes('businessIdPlaceholder'), false);
+  assert.equal(/Paste business/i.test(composer), false);
+
+  // Guard/auth tests with synthetic eligible options (coordinator DI)
+  const mapped = sampleEligibleOptions();
   const selectedId = mapped[0]!.businessId;
   assert.equal(isLocalCreateBusinessSelected(selectedId, mapped), true);
-  assert.equal(findLocalCreateBusinessOption(selectedId, mapped)?.displayName, 'Local Fixer A');
+  assert.equal(findLocalCreateBusinessOption(selectedId, mapped)?.displayName, 'Eligible Local Merchant');
 
-  // Missing / stale selection prevents submit
   const formEmpty = defaultLocalCreateFormValues();
   assert.ok(validateLocalCreateForm(formEmpty, mapped));
   assert.equal(canSubmitLocalCreate('IDLE', formEmpty, mapped), false);
@@ -125,7 +149,6 @@ async function run(): Promise<void> {
   };
   assert.equal(validateLocalCreateForm(formOk, mapped), null);
 
-  // 7–8: source + forbidden keys
   const body = buildLocalCreateRequestBody(formOk);
   assert.equal(body.source, LOCAL_CREATE_CLIENT_SOURCE);
   assertLocalCreateBodySafe(body);
@@ -133,7 +156,6 @@ async function run(): Promise<void> {
     assert.equal(Object.prototype.hasOwnProperty.call(body, key), false);
   }
 
-  // 9–12: guard before JWT await; double submit → one JWT + one POST
   let jwtCalls = 0;
   let postCalls = 0;
   const postedBodies: LocalUserRequestCreateBody[] = [];
@@ -178,7 +200,6 @@ async function run(): Promise<void> {
   assert.equal(postedBodies[0]?.source, 'LOCAL_SCREEN');
   assert.equal(postedBodies[0]?.businessId, selectedId);
 
-  // 13–14: Authorization header behavior (pure rule + apiClient source contract)
   function buildAuthHeader(token: string | null): Record<string, string> {
     const headers: Record<string, string> = {};
     if (token) headers.Authorization = `Bearer ${token}`;
@@ -190,14 +211,12 @@ async function run(): Promise<void> {
   const apiClientSrc = read('src/services/apiClient.ts');
   assert.equal(apiClientSrc.includes('EXPO_PUBLIC_DEV_REST_JWT'), false);
   assert.match(apiClientSrc, /export async function getRestApiJwt/);
-  // No Authorization when token absent — restApiFetchJson only sets Bearer when jwt truthy
   assert.match(
     apiClientSrc,
     /if \(jwt\)[\s\S]{0,120}Authorization[\s\S]{0,40}Bearer/
   );
   assert.equal(/maxRetries|retryCount/i.test(apiClientSrc), false);
 
-  // 15: no automatic retry — single createRequest call already proven; failing once stays one call
   let failPosts = 0;
   const failOnce = async (): Promise<ApiRequestResult<LocalUserRequestCreateResult>> => {
     failPosts += 1;
@@ -213,7 +232,6 @@ async function run(): Promise<void> {
   assert.equal(failPosts, 1);
   assert.equal(failResult.uiState, 'SERVER_ERROR');
 
-  // 16–19: 201 id + refresh-success semantics helpers
   assert.equal(
     findLikelyCreatedRequestId({
       createdRequestId: 'req-created-1',
@@ -224,11 +242,8 @@ async function run(): Promise<void> {
     }),
     'req-created-1'
   );
-
-  // Refresh failure remains success is UI responsibility; runner already returned CREATED_SUCCESS with id.
   assert.ok(r1.created?.id);
 
-  // 20–25: HTTP / network mapping
   assert.equal(mapCreateApiResultToUiState({ ok: false, status: 400, error: 'x' }), 'SERVER_VALIDATION_ERROR');
   assert.equal(mapCreateApiResultToUiState({ ok: false, status: 401, error: 'x' }), 'AUTH_REQUIRED_OR_EXPIRED');
   assert.equal(mapCreateApiResultToUiState({ ok: false, status: 404, error: 'x' }), 'SERVER_VALIDATION_ERROR');
@@ -239,7 +254,6 @@ async function run(): Promise<void> {
     'NETWORK_RESULT_UNKNOWN'
   );
 
-  // 26: NETWORK_RESULT_UNKNOWN does not auto-resubmit (runner does not loop)
   let netPosts = 0;
   const netFlight = { current: false };
   const netResult = await runLocalCreateSubmit({
@@ -257,7 +271,6 @@ async function run(): Promise<void> {
   assert.equal(netResult.uiState, 'NETWORK_RESULT_UNKNOWN');
   assert.equal(netPosts, 1);
 
-  // Auth missing clears without POST
   let authPosts = 0;
   const authFlight = { current: false };
   const authResult = await runLocalCreateSubmit({
@@ -276,23 +289,12 @@ async function run(): Promise<void> {
   assert.equal(authPosts, 0);
   assert.equal(authFlight.current, false);
 
-  // 27–29: list/timeline/cancel signatures preserved
   const apiSrc = read('src/services/localUserRequestApi.ts');
   assert.match(apiSrc, /export async function fetchUserLocalServiceRequests/);
   assert.match(apiSrc, /export async function fetchUserLocalRequestTimeline/);
   assert.match(apiSrc, /export async function cancelUserLocalServiceRequest/);
   assert.match(apiSrc, /export async function createUserLocalServiceRequest/);
 
-  // 2 / raw UUID removed from composer
-  const composer = read('src/components/local/LocalUserRequestCreateComposer.tsx');
-  assert.equal(composer.includes('local-create-business-id'), false);
-  assert.equal(composer.includes('Paste business UUID'), false);
-  assert.equal(composer.includes('businessIdPlaceholder'), false);
-  assert.match(composer, /local-create-provider-list/);
-  assert.match(composer, /loadLocalCreateBusinessOptionsFromTourismDiscover|loadBusinessOptions/);
-  assert.match(composer, /runLocalCreateSubmit/);
-
-  // 30: no Prisma on mobile create graph
   for (const file of [
     'src/screens/b2c/LocalUserRequestStatusScreen.tsx',
     'src/screens/b2c/localUserRequestCreateFlow.ts',
@@ -306,7 +308,6 @@ async function run(): Promise<void> {
     assert.equal(src.includes('@prisma/client'), false, file);
   }
 
-  // 31: EN/VI key alignment for create
   const en = JSON.parse(read('src/i18n/locales/en.json')) as {
     local: { userRequestStatus: { create: Record<string, unknown> } };
   };
@@ -318,13 +319,21 @@ async function run(): Promise<void> {
   for (const key of Object.keys(enCreate)) {
     assert.ok(key in viCreate, `VI missing create.${key}`);
   }
+  const enFb = enCreate.feedback as Record<string, string>;
+  const viFb = viCreate.feedback as Record<string, string>;
+  for (const key of Object.keys(enFb)) {
+    assert.ok(key in viFb, `VI missing create.feedback.${key}`);
+  }
   assert.equal('businessIdPlaceholder' in enCreate, false);
   assert.equal('businessIdLabel' in enCreate, false);
-  assert.ok(typeof enCreate.providerLabel === 'string');
-  assert.ok(typeof (enCreate.feedback as Record<string, string>).providersEmpty === 'string');
+  assert.ok(typeof enFb.providerSelectionUnavailable === 'string');
+  assert.match(enFb.providerSelectionUnavailable, /not available yet/i);
+  assert.equal(/UUID|Paste business/i.test(JSON.stringify(enCreate)), false);
+  assert.equal(/UUID|Paste business/i.test(JSON.stringify(viCreate)), false);
 
-  // apiClient: no DEV JWT, no retry loop (covered above via apiClientSrc)
-  assert.equal(apiClientSrc.includes('EXPO_PUBLIC_DEV_REST_JWT'), false);
+  // Tourism discover route itself unchanged (still present for Travel)
+  const tourismRoutes = read('src/routes/tourismRoutes.ts');
+  assert.match(tourismRoutes, /\/discover/);
 
   console.log('[test-local-user-request-create-client] OK');
 }
