@@ -1732,6 +1732,26 @@ var B2C_TRAVEL_PACKAGE_SUB_USD = PRICING_AUTHORITY.b2cCredits.travelPackageSubMa
 var INTERPRETER_MAX_SESSION_MINUTES = 8;
 var INTERPRETER_SESSION_CREDITS = INTERPRETER_PER_MIN_CREDITS * INTERPRETER_MAX_SESSION_MINUTES;
 
+// ../src/core/monetization/vioDisplayConfig.ts
+var vioDisplayConfig = {
+  publicCode: "VIO",
+  publicName: "VIO Points",
+  publicCreditName: "VIO Credits",
+  legacyCode: "VIG",
+  isCrypto: false,
+  isWithdrawableCash: false,
+  /** Max % of an order or redemption basket payable with points (policy target). */
+  redeemCapPercent: 20,
+  /** Default inactivity / issuance expiry horizon (days). */
+  expiresAfterDays: 365,
+  requiresLiabilityTracking: true
+};
+
+// ../src/core/monetization/vioDisplayLabels.ts
+function getVioCreditsLabel() {
+  return vioDisplayConfig.publicCreditName;
+}
+
 // ../src/services/PaymentsService.ts
 var PAYMENTS_API_BASE = process.env.EXPO_PUBLIC_PAYMENTS_API_BASE?.trim() ?? "";
 function normalizeCountry(input) {
@@ -1750,7 +1770,7 @@ function calculateCallCreditPrice(userCountry) {
     basePerCallCzk: creditsPerCall,
     localAmount: creditsPerCall,
     currencyCode: "VIG_TOKEN",
-    amountLabel: `${formatMoney(creditsPerCall)} VIG Token/cu\u1ED9c`
+    amountLabel: `${formatMoney(creditsPerCall)} ${getVioCreditsLabel()}/cu\u1ED9c`
   };
 }
 function calculateLeTanBookingPrice(userCountry) {
@@ -1762,7 +1782,7 @@ function calculateLeTanBookingPrice(userCountry) {
     creditsPerBooking,
     localAmount: creditsPerBooking,
     currencyCode: "VIG_TOKEN",
-    amountLabel: `${creditsPerBooking} VIG Token/l\u01B0\u1EE3t`
+    amountLabel: `${creditsPerBooking} ${getVioCreditsLabel()}/l\u01B0\u1EE3t`
   };
 }
 

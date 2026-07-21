@@ -1587,6 +1587,20 @@ No Prebuild/EAS/device/Phase D2; Phase C closed green; EAS iOS build NOT AUTHORI
 Next: authorize separate functions/lib bundle-parity remediation before PR #407 merge
 Evidence: docs/product/VIONA_EXPO_LOCALIZATION_17_0_9_PATCH_ALIGNMENT_EVIDENCE.md §13
 
+=== FUNCTIONS/LIB VIO DISPLAY-LABEL BUNDLE PARITY ===
+Operator phrase: APPROVE_VIONA_FUNCTIONS_LIB_VIO_DISPLAY_LABEL_BUNDLE_PARITY_REMEDIATION
+Master baseline: da65a2c42ea24a10d62327bef8d94116204d9d20 (PR #407 already MERGED)
+Branch: chore/viona-functions-lib-vio-label-bundle-parity
+Generated: functions/lib/index.js only (EXPECTED_GENERATED_PARITY_UPDATE)
+Source SoT: src/core/monetization/vioDisplayConfig.ts + vioDisplayLabels.ts + PaymentsService.ts (@app)
+Build: npm run functions:build (node esbuild.mjs) — FUNCTIONS_BUNDLE_REBUILD_DETERMINISTIC
+Labels: hardcoded "VIG Token" amountLabel → getVioCreditsLabel() ("VIO Credits")
+ci:expo-readiness: PASS; ci:release-discipline: PASS
+No functions/src or src edits; no package changes; no deploy
+Primary classification: READY_FOR_VIONA_FUNCTIONS_LIB_VIO_LABEL_BUNDLE_PARITY_PR_REVIEW
+Phase C closed green; EAS iOS build NOT AUTHORIZED; Phase D2 NOT AUTHORIZED
+Evidence: docs/product/VIONA_FUNCTIONS_LIB_VIO_DISPLAY_LABEL_BUNDLE_PARITY_REMEDIATION_EVIDENCE.md
+
 === PACK40DR2 DORMANT RECOVERY SERVICES ===
 Operator phrase: APPROVE_PACK40DR2_DORMANT_RECOVERY_SERVICES
 Master baseline: f184120 (PR #379 MERGED — Pack40DR1 staging migrate-apply evidence)
