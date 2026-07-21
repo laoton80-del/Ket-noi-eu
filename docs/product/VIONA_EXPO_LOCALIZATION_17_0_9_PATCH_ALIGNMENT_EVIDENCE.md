@@ -123,6 +123,69 @@ No Doctor exclusions added.
 
 Did **not**: modify `src/**`, `app.config.js`, `eas.json`, ios/android, run Prebuild, EAS device/build/submit, Phase D2, or deploy.
 
-## 12. Final classification
+## 12. Final classification (patch pack)
 
 `READY_FOR_VIONA_EXPO_LOCALIZATION_17_0_9_PATCH_PR_REVIEW`
+
+---
+
+## 13. PR #407 bounded Expo readiness policy sync
+
+Operator authorization: `APPROVE_VIONA_PR407_BOUNDED_EXPO_READINESS_POLICY_SYNC`
+
+Original PR head: `eacc445f32f7026052a76e6ea2acd778cc9a8ccb`
+
+### Original CI failure (`npm run ci:expo-readiness`)
+
+Deterministic hardcoded policy mismatch in `scripts/expo-readiness-check.mjs`:
+
+| Package | Stale expected | Found |
+|---|---|---|
+| expo | `~54.0.34` | `~54.0.36` |
+| expo-localization | `~17.0.8` | `~17.0.9` |
+| expo-updates | `~29.0.17` | `~29.0.19` |
+
+Expo public config still resolved; failure was policy-only (not WebRTC/secrets/Functions).
+
+### Corrected expectations (strict equality retained)
+
+| Package | Corrected expected |
+|---|---|
+| expo | `~54.0.36` |
+| expo-localization | `~17.0.9` |
+| expo-updates | `~29.0.19` |
+
+Gate remains strict: any incorrect approved pin still fails the check. No wildcards, exclusions, or suppressed failures.
+
+### Stale-string search classification
+
+| Occurrence | Class | Action |
+|---|---|---|
+| `scripts/expo-readiness-check.mjs` | EXECUTABLE_CI_POLICY | Updated |
+| `docs/audit/VIONA_CI_STABILITY_FOLLOWUP_AUDIT.md` | HISTORICAL_EVIDENCE | Left unchanged |
+| `docs/design/evidence/cursor-pack32-4-...` | HISTORICAL_EVIDENCE | Left unchanged |
+| Pre-change lines in this evidence file | HISTORICAL_EVIDENCE | Left unchanged |
+| `package.json` `expo-local-authentication ~17.0.8` | unrelated package | Not touched |
+
+### Gate results after policy sync
+
+| Check | Result |
+|---|---|
+| `npm run ci:expo-readiness` | **PASS** |
+| `npx expo install --check` | Dependencies are up to date |
+| TypeScript / smoke / Phase A/B/C / SOS / Profile / Local / JWT / Prisma boundary | **OK** |
+| `package.json` / `package-lock.json` | **unchanged** |
+| `npm run ci:release-discipline` | **FAIL** — unrelated `functions/lib` bundle parity drift after rebuild (VIO display labels pulled into `functions/lib/index.js`). Dirty rebuild output discarded; not part of this pack. |
+
+### Policy-sync changed paths
+
+- `scripts/expo-readiness-check.mjs`
+- `docs/product/VIONA_EXPO_LOCALIZATION_17_0_9_PATCH_ALIGNMENT_EVIDENCE.md`
+- `docs/ai-context/VIONA_KERNEL_HANDOFF_FAST_SAFE_GLOBAL_MODE.md`
+- `Handoff_VIONA11726.txt`
+
+### Policy-sync classification
+
+`BLOCKED_ADDITIONAL_CI_FAILURE` — Expo readiness policy sync is complete and strict; merge remains blocked until a separately authorized Functions bundle-parity remediation lands (out of this pack scope).
+
+Confirmations: no dependency/source/native/runtime product changes; no Prebuild/EAS/device/deploy; Phase C closed green; EAS iOS build unauthorized; Phase D2 unauthorized.

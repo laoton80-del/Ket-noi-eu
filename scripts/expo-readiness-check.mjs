@@ -36,15 +36,15 @@ function main() {
   }
 
   const expectedVersions = {
-    expo: '~54.0.34',
+    expo: '~54.0.36',
     'expo-dev-client': '~6.0.21',
     'expo-file-system': '~19.0.22',
     'expo-image-picker': '~17.0.11',
-    'expo-localization': '~17.0.8',
+    'expo-localization': '~17.0.9',
     'expo-notifications': '~0.32.17',
     'expo-print': '~15.0.8',
     'expo-sharing': '~14.0.8',
-    'expo-updates': '~29.0.17',
+    'expo-updates': '~29.0.19',
     '@react-native-community/slider': '5.0.1',
   };
 
