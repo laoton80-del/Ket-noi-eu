@@ -1648,17 +1648,28 @@ Evidence: docs/product/VIONA_FC_P0_LOCAL_CREATE_BUSINESS_CONTEXT_AND_SUBMIT_GUAR
 
 === FC-P0 LOCAL PROVIDER ELIGIBILITY + TOURISM COUPLING REMEDIATION ===
 Operator phrase: APPROVE_VIONA_FC_P0_LOCAL_PROVIDER_ELIGIBILITY_AUTHORITY_AND_TOURISM_COUPLING_REMEDIATION
-Baseline: origin/master @ 8bc568b0404981d19c9e9579646acac0af276af6 (PR #413 merge)
-Branch: feat/viona-fc-p0-local-provider-eligibility-tourism-coupling-remediation
-Mode: IMPLEMENTATION_ONLY_NO_DEPLOY
-Path: Path 2 SAFE CONTAINMENT — NO_CANONICAL_LOCAL_PROVIDER_ELIGIBILITY_AUTHORITY
-Actions: remove GET /api/tourism/discover from Local create; PROVIDER_SELECTION_UNAVAILABLE UX
-Preserve: raw UUID removal; submit guard before JWT await; POST /api/local/requests contract
-FC-P0 Local create: STILL BLOCKED (await separate Local provider eligibility authority pack)
-Primary classification: READY_FOR_VIONA_LOCAL_TOURISM_COUPLING_CONTAINMENT_PR_REVIEW_WITH_FC_P0_STILL_BLOCKED
-Apple/EAS/Phase D2 deferred; Pack40S NOT AUTHORIZED; Phase C closed green
+MERGED / VERIFIED ON MASTER: PR #414 @ 19dbc2f1c52aa2c61dfe8c47dab913dc08a70dfb
+Reviewed head: 6e0c37de8678e4def368ea2637cf60d6dd3ee271
+Path 2 containment: PROVIDER_SELECTION_UNAVAILABLE; Tourism discover removed from Local create
+FC-P0 Local create: STILL BLOCKED (no Local provider eligibility authority)
 Evidence: docs/product/VIONA_FC_P0_LOCAL_PROVIDER_ELIGIBILITY_AUTHORITY_AND_TOURISM_COUPLING_REMEDIATION_EVIDENCE.md
-Next: strict read-only review of containment PR — do not treat FC-P0 as closed; no live create QA
+
+=== FC-P0 LOCAL PROVIDER ELIGIBILITY AUTHORITY BOUNDARY + IMPLEMENTATION PLAN ===
+Operator phrase: APPROVE_VIONA_FC_P0_LOCAL_PROVIDER_ELIGIBILITY_AUTHORITY_BOUNDARY_AND_IMPLEMENTATION_PLAN
+Baseline: origin/master @ 19dbc2f1c52aa2c61dfe8c47dab913dc08a70dfb (PR #414 verified)
+Branch: docs/viona-fc-p0-local-provider-eligibility-authority-boundary-plan
+Mode: DOCS_ONLY_NO_IMPLEMENTATION_NO_DEPLOY
+Schema: MINIMAL_SCHEMA_EXTENSION_REQUIRED → LocalProviderEligibility 1:1 Business
+Owner: LOCAL_PROVIDER_AUTHORITY_OWNER_INTERNAL_OPS (superAdmin)
+Read: GET /api/local/providers (auth); Write: /api/local/ops/providers/* (superAdmin)
+Create enforce: createLocalServiceRequest must verify selectable + serviceType support
+Sequence: Pack A schema/backend → Pack B client wiring → staging/QA phrases separate
+Immediate next impl phrase (UNAUTHORIZED): APPROVE_VIONA_FC_P0_LOCAL_PROVIDER_ELIGIBILITY_AUTHORITY_SCHEMA_BACKEND
+Primary classification: READY_FOR_VIONA_FC_P0_LOCAL_PROVIDER_ELIGIBILITY_AUTHORITY_PLAN_PR_REVIEW
+FC-P0 still blocked; AI hard-stop after Local FC-P0; GDPR export after; REQUEST_ONLY_NO_CHARGE
+Apple/EAS/Phase D2 deferred; Pack40S NOT AUTHORIZED; Phase C closed green
+Evidence: docs/product/VIONA_FC_P0_LOCAL_PROVIDER_ELIGIBILITY_AUTHORITY_BOUNDARY_AND_IMPLEMENTATION_PLAN.md
+Next: strict read-only review of this docs PR — do not auto-authorize Pack A implementation
 
 === PACK40DR2 DORMANT RECOVERY SERVICES ===
 Operator phrase: APPROVE_PACK40DR2_DORMANT_RECOVERY_SERVICES
