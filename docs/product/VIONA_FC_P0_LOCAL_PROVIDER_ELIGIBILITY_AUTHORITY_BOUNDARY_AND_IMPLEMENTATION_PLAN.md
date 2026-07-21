@@ -435,3 +435,30 @@ as a separate IMPLEMENTATION_ONLY_NO_DEPLOY pack.
 ## 21. Final classification
 
 `READY_FOR_VIONA_FC_P0_LOCAL_PROVIDER_ELIGIBILITY_AUTHORITY_PLAN_PR_REVIEW`
+
+---
+
+## 22. Remediation addendum (post–PR #415 strict review)
+
+**Status:** PR #415 merged @ `dc5c625`. Strict review blocked on lifecycle / write / audit / consistency gaps.
+
+**Remediation document (authoritative locks):**  
+`docs/product/VIONA_FC_P0_LOCAL_PROVIDER_AUTHORITY_PLAN_LIFECYCLE_WRITE_AUDIT_CONSISTENCY_REMEDIATION.md`
+
+That addendum **supersedes** ambiguous wording in §§3, 6, 8–11, 16–17 of this plan where they conflict, specifically:
+
+| Topic | Locked decision |
+|---|---|
+| Owner | `LOCAL_PROVIDER_AUTHORITY_OWNER_ROLE_ADMIN_VIA_SUPERADMIN_MIDDLEWARE` (`Role.ADMIN` only) |
+| Lifecycle | Allowed transitions table; `RETIRED` terminal; no reset-to-DRAFT |
+| Idempotency | Same-state → 200, **no** mutation audit |
+| Invalid transition | **409** (Local `invalid_status` convention) |
+| Write routes | Exact POST/PATCH/activate/suspend/retire — no OR |
+| Audit | New `LocalProviderEligibilityAuditEvent` (request audit cannot be reused — requires `requestId`) |
+| Create consistency | Re-check eligibility **inside** existing `$transaction` |
+| Read | `LocalRequestController.getLocalProviders` + `listSelectableLocalProviders`; envelope `{ items, pagination: { limit, skip, returned } }` |
+| DTO | No `categoryLabel` in FC-P0 |
+| Sequence | **A1 → A2 → B** |
+| Immediate phrase | `APPROVE_VIONA_FC_P0_LOCAL_PROVIDER_ELIGIBILITY_AUTHORITY_SCHEMA_DOMAIN_ENFORCEMENT` (**unauthorized**) |
+
+**FC-P0 remains blocked until A1→A2→B complete under separate authorizations.**
