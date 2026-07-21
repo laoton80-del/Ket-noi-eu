@@ -1632,17 +1632,27 @@ Evidence: docs/product/VIONA_FC_P0_LOCAL_REQUEST_CREATE_CLIENT_IMPLEMENTATION_BO
 
 === FC-P0 LOCAL REQUEST CREATE CLIENT IMPLEMENTATION ===
 Operator phrase: APPROVE_VIONA_FC_P0_LOCAL_REQUEST_CREATE_CLIENT
-Baseline: origin/master @ 1c631dc0ad85864c77c3c53f7b03793f411b72b2
-Branch: feat/viona-fc-p0-local-request-create-client
-Mode: IMPLEMENTATION_ONLY_NO_DEPLOY
-Entry: LocalUserRequestStatusScreen in-screen composer (no new Stack.Screen)
-API: createUserLocalServiceRequest → POST /api/local/requests (session JWT; source=LOCAL_SCREEN)
-Post-create: stay on status screen; refresh list; expand created id
-No backend/schema/payment/wallet/AI/Pack40/deploy; REQUEST_ONLY_NO_CHARGE preserved
-ci:expo-readiness PASS; focused create client tests PASS; tsc PASS
-Primary classification: READY_FOR_VIONA_FC_P0_LOCAL_REQUEST_CREATE_CLIENT_PR_REVIEW
-Apple/EAS/Phase D2 deferred; Pack40S NOT AUTHORIZED; Phase C closed green
+MERGED ON MASTER: PR #412 @ 028187cbe6d9bd78890ca1d56f7001bf73b772f4
+Reviewed PR head: 61789b1ef67cc9bb5817e21ae536cb1b4ef79b8c
+Post-merge strict review: BLOCKED_LOCAL_CREATE_FIRST_REQUEST_BUSINESS_CONTEXT_UNUSABLE
+  (+ raw UUID consumer UX; inFlight after JWT await race; behavioral-test gap)
 Evidence: docs/product/VIONA_FC_P0_LOCAL_REQUEST_CREATE_CLIENT_IMPLEMENTATION_EVIDENCE.md
+
+=== FC-P0 LOCAL CREATE BUSINESS CONTEXT + SUBMIT GUARD REMEDIATION ===
+Operator phrase: APPROVE_VIONA_FC_P0_LOCAL_CREATE_BUSINESS_CONTEXT_AND_SUBMIT_GUARD_REMEDIATION
+Baseline: origin/master @ 028187cbe6d9bd78890ca1d56f7001bf73b772f4 (PR #412 merge)
+Branch: feat/viona-fc-p0-local-create-business-context-submit-guard-remediation
+Mode: IMPLEMENTATION_ONLY_NO_DEPLOY
+Gate A source: GET /api/tourism/discover → Business.id + name (zero-history; no new backend)
+Architecture: in-screen provider selector on LocalUserRequestCreateComposer
+Raw UUID TextInput / paste instructions removed; displayName only in UI
+Submit guard: runLocalCreateSubmit sets inFlight BEFORE await getJwt/POST
+Executed DI behavioral tests: scripts/test-local-user-request-create-client.ts
+No backend/schema/payment/wallet/AI/Pack40/deploy; REQUEST_ONLY_NO_CHARGE preserved
+Primary classification: READY_FOR_VIONA_FC_P0_LOCAL_CREATE_BUSINESS_CONTEXT_AND_SUBMIT_GUARD_REMEDIATION_PR_REVIEW
+Apple/EAS/Phase D2 deferred; Pack40S NOT AUTHORIZED; Phase C closed green
+Evidence: docs/product/VIONA_FC_P0_LOCAL_CREATE_BUSINESS_CONTEXT_AND_SUBMIT_GUARD_REMEDIATION_EVIDENCE.md
+Next: strict read-only review of remediation PR — do not auto-authorize staging/live create QA
 
 === PACK40DR2 DORMANT RECOVERY SERVICES ===
 Operator phrase: APPROVE_PACK40DR2_DORMANT_RECOVERY_SERVICES

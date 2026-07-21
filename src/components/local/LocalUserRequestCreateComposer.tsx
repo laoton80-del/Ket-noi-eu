@@ -1,5 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
-import { useCallback, useMemo, useRef, useState, type ReactElement } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactElement } from 'react';
 import {
   ActivityIndicator,
   Pressable,
@@ -20,16 +20,21 @@ import { FontFamily } from '../../theme/typography';
 import { createUserLocalServiceRequest } from '../../services/localUserRequestApi';
 import { getRestApiJwt } from '../../services/apiClient';
 import {
-  assertLocalCreateBodySafe,
-  buildLocalCreateRequestBody,
+  findLocalCreateBusinessOption,
+  loadLocalCreateBusinessOptionsFromTourismDiscover,
+  mergeHistoryBusinessHints,
+  type LocalCreateBusinessOption,
+  type LocalCreateBusinessSourceLoader,
+} from '../../services/local/localCreateBusinessSource';
+import {
   canSubmitLocalCreate,
   defaultLocalCreateFormValues,
   feedbackKeyForCreateState,
   fieldsEditableInLocalCreateState,
   LOCAL_CREATE_SERVICE_TYPE_OPTIONS,
-  mapCreateApiResultToUiState,
-  validateLocalCreateForm,
+  runLocalCreateSubmit,
   type LocalCreateFormValues,
+  type LocalCreateSubmitDeps,
   type LocalCreateUiState,
 } from '../../screens/b2c/localUserRequestCreateFlow';
 
@@ -43,11 +48,15 @@ export type LocalKnownBusinessOption = Readonly<{
 }>;
 
 export type LocalUserRequestCreateComposerProps = Readonly<{
+  /** History hints only — never the sole first-time source. */
   knownBusinesses: readonly LocalKnownBusinessOption[];
   t: (key: string, options?: Record<string, unknown>) => string;
   onCreated: (result: LocalUserRequestCreateResult) => Promise<void>;
   onRefreshListForUnknownResult: (form: LocalCreateFormValues) => Promise<string | null>;
   onAuthRequired: () => void;
+  /** Injectable for tests. */
+  loadBusinessOptions?: LocalCreateBusinessSourceLoader;
+  submitDeps?: LocalCreateSubmitDeps;
 }>;
 
 export function LocalUserRequestCreateComposer({
@@ -56,25 +65,58 @@ export function LocalUserRequestCreateComposer({
   onCreated,
   onRefreshListForUnknownResult,
   onAuthRequired,
+  loadBusinessOptions = loadLocalCreateBusinessOptionsFromTourismDiscover,
+  submitDeps,
 }: LocalUserRequestCreateComposerProps): ReactElement {
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState<LocalCreateFormValues>(defaultLocalCreateFormValues);
   const [uiState, setUiState] = useState<LocalCreateUiState>('IDLE');
   const [refreshWarning, setRefreshWarning] = useState(false);
   const [createdId, setCreatedId] = useState<string | null>(null);
+  const [options, setOptions] = useState<readonly LocalCreateBusinessOption[]>([]);
+  const [optionsLoading, setOptionsLoading] = useState(false);
+  const [optionsError, setOptionsError] = useState(false);
   const inFlightRef = useRef(false);
+  const mountedRef = useRef(true);
+
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+    };
+  }, []);
 
   const editable = fieldsEditableInLocalCreateState(uiState);
-  const canSubmit = canSubmitLocalCreate(uiState, form);
+  const canSubmit = canSubmitLocalCreate(uiState, form, options);
   const feedbackKey = feedbackKeyForCreateState(uiState);
+  const selected = findLocalCreateBusinessOption(form.businessId, options);
 
   const feedbackText = useMemo(() => {
     if (refreshWarning) {
       return t('local.userRequestStatus.create.refreshWarning');
     }
+    if (optionsError) {
+      return t('local.userRequestStatus.create.feedback.providersLoadError');
+    }
+    if (!optionsLoading && open && options.length === 0) {
+      return t('local.userRequestStatus.create.feedback.providersEmpty');
+    }
+    if (feedbackKey === 'validation' && form.businessId && !selected) {
+      return t('local.userRequestStatus.create.feedback.providerUnavailable');
+    }
     if (!feedbackKey) return null;
     return t(`local.userRequestStatus.create.feedback.${feedbackKey}`);
-  }, [feedbackKey, refreshWarning, t]);
+  }, [
+    feedbackKey,
+    form.businessId,
+    open,
+    options.length,
+    optionsError,
+    optionsLoading,
+    refreshWarning,
+    selected,
+    t,
+  ]);
 
   const patchForm = useCallback((patch: Partial<LocalCreateFormValues>) => {
     if (!fieldsEditableInLocalCreateState(uiState)) return;
@@ -99,54 +141,84 @@ export function LocalUserRequestCreateComposer({
     inFlightRef.current = false;
   }, []);
 
+  const loadOptions = useCallback(async () => {
+    setOptionsLoading(true);
+    setOptionsError(false);
+    const result = await loadBusinessOptions();
+    if (!mountedRef.current) return;
+    setOptionsLoading(false);
+    if (!result.ok) {
+      setOptionsError(true);
+      setOptions(
+        mergeHistoryBusinessHints(
+          [],
+          knownBusinesses.map((b) => ({ id: b.id, name: b.name }))
+        )
+      );
+      return;
+    }
+    setOptions(
+      mergeHistoryBusinessHints(
+        result.data,
+        knownBusinesses.map((b) => ({ id: b.id, name: b.name }))
+      )
+    );
+  }, [knownBusinesses, loadBusinessOptions]);
+
+  const openComposer = useCallback(() => {
+    resetComposer();
+    setOpen(true);
+    void loadOptions();
+  }, [loadOptions, resetComposer]);
+
+  const resolvedSubmitDeps: LocalCreateSubmitDeps = useMemo(
+    () =>
+      submitDeps ?? {
+        getJwt: getRestApiJwt,
+        createRequest: createUserLocalServiceRequest,
+      },
+    [submitDeps]
+  );
+
   const submit = useCallback(async () => {
+    // UI may soft-check; authoritative lock is set inside runLocalCreateSubmit
+    // synchronously before any await (JWT / POST).
     if (inFlightRef.current || uiState === 'SUBMITTING') return;
     if (uiState === 'NETWORK_RESULT_UNKNOWN') return;
 
-    const fieldErrors = validateLocalCreateForm(form);
-    if (fieldErrors) {
-      setUiState('VALIDATION_ERROR');
-      return;
-    }
-
-    const jwt = await getRestApiJwt();
-    if (!jwt) {
-      setUiState('AUTH_REQUIRED_OR_EXPIRED');
-      onAuthRequired();
-      return;
-    }
-
-    const body = buildLocalCreateRequestBody(form);
-    assertLocalCreateBodySafe(body);
-
-    inFlightRef.current = true;
     setUiState('SUBMITTING');
     setRefreshWarning(false);
 
-    const result = await createUserLocalServiceRequest(body);
-    const next = mapCreateApiResultToUiState(result);
-    inFlightRef.current = false;
+    const result = await runLocalCreateSubmit({
+      form,
+      options,
+      inFlight: inFlightRef,
+      deps: resolvedSubmitDeps,
+    });
 
-    if (next === 'CREATED_SUCCESS' && result.ok) {
-      setCreatedId(result.data.id);
+    if (!mountedRef.current) return;
+
+    if (result.uiState === 'CREATED_SUCCESS' && result.created) {
+      setCreatedId(result.created.id);
       setUiState('CREATED_SUCCESS');
       try {
-        await onCreated(result.data);
+        await onCreated(result.created);
       } catch {
-        setRefreshWarning(true);
+        if (mountedRef.current) setRefreshWarning(true);
       }
       return;
     }
 
-    if (next === 'AUTH_REQUIRED_OR_EXPIRED') {
-      setUiState(next);
+    if (result.uiState === 'AUTH_REQUIRED_OR_EXPIRED') {
+      setUiState(result.uiState);
       onAuthRequired();
       return;
     }
 
-    if (next === 'NETWORK_RESULT_UNKNOWN') {
-      setUiState(next);
+    if (result.uiState === 'NETWORK_RESULT_UNKNOWN') {
+      setUiState(result.uiState);
       const recoveredId = await onRefreshListForUnknownResult(form);
+      if (!mountedRef.current) return;
       if (recoveredId) {
         setCreatedId(recoveredId);
         setUiState('CREATED_SUCCESS');
@@ -154,8 +226,21 @@ export function LocalUserRequestCreateComposer({
       return;
     }
 
-    setUiState(next);
-  }, [form, onAuthRequired, onCreated, onRefreshListForUnknownResult, uiState]);
+    if (result.uiState === 'SUBMITTING' && !result.created) {
+      // Duplicate entry while another submit owns the lock — do not clear SUBMITTING.
+      return;
+    }
+
+    setUiState(result.uiState);
+  }, [
+    form,
+    onAuthRequired,
+    onCreated,
+    onRefreshListForUnknownResult,
+    options,
+    resolvedSubmitDeps,
+    uiState,
+  ]);
 
   const acknowledgeNetworkAndResubmit = useCallback(() => {
     if (uiState !== 'NETWORK_RESULT_UNKNOWN') return;
@@ -166,10 +251,7 @@ export function LocalUserRequestCreateComposer({
     return (
       <Pressable
         testID="local-user-request-create-open"
-        onPress={() => {
-          resetComposer();
-          setOpen(true);
-        }}
+        onPress={openComposer}
         accessibilityRole="button"
         accessibilityLabel={t('local.userRequestStatus.create.openA11y')}
         style={({ pressed }) => [styles.openBtn, pressed && { opacity: 0.88 }]}
@@ -201,44 +283,42 @@ export function LocalUserRequestCreateComposer({
         {t('local.userRequestStatus.create.sourceFixed', { source: LOCAL_CREATE_CLIENT_SOURCE })}
       </Text>
 
-      {knownBusinesses.length > 0 ? (
-        <View style={styles.knownRow}>
-          <Text style={styles.label}>{t('local.userRequestStatus.create.knownBusinesses')}</Text>
-          <View style={styles.chipWrap}>
-            {knownBusinesses.map((biz) => {
-              const active = form.businessId === biz.id;
-              return (
-                <Pressable
-                  key={biz.id}
-                  disabled={!editable}
-                  onPress={() => patchForm({ businessId: biz.id })}
-                  accessibilityRole="button"
-                  accessibilityLabel={biz.name}
-                  style={[styles.bizChip, active && styles.bizChipActive, !editable && styles.disabled]}
-                >
-                  <Text style={[styles.bizChipText, active && styles.bizChipTextActive]} numberOfLines={1}>
-                    {biz.name}
-                  </Text>
-                </Pressable>
-              );
-            })}
-          </View>
+      <Text style={styles.label}>{t('local.userRequestStatus.create.providerLabel')}</Text>
+      {optionsLoading ? (
+        <ActivityIndicator
+          color={EMERALD}
+          accessibilityLabel={t('local.userRequestStatus.create.providersLoading')}
+        />
+      ) : (
+        <View style={styles.chipWrap} testID="local-create-provider-list">
+          {options.map((biz) => {
+            const active = form.businessId === biz.businessId;
+            return (
+              <Pressable
+                key={biz.businessId}
+                disabled={!editable}
+                onPress={() => patchForm({ businessId: biz.businessId })}
+                accessibilityRole="button"
+                accessibilityLabel={biz.displayName}
+                accessibilityState={{ selected: active }}
+                style={[styles.bizChip, active && styles.bizChipActive, !editable && styles.disabled]}
+              >
+                <Text style={[styles.bizChipText, active && styles.bizChipTextActive]} numberOfLines={1}>
+                  {biz.displayName}
+                </Text>
+                <Text style={styles.bizChipCat} numberOfLines={1}>
+                  {biz.categoryLabel}
+                </Text>
+              </Pressable>
+            );
+          })}
         </View>
+      )}
+      {selected ? (
+        <Text style={styles.selectedLine} testID="local-create-selected-name">
+          {t('local.userRequestStatus.create.selectedProvider', { name: selected.displayName })}
+        </Text>
       ) : null}
-
-      <Text style={styles.label}>{t('local.userRequestStatus.create.businessIdLabel')}</Text>
-      <TextInput
-        testID="local-create-business-id"
-        value={form.businessId}
-        editable={editable}
-        onChangeText={(businessId) => patchForm({ businessId })}
-        autoCapitalize="none"
-        autoCorrect={false}
-        placeholder={t('local.userRequestStatus.create.businessIdPlaceholder')}
-        placeholderTextColor={INK_MUTED}
-        style={[styles.input, !editable && styles.disabled]}
-        accessibilityLabel={t('local.userRequestStatus.create.businessIdLabel')}
-      />
 
       <Text style={styles.label}>{t('local.userRequestStatus.create.serviceTypeLabel')}</Text>
       <View style={styles.chipWrap}>
@@ -295,7 +375,6 @@ export function LocalUserRequestCreateComposer({
           ]}
         >
           {feedbackText}
-          {createdId ? ` (${createdId.slice(0, 8)}…)` : ''}
         </Text>
       ) : null}
 
@@ -314,14 +393,17 @@ export function LocalUserRequestCreateComposer({
 
       <Pressable
         testID="local-create-submit"
-        disabled={!canSubmit || uiState === 'SUBMITTING'}
+        disabled={!canSubmit || uiState === 'SUBMITTING' || optionsLoading}
         onPress={() => void submit()}
         accessibilityRole="button"
-        accessibilityState={{ disabled: !canSubmit || uiState === 'SUBMITTING', busy: uiState === 'SUBMITTING' }}
+        accessibilityState={{
+          disabled: !canSubmit || uiState === 'SUBMITTING' || optionsLoading,
+          busy: uiState === 'SUBMITTING',
+        }}
         accessibilityLabel={t('local.userRequestStatus.create.submitA11y')}
         style={({ pressed }) => [
           styles.submitBtn,
-          (!canSubmit || uiState === 'SUBMITTING') && styles.submitDisabled,
+          (!canSubmit || uiState === 'SUBMITTING' || optionsLoading) && styles.submitDisabled,
           pressed && canSubmit && uiState !== 'SUBMITTING' && { opacity: 0.9 },
         ]}
       >
@@ -335,7 +417,10 @@ export function LocalUserRequestCreateComposer({
       {uiState === 'CREATED_SUCCESS' ? (
         <Pressable
           testID="local-create-another"
-          onPress={resetComposer}
+          onPress={() => {
+            resetComposer();
+            void loadOptions();
+          }}
           accessibilityRole="button"
           style={({ pressed }) => [styles.secondaryBtn, pressed && { opacity: 0.88 }]}
         >
@@ -403,9 +488,6 @@ const styles = StyleSheet.create({
     fontSize: 10,
     color: EMERALD,
   },
-  knownRow: {
-    gap: 6,
-  },
   label: {
     fontFamily: FontFamily.extrabold,
     fontSize: 11,
@@ -435,23 +517,34 @@ const styles = StyleSheet.create({
   },
   bizChip: {
     maxWidth: '100%',
-    minHeight: 36,
+    minHeight: 44,
     paddingHorizontal: 10,
     paddingVertical: 6,
-    borderRadius: 999,
+    borderRadius: 12,
     borderWidth: 1,
     borderColor: localConstellation.border,
+    gap: 2,
   },
   bizChipActive: {
     borderColor: 'rgba(72, 210, 165, 0.5)',
     backgroundColor: 'rgba(72, 210, 165, 0.12)',
   },
   bizChipText: {
-    fontFamily: FontFamily.semibold,
-    fontSize: 11,
+    fontFamily: FontFamily.extrabold,
+    fontSize: 12,
     color: INK_MUTED,
   },
   bizChipTextActive: {
+    color: EMERALD,
+  },
+  bizChipCat: {
+    fontFamily: FontFamily.semibold,
+    fontSize: 9,
+    color: INK_MUTED,
+  },
+  selectedLine: {
+    fontFamily: FontFamily.semibold,
+    fontSize: 11,
     color: EMERALD,
   },
   typeChip: {
