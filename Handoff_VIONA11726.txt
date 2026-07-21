@@ -1656,20 +1656,27 @@ Evidence: docs/product/VIONA_FC_P0_LOCAL_PROVIDER_ELIGIBILITY_AUTHORITY_AND_TOUR
 
 === FC-P0 LOCAL PROVIDER ELIGIBILITY AUTHORITY BOUNDARY + IMPLEMENTATION PLAN ===
 Operator phrase: APPROVE_VIONA_FC_P0_LOCAL_PROVIDER_ELIGIBILITY_AUTHORITY_BOUNDARY_AND_IMPLEMENTATION_PLAN
-Baseline: origin/master @ 19dbc2f1c52aa2c61dfe8c47dab913dc08a70dfb (PR #414 verified)
-Branch: docs/viona-fc-p0-local-provider-eligibility-authority-boundary-plan
-Mode: DOCS_ONLY_NO_IMPLEMENTATION_NO_DEPLOY
-Schema: MINIMAL_SCHEMA_EXTENSION_REQUIRED → LocalProviderEligibility 1:1 Business
-Owner: LOCAL_PROVIDER_AUTHORITY_OWNER_INTERNAL_OPS (superAdmin)
-Read: GET /api/local/providers (auth); Write: /api/local/ops/providers/* (superAdmin)
-Create enforce: createLocalServiceRequest must verify selectable + serviceType support
-Sequence: Pack A schema/backend → Pack B client wiring → staging/QA phrases separate
-Immediate next impl phrase (UNAUTHORIZED): APPROVE_VIONA_FC_P0_LOCAL_PROVIDER_ELIGIBILITY_AUTHORITY_SCHEMA_BACKEND
-Primary classification: READY_FOR_VIONA_FC_P0_LOCAL_PROVIDER_ELIGIBILITY_AUTHORITY_PLAN_PR_REVIEW
-FC-P0 still blocked; AI hard-stop after Local FC-P0; GDPR export after; REQUEST_ONLY_NO_CHARGE
-Apple/EAS/Phase D2 deferred; Pack40S NOT AUTHORIZED; Phase C closed green
+MERGED ON MASTER: PR #415 @ dc5c625ce2afd5913737cc01111da4679fed6987
+Reviewed head: 51b239d30166f5a07ef320a47df9f15012205945
+Post-merge strict review: BLOCKED_LOCAL_PROVIDER_STATUS_LIFECYCLE_UNRESOLVED
+  (+ write OR, audit OR, create consistency, migration/test gaps)
 Evidence: docs/product/VIONA_FC_P0_LOCAL_PROVIDER_ELIGIBILITY_AUTHORITY_BOUNDARY_AND_IMPLEMENTATION_PLAN.md
-Next: strict read-only review of this docs PR — do not auto-authorize Pack A implementation
+
+=== FC-P0 LOCAL PROVIDER AUTHORITY PLAN LIFECYCLE/WRITE/AUDIT/CONSISTENCY REMEDIATION ===
+Operator phrase: APPROVE_VIONA_FC_P0_LOCAL_PROVIDER_AUTHORITY_PLAN_LIFECYCLE_WRITE_AUDIT_CONSISTENCY_REMEDIATION
+Baseline: origin/master @ dc5c625ce2afd5913737cc01111da4679fed6987 (PR #415)
+Branch: docs/viona-fc-p0-local-provider-authority-plan-lifecycle-remediation
+Mode: DOCS_ONLY_NO_IMPLEMENTATION_NO_MIGRATION_NO_DEPLOY
+Locks: Role.ADMIN via superAdminMiddleware; RETIRED terminal; transition table; 409 invalid;
+  same-state 200 no audit; exact POST/PATCH/activate/suspend/retire;
+  LocalProviderEligibilityAuditEvent (request audit not reusable);
+  create eligibility re-check inside existing $transaction; A1→A2→B sequence
+Immediate next (UNAUTHORIZED): APPROVE_VIONA_FC_P0_LOCAL_PROVIDER_ELIGIBILITY_AUTHORITY_SCHEMA_DOMAIN_ENFORCEMENT
+Primary classification: READY_FOR_VIONA_FC_P0_LOCAL_PROVIDER_AUTHORITY_PLAN_REMEDIATION_PR_REVIEW
+FC-P0 still blocked; AI hard-stop after Local FC-P0; REQUEST_ONLY_NO_CHARGE
+Apple/EAS/Phase D2 deferred; Pack40S NOT AUTHORIZED; Phase C closed green
+Evidence: docs/product/VIONA_FC_P0_LOCAL_PROVIDER_AUTHORITY_PLAN_LIFECYCLE_WRITE_AUDIT_CONSISTENCY_REMEDIATION.md
+Next: strict read-only review of this docs PR — do not auto-authorize Pack A1
 
 === PACK40DR2 DORMANT RECOVERY SERVICES ===
 Operator phrase: APPROVE_PACK40DR2_DORMANT_RECOVERY_SERVICES

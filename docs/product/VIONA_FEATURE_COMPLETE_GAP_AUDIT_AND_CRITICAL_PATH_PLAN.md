@@ -295,9 +295,11 @@ Numeric % = `(sum of universe scores) / 24 × 100`, rounded to nearest integer.
 | Order | Pack | Priority | Scope | Size | Parallel? | Auth phrase |
 |---|---|---|---|---|---|---|
 | 0a | **FC-P0 Local create client + containment lineage** | P0 (done partial) | Local | — | MERGED | PR #412 create client; #413 UUID/guard; #414 Tourism coupling containment **verified on master** — create UI still `PROVIDER_SELECTION_UNAVAILABLE` |
-| 0b | **FC-P0-LOCAL-PROVIDER-ELIGIBILITY-AUTHORITY-BOUNDARY** | P0 (docs) | Local | S | This plan | `APPROVE_VIONA_FC_P0_LOCAL_PROVIDER_ELIGIBILITY_AUTHORITY_BOUNDARY_AND_IMPLEMENTATION_PLAN` |
-| 1 | **FC-P0-LOCAL-PROVIDER-ELIGIBILITY-AUTHORITY-SCHEMA-BACKEND** | P0 | Local | M | After 0b merge+verify | `APPROVE_VIONA_FC_P0_LOCAL_PROVIDER_ELIGIBILITY_AUTHORITY_SCHEMA_BACKEND` |
-| 1b | **FC-P0-LOCAL-PROVIDER-AUTHORITY-CLIENT-WIRING** | P0 | Local | M | After 1 merge+verify | `APPROVE_VIONA_FC_P0_LOCAL_PROVIDER_AUTHORITY_CLIENT_WIRING` |
+| 0b | **FC-P0-LOCAL-PROVIDER-ELIGIBILITY-AUTHORITY-BOUNDARY** | P0 (docs) | Local | S | PR #415 MERGED @ `dc5c625`; lifecycle remediation addendum required before Pack A | plan + remediation phrases |
+| 0c | **FC-P0-LOCAL-PROVIDER-AUTHORITY-PLAN-LIFECYCLE-REMEDIATION** | P0 (docs) | Local | S | Locks transition/write/audit/consistency; A1→A2→B | `APPROVE_VIONA_FC_P0_LOCAL_PROVIDER_AUTHORITY_PLAN_LIFECYCLE_WRITE_AUDIT_CONSISTENCY_REMEDIATION` |
+| 1 | **FC-P0-LOCAL-PROVIDER-ELIGIBILITY-AUTHORITY-SCHEMA-DOMAIN (A1)** | P0 | Local | M | After 0c merge+verify | `APPROVE_VIONA_FC_P0_LOCAL_PROVIDER_ELIGIBILITY_AUTHORITY_SCHEMA_DOMAIN_ENFORCEMENT` |
+| 1a | **FC-P0-LOCAL-PROVIDER-ELIGIBILITY-AUTHORITY-READ-OPS (A2)** | P0 | Local | M | After A1 verified | `APPROVE_VIONA_FC_P0_LOCAL_PROVIDER_ELIGIBILITY_AUTHORITY_READ_OPS_ROUTES` |
+| 1b | **FC-P0-LOCAL-PROVIDER-AUTHORITY-CLIENT-WIRING (B)** | P0 | Local | M | After A2 verified | `APPROVE_VIONA_FC_P0_LOCAL_PROVIDER_AUTHORITY_CLIENT_WIRING` |
 | 2 | **FC-P0-AI-RUNTIME-COST-HARD-STOP** | P0 | Shared AI | L | After Local FC-P0 closure (1b verified) | `APPROVE_VIONA_FC_P0_AI_RUNTIME_COST_HARD_STOP` |
 | 3 | **FC-P0-ACCOUNT-GDPR-EXPORT** | P0 | Account | S | After or with 2 | `APPROVE_VIONA_FC_P0_ACCOUNT_GDPR_EXPORT` |
 | 4 | **FC-P1-LOCAL-EXPIRY-AND-RATE-LIMIT** | P1 | Local | M | After Local create closed | `APPROVE_VIONA_FC_P1_LOCAL_EXPIRY_AND_RATE_LIMIT` |
@@ -323,8 +325,9 @@ iOS/Apple packs remain **out of this critical path** until operator reopens the 
 | Problem | First-time B2C create cannot select a Local-eligible provider; Tourism discover rejected; no schema/route authority |
 | Boundary plan | `docs/product/VIONA_FC_P0_LOCAL_PROVIDER_ELIGIBILITY_AUTHORITY_BOUNDARY_AND_IMPLEMENTATION_PLAN.md` |
 | Architecture | Minimal `LocalProviderEligibility` 1:1 Business; ops/superAdmin owner; `GET /api/local/providers`; create-service enforcement |
-| Next impl phrase | `APPROVE_VIONA_FC_P0_LOCAL_PROVIDER_ELIGIBILITY_AUTHORITY_SCHEMA_BACKEND` (**unauthorized** until this plan is reviewed, merged, verified) |
-| Client wiring phrase | `APPROVE_VIONA_FC_P0_LOCAL_PROVIDER_AUTHORITY_CLIENT_WIRING` (after schema/backend verified) |
+| Next impl phrase | `APPROVE_VIONA_FC_P0_LOCAL_PROVIDER_ELIGIBILITY_AUTHORITY_SCHEMA_DOMAIN_ENFORCEMENT` (**unauthorized** until lifecycle remediation reviewed/merged/verified) |
+| Client wiring phrase | `APPROVE_VIONA_FC_P0_LOCAL_PROVIDER_AUTHORITY_CLIENT_WIRING` (after A2 verified) |
+| Remediation | `docs/product/VIONA_FC_P0_LOCAL_PROVIDER_AUTHORITY_PLAN_LIFECYCLE_WRITE_AUDIT_CONSISTENCY_REMEDIATION.md` |
 
 #### FC-P0-LOCAL-REQUEST-CREATE-CLIENT (lineage — partial)
 
@@ -416,18 +419,18 @@ iOS/Apple packs remain **out of this critical path** until operator reopens the 
 
 ## 14. Recommended single next implementation pack
 
-**Immediate docs gate (this pack):** Local provider eligibility authority boundary plan.  
-Phrase: `APPROVE_VIONA_FC_P0_LOCAL_PROVIDER_ELIGIBILITY_AUTHORITY_BOUNDARY_AND_IMPLEMENTATION_PLAN`
+**Immediate docs gate:** Local provider authority plan lifecycle/write/audit/consistency remediation.  
+Phrase: `APPROVE_VIONA_FC_P0_LOCAL_PROVIDER_AUTHORITY_PLAN_LIFECYCLE_WRITE_AUDIT_CONSISTENCY_REMEDIATION`
 
-**Immediate next implementation pack (unauthorized until this plan is reviewed, merged, and verified):**  
-**`FC-P0-LOCAL-PROVIDER-ELIGIBILITY-AUTHORITY-SCHEMA-BACKEND`**  
-Phrase: `APPROVE_VIONA_FC_P0_LOCAL_PROVIDER_ELIGIBILITY_AUTHORITY_SCHEMA_BACKEND`
+**Immediate next implementation pack (unauthorized until remediation is reviewed, merged, and verified):**  
+**`FC-P0-LOCAL-PROVIDER-ELIGIBILITY-AUTHORITY-SCHEMA-DOMAIN` (Pack A1)**  
+Phrase: `APPROVE_VIONA_FC_P0_LOCAL_PROVIDER_ELIGIBILITY_AUTHORITY_SCHEMA_DOMAIN_ENFORCEMENT`
 
-Canonical plan: `docs/product/VIONA_FC_P0_LOCAL_PROVIDER_ELIGIBILITY_AUTHORITY_BOUNDARY_AND_IMPLEMENTATION_PLAN.md`
+Canonical remediation: `docs/product/VIONA_FC_P0_LOCAL_PROVIDER_AUTHORITY_PLAN_LIFECYCLE_WRITE_AUDIT_CONSISTENCY_REMEDIATION.md`  
+Parent plan: `docs/product/VIONA_FC_P0_LOCAL_PROVIDER_ELIGIBILITY_AUTHORITY_BOUNDARY_AND_IMPLEMENTATION_PLAN.md` (PR #415)
 
-Rationale: Tourism coupling is contained (PR #414 verified). FC-P0 Local create remains blocked solely by missing Local provider eligibility authority. AI hard-stop and GDPR export stay **after** Local FC-P0 closure. No Apple/Pack40S/deploy.
-
-Lineage (do not reopen as “create client missing”): PR #412 create client; #413 UUID/guard; #414 containment. Client wiring is Pack B after schema/backend.
+Sequence: **A1 (schema/domain/create enforce) → A2 (read/ops routes) → B (client wiring)**.  
+FC-P0 still blocked. AI hard-stop after Local FC-P0 closure. No Apple/Pack40S/deploy.
 
 ---
 
