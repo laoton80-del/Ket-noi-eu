@@ -886,7 +886,45 @@
       "actionFailedTitle": "Thao tác thất bại",
       "localTileTitle": "Yêu cầu của tôi",
       "localTileSub": "Theo dõi trạng thái tại đây. Chỉ gửi yêu cầu · không thu phí · đã xác nhận ≠ đã thanh toán.",
-      "localTileA11y": "Mở yêu cầu Local của tôi"
+      "localTileA11y": "Mở yêu cầu Local của tôi",
+      "create": {
+        "openBtn": "Tạo yêu cầu Local",
+        "openA11y": "Mở biểu mẫu tạo yêu cầu Local",
+        "closeA11y": "Đóng biểu mẫu tạo yêu cầu",
+        "title": "Yêu cầu Local mới",
+        "hint": "Chỉ gửi yêu cầu · không thu phí. Nhập business ID đã biết. Merchant xác nhận trước khi lịch được chốt.",
+        "sourceFixed": "Nguồn cố định: {{source}}",
+        "knownBusinesses": "Từ merchant gần đây của bạn",
+        "businessIdLabel": "Business ID",
+        "businessIdPlaceholder": "Dán UUID của business",
+        "serviceTypeLabel": "Loại dịch vụ",
+        "titleLabel": "Tiêu đề",
+        "titlePlaceholder": "Bạn cần gì?",
+        "descriptionLabel": "Chi tiết (tuỳ chọn)",
+        "descriptionPlaceholder": "Ghi chú thêm cho merchant",
+        "submitBtn": "Gửi yêu cầu",
+        "submitA11y": "Gửi yêu cầu dịch vụ Local",
+        "submitting": "Đang gửi yêu cầu",
+        "createAnother": "Tạo yêu cầu khác",
+        "ackUnknownToRetry": "Đã kiểm tra danh sách — chạm để mở gửi lại thủ công",
+        "refreshWarning": "Đã tạo yêu cầu nhưng chưa làm mới danh sách. Kéo để làm mới.",
+        "feedback": {
+          "validation": "Kiểm tra business ID, loại dịch vụ và tiêu đề.",
+          "auth": "Cần đăng nhập để tạo yêu cầu.",
+          "rateLimited": "Quá nhiều yêu cầu. Vui lòng đợi rồi thử lại.",
+          "serverValidation": "Máy chủ không chấp nhận yêu cầu. Kiểm tra business ID và các trường.",
+          "networkUnknown": "Mất kết nối. Đang làm mới danh sách trước khi gửi lại.",
+          "serverError": "Đã xảy ra lỗi. Vui lòng thử lại.",
+          "success": "Yêu cầu đã gửi để merchant xem xét."
+        },
+        "serviceType": {
+          "GENERIC_REQUEST": "Chung",
+          "SERVICE_MENU": "Menu dịch vụ",
+          "FIXER_HIRE": "Fixer",
+          "LEGAL_INTAKE": "Tư vấn pháp lý",
+          "CLASSIFIED_LEAD": "Lead rao vặt"
+        }
+      }
     },
     "opsAudit": {
       "title": "Kiểm toán Ops Local",

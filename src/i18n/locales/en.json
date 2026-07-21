@@ -886,7 +886,45 @@
       "actionFailedTitle": "Action failed",
       "localTileTitle": "My requests",
       "localTileSub": "Track status here. Request-only · no charge · confirmed ≠ paid.",
-      "localTileA11y": "Open my Local service requests"
+      "localTileA11y": "Open my Local service requests",
+      "create": {
+        "openBtn": "Create Local request",
+        "openA11y": "Open create Local request form",
+        "closeA11y": "Close create form",
+        "title": "New Local request",
+        "hint": "Request-only · no charge. Enter a known business id. Merchant confirms before your visit is final.",
+        "sourceFixed": "Source fixed: {{source}}",
+        "knownBusinesses": "From your recent merchants",
+        "businessIdLabel": "Business ID",
+        "businessIdPlaceholder": "Paste business UUID",
+        "serviceTypeLabel": "Service type",
+        "titleLabel": "Title",
+        "titlePlaceholder": "What do you need?",
+        "descriptionLabel": "Details (optional)",
+        "descriptionPlaceholder": "Optional notes for the merchant",
+        "submitBtn": "Submit request",
+        "submitA11y": "Submit Local service request",
+        "submitting": "Submitting request",
+        "createAnother": "Create another request",
+        "ackUnknownToRetry": "List checked — tap to unlock manual resubmit",
+        "refreshWarning": "Request created, but the list could not refresh. Pull to refresh.",
+        "feedback": {
+          "validation": "Check business ID, service type, and title.",
+          "auth": "Sign in required to create a request.",
+          "rateLimited": "Too many requests. Please wait and try again.",
+          "serverValidation": "The server could not accept this request. Check the business ID and fields.",
+          "networkUnknown": "Connection interrupted. Refreshing your list before any resubmit.",
+          "serverError": "Something went wrong. Please try again.",
+          "success": "Request submitted for merchant review."
+        },
+        "serviceType": {
+          "GENERIC_REQUEST": "General",
+          "SERVICE_MENU": "Service menu",
+          "FIXER_HIRE": "Fixer",
+          "LEGAL_INTAKE": "Legal intake",
+          "CLASSIFIED_LEAD": "Classified lead"
+        }
+      }
     },
     "opsAudit": {
       "title": "Local Ops Audit",
