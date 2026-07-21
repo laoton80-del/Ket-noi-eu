@@ -1615,6 +1615,20 @@ No production submit/deploy; Phase C closed green; Phase D2 NOT AUTHORIZED
 Evidence: docs/product/VIONA_IOS_EAS_DEVELOPMENT_BUILD_EXECUTION_EVIDENCE.md
 Next: link/create Apple Developer team on Expo account, then re-authorize EAS iOS development build pack
 
+=== FEATURE COMPLETE GAP AUDIT + CRITICAL PATH PLAN ===
+Operator phrase: APPROVE_VIONA_FEATURE_COMPLETE_GAP_AUDIT_AND_CRITICAL_PATH_PLAN
+Baseline: origin/master @ 3d9fe752b567060f99de9ce3576e6d6d56f2af93 (PR #406–#409)
+Mode: docs-only; no runtime/src/deploy; Apple/EAS/Phase D2 not reopened
+ci:expo-readiness: PASS; ci:release-discipline: PASS
+Scorecard: 16/24 (~67%) — not feature-complete
+P0: Local create client UNWIRED; AI cost hard-stop; Account GDPR export
+P1: Local expiry/rate-limit; mock removal; Travel/Academy/Business primary slices; monetization wire
+Deferred: APPLE_DEVELOPER_ACCESS; IOS_EAS_DEVELOPMENT_BUILD; IOS_PHYSICAL_PHASE_D2
+Pack40DR wait-state preserved; Pack40S NOT AUTHORIZED; Phase C closed green
+Primary classification: READY_FOR_VIONA_FEATURE_COMPLETE_CRITICAL_PATH_IMPLEMENTATION
+Next pack: FC-P0-LOCAL-REQUEST-CREATE-CLIENT / APPROVE_VIONA_FC_P0_LOCAL_REQUEST_CREATE_CLIENT
+Evidence: docs/product/VIONA_FEATURE_COMPLETE_GAP_AUDIT_AND_CRITICAL_PATH_PLAN.md
+
 === PACK40DR2 DORMANT RECOVERY SERVICES ===
 Operator phrase: APPROVE_PACK40DR2_DORMANT_RECOVERY_SERVICES
 Master baseline: f184120 (PR #379 MERGED — Pack40DR1 staging migrate-apply evidence)
