@@ -15,6 +15,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { AdaptiveContainer } from '../../components/layout/AdaptiveContainer';
+import { LocalUserRequestCreateComposer } from '../../components/local/LocalUserRequestCreateComposer';
 import { LocalUserRequestStatusCard } from '../../components/local/LocalUserRequestStatusCard';
 import { LocalConstellationFrame } from '../../components/local/LocalConstellationFrame';
 import { localConstellation } from '../../components/local/localConstellationTokens';
@@ -25,6 +26,7 @@ import {
   cancelUserLocalServiceRequest,
   fetchUserLocalRequestTimeline,
   fetchUserLocalServiceRequests,
+  type LocalUserRequestCreateResult,
   type LocalUserRequestListItem,
   type LocalUserRequestTimelineItem,
 } from '../../services/localUserRequestApi';
@@ -33,6 +35,10 @@ import { FontFamily } from '../../theme/typography';
 import { useTranslation } from '../../utils/i18n';
 import { applyWebStyles } from '../../utils/applyWebStyles';
 
+import {
+  findLikelyCreatedRequestId,
+  type LocalCreateFormValues,
+} from './localUserRequestCreateFlow';
 import {
   attachLocalUserRequestActions,
   buildLocalUserRequestDisplayLabels,
@@ -124,6 +130,16 @@ export function LocalUserRequestStatusScreen(): ReactElement {
     [requests, activeFilter]
   );
 
+  const knownBusinesses = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const row of requests) {
+      if (!map.has(row.businessId)) {
+        map.set(row.businessId, row.business.name);
+      }
+    }
+    return [...map.entries()].map(([id, name]) => ({ id, name }));
+  }, [requests]);
+
   const loadTimeline = useCallback(
     async (requestId: string): Promise<void> => {
       if (timelineById[requestId]) {
@@ -177,6 +193,55 @@ export function LocalUserRequestStatusScreen(): ReactElement {
     },
     [load, t]
   );
+
+  const handleCreated = useCallback(
+    async (result: LocalUserRequestCreateResult) => {
+      const refresh = await fetchUserLocalServiceRequests();
+      if (!refresh.ok) {
+        throw new Error('refresh_failed');
+      }
+      setRequests(refresh.data.requests.map((row) => attachLocalUserRequestActions(row)));
+      setError(null);
+      setExpandedId(result.id);
+      setActiveFilter('all');
+      void loadTimeline(result.id);
+    },
+    [loadTimeline]
+  );
+
+  const handleUnknownNetworkRefresh = useCallback(
+    async (form: LocalCreateFormValues): Promise<string | null> => {
+      const refresh = await fetchUserLocalServiceRequests();
+      if (!refresh.ok) {
+        return null;
+      }
+      const rows = refresh.data.requests.map((row) => attachLocalUserRequestActions(row));
+      setRequests(rows);
+      setError(null);
+      const recoveredId = findLikelyCreatedRequestId({
+        createdRequestId: null,
+        listIds: rows.map((r) => r.id),
+        title: form.title,
+        businessId: form.businessId,
+        candidates: rows.map((r) => ({
+          id: r.id,
+          title: r.title,
+          businessId: r.businessId,
+        })),
+      });
+      if (recoveredId) {
+        setExpandedId(recoveredId);
+        setActiveFilter('all');
+        void loadTimeline(recoveredId);
+      }
+      return recoveredId;
+    },
+    [loadTimeline]
+  );
+
+  const handleAuthRequired = useCallback(() => {
+    navigation.navigate('Login');
+  }, [navigation]);
 
   return (
     <SafeAreaView style={styles.container} className={applyWebStyles('kn-glass')}>
@@ -234,6 +299,14 @@ export function LocalUserRequestStatusScreen(): ReactElement {
               ))}
             </View>
           </LocalConstellationFrame>
+
+          <LocalUserRequestCreateComposer
+            knownBusinesses={knownBusinesses}
+            t={t}
+            onCreated={handleCreated}
+            onRefreshListForUnknownResult={handleUnknownNetworkRefresh}
+            onAuthRequired={handleAuthRequired}
+          />
 
           <ScrollView
             horizontal

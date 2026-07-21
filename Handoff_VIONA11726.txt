@@ -1626,17 +1626,23 @@ Evidence: docs/product/VIONA_FEATURE_COMPLETE_GAP_AUDIT_AND_CRITICAL_PATH_PLAN.m
 
 === FC-P0 LOCAL REQUEST CREATE CLIENT BOUNDARY ADDENDUM ===
 Operator phrase: APPROVE_VIONA_FC_P0_LOCAL_REQUEST_CREATE_CLIENT_BOUNDARY_ADDENDUM
-Baseline: origin/master @ 86fb9fba9d94cae19f37af0469263c9e05785ff2 (PR #410 merged)
+MERGED / VERIFIED ON MASTER: PR #411 @ 1c631dc0ad85864c77c3c53f7b03793f411b72b2
 Resolves: BLOCKED_LOCAL_CREATE_IMPLEMENTATION_BOUNDARY_UNRESOLVED
-Entry: LocalScreen my-requests tile → LocalUserRequestStatus → in-screen create composer (no new Stack.Screen)
-Endpoint: POST /api/local/requests (authMiddleware → create_request rate limit → postCreateLocalServiceRequest)
-DTO: businessId + serviceType + title + source=LOCAL_SCREEN; dangerous keys forbidden; JWT identity only
-Duplicate-submit: rate limit ≠ idempotency; one in-flight POST; NETWORK_RESULT_UNKNOWN → refresh before manual resubmit
-Post-create: stay on LocalUserRequestStatusScreen; refresh list; expand created id
-Deploy: IMPLEMENTATION_ONLY_NO_DEPLOY
-FC-P0 implementation: STILL UNAUTHORIZED (APPROVE_VIONA_FC_P0_LOCAL_REQUEST_CREATE_CLIENT not granted)
-Apple/EAS/Phase D2 deferred; Pack40S NOT AUTHORIZED; no runtime/src/deploy in this pack
 Evidence: docs/product/VIONA_FC_P0_LOCAL_REQUEST_CREATE_CLIENT_IMPLEMENTATION_BOUNDARY_ADDENDUM.md
+
+=== FC-P0 LOCAL REQUEST CREATE CLIENT IMPLEMENTATION ===
+Operator phrase: APPROVE_VIONA_FC_P0_LOCAL_REQUEST_CREATE_CLIENT
+Baseline: origin/master @ 1c631dc0ad85864c77c3c53f7b03793f411b72b2
+Branch: feat/viona-fc-p0-local-request-create-client
+Mode: IMPLEMENTATION_ONLY_NO_DEPLOY
+Entry: LocalUserRequestStatusScreen in-screen composer (no new Stack.Screen)
+API: createUserLocalServiceRequest → POST /api/local/requests (session JWT; source=LOCAL_SCREEN)
+Post-create: stay on status screen; refresh list; expand created id
+No backend/schema/payment/wallet/AI/Pack40/deploy; REQUEST_ONLY_NO_CHARGE preserved
+ci:expo-readiness PASS; focused create client tests PASS; tsc PASS
+Primary classification: READY_FOR_VIONA_FC_P0_LOCAL_REQUEST_CREATE_CLIENT_PR_REVIEW
+Apple/EAS/Phase D2 deferred; Pack40S NOT AUTHORIZED; Phase C closed green
+Evidence: docs/product/VIONA_FC_P0_LOCAL_REQUEST_CREATE_CLIENT_IMPLEMENTATION_EVIDENCE.md
 
 === PACK40DR2 DORMANT RECOVERY SERVICES ===
 Operator phrase: APPROVE_PACK40DR2_DORMANT_RECOVERY_SERVICES

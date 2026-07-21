@@ -1,9 +1,18 @@
+import type {
+  LocalUserRequestCreateBody,
+  LocalUserRequestCreateResult,
+} from '../domain/local/localServiceRequestClientContract';
 import { restApiFetchJson, type ApiRequestResult } from './apiClient';
 
 export type LocalUserRequestListItemDisplay = Readonly<{
   noPaymentCaptured: true;
   requestOnlyNoCharge: boolean;
 }>;
+
+export type {
+  LocalUserRequestCreateBody,
+  LocalUserRequestCreateResult,
+} from '../domain/local/localServiceRequestClientContract';
 
 export type LocalUserRequestListItem = Readonly<{
   id: string;
@@ -99,4 +108,17 @@ export async function cancelUserLocalServiceRequest(
     `/api/local/requests/${encodeURIComponent(requestId)}/cancel`,
     { method: 'POST', body: {} }
   );
+}
+
+/**
+ * `POST /api/local/requests` — request-only create (no charge).
+ * Uses session JWT via restApiFetchJson; no automatic retry.
+ */
+export async function createUserLocalServiceRequest(
+  body: LocalUserRequestCreateBody
+): Promise<ApiRequestResult<LocalUserRequestCreateResult>> {
+  return restApiFetchJson<LocalUserRequestCreateResult>('/api/local/requests', {
+    method: 'POST',
+    body,
+  });
 }
