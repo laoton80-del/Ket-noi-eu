@@ -1,18 +1,24 @@
 VIONA — KERNEL/HANDOFF SNAPSHOT (local notes, not committed to git)
-Last updated: 2026-07-22 — FC-P0 Local create failure-code envelope + Pack B recovery discrimination
+Last updated: 2026-07-23 — FC-P0 Local provider authority controlled execution planning packet
 
-=== FC-P0 LOCAL CREATE FAILURE CODE ENVELOPE + PACK B RECOVERY ===
+=== FC-P0 LOCAL PROVIDER AUTHORITY CONTROLLED EXECUTION PLANNING ===
+Operator: APPROVE_VIONA_FC_P0_LOCAL_PROVIDER_AUTHORITY_EXECUTION_PLANNING_PACKET
+Baseline: c7b936595abaf8ffca8d12687833ef47e4be5791 (PR #423 verified master)
+Branch: docs/viona-fc-p0-local-provider-authority-execution-planning-packet
+Mode: DOCS_ONLY — E0–E10 staging sequence planned; one gate / one phrase
+Stages: preflight → migrate apply → API deploy → route/schema → Role.ADMIN →
+  DRAFT register/config → separate activation → client decision → one-request QA → closure
+Future phrases proposed; NONE granted. No migrate/deploy/activation/live QA.
+REQUEST_ONLY_NO_CHARGE. FC-P0 still blocked. Pack40S NOT AUTHORIZED. Phase C green.
+Evidence: docs/product/VIONA_FC_P0_LOCAL_PROVIDER_AUTHORITY_EXECUTION_PLANNING_PACKET.md
+Next: strict-review this docs-only PR (#424) — do NOT auto-authorize E1–E10.
+
+=== PRIOR — FC-P0 LOCAL CREATE FAILURE CODE ENVELOPE + PACK B RECOVERY ===
 Operator: APPROVE_VIONA_FC_P0_LOCAL_CREATE_FAILURE_CODE_ENVELOPE_AND_PACK_B_RECOVERY_DISCRIMINATION
-Baseline: 5ef5a1d58539648311548db2c9f6017440f088f4
-Branch: fix/viona-fc-p0-local-create-failure-code-envelope-pack-b-recovery
-Envelope: { success:false, code, error } on POST /api/local/requests failures
-Recovery only: provider_not_available@404 | service_type_not_supported@400
-Unrelated 400/non-provider 404/missing/unknown code: GET delta=0, selection preserved
-Tests: E1–E6, C1–C20, Pack B B1–B17 (B11/B12 remediated), A1/A2, Local, JWT, no-Prisma, Functions, smoke, Profile, Phase C, tsc/expo/release PASS
-No migrate-apply / deploy / activation / live QA / payment. REQUEST_ONLY_NO_CHARGE.
-FC-P0 still blocked pending execution gates.
+Merged PR #423 @ c7b936595abaf8ffca8d12687833ef47e4be5791
+Post-merge verified on master. Envelope + recovery discrimination CLOSED/GREEN on master.
+Execution gates remain unauthorized (see planning packet above).
 Evidence: docs/product/VIONA_FC_P0_LOCAL_CREATE_FAILURE_CODE_ENVELOPE_AND_PACK_B_RECOVERY_DISCRIMINATION.md
-Next: strict-review this PR only — do NOT auto-authorize migrate/deploy/activation.
 
 === PRIOR — FC-P0 LOCAL PROVIDER PACK B — CLIENT AUTHORITY WIRING ===
 Operator: APPROVE_VIONA_FC_P0_LOCAL_PROVIDER_ELIGIBILITY_AUTHORITY_CLIENT_WIRING
