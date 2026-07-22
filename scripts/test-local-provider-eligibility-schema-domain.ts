@@ -41,6 +41,10 @@ const CONTROLLER = fs.readFileSync(
   path.join(ROOT, 'src', 'controllers', 'LocalRequestController.ts'),
   'utf8'
 );
+const FAILURE_CODES = fs.readFileSync(
+  path.join(ROOT, 'src', 'domain', 'local', 'localCreateFailureCodes.ts'),
+  'utf8'
+);
 
 function assertIncludes(hay: string, needle: string, label: string): void {
   assert.ok(hay.includes(needle), `${label}: missing ${needle}`);
@@ -309,9 +313,20 @@ function run(): void {
     'service_type_not_supported'
   ); // 25
 
-  assertIncludes(CONTROLLER, 'provider_not_available: 404', 'case18-24 http');
-  assertIncludes(CONTROLLER, 'service_type_not_supported: 400', 'case25 http');
-  assertIncludes(CONTROLLER, "provider_not_available: 'Provider not available'", 'case18-24 msg');
+  assertIncludes(
+    FAILURE_CODES,
+    "code: LOCAL_CREATE_FAILURE_CODE.PROVIDER_NOT_AVAILABLE",
+    'case18-24 public code'
+  );
+  assertIncludes(FAILURE_CODES, 'status: 404', 'case18-24 http status');
+  assertIncludes(
+    FAILURE_CODES,
+    "code: LOCAL_CREATE_FAILURE_CODE.SERVICE_TYPE_NOT_SUPPORTED",
+    'case25 public code'
+  );
+  assertIncludes(FAILURE_CODES, 'status: 400', 'case25 http status');
+  assertIncludes(CONTROLLER, 'mapLocalCreateDomainFailureToPublic', 'create maps domain→public');
+  assertIncludes(CONTROLLER, 'jsonLocalCreateFail', 'create emits coded fail');
   assertNotIncludes(CONTROLLER, 'createFailure: 403', 'no create 403');
   assert.ok(
     !/localProviderEligibilityAuditEvent\.(create|createMany)/.test(CREATE_SERVICE),

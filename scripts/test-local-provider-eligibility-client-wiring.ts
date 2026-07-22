@@ -426,35 +426,102 @@ async function run(): Promise<void> {
   assert.equal(r2.uiState, 'SUBMITTING');
   pass('B10', 'pre-await one-in-flight');
 
-  // --- B11 / B12 server rejection recovery (no auto POST retry) ---
-  assert.equal(
-    mapCreateApiResultToUiState({ ok: false, status: 404, error: 'missing' }),
-    'SERVER_VALIDATION_ERROR'
-  );
-  assert.equal(
-    mapCreateApiResultToUiState({ ok: false, status: 400, error: 'bad' }),
-    'SERVER_VALIDATION_ERROR'
-  );
+  // --- B11 / B12 provider-authority recovery (code-discriminated; no auto POST retry) ---
   assert.ok(composer.includes("'post_reject_refresh'"));
   assert.ok(composer.includes('providerRefreshBudgetRef'));
-  assert.ok(composer.includes("businessId: ''"));
-  let postRejectPosts = 0;
-  const rejectResult = await runLocalCreateSubmit({
+  assert.ok(composer.includes("recoveryAction === 'REFRESH_PROVIDER_AUTHORITY_ONCE'"));
+  assert.ok(!composer.includes("result.uiState === 'SERVER_VALIDATION_ERROR' && form.serviceType"));
+
+  let b11Posts = 0;
+  const b11 = await runLocalCreateSubmit({
     form: formOk,
     options: readyLoad.options,
     inFlight: { current: false },
     deps: {
       getJwt: async () => 'tok',
       createRequest: async () => {
-        postRejectPosts += 1;
-        return { ok: false, status: 404, error: 'provider unavailable' };
+        b11Posts += 1;
+        return {
+          ok: false,
+          status: 404,
+          code: 'provider_not_available',
+          error: 'Provider not available',
+        };
       },
     },
   });
-  assert.equal(postRejectPosts, 1);
-  assert.equal(rejectResult.uiState, 'SERVER_VALIDATION_ERROR');
-  pass('B11', '404 stale authority — no auto POST retry');
-  pass('B12', '400 unsupported type maps to validation recovery path');
+  assert.equal(b11Posts, 1);
+  assert.equal(b11.uiState, 'SERVER_VALIDATION_ERROR');
+  assert.equal(b11.recoveryAction, 'REFRESH_PROVIDER_AUTHORITY_ONCE');
+  assert.equal(b11.outcome?.kind, 'provider_unavailable');
+  // Composer arms exactly one post_reject GET (budget=1) — proven in C1 harness;
+  // coordinator itself does not POST-retry.
+  pass('B11', '404+provider_not_available — 1 POST, recovery REFRESH, 0 POST retry');
+
+  let b12Posts = 0;
+  const b12 = await runLocalCreateSubmit({
+    form: formOk,
+    options: readyLoad.options,
+    inFlight: { current: false },
+    deps: {
+      getJwt: async () => 'tok',
+      createRequest: async () => {
+        b12Posts += 1;
+        return {
+          ok: false,
+          status: 400,
+          code: 'service_type_not_supported',
+          error: 'Unsupported service type for this provider',
+        };
+      },
+    },
+  });
+  assert.equal(b12Posts, 1);
+  assert.equal(b12.uiState, 'SERVER_VALIDATION_ERROR');
+  assert.equal(b12.recoveryAction, 'REFRESH_PROVIDER_AUTHORITY_ONCE');
+  assert.equal(b12.outcome?.kind, 'service_type_not_supported');
+
+  // Negative: invalid_input must NOT behave like B12
+  let invalidPosts = 0;
+  const invalid = await runLocalCreateSubmit({
+    form: formOk,
+    options: readyLoad.options,
+    inFlight: { current: false },
+    deps: {
+      getJwt: async () => 'tok',
+      createRequest: async () => {
+        invalidPosts += 1;
+        return {
+          ok: false,
+          status: 400,
+          code: 'invalid_input',
+          error: 'Invalid local request',
+        };
+      },
+    },
+  });
+  assert.equal(invalidPosts, 1);
+  assert.equal(invalid.uiState, 'SERVER_VALIDATION_ERROR');
+  assert.equal(invalid.recoveryAction, 'NONE');
+  assert.equal(invalid.outcome?.kind, 'validation_error');
+
+  // Status-only 404 without code must NOT refresh
+  const bare404 = await runLocalCreateSubmit({
+    form: formOk,
+    options: readyLoad.options,
+    inFlight: { current: false },
+    deps: {
+      getJwt: async () => 'tok',
+      createRequest: async () => ({
+        ok: false,
+        status: 404,
+        error: 'missing',
+      }),
+    },
+  });
+  assert.equal(bare404.recoveryAction, 'NONE');
+  assert.equal(bare404.uiState, 'SERVER_VALIDATION_ERROR');
+  pass('B12', '400+service_type_not_supported refreshes; invalid_input / bare 404 do not');
 
   // --- B13 create auth/rate/network/server regression ---
   assert.equal(
