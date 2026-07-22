@@ -9,8 +9,8 @@
 **Primary classification:** `SUPERSEDED_IN_PART_BY_AUDIT_MODEL_AND_IMPLEMENTATION_READINESS_REMEDIATION`
 
 > **Supersession:** Where this document conflicts with  
-> `docs/product/VIONA_FC_P0_LOCAL_PROVIDER_AUTHORITY_PLAN_AUDIT_MODEL_AND_IMPLEMENTATION_READINESS_REMEDIATION.md`,  
-> the audit-model / implementation-readiness remediation is authoritative (complete audit Prisma shape, actor enum, no-change PATCH, READ COMMITTED race matrix A–E, post-activation name policy, in-repo tests 1–43, Pack A1 card).
+> `docs/product/VIONA_FC_P0_LOCAL_PROVIDER_AUTHORITY_PLAN_TIMESTAMP_REFERENTIAL_PATCH_FINALIZATION.md`,  
+> the timestamp / referential / PATCH finalization is authoritative (lifecycle timestamps, Restrict graph, REGISTERED prior-list, PATCH-by-status, RETIRED immutability, A1 card).
 
 ```text
 VIONA_FC_P0_LOCAL_PROVIDER_AUTHORITY_PLAN_REMEDIATION
@@ -20,7 +20,7 @@ A1_A2_B_SEQUENCE
 FC_P0_STILL_BLOCKED
 NO_IMPLEMENTATION
 PACK_A_NOT_AUTHORIZED
-SUPERSEDED_AUDIT_DETAILS_SEE_AUDIT_READINESS_REMEDIATION
+SUPERSEDED_TIMESTAMP_REFERENTIAL_PATCH_SEE_FINALIZATION
 ```
 
 ---
@@ -94,12 +94,12 @@ No reset-to-DRAFT operation.
 
 | Current | Target | Caller | Preconditions | Postconditions | Idempotency | Audit | Success | Invalid |
 |---|---|---|---|---|---|---|---|---|
-| DRAFT | ACTIVE | Role.ADMIN | Business exists; name non-empty; `publicB2cVisible==true`; `supportedServiceTypes.length>=1` | `status=ACTIVE`; set `activatedAt` | If already ACTIVE → same-state policy (§3) | `ACTIVATED` | 200 + eligibility DTO | 409 invariants or forbidden |
-| DRAFT | RETIRED | Role.ADMIN | Eligibility exists | `status=RETIRED`; set `retiredAt` | Same-state if already RETIRED | `RETIRED` | 200 | 409 if forbidden |
-| ACTIVE | SUSPENDED | Role.ADMIN | Eligibility ACTIVE | `status=SUSPENDED`; set `suspendedAt` | Same-state if SUSPENDED | `SUSPENDED` | 200 | 409 |
-| ACTIVE | RETIRED | Role.ADMIN | Eligibility ACTIVE | `status=RETIRED`; set `retiredAt` | Same-state if RETIRED | `RETIRED` | 200 | 409 |
-| SUSPENDED | ACTIVE | Role.ADMIN | Same ACTIVE invariants as DRAFT→ACTIVE | `status=ACTIVE`; clear/update timestamps | Same-state if ACTIVE | `ACTIVATED` | 200 | 409 |
-| SUSPENDED | RETIRED | Role.ADMIN | Eligibility SUSPENDED | `status=RETIRED`; set `retiredAt` | Same-state if RETIRED | `RETIRED` | 200 | 409 |
+| DRAFT | ACTIVE | Role.ADMIN | Business exists; name non-empty; `publicB2cVisible==true`; `supportedServiceTypes.length>=1` | `status=ACTIVE`; `activatedAt=now`; `suspendedAt=null`; `retiredAt=null` | If already ACTIVE → same-state policy (§3) | `ACTIVATED` | 200 + eligibility DTO | 409 invariants or forbidden |
+| DRAFT | RETIRED | Role.ADMIN | Eligibility exists | `status=RETIRED`; `retiredAt=now`; activated/suspended remain null | Same-state if already RETIRED | `RETIRED` | 200 | 409 if forbidden |
+| ACTIVE | SUSPENDED | Role.ADMIN | Eligibility ACTIVE | `status=SUSPENDED`; `suspendedAt=now`; `activatedAt` unchanged; `retiredAt` null | Same-state if SUSPENDED | `SUSPENDED` | 200 | 409 |
+| ACTIVE | RETIRED | Role.ADMIN | Eligibility ACTIVE | `status=RETIRED`; `retiredAt=now`; `activatedAt` unchanged; `suspendedAt` null | Same-state if RETIRED | `RETIRED` | 200 | 409 |
+| SUSPENDED | ACTIVE | Role.ADMIN | Same ACTIVE invariants as DRAFT→ACTIVE | `status=ACTIVE`; `activatedAt=now` (latest); `suspendedAt=null` (cleared); `retiredAt` null | Same-state if ACTIVE | `ACTIVATED` | 200 | 409 |
+| SUSPENDED | RETIRED | Role.ADMIN | Eligibility SUSPENDED | `status=RETIRED`; `retiredAt=now`; keep latest `activatedAt`/`suspendedAt` | Same-state if RETIRED | `RETIRED` | 200 | 409 |
 | * | * (forbidden) | Role.ADMIN | — | unchanged | N/A | **no** audit (no mutation) | — | **409** `invalid_status` (Local confirm/cancel convention) |
 | any | same | Role.ADMIN | — | unchanged | **§3** | **no** mutation audit | **200** current DTO | — |
 
@@ -171,9 +171,11 @@ Success first create: **201**.
 
 Require ≥1 field. Reject `status`, name, owner, payment, actor, timestamps, unknown keys (**400**).
 
-**No-change PATCH** (validated body equals current config): **200** + current ops DTO; **no** Prisma update; **`updatedAt` unchanged**; **no** `CONFIG_UPDATED` audit.
+**No-change PATCH** (DRAFT/ACTIVE/SUSPENDED only; validated body equals current config): **200** + current ops DTO; **no** Prisma update; **`updatedAt` unchanged**; **no** lifecycle timestamp change; **no** `CONFIG_UPDATED` audit.
 
-**Changing PATCH:** one eligibility update; `updatedAt` changes; exactly one `CONFIG_UPDATED` with explicit prior/next columns in the same transaction.
+**Changing PATCH** (DRAFT/ACTIVE/SUSPENDED): one eligibility update; `updatedAt` changes; exactly one `CONFIG_UPDATED` with explicit prior/next columns; **no** lifecycle timestamp mutation. ACTIVE cannot become private or empty-types (**409**).
+
+**RETIRED:** every PATCH (including identical payload) → **409**; no update; no audit; no timestamp change.
 
 ### Transition bodies
 
@@ -206,16 +208,17 @@ Never include suspension/retire reasons on eligibility model or ops response DTO
 
 **Cannot reuse `LocalServiceRequestAuditEvent`:** it requires `requestId` FK to `LocalServiceRequest`.
 
-**Authoritative complete model:** see audit-readiness remediation §§2–5.
+**Authoritative complete model:** see timestamp/referential/PATCH finalization §§5–9 (supersedes Cascade and prior-list ambiguity).
 
 Summary (must match that doc — no alternatives):
 
 - Model: `LocalProviderEligibilityAuditEvent`
-- Event enum: `LocalProviderEligibilityAuditEventType` = `REGISTERED | CONFIG_UPDATED | ACTIVATED | SUSPENDED | RETIRED`
-- Actor enum: `LocalProviderEligibilityAuditActorType` = `ROLE_ADMIN` only; plus required `actorUserId`
-- Explicit prior/next status, visibility, and `supportedServiceTypes` columns — **no** `metadataJson`
-- `eligibilityId` FK with `onDelete: Restrict`
-- Append-only create-only at application boundary
+- Event enum: `REGISTERED | CONFIG_UPDATED | ACTIVATED | SUSPENDED | RETIRED`
+- Actor enum: `ROLE_ADMIN` + required `actorUserId` with User FK `onDelete: Restrict`
+- Eligibility → Business: `onDelete: Restrict` (no Cascade)
+- Audit → eligibility: `onDelete: Restrict`
+- REGISTERED: `priorStatus=null`, `priorPublicB2cVisible=null`, `priorSupportedServiceTypes=[]` (no-prior discriminator)
+- Explicit prior/next columns — **no** `metadataJson`
 - Pack A2 owns event writes; Pack A1 owns schema only
 
 Service helper (Pack A2): `createLocalProviderEligibilityAuditEvent`.
@@ -377,9 +380,9 @@ Example: `20260721220000_add_local_provider_eligibility_authority`
 **Phrase:** `APPROVE_VIONA_FC_P0_LOCAL_PROVIDER_ELIGIBILITY_AUTHORITY_SCHEMA_DOMAIN_ENFORCEMENT`
 
 **Mode:** `IMPLEMENTATION_ONLY_NO_DEPLOY`  
-**Depends on:** audit-model / implementation-readiness remediation reviewed + merged + post-merge verified.
+**Depends on:** timestamp/referential/PATCH finalization reviewed + merged + post-merge verified.
 
-Full Pack A1 card (schema, tests 1–29, success/blocker classifications): see audit-readiness remediation §14.
+Full Pack A1 card: see timestamp/referential/PATCH finalization §12.
 
 ---
 
@@ -416,6 +419,6 @@ Self-request ban remains create-time integrity (not list filter).
 
 ## 17. Final classification
 
-`SUPERSEDED_IN_PART_BY_AUDIT_MODEL_AND_IMPLEMENTATION_READINESS_REMEDIATION`
+`SUPERSEDED_IN_PART_BY_TIMESTAMP_REFERENTIAL_PATCH_FINALIZATION`
 
-Lifecycle/write route locks remain; audit completeness / PATCH / race / tests / A1 card are finalized in the audit-readiness remediation.
+Lifecycle/write route locks remain; timestamp / Restrict / PATCH-status / REGISTERED prior-list / A1 card are finalized in the timestamp-referential-PATCH finalization.

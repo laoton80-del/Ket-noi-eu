@@ -6,7 +6,11 @@
 **Canonical master baseline:** `origin/master` @ `435ddcd0f59b6e9295755398a54482788d7948ed` (PR #416 squash)  
 **Reviewed PR #416 head:** `e83bc6727ad59a3d2d18396ea635ee81a5574eb4`  
 **Branch:** `docs/viona-fc-p0-local-provider-authority-plan-audit-readiness-remediation`  
-**Primary classification:** `READY_FOR_VIONA_FC_P0_LOCAL_PROVIDER_AUTHORITY_FINAL_PLAN_REMEDIATION_PR_REVIEW`
+**Primary classification:** `SUPERSEDED_IN_PART_BY_TIMESTAMP_REFERENTIAL_PATCH_FINALIZATION`
+
+> **Supersession:** Where this document conflicts with  
+> `docs/product/VIONA_FC_P0_LOCAL_PROVIDER_AUTHORITY_PLAN_TIMESTAMP_REFERENTIAL_PATCH_FINALIZATION.md`,  
+> that finalization is authoritative (lifecycle timestamps, Restrict retention graph including actor User, REGISTERED prior-list representation, PATCH-by-status / RETIRED immutability, A1 card).
 
 ```text
 VIONA_FC_P0_LOCAL_PROVIDER_AUTHORITY_AUDIT_READINESS_REMEDIATION
@@ -18,6 +22,7 @@ A1_PACK_CARD_EXECUTABLE
 FC_P0_STILL_BLOCKED
 PACK_A1_NOT_AUTHORIZED
 NO_IMPLEMENTATION
+SUPERSEDED_TIMESTAMP_REFERENTIAL_PATCH_SEE_FINALIZATION
 ```
 
 ---
@@ -72,7 +77,7 @@ model LocalProviderEligibility {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  business Business @relation(fields: [businessId], references: [id], onDelete: Restrict)
   auditEvents LocalProviderEligibilityAuditEvent[]
 
   @@index([status, publicB2cVisible])
@@ -85,11 +90,11 @@ model LocalProviderEligibility {
 |---|---|
 | `id` | `String` `@id` `@default(uuid())` — repository UUID convention |
 | `businessId` | `String` `@unique`; FK → `Business.id`; type matches `Business.id` |
-| Relation | 1:1 optional from Business; `onDelete: Cascade` (eligibility removed with Business) |
+| Relation | 1:1 optional from Business; **`onDelete: Restrict`** (no Cascade; see timestamp/referential finalization) |
 | `status` | `LocalProviderEligibilityStatus` `@default(DRAFT)` |
 | `publicB2cVisible` | `Boolean` `@default(false)` |
-| `supportedServiceTypes` | `LocalServiceType[]` — empty array default at create (no types until configured) |
-| `activatedAt` / `suspendedAt` / `retiredAt` | `DateTime?` — lifecycle timestamps only |
+| `supportedServiceTypes` | `LocalServiceType[]` — empty array default at create |
+| `activatedAt` / `suspendedAt` / `retiredAt` | Exact semantics in timestamp finalization §1 (latest activation; clear suspend on reactivation; immutable retire) |
 | `createdAt` / `updatedAt` | standard |
 
 **Forbidden on this model:** `suspensionReason`, `retirementReason`, `displayName`, owner/contact/tax/payment/ranking/reviews/marketplace metadata, audit actor ids (`activatedByUserId`, `lastStatusChangedByUserId`).
@@ -167,8 +172,8 @@ model LocalProviderEligibilityAuditEvent {
   priorPublicB2cVisible Boolean?
   nextPublicB2cVisible  Boolean
 
-  priorSupportedServiceTypes LocalServiceType[]
-  nextSupportedServiceTypes  LocalServiceType[]
+  priorSupportedServiceTypes LocalServiceType[] @default([])
+  nextSupportedServiceTypes  LocalServiceType[] @default([])
 
   reason String?
 
@@ -176,6 +181,11 @@ model LocalProviderEligibilityAuditEvent {
 
   eligibility LocalProviderEligibility @relation(
     fields: [eligibilityId],
+    references: [id],
+    onDelete: Restrict
+  )
+  actorUser User @relation(
+    fields: [actorUserId],
     references: [id],
     onDelete: Restrict
   )
@@ -189,18 +199,19 @@ model LocalProviderEligibilityAuditEvent {
 
 | Field | Semantics |
 |---|---|
-| `eligibilityId` | FK → `LocalProviderEligibility`; **`onDelete: Restrict`** — preserves audit history; no cascade delete of audit rows |
-| `businessId` | Target Business id (denormalized query key; **no** FK duplication of private Business fields) |
-| `actorUserId` | Acting Role.ADMIN user |
+| `eligibilityId` | FK → eligibility; **`onDelete: Restrict`** |
+| `businessId` | Immutable scalar snapshot; **no** Business FK |
+| `actorUserId` | FK → `User`; **`onDelete: Restrict`** |
 | `actorType` | Always `ROLE_ADMIN` in FC-P0 |
-| `eventType` | Dedicated enum above |
-| `prior*` | Nullable **only** for `REGISTERED` (no prior eligibility state) |
-| `next*` | Complete resulting authoritative configuration after the mutation |
-| Visibility / types | **Explicit columns** — **not** `metadataJson` |
-| `reason` | Optional; max **280** chars after trim; audit-only; suspend/retire bodies only |
-| `metadataJson` | **Not present** for locked FC-P0 events |
+| `eventType` | Dedicated enum |
+| `priorStatus` / `priorPublicB2cVisible` | Nullable; **null only for REGISTERED** |
+| `priorSupportedServiceTypes` | Required list `@default([])`; REGISTERED `[]` = **no prior list state** (not “previous empty config”) |
+| `next*` | Complete resulting authoritative configuration |
+| Visibility / types | Explicit columns — **not** `metadataJson` |
+| `reason` | Optional; max **280**; audit-only; suspend/retire only |
+| Discriminator for no-prior | `eventType==REGISTERED` AND `priorStatus==null` AND `priorPublicB2cVisible==null` |
 
-**No** private Business fields, tokens, payment data, raw request bodies, or unbounded metadata.
+**Authoritative REGISTERED / PATCH / timestamp rules:** timestamp/referential/PATCH finalization §§1–9.
 
 ---
 
@@ -223,14 +234,14 @@ model LocalProviderEligibilityAuditEvent {
 
 ## 6. Lock — No-change PATCH semantics
 
-`PATCH /api/local/ops/providers/:businessId` accepts only `supportedServiceTypes` and/or `publicB2cVisible` (≥1 field required). Reject `status`, authority/audit fields, unknown keys → **400**.
+**Authoritative PATCH-by-status matrix:** timestamp/referential/PATCH finalization §4.
 
-| Situation | HTTP | Prisma update | `updatedAt` | Audit |
-|---|---|---|---|---|
-| Validated request equals current config | **200** + current ops DTO | **None** | **Unchanged** | **None** |
-| At least one value changes | **200** + updated ops DTO | Exactly one eligibility update | Changes (`@updatedAt`) | Exactly one `CONFIG_UPDATED` in same transaction; prior/next columns = full before/after |
+Summary:
 
-ACTIVE invariant violations on PATCH (`publicB2cVisible=false` or empty types while ACTIVE) → **409** (must suspend/retire first). Repeated equivalent PATCH = safe idempotent no-op.
+- DRAFT/ACTIVE/SUSPENDED no-change → **200** / no update / `updatedAt` unchanged / no audit / no lifecycle stamp change.  
+- ACTIVE invariant violations → **409**.  
+- **RETIRED every PATCH (including identical) → 409**.  
+- Changed allowed PATCH → one update + one `CONFIG_UPDATED`; no lifecycle stamp mutation.
 
 ---
 
@@ -396,8 +407,8 @@ Intended A1 test locations: `tests/` / server Local create + domain/migration su
 **Phrase:** `APPROVE_VIONA_FC_P0_LOCAL_PROVIDER_ELIGIBILITY_AUTHORITY_SCHEMA_DOMAIN_ENFORCEMENT`  
 
 **Mode:** `IMPLEMENTATION_ONLY_NO_DEPLOY`  
-**Depends on:** this remediation reviewed + merged + post-merge verified on master.  
-**This docs pack does not authorize A1.**
+**Depends on:** timestamp/referential/PATCH finalization reviewed + merged + post-merge verified on master.  
+**This docs pack does not authorize A1.** Full A1 card: timestamp/referential/PATCH finalization §12.
 
 ### Locked for A1 execution
 
@@ -440,4 +451,4 @@ Intended A1 test locations: `tests/` / server Local create + domain/migration su
 
 ## 16. Final classification
 
-`READY_FOR_VIONA_FC_P0_LOCAL_PROVIDER_AUTHORITY_FINAL_PLAN_REMEDIATION_PR_REVIEW`
+`SUPERSEDED_IN_PART_BY_TIMESTAMP_REFERENTIAL_PATCH_FINALIZATION`
