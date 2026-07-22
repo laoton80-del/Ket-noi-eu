@@ -1,20 +1,22 @@
 # VIONA FC-P0 — Local Provider Authority Staging Execution Preflight Result (E1)
 
-**Primary classification:** `READY_FOR_VIONA_FC_P0_LOCAL_PROVIDER_AUTHORITY_STAGING_EXECUTION_PREFLIGHT_RESULT_PR_REVIEW`
+**Primary classification (PR #425 original):** `READY_FOR_VIONA_FC_P0_LOCAL_PROVIDER_AUTHORITY_STAGING_EXECUTION_PREFLIGHT_RESULT_PR_REVIEW`
 
-**Secondary E2 readiness decision:** `READY_FOR_E2_MIGRATION_APPLY_AUTHORIZATION_DECISION`
+**Secondary E2 readiness decision (current after backup/restore remediation):** `BLOCKED_E1_EXPLICIT_FC_P0_RISK_ACCEPTANCE_REQUIRED`
 
-**Authorization:** `APPROVE_VIONA_FC_P0_LOCAL_PROVIDER_AUTHORITY_STAGING_EXECUTION_PREFLIGHT`
+> **Remediation note (post-#425):** Strict review blocked `#425` on stale/insufficient backup/restore evidence. Docs remediation under `APPROVE_VIONA_FC_P0_LOCAL_PROVIDER_AUTHORITY_E1_BACKUP_RESTORE_EVIDENCE_REMEDIATION` corrects Pack A1 Git/LF checksum representation and **withdraws** the unsupported `BACKUP_RESTORE_READINESS_CONFIRMED` claim. See `docs/product/VIONA_FC_P0_LOCAL_PROVIDER_AUTHORITY_E1_BACKUP_RESTORE_EVIDENCE_REMEDIATION.md`. Historical PR #425 observations below are preserved and labelled where superseded.
+
+**Authorization (original E1):** `APPROVE_VIONA_FC_P0_LOCAL_PROVIDER_AUTHORITY_STAGING_EXECUTION_PREFLIGHT`
 
 **Mode:** `CONTROLLED_READ_ONLY_STAGING_PREFLIGHT` / docs-evidence output only
 
 **Executor:** Composer 2.5 Fast
 
-**Canonical master baseline:** `50c2c7616184c3b8f0a85bf224bc30a4daf526d6`
+**Canonical master baseline (E1 authoring):** `50c2c7616184c3b8f0a85bf224bc30a4daf526d6`
 
 **Planning classification preserved:** `VIONA_FC_P0_LOCAL_PROVIDER_AUTHORITY_EXECUTION_PLANNING_PACKET_VERIFIED_ON_MASTER_WITH_E1_E10_UNAUTHORIZED`
 
-**Branch:** `docs/viona-fc-p0-local-provider-authority-staging-execution-preflight-result`
+**Branch (original E1):** `docs/viona-fc-p0-local-provider-authority-staging-execution-preflight-result`
 
 ```text
 E1_READ_ONLY_PREFLIGHT_EXECUTED
@@ -24,7 +26,8 @@ E4_THROUGH_E10_NOT_AUTHORIZED
 PACK_A1_MIGRATION_BYTE_IDENTITY_VERIFIED
 PACK_A1_MIGRATION_UNAPPLIED
 UNRESOLVED_DEPLOYED_API_SOURCE_SHA_RESOLVED_VIA_RELEASE_EVIDENCE_CORRELATION
-BACKUP_RESTORE_READINESS_CONFIRMED
+BACKUP_RESTORE_READINESS_CONFIRMED_SUPERSEDED_BY_REMEDIATION
+BLOCKED_E1_EXPLICIT_FC_P0_RISK_ACCEPTANCE_REQUIRED
 APPROVED_STAGING_ROLE_ADMIN_AVAILABLE
 BLOCKED_NO_SAFE_STAGING_BUSINESS_FIXTURE
 BLOCKED_E1_STAGING_CLIENT_SOURCE_SHA_UNRESOLVED
@@ -66,7 +69,7 @@ E1 does **not** authorize or execute E2–E10.
 | 2 | Exact branch (after create) | `docs/viona-fc-p0-local-provider-authority-staging-execution-preflight-result` |
 | 3 | Fly app / region (source) | `viona-api-staging-eu` / `fra` (`fly.toml`) |
 | 4 | Pack A1 directory | `prisma/migrations/20260722120000_add_local_provider_eligibility_authority` |
-| 5 | SHA256 (`migration.sql`) | `082EB713CAD94FDEF9D5FCA6E13EAE217BC76D712B913C72836513235B466ACC` (3552 bytes) |
+| 5 | SHA256 (`migration.sql`) | **Canonical Git/LF (authoritative):** `3B028C852F594AC9B538FED90C2CEE1D494EC33091F260906020F1819FF23D69` (3471 bytes). **PR #425 original recorded working-tree CRLF (non-canonical):** `082EB713CAD94FDEF9D5FCA6E13EAE217BC76D712B913C72836513235B466ACC` (3552 bytes) — environment-dependent; superseded by remediation. |
 | 6 | SQL operation inventory | `CREATE TYPE` ×3; `CREATE TABLE` ×2; `CREATE UNIQUE INDEX` ×1; `CREATE INDEX` ×5; `ALTER TABLE … ADD CONSTRAINT` FK ×3 — all `ON DELETE RESTRICT` |
 | 7 | Seed/backfill/data mutation | **None** (comment + SQL: no INSERT/UPDATE/DELETE/TRUNCATE) |
 | 8 | Local route inventory | see §11 |
@@ -119,8 +122,9 @@ Machine parity: one machine **started**, one **stopped** (standby); both report 
 |---|---|
 | Directory | `20260722120000_add_local_provider_eligibility_authority` |
 | File | `migration.sql` only |
-| Bytes | 3552 |
-| SHA256 | `082EB713CAD94FDEF9D5FCA6E13EAE217BC76D712B913C72836513235B466ACC` |
+| Bytes (canonical Git/LF) | **3471** |
+| SHA256 (canonical Git/LF) | `3B028C852F594AC9B538FED90C2CEE1D494EC33091F260906020F1819FF23D69` |
+| Bytes / SHA256 (WT CRLF; non-canonical; PR #425 original) | 3552 / `082EB713CAD94FDEF9D5FCA6E13EAE217BC76D712B913C72836513235B466ACC` |
 | Enums | `LocalProviderEligibilityStatus`, `LocalProviderEligibilityAuditEventType`, `LocalProviderEligibilityAuditActorType` |
 | Tables | `LocalProviderEligibility`, `LocalProviderEligibilityAuditEvent` |
 | Indexes | businessId unique; status+visible; audit eligibility/business/actor/eventType + createdAt |
@@ -171,20 +175,34 @@ Independent signals:
 
 ## 9. E1-F — Backup / restore readiness
 
-Environment-specific evidence (same staging project):
+### 9.1 PR #425 original observation (historical; insufficient for E2)
+
+Environment-specific historical evidence (same staging project):
 
 | Item | Evidence |
 |---|---|
-| Backups exist | Pack15C PRO plan physical scheduled backups confirmed for `viona-staging-eu` |
-| Last recorded backup timestamp (docs) | `18 Jun 2026 02:04:53 (+0000)` — **not re-queried** from live dashboard in E1 |
-| Restore procedure | Pack15C restore/rollback procedure evidence (dashboard path; owner `Nong Si Buong`) |
-| Restore tested | **NO** historically; human **not-tested restore risk acceptance** recorded for this project |
-| Later staging applies under that acceptance | Pack40 series including Pack40DR1 migrate apply on same staging DB |
-| Escalation | stop-on-error; no extra Prisma/DB commands; restore only under separate authorization |
+| Backups exist (historical) | Pack15C PRO plan physical scheduled backups confirmed for `viona-staging-eu` |
+| Last recorded backup timestamp (docs) | `18 Jun 2026 02:04:53 (+0000)` — **not re-queried** during original E1 |
+| Restore procedure | Pack15C restore/rollback procedure evidence (dashboard path; owner alias `Nong Si Buong`) |
+| Restore tested | **NO** historically; Pack15C-scoped not-tested restore risk acceptance existed |
+| Later staging applies | Pack40 series including Pack40DR1 migrate apply on same staging DB |
+| Escalation | stop-on-error; restore only under separate authorization |
 
-**Result:** `BACKUP_RESTORE_READINESS_CONFIRMED` for E2 authorization **decision** purposes, with residual: fresh backup timestamp not re-observed in this E1 session.
+Original E1 claimed `BACKUP_RESTORE_READINESS_CONFIRMED` with residual freshness caveat.
 
-E1 did **not** create a backup and did **not** restore.
+### 9.2 Post-#425 remediation correction (current)
+
+Strict review found that claim **stale/insufficient** for current pre-Pack-A1 staging after Pack40 schema evolution.
+
+Remediation attempted fresh read-only metadata via  
+`npx supabase backups list --project-ref euqbfanilcssjiwwtcby` at observation `2026-07-22T22:59:28Z`.  
+**Result:** management access token unavailable → latest recovery point **UNRESOLVED**.
+
+**Current authoritative result:** `BACKUP_RESTORE_READINESS_CONFIRMED` is **withdrawn**.  
+Active status: `BLOCKED_E1_EXPLICIT_FC_P0_RISK_ACCEPTANCE_REQUIRED`  
+(also: `CURRENT_STAGING_RECOVERY_POINT_UNPROVEN`).
+
+E1 / remediation did **not** create a backup and did **not** restore.
 
 ---
 
@@ -278,12 +296,12 @@ E1 did **not** create a Business.
 | 3 | Region | Fly / toml | `fra` | **PASS** | n/a | — |
 | 4 | Deployed API source SHA | release correlation | `a84f46d…` via v28 image | **PASS** | no tokens | — |
 | 5 | Current API release | Fly releases | **v28** | **PASS** | n/a | — |
-| 6 | Pack A1 checksum | SHA256 + PR#419 blob | verified | **PASS** | n/a | mismatch → stop |
+| 6 | Pack A1 checksum | Git/LF SHA256 + PR#419 blob | Git/LF `3B028C85…` / 3471 B verified; CRLF non-canonical labelled | **PASS** | n/a | mismatch → stop |
 | 7 | Migration history | migrate status | 18 applied + 1 pending | **PASS** | host redacted class only | unreadable → stop |
 | 8 | Pack A1 applied? | migrate status | **UNAPPLIED** | **PASS** | n/a | if applied → contradiction |
 | 9 | Production exclusion | app stage + DB ref | staging proven | **PASS** | no URLs | prod risk → stop |
-| 10 | Backup readiness | Pack15C + lineage | confirmed (timestamp stale residual) | **PASS** | no secrets | unresolved → E2 block |
-| 11 | Restore readiness | procedure + risk acceptance | confirmed (untested residual) | **PASS** | n/a | — |
+| 10 | Backup readiness | current recovery point | **UNPROVEN** (fresh list blocked: no token); June 18 historical insufficient | **BLOCKED** | no secrets | E2 blocked |
+| 11 | Restore readiness | procedure + current RPO | procedure known historically; RPO unproven → risk acceptance required | **BLOCKED** | n/a | E2 blocked |
 | 12 | API rollback artifact | prior release | **v27** image | **PASS** | n/a | — |
 | 13 | Health route | live GET | 200 ok | **PASS** | no PII | — |
 | 14 | Local route inventory | source + live 401 | matches plan | **PASS** | n/a | — |
@@ -325,14 +343,16 @@ Migration-critical conditions for recommending an **authorization decision** (no
 | Migration status observed | Yes |
 | Pack A1 confirmed unapplied | Yes |
 | No failed/partial migration | Yes |
-| Backup/restore readiness confirmed | Yes (residuals disclosed) |
+| Backup/restore readiness confirmed | **No** — withdrawn; current recovery point unproven |
 | Rollback API artifact identified | Yes |
 | No route/environment contradiction | Yes |
 | No unauthorized mutation in E1 | Yes |
 
-**Secondary decision:** `READY_FOR_E2_MIGRATION_APPLY_AUTHORIZATION_DECISION`
+**Secondary decision (current):** `BLOCKED_E1_EXPLICIT_FC_P0_RISK_ACCEPTANCE_REQUIRED`
 
-This does **not** authorize E2. E2 requires a separate operator phrase:
+PR #425 originally recorded `READY_FOR_E2_MIGRATION_APPLY_AUTHORIZATION_DECISION`; that secondary decision is **superseded** until either fresh backup metadata is observed or the separate FC-P0 risk-acceptance phrase is granted.
+
+E2 remains **not** authorized. Future E2 (when unblocked) still requires:
 
 `APPROVE_VIONA_FC_P0_LOCAL_PROVIDER_AUTHORITY_STAGING_MIGRATION_APPLY`
 

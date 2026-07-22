@@ -47,8 +47,9 @@ Fly read-only status/releases/image/config; `prisma migrate status`; bounded una
 ## 10. Pack A1 path / checksum
 
 - Path: `prisma/migrations/20260722120000_add_local_provider_eligibility_authority/migration.sql`
-- SHA256: `082EB713CAD94FDEF9D5FCA6E13EAE217BC76D712B913C72836513235B466ACC`
-- Byte-identical to PR #419 squash blob
+- **Canonical Git/LF SHA256:** `3B028C852F594AC9B538FED90C2CEE1D494EC33091F260906020F1819FF23D69` (3471 bytes)
+- **Non-canonical WT CRLF (PR #425 original):** `082EB713CAD94FDEF9D5FCA6E13EAE217BC76D712B913C72836513235B466ACC` (3552 bytes)
+- Byte-identical Git blob to PR #419 squash
 
 ## 11. Migration SQL inventory
 
@@ -64,7 +65,9 @@ Staging Fly app + staging Supabase project ref `euqbfanilcssjiwwtcby` / alias `v
 
 ## 14. Backup / restore readiness
 
-`BACKUP_RESTORE_READINESS_CONFIRMED` via Pack15C PRO backups + restore procedure + not-tested risk acceptance + later Pack40 staging applies on same project. Fresh dashboard timestamp not re-read in E1.
+**PR #425 original:** claimed `BACKUP_RESTORE_READINESS_CONFIRMED` from Pack15C + Pack40 lineage (June 18 timestamp not re-read).
+
+**Post-remediation (current):** claim **withdrawn**. Fresh `supabase backups list` blocked (no management token) at `2026-07-22T22:59:28Z`. Active: `BLOCKED_E1_EXPLICIT_FC_P0_RISK_ACCEPTANCE_REQUIRED`. See remediation packet + risk-acceptance proposal (**NOT GRANTED**).
 
 ## 15. Rollback artifact
 
@@ -101,7 +104,8 @@ See result packet §§14–16. E5 live auth, E6 fixture, E8 client SHA remain un
 
 ## 24. E2 readiness decision
 
-`READY_FOR_E2_MIGRATION_APPLY_AUTHORIZATION_DECISION` — **does not authorize E2**.
+**Current:** `BLOCKED_E1_EXPLICIT_FC_P0_RISK_ACCEPTANCE_REQUIRED` — **does not authorize E2**.  
+(PR #425 original secondary `READY_FOR_E2…` is superseded by backup/restore remediation.)
 
 ## 25–29. Confirmations
 
@@ -121,7 +125,7 @@ Deferred; Phase C closed green.
 
 ## 33. Exactly one next operator action
 
-Strict-review this E1 result PR. Do **not** authorize E2 automatically.
+Strict-review the E1 backup/restore remediation PR (not E2). Do **not** authorize E2 or grant risk acceptance automatically.
 
 ## 34. Validation commands
 
