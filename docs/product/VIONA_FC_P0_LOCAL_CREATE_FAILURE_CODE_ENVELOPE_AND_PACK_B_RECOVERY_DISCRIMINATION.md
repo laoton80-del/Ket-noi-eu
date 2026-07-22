@@ -8,6 +8,10 @@
 
 **Branch:** `fix/viona-fc-p0-local-create-failure-code-envelope-pack-b-recovery`
 
+**HEAD:** `4b9dea620d34a4e280708313a48dd264b5a86c3f`
+
+**PR:** https://github.com/laoton80-del/Ket-noi-eu/pull/423
+
 ---
 
 ## 1. Original blockers
