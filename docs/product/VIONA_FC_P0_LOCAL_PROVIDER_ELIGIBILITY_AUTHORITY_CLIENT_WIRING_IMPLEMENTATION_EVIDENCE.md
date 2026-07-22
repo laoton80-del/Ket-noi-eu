@@ -15,6 +15,8 @@
 | Workspace | `C:\KNG\ket-noi-eu` |
 | Baseline | `0dab3f40053f1601beabe77ced9a6da990f9b954` (PR #421 on master) |
 | Branch | `feat/viona-fc-p0-local-provider-eligibility-client-wiring` |
+| Implementation HEAD | `0e873a2f91826ca53261dd6260e6ca469957537a` |
+| PR | https://github.com/laoton80-del/Ket-noi-eu/pull/422 |
 
 Preserved lineage: Pack A1 (#419), Pack A2 (#420), A2 deterministic remediation (#421).
 
