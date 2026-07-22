@@ -23,7 +23,10 @@ import {
 
 import { getUserLocalServiceRequests } from '../src/controllers/LocalRequestController';
 import { disconnectPrisma, getPrisma } from '../src/lib/prisma';
-import { createLocalServiceRequest } from '../src/services/local/localRequestCreateService';
+import {
+  createLocalServiceRequestForRegression,
+  deleteLocalProviderEligibilityIfPresent,
+} from './localProviderEligibilityTestSupport';
 import {
   LOCAL_USER_REQUEST_LIST_SAFETY,
   listUserLocalServiceRequests,
@@ -120,7 +123,7 @@ async function run(): Promise<void> {
   const createdIds: string[] = [];
 
   try {
-    const reqA = await createLocalServiceRequest({
+    const reqA = await createLocalServiceRequestForRegression(prisma, {
       requesterUserId: requesterA,
       businessId: biz.id,
       serviceType: LocalServiceType.GENERIC_REQUEST,
@@ -132,7 +135,7 @@ async function run(): Promise<void> {
     if (!reqA.ok) throw new Error('create A failed');
     createdIds.push(reqA.request.id);
 
-    const reqB = await createLocalServiceRequest({
+    const reqB = await createLocalServiceRequestForRegression(prisma, {
       requesterUserId: requesterB,
       businessId: biz.id,
       serviceType: LocalServiceType.GENERIC_REQUEST,
@@ -205,6 +208,7 @@ async function run(): Promise<void> {
       });
       await prisma.localServiceRequest.deleteMany({ where: { id: { in: createdIds } } });
     }
+    await deleteLocalProviderEligibilityIfPresent(prisma, biz.id);
     await prisma.business.delete({ where: { id: biz.id } });
     await prisma.user.deleteMany({
       where: { id: { in: [owner, requesterA, requesterB] } },

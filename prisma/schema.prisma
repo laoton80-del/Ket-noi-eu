@@ -192,6 +192,28 @@ enum LocalServiceRequestAuditActorType {
   AI_ACTION_ASSISTANT_FUTURE
 }
 
+/// Local provider eligibility lifecycle (FC-P0 Local provider authority).
+enum LocalProviderEligibilityStatus {
+  DRAFT
+  ACTIVE
+  SUSPENDED
+  RETIRED
+}
+
+/// Append-only eligibility authority audit event types (FC-P0).
+enum LocalProviderEligibilityAuditEventType {
+  REGISTERED
+  CONFIG_UPDATED
+  ACTIVATED
+  SUSPENDED
+  RETIRED
+}
+
+/// Authority-class snapshot for eligibility audit actors (FC-P0: Role.ADMIN only).
+enum LocalProviderEligibilityAuditActorType {
+  ROLE_ADMIN
+}
+
 enum PayStatus {
   UNPAID
   DEPOSIT_PAID
@@ -301,6 +323,8 @@ model User {
   brokerEscrows    BrokerCommissionEscrow[] @relation("EscrowBeneficiary")
   /// Opaque refresh sessions (hash-only); cascade on user delete (GDPR).
   authRefreshSessions AuthRefreshSession[]
+  /// Local provider eligibility audit rows where this user acted as Role.ADMIN.
+  localProviderEligibilityAuditEvents LocalProviderEligibilityAuditEvent[]
 
   @@index([masterBrokerId])
 }
@@ -525,6 +549,7 @@ model Business {
   tourismBookings  TourismBooking[]
   localServiceRequests LocalServiceRequest[]
   brokerActivation MerchantBrokerActivation?
+  localProviderEligibility LocalProviderEligibility?
 
   @@index([ownerId])
   @@index([category, locationLat, locationLng])
@@ -681,6 +706,63 @@ model LocalServiceRequestAuditEvent {
   @@index([actorType, createdAt])
   @@index([runId])
   @@index([idempotencyKey])
+}
+
+/// 1:1 Local provider eligibility authority for a Business (FC-P0).
+/// No row ⇒ Business is not Local-eligible. Reasons live only on audit events.
+model LocalProviderEligibility {
+  id        String @id @default(uuid())
+  businessId String @unique
+
+  status                LocalProviderEligibilityStatus @default(DRAFT)
+  publicB2cVisible      Boolean                       @default(false)
+  supportedServiceTypes LocalServiceType[]            @default([])
+
+  activatedAt DateTime?
+  suspendedAt DateTime?
+  retiredAt   DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  business    Business                           @relation(fields: [businessId], references: [id], onDelete: Restrict)
+  auditEvents LocalProviderEligibilityAuditEvent[]
+
+  @@index([status, publicB2cVisible])
+}
+
+/// Append-only Local provider eligibility authority audit (FC-P0).
+/// Production code must not update/delete rows — create only (Pack A2 writers).
+model LocalProviderEligibilityAuditEvent {
+  id String @id @default(uuid())
+
+  eligibilityId String
+  businessId    String
+
+  eventType   LocalProviderEligibilityAuditEventType
+  actorType   LocalProviderEligibilityAuditActorType
+  actorUserId String
+
+  priorStatus LocalProviderEligibilityStatus?
+  nextStatus  LocalProviderEligibilityStatus
+
+  priorPublicB2cVisible Boolean?
+  nextPublicB2cVisible  Boolean
+
+  priorSupportedServiceTypes LocalServiceType[] @default([])
+  nextSupportedServiceTypes  LocalServiceType[] @default([])
+
+  reason String?
+
+  createdAt DateTime @default(now())
+
+  eligibility LocalProviderEligibility @relation(fields: [eligibilityId], references: [id], onDelete: Restrict)
+  actorUser   User                     @relation(fields: [actorUserId], references: [id], onDelete: Restrict)
+
+  @@index([eligibilityId, createdAt])
+  @@index([businessId, createdAt])
+  @@index([actorUserId, createdAt])
+  @@index([eventType, createdAt])
 }
 
 /// Inbound tourism catalog line (hotels, tours, fixers, F&B) — distinct from legacy `Service` / `Booking`.

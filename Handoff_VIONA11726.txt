@@ -1688,12 +1688,33 @@ Mode: DOCS_ONLY_NO_IMPLEMENTATION_NO_SCHEMA_CHANGE_NO_DEPLOY
 Locks: latest activatedAt; clear suspendedAt on reactivation; immutable retiredAt;
   Restrict eligibility→Business, audit→eligibility, audit→User; REGISTERED prior null/[ ];
   PATCH matrix incl. RETIRED every PATCH → 409; executable A1 card
-Immediate next (UNAUTHORIZED): APPROVE_VIONA_FC_P0_LOCAL_PROVIDER_ELIGIBILITY_AUTHORITY_SCHEMA_DOMAIN_ENFORCEMENT
-Primary classification: READY_FOR_VIONA_FC_P0_LOCAL_PROVIDER_AUTHORITY_TIMESTAMP_REFERENTIAL_PATCH_FINALIZATION_PR_REVIEW
+Immediate next (AUTHORIZED as Pack A1): APPROVE_VIONA_FC_P0_LOCAL_PROVIDER_ELIGIBILITY_AUTHORITY_SCHEMA_DOMAIN_ENFORCEMENT
+Primary classification: MERGED_ON_MASTER_VIA_PR_418 (see Pack A1 section below)
 FC-P0 still blocked; AI hard-stop after Local FC-P0; REQUEST_ONLY_NO_CHARGE
 Apple/EAS/Phase D2 deferred; Pack40S NOT AUTHORIZED; Phase C closed green
 Evidence: docs/product/VIONA_FC_P0_LOCAL_PROVIDER_AUTHORITY_PLAN_TIMESTAMP_REFERENTIAL_PATCH_FINALIZATION.md
-Next: strict read-only review of this docs PR — do not auto-authorize Pack A1
+Next: Pack A1 implementation authorized separately — do not auto-authorize Pack A2
+
+=== FC-P0 LOCAL PROVIDER ELIGIBILITY PACK A1 — SCHEMA + DOMAIN ENFORCEMENT ===
+Operator phrase: APPROVE_VIONA_FC_P0_LOCAL_PROVIDER_ELIGIBILITY_AUTHORITY_SCHEMA_DOMAIN_ENFORCEMENT
+Baseline: origin/master @ 4d0e6cff083f86ef153979446be4785bdbcfb73b (PR #418)
+Branch: feat/viona-fc-p0-local-provider-eligibility-schema-domain-enforcement
+Mode: IMPLEMENTATION_ONLY_NO_DEPLOY_NO_MIGRATION_APPLY
+Delivered:
+  LocalProviderEligibilityStatus / AuditEventType / AuditActorType(ROLE_ADMIN)
+  LocalProviderEligibility + LocalProviderEligibilityAuditEvent (Restrict graph)
+  structure-only migration 20260722120000_add_local_provider_eligibility_authority
+  domain helpers + lifecycle timestamps + append-only gate
+  createLocalServiceRequest in-txn eligibility enforcement (404/400 mappings)
+  A1 tests 1–29 PASS; list/timeline/cancel/create-client regressions PASS
+Confirmations:
+  NO A2 routes; NO client wiring; NO migration apply; NO provider activation;
+  NO deploy; NO live Local request; FC-P0 STILL BLOCKED pending A2+B;
+  REQUEST_ONLY_NO_CHARGE; Phase C closed green; Pack40S NOT AUTHORIZED;
+  Apple/EAS/Phase D2 deferred
+Evidence: docs/product/VIONA_FC_P0_LOCAL_PROVIDER_ELIGIBILITY_SCHEMA_DOMAIN_ENFORCEMENT_IMPLEMENTATION_EVIDENCE.md
+Primary classification: READY_FOR_VIONA_FC_P0_LOCAL_PROVIDER_ELIGIBILITY_SCHEMA_DOMAIN_ENFORCEMENT_PR_REVIEW
+Next: strict read-only review of Pack A1 PR — do not merge as FC-P0 closed; do not apply migration; do not auto-authorize Pack A2
 
 === PACK40DR2 DORMANT RECOVERY SERVICES ===
 Operator phrase: APPROVE_PACK40DR2_DORMANT_RECOVERY_SERVICES

@@ -17,6 +17,7 @@ import {
   buildRequestAuditSafeMessage,
   createLocalRequestAuditEvent,
 } from './localRequestAuditEventService';
+import { validateLocalProviderEligibilityForCreate } from './localProviderEligibilityDomain';
 
 export const LOCAL_REQUEST_CREATE_SUCCESS_MESSAGE =
   'Request submitted for merchant review.' as const;
@@ -44,7 +45,9 @@ export type CreateLocalServiceRequestFailure =
   | 'business_not_found'
   | 'service_not_found'
   | 'service_business_mismatch'
-  | 'self_request_forbidden';
+  | 'self_request_forbidden'
+  | 'provider_not_available'
+  | 'service_type_not_supported';
 
 export type CreateLocalServiceRequestResult =
   | Readonly<{
@@ -71,6 +74,8 @@ export type CreateLocalServiceRequestResult =
 
 /**
  * Request-only Local create — durable Prisma SoT row with no wallet ledger mutation.
+ * Pack A1: eligibility re-checked inside the existing `$transaction` (READ COMMITTED).
+ * Does not write LocalProviderEligibilityAuditEvent (Pack A2 owns eligibility mutation audits).
  */
 export async function createLocalServiceRequest(
   input: CreateLocalServiceRequestInput
@@ -86,15 +91,7 @@ export async function createLocalServiceRequest(
 
   const prisma = getPrisma();
 
-  const business = await prisma.business.findUnique({ where: { id: businessId } });
-  if (!business) {
-    return { ok: false, reason: 'business_not_found' };
-  }
-
-  if (requesterUserId === business.ownerId) {
-    return { ok: false, reason: 'self_request_forbidden' };
-  }
-
+  // Optional Service checks remain pre-transaction (not Local eligibility authority).
   if (serviceId && serviceId.length > 0) {
     const service = await prisma.service.findUnique({ where: { id: serviceId } });
     if (!service) {
@@ -105,69 +102,128 @@ export async function createLocalServiceRequest(
     }
   }
 
-  const row = await prisma.$transaction(async (tx) => {
-    const created = await tx.localServiceRequest.create({
-      data: {
-        requesterUserId,
-        businessId,
+  try {
+    const row = await prisma.$transaction(async (tx) => {
+      const business = await tx.business.findUnique({ where: { id: businessId } });
+      if (!business) {
+        throw Object.assign(new Error('CREATE_FAIL'), {
+          createFailure: 'business_not_found' as const,
+        });
+      }
+
+      if (requesterUserId === business.ownerId) {
+        throw Object.assign(new Error('CREATE_FAIL'), {
+          createFailure: 'self_request_forbidden' as const,
+        });
+      }
+
+      const eligibility = await tx.localProviderEligibility.findUnique({
+        where: { businessId },
+      });
+
+      const eligibilityVerdict = validateLocalProviderEligibilityForCreate({
+        business: { id: business.id, name: business.name },
+        eligibility: eligibility
+          ? {
+              status: eligibility.status,
+              publicB2cVisible: eligibility.publicB2cVisible,
+              supportedServiceTypes: eligibility.supportedServiceTypes,
+            }
+          : null,
         serviceType: input.serviceType,
-        title,
-        source: input.source,
-        status: LocalServiceRequestStatus.REQUESTED,
-        walletMode: LocalWalletMode.REQUEST_ONLY_NO_CHARGE,
-        walletPhase: LocalWalletPhase.NONE,
-        ...(serviceId && serviceId.length > 0 ? { serviceId } : {}),
-        ...(input.fixerProfileKey?.trim()
-          ? { fixerProfileKey: input.fixerProfileKey.trim() }
-          : {}),
-        ...(input.category != null ? { category: input.category } : {}),
-        description: input.description?.trim() ?? '',
-        ...(input.locationText?.trim() ? { locationText: input.locationText.trim() } : {}),
-        ...(input.city?.trim() ? { city: input.city.trim() } : {}),
-        ...(input.countryCode?.trim() ? { countryCode: input.countryCode.trim() } : {}),
-        ...(input.scheduledStartAt != null ? { scheduledStartAt: input.scheduledStartAt } : {}),
-        ...(input.scheduledEndAt != null ? { scheduledEndAt: input.scheduledEndAt } : {}),
-        ...(input.metadata !== undefined ? { metadata: input.metadata } : {}),
-      },
+      });
+
+      if (!eligibilityVerdict.ok) {
+        throw Object.assign(new Error('CREATE_FAIL'), {
+          createFailure: eligibilityVerdict.reason,
+        });
+      }
+
+      const created = await tx.localServiceRequest.create({
+        data: {
+          requesterUserId,
+          businessId,
+          serviceType: input.serviceType,
+          title,
+          source: input.source,
+          status: LocalServiceRequestStatus.REQUESTED,
+          walletMode: LocalWalletMode.REQUEST_ONLY_NO_CHARGE,
+          walletPhase: LocalWalletPhase.NONE,
+          ...(serviceId && serviceId.length > 0 ? { serviceId } : {}),
+          ...(input.fixerProfileKey?.trim()
+            ? { fixerProfileKey: input.fixerProfileKey.trim() }
+            : {}),
+          ...(input.category != null ? { category: input.category } : {}),
+          description: input.description?.trim() ?? '',
+          ...(input.locationText?.trim() ? { locationText: input.locationText.trim() } : {}),
+          ...(input.city?.trim() ? { city: input.city.trim() } : {}),
+          ...(input.countryCode?.trim() ? { countryCode: input.countryCode.trim() } : {}),
+          ...(input.scheduledStartAt != null ? { scheduledStartAt: input.scheduledStartAt } : {}),
+          ...(input.scheduledEndAt != null ? { scheduledEndAt: input.scheduledEndAt } : {}),
+          ...(input.metadata !== undefined ? { metadata: input.metadata } : {}),
+        },
+      });
+
+      assertLocalRequestAuditWritten(
+        await createLocalRequestAuditEvent({
+          db: tx,
+          requestId: created.id,
+          eventType: LocalServiceRequestAuditEventType.REQUEST_CREATED,
+          actorType: LocalServiceRequestAuditActorType.REQUESTER,
+          actorUserId: requesterUserId,
+          businessId,
+          fromStatus: null,
+          toStatus: LocalServiceRequestStatus.REQUESTED,
+          safeMessage: buildRequestAuditSafeMessage(
+            LocalServiceRequestAuditEventType.REQUEST_CREATED
+          ),
+        })
+      );
+
+      return created;
     });
 
-    assertLocalRequestAuditWritten(
-      await createLocalRequestAuditEvent({
-        db: tx,
-        requestId: created.id,
-        eventType: LocalServiceRequestAuditEventType.REQUEST_CREATED,
-        actorType: LocalServiceRequestAuditActorType.REQUESTER,
-        actorUserId: requesterUserId,
-        businessId,
-        fromStatus: null,
-        toStatus: LocalServiceRequestStatus.REQUESTED,
-        safeMessage: buildRequestAuditSafeMessage(
-          LocalServiceRequestAuditEventType.REQUEST_CREATED
-        ),
-      })
-    );
-
-    return created;
-  });
-
-  return {
-    ok: true,
-    request: {
-      id: row.id,
-      requesterUserId: row.requesterUserId,
-      businessId: row.businessId,
-      serviceId: row.serviceId,
-      serviceType: row.serviceType,
-      title: row.title,
-      status: row.status,
-      walletMode: row.walletMode,
-      walletPhase: row.walletPhase,
-      totalVioCredits: row.totalVioCredits,
-      heldVioCredits: row.heldVioCredits,
-      releasedVioCredits: row.releasedVioCredits,
-      platformFeeVioCredits: row.platformFeeVioCredits,
-      providerEarningsVioCredits: row.providerEarningsVioCredits,
-      message: LOCAL_REQUEST_CREATE_SUCCESS_MESSAGE,
-    },
-  };
+    return {
+      ok: true,
+      request: {
+        id: row.id,
+        requesterUserId: row.requesterUserId,
+        businessId: row.businessId,
+        serviceId: row.serviceId,
+        serviceType: row.serviceType,
+        title: row.title,
+        status: row.status,
+        walletMode: row.walletMode,
+        walletPhase: row.walletPhase,
+        totalVioCredits: row.totalVioCredits,
+        heldVioCredits: row.heldVioCredits,
+        releasedVioCredits: row.releasedVioCredits,
+        platformFeeVioCredits: row.platformFeeVioCredits,
+        providerEarningsVioCredits: row.providerEarningsVioCredits,
+        message: LOCAL_REQUEST_CREATE_SUCCESS_MESSAGE,
+      },
+    };
+  } catch (err) {
+    const failure = (err as { createFailure?: CreateLocalServiceRequestFailure } | null)
+      ?.createFailure;
+    if (
+      failure === 'business_not_found' ||
+      failure === 'self_request_forbidden' ||
+      failure === 'provider_not_available' ||
+      failure === 'service_type_not_supported'
+    ) {
+      return { ok: false, reason: failure };
+    }
+    // Pre-migration / NO_MIGRATION_APPLY: missing eligibility table ⇒ no selectable providers.
+    const prismaCode = (err as { code?: string } | null)?.code;
+    const prismaMeta = (err as { meta?: { modelName?: string; table?: string } } | null)?.meta;
+    if (
+      prismaCode === 'P2021' &&
+      (prismaMeta?.modelName === 'LocalProviderEligibility' ||
+        prismaMeta?.table?.includes('LocalProviderEligibility'))
+    ) {
+      return { ok: false, reason: 'provider_not_available' };
+    }
+    throw err;
+  }
 }

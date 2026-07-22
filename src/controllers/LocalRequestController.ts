@@ -605,6 +605,8 @@ export async function postCreateLocalServiceRequest(req: Request, res: Response)
         service_not_found: 404,
         service_business_mismatch: 400,
         self_request_forbidden: 400,
+        provider_not_available: 404,
+        service_type_not_supported: 400,
       };
       const msgMap: Record<typeof result.reason, string> = {
         invalid_input: 'Invalid local request',
@@ -612,6 +614,8 @@ export async function postCreateLocalServiceRequest(req: Request, res: Response)
         service_not_found: 'Service not found',
         service_business_mismatch: 'Service does not belong to the given business',
         self_request_forbidden: 'Self-request is prohibited for integrity reasons.',
+        provider_not_available: 'Provider not available',
+        service_type_not_supported: 'Unsupported service type for this provider',
       };
       jsonFail(res, msgMap[result.reason], statusMap[result.reason]);
       return;
