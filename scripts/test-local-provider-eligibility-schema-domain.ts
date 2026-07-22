@@ -379,15 +379,12 @@ function run(): void {
     true
   );
 
-  // Append-only source gate
+  // Append-only source gate (covers Pack A1 + A2 production modules)
   const forbidden = findForbiddenLocalProviderEligibilityAuditMutations(ROOT);
   assert.deepEqual(forbidden, [], `append-only gate hits: ${forbidden.join(', ')}`);
 
-  // No A2 routes in this pack
-  const routes = fs.readFileSync(path.join(ROOT, 'src', 'routes', 'localRoutes.ts'), 'utf8');
-  assert.ok(!routes.includes('/ops/providers'), 'no ops providers routes');
-  assert.ok(!routes.includes("'/providers'"), 'no GET providers route string');
-  assert.ok(!routes.includes('"/providers"'), 'no GET providers route string');
+  // Pack A1 schema/domain cases do not assert A2 route absence after Pack A2 lands.
+  // A2 route/auth/privacy boundaries are covered by test-local-provider-eligibility-read-ops-control.ts.
 
   console.log('[test-local-provider-eligibility-schema-domain] OK cases 1–29 + gates');
 }

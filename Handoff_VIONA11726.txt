@@ -1713,8 +1713,28 @@ Confirmations:
   REQUEST_ONLY_NO_CHARGE; Phase C closed green; Pack40S NOT AUTHORIZED;
   Apple/EAS/Phase D2 deferred
 Evidence: docs/product/VIONA_FC_P0_LOCAL_PROVIDER_ELIGIBILITY_SCHEMA_DOMAIN_ENFORCEMENT_IMPLEMENTATION_EVIDENCE.md
-Primary classification: READY_FOR_VIONA_FC_P0_LOCAL_PROVIDER_ELIGIBILITY_SCHEMA_DOMAIN_ENFORCEMENT_PR_REVIEW
-Next: strict read-only review of Pack A1 PR — do not merge as FC-P0 closed; do not apply migration; do not auto-authorize Pack A2
+Primary classification: MERGED_ON_MASTER_VIA_PR_419 (verified)
+Next: Pack A2 read/ops control authorized separately — do not auto-authorize Pack B
+
+=== FC-P0 LOCAL PROVIDER ELIGIBILITY PACK A2 — READ + OPS CONTROL ===
+Operator phrase: APPROVE_VIONA_FC_P0_LOCAL_PROVIDER_ELIGIBILITY_AUTHORITY_READ_AND_OPS_CONTROL
+Baseline: origin/master @ 97d9ee01f6159a7ed7d48ac3b422ddb4359bca60 (PR #419 Pack A1)
+Branch: feat/viona-fc-p0-local-provider-eligibility-read-ops-control
+Mode: IMPLEMENTATION_ONLY_NO_DEPLOY_NO_MIGRATION_APPLY_NO_PROVIDER_ACTIVATION
+Delivered:
+  GET /api/local/providers (auth; selectable list; public DTO; pagination)
+  POST/PATCH/activate/suspend/retire under /api/local/ops/providers (Role.ADMIN)
+  append-only LocalProviderEligibilityAuditEvent writes in mutation transactions
+  A2 tests 30–43 PASS (DB mutation skipped — migration unapplied)
+  A1 1–29 + Local regressions PASS; PROVIDER_SELECTION_UNAVAILABLE preserved
+Confirmations:
+  NO Prisma schema/migration change; NO migration apply; NO staging activation;
+  NO Pack B client wiring; NO deploy; NO live Local request;
+  FC-P0 STILL BLOCKED pending Pack B; REQUEST_ONLY_NO_CHARGE;
+  Phase C closed green; Pack40S NOT AUTHORIZED; Apple/EAS/Phase D2 deferred
+Evidence: docs/product/VIONA_FC_P0_LOCAL_PROVIDER_ELIGIBILITY_READ_AND_OPS_CONTROL_IMPLEMENTATION_EVIDENCE.md
+Primary classification: READY_FOR_VIONA_FC_P0_LOCAL_PROVIDER_ELIGIBILITY_READ_AND_OPS_CONTROL_PR_REVIEW
+Next: strict read-only review of Pack A2 PR — do not merge as FC-P0 closed; do not apply migration; do not auto-authorize Pack B
 
 === PACK40DR2 DORMANT RECOVERY SERVICES ===
 Operator phrase: APPROVE_PACK40DR2_DORMANT_RECOVERY_SERVICES
