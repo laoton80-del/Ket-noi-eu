@@ -1,23 +1,30 @@
 VIONA — KERNEL/HANDOFF SNAPSHOT (local notes, not committed to git)
-Last updated: 2026-07-23 — FC-P0 Local provider authority E1 staging execution preflight
+Last updated: 2026-07-23 — FC-P0 E1 backup/restore evidence remediation
 
-=== FC-P0 LOCAL PROVIDER AUTHORITY E1 STAGING EXECUTION PREFLIGHT ===
+=== FC-P0 E1 BACKUP / RESTORE EVIDENCE REMEDIATION ===
+Operator: APPROVE_VIONA_FC_P0_LOCAL_PROVIDER_AUTHORITY_E1_BACKUP_RESTORE_EVIDENCE_REMEDIATION
+Baseline: 098cb8709a980aa6a9df76a6ca6a1e4fffa9478d (PR #425 merged master)
+Branch: docs/viona-fc-p0-local-provider-authority-e1-backup-restore-evidence-remediation
+Mode: READ-ONLY metadata attempt + docs remediation only
+Corrected: Pack A1 Git/LF SHA256 3B028C85… / 3471 B (CRLF hash labelled non-canonical)
+Fresh backups list: blocked (no SUPABASE_ACCESS_TOKEN) @ 2026-07-22T22:59:28Z
+Active: BLOCKED_E1_EXPLICIT_FC_P0_RISK_ACCEPTANCE_REQUIRED
+Risk acceptance: PROPOSED / NOT GRANTED
+No backup create / restore / migrate-apply / deploy / provider mutation / live QA.
+REQUEST_ONLY_NO_CHARGE. Pack40S NOT AUTHORIZED. Phase C green.
+Evidence: docs/product/VIONA_FC_P0_LOCAL_PROVIDER_AUTHORITY_E1_BACKUP_RESTORE_EVIDENCE_REMEDIATION.md
+Next: strict-review this remediation PR — do NOT authorize E2 or grant risk acceptance.
+
+=== PRIOR — FC-P0 LOCAL PROVIDER AUTHORITY E1 STAGING EXECUTION PREFLIGHT ===
 Operator: APPROVE_VIONA_FC_P0_LOCAL_PROVIDER_AUTHORITY_STAGING_EXECUTION_PREFLIGHT
-Baseline: 50c2c7616184c3b8f0a85bf224bc30a4daf526d6 (PR #424 verified master)
-Branch: docs/viona-fc-p0-local-provider-authority-staging-execution-preflight-result
-Mode: READ-ONLY staging preflight + docs/evidence only
-Observed: Pack A1 checksum verified; Pack A1 UNAPPLIED on staging; app viona-api-staging-eu/fra v28;
-  API rollback v27; E2 readiness decision READY (E2 NOT AUTHORIZED/EXECUTED)
-Later-stage unresolved: safe Business fixture; staging client SHA
-No migrate-apply / deploy / provider mutation / live QA.
-REQUEST_ONLY_NO_CHARGE. FC-P0 still blocked. Pack40S NOT AUTHORIZED. Phase C green.
+Merged PR #425 @ 098cb8709a980aa6a9df76a6ca6a1e4fffa9478d
+Strict review blocked backup/restore freshness; remediated by packet above.
+Pack A1 still UNAPPLIED; Fly v28 / rollback v27 preserved.
 Evidence: docs/product/VIONA_FC_P0_LOCAL_PROVIDER_AUTHORITY_STAGING_EXECUTION_PREFLIGHT_RESULT.md
-Next: strict-review this E1 result PR — do NOT auto-authorize E2.
 
 === PRIOR — FC-P0 LOCAL PROVIDER AUTHORITY CONTROLLED EXECUTION PLANNING ===
 Operator: APPROVE_VIONA_FC_P0_LOCAL_PROVIDER_AUTHORITY_EXECUTION_PLANNING_PACKET
 Merged PR #424 @ 50c2c7616184c3b8f0a85bf224bc30a4daf526d6
-Post-merge verified on master with E1–E10 unauthorized (E1 now separately executed as above).
 Evidence: docs/product/VIONA_FC_P0_LOCAL_PROVIDER_AUTHORITY_EXECUTION_PLANNING_PACKET.md
 
 === PRIOR — FC-P0 LOCAL CREATE FAILURE CODE ENVELOPE + PACK B RECOVERY ===
