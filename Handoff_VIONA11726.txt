@@ -1664,18 +1664,27 @@ Evidence: docs/product/VIONA_FC_P0_LOCAL_PROVIDER_ELIGIBILITY_AUTHORITY_BOUNDARY
 
 === FC-P0 LOCAL PROVIDER AUTHORITY PLAN LIFECYCLE/WRITE/AUDIT/CONSISTENCY REMEDIATION ===
 Operator phrase: APPROVE_VIONA_FC_P0_LOCAL_PROVIDER_AUTHORITY_PLAN_LIFECYCLE_WRITE_AUDIT_CONSISTENCY_REMEDIATION
-Baseline: origin/master @ dc5c625ce2afd5913737cc01111da4679fed6987 (PR #415)
-Branch: docs/viona-fc-p0-local-provider-authority-plan-lifecycle-remediation
-Mode: DOCS_ONLY_NO_IMPLEMENTATION_NO_MIGRATION_NO_DEPLOY
-Locks: Role.ADMIN via superAdminMiddleware; RETIRED terminal; transition table; 409 invalid;
-  same-state 200 no audit; exact POST/PATCH/activate/suspend/retire;
-  LocalProviderEligibilityAuditEvent (request audit not reusable);
-  create eligibility re-check inside existing $transaction; A1→A2→B sequence
+MERGED ON MASTER: PR #416 squash @ 435ddcd0f59b6e9295755398a54482788d7948ed
+Reviewed head: e83bc6727ad59a3d2d18396ea635ee81a5574eb4
+Strict review: BLOCKED_LOCAL_PROVIDER_AUDIT_MODEL_BOUNDARY_UNRESOLVED
+  (+ config PATCH, create consistency, ACTIVE name, test matrix, A1 pack card;
+   residual suspensionReason on eligibility model)
+Evidence: docs/product/VIONA_FC_P0_LOCAL_PROVIDER_AUTHORITY_PLAN_LIFECYCLE_WRITE_AUDIT_CONSISTENCY_REMEDIATION.md
+
+=== FC-P0 LOCAL PROVIDER AUTHORITY AUDIT MODEL + IMPLEMENTATION READINESS REMEDIATION ===
+Operator phrase: APPROVE_VIONA_FC_P0_LOCAL_PROVIDER_AUTHORITY_PLAN_AUDIT_MODEL_AND_IMPLEMENTATION_READINESS_REMEDIATION
+Baseline: origin/master @ 435ddcd0f59b6e9295755398a54482788d7948ed (PR #416)
+Branch: docs/viona-fc-p0-local-provider-authority-plan-audit-readiness-remediation
+Mode: DOCS_ONLY_NO_IMPLEMENTATION_NO_SCHEMA_CHANGE_NO_DEPLOY
+Locks: complete LocalProviderEligibilityAuditEvent + dedicated enums;
+  actorType ROLE_ADMIN; no eligibility suspensionReason; no-change PATCH;
+  READ COMMITTED race A–E; post-activation empty-name exclude-without-mutate;
+  in-repo tests 1–43; executable A1 card
 Immediate next (UNAUTHORIZED): APPROVE_VIONA_FC_P0_LOCAL_PROVIDER_ELIGIBILITY_AUTHORITY_SCHEMA_DOMAIN_ENFORCEMENT
-Primary classification: READY_FOR_VIONA_FC_P0_LOCAL_PROVIDER_AUTHORITY_PLAN_REMEDIATION_PR_REVIEW
+Primary classification: READY_FOR_VIONA_FC_P0_LOCAL_PROVIDER_AUTHORITY_FINAL_PLAN_REMEDIATION_PR_REVIEW
 FC-P0 still blocked; AI hard-stop after Local FC-P0; REQUEST_ONLY_NO_CHARGE
 Apple/EAS/Phase D2 deferred; Pack40S NOT AUTHORIZED; Phase C closed green
-Evidence: docs/product/VIONA_FC_P0_LOCAL_PROVIDER_AUTHORITY_PLAN_LIFECYCLE_WRITE_AUDIT_CONSISTENCY_REMEDIATION.md
+Evidence: docs/product/VIONA_FC_P0_LOCAL_PROVIDER_AUTHORITY_PLAN_AUDIT_MODEL_AND_IMPLEMENTATION_READINESS_REMEDIATION.md
 Next: strict read-only review of this docs PR — do not auto-authorize Pack A1
 
 === PACK40DR2 DORMANT RECOVERY SERVICES ===

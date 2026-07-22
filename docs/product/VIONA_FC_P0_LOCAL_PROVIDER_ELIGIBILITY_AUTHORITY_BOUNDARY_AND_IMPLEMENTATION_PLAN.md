@@ -145,16 +145,17 @@ One row per eligible Business (1:1).
 | `activatedAt` | `DateTime?` | Set on transition to ACTIVE |
 | `suspendedAt` | `DateTime?` | Set on SUSPENDED |
 | `retiredAt` | `DateTime?` | Set on RETIRED |
-| `activatedByUserId` | `String?` | Ops actor user id (never B2C) |
-| `lastStatusChangedByUserId` | `String?` | Ops actor |
-| `suspensionReason` | `String?` | Ops-only; **never** in B2C DTO |
 | `createdAt` | `DateTime` `@default(now())` | |
 | `updatedAt` | `DateTime` `@updatedAt` | |
 
 `Business` gains relation: `localProviderEligibility LocalProviderEligibility?`
 
+**Do not** put `suspensionReason` / `retirementReason` on this model (audit-event-only).  
+**Do not** put audit actor ids on this model (actors live on `LocalProviderEligibilityAuditEvent`).  
 **Do not** duplicate `Business.name` on eligibility (read name from Business at query time).  
 **Do not** add payment, ranking, reviews, location-discovery, marketplace, or Tourism fields.
+
+**Indexes:** `@unique` on `businessId`; `@@index([status, publicB2cVisible])`; **no GIN** on `supportedServiceTypes` (FC-P0).
 
 ### Enum: `LocalProviderEligibilityStatus`
 
@@ -168,8 +169,8 @@ One row per eligible Business (1:1).
 |---|---|---|---|---|---|---|
 | `DRAFT` | No | No | No | No (FC-P0) | Yes | No |
 | `ACTIVE` | Only if `publicB2cVisible` + types | Yes (if selectable rule) | Yes (if selectable rule) | No (FC-P0) | Yes | No |
-| `SUSPENDED` | No | No | No | No | Yes | Reversible → ACTIVE/DRAFT |
-| `RETIRED` | No | No | No | No | Yes (limited) | Prefer terminal |
+| `SUSPENDED` | No | No | No | No | Yes | Reversible → ACTIVE or RETIRED only (no reset-to-DRAFT) |
+| `RETIRED` | No | No | No | No | Yes (limited) | **Terminal** |
 
 **Transition authority (FC-P0):** `Role.ADMIN` via ops control routes only.
 
@@ -197,8 +198,8 @@ Grounded in `localRouter` conventions (`/api/local` + resource).
 |---|---|
 | Auth | `authMiddleware` (same as all Local routes) |
 | Middleware | Router-level JWT only (no superAdmin) |
-| Controller | `LocalRequestController.getLocalProviders` (or dedicated thin controller under Local) |
-| Service | `listPublicLocalProviders` in `src/services/local/` |
+| Controller | `LocalRequestController.getLocalProviders` |
+| Service | `listSelectableLocalProviders` in `src/services/local/` |
 | Returns | Only rows satisfying `IS_LOCAL_PROVIDER_SELECTABLE` |
 | Pagination | `limit` / `skip` — default **50**, max **100** (match Local list services) |
 | Ordering | Stable: `Business.name asc`, then `businessId asc` |
@@ -218,8 +219,8 @@ type LocalProviderPublicDto = Readonly<{
   businessId: string;
   displayName: string;
   supportedServiceTypes: readonly LocalServiceType[];
-  categoryLabel?: string; // optional: map Business.category string for display only — not eligibility
 }>;
+// categoryLabel omitted in FC-P0 — do not fabricate Local category from Tourism BizType.
 
 type LocalProviderListResponse = Readonly<{
   items: readonly LocalProviderPublicDto[];
@@ -227,7 +228,7 @@ type LocalProviderListResponse = Readonly<{
 }>;
 ```
 
-**Exclude:** ownerId, email, phone, tax, payment/settlement, scores, suspensionReason, notes, audit actors, private address, VietQR, secrets.
+**Exclude:** ownerId, email, phone, tax, payment/settlement, scores, suspension/retire reasons, notes, audit actors, status, private address, VietQR, secrets.
 
 **Malformed rows:** skip (do not return); never 500 on single bad join.
 
@@ -235,22 +236,22 @@ type LocalProviderListResponse = Readonly<{
 
 ## 10. Audit J — Write / admin control (exact)
 
-**Approach:** internal superAdmin endpoints under `/api/local/ops/providers`.
+**Approach:** internal Role.ADMIN endpoints under `/api/local/ops/providers` (exact routes locked by lifecycle + audit readiness remediations).
 
-| Operation | Method / path (exact shape) |
+| Operation | Method / path |
 |---|---|
-| Upsert / register eligibility | `PUT /api/local/ops/providers/:businessId` |
+| Register eligibility | `POST /api/local/ops/providers` |
+| Update supported types / visibility | `PATCH /api/local/ops/providers/:businessId` |
 | Activate | `POST /api/local/ops/providers/:businessId/activate` |
 | Suspend | `POST /api/local/ops/providers/:businessId/suspend` |
 | Retire | `POST /api/local/ops/providers/:businessId/retire` |
-| Update supported types / visibility | body on upsert or dedicated `PATCH` |
 
 | Requirement | Lock |
 |---|---|
-| Auth | `authMiddleware` + `superAdminMiddleware` |
-| Validation | business exists; enum/status legality; non-empty types for ACTIVE+public |
-| Audit | Append-only ops-safe events (reuse Local audit patterns or eligibility-specific append-only table in Pack A) |
-| Idempotency | Repeated activate/suspend/retire when already in target status → **200 no-op** |
+| Auth | `authMiddleware` + `superAdminMiddleware` (`Role.ADMIN` only) |
+| Validation | business exists; enum/status legality; ACTIVE invariants; unknown-key reject |
+| Audit | `LocalProviderEligibilityAuditEvent` only (append-only create; Pack A2 writes) |
+| Idempotency | Same-state / no-change PATCH → **200**, no update, no audit, `updatedAt` unchanged |
 | Public self-activation | **Forbidden** in FC-P0 |
 
 No broad admin console required; secured HTTP + operator evidence is sufficient.
@@ -438,26 +439,28 @@ as a separate IMPLEMENTATION_ONLY_NO_DEPLOY pack.
 
 ---
 
-## 22. Remediation addendum (post–PR #415 strict review)
+## 22. Remediation lineage (post–PR #415 / #416)
 
-**Status:** PR #415 merged @ `dc5c625`. Strict review blocked on lifecycle / write / audit / consistency gaps.
+**PR #415** merged @ `dc5c625` — boundary plan.  
+**PR #416** merged @ `435ddcd0f59b6e9295755398a54482788d7948ed` — lifecycle/write/audit/consistency locks.  
+Strict review of #416: `BLOCKED_LOCAL_PROVIDER_AUDIT_MODEL_BOUNDARY_UNRESOLVED` (+ co-blockers).
 
-**Remediation document (authoritative locks):**  
-`docs/product/VIONA_FC_P0_LOCAL_PROVIDER_AUTHORITY_PLAN_LIFECYCLE_WRITE_AUDIT_CONSISTENCY_REMEDIATION.md`
-
-That addendum **supersedes** ambiguous wording in §§3, 6, 8–11, 16–17 of this plan where they conflict, specifically:
+**Current authoritative locks (supersede conflicts in this plan and the PR #416 remediation):**  
+`docs/product/VIONA_FC_P0_LOCAL_PROVIDER_AUTHORITY_PLAN_AUDIT_MODEL_AND_IMPLEMENTATION_READINESS_REMEDIATION.md`
 
 | Topic | Locked decision |
 |---|---|
 | Owner | `LOCAL_PROVIDER_AUTHORITY_OWNER_ROLE_ADMIN_VIA_SUPERADMIN_MIDDLEWARE` (`Role.ADMIN` only) |
-| Lifecycle | Allowed transitions table; `RETIRED` terminal; no reset-to-DRAFT |
-| Idempotency | Same-state → 200, **no** mutation audit |
-| Invalid transition | **409** (Local `invalid_status` convention) |
-| Write routes | Exact POST/PATCH/activate/suspend/retire — no OR |
-| Audit | New `LocalProviderEligibilityAuditEvent` (request audit cannot be reused — requires `requestId`) |
-| Create consistency | Re-check eligibility **inside** existing `$transaction` |
-| Read | `LocalRequestController.getLocalProviders` + `listSelectableLocalProviders`; envelope `{ items, pagination: { limit, skip, returned } }` |
-| DTO | No `categoryLabel` in FC-P0 |
+| Eligibility schema | No `suspensionReason` / `retirementReason` / audit actor ids on model |
+| Lifecycle | Allowed transitions; `RETIRED` terminal; same-state → 200 / no update / no audit |
+| Invalid transition / ACTIVE PATCH invariant | **409** |
+| No-change PATCH | 200; no Prisma update; `updatedAt` unchanged; no audit |
+| Write routes | Exact POST/PATCH/activate/suspend/retire |
+| Audit | Complete `LocalProviderEligibilityAuditEvent` + dedicated enums; explicit prior/next columns; append-only; **no** `metadataJson` authority |
+| Actor | `LocalProviderEligibilityAuditActorType.ROLE_ADMIN` + `actorUserId` |
+| Create consistency | In-tx re-read; READ COMMITTED bounded race A–E |
+| Post-activation empty name | Exclude from list/create; **do not** silently mutate eligibility |
+| Tests | In-repo numbered cases **1–43** (A1: 1–29; A2: 30–43) |
 | Sequence | **A1 → A2 → B** |
 | Immediate phrase | `APPROVE_VIONA_FC_P0_LOCAL_PROVIDER_ELIGIBILITY_AUTHORITY_SCHEMA_DOMAIN_ENFORCEMENT` (**unauthorized**) |
 

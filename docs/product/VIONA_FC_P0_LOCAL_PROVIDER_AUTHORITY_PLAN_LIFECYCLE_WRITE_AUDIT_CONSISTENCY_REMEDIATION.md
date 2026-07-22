@@ -6,7 +6,11 @@
 **Baseline:** `origin/master` @ `dc5c625ce2afd5913737cc01111da4679fed6987` (PR #415 squash)  
 **Reviewed PR #415 head:** `51b239d30166f5a07ef320a47df9f15012205945`  
 **Branch:** `docs/viona-fc-p0-local-provider-authority-plan-lifecycle-remediation`  
-**Primary classification:** `READY_FOR_VIONA_FC_P0_LOCAL_PROVIDER_AUTHORITY_PLAN_REMEDIATION_PR_REVIEW`
+**Primary classification:** `SUPERSEDED_IN_PART_BY_AUDIT_MODEL_AND_IMPLEMENTATION_READINESS_REMEDIATION`
+
+> **Supersession:** Where this document conflicts with  
+> `docs/product/VIONA_FC_P0_LOCAL_PROVIDER_AUTHORITY_PLAN_AUDIT_MODEL_AND_IMPLEMENTATION_READINESS_REMEDIATION.md`,  
+> the audit-model / implementation-readiness remediation is authoritative (complete audit Prisma shape, actor enum, no-change PATCH, READ COMMITTED race matrix A–E, post-activation name policy, in-repo tests 1–43, Pack A1 card).
 
 ```text
 VIONA_FC_P0_LOCAL_PROVIDER_AUTHORITY_PLAN_REMEDIATION
@@ -16,6 +20,7 @@ A1_A2_B_SEQUENCE
 FC_P0_STILL_BLOCKED
 NO_IMPLEMENTATION
 PACK_A_NOT_AUTHORIZED
+SUPERSEDED_AUDIT_DETAILS_SEE_AUDIT_READINESS_REMEDIATION
 ```
 
 ---
@@ -89,12 +94,12 @@ No reset-to-DRAFT operation.
 
 | Current | Target | Caller | Preconditions | Postconditions | Idempotency | Audit | Success | Invalid |
 |---|---|---|---|---|---|---|---|---|
-| DRAFT | ACTIVE | Role.ADMIN | Business exists; name non-empty; `publicB2cVisible==true`; `supportedServiceTypes.length>=1` | `status=ACTIVE`; set `activatedAt`, `activatedByUserId`, `lastStatusChangedByUserId` | If already ACTIVE → same-state policy (§3) | `LOCAL_PROVIDER_ELIGIBILITY_ACTIVATED` | 200 + eligibility DTO | 400 invariants; 409 forbidden transition |
-| DRAFT | RETIRED | Role.ADMIN | Eligibility exists | `status=RETIRED`; set `retiredAt`, `lastStatusChangedByUserId` | Same-state if already RETIRED | `LOCAL_PROVIDER_ELIGIBILITY_RETIRED` | 200 | 409 if forbidden |
-| ACTIVE | SUSPENDED | Role.ADMIN | Eligibility ACTIVE | `status=SUSPENDED`; set `suspendedAt`, `lastStatusChangedByUserId` | Same-state if SUSPENDED | `LOCAL_PROVIDER_ELIGIBILITY_SUSPENDED` | 200 | 409 |
-| ACTIVE | RETIRED | Role.ADMIN | Eligibility ACTIVE | `status=RETIRED`; set `retiredAt`, … | Same-state if RETIRED | `LOCAL_PROVIDER_ELIGIBILITY_RETIRED` | 200 | 409 |
-| SUSPENDED | ACTIVE | Role.ADMIN | Same ACTIVE invariants as DRAFT→ACTIVE | `status=ACTIVE`; clear/update timestamps; set actors | Same-state if ACTIVE | `LOCAL_PROVIDER_ELIGIBILITY_ACTIVATED` | 200 | 400 / 409 |
-| SUSPENDED | RETIRED | Role.ADMIN | Eligibility SUSPENDED | `status=RETIRED`; set `retiredAt` | Same-state if RETIRED | `LOCAL_PROVIDER_ELIGIBILITY_RETIRED` | 200 | 409 |
+| DRAFT | ACTIVE | Role.ADMIN | Business exists; name non-empty; `publicB2cVisible==true`; `supportedServiceTypes.length>=1` | `status=ACTIVE`; set `activatedAt` | If already ACTIVE → same-state policy (§3) | `ACTIVATED` | 200 + eligibility DTO | 409 invariants or forbidden |
+| DRAFT | RETIRED | Role.ADMIN | Eligibility exists | `status=RETIRED`; set `retiredAt` | Same-state if already RETIRED | `RETIRED` | 200 | 409 if forbidden |
+| ACTIVE | SUSPENDED | Role.ADMIN | Eligibility ACTIVE | `status=SUSPENDED`; set `suspendedAt` | Same-state if SUSPENDED | `SUSPENDED` | 200 | 409 |
+| ACTIVE | RETIRED | Role.ADMIN | Eligibility ACTIVE | `status=RETIRED`; set `retiredAt` | Same-state if RETIRED | `RETIRED` | 200 | 409 |
+| SUSPENDED | ACTIVE | Role.ADMIN | Same ACTIVE invariants as DRAFT→ACTIVE | `status=ACTIVE`; clear/update timestamps | Same-state if ACTIVE | `ACTIVATED` | 200 | 409 |
+| SUSPENDED | RETIRED | Role.ADMIN | Eligibility SUSPENDED | `status=RETIRED`; set `retiredAt` | Same-state if RETIRED | `RETIRED` | 200 | 409 |
 | * | * (forbidden) | Role.ADMIN | — | unchanged | N/A | **no** audit (no mutation) | — | **409** `invalid_status` (Local confirm/cancel convention) |
 | any | same | Role.ADMIN | — | unchanged | **§3** | **no** mutation audit | **200** current DTO | — |
 
@@ -123,12 +128,13 @@ Invalid cross-state transitions: **409** with safe message (e.g. `Invalid provid
 
 **Update rules:**
 
-1. ACTIVE cannot PATCH to `publicB2cVisible=false` or empty `supportedServiceTypes` — **400**; must SUSPEND or RETIRE first.
+1. ACTIVE cannot PATCH to `publicB2cVisible=false` or empty `supportedServiceTypes` — **409**; must SUSPEND or RETIRE first.
 2. DRAFT may have `publicB2cVisible=false` and empty types.
 3. SUSPENDED may retain prior types/visibility config; **never** selectable.
 4. RETIRED never selectable; terminal.
+5. After activation, if `Business.name` becomes empty/invalid: **do not** silently mutate eligibility; exclude from B2C list and create (404); ops may repair name or suspend/retire.
 
-No valid `ACTIVE+private` or `ACTIVE+empty-types` persisted state.
+No valid `ACTIVE+private` or `ACTIVE+empty-types` persisted state via PATCH/activate.
 
 ---
 
@@ -153,7 +159,7 @@ Middleware order (all mutations): `localRouter` `authMiddleware` → route `supe
 ```
 
 Defaults: `status=DRAFT`, `supportedServiceTypes=[]`, `publicB2cVisible=false`.  
-If row exists for `businessId`: **200** return existing (idempotent); audit only on first create (`REGISTERED`).
+If row exists for `businessId`: **200** return existing (idempotent); **do not overwrite** configuration; **do not** change `updatedAt`; audit only on first create (`REGISTERED`).
 
 Success first create: **201**.
 
@@ -164,6 +170,10 @@ Success first create: **201**.
 ```
 
 Require ≥1 field. Reject `status`, name, owner, payment, actor, timestamps, unknown keys (**400**).
+
+**No-change PATCH** (validated body equals current config): **200** + current ops DTO; **no** Prisma update; **`updatedAt` unchanged**; **no** `CONFIG_UPDATED` audit.
+
+**Changing PATCH:** one eligibility update; `updatedAt` changes; exactly one `CONFIG_UPDATED` with explicit prior/next columns in the same transaction.
 
 ### Transition bodies
 
@@ -188,41 +198,27 @@ Empty body allowed.
 }
 ```
 
-Never include `suspensionReason` on model response (reason lives in audit only).
+Never include suspension/retire reasons on eligibility model or ops response DTO beyond what the audit-readiness remediation allows (reasons live on audit events only).
 
 ---
 
 ## 6. Lock — Audit mechanism (exact one)
 
-**Cannot reuse `LocalServiceRequestAuditEvent`:** it requires `requestId` FK to `LocalServiceRequest` (`prisma/schema.prisma`, `createLocalRequestAuditEvent`). Overloading it would corrupt request-audit semantics.
+**Cannot reuse `LocalServiceRequestAuditEvent`:** it requires `requestId` FK to `LocalServiceRequest`.
 
-**Locked mechanism:** new append-only model **`LocalProviderEligibilityAuditEvent`**, parallel design to Local request audit (`docs/architecture/VIONA_LOCAL_REQUEST_AUDIT_LOG_DESIGN_1.md` pattern):
+**Authoritative complete model:** see audit-readiness remediation §§2–5.
 
-| Field | Notes |
-|---|---|
-| `id` | uuid |
-| `eligibilityId` | FK → `LocalProviderEligibility` Cascade |
-| `businessId` | denormalized for query |
-| `eventType` | enum below |
-| `actorType` | `OPS` (reuse `LocalServiceRequestAuditActorType.OPS` or eligibility-local OPS-only enum — **Pack A1 locks reuse of `OPS`**) |
-| `actorUserId` | Role.ADMIN user id |
-| `fromStatus` / `toStatus` | eligibility status |
-| `reason` | optional bounded suspend/retire |
-| `safeMessage` | non-payment wording |
-| `metadataJson` | prior/next `publicB2cVisible`, prior/next `supportedServiceTypes`; strip unsafe keys per `UNSAFE_LOCAL_REQUEST_AUDIT_METADATA_KEYS` |
-| `createdAt` | now |
+Summary (must match that doc — no alternatives):
 
-### Event types (exact)
+- Model: `LocalProviderEligibilityAuditEvent`
+- Event enum: `LocalProviderEligibilityAuditEventType` = `REGISTERED | CONFIG_UPDATED | ACTIVATED | SUSPENDED | RETIRED`
+- Actor enum: `LocalProviderEligibilityAuditActorType` = `ROLE_ADMIN` only; plus required `actorUserId`
+- Explicit prior/next status, visibility, and `supportedServiceTypes` columns — **no** `metadataJson`
+- `eligibilityId` FK with `onDelete: Restrict`
+- Append-only create-only at application boundary
+- Pack A2 owns event writes; Pack A1 owns schema only
 
-- `LOCAL_PROVIDER_ELIGIBILITY_REGISTERED`
-- `LOCAL_PROVIDER_ELIGIBILITY_CONFIG_UPDATED`
-- `LOCAL_PROVIDER_ELIGIBILITY_ACTIVATED`
-- `LOCAL_PROVIDER_ELIGIBILITY_SUSPENDED`
-- `LOCAL_PROVIDER_ELIGIBILITY_RETIRED`
-
-**No** `NO_CHANGE` event (idempotent same-state → no audit).
-
-Service helper (Pack A2): `createLocalProviderEligibilityAuditEvent` mirroring `createLocalRequestAuditEvent` safety checks.
+Service helper (Pack A2): `createLocalProviderEligibilityAuditEvent`.
 
 ---
 
@@ -231,9 +227,9 @@ Service helper (Pack A2): `createLocalProviderEligibilityAuditEvent` mirroring `
 **Policy:** optional `reason` on suspend/retire bodies only.
 
 - Max length **280** characters after trim.
-- Stored **only** on audit `reason` field — **not** on `LocalProviderEligibility` model.
+- Stored **only** on audit `reason` field — **not** on `LocalProviderEligibility` model (no `suspensionReason` / `retirementReason` columns).
 - Never in B2C DTO.
-- Reject if contains unsafe substrings analogous to request audit payment bans where applicable; no secrets/PII keys in metadata.
+- Reject unsafe payment/secret substrings where applicable.
 
 ---
 
@@ -249,9 +245,18 @@ Inside transaction:
 4. Create request `REQUEST_CREATED` audit.
 5. Commit together.
 
-**Isolation:** PostgreSQL / Prisma **default** (Read Committed). No custom `SET TRANSACTION` / unsupported locking SQL.
+**Isolation:** PostgreSQL / Prisma **default** (Read Committed). No custom `SET TRANSACTION` / row locks / SERIALIZABLE / unsupported locking SQL.
 
-**Concurrency:** Client list is advisory. If suspension commits first, later create tx fails with `provider_not_available` → **404**. No create from stale client state alone.
+**Bounded guarantee (exact):**
+
+- Stale client list never authorizes create.
+- Suspension committed before create’s authoritative eligibility read → create fails (404).
+- Create that authoritatively read ACTIVE before concurrent suspension commits → create **may** complete.
+- After suspension commits, later reads reject.
+- Request + request audit atomic.
+- Does **not** claim “no create may commit after suspension commits” in the stronger sense.
+
+Race matrix A–E: see audit-readiness remediation §10.
 
 Pre-transaction checks may exist for fast-fail but are **not** authority.
 
@@ -278,11 +283,11 @@ No create-specific 403/409 for eligibility miss (use 404).
 GET /api/local/providers
 → authMiddleware (router)
 → validateLocalProviderListQuery
-→ getLocalProviders (controller symbol in LocalRequestController or dedicated file under controllers/local — Pack A2 implements as LocalRequestController.getLocalProviders to match existing Local surface)
+→ LocalRequestController.getLocalProviders
 → listSelectableLocalProviders (service)
 ```
 
-**Locked controller symbol for Pack A2:** `LocalRequestController.getLocalProviders` (no “or dedicated” alternative).
+**Locked controller symbol for Pack A2:** `LocalRequestController.getLocalProviders`.
 
 | Aspect | Lock |
 |---|---|
@@ -337,13 +342,15 @@ Example: `20260721220000_add_local_provider_eligibility_authority`
 **Contents:**
 
 - enum `LocalProviderEligibilityStatus`
-- enum event types for eligibility audit (or Prisma enum)
+- enum `LocalProviderEligibilityAuditEventType`
+- enum `LocalProviderEligibilityAuditActorType`
 - tables `LocalProviderEligibility`, `LocalProviderEligibilityAuditEvent`
 - unique on `businessId`
-- indexes: `@@index([status, publicB2cVisible])`; `@@index([businessId])` on audit; `@@index([eligibilityId, createdAt])`
+- indexes: `@@index([status, publicB2cVisible])`; audit `@@index([eligibilityId, createdAt])`, `@@index([businessId, createdAt])`, `@@index([actorUserId, createdAt])`, `@@index([eventType, createdAt])`
 - **No GIN** on `supportedServiceTypes` for FC-P0 (small activated set; Prisma `has` filter sufficient)
 - **Zero** INSERT/UPDATE of Business or eligibility activation
 - **Zero** seed/backfill
+- **No** `suspensionReason` column on eligibility
 
 **Canonical statement:**
 
@@ -370,13 +377,18 @@ Example: `20260721220000_add_local_provider_eligibility_authority`
 **Phrase:** `APPROVE_VIONA_FC_P0_LOCAL_PROVIDER_ELIGIBILITY_AUTHORITY_SCHEMA_DOMAIN_ENFORCEMENT`
 
 **Mode:** `IMPLEMENTATION_ONLY_NO_DEPLOY`  
-**Depends on:** this remediation reviewed + merged + post-merge verified.
+**Depends on:** audit-model / implementation-readiness remediation reviewed + merged + post-merge verified.
+
+Full Pack A1 card (schema, tests 1–29, success/blocker classifications): see audit-readiness remediation §14.
 
 ---
 
 ## 14. Expanded Pack A1/A2 test requirements
 
-Include all cases listed in operator pack LOCK 14 (transitions 1–10, config 11–14, auth 15–17, audit 18–24, consistency/create 25–33, migration 34–38, read 39–43).
+**Authoritative numbered matrix (exactly 43 cases):**  
+`docs/product/VIONA_FC_P0_LOCAL_PROVIDER_AUTHORITY_PLAN_AUDIT_MODEL_AND_IMPLEMENTATION_READINESS_REMEDIATION.md` §13.
+
+A1 owns cases **1–29**; A2 owns cases **30–43**. Do not cite external “operator LOCK 14” alone.
 
 Pack B retains prior client behavioral tests from containment lineage.
 
@@ -404,4 +416,6 @@ Self-request ban remains create-time integrity (not list filter).
 
 ## 17. Final classification
 
-`READY_FOR_VIONA_FC_P0_LOCAL_PROVIDER_AUTHORITY_PLAN_REMEDIATION_PR_REVIEW`
+`SUPERSEDED_IN_PART_BY_AUDIT_MODEL_AND_IMPLEMENTATION_READINESS_REMEDIATION`
+
+Lifecycle/write route locks remain; audit completeness / PATCH / race / tests / A1 card are finalized in the audit-readiness remediation.
