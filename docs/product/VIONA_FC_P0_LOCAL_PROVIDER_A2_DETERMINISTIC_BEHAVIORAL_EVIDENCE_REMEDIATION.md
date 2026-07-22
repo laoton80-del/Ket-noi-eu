@@ -15,7 +15,7 @@
 | Workspace | `C:\KNG\ket-noi-eu` |
 | Baseline (PR #420 squash on master) | `ff0fdfa7752eacb265e94f1de75e676d57ae5c62` |
 | Branch | `fix/viona-fc-p0-local-provider-a2-deterministic-behavioral-evidence-remediation` |
-| Implementation HEAD | `38d4a9f441f10c13d9e81a60cf585fdd0d3c4dc7` |
+| Implementation HEAD | `9baad3b9bef022fe270cb7c2928f70a1a801aeeb` |
 | Original blocker | `BLOCKED_LOCAL_PROVIDER_A2_DB_BEHAVIOR_EVIDENCE_INSUFFICIENT` |
 
 PR #420 reported A2 cases 30–43 PASS while the full DB behavior branch was skipped (`LocalProviderEligibility` unapplied / `42P01`). Critical registration, PATCH, lifecycle, audit, rollback, list, and non-admin 403 middleware paths were not executed.
