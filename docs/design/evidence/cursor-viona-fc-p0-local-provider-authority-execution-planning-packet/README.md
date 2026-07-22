@@ -12,7 +12,7 @@
 ## 3. Branch and HEAD
 
 - Branch: `docs/viona-fc-p0-local-provider-authority-execution-planning-packet`
-- HEAD: recorded at commit time on this docs-only branch
+- HEAD: `b691bc656f7edfbcc6d340b7f07b86ad1da5678f`
 
 ## 4. Exact changed paths
 

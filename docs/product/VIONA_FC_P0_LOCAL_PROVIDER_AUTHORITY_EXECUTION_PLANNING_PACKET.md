@@ -10,6 +10,8 @@
 
 **Branch:** `docs/viona-fc-p0-local-provider-authority-execution-planning-packet`
 
+**HEAD:** `b691bc656f7edfbcc6d340b7f07b86ad1da5678f`
+
 ```text
 PLANNING_PACKET_AUTHORIZED_FOR_DOCS_ONLY_CREATION
 MIGRATION_PREFLIGHT_NOT_AUTHORIZED
