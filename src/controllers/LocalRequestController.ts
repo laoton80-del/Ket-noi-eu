@@ -24,7 +24,11 @@ import { normalizeLocalOpsCancelReason } from '../services/local/localOpsRequest
 import { createLocalServiceRequest } from '../services/local/localRequestCreateService';
 import { listMerchantLocalServiceRequests } from '../services/local/localMerchantRequestInboxService';
 import { listUserLocalServiceRequests } from '../services/local/localUserRequestListService';
-import { jsonFail, jsonOk } from '../utils/apiEnvelope';
+import {
+  localCreateInvalidInputFailure,
+  mapLocalCreateDomainFailureToPublic,
+} from '../domain/local/localCreateFailureCodes';
+import { jsonFail, jsonLocalCreateFail, jsonOk } from '../utils/apiEnvelope';
 
 function readAuthUserId(req: Request): string | null {
   const id = req.authUserId;
@@ -507,17 +511,17 @@ export async function postCreateLocalServiceRequest(req: Request, res: Response)
 
     const body: unknown = req.body;
     if (typeof body !== 'object' || body === null) {
-      jsonFail(res, 'Invalid JSON body', 400);
+      const fail = localCreateInvalidInputFailure('Invalid JSON body');
+      jsonLocalCreateFail(res, fail.status, fail.code, fail.error);
       return;
     }
 
     const dangerousKeys = findDangerousLocalRequestCreateBodyKeys(body);
     if (dangerousKeys.length > 0) {
-      jsonFail(
-        res,
-        `Request-only create does not accept: ${dangerousKeys.join(', ')}`,
-        400
+      const fail = localCreateInvalidInputFailure(
+        `Request-only create does not accept: ${dangerousKeys.join(', ')}`
       );
+      jsonLocalCreateFail(res, fail.status, fail.code, fail.error);
       return;
     }
 
@@ -527,36 +531,48 @@ export async function postCreateLocalServiceRequest(req: Request, res: Response)
     const source = parseLocalRequestSource((body as { source?: unknown }).source);
 
     if (!businessId || !serviceType || !title || title.trim().length === 0) {
-      jsonFail(res, 'businessId, serviceType, and title are required', 400);
+      const fail = localCreateInvalidInputFailure(
+        'businessId, serviceType, and title are required'
+      );
+      jsonLocalCreateFail(res, fail.status, fail.code, fail.error);
       return;
     }
 
     if (source == null) {
-      jsonFail(res, 'Invalid source', 400);
+      const fail = localCreateInvalidInputFailure('Invalid source');
+      jsonLocalCreateFail(res, fail.status, fail.code, fail.error);
       return;
     }
 
     const category = parseBizType((body as { category?: unknown }).category);
     if (category === null) {
-      jsonFail(res, 'Invalid category', 400);
+      const fail = localCreateInvalidInputFailure('Invalid category');
+      jsonLocalCreateFail(res, fail.status, fail.code, fail.error);
       return;
     }
 
     const metadata = parseMetadataJson((body as { metadata?: unknown }).metadata);
     if (metadata === null) {
-      jsonFail(res, 'metadata must be a JSON object', 400);
+      const fail = localCreateInvalidInputFailure('metadata must be a JSON object');
+      jsonLocalCreateFail(res, fail.status, fail.code, fail.error);
       return;
     }
 
     const scheduledStartAt = parseIsoDate((body as { scheduledStartAt?: unknown }).scheduledStartAt);
     if (scheduledStartAt === null) {
-      jsonFail(res, 'scheduledStartAt must be a valid ISO-8601 instant', 400);
+      const fail = localCreateInvalidInputFailure(
+        'scheduledStartAt must be a valid ISO-8601 instant'
+      );
+      jsonLocalCreateFail(res, fail.status, fail.code, fail.error);
       return;
     }
 
     const scheduledEndAt = parseIsoDate((body as { scheduledEndAt?: unknown }).scheduledEndAt);
     if (scheduledEndAt === null) {
-      jsonFail(res, 'scheduledEndAt must be a valid ISO-8601 instant', 400);
+      const fail = localCreateInvalidInputFailure(
+        'scheduledEndAt must be a valid ISO-8601 instant'
+      );
+      jsonLocalCreateFail(res, fail.status, fail.code, fail.error);
       return;
     }
 
@@ -599,25 +615,8 @@ export async function postCreateLocalServiceRequest(req: Request, res: Response)
     });
 
     if (!result.ok) {
-      const statusMap: Record<typeof result.reason, number> = {
-        invalid_input: 400,
-        business_not_found: 404,
-        service_not_found: 404,
-        service_business_mismatch: 400,
-        self_request_forbidden: 400,
-        provider_not_available: 404,
-        service_type_not_supported: 400,
-      };
-      const msgMap: Record<typeof result.reason, string> = {
-        invalid_input: 'Invalid local request',
-        business_not_found: 'Business not found',
-        service_not_found: 'Service not found',
-        service_business_mismatch: 'Service does not belong to the given business',
-        self_request_forbidden: 'Self-request is prohibited for integrity reasons.',
-        provider_not_available: 'Provider not available',
-        service_type_not_supported: 'Unsupported service type for this provider',
-      };
-      jsonFail(res, msgMap[result.reason], statusMap[result.reason]);
+      const fail = mapLocalCreateDomainFailureToPublic(result.reason);
+      jsonLocalCreateFail(res, fail.status, fail.code, fail.error);
       return;
     }
 

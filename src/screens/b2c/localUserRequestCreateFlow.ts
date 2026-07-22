@@ -10,6 +10,11 @@ import {
   type LocalUserRequestCreateBody,
   type LocalUserRequestCreateResult,
 } from '../../domain/local/localServiceRequestClientContract';
+import {
+  isLocalCreateFailureCode,
+  LOCAL_CREATE_FAILURE_CODE,
+  type LocalCreateFailureCode,
+} from '../../domain/local/localCreateFailureCodes';
 import type { ApiRequestResult } from '../../services/apiClient';
 import {
   isLocalProviderSelectionCompatible,
@@ -125,20 +130,141 @@ export function fieldsEditableInLocalCreateState(uiState: LocalCreateUiState): b
   return uiState !== 'SUBMITTING';
 }
 
+/**
+ * Structured create submit outcome — control-flow source of truth.
+ * Presentation (UI state) and recovery side effects map from this separately.
+ */
+export type LocalCreateSubmitOutcome =
+  | { kind: 'created'; requestId: string }
+  | {
+      kind: 'provider_unavailable';
+      status: 404;
+      code: typeof LOCAL_CREATE_FAILURE_CODE.PROVIDER_NOT_AVAILABLE;
+    }
+  | {
+      kind: 'service_type_not_supported';
+      status: 400;
+      code: typeof LOCAL_CREATE_FAILURE_CODE.SERVICE_TYPE_NOT_SUPPORTED;
+    }
+  | {
+      kind: 'validation_error';
+      status: 400 | 404;
+      code?: LocalCreateFailureCode;
+    }
+  | { kind: 'auth_required'; status: 401 }
+  | { kind: 'rate_limited'; status: 429 }
+  | { kind: 'network_result_unknown' }
+  | { kind: 'server_error'; status?: number };
+
+export type LocalCreateRecoveryAction = 'NONE' | 'REFRESH_PROVIDER_AUTHORITY_ONCE';
+
+/**
+ * Map HTTP create result → structured outcome.
+ * Unknown/missing/malformed codes fail closed as generic validation_error (no recovery).
+ * Never parses human error prose.
+ */
+export function mapCreateApiResultToSubmitOutcome(
+  result: ApiRequestResult<LocalUserRequestCreateResult>
+): LocalCreateSubmitOutcome {
+  if (result.ok) {
+    if (result.status === 201 && typeof result.data.id === 'string' && result.data.id.length > 0) {
+      return { kind: 'created', requestId: result.data.id };
+    }
+    return { kind: 'server_error', status: result.status };
+  }
+  if (result.unreachable === true || result.status === 0) {
+    return { kind: 'network_result_unknown' };
+  }
+  if (result.status === 401) return { kind: 'auth_required', status: 401 };
+  if (result.status === 429) return { kind: 'rate_limited', status: 429 };
+
+  const code = isLocalCreateFailureCode(result.code) ? result.code : undefined;
+
+  if (
+    result.status === 404 &&
+    code === LOCAL_CREATE_FAILURE_CODE.PROVIDER_NOT_AVAILABLE
+  ) {
+    return {
+      kind: 'provider_unavailable',
+      status: 404,
+      code: LOCAL_CREATE_FAILURE_CODE.PROVIDER_NOT_AVAILABLE,
+    };
+  }
+  if (
+    result.status === 400 &&
+    code === LOCAL_CREATE_FAILURE_CODE.SERVICE_TYPE_NOT_SUPPORTED
+  ) {
+    return {
+      kind: 'service_type_not_supported',
+      status: 400,
+      code: LOCAL_CREATE_FAILURE_CODE.SERVICE_TYPE_NOT_SUPPORTED,
+    };
+  }
+  if (result.status === 400 || result.status === 404) {
+    return {
+      kind: 'validation_error',
+      status: result.status as 400 | 404,
+      ...(code ? { code } : {}),
+    };
+  }
+  if (result.status >= 500) return { kind: 'server_error', status: result.status };
+  return { kind: 'server_error', status: result.status };
+}
+
+export function mapSubmitOutcomeToUiState(
+  outcome: LocalCreateSubmitOutcome
+): LocalCreateUiState {
+  switch (outcome.kind) {
+    case 'created':
+      return 'CREATED_SUCCESS';
+    case 'provider_unavailable':
+    case 'service_type_not_supported':
+    case 'validation_error':
+      return 'SERVER_VALIDATION_ERROR';
+    case 'auth_required':
+      return 'AUTH_REQUIRED_OR_EXPIRED';
+    case 'rate_limited':
+      return 'RATE_LIMITED';
+    case 'network_result_unknown':
+      return 'NETWORK_RESULT_UNKNOWN';
+    case 'server_error':
+      return 'SERVER_ERROR';
+    default: {
+      const _exhaustive: never = outcome;
+      return _exhaustive;
+    }
+  }
+}
+
+/**
+ * Recovery side-effect classifier — independent of UI presentation state.
+ * Refresh only for exact provider-authority codes + matching HTTP status.
+ */
+export function classifyLocalCreateRecovery(
+  outcome: LocalCreateSubmitOutcome
+): LocalCreateRecoveryAction {
+  if (
+    outcome.kind === 'provider_unavailable' &&
+    outcome.status === 404 &&
+    outcome.code === LOCAL_CREATE_FAILURE_CODE.PROVIDER_NOT_AVAILABLE
+  ) {
+    return 'REFRESH_PROVIDER_AUTHORITY_ONCE';
+  }
+  if (
+    outcome.kind === 'service_type_not_supported' &&
+    outcome.status === 400 &&
+    outcome.code === LOCAL_CREATE_FAILURE_CODE.SERVICE_TYPE_NOT_SUPPORTED
+  ) {
+    return 'REFRESH_PROVIDER_AUTHORITY_ONCE';
+  }
+  return 'NONE';
+}
+
+/** @deprecated Prefer mapCreateApiResultToSubmitOutcome → mapSubmitOutcomeToUiState. */
 export function mapCreateApiResultToUiState(
   result: ApiRequestResult<LocalUserRequestCreateResult>
 ): LocalCreateUiState {
-  if (result.ok) {
-    return result.status === 201 ? 'CREATED_SUCCESS' : 'SERVER_ERROR';
-  }
-  if (result.unreachable === true || result.status === 0) {
-    return 'NETWORK_RESULT_UNKNOWN';
-  }
-  if (result.status === 401) return 'AUTH_REQUIRED_OR_EXPIRED';
-  if (result.status === 429) return 'RATE_LIMITED';
-  if (result.status === 400 || result.status === 404) return 'SERVER_VALIDATION_ERROR';
-  if (result.status >= 500) return 'SERVER_ERROR';
-  return 'SERVER_ERROR';
+  return mapSubmitOutcomeToUiState(mapCreateApiResultToSubmitOutcome(result));
 }
 
 export type LocalCreateFeedbackKey =
@@ -212,9 +338,29 @@ export type LocalCreateSubmitDeps = Readonly<{
 
 export type LocalCreateSubmitResult = Readonly<{
   uiState: LocalCreateUiState;
+  recoveryAction: LocalCreateRecoveryAction;
+  outcome: LocalCreateSubmitOutcome | null;
   created: LocalUserRequestCreateResult | null;
   bodyPosted: LocalUserRequestCreateBody | null;
 }>;
+
+function submitResult(
+  partial: Omit<LocalCreateSubmitResult, 'recoveryAction'> & {
+    recoveryAction?: LocalCreateRecoveryAction;
+  }
+): LocalCreateSubmitResult {
+  const outcome = partial.outcome;
+  const recoveryAction =
+    partial.recoveryAction ??
+    (outcome ? classifyLocalCreateRecovery(outcome) : 'NONE');
+  return {
+    uiState: partial.uiState,
+    recoveryAction,
+    outcome,
+    created: partial.created,
+    bodyPosted: partial.bodyPosted,
+  };
+}
 
 /**
  * Single-flight create runner.
@@ -227,12 +373,24 @@ export async function runLocalCreateSubmit(input: Readonly<{
   deps: LocalCreateSubmitDeps;
 }>): Promise<LocalCreateSubmitResult> {
   if (input.inFlight.current) {
-    return { uiState: 'SUBMITTING', created: null, bodyPosted: null };
+    return submitResult({
+      uiState: 'SUBMITTING',
+      outcome: null,
+      created: null,
+      bodyPosted: null,
+      recoveryAction: 'NONE',
+    });
   }
 
   const fieldErrors = validateLocalCreateForm(input.form, input.options);
   if (fieldErrors) {
-    return { uiState: 'VALIDATION_ERROR', created: null, bodyPosted: null };
+    return submitResult({
+      uiState: 'VALIDATION_ERROR',
+      outcome: null,
+      created: null,
+      bodyPosted: null,
+      recoveryAction: 'NONE',
+    });
   }
 
   input.inFlight.current = true;
@@ -240,7 +398,12 @@ export async function runLocalCreateSubmit(input: Readonly<{
   try {
     const jwt = await input.deps.getJwt();
     if (!jwt) {
-      return { uiState: 'AUTH_REQUIRED_OR_EXPIRED', created: null, bodyPosted: null };
+      return submitResult({
+        uiState: 'AUTH_REQUIRED_OR_EXPIRED',
+        outcome: { kind: 'auth_required', status: 401 },
+        created: null,
+        bodyPosted: null,
+      });
     }
 
     if (
@@ -251,18 +414,38 @@ export async function runLocalCreateSubmit(input: Readonly<{
         input.options
       )
     ) {
-      return { uiState: 'VALIDATION_ERROR', created: null, bodyPosted: null };
+      return submitResult({
+        uiState: 'VALIDATION_ERROR',
+        outcome: null,
+        created: null,
+        bodyPosted: null,
+        recoveryAction: 'NONE',
+      });
     }
 
     const body = buildLocalCreateRequestBody(input.form);
     assertLocalCreateBodySafe(body);
 
     const result = await input.deps.createRequest(body);
-    const uiState = mapCreateApiResultToUiState(result);
+    const outcome = mapCreateApiResultToSubmitOutcome(result);
+    const uiState = mapSubmitOutcomeToUiState(outcome);
+    const recoveryAction = classifyLocalCreateRecovery(outcome);
     if (uiState === 'CREATED_SUCCESS' && result.ok) {
-      return { uiState, created: result.data, bodyPosted: body };
+      return submitResult({
+        uiState,
+        outcome,
+        recoveryAction,
+        created: result.data,
+        bodyPosted: body,
+      });
     }
-    return { uiState, created: null, bodyPosted: body };
+    return submitResult({
+      uiState,
+      outcome,
+      recoveryAction,
+      created: null,
+      bodyPosted: body,
+    });
   } finally {
     input.inFlight.current = false;
   }

@@ -100,6 +100,8 @@ export function LocalUserRequestCreateComposer({
   const [options, setOptions] = useState<readonly LocalCreateBusinessOption[]>([]);
   const [providerStatus, setProviderStatus] =
     useState<LocalCreateProviderSourceStatus>('PROVIDER_IDLE');
+  /** True only after a provider-authority create rejection (not unrelated validation). */
+  const [providerAuthorityRejected, setProviderAuthorityRejected] = useState(false);
   const inFlightRef = useRef(false);
   const mountedRef = useRef(true);
   const providerGenerationRef = useRef(0);
@@ -135,7 +137,11 @@ export function LocalUserRequestCreateComposer({
       return t('local.userRequestStatus.create.feedback.providerUnavailable');
     }
     if (feedbackKey === 'serverValidation') {
-      return t('local.userRequestStatus.create.feedback.providerUnavailable');
+      return t(
+        providerAuthorityRejected
+          ? 'local.userRequestStatus.create.feedback.providerUnavailable'
+          : 'local.userRequestStatus.create.feedback.serverValidation'
+      );
     }
     const providerKey = providerFeedbackKey(providerStatus);
     if (providerKey && uiState !== 'CREATED_SUCCESS') {
@@ -146,6 +152,7 @@ export function LocalUserRequestCreateComposer({
   }, [
     feedbackKey,
     form.businessId,
+    providerAuthorityRejected,
     providerStatus,
     refreshWarning,
     selected,
@@ -224,6 +231,7 @@ export function LocalUserRequestCreateComposer({
             : prev
         );
         setRefreshWarning(false);
+        setProviderAuthorityRejected(false);
         providerRefreshBudgetRef.current = 0;
         if (nextType == null) {
           providerGenerationRef.current += 1;
@@ -256,6 +264,7 @@ export function LocalUserRequestCreateComposer({
     setForm(defaultLocalCreateFormValues());
     setUiState('IDLE');
     setRefreshWarning(false);
+    setProviderAuthorityRejected(false);
     setCreatedId(null);
     setOptions([]);
     setProviderStatus('PROVIDER_IDLE');
@@ -295,6 +304,7 @@ export function LocalUserRequestCreateComposer({
     if (!mountedRef.current) return;
 
     if (result.uiState === 'CREATED_SUCCESS' && result.created) {
+      setProviderAuthorityRejected(false);
       setCreatedId(result.created.id);
       setUiState('CREATED_SUCCESS');
       try {
@@ -306,6 +316,7 @@ export function LocalUserRequestCreateComposer({
     }
 
     if (result.uiState === 'AUTH_REQUIRED_OR_EXPIRED') {
+      setProviderAuthorityRejected(false);
       clearProviderAuthority();
       setProviderStatus('PROVIDER_AUTH_REQUIRED_OR_EXPIRED');
       setUiState(result.uiState);
@@ -314,6 +325,7 @@ export function LocalUserRequestCreateComposer({
     }
 
     if (result.uiState === 'NETWORK_RESULT_UNKNOWN') {
+      setProviderAuthorityRejected(false);
       setUiState(result.uiState);
       const recoveredId = await onRefreshListForUnknownResult(form);
       if (!mountedRef.current) return;
@@ -328,8 +340,12 @@ export function LocalUserRequestCreateComposer({
       return;
     }
 
-    if (result.uiState === 'SERVER_VALIDATION_ERROR' && form.serviceType) {
-      // Authoritative stale provider / unsupported type — no auto POST retry.
+    if (
+      result.recoveryAction === 'REFRESH_PROVIDER_AUTHORITY_ONCE' &&
+      form.serviceType
+    ) {
+      // Provider-authority rejection only — never derived from UI state alone.
+      setProviderAuthorityRejected(true);
       setForm((prev) => ({ ...prev, businessId: '' }));
       setUiState(result.uiState);
       providerRefreshBudgetRef.current = 1;
@@ -337,6 +353,7 @@ export function LocalUserRequestCreateComposer({
       return;
     }
 
+    setProviderAuthorityRejected(false);
     setUiState(result.uiState);
   }, [
     clearProviderAuthority,

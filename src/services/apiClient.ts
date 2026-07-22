@@ -2,14 +2,23 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { STORAGE_KEYS } from '../storage/storageKeys';
 import { isDemoSandboxActive, mockRestApiRequestResult } from './ux/DemoSandbox';
+import {
+  parseRestApiJsonEnvelope,
+  type RestApiJsonEnvelope,
+} from '../utils/restApiJsonEnvelope';
 
-export type ApiEnvelope<T> =
-  | Readonly<{ success: true; data: T }>
-  | Readonly<{ success: false; error: string }>;
+export type ApiEnvelope<T> = RestApiJsonEnvelope<T>;
 
 export type ApiRequestResult<T> =
   | Readonly<{ ok: true; status: number; data: T }>
-  | Readonly<{ ok: false; status: number; error: string; unreachable?: boolean }>;
+  | Readonly<{
+      ok: false;
+      status: number;
+      error: string;
+      /** Optional machine failure code when the server envelope includes an allowlisted `code`. */
+      code?: string;
+      unreachable?: boolean;
+    }>;
 
 /** Base URL for ViGlobal Express API (`/api/*`) — no trailing slash. */
 export function getRestApiBaseUrl(): string {
@@ -47,20 +56,7 @@ export async function clearRestApiJwt(): Promise<void> {
 }
 
 function parseJsonEnvelope<T>(raw: string): ApiEnvelope<T> | null {
-  try {
-    const v = JSON.parse(raw) as unknown;
-    if (typeof v !== 'object' || v === null) return null;
-    const success = (v as { success?: unknown }).success;
-    if (success === true && 'data' in v) {
-      return { success: true, data: (v as { data: T }).data };
-    }
-    if (success === false && typeof (v as { error?: unknown }).error === 'string') {
-      return { success: false, error: (v as { error: string }).error };
-    }
-    return null;
-  } catch {
-    return null;
-  }
+  return parseRestApiJsonEnvelope<T>(raw);
 }
 
 export function formatNetworkFailureMessage(error: unknown): string {
@@ -123,7 +119,14 @@ export async function restApiFetchJson<T>(
     return { ok: true, status: res.status, data: parsed.data };
   }
   if (parsed?.success === false) {
-    return { ok: false, status: res.status, error: parsed.error };
+    return {
+      ok: false,
+      status: res.status,
+      error: parsed.error,
+      ...(typeof parsed.code === 'string' && parsed.code.length > 0
+        ? { code: parsed.code }
+        : {}),
+    };
   }
 
   const fallback =
