@@ -218,9 +218,14 @@ async function runSourceGates(log: PassLog): Promise<void> {
     assert.ok(!text.includes('42P01'), `${rel} no missing-table fake fallback`);
   }
 
-  assert.ok(composer.includes('PROVIDER_SELECTION_UNAVAILABLE'), 'client freeze');
-  assert.ok(source.includes('PROVIDER_SELECTION_UNAVAILABLE'), 'source freeze');
-  assert.ok(!composer.includes('/api/local/providers'), 'no Pack B client wiring');
+  assert.ok(composer.includes('loadLocalCreateBusinessOptions'), 'composer uses Pack B loader');
+  assert.ok(composer.includes('PROVIDER_IDLE') || composer.includes('PROVIDER_LOADING'), 'Pack B provider states');
+  assert.ok(source.includes('listLocalProviders'), 'source calls provider list client');
+  assert.ok(!composer.includes('viGlobalTourismApi'), 'no Tourism in composer');
+  assert.ok(!source.includes('PROVIDER_SELECTION_UNAVAILABLE'), 'Pack B replaces unavailable freeze');
+  const listClient = read('src/services/local/localProviderListClient.ts');
+  assert.ok(listClient.includes('/api/local/providers'), 'Pack B GET providers adapter');
+  assert.ok(!listClient.includes('42P01'), 'no missing-table fake');
 
   const forbidden = findForbiddenLocalProviderEligibilityAuditMutations(ROOT);
   assert.deepEqual(forbidden, [], `append-only: ${forbidden.join(', ')}`);

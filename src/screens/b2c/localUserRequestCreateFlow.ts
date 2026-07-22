@@ -12,7 +12,7 @@ import {
 } from '../../domain/local/localServiceRequestClientContract';
 import type { ApiRequestResult } from '../../services/apiClient';
 import {
-  isLocalCreateBusinessSelected,
+  isLocalProviderSelectionCompatible,
   type LocalCreateBusinessOption,
 } from '../../services/local/localCreateBusinessOptionModel';
 
@@ -29,7 +29,8 @@ export type LocalCreateUiState =
 
 export type LocalCreateFormValues = Readonly<{
   businessId: string;
-  serviceType: LocalServiceTypeClient;
+  /** Null until the user selects a service type (Pack B service-type-first). */
+  serviceType: LocalServiceTypeClient | null;
   title: string;
   description: string;
 }>;
@@ -51,7 +52,7 @@ export const LOCAL_CREATE_SERVICE_TYPE_OPTIONS: readonly LocalServiceTypeClient[
 export function defaultLocalCreateFormValues(): LocalCreateFormValues {
   return {
     businessId: '',
-    serviceType: LOCAL_SERVICE_TYPE.GENERIC_REQUEST,
+    serviceType: null,
     title: '',
     description: '',
   };
@@ -64,10 +65,14 @@ export function validateLocalCreateForm(
   const errors: { businessId?: string; serviceType?: string; title?: string } = {};
   if (form.businessId.trim().length === 0) {
     errors.businessId = 'required';
-  } else if (options && !isLocalCreateBusinessSelected(form.businessId, options)) {
+  } else if (
+    options &&
+    (form.serviceType == null ||
+      !isLocalProviderSelectionCompatible(form.businessId, form.serviceType, options))
+  ) {
     errors.businessId = 'unavailable';
   }
-  if (!isLocalServiceTypeClient(form.serviceType)) {
+  if (form.serviceType == null || !isLocalServiceTypeClient(form.serviceType)) {
     errors.serviceType = 'required';
   }
   if (form.title.trim().length === 0) {
@@ -79,6 +84,9 @@ export function validateLocalCreateForm(
 export function buildLocalCreateRequestBody(
   form: LocalCreateFormValues
 ): LocalUserRequestCreateBody {
+  if (form.serviceType == null || !isLocalServiceTypeClient(form.serviceType)) {
+    throw new Error('Local create requires a selected serviceType');
+  }
   const description = form.description.trim();
   return {
     businessId: form.businessId.trim(),
@@ -144,7 +152,12 @@ export type LocalCreateFeedbackKey =
   | 'refreshWarning'
   | 'providerUnavailable'
   | 'providersEmpty'
-  | 'providersLoadError';
+  | 'providersLoadError'
+  | 'providerAuthRequired'
+  | 'providerNetworkError'
+  | 'providerServerError'
+  | 'chooseServiceType'
+  | 'chooseProvider';
 
 export function feedbackKeyForCreateState(uiState: LocalCreateUiState): LocalCreateFeedbackKey | null {
   switch (uiState) {
@@ -230,7 +243,14 @@ export async function runLocalCreateSubmit(input: Readonly<{
       return { uiState: 'AUTH_REQUIRED_OR_EXPIRED', created: null, bodyPosted: null };
     }
 
-    if (!isLocalCreateBusinessSelected(input.form.businessId, input.options)) {
+    if (
+      input.form.serviceType == null ||
+      !isLocalProviderSelectionCompatible(
+        input.form.businessId,
+        input.form.serviceType,
+        input.options
+      )
+    ) {
       return { uiState: 'VALIDATION_ERROR', created: null, bodyPosted: null };
     }
 
