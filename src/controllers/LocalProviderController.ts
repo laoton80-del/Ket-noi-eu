@@ -1,8 +1,12 @@
 /**
  * Pack A2 — Local provider eligibility B2C read + Role.ADMIN ops controllers.
+ *
+ * Optional `deps` is for deterministic tests only. Route handlers call with
+ * (req, res) so production always uses Prisma-backed defaults.
  */
 import type { Request, Response } from 'express';
 
+import type { LocalProviderAuthorityDeps } from '../services/local/localProviderEligibilityAuthorityTypes';
 import { listSelectableLocalProviders } from '../services/local/localProviderEligibilityListService';
 import {
   activateLocalProviderEligibility,
@@ -30,7 +34,11 @@ function readBusinessIdParam(req: Request): string | null {
 }
 
 /** GET /api/local/providers — authenticated B2C selectable provider list. */
-export async function getLocalProviders(req: Request, res: Response): Promise<void> {
+export async function getLocalProviders(
+  req: Request,
+  res: Response,
+  deps?: LocalProviderAuthorityDeps
+): Promise<void> {
   try {
     if (!readAuthUserId(req)) {
       jsonFail(res, 'Unauthorized', 401);
@@ -43,11 +51,14 @@ export async function getLocalProviders(req: Request, res: Response): Promise<vo
       return;
     }
 
-    const data = await listSelectableLocalProviders({
-      limit: query.limit,
-      skip: query.skip,
-      ...(query.serviceType ? { serviceType: query.serviceType } : {}),
-    });
+    const data = await listSelectableLocalProviders(
+      {
+        limit: query.limit,
+        skip: query.skip,
+        ...(query.serviceType ? { serviceType: query.serviceType } : {}),
+      },
+      deps
+    );
     jsonOk(res, data, 200);
   } catch (err) {
     console.error('[getLocalProviders]', err);
@@ -56,7 +67,11 @@ export async function getLocalProviders(req: Request, res: Response): Promise<vo
 }
 
 /** POST /api/local/ops/providers — register eligibility (Role.ADMIN). */
-export async function postRegisterLocalProvider(req: Request, res: Response): Promise<void> {
+export async function postRegisterLocalProvider(
+  req: Request,
+  res: Response,
+  deps?: LocalProviderAuthorityDeps
+): Promise<void> {
   try {
     const actorUserId = readAuthUserId(req);
     if (!actorUserId) {
@@ -70,12 +85,15 @@ export async function postRegisterLocalProvider(req: Request, res: Response): Pr
       return;
     }
 
-    const result = await registerLocalProviderEligibility({
-      actorUserId,
-      businessId: body.businessId,
-      supportedServiceTypes: body.supportedServiceTypes,
-      publicB2cVisible: body.publicB2cVisible,
-    });
+    const result = await registerLocalProviderEligibility(
+      {
+        actorUserId,
+        businessId: body.businessId,
+        supportedServiceTypes: body.supportedServiceTypes,
+        publicB2cVisible: body.publicB2cVisible,
+      },
+      deps
+    );
 
     if (!result.ok) {
       const statusMap = {
@@ -100,7 +118,11 @@ export async function postRegisterLocalProvider(req: Request, res: Response): Pr
 }
 
 /** PATCH /api/local/ops/providers/:businessId */
-export async function patchLocalProvider(req: Request, res: Response): Promise<void> {
+export async function patchLocalProvider(
+  req: Request,
+  res: Response,
+  deps?: LocalProviderAuthorityDeps
+): Promise<void> {
   try {
     const actorUserId = readAuthUserId(req);
     if (!actorUserId) {
@@ -120,16 +142,19 @@ export async function patchLocalProvider(req: Request, res: Response): Promise<v
       return;
     }
 
-    const result = await patchLocalProviderEligibility({
-      actorUserId,
-      businessId,
-      ...(body.supportedServiceTypes !== undefined
-        ? { supportedServiceTypes: body.supportedServiceTypes }
-        : {}),
-      ...(body.publicB2cVisible !== undefined
-        ? { publicB2cVisible: body.publicB2cVisible }
-        : {}),
-    });
+    const result = await patchLocalProviderEligibility(
+      {
+        actorUserId,
+        businessId,
+        ...(body.supportedServiceTypes !== undefined
+          ? { supportedServiceTypes: body.supportedServiceTypes }
+          : {}),
+        ...(body.publicB2cVisible !== undefined
+          ? { publicB2cVisible: body.publicB2cVisible }
+          : {}),
+      },
+      deps
+    );
 
     if (!result.ok) {
       const statusMap = {
@@ -156,7 +181,11 @@ export async function patchLocalProvider(req: Request, res: Response): Promise<v
 }
 
 /** POST /api/local/ops/providers/:businessId/activate */
-export async function postActivateLocalProvider(req: Request, res: Response): Promise<void> {
+export async function postActivateLocalProvider(
+  req: Request,
+  res: Response,
+  deps?: LocalProviderAuthorityDeps
+): Promise<void> {
   try {
     const actorUserId = readAuthUserId(req);
     if (!actorUserId) {
@@ -175,7 +204,7 @@ export async function postActivateLocalProvider(req: Request, res: Response): Pr
       return;
     }
 
-    const result = await activateLocalProviderEligibility({ actorUserId, businessId });
+    const result = await activateLocalProviderEligibility({ actorUserId, businessId }, deps);
     if (!result.ok) {
       const statusMap = {
         invalid_input: 400,
@@ -203,7 +232,8 @@ export async function postActivateLocalProvider(req: Request, res: Response): Pr
 async function postTransitionWithOptionalReason(
   req: Request,
   res: Response,
-  kind: 'suspend' | 'retire'
+  kind: 'suspend' | 'retire',
+  deps?: LocalProviderAuthorityDeps
 ): Promise<void> {
   const actorUserId = readAuthUserId(req);
   if (!actorUserId) {
@@ -225,16 +255,22 @@ async function postTransitionWithOptionalReason(
 
   const result =
     kind === 'suspend'
-      ? await suspendLocalProviderEligibility({
-          actorUserId,
-          businessId,
-          reason: body.reason,
-        })
-      : await retireLocalProviderEligibility({
-          actorUserId,
-          businessId,
-          reason: body.reason,
-        });
+      ? await suspendLocalProviderEligibility(
+          {
+            actorUserId,
+            businessId,
+            reason: body.reason,
+          },
+          deps
+        )
+      : await retireLocalProviderEligibility(
+          {
+            actorUserId,
+            businessId,
+            reason: body.reason,
+          },
+          deps
+        );
 
   if (!result.ok) {
     const statusMap = {
@@ -257,9 +293,13 @@ async function postTransitionWithOptionalReason(
 }
 
 /** POST /api/local/ops/providers/:businessId/suspend */
-export async function postSuspendLocalProvider(req: Request, res: Response): Promise<void> {
+export async function postSuspendLocalProvider(
+  req: Request,
+  res: Response,
+  deps?: LocalProviderAuthorityDeps
+): Promise<void> {
   try {
-    await postTransitionWithOptionalReason(req, res, 'suspend');
+    await postTransitionWithOptionalReason(req, res, 'suspend', deps);
   } catch (err) {
     console.error('[postSuspendLocalProvider]', err);
     jsonFail(res, 'Internal server error', 500);
@@ -267,9 +307,13 @@ export async function postSuspendLocalProvider(req: Request, res: Response): Pro
 }
 
 /** POST /api/local/ops/providers/:businessId/retire */
-export async function postRetireLocalProvider(req: Request, res: Response): Promise<void> {
+export async function postRetireLocalProvider(
+  req: Request,
+  res: Response,
+  deps?: LocalProviderAuthorityDeps
+): Promise<void> {
   try {
-    await postTransitionWithOptionalReason(req, res, 'retire');
+    await postTransitionWithOptionalReason(req, res, 'retire', deps);
   } catch (err) {
     console.error('[postRetireLocalProvider]', err);
     jsonFail(res, 'Internal server error', 500);

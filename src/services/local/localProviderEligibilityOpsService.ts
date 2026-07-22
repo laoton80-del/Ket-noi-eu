@@ -1,19 +1,20 @@
 /**
  * Pack A2 — Role.ADMIN Local provider eligibility registration and lifecycle ops.
- * Mutation + LocalProviderEligibilityAuditEvent always share one Prisma transaction.
+ * Mutation + LocalProviderEligibilityAuditEvent always share one transaction.
  */
 import {
   LocalProviderEligibilityAuditEventType,
   LocalProviderEligibilityStatus,
-  Role,
   type LocalServiceType,
 } from '@prisma/client';
 
-import { getPrisma } from '../../lib/prisma';
-import { createLocalProviderEligibilityAuditEvent } from './localProviderEligibilityAuditWrite';
 import {
-  isValidLocalProviderBusinessDisplayName,
-} from './localProviderEligibilityDomain';
+  createPrismaLocalProviderAuthorityDeps,
+  isAdminRole,
+} from './localProviderEligibilityAuthorityPrisma';
+import type { LocalProviderAuthorityDeps } from './localProviderEligibilityAuthorityTypes';
+import { createLocalProviderEligibilityAuditEvent } from './localProviderEligibilityAuditWrite';
+import { isValidLocalProviderBusinessDisplayName } from './localProviderEligibilityDomain';
 import {
   draftRegistrationTimestamps,
   lifecycleTimestampsForTransition,
@@ -58,46 +59,41 @@ function toOpsDto(row: {
   };
 }
 
-async function assertAdminActor(actorUserId: string): Promise<boolean> {
-  const prisma = getPrisma();
-  const user = await prisma.user.findUnique({
-    where: { id: actorUserId },
-    select: { role: true },
-  });
-  return !!user && user.role === Role.ADMIN;
+function resolveDeps(deps?: LocalProviderAuthorityDeps): LocalProviderAuthorityDeps {
+  return deps ?? createPrismaLocalProviderAuthorityDeps();
 }
 
 export type RegisterLocalProviderResult =
   | Readonly<{ ok: true; created: boolean; provider: LocalProviderOpsDto }>
   | Readonly<{ ok: false; reason: 'invalid_input' | 'forbidden' | 'business_not_found' }>;
 
-export async function registerLocalProviderEligibility(input: {
-  actorUserId: string;
-  businessId: string;
-  supportedServiceTypes: LocalServiceType[];
-  publicB2cVisible: boolean;
-}): Promise<RegisterLocalProviderResult> {
+export async function registerLocalProviderEligibility(
+  input: {
+    actorUserId: string;
+    businessId: string;
+    supportedServiceTypes: LocalServiceType[];
+    publicB2cVisible: boolean;
+  },
+  deps?: LocalProviderAuthorityDeps
+): Promise<RegisterLocalProviderResult> {
+  const d = resolveDeps(deps);
   const actorUserId = input.actorUserId.trim();
   const businessId = input.businessId.trim();
   if (!actorUserId || !businessId) return { ok: false, reason: 'invalid_input' };
-  if (!(await assertAdminActor(actorUserId))) return { ok: false, reason: 'forbidden' };
+  if (!isAdminRole(await d.findUserRole(actorUserId))) return { ok: false, reason: 'forbidden' };
 
-  const prisma = getPrisma();
-  const existing = await prisma.localProviderEligibility.findUnique({ where: { businessId } });
+  const existing = await d.findEligibilityByBusinessId(businessId);
   if (existing) {
     return { ok: true, created: false, provider: toOpsDto(existing) };
   }
 
-  const business = await prisma.business.findUnique({
-    where: { id: businessId },
-    select: { id: true },
-  });
+  const business = await d.findBusiness(businessId);
   if (!business) return { ok: false, reason: 'business_not_found' };
 
   const stamps = draftRegistrationTimestamps();
-  const row = await prisma.$transaction(async (tx) => {
-    const created = await tx.localProviderEligibility.create({
-      data: {
+  try {
+    const row = await d.runInTransaction(async (tx) => {
+      const created = await tx.createEligibility({
         businessId,
         status: LocalProviderEligibilityStatus.DRAFT,
         publicB2cVisible: input.publicB2cVisible,
@@ -105,27 +101,28 @@ export async function registerLocalProviderEligibility(input: {
         activatedAt: stamps.activatedAt,
         suspendedAt: stamps.suspendedAt,
         retiredAt: stamps.retiredAt,
-      },
+      });
+
+      await createLocalProviderEligibilityAuditEvent(tx, {
+        eligibilityId: created.id,
+        businessId,
+        actorUserId,
+        eventType: LocalProviderEligibilityAuditEventType.REGISTERED,
+        priorStatus: null,
+        nextStatus: LocalProviderEligibilityStatus.DRAFT,
+        priorPublicB2cVisible: null,
+        nextPublicB2cVisible: created.publicB2cVisible,
+        priorSupportedServiceTypes: [],
+        nextSupportedServiceTypes: created.supportedServiceTypes,
+      });
+
+      return created;
     });
 
-    await createLocalProviderEligibilityAuditEvent({
-      db: tx,
-      eligibilityId: created.id,
-      businessId,
-      actorUserId,
-      eventType: LocalProviderEligibilityAuditEventType.REGISTERED,
-      priorStatus: null,
-      nextStatus: LocalProviderEligibilityStatus.DRAFT,
-      priorPublicB2cVisible: null,
-      nextPublicB2cVisible: created.publicB2cVisible,
-      priorSupportedServiceTypes: [],
-      nextSupportedServiceTypes: created.supportedServiceTypes,
-    });
-
-    return created;
-  });
-
-  return { ok: true, created: true, provider: toOpsDto(row) };
+    return { ok: true, created: true, provider: toOpsDto(row) };
+  } catch {
+    return { ok: false, reason: 'invalid_input' };
+  }
 }
 
 export type PatchLocalProviderResult =
@@ -135,12 +132,16 @@ export type PatchLocalProviderResult =
       reason: 'invalid_input' | 'forbidden' | 'not_found' | 'conflict';
     }>;
 
-export async function patchLocalProviderEligibility(input: {
-  actorUserId: string;
-  businessId: string;
-  supportedServiceTypes?: LocalServiceType[];
-  publicB2cVisible?: boolean;
-}): Promise<PatchLocalProviderResult> {
+export async function patchLocalProviderEligibility(
+  input: {
+    actorUserId: string;
+    businessId: string;
+    supportedServiceTypes?: LocalServiceType[];
+    publicB2cVisible?: boolean;
+  },
+  deps?: LocalProviderAuthorityDeps
+): Promise<PatchLocalProviderResult> {
+  const d = resolveDeps(deps);
   const actorUserId = input.actorUserId.trim();
   const businessId = input.businessId.trim();
   if (!actorUserId || !businessId) return { ok: false, reason: 'invalid_input' };
@@ -150,13 +151,9 @@ export async function patchLocalProviderEligibility(input: {
   ) {
     return { ok: false, reason: 'invalid_input' };
   }
-  if (!(await assertAdminActor(actorUserId))) return { ok: false, reason: 'forbidden' };
+  if (!isAdminRole(await d.findUserRole(actorUserId))) return { ok: false, reason: 'forbidden' };
 
-  const prisma = getPrisma();
-  const current = await prisma.localProviderEligibility.findUnique({
-    where: { businessId },
-    include: { business: { select: { name: true } } },
-  });
+  const current = await d.findEligibilityByBusinessId(businessId);
   if (!current) return { ok: false, reason: 'not_found' };
 
   if (current.status === LocalProviderEligibilityStatus.RETIRED) {
@@ -187,33 +184,33 @@ export async function patchLocalProviderEligibility(input: {
     }
   }
 
-  const updated = await prisma.$transaction(async (tx) => {
-    const row = await tx.localProviderEligibility.update({
-      where: { businessId },
-      data: {
+  try {
+    const updated = await d.runInTransaction(async (tx) => {
+      const row = await tx.updateEligibility(businessId, {
         supportedServiceTypes: nextTypes,
         publicB2cVisible: nextVisible,
-      },
+      });
+
+      await createLocalProviderEligibilityAuditEvent(tx, {
+        eligibilityId: row.id,
+        businessId,
+        actorUserId,
+        eventType: LocalProviderEligibilityAuditEventType.CONFIG_UPDATED,
+        priorStatus: current.status,
+        nextStatus: current.status,
+        priorPublicB2cVisible: current.publicB2cVisible,
+        nextPublicB2cVisible: nextVisible,
+        priorSupportedServiceTypes: current.supportedServiceTypes,
+        nextSupportedServiceTypes: nextTypes,
+      });
+
+      return row;
     });
 
-    await createLocalProviderEligibilityAuditEvent({
-      db: tx,
-      eligibilityId: row.id,
-      businessId,
-      actorUserId,
-      eventType: LocalProviderEligibilityAuditEventType.CONFIG_UPDATED,
-      priorStatus: current.status,
-      nextStatus: current.status,
-      priorPublicB2cVisible: current.publicB2cVisible,
-      nextPublicB2cVisible: nextVisible,
-      priorSupportedServiceTypes: current.supportedServiceTypes,
-      nextSupportedServiceTypes: nextTypes,
-    });
-
-    return row;
-  });
-
-  return { ok: true, provider: toOpsDto(updated) };
+    return { ok: true, provider: toOpsDto(updated) };
+  } catch {
+    return { ok: false, reason: 'invalid_input' };
+  }
 }
 
 type TransitionFailure = 'invalid_input' | 'forbidden' | 'not_found' | 'conflict';
@@ -226,25 +223,25 @@ function statusName(s: LocalProviderEligibilityStatus): LocalProviderEligibility
   return s as LocalProviderEligibilityStatusName;
 }
 
-async function transitionLocalProvider(input: {
-  actorUserId: string;
-  businessId: string;
-  to: LocalProviderEligibilityStatus;
-  eventType: LocalProviderEligibilityAuditEventType;
-  reason: string | null;
-  allowedFrom: readonly LocalProviderEligibilityStatus[];
-  sameState: LocalProviderEligibilityStatus;
-}): Promise<TransitionLocalProviderResult> {
+async function transitionLocalProvider(
+  input: {
+    actorUserId: string;
+    businessId: string;
+    to: LocalProviderEligibilityStatus;
+    eventType: LocalProviderEligibilityAuditEventType;
+    reason: string | null;
+    allowedFrom: readonly LocalProviderEligibilityStatus[];
+    sameState: LocalProviderEligibilityStatus;
+  },
+  deps?: LocalProviderAuthorityDeps
+): Promise<TransitionLocalProviderResult> {
+  const d = resolveDeps(deps);
   const actorUserId = input.actorUserId.trim();
   const businessId = input.businessId.trim();
   if (!actorUserId || !businessId) return { ok: false, reason: 'invalid_input' };
-  if (!(await assertAdminActor(actorUserId))) return { ok: false, reason: 'forbidden' };
+  if (!isAdminRole(await d.findUserRole(actorUserId))) return { ok: false, reason: 'forbidden' };
 
-  const prisma = getPrisma();
-  const current = await prisma.localProviderEligibility.findUnique({
-    where: { businessId },
-    include: { business: { select: { id: true, name: true } } },
-  });
+  const current = await d.findEligibilityByBusinessId(businessId);
   if (!current) return { ok: false, reason: 'not_found' };
 
   if (current.status === input.sameState) {
@@ -264,7 +261,7 @@ async function transitionLocalProvider(input: {
     }
   }
 
-  const now = new Date();
+  const now = d.now();
   const stamps = lifecycleTimestampsForTransition({
     from: statusName(current.status),
     to: statusName(input.to),
@@ -277,88 +274,95 @@ async function transitionLocalProvider(input: {
   });
   if (!stamps) return { ok: false, reason: 'conflict' };
 
-  const updated = await prisma.$transaction(async (tx) => {
-    const row = await tx.localProviderEligibility.update({
-      where: { businessId },
-      data: {
+  try {
+    const updated = await d.runInTransaction(async (tx) => {
+      const row = await tx.updateEligibility(businessId, {
         status: input.to,
         activatedAt: stamps.activatedAt,
         suspendedAt: stamps.suspendedAt,
         retiredAt: stamps.retiredAt,
-      },
+      });
+
+      await createLocalProviderEligibilityAuditEvent(tx, {
+        eligibilityId: row.id,
+        businessId,
+        actorUserId,
+        eventType: input.eventType,
+        priorStatus: current.status,
+        nextStatus: input.to,
+        priorPublicB2cVisible: current.publicB2cVisible,
+        nextPublicB2cVisible: current.publicB2cVisible,
+        priorSupportedServiceTypes: current.supportedServiceTypes,
+        nextSupportedServiceTypes: current.supportedServiceTypes,
+        reason: input.reason,
+      });
+
+      return row;
     });
 
-    await createLocalProviderEligibilityAuditEvent({
-      db: tx,
-      eligibilityId: row.id,
-      businessId,
-      actorUserId,
-      eventType: input.eventType,
-      priorStatus: current.status,
-      nextStatus: input.to,
-      priorPublicB2cVisible: current.publicB2cVisible,
-      nextPublicB2cVisible: current.publicB2cVisible,
-      priorSupportedServiceTypes: current.supportedServiceTypes,
-      nextSupportedServiceTypes: current.supportedServiceTypes,
+    return { ok: true, provider: toOpsDto(updated) };
+  } catch {
+    return { ok: false, reason: 'invalid_input' };
+  }
+}
+
+export async function activateLocalProviderEligibility(
+  input: { actorUserId: string; businessId: string },
+  deps?: LocalProviderAuthorityDeps
+): Promise<TransitionLocalProviderResult> {
+  return transitionLocalProvider(
+    {
+      actorUserId: input.actorUserId,
+      businessId: input.businessId,
+      to: LocalProviderEligibilityStatus.ACTIVE,
+      eventType: LocalProviderEligibilityAuditEventType.ACTIVATED,
+      reason: null,
+      allowedFrom: [
+        LocalProviderEligibilityStatus.DRAFT,
+        LocalProviderEligibilityStatus.SUSPENDED,
+      ],
+      sameState: LocalProviderEligibilityStatus.ACTIVE,
+    },
+    deps
+  );
+}
+
+export async function suspendLocalProviderEligibility(
+  input: { actorUserId: string; businessId: string; reason: string | null },
+  deps?: LocalProviderAuthorityDeps
+): Promise<TransitionLocalProviderResult> {
+  return transitionLocalProvider(
+    {
+      actorUserId: input.actorUserId,
+      businessId: input.businessId,
+      to: LocalProviderEligibilityStatus.SUSPENDED,
+      eventType: LocalProviderEligibilityAuditEventType.SUSPENDED,
       reason: input.reason,
-    });
-
-    return row;
-  });
-
-  return { ok: true, provider: toOpsDto(updated) };
+      allowedFrom: [LocalProviderEligibilityStatus.ACTIVE],
+      sameState: LocalProviderEligibilityStatus.SUSPENDED,
+    },
+    deps
+  );
 }
 
-export async function activateLocalProviderEligibility(input: {
-  actorUserId: string;
-  businessId: string;
-}): Promise<TransitionLocalProviderResult> {
-  return transitionLocalProvider({
-    actorUserId: input.actorUserId,
-    businessId: input.businessId,
-    to: LocalProviderEligibilityStatus.ACTIVE,
-    eventType: LocalProviderEligibilityAuditEventType.ACTIVATED,
-    reason: null,
-    allowedFrom: [
-      LocalProviderEligibilityStatus.DRAFT,
-      LocalProviderEligibilityStatus.SUSPENDED,
-    ],
-    sameState: LocalProviderEligibilityStatus.ACTIVE,
-  });
-}
-
-export async function suspendLocalProviderEligibility(input: {
-  actorUserId: string;
-  businessId: string;
-  reason: string | null;
-}): Promise<TransitionLocalProviderResult> {
-  return transitionLocalProvider({
-    actorUserId: input.actorUserId,
-    businessId: input.businessId,
-    to: LocalProviderEligibilityStatus.SUSPENDED,
-    eventType: LocalProviderEligibilityAuditEventType.SUSPENDED,
-    reason: input.reason,
-    allowedFrom: [LocalProviderEligibilityStatus.ACTIVE],
-    sameState: LocalProviderEligibilityStatus.SUSPENDED,
-  });
-}
-
-export async function retireLocalProviderEligibility(input: {
-  actorUserId: string;
-  businessId: string;
-  reason: string | null;
-}): Promise<TransitionLocalProviderResult> {
-  return transitionLocalProvider({
-    actorUserId: input.actorUserId,
-    businessId: input.businessId,
-    to: LocalProviderEligibilityStatus.RETIRED,
-    eventType: LocalProviderEligibilityAuditEventType.RETIRED,
-    reason: input.reason,
-    allowedFrom: [
-      LocalProviderEligibilityStatus.DRAFT,
-      LocalProviderEligibilityStatus.ACTIVE,
-      LocalProviderEligibilityStatus.SUSPENDED,
-    ],
-    sameState: LocalProviderEligibilityStatus.RETIRED,
-  });
+export async function retireLocalProviderEligibility(
+  input: { actorUserId: string; businessId: string; reason: string | null },
+  deps?: LocalProviderAuthorityDeps
+): Promise<TransitionLocalProviderResult> {
+  return transitionLocalProvider(
+    {
+      actorUserId: input.actorUserId,
+      businessId: input.businessId,
+      to: LocalProviderEligibilityStatus.RETIRED,
+      eventType: LocalProviderEligibilityAuditEventType.RETIRED,
+      reason: input.reason,
+      allowedFrom: [
+        LocalProviderEligibilityStatus.DRAFT,
+        LocalProviderEligibilityStatus.ACTIVE,
+        LocalProviderEligibilityStatus.SUSPENDED,
+      ],
+      sameState: LocalProviderEligibilityStatus.RETIRED,
+    },
+    deps
+  );
 }
