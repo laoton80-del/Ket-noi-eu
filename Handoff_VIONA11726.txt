@@ -1,4 +1,23 @@
 VIONA — KERNEL/HANDOFF SNAPSHOT (local notes, not committed to git)
+Last updated: 2026-07-22 — FC-P0 Pack A2 DETERMINISTIC BEHAVIORAL EVIDENCE REMEDIATION
+
+=== FC-P0 LOCAL PROVIDER A2 DETERMINISTIC BEHAVIORAL EVIDENCE REMEDIATION ===
+Operator: APPROVE_VIONA_FC_P0_LOCAL_PROVIDER_A2_DETERMINISTIC_BEHAVIORAL_EVIDENCE_REMEDIATION
+Baseline (PR #420 squash): ff0fdfa7752eacb265e94f1de75e676d57ae5c62
+Branch: fix/viona-fc-p0-local-provider-a2-deterministic-behavioral-evidence-remediation
+Original blocker: BLOCKED_LOCAL_PROVIDER_A2_DB_BEHAVIOR_EVIDENCE_INSUFFICIENT
+Architecture: real ops/list orchestration + optional LocalProviderAuthorityDeps;
+  production default = Prisma; tests = scripts/localProviderEligibilityDeterministicDoubles.ts
+  (in-memory store + commit/rollback + fixed clock). No schema/migration change. No migrate-apply.
+Cases 30–43 + rollback A–D: PASS via deterministic executed behavior.
+Optional DB: OPTIONAL_DB_INTEGRATION_SKIPPED_EXPECTED_NO_MIGRATION_APPLY (does not gate PASS).
+A1 1–29 / tsc / expo / release-discipline / Local list-timeline-cancel / JWT / no-Prisma /
+  Functions / smoke / Profile-Language / Modern Home A-B-C: PASS.
+No Pack B. No deploy. No provider activation. FC-P0 still blocked. REQUEST_ONLY_NO_CHARGE.
+Evidence: docs/product/VIONA_FC_P0_LOCAL_PROVIDER_A2_DETERMINISTIC_BEHAVIORAL_EVIDENCE_REMEDIATION.md
+Next operator action: strict-review remediation PR only — do NOT auto-authorize Pack B.
+
+=== PRIOR NOTE (Pack39 closure — historical) ===
 Last updated: 2026-07-14 14:54 — Pack39 POST-MERGE CANONICAL CLOSURE SYNC (docs-only): PR #337
 MERGED @ 3ae223a; post-merge verification from clean worktree @ origin/master re-confirmed
 15/15 Pack39, 27/27 Pack37, 23/23 full local regression, typecheck + lint PASS; Layer 3 absent;

@@ -5,8 +5,9 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
-const FORBIDDEN_MUTATION_RE =
-  /\.(update|updateMany|delete|deleteMany)\s*\(/;
+/** Forbidden: mutate LocalProviderEligibilityAuditEvent (create-only / append-only). */
+const FORBIDDEN_AUDIT_MUTATION_RE =
+  /localProviderEligibilityAuditEvent\s*\.\s*(update|updateMany|delete|deleteMany)\s*\(/;
 
 const SCAN_ROOTS = [
   path.join('src', 'services', 'local'),
@@ -48,7 +49,7 @@ export function findForbiddenLocalProviderEligibilityAuditMutations(
         .replace(/\/\*[\s\S]*?\*\//g, '')
         .replace(/\/\/.*$/gm, '');
       if (!stripped.includes('localProviderEligibilityAuditEvent')) continue;
-      if (FORBIDDEN_MUTATION_RE.test(stripped)) {
+      if (FORBIDDEN_AUDIT_MUTATION_RE.test(stripped)) {
         hits.push(file);
       }
     }

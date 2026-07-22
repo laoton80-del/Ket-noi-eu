@@ -1,12 +1,10 @@
 /**
  * Pack A2 — B2C selectable Local provider list (read-only; no eligibility mutation).
  */
-import {
-  LocalProviderEligibilityStatus,
-  type LocalServiceType,
-} from '@prisma/client';
+import type { LocalServiceType } from '@prisma/client';
 
-import { getPrisma } from '../../lib/prisma';
+import { createPrismaLocalProviderAuthorityDeps } from './localProviderEligibilityAuthorityPrisma';
+import type { LocalProviderAuthorityDeps } from './localProviderEligibilityAuthorityTypes';
 import { isLocalProviderSelectable } from './localProviderEligibilityDomain';
 import {
   LOCAL_PROVIDER_LIST_DEFAULT_LIMIT,
@@ -30,13 +28,19 @@ export type ListSelectableLocalProvidersResult = Readonly<{
   pagination: Readonly<{ limit: number; skip: number; returned: number }>;
 }>;
 
+function resolveDeps(deps?: LocalProviderAuthorityDeps): LocalProviderAuthorityDeps {
+  return deps ?? createPrismaLocalProviderAuthorityDeps();
+}
+
 /**
  * Returns only ACTIVE public providers with non-empty types and valid Business name.
- * Stable order: Business.name ASC, businessId ASC.
+ * Stable order: Business.name ASC, businessId ASC (store candidate order preserved).
  */
 export async function listSelectableLocalProviders(
-  input: ListSelectableLocalProvidersInput = {}
+  input: ListSelectableLocalProvidersInput = {},
+  deps?: LocalProviderAuthorityDeps
 ): Promise<ListSelectableLocalProvidersResult> {
+  const d = resolveDeps(deps);
   const limit = Math.min(
     Math.max(input.limit ?? LOCAL_PROVIDER_LIST_DEFAULT_LIMIT, 1),
     LOCAL_PROVIDER_LIST_MAX_LIMIT
@@ -44,20 +48,8 @@ export async function listSelectableLocalProviders(
   const skip = Math.max(input.skip ?? 0, 0);
   const serviceType = input.serviceType;
 
-  const prisma = getPrisma();
-
-  const rows = await prisma.localProviderEligibility.findMany({
-    where: {
-      status: LocalProviderEligibilityStatus.ACTIVE,
-      publicB2cVisible: true,
-      ...(serviceType
-        ? { supportedServiceTypes: { has: serviceType } }
-        : { supportedServiceTypes: { isEmpty: false } }),
-    },
-    include: {
-      business: { select: { id: true, name: true } },
-    },
-    orderBy: [{ business: { name: 'asc' } }, { businessId: 'asc' }],
+  const rows = await d.listEligibilityCandidates({
+    ...(serviceType ? { serviceType } : {}),
   });
 
   const items: LocalProviderPublicDto[] = [];
