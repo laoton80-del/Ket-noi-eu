@@ -23,6 +23,7 @@ import {
   findLocalCreateBusinessOption,
   loadLocalCreateBusinessOptions,
   localCreateProviderSelectionEnabled,
+  shouldApplyProviderListResult,
   type LocalCreateBusinessOption,
   type LocalCreateBusinessSourceLoader,
   type LocalCreateProviderSourceStatus,
@@ -50,8 +51,8 @@ export type LocalKnownBusinessOption = Readonly<{
 
 export type LocalUserRequestCreateComposerProps = Readonly<{
   /**
-   * Retained for host compatibility. Path 2 does NOT use history as a provider
-   * authority (not sole first-time source; not a substitute for Local eligibility).
+   * Retained for host compatibility. Must NOT be used as provider authority
+   * (history is not Local eligibility).
    */
   knownBusinesses: readonly LocalKnownBusinessOption[];
   t: (key: string, options?: Record<string, unknown>) => string;
@@ -62,6 +63,25 @@ export type LocalUserRequestCreateComposerProps = Readonly<{
   loadBusinessOptions?: LocalCreateBusinessSourceLoader;
   submitDeps?: LocalCreateSubmitDeps;
 }>;
+
+function providerFeedbackKey(
+  status: LocalCreateProviderSourceStatus
+): string | null {
+  switch (status) {
+    case 'PROVIDER_IDLE':
+      return 'chooseServiceType';
+    case 'PROVIDER_EMPTY':
+      return 'providersEmpty';
+    case 'PROVIDER_AUTH_REQUIRED_OR_EXPIRED':
+      return 'providerAuthRequired';
+    case 'PROVIDER_NETWORK_ERROR':
+      return 'providerNetworkError';
+    case 'PROVIDER_SERVER_ERROR':
+      return 'providerServerError';
+    default:
+      return null;
+  }
+}
 
 export function LocalUserRequestCreateComposer({
   knownBusinesses: _knownBusinesses,
@@ -79,9 +99,12 @@ export function LocalUserRequestCreateComposer({
   const [createdId, setCreatedId] = useState<string | null>(null);
   const [options, setOptions] = useState<readonly LocalCreateBusinessOption[]>([]);
   const [providerStatus, setProviderStatus] =
-    useState<LocalCreateProviderSourceStatus>('PROVIDER_SELECTION_UNAVAILABLE');
+    useState<LocalCreateProviderSourceStatus>('PROVIDER_IDLE');
   const inFlightRef = useRef(false);
   const mountedRef = useRef(true);
+  const providerGenerationRef = useRef(0);
+  const providerRefreshBudgetRef = useRef(0);
+  const formServiceTypeRef = useRef<LocalServiceTypeClient | null>(null);
 
   useEffect(() => {
     mountedRef.current = true;
@@ -90,10 +113,17 @@ export function LocalUserRequestCreateComposer({
     };
   }, []);
 
+  useEffect(() => {
+    formServiceTypeRef.current = form.serviceType;
+  }, [form.serviceType]);
+
   const selectionEnabled = localCreateProviderSelectionEnabled(providerStatus, options);
-  const editable = fieldsEditableInLocalCreateState(uiState) && selectionEnabled;
+  const fieldsEditable = fieldsEditableInLocalCreateState(uiState);
+  const providerSelectable = selectionEnabled && fieldsEditable;
   const canSubmit =
-    selectionEnabled && canSubmitLocalCreate(uiState, form, options);
+    selectionEnabled &&
+    form.serviceType != null &&
+    canSubmitLocalCreate(uiState, form, options);
   const feedbackKey = feedbackKeyForCreateState(uiState);
   const selected = findLocalCreateBusinessOption(form.businessId, options);
 
@@ -101,17 +131,15 @@ export function LocalUserRequestCreateComposer({
     if (refreshWarning) {
       return t('local.userRequestStatus.create.refreshWarning');
     }
-    if (providerStatus === 'PROVIDER_SELECTION_UNAVAILABLE') {
-      return t('local.userRequestStatus.create.feedback.providerSelectionUnavailable');
-    }
-    if (providerStatus === 'PROVIDERS_LOAD_ERROR') {
-      return t('local.userRequestStatus.create.feedback.providersLoadError');
-    }
-    if (providerStatus === 'PROVIDERS_EMPTY') {
-      return t('local.userRequestStatus.create.feedback.providersEmpty');
-    }
     if (feedbackKey === 'validation' && form.businessId && !selected) {
       return t('local.userRequestStatus.create.feedback.providerUnavailable');
+    }
+    if (feedbackKey === 'serverValidation') {
+      return t('local.userRequestStatus.create.feedback.providerUnavailable');
+    }
+    const providerKey = providerFeedbackKey(providerStatus);
+    if (providerKey && uiState !== 'CREATED_SUCCESS') {
+      return t(`local.userRequestStatus.create.feedback.${providerKey}`);
     }
     if (!feedbackKey) return null;
     return t(`local.userRequestStatus.create.feedback.${feedbackKey}`);
@@ -122,52 +150,122 @@ export function LocalUserRequestCreateComposer({
     refreshWarning,
     selected,
     t,
+    uiState,
   ]);
 
-  const patchForm = useCallback((patch: Partial<LocalCreateFormValues>) => {
-    if (!fieldsEditableInLocalCreateState(uiState)) return;
-    if (!localCreateProviderSelectionEnabled(providerStatus, options) && patch.businessId) {
-      return;
-    }
-    setForm((prev) => ({ ...prev, ...patch }));
-    setUiState((prev) =>
-      prev === 'VALIDATION_ERROR' ||
-      prev === 'SERVER_VALIDATION_ERROR' ||
-      prev === 'RATE_LIMITED' ||
-      prev === 'SERVER_ERROR' ||
-      prev === 'AUTH_REQUIRED_OR_EXPIRED'
-        ? 'IDLE'
-        : prev
-    );
-    setRefreshWarning(false);
-  }, [options, providerStatus, uiState]);
+  const clearProviderAuthority = useCallback(() => {
+    setOptions([]);
+    setForm((prev) => ({ ...prev, businessId: '' }));
+  }, []);
+
+  const loadProvidersForServiceType = useCallback(
+    async (
+      serviceType: LocalServiceTypeClient,
+      mode: 'user' | 'post_reject_refresh' = 'user'
+    ) => {
+      if (mode === 'post_reject_refresh') {
+        if (providerRefreshBudgetRef.current <= 0) return;
+        providerRefreshBudgetRef.current -= 1;
+      }
+
+      providerGenerationRef.current += 1;
+      const generation = providerGenerationRef.current;
+      setProviderStatus('PROVIDER_LOADING');
+      setOptions([]);
+      setForm((prev) => ({ ...prev, businessId: '' }));
+
+      const result = await loadBusinessOptions({ serviceType });
+      if (!mountedRef.current) return;
+      if (
+        !shouldApplyProviderListResult({
+          responseGeneration: generation,
+          activeGeneration: providerGenerationRef.current,
+          responseServiceType: serviceType,
+          activeServiceType: formServiceTypeRef.current,
+        })
+      ) {
+        return;
+      }
+
+      setProviderStatus(result.status);
+      setOptions(result.options);
+      if (!localCreateProviderSelectionEnabled(result.status, result.options)) {
+        setForm((prev) => ({ ...prev, businessId: '' }));
+      }
+      if (result.status === 'PROVIDER_AUTH_REQUIRED_OR_EXPIRED') {
+        clearProviderAuthority();
+        onAuthRequired();
+      }
+    },
+    [clearProviderAuthority, loadBusinessOptions, onAuthRequired]
+  );
+
+  const patchForm = useCallback(
+    (patch: Partial<LocalCreateFormValues>) => {
+      if (!fieldsEditableInLocalCreateState(uiState)) return;
+      if (patch.businessId != null && !localCreateProviderSelectionEnabled(providerStatus, options)) {
+        return;
+      }
+
+      if (patch.serviceType !== undefined && patch.serviceType !== form.serviceType) {
+        const nextType = patch.serviceType;
+        setForm((prev) => ({
+          ...prev,
+          ...patch,
+          businessId: '',
+        }));
+        setUiState((prev) =>
+          prev === 'VALIDATION_ERROR' ||
+          prev === 'SERVER_VALIDATION_ERROR' ||
+          prev === 'RATE_LIMITED' ||
+          prev === 'SERVER_ERROR' ||
+          prev === 'AUTH_REQUIRED_OR_EXPIRED'
+            ? 'IDLE'
+            : prev
+        );
+        setRefreshWarning(false);
+        providerRefreshBudgetRef.current = 0;
+        if (nextType == null) {
+          providerGenerationRef.current += 1;
+          setProviderStatus('PROVIDER_IDLE');
+          setOptions([]);
+          return;
+        }
+        void loadProvidersForServiceType(nextType, 'user');
+        return;
+      }
+
+      setForm((prev) => ({ ...prev, ...patch }));
+      setUiState((prev) =>
+        prev === 'VALIDATION_ERROR' ||
+        prev === 'SERVER_VALIDATION_ERROR' ||
+        prev === 'RATE_LIMITED' ||
+        prev === 'SERVER_ERROR' ||
+        prev === 'AUTH_REQUIRED_OR_EXPIRED'
+          ? 'IDLE'
+          : prev
+      );
+      setRefreshWarning(false);
+    },
+    [form.serviceType, loadProvidersForServiceType, options, providerStatus, uiState]
+  );
 
   const resetComposer = useCallback(() => {
+    providerGenerationRef.current += 1;
+    providerRefreshBudgetRef.current = 0;
     setForm(defaultLocalCreateFormValues());
     setUiState('IDLE');
     setRefreshWarning(false);
     setCreatedId(null);
+    setOptions([]);
+    setProviderStatus('PROVIDER_IDLE');
     inFlightRef.current = false;
   }, []);
-
-  const loadOptions = useCallback(async () => {
-    setProviderStatus('PROVIDERS_LOADING');
-    setOptions([]);
-    const result = await loadBusinessOptions();
-    if (!mountedRef.current) return;
-    setProviderStatus(result.status);
-    setOptions(result.options);
-    // Clear any stale selection when authority does not yield options.
-    if (!localCreateProviderSelectionEnabled(result.status, result.options)) {
-      setForm((prev) => ({ ...prev, businessId: '' }));
-    }
-  }, [loadBusinessOptions]);
 
   const openComposer = useCallback(() => {
     resetComposer();
     setOpen(true);
-    void loadOptions();
-  }, [loadOptions, resetComposer]);
+  }, [resetComposer]);
 
   const resolvedSubmitDeps: LocalCreateSubmitDeps = useMemo(
     () =>
@@ -179,11 +277,10 @@ export function LocalUserRequestCreateComposer({
   );
 
   const submit = useCallback(async () => {
-    // UI may soft-check; authoritative lock is set inside runLocalCreateSubmit
-    // synchronously before any await (JWT / POST).
     if (inFlightRef.current || uiState === 'SUBMITTING') return;
     if (uiState === 'NETWORK_RESULT_UNKNOWN') return;
     if (!localCreateProviderSelectionEnabled(providerStatus, options)) return;
+    if (form.serviceType == null) return;
 
     setUiState('SUBMITTING');
     setRefreshWarning(false);
@@ -209,6 +306,8 @@ export function LocalUserRequestCreateComposer({
     }
 
     if (result.uiState === 'AUTH_REQUIRED_OR_EXPIRED') {
+      clearProviderAuthority();
+      setProviderStatus('PROVIDER_AUTH_REQUIRED_OR_EXPIRED');
       setUiState(result.uiState);
       onAuthRequired();
       return;
@@ -226,13 +325,23 @@ export function LocalUserRequestCreateComposer({
     }
 
     if (result.uiState === 'SUBMITTING' && !result.created) {
-      // Duplicate entry while another submit owns the lock — do not clear SUBMITTING.
+      return;
+    }
+
+    if (result.uiState === 'SERVER_VALIDATION_ERROR' && form.serviceType) {
+      // Authoritative stale provider / unsupported type — no auto POST retry.
+      setForm((prev) => ({ ...prev, businessId: '' }));
+      setUiState(result.uiState);
+      providerRefreshBudgetRef.current = 1;
+      await loadProvidersForServiceType(form.serviceType, 'post_reject_refresh');
       return;
     }
 
     setUiState(result.uiState);
   }, [
+    clearProviderAuthority,
     form,
+    loadProvidersForServiceType,
     onAuthRequired,
     onCreated,
     onRefreshListForUnknownResult,
@@ -246,6 +355,19 @@ export function LocalUserRequestCreateComposer({
     if (uiState !== 'NETWORK_RESULT_UNKNOWN') return;
     setUiState('IDLE');
   }, [uiState]);
+
+  const retryProviders = useCallback(() => {
+    if (form.serviceType == null) return;
+    if (
+      providerStatus !== 'PROVIDER_NETWORK_ERROR' &&
+      providerStatus !== 'PROVIDER_SERVER_ERROR' &&
+      providerStatus !== 'PROVIDER_AUTH_REQUIRED_OR_EXPIRED' &&
+      providerStatus !== 'PROVIDER_EMPTY'
+    ) {
+      return;
+    }
+    void loadProvidersForServiceType(form.serviceType, 'user');
+  }, [form.serviceType, loadProvidersForServiceType, providerStatus]);
 
   if (!open) {
     return (
@@ -263,8 +385,11 @@ export function LocalUserRequestCreateComposer({
   }
 
   const showRetry =
-    providerStatus === 'PROVIDERS_LOAD_ERROR' ||
-    providerStatus === 'PROVIDER_SELECTION_UNAVAILABLE';
+    form.serviceType != null &&
+    (providerStatus === 'PROVIDER_NETWORK_ERROR' ||
+      providerStatus === 'PROVIDER_SERVER_ERROR' ||
+      providerStatus === 'PROVIDER_AUTH_REQUIRED_OR_EXPIRED' ||
+      providerStatus === 'PROVIDER_EMPTY');
 
   return (
     <View style={styles.panel} testID="local-user-request-create-composer">
@@ -287,64 +412,19 @@ export function LocalUserRequestCreateComposer({
         {t('local.userRequestStatus.create.sourceFixed', { source: LOCAL_CREATE_CLIENT_SOURCE })}
       </Text>
 
-      <Text style={styles.label}>{t('local.userRequestStatus.create.providerLabel')}</Text>
-      {providerStatus === 'PROVIDERS_LOADING' ? (
-        <ActivityIndicator
-          color={EMERALD}
-          accessibilityLabel={t('local.userRequestStatus.create.providersLoading')}
-        />
-      ) : selectionEnabled ? (
-        <View style={styles.chipWrap} testID="local-create-provider-list">
-          {options.map((biz) => {
-            const active = form.businessId === biz.businessId;
-            return (
-              <Pressable
-                key={biz.businessId}
-                disabled={!editable}
-                onPress={() => patchForm({ businessId: biz.businessId })}
-                accessibilityRole="button"
-                accessibilityLabel={biz.displayName}
-                accessibilityState={{ selected: active }}
-                style={[styles.bizChip, active && styles.bizChipActive, !editable && styles.disabled]}
-              >
-                <Text style={[styles.bizChipText, active && styles.bizChipTextActive]} numberOfLines={1}>
-                  {biz.displayName}
-                </Text>
-                {biz.categoryLabel ? (
-                  <Text style={styles.bizChipCat} numberOfLines={1}>
-                    {biz.categoryLabel}
-                  </Text>
-                ) : null}
-              </Pressable>
-            );
-          })}
-        </View>
-      ) : (
-        <View testID="local-create-provider-unavailable" style={styles.unavailableBox}>
-          <Text style={styles.unavailableText}>
-            {t('local.userRequestStatus.create.feedback.providerSelectionUnavailable')}
-          </Text>
-        </View>
-      )}
-      {selected ? (
-        <Text style={styles.selectedLine} testID="local-create-selected-name">
-          {t('local.userRequestStatus.create.selectedProvider', { name: selected.displayName })}
-        </Text>
-      ) : null}
-
       <Text style={styles.label}>{t('local.userRequestStatus.create.serviceTypeLabel')}</Text>
-      <View style={styles.chipWrap}>
+      <View style={styles.chipWrap} testID="local-create-service-type-list">
         {LOCAL_CREATE_SERVICE_TYPE_OPTIONS.map((value) => {
           const active = form.serviceType === value;
-          const typeEditable = fieldsEditableInLocalCreateState(uiState);
           return (
             <Pressable
               key={value}
-              disabled={!typeEditable}
+              disabled={!fieldsEditable}
               onPress={() => patchForm({ serviceType: value })}
               accessibilityRole="button"
-              accessibilityLabel={value}
-              style={[styles.typeChip, active && styles.typeChipActive, !typeEditable && styles.disabled]}
+              accessibilityLabel={t(`local.userRequestStatus.create.serviceType.${value}`)}
+              accessibilityState={{ selected: active, disabled: !fieldsEditable }}
+              style={[styles.typeChip, active && styles.typeChipActive, !fieldsEditable && styles.disabled]}
             >
               <Text style={[styles.typeChipText, active && styles.typeChipTextActive]}>
                 {t(`local.userRequestStatus.create.serviceType.${value}`)}
@@ -354,15 +434,68 @@ export function LocalUserRequestCreateComposer({
         })}
       </View>
 
+      <Text style={styles.label}>{t('local.userRequestStatus.create.providerLabel')}</Text>
+      {providerStatus === 'PROVIDER_LOADING' ? (
+        <ActivityIndicator
+          testID="local-create-providers-loading"
+          color={EMERALD}
+          accessibilityLabel={t('local.userRequestStatus.create.providersLoading')}
+        />
+      ) : selectionEnabled ? (
+        <View
+          style={styles.chipWrap}
+          testID="local-create-provider-list"
+          accessibilityLabel={t('local.userRequestStatus.create.providerListA11y')}
+        >
+          {options.map((biz) => {
+            const active = form.businessId === biz.businessId;
+            return (
+              <Pressable
+                key={biz.businessId}
+                disabled={!providerSelectable}
+                onPress={() => patchForm({ businessId: biz.businessId })}
+                accessibilityRole="button"
+                accessibilityLabel={biz.displayName}
+                accessibilityState={{ selected: active, disabled: !providerSelectable }}
+                style={[
+                  styles.bizChip,
+                  active && styles.bizChipActive,
+                  !providerSelectable && styles.disabled,
+                ]}
+              >
+                <Text style={[styles.bizChipText, active && styles.bizChipTextActive]} numberOfLines={1}>
+                  {biz.displayName}
+                </Text>
+              </Pressable>
+            );
+          })}
+        </View>
+      ) : (
+        <View testID="local-create-provider-unavailable" style={styles.unavailableBox}>
+          <Text style={styles.unavailableText}>
+            {t(
+              `local.userRequestStatus.create.feedback.${
+                providerFeedbackKey(providerStatus) ?? 'chooseServiceType'
+              }`
+            )}
+          </Text>
+        </View>
+      )}
+      {selected ? (
+        <Text style={styles.selectedLine} testID="local-create-selected-name">
+          {t('local.userRequestStatus.create.selectedProvider', { name: selected.displayName })}
+        </Text>
+      ) : null}
+
       <Text style={styles.label}>{t('local.userRequestStatus.create.titleLabel')}</Text>
       <TextInput
         testID="local-create-title"
         value={form.title}
-        editable={fieldsEditableInLocalCreateState(uiState)}
+        editable={fieldsEditable}
         onChangeText={(title) => patchForm({ title })}
         placeholder={t('local.userRequestStatus.create.titlePlaceholder')}
         placeholderTextColor={INK_MUTED}
-        style={[styles.input, !fieldsEditableInLocalCreateState(uiState) && styles.disabled]}
+        style={[styles.input, !fieldsEditable && styles.disabled]}
         accessibilityLabel={t('local.userRequestStatus.create.titleLabel')}
       />
 
@@ -370,20 +503,16 @@ export function LocalUserRequestCreateComposer({
       <TextInput
         testID="local-create-description"
         value={form.description}
-        editable={fieldsEditableInLocalCreateState(uiState)}
+        editable={fieldsEditable}
         onChangeText={(description) => patchForm({ description })}
         placeholder={t('local.userRequestStatus.create.descriptionPlaceholder')}
         placeholderTextColor={INK_MUTED}
         multiline
-        style={[
-          styles.input,
-          styles.inputMultiline,
-          !fieldsEditableInLocalCreateState(uiState) && styles.disabled,
-        ]}
+        style={[styles.input, styles.inputMultiline, !fieldsEditable && styles.disabled]}
         accessibilityLabel={t('local.userRequestStatus.create.descriptionLabel')}
       />
 
-      {feedbackText && providerStatus !== 'PROVIDER_SELECTION_UNAVAILABLE' ? (
+      {feedbackText ? (
         <Text
           testID="local-create-feedback"
           style={[
@@ -394,17 +523,13 @@ export function LocalUserRequestCreateComposer({
           {feedbackText}
         </Text>
       ) : null}
-      {providerStatus === 'PROVIDER_SELECTION_UNAVAILABLE' ? (
-        <Text testID="local-create-feedback" style={[styles.feedback, styles.feedbackErr]}>
-          {t('local.userRequestStatus.create.feedback.providerSelectionUnavailable')}
-        </Text>
-      ) : null}
 
       {showRetry ? (
         <Pressable
           testID="local-create-retry-providers"
-          onPress={() => void loadOptions()}
+          onPress={retryProviders}
           accessibilityRole="button"
+          accessibilityLabel={t('local.userRequestStatus.create.retryProviders')}
           style={({ pressed }) => [styles.secondaryBtn, pressed && { opacity: 0.88 }]}
         >
           <Text style={styles.secondaryBtnText}>
@@ -428,17 +553,17 @@ export function LocalUserRequestCreateComposer({
 
       <Pressable
         testID="local-create-submit"
-        disabled={!canSubmit || uiState === 'SUBMITTING' || providerStatus === 'PROVIDERS_LOADING'}
+        disabled={!canSubmit || uiState === 'SUBMITTING' || providerStatus === 'PROVIDER_LOADING'}
         onPress={() => void submit()}
         accessibilityRole="button"
         accessibilityState={{
-          disabled: !canSubmit || uiState === 'SUBMITTING' || providerStatus === 'PROVIDERS_LOADING',
+          disabled: !canSubmit || uiState === 'SUBMITTING' || providerStatus === 'PROVIDER_LOADING',
           busy: uiState === 'SUBMITTING',
         }}
         accessibilityLabel={t('local.userRequestStatus.create.submitA11y')}
         style={({ pressed }) => [
           styles.submitBtn,
-          (!canSubmit || uiState === 'SUBMITTING' || providerStatus === 'PROVIDERS_LOADING') &&
+          (!canSubmit || uiState === 'SUBMITTING' || providerStatus === 'PROVIDER_LOADING') &&
             styles.submitDisabled,
           pressed && canSubmit && uiState !== 'SUBMITTING' && { opacity: 0.9 },
         ]}
@@ -455,7 +580,6 @@ export function LocalUserRequestCreateComposer({
           testID="local-create-another"
           onPress={() => {
             resetComposer();
-            void loadOptions();
           }}
           accessibilityRole="button"
           style={({ pressed }) => [styles.secondaryBtn, pressed && { opacity: 0.88 }]}
@@ -463,11 +587,17 @@ export function LocalUserRequestCreateComposer({
           <Text style={styles.secondaryBtnText}>{t('local.userRequestStatus.create.createAnother')}</Text>
         </Pressable>
       ) : null}
+
+      {createdId ? (
+        <Text testID="local-create-created-id" style={styles.createdIdHidden}>
+          {createdId}
+        </Text>
+      ) : null}
     </View>
   );
 }
 
-/** Exported for tests — default service type wire value. */
+/** Exported for tests — default service type wire value when a type is chosen. */
 export const LOCAL_CREATE_DEFAULT_SERVICE_TYPE: LocalServiceTypeClient =
   LOCAL_SERVICE_TYPE.GENERIC_REQUEST;
 
@@ -549,74 +679,69 @@ const styles = StyleSheet.create({
   chipWrap: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 6,
-  },
-  unavailableBox: {
-    minHeight: 44,
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: localConstellation.border,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    justifyContent: 'center',
-  },
-  unavailableText: {
-    fontFamily: FontFamily.semibold,
-    fontSize: 12,
-    color: INK_MUTED,
-    lineHeight: 16,
+    gap: 8,
   },
   bizChip: {
     maxWidth: '100%',
     minHeight: 44,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 12,
+    borderRadius: 10,
     borderWidth: 1,
     borderColor: localConstellation.border,
-    gap: 2,
+    backgroundColor: 'rgba(0,0,0,0.22)',
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    justifyContent: 'center',
   },
   bizChipActive: {
-    borderColor: 'rgba(72, 210, 165, 0.5)',
+    borderColor: 'rgba(72, 210, 165, 0.55)',
     backgroundColor: 'rgba(72, 210, 165, 0.12)',
   },
   bizChipText: {
-    fontFamily: FontFamily.extrabold,
+    fontFamily: FontFamily.semibold,
     fontSize: 12,
-    color: INK_MUTED,
+    color: INK,
   },
   bizChipTextActive: {
     color: EMERALD,
   },
-  bizChipCat: {
+  typeChip: {
+    minHeight: 40,
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: localConstellation.border,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    justifyContent: 'center',
+  },
+  typeChipActive: {
+    borderColor: 'rgba(72, 210, 165, 0.55)',
+    backgroundColor: 'rgba(72, 210, 165, 0.12)',
+  },
+  typeChipText: {
     fontFamily: FontFamily.semibold,
-    fontSize: 9,
+    fontSize: 11,
     color: INK_MUTED,
+  },
+  typeChipTextActive: {
+    color: EMERALD,
   },
   selectedLine: {
     fontFamily: FontFamily.semibold,
     fontSize: 11,
     color: EMERALD,
   },
-  typeChip: {
-    minHeight: 36,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 999,
+  unavailableBox: {
+    borderRadius: 10,
     borderWidth: 1,
-    borderColor: localConstellation.border,
+    borderColor: 'rgba(255, 120, 120, 0.25)',
+    backgroundColor: 'rgba(255, 80, 80, 0.06)',
+    padding: 12,
   },
-  typeChipActive: {
-    borderColor: 'rgba(72, 210, 165, 0.5)',
-    backgroundColor: 'rgba(72, 210, 165, 0.12)',
-  },
-  typeChipText: {
-    fontFamily: FontFamily.extrabold,
-    fontSize: 10,
+  unavailableText: {
+    fontFamily: FontFamily.semibold,
+    fontSize: 12,
     color: INK_MUTED,
-  },
-  typeChipTextActive: {
-    color: EMERALD,
+    lineHeight: 16,
   },
   feedback: {
     fontFamily: FontFamily.semibold,
@@ -627,17 +752,17 @@ const styles = StyleSheet.create({
     color: EMERALD,
   },
   feedbackErr: {
-    color: 'rgba(255, 138, 138, 0.95)',
+    color: '#ff9b9b',
   },
   submitBtn: {
-    marginTop: 6,
     minHeight: 48,
     borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
+    backgroundColor: 'rgba(72, 210, 165, 0.18)',
     borderWidth: 1,
-    borderColor: 'rgba(72, 210, 165, 0.4)',
-    backgroundColor: 'rgba(72, 210, 165, 0.14)',
+    borderColor: 'rgba(72, 210, 165, 0.45)',
+    marginTop: 4,
   },
   submitDisabled: {
     opacity: 0.45,
@@ -649,15 +774,24 @@ const styles = StyleSheet.create({
   },
   secondaryBtn: {
     minHeight: 44,
+    borderRadius: 10,
     alignItems: 'center',
     justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: localConstellation.border,
+    paddingHorizontal: 12,
   },
   secondaryBtnText: {
-    fontFamily: FontFamily.extrabold,
-    fontSize: 11,
-    color: localConstellation.accentCyan,
+    fontFamily: FontFamily.semibold,
+    fontSize: 12,
+    color: INK,
   },
   disabled: {
-    opacity: 0.7,
+    opacity: 0.5,
+  },
+  createdIdHidden: {
+    height: 0,
+    opacity: 0,
+    fontSize: 1,
   },
 });

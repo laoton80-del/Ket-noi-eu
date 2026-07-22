@@ -58,7 +58,8 @@
     "test:ses-otp": "node testEmail.js",
     "test:core-flow": "tsx scripts/test-core-flow.ts",
     "test:local-provider-eligibility-schema-domain": "tsx scripts/test-local-provider-eligibility-schema-domain.ts",
-    "test:local-provider-eligibility-read-ops-control": "tsx scripts/test-local-provider-eligibility-read-ops-control.ts"
+    "test:local-provider-eligibility-read-ops-control": "tsx scripts/test-local-provider-eligibility-read-ops-control.ts",
+    "test:local-provider-eligibility-client-wiring": "tsx scripts/test-local-provider-eligibility-client-wiring.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1041.0",

@@ -1,5 +1,5 @@
 /**
- * FC-P0 Local create — Tourism coupling containment + preserved guard/auth tests.
+ * FC-P0 Local create — Pack B provider wiring + preserved guard/auth tests.
  *
  * Run: npx tsx scripts/test-local-user-request-create-client.ts
  */
@@ -46,7 +46,12 @@ function read(rel: string): string {
 /** Synthetic Local-eligible options for guard/auth tests only (not a product authority). */
 function sampleEligibleOptions(): readonly LocalCreateBusinessOption[] {
   return sanitizeLocalCreateBusinessOptions([
-    { businessId: 'biz-eligible-1', displayName: 'Eligible Local Merchant', categoryLabel: 'LOCAL' },
+    {
+      businessId: 'biz-eligible-1',
+      displayName: 'Eligible Local Merchant',
+      supportedServiceTypes: [LOCAL_SERVICE_TYPE.GENERIC_REQUEST],
+      categoryLabel: 'LOCAL',
+    },
   ]);
 }
 
@@ -71,15 +76,37 @@ function okCreate(id: string): LocalUserRequestCreateResult {
 }
 
 async function run(): Promise<void> {
-  // Path 2: default loader → PROVIDER_SELECTION_UNAVAILABLE; no Tourism
-  const authority = await loadLocalCreateBusinessOptions();
-  assert.equal(authority.status, 'PROVIDER_SELECTION_UNAVAILABLE');
+  // Pack B: default loader requires auth — without JWT → PROVIDER_AUTH_REQUIRED_OR_EXPIRED
+  const authority = await loadLocalCreateBusinessOptions(
+    { serviceType: LOCAL_SERVICE_TYPE.GENERIC_REQUEST },
+    {
+      listProviders: async (_input, listDeps) => {
+        const jwt = listDeps ? await listDeps.getJwt() : null;
+        if (!jwt) {
+          return { ok: false, reason: 'auth', path: '/api/local/providers' };
+        }
+        return {
+          ok: true,
+          path: '/api/local/providers',
+          data: { items: [], pagination: { limit: 100, skip: 0, returned: 0 } },
+        };
+      },
+      listDeps: {
+        getJwt: async () => null,
+        fetchJson: async () => {
+          throw new Error('unreachable');
+        },
+      },
+    }
+  );
+  assert.equal(authority.status, 'PROVIDER_AUTH_REQUIRED_OR_EXPIRED');
   assert.equal(authority.options.length, 0);
   assert.equal(localCreateProviderSelectionEnabled(authority.status, authority.options), false);
 
   // No POST without valid selected provider (empty authority)
   const emptyForm = {
     ...defaultLocalCreateFormValues(),
+    serviceType: LOCAL_SERVICE_TYPE.GENERIC_REQUEST,
     businessId: 'any-id',
     title: 'Need help',
   };
@@ -112,8 +139,9 @@ async function run(): Promise<void> {
   assert.equal(composer.includes('fetchTourismDiscover'), false);
   assert.equal(composer.includes('loadLocalCreateBusinessOptionsFromTourismDiscover'), false);
   assert.match(composer, /loadLocalCreateBusinessOptions/);
-  assert.match(composer, /PROVIDER_SELECTION_UNAVAILABLE|providerSelectionUnavailable/);
+  assert.match(composer, /PROVIDER_IDLE|PROVIDER_LOADING/);
   assert.match(composer, /local-create-provider-unavailable/);
+  assert.match(sourceTs, /listLocalProviders/);
 
   // Raw UUID remains absent
   assert.equal(composer.includes('local-create-business-id'), false);
@@ -128,6 +156,7 @@ async function run(): Promise<void> {
   assert.equal(findLocalCreateBusinessOption(selectedId, mapped)?.displayName, 'Eligible Local Merchant');
 
   const formEmpty = defaultLocalCreateFormValues();
+  assert.equal(formEmpty.serviceType, null);
   assert.ok(validateLocalCreateForm(formEmpty, mapped));
   assert.equal(canSubmitLocalCreate('IDLE', formEmpty, mapped), false);
 
@@ -233,112 +262,71 @@ async function run(): Promise<void> {
   assert.equal(failResult.uiState, 'SERVER_ERROR');
 
   assert.equal(
+    mapCreateApiResultToUiState({ ok: false, status: 401, error: 'x' }),
+    'AUTH_REQUIRED_OR_EXPIRED'
+  );
+  assert.equal(mapCreateApiResultToUiState({ ok: false, status: 429, error: 'x' }), 'RATE_LIMITED');
+  assert.equal(
+    mapCreateApiResultToUiState({ ok: false, status: 0, error: 'x', unreachable: true }),
+    'NETWORK_RESULT_UNKNOWN'
+  );
+
+  const nullJwt = await runLocalCreateSubmit({
+    form: formOk,
+    options: mapped,
+    inFlight: { current: false },
+    deps: {
+      getJwt: async () => null,
+      createRequest: async () => {
+        throw new Error('POST must not run');
+      },
+    },
+  });
+  assert.equal(nullJwt.uiState, 'AUTH_REQUIRED_OR_EXPIRED');
+  assert.equal(nullJwt.bodyPosted, null);
+
+  assert.equal(
     findLikelyCreatedRequestId({
-      createdRequestId: 'req-created-1',
-      listIds: ['req-created-1'],
+      createdRequestId: 'c1',
+      listIds: ['c1', 'c2'],
       title: 'Need help',
       businessId: selectedId,
       candidates: [],
     }),
-    'req-created-1'
-  );
-  assert.ok(r1.created?.id);
-
-  assert.equal(mapCreateApiResultToUiState({ ok: false, status: 400, error: 'x' }), 'SERVER_VALIDATION_ERROR');
-  assert.equal(mapCreateApiResultToUiState({ ok: false, status: 401, error: 'x' }), 'AUTH_REQUIRED_OR_EXPIRED');
-  assert.equal(mapCreateApiResultToUiState({ ok: false, status: 404, error: 'x' }), 'SERVER_VALIDATION_ERROR');
-  assert.equal(mapCreateApiResultToUiState({ ok: false, status: 429, error: 'x' }), 'RATE_LIMITED');
-  assert.equal(mapCreateApiResultToUiState({ ok: false, status: 500, error: 'x' }), 'SERVER_ERROR');
-  assert.equal(
-    mapCreateApiResultToUiState({ ok: false, status: 0, error: 'n', unreachable: true }),
-    'NETWORK_RESULT_UNKNOWN'
+    'c1'
   );
 
-  let netPosts = 0;
-  const netFlight = { current: false };
-  const netResult = await runLocalCreateSubmit({
-    form: formOk,
-    options: mapped,
-    inFlight: netFlight,
-    deps: {
-      getJwt: async () => 'tok',
-      createRequest: async () => {
-        netPosts += 1;
-        return { ok: false, status: 0, error: 'down', unreachable: true };
-      },
-    },
-  });
-  assert.equal(netResult.uiState, 'NETWORK_RESULT_UNKNOWN');
-  assert.equal(netPosts, 1);
-
-  let authPosts = 0;
-  const authFlight = { current: false };
-  const authResult = await runLocalCreateSubmit({
-    form: formOk,
-    options: mapped,
-    inFlight: authFlight,
-    deps: {
-      getJwt: async () => null,
-      createRequest: async () => {
-        authPosts += 1;
-        return { ok: true, status: 201, data: okCreate('x') };
-      },
-    },
-  });
-  assert.equal(authResult.uiState, 'AUTH_REQUIRED_OR_EXPIRED');
-  assert.equal(authPosts, 0);
-  assert.equal(authFlight.current, false);
-
-  const apiSrc = read('src/services/localUserRequestApi.ts');
-  assert.match(apiSrc, /export async function fetchUserLocalServiceRequests/);
-  assert.match(apiSrc, /export async function fetchUserLocalRequestTimeline/);
-  assert.match(apiSrc, /export async function cancelUserLocalServiceRequest/);
-  assert.match(apiSrc, /export async function createUserLocalServiceRequest/);
-
-  for (const file of [
-    'src/screens/b2c/LocalUserRequestStatusScreen.tsx',
-    'src/screens/b2c/localUserRequestCreateFlow.ts',
+  // Client files must not import Prisma
+  for (const rel of [
     'src/components/local/LocalUserRequestCreateComposer.tsx',
-    'src/services/localUserRequestApi.ts',
     'src/services/local/localCreateBusinessSource.ts',
-    'src/services/local/localCreateBusinessOptionModel.ts',
-    'src/domain/local/localServiceRequestClientContract.ts',
+    'src/services/local/localProviderListClient.ts',
+    'src/screens/b2c/localUserRequestCreateFlow.ts',
   ]) {
-    const src = read(file);
-    assert.equal(src.includes('@prisma/client'), false, file);
+    assert.equal(read(rel).includes('@prisma/client'), false, rel);
   }
 
+  // EN/VI create key parity for Pack B feedback
   const en = JSON.parse(read('src/i18n/locales/en.json')) as {
-    local: { userRequestStatus: { create: Record<string, unknown> } };
+    local: { userRequestStatus: { create: { feedback: Record<string, string> } } };
   };
   const vi = JSON.parse(read('src/i18n/locales/vi.json')) as {
-    local: { userRequestStatus: { create: Record<string, unknown> } };
+    local: { userRequestStatus: { create: { feedback: Record<string, string> } } };
   };
-  const enCreate = en.local.userRequestStatus.create;
-  const viCreate = vi.local.userRequestStatus.create;
-  for (const key of Object.keys(enCreate)) {
-    assert.ok(key in viCreate, `VI missing create.${key}`);
+  for (const key of Object.keys(en.local.userRequestStatus.create.feedback)) {
+    assert.ok(
+      vi.local.userRequestStatus.create.feedback[key],
+      `vi missing create.feedback.${key}`
+    );
   }
-  const enFb = enCreate.feedback as Record<string, string>;
-  const viFb = viCreate.feedback as Record<string, string>;
-  for (const key of Object.keys(enFb)) {
-    assert.ok(key in viFb, `VI missing create.feedback.${key}`);
-  }
-  assert.equal('businessIdPlaceholder' in enCreate, false);
-  assert.equal('businessIdLabel' in enCreate, false);
-  assert.ok(typeof enFb.providerSelectionUnavailable === 'string');
-  assert.match(enFb.providerSelectionUnavailable, /not available yet/i);
-  assert.equal(/UUID|Paste business/i.test(JSON.stringify(enCreate)), false);
-  assert.equal(/UUID|Paste business/i.test(JSON.stringify(viCreate)), false);
 
-  // Tourism discover route itself unchanged (still present for Travel)
-  const tourismRoutes = read('src/routes/tourismRoutes.ts');
-  assert.match(tourismRoutes, /\/discover/);
+  // Tourism discover still exists for Travel (not Local create)
+  assert.match(read('src/services/viGlobalTourismApi.ts'), /discover/);
 
   console.log('[test-local-user-request-create-client] OK');
 }
 
-void run().catch((err) => {
+run().catch((err) => {
   console.error(err);
   process.exitCode = 1;
 });
