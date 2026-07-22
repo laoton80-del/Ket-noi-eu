@@ -138,13 +138,13 @@ One row per eligible Business (1:1).
 | Field | Type | Notes |
 |---|---|---|
 | `id` | `String` `@id` `@default(uuid())` | |
-| `businessId` | `String` `@unique` | FK → `Business.id` `onDelete: Cascade` |
+| `businessId` | `String` `@unique` | FK → `Business.id` `onDelete: Restrict` |
 | `status` | `LocalProviderEligibilityStatus` | See Audit F |
 | `publicB2cVisible` | `Boolean` `@default(false)` | Must be true for B2C list/select |
 | `supportedServiceTypes` | `LocalServiceType[]` | Existing enum; empty ⇒ not selectable |
-| `activatedAt` | `DateTime?` | Set on transition to ACTIVE |
-| `suspendedAt` | `DateTime?` | Set on SUSPENDED |
-| `retiredAt` | `DateTime?` | Set on RETIRED |
+| `activatedAt` | `DateTime?` | Latest successful transition to ACTIVE (see timestamp finalization) |
+| `suspendedAt` | `DateTime?` | Current suspension episode; cleared on reactivation |
+| `retiredAt` | `DateTime?` | Set on RETIRED; immutable once set |
 | `createdAt` | `DateTime` `@default(now())` | |
 | `updatedAt` | `DateTime` `@updatedAt` | |
 
@@ -153,9 +153,13 @@ One row per eligible Business (1:1).
 **Do not** put `suspensionReason` / `retirementReason` on this model (audit-event-only).  
 **Do not** put audit actor ids on this model (actors live on `LocalProviderEligibilityAuditEvent`).  
 **Do not** duplicate `Business.name` on eligibility (read name from Business at query time).  
-**Do not** add payment, ranking, reviews, location-discovery, marketplace, or Tourism fields.
+**Do not** add payment, ranking, reviews, location-discovery, marketplace, or Tourism fields.  
+**Do not** use Cascade from Business → eligibility (Restrict retention — see timestamp/referential finalization).
 
 **Indexes:** `@unique` on `businessId`; `@@index([status, publicB2cVisible])`; **no GIN** on `supportedServiceTypes` (FC-P0).
+
+**Lifecycle timestamps (authoritative):**  
+`docs/product/VIONA_FC_P0_LOCAL_PROVIDER_AUTHORITY_PLAN_TIMESTAMP_REFERENTIAL_PATCH_FINALIZATION.md` §1–2.
 
 ### Enum: `LocalProviderEligibilityStatus`
 
@@ -251,7 +255,7 @@ type LocalProviderListResponse = Readonly<{
 | Auth | `authMiddleware` + `superAdminMiddleware` (`Role.ADMIN` only) |
 | Validation | business exists; enum/status legality; ACTIVE invariants; unknown-key reject |
 | Audit | `LocalProviderEligibilityAuditEvent` only (append-only create; Pack A2 writes) |
-| Idempotency | Same-state / no-change PATCH → **200**, no update, no audit, `updatedAt` unchanged |
+| Idempotency | Same-state / no-change PATCH (DRAFT/ACTIVE/SUSPENDED) → **200**, no update, no audit, `updatedAt` unchanged; **RETIRED every PATCH → 409** |
 | Public self-activation | **Forbidden** in FC-P0 |
 
 No broad admin console required; secured HTTP + operator evidence is sufficient.
@@ -439,28 +443,26 @@ as a separate IMPLEMENTATION_ONLY_NO_DEPLOY pack.
 
 ---
 
-## 22. Remediation lineage (post–PR #415 / #416)
+## 22. Remediation lineage (post–PR #415 / #416 / #417)
 
 **PR #415** merged @ `dc5c625` — boundary plan.  
-**PR #416** merged @ `435ddcd0f59b6e9295755398a54482788d7948ed` — lifecycle/write/audit/consistency locks.  
-Strict review of #416: `BLOCKED_LOCAL_PROVIDER_AUDIT_MODEL_BOUNDARY_UNRESOLVED` (+ co-blockers).
+**PR #416** merged @ `435ddcd0f59b6e9295755398a54482788d7948ed` — lifecycle/write locks.  
+**PR #417** merged @ `d3bd2935b7ff8029eb5e4c96869c70f1bf1a54ac` — audit-readiness locks.  
+Strict review of #417: `BLOCKED_LOCAL_PROVIDER_LIFECYCLE_TIMESTAMP_SEMANTICS_UNRESOLVED`  
+(+ referential Cascade/Restrict contradiction, REGISTERED prior scalar-list, PATCH-by-status / RETIRED mutability, A1 card).
 
-**Current authoritative locks (supersede conflicts in this plan and the PR #416 remediation):**  
-`docs/product/VIONA_FC_P0_LOCAL_PROVIDER_AUTHORITY_PLAN_AUDIT_MODEL_AND_IMPLEMENTATION_READINESS_REMEDIATION.md`
+**Current authoritative locks:**  
+`docs/product/VIONA_FC_P0_LOCAL_PROVIDER_AUTHORITY_PLAN_TIMESTAMP_REFERENTIAL_PATCH_FINALIZATION.md`
 
 | Topic | Locked decision |
 |---|---|
-| Owner | `LOCAL_PROVIDER_AUTHORITY_OWNER_ROLE_ADMIN_VIA_SUPERADMIN_MIDDLEWARE` (`Role.ADMIN` only) |
-| Eligibility schema | No `suspensionReason` / `retirementReason` / audit actor ids on model |
-| Lifecycle | Allowed transitions; `RETIRED` terminal; same-state → 200 / no update / no audit |
-| Invalid transition / ACTIVE PATCH invariant | **409** |
-| No-change PATCH | 200; no Prisma update; `updatedAt` unchanged; no audit |
-| Write routes | Exact POST/PATCH/activate/suspend/retire |
-| Audit | Complete `LocalProviderEligibilityAuditEvent` + dedicated enums; explicit prior/next columns; append-only; **no** `metadataJson` authority |
-| Actor | `LocalProviderEligibilityAuditActorType.ROLE_ADMIN` + `actorUserId` |
-| Create consistency | In-tx re-read; READ COMMITTED bounded race A–E |
-| Post-activation empty name | Exclude from list/create; **do not** silently mutate eligibility |
-| Tests | In-repo numbered cases **1–43** (A1: 1–29; A2: 30–43) |
+| Owner | `LOCAL_PROVIDER_AUTHORITY_OWNER_ROLE_ADMIN_VIA_SUPERADMIN_MIDDLEWARE` |
+| Eligibility | No reason fields; Restrict → Business; lifecycle stamps per finalization §1 |
+| Timestamps | Latest `activatedAt`; clear `suspendedAt` on reactivation; immutable `retiredAt` |
+| PATCH matrix | DRAFT/SUSPENDED flexible; ACTIVE invariants; **RETIRED every PATCH → 409** |
+| Audit | Dedicated enums; REGISTERED prior null/`[]`; Restrict → eligibility + User; no Cascade |
+| Create consistency | READ COMMITTED race A–E |
+| Tests | Cases **1–43** with finalization §11 amendments |
 | Sequence | **A1 → A2 → B** |
 | Immediate phrase | `APPROVE_VIONA_FC_P0_LOCAL_PROVIDER_ELIGIBILITY_AUTHORITY_SCHEMA_DOMAIN_ENFORCEMENT` (**unauthorized**) |
 
