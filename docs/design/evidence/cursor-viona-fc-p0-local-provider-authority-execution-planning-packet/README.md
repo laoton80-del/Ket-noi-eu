@@ -12,7 +12,8 @@
 ## 3. Branch and HEAD
 
 - Branch: `docs/viona-fc-p0-local-provider-authority-execution-planning-packet`
-- HEAD: `b691bc656f7edfbcc6d340b7f07b86ad1da5678f`
+- HEAD: `8b3b0ffe83450a979a7df10ff9f9f4dd12067e35`
+- PR: https://github.com/laoton80-del/Ket-noi-eu/pull/424
 
 ## 4. Exact changed paths
 

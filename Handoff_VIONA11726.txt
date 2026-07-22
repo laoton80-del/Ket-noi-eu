@@ -11,7 +11,7 @@ Stages: preflight → migrate apply → API deploy → route/schema → Role.ADM
 Future phrases proposed; NONE granted. No migrate/deploy/activation/live QA.
 REQUEST_ONLY_NO_CHARGE. FC-P0 still blocked. Pack40S NOT AUTHORIZED. Phase C green.
 Evidence: docs/product/VIONA_FC_P0_LOCAL_PROVIDER_AUTHORITY_EXECUTION_PLANNING_PACKET.md
-Next: strict-review this docs-only PR — do NOT auto-authorize E1–E10.
+Next: strict-review this docs-only PR (#424) — do NOT auto-authorize E1–E10.
 
 === PRIOR — FC-P0 LOCAL CREATE FAILURE CODE ENVELOPE + PACK B RECOVERY ===
 Operator: APPROVE_VIONA_FC_P0_LOCAL_CREATE_FAILURE_CODE_ENVELOPE_AND_PACK_B_RECOVERY_DISCRIMINATION
