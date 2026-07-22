@@ -22,7 +22,10 @@ import {
 } from '@prisma/client';
 
 import { disconnectPrisma, getPrisma } from '../src/lib/prisma';
-import { createLocalServiceRequest } from '../src/services/local/localRequestCreateService';
+import {
+  createLocalServiceRequestForRegression,
+  deleteLocalProviderEligibilityIfPresent,
+} from './localProviderEligibilityTestSupport';
 import { confirmMerchantLocalServiceRequest } from '../src/services/local/localMerchantRequestConfirmService';
 import {
   cancelUserLocalServiceRequest,
@@ -72,7 +75,7 @@ async function run(): Promise<void> {
   const createdIds: string[] = [];
 
   try {
-    const created = await createLocalServiceRequest({
+    const created = await createLocalServiceRequestForRegression(prisma, {
       requesterUserId: requesterA,
       businessId: biz.id,
       serviceType: LocalServiceType.GENERIC_REQUEST,
@@ -258,6 +261,7 @@ async function run(): Promise<void> {
     if (createdIds.length > 0) {
       await prisma.localServiceRequest.deleteMany({ where: { id: { in: createdIds } } });
     }
+    await deleteLocalProviderEligibilityIfPresent(prisma, biz.id);
     await prisma.business.delete({ where: { id: biz.id } });
     await prisma.user.deleteMany({ where: { id: { in: [owner, requesterA, requesterB] } } });
     await disconnectPrisma();

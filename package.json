@@ -56,7 +56,8 @@
     "api:start": "tsx src/server.ts",
     "cron:marketing-draft": "tsx src/workers/runMarketingDraftOnce.ts",
     "test:ses-otp": "node testEmail.js",
-    "test:core-flow": "tsx scripts/test-core-flow.ts"
+    "test:core-flow": "tsx scripts/test-core-flow.ts",
+    "test:local-provider-eligibility-schema-domain": "tsx scripts/test-local-provider-eligibility-schema-domain.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1041.0",
