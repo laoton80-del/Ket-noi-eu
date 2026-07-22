@@ -1,17 +1,24 @@
 VIONA — KERNEL/HANDOFF SNAPSHOT (local notes, not committed to git)
-Last updated: 2026-07-23 — FC-P0 Local provider authority controlled execution planning packet
+Last updated: 2026-07-23 — FC-P0 Local provider authority E1 staging execution preflight
 
-=== FC-P0 LOCAL PROVIDER AUTHORITY CONTROLLED EXECUTION PLANNING ===
-Operator: APPROVE_VIONA_FC_P0_LOCAL_PROVIDER_AUTHORITY_EXECUTION_PLANNING_PACKET
-Baseline: c7b936595abaf8ffca8d12687833ef47e4be5791 (PR #423 verified master)
-Branch: docs/viona-fc-p0-local-provider-authority-execution-planning-packet
-Mode: DOCS_ONLY — E0–E10 staging sequence planned; one gate / one phrase
-Stages: preflight → migrate apply → API deploy → route/schema → Role.ADMIN →
-  DRAFT register/config → separate activation → client decision → one-request QA → closure
-Future phrases proposed; NONE granted. No migrate/deploy/activation/live QA.
+=== FC-P0 LOCAL PROVIDER AUTHORITY E1 STAGING EXECUTION PREFLIGHT ===
+Operator: APPROVE_VIONA_FC_P0_LOCAL_PROVIDER_AUTHORITY_STAGING_EXECUTION_PREFLIGHT
+Baseline: 50c2c7616184c3b8f0a85bf224bc30a4daf526d6 (PR #424 verified master)
+Branch: docs/viona-fc-p0-local-provider-authority-staging-execution-preflight-result
+Mode: READ-ONLY staging preflight + docs/evidence only
+Observed: Pack A1 checksum verified; Pack A1 UNAPPLIED on staging; app viona-api-staging-eu/fra v28;
+  API rollback v27; E2 readiness decision READY (E2 NOT AUTHORIZED/EXECUTED)
+Later-stage unresolved: safe Business fixture; staging client SHA
+No migrate-apply / deploy / provider mutation / live QA.
 REQUEST_ONLY_NO_CHARGE. FC-P0 still blocked. Pack40S NOT AUTHORIZED. Phase C green.
+Evidence: docs/product/VIONA_FC_P0_LOCAL_PROVIDER_AUTHORITY_STAGING_EXECUTION_PREFLIGHT_RESULT.md
+Next: strict-review this E1 result PR — do NOT auto-authorize E2.
+
+=== PRIOR — FC-P0 LOCAL PROVIDER AUTHORITY CONTROLLED EXECUTION PLANNING ===
+Operator: APPROVE_VIONA_FC_P0_LOCAL_PROVIDER_AUTHORITY_EXECUTION_PLANNING_PACKET
+Merged PR #424 @ 50c2c7616184c3b8f0a85bf224bc30a4daf526d6
+Post-merge verified on master with E1–E10 unauthorized (E1 now separately executed as above).
 Evidence: docs/product/VIONA_FC_P0_LOCAL_PROVIDER_AUTHORITY_EXECUTION_PLANNING_PACKET.md
-Next: strict-review this docs-only PR (#424) — do NOT auto-authorize E1–E10.
 
 === PRIOR — FC-P0 LOCAL CREATE FAILURE CODE ENVELOPE + PACK B RECOVERY ===
 Operator: APPROVE_VIONA_FC_P0_LOCAL_CREATE_FAILURE_CODE_ENVELOPE_AND_PACK_B_RECOVERY_DISCRIMINATION
