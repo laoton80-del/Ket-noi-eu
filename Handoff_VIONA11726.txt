@@ -1,7 +1,19 @@
 VIONA — KERNEL/HANDOFF SNAPSHOT (local notes, not committed to git)
-Last updated: 2026-07-23 — FC-P0 staging provider activation retry SUCCESS (ACTIVE)
+Last updated: 2026-07-23 — FC-P0 post-activation next-stage decision packet (docs-only)
 
-=== FC-P0 STAGING PROVIDER ACTIVATION RETRY (AFTER VISIBILITY) ===
+=== FC-P0 POST-ACTIVATION NEXT-STAGE DECISION PACKET ===
+Operator: APPROVE_VIONA_FC_P0_LOCAL_PROVIDER_AUTHORITY_POST_ACTIVATION_NEXT_STAGE_DECISION_PACKET
+Baseline master: 1110c21b8b83fbd2dc2f83846ea795a8027122c3 (PR #434 activation-retry verified)
+Branch: docs/viona-fc-p0-local-provider-authority-post-activation-next-stage-decision-packet
+Mode: docs-only / read-only source audit — no login / mutation / Local request / deploy / migrate
+Recommendation (NOT authorization): RECOMMEND_E8_FOR_SEPARATE_OPERATOR_AUTHORIZATION_DECISION
+Canonical E8 phrase remains NOT GRANTED: APPROVE_VIONA_FC_P0_LOCAL_PROVIDER_AUTHORITY_STAGING_CLIENT_DEPLOY
+E9/E10 remain NOT AUTHORIZED. REQUEST_ONLY_NO_CHARGE. Pack40S NOT AUTHORIZED. Phase C green.
+AI hard-stop not started. No production-ready claim.
+Evidence: docs/product/VIONA_FC_P0_LOCAL_PROVIDER_AUTHORITY_POST_ACTIVATION_NEXT_STAGE_DECISION_PACKET.md
+Next: strict-review this docs PR — do NOT auto-grant E8–E10.
+
+=== PRIOR — FC-P0 STAGING PROVIDER ACTIVATION RETRY (AFTER VISIBILITY) ===
 Operator: APPROVE_VIONA_FC_P0_LOCAL_PROVIDER_AUTHORITY_STAGING_PROVIDER_ACTIVATION_RETRY_AFTER_PUBLIC_B2C_VISIBILITY_ENABLEMENT
 Pre-exec master: d39a1a11faddabe14c205d485f78f9cb68bfc337 (visibility PR #433)
 Branch: docs/viona-fc-p0-local-provider-authority-staging-provider-activation-retry-result
