@@ -1,19 +1,25 @@
 VIONA — KERNEL/HANDOFF SNAPSHOT (local notes, not committed to git)
-Last updated: 2026-07-23 — FC-P0 E8 staging client deployment readiness prerequisite packet (docs-only)
+Last updated: 2026-07-23 — PR #436 TypeScript RangeError tooling triage (docs-only)
 
-=== FC-P0 E8 STAGING CLIENT DEPLOYMENT READINESS + PREREQUISITE PACKET ===
+=== PR #436 TYPESCRIPT RANGEERROR NO-PRODUCT-CHANGE TOOLING TRIAGE ===
+Operator: APPROVE_VIONA_FC_P0_PR436_POST_MERGE_TYPESCRIPT_RANGEERROR_NO_PRODUCT_CHANGE_TOOLING_TRIAGE_PACKET
+Baseline master: 7f001c6fd403be795c812e247856d23af08a148f (PR #436 squash)
+Branch: docs/viona-pr436-typescript-rangeerror-no-product-change-tooling-triage
+Mode: read-only triage + docs-only — no product/deps/toolchain install / no stack workaround / no E8 deploy
+Primary root cause: BLOCKED_TYPESCRIPT_RANGEERROR_INPUT_SCOPE_RECURSION
+Evidence: local dist/_expo/static/js/web/*.js included in root tsc (allowJs); CI Node 20 Release Discipline green on PR head; local Node 20 unavailable
+PR436 impact: PR436_POST_MERGE_VALIDATION_REMAINS_BLOCKED_PENDING_TOOLING_REMEDIATION
+E8 Case A preserved; Case B blockers preserved; E8–E10 NOT AUTHORIZED; REQUEST_ONLY_NO_CHARGE
+Evidence: docs/product/VIONA_PR436_TYPESCRIPT_RANGEERROR_NO_PRODUCT_CHANGE_TOOLING_TRIAGE_PACKET.md
+Next: strict-review this docs PR — do NOT implement tsconfig/exclude fix in this lane.
+
+=== PRIOR — FC-P0 E8 STAGING CLIENT DEPLOYMENT READINESS (MERGED PR #436) ===
 Operator: APPROVE_VIONA_FC_P0_LOCAL_PROVIDER_AUTHORITY_E8_STAGING_CLIENT_DEPLOYMENT_READINESS_AND_PREREQUISITE_PACKET
-Baseline master: a98a3222a0a5a637088693d8fe147861210070b1 (PR #435 post-activation decision verified)
-Branch: docs/viona-fc-p0-local-provider-authority-e8-staging-client-deployment-readiness-prerequisite-packet
-Mode: docs-only / read-only inventory — no client/API deploy / login / provider mutation / Local request / migrate
+Merged PR #436 @ 7f001c6fd403be795c812e247856d23af08a148f (head b249166…)
 Case: E8_CASE_A_DOCS_ONLY_RECOMMENDED
-Markers: BLOCKED_NO_VERIFIED_VIONA_STAGING_CLIENT_DEPLOYMENT_TARGET; BLOCKED_E8_STAGING_CLIENT_PROJECT_BINDING_UNRESOLVED; BLOCKED_E8_CLIENT_DEPLOYMENT_ROLLBACK_CONTRACT_INCOMPLETE
-Local gates: tsc + ci:expo-readiness + ci:release-discipline + build:web PASS (dist not uploaded; localhost API baked — not staging-safe)
+Post-merge: content preserved; validation blocked on TypeScript RangeError (see triage above)
 Canonical E8 phrase remains NOT GRANTED: APPROVE_VIONA_FC_P0_LOCAL_PROVIDER_AUTHORITY_STAGING_CLIENT_DEPLOY
-E9/E10 remain NOT AUTHORIZED. REQUEST_ONLY_NO_CHARGE. Pack40S NOT AUTHORIZED. Phase C green.
-AI hard-stop not started. No production-ready claim.
 Evidence: docs/product/VIONA_FC_P0_LOCAL_PROVIDER_AUTHORITY_E8_STAGING_CLIENT_DEPLOYMENT_READINESS_AND_PREREQUISITE_PACKET.md
-Next: strict-review this docs PR — do NOT auto-grant E8 Case B deploy.
 
 === PRIOR — FC-P0 POST-ACTIVATION NEXT-STAGE DECISION PACKET (MERGED PR #435) ===
 Operator: APPROVE_VIONA_FC_P0_LOCAL_PROVIDER_AUTHORITY_POST_ACTIVATION_NEXT_STAGE_DECISION_PACKET
