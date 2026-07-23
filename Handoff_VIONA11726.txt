@@ -1,17 +1,25 @@
 VIONA — KERNEL/HANDOFF SNAPSHOT (local notes, not committed to git)
-Last updated: 2026-07-23 — PR #436 TypeScript RangeError tooling triage (docs-only)
+Last updated: 2026-07-23 — PR #436 TypeScript RangeError dist exclusion implementation
 
-=== PR #436 TYPESCRIPT RANGEERROR NO-PRODUCT-CHANGE TOOLING TRIAGE ===
-Operator: APPROVE_VIONA_FC_P0_PR436_POST_MERGE_TYPESCRIPT_RANGEERROR_NO_PRODUCT_CHANGE_TOOLING_TRIAGE_PACKET
-Baseline master: 7f001c6fd403be795c812e247856d23af08a148f (PR #436 squash)
-Branch: docs/viona-pr436-typescript-rangeerror-no-product-change-tooling-triage
-Mode: read-only triage + docs-only — no product/deps/toolchain install / no stack workaround / no E8 deploy
-Primary root cause: BLOCKED_TYPESCRIPT_RANGEERROR_INPUT_SCOPE_RECURSION
-Evidence: local dist/_expo/static/js/web/*.js included in root tsc (allowJs); CI Node 20 Release Discipline green on PR head; local Node 20 unavailable
-PR436 impact: PR436_POST_MERGE_VALIDATION_REMAINS_BLOCKED_PENDING_TOOLING_REMEDIATION
+=== PR #436 DIST EXCLUSION NO-PRODUCT-CHANGE IMPLEMENTATION ===
+Operator: APPROVE_VIONA_PR436_TYPESCRIPT_RANGEERROR_EXCLUDE_GENERATED_DIST_NO_PRODUCT_CHANGE_IMPLEMENTATION
+Baseline master: 48da52e4e2619a1b2e5a268e2841a858be1f4fae (PR #437 triage)
+Branch: fix/viona-pr436-exclude-generated-dist-from-root-typecheck
+Change: tsconfig.json exclude adds dist/** (keep functions/**)
+Markers: GENERATED_DIST_EXCLUDED_FROM_ROOT_TYPESCRIPT_INPUT_SCOPE; DIST_EXCLUSION_REMOVED_ONLY_GENERATED_WEB_ARTIFACT_INPUTS
+Validation: tsc + ci:expo-readiness + ci:release-discipline PASS with dist present; post-build:web regen still excluded; no RangeError
+PR436 impact: PR436_POST_MERGE_VALIDATION_READY_FOR_RECHECK_AFTER_DIST_EXCLUSION_REMEDIATION
 E8 Case A preserved; Case B blockers preserved; E8–E10 NOT AUTHORIZED; REQUEST_ONLY_NO_CHARGE
+Evidence: docs/product/VIONA_PR436_TYPESCRIPT_RANGEERROR_DIST_EXCLUSION_NO_PRODUCT_CHANGE_IMPLEMENTATION_RESULT.md
+Next: strict-review this remediation PR — do NOT auto-claim PR #436 closed until merge + post-merge verify.
+
+=== PRIOR — PR #437 TYPESCRIPT RANGEERROR TOOLING TRIAGE (MERGED) ===
+Operator: APPROVE_VIONA_FC_P0_PR436_POST_MERGE_TYPESCRIPT_RANGEERROR_NO_PRODUCT_CHANGE_TOOLING_TRIAGE_PACKET
+Merged PR #437 @ 48da52e4e2619a1b2e5a268e2841a858be1f4fae
+Root cause: BLOCKED_TYPESCRIPT_RANGEERROR_INPUT_SCOPE_RECURSION
+Post-merge: VERIFIED_ON_MASTER_WITH_INPUT_SCOPE_ROOT_CAUSE_CONFIRMED_AND_REMEDIATION_UNAUTHORIZED (pre-implementation)
 Evidence: docs/product/VIONA_PR436_TYPESCRIPT_RANGEERROR_NO_PRODUCT_CHANGE_TOOLING_TRIAGE_PACKET.md
-Next: strict-review this docs PR — do NOT implement tsconfig/exclude fix in this lane.
+
 
 === PRIOR — FC-P0 E8 STAGING CLIENT DEPLOYMENT READINESS (MERGED PR #436) ===
 Operator: APPROVE_VIONA_FC_P0_LOCAL_PROVIDER_AUTHORITY_E8_STAGING_CLIENT_DEPLOYMENT_READINESS_AND_PREREQUISITE_PACKET
