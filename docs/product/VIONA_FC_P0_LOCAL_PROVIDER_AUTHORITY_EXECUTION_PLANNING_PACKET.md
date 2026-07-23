@@ -52,8 +52,8 @@ Every future gate uses exactly one of:
 | This planning packet (docs-only) | `AUTHORIZED` for docs-only creation |
 | E0 environment resolution | `PLANNED` |
 | E1 read-only preflight | `PLANNED` / **NOT AUTHORIZED** |
-| E2 staging migration apply | **EXECUTED** (staging Pack A1 applied `2026-07-23T10:06:06Z`); result PR pending review — **E3–E10 remain NOT AUTHORIZED** |
-| E3 staging API deploy | `PLANNED` / **NOT AUTHORIZED** |
+| E2 staging migration apply | **EXECUTED / VERIFIED ON MASTER** (PR #428) — Pack A1 applied; **E3 executed separately below** |
+| E3 staging API deploy | **EXECUTED** (Fly **v29** @ `2026-07-23T10:45:07Z`); result PR pending review — **E4–E10 remain NOT AUTHORIZED** |
 | E4 route/schema compatibility | `PLANNED` / **NOT AUTHORIZED** |
 | E5 Role.ADMIN operator identity | `PLANNED` / **NOT AUTHORIZED** |
 | E6 provider registration/configuration | `PLANNED` / **NOT AUTHORIZED** |
@@ -278,8 +278,13 @@ History clean; schema objects present; eligibility/audit rows = 0.
 
 ## 8. Stage E3 — Staging API deploy
 
-**Proposed phrase (NOT GRANTED):**  
+**Authorization phrase (GRANTED / EXECUTED):**  
 `APPROVE_VIONA_FC_P0_LOCAL_PROVIDER_AUTHORITY_STAGING_API_DEPLOY`
+
+**Observed result (docs):** `docs/product/VIONA_FC_P0_LOCAL_PROVIDER_AUTHORITY_STAGING_API_DEPLOY_RESULT.md`  
+Fly staging deploy @ `2026-07-23T10:45:07Z`–`10:48:14Z` (`fly deploy --app viona-api-staging-eu --remote-only` exit 0) → **v29** / `deployment-01KY798FWDYE8YM0ZD4QW98JP0`.  
+Pre-deploy rollback target exact **v28**. Post-deploy `/health` 200; unauth Local routes 401; Pack A1 clean; rows 0/0.  
+**E4–E10 remain NOT AUTHORIZED.** Do not treat this section as E4 authorization.
 
 | Constraint | Rule |
 |---|---|
@@ -488,7 +493,7 @@ Synthetic staging-safe data only. Evidence must not contain real JWTs, full emai
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|
 | E1 | `…_STAGING_EXECUTION_PREFLIGHT` | TBD | staging | TBD | PLANNED | read-only checks | READY_FOR_APPLY or BLOCKED | — | TBD | §16 | n/a | E2 | apply/deploy/activation/QA |
 | E2 | `…_STAGING_MIGRATION_APPLY` | `91b7aaf…` | staging DB `euqbfanilcssjiwwtcby` | `2026-07-23T10:06:06Z` | E1 VERIFIED | migrate deploy | schema + zero rows **PASS** | — | EXECUTED | §16 | §7.1 | E3 decision only | deploy/activation/QA still unauthorized |
-| E3 | `…_STAGING_API_DEPLOY` | TBD | `viona-api-staging-eu` | TBD | E2 VERIFIED | fly deploy | health 200 | — | TBD | §16 | roll API version | E4 | activation/QA |
+| E3 | `…_STAGING_API_DEPLOY` | `de59110…` | `viona-api-staging-eu` | `2026-07-23T10:45:07Z` | E2 VERIFIED | fly deploy | health 200 **PASS** | — | EXECUTED | §16 | roll API **v28** | E4 decision only | activation/QA still unauthorized |
 | E4 | (under E3 or dedicated) | TBD | staging API | TBD | E3 VERIFIED | HTTP probes | READY_FOR_REGISTRATION | — | TBD | §16 | hold | E5/E6 | registration |
 | E5 | (under E6 precheck) | TBD | staging auth | TBD | E4 green | admin probe | ADMIN ok | — | TBD | §16 | stop | E6 | elevation |
 | E6 | `…_PROVIDER_REGISTRATION_AND_CONFIGURATION` | TBD | ops routes | TBD | E5 ok | POST+PATCH | DRAFT + audits | — | TBD | §16 | leave DRAFT | E7 | activation/QA |
