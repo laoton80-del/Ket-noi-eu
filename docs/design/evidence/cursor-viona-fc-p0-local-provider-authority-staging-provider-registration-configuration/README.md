@@ -1,69 +1,61 @@
-# Evidence — FC-P0 Local Provider Authority Staging Provider Registration / Configuration (E6)
+# Evidence — FC-P0 Local Provider Authority Staging Provider Registration / Configuration (E6 executed)
 
 ## 1. Authorization phrase
 
 `APPROVE_VIONA_FC_P0_LOCAL_PROVIDER_AUTHORITY_STAGING_PROVIDER_REGISTRATION_AND_CONFIGURATION`
 
-## 2. Canonical master
+## 2. Canonical master (pre-execution)
 
-`3f724e06612da48eecb8a0931e3255727bc2a204`
+`19023d2b7fcbaa49ace1a8db7d11d97c0b56244a`
 
 ## 3. Branch and classification
 
-- Branch: `docs/viona-fc-p0-local-provider-authority-staging-provider-registration-configuration-result`
-- Primary: `BLOCKED_LIVE_ROLE_ADMIN_AUTHENTICATION_UNRESOLVED`
-- Concurrent: `BLOCKED_NO_SAFE_STAGING_BUSINESS_FIXTURE`
+- Branch: `docs/viona-fc-p0-local-provider-authority-staging-provider-registration-configuration-executed-result`
+- Primary: `READY_FOR_VIONA_FC_P0_LOCAL_PROVIDER_AUTHORITY_STAGING_PROVIDER_REGISTRATION_AND_CONFIGURATION_RESULT_PR_REVIEW`
+- Conclusion: `CONTROLLED_PROVIDER_REGISTERED_AND_CONFIGURED_IN_DRAFT_WITH_VISIBILITY_DISABLED`
 
 ## 4. Exact changed paths
 
 | Path | Purpose |
 |---|---|
-| `docs/product/VIONA_FC_P0_LOCAL_PROVIDER_AUTHORITY_STAGING_PROVIDER_REGISTRATION_AND_CONFIGURATION_RESULT.md` | E6 blocked result |
+| `docs/product/VIONA_FC_P0_LOCAL_PROVIDER_AUTHORITY_STAGING_PROVIDER_REGISTRATION_AND_CONFIGURATION_RESULT.md` | E6 executed result (supersedes blocked narrative from PR #430) |
 | `docs/design/evidence/cursor-viona-fc-p0-local-provider-authority-staging-provider-registration-configuration/README.md` | This evidence README |
 | `docs/ai-context/VIONA_KERNEL_HANDOFF_FAST_SAFE_GLOBAL_MODE.md` | Kernel sync |
 | `Handoff_VIONA11726.txt` | Handoff sync |
-| `docs/product/VIONA_FC_P0_LOCAL_PROVIDER_AUTHORITY_EXECUTION_PLANNING_PACKET.md` | Optional observed-result field for E6 only |
+| `docs/product/VIONA_FC_P0_LOCAL_PROVIDER_AUTHORITY_EXECUTION_PLANNING_PACKET.md` | Observed-result field for E6 |
 
-## 5. Staging target / active release
+## 5. Staging target / release
 
 | Field | Value |
 |---|---|
-| Fly app | `viona-api-staging-eu` |
-| Region | `fra` |
-| Stage | `staging` |
+| Fly | `viona-api-staging-eu` / `fra` / **v29** / `deployment-01KY798FWDYE8YM0ZD4QW98JP0` |
 | Supabase | `viona-staging-eu` / `euqbfanilcssjiwwtcby` |
-| Fly release | **v29** / `deployment-01KY798FWDYE8YM0ZD4QW98JP0` |
-| Health | **200** ok |
+| Health | **200** |
 
-## 6. Database read-only recheck
+## 6. Mutation proof (bounded)
 
-| Check | Result |
+| Action | Count | Result |
+|---|---|---|
+| `POST /api/local/ops/providers` | **1** | HTTP **201** @ `2026-07-23T16:01:33Z` |
+| `PATCH` config | **0** | POST included exact config |
+| Activate / suspend / retire | **0** | — |
+
+## 7. Provider / audit (sanitized)
+
+| Field | Value |
 |---|---|
-| `npx prisma migrate status` | exit 0; schema up to date; 19 migrations |
-| Eligibility count | **0** |
-| Audit count | **0** |
-| Migration / write SQL | **Not run** |
+| Business prefix | `257f467a…` |
+| Lifecycle | `DRAFT` |
+| Visibility | `false` |
+| Types | `GENERIC_REQUEST` |
+| Lifecycle timestamps | all `null` |
+| Audit | `REGISTERED` only |
+| Eligibility/audit totals | **1 / 1** |
 
-## 7. Mutation proof
+## 8. Secrets
 
-| Action | Count |
-|---|---|
-| `POST /api/local/ops/providers` | **0** |
-| `PATCH /api/local/ops/providers/:businessId` | **0** |
-| Activate / suspend / retire | **0** |
-| Business / User / role mutation | **0** |
-| Local request | **0** |
-| Deploy | **0** |
+No phone, PIN, JWT, connection string, or full Business UUID recorded in this evidence tree.
 
-## 8. Hard stops
+## 9. Later stages
 
-1. Live `Role.ADMIN` authentication unresolved in executor environment (no JWT/token present; User create / role elevation forbidden).
-2. No operator-approved safe staging Business fixture proven (E1-J unresolved; fixture env ids absent; Business create/edit forbidden).
-
-## 9. Secrets
-
-No credentials, JWTs, connection strings, or Business/User PII recorded in this evidence tree.
-
-## 10. Later stages
-
-Provider activation phrase and E7–E10 remain **NOT AUTHORIZED**.
+E7 activation phrase remains **NOT GRANTED**. E7–E10 unauthorized.

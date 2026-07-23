@@ -1,20 +1,22 @@
 VIONA — KERNEL/HANDOFF SNAPSHOT (local notes, not committed to git)
-Last updated: 2026-07-23 — FC-P0 E6 provider registration blocked (no mutation)
+Last updated: 2026-07-23 — FC-P0 E6 provider registration executed (DRAFT)
 
-=== FC-P0 E6 STAGING PROVIDER REGISTRATION / CONFIGURATION ===
+=== FC-P0 E6 STAGING PROVIDER REGISTRATION / CONFIGURATION (EXECUTED) ===
 Operator: APPROVE_VIONA_FC_P0_LOCAL_PROVIDER_AUTHORITY_STAGING_PROVIDER_REGISTRATION_AND_CONFIGURATION
-Baseline: 3f724e06612da48eecb8a0931e3255727bc2a204 (E3 PR #429 on master)
-Branch: docs/viona-fc-p0-local-provider-authority-staging-provider-registration-configuration-result
+Pre-exec master: 19023d2b7fcbaa49ace1a8db7d11d97c0b56244a (includes blocked PR #430)
+Branch: docs/viona-fc-p0-local-provider-authority-staging-provider-registration-configuration-executed-result
 Target: viona-api-staging-eu / fra / staging / viona-staging-eu / euqbfanilcssjiwwtcby
-Active: Fly v29 / deployment-01KY798FWDYE8YM0ZD4QW98JP0; /health 200; migrate status up to date; rows 0/0
-Canonical: POST /api/local/ops/providers + PATCH /api/local/ops/providers/:businessId (Role.ADMIN)
-Primary: BLOCKED_LIVE_ROLE_ADMIN_AUTHENTICATION_UNRESOLVED
-Concurrent: BLOCKED_NO_SAFE_STAGING_BUSINESS_FIXTURE
-Mutations: 0 register / 0 configure / 0 activate; no Business/User/role mutation; no Local request; no deploy/migrate
+Active: Fly v29 / deployment-01KY798FWDYE8YM0ZD4QW98JP0; /health 200
+Register: POST /api/local/ops/providers x1 @ 2026-07-23T16:01:33Z → HTTP 201
+PATCH config: 0 (POST included GENERIC_REQUEST + publicB2cVisible=false)
+State: DRAFT / visibility false / activatedAt|suspendedAt|retiredAt null
+Audit: REGISTERED only; eligibility/audit 1/1
+Business: operator-approved Local pilot candidate 1 (prefix 257f467a…); no Business/User/role mutation
+Conclusion: CONTROLLED_PROVIDER_REGISTERED_AND_CONFIGURED_IN_DRAFT_WITH_VISIBILITY_DISABLED
 Activation phrase NOT GRANTED. E7–E10 NOT AUTHORIZED.
 Risk acceptance: NOT GRANTED / NOT INVOKED. REQUEST_ONLY_NO_CHARGE. Pack40S NOT AUTHORIZED. Phase C green.
 Evidence: docs/product/VIONA_FC_P0_LOCAL_PROVIDER_AUTHORITY_STAGING_PROVIDER_REGISTRATION_AND_CONFIGURATION_RESULT.md
-Next: supply live staging Role.ADMIN auth + operator-approved safe Business fixture; do NOT authorize activation.
+Next: strict-review this docs-only PR — do NOT authorize activation.
 
 === PRIOR — FC-P0 E3 STAGING API DEPLOY ===
 Operator: APPROVE_VIONA_FC_P0_LOCAL_PROVIDER_AUTHORITY_STAGING_API_DEPLOY
