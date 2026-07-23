@@ -69,8 +69,10 @@ Preserved (Fly staging + staging project ref).
 
 ## 23–25. Residual risk / E2 decision
 
-Fresh recovery point unproven → `BLOCKED_E1_EXPLICIT_FC_P0_RISK_ACCEPTANCE_REQUIRED`.  
+At remediation merge: fresh recovery point unproven → `BLOCKED_E1_EXPLICIT_FC_P0_RISK_ACCEPTANCE_REQUIRED`.  
 Risk acceptance **proposed, not granted**. E2 **not** authorized.
+
+**Supersession:** operator-mediated dashboard capture confirmed `2026-07-23T02:42:05Z` → secondary becomes `READY_FOR_E2_MIGRATION_APPLY_AUTHORIZATION_DECISION` without granting risk acceptance. E2 still **not** authorized.
 
 ## 26–35. Confirmations
 
@@ -78,7 +80,8 @@ No backup create; no restore; no migrate apply; no deploy; no provider mutation;
 
 ## 36. Next operator action
 
-Strict-review this remediation PR. Do not authorize E2 or grant risk acceptance automatically.
+Historical: strict-review remediation PR.  
+Current: strict-review operator-mediated backup metadata capture result PR. Do not authorize E2 or grant risk acceptance.
 
 ## 37. Validation
 
