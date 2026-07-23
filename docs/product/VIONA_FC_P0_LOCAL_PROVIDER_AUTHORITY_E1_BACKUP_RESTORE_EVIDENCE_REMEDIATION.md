@@ -1,8 +1,12 @@
 # VIONA FC-P0 — E1 Backup / Restore Evidence Remediation
 
-**Primary classification:** `READY_FOR_VIONA_FC_P0_LOCAL_PROVIDER_AUTHORITY_E1_BACKUP_RESTORE_EVIDENCE_REMEDIATION_PR_REVIEW`
+**Primary classification (historical at merge):** `READY_FOR_VIONA_FC_P0_LOCAL_PROVIDER_AUTHORITY_E1_BACKUP_RESTORE_EVIDENCE_REMEDIATION_PR_REVIEW`
 
-**Secondary E2 readiness decision:** `BLOCKED_E1_EXPLICIT_FC_P0_RISK_ACCEPTANCE_REQUIRED`
+**Merged:** PR #426 @ `777c87662174ba3445ee88d293c27e4506dddf3f`
+
+**Secondary E2 readiness decision (at remediation merge):** `BLOCKED_E1_EXPLICIT_FC_P0_RISK_ACCEPTANCE_REQUIRED`
+
+**Supersession (post-merge):** Operator-mediated dashboard capture cleared the recovery-point blocker without granting risk acceptance. Current secondary decision lives in `docs/product/VIONA_FC_P0_LOCAL_PROVIDER_AUTHORITY_E1_OPERATOR_MEDIATED_BACKUP_METADATA_CAPTURE_RESULT.md` → `READY_FOR_E2_MIGRATION_APPLY_AUTHORIZATION_DECISION` (**E2 still not authorized**).
 
 **Authorization:** `APPROVE_VIONA_FC_P0_LOCAL_PROVIDER_AUTHORITY_E1_BACKUP_RESTORE_EVIDENCE_REMEDIATION`
 
@@ -172,23 +176,24 @@ See:
 | Suggested future phrase | `APPROVE_VIONA_FC_P0_LOCAL_PROVIDER_AUTHORITY_E2_BACKUP_RESTORE_RISK_ACCEPTANCE` |
 | Granted by this packet | **No** |
 
-**Active blocker:** `BLOCKED_E1_EXPLICIT_FC_P0_RISK_ACCEPTANCE_REQUIRED`
+**Active blocker at remediation merge:** `BLOCKED_E1_EXPLICIT_FC_P0_RISK_ACCEPTANCE_REQUIRED`  
+**Post-merge supersession:** cleared by operator dashboard evidence (see operator-mediated capture result). Risk acceptance remains **PROPOSED / NOT GRANTED**.
 
 ---
 
 ## 10. Updated E1 / E2 readiness
 
-| Item | Status |
-|---|---|
-| Staging identity | PASS (preserved) |
-| Pack A1 Git/LF checksum | PASS (corrected) |
-| Pack A1 unapplied | PASS (re-observed) |
-| Production exclusion | PASS |
-| Current recovery point | **FAIL / UNPROVEN** |
-| Schema coverage of recovery point | **FAIL / UNPROVEN** |
-| Backup/restore readiness claim | **Withdrawn** — not `CONFIRMED` |
-| E2 secondary decision | `BLOCKED_E1_EXPLICIT_FC_P0_RISK_ACCEPTANCE_REQUIRED` |
-| E2 authorized | **No** |
+| Item | Status at remediation merge | Post operator-mediated capture |
+|---|---|---|
+| Staging identity | PASS (preserved) | PASS |
+| Pack A1 Git/LF checksum | PASS (corrected) | PASS |
+| Pack A1 unapplied | PASS (re-observed) | PASS (re-observed again) |
+| Production exclusion | PASS | PASS |
+| Current recovery point | **FAIL / UNPROVEN** | **PASS** — `2026-07-23T02:42:05Z` COMPLETED |
+| Schema coverage of recovery point | **FAIL / UNPROVEN** | **PASS** — pre-Pack-A1 coverage |
+| Backup/restore readiness claim | **Withdrawn** — not `CONFIRMED` | `BACKUP_RESTORE_READINESS_CONFIRMED_BY_FRESH_OPERATOR_DASHBOARD_EVIDENCE` |
+| E2 secondary decision | `BLOCKED_E1_EXPLICIT_FC_P0_RISK_ACCEPTANCE_REQUIRED` | `READY_FOR_E2_MIGRATION_APPLY_AUTHORIZATION_DECISION` |
+| E2 authorized | **No** | **No** |
 
 ---
 
@@ -233,7 +238,8 @@ See:
 
 ## 14. Exactly one next operator action
 
-**Strict-review this remediation PR.**
+**Historical (at remediation open):** Strict-review this remediation PR.
 
+**Current (post-#426 + operator capture):** Strict-review the operator-mediated backup metadata capture result PR.  
 Do **not** authorize E2 automatically.  
-Do **not** grant the proposed risk-acceptance phrase automatically.
+Do **not** grant the proposed risk-acceptance phrase.

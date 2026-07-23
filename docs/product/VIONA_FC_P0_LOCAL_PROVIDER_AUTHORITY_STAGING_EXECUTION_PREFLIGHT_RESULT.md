@@ -2,9 +2,11 @@
 
 **Primary classification (PR #425 original):** `READY_FOR_VIONA_FC_P0_LOCAL_PROVIDER_AUTHORITY_STAGING_EXECUTION_PREFLIGHT_RESULT_PR_REVIEW`
 
-**Secondary E2 readiness decision (current after backup/restore remediation):** `BLOCKED_E1_EXPLICIT_FC_P0_RISK_ACCEPTANCE_REQUIRED`
+**Secondary E2 readiness decision (current after operator-mediated backup capture):** `READY_FOR_E2_MIGRATION_APPLY_AUTHORIZATION_DECISION`
 
-> **Remediation note (post-#425):** Strict review blocked `#425` on stale/insufficient backup/restore evidence. Docs remediation under `APPROVE_VIONA_FC_P0_LOCAL_PROVIDER_AUTHORITY_E1_BACKUP_RESTORE_EVIDENCE_REMEDIATION` corrects Pack A1 Git/LF checksum representation and **withdraws** the unsupported `BACKUP_RESTORE_READINESS_CONFIRMED` claim. See `docs/product/VIONA_FC_P0_LOCAL_PROVIDER_AUTHORITY_E1_BACKUP_RESTORE_EVIDENCE_REMEDIATION.md`. Historical PR #425 observations below are preserved and labelled where superseded.
+> **Remediation note (post-#425):** Strict review blocked `#425` on stale/insufficient backup/restore evidence. Docs remediation under `APPROVE_VIONA_FC_P0_LOCAL_PROVIDER_AUTHORITY_E1_BACKUP_RESTORE_EVIDENCE_REMEDIATION` (merged PR #426) corrects Pack A1 Git/LF checksum representation and **withdraws** the unsupported `BACKUP_RESTORE_READINESS_CONFIRMED` claim. See `docs/product/VIONA_FC_P0_LOCAL_PROVIDER_AUTHORITY_E1_BACKUP_RESTORE_EVIDENCE_REMEDIATION.md`.
+>
+> **Operator-mediated capture note (post-#426):** Under `APPROVE_VIONA_FC_P0_LOCAL_PROVIDER_AUTHORITY_E1_OPERATOR_MEDIATED_BACKUP_METADATA_CAPTURE`, fresh dashboard evidence confirms recovery point `2026-07-23T02:42:05Z` PHYSICAL COMPLETED → `CURRENT_STAGING_RECOVERY_POINT_CONFIRMED_BY_OPERATOR_DASHBOARD_EVIDENCE`. Risk-acceptance blocker is **cleared without granting** risk acceptance (proposal remains PROPOSED / NOT GRANTED / NOT INVOKED). See `docs/product/VIONA_FC_P0_LOCAL_PROVIDER_AUTHORITY_E1_OPERATOR_MEDIATED_BACKUP_METADATA_CAPTURE_RESULT.md`. Historical PR #425 observations below are preserved and labelled where superseded.
 
 **Authorization (original E1):** `APPROVE_VIONA_FC_P0_LOCAL_PROVIDER_AUTHORITY_STAGING_EXECUTION_PREFLIGHT`
 
@@ -27,7 +29,10 @@ PACK_A1_MIGRATION_BYTE_IDENTITY_VERIFIED
 PACK_A1_MIGRATION_UNAPPLIED
 UNRESOLVED_DEPLOYED_API_SOURCE_SHA_RESOLVED_VIA_RELEASE_EVIDENCE_CORRELATION
 BACKUP_RESTORE_READINESS_CONFIRMED_SUPERSEDED_BY_REMEDIATION
-BLOCKED_E1_EXPLICIT_FC_P0_RISK_ACCEPTANCE_REQUIRED
+BLOCKED_E1_EXPLICIT_FC_P0_RISK_ACCEPTANCE_REQUIRED_SUPERSEDED_BY_OPERATOR_DASHBOARD_EVIDENCE
+CURRENT_STAGING_RECOVERY_POINT_CONFIRMED_BY_OPERATOR_DASHBOARD_EVIDENCE
+BACKUP_RESTORE_READINESS_CONFIRMED_BY_FRESH_OPERATOR_DASHBOARD_EVIDENCE
+READY_FOR_E2_MIGRATION_APPLY_AUTHORIZATION_DECISION
 APPROVED_STAGING_ROLE_ADMIN_AVAILABLE
 BLOCKED_NO_SAFE_STAGING_BUSINESS_FIXTURE
 BLOCKED_E1_STAGING_CLIENT_SOURCE_SHA_UNRESOLVED
@@ -190,19 +195,35 @@ Environment-specific historical evidence (same staging project):
 
 Original E1 claimed `BACKUP_RESTORE_READINESS_CONFIRMED` with residual freshness caveat.
 
-### 9.2 Post-#425 remediation correction (current)
+### 9.2 Post-#425 remediation correction (historical — PR #426)
 
 Strict review found that claim **stale/insufficient** for current pre-Pack-A1 staging after Pack40 schema evolution.
 
 Remediation attempted fresh read-only metadata via  
 `npx supabase backups list --project-ref euqbfanilcssjiwwtcby` at observation `2026-07-22T22:59:28Z`.  
-**Result:** management access token unavailable → latest recovery point **UNRESOLVED**.
+**Result:** management access token unavailable → latest recovery point **UNRESOLVED** at that time.
 
-**Current authoritative result:** `BACKUP_RESTORE_READINESS_CONFIRMED` is **withdrawn**.  
-Active status: `BLOCKED_E1_EXPLICIT_FC_P0_RISK_ACCEPTANCE_REQUIRED`  
-(also: `CURRENT_STAGING_RECOVERY_POINT_UNPROVEN`).
+At remediation merge: `BACKUP_RESTORE_READINESS_CONFIRMED` remained **withdrawn**; active status was `BLOCKED_E1_EXPLICIT_FC_P0_RISK_ACCEPTANCE_REQUIRED` / `CURRENT_STAGING_RECOVERY_POINT_UNPROVEN`.
 
-E1 / remediation did **not** create a backup and did **not** restore.
+### 9.3 Operator-mediated dashboard capture (current — post-#426)
+
+Under `APPROVE_VIONA_FC_P0_LOCAL_PROVIDER_AUTHORITY_E1_OPERATOR_MEDIATED_BACKUP_METADATA_CAPTURE`:
+
+| Field | Value |
+|---|---|
+| Observation UTC | `2026-07-23T09:27:02Z` |
+| Latest recovery point | `2026-07-23T02:42:05Z` |
+| Type / status | PHYSICAL / COMPLETED |
+| Restore availability | Restore control visible (not executed) |
+| Classification | `CURRENT_STAGING_RECOVERY_POINT_CONFIRMED_BY_OPERATOR_DASHBOARD_EVIDENCE` |
+| Schema coverage | `RECOVERY_POINT_COVERS_CURRENT_PRE_PACK_A1_STAGING_STATE` |
+| Pack A1 | Still **unapplied** (re-observed) |
+| Risk acceptance | Still **PROPOSED / NOT GRANTED / NOT INVOKED** |
+
+**Current authoritative result:** `BACKUP_RESTORE_READINESS_CONFIRMED_BY_FRESH_OPERATOR_DASHBOARD_EVIDENCE`  
+Secondary E2 decision: `READY_FOR_E2_MIGRATION_APPLY_AUTHORIZATION_DECISION` (**E2 not authorized**).
+
+E1 / remediation / operator capture did **not** create a backup and did **not** restore.
 
 ---
 
@@ -300,8 +321,8 @@ E1 did **not** create a Business.
 | 7 | Migration history | migrate status | 18 applied + 1 pending | **PASS** | host redacted class only | unreadable → stop |
 | 8 | Pack A1 applied? | migrate status | **UNAPPLIED** | **PASS** | n/a | if applied → contradiction |
 | 9 | Production exclusion | app stage + DB ref | staging proven | **PASS** | no URLs | prod risk → stop |
-| 10 | Backup readiness | current recovery point | **UNPROVEN** (fresh list blocked: no token); June 18 historical insufficient | **BLOCKED** | no secrets | E2 blocked |
-| 11 | Restore readiness | procedure + current RPO | procedure known historically; RPO unproven → risk acceptance required | **BLOCKED** | n/a | E2 blocked |
+| 10 | Backup readiness | current recovery point | **CONFIRMED** operator dashboard `2026-07-23T02:42:05Z` PHYSICAL COMPLETED; June 18 historical only | **PASS** | no secrets | — |
+| 11 | Restore readiness | procedure + current RPO | Pack15C procedure/owner; daily cadence; exact retention days not exposed (residual disclosed) | **PASS\*\*** | n/a | separate restore auth still required |
 | 12 | API rollback artifact | prior release | **v27** image | **PASS** | n/a | — |
 | 13 | Health route | live GET | 200 ok | **PASS** | no PII | — |
 | 14 | Local route inventory | source + live 401 | matches plan | **PASS** | n/a | — |
@@ -312,7 +333,8 @@ E1 did **not** create a Business.
 | 19 | E2 stop conditions | planning §16 | recorded below | **PASS** | n/a | — |
 | 20 | Unauthorized later gates | E2–E10 | **NOT AUTHORIZED** | **PASS** | n/a | — |
 
-\*Availability ≠ live E5 authentication success.
+\*Availability ≠ live E5 authentication success.  
+\*\*Restore readiness PASS does not authorize restore execution; exact retention day count remains undisclosed residual.
 
 ---
 
@@ -343,16 +365,16 @@ Migration-critical conditions for recommending an **authorization decision** (no
 | Migration status observed | Yes |
 | Pack A1 confirmed unapplied | Yes |
 | No failed/partial migration | Yes |
-| Backup/restore readiness confirmed | **No** — withdrawn; current recovery point unproven |
+| Backup/restore readiness confirmed | **Yes** — operator dashboard fresh recovery point `2026-07-23T02:42:05Z` PHYSICAL COMPLETED; risk acceptance not invoked |
 | Rollback API artifact identified | Yes |
 | No route/environment contradiction | Yes |
 | No unauthorized mutation in E1 | Yes |
 
-**Secondary decision (current):** `BLOCKED_E1_EXPLICIT_FC_P0_RISK_ACCEPTANCE_REQUIRED`
+**Secondary decision (current):** `READY_FOR_E2_MIGRATION_APPLY_AUTHORIZATION_DECISION`
 
-PR #425 originally recorded `READY_FOR_E2_MIGRATION_APPLY_AUTHORIZATION_DECISION`; that secondary decision is **superseded** until either fresh backup metadata is observed or the separate FC-P0 risk-acceptance phrase is granted.
+PR #425 originally recorded `READY_FOR_E2…`; remediation (PR #426) superseded that with `BLOCKED_E1_EXPLICIT_FC_P0_RISK_ACCEPTANCE_REQUIRED`. Operator-mediated dashboard capture **clears** that blocker without granting risk acceptance.
 
-E2 remains **not** authorized. Future E2 (when unblocked) still requires:
+E2 remains **not** authorized. Future E2 still requires:
 
 `APPROVE_VIONA_FC_P0_LOCAL_PROVIDER_AUTHORITY_STAGING_MIGRATION_APPLY`
 

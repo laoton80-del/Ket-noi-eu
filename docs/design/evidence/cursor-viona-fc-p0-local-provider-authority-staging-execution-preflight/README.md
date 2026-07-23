@@ -67,7 +67,9 @@ Staging Fly app + staging Supabase project ref `euqbfanilcssjiwwtcby` / alias `v
 
 **PR #425 original:** claimed `BACKUP_RESTORE_READINESS_CONFIRMED` from Pack15C + Pack40 lineage (June 18 timestamp not re-read).
 
-**Post-remediation (current):** claim **withdrawn**. Fresh `supabase backups list` blocked (no management token) at `2026-07-22T22:59:28Z`. Active: `BLOCKED_E1_EXPLICIT_FC_P0_RISK_ACCEPTANCE_REQUIRED`. See remediation packet + risk-acceptance proposal (**NOT GRANTED**).
+**Post-remediation (PR #426):** claim **withdrawn**. Fresh `supabase backups list` blocked (no management token) at `2026-07-22T22:59:28Z`. Then-active: `BLOCKED_E1_EXPLICIT_FC_P0_RISK_ACCEPTANCE_REQUIRED`.
+
+**Current (operator-mediated capture):** `CURRENT_STAGING_RECOVERY_POINT_CONFIRMED_BY_OPERATOR_DASHBOARD_EVIDENCE` — latest `2026-07-23T02:42:05Z` PHYSICAL COMPLETED. Readiness: `BACKUP_RESTORE_READINESS_CONFIRMED_BY_FRESH_OPERATOR_DASHBOARD_EVIDENCE`. Risk acceptance remains **PROPOSED / NOT GRANTED / NOT INVOKED**. See operator-mediated capture result.
 
 ## 15. Rollback artifact
 
@@ -104,8 +106,8 @@ See result packet §§14–16. E5 live auth, E6 fixture, E8 client SHA remain un
 
 ## 24. E2 readiness decision
 
-**Current:** `BLOCKED_E1_EXPLICIT_FC_P0_RISK_ACCEPTANCE_REQUIRED` — **does not authorize E2**.  
-(PR #425 original secondary `READY_FOR_E2…` is superseded by backup/restore remediation.)
+**Current:** `READY_FOR_E2_MIGRATION_APPLY_AUTHORIZATION_DECISION` — **does not authorize E2**.  
+(PR #425 original secondary `READY_FOR_E2…` → remediation `BLOCKED_E1_EXPLICIT_FC_P0_RISK_ACCEPTANCE_REQUIRED` → operator dashboard capture restores decision readiness without granting risk acceptance.)
 
 ## 25–29. Confirmations
 
@@ -125,7 +127,7 @@ Deferred; Phase C closed green.
 
 ## 33. Exactly one next operator action
 
-Strict-review the E1 backup/restore remediation PR (not E2). Do **not** authorize E2 or grant risk acceptance automatically.
+Strict-review the E1 operator-mediated backup metadata capture result PR (not E2). Do **not** authorize E2 or grant risk acceptance.
 
 ## 34. Validation commands
 

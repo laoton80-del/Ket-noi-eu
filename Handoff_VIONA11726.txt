@@ -1,24 +1,36 @@
 VIONA — KERNEL/HANDOFF SNAPSHOT (local notes, not committed to git)
-Last updated: 2026-07-23 — FC-P0 E1 backup/restore evidence remediation
+Last updated: 2026-07-23 — FC-P0 E1 operator-mediated backup metadata capture
 
-=== FC-P0 E1 BACKUP / RESTORE EVIDENCE REMEDIATION ===
-Operator: APPROVE_VIONA_FC_P0_LOCAL_PROVIDER_AUTHORITY_E1_BACKUP_RESTORE_EVIDENCE_REMEDIATION
-Baseline: 098cb8709a980aa6a9df76a6ca6a1e4fffa9478d (PR #425 merged master)
-Branch: docs/viona-fc-p0-local-provider-authority-e1-backup-restore-evidence-remediation
-Mode: READ-ONLY metadata attempt + docs remediation only
-Corrected: Pack A1 Git/LF SHA256 3B028C85… / 3471 B (CRLF hash labelled non-canonical)
-Fresh backups list: blocked (no SUPABASE_ACCESS_TOKEN) @ 2026-07-22T22:59:28Z
-Active: BLOCKED_E1_EXPLICIT_FC_P0_RISK_ACCEPTANCE_REQUIRED
-Risk acceptance: PROPOSED / NOT GRANTED
+=== FC-P0 E1 OPERATOR-MEDIATED BACKUP METADATA CAPTURE ===
+Operator: APPROVE_VIONA_FC_P0_LOCAL_PROVIDER_AUTHORITY_E1_OPERATOR_MEDIATED_BACKUP_METADATA_CAPTURE
+Baseline: 777c87662174ba3445ee88d293c27e4506dddf3f (PR #426 merged master)
+Branch: docs/viona-fc-p0-local-provider-authority-e1-fresh-backup-metadata-verification-result
+Mode: Operator dashboard screenshots + one read-only migrate status; docs-only
+Project: viona-staging-eu / euqbfanilcssjiwwtcby
+Latest recovery point: 2026-07-23T02:42:05Z PHYSICAL COMPLETED (Restore visible, not executed)
+Classification: CURRENT_STAGING_RECOVERY_POINT_CONFIRMED_BY_OPERATOR_DASHBOARD_EVIDENCE
+Pack A1: UNAPPLIED (re-observed); no failed/partial
+Coverage: RECOVERY_POINT_COVERS_CURRENT_PRE_PACK_A1_STAGING_STATE
+Risk acceptance: PROPOSED / NOT GRANTED / NOT INVOKED
+Secondary: READY_FOR_E2_MIGRATION_APPLY_AUTHORIZATION_DECISION
+E2: NOT AUTHORIZED
 No backup create / restore / migrate-apply / deploy / provider mutation / live QA.
-REQUEST_ONLY_NO_CHARGE. Pack40S NOT AUTHORIZED. Phase C green.
+PAT cleared/revoked; no token in repo. REQUEST_ONLY_NO_CHARGE. Pack40S NOT AUTHORIZED. Phase C green.
+Evidence: docs/product/VIONA_FC_P0_LOCAL_PROVIDER_AUTHORITY_E1_OPERATOR_MEDIATED_BACKUP_METADATA_CAPTURE_RESULT.md
+Next: strict-review this docs-only PR — do NOT authorize E2 or grant risk acceptance.
+
+=== PRIOR — FC-P0 E1 BACKUP / RESTORE EVIDENCE REMEDIATION ===
+Operator: APPROVE_VIONA_FC_P0_LOCAL_PROVIDER_AUTHORITY_E1_BACKUP_RESTORE_EVIDENCE_REMEDIATION
+Merged PR #426 @ 777c87662174ba3445ee88d293c27e4506dddf3f
+At merge: BLOCKED_E1_EXPLICIT_FC_P0_RISK_ACCEPTANCE_REQUIRED (CLI token absent)
+Superseded for recovery-point proof by operator-mediated capture above.
+Risk acceptance proposal remains PROPOSED / NOT GRANTED.
 Evidence: docs/product/VIONA_FC_P0_LOCAL_PROVIDER_AUTHORITY_E1_BACKUP_RESTORE_EVIDENCE_REMEDIATION.md
-Next: strict-review this remediation PR — do NOT authorize E2 or grant risk acceptance.
 
 === PRIOR — FC-P0 LOCAL PROVIDER AUTHORITY E1 STAGING EXECUTION PREFLIGHT ===
 Operator: APPROVE_VIONA_FC_P0_LOCAL_PROVIDER_AUTHORITY_STAGING_EXECUTION_PREFLIGHT
 Merged PR #425 @ 098cb8709a980aa6a9df76a6ca6a1e4fffa9478d
-Strict review blocked backup/restore freshness; remediated by packet above.
+Strict review blocked backup/restore freshness; remediated by #426; recovery point confirmed by operator capture.
 Pack A1 still UNAPPLIED; Fly v28 / rollback v27 preserved.
 Evidence: docs/product/VIONA_FC_P0_LOCAL_PROVIDER_AUTHORITY_STAGING_EXECUTION_PREFLIGHT_RESULT.md
 
