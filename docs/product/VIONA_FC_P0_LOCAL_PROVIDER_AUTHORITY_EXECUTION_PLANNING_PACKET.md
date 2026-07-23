@@ -57,8 +57,8 @@ Every future gate uses exactly one of:
 | E4 route/schema compatibility | `PLANNED` / **NOT AUTHORIZED** |
 | E5 Role.ADMIN operator identity | `PLANNED` / **NOT AUTHORIZED** |
 | E6 provider registration/configuration | **EXECUTED** (DRAFT / visibility false) — see observed result below; **E7 still NOT AUTHORIZED** |
-| E7 provider activation | **AUTHORIZED** (phrase granted) / **BLOCKED** on first attempt (visibility false); visibility later enabled under separate phrase — **activation retry still NOT AUTHORIZED** |
-| Staging public B2C visibility enablement | **EXECUTED** (DRAFT / visibility true) — see E7 observed visibility-result field; **not** activation |
+| E7 provider activation | **EXECUTED** (retry after visibility) — ACTIVE / visibility true; see activation-retry observed result; **E8–E10 remain NOT AUTHORIZED** |
+| Staging public B2C visibility enablement | **EXECUTED / VERIFIED** (PR #433) — DRAFT / visibility true at that time; historical post-merge note that activation retry was unauthorized then remains valid historically |
 | E8 client deployment decision | `PLANNED` / **NOT AUTHORIZED** |
 | E9 controlled Local create QA | `PLANNED` / **NOT AUTHORIZED** |
 | E10 FC-P0 staging closure | `PLANNED` / **NOT AUTHORIZED** |
@@ -383,7 +383,13 @@ Primary: `BLOCKED_E7_SEPARATE_VISIBILITY_ACTION_NOT_AUTHORIZED` (activate requir
 `docs/product/VIONA_FC_P0_LOCAL_PROVIDER_AUTHORITY_STAGING_PROVIDER_PUBLIC_B2C_VISIBILITY_ENABLEMENT_RESULT.md`  
 Phrase `APPROVE_VIONA_FC_P0_LOCAL_PROVIDER_AUTHORITY_STAGING_PROVIDER_PUBLIC_B2C_VISIBILITY_ENABLEMENT`; prior login HTTP **401** preserved (zero mutation); fresh PATCH `{publicB2cVisible:true}` @ `2026-07-23T17:10:15Z` → HTTP **200**; provider **DRAFT** / visibility **true**; audit REGISTERED→CONFIG_UPDATED; totals 1/2.  
 Conclusion: `CONTROLLED_PROVIDER_PUBLIC_B2C_VISIBILITY_ENABLED_WHILE_REMAINING_DRAFT`.  
-**Activation retry remains NOT AUTHORIZED** until a new explicit E7 phrase.
+Historical post-merge note: activation retry unauthorized **at that time** (not rewritten).
+
+**Activation retry observed result (later explicit phrase):**  
+`docs/product/VIONA_FC_P0_LOCAL_PROVIDER_AUTHORITY_STAGING_PROVIDER_ACTIVATION_RETRY_RESULT.md`  
+Phrase `APPROVE_VIONA_FC_P0_LOCAL_PROVIDER_AUTHORITY_STAGING_PROVIDER_ACTIVATION_RETRY_AFTER_PUBLIC_B2C_VISIBILITY_ENABLEMENT`; one activate empty body @ `2026-07-23T18:50:15Z` → HTTP **200**; provider **ACTIVE** / visibility **true**; audit REGISTERED→CONFIG_UPDATED→ACTIVATED; totals 1/3.  
+Conclusion: `CONTROLLED_STAGING_PROVIDER_ACTIVATED_AFTER_PUBLIC_B2C_VISIBILITY_ENABLEMENT`.  
+**E8–E10 remain NOT AUTHORIZED.**
 
 **Preconditions:** DRAFT eligibility; valid display name; `publicB2cVisible=true`; non-empty supported types; REGISTERED + CONFIG_UPDATED verified; E4 green; approved operator; exact Business id; suspend containment understood.
 

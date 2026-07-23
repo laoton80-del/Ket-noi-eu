@@ -1,19 +1,27 @@
 VIONA — KERNEL/HANDOFF SNAPSHOT (local notes, not committed to git)
-Last updated: 2026-07-23 — FC-P0 public B2C visibility enabled (DRAFT preserved)
+Last updated: 2026-07-23 — FC-P0 staging provider activation retry SUCCESS (ACTIVE)
 
-=== FC-P0 STAGING PUBLIC B2C VISIBILITY ENABLEMENT ===
-Operator: APPROVE_VIONA_FC_P0_LOCAL_PROVIDER_AUTHORITY_STAGING_PROVIDER_PUBLIC_B2C_VISIBILITY_ENABLEMENT
-Pre-exec master: b2e84f88be71ab50e4494de1832a86cd92569679 (E7 blocked-result PR #432)
-Branch: docs/viona-fc-p0-local-provider-authority-staging-provider-public-b2c-visibility-enablement-result
+=== FC-P0 STAGING PROVIDER ACTIVATION RETRY (AFTER VISIBILITY) ===
+Operator: APPROVE_VIONA_FC_P0_LOCAL_PROVIDER_AUTHORITY_STAGING_PROVIDER_ACTIVATION_RETRY_AFTER_PUBLIC_B2C_VISIBILITY_ENABLEMENT
+Pre-exec master: d39a1a11faddabe14c205d485f78f9cb68bfc337 (visibility PR #433)
+Branch: docs/viona-fc-p0-local-provider-authority-staging-provider-activation-retry-result
 Target: viona-api-staging-eu / staging / prefix 257f467a…
-Prior auth run (preserved): login x1 → HTTP 401; PATCH 0; activation 0 → BLOCKED_LIVE_ROLE_ADMIN_AUTHENTICATION_UNRESOLVED
-Fresh run: login x1 → 200 ADMIN; PATCH x1 @ 2026-07-23T17:10:15Z → HTTP 200 {publicB2cVisible:true}
-Post-state: DRAFT / visibility true / GENERIC_REQUEST; audit REGISTERED→CONFIG_UPDATED; rows 1/2
-Conclusion: CONTROLLED_PROVIDER_PUBLIC_B2C_VISIBILITY_ENABLED_WHILE_REMAINING_DRAFT
-Activation attempt this lane: 0. Activation retry NOT AUTHORIZED. E8–E10 NOT AUTHORIZED.
-REQUEST_ONLY_NO_CHARGE. Pack40S NOT AUTHORIZED. Phase C green.
+Pre-state: DRAFT / visibility true / GENERIC_REQUEST; audit REGISTERED→CONFIG_UPDATED; rows 1/2
+Login x1 @ 2026-07-23T18:50:14.991Z → 200 ADMIN; PATCH 0
+Activate POST x1 empty body @ 2026-07-23T18:50:15Z → HTTP 200
+Post-state: ACTIVE / visibility true / GENERIC_REQUEST; activatedAt set; suspendedAt/retiredAt null
+Audit: REGISTERED→CONFIG_UPDATED→ACTIVATED; rows 1/3
+Conclusion: CONTROLLED_STAGING_PROVIDER_ACTIVATED_AFTER_PUBLIC_B2C_VISIBILITY_ENABLEMENT
+E8–E10 NOT AUTHORIZED. REQUEST_ONLY_NO_CHARGE. Pack40S NOT AUTHORIZED. Phase C green.
+Evidence: docs/product/VIONA_FC_P0_LOCAL_PROVIDER_AUTHORITY_STAGING_PROVIDER_ACTIVATION_RETRY_RESULT.md
+Next: decide E8 client-deploy authorization — do NOT auto-run Local QA.
+
+=== PRIOR — FC-P0 STAGING PUBLIC B2C VISIBILITY ENABLEMENT (MERGED PR #433) ===
+Operator: APPROVE_VIONA_FC_P0_LOCAL_PROVIDER_AUTHORITY_STAGING_PROVIDER_PUBLIC_B2C_VISIBILITY_ENABLEMENT
+Merged PR #433 @ d39a1a11faddabe14c205d485f78f9cb68bfc337
+PATCH x1 @ 2026-07-23T17:10:15Z → 200; DRAFT / visibility true; REGISTERED→CONFIG_UPDATED; rows 1/2
+Note: post-merge verify correctly said activation retry unauthorized then; later grant used above.
 Evidence: docs/product/VIONA_FC_P0_LOCAL_PROVIDER_AUTHORITY_STAGING_PROVIDER_PUBLIC_B2C_VISIBILITY_ENABLEMENT_RESULT.md
-Next: decide separate E7 activation re-authorization — do NOT auto-activate.
 
 === PRIOR — FC-P0 E7 STAGING PROVIDER ACTIVATION (BLOCKED; MERGED PR #432) ===
 Operator: APPROVE_VIONA_FC_P0_LOCAL_PROVIDER_AUTHORITY_STAGING_PROVIDER_ACTIVATION
