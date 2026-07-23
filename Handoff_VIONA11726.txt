@@ -1,17 +1,26 @@
 VIONA — KERNEL/HANDOFF SNAPSHOT (local notes, not committed to git)
-Last updated: 2026-07-23 — FC-P0 post-activation next-stage decision packet (docs-only)
+Last updated: 2026-07-23 — FC-P0 E8 staging client deployment readiness prerequisite packet (docs-only)
 
-=== FC-P0 POST-ACTIVATION NEXT-STAGE DECISION PACKET ===
-Operator: APPROVE_VIONA_FC_P0_LOCAL_PROVIDER_AUTHORITY_POST_ACTIVATION_NEXT_STAGE_DECISION_PACKET
-Baseline master: 1110c21b8b83fbd2dc2f83846ea795a8027122c3 (PR #434 activation-retry verified)
-Branch: docs/viona-fc-p0-local-provider-authority-post-activation-next-stage-decision-packet
-Mode: docs-only / read-only source audit — no login / mutation / Local request / deploy / migrate
-Recommendation (NOT authorization): RECOMMEND_E8_FOR_SEPARATE_OPERATOR_AUTHORIZATION_DECISION
+=== FC-P0 E8 STAGING CLIENT DEPLOYMENT READINESS + PREREQUISITE PACKET ===
+Operator: APPROVE_VIONA_FC_P0_LOCAL_PROVIDER_AUTHORITY_E8_STAGING_CLIENT_DEPLOYMENT_READINESS_AND_PREREQUISITE_PACKET
+Baseline master: a98a3222a0a5a637088693d8fe147861210070b1 (PR #435 post-activation decision verified)
+Branch: docs/viona-fc-p0-local-provider-authority-e8-staging-client-deployment-readiness-prerequisite-packet
+Mode: docs-only / read-only inventory — no client/API deploy / login / provider mutation / Local request / migrate
+Case: E8_CASE_A_DOCS_ONLY_RECOMMENDED
+Markers: BLOCKED_NO_VERIFIED_VIONA_STAGING_CLIENT_DEPLOYMENT_TARGET; BLOCKED_E8_STAGING_CLIENT_PROJECT_BINDING_UNRESOLVED; BLOCKED_E8_CLIENT_DEPLOYMENT_ROLLBACK_CONTRACT_INCOMPLETE
+Local gates: tsc + ci:expo-readiness + ci:release-discipline + build:web PASS (dist not uploaded; localhost API baked — not staging-safe)
 Canonical E8 phrase remains NOT GRANTED: APPROVE_VIONA_FC_P0_LOCAL_PROVIDER_AUTHORITY_STAGING_CLIENT_DEPLOY
 E9/E10 remain NOT AUTHORIZED. REQUEST_ONLY_NO_CHARGE. Pack40S NOT AUTHORIZED. Phase C green.
 AI hard-stop not started. No production-ready claim.
+Evidence: docs/product/VIONA_FC_P0_LOCAL_PROVIDER_AUTHORITY_E8_STAGING_CLIENT_DEPLOYMENT_READINESS_AND_PREREQUISITE_PACKET.md
+Next: strict-review this docs PR — do NOT auto-grant E8 Case B deploy.
+
+=== PRIOR — FC-P0 POST-ACTIVATION NEXT-STAGE DECISION PACKET (MERGED PR #435) ===
+Operator: APPROVE_VIONA_FC_P0_LOCAL_PROVIDER_AUTHORITY_POST_ACTIVATION_NEXT_STAGE_DECISION_PACKET
+Merged PR #435 @ a98a3222a0a5a637088693d8fe147861210070b1
+Recommendation (NOT authorization): RECOMMEND_E8_FOR_SEPARATE_OPERATOR_AUTHORIZATION_DECISION
+Canonical E8 phrase remained NOT GRANTED at merge.
 Evidence: docs/product/VIONA_FC_P0_LOCAL_PROVIDER_AUTHORITY_POST_ACTIVATION_NEXT_STAGE_DECISION_PACKET.md
-Next: strict-review this docs PR — do NOT auto-grant E8–E10.
 
 === PRIOR — FC-P0 STAGING PROVIDER ACTIVATION RETRY (AFTER VISIBILITY) ===
 Operator: APPROVE_VIONA_FC_P0_LOCAL_PROVIDER_AUTHORITY_STAGING_PROVIDER_ACTIVATION_RETRY_AFTER_PUBLIC_B2C_VISIBILITY_ENABLEMENT
