@@ -56,7 +56,7 @@ Every future gate uses exactly one of:
 | E3 staging API deploy | **EXECUTED** (Fly **v29** @ `2026-07-23T10:45:07Z`); result PR pending review — **E4–E10 remain NOT AUTHORIZED** |
 | E4 route/schema compatibility | `PLANNED` / **NOT AUTHORIZED** |
 | E5 Role.ADMIN operator identity | `PLANNED` / **NOT AUTHORIZED** |
-| E6 provider registration/configuration | **AUTHORIZED** (phrase granted) / **BLOCKED — NO MUTATION** — see observed result below |
+| E6 provider registration/configuration | **EXECUTED** (DRAFT / visibility false) — see observed result below; **E7 still NOT AUTHORIZED** |
 | E7 provider activation | `PLANNED` / **NOT AUTHORIZED** |
 | E8 client deployment decision | `PLANNED` / **NOT AUTHORIZED** |
 | E9 controlled Local create QA | `PLANNED` / **NOT AUTHORIZED** |
@@ -342,11 +342,12 @@ If no approved staging Role.ADMIN exists at execution time:
 
 ## 11. Stage E6 — Provider registration and configuration (DRAFT)
 
-**Authorization phrase (GRANTED / ATTEMPTED):**  
+**Authorization phrase (GRANTED / EXECUTED):**  
 `APPROVE_VIONA_FC_P0_LOCAL_PROVIDER_AUTHORITY_STAGING_PROVIDER_REGISTRATION_AND_CONFIGURATION`
 
 **Observed result (docs):** `docs/product/VIONA_FC_P0_LOCAL_PROVIDER_AUTHORITY_STAGING_PROVIDER_REGISTRATION_AND_CONFIGURATION_RESULT.md`  
-Primary `BLOCKED_LIVE_ROLE_ADMIN_AUTHENTICATION_UNRESOLVED`; concurrent `BLOCKED_NO_SAFE_STAGING_BUSINESS_FIXTURE`; **zero** provider registration/configuration mutations.  
+One `POST /api/local/ops/providers` @ `2026-07-23T16:01:33Z` → HTTP **201**; lifecycle **DRAFT**; visibility **false**; types `GENERIC_REQUEST`; audit **REGISTERED** only; `PATCH` count **0**.  
+Conclusion: `CONTROLLED_PROVIDER_REGISTERED_AND_CONFIGURED_IN_DRAFT_WITH_VISIBILITY_DISABLED`.  
 **E7–E10 remain NOT AUTHORIZED.** Do not treat this section as activation authorization.
 
 ### 11.1 Business fixture
