@@ -1,22 +1,27 @@
 VIONA — KERNEL/HANDOFF SNAPSHOT (local notes, not committed to git)
-Last updated: 2026-07-23 — FC-P0 E3 staging API deploy
+Last updated: 2026-07-23 — FC-P0 E6 provider registration blocked (no mutation)
 
-=== FC-P0 E3 STAGING API DEPLOY ===
-Operator: APPROVE_VIONA_FC_P0_LOCAL_PROVIDER_AUTHORITY_STAGING_API_DEPLOY
-Source/baseline: de59110a6c9a1bfef7fc0d7c68be24513ffe9781 (PR #428 verified master)
-Branch: docs/viona-fc-p0-local-provider-authority-staging-api-deploy-result
+=== FC-P0 E6 STAGING PROVIDER REGISTRATION / CONFIGURATION ===
+Operator: APPROVE_VIONA_FC_P0_LOCAL_PROVIDER_AUTHORITY_STAGING_PROVIDER_REGISTRATION_AND_CONFIGURATION
+Baseline: 3f724e06612da48eecb8a0931e3255727bc2a204 (E3 PR #429 on master)
+Branch: docs/viona-fc-p0-local-provider-authority-staging-provider-registration-configuration-result
 Target: viona-api-staging-eu / fra / staging / viona-staging-eu / euqbfanilcssjiwwtcby
-Pre-deploy: v28 / deployment-01KXN3M9E6NWTFAE5YMW60T9FH (exact rollback target)
-Deploy: fly deploy --app viona-api-staging-eu --remote-only @ 2026-07-23T10:45:07Z–10:48:14Z exit 0
-Active: Fly v29 / deployment-01KY798FWDYE8YM0ZD4QW98JP0 / digest sha256:b4c42e5c…
-Health: /health 200; unauth Local routes 401; no DB release hook; Pack A1 clean; rows 0/0
-Secondary (packet §9): READY_FOR_CONTROLLED_PROVIDER_REGISTRATION
-E4–E10: NOT AUTHORIZED
-No secret/config mutation / provider mutation / authenticated QA / client deploy / restore.
+Active: Fly v29 / deployment-01KY798FWDYE8YM0ZD4QW98JP0; /health 200; migrate status up to date; rows 0/0
+Canonical: POST /api/local/ops/providers + PATCH /api/local/ops/providers/:businessId (Role.ADMIN)
+Primary: BLOCKED_LIVE_ROLE_ADMIN_AUTHENTICATION_UNRESOLVED
+Concurrent: BLOCKED_NO_SAFE_STAGING_BUSINESS_FIXTURE
+Mutations: 0 register / 0 configure / 0 activate; no Business/User/role mutation; no Local request; no deploy/migrate
+Activation phrase NOT GRANTED. E7–E10 NOT AUTHORIZED.
 Risk acceptance: NOT GRANTED / NOT INVOKED. REQUEST_ONLY_NO_CHARGE. Pack40S NOT AUTHORIZED. Phase C green.
-Rollback: NOT REQUIRED (post-deploy healthy).
+Evidence: docs/product/VIONA_FC_P0_LOCAL_PROVIDER_AUTHORITY_STAGING_PROVIDER_REGISTRATION_AND_CONFIGURATION_RESULT.md
+Next: supply live staging Role.ADMIN auth + operator-approved safe Business fixture; do NOT authorize activation.
+
+=== PRIOR — FC-P0 E3 STAGING API DEPLOY ===
+Operator: APPROVE_VIONA_FC_P0_LOCAL_PROVIDER_AUTHORITY_STAGING_API_DEPLOY
+Merged PR #429 @ 3f724e06612da48eecb8a0931e3255727bc2a204
+Active: Fly v29 / deployment-01KY798FWDYE8YM0ZD4QW98JP0 / digest sha256:b4c42e5c…
+Secondary (packet §9): READY_FOR_CONTROLLED_PROVIDER_REGISTRATION (did not authorize E4/E6)
 Evidence: docs/product/VIONA_FC_P0_LOCAL_PROVIDER_AUTHORITY_STAGING_API_DEPLOY_RESULT.md
-Next: strict-review this docs-only PR — do NOT authorize E4.
 
 === PRIOR — FC-P0 E2 STAGING MIGRATION APPLY (PACK A1) ===
 Operator: APPROVE_VIONA_FC_P0_LOCAL_PROVIDER_AUTHORITY_STAGING_MIGRATION_APPLY
