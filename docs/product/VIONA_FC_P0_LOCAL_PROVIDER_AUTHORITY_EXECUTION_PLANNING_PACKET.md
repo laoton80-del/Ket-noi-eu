@@ -57,7 +57,8 @@ Every future gate uses exactly one of:
 | E4 route/schema compatibility | `PLANNED` / **NOT AUTHORIZED** |
 | E5 Role.ADMIN operator identity | `PLANNED` / **NOT AUTHORIZED** |
 | E6 provider registration/configuration | **EXECUTED** (DRAFT / visibility false) — see observed result below; **E7 still NOT AUTHORIZED** |
-| E7 provider activation | **AUTHORIZED** (phrase granted) / **BLOCKED** — separate visibility write required; see observed result |
+| E7 provider activation | **AUTHORIZED** (phrase granted) / **BLOCKED** on first attempt (visibility false); visibility later enabled under separate phrase — **activation retry still NOT AUTHORIZED** |
+| Staging public B2C visibility enablement | **EXECUTED** (DRAFT / visibility true) — see E7 observed visibility-result field; **not** activation |
 | E8 client deployment decision | `PLANNED` / **NOT AUTHORIZED** |
 | E9 controlled Local create QA | `PLANNED` / **NOT AUTHORIZED** |
 | E10 FC-P0 staging closure | `PLANNED` / **NOT AUTHORIZED** |
@@ -374,9 +375,15 @@ Must be operator-approved, staging-only, non-production, non-sensitive, human-re
 `APPROVE_VIONA_FC_P0_LOCAL_PROVIDER_AUTHORITY_STAGING_PROVIDER_ACTIVATION`
 
 **Observed result (docs):** `docs/product/VIONA_FC_P0_LOCAL_PROVIDER_AUTHORITY_STAGING_PROVIDER_ACTIVATION_RESULT.md`  
-One activate @ `2026-07-23T16:37:09Z` → HTTP **409**; provider remains **DRAFT** / visibility **false**.  
+One activate @ `2026-07-23T16:37:09Z` → HTTP **409**; provider remained **DRAFT** / visibility **false** at that attempt.  
 Primary: `BLOCKED_E7_SEPARATE_VISIBILITY_ACTION_NOT_AUTHORIZED` (activate requires `publicB2cVisible=true` but does not set it; separate PATCH not in E7 scope).  
 **E8–E10 remain NOT AUTHORIZED.**
+
+**Visibility enablement observed result (separate phrase; not activation):**  
+`docs/product/VIONA_FC_P0_LOCAL_PROVIDER_AUTHORITY_STAGING_PROVIDER_PUBLIC_B2C_VISIBILITY_ENABLEMENT_RESULT.md`  
+Phrase `APPROVE_VIONA_FC_P0_LOCAL_PROVIDER_AUTHORITY_STAGING_PROVIDER_PUBLIC_B2C_VISIBILITY_ENABLEMENT`; prior login HTTP **401** preserved (zero mutation); fresh PATCH `{publicB2cVisible:true}` @ `2026-07-23T17:10:15Z` → HTTP **200**; provider **DRAFT** / visibility **true**; audit REGISTERED→CONFIG_UPDATED; totals 1/2.  
+Conclusion: `CONTROLLED_PROVIDER_PUBLIC_B2C_VISIBILITY_ENABLED_WHILE_REMAINING_DRAFT`.  
+**Activation retry remains NOT AUTHORIZED** until a new explicit E7 phrase.
 
 **Preconditions:** DRAFT eligibility; valid display name; `publicB2cVisible=true`; non-empty supported types; REGISTERED + CONFIG_UPDATED verified; E4 green; approved operator; exact Business id; suspend containment understood.
 
