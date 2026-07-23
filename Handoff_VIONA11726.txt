@@ -1,22 +1,26 @@
 VIONA — KERNEL/HANDOFF SNAPSHOT (local notes, not committed to git)
-Last updated: 2026-07-23 — FC-P0 E6 provider registration executed (DRAFT)
+Last updated: 2026-07-23 — FC-P0 E7 activation blocked (visibility precondition)
 
-=== FC-P0 E6 STAGING PROVIDER REGISTRATION / CONFIGURATION (EXECUTED) ===
-Operator: APPROVE_VIONA_FC_P0_LOCAL_PROVIDER_AUTHORITY_STAGING_PROVIDER_REGISTRATION_AND_CONFIGURATION
-Pre-exec master: 19023d2b7fcbaa49ace1a8db7d11d97c0b56244a (includes blocked PR #430)
-Branch: docs/viona-fc-p0-local-provider-authority-staging-provider-registration-configuration-executed-result
+=== FC-P0 E7 STAGING PROVIDER ACTIVATION ===
+Operator: APPROVE_VIONA_FC_P0_LOCAL_PROVIDER_AUTHORITY_STAGING_PROVIDER_ACTIVATION
+Pre-exec master: f59e723fd18ee4854c0e92739b81d085112802e0 (E6 PR #431)
+Branch: docs/viona-fc-p0-local-provider-authority-staging-provider-activation-result
 Target: viona-api-staging-eu / fra / staging / viona-staging-eu / euqbfanilcssjiwwtcby
 Active: Fly v29 / deployment-01KY798FWDYE8YM0ZD4QW98JP0; /health 200
-Register: POST /api/local/ops/providers x1 @ 2026-07-23T16:01:33Z → HTTP 201
-PATCH config: 0 (POST included GENERIC_REQUEST + publicB2cVisible=false)
-State: DRAFT / visibility false / activatedAt|suspendedAt|retiredAt null
-Audit: REGISTERED only; eligibility/audit 1/1
-Business: operator-approved Local pilot candidate 1 (prefix 257f467a…); no Business/User/role mutation
-Conclusion: CONTROLLED_PROVIDER_REGISTERED_AND_CONFIGURED_IN_DRAFT_WITH_VISIBILITY_DISABLED
-Activation phrase NOT GRANTED. E7–E10 NOT AUTHORIZED.
-Risk acceptance: NOT GRANTED / NOT INVOKED. REQUEST_ONLY_NO_CHARGE. Pack40S NOT AUTHORIZED. Phase C green.
+Activate: POST /api/local/ops/providers/:businessId/activate x1 @ 2026-07-23T16:37:09Z → HTTP 409
+Root cause: activate requires publicB2cVisible=true but does not set it; separate PATCH not authorized by E7
+Primary: BLOCKED_E7_SEPARATE_VISIBILITY_ACTION_NOT_AUTHORIZED
+State unchanged: DRAFT / visibility false; audit REGISTERED only; rows 1/1
+No visibility PATCH / no retry / no Local request / no deploy/migrate
+E8–E10 NOT AUTHORIZED. REQUEST_ONLY_NO_CHARGE. Pack40S NOT AUTHORIZED. Phase C green.
+Evidence: docs/product/VIONA_FC_P0_LOCAL_PROVIDER_AUTHORITY_STAGING_PROVIDER_ACTIVATION_RESULT.md
+Next: decide separate visibility-enablement authorization — do NOT invent bypass.
+
+=== PRIOR — FC-P0 E6 STAGING PROVIDER REGISTRATION / CONFIGURATION (EXECUTED) ===
+Operator: APPROVE_VIONA_FC_P0_LOCAL_PROVIDER_AUTHORITY_STAGING_PROVIDER_REGISTRATION_AND_CONFIGURATION
+Merged PR #431 @ f59e723fd18ee4854c0e92739b81d085112802e0
+Register POST x1 @ 2026-07-23T16:01:33Z → 201; DRAFT / visibility false; REGISTERED only
 Evidence: docs/product/VIONA_FC_P0_LOCAL_PROVIDER_AUTHORITY_STAGING_PROVIDER_REGISTRATION_AND_CONFIGURATION_RESULT.md
-Next: strict-review this docs-only PR — do NOT authorize activation.
 
 === PRIOR — FC-P0 E3 STAGING API DEPLOY ===
 Operator: APPROVE_VIONA_FC_P0_LOCAL_PROVIDER_AUTHORITY_STAGING_API_DEPLOY
