@@ -1,22 +1,26 @@
 VIONA — KERNEL/HANDOFF SNAPSHOT (local notes, not committed to git)
-Last updated: 2026-07-24 — E8 Case B B1A: empty staging project + local link (zero deploy; B1B unauthorized)
+Last updated: 2026-07-24 — E8 Case B PR #445: factual B1A green on master + Option A non-retroactive merge-auth exception (KERNEL_HANDOFF_SYNC_PREPARED_UNCOMMITTED)
 
-=== E8 CASE B B1A STAGING PROJECT PROVISIONING RETRY (EXECUTED; DOCS UNCOMMITTED) ===
-Operator: APPROVE_…_B1A_DEDICATED_VERCEL_STAGING_PROJECT_PROVISIONING_AND_LOCAL_LINK_RETRY_AFTER_CLI_LOGIN_VERIFIED
-Baseline master: 20b6bce37810c51bd54fe5a4226571bb33a1528b (PR #444 verified tip)
-Branch: docs/viona-fc-p0-local-provider-authority-e8-case-b-b1a-vercel-project-provisioning-retry-result
-CLI/auth: 56.5.0 / identity sanitized l******5; no extra login
-Scope: ket-noi-global (1 operator-owned team); no paid upgrade
-Create: vercel project add viona-web-staging-eu — exit 0 (2026-07-24T16:34:14Z–16:34:18Z)
-Link: vercel link --yes --project viona-web-staging-eu --scope ket-noi-global — exit 0 (16:36:23Z–16:36:27Z)
-Verified: deployments 0; Git 0; env vars 0; domains/aliases 0; staging URL NONE
-.vercel: pre hash 25AB42D9… (ket-noi-eu non-authoritative) → post hash 68856D73… (viona-web-staging-eu); ignored; uncommitted
-Side effect: link auto-wrote VERCEL_OIDC_TOKEN to .env.local + touched .gitignore — remediated (OIDC removed; gitignore restored; residual OIDC/tracked-diff = 0; history not zero-mutation)
+=== E8 CASE B B1A STAGING PROJECT PROVISIONING RETRY (PR #445 MERGED; FACTUAL GREEN ACCEPTED; PREMERGE AUTH UNRESOLVED) ===
+PR #445: MERGED @ 20711265cd25202a4426be740697b5a9d67c113c (reviewed head 899b5ce…; parent 20b6bce…; mergedAt 2026-07-24T18:22:23Z)
+Factual result: GREEN AND ACCEPTED ON MASTER
+Historical pre-merge fixed-head merge authorization: NOT PROVEN / REMAINS UNRESOLVED
+Governance disposition: NON-RETROACTIVE EXCEPTION ACCEPTED (Option A)
+Acceptance: ACKNOWLEDGE_AND_ACCEPT_…_PR445_…_AS_NON_RETROACTIVE_GOVERNANCE_EXCEPTION — NO_RETROACTIVE_AUTHORIZATION_CLAIMED
+B1A execution auth: CONFIRMED; result-packet commit/PR auth: CONFIRMED; distinct pre-merge merge phrase: NOT FOUND
+Operator B1A: APPROVE_…_B1A_DEDICATED_VERCEL_STAGING_PROJECT_PROVISIONING_AND_LOCAL_LINK_RETRY_AFTER_CLI_LOGIN_VERIFIED
+Scope/project: ket-noi-global / viona-web-staging-eu; identity sanitized l******5
+Create/link: vercel project add + vercel link --yes — exit 0; deployments 0; project env 0
+Git binding / domains/aliases: NOT RECONFIRMED BY CURRENT CLI CONTRACT
+Local .vercel link: VERIFIED (ignored; uncommitted); projectName viona-web-staging-eu
+Side effect: transient VERCEL_OIDC_TOKEN + .gitignore — remediated (hist counts 1/1; residual 0; not zero-mutation rewrite)
 Classifications: DEDICATED_VERCEL_STAGING_PROJECT_PROVISIONED_WITH_ZERO_DEPLOYMENTS; B1A_LOCAL_PROJECT_LINK_VERIFIED_WITH_GIT_BINDING_UNAUTHORIZED; B1A_VERCEL_LINK_TRANSIENT_LOCAL_ENV_AND_GITIGNORE_MUTATION_REMEDIATED_WITH_NO_OIDC_SECRET_OR_TRACKED_DIFF_REMAINING
-Case B blockers PRESERVED (empty project ≠ verified staging client; CLI link ≠ Git binding; rollback/API base still incomplete)
+Case B blockers PRESERVED; Case B deployment readiness NOT PROVEN
 B1B–B7 NOT AUTHORIZED; E8–E10 NOT AUTHORIZED; REQUEST_ONLY_NO_CHARGE
+KERNEL_HANDOFF_SYNC_PREPARED_UNCOMMITTED (canonical only after later commit/PR merge + post-merge verify)
 Evidence: docs/product/VIONA_FC_P0_LOCAL_PROVIDER_AUTHORITY_E8_CASE_B_B1A_VERCEL_STAGING_PROJECT_PROVISIONING_RETRY_RESULT.md
-Next: separately authorize B1B Git/deployment policy — do NOT auto-deploy.
+Governance: docs/product/VIONA_FC_P0_LOCAL_PROVIDER_AUTHORITY_E8_CASE_B_PR445_MERGE_AUTHORIZATION_PROVENANCE_GAP_NON_RETROACTIVE_EXCEPTION_DECISION.md
+Next: separately authorize docs-only commit/PR for this sync — do NOT auto-start B1B.
 
 === PRIOR — PR #444 VERCEL CLI OPERATOR INTERACTIVE LOGIN (MERGED / POST-MERGE VERIFIED) ===
 Operator: APPROVE_…_VERCEL_CLI_OPERATOR_INTERACTIVE_LOGIN_ONLY (+ result packet commit/PR + reviews + merge)

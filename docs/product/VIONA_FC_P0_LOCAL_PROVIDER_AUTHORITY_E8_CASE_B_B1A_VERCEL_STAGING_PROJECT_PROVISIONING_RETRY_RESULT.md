@@ -233,8 +233,8 @@ E8–E10: NOT AUTHORIZED
 
 ## 13. Docs output
 
-**Created:** this packet + evidence README  
-**Updated:** Kernel + Handoff  
+**Created:** this packet + evidence README
+**Updated:** Kernel + Handoff
 **Commit:** Left uncommitted unless separately authorized
 
 ---
