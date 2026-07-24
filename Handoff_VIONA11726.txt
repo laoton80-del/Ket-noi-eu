@@ -1,26 +1,30 @@
 VIONA — KERNEL/HANDOFF SNAPSHOT (local notes, not committed to git)
-Last updated: 2026-07-24 — E8 Case B Vercel CLI pinned install verified (login/B1A still unauthorized)
+Last updated: 2026-07-24 — E8 Case B Vercel CLI interactive login verified (B1A retry still unauthorized)
 
-=== E8 CASE B VERCEL CLI PINNED TOOLING INSTALLATION (EXECUTED; DOCS UNCOMMITTED) ===
-Operator: APPROVE_VIONA_FC_P0_LOCAL_PROVIDER_AUTHORITY_E8_CASE_B_VERCEL_CLI_PINNED_TOOLING_INSTALLATION_ONLY
-Baseline master: d4fcce082b284884caacab2fd550ead558a7c716 (PR #442 verified tip)
-Branch: docs/viona-fc-p0-local-provider-authority-e8-case-b-vercel-cli-pinned-installation-result
-Command: npm install -g vercel@56.5.0 — exit 0 (2026-07-24T15:06:53Z–15:08:03Z)
-Verified: vercel --version = 56.5.0; npm list -g vercel@56.5.0; prefix <USER_APPDATA>\Roaming\npm
-Classifications: VERCEL_CLI_PINNED_GLOBAL_INSTALLATION_VERIFIED; B1A_CLI_PREREQUISITE_REMEDIATED_WITH_LOGIN_AND_RETRY_UNAUTHORIZED
-Resolved: BLOCKED_B1A_VERCEL_CLI_NOT_AVAILABLE (tooling only)
-Login: NOT STARTED; phrase PROPOSED only: APPROVE_…_VERCEL_CLI_OPERATOR_INTERACTIVE_LOGIN_ONLY
+=== E8 CASE B VERCEL CLI OPERATOR INTERACTIVE LOGIN (EXECUTED; DOCS UNCOMMITTED) ===
+Operator: APPROVE_VIONA_FC_P0_LOCAL_PROVIDER_AUTHORITY_E8_CASE_B_VERCEL_CLI_OPERATOR_INTERACTIVE_LOGIN_ONLY
+Baseline master: c83a7500bcf45a08bc9e9dc6968ac99ce7f929df (PR #443 verified tip)
+Branch: docs/viona-fc-p0-local-provider-authority-e8-case-b-vercel-cli-operator-interactive-login-result
+CLI: 56.5.0 (unchanged); Command: vercel login — exit 0 (2026-07-24T15:42:41Z–15:43:52Z)
+Verified: vercel whoami exit 0; identity sanitized (username); ownership via operator device login
+Classifications: VERCEL_CLI_OPERATOR_INTERACTIVE_LOGIN_VERIFIED; B1A_AUTHENTICATION_PREREQUISITE_REMEDIATED_WITH_PROJECT_PROVISIONING_RETRY_UNAUTHORIZED
 B1A retry NOT AUTHORIZED; B1B–B7 NOT AUTHORIZED; E8–E10 NOT AUTHORIZED; REQUEST_ONLY_NO_CHARGE
 Case B blockers PRESERVED (target/binding/rollback/api-base)
 package.json/lockfile unchanged; .vercel ignored + hash unchanged; no project/link/Git/env/build/deploy
+Evidence: docs/product/VIONA_FC_P0_LOCAL_PROVIDER_AUTHORITY_E8_CASE_B_VERCEL_CLI_OPERATOR_INTERACTIVE_LOGIN_RESULT.md
+Next: separately authorize B1A provisioning retry — do NOT auto-create/link/deploy.
+
+=== PRIOR — PR #443 VERCEL CLI PINNED INSTALLATION RESULT (MERGED / POST-MERGE VERIFIED) ===
+Operator: APPROVE_…_VERCEL_CLI_PINNED_TOOLING_INSTALLATION_ONLY (+ result packet commit/PR + reviews)
+Merged PR #443 @ c83a7500bcf45a08bc9e9dc6968ac99ce7f929df (head 30326eb…)
+Classifications: VERCEL_CLI_PINNED_GLOBAL_INSTALLATION_VERIFIED; B1A_CLI_PREREQUISITE_REMEDIATED_WITH_LOGIN_AND_RETRY_UNAUTHORIZED
+Post-merge: VERIFIED_ON_MASTER_WITH_CLI_56_5_0_AND_LOGIN_B1A_RETRY_UNAUTHORIZED
 Evidence: docs/product/VIONA_FC_P0_LOCAL_PROVIDER_AUTHORITY_E8_CASE_B_VERCEL_CLI_PINNED_INSTALLATION_RESULT.md
-Next: separately authorize interactive login ONLY — do NOT auto-retry B1A.
 
 === PRIOR — PR #442 VERCEL CLI TOOLING-PREPARATION (MERGED / POST-MERGE VERIFIED) ===
 Operator: APPROVE_…_VERCEL_CLI_TOOLING_PREPARATION_DECISION_PACKET (+ commit/PR + strict review + post-merge verify)
 Merged PR #442 @ d4fcce082b284884caacab2fd550ead558a7c716 (head 999ac17…)
 Decision: VERCEL_CLI_PINNED_GLOBAL_INSTALLATION_RECOMMENDED_FOR_SEPARATE_AUTHORIZATION
-Post-merge: VERIFIED_ON_MASTER_WITH_PINNED_GLOBAL_INSTALLATION_RECOMMENDED_AND_INSTALL_LOGIN_UNAUTHORIZED
 Evidence: docs/product/VIONA_FC_P0_LOCAL_PROVIDER_AUTHORITY_E8_CASE_B_VERCEL_CLI_TOOLING_PREPARATION_DECISION.md
 
 === PRIOR — E8 CASE B B1A (MERGED PR #441; BLOCKED RESULT) ===
