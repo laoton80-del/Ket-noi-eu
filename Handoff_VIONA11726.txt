@@ -1,22 +1,39 @@
 VIONA — KERNEL/HANDOFF SNAPSHOT (local notes, not committed to git)
-Last updated: 2026-07-25 — E8 Case B PR #446: second non-retroactive merge-auth exception + mandatory guardrail freeze (PR446_CANONICAL_LIFECYCLE_STATUS_SYNC_PREPARED_UNCOMMITTED)
+Last updated: 2026-07-27 — PR #447 freeze-breach: Disposition A + Direction C technical containment plan (PR447_INCIDENT_DISPOSITION_AND_TECHNICAL_CONTAINMENT_SYNC_PREPARED_UNCOMMITTED)
 
-=== E8 CASE B PR #446 EXCEPTION ACCEPTANCE + MANDATORY MERGE GUARDRAIL FREEZE (PREPARED; UNCOMMITTED) ===
+=== PR #447 ACTIVE MANDATORY MERGE-FREEZE BREACH (INCIDENT OPEN; DISPOSITION A + DIRECTION C PLANNING; UNCOMMITTED) ===
+PR #447: MERGED DURING ACTIVE MANDATORY FREEZE @ 636ad1e145e65547d80a863e2d249279bce8b25d (reviewed head ace52962355ecb38016f70f35502e82efab8f054; parent adc77d2…; mergedAt 2026-07-26T16:48:49Z)
+merged_by: laoton80-del — FACTUAL ACTOR METADATA ONLY — NOT AUTHORIZATION
+Factual content: GREEN / RETAINED ON CANONICAL MASTER
+Governance lifecycle: NOT GREEN
+Incident: OPEN — BLOCKED_PR447_MERGED_DURING_ACTIVE_MANDATORY_FREEZE
+Disposition: A SELECTED — retain factual content; keep incident open; NO third non-retroactive exception
+Selection: ACKNOWLEDGE_AND_SELECT_…_DISPOSITION_A_…_AND_DIRECTION_C_…_WITH_NO_THIRD_EXCEPTION
+Technical direction: C SELECTED FOR PLANNING — repository-level merge enforcement plan (design-only)
+Freeze-remediation exception: NOT FOUND / NOT GRANTED / NOT EFFECTIVE
+PR447_INCIDENT_CONTAINMENT_ACTIVE
+Active freeze: MANDATORY_MERGE_AUTHORIZATION_GUARDRAIL_FREEZE_ACTIVE
+NO_FURTHER_VIONA_PR_MERGE_UNTIL_GUARDRAIL_IMPLEMENTED_TESTED_AND_VERIFIED
+B1B_GOVERNANCE_FREEZE_ACTIVE
+FACT: master protection ABSENT; rulesets EMPTY; auto-merge DISABLED; merge channel NOT CONFIRMED
+INFERENCE: documented freeze lacked effective repository-level technical enforcement for this merge path
+PR447_INCIDENT_DISPOSITION_AND_TECHNICAL_CONTAINMENT_SYNC_PREPARED_UNCOMMITTED (not canonical until later authorized commit/review/remediation-controlled merge + post-merge verify)
+Evidence: docs/product/VIONA_PR447_ACTIVE_MANDATORY_MERGE_FREEZE_BREACH_GOVERNANCE_INCIDENT_INVESTIGATION_CONTAINMENT_AND_DISPOSITION.md
+Plan: docs/product/VIONA_REPOSITORY_LEVEL_MERGE_AUTHORIZATION_TECHNICAL_CONTAINMENT_PLAN.md
+Next: separately authorize strict read-only review of disposition + containment plan — do NOT commit/PR/merge/implement/settings/freeze-release/B1B from this sync.
+
+=== PRIOR — E8 CASE B PR #446 EXCEPTION ACCEPTANCE + MANDATORY MERGE GUARDRAIL FREEZE (CONTENT ON MASTER VIA PR #447) ===
 PR #446: MERGED @ adc77d2b042af89fddda54793d28b21c7bcf237c (reviewed head 2c5d8dae8cb40667492d765ca5dd48fb202769cb; parent 20711265…; mergedAt 2026-07-24T20:35:40Z)
 Factual result: GREEN AND RETAINED ON MASTER
 Historical fixed-head pre-merge authorization: NOT PROVEN / REMAINS PERMANENTLY UNRESOLVED
 Governance disposition: SECOND NON-RETROACTIVE EXCEPTION ACCEPTED (Option A+)
 Acceptance: ACKNOWLEDGE_AND_ACCEPT_…_PR446_…_AS_SECOND_NON_RETROACTIVE_GOVERNANCE_EXCEPTION_WITH_MANDATORY_MERGE_GUARDRAIL_FREEZE — NO_RETROACTIVE_AUTHORIZATION_CLAIMED
-Active freeze: MANDATORY_MERGE_AUTHORIZATION_GUARDRAIL_FREEZE_ACTIVE
-NO_FURTHER_VIONA_PR_MERGE_UNTIL_GUARDRAIL_IMPLEMENTED_TESTED_AND_VERIFIED
+Active freeze: MANDATORY_MERGE_AUTHORIZATION_GUARDRAIL_FREEZE_ACTIVE (still active; not released by PR #447)
 B1B_GOVERNANCE_FREEZE_ACTIVE
 PR445+PR446 consecutive gaps accepted as permanent non-retroactive exceptions
-Guardrail implementation: PLAN-ONLY (scripts/viona-guarded-pr-merge.mjs / viona:merge:guarded — not implemented this lane)
-Remediation merge exception / freeze-release phrases: PROPOSED ONLY / NOT GRANTED
-PR446_CANONICAL_LIFECYCLE_STATUS_SYNC_PREPARED_UNCOMMITTED (canonical only after later commit/PR merge + post-merge verify)
+Guardrail implementation: PLAN-ONLY (superseded/extended by repository-level containment plan under Direction C)
 Evidence: docs/product/VIONA_FC_P0_LOCAL_PROVIDER_AUTHORITY_E8_CASE_B_PR446_REPEAT_MERGE_AUTHORIZATION_CONTROL_FAILURE_NON_RETROACTIVE_EXCEPTION_AND_GUARDRAIL_DECISION.md
 Plan: docs/product/VIONA_MANDATORY_MERGE_AUTHORIZATION_GUARDRAIL_IMPLEMENTATION_PLAN.md
-Next: separately authorize docs-only commit/PR for accepted second exception + freeze + plan — do NOT implement guardrail or start B1B.
 
 === PRIOR — E8 CASE B B1A STAGING PROJECT PROVISIONING RETRY (PR #445 MERGED; FACTUAL GREEN ACCEPTED; PREMERGE AUTH PERMANENTLY UNRESOLVED) ===
 PR #445: MERGED @ 20711265cd25202a4426be740697b5a9d67c113c (reviewed head 899b5ce…; parent 20b6bce…; mergedAt 2026-07-24T18:22:23Z)
