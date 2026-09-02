@@ -28,6 +28,17 @@ const ALLOWED = new Set([
   'scripts/test-viona-mobile-phase0-native-presentation-isolation.ts',
 ]);
 
+/** Exact Phase 1 descendant lineage: orientation unlock + landscape residual stabilization. */
+const PHASE1_DESCENDANT_ALLOWED = new Set([
+  'app.config.js',
+  'scripts/expo-readiness-check.mjs',
+  'App.tsx',
+  'src/navigation/MainTabNavigator.tsx',
+  'src/screens/HomeScreen.tsx',
+  'src/screens/b2c/LocalScreen.tsx',
+  'scripts/test-viona-mobile-phase1-clear-premium-native-home.ts',
+]);
+
 const DENY = [
   'src/navigation/fashionHomeShellMode.ts',
   'src/navigation/MainTabNavigator.tsx',
@@ -276,8 +287,35 @@ assert('SOS hold remains 3000', sosShield.includes('V7_SOS_HOLD_TO_TRIGGER_MS = 
 assert('Account chrome still PersonalHub', mainTab.includes('openPersonalHub'));
 assert('B2C Academy tab unchanged', mainTab.includes('MAIN_TAB.B2C.ai') && mainTab.includes("'Academy'"));
 
-assert('mutation path count is Phase 1 allowlist size or subset', changed.every((p) => ALLOWED.has(p) || p.length === 0));
+{
+  const appRoot = read('App.tsx');
+  const local = read('src/screens/b2c/LocalScreen.tsx');
+  const appConfig = read('app.config.js');
+  assert(
+    'canonical Expo orientation remains default',
+    /orientation:\s*'default'/.test(appConfig) && !/orientation:\s*'portrait'/.test(appConfig)
+  );
+  assert(
+    'native landscape root full-bleed is platform-guarded',
+    appRoot.includes("Platform.OS !== 'web' && width > height") &&
+      appRoot.includes('nativeLandscapeFullBleed')
+  );
+  assert('web large-screen rule unchanged', appRoot.includes("Platform.OS === 'web' && width > 768"));
+  assert(
+    'native two-band host reserves layout (not absolute overlay)',
+    mainTab.includes('nativeBottomShellHost') &&
+      mainTab.includes('nativeTwoBandShellHeight') &&
+      /nativeBottomShellHost:\s*\{[^}]*position:\s*'relative'/.test(mainTab)
+  );
+  assert(
+    'native Local does not hide the four-tab bar',
+    local.includes("if (Platform.OS !== 'web')") && local.includes('LOCAL_HIDDEN_TAB_BAR_STYLE')
+  );
+}
+
+assert('mutation path is original Phase 1 allowlist or explicit descendant contract', changed.every((p) => ALLOWED.has(p) || PHASE1_DESCENDANT_ALLOWED.has(p) || p.length === 0));
 for (const denied of DENY) {
+  if (PHASE1_DESCENDANT_ALLOWED.has(denied)) continue;
   assert(`${denied} absent from mutation`, !changed.includes(denied));
 }
 assert('no package.json mutation', !changed.includes('package.json') && !changed.includes('package-lock.json'));

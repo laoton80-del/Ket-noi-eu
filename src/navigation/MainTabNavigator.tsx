@@ -245,6 +245,9 @@ export function MainTabNavigator(): ReactElement {
   const flags = useMemo(() => getFeatureFlags(), []);
 
   const tabBarLift = tabSizing.tabBarBaseHeight + (isDesktopWeb ? Math.max(insets.bottom, 16) : Math.max(insets.bottom, 10)) + 10;
+  const nativeChromePad = Math.max(insets.bottom, 10);
+  const nativeTabsBandHeight = tabSizing.tabBarBaseHeight + 8;
+  const nativeTwoBandShellHeight = nativeTabsBandHeight + NATIVE_BOTTOM_SHELL_CHROME_ROW + nativeChromePad;
 
   const fashionHomeDesktopShell = useMemo(
     () =>
@@ -338,30 +341,27 @@ export function MainTabNavigator(): ReactElement {
       // Native bottom shell: full-width tabs above a reserved chrome row so Account/ME
       // and SOS cannot paint over Hub / Academy Lite (P1-V11). Web keeps overlays.
       if (Platform.OS !== 'web') {
-        const chromePad = Math.max(props.insets.bottom, 10);
-        const tabsBandHeight = tabSizing.tabBarBaseHeight + 8;
-        const shellHeight = tabsBandHeight + NATIVE_BOTTOM_SHELL_CHROME_ROW + chromePad;
         return (
           <View
             style={[
-              styles.tabBarHost,
+              styles.nativeBottomShellHost,
               styles.nativeBottomShellHostBorder,
               {
-                height: shellHeight,
+                height: nativeTwoBandShellHeight,
                 backgroundColor: chrome.barBg,
                 borderTopColor: chrome.barBorder,
               },
             ]}
             testID="viona-sos-tab-bar-host"
           >
-            <View style={[styles.nativeBottomTabsClip, { height: tabsBandHeight }]}>
+            <View style={[styles.nativeBottomTabsClip, { height: nativeTabsBandHeight }]}>
               <BottomTabBar {...props} />
             </View>
             <View
               style={[
                 styles.nativeBottomChromeRow,
                 {
-                  paddingBottom: chromePad,
+                  paddingBottom: nativeChromePad,
                   paddingLeft: Math.max(props.insets.left, 8),
                   paddingRight: Math.max(props.insets.right, 8),
                 },
@@ -433,13 +433,15 @@ export function MainTabNavigator(): ReactElement {
       chrome.barBg,
       chrome.barBorder,
       mountSosInTabBarShell,
+      nativeChromePad,
+      nativeTabsBandHeight,
+      nativeTwoBandShellHeight,
       onSosHoldComplete,
       openShellAccount,
       openShellLanguage,
       openShellRole,
       showRolePicker,
       tabBarPosition,
-      tabSizing.tabBarBaseHeight,
     ]
   );
 
@@ -601,17 +603,14 @@ export function MainTabNavigator(): ReactElement {
                   }
                 : {
                     height:
-                      tabSizing.tabBarBaseHeight +
-                      Math.max(insets.bottom, 10) +
-                      (mountSosInTabBarShell && Platform.OS !== 'web'
-                        ? NATIVE_BOTTOM_SHELL_CHROME_ROW
-                        : 0),
+                      mountSosInTabBarShell && Platform.OS !== 'web'
+                        ? nativeTwoBandShellHeight
+                        : tabSizing.tabBarBaseHeight + Math.max(insets.bottom, 10),
                     paddingBottom:
-                      Math.max(insets.bottom, 10) +
-                      (mountSosInTabBarShell && Platform.OS !== 'web'
-                        ? NATIVE_BOTTOM_SHELL_CHROME_ROW
-                        : 0),
-                    paddingTop: 8,
+                      mountSosInTabBarShell && Platform.OS !== 'web'
+                        ? 0
+                        : Math.max(insets.bottom, 10),
+                    paddingTop: mountSosInTabBarShell && Platform.OS !== 'web' ? 0 : 8,
                     paddingLeft:
                       mountSosInTabBarShell && tabBarPosition === 'bottom' && Platform.OS === 'web'
                         ? showRolePicker
@@ -810,6 +809,10 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
+  },
+  nativeBottomShellHost: {
+    position: 'relative',
+    width: '100%',
   },
   nativeBottomShellHostBorder: {
     borderTopWidth: 1,

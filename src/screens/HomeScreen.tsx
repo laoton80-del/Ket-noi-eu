@@ -1172,7 +1172,8 @@ export function HomeScreen() {
   const scrollBottomPad = useMemo(() => {
     if (!isDesktopWeb) {
       if (homePresentationTarget === 'native-adaptive') {
-        return Math.max(insets.bottom, 24) + 168;
+        // Scene already reserves the native two-band (MainTabNavigator nativeTwoBandShellHeight).
+        return Math.max(insets.bottom, 24);
       }
       return 140;
     }

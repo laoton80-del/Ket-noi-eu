@@ -409,6 +409,7 @@ Notifications.setNotificationHandler({
 type AppNavigationShellProps = Readonly<{
   insets: import('react-native-safe-area-context').EdgeInsets;
   isLargeScreen: boolean;
+  nativeLandscapeFullBleed: boolean;
   user: import('./src/context/authTypes').AuthUser | null;
   transitionAnim: Animated.Value;
   mode: import('./src/context/AppModeContext').AppMode;
@@ -420,6 +421,7 @@ type AppNavigationShellProps = Readonly<{
 function AppNavigationShell({
   insets,
   isLargeScreen,
+  nativeLandscapeFullBleed,
   user,
   transitionAnim,
   mode,
@@ -429,7 +431,14 @@ function AppNavigationShell({
 }: AppNavigationShellProps): ReactElement {
   const { navigationTheme, statusBarStyle, syncFromRootStackRoute } = useNavigationThemeForHub();
   return (
-    <View style={{ flex: 1, width: '100%', maxWidth: isLargeScreen ? '100%' : 600, alignSelf: 'center' }}>
+    <View
+      style={{
+        flex: 1,
+        width: '100%',
+        maxWidth: isLargeScreen || nativeLandscapeFullBleed ? '100%' : 600,
+        alignSelf: 'center',
+      }}
+    >
       <ThemeProvider value={navigationTheme}>
         <NavigationContainer
           ref={navigationRef}
@@ -696,8 +705,9 @@ function AppNavigationShell({
 
 function AppRoot() {
   const insets = useSafeAreaInsets();
-  const { width } = useWindowDimensions();
+  const { width, height } = useWindowDimensions();
   const isLargeScreen = Platform.OS === 'web' && width > 768;
+  const nativeLandscapeFullBleed = Platform.OS !== 'web' && width > height;
   const { isHydrating, user, setPendingRedirect } = useAuth();
   const { mode, transitionKey } = useAppMode();
   const [isOnline, setIsOnline] = useState(true);
@@ -787,6 +797,7 @@ function AppRoot() {
       <AppNavigationShell
         insets={insets}
         isLargeScreen={isLargeScreen}
+        nativeLandscapeFullBleed={nativeLandscapeFullBleed}
         user={user}
         transitionAnim={transitionAnim}
         mode={mode}

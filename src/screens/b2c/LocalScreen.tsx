@@ -115,10 +115,9 @@ const RISK = localConstellation.risk;
 const LOCAL_LEGACY_HIDE_STYLE_ID = 'viona-local-legacy-hide';
 
 /**
- * Fully hides the shared bottom tab bar while the Local hub is focused. The Local main page
- * already exposes universe handoff via "Vũ trụ liên kết" plus compact Back/Home controls, so the
- * 4-item bottom tab bar (Hub / Local / Travel Lite / Academy Lite) is redundant here. Applied only
- * on focus and reverted on blur, so Hub / Travel / Academy tabs keep their bar untouched.
+ * Fully hides the shared bottom tab bar while the Local hub is focused on **web**.
+ * Native Local keeps stock Home / Local / Travel / Academy tab reachability; Local header
+ * still owns Account/SOS (shouldMountSosInTabBarShell remains false — no second SOS).
  */
 const LOCAL_HIDDEN_TAB_BAR_STYLE = {
   display: 'none' as const,
@@ -528,8 +527,7 @@ export function LocalScreen() {
   const { width, height } = useWindowDimensions();
   const navigation = useNavigation<Nav>();
   // Same underlying navigation object as `navigation`, but typed as the bottom-tab navigator so we
-  // can toggle this screen's `tabBarStyle`. Used only to hide the redundant 4-item bottom nav while
-  // Local is focused; no routes/handlers/behavior change.
+  // can toggle this screen's `tabBarStyle` on web Local. Native keeps the 4-item bar visible.
   const tabBarNavigation = useNavigation<BottomTabNavigationProp<RootTabParamList>>();
   const { openMiniApp } = useMiniAppEntry();
   const wallet = useWalletState();
@@ -795,9 +793,12 @@ export function LocalScreen() {
     navigation.navigate('Tabs', { screen: MAIN_TAB.B2C.home });
   }, [navigation]);
 
-  // Hide the shared 4-item bottom nav only while Local is focused; restore on blur.
+  // Hide the shared 4-item bottom nav on web Local only; native keeps four-tab reachability.
   useFocusEffect(
     useCallback(() => {
+      if (Platform.OS !== 'web') {
+        return undefined;
+      }
       tabBarNavigation.setOptions({ tabBarStyle: LOCAL_HIDDEN_TAB_BAR_STYLE });
       return () => {
         tabBarNavigation.setOptions({ tabBarStyle: undefined });
