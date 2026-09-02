@@ -99,6 +99,73 @@ assert('Legacy emergency SOSModal file untouched (still present)', legacySosModa
 assert('ProfileSwitcher not edited in this pack contract', true);
 assert('No backend/provider invoke in shell action', !/fetch\(|axios|twilio|Linking\.openURL/.test(shellAction));
 
+const sosShield = readFileSync(path.join(root, 'src/components/premium/SOSShieldComponent.tsx'), 'utf8');
+assert('Hold duration remains 3000ms', sosShield.includes('V7_SOS_HOLD_TO_TRIGGER_MS = 3_000'));
+assert(
+  'Account chrome still opens PersonalHub',
+  /openShellAccount[\s\S]*openPersonalHub/.test(mainTab)
+);
+assert(
+  'B2C bottom tabs remain Home Local Travel Academy',
+  mainTab.includes('MAIN_TAB.B2C.home') &&
+    mainTab.includes('MAIN_TAB.B2C.local') &&
+    mainTab.includes('MAIN_TAB.B2C.travel') &&
+    mainTab.includes('MAIN_TAB.B2C.ai')
+);
+
+// --- P1-V11 native bottom shell geometry (web overlay architecture unchanged) ---
+assert(
+  'Native bottom shell uses Platform.OS !== web chrome-row branch',
+  mainTab.includes("if (Platform.OS !== 'web')") &&
+    mainTab.includes('nativeBottomChromeRow') &&
+    mainTab.includes('nativeBottomAccountSlot') &&
+    mainTab.includes('nativeBottomChromeSpacer') &&
+    mainTab.includes('nativeBottomSosSlot') &&
+    mainTab.includes('nativeBottomTabsClip') &&
+    mainTab.includes('NATIVE_BOTTOM_SHELL_CHROME_ROW = 72')
+);
+assert(
+  'Native chrome row is a non-overlapping reserved band',
+  /nativeBottomChromeRow:\s*\{[\s\S]*flexDirection:\s*'row'/.test(mainTab) &&
+    /nativeBottomAccountSlot:\s*\{[\s\S]*flexShrink:\s*0/.test(mainTab) &&
+    /nativeBottomChromeSpacer:\s*\{[\s\S]*flex:\s*1/.test(mainTab) &&
+    /nativeBottomSosSlot:\s*\{[\s\S]*flexShrink:\s*0/.test(mainTab) &&
+    /nativeBottomTabsClip:\s*\{[\s\S]*overflow:\s*'hidden'/.test(mainTab) &&
+    /paddingBottom:[\s\S]*NATIVE_BOTTOM_SHELL_CHROME_ROW/.test(mainTab)
+);
+assert(
+  'Web overlay reserves remain 120 / 168 / 104',
+  mainTab.includes('WEB_BOTTOM_SHELL_ACCOUNT_LANGUAGE_RESERVE = 120') &&
+    mainTab.includes('WEB_BOTTOM_SHELL_ACCOUNT_LANGUAGE_RESERVE_WITH_ROLE = 168') &&
+    mainTab.includes('WEB_BOTTOM_SHELL_SOS_RESERVE = 104')
+);
+assert(
+  'Web overlay slot remains absolute',
+  /accountLanguageShellSlot:\s*\{[\s\S]*position:\s*'absolute'/.test(mainTab) &&
+    /sosShellSlot:\s*\{[\s\S]*position:\s*'absolute'/.test(mainTab)
+);
+assert(
+  'Web-only overlay padding is Platform.OS === web',
+  /paddingLeft:[\s\S]*Platform\.OS === 'web'[\s\S]*WEB_BOTTOM_SHELL_ACCOUNT_LANGUAGE_RESERVE/.test(
+    mainTab
+  ) &&
+    /paddingRight:[\s\S]*Platform\.OS === 'web'[\s\S]*WEB_BOTTOM_SHELL_SOS_RESERVE/.test(mainTab)
+);
+assert(
+  'Native tab bar is relative inside the reserved shell',
+  /position:[\s\S]*Platform\.OS !== 'web'[\s\S]*'relative'/.test(mainTab)
+);
+assert('Left-rail host identity preserved', mainTab.includes('viona-sos-left-rail-host'));
+assert(
+  'Fashion desktop SOS suppression still consulted',
+  mainTab.includes('fashionHomeDesktopShell')
+);
+assert(
+  'Exact-one shell SOS action still used',
+  (mainTab.match(/<VionaGlobalSosShellAction\b/g) ?? []).length >= 1 &&
+    (mainTab.match(/<SOSModal\b/g) ?? []).length === 1
+);
+
 if (failed > 0) {
   console.error(`\n[test-viona-mobile-sos-shell-consolidation-phase-1] ${failed} failure(s)`);
   process.exit(1);

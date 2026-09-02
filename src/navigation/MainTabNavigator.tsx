@@ -68,6 +68,12 @@ import { VionaShellAccountLanguageActions } from '../components/viona/VionaShell
 import { SOSModal } from '../screens/b2c/SOSModal';
 const Tab = createBottomTabNavigator<RootTabParamList>();
 
+/** Web-only overlay reserves. Native bottom shell uses a non-overlapping chrome row (P1-V11). */
+const WEB_BOTTOM_SHELL_ACCOUNT_LANGUAGE_RESERVE = 120;
+const WEB_BOTTOM_SHELL_ACCOUNT_LANGUAGE_RESERVE_WITH_ROLE = 168;
+const WEB_BOTTOM_SHELL_SOS_RESERVE = 104;
+const NATIVE_BOTTOM_SHELL_CHROME_ROW = 72;
+
 type StackNav = NativeStackNavigationProp<RootStackParamList>;
 
 function GatedWalletB2BTab(): ReactElement {
@@ -329,6 +335,61 @@ export function MainTabNavigator(): ReactElement {
         );
       }
 
+      // Native bottom shell: full-width tabs above a reserved chrome row so Account/ME
+      // and SOS cannot paint over Hub / Academy Lite (P1-V11). Web keeps overlays.
+      if (Platform.OS !== 'web') {
+        const chromePad = Math.max(props.insets.bottom, 10);
+        const tabsBandHeight = tabSizing.tabBarBaseHeight + 8;
+        const shellHeight = tabsBandHeight + NATIVE_BOTTOM_SHELL_CHROME_ROW + chromePad;
+        return (
+          <View
+            style={[
+              styles.tabBarHost,
+              styles.nativeBottomShellHostBorder,
+              {
+                height: shellHeight,
+                backgroundColor: chrome.barBg,
+                borderTopColor: chrome.barBorder,
+              },
+            ]}
+            testID="viona-sos-tab-bar-host"
+          >
+            <View style={[styles.nativeBottomTabsClip, { height: tabsBandHeight }]}>
+              <BottomTabBar {...props} />
+            </View>
+            <View
+              style={[
+                styles.nativeBottomChromeRow,
+                {
+                  paddingBottom: chromePad,
+                  paddingLeft: Math.max(props.insets.left, 8),
+                  paddingRight: Math.max(props.insets.right, 8),
+                },
+              ]}
+              pointerEvents="box-none"
+              testID="viona-native-bottom-shell-row"
+            >
+              <View
+                style={styles.nativeBottomAccountSlot}
+                testID="viona-shell-account-language-bottom-slot"
+              >
+                <VionaShellAccountLanguageActions
+                  layout="bottomChip"
+                  showRolePicker={showRolePicker}
+                  onPressAccount={openShellAccount}
+                  onPressLanguage={openShellLanguage}
+                  onPressRole={openShellRole}
+                />
+              </View>
+              <View style={styles.nativeBottomChromeSpacer} pointerEvents="none" />
+              <View style={styles.nativeBottomSosSlot}>
+                <VionaGlobalSosShellAction layout="bottomChip" onHoldComplete={onSosHoldComplete} />
+              </View>
+            </View>
+          </View>
+        );
+      }
+
       return (
         <View style={styles.tabBarHost} testID="viona-sos-tab-bar-host">
           <View style={styles.tabBarMain}>
@@ -378,6 +439,7 @@ export function MainTabNavigator(): ReactElement {
       openShellRole,
       showRolePicker,
       tabBarPosition,
+      tabSizing.tabBarBaseHeight,
     ]
   );
 
@@ -513,7 +575,13 @@ export function MainTabNavigator(): ReactElement {
               },
               tabBarPosition === 'left' && styles.tabLabelDesktop,
             ],
-            tabBarItemStyle: [styles.tabItem, tabBarPosition === 'left' && styles.tabItemDesktop],
+            tabBarItemStyle: [
+              styles.tabItem,
+              tabBarPosition === 'left' && styles.tabItemDesktop,
+              mountSosInTabBarShell && tabBarPosition === 'bottom' && Platform.OS !== 'web'
+                ? styles.nativeBottomTabItem
+                : null,
+            ],
             tabBarStyle: [
               styles.tabBar,
               {
@@ -532,17 +600,44 @@ export function MainTabNavigator(): ReactElement {
                     paddingHorizontal: 8,
                   }
                 : {
-                    height: tabSizing.tabBarBaseHeight + insets.bottom,
-                    paddingBottom: Math.max(insets.bottom, 10),
+                    height:
+                      tabSizing.tabBarBaseHeight +
+                      Math.max(insets.bottom, 10) +
+                      (mountSosInTabBarShell && Platform.OS !== 'web'
+                        ? NATIVE_BOTTOM_SHELL_CHROME_ROW
+                        : 0),
+                    paddingBottom:
+                      Math.max(insets.bottom, 10) +
+                      (mountSosInTabBarShell && Platform.OS !== 'web'
+                        ? NATIVE_BOTTOM_SHELL_CHROME_ROW
+                        : 0),
                     paddingTop: 8,
                     paddingLeft:
-                      mountSosInTabBarShell && tabBarPosition === 'bottom'
+                      mountSosInTabBarShell && tabBarPosition === 'bottom' && Platform.OS === 'web'
                         ? showRolePicker
-                          ? 168
-                          : 120
+                          ? WEB_BOTTOM_SHELL_ACCOUNT_LANGUAGE_RESERVE_WITH_ROLE
+                          : WEB_BOTTOM_SHELL_ACCOUNT_LANGUAGE_RESERVE
                         : undefined,
                     paddingRight:
-                      mountSosInTabBarShell && tabBarPosition === 'bottom' ? 104 : undefined,
+                      mountSosInTabBarShell && tabBarPosition === 'bottom' && Platform.OS === 'web'
+                        ? WEB_BOTTOM_SHELL_SOS_RESERVE
+                        : undefined,
+                    position:
+                      mountSosInTabBarShell && tabBarPosition === 'bottom' && Platform.OS !== 'web'
+                        ? 'relative'
+                        : 'absolute',
+                    borderTopWidth:
+                      mountSosInTabBarShell && tabBarPosition === 'bottom' && Platform.OS !== 'web'
+                        ? 0
+                        : 1,
+                    elevation:
+                      mountSosInTabBarShell && tabBarPosition === 'bottom' && Platform.OS !== 'web'
+                        ? 0
+                        : undefined,
+                    shadowOpacity:
+                      mountSosInTabBarShell && tabBarPosition === 'bottom' && Platform.OS !== 'web'
+                        ? 0
+                        : undefined,
                   },
               tabBarPosition === 'bottom' ? TAB_BAR_WEB_GLASS : null,
               tabBarPosition === 'left' && styles.tabBarDesktop,
@@ -716,8 +811,41 @@ const styles = StyleSheet.create({
     right: 0,
     bottom: 0,
   },
+  nativeBottomShellHostBorder: {
+    borderTopWidth: 1,
+    elevation: 8,
+  },
   tabBarMain: {
     flexGrow: 1,
+  },
+  nativeBottomTabsClip: {
+    overflow: 'hidden',
+    width: '100%',
+  },
+  nativeBottomChromeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    minHeight: NATIVE_BOTTOM_SHELL_CHROME_ROW,
+  },
+  nativeBottomTabItem: {
+    justifyContent: 'flex-start',
+    paddingTop: 4,
+  },
+  nativeBottomAccountSlot: {
+    flexShrink: 0,
+    justifyContent: 'center',
+    alignItems: 'center',
+    minHeight: 44,
+  },
+  nativeBottomChromeSpacer: {
+    flex: 1,
+    minWidth: 8,
+  },
+  nativeBottomSosSlot: {
+    flexShrink: 0,
+    justifyContent: 'center',
+    alignItems: 'center',
+    minHeight: 44,
   },
   accountLanguageShellSlot: {
     position: 'absolute',
