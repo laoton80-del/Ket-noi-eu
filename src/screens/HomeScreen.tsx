@@ -42,7 +42,11 @@ import {
   VionaSosPlusInfoModal,
 } from '../components/viona';
 import { VionaFashionHomeAdaptiveComposition } from '../components/viona/VionaFashionHomeAdaptiveComposition';
-import { VionaNativeHomeOpeningStage } from '../components/viona/VionaNativeHomeOpeningStage';
+import {
+  VionaNativeHomeOpeningStage,
+  type VionaNativeQuickActionItem,
+  type VionaNativeUniverseLauncherItem,
+} from '../components/viona/VionaNativeHomeOpeningStage';
 import {
   FASHION_HOME_DESKTOP_HERO_ASPECT,
   FASHION_HOME_DAYLIGHT_CANVAS,
@@ -1503,6 +1507,111 @@ export function HomeScreen() {
     [goUniverseAcademy, goUniverseLocal, goUniverseTravel, openInterpreter, openProtected, openSosEntry, t]
   );
 
+  const nativeHomeLauncherItems = useMemo((): readonly VionaNativeUniverseLauncherItem[] => {
+    return [
+      {
+        id: 'local',
+        label: t('home.fashionTech.local.title'),
+        readinessLabel: t('home.worldStage.local.status'),
+        image: IMG_HOME_LOCAL,
+        semanticAccent: 'local',
+        accessibilityLabel: `${t('home.fashionTech.local.title')}. ${t('home.worldStage.local.status')}`,
+        onPress: goUniverseLocal,
+      },
+      {
+        id: 'travel',
+        label: t('home.fashionTech.travel.title'),
+        readinessLabel: featureFlags.travelEnabled
+          ? t('home.worldStage.travel.status')
+          : t('home.worldStage.travel.statusComingSoon'),
+        image: IMG_HOME_TRAVEL,
+        semanticAccent: 'travel',
+        accessibilityLabel: `${t('home.fashionTech.travel.title')}. ${
+          featureFlags.travelEnabled
+            ? t('home.worldStage.travel.status')
+            : t('home.worldStage.travel.statusComingSoon')
+        }`,
+        onPress: featureFlags.travelEnabled ? goUniverseTravel : undefined,
+      },
+      {
+        id: 'academy',
+        label: t('home.fashionTech.academy.title'),
+        readinessLabel: t('home.worldStage.academy.status'),
+        image: IMG_HOME_ACADEMY,
+        semanticAccent: 'academy',
+        accessibilityLabel: `${t('home.fashionTech.academy.title')}. ${t('home.worldStage.academy.status')}`,
+        onPress: goUniverseAcademy,
+      },
+      {
+        id: 'business',
+        label: t('home.fashionTech.business.title'),
+        readinessLabel: t('home.worldStage.business.status'),
+        image: IMG_HOME_BUSINESS,
+        semanticAccent: 'business',
+        accessibilityLabel: `${t('home.fashionTech.business.title')}. ${t('home.worldStage.business.status')}`,
+        onPress: goUniverseBusiness,
+      },
+    ];
+  }, [
+    featureFlags.travelEnabled,
+    goUniverseAcademy,
+    goUniverseBusiness,
+    goUniverseLocal,
+    goUniverseTravel,
+    t,
+  ]);
+
+  const nativeHomeQuickActions = useMemo((): readonly VionaNativeQuickActionItem[] => {
+    if (!featureFlags.hubEnabled) return [];
+    const askVisible = featureFlags.leonaAssistantEnabled;
+    const byId = new Map(quickActionItems.map((item) => [item.id, item]));
+    const categoryById: Record<string, VionaNativeQuickActionItem['category']> = {
+      bookServices: 'local',
+      travelLite: 'travel',
+      learning: 'academy',
+      documents: 'docs',
+      quickTranslate: 'ai',
+      aiAssistant: 'ai',
+      nearbySupport: 'local',
+      safety: 'safety',
+    };
+    const priorityById: Record<string, VionaNativeQuickActionItem['priority']> = {
+      bookServices: 'primary',
+      travelLite: 'primary',
+      learning: 'primary',
+      documents: 'primary',
+      quickTranslate: 'primary',
+      aiAssistant: askVisible ? 'overflow' : 'primary',
+      nearbySupport: 'overflow',
+      safety: 'overflow',
+    };
+    const order = [
+      'bookServices',
+      'travelLite',
+      'learning',
+      'documents',
+      'quickTranslate',
+      'aiAssistant',
+      'nearbySupport',
+      'safety',
+    ];
+    return order.flatMap((id) => {
+      const source = byId.get(id);
+      if (!source) return [];
+      return [
+        {
+          id: source.id,
+          label: source.label,
+          icon: source.icon,
+          onPress: source.onPress,
+          category: categoryById[id],
+          priority: priorityById[id],
+          accessibilityLabel: source.label,
+        },
+      ];
+    });
+  }, [featureFlags.hubEnabled, featureFlags.leonaAssistantEnabled, quickActionItems]);
+
   /** GLASS.HOME.ROOT Ă˘â‚¬â€ť edge-lit stack only (no full-card sheen/glow wash; card fog removed in VionaFashionWorldCard). */
   const FashionHomeWorldCardGlassLayers = ({
     accent,
@@ -2345,6 +2454,30 @@ export function HomeScreen() {
             ) : homePresentationTarget === 'native-adaptive' ? (
               <View style={{ paddingHorizontal: layout.pad, marginBottom: vionaTokens.spacing[12] }}>
                 <VionaNativeHomeOpeningStage
+                  layout={{
+                    mode: fashionHomeShellMode === 'tablet' ? 'tablet' : 'mobile',
+                    isLandscape: isLandscapeViewport,
+                    reduceMotion,
+                  }}
+                  header={{
+                    brandLabel: 'VIONA',
+                    greetingLine1: fashionDesktopHeaderBlock.line1,
+                    greetingWish: fashionDesktopHeaderBlock.wish,
+                    localeCue: fashionDesktopHeaderBlock.clockLine,
+                  }}
+                  primaryEntry={{
+                    findLabel: `${t('home.fashionTech.local.title')}, ${t('home.fashionTech.travel.title')}, ${t('home.fashionTech.academy.title')}`,
+                    findA11yLabel: t('home.fashionTech.ctaExplore'),
+                    onFind: goUniverseLocal,
+                    askVisible: featureFlags.leonaAssistantEnabled,
+                    askLabel: t('home.quickActions.aiAssistant'),
+                    onAsk: () => openProtected('LeonaCall'),
+                  }}
+                  launcherItems={nativeHomeLauncherItems}
+                  quickActions={{
+                    items: nativeHomeQuickActions,
+                    moreLabel: t('home.fashionTech.ctaExplore'),
+                  }}
                   mode={fashionHomeShellMode === 'tablet' ? 'tablet' : 'mobile'}
                   brandLabel="VIONA"
                   greetingLine1={fashionDesktopHeaderBlock.line1}
@@ -2357,6 +2490,7 @@ export function HomeScreen() {
                 />
               </View>
             ) : null}
+            {homePresentationTarget !== 'native-adaptive' ? (
             <LinearGradient
               colors={[...vionaTokens.fashionTech.heroGradient]}
               start={{ x: 0, y: 0 }}
@@ -2661,10 +2795,11 @@ export function HomeScreen() {
                 </View>
               )}
             </LinearGradient>
+            ) : null}
           </View>
         )}
 
-        {featureFlags.hubEnabled ? (
+        {featureFlags.hubEnabled && homePresentationTarget !== 'native-adaptive' ? (
           <View
             style={
               fashionHomeDesktopShellActive && Platform.OS === 'web'

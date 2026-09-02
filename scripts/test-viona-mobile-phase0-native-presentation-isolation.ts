@@ -184,10 +184,28 @@ assert('B2C home route id unchanged', routes.includes('B2C') && routes.includes(
 assert('Academy still TabAi / MAIN_TAB.B2C.ai', mainTab.includes('MAIN_TAB.B2C.ai') && mainTab.includes("'Academy'"));
 
 assert('fashionHomeShellMode still exports four modes', shellMode.includes("'legacy' | 'mobile' | 'tablet' | 'desktop'"));
-assert('No Clear Premium token file', !existsSync(path.join(root, 'src/design/vionaNativeClearPremiumTokens.ts')));
+
+const phase1TokensPath = path.join(root, 'src/design/vionaNativeClearPremiumTokens.ts');
+const phase1CompositionPath = path.join(
+  root,
+  'src/components/viona/native-home/VionaNativeHomeClearPremiumComposition.tsx'
+);
+const phase1LayerPresent = existsSync(phase1TokensPath) || existsSync(phase1CompositionPath);
+
 assert(
-  'No Phase 1 native-home composition',
-  !existsSync(path.join(root, 'src/components/viona/native-home/VionaNativeHomeClearPremiumComposition.tsx'))
+  'Phase 0 native-adaptive still mounts OpeningStage under descendant layers',
+  home.includes("homePresentationTarget === 'native-adaptive'") &&
+    home.includes('<VionaNativeHomeOpeningStage') &&
+    !home.includes('<VionaNativeHomeClearPremiumComposition')
+);
+assert(
+  'Phase 1 native-home files if present do not bypass Phase 0 isolation',
+  !phase1LayerPresent ||
+    (opening.includes('VionaNativeHomeClearPremiumComposition') &&
+      opening.includes('viona-native-home-opening-stage') &&
+      !home.includes("from '../components/viona/native-home/") &&
+      home.includes("homePresentationTarget === 'web-adaptive'") &&
+      home.includes('<VionaFashionHomeAdaptiveComposition'))
 );
 
 if (failed > 0) {
