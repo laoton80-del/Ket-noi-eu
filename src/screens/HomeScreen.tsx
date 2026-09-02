@@ -42,6 +42,7 @@ import {
   VionaSosPlusInfoModal,
 } from '../components/viona';
 import { VionaFashionHomeAdaptiveComposition } from '../components/viona/VionaFashionHomeAdaptiveComposition';
+import { VionaNativeHomeOpeningStage } from '../components/viona/VionaNativeHomeOpeningStage';
 import {
   FASHION_HOME_DESKTOP_HERO_ASPECT,
   FASHION_HOME_DAYLIGHT_CANVAS,
@@ -177,6 +178,7 @@ import {
   resolveFashionHomeShellMode,
   type FashionHomeShellMode,
 } from '../navigation/fashionHomeShellMode';
+import { resolveHomePresentationTarget } from '../navigation/homePresentationTarget';
 import { MAIN_TAB, type RootStackParamList } from '../navigation/routes';
 import { normalizeCountryCodeOrSentinel } from '../config/countryPacks';
 import { vionaTokens } from '../design';
@@ -656,6 +658,14 @@ export function HomeScreen() {
   );
   /** Phase B/C: adaptive Fashion-Tech on mobile/tablet (web + native) — desktop predicate stays false. */
   const fashionHomeAdaptiveActive = isFashionHomeAdaptiveComposition(fashionHomeShellMode);
+  const homePresentationTarget = useMemo(
+    () =>
+      resolveHomePresentationTarget({
+        platform: Platform.OS,
+        shellMode: fashionHomeShellMode,
+      }),
+    [fashionHomeShellMode]
+  );
 
   const [daylightBoost, setDaylightBoost] = useVionaHomeDaylightBoost();
   /** Home fashion desktop always luminous; toggle persists global preference for Local/other shells. */
@@ -2318,9 +2328,23 @@ export function HomeScreen() {
               fashionHomeAdaptiveActive ? 'viona-fashion-home-adaptive-root' : 'viona-home-legacy-hybrid-root'
             }
           >
-            {fashionHomeAdaptiveActive ? (
+            {homePresentationTarget === 'web-adaptive' ? (
               <View style={{ paddingHorizontal: layout.pad, marginBottom: vionaTokens.spacing[12] }}>
                 <VionaFashionHomeAdaptiveComposition
+                  mode={fashionHomeShellMode === 'tablet' ? 'tablet' : 'mobile'}
+                  brandLabel="VIONA"
+                  greetingLine1={fashionDesktopHeaderBlock.line1}
+                  greetingWish={fashionDesktopHeaderBlock.wish}
+                  eyebrow={activeHero.eyebrow}
+                  title={activeHero.title}
+                  subtitle={activeHero.subtitle}
+                  heroImage={activeHero.image}
+                  heroA11yLabel={t('home.fashionTech.heroVisualA11y')}
+                />
+              </View>
+            ) : homePresentationTarget === 'native-adaptive' ? (
+              <View style={{ paddingHorizontal: layout.pad, marginBottom: vionaTokens.spacing[12] }}>
+                <VionaNativeHomeOpeningStage
                   mode={fashionHomeShellMode === 'tablet' ? 'tablet' : 'mobile'}
                   brandLabel="VIONA"
                   greetingLine1={fashionDesktopHeaderBlock.line1}
