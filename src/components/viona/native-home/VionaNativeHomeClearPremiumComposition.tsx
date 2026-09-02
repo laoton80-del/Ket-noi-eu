@@ -63,9 +63,14 @@ export function VionaNativeHomeClearPremiumComposition({
 const styles = StyleSheet.create({
   root: {
     backgroundColor: tkn.bg.canvas,
-    paddingBottom: tkn.spacing[8],
+    paddingBottom: tkn.spacing[32],
+    width: '100%',
+    alignSelf: 'stretch',
   },
   rootWide: {
-    paddingHorizontal: tkn.spacing[4],
+    paddingHorizontal: tkn.spacing[8],
+    paddingBottom: tkn.spacing[24],
+    width: '100%',
+    alignSelf: 'stretch',
   },
 });

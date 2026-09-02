@@ -70,6 +70,6 @@ const styles = StyleSheet.create({
     fontFamily: FontFamily.regular,
     fontSize: tkn.type.meta.fontSize,
     lineHeight: tkn.type.meta.lineHeight,
-    marginTop: tkn.spacing[8],
+    marginTop: tkn.spacing[4],
   },
 });

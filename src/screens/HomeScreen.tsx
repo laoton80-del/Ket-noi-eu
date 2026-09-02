@@ -1147,12 +1147,18 @@ export function HomeScreen() {
       return resolveFashionHomeDesktopLayout(width);
     }
     const columnWidth = hubWebAppColumnWidthPx(width);
-    const maxShell = width > 1280 ? 860 : 760;
+    const nativeTablet =
+      homePresentationTarget === 'native-adaptive' && fashionHomeShellMode === 'tablet';
+    const maxShell = nativeTablet
+      ? Math.min(width, 1180)
+      : width > 1280
+        ? 860
+        : 760;
     const shellWidth = Math.min(columnWidth, maxShell);
     const pad = theme.spacing.lg;
     const inner = shellWidth - pad * 2;
     return { shellWidth, pad, inner };
-  }, [fashionHomeDesktopShellActive, width]);
+  }, [fashionHomeDesktopShellActive, fashionHomeShellMode, homePresentationTarget, width]);
 
   const homeResponsiveShellStyle = useMemo(
     () => hubResponsiveContentShellStyle(width, height),
@@ -1164,12 +1170,17 @@ export function HomeScreen() {
   );
 
   const scrollBottomPad = useMemo(() => {
-    if (!isDesktopWeb) return 140;
+    if (!isDesktopWeb) {
+      if (homePresentationTarget === 'native-adaptive') {
+        return Math.max(insets.bottom, 24) + 168;
+      }
+      return 140;
+    }
     if (fashionHomeDesktopShellActive) {
       return Math.max(insets.bottom, 20) + 56 + FASHION_HOME_SCROLL_BOTTOM_BREATHING_EXTRA_PX;
     }
     return Math.max(insets.bottom, 16) + 48;
-  }, [fashionHomeDesktopShellActive, isDesktopWeb, insets.bottom]);
+  }, [fashionHomeDesktopShellActive, homePresentationTarget, isDesktopWeb, insets.bottom]);
 
   const creditPillMax = useMemo(() => Math.min(width * 0.9, 300), [width]);
 
@@ -1598,19 +1609,29 @@ export function HomeScreen() {
     return order.flatMap((id) => {
       const source = byId.get(id);
       if (!source) return [];
+      const label = id === 'safety' ? t('home.quickActions.safety') : source.label;
       return [
         {
           id: source.id,
-          label: source.label,
+          label,
           icon: source.icon,
           onPress: source.onPress,
           category: categoryById[id],
           priority: priorityById[id],
-          accessibilityLabel: source.label,
+          accessibilityLabel: label,
         },
       ];
     });
-  }, [featureFlags.hubEnabled, featureFlags.leonaAssistantEnabled, quickActionItems]);
+  }, [featureFlags.hubEnabled, featureFlags.leonaAssistantEnabled, quickActionItems, t]);
+
+  const nativeHomeMoreLabel = useMemo(
+    () =>
+      nativeHomeQuickActions
+        .filter((item) => item.priority === 'overflow')
+        .map((item) => item.label)
+        .join(', '),
+    [nativeHomeQuickActions]
+  );
 
   /** GLASS.HOME.ROOT Ă˘â‚¬â€ť edge-lit stack only (no full-card sheen/glow wash; card fog removed in VionaFashionWorldCard). */
   const FashionHomeWorldCardGlassLayers = ({
@@ -1870,9 +1891,17 @@ export function HomeScreen() {
                 : fashionHomeDesktopShellActive
                   ? theme.spacing.xs
                   : theme.spacing.md,
-            width: fashionHomeDesktopShellActive ? '100%' : layout.shellWidth,
+            width:
+              fashionHomeDesktopShellActive ||
+              (homePresentationTarget === 'native-adaptive' && fashionHomeShellMode === 'tablet')
+                ? '100%'
+                : layout.shellWidth,
             maxWidth: '100%',
-            alignSelf: fashionHomeDesktopShellActive ? 'stretch' : 'center',
+            alignSelf:
+              fashionHomeDesktopShellActive ||
+              (homePresentationTarget === 'native-adaptive' && fashionHomeShellMode === 'tablet')
+                ? 'stretch'
+                : 'center',
           },
           !fashionHomeDesktopShellActive ? homeResponsiveShellStyle : null,
         ]}
@@ -2452,7 +2481,14 @@ export function HomeScreen() {
                 />
               </View>
             ) : homePresentationTarget === 'native-adaptive' ? (
-              <View style={{ paddingHorizontal: layout.pad, marginBottom: vionaTokens.spacing[12] }}>
+              <View
+                style={{
+                  paddingHorizontal: layout.pad,
+                  marginBottom: vionaTokens.spacing[12],
+                  width: '100%',
+                  alignSelf: 'stretch',
+                }}
+              >
                 <VionaNativeHomeOpeningStage
                   layout={{
                     mode: fashionHomeShellMode === 'tablet' ? 'tablet' : 'mobile',
@@ -2463,11 +2499,11 @@ export function HomeScreen() {
                     brandLabel: 'VIONA',
                     greetingLine1: fashionDesktopHeaderBlock.line1,
                     greetingWish: fashionDesktopHeaderBlock.wish,
-                    localeCue: fashionDesktopHeaderBlock.clockLine,
+                    localeCue: '',
                   }}
                   primaryEntry={{
-                    findLabel: `${t('home.fashionTech.local.title')}, ${t('home.fashionTech.travel.title')}, ${t('home.fashionTech.academy.title')}`,
-                    findA11yLabel: t('home.fashionTech.ctaExplore'),
+                    findLabel: t('home.fashionTech.local.title'),
+                    findA11yLabel: `${t('home.fashionTech.local.title')}. ${t('home.worldStage.local.status')}`,
                     onFind: goUniverseLocal,
                     askVisible: featureFlags.leonaAssistantEnabled,
                     askLabel: t('home.quickActions.aiAssistant'),
@@ -2476,7 +2512,7 @@ export function HomeScreen() {
                   launcherItems={nativeHomeLauncherItems}
                   quickActions={{
                     items: nativeHomeQuickActions,
-                    moreLabel: t('home.fashionTech.ctaExplore'),
+                    moreLabel: nativeHomeMoreLabel,
                   }}
                   mode={fashionHomeShellMode === 'tablet' ? 'tablet' : 'mobile'}
                   brandLabel="VIONA"

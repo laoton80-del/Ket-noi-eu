@@ -209,6 +209,32 @@ assert(
     !tokens.includes('vionaTokens.fashionTech')
 );
 assert('Find onFind is goUniverseLocal', home.includes('onFind: goUniverseLocal'));
+assert(
+  'Find label is Local entry, not multi-universe search copy',
+  home.includes("findLabel: t('home.fashionTech.local.title')") &&
+    !home.includes("findLabel: `${t('home.fashionTech.local.title')}, ${t('home.fashionTech.travel.title')}, ${t('home.fashionTech.academy.title')}`")
+);
+assert(
+  'Find a11y is not global Explore VIONA',
+  !home.includes("findA11yLabel: t('home.fashionTech.ctaExplore')") &&
+    home.includes("t('home.worldStage.local.status')")
+);
+assert(
+  'More does not use Explore VIONA',
+  !home.includes("moreLabel: t('home.fashionTech.ctaExplore')") && home.includes('moreLabel: nativeHomeMoreLabel')
+);
+assert(
+  'Native safety uses existing quickActions.safety wording',
+  home.includes("id === 'safety' ? t('home.quickActions.safety')")
+);
+assert('Shared web safety chip label remains sos.chip', home.includes("label: t('sos.chip')"));
+assert('Native header omits duplicate clock cue', home.includes("localeCue: '',"));
+assert('Ask gating remains leonaAssistantEnabled', home.includes('askVisible: featureFlags.leonaAssistantEnabled'));
+assert(
+  'Native tablet uses stretch width rather than phone column cap',
+  home.includes("homePresentationTarget === 'native-adaptive' && fashionHomeShellMode === 'tablet'") &&
+    home.includes("? 'stretch'")
+);
 
 for (const id of [
   'bookServices',

@@ -60,9 +60,6 @@ export function VionaNativeQuickActions({ items, moreLabel }: VionaNativeQuickAc
             <View style={[styles.iconWrap, { backgroundColor: tkn.bg.muted }]}>
               <Ionicons name="ellipsis-horizontal" size={18} color={tkn.ink.primary} />
             </View>
-            <Text style={styles.label} numberOfLines={2}>
-              {moreLabel}
-            </Text>
           </Pressable>
         ) : null}
       </View>
@@ -120,12 +117,12 @@ const styles = StyleSheet.create({
     marginHorizontal: -tkn.spacing[4],
   },
   cell: {
-    width: '31%',
+    width: '15%',
     flexGrow: 1,
     minHeight: tkn.hit.min,
     margin: tkn.spacing[4],
     alignItems: 'center',
-    gap: tkn.spacing[8],
+    gap: tkn.spacing[4],
   },
   iconWrap: {
     width: tkn.hit.min,

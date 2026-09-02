@@ -1,4 +1,5 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 
 import { vionaNativeClearPremiumTokens as tkn } from '../../../design/vionaNativeClearPremiumTokens';
 import { FontFamily } from '../../../theme/typography';
@@ -14,6 +15,7 @@ export type VionaNativeHomePrimaryEntryProps = Readonly<{
 
 /**
  * Honest Find / Ask slot. No query state, no results API, no travel flight-search route.
+ * Find is a Local entry action, not a fake global search field.
  */
 export function VionaNativeHomePrimaryEntry({
   findLabel,
@@ -34,6 +36,7 @@ export function VionaNativeHomePrimaryEntry({
         <Text style={styles.findLabel} numberOfLines={1}>
           {findLabel}
         </Text>
+        <Ionicons name="chevron-forward" size={16} color={tkn.ink.secondary} />
       </Pressable>
       {askVisible && askLabel && onAsk ? (
         <Pressable
@@ -42,7 +45,7 @@ export function VionaNativeHomePrimaryEntry({
           accessibilityLabel={askLabel}
           style={({ pressed }) => [styles.ask, pressed && styles.pressed]}
         >
-          <Text style={styles.askLabel} numberOfLines={1}>
+          <Text style={styles.askLabel} numberOfLines={2}>
             {askLabel}
           </Text>
         </Pressable>
@@ -56,38 +59,45 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: tkn.spacing[8],
-    marginBottom: tkn.spacing[16],
+    marginBottom: tkn.spacing[12],
   },
   find: {
     flex: 1,
     minHeight: tkn.hit.min,
-    borderRadius: tkn.radius.lg,
-    backgroundColor: tkn.bg.surface,
-    borderWidth: 1,
-    borderColor: tkn.line.subtle,
-    justifyContent: 'center',
-    paddingHorizontal: tkn.spacing[16],
+    borderRadius: tkn.radius.md,
+    backgroundColor: tkn.bg.muted,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: tkn.spacing[12],
+    gap: tkn.spacing[8],
   },
   findLabel: {
-    color: tkn.ink.secondary,
-    fontFamily: FontFamily.regular,
+    flex: 1,
+    color: tkn.ink.primary,
+    fontFamily: FontFamily.semibold,
     fontSize: tkn.type.body.fontSize,
     lineHeight: tkn.type.body.lineHeight,
   },
   ask: {
+    maxWidth: '34%',
     minHeight: tkn.hit.min,
     minWidth: tkn.hit.min,
     borderRadius: tkn.radius.pill,
-    backgroundColor: tkn.bg.muted,
-    paddingHorizontal: tkn.spacing[16],
+    backgroundColor: tkn.bg.surface,
+    borderWidth: 1,
+    borderColor: tkn.line.subtle,
+    paddingHorizontal: tkn.spacing[8],
+    paddingVertical: tkn.spacing[4],
     justifyContent: 'center',
     alignItems: 'center',
   },
   askLabel: {
-    color: tkn.accent.academy,
-    fontFamily: FontFamily.semibold,
-    fontSize: tkn.type.body.fontSize,
-    lineHeight: tkn.type.body.lineHeight,
+    color: tkn.ink.secondary,
+    fontFamily: FontFamily.medium,
+    fontSize: tkn.type.ask.fontSize,
+    lineHeight: tkn.type.ask.lineHeight,
+    textAlign: 'center',
   },
   pressed: {
     opacity: 0.86,

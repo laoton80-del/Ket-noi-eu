@@ -39,8 +39,8 @@ export function VionaNativeUniverseLauncher({
 }: VionaNativeUniverseLauncherProps) {
   const { width } = useWindowDimensions();
   const tileMinHeight = useMemo(() => {
-    if (fourAcross) return Math.max(112, Math.min(148, Math.floor(width * 0.18)));
-    return Math.max(132, Math.min(168, Math.floor(width * 0.38)));
+    if (fourAcross) return Math.max(96, Math.min(124, Math.floor(width * 0.12)));
+    return Math.max(108, Math.min(132, Math.floor(width * 0.28)));
   }, [fourAcross, width]);
 
   return (
@@ -128,12 +128,12 @@ const styles = StyleSheet.create({
   },
   image: {
     width: '100%',
-    height: 84,
+    height: 48,
   },
   meta: {
-    paddingHorizontal: tkn.spacing[12],
-    paddingVertical: tkn.spacing[8],
-    gap: tkn.spacing[8],
+    paddingHorizontal: tkn.spacing[8],
+    paddingVertical: tkn.spacing[4],
+    gap: tkn.spacing[4],
   },
   label: {
     color: tkn.ink.primary,
