@@ -59,6 +59,9 @@ import {
 } from '../../components/local/localConstellationTokens';
 import { VionaMiniAppShell, VIONA_TABLET_MIN_WIDTH } from '../../components/viona/VionaMiniAppShell';
 import { VionaNativeTravelOpeningStage } from '../../components/viona/VionaNativeTravelOpeningStage';
+import { VionaNativeTravelClearPremiumComposition } from '../../components/viona/native-travel/VionaNativeTravelClearPremiumComposition';
+import type { NativeTravelFlagshipId } from '../../components/viona/native-travel/VionaNativeTravelFlagshipActions';
+import type { NativeTravelUtilityId } from '../../components/viona/native-travel/VionaNativeTravelUtilityActions';
 import {
   resolveTravelPresentationTarget,
   type TravelPresentationTarget,
@@ -6101,6 +6104,16 @@ export function TravelScreen() {
     () => resolveTravelPresentationTarget({ platform: Platform.OS, windowWidth: width }),
     [width]
   );
+  const nativeTravelReduceMotion = useFashionHomePrefersReducedMotion();
+  const nativeTravelLayout = useMemo(
+    () =>
+      ({
+        mode: width >= VIONA_TABLET_MIN_WIDTH ? 'tablet' : 'mobile',
+        isLandscape: width > viewportHeight,
+        reduceMotion: nativeTravelReduceMotion,
+      }) as const,
+    [nativeTravelReduceMotion, viewportHeight, width]
+  );
   const quickHelpTouchSelectionMode = useTravelQuickHelpTouchSelection(width);
   const insets = useSafeAreaInsets();
   const { isFullscreen } = useFullscreenMode();
@@ -6676,6 +6689,243 @@ export function TravelScreen() {
     scrollBottomClearance: travelScrollBottomClearance,
     tabletFullWidth: isHubWebTabletFullBleedViewport(width),
   };
+
+  if (travelPresentationTarget === 'native-adaptive') {
+    const nativeGate = locationGate === 'loading' ? 'loading' : locationGate === 'prompt' ? 'prompt' : 'ready';
+    const nativeFlagship = TRAVEL_FLAGSHIP_IDS.map((id) => {
+      const item = scenarioById.get(id);
+      const image =
+        id === 'airport'
+          ? TRAVEL_DYN_HERO_AIRPORT_CARD
+          : id === 'translation'
+            ? TRAVEL_DYN_HERO_TRANSLATION_CARD
+            : id === 'taxi'
+              ? TRAVEL_DYN_HERO_RIDES_CARD
+              : TRAVEL_DYN_HERO_EMERGENCY_CARD;
+      return {
+        id: id as NativeTravelFlagshipId,
+        title: t(`travelHub.scenario.${id}.title`),
+        subtitle: t(`travelHub.scenario.${id}.sub`),
+        statusLabel: travelScenarioStatusLabel(id, t) ?? t('travelHub.tileBadge.lite'),
+        accessibilityLabel: t(`travelHub.scenario.${id}.title`),
+        image,
+        onPress: () => {
+          item?.onPress();
+        },
+      };
+    });
+    const nativeUtility = orderTravelUtilityIds(travelPerspectiveMode).map((id) => {
+      const item = scenarioById.get(id);
+      return {
+        id: id as NativeTravelUtilityId,
+        title: t(`travelHub.scenario.${id}.title`),
+        statusLabel: travelScenarioStatusLabel(id, t) ?? t('travelHub.tileBadge.lite'),
+        accessibilityLabel: t(`travelHub.scenario.${id}.title`),
+        icon: item?.icon ?? 'ellipse-outline',
+        onPress: () => {
+          item?.onPress();
+        },
+      };
+    });
+    const nativeLens = getAllTravelDirections().map((def) => ({
+      id: def.id,
+      title: t(def.titleKey),
+      subtitle: t(def.subtitleKey),
+      accessibilityLabel: t(def.titleKey),
+      image: TRAVEL_PERSPECTIVE_CARD_ASSETS[def.id],
+      selected: travelPerspectiveDirectionId === def.id,
+      onPress: () => onTravelPerspectiveSelect(def.id),
+    }));
+    const nativeDiscovery = resolveTravelLocalDiscoveryPreviewItems(t);
+    const nativeConnected = [
+      {
+        id: 'local' as const,
+        title: t('travelHub.connectedLocal'),
+        subtitle: t('localHub.universeKicker'),
+        accessibilityLabel: t('travelHub.connectedLocal'),
+        onPress: openLocalUniverse,
+      },
+      ...(featureFlags.academyLiteEnabled
+        ? [
+            {
+              id: 'academy' as const,
+              title: t('travelHub.connectedAcademy'),
+              subtitle: t('localHub.connectedAcademySub'),
+              accessibilityLabel: t('travelHub.connectedAcademy'),
+              onPress: openAcademyUniverse,
+            },
+          ]
+        : []),
+      {
+        id: 'business' as const,
+        title: t('travelHub.connectedBusiness'),
+        subtitle: t('localHub.connectedBusinessSub'),
+        accessibilityLabel: t('travelHub.connectedBusiness'),
+        onPress: openBusinessUniverse,
+      },
+    ];
+    const nativeGated = [
+      {
+        id: 'leona',
+        label: t('travelHub.quickHelpHero.translation.chip2'),
+        accessibilityLabel: t('travelHub.quickHelpHero.translation.chip2'),
+        onPress: () => openLeona(t('travelHub.leonaPrefill.taxi')),
+      },
+      {
+        id: 'interpreter',
+        label: t('travelHub.quickHelpHero.translation.chip1'),
+        accessibilityLabel: t('travelHub.quickHelpHero.translation.chip1'),
+        onPress: () => openInterpreter('travel'),
+      },
+      {
+        id: 'minhKhang',
+        label: t('travelHub.quickHelpHero.translation.chip3'),
+        accessibilityLabel: t('travelHub.quickHelpHero.translation.chip3'),
+        onPress: () => openInterpreter('travel'),
+      },
+      ...(SOS_PLUS_PRODUCT_SURFACE_UI_ENABLED
+        ? [
+            {
+              id: 'sosPlus',
+              label: t('sos.fabLabel'),
+              accessibilityLabel: t('sos.fabLabel'),
+              onPress: () => setSosPlusInfoOpen(true),
+            },
+          ]
+        : []),
+    ];
+
+    return mountTravelPresentation(
+      travelPresentationTarget,
+      <>
+        <StatusBar style="dark" />
+        <VionaMiniAppShell {...shellProps} surfaceMode="light">
+          <VionaNativeTravelClearPremiumComposition
+            layout={nativeTravelLayout}
+            gate={nativeGate}
+            context={{
+              gate: nativeGate,
+              loadingLabel: t('travelHub.consentHeadline'),
+              consentTitle: t('travelHub.consentHeadline'),
+              consentSubtitle: t('travelHub.consentSubtitle'),
+              consentSupport: t('travelHub.consentSupport'),
+              consentAllowLabel: t('travelHub.consentPrimary'),
+              consentDeclineLabel: t('travelHub.consentSecondary'),
+              onAllowLocation: () => {
+                void (async () => {
+                  await setTravelLocationConsent(true);
+                  setGpsOptIn(true);
+                  setLocationGate('ready');
+                })();
+              },
+              onContinueWithoutLocation: () => {
+                void (async () => {
+                  await setTravelLocationConsent(false);
+                  setGpsOptIn(false);
+                  setLocationGate('ready');
+                })();
+              },
+              destinationLabel: t('travelHub.destinationPlaceholder'),
+              destinationPlaceholder: t('travelHub.destinationPlaceholder'),
+              destinationQuery,
+              onDestinationChange: setDestinationQuery,
+              weatherLine,
+              fxLine,
+              enableLocationLabel: t('travelHub.enableLocationCta'),
+              onEnableLocation: () => setLocationGate('prompt'),
+              locationEnabled: gpsOptIn,
+            }}
+            flagship={{ items: nativeFlagship }}
+            utility={{ items: nativeUtility }}
+            secondary={{
+              lensTitle: t('travel.direction.sectionKicker'),
+              lensSubtitle: t('travel.direction.subtitle'),
+              lensItems: nativeLens,
+              discoveryTitle: t('travelHub.localDiscovery.previewKicker'),
+              discoveryPreviews: nativeDiscovery,
+              localFixerLabel: t('travelHub.experienceZone.localMapConcierge.title'),
+              localFixerA11y: t('travelHub.experienceZone.localMapConcierge.title'),
+              onOpenLocalFixer: () => navigation.navigate('LocalFixer'),
+              connectedTitle: t('travelHub.connectedUniversesKicker'),
+              connectedItems: nativeConnected,
+              pilotTitle: t('travelHub.pilotStripTitle'),
+              pilotSubtitle: t('travelHub.pilotStripBanner'),
+              pilotPills: [
+                t('travelHub.pilotPill.lite'),
+                t('travelHub.pilotPill.demo'),
+                t('travelHub.pilotPill.preview'),
+              ],
+              gatedTitle: t('travelHub.railSubtitle'),
+              gatedItems: nativeGated,
+              backLabel: t('shell.miniapp.back'),
+              homeLabel: t('shell.miniapp.home'),
+              onBack: onBackPress,
+              onHome: goHome,
+            }}
+          />
+        </VionaMiniAppShell>
+        <Modal visible={cravingsModalOpen} transparent animationType="fade" onRequestClose={() => setCravingsModalOpen(false)}>
+          <Pressable style={styles.modalBackdrop} onPress={() => setCravingsModalOpen(false)}>
+            <Pressable style={styles.modalShell} onPress={(e) => e.stopPropagation()}>
+              <TravelGlassCard tier="utility" contentStyle={styles.modalInner}>
+                <Text style={styles.modalTitle}>{t('travelHub.cravingsModalTitle')}</Text>
+                <Text style={styles.modalSub}>{t('travelHub.cravingsModalSub')}</Text>
+                <ScrollView style={styles.modalScroll} showsVerticalScrollIndicator={false}>
+                  {cravingsHits.length === 0 ? (
+                    <Text style={styles.modalEmpty}>{t('travelHub.cravingsEmpty')}</Text>
+                  ) : (
+                    cravingsHits.map((hit) => (
+                      <Pressable
+                        key={hit.id}
+                        onPress={() => {
+                          setCravingsModalOpen(false);
+                          navigation.navigate('MerchantDetail', {
+                            merchantId: hit.id,
+                            merchantName: hit.name,
+                            industry: 'Restaurant',
+                          });
+                        }}
+                        style={({ pressed }) => [styles.cravingRow, pressed && { opacity: 0.88 }]}
+                      >
+                        <Text style={styles.cravingName}>{hit.name}</Text>
+                        <Text style={styles.cravingMeta}>{hit.distanceKm.toFixed(1)} km</Text>
+                      </Pressable>
+                    ))
+                  )}
+                </ScrollView>
+                <Pressable onPress={() => setCravingsModalOpen(false)} style={styles.modalCloseBtn}>
+                  <Text style={styles.modalCloseText}>{t('travelHub.modalClose')}</Text>
+                </Pressable>
+              </TravelGlassCard>
+            </Pressable>
+          </Pressable>
+        </Modal>
+        <VionaSosHoldGateModal
+          visible={sosHoldGateOpen}
+          onRequestClose={() => setSosHoldGateOpen(false)}
+          onHoldComplete={onSosHoldGateComplete}
+          variant="continueToAppSos"
+          onOpenPlusInfo={
+            SOS_PLUS_PRODUCT_SURFACE_UI_ENABLED ? () => setSosPlusInfoOpen(true) : undefined
+          }
+        />
+        {SOS_PLUS_PRODUCT_SURFACE_UI_ENABLED ? (
+          <VionaSosPlusInfoModal
+            visible={sosPlusInfoOpen}
+            onRequestClose={() => setSosPlusInfoOpen(false)}
+            onPressOpenProfile={
+              SOS_PLUS_PROFILE_UI_ENABLED
+                ? () => {
+                    setSosPlusInfoOpen(false);
+                    navigation.navigate('SosPlusProfile');
+                  }
+                : undefined
+            }
+          />
+        ) : null}
+      </>
+    );
+  }
 
   if (locationGate === 'loading') {
     return mountTravelPresentation(

@@ -95,9 +95,15 @@ assert(
   !opening.includes("from './native-travel") && !opening.includes("from '../native-travel")
 );
 assert(
-  'P2-B native-travel composition is not present',
-  !existsSync(path.join(root, 'src/components/viona/native-travel'))
+  'P2-B native-travel composition exists and is native-only',
+  existsSync(path.join(root, 'src/components/viona/native-travel/VionaNativeTravelClearPremiumComposition.tsx')) &&
+    travel.includes('VionaNativeTravelClearPremiumComposition') &&
+    travel.includes("travelPresentationTarget === 'native-adaptive'")
 );
+assert('TravelScreen still uses TravelGlassCard (web/shared path preserved)', travel.includes('<TravelGlassCard'));
+assert('TravelScreen still imports fashionHomeDesktopShell helpers', travel.includes('fashionHomeDesktopShell'));
+assert('TravelScreen still has web-only tab hide predicate', travel.includes("Platform.OS === 'web'") && travel.includes('width >= 768'));
+assert('opening stage remains a thin parity host', opening.includes('{children}') && !opening.includes('ClearPremium'));
 
 assert('TravelScreen imports presentation target', travel.includes('resolveTravelPresentationTarget'));
 assert('TravelScreen imports Native Travel OpeningStage', travel.includes('VionaNativeTravelOpeningStage'));
@@ -128,7 +134,11 @@ assert('Flagship IDs remain', travel.includes("'airport', 'translation', 'taxi',
 assert('TravelScreen still uses TravelGlassCard (web/shared path preserved)', travel.includes('<TravelGlassCard'));
 assert('TravelScreen still imports fashionHomeDesktopShell helpers', travel.includes('fashionHomeDesktopShell'));
 assert('TravelScreen still has web-only tab hide predicate', travel.includes("Platform.OS === 'web'") && travel.includes('width >= 768'));
-assert('P2-A is parity host not Clear Premium restyle', !travel.includes('VionaNativeTravelClearPremium') && !opening.includes('ClearPremium'));
+assert(
+  'Web Travel still uses existing glass/hero presentation path',
+  travel.includes('<TravelGlassCard') && travel.includes('travel-dynamic-hero-stage')
+);
+assert('opening stage is not Clear Premium composition owner', !opening.includes('ClearPremium'));
 
 assert('B2C Home tab unchanged', routes.includes('B2C') && mainTab.includes('MAIN_TAB.B2C.home'));
 assert('B2C Local tab unchanged', mainTab.includes('MAIN_TAB.B2C.local') && mainTab.includes("'Local'"));
