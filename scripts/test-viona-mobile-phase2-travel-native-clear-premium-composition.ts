@@ -128,8 +128,13 @@ assert(
     travel.includes("travelPresentationTarget === 'native-adaptive'") &&
     travel.includes('VionaNativeTravelClearPremiumComposition')
 );
-assert('P2-D not claimed in composition', !composition.includes('P2-D'));
-assert('P2-D not started', !composition.includes('P2-D') && !travel.includes('P2-D'));
+assert('P2-D not claimed GREEN in composition', !composition.includes('P2-D'));
+assert('P2-D not claimed GREEN in TravelScreen', !travel.includes('P2-D'));
+assert(
+  'P2-D final-closure TEST exists',
+  existsSync(path.join(root, 'scripts/test-viona-mobile-phase2-travel-final-closure.ts')) &&
+    read('scripts/test-viona-mobile-phase2-travel-final-closure.ts').includes('P2-D final-closure TEST exists')
+);
 assert('no new token file', !existsSync(path.join(root, 'src/design/vionaNativeClearPremiumTravelTokens.ts')));
 
 if (failed > 0) {

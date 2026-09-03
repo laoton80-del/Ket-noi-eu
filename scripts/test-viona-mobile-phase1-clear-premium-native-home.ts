@@ -72,6 +72,14 @@ const PHASE2_C_TRAVEL_RESPONSIVE_DESCENDANT_ALLOWED = new Set([
   'scripts/test-viona-mobile-phase2-travel-native-clear-premium-composition.ts',
 ]);
 
+/** Exact P2-D Travel final-closure descendant. Tests only. No glob. No product/runtime mutation. */
+const PHASE2_D_TRAVEL_FINAL_CLOSURE_DESCENDANT_ALLOWED = new Set([
+  'scripts/test-viona-mobile-phase2-travel-final-closure.ts',
+  'scripts/test-viona-mobile-phase1-clear-premium-native-home.ts',
+  'scripts/test-viona-mobile-phase2-travel-native-clear-premium-composition.ts',
+  'scripts/test-viona-mobile-phase2-travel-native-responsive-refinement.ts',
+]);
+
 const DENY = [
   'src/navigation/fashionHomeShellMode.ts',
   'src/navigation/MainTabNavigator.tsx',
@@ -355,6 +363,7 @@ assert(
       PHASE2_A_TRAVEL_ISOLATION_DESCENDANT_ALLOWED.has(p) ||
       PHASE2_B_TRAVEL_COMPOSITION_DESCENDANT_ALLOWED.has(p) ||
       PHASE2_C_TRAVEL_RESPONSIVE_DESCENDANT_ALLOWED.has(p) ||
+      PHASE2_D_TRAVEL_FINAL_CLOSURE_DESCENDANT_ALLOWED.has(p) ||
       p.length === 0
   )
 );

@@ -162,6 +162,11 @@ assert('MiniAppShell source untouched by P2-C assertions', miniShell.includes('V
 assert('App.tsx native portrait cap remains 600', appRoot.includes('maxWidth: isLargeScreen || nativeLandscapeFullBleed ?') && appRoot.includes('600'));
 assert('P2-D not claimed in composition', !composition.includes('P2-D'));
 assert(
+  'P2-D final closure TEST exists',
+  existsSync(path.join(root, 'scripts/test-viona-mobile-phase2-travel-final-closure.ts')) &&
+    read('scripts/test-viona-mobile-phase2-travel-final-closure.ts').includes('P2-D final closure TEST exists')
+);
+assert(
   'P2-C does not claim visual GREEN from source strings',
   !composition.includes('VIONA_PHASE2_TRAVEL_NATIVE_RESPONSIVE_VISUAL_CONFIDENCE_GREEN') &&
     composition.includes('Source assertions do not prove visual GREEN')
