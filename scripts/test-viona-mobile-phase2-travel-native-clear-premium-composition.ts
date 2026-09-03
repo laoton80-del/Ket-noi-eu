@@ -121,8 +121,15 @@ assert('Travel does not mount tab-bar SOS', sosVisibility.includes('MAIN_TAB.B2C
 assert('SOS hold remains 3000', sosShield.includes('V7_SOS_HOLD_TO_TRIGGER_MS = 3_000'));
 assert('mapper has no AI provider', !mapper.includes('openai') && !mapper.includes('anthropic'));
 assert('composition has no AI provider', !composition.includes('openai') && !composition.includes('anthropic'));
-assert('P2-B does not claim P2-C', !composition.includes('P2-C') || composition.includes('Presentation only'));
+assert(
+  'P2-C responsive refinement exists and remains native-only',
+  composition.includes('P2-C') &&
+    composition.includes('onLayout') &&
+    travel.includes("travelPresentationTarget === 'native-adaptive'") &&
+    travel.includes('VionaNativeTravelClearPremiumComposition')
+);
 assert('P2-D not claimed in composition', !composition.includes('P2-D'));
+assert('P2-D not started', !composition.includes('P2-D') && !travel.includes('P2-D'));
 assert('no new token file', !existsSync(path.join(root, 'src/design/vionaNativeClearPremiumTravelTokens.ts')));
 
 if (failed > 0) {

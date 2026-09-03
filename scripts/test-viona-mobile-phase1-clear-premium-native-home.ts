@@ -60,6 +60,18 @@ const PHASE2_B_TRAVEL_COMPOSITION_DESCENDANT_ALLOWED = new Set([
   'scripts/test-viona-mobile-phase1-clear-premium-native-home.ts',
 ]);
 
+/** Exact P2-C Travel native responsive four-matrix descendant. No glob. */
+const PHASE2_C_TRAVEL_RESPONSIVE_DESCENDANT_ALLOWED = new Set([
+  'src/components/viona/native-travel/VionaNativeTravelClearPremiumComposition.tsx',
+  'src/components/viona/native-travel/VionaNativeTravelContextStrip.tsx',
+  'src/components/viona/native-travel/VionaNativeTravelFlagshipActions.tsx',
+  'src/components/viona/native-travel/VionaNativeTravelUtilityActions.tsx',
+  'src/components/viona/native-travel/VionaNativeTravelSecondaryStack.tsx',
+  'scripts/test-viona-mobile-phase2-travel-native-responsive-refinement.ts',
+  'scripts/test-viona-mobile-phase1-clear-premium-native-home.ts',
+  'scripts/test-viona-mobile-phase2-travel-native-clear-premium-composition.ts',
+]);
+
 const DENY = [
   'src/navigation/fashionHomeShellMode.ts',
   'src/navigation/MainTabNavigator.tsx',
@@ -342,6 +354,7 @@ assert(
       PHASE1_DESCENDANT_ALLOWED.has(p) ||
       PHASE2_A_TRAVEL_ISOLATION_DESCENDANT_ALLOWED.has(p) ||
       PHASE2_B_TRAVEL_COMPOSITION_DESCENDANT_ALLOWED.has(p) ||
+      PHASE2_C_TRAVEL_RESPONSIVE_DESCENDANT_ALLOWED.has(p) ||
       p.length === 0
   )
 );

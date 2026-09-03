@@ -27,16 +27,25 @@ export type VionaNativeTravelFlagshipActionsProps = Readonly<{
   items: readonly NativeTravelFlagshipItem[];
   fourAcross: boolean;
   reduceMotion: boolean;
+  tileWidth?: number;
+  compact?: boolean;
+  shortTile?: boolean;
+  imageHeight?: number;
 }>;
 
 /**
  * Native Travel flagship row. Presentation only: airport, translation, taxi, emergency.
  * Emergency is a safety-styled entry; SOS provider stays upstream.
+ * Column count, tile geometry, and crop height are P2-C presentation branches.
  */
 export function VionaNativeTravelFlagshipActions({
   items,
   fourAcross,
   reduceMotion,
+  tileWidth = 0,
+  compact = false,
+  shortTile = false,
+  imageHeight = 72,
 }: VionaNativeTravelFlagshipActionsProps) {
   return (
     <View
@@ -57,24 +66,33 @@ export function VionaNativeTravelFlagshipActions({
             accessibilityLabel={item.accessibilityLabel}
             style={({ pressed }) => [
               styles.tile,
-              fourAcross ? styles.tileFour : styles.tileTwo,
+              shortTile && styles.tileCompact,
+              tileWidth > 0 ? { width: tileWidth, flexGrow: 0, flexShrink: 0 } : fourAcross ? styles.tileFourFallback : styles.tileTwoFallback,
               pressed && (reduceMotion ? styles.pressedFade : styles.pressedScale),
             ]}
           >
-            <View style={[styles.rail, { backgroundColor: accent }]} />
-            <Image source={item.image} resizeMode="cover" style={styles.image} />
-            <View style={styles.meta}>
-              <Text style={styles.title} numberOfLines={2}>
+            <View style={[styles.rail, shortTile && styles.railCompact, { backgroundColor: accent }]} />
+            <Image
+              source={item.image}
+              resizeMode="cover"
+              style={[styles.image, { height: imageHeight }]}
+            />
+            <View style={[styles.meta, (compact || shortTile) && styles.metaCompact]}>
+              <Text style={styles.title} numberOfLines={compact || shortTile ? 1 : 2}>
                 {item.title}
               </Text>
-              <Text style={styles.subtitle} numberOfLines={2}>
-                {item.subtitle}
-              </Text>
-              <View style={[styles.chip, { borderColor: accent }]}>
-                <Text style={[styles.chipText, { color: accent }]} numberOfLines={1}>
-                  {item.statusLabel}
+              {compact || shortTile ? null : (
+                <Text style={styles.subtitle} numberOfLines={2}>
+                  {item.subtitle}
                 </Text>
-              </View>
+              )}
+              {shortTile ? null : (
+                <View style={[styles.chip, { borderColor: accent }]}>
+                  <Text style={[styles.chipText, { color: accent }]} numberOfLines={1}>
+                    {item.statusLabel}
+                  </Text>
+                </View>
+              )}
             </View>
             {safety ? (
               <View style={styles.safetyGlyph} accessibilityElementsHidden>
@@ -92,8 +110,8 @@ const styles = StyleSheet.create({
   root: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    marginHorizontal: -tkn.spacing[4],
-    marginBottom: tkn.spacing[16],
+    gap: tkn.spacing[8],
+    marginBottom: tkn.spacing[12],
     width: '100%',
   },
   tile: {
@@ -102,16 +120,17 @@ const styles = StyleSheet.create({
     backgroundColor: tkn.bg.surface,
     borderWidth: 1,
     borderColor: tkn.line.subtle,
-    margin: tkn.spacing[4],
-    minHeight: 148,
+    minHeight: 118,
   },
-  tileTwo: {
-    width: '47%',
-    flexGrow: 1,
+  tileCompact: {
+    minHeight: tkn.hit.min,
+    borderRadius: tkn.radius.lg,
   },
-  tileFour: {
+  tileTwoFallback: {
+    width: '48%',
+  },
+  tileFourFallback: {
     width: '23%',
-    flexGrow: 1,
   },
   pressedScale: {
     transform: [{ scale: 0.98 }],
@@ -123,13 +142,20 @@ const styles = StyleSheet.create({
     height: 4,
     width: '100%',
   },
+  railCompact: {
+    height: 3,
+  },
   image: {
     width: '100%',
-    height: 72,
+    height: 56,
   },
   meta: {
     padding: tkn.spacing[12],
     gap: tkn.spacing[4],
+  },
+  metaCompact: {
+    padding: tkn.spacing[8],
+    gap: 2,
   },
   title: {
     fontFamily: FontFamily.semibold,

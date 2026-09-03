@@ -62,11 +62,15 @@ export type VionaNativeTravelSecondaryStackProps = Readonly<{
   onBack: () => void;
   onHome: () => void;
   reduceMotion: boolean;
+  contentWidth?: number;
+  wide?: boolean;
+  lensImageHeight?: number;
 }>;
 
 /**
  * Native Travel secondary stack. Presentation only for lens, discovery, LocalFixer,
  * connected universes, honesty pills, existing gated AI entries, and escape actions.
+ * Width, grouping, Travel Lens crop, and spacing are P2-C presentation branches.
  */
 export function VionaNativeTravelSecondaryStack({
   lensTitle,
@@ -89,7 +93,25 @@ export function VionaNativeTravelSecondaryStack({
   onBack,
   onHome,
   reduceMotion,
+  contentWidth = 0,
+  wide = false,
+  lensImageHeight = 72,
 }: VionaNativeTravelSecondaryStackProps) {
+  const lensColumns = lensItems.length > 0 ? Math.min(3, lensItems.length) : 3;
+  const lensGap = tkn.spacing[8];
+  const lensWidth =
+    contentWidth > 0
+      ? Math.max(96, Math.floor((contentWidth - lensGap * (lensColumns - 1)) / lensColumns))
+      : 0;
+  const connectedColumns = wide ? Math.min(3, Math.max(1, connectedItems.length)) : 1;
+  const connectedWidth =
+    wide && contentWidth > 0
+      ? Math.max(
+          tkn.hit.min,
+          Math.floor((contentWidth - tkn.spacing[8] * (connectedColumns - 1)) / connectedColumns)
+        )
+      : 0;
+
   return (
     <View testID="viona-native-travel-secondary-stack" style={styles.root}>
       <Text style={styles.kicker}>{lensTitle}</Text>
@@ -105,11 +127,18 @@ export function VionaNativeTravelSecondaryStack({
             accessibilityState={{ selected: item.selected }}
             style={({ pressed }) => [
               styles.lensCard,
+              lensWidth > 0
+                ? { width: lensWidth, flexGrow: 0, flexShrink: 0 }
+                : styles.lensCardFallback,
               item.selected && styles.lensSelected,
               pressed && (reduceMotion ? styles.pressedFade : styles.pressedScale),
             ]}
           >
-            <Image source={item.image} resizeMode="cover" style={styles.lensImage} />
+            <Image
+              source={item.image}
+              resizeMode="cover"
+              style={[styles.lensImage, { height: lensImageHeight }]}
+            />
             <Text style={styles.lensTitle} numberOfLines={2}>
               {item.title}
             </Text>
@@ -142,19 +171,27 @@ export function VionaNativeTravelSecondaryStack({
       </Pressable>
 
       <Text style={styles.kicker}>{connectedTitle}</Text>
-      {connectedItems.map((item) => (
-        <Pressable
-          key={item.id}
-          testID={`travel-native-connected-${item.id}`}
-          onPress={item.onPress}
-          accessibilityRole="button"
-          accessibilityLabel={item.accessibilityLabel}
-          style={({ pressed }) => [styles.actionRow, pressed && styles.pressedFade]}
-        >
-          <Text style={styles.actionLabel}>{item.title}</Text>
-          <Text style={styles.actionSub}>{item.subtitle}</Text>
-        </Pressable>
-      ))}
+      <View style={[styles.connectedRow, !wide && styles.connectedStack]}>
+        {connectedItems.map((item) => (
+          <Pressable
+            key={item.id}
+            testID={`travel-native-connected-${item.id}`}
+            onPress={item.onPress}
+            accessibilityRole="button"
+            accessibilityLabel={item.accessibilityLabel}
+            style={({ pressed }) => [
+              styles.actionRow,
+              connectedWidth > 0 ? { width: connectedWidth, flexGrow: 0, flexShrink: 0 } : styles.actionRowFill,
+              pressed && styles.pressedFade,
+            ]}
+          >
+            <Text style={styles.actionLabel}>{item.title}</Text>
+            <Text style={styles.actionSub} numberOfLines={2}>
+              {item.subtitle}
+            </Text>
+          </Pressable>
+        ))}
+      </View>
 
       <View style={styles.pilot}>
         <Text style={styles.pilotTitle}>{pilotTitle}</Text>
@@ -231,12 +268,10 @@ const styles = StyleSheet.create({
   lensRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    marginHorizontal: -tkn.spacing[4],
+    gap: tkn.spacing[8],
+    width: '100%',
   },
   lensCard: {
-    width: '30%',
-    flexGrow: 1,
-    margin: tkn.spacing[4],
     borderRadius: tkn.radius.lg,
     overflow: 'hidden',
     backgroundColor: tkn.bg.surface,
@@ -244,13 +279,16 @@ const styles = StyleSheet.create({
     borderColor: tkn.line.subtle,
     minWidth: 96,
   },
+  lensCardFallback: {
+    width: '31%',
+  },
   lensSelected: {
     borderColor: tkn.accent.travel,
     borderWidth: 2,
   },
   lensImage: {
     width: '100%',
-    height: 72,
+    height: 64,
   },
   lensTitle: {
     fontFamily: FontFamily.semibold,
@@ -289,6 +327,15 @@ const styles = StyleSheet.create({
     fontSize: tkn.type.chip.fontSize,
     lineHeight: tkn.type.chip.lineHeight,
   },
+  connectedRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: tkn.spacing[8],
+    width: '100%',
+  },
+  connectedStack: {
+    flexDirection: 'column',
+  },
   actionRow: {
     minHeight: tkn.hit.min,
     flexDirection: 'row',
@@ -299,6 +346,9 @@ const styles = StyleSheet.create({
     borderColor: tkn.line.subtle,
     backgroundColor: tkn.bg.surface,
     paddingHorizontal: tkn.spacing[12],
+  },
+  actionRowFill: {
+    width: '100%',
   },
   actionLabel: {
     fontFamily: FontFamily.semibold,
@@ -312,6 +362,7 @@ const styles = StyleSheet.create({
     color: tkn.ink.secondary,
     fontSize: tkn.type.meta.fontSize,
     lineHeight: tkn.type.meta.lineHeight,
+    flexShrink: 1,
   },
   pilot: {
     borderRadius: tkn.radius.lg,
