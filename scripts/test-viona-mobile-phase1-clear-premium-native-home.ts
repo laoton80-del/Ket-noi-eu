@@ -39,6 +39,14 @@ const PHASE1_DESCENDANT_ALLOWED = new Set([
   'scripts/test-viona-mobile-phase1-clear-premium-native-home.ts',
 ]);
 
+/** Exact P2-A Travel native presentation-isolation descendant (parity only; not P2-B restyle). */
+const PHASE2_A_TRAVEL_ISOLATION_DESCENDANT_ALLOWED = new Set([
+  'src/navigation/travelPresentationTarget.ts',
+  'src/components/viona/VionaNativeTravelOpeningStage.tsx',
+  'scripts/test-viona-mobile-phase2-travel-native-presentation-isolation.ts',
+  'src/screens/b2c/TravelScreen.tsx',
+]);
+
 const DENY = [
   'src/navigation/fashionHomeShellMode.ts',
   'src/navigation/MainTabNavigator.tsx',
@@ -313,7 +321,16 @@ assert('B2C Academy tab unchanged', mainTab.includes('MAIN_TAB.B2C.ai') && mainT
   );
 }
 
-assert('mutation path is original Phase 1 allowlist or explicit descendant contract', changed.every((p) => ALLOWED.has(p) || PHASE1_DESCENDANT_ALLOWED.has(p) || p.length === 0));
+assert(
+  'mutation path is original Phase 1 allowlist or explicit descendant contract',
+  changed.every(
+    (p) =>
+      ALLOWED.has(p) ||
+      PHASE1_DESCENDANT_ALLOWED.has(p) ||
+      PHASE2_A_TRAVEL_ISOLATION_DESCENDANT_ALLOWED.has(p) ||
+      p.length === 0
+  )
+);
 for (const denied of DENY) {
   if (PHASE1_DESCENDANT_ALLOWED.has(denied)) continue;
   assert(`${denied} absent from mutation`, !changed.includes(denied));

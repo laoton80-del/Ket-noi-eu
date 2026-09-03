@@ -58,6 +58,11 @@ import {
   localConstellation,
 } from '../../components/local/localConstellationTokens';
 import { VionaMiniAppShell, VIONA_TABLET_MIN_WIDTH } from '../../components/viona/VionaMiniAppShell';
+import { VionaNativeTravelOpeningStage } from '../../components/viona/VionaNativeTravelOpeningStage';
+import {
+  resolveTravelPresentationTarget,
+  type TravelPresentationTarget,
+} from '../../navigation/travelPresentationTarget';
 import { useVionaGlobalTopRailWebLegacySuppression } from '../../components/viona/VionaGlobalTopRail';
 import { VionaBottomEscapeBar } from '../../components/viona/VionaBottomEscapeBar';
 import { VionaSosHoldGateModal } from '../../components/viona/VionaSosHoldGateModal';
@@ -6068,6 +6073,13 @@ function TravelLocationConsentGate({
   );
 }
 
+function mountTravelPresentation(target: TravelPresentationTarget, body: ReactElement): ReactElement {
+  if (target === 'native-adaptive') {
+    return <VionaNativeTravelOpeningStage>{body}</VionaNativeTravelOpeningStage>;
+  }
+  return body;
+}
+
 export function TravelScreen() {
   const { t, i18n } = useTranslation();
   const { userSelectedLocale } = useSmartTrio();
@@ -6085,6 +6097,10 @@ export function TravelScreen() {
   }, [userSelectedLocale, i18n.language]);
 
   const { width, height: viewportHeight } = useWindowDimensions();
+  const travelPresentationTarget = useMemo(
+    () => resolveTravelPresentationTarget({ platform: Platform.OS, windowWidth: width }),
+    [width]
+  );
   const quickHelpTouchSelectionMode = useTravelQuickHelpTouchSelection(width);
   const insets = useSafeAreaInsets();
   const { isFullscreen } = useFullscreenMode();
@@ -6662,7 +6678,8 @@ export function TravelScreen() {
   };
 
   if (locationGate === 'loading') {
-    return (
+    return mountTravelPresentation(
+      travelPresentationTarget,
       <VionaMiniAppShell {...shellProps} showDock={false}>
         <View style={styles.centered}>
           <ActivityIndicator size="large" color={CYAN} />
@@ -6672,7 +6689,8 @@ export function TravelScreen() {
   }
 
   if (locationGate === 'prompt') {
-    return (
+    return mountTravelPresentation(
+      travelPresentationTarget,
       <VionaMiniAppShell {...shellProps} showDock={false}>
         <TravelLocationConsentGate
           onAllow={() => {
@@ -6694,7 +6712,8 @@ export function TravelScreen() {
     );
   }
 
-  return (
+  return mountTravelPresentation(
+    travelPresentationTarget,
     <>
       <StatusBar style="light" />
       <VionaMiniAppShell {...shellProps}>
