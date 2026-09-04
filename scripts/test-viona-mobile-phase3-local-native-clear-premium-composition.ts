@@ -53,6 +53,14 @@ const P4A_EXACT_PATHS = new Set([
   'scripts/test-viona-mobile-phase1-clear-premium-native-home.ts',
 ]);
 
+const P4B1_EXACT_PATHS = new Set([
+  'src/navigation/accountPresentationTarget.ts',
+  'src/components/viona/VionaNativeAccountOpeningStage.tsx',
+  'scripts/test-viona-mobile-phase4-account-personalhub-presentation-isolation.ts',
+  'src/screens/CaNhanScreen.tsx',
+  'scripts/test-viona-mobile-phase1-clear-premium-native-home.ts',
+]);
+
 let failed = 0;
 
 function assert(label: string, condition: boolean): void {
@@ -226,11 +234,15 @@ assert(
 );
 assert('P3-D not claimed GREEN in composition', !composition.includes('P3-D'));
 assert(
-  'exact P3-B or exact P3-C or exact P3-D or exact P4-A mutable-path contract',
+  'exact P3-B or exact P3-C or exact P3-D or exact P4-A or exact P4-B1 mutable-path contract',
   changed.length > 0 &&
     changed.every(
       (p) =>
-        P3B_EXACT_PATHS.has(p) || P3C_EXACT_PATHS.has(p) || P3D_EXACT_PATHS.has(p) || P4A_EXACT_PATHS.has(p)
+        P3B_EXACT_PATHS.has(p) ||
+        P3C_EXACT_PATHS.has(p) ||
+        P3D_EXACT_PATHS.has(p) ||
+        P4A_EXACT_PATHS.has(p) ||
+        P4B1_EXACT_PATHS.has(p)
     )
 );
 assert(

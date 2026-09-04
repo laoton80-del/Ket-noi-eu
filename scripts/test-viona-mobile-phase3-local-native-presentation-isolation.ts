@@ -65,6 +65,15 @@ const P4A_EXACT_PATHS = new Set([
   'scripts/test-viona-mobile-phase1-clear-premium-native-home.ts',
 ]);
 
+/** Exact P4-B1 native PersonalHub presentation-isolation descendant allowlist. */
+const P4B1_EXACT_PATHS = new Set([
+  'src/navigation/accountPresentationTarget.ts',
+  'src/components/viona/VionaNativeAccountOpeningStage.tsx',
+  'scripts/test-viona-mobile-phase4-account-personalhub-presentation-isolation.ts',
+  'src/screens/CaNhanScreen.tsx',
+  'scripts/test-viona-mobile-phase1-clear-premium-native-home.ts',
+]);
+
 /** Original P3-A implementation commit; inspect this range even after later test-only commits. */
 const P3A_IMPLEMENTATION_HEAD = 'b873ad2303045207f0db846652dfaaa07b2d88e2';
 const P3A_IMPLEMENTATION_PARENT = 'e2f07013424ece9a714f972805bf78fe99a0cca8';
@@ -273,7 +282,7 @@ assert(
     [...P3A_EXACT_PATHS].every((p) => committedParentDiff.includes(p))
 );
 assert(
-  'current mutation is P3-A historical set or exact P3-B or exact P3-C or exact P3-D or exact P4-A allowlist',
+  'current mutation is P3-A historical set or exact P3-B or exact P3-C or exact P3-D or exact P4-A or exact P4-B1 allowlist',
   changed.length > 0 &&
     changed.every(
       (p) =>
@@ -281,7 +290,8 @@ assert(
         P3B_EXACT_PATHS.has(p) ||
         P3C_EXACT_PATHS.has(p) ||
         P3D_EXACT_PATHS.has(p) ||
-        P4A_EXACT_PATHS.has(p)
+        P4A_EXACT_PATHS.has(p) ||
+        P4B1_EXACT_PATHS.has(p)
     )
 );
 assert(

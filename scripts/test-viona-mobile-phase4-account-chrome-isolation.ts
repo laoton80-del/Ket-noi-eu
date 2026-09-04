@@ -29,6 +29,15 @@ const P4A_CONDITIONAL_DESCENDANT_PATHS = new Set([
   'scripts/test-viona-mobile-phase3-local-final-closure.ts',
 ]);
 
+/** Exact P4-B1 native PersonalHub presentation-isolation descendant allowlist. */
+const P4B1_EXACT_PATHS = new Set([
+  'src/navigation/accountPresentationTarget.ts',
+  'src/components/viona/VionaNativeAccountOpeningStage.tsx',
+  'scripts/test-viona-mobile-phase4-account-personalhub-presentation-isolation.ts',
+  'src/screens/CaNhanScreen.tsx',
+  'scripts/test-viona-mobile-phase1-clear-premium-native-home.ts',
+]);
+
 let failed = 0;
 
 function assert(label: string, condition: boolean): void {
@@ -161,7 +170,14 @@ assert('P3-C still does not prove visual GREEN', p3c.includes('SOURCE ASSERTIONS
 assert('P3 Local composition not in P4-A mutation', !changed.includes('src/components/viona/native-local/VionaNativeLocalClearPremiumComposition.tsx'));
 assert('LocalScreen not in P4-A mutation', !changed.includes('src/screens/b2c/LocalScreen.tsx'));
 assert('MainTabNavigator not in P4-A mutation', !changed.includes('src/navigation/MainTabNavigator.tsx'));
-assert('CaNhanScreen not in P4-A mutation', !changed.includes('src/screens/CaNhanScreen.tsx'));
+assert(
+  'CaNhanScreen may be mutated only as the exact P4-B1 presentation-isolation path',
+  !changed.includes('src/screens/CaNhanScreen.tsx') ||
+    (P4B1_EXACT_PATHS.has('src/screens/CaNhanScreen.tsx') &&
+      changed.includes('src/navigation/accountPresentationTarget.ts') &&
+      changed.includes('src/components/viona/VionaNativeAccountOpeningStage.tsx') &&
+      changed.includes('scripts/test-viona-mobile-phase4-account-personalhub-presentation-isolation.ts'))
+);
 assert('i18n en not in P4-A mutation', !changed.includes('src/i18n/locales/en.json'));
 assert('i18n vi not in P4-A mutation', !changed.includes('src/i18n/locales/vi.json'));
 assert('SOSModal not in P4-A mutation', !changed.includes('src/screens/b2c/SOSModal.tsx'));
@@ -170,8 +186,15 @@ assert('routes.ts not in P4-A mutation', !changed.includes('src/navigation/route
 assert('package.json not in P4-A mutation', !changed.includes('package.json'));
 
 assert(
+  'P4-B1 isolation exists',
+  existsSync(path.join(root, 'src/navigation/accountPresentationTarget.ts')) &&
+    existsSync(path.join(root, 'src/components/viona/VionaNativeAccountOpeningStage.tsx')) &&
+    existsSync(path.join(root, 'scripts/test-viona-mobile-phase4-account-personalhub-presentation-isolation.ts'))
+);
+assert(
   'P4-B not started',
-  !existsSync(path.join(root, 'scripts/test-viona-mobile-phase4-account-personalhub-composition.ts'))
+  !existsSync(path.join(root, 'scripts/test-viona-mobile-phase4-account-personalhub-composition.ts')) &&
+    !existsSync(path.join(root, 'src/components/viona/native-account/VionaNativeAccountClearPremiumComposition.tsx'))
 );
 assert(
   'P4-C not started',
@@ -185,10 +208,12 @@ assert('Option B fifth-tab test not started', !existsSync(path.join(root, 'scrip
 
 assert('exact P4-A primary allowlist size', P4A_PRIMARY_PATHS.size === 3);
 assert(
-  'exact P4-A mutable-path contract',
+  'exact P4-A or exact P4-B1 mutable-path contract',
   changed.length > 0 &&
-    changed.every((p) => P4A_PRIMARY_PATHS.has(p) || P4A_CONDITIONAL_DESCENDANT_PATHS.has(p)) &&
-    changed.length <= 7
+    changed.every(
+      (p) => P4A_PRIMARY_PATHS.has(p) || P4A_CONDITIONAL_DESCENDANT_PATHS.has(p) || P4B1_EXACT_PATHS.has(p)
+    ) &&
+    changed.length <= 10
 );
 assert('P4-A primary chrome path is part of mutation or committed set', P4A_PRIMARY_PATHS.has(chromeRel));
 assert('P4-A test does not fake four-matrix visual GREEN', p4a.includes('SOURCE ASSERTIONS DO NOT PROVE FOUR_MATRIX_VISUAL_GREEN'));

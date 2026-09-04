@@ -3,7 +3,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Clipboard from 'expo-clipboard';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState, type ReactElement } from 'react';
 import {
   Alert,
   Image,
@@ -24,6 +24,10 @@ import { isMerchantServerRole } from '../context/authTypes';
 import { useTranslation } from '../i18n';
 import { persistUserLanguage } from '../i18n/persistLanguage';
 import { getStrings } from '../i18n/strings';
+import {
+  resolveAccountPresentationTarget,
+  type AccountPresentationTarget,
+} from '../navigation/accountPresentationTarget';
 import type { RootStackParamList } from '../navigation/routes';
 import { useAssistantSettings } from '../state/assistantSettings';
 import { resetGuidedOnboarding } from '../onboarding/guidedOnboardingStorage';
@@ -32,6 +36,7 @@ import * as FirebaseAuth from 'firebase/auth';
 import { ensureFirebaseAppCheckInitialized } from '../config/appCheckClient';
 import { getFirebaseApp, isFirebaseClientConfigured } from '../config/firebaseApp';
 import { AccountNeonGlassPanel } from '../components/account/AccountNeonGlassPanel';
+import { VionaNativeAccountOpeningStage } from '../components/viona/VionaNativeAccountOpeningStage';
 import { DiasporaRestrictionModal } from '../components/modals/DiasporaRestrictionModal';
 import { evaluateMerchantSurfaceAccess } from '../services/auth/merchantSurfaceEntry';
 import { loadUsageHistory, type UsageHistoryItem } from '../services/history';
@@ -172,7 +177,7 @@ function interpolate(template: string, vars: Record<string, string>): string {
   return out;
 }
 
-export function CaNhanScreen() {
+export function CaNhanScreen(): ReactElement {
   const navigation = useNavigation<Nav>();
   const { width } = useWindowDimensions();
   const { user, updateProfile } = useAuth();
@@ -206,6 +211,11 @@ export function CaNhanScreen() {
     [width],
   );
   const accountBackdropOpacity = Platform.OS === 'web' && width > 768 ? 0.68 : 0.46;
+  const accountPresentationTarget = useMemo(
+    (): AccountPresentationTarget =>
+      resolveAccountPresentationTarget({ platform: Platform.OS, windowWidth: width }),
+    [width]
+  );
   const showWorkspaceShortcut = Boolean(
     user && (user.serverRole === 'BROKER' || isMerchantServerRole(user.serverRole))
   );
@@ -389,7 +399,7 @@ export function CaNhanScreen() {
     })();
   }, [wallet.credits]);
 
-  return (
+  const hub = (
     <SafeAreaView style={styles.container}>
       <View style={styles.screenBackdrop} pointerEvents="none">
         <View style={styles.constellationFrame}>
@@ -768,6 +778,11 @@ export function CaNhanScreen() {
       />
     </SafeAreaView>
   );
+
+  if (accountPresentationTarget === 'native-adaptive') {
+    return <VionaNativeAccountOpeningStage>{hub}</VionaNativeAccountOpeningStage>;
+  }
+  return hub;
 }
 
 const styles = StyleSheet.create({
