@@ -115,6 +115,15 @@ const PHASE3_C_LOCAL_RESPONSIVE_DESCENDANT_ALLOWED = new Set([
   'scripts/test-viona-mobile-phase3-local-native-presentation-isolation.ts',
 ]);
 
+/** Exact P3-D Local final-closure descendant. Tests only. No glob. No product/runtime mutation. */
+const PHASE3_D_LOCAL_FINAL_CLOSURE_DESCENDANT_ALLOWED = new Set([
+  'scripts/test-viona-mobile-phase3-local-final-closure.ts',
+  'scripts/test-viona-mobile-phase1-clear-premium-native-home.ts',
+  'scripts/test-viona-mobile-phase3-local-native-presentation-isolation.ts',
+  'scripts/test-viona-mobile-phase3-local-native-clear-premium-composition.ts',
+  'scripts/test-viona-mobile-phase3-local-native-responsive-refinement.ts',
+]);
+
 const DENY = [
   'src/navigation/fashionHomeShellMode.ts',
   'src/navigation/MainTabNavigator.tsx',
@@ -402,6 +411,7 @@ assert(
       PHASE3_A_LOCAL_ISOLATION_DESCENDANT_ALLOWED.has(p) ||
       PHASE3_B_LOCAL_COMPOSITION_DESCENDANT_ALLOWED.has(p) ||
       PHASE3_C_LOCAL_RESPONSIVE_DESCENDANT_ALLOWED.has(p) ||
+      PHASE3_D_LOCAL_FINAL_CLOSURE_DESCENDANT_ALLOWED.has(p) ||
       p.length === 0
   )
 );

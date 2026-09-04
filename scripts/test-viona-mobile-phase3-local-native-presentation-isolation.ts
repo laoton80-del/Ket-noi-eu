@@ -49,6 +49,15 @@ const P3C_EXACT_PATHS = new Set([
   'scripts/test-viona-mobile-phase3-local-native-presentation-isolation.ts',
 ]);
 
+/** Exact P3-D final-closure descendant allowlist. Isolation remains valid after this lane. */
+const P3D_EXACT_PATHS = new Set([
+  'scripts/test-viona-mobile-phase3-local-final-closure.ts',
+  'scripts/test-viona-mobile-phase1-clear-premium-native-home.ts',
+  'scripts/test-viona-mobile-phase3-local-native-presentation-isolation.ts',
+  'scripts/test-viona-mobile-phase3-local-native-clear-premium-composition.ts',
+  'scripts/test-viona-mobile-phase3-local-native-responsive-refinement.ts',
+]);
+
 /** Original P3-A implementation commit; inspect this range even after later test-only commits. */
 const P3A_IMPLEMENTATION_HEAD = 'b873ad2303045207f0db846652dfaaa07b2d88e2';
 const P3A_IMPLEMENTATION_PARENT = 'e2f07013424ece9a714f972805bf78fe99a0cca8';
@@ -257,9 +266,12 @@ assert(
     [...P3A_EXACT_PATHS].every((p) => committedParentDiff.includes(p))
 );
 assert(
-  'current mutation is P3-A historical set or exact P3-B or exact P3-C allowlist',
+  'current mutation is P3-A historical set or exact P3-B or exact P3-C or exact P3-D allowlist',
   changed.length > 0 &&
-    changed.every((p) => P3A_EXACT_PATHS.has(p) || P3B_EXACT_PATHS.has(p) || P3C_EXACT_PATHS.has(p))
+    changed.every(
+      (p) =>
+        P3A_EXACT_PATHS.has(p) || P3B_EXACT_PATHS.has(p) || P3C_EXACT_PATHS.has(p) || P3D_EXACT_PATHS.has(p)
+    )
 );
 assert(
   'no unauthorized isolation-lane path',

@@ -39,6 +39,14 @@ const P3C_EXACT_PATHS = new Set([
   'scripts/test-viona-mobile-phase3-local-native-presentation-isolation.ts',
 ]);
 
+const P3D_EXACT_PATHS = new Set([
+  'scripts/test-viona-mobile-phase3-local-final-closure.ts',
+  'scripts/test-viona-mobile-phase1-clear-premium-native-home.ts',
+  'scripts/test-viona-mobile-phase3-local-native-presentation-isolation.ts',
+  'scripts/test-viona-mobile-phase3-local-native-clear-premium-composition.ts',
+  'scripts/test-viona-mobile-phase3-local-native-responsive-refinement.ts',
+]);
+
 let failed = 0;
 
 function assert(label: string, condition: boolean): void {
@@ -206,8 +214,15 @@ assert(
     local.includes("localPresentationTarget === 'native-adaptive'")
 );
 assert(
-  'exact P3-B or exact P3-C mutable-path contract',
-  changed.length > 0 && changed.every((p) => P3B_EXACT_PATHS.has(p) || P3C_EXACT_PATHS.has(p))
+  'P3-D final-closure TEST exists',
+  existsSync(path.join(root, 'scripts/test-viona-mobile-phase3-local-final-closure.ts')) &&
+    read('scripts/test-viona-mobile-phase3-local-final-closure.ts').includes('P3-D final-closure TEST exists')
+);
+assert('P3-D not claimed GREEN in composition', !composition.includes('P3-D'));
+assert(
+  'exact P3-B or exact P3-C or exact P3-D mutable-path contract',
+  changed.length > 0 &&
+    changed.every((p) => P3B_EXACT_PATHS.has(p) || P3C_EXACT_PATHS.has(p) || P3D_EXACT_PATHS.has(p))
 );
 assert(
   'no unauthorized path',

@@ -30,6 +30,14 @@ const P3C_EXACT_PATHS = new Set([
   'scripts/test-viona-mobile-phase3-local-native-presentation-isolation.ts',
 ]);
 
+const P3D_EXACT_PATHS = new Set([
+  'scripts/test-viona-mobile-phase3-local-final-closure.ts',
+  'scripts/test-viona-mobile-phase1-clear-premium-native-home.ts',
+  'scripts/test-viona-mobile-phase3-local-native-presentation-isolation.ts',
+  'scripts/test-viona-mobile-phase3-local-native-clear-premium-composition.ts',
+  'scripts/test-viona-mobile-phase3-local-native-responsive-refinement.ts',
+]);
+
 const P3A_IMPLEMENTATION_HEAD = 'b873ad2303045207f0db846652dfaaa07b2d88e2';
 const P3A_IMPLEMENTATION_PARENT = 'e2f07013424ece9a714f972805bf78fe99a0cca8';
 
@@ -294,8 +302,9 @@ assert(
   isolation.includes('P3C_EXACT_PATHS') && isolation.includes(p3cRel)
 );
 assert(
-  'P3-D not started',
-  !existsSync(path.join(root, 'scripts/test-viona-mobile-phase3-local-final-closure.ts')) &&
+  'P3-D final-closure TEST exists',
+  existsSync(path.join(root, 'scripts/test-viona-mobile-phase3-local-final-closure.ts')) &&
+    read('scripts/test-viona-mobile-phase3-local-final-closure.ts').includes('P3-D final-closure TEST exists') &&
     !composition.includes('P3-D') &&
     p3c.includes('SOURCE ASSERTIONS DO NOT PROVE VISUAL GREEN')
 );
@@ -305,8 +314,8 @@ assert(
     composition.includes('Source assertions do not prove visual GREEN')
 );
 assert(
-  'exact P3-C mutable-path contract',
-  changed.length > 0 && changed.every((p) => P3C_EXACT_PATHS.has(p)) && changed.length <= 9
+  'exact P3-C or exact P3-D mutable-path contract',
+  changed.length > 0 && changed.every((p) => P3C_EXACT_PATHS.has(p) || P3D_EXACT_PATHS.has(p))
 );
 assert('exact nine-path allowlist size', P3C_EXACT_PATHS.size === 9);
 assert(
