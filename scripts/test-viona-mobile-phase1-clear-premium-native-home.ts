@@ -80,6 +80,15 @@ const PHASE2_D_TRAVEL_FINAL_CLOSURE_DESCENDANT_ALLOWED = new Set([
   'scripts/test-viona-mobile-phase2-travel-native-responsive-refinement.ts',
 ]);
 
+/** Exact P3-A Local native presentation-isolation descendant (parity only; not P3-B restyle). */
+const PHASE3_A_LOCAL_ISOLATION_DESCENDANT_ALLOWED = new Set([
+  'src/navigation/localPresentationTarget.ts',
+  'src/components/viona/VionaNativeLocalOpeningStage.tsx',
+  'scripts/test-viona-mobile-phase3-local-native-presentation-isolation.ts',
+  'src/screens/b2c/LocalScreen.tsx',
+  'scripts/test-viona-mobile-phase1-clear-premium-native-home.ts',
+]);
+
 const DENY = [
   'src/navigation/fashionHomeShellMode.ts',
   'src/navigation/MainTabNavigator.tsx',
@@ -364,6 +373,7 @@ assert(
       PHASE2_B_TRAVEL_COMPOSITION_DESCENDANT_ALLOWED.has(p) ||
       PHASE2_C_TRAVEL_RESPONSIVE_DESCENDANT_ALLOWED.has(p) ||
       PHASE2_D_TRAVEL_FINAL_CLOSURE_DESCENDANT_ALLOWED.has(p) ||
+      PHASE3_A_LOCAL_ISOLATION_DESCENDANT_ALLOWED.has(p) ||
       p.length === 0
   )
 );

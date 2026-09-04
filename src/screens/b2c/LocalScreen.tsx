@@ -41,7 +41,12 @@ import { LocalConnectedUniverseLinks } from '../../components/viona/local/LocalC
 import { LocalClassifiedsFeaturedPreview } from '../../components/viona/local/LocalClassifiedsFeaturedPreview';
 import { LocalMerchantToolsSection } from '../../components/viona/local/LocalMerchantToolsSection';
 import { LocalOpeningStageLayout } from '../../components/viona/local/LocalOpeningStageLayout';
+import { VionaNativeLocalOpeningStage } from '../../components/viona/VionaNativeLocalOpeningStage';
 import { PremiumAppShell, PremiumHubLayout } from '../../components/viona';
+import {
+  resolveLocalPresentationTarget,
+  type LocalPresentationTarget,
+} from '../../navigation/localPresentationTarget';
 import { VionaBrandLockup } from '../../components/viona/VionaBrandLockup';
 import { vionaTokens } from '../../design';
 import {
@@ -75,6 +80,13 @@ import { theme } from '../../theme/theme';
 import { FontFamily } from '../../theme/typography';
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
+
+function mountLocalOpeningStage(target: LocalPresentationTarget, openingStage: ReactElement): ReactElement {
+  if (target === 'native-adaptive') {
+    return <VionaNativeLocalOpeningStage>{openingStage}</VionaNativeLocalOpeningStage>;
+  }
+  return openingStage;
+}
 
 type ClassifiedCategory = 'hiring' | 'shop_transfer' | 'housing';
 
@@ -525,6 +537,10 @@ const DEFAULT_POSTS: readonly ClassifiedPost[] = [
 export function LocalScreen() {
   const { t, i18n } = useTranslation();
   const { width, height } = useWindowDimensions();
+  const localPresentationTarget = useMemo(
+    () => resolveLocalPresentationTarget({ platform: Platform.OS, windowWidth: width }),
+    [width]
+  );
   const navigation = useNavigation<Nav>();
   // Same underlying navigation object as `navigation`, but typed as the bottom-tab navigator so we
   // can toggle this screen's `tabBarStyle` on web Local. Native keeps the 4-item bar visible.
@@ -924,7 +940,8 @@ export function LocalScreen() {
 
         <PremiumHubLayout
           testID="local-premium-hub"
-          hero={
+          hero={mountLocalOpeningStage(
+            localPresentationTarget,
             <LocalOpeningStageLayout
               openingStageFullscreen={desktopWeb && isFullscreen}
               onBrowseServices={openServiceHub}
@@ -940,7 +957,7 @@ export function LocalScreen() {
               onAiReceptionist={() => navigation.navigate('AiReceptionistDemoSimulator')}
               onLanguageAssist={openLanguageSheet}
             />
-          }
+          )}
         >
           <LocalHubCompactStatusGuide />
 
