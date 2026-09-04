@@ -44,6 +44,12 @@ const P3D_EXACT_PATHS = new Set([
   'scripts/test-viona-mobile-phase3-local-native-responsive-refinement.ts',
 ]);
 
+const P4A_EXACT_PATHS = new Set([
+  'src/components/viona/VionaShellAccountLanguageActions.tsx',
+  'scripts/test-viona-mobile-phase4-account-chrome-isolation.ts',
+  'scripts/test-viona-mobile-phase1-clear-premium-native-home.ts',
+]);
+
 const P3A_IMPLEMENTATION_HEAD = 'b873ad2303045207f0db846652dfaaa07b2d88e2';
 const P3A_IMPLEMENTATION_PARENT = 'e2f07013424ece9a714f972805bf78fe99a0cca8';
 
@@ -303,8 +309,10 @@ assert(
 );
 assert('exact P3-D five-path allowlist size', P3D_EXACT_PATHS.size === 5);
 assert(
-  'exact P3-D mutable-path contract',
-  changed.length > 0 && changed.every((p) => P3D_EXACT_PATHS.has(p)) && changed.length <= 5
+  'exact P3-D or exact P4-A mutable-path contract',
+  changed.length > 0 &&
+    changed.every((p) => P3D_EXACT_PATHS.has(p) || P4A_EXACT_PATHS.has(p)) &&
+    changed.length <= 7
 );
 assert(
   'no product/runtime path in P3-D mutation',
