@@ -56,11 +56,14 @@ export type VionaNativeLocalSecondaryStackProps = Readonly<{
   connectedTitle: string;
   connectedItems: readonly NativeLocalConnectedItem[];
   reduceMotion: boolean;
+  contentWidth?: number;
+  widePair?: boolean;
 }>;
 
 /**
  * Native Local secondary stack. Presentation only for request status, classifieds preview,
  * merchant entries, and connected universes. Composer, VIP spend, and flags stay on LocalScreen.
+ * Optional widePair groups merchant and connected side-by-side without changing IA order.
  */
 export function VionaNativeLocalSecondaryStack({
   statusTitle,
@@ -84,7 +87,14 @@ export function VionaNativeLocalSecondaryStack({
   connectedTitle,
   connectedItems,
   reduceMotion,
+  contentWidth = 0,
+  widePair = false,
 }: VionaNativeLocalSecondaryStackProps) {
+  const pairWidth =
+    widePair && contentWidth > 0
+      ? Math.max(tkn.hit.min, Math.floor((contentWidth - tkn.spacing[8]) / 2))
+      : 0;
+
   return (
     <View testID="viona-native-local-secondary-stack" style={styles.root}>
       <View testID="viona-native-local-status-strip" style={styles.status} accessibilityLabel={`${statusTitle}. ${statusNote}`}>
@@ -154,7 +164,14 @@ export function VionaNativeLocalSecondaryStack({
         <Text style={styles.safety}>{classifiedsSafety}</Text>
       </View>
 
-      <View testID="viona-native-local-merchant-section" style={styles.section}>
+      <View
+        testID={widePair ? 'viona-native-local-secondary-wide-pair' : 'viona-native-local-secondary-stack-tail'}
+        style={widePair ? styles.pairRow : styles.stackTail}
+      >
+      <View
+        testID="viona-native-local-merchant-section"
+        style={[styles.section, pairWidth > 0 ? { width: pairWidth, flexGrow: 0, flexShrink: 0 } : null]}
+      >
         <Text style={styles.kicker}>{merchantTitle}</Text>
         {merchantItems.map((item) => (
           <Pressable
@@ -175,7 +192,10 @@ export function VionaNativeLocalSecondaryStack({
         ))}
       </View>
 
-      <View testID="viona-native-local-connected-section" style={styles.section}>
+      <View
+        testID="viona-native-local-connected-section"
+        style={[styles.section, pairWidth > 0 ? { width: pairWidth, flexGrow: 0, flexShrink: 0 } : null]}
+      >
         <Text style={styles.kicker}>{connectedTitle}</Text>
         {connectedItems.map((item) => (
           <Pressable
@@ -195,6 +215,7 @@ export function VionaNativeLocalSecondaryStack({
           </Pressable>
         ))}
       </View>
+      </View>
     </View>
   );
 }
@@ -207,6 +228,17 @@ const styles = StyleSheet.create({
   },
   section: {
     width: '100%',
+    gap: tkn.spacing[8],
+  },
+  stackTail: {
+    width: '100%',
+    gap: tkn.spacing[16],
+  },
+  pairRow: {
+    width: '100%',
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    alignItems: 'flex-start',
     gap: tkn.spacing[8],
   },
   status: {

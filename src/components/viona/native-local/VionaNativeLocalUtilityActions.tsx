@@ -4,6 +4,8 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { vionaNativeClearPremiumTokens as tkn } from '../../../design/vionaNativeClearPremiumTokens';
 import { FontFamily } from '../../../theme/typography';
 
+export type NativeLocalGridColumns = 1 | 2 | 3 | 4;
+
 export type NativeLocalUtilityId =
   | 'restaurants'
   | 'transit'
@@ -27,19 +29,27 @@ export type VionaNativeLocalUtilityActionsProps = Readonly<{
   kicker: string;
   items: readonly NativeLocalUtilityItem[];
   reduceMotion: boolean;
+  columns?: NativeLocalGridColumns;
+  tileWidth?: number;
 }>;
 
 /**
  * Native Local utility grid. Presentation only for L05–L12.
  * Does not own Leona, DailyReward, language, or classifieds domain.
+ * Column count and tileWidth are P3-C geometry branches. IDs are never dropped.
  */
 export function VionaNativeLocalUtilityActions({
   kicker,
   items,
   reduceMotion,
+  columns = 2,
+  tileWidth = 0,
 }: VionaNativeLocalUtilityActionsProps) {
   return (
-    <View testID="viona-native-local-utility-actions" style={styles.root}>
+    <View
+      testID={`viona-native-local-utility-actions-cols-${columns}`}
+      style={styles.root}
+    >
       <Text style={styles.kicker}>{kicker}</Text>
       <View style={styles.row}>
         {items.map((item) => (
@@ -51,6 +61,15 @@ export function VionaNativeLocalUtilityActions({
             accessibilityLabel={item.accessibilityLabel}
             style={({ pressed }) => [
               styles.tile,
+              tileWidth > 0
+                ? { width: tileWidth, flexGrow: 0, flexShrink: 0, minWidth: 0 }
+                : columns === 4
+                  ? styles.tileFourFallback
+                  : columns === 3
+                    ? styles.tileThreeFallback
+                    : columns === 1
+                      ? styles.tileOneFallback
+                      : styles.tileTwoFallback,
               pressed && (reduceMotion ? styles.pressedFade : styles.pressedScale),
             ]}
           >
@@ -92,9 +111,6 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   tile: {
-    width: '48%',
-    flexGrow: 1,
-    minWidth: 148,
     minHeight: tkn.hit.min,
     flexDirection: 'row',
     alignItems: 'center',
@@ -105,6 +121,18 @@ const styles = StyleSheet.create({
     borderRadius: tkn.radius.lg,
     borderWidth: 1,
     borderColor: tkn.line.subtle,
+  },
+  tileOneFallback: {
+    width: '100%',
+  },
+  tileTwoFallback: {
+    width: '48%',
+  },
+  tileThreeFallback: {
+    width: '31%',
+  },
+  tileFourFallback: {
+    width: '23%',
   },
   pressedScale: {
     transform: [{ scale: 0.98 }],

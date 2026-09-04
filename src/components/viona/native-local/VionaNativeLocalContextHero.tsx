@@ -11,11 +11,14 @@ export type VionaNativeLocalContextHeroProps = Readonly<{
   accessibilityLabel: string;
   image: ImageSourcePropType;
   reduceMotion: boolean;
+  imageHeight?: number;
+  compact?: boolean;
 }>;
 
 /**
  * Native Local context hero. Presentation only.
  * Not a search control. No query field. No fabricated results.
+ * Image height and compact padding are P3-C density branches.
  */
 export function VionaNativeLocalContextHero({
   kicker,
@@ -25,20 +28,22 @@ export function VionaNativeLocalContextHero({
   accessibilityLabel,
   image,
   reduceMotion,
+  imageHeight = 132,
+  compact = false,
 }: VionaNativeLocalContextHeroProps) {
   return (
     <View
       testID="viona-native-local-context-hero"
       accessibilityLabel={accessibilityLabel}
-      style={styles.root}
+      style={[styles.root, compact && styles.rootCompact]}
     >
       <Image
         source={image}
         resizeMode="cover"
         accessibilityIgnoresInvertColors
-        style={[styles.image, reduceMotion && styles.imageStill]}
+        style={[styles.image, { height: imageHeight }, reduceMotion && styles.imageStill]}
       />
-      <View style={styles.copy}>
+      <View style={[styles.copy, compact && styles.copyCompact]}>
         <Text style={styles.kicker}>{kicker}</Text>
         <Text style={styles.title}>{title}</Text>
         <Text style={styles.subtitle}>{subtitle}</Text>
@@ -58,6 +63,9 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: tkn.line.subtle,
   },
+  rootCompact: {
+    marginBottom: tkn.spacing[8],
+  },
   image: {
     width: '100%',
     height: 132,
@@ -68,6 +76,10 @@ const styles = StyleSheet.create({
   copy: {
     padding: tkn.spacing[16],
     gap: tkn.spacing[4],
+  },
+  copyCompact: {
+    padding: tkn.spacing[12],
+    gap: 2,
   },
   kicker: {
     fontFamily: FontFamily.semibold,

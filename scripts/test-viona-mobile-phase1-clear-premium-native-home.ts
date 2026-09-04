@@ -102,6 +102,19 @@ const PHASE3_B_LOCAL_COMPOSITION_DESCENDANT_ALLOWED = new Set([
   'scripts/test-viona-mobile-phase3-local-native-presentation-isolation.ts',
 ]);
 
+/** Exact P3-C Local native responsive four-matrix descendant. No glob. */
+const PHASE3_C_LOCAL_RESPONSIVE_DESCENDANT_ALLOWED = new Set([
+  'src/components/viona/native-local/VionaNativeLocalClearPremiumComposition.tsx',
+  'src/components/viona/native-local/VionaNativeLocalContextHero.tsx',
+  'src/components/viona/native-local/VionaNativeLocalFlagshipActions.tsx',
+  'src/components/viona/native-local/VionaNativeLocalUtilityActions.tsx',
+  'src/components/viona/native-local/VionaNativeLocalSecondaryStack.tsx',
+  'scripts/test-viona-mobile-phase3-local-native-responsive-refinement.ts',
+  'scripts/test-viona-mobile-phase1-clear-premium-native-home.ts',
+  'scripts/test-viona-mobile-phase3-local-native-clear-premium-composition.ts',
+  'scripts/test-viona-mobile-phase3-local-native-presentation-isolation.ts',
+]);
+
 const DENY = [
   'src/navigation/fashionHomeShellMode.ts',
   'src/navigation/MainTabNavigator.tsx',
@@ -388,6 +401,7 @@ assert(
       PHASE2_D_TRAVEL_FINAL_CLOSURE_DESCENDANT_ALLOWED.has(p) ||
       PHASE3_A_LOCAL_ISOLATION_DESCENDANT_ALLOWED.has(p) ||
       PHASE3_B_LOCAL_COMPOSITION_DESCENDANT_ALLOWED.has(p) ||
+      PHASE3_C_LOCAL_RESPONSIVE_DESCENDANT_ALLOWED.has(p) ||
       p.length === 0
   )
 );

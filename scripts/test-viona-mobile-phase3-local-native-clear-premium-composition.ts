@@ -27,6 +27,18 @@ const P3B_EXACT_PATHS = new Set([
   'scripts/test-viona-mobile-phase3-local-native-presentation-isolation.ts',
 ]);
 
+const P3C_EXACT_PATHS = new Set([
+  'src/components/viona/native-local/VionaNativeLocalClearPremiumComposition.tsx',
+  'src/components/viona/native-local/VionaNativeLocalContextHero.tsx',
+  'src/components/viona/native-local/VionaNativeLocalFlagshipActions.tsx',
+  'src/components/viona/native-local/VionaNativeLocalUtilityActions.tsx',
+  'src/components/viona/native-local/VionaNativeLocalSecondaryStack.tsx',
+  'scripts/test-viona-mobile-phase3-local-native-responsive-refinement.ts',
+  'scripts/test-viona-mobile-phase1-clear-premium-native-home.ts',
+  'scripts/test-viona-mobile-phase3-local-native-clear-premium-composition.ts',
+  'scripts/test-viona-mobile-phase3-local-native-presentation-isolation.ts',
+]);
+
 let failed = 0;
 
 function assert(label: string, condition: boolean): void {
@@ -188,8 +200,14 @@ assert(
 assert('isolation test still pins original P3-A five-path range', isolation.includes('b873ad2303045207f0db846652dfaaa07b2d88e2'));
 
 assert(
-  'exact P3-B mutable-path contract',
-  changed.length > 0 && changed.every((p) => P3B_EXACT_PATHS.has(p))
+  'P3-C responsive refinement exists native-only',
+  existsSync(path.join(root, 'scripts/test-viona-mobile-phase3-local-native-responsive-refinement.ts')) &&
+    composition.includes('onLayout') &&
+    local.includes("localPresentationTarget === 'native-adaptive'")
+);
+assert(
+  'exact P3-B or exact P3-C mutable-path contract',
+  changed.length > 0 && changed.every((p) => P3B_EXACT_PATHS.has(p) || P3C_EXACT_PATHS.has(p))
 );
 assert(
   'no unauthorized path',
