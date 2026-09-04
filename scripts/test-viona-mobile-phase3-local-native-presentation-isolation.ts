@@ -2,7 +2,7 @@
  * Phase 3-A — Native Local presentation isolation (parity host, not P3-B restyle).
  * Run: npx tsx scripts/test-viona-mobile-phase3-local-native-presentation-isolation.ts
  */
-import { execSync } from 'node:child_process';
+import { execFileSync } from 'node:child_process';
 import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -23,6 +23,10 @@ const P3A_EXACT_PATHS = new Set([
   'scripts/test-viona-mobile-phase1-clear-premium-native-home.ts',
 ]);
 
+/** Original P3-A implementation commit; inspect this range even after later test-only commits. */
+const P3A_IMPLEMENTATION_HEAD = 'b873ad2303045207f0db846652dfaaa07b2d88e2';
+const P3A_IMPLEMENTATION_PARENT = 'e2f07013424ece9a714f972805bf78fe99a0cca8';
+
 let failed = 0;
 
 function assert(label: string, condition: boolean): void {
@@ -38,8 +42,8 @@ function read(rel: string): string {
   return readFileSync(path.join(root, rel), 'utf8');
 }
 
-function gitLines(command: string): string[] {
-  return execSync(command, { cwd: root, encoding: 'utf8' })
+function gitLines(args: readonly string[]): string[] {
+  return execFileSync('git', args, { cwd: root, encoding: 'utf8', windowsHide: true })
     .split(/\r?\n/)
     .map((line) => line.trim().replace(/\\/g, '/'))
     .filter(Boolean);
@@ -47,13 +51,13 @@ function gitLines(command: string): string[] {
 
 function mutationPaths(): string[] {
   const live = [
-    ...gitLines('git diff --name-only'),
-    ...gitLines('git diff --cached --name-only'),
-    ...gitLines('git ls-files --others --exclude-standard'),
+    ...gitLines(['diff', '--name-only']),
+    ...gitLines(['diff', '--cached', '--name-only']),
+    ...gitLines(['ls-files', '--others', '--exclude-standard']),
   ];
   const uniqueLive = [...new Set(live)];
   if (uniqueLive.length > 0) return uniqueLive;
-  return gitLines('git diff --name-only HEAD^ HEAD');
+  return gitLines(['diff', '--name-only', 'HEAD^', 'HEAD']);
 }
 
 assert(
@@ -114,6 +118,12 @@ const sosHold = read('src/components/viona/VionaSosHoldButton.tsx');
 const sosVisibility = read('src/navigation/vionaGlobalSosShellVisibility.ts');
 const phase1 = read('scripts/test-viona-mobile-phase1-clear-premium-native-home.ts');
 const changed = mutationPaths();
+const committedParentDiff = gitLines([
+  'diff',
+  '--name-only',
+  P3A_IMPLEMENTATION_PARENT,
+  P3A_IMPLEMENTATION_HEAD,
+]);
 
 assert('mapper is not native UI (no react-native View)', !mapper.includes("from 'react-native'"));
 assert(
@@ -214,6 +224,11 @@ assert(
     phase1.includes('src/components/viona/VionaNativeLocalOpeningStage.tsx')
 );
 
+assert(
+  'Git parent-diff of original P3-A implementation HEAD vs parent executes with exact five committed P3-A paths',
+  committedParentDiff.length === 5 &&
+    [...P3A_EXACT_PATHS].every((p) => committedParentDiff.includes(p))
+);
 assert(
   'exact five-path P3-A diff contract',
   changed.length > 0 && changed.every((p) => P3A_EXACT_PATHS.has(p))
