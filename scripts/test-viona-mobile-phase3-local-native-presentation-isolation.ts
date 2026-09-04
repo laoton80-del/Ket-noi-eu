@@ -23,6 +23,19 @@ const P3A_EXACT_PATHS = new Set([
   'scripts/test-viona-mobile-phase1-clear-premium-native-home.ts',
 ]);
 
+/** Exact P3-B composition descendant allowlist. Isolation remains valid after this lane. */
+const P3B_EXACT_PATHS = new Set([
+  'src/components/viona/native-local/VionaNativeLocalClearPremiumComposition.tsx',
+  'src/components/viona/native-local/VionaNativeLocalContextHero.tsx',
+  'src/components/viona/native-local/VionaNativeLocalFlagshipActions.tsx',
+  'src/components/viona/native-local/VionaNativeLocalUtilityActions.tsx',
+  'src/components/viona/native-local/VionaNativeLocalSecondaryStack.tsx',
+  'scripts/test-viona-mobile-phase3-local-native-clear-premium-composition.ts',
+  'src/screens/b2c/LocalScreen.tsx',
+  'scripts/test-viona-mobile-phase1-clear-premium-native-home.ts',
+  'scripts/test-viona-mobile-phase3-local-native-presentation-isolation.ts',
+]);
+
 /** Original P3-A implementation commit; inspect this range even after later test-only commits. */
 const P3A_IMPLEMENTATION_HEAD = 'b873ad2303045207f0db846652dfaaa07b2d88e2';
 const P3A_IMPLEMENTATION_PARENT = 'e2f07013424ece9a714f972805bf78fe99a0cca8';
@@ -156,10 +169,12 @@ assert(
   !opening.includes("from './native-local") && !opening.includes("from '../native-local")
 );
 assert(
-  'P3-B native-local composition is not introduced',
-  !existsSync(path.join(root, 'src/components/viona/native-local')) &&
-    !local.includes('VionaNativeLocalClearPremiumComposition') &&
-    !opening.includes('ClearPremium')
+  'P3-B native-local composition is native-only (exists and is not imported by thin host)',
+  existsSync(path.join(root, 'src/components/viona/native-local/VionaNativeLocalClearPremiumComposition.tsx')) &&
+    local.includes('VionaNativeLocalClearPremiumComposition') &&
+    local.includes("localPresentationTarget === 'native-adaptive'") &&
+    !opening.includes('ClearPremium') &&
+    !opening.includes('VionaNativeLocalClearPremiumComposition')
 );
 assert('opening stage does not own classifieds/credits', !opening.includes('VIP_POSTING_COST_VIG') && !opening.includes('reserveAndCommitCredits'));
 assert('opening stage does not own feature flags', !opening.includes('getFeatureFlags'));
@@ -177,14 +192,13 @@ assert(
   local.includes('<LocalOpeningStageLayout')
 );
 assert(
-  'Web/shared path still uses LocalOpeningStageLayout without requiring P3-B',
+  'Web/shared path still uses LocalOpeningStageLayout without requiring native composition',
   local.includes('LocalOpeningStageLayout') && layout.includes('LocalDynamicHero')
 );
 assert('LocalOpeningStageLayout remains shared hero/cards/quick-actions owner', layout.includes('LocalHeroCardsRow') && layout.includes('LocalQuickActionsRow'));
 assert(
-  'native host wraps current opening-stage children rather than replacing them',
-  local.includes('<VionaNativeLocalOpeningStage>{openingStage}</VionaNativeLocalOpeningStage>') ||
-    (local.includes('<VionaNativeLocalOpeningStage>') && local.includes('<LocalOpeningStageLayout'))
+  'native host still wraps opening-stage children (thin host, composition is the child)',
+  local.includes('<VionaNativeLocalOpeningStage>{openingStage}</VionaNativeLocalOpeningStage>')
 );
 assert('LocalScreen still owns VionaMiniAppShell / PremiumAppShell', local.includes('<PremiumAppShell') || local.includes('VionaMiniAppShell'));
 assert('LocalScreen remains domain owner of requests', local.includes("navigate('LocalUserRequestStatus')"));
@@ -225,21 +239,23 @@ assert(
 );
 
 assert(
-  'Git parent-diff of original P3-A implementation HEAD vs parent executes with exact five committed P3-A paths',
+  'exact five-path original P3-A implementation range remains frozen',
   committedParentDiff.length === 5 &&
     [...P3A_EXACT_PATHS].every((p) => committedParentDiff.includes(p))
 );
 assert(
-  'exact five-path P3-A diff contract',
-  changed.length > 0 && changed.every((p) => P3A_EXACT_PATHS.has(p))
+  'current mutation is P3-A historical set or exact P3-B composition allowlist',
+  changed.length > 0 &&
+    changed.every((p) => P3A_EXACT_PATHS.has(p) || P3B_EXACT_PATHS.has(p))
 );
 assert(
-  'no sixth mutation path',
+  'no unauthorized isolation-lane path',
   !changed.includes('src/components/viona/local/LocalOpeningStageLayout.tsx') &&
-    !changed.some((p) => p.startsWith('src/components/viona/native-local/')) &&
     !changed.includes('package.json') &&
     !changed.includes('App.tsx') &&
-    !changed.includes('src/navigation/MainTabNavigator.tsx')
+    !changed.includes('src/navigation/MainTabNavigator.tsx') &&
+    !changed.includes('src/navigation/localPresentationTarget.ts') &&
+    !changed.includes('src/components/viona/VionaNativeLocalOpeningStage.tsx')
 );
 assert(
   'no token/asset mutation',

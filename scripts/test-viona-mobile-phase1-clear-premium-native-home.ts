@@ -89,6 +89,19 @@ const PHASE3_A_LOCAL_ISOLATION_DESCENDANT_ALLOWED = new Set([
   'scripts/test-viona-mobile-phase1-clear-premium-native-home.ts',
 ]);
 
+/** Exact P3-B Local native Clear Premium composition descendant. */
+const PHASE3_B_LOCAL_COMPOSITION_DESCENDANT_ALLOWED = new Set([
+  'src/components/viona/native-local/VionaNativeLocalClearPremiumComposition.tsx',
+  'src/components/viona/native-local/VionaNativeLocalContextHero.tsx',
+  'src/components/viona/native-local/VionaNativeLocalFlagshipActions.tsx',
+  'src/components/viona/native-local/VionaNativeLocalUtilityActions.tsx',
+  'src/components/viona/native-local/VionaNativeLocalSecondaryStack.tsx',
+  'scripts/test-viona-mobile-phase3-local-native-clear-premium-composition.ts',
+  'src/screens/b2c/LocalScreen.tsx',
+  'scripts/test-viona-mobile-phase1-clear-premium-native-home.ts',
+  'scripts/test-viona-mobile-phase3-local-native-presentation-isolation.ts',
+]);
+
 const DENY = [
   'src/navigation/fashionHomeShellMode.ts',
   'src/navigation/MainTabNavigator.tsx',
@@ -374,6 +387,7 @@ assert(
       PHASE2_C_TRAVEL_RESPONSIVE_DESCENDANT_ALLOWED.has(p) ||
       PHASE2_D_TRAVEL_FINAL_CLOSURE_DESCENDANT_ALLOWED.has(p) ||
       PHASE3_A_LOCAL_ISOLATION_DESCENDANT_ALLOWED.has(p) ||
+      PHASE3_B_LOCAL_COMPOSITION_DESCENDANT_ALLOWED.has(p) ||
       p.length === 0
   )
 );
