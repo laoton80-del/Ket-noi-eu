@@ -1,9 +1,60 @@
-import type { ReactNode } from 'react';
+import { useCallback, useState, type ReactNode } from 'react';
 import { Ionicons } from '@expo/vector-icons';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import {
+  Platform,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+  useWindowDimensions,
+  type LayoutChangeEvent,
+} from 'react-native';
 
+import { useFashionHomePrefersReducedMotion } from '../fashionHomeDesktopShell';
 import { vionaNativeClearPremiumTokens as tkn } from '../../../design/vionaNativeClearPremiumTokens';
 import { FontFamily } from '../../../theme/typography';
+
+/** Account-specific 2-col gap. Not Local 8-as-column-law; token spacing reused. */
+export const ACCOUNT_NATIVE_ACTION_GAP = tkn.spacing[8];
+/** Conservative readable action-tile min for 2-col. Not Local 148 / 304 / 460 / 616. */
+export const ACCOUNT_NATIVE_TWO_COL_MIN_TILE = 176;
+export const ACCOUNT_NATIVE_MAX_COLUMNS = 2 as const;
+
+export type AccountNativeListColumns = 1 | 2;
+
+/**
+ * Shortcuts/settings columns. Portrait always 1.
+ * PHONE PORTRAIT: one column for every major section. Do not copy Local tile-threshold column law.
+ * PHONE LANDSCAPE / TABLET LANDSCAPE: 2-col shortcuts/settings only if measured inner width fits 2 tiles + gap.
+ * TABLET PORTRAIT: remains one column (orientation gate). App shell maxWidth 600 is READ_ONLY.
+ * Two columns only when native landscape AND measured contentWidth fits two readable tiles + gap.
+ * Web never activates this grid. Device labels are not column authority.
+ * Max columns = 2. Never 3/4. Never desktop dashboard. Not Local column law.
+ * SOURCE ASSERTIONS DO NOT PROVE FOUR_MATRIX_VISUAL_GREEN.
+ */
+export function resolveAccountNativeShortcutSettingsColumns(
+  contentWidth: number,
+  isLandscape: boolean,
+  platformOS: typeof Platform.OS = Platform.OS
+): AccountNativeListColumns {
+  if (platformOS === 'web') return 1;
+  if (!isLandscape) return 1;
+  if (contentWidth <= 0) return 1;
+  const needed = ACCOUNT_NATIVE_TWO_COL_MIN_TILE * 2 + ACCOUNT_NATIVE_ACTION_GAP;
+  if (contentWidth < needed) return 1;
+  return ACCOUNT_NATIVE_MAX_COLUMNS;
+}
+
+export function tileWidthForAccountNativeColumns(
+  contentWidth: number,
+  columns: AccountNativeListColumns
+): number {
+  if (contentWidth <= 0 || columns <= 0) return 0;
+  return Math.max(
+    tkn.hit.min,
+    Math.floor((contentWidth - ACCOUNT_NATIVE_ACTION_GAP * (columns - 1)) / columns)
+  );
+}
 
 export type NativeAccountIdentityRow = Readonly<{
   label: string;
@@ -74,10 +125,12 @@ export type VionaNativeAccountClearPremiumCompositionProps = Readonly<{
 }>;
 
 /**
- * Native-only PersonalHub Clear Premium composition (P4-B2).
+ * Native-only PersonalHub Clear Premium composition (P4-B2 + P4-C four-matrix presentation).
  * Presentation only. Domain callbacks and slots stay on CaNhanScreen.
- * CHILDREN / host slots: GDPR + history. No navigation owner, wallet writes, SOS, role picker, or Web constellation.
- * Phone-portrait foundation only. Not P4-C four-matrix. Not P4-D a11y certification.
+ * Canonical signals: onLayout contentWidth + isLandscape (width > height) + useFashionHomePrefersReducedMotion.
+ * Phone portrait remains one column. Max two columns for shortcuts/settings only when landscape + measured width.
+ * Not Local 304/460/616 column law. Not 3/4-column. Not P4-D a11y certification.
+ * SOURCE ASSERTIONS DO NOT PROVE FOUR_MATRIX_VISUAL_GREEN.
  */
 export function VionaNativeAccountClearPremiumComposition({
   brandHint,
@@ -125,15 +178,40 @@ export function VionaNativeAccountClearPremiumComposition({
   onCopyDevTokenPress,
   devTokenPreview,
 }: VionaNativeAccountClearPremiumCompositionProps) {
+  const { width: windowWidth, height: windowHeight } = useWindowDimensions();
+  const isLandscape = windowWidth > windowHeight;
+  const reduceMotion = useFashionHomePrefersReducedMotion();
+  const [contentWidth, setContentWidth] = useState(0);
+
+  const onMeasureLayout = useCallback((event: LayoutChangeEvent) => {
+    const next = Math.round(event.nativeEvent.layout.width);
+    setContentWidth((prev) => (Math.abs(prev - next) < 1 ? prev : next));
+  }, []);
+
+  const listColumns = resolveAccountNativeShortcutSettingsColumns(contentWidth, isLandscape);
+  const listTileWidth = tileWidthForAccountNativeColumns(contentWidth, listColumns);
+  const compact = isLandscape && Platform.OS !== 'web';
+  const pressStyle = reduceMotion ? styles.pressedReduced : styles.pressed;
+
   return (
-    <View testID="viona-native-account-clear-premium-composition" style={styles.root} collapsable={false}>
+    <View
+      testID="viona-native-account-clear-premium-composition"
+      style={[styles.root, compact && styles.rootCompact]}
+      collapsable={false}
+    >
+      <View
+        testID="account-native-measure"
+        onLayout={onMeasureLayout}
+        style={styles.measure}
+        collapsable={false}
+      >
       <Text style={styles.brandHint}>{brandHint}</Text>
       <Text style={styles.screenTitle}>{screenTitle}</Text>
       <Text style={styles.screenSubtitle} numberOfLines={2}>
         {screenSubtitle}
       </Text>
 
-      <View testID="account-native-pilot" style={styles.card}>
+      <View testID="account-native-pilot" style={[styles.card, compact && styles.cardCompact]}>
         <Text style={styles.cardKicker}>{pilotTitle}</Text>
         <Text style={styles.body} numberOfLines={2}>
           {pilotBanner}
@@ -153,7 +231,7 @@ export function VionaNativeAccountClearPremiumComposition({
         onPress={onProfilePress}
         accessibilityRole="button"
         accessibilityLabel={profileA11y}
-        style={({ pressed }) => [styles.flagshipCard, pressed && styles.pressed]}
+        style={({ pressed }) => [styles.flagshipCard, compact && styles.flagshipCardCompact, pressed && pressStyle]}
       >
         <View style={styles.avatar}>
           <Ionicons name="person" size={28} color={tkn.accent.business} />
@@ -172,7 +250,7 @@ export function VionaNativeAccountClearPremiumComposition({
         onPress={onWalletPress}
         accessibilityRole="button"
         accessibilityLabel={creditsA11y}
-        style={({ pressed }) => [styles.card, pressed && styles.pressed]}
+        style={({ pressed }) => [styles.card, compact && styles.cardCompact, pressed && pressStyle]}
       >
         <View style={styles.rowBetween}>
           <View style={styles.inlineIconTitle}>
@@ -191,19 +269,34 @@ export function VionaNativeAccountClearPremiumComposition({
       </Pressable>
 
       <Text style={styles.sectionKicker}>{shortcutsKicker}</Text>
-      {shortcuts.map((item) => (
-        <ActionTile key={item.id} item={item} />
-      ))}
+      <View
+        testID="account-native-shortcuts"
+        style={listColumns === 2 ? styles.actionGrid : styles.actionStack}
+      >
+        {shortcuts.map((item) => (
+          <ActionTile
+            key={item.id}
+            item={item}
+            tileWidth={listColumns === 2 ? listTileWidth : undefined}
+            compact={compact}
+            pressStyle={pressStyle}
+          />
+        ))}
+      </View>
 
-      <View testID="account-native-identity" style={styles.card}>
+      <View testID="account-native-identity" style={[styles.card, compact && styles.cardCompact]}>
         <View style={styles.rowBetween}>
-          <Text style={styles.cardTitle}>{identityTitle}</Text>
+          <Text style={styles.cardTitle} numberOfLines={1}>
+            {identityTitle}
+          </Text>
           <Text style={styles.badge}>{identityBadge}</Text>
         </View>
         {identityRows.map((row) => (
           <View key={row.label} style={styles.identityRow}>
             <Text style={styles.identityKey}>{row.label}</Text>
-            <Text style={styles.identityValue}>{row.value}</Text>
+            <Text style={styles.identityValue} numberOfLines={2}>
+              {row.value}
+            </Text>
           </View>
         ))}
         <Text style={styles.footnote} numberOfLines={2}>
@@ -214,16 +307,27 @@ export function VionaNativeAccountClearPremiumComposition({
           onPress={onIdentityEditPress}
           accessibilityRole="button"
           accessibilityLabel={identityEditA11y}
-          style={({ pressed }) => [styles.identityCta, pressed && styles.pressed]}
+          style={({ pressed }) => [styles.identityCta, pressed && pressStyle]}
         >
           <Text style={styles.identityCtaText}>{identityEditCta}</Text>
         </Pressable>
       </View>
 
       <Text style={styles.sectionKicker}>{settingsKicker}</Text>
-      {settings.map((item) => (
-        <ActionTile key={item.id} item={item} />
-      ))}
+      <View
+        testID="account-native-settings"
+        style={listColumns === 2 ? styles.actionGrid : styles.actionStack}
+      >
+        {settings.map((item) => (
+          <ActionTile
+            key={item.id}
+            item={item}
+            tileWidth={listColumns === 2 ? listTileWidth : undefined}
+            compact={compact}
+            pressStyle={pressStyle}
+          />
+        ))}
+      </View>
 
       <View testID="account-native-gdpr-slot">{gdprSlot}</View>
       <View testID="account-native-history-slot">{historySlot}</View>
@@ -233,7 +337,7 @@ export function VionaNativeAccountClearPremiumComposition({
         onPress={onOnboardingResetPress}
         accessibilityRole="button"
         accessibilityLabel={onboardingResetA11y}
-        style={({ pressed }) => [styles.secondaryRow, pressed && styles.pressed]}
+        style={({ pressed }) => [styles.secondaryRow, compact && styles.secondaryRowCompact, pressed && pressStyle]}
       >
         <Text style={styles.secondaryRowText}>{onboardingResetLabel}</Text>
         <Ionicons name="refresh" size={18} color={tkn.ink.secondary} />
@@ -246,7 +350,7 @@ export function VionaNativeAccountClearPremiumComposition({
           delayLongPress={1200}
           accessibilityRole="button"
           accessibilityLabel={adminTitle}
-          style={({ pressed }) => [styles.secondaryRow, pressed && styles.pressed]}
+          style={({ pressed }) => [styles.secondaryRow, compact && styles.secondaryRowCompact, pressed && pressStyle]}
         >
           <View style={styles.flagshipMeta}>
             <Text style={styles.secondaryRowText}>{adminTitle}</Text>
@@ -258,36 +362,54 @@ export function VionaNativeAccountClearPremiumComposition({
       ) : null}
 
       {showDevToken ? (
-        <View testID="account-native-dev-token" style={styles.card}>
+        <View testID="account-native-dev-token" style={[styles.card, compact && styles.cardCompact]}>
           <Text style={styles.cardKicker}>{devTokenLabel}</Text>
-          <Text style={styles.meta}>{devTokenHint}</Text>
+          <Text style={styles.meta} numberOfLines={2}>
+            {devTokenHint}
+          </Text>
           <Pressable
             onPress={onCopyDevTokenPress}
             accessibilityRole="button"
             accessibilityLabel={devTokenCta}
-            style={({ pressed }) => [styles.identityCta, pressed && styles.pressed]}
+            style={({ pressed }) => [styles.identityCta, pressed && pressStyle]}
           >
             <Text style={styles.identityCtaText}>{devTokenCta}</Text>
           </Pressable>
           {devTokenPreview ? (
-            <Text style={styles.footnote} selectable>
+            <Text style={styles.footnote} selectable numberOfLines={2}>
               {devTokenPreview}
             </Text>
           ) : null}
         </View>
       ) : null}
+      </View>
     </View>
   );
 }
 
-function ActionTile({ item }: { item: NativeAccountActionItem }) {
+function ActionTile({
+  item,
+  tileWidth,
+  compact,
+  pressStyle,
+}: {
+  item: NativeAccountActionItem;
+  tileWidth?: number;
+  compact: boolean;
+  pressStyle: { opacity: number };
+}) {
   return (
     <Pressable
       testID={item.testID}
       onPress={item.onPress}
       accessibilityRole="button"
       accessibilityLabel={item.accessibilityLabel}
-      style={({ pressed }) => [styles.actionTile, pressed && styles.pressed]}
+      style={({ pressed }) => [
+        styles.actionTile,
+        compact && styles.actionTileCompact,
+        tileWidth != null ? { width: tileWidth } : styles.actionTileFull,
+        pressed && pressStyle,
+      ]}
     >
       <View style={styles.actionIcon}>
         <Ionicons name={item.icon} size={20} color={tkn.accent.business} />
@@ -315,6 +437,44 @@ const styles = StyleSheet.create({
     paddingTop: tkn.spacing[12],
     paddingBottom: tkn.spacing[24],
     gap: tkn.spacing[8],
+  },
+  rootCompact: {
+    paddingTop: tkn.spacing[8],
+    paddingBottom: tkn.spacing[16],
+    gap: tkn.spacing[8],
+  },
+  measure: {
+    width: '100%',
+    alignSelf: 'stretch',
+    gap: tkn.spacing[8],
+  },
+  actionStack: {
+    width: '100%',
+    gap: tkn.spacing[8],
+  },
+  actionGrid: {
+    width: '100%',
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: ACCOUNT_NATIVE_ACTION_GAP,
+  },
+  actionTileFull: {
+    width: '100%',
+  },
+  cardCompact: {
+    padding: tkn.spacing[12],
+  },
+  flagshipCardCompact: {
+    paddingVertical: tkn.spacing[8],
+  },
+  actionTileCompact: {
+    paddingVertical: tkn.spacing[8],
+  },
+  secondaryRowCompact: {
+    paddingVertical: tkn.spacing[8],
+  },
+  pressedReduced: {
+    opacity: 0.88,
   },
   brandHint: {
     ...tkn.type.brand,
@@ -446,7 +606,6 @@ const styles = StyleSheet.create({
     fontFamily: FontFamily.bold,
   },
   actionTile: {
-    width: '100%',
     minHeight: tkn.hit.min,
     flexDirection: 'row',
     alignItems: 'center',
@@ -482,12 +641,16 @@ const styles = StyleSheet.create({
     color: tkn.ink.secondary,
     fontFamily: FontFamily.medium,
     flex: 1,
+    flexShrink: 1,
+    minWidth: 0,
   },
   identityValue: {
     ...tkn.type.meta,
     color: tkn.ink.primary,
     fontFamily: FontFamily.bold,
     flex: 1,
+    flexShrink: 1,
+    minWidth: 0,
     textAlign: 'right',
   },
   identityCta: {

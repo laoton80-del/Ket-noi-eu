@@ -4,7 +4,7 @@
  *
  * Structural assertions only. SOURCE ASSERTIONS DO NOT PROVE FOUR_MATRIX_VISUAL_GREEN
  * P4-A owns native Account chrome presentation and chip residual remediation.
- * P4-B / P4-C / P4-D / Option B fifth tab are not started.
+ * P4-C EXISTS. P4-D / Option B fifth tab are not started.
  */
 import { execFileSync } from 'node:child_process';
 import { existsSync, readFileSync } from 'node:fs';
@@ -45,6 +45,20 @@ const P4B2_EXACT_PATHS = new Set([
   'src/screens/CaNhanScreen.tsx',
   'scripts/test-viona-mobile-phase1-clear-premium-native-home.ts',
   'scripts/test-viona-mobile-phase4-account-personalhub-presentation-isolation.ts',
+]);
+
+/** Exact P4-C Account four-matrix responsive descendant. No glob. */
+const P4C_EXACT_PATHS = new Set([
+  'src/components/viona/native-account/VionaNativeAccountClearPremiumComposition.tsx',
+  'scripts/test-viona-mobile-phase4-account-responsive-refinement.ts',
+  'scripts/test-viona-mobile-phase4-account-personalhub-composition.ts',
+  'scripts/test-viona-mobile-phase4-account-personalhub-presentation-isolation.ts',
+  'scripts/test-viona-mobile-phase4-account-chrome-isolation.ts',
+  'scripts/test-viona-mobile-phase1-clear-premium-native-home.ts',
+  'scripts/test-viona-mobile-phase3-local-native-presentation-isolation.ts',
+  'scripts/test-viona-mobile-phase3-local-native-clear-premium-composition.ts',
+  'scripts/test-viona-mobile-phase3-local-native-responsive-refinement.ts',
+  'scripts/test-viona-mobile-phase3-local-final-closure.ts',
 ]);
 
 let failed = 0;
@@ -208,8 +222,8 @@ assert(
     existsSync(path.join(root, 'scripts/test-viona-mobile-phase4-account-personalhub-composition.ts'))
 );
 assert(
-  'P4-C not started',
-  !existsSync(path.join(root, 'scripts/test-viona-mobile-phase4-account-responsive-refinement.ts'))
+  'P4-C EXISTS',
+  existsSync(path.join(root, 'scripts/test-viona-mobile-phase4-account-responsive-refinement.ts'))
 );
 assert(
   'P4-D not started',
@@ -226,7 +240,8 @@ assert(
         P4A_PRIMARY_PATHS.has(p) ||
         P4A_CONDITIONAL_DESCENDANT_PATHS.has(p) ||
         P4B1_EXACT_PATHS.has(p) ||
-        P4B2_EXACT_PATHS.has(p)
+        P4B2_EXACT_PATHS.has(p) ||
+        P4C_EXACT_PATHS.has(p)
     ) &&
     changed.length <= 10
 );

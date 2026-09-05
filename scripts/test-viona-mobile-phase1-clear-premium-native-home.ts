@@ -153,6 +153,20 @@ const PHASE4_B2_ACCOUNT_COMPOSITION_DESCENDANT_ALLOWED = new Set([
   'scripts/test-viona-mobile-phase4-account-personalhub-presentation-isolation.ts',
 ]);
 
+/** Exact P4-C Account four-matrix responsive descendant. No glob. */
+const PHASE4_C_ACCOUNT_RESPONSIVE_DESCENDANT_ALLOWED = new Set([
+  'src/components/viona/native-account/VionaNativeAccountClearPremiumComposition.tsx',
+  'scripts/test-viona-mobile-phase4-account-responsive-refinement.ts',
+  'scripts/test-viona-mobile-phase4-account-personalhub-composition.ts',
+  'scripts/test-viona-mobile-phase4-account-personalhub-presentation-isolation.ts',
+  'scripts/test-viona-mobile-phase4-account-chrome-isolation.ts',
+  'scripts/test-viona-mobile-phase1-clear-premium-native-home.ts',
+  'scripts/test-viona-mobile-phase3-local-native-presentation-isolation.ts',
+  'scripts/test-viona-mobile-phase3-local-native-clear-premium-composition.ts',
+  'scripts/test-viona-mobile-phase3-local-native-responsive-refinement.ts',
+  'scripts/test-viona-mobile-phase3-local-final-closure.ts',
+]);
+
 const DENY = [
   'src/navigation/fashionHomeShellMode.ts',
   'src/navigation/MainTabNavigator.tsx',
@@ -444,6 +458,7 @@ assert(
       PHASE4_A_ACCOUNT_CHROME_DESCENDANT_ALLOWED.has(p) ||
       PHASE4_B1_ACCOUNT_PERSONALHUB_ISOLATION_DESCENDANT_ALLOWED.has(p) ||
       PHASE4_B2_ACCOUNT_COMPOSITION_DESCENDANT_ALLOWED.has(p) ||
+      PHASE4_C_ACCOUNT_RESPONSIVE_DESCENDANT_ALLOWED.has(p) ||
       p.length === 0
   )
 );
