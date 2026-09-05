@@ -38,6 +38,15 @@ const P4B1_EXACT_PATHS = new Set([
   'scripts/test-viona-mobile-phase1-clear-premium-native-home.ts',
 ]);
 
+/** Exact P4-B2 native PersonalHub Clear Premium composition descendant allowlist. */
+const P4B2_EXACT_PATHS = new Set([
+  'src/components/viona/native-account/VionaNativeAccountClearPremiumComposition.tsx',
+  'scripts/test-viona-mobile-phase4-account-personalhub-composition.ts',
+  'src/screens/CaNhanScreen.tsx',
+  'scripts/test-viona-mobile-phase1-clear-premium-native-home.ts',
+  'scripts/test-viona-mobile-phase4-account-personalhub-presentation-isolation.ts',
+]);
+
 let failed = 0;
 
 function assert(label: string, condition: boolean): void {
@@ -171,8 +180,10 @@ assert('P3 Local composition not in P4-A mutation', !changed.includes('src/compo
 assert('LocalScreen not in P4-A mutation', !changed.includes('src/screens/b2c/LocalScreen.tsx'));
 assert('MainTabNavigator not in P4-A mutation', !changed.includes('src/navigation/MainTabNavigator.tsx'));
 assert(
-  'CaNhanScreen may be mutated only as the exact P4-B1 presentation-isolation path',
+  'CaNhanScreen may be mutated only as the exact P4-B1 isolation or P4-B2 composition path',
   !changed.includes('src/screens/CaNhanScreen.tsx') ||
+    (P4B2_EXACT_PATHS.has('src/screens/CaNhanScreen.tsx') &&
+      changed.includes('src/components/viona/native-account/VionaNativeAccountClearPremiumComposition.tsx')) ||
     (P4B1_EXACT_PATHS.has('src/screens/CaNhanScreen.tsx') &&
       changed.includes('src/navigation/accountPresentationTarget.ts') &&
       changed.includes('src/components/viona/VionaNativeAccountOpeningStage.tsx') &&
@@ -192,9 +203,9 @@ assert(
     existsSync(path.join(root, 'scripts/test-viona-mobile-phase4-account-personalhub-presentation-isolation.ts'))
 );
 assert(
-  'P4-B not started',
-  !existsSync(path.join(root, 'scripts/test-viona-mobile-phase4-account-personalhub-composition.ts')) &&
-    !existsSync(path.join(root, 'src/components/viona/native-account/VionaNativeAccountClearPremiumComposition.tsx'))
+  'P4-B2 composition exists',
+  existsSync(path.join(root, 'src/components/viona/native-account/VionaNativeAccountClearPremiumComposition.tsx')) &&
+    existsSync(path.join(root, 'scripts/test-viona-mobile-phase4-account-personalhub-composition.ts'))
 );
 assert(
   'P4-C not started',
@@ -208,10 +219,14 @@ assert('Option B fifth-tab test not started', !existsSync(path.join(root, 'scrip
 
 assert('exact P4-A primary allowlist size', P4A_PRIMARY_PATHS.size === 3);
 assert(
-  'exact P4-A or exact P4-B1 mutable-path contract',
+  'exact P4-A or exact P4-B1 or exact P4-B2 mutable-path contract',
   changed.length > 0 &&
     changed.every(
-      (p) => P4A_PRIMARY_PATHS.has(p) || P4A_CONDITIONAL_DESCENDANT_PATHS.has(p) || P4B1_EXACT_PATHS.has(p)
+      (p) =>
+        P4A_PRIMARY_PATHS.has(p) ||
+        P4A_CONDITIONAL_DESCENDANT_PATHS.has(p) ||
+        P4B1_EXACT_PATHS.has(p) ||
+        P4B2_EXACT_PATHS.has(p)
     ) &&
     changed.length <= 10
 );

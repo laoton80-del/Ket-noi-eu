@@ -144,6 +144,15 @@ const PHASE4_B1_ACCOUNT_PERSONALHUB_ISOLATION_DESCENDANT_ALLOWED = new Set([
   'scripts/test-viona-mobile-phase1-clear-premium-native-home.ts',
 ]);
 
+/** Exact P4-B2 native PersonalHub Clear Premium composition descendant. No glob. */
+const PHASE4_B2_ACCOUNT_COMPOSITION_DESCENDANT_ALLOWED = new Set([
+  'src/components/viona/native-account/VionaNativeAccountClearPremiumComposition.tsx',
+  'scripts/test-viona-mobile-phase4-account-personalhub-composition.ts',
+  'src/screens/CaNhanScreen.tsx',
+  'scripts/test-viona-mobile-phase1-clear-premium-native-home.ts',
+  'scripts/test-viona-mobile-phase4-account-personalhub-presentation-isolation.ts',
+]);
+
 const DENY = [
   'src/navigation/fashionHomeShellMode.ts',
   'src/navigation/MainTabNavigator.tsx',
@@ -434,6 +443,7 @@ assert(
       PHASE3_D_LOCAL_FINAL_CLOSURE_DESCENDANT_ALLOWED.has(p) ||
       PHASE4_A_ACCOUNT_CHROME_DESCENDANT_ALLOWED.has(p) ||
       PHASE4_B1_ACCOUNT_PERSONALHUB_ISOLATION_DESCENDANT_ALLOWED.has(p) ||
+      PHASE4_B2_ACCOUNT_COMPOSITION_DESCENDANT_ALLOWED.has(p) ||
       p.length === 0
   )
 );

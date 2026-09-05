@@ -36,6 +36,15 @@ const P4B1_LINEAGE_WITNESS_PATHS = new Set([
   'scripts/test-viona-mobile-phase4-account-chrome-isolation.ts',
 ]);
 
+/** Exact P4-B2 composition descendant allowlist. Isolation remains valid after this lane. */
+const P4B2_EXACT_PATHS = new Set([
+  'src/components/viona/native-account/VionaNativeAccountClearPremiumComposition.tsx',
+  'scripts/test-viona-mobile-phase4-account-personalhub-composition.ts',
+  'src/screens/CaNhanScreen.tsx',
+  'scripts/test-viona-mobile-phase1-clear-premium-native-home.ts',
+  'scripts/test-viona-mobile-phase4-account-personalhub-presentation-isolation.ts',
+]);
+
 let failed = 0;
 
 function assert(label: string, condition: boolean): void {
@@ -187,20 +196,31 @@ assert('CaNhanScreen imports Native Account OpeningStage', hub.includes('VionaNa
 assert(
   'CaNhanScreen native-adaptive uses opening-stage mount seam',
   hub.includes("accountPresentationTarget === 'native-adaptive'") &&
-    hub.includes('<VionaNativeAccountOpeningStage>{hub}</VionaNativeAccountOpeningStage>')
+    hub.includes('<VionaNativeAccountOpeningStage>') &&
+    hub.includes('</VionaNativeAccountOpeningStage>')
 );
 assert(
-  'current presentation remains children / exact equivalent',
+  'Web hub remains current PersonalHub presentation',
   hub.includes('const hub = (') &&
     hub.includes('<SafeAreaView style={styles.container}>') &&
     hub.includes('AccountNeonGlassPanel') &&
-    hub.includes('IMG_ACCOUNT_CONSTELLATION')
+    hub.includes('IMG_ACCOUNT_CONSTELLATION') &&
+    hub.includes('return hub')
 );
 assert('Web PersonalHub still uses AccountNeonGlassPanel', hub.includes('<AccountNeonGlassPanel') && neon.includes('export function AccountNeonGlassPanel'));
 assert('Fashion-Tech constellation remains in CaNhanScreen', hub.includes('viona-account-global-net-bg-v2.png') && hub.includes('accountBackdropOpacity'));
-assert('no native-account Clear Premium composition in this lane', !existsSync(path.join(root, compositionRel)));
-assert('P4-B2 composition test not started', !existsSync(path.join(root, compositionTestRel)));
-assert('opening stage is not Clear Premium composition owner', !opening.includes('nativeAccountChip') && !hub.includes('VionaNativeAccountClearPremiumComposition'));
+assert('P4-B2 composition exists under isolation host', existsSync(path.join(root, compositionRel)));
+assert('P4-B2 composition test exists', existsSync(path.join(root, compositionTestRel)));
+assert(
+  'opening stage is not Clear Premium composition owner',
+  !opening.includes('VionaNativeAccountClearPremiumComposition') &&
+    hub.includes('VionaNativeAccountClearPremiumComposition')
+);
+assert(
+  'native composition is mounted by CaNhanScreen under native-adaptive',
+  hub.includes('<VionaNativeAccountClearPremiumComposition') &&
+    hub.includes("accountPresentationTarget === 'native-adaptive'")
+);
 
 assert('A01 chrome Account still PersonalHub', mainTab.includes('openPersonalHub') && profileSwitcher.includes("navigate('PersonalHub')"));
 assert('A02 four tabs; Account not a tab', mainTab.includes('MAIN_TAB.B2C.home') && mainTab.includes('MAIN_TAB.B2C.local') && mainTab.includes('MAIN_TAB.B2C.travel') && mainTab.includes('MAIN_TAB.B2C.ai') && !('account' in MAIN_TAB.B2C) && !routes.includes('TabAccount'));
@@ -223,7 +243,7 @@ assert('A18 GDPR gated live workflow', hub.includes('<GDPRDashboard />') && gdpr
 assert('A19 usage history', hub.includes('TrustHistoryCard') && hub.includes('loadUsageHistory'));
 assert('A20 onboarding reset', hub.includes('resetGuidedOnboarding'));
 assert('A21 admin unlock reset', hub.includes('ADMIN_UNLOCK_KEY') && hub.includes('Nội bộ QA'));
-assert('A22 dev token action __DEV__ only', hub.includes('copyDevFirebaseIdToken') && hub.includes('{__DEV__ ?'));
+assert('A22 dev token action __DEV__ only', hub.includes('copyDevFirebaseIdToken') && (hub.includes('{__DEV__ ?') || hub.includes('showDevToken={__DEV__}')));
 assert('A23 Diaspora restriction gate', hub.includes('DiasporaRestrictionModal') && hub.includes('vn_dial'));
 assert('A24 role picker remains chrome-owned', profileSwitcher.includes('openRolePicker') && !hub.includes('ProfileSwitcher') && !hub.includes('openRolePicker'));
 assert('A25 documents/Vault remains OUT_OF_SCOPE for PersonalHub', !hub.includes("navigate('Vault')"));
@@ -262,7 +282,10 @@ assert(
   changed.length > 0 &&
     changed.every(
       (p) =>
-        P4B1_PRIMARY_PATHS.has(p) || p === P4B1_CONDITIONAL_PHASE1 || P4B1_LINEAGE_WITNESS_PATHS.has(p)
+        P4B1_PRIMARY_PATHS.has(p) ||
+        p === P4B1_CONDITIONAL_PHASE1 ||
+        P4B1_LINEAGE_WITNESS_PATHS.has(p) ||
+        P4B2_EXACT_PATHS.has(p)
     ) &&
     changed.length <= 10
 );
