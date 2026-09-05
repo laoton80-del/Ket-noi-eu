@@ -46,6 +46,20 @@ const P4C_EXACT_PATHS = new Set([
   'scripts/test-viona-mobile-phase3-local-final-closure.ts',
 ]);
 
+/** Exact P4-D Account final-closure descendant. Tests only. No glob. No product/runtime mutation. */
+const P4D_EXACT_PATHS = new Set([
+  'scripts/test-viona-mobile-phase4-account-final-closure.ts',
+  'scripts/test-viona-mobile-phase1-clear-premium-native-home.ts',
+  'scripts/test-viona-mobile-phase4-account-chrome-isolation.ts',
+  'scripts/test-viona-mobile-phase4-account-personalhub-presentation-isolation.ts',
+  'scripts/test-viona-mobile-phase4-account-personalhub-composition.ts',
+  'scripts/test-viona-mobile-phase4-account-responsive-refinement.ts',
+  'scripts/test-viona-mobile-phase3-local-native-presentation-isolation.ts',
+  'scripts/test-viona-mobile-phase3-local-native-clear-premium-composition.ts',
+  'scripts/test-viona-mobile-phase3-local-native-responsive-refinement.ts',
+  'scripts/test-viona-mobile-phase3-local-final-closure.ts',
+]);
+
 let failed = 0;
 
 function assert(label: string, condition: boolean): void {
@@ -215,14 +229,14 @@ assert('no fifth B2C Account tab constant', !('account' in MAIN_TAB.B2C));
 assert('P4-B1 isolation test still names isolation-not-restyle', p4b1.includes('P4B1_SOURCE_ASSERTIONS_PROVE_ISOLATION_CONTRACT_NOT_VISUAL_RESTYLE'));
 
 assert('P4-C EXISTS', existsSync(path.join(root, 'scripts/test-viona-mobile-phase4-account-responsive-refinement.ts')));
-assert('P4-D not started', !existsSync(path.join(root, 'scripts/test-viona-mobile-phase4-account-final-closure.ts')));
+assert('P4-D EXISTS', existsSync(path.join(root, 'scripts/test-viona-mobile-phase4-account-final-closure.ts')));
 assert('Option B fifth-tab test not started', !existsSync(path.join(root, 'scripts/test-viona-mobile-phase4-account-fifth-tab.ts')));
 
 assert('exact P4-B2 primary allowlist size', P4B2_PRIMARY_PATHS.size === 5);
 assert(
   'exact P4-B2 mutable-path contract',
   changed.length > 0 &&
-    changed.every((p) => P4B2_PRIMARY_PATHS.has(p) || P4B2_CONDITIONAL_LINEAGE_PATHS.has(p) || P4C_EXACT_PATHS.has(p)) &&
+    changed.every((p) => P4B2_PRIMARY_PATHS.has(p) || P4B2_CONDITIONAL_LINEAGE_PATHS.has(p) || P4C_EXACT_PATHS.has(p) || P4D_EXACT_PATHS.has(p)) &&
     changed.length <= 10
 );
 assert(

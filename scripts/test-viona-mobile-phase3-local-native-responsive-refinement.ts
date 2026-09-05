@@ -74,6 +74,20 @@ const P4C_EXACT_PATHS = new Set([
   'scripts/test-viona-mobile-phase3-local-final-closure.ts',
 ]);
 
+/** Exact P4-D Account final-closure descendant. Tests only. No glob. No product/runtime mutation. */
+const P4D_EXACT_PATHS = new Set([
+  'scripts/test-viona-mobile-phase4-account-final-closure.ts',
+  'scripts/test-viona-mobile-phase1-clear-premium-native-home.ts',
+  'scripts/test-viona-mobile-phase4-account-chrome-isolation.ts',
+  'scripts/test-viona-mobile-phase4-account-personalhub-presentation-isolation.ts',
+  'scripts/test-viona-mobile-phase4-account-personalhub-composition.ts',
+  'scripts/test-viona-mobile-phase4-account-responsive-refinement.ts',
+  'scripts/test-viona-mobile-phase3-local-native-presentation-isolation.ts',
+  'scripts/test-viona-mobile-phase3-local-native-clear-premium-composition.ts',
+  'scripts/test-viona-mobile-phase3-local-native-responsive-refinement.ts',
+  'scripts/test-viona-mobile-phase3-local-final-closure.ts',
+]);
+
 const P3A_IMPLEMENTATION_HEAD = 'b873ad2303045207f0db846652dfaaa07b2d88e2';
 const P3A_IMPLEMENTATION_PARENT = 'e2f07013424ece9a714f972805bf78fe99a0cca8';
 
@@ -359,7 +373,8 @@ assert(
         P4A_EXACT_PATHS.has(p) ||
         P4B1_EXACT_PATHS.has(p) ||
         P4B2_EXACT_PATHS.has(p) ||
-        P4C_EXACT_PATHS.has(p)
+        P4C_EXACT_PATHS.has(p) ||
+        P4D_EXACT_PATHS.has(p)
     )
 );
 assert('exact nine-path allowlist size', P3C_EXACT_PATHS.size === 9);

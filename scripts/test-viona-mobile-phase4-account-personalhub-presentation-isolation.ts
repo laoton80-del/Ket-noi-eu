@@ -59,6 +59,20 @@ const P4C_EXACT_PATHS = new Set([
   'scripts/test-viona-mobile-phase3-local-final-closure.ts',
 ]);
 
+/** Exact P4-D Account final-closure descendant. Tests only. No glob. No product/runtime mutation. */
+const P4D_EXACT_PATHS = new Set([
+  'scripts/test-viona-mobile-phase4-account-final-closure.ts',
+  'scripts/test-viona-mobile-phase1-clear-premium-native-home.ts',
+  'scripts/test-viona-mobile-phase4-account-chrome-isolation.ts',
+  'scripts/test-viona-mobile-phase4-account-personalhub-presentation-isolation.ts',
+  'scripts/test-viona-mobile-phase4-account-personalhub-composition.ts',
+  'scripts/test-viona-mobile-phase4-account-responsive-refinement.ts',
+  'scripts/test-viona-mobile-phase3-local-native-presentation-isolation.ts',
+  'scripts/test-viona-mobile-phase3-local-native-clear-premium-composition.ts',
+  'scripts/test-viona-mobile-phase3-local-native-responsive-refinement.ts',
+  'scripts/test-viona-mobile-phase3-local-final-closure.ts',
+]);
+
 let failed = 0;
 
 function assert(label: string, condition: boolean): void {
@@ -287,7 +301,7 @@ assert('hub has no AI provider', !hub.includes('openai') && !hub.includes('anthr
 assert('hub has no Stripe checkout', !hub.includes('checkout') && !hub.includes('Stripe'));
 
 assert('P4-C EXISTS', existsSync(path.join(root, 'scripts/test-viona-mobile-phase4-account-responsive-refinement.ts')));
-assert('P4-D not started', !existsSync(path.join(root, 'scripts/test-viona-mobile-phase4-account-final-closure.ts')));
+assert('P4-D EXISTS', existsSync(path.join(root, 'scripts/test-viona-mobile-phase4-account-final-closure.ts')));
 assert('Option B fifth-tab test not started', !existsSync(path.join(root, 'scripts/test-viona-mobile-phase4-account-fifth-tab.ts')));
 
 assert('exact P4-B1 primary allowlist size', P4B1_PRIMARY_PATHS.size === 4);
@@ -300,7 +314,8 @@ assert(
         p === P4B1_CONDITIONAL_PHASE1 ||
         P4B1_LINEAGE_WITNESS_PATHS.has(p) ||
         P4B2_EXACT_PATHS.has(p) ||
-        P4C_EXACT_PATHS.has(p)
+        P4C_EXACT_PATHS.has(p) ||
+        P4D_EXACT_PATHS.has(p)
     ) &&
     changed.length <= 10
 );

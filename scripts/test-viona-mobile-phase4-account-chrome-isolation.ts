@@ -4,7 +4,7 @@
  *
  * Structural assertions only. SOURCE ASSERTIONS DO NOT PROVE FOUR_MATRIX_VISUAL_GREEN
  * P4-A owns native Account chrome presentation and chip residual remediation.
- * P4-C EXISTS. P4-D / Option B fifth tab are not started.
+ * P4-C EXISTS. P4-D EXISTS. Option B fifth tab is not started.
  */
 import { execFileSync } from 'node:child_process';
 import { existsSync, readFileSync } from 'node:fs';
@@ -55,6 +55,20 @@ const P4C_EXACT_PATHS = new Set([
   'scripts/test-viona-mobile-phase4-account-personalhub-presentation-isolation.ts',
   'scripts/test-viona-mobile-phase4-account-chrome-isolation.ts',
   'scripts/test-viona-mobile-phase1-clear-premium-native-home.ts',
+  'scripts/test-viona-mobile-phase3-local-native-presentation-isolation.ts',
+  'scripts/test-viona-mobile-phase3-local-native-clear-premium-composition.ts',
+  'scripts/test-viona-mobile-phase3-local-native-responsive-refinement.ts',
+  'scripts/test-viona-mobile-phase3-local-final-closure.ts',
+]);
+
+/** Exact P4-D Account final-closure descendant. Tests only. No glob. No product/runtime mutation. */
+const P4D_EXACT_PATHS = new Set([
+  'scripts/test-viona-mobile-phase4-account-final-closure.ts',
+  'scripts/test-viona-mobile-phase1-clear-premium-native-home.ts',
+  'scripts/test-viona-mobile-phase4-account-chrome-isolation.ts',
+  'scripts/test-viona-mobile-phase4-account-personalhub-presentation-isolation.ts',
+  'scripts/test-viona-mobile-phase4-account-personalhub-composition.ts',
+  'scripts/test-viona-mobile-phase4-account-responsive-refinement.ts',
   'scripts/test-viona-mobile-phase3-local-native-presentation-isolation.ts',
   'scripts/test-viona-mobile-phase3-local-native-clear-premium-composition.ts',
   'scripts/test-viona-mobile-phase3-local-native-responsive-refinement.ts',
@@ -226,8 +240,8 @@ assert(
   existsSync(path.join(root, 'scripts/test-viona-mobile-phase4-account-responsive-refinement.ts'))
 );
 assert(
-  'P4-D not started',
-  !existsSync(path.join(root, 'scripts/test-viona-mobile-phase4-account-final-closure.ts'))
+  'P4-D EXISTS',
+  existsSync(path.join(root, 'scripts/test-viona-mobile-phase4-account-final-closure.ts'))
 );
 assert('Option B fifth-tab test not started', !existsSync(path.join(root, 'scripts/test-viona-mobile-phase4-account-fifth-tab.ts')));
 
@@ -241,7 +255,8 @@ assert(
         P4A_CONDITIONAL_DESCENDANT_PATHS.has(p) ||
         P4B1_EXACT_PATHS.has(p) ||
         P4B2_EXACT_PATHS.has(p) ||
-        P4C_EXACT_PATHS.has(p)
+        P4C_EXACT_PATHS.has(p) ||
+        P4D_EXACT_PATHS.has(p)
     ) &&
     changed.length <= 10
 );

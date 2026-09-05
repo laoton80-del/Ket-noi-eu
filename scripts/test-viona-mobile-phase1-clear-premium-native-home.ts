@@ -167,6 +167,20 @@ const PHASE4_C_ACCOUNT_RESPONSIVE_DESCENDANT_ALLOWED = new Set([
   'scripts/test-viona-mobile-phase3-local-final-closure.ts',
 ]);
 
+/** Exact P4-D Account final-closure descendant. Tests only. No glob. No product/runtime mutation. */
+const PHASE4_D_ACCOUNT_FINAL_CLOSURE_DESCENDANT_ALLOWED = new Set([
+  'scripts/test-viona-mobile-phase4-account-final-closure.ts',
+  'scripts/test-viona-mobile-phase1-clear-premium-native-home.ts',
+  'scripts/test-viona-mobile-phase4-account-chrome-isolation.ts',
+  'scripts/test-viona-mobile-phase4-account-personalhub-presentation-isolation.ts',
+  'scripts/test-viona-mobile-phase4-account-personalhub-composition.ts',
+  'scripts/test-viona-mobile-phase4-account-responsive-refinement.ts',
+  'scripts/test-viona-mobile-phase3-local-native-presentation-isolation.ts',
+  'scripts/test-viona-mobile-phase3-local-native-clear-premium-composition.ts',
+  'scripts/test-viona-mobile-phase3-local-native-responsive-refinement.ts',
+  'scripts/test-viona-mobile-phase3-local-final-closure.ts',
+]);
+
 const DENY = [
   'src/navigation/fashionHomeShellMode.ts',
   'src/navigation/MainTabNavigator.tsx',
@@ -459,6 +473,7 @@ assert(
       PHASE4_B1_ACCOUNT_PERSONALHUB_ISOLATION_DESCENDANT_ALLOWED.has(p) ||
       PHASE4_B2_ACCOUNT_COMPOSITION_DESCENDANT_ALLOWED.has(p) ||
       PHASE4_C_ACCOUNT_RESPONSIVE_DESCENDANT_ALLOWED.has(p) ||
+      PHASE4_D_ACCOUNT_FINAL_CLOSURE_DESCENDANT_ALLOWED.has(p) ||
       p.length === 0
   )
 );

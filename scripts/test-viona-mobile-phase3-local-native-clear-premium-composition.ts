@@ -83,6 +83,20 @@ const P4C_EXACT_PATHS = new Set([
   'scripts/test-viona-mobile-phase3-local-final-closure.ts',
 ]);
 
+/** Exact P4-D Account final-closure descendant. Tests only. No glob. No product/runtime mutation. */
+const P4D_EXACT_PATHS = new Set([
+  'scripts/test-viona-mobile-phase4-account-final-closure.ts',
+  'scripts/test-viona-mobile-phase1-clear-premium-native-home.ts',
+  'scripts/test-viona-mobile-phase4-account-chrome-isolation.ts',
+  'scripts/test-viona-mobile-phase4-account-personalhub-presentation-isolation.ts',
+  'scripts/test-viona-mobile-phase4-account-personalhub-composition.ts',
+  'scripts/test-viona-mobile-phase4-account-responsive-refinement.ts',
+  'scripts/test-viona-mobile-phase3-local-native-presentation-isolation.ts',
+  'scripts/test-viona-mobile-phase3-local-native-clear-premium-composition.ts',
+  'scripts/test-viona-mobile-phase3-local-native-responsive-refinement.ts',
+  'scripts/test-viona-mobile-phase3-local-final-closure.ts',
+]);
+
 let failed = 0;
 
 function assert(label: string, condition: boolean): void {
@@ -266,7 +280,8 @@ assert(
         P4A_EXACT_PATHS.has(p) ||
         P4B1_EXACT_PATHS.has(p) ||
         P4B2_EXACT_PATHS.has(p) ||
-        P4C_EXACT_PATHS.has(p)
+        P4C_EXACT_PATHS.has(p) ||
+        P4D_EXACT_PATHS.has(p)
     )
 );
 assert(

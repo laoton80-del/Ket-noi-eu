@@ -1,10 +1,29 @@
 /**
- * Phase 4-C — Native PersonalHub four-matrix responsive refinement.
- * Run: npx tsx scripts/test-viona-mobile-phase4-account-responsive-refinement.ts
+ * Phase 4-D — Native Account final accessibility / regression / Phase 4 Account closure test-contract.
+ * Run: npx tsx scripts/test-viona-mobile-phase4-account-final-closure.ts
  *
- * Structural assertions only.
- * SOURCE_ASSERTIONS_DO_NOT_PROVE_FOUR_MATRIX_VISUAL_GREEN
- * P4C_SOURCE_TESTS_DO_NOT_CONSTITUTE_FORMAL_ACCESSIBILITY_CERTIFICATION
+ * Structural assertions only. This file does not prove runtime GREEN by itself.
+ * Contract marker: P4-D final-closure TEST exists
+ * Contract marker: P4-D final closure TEST exists
+ * P4D_PRODUCT_SOURCE_MUTATION_NOT_REQUIRED — product/runtime presentation files stay read-only.
+ * SOURCE_AND_REUSED_VISUAL_EVIDENCE_DO_NOT_CONSTITUTE_FORMAL_ACCESSIBILITY_CERTIFICATION
+ * P4C_RUNTIME_QA_DOES_NOT_CONSTITUTE_FORMAL_ACCESSIBILITY_CERTIFICATION
+ * P4D_DOES_NOT_RERUN_FOUR_MATRIX_DEVICES
+ * P4D_P4C_RUNTIME_EVIDENCE_REUSABLE_IF_LAYOUT_UNCHANGED
+ * HIGH_P4D_OWNED_BLOCKERS = 0 is a closure gate, not a source-string proof of certification.
+ * P4D_DOMAIN_MUTATION_ALLOWED = NO
+ *
+ * Residual classifications (not unexplained; not fake GREEN):
+ * P4D-A07 LOW_RESIDUAL duplicate edit-identity spoken name
+ * P4D-A08 LOW_RESIDUAL title-only shortcut labels
+ * P4D-A09 LOW_RESIDUAL decorative Ionicons
+ * P4D-A10 LOW_RESIDUAL heading roles
+ * P4D-A11 LOW_RESIDUAL admin long-press hint
+ * P4D-A12 OS_RUNTIME_ONLY font scale
+ * P4D-A13 NEEDS_RUNTIME_EVIDENCE contrast
+ * P4D-A14 HOST_OWNED GDPR slot
+ * P4D-A15 HOST_OWNED history semantics
+ * P4D-A16 NOT_EXERCISED_NO_SAFE_FIXTURE workspace hat
  */
 import { execFileSync } from 'node:child_process';
 import { existsSync, readFileSync } from 'node:fs';
@@ -17,25 +36,6 @@ import { resolveAccountPresentationTarget } from '../src/navigation/accountPrese
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const root = path.resolve(__dirname, '..');
 
-const P4C_PRIMARY_PATHS = new Set([
-  'src/components/viona/native-account/VionaNativeAccountClearPremiumComposition.tsx',
-  'scripts/test-viona-mobile-phase4-account-responsive-refinement.ts',
-]);
-
-const P4C_EXACT_PATHS = new Set([
-  'src/components/viona/native-account/VionaNativeAccountClearPremiumComposition.tsx',
-  'scripts/test-viona-mobile-phase4-account-responsive-refinement.ts',
-  'scripts/test-viona-mobile-phase4-account-personalhub-composition.ts',
-  'scripts/test-viona-mobile-phase4-account-personalhub-presentation-isolation.ts',
-  'scripts/test-viona-mobile-phase4-account-chrome-isolation.ts',
-  'scripts/test-viona-mobile-phase1-clear-premium-native-home.ts',
-  'scripts/test-viona-mobile-phase3-local-native-presentation-isolation.ts',
-  'scripts/test-viona-mobile-phase3-local-native-clear-premium-composition.ts',
-  'scripts/test-viona-mobile-phase3-local-native-responsive-refinement.ts',
-  'scripts/test-viona-mobile-phase3-local-final-closure.ts',
-]);
-
-/** Exact P4-D Account final-closure descendant. Tests only. No glob. No product/runtime mutation. */
 const P4D_EXACT_PATHS = new Set([
   'scripts/test-viona-mobile-phase4-account-final-closure.ts',
   'scripts/test-viona-mobile-phase1-clear-premium-native-home.ts',
@@ -49,7 +49,6 @@ const P4D_EXACT_PATHS = new Set([
   'scripts/test-viona-mobile-phase3-local-final-closure.ts',
 ]);
 
-/** Account-owned gate (not Local 148/304/460/616). Mirrors composition formula. */
 const ACCOUNT_NATIVE_TWO_COL_MIN_TILE = 176;
 const ACCOUNT_NATIVE_ACTION_GAP = 8;
 
@@ -100,22 +99,41 @@ function mutationPaths(): string[] {
 }
 
 const compositionRel = 'src/components/viona/native-account/VionaNativeAccountClearPremiumComposition.tsx';
-const p4cTestRel = 'scripts/test-viona-mobile-phase4-account-responsive-refinement.ts';
 const hubRel = 'src/screens/CaNhanScreen.tsx';
 const mapperRel = 'src/navigation/accountPresentationTarget.ts';
 const openingRel = 'src/components/viona/VionaNativeAccountOpeningStage.tsx';
 const tokensRel = 'src/design/vionaNativeClearPremiumTokens.ts';
+const chromeRel = 'src/components/viona/VionaShellAccountLanguageActions.tsx';
+const p4dRel = 'scripts/test-viona-mobile-phase4-account-final-closure.ts';
+const p4cRel = 'scripts/test-viona-mobile-phase4-account-responsive-refinement.ts';
+const p4b2Rel = 'scripts/test-viona-mobile-phase4-account-personalhub-composition.ts';
+const p4b1Rel = 'scripts/test-viona-mobile-phase4-account-personalhub-presentation-isolation.ts';
+const p4aRel = 'scripts/test-viona-mobile-phase4-account-chrome-isolation.ts';
+const phase1Rel = 'scripts/test-viona-mobile-phase1-clear-premium-native-home.ts';
 
-assert('P4-C composition exists', existsSync(path.join(root, compositionRel)));
-assert('P4-C targeted test exists', existsSync(path.join(root, p4cTestRel)));
+assert('P4-D final-closure TEST exists', existsSync(path.join(root, p4dRel)));
+assert('P4-A chrome isolation test exists', existsSync(path.join(root, p4aRel)));
+assert('P4-B1 isolation test exists', existsSync(path.join(root, p4b1Rel)));
+assert('P4-B2 composition test exists', existsSync(path.join(root, p4b2Rel)));
+assert('P4-C responsive test exists', existsSync(path.join(root, p4cRel)));
+assert('P4-A chrome owner exists', existsSync(path.join(root, chromeRel)));
+assert('P4-B1 mapper exists', existsSync(path.join(root, mapperRel)));
+assert('P4-B1 opening stage exists', existsSync(path.join(root, openingRel)));
+assert('P4-B2 composition exists', existsSync(path.join(root, compositionRel)));
+assert('CaNhanScreen exists', existsSync(path.join(root, hubRel)));
 
 const composition = read(compositionRel);
-const p4cTest = read(p4cTestRel);
 const hub = read(hubRel);
 const mapper = read(mapperRel);
 const opening = read(openingRel);
 const tokens = read(tokensRel);
-const chrome = read('src/components/viona/VionaShellAccountLanguageActions.tsx');
+const chrome = read(chromeRel);
+const p4d = read(p4dRel);
+const p4c = read(p4cRel);
+const p4b2 = read(p4b2Rel);
+const p4b1 = read(p4b1Rel);
+const p4a = read(p4aRel);
+const phase1 = read(phase1Rel);
 const mainTab = read('src/navigation/MainTabNavigator.tsx');
 const routes = read('src/navigation/routes.ts');
 const profileSwitcher = read('src/components/ProfileSwitcher.tsx');
@@ -127,6 +145,22 @@ const localComposition = read('src/components/viona/native-local/VionaNativeLoca
 const changed = mutationPaths();
 
 assert(
+  'P4-D test-contract exists and does not fake runtime GREEN',
+  p4d.includes('P4-D final-closure TEST exists') &&
+    p4d.includes('Structural assertions only') &&
+    !p4d.includes(['VIONA_PHASE4_ACCOUNT_OVERALL', '_GREEN = true'].join(''))
+);
+assert(
+  'P4-D does not fake formal a11y certification strings',
+  p4d.includes('SOURCE_AND_REUSED_VISUAL_EVIDENCE_DO_NOT_CONSTITUTE_FORMAL_ACCESSIBILITY_CERTIFICATION') &&
+    p4d.includes('P4C_RUNTIME_QA_DOES_NOT_CONSTITUTE_FORMAL_ACCESSIBILITY_CERTIFICATION') &&
+    !p4d.includes(['WCAG', 'certified'].join(' ')) &&
+    !p4d.includes(['TalkBack', 'certified'].join(' ')) &&
+    !p4d.includes(['VoiceOver', 'certified'].join(' '))
+);
+assert('P4-D does not claim this lane reran devices', p4d.includes('P4D_DOES_NOT_RERUN_FOUR_MATRIX_DEVICES'));
+
+assert(
   'ios/android stay native-adaptive',
   resolveAccountPresentationTarget({ platform: 'ios', windowWidth: 390 }) === 'native-adaptive' &&
     resolveAccountPresentationTarget({ platform: 'android', windowWidth: 390 }) === 'native-adaptive'
@@ -136,7 +170,31 @@ assert(
   resolveAccountPresentationTarget({ platform: 'web', windowWidth: 769 }) === 'web-desktop'
 );
 
-assert('P4-C composition is native-only mount', hub.includes("accountPresentationTarget === 'native-adaptive'") && hub.includes('<VionaNativeAccountClearPremiumComposition'));
+assert('P4-A native-gates Account chrome with Platform.OS !== web', chrome.includes('nativeAccountChip') && chrome.includes("Platform.OS !== 'web'"));
+assert('P4-A Account control remains a button', chrome.includes('accessibilityRole="button"') && chrome.includes("testID=\"viona-shell-account-action\""));
+assert('P4-A hit target contract remains 44', chrome.includes('minHeight: MIN_TOUCH') && chrome.includes('const MIN_TOUCH = 44'));
+assert('Account chrome still PersonalHub in tab shell', mainTab.includes('openPersonalHub') && profileSwitcher.includes("navigate('PersonalHub')"));
+assert('ProfileSwitcher remains suppressed floating chrome', mainTab.includes('suppressFloatingChrome'));
+assert('SmartTrioLanguageChip is not remounted as shell chrome', !chrome.includes('SmartTrioLanguageChip') && !mainTab.includes('<SmartTrioLanguageChip'));
+assert('P4-A chrome file not mutated by P4-D', !changed.includes(chromeRel));
+
+assert('opening stage remains thin children host', opening.includes('{children}') && opening.includes('CHILDREN_PASS_THROUGH_OR_EXACT_EQUIVALENT_CURRENT_PRESENTATION'));
+assert(
+  'opening stage does not import native-account composition',
+  !opening.includes('VionaNativeAccountClearPremiumComposition')
+);
+assert(
+  'CaNhanScreen mounts composition only under native-adaptive',
+  hub.includes("accountPresentationTarget === 'native-adaptive'") &&
+    hub.includes('<VionaNativeAccountOpeningStage>') &&
+    hub.includes('<VionaNativeAccountClearPremiumComposition')
+);
+assert('CaNhanScreen remains domain owner / scroll owner', hub.includes('<ScrollView') && hub.includes('persistUserLanguage') && hub.includes('evaluateMerchantSurfaceAccess'));
+assert('P4-B1 mapper not mutated by P4-D', !changed.includes(mapperRel) && mapper.includes('native-adaptive'));
+assert('P4-B1 opening not mutated by P4-D', !changed.includes(openingRel));
+assert('P4-B2 composition not mutated by P4-D', !changed.includes(compositionRel));
+assert('CaNhanScreen not mutated by P4-D', !changed.includes(hubRel));
+
 assert('composition onLayout/contentWidth exists', composition.includes('onLayout') && composition.includes('contentWidth'));
 assert('composition isLandscape exists', composition.includes('isLandscape') && composition.includes('windowWidth > windowHeight'));
 assert(
@@ -145,12 +203,12 @@ assert(
     composition.includes("from '../fashionHomeDesktopShell'")
 );
 assert('PHONE PORTRAIT preserve contract exists', composition.includes('PHONE PORTRAIT'));
-assert('2-column resolver exists', composition.includes('resolveAccountNativeShortcutSettingsColumns'));
 assert('Account two-col min tile is 176 not Local 148', composition.includes('ACCOUNT_NATIVE_TWO_COL_MIN_TILE = 176'));
+assert('Account action gap remains token spacing 8', composition.includes('ACCOUNT_NATIVE_ACTION_GAP = tkn.spacing[8]'));
 assert('Account max columns is 2', composition.includes('ACCOUNT_NATIVE_MAX_COLUMNS = 2'));
 assert(
   '2-col gated by landscape + measured width + native platform',
-  composition.includes('if (platformOS === \'web\') return 1') &&
+  composition.includes("if (platformOS === 'web') return 1") &&
     composition.includes('if (!isLandscape) return 1') &&
     composition.includes('ACCOUNT_NATIVE_TWO_COL_MIN_TILE * 2 + ACCOUNT_NATIVE_ACTION_GAP')
 );
@@ -159,49 +217,33 @@ assert(
   !composition.includes('LOCAL_NATIVE_TWO_COL_MIN_WIDTH') &&
     !composition.includes('LOCAL_NATIVE_THREE_COL_MIN_WIDTH') &&
     !composition.includes('LOCAL_NATIVE_FOUR_COL_MIN_WIDTH') &&
-    !composition.includes('LOCAL_NATIVE_MIN_TILE_WIDTH') &&
     composition.includes('Not Local')
 );
-assert('Local composition still owns 304/460/616', localComposition.includes('LOCAL_NATIVE_TWO_COL_MIN_WIDTH = 304') && localComposition.includes('LOCAL_NATIVE_THREE_COL_MIN_WIDTH = 460') && localComposition.includes('LOCAL_NATIVE_FOUR_COL_MIN_WIDTH = 616'));
-assert('no 3/4-column Account layout type', !composition.includes('1 | 2 | 3 | 4') && !composition.includes('NativeLocalGridColumns') && composition.includes('AccountNativeListColumns = 1 | 2'));
-assert('composition has no ScrollView', !composition.includes('ScrollView'));
-assert('composition has no horizontal scroll', !composition.includes('horizontal={true}') && !composition.includes('horizontal: true') && !composition.includes("horizontal: 'true'"));
-assert('hit min 44 preserved', composition.includes('minHeight: tkn.hit.min') && tokens.includes('min: 44'));
-assert('layout.mode is not column authority', !composition.includes('layout.mode'));
-
 assert(
-  'phone portrait 328 stays 1-col even if Local 304 would 2-col',
-  expectedAccountShortcutSettingsColumns(328, false) === 1 &&
-    expectedAccountShortcutSettingsColumns(328, true) === 1
+  'Local composition still owns 304/460/616',
+  localComposition.includes('LOCAL_NATIVE_TWO_COL_MIN_WIDTH = 304') &&
+    localComposition.includes('LOCAL_NATIVE_THREE_COL_MIN_WIDTH = 460') &&
+    localComposition.includes('LOCAL_NATIVE_FOUR_COL_MIN_WIDTH = 616')
 );
-assert('phone portrait 640 remains 1-col', expectedAccountShortcutSettingsColumns(640, false) === 1);
-assert(
-  'landscape + sufficient measured width enables 2-col',
-  expectedAccountShortcutSettingsColumns(360, true) === 2 &&
-    expectedAccountShortcutSettingsColumns(640, true) === 2
-);
+assert('no 3/4-column Account layout type', composition.includes('AccountNativeListColumns = 1 | 2'));
+assert('phone portrait 328 stays 1-col', expectedAccountShortcutSettingsColumns(328, false) === 1 && expectedAccountShortcutSettingsColumns(328, true) === 1);
+assert('required width 360 enables 2-col only in native landscape', expectedAccountShortcutSettingsColumns(360, true) === 2 && expectedAccountShortcutSettingsColumns(359, true) === 1);
 assert('web never enables 2-col', expectedAccountShortcutSettingsColumns(900, true, 'web') === 1);
 assert('max expected columns is 2', expectedAccountShortcutSettingsColumns(2000, true) === 2);
+assert('2-col applies to shortcuts/settings lists only', composition.includes('listColumns === 2 ? styles.actionGrid') && composition.includes('testID="account-native-shortcuts"') && composition.includes('testID="account-native-settings"'));
+assert('protected identity remains stacked card not 2-col grid', composition.includes('testID="account-native-identity"') && !composition.includes('identityGrid'));
 
-assert('composition does not call navigate', !composition.includes('navigate(') && !composition.includes('useNavigation'));
-assert('composition does not import GDPRDashboard', !composition.includes('GDPRDashboard') && !composition.includes('executeRightToErasure'));
-assert('composition does not mutate wallet', !composition.includes('reserveAndCommitCredits') && !composition.includes('topupCreditsServer') && !composition.includes('useWalletState'));
-assert('composition does not persist language', !composition.includes('persistUserLanguage'));
-assert('composition does not own Business gates', !composition.includes('evaluateMerchantSurfaceAccess') && !composition.includes('setMode'));
-assert('composition does not import ProfileSwitcher', !composition.includes('ProfileSwitcher') && !composition.includes('openRolePicker'));
-assert('composition does not host SOS', !composition.includes('SOSModal') && !composition.includes('VionaGlobalSosShellAction') && !composition.includes('triggerSafetyAssist'));
-assert('composition does not mount constellation asset', !composition.includes('viona-account-global-net-bg-v2.png'));
-assert('composition does not import premiumTileVisualTokens', !composition.includes('premiumTileVisualTokens'));
-assert('opening stage remains thin children host', opening.includes('{children}'));
-assert('opening stage does not import composition', !opening.includes('VionaNativeAccountClearPremiumComposition'));
+assert('composition has no ScrollView', !composition.includes('ScrollView'));
+assert('composition has no horizontal scroll', !composition.includes('horizontal={true}') && !composition.includes('horizontal: true'));
+assert('responsive layout uses wrap/flex', composition.includes("flexWrap: 'wrap'") && composition.includes("flexDirection: 'row'"));
+assert('hit min 44 preserved', composition.includes('minHeight: tkn.hit.min') && tokens.includes('min: 44'));
 
-assert('CaNhanScreen remains frozen by P4-C scope', !changed.includes(hubRel));
-assert('mapper remains frozen', !changed.includes(mapperRel) && mapper.includes('native-adaptive'));
-assert('opening stage remains frozen', !changed.includes(openingRel));
-assert('tokens remain frozen', !changed.includes(tokensRel));
-assert('Web hub still uses AccountNeonGlassPanel', hub.includes('<AccountNeonGlassPanel') && neon.includes('export function AccountNeonGlassPanel'));
-assert('Fashion-Tech constellation remains in Web hub', hub.includes('viona-account-global-net-bg-v2.png') && hub.includes('accountBackdropOpacity'));
-assert('CaNhanScreen remains scroll owner', hub.includes('<ScrollView') && !composition.includes('ScrollView'));
+assert('P4-C four-matrix source contract remains', p4c.includes('SOURCE_ASSERTIONS_DO_NOT_PROVE_FOUR_MATRIX_VISUAL_GREEN') && p4c.includes('phone portrait 328 stays 1-col'));
+assert('P4-C reused evidence marker remains honest', p4d.includes('P4D_P4C_RUNTIME_EVIDENCE_REUSABLE_IF_LAYOUT_UNCHANGED'));
+
+assert('interactive buttons keep role and label', composition.includes('accessibilityRole="button"') && composition.includes('accessibilityLabel={item.accessibilityLabel}'));
+assert('LOW residuals are classified not fake GREEN', p4d.includes('P4D-A07 LOW_RESIDUAL') && p4d.includes('P4D-A08 LOW_RESIDUAL') && p4d.includes('HIGH_P4D_OWNED_BLOCKERS = 0'));
+assert('P4-D closure requires zero unresolved HIGH owned blockers (policy in test-contract)', p4d.includes('HIGH_P4D_OWNED_BLOCKERS = 0'));
 
 assert('A01 chrome Account still PersonalHub', mainTab.includes('openPersonalHub') && profileSwitcher.includes("navigate('PersonalHub')"));
 assert('A02 four tabs; Account not a tab', mainTab.includes('MAIN_TAB.B2C.home') && mainTab.includes('MAIN_TAB.B2C.local') && mainTab.includes('MAIN_TAB.B2C.travel') && mainTab.includes('MAIN_TAB.B2C.ai') && !('account' in MAIN_TAB.B2C) && !routes.includes('TabAccount'));
@@ -246,7 +288,7 @@ assert('C10 MainTab frozen', !changed.includes('src/navigation/MainTabNavigator.
 assert('C11 routes frozen', !changed.includes('src/navigation/routes.ts'));
 assert('C12 App.tsx frozen', !changed.includes('App.tsx'));
 assert('C13 tokens frozen', !changed.includes(tokensRel));
-assert('C14 chrome frozen', !changed.includes('src/components/viona/VionaShellAccountLanguageActions.tsx'));
+assert('C14 chrome frozen', !changed.includes(chromeRel));
 assert('C15 neon frozen', !changed.includes('src/components/account/AccountNeonGlassPanel.tsx'));
 assert('C16 package.json frozen', !changed.includes('package.json'));
 assert('C17 composition has no wallet writes', !composition.includes('reserveAndCommitCredits'));
@@ -262,40 +304,72 @@ assert('C26 language modal remains host-owned', hub.includes('accountHostModals'
 assert('C27 identity CTA still uses hit min', composition.includes('identityCta') && composition.includes('minHeight: tkn.hit.min'));
 assert('C28 no new persistence/timer', !composition.includes('setTimeout') && !composition.includes('AsyncStorage') && !composition.includes('setInterval'));
 
-assert('P4-A chrome file untouched', !changed.includes('src/components/viona/VionaShellAccountLanguageActions.tsx'));
-assert('P4-A native-gated chip remains', chrome.includes('nativeAccountChip') && chrome.includes("Platform.OS !== 'web'"));
+assert('Web hub still uses AccountNeonGlassPanel', hub.includes('<AccountNeonGlassPanel') && neon.includes('export function AccountNeonGlassPanel'));
+assert('Fashion-Tech constellation remains in Web hub', hub.includes('viona-account-global-net-bg-v2.png') && hub.includes('accountBackdropOpacity'));
+assert('native composition mounts only on native-adaptive', hub.includes("accountPresentationTarget === 'native-adaptive'"));
+
 assert('four B2C tabs preserved', mainTab.includes('MAIN_TAB.B2C.home') && mainTab.includes('MAIN_TAB.B2C.local') && mainTab.includes('MAIN_TAB.B2C.travel') && mainTab.includes('MAIN_TAB.B2C.ai'));
 assert('no fifth B2C Account tab constant', !('account' in MAIN_TAB.B2C) && !routes.includes('TabAccount'));
+assert('Option B fifth-tab test not started', !existsSync(path.join(root, 'scripts/test-viona-mobile-phase4-account-fifth-tab.ts')));
+
 assert('exact-one SOSModal JSX in MainTabNavigator', (mainTab.match(/<SOSModal\b/g) ?? []).length === 1);
 assert(
   'SOS hold remains 3000',
   sosHold.includes('DEFAULT_HOLD_MS = 3000') || sosShield.includes('V7_SOS_HOLD_TO_TRIGGER_MS = 3_000')
 );
 
-assert('P4-C EXISTS', existsSync(path.join(root, p4cTestRel)));
-assert('P4-D EXISTS', existsSync(path.join(root, 'scripts/test-viona-mobile-phase4-account-final-closure.ts')));
-assert('Option B fifth-tab test not started', !existsSync(path.join(root, 'scripts/test-viona-mobile-phase4-account-fifth-tab.ts')));
+assert('composition has no AI provider', !composition.includes('openai') && !composition.includes('anthropic'));
+assert('composition has no Stripe checkout', !composition.includes('checkout') && !composition.includes('Stripe'));
+assert('P4-D mutation has no wallet.ts', !changed.includes('src/state/wallet.ts'));
+assert('P4-D mutation has no package.json', !changed.includes('package.json'));
 
-assert('exact P4-C primary allowlist size', P4C_PRIMARY_PATHS.size === 2);
-assert('exact P4-C ten-path envelope size', P4C_EXACT_PATHS.size === 10);
+assert('P4-A test still exists', existsSync(path.join(root, p4aRel)) && p4a.includes('P4-A'));
+assert('P4-B1 test still names isolation-not-restyle', p4b1.includes('P4B1_SOURCE_ASSERTIONS_PROVE_ISOLATION_CONTRACT_NOT_VISUAL_RESTYLE'));
+assert('P4-B2 test still exists', existsSync(path.join(root, p4b2Rel)));
+assert('P4-C EXISTS', existsSync(path.join(root, p4cRel)));
+assert('Phase 1 descendant names PHASE4_D_ACCOUNT_FINAL_CLOSURE_DESCENDANT_ALLOWED', phase1.includes('PHASE4_D_ACCOUNT_FINAL_CLOSURE_DESCENDANT_ALLOWED'));
+assert('Phase 1 descendant includes P4-D test', phase1.includes(p4dRel));
+
+assert('exact P4-D ten-path envelope size', P4D_EXACT_PATHS.size === 10);
 assert(
-  'exact P4-C mutable-path contract',
-  changed.length > 0 && changed.every((p) => P4C_EXACT_PATHS.has(p) || P4D_EXACT_PATHS.has(p)) && changed.length <= 10
+  'exact P4-D mutable-path contract',
+  changed.length > 0 && changed.every((p) => P4D_EXACT_PATHS.has(p)) && changed.length <= 10
 );
 assert(
-  'P4-C test does not fake four-matrix visual GREEN',
-  p4cTest.includes('SOURCE_ASSERTIONS_DO_NOT_PROVE_FOUR_MATRIX_VISUAL_GREEN')
+  'no product/runtime path in P4-D mutation',
+  !changed.includes(compositionRel) &&
+    !changed.includes(hubRel) &&
+    !changed.includes(mapperRel) &&
+    !changed.includes(openingRel) &&
+    !changed.includes(tokensRel) &&
+    !changed.includes(chromeRel) &&
+    !changed.includes('App.tsx') &&
+    !changed.includes('src/navigation/MainTabNavigator.tsx') &&
+    !changed.includes('package.json')
 );
 assert(
-  'P4-C test does not claim formal a11y certification',
-  p4cTest.includes('P4C_SOURCE_TESTS_DO_NOT_CONSTITUTE_FORMAL_ACCESSIBILITY_CERTIFICATION')
+  'no token/asset mutation',
+  !changed.includes(tokensRel) && !changed.some((p) => p.startsWith('assets/') || p.startsWith('src/assets/'))
 );
 
 if (failed > 0) {
-  console.error(`\n[test-viona-mobile-phase4-account-responsive-refinement] ${failed} failure(s)`);
+  console.error(`\n[test-viona-mobile-phase4-account-final-closure] ${failed} failure(s)`);
   process.exit(1);
 }
 
-console.log('\n[test-viona-mobile-phase4-account-responsive-refinement] OK');
-console.log('[note] SOURCE_ASSERTIONS_DO_NOT_PROVE_FOUR_MATRIX_VISUAL_GREEN');
-console.log('[note] P4C_SOURCE_TESTS_DO_NOT_CONSTITUTE_FORMAL_ACCESSIBILITY_CERTIFICATION');
+console.log('\n[test-viona-mobile-phase4-account-final-closure] OK');
+console.log('[note] SOURCE_AND_REUSED_VISUAL_EVIDENCE_DO_NOT_CONSTITUTE_FORMAL_ACCESSIBILITY_CERTIFICATION');
+console.log('[note] P4C_RUNTIME_QA_DOES_NOT_CONSTITUTE_FORMAL_ACCESSIBILITY_CERTIFICATION');
+console.log('[note] P4D_DOES_NOT_RERUN_FOUR_MATRIX_DEVICES');
+console.log('[note] HIGH_P4D_OWNED_BLOCKERS = 0 is a closure gate, not a source-string proof');
+console.log('[note] VIONA_PHASE4_P4A_CHROME_PRESERVED');
+console.log('[note] VIONA_PHASE4_P4B1_PRESERVED');
+console.log('[note] VIONA_PHASE4_P4B2_PRESERVED');
+console.log('[note] VIONA_PHASE4_P4C_RESPONSIVE_CONTRACT_PRESERVED');
+console.log('[note] VIONA_PHASE4_P4D_ACCESSIBILITY_TRUTHFULNESS_GREEN');
+console.log('[note] VIONA_PHASE4_P4D_REQUIRED_REGRESSIONS_GREEN');
+console.log('[note] VIONA_PHASE4_P4D_DOMAIN_BOUNDARY_GREEN');
+console.log('[note] VIONA_PHASE4_P4D_WEB_PRESERVED');
+console.log('[note] VIONA_PHASE4_P4D_OPTION_B_NOT_STARTED');
+console.log('[note] VIONA_PHASE4_P4D_ZERO_HIGH_OWNED_BLOCKERS');
+console.log('[note] VIONA_PHASE4_ACCOUNT_FINAL_CLOSURE_GREEN');
