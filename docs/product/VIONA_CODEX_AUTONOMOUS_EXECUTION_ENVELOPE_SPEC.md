@@ -51,6 +51,7 @@ EXPECTED_BASE:
   head:
   parent:
   tree_state:
+  untracked_paths:
 
 MODE:
   autonomy_level:
@@ -132,6 +133,12 @@ FINAL_CLASSIFICATION:
   success:
   blocked:
 ```
+
+`EXPECTED_BASE.untracked_paths` is an exact baseline declaration. Use
+`untracked_paths: []` when no untracked repository files are expected. If
+untracked files are expected, list their exact repository paths. The observed
+output of `git ls-files --others --exclude-standard` must match that declared
+set exactly; Codex must not infer expected untracked paths.
 
 ---
 
@@ -553,6 +560,7 @@ EXPECTED_BASE:
   head: 0000000000000000000000000000000000000000
   parent: 0000000000000000000000000000000000000000
   tree_state: clean
+  untracked_paths: []
 
 MODE:
   autonomy_level: A2C
