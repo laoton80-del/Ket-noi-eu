@@ -67,9 +67,36 @@ jobs:
         with:
           node-version: 20
 
+      # Secrets are not read into `if:` expressions. Detect presence without
+      # printing values. If absent, skip minting and pass an empty token so the
+      # gate script can fail-closed with BLOCKED_MERGE_PROTECTION_READ_CREDENTIAL_MISSING.
+      - name: Detect protection-read App secrets
+        id: protection_read_secrets
+        env:
+          APP_ID: ${{ secrets.VIONA_GATE_PROTECTION_READ_APP_ID }}
+          APP_PRIVATE_KEY: ${{ secrets.VIONA_GATE_PROTECTION_READ_APP_PRIVATE_KEY }}
+        run: |
+          if [ -n "$APP_ID" ] && [ -n "$APP_PRIVATE_KEY" ]; then
+            echo "present=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "present=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Mint protection-read GitHub App token
+        id: protection_read
+        if: steps.protection_read_secrets.outputs.present == 'true'
+        uses: actions/create-github-app-token@v2
+        with:
+          app-id: ${{ secrets.VIONA_GATE_PROTECTION_READ_APP_ID }}
+          private-key: ${{ secrets.VIONA_GATE_PROTECTION_READ_APP_PRIVATE_KEY }}
+          owner: laoton80-del
+          repositories: Ket-noi-eu
+          permission-administration: read
+
       - name: Evaluate Viona Merge Authorization Gate
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VIONA_GATE_PROTECTION_READ_TOKEN: ${{ steps.protection_read.outputs.token }}
           VIONA_GATE_PR_NUMBER: ${{ inputs.pr_number }}
           VIONA_GATE_HEAD_SHA: ${{ inputs.head_sha }}
           VIONA_GATE_BASE_BRANCH: ${{ inputs.base_branch }}

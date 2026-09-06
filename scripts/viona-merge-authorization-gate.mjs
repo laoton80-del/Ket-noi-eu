@@ -76,6 +76,10 @@ export const BLOCKERS = Object.freeze({
   BLOCKED_MERGE_AUTO_MERGE_ACTIVE: 'BLOCKED_MERGE_AUTO_MERGE_ACTIVE',
   BLOCKED_MERGE_REPOSITORY_RULESET_NOT_ENFORCED:
     'BLOCKED_MERGE_REPOSITORY_RULESET_NOT_ENFORCED',
+  BLOCKED_MERGE_PROTECTION_READ_CREDENTIAL_MISSING:
+    'BLOCKED_MERGE_PROTECTION_READ_CREDENTIAL_MISSING',
+  BLOCKED_MERGE_PROTECTION_READ_UNAUTHORIZED:
+    'BLOCKED_MERGE_PROTECTION_READ_UNAUTHORIZED',
   BLOCKED_MERGE_WORKFLOW_RERUN_NOT_PERMITTED:
     'BLOCKED_MERGE_WORKFLOW_RERUN_NOT_PERMITTED',
   BLOCKED_VIONA_T3_GATE_CONTEXT_IDENTITY_AMBIGUOUS:
@@ -99,6 +103,43 @@ export const BLOCKERS = Object.freeze({
 
 const FULL_SHA_RE = /^[0-9a-f]{40}$/i;
 const FORBIDDEN_INPUT_KEYS = Object.freeze(['authorization', 'authorized_operator']);
+
+export const CANONICAL_MASTER_PROTECTION_PATH = `/repos/${CANONICAL_REPOSITORY}/branches/master/protection`;
+
+export function normalizeRestPath(urlPath) {
+  return String(urlPath ?? '').split('?')[0];
+}
+
+export function isCanonicalMasterProtectionPath(urlPath) {
+  return normalizeRestPath(urlPath) === CANONICAL_MASTER_PROTECTION_PATH;
+}
+
+function pathGuardError(message) {
+  const err = new Error(message);
+  err.sanitized = { message };
+  return err;
+}
+
+/**
+ * GITHUB_TOKEN / checks REST route must never perform the canonical protection GET.
+ */
+export function assertChecksRestRequest(method, urlPath) {
+  void method;
+  if (isCanonicalMasterProtectionPath(urlPath)) {
+    throw pathGuardError('checks_token_protection_get_forbidden');
+  }
+}
+
+/**
+ * Protection-read credential may perform exactly one operation:
+ * GET /repos/laoton80-del/Ket-noi-eu/branches/master/protection
+ */
+export function assertProtectionReadRequest(method, urlPath) {
+  const m = String(method ?? '').toUpperCase();
+  if (m !== 'GET' || !isCanonicalMasterProtectionPath(urlPath)) {
+    throw pathGuardError('protection_read_path_forbidden');
+  }
+}
 
 export function computeReviewedScopeDigest(files) {
   const records = (files ?? []).map((f) => {
@@ -366,6 +407,7 @@ export function selectExactHeadApproval(reviews, headSha, dispatchCreatedAtMs) {
 async function rest(deps, method, urlPath, body) {
   deps.mergeCalls = deps.mergeCalls ?? [];
   if (/\/merges$|\/merge$/.test(urlPath)) deps.mergeCalls.push({ method, urlPath });
+  assertChecksRestRequest(method, urlPath);
   return deps.restRequest({ method, urlPath, body });
 }
 
@@ -870,34 +912,79 @@ export async function runMergeAuthorizationGate(deps) {
       });
     }
 
+    const protectionTokenPresent =
+      String(env.VIONA_GATE_PROTECTION_READ_TOKEN ?? '').trim().length > 0;
+    if (!protectionTokenPresent) {
+      return completeIfCreated({
+        conclusion: 'failure',
+        blocker: BLOCKERS.BLOCKED_MERGE_PROTECTION_READ_CREDENTIAL_MISSING,
+        evidence: sanitizeEvidence({
+          decision: 'failure',
+          blocker: BLOCKERS.BLOCKED_MERGE_PROTECTION_READ_CREDENTIAL_MISSING,
+        }),
+      });
+    }
+
     let repositoryEnforcementActive = false;
     let requiredCheckFailed = false;
     let staleRequiredCheckFromOtherSha = false;
+    let protection;
     try {
-      const protection = await rest(deps, 'GET', `/repos/${owner}/${repo}/branches/master/protection`);
-      repositoryEnforcementActive =
-        protection?.enforce_admins?.enabled === true ||
-        protection?.required_status_checks != null;
-      const requiredContexts = protection?.required_status_checks?.contexts ?? [];
-      const checkRuns = await listAllCheckRuns(deps, owner, repo, inputs.headSha);
-      for (const ctx of requiredContexts) {
-        if (ctx === GATE_CHECK_RUN_NAME) continue;
-        const onHead = checkRuns.filter(
-          (c) =>
-            c.name === ctx &&
-            String(c.head_sha).toLowerCase() === String(inputs.headSha).toLowerCase(),
-        );
-        const other = checkRuns.filter(
-          (c) =>
-            c.name === ctx &&
-            String(c.head_sha).toLowerCase() !== String(inputs.headSha).toLowerCase(),
-        );
-        if (onHead.length === 0 && other.length > 0) staleRequiredCheckFromOtherSha = true;
-        if (!onHead.some((c) => c.conclusion === 'success')) requiredCheckFailed = true;
+      if (!deps.protectionRestRequest) {
+        return completeIfCreated({
+          conclusion: 'failure',
+          blocker: BLOCKERS.BLOCKED_VIONA_T3_GATE_TECHNICAL_ERROR,
+          evidence: sanitizeEvidence({
+            decision: 'failure',
+            blocker: BLOCKERS.BLOCKED_VIONA_T3_GATE_TECHNICAL_ERROR,
+            reason: 'protection_adapter_missing',
+          }),
+        });
       }
-    } catch {
-      repositoryEnforcementActive = false;
+      protection = await deps.protectionRestRequest({
+        method: 'GET',
+        urlPath: CANONICAL_MASTER_PROTECTION_PATH,
+      });
+    } catch (err) {
+      const status = err?.sanitized?.status;
+      if (status === 401 || status === 403) {
+        return completeIfCreated({
+          conclusion: 'failure',
+          blocker: BLOCKERS.BLOCKED_MERGE_PROTECTION_READ_UNAUTHORIZED,
+          evidence: sanitizeEvidence({
+            decision: 'failure',
+            blocker: BLOCKERS.BLOCKED_MERGE_PROTECTION_READ_UNAUTHORIZED,
+            status,
+          }),
+        });
+      }
+      if (status === 404) {
+        return completeIfCreated({
+          conclusion: 'failure',
+          blocker: BLOCKERS.BLOCKED_MERGE_REPOSITORY_RULESET_NOT_ENFORCED,
+          evidence: sanitizeEvidence({
+            decision: 'failure',
+            blocker: BLOCKERS.BLOCKED_MERGE_REPOSITORY_RULESET_NOT_ENFORCED,
+            status,
+          }),
+        });
+      }
+      return completeIfCreated({
+        conclusion: 'failure',
+        blocker: BLOCKERS.BLOCKED_VIONA_T3_GATE_TECHNICAL_ERROR,
+        evidence: sanitizeEvidence({
+          decision: 'failure',
+          blocker: BLOCKERS.BLOCKED_VIONA_T3_GATE_TECHNICAL_ERROR,
+          reason: 'protection_get_error',
+        }),
+      });
     }
+    const protectionMalformed =
+      protection == null || typeof protection !== 'object' || Array.isArray(protection);
+    repositoryEnforcementActive =
+      !protectionMalformed &&
+      (protection?.enforce_admins?.enabled === true ||
+        protection?.required_status_checks != null);
     if (!repositoryEnforcementActive) {
       return completeIfCreated({
         conclusion: 'failure',
@@ -907,6 +994,23 @@ export async function runMergeAuthorizationGate(deps) {
           blocker: BLOCKERS.BLOCKED_MERGE_REPOSITORY_RULESET_NOT_ENFORCED,
         }),
       });
+    }
+    const requiredContexts = protection?.required_status_checks?.contexts ?? [];
+    const checkRuns = await listAllCheckRuns(deps, owner, repo, inputs.headSha);
+    for (const ctx of requiredContexts) {
+      if (ctx === GATE_CHECK_RUN_NAME) continue;
+      const onHead = checkRuns.filter(
+        (c) =>
+          c.name === ctx &&
+          String(c.head_sha).toLowerCase() === String(inputs.headSha).toLowerCase(),
+      );
+      const other = checkRuns.filter(
+        (c) =>
+          c.name === ctx &&
+          String(c.head_sha).toLowerCase() !== String(inputs.headSha).toLowerCase(),
+      );
+      if (onHead.length === 0 && other.length > 0) staleRequiredCheckFromOtherSha = true;
+      if (!onHead.some((c) => c.conclusion === 'success')) requiredCheckFailed = true;
     }
     if (requiredCheckFailed || staleRequiredCheckFromOtherSha) {
       return completeIfCreated({
@@ -1023,10 +1127,10 @@ export async function runMergeAuthorizationGate(deps) {
 }
 
 export function createProductionDeps(env = process.env) {
-  const token = env.GITHUB_TOKEN;
+  const checksToken = env.GITHUB_TOKEN;
   const apiBase = 'https://api.github.com';
 
-  async function restRequest({ method, urlPath, body }) {
+  async function githubFetch(token, { method, urlPath, body }) {
     const res = await fetch(`${apiBase}${urlPath}`, {
       method,
       headers: {
@@ -1052,12 +1156,28 @@ export function createProductionDeps(env = process.env) {
     return json;
   }
 
+  async function restRequest({ method, urlPath, body }) {
+    assertChecksRestRequest(method, urlPath);
+    return githubFetch(checksToken, { method, urlPath, body });
+  }
+
+  async function protectionRestRequest({ method, urlPath, body }) {
+    assertProtectionReadRequest(method, urlPath);
+    const protectionToken = String(env.VIONA_GATE_PROTECTION_READ_TOKEN ?? '').trim();
+    if (!protectionToken) {
+      const err = new Error('protection_read_credential_missing');
+      err.sanitized = { message: 'protection_read_credential_missing' };
+      throw err;
+    }
+    return githubFetch(protectionToken, { method, urlPath, body });
+  }
+
   async function graphqlRequest({ query, variables }) {
     const res = await fetch(`${apiBase}/graphql`, {
       method: 'POST',
       headers: {
         Accept: 'application/vnd.github+json',
-        Authorization: `Bearer ${token}`,
+        Authorization: `Bearer ${checksToken}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({ query, variables }),
@@ -1074,6 +1194,7 @@ export function createProductionDeps(env = process.env) {
   return {
     env,
     restRequest,
+    protectionRestRequest,
     graphqlRequest,
     async createCheckRun({ name, headSha, status }) {
       return restRequest({
