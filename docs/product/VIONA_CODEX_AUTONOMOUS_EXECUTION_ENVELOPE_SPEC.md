@@ -52,6 +52,7 @@ EXPECTED_BASE:
   parent:
   tree_state:
   staged_paths:
+  staged_diff_sha256:
   untracked_paths:
 
 MODE:
@@ -144,6 +145,25 @@ exactly. Rename detection must be disabled for staged path-set comparisons so
 both the source and destination paths of a staged rename are enumerated and
 must be explicitly authorized.
 
+`EXPECTED_BASE.staged_diff_sha256` pins the exact content of the baseline index
+when staged changes exist. It is the lowercase SHA-256 of the exact raw stdout
+bytes from this canonical command, with no text decoding or newline
+normalization before hashing:
+
+```bash
+git -c core.abbrev=40 diff --cached --raw --no-renames -z
+```
+
+For this SHA-1 repository, `core.abbrev=40` forces full object IDs in the raw
+index diff. The byte stream includes modes, pre/post object IDs, status, and
+NUL-delimited paths; with rename detection disabled, both endpoints of a rename
+are represented as separate delete/add records. A clean index therefore uses
+the SHA-256 of the empty byte string:
+`e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855`.
+The staged-content digest must be verified at preflight and reverified
+immediately before any commit-only operation. Matching path names without a
+matching staged-content digest is not sufficient.
+
 `EXPECTED_BASE.untracked_paths` is an exact baseline declaration. Use
 `untracked_paths: []` when no untracked repository files are expected. If
 untracked files are expected, list their exact repository paths. The observed
@@ -155,7 +175,7 @@ set exactly; Codex must not infer expected untracked paths.
 ## 4. Autonomy Levels
 
 | Level | Name | Local authority | Remote authority |
-| --- | --- | --- | --- |
+| --- | --- | --- |
 | A0 | Read / audit | Read-only inspection and reporting | None |
 | A1 | Docs / planning | Create or edit exact docs only | None |
 | A2 | Local implementation + tests | Edit exact allowlisted local files and run validators | None |
@@ -207,6 +227,14 @@ git diff --cached --no-renames --name-only
 git ls-files --others --exclude-standard
 ```
 
+In addition, compute and compare the exact raw-byte SHA-256 for:
+
+```bash
+git -c core.abbrev=40 diff --cached --raw --no-renames -z
+```
+
+against `EXPECTED_BASE.staged_diff_sha256`.
+
 Require:
 
 - canonical root;
@@ -214,6 +242,7 @@ Require:
 - exact HEAD;
 - expected tree state;
 - expected staged path set, with rename source and destination paths both enumerated;
+- expected staged-content digest;
 - expected untracked-file state.
 
 Any mismatch means stop. No automatic checkout, reset, rebase, stash, pull, fetch, branch repair, or worktree repair is allowed unless explicitly authorized.
@@ -357,14 +386,17 @@ When commit authority is true:
 - `COMMIT_AUTHORITY.paths` must list every repository path authorized for the commit exactly, including both source and destination paths of any rename;
 - immediately before committing, `git diff --cached --no-renames --name-only` must equal `COMMIT_AUTHORITY.paths` exactly, with no additional staged path;
 - if stage authority is false, perform no staging and require the pre-existing cached path set to match both `EXPECTED_BASE.staged_paths` and `COMMIT_AUTHORITY.paths` exactly;
+- if stage authority is false, also recompute the raw staged-content digest immediately before commit and require exact equality with `EXPECTED_BASE.staged_diff_sha256`;
 - if stage authority is true, require the post-stage cached path set to match `COMMIT_AUTHORITY.paths` exactly before committing;
 - create exactly the number of commits authorized;
 - use the exact subject if provided;
 - do not amend, rebase, squash, or rewrite history unless explicitly granted.
 
-A commit must not package an unnamed or unrelated staged path. Commit authority
-without an exact `COMMIT_AUTHORITY.paths` set is insufficient to authorize a
-commit.
+A commit must not package an unnamed, unrelated, or baseline-drifted staged
+change. Commit authority without an exact `COMMIT_AUTHORITY.paths` set is
+insufficient, and a commit-only lane with pre-existing staged content is
+forbidden unless both its exact path set and its staged-content digest match the
+operator-declared baseline immediately before commit.
 
 ---
 
@@ -581,6 +613,7 @@ EXPECTED_BASE:
   parent: 0000000000000000000000000000000000000000
   tree_state: clean
   staged_paths: []
+  staged_diff_sha256: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
   untracked_paths: []
 
 MODE:
