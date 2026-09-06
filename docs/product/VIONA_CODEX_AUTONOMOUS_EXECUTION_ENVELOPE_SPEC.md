@@ -139,7 +139,10 @@ FINAL_CLASSIFICATION:
 `EXPECTED_BASE.staged_paths` is the exact baseline index-path declaration. Use
 `staged_paths: []` when no paths are staged at baseline; otherwise list every
 expected staged repository path exactly. The observed output of
-`git diff --cached --name-only` must match that declared set exactly.
+`git diff --cached --no-renames --name-only` must match that declared set
+exactly. Rename detection must be disabled for staged path-set comparisons so
+both the source and destination paths of a staged rename are enumerated and
+must be explicitly authorized.
 
 `EXPECTED_BASE.untracked_paths` is an exact baseline declaration. Use
 `untracked_paths: []` when no untracked repository files are expected. If
@@ -200,7 +203,7 @@ git branch --show-current
 git rev-parse HEAD
 git status --short --branch
 git diff --name-only
-git diff --cached --name-only
+git diff --cached --no-renames --name-only
 git ls-files --others --exclude-standard
 ```
 
@@ -210,7 +213,7 @@ Require:
 - expected branch;
 - exact HEAD;
 - expected tree state;
-- expected staged path set;
+- expected staged path set, with rename source and destination paths both enumerated;
 - expected untracked-file state.
 
 Any mismatch means stop. No automatic checkout, reset, rebase, stash, pull, fetch, branch repair, or worktree repair is allowed unless explicitly authorized.
@@ -334,7 +337,7 @@ stage-only lane with stage authority true and commit authority false is valid.
 When stage authority is true:
 
 - use exact paths only;
-- run `git diff --cached --name-only`;
+- run `git diff --cached --no-renames --name-only` and require every staged path, including both endpoints of a rename, to be authorized;
 - run `git diff --cached --check`.
 
 Never use these staging commands unless the operator explicitly authorizes them:
@@ -351,8 +354,8 @@ imply stage authority.
 
 When commit authority is true:
 
-- `COMMIT_AUTHORITY.paths` must list every repository path authorized for the commit exactly;
-- immediately before committing, `git diff --cached --name-only` must equal `COMMIT_AUTHORITY.paths` exactly, with no additional staged path;
+- `COMMIT_AUTHORITY.paths` must list every repository path authorized for the commit exactly, including both source and destination paths of any rename;
+- immediately before committing, `git diff --cached --no-renames --name-only` must equal `COMMIT_AUTHORITY.paths` exactly, with no additional staged path;
 - if stage authority is false, perform no staging and require the pre-existing cached path set to match both `EXPECTED_BASE.staged_paths` and `COMMIT_AUTHORITY.paths` exactly;
 - if stage authority is true, require the post-stage cached path set to match `COMMIT_AUTHORITY.paths` exactly before committing;
 - create exactly the number of commits authorized;
