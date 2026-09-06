@@ -86,7 +86,7 @@ Every controlled lane must be expressible as a finite budget:
 
 | Mutation type | Required declaration |
 | --- | --- |
-| File edits | Exact paths or exact count plus documentation-only class |
+| File edits | Explicit exact paths; file count and documentation class are budget or evidence metadata only |
 | Stage | Yes or no, with exact path list when yes |
 | Commit | Yes or no, with expected subject when yes |
 | Push | Yes or no, with target branch when yes |
@@ -97,6 +97,12 @@ Every controlled lane must be expressible as a finite budget:
 | Data/API | Yes or no, with exact endpoint/table and safety gate when yes |
 
 If a lane says zero for a mutation class, Codex must not perform that mutation class.
+
+All repository file mutation authority requires explicit exact paths. A
+documentation class may describe the work type, and a file count may record a
+budget or evidence, but neither can substitute for exact paths. Wildcards,
+broad categories, or inferred paths such as `related files`, `supporting files`,
+or `as needed` do not grant file mutation authority.
 
 ### 3.4 Fail closed
 
@@ -165,9 +171,12 @@ git branch --show-current
 git rev-parse HEAD
 git status --short --branch
 git diff --name-only
-git diff --cached --name-only
+git diff --cached --no-renames --name-only
 git ls-files --others --exclude-standard
 ```
+
+The staged-path preflight disables rename detection so both source and
+destination endpoints of a staged rename are visible to exact-path validation.
 
 For branch creation from a named baseline:
 
@@ -300,7 +309,7 @@ Codex may proceed without asking another question only when all of these are tru
 1. the operator phrase clearly names the lane;
 2. the baseline matches;
 3. the mutation budget is finite;
-4. every edited file is inside the allowlist or exact docs-only count;
+4. every edited repository file is inside the explicit exact-path allowlist;
 5. no protected VIONA surface is being activated;
 6. no remote or production action is implied;
 7. validation commands are safe for the lane;

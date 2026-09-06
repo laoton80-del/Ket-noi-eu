@@ -51,6 +51,9 @@ EXPECTED_BASE:
   head:
   parent:
   tree_state:
+  staged_paths:
+  staged_diff_sha256:
+  untracked_paths:
 
 MODE:
   autonomy_level:
@@ -87,6 +90,7 @@ STAGE_AUTHORITY:
 
 COMMIT_AUTHORITY:
   allowed:
+  paths:
   count:
   subject:
 
@@ -133,12 +137,45 @@ FINAL_CLASSIFICATION:
   blocked:
 ```
 
+`EXPECTED_BASE.staged_paths` is the exact baseline index-path declaration. Use
+`staged_paths: []` when no paths are staged at baseline; otherwise list every
+expected staged repository path exactly. The observed output of
+`git diff --cached --no-renames --name-only` must match that declared set
+exactly. Rename detection must be disabled for staged path-set comparisons so
+both the source and destination paths of a staged rename are enumerated and
+must be explicitly authorized.
+
+`EXPECTED_BASE.staged_diff_sha256` pins the exact content of the baseline index
+when staged changes exist. It is the lowercase SHA-256 of the exact raw stdout
+bytes from this canonical command, with no text decoding or newline
+normalization before hashing:
+
+```bash
+git -c core.abbrev=40 diff --cached --raw --no-renames -z
+```
+
+For this SHA-1 repository, `core.abbrev=40` forces full object IDs in the raw
+index diff. The byte stream includes modes, pre/post object IDs, status, and
+NUL-delimited paths; with rename detection disabled, both endpoints of a rename
+are represented as separate delete/add records. A clean index therefore uses
+the SHA-256 of the empty byte string:
+`e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855`.
+The staged-content digest must be verified at preflight and reverified
+immediately before any commit-only operation. Matching path names without a
+matching staged-content digest is not sufficient.
+
+`EXPECTED_BASE.untracked_paths` is an exact baseline declaration. Use
+`untracked_paths: []` when no untracked repository files are expected. If
+untracked files are expected, list their exact repository paths. The observed
+output of `git ls-files --others --exclude-standard` must match that declared
+set exactly; Codex must not infer expected untracked paths.
+
 ---
 
 ## 4. Autonomy Levels
 
 | Level | Name | Local authority | Remote authority |
-| --- | --- | --- | --- |
+| --- | --- | --- |
 | A0 | Read / audit | Read-only inspection and reporting | None |
 | A1 | Docs / planning | Create or edit exact docs only | None |
 | A2 | Local implementation + tests | Edit exact allowlisted local files and run validators | None |
@@ -186,8 +223,17 @@ git branch --show-current
 git rev-parse HEAD
 git status --short --branch
 git diff --name-only
-git diff --cached --name-only
+git diff --cached --no-renames --name-only
+git ls-files --others --exclude-standard
 ```
+
+In addition, compute and compare the exact raw-byte SHA-256 for:
+
+```bash
+git -c core.abbrev=40 diff --cached --raw --no-renames -z
+```
+
+against `EXPECTED_BASE.staged_diff_sha256`.
 
 Require:
 
@@ -195,7 +241,9 @@ Require:
 - expected branch;
 - exact HEAD;
 - expected tree state;
-- expected staged state.
+- expected staged path set, with rename source and destination paths both enumerated;
+- expected staged-content digest;
+- expected untracked-file state.
 
 Any mismatch means stop. No automatic checkout, reset, rebase, stash, pull, fetch, branch repair, or worktree repair is allowed unless explicitly authorized.
 
@@ -310,15 +358,15 @@ Codex must not claim success without evidence.
 
 ## 11. Local Commit Contract
 
-If local commit authority is false:
+Stage authority and commit authority are independent. If stage authority is
+false, do not stage. If stage authority is true, Codex may stage only the exact
+paths in `STAGE_AUTHORITY.paths`, including when commit authority is false. A
+stage-only lane with stage authority true and commit authority false is valid.
 
-- do not stage;
-- do not commit.
-
-If stage authority is true:
+When stage authority is true:
 
 - use exact paths only;
-- run `git diff --cached --name-only`;
+- run `git diff --cached --no-renames --name-only` and require every staged path, including both endpoints of a rename, to be authorized;
 - run `git diff --cached --check`.
 
 Never use these staging commands unless the operator explicitly authorizes them:
@@ -329,11 +377,26 @@ git add -A
 git add --all
 ```
 
-If commit authority is true:
+If commit authority is false, do not commit; it does not independently forbid
+staging authorized by stage authority. If commit authority is true, it does not
+imply stage authority.
 
+When commit authority is true:
+
+- `COMMIT_AUTHORITY.paths` must list every repository path authorized for the commit exactly, including both source and destination paths of any rename;
+- immediately before committing, `git diff --cached --no-renames --name-only` must equal `COMMIT_AUTHORITY.paths` exactly, with no additional staged path;
+- if stage authority is false, perform no staging and require the pre-existing cached path set to match both `EXPECTED_BASE.staged_paths` and `COMMIT_AUTHORITY.paths` exactly;
+- if stage authority is false, also recompute the raw staged-content digest immediately before commit and require exact equality with `EXPECTED_BASE.staged_diff_sha256`;
+- if stage authority is true, require the post-stage cached path set to match `COMMIT_AUTHORITY.paths` exactly before committing;
 - create exactly the number of commits authorized;
 - use the exact subject if provided;
 - do not amend, rebase, squash, or rewrite history unless explicitly granted.
+
+A commit must not package an unnamed, unrelated, or baseline-drifted staged
+change. Commit authority without an exact `COMMIT_AUTHORITY.paths` set is
+insufficient, and a commit-only lane with pre-existing staged content is
+forbidden unless both its exact path set and its staged-content digest match the
+operator-declared baseline immediately before commit.
 
 ---
 
@@ -549,6 +612,9 @@ EXPECTED_BASE:
   head: 0000000000000000000000000000000000000000
   parent: 0000000000000000000000000000000000000000
   tree_state: clean
+  staged_paths: []
+  staged_diff_sha256: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+  untracked_paths: []
 
 MODE:
   autonomy_level: A2C
@@ -607,6 +673,10 @@ STAGE_AUTHORITY:
 
 COMMIT_AUTHORITY:
   allowed: true
+  paths:
+    - src/example/new-file.ts
+    - src/example/existing-file.ts
+    - scripts/test-example.ts
   count: 1
   subject: "feat(example): add controlled local implementation"
 
