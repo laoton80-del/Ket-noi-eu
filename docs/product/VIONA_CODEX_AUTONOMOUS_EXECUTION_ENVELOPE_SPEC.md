@@ -187,6 +187,7 @@ git rev-parse HEAD
 git status --short --branch
 git diff --name-only
 git diff --cached --name-only
+git ls-files --others --exclude-standard
 ```
 
 Require:
@@ -196,6 +197,7 @@ Require:
 - exact HEAD;
 - expected tree state;
 - expected staged state.
+- expected untracked-file state.
 
 Any mismatch means stop. No automatic checkout, reset, rebase, stash, pull, fetch, branch repair, or worktree repair is allowed unless explicitly authorized.
 
@@ -310,12 +312,12 @@ Codex must not claim success without evidence.
 
 ## 11. Local Commit Contract
 
-If local commit authority is false:
+Stage authority and commit authority are independent. If stage authority is
+false, do not stage. If stage authority is true, Codex may stage only the exact
+paths in `STAGE_AUTHORITY.paths`, including when commit authority is false. A
+stage-only lane with stage authority true and commit authority false is valid.
 
-- do not stage;
-- do not commit.
-
-If stage authority is true:
+When stage authority is true:
 
 - use exact paths only;
 - run `git diff --cached --name-only`;
@@ -329,7 +331,9 @@ git add -A
 git add --all
 ```
 
-If commit authority is true:
+If commit authority is false, do not commit; it does not independently forbid
+staging authorized by stage authority. If commit authority is true, it does not
+imply stage authority. When commit authority is true:
 
 - create exactly the number of commits authorized;
 - use the exact subject if provided;
