@@ -21,6 +21,10 @@ import {
   proveCanonicalWorkflowVersion,
   selectExactHeadApproval,
   assertPermissionScope,
+  createProductionDeps,
+  assertChecksRestRequest,
+  assertProtectionReadRequest,
+  CANONICAL_MASTER_PROTECTION_PATH,
   REPOSITORY_LEVEL_REQUIRED_CHECK_IS_PRIMARY,
   GUARDED_MERGE_WRAPPER_IS_DEFENSE_IN_DEPTH,
 } from './viona-merge-authorization-gate.mjs';
@@ -139,6 +143,7 @@ function createMockGateDeps(options = {}) {
       VIONA_GATE_REVIEWED_SCOPE_DIGEST: digest,
       VIONA_GATE_RUN_ID: '999',
       VIONA_GATE_REPOSITORY: CANONICAL_REPOSITORY,
+      VIONA_GATE_PROTECTION_READ_TOKEN: 'test-protection-read-token',
       ...options.env,
     },
     workflowPermissionLines: [
@@ -149,6 +154,7 @@ function createMockGateDeps(options = {}) {
     creates,
     completes,
     mergeCalls,
+    protectionRestCalls: [],
     extraCheckRunsBeforeCreate: options.extraCheckRunsBeforeCreate ?? [],
     extraCheckRunsAfterCreate: options.extraCheckRunsAfterCreate ?? [],
     injectDuplicateAfterCreate: options.injectDuplicateAfterCreate === true,
@@ -245,15 +251,29 @@ function createMockGateDeps(options = {}) {
           ],
         };
       }
-      if (urlPath.includes('/branches/master/protection')) {
-        return {
-          enforce_admins: { enabled: true },
-          required_status_checks: {
-            contexts: options.requiredContexts ?? ['Viona Emergency Merge Lock'],
-          },
-        };
-      }
+      assertChecksRestRequest(method, urlPath);
       return {};
+    },
+    async protectionRestRequest({ method, urlPath }) {
+      deps.protectionRestCalls.push({ method, urlPath });
+      assertProtectionReadRequest(method, urlPath);
+      if (options.protectionHttpStatus === 401 || options.protectionHttpStatus === 403) {
+        const err = new Error(`GitHub REST ${options.protectionHttpStatus}`);
+        err.sanitized = { status: options.protectionHttpStatus, message: 'error' };
+        throw err;
+      }
+      if (options.protectionMalformed === true) {
+        return 'not-an-object';
+      }
+      if (Object.prototype.hasOwnProperty.call(options, 'protectionOverride')) {
+        return options.protectionOverride;
+      }
+      return {
+        enforce_admins: { enabled: true },
+        required_status_checks: {
+          contexts: options.requiredContexts ?? ['Viona Emergency Merge Lock'],
+        },
+      };
     },
     async graphqlRequest() {
       if (threadPages) {
@@ -496,6 +516,13 @@ async function main() {
       assert.match(yml, /cancel-in-progress:\s*false/);
       assert.doesNotMatch(yml, /VIONA_GATE_WORKFLOW_SHA/);
       assert.doesNotMatch(yml, /VIONA_GATE_MASTER_WORKFLOW_SHA/);
+      assert.match(yml, /actions\/create-github-app-token@v2/);
+      assert.match(yml, /VIONA_GATE_PROTECTION_READ_APP_ID/);
+      assert.match(yml, /VIONA_GATE_PROTECTION_READ_APP_PRIVATE_KEY/);
+      assert.match(yml, /VIONA_GATE_PROTECTION_READ_TOKEN:/);
+      assert.match(yml, /permission-administration:\s*read/);
+      assert.doesNotMatch(yml, /\npermissions:\n(?:  .+\n)*  administration:/);
+      assert.doesNotMatch(yml, /permission-administration:\s*write/);
       assert.equal(
         assertPermissionScope([
           'contents: read',
@@ -804,6 +831,231 @@ async function main() {
       );
       assert.doesNotMatch(src, /pr\.updated_at/);
       assert.doesNotMatch(src, /updated_at \?\?/);
+    });
+
+    await testAsync('63 protection credential missing', async () => {
+      const deps = createMockGateDeps({
+        env: { VIONA_GATE_PROTECTION_READ_TOKEN: '' },
+      });
+      const result = await runMergeAuthorizationGate(deps);
+      assert.equal(result.blocker, BLOCKERS.BLOCKED_MERGE_PROTECTION_READ_CREDENTIAL_MISSING);
+      assert.equal(deps.creates.length, 1);
+      assert.equal(deps.completes.length, 1);
+      assert.equal(deps.completes[0].conclusion, 'failure');
+      assert.equal(deps.protectionRestCalls.length, 0);
+      assert.equal(deps.mergeCalls.length, 0);
+    });
+
+    await testAsync('64 protection GET 401', async () => {
+      const deps = createMockGateDeps({ protectionHttpStatus: 401 });
+      const result = await runMergeAuthorizationGate(deps);
+      assert.equal(result.blocker, BLOCKERS.BLOCKED_MERGE_PROTECTION_READ_UNAUTHORIZED);
+      assert.equal(deps.creates.length, 1);
+      assert.equal(deps.completes[0].conclusion, 'failure');
+    });
+
+    await testAsync('65 protection GET 403', async () => {
+      const deps = createMockGateDeps({ protectionHttpStatus: 403 });
+      const result = await runMergeAuthorizationGate(deps);
+      assert.equal(result.blocker, BLOCKERS.BLOCKED_MERGE_PROTECTION_READ_UNAUTHORIZED);
+      assert.notEqual(
+        result.blocker,
+        BLOCKERS.BLOCKED_MERGE_REPOSITORY_RULESET_NOT_ENFORCED,
+      );
+      assert.equal(deps.creates.length, 1);
+    });
+
+    await testAsync('66 malformed protection payload', async () => {
+      const deps = createMockGateDeps({ protectionMalformed: true });
+      const result = await runMergeAuthorizationGate(deps);
+      assert.equal(result.blocker, BLOCKERS.BLOCKED_MERGE_REPOSITORY_RULESET_NOT_ENFORCED);
+    });
+
+    await testAsync('67 enforce_admins false and required_status_checks absent', async () => {
+      const deps = createMockGateDeps({
+        protectionOverride: { enforce_admins: { enabled: false } },
+      });
+      const result = await runMergeAuthorizationGate(deps);
+      assert.equal(result.blocker, BLOCKERS.BLOCKED_MERGE_REPOSITORY_RULESET_NOT_ENFORCED);
+    });
+
+    await testAsync('68 valid protection proceeds to remaining policy', async () => {
+      const deps = createMockGateDeps();
+      const result = await runMergeAuthorizationGate(deps);
+      assert.equal(result.conclusion, 'success');
+      assert.equal(deps.protectionRestCalls.length, 1);
+      assert.equal(deps.protectionRestCalls[0].method, 'GET');
+      assert.equal(deps.protectionRestCalls[0].urlPath, CANONICAL_MASTER_PROTECTION_PATH);
+      assert.equal(deps.mergeCalls.length, 0);
+    });
+
+    test('69 checks client cannot perform canonical protection GET', () => {
+      assert.throws(
+        () => assertChecksRestRequest('GET', CANONICAL_MASTER_PROTECTION_PATH),
+        /checks_token_protection_get_forbidden/,
+      );
+    });
+
+    test('70 protection token rejects Checks create path', () => {
+      assert.throws(
+        () =>
+          assertProtectionReadRequest(
+            'POST',
+            '/repos/laoton80-del/Ket-noi-eu/check-runs',
+          ),
+        /protection_read_path_forbidden/,
+      );
+    });
+
+    test('71 protection token rejects status paths', () => {
+      assert.throws(
+        () =>
+          assertProtectionReadRequest(
+            'POST',
+            `/repos/laoton80-del/Ket-noi-eu/statuses/${HEAD}`,
+          ),
+        /protection_read_path_forbidden/,
+      );
+    });
+
+    test('72 protection token rejects merge paths', () => {
+      assert.throws(
+        () =>
+          assertProtectionReadRequest('PUT', '/repos/laoton80-del/Ket-noi-eu/pulls/100/merge'),
+        /protection_read_path_forbidden/,
+      );
+      assert.throws(
+        () => assertProtectionReadRequest('POST', '/repos/laoton80-del/Ket-noi-eu/merges'),
+        /protection_read_path_forbidden/,
+      );
+    });
+
+    test('73 protection token rejects protection write', () => {
+      assert.throws(
+        () => assertProtectionReadRequest('PUT', CANONICAL_MASTER_PROTECTION_PATH),
+        /protection_read_path_forbidden/,
+      );
+      assert.throws(
+        () => assertProtectionReadRequest('PATCH', CANONICAL_MASTER_PROTECTION_PATH),
+        /protection_read_path_forbidden/,
+      );
+      assert.throws(
+        () => assertProtectionReadRequest('DELETE', CANONICAL_MASTER_PROTECTION_PATH),
+        /protection_read_path_forbidden/,
+      );
+    });
+
+    test('74 protection token rejects arbitrary path', () => {
+      assert.throws(
+        () =>
+          assertProtectionReadRequest(
+            'GET',
+            '/repos/laoton80-del/Ket-noi-eu/actions/secrets',
+          ),
+        /protection_read_path_forbidden/,
+      );
+      assert.throws(
+        () =>
+          assertProtectionReadRequest(
+            'POST',
+            '/repos/laoton80-del/Ket-noi-eu/actions/workflows/1/dispatches',
+          ),
+        /protection_read_path_forbidden/,
+      );
+      assert.throws(
+        () =>
+          assertProtectionReadRequest(
+            'POST',
+            '/repos/laoton80-del/Ket-noi-eu/deployments',
+          ),
+        /protection_read_path_forbidden/,
+      );
+    });
+
+    test('75 protection GET path is the only allowed protection-read request', () => {
+      assert.doesNotThrow(() =>
+        assertProtectionReadRequest('GET', CANONICAL_MASTER_PROTECTION_PATH),
+      );
+    });
+
+    await testAsync('76 production deps isolate tokens and reject writes', async () => {
+      const auths = [];
+      const prev = globalThis.fetch;
+      globalThis.fetch = async (_url, opts) => {
+        auths.push(opts.headers.Authorization);
+        return {
+          ok: true,
+          status: 200,
+          async text() {
+            return JSON.stringify({ id: 1, app: { id: 15368 } });
+          },
+        };
+      };
+      try {
+        const deps = createProductionDeps({
+          GITHUB_TOKEN: 'checks-token',
+          VIONA_GATE_PROTECTION_READ_TOKEN: 'prot-token',
+        });
+        await assert.rejects(() =>
+          deps.restRequest({
+            method: 'GET',
+            urlPath: CANONICAL_MASTER_PROTECTION_PATH,
+          }),
+        );
+        await deps.createCheckRun({
+          name: GATE_CHECK_RUN_NAME,
+          headSha: HEAD,
+          status: 'in_progress',
+        });
+        await deps.protectionRestRequest({
+          method: 'GET',
+          urlPath: CANONICAL_MASTER_PROTECTION_PATH,
+        });
+        assert.deepEqual(auths, ['Bearer checks-token', 'Bearer prot-token']);
+        await assert.rejects(() =>
+          deps.protectionRestRequest({
+            method: 'POST',
+            urlPath: '/repos/laoton80-del/Ket-noi-eu/check-runs',
+          }),
+        );
+        await assert.rejects(() =>
+          deps.protectionRestRequest({
+            method: 'POST',
+            urlPath: `/repos/laoton80-del/Ket-noi-eu/statuses/${HEAD}`,
+          }),
+        );
+        await assert.rejects(() =>
+          deps.protectionRestRequest({
+            method: 'PUT',
+            urlPath: '/repos/laoton80-del/Ket-noi-eu/pulls/1/merge',
+          }),
+        );
+        await assert.rejects(() =>
+          deps.protectionRestRequest({
+            method: 'PUT',
+            urlPath: CANONICAL_MASTER_PROTECTION_PATH,
+          }),
+        );
+      } finally {
+        globalThis.fetch = prev;
+      }
+    });
+
+    await testAsync('77 orchestrator mergeCalls remain zero after protection read', async () => {
+      const deps = createMockGateDeps();
+      await runMergeAuthorizationGate(deps);
+      assert.equal(deps.mergeCalls.length, 0);
+    });
+
+    test('78 gate source has no statuses write and no merge execution', () => {
+      const src = readFileSync(
+        path.join(root, 'scripts/viona-merge-authorization-gate.mjs'),
+        'utf8',
+      );
+      const yml = readFileSync(path.join(root, WORKFLOW_FILE_PATH), 'utf8');
+      assert.doesNotMatch(yml, /statuses:\s*write/);
+      assert.doesNotMatch(src, /\/statuses\//);
+      assert.doesNotMatch(src, /\/pulls\/\$\{[^}]+\}\/merge/);
     });
 
     assert.equal(unexpectedNetworkCalls, 0, 'global fetch trap must remain unused');
