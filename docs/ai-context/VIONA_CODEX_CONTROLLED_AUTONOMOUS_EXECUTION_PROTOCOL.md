@@ -171,9 +171,12 @@ git branch --show-current
 git rev-parse HEAD
 git status --short --branch
 git diff --name-only
-git diff --cached --name-only
+git diff --cached --no-renames --name-only
 git ls-files --others --exclude-standard
 ```
+
+The staged-path preflight disables rename detection so both source and
+destination endpoints of a staged rename are visible to exact-path validation.
 
 For branch creation from a named baseline:
 
