@@ -306,7 +306,7 @@ Codex may proceed without asking another question only when all of these are tru
 1. the operator phrase clearly names the lane;
 2. the baseline matches;
 3. the mutation budget is finite;
-4. every edited file is inside the allowlist or exact docs-only count;
+4. every edited repository file is inside the explicit exact-path allowlist;
 5. no protected VIONA surface is being activated;
 6. no remote or production action is implied;
 7. validation commands are safe for the lane;
