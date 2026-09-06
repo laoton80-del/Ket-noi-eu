@@ -18,6 +18,7 @@ export type VionaShellAccountLanguageActionsProps = Readonly<{
 
 const MIN_TOUCH = 44;
 const ACCENT = '#7AE4FF';
+const isNative = Platform.OS !== 'web';
 
 function triggerHaptic(): void {
   if (Platform.OS === 'web') return;
@@ -27,6 +28,7 @@ function triggerHaptic(): void {
 /**
  * Tab-chrome Account / Language / Role actions (bottom bar or desktop left rail).
  * Not an absolute floating overlay over application content.
+ * P4-A: native-gated Account chip geometry only. Web chrome styles stay unchanged.
  */
 export function VionaShellAccountLanguageActions({
   layout = 'bottomChip',
@@ -37,6 +39,7 @@ export function VionaShellAccountLanguageActions({
 }: VionaShellAccountLanguageActionsProps): ReactElement {
   const { t } = useTranslation();
   const isLeftRail = layout === 'leftRail';
+  const nativeBottomAccount = isNative && !isLeftRail;
 
   const onAccount = useCallback(() => {
     triggerHaptic();
@@ -66,9 +69,22 @@ export function VionaShellAccountLanguageActions({
         accessibilityRole="button"
         accessibilityLabel={t('home.accountChipA11y')}
       >
-        <View style={[styles.chip, isLeftRail && styles.chipRail]}>
+        <View
+          style={[
+            styles.chip,
+            isLeftRail && styles.chipRail,
+            nativeBottomAccount && styles.nativeAccountChip,
+          ]}
+        >
           <Ionicons name="person-circle" size={isLeftRail ? 16 : 18} color="#FFFFFF" />
-          <Text style={[styles.label, isLeftRail && styles.labelRail]} numberOfLines={1}>
+          <Text
+            style={[
+              styles.label,
+              isLeftRail && styles.labelRail,
+              nativeBottomAccount && styles.nativeAccountLabel,
+            ]}
+            numberOfLines={1}
+          >
             {t('home.accountChipShort')}
           </Text>
         </View>
@@ -161,12 +177,23 @@ const styles = StyleSheet.create({
     width: '100%',
     paddingHorizontal: 6,
   },
+  nativeAccountChip: {
+    maxWidth: 128,
+    minWidth: MIN_TOUCH,
+    paddingHorizontal: 8,
+    flexShrink: 0,
+  },
   label: {
     fontFamily: FontFamily.extrabold,
     fontSize: 8,
     letterSpacing: 0.2,
     color: '#FFFFFF',
     textTransform: 'uppercase',
+  },
+  nativeAccountLabel: {
+    fontSize: 11,
+    letterSpacing: 0.1,
+    flexShrink: 0,
   },
   labelLanguage: {
     color: ACCENT,

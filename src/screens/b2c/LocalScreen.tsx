@@ -7,6 +7,7 @@ import { useCallback, useMemo, useRef, useState, type ReactElement } from 'react
 import {
   ActivityIndicator,
   Alert,
+  findNodeHandle,
   Modal,
   Platform,
   Pressable,
@@ -41,7 +42,15 @@ import { LocalConnectedUniverseLinks } from '../../components/viona/local/LocalC
 import { LocalClassifiedsFeaturedPreview } from '../../components/viona/local/LocalClassifiedsFeaturedPreview';
 import { LocalMerchantToolsSection } from '../../components/viona/local/LocalMerchantToolsSection';
 import { LocalOpeningStageLayout } from '../../components/viona/local/LocalOpeningStageLayout';
+import { getLocalDynamicHeroAsset } from '../../components/viona/local/localDynamicHeroAssets';
+import { VionaNativeLocalClearPremiumComposition } from '../../components/viona/native-local/VionaNativeLocalClearPremiumComposition';
+import { VionaNativeLocalOpeningStage } from '../../components/viona/VionaNativeLocalOpeningStage';
+import { getLocalHeroCardAsset } from '../../design/vionaLocalHeroAssets';
 import { PremiumAppShell, PremiumHubLayout } from '../../components/viona';
+import {
+  resolveLocalPresentationTarget,
+  type LocalPresentationTarget,
+} from '../../navigation/localPresentationTarget';
 import { VionaBrandLockup } from '../../components/viona/VionaBrandLockup';
 import { vionaTokens } from '../../design';
 import {
@@ -63,6 +72,7 @@ import {
   hubTabletPortraitWebBreakoutStyle,
   HUB_WEB_TABLET_FULL_BLEED_MIN_WIDTH_PX,
   isHubWebTabletFullBleedViewport,
+  useFashionHomePrefersReducedMotion,
   useHubWebShellCompensation,
 } from '../../components/viona/fashionHomeDesktopShell';
 import { SmartTrioLanguageSheet } from '../../components/smartTrio/SmartTrioLanguageSheet';
@@ -75,6 +85,13 @@ import { theme } from '../../theme/theme';
 import { FontFamily } from '../../theme/typography';
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
+
+function mountLocalOpeningStage(target: LocalPresentationTarget, openingStage: ReactElement): ReactElement {
+  if (target === 'native-adaptive') {
+    return <VionaNativeLocalOpeningStage>{openingStage}</VionaNativeLocalOpeningStage>;
+  }
+  return openingStage;
+}
 
 type ClassifiedCategory = 'hiring' | 'shop_transfer' | 'housing';
 
@@ -115,10 +132,9 @@ const RISK = localConstellation.risk;
 const LOCAL_LEGACY_HIDE_STYLE_ID = 'viona-local-legacy-hide';
 
 /**
- * Fully hides the shared bottom tab bar while the Local hub is focused. The Local main page
- * already exposes universe handoff via "Vũ trụ liên kết" plus compact Back/Home controls, so the
- * 4-item bottom tab bar (Hub / Local / Travel Lite / Academy Lite) is redundant here. Applied only
- * on focus and reverted on blur, so Hub / Travel / Academy tabs keep their bar untouched.
+ * Fully hides the shared bottom tab bar while the Local hub is focused on **web**.
+ * Native Local keeps stock Home / Local / Travel / Academy tab reachability; Local header
+ * still owns Account/SOS (shouldMountSosInTabBarShell remains false — no second SOS).
  */
 const LOCAL_HIDDEN_TAB_BAR_STYLE = {
   display: 'none' as const,
@@ -526,16 +542,20 @@ const DEFAULT_POSTS: readonly ClassifiedPost[] = [
 export function LocalScreen() {
   const { t, i18n } = useTranslation();
   const { width, height } = useWindowDimensions();
+  const localPresentationTarget = useMemo(
+    () => resolveLocalPresentationTarget({ platform: Platform.OS, windowWidth: width }),
+    [width]
+  );
   const navigation = useNavigation<Nav>();
   // Same underlying navigation object as `navigation`, but typed as the bottom-tab navigator so we
-  // can toggle this screen's `tabBarStyle`. Used only to hide the redundant 4-item bottom nav while
-  // Local is focused; no routes/handlers/behavior change.
+  // can toggle this screen's `tabBarStyle` on web Local. Native keeps the 4-item bar visible.
   const tabBarNavigation = useNavigation<BottomTabNavigationProp<RootTabParamList>>();
   const { openMiniApp } = useMiniAppEntry();
   const wallet = useWalletState();
   const featureFlags = useMemo(() => getFeatureFlags(), []);
   const legalScanEnabled = featureFlags.legalScanEnabled;
   const scrollRef = useRef<ScrollView>(null);
+  const classifiedsAnchorRef = useRef<View>(null);
   const [classifiedsY, setClassifiedsY] = useState(0);
   const [posts, setPosts] = useState<readonly ClassifiedPost[]>(DEFAULT_POSTS);
   const [composerVisible, setComposerVisible] = useState(false);
@@ -600,7 +620,22 @@ export function LocalScreen() {
   };
 
   const scrollToClassifieds = useCallback(() => {
-    scrollRef.current?.scrollTo({ y: Math.max(0, classifiedsY - 12), animated: true });
+    const scroll = scrollRef.current;
+    const anchor = classifiedsAnchorRef.current;
+    const scrollNode = scroll ? findNodeHandle(scroll) : null;
+    if (anchor && scroll && scrollNode != null) {
+      anchor.measureLayout(
+        scrollNode,
+        (_x, y) => {
+          scroll.scrollTo({ y: Math.max(0, y - 12), animated: true });
+        },
+        () => {
+          scroll.scrollTo({ y: Math.max(0, classifiedsY - 12), animated: true });
+        }
+      );
+      return;
+    }
+    scroll?.scrollTo({ y: Math.max(0, classifiedsY - 12), animated: true });
   }, [classifiedsY]);
 
   const openLeonaPrefill = useCallback(
@@ -736,6 +771,16 @@ export function LocalScreen() {
   const useIconOnlyShellUtilities = isLocalMobile;
   const isHubWide = width >= 768;
   const isShortLandscape = width > height && height > 0 && height < 500;
+  const nativeLocalReduceMotion = useFashionHomePrefersReducedMotion();
+  const nativeLocalLayout = useMemo(
+    () =>
+      ({
+        mode: width >= 768 ? 'tablet' : 'mobile',
+        isLandscape: width > height,
+        reduceMotion: nativeLocalReduceMotion,
+      }) as const,
+    [height, nativeLocalReduceMotion, width]
+  );
   const bookingAssistPrefill = t('localCommerce.leonaBookingAssistPrefill');
   const openLanguageSheet = useCallback(() => {
     setLanguageSheetOpen(true);
@@ -795,9 +840,12 @@ export function LocalScreen() {
     navigation.navigate('Tabs', { screen: MAIN_TAB.B2C.home });
   }, [navigation]);
 
-  // Hide the shared 4-item bottom nav only while Local is focused; restore on blur.
+  // Hide the shared 4-item bottom nav on web Local only; native keeps four-tab reachability.
   useFocusEffect(
     useCallback(() => {
+      if (Platform.OS !== 'web') {
+        return undefined;
+      }
       tabBarNavigation.setOptions({ tabBarStyle: LOCAL_HIDDEN_TAB_BAR_STYLE });
       return () => {
         tabBarNavigation.setOptions({ tabBarStyle: undefined });
@@ -923,58 +971,269 @@ export function LocalScreen() {
 
         <PremiumHubLayout
           testID="local-premium-hub"
-          hero={
-            <LocalOpeningStageLayout
-              openingStageFullscreen={desktopWeb && isFullscreen}
-              onBrowseServices={openServiceHub}
-              onBookingAssist={() => openLeonaPrefill(bookingAssistPrefill)}
-              onMyRequests={() => navigation.navigate('LocalUserRequestStatus')}
-              onLegalWealth={() => void runUltraMasterBookingWithAlerts(t('localHub.legalWealthTitle'))}
-              onRestaurants={() => openLeonaPrefill(t('localCommerce.leonaRestaurantPrefill'))}
-              onTransit={() => openLeonaPrefill(t('localHub.transitLeonaPrefill'))}
-              onRentals={() => void scrollToClassifieds()}
-              onClassifieds={() => void scrollToClassifieds()}
-              onNailsSpa={openServiceHub}
-              onCommunityEvents={() => navigation.navigate('DailyReward')}
-              onAiReceptionist={() => navigation.navigate('AiReceptionistDemoSimulator')}
-              onLanguageAssist={openLanguageSheet}
-            />
-          }
+          hero={mountLocalOpeningStage(
+            localPresentationTarget,
+            localPresentationTarget === 'native-adaptive' ? (
+              <VionaNativeLocalClearPremiumComposition
+                layout={nativeLocalLayout}
+                context={{
+                  kicker: t('localHub.reframe.heroEyebrow'),
+                  title: t('localHub.reframe.heroHeadline'),
+                  subtitle: t('localHub.reframe.heroSubtitle'),
+                  trustLine: t('localHub.reframe.trustMerchantFirst'),
+                  accessibilityLabel: `${t('localHub.reframe.heroHeadline')}. ${t('localHub.reframe.heroSubtitle')}`,
+                  image: getLocalDynamicHeroAsset('default', 'mobile'),
+                }}
+                flagship={{
+                  kicker: t('localHub.reframe.flagshipRowKicker'),
+                  items: [
+                    {
+                      id: 'myRequests',
+                      title: t('local.userRequestStatus.localTileTitle'),
+                      subtitle: t('local.userRequestStatus.localTileSub'),
+                      statusLabel: t('localCommerce.bookingStatus.requestOnly'),
+                      accessibilityLabel: t('local.userRequestStatus.localTileA11y'),
+                      image: getLocalHeroCardAsset('myRequests'),
+                      onPress: () => navigation.navigate('LocalUserRequestStatus'),
+                    },
+                    {
+                      id: 'bookingAssist',
+                      title: t('localCommerce.cta.requestBooking'),
+                      subtitle: t('localCommerce.compactAssistSub'),
+                      statusLabel: t('localCommerce.bookingStatus.requestOnly'),
+                      accessibilityLabel: t('localCommerce.cta.requestBooking'),
+                      image: getLocalHeroCardAsset('bookingAssist'),
+                      onPress: () => openLeonaPrefill(bookingAssistPrefill),
+                    },
+                    {
+                      id: 'legalWealth',
+                      title: t('localHub.legalWealthTitle'),
+                      subtitle: t('localHub.legalWealthSub'),
+                      statusLabel: t('localCommerce.bookingStatus.demo'),
+                      accessibilityLabel: t('localHub.legalWealthTitle'),
+                      image: getLocalHeroCardAsset('legalWealth'),
+                      onPress: () => void runUltraMasterBookingWithAlerts(t('localHub.legalWealthTitle')),
+                    },
+                    {
+                      id: 'browseServices',
+                      title: t('localCommerce.cta.browseServices'),
+                      subtitle: t('localCommerce.compactBrowseSub'),
+                      statusLabel: t('localCommerce.bookingStatus.lite'),
+                      accessibilityLabel: t('localCommerce.cta.browseServices'),
+                      image: getLocalHeroCardAsset('browseServices'),
+                      onPress: openServiceHub,
+                    },
+                  ],
+                }}
+                utility={{
+                  kicker: t('localHub.reframe.quickAccessTitle'),
+                  items: [
+                    {
+                      id: 'restaurants',
+                      title: t('localHub.restaurantTitle'),
+                      statusLabel: t('localCommerce.bookingStatus.requestOnly'),
+                      accessibilityLabel: t('localHub.restaurantTitle'),
+                      icon: 'restaurant-outline',
+                      onPress: () => openLeonaPrefill(t('localCommerce.leonaRestaurantPrefill')),
+                    },
+                    {
+                      id: 'transit',
+                      title: t('localHub.transitTitle'),
+                      statusLabel: t('localCommerce.bookingStatus.requestOnly'),
+                      accessibilityLabel: t('localHub.transitTitle'),
+                      icon: 'car-outline',
+                      onPress: () => openLeonaPrefill(t('localHub.transitLeonaPrefill')),
+                    },
+                    {
+                      id: 'rentals',
+                      title: t('localHub.classifiedsHousingTitle'),
+                      statusLabel: t('localCommerce.bookingStatus.lite'),
+                      accessibilityLabel: t('localHub.classifiedsHousingTitle'),
+                      icon: 'home-outline',
+                      onPress: () => void scrollToClassifieds(),
+                    },
+                    {
+                      id: 'classifieds',
+                      title: t('localHub.classifiedsTitle'),
+                      statusLabel: t('localCommerce.bookingStatus.lite'),
+                      accessibilityLabel: t('localHub.classifiedsTitle'),
+                      icon: 'pricetags-outline',
+                      onPress: () => void scrollToClassifieds(),
+                    },
+                    {
+                      id: 'nails',
+                      title: t('localHub.nailsTitle'),
+                      statusLabel: t('localCommerce.bookingStatus.lite'),
+                      accessibilityLabel: t('localHub.nailsTitle'),
+                      icon: 'sparkles-outline',
+                      onPress: openServiceHub,
+                    },
+                    {
+                      id: 'community',
+                      title: t('localHub.eventsTitle'),
+                      statusLabel: t('localCommerce.bookingStatus.lite'),
+                      accessibilityLabel: t('localHub.eventsTitle'),
+                      icon: 'ticket-outline',
+                      onPress: () => navigation.navigate('DailyReward'),
+                    },
+                    {
+                      id: 'aiReceptionist',
+                      title: t('localHub.reframe.quickActionAiReceptionist'),
+                      statusLabel: t('localCommerce.bookingStatus.demo'),
+                      accessibilityLabel: t('localHub.reframe.quickActionAiReceptionist'),
+                      icon: 'headset-outline',
+                      onPress: () => navigation.navigate('AiReceptionistDemoSimulator'),
+                    },
+                    {
+                      id: 'language',
+                      title: t('localHub.reframe.quickActionLanguageAssist'),
+                      statusLabel: t('localCommerce.bookingStatus.lite'),
+                      accessibilityLabel: t('localHub.reframe.quickActionLanguageAssist'),
+                      icon: 'language-outline',
+                      onPress: openLanguageSheet,
+                    },
+                  ],
+                }}
+                secondary={{
+                  statusTitle: t('localHub.universeKicker'),
+                  statusSteps: LOCAL_STATUS_FLOW_STEPS.map((key) => ({ id: key, label: t(key) })),
+                  statusNote: t('localHub.statusFlow.note'),
+                  classifiedsTitle: t('localHub.classifiedsTitle'),
+                  classifiedsSubtitle: t('localHub.classifiedsFeaturedSubtitle'),
+                  classifiedsSafety: t('localHub.classifiedsFeaturedSafety'),
+                  classifiedsVipLabel: t('localHub.vipToggleLabel', {
+                    amount: formatVioCredits(VIP_POSTING_COST_VIG),
+                  }),
+                  vipHighlightLabel: t('localHub.vipHighlight'),
+                  createListingLabel: t('localHub.postNewListing'),
+                  createListingA11y: t('localHub.postNewListing'),
+                  onCreateListing: () => setComposerVisible(true),
+                  viewAllLabel: t('localHub.viewAllClassifieds'),
+                  viewAllA11y: t('localHub.viewAllClassifieds'),
+                  onViewAllClassifieds: scrollToClassifieds,
+                  classifiedPreviews: sortedPosts.slice(0, 2).map((post) => ({
+                    id: post.id,
+                    title: post.title,
+                    city: post.city,
+                    priceLabel: post.priceLabel,
+                    isVip: post.isVip,
+                  })),
+                  classifiedsAnchorRef,
+                  merchantTitle: t('localHub.reframe.forVietnameseBusinesses'),
+                  merchantItems: [
+                    {
+                      id: 'hub',
+                      title: t('localHub.connectedBusiness'),
+                      subtitle: t('localHub.reframe.merchantToolsHubSub'),
+                      accessibilityLabel: t('localHub.connectedBusiness'),
+                      onPress: openBusinessUniverse,
+                    },
+                    {
+                      id: 'bookingAssist',
+                      title: t('localCommerce.cta.requestBooking'),
+                      subtitle: t('localHub.reframe.merchantToolsBookingSub'),
+                      accessibilityLabel: t('localCommerce.cta.requestBooking'),
+                      onPress: () => openLeonaPrefill(bookingAssistPrefill),
+                    },
+                    {
+                      id: 'aiReceptionist',
+                      title: t('localHub.reframe.quickActionAiReceptionist'),
+                      subtitle: t('localHub.aiPilotCardSub'),
+                      accessibilityLabel: t('localHub.reframe.quickActionAiReceptionist'),
+                      onPress: () => navigation.navigate('AiReceptionistDemoSimulator'),
+                    },
+                  ],
+                  connectedTitle: t('localHub.connectedUniversesKicker'),
+                  connectedItems: [
+                    ...(featureFlags.travelLiteEnabled
+                      ? [
+                          {
+                            id: 'travel' as const,
+                            title: t('localHub.connectedTravel'),
+                            subtitle: t('localHub.connectedTravelSub'),
+                            accessibilityLabel: t('localHub.connectedTravel'),
+                            onPress: openTravelUniverse,
+                          },
+                        ]
+                      : []),
+                    {
+                      id: 'business',
+                      title: t('localHub.connectedBusiness'),
+                      subtitle: t('localHub.connectedBusinessSub'),
+                      accessibilityLabel: t('localHub.connectedBusiness'),
+                      onPress: openBusinessUniverse,
+                    },
+                    ...(featureFlags.academyLiteEnabled
+                      ? [
+                          {
+                            id: 'academy' as const,
+                            title: t('localHub.connectedAcademy'),
+                            subtitle: t('localHub.connectedAcademySub'),
+                            accessibilityLabel: t('localHub.connectedAcademy'),
+                            onPress: openAcademyUniverse,
+                          },
+                        ]
+                      : []),
+                  ],
+                }}
+              />
+            ) : (
+              <LocalOpeningStageLayout
+                openingStageFullscreen={desktopWeb && isFullscreen}
+                onBrowseServices={openServiceHub}
+                onBookingAssist={() => openLeonaPrefill(bookingAssistPrefill)}
+                onMyRequests={() => navigation.navigate('LocalUserRequestStatus')}
+                onLegalWealth={() => void runUltraMasterBookingWithAlerts(t('localHub.legalWealthTitle'))}
+                onRestaurants={() => openLeonaPrefill(t('localCommerce.leonaRestaurantPrefill'))}
+                onTransit={() => openLeonaPrefill(t('localHub.transitLeonaPrefill'))}
+                onRentals={() => void scrollToClassifieds()}
+                onClassifieds={() => void scrollToClassifieds()}
+                onNailsSpa={openServiceHub}
+                onCommunityEvents={() => navigation.navigate('DailyReward')}
+                onAiReceptionist={() => navigation.navigate('AiReceptionistDemoSimulator')}
+                onLanguageAssist={openLanguageSheet}
+              />
+            )
+          )}
         >
-          <LocalHubCompactStatusGuide />
+          {localPresentationTarget === 'native-adaptive' ? null : (
+            <>
+              <LocalHubCompactStatusGuide />
 
-          <View
-            onLayout={(e) => {
-              setClassifiedsY(e.nativeEvent.layout.y);
-            }}
-            style={styles.classifiedsAnchor}
-          >
-            <LocalClassifiedsFeaturedPreview
-              posts={sortedPosts}
-              totalCount={sortedPosts.length}
-              walletLabel={formatVioCredits(wallet.credits)}
-              onCreateListing={() => setComposerVisible(true)}
-              onViewAll={scrollToClassifieds}
-            />
-          </View>
+              <View
+                onLayout={(e) => {
+                  setClassifiedsY(e.nativeEvent.layout.y);
+                }}
+                style={styles.classifiedsAnchor}
+              >
+                <LocalClassifiedsFeaturedPreview
+                  posts={sortedPosts}
+                  totalCount={sortedPosts.length}
+                  walletLabel={formatVioCredits(wallet.credits)}
+                  onCreateListing={() => setComposerVisible(true)}
+                  onViewAll={scrollToClassifieds}
+                />
+              </View>
 
-          <View style={[styles.secondaryHubSection, styles.merchantToolsSection]}>
-            <LocalMerchantToolsSection
-              onMerchantHub={openBusinessUniverse}
-              onBookingAssist={() => openLeonaPrefill(bookingAssistPrefill)}
-              onAiReceptionist={() => navigation.navigate('AiReceptionistDemoSimulator')}
-            />
-          </View>
+              <View style={[styles.secondaryHubSection, styles.merchantToolsSection]}>
+                <LocalMerchantToolsSection
+                  onMerchantHub={openBusinessUniverse}
+                  onBookingAssist={() => openLeonaPrefill(bookingAssistPrefill)}
+                  onAiReceptionist={() => navigation.navigate('AiReceptionistDemoSimulator')}
+                />
+              </View>
 
-          <View style={[styles.secondaryHubSection, styles.connectedUniversesSection]}>
-            <LocalConnectedUniverseLinks
-              travelEnabled={featureFlags.travelLiteEnabled}
-              academyEnabled={featureFlags.academyLiteEnabled}
-              onTravel={openTravelUniverse}
-              onBusiness={openBusinessUniverse}
-              onAcademy={openAcademyUniverse}
-            />
-          </View>
+              <View style={[styles.secondaryHubSection, styles.connectedUniversesSection]}>
+                <LocalConnectedUniverseLinks
+                  travelEnabled={featureFlags.travelLiteEnabled}
+                  academyEnabled={featureFlags.academyLiteEnabled}
+                  onTravel={openTravelUniverse}
+                  onBusiness={openBusinessUniverse}
+                  onAcademy={openAcademyUniverse}
+                />
+              </View>
+            </>
+          )}
 
           <VionaBottomEscapeBar
             showBack

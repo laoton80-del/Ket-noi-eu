@@ -3,7 +3,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Clipboard from 'expo-clipboard';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState, type ReactElement } from 'react';
 import {
   Alert,
   Image,
@@ -24,6 +24,10 @@ import { isMerchantServerRole } from '../context/authTypes';
 import { useTranslation } from '../i18n';
 import { persistUserLanguage } from '../i18n/persistLanguage';
 import { getStrings } from '../i18n/strings';
+import {
+  resolveAccountPresentationTarget,
+  type AccountPresentationTarget,
+} from '../navigation/accountPresentationTarget';
 import type { RootStackParamList } from '../navigation/routes';
 import { useAssistantSettings } from '../state/assistantSettings';
 import { resetGuidedOnboarding } from '../onboarding/guidedOnboardingStorage';
@@ -32,6 +36,9 @@ import * as FirebaseAuth from 'firebase/auth';
 import { ensureFirebaseAppCheckInitialized } from '../config/appCheckClient';
 import { getFirebaseApp, isFirebaseClientConfigured } from '../config/firebaseApp';
 import { AccountNeonGlassPanel } from '../components/account/AccountNeonGlassPanel';
+import { VionaNativeAccountClearPremiumComposition } from '../components/viona/native-account/VionaNativeAccountClearPremiumComposition';
+import { VionaNativeAccountOpeningStage } from '../components/viona/VionaNativeAccountOpeningStage';
+import { vionaNativeClearPremiumTokens as nativeAccountTkn } from '../design/vionaNativeClearPremiumTokens';
 import { DiasporaRestrictionModal } from '../components/modals/DiasporaRestrictionModal';
 import { evaluateMerchantSurfaceAccess } from '../services/auth/merchantSurfaceEntry';
 import { loadUsageHistory, type UsageHistoryItem } from '../services/history';
@@ -172,7 +179,7 @@ function interpolate(template: string, vars: Record<string, string>): string {
   return out;
 }
 
-export function CaNhanScreen() {
+export function CaNhanScreen(): ReactElement {
   const navigation = useNavigation<Nav>();
   const { width } = useWindowDimensions();
   const { user, updateProfile } = useAuth();
@@ -206,6 +213,11 @@ export function CaNhanScreen() {
     [width],
   );
   const accountBackdropOpacity = Platform.OS === 'web' && width > 768 ? 0.68 : 0.46;
+  const accountPresentationTarget = useMemo(
+    (): AccountPresentationTarget =>
+      resolveAccountPresentationTarget({ platform: Platform.OS, windowWidth: width }),
+    [width]
+  );
   const showWorkspaceShortcut = Boolean(
     user && (user.serverRole === 'BROKER' || isMerchantServerRole(user.serverRole))
   );
@@ -389,7 +401,95 @@ export function CaNhanScreen() {
     })();
   }, [wallet.credits]);
 
-  return (
+  const openProfileEdit = useCallback(() => {
+    navigation.navigate('SetupProfile', { mode: 'edit' });
+  }, [navigation]);
+  const openWallet = useCallback(() => {
+    navigation.navigate('Wallet');
+  }, [navigation]);
+  const openRequestsInbox = useCallback(() => {
+    navigation.navigate('VionaRequestLiveInbox');
+  }, [navigation]);
+  const openLanguageModal = useCallback(() => {
+    setLanguageModalOpen(true);
+  }, []);
+  const toggleWorkspaceHat = useCallback(() => {
+    if (!user) return;
+    if (user.workspaceUiOverride === 'consumer') {
+      updateProfile({ workspaceUiOverride: null });
+    } else {
+      updateProfile({ workspaceUiOverride: 'consumer' });
+    }
+  }, [updateProfile, user]);
+  const confirmOnboardingReset = useCallback(() => {
+    Alert.alert(strings.profile.onboardingResetTitle, strings.profile.onboardingResetMessage, [
+      { text: strings.profile.onboardingResetCancel, style: 'cancel' },
+      {
+        text: strings.profile.onboardingResetConfirm,
+        onPress: () => {
+          void resetGuidedOnboarding();
+          Alert.alert(strings.profile.onboardingResetDoneTitle, strings.profile.onboardingResetDoneMessage);
+        },
+      },
+    ]);
+  }, [strings.profile]);
+  const resetAdminUnlock = useCallback(() => {
+    void AsyncStorage.removeItem(ADMIN_UNLOCK_KEY);
+    setAdminUnlocked(false);
+  }, []);
+
+  const accountHostModals = (
+    <>
+      <Modal
+        visible={languageModalOpen}
+        animationType="fade"
+        transparent
+        onRequestClose={() => setLanguageModalOpen(false)}
+      >
+        <View style={styles.langModalBackdrop}>
+          <Pressable style={StyleSheet.absoluteFill} onPress={() => setLanguageModalOpen(false)} />
+          <View style={styles.langModalCard}>
+            <Text style={styles.langModalTitle}>🌐 Language / Ngôn ngữ</Text>
+            <Text style={styles.langModalCaption}>Intergenerational bridge — choose your preferred language.</Text>
+            {LANGUAGE_OPTIONS.map((opt) => {
+              const active = languageCode === opt.code;
+              return (
+                <Pressable
+                  key={opt.code}
+                  onPress={() => {
+                    void (async () => {
+                      await persistUserLanguage(opt.code);
+                      setLanguageModalOpen(false);
+                    })();
+                  }}
+                  style={({ pressed }) => [
+                    styles.langOption,
+                    active && styles.langOptionActive,
+                    pressed && { opacity: 0.88 },
+                  ]}
+                >
+                  <Text style={[styles.langOptionTitle, active && styles.langOptionTitleActive]}>{opt.title}</Text>
+                  <Text style={[styles.langOptionHint, active && styles.langOptionHintActive]}>{opt.hint}</Text>
+                </Pressable>
+              );
+            })}
+            <Pressable
+              onPress={() => setLanguageModalOpen(false)}
+              style={({ pressed }) => [styles.langModalClose, pressed && { opacity: 0.82 }]}
+            >
+              <Text style={styles.langModalCloseText}>Close</Text>
+            </Pressable>
+          </View>
+        </View>
+      </Modal>
+      <DiasporaRestrictionModal
+        visible={diasporaRestrictionOpen}
+        onClose={() => setDiasporaRestrictionOpen(false)}
+      />
+    </>
+  );
+
+  const hub = (
     <SafeAreaView style={styles.container}>
       <View style={styles.screenBackdrop} pointerEvents="none">
         <View style={styles.constellationFrame}>
@@ -719,55 +819,170 @@ export function CaNhanScreen() {
           </Pressable>
         ) : null}
       </ScrollView>
-      <Modal
-        visible={languageModalOpen}
-        animationType="fade"
-        transparent
-        onRequestClose={() => setLanguageModalOpen(false)}
-      >
-        <View style={styles.langModalBackdrop}>
-          <Pressable style={StyleSheet.absoluteFill} onPress={() => setLanguageModalOpen(false)} />
-          <View style={styles.langModalCard}>
-            <Text style={styles.langModalTitle}>🌐 Language / Ngôn ngữ</Text>
-            <Text style={styles.langModalCaption}>Intergenerational bridge — choose your preferred language.</Text>
-            {LANGUAGE_OPTIONS.map((opt) => {
-              const active = languageCode === opt.code;
-              return (
-                <Pressable
-                  key={opt.code}
-                  onPress={() => {
-                    void (async () => {
-                      await persistUserLanguage(opt.code);
-                      setLanguageModalOpen(false);
-                    })();
-                  }}
-                  style={({ pressed }) => [
-                    styles.langOption,
-                    active && styles.langOptionActive,
-                    pressed && { opacity: 0.88 },
-                  ]}
-                >
-                  <Text style={[styles.langOptionTitle, active && styles.langOptionTitleActive]}>{opt.title}</Text>
-                  <Text style={[styles.langOptionHint, active && styles.langOptionHintActive]}>{opt.hint}</Text>
-                </Pressable>
-              );
-            })}
-            <Pressable
-              onPress={() => setLanguageModalOpen(false)}
-              style={({ pressed }) => [styles.langModalClose, pressed && { opacity: 0.82 }]}
-            >
-              <Text style={styles.langModalCloseText}>Close</Text>
-            </Pressable>
-          </View>
-        </View>
-      </Modal>
-
-      <DiasporaRestrictionModal
-        visible={diasporaRestrictionOpen}
-        onClose={() => setDiasporaRestrictionOpen(false)}
-      />
+      {accountHostModals}
     </SafeAreaView>
   );
+
+  if (accountPresentationTarget === 'native-adaptive') {
+    const nativeShortcuts = [
+      {
+        id: 'store',
+        testID: 'account-action-virtual-store',
+        icon: 'storefront-outline' as const,
+        statusLabel: t('accountHub.shortcut.store.badge'),
+        title: t('accountHub.shortcut.store.title'),
+        subtitle: t('accountHub.shortcut.store.subtitle'),
+        accessibilityLabel: `${t('accountHub.shortcut.store.title')}. ${strings.profile.shortcutStoreA11y}`,
+        onPress: openWallet,
+      },
+      {
+        id: 'b2bPricing',
+        testID: 'account-action-b2b-pricing',
+        icon: 'pricetags-outline' as const,
+        statusLabel: t('accountHub.shortcut.b2bPricing.badge'),
+        title: t('accountHub.shortcut.b2bPricing.title'),
+        subtitle: t('accountHub.shortcut.b2bPricing.subtitle'),
+        accessibilityLabel: t('accountHub.shortcut.b2bPricing.title'),
+        onPress: () => openMerchantRoute('B2BPaywall'),
+      },
+      {
+        id: 'b2bSwitch',
+        testID: 'account-action-b2b-switch',
+        icon: 'swap-horizontal' as const,
+        statusLabel: t('accountHub.shortcut.b2bSwitch.badge'),
+        title: t('accountHub.shortcut.b2bSwitch.title'),
+        subtitle: t('accountHub.shortcut.b2bSwitch.subtitle', {
+          mode: mode === 'B2B_MODE' ? 'B2B_MODE' : 'B2C_MODE',
+        }),
+        accessibilityLabel: `${t('accountHub.shortcut.b2bSwitch.title')}. ${strings.profile.shortcutB2bSwitchA11y}`,
+        onPress: openB2BWorkspaceSwitch,
+      },
+      ...(showWorkspaceShortcut && user
+        ? [
+            {
+              id: 'workspaceHat',
+              testID: 'account-action-workspace-hat',
+              icon: 'people-circle-outline' as const,
+              statusLabel: t('accountHub.shortcut.workspace.badge'),
+              title: workspaceShortcutTitle,
+              subtitle: t('accountHub.shortcut.workspace.subtitle'),
+              accessibilityLabel: `${workspaceShortcutTitle}. ${strings.profile.shortcutWorkspaceA11y}`,
+              onPress: toggleWorkspaceHat,
+            },
+          ]
+        : []),
+      {
+        id: 'requests',
+        testID: 'account-action-viona-requests-live-inbox',
+        icon: 'documents-outline' as const,
+        statusLabel: 'Read-only',
+        title: 'VIONA requests',
+        subtitle: 'Live read-only inbox · no write/actions',
+        accessibilityLabel: 'VIONA requests live read-only inbox',
+        onPress: openRequestsInbox,
+      },
+      {
+        id: 'partner',
+        testID: 'account-action-partner',
+        icon: 'shield-checkmark' as const,
+        statusLabel: t('accountHub.shortcut.partner.badge'),
+        title: t('accountHub.shortcut.partner.title'),
+        subtitle: t('accountHub.shortcut.partner.subtitle'),
+        accessibilityLabel: `${t('accountHub.shortcut.partner.title')}. ${strings.profile.shortcutPartnerA11y}`,
+        onPress: () => openMerchantRoute('PartnerOnboarding'),
+      },
+    ];
+    const nativeSettings = [
+      {
+        id: 'language',
+        testID: 'account-native-language',
+        icon: 'language-outline' as const,
+        statusLabel: t('accountHub.creditsBadge'),
+        title: strings.profile.settingLanguageRow,
+        subtitle: languageSubtitleForCode(languageCode),
+        accessibilityLabel: strings.profile.settingLanguageRow,
+        onPress: openLanguageModal,
+      },
+      ...settings.map((item) => ({
+        id: item.key,
+        testID: `account-native-setting-${item.key}`,
+        icon: item.icon,
+        statusLabel: t('accountHub.creditsBadge'),
+        title: item.label,
+        subtitle: t('accountHub.settingsTileSub'),
+        accessibilityLabel: item.label,
+        onPress: item.onPress,
+      })),
+    ];
+
+    return (
+      <VionaNativeAccountOpeningStage>
+        <SafeAreaView style={{ flex: 1, backgroundColor: nativeAccountTkn.bg.canvas }}>
+          <ScrollView
+            contentContainerStyle={{ width: '100%' }}
+            showsVerticalScrollIndicator={false}
+          >
+            <VionaNativeAccountClearPremiumComposition
+              brandHint={APP_BRAND.launchSubtitle}
+              screenTitle={strings.profile.screenTitle}
+              screenSubtitle={t('accountHub.screenSubtitle')}
+              pilotTitle={t('accountHub.pilotStripTitle')}
+              pilotBanner={t('accountHub.pilotStripBanner')}
+              pilotItems={ACCOUNT_PILOT_PILLS.map((pill) => ({ key: pill.key, label: t(pill.key) }))}
+              profileSectionKicker={t('accountHub.sectionProfile')}
+              profileName={strings.common.pronounYou}
+              profilePlan={strings.profile.currentPlan}
+              profileA11y={strings.profile.editIdentityCta}
+              onProfilePress={openProfileEdit}
+              creditsTitle={strings.profile.creditsTitle}
+              creditsBadge={t('accountHub.creditsBadge')}
+              creditsBalance={interpolate(strings.profile.creditsBalanceCurrent, {
+                credits: String(wallet.credits),
+              })}
+              creditsHint={t('accountHub.creditsHintShort')}
+              creditsFootnote={t('accountHub.creditsFootnote')}
+              creditsA11y={`${strings.profile.creditsTitle}. ${interpolate(strings.profile.creditsBalanceCurrent, { credits: String(wallet.credits) })}`}
+              onWalletPress={openWallet}
+              shortcutsKicker={t('accountHub.sectionShortcuts')}
+              shortcuts={nativeShortcuts}
+              identityTitle={t('accountHub.sectionIdentity')}
+              identityBadge={t('accountHub.identityBadge')}
+              identityFootnote={t('accountHub.identityFootnote')}
+              identityRows={[
+                { label: strings.profile.residencyStatusLabel, value: residencyLabel },
+                { label: strings.profile.visaTypeLabel, value: user?.visaType?.trim() || '-' },
+                { label: strings.profile.visaExpiryLabel, value: user?.visaExpiryDate?.trim() || '-' },
+                { label: strings.profile.subscriptionPlanLabel, value: planLabel },
+                { label: strings.profile.aiCreditsLabel, value: String(user?.aiCallCredits ?? wallet.credits) },
+              ]}
+              identityEditCta={strings.profile.editIdentityCta}
+              identityEditA11y={strings.profile.editIdentityCta}
+              onIdentityEditPress={openProfileEdit}
+              settingsKicker={t('accountHub.sectionSettings')}
+              settings={nativeSettings}
+              gdprSlot={<GDPRDashboard />}
+              historySlot={<TrustHistoryCard items={history} />}
+              onboardingResetLabel={strings.profile.onboardingResetRowLabel}
+              onboardingResetA11y={strings.profile.onboardingResetRowLabel}
+              onOnboardingResetPress={confirmOnboardingReset}
+              adminUnlocked={adminUnlocked}
+              adminTitle="Nội bộ QA"
+              adminBody="Nhấn giữ 1.2s để Reset Admin Unlock (yêu cầu nhập lại PIN 8888)"
+              onAdminResetPress={resetAdminUnlock}
+              showDevToken={__DEV__}
+              devTokenLabel="Dev only — TEMP (gỡ trước ship)"
+              devTokenHint="Metro log: FIREBASE_UID, TOKEN_SEGMENTS, TOKEN_LENGTH, FIREBASE_ID_TOKEN"
+              devTokenCta="Copy Firebase ID Token"
+              onCopyDevTokenPress={() => void copyDevFirebaseIdToken()}
+              devTokenPreview={devIdTokenPreview}
+            />
+          </ScrollView>
+          {accountHostModals}
+        </SafeAreaView>
+      </VionaNativeAccountOpeningStage>
+    );
+  }
+  return hub;
 }
 
 const styles = StyleSheet.create({

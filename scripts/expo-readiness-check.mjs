@@ -35,6 +35,14 @@ function main() {
     failures.push('app.json must not exist (app.config.js is source of truth).');
   }
 
+  const appConfigSource = readFileSync(path.join(root, 'app.config.js'), 'utf8');
+  if (!/orientation:\s*'default'/.test(appConfigSource)) {
+    failures.push("app.config.js must set expo orientation to 'default' (native portrait+landscape).");
+  }
+  if (/orientation:\s*'portrait'/.test(appConfigSource)) {
+    failures.push("app.config.js must not lock expo orientation to 'portrait'.");
+  }
+
   const expectedVersions = {
     expo: '~54.0.36',
     'expo-dev-client': '~6.0.21',
@@ -77,6 +85,7 @@ function main() {
   console.log('[expo-readiness-check] PASS');
   console.log('- Expo config resolves successfully.');
   console.log('- app.json is absent.');
+  console.log('- Expo orientation is default (native rotation enabled).');
   console.log('- Expo SDK 54 pinned versions are aligned.');
   console.log('- React Native Directory excludes include required packages.');
 }
