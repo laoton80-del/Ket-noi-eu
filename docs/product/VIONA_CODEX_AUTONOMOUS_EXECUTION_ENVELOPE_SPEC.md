@@ -51,6 +51,7 @@ EXPECTED_BASE:
   head:
   parent:
   tree_state:
+  staged_paths:
   untracked_paths:
 
 MODE:
@@ -88,6 +89,7 @@ STAGE_AUTHORITY:
 
 COMMIT_AUTHORITY:
   allowed:
+  paths:
   count:
   subject:
 
@@ -133,6 +135,11 @@ FINAL_CLASSIFICATION:
   success:
   blocked:
 ```
+
+`EXPECTED_BASE.staged_paths` is the exact baseline index-path declaration. Use
+`staged_paths: []` when no paths are staged at baseline; otherwise list every
+expected staged repository path exactly. The observed output of
+`git diff --cached --name-only` must match that declared set exactly.
 
 `EXPECTED_BASE.untracked_paths` is an exact baseline declaration. Use
 `untracked_paths: []` when no untracked repository files are expected. If
@@ -203,7 +210,7 @@ Require:
 - expected branch;
 - exact HEAD;
 - expected tree state;
-- expected staged state.
+- expected staged path set;
 - expected untracked-file state.
 
 Any mismatch means stop. No automatic checkout, reset, rebase, stash, pull, fetch, branch repair, or worktree repair is allowed unless explicitly authorized.
@@ -340,11 +347,21 @@ git add --all
 
 If commit authority is false, do not commit; it does not independently forbid
 staging authorized by stage authority. If commit authority is true, it does not
-imply stage authority. When commit authority is true:
+imply stage authority.
 
+When commit authority is true:
+
+- `COMMIT_AUTHORITY.paths` must list every repository path authorized for the commit exactly;
+- immediately before committing, `git diff --cached --name-only` must equal `COMMIT_AUTHORITY.paths` exactly, with no additional staged path;
+- if stage authority is false, perform no staging and require the pre-existing cached path set to match both `EXPECTED_BASE.staged_paths` and `COMMIT_AUTHORITY.paths` exactly;
+- if stage authority is true, require the post-stage cached path set to match `COMMIT_AUTHORITY.paths` exactly before committing;
 - create exactly the number of commits authorized;
 - use the exact subject if provided;
 - do not amend, rebase, squash, or rewrite history unless explicitly granted.
+
+A commit must not package an unnamed or unrelated staged path. Commit authority
+without an exact `COMMIT_AUTHORITY.paths` set is insufficient to authorize a
+commit.
 
 ---
 
@@ -560,6 +577,7 @@ EXPECTED_BASE:
   head: 0000000000000000000000000000000000000000
   parent: 0000000000000000000000000000000000000000
   tree_state: clean
+  staged_paths: []
   untracked_paths: []
 
 MODE:
@@ -619,6 +637,10 @@ STAGE_AUTHORITY:
 
 COMMIT_AUTHORITY:
   allowed: true
+  paths:
+    - src/example/new-file.ts
+    - src/example/existing-file.ts
+    - scripts/test-example.ts
   count: 1
   subject: "feat(example): add controlled local implementation"
 
