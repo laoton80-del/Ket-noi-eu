@@ -198,6 +198,25 @@ no permission to read their semantic contents, modify them, stage them, execute
 them, or treat them as supporting files. Mutation authority still comes only
 from the exact active allowlist.
 
+After all authorized validators have run and before final success
+classification, Codex must recompute the exact nonignored untracked path set,
+the exact ignored untracked path set, and both deterministic manifest SHA-256
+identities. Codex must compare all four final values with the
+operator-declared `EXPECTED_BASE` values. Any delta fails closed unless the
+exact changed path is independently mutation-authorized by the active envelope
+and the post-mutation expected state is explicitly declared. Ignored does not
+mean irrelevant, and validator-produced ignored or untracked changes cannot be
+silently accepted.
+
+Required post-validator truths:
+
+```text
+POST_VALIDATOR_UNTRACKED_RECHECK=YES
+POST_VALIDATOR_IGNORED_RECHECK=YES
+POST_VALIDATOR_MANIFEST_RECHECK=YES
+UNAUTHORIZED_VALIDATOR_STATE_DELTA_FAILS_CLOSED=YES
+```
+
 For branch creation from a named baseline:
 
 ```bash
@@ -253,15 +272,42 @@ git add --all
 
 Committing requires explicit authorization and an expected subject or commit purpose. Codex must verify staged paths before committing.
 
+Before any commit-authorized operation, Codex must reject any in-progress Git
+operation that can alter commit ancestry or commit semantics. The check must
+include merge, rebase, cherry-pick, revert, bisect, and equivalent operation
+markers such as `MERGE_HEAD`, `rebase-merge`, `rebase-apply`,
+`CHERRY_PICK_HEAD`, `REVERT_HEAD`, and `BISECT_LOG` resolved through
+`git rev-parse --git-path`. Codex then records `PRE_COMMIT_HEAD` and requires
+it to equal the exact expected parent baseline for the lane before committing.
+This protocol grants no merge-commit authority unless an active envelope grants
+it separately and explicitly.
+
 A commit-authorized lane must also neutralize repository hooks deterministically.
 The active envelope must declare one exact absolute hooks directory outside the
 repository. Before commit, Codex must verify that directory exists, is a real
 directory rather than a symlink, and is empty. Codex then records the authorized
-index tree with `git write-tree`, commits with `core.hooksPath` set to that exact
+index tree as `AUTHORIZED_TREE=$(git write-tree)`, commits with `core.hooksPath` set to that exact
 verified-empty directory, and requires `HEAD^{tree}` to equal the recorded
 authorized tree exactly. Any hook-path mismatch, nonempty hook directory, or
 post-commit tree mismatch is a fail-closed blocker; the lane must not claim the
 commit as successfully authorized.
+
+Immediately after an ordinary authorized commit, Codex must require
+`parent_count = 1` and `sole_parent = PRE_COMMIT_HEAD`. A commit with multiple
+parents, a missing parent, or a parent different from `PRE_COMMIT_HEAD` fails
+closed unless the active envelope separately and explicitly grants merge-commit
+authority. Commit tree equality with `AUTHORIZED_TREE` is still required.
+
+Required commit-ancestry truths:
+
+```text
+IN_PROGRESS_GIT_OPERATION_CHECK=YES
+PRE_COMMIT_HEAD_PINNED=YES
+POST_COMMIT_PARENT_COUNT_ONE=YES
+POST_COMMIT_PARENT_EQUALS_PRE_COMMIT_HEAD=YES
+TREE_EQUIVALENCE_STILL_REQUIRED=YES
+MERGE_COMMIT_AUTHORITY=NO
+```
 
 For docs-only packaging, the expected post-commit proof is:
 

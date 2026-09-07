@@ -82,6 +82,11 @@ VALIDATORS:
   full:
   post_mutation:
 
+POST_VALIDATOR_STATE_RECHECK:
+  required:
+  compare_to_expected_base:
+  unauthorized_delta:
+
 SELF_REMEDIATION_POLICY:
   allowed:
   forbidden:
@@ -97,6 +102,7 @@ COMMIT_AUTHORITY:
   count:
   subject:
   hooks_path:
+  merge_commit_allowed:
 
 PUSH_AUTHORITY:
   allowed:
@@ -201,6 +207,25 @@ semantic inspection, disclosure, execution, modification, staging, or commit of
 ignored or nonignored untracked files. Secrets and ignored artifacts remain
 default-deny unless separately and explicitly authorized by exact path and
 action.
+
+`POST_VALIDATOR_STATE_RECHECK` is required for any lane that runs validators.
+After all authorized validators and before final success classification, Codex
+must recompute the exact nonignored untracked path set, ignored untracked path
+set, `untracked_manifest_sha256`, and `ignored_untracked_manifest_sha256`.
+Codex must compare all four final values against `EXPECTED_BASE`. Any delta
+fails closed unless the exact changed path is independently mutation-authorized
+by the active envelope and the post-mutation expected state is explicitly
+declared. Ignored does not mean irrelevant, and validator-produced ignored or
+untracked changes cannot be silently accepted.
+
+Required post-validator truths:
+
+```text
+POST_VALIDATOR_UNTRACKED_RECHECK=YES
+POST_VALIDATOR_IGNORED_RECHECK=YES
+POST_VALIDATOR_MANIFEST_RECHECK=YES
+UNAUTHORIZED_VALIDATOR_STATE_DELTA_FAILS_CLOSED=YES
+```
 
 ---
 
@@ -358,6 +383,9 @@ IMPLEMENT
 -> ELSE:
      STOP
 -> RUN FULL REQUIRED VALIDATORS
+-> RECOMPUTE FINAL NONIGNORED AND IGNORED UNTRACKED PATH SETS
+-> RECOMPUTE FINAL UNTRACKED MANIFEST SHA-256 IDENTITIES
+-> COMPARE FINAL VALUES WITH EXPECTED_BASE
 -> CAPTURE FINAL GIT STATE
 ```
 
@@ -422,6 +450,9 @@ imply stage authority.
 When commit authority is true:
 
 - `COMMIT_AUTHORITY.paths` must list every repository path authorized for the commit exactly, including both source and destination paths of any rename;
+- reject any in-progress Git operation that can alter commit ancestry or semantics, including merge, rebase, cherry-pick, revert, bisect, and equivalent operation markers such as `MERGE_HEAD`, `rebase-merge`, `rebase-apply`, `CHERRY_PICK_HEAD`, `REVERT_HEAD`, and `BISECT_LOG` resolved through `git rev-parse --git-path`;
+- record `PRE_COMMIT_HEAD` immediately before committing;
+- require `PRE_COMMIT_HEAD` to equal the exact expected parent baseline from `EXPECTED_BASE.head`;
 - immediately before committing, `git diff --cached --no-renames --name-only` must equal `COMMIT_AUTHORITY.paths` exactly, with no additional staged path;
 - if stage authority is false, perform no staging and require the pre-existing cached path set to match both `EXPECTED_BASE.staged_paths` and `COMMIT_AUTHORITY.paths` exactly;
 - if stage authority is false, also recompute the raw staged-content digest immediately before commit and require exact equality with `EXPECTED_BASE.staged_diff_sha256`;
@@ -431,6 +462,8 @@ When commit authority is true:
 - after all staged checks, capture `AUTHORIZED_TREE=$(git write-tree)`;
 - commit with hooks neutralized by setting `core.hooksPath` to exactly the verified-empty `COMMIT_AUTHORITY.hooks_path` for that commit invocation;
 - immediately after commit, require `git rev-parse 'HEAD^{tree}'` to equal `AUTHORIZED_TREE` exactly; a mismatch is a blocker and the lane must not claim successful authorized packaging;
+- unless `COMMIT_AUTHORITY.merge_commit_allowed` is separately and explicitly true, require the new commit to have `parent_count = 1` and `sole_parent = PRE_COMMIT_HEAD`;
+- when `COMMIT_AUTHORITY.merge_commit_allowed` is false or omitted, any merge commit or parent mismatch fails closed;
 - create exactly the number of commits authorized;
 - use the exact subject if provided;
 - do not amend, rebase, squash, or rewrite history unless explicitly granted.
@@ -441,6 +474,19 @@ hook-mutated staged change. Commit authority without an exact
 and a commit-only lane with pre-existing staged content is forbidden unless both
 its exact path set and its staged-content digest match the operator-declared
 baseline immediately before commit.
+
+Ordinary VIONA commit authority uses:
+
+```text
+IN_PROGRESS_GIT_OPERATION_CHECK=YES
+PRE_COMMIT_HEAD_PINNED=YES
+POST_COMMIT_PARENT_COUNT_ONE=YES
+POST_COMMIT_PARENT_EQUALS_PRE_COMMIT_HEAD=YES
+TREE_EQUIVALENCE_STILL_REQUIRED=YES
+MERGE_COMMIT_AUTHORITY=NO
+```
+
+Merge-commit authority is never implied by commit authority.
 
 ---
 
@@ -701,6 +747,11 @@ VALIDATORS:
     - git diff --check
     - git status --short --branch
 
+POST_VALIDATOR_STATE_RECHECK:
+  required: true
+  compare_to_expected_base: true
+  unauthorized_delta: fail_closed
+
 SELF_REMEDIATION_POLICY:
   allowed:
     - typing fixes inside allowlisted files
@@ -727,6 +778,7 @@ COMMIT_AUTHORITY:
   count: 1
   subject: "feat(example): add controlled local implementation"
   hooks_path: C:\VIONA\empty-hooks
+  merge_commit_allowed: false
 
 PUSH_AUTHORITY:
   allowed: false
