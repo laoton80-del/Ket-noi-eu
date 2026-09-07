@@ -37,7 +37,9 @@ Executor substitution does not reset or expand authorization. Codex may be the p
 
 ## 3. Required Envelope Fields
 
-Every VIONA Controlled Autonomous Execution Envelope must include these fields. No missing field may be silently inferred as permission.
+Every VIONA Controlled Autonomous Execution Envelope must include the applicable
+fields below. Mode-specific fields are included or omitted exactly as specified
+in this section. No missing field may be inferred as mutation permission.
 
 ```text
 PROJECT:
@@ -53,6 +55,7 @@ EXPECTED_BASE:
   tree_state:
   unstaged_tracked_paths:
   unstaged_tracked_diff_sha256:
+  tracked_worktree_manifest_sha256:
   staged_paths:
   staged_diff_sha256:
   untracked_paths:
@@ -86,9 +89,13 @@ VALIDATORS:
 
 POST_VALIDATOR_STATE_RECHECK:
   required:
-  compare_to_expected_base:
+  comparison_source:
+  capture:
   post_mutation_unstaged_tracked_paths:
   post_mutation_unstaged_tracked_diff_sha256:
+  post_mutation_tracked_worktree_manifest_sha256:
+  post_mutation_staged_paths:
+  post_mutation_staged_diff_sha256:
   post_mutation_untracked_paths:
   post_mutation_untracked_manifest_sha256:
   post_mutation_ignored_untracked_paths:
@@ -103,6 +110,7 @@ SELF_REMEDIATION_POLICY:
 STAGE_AUTHORITY:
   allowed:
   paths:
+  post_stage_paths:
 
 COMMIT_AUTHORITY:
   allowed:
@@ -158,27 +166,37 @@ FINAL_CLASSIFICATION:
 `EXPECTED_BASE.unstaged_tracked_paths` is the exact baseline path set for
 unstaged tracked changes. Use `unstaged_tracked_paths: []` when no unstaged
 tracked paths are present; otherwise list every expected repository path
-exactly. The observed output of `git diff --no-renames --name-only` must match
+exactly. The observed output of `git diff --no-renames --name-only -z` must match
 that declared set exactly.
 
-`EXPECTED_BASE.unstaged_tracked_diff_sha256` pins the exact content of the
-baseline unstaged tracked diff. It is the lowercase SHA-256 of the exact raw
-stdout bytes from this canonical command, with no text decoding or newline
-normalization before hashing:
+`EXPECTED_BASE.unstaged_tracked_diff_sha256` pins raw diff metadata, not
+working-file contents. It is the lowercase SHA-256 of the exact raw stdout
+bytes from this command, without text decoding or newline normalization:
 
 ```bash
 git -c core.abbrev=40 diff --raw --no-renames -z
 ```
 
-Path equality alone is insufficient. A validator can rewrite bytes at the same
-tracked path without changing the path set, so both path set and raw diff digest
-must be verified at preflight and after validators before final success
-classification.
+Raw worktree diff postimage object IDs are all zeros for unstaged changes.
+Therefore a same-path byte rewrite can leave this digest unchanged.
+`EXPECTED_BASE.tracked_worktree_manifest_sha256` additionally binds actual raw
+working content for every path from `git ls-files --cached -z`, sorted and
+deduplicated by raw path bytes. Include Git-clean paths: normalization, filters,
+and index flags can hide byte changes from `git diff`. The verified HEAD and
+staged identity determine this complete tracked inventory. Use the canonical
+path/type/content record defined below for untracked files, with one extra
+type: a deleted tracked path has type `missing` and the SHA-256 of the empty
+byte string. An existing empty regular file still has type `file`; it cannot
+equal a deletion. Symlinks bind their raw target bytes without dereferencing.
+The raw diff digest binds modes/status/index IDs, while the manifest binds
+working bytes, including binary files. Verify both identities and the exact
+path set at preflight and after validators. Reject unsupported types,
+incomplete enumeration, unreadable content, and unmerged index entries.
 
 `EXPECTED_BASE.staged_paths` is the exact baseline index-path declaration. Use
 `staged_paths: []` when no paths are staged at baseline; otherwise list every
 expected staged repository path exactly. The observed output of
-`git diff --cached --no-renames --name-only` must match that declared set
+`git diff --cached --no-renames --name-only -z` must match that declared set
 exactly. Rename detection must be disabled for staged path-set comparisons so
 both the source and destination paths of a staged rename are enumerated and
 must be explicitly authorized.
@@ -236,35 +254,71 @@ ignored or nonignored untracked files. Secrets and ignored artifacts remain
 default-deny unless separately and explicitly authorized by exact path and
 action.
 
-`POST_VALIDATOR_STATE_RECHECK` is required for any lane that runs validators.
-After all authorized validators and before final success classification, Codex
-must recompute the exact unstaged tracked path set, unstaged tracked diff
-digest, nonignored untracked path set, ignored untracked path set,
-`untracked_manifest_sha256`, and `ignored_untracked_manifest_sha256`.
+`POST_VALIDATOR_STATE_RECHECK` is required for every lane that runs validators.
+`required` must be true and `unauthorized_delta` must be `fail_closed`.
+`comparison_source` selects exactly one source of expected values:
 
-By default, Codex compares the final values against `EXPECTED_BASE`. If an
-authorized lane intentionally creates or changes an untracked, ignored, or
-unstaged tracked path before final classification, the active envelope must
-declare the complete post-mutation expected values in
-`POST_VALIDATOR_STATE_RECHECK`:
+- `expected_base` (default): all values remain those in `EXPECTED_BASE`;
+  `capture` and all `post_mutation_*` fields are omitted.
+- `declared_post_mutation`: the operator supplies every `post_mutation_*`
+  path set and digest listed below; `capture` is omitted. Verify this state
+  before the first validator, then seal it as that group's input.
+- `sealed_pre_validator_candidate`: only when explicitly selected by the
+  operator, `capture` is `after_authorized_implementation_before_first_validator`
+  and `post_mutation_*` fields are omitted. Record computed candidate values
+  in evidence after authorized implementation and before validators. This
+  avoids inventing output hashes before an implementation exists.
+
+The complete post-mutation identity consists of:
 
 - `post_mutation_unstaged_tracked_paths`;
 - `post_mutation_unstaged_tracked_diff_sha256`;
+- `post_mutation_tracked_worktree_manifest_sha256`;
+- `post_mutation_staged_paths`;
+- `post_mutation_staged_diff_sha256`;
 - `post_mutation_untracked_paths`;
 - `post_mutation_untracked_manifest_sha256`;
 - `post_mutation_ignored_untracked_paths`;
 - `post_mutation_ignored_untracked_manifest_sha256`.
 
-Every post-mutation path must still be independently mutation-authorized by
-exact path. Any undeclared delta fails closed. Ignored does not mean irrelevant,
-and validator-produced tracked, ignored, or untracked changes cannot be
-silently accepted.
+All modes also pin the verified canonical root, branch, and HEAD; validators
+have no branch or commit authority. Before sealing a post-mutation state,
+compare its per-path records with the captured, verified baseline. Each changed
+path and action must be independently authorized; staged changes require stage
+authority. Unchanged unrelated paths retain their baseline identities and do
+not need mutation authority merely to appear in a complete inventory.
+Expected-state declarations and candidate capture grant no additional rights.
+Reject conflicting mode fields or missing required identities.
+
+After every validator group, recompute root, branch,
+HEAD, exact unstaged paths, unstaged raw diff digest, tracked content manifest,
+staged paths/content digest, both untracked path sets, and both untracked
+manifests. Every value must equal the sealed input, including in stage-only or
+no-commit lanes. Never accept validator output as a replacement expected state.
+Validator-created files, same-path byte changes, index changes, and HEAD changes
+fail closed.
+
+If an in-scope remediation is authorized, preserve failure evidence and restore
+the last sealed input only when that restoration is already authorized;
+otherwise stop. Then apply the authorized remediation, re-establish expected input,
+and rerun affected validators. Re-establish input using the same selected
+comparison source: only explicitly selected candidate mode may capture new
+computed identities; other modes must still match their declared identities or
+stop for an updated operator declaration. Do not reseal unexplained validator changes.
+Before any later stage or commit, revalidate the last verified state; separately
+authorized transitions follow §11 and must be recorded in final evidence.
+Final success requires the state derived from the last validated input plus
+only those verified authorized transitions, with no unexplained changes.
 
 Required post-validator truths:
 
 ```text
 POST_VALIDATOR_TRACKED_RECHECK=YES
 POST_VALIDATOR_TRACKED_DIFF_SHA256_RECHECK=YES
+POST_VALIDATOR_TRACKED_MANIFEST_RECHECK=YES
+POST_VALIDATOR_STAGED_RECHECK=YES
+POST_VALIDATOR_STAGED_DIFF_SHA256_RECHECK=YES
+POST_VALIDATOR_HEAD_RECHECK=YES
 POST_VALIDATOR_UNTRACKED_RECHECK=YES
 POST_VALIDATOR_IGNORED_RECHECK=YES
 POST_VALIDATOR_MANIFEST_RECHECK=YES
@@ -323,9 +377,9 @@ git rev-parse --show-toplevel
 git branch --show-current
 git rev-parse HEAD
 git status --short --branch
-git diff --no-renames --name-only
+git diff --no-renames --name-only -z
 git -c core.abbrev=40 diff --raw --no-renames -z
-git diff --cached --no-renames --name-only
+git diff --cached --no-renames --name-only -z
 git ls-files --others --exclude-standard -z
 git ls-files --others --ignored --exclude-standard -z
 ```
@@ -338,8 +392,8 @@ git -c core.abbrev=40 diff --cached --raw --no-renames -z
 
 against `EXPECTED_BASE.staged_diff_sha256`, and compute both canonical untracked
 manifests described in §3 against their declared path sets and manifest digests.
-Also compute and compare the exact unstaged tracked path set and raw diff
-digest described in §3.
+Also compute and compare the exact unstaged tracked path set, raw metadata
+digest, and raw-byte tracked content manifest described in §3.
 
 Require:
 
@@ -347,7 +401,7 @@ Require:
 - expected branch;
 - exact HEAD;
 - expected tree state;
-- expected unstaged tracked path set and tracked diff digest;
+- expected unstaged tracked path set, raw metadata digest, and content manifest;
 - expected staged path set, with rename source and destination paths both enumerated;
 - expected staged-content digest;
 - exact nonignored untracked path set and content-identity manifest;
@@ -421,21 +475,25 @@ Not allowed without stop:
 Use this loop:
 
 ```text
-IMPLEMENT
+IMPLEMENT INSIDE THE AUTHORIZED ENVELOPE
+-> VERIFY AUTHORIZED DELTAS AND SEAL THE PRE-VALIDATOR INPUT STATE
 -> RUN TARGETED TEST
+-> RECHECK ALL SEALED STATE IDENTITIES
 -> IF FAIL:
      classify cause
 -> IF safely remediable inside envelope:
-     remediate
-     rerun
+     preserve evidence; restore sealed input only when authorized
+     remediate; re-establish input using the same selected comparison source
+     rerun and recheck all sealed state identities
 -> ELSE:
      STOP
 -> RUN FULL REQUIRED VALIDATORS
--> RECOMPUTE FINAL UNSTAGED TRACKED PATH SET AND DIFF DIGEST
--> RECOMPUTE FINAL NONIGNORED AND IGNORED UNTRACKED PATH SETS
--> RECOMPUTE FINAL UNTRACKED MANIFEST SHA-256 IDENTITIES
--> COMPARE FINAL VALUES WITH EXPECTED_BASE OR DECLARED POST-MUTATION STATE
--> CAPTURE FINAL GIT STATE
+-> RECHECK ROOT, BRANCH, HEAD, UNSTAGED PATHS/METADATA/CONTENT MANIFEST
+-> RECHECK STAGED PATHS AND STAGED-CONTENT DIGEST
+-> RECHECK NONIGNORED AND IGNORED PATH SETS AND CONTENT MANIFESTS
+-> COMPARE EVERY VALUE WITH THE SAME SEALED INPUT STATE
+-> REVALIDATE BEFORE ANY INDEPENDENTLY AUTHORIZED STAGE/COMMIT TRANSITION
+-> CAPTURE FINAL GIT STATE AND TRANSITION EVIDENCE
 ```
 
 Default anti-loop rule:
@@ -459,6 +517,10 @@ Every autonomous lane must return:
 - files denied and not touched;
 - tests run;
 - test outcomes;
+- comparison source and sealed pre-validator state identities;
+- every post-validator identity comparison;
+- verified stage transitions, staged paths and staged-content digest;
+- PRE_COMMIT_HEAD, AUTHORIZED_TREE, committed tree and parent proof when committed;
 - remediation performed;
 - scope expansions requested;
 - Git state;
@@ -480,9 +542,25 @@ stage-only lane with stage authority true and commit authority false is valid.
 
 When stage authority is true:
 
-- use exact paths only;
-- run `git diff --cached --no-renames --name-only` and require every staged path, including both endpoints of a rename, to be authorized;
+- use exact paths only and revalidate the last verified state before staging;
+- `STAGE_AUTHORITY.post_stage_paths` declares the complete expected index diff
+  path set, including unchanged baseline entries; only paths independently
+  listed in `STAGE_AUTHORITY.paths` may have their index entries changed;
+- run `git diff --cached --no-renames --name-only -z` and require equality with
+  `STAGE_AUTHORITY.post_stage_paths`, including both endpoints of every rename;
+- preserve baseline index content outside the stage-authorized paths;
+- verify changed staged entries against the validated working content;
+  unchanged baseline entries retain their verified index identities;
+  reject unvalidated filter or other transformations, and any worktree change;
+- record the verified post-stage `staged_diff_sha256` and require it unchanged
+  immediately before commit, or at final reporting when no commit occurs;
+  after commit retain it as pre-commit evidence and verify the resulting index
+  against the committed tree, with expected worktree state unchanged;
 - run `git diff --cached --check`.
+
+A stage-only lane follows all these checks even though it will not commit.
+Stage authority limits index mutations; pre-existing unchanged staged entries
+are evidence, not implicit authority to commit them.
 
 Never use these staging commands unless the operator explicitly authorizes them:
 
@@ -499,16 +577,16 @@ imply stage authority.
 When commit authority is true:
 
 - `COMMIT_AUTHORITY.paths` must list every repository path authorized for the commit exactly, including both source and destination paths of any rename;
-- reject any in-progress Git operation that can alter commit ancestry or semantics, including merge, rebase, cherry-pick, revert, bisect, and equivalent operation markers such as `MERGE_HEAD`, `rebase-merge`, `rebase-apply`, `CHERRY_PICK_HEAD`, `REVERT_HEAD`, and `BISECT_LOG` resolved through `git rev-parse --git-path`;
+- reject any in-progress Git operation that can alter commit ancestry or semantics, including merge, rebase, cherry-pick, revert, bisect, and equivalent operation markers such as `MERGE_HEAD`, `rebase-merge`, `rebase-apply`, `CHERRY_PICK_HEAD`, `REVERT_HEAD`, `sequencer`, and `BISECT_LOG` resolved through `git rev-parse --git-path`;
 - record `PRE_COMMIT_HEAD` immediately before committing;
 - require `PRE_COMMIT_HEAD` to equal the exact expected parent baseline from `EXPECTED_BASE.head`;
-- immediately before committing, `git diff --cached --no-renames --name-only` must equal `COMMIT_AUTHORITY.paths` exactly, with no additional staged path;
+- immediately before committing, `git diff --cached --no-renames --name-only -z` must equal `COMMIT_AUTHORITY.paths` exactly, with no additional staged path;
 - if stage authority is false, perform no staging and require the pre-existing cached path set to match both `EXPECTED_BASE.staged_paths` and `COMMIT_AUTHORITY.paths` exactly;
 - if stage authority is false, also recompute the raw staged-content digest immediately before commit and require exact equality with `EXPECTED_BASE.staged_diff_sha256`;
-- if stage authority is true, require the post-stage cached path set to match `COMMIT_AUTHORITY.paths` exactly before committing;
+- if stage authority is true, require the post-stage cached path set to match `COMMIT_AUTHORITY.paths` exactly and its content digest to equal the verified post-stage digest immediately before committing;
 - `COMMIT_AUTHORITY.hooks_path` must be one exact absolute path outside the repository to a real directory that is not a symlink;
 - immediately before commit, the hooks directory must exist and be empty; a missing, non-directory, symlinked, or nonempty hooks path is a blocker;
-- after all staged checks, capture `AUTHORIZED_TREE=$(git write-tree)`;
+- after all staged checks, capture `AUTHORIZED_TREE=$(git write-tree)`; capturing the current tree alone is not a content-authorization check;
 - commit with hooks neutralized by setting `core.hooksPath` to exactly the verified-empty `COMMIT_AUTHORITY.hooks_path` for that commit invocation;
 - immediately after commit, require `git rev-parse 'HEAD^{tree}'` to equal `AUTHORIZED_TREE` exactly; a mismatch is a blocker and the lane must not claim successful authorized packaging;
 - unless `COMMIT_AUTHORITY.merge_commit_allowed` is separately and explicitly true, require the new commit to have `parent_count = 1` and `sole_parent = PRE_COMMIT_HEAD`;
@@ -739,6 +817,15 @@ NO SILENT REMEDIATION OUTSIDE AUTHORITY
 
 ## 21. Example Envelope
 
+This example explicitly authorizes sealing the implemented candidate before
+validators. Its created file remains in the nonignored untracked manifest until
+the separately authorized stage step. The candidate records the actual changed
+tracked paths and content identities; it does not claim an empty post-state.
+Staging occurs only after validation and must preserve the validated bytes.
+Replace the illustrative baseline SHAs and manifest placeholder with verified
+exact values before authorizing a real lane. A clean worktree still has a
+nonempty tracked manifest when indexed files exist.
+
 ```text
 PROJECT:
   name: VIONA
@@ -753,6 +840,7 @@ EXPECTED_BASE:
   tree_state: clean
   unstaged_tracked_paths: []
   unstaged_tracked_diff_sha256: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+  tracked_worktree_manifest_sha256: <required-baseline-manifest-sha256>
   staged_paths: []
   staged_diff_sha256: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
   untracked_paths: []
@@ -800,13 +888,8 @@ VALIDATORS:
 
 POST_VALIDATOR_STATE_RECHECK:
   required: true
-  compare_to_expected_base: true
-  post_mutation_unstaged_tracked_paths: []
-  post_mutation_unstaged_tracked_diff_sha256: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
-  post_mutation_untracked_paths: []
-  post_mutation_untracked_manifest_sha256: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
-  post_mutation_ignored_untracked_paths: []
-  post_mutation_ignored_untracked_manifest_sha256: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+  comparison_source: sealed_pre_validator_candidate
+  capture: after_authorized_implementation_before_first_validator
   unauthorized_delta: fail_closed
 
 SELF_REMEDIATION_POLICY:
@@ -822,6 +905,10 @@ SELF_REMEDIATION_POLICY:
 STAGE_AUTHORITY:
   allowed: true
   paths:
+    - src/example/new-file.ts
+    - src/example/existing-file.ts
+    - scripts/test-example.ts
+  post_stage_paths:
     - src/example/new-file.ts
     - src/example/existing-file.ts
     - scripts/test-example.ts
@@ -883,6 +970,8 @@ OUTPUT_EVIDENCE:
     - baseline
     - files changed
     - validators
+    - sealed candidate identities and post-validator comparisons
+    - staged-content and ordinary commit ancestry proof
     - git state
     - remote effect
     - final classification

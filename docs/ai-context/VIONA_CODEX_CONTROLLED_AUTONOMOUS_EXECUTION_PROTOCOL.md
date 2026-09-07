@@ -65,7 +65,7 @@ Codex must verify the local repository state before performing any approved muta
 - repository top-level;
 - branch;
 - HEAD;
-- unstaged tracked paths and their deterministic diff identity;
+- unstaged tracked paths, raw diff metadata, and raw-byte content manifest;
 - staged diff;
 - unstaged tracked diff;
 - nonignored untracked paths and their deterministic content identities;
@@ -176,21 +176,31 @@ git rev-parse --show-toplevel
 git branch --show-current
 git rev-parse HEAD
 git status --short --branch
-git diff --no-renames --name-only
+git diff --no-renames --name-only -z
 git -c core.abbrev=40 diff --raw --no-renames -z
-git diff --cached --no-renames --name-only
+git diff --cached --no-renames --name-only -z
 git ls-files --others --exclude-standard -z
 git ls-files --others --ignored --exclude-standard -z
 ```
 
-The unstaged tracked baseline is an exact path set and raw diff identity. Codex
-must compare `git diff --no-renames --name-only` with the operator-declared
-unstaged tracked path set and compare the SHA-256 of
-`git -c core.abbrev=40 diff --raw --no-renames -z` with the declared tracked
-diff digest. Path equality alone is insufficient because a validator can change
-bytes at the same tracked path without changing the path set. Rename detection
-must be disabled so both endpoints of a rename are visible to exact-path
-validation.
+The unstaged tracked baseline contains an exact path set, raw diff metadata
+digest, and a separate raw-byte content manifest. Compare
+`git diff --no-renames --name-only -z` with the declared path set and the SHA-256
+of `git -c core.abbrev=40 diff --raw --no-renames -z` with the declared metadata
+digest. Raw worktree diffs contain all-zero postimage object IDs; they do not
+bind changed file bytes. Also compute `tracked_worktree_manifest_sha256` using
+the canonical manifest in envelope spec §3 over every indexed working path
+from `git ls-files --cached -z`: raw file bytes, raw symlink targets without
+dereferencing, and explicit missing-path records. Hash even Git-clean paths;
+normalization, filters, or index flags must not hide working-byte changes. Both the metadata
+digest and content manifest must match. Rename detection stays disabled so both
+endpoints are visible. Unsupported types, incomplete inventories, or unreadable
+identities fail closed.
+
+The staged baseline must match both its exact path set and
+`staged_diff_sha256`, computed from
+`git -c core.abbrev=40 diff --cached --raw --no-renames -z`. This index diff
+contains full blob IDs and modes. Reject unmerged index entries.
 
 The staged-path preflight disables rename detection so both source and
 destination endpoints of a staged rename are visible to exact-path validation.
@@ -210,21 +220,43 @@ no permission to read their semantic contents, modify them, stage them, execute
 them, or treat them as supporting files. Mutation authority still comes only
 from the exact active allowlist.
 
-After all authorized validators have run and before final success
-classification, Codex must recompute the exact unstaged tracked path set,
-tracked diff identity, nonignored untracked path set, ignored untracked path
-set, and both deterministic untracked manifest SHA-256 identities. Codex must
-compare all final values with the operator-declared `EXPECTED_BASE` values
-unless the active envelope declares exact post-mutation expected values for an
-independently mutation-authorized changed path. Any undeclared delta fails
-closed. Ignored does not mean irrelevant, and validator-produced tracked,
-ignored, or untracked changes cannot be silently accepted.
+For every validator group, first seal the complete expected input state using
+the envelope spec §3 `POST_VALIDATOR_STATE_RECHECK.comparison_source`. The source
+is `expected_base`, `declared_post_mutation`, or an explicitly authorized
+`sealed_pre_validator_candidate`. Candidate capture occurs after authorized
+implementation and before the first validator; every difference from baseline
+must be independently authorized, and unchanged unrelated paths retain their
+baseline identities. Capturing evidence never grants mutation or stage authority.
+
+After validators, recompute root, branch, HEAD, exact unstaged tracked paths,
+tracked raw metadata digest, tracked content manifest, staged paths and
+staged-content digest, both untracked path sets, and both untracked manifests.
+Compare every value to the sealed input state, including in stage-only and
+no-commit lanes. Never refresh expected identities from validator output.
+Validator-created or validator-modified worktree/index state and unexpected
+HEAD movement fail closed. A permitted remediation starts only after preserving
+evidence and restoring the last sealed input when that restoration is already
+authorized; otherwise stop. Apply authorized edits and re-establish expected input using the same selected
+comparison source. Only explicitly selected candidate mode may capture new
+computed identities; other modes must still match their declared identities or
+stop for an updated operator declaration. Rerun affected validators.
+
+Before any later stage or commit, revalidate the last verified state. Independently
+authorized staging may then change only the declared index paths and must bind
+the resulting blobs and modes to the validated working content. Record that
+verified staged identity; immediately before commit it must still match.
+Final evidence must account for each authorized stage/commit transition as well
+as the post-validator comparison. Ignored files remain part of the state.
 
 Required post-validator truths:
 
 ```text
 POST_VALIDATOR_TRACKED_RECHECK=YES
 POST_VALIDATOR_TRACKED_DIFF_SHA256_RECHECK=YES
+POST_VALIDATOR_TRACKED_MANIFEST_RECHECK=YES
+POST_VALIDATOR_STAGED_RECHECK=YES
+POST_VALIDATOR_STAGED_DIFF_SHA256_RECHECK=YES
+POST_VALIDATOR_HEAD_RECHECK=YES
 POST_VALIDATOR_UNTRACKED_RECHECK=YES
 POST_VALIDATOR_IGNORED_RECHECK=YES
 POST_VALIDATOR_MANIFEST_RECHECK=YES
@@ -272,7 +304,16 @@ If the requested docs need evidence from runtime tests, Codex may run non-deploy
 
 ### 7.1 Stage gate
 
-Staging requires explicit authorization. When authorized, Codex must stage exact paths only.
+Staging requires explicit authorization. When authorized, Codex must stage exact
+paths only. Stage-only lanes are valid and do not require commit authority.
+Before staging, revalidate the last verified state. After staging, require the
+exact declared post-stage path set and content identity; unchanged baseline
+index entries retain their identities. Verify changed staged entries against
+the validated working content, including both rename endpoints; unchanged
+baseline entries keep their verified index identities. Reject
+unvalidated filter or other transformations. Staging must not modify worktree
+content. Preserve the verified staged digest for the final report and commit
+gate. See envelope spec §11 for the independent stage and commit contracts.
 
 Forbidden staging patterns unless the operator explicitly authorizes them:
 
@@ -290,7 +331,7 @@ Before any commit-authorized operation, Codex must reject any in-progress Git
 operation that can alter commit ancestry or commit semantics. The check must
 include merge, rebase, cherry-pick, revert, bisect, and equivalent operation
 markers such as `MERGE_HEAD`, `rebase-merge`, `rebase-apply`,
-`CHERRY_PICK_HEAD`, `REVERT_HEAD`, and `BISECT_LOG` resolved through
+`CHERRY_PICK_HEAD`, `REVERT_HEAD`, `sequencer`, and `BISECT_LOG` resolved through
 `git rev-parse --git-path`. Codex then records `PRE_COMMIT_HEAD` and requires
 it to equal the exact expected parent baseline for the lane before committing.
 This protocol grants no merge-commit authority unless an active envelope grants
@@ -300,7 +341,9 @@ A commit-authorized lane must also neutralize repository hooks deterministically
 The active envelope must declare one exact absolute hooks directory outside the
 repository. Before commit, Codex must verify that directory exists, is a real
 directory rather than a symlink, and is empty. Codex then records the authorized
-index tree as `AUTHORIZED_TREE=$(git write-tree)`, commits with `core.hooksPath` set to that exact
+index tree as `AUTHORIZED_TREE=$(git write-tree)` only after verifying the
+exact staged-content identity against the last validated state or the verified
+authorized stage transition. It commits with `core.hooksPath` set to that exact
 verified-empty directory, and requires `HEAD^{tree}` to equal the recorded
 authorized tree exactly. Any hook-path mismatch, nonempty hook directory, or
 post-commit tree mismatch is a fail-closed blocker; the lane must not claim the
@@ -435,12 +478,12 @@ Every controlled autonomous lane should end with:
 | Branch | Actual branch name |
 | Baseline | Starting commit and current HEAD |
 | Files changed | Exact file list |
-| Staged | Exact staged state |
-| Commit | Commit hash or `none` |
+| Staged | Exact staged paths/content identity and any verified stage transition |
+| Commit | Commit hash or `none`; PRE_COMMIT_HEAD, AUTHORIZED_TREE, resulting tree and parent proof when committed |
 | Push | `zero` unless authorized and completed |
 | PR | `zero` unless authorized and completed |
 | Runtime/source | `zero` for docs-only lanes |
-| Validation | Commands run and pass/fail result |
+| Validation | Commands run, pass/fail result, comparison source, sealed input identities, and every post-validator state comparison |
 | Blockers | Any stop condition |
 | Next action | Hold state or request next explicit authorization |
 
