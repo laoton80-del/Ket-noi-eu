@@ -197,10 +197,13 @@ digest and content manifest must match. Rename detection stays disabled so both
 endpoints are visible. Unsupported types, incomplete inventories, or unreadable
 identities fail closed.
 
-The staged baseline must match both its exact path set and
+The staged baseline must match its exact path set and
 `staged_diff_sha256`, computed from
 `git -c core.abbrev=40 diff --cached --raw --no-renames -z`. This index diff
-contains full blob IDs and modes. Reject unmerged index entries.
+contains full blob IDs and modes. Also require `index_semantic_manifest_sha256`
+as defined in envelope spec §3 over every index entry, including assume-unchanged,
+skip-worktree, and intent-to-add flags. Cached diffs do not expose flag-only
+mutations. Reject unmerged index entries and unsupported manifest input.
 
 The staged-path preflight disables rename detection so both source and
 destination endpoints of a staged rename are visible to exact-path validation.
@@ -230,7 +233,8 @@ baseline identities. Capturing evidence never grants mutation or stage authority
 
 After validators, recompute root, branch, HEAD, exact unstaged tracked paths,
 tracked raw metadata digest, tracked content manifest, staged paths and
-staged-content digest, both untracked path sets, and both untracked manifests.
+staged-content digest, semantic index manifest, both untracked path sets, and
+both untracked manifests.
 Compare every value to the sealed input state, including in stage-only and
 no-commit lanes. Never refresh expected identities from validator output.
 Validator-created or validator-modified worktree/index state and unexpected
@@ -256,6 +260,7 @@ POST_VALIDATOR_TRACKED_DIFF_SHA256_RECHECK=YES
 POST_VALIDATOR_TRACKED_MANIFEST_RECHECK=YES
 POST_VALIDATOR_STAGED_RECHECK=YES
 POST_VALIDATOR_STAGED_DIFF_SHA256_RECHECK=YES
+POST_VALIDATOR_INDEX_SEMANTIC_MANIFEST_RECHECK=YES
 POST_VALIDATOR_HEAD_RECHECK=YES
 POST_VALIDATOR_UNTRACKED_RECHECK=YES
 POST_VALIDATOR_IGNORED_RECHECK=YES
@@ -310,10 +315,14 @@ Before staging, revalidate the last verified state. After staging, require the
 exact declared post-stage path set and content identity; unchanged baseline
 index entries retain their identities. Verify changed staged entries against
 the validated working content, including both rename endpoints; unchanged
-baseline entries keep their verified index identities. Reject
+baseline entries keep their verified index identities. Compare semantic index
+records as well; ordinary staging may only clear intent-to-add when staging
+validated content at an authorized path. Other flag transitions require explicit
+path-and-flag authority. Reject
 unvalidated filter or other transformations. Staging must not modify worktree
-content. Preserve the verified staged digest for the final report and commit
-gate. See envelope spec §11 for the independent stage and commit contracts.
+content. Preserve the verified staged digest and semantic index manifest for
+final evidence and recheck the manifest before and after commit. See envelope
+spec §11 for the independent stage and commit contracts.
 
 Forbidden staging patterns unless the operator explicitly authorizes them:
 
@@ -334,8 +343,11 @@ markers such as `MERGE_HEAD`, `rebase-merge`, `rebase-apply`,
 `CHERRY_PICK_HEAD`, `REVERT_HEAD`, `sequencer`, and `BISECT_LOG` resolved through
 `git rev-parse --git-path`. Codex then records `PRE_COMMIT_HEAD` and requires
 it to equal the exact expected parent baseline for the lane before committing.
-This protocol grants no merge-commit authority unless an active envelope grants
-it separately and explicitly.
+This is an ordinary-commit-only contract. `COMMIT_AUTHORITY.merge_commit_allowed`
+is false by default and false is its only supported value here. A true value
+fails closed before committing. Merge commits require a separate explicit
+merge-specific contract and any required governance freeze release; they must
+not use or bypass this ordinary commit gate.
 
 A commit-authorized lane must also neutralize repository hooks deterministically.
 The active envelope must declare one exact absolute hooks directory outside the
@@ -351,9 +363,9 @@ commit as successfully authorized.
 
 Immediately after an ordinary authorized commit, Codex must require
 `parent_count = 1` and `sole_parent = PRE_COMMIT_HEAD`. A commit with multiple
-parents, a missing parent, or a parent different from `PRE_COMMIT_HEAD` fails
-closed unless the active envelope separately and explicitly grants merge-commit
-authority. Commit tree equality with `AUTHORIZED_TREE` is still required.
+parents, a missing parent, or a parent different from `PRE_COMMIT_HEAD` always
+fails closed under this ordinary contract. Commit tree equality with
+`AUTHORIZED_TREE` and an unchanged verified semantic index manifest are required.
 
 Required commit-ancestry truths:
 
@@ -478,7 +490,7 @@ Every controlled autonomous lane should end with:
 | Branch | Actual branch name |
 | Baseline | Starting commit and current HEAD |
 | Files changed | Exact file list |
-| Staged | Exact staged paths/content identity and any verified stage transition |
+| Staged | Exact staged paths/content identity, semantic index manifest, and any verified stage transition |
 | Commit | Commit hash or `none`; PRE_COMMIT_HEAD, AUTHORIZED_TREE, resulting tree and parent proof when committed |
 | Push | `zero` unless authorized and completed |
 | PR | `zero` unless authorized and completed |

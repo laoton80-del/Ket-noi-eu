@@ -58,6 +58,7 @@ EXPECTED_BASE:
   tracked_worktree_manifest_sha256:
   staged_paths:
   staged_diff_sha256:
+  index_semantic_manifest_sha256:
   untracked_paths:
   untracked_manifest_sha256:
   ignored_untracked_paths:
@@ -96,6 +97,7 @@ POST_VALIDATOR_STATE_RECHECK:
   post_mutation_tracked_worktree_manifest_sha256:
   post_mutation_staged_paths:
   post_mutation_staged_diff_sha256:
+  post_mutation_index_semantic_manifest_sha256:
   post_mutation_untracked_paths:
   post_mutation_untracked_manifest_sha256:
   post_mutation_ignored_untracked_paths:
@@ -118,7 +120,7 @@ COMMIT_AUTHORITY:
   count:
   subject:
   hooks_path:
-  merge_commit_allowed:
+  merge_commit_allowed: false
 
 PUSH_AUTHORITY:
   allowed:
@@ -182,8 +184,8 @@ Therefore a same-path byte rewrite can leave this digest unchanged.
 `EXPECTED_BASE.tracked_worktree_manifest_sha256` additionally binds actual raw
 working content for every path from `git ls-files --cached -z`, sorted and
 deduplicated by raw path bytes. Include Git-clean paths: normalization, filters,
-and index flags can hide byte changes from `git diff`. The verified HEAD and
-staged identity determine this complete tracked inventory. Use the canonical
+and index flags can hide byte changes from `git diff`. The verified HEAD,
+staged identity, and semantic index manifest determine this tracked inventory. Use the canonical
 path/type/content record defined below for untracked files, with one extra
 type: a deleted tracked path has type `missing` and the SHA-256 of the empty
 byte string. An existing empty regular file still has type `file`; it cannot
@@ -219,6 +221,45 @@ the SHA-256 of the empty byte string:
 The staged-content digest must be verified at preflight and reverified
 immediately before any commit-only operation. Matching path names without a
 matching staged-content digest is not sufficient.
+
+`EXPECTED_BASE.index_semantic_manifest_sha256` binds every index entry even
+when the cached diff is empty. Read from the canonical root using:
+
+```bash
+git --no-optional-locks -c core.fsmonitor=false ls-files --stage --debug --abbrev=40 -z
+```
+
+Parse each mode/full-object-ID/stage header through its TAB, preserve the raw
+pathname through NUL, then parse the supported five-line debug metadata and its
+hexadecimal flags. Do not split pathnames on whitespace or newlines. Reject
+malformed or changed debug output, duplicate paths, and nonzero index stages.
+`--debug` is not a stable machine format: an unsupported format fails closed
+until its parser is explicitly reviewed. Do not hash physical index bytes or
+raw debug output, because stat/cache refreshes are not content authority.
+
+Sort records by raw path bytes ascending and serialize exactly:
+
+```text
+<path> NUL <stage-decimal> NUL <mode-six-octal> NUL <full-lowercase-oid> NUL <assume-bit> NUL <skip-bit> NUL <intent-to-add-bit> NUL
+```
+
+Each bit is ASCII `0` or `1`. Decode assume-unchanged from `0x8000`,
+skip-worktree from `0x40000000`, and intent-to-add from `0x20000000`.
+The lowercase SHA-256 of the concatenated records is the semantic manifest;
+an empty index uses the empty-byte-string digest. An index with unchanged
+tracked files still has a nonempty manifest. Ignore stat metadata and only
+these recognized bookkeeping/cache flag bits: EXTENDED `0x4000`, UPTODATE
+`0x40000`, HASHED `0x100000`, and FSMONITOR_VALID `0x200000`. Reject all other
+flag bits rather than silently masking unknown semantics. Fsmonitor is disabled
+for this inventory; the independent full raw-worktree manifest still detects
+content changes regardless of cached hints.
+
+Verify this manifest at preflight, before and after every validator group,
+before and after staging, immediately before commit, and after commit. Stage
+transitions must preserve all entries outside their exact authority. Ordinary
+staging may clear intent-to-add only while staging validated content at an
+authorized path; any other semantic flag transition requires exact path-and-flag
+authority. Recording a changed manifest does not authorize that change.
 
 `EXPECTED_BASE.untracked_paths` is the exact set of nonignored untracked
 repository paths. `EXPECTED_BASE.ignored_untracked_paths` is the exact set of
@@ -276,6 +317,7 @@ The complete post-mutation identity consists of:
 - `post_mutation_tracked_worktree_manifest_sha256`;
 - `post_mutation_staged_paths`;
 - `post_mutation_staged_diff_sha256`;
+- `post_mutation_index_semantic_manifest_sha256`;
 - `post_mutation_untracked_paths`;
 - `post_mutation_untracked_manifest_sha256`;
 - `post_mutation_ignored_untracked_paths`;
@@ -292,8 +334,8 @@ Reject conflicting mode fields or missing required identities.
 
 After every validator group, recompute root, branch,
 HEAD, exact unstaged paths, unstaged raw diff digest, tracked content manifest,
-staged paths/content digest, both untracked path sets, and both untracked
-manifests. Every value must equal the sealed input, including in stage-only or
+staged paths/content digest, semantic index manifest, both untracked path sets,
+and both untracked manifests. Every value must equal the sealed input, including in stage-only or
 no-commit lanes. Never accept validator output as a replacement expected state.
 Validator-created files, same-path byte changes, index changes, and HEAD changes
 fail closed.
@@ -318,6 +360,7 @@ POST_VALIDATOR_TRACKED_DIFF_SHA256_RECHECK=YES
 POST_VALIDATOR_TRACKED_MANIFEST_RECHECK=YES
 POST_VALIDATOR_STAGED_RECHECK=YES
 POST_VALIDATOR_STAGED_DIFF_SHA256_RECHECK=YES
+POST_VALIDATOR_INDEX_SEMANTIC_MANIFEST_RECHECK=YES
 POST_VALIDATOR_HEAD_RECHECK=YES
 POST_VALIDATOR_UNTRACKED_RECHECK=YES
 POST_VALIDATOR_IGNORED_RECHECK=YES
@@ -390,7 +433,9 @@ In addition, compute and compare the exact raw-byte SHA-256 for:
 git -c core.abbrev=40 diff --cached --raw --no-renames -z
 ```
 
-against `EXPECTED_BASE.staged_diff_sha256`, and compute both canonical untracked
+against `EXPECTED_BASE.staged_diff_sha256`. Compute the complete semantic index
+manifest against `EXPECTED_BASE.index_semantic_manifest_sha256` using §3, and
+compute both canonical untracked
 manifests described in §3 against their declared path sets and manifest digests.
 Also compute and compare the exact unstaged tracked path set, raw metadata
 digest, and raw-byte tracked content manifest described in §3.
@@ -403,7 +448,7 @@ Require:
 - expected tree state;
 - expected unstaged tracked path set, raw metadata digest, and content manifest;
 - expected staged path set, with rename source and destination paths both enumerated;
-- expected staged-content digest;
+- expected staged-content digest and semantic index manifest;
 - exact nonignored untracked path set and content-identity manifest;
 - exact ignored untracked path set and content-identity manifest.
 
@@ -489,7 +534,7 @@ IMPLEMENT INSIDE THE AUTHORIZED ENVELOPE
      STOP
 -> RUN FULL REQUIRED VALIDATORS
 -> RECHECK ROOT, BRANCH, HEAD, UNSTAGED PATHS/METADATA/CONTENT MANIFEST
--> RECHECK STAGED PATHS AND STAGED-CONTENT DIGEST
+-> RECHECK STAGED PATHS, STAGED-CONTENT DIGEST, AND SEMANTIC INDEX MANIFEST
 -> RECHECK NONIGNORED AND IGNORED PATH SETS AND CONTENT MANIFESTS
 -> COMPARE EVERY VALUE WITH THE SAME SEALED INPUT STATE
 -> REVALIDATE BEFORE ANY INDEPENDENTLY AUTHORIZED STAGE/COMMIT TRANSITION
@@ -519,7 +564,7 @@ Every autonomous lane must return:
 - test outcomes;
 - comparison source and sealed pre-validator state identities;
 - every post-validator identity comparison;
-- verified stage transitions, staged paths and staged-content digest;
+- verified stage transitions, staged paths/content digest, and semantic index manifests;
 - PRE_COMMIT_HEAD, AUTHORIZED_TREE, committed tree and parent proof when committed;
 - remediation performed;
 - scope expansions requested;
@@ -548,10 +593,16 @@ When stage authority is true:
   listed in `STAGE_AUTHORITY.paths` may have their index entries changed;
 - run `git diff --cached --no-renames --name-only -z` and require equality with
   `STAGE_AUTHORITY.post_stage_paths`, including both endpoints of every rename;
-- preserve baseline index content outside the stage-authorized paths;
+- compare complete semantic index records before and after staging; preserve
+  baseline records outside the stage-authorized paths;
+- ordinary staging may clear intent-to-add only when staging validated content
+  at a stage-authorized path; other flag transitions require explicit
+  path-and-flag authority and must match that exact declared transition;
 - verify changed staged entries against the validated working content;
   unchanged baseline entries retain their verified index identities;
   reject unvalidated filter or other transformations, and any worktree change;
+- record the verified post-stage `index_semantic_manifest_sha256`; require it
+  unchanged before commit, after commit, and at final reporting;
 - record the verified post-stage `staged_diff_sha256` and require it unchanged
   immediately before commit, or at final reporting when no commit occurs;
   after commit retain it as pre-commit evidence and verify the resulting index
@@ -576,21 +627,23 @@ imply stage authority.
 
 When commit authority is true:
 
+- `COMMIT_AUTHORITY.merge_commit_allowed` must be false (the default and only supported value in this ordinary-commit contract); reject true before committing;
 - `COMMIT_AUTHORITY.paths` must list every repository path authorized for the commit exactly, including both source and destination paths of any rename;
 - reject any in-progress Git operation that can alter commit ancestry or semantics, including merge, rebase, cherry-pick, revert, bisect, and equivalent operation markers such as `MERGE_HEAD`, `rebase-merge`, `rebase-apply`, `CHERRY_PICK_HEAD`, `REVERT_HEAD`, `sequencer`, and `BISECT_LOG` resolved through `git rev-parse --git-path`;
 - record `PRE_COMMIT_HEAD` immediately before committing;
 - require `PRE_COMMIT_HEAD` to equal the exact expected parent baseline from `EXPECTED_BASE.head`;
 - immediately before committing, `git diff --cached --no-renames --name-only -z` must equal `COMMIT_AUTHORITY.paths` exactly, with no additional staged path;
 - if stage authority is false, perform no staging and require the pre-existing cached path set to match both `EXPECTED_BASE.staged_paths` and `COMMIT_AUTHORITY.paths` exactly;
-- if stage authority is false, also recompute the raw staged-content digest immediately before commit and require exact equality with `EXPECTED_BASE.staged_diff_sha256`;
-- if stage authority is true, require the post-stage cached path set to match `COMMIT_AUTHORITY.paths` exactly and its content digest to equal the verified post-stage digest immediately before committing;
+- if stage authority is false, also recompute the raw staged-content digest and semantic index manifest immediately before commit and require exact equality with `EXPECTED_BASE.staged_diff_sha256` and `EXPECTED_BASE.index_semantic_manifest_sha256`;
+- if stage authority is true, require the post-stage cached path set to match `COMMIT_AUTHORITY.paths` exactly, its content digest to equal the verified post-stage digest, and its semantic index manifest to equal the verified post-stage manifest immediately before committing;
 - `COMMIT_AUTHORITY.hooks_path` must be one exact absolute path outside the repository to a real directory that is not a symlink;
 - immediately before commit, the hooks directory must exist and be empty; a missing, non-directory, symlinked, or nonempty hooks path is a blocker;
 - after all staged checks, capture `AUTHORIZED_TREE=$(git write-tree)`; capturing the current tree alone is not a content-authorization check;
 - commit with hooks neutralized by setting `core.hooksPath` to exactly the verified-empty `COMMIT_AUTHORITY.hooks_path` for that commit invocation;
 - immediately after commit, require `git rev-parse 'HEAD^{tree}'` to equal `AUTHORIZED_TREE` exactly; a mismatch is a blocker and the lane must not claim successful authorized packaging;
-- unless `COMMIT_AUTHORITY.merge_commit_allowed` is separately and explicitly true, require the new commit to have `parent_count = 1` and `sole_parent = PRE_COMMIT_HEAD`;
-- when `COMMIT_AUTHORITY.merge_commit_allowed` is false or omitted, any merge commit or parent mismatch fails closed;
+- require the new commit to have `parent_count = 1` and `sole_parent = PRE_COMMIT_HEAD` without an exception in this ordinary contract;
+- after commit, require the semantic index manifest to equal its verified pre-commit value; tree equality alone cannot detect index flag mutation;
+- any merge commit or parent mismatch fails closed;
 - create exactly the number of commits authorized;
 - use the exact subject if provided;
 - do not amend, rebase, squash, or rewrite history unless explicitly granted.
@@ -613,7 +666,10 @@ TREE_EQUIVALENCE_STILL_REQUIRED=YES
 MERGE_COMMIT_AUTHORITY=NO
 ```
 
-Merge-commit authority is never implied by commit authority.
+Merge-commit authority is never implied by commit authority. A true
+`merge_commit_allowed` value is unsupported by this ordinary-commit contract.
+A merge needs a separate explicit merge-specific contract and any required
+freeze release. It must not bypass this gate using a direct merge command.
 
 ---
 
@@ -824,7 +880,7 @@ tracked paths and content identities; it does not claim an empty post-state.
 Staging occurs only after validation and must preserve the validated bytes.
 Replace the illustrative baseline SHAs and manifest placeholder with verified
 exact values before authorizing a real lane. A clean worktree still has a
-nonempty tracked manifest when indexed files exist.
+nonempty tracked manifest and semantic index manifest when indexed files exist.
 
 ```text
 PROJECT:
@@ -843,6 +899,7 @@ EXPECTED_BASE:
   tracked_worktree_manifest_sha256: <required-baseline-manifest-sha256>
   staged_paths: []
   staged_diff_sha256: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+  index_semantic_manifest_sha256: <required-baseline-index-semantic-manifest-sha256>
   untracked_paths: []
   untracked_manifest_sha256: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
   ignored_untracked_paths: []
