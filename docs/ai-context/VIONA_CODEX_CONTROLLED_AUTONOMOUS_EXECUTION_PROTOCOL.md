@@ -229,7 +229,9 @@ from the exact active allowlist.
 
 Compute `EXPECTED_BASE.refs_manifest_sha256` using the complete logical ref
 inventory in envelope spec §3, including HEAD, all refs namespaces, direct OIDs,
-and immediate symbolic targets. Require strict ref integrity and two matching
+and immediate symbolic targets. Use the Git 2.43-compatible files-backend
+procedure, including packed/loose completeness and explicit root-ref reads.
+Require ref integrity and two matching
 snapshots; unsupported, malformed, dangling, or incomplete state fails closed.
 No namespace is exempt, and candidate capture cannot adopt changed refs.
 Implementation, validators, and staging must preserve this identity. Any
@@ -428,6 +430,10 @@ Any local tracking-ref effect must be separately declared by exact ref name,
 old value, and expected new OID derived from the authorized refspec; verify that
 transition and preserve every other ref and symbolic target. Final ref evidence
 must reflect only verified authorized transitions (envelope spec §11).
+The envelope must declare an exact source selector/OID, destination refspec,
+and typed expected local-ref transitions before execution. Pin PUSH_SOURCE_OID
+and use that literal OID in the push refspec; no floating HEAD or inferred
+tracking-ref permission. A disabled push block omits all other push fields.
 
 ### 7.4 PR gate
 

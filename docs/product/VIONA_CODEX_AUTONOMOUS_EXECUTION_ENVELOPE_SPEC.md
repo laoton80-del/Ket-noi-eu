@@ -127,6 +127,20 @@ PUSH_AUTHORITY:
   allowed:
   remote:
   branch:
+  refspec:
+    source:
+      kind:
+      oid:
+      selector:
+    destination:
+  expected_local_ref_transitions:
+    - ref:
+      old:
+        kind:
+        value:
+      new:
+        kind: direct
+        value_from: PUSH_SOURCE_OID
 
 PR_AUTHORITY:
   create:
@@ -166,76 +180,84 @@ FINAL_CLASSIFICATION:
   blocked:
 ```
 
-`EXPECTED_BASE.refs_manifest_sha256` binds the complete logical ref state,
-including HEAD, other root refs, FETCH_HEAD, MERGE_HEAD, and every ref under `refs/`:
-local branches, remote-tracking
-refs, tags, notes, stash, replacement refs, and tool-owned refs. No namespace
-is exempt. Use the canonical repository with no namespace/filter/count
-restrictions, and require these read-only commands to succeed without stderr:
+`EXPECTED_BASE.refs_manifest_sha256` binds HEAD, root refs, FETCH_HEAD,
+MERGE_HEAD, and every visible `refs/` namespace: branches, remote-tracking refs,
+tags, notes, stash, replacement refs, and tool-owned refs. No namespace grants
+write permission. The read-only procedure uses commands available in Git 2.43
+and does not require a Git upgrade or configuration mutation:
 
 ```bash
-git --no-optional-locks --no-replace-objects refs verify --strict
-git --no-optional-locks --no-replace-objects for-each-ref --include-root-refs --sort=refname --format='%(refname)%00%(objectname)%00%(symref)%00'
+git --no-optional-locks --no-replace-objects config --get extensions.refStorage
+git --no-optional-locks --no-replace-objects for-each-ref --sort=refname --format='%(refname)%00%(objectname)%00%(symref)%00'
 git --no-optional-locks --no-replace-objects symbolic-ref --no-recurse -q HEAD
+git rev-parse --path-format=absolute --git-common-dir
+git rev-parse --absolute-git-dir
 ```
 
-Only the `files` ref backend is supported; verify with
-`git rev-parse --show-ref-format`, otherwise fail closed. Git enumeration and
-strict verification can both omit dangling symbolic refs. Also inventory all
-loose-ref leaves under `refs/` in the resolved common and active Git directories
-(`git rev-parse --path-format=absolute --git-common-dir` and
-`git rev-parse --absolute-git-dir`), deduplicating identical roots. Read only;
-never follow symlinks/reparse points. Require regular files, valid ref names,
-and supported direct full-OID or `ref: <immediate-target>` contents. Every
-loose ref must match an enumerated entry: direct OID or immediate target
-obtained by the separate no-recurse command below, not a recursively resolved
-enumeration target. Reject absent entries (including dangling refs),
-unsupported contents/types, and lock files. Verify packed-ref integrity via
-strict verification above. Also inspect uppercase root candidates in both Git
-directories: names matching `[A-Z][A-Z0-9_]*`, excluding only non-ref message
-files `COMMIT_EDITMSG`, `MERGE_MSG`, and `SQUASH_MSG`. Apply the same
-loose-ref matching rule, except `FETCH_HEAD` and `MERGE_HEAD`: bind their
-presence and SHA-256 of exact raw file bytes as `pseudoref` records instead,
-since they can contain multiple records omitted by Git enumeration. Absence
-means no record; an empty existing file is distinct. Reject unknown unsupported
-root contents/types; never silently omit them. Physical packing does not alter
-logical identity.
+The storage query must return either exit 1 with empty output (the default
+files backend), or exit 0 with exactly `files`; reject other values, errors,
+or stderr. Every other required read must succeed without stderr. Newer
+`git refs` commands, root-ref enumeration options, and ref-format query options
+are not prerequisites. See the [Git 2.43 ref enumeration documentation](https://git-scm.com/docs/git-for-each-ref/2.43.0)
+and [repository layout](https://git-scm.com/docs/gitrepository-layout/2.43.0).
 
-Unsupported verification, broken/dangling refs, incomplete enumeration, or
-malformed records fail closed; never repair them automatically. Parse the
-for-each-ref fields as raw bytes, consuming its single LF after each NUL-ended
-record. Preserve each complete ref name. For a direct ref record its full
-unpeeled object ID (not an annotated tag's peeled commit); for a symbolic ref
-record its immediate target, verified with `git symbolic-ref --no-recurse -q`
-for that exact ref. Resolve symbolic chains against the complete map and
-require their resolved OIDs to match the enumeration; reject cycles and
-missing targets. HEAD must be directly attached to the exact
-`refs/heads/<EXPECTED_BASE.branch>` ref, which must itself be direct and have
-`EXPECTED_BASE.head` as its OID through the pre-commit phase. After an authorized
-commit, compare with the independently derived expected phase map/new verified
-HEAD from §11, never an expected OID adopted from unverified output.
-Detached/unborn HEAD is unsupported here.
+Construct the logical map independently from the files backend. Read the
+common directory's optional `packed-refs` as regular raw data; reject links,
+reparse points, locks, malformed records, duplicate names, or unsupported
+headers. Parse full object-ID SP exact `refs/` name records. An optional
+`^<full-OID>` line belongs only to the immediately preceding record as peeled
+metadata, never as another ref. After loose overlay, verify only effective packed peeled IDs by dereferencing
+the literal full unpeeled OID with `git --no-replace-objects rev-parse <OID>^{}`;
+the manifest binds the unpeeled OID. Validate names with `git check-ref-format`.
 
-Include HEAD once as a symbolic record. Sort all records by raw ref-name bytes and
-concatenate `name NUL kind NUL value NUL`, where kind is ASCII `direct`,
-`symbolic`, or `pseudoref`; value is respectively the full lowercase object
-ID, raw immediate target, or lowercase raw-file SHA-256. Hash this byte stream
-with SHA-256, lowercase hex. Retain
-the records as evidence. Symbolic records bind targets, not derived OIDs;
-target resolution is separately verified. Packed versus loose storage and
-reflog/cache metadata are not part of this logical ref identity.
+Overlay supported loose refs, which take precedence over matching packed
+records. Read regular files only; never follow symlinks/reparse points. Accept
+only a full direct OID or `ref: <immediate-target>` with the supported line
+terminator; validate names/targets and reject unsupported bytes, locks,
+duplicates, cycles, dangling targets, or missing objects. Resolve storage with
+`git rev-parse --git-path <exact-ref-name>`: shared refs use the common Git
+directory; per-worktree refs use the active Git directory. Inventory those
+locations according to Git's repository layout, without substituting another
+worktree's private refs. No worktree creation is authorized by this procedure.
 
-Require two consecutive complete snapshots to agree at every acceptance.
-Quiesce concurrent ref writers; detected concurrent movement fails closed.
-File implementation, validators, and staging confer no ref-change authority.
-All comparison modes retain the baseline refs identity through those steps;
-candidate capture must not adopt a changed refs map. Explicit branch creation
-or another authorized ref operation must be a separate transition with exact
-ref names, actions, old values (including absence), and expected new values;
-verify it and establish the declared next phase baseline before validators.
-An ordinary commit and any later push follow the limited transitions in §11.
-Use `--no-replace-objects` for Git object/content, HEAD, tree, and parent proofs
-so declared replacement refs cannot substitute interpreted objects.
+Cross-check the constructed `refs/` name set exactly against ordinary
+`for-each-ref`, parsing its NUL fields and single record-ending LF as raw bytes.
+Require matching resolved full OIDs and direct/symbolic kinds; verify each
+immediate symbolic target with `git symbolic-ref --no-recurse -q <exact-ref>`.
+A loose ref silently omitted by Git enumeration, including a dangling
+symbolic ref, therefore fails closed. Direct IDs are unpeeled, including for
+annotated tags; symbolic resolutions must agree with the constructed map.
+
+Read HEAD and uppercase root candidates from the active Git directory
+(names matching `[A-Z][A-Z0-9_]*`), excluding only non-ref message files
+`COMMIT_EDITMSG`, `MERGE_MSG`, and `SQUASH_MSG`. Apply the same direct/symbolic
+syntax and resolution checks. For `FETCH_HEAD` and `MERGE_HEAD`, bind presence
+and SHA-256 of exact raw bytes as `pseudoref` records because they may contain
+multiple records; absence differs from an empty existing file. Reject unknown
+unsupported root contents/types instead of silently omitting them.
+
+HEAD must be directly attached to `refs/heads/<EXPECTED_BASE.branch>`, whose
+direct OID equals `EXPECTED_BASE.head` through the pre-commit phase. Detached
+or unborn HEAD is unsupported. Later acceptance uses only the independently
+verified phase map and new commit from §11, never an observed OID adopted as
+expected state. Include HEAD once in the map.
+
+Sort by raw ref-name bytes and concatenate `name NUL kind NUL value NUL`.
+Kind is ASCII `direct`, `symbolic`, or `pseudoref`; value is the full lowercase
+object ID, raw immediate target, or lowercase raw-file SHA-256 respectively.
+The manifest is lowercase SHA-256 of that byte stream. Retain the records.
+Symbolic targets, not derived OIDs, are serialized; verify resolution
+separately. Packing unchanged refs does not change logical identity.
+Reflog/cache metadata is not part of this logical ref manifest.
+
+Require two matching complete snapshots at every acceptance and quiesce
+concurrent ref writers. Implementation, validators, and staging must preserve
+the baseline map; candidate capture cannot adopt ref drift. Any separately
+authorized ref operation needs exact names, actions, old values (including
+absence), expected new values, and a verified next phase baseline. Ordinary
+commit/push transitions follow §11. Use `--no-replace-objects` for object,
+content, HEAD, tree, and parent proofs. Unsupported or incomplete verification
+fails closed without automatic repair.
 
 `EXPECTED_BASE.unstaged_tracked_paths` is the exact baseline path set for
 unstaged tracked changes. Use `unstaged_tracked_paths: []` when no unstaged
@@ -750,13 +772,63 @@ and a commit-only lane with pre-existing staged content is forbidden unless both
 its exact path set and its staged-content digest match the operator-declared
 baseline immediately before commit.
 
-A later authorized push may update local tracking refs only as a separately
-verified transition: record exact names and old values before push, derive the
-expected new OIDs from the exact authorized refspec and pushed commit, and
-require every other ref, symbolic target, and pseudoref unchanged afterward. Push authority
-does not authorize tags, other branch refs, or arbitrary tracking-ref updates.
-Final refs must equal the last verified map plus only these exact transitions;
-never refresh the expected map from unexplained post-operation output.
+When `PUSH_AUTHORITY.allowed` is false, omit every other push field. When
+true, `remote`, `branch`, `refspec`, and `expected_local_ref_transitions` are
+required operator declarations made before execution. `branch` is one exact
+short branch name; `refspec.destination` must equal `refs/heads/<branch>`.
+`refspec.source` selects exactly one mode:
+
+- `kind: exact_commit` with `oid: <full-commit-OID>`; omit `selector`.
+- `kind: verified_lane_commit` with
+  `selector: last_verified_authorized_commit`; omit `oid`. Resolve only a
+  commit actually produced and fully verified under this envelope.
+
+Pin the resolved source as `PUSH_SOURCE_OID` before push and prove it is the
+authorized commit. Invoke only the explicit
+`<PUSH_SOURCE_OID>:<refspec.destination>` refspec on the declared remote;
+do not use floating HEAD, a wildcard, leading `+`, empty/deletion source,
+implicit configured refspecs, `--all`, `--mirror`, or `--follow-tags`.
+
+`expected_local_ref_transitions` is an exact list of unique local
+remote-tracking ref names, or explicit `[]` when none may change. Each entry
+has `ref`, typed `old`, and typed `new`. `old.kind` is `absent` (omit `value`)
+or `direct` with its exact full old OID in `value`. `new` must be
+`{kind: direct, value_from: PUSH_SOURCE_OID}`. Reject symbolic tracking
+destinations in this ordinary push contract; it cannot create/retarget
+symbolic refs or delete refs. Match the named transitions to the declared
+remote/destination's verified tracking mapping; this list grants no authority
+over unrelated refs.
+
+Before push, compare the complete current ref map with the last verified
+state, verify each declared old value, and derive the entire expected post-map
+by substituting the pinned source OID only at the declared refs. Never fill
+missing authority from observation or refresh expected values after push.
+After push, require that exact complete map; all unlisted refs, HEAD, symbolic
+targets, and pseudorefs remain unchanged. Record source OID, literal refspec,
+declarations, pre/post maps/digests and transition proof in final evidence.
+
+This illustrative push block is usable only inside an explicitly authorized
+envelope with an actual verified lane commit and a verified absent tracking
+ref; it grants no authority by itself:
+
+```text
+PUSH_AUTHORITY:
+  allowed: true
+  remote: origin
+  branch: docs/example-local-implementation
+  refspec:
+    source:
+      kind: verified_lane_commit
+      selector: last_verified_authorized_commit
+    destination: refs/heads/docs/example-local-implementation
+  expected_local_ref_transitions:
+    - ref: refs/remotes/origin/docs/example-local-implementation
+      old:
+        kind: absent
+      new:
+        kind: direct
+        value_from: PUSH_SOURCE_OID
+```
 
 Ordinary VIONA commit authority uses:
 
@@ -1093,8 +1165,6 @@ COMMIT_AUTHORITY:
 
 PUSH_AUTHORITY:
   allowed: false
-  remote:
-  branch:
 
 PR_AUTHORITY:
   create: false
