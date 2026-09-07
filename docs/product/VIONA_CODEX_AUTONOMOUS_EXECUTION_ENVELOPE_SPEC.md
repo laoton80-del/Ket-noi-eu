@@ -126,6 +126,10 @@ COMMIT_AUTHORITY:
 PUSH_AUTHORITY:
   allowed:
   remote:
+  push_url:
+  hooks_path:
+  execution_config_sha256:
+  execution_environment_sha256:
   branch:
   refspec:
     source:
@@ -230,7 +234,13 @@ annotated tags; symbolic resolutions must agree with the constructed map.
 
 Read HEAD and uppercase root candidates from the active Git directory
 (names matching `[A-Z][A-Z0-9_]*`), excluding only non-ref message files
-`COMMIT_EDITMSG`, `MERGE_MSG`, and `SQUASH_MSG`. Apply the same direct/symbolic
+`COMMIT_EDITMSG`, `MERGE_MSG`, `SQUASH_MSG`, `TAG_EDITMSG`,
+`NOTES_EDITMSG`, and `EDIT_DESCRIPTION`. These exact exclusions apply only
+to root editor artifacts, never to names beneath `refs/`; do not use suffix
+wildcards. Git 2.43 creates these files while editing [tag messages](https://github.com/git/git/blob/v2.43.0/builtin/tag.c),
+[note messages](https://github.com/git/git/blob/v2.43.0/builtin/notes.c), and
+[branch descriptions](https://github.com/git/git/blob/v2.43.0/builtin/branch.c).
+Apply the same direct/symbolic
 syntax and resolution checks. For `FETCH_HEAD` and `MERGE_HEAD`, bind presence
 and SHA-256 of exact raw bytes as `pseudoref` records because they may contain
 multiple records; absence differs from an empty existing file. Reject unknown
@@ -456,7 +466,7 @@ and rerun affected validators. Re-establish input using the same selected
 comparison source: only explicitly selected candidate mode may capture new
 computed identities; other modes must still match their declared identities or
 stop for an updated operator declaration. Do not reseal unexplained validator changes.
-Before any later stage or commit, revalidate the last verified state; separately
+Before any later stage, commit, or push, revalidate the last verified state; separately
 authorized transitions follow §11 and must be recorded in final evidence.
 Final success requires the state derived from the last validated input plus
 only those verified authorized transitions, with no unexplained changes.
@@ -773,9 +783,12 @@ its exact path set and its staged-content digest match the operator-declared
 baseline immediately before commit.
 
 When `PUSH_AUTHORITY.allowed` is false, omit every other push field. When
-true, `remote`, `branch`, `refspec`, and `expected_local_ref_transitions` are
-required operator declarations made before execution. `branch` is one exact
-short branch name; `refspec.destination` must equal `refs/heads/<branch>`.
+true, `remote`, `push_url`, `hooks_path`, `execution_config_sha256`,
+`execution_environment_sha256`, `branch`, `refspec`, and
+`expected_local_ref_transitions` are required operator declarations made
+before execution. `remote` is one exact configured remote name, never an
+option or URL operand. `branch` is one exact short branch name;
+`refspec.destination` must equal `refs/heads/<branch>`.
 `refspec.source` selects exactly one mode:
 
 - `kind: exact_commit` with `oid: <full-commit-OID>`; omit `selector`.
@@ -784,10 +797,75 @@ short branch name; `refspec.destination` must equal `refs/heads/<branch>`.
   commit actually produced and fully verified under this envelope.
 
 Pin the resolved source as `PUSH_SOURCE_OID` before push and prove it is the
-authorized commit. Invoke only the explicit
-`<PUSH_SOURCE_OID>:<refspec.destination>` refspec on the declared remote;
-do not use floating HEAD, a wildcard, leading `+`, empty/deletion source,
-implicit configured refspecs, `--all`, `--mirror`, or `--follow-tags`.
+authorized commit. Use exactly one literal
+`<PUSH_SOURCE_OID>:<refspec.destination>` refspec. No floating HEAD, wildcard,
+leading `+`, empty/deletion source, inferred refspec, extra refspec, force,
+mirror, tags, prune, upstream-setting, or push-option arguments are allowed.
+
+The ordinary push transport is one exact HTTPS repository URL in `push_url`,
+without embedded credentials, query, or fragment. Other transports and custom
+remote helpers require a separate explicit transport contract. Under the same
+fixed command prefix and child environment used for push, run
+`git remote get-url --push --all <remote>`; require exactly one expanded URL
+equal byte-for-byte to `push_url`. Multiple push URLs fail closed even when
+one matches. Verify the endpoint's repository identity and live destination
+head independently through read-only access. Recheck immediately before
+invocation; an unchanged remote label or refs manifest does not prove the URL.
+
+`hooks_path` is independent of commit authority. Require that exact absolute
+external directory to exist, be a real directory without symlinks/reparse
+points, and be empty immediately before push. Do not create it under this
+contract. Apply the following Git 2.43-compatible fixed invocation profile,
+using argument arrays rather than shell interpolation:
+
+```bash
+git --no-optional-locks --no-replace-objects \
+  -c core.hooksPath="<hooks_path>" -c core.fsmonitor=false \
+  -c remote.<remote>.mirror=false -c push.followTags=false \
+  -c push.pushOption= -c push.recurseSubmodules=no \
+  -c push.autoSetupRemote=false -c push.useForceIfIncludes=false \
+  -c push.negotiate=false -c push.gpgSign=false \
+  -c gc.auto=0 -c maintenance.auto=false \
+  -c http.followRedirects=false -c http.sslVerify=true \
+  push --porcelain --no-verify --no-follow-tags --recurse-submodules=no \
+  --signed=false --no-force <remote> <PUSH_SOURCE_OID>:<refspec.destination>
+```
+
+The empty `push.pushOption` clears inherited values. The explicit arguments
+and overrides disable extra tag/submodule pushes, mirroring, signing, automatic
+upstream setup, negotiation, maintenance and hooks without editing config.
+See [Git 2.43 push options](https://git-scm.com/docs/git-push/2.43.0).
+Resolve URL-specific HTTP settings too: require effective redirects disabled
+and TLS verification enabled for `push_url`; a more-specific setting must not
+defeat the profile. Reject configured custom `remote.<remote>.vcs`,
+nonstandard receive-pack commands, external transport overrides, or any
+effective setting that bypasses these controls. The configuration digest never
+authorizes a prohibited mode. Credential access retains its existing authority.
+
+To compute `execution_config_sha256`, replace only the push subcommand and
+its arguments in that exact prefix with
+`config --null --list --show-origin --show-scope --includes`. Require success
+and hash the complete raw stdout with lowercase SHA-256, preserving ordering,
+origins, scopes and repeated values; retain it privately for equality checks.
+This covers remote URLs/push URLs, rewrites, tracking mappings, transport and
+push settings from every included scope plus the fixed overrides.
+`execution_environment_sha256` binds the exact child environment supplied to
+those Git calls: sort names by UTF-8 bytes and concatenate
+`name NUL SHA256(UTF8(value)) NUL`, then hash that stream with SHA-256.
+Retain the map privately. Build an explicit child environment with unique
+names under host case rules: on case-insensitive hosts, coalesce case variants
+only when their values are identical, retaining the first UTF-8-sorted spelling;
+conflicting values fail closed. Hash and pass that same resulting map.
+Use the same sealed executable, prefix and environment for URL resolution,
+config inspection and push. Quiesce concurrent configuration/environment
+writers; require two equal captures at preflight and recheck before/after
+validators and immediately before/after push. Do not adopt drift or print
+credentials, raw configuration values, or secret environment values.
+At preflight, before object traversal or push preparation, reject any effective
+`extensions.partialClone` or enabled `remote.*.promisor`; this ordinary contract
+cannot lazily fetch missing objects from another endpoint. Missing objects fail
+closed without fetch or automatic provisioning.
+These controls also apply to any authorized push dry-run.
 
 `expected_local_ref_transitions` is an exact list of unique local
 remote-tracking ref names, or explicit `[]` when none may change. Each entry
@@ -799,22 +877,49 @@ symbolic refs or delete refs. Match the named transitions to the declared
 remote/destination's verified tracking mapping; this list grants no authority
 over unrelated refs.
 
-Before push, compare the complete current ref map with the last verified
-state, verify each declared old value, and derive the entire expected post-map
-by substituting the pinned source OID only at the declared refs. Never fill
-missing authority from observation or refresh expected values after push.
-After push, require that exact complete map; all unlisted refs, HEAD, symbolic
-targets, and pseudorefs remain unchanged. Record source OID, literal refspec,
-declarations, pre/post maps/digests and transition proof in final evidence.
+Before push, revalidate the complete last verified local state: canonical
+root, branch, HEAD, tracked paths/raw diff/content manifest, staged paths/digest,
+semantic index and empty resolve-undo data, both ignored/nonignored untracked
+path sets and content manifests, and complete refs/pseudorefs. Seal that input
+along with the verified push configuration, environment and empty hooks path.
+Verify each declared old ref value and derive the entire expected post-map by
+substituting the pinned source OID only at the declared refs. Never fill missing
+authority from observation or refresh expected values after push.
+
+After every push attempt, including failure, recompute that complete local
+state and push execution context. Require equality for all non-ref state;
+only the exact declared tracking-ref transitions may differ. On success the
+complete map must equal the derived post-map. On failure any observed partial
+transition must still be within those exact declarations; inspect the approved
+remote read-only to determine the actual outcome, then stop without claiming
+success, blind retries or automatic rollback. A hook/transport-created file,
+same-path byte mutation, index flag change or unlisted ref change fails closed.
+Record source OID, literal refspec, effective URL, configuration/environment
+digests, hook proof, complete local comparisons, declarations, pre/post ref
+maps/digests and independently verified remote result in final evidence.
+
+Required push truths, only when a push was attempted:
+
+```text
+PUSH_ENDPOINT_AND_CONFIG_VERIFIED=YES
+PUSH_HOOKS_DISABLED=YES
+POST_PUSH_COMPLETE_LOCAL_STATE_RECHECK=YES
+POST_PUSH_REFS_TRANSITION_VERIFIED=YES
+```
 
 This illustrative push block is usable only inside an explicitly authorized
 envelope with an actual verified lane commit and a verified absent tracking
-ref; it grants no authority by itself:
+ref. Replace its URL, hooks path and digest placeholders with exact verified
+operator declarations before use; it grants no authority by itself:
 
 ```text
 PUSH_AUTHORITY:
   allowed: true
   remote: origin
+  push_url: https://github.com/example/project.git
+  hooks_path: C:\VIONA\empty-hooks
+  execution_config_sha256: <verified-fixed-profile-config-sha256>
+  execution_environment_sha256: <verified-child-environment-sha256>
   branch: docs/example-local-implementation
   refspec:
     source:
@@ -1210,7 +1315,7 @@ OUTPUT_EVIDENCE:
     - sealed candidate identities and post-validator comparisons
     - staged-content and ordinary commit ancestry proof
     - git state
-    - remote effect
+    - remote effect and applicable push endpoint/config/hook/state proofs
     - final classification
 
 FINAL_CLASSIFICATION:

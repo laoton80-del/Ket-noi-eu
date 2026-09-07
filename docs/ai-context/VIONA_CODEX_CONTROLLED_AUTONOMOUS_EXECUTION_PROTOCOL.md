@@ -262,11 +262,11 @@ comparison source. Only explicitly selected candidate mode may capture new
 computed identities; other modes must still match their declared identities or
 stop for an updated operator declaration. Rerun affected validators.
 
-Before any later stage or commit, revalidate the last verified state. Independently
+Before any later stage, commit, or push, revalidate the last verified state. Independently
 authorized staging may then change only the declared index paths and must bind
 the resulting blobs and modes to the validated working content. Record that
 verified staged identity; immediately before commit it must still match.
-Final evidence must account for each authorized stage/commit transition as well
+Final evidence must account for each authorized stage/commit/push transition as well
 as the post-validator comparison. Ignored files remain part of the state.
 
 Required post-validator truths:
@@ -425,15 +425,35 @@ git status --short --branch
 
 ### 7.3 Push gate
 
-Push requires explicit authorization. A local branch or local commit does not imply push permission.
-Any local tracking-ref effect must be separately declared by exact ref name,
-old value, and expected new OID derived from the authorized refspec; verify that
-transition and preserve every other ref and symbolic target. Final ref evidence
-must reflect only verified authorized transitions (envelope spec §11).
-The envelope must declare an exact source selector/OID, destination refspec,
-and typed expected local-ref transitions before execution. Pin PUSH_SOURCE_OID
-and use that literal OID in the push refspec; no floating HEAD or inferred
-tracking-ref permission. A disabled push block omits all other push fields.
+Push requires explicit authorization. A local branch or local commit does
+not imply push permission. Require the full envelope spec §11 push contract:
+one exact expanded HTTPS `push_url`, independently verified repository and
+destination head, pinned source OID, destination refspec, execution-config and
+child-environment digests, independent exact `PUSH_AUTHORITY.hooks_path`,
+and typed expected local tracking-ref transitions. A disabled push block omits
+every other push field. A remote name alone does not bind the destination.
+
+Use the fixed Git 2.43-compatible invocation profile in spec §11. Resolve all
+push URLs under that same profile/environment and accept exactly one approved
+URL; recheck configuration and effective URL-specific HTTP settings. Disable
+mirroring, follow-tags, inherited push options, submodule recursion, signing,
+automatic upstream setup, negotiation and maintenance. The exact existing
+external hooks directory must be real and empty; set `core.hooksPath` to it
+and use `--no-verify`. Pin `PUSH_SOURCE_OID` and push only its literal refspec.
+No config-file mutation, implicit refspec, extra remote or unlisted ref effect
+is authorized. Apply these controls to authorized dry-runs as well.
+
+Before push, revalidate and seal the complete last verified local state and
+push execution context. After every attempt, including failure, recompute
+root/branch/HEAD, tracked paths/diff/raw contents, staged paths/content,
+semantic index with empty resolve-undo, both untracked path sets/manifests,
+and complete refs. All non-ref identities must remain equal; only declared
+tracking-ref transitions may differ. Verify the remote outcome independently;
+failure or uncertainty requires read-only diagnosis and a stop, without blind
+retry or automatic rollback. Do not report success from a refs-only check.
+Record endpoint/config/environment identity, hook proof and every state
+comparison in final evidence. See spec §11 for the fixed digest encoding,
+failure handling and required push truth fields.
 
 ### 7.4 PR gate
 
@@ -537,7 +557,7 @@ Every controlled autonomous lane should end with:
 | Refs | Complete pre/post ref records and digests; exact validator/stage equality and authorized commit/push transition proof |
 | Staged | Exact staged paths/content identity, semantic index manifest, empty resolve-undo proof, and any verified stage transition |
 | Commit | Commit hash or `none`; PRE_COMMIT_HEAD, AUTHORIZED_TREE, resulting tree and parent proof when committed |
-| Push | `zero` unless authorized and completed |
+| Push | No attempt, verified success, failure, or uncertain result; endpoint/config/environment digests, hooks-disabled proof and complete pre/post local-state comparisons for every attempt |
 | PR | `zero` unless authorized and completed |
 | Runtime/source | `zero` for docs-only lanes |
 | Validation | Commands run, pass/fail result, comparison source, sealed input identities, and every post-validator state comparison |
