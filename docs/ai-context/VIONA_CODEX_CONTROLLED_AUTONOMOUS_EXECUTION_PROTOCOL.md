@@ -65,6 +65,7 @@ Codex must verify the local repository state before performing any approved muta
 - repository top-level;
 - branch;
 - HEAD;
+- unstaged tracked paths and their deterministic diff identity;
 - staged diff;
 - unstaged tracked diff;
 - nonignored untracked paths and their deterministic content identities;
@@ -115,6 +116,7 @@ Codex must stop on:
 - HEAD mismatch;
 - unexpected staged content;
 - unexpected tracked diff;
+- unexpected tracked content-identity drift;
 - unexpected nonignored or ignored untracked path state;
 - unexpected untracked content-identity drift;
 - validation mutation;
@@ -174,11 +176,21 @@ git rev-parse --show-toplevel
 git branch --show-current
 git rev-parse HEAD
 git status --short --branch
-git diff --name-only
+git diff --no-renames --name-only
+git -c core.abbrev=40 diff --raw --no-renames -z
 git diff --cached --no-renames --name-only
 git ls-files --others --exclude-standard -z
 git ls-files --others --ignored --exclude-standard -z
 ```
+
+The unstaged tracked baseline is an exact path set and raw diff identity. Codex
+must compare `git diff --no-renames --name-only` with the operator-declared
+unstaged tracked path set and compare the SHA-256 of
+`git -c core.abbrev=40 diff --raw --no-renames -z` with the declared tracked
+diff digest. Path equality alone is insufficient because a validator can change
+bytes at the same tracked path without changing the path set. Rename detection
+must be disabled so both endpoints of a rename are visible to exact-path
+validation.
 
 The staged-path preflight disables rename detection so both source and
 destination endpoints of a staged rename are visible to exact-path validation.
@@ -199,18 +211,20 @@ them, or treat them as supporting files. Mutation authority still comes only
 from the exact active allowlist.
 
 After all authorized validators have run and before final success
-classification, Codex must recompute the exact nonignored untracked path set,
-the exact ignored untracked path set, and both deterministic manifest SHA-256
-identities. Codex must compare all four final values with the
-operator-declared `EXPECTED_BASE` values. Any delta fails closed unless the
-exact changed path is independently mutation-authorized by the active envelope
-and the post-mutation expected state is explicitly declared. Ignored does not
-mean irrelevant, and validator-produced ignored or untracked changes cannot be
-silently accepted.
+classification, Codex must recompute the exact unstaged tracked path set,
+tracked diff identity, nonignored untracked path set, ignored untracked path
+set, and both deterministic untracked manifest SHA-256 identities. Codex must
+compare all final values with the operator-declared `EXPECTED_BASE` values
+unless the active envelope declares exact post-mutation expected values for an
+independently mutation-authorized changed path. Any undeclared delta fails
+closed. Ignored does not mean irrelevant, and validator-produced tracked,
+ignored, or untracked changes cannot be silently accepted.
 
 Required post-validator truths:
 
 ```text
+POST_VALIDATOR_TRACKED_RECHECK=YES
+POST_VALIDATOR_TRACKED_DIFF_SHA256_RECHECK=YES
 POST_VALIDATOR_UNTRACKED_RECHECK=YES
 POST_VALIDATOR_IGNORED_RECHECK=YES
 POST_VALIDATOR_MANIFEST_RECHECK=YES

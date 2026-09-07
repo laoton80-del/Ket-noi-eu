@@ -51,6 +51,8 @@ EXPECTED_BASE:
   head:
   parent:
   tree_state:
+  unstaged_tracked_paths:
+  unstaged_tracked_diff_sha256:
   staged_paths:
   staged_diff_sha256:
   untracked_paths:
@@ -85,6 +87,12 @@ VALIDATORS:
 POST_VALIDATOR_STATE_RECHECK:
   required:
   compare_to_expected_base:
+  post_mutation_unstaged_tracked_paths:
+  post_mutation_unstaged_tracked_diff_sha256:
+  post_mutation_untracked_paths:
+  post_mutation_untracked_manifest_sha256:
+  post_mutation_ignored_untracked_paths:
+  post_mutation_ignored_untracked_manifest_sha256:
   unauthorized_delta:
 
 SELF_REMEDIATION_POLICY:
@@ -146,6 +154,26 @@ FINAL_CLASSIFICATION:
   success:
   blocked:
 ```
+
+`EXPECTED_BASE.unstaged_tracked_paths` is the exact baseline path set for
+unstaged tracked changes. Use `unstaged_tracked_paths: []` when no unstaged
+tracked paths are present; otherwise list every expected repository path
+exactly. The observed output of `git diff --no-renames --name-only` must match
+that declared set exactly.
+
+`EXPECTED_BASE.unstaged_tracked_diff_sha256` pins the exact content of the
+baseline unstaged tracked diff. It is the lowercase SHA-256 of the exact raw
+stdout bytes from this canonical command, with no text decoding or newline
+normalization before hashing:
+
+```bash
+git -c core.abbrev=40 diff --raw --no-renames -z
+```
+
+Path equality alone is insufficient. A validator can rewrite bytes at the same
+tracked path without changing the path set, so both path set and raw diff digest
+must be verified at preflight and after validators before final success
+classification.
 
 `EXPECTED_BASE.staged_paths` is the exact baseline index-path declaration. Use
 `staged_paths: []` when no paths are staged at baseline; otherwise list every
@@ -210,17 +238,33 @@ action.
 
 `POST_VALIDATOR_STATE_RECHECK` is required for any lane that runs validators.
 After all authorized validators and before final success classification, Codex
-must recompute the exact nonignored untracked path set, ignored untracked path
-set, `untracked_manifest_sha256`, and `ignored_untracked_manifest_sha256`.
-Codex must compare all four final values against `EXPECTED_BASE`. Any delta
-fails closed unless the exact changed path is independently mutation-authorized
-by the active envelope and the post-mutation expected state is explicitly
-declared. Ignored does not mean irrelevant, and validator-produced ignored or
-untracked changes cannot be silently accepted.
+must recompute the exact unstaged tracked path set, unstaged tracked diff
+digest, nonignored untracked path set, ignored untracked path set,
+`untracked_manifest_sha256`, and `ignored_untracked_manifest_sha256`.
+
+By default, Codex compares the final values against `EXPECTED_BASE`. If an
+authorized lane intentionally creates or changes an untracked, ignored, or
+unstaged tracked path before final classification, the active envelope must
+declare the complete post-mutation expected values in
+`POST_VALIDATOR_STATE_RECHECK`:
+
+- `post_mutation_unstaged_tracked_paths`;
+- `post_mutation_unstaged_tracked_diff_sha256`;
+- `post_mutation_untracked_paths`;
+- `post_mutation_untracked_manifest_sha256`;
+- `post_mutation_ignored_untracked_paths`;
+- `post_mutation_ignored_untracked_manifest_sha256`.
+
+Every post-mutation path must still be independently mutation-authorized by
+exact path. Any undeclared delta fails closed. Ignored does not mean irrelevant,
+and validator-produced tracked, ignored, or untracked changes cannot be
+silently accepted.
 
 Required post-validator truths:
 
 ```text
+POST_VALIDATOR_TRACKED_RECHECK=YES
+POST_VALIDATOR_TRACKED_DIFF_SHA256_RECHECK=YES
 POST_VALIDATOR_UNTRACKED_RECHECK=YES
 POST_VALIDATOR_IGNORED_RECHECK=YES
 POST_VALIDATOR_MANIFEST_RECHECK=YES
@@ -279,7 +323,8 @@ git rev-parse --show-toplevel
 git branch --show-current
 git rev-parse HEAD
 git status --short --branch
-git diff --name-only
+git diff --no-renames --name-only
+git -c core.abbrev=40 diff --raw --no-renames -z
 git diff --cached --no-renames --name-only
 git ls-files --others --exclude-standard -z
 git ls-files --others --ignored --exclude-standard -z
@@ -293,6 +338,8 @@ git -c core.abbrev=40 diff --cached --raw --no-renames -z
 
 against `EXPECTED_BASE.staged_diff_sha256`, and compute both canonical untracked
 manifests described in §3 against their declared path sets and manifest digests.
+Also compute and compare the exact unstaged tracked path set and raw diff
+digest described in §3.
 
 Require:
 
@@ -300,6 +347,7 @@ Require:
 - expected branch;
 - exact HEAD;
 - expected tree state;
+- expected unstaged tracked path set and tracked diff digest;
 - expected staged path set, with rename source and destination paths both enumerated;
 - expected staged-content digest;
 - exact nonignored untracked path set and content-identity manifest;
@@ -383,9 +431,10 @@ IMPLEMENT
 -> ELSE:
      STOP
 -> RUN FULL REQUIRED VALIDATORS
+-> RECOMPUTE FINAL UNSTAGED TRACKED PATH SET AND DIFF DIGEST
 -> RECOMPUTE FINAL NONIGNORED AND IGNORED UNTRACKED PATH SETS
 -> RECOMPUTE FINAL UNTRACKED MANIFEST SHA-256 IDENTITIES
--> COMPARE FINAL VALUES WITH EXPECTED_BASE
+-> COMPARE FINAL VALUES WITH EXPECTED_BASE OR DECLARED POST-MUTATION STATE
 -> CAPTURE FINAL GIT STATE
 ```
 
@@ -702,6 +751,8 @@ EXPECTED_BASE:
   head: 0000000000000000000000000000000000000000
   parent: 0000000000000000000000000000000000000000
   tree_state: clean
+  unstaged_tracked_paths: []
+  unstaged_tracked_diff_sha256: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
   staged_paths: []
   staged_diff_sha256: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
   untracked_paths: []
@@ -750,6 +801,12 @@ VALIDATORS:
 POST_VALIDATOR_STATE_RECHECK:
   required: true
   compare_to_expected_base: true
+  post_mutation_unstaged_tracked_paths: []
+  post_mutation_unstaged_tracked_diff_sha256: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+  post_mutation_untracked_paths: []
+  post_mutation_untracked_manifest_sha256: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+  post_mutation_ignored_untracked_paths: []
+  post_mutation_ignored_untracked_manifest_sha256: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
   unauthorized_delta: fail_closed
 
 SELF_REMEDIATION_POLICY:
