@@ -51,6 +51,7 @@ CANONICAL_ROOT:
 EXPECTED_BASE:
   branch:
   head:
+  refs_manifest_sha256:
   parent:
   tree_state:
   unstaged_tracked_paths:
@@ -164,6 +165,77 @@ FINAL_CLASSIFICATION:
   success:
   blocked:
 ```
+
+`EXPECTED_BASE.refs_manifest_sha256` binds the complete logical ref state,
+including HEAD, other root refs, FETCH_HEAD, MERGE_HEAD, and every ref under `refs/`:
+local branches, remote-tracking
+refs, tags, notes, stash, replacement refs, and tool-owned refs. No namespace
+is exempt. Use the canonical repository with no namespace/filter/count
+restrictions, and require these read-only commands to succeed without stderr:
+
+```bash
+git --no-optional-locks --no-replace-objects refs verify --strict
+git --no-optional-locks --no-replace-objects for-each-ref --include-root-refs --sort=refname --format='%(refname)%00%(objectname)%00%(symref)%00'
+git --no-optional-locks --no-replace-objects symbolic-ref --no-recurse -q HEAD
+```
+
+Only the `files` ref backend is supported; verify with
+`git rev-parse --show-ref-format`, otherwise fail closed. Git enumeration and
+strict verification can both omit dangling symbolic refs. Also inventory all
+loose-ref leaves under `refs/` in the resolved common and active Git directories
+(`git rev-parse --path-format=absolute --git-common-dir` and
+`git rev-parse --absolute-git-dir`), deduplicating identical roots. Read only;
+never follow symlinks/reparse points. Require regular files, valid ref names,
+and supported direct full-OID or `ref: <immediate-target>` contents. Every
+loose ref must match an enumerated entry: direct OID or immediate target
+obtained by the separate no-recurse command below, not a recursively resolved
+enumeration target. Reject absent entries (including dangling refs),
+unsupported contents/types, and lock files. Verify packed-ref integrity via
+strict verification above. Also inspect uppercase root candidates in both Git
+directories: names matching `[A-Z][A-Z0-9_]*`, excluding only non-ref message
+files `COMMIT_EDITMSG`, `MERGE_MSG`, and `SQUASH_MSG`. Apply the same
+loose-ref matching rule, except `FETCH_HEAD` and `MERGE_HEAD`: bind their
+presence and SHA-256 of exact raw file bytes as `pseudoref` records instead,
+since they can contain multiple records omitted by Git enumeration. Absence
+means no record; an empty existing file is distinct. Reject unknown unsupported
+root contents/types; never silently omit them. Physical packing does not alter
+logical identity.
+
+Unsupported verification, broken/dangling refs, incomplete enumeration, or
+malformed records fail closed; never repair them automatically. Parse the
+for-each-ref fields as raw bytes, consuming its single LF after each NUL-ended
+record. Preserve each complete ref name. For a direct ref record its full
+unpeeled object ID (not an annotated tag's peeled commit); for a symbolic ref
+record its immediate target, verified with `git symbolic-ref --no-recurse -q`
+for that exact ref. Resolve symbolic chains against the complete map and
+require their resolved OIDs to match the enumeration; reject cycles and
+missing targets. HEAD must be directly attached to the exact
+`refs/heads/<EXPECTED_BASE.branch>` ref, which must itself be direct and have
+`EXPECTED_BASE.head` as its OID through the pre-commit phase. After an authorized
+commit, compare with the independently derived expected phase map/new verified
+HEAD from §11, never an expected OID adopted from unverified output.
+Detached/unborn HEAD is unsupported here.
+
+Include HEAD once as a symbolic record. Sort all records by raw ref-name bytes and
+concatenate `name NUL kind NUL value NUL`, where kind is ASCII `direct`,
+`symbolic`, or `pseudoref`; value is respectively the full lowercase object
+ID, raw immediate target, or lowercase raw-file SHA-256. Hash this byte stream
+with SHA-256, lowercase hex. Retain
+the records as evidence. Symbolic records bind targets, not derived OIDs;
+target resolution is separately verified. Packed versus loose storage and
+reflog/cache metadata are not part of this logical ref identity.
+
+Require two consecutive complete snapshots to agree at every acceptance.
+Quiesce concurrent ref writers; detected concurrent movement fails closed.
+File implementation, validators, and staging confer no ref-change authority.
+All comparison modes retain the baseline refs identity through those steps;
+candidate capture must not adopt a changed refs map. Explicit branch creation
+or another authorized ref operation must be a separate transition with exact
+ref names, actions, old values (including absence), and expected new values;
+verify it and establish the declared next phase baseline before validators.
+An ordinary commit and any later push follow the limited transitions in §11.
+Use `--no-replace-objects` for Git object/content, HEAD, tree, and parent proofs
+so declared replacement refs cannot substitute interpreted objects.
 
 `EXPECTED_BASE.unstaged_tracked_paths` is the exact baseline path set for
 unstaged tracked changes. Use `unstaged_tracked_paths: []` when no unstaged
@@ -336,7 +408,8 @@ The complete post-mutation identity consists of:
 - `post_mutation_ignored_untracked_paths`;
 - `post_mutation_ignored_untracked_manifest_sha256`.
 
-All modes also pin the verified canonical root, branch, and HEAD; validators
+All modes also pin the verified canonical root, branch, HEAD, and complete
+baseline refs manifest. Ref identity is not a post_mutation_* override; validators
 have no branch or commit authority. Before sealing a post-mutation state,
 compare its per-path records with the captured, verified baseline. Each changed
 path and action must be independently authorized; staged changes require stage
@@ -346,11 +419,12 @@ Expected-state declarations and candidate capture grant no additional rights.
 Reject conflicting mode fields or missing required identities.
 
 After every validator group, recompute root, branch,
-HEAD, exact unstaged paths, unstaged raw diff digest, tracked content manifest,
+HEAD, complete refs manifest, exact unstaged paths, unstaged raw diff digest, tracked content manifest,
 staged paths/content digest, semantic index manifest, both untracked path sets,
 and both untracked manifests. Every value must equal the sealed input, including in stage-only or
 no-commit lanes. Never accept validator output as a replacement expected state.
-Validator-created files, same-path byte changes, index changes, and HEAD changes
+Validator-created files, same-path byte changes, index changes, ref creation,
+deletion or movement, symbolic-target changes, and HEAD changes
 fail closed.
 
 If an in-scope remediation is authorized, preserve failure evidence and restore
@@ -376,6 +450,7 @@ POST_VALIDATOR_STAGED_DIFF_SHA256_RECHECK=YES
 POST_VALIDATOR_INDEX_SEMANTIC_MANIFEST_RECHECK=YES
 INDEX_RESOLVE_UNDO_EMPTY=YES
 POST_VALIDATOR_HEAD_RECHECK=YES
+POST_VALIDATOR_REFS_MANIFEST_RECHECK=YES
 POST_VALIDATOR_UNTRACKED_RECHECK=YES
 POST_VALIDATOR_IGNORED_RECHECK=YES
 POST_VALIDATOR_MANIFEST_RECHECK=YES
@@ -447,7 +522,8 @@ In addition, compute and compare the exact raw-byte SHA-256 for:
 git -c core.abbrev=40 diff --cached --raw --no-renames -z
 ```
 
-against `EXPECTED_BASE.staged_diff_sha256`. Compute the complete semantic index
+against `EXPECTED_BASE.staged_diff_sha256`. Compute and verify the complete
+refs manifest against `EXPECTED_BASE.refs_manifest_sha256` using §3. Compute the complete semantic index
 manifest against `EXPECTED_BASE.index_semantic_manifest_sha256` using §3, and
 compute both canonical untracked
 manifests described in §3 against their declared path sets and manifest digests.
@@ -458,7 +534,7 @@ Require:
 
 - canonical root;
 - expected branch;
-- exact HEAD;
+- exact HEAD and complete logical refs identity, including HEAD symbolic target;
 - expected tree state;
 - expected unstaged tracked path set, raw metadata digest, and content manifest;
 - expected staged path set, with rename source and destination paths both enumerated;
@@ -547,6 +623,7 @@ IMPLEMENT INSIDE THE AUTHORIZED ENVELOPE
 -> ELSE:
      STOP
 -> RUN FULL REQUIRED VALIDATORS
+-> RECHECK COMPLETE REFS MANIFEST AND HEAD SYMBOLIC TARGET
 -> RECHECK ROOT, BRANCH, HEAD, UNSTAGED PATHS/METADATA/CONTENT MANIFEST
 -> RECHECK STAGED PATHS, STAGED-CONTENT DIGEST, AND SEMANTIC INDEX MANIFEST
 -> RECHECK NONIGNORED AND IGNORED PATH SETS AND CONTENT MANIFESTS
@@ -578,6 +655,7 @@ Every autonomous lane must return:
 - test outcomes;
 - comparison source and sealed pre-validator state identities;
 - every post-validator identity comparison;
+- complete pre/post ref records, manifest digests, and exact authorized ref transitions;
 - verified stage transitions, staged paths/content digest, semantic index manifests, and empty resolve-undo proof;
 - PRE_COMMIT_HEAD, AUTHORIZED_TREE, committed tree and parent proof when committed;
 - remediation performed;
@@ -602,6 +680,7 @@ stage-only lane with stage authority true and commit authority false is valid.
 When stage authority is true:
 
 - use exact paths only and revalidate the last verified state before staging;
+- require the complete refs manifest unchanged before and after staging, including for stage-only lanes;
 - `STAGE_AUTHORITY.post_stage_paths` declares the complete expected index diff
   path set, including unchanged baseline entries; only paths independently
   listed in `STAGE_AUTHORITY.paths` may have their index entries changed;
@@ -644,7 +723,7 @@ When commit authority is true:
 - `COMMIT_AUTHORITY.merge_commit_allowed` must be false (the default and only supported value in this ordinary-commit contract); reject true before committing;
 - `COMMIT_AUTHORITY.paths` must list every repository path authorized for the commit exactly, including both source and destination paths of any rename;
 - reject any in-progress Git operation that can alter commit ancestry or semantics, including merge, rebase, cherry-pick, revert, bisect, and equivalent operation markers such as `MERGE_HEAD`, `rebase-merge`, `rebase-apply`, `CHERRY_PICK_HEAD`, `REVERT_HEAD`, `sequencer`, and `BISECT_LOG` resolved through `git rev-parse --git-path`;
-- record `PRE_COMMIT_HEAD` immediately before committing;
+- record `PRE_COMMIT_HEAD` and the verified complete pre-commit ref map immediately before committing;
 - require `PRE_COMMIT_HEAD` to equal the exact expected parent baseline from `EXPECTED_BASE.head`;
 - immediately before committing, `git diff --cached --no-renames --name-only -z` must equal `COMMIT_AUTHORITY.paths` exactly, with no additional staged path;
 - if stage authority is false, perform no staging and require the pre-existing cached path set to match both `EXPECTED_BASE.staged_paths` and `COMMIT_AUTHORITY.paths` exactly;
@@ -657,6 +736,7 @@ When commit authority is true:
 - commit with hooks neutralized by setting `core.hooksPath` to exactly the verified-empty `COMMIT_AUTHORITY.hooks_path` for that commit invocation;
 - immediately after commit, require `git rev-parse 'HEAD^{tree}'` to equal `AUTHORIZED_TREE` exactly; a mismatch is a blocker and the lane must not claim successful authorized packaging;
 - require the new commit to have `parent_count = 1` and `sole_parent = PRE_COMMIT_HEAD` without an exception in this ordinary contract;
+- after commit, require the ref-name set and all symbolic targets (including HEAD) unchanged; only the existing direct `refs/heads/<EXPECTED_BASE.branch>` value may move from `PRE_COMMIT_HEAD` to the verified new commit ID; every other direct ref must retain its exact pre-commit OID, and all pseudoref records must remain identical; verify symbolic resolutions from this map and record the resulting manifest;
 - after commit, require the semantic index manifest to equal its verified pre-commit value; tree equality alone cannot detect index flag mutation;
 - any merge commit or parent mismatch fails closed;
 - create exactly the number of commits authorized;
@@ -670,11 +750,20 @@ and a commit-only lane with pre-existing staged content is forbidden unless both
 its exact path set and its staged-content digest match the operator-declared
 baseline immediately before commit.
 
+A later authorized push may update local tracking refs only as a separately
+verified transition: record exact names and old values before push, derive the
+expected new OIDs from the exact authorized refspec and pushed commit, and
+require every other ref, symbolic target, and pseudoref unchanged afterward. Push authority
+does not authorize tags, other branch refs, or arbitrary tracking-ref updates.
+Final refs must equal the last verified map plus only these exact transitions;
+never refresh the expected map from unexplained post-operation output.
+
 Ordinary VIONA commit authority uses:
 
 ```text
 IN_PROGRESS_GIT_OPERATION_CHECK=YES
 PRE_COMMIT_HEAD_PINNED=YES
+POST_COMMIT_REFS_TRANSITION_VERIFIED=YES
 POST_COMMIT_PARENT_COUNT_ONE=YES
 POST_COMMIT_PARENT_EQUALS_PRE_COMMIT_HEAD=YES
 TREE_EQUIVALENCE_STILL_REQUIRED=YES
@@ -867,7 +956,7 @@ Canonical blockers:
 
 | Classification | Meaning |
 | --- | --- |
-| `BLOCKED_VIONA_CODEX_BASELINE_DRIFT` | Root, branch, HEAD, staged, tracked, or ignored/nonignored untracked baseline identity does not match the envelope. |
+| `BLOCKED_VIONA_CODEX_BASELINE_DRIFT` | Root, branch, HEAD, complete refs, staged, tracked, or ignored/nonignored untracked baseline identity does not match the envelope. |
 | `BLOCKED_VIONA_CODEX_SCOPE_EXPANSION_REQUIRED` | The required work needs files or behavior outside the allowlist. |
 | `BLOCKED_VIONA_CODEX_DENYLIST_CONFLICT` | The required work touches a denied file or category. |
 | `BLOCKED_VIONA_CODEX_VALIDATION_FAILURE_OUTSIDE_SCOPE` | A failure cannot be fixed inside the envelope. |
@@ -898,6 +987,9 @@ Replace the illustrative baseline SHAs and manifest placeholder with verified
 exact values before authorizing a real lane. A clean worktree still has a
 nonempty tracked manifest and semantic index manifest when indexed files exist.
 The example also requires empty resolve-undo output at every index checkpoint.
+Its complete refs manifest stays at baseline through implementation, validators,
+and staging. Only the verified ordinary commit moves the existing branch ref;
+all other direct refs and every symbolic target remain unchanged.
 
 ```text
 PROJECT:
@@ -909,6 +1001,7 @@ CANONICAL_ROOT:
 EXPECTED_BASE:
   branch: docs/example-local-implementation
   head: 0000000000000000000000000000000000000000
+  refs_manifest_sha256: <required-baseline-refs-manifest-sha256>
   parent: 0000000000000000000000000000000000000000
   tree_state: clean
   unstaged_tracked_paths: []

@@ -64,7 +64,7 @@ Codex must verify the local repository state before performing any approved muta
 
 - repository top-level;
 - branch;
-- HEAD;
+- HEAD and complete logical refs identity;
 - unstaged tracked paths, raw diff metadata, and raw-byte content manifest;
 - staged diff;
 - unstaged tracked diff;
@@ -113,7 +113,7 @@ or `as needed` do not grant file mutation authority.
 Codex must stop on:
 
 - branch mismatch;
-- HEAD mismatch;
+- HEAD or complete refs identity mismatch;
 - unexpected staged content;
 - unexpected tracked diff;
 - unexpected tracked content-identity drift;
@@ -227,6 +227,15 @@ no permission to read their semantic contents, modify them, stage them, execute
 them, or treat them as supporting files. Mutation authority still comes only
 from the exact active allowlist.
 
+Compute `EXPECTED_BASE.refs_manifest_sha256` using the complete logical ref
+inventory in envelope spec §3, including HEAD, all refs namespaces, direct OIDs,
+and immediate symbolic targets. Require strict ref integrity and two matching
+snapshots; unsupported, malformed, dangling, or incomplete state fails closed.
+No namespace is exempt, and candidate capture cannot adopt changed refs.
+Implementation, validators, and staging must preserve this identity. Any
+separately authorized branch/ref operation needs exact old/new transition
+proof and a declared next phase baseline before validators.
+
 For every validator group, first seal the complete expected input state using
 the envelope spec §3 `POST_VALIDATOR_STATE_RECHECK.comparison_source`. The source
 is `expected_base`, `declared_post_mutation`, or an explicitly authorized
@@ -235,14 +244,16 @@ implementation and before the first validator; every difference from baseline
 must be independently authorized, and unchanged unrelated paths retain their
 baseline identities. Capturing evidence never grants mutation or stage authority.
 
-After validators, recompute root, branch, HEAD, exact unstaged tracked paths,
+After validators, recompute root, branch, HEAD, complete refs manifest,
+exact unstaged tracked paths,
 tracked raw metadata digest, tracked content manifest, staged paths and
 staged-content digest, semantic index manifest, both untracked path sets, and
 both untracked manifests.
 Compare every value to the sealed input state, including in stage-only and
 no-commit lanes. Never refresh expected identities from validator output.
 Validator-created or validator-modified worktree/index state and unexpected
-HEAD movement fail closed. A permitted remediation starts only after preserving
+HEAD movement or any ref creation, deletion, movement, or symbolic-target
+change fail closed. A permitted remediation starts only after preserving
 evidence and restoring the last sealed input when that restoration is already
 authorized; otherwise stop. Apply authorized edits and re-establish expected input using the same selected
 comparison source. Only explicitly selected candidate mode may capture new
@@ -267,6 +278,7 @@ POST_VALIDATOR_STAGED_DIFF_SHA256_RECHECK=YES
 POST_VALIDATOR_INDEX_SEMANTIC_MANIFEST_RECHECK=YES
 INDEX_RESOLVE_UNDO_EMPTY=YES
 POST_VALIDATOR_HEAD_RECHECK=YES
+POST_VALIDATOR_REFS_MANIFEST_RECHECK=YES
 POST_VALIDATOR_UNTRACKED_RECHECK=YES
 POST_VALIDATOR_IGNORED_RECHECK=YES
 POST_VALIDATOR_MANIFEST_RECHECK=YES
@@ -325,7 +337,8 @@ records as well; ordinary staging may only clear intent-to-add when staging
 validated content at an authorized path. Other flag transitions require explicit
 path-and-flag authority. Reject
 unvalidated filter or other transformations. Staging must not modify worktree
-content. Preserve the verified staged digest and semantic index manifest for
+content or refs; the complete refs manifest must match before and after
+staging, including in stage-only lanes. Preserve the verified staged digest and semantic index manifest for
 final evidence and recheck the manifest before and after commit. See envelope
 spec §11 for the independent stage and commit contracts.
 
@@ -348,6 +361,8 @@ markers such as `MERGE_HEAD`, `rebase-merge`, `rebase-apply`,
 `CHERRY_PICK_HEAD`, `REVERT_HEAD`, `sequencer`, and `BISECT_LOG` resolved through
 `git rev-parse --git-path`. Codex then records `PRE_COMMIT_HEAD` and requires
 it to equal the exact expected parent baseline for the lane before committing.
+Also verify and record the complete pre-commit ref map and digest. HEAD must
+remain directly attached to the exact expected branch, whose ref is direct.
 This is an ordinary-commit-only contract. `COMMIT_AUTHORITY.merge_commit_allowed`
 is false by default and false is its only supported value here. A true value
 fails closed before committing. Merge commits require a separate explicit
@@ -378,11 +393,18 @@ parents, a missing parent, or a parent different from `PRE_COMMIT_HEAD` always
 fails closed under this ordinary contract. Commit tree equality with
 `AUTHORIZED_TREE` and an unchanged verified semantic index manifest are required.
 
+After commit, verify the ref-name set and every symbolic target, including
+HEAD, are unchanged. Only the existing expected direct branch ref may move
+from `PRE_COMMIT_HEAD` to the verified new commit; all other direct ref OIDs
+and pseudoref records remain identical. Verify symbolic resolutions and record the resulting digest.
+See envelope spec §11 for exact transition evidence.
+
 Required commit-ancestry truths:
 
 ```text
 IN_PROGRESS_GIT_OPERATION_CHECK=YES
 PRE_COMMIT_HEAD_PINNED=YES
+POST_COMMIT_REFS_TRANSITION_VERIFIED=YES
 POST_COMMIT_PARENT_COUNT_ONE=YES
 POST_COMMIT_PARENT_EQUALS_PRE_COMMIT_HEAD=YES
 TREE_EQUIVALENCE_STILL_REQUIRED=YES
@@ -402,6 +424,10 @@ git status --short --branch
 ### 7.3 Push gate
 
 Push requires explicit authorization. A local branch or local commit does not imply push permission.
+Any local tracking-ref effect must be separately declared by exact ref name,
+old value, and expected new OID derived from the authorized refspec; verify that
+transition and preserve every other ref and symbolic target. Final ref evidence
+must reflect only verified authorized transitions (envelope spec §11).
 
 ### 7.4 PR gate
 
@@ -500,8 +526,9 @@ Every controlled autonomous lane should end with:
 | Field | Required content |
 | --- | --- |
 | Branch | Actual branch name |
-| Baseline | Starting commit and current HEAD |
+| Baseline | Starting commit, current HEAD, and complete logical refs manifest |
 | Files changed | Exact file list |
+| Refs | Complete pre/post ref records and digests; exact validator/stage equality and authorized commit/push transition proof |
 | Staged | Exact staged paths/content identity, semantic index manifest, empty resolve-undo proof, and any verified stage transition |
 | Commit | Commit hash or `none`; PRE_COMMIT_HEAD, AUTHORIZED_TREE, resulting tree and parent proof when committed |
 | Push | `zero` unless authorized and completed |
@@ -521,7 +548,7 @@ Use these classifications when applicable:
 
 | Classification | Meaning |
 | --- | --- |
-| `BLOCKED_VIONA_CODEX_BASELINE_DRIFT` | Root, branch, HEAD, staged state, tracked state, or ignored/nonignored untracked baseline identity does not match the envelope. |
+| `BLOCKED_VIONA_CODEX_BASELINE_DRIFT` | Root, branch, HEAD, complete refs, staged state, tracked state, or ignored/nonignored untracked baseline identity does not match the envelope. |
 | `BLOCKED_VIONA_CODEX_SCOPE_EXPANSION_REQUIRED` | The required work needs files or behavior outside the allowlist. |
 | `BLOCKED_VIONA_CODEX_DENYLIST_CONFLICT` | The required work touches a denied file or category. |
 | `BLOCKED_VIONA_CODEX_VALIDATION_FAILURE_OUTSIDE_SCOPE` | A failure cannot be fixed inside the envelope. |
