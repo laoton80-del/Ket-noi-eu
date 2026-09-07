@@ -127,6 +127,15 @@ PUSH_AUTHORITY:
   allowed:
   remote:
   push_url:
+  repository_identity:
+    provider: github
+    host: github.com
+    node_id:
+    provenance:
+  expected_destination:
+    kind:
+    oid:
+  execution_environment_names: []
   hooks_path:
   execution_config_sha256:
   execution_environment_sha256:
@@ -572,7 +581,10 @@ Require:
 - expected staged path set, with rename source and destination paths both enumerated;
 - expected staged-content digest and semantic index manifest, with empty resolve-undo proof;
 - exact nonignored untracked path set and content-identity manifest;
-- exact ignored untracked path set and content-identity manifest.
+- exact ignored untracked path set and content-identity manifest;
+- when push is enabled, its independently declared repository identity and
+  destination old state, validated environment allowlist and executable/path
+  identities, and the complete §11 push context before push preparation.
 
 Inventorying ignored files is evidence only and never grants mutation, staging,
 execution, or semantic-use authority. Any mismatch means stop. No automatic
@@ -694,7 +706,8 @@ Every autonomous lane must return:
 - scope expansions requested;
 - Git state;
 - runtime effect;
-- remote effect;
+- remote effect and, for push, §11 identity/provenance, expected destination,
+  environment-policy/executable proof and all pre/post comparisons;
 - rollback state;
 - final classification.
 
@@ -783,7 +796,8 @@ its exact path set and its staged-content digest match the operator-declared
 baseline immediately before commit.
 
 When `PUSH_AUTHORITY.allowed` is false, omit every other push field. When
-true, `remote`, `push_url`, `hooks_path`, `execution_config_sha256`,
+true, `remote`, `push_url`, `repository_identity`, `expected_destination`,
+`execution_environment_names`, `hooks_path`, `execution_config_sha256`,
 `execution_environment_sha256`, `branch`, `refspec`, and
 `expected_local_ref_transitions` are required operator declarations made
 before execution. `remote` is one exact configured remote name, never an
@@ -802,15 +816,35 @@ authorized commit. Use exactly one literal
 leading `+`, empty/deletion source, inferred refspec, extra refspec, force,
 mirror, tags, prune, upstream-setting, or push-option arguments are allowed.
 
-The ordinary push transport is one exact HTTPS repository URL in `push_url`,
-without embedded credentials, query, or fragment. Other transports and custom
-remote helpers require a separate explicit transport contract. Under the same
-fixed command prefix and child environment used for push, run
+The ordinary push transport is one exact GitHub.com HTTPS repository URL in
+`push_url`, without embedded credentials, query, or fragment. Other providers,
+transports and custom remote helpers require a separate explicit transport and
+identity contract. `repository_identity` requires `provider: github`,
+`host: github.com`, the exact immutable repository `node_id`, and `provenance`
+identifying trusted evidence that anchors that ID independently of the URL
+lookup being checked. A repository name or URL is not an immutable identity.
+Do not obtain the expected ID by adopting the current URL target's response.
+A previously authorized PR/review node can anchor its owning repository;
+verify that relationship and retain its evidence before the URL-target check.
+
+`expected_destination` declares the exact old state of `refspec.destination`:
+`kind: direct` requires its full expected commit `oid`; `kind: absent` omits
+`oid` and requires authoritative evidence of absence in the identified repo.
+Permission errors or failed reads are not absence. Never refresh this old state
+from a differing live read. A subsequent authorized campaign phase may use only
+its previously verified remote outcome as the next declared expectation.
+
+Before any Git/config/URL/object/network call for push preparation, validate
+and construct the child environment under the semantic policy below. Under
+that same fixed command prefix and environment, run
 `git remote get-url --push --all <remote>`; require exactly one expanded URL
 equal byte-for-byte to `push_url`. Multiple push URLs fail closed even when
-one matches. Verify the endpoint's repository identity and live destination
-head independently through read-only access. Recheck immediately before
-invocation; an unchanged remote label or refs manifest does not prove the URL.
+one matches. Through trusted read-only access to `https://api.github.com`,
+query the repository identified by that exact URL and require its `node_id`
+to equal the independent declaration. Verify the URL-to-repository relationship
+without following a redirect and compare its exact destination state to
+`expected_destination`. Recheck both immediately before invocation. A moved,
+recreated, inaccessible, mismatching or uncertain endpoint fails closed.
 
 `hooks_path` is independent of commit authority. Require that exact absolute
 external directory to exist, be a real directory without symlinks/reparse
@@ -839,8 +873,47 @@ Resolve URL-specific HTTP settings too: require effective redirects disabled
 and TLS verification enabled for `push_url`; a more-specific setting must not
 defeat the profile. Reject configured custom `remote.<remote>.vcs`,
 nonstandard receive-pack commands, external transport overrides, or any
-effective setting that bypasses these controls. The configuration digest never
-authorizes a prohibited mode. Credential access retains its existing authority.
+effective setting that bypasses these controls. Require direct HTTPS: reject
+effective nonempty `remote.<remote>.proxy`, URL-specific `http.proxy`, and
+custom `http.curloptResolve`. Use the independently trusted installed Git/OS
+CA policy; arbitrary CA, TLS-backend or proxy overrides require a separate
+transport contract. The configuration digest never authorizes a prohibited
+mode. Credential access retains its existing authority.
+
+The child-environment policy is semantic, before its digest is accepted:
+
+- Inspect inherited names using host case rules and reject any presence,
+  regardless of value, of `GIT_SSL_*`, `GIT_HTTP_*`, `GIT_CURL_*`,
+  `GIT_PROXY_*`, `CURL_*`, `SSL_*`, `SSLKEYLOGFILE`, `OPENSSL_*`, and
+  `HTTP_PROXY`, `HTTPS_PROXY`, `ALL_PROXY`, or `NO_PROXY` in any casing.
+  Other TLS-library bypass/trust overrides are unsupported as well.
+  In particular, Git treats even empty, `0`, or `false` values of
+  `GIT_SSL_NO_VERIFY` as disabling verification; `-c http.sslVerify=true`
+  cannot repair this. See [Git 2.43 HTTP implementation](https://github.com/git/git/blob/v2.43.0/http.c).
+- Build a new map from the exact declared `execution_environment_names`
+  allowlist, never by forwarding the inherited environment or by subtracting
+  a denylist. Only verified platform/home/temp/locale bindings, trusted PATH,
+  and independently approved exact credential inputs may be included.
+  Unknown unrelated names are omitted; a required unsupported binding stops
+  execution. Names alone do not authorize unsafe values.
+- Pin the verified absolute Git executable, its trusted installation's exec-path
+  and HTTPS helper, existing approved credential-helper executables, and an
+  exact PATH containing only declared absolute trusted directories. Retain
+  these paths and content identities in the execution evidence and recheck
+  them at the same boundaries as the environment digest. Prove effective
+  helper selection equals those pinned paths; hashing an unused approved
+  executable is insufficient. Reject untrusted
+  helper/config commands; do not provision a helper or trust store.
+- Do not inherit Git config overrides, `GIT_EXEC_PATH`, askpass overrides,
+  `GIT_TRACE_*`, `GIT_REDIRECT_*`, loader/interpreter injection, or shell startup
+  variables. Credential exceptions must name exact independently approved
+  inputs; no wildcard `GCM_*`, `GH_*`, or similar exemption. They cannot
+  bypass the transport/TLS denials above.
+- Check the constructed map again for forbidden bindings, then seal it. Apply
+  the equivalent approved environment/executable policy to the independent
+  API verifier, with its own exact necessary credential inputs and evidence.
+  Matching digests prove stability only after these semantic checks; they
+  cannot authorize a prohibited value or turn a failed check into approval.
 
 To compute `execution_config_sha256`, replace only the push subcommand and
 its arguments in that exact prefix with
@@ -852,8 +925,8 @@ push settings from every included scope plus the fixed overrides.
 `execution_environment_sha256` binds the exact child environment supplied to
 those Git calls: sort names by UTF-8 bytes and concatenate
 `name NUL SHA256(UTF8(value)) NUL`, then hash that stream with SHA-256.
-Retain the map privately. Build an explicit child environment with unique
-names under host case rules: on case-insensitive hosts, coalesce case variants
+Retain the map privately. The semantically validated allowlisted child
+map must have unique names under host case rules: on case-insensitive hosts, coalesce case variants
 only when their values are identical, retaining the first UTF-8-sorted spelling;
 conflicting values fail closed. Hash and pass that same resulting map.
 Use the same sealed executable, prefix and environment for URL resolution,
@@ -894,29 +967,48 @@ transition must still be within those exact declarations; inspect the approved
 remote read-only to determine the actual outcome, then stop without claiming
 success, blind retries or automatic rollback. A hook/transport-created file,
 same-path byte mutation, index flag change or unlisted ref change fails closed.
-Record source OID, literal refspec, effective URL, configuration/environment
-digests, hook proof, complete local comparisons, declarations, pre/post ref
-maps/digests and independently verified remote result in final evidence.
+On successful push, independently require the same declared repository
+`node_id` and the destination's direct OID equal to `PUSH_SOURCE_OID`.
+Record source OID, literal refspec, effective URL, identity provenance,
+expected/observed repository IDs, expected old destination and observed
+before/after state, environment-policy result, executable/path identities,
+configuration/environment digests, hook proof, complete local comparisons,
+declarations, pre/post ref maps/digests and independently verified remote
+result in final evidence.
 
 Required push truths, only when a push was attempted:
 
 ```text
 PUSH_ENDPOINT_AND_CONFIG_VERIFIED=YES
+PUSH_REPOSITORY_IDENTITY_MATCH=YES
+PUSH_EXPECTED_DESTINATION_MATCH=YES
+PUSH_ENVIRONMENT_SEMANTIC_POLICY=PASS
 PUSH_HOOKS_DISABLED=YES
 POST_PUSH_COMPLETE_LOCAL_STATE_RECHECK=YES
 POST_PUSH_REFS_TRANSITION_VERIFIED=YES
 ```
 
 This illustrative push block is usable only inside an explicitly authorized
-envelope with an actual verified lane commit and a verified absent tracking
-ref. Replace its URL, hooks path and digest placeholders with exact verified
-operator declarations before use; it grants no authority by itself:
+envelope with an actual verified lane commit, independently anchored repository
+identity, and verified absent destination and tracking refs. Replace its URL,
+identity/provenance, exact environment-name list, hooks path and digest
+placeholders with verified operator declarations before use; verify and record
+the allowed executable/path identities too. It grants no authority by itself:
 
 ```text
 PUSH_AUTHORITY:
   allowed: true
   remote: origin
   push_url: https://github.com/example/project.git
+  repository_identity:
+    provider: github
+    host: github.com
+    node_id: <independently-anchored-repository-node-id>
+    provenance: <trusted-prior-identity-evidence-reference>
+  expected_destination:
+    kind: absent
+  execution_environment_names:
+    - <exact-approved-platform-or-credential-variable-name>
   hooks_path: C:\VIONA\empty-hooks
   execution_config_sha256: <verified-fixed-profile-config-sha256>
   execution_environment_sha256: <verified-child-environment-sha256>

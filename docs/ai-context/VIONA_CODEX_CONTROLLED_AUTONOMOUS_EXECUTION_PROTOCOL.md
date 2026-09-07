@@ -427,11 +427,32 @@ git status --short --branch
 
 Push requires explicit authorization. A local branch or local commit does
 not imply push permission. Require the full envelope spec §11 push contract:
-one exact expanded HTTPS `push_url`, independently verified repository and
-destination head, pinned source OID, destination refspec, execution-config and
-child-environment digests, independent exact `PUSH_AUTHORITY.hooks_path`,
+one exact expanded GitHub.com HTTPS `push_url`, independently declared immutable
+`repository_identity` with trusted provenance, typed `expected_destination`
+old state, pinned source OID, destination refspec, exact
+`execution_environment_names` allowlist, execution-config and child-environment
+digests, independent exact `PUSH_AUTHORITY.hooks_path`,
 and typed expected local tracking-ref transitions. A disabled push block omits
 every other push field. A remote name alone does not bind the destination.
+
+Before any push-preparation Git/config/URL/object/network call, apply the
+spec §11 semantic child-environment policy. Reject inherited TLS/transport
+bypass variables regardless of value, including any presence of
+`GIT_SSL_NO_VERIFY`. Construct a new closed-allowlist map; omit unrelated
+unknown variables and stop for required unsupported bindings. Pin trusted
+absolute executable/helper paths and PATH, exclude config/askpass/trace/loader
+injection, and independently approve exact credential inputs. Validate the
+constructed map and independent API verifier too; matching digests never
+authorize unsafe values. Use the trusted Git/OS CA policy and reject proxies,
+custom resolution and unsupported trust overrides.
+
+Through trusted GitHub API access, require the URL-target repository's
+`node_id` to equal the independently anchored declaration and its exact
+remote destination state to equal `expected_destination`. A current URL
+response cannot supply its own expected identity. Failed access does not
+prove absence; a changed name/URL must not silently adopt another repository.
+Recheck immediately before push, and after success require that same identity
+and destination equal to `PUSH_SOURCE_OID`.
 
 Use the fixed Git 2.43-compatible invocation profile in spec §11. Resolve all
 push URLs under that same profile/environment and accept exactly one approved
@@ -451,8 +472,10 @@ and complete refs. All non-ref identities must remain equal; only declared
 tracking-ref transitions may differ. Verify the remote outcome independently;
 failure or uncertainty requires read-only diagnosis and a stop, without blind
 retry or automatic rollback. Do not report success from a refs-only check.
-Record endpoint/config/environment identity, hook proof and every state
-comparison in final evidence. See spec §11 for the fixed digest encoding,
+Record repository identity/provenance and equality, expected and observed
+destination states, semantic environment-policy result, executable/path and
+endpoint/config/environment identities, hook proof and every state comparison
+in final evidence. See spec §11 for the fixed digest encoding,
 failure handling and required push truth fields.
 
 ### 7.4 PR gate
@@ -557,7 +580,7 @@ Every controlled autonomous lane should end with:
 | Refs | Complete pre/post ref records and digests; exact validator/stage equality and authorized commit/push transition proof |
 | Staged | Exact staged paths/content identity, semantic index manifest, empty resolve-undo proof, and any verified stage transition |
 | Commit | Commit hash or `none`; PRE_COMMIT_HEAD, AUTHORIZED_TREE, resulting tree and parent proof when committed |
-| Push | No attempt, verified success, failure, or uncertain result; endpoint/config/environment digests, hooks-disabled proof and complete pre/post local-state comparisons for every attempt |
+| Push | No attempt, verified success, failure, or uncertain result; independent repository identity/provenance, expected/observed destination, environment-policy and executable proofs, endpoint/config/environment digests, hooks-disabled proof and complete pre/post local-state comparisons for every attempt |
 | PR | `zero` unless authorized and completed |
 | Runtime/source | `zero` for docs-only lanes |
 | Validation | Commands run, pass/fail result, comparison source, sealed input identities, and every post-validator state comparison |
