@@ -54,6 +54,9 @@ EXPECTED_BASE:
   staged_paths:
   staged_diff_sha256:
   untracked_paths:
+  untracked_manifest_sha256:
+  ignored_untracked_paths:
+  ignored_untracked_manifest_sha256:
 
 MODE:
   autonomy_level:
@@ -93,6 +96,7 @@ COMMIT_AUTHORITY:
   paths:
   count:
   subject:
+  hooks_path:
 
 PUSH_AUTHORITY:
   allowed:
@@ -164,11 +168,39 @@ The staged-content digest must be verified at preflight and reverified
 immediately before any commit-only operation. Matching path names without a
 matching staged-content digest is not sufficient.
 
-`EXPECTED_BASE.untracked_paths` is an exact baseline declaration. Use
-`untracked_paths: []` when no untracked repository files are expected. If
-untracked files are expected, list their exact repository paths. The observed
-output of `git ls-files --others --exclude-standard` must match that declared
-set exactly; Codex must not infer expected untracked paths.
+`EXPECTED_BASE.untracked_paths` is the exact set of nonignored untracked
+repository paths. `EXPECTED_BASE.ignored_untracked_paths` is the exact set of
+ignored untracked repository paths. Use `[]` when the relevant set is empty.
+The observed NUL-delimited outputs from these canonical commands must match the
+corresponding declared path sets exactly:
+
+```bash
+git ls-files --others --exclude-standard -z
+git ls-files --others --ignored --exclude-standard -z
+```
+
+Path equality alone is insufficient. Each declared untracked set also requires
+a deterministic content-identity manifest. For every exact path in the set,
+sort by raw repository path bytes ascending and append one record consisting of:
+
+```text
+<path-bytes> NUL <type-ascii> NUL <sha256-hex> NUL
+```
+
+For a regular file, `sha256-hex` is the lowercase SHA-256 of its exact raw file
+bytes. For a symlink, it is the lowercase SHA-256 of the raw link-target bytes
+without dereferencing the target. The type token is exactly `file` or
+`symlink`; any other filesystem type is a fail-closed blocker. Hash the complete
+concatenated record byte stream to produce `untracked_manifest_sha256` or
+`ignored_untracked_manifest_sha256`. An empty set uses the SHA-256 of the empty
+byte string:
+`e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855`.
+
+Manifest construction is identity verification only. It does not authorize
+semantic inspection, disclosure, execution, modification, staging, or commit of
+ignored or nonignored untracked files. Secrets and ignored artifacts remain
+default-deny unless separately and explicitly authorized by exact path and
+action.
 
 ---
 
@@ -224,7 +256,8 @@ git rev-parse HEAD
 git status --short --branch
 git diff --name-only
 git diff --cached --no-renames --name-only
-git ls-files --others --exclude-standard
+git ls-files --others --exclude-standard -z
+git ls-files --others --ignored --exclude-standard -z
 ```
 
 In addition, compute and compare the exact raw-byte SHA-256 for:
@@ -233,7 +266,8 @@ In addition, compute and compare the exact raw-byte SHA-256 for:
 git -c core.abbrev=40 diff --cached --raw --no-renames -z
 ```
 
-against `EXPECTED_BASE.staged_diff_sha256`.
+against `EXPECTED_BASE.staged_diff_sha256`, and compute both canonical untracked
+manifests described in §3 against their declared path sets and manifest digests.
 
 Require:
 
@@ -243,9 +277,13 @@ Require:
 - expected tree state;
 - expected staged path set, with rename source and destination paths both enumerated;
 - expected staged-content digest;
-- expected untracked-file state.
+- exact nonignored untracked path set and content-identity manifest;
+- exact ignored untracked path set and content-identity manifest.
 
-Any mismatch means stop. No automatic checkout, reset, rebase, stash, pull, fetch, branch repair, or worktree repair is allowed unless explicitly authorized.
+Inventorying ignored files is evidence only and never grants mutation, staging,
+execution, or semantic-use authority. Any mismatch means stop. No automatic
+checkout, reset, rebase, stash, pull, fetch, branch repair, or worktree repair
+is allowed unless explicitly authorized.
 
 ---
 
@@ -388,15 +426,21 @@ When commit authority is true:
 - if stage authority is false, perform no staging and require the pre-existing cached path set to match both `EXPECTED_BASE.staged_paths` and `COMMIT_AUTHORITY.paths` exactly;
 - if stage authority is false, also recompute the raw staged-content digest immediately before commit and require exact equality with `EXPECTED_BASE.staged_diff_sha256`;
 - if stage authority is true, require the post-stage cached path set to match `COMMIT_AUTHORITY.paths` exactly before committing;
+- `COMMIT_AUTHORITY.hooks_path` must be one exact absolute path outside the repository to a real directory that is not a symlink;
+- immediately before commit, the hooks directory must exist and be empty; a missing, non-directory, symlinked, or nonempty hooks path is a blocker;
+- after all staged checks, capture `AUTHORIZED_TREE=$(git write-tree)`;
+- commit with hooks neutralized by setting `core.hooksPath` to exactly the verified-empty `COMMIT_AUTHORITY.hooks_path` for that commit invocation;
+- immediately after commit, require `git rev-parse 'HEAD^{tree}'` to equal `AUTHORIZED_TREE` exactly; a mismatch is a blocker and the lane must not claim successful authorized packaging;
 - create exactly the number of commits authorized;
 - use the exact subject if provided;
 - do not amend, rebase, squash, or rewrite history unless explicitly granted.
 
-A commit must not package an unnamed, unrelated, or baseline-drifted staged
-change. Commit authority without an exact `COMMIT_AUTHORITY.paths` set is
-insufficient, and a commit-only lane with pre-existing staged content is
-forbidden unless both its exact path set and its staged-content digest match the
-operator-declared baseline immediately before commit.
+A commit must not package an unnamed, unrelated, baseline-drifted, or
+hook-mutated staged change. Commit authority without an exact
+`COMMIT_AUTHORITY.paths` set and exact verified-empty hooks path is insufficient,
+and a commit-only lane with pre-existing staged content is forbidden unless both
+its exact path set and its staged-content digest match the operator-declared
+baseline immediately before commit.
 
 ---
 
@@ -578,7 +622,7 @@ Canonical blockers:
 
 | Classification | Meaning |
 | --- | --- |
-| `BLOCKED_VIONA_CODEX_BASELINE_DRIFT` | Root, branch, HEAD, staged state, or tree state does not match the envelope. |
+| `BLOCKED_VIONA_CODEX_BASELINE_DRIFT` | Root, branch, HEAD, staged, tracked, or ignored/nonignored untracked baseline identity does not match the envelope. |
 | `BLOCKED_VIONA_CODEX_SCOPE_EXPANSION_REQUIRED` | The required work needs files or behavior outside the allowlist. |
 | `BLOCKED_VIONA_CODEX_DENYLIST_CONFLICT` | The required work touches a denied file or category. |
 | `BLOCKED_VIONA_CODEX_VALIDATION_FAILURE_OUTSIDE_SCOPE` | A failure cannot be fixed inside the envelope. |
@@ -615,6 +659,9 @@ EXPECTED_BASE:
   staged_paths: []
   staged_diff_sha256: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
   untracked_paths: []
+  untracked_manifest_sha256: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+  ignored_untracked_paths: []
+  ignored_untracked_manifest_sha256: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
 
 MODE:
   autonomy_level: A2C
@@ -679,6 +726,7 @@ COMMIT_AUTHORITY:
     - scripts/test-example.ts
   count: 1
   subject: "feat(example): add controlled local implementation"
+  hooks_path: C:\VIONA\empty-hooks
 
 PUSH_AUTHORITY:
   allowed: false
