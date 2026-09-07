@@ -229,6 +229,19 @@ when the cached diff is empty. Read from the canonical root using:
 git --no-optional-locks -c core.fsmonitor=false ls-files --stage --debug --abbrev=40 -z
 ```
 
+Before accepting any semantic-index snapshot, also run:
+
+```bash
+git --no-optional-locks -c core.fsmonitor=false ls-files --resolve-undo --abbrev=40 -z
+```
+
+Require exit success and exactly zero raw stdout bytes. Nonempty resolve-undo
+records are unsupported by this ordinary contract and fail closed before
+mutation or validator execution, and at every later semantic-index acceptance
+(including staging, commit, and final evidence). Never clear or normalize these
+records automatically. No extra schema digest is needed because only empty
+resolve-undo state is supported.
+
 Parse each mode/full-object-ID/stage header through its TAB, preserve the raw
 pathname through NUL, then parse the supported five-line debug metadata and its
 hexadecimal flags. Do not split pathnames on whitespace or newlines. Reject
@@ -361,6 +374,7 @@ POST_VALIDATOR_TRACKED_MANIFEST_RECHECK=YES
 POST_VALIDATOR_STAGED_RECHECK=YES
 POST_VALIDATOR_STAGED_DIFF_SHA256_RECHECK=YES
 POST_VALIDATOR_INDEX_SEMANTIC_MANIFEST_RECHECK=YES
+INDEX_RESOLVE_UNDO_EMPTY=YES
 POST_VALIDATOR_HEAD_RECHECK=YES
 POST_VALIDATOR_UNTRACKED_RECHECK=YES
 POST_VALIDATOR_IGNORED_RECHECK=YES
@@ -448,7 +462,7 @@ Require:
 - expected tree state;
 - expected unstaged tracked path set, raw metadata digest, and content manifest;
 - expected staged path set, with rename source and destination paths both enumerated;
-- expected staged-content digest and semantic index manifest;
+- expected staged-content digest and semantic index manifest, with empty resolve-undo proof;
 - exact nonignored untracked path set and content-identity manifest;
 - exact ignored untracked path set and content-identity manifest.
 
@@ -564,7 +578,7 @@ Every autonomous lane must return:
 - test outcomes;
 - comparison source and sealed pre-validator state identities;
 - every post-validator identity comparison;
-- verified stage transitions, staged paths/content digest, and semantic index manifests;
+- verified stage transitions, staged paths/content digest, semantic index manifests, and empty resolve-undo proof;
 - PRE_COMMIT_HEAD, AUTHORIZED_TREE, committed tree and parent proof when committed;
 - remediation performed;
 - scope expansions requested;
@@ -639,6 +653,7 @@ When commit authority is true:
 - `COMMIT_AUTHORITY.hooks_path` must be one exact absolute path outside the repository to a real directory that is not a symlink;
 - immediately before commit, the hooks directory must exist and be empty; a missing, non-directory, symlinked, or nonempty hooks path is a blocker;
 - after all staged checks, capture `AUTHORIZED_TREE=$(git write-tree)`; capturing the current tree alone is not a content-authorization check;
+- before committing, enumerate `AUTHORIZED_TREE` using `git --no-replace-objects ls-tree -r --full-tree -z "$AUTHORIZED_TREE"` and compare its raw path/mode/object-ID tuples exactly with all verified stage-zero index entries whose intent-to-add bit is zero, sorted by raw path bytes; exclude intent-to-add entries only from this expected tree, retaining them in all semantic-index comparisons; reject missing, extra, or different tree entries so index tree-cache data cannot substitute for verified index contents;
 - commit with hooks neutralized by setting `core.hooksPath` to exactly the verified-empty `COMMIT_AUTHORITY.hooks_path` for that commit invocation;
 - immediately after commit, require `git rev-parse 'HEAD^{tree}'` to equal `AUTHORIZED_TREE` exactly; a mismatch is a blocker and the lane must not claim successful authorized packaging;
 - require the new commit to have `parent_count = 1` and `sole_parent = PRE_COMMIT_HEAD` without an exception in this ordinary contract;
@@ -663,6 +678,7 @@ PRE_COMMIT_HEAD_PINNED=YES
 POST_COMMIT_PARENT_COUNT_ONE=YES
 POST_COMMIT_PARENT_EQUALS_PRE_COMMIT_HEAD=YES
 TREE_EQUIVALENCE_STILL_REQUIRED=YES
+AUTHORIZED_TREE_MATCHES_VERIFIED_INDEX=YES
 MERGE_COMMIT_AUTHORITY=NO
 ```
 
@@ -881,6 +897,7 @@ Staging occurs only after validation and must preserve the validated bytes.
 Replace the illustrative baseline SHAs and manifest placeholder with verified
 exact values before authorizing a real lane. A clean worktree still has a
 nonempty tracked manifest and semantic index manifest when indexed files exist.
+The example also requires empty resolve-undo output at every index checkpoint.
 
 ```text
 PROJECT:

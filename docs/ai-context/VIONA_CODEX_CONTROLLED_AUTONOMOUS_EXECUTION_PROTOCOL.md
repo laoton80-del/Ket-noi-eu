@@ -203,7 +203,11 @@ The staged baseline must match its exact path set and
 contains full blob IDs and modes. Also require `index_semantic_manifest_sha256`
 as defined in envelope spec §3 over every index entry, including assume-unchanged,
 skip-worktree, and intent-to-add flags. Cached diffs do not expose flag-only
-mutations. Reject unmerged index entries and unsupported manifest input.
+mutations. Every semantic-index snapshot also requires successful, empty raw
+output from `git --no-optional-locks -c core.fsmonitor=false ls-files --resolve-undo --abbrev=40 -z`.
+Reject nonempty resolve-undo records before mutation or validator execution and
+at each later snapshot. Never clear records automatically to pass this gate.
+Reject unmerged index entries and unsupported manifest input.
 
 The staged-path preflight disables rename detection so both source and
 destination endpoints of a staged rename are visible to exact-path validation.
@@ -261,6 +265,7 @@ POST_VALIDATOR_TRACKED_MANIFEST_RECHECK=YES
 POST_VALIDATOR_STAGED_RECHECK=YES
 POST_VALIDATOR_STAGED_DIFF_SHA256_RECHECK=YES
 POST_VALIDATOR_INDEX_SEMANTIC_MANIFEST_RECHECK=YES
+INDEX_RESOLVE_UNDO_EMPTY=YES
 POST_VALIDATOR_HEAD_RECHECK=YES
 POST_VALIDATOR_UNTRACKED_RECHECK=YES
 POST_VALIDATOR_IGNORED_RECHECK=YES
@@ -355,7 +360,13 @@ repository. Before commit, Codex must verify that directory exists, is a real
 directory rather than a symlink, and is empty. Codex then records the authorized
 index tree as `AUTHORIZED_TREE=$(git write-tree)` only after verifying the
 exact staged-content identity against the last validated state or the verified
-authorized stage transition. It commits with `core.hooksPath` set to that exact
+authorized stage transition. Before accepting `AUTHORIZED_TREE`, enumerate it
+with `git --no-replace-objects ls-tree -r --full-tree -z "$AUTHORIZED_TREE"` and
+require exact raw path/mode/object-ID equality with all verified stage-zero
+index entries whose intent-to-add bit is zero. Intent-to-add entries do not
+commit content; exclude them only from the expected tree, while retaining them
+in all semantic-index comparisons. Missing, extra, or different tree entries fail closed; a cache-derived
+tree ID alone is insufficient. It commits with `core.hooksPath` set to that exact
 verified-empty directory, and requires `HEAD^{tree}` to equal the recorded
 authorized tree exactly. Any hook-path mismatch, nonempty hook directory, or
 post-commit tree mismatch is a fail-closed blocker; the lane must not claim the
@@ -375,6 +386,7 @@ PRE_COMMIT_HEAD_PINNED=YES
 POST_COMMIT_PARENT_COUNT_ONE=YES
 POST_COMMIT_PARENT_EQUALS_PRE_COMMIT_HEAD=YES
 TREE_EQUIVALENCE_STILL_REQUIRED=YES
+AUTHORIZED_TREE_MATCHES_VERIFIED_INDEX=YES
 MERGE_COMMIT_AUTHORITY=NO
 ```
 
@@ -490,7 +502,7 @@ Every controlled autonomous lane should end with:
 | Branch | Actual branch name |
 | Baseline | Starting commit and current HEAD |
 | Files changed | Exact file list |
-| Staged | Exact staged paths/content identity, semantic index manifest, and any verified stage transition |
+| Staged | Exact staged paths/content identity, semantic index manifest, empty resolve-undo proof, and any verified stage transition |
 | Commit | Commit hash or `none`; PRE_COMMIT_HEAD, AUTHORIZED_TREE, resulting tree and parent proof when committed |
 | Push | `zero` unless authorized and completed |
 | PR | `zero` unless authorized and completed |
