@@ -67,8 +67,11 @@ Codex must verify the local repository state before performing any approved muta
 - HEAD;
 - staged diff;
 - unstaged tracked diff;
-- untracked paths;
+- nonignored untracked paths and their deterministic content identities;
+- ignored untracked paths and their deterministic content identities;
 - relevant source/runtime/package drift.
+
+Inventorying an ignored or nonignored untracked path is evidence only. It does not grant mutation, staging, commit, execution, disclosure, or use authority over that path.
 
 If the actual state does not match the operator's baseline, Codex stops instead of repairing the baseline silently.
 
@@ -112,7 +115,8 @@ Codex must stop on:
 - HEAD mismatch;
 - unexpected staged content;
 - unexpected tracked diff;
-- unexpected untracked paths outside the approved packet;
+- unexpected nonignored or ignored untracked path state;
+- unexpected untracked content-identity drift;
 - validation mutation;
 - source/runtime drift in a docs-only lane;
 - failed `git diff --check` where remediation is not explicitly authorized;
@@ -172,11 +176,27 @@ git rev-parse HEAD
 git status --short --branch
 git diff --name-only
 git diff --cached --no-renames --name-only
-git ls-files --others --exclude-standard
+git ls-files --others --exclude-standard -z
+git ls-files --others --ignored --exclude-standard -z
 ```
 
 The staged-path preflight disables rename detection so both source and
 destination endpoints of a staged rename are visible to exact-path validation.
+
+The untracked baseline is two disjoint exact path sets: nonignored untracked
+paths and ignored untracked paths. Each set must match the corresponding
+operator-declared exact path set and deterministic manifest SHA-256 in the
+active execution envelope. The manifest binds the exact path bytes, filesystem
+type, and raw-byte content identity of every declared untracked path. An empty
+set is represented by the SHA-256 of the empty byte string. Symlink identity is
+the raw link-target bytes; unsupported filesystem types are a fail-closed
+blocker. Manifest construction must not disclose or use file contents beyond
+computing the declared identity.
+
+Inventorying ignored dependency/cache artifacts or ignored secret paths grants
+no permission to read their semantic contents, modify them, stage them, execute
+them, or treat them as supporting files. Mutation authority still comes only
+from the exact active allowlist.
 
 For branch creation from a named baseline:
 
@@ -232,6 +252,16 @@ git add --all
 ### 7.2 Commit gate
 
 Committing requires explicit authorization and an expected subject or commit purpose. Codex must verify staged paths before committing.
+
+A commit-authorized lane must also neutralize repository hooks deterministically.
+The active envelope must declare one exact absolute hooks directory outside the
+repository. Before commit, Codex must verify that directory exists, is a real
+directory rather than a symlink, and is empty. Codex then records the authorized
+index tree with `git write-tree`, commits with `core.hooksPath` set to that exact
+verified-empty directory, and requires `HEAD^{tree}` to equal the recorded
+authorized tree exactly. Any hook-path mismatch, nonempty hook directory, or
+post-commit tree mismatch is a fail-closed blocker; the lane must not claim the
+commit as successfully authorized.
 
 For docs-only packaging, the expected post-commit proof is:
 
@@ -364,7 +394,7 @@ Use these classifications when applicable:
 
 | Classification | Meaning |
 | --- | --- |
-| `BLOCKED_VIONA_CODEX_BASELINE_DRIFT` | Root, branch, HEAD, staged state, or tree state does not match the envelope. |
+| `BLOCKED_VIONA_CODEX_BASELINE_DRIFT` | Root, branch, HEAD, staged state, tracked state, or ignored/nonignored untracked baseline identity does not match the envelope. |
 | `BLOCKED_VIONA_CODEX_SCOPE_EXPANSION_REQUIRED` | The required work needs files or behavior outside the allowlist. |
 | `BLOCKED_VIONA_CODEX_DENYLIST_CONFLICT` | The required work touches a denied file or category. |
 | `BLOCKED_VIONA_CODEX_VALIDATION_FAILURE_OUTSIDE_SCOPE` | A failure cannot be fixed inside the envelope. |
