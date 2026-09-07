@@ -175,7 +175,7 @@ set exactly; Codex must not infer expected untracked paths.
 ## 4. Autonomy Levels
 
 | Level | Name | Local authority | Remote authority |
-| --- | --- | --- |
+| --- | --- | --- | --- |
 | A0 | Read / audit | Read-only inspection and reporting | None |
 | A1 | Docs / planning | Create or edit exact docs only | None |
 | A2 | Local implementation + tests | Edit exact allowlisted local files and run validators | None |
