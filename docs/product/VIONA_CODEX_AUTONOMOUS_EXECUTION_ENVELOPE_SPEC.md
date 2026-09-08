@@ -180,6 +180,8 @@ REMOTE_COMMIT_AUTHORITY:
   operation_id:
   durable_attempt_authority_id:
   expected_pr_binding_id:
+  associated_pr_scope_id:
+  metadata_race_acceptance_id:
 
 DURABLE_ATTEMPT_AUTHORITY:
   allowed:
@@ -217,6 +219,35 @@ EXPECTED_PR_BINDING:
   merged: false
   draft: false
   auto_merge: disabled
+
+ASSOCIATED_PR_SCOPE:
+  required:
+  id:
+  policy: SINGLE_DECLARED_OPEN_PR_ONLY
+  expected_pr_binding_id:
+  head_ref_source: EXPECTED_PR_BINDING.head_ref_node_id
+  connection: Ref.associatedPullRequests
+  states: [OPEN]
+  optional_filters: none
+  completeness: all_pages_until_hasNextPage_false
+  mandatory_observations: [pre_dispatch, post_publication, final_closure]
+  mismatch_or_incomplete: block_without_repair
+
+PR_METADATA_RACE_ACCEPTANCE:
+  accepted:
+  id:
+  authorization_reference:
+  operation_id:
+  expected_pr_binding_id:
+  associated_pr_scope_id:
+  publication_scope_source: REMOTE_COMMIT_AUTHORITY
+  accepted_interval_risks: [metadata_between_observations, membership_between_observations, unobserved_transient_changes]
+  mandatory_observations: [pre_dispatch, post_publication, final_closure]
+  atomic_pr_metadata_precondition: NOT_PROVIDED
+  technically_eliminated: false
+  known_pre_dispatch_mismatch: block
+  observable_post_publication_mismatch: incident_stop_closure_no_rollback_or_retry
+  additional_authority: none
 
 LOCAL_SYNC_AUTHORITY:
   allowed:
@@ -1178,8 +1209,13 @@ or missing authority fails closed. A disabled block contains only allowed: false
 API_EXECUTION_CONTEXTS and API_REQUEST_RECORDS when no enabled operation needs an API context.
 Enabled publication must reference its single DURABLE_ATTEMPT_AUTHORITY and
 EXPECTED_PR_BINDING by exact ID, with matching operation_id and authorization.
+It must also reference required ASSOCIATED_PR_SCOPE and explicitly accepted
+PR_METADATA_RACE_ACCEPTANCE by ID. Both reuse the same EXPECTED_PR_BINDING;
+no independently editable second PR identity declaration is allowed.
 A disabled DURABLE_ATTEMPT_AUTHORITY contains only allowed: false; an unused
-EXPECTED_PR_BINDING contains only required: false. No disabled block supplies
+EXPECTED_PR_BINDING or ASSOCIATED_PR_SCOPE contains only required: false. An
+unaccepted PR_METADATA_RACE_ACCEPTANCE contains only accepted: false. Missing,
+false or inapplicable acceptance disables this bounded API profile. No disabled block supplies
 an implicit marker, PR, request, storage or publication permission.
 COMMIT_AUTHORITY governs locally authored commits; PUSH_AUTHORITY governs Git
 push. Neither grants server commit creation or local synchronization. An API
@@ -1232,6 +1268,78 @@ guarantee is claimed. Successful queries do not prove mutation permission.
 Do not reclassify that acceptance as a newly established server guarantee.
 Actual identity mismatch, unsupported context or permission rejection still
 blocks. There is no ordinary Git push fallback.
+
+#### Single declared open PR and scoped residual-risk disposition
+
+ASSOCIATED_PR_SCOPE supports only SINGLE_DECLARED_OPEN_PR_ONLY. Its exact Ref
+comes from EXPECTED_PR_BINDING.head_ref_node_id; its expected set is exactly
+that binding's PR node ID AND number. Before dispatch, after publication and
+at final closure, query the verified Ref node's associatedPullRequests
+connection with states: [OPEN]. Read every page until hasNextPage=false.
+Never use a search index or branch-name match as this inventory. Do not filter
+by baseRefName, labels, draft/auto-merge state or any other optional criterion;
+a PR on another base, including draft or auto-merge-enabled PRs, must remain
+visible in the returned set. No multi-PR publication mode is supported.
+
+Retain each page's request-instance ID, bound cursor, query-document and exact
+payload seals under API_REQUEST_RECORDS, returned edge cursors and pageInfo,
+totalCount, observation start/end timestamps and verifier context. Retain every
+returned PR's node ID/number, owning/head/base repository IDs, exact head Ref
+ID/name/OID, base ref/OID, OPEN/merged/draft/auto-merge values. Verify returned
+heads belong to the expected repository AND Ref; an identically named branch
+in a different repository is not equivalent. Compare all PR conditions with
+EXPECTED_PR_BINDING, using the independently verified SERVER_COMMIT only for
+the post-publication head transition. An observed extra PR must not be discarded.
+
+Require the complete observed set to equal the declared singleton. Zero PRs,
+another PR, wrong identities, missing/unreadable fields, partial GraphQL errors,
+inconsistent totals/cursors/pages, duplicates, an incomplete inventory or an
+actual access/coverage gap fails closed. Do not close, retarget, alter draft or
+auto-merge, or otherwise repair any PR to pass. Evidence describes the complete
+accessible connection returned under the verified API context, not omniscient
+visibility beyond that contract. Pages and repeated inventories are observations,
+not an atomic snapshot or a lock preventing another PR from becoming associated.
+
+PR_METADATA_RACE_ACCEPTANCE must be explicit current operator authorization
+applicable to this exact operation_id, REMOTE_COMMIT_AUTHORITY candidate/file
+scope, EXPECTED_PR_BINDING and ASSOCIATED_PR_SCOPE. Validate all references,
+operation and authorization provenance before enabling the profile. Authority
+must predate the observation: returned metadata cannot supply missing acceptance.
+An enabled typed example is a template, not live approval. Each future lane
+needs its own explicit applicable acceptance; none is inferred from this text.
+
+The required disposition is:
+
+- ATOMIC_PR_METADATA_PRECONDITION=NOT_PROVIDED
+- PR_METADATA_AND_MEMBERSHIP_RACE=EXPLICITLY_ACCEPTED_WITHIN_DECLARED_SCOPE
+- TECHNICALLY_ELIMINATED=NO
+
+Within this bounded mode only, the operator accepts PR metadata changing or
+another open PR becoming associated with the head Ref between required
+observations, including transient changes that may not be visible in those
+observations. This removes a requirement for continuous atomic truth of the
+PR metadata/membership observations; it does not remove the observations.
+Every known pre-dispatch PR or set mismatch still forbids sending. Repository,
+Ref, fixed expected head and sealed candidate/tree bindings remain required.
+No repeated reads, local lock, one executor or conversation lock makes these
+checks atomic. The server expectedHeadOid condition does not lock PR metadata
+or membership. The server-atomic PR metadata precondition is not implemented.
+
+A post-publication observable mismatch is an incident: record the actual remote
+outcome and drift, then stop synchronization/closure without rollback, repair,
+replay or an alternative writer. A final-closure mismatch likewise blocks
+further closure. Postchecks detect observable outcomes, not every transient
+change. Acceptance never covers a known extra PR, incomplete inventory, wrong
+content/repository/Ref, authentication failure, protection bypass, merge or
+deployment; it grants no other local/remote mutation authority. No ordinary Git push fallback
+is permitted. Do not retrofit this disposition into historical publications.
+
+Review/final evidence distinguishes technical findings fixed, accepted residual
+risks, undispositioned actionable findings and unresolved threads. The exact
+accepted metadata/membership limitation may be dispositioned as
+ACCEPTED_RESIDUAL_RISK with the applicable authorization and observations; never
+as TECHNICALLY_FIXED. A restatement of that same limitation is not a new technical
+fix. A different control failure or broader impact cannot inherit this acceptance.
 
 #### API execution context and request identity
 
@@ -1456,7 +1564,10 @@ worktree. Separately authorized object-store/lock/reflog effects are Git
 metadata, not new worktree files. Preserve state and report publication success
 with local-sync-incomplete if synchronization fails; never republish.
 
-Final evidence retains the resolved DURABLE_ATTEMPT_AUTHORITY and EXPECTED_PR_BINDING,
+Final evidence retains the resolved DURABLE_ATTEMPT_AUTHORITY, EXPECTED_PR_BINDING,
+ASSOCIATED_PR_SCOPE and PR_METADATA_RACE_ACCEPTANCE, all complete pre-dispatch,
+post-publication and final inventories with request/page seals and limitations,
+observed drift and the separate technical-fix/residual-risk disposition counts,
 exact authorized storage paths/operations, operation/authorization identity,
 marker bytes/digest and reservation/Flush(true)/same-handle read-back/outcome
 results. Retain every API_REQUEST_RECORDS entry and context fingerprint, exact
@@ -1507,6 +1618,8 @@ REMOTE_COMMIT_AUTHORITY:
   operation_id: <separately-authorized-successor-operation-id>
   durable_attempt_authority_id: publication_attempt
   expected_pr_binding_id: declared_pr
+  associated_pr_scope_id: singleton_scope
+  metadata_race_acceptance_id: scoped_acceptance
 DURABLE_ATTEMPT_AUTHORITY:
   allowed: true
   id: publication_attempt
@@ -1542,6 +1655,35 @@ EXPECTED_PR_BINDING:
   merged: false
   draft: false
   auto_merge: disabled
+ASSOCIATED_PR_SCOPE:
+  required: true
+  id: singleton_scope
+  policy: SINGLE_DECLARED_OPEN_PR_ONLY
+  expected_pr_binding_id: declared_pr
+  head_ref_source: EXPECTED_PR_BINDING.head_ref_node_id
+  connection: Ref.associatedPullRequests
+  states: [OPEN]
+  optional_filters: none
+  completeness: all_pages_until_hasNextPage_false
+  mandatory_observations: [pre_dispatch, post_publication, final_closure]
+  mismatch_or_incomplete: block_without_repair
+
+PR_METADATA_RACE_ACCEPTANCE:
+  accepted: true
+  id: scoped_acceptance
+  authorization_reference: <explicit-current-applicable-operator-race-acceptance>
+  operation_id: <same-separately-authorized-successor-operation-id>
+  expected_pr_binding_id: declared_pr
+  associated_pr_scope_id: singleton_scope
+  publication_scope_source: REMOTE_COMMIT_AUTHORITY
+  accepted_interval_risks: [metadata_between_observations, membership_between_observations, unobserved_transient_changes]
+  mandatory_observations: [pre_dispatch, post_publication, final_closure]
+  atomic_pr_metadata_precondition: NOT_PROVIDED
+  technically_eliminated: false
+  known_pre_dispatch_mismatch: block
+  observable_post_publication_mismatch: incident_stop_closure_no_rollback_or_retry
+  additional_authority: none
+
 LOCAL_SYNC_AUTHORITY:
   allowed: true
   root: <explicitly-authorized-absolute-checkout-root>
@@ -1611,6 +1753,8 @@ Trace every enabled requirement through its declaration and evidence:
 | --- | --- | --- | --- |
 | Durable attempt | DURABLE_ATTEMPT_AUTHORITY, operator-granted exact external paths and operation_id | CreateNew/None, write once, Flush(true), same-handle read-back, retained handle through dispatch/outcome | Existing, partial, missing-after-evidence or uncertain state blocks; typed publication_attempt example |
 | Request identity | Stable API_EXECUTION_CONTEXTS plus append-only API_REQUEST_RECORDS, declared variable sources | Bind legitimate variables, seal exact UTF-8 buffer, verify and send those bytes once | Changed bytes/unknown source blocks; distinct preflight/publication example records |
+| Singleton scope | ASSOCIATED_PR_SCOPE references the one EXPECTED_PR_BINDING | Complete unfiltered OPEN connection of the exact Ref, all page/request seals, pre/post/final singleton equality | Missing/extra/incomplete/mismatched results block; singleton_scope example |
+| Metadata race disposition | PR_METADATA_RACE_ACCEPTANCE references the same PR/scope and exact authorized operation | Explicit applicable operator acceptance plus mandatory observations; no atomic metadata enforcement | Missing acceptance disables; known mismatch blocks; observed post-drift is an incident; scoped_acceptance example |
 | PR identity | EXPECTED_PR_BINDING referenced by publication, operator-provided IDs/state | Verify node AND number, all repository/head/base/state fields before/after | Any mismatch blocks without repair; only verified post-publication head transition |
 
 
@@ -1920,6 +2064,12 @@ DURABLE_ATTEMPT_AUTHORITY:
 
 EXPECTED_PR_BINDING:
   required: false
+
+ASSOCIATED_PR_SCOPE:
+  required: false
+
+PR_METADATA_RACE_ACCEPTANCE:
+  accepted: false
 
 LOCAL_SYNC_AUTHORITY:
   allowed: false

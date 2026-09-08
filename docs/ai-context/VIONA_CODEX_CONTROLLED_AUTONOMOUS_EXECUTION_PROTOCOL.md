@@ -552,6 +552,49 @@ retain all conditions; only the post-publication head becomes the independently
 verified SERVER_COMMIT. Do not repair a mismatch. These reads do not atomically
 lock PR metadata or replace the server expectedHeadOid condition.
 
+Require ASSOCIATED_PR_SCOPE with SINGLE_DECLARED_OPEN_PR_ONLY, referencing
+that same EXPECTED_PR_BINDING. Inventory the verified Ref node's
+associatedPullRequests connection with states: [OPEN], without base/label,
+draft/auto-merge or other optional filters. Read all pages until
+hasNextPage=false before dispatch, after publication and at final closure.
+Retain page cursors/pageInfo/totals, all returned PR identities and owning/head/base
+repositories, exact head Ref/OID, base ref/OID and state flags, observation
+start/end times and distinct API_REQUEST_RECORDS seals. Verify the exact
+repository AND Ref; a same-named branch elsewhere is not this head. Require
+complete observed singleton equality with the declared PR. Zero/extra PRs,
+partial GraphQL errors, unreadable fields, inconsistent pagination or incomplete
+coverage block; never discard or repair a result. This is the complete accessible
+connection under the verified API context, not omniscient or atomic coverage.
+
+PR_METADATA_RACE_ACCEPTANCE must bind explicit applicable current operator
+provenance, this exact publication operation/candidate scope, the same PR/Ref
+binding and singleton policy, accepted interval risks, required pre-dispatch,
+post-publication and final observations, failure response and no other authority.
+Missing, false or out-of-scope acceptance disables this bounded profile. Use the
+typed schema and enabled/disabled examples in spec §12.1; examples are not live
+approval. A future lane needs its own acceptance. Retain the disposition:
+
+- ATOMIC_PR_METADATA_PRECONDITION=NOT_PROVIDED
+- PR_METADATA_AND_MEMBERSHIP_RACE=EXPLICITLY_ACCEPTED_WITHIN_DECLARED_SCOPE
+- TECHNICALLY_ELIMINATED=NO
+
+The operator accepts metadata/membership changes between observations, including
+another PR becoming associated and transient changes not observable afterward.
+Acceptance removes continuous atomic-truth requirements for these observations,
+not the observations. Known pre-dispatch mismatches still forbid sending;
+repository/Ref, fixed expected head and exact sealed content remain bound.
+Repeated reads, locks, a single executor and expectedHeadOid cannot atomically
+lock PR metadata or membership. Observable post-publication drift is an incident:
+record the actual outcome and stop synchronization/closure, without rollback or
+retry. Final observed drift blocks further closure. Postchecks do not detect
+every transient change. No ordinary Git push fallback is allowed. Acceptance
+never covers known extra PRs, incomplete inventory, wrong content/repository/Ref,
+authentication failure, protection bypass, merge or deployment, and grants no
+other mutation authority. Do not apply it retroactively. Review/final evidence
+separates technical findings fixed, ACCEPTED_RESIDUAL_RISK, undispositioned
+actionable findings and unresolved threads. Identical accepted risk restatement
+is not a technical fix; a new control failure cannot inherit this disposition.
+
 DURABLE_ATTEMPT_AUTHORITY must separately authorize exact external marker and
 existing evidence-ledger paths, their permitted file operations, operation and
 authorization identity, deterministic record encoding/bindings and recovery.
