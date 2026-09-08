@@ -132,6 +132,7 @@ PUSH_AUTHORITY:
     host: github.com
     node_id:
     provenance:
+  api_verifier_context_id:
   expected_destination:
     kind:
     oid:
@@ -154,6 +155,61 @@ PUSH_AUTHORITY:
       new:
         kind: direct
         value_from: PUSH_SOURCE_OID
+
+REMOTE_COMMIT_AUTHORITY:
+  allowed:
+  profile: github_graphql_existing_branch_replace_v1
+  repository_identity:
+    node_id:
+    numeric_id:
+    provenance:
+  branch_node_id:
+  branch_ref:
+  expected_head_oid:
+  base_tree_oid:
+  paths: []
+  replacement_count: 2
+  content_source: sealed_validated_staged_blobs
+  tree_source: independently_derived_base_tree_plus_replacements
+  max_commits: 1
+  max_attempts: 1
+  message_headline:
+  api_verifier_context_id:
+  api_publisher_context_id:
+  mutation_document_sha256:
+
+LOCAL_SYNC_AUTHORITY:
+  allowed:
+  root:
+  branch_ref:
+  expected_old_oid:
+  new_oid_source: verified_server_commit
+  object_import_url:
+  git_execution_context_reference:
+  hooks_path:
+  max_ref_updates: 1
+
+API_EXECUTION_CONTEXTS:
+  - id:
+    executable_path:
+    executable_sha256:
+    executable_provenance:
+    runtime_version:
+    runtime_identities: []
+    helper_sha256:
+    endpoint: https://api.github.com/graphql
+    request_documents: []
+    request_payload_sha256:
+    environment_names: []
+    environment_sha256:
+    configuration_policy:
+    configuration_sha256:
+    credential_source_reference:
+    credential_accessor:
+    expected_actor:
+    tls_policy:
+    redirect_policy:
+    retry_policy:
 
 PR_AUTHORITY:
   create:
@@ -582,6 +638,9 @@ Require:
 - expected staged-content digest and semantic index manifest, with empty resolve-undo proof;
 - exact nonignored untracked path set and content-identity manifest;
 - exact ignored untracked path set and content-identity manifest;
+- for an API publication lane, the full §12.1 verifier/publisher contexts,
+  anchored repository/Ref/head/base and supported no-redirect client; establish
+  client safety before edits when the operator requires that ordering;
 - when push is enabled, its independently declared repository identity and
   destination old state, validated environment allowlist and executable/path
   identities, and the complete §11 push context before push preparation.
@@ -673,6 +732,8 @@ IMPLEMENT INSIDE THE AUTHORIZED ENVELOPE
 -> RECHECK NONIGNORED AND IGNORED PATH SETS AND CONTENT MANIFESTS
 -> COMPARE EVERY VALUE WITH THE SAME SEALED INPUT STATE
 -> REVALIDATE BEFORE ANY INDEPENDENTLY AUTHORIZED STAGE/COMMIT TRANSITION
+-> IF INDEPENDENTLY AUTHORIZED API PROFILE: REVALIDATE §12.1 CONTEXT AND CANDIDATE
+-> ONE API DISPATCH; VERIFY REMOTE PARENT/TREE/REF; SYNC ONLY IF SEPARATELY AUTHORIZED
 -> CAPTURE FINAL GIT STATE AND TRANSITION EVIDENCE
 ```
 
@@ -708,6 +769,8 @@ Every autonomous lane must return:
 - runtime effect;
 - remote effect and, for push, §11 identity/provenance, expected destination,
   environment-policy/executable proof and all pre/post comparisons;
+- API publication, when authorized: §12.1 request/context/attempt records,
+  full tree/blob and parent/Ref evidence, and separate local-sync outcome;
 - rollback state;
 - final classification.
 
@@ -716,6 +779,12 @@ Codex must not claim success without evidence.
 ---
 
 ## 11. Local Commit Contract
+
+Stage authority and local commit authority are independent. The explicit
+§12.1 API stage-before-validator option changes only the permitted ordering:
+seal authorized working bytes first, verify the exact stage transition, then
+validate and recheck that staged candidate before publication. It never grants
+staging or excuses a filter, path, mode, flag or ref mismatch.
 
 Stage authority and commit authority are independent. If stage authority is
 false, do not stage. If stage authority is true, Codex may stage only the exact
@@ -795,12 +864,26 @@ and a commit-only lane with pre-existing staged content is forbidden unless both
 its exact path set and its staged-content digest match the operator-declared
 baseline immediately before commit.
 
+The ordinary named-remote push profile is unsupported for publication under
+this specification: the command below does not carry the operator-pinned old
+value or immutable repository identity as enforced conditions of the write.
+Its transport restrictions are retained as necessary constraints, not an
+executable publication or dry-run route. PUSH_AUTHORITY.allowed: true fails
+closed before preparation unless a separately reviewed, explicitly authorized
+transport contract establishes both write bindings and its complete declared
+API verifier context. No such Git write-binding mechanism is supplied here;
+URL reads, broad credentials and post-write checks cannot substitute for it.
+The separately authorized API profile in §12.1 has no ordinary Git push fallback.
+
 When `PUSH_AUTHORITY.allowed` is false, omit every other push field. When
-true, `remote`, `push_url`, `repository_identity`, `expected_destination`,
+true, `remote`, `push_url`, `repository_identity`, `api_verifier_context_id`, `expected_destination`,
 `execution_environment_names`, `hooks_path`, `execution_config_sha256`,
 `execution_environment_sha256`, `branch`, `refspec`, and
 `expected_local_ref_transitions` are required operator declarations made
-before execution. `remote` is one exact configured remote name, never an
+before execution. api_verifier_context_id must resolve to the full explicit
+API_EXECUTION_CONTEXTS schema in §§3 and 12.1, even for a separately authorized
+Git transport contract. These declarations do not remove the unsupported
+write-binding stop above. `remote` is one exact configured remote name, never an
 option or URL operand. `branch` is one exact short branch name;
 `refspec.destination` must equal `refs/heads/<branch>`.
 `refspec.source` selects exactly one mode:
@@ -988,46 +1071,15 @@ POST_PUSH_COMPLETE_LOCAL_STATE_RECHECK=YES
 POST_PUSH_REFS_TRANSITION_VERIFIED=YES
 ```
 
-This illustrative push block is usable only inside an explicitly authorized
-envelope with an actual verified lane commit, independently anchored repository
-identity, and verified absent destination and tracking refs. Replace its URL,
-identity/provenance, exact environment-name list, hooks path and digest
-placeholders with verified operator declarations before use; verify and record
-the allowed executable/path identities too. It grants no authority by itself:
+The former plain-push example is disabled because its write bindings are not
+established. The supported API example is in §12.1; it is independently gated.
 
 ```text
 PUSH_AUTHORITY:
-  allowed: true
-  remote: origin
-  push_url: https://github.com/example/project.git
-  repository_identity:
-    provider: github
-    host: github.com
-    node_id: <independently-anchored-repository-node-id>
-    provenance: <trusted-prior-identity-evidence-reference>
-  expected_destination:
-    kind: absent
-  execution_environment_names:
-    - <exact-approved-platform-or-credential-variable-name>
-  hooks_path: C:\VIONA\empty-hooks
-  execution_config_sha256: <verified-fixed-profile-config-sha256>
-  execution_environment_sha256: <verified-child-environment-sha256>
-  branch: docs/example-local-implementation
-  refspec:
-    source:
-      kind: verified_lane_commit
-      selector: last_verified_authorized_commit
-    destination: refs/heads/docs/example-local-implementation
-  expected_local_ref_transitions:
-    - ref: refs/remotes/origin/docs/example-local-implementation
-      old:
-        kind: absent
-      new:
-        kind: direct
-        value_from: PUSH_SOURCE_OID
+  allowed: false
 ```
 
-Ordinary VIONA commit authority uses:
+Ordinary VIONA local commit authority uses:
 
 ```text
 IN_PROGRESS_GIT_OPERATION_CHECK=YES
@@ -1064,6 +1116,286 @@ Separate authority is required for:
 - remote issue, release, or environment write.
 
 Local commit does not imply push. Push does not imply PR. PR does not imply merge. Merge does not imply deploy.
+
+---
+
+### 12.1 Existing-branch API publication profile
+
+REMOTE_COMMIT_AUTHORITY and LOCAL_SYNC_AUTHORITY are independent, default-false
+authorities. Enabled server publication also requires REMOTE_MUTATION_AUTHORITY
+allowed: true with github.createCommitOnBranch explicitly listed; contradictory
+or missing authority fails closed. A disabled block contains only allowed: false. Omit
+API_EXECUTION_CONTEXTS when no enabled operation needs an API context.
+COMMIT_AUTHORITY governs locally authored commits; PUSH_AUTHORITY governs Git
+push. Neither grants server commit creation or local synchronization. An API
+publication creates its one authorized commit on GitHub: it does not require
+a preliminary local commit or authorize an additional commit afterward.
+
+The only supported API publication profile here is
+github_graphql_existing_branch_replace_v1. It supports exactly two existing,
+regular, non-executable text files with unchanged Git mode 100644. Its exact
+paths must equal the operator's MODIFY_ALLOWLIST and the complete candidate
+diff against expected_head_oid; CREATE_ALLOWLIST must be empty. Wildcards,
+new paths, deletions, renames, symlinks, submodules, mode changes, absent-branch
+creation and history rewriting are unsupported. A third path fails closed.
+
+Required bindings address the three findings as follows:
+
+| Finding | Required control |
+| --- | --- |
+| ATOMIC_DESTINATION_PRECONDITION | Include the unchanged expected_head_oid as expectedHeadOid in the actual createCommitOnBranch input; a read-before-write check is not its substitute. |
+| IDENTITY_BOUND_REMOTE_WRITE | Target branch.id using the exact independently verified global Ref node, whose owning repository matches the independently anchored node_id and numeric_id. Do not select the write destination by a mutable repository slug. |
+| DECLARED_API_VERIFIER_CONTEXT | Resolve both api_verifier_context_id and api_publisher_context_id to complete, explicitly declared API_EXECUTION_CONTEXTS records before using either context. |
+
+The repository identity and its trusted provenance must predate the lookup
+being verified. Query that repository node and the declared Ref node; verify
+the Ref's repository, exact name, refs/heads/ prefix and commit target. Verify
+the authorized PR's owning and head repository, exact head Ref/OID, base,
+open/unmerged state, draft policy and auto-merge policy. Never replace an
+expected ID or head with a newly observed value. The local baseline, branch,
+full refs, operation-state, index and worktree controls in §§3, 6 and 11 still
+apply. An explicitly authorized isolated checkout has its own prospective
+baseline; it does not repair or approve historical drift elsewhere.
+
+The selected controls rely on GitHub's published
+[createCommitOnBranch contract](https://docs.github.com/en/graphql/reference/commits#createcommitonbranch)
+and [CommittableBranch/FileChanges types](https://docs.github.com/en/graphql/reference/git).
+The operator must explicitly accept this bounded reliance: no formal linearizability proof
+is claimed; no undocumented Ref-ID reuse or lifetime
+guarantee is claimed. Successful queries do not prove mutation permission.
+Do not reclassify that acceptance as a newly established server guarantee.
+Actual identity mismatch, unsupported context or permission rejection still
+blocks. There is no ordinary Git push fallback.
+
+#### API execution context and request identity
+
+Each referenced context must provide all fields in §3. The same context ID
+may be selected explicitly for verifier and publisher; neither selection may
+be inferred. executable_path is the exact absolute existing runtime/client
+path; executable_sha256 hashes its file bytes. executable_provenance identifies
+its independently trusted installation. runtime_version and runtime_identities
+record the actual runtime and all relevant loaded HTTP/runtime assemblies,
+their exact paths and byte SHA-256 values. helper_sha256 binds the reviewed
+client/helper source bytes and exact launch arguments. A digest of a different
+executable or unreviewed helper is insufficient.
+
+environment_names is the exact closed child-environment allowlist.
+environment_sha256 uses the §11 name/NUL/value-hash/NUL encoding for that API
+process, independently from the Git environment. Retain the actual private
+map for equality checks. Declare any runtime startup transformations and the
+separate exact environment passed to a credential-accessor child. Reject
+proxy/TLS/host overrides, loader injection and debug logging; names or hashes
+never authorize unsafe values. configuration_policy declares the effective
+working directory, trust/configuration sources, HTTP handler settings and
+invocation policy. configuration_sha256 hashes UTF-8 JSON of those validated
+nonsecret records with explicitly fixed field/array ordering; retain the
+records and serialization definition, not only the digest. Secrets are never
+part of public configuration evidence.
+
+credential_source_reference names only the existing approved source and its
+authorization provenance, not its value. credential_accessor declares the
+exact local accessor executable/version/digest, arguments, private pipe and
+child-environment policy, or an explicitly approved equivalent existing
+credential input. An approved private accessor must use no shell, capture
+stdout/stderr privately, and never send the credential to tests, Git, files,
+arguments, environment variables, logs or the transcript. No search, login,
+refresh, account switch or scope increase is implied. Verify expected_actor
+with the declared verifier. Release references and dispose requests; managed
+memory zeroization is not claimed.
+
+For the supported .NET HTTP profile, create HttpClientHandler before use with
+AllowAutoRedirect=false, UseCookies=false, UseDefaultCredentials=false and
+UseProxy=false. tls_policy requires normal platform certificate validation,
+no permissive callback or trust-store changes. Validate HTTPS, exact host
+api.github.com, default port 443, empty userinfo/query/fragment and /graphql
+before each production request. Attach Authorization only to that validated
+request, never as a reusable arbitrary-host client default. Never follow
+Location manually; every 3xx blocks. redirect_policy must retain successful
+dummy-token loopback tests for 301/302/303/307/308, zero requests to the
+Location destination, URL-policy rejection tests and sanitized error-output
+tests, all performed before real credential access. HTTP loopback fixtures
+do not prove that a real HTTPS downgrade attack was exercised.
+
+retry_policy requires no application retry middleware, pagination of a
+mutation, authentication replay or fallback client. Use a fresh handler and
+connection context for publication, HTTP/1.1 exact where supported, and record
+actual runtime behavior. Claim one application dispatch, not proven
+exactly-once network delivery. An installed client that cannot meet these
+controls is unsupported; do not silently substitute it or extract credentials
+through another channel.
+
+request_documents lists exact authorized operation names/types, immutable
+query-document SHA-256 identities and allowed variable bindings. Hash each
+document's exact UTF-8 query string, including whitespace. Queries must contain
+only read operations; publication must contain exactly one top-level
+createCommitOnBranch mutation. After binding variables, seal
+request_payload_sha256 over the exact UTF-8 JSON bytes that will be sent,
+before dispatch; retain that request-specific nonsecret seal separately from
+the fixed context identity. Changing a document, destination, context or input
+after sealing invalidates the request. Do not log Authorization or credential
+values, replacement contents or their Base64 payload.
+
+#### Candidate, dispatch and outcome
+
+Select and authorize sealed_pre_validator_candidate comparison mode explicitly.
+Prepare only the allowed replacements and preserve all other baseline state.
+Staging remains independently authorized under §11. It may occur before the
+API candidate's validators only when the operator explicitly permits that
+order; otherwise validate working content first, then bind the authorized
+stage transition and rerun required candidate validation. No stage authority
+means no staging; pre-existing staged content must already match the exact
+operator-declared paths and content identity. Reject any staged path, flag,
+rename endpoint or filter transformation outside that authority.
+
+Read publication bytes from the verified staged Git blobs. Record each exact
+path, old/new blob OID, unchanged mode, byte length and SHA-256. Verify staged
+bytes equal the tested raw working bytes without text-mode conversion.
+Derive the entire expected tree independently from base_tree_oid plus only
+these replacements; verify the base tree belongs to expected_head_oid.
+Require this AUTHORIZED_TREE to equal git write-tree and independently
+enumerated semantic index entries. Seal all complete local state and execution
+contexts before validators; afterward require those identities unchanged.
+Validator-created files, path-preserving byte changes, ignored/untracked
+changes, index/flag changes, hooks or any unlisted ref change fail closed.
+
+The actual input uses branch: {id: branch_node_id}, expectedHeadOid equal to
+expected_head_oid, the exact message_headline and exactly two unique
+fileChanges.additions entries containing RFC 4648 Base64 of the sealed blob
+bytes. Deletions are omitted; no branchName or repositoryNameWithOwner is
+allowed. FileAddition performs replacement here; it grants no creation scope.
+Validate the response-selection schema read-only before publication.
+
+Immediately before dispatch, reverify the remote identities/head/base, actor,
+contexts, candidate/index/tree and complete sealed local state. Persist and
+flush a nonsecret attempt-intent record with Ref ID, expected head,
+request-payload digest, AUTHORIZED_TREE and correlation ID before calling the
+client, and mark the sole attempt consumed. clientMutationId is correlation
+evidence only, not an idempotency guarantee. Process restart, timeout or an
+ambiguous response must never reset the consumed-attempt marker or budget.
+
+HTTP success alone is insufficient. Reject GraphQL errors, missing/partial
+data and mismatched results. Independently requery the commit and exact Ref:
+require the anchored repository, exactly one parent equal to expected_head_oid,
+and the full resulting tree equal to AUTHORIZED_TREE. Verify both replacement
+blobs/modes and every other tree entry, authorized commit purpose, authenticated
+authorship, PR/Ref target and unchanged protected base. GitHub-generated
+author/committer/signature metadata is permitted; no local commit OID need be
+precomputed. The complete local index, worktree and refs state must remain
+unchanged during publication and verification, before separate synchronization.
+
+On any 3xx, stale-head/permission error, GraphQL error, transport failure,
+timeout or uncertainty, preserve evidence, perform only authorized read-only
+reconciliation, then stop. Never resend, change the expected head, push,
+upload alternate blobs/trees, escalate permission or fabricate rollback.
+A commit found during reconciliation is evidence, not replay authority.
+Do not claim zero remote effects for an ambiguous outcome.
+
+#### Separately authorized local synchronization
+
+LOCAL_SYNC_AUTHORITY must name the exact checkout root, existing direct branch,
+old OID, verified server-commit source, approved object-import URL, sealed Git
+execution context and exact verified-empty external hooks directory. No
+authority applies to another checkout. Import only the literal verified
+server OID and necessary objects when missing: no tags, ref mappings, tracking
+updates, FETCH_HEAD write, submodules, lazy fetch, maintenance or commit-graph
+write. Use the independently verified no-redirect/TLS Git read context and
+only separately approved existing credential inputs; do not pass the API
+credential to Git. Unsupported installed controls or missing objects block.
+
+Verify imported object identity, sole parent and complete tree locally.
+Require symbolic HEAD still attached to the named direct branch at the exact
+old OID, index equal to AUTHORIZED_TREE/server tree, candidate raw bytes and
+all other sealed state unchanged, and live PR/base still as verified. Perform
+one old-value-guarded git update-ref on only that existing branch with explicit
+new and old OIDs and hooks disabled. No local commit, reset, checkout overwrite,
+read-tree repair, stash, merge, rebase or amend is permitted by synchronization.
+
+Afterward, only the declared branch old-to-server transition may differ;
+retain every other direct/symbolic/pseudoref identity, semantic index and raw
+working bytes. Require local HEAD equal to verified remote HEAD and Git-clean
+worktree. Separately authorized object-store/lock/reflog effects are Git
+metadata, not new worktree files. Preserve state and report publication success
+with local-sync-incomplete if synchronization fails; never republish.
+
+Final evidence separates baseline, validated tree/blobs, request/context seals,
+attempt/outcome, server parent/tree/Ref proof, complete pre/post local records,
+and any authorized sync transition. Retain maps and timestamps, not hashes
+alone. PR review/thread actions, human review requests, workflows, Gate, merge
+and deploy still need their own exact authority. A path/status reviewed-scope
+digest does not replace content tree/blob evidence.
+
+#### Typed example, not live session evidence
+
+The following is a partial API envelope example. Angle-bracket values are
+required typed substitutions from independently verified lane evidence, not
+fabricated live identities. All ordinary envelope scope/baseline/validator
+fields still apply. Every typed substitution below must be supplied and verified before use;
+no placeholder or context reference infers permission.
+
+~~~text
+COMMIT_AUTHORITY:
+  allowed: false
+PUSH_AUTHORITY:
+  allowed: false
+REMOTE_COMMIT_AUTHORITY:
+  allowed: true
+  profile: github_graphql_existing_branch_replace_v1
+  repository_identity:
+    node_id: <independently-anchored-repository-node-id>
+    numeric_id: <independently-anchored-repository-numeric-id>
+    provenance: <trusted-existing-identity-evidence-reference>
+  branch_node_id: <verified-global-ref-node-id>
+  branch_ref: refs/heads/<exact-existing-authorized-branch>
+  expected_head_oid: <fixed-authorized-old-commit-oid>
+  base_tree_oid: <that-commit-tree-oid>
+  paths:
+    - docs/ai-context/VIONA_CODEX_CONTROLLED_AUTONOMOUS_EXECUTION_PROTOCOL.md
+    - docs/product/VIONA_CODEX_AUTONOMOUS_EXECUTION_ENVELOPE_SPEC.md
+  replacement_count: 2
+  content_source: sealed_validated_staged_blobs
+  tree_source: independently_derived_base_tree_plus_replacements
+  max_commits: 1
+  max_attempts: 1
+  message_headline: <exact-authorized-commit-subject>
+  api_verifier_context_id: api_context
+  api_publisher_context_id: api_context
+  mutation_document_sha256: <sealed-exact-mutation-document-sha256>
+LOCAL_SYNC_AUTHORITY:
+  allowed: true
+  root: <explicitly-authorized-absolute-checkout-root>
+  branch_ref: refs/heads/<same-exact-existing-authorized-branch>
+  expected_old_oid: <same-fixed-authorized-old-commit-oid>
+  new_oid_source: verified_server_commit
+  object_import_url: https://github.com/example/project.git
+  git_execution_context_reference: <complete-approved-Git-read-and-update-context>
+  hooks_path: <verified-empty-external-absolute-hooks-directory>
+  max_ref_updates: 1
+REMOTE_MUTATION_AUTHORITY:
+  allowed: true
+  operations:
+    - github.createCommitOnBranch
+API_EXECUTION_CONTEXTS:
+  - id: api_context
+    executable_path: <trusted-existing-absolute-runtime-path>
+    executable_sha256: <verified-executable-byte-sha256>
+    executable_provenance: <independent-installed-runtime-evidence>
+    runtime_version: <actual-runtime-version>
+    runtime_identities: <exact-HTTP-and-runtime-assembly-paths-and-sha256-values>
+    helper_sha256: <reviewed-helper-source-byte-sha256>
+    endpoint: https://api.github.com/graphql
+    request_documents: <approved-names-types-query-sha256-and-variable-bindings>
+    request_payload_sha256: <per-request-sealed-exact-UTF8-JSON-byte-sha256>
+    environment_names: <exact-closed-API-process-environment-name-list>
+    environment_sha256: <verified-name-NUL-value-hash-NUL-sha256>
+    configuration_policy: <exact-working-directory-launch-arguments-and-effective-trust-handler-records>
+    configuration_sha256: <canonical-nonsecret-configuration-record-sha256>
+    credential_source_reference: <approved-existing-OAuth-source-provenance>
+    credential_accessor: <exact-existing-accessor-identity-arguments-private-pipe-and-child-environment>
+    expected_actor: <independently-authorized-account-login>
+    tls_policy: platform_validation_no_bypass
+    redirect_policy: tested_handler_no_redirect_no_manual_follow
+    retry_policy: one_application_dispatch_no_replay_fresh_HTTP1_1_context
+~~~
 
 ---
 
@@ -1361,6 +1693,12 @@ COMMIT_AUTHORITY:
   merge_commit_allowed: false
 
 PUSH_AUTHORITY:
+  allowed: false
+
+REMOTE_COMMIT_AUTHORITY:
+  allowed: false
+
+LOCAL_SYNC_AUTHORITY:
   allowed: false
 
 PR_AUTHORITY:

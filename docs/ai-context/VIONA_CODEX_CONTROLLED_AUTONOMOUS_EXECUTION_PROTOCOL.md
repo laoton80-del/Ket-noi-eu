@@ -328,6 +328,11 @@ If the requested docs need evidence from runtime tests, Codex may run non-deploy
 
 ### 7.1 Stage gate
 
+For the explicitly authorized §7.6 API stage-before-validator order, seal the
+working bytes, verify the exact stage transition, then validate and recheck
+that candidate before publication. All path/content/flag/ref constraints below
+remain mandatory; the ordering exception grants no staging authority itself.
+
 Staging requires explicit authorization. When authorized, Codex must stage exact
 paths only. Stage-only lanes are valid and do not require commit authority.
 Before staging, revalidate the last verified state. After staging, require the
@@ -352,11 +357,15 @@ git add -A
 git add --all
 ```
 
-### 7.2 Commit gate
+### 7.2 Local commit gate
 
 Committing requires explicit authorization and an expected subject or commit purpose. Codex must verify staged paths before committing.
 
-Before any commit-authorized operation, Codex must reject any in-progress Git
+This gate governs local commit creation. Server commit creation uses the
+independent REMOTE_COMMIT_AUTHORITY contract in §7.6; it does not implicitly
+invoke this local gate or authorize another commit.
+
+Before any local commit-authorized operation, Codex must reject any in-progress Git
 operation that can alter commit ancestry or commit semantics. The check must
 include merge, rebase, cherry-pick, revert, bisect, and equivalent operation
 markers such as `MERGE_HEAD`, `rebase-merge`, `rebase-apply`,
@@ -425,6 +434,13 @@ git status --short --branch
 
 ### 7.3 Push gate
 
+The retained ordinary named-remote push profile is unsupported until a
+separately reviewed transport contract establishes both the declared old-value
+write precondition and immutable repository write binding. The recipe below
+alone establishes neither, so an enabled ordinary push must fail closed before
+preparation, including dry-runs. API publication uses §7.6 only when separately
+authorized; there is no ordinary Git push fallback.
+
 Push requires explicit authorization. A local branch or local commit does
 not imply push permission. Require the full envelope spec §11 push contract:
 one exact expanded GitHub.com HTTPS `push_url`, independently declared immutable
@@ -488,6 +504,60 @@ Merge and deploy each require explicit authorization. A green PR does not imply 
 
 ---
 
+### 7.6 Existing-branch API publication and separate local sync
+
+REMOTE_COMMIT_AUTHORITY is separate from local COMMIT_AUTHORITY and Git
+PUSH_AUTHORITY. Only the explicitly authorized
+github_graphql_existing_branch_replace_v1 profile in envelope spec §12.1 is
+supported here. It creates one server commit replacing exactly two existing
+100644 text files at exact modify-authorized paths, without creating files,
+changing modes or rewriting history. No preliminary local commit is implied.
+
+Use branch.id targeting the declared global Ref verified against an
+independently anchored repository, with fixed expectedHeadOid in the actual
+createCommitOnBranch input. Read-before-write checks are not write constraints.
+The accepted reliance is GitHub's published bounded contract: no formal linearizability proof
+is claimed; no undocumented Ref-ID reuse or lifetime guarantee is claimed.
+Successful queries do not prove mutation permission. There is no ordinary Git push fallback.
+
+Both verifier and publisher must resolve their explicitly named complete API
+execution contexts in spec §§3 and 12.1, including executable/runtime/helper
+identities and provenance, environment and configuration/trust policy,
+credential-source/accessor reference, expected actor, endpoint, request and
+payload identities, actual no-redirect behavior and retry policy. Verify the
+client before acquiring credentials and before edits when required by the
+operator. Unsupported clients or missing bindings fail closed; token values
+must never enter evidence, shell output, files, arguments or environment.
+
+Preserve all local baseline, exact-path, index/flag, hook, operation-state,
+ignored/nonignored and complete-ref protections. Stage only with independent
+STAGE_AUTHORITY. Seal and test the exact candidate; bind staged blob bytes and
+their unchanged modes to the tested raw working bytes, independently derive
+AUTHORIZED_TREE from the pinned base tree plus only those replacements, and
+compare the full candidate index tree. Recheck all sealed state after validators
+and immediately before publication. Do not accept validator-created deltas.
+
+Persist the exact request digest and consumed-attempt marker before one
+application dispatch. No redirect, pagination, retry wrapper, authentication
+replay or alternate writer is allowed. On an error or ambiguous result, retain
+evidence, perform read-only reconciliation and stop without a second attempt.
+Correlation IDs do not grant idempotency. Verify the server repository/Ref,
+one parent equal to the fixed expected head, full tree and replacement blobs,
+authorized purpose/authorship, PR target and protected base independently.
+Server-generated commit metadata is permitted. Local state remains unchanged
+until the separately authorized synchronization transition.
+
+LOCAL_SYNC_AUTHORITY names one exact checkout, object-import context and one
+old-value-guarded update-ref from the declared old OID to the verified server
+commit. Require matching index/tree/raw worktree bytes before changing that
+ref; no local commit, overwrite or repair is implied. Recheck all other refs
+and complete local state afterward. A lane-specific isolated baseline never
+retroactively approves drift or synchronizes an unrelated checkout.
+Report server publication and local synchronization outcomes separately.
+See spec §12.1 for the complete schema, request, verification and failure rules.
+
+---
+
 ## 8. VIONA Safety Surfaces
 
 ### 8.1 SOS / Global Lifeline
@@ -547,6 +617,10 @@ Codex may proceed without asking another question only when all of these are tru
 7. validation commands are safe for the lane;
 8. the final state can be verified.
 
+An explicitly authorized API lane proceeds only through §7.6 after candidate
+validation and complete context/state checks, then through separately authorized
+local synchronization. A2/A2C or local packaging never implies either operation.
+
 Codex must stop and report when any of these is false.
 
 ---
@@ -581,6 +655,7 @@ Every controlled autonomous lane should end with:
 | Staged | Exact staged paths/content identity, semantic index manifest, empty resolve-undo proof, and any verified stage transition |
 | Commit | Commit hash or `none`; PRE_COMMIT_HEAD, AUTHORIZED_TREE, resulting tree and parent proof when committed |
 | Push | No attempt, verified success, failure, or uncertain result; independent repository identity/provenance, expected/observed destination, environment-policy and executable proofs, endpoint/config/environment digests, hooks-disabled proof and complete pre/post local-state comparisons for every attempt |
+| API publication | Explicit context/request/attempt records, independently verified server parent/tree/Ref and separate local-sync outcome under §7.6; `none` when unused |
 | PR | `zero` unless authorized and completed |
 | Runtime/source | `zero` for docs-only lanes |
 | Validation | Commands run, pass/fail result, comparison source, sealed input identities, and every post-validator state comparison |
