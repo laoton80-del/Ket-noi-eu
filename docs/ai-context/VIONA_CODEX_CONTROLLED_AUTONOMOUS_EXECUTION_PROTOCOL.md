@@ -523,8 +523,15 @@ Successful queries do not prove mutation permission. There is no ordinary Git pu
 Both verifier and publisher must resolve their explicitly named complete API
 execution contexts in spec §§3 and 12.1, including executable/runtime/helper
 identities and provenance, environment and configuration/trust policy,
-credential-source/accessor reference, expected actor, endpoint, request and
-payload identities, actual no-redirect behavior and retry policy. Verify the
+credential-source/accessor reference, expected actor, endpoint, approved operation
+documents, actual no-redirect behavior and retry policy. Stable
+API_EXECUTION_CONTEXTS do not contain one payload hash for multiple requests.
+API_REQUEST_RECORDS appends a distinct ID, context, operation/type, query digest,
+authorized variable sources, actual payload digest, phase and purpose for every
+call. Bind legitimate variables first, seal final UTF-8 bytes and send that
+retained buffer. Shared contexts, pagination and repeated queries still require
+distinct records; never overwrite previous seals or fabricate future server
+OIDs/hashes. Unknown operations, sources or changed sealed bytes fail closed. Verify the
 client before acquiring credentials and before edits when required by the
 operator. Unsupported clients or missing bindings fail closed; token values
 must never enter evidence, shell output, files, arguments or environment.
@@ -537,8 +544,32 @@ AUTHORIZED_TREE from the pinned base tree plus only those replacements, and
 compare the full candidate index tree. Recheck all sealed state after validators
 and immediately before publication. Do not accept validator-created deltas.
 
-Persist the exact request digest and consumed-attempt marker before one
-application dispatch. No redirect, pagination, retry wrapper, authentication
+Require the referenced EXPECTED_PR_BINDING before publication: exact PR node ID
+AND number, owning/head/base repository IDs, head Ref/branch/OID, full base ref
+and fixed base OID, OPEN/unmerged/non-draft state and disabled auto-merge. Query
+that declared PR, never select one by branch search. Before/after comparisons
+retain all conditions; only the post-publication head becomes the independently
+verified SERVER_COMMIT. Do not repair a mismatch. These reads do not atomically
+lock PR metadata or replace the server expectedHeadOid condition.
+
+DURABLE_ATTEMPT_AUTHORITY must separately authorize exact external marker and
+existing evidence-ledger paths, their permitted file operations, operation and
+authorization identity, deterministic record encoding/bindings and recovery.
+Validate real local storage/paths, preserve prior attempts, and block a missing
+marker after reservation evidence. Reserve using FileMode.CreateNew and
+FileShare.None, write the complete nonsecret consumed-intent, call the actual
+FileStream.Flush(true), and verify bytes/bindings through the same held handle.
+Only that creating/verifying process may make one application dispatch; retain
+the exclusive handle through dispatch and outcome recording. Never use an
+exists-then-overwrite check or claim the complete JSON write is indivisible.
+Existing, partial, corrupt, mismatched, unreadable or uncertain markers and
+persistence failures block. Restart permits read-only reconciliation, never
+replay, even from a valid marker. Keep the marker permanently; no truncation,
+replacement, deletion or operation-ID/path change may restore allowance.
+A separately authorized successor preserves prior records and budget. This
+local process-restart contract does not claim immunity to privileged deletion,
+backup restoration, storage failure, every power-loss case or distributed
+exactly-once delivery. Fixtures never authorize a production request. No redirect, pagination, retry wrapper, authentication
 replay or alternate writer is allowed. On an error or ambiguous result, retain
 evidence, perform read-only reconciliation and stop without a second attempt.
 Correlation IDs do not grant idempotency. Verify the server repository/Ref,
@@ -655,7 +686,7 @@ Every controlled autonomous lane should end with:
 | Staged | Exact staged paths/content identity, semantic index manifest, empty resolve-undo proof, and any verified stage transition |
 | Commit | Commit hash or `none`; PRE_COMMIT_HEAD, AUTHORIZED_TREE, resulting tree and parent proof when committed |
 | Push | No attempt, verified success, failure, or uncertain result; independent repository identity/provenance, expected/observed destination, environment-policy and executable proofs, endpoint/config/environment digests, hooks-disabled proof and complete pre/post local-state comparisons for every attempt |
-| API publication | Explicit context/request/attempt records, independently verified server parent/tree/Ref and separate local-sync outcome under §7.6; `none` when unused |
+| API publication | DURABLE_ATTEMPT_AUTHORITY storage/operation/marker persistence and recovery evidence; every API_REQUEST_RECORDS seal; EXPECTED_PR_BINDING pre/post equality; context fingerprints, dispatch/outcome, server parent/tree/Ref and separate local-sync proof under §7.6; `none` when unused |
 | PR | `zero` unless authorized and completed |
 | Runtime/source | `zero` for docs-only lanes |
 | Validation | Commands run, pass/fail result, comparison source, sealed input identities, and every post-validator state comparison |

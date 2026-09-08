@@ -177,6 +177,46 @@ REMOTE_COMMIT_AUTHORITY:
   api_verifier_context_id:
   api_publisher_context_id:
   mutation_document_sha256:
+  operation_id:
+  durable_attempt_authority_id:
+  expected_pr_binding_id:
+
+DURABLE_ATTEMPT_AUTHORITY:
+  allowed:
+  id:
+  operation_id:
+  authorization_reference:
+  marker_path:
+  evidence_ledger_path:
+  local_file_operations:
+    marker: [create_new_exclusive, write_initial_record, flush_to_disk, read_same_handle, read_existing_for_reconciliation, retain]
+    ledger: [append_nonsecret_records, flush_to_disk, read]
+  storage_contract: verified_local_fixed_NTFS_real_paths
+  record_version: 1
+  record_encoding: UTF8_no_BOM_ordered_compact_JSON_no_newline
+  record_field_order: [record_version, encoding, operation_id, authorization, marker_path, consumed, repository_node_id, repository_numeric_id, pr_node_id, pr_number, head_ref_node_id, head_ref, expected_head_oid, authorized_tree, request_id, request_payload_sha256, clientMutationId, context_id, helper_sha256]
+  reservation: FileMode.CreateNew
+  sharing: FileShare.None
+  persistence: FileStream.Flush(true)
+  recovery: existing_or_uncertain_means_read_only_reconciliation
+
+EXPECTED_PR_BINDING:
+  required:
+  id:
+  number:
+  node_id:
+  owning_repository_node_id:
+  head_repository_node_id:
+  base_repository_node_id:
+  head_ref_node_id:
+  head_ref:
+  expected_head_oid:
+  base_ref:
+  expected_base_oid:
+  state: OPEN
+  merged: false
+  draft: false
+  auto_merge: disabled
 
 LOCAL_SYNC_AUTHORITY:
   allowed:
@@ -199,7 +239,6 @@ API_EXECUTION_CONTEXTS:
     helper_sha256:
     endpoint: https://api.github.com/graphql
     request_documents: []
-    request_payload_sha256:
     environment_names: []
     environment_sha256:
     configuration_policy:
@@ -210,6 +249,17 @@ API_EXECUTION_CONTEXTS:
     tls_policy:
     redirect_policy:
     retry_policy:
+
+API_REQUEST_RECORDS:
+  - request_id:
+    context_id:
+    operation_name:
+    operation_type:
+    query_document_sha256:
+    authorized_variable_binding_sources:
+    request_payload_sha256:
+    phase:
+    purpose:
 
 PR_AUTHORITY:
   create:
@@ -1125,7 +1175,12 @@ REMOTE_COMMIT_AUTHORITY and LOCAL_SYNC_AUTHORITY are independent, default-false
 authorities. Enabled server publication also requires REMOTE_MUTATION_AUTHORITY
 allowed: true with github.createCommitOnBranch explicitly listed; contradictory
 or missing authority fails closed. A disabled block contains only allowed: false. Omit
-API_EXECUTION_CONTEXTS when no enabled operation needs an API context.
+API_EXECUTION_CONTEXTS and API_REQUEST_RECORDS when no enabled operation needs an API context.
+Enabled publication must reference its single DURABLE_ATTEMPT_AUTHORITY and
+EXPECTED_PR_BINDING by exact ID, with matching operation_id and authorization.
+A disabled DURABLE_ATTEMPT_AUTHORITY contains only allowed: false; an unused
+EXPECTED_PR_BINDING contains only required: false. No disabled block supplies
+an implicit marker, PR, request, storage or publication permission.
 COMMIT_AUTHORITY governs locally authored commits; PUSH_AUTHORITY governs Git
 push. Neither grants server commit creation or local synchronization. An API
 publication creates its one authorized commit on GitHub: it does not require
@@ -1150,8 +1205,19 @@ Required bindings address the three findings as follows:
 The repository identity and its trusted provenance must predate the lookup
 being verified. Query that repository node and the declared Ref node; verify
 the Ref's repository, exact name, refs/heads/ prefix and commit target. Verify
-the authorized PR's owning and head repository, exact head Ref/OID, base,
-open/unmerged state, draft policy and auto-merge policy. Never replace an
+the EXPECTED_PR_BINDING number AND node_id, owning/head/base repository IDs,
+exact head Ref/OID, base_ref/OID and required open/unmerged/non-draft state with
+auto-merge disabled. All three repository IDs must equal the independently
+anchored repository; head_ref_node_id, head_ref and expected_head_oid must match
+REMOTE_COMMIT_AUTHORITY. Bind base_ref as a full refs/heads/... name. Query the
+exact PR node or the independently anchored repository plus declared number,
+then compare both identities; never choose a PR from branch search results.
+Missing declarations or mismatches block; observations do not fill authority.
+Recheck before dispatch and after publication. Only expected_head_oid may
+transition to the independently verified SERVER_COMMIT afterward; all other
+conditions remain required. Never reopen, retarget or repair the PR to pass.
+These read-only checks do not atomically lock PR metadata; they are separate
+from the server's expectedHeadOid condition. Never replace an
 expected ID or head with a newly observed value. The local baseline, branch,
 full refs, operation-state, index and worktree controls in §§3, 6 and 11 still
 apply. An explicitly authorized isolated checkout has its own prospective
@@ -1224,16 +1290,44 @@ exactly-once network delivery. An installed client that cannot meet these
 controls is unsupported; do not silently substitute it or extract credentials
 through another channel.
 
-request_documents lists exact authorized operation names/types, immutable
-query-document SHA-256 identities and allowed variable bindings. Hash each
-document's exact UTF-8 query string, including whitespace. Queries must contain
-only read operations; publication must contain exactly one top-level
-createCommitOnBranch mutation. After binding variables, seal
-request_payload_sha256 over the exact UTF-8 JSON bytes that will be sent,
-before dispatch; retain that request-specific nonsecret seal separately from
-the fixed context identity. Changing a document, destination, context or input
-after sealing invalidates the request. Do not log Authorization or credential
-values, replacement contents or their Base64 payload.
+request_documents is the stable context allowlist of exact operation names/types,
+query-document SHA-256 identities and authorized variable-binding sources.
+It is not a place for one payload hash shared by multiple calls. Hash each
+document's exact UTF-8 query string, including whitespace. Queries contain only
+reads; publication contains exactly one top-level createCommitOnBranch write.
+
+API_REQUEST_RECORDS is append-only execution evidence in the separately
+authorized external evidence ledger. For each actual request, after its variables
+are legitimately bound and before sending, append one complete record with a
+unique request_id, declared context_id, operation_name/type, query_document_sha256,
+authorized_variable_binding_sources, request_payload_sha256, phase and purpose.
+All fields in an actual record are required. Unknown contexts, operations,
+query hashes or value sources fail closed. A shared verifier/publisher context
+is valid; the same context still requires distinct request records and seals.
+Paginated and repeated queries each get a new request_id and a record of their
+actual bound variables' payload identity, even if identical bytes yield the
+same digest. Never overwrite an earlier record with a later hash.
+
+Serialize the final request body to UTF-8 bytes after binding variables, hash
+those exact bytes with SHA-256, retain the byte buffer and send that sealed
+buffer. Do not reconstruct JSON after sealing. Verify any private-pipe byte
+transfer against the seal before dispatch. The seal covers the request body,
+not the request record containing its own hash; no self-reference is required.
+Sealing grants no operation, storage or credential authority.
+
+Declare permissible variable sources before execution, not fabricated future
+values or hashes. Publication values come only from fixed destination/PR
+declarations and sealed staged candidate bytes. Verification may use an actual
+SERVER_COMMIT only after a successful response establishes that commit and its
+repository/parent/tree bindings, followed by independent verification. A future
+request record is absent until that request can be constructed; its absence
+does not permit premature dispatch. A later verified server OID never replaces
+the fixed expected head of the consumed publication request. Each metadata
+mutation also receives its own seal and has no automatic replay on ambiguity.
+
+Never log Authorization, credential values, replacement contents or Base64.
+The nonsecret request record retains identities and authorized source references,
+not secret variable values.
 
 #### Candidate, dispatch and outcome
 
@@ -1266,12 +1360,57 @@ allowed. FileAddition performs replacement here; it grants no creation scope.
 Validate the response-selection schema read-only before publication.
 
 Immediately before dispatch, reverify the remote identities/head/base, actor,
-contexts, candidate/index/tree and complete sealed local state. Persist and
-flush a nonsecret attempt-intent record with Ref ID, expected head,
-request-payload digest, AUTHORIZED_TREE and correlation ID before calling the
-client, and mark the sole attempt consumed. clientMutationId is correlation
-evidence only, not an idempotency guarantee. Process restart, timeout or an
-ambiguous response must never reset the consumed-attempt marker or budget.
+contexts, candidate/index/tree and complete sealed local state. use the declared DURABLE_ATTEMPT_AUTHORITY; no implicit evidence-file write is
+permitted. Its marker_path and evidence_ledger_path are exact absolute paths
+outside the checkout, with independently granted operations for each file.
+Verify real parents/files, absence of links/reparse points or repository aliases,
+and the declared local fixed NTFS storage contract. The evidence ledger must
+already exist under separate exact create authority; append permission does
+not grant creation, replacement or truncation. Parent-directory creation also
+needs separate exact authority. Fixtures never satisfy the production marker.
+
+The durable block declares an operator-supplied operation_id and authorization
+reference, record version/encoding/field order, exclusive reservation, persistence
+and recovery rules. Its operation_id must match REMOTE_COMMIT_AUTHORITY. The
+consumed-intent record uses the ordered field names in §3: identities come from
+the anchored repository and EXPECTED_PR_BINDING; expected_head_oid comes from
+the fixed publication authority; authorized_tree comes from the independently
+derived tested candidate; request_id/payload digest/context_id come from that
+publication's API_REQUEST_RECORDS entry; helper_sha256 is the verified client
+source. consumed is true, record_version is integer 1, PR/repository numbers
+are integers, OIDs and SHA-256 values are lowercase hexadecimal, and other
+identity/reference fields are exact strings. Encode fixed-order compact JSON
+as UTF-8 without BOM or trailing newline. The marker does not contain its own
+hash; record its byte SHA-256 separately after successful read-back.
+
+Before trying reservation, check retained evidence for this operation. A missing marker
+after any reservation/dispatch evidence blocks; it never restores allowance.
+Append and flush a nonsecret reservation-intent event to the authorized ledger.
+Reserve the exact marker with FileMode.CreateNew and FileShare.None, using a
+read/write FileStream. CreateNew is the exclusive reservation; an exists-check
+followed by overwrite is forbidden. Write the complete consumed-intent bytes,
+call the actual FileStream.Flush(true), then read back through the same held handle
+and verify exact length/bytes, decoding and every fixed binding before dispatch.
+The process must retain this exclusive handle through the one dispatch and
+outcome recording, then close it without modifying or deleting the marker.
+Only the process that created, persisted and verified that marker may dispatch.
+No validator or evidence update may create a third checkout path.
+
+Any existing marker, sharing violation, malformed/partial record, wrong binding,
+unreadable record, write/flush/read-back failure or storage-integrity uncertainty
+forbids dispatch. A partial JSON write is consumed/uncertain evidence; the whole
+JSON write is not claimed indivisible. Existing markers after restart allow only
+read-only reconciliation, including when valid and no server effect is found.
+Never truncate, replace, delete, reuse or resume sending from a marker. A new
+path or operation_id requires separate operator authority; the executor cannot
+mint a successor to reset a budget. A separately authorized successor operation
+preserves the prior consumed record and prior budget accounting.
+
+This is conservative process-restart recovery under the validated local
+filesystem contract. It is not immunity to privileged deletion, restored
+backups, storage failure or every power-loss scenario, and it is not distributed
+exactly-once delivery. Storage uncertainty fails closed. clientMutationId is
+correlation only, not an idempotency guarantee.
 
 HTTP success alone is insufficient. Reject GraphQL errors, missing/partial
 data and mismatched results. Independently requery the commit and exact Ref:
@@ -1317,9 +1456,14 @@ worktree. Separately authorized object-store/lock/reflog effects are Git
 metadata, not new worktree files. Preserve state and report publication success
 with local-sync-incomplete if synchronization fails; never republish.
 
-Final evidence separates baseline, validated tree/blobs, request/context seals,
-attempt/outcome, server parent/tree/Ref proof, complete pre/post local records,
-and any authorized sync transition. Retain maps and timestamps, not hashes
+Final evidence retains the resolved DURABLE_ATTEMPT_AUTHORITY and EXPECTED_PR_BINDING,
+exact authorized storage paths/operations, operation/authorization identity,
+marker bytes/digest and reservation/Flush(true)/same-handle read-back/outcome
+results. Retain every API_REQUEST_RECORDS entry and context fingerprint, exact
+PR pre/post comparisons, tested tree/blobs, server parent/tree/Ref proof,
+complete pre/post local records and any separately authorized sync transition.
+Report reservation, application dispatch and server outcome separately; a
+reserved or partial marker with zero sends still forbids a fresh attempt. Retain maps and timestamps, not hashes
 alone. PR review/thread actions, human review requests, workflows, Gate, merge
 and deploy still need their own exact authority. A path/status reviewed-scope
 digest does not replace content tree/blob evidence.
@@ -1360,6 +1504,44 @@ REMOTE_COMMIT_AUTHORITY:
   api_verifier_context_id: api_context
   api_publisher_context_id: api_context
   mutation_document_sha256: <sealed-exact-mutation-document-sha256>
+  operation_id: <separately-authorized-successor-operation-id>
+  durable_attempt_authority_id: publication_attempt
+  expected_pr_binding_id: declared_pr
+DURABLE_ATTEMPT_AUTHORITY:
+  allowed: true
+  id: publication_attempt
+  operation_id: <same-separately-authorized-successor-operation-id>
+  authorization_reference: <explicit-current-operator-authorization>
+  marker_path: <exact-authorized-absolute-external-marker-path>
+  evidence_ledger_path: <exact-authorized-absolute-external-ledger-path>
+  local_file_operations:
+    marker: [create_new_exclusive, write_initial_record, flush_to_disk, read_same_handle, read_existing_for_reconciliation, retain]
+    ledger: [append_nonsecret_records, flush_to_disk, read]
+  storage_contract: verified_local_fixed_NTFS_real_paths
+  record_version: 1
+  record_encoding: UTF8_no_BOM_ordered_compact_JSON_no_newline
+  record_field_order: [record_version, encoding, operation_id, authorization, marker_path, consumed, repository_node_id, repository_numeric_id, pr_node_id, pr_number, head_ref_node_id, head_ref, expected_head_oid, authorized_tree, request_id, request_payload_sha256, clientMutationId, context_id, helper_sha256]
+  reservation: FileMode.CreateNew
+  sharing: FileShare.None
+  persistence: FileStream.Flush(true)
+  recovery: existing_or_uncertain_means_read_only_reconciliation
+EXPECTED_PR_BINDING:
+  required: true
+  id: declared_pr
+  number: <explicit-authorized-PR-integer>
+  node_id: <explicit-authorized-PR-node-id>
+  owning_repository_node_id: <same-anchored-repository-node-id>
+  head_repository_node_id: <same-anchored-repository-node-id>
+  base_repository_node_id: <same-anchored-repository-node-id>
+  head_ref_node_id: <same-verified-global-ref-node-id>
+  head_ref: refs/heads/<same-exact-existing-authorized-branch>
+  expected_head_oid: <same-fixed-authorized-old-commit-oid>
+  base_ref: refs/heads/<explicit-authorized-base-branch>
+  expected_base_oid: <fixed-authorized-base-commit-oid>
+  state: OPEN
+  merged: false
+  draft: false
+  auto_merge: disabled
 LOCAL_SYNC_AUTHORITY:
   allowed: true
   root: <explicitly-authorized-absolute-checkout-root>
@@ -1384,7 +1566,6 @@ API_EXECUTION_CONTEXTS:
     helper_sha256: <reviewed-helper-source-byte-sha256>
     endpoint: https://api.github.com/graphql
     request_documents: <approved-names-types-query-sha256-and-variable-bindings>
-    request_payload_sha256: <per-request-sealed-exact-UTF8-JSON-byte-sha256>
     environment_names: <exact-closed-API-process-environment-name-list>
     environment_sha256: <verified-name-NUL-value-hash-NUL-sha256>
     configuration_policy: <exact-working-directory-launch-arguments-and-effective-trust-handler-records>
@@ -1395,7 +1576,43 @@ API_EXECUTION_CONTEXTS:
     tls_policy: platform_validation_no_bypass
     redirect_policy: tested_handler_no_redirect_no_manual_follow
     retry_policy: one_application_dispatch_no_replay_fresh_HTTP1_1_context
+API_REQUEST_RECORDS:
+  - request_id: <unique-preflight-request-id-created-when-bound>
+    context_id: api_context
+    operation_name: <declared-preflight-query-name>
+    operation_type: query
+    query_document_sha256: <actual-approved-query-document-sha256>
+    authorized_variable_binding_sources: <fixed-declared-repository-PR-Ref-identities>
+    request_payload_sha256: <actual-preflight-byte-seal-after-binding>
+    phase: preflight
+    purpose: verify_declared_PR_and_destination
+  - request_id: <different-publication-request-id-created-when-bound>
+    context_id: api_context
+    operation_name: <declared-publication-mutation-name>
+    operation_type: mutation
+    query_document_sha256: <actual-approved-mutation-document-sha256>
+    authorized_variable_binding_sources: <fixed-destination-plus-sealed-staged-candidate>
+    request_payload_sha256: <actual-publication-byte-seal-after-binding>
+    phase: publication
+    purpose: create_one_authorized_successor_commit
 ~~~
+
+These two records illustrate distinct requests using the same context. Every
+placeholder is a type/value-source illustration, not live evidence or authority.
+In a real lane append each record only when its bytes exist and are sealed;
+do not populate the second record or a future verification record in advance.
+Later read/metadata calls append their own complete records and require their
+own applicable authority. The marker references only the actual publication
+request record, never a fixture or verifier record.
+
+Trace every enabled requirement through its declaration and evidence:
+
+| Requirement | Schema and authorized source | Permitted action and check | Failure/restart and example |
+| --- | --- | --- | --- |
+| Durable attempt | DURABLE_ATTEMPT_AUTHORITY, operator-granted exact external paths and operation_id | CreateNew/None, write once, Flush(true), same-handle read-back, retained handle through dispatch/outcome | Existing, partial, missing-after-evidence or uncertain state blocks; typed publication_attempt example |
+| Request identity | Stable API_EXECUTION_CONTEXTS plus append-only API_REQUEST_RECORDS, declared variable sources | Bind legitimate variables, seal exact UTF-8 buffer, verify and send those bytes once | Changed bytes/unknown source blocks; distinct preflight/publication example records |
+| PR identity | EXPECTED_PR_BINDING referenced by publication, operator-provided IDs/state | Verify node AND number, all repository/head/base/state fields before/after | Any mismatch blocks without repair; only verified post-publication head transition |
+
 
 ---
 
@@ -1697,6 +1914,12 @@ PUSH_AUTHORITY:
 
 REMOTE_COMMIT_AUTHORITY:
   allowed: false
+
+DURABLE_ATTEMPT_AUTHORITY:
+  allowed: false
+
+EXPECTED_PR_BINDING:
+  required: false
 
 LOCAL_SYNC_AUTHORITY:
   allowed: false
