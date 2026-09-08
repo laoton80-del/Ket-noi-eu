@@ -64,11 +64,15 @@ Codex must verify the local repository state before performing any approved muta
 
 - repository top-level;
 - branch;
-- HEAD;
+- HEAD and complete logical refs identity;
+- unstaged tracked paths, raw diff metadata, and raw-byte content manifest;
 - staged diff;
 - unstaged tracked diff;
-- untracked paths;
+- nonignored untracked paths and their deterministic content identities;
+- ignored untracked paths and their deterministic content identities;
 - relevant source/runtime/package drift.
+
+Inventorying an ignored or nonignored untracked path is evidence only. It does not grant mutation, staging, commit, execution, disclosure, or use authority over that path.
 
 If the actual state does not match the operator's baseline, Codex stops instead of repairing the baseline silently.
 
@@ -86,7 +90,7 @@ Every controlled lane must be expressible as a finite budget:
 
 | Mutation type | Required declaration |
 | --- | --- |
-| File edits | Exact paths or exact count plus documentation-only class |
+| File edits | Explicit exact paths; file count and documentation class are budget or evidence metadata only |
 | Stage | Yes or no, with exact path list when yes |
 | Commit | Yes or no, with expected subject when yes |
 | Push | Yes or no, with target branch when yes |
@@ -98,15 +102,23 @@ Every controlled lane must be expressible as a finite budget:
 
 If a lane says zero for a mutation class, Codex must not perform that mutation class.
 
+All repository file mutation authority requires explicit exact paths. A
+documentation class may describe the work type, and a file count may record a
+budget or evidence, but neither can substitute for exact paths. Wildcards,
+broad categories, or inferred paths such as `related files`, `supporting files`,
+or `as needed` do not grant file mutation authority.
+
 ### 3.4 Fail closed
 
 Codex must stop on:
 
 - branch mismatch;
-- HEAD mismatch;
+- HEAD or complete refs identity mismatch;
 - unexpected staged content;
 - unexpected tracked diff;
-- unexpected untracked paths outside the approved packet;
+- unexpected tracked content-identity drift;
+- unexpected nonignored or ignored untracked path state;
+- unexpected untracked content-identity drift;
 - validation mutation;
 - source/runtime drift in a docs-only lane;
 - failed `git diff --check` where remediation is not explicitly authorized;
@@ -164,9 +176,115 @@ git rev-parse --show-toplevel
 git branch --show-current
 git rev-parse HEAD
 git status --short --branch
-git diff --name-only
-git diff --cached --name-only
-git ls-files --others --exclude-standard
+git diff --no-renames --name-only -z
+git -c core.abbrev=40 diff --raw --no-renames -z
+git diff --cached --no-renames --name-only -z
+git ls-files --others --exclude-standard -z
+git ls-files --others --ignored --exclude-standard -z
+```
+
+The unstaged tracked baseline contains an exact path set, raw diff metadata
+digest, and a separate raw-byte content manifest. Compare
+`git diff --no-renames --name-only -z` with the declared path set and the SHA-256
+of `git -c core.abbrev=40 diff --raw --no-renames -z` with the declared metadata
+digest. Raw worktree diffs contain all-zero postimage object IDs; they do not
+bind changed file bytes. Also compute `tracked_worktree_manifest_sha256` using
+the canonical manifest in envelope spec §3 over every indexed working path
+from `git ls-files --cached -z`: raw file bytes, raw symlink targets without
+dereferencing, and explicit missing-path records. Hash even Git-clean paths;
+normalization, filters, or index flags must not hide working-byte changes. Both the metadata
+digest and content manifest must match. Rename detection stays disabled so both
+endpoints are visible. Unsupported types, incomplete inventories, or unreadable
+identities fail closed.
+
+The staged baseline must match its exact path set and
+`staged_diff_sha256`, computed from
+`git -c core.abbrev=40 diff --cached --raw --no-renames -z`. This index diff
+contains full blob IDs and modes. Also require `index_semantic_manifest_sha256`
+as defined in envelope spec §3 over every index entry, including assume-unchanged,
+skip-worktree, and intent-to-add flags. Cached diffs do not expose flag-only
+mutations. Every semantic-index snapshot also requires successful, empty raw
+output from `git --no-optional-locks -c core.fsmonitor=false ls-files --resolve-undo --abbrev=40 -z`.
+Reject nonempty resolve-undo records before mutation or validator execution and
+at each later snapshot. Never clear records automatically to pass this gate.
+Reject unmerged index entries and unsupported manifest input.
+
+The staged-path preflight disables rename detection so both source and
+destination endpoints of a staged rename are visible to exact-path validation.
+
+The untracked baseline is two disjoint exact path sets: nonignored untracked
+paths and ignored untracked paths. Each set must match the corresponding
+operator-declared exact path set and deterministic manifest SHA-256 in the
+active execution envelope. The manifest binds the exact path bytes, filesystem
+type, and raw-byte content identity of every declared untracked path. An empty
+set is represented by the SHA-256 of the empty byte string. Symlink identity is
+the raw link-target bytes; unsupported filesystem types are a fail-closed
+blocker. Manifest construction must not disclose or use file contents beyond
+computing the declared identity.
+
+Inventorying ignored dependency/cache artifacts or ignored secret paths grants
+no permission to read their semantic contents, modify them, stage them, execute
+them, or treat them as supporting files. Mutation authority still comes only
+from the exact active allowlist.
+
+Compute `EXPECTED_BASE.refs_manifest_sha256` using the complete logical ref
+inventory in envelope spec §3, including HEAD, all refs namespaces, direct OIDs,
+and immediate symbolic targets. Use the Git 2.43-compatible files-backend
+procedure, including packed/loose completeness and explicit root-ref reads.
+Require ref integrity and two matching
+snapshots; unsupported, malformed, dangling, or incomplete state fails closed.
+No namespace is exempt, and candidate capture cannot adopt changed refs.
+Implementation, validators, and staging must preserve this identity. Any
+separately authorized branch/ref operation needs exact old/new transition
+proof and a declared next phase baseline before validators.
+
+For every validator group, first seal the complete expected input state using
+the envelope spec §3 `POST_VALIDATOR_STATE_RECHECK.comparison_source`. The source
+is `expected_base`, `declared_post_mutation`, or an explicitly authorized
+`sealed_pre_validator_candidate`. Candidate capture occurs after authorized
+implementation and before the first validator; every difference from baseline
+must be independently authorized, and unchanged unrelated paths retain their
+baseline identities. Capturing evidence never grants mutation or stage authority.
+
+After validators, recompute root, branch, HEAD, complete refs manifest,
+exact unstaged tracked paths,
+tracked raw metadata digest, tracked content manifest, staged paths and
+staged-content digest, semantic index manifest, both untracked path sets, and
+both untracked manifests.
+Compare every value to the sealed input state, including in stage-only and
+no-commit lanes. Never refresh expected identities from validator output.
+Validator-created or validator-modified worktree/index state and unexpected
+HEAD movement or any ref creation, deletion, movement, or symbolic-target
+change fail closed. A permitted remediation starts only after preserving
+evidence and restoring the last sealed input when that restoration is already
+authorized; otherwise stop. Apply authorized edits and re-establish expected input using the same selected
+comparison source. Only explicitly selected candidate mode may capture new
+computed identities; other modes must still match their declared identities or
+stop for an updated operator declaration. Rerun affected validators.
+
+Before any later stage, commit, or push, revalidate the last verified state. Independently
+authorized staging may then change only the declared index paths and must bind
+the resulting blobs and modes to the validated working content. Record that
+verified staged identity; immediately before commit it must still match.
+Final evidence must account for each authorized stage/commit/push transition as well
+as the post-validator comparison. Ignored files remain part of the state.
+
+Required post-validator truths:
+
+```text
+POST_VALIDATOR_TRACKED_RECHECK=YES
+POST_VALIDATOR_TRACKED_DIFF_SHA256_RECHECK=YES
+POST_VALIDATOR_TRACKED_MANIFEST_RECHECK=YES
+POST_VALIDATOR_STAGED_RECHECK=YES
+POST_VALIDATOR_STAGED_DIFF_SHA256_RECHECK=YES
+POST_VALIDATOR_INDEX_SEMANTIC_MANIFEST_RECHECK=YES
+INDEX_RESOLVE_UNDO_EMPTY=YES
+POST_VALIDATOR_HEAD_RECHECK=YES
+POST_VALIDATOR_REFS_MANIFEST_RECHECK=YES
+POST_VALIDATOR_UNTRACKED_RECHECK=YES
+POST_VALIDATOR_IGNORED_RECHECK=YES
+POST_VALIDATOR_MANIFEST_RECHECK=YES
+UNAUTHORIZED_VALIDATOR_STATE_DELTA_FAILS_CLOSED=YES
 ```
 
 For branch creation from a named baseline:
@@ -210,7 +328,26 @@ If the requested docs need evidence from runtime tests, Codex may run non-deploy
 
 ### 7.1 Stage gate
 
-Staging requires explicit authorization. When authorized, Codex must stage exact paths only.
+For the explicitly authorized §7.6 API stage-before-validator order, seal the
+working bytes, verify the exact stage transition, then validate and recheck
+that candidate before publication. All path/content/flag/ref constraints below
+remain mandatory; the ordering exception grants no staging authority itself.
+
+Staging requires explicit authorization. When authorized, Codex must stage exact
+paths only. Stage-only lanes are valid and do not require commit authority.
+Before staging, revalidate the last verified state. After staging, require the
+exact declared post-stage path set and content identity; unchanged baseline
+index entries retain their identities. Verify changed staged entries against
+the validated working content, including both rename endpoints; unchanged
+baseline entries keep their verified index identities. Compare semantic index
+records as well; ordinary staging may only clear intent-to-add when staging
+validated content at an authorized path. Other flag transitions require explicit
+path-and-flag authority. Reject
+unvalidated filter or other transformations. Staging must not modify worktree
+content or refs; the complete refs manifest must match before and after
+staging, including in stage-only lanes. Preserve the verified staged digest and semantic index manifest for
+final evidence and recheck the manifest before and after commit. See envelope
+spec §11 for the independent stage and commit contracts.
 
 Forbidden staging patterns unless the operator explicitly authorizes them:
 
@@ -220,9 +357,71 @@ git add -A
 git add --all
 ```
 
-### 7.2 Commit gate
+### 7.2 Local commit gate
 
 Committing requires explicit authorization and an expected subject or commit purpose. Codex must verify staged paths before committing.
+
+This gate governs local commit creation. Server commit creation uses the
+independent REMOTE_COMMIT_AUTHORITY contract in §7.6; it does not implicitly
+invoke this local gate or authorize another commit.
+
+Before any local commit-authorized operation, Codex must reject any in-progress Git
+operation that can alter commit ancestry or commit semantics. The check must
+include merge, rebase, cherry-pick, revert, bisect, and equivalent operation
+markers such as `MERGE_HEAD`, `rebase-merge`, `rebase-apply`,
+`CHERRY_PICK_HEAD`, `REVERT_HEAD`, `sequencer`, and `BISECT_LOG` resolved through
+`git rev-parse --git-path`. Codex then records `PRE_COMMIT_HEAD` and requires
+it to equal the exact expected parent baseline for the lane before committing.
+Also verify and record the complete pre-commit ref map and digest. HEAD must
+remain directly attached to the exact expected branch, whose ref is direct.
+This is an ordinary-commit-only contract. `COMMIT_AUTHORITY.merge_commit_allowed`
+is false by default and false is its only supported value here. A true value
+fails closed before committing. Merge commits require a separate explicit
+merge-specific contract and any required governance freeze release; they must
+not use or bypass this ordinary commit gate.
+
+A commit-authorized lane must also neutralize repository hooks deterministically.
+The active envelope must declare one exact absolute hooks directory outside the
+repository. Before commit, Codex must verify that directory exists, is a real
+directory rather than a symlink, and is empty. Codex then records the authorized
+index tree as `AUTHORIZED_TREE=$(git write-tree)` only after verifying the
+exact staged-content identity against the last validated state or the verified
+authorized stage transition. Before accepting `AUTHORIZED_TREE`, enumerate it
+with `git --no-replace-objects ls-tree -r --full-tree -z "$AUTHORIZED_TREE"` and
+require exact raw path/mode/object-ID equality with all verified stage-zero
+index entries whose intent-to-add bit is zero. Intent-to-add entries do not
+commit content; exclude them only from the expected tree, while retaining them
+in all semantic-index comparisons. Missing, extra, or different tree entries fail closed; a cache-derived
+tree ID alone is insufficient. It commits with `core.hooksPath` set to that exact
+verified-empty directory, and requires `HEAD^{tree}` to equal the recorded
+authorized tree exactly. Any hook-path mismatch, nonempty hook directory, or
+post-commit tree mismatch is a fail-closed blocker; the lane must not claim the
+commit as successfully authorized.
+
+Immediately after an ordinary authorized commit, Codex must require
+`parent_count = 1` and `sole_parent = PRE_COMMIT_HEAD`. A commit with multiple
+parents, a missing parent, or a parent different from `PRE_COMMIT_HEAD` always
+fails closed under this ordinary contract. Commit tree equality with
+`AUTHORIZED_TREE` and an unchanged verified semantic index manifest are required.
+
+After commit, verify the ref-name set and every symbolic target, including
+HEAD, are unchanged. Only the existing expected direct branch ref may move
+from `PRE_COMMIT_HEAD` to the verified new commit; all other direct ref OIDs
+and pseudoref records remain identical. Verify symbolic resolutions and record the resulting digest.
+See envelope spec §11 for exact transition evidence.
+
+Required commit-ancestry truths:
+
+```text
+IN_PROGRESS_GIT_OPERATION_CHECK=YES
+PRE_COMMIT_HEAD_PINNED=YES
+POST_COMMIT_REFS_TRANSITION_VERIFIED=YES
+POST_COMMIT_PARENT_COUNT_ONE=YES
+POST_COMMIT_PARENT_EQUALS_PRE_COMMIT_HEAD=YES
+TREE_EQUIVALENCE_STILL_REQUIRED=YES
+AUTHORIZED_TREE_MATCHES_VERIFIED_INDEX=YES
+MERGE_COMMIT_AUTHORITY=NO
+```
 
 For docs-only packaging, the expected post-commit proof is:
 
@@ -235,7 +434,65 @@ git status --short --branch
 
 ### 7.3 Push gate
 
-Push requires explicit authorization. A local branch or local commit does not imply push permission.
+The retained ordinary named-remote push profile is unsupported until a
+separately reviewed transport contract establishes both the declared old-value
+write precondition and immutable repository write binding. The recipe below
+alone establishes neither, so an enabled ordinary push must fail closed before
+preparation, including dry-runs. API publication uses §7.6 only when separately
+authorized; there is no ordinary Git push fallback.
+
+Push requires explicit authorization. A local branch or local commit does
+not imply push permission. Require the full envelope spec §11 push contract:
+one exact expanded GitHub.com HTTPS `push_url`, independently declared immutable
+`repository_identity` with trusted provenance, typed `expected_destination`
+old state, pinned source OID, destination refspec, exact
+`execution_environment_names` allowlist, execution-config and child-environment
+digests, independent exact `PUSH_AUTHORITY.hooks_path`,
+and typed expected local tracking-ref transitions. A disabled push block omits
+every other push field. A remote name alone does not bind the destination.
+
+Before any push-preparation Git/config/URL/object/network call, apply the
+spec §11 semantic child-environment policy. Reject inherited TLS/transport
+bypass variables regardless of value, including any presence of
+`GIT_SSL_NO_VERIFY`. Construct a new closed-allowlist map; omit unrelated
+unknown variables and stop for required unsupported bindings. Pin trusted
+absolute executable/helper paths and PATH, exclude config/askpass/trace/loader
+injection, and independently approve exact credential inputs. Validate the
+constructed map and independent API verifier too; matching digests never
+authorize unsafe values. Use the trusted Git/OS CA policy and reject proxies,
+custom resolution and unsupported trust overrides.
+
+Through trusted GitHub API access, require the URL-target repository's
+`node_id` to equal the independently anchored declaration and its exact
+remote destination state to equal `expected_destination`. A current URL
+response cannot supply its own expected identity. Failed access does not
+prove absence; a changed name/URL must not silently adopt another repository.
+Recheck immediately before push, and after success require that same identity
+and destination equal to `PUSH_SOURCE_OID`.
+
+Use the fixed Git 2.43-compatible invocation profile in spec §11. Resolve all
+push URLs under that same profile/environment and accept exactly one approved
+URL; recheck configuration and effective URL-specific HTTP settings. Disable
+mirroring, follow-tags, inherited push options, submodule recursion, signing,
+automatic upstream setup, negotiation and maintenance. The exact existing
+external hooks directory must be real and empty; set `core.hooksPath` to it
+and use `--no-verify`. Pin `PUSH_SOURCE_OID` and push only its literal refspec.
+No config-file mutation, implicit refspec, extra remote or unlisted ref effect
+is authorized. Apply these controls to authorized dry-runs as well.
+
+Before push, revalidate and seal the complete last verified local state and
+push execution context. After every attempt, including failure, recompute
+root/branch/HEAD, tracked paths/diff/raw contents, staged paths/content,
+semantic index with empty resolve-undo, both untracked path sets/manifests,
+and complete refs. All non-ref identities must remain equal; only declared
+tracking-ref transitions may differ. Verify the remote outcome independently;
+failure or uncertainty requires read-only diagnosis and a stop, without blind
+retry or automatic rollback. Do not report success from a refs-only check.
+Record repository identity/provenance and equality, expected and observed
+destination states, semantic environment-policy result, executable/path and
+endpoint/config/environment identities, hook proof and every state comparison
+in final evidence. See spec §11 for the fixed digest encoding,
+failure handling and required push truth fields.
 
 ### 7.4 PR gate
 
@@ -244,6 +501,134 @@ Opening or editing a pull request requires explicit authorization. A pushed bran
 ### 7.5 Merge and deploy gates
 
 Merge and deploy each require explicit authorization. A green PR does not imply merge permission, and a merge does not imply deploy permission.
+
+---
+
+### 7.6 Existing-branch API publication and separate local sync
+
+REMOTE_COMMIT_AUTHORITY is separate from local COMMIT_AUTHORITY and Git
+PUSH_AUTHORITY. Only the explicitly authorized
+github_graphql_existing_branch_replace_v1 profile in envelope spec §12.1 is
+supported here. It creates one server commit replacing exactly two existing
+100644 text files at exact modify-authorized paths, without creating files,
+changing modes or rewriting history. No preliminary local commit is implied.
+
+Use branch.id targeting the declared global Ref verified against an
+independently anchored repository, with fixed expectedHeadOid in the actual
+createCommitOnBranch input. Read-before-write checks are not write constraints.
+The accepted reliance is GitHub's published bounded contract: no formal linearizability proof
+is claimed; no undocumented Ref-ID reuse or lifetime guarantee is claimed.
+Successful queries do not prove mutation permission. There is no ordinary Git push fallback.
+
+Both verifier and publisher must resolve their explicitly named complete API
+execution contexts in spec §§3 and 12.1, including executable/runtime/helper
+identities and provenance, environment and configuration/trust policy,
+credential-source/accessor reference, expected actor, endpoint, approved operation
+documents, actual no-redirect behavior and retry policy. Stable
+API_EXECUTION_CONTEXTS do not contain one payload hash for multiple requests.
+API_REQUEST_RECORDS appends a distinct ID, context, operation/type, query digest,
+authorized variable sources, actual payload digest, phase and purpose for every
+call. Bind legitimate variables first, seal final UTF-8 bytes and send that
+retained buffer. Shared contexts, pagination and repeated queries still require
+distinct records; never overwrite previous seals or fabricate future server
+OIDs/hashes. Unknown operations, sources or changed sealed bytes fail closed. Verify the
+client before acquiring credentials and before edits when required by the
+operator. Unsupported clients or missing bindings fail closed; token values
+must never enter evidence, shell output, files, arguments or environment.
+
+Preserve all local baseline, exact-path, index/flag, hook, operation-state,
+ignored/nonignored and complete-ref protections. Stage only with independent
+STAGE_AUTHORITY. Seal and test the exact candidate; bind staged blob bytes and
+their unchanged modes to the tested raw working bytes, independently derive
+AUTHORIZED_TREE from the pinned base tree plus only those replacements, and
+compare the full candidate index tree. Recheck all sealed state after validators
+and immediately before publication. Do not accept validator-created deltas.
+
+Require the referenced EXPECTED_PR_BINDING before publication: exact PR node ID
+AND number, owning/head/base repository IDs, head Ref/branch/OID, full base ref
+and fixed base OID, OPEN/unmerged/non-draft state and disabled auto-merge. Query
+that declared PR, never select one by branch search. Before/after comparisons
+retain all conditions; only the post-publication head becomes the independently
+verified SERVER_COMMIT. Do not repair a mismatch. These reads do not atomically
+lock PR metadata or replace the server expectedHeadOid condition.
+
+Require ASSOCIATED_PR_SCOPE with SINGLE_DECLARED_OPEN_PR_ONLY, referencing
+that same EXPECTED_PR_BINDING. Inventory the verified Ref node's
+associatedPullRequests connection with states: [OPEN], without base/label,
+draft/auto-merge or other optional filters. Read all pages until
+hasNextPage=false before dispatch, after publication and at final closure.
+Retain page cursors/pageInfo/totals, all returned PR identities and owning/head/base
+repositories, exact head Ref/OID, base ref/OID and state flags, observation
+start/end times and distinct API_REQUEST_RECORDS seals. Verify the exact
+repository AND Ref; a same-named branch elsewhere is not this head. Require
+complete observed singleton equality with the declared PR. Zero/extra PRs,
+partial GraphQL errors, unreadable fields, inconsistent pagination or incomplete
+coverage block; never discard or repair a result. This is the complete accessible
+connection under the verified API context, not omniscient or atomic coverage.
+
+PR_METADATA_RACE_ACCEPTANCE must bind explicit applicable current operator
+provenance, this exact publication operation/candidate scope, the same PR/Ref
+binding and singleton policy, accepted interval risks, required pre-dispatch,
+post-publication and final observations, failure response and no other authority.
+Missing, false or out-of-scope acceptance disables this bounded profile. Use the
+typed schema and enabled/disabled examples in spec §12.1; examples are not live
+approval. A future lane needs its own acceptance. Retain the disposition:
+
+- ATOMIC_PR_METADATA_PRECONDITION=NOT_PROVIDED
+- PR_METADATA_AND_MEMBERSHIP_RACE=EXPLICITLY_ACCEPTED_WITHIN_DECLARED_SCOPE
+- TECHNICALLY_ELIMINATED=NO
+
+The operator accepts metadata/membership changes between observations, including
+another PR becoming associated and transient changes not observable afterward.
+Acceptance removes continuous atomic-truth requirements for these observations,
+not the observations. Known pre-dispatch mismatches still forbid sending;
+repository/Ref, fixed expected head and exact sealed content remain bound.
+Repeated reads, locks, a single executor and expectedHeadOid cannot atomically
+lock PR metadata or membership. Observable post-publication drift is an incident:
+record the actual outcome and stop synchronization/closure, without rollback or
+retry. Final observed drift blocks further closure. Postchecks do not detect
+every transient change. No ordinary Git push fallback is allowed. Acceptance
+never covers known extra PRs, incomplete inventory, wrong content/repository/Ref,
+authentication failure, protection bypass, merge or deployment, and grants no
+other mutation authority. Do not apply it retroactively. Review/final evidence
+separates technical findings fixed, ACCEPTED_RESIDUAL_RISK, undispositioned
+actionable findings and unresolved threads. Identical accepted risk restatement
+is not a technical fix; a new control failure cannot inherit this disposition.
+
+DURABLE_ATTEMPT_AUTHORITY must separately authorize exact external marker and
+existing evidence-ledger paths, their permitted file operations, operation and
+authorization identity, deterministic record encoding/bindings and recovery.
+Validate real local storage/paths, preserve prior attempts, and block a missing
+marker after reservation evidence. Reserve using FileMode.CreateNew and
+FileShare.None, write the complete nonsecret consumed-intent, call the actual
+FileStream.Flush(true), and verify bytes/bindings through the same held handle.
+Only that creating/verifying process may make one application dispatch; retain
+the exclusive handle through dispatch and outcome recording. Never use an
+exists-then-overwrite check or claim the complete JSON write is indivisible.
+Existing, partial, corrupt, mismatched, unreadable or uncertain markers and
+persistence failures block. Restart permits read-only reconciliation, never
+replay, even from a valid marker. Keep the marker permanently; no truncation,
+replacement, deletion or operation-ID/path change may restore allowance.
+A separately authorized successor preserves prior records and budget. This
+local process-restart contract does not claim immunity to privileged deletion,
+backup restoration, storage failure, every power-loss case or distributed
+exactly-once delivery. Fixtures never authorize a production request. No redirect, pagination, retry wrapper, authentication
+replay or alternate writer is allowed. On an error or ambiguous result, retain
+evidence, perform read-only reconciliation and stop without a second attempt.
+Correlation IDs do not grant idempotency. Verify the server repository/Ref,
+one parent equal to the fixed expected head, full tree and replacement blobs,
+authorized purpose/authorship, PR target and protected base independently.
+Server-generated commit metadata is permitted. Local state remains unchanged
+until the separately authorized synchronization transition.
+
+LOCAL_SYNC_AUTHORITY names one exact checkout, object-import context and one
+old-value-guarded update-ref from the declared old OID to the verified server
+commit. Require matching index/tree/raw worktree bytes before changing that
+ref; no local commit, overwrite or repair is implied. Recheck all other refs
+and complete local state afterward. A lane-specific isolated baseline never
+retroactively approves drift or synchronizes an unrelated checkout.
+Report server publication and local synchronization outcomes separately.
+See spec §12.1 for the complete schema, request, verification and failure rules.
 
 ---
 
@@ -300,11 +685,15 @@ Codex may proceed without asking another question only when all of these are tru
 1. the operator phrase clearly names the lane;
 2. the baseline matches;
 3. the mutation budget is finite;
-4. every edited file is inside the allowlist or exact docs-only count;
+4. every edited repository file is inside the explicit exact-path allowlist;
 5. no protected VIONA surface is being activated;
 6. no remote or production action is implied;
 7. validation commands are safe for the lane;
 8. the final state can be verified.
+
+An explicitly authorized API lane proceeds only through §7.6 after candidate
+validation and complete context/state checks, then through separately authorized
+local synchronization. A2/A2C or local packaging never implies either operation.
 
 Codex must stop and report when any of these is false.
 
@@ -334,14 +723,16 @@ Every controlled autonomous lane should end with:
 | Field | Required content |
 | --- | --- |
 | Branch | Actual branch name |
-| Baseline | Starting commit and current HEAD |
+| Baseline | Starting commit, current HEAD, and complete logical refs manifest |
 | Files changed | Exact file list |
-| Staged | Exact staged state |
-| Commit | Commit hash or `none` |
-| Push | `zero` unless authorized and completed |
+| Refs | Complete pre/post ref records and digests; exact validator/stage equality and authorized commit/push transition proof |
+| Staged | Exact staged paths/content identity, semantic index manifest, empty resolve-undo proof, and any verified stage transition |
+| Commit | Commit hash or `none`; PRE_COMMIT_HEAD, AUTHORIZED_TREE, resulting tree and parent proof when committed |
+| Push | No attempt, verified success, failure, or uncertain result; independent repository identity/provenance, expected/observed destination, environment-policy and executable proofs, endpoint/config/environment digests, hooks-disabled proof and complete pre/post local-state comparisons for every attempt |
+| API publication | DURABLE_ATTEMPT_AUTHORITY storage/operation/marker persistence and recovery evidence; every API_REQUEST_RECORDS seal; EXPECTED_PR_BINDING pre/post equality; context fingerprints, dispatch/outcome, server parent/tree/Ref and separate local-sync proof under §7.6; `none` when unused |
 | PR | `zero` unless authorized and completed |
 | Runtime/source | `zero` for docs-only lanes |
-| Validation | Commands run and pass/fail result |
+| Validation | Commands run, pass/fail result, comparison source, sealed input identities, and every post-validator state comparison |
 | Blockers | Any stop condition |
 | Next action | Hold state or request next explicit authorization |
 
@@ -355,7 +746,7 @@ Use these classifications when applicable:
 
 | Classification | Meaning |
 | --- | --- |
-| `BLOCKED_VIONA_CODEX_BASELINE_DRIFT` | Root, branch, HEAD, staged state, or tree state does not match the envelope. |
+| `BLOCKED_VIONA_CODEX_BASELINE_DRIFT` | Root, branch, HEAD, complete refs, staged state, tracked state, or ignored/nonignored untracked baseline identity does not match the envelope. |
 | `BLOCKED_VIONA_CODEX_SCOPE_EXPANSION_REQUIRED` | The required work needs files or behavior outside the allowlist. |
 | `BLOCKED_VIONA_CODEX_DENYLIST_CONFLICT` | The required work touches a denied file or category. |
 | `BLOCKED_VIONA_CODEX_VALIDATION_FAILURE_OUTSIDE_SCOPE` | A failure cannot be fixed inside the envelope. |
