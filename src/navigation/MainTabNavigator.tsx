@@ -608,7 +608,8 @@ export function MainTabNavigator(): ReactElement {
                         : tabSizing.tabBarBaseHeight + Math.max(insets.bottom, 10),
                     paddingBottom:
                       mountSosInTabBarShell && Platform.OS !== 'web'
-                        ? 0
+                        // Keep the reported shell height; expose only tab content above the clip.
+                        ? NATIVE_BOTTOM_SHELL_CHROME_ROW + nativeChromePad
                         : Math.max(insets.bottom, 10),
                     paddingTop: mountSosInTabBarShell && Platform.OS !== 'web' ? 0 : 8,
                     paddingLeft:

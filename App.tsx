@@ -410,6 +410,7 @@ type AppNavigationShellProps = Readonly<{
   insets: import('react-native-safe-area-context').EdgeInsets;
   isLargeScreen: boolean;
   nativeLandscapeFullBleed: boolean;
+  nativeTabletPortraitFullBleed: boolean;
   user: import('./src/context/authTypes').AuthUser | null;
   transitionAnim: Animated.Value;
   mode: import('./src/context/AppModeContext').AppMode;
@@ -422,6 +423,7 @@ function AppNavigationShell({
   insets,
   isLargeScreen,
   nativeLandscapeFullBleed,
+  nativeTabletPortraitFullBleed,
   user,
   transitionAnim,
   mode,
@@ -435,7 +437,7 @@ function AppNavigationShell({
       style={{
         flex: 1,
         width: '100%',
-        maxWidth: isLargeScreen || nativeLandscapeFullBleed ? '100%' : 600,
+        maxWidth: isLargeScreen || nativeLandscapeFullBleed || nativeTabletPortraitFullBleed ? '100%' : 600,
         alignSelf: 'center',
       }}
     >
@@ -708,6 +710,13 @@ function AppRoot() {
   const { width, height } = useWindowDimensions();
   const isLargeScreen = Platform.OS === 'web' && width > 768;
   const nativeLandscapeFullBleed = Platform.OS !== 'web' && width > height;
+  // Viewport width policy; this does not identify tablet hardware.
+  const nativeTabletPortraitFullBleed =
+    Platform.OS !== 'web' &&
+    Number.isFinite(width) &&
+    Number.isFinite(height) &&
+    width >= 768 &&
+    height >= width;
   const { isHydrating, user, setPendingRedirect } = useAuth();
   const { mode, transitionKey } = useAppMode();
   const [isOnline, setIsOnline] = useState(true);
@@ -798,6 +807,7 @@ function AppRoot() {
         insets={insets}
         isLargeScreen={isLargeScreen}
         nativeLandscapeFullBleed={nativeLandscapeFullBleed}
+        nativeTabletPortraitFullBleed={nativeTabletPortraitFullBleed}
         user={user}
         transitionAnim={transitionAnim}
         mode={mode}
