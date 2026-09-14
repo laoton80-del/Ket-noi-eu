@@ -102,7 +102,7 @@ without predicting its new commit SHA.
 | State | Path | SHA-256 | Lines |
 |---|---|---|---:|
 | Original reconciliation output | `docs/product/VIONA_PR459_EXACT_CANONICAL_DOCS_FREEZE_EXCEPTION_DESIGN.md` | `0a69a8a7e83ffdfabf7e27fb9727346a76f678340c2018afbe9d7ed4a23dabd1` | 569 |
-| Current false-green-remediated local design | `docs/product/VIONA_PR459_EXACT_CANONICAL_DOCS_FREEZE_EXCEPTION_DESIGN.md` | `def33564f377697563c5aa65aa1a17f2af61fd9b05df659bb70a10dce059c0f9` | 609 |
+| Current latest-effective-review-state-remediated local design | `docs/product/VIONA_PR459_EXACT_CANONICAL_DOCS_FREEZE_EXCEPTION_DESIGN.md` | `b4de769e484f7d177cd704ea15fb3dcb1b395b3530224e2274c50d723b04cd31` | 637 |
 
 The design includes exact identity and digest algorithms, transition topology,
 runtime ancestry and byte-verification predicates, reviewer requirements,
@@ -139,6 +139,16 @@ design now makes these controls explicit:
 - a final authorization snapshot re-reads every mutable authorization fact;
 - the final remote read rejects any late duplicate and proves the sole gate
   check belongs to the current positive-integer check ID and app.
+
+The PR #460 P1 review added one further exact-head rule. A gate must not select
+an older approval after the same reviewer later requests changes on that head.
+Each initial, Snapshot B, and final review read therefore reduces the complete
+exact-head timeline to the latest decision per reviewer before checking
+repository permission. Later `CHANGES_REQUESTED` or dismissal invalidates an
+approval; a later `APPROVED` may restore eligibility. `COMMENTED` and `PENDING`
+are non-decision states and do not replace the latest decision. Invalid review
+identity or chronology fails closed, and stable positive review IDs break equal
+timestamp ties deterministically.
 
 This addendum records the reconciled design contract. It is local documentation,
 not live GitHub proof, dispatch authority, merge authority, or a claim that an

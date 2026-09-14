@@ -13,7 +13,8 @@
  *
  * Check creation requires minimum provenance first.
  * Canonical workflow version is proven via independent GETs (run ID lookup key only).
- * Head activation: exact-head APPROVED review submitted_at <= run.created_at + snapshot A/B.
+ * Head activation: latest effective per-reviewer exact-head APPROVED state,
+ * submitted_at <= run.created_at, re-established at initial, B, and final snapshots.
  */
 
 import { createHash } from 'node:crypto';
@@ -697,6 +698,11 @@ export function evaluateMergeAuthorizationGate(facts) {
     if (facts.pr459ReviewerPermissionProven !== true) {
       return fail(BLOCKERS.BLOCKED_PR459_REVIEWER_PERMISSION_UNPROVEN);
     }
+    if (facts.pr459LatestEffectiveReviewStateVerified !== true) {
+      return fail(BLOCKERS.BLOCKED_VIONA_T3_GATE_TECHNICAL_ERROR, {
+        reason: 'pr459_latest_effective_review_state_unproven',
+      });
+    }
     if (
       facts.pr459ProtectionInvariantsVerified !== true ||
       facts.pr459ThreadInventoryComplete !== true ||
@@ -787,21 +793,184 @@ export function selectExactHeadApproval(reviews, headSha, dispatchCreatedAtMs) {
   return { ok: true, review: selected.candidates[0] };
 }
 
-/** PR #459 also requires the exact-head approval to come from a non-author. */
+/** PR #459 also requires the latest effective exact-head approval to come from a non-author. */
 export function selectPr459ExactHeadApproval(
   reviews,
   headSha,
   dispatchCreatedAtMs,
   prAuthorLogin,
 ) {
-  const author = String(prAuthorLogin ?? '').toLowerCase();
+  const author = String(prAuthorLogin ?? '').trim().toLowerCase();
   if (!author) return { ok: false, reason: 'pr_author_unresolved' };
-  if (!Array.isArray(reviews)) return { ok: false, reason: 'reviews_shape_invalid' };
-  const nonAuthorReviews = reviews.filter((review) => {
-    const reviewer = String(review?.user?.login ?? '').toLowerCase();
+  const selected = latestEffectivePr459ApprovalCandidates(
+    reviews,
+    headSha,
+    dispatchCreatedAtMs,
+  );
+  if (!selected.ok) {
+    return {
+      ok: false,
+      reason: selected.reason,
+      technicalError: selected.technicalError === true,
+    };
+  }
+  const review = selected.candidates.find((candidate) => {
+    const reviewer = String(candidate?.user?.login ?? '').trim().toLowerCase();
     return reviewer.length > 0 && reviewer !== author;
   });
-  return selectExactHeadApproval(nonAuthorReviews, headSha, dispatchCreatedAtMs);
+  if (!review) return { ok: false, reason: 'no_non_author_exact_head_approval' };
+  return { ok: true, review };
+}
+
+export const COMMENTED_EFFECTIVE_STATE_POLICY =
+  'COMMENTED_AND_PENDING_ARE_NON_DECISION_STATES_AND_DO_NOT_SUPERSEDE_THE_LATEST_EXACT_HEAD_DECISION';
+
+const PR459_DECISION_REVIEW_STATES = Object.freeze([
+  'APPROVED',
+  'CHANGES_REQUESTED',
+  'DISMISSED',
+]);
+
+const EXPLICIT_ZONE_TIMESTAMP_RE =
+  /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})$/;
+
+function parseUnambiguousReviewTimestamp(value) {
+  if (typeof value !== 'string' || !EXPLICIT_ZONE_TIMESTAMP_RE.test(value)) return null;
+  const parsed = Date.parse(value);
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
+/** Validate one complete REST review inventory before chronology reduction. */
+export function validatePr459ReviewInventory(reviews) {
+  if (!Array.isArray(reviews)) {
+    return { ok: false, reason: 'reviews_shape_invalid' };
+  }
+  const seenReviewIds = new Set();
+  for (const review of reviews) {
+    if (!isPlainObject(review) || !KNOWN_REVIEW_STATES.includes(review.state)) {
+      return { ok: false, reason: 'review_record_shape_invalid' };
+    }
+    if (!Number.isSafeInteger(review.id) || review.id <= 0) {
+      return { ok: false, reason: 'review_identity_malformed' };
+    }
+    if (seenReviewIds.has(review.id)) {
+      return { ok: false, reason: 'review_identity_duplicate' };
+    }
+    seenReviewIds.add(review.id);
+    if (
+      !isPlainObject(review.user) ||
+      typeof review.user.login !== 'string' ||
+      review.user.login.trim().length === 0
+    ) {
+      return { ok: false, reason: 'reviewer_identity_malformed' };
+    }
+    if (!FULL_SHA_RE.test(String(review.commit_id ?? ''))) {
+      return { ok: false, reason: 'review_commit_identity_malformed' };
+    }
+    const submittedAtMs = parseUnambiguousReviewTimestamp(review.submitted_at);
+    if (submittedAtMs === null) {
+      return { ok: false, reason: 'review_submission_time_malformed' };
+    }
+    if (review.dismissed_at != null) {
+      const dismissedAtMs = parseUnambiguousReviewTimestamp(review.dismissed_at);
+      if (dismissedAtMs === null) {
+        return { ok: false, reason: 'review_dismissal_time_malformed' };
+      }
+      if (dismissedAtMs < submittedAtMs) {
+        return { ok: false, reason: 'review_dismissal_precedes_submission' };
+      }
+      if (review.state === 'COMMENTED' || review.state === 'PENDING') {
+        return { ok: false, reason: 'review_dismissal_state_invalid' };
+      }
+    }
+  }
+  return { ok: true };
+}
+
+/**
+ * Collapse the exact-head review history to one latest decision per reviewer.
+ * GitHub documents the REST review inventory as chronological; explicit review
+ * IDs make equal submitted_at timestamps deterministic and duplicate IDs fail
+ * closed. COMMENTED/PENDING are not approval decisions and do not revoke a
+ * prior decision. A dismissed decision never authorizes.
+ */
+export function latestEffectivePr459ReviewStates(reviews, headSha) {
+  const inventory = validatePr459ReviewInventory(reviews);
+  if (!inventory.ok) {
+    return { ok: false, technicalError: true, reason: inventory.reason, latest: [] };
+  }
+  const head = String(headSha ?? '').toLowerCase();
+  if (!FULL_SHA_RE.test(head)) {
+    return { ok: false, technicalError: true, reason: 'review_head_identity_malformed', latest: [] };
+  }
+
+  const latestByReviewer = new Map();
+  for (const review of reviews) {
+    if (String(review.commit_id).toLowerCase() !== head) continue;
+    if (!PR459_DECISION_REVIEW_STATES.includes(review.state)) continue;
+    const reviewerLogin = review.user.login.trim();
+    const reviewer = reviewerLogin.toLowerCase();
+    const submittedAtMs = parseUnambiguousReviewTimestamp(review.submitted_at);
+    const effectiveState = review.dismissed_at != null ? 'DISMISSED' : review.state;
+    const candidate = {
+      review,
+      reviewer,
+      reviewerLogin,
+      submittedAtMs,
+      reviewId: review.id,
+      effectiveState,
+    };
+    const current = latestByReviewer.get(reviewer);
+    if (
+      !current ||
+      candidate.submittedAtMs > current.submittedAtMs ||
+      (candidate.submittedAtMs === current.submittedAtMs &&
+        candidate.reviewId > current.reviewId)
+    ) {
+      latestByReviewer.set(reviewer, candidate);
+    }
+  }
+
+  const latest = [...latestByReviewer.values()].sort((a, b) =>
+    compareOrdinalCodePoints(a.reviewer, b.reviewer),
+  );
+  return { ok: true, technicalError: false, latest };
+}
+
+function latestEffectivePr459ApprovalCandidates(reviews, headSha, dispatchCreatedAtMs) {
+  const dispatchMs = Number(dispatchCreatedAtMs);
+  if (!Number.isFinite(dispatchMs)) {
+    return {
+      ok: false,
+      technicalError: false,
+      reason: 'dispatch_time_unresolved',
+      candidates: [],
+    };
+  }
+  const reduced = latestEffectivePr459ReviewStates(reviews, headSha);
+  if (!reduced.ok) {
+    return {
+      ok: false,
+      technicalError: true,
+      reason: reduced.reason,
+      candidates: [],
+    };
+  }
+  const candidates = reduced.latest
+    .filter(
+      (entry) =>
+        entry.effectiveState === 'APPROVED' && entry.submittedAtMs <= dispatchMs,
+    )
+    .map((entry) => entry.review);
+  if (candidates.length === 0) {
+    return {
+      ok: false,
+      technicalError: false,
+      reason: 'no_latest_effective_exact_head_approval_before_dispatch',
+      candidates: [],
+    };
+  }
+  return { ok: true, technicalError: false, candidates };
 }
 
 /** Validate the repository-permission response for one exact reviewer identity. */
@@ -846,37 +1015,6 @@ const KNOWN_REVIEW_STATES = Object.freeze([
   'PENDING',
 ]);
 
-export function validatePr459ReviewInventory(reviews) {
-  if (!Array.isArray(reviews)) {
-    return { ok: false, reason: 'reviews_shape_invalid' };
-  }
-  for (const review of reviews) {
-    if (!isPlainObject(review) || !KNOWN_REVIEW_STATES.includes(review.state)) {
-      return { ok: false, reason: 'review_record_shape_invalid' };
-    }
-    if (
-      !isPlainObject(review.user) ||
-      typeof review.user.login !== 'string' ||
-      review.user.login.trim().length === 0
-    ) {
-      return { ok: false, reason: 'reviewer_identity_malformed' };
-    }
-    if (!FULL_SHA_RE.test(String(review.commit_id ?? ''))) {
-      return { ok: false, reason: 'review_commit_identity_malformed' };
-    }
-    if (!Number.isFinite(Date.parse(review.submitted_at ?? ''))) {
-      return { ok: false, reason: 'review_submission_time_malformed' };
-    }
-    if (
-      review.dismissed_at != null &&
-      !Number.isFinite(Date.parse(review.dismissed_at))
-    ) {
-      return { ok: false, reason: 'review_dismissal_time_malformed' };
-    }
-  }
-  return { ok: true };
-}
-
 /**
  * Select an exact-head non-author approval only after repository permission is
  * independently proven. At least one fully proven candidate is sufficient;
@@ -894,11 +1032,15 @@ export async function selectEligiblePr459ExactHeadApproval(
   if (!inventory.ok) {
     return { ok: false, technicalError: true, reason: inventory.reason };
   }
-  const selected = exactHeadApprovalCandidates(reviews, headSha, dispatchCreatedAtMs);
+  const selected = latestEffectivePr459ApprovalCandidates(
+    reviews,
+    headSha,
+    dispatchCreatedAtMs,
+  );
   if (!selected.ok) {
     return {
       ok: false,
-      technicalError: selected.reason === 'reviews_shape_invalid',
+      technicalError: selected.technicalError === true,
       reason: selected.reason,
     };
   }
@@ -2424,6 +2566,7 @@ export async function runMergeAuthorizationGate(deps) {
       pr459MasterStable: isPr459Exception ? true : null,
       pr459PayloadStable: isPr459Exception ? true : null,
       pr459ReviewerPermissionProven: isPr459Exception ? true : null,
+      pr459LatestEffectiveReviewStateVerified: isPr459Exception ? true : null,
       pr459ProtectionInvariantsVerified: isPr459Exception ? true : null,
       pr459ThreadInventoryComplete: isPr459Exception ? true : null,
       finalAuthorizationSnapshotVerified: isPr459Exception ? true : null,

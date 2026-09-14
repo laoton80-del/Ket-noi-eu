@@ -307,7 +307,11 @@ pagination uncertainty, or any byte mismatch fail closed.
 ## 9. Exact-head review remains strict
 
 After synchronization, all reviews attached only to the old head are
-insufficient. Before dispatch, require at least one eligible reviewer who:
+insufficient. The gate must first build a complete, deterministic timeline for
+each reviewer from reviews attached to the exact current head. It reduces each
+timeline to that reviewer's latest decision state before selecting any
+approval. Before dispatch, require at least one eligible reviewer whose latest
+effective exact-head decision:
 
 - is not the PR author;
 - submits `APPROVED`;
@@ -317,13 +321,25 @@ insufficient. Before dispatch, require at least one eligible reviewer who:
 - submits before the workflow dispatch creation time under current gate
   semantics.
 
+`APPROVED` followed by `CHANGES_REQUESTED` from the same reviewer is not an
+approval. `CHANGES_REQUESTED` followed by `APPROVED` may qualify when every
+other gate holds. A dismissed approval never qualifies. `COMMENTED` and
+`PENDING` are non-decision records under the GitHub review-state model and do
+not supersede the latest decision. Malformed chronology, unknown review state,
+missing identity, duplicate stable review identity, or an invalid timestamp is
+a technical failure. When submission timestamps match, the positive numeric
+GitHub review ID provides deterministic ordering; a missing or duplicate ID
+fails closed.
+
 `author_association` is supplemental metadata only. The gate must independently
 read the candidate's repository permission and accept only `push`, `maintain`,
 or `admin`. `none`, `read`, and `triage` are ineligible. Missing, null, unknown,
 malformed, unauthorized, or otherwise unreadable permission data is a technical
 failure. If several exact-head approvals exist, at least one non-author must be
 independently proven eligible. Snapshot B and the final authorization snapshot
-must repeat both the review read and the repository-permission proof.
+must independently rebuild the latest-effective-state timelines and repeat both
+the review read and the repository-permission proof. No approval selection may
+be cached across snapshots.
 
 ```text
 EXACT_HEAD_REVIEW_REQUIREMENT_PRESERVED=YES
@@ -415,7 +431,8 @@ Before creating a check run, require all existing gates plus:
 10. current master equal to the authorized second parent and proven ancestor;
 11. exact seven file records and initial scope digest;
 12. exact seven file hashes and canonical payload digest;
-13. eligible non-author exact-current-head approval before dispatch;
+13. eligible non-author whose latest effective exact-current-head decision is
+    approval before dispatch;
 14. zero unresolved conversations;
 15. active repository protection and exact required gate context/app;
 16. all non-gate required checks green on the runtime head;
@@ -424,7 +441,7 @@ Before creating a check run, require all existing gates plus:
 Re-evaluate the mutable facts, including master identity, ancestry, parent
 topology, PR files, and payload bytes, in Snapshot B before success. A final
 authorization snapshot must then re-read PR identity and auto-merge state,
-exact-head reviews and reviewer permission, the complete review-thread
+exact-head review timelines and reviewer permission, the complete review-thread
 inventory, master identity/topology, the complete canonical protection object,
 all non-gate required checks, exact scope and payload, and finally the gate-check
 inventory. The last remote read must prove exactly one same-head canonical gate
@@ -514,6 +531,13 @@ another page remains.
 | REVIEW-03 | PR author approval | `FAIL_REVIEW` |
 | REVIEW-04 | approval after dispatch | `FAIL_REVIEW` |
 | REVIEW-05 | dismissed approval | `FAIL_REVIEW` |
+| REVIEW-06 | same reviewer: approval then later changes requested | `FAIL_REVIEW` |
+| REVIEW-07 | same reviewer: changes requested then later approval | candidate pass when otherwise eligible |
+| REVIEW-08 | approval followed by a comment-only review | prior decision remains effective |
+| REVIEW-09 | duplicate timestamp with stable increasing review IDs | deterministic latest decision |
+| REVIEW-10 | malformed chronology, missing ID, or duplicate ID | technical failure |
+| REVIEW-11 | approval valid initially, then changes requested before Snapshot B | fail |
+| REVIEW-12 | approval valid at Snapshot B, then changes requested before final snapshot | fail |
 | THREAD-01 | unresolved review thread | fail |
 | STATE-01 | auto-merge active | fail |
 | STATE-02 | PR closed or merged | fail |
@@ -533,8 +557,12 @@ another page remains.
 
 The implementation-remediation matrix additionally requires: read/triage/none
 reviewers fail; push/maintain/admin non-author reviewers pass candidate
-selection; reviewer-permission API uncertainty fails; malformed review records
-fail; every incomplete or cyclic review-thread pagination shape fails;
+selection; each snapshot independently reduces the complete exact-head review
+inventory to the latest decision per reviewer; an approval superseded by
+changes requested or dismissal fails; later approval may restore eligibility;
+comment-only records do not supersede decisions; reviewer-permission API
+uncertainty fails; malformed or ambiguous review chronology fails; every
+incomplete or cyclic review-thread pagination shape fails;
 non-boolean `isResolved` fails; incomplete protection, administrator bypass, or
 force-push/deletion enablement, branch restrictions, code-owner review-policy
 drift, or malformed gate identity fails; and every mutable-state transition from

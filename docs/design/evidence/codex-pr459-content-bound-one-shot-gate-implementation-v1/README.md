@@ -5,7 +5,7 @@ PACK_ID=VIONA.GOVERNANCE.PR459.CONTENT_BOUND_ONE_SHOT_FREEZE_EXCEPTION.GATE_IMPL
 AUTHORIZATION_PROVENANCE=APPROVE_VIONA_PR459_GATE_LOCAL_FALSE_GREEN_REMEDIATION_V1
 ORIGINAL_IMPLEMENTATION_PACK=VIONA.GOVERNANCE.PR459.CONTENT_BOUND_ONE_SHOT_FREEZE_EXCEPTION.GATE_IMPLEMENTATION.V1
 FOUNDER_GOVERNANCE_DECISION=SELECT_CONTENT_BOUND_POST_GATE_REMEDIATION_CONTINUATION_MODEL
-STATUS=LOCAL_FALSE_GREEN_REMEDIATION_OFFLINE_VERIFIED_NOT_STAGED
+STATUS=LOCAL_LATEST_EFFECTIVE_REVIEW_STATE_P1_REMEDIATION_OFFLINE_VERIFIED_NOT_STAGED
 NOT_MERGE_AUTHORIZATION=YES
 GLOBAL_FREEZE_RELEASED=NO
 REMOTE_EFFECTS=NONE
@@ -56,10 +56,10 @@ Current remediation outputs, hashed after the final source/test edits:
 | Path | Current SHA-256 |
 |---|---|
 | `.github/workflows/viona-merge-authorization-gate.yml` | `a8f48beef9161146b12c9ddb55b81327de64ee81d362d1276f286a6ed10bb02c` |
-| `scripts/viona-merge-authorization-gate.mjs` | `1bae4c1b1d2a8afc87efc2b02fbeb7ca016967707e212bdcb9c9516fe73a8105` |
-| `scripts/test-viona-merge-authorization-gate.mjs` | `0fcb178e62bfbeb5d7438816bb513836b661dcb554ed6431c3b3d6e7ea81bed1` |
-| `docs/product/VIONA_PR459_EXACT_CANONICAL_DOCS_FREEZE_EXCEPTION_DESIGN.md` | `def33564f377697563c5aa65aa1a17f2af61fd9b05df659bb70a10dce059c0f9` |
-| `docs/design/evidence/codex-pr459-exact-canonical-docs-freeze-exception-design-v1/README.md` | `977fe925b9e4b72c21ea06dc4b32f2cd68cf2b4019617af6a6119fb3e4b13f05` |
+| `scripts/viona-merge-authorization-gate.mjs` | `6131ee682643f5960e5bfc5ba98df54d684c22c6e3b199e45bbcab2a66a089bf` |
+| `scripts/test-viona-merge-authorization-gate.mjs` | `9dc782bbe7642ebbc156617d2679228119caf577fa7482ef422cd5025dfa0032` |
+| `docs/product/VIONA_PR459_EXACT_CANONICAL_DOCS_FREEZE_EXCEPTION_DESIGN.md` | `b4de769e484f7d177cd704ea15fb3dcb1b395b3530224e2274c50d723b04cd31` |
+| `docs/design/evidence/codex-pr459-exact-canonical-docs-freeze-exception-design-v1/README.md` | `ec0a2141f1e1f195d93b1859725b1428c22bcb4bb0e891bfb521877c1c672182` |
 
 ## Implemented immutable policy
 
@@ -127,6 +127,11 @@ changes the PR459 path as follows:
   partial GraphQL errors and page-limit exhaustion, and accepts only a boolean
   `isResolved` value;
 - Snapshot B repeats exact-head review and repository-permission proof;
+- initial selection, Snapshot B, and the final snapshot each reduce the full
+  exact-head review history to the latest decision per reviewer before any
+  approval is considered; later `CHANGES_REQUESTED` or dismissal invalidates an
+  older approval, later `APPROVED` may restore eligibility, and `COMMENTED` or
+  `PENDING` remains a non-decision state;
 - a final authorization snapshot re-reads PR/auto-merge state, reviews and
   reviewer permission, complete threads, current master and topology,
   protection, non-gate checks, exact scope, and raw payload bytes;
@@ -139,6 +144,29 @@ two-parent transition, current-master ancestry, canonical digests, and the two
 exact freeze tokens remain unchanged. The existing
 `FREEZE_EXCEPTION_FOR_MERGE_GUARDRAIL_REMEDIATION_ONLY` fixture retains its
 previous successful behavior and performs no PR459 payload reads.
+
+## Live PR #460 P1 remediation
+
+```text
+LIVE_CODEX_P1_ACCEPTED=YES
+P1_LIVE_REVIEW_THREAD_ID=PRRT_kwDOSFpBeM6iDLfF
+P1_LIVE_COMMENT_ID=PRRC_kwDOSFpBeM7uo_Wm
+P1_LATEST_EFFECTIVE_REVIEW_STATE_REMEDIATED=YES_OFFLINE_LOGIC_AND_ADVERSARIAL_FIXTURES
+LATEST_REVIEW_STATE_POLICY=LATEST_DECISION_PER_NORMALIZED_REVIEWER_ON_EXACT_RUNTIME_HEAD_ORDERED_BY_SUBMITTED_AT_THEN_STABLE_POSITIVE_REVIEW_ID
+COMMENTED_EFFECTIVE_STATE_POLICY=COMMENTED_AND_PENDING_ARE_NON_DECISION_STATES_AND_DO_NOT_SUPERSEDE_THE_LATEST_EXACT_HEAD_DECISION
+ADVERSARIAL_REVIEW_SEQUENCE_TESTS=17_PASS_0_FAIL
+LIVE_ELIGIBLE_REVIEWER_PROVEN=NO
+PR460_MERGE_READY=NOT_CLAIMED
+PR459_MERGE_READY=NOT_CLAIMED
+LIVE_GATE_SUCCESS=NOT_CLAIMED
+```
+
+The reducer validates every review record before using it. Missing or duplicate
+stable review IDs, malformed author/head/timestamps, unknown states, and
+impossible dismissal chronology are technical failures. Equal timestamps are
+resolved deterministically by the GitHub review ID. Review permission remains a
+separate live API proof and is repeated independently at the initial, Snapshot
+B, and final authorization reads.
 
 ## Evidence truth and review boundary
 
@@ -171,11 +199,11 @@ specified green-to-red mutable-state transition.
 |---|---|
 | Gate syntax (`node --check`) | PASS |
 | Gate-test syntax (`node --check`) | PASS |
-| Pre-remediation gate suite retained | 121 PASS, 0 FAIL |
-| New false-green remediation scenarios | 79 PASS, 0 FAIL |
-| Complete gate suite | 200 PASS, 0 FAIL |
+| Pre-latest-review-state gate suite retained | 200 PASS, 0 FAIL |
+| New latest-effective-review-state scenarios | 17 PASS, 0 FAIL |
+| Complete gate suite | 217 PASS, 0 FAIL |
 | Guarded-merge regression suite | 26 PASS, 0 FAIL |
-| Full merge-governance suite | 226 PASS, 0 FAIL |
+| Full merge-governance suite | 243 PASS, 0 FAIL |
 | Unexpected network calls from offline fixtures | 0 |
 
 Final whitespace and workflow-static validation are recorded by the active

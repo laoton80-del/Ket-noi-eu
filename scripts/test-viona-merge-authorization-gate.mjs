@@ -43,6 +43,8 @@ import {
   selectEligiblePr459ExactHeadApproval,
   validateReviewerPermissionResponse,
   validatePr459ReviewInventory,
+  latestEffectivePr459ReviewStates,
+  COMMENTED_EFFECTIVE_STATE_POLICY,
   listReviewThreadsPaginated,
   validatePr459MasterProtection,
   validateRequiredNonGateChecks,
@@ -70,6 +72,7 @@ let passed = 0;
 let pr459PositivePassed = 0;
 let pr459NegativePassed = 0;
 let remediationPassed = 0;
+let latestReviewSequencePassed = 0;
 function test(name, fn) {
   fn();
   passed += 1;
@@ -118,6 +121,23 @@ function remediationTest(name, fn) {
 async function remediationTestAsync(name, fn) {
   await testAsync(name, fn);
   remediationPassed += 1;
+}
+function latestReviewSequenceTest(name, fn) {
+  remediationTest(name, fn);
+  latestReviewSequencePassed += 1;
+}
+async function latestReviewSequenceTestAsync(name, fn) {
+  await remediationTestAsync(name, fn);
+  latestReviewSequencePassed += 1;
+}
+
+function withReviewIds(reviews, firstId = 1001) {
+  if (!Array.isArray(reviews)) return reviews;
+  return reviews.map((review, index) => {
+    if (!review || typeof review !== 'object' || Array.isArray(review)) return review;
+    if (Object.prototype.hasOwnProperty.call(review, 'id')) return review;
+    return { id: firstId + index, ...review };
+  });
 }
 
 function createPr459Fixture() {
@@ -269,6 +289,7 @@ function happyPr459Facts(over = {}) {
     pr459MasterStable: true,
     pr459PayloadStable: true,
     pr459ReviewerPermissionProven: true,
+    pr459LatestEffectiveReviewStateVerified: true,
     pr459ProtectionInvariantsVerified: true,
     pr459ThreadInventoryComplete: true,
     finalAuthorizationSnapshotVerified: true,
@@ -307,6 +328,7 @@ function createMockGateDeps(options = {}) {
   };
   const reviews = options.reviews ?? [
     {
+      id: 1001,
       state: 'APPROVED',
       commit_id: options.pr459 ? PR459_HEAD : HEAD,
       submitted_at: APPROVAL_BEFORE,
@@ -524,9 +546,9 @@ function createMockGateDeps(options = {}) {
       if (urlPath.includes('/reviews')) {
         const round = deps._reviewListRounds ?? 0;
         deps._reviewListRounds = round + 1;
-        return (
+        return withReviewIds(
           options.reviewsByRound?.[round] ??
-          (round > 0 && options.reviewsB ? options.reviewsB : reviews)
+            (round > 0 && options.reviewsB ? options.reviewsB : reviews)
         );
       }
       if (/\/collaborators\/[^/]+\/permission(?:\?|$)/.test(urlPath) && method === 'GET') {
@@ -1947,19 +1969,216 @@ async function main() {
       const result = await selectEligiblePr459ExactHeadApproval(deps, {
         owner: 'laoton80-del',
         repo: 'Ket-noi-eu',
-        reviews: reviews ?? [{
+        reviews: withReviewIds(reviews ?? [{
           state: 'APPROVED',
           commit_id: PR459_HEAD,
           submitted_at: APPROVAL_BEFORE,
           author_association: 'NONE',
           user: { login: 'outsider' },
-        }],
+        }]),
         headSha: PR459_HEAD,
         dispatchCreatedAtMs: Date.parse(RUN_CREATED),
         prAuthorLogin: 'pr-author',
       });
       return { deps, result };
     };
+
+    const sequenceReview = (id, login, state, submittedAt, over = {}) => ({
+      id,
+      state,
+      commit_id: PR459_HEAD,
+      submitted_at: submittedAt,
+      user: { login },
+      ...over,
+    });
+    const EARLY_REVIEW = '2020-01-01T00:00:02.000Z';
+    const MIDDLE_REVIEW = '2020-01-01T00:00:05.000Z';
+    const LATE_REVIEW = '2020-01-01T00:00:08.000Z';
+    const selectReviewSequence = async (
+      reviews,
+      { reviewerPermission = 'push', reviewerPermissionByLogin } = {},
+    ) => {
+      const deps = createMockGateDeps({
+        pr459: true,
+        reviewerPermission,
+        reviewerPermissionByLogin,
+      });
+      const result = await selectEligiblePr459ExactHeadApproval(deps, {
+        owner: 'laoton80-del',
+        repo: 'Ket-noi-eu',
+        reviews,
+        headSha: PR459_HEAD,
+        dispatchCreatedAtMs: Date.parse(RUN_CREATED),
+        prAuthorLogin: 'pr-author',
+      });
+      return { deps, result };
+    };
+
+    await latestReviewSequenceTestAsync('LATEST REVIEW A single approval is eligible candidate', async () => {
+      const { result } = await selectReviewSequence([
+        sequenceReview(2001, 'reviewer-a', 'APPROVED', MIDDLE_REVIEW),
+      ]);
+      assert.equal(result.ok, true);
+      assert.equal(result.reviewerLogin, 'reviewer-a');
+    });
+    await latestReviewSequenceTestAsync('LATEST REVIEW B approve then changes requested rejects reviewer', async () => {
+      const { result } = await selectReviewSequence([
+        sequenceReview(2001, 'reviewer-a', 'APPROVED', EARLY_REVIEW),
+        sequenceReview(2002, 'reviewer-a', 'CHANGES_REQUESTED', LATE_REVIEW),
+      ]);
+      assert.equal(result.ok, false);
+      assert.equal(result.technicalError, false);
+    });
+    await latestReviewSequenceTestAsync('LATEST REVIEW C changes requested then approve is candidate', async () => {
+      const { result } = await selectReviewSequence([
+        sequenceReview(2001, 'reviewer-a', 'CHANGES_REQUESTED', EARLY_REVIEW),
+        sequenceReview(2002, 'reviewer-a', 'APPROVED', LATE_REVIEW),
+      ]);
+      assert.equal(result.ok, true);
+      assert.equal(result.review.id, 2002);
+    });
+    await latestReviewSequenceTestAsync('LATEST REVIEW D dismissed approval rejects reviewer', async () => {
+      const { result } = await selectReviewSequence([
+        sequenceReview(2001, 'reviewer-a', 'APPROVED', MIDDLE_REVIEW, {
+          dismissed_at: LATE_REVIEW,
+        }),
+      ]);
+      assert.equal(result.ok, false);
+    });
+    await latestReviewSequenceTestAsync('LATEST REVIEW E historical approvals cannot outvote later changes requested', async () => {
+      const { result } = await selectReviewSequence([
+        sequenceReview(2001, 'reviewer-a', 'APPROVED', EARLY_REVIEW),
+        sequenceReview(2002, 'reviewer-a', 'APPROVED', MIDDLE_REVIEW),
+        sequenceReview(2003, 'reviewer-a', 'CHANGES_REQUESTED', LATE_REVIEW),
+      ]);
+      assert.equal(result.ok, false);
+    });
+    await latestReviewSequenceTestAsync('LATEST REVIEW F second eligible reviewer may satisfy approval', async () => {
+      const { result } = await selectReviewSequence(
+        [
+          sequenceReview(2001, 'reviewer-a', 'APPROVED', EARLY_REVIEW),
+          sequenceReview(2002, 'reviewer-a', 'CHANGES_REQUESTED', LATE_REVIEW),
+          sequenceReview(2003, 'reviewer-b', 'APPROVED', MIDDLE_REVIEW),
+        ],
+        { reviewerPermissionByLogin: { 'reviewer-b': 'push' } },
+      );
+      assert.equal(result.ok, true);
+      assert.equal(result.reviewerLogin, 'reviewer-b');
+    });
+    await latestReviewSequenceTestAsync('LATEST REVIEW G another reviewer changes request does not erase valid approval', async () => {
+      const { result } = await selectReviewSequence(
+        [
+          sequenceReview(2001, 'reviewer-a', 'APPROVED', MIDDLE_REVIEW),
+          sequenceReview(2002, 'reviewer-b', 'CHANGES_REQUESTED', LATE_REVIEW),
+        ],
+        { reviewerPermissionByLogin: { 'reviewer-a': 'maintain' } },
+      );
+      assert.equal(result.ok, true);
+      assert.equal(result.reviewerLogin, 'reviewer-a');
+    });
+    await latestReviewSequenceTestAsync('LATEST REVIEW H old-head approval is rejected', async () => {
+      const { result } = await selectReviewSequence([
+        sequenceReview(2001, 'reviewer-a', 'APPROVED', MIDDLE_REVIEW, {
+          commit_id: PR459_PRE_REMEDIATION_REFERENCE_HEAD,
+        }),
+      ]);
+      assert.equal(result.ok, false);
+    });
+    await latestReviewSequenceTestAsync('LATEST REVIEW I changes requested before Snapshot B fails', async () => {
+      const approved = sequenceReview(2001, 'eligible-reviewer', 'APPROVED', MIDDLE_REVIEW);
+      const revoked = sequenceReview(2002, 'eligible-reviewer', 'CHANGES_REQUESTED', LATE_REVIEW);
+      const deps = createMockGateDeps({
+        pr459: true,
+        reviewsByRound: [[approved], [approved, revoked], [approved, revoked]],
+      });
+      const result = await runMergeAuthorizationGate(deps);
+      assert.notEqual(result.conclusion, 'success');
+      assert.match(String(result.evidence?.reason ?? ''), /snapshot_b_no_latest_effective/);
+    });
+    await latestReviewSequenceTestAsync('LATEST REVIEW J changes requested before final snapshot fails', async () => {
+      const approved = sequenceReview(2001, 'eligible-reviewer', 'APPROVED', MIDDLE_REVIEW);
+      const revoked = sequenceReview(2002, 'eligible-reviewer', 'CHANGES_REQUESTED', LATE_REVIEW);
+      const deps = createMockGateDeps({
+        pr459: true,
+        reviewsByRound: [[approved], [approved], [approved, revoked]],
+      });
+      const result = await runMergeAuthorizationGate(deps);
+      assert.notEqual(result.conclusion, 'success');
+      assert.match(String(result.evidence?.reason ?? ''), /final_no_latest_effective/);
+    });
+    await latestReviewSequenceTestAsync('LATEST REVIEW K permission downgrade before final snapshot fails', async () => {
+      const deps = createMockGateDeps({
+        pr459: true,
+        reviewerPermissionSequence: ['push', 'push', 'read'],
+      });
+      const result = await runMergeAuthorizationGate(deps);
+      assert.equal(result.blocker, BLOCKERS.BLOCKED_PR459_REVIEWER_PERMISSION_UNPROVEN);
+    });
+    await latestReviewSequenceTestAsync('LATEST REVIEW L malformed chronology fails closed', async () => {
+      const { result } = await selectReviewSequence([
+        sequenceReview(2001, 'reviewer-a', 'APPROVED', LATE_REVIEW, {
+          dismissed_at: EARLY_REVIEW,
+        }),
+      ]);
+      assert.equal(result.ok, false);
+      assert.equal(result.technicalError, true);
+      assert.equal(result.reason, 'review_dismissal_precedes_submission');
+      const numericTimestamp = latestEffectivePr459ReviewStates([
+        sequenceReview(2002, 'reviewer-a', 'APPROVED', 12345),
+      ], PR459_HEAD);
+      assert.equal(numericTimestamp.ok, false);
+      assert.equal(numericTimestamp.reason, 'review_submission_time_malformed');
+      const timezoneAmbiguous = latestEffectivePr459ReviewStates([
+        sequenceReview(2003, 'reviewer-a', 'APPROVED', '2020-01-01T00:00:05'),
+      ], PR459_HEAD);
+      assert.equal(timezoneAmbiguous.ok, false);
+      assert.equal(timezoneAmbiguous.reason, 'review_submission_time_malformed');
+    });
+    latestReviewSequenceTest('LATEST REVIEW M equal timestamps use stable review id deterministically', () => {
+      const approve = sequenceReview(2001, 'reviewer-a', 'APPROVED', MIDDLE_REVIEW);
+      const request = sequenceReview(2002, 'reviewer-a', 'CHANGES_REQUESTED', MIDDLE_REVIEW);
+      const forward = latestEffectivePr459ReviewStates([approve, request], PR459_HEAD);
+      const reverse = latestEffectivePr459ReviewStates([request, approve], PR459_HEAD);
+      assert.equal(forward.ok, true);
+      assert.equal(reverse.ok, true);
+      assert.equal(forward.latest[0].effectiveState, 'CHANGES_REQUESTED');
+      assert.equal(reverse.latest[0].effectiveState, 'CHANGES_REQUESTED');
+      assert.equal(forward.latest[0].reviewId, 2002);
+      assert.equal(reverse.latest[0].reviewId, 2002);
+    });
+    await latestReviewSequenceTestAsync('LATEST REVIEW N empty inventory fails authorization', async () => {
+      const { result } = await selectReviewSequence([]);
+      assert.equal(result.ok, false);
+      assert.equal(result.technicalError, false);
+    });
+    await latestReviewSequenceTestAsync('LATEST REVIEW O all latest states non-approved fail', async () => {
+      const { result } = await selectReviewSequence([
+        sequenceReview(2001, 'reviewer-a', 'CHANGES_REQUESTED', MIDDLE_REVIEW),
+        sequenceReview(2002, 'reviewer-b', 'DISMISSED', LATE_REVIEW),
+      ]);
+      assert.equal(result.ok, false);
+    });
+    await latestReviewSequenceTestAsync('LATEST REVIEW COMMENTED does not supersede an approval', async () => {
+      const { result } = await selectReviewSequence([
+        sequenceReview(2001, 'reviewer-a', 'APPROVED', EARLY_REVIEW),
+        sequenceReview(2002, 'reviewer-a', 'COMMENTED', LATE_REVIEW),
+      ]);
+      assert.equal(result.ok, true);
+      assert.equal(result.review.id, 2001);
+      assert.equal(
+        COMMENTED_EFFECTIVE_STATE_POLICY,
+        'COMMENTED_AND_PENDING_ARE_NON_DECISION_STATES_AND_DO_NOT_SUPERSEDE_THE_LATEST_EXACT_HEAD_DECISION',
+      );
+    });
+    latestReviewSequenceTest('LATEST REVIEW duplicate stable identity fails closed', () => {
+      const result = latestEffectivePr459ReviewStates([
+        sequenceReview(2001, 'reviewer-a', 'APPROVED', EARLY_REVIEW),
+        sequenceReview(2001, 'reviewer-a', 'CHANGES_REQUESTED', LATE_REVIEW),
+      ], PR459_HEAD);
+      assert.equal(result.ok, false);
+      assert.equal(result.technicalError, true);
+      assert.equal(result.reason, 'review_identity_duplicate');
+    });
 
     await remediationTestAsync('REMEDIATION FG01 01 outsider NONE read fails', async () => {
       const { result } = await permissionSelection('read');
@@ -2034,10 +2253,10 @@ async function main() {
       const result = await selectEligiblePr459ExactHeadApproval(deps, {
         owner: 'laoton80-del', repo: 'Ket-noi-eu', headSha: PR459_HEAD,
         dispatchCreatedAtMs: Date.parse(RUN_CREATED), prAuthorLogin: 'pr-author',
-        reviews: [
+        reviews: withReviewIds([
           { state: 'APPROVED', commit_id: PR459_HEAD, submitted_at: APPROVAL_BEFORE, user: { login: 'outsider' } },
           { state: 'APPROVED', commit_id: PR459_HEAD, submitted_at: APPROVAL_BEFORE, user: { login: 'eligible' } },
-        ],
+        ]),
       });
       assert.equal(result.ok, true);
       assert.equal(result.reviewerLogin, 'eligible');
@@ -2051,10 +2270,10 @@ async function main() {
       const result = await selectEligiblePr459ExactHeadApproval(deps, {
         owner: 'laoton80-del', repo: 'Ket-noi-eu', headSha: PR459_HEAD,
         dispatchCreatedAtMs: Date.parse(RUN_CREATED), prAuthorLogin: 'pr-author',
-        reviews: [
+        reviews: withReviewIds([
           { state: 'APPROVED', commit_id: PR459_HEAD, submitted_at: APPROVAL_BEFORE, user: { login: 'outsider' } },
           { state: 'APPROVED', commit_id: PR459_HEAD, submitted_at: APPROVAL_BEFORE, user: { login: 'reader' } },
-        ],
+        ]),
       });
       assert.equal(result.ok, false);
       assert.equal(result.technicalError, false);
@@ -2298,6 +2517,7 @@ async function main() {
     remediationTest('REMEDIATION pure policy requires final proof facts', () => {
       for (const field of [
         'pr459ReviewerPermissionProven',
+        'pr459LatestEffectiveReviewStateVerified',
         'pr459ProtectionInvariantsVerified',
         'pr459ThreadInventoryComplete',
         'finalAuthorizationSnapshotVerified',
@@ -2404,6 +2624,7 @@ async function main() {
     console.log(`PR459_POSITIVE_PASS_COUNT ${pr459PositivePassed}`);
     console.log(`PR459_NEGATIVE_PASS_COUNT ${pr459NegativePassed}`);
     console.log(`REMEDIATION_PASS_COUNT ${remediationPassed}`);
+    console.log(`LATEST_REVIEW_SEQUENCE_PASS_COUNT ${latestReviewSequencePassed}`);
     console.log(`UNEXPECTED_NETWORK_CALLS ${unexpectedNetworkCalls}`);
   } finally {
     globalThis.fetch = originalFetch;
