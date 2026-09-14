@@ -30,8 +30,11 @@
     "archivedProtocol": {
       "path": "docs/ai-context/archive/VIONA_OPERATING_PROTOCOL_V1.md",
       "version": "1",
-      "sha256": "3be273fab8008c262465781fdbb9d9d4c66fb051f4a88371d2b1fbaca778d215",
-      "exactPrePromotionBytes": true
+      "sha256": "9cfe4452f974a287e74e4bff5c987e8614178b501c2b7be05aca73e51dd4f657",
+      "exactPrePromotionBytes": false,
+      "representation": "LF_NORMALIZED_GIT_SNAPSHOT",
+      "rawWorkingTreePrestateSha256": "3be273fab8008c262465781fdbb9d9d4c66fb051f4a88371d2b1fbaca778d215",
+      "semanticContentPreservedAfterLineEndingNormalization": true
     },
     "codexEntrypoint": {
       "path": "docs/ai-context/VIONA_CODEX_CANONICAL_ENTRYPOINT.md",
@@ -86,5 +89,15 @@
     "docs/design/evidence/codex-viona-operating-protocol-v2-reconcile-and-promote-v1/evidence-manifest.sha256"
   ],
   "result": "PASS",
-  "classification": "VIONA_OPERATING_PROTOCOL_V2_RECONCILED_AND_PROMOTED_DOCS_ONLY"
+  "classification": "VIONA_OPERATING_PROTOCOL_V2_RECONCILED_AND_PROMOTED_DOCS_ONLY",
+  "evidenceIdentityDomain": "GIT_NORMALIZED_SNAPSHOT_BYTES",
+  "evidenceIntegrityRemediation": {
+    "packId": "VIONA.CANONICAL.OPERATING_PROTOCOL_V2.PR459.EVIDENCE_INTEGRITY_REMEDIATION.V1",
+    "authorizationProvenance": "APPROVE_VIONA_PR459_DOCS_ONLY_EVIDENCE_INTEGRITY_REMEDIATION_AND_PUSH",
+    "remediatedUtc": "2026-09-14T02:22:36.756Z",
+    "p1FindingsAccepted": 2,
+    "archiveRepresentationCorrected": true,
+    "promotionRecordChecksumRegenerated": true,
+    "evidenceManifestRegeneratedFromFinalGitSnapshotBytes": true
+  }
 }
