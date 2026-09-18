@@ -1047,6 +1047,85 @@
     "tierDemoSuccessBody": "Wallet sync preview only — not an app-store receipt or live subscription."
   },
   "home": {
+    "rec2": {
+      "brandSubtitle": "Global Vietnamese Companion OS",
+      "language": "Choose language",
+      "notificationUnavailable": "Notifications are not connected in this Home candidate",
+      "greetingNamed": "Good to see you, {{name}}.",
+      "greetingGuest": "Welcome to VIONA.",
+      "headline": "Your life, connected through one calm Home.",
+      "imageFallback": "Cinematic gradient shown until a licensed visual is available",
+      "imageReady": "Licensed visual available",
+      "universeOpenHint": "Open this VIONA universe",
+      "universesTitle": "Explore six VIONA universes",
+      "availability": {
+        "available": "Open",
+        "gated": "Access required",
+        "unavailable": "Unavailable"
+      },
+      "layouts": {
+        "web": "Web",
+        "tablet-landscape": "Tablet landscape",
+        "tablet-portrait": "Tablet portrait",
+        "phone": "Phone"
+      },
+      "states": {
+        "loading": "Home content is loading.",
+        "empty": "No Home content is available yet.",
+        "offline": "You are offline. Only locally available controls are shown.",
+        "gated": "This Home content needs access that is not currently available."
+      },
+      "tasks": {
+        "title": "Continue where you left off",
+        "noTrustedAdapter": "No trusted task source is connected, so VIONA is not presenting inferred tasks."
+      },
+      "alfred": {
+        "eyebrow": "SHARED INTELLIGENCE",
+        "title": "Viona",
+        "expand": "Open Viona information panel",
+        "collapse": "Close Viona information panel",
+        "uiOnlyDetail": "This panel is informational in the RC2 Home candidate. It does not call an AI provider, start a microphone, submit a request, or charge a wallet.",
+        "voiceUnavailable": "Voice is unavailable in this candidate",
+        "states": {
+          "idle": "Ready when a trusted Viona runtime is connected.",
+          "permission-required": "Permission would be required before voice use.",
+          "listening": "Listening test state.",
+          "processing": "Processing test state.",
+          "response": "Response test state.",
+          "interrupted": "Viona test state interrupted.",
+          "offline": "Viona runtime is offline.",
+          "unavailable": "Viona is UI-only and unavailable for live requests in this candidate.",
+          "error": "Viona test state encountered an error."
+        }
+      },
+      "universes": {
+        "local": {
+          "title": "Local",
+          "subtitle": "Nearby services, Vietnamese community, and everyday support."
+        },
+        "travel": {
+          "title": "Travel",
+          "subtitle": "Travel guidance and language support without implied booking."
+        },
+        "academy": {
+          "title": "Academy",
+          "subtitle": "Learning and practice through currently available Academy surfaces."
+        },
+        "business": {
+          "title": "Business",
+          "subtitle": "Merchant workspace access for eligible accounts only."
+        },
+        "account": {
+          "title": "Account",
+          "subtitle": "Profile, language, privacy, and available account controls."
+        },
+        "sos": {
+          "title": "SOS",
+          "subtitle": "Open the existing safety guidance surface; no automatic call or dispatch."
+        }
+      },
+      "runtimeTruth": "RC2 Home is a local, feature-gated candidate. Notifications, live Viona requests, and inferred tasks are unavailable."
+    },
     "tabHub": "Hub",
     "tabLocal": "Local",
     "tabTravel": "Travel Lite",

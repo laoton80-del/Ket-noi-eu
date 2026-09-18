@@ -5,8 +5,6 @@ import { initProductAnalytics } from './src/services/AnalyticsService';
 import * as Sentry from '@sentry/react-native';
 import { initMonitoringRadar } from './src/config/sentryConfig';
 
-initMonitoringRadar();
-
 import {
   Montserrat_400Regular,
   Montserrat_500Medium,
@@ -39,6 +37,7 @@ import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-cont
 import { AppStateView } from './src/components/ui/AppStateView';
 import { IntentEntryModal } from './src/components/IntentEntryModal';
 import { AuthProvider, useAuth } from './src/context/AuthContext';
+import { useUserStore } from './src/store/userStore';
 import { SmartTrioProvider } from './src/context/SmartTrioContext';
 import {
   isAdminDebugSurfaceEnabled,
@@ -101,6 +100,17 @@ import { KidsLeaderboardScreen } from './src/screens/b2c/academy/KidsLeaderboard
 import { SuperAppUserStoreSync } from './src/store/SuperAppUserStoreSync';
 import { theme } from './src/theme/theme';
 import { useAppStartupOrchestration } from './src/app/bootstrap/useAppStartupOrchestration';
+import {
+  Rec2OfflineHomeBoundaryContext,
+  advanceRec2OfflineSession,
+  claimRec2RemoteInitializerOnce,
+  resolveRec2OfflineHomePolicy,
+  resolveRec2SessionRootLinking,
+  type Rec2ConnectivityTruth,
+  type Rec2ConnectivityState,
+  type Rec2OfflineHomeRuntimeBoundary,
+  type Rec2OfflineSessionState,
+} from './src/app/bootstrap/rec2OfflineHomePolicy';
 import { AppModeProvider, useAppMode } from './src/context/AppModeContext';
 import { HubThemeProvider } from './src/context/HubThemeContext';
 import { ConditionalStripeProvider } from './src/providers/ConditionalStripeProvider';
@@ -417,6 +427,7 @@ type AppNavigationShellProps = Readonly<{
   showIntentModal: boolean;
   onGuidedIntent: (id: GuidedIntentId) => void;
   onSkipGuidedIntent: () => void;
+  offlineBoundary: Rec2OfflineHomeRuntimeBoundary;
 }>;
 
 function AppNavigationShell({
@@ -430,21 +441,25 @@ function AppNavigationShell({
   showIntentModal,
   onGuidedIntent,
   onSkipGuidedIntent,
+  offlineBoundary,
 }: AppNavigationShellProps): ReactElement {
   const { navigationTheme, statusBarStyle, syncFromRootStackRoute } = useNavigationThemeForHub();
   return (
-    <View
-      style={{
-        flex: 1,
-        width: '100%',
-        maxWidth: isLargeScreen || nativeLandscapeFullBleed || nativeTabletPortraitFullBleed ? '100%' : 600,
-        alignSelf: 'center',
-      }}
-    >
-      <ThemeProvider value={navigationTheme}>
-        <NavigationContainer
-          ref={navigationRef}
-          linking={rootLinking}
+    <Rec2OfflineHomeBoundaryContext.Provider value={offlineBoundary}>
+      <View
+        style={{
+          flex: 1,
+          width: '100%',
+          maxWidth: isLargeScreen || nativeLandscapeFullBleed || nativeTabletPortraitFullBleed ? '100%' : 600,
+          alignSelf: 'center',
+        }}
+        testID={offlineBoundary.localOnlyGuestHome ? 'viona-rec2-local-offline-app-root' : 'viona-app-root'}
+        accessibilityLabel={offlineBoundary.localOnlyGuestHome ? 'VIONA RC2 local offline Home' : undefined}
+      >
+        <ThemeProvider value={navigationTheme}>
+          <NavigationContainer
+            ref={navigationRef}
+            linking={offlineBoundary.rootLinkingAllowed ? rootLinking : undefined}
           theme={navigationTheme}
           onStateChange={(state) => {
             if (!state?.routes?.length) return;
@@ -455,7 +470,11 @@ function AppNavigationShell({
         >
           <StatusBar style={statusBarStyle} />
           <SuperAppUserStoreSync />
-          <IntentEntryModal visible={showIntentModal} onSelectIntent={onGuidedIntent} onSkip={onSkipGuidedIntent} />
+          <IntentEntryModal
+            visible={showIntentModal && offlineBoundary.remoteNavigationAllowed}
+            onSelectIntent={onGuidedIntent}
+            onSkip={onSkipGuidedIntent}
+          />
           <Stack.Navigator
             key={`root-${user?.phone ?? 'guest'}`}
             initialRouteName={resolveRootStackRoute(user)}
@@ -699,10 +718,27 @@ function AppNavigationShell({
             ]}
           />
           <DemoTourOverlay />
-        </NavigationContainer>
-      </ThemeProvider>
-    </View>
+          </NavigationContainer>
+        </ThemeProvider>
+      </View>
+    </Rec2OfflineHomeBoundaryContext.Provider>
   );
+}
+
+function normalizeConnectivity(value: boolean | null | undefined): Rec2ConnectivityTruth {
+  if (value === true) return true;
+  if (value === false) return false;
+  return null;
+}
+
+function normalizeConnectivityState(state: Readonly<{
+  isConnected?: boolean | null;
+  isInternetReachable?: boolean | null;
+}>): Rec2ConnectivityState {
+  return {
+    isConnected: normalizeConnectivity(state.isConnected),
+    isInternetReachable: normalizeConnectivity(state.isInternetReachable),
+  };
 }
 
 function AppRoot() {
@@ -719,8 +755,15 @@ function AppRoot() {
     height >= width;
   const { isHydrating, user, setPendingRedirect } = useAuth();
   const { mode, transitionKey } = useAppMode();
-  const [isOnline, setIsOnline] = useState(true);
+  const currentActiveRole = useUserStore((state) => state.currentActiveRole);
+  const [connectivity, setConnectivity] = useState<Rec2ConnectivityState>({
+    isConnected: null,
+    isInternetReachable: null,
+  });
+  const [localeReady, setLocaleReady] = useState(false);
   const transitionAnim = useRef(new Animated.Value(0)).current;
+  const appRemoteInitializersRef = useRef(new Set<string>());
+  const offlineSessionRef = useRef<Rec2OfflineSessionState>({ localOnlyObserved: false });
   const [fontsLoaded] = useMontserratFonts({
     Montserrat_400Regular,
     Montserrat_500Medium,
@@ -733,29 +776,83 @@ function AppRoot() {
     intentGateReady,
     showIntentModal,
     opsReady,
+    remoteOpsReady,
     opsConfig,
     onGuidedIntent,
     onSkipGuidedIntent,
   } = useAppStartupOrchestration({
     isHydrating,
     user,
+    connectivity,
     navigationRef,
     setPendingRedirect,
   });
 
   useEffect(() => {
-    const sub = NetInfo.addEventListener((s) => setIsOnline(s.isConnected !== false));
-    void NetInfo.fetch().then((s) => setIsOnline(s.isConnected !== false));
+    let listenerObserved = false;
+    const sub = NetInfo.addEventListener((state) => {
+      listenerObserved = true;
+      setConnectivity(normalizeConnectivityState(state));
+    });
+    void NetInfo.fetch().then((state) => {
+      if (!listenerObserved) setConnectivity(normalizeConnectivityState(state));
+    });
     return () => sub();
   }, []);
 
   useEffect(() => {
-    void applyStoredLanguage();
+    let active = true;
+    void applyStoredLanguage().finally(() => {
+      if (active) setLocaleReady(true);
+    });
+    return () => {
+      active = false;
+    };
   }, []);
 
+  const rec2HomeEnabled = getFeatureFlags().rec2HomeShellEnabled;
+  const offlinePolicy = resolveRec2OfflineHomePolicy({
+    rec2HomeEnabled,
+    connectivity,
+    isHydrating,
+    hasAuthenticatedUser: user !== null,
+    hasB2BWorkspaceAccess: hasB2BWorkspaceAccess(user),
+    isB2CMode: mode === 'B2C_MODE' && currentActiveRole === 'B2C',
+    localeReady,
+    fontAssetsReady: fontsLoaded,
+    intentGateReady,
+    opsReady,
+    remoteOpsReady,
+    operationalKillSwitch: opsConfig?.killSwitch === true,
+    operationalReadOnlyMode: opsConfig?.readOnlyMode === true,
+    disabledFeatures: opsConfig?.disabledFeatures ?? [],
+  });
+  offlineSessionRef.current = advanceRec2OfflineSession(offlineSessionRef.current, offlinePolicy);
+  const offlineBoundary: Rec2OfflineHomeRuntimeBoundary = {
+    ...offlinePolicy,
+    rootLinkingAllowed: resolveRec2SessionRootLinking(offlineSessionRef.current, offlinePolicy),
+  };
+
   useEffect(() => {
-    initProductAnalytics();
-  }, []);
+    if (
+      claimRec2RemoteInitializerOnce(
+        appRemoteInitializersRef.current,
+        'monitoring-radar',
+        offlinePolicy.remoteInitializersAllowed
+      )
+    ) {
+      initMonitoringRadar();
+    }
+    if (
+      claimRec2RemoteInitializerOnce(
+        appRemoteInitializersRef.current,
+        'product-analytics',
+        offlinePolicy.remoteInitializersAllowed
+      )
+    ) {
+      initProductAnalytics();
+    }
+  }, [offlinePolicy.remoteInitializersAllowed]);
 
   useEffect(() => {
     transitionAnim.setValue(0);
@@ -767,20 +864,20 @@ function AppRoot() {
     }).start();
   }, [transitionAnim, transitionKey]);
 
-  if (!isOnline) {
+  if (offlinePolicy.renderMode === 'offline-blocked') {
     return (
       <AppStateView
         variant="offline"
         title="CONNECTION LOST"
         message="Please check your network settings and try again."
         onRetry={() => {
-          void NetInfo.refresh().then((s) => setIsOnline(s.isConnected !== false));
+          void NetInfo.refresh().then((state) => setConnectivity(normalizeConnectivityState(state)));
         }}
       />
     );
   }
 
-  if (!fontsLoaded || isHydrating || !intentGateReady || !opsReady) {
+  if (offlinePolicy.renderMode === 'loading') {
     return (
       <AppStateView
         variant="loading"
@@ -790,13 +887,13 @@ function AppRoot() {
     );
   }
 
-  if (opsConfig?.killSwitch) {
+  if (offlinePolicy.renderMode === 'maintenance') {
     return (
       <AppStateView
         variant="maintenance"
         title="SCHEDULED MAINTENANCE"
         message="VIONA is temporarily unavailable. We will be back soon."
-        detail={`Ops source: ${opsConfig.source}`}
+        detail={`Ops source: ${opsConfig?.source ?? 'unavailable'}`}
       />
     );
   }
@@ -814,6 +911,7 @@ function AppRoot() {
         showIntentModal={showIntentModal}
         onGuidedIntent={onGuidedIntent}
         onSkipGuidedIntent={onSkipGuidedIntent}
+        offlineBoundary={offlineBoundary}
       />
     </V7NavigationSurfaceProvider>
   );

@@ -53,6 +53,10 @@ import {
   resolveVionaHomeRouteTabBarStyleOverride,
   resolveVionaNativeBottomShellGeometry,
 } from './vionaBottomShellGeometry';
+import {
+  isRec2ActionAllowed,
+  useRec2OfflineHomeBoundary,
+} from '../app/bootstrap/rec2OfflineHomePolicy';
 
 import { HomeScreen } from '../screens/HomeScreen';
 import { AcademyScreen } from '../screens/AcademyScreen';
@@ -189,10 +193,11 @@ export function MainTabNavigator(): ReactElement {
   const { t } = useTranslation();
   const navigation = useNavigation<StackNav>();
   const { user, pendingRedirect, setPendingRedirect } = useAuth();
+  const offlineBoundary = useRec2OfflineHomeBoundary();
   const currentActiveRole = useUserStore((s) => s.currentActiveRole);
   const switchRole = useUserStore((s) => s.switchRole);
   const allowedRoles = useUserStore((s) => s.allowedRoles);
-  const showRolePicker = allowedRoles.length > 1;
+  const showRolePicker = !offlineBoundary.localOnlyGuestHome && allowedRoles.length > 1;
   const [paywallTarget, setPaywallTarget] = useState<RedirectTarget | null>(null);
   const [sosSheetOpen, setSosSheetOpen] = useState(false);
   const [languageSheetOpen, setLanguageSheetOpen] = useState(false);
@@ -283,16 +288,18 @@ export function MainTabNavigator(): ReactElement {
   }, [mountShellLanguageSheet]);
 
   const openShellAccount = useCallback(() => {
+    if (!isRec2ActionAllowed(offlineBoundary, 'account')) return;
     profileSwitcherRef.current?.openPersonalHub();
-  }, []);
+  }, [offlineBoundary]);
 
   const openShellLanguage = useCallback(() => {
     setLanguageSheetOpen(true);
   }, []);
 
   const openShellRole = useCallback(() => {
+    if (!offlineBoundary.remoteNavigationAllowed) return;
     profileSwitcherRef.current?.openRolePicker();
-  }, []);
+  }, [offlineBoundary.remoteNavigationAllowed]);
 
   const b2cDesktopBottomTabs = isDesktopWeb && currentActiveRole === 'B2C' && !fashionHomeDesktopShell;
   const tabBarPosition = b2cDesktopBottomTabs ? 'bottom' : isDesktopWeb ? 'left' : 'bottom';
@@ -469,19 +476,33 @@ export function MainTabNavigator(): ReactElement {
     () => ({
       openLanguageSheet: () => setLanguageSheetOpen(true),
       triggerSafetyAssist: onSosHoldComplete,
-      openAccount: () => profileSwitcherRef.current?.openPersonalHub(),
-      openRolePicker: () => profileSwitcherRef.current?.openRolePicker(),
+      openAccount: () => {
+        if (isRec2ActionAllowed(offlineBoundary, 'account')) {
+          profileSwitcherRef.current?.openPersonalHub();
+        }
+      },
+      openRolePicker: () => {
+        if (offlineBoundary.remoteNavigationAllowed) profileSwitcherRef.current?.openRolePicker();
+      },
       showRolePicker,
     }),
-    [onSosHoldComplete, showRolePicker]
+    [offlineBoundary, onSosHoldComplete, showRolePicker]
   );
 
   const openPaywall = (target: RedirectTarget) => {
+    if (!offlineBoundary.remoteNavigationAllowed) return;
     setPendingRedirect(target);
     setPaywallTarget(target);
   };
 
   useEffect(() => {
+    if (!offlineBoundary.localOnlyGuestHome) return;
+    if (pendingRedirect) setPendingRedirect(null);
+    if (paywallTarget) setPaywallTarget(null);
+  }, [offlineBoundary.localOnlyGuestHome, paywallTarget, pendingRedirect, setPendingRedirect]);
+
+  useEffect(() => {
+    if (!offlineBoundary.remoteNavigationAllowed) return;
     if (!user || !pendingRedirect) return;
 
     const defaultTabForActiveRole = (): keyof RootTabParamList => {
@@ -565,6 +586,7 @@ export function MainTabNavigator(): ReactElement {
   }, [
     currentActiveRole,
     navigation,
+    offlineBoundary.remoteNavigationAllowed,
     pendingRedirect,
     setPendingRedirect,
     switchRole,
@@ -577,6 +599,16 @@ export function MainTabNavigator(): ReactElement {
         <Tab.Navigator
           key={currentActiveRole}
           tabBar={renderTabBar}
+          screenListeners={({ route }) => ({
+            tabPress: (event) => {
+              if (
+                offlineBoundary.localOnlyGuestHome &&
+                route.name !== MAIN_TAB.B2C.home
+              ) {
+                event.preventDefault();
+              }
+            },
+          })}
           screenOptions={({ route }) => ({
             headerShown: false,
             tabBarPosition,
@@ -729,6 +761,10 @@ export function MainTabNavigator(): ReactElement {
                 options={{ title: t('home.tabAcademy') }}
                 listeners={{
                   tabPress: (e) => {
+                    if (offlineBoundary.localOnlyGuestHome) {
+                      e.preventDefault();
+                      return;
+                    }
                     if (!user && !isDemoSandboxActive()) {
                       e.preventDefault();
                       openPaywall('Academy');
@@ -818,6 +854,10 @@ export function MainTabNavigator(): ReactElement {
         visible={!!paywallTarget}
         onClose={() => setPaywallTarget(null)}
         onContinue={() => {
+          if (!offlineBoundary.remoteNavigationAllowed) {
+            setPaywallTarget(null);
+            return;
+          }
           const redirect = paywallTarget ?? undefined;
           setPaywallTarget(null);
           if (redirect) setPendingRedirect(redirect);
