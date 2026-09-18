@@ -94,7 +94,7 @@ module.exports = () => {
     name: 'VIONA',
     slug: 'ket-noi-global',
     version: '1.0.0',
-    orientation: 'portrait',
+    orientation: 'default',
     icon: './assets/brand/viona/app-icon.png',
     splash: {
       image: './assets/brand/viona/splash.png',
