@@ -716,7 +716,7 @@ assert(
 );
 assert(
   'universe cards can grow with content instead of using a fixed or maximum height',
-  shellSource.includes('cardHost: {\n    minHeight: 180,') &&
+  shellSource.replace(/\r\n/g, '\n').includes('cardHost: {\n    minHeight: 180,') &&
     !/cardHost:\s*\{[^}]*(?:maxHeight|(?<!min)height)\s*:/s.test(shellSource)
 );
 assert(
