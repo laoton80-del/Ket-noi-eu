@@ -1,0 +1,6 @@
+{
+  "schema": "viona.merge-authority-ledger/v1",
+  "schema_version": 1,
+  "description": "VIONA REC2 Stage-2 merge-authorization lifecycle ledger schema identity marker. This file is not an authorization record.",
+  "record_count": 0
+}
