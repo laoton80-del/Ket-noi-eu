@@ -1,0 +1,105 @@
+# Viona Explicit Merge Authorization Dispatcher
+# Canonical required context is the explicit Checks API check run
+# "Viona Explicit Merge Authorization" — not this workflow job result.
+#
+# STAGE 2 of the VIONA Two-Stage Merge Control design
+# (docs/governance/VIONA_REC2_TWO_STAGE_MERGE_CONTROL_DESIGN_V1.md).
+#
+# This workflow performs NO merge API mutation. It only evaluates whether
+# an explicit, exact-target, one-time Governor merge authorization may be
+# ISSUED, and if so, creates/updates the canonical Stage 2 check run.
+#
+# DORMANT: this workflow is not referenced by branch protection during
+# Lane B1. It must not be dispatched during B1 (see governance directive
+# VIONA.REC2.MERGE_CONTROL.LANE_B1.IMPLEMENTATION_AUTHORIZATION.V1, §34).
+name: Viona Explicit Merge Authorization Dispatcher
+
+on:
+  workflow_dispatch:
+    inputs:
+      pr_number:
+        description: Pull request number (integer as string)
+        required: true
+        type: string
+      head_sha:
+        description: Full 40-character PR head SHA
+        required: true
+        type: string
+      base_branch:
+        description: Base branch (exact)
+        required: true
+        type: choice
+        options:
+          - master
+      merge_mode:
+        description: Merge mode (exact)
+        required: true
+        type: choice
+        options:
+          - squash
+      reviewed_scope_digest:
+        description: Deterministic reviewed-scope digest (SHA-256 hex) — must equal Stage 1's digest
+        required: true
+        type: string
+      stage1_check_run_id:
+        description: Check-run ID of the exact "Viona Merge Authorization Gate" (Stage 1) success being relied upon
+        required: true
+        type: string
+      freeze_scope:
+        description: Freeze remediation scope (exact while GLOBAL_MERGE_FREEZE is active)
+        required: true
+        type: choice
+        options:
+          - FREEZE_EXCEPTION_FOR_MERGE_GUARDRAIL_REMEDIATION_ONLY
+
+# Bind concurrency to repository + PR + head. cancel-in-progress=false so an
+# older run cannot be cancelled into a reusable success race, and so a
+# second concurrent dispatch for the exact same target queues behind the
+# first rather than running in parallel (best-effort atomic-issuance
+# defense using existing GitHub Actions primitives only — see design doc
+# §4.4 and the Lane B1 implementation report for the accepted residual
+# limitation of this approach).
+concurrency:
+  group: viona-explicit-merge-authorization-${{ github.repository }}-${{ inputs.pr_number }}-${{ inputs.head_sha }}
+  cancel-in-progress: false
+
+# contents: write is a narrow, single-workflow exception (governance
+# directive VIONA.REC2.MERGE_CONTROL.LANE_B1.LEDGER_INTEGRATION_AUTHORIZATION.V2
+# §0/§6) granted ONLY to this file, for the sole purpose of writing Stage-2
+# authority lifecycle records to the dedicated, protected ledger ref
+# refs/heads/viona-governance-merge-ledger-v1 via the GitHub Contents API's
+# sha-conditional PUT. It does NOT relax the Stage 1 gate's
+# FORBIDDEN_WORKFLOW_PERMISSIONS policy (scripts/viona-merge-authorization-gate.mjs),
+# which continues to forbid contents:write for the Stage 1 workflow.
+permissions:
+  contents: write
+  pull-requests: read
+  checks: write
+  actions: read
+
+jobs:
+  evaluate_explicit_merge_authorization:
+    name: Evaluate Viona Explicit Merge Authorization
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Evaluate Viona Explicit Merge Authorization
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VIONA_STAGE2_PR_NUMBER: ${{ inputs.pr_number }}
+          VIONA_STAGE2_HEAD_SHA: ${{ inputs.head_sha }}
+          VIONA_STAGE2_BASE_BRANCH: ${{ inputs.base_branch }}
+          VIONA_STAGE2_MERGE_MODE: ${{ inputs.merge_mode }}
+          VIONA_STAGE2_REVIEWED_SCOPE_DIGEST: ${{ inputs.reviewed_scope_digest }}
+          VIONA_STAGE2_STAGE1_CHECK_RUN_ID: ${{ inputs.stage1_check_run_id }}
+          VIONA_STAGE2_FREEZE_SCOPE: ${{ inputs.freeze_scope }}
+          VIONA_STAGE2_RUN_ID: ${{ github.run_id }}
+          VIONA_STAGE2_REPOSITORY: ${{ github.repository }}
+        run: node scripts/viona-merge-explicit-authorization.mjs
