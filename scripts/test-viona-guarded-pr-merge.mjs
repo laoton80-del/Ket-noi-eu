@@ -144,7 +144,8 @@ function createMockWrapperDeps(options = {}) {
         return {
           enforce_admins: { enabled: true },
           required_status_checks: {
-            contexts: ['Viona Emergency Merge Lock', GATE_CHECK_RUN_NAME],
+            contexts:
+              options.requiredContexts ?? ['Viona Emergency Merge Lock', GATE_CHECK_RUN_NAME],
           },
         };
       }
@@ -351,6 +352,68 @@ async function main() {
       await runGuardedPrMerge(deps);
       assert.equal(deps.protectionMutations.length, 0);
     });
+
+    // --- Stage1 Readiness semantic migration (governance directive
+    // VIONA.REC2.MERGE_CONTROL.STAGE1_READINESS_SEMANTIC_MIGRATION.LOCAL_IMPLEMENTATION.V1) ---
+    await testAsync(
+      '23b R12 legacy-named Stage1 success alone does not satisfy wrapper lookup',
+      async () => {
+        const deps = createMockWrapperDeps({
+          execute: true,
+          checkRuns: [
+            {
+              name: 'Viona Merge Authorization Gate',
+              head_sha: HEAD,
+              conclusion: 'success',
+              status: 'completed',
+              app: { id: 42 },
+            },
+            {
+              name: 'Viona Emergency Merge Lock',
+              head_sha: HEAD,
+              conclusion: 'success',
+              status: 'completed',
+            },
+          ],
+        });
+        const result = await runGuardedPrMerge(deps);
+        assert.equal(result.ok, false);
+        assert.equal(result.blocker, BLOCKERS.BLOCKED_MERGE_REQUIRED_CHECK_FAILED);
+        assert.equal(result.mergeInvoked, false);
+        assert.equal(deps.mergeCalls.length, 0);
+      },
+    );
+
+    await testAsync(
+      '23c R13 wrapper remains fail-closed while branch protection still requires legacy Stage1 context',
+      async () => {
+        // Default checkRuns already include the NEW Readiness Gate success;
+        // no legacy-named success exists anywhere. Branch protection still
+        // (transitionally) requires the OLD literal alongside Stage2. This
+        // wrapper deliberately has NO legacy skip (governance directive §8),
+        // so the old context is enumerated as an ordinary "other required
+        // context" and correctly found missing/unsatisfied.
+        const deps = createMockWrapperDeps({
+          execute: true,
+          requiredContexts: ['Viona Merge Authorization Gate', 'Viona Explicit Merge Authorization'],
+        });
+        const result = await runGuardedPrMerge(deps);
+        assert.equal(result.ok, false);
+        assert.equal(result.blocker, BLOCKERS.BLOCKED_MERGE_REQUIRED_CHECK_FAILED);
+        assert.equal(result.mergeInvoked, false);
+        assert.equal(deps.mergeCalls.length, 0);
+      },
+    );
+
+    // R14 ("wrapper works after final protection state": new Readiness Gate
+    // + Stage2 required, exact Stage1 success + Stage2 success + valid
+    // ACTIVE ledger) requires full Stage2/ledger integration fixtures that
+    // already live in scripts/test-viona-guarded-pr-merge-stage2.mjs, whose
+    // default branch-protection fixture is exactly
+    // [GATE_CHECK_RUN_NAME, STAGE2_CHECK_RUN_NAME] (no legacy literal). That
+    // constant already resolves to the renamed "Viona Merge Readiness Gate"
+    // via this migration's import, so R14 is proven there with zero textual
+    // change (see R16 rerun below and governance directive §13).
 
     test('24 exact primary and defense-in-depth markers exist', () => {
       assert.equal(

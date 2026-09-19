@@ -42,7 +42,7 @@ on:
         required: true
         type: string
       stage1_check_run_id:
-        description: Check-run ID of the exact "Viona Merge Authorization Gate" (Stage 1) success being relied upon
+        description: Check-run ID of the exact "Viona Merge Readiness Gate" (Stage 1) success being relied upon
         required: true
         type: string
       freeze_scope:
