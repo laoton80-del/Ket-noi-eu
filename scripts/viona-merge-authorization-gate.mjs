@@ -1,5 +1,5 @@
 /**
- * Viona Merge Authorization Gate
+ * Viona Merge Readiness Gate (Stage 1)
  *
  * REPOSITORY_LEVEL_REQUIRED_CHECK_IS_PRIMARY
  * GUARDED_MERGE_WRAPPER_IS_DEFENSE_IN_DEPTH
@@ -25,7 +25,11 @@ export const REPOSITORY_LEVEL_REQUIRED_CHECK_IS_PRIMARY =
 export const GUARDED_MERGE_WRAPPER_IS_DEFENSE_IN_DEPTH =
   'GUARDED_MERGE_WRAPPER_IS_DEFENSE_IN_DEPTH';
 
-export const GATE_CHECK_RUN_NAME = 'Viona Merge Authorization Gate';
+// Canonical Stage 1 identity (VIONA.REC2.MERGE_CONTROL.STAGE1_READINESS_SEMANTIC_MIGRATION.LOCAL_IMPLEMENTATION.V1):
+// this check communicates technical/procedural READINESS for a Governor
+// merge-authorization decision. It does NOT itself grant merge authority
+// and MUST NEVER carry authority=MERGE-shaped semantics (design §2).
+export const GATE_CHECK_RUN_NAME = 'Viona Merge Readiness Gate';
 // Canonical Stage 2 (Viona Explicit Merge Authorization) check-run name,
 // duplicated here as a local literal — intentionally NOT imported from
 // scripts/viona-merge-explicit-authorization.mjs, because that module
@@ -36,15 +40,28 @@ export const GATE_CHECK_RUN_NAME = 'Viona Merge Authorization Gate';
 // directive VIONA.REC2.MERGE_CONTROL.LANE_B2.CIRCULAR_DEPENDENCY_REMEDIATION.LOCAL_IMPLEMENTATION.V2) —
 // it does not relax enforcement of any other (unrelated) required context.
 const STAGE2_CHECK_RUN_NAME = 'Viona Explicit Merge Authorization';
+// TRANSITIONAL ONLY (VIONA.REC2.MERGE_CONTROL.STAGE1_READINESS_SEMANTIC_MIGRATION.LOCAL_IMPLEMENTATION.V1):
+// the legacy pre-rename Stage 1 check-run name. This local, non-exported
+// literal is tolerated in EXACTLY ONE place below — Stage 1's generic
+// "every other required context must already be green" enumeration — for
+// the sole purpose of allowing the renamed Stage 1 to reach a genuine
+// success while GitHub branch protection still (temporarily) lists the old
+// name as a required context during the migration bootstrap window. It is
+// NOT canonical identity, is NEVER accepted as satisfying Stage 1's own
+// identity/duplicate-scan logic, is NEVER accepted by Stage 2 (which binds
+// only to the current value of GATE_CHECK_RUN_NAME via its own import),
+// and is NEVER referenced by the guarded merge wrapper. It MUST be removed,
+// together with its one usage site, by the follow-up cleanup PR once
+// branch protection no longer requires the old context (design §15 step 10).
+const LEGACY_STAGE1_CHECK_RUN_NAME = 'Viona Merge Authorization Gate';
 export const WORKFLOW_FILE_PATH = '.github/workflows/viona-merge-authorization-gate.yml';
-export const WORKFLOW_DISPLAY_NAME = 'Viona Merge Authorization Gate Dispatcher';
+export const WORKFLOW_DISPLAY_NAME = 'Viona Merge Readiness Gate Dispatcher';
 export const JOB_ID = 'evaluate_merge_authorization';
-export const JOB_DISPLAY_NAME = 'Evaluate Viona Merge Authorization Gate';
+export const JOB_DISPLAY_NAME = 'Evaluate Viona Merge Readiness Gate';
 export const GATE_SCRIPT_PATH = 'scripts/viona-merge-authorization-gate.mjs';
 export const CANONICAL_REPOSITORY = 'laoton80-del/Ket-noi-eu';
 export const CANONICAL_BASE_BRANCH = 'master';
 export const CANONICAL_MERGE_MODE = 'squash';
-export const CANONICAL_AUTHORITY = 'MERGE';
 export const CANONICAL_FREEZE_SCOPE =
   'FREEZE_EXCEPTION_FOR_MERGE_GUARDRAIL_REMEDIATION_ONLY';
 export const AUTHORIZED_ACTORS = Object.freeze(['laoton80-del']);
@@ -204,7 +221,6 @@ export function parseStructuredInputs(env) {
   const headSha = env.VIONA_GATE_HEAD_SHA;
   const baseBranch = env.VIONA_GATE_BASE_BRANCH;
   const mergeMode = env.VIONA_GATE_MERGE_MODE;
-  const authority = env.VIONA_GATE_AUTHORITY;
   const freezeScope = env.VIONA_GATE_FREEZE_SCOPE;
   const reviewedScopeDigest = env.VIONA_GATE_REVIEWED_SCOPE_DIGEST;
   const missing = [];
@@ -213,7 +229,6 @@ export function parseStructuredInputs(env) {
     ['head_sha', headSha],
     ['base_branch', baseBranch],
     ['merge_mode', mergeMode],
-    ['authority', authority],
     ['freeze_scope', freezeScope],
     ['reviewed_scope_digest', reviewedScopeDigest],
   ]) {
@@ -227,7 +242,6 @@ export function parseStructuredInputs(env) {
     headSha,
     baseBranch,
     mergeMode,
-    authority,
     freezeScope,
     reviewedScopeDigest,
     runId: env.VIONA_GATE_RUN_ID ?? null,
@@ -339,11 +353,6 @@ export function evaluateMergeAuthorizationGate(facts) {
   }
   if (facts.mergeMode !== CANONICAL_MERGE_MODE) {
     return fail(BLOCKERS.BLOCKED_MERGE_MODE_AUTHORIZATION_MISMATCH);
-  }
-  if (facts.authority !== CANONICAL_AUTHORITY) {
-    return fail(BLOCKERS.BLOCKED_MERGE_AUTHORIZATION_PROVENANCE_UNRESOLVED, {
-      reason: 'authority_not_merge',
-    });
   }
   if (facts.freezeScope !== CANONICAL_FREEZE_SCOPE) {
     return fail(BLOCKERS.BLOCKED_MERGE_FREEZE_REMEDIATION_SCOPE_MISSING);
@@ -725,11 +734,6 @@ export async function runMergeAuthorizationGate(deps) {
     if (inputs.mergeMode !== CANONICAL_MERGE_MODE) {
       return earlyFail(BLOCKERS.BLOCKED_MERGE_MODE_AUTHORIZATION_MISMATCH);
     }
-    if (inputs.authority !== CANONICAL_AUTHORITY) {
-      return earlyFail(BLOCKERS.BLOCKED_MERGE_AUTHORIZATION_PROVENANCE_UNRESOLVED, {
-        reason: 'authority_not_merge',
-      });
-    }
     if (inputs.freezeScope !== CANONICAL_FREEZE_SCOPE) {
       return earlyFail(BLOCKERS.BLOCKED_MERGE_FREEZE_REMEDIATION_SCOPE_MISSING);
     }
@@ -1008,7 +1012,11 @@ export async function runMergeAuthorizationGate(deps) {
     const requiredContexts = protection?.required_status_checks?.contexts ?? [];
     const checkRuns = await listAllCheckRuns(deps, owner, repo, inputs.headSha);
     for (const ctx of requiredContexts) {
-      if (ctx === GATE_CHECK_RUN_NAME || ctx === STAGE2_CHECK_RUN_NAME) {
+      if (
+        ctx === GATE_CHECK_RUN_NAME ||
+        ctx === STAGE2_CHECK_RUN_NAME ||
+        ctx === LEGACY_STAGE1_CHECK_RUN_NAME
+      ) {
         continue;
       }
       const onHead = checkRuns.filter(
@@ -1100,7 +1108,6 @@ export async function runMergeAuthorizationGate(deps) {
       actualBaseBranch: prB.base.ref,
       actualHeadSha: prB.head.sha,
       mergeMode: inputs.mergeMode,
-      authority: inputs.authority,
       freezeScope: inputs.freezeScope,
       headActivationProven: true,
       authorizationPredatesCurrentHead: false,

@@ -429,7 +429,7 @@ export async function runGuardedPrMerge(deps) {
       (c) =>
         typeof c.name === 'string' &&
         c.name !== GATE_CHECK_RUN_NAME &&
-        c.name.startsWith('Viona Merge Authorization Gate'),
+        c.name.startsWith(GATE_CHECK_RUN_NAME),
     );
     if (aliases.length > 0) duplicateConflictingGateContext = true;
     if (deps.forceDuplicateConflictingGateContext === true) {

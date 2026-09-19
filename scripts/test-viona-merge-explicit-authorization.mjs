@@ -409,6 +409,32 @@ async function main() {
       assert.equal(r.blocker, BLOCKERS.BLOCKED_STAGE2_STAGE1_IDENTITY_MISMATCH);
     });
 
+    // --- Stage1 Readiness semantic migration (governance directive
+    // VIONA.REC2.MERGE_CONTROL.STAGE1_READINESS_SEMANTIC_MIGRATION.LOCAL_IMPLEMENTATION.V1) ---
+    test('9d R9 old Stage1 check name alone cannot satisfy Stage2', () => {
+      const r = evaluateAuthorizationIssuance(
+        happyIssuanceFacts({ stage1CheckName: 'Viona Merge Authorization Gate' }),
+      );
+      assert.equal(r.blocker, BLOCKERS.BLOCKED_STAGE2_STAGE1_IDENTITY_MISMATCH);
+      assert.notEqual('Viona Merge Authorization Gate', STAGE1_CHECK_RUN_NAME);
+    });
+
+    test('9e R10 Stage2 rejects wrong readiness check-run ID', () => {
+      const r = evaluateAuthorizationIssuance(
+        happyIssuanceFacts({ actualStage1CheckRunId: 999999 }),
+      );
+      assert.equal(r.blocker, BLOCKERS.BLOCKED_STAGE2_STAGE1_IDENTITY_MISMATCH);
+    });
+
+    test('9f R11 Stage2 rejects wrong readiness head', () => {
+      const r = evaluateAuthorizationIssuance(happyIssuanceFacts({ stage1HeadSha: HEAD2 }));
+      assert.equal(r.blocker, BLOCKERS.BLOCKED_STAGE2_STAGE1_IDENTITY_MISMATCH);
+    });
+
+    test('9g STAGE1_CHECK_RUN_NAME alias resolves to renamed Readiness Gate', () => {
+      assert.equal(STAGE1_CHECK_RUN_NAME, 'Viona Merge Readiness Gate');
+    });
+
     test('10 duplicate active authorization rejected', () => {
       const r = evaluateAuthorizationIssuance(
         happyIssuanceFacts({ duplicateActiveAuthorization: true }),

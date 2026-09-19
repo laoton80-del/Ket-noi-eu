@@ -87,7 +87,6 @@ function happyFacts(over = {}) {
     actualBaseBranch: 'master',
     actualHeadSha: HEAD,
     mergeMode: 'squash',
-    authority: 'MERGE',
     freezeScope: CANONICAL_FREEZE_SCOPE,
     headActivationProven: true,
     authorizationPredatesCurrentHead: false,
@@ -138,7 +137,6 @@ function createMockGateDeps(options = {}) {
       VIONA_GATE_HEAD_SHA: HEAD,
       VIONA_GATE_BASE_BRANCH: 'master',
       VIONA_GATE_MERGE_MODE: 'squash',
-      VIONA_GATE_AUTHORITY: 'MERGE',
       VIONA_GATE_FREEZE_SCOPE: CANONICAL_FREEZE_SCOPE,
       VIONA_GATE_REVIEWED_SCOPE_DIGEST: digest,
       VIONA_GATE_RUN_ID: '999',
@@ -413,7 +411,6 @@ async function main() {
         { actualBaseBranch: 'dev' },
         { actualHeadSha: HEAD2 },
         { mergeMode: 'merge' },
-        { authority: 'NO' },
         { freezeScope: 'NO' },
         { headActivationProven: false },
         { authorizationPredatesCurrentHead: true },
@@ -523,6 +520,16 @@ async function main() {
       assert.match(yml, /permission-administration:\s*read/);
       assert.doesNotMatch(yml, /\npermissions:\n(?:  .+\n)*  administration:/);
       assert.doesNotMatch(yml, /permission-administration:\s*write/);
+      // R2 — authority=MERGE input removed, no replacement flag introduced (R3).
+      assert.doesNotMatch(yml, /\n\s*authority:/);
+      assert.doesNotMatch(yml, /VIONA_GATE_AUTHORITY/);
+      assert.doesNotMatch(yml, /\n\s*readiness:/);
+      assert.doesNotMatch(yml, /\n\s*approval:/);
+      assert.doesNotMatch(yml, /\n\s*authorized:/);
+      assert.doesNotMatch(yml, /\n\s*decision:/);
+      assert.doesNotMatch(yml, /\n\s*go:/);
+      assert.match(yml, /Viona Merge Readiness Gate/);
+      assert.doesNotMatch(yml, /name:\s*Viona Merge Authorization Gate\b/);
       assert.equal(
         assertPermissionScope([
           'contents: read',
@@ -1119,6 +1126,131 @@ async function main() {
         assert.equal(result.blocker, BLOCKERS.BLOCKED_MERGE_REQUIRED_CHECK_FAILED);
       },
     );
+
+    // --- Stage1 Readiness semantic migration (governance directive
+    // VIONA.REC2.MERGE_CONTROL.STAGE1_READINESS_SEMANTIC_MIGRATION.LOCAL_IMPLEMENTATION.V1) ---
+    const LEGACY_STAGE1_LITERAL = 'Viona Merge Authorization Gate';
+    const STAGE2_LITERAL = 'Viona Explicit Merge Authorization';
+
+    test('82 R1 canonical identity is the renamed Readiness Gate', () => {
+      assert.equal(GATE_CHECK_RUN_NAME, 'Viona Merge Readiness Gate');
+      assert.notEqual(GATE_CHECK_RUN_NAME, LEGACY_STAGE1_LITERAL);
+    });
+
+    await testAsync(
+      '83 R1 orchestrated success creates/completes the renamed check',
+      async () => {
+        const deps = createMockGateDeps();
+        const result = await runMergeAuthorizationGate(deps);
+        assert.equal(result.conclusion, 'success');
+        assert.equal(deps.creates[0].name, 'Viona Merge Readiness Gate');
+      },
+    );
+
+    test('84 R2 no authority-shaped env field required for success', () => {
+      // happyFacts() and createMockGateDeps() no longer supply any
+      // authority-shaped fact/env at all (removed above); test 1 and 34/83
+      // already prove success without it. This test proves the removal at
+      // the source/workflow-text level.
+      const src = readFileSync(
+        path.join(root, 'scripts/viona-merge-authorization-gate.mjs'),
+        'utf8',
+      );
+      assert.doesNotMatch(src, /CANONICAL_AUTHORITY/);
+      assert.doesNotMatch(src, /VIONA_GATE_AUTHORITY/);
+      assert.doesNotMatch(src, /authority:\s*inputs\.authority/);
+      assert.doesNotMatch(src, /facts\.authority/);
+      assert.doesNotMatch(src, /inputs\.authority/);
+      const yml = readFileSync(path.join(root, WORKFLOW_FILE_PATH), 'utf8');
+      assert.doesNotMatch(yml, /authority/i);
+    });
+
+    test('85 R3 no replacement merge-authority-shaped input introduced', () => {
+      const ymlRaw = readFileSync(path.join(root, WORKFLOW_FILE_PATH), 'utf8');
+      const yml = ymlRaw.replace(/\r\n/g, '\n');
+      const inputsBlockMatch = yml.match(/workflow_dispatch:\n\s*inputs:\n([\s\S]*?)\n\n/);
+      assert.ok(inputsBlockMatch, 'workflow_dispatch inputs block must be found');
+      const inputNames = [...inputsBlockMatch[1].matchAll(/^\s{6}(\w+):/gm)].map(
+        (m) => m[1],
+      );
+      assert.deepEqual(inputNames, [
+        'pr_number',
+        'head_sha',
+        'base_branch',
+        'merge_mode',
+        'freeze_scope',
+        'reviewed_scope_digest',
+      ]);
+      for (const forbidden of ['readiness', 'approval', 'authorized', 'decision', 'go']) {
+        assert.ok(
+          !inputNames.includes(forbidden),
+          `must not introduce replacement input: ${forbidden}`,
+        );
+      }
+    });
+
+    await testAsync(
+      '86 R6 unrelated required check still enforced alongside legacy+readiness+stage2',
+      async () => {
+        const deps = createMockGateDeps({
+          requiredContexts: [
+            LEGACY_STAGE1_LITERAL,
+            GATE_CHECK_RUN_NAME,
+            STAGE2_LITERAL,
+            'Some Unrelated Required CI',
+          ],
+          checkRuns: [],
+        });
+        const result = await runMergeAuthorizationGate(deps);
+        assert.notEqual(result.conclusion, 'success');
+        assert.equal(result.blocker, BLOCKERS.BLOCKED_MERGE_REQUIRED_CHECK_FAILED);
+      },
+    );
+
+    await testAsync(
+      '87 R7 unrelated required check succeeding only on another head remains fail-closed',
+      async () => {
+        const deps = createMockGateDeps({
+          requiredContexts: [
+            LEGACY_STAGE1_LITERAL,
+            GATE_CHECK_RUN_NAME,
+            STAGE2_LITERAL,
+            'Some Unrelated Required CI',
+          ],
+          checkRuns: [
+            {
+              name: 'Some Unrelated Required CI',
+              head_sha: HEAD2,
+              conclusion: 'success',
+              status: 'completed',
+            },
+          ],
+        });
+        const result = await runMergeAuthorizationGate(deps);
+        assert.notEqual(result.conclusion, 'success');
+        assert.equal(result.blocker, BLOCKERS.BLOCKED_MERGE_REQUIRED_CHECK_FAILED);
+      },
+    );
+
+    await testAsync(
+      '88 R8 transitional bootstrap: legacy required context tolerated, no unrelated missing',
+      async () => {
+        const deps = createMockGateDeps({
+          requiredContexts: [LEGACY_STAGE1_LITERAL, GATE_CHECK_RUN_NAME, STAGE2_LITERAL],
+          checkRuns: [],
+        });
+        const result = await runMergeAuthorizationGate(deps);
+        assert.equal(result.conclusion, 'success');
+        assert.equal(deps.mergeCalls.length, 0);
+      },
+    );
+
+    test('89 legacy literal is not the exported canonical identity', () => {
+      // Proves legacy rejection; this literal must never satisfy Stage1's
+      // own identity/duplicate-scan logic (only the generic required-context
+      // enumeration may tolerate it, per governance directive §7).
+      assert.notEqual(LEGACY_STAGE1_LITERAL, GATE_CHECK_RUN_NAME);
+    });
 
     assert.equal(unexpectedNetworkCalls, 0, 'global fetch trap must remain unused');
     console.log(`\nPASS_COUNT ${passed}`);
