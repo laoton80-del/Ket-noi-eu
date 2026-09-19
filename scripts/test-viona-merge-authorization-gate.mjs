@@ -1,5 +1,6 @@
 /**
- * Offline deterministic tests — Viona Merge Authorization Gate (remediated)
+ * Offline deterministic tests — Viona Merge Readiness Gate (Stage 1,
+ * formerly "Viona Merge Authorization Gate"; remediated)
  * Network: global fetch trap. Tokens unused. Real check runs: 0.
  */
 
@@ -1127,12 +1128,23 @@ async function main() {
       },
     );
 
-    // --- Stage1 Readiness semantic migration (governance directive
-    // VIONA.REC2.MERGE_CONTROL.STAGE1_READINESS_SEMANTIC_MIGRATION.LOCAL_IMPLEMENTATION.V1) ---
+    // --- Stage1 Readiness semantic migration (governance directives
+    // VIONA.REC2.MERGE_CONTROL.STAGE1_READINESS_SEMANTIC_MIGRATION.LOCAL_IMPLEMENTATION.V1
+    // and, for the FINAL-cleanup tests below (F1-F8),
+    // VIONA.REC2.MERGE_CONTROL.STAGE1_READINESS.FINAL_CLEANUP_LOCAL_IMPLEMENTATION.V1)
+    // ---
+    // The transitional bootstrap shim (LEGACY_STAGE1_CHECK_RUN_NAME + its
+    // skip inside the generic required-context loop) has now been REMOVED
+    // from scripts/viona-merge-authorization-gate.mjs. Only
+    // GATE_CHECK_RUN_NAME (canonical Stage1 identity) and
+    // STAGE2_CHECK_RUN_NAME are ever skipped there. If branch protection
+    // still lists the legacy name, it is now an ordinary unrelated required
+    // context and Stage1 fails closed on it, exactly as designed
+    // (design §15 step 10).
     const LEGACY_STAGE1_LITERAL = 'Viona Merge Authorization Gate';
     const STAGE2_LITERAL = 'Viona Explicit Merge Authorization';
 
-    test('82 R1 canonical identity is the renamed Readiness Gate', () => {
+    test('82 R1/F1 canonical identity is the renamed Readiness Gate', () => {
       assert.equal(GATE_CHECK_RUN_NAME, 'Viona Merge Readiness Gate');
       assert.notEqual(GATE_CHECK_RUN_NAME, LEGACY_STAGE1_LITERAL);
     });
@@ -1144,6 +1156,19 @@ async function main() {
         const result = await runMergeAuthorizationGate(deps);
         assert.equal(result.conclusion, 'success');
         assert.equal(deps.creates[0].name, 'Viona Merge Readiness Gate');
+      },
+    );
+
+    await testAsync(
+      '83b F2 required contexts [Readiness Gate, Stage2] with all unrelated checks green succeeds',
+      async () => {
+        const deps = createMockGateDeps({
+          requiredContexts: [GATE_CHECK_RUN_NAME, STAGE2_LITERAL],
+          checkRuns: [],
+        });
+        const result = await runMergeAuthorizationGate(deps);
+        assert.equal(result.conclusion, 'success');
+        assert.equal(deps.mergeCalls.length, 0);
       },
     );
 
@@ -1161,6 +1186,9 @@ async function main() {
       assert.doesNotMatch(src, /authority:\s*inputs\.authority/);
       assert.doesNotMatch(src, /facts\.authority/);
       assert.doesNotMatch(src, /inputs\.authority/);
+      // F7 (final cleanup): the transitional legacy constant is fully gone —
+      // no free-text or legacy-shaped authority substitute reappeared.
+      assert.doesNotMatch(src, /LEGACY_STAGE1_CHECK_RUN_NAME/);
       const yml = readFileSync(path.join(root, WORKFLOW_FILE_PATH), 'utf8');
       assert.doesNotMatch(yml, /authority/i);
     });
@@ -1190,15 +1218,10 @@ async function main() {
     });
 
     await testAsync(
-      '86 R6 unrelated required check still enforced alongside legacy+readiness+stage2',
+      '86 F4 unrelated missing required CI still fails (final context set: Readiness Gate + Stage2)',
       async () => {
         const deps = createMockGateDeps({
-          requiredContexts: [
-            LEGACY_STAGE1_LITERAL,
-            GATE_CHECK_RUN_NAME,
-            STAGE2_LITERAL,
-            'Some Unrelated Required CI',
-          ],
+          requiredContexts: [GATE_CHECK_RUN_NAME, STAGE2_LITERAL, 'Some Unrelated Required CI'],
           checkRuns: [],
         });
         const result = await runMergeAuthorizationGate(deps);
@@ -1208,15 +1231,10 @@ async function main() {
     );
 
     await testAsync(
-      '87 R7 unrelated required check succeeding only on another head remains fail-closed',
+      '87 F5 unrelated required check succeeding only on another head remains fail-closed (final context set)',
       async () => {
         const deps = createMockGateDeps({
-          requiredContexts: [
-            LEGACY_STAGE1_LITERAL,
-            GATE_CHECK_RUN_NAME,
-            STAGE2_LITERAL,
-            'Some Unrelated Required CI',
-          ],
+          requiredContexts: [GATE_CHECK_RUN_NAME, STAGE2_LITERAL, 'Some Unrelated Required CI'],
           checkRuns: [
             {
               name: 'Some Unrelated Required CI',
@@ -1233,23 +1251,58 @@ async function main() {
     );
 
     await testAsync(
-      '88 R8 transitional bootstrap: legacy required context tolerated, no unrelated missing',
+      '88 F3 legacy required context with no successful legacy check now FAILS (transitional skip removed)',
       async () => {
+        // Required contexts still (temporarily, on GitHub's side) include
+        // the OLD legacy name alongside the NEW Readiness Gate and Stage2.
+        // Before this cleanup, LEGACY_STAGE1_CHECK_RUN_NAME was explicitly
+        // skipped here and this exact fixture used to succeed. That skip is
+        // now gone: the legacy name is treated as an ordinary unrelated
+        // required context, and since no check named
+        // "Viona Merge Authorization Gate" exists on this head, Stage1 must
+        // now fail closed — proving the transitional bootstrap shim has
+        // been fully removed.
         const deps = createMockGateDeps({
           requiredContexts: [LEGACY_STAGE1_LITERAL, GATE_CHECK_RUN_NAME, STAGE2_LITERAL],
           checkRuns: [],
         });
         const result = await runMergeAuthorizationGate(deps);
-        assert.equal(result.conclusion, 'success');
+        assert.notEqual(result.conclusion, 'success');
+        assert.equal(result.blocker, BLOCKERS.BLOCKED_MERGE_REQUIRED_CHECK_FAILED);
         assert.equal(deps.mergeCalls.length, 0);
       },
     );
 
     test('89 legacy literal is not the exported canonical identity', () => {
       // Proves legacy rejection; this literal must never satisfy Stage1's
-      // own identity/duplicate-scan logic (only the generic required-context
-      // enumeration may tolerate it, per governance directive §7).
+      // own identity/duplicate-scan logic, and — after this cleanup — is no
+      // longer tolerated anywhere at all, including the generic
+      // required-context enumeration (see test 88/F3 above).
       assert.notEqual(LEGACY_STAGE1_LITERAL, GATE_CHECK_RUN_NAME);
+    });
+
+    test('90 F6 Stage2 downstream missing remains excluded from Stage1 prerequisites', () => {
+      // Proven end-to-end by test 79 ("TEST A") and test 83b ("F2") above,
+      // both of which use requiredContexts=[GATE_CHECK_RUN_NAME, STAGE2_LITERAL]
+      // with no Stage2 check present on head and assert success. Re-stated
+      // here by name for direct traceability to this cleanup directive's F6
+      // requirement — GATE_CHECK_RUN_NAME and STAGE2_CHECK_RUN_NAME (via the
+      // STAGE2_LITERAL fixture) remain the only two contexts ever skipped in
+      // the generic required-context loop after the legacy skip's removal.
+      assert.notEqual(GATE_CHECK_RUN_NAME, STAGE2_LITERAL);
+    });
+
+    test('91 F8 Stage1 has zero merge execution capability', () => {
+      const src = readFileSync(
+        path.join(root, 'scripts/viona-merge-authorization-gate.mjs'),
+        'utf8',
+      );
+      // Same execution-path assertion as test 78: Stage1 never constructs a
+      // pulls/{n}/merge request. The only `/merges` occurrence in this file
+      // is the observer that records mergeCalls so tests 61/77 can prove
+      // those calls stay at zero — it is not a merge-execution path.
+      assert.doesNotMatch(src, /\/pulls\/\$\{[^}]+\}\/merge/);
+      assert.match(src, /deps\.mergeCalls\.push/);
     });
 
     assert.equal(unexpectedNetworkCalls, 0, 'global fetch trap must remain unused');
