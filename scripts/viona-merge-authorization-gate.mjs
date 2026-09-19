@@ -26,6 +26,16 @@ export const GUARDED_MERGE_WRAPPER_IS_DEFENSE_IN_DEPTH =
   'GUARDED_MERGE_WRAPPER_IS_DEFENSE_IN_DEPTH';
 
 export const GATE_CHECK_RUN_NAME = 'Viona Merge Authorization Gate';
+// Canonical Stage 2 (Viona Explicit Merge Authorization) check-run name,
+// duplicated here as a local literal — intentionally NOT imported from
+// scripts/viona-merge-explicit-authorization.mjs, because that module
+// already imports GATE_CHECK_RUN_NAME from this one; importing back would
+// risk a circular ES-module dependency. Used only to exclude the
+// downstream Stage 2 required context from Stage 1's generic "every other
+// required context must already be green" enumeration below (governance
+// directive VIONA.REC2.MERGE_CONTROL.LANE_B2.CIRCULAR_DEPENDENCY_REMEDIATION.LOCAL_IMPLEMENTATION.V2) —
+// it does not relax enforcement of any other (unrelated) required context.
+const STAGE2_CHECK_RUN_NAME = 'Viona Explicit Merge Authorization';
 export const WORKFLOW_FILE_PATH = '.github/workflows/viona-merge-authorization-gate.yml';
 export const WORKFLOW_DISPLAY_NAME = 'Viona Merge Authorization Gate Dispatcher';
 export const JOB_ID = 'evaluate_merge_authorization';
@@ -998,7 +1008,9 @@ export async function runMergeAuthorizationGate(deps) {
     const requiredContexts = protection?.required_status_checks?.contexts ?? [];
     const checkRuns = await listAllCheckRuns(deps, owner, repo, inputs.headSha);
     for (const ctx of requiredContexts) {
-      if (ctx === GATE_CHECK_RUN_NAME) continue;
+      if (ctx === GATE_CHECK_RUN_NAME || ctx === STAGE2_CHECK_RUN_NAME) {
+        continue;
+      }
       const onHead = checkRuns.filter(
         (c) =>
           c.name === ctx &&
