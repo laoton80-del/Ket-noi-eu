@@ -1058,6 +1058,68 @@ async function main() {
       assert.doesNotMatch(src, /\/pulls\/\$\{[^}]+\}\/merge/);
     });
 
+    // --- Stage1/Stage2 required-check deadlock remediation (governance
+    // directive VIONA.REC2.MERGE_CONTROL.LANE_B2.CIRCULAR_DEPENDENCY_REMEDIATION.LOCAL_IMPLEMENTATION.V2) ---
+    // These deterministic, offline, network-free tests exercise ONLY the
+    // required-context enumeration inside runMergeAuthorizationGate. They
+    // prove Stage1 is independently reachable when the downstream Stage2
+    // context is a live required check but has not yet run — they do NOT
+    // claim to prove the separate, live GitHub-native property "Stage1
+    // success + Stage2 missing => branch protection blocks the merge
+    // button," which remains a later disposable-PR proof after Lane B2 is
+    // re-activated.
+
+    await testAsync(
+      '79 TEST A — Stage2 downstream context missing must not block Stage1',
+      async () => {
+        const deps = createMockGateDeps({
+          requiredContexts: [GATE_CHECK_RUN_NAME, 'Viona Explicit Merge Authorization'],
+          checkRuns: [],
+        });
+        const result = await runMergeAuthorizationGate(deps);
+        assert.equal(result.conclusion, 'success');
+        assert.equal(deps.mergeCalls.length, 0);
+      },
+    );
+
+    await testAsync('80 TEST B — unrelated required check remains enforced', async () => {
+      const deps = createMockGateDeps({
+        requiredContexts: [
+          GATE_CHECK_RUN_NAME,
+          'Viona Explicit Merge Authorization',
+          'Some Unrelated Required CI',
+        ],
+        checkRuns: [],
+      });
+      const result = await runMergeAuthorizationGate(deps);
+      assert.notEqual(result.conclusion, 'success');
+      assert.equal(result.blocker, BLOCKERS.BLOCKED_MERGE_REQUIRED_CHECK_FAILED);
+    });
+
+    await testAsync(
+      '81 TEST C — stale unrelated required check on a different head remains fail-closed',
+      async () => {
+        const deps = createMockGateDeps({
+          requiredContexts: [
+            GATE_CHECK_RUN_NAME,
+            'Viona Explicit Merge Authorization',
+            'Some Unrelated Required CI',
+          ],
+          checkRuns: [
+            {
+              name: 'Some Unrelated Required CI',
+              head_sha: HEAD2,
+              conclusion: 'success',
+              status: 'completed',
+            },
+          ],
+        });
+        const result = await runMergeAuthorizationGate(deps);
+        assert.notEqual(result.conclusion, 'success');
+        assert.equal(result.blocker, BLOCKERS.BLOCKED_MERGE_REQUIRED_CHECK_FAILED);
+      },
+    );
+
     assert.equal(unexpectedNetworkCalls, 0, 'global fetch trap must remain unused');
     console.log(`\nPASS_COUNT ${passed}`);
     console.log(`UNEXPECTED_NETWORK_CALLS ${unexpectedNetworkCalls}`);
