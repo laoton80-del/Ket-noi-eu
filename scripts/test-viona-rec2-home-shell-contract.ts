@@ -503,12 +503,20 @@ assert(
     malformedLayout.cardWidth > 0
 );
 
-assert('RC2 feature flag default is OFF', resolveRec2HomeShellEnabled(undefined) === false);
-assert('RC2 feature flag rejects arbitrary truthy text', resolveRec2HomeShellEnabled('yes') === false);
-assert('RC2 feature flag accepts canonical true', resolveRec2HomeShellEnabled('true') === true);
+assert('REC2 feature flag defaults ON when unset', resolveRec2HomeShellEnabled(undefined) === true);
+assert('REC2 feature flag treats an empty value as default ON', resolveRec2HomeShellEnabled('') === true);
+assert('REC2 feature flag treats whitespace as default ON', resolveRec2HomeShellEnabled('   ') === true);
+assert('REC2 feature flag accepts canonical true', resolveRec2HomeShellEnabled('true') === true);
+assert('REC2 feature flag accepts trimmed canonical true', resolveRec2HomeShellEnabled(' true ') === true);
+assert('REC2 feature flag accepts explicit false rollback', resolveRec2HomeShellEnabled('false') === false);
+assert('REC2 feature flag accepts trimmed explicit false rollback', resolveRec2HomeShellEnabled(' false ') === false);
+assert(
+  'REC2 feature flag rejects invalid non-empty values',
+  resolveRec2HomeShellEnabled('yes') === false && resolveRec2HomeShellEnabled('1') === false
+);
 assert('shared truthy parser remains exact', parseTruthyEnvString('false') === false && parseTruthyEnvString(' true ') === true);
-assert('flag OFF selects complete reconstruction renderer', resolveHomeRendererSelection(false) === 'reconstruction');
-assert('flag ON selects only RC2 renderer', resolveHomeRendererSelection(true) === 'rec2');
+assert('flag false selects complete reconstruction renderer', resolveHomeRendererSelection(false) === 'reconstruction');
+assert('flag true selects only REC2 renderer', resolveHomeRendererSelection(true) === 'rec2');
 assert(
   'non-boolean truthy value cannot activate renderer',
   resolveHomeRendererSelection('true' as unknown as boolean) === 'reconstruction'
@@ -689,7 +697,13 @@ assert('guest, loading, empty, offline, gated, image fallback, focus and pressed
   'onFocus',
   'pressed',
 ].every((token) => shellSource.includes(token)));
-assert('build-time flag remains exact and defaults off through undefined', flagsSource.includes('EXPO_PUBLIC_FEATURE_REC2_HOME_SHELL') && flagsSource.includes('resolveRec2HomeShellEnabled'));
+assert(
+  'build-time flag source declares default-on REC2 and explicit false rollback',
+  flagsSource.includes('EXPO_PUBLIC_FEATURE_REC2_HOME_SHELL') &&
+    flagsSource.includes('Canonical REC2 Home defaults ON when unset') &&
+    flagsSource.includes('Explicit `"false"` rolls back') &&
+    flagsSource.includes("return normalized === 'true';")
+);
 assert('renderer choice lives beside the existing presentation target', presentationSource.includes('resolveHomeRendererSelection'));
 assert('Home module has no high-risk call executed during module initialization', topLevelHighRiskCalls(homeSource).length === 0);
 const importGraphAudit = auditLocalImportGraph('src/screens/HomeScreen.tsx');
