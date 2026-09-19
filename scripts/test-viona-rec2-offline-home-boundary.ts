@@ -144,6 +144,19 @@ check(
     !transportWithoutInternet.remoteNavigationAllowed
 );
 
+const initialUnknownConnectivity = resolveRec2OfflineHomePolicy({
+  ...readyGuest,
+  connectivity: { isConnected: null, isInternetReachable: null },
+});
+check(
+  'AppRoot initial unknown connectivity stays local without granting remote or linking authority',
+  initialUnknownConnectivity.renderMode === 'local-offline-home' &&
+    initialUnknownConnectivity.localOnlyGuestHome &&
+    initialUnknownConnectivity.contentState === 'loading' &&
+    !initialUnknownConnectivity.remoteNavigationAllowed &&
+    !initialUnknownConnectivity.rootLinkingAllowed
+);
+
 const unknownInternetReachability = resolveRec2OfflineHomePolicy({
   ...readyGuest,
   connectivity: { isConnected: true, isInternetReachable: null },
@@ -196,6 +209,52 @@ check(
   online.renderMode === 'online-app' &&
     online.remoteInitializersAllowed &&
     online.remoteNavigationAllowed
+);
+
+let initialUnknownSession = { localOnlyObserved: false };
+initialUnknownSession = advanceRec2OfflineSession(
+  initialUnknownSession,
+  initialUnknownConnectivity
+);
+check(
+  'AppRoot initial unknown connectivity does not latch the session as offline',
+  !initialUnknownSession.localOnlyObserved
+);
+initialUnknownSession = advanceRec2OfflineSession(initialUnknownSession, online);
+check(
+  'fully ready online truth enables root linking after an initially unknown startup',
+  resolveRec2SessionRootLinking(initialUnknownSession, online)
+);
+
+let partialUnknownSession = { localOnlyObserved: false };
+partialUnknownSession = advanceRec2OfflineSession(
+  partialUnknownSession,
+  unknownInternetReachability
+);
+check(
+  'connected transport with unknown Internet reachability does not latch offline',
+  !partialUnknownSession.localOnlyObserved
+);
+partialUnknownSession = advanceRec2OfflineSession(partialUnknownSession, online);
+check(
+  'fully ready online truth enables root linking after partial connectivity was unknown',
+  resolveRec2SessionRootLinking(partialUnknownSession, online)
+);
+
+let onlinePendingSession = { localOnlyObserved: false };
+onlinePendingSession = advanceRec2OfflineSession(
+  onlinePendingSession,
+  onlinePendingRemoteReadiness
+);
+check(
+  'online transport pending remote ops stays local without latching offline',
+  onlinePendingRemoteReadiness.localOnlyGuestHome &&
+    !onlinePendingSession.localOnlyObserved
+);
+onlinePendingSession = advanceRec2OfflineSession(onlinePendingSession, online);
+check(
+  'remote ops readiness enables root linking after an online pending state',
+  resolveRec2SessionRootLinking(onlinePendingSession, online)
 );
 
 const safeLocalActions: readonly Rec2LocalAction[] = [
@@ -305,10 +364,24 @@ check(
 
 let offlineSession = { localOnlyObserved: false };
 offlineSession = advanceRec2OfflineSession(offlineSession, localOffline);
+check(
+  'an explicit offline observation latches the mounted session',
+  offlineSession.localOnlyObserved
+);
 offlineSession = advanceRec2OfflineSession(offlineSession, online);
 check(
   'a protected initial link rejected offline is not replayed after reconnect',
   offlineSession.localOnlyObserved && !resolveRec2SessionRootLinking(offlineSession, online)
+);
+offlineSession = advanceRec2OfflineSession(
+  offlineSession,
+  initialUnknownConnectivity
+);
+offlineSession = advanceRec2OfflineSession(offlineSession, online);
+check(
+  'the explicit offline latch remains monotonic through later unknown and online states',
+  offlineSession.localOnlyObserved &&
+    !resolveRec2SessionRootLinking(offlineSession, online)
 );
 
 check(

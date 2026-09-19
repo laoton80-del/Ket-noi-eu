@@ -211,15 +211,22 @@ export type Rec2OfflineSessionState = Readonly<{
 }>;
 
 /**
- * Once a local-only session has rejected startup linking, reconnect does not
- * replay a previously supplied initial URL. A fresh app session may link again.
+ * Only an explicit offline observation creates the mounted-session no-replay
+ * latch; unresolved connectivity or another local loading state does not.
+ * After a genuine offline rejection, reconnect does not replay the previously
+ * supplied startup URL in that same mounted session.
  */
 export function advanceRec2OfflineSession(
   previous: Rec2OfflineSessionState,
   policy: Rec2OfflineHomePolicy
 ): Rec2OfflineSessionState {
+  const explicitlyOffline =
+    policy.connectivity.isConnected === false ||
+    policy.connectivity.isInternetReachable === false;
   return {
-    localOnlyObserved: previous.localOnlyObserved || policy.localOnlyGuestHome,
+    localOnlyObserved:
+      previous.localOnlyObserved ||
+      (policy.localOnlyGuestHome && explicitlyOffline),
   };
 }
 
