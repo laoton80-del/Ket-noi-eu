@@ -23,12 +23,12 @@
  *   NOT claimed — see the Lane B1 implementation report for the accepted
  *   residual limitation.
  *
- * NOTE ON STAGE 1 NAME: the design's target name for Stage 1 is
- * "Viona Merge Readiness Gate", but that rename is a LATER migration step
- * (design doc §15, step 8) and is explicitly out of scope for Lane B1.
- * This module therefore binds to the CURRENT canonical Stage 1 check name,
- * "Viona Merge Authorization Gate", imported unchanged from the existing
- * approved implementation.
+ * NOTE ON STAGE 1 NAME: the canonical Stage 1 identity is now
+ * "Viona Merge Readiness Gate". This module imports it through
+ * GATE_CHECK_RUN_NAME as STAGE1_CHECK_RUN_NAME and therefore binds
+ * exclusively to the canonical Stage 1 identity exported by the Stage 1
+ * module. No legacy Stage 1 identity ("Viona Merge Authorization Gate")
+ * is accepted.
  */
 
 import { createHash, randomUUID } from 'node:crypto';

@@ -40,20 +40,6 @@ export const GATE_CHECK_RUN_NAME = 'Viona Merge Readiness Gate';
 // directive VIONA.REC2.MERGE_CONTROL.LANE_B2.CIRCULAR_DEPENDENCY_REMEDIATION.LOCAL_IMPLEMENTATION.V2) —
 // it does not relax enforcement of any other (unrelated) required context.
 const STAGE2_CHECK_RUN_NAME = 'Viona Explicit Merge Authorization';
-// TRANSITIONAL ONLY (VIONA.REC2.MERGE_CONTROL.STAGE1_READINESS_SEMANTIC_MIGRATION.LOCAL_IMPLEMENTATION.V1):
-// the legacy pre-rename Stage 1 check-run name. This local, non-exported
-// literal is tolerated in EXACTLY ONE place below — Stage 1's generic
-// "every other required context must already be green" enumeration — for
-// the sole purpose of allowing the renamed Stage 1 to reach a genuine
-// success while GitHub branch protection still (temporarily) lists the old
-// name as a required context during the migration bootstrap window. It is
-// NOT canonical identity, is NEVER accepted as satisfying Stage 1's own
-// identity/duplicate-scan logic, is NEVER accepted by Stage 2 (which binds
-// only to the current value of GATE_CHECK_RUN_NAME via its own import),
-// and is NEVER referenced by the guarded merge wrapper. It MUST be removed,
-// together with its one usage site, by the follow-up cleanup PR once
-// branch protection no longer requires the old context (design §15 step 10).
-const LEGACY_STAGE1_CHECK_RUN_NAME = 'Viona Merge Authorization Gate';
 export const WORKFLOW_FILE_PATH = '.github/workflows/viona-merge-authorization-gate.yml';
 export const WORKFLOW_DISPLAY_NAME = 'Viona Merge Readiness Gate Dispatcher';
 export const JOB_ID = 'evaluate_merge_authorization';
@@ -1012,11 +998,7 @@ export async function runMergeAuthorizationGate(deps) {
     const requiredContexts = protection?.required_status_checks?.contexts ?? [];
     const checkRuns = await listAllCheckRuns(deps, owner, repo, inputs.headSha);
     for (const ctx of requiredContexts) {
-      if (
-        ctx === GATE_CHECK_RUN_NAME ||
-        ctx === STAGE2_CHECK_RUN_NAME ||
-        ctx === LEGACY_STAGE1_CHECK_RUN_NAME
-      ) {
+      if (ctx === GATE_CHECK_RUN_NAME || ctx === STAGE2_CHECK_RUN_NAME) {
         continue;
       }
       const onHead = checkRuns.filter(
