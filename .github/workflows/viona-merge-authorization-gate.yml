@@ -38,6 +38,7 @@ on:
         type: choice
         options:
           - FREEZE_EXCEPTION_FOR_MERGE_GUARDRAIL_REMEDIATION_ONLY
+          - FREEZE_EXCEPTION_FOR_PR459_OPERATING_PROTOCOL_V2_CANONICAL_PROMOTION_ONLY
       reviewed_scope_digest:
         description: Deterministic reviewed-scope digest (SHA-256 hex)
         required: true
