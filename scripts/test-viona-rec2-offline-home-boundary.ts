@@ -16,6 +16,7 @@ import {
   type Rec2LocalAction,
   type Rec2OfflineHomePolicy,
   type Rec2OfflineSessionState,
+  type Rec2RootLinkingLifecycleState,
 } from '../src/app/bootstrap/rec2OfflineHomePolicy';
 import { resolveHomeRendererSelection } from '../src/navigation/homePresentationTarget';
 
@@ -232,6 +233,160 @@ const withSessionRootLinking = (
   ...policy,
   rootLinkingAllowed: resolveRec2SessionRootLinking(session, policy),
 });
+type CommittedStartupLinkingState = Readonly<{
+  session: Rec2OfflineSessionState;
+  lifecycle: Rec2RootLinkingLifecycleState;
+}>;
+const projectStartupLinkingCandidate = (
+  committed: CommittedStartupLinkingState,
+  policy: Rec2OfflineHomePolicy,
+  navigationWillMount = navigationWillMountForPolicy(policy)
+) => {
+  const session = advanceSession(committed.session, policy, navigationWillMount);
+  const boundary = withSessionRootLinking(session, policy);
+  const lifecycle = advanceRec2RootLinkingLifecycle(
+    committed.lifecycle,
+    session,
+    boundary,
+    navigationWillMount
+  );
+  return { session, boundary, lifecycle };
+};
+
+const initialCommittedStartup: CommittedStartupLinkingState = {
+  session: pendingStartupSession(),
+  lifecycle: INITIAL_REC2_ROOT_LINKING_LIFECYCLE_STATE,
+};
+const abortedOfflineCandidate = projectStartupLinkingCandidate(
+  initialCommittedStartup,
+  localOffline,
+  true
+);
+const onlineAfterAbortedOffline = projectStartupLinkingCandidate(
+  initialCommittedStartup,
+  online,
+  true
+);
+check(
+  'aborting an offline shell candidate cannot contaminate the next online startup projection',
+  abortedOfflineCandidate.session.startupLinkingOutcome === 'rejected-offline' &&
+    initialCommittedStartup.session.startupLinkingOutcome === 'pending' &&
+    onlineAfterAbortedOffline.session.startupLinkingOutcome === 'authorized-online' &&
+    onlineAfterAbortedOffline.boundary.rootLinkingAllowed &&
+    onlineAfterAbortedOffline.lifecycle.initializationGeneration === 0
+);
+
+const committedOfflineStartup: CommittedStartupLinkingState = {
+  session: abortedOfflineCandidate.session,
+  lifecycle: abortedOfflineCandidate.lifecycle,
+};
+const onlineAfterCommittedOffline = projectStartupLinkingCandidate(
+  committedOfflineStartup,
+  online,
+  true
+);
+check(
+  'committed offline shell rejection remains terminal while reconnect restores live linking',
+  committedOfflineStartup.session.startupLinkingOutcome === 'rejected-offline' &&
+    onlineAfterCommittedOffline.session.startupLinkingOutcome === 'rejected-offline' &&
+    onlineAfterCommittedOffline.boundary.rootLinkingAllowed &&
+    onlineAfterCommittedOffline.lifecycle.initializationGeneration === 0
+);
+
+const remoteOpsPendingCandidate = projectStartupLinkingCandidate(
+  initialCommittedStartup,
+  onlinePendingRemoteReadiness,
+  true
+);
+const committedRemoteOpsPending: CommittedStartupLinkingState = {
+  session: remoteOpsPendingCandidate.session,
+  lifecycle: remoteOpsPendingCandidate.lifecycle,
+};
+const abortedAuthorizedRemount = projectStartupLinkingCandidate(
+  committedRemoteOpsPending,
+  online,
+  true
+);
+const retriedAuthorizedRemount = projectStartupLinkingCandidate(
+  committedRemoteOpsPending,
+  online,
+  true
+);
+check(
+  'aborted authorized remount leaves the committed generation unchanged and retries the same increment',
+  committedRemoteOpsPending.session.startupLinkingOutcome === 'pending' &&
+    committedRemoteOpsPending.lifecycle.pendingStartupLinkingInitialization &&
+    committedRemoteOpsPending.lifecycle.initializationGeneration === 0 &&
+    abortedAuthorizedRemount.session.startupLinkingOutcome === 'authorized-online' &&
+    abortedAuthorizedRemount.lifecycle.initializationGeneration === 1 &&
+    retriedAuthorizedRemount.lifecycle.initializationGeneration === 1
+);
+
+const committedAuthorizedRemount: CommittedStartupLinkingState = {
+  session: abortedAuthorizedRemount.session,
+  lifecycle: abortedAuthorizedRemount.lifecycle,
+};
+const stableAuthorizedRender = projectStartupLinkingCandidate(
+  committedAuthorizedRemount,
+  online,
+  true
+);
+check(
+  'committed authorized remount stays at one generation on subsequent renders',
+  committedAuthorizedRemount.lifecycle.initializationGeneration === 1 &&
+    stableAuthorizedRender.session.startupLinkingOutcome === 'authorized-online' &&
+    stableAuthorizedRender.lifecycle.initializationGeneration === 1
+);
+
+const preMountOfflineCandidate = projectStartupLinkingCandidate(
+  initialCommittedStartup,
+  hydrating,
+  false
+);
+const committedPreMountOffline: CommittedStartupLinkingState = {
+  session: preMountOfflineCandidate.session,
+  lifecycle: preMountOfflineCandidate.lifecycle,
+};
+const onlineAfterCommittedAppStateView = projectStartupLinkingCandidate(
+  committedPreMountOffline,
+  online,
+  true
+);
+check(
+  'committed pre-mount offline AppStateView preserves normal online first-mount linking',
+  committedPreMountOffline.session.startupLinkingOutcome === 'pending' &&
+    !committedPreMountOffline.lifecycle.navigationMounted &&
+    onlineAfterCommittedAppStateView.session.startupLinkingOutcome === 'authorized-online' &&
+    onlineAfterCommittedAppStateView.boundary.rootLinkingAllowed &&
+    onlineAfterCommittedAppStateView.lifecycle.initializationGeneration === 0
+);
+
+const committedOnlineStartup: CommittedStartupLinkingState = {
+  session: onlineAfterAbortedOffline.session,
+  lifecycle: onlineAfterAbortedOffline.lifecycle,
+};
+const committedOnlineOutageCandidate = projectStartupLinkingCandidate(
+  committedOnlineStartup,
+  localOffline,
+  true
+);
+const committedOnlineOutage: CommittedStartupLinkingState = {
+  session: committedOnlineOutageCandidate.session,
+  lifecycle: committedOnlineOutageCandidate.lifecycle,
+};
+const committedOnlineReconnect = projectStartupLinkingCandidate(
+  committedOnlineOutage,
+  online,
+  true
+);
+check(
+  'committed post-start outage and reconnect preserve authorization without generation growth',
+  committedOnlineOutageCandidate.session.startupLinkingOutcome === 'authorized-online' &&
+    !committedOnlineOutageCandidate.boundary.rootLinkingAllowed &&
+    committedOnlineReconnect.session.startupLinkingOutcome === 'authorized-online' &&
+    committedOnlineReconnect.boundary.rootLinkingAllowed &&
+    committedOnlineReconnect.lifecycle.initializationGeneration === 0
+);
 
 let ordinaryOnlineSession = advanceSession(pendingStartupSession(), online);
 let ordinaryOnlineLifecycle = advanceRec2RootLinkingLifecycle(
@@ -707,6 +862,7 @@ check(
 );
 
 const appSource = readFileSync('App.tsx', 'utf8');
+const appConfigSource = readFileSync('app.config.js', 'utf8');
 const navigationContainerSource = readFileSync(
   'node_modules/@react-navigation/native/src/NavigationContainer.tsx',
   'utf8'
@@ -736,17 +892,38 @@ check(
     !appSource.includes('key={`root-linking-${connectivity')
 );
 check(
-  'AppRoot advances the bounded linking lifecycle before render-mode early returns',
-  appSource.indexOf('rootLinkingLifecycleRef.current = advanceRec2RootLinkingLifecycle(') <
+  'AppRoot projects the bounded linking lifecycle before render-mode early returns',
+  appSource.indexOf('const projectedRootLinkingLifecycle = advanceRec2RootLinkingLifecycle(') <
     appSource.indexOf("if (offlinePolicy.renderMode === 'offline-blocked')")
 );
 check(
-  'AppRoot derives mount authority before session classification and reuses it for the lifecycle',
+  'AppRoot derives mount authority before pure session, boundary, and lifecycle projections',
   appSource.indexOf('const navigationWillMount =') <
-    appSource.indexOf('offlineSessionRef.current = advanceRec2OfflineSession(') &&
+    appSource.indexOf('const projectedOfflineSession = advanceRec2OfflineSession(') &&
     appSource.includes('{ navigationWillMount }') &&
-    appSource.indexOf('offlineSessionRef.current = advanceRec2OfflineSession(') <
-      appSource.indexOf('rootLinkingLifecycleRef.current = advanceRec2RootLinkingLifecycle(')
+    appSource.indexOf('const projectedOfflineSession = advanceRec2OfflineSession(') <
+      appSource.indexOf('const projectedOfflineBoundary: Rec2OfflineHomeRuntimeBoundary =') &&
+    appSource.indexOf('const projectedOfflineBoundary: Rec2OfflineHomeRuntimeBoundary =') <
+      appSource.indexOf(
+        'const projectedRootLinkingLifecycle = advanceRec2RootLinkingLifecycle('
+      )
+);
+check(
+  'new-architecture AppRoot persists projected startup linking state only in commit phase',
+  appConfigSource.includes('newArchEnabled: true') &&
+    !appSource.includes('offlineSessionRef.current = advanceRec2OfflineSession(') &&
+    !appSource.includes(
+      'rootLinkingLifecycleRef.current = advanceRec2RootLinkingLifecycle('
+    ) &&
+    /useLayoutEffect\(\(\) => \{\s*offlineSessionRef\.current = projectedOfflineSession;\s*rootLinkingLifecycleRef\.current = projectedRootLinkingLifecycle;\s*}, \[projectedOfflineSession, projectedRootLinkingLifecycle\]\);/s.test(
+      appSource
+    )
+);
+check(
+  'AppNavigationShell renders the exact projected boundary, generation, and startup outcome',
+  appSource.includes('offlineBoundary={projectedOfflineBoundary}') &&
+    appSource.includes('projectedRootLinkingLifecycle.initializationGeneration') &&
+    appSource.includes('startupLinkingOutcome={projectedOfflineSession.startupLinkingOutcome}')
 );
 check(
   'installed React Navigation captures initial linking in a mount-scoped thenable',

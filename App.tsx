@@ -23,7 +23,7 @@ import NetInfo from '@react-native-community/netinfo';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { StatusBar } from 'expo-status-bar';
 import * as Notifications from 'expo-notifications';
-import { useEffect, useRef, useState, type ReactElement } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState, type ReactElement } from 'react';
 import {
   Animated,
   Easing,
@@ -857,15 +857,28 @@ function AppRoot() {
   const navigationWillMount =
     offlinePolicy.renderMode === 'online-app' ||
     offlinePolicy.renderMode === 'local-offline-home';
-  offlineSessionRef.current = advanceRec2OfflineSession(
-    offlineSessionRef.current,
+  const committedOfflineSession = offlineSessionRef.current;
+  const projectedOfflineSession = advanceRec2OfflineSession(
+    committedOfflineSession,
     offlinePolicy,
     { navigationWillMount }
   );
-  const offlineBoundary: Rec2OfflineHomeRuntimeBoundary = {
+  const projectedOfflineBoundary: Rec2OfflineHomeRuntimeBoundary = {
     ...offlinePolicy,
-    rootLinkingAllowed: resolveRec2SessionRootLinking(offlineSessionRef.current, offlinePolicy),
+    rootLinkingAllowed: resolveRec2SessionRootLinking(projectedOfflineSession, offlinePolicy),
   };
+  const committedRootLinkingLifecycle = rootLinkingLifecycleRef.current;
+  const projectedRootLinkingLifecycle = advanceRec2RootLinkingLifecycle(
+    committedRootLinkingLifecycle,
+    projectedOfflineSession,
+    projectedOfflineBoundary,
+    navigationWillMount
+  );
+
+  useLayoutEffect(() => {
+    offlineSessionRef.current = projectedOfflineSession;
+    rootLinkingLifecycleRef.current = projectedRootLinkingLifecycle;
+  }, [projectedOfflineSession, projectedRootLinkingLifecycle]);
 
   useEffect(() => {
     if (
@@ -897,13 +910,6 @@ function AppRoot() {
       useNativeDriver: true,
     }).start();
   }, [transitionAnim, transitionKey]);
-
-  rootLinkingLifecycleRef.current = advanceRec2RootLinkingLifecycle(
-    rootLinkingLifecycleRef.current,
-    offlineSessionRef.current,
-    offlineBoundary,
-    navigationWillMount
-  );
 
   if (offlinePolicy.renderMode === 'offline-blocked') {
     return (
@@ -952,11 +958,11 @@ function AppRoot() {
         showIntentModal={showIntentModal}
         onGuidedIntent={onGuidedIntent}
         onSkipGuidedIntent={onSkipGuidedIntent}
-        offlineBoundary={offlineBoundary}
+        offlineBoundary={projectedOfflineBoundary}
         rootLinkingInitializationGeneration={
-          rootLinkingLifecycleRef.current.initializationGeneration
+          projectedRootLinkingLifecycle.initializationGeneration
         }
-        startupLinkingOutcome={offlineSessionRef.current.startupLinkingOutcome}
+        startupLinkingOutcome={projectedOfflineSession.startupLinkingOutcome}
       />
     </V7NavigationSurfaceProvider>
   );
