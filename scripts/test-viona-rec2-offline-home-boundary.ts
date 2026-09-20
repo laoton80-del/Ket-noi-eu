@@ -3,16 +3,19 @@ import { readFileSync } from 'node:fs';
 
 import {
   INITIAL_REC2_ROOT_LINKING_LIFECYCLE_STATE,
+  REC2_PENDING_NATIVE_LINK_BUFFER_MAX_SIZE,
   advanceRec2OfflineSession,
   advanceRec2RootLinkingLifecycle,
   canRunRec2RemoteInitializers,
   canResolveRec2RemoteOpsConfig,
   claimRec2RemoteInitializerOnce,
+  enqueueRec2PendingNativeLink,
   isRec2RemoteOpsResolutionReady,
   isRec2ActionAllowed,
   resolveRec2LocalOpsConfig,
   resolveRec2OfflineHomePolicy,
   resolveRec2SessionRootLinking,
+  settleRec2PendingNativeLinks,
   type Rec2LocalAction,
   type Rec2OfflineHomePolicy,
   type Rec2OfflineSessionState,
@@ -386,6 +389,178 @@ check(
     committedOnlineReconnect.session.startupLinkingOutcome === 'authorized-online' &&
     committedOnlineReconnect.boundary.rootLinkingAllowed &&
     committedOnlineReconnect.lifecycle.initializationGeneration === 0
+);
+
+type NativeLinkQueueOwner =
+  | 'idle'
+  | 'pending-buffer'
+  | 'react-navigation'
+  | 'rejected-offline';
+type NativeLinkQueueHarness = {
+  pendingLinks: readonly string[];
+  deliveredLinks: string[];
+  owner: NativeLinkQueueOwner;
+  listenerActive: boolean;
+};
+const createNativeLinkQueueHarness = (native = true): NativeLinkQueueHarness => ({
+  pendingLinks: [],
+  deliveredLinks: [],
+  owner: native ? 'pending-buffer' : 'idle',
+  listenerActive: native,
+});
+const emitNativeLink = (harness: NativeLinkQueueHarness, url: string): void => {
+  if (!harness.listenerActive) return;
+  if (harness.owner === 'pending-buffer') {
+    harness.pendingLinks = enqueueRec2PendingNativeLink(harness.pendingLinks, url);
+  } else if (harness.owner === 'react-navigation') {
+    harness.deliveredLinks.push(url);
+  }
+};
+const commitNativeLinkOutcome = (
+  harness: NativeLinkQueueHarness,
+  outcome: Rec2OfflineSessionState['startupLinkingOutcome']
+): void => {
+  const settlement = settleRec2PendingNativeLinks(harness.pendingLinks, outcome);
+  harness.pendingLinks = settlement.pendingLinks;
+  if (outcome === 'authorized-online') {
+    harness.owner = 'react-navigation';
+    harness.listenerActive = true;
+    harness.deliveredLinks.push(...settlement.linksToDeliver);
+  } else if (outcome === 'rejected-offline') {
+    harness.owner = 'rejected-offline';
+    harness.listenerActive = false;
+  }
+};
+const disableNativeLiveLinking = (harness: NativeLinkQueueHarness): void => {
+  harness.owner = 'idle';
+  harness.listenerActive = false;
+};
+const enableNativeLiveLinking = (harness: NativeLinkQueueHarness): void => {
+  harness.owner = 'react-navigation';
+  harness.listenerActive = true;
+};
+
+const pendingSingleEvent = createNativeLinkQueueHarness();
+emitNativeLink(pendingSingleEvent, 'ketnoieu://travel/pending-one');
+check(
+  'pending native runtime URL waits without navigation and drains once after authorized commit',
+  pendingSingleEvent.pendingLinks.length === 1 &&
+    pendingSingleEvent.deliveredLinks.length === 0
+);
+commitNativeLinkOutcome(pendingSingleEvent, 'authorized-online');
+check(
+  'authorized commit delivers one pending native runtime URL exactly once and empties the queue',
+  JSON.stringify(pendingSingleEvent.deliveredLinks) ===
+    JSON.stringify(['ketnoieu://travel/pending-one']) &&
+    pendingSingleEvent.pendingLinks.length === 0
+);
+
+const pendingMultipleEvents = createNativeLinkQueueHarness();
+const orderedPendingLinks = [
+  'ketnoieu://home',
+  'ketnoieu://local',
+  'ketnoieu://travel',
+];
+for (const url of orderedPendingLinks) emitNativeLink(pendingMultipleEvents, url);
+commitNativeLinkOutcome(pendingMultipleEvents, 'authorized-online');
+check(
+  'multiple pending native runtime URLs drain exactly once in deterministic arrival order',
+  JSON.stringify(pendingMultipleEvents.deliveredLinks) === JSON.stringify(orderedPendingLinks) &&
+    pendingMultipleEvents.pendingLinks.length === 0
+);
+
+const boundedPendingEvents = createNativeLinkQueueHarness();
+const overflowLinks = Array.from(
+  { length: REC2_PENDING_NATIVE_LINK_BUFFER_MAX_SIZE + 3 },
+  (_, index) => `ketnoieu://pending/${index + 1}`
+);
+for (const url of overflowLinks) emitNativeLink(boundedPendingEvents, url);
+check(
+  'pending native runtime URL buffer is bounded and deterministically drops the oldest entry',
+  boundedPendingEvents.pendingLinks.length === REC2_PENDING_NATIVE_LINK_BUFFER_MAX_SIZE &&
+    JSON.stringify(boundedPendingEvents.pendingLinks) ===
+      JSON.stringify(overflowLinks.slice(-REC2_PENDING_NATIVE_LINK_BUFFER_MAX_SIZE))
+);
+
+const rejectedPendingEvent = createNativeLinkQueueHarness();
+emitNativeLink(rejectedPendingEvent, 'ketnoieu://account/rejected-pending');
+commitNativeLinkOutcome(rejectedPendingEvent, 'rejected-offline');
+check(
+  'committed rejected-offline startup clears pending runtime URLs without navigation',
+  rejectedPendingEvent.pendingLinks.length === 0 &&
+    rejectedPendingEvent.deliveredLinks.length === 0 &&
+    rejectedPendingEvent.owner === 'rejected-offline' &&
+    !rejectedPendingEvent.listenerActive
+);
+
+const abortedAuthorizationEvent = createNativeLinkQueueHarness();
+emitNativeLink(abortedAuthorizationEvent, 'ketnoieu://academy/after-abort');
+const projectedAuthorizationWithoutCommit = 'authorized-online';
+check(
+  'projecting authorization without commit neither drains nor delivers the pending native queue',
+  projectedAuthorizationWithoutCommit === 'authorized-online' &&
+    abortedAuthorizationEvent.owner === 'pending-buffer' &&
+    abortedAuthorizationEvent.pendingLinks.length === 1 &&
+    abortedAuthorizationEvent.deliveredLinks.length === 0
+);
+commitNativeLinkOutcome(abortedAuthorizationEvent, 'authorized-online');
+check(
+  'the next committed authorization drains the retained event exactly once after an aborted candidate',
+  JSON.stringify(abortedAuthorizationEvent.deliveredLinks) ===
+    JSON.stringify(['ketnoieu://academy/after-abort']) &&
+    abortedAuthorizationEvent.pendingLinks.length === 0
+);
+
+const ordinaryAuthorizedEvent = createNativeLinkQueueHarness();
+commitNativeLinkOutcome(ordinaryAuthorizedEvent, 'authorized-online');
+emitNativeLink(ordinaryAuthorizedEvent, 'ketnoieu://local/live');
+check(
+  'authorized native runtime URLs use the canonical live listener exactly once instead of the startup queue',
+  JSON.stringify(ordinaryAuthorizedEvent.deliveredLinks) ===
+    JSON.stringify(['ketnoieu://local/live']) &&
+    ordinaryAuthorizedEvent.pendingLinks.length === 0
+);
+
+const postStartOutageEvent = createNativeLinkQueueHarness();
+commitNativeLinkOutcome(postStartOutageEvent, 'authorized-online');
+disableNativeLiveLinking(postStartOutageEvent);
+emitNativeLink(postStartOutageEvent, 'ketnoieu://travel/during-outage');
+enableNativeLiveLinking(postStartOutageEvent);
+emitNativeLink(postStartOutageEvent, 'ketnoieu://travel/after-reconnect');
+check(
+  'post-start outage never reactivates the startup queue and reconnect restores only new live events',
+  postStartOutageEvent.pendingLinks.length === 0 &&
+    JSON.stringify(postStartOutageEvent.deliveredLinks) ===
+      JSON.stringify(['ketnoieu://travel/after-reconnect'])
+);
+
+enableNativeLiveLinking(rejectedPendingEvent);
+emitNativeLink(rejectedPendingEvent, 'ketnoieu://home/new-after-reconnect');
+check(
+  'rejected-start reconnect restores new live URLs without replaying the cleared pending event',
+  JSON.stringify(rejectedPendingEvent.deliveredLinks) ===
+    JSON.stringify(['ketnoieu://home/new-after-reconnect']) &&
+    rejectedPendingEvent.pendingLinks.length === 0
+);
+
+const webPendingEvent = createNativeLinkQueueHarness(false);
+emitNativeLink(webPendingEvent, 'https://ketnoieu.example/travel');
+check(
+  'web startup does not instantiate or populate the native pending-link buffer',
+  webPendingEvent.owner === 'idle' &&
+    !webPendingEvent.listenerActive &&
+    webPendingEvent.pendingLinks.length === 0
+);
+
+const cleanedUpPendingListener = createNativeLinkQueueHarness();
+cleanedUpPendingListener.pendingLinks = [];
+disableNativeLiveLinking(cleanedUpPendingListener);
+emitNativeLink(cleanedUpPendingListener, 'ketnoieu://home/after-cleanup');
+check(
+  'terminal listener cleanup relinquishes pending ownership and prevents duplicate delivery',
+  cleanedUpPendingListener.owner === 'idle' &&
+    !cleanedUpPendingListener.listenerActive &&
+    cleanedUpPendingListener.deliveredLinks.length === 0
 );
 
 let ordinaryOnlineSession = advanceSession(pendingStartupSession(), online);
@@ -879,6 +1054,10 @@ const webUseLinkingSource = readFileSync(
   'node_modules/@react-navigation/native/src/useLinking.tsx',
   'utf8'
 );
+const offlinePolicySource = readFileSync(
+  'src/app/bootstrap/rec2OfflineHomePolicy.ts',
+  'utf8'
+);
 const startupSource = readFileSync(
   'src/app/bootstrap/useAppStartupOrchestration.ts',
   'utf8'
@@ -938,6 +1117,13 @@ check(
     /return subscribe\(listener\);\s*}, \[enabled,/.test(nativeUseLinkingSource)
 );
 check(
+  'installed native linking drops runtime URL events while disabled and cannot recover them from launch URL state',
+  nativeUseLinkingSource.includes('if (!enabled)') &&
+    nativeUseLinkingSource.includes('Linking.getInitialURL()') &&
+    nativeUseLinkingSource.indexOf('if (!enabled)') <
+      nativeUseLinkingSource.indexOf('const navigation = ref.current')
+);
+check(
   'installed web linking refreshes its history listener when enabled changes',
   webUseLinkingSource.includes('return history.listen(() => {') &&
     /}, \[\s*enabled,\s*history,/s.test(webUseLinkingSource)
@@ -948,6 +1134,51 @@ check(
     appSource.includes('getInitialURL: () => null') &&
     appSource.includes("startupLinkingOutcome === 'rejected-offline'") &&
     appSource.includes('? rootLinkingAfterRejectedStartup')
+);
+check(
+  'native pending runtime-link buffering is bounded with deterministic drop-oldest overflow',
+  offlinePolicySource.includes('REC2_PENDING_NATIVE_LINK_BUFFER_MAX_SIZE = 8') &&
+    offlinePolicySource.includes('next.slice(-REC2_PENDING_NATIVE_LINK_BUFFER_MAX_SIZE)') &&
+    appSource.includes('enqueueRec2PendingNativeLink(')
+);
+check(
+  'native pending listener is commit-owned and web never instantiates the native buffer',
+  appSource.includes("Platform.OS === 'web' || nativeLinkSubscriptionRef.current") &&
+    appSource.includes("Linking.addEventListener('url'") &&
+    appSource.includes("nativeLinkListenerOwnerRef.current === 'pending-buffer'") &&
+    appSource.includes("if (startupLinkingOutcome === 'pending')") &&
+    appSource.includes('ensureNativeLinkSubscription();')
+);
+check(
+  'pending queue drains only through the committed React Navigation subscription handoff',
+  appSource.includes(
+    'const committedOutcome = committedStartupLinkingOutcomeRef.current;'
+  ) &&
+    appSource.includes("committedOutcome !== 'authorized-online'") &&
+    appSource.includes('for (const url of settlement.linksToDeliver) listener(url);') &&
+    appSource.indexOf('committedStartupLinkingOutcomeRef.current = startupLinkingOutcome;') <
+      appSource.indexOf('const committedOutcome = committedStartupLinkingOutcomeRef.current;')
+);
+check(
+  'pending queue release waits for the committed NavigationContainer generation to become ready',
+  appSource.includes('navigationReadyGenerationRef.current !== committedRootLinkingGenerationRef.current') &&
+    appSource.includes('onReady={handleRootNavigationReady}') &&
+    appSource.includes('releasePendingNativeLinksIfReady();')
+);
+check(
+  'rejected-offline commit clears rather than drains pending native startup events',
+  appSource.includes("if (startupLinkingOutcome === 'rejected-offline')") &&
+    appSource.includes('pendingNativeLinksRef.current = settlement.pendingLinks;') &&
+    offlinePolicySource.includes("if (outcome === 'authorized-online')") &&
+    offlinePolicySource.includes('return { pendingLinks: [], linksToDeliver: [] };')
+);
+check(
+  'custom native subscribe preserves the canonical route config without duplicating route parsing',
+  appSource.includes('() => ({ ...rootLinking, subscribe: subscribeToNativeLinks })') &&
+    appSource.includes(
+      '() => ({ ...rootLinkingAfterRejectedStartup, subscribe: subscribeToNativeLinks })'
+    ) &&
+    !appSource.includes('getStateFromPath:')
 );
 check(
   'AppRoot no longer initializes monitoring or analytics at module load',

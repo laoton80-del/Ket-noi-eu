@@ -211,6 +211,47 @@ export type Rec2StartupLinkingOutcome =
   | 'authorized-online'
   | 'rejected-offline';
 
+export const REC2_PENDING_NATIVE_LINK_BUFFER_MAX_SIZE = 8;
+
+/**
+ * Retains only the newest bounded set of native URL events observed while
+ * startup linking is pending. The queue is process-local and never grants
+ * navigation authority by itself.
+ */
+export function enqueueRec2PendingNativeLink(
+  pendingLinks: readonly string[],
+  url: string
+): readonly string[] {
+  if (!url) return pendingLinks;
+  const next = [...pendingLinks, url];
+  return next.length <= REC2_PENDING_NATIVE_LINK_BUFFER_MAX_SIZE
+    ? next
+    : next.slice(-REC2_PENDING_NATIVE_LINK_BUFFER_MAX_SIZE);
+}
+
+export type Rec2PendingNativeLinkSettlement = Readonly<{
+  pendingLinks: readonly string[];
+  linksToDeliver: readonly string[];
+}>;
+
+/**
+ * Only committed online authorization releases queued runtime URLs. A
+ * committed offline rejection clears them, and a pending/unknown decision
+ * leaves them untouched without delivery.
+ */
+export function settleRec2PendingNativeLinks(
+  pendingLinks: readonly string[],
+  outcome: Rec2StartupLinkingOutcome
+): Rec2PendingNativeLinkSettlement {
+  if (outcome === 'authorized-online') {
+    return { pendingLinks: [], linksToDeliver: [...pendingLinks] };
+  }
+  if (outcome === 'pending') {
+    return { pendingLinks: [...pendingLinks], linksToDeliver: [] };
+  }
+  return { pendingLinks: [], linksToDeliver: [] };
+}
+
 export type Rec2OfflineSessionState = Readonly<{
   startupLinkingOutcome: Rec2StartupLinkingOutcome;
 }>;
