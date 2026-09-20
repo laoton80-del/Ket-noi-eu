@@ -2,7 +2,7 @@
 
 **Document type:** Canonical kernel and session handoff for VIONA engineering, product, and AI agents.
 **Audience:** New ChatGPT / Cursor windows, staff, contractors, and automation executors.
-**Baseline:** CURRENT CANONICAL SOURCE BASELINE = `origin/master @ 76068e7f7eab54bebc8553beb5a5dd0d0754146c`; AS-OF DATE = `2026-09-20`. Historical Pack-era baseline: `origin/master @ 5b75114` — `feat(viona): implement Pack30D-5 real-provider spend circuit breaker (mock-only, both flags off) (#320)` — see §5 "Pack30D-6 Kernel Sync & Strategic Financial Pivot" narrative section below for the full PR #319–#320 catch-up (Circuit Breaker planning + implementation) plus the formal, permanent removal of Web3/Crypto/Smart Contracts from every visionary pillar and monetization section (real execution/production remain BLOCKED/NOT AUTHORIZED). Earlier baselines remain historical: `dc79017` (PR #317) — see §5 "Pack32.6 Marketing Agent Closure & Kernel Sync"; `c0c3214` (PR #312) — see §5 "Pack32.2 Kernel/Handoff sync".
+**Baseline:** CURRENT CANONICAL SOURCE BASELINE = `origin/master @ 64c2a34477195bd6c9c2cbb2279be69c26b319fd`; AS-OF DATE = `2026-09-20`. Historical Pack-era baseline: `origin/master @ 5b75114` — `feat(viona): implement Pack30D-5 real-provider spend circuit breaker (mock-only, both flags off) (#320)` — see §5 "Pack30D-6 Kernel Sync & Strategic Financial Pivot" narrative section below for the full PR #319–#320 catch-up (Circuit Breaker planning + implementation) plus the formal, permanent removal of Web3/Crypto/Smart Contracts from every visionary pillar and monetization section (real execution/production remain BLOCKED/NOT AUTHORIZED). Earlier baselines remain historical: `dc79017` (PR #317) — see §5 "Pack32.6 Marketing Agent Closure & Kernel Sync"; `c0c3214` (PR #312) — see §5 "Pack32.2 Kernel/Handoff sync".
 **Supersedes for Request Engine sequencing:** prior scattered pack pointers when this doc conflicts on pack order or blocked state — align to this handoff.
 **Subordinate to:** `docs/ai-context/VIONA_OPERATING_PROTOCOL.md` and founder-signed **Master Blueprint** (`VIONA_FINAL_MASTER_BLUEPRINT_V2.md`). If conflict, stop and report drift risk.
 
@@ -157,8 +157,9 @@ Canonical checker: `node scripts/viona-forbidden-claims-check.mjs` (strict mode 
 |-------|--------|
 | Remote | `origin/master` |
 | As-of date | `2026-09-20` |
-| Current canonical source baseline | `76068e7f7eab54bebc8553beb5a5dd0d0754146c` |
+| Current canonical source baseline before release activation | `64c2a34477195bd6c9c2cbb2279be69c26b319fd` |
 | REC2 closure source | PR #465 squash merge; reviewed/final head `58953fe5c7d77bbac0f886da2c4680fb84e413ff` |
+| Kernel/Handoff reconciliation source | PR #467; `MERGED / CANONICAL`; merge commit `64c2a34477195bd6c9c2cbb2279be69c26b319fd` |
 | Historical Pack-era snapshot | `c843111c6caa45fa59126b9460ef88c7fb5ef136` — `docs(pack18): add controlled write authorization packet (#229)` |
 | Earlier historical snapshot | `89a2f8c` — `docs(pack17): sync kernel handoff after read-only inbox staging qa (#228)` |
 
@@ -173,7 +174,8 @@ This section is the current canonical interpretation of VIONA merge control. Old
 | `VIONA_REC2_TWO_STAGE_MERGE_CONTROL` | `CLOSED_GREEN` |
 | Final cleanup PR | PR #465 |
 | Reviewed/final PR head | `58953fe5c7d77bbac0f886da2c4680fb84e413ff` |
-| Squash merge / current master | `76068e7f7eab54bebc8553beb5a5dd0d0754146c` |
+| REC2 squash merge | `76068e7f7eab54bebc8553beb5a5dd0d0754146c` |
+| Current canonical master before release activation | `64c2a34477195bd6c9c2cbb2279be69c26b319fd` |
 | Final Stage1 | `Viona Merge Readiness Gate` |
 | Final Stage2 | `Viona Explicit Merge Authorization` |
 | Required status checks | `Viona Merge Readiness Gate` / `app_id 15368`; `Viona Explicit Merge Authorization` / `app_id 15368` |
@@ -188,11 +190,13 @@ This section is the current canonical interpretation of VIONA merge control. Old
 | Final authorization state | `CONSUMED` |
 | Final ledger ref after REC2 closure | `11183517981a94f473e6e36a27fde3d01d319d9a` |
 | REC2 Stage2 run count after closure | `3` |
+| Current ledger ref after PR #467 canonicalization | `472306f92f58156b070566f85b2aedf57b8c9b71` |
+| Current Stage2 run count after PR #467 canonicalization | `4` |
 | Deployment performed during REC2 closure | `NO` |
 
 Current interpretation: **REC2 TWO-STAGE MERGE CONTROL IMPLEMENTED, LIVE-PROVEN, MIGRATION COMPLETE, LEGACY STAGE1 REMOVED.**
 
-#### Preserved governance freeze
+#### Governance freeze before release activation becomes canonical
 
 | Field | Current state |
 |-------|---------------|
@@ -201,7 +205,7 @@ Current interpretation: **REC2 TWO-STAGE MERGE CONTROL IMPLEMENTED, LIVE-PROVEN,
 | `MANDATORY_MERGE_AUTHORIZATION_GUARDRAIL_FREEZE_ACTIVE` | `YES` |
 | `B1B_GOVERNANCE_FREEZE_ACTIVE` | `YES` |
 | `NO_RETROACTIVE_AUTHORIZATION_CLAIMED` | `PRESERVED` |
-| Canonical current runtime freeze scope | `FREEZE_EXCEPTION_FOR_MERGE_GUARDRAIL_REMEDIATION_ONLY` |
+| Canonical master runtime freeze scope before activation | `FREEZE_EXCEPTION_FOR_MERGE_GUARDRAIL_REMEDIATION_ONLY` |
 
 REC2 closure did not automatically release any freeze.
 
@@ -217,11 +221,16 @@ This reconciliation does not create a new numbered freeze-release contract and d
 | Field | State |
 |-------|-------|
 | REC2 implementation / verification | `CLOSED_GREEN`; live-proven |
-| Kernel/Handoff reconciliation | PR #467; `PENDING_CANONICAL_MERGE` |
-| Explicit operator freeze release | `NOT_GRANTED`; `NOT_EFFECTIVE` |
-| Result | `GLOBAL_MERGE_FREEZE = ACTIVE` |
+| Kernel/Handoff reconciliation | PR #467; `MERGED / CANONICAL`; recording requirement `SATISFIED` |
+| Explicit operator freeze release | `GRANTED` via `RELEASE_VIONA_MANDATORY_MERGE_AUTHORIZATION_GUARDRAIL_FREEZE_AFTER_IMPLEMENTATION_AND_POST_MERGE_VERIFICATION` |
+| Runtime release effectiveness | `PENDING THIS ACTIVATION MERGE` |
+| Result before activation is canonical | `GLOBAL_MERGE_FREEZE = ACTIVE` |
 
-The existence of this branch and PR does not complete Kernel/Handoff canonicalization. This exact PR reaching canonical master through a validly authorized merge may satisfy the Kernel/Handoff recording requirement, but does not itself grant or effect freeze release.
+PR #467 completed the Kernel/Handoff recording requirement when it reached
+canonical master. The operator release is now granted, but this local
+activation branch is not canonical and does not itself effect release. The
+runtime becomes `GLOBAL_MERGE_FREEZE = RELEASED` only if this exact activation
+is separately published, reviewed, authorized, and validly merged to master.
 
 #### PR #466 governance hold
 
@@ -247,14 +256,14 @@ PR #466 is not recorded as technically failed.
 
 #### PR-creation governance
 
-`VIONA_REC2_R2_PR_CREATION_FREEZE_RELEASE_PACKET_V1` was a one-time PR-creation exception for its exact R2 target. It did not globally release `NEW_ORDINARY_VIONA_PR_CREATION_SUSPENDED`, and it did not release `ALL_VIONA_PR_MERGES_PROHIBITED`. This governance-sync branch is not authorized for push or PR creation by the local reconciliation lane; remote publication requires separate explicit authorization.
+`VIONA_REC2_R2_PR_CREATION_FREEZE_RELEASE_PACKET_V1` was a one-time PR-creation exception for its exact R2 target. It did not globally release `NEW_ORDINARY_VIONA_PR_CREATION_SUSPENDED`. The operator has now granted the mandatory merge-freeze release, but `NEW_ORDINARY_VIONA_PR_CREATION_SUSPENDED` remains active. This release-activation branch is not authorized for push or PR creation by its local preparation lane; remote publication requires a separate exact exception.
 
 #### Next governance sequence
 
-1. Merge this exact Kernel/Handoff reconciliation through a separately authorized governance-remediation path.
-2. Verify the Kernel/Handoff recording is canonical on master.
-3. Obtain explicit operator merge-freeze release.
-4. Only after freeze release, resume PR #466 Readiness → Stage2 → guarded merge under semantics valid for ordinary product PRs.
+1. Obtain a separate exact publication exception for this fixed release-activation head.
+2. Review, authorize, and validly merge the exact activation through the mandatory two-stage control.
+3. Verify the code-owned `GLOBAL_MERGE_FREEZE = RELEASED` state is canonical on master.
+4. Only then, and under a separate exact authorization, resume PR #466 Readiness → Stage2 → guarded merge under ordinary post-release semantics.
 
 Documenting this sequence does not authorize any step.
 

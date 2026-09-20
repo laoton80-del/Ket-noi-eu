@@ -216,17 +216,29 @@ not production-ready.
 
 ## Governance Freeze
 
-Preserve current governance state unless a separate founder/operator-approved
-governance release packet says otherwise:
+The operator release recorded in
+`docs/governance/VIONA_MANDATORY_MERGE_AUTHORIZATION_GUARDRAIL_FREEZE_RELEASE_PACKET_V1.md`
+is granted, but its runtime effect is conditional on this exact activation
+being validly merged to canonical `master`. A local branch, commit, or review
+does not make the release effective.
 
-- `EMERGENCY_VIONA_PR_LIFECYCLE_CONTAINMENT_ACTIVE`
-- `NEW_ORDINARY_VIONA_PR_CREATION_SUSPENDED`
-- `ALL_VIONA_PR_MERGES_PROHIBITED`
-- `MANDATORY_MERGE_AUTHORIZATION_GUARDRAIL_FREEZE_ACTIVE`
-- `B1B_GOVERNANCE_FREEZE_ACTIVE`
-- `NO_RETROACTIVE_AUTHORIZATION_CLAIMED`
+After that canonical activation:
 
-This file does not release, override, weaken, or supersede those states.
+- `MANDATORY_MERGE_AUTHORIZATION_GUARDRAIL_FREEZE_ACTIVE = NO`;
+- `ALL_VIONA_PR_MERGES_PROHIBITED` is released;
+- ordinary merges remain prohibited unless they satisfy the mandatory
+  Readiness → Explicit Authorization → guarded wrapper control, including
+  exact-target binding, approval, TTL, ledger CAS lifecycle, and protection.
+
+The activation does not release unrelated containment. Preserve:
+
+- `EMERGENCY_VIONA_PR_LIFECYCLE_CONTAINMENT_ACTIVE`;
+- `NEW_ORDINARY_VIONA_PR_CREATION_SUSPENDED`;
+- `B1B_GOVERNANCE_FREEZE_ACTIVE`;
+- `NO_RETROACTIVE_AUTHORIZATION_CLAIMED`.
+
+This file does not itself authorize publication, PR creation, merge,
+deployment, or any other mutation.
 
 ## Evidence
 

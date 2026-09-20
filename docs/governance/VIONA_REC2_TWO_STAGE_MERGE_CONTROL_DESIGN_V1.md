@@ -377,7 +377,7 @@ the same exact tuple) is forbidden by construction and must never occur.
 enforced control inside the Stage 2 evaluator itself (not documentation,
 not chat discipline, not operator memory).
 
-**Default behavior:** while `GLOBAL_MERGE_FREEZE = ACTIVE`, Stage 2 MUST
+**ACTIVE behavior:** while `GLOBAL_MERGE_FREEZE = ACTIVE`, Stage 2 MUST
 remain non-success (`NO MERGE AUTHORITY`) for every authorization request,
 unconditionally, regardless of any other input being otherwise valid —
 unless a valid explicit freeze exception exists for that exact request.
@@ -401,6 +401,27 @@ is invalid and MUST be rejected by the Stage 2 evaluator.
 **Result:** because GitHub Branch Protection requires the Stage 2 context,
 an active freeze without a matching exact exception mechanically blocks all
 merges at the platform level — not merely by convention.
+
+**RELEASED behavior:** the canonical repository implementation may set
+`GLOBAL_MERGE_FREEZE = RELEASED` only through a reviewed code change that
+records the applicable operator release. In this state, an ordinary Stage 2
+authorization may issue without a freeze exception, but only through the
+complete two-stage control. `GLOBAL_MERGE_FREEZE_RELEASED` is an audit scope
+marker; caller-supplied text does not prove or select the canonical state.
+
+Release changes only the freeze dimension. It does not bypass or weaken
+Stage 1 Readiness, exact PR/head/base/merge-mode binding, reviewed-scope
+digest, exact-head approval, unresolved-conversation checks, actor and
+workflow provenance, TTL, the authoritative ledger and CAS lifecycle, the
+required Stage 2 check, branch protection, or the guarded merge wrapper.
+Released-mode records must identify `freeze_state = RELEASED`, use the
+released audit scope, and carry no remediation `freeze_exception_binding`.
+An ACTIVE remediation record or scope cannot be reused as ordinary
+post-release authority.
+
+Any unknown canonical freeze state fails closed. The ACTIVE exception model
+above remains the historical/pre-release and rollback-safe behavior; it is
+not converted into a generic or reusable bypass by release.
 
 ## 10. Failure / Recovery Matrix
 

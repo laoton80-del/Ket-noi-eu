@@ -46,10 +46,11 @@ on:
         required: true
         type: string
       freeze_scope:
-        description: Freeze remediation scope (exact while GLOBAL_MERGE_FREEZE is active)
+        description: Freeze audit scope; canonical repository code independently enforces ACTIVE or RELEASED state
         required: true
         type: choice
         options:
+          - GLOBAL_MERGE_FREEZE_RELEASED
           - FREEZE_EXCEPTION_FOR_MERGE_GUARDRAIL_REMEDIATION_ONLY
 
 # Bind concurrency to repository + PR + head. cancel-in-progress=false so an
