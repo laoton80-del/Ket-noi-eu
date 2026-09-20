@@ -2,7 +2,9 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 
 import {
+  INITIAL_REC2_ROOT_LINKING_LIFECYCLE_STATE,
   advanceRec2OfflineSession,
+  advanceRec2RootLinkingLifecycle,
   canRunRec2RemoteInitializers,
   canResolveRec2RemoteOpsConfig,
   claimRec2RemoteInitializerOnce,
@@ -257,6 +259,116 @@ check(
   resolveRec2SessionRootLinking(onlinePendingSession, online)
 );
 
+let unresolvedLifecycleSession = { localOnlyObserved: false };
+let unresolvedLifecycle = INITIAL_REC2_ROOT_LINKING_LIFECYCLE_STATE;
+unresolvedLifecycleSession = advanceRec2OfflineSession(
+  unresolvedLifecycleSession,
+  initialUnknownConnectivity
+);
+unresolvedLifecycle = advanceRec2RootLinkingLifecycle(
+  unresolvedLifecycle,
+  unresolvedLifecycleSession,
+  initialUnknownConnectivity,
+  false
+);
+check(
+  'unknown startup records pending initial-link eligibility without mounting navigation authority',
+  unresolvedLifecycle.unresolvedStartupObserved &&
+    !unresolvedLifecycle.navigationMounted &&
+    !unresolvedLifecycle.linkingInitializationComplete
+);
+unresolvedLifecycle = advanceRec2RootLinkingLifecycle(
+  unresolvedLifecycle,
+  unresolvedLifecycleSession,
+  initialUnknownConnectivity,
+  true
+);
+check(
+  'an unresolved local-shell mount preserves one pending cold-start linking initialization',
+  unresolvedLifecycle.navigationMounted &&
+    unresolvedLifecycle.unresolvedStartupPending &&
+    unresolvedLifecycle.initializationGeneration === 0
+);
+unresolvedLifecycleSession = advanceRec2OfflineSession(unresolvedLifecycleSession, online);
+const unresolvedOnlineBoundary = {
+  ...online,
+  rootLinkingAllowed: resolveRec2SessionRootLinking(unresolvedLifecycleSession, online),
+};
+unresolvedLifecycle = advanceRec2RootLinkingLifecycle(
+  unresolvedLifecycle,
+  unresolvedLifecycleSession,
+  unresolvedOnlineBoundary,
+  true
+);
+check(
+  'unresolved startup becoming fully online requests exactly one fresh linking initialization',
+  unresolvedLifecycle.linkingInitializationComplete &&
+    !unresolvedLifecycle.unresolvedStartupPending &&
+    unresolvedLifecycle.initializationGeneration === 1
+);
+const completedLifecycle = unresolvedLifecycle;
+unresolvedLifecycle = advanceRec2RootLinkingLifecycle(
+  unresolvedLifecycle,
+  unresolvedLifecycleSession,
+  initialUnknownConnectivity,
+  true
+);
+unresolvedLifecycle = advanceRec2RootLinkingLifecycle(
+  unresolvedLifecycle,
+  unresolvedLifecycleSession,
+  unresolvedOnlineBoundary,
+  true
+);
+check(
+  'later connectivity flaps cannot duplicate cold-start linking initialization',
+  unresolvedLifecycle === completedLifecycle &&
+    unresolvedLifecycle.initializationGeneration === 1
+);
+
+let explicitOfflineLifecycleSession = advanceRec2OfflineSession(
+  { localOnlyObserved: false },
+  localOffline
+);
+let explicitOfflineLifecycle = advanceRec2RootLinkingLifecycle(
+  INITIAL_REC2_ROOT_LINKING_LIFECYCLE_STATE,
+  explicitOfflineLifecycleSession,
+  localOffline,
+  true
+);
+explicitOfflineLifecycleSession = advanceRec2OfflineSession(
+  explicitOfflineLifecycleSession,
+  online
+);
+explicitOfflineLifecycle = advanceRec2RootLinkingLifecycle(
+  explicitOfflineLifecycle,
+  explicitOfflineLifecycleSession,
+  {
+    ...online,
+    rootLinkingAllowed: resolveRec2SessionRootLinking(explicitOfflineLifecycleSession, online),
+  },
+  true
+);
+check(
+  'genuine offline startup never arms or replays the cold-start link after reconnect',
+  explicitOfflineLifecycleSession.localOnlyObserved &&
+    !explicitOfflineLifecycle.unresolvedStartupPending &&
+    !explicitOfflineLifecycle.linkingInitializationComplete &&
+    explicitOfflineLifecycle.initializationGeneration === 0
+);
+
+const ordinaryOnlineLifecycle = advanceRec2RootLinkingLifecycle(
+  INITIAL_REC2_ROOT_LINKING_LIFECYCLE_STATE,
+  { localOnlyObserved: false },
+  online,
+  true
+);
+check(
+  'ordinary online startup initializes linking on its first navigation mount without a remount',
+  ordinaryOnlineLifecycle.navigationMounted &&
+    ordinaryOnlineLifecycle.linkingInitializationComplete &&
+    ordinaryOnlineLifecycle.initializationGeneration === 0
+);
+
 const safeLocalActions: readonly Rec2LocalAction[] = [
   'language',
   'viona-panel',
@@ -454,15 +566,36 @@ check(
 );
 
 const appSource = readFileSync('App.tsx', 'utf8');
+const navigationContainerSource = readFileSync(
+  'node_modules/@react-navigation/native/src/NavigationContainer.tsx',
+  'utf8'
+);
+const useThenableSource = readFileSync(
+  'node_modules/@react-navigation/native/src/useThenable.tsx',
+  'utf8'
+);
 const startupSource = readFileSync(
   'src/app/bootstrap/useAppStartupOrchestration.ts',
   'utf8'
 );
 const mainTabSource = readFileSync('src/navigation/MainTabNavigator.tsx', 'utf8');
 check(
-  'connectivity never participates in the navigator identity key',
+  'raw connectivity never participates in navigator identity while the bounded lifecycle generation does',
   appSource.includes("key={`root-${user?.phone ?? 'guest'}`}") &&
-    !appSource.includes('key={`root-${connectivity')
+    appSource.includes('key={`root-linking-${rootLinkingInitializationGeneration}`}') &&
+    !appSource.includes('key={`root-${connectivity') &&
+    !appSource.includes('key={`root-linking-${connectivity')
+);
+check(
+  'AppRoot advances the bounded linking lifecycle before render-mode early returns',
+  appSource.indexOf('rootLinkingLifecycleRef.current = advanceRec2RootLinkingLifecycle(') <
+    appSource.indexOf("if (offlinePolicy.renderMode === 'offline-blocked')")
+);
+check(
+  'installed React Navigation captures initial linking in a mount-scoped thenable',
+  navigationContainerSource.includes(
+    'const [isResolved, initialState] = useThenable(getInitialState);'
+  ) && useThenableSource.includes('const [promise] = React.useState(create);')
 );
 check(
   'AppRoot no longer initializes monitoring or analytics at module load',

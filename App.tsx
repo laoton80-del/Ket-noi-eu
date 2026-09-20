@@ -101,8 +101,10 @@ import { SuperAppUserStoreSync } from './src/store/SuperAppUserStoreSync';
 import { theme } from './src/theme/theme';
 import { useAppStartupOrchestration } from './src/app/bootstrap/useAppStartupOrchestration';
 import {
+  INITIAL_REC2_ROOT_LINKING_LIFECYCLE_STATE,
   Rec2OfflineHomeBoundaryContext,
   advanceRec2OfflineSession,
+  advanceRec2RootLinkingLifecycle,
   claimRec2RemoteInitializerOnce,
   resolveRec2OfflineHomePolicy,
   resolveRec2SessionRootLinking,
@@ -110,6 +112,7 @@ import {
   type Rec2ConnectivityState,
   type Rec2OfflineHomeRuntimeBoundary,
   type Rec2OfflineSessionState,
+  type Rec2RootLinkingLifecycleState,
 } from './src/app/bootstrap/rec2OfflineHomePolicy';
 import { AppModeProvider, useAppMode } from './src/context/AppModeContext';
 import { HubThemeProvider } from './src/context/HubThemeContext';
@@ -428,6 +431,7 @@ type AppNavigationShellProps = Readonly<{
   onGuidedIntent: (id: GuidedIntentId) => void;
   onSkipGuidedIntent: () => void;
   offlineBoundary: Rec2OfflineHomeRuntimeBoundary;
+  rootLinkingInitializationGeneration: number;
 }>;
 
 function AppNavigationShell({
@@ -442,6 +446,7 @@ function AppNavigationShell({
   onGuidedIntent,
   onSkipGuidedIntent,
   offlineBoundary,
+  rootLinkingInitializationGeneration,
 }: AppNavigationShellProps): ReactElement {
   const { navigationTheme, statusBarStyle, syncFromRootStackRoute } = useNavigationThemeForHub();
   return (
@@ -458,6 +463,7 @@ function AppNavigationShell({
       >
         <ThemeProvider value={navigationTheme}>
           <NavigationContainer
+            key={`root-linking-${rootLinkingInitializationGeneration}`}
             ref={navigationRef}
             linking={offlineBoundary.rootLinkingAllowed ? rootLinking : undefined}
           theme={navigationTheme}
@@ -764,6 +770,9 @@ function AppRoot() {
   const transitionAnim = useRef(new Animated.Value(0)).current;
   const appRemoteInitializersRef = useRef(new Set<string>());
   const offlineSessionRef = useRef<Rec2OfflineSessionState>({ localOnlyObserved: false });
+  const rootLinkingLifecycleRef = useRef<Rec2RootLinkingLifecycleState>(
+    INITIAL_REC2_ROOT_LINKING_LIFECYCLE_STATE
+  );
   const [fontsLoaded] = useMontserratFonts({
     Montserrat_400Regular,
     Montserrat_500Medium,
@@ -864,6 +873,14 @@ function AppRoot() {
     }).start();
   }, [transitionAnim, transitionKey]);
 
+  rootLinkingLifecycleRef.current = advanceRec2RootLinkingLifecycle(
+    rootLinkingLifecycleRef.current,
+    offlineSessionRef.current,
+    offlineBoundary,
+    offlinePolicy.renderMode === 'online-app' ||
+      offlinePolicy.renderMode === 'local-offline-home'
+  );
+
   if (offlinePolicy.renderMode === 'offline-blocked') {
     return (
       <AppStateView
@@ -912,6 +929,9 @@ function AppRoot() {
         onGuidedIntent={onGuidedIntent}
         onSkipGuidedIntent={onSkipGuidedIntent}
         offlineBoundary={offlineBoundary}
+        rootLinkingInitializationGeneration={
+          rootLinkingLifecycleRef.current.initializationGeneration
+        }
       />
     </V7NavigationSurfaceProvider>
   );

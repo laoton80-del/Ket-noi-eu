@@ -237,6 +237,80 @@ export function resolveRec2SessionRootLinking(
   return policy.rootLinkingAllowed && !session.localOnlyObserved;
 }
 
+export type Rec2RootLinkingLifecycleState = Readonly<{
+  navigationMounted: boolean;
+  unresolvedStartupObserved: boolean;
+  unresolvedStartupPending: boolean;
+  linkingInitializationComplete: boolean;
+  initializationGeneration: number;
+}>;
+
+export const INITIAL_REC2_ROOT_LINKING_LIFECYCLE_STATE: Rec2RootLinkingLifecycleState =
+  Object.freeze({
+    navigationMounted: false,
+    unresolvedStartupObserved: false,
+    unresolvedStartupPending: false,
+    linkingInitializationComplete: false,
+    initializationGeneration: 0,
+  });
+
+/**
+ * React Navigation captures its initial-linking thenable when the container
+ * mounts. If the local shell mounts while connectivity is unresolved, a later
+ * linking prop change cannot reliably re-read the cold-start URL. Advance the
+ * generation exactly once when that unresolved startup becomes authorized.
+ * A genuine offline observation is latched separately and can never trigger
+ * the remount/replay path in the same mounted app session.
+ */
+export function advanceRec2RootLinkingLifecycle(
+  previous: Rec2RootLinkingLifecycleState,
+  session: Rec2OfflineSessionState,
+  policy: Rec2OfflineHomeRuntimeBoundary,
+  navigationWillMount: boolean
+): Rec2RootLinkingLifecycleState {
+  const unresolvedStartupObserved =
+    previous.unresolvedStartupObserved ||
+    (!previous.navigationMounted &&
+      (policy.connectivity.isConnected === null ||
+        policy.connectivity.isInternetReachable === null));
+
+  if (!previous.navigationMounted) {
+    if (!navigationWillMount) {
+      return unresolvedStartupObserved === previous.unresolvedStartupObserved
+        ? previous
+        : { ...previous, unresolvedStartupObserved };
+    }
+
+    return {
+      navigationMounted: true,
+      unresolvedStartupObserved,
+      unresolvedStartupPending:
+        unresolvedStartupObserved &&
+        !policy.rootLinkingAllowed &&
+        !session.localOnlyObserved,
+      linkingInitializationComplete: policy.rootLinkingAllowed,
+      initializationGeneration: previous.initializationGeneration,
+    };
+  }
+
+  if (
+    previous.unresolvedStartupPending &&
+    !previous.linkingInitializationComplete &&
+    policy.rootLinkingAllowed &&
+    !session.localOnlyObserved
+  ) {
+    return {
+      navigationMounted: true,
+      unresolvedStartupObserved: previous.unresolvedStartupObserved,
+      unresolvedStartupPending: false,
+      linkingInitializationComplete: true,
+      initializationGeneration: previous.initializationGeneration + 1,
+    };
+  }
+
+  return previous;
+}
+
 export const REC2_OPS_CONFIG_CACHE_KEY = 'kn_ops_remote_config_v1';
 
 export type Rec2LocalOpsConfig = Readonly<{
