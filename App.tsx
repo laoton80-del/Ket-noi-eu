@@ -113,6 +113,7 @@ import {
   type Rec2OfflineHomeRuntimeBoundary,
   type Rec2OfflineSessionState,
   type Rec2RootLinkingLifecycleState,
+  type Rec2StartupLinkingOutcome,
 } from './src/app/bootstrap/rec2OfflineHomePolicy';
 import { AppModeProvider, useAppMode } from './src/context/AppModeContext';
 import { HubThemeProvider } from './src/context/HubThemeContext';
@@ -405,6 +406,13 @@ const rootLinking: LinkingOptions<RootStackParamList> = {
   },
 };
 
+// A rejected offline startup may regain the live URL subscription, but its
+// original cold-start URL must never be requested again.
+const rootLinkingAfterRejectedStartup: LinkingOptions<RootStackParamList> = {
+  ...rootLinking,
+  getInitialURL: () => null,
+};
+
 const STRIPE_PUBLISHABLE_KEY = process.env.EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY ?? '';
 const STRIPE_MERCHANT_IDENTIFIER = process.env.EXPO_PUBLIC_STRIPE_MERCHANT_IDENTIFIER || undefined;
 const STRIPE_URL_SCHEME = process.env.EXPO_PUBLIC_STRIPE_URL_SCHEME ?? 'ketnoieu';
@@ -432,6 +440,7 @@ type AppNavigationShellProps = Readonly<{
   onSkipGuidedIntent: () => void;
   offlineBoundary: Rec2OfflineHomeRuntimeBoundary;
   rootLinkingInitializationGeneration: number;
+  startupLinkingOutcome: Rec2StartupLinkingOutcome;
 }>;
 
 function AppNavigationShell({
@@ -447,6 +456,7 @@ function AppNavigationShell({
   onSkipGuidedIntent,
   offlineBoundary,
   rootLinkingInitializationGeneration,
+  startupLinkingOutcome,
 }: AppNavigationShellProps): ReactElement {
   const { navigationTheme, statusBarStyle, syncFromRootStackRoute } = useNavigationThemeForHub();
   return (
@@ -465,7 +475,13 @@ function AppNavigationShell({
           <NavigationContainer
             key={`root-linking-${rootLinkingInitializationGeneration}`}
             ref={navigationRef}
-            linking={offlineBoundary.rootLinkingAllowed ? rootLinking : undefined}
+            linking={
+              offlineBoundary.rootLinkingAllowed
+                ? startupLinkingOutcome === 'rejected-offline'
+                  ? rootLinkingAfterRejectedStartup
+                  : rootLinking
+                : undefined
+            }
           theme={navigationTheme}
           onStateChange={(state) => {
             if (!state?.routes?.length) return;
@@ -769,7 +785,9 @@ function AppRoot() {
   const [localeReady, setLocaleReady] = useState(false);
   const transitionAnim = useRef(new Animated.Value(0)).current;
   const appRemoteInitializersRef = useRef(new Set<string>());
-  const offlineSessionRef = useRef<Rec2OfflineSessionState>({ localOnlyObserved: false });
+  const offlineSessionRef = useRef<Rec2OfflineSessionState>({
+    startupLinkingOutcome: 'pending',
+  });
   const rootLinkingLifecycleRef = useRef<Rec2RootLinkingLifecycleState>(
     INITIAL_REC2_ROOT_LINKING_LIFECYCLE_STATE
   );
@@ -932,6 +950,7 @@ function AppRoot() {
         rootLinkingInitializationGeneration={
           rootLinkingLifecycleRef.current.initializationGeneration
         }
+        startupLinkingOutcome={offlineSessionRef.current.startupLinkingOutcome}
       />
     </V7NavigationSurfaceProvider>
   );

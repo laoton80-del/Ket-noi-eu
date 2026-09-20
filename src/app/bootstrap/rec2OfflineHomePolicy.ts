@@ -206,35 +206,60 @@ export function claimRec2RemoteInitializerOnce(
   return true;
 }
 
+export type Rec2StartupLinkingOutcome =
+  | 'pending'
+  | 'authorized-online'
+  | 'rejected-offline';
+
 export type Rec2OfflineSessionState = Readonly<{
-  localOnlyObserved: boolean;
+  startupLinkingOutcome: Rec2StartupLinkingOutcome;
 }>;
 
 /**
- * Only an explicit offline observation creates the mounted-session no-replay
- * latch; unresolved connectivity or another local loading state does not.
- * After a genuine offline rejection, reconnect does not replay the previously
- * supplied startup URL in that same mounted session.
+ * Classifies the startup linking decision exactly once. Later outages cannot
+ * rewrite an already-authorized startup, while a genuine offline decision
+ * permanently records that only the original startup URL was rejected.
  */
 export function advanceRec2OfflineSession(
   previous: Rec2OfflineSessionState,
   policy: Rec2OfflineHomePolicy
 ): Rec2OfflineSessionState {
+  if (
+    previous.startupLinkingOutcome === 'authorized-online' ||
+    previous.startupLinkingOutcome === 'rejected-offline'
+  ) {
+    return previous;
+  }
+
+  if (previous.startupLinkingOutcome !== 'pending') {
+    return previous;
+  }
+
   const explicitlyOffline =
     policy.connectivity.isConnected === false ||
     policy.connectivity.isInternetReachable === false;
-  return {
-    localOnlyObserved:
-      previous.localOnlyObserved ||
-      (policy.localOnlyGuestHome && explicitlyOffline),
-  };
+  if (explicitlyOffline) {
+    return { startupLinkingOutcome: 'rejected-offline' };
+  }
+
+  if (policy.rootLinkingAllowed) {
+    return { startupLinkingOutcome: 'authorized-online' };
+  }
+
+  return previous;
 }
 
 export function resolveRec2SessionRootLinking(
   session: Rec2OfflineSessionState,
   policy: Rec2OfflineHomePolicy
 ): boolean {
-  return policy.rootLinkingAllowed && !session.localOnlyObserved;
+  if (
+    session.startupLinkingOutcome !== 'authorized-online' &&
+    session.startupLinkingOutcome !== 'rejected-offline'
+  ) {
+    return false;
+  }
+  return policy.rootLinkingAllowed;
 }
 
 export type Rec2RootLinkingLifecycleState = Readonly<{
@@ -287,7 +312,7 @@ export function advanceRec2RootLinkingLifecycle(
       unresolvedStartupPending:
         unresolvedStartupObserved &&
         !policy.rootLinkingAllowed &&
-        !session.localOnlyObserved,
+        session.startupLinkingOutcome === 'pending',
       linkingInitializationComplete: policy.rootLinkingAllowed,
       initializationGeneration: previous.initializationGeneration,
     };
@@ -295,9 +320,19 @@ export function advanceRec2RootLinkingLifecycle(
 
   if (
     previous.unresolvedStartupPending &&
+    session.startupLinkingOutcome === 'rejected-offline'
+  ) {
+    return {
+      ...previous,
+      unresolvedStartupPending: false,
+    };
+  }
+
+  if (
+    previous.unresolvedStartupPending &&
     !previous.linkingInitializationComplete &&
     policy.rootLinkingAllowed &&
-    !session.localOnlyObserved
+    session.startupLinkingOutcome === 'authorized-online'
   ) {
     return {
       navigationMounted: true,

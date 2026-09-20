@@ -15,6 +15,7 @@ import {
   resolveRec2SessionRootLinking,
   type Rec2LocalAction,
   type Rec2OfflineHomePolicy,
+  type Rec2OfflineSessionState,
 } from '../src/app/bootstrap/rec2OfflineHomePolicy';
 import { resolveHomeRendererSelection } from '../src/navigation/homePresentationTarget';
 
@@ -213,53 +214,66 @@ check(
     online.remoteNavigationAllowed
 );
 
-let initialUnknownSession = { localOnlyObserved: false };
-initialUnknownSession = advanceRec2OfflineSession(
-  initialUnknownSession,
+const pendingStartupSession = (): Rec2OfflineSessionState => ({
+  startupLinkingOutcome: 'pending',
+});
+const withSessionRootLinking = (
+  session: Rec2OfflineSessionState,
+  policy: Rec2OfflineHomePolicy
+): Rec2OfflineHomePolicy => ({
+  ...policy,
+  rootLinkingAllowed: resolveRec2SessionRootLinking(session, policy),
+});
+
+let initialUnknownSession = advanceRec2OfflineSession(
+  pendingStartupSession(),
   initialUnknownConnectivity
 );
 check(
-  'AppRoot initial unknown connectivity does not latch the session as offline',
-  !initialUnknownSession.localOnlyObserved
+  'AppRoot initial unknown connectivity keeps startup pending without granting linking authority',
+  initialUnknownSession.startupLinkingOutcome === 'pending' &&
+    !resolveRec2SessionRootLinking(initialUnknownSession, initialUnknownConnectivity)
 );
 initialUnknownSession = advanceRec2OfflineSession(initialUnknownSession, online);
 check(
-  'fully ready online truth enables root linking after an initially unknown startup',
-  resolveRec2SessionRootLinking(initialUnknownSession, online)
+  'fully ready online truth authorizes startup linking after initially unknown connectivity',
+  initialUnknownSession.startupLinkingOutcome === 'authorized-online' &&
+    resolveRec2SessionRootLinking(initialUnknownSession, online)
 );
 
-let partialUnknownSession = { localOnlyObserved: false };
-partialUnknownSession = advanceRec2OfflineSession(
-  partialUnknownSession,
+let partialUnknownSession = advanceRec2OfflineSession(
+  pendingStartupSession(),
   unknownInternetReachability
 );
 check(
-  'connected transport with unknown Internet reachability does not latch offline',
-  !partialUnknownSession.localOnlyObserved
+  'connected transport with unknown Internet reachability keeps startup pending',
+  partialUnknownSession.startupLinkingOutcome === 'pending'
 );
 partialUnknownSession = advanceRec2OfflineSession(partialUnknownSession, online);
 check(
-  'fully ready online truth enables root linking after partial connectivity was unknown',
-  resolveRec2SessionRootLinking(partialUnknownSession, online)
+  'fully ready online truth authorizes linking after partial connectivity was unknown',
+  partialUnknownSession.startupLinkingOutcome === 'authorized-online' &&
+    resolveRec2SessionRootLinking(partialUnknownSession, online)
 );
 
-let onlinePendingSession = { localOnlyObserved: false };
-onlinePendingSession = advanceRec2OfflineSession(
-  onlinePendingSession,
+let onlinePendingSession = advanceRec2OfflineSession(
+  pendingStartupSession(),
   onlinePendingRemoteReadiness
 );
 check(
-  'online transport pending remote ops stays local without latching offline',
+  'online transport pending remote ops preserves the pending startup decision',
   onlinePendingRemoteReadiness.localOnlyGuestHome &&
-    !onlinePendingSession.localOnlyObserved
+    onlinePendingSession.startupLinkingOutcome === 'pending' &&
+    !resolveRec2SessionRootLinking(onlinePendingSession, onlinePendingRemoteReadiness)
 );
 onlinePendingSession = advanceRec2OfflineSession(onlinePendingSession, online);
 check(
-  'remote ops readiness enables root linking after an online pending state',
-  resolveRec2SessionRootLinking(onlinePendingSession, online)
+  'remote ops readiness terminally authorizes startup linking',
+  onlinePendingSession.startupLinkingOutcome === 'authorized-online' &&
+    resolveRec2SessionRootLinking(onlinePendingSession, online)
 );
 
-let unresolvedLifecycleSession = { localOnlyObserved: false };
+let unresolvedLifecycleSession = pendingStartupSession();
 let unresolvedLifecycle = INITIAL_REC2_ROOT_LINKING_LIFECYCLE_STATE;
 unresolvedLifecycleSession = advanceRec2OfflineSession(
   unresolvedLifecycleSession,
@@ -307,26 +321,36 @@ check(
     unresolvedLifecycle.initializationGeneration === 1
 );
 const completedLifecycle = unresolvedLifecycle;
-unresolvedLifecycle = advanceRec2RootLinkingLifecycle(
-  unresolvedLifecycle,
+const unresolvedAuthorizedOutageSession = advanceRec2OfflineSession(
   unresolvedLifecycleSession,
-  initialUnknownConnectivity,
-  true
+  localOffline
 );
 unresolvedLifecycle = advanceRec2RootLinkingLifecycle(
   unresolvedLifecycle,
-  unresolvedLifecycleSession,
-  unresolvedOnlineBoundary,
+  unresolvedAuthorizedOutageSession,
+  withSessionRootLinking(unresolvedAuthorizedOutageSession, localOffline),
+  true
+);
+const unresolvedAuthorizedReconnectSession = advanceRec2OfflineSession(
+  unresolvedAuthorizedOutageSession,
+  online
+);
+unresolvedLifecycle = advanceRec2RootLinkingLifecycle(
+  unresolvedLifecycle,
+  unresolvedAuthorizedReconnectSession,
+  withSessionRootLinking(unresolvedAuthorizedReconnectSession, online),
   true
 );
 check(
-  'later connectivity flaps cannot duplicate cold-start linking initialization',
+  'later outage and reconnect cannot duplicate unknown-start cold-link initialization',
   unresolvedLifecycle === completedLifecycle &&
+    unresolvedAuthorizedReconnectSession.startupLinkingOutcome === 'authorized-online' &&
+    resolveRec2SessionRootLinking(unresolvedAuthorizedReconnectSession, online) &&
     unresolvedLifecycle.initializationGeneration === 1
 );
 
 let explicitOfflineLifecycleSession = advanceRec2OfflineSession(
-  { localOnlyObserved: false },
+  pendingStartupSession(),
   localOffline
 );
 let explicitOfflineLifecycle = advanceRec2RootLinkingLifecycle(
@@ -349,24 +373,115 @@ explicitOfflineLifecycle = advanceRec2RootLinkingLifecycle(
   true
 );
 check(
-  'genuine offline startup never arms or replays the cold-start link after reconnect',
-  explicitOfflineLifecycleSession.localOnlyObserved &&
+  'genuine offline startup restores live linking without remounting or replaying its initial URL',
+  explicitOfflineLifecycleSession.startupLinkingOutcome === 'rejected-offline' &&
+    resolveRec2SessionRootLinking(explicitOfflineLifecycleSession, online) &&
     !explicitOfflineLifecycle.unresolvedStartupPending &&
     !explicitOfflineLifecycle.linkingInitializationComplete &&
     explicitOfflineLifecycle.initializationGeneration === 0
 );
 
-const ordinaryOnlineLifecycle = advanceRec2RootLinkingLifecycle(
+let ordinaryOnlineSession = advanceRec2OfflineSession(pendingStartupSession(), online);
+let ordinaryOnlineLifecycle = advanceRec2RootLinkingLifecycle(
   INITIAL_REC2_ROOT_LINKING_LIFECYCLE_STATE,
-  { localOnlyObserved: false },
-  online,
+  ordinaryOnlineSession,
+  withSessionRootLinking(ordinaryOnlineSession, online),
   true
 );
 check(
   'ordinary online startup initializes linking on its first navigation mount without a remount',
+  ordinaryOnlineSession.startupLinkingOutcome === 'authorized-online' &&
   ordinaryOnlineLifecycle.navigationMounted &&
     ordinaryOnlineLifecycle.linkingInitializationComplete &&
     ordinaryOnlineLifecycle.initializationGeneration === 0
+);
+
+ordinaryOnlineSession = advanceRec2OfflineSession(ordinaryOnlineSession, localOffline);
+const ordinaryOutageBoundary = withSessionRootLinking(ordinaryOnlineSession, localOffline);
+ordinaryOnlineLifecycle = advanceRec2RootLinkingLifecycle(
+  ordinaryOnlineLifecycle,
+  ordinaryOnlineSession,
+  ordinaryOutageBoundary,
+  true
+);
+check(
+  'post-start outage denies current linking without changing the authorized startup outcome',
+  ordinaryOnlineSession.startupLinkingOutcome === 'authorized-online' &&
+    !ordinaryOutageBoundary.rootLinkingAllowed &&
+    ordinaryOnlineLifecycle.initializationGeneration === 0
+);
+
+ordinaryOnlineSession = advanceRec2OfflineSession(ordinaryOnlineSession, online);
+const ordinaryReconnectBoundary = withSessionRootLinking(ordinaryOnlineSession, online);
+ordinaryOnlineLifecycle = advanceRec2RootLinkingLifecycle(
+  ordinaryOnlineLifecycle,
+  ordinaryOnlineSession,
+  ordinaryReconnectBoundary,
+  true
+);
+check(
+  'post-start reconnect restores live linking without a cold-start remount',
+  ordinaryOnlineSession.startupLinkingOutcome === 'authorized-online' &&
+    ordinaryReconnectBoundary.rootLinkingAllowed &&
+    ordinaryOnlineLifecycle.initializationGeneration === 0
+);
+
+const repeatedOutageLinking: boolean[] = [];
+for (const policy of [localOffline, online, localOffline, online]) {
+  ordinaryOnlineSession = advanceRec2OfflineSession(ordinaryOnlineSession, policy);
+  const boundary = withSessionRootLinking(ordinaryOnlineSession, policy);
+  ordinaryOnlineLifecycle = advanceRec2RootLinkingLifecycle(
+    ordinaryOnlineLifecycle,
+    ordinaryOnlineSession,
+    boundary,
+    true
+  );
+  repeatedOutageLinking.push(boundary.rootLinkingAllowed);
+}
+check(
+  'multiple post-start outages follow current authority with no permanent lock or generation growth',
+  JSON.stringify(repeatedOutageLinking) === JSON.stringify([false, true, false, true]) &&
+    ordinaryOnlineSession.startupLinkingOutcome === 'authorized-online' &&
+    ordinaryOnlineLifecycle.initializationGeneration === 0
+);
+
+let unknownThenOfflineSession = advanceRec2OfflineSession(
+  pendingStartupSession(),
+  initialUnknownConnectivity
+);
+let unknownThenOfflineLifecycle = advanceRec2RootLinkingLifecycle(
+  INITIAL_REC2_ROOT_LINKING_LIFECYCLE_STATE,
+  unknownThenOfflineSession,
+  initialUnknownConnectivity,
+  true
+);
+unknownThenOfflineSession = advanceRec2OfflineSession(
+  unknownThenOfflineSession,
+  localOffline
+);
+unknownThenOfflineLifecycle = advanceRec2RootLinkingLifecycle(
+  unknownThenOfflineLifecycle,
+  unknownThenOfflineSession,
+  withSessionRootLinking(unknownThenOfflineSession, localOffline),
+  true
+);
+unknownThenOfflineSession = advanceRec2OfflineSession(unknownThenOfflineSession, online);
+const unknownOfflineReconnectBoundary = withSessionRootLinking(
+  unknownThenOfflineSession,
+  online
+);
+unknownThenOfflineLifecycle = advanceRec2RootLinkingLifecycle(
+  unknownThenOfflineLifecycle,
+  unknownThenOfflineSession,
+  unknownOfflineReconnectBoundary,
+  true
+);
+check(
+  'unknown then explicit-offline startup rejects only the initial URL and restores future live links',
+  unknownThenOfflineSession.startupLinkingOutcome === 'rejected-offline' &&
+    unknownOfflineReconnectBoundary.rootLinkingAllowed &&
+    !unknownThenOfflineLifecycle.unresolvedStartupPending &&
+    unknownThenOfflineLifecycle.initializationGeneration === 0
 );
 
 const safeLocalActions: readonly Rec2LocalAction[] = [
@@ -474,26 +589,14 @@ check(
   remoteInitializerInvocations === 1 && initializerClaims.size === 1
 );
 
-let offlineSession = { localOnlyObserved: false };
-offlineSession = advanceRec2OfflineSession(offlineSession, localOffline);
+const invalidStartupSession = {
+  startupLinkingOutcome: 'invalid-runtime-value',
+} as unknown as Rec2OfflineSessionState;
+const invalidStartupAdvanced = advanceRec2OfflineSession(invalidStartupSession, online);
 check(
-  'an explicit offline observation latches the mounted session',
-  offlineSession.localOnlyObserved
-);
-offlineSession = advanceRec2OfflineSession(offlineSession, online);
-check(
-  'a protected initial link rejected offline is not replayed after reconnect',
-  offlineSession.localOnlyObserved && !resolveRec2SessionRootLinking(offlineSession, online)
-);
-offlineSession = advanceRec2OfflineSession(
-  offlineSession,
-  initialUnknownConnectivity
-);
-offlineSession = advanceRec2OfflineSession(offlineSession, online);
-check(
-  'the explicit offline latch remains monotonic through later unknown and online states',
-  offlineSession.localOnlyObserved &&
-    !resolveRec2SessionRootLinking(offlineSession, online)
+  'invalid startup-linking state fails closed and cannot acquire live linking authority',
+  invalidStartupAdvanced === invalidStartupSession &&
+    !resolveRec2SessionRootLinking(invalidStartupAdvanced, online)
 );
 
 check(
@@ -574,6 +677,14 @@ const useThenableSource = readFileSync(
   'node_modules/@react-navigation/native/src/useThenable.tsx',
   'utf8'
 );
+const nativeUseLinkingSource = readFileSync(
+  'node_modules/@react-navigation/native/src/useLinking.native.tsx',
+  'utf8'
+);
+const webUseLinkingSource = readFileSync(
+  'node_modules/@react-navigation/native/src/useLinking.tsx',
+  'utf8'
+);
 const startupSource = readFileSync(
   'src/app/bootstrap/useAppStartupOrchestration.ts',
   'utf8'
@@ -596,6 +707,24 @@ check(
   navigationContainerSource.includes(
     'const [isResolved, initialState] = useThenable(getInitialState);'
   ) && useThenableSource.includes('const [promise] = React.useState(create);')
+);
+check(
+  'installed native linking resubscribes live URL handling when enabled changes',
+  nativeUseLinkingSource.includes('const subscription = Linking.addEventListener') &&
+    nativeUseLinkingSource.includes('return subscribe(listener);') &&
+    /return subscribe\(listener\);\s*}, \[enabled,/.test(nativeUseLinkingSource)
+);
+check(
+  'installed web linking refreshes its history listener when enabled changes',
+  webUseLinkingSource.includes('return history.listen(() => {') &&
+    /}, \[\s*enabled,\s*history,/s.test(webUseLinkingSource)
+);
+check(
+  'rejected offline startup suppresses getInitialURL while retaining the ordinary live subscription',
+  appSource.includes('const rootLinkingAfterRejectedStartup') &&
+    appSource.includes('getInitialURL: () => null') &&
+    appSource.includes("startupLinkingOutcome === 'rejected-offline'") &&
+    appSource.includes('? rootLinkingAfterRejectedStartup')
 );
 check(
   'AppRoot no longer initializes monitoring or analytics at module load',
