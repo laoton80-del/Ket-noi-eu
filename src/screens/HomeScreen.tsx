@@ -518,8 +518,39 @@ function detectHomeHoverPointer(): boolean {
  * starts reconstruction Home hooks or their effects while its feature flag is on.
  */
 export function HomeScreen() {
+  const { user, updateProfile } = useAuth();
+  const [personaModalVisible, setPersonaModalVisible] = useState(false);
   const renderer = resolveHomeRendererSelection(getFeatureFlags().rec2HomeShellEnabled);
-  return renderer === 'rec2' ? <VionaRec2HomeEntry /> : <ReconstructionHomeScreen />;
+
+  useEffect(() => {
+    if (!user) setPersonaModalVisible(false);
+  }, [user]);
+
+  useFocusEffect(
+    useCallback(() => {
+      if (user?.needsPersonaOnboarding === true) setPersonaModalVisible(true);
+    }, [user?.needsPersonaOnboarding])
+  );
+
+  const applyPersonaChoice = useCallback(
+    (persona: 'EXPAT' | 'TOURIST') => {
+      void patchUserPersonaOnServer(persona);
+      updateProfile({ persona, needsPersonaOnboarding: false });
+      setPersonaModalVisible(false);
+    },
+    [updateProfile]
+  );
+
+  return (
+    <>
+      {renderer === 'rec2' ? <VionaRec2HomeEntry /> : <ReconstructionHomeScreen />}
+      <PersonaOnboardingModal
+        visible={personaModalVisible}
+        onPickExpat={() => applyPersonaChoice('EXPAT')}
+        onPickTourist={() => applyPersonaChoice('TOURIST')}
+      />
+    </>
+  );
 }
 
 function VionaRec2HomeEntry() {
@@ -620,10 +651,9 @@ function ReconstructionHomeScreen() {
   const navigation = useNavigation<Nav>();
   const { width, height } = useWindowDimensions();
   const insets = useSafeAreaInsets();
-  const { user, setPendingRedirect, updateProfile } = useAuth();
+  const { user, setPendingRedirect } = useAuth();
   const isTourist = user?.persona === 'TOURIST';
   const featureFlags = useMemo(() => getFeatureFlags(), []);
-  const [personaModalVisible, setPersonaModalVisible] = useState(false);
   const wallet = useWalletState();
   const [showPaywall, setShowPaywall] = useState(false);
   const [showPin, setShowPin] = useState(false);
@@ -663,10 +693,6 @@ function ReconstructionHomeScreen() {
     };
   }, [user?.country, user?.name, user?.phone]);
 
-  useEffect(() => {
-    if (!user) setPersonaModalVisible(false);
-  }, [user]);
-
   useFocusEffect(
     useCallback(() => {
       let cancelled = false;
@@ -688,21 +714,6 @@ function ReconstructionHomeScreen() {
         cancelled = true;
       };
     }, [])
-  );
-
-  useFocusEffect(
-    useCallback(() => {
-      if (user?.needsPersonaOnboarding === true) setPersonaModalVisible(true);
-    }, [user?.needsPersonaOnboarding])
-  );
-
-  const applyPersonaChoice = useCallback(
-    (persona: 'EXPAT' | 'TOURIST') => {
-      void patchUserPersonaOnServer(persona);
-      updateProfile({ persona, needsPersonaOnboarding: false });
-      setPersonaModalVisible(false);
-    },
-    [updateProfile]
   );
 
   const localClock = useMemo(
@@ -3326,12 +3337,6 @@ function ReconstructionHomeScreen() {
         </VionaCard>
         ) : null}
       </ScrollView>
-
-      <PersonaOnboardingModal
-        visible={personaModalVisible}
-        onPickExpat={() => applyPersonaChoice('EXPAT')}
-        onPickTourist={() => applyPersonaChoice('TOURIST')}
-      />
 
       <AuthPaywallModal
         visible={showPaywall}

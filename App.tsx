@@ -23,10 +23,19 @@ import NetInfo from '@react-native-community/netinfo';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { StatusBar } from 'expo-status-bar';
 import * as Notifications from 'expo-notifications';
-import { useEffect, useRef, useState, type ReactElement } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ReactElement,
+} from 'react';
 import {
   Animated,
   Easing,
+  Linking,
   Platform,
   StyleSheet,
   Text,
@@ -101,15 +110,21 @@ import { SuperAppUserStoreSync } from './src/store/SuperAppUserStoreSync';
 import { theme } from './src/theme/theme';
 import { useAppStartupOrchestration } from './src/app/bootstrap/useAppStartupOrchestration';
 import {
+  INITIAL_REC2_ROOT_LINKING_LIFECYCLE_STATE,
   Rec2OfflineHomeBoundaryContext,
   advanceRec2OfflineSession,
+  advanceRec2RootLinkingLifecycle,
   claimRec2RemoteInitializerOnce,
+  enqueueRec2PendingNativeLink,
   resolveRec2OfflineHomePolicy,
   resolveRec2SessionRootLinking,
+  settleRec2PendingNativeLinks,
   type Rec2ConnectivityTruth,
   type Rec2ConnectivityState,
   type Rec2OfflineHomeRuntimeBoundary,
   type Rec2OfflineSessionState,
+  type Rec2RootLinkingLifecycleState,
+  type Rec2StartupLinkingOutcome,
 } from './src/app/bootstrap/rec2OfflineHomePolicy';
 import { AppModeProvider, useAppMode } from './src/context/AppModeContext';
 import { HubThemeProvider } from './src/context/HubThemeContext';
@@ -402,6 +417,19 @@ const rootLinking: LinkingOptions<RootStackParamList> = {
   },
 };
 
+// A rejected offline startup may regain the live URL subscription, but its
+// original cold-start URL must never be requested again.
+const rootLinkingAfterRejectedStartup: LinkingOptions<RootStackParamList> = {
+  ...rootLinking,
+  getInitialURL: () => null,
+};
+
+type NativeLinkListenerOwner =
+  | 'idle'
+  | 'pending-buffer'
+  | 'react-navigation'
+  | 'rejected-offline';
+
 const STRIPE_PUBLISHABLE_KEY = process.env.EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY ?? '';
 const STRIPE_MERCHANT_IDENTIFIER = process.env.EXPO_PUBLIC_STRIPE_MERCHANT_IDENTIFIER || undefined;
 const STRIPE_URL_SCHEME = process.env.EXPO_PUBLIC_STRIPE_URL_SCHEME ?? 'ketnoieu';
@@ -428,6 +456,8 @@ type AppNavigationShellProps = Readonly<{
   onGuidedIntent: (id: GuidedIntentId) => void;
   onSkipGuidedIntent: () => void;
   offlineBoundary: Rec2OfflineHomeRuntimeBoundary;
+  rootLinkingInitializationGeneration: number;
+  startupLinkingOutcome: Rec2StartupLinkingOutcome;
 }>;
 
 function AppNavigationShell({
@@ -442,8 +472,154 @@ function AppNavigationShell({
   onGuidedIntent,
   onSkipGuidedIntent,
   offlineBoundary,
+  rootLinkingInitializationGeneration,
+  startupLinkingOutcome,
 }: AppNavigationShellProps): ReactElement {
   const { navigationTheme, statusBarStyle, syncFromRootStackRoute } = useNavigationThemeForHub();
+  const committedStartupLinkingOutcomeRef = useRef(startupLinkingOutcome);
+  const pendingNativeLinksRef = useRef<readonly string[]>([]);
+  const nativeLinkListenerOwnerRef = useRef<NativeLinkListenerOwner>('idle');
+  const reactNavigationNativeLinkListenerRef = useRef<((url: string) => void) | null>(null);
+  const committedRootLinkingGenerationRef = useRef(rootLinkingInitializationGeneration);
+  const navigationReadyGenerationRef = useRef<number | null>(null);
+  const nativeLinkSubscriptionRef = useRef<ReturnType<typeof Linking.addEventListener> | null>(
+    null
+  );
+
+  const removeNativeLinkSubscription = useCallback(() => {
+    nativeLinkSubscriptionRef.current?.remove();
+    nativeLinkSubscriptionRef.current = null;
+  }, []);
+
+  const ensureNativeLinkSubscription = useCallback(() => {
+    if (Platform.OS === 'web' || nativeLinkSubscriptionRef.current) return;
+    nativeLinkSubscriptionRef.current = Linking.addEventListener('url', ({ url }) => {
+      if (nativeLinkListenerOwnerRef.current === 'pending-buffer') {
+        pendingNativeLinksRef.current = enqueueRec2PendingNativeLink(
+          pendingNativeLinksRef.current,
+          url
+        );
+        return;
+      }
+      if (nativeLinkListenerOwnerRef.current === 'react-navigation') {
+        reactNavigationNativeLinkListenerRef.current?.(url);
+      }
+    });
+  }, []);
+
+  useLayoutEffect(() => {
+    committedStartupLinkingOutcomeRef.current = startupLinkingOutcome;
+    if (Platform.OS === 'web') return;
+
+    if (startupLinkingOutcome === 'pending') {
+      nativeLinkListenerOwnerRef.current = 'pending-buffer';
+      ensureNativeLinkSubscription();
+      return;
+    }
+
+    if (startupLinkingOutcome === 'rejected-offline') {
+      const settlement = settleRec2PendingNativeLinks(
+        pendingNativeLinksRef.current,
+        startupLinkingOutcome
+      );
+      pendingNativeLinksRef.current = settlement.pendingLinks;
+      reactNavigationNativeLinkListenerRef.current = null;
+      nativeLinkListenerOwnerRef.current = 'rejected-offline';
+      removeNativeLinkSubscription();
+    }
+  }, [ensureNativeLinkSubscription, removeNativeLinkSubscription, startupLinkingOutcome]);
+
+  useLayoutEffect(() => {
+    committedRootLinkingGenerationRef.current = rootLinkingInitializationGeneration;
+    navigationReadyGenerationRef.current = null;
+  }, [rootLinkingInitializationGeneration]);
+
+  useLayoutEffect(
+    () => () => {
+      pendingNativeLinksRef.current = [];
+      reactNavigationNativeLinkListenerRef.current = null;
+      nativeLinkListenerOwnerRef.current = 'idle';
+      removeNativeLinkSubscription();
+    },
+    [removeNativeLinkSubscription]
+  );
+
+  const releasePendingNativeLinksIfReady = useCallback(() => {
+    if (
+      Platform.OS === 'web' ||
+      nativeLinkListenerOwnerRef.current !== 'pending-buffer' ||
+      navigationReadyGenerationRef.current !== committedRootLinkingGenerationRef.current
+    ) {
+      return;
+    }
+
+    const listener = reactNavigationNativeLinkListenerRef.current;
+    const committedOutcome = committedStartupLinkingOutcomeRef.current;
+    if (!listener || committedOutcome !== 'authorized-online') return;
+
+    const settlement = settleRec2PendingNativeLinks(
+      pendingNativeLinksRef.current,
+      committedOutcome
+    );
+    pendingNativeLinksRef.current = settlement.pendingLinks;
+    nativeLinkListenerOwnerRef.current = 'react-navigation';
+    for (const url of settlement.linksToDeliver) listener(url);
+  }, []);
+
+  const handleRootNavigationReady = useCallback(() => {
+    navigationReadyGenerationRef.current = committedRootLinkingGenerationRef.current;
+    releasePendingNativeLinksIfReady();
+  }, [releasePendingNativeLinksIfReady]);
+
+  const subscribeToNativeLinks = useCallback(
+    (listener: (url: string) => void) => {
+      const committedOutcome = committedStartupLinkingOutcomeRef.current;
+      if (
+        Platform.OS === 'web' ||
+        (committedOutcome !== 'authorized-online' && committedOutcome !== 'rejected-offline')
+      ) {
+        return () => undefined;
+      }
+
+      const pendingBufferOwnsHandoff =
+        nativeLinkListenerOwnerRef.current === 'pending-buffer';
+      reactNavigationNativeLinkListenerRef.current = listener;
+      if (!pendingBufferOwnsHandoff) {
+        nativeLinkListenerOwnerRef.current = 'react-navigation';
+      }
+      ensureNativeLinkSubscription();
+      releasePendingNativeLinksIfReady();
+
+      return () => {
+        if (reactNavigationNativeLinkListenerRef.current !== listener) return;
+        reactNavigationNativeLinkListenerRef.current = null;
+        nativeLinkListenerOwnerRef.current = 'idle';
+        removeNativeLinkSubscription();
+      };
+    },
+    [
+      ensureNativeLinkSubscription,
+      releasePendingNativeLinksIfReady,
+      removeNativeLinkSubscription,
+    ]
+  );
+
+  const nativeRootLinking = useMemo<LinkingOptions<RootStackParamList>>(
+    () => ({ ...rootLinking, subscribe: subscribeToNativeLinks }),
+    [subscribeToNativeLinks]
+  );
+  const nativeRootLinkingAfterRejectedStartup = useMemo<LinkingOptions<RootStackParamList>>(
+    () => ({ ...rootLinkingAfterRejectedStartup, subscribe: subscribeToNativeLinks }),
+    [subscribeToNativeLinks]
+  );
+  const activeRootLinking =
+    startupLinkingOutcome === 'rejected-offline'
+      ? Platform.OS === 'web'
+        ? rootLinkingAfterRejectedStartup
+        : nativeRootLinkingAfterRejectedStartup
+      : Platform.OS === 'web'
+        ? rootLinking
+        : nativeRootLinking;
   return (
     <Rec2OfflineHomeBoundaryContext.Provider value={offlineBoundary}>
       <View
@@ -458,8 +634,12 @@ function AppNavigationShell({
       >
         <ThemeProvider value={navigationTheme}>
           <NavigationContainer
+            key={`root-linking-${rootLinkingInitializationGeneration}`}
             ref={navigationRef}
-            linking={offlineBoundary.rootLinkingAllowed ? rootLinking : undefined}
+            onReady={handleRootNavigationReady}
+            linking={
+              offlineBoundary.rootLinkingAllowed ? activeRootLinking : undefined
+            }
           theme={navigationTheme}
           onStateChange={(state) => {
             if (!state?.routes?.length) return;
@@ -763,7 +943,12 @@ function AppRoot() {
   const [localeReady, setLocaleReady] = useState(false);
   const transitionAnim = useRef(new Animated.Value(0)).current;
   const appRemoteInitializersRef = useRef(new Set<string>());
-  const offlineSessionRef = useRef<Rec2OfflineSessionState>({ localOnlyObserved: false });
+  const offlineSessionRef = useRef<Rec2OfflineSessionState>({
+    startupLinkingOutcome: 'pending',
+  });
+  const rootLinkingLifecycleRef = useRef<Rec2RootLinkingLifecycleState>(
+    INITIAL_REC2_ROOT_LINKING_LIFECYCLE_STATE
+  );
   const [fontsLoaded] = useMontserratFonts({
     Montserrat_400Regular,
     Montserrat_500Medium,
@@ -827,11 +1012,31 @@ function AppRoot() {
     operationalReadOnlyMode: opsConfig?.readOnlyMode === true,
     disabledFeatures: opsConfig?.disabledFeatures ?? [],
   });
-  offlineSessionRef.current = advanceRec2OfflineSession(offlineSessionRef.current, offlinePolicy);
-  const offlineBoundary: Rec2OfflineHomeRuntimeBoundary = {
+  const navigationWillMount =
+    offlinePolicy.renderMode === 'online-app' ||
+    offlinePolicy.renderMode === 'local-offline-home';
+  const committedOfflineSession = offlineSessionRef.current;
+  const projectedOfflineSession = advanceRec2OfflineSession(
+    committedOfflineSession,
+    offlinePolicy,
+    { navigationWillMount }
+  );
+  const projectedOfflineBoundary: Rec2OfflineHomeRuntimeBoundary = {
     ...offlinePolicy,
-    rootLinkingAllowed: resolveRec2SessionRootLinking(offlineSessionRef.current, offlinePolicy),
+    rootLinkingAllowed: resolveRec2SessionRootLinking(projectedOfflineSession, offlinePolicy),
   };
+  const committedRootLinkingLifecycle = rootLinkingLifecycleRef.current;
+  const projectedRootLinkingLifecycle = advanceRec2RootLinkingLifecycle(
+    committedRootLinkingLifecycle,
+    projectedOfflineSession,
+    projectedOfflineBoundary,
+    navigationWillMount
+  );
+
+  useLayoutEffect(() => {
+    offlineSessionRef.current = projectedOfflineSession;
+    rootLinkingLifecycleRef.current = projectedRootLinkingLifecycle;
+  }, [projectedOfflineSession, projectedRootLinkingLifecycle]);
 
   useEffect(() => {
     if (
@@ -911,7 +1116,11 @@ function AppRoot() {
         showIntentModal={showIntentModal}
         onGuidedIntent={onGuidedIntent}
         onSkipGuidedIntent={onSkipGuidedIntent}
-        offlineBoundary={offlineBoundary}
+        offlineBoundary={projectedOfflineBoundary}
+        rootLinkingInitializationGeneration={
+          projectedRootLinkingLifecycle.initializationGeneration
+        }
+        startupLinkingOutcome={projectedOfflineSession.startupLinkingOutcome}
       />
     </V7NavigationSurfaceProvider>
   );

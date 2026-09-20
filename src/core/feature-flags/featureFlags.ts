@@ -12,13 +12,15 @@ export function parseTruthyEnvString(raw: string | undefined): boolean {
   return typeof raw === 'string' && raw.trim() === 'true';
 }
 
-/** RC2 Home remains opt-in; undefined and every non-canonical value are OFF. */
+/** Canonical REC2 Home defaults ON when unset. Explicit `"false"` rolls back; every other non-empty value fails closed. */
 export function resolveRec2HomeShellEnabled(raw: string | undefined): boolean {
-  return parseTruthyEnvString(raw);
+  const normalized = raw?.trim();
+  if (!normalized) return true;
+  return normalized === 'true';
 }
 
 export interface FeatureFlags {
-  /** Local RC2 Home candidate. Defaults OFF; build-time env only. */
+  /** Canonical REC2 Home. Defaults ON; explicit false or invalid non-empty config rolls back to Reconstruction. */
   rec2HomeShellEnabled: boolean;
   hubEnabled: boolean;
   localEnabled: boolean;

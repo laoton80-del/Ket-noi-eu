@@ -206,28 +206,186 @@ export function claimRec2RemoteInitializerOnce(
   return true;
 }
 
-export type Rec2OfflineSessionState = Readonly<{
-  localOnlyObserved: boolean;
+export type Rec2StartupLinkingOutcome =
+  | 'pending'
+  | 'authorized-online'
+  | 'rejected-offline';
+
+export const REC2_PENDING_NATIVE_LINK_BUFFER_MAX_SIZE = 8;
+
+/**
+ * Retains only the newest bounded set of native URL events observed while
+ * startup linking is pending. The queue is process-local and never grants
+ * navigation authority by itself.
+ */
+export function enqueueRec2PendingNativeLink(
+  pendingLinks: readonly string[],
+  url: string
+): readonly string[] {
+  if (!url) return pendingLinks;
+  const next = [...pendingLinks, url];
+  return next.length <= REC2_PENDING_NATIVE_LINK_BUFFER_MAX_SIZE
+    ? next
+    : next.slice(-REC2_PENDING_NATIVE_LINK_BUFFER_MAX_SIZE);
+}
+
+export type Rec2PendingNativeLinkSettlement = Readonly<{
+  pendingLinks: readonly string[];
+  linksToDeliver: readonly string[];
 }>;
 
 /**
- * Once a local-only session has rejected startup linking, reconnect does not
- * replay a previously supplied initial URL. A fresh app session may link again.
+ * Only committed online authorization releases queued runtime URLs. A
+ * committed offline rejection clears them, and a pending/unknown decision
+ * leaves them untouched without delivery.
+ */
+export function settleRec2PendingNativeLinks(
+  pendingLinks: readonly string[],
+  outcome: Rec2StartupLinkingOutcome
+): Rec2PendingNativeLinkSettlement {
+  if (outcome === 'authorized-online') {
+    return { pendingLinks: [], linksToDeliver: [...pendingLinks] };
+  }
+  if (outcome === 'pending') {
+    return { pendingLinks: [...pendingLinks], linksToDeliver: [] };
+  }
+  return { pendingLinks: [], linksToDeliver: [] };
+}
+
+export type Rec2OfflineSessionState = Readonly<{
+  startupLinkingOutcome: Rec2StartupLinkingOutcome;
+}>;
+
+export type Rec2OfflineSessionAdvanceContext = Readonly<{
+  navigationWillMount: boolean;
+}>;
+
+/**
+ * Classifies the startup linking decision exactly once from the navigation
+ * lifecycle that AppRoot will actually render. Connectivity alone cannot
+ * reject an initial URL before a local offline navigation shell mounts.
  */
 export function advanceRec2OfflineSession(
   previous: Rec2OfflineSessionState,
-  policy: Rec2OfflineHomePolicy
+  policy: Rec2OfflineHomePolicy,
+  context: Rec2OfflineSessionAdvanceContext
 ): Rec2OfflineSessionState {
-  return {
-    localOnlyObserved: previous.localOnlyObserved || policy.localOnlyGuestHome,
-  };
+  if (
+    previous.startupLinkingOutcome === 'authorized-online' ||
+    previous.startupLinkingOutcome === 'rejected-offline'
+  ) {
+    return previous;
+  }
+
+  if (previous.startupLinkingOutcome !== 'pending') {
+    return previous;
+  }
+
+  if (context.navigationWillMount && policy.rootLinkingAllowed) {
+    return { startupLinkingOutcome: 'authorized-online' };
+  }
+
+  const explicitlyOffline =
+    policy.connectivity.isConnected === false ||
+    policy.connectivity.isInternetReachable === false;
+  if (
+    context.navigationWillMount &&
+    policy.renderMode === 'local-offline-home' &&
+    explicitlyOffline
+  ) {
+    return { startupLinkingOutcome: 'rejected-offline' };
+  }
+
+  return previous;
 }
 
 export function resolveRec2SessionRootLinking(
   session: Rec2OfflineSessionState,
   policy: Rec2OfflineHomePolicy
 ): boolean {
-  return policy.rootLinkingAllowed && !session.localOnlyObserved;
+  if (
+    session.startupLinkingOutcome !== 'authorized-online' &&
+    session.startupLinkingOutcome !== 'rejected-offline'
+  ) {
+    return false;
+  }
+  return policy.rootLinkingAllowed;
+}
+
+export type Rec2RootLinkingLifecycleState = Readonly<{
+  navigationMounted: boolean;
+  pendingStartupLinkingObserved: boolean;
+  pendingStartupLinkingInitialization: boolean;
+  linkingInitializationComplete: boolean;
+  initializationGeneration: number;
+}>;
+
+export const INITIAL_REC2_ROOT_LINKING_LIFECYCLE_STATE: Rec2RootLinkingLifecycleState =
+  Object.freeze({
+    navigationMounted: false,
+    pendingStartupLinkingObserved: false,
+    pendingStartupLinkingInitialization: false,
+    linkingInitializationComplete: false,
+    initializationGeneration: 0,
+  });
+
+/**
+ * React Navigation captures its initial-linking thenable when the container
+ * mounts. If any startup gate causes the navigation shell to mount while the
+ * linking decision is pending, a later linking prop change cannot reliably
+ * re-read the cold-start URL. Advance the generation exactly once when that
+ * mounted pending startup becomes authorized. A local offline shell rejection
+ * is terminal and can never trigger the remount/replay path.
+ */
+export function advanceRec2RootLinkingLifecycle(
+  previous: Rec2RootLinkingLifecycleState,
+  session: Rec2OfflineSessionState,
+  policy: Rec2OfflineHomeRuntimeBoundary,
+  navigationWillMount: boolean
+): Rec2RootLinkingLifecycleState {
+  if (!previous.navigationMounted) {
+    if (!navigationWillMount) {
+      return previous;
+    }
+
+    const pendingStartupLinkingInitialization =
+      session.startupLinkingOutcome === 'pending' && !policy.rootLinkingAllowed;
+
+    return {
+      navigationMounted: true,
+      pendingStartupLinkingObserved: pendingStartupLinkingInitialization,
+      pendingStartupLinkingInitialization,
+      linkingInitializationComplete: policy.rootLinkingAllowed,
+      initializationGeneration: previous.initializationGeneration,
+    };
+  }
+
+  if (
+    previous.pendingStartupLinkingInitialization &&
+    session.startupLinkingOutcome === 'rejected-offline'
+  ) {
+    return {
+      ...previous,
+      pendingStartupLinkingInitialization: false,
+    };
+  }
+
+  if (
+    previous.pendingStartupLinkingInitialization &&
+    !previous.linkingInitializationComplete &&
+    policy.rootLinkingAllowed &&
+    session.startupLinkingOutcome === 'authorized-online'
+  ) {
+    return {
+      navigationMounted: true,
+      pendingStartupLinkingObserved: previous.pendingStartupLinkingObserved,
+      pendingStartupLinkingInitialization: false,
+      linkingInitializationComplete: true,
+      initializationGeneration: previous.initializationGeneration + 1,
+    };
+  }
+
+  return previous;
 }
 
 export const REC2_OPS_CONFIG_CACHE_KEY = 'kn_ops_remote_config_v1';
