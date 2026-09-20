@@ -40,9 +40,14 @@ import {
   CANONICAL_BASE_BRANCH,
   CANONICAL_MERGE_MODE,
   CANONICAL_FREEZE_SCOPE,
+  GLOBAL_MERGE_FREEZE_STATES,
+  GLOBAL_MERGE_FREEZE_STATE,
+  RELEASED_FREEZE_SCOPE,
+  FREEZE_SCOPE_POLICY_FAILURES,
   AUTHORIZED_ACTORS,
   GATE_CHECK_RUN_NAME as STAGE1_CHECK_RUN_NAME,
   computeReviewedScopeDigest,
+  evaluateFreezeScopeForState,
   sanitizeEvidence,
   selectExactHeadApproval,
 } from './viona-merge-authorization-gate.mjs';
@@ -53,21 +58,6 @@ export const STAGE2_WORKFLOW_FILE_PATH =
 export const STAGE2_JOB_ID = 'evaluate_explicit_merge_authorization';
 export const STAGE2_SCRIPT_PATH = 'scripts/viona-merge-explicit-authorization.mjs';
 export const AUTHORIZATION_TTL_MINUTES = 15;
-
-/**
- * Canonical, code-owned global merge-freeze state.
- *
- * Workflow/CLI inputs carry an audit scope only. They can never select or
- * prove the global state. Changing this state requires a reviewed change to
- * canonical repository code; unknown values fail closed in the shared policy
- * evaluators below.
- */
-export const GLOBAL_MERGE_FREEZE_STATES = Object.freeze({
-  ACTIVE: 'ACTIVE',
-  RELEASED: 'RELEASED',
-});
-export const GLOBAL_MERGE_FREEZE_STATE = GLOBAL_MERGE_FREEZE_STATES.RELEASED;
-export const RELEASED_FREEZE_SCOPE = 'GLOBAL_MERGE_FREEZE_RELEASED';
 
 /**
  * Ledger backend (Lane B1 V2, per governance directive
@@ -354,9 +344,14 @@ export {
   CANONICAL_BASE_BRANCH,
   CANONICAL_MERGE_MODE,
   CANONICAL_FREEZE_SCOPE,
+  GLOBAL_MERGE_FREEZE_STATES,
+  GLOBAL_MERGE_FREEZE_STATE,
+  RELEASED_FREEZE_SCOPE,
+  FREEZE_SCOPE_POLICY_FAILURES,
   AUTHORIZED_ACTORS,
   STAGE1_CHECK_RUN_NAME,
   computeReviewedScopeDigest,
+  evaluateFreezeScopeForState,
   sanitizeEvidence,
   selectExactHeadApproval,
 };
@@ -437,26 +432,14 @@ export const BLOCKERS = Object.freeze({
 
 const FULL_SHA_RE = /^[0-9a-f]{40}$/i;
 
-/**
- * Shared freeze-scope policy. `freezeState` must always be supplied by
- * canonical code in production; this pure helper accepts it explicitly so
- * both state branches and the fail-closed unknown branch remain directly
- * testable without turning a workflow input into authority.
- */
-export function evaluateFreezeScopeForState({ freezeState, freezeScope }) {
-  if (freezeState === GLOBAL_MERGE_FREEZE_STATES.ACTIVE) {
-    if (freezeScope !== CANONICAL_FREEZE_SCOPE) {
-      return { ok: false, blocker: BLOCKERS.BLOCKED_STAGE2_FREEZE_EXCEPTION_MISSING };
-    }
-    return { ok: true, blocker: null };
+export function stage2BlockerForFreezeScopePolicy(policy) {
+  if (policy?.reason === FREEZE_SCOPE_POLICY_FAILURES.ACTIVE_REMEDIATION_SCOPE_REQUIRED) {
+    return BLOCKERS.BLOCKED_STAGE2_FREEZE_EXCEPTION_MISSING;
   }
-  if (freezeState === GLOBAL_MERGE_FREEZE_STATES.RELEASED) {
-    if (freezeScope !== RELEASED_FREEZE_SCOPE) {
-      return { ok: false, blocker: BLOCKERS.BLOCKED_STAGE2_FREEZE_SCOPE_MISMATCH };
-    }
-    return { ok: true, blocker: null };
+  if (policy?.reason === FREEZE_SCOPE_POLICY_FAILURES.RELEASED_SCOPE_REQUIRED) {
+    return BLOCKERS.BLOCKED_STAGE2_FREEZE_SCOPE_MISMATCH;
   }
-  return { ok: false, blocker: BLOCKERS.BLOCKED_STAGE2_FREEZE_STATE_UNKNOWN };
+  return BLOCKERS.BLOCKED_STAGE2_FREEZE_STATE_UNKNOWN;
 }
 
 /**
@@ -469,7 +452,9 @@ export function evaluateFreezeScopeForState({ freezeState, freezeScope }) {
  */
 export function evaluateFreezeRecordForState({ freezeState, record, expected = {} }) {
   const scope = evaluateFreezeScopeForState({ freezeState, freezeScope: record?.freeze_scope });
-  if (!scope.ok) return scope;
+  if (!scope.ok) {
+    return { ...scope, blocker: stage2BlockerForFreezeScopePolicy(scope) };
+  }
 
   if (record?.freeze_state !== freezeState) {
     return { ok: false, blocker: BLOCKERS.BLOCKED_STAGE2_FREEZE_STATE_MISMATCH };
@@ -616,7 +601,7 @@ export function evaluateAuthorizationIssuance(facts) {
     freezeScope: facts.freezeScope,
   });
   if (!freezePolicy.ok) {
-    return fail(freezePolicy.blocker);
+    return fail(stage2BlockerForFreezeScopePolicy(freezePolicy));
   }
   if (facts.prMissing === true) {
     return fail(BLOCKERS.BLOCKED_STAGE2_PR_MISMATCH, { reason: 'pr_missing' });
@@ -1038,7 +1023,7 @@ export async function runExplicitMergeAuthorization(deps) {
       freezeScope: inputs.freezeScope,
     });
     if (!freezePolicy.ok) {
-      return earlyFail(freezePolicy.blocker);
+      return earlyFail(stage2BlockerForFreezeScopePolicy(freezePolicy));
     }
 
     let proven;

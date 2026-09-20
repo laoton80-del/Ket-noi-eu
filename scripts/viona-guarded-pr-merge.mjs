@@ -33,6 +33,7 @@ import {
   AUTHORIZED_ACTORS as STAGE2_AUTHORIZED_ACTORS,
   BLOCKERS as STAGE2_BLOCKERS,
   evaluateFreezeScopeForState,
+  stage2BlockerForFreezeScopePolicy,
   evaluateAuthorizationLifecycleValidity,
   parseStage2Record,
   classifyMergeAttemptFailure,
@@ -53,6 +54,7 @@ export {
   RELEASED_FREEZE_SCOPE,
   LEDGER_REF,
   evaluateFreezeScopeForState,
+  stage2BlockerForFreezeScopePolicy,
   evaluateAuthorizationLifecycleValidity,
   parseStage2Record,
   classifyMergeAttemptFailure,
@@ -279,7 +281,7 @@ export function evaluateGuardedMerge(facts) {
       freezeScope: facts.freezeScope,
     });
     if (!freezePolicy.ok) {
-      return fail(freezePolicy.blocker);
+      return fail(stage2BlockerForFreezeScopePolicy(freezePolicy));
     }
     if (!STAGE2_AUTHORIZED_ACTORS.includes(facts.stage2RecordAuthorizedBy)) {
       return fail(STAGE2_BLOCKERS.BLOCKED_STAGE2_OPERATOR_NOT_AUTHORIZED);

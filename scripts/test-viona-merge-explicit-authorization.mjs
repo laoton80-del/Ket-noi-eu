@@ -20,12 +20,14 @@ import {
   GLOBAL_MERGE_FREEZE_STATES,
   GLOBAL_MERGE_FREEZE_STATE,
   RELEASED_FREEZE_SCOPE,
+  FREEZE_SCOPE_POLICY_FAILURES,
   AUTHORIZATION_TTL_MINUTES,
   LEDGER_REF,
   computeAuthorizationExpiry,
   evaluateAuthorizationIssuance,
   evaluateAuthorizationLifecycleValidity,
   evaluateFreezeScopeForState,
+  stage2BlockerForFreezeScopePolicy,
   evaluateFreezeRecordForState,
   parseStage2Inputs,
   classifyMergeAttemptFailure,
@@ -477,7 +479,14 @@ async function main() {
         freezeScope: null,
       });
       assert.equal(r.ok, false);
-      assert.equal(r.blocker, BLOCKERS.BLOCKED_STAGE2_FREEZE_EXCEPTION_MISSING);
+      assert.equal(
+        r.reason,
+        FREEZE_SCOPE_POLICY_FAILURES.ACTIVE_REMEDIATION_SCOPE_REQUIRED,
+      );
+      assert.equal(
+        stage2BlockerForFreezeScopePolicy(r),
+        BLOCKERS.BLOCKED_STAGE2_FREEZE_EXCEPTION_MISSING,
+      );
     });
 
     test('13b ACTIVE freeze with invalid remediation exception scope is denied', () => {
@@ -486,7 +495,14 @@ async function main() {
         freezeScope: 'SOMETHING_ELSE',
       });
       assert.equal(r.ok, false);
-      assert.equal(r.blocker, BLOCKERS.BLOCKED_STAGE2_FREEZE_EXCEPTION_MISSING);
+      assert.equal(
+        r.reason,
+        FREEZE_SCOPE_POLICY_FAILURES.ACTIVE_REMEDIATION_SCOPE_REQUIRED,
+      );
+      assert.equal(
+        stage2BlockerForFreezeScopePolicy(r),
+        BLOCKERS.BLOCKED_STAGE2_FREEZE_EXCEPTION_MISSING,
+      );
     });
 
     test('14a ACTIVE freeze with exact-bound remediation exception is accepted by shared policy', () => {
@@ -512,7 +528,11 @@ async function main() {
     test('14d UNKNOWN freeze state fails closed', () => {
       const r = evaluateFreezeScopeForState({ freezeState: 'UNKNOWN', freezeScope: RELEASED_FREEZE_SCOPE });
       assert.equal(r.ok, false);
-      assert.equal(r.blocker, BLOCKERS.BLOCKED_STAGE2_FREEZE_STATE_UNKNOWN);
+      assert.equal(r.reason, FREEZE_SCOPE_POLICY_FAILURES.UNKNOWN_FREEZE_STATE);
+      assert.equal(
+        stage2BlockerForFreezeScopePolicy(r),
+        BLOCKERS.BLOCKED_STAGE2_FREEZE_STATE_UNKNOWN,
+      );
     });
 
     test('15 PR closed rejected', () => {
