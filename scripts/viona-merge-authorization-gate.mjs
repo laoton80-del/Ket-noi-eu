@@ -50,6 +50,17 @@ export const CANONICAL_BASE_BRANCH = 'master';
 export const CANONICAL_MERGE_MODE = 'squash';
 export const CANONICAL_FREEZE_SCOPE =
   'FREEZE_EXCEPTION_FOR_MERGE_GUARDRAIL_REMEDIATION_ONLY';
+export const GLOBAL_MERGE_FREEZE_STATES = Object.freeze({
+  ACTIVE: 'ACTIVE',
+  RELEASED: 'RELEASED',
+});
+export const GLOBAL_MERGE_FREEZE_STATE = GLOBAL_MERGE_FREEZE_STATES.RELEASED;
+export const RELEASED_FREEZE_SCOPE = 'GLOBAL_MERGE_FREEZE_RELEASED';
+export const FREEZE_SCOPE_POLICY_FAILURES = Object.freeze({
+  ACTIVE_REMEDIATION_SCOPE_REQUIRED: 'ACTIVE_REMEDIATION_SCOPE_REQUIRED',
+  RELEASED_SCOPE_REQUIRED: 'RELEASED_SCOPE_REQUIRED',
+  UNKNOWN_FREEZE_STATE: 'UNKNOWN_FREEZE_STATE',
+});
 export const AUTHORIZED_ACTORS = Object.freeze(['laoton80-del']);
 export const ALLOWED_WORKFLOW_PERMISSIONS = Object.freeze([
   'contents: read',
@@ -84,6 +95,8 @@ export const BLOCKERS = Object.freeze({
   BLOCKED_MERGE_OPERATOR_NOT_AUTHORIZED: 'BLOCKED_MERGE_OPERATOR_NOT_AUTHORIZED',
   BLOCKED_MERGE_FREEZE_REMEDIATION_SCOPE_MISSING:
     'BLOCKED_MERGE_FREEZE_REMEDIATION_SCOPE_MISSING',
+  BLOCKED_MERGE_FREEZE_SCOPE_MISMATCH: 'BLOCKED_MERGE_FREEZE_SCOPE_MISMATCH',
+  BLOCKED_MERGE_FREEZE_STATE_UNKNOWN: 'BLOCKED_MERGE_FREEZE_STATE_UNKNOWN',
   BLOCKED_MERGE_AUTHORIZATION_PREDATES_CURRENT_HEAD:
     'BLOCKED_MERGE_AUTHORIZATION_PREDATES_CURRENT_HEAD',
   BLOCKED_MERGE_AUTO_MERGE_ACTIVE: 'BLOCKED_MERGE_AUTO_MERGE_ACTIVE',
@@ -116,6 +129,44 @@ export const BLOCKERS = Object.freeze({
 
 const FULL_SHA_RE = /^[0-9a-f]{40}$/i;
 const FORBIDDEN_INPUT_KEYS = Object.freeze(['authorization', 'authorized_operator']);
+
+/**
+ * Canonical, code-owned merge-freeze scope policy shared by Stage 1,
+ * Stage 2, and the guarded merge wrapper. `freezeState` is explicit only
+ * so every branch is deterministically testable; production callers pass
+ * GLOBAL_MERGE_FREEZE_STATE, never a workflow or CLI state claim.
+ */
+export function evaluateFreezeScopeForState({ freezeState, freezeScope }) {
+  if (freezeState === GLOBAL_MERGE_FREEZE_STATES.ACTIVE) {
+    if (freezeScope !== CANONICAL_FREEZE_SCOPE) {
+      return {
+        ok: false,
+        reason: FREEZE_SCOPE_POLICY_FAILURES.ACTIVE_REMEDIATION_SCOPE_REQUIRED,
+      };
+    }
+    return { ok: true, reason: null };
+  }
+  if (freezeState === GLOBAL_MERGE_FREEZE_STATES.RELEASED) {
+    if (freezeScope !== RELEASED_FREEZE_SCOPE) {
+      return {
+        ok: false,
+        reason: FREEZE_SCOPE_POLICY_FAILURES.RELEASED_SCOPE_REQUIRED,
+      };
+    }
+    return { ok: true, reason: null };
+  }
+  return { ok: false, reason: FREEZE_SCOPE_POLICY_FAILURES.UNKNOWN_FREEZE_STATE };
+}
+
+function stage1BlockerForFreezeScopePolicy(policy) {
+  if (policy?.reason === FREEZE_SCOPE_POLICY_FAILURES.ACTIVE_REMEDIATION_SCOPE_REQUIRED) {
+    return BLOCKERS.BLOCKED_MERGE_FREEZE_REMEDIATION_SCOPE_MISSING;
+  }
+  if (policy?.reason === FREEZE_SCOPE_POLICY_FAILURES.RELEASED_SCOPE_REQUIRED) {
+    return BLOCKERS.BLOCKED_MERGE_FREEZE_SCOPE_MISMATCH;
+  }
+  return BLOCKERS.BLOCKED_MERGE_FREEZE_STATE_UNKNOWN;
+}
 
 export const CANONICAL_MASTER_PROTECTION_PATH = `/repos/${CANONICAL_REPOSITORY}/branches/master/protection`;
 
@@ -340,8 +391,12 @@ export function evaluateMergeAuthorizationGate(facts) {
   if (facts.mergeMode !== CANONICAL_MERGE_MODE) {
     return fail(BLOCKERS.BLOCKED_MERGE_MODE_AUTHORIZATION_MISMATCH);
   }
-  if (facts.freezeScope !== CANONICAL_FREEZE_SCOPE) {
-    return fail(BLOCKERS.BLOCKED_MERGE_FREEZE_REMEDIATION_SCOPE_MISSING);
+  const freezePolicy = evaluateFreezeScopeForState({
+    freezeState: GLOBAL_MERGE_FREEZE_STATE,
+    freezeScope: facts.freezeScope,
+  });
+  if (!freezePolicy.ok) {
+    return fail(stage1BlockerForFreezeScopePolicy(freezePolicy));
   }
   if (facts.headActivationProven !== true) {
     return fail(BLOCKERS.BLOCKED_VIONA_T3_AUTHORIZATION_HEAD_ACTIVATION_TIME_UNPROVEN);
@@ -720,8 +775,12 @@ export async function runMergeAuthorizationGate(deps) {
     if (inputs.mergeMode !== CANONICAL_MERGE_MODE) {
       return earlyFail(BLOCKERS.BLOCKED_MERGE_MODE_AUTHORIZATION_MISMATCH);
     }
-    if (inputs.freezeScope !== CANONICAL_FREEZE_SCOPE) {
-      return earlyFail(BLOCKERS.BLOCKED_MERGE_FREEZE_REMEDIATION_SCOPE_MISSING);
+    const freezePolicy = evaluateFreezeScopeForState({
+      freezeState: GLOBAL_MERGE_FREEZE_STATE,
+      freezeScope: inputs.freezeScope,
+    });
+    if (!freezePolicy.ok) {
+      return earlyFail(stage1BlockerForFreezeScopePolicy(freezePolicy));
     }
     if (prA.auto_merge) {
       return earlyFail(BLOCKERS.BLOCKED_MERGE_AUTO_MERGE_ACTIVE);

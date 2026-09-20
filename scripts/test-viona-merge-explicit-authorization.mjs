@@ -17,11 +17,18 @@ import {
   BLOCKERS,
   CANONICAL_REPOSITORY,
   CANONICAL_FREEZE_SCOPE,
+  GLOBAL_MERGE_FREEZE_STATES,
+  GLOBAL_MERGE_FREEZE_STATE,
+  RELEASED_FREEZE_SCOPE,
+  FREEZE_SCOPE_POLICY_FAILURES,
   AUTHORIZATION_TTL_MINUTES,
   LEDGER_REF,
   computeAuthorizationExpiry,
   evaluateAuthorizationIssuance,
   evaluateAuthorizationLifecycleValidity,
+  evaluateFreezeScopeForState,
+  stage2BlockerForFreezeScopePolicy,
+  evaluateFreezeRecordForState,
   parseStage2Inputs,
   classifyMergeAttemptFailure,
   MERGE_RESULT_CLASSES,
@@ -71,7 +78,7 @@ function happyIssuanceFacts(over = {}) {
     headSha: HEAD,
     baseBranch: 'master',
     mergeMode: 'squash',
-    freezeScope: CANONICAL_FREEZE_SCOPE,
+    freezeScope: RELEASED_FREEZE_SCOPE,
     stage1CheckRunId: 555,
     reviewedScopeDigest: 'abc',
     missing: [],
@@ -139,18 +146,9 @@ function activeRecord(over = {}) {
     authorized_at: new Date(authorizedAtMs).toISOString(),
     expires_at: new Date(expiresAtMs).toISOString(),
     expires_at_ms: expiresAtMs,
-    freeze_scope: CANONICAL_FREEZE_SCOPE,
-    freeze_exception_binding: buildFreezeExceptionBinding({
-      repository: CANONICAL_REPOSITORY,
-      prNumber: 461,
-      headSha: HEAD,
-      authorizationId,
-      reviewedScopeDigest: 'abc',
-      mergeMode: 'squash',
-      actor: 'laoton80-del',
-      windowStart: new Date(authorizedAtMs).toISOString(),
-      windowEnd: new Date(expiresAtMs).toISOString(),
-    }),
+    freeze_state: GLOBAL_MERGE_FREEZE_STATE,
+    freeze_scope: RELEASED_FREEZE_SCOPE,
+    freeze_exception_binding: null,
     revoked_at: null,
     revoked_by: null,
     revocation_reason: null,
@@ -163,6 +161,29 @@ function activeRecord(over = {}) {
     last_transition_actor: 'laoton80-del',
     ...over,
   };
+}
+
+function historicalFreezeActiveRecord(over = {}) {
+  const authorizationId = over.authorization_id ?? 'fixed-test-authorization-id-1';
+  const reviewedScopeDigest = over.reviewed_scope_digest ?? 'abc';
+  const authorizedAtMs = RUN_CREATED_MS;
+  const expiresAtMs = computeAuthorizationExpiry(authorizedAtMs);
+  return activeRecord({
+    freeze_state: GLOBAL_MERGE_FREEZE_STATES.ACTIVE,
+    freeze_scope: CANONICAL_FREEZE_SCOPE,
+    freeze_exception_binding: buildFreezeExceptionBinding({
+      repository: CANONICAL_REPOSITORY,
+      prNumber: 461,
+      headSha: over.head_sha ?? HEAD,
+      authorizationId,
+      reviewedScopeDigest,
+      mergeMode: over.merge_mode ?? 'squash',
+      actor: 'laoton80-del',
+      windowStart: new Date(authorizedAtMs).toISOString(),
+      windowEnd: new Date(expiresAtMs).toISOString(),
+    }),
+    ...over,
+  });
 }
 
 /**
@@ -253,7 +274,7 @@ function createMockStage2Deps(options = {}) {
       VIONA_STAGE2_MERGE_MODE: 'squash',
       VIONA_STAGE2_REVIEWED_SCOPE_DIGEST: digest,
       VIONA_STAGE2_STAGE1_CHECK_RUN_ID: '555',
-      VIONA_STAGE2_FREEZE_SCOPE: CANONICAL_FREEZE_SCOPE,
+      VIONA_STAGE2_FREEZE_SCOPE: RELEASED_FREEZE_SCOPE,
       VIONA_STAGE2_RUN_ID: '999',
       VIONA_STAGE2_REPOSITORY: CANONICAL_REPOSITORY,
       ...options.env,
@@ -452,16 +473,66 @@ async function main() {
       assert.equal(r.blocker, BLOCKERS.BLOCKED_STAGE2_UNRESOLVED_CONVERSATION);
     });
 
-    test('13 freeze active without exception rejected', () => {
-      const r = evaluateAuthorizationIssuance(happyIssuanceFacts({ freezeScope: 'SOMETHING_ELSE' }));
-      assert.equal(r.blocker, BLOCKERS.BLOCKED_STAGE2_FREEZE_EXCEPTION_MISSING);
+    test('13a ACTIVE freeze with no remediation exception scope is denied', () => {
+      const r = evaluateFreezeScopeForState({
+        freezeState: GLOBAL_MERGE_FREEZE_STATES.ACTIVE,
+        freezeScope: null,
+      });
+      assert.equal(r.ok, false);
+      assert.equal(
+        r.reason,
+        FREEZE_SCOPE_POLICY_FAILURES.ACTIVE_REMEDIATION_SCOPE_REQUIRED,
+      );
+      assert.equal(
+        stage2BlockerForFreezeScopePolicy(r),
+        BLOCKERS.BLOCKED_STAGE2_FREEZE_EXCEPTION_MISSING,
+      );
     });
 
-    test('14 freeze active with exact valid exception accepted', () => {
-      const r = evaluateAuthorizationIssuance(
-        happyIssuanceFacts({ freezeScope: CANONICAL_FREEZE_SCOPE }),
+    test('13b ACTIVE freeze with invalid remediation exception scope is denied', () => {
+      const r = evaluateFreezeScopeForState({
+        freezeState: GLOBAL_MERGE_FREEZE_STATES.ACTIVE,
+        freezeScope: 'SOMETHING_ELSE',
+      });
+      assert.equal(r.ok, false);
+      assert.equal(
+        r.reason,
+        FREEZE_SCOPE_POLICY_FAILURES.ACTIVE_REMEDIATION_SCOPE_REQUIRED,
       );
+      assert.equal(
+        stage2BlockerForFreezeScopePolicy(r),
+        BLOCKERS.BLOCKED_STAGE2_FREEZE_EXCEPTION_MISSING,
+      );
+    });
+
+    test('14a ACTIVE freeze with exact-bound remediation exception is accepted by shared policy', () => {
+      const r = evaluateFreezeRecordForState({
+        freezeState: GLOBAL_MERGE_FREEZE_STATES.ACTIVE,
+        record: historicalFreezeActiveRecord(),
+        expected: { repository: CANONICAL_REPOSITORY, actor: 'laoton80-del' },
+      });
+      assert.equal(r.ok, true);
+    });
+
+    test('14b RELEASED ordinary Stage2 issuance succeeds when every non-freeze condition is green', () => {
+      const r = evaluateAuthorizationIssuance(happyIssuanceFacts());
       assert.equal(r.conclusion, 'success');
+    });
+
+    test('14c RELEASED mode rejects remediation scope as an ordinary authorization shortcut', () => {
+      const r = evaluateAuthorizationIssuance(happyIssuanceFacts({ freezeScope: CANONICAL_FREEZE_SCOPE }));
+      assert.equal(r.conclusion, 'failure');
+      assert.equal(r.blocker, BLOCKERS.BLOCKED_STAGE2_FREEZE_SCOPE_MISMATCH);
+    });
+
+    test('14d UNKNOWN freeze state fails closed', () => {
+      const r = evaluateFreezeScopeForState({ freezeState: 'UNKNOWN', freezeScope: RELEASED_FREEZE_SCOPE });
+      assert.equal(r.ok, false);
+      assert.equal(r.reason, FREEZE_SCOPE_POLICY_FAILURES.UNKNOWN_FREEZE_STATE);
+      assert.equal(
+        stage2BlockerForFreezeScopePolicy(r),
+        BLOCKERS.BLOCKED_STAGE2_FREEZE_STATE_UNKNOWN,
+      );
     });
 
     test('15 PR closed rejected', () => {
@@ -600,18 +671,19 @@ async function main() {
       assert.equal(r.blocker, BLOCKERS.BLOCKED_STAGE2_MERGE_MODE_MISMATCH);
     });
 
-    test('28b missing/mismatched freeze-exception binding rejected even with matching scope string', () => {
-      const r = evaluateAuthorizationLifecycleValidity({
-        record: activeRecord({ freeze_exception_binding: null }),
+    test('28b ACTIVE missing freeze-exception binding rejected even with matching remediation scope', () => {
+      const r = evaluateFreezeRecordForState({
+        freezeState: GLOBAL_MERGE_FREEZE_STATES.ACTIVE,
+        record: historicalFreezeActiveRecord({ freeze_exception_binding: null }),
         expected: {},
-        nowMs: RUN_CREATED_MS + 1,
       });
       assert.equal(r.blocker, BLOCKERS.BLOCKED_STAGE2_FREEZE_EXCEPTION_MISSING);
     });
 
-    test('28c freeze-exception binding for a DIFFERENT authorization_id rejected', () => {
-      const r = evaluateAuthorizationLifecycleValidity({
-        record: activeRecord({
+    test('28c ACTIVE freeze-exception binding for a DIFFERENT authorization_id rejected', () => {
+      const r = evaluateFreezeRecordForState({
+        freezeState: GLOBAL_MERGE_FREEZE_STATES.ACTIVE,
+        record: historicalFreezeActiveRecord({
           freeze_exception_binding: buildFreezeExceptionBinding({
             repository: CANONICAL_REPOSITORY,
             prNumber: 461,
@@ -625,9 +697,28 @@ async function main() {
           }),
         }),
         expected: {},
-        nowMs: RUN_CREATED_MS + 1,
       });
       assert.equal(r.blocker, BLOCKERS.BLOCKED_STAGE2_FREEZE_EXCEPTION_MISSING);
+    });
+
+    test('28d RELEASED lifecycle rejects a manufactured ACTIVE remediation exception record', () => {
+      const r = evaluateAuthorizationLifecycleValidity({
+        record: historicalFreezeActiveRecord(),
+        expected: {},
+        nowMs: RUN_CREATED_MS + 1,
+      });
+      assert.equal(r.ok, false);
+      assert.equal(r.blocker, BLOCKERS.BLOCKED_STAGE2_FREEZE_SCOPE_MISMATCH);
+    });
+
+    test('28e RELEASED record rejects a fake remediation binding even with the released scope', () => {
+      const r = evaluateAuthorizationLifecycleValidity({
+        record: activeRecord({ freeze_exception_binding: { manufactured: true } }),
+        expected: {},
+        nowMs: RUN_CREATED_MS + 1,
+      });
+      assert.equal(r.ok, false);
+      assert.equal(r.blocker, BLOCKERS.BLOCKED_STAGE2_FREEZE_EXCEPTION_NOT_PERMITTED);
     });
 
     // --- classifyMergeAttemptFailure ---
@@ -661,7 +752,7 @@ async function main() {
         VIONA_STAGE2_MERGE_MODE: 'squash',
         VIONA_STAGE2_REVIEWED_SCOPE_DIGEST: 'abc',
         VIONA_STAGE2_STAGE1_CHECK_RUN_ID: '555',
-        VIONA_STAGE2_FREEZE_SCOPE: CANONICAL_FREEZE_SCOPE,
+        VIONA_STAGE2_FREEZE_SCOPE: RELEASED_FREEZE_SCOPE,
       });
       assert.equal(parsed.structuredInputsComplete, true);
       assert.equal(parsed.prNumber, 461);
@@ -784,8 +875,9 @@ async function main() {
           authorizedAt: new Date(0).toISOString(),
           expiresAt: new Date(1).toISOString(),
           expiresAtMs: 1,
-          freezeScope: CANONICAL_FREEZE_SCOPE,
-          freezeExceptionBinding: {},
+          freezeState: GLOBAL_MERGE_FREEZE_STATE,
+          freezeScope: RELEASED_FREEZE_SCOPE,
+          freezeExceptionBinding: null,
           lastTransitionAt: new Date(0).toISOString(),
           lastTransitionActor: 'laoton80-del',
         }),
@@ -935,8 +1027,9 @@ async function main() {
       assert.equal(ledger.store.size, 1);
       const [[, entry]] = [...ledger.store.entries()];
       assert.equal(entry.json.state, AUTHORIZATION_STATES.ACTIVE);
-      assert.ok(entry.json.freeze_exception_binding);
-      assert.equal(entry.json.freeze_exception_binding.authorization_id, entry.json.authorization_id);
+      assert.equal(entry.json.freeze_state, GLOBAL_MERGE_FREEZE_STATES.RELEASED);
+      assert.equal(entry.json.freeze_scope, RELEASED_FREEZE_SCOPE);
+      assert.equal(entry.json.freeze_exception_binding, null);
       // Check-run output is a PROJECTION only — no full record fields.
       const summary = JSON.parse(deps.completes[0].output.summary);
       assert.equal(summary.ledger_ref, LEDGER_REF);
