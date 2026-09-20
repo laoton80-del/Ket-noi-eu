@@ -207,14 +207,21 @@ REC2 closure did not automatically release any freeze.
 
 #### Freeze-release readiness
 
-| Condition | State |
-|-----------|-------|
-| Technical conditions 1–13 | `SATISFIED` |
-| Condition 14 — Kernel/Handoff current-state reconciliation | `PENDING_CANONICAL_MERGE` before this exact sync reaches master |
-| Condition 15 — explicit operator freeze release | `NOT_GRANTED`; `NOT_EFFECTIVE` |
-| Result | `MERGE_FREEZE = ACTIVE` |
+Source contracts retained:
 
-This local reconciliation and its local commit do not satisfy condition 14 on canonical master. Condition 14 becomes satisfied only if this exact reconciliation is later reviewed and merged through an independently authorized governance path.
+- Repository-Level Merge Authorization Technical Containment Plan §8: eight-condition formulation.
+- Mandatory Merge-Authorization Guardrail Implementation Plan §7: seven-condition formulation.
+
+This reconciliation does not create a new numbered freeze-release contract and does not renumber either historical source. It does not claim that either historical formulation has been newly superseded. Both formulations require the applicable guardrail implementation, testing, and post-merge verification to be complete; Kernel/Handoff to record or canonicalize the guardrail state; and the operator to explicitly release the freeze before release can become effective.
+
+| Field | State |
+|-------|-------|
+| REC2 implementation / verification | `CLOSED_GREEN`; live-proven |
+| Kernel/Handoff reconciliation | PR #467; `PENDING_CANONICAL_MERGE` |
+| Explicit operator freeze release | `NOT_GRANTED`; `NOT_EFFECTIVE` |
+| Result | `GLOBAL_MERGE_FREEZE = ACTIVE` |
+
+The existence of this branch and PR does not complete Kernel/Handoff canonicalization. This exact PR reaching canonical master through a validly authorized merge may satisfy the Kernel/Handoff recording requirement, but does not itself grant or effect freeze release.
 
 #### PR #466 governance hold
 
@@ -245,7 +252,7 @@ PR #466 is not recorded as technically failed.
 #### Next governance sequence
 
 1. Merge this exact Kernel/Handoff reconciliation through a separately authorized governance-remediation path.
-2. Verify condition 14 is canonical on master.
+2. Verify the Kernel/Handoff recording is canonical on master.
 3. Obtain explicit operator merge-freeze release.
 4. Only after freeze release, resume PR #466 Readiness → Stage2 → guarded merge under semantics valid for ordinary product PRs.
 
