@@ -2150,3 +2150,4 @@ Current state recorded as an example context only:
 | Current local planning tip | `40b8c61bf7a053880007978002fe6e26fe4ad5c4` |
 
 This envelope spec does not authorize Phase 0 or Phase 1 implementation.
+<!-- VIONA_BOOTSTRAP_ONLY_DO_NOT_MERGE: holder commit for canonical existing-branch publication; grants no authority. -->
