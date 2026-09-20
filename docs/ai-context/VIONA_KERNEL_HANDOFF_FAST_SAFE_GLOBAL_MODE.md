@@ -2,7 +2,7 @@
 
 **Document type:** Canonical kernel and session handoff for VIONA engineering, product, and AI agents.
 **Audience:** New ChatGPT / Cursor windows, staff, contractors, and automation executors.
-**Baseline:** `origin/master @ 5b75114` — `feat(viona): implement Pack30D-5 real-provider spend circuit breaker (mock-only, both flags off) (#320)` — see §5 "Pack30D-6 Kernel Sync & Strategic Financial Pivot" narrative section below for the full PR #319–#320 catch-up (Circuit Breaker planning + implementation) plus the formal, permanent removal of Web3/Crypto/Smart Contracts from every visionary pillar and monetization section (real execution/production remain BLOCKED/NOT AUTHORIZED). Prior baseline `dc79017` (PR #317) — see §5 "Pack32.6 Marketing Agent Closure & Kernel Sync" narrative section for the PR #313–#317 catch-up. Prior baseline `c0c3214` (PR #312) — see §5 "Pack32.2 Kernel/Handoff sync" narrative section for the PR #292–#312 catch-up (Pack30D-2/3/4, Pack31, Pack32, Pack32.5, Pack33, Pack32.1).
+**Baseline:** CURRENT CANONICAL SOURCE BASELINE = `origin/master @ 76068e7f7eab54bebc8553beb5a5dd0d0754146c`; AS-OF DATE = `2026-09-20`. Historical Pack-era baseline: `origin/master @ 5b75114` — `feat(viona): implement Pack30D-5 real-provider spend circuit breaker (mock-only, both flags off) (#320)` — see §5 "Pack30D-6 Kernel Sync & Strategic Financial Pivot" narrative section below for the full PR #319–#320 catch-up (Circuit Breaker planning + implementation) plus the formal, permanent removal of Web3/Crypto/Smart Contracts from every visionary pillar and monetization section (real execution/production remain BLOCKED/NOT AUTHORIZED). Earlier baselines remain historical: `dc79017` (PR #317) — see §5 "Pack32.6 Marketing Agent Closure & Kernel Sync"; `c0c3214` (PR #312) — see §5 "Pack32.2 Kernel/Handoff sync".
 **Supersedes for Request Engine sequencing:** prior scattered pack pointers when this doc conflicts on pack order or blocked state — align to this handoff.
 **Subordinate to:** `docs/ai-context/VIONA_OPERATING_PROTOCOL.md` and founder-signed **Master Blueprint** (`VIONA_FINAL_MASTER_BLUEPRINT_V2.md`). If conflict, stop and report drift risk.
 
@@ -156,13 +156,107 @@ Canonical checker: `node scripts/viona-forbidden-claims-check.mjs` (strict mode 
 | Field | Value |
 |-------|--------|
 | Remote | `origin/master` |
-| Commit | `c843111` |
-| Full hash | `c843111c6caa45fa59126b9460ef88c7fb5ef136` |
-| Message | `docs(pack18): add controlled write authorization packet (#229)` |
-| Previous master | `89a2f8c` — `docs(pack17): sync kernel handoff after read-only inbox staging qa (#228)` |
-| Previous latest (prior to #229) | `89a2f8c` — `docs(pack17): sync kernel handoff after read-only inbox staging qa (#228)` |
+| As-of date | `2026-09-20` |
+| Current canonical source baseline | `76068e7f7eab54bebc8553beb5a5dd0d0754146c` |
+| REC2 closure source | PR #465 squash merge; reviewed/final head `58953fe5c7d77bbac0f886da2c4680fb84e413ff` |
+| Historical Pack-era snapshot | `c843111c6caa45fa59126b9460ef88c7fb5ef136` — `docs(pack18): add controlled write authorization packet (#229)` |
+| Earlier historical snapshot | `89a2f8c` — `docs(pack17): sync kernel handoff after read-only inbox staging qa (#228)` |
 
-All new work branches from `c843111` unless a later pack explicitly updates this handoff.
+New work must use the current canonical source baseline and its applicable authorization envelope. The older Pack-era baselines and narratives below are retained as history, not as the current repository baseline.
+
+### REC2 Two-Stage Merge Control Closure — Current Canonical Governance State
+
+This section is the current canonical interpretation of VIONA merge control. Older T1–T3 entries below are retained as historical incident and migration provenance only.
+
+| Field | Current state |
+|-------|---------------|
+| `VIONA_REC2_TWO_STAGE_MERGE_CONTROL` | `CLOSED_GREEN` |
+| Final cleanup PR | PR #465 |
+| Reviewed/final PR head | `58953fe5c7d77bbac0f886da2c4680fb84e413ff` |
+| Squash merge / current master | `76068e7f7eab54bebc8553beb5a5dd0d0754146c` |
+| Final Stage1 | `Viona Merge Readiness Gate` |
+| Final Stage2 | `Viona Explicit Merge Authorization` |
+| Required status checks | `Viona Merge Readiness Gate` / `app_id 15368`; `Viona Explicit Merge Authorization` / `app_id 15368` |
+| Required-status-check strictness | `strict = true` |
+| Legacy Stage1 | `Viona Merge Authorization Gate` — `REMOVED_FROM_ACTIVE_REQUIRED_CONTEXTS` |
+| `LEGACY_STAGE1_CONSTANT_PRESENT` | `NO` |
+| `LEGACY_STAGE1_SKIP_PRESENT` | `NO` |
+| `ACTIVE_RUNTIME_LEGACY_SEMANTIC_USE_COUNT` | `0` |
+| Guarded merge consumer | `scripts/viona-guarded-pr-merge.mjs` |
+| Guarded merge consumer role | `CANONICAL / SOLE INTENDED STAGE2 AUTHORIZATION CONSUMER` |
+| Final REC2 authorization | `7f1a9875-b544-4f47-9b6b-5811143f6ac2` |
+| Final authorization state | `CONSUMED` |
+| Final ledger ref after REC2 closure | `11183517981a94f473e6e36a27fde3d01d319d9a` |
+| REC2 Stage2 run count after closure | `3` |
+| Deployment performed during REC2 closure | `NO` |
+
+Current interpretation: **REC2 TWO-STAGE MERGE CONTROL IMPLEMENTED, LIVE-PROVEN, MIGRATION COMPLETE, LEGACY STAGE1 REMOVED.**
+
+#### Preserved governance freeze
+
+| Field | Current state |
+|-------|---------------|
+| `GLOBAL_MERGE_FREEZE` | `ACTIVE` |
+| `ALL_VIONA_PR_MERGES_PROHIBITED` | `PRESERVED UNTIL EXPLICIT RELEASE` |
+| `MANDATORY_MERGE_AUTHORIZATION_GUARDRAIL_FREEZE_ACTIVE` | `YES` |
+| `B1B_GOVERNANCE_FREEZE_ACTIVE` | `YES` |
+| `NO_RETROACTIVE_AUTHORIZATION_CLAIMED` | `PRESERVED` |
+| Canonical current runtime freeze scope | `FREEZE_EXCEPTION_FOR_MERGE_GUARDRAIL_REMEDIATION_ONLY` |
+
+REC2 closure did not automatically release any freeze.
+
+#### Freeze-release readiness
+
+Source contracts retained:
+
+- Repository-Level Merge Authorization Technical Containment Plan §8: eight-condition formulation.
+- Mandatory Merge-Authorization Guardrail Implementation Plan §7: seven-condition formulation.
+
+This reconciliation does not create a new numbered freeze-release contract and does not renumber either historical source. It does not claim that either historical formulation has been newly superseded. Both formulations require the applicable guardrail implementation, testing, and post-merge verification to be complete; Kernel/Handoff to record or canonicalize the guardrail state; and the operator to explicitly release the freeze before release can become effective.
+
+| Field | State |
+|-------|-------|
+| REC2 implementation / verification | `CLOSED_GREEN`; live-proven |
+| Kernel/Handoff reconciliation | PR #467; `PENDING_CANONICAL_MERGE` |
+| Explicit operator freeze release | `NOT_GRANTED`; `NOT_EFFECTIVE` |
+| Result | `GLOBAL_MERGE_FREEZE = ACTIVE` |
+
+The existence of this branch and PR does not complete Kernel/Handoff canonicalization. This exact PR reaching canonical master through a validly authorized merge may satisfy the Kernel/Handoff recording requirement, but does not itself grant or effect freeze release.
+
+#### PR #466 governance hold
+
+| Field | Current state |
+|-------|---------------|
+| PR | #466 |
+| Purpose | Canonical REC2 six-universe Home activation |
+| Head | `829b05ba7a12411f7d73935d4ea41442cfa51157` |
+| State | `OPEN`; `NON_DRAFT`; `UNMERGED` |
+| Exact-head Preflight | check run `105985462222`; `SUCCESS` |
+| Maty2016 exact-head approval | review `5258381266`; `APPROVED` |
+| Unresolved review threads | `0` |
+| Reviewed scope digest | `4f8862f72deefcd45060ff8ec9b896ba02868cc8ef8b849aeeef687c3edc9890` |
+| Target key | `b8aadba6ffdb2610676dc5be4032acf1af31fe7c22be1486c6a87e1dba915a36` |
+| Target ledger record | `ABSENT` |
+| Readiness check | `NOT ISSUED` |
+| Stage2 | `NOT ISSUED` |
+| Merge | `NOT AUTHORIZED` |
+| Reason | `ACTIVE MERGE FREEZE` + product PR cannot legitimately use `FREEZE_EXCEPTION_FOR_MERGE_GUARDRAIL_REMEDIATION_ONLY` |
+| Classification | `BLOCKED_ONLY_BY_CURRENT_GOVERNANCE_FREEZE_RELEASE_SEQUENCE` |
+
+PR #466 is not recorded as technically failed.
+
+#### PR-creation governance
+
+`VIONA_REC2_R2_PR_CREATION_FREEZE_RELEASE_PACKET_V1` was a one-time PR-creation exception for its exact R2 target. It did not globally release `NEW_ORDINARY_VIONA_PR_CREATION_SUSPENDED`, and it did not release `ALL_VIONA_PR_MERGES_PROHIBITED`. This governance-sync branch is not authorized for push or PR creation by the local reconciliation lane; remote publication requires separate explicit authorization.
+
+#### Next governance sequence
+
+1. Merge this exact Kernel/Handoff reconciliation through a separately authorized governance-remediation path.
+2. Verify the Kernel/Handoff recording is canonical on master.
+3. Obtain explicit operator merge-freeze release.
+4. Only after freeze release, resume PR #466 Readiness → Stage2 → guarded merge under semantics valid for ordinary product PRs.
+
+Documenting this sequence does not authorize any step.
 
 ### Pack25 controlled status-action UI visual confirmation (CLOSED/GREEN)
 
@@ -460,7 +554,7 @@ All new work branches from `c843111` unless a later pack explicitly updates this
 | FC-P0 Local provider authority E8 Case B PR #446 exception acceptance + Kernel/Handoff sync | **MERGED ON MASTER via PR #447 squash `@ 636ad1e145e65547d80a863e2d249279bce8b25d`** — PR #446 content retained; historical fixed-head pre-merge authorization for #446 remains NOT PROVEN / PERMANENTLY UNRESOLVED; Option A+ second non-retroactive exception accepted; `MANDATORY_MERGE_AUTHORIZATION_GUARDRAIL_FREEZE_ACTIVE`; `B1B_GOVERNANCE_FREEZE_ACTIVE`; `NO_RETROACTIVE_AUTHORIZATION_CLAIMED`. Evidence: `docs/product/VIONA_FC_P0_LOCAL_PROVIDER_AUTHORITY_E8_CASE_B_PR446_REPEAT_MERGE_AUTHORIZATION_CONTROL_FAILURE_NON_RETROACTIVE_EXCEPTION_AND_GUARDRAIL_DECISION.md`, `docs/product/VIONA_MANDATORY_MERGE_AUTHORIZATION_GUARDRAIL_IMPLEMENTATION_PLAN.md`. |
 | FC-P0 Local provider authority PR #447 active mandatory merge-freeze breach | **INCIDENT OPEN / FACTUAL CONTENT RETAINED** — PR #447 MERGED DURING ACTIVE MANDATORY FREEZE (reviewed head `ace52962355ecb38016f70f35502e82efab8f054`; squash `@ 636ad1e145e65547d80a863e2d249279bce8b25d`; mergedAt `2026-07-26T16:48:49Z`; merged_by `laoton80-del` metadata only); governance lifecycle NOT GREEN; Disposition A selected; Direction C planning recorded on master via PR #448; freeze-remediation exception NOT FOUND / NOT GRANTED; `PR447_INCIDENT_CONTAINMENT_ACTIVE`; incident remains OPEN and is not closed by PR #448. Evidence: `docs/product/VIONA_PR447_ACTIVE_MANDATORY_MERGE_FREEZE_BREACH_GOVERNANCE_INCIDENT_INVESTIGATION_CONTAINMENT_AND_DISPOSITION.md`, `docs/product/VIONA_REPOSITORY_LEVEL_MERGE_AUTHORIZATION_TECHNICAL_CONTAINMENT_PLAN.md`. |
 | FC-P0 Local provider authority PR #448 second active mandatory merge-freeze breach | **INCIDENT OPEN / CONTAINMENT ACTIVE** — PR #448 MERGED DURING ACTIVE MANDATORY FREEZE (reviewed head `7c99c2a77544ffb0c3a5fb73cd6ee12316f1e37a`; squash `@ c6a19e203a3aa6897cffad8dc9d908f9bca9e9ec`; mergedAt `2026-07-27T01:34:28Z`; merged_by `laoton80-del` metadata only); factual content GREEN / RETAINED; governance lifecycle NOT GREEN; Disposition **A SELECTED**; Direction **C SELECTED**; no new governance exception; `EMERGENCY_VIONA_PR_LIFECYCLE_CONTAINMENT_ACTIVE`; `NEW_ORDINARY_VIONA_PR_CREATION_SUSPENDED`; `ALL_VIONA_PR_MERGES_PROHIBITED`; `MANDATORY_MERGE_AUTHORIZATION_GUARDRAIL_FREEZE_ACTIVE`; `B1B_GOVERNANCE_FREEZE_ACTIVE`; `NO_RETROACTIVE_AUTHORIZATION_CLAIMED`; PR #447 and #448 incidents both remain OPEN. Evidence: `docs/product/VIONA_PR448_SECOND_ACTIVE_MANDATORY_MERGE_FREEZE_BREACH_GOVERNANCE_INCIDENT_INVESTIGATION_EMERGENCY_CONTAINMENT_AND_DISPOSITION.md`, `docs/product/VIONA_EMERGENCY_PR_LIFECYCLE_CONTAINMENT_AND_REPOSITORY_LEVEL_GITHUB_PROTECTION_IMPLEMENTATION_PLAN.md`. |
-| VIONA emergency master lockdown T1–T3 (uncommitted packet sync) | **VIONA_T2_RESULT_AND_PHASE_T3_MERGE_AUTHORIZATION_GATE_PLAN_SYNC_PREPARED_UNCOMMITTED** — T1: master emergency branch protection APPLIED and GET-verified (`Viona Emergency Merge Lock`; strict; enforce_admins; force/delete disabled); T2: effectiveness VERIFIED via master configuration evidence + controlled mirror negative tests (PR #449 ephemeral test PR CLOSED / UNMERGED / mirror-target only; master destructive tests NOT EXECUTED; master protection UNCHANGED after cleanup); `EMERGENCY_MASTER_LOCKDOWN_EFFECTIVENESS_VERIFIED` (emergency control only — not gate complete); Viona Merge Authorization Gate: **NOT IMPLEMENTED**; Phase T3: implementation + bootstrap Candidate A (head-bound emergency-lock success) + post-merge required-context transition **PLANNED / NOT AUTHORIZED / NOT EXECUTED**; containment/freeze/B1B remain ACTIVE/ACTIVE/FROZEN. Evidence: `docs/product/VIONA_T2_EMERGENCY_BRANCH_PROTECTION_EFFECTIVENESS_VERIFICATION_RESULT.md`, `docs/product/VIONA_T3_MERGE_AUTHORIZATION_GATE_IMPLEMENTATION_BOOTSTRAP_AND_VERIFICATION_PLAN.md`. |
+| VIONA emergency master lockdown T1–T3 (uncommitted packet sync) | **HISTORICAL SNAPSHOT — SUPERSEDED BY REC2 TWO-STAGE CLOSURE; see “REC2 Two-Stage Merge Control Closure — Current Canonical Governance State” above.** Historical record: `VIONA_T2_RESULT_AND_PHASE_T3_MERGE_AUTHORIZATION_GATE_PLAN_SYNC_PREPARED_UNCOMMITTED` — T1: master emergency branch protection APPLIED and GET-verified (`Viona Emergency Merge Lock`; strict; enforce_admins; force/delete disabled); T2: effectiveness VERIFIED via master configuration evidence + controlled mirror negative tests (PR #449 ephemeral test PR CLOSED / UNMERGED / mirror-target only; master destructive tests NOT EXECUTED; master protection UNCHANGED after cleanup); `EMERGENCY_MASTER_LOCKDOWN_EFFECTIVENESS_VERIFIED` (emergency control only — not gate complete); at that historical snapshot, Viona Merge Authorization Gate: **NOT IMPLEMENTED**; Phase T3: implementation + bootstrap Candidate A (head-bound emergency-lock success) + post-merge required-context transition **PLANNED / NOT AUTHORIZED / NOT EXECUTED**; containment/freeze/B1B remained ACTIVE/ACTIVE/FROZEN. Evidence: `docs/product/VIONA_T2_EMERGENCY_BRANCH_PROTECTION_EFFECTIVENESS_VERIFICATION_RESULT.md`, `docs/product/VIONA_T3_MERGE_AUTHORIZATION_GATE_IMPLEMENTATION_BOOTSTRAP_AND_VERIFICATION_PLAN.md`. |
 | Pack26 implementation | **NOT opened** |
 
 ### DEFERRED / BACKLOG (recorded, not authorized — logged during Pack37 implementation sync; updated during Pack38 implementation sync with 2 additional findings; those 2 findings moved out during Pack39 planning sync into their own planning packet — see the Pack39 planning row above — and removed from this list accordingly)
