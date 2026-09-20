@@ -27,11 +27,12 @@ on:
         options:
           - squash
       freeze_scope:
-        description: Freeze remediation scope (exact while freeze active)
+        description: Audit scope only; canonical code selects the legal scope for its freeze state, and this input cannot change that state
         required: true
         type: choice
         options:
           - FREEZE_EXCEPTION_FOR_MERGE_GUARDRAIL_REMEDIATION_ONLY
+          - GLOBAL_MERGE_FREEZE_RELEASED
       reviewed_scope_digest:
         description: Deterministic reviewed-scope digest (SHA-256 hex)
         required: true

@@ -14,8 +14,13 @@ import {
   WORKFLOW_FILE_PATH,
   CANONICAL_REPOSITORY,
   CANONICAL_FREEZE_SCOPE,
+  GLOBAL_MERGE_FREEZE_STATES,
+  GLOBAL_MERGE_FREEZE_STATE,
+  RELEASED_FREEZE_SCOPE,
+  FREEZE_SCOPE_POLICY_FAILURES,
   BLOCKERS,
   computeReviewedScopeDigest,
+  evaluateFreezeScopeForState,
   evaluateMergeAuthorizationGate,
   parseStructuredInputs,
   runMergeAuthorizationGate,
@@ -88,7 +93,7 @@ function happyFacts(over = {}) {
     actualBaseBranch: 'master',
     actualHeadSha: HEAD,
     mergeMode: 'squash',
-    freezeScope: CANONICAL_FREEZE_SCOPE,
+    freezeScope: RELEASED_FREEZE_SCOPE,
     headActivationProven: true,
     authorizationPredatesCurrentHead: false,
     autoMergeActive: false,
@@ -138,7 +143,7 @@ function createMockGateDeps(options = {}) {
       VIONA_GATE_HEAD_SHA: HEAD,
       VIONA_GATE_BASE_BRANCH: 'master',
       VIONA_GATE_MERGE_MODE: 'squash',
-      VIONA_GATE_FREEZE_SCOPE: CANONICAL_FREEZE_SCOPE,
+      VIONA_GATE_FREEZE_SCOPE: RELEASED_FREEZE_SCOPE,
       VIONA_GATE_REVIEWED_SCOPE_DIGEST: digest,
       VIONA_GATE_RUN_ID: '999',
       VIONA_GATE_REPOSITORY: CANONICAL_REPOSITORY,
@@ -320,6 +325,110 @@ function createMockGateDeps(options = {}) {
 
 async function main() {
   try {
+    test('P1 parity 1 ACTIVE plus remediation audit scope passes shared policy', () => {
+      const r = evaluateFreezeScopeForState({
+        freezeState: GLOBAL_MERGE_FREEZE_STATES.ACTIVE,
+        freezeScope: CANONICAL_FREEZE_SCOPE,
+      });
+      assert.deepEqual(r, { ok: true, reason: null });
+    });
+
+    test('P1 parity 2 ACTIVE plus released audit scope is denied', () => {
+      const r = evaluateFreezeScopeForState({
+        freezeState: GLOBAL_MERGE_FREEZE_STATES.ACTIVE,
+        freezeScope: RELEASED_FREEZE_SCOPE,
+      });
+      assert.equal(r.ok, false);
+      assert.equal(
+        r.reason,
+        FREEZE_SCOPE_POLICY_FAILURES.ACTIVE_REMEDIATION_SCOPE_REQUIRED,
+      );
+    });
+
+    test('P1 parity 3 RELEASED plus released audit scope passes shared policy', () => {
+      const r = evaluateFreezeScopeForState({
+        freezeState: GLOBAL_MERGE_FREEZE_STATES.RELEASED,
+        freezeScope: RELEASED_FREEZE_SCOPE,
+      });
+      assert.deepEqual(r, { ok: true, reason: null });
+    });
+
+    test('P1 parity 4 RELEASED plus remediation audit scope is denied', () => {
+      const r = evaluateFreezeScopeForState({
+        freezeState: GLOBAL_MERGE_FREEZE_STATES.RELEASED,
+        freezeScope: CANONICAL_FREEZE_SCOPE,
+      });
+      assert.equal(r.ok, false);
+      assert.equal(r.reason, FREEZE_SCOPE_POLICY_FAILURES.RELEASED_SCOPE_REQUIRED);
+    });
+
+    test('P1 parity 5 UNKNOWN state denies either canonical audit scope', () => {
+      for (const freezeScope of [CANONICAL_FREEZE_SCOPE, RELEASED_FREEZE_SCOPE]) {
+        const r = evaluateFreezeScopeForState({ freezeState: 'UNKNOWN', freezeScope });
+        assert.equal(r.ok, false);
+        assert.equal(r.reason, FREEZE_SCOPE_POLICY_FAILURES.UNKNOWN_FREEZE_STATE);
+      }
+    });
+
+    test('P1 parity 6 canonical RELEASED mode accepts otherwise-valid Stage1 facts', () => {
+      assert.equal(GLOBAL_MERGE_FREEZE_STATE, GLOBAL_MERGE_FREEZE_STATES.RELEASED);
+      assert.equal(evaluateMergeAuthorizationGate(happyFacts()).conclusion, 'success');
+    });
+
+    test('P1 parity 7 RELEASED mode still denies an invalid approval', () => {
+      assert.equal(
+        evaluateMergeAuthorizationGate(happyFacts({ reviewSatisfied: false })).blocker,
+        BLOCKERS.BLOCKED_MERGE_REVIEW_REQUIREMENT_NOT_SATISFIED,
+      );
+    });
+
+    test('P1 parity 8 RELEASED mode still denies the wrong reviewed-scope digest', () => {
+      assert.equal(
+        evaluateMergeAuthorizationGate(
+          happyFacts({ computedReviewedScopeDigest: 'abc', suppliedReviewedScopeDigest: 'def' }),
+        ).blocker,
+        BLOCKERS.BLOCKED_MERGE_SCOPE_CHANGED_AFTER_REVIEW,
+      );
+    });
+
+    test('P1 parity 9 RELEASED mode still denies an unresolved conversation', () => {
+      assert.equal(
+        evaluateMergeAuthorizationGate(happyFacts({ unresolvedConversation: true })).blocker,
+        BLOCKERS.BLOCKED_MERGE_UNRESOLVED_CONVERSATION,
+      );
+    });
+
+    await testAsync(
+      'P1 parity 10 RELEASED mode still denies a failed unrelated required context',
+      async () => {
+        const deps = createMockGateDeps({
+          requiredContexts: [
+            GATE_CHECK_RUN_NAME,
+            'Viona Explicit Merge Authorization',
+            'Some Unrelated Required CI',
+          ],
+          checkRuns: [],
+        });
+        const result = await runMergeAuthorizationGate(deps);
+        assert.equal(result.blocker, BLOCKERS.BLOCKED_MERGE_REQUIRED_CHECK_FAILED);
+      },
+    );
+
+    test('P1 parity state is code-owned and cannot be selected through env input', () => {
+      const parsed = parseStructuredInputs({
+        VIONA_GATE_PR_NUMBER: '100',
+        VIONA_GATE_HEAD_SHA: HEAD,
+        VIONA_GATE_BASE_BRANCH: 'master',
+        VIONA_GATE_MERGE_MODE: 'squash',
+        VIONA_GATE_FREEZE_SCOPE: RELEASED_FREEZE_SCOPE,
+        VIONA_GATE_FREEZE_STATE: GLOBAL_MERGE_FREEZE_STATES.ACTIVE,
+        VIONA_GATE_REVIEWED_SCOPE_DIGEST: 'abc',
+      });
+      assert.equal(parsed.structuredInputsComplete, true);
+      assert.equal(Object.hasOwn(parsed, 'freezeState'), false);
+      assert.equal(GLOBAL_MERGE_FREEZE_STATE, GLOBAL_MERGE_FREEZE_STATES.RELEASED);
+    });
+
     test('1 valid evaluate success', () => {
       const r = evaluateMergeAuthorizationGate(happyFacts());
       assert.equal(r.conclusion, 'success');
@@ -529,6 +638,10 @@ async function main() {
       assert.doesNotMatch(yml, /\n\s*authorized:/);
       assert.doesNotMatch(yml, /\n\s*decision:/);
       assert.doesNotMatch(yml, /\n\s*go:/);
+      assert.doesNotMatch(yml, /^\s{6}freeze_state:/m);
+      assert.match(yml, /description: Audit scope only;/);
+      assert.match(yml, /- FREEZE_EXCEPTION_FOR_MERGE_GUARDRAIL_REMEDIATION_ONLY/);
+      assert.match(yml, /- GLOBAL_MERGE_FREEZE_RELEASED/);
       assert.match(yml, /Viona Merge Readiness Gate/);
       assert.doesNotMatch(yml, /name:\s*Viona Merge Authorization Gate\b/);
       assert.equal(

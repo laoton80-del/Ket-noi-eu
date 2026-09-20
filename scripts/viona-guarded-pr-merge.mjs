@@ -27,9 +27,13 @@ import {
   AUTHORIZATION_STATES,
   MERGE_RESULT_CLASSES,
   CANONICAL_FREEZE_SCOPE,
+  GLOBAL_MERGE_FREEZE_STATE,
+  RELEASED_FREEZE_SCOPE,
   LEDGER_REF,
   AUTHORIZED_ACTORS as STAGE2_AUTHORIZED_ACTORS,
   BLOCKERS as STAGE2_BLOCKERS,
+  evaluateFreezeScopeForState,
+  stage2BlockerForFreezeScopePolicy,
   evaluateAuthorizationLifecycleValidity,
   parseStage2Record,
   classifyMergeAttemptFailure,
@@ -46,7 +50,11 @@ export {
   AUTHORIZATION_STATES,
   MERGE_RESULT_CLASSES,
   CANONICAL_FREEZE_SCOPE,
+  GLOBAL_MERGE_FREEZE_STATE,
+  RELEASED_FREEZE_SCOPE,
   LEDGER_REF,
+  evaluateFreezeScopeForState,
+  stage2BlockerForFreezeScopePolicy,
   evaluateAuthorizationLifecycleValidity,
   parseStage2Record,
   classifyMergeAttemptFailure,
@@ -268,8 +276,12 @@ export function evaluateGuardedMerge(facts) {
     if (facts.stage2LifecycleOk !== true) {
       return fail(facts.stage2LifecycleBlocker ?? STAGE2_BLOCKERS.BLOCKED_STAGE2_AUTHORIZATION_NOT_ACTIVE);
     }
-    if (facts.freezeScope !== CANONICAL_FREEZE_SCOPE) {
-      return fail(STAGE2_BLOCKERS.BLOCKED_STAGE2_FREEZE_EXCEPTION_MISSING);
+    const freezePolicy = evaluateFreezeScopeForState({
+      freezeState: GLOBAL_MERGE_FREEZE_STATE,
+      freezeScope: facts.freezeScope,
+    });
+    if (!freezePolicy.ok) {
+      return fail(stage2BlockerForFreezeScopePolicy(freezePolicy));
     }
     if (!STAGE2_AUTHORIZED_ACTORS.includes(facts.stage2RecordAuthorizedBy)) {
       return fail(STAGE2_BLOCKERS.BLOCKED_STAGE2_OPERATOR_NOT_AUTHORIZED);
@@ -736,8 +748,8 @@ export async function runGuardedPrMerge(deps) {
       // through this recovery decision (no other writer can touch a
       // CONSUMING record's blob sha without first winning a conditional
       // write this holder still possesses), claimRecord's own
-      // revoked_at/freeze_exception_binding fields are still authoritative
-      // and are re-checked unchanged by this same call.
+      // revoked_at/freeze-state fields are still authoritative and are
+      // re-checked unchanged by this same call.
       const recoveryValidity = evaluateAuthorizationLifecycleValidity({
         record: { ...claimRecord, state: AUTHORIZATION_STATES.ACTIVE },
         expected: {

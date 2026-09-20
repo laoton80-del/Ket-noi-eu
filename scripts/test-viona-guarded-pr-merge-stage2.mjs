@@ -24,6 +24,9 @@ import {
   STAGE2_CHECK_RUN_NAME,
   AUTHORIZATION_STATES,
   CANONICAL_FREEZE_SCOPE,
+  GLOBAL_MERGE_FREEZE_STATES,
+  GLOBAL_MERGE_FREEZE_STATE,
+  RELEASED_FREEZE_SCOPE,
   CANONICAL_REPOSITORY,
   LEDGER_REF,
   computeAuthorizationExpiry,
@@ -139,18 +142,9 @@ function ledgerRecord(over = {}) {
     authorized_at: new Date(authorizedAtMs).toISOString(),
     expires_at: new Date(expiresAtMs).toISOString(),
     expires_at_ms: expiresAtMs,
-    freeze_scope: CANONICAL_FREEZE_SCOPE,
-    freeze_exception_binding: buildFreezeExceptionBinding({
-      repository: CANONICAL_REPOSITORY,
-      prNumber: 461,
-      headSha: HEAD,
-      authorizationId,
-      reviewedScopeDigest: digest,
-      mergeMode: 'squash',
-      actor: 'laoton80-del',
-      windowStart: new Date(authorizedAtMs).toISOString(),
-      windowEnd: new Date(expiresAtMs).toISOString(),
-    }),
+    freeze_state: GLOBAL_MERGE_FREEZE_STATE,
+    freeze_scope: RELEASED_FREEZE_SCOPE,
+    freeze_exception_binding: null,
     revoked_at: null,
     revoked_by: null,
     revocation_reason: null,
@@ -232,7 +226,7 @@ function createMockWrapperDeps(options = {}) {
     mode: 'squash',
     reviewedScopeDigest: digest,
     gateAppId: '42',
-    freezeScope: options.freezeScope ?? CANONICAL_FREEZE_SCOPE,
+    freezeScope: options.freezeScope ?? RELEASED_FREEZE_SCOPE,
     authorizationId: options.authorizationId ?? 'fixed-test-authorization-id-1',
     execute: options.execute === true,
   };
@@ -433,7 +427,7 @@ async function main() {
     });
 
     // --- 11. Valid exact authority in dry-run => all checks pass, no merge ---
-    await testAsync('11 valid exact authority in dry-run => verified, zero merge calls, ledger untouched', async () => {
+    await testAsync('11 RELEASED valid exact authority in dry-run => verified, zero merge calls, ledger untouched', async () => {
       const deps = createMockWrapperDeps({ execute: false });
       const result = await runGuardedPrMerge(deps);
       assert.equal(result.ok, true);
@@ -441,6 +435,8 @@ async function main() {
       assert.equal(deps._mergeAttempt(), 0);
       const before = deps._ledger.getRaw(deps._targetKey);
       assert.equal(before.json.state, AUTHORIZATION_STATES.ACTIVE);
+      assert.equal(before.json.freeze_state, GLOBAL_MERGE_FREEZE_STATES.RELEASED);
+      assert.equal(before.json.freeze_exception_binding, null);
     });
 
     await testAsync('12 valid exact authority with --execute => claim, one merge, CONSUMED recorded in ledger with merge_commit_sha', async () => {
@@ -494,6 +490,42 @@ async function main() {
       assert.equal(r.ok, false);
     });
 
+    await testAsync('13b RELEASED wrapper rejects remediation scope as an ordinary bypass', async () => {
+      const deps = createMockWrapperDeps({ freezeScope: CANONICAL_FREEZE_SCOPE, execute: true });
+      const result = await runGuardedPrMerge(deps);
+      assert.equal(result.ok, false);
+      assert.equal(result.mergeInvoked, false);
+      assert.equal(deps._mergeAttempt(), 0);
+    });
+
+    await testAsync('13c RELEASED wrapper rejects a historical ACTIVE remediation record', async () => {
+      const digest = computeReviewedScopeDigest([{ status: 'modified', filename: 'a.txt' }]);
+      const authorizationId = 'fixed-test-authorization-id-1';
+      const deps = createMockWrapperDeps({
+        freezeScope: CANONICAL_FREEZE_SCOPE,
+        recordOverrides: {
+          freeze_state: GLOBAL_MERGE_FREEZE_STATES.ACTIVE,
+          freeze_scope: CANONICAL_FREEZE_SCOPE,
+          freeze_exception_binding: buildFreezeExceptionBinding({
+            repository: CANONICAL_REPOSITORY,
+            prNumber: 461,
+            headSha: HEAD,
+            authorizationId,
+            reviewedScopeDigest: digest,
+            mergeMode: 'squash',
+            actor: 'laoton80-del',
+            windowStart: new Date(AUTHORIZED_AT_MS).toISOString(),
+            windowEnd: new Date(computeAuthorizationExpiry(AUTHORIZED_AT_MS)).toISOString(),
+          }),
+        },
+        execute: true,
+      });
+      const result = await runGuardedPrMerge(deps);
+      assert.equal(result.ok, false);
+      assert.equal(result.mergeInvoked, false);
+      assert.equal(deps._mergeAttempt(), 0);
+    });
+
     test('14 evaluateGuardedMerge never weakens pre-existing Stage 1 checks', () => {
       // Every pre-existing Stage 1/review/digest guard must still fire even
       // when every Stage 2 fact is green — additive checks must never move
@@ -516,7 +548,7 @@ async function main() {
         stage2CheckConclusion: 'success',
         stage2TargetKeyMismatch: false,
         stage2LifecycleOk: true,
-        freezeScope: CANONICAL_FREEZE_SCOPE,
+        freezeScope: RELEASED_FREEZE_SCOPE,
         stage2RecordAuthorizedBy: 'laoton80-del',
       });
       assert.equal(r.ok, false);
@@ -525,10 +557,10 @@ async function main() {
 
     test('15 parseGuardedMergeArgs parses new Stage 2 flags', () => {
       const parsed = parseGuardedMergeArgs([
-        '--freeze-scope', CANONICAL_FREEZE_SCOPE,
+        '--freeze-scope', RELEASED_FREEZE_SCOPE,
         '--authorization-id', 'abc-123',
       ]);
-      assert.equal(parsed.freezeScope, CANONICAL_FREEZE_SCOPE);
+      assert.equal(parsed.freezeScope, RELEASED_FREEZE_SCOPE);
       assert.equal(parsed.authorizationId, 'abc-123');
     });
 

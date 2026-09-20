@@ -40,9 +40,14 @@ import {
   CANONICAL_BASE_BRANCH,
   CANONICAL_MERGE_MODE,
   CANONICAL_FREEZE_SCOPE,
+  GLOBAL_MERGE_FREEZE_STATES,
+  GLOBAL_MERGE_FREEZE_STATE,
+  RELEASED_FREEZE_SCOPE,
+  FREEZE_SCOPE_POLICY_FAILURES,
   AUTHORIZED_ACTORS,
   GATE_CHECK_RUN_NAME as STAGE1_CHECK_RUN_NAME,
   computeReviewedScopeDigest,
+  evaluateFreezeScopeForState,
   sanitizeEvidence,
   selectExactHeadApproval,
 } from './viona-merge-authorization-gate.mjs';
@@ -296,6 +301,7 @@ export function buildLedgerRecord(input) {
     expires_at: input.expiresAt,
     expires_at_ms: input.expiresAtMs,
 
+    freeze_state: input.freezeState,
     freeze_scope: input.freezeScope,
     freeze_exception_binding: input.freezeExceptionBinding,
 
@@ -338,9 +344,14 @@ export {
   CANONICAL_BASE_BRANCH,
   CANONICAL_MERGE_MODE,
   CANONICAL_FREEZE_SCOPE,
+  GLOBAL_MERGE_FREEZE_STATES,
+  GLOBAL_MERGE_FREEZE_STATE,
+  RELEASED_FREEZE_SCOPE,
+  FREEZE_SCOPE_POLICY_FAILURES,
   AUTHORIZED_ACTORS,
   STAGE1_CHECK_RUN_NAME,
   computeReviewedScopeDigest,
+  evaluateFreezeScopeForState,
   sanitizeEvidence,
   selectExactHeadApproval,
 };
@@ -380,6 +391,11 @@ export const BLOCKERS = Object.freeze({
   BLOCKED_STAGE2_HEAD_MISMATCH: 'BLOCKED_STAGE2_HEAD_MISMATCH',
   BLOCKED_STAGE2_MERGE_MODE_MISMATCH: 'BLOCKED_STAGE2_MERGE_MODE_MISMATCH',
   BLOCKED_STAGE2_FREEZE_EXCEPTION_MISSING: 'BLOCKED_STAGE2_FREEZE_EXCEPTION_MISSING',
+  BLOCKED_STAGE2_FREEZE_EXCEPTION_NOT_PERMITTED:
+    'BLOCKED_STAGE2_FREEZE_EXCEPTION_NOT_PERMITTED',
+  BLOCKED_STAGE2_FREEZE_SCOPE_MISMATCH: 'BLOCKED_STAGE2_FREEZE_SCOPE_MISMATCH',
+  BLOCKED_STAGE2_FREEZE_STATE_MISMATCH: 'BLOCKED_STAGE2_FREEZE_STATE_MISMATCH',
+  BLOCKED_STAGE2_FREEZE_STATE_UNKNOWN: 'BLOCKED_STAGE2_FREEZE_STATE_UNKNOWN',
   BLOCKED_STAGE2_STAGE1_MISSING: 'BLOCKED_STAGE2_STAGE1_MISSING',
   BLOCKED_STAGE2_STAGE1_NOT_SUCCESS: 'BLOCKED_STAGE2_STAGE1_NOT_SUCCESS',
   BLOCKED_STAGE2_STAGE1_IDENTITY_MISMATCH: 'BLOCKED_STAGE2_STAGE1_IDENTITY_MISMATCH',
@@ -415,6 +431,58 @@ export const BLOCKERS = Object.freeze({
 });
 
 const FULL_SHA_RE = /^[0-9a-f]{40}$/i;
+
+export function stage2BlockerForFreezeScopePolicy(policy) {
+  if (policy?.reason === FREEZE_SCOPE_POLICY_FAILURES.ACTIVE_REMEDIATION_SCOPE_REQUIRED) {
+    return BLOCKERS.BLOCKED_STAGE2_FREEZE_EXCEPTION_MISSING;
+  }
+  if (policy?.reason === FREEZE_SCOPE_POLICY_FAILURES.RELEASED_SCOPE_REQUIRED) {
+    return BLOCKERS.BLOCKED_STAGE2_FREEZE_SCOPE_MISMATCH;
+  }
+  return BLOCKERS.BLOCKED_STAGE2_FREEZE_STATE_UNKNOWN;
+}
+
+/**
+ * Shared ledger-record freeze policy used by lifecycle validation.
+ *
+ * ACTIVE records retain the exact remediation exception binding. RELEASED
+ * records use the released audit scope and must not carry a remediation
+ * binding, so a caller cannot manufacture an ACTIVE exception as an
+ * ordinary post-release shortcut.
+ */
+export function evaluateFreezeRecordForState({ freezeState, record, expected = {} }) {
+  const scope = evaluateFreezeScopeForState({ freezeState, freezeScope: record?.freeze_scope });
+  if (!scope.ok) {
+    return { ...scope, blocker: stage2BlockerForFreezeScopePolicy(scope) };
+  }
+
+  if (record?.freeze_state !== freezeState) {
+    return { ok: false, blocker: BLOCKERS.BLOCKED_STAGE2_FREEZE_STATE_MISMATCH };
+  }
+
+  if (freezeState === GLOBAL_MERGE_FREEZE_STATES.RELEASED) {
+    if (record.freeze_exception_binding != null) {
+      return { ok: false, blocker: BLOCKERS.BLOCKED_STAGE2_FREEZE_EXCEPTION_NOT_PERMITTED };
+    }
+    return { ok: true, blocker: null };
+  }
+
+  const feb = record.freeze_exception_binding;
+  const febValid =
+    feb &&
+    Number(feb.pr_number) === Number(record.pr_number) &&
+    String(feb.head_sha ?? '').toLowerCase() === String(record.head_sha ?? '').toLowerCase() &&
+    feb.authorization_id === record.authorization_id &&
+    String(feb.reviewed_scope_digest ?? '').toLowerCase() ===
+      String(record.reviewed_scope_digest ?? '').toLowerCase() &&
+    feb.merge_mode === record.merge_mode &&
+    (expected.repository == null || feb.repository === expected.repository) &&
+    (expected.actor == null || feb.actor === expected.actor);
+  if (!febValid) {
+    return { ok: false, blocker: BLOCKERS.BLOCKED_STAGE2_FREEZE_EXCEPTION_MISSING };
+  }
+  return { ok: true, blocker: null };
+}
 
 /**
  * Parse the workflow_dispatch structured inputs (env-provided) for Stage 2.
@@ -528,8 +596,12 @@ export function evaluateAuthorizationIssuance(facts) {
   if (facts.structuredInputsComplete !== true) {
     return fail(BLOCKERS.BLOCKED_STAGE2_STRUCTURED_INPUTS_MISSING, { missing: facts.missing ?? [] });
   }
-  if (facts.freezeScope !== CANONICAL_FREEZE_SCOPE) {
-    return fail(BLOCKERS.BLOCKED_STAGE2_FREEZE_EXCEPTION_MISSING);
+  const freezePolicy = evaluateFreezeScopeForState({
+    freezeState: GLOBAL_MERGE_FREEZE_STATE,
+    freezeScope: facts.freezeScope,
+  });
+  if (!freezePolicy.ok) {
+    return fail(stage2BlockerForFreezeScopePolicy(freezePolicy));
   }
   if (facts.prMissing === true) {
     return fail(BLOCKERS.BLOCKED_STAGE2_PR_MISMATCH, { reason: 'pr_missing' });
@@ -679,24 +751,13 @@ export function evaluateAuthorizationLifecycleValidity(facts) {
     return fail(BLOCKERS.BLOCKED_STAGE2_MERGE_MODE_MISMATCH);
   }
 
-  // Exact-bound freeze-exception structure (directive §23). A canonical
-  // freeze-scope string alone is never sufficient authority while
-  // GLOBAL_MERGE_FREEZE is active (the current, invariant system state):
-  // the ledger record must carry a freeze_exception_binding tied to this
-  // exact authorization_id/target, not merely a matching scope string.
-  const feb = record.freeze_exception_binding;
-  const febValid =
-    feb &&
-    Number(feb.pr_number) === Number(record.pr_number) &&
-    String(feb.head_sha ?? '').toLowerCase() === String(record.head_sha ?? '').toLowerCase() &&
-    feb.authorization_id === record.authorization_id &&
-    String(feb.reviewed_scope_digest ?? '').toLowerCase() ===
-      String(record.reviewed_scope_digest ?? '').toLowerCase() &&
-    feb.merge_mode === record.merge_mode &&
-    (expected.repository == null || feb.repository === expected.repository) &&
-    (expected.actor == null || feb.actor === expected.actor);
-  if (!febValid) {
-    return fail(BLOCKERS.BLOCKED_STAGE2_FREEZE_EXCEPTION_MISSING);
+  const freezePolicy = evaluateFreezeRecordForState({
+    freezeState: GLOBAL_MERGE_FREEZE_STATE,
+    record,
+    expected,
+  });
+  if (!freezePolicy.ok) {
+    return fail(freezePolicy.blocker);
   }
 
   return {
@@ -957,8 +1018,12 @@ export async function runExplicitMergeAuthorization(deps) {
     if (!inputs.runId) {
       return earlyFail(BLOCKERS.BLOCKED_STAGE2_PROVENANCE_UNRESOLVED, { reason: 'run_id_missing' });
     }
-    if (inputs.freezeScope !== CANONICAL_FREEZE_SCOPE) {
-      return earlyFail(BLOCKERS.BLOCKED_STAGE2_FREEZE_EXCEPTION_MISSING);
+    const freezePolicy = evaluateFreezeScopeForState({
+      freezeState: GLOBAL_MERGE_FREEZE_STATE,
+      freezeScope: inputs.freezeScope,
+    });
+    if (!freezePolicy.ok) {
+      return earlyFail(stage2BlockerForFreezeScopePolicy(freezePolicy));
     }
 
     let proven;
@@ -1149,17 +1214,20 @@ export async function runExplicitMergeAuthorization(deps) {
 
     const nowIso = new Date(evaluated.authorizedAtMs).toISOString();
     const expiresAtIso = new Date(evaluated.expiresAtMs).toISOString();
-    const freezeExceptionBinding = buildFreezeExceptionBinding({
-      repository: facts.repository,
-      prNumber: facts.prNumber,
-      headSha: facts.headSha,
-      authorizationId: evaluated.authorizationId,
-      reviewedScopeDigest: facts.reviewedScopeDigest,
-      mergeMode: facts.mergeMode,
-      actor,
-      windowStart: nowIso,
-      windowEnd: expiresAtIso,
-    });
+    const freezeExceptionBinding =
+      GLOBAL_MERGE_FREEZE_STATE === GLOBAL_MERGE_FREEZE_STATES.ACTIVE
+        ? buildFreezeExceptionBinding({
+            repository: facts.repository,
+            prNumber: facts.prNumber,
+            headSha: facts.headSha,
+            authorizationId: evaluated.authorizationId,
+            reviewedScopeDigest: facts.reviewedScopeDigest,
+            mergeMode: facts.mergeMode,
+            actor,
+            windowStart: nowIso,
+            windowEnd: expiresAtIso,
+          })
+        : null;
     const record = buildLedgerRecord({
       targetKey,
       authorizationId: evaluated.authorizationId,
@@ -1179,6 +1247,7 @@ export async function runExplicitMergeAuthorization(deps) {
       authorizedAt: nowIso,
       expiresAt: expiresAtIso,
       expiresAtMs: evaluated.expiresAtMs,
+      freezeState: GLOBAL_MERGE_FREEZE_STATE,
       freezeScope: facts.freezeScope,
       freezeExceptionBinding,
       lastTransitionAt: nowIso,
