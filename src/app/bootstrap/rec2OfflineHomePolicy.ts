@@ -215,14 +215,19 @@ export type Rec2OfflineSessionState = Readonly<{
   startupLinkingOutcome: Rec2StartupLinkingOutcome;
 }>;
 
+export type Rec2OfflineSessionAdvanceContext = Readonly<{
+  navigationWillMount: boolean;
+}>;
+
 /**
- * Classifies the startup linking decision exactly once. Later outages cannot
- * rewrite an already-authorized startup, while a genuine offline decision
- * permanently records that only the original startup URL was rejected.
+ * Classifies the startup linking decision exactly once from the navigation
+ * lifecycle that AppRoot will actually render. Connectivity alone cannot
+ * reject an initial URL before a local offline navigation shell mounts.
  */
 export function advanceRec2OfflineSession(
   previous: Rec2OfflineSessionState,
-  policy: Rec2OfflineHomePolicy
+  policy: Rec2OfflineHomePolicy,
+  context: Rec2OfflineSessionAdvanceContext
 ): Rec2OfflineSessionState {
   if (
     previous.startupLinkingOutcome === 'authorized-online' ||
@@ -235,15 +240,19 @@ export function advanceRec2OfflineSession(
     return previous;
   }
 
+  if (context.navigationWillMount && policy.rootLinkingAllowed) {
+    return { startupLinkingOutcome: 'authorized-online' };
+  }
+
   const explicitlyOffline =
     policy.connectivity.isConnected === false ||
     policy.connectivity.isInternetReachable === false;
-  if (explicitlyOffline) {
+  if (
+    context.navigationWillMount &&
+    policy.renderMode === 'local-offline-home' &&
+    explicitlyOffline
+  ) {
     return { startupLinkingOutcome: 'rejected-offline' };
-  }
-
-  if (policy.rootLinkingAllowed) {
-    return { startupLinkingOutcome: 'authorized-online' };
   }
 
   return previous;
@@ -264,8 +273,8 @@ export function resolveRec2SessionRootLinking(
 
 export type Rec2RootLinkingLifecycleState = Readonly<{
   navigationMounted: boolean;
-  unresolvedStartupObserved: boolean;
-  unresolvedStartupPending: boolean;
+  pendingStartupLinkingObserved: boolean;
+  pendingStartupLinkingInitialization: boolean;
   linkingInitializationComplete: boolean;
   initializationGeneration: number;
 }>;
@@ -273,19 +282,19 @@ export type Rec2RootLinkingLifecycleState = Readonly<{
 export const INITIAL_REC2_ROOT_LINKING_LIFECYCLE_STATE: Rec2RootLinkingLifecycleState =
   Object.freeze({
     navigationMounted: false,
-    unresolvedStartupObserved: false,
-    unresolvedStartupPending: false,
+    pendingStartupLinkingObserved: false,
+    pendingStartupLinkingInitialization: false,
     linkingInitializationComplete: false,
     initializationGeneration: 0,
   });
 
 /**
  * React Navigation captures its initial-linking thenable when the container
- * mounts. If the local shell mounts while connectivity is unresolved, a later
- * linking prop change cannot reliably re-read the cold-start URL. Advance the
- * generation exactly once when that unresolved startup becomes authorized.
- * A genuine offline observation is latched separately and can never trigger
- * the remount/replay path in the same mounted app session.
+ * mounts. If any startup gate causes the navigation shell to mount while the
+ * linking decision is pending, a later linking prop change cannot reliably
+ * re-read the cold-start URL. Advance the generation exactly once when that
+ * mounted pending startup becomes authorized. A local offline shell rejection
+ * is terminal and can never trigger the remount/replay path.
  */
 export function advanceRec2RootLinkingLifecycle(
   previous: Rec2RootLinkingLifecycleState,
@@ -293,51 +302,43 @@ export function advanceRec2RootLinkingLifecycle(
   policy: Rec2OfflineHomeRuntimeBoundary,
   navigationWillMount: boolean
 ): Rec2RootLinkingLifecycleState {
-  const unresolvedStartupObserved =
-    previous.unresolvedStartupObserved ||
-    (!previous.navigationMounted &&
-      (policy.connectivity.isConnected === null ||
-        policy.connectivity.isInternetReachable === null));
-
   if (!previous.navigationMounted) {
     if (!navigationWillMount) {
-      return unresolvedStartupObserved === previous.unresolvedStartupObserved
-        ? previous
-        : { ...previous, unresolvedStartupObserved };
+      return previous;
     }
+
+    const pendingStartupLinkingInitialization =
+      session.startupLinkingOutcome === 'pending' && !policy.rootLinkingAllowed;
 
     return {
       navigationMounted: true,
-      unresolvedStartupObserved,
-      unresolvedStartupPending:
-        unresolvedStartupObserved &&
-        !policy.rootLinkingAllowed &&
-        session.startupLinkingOutcome === 'pending',
+      pendingStartupLinkingObserved: pendingStartupLinkingInitialization,
+      pendingStartupLinkingInitialization,
       linkingInitializationComplete: policy.rootLinkingAllowed,
       initializationGeneration: previous.initializationGeneration,
     };
   }
 
   if (
-    previous.unresolvedStartupPending &&
+    previous.pendingStartupLinkingInitialization &&
     session.startupLinkingOutcome === 'rejected-offline'
   ) {
     return {
       ...previous,
-      unresolvedStartupPending: false,
+      pendingStartupLinkingInitialization: false,
     };
   }
 
   if (
-    previous.unresolvedStartupPending &&
+    previous.pendingStartupLinkingInitialization &&
     !previous.linkingInitializationComplete &&
     policy.rootLinkingAllowed &&
     session.startupLinkingOutcome === 'authorized-online'
   ) {
     return {
       navigationMounted: true,
-      unresolvedStartupObserved: previous.unresolvedStartupObserved,
-      unresolvedStartupPending: false,
+      pendingStartupLinkingObserved: previous.pendingStartupLinkingObserved,
+      pendingStartupLinkingInitialization: false,
       linkingInitializationComplete: true,
       initializationGeneration: previous.initializationGeneration + 1,
     };

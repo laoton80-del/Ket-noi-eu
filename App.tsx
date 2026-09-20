@@ -854,7 +854,14 @@ function AppRoot() {
     operationalReadOnlyMode: opsConfig?.readOnlyMode === true,
     disabledFeatures: opsConfig?.disabledFeatures ?? [],
   });
-  offlineSessionRef.current = advanceRec2OfflineSession(offlineSessionRef.current, offlinePolicy);
+  const navigationWillMount =
+    offlinePolicy.renderMode === 'online-app' ||
+    offlinePolicy.renderMode === 'local-offline-home';
+  offlineSessionRef.current = advanceRec2OfflineSession(
+    offlineSessionRef.current,
+    offlinePolicy,
+    { navigationWillMount }
+  );
   const offlineBoundary: Rec2OfflineHomeRuntimeBoundary = {
     ...offlinePolicy,
     rootLinkingAllowed: resolveRec2SessionRootLinking(offlineSessionRef.current, offlinePolicy),
@@ -895,8 +902,7 @@ function AppRoot() {
     rootLinkingLifecycleRef.current,
     offlineSessionRef.current,
     offlineBoundary,
-    offlinePolicy.renderMode === 'online-app' ||
-      offlinePolicy.renderMode === 'local-offline-home'
+    navigationWillMount
   );
 
   if (offlinePolicy.renderMode === 'offline-blocked') {
