@@ -156,21 +156,46 @@ PUSH_AUTHORITY:
         kind: direct
         value_from: PUSH_SOURCE_OID
 
+REMOTE_REF_CREATE_AUTHORITY:
+  allowed:
+  id:
+  profile:
+  repository_identity:
+    node_id:
+    numeric_id:
+    provenance:
+  ref_name:
+  expected_before_oid:
+  target_oid:
+  force: false
+  max_attempts: 1
+  api_verifier_context_id:
+  api_publisher_context_id:
+  operation_id:
+  durable_attempt_authority_id:
+
 REMOTE_COMMIT_AUTHORITY:
   allowed:
-  profile: github_graphql_existing_branch_replace_v1
+  profile:
+  execution_mode:
   repository_identity:
     node_id:
     numeric_id:
     provenance:
   branch_node_id:
+  branch_ref_node_id_source:
+  verified_branch_ref_node_id:
   branch_ref:
   expected_head_oid:
   base_tree_oid:
   paths: []
-  replacement_count: 2
-  content_source: sealed_validated_staged_blobs
-  tree_source: independently_derived_base_tree_plus_replacements
+  create_paths: []
+  modify_paths: []
+  path_count:
+  replacement_count:
+  content_source:
+  tree_source:
+  authorized_tree:
   max_commits: 1
   max_attempts: 1
   message_headline:
@@ -179,6 +204,7 @@ REMOTE_COMMIT_AUTHORITY:
   mutation_document_sha256:
   operation_id:
   durable_attempt_authority_id:
+  candidate_commit_durable_phase_authority_id:
   expected_pr_binding_id:
   associated_pr_scope_id:
   metadata_race_acceptance_id:
@@ -201,6 +227,51 @@ DURABLE_ATTEMPT_AUTHORITY:
   sharing: FileShare.None
   persistence: FileStream.Flush(true)
   recovery: existing_or_uncertain_means_read_only_reconciliation
+
+DURABLE_PHASE_AUTHORITIES:
+  required:
+  profile:
+  execution_mode:
+  publication_operation_id:
+  fresh_phase_set: []
+  records:
+    - id:
+      phase:
+      operation_id:
+      authorization_reference:
+      marker_path:
+      evidence_ledger_path:
+      local_file_operations:
+        marker: [create_new_exclusive, write_initial_record, flush_to_disk, read_same_handle, read_existing_for_reconciliation, retain]
+        ledger: [append_nonsecret_records, flush_to_disk, read]
+      storage_contract: verified_local_fixed_NTFS_real_paths
+      record_version: 1
+      record_encoding: UTF8_no_BOM_ordered_compact_JSON_no_newline
+      record_field_order:
+      reservation: FileMode.CreateNew
+      sharing: FileShare.None
+      persistence: FileStream.Flush(true)
+      recovery: existing_or_uncertain_means_read_only_reconciliation
+
+PHASE_A_CONTINUATION_BINDING:
+  required:
+  profile:
+  prior_operation_id:
+  prior_authorization_reference:
+  prior_ref_create_authority_id:
+  prior_durable_phase_authority_id:
+  prior_marker_path:
+  prior_evidence_ledger_path:
+  repository_identity:
+    node_id:
+    numeric_id:
+    provenance:
+  ref_node_id:
+  ref_name:
+  expected_base_oid:
+  observed_branch_head_oid:
+  phase_a_outcome:
+  phase_a_marker_state:
 
 EXPECTED_PR_BINDING:
   required:
@@ -329,6 +400,66 @@ FINAL_CLASSIFICATION:
   success:
   blocked:
 ```
+
+`REMOTE_COMMIT_AUTHORITY` is a closed discriminated union keyed by `profile`.
+The new profile is further discriminated by `execution_mode`. Unknown profiles,
+unknown modes, mixed profile fields, undeclared fields, null placeholders and
+missing required fields fail closed. Profile-inapplicable fields inside an
+enabled block must be omitted; they cannot be serialized as null. Separately
+defined disabled authority blocks use only their exact boolean form below. No
+fields are optional for an enabled profile/mode unless an applicable section
+explicitly says otherwise.
+
+For `github_graphql_existing_branch_replace_v1`, `execution_mode` is not
+applicable. Require `repository_identity`, `branch_node_id`, `branch_ref`,
+`expected_head_oid`, `base_tree_oid`, `paths`, `replacement_count: 2`,
+`content_source: sealed_validated_staged_blobs`,
+`tree_source: independently_derived_base_tree_plus_replacements`,
+`max_commits: 1`, `max_attempts: 1`, `message_headline`, both API context IDs,
+`mutation_document_sha256`, `operation_id`, `durable_attempt_authority_id`,
+`expected_pr_binding_id`, `associated_pr_scope_id` and
+`metadata_race_acceptance_id`. Forbid `execution_mode`,
+`branch_ref_node_id_source`, `verified_branch_ref_node_id`, `create_paths`,
+`modify_paths`, `path_count`, `authorized_tree` and
+`candidate_commit_durable_phase_authority_id`. Continue to require the singular
+`DURABLE_ATTEMPT_AUTHORITY`, `EXPECTED_PR_BINDING`, `ASSOCIATED_PR_SCOPE` and
+`PR_METADATA_RACE_ACCEPTANCE` contracts from §12.1.
+
+For `github_graphql_create_ref_then_commit_candidate_v1`, require
+`execution_mode`, `repository_identity`, `branch_ref_node_id_source:
+VERIFIED_PHASE_A_REF_NODE_ID`, the exact `verified_branch_ref_node_id`,
+`branch_ref`, `expected_head_oid`, `base_tree_oid`, `paths`, `create_paths`,
+`modify_paths`, `path_count`,
+`content_source: sealed_validated_local_candidate_bytes`, and `tree_source:`
+`independently_derived_base_tree_plus_exact_additions_and_replacements`,
+`authorized_tree`, `max_commits: 1`, `max_attempts: 1`, `message_headline`, both
+API context IDs, `mutation_document_sha256`, `operation_id` and
+`candidate_commit_durable_phase_authority_id`. Forbid `branch_node_id`,
+`replacement_count`, `durable_attempt_authority_id`,
+`expected_pr_binding_id`, `associated_pr_scope_id` and
+`metadata_race_acceptance_id` inside this `REMOTE_COMMIT_AUTHORITY`. Continue to
+require the exact disabled pre-PR binding blocks from §12.2; those blocks do not
+supply IDs to the forbidden fields.
+
+The profile/mode authority-block matrix is normative:
+
+| Profile / mode | `REMOTE_REF_CREATE_AUTHORITY` | Durable authority | `PHASE_A_CONTINUATION_BINDING` | PR binding blocks | Exact `REMOTE_MUTATION_AUTHORITY.operations` |
+| --- | --- | --- | --- | --- | --- |
+| `github_graphql_existing_branch_replace_v1` / not applicable | Forbidden; newly introduced block omitted, or exact `allowed: false` only in a current full-schema serializer | `DURABLE_ATTEMPT_AUTHORITY` required; `DURABLE_PHASE_AUTHORITIES` forbidden/omitted or exact `required: false` only | Forbidden/omitted or exact `required: false` only | `EXPECTED_PR_BINDING`, `ASSOCIATED_PR_SCOPE` and `PR_METADATA_RACE_ACCEPTANCE` required | exactly `[github.createCommitOnBranch]` |
+| `github_graphql_create_ref_then_commit_candidate_v1` / `full_two_phase` | Required and enabled with the complete Phase-A shape | `DURABLE_ATTEMPT_AUTHORITY` exact `allowed: false` only; `DURABLE_PHASE_AUTHORITIES` requires fresh phase set exactly `[REF_CREATE, CANDIDATE_COMMIT]` | exact `required: false` only | exact disabled boolean-only blocks | exactly `[github.updateRefs, github.createCommitOnBranch]` |
+| `github_graphql_create_ref_then_commit_candidate_v1` / `phase_b_only` | exact `allowed: false` only | `DURABLE_ATTEMPT_AUTHORITY` exact `allowed: false` only; `DURABLE_PHASE_AUTHORITIES` requires fresh phase set exactly `[CANDIDATE_COMMIT]` | required with the complete continuation shape | exact disabled boolean-only blocks | exactly `[github.createCommitOnBranch]`; `github.updateRefs` forbidden |
+
+An authority block marked forbidden grants no fields or operation. The exact
+disabled forms are `REMOTE_REF_CREATE_AUTHORITY.allowed: false`,
+`REMOTE_COMMIT_AUTHORITY.allowed: false`,
+`DURABLE_ATTEMPT_AUTHORITY.allowed: false`,
+`DURABLE_PHASE_AUTHORITIES.required: false`,
+`PHASE_A_CONTINUATION_BINDING.required: false`,
+`EXPECTED_PR_BINDING.required: false`, `ASSOCIATED_PR_SCOPE.required: false`
+and `PR_METADATA_RACE_ACCEPTANCE.accepted: false`, each with no additional
+fields. Existing-profile envelopes created before the new blocks existed remain
+valid when those new-only forbidden blocks are omitted. Any other profile/mode
+combination blocks.
 
 `EXPECTED_BASE.refs_manifest_sha256` binds HEAD, root refs, FETCH_HEAD,
 MERGE_HEAD, and every visible `refs/` namespace: branches, remote-tracking refs,
@@ -719,7 +850,7 @@ Require:
 - expected staged-content digest and semantic index manifest, with empty resolve-undo proof;
 - exact nonignored untracked path set and content-identity manifest;
 - exact ignored untracked path set and content-identity manifest;
-- for an API publication lane, the full §12.1 verifier/publisher contexts,
+- for an API publication lane, the full applicable §§12.1-12.2 verifier/publisher contexts,
   anchored repository/Ref/head/base and supported no-redirect client; establish
   client safety before edits when the operator requires that ordering;
 - when push is enabled, its independently declared repository identity and
@@ -813,7 +944,7 @@ IMPLEMENT INSIDE THE AUTHORIZED ENVELOPE
 -> RECHECK NONIGNORED AND IGNORED PATH SETS AND CONTENT MANIFESTS
 -> COMPARE EVERY VALUE WITH THE SAME SEALED INPUT STATE
 -> REVALIDATE BEFORE ANY INDEPENDENTLY AUTHORIZED STAGE/COMMIT TRANSITION
--> IF INDEPENDENTLY AUTHORIZED API PROFILE: REVALIDATE §12.1 CONTEXT AND CANDIDATE
+-> IF INDEPENDENTLY AUTHORIZED API PROFILE: REVALIDATE THE APPLICABLE §§12.1-12.2 CONTEXT AND CANDIDATE
 -> ONE API DISPATCH; VERIFY REMOTE PARENT/TREE/REF; SYNC ONLY IF SEPARATELY AUTHORIZED
 -> CAPTURE FINAL GIT STATE AND TRANSITION EVIDENCE
 ```
@@ -850,7 +981,7 @@ Every autonomous lane must return:
 - runtime effect;
 - remote effect and, for push, §11 identity/provenance, expected destination,
   environment-policy/executable proof and all pre/post comparisons;
-- API publication, when authorized: §12.1 request/context/attempt records,
+- API publication, when authorized: applicable §§12.1-12.2 request/context/attempt records,
   full tree/blob and parent/Ref evidence, and separate local-sync outcome;
 - rollback state;
 - final classification.
@@ -954,7 +1085,7 @@ closed before preparation unless a separately reviewed, explicitly authorized
 transport contract establishes both write bindings and its complete declared
 API verifier context. No such Git write-binding mechanism is supplied here;
 URL reads, broad credentials and post-write checks cannot substitute for it.
-The separately authorized API profile in §12.1 has no ordinary Git push fallback.
+The separately authorized API profiles in §§12.1-12.2 have no ordinary Git push fallback.
 
 When `PUSH_AUTHORITY.allowed` is false, omit every other push field. When
 true, `remote`, `push_url`, `repository_identity`, `api_verifier_context_id`, `expected_destination`,
@@ -1198,6 +1329,15 @@ Separate authority is required for:
 
 Local commit does not imply push. Push does not imply PR. PR does not imply merge. Merge does not imply deploy.
 
+The supported API publication profiles are exactly:
+
+1. `github_graphql_existing_branch_replace_v1` under §12.1;
+2. `github_graphql_create_ref_then_commit_candidate_v1` under §12.2.
+
+No third API publication profile, ordinary Git push fallback, REST Git-data
+writer, alternate GraphQL writer, PR authority, merge authority or deploy
+authority is implied.
+
 ---
 
 ### 12.1 Existing-branch API publication profile
@@ -1222,7 +1362,7 @@ push. Neither grants server commit creation or local synchronization. An API
 publication creates its one authorized commit on GitHub: it does not require
 a preliminary local commit or authorize an additional commit afterward.
 
-The only supported API publication profile here is
+The API publication profile defined in this section is
 github_graphql_existing_branch_replace_v1. It supports exactly two existing,
 regular, non-executable text files with unchanged Git mode 100644. Its exact
 paths must equal the operator's MODIFY_ALLOWLIST and the complete candidate
@@ -1758,6 +1898,494 @@ Trace every enabled requirement through its declaration and evidence:
 | PR identity | EXPECTED_PR_BINDING referenced by publication, operator-provided IDs/state | Verify node AND number, all repository/head/base/state fields before/after | Any mismatch blocks without repair; only verified post-publication head transition |
 
 
+### 12.2 Identity-bound create-ref-then-commit API publication profile
+
+`github_graphql_create_ref_then_commit_candidate_v1` is the only supported API
+profile for publishing a sealed candidate by first creating the exact absent
+destination branch, or for continuing only Phase B after a separately
+authorized Phase A has already produced the exact verified branch-at-base
+state. It has exactly two supported `execution_mode` values:
+
+1. `full_two_phase`: Phase A uses `updateRefs` to create one exact branch at
+   one exact base, then Phase B uses `createCommitOnBranch` to create one commit
+   on the independently verified Ref produced by Phase A;
+2. `phase_b_only`: no Phase-A operation is authorized; Phase B continues from
+   retained, verified and non-reusable prior Phase-A evidence.
+
+Unknown, missing or mixed execution modes fail closed. `execution_mode` is
+specific to this profile and is forbidden for
+`github_graphql_existing_branch_replace_v1`.
+
+The profile relies only on GitHub's published
+[`updateRefs`/`RefUpdate` contract](https://docs.github.com/en/graphql/reference/git)
+and
+[`createCommitOnBranch` contract](https://docs.github.com/en/graphql/reference/commits#createcommitonbranch),
+subject to every additional VIONA restriction below. Schema capability alone
+never supplies mutation authority.
+
+The profile is not a fallback implementation of ordinary Git push. It has NO
+ordinary Git push fallback and NO REST Git-data fallback. It must not switch
+clients, writers, endpoints or credentials after failure or ambiguity. It does
+not broaden or reinterpret §12.1, and it cannot be used for an existing branch
+unless a separately authorized Phase-B-only continuation satisfies the exact
+safe-partial-state rules below.
+
+Every enabled mode requires all of the following, with exact IDs and matching
+authorization/operation bindings:
+
+- `REMOTE_COMMIT_AUTHORITY.allowed: true` with this profile, the exact mode and
+  the new-profile field shape below;
+- `REMOTE_MUTATION_AUTHORITY.allowed: true` with only the exact operation set
+  declared for that mode;
+- complete referenced `API_EXECUTION_CONTEXTS` and append-only
+  `API_REQUEST_RECORDS`;
+- `DURABLE_PHASE_AUTHORITIES.required: true` with only the fresh phase set
+  declared for that mode;
+- a fixed exact base commit/tree and independently derived `AUTHORIZED_TREE`;
+- exact finite `CREATE_ALLOWLIST` and `MODIFY_ALLOWLIST` declarations whose
+  disjoint union equals the complete candidate diff;
+- the exact disabled pre-PR binding blocks.
+
+`full_two_phase` additionally requires enabled
+`REMOTE_REF_CREATE_AUTHORITY`, fresh durable authorities for both phases, and
+exact mutation operations `[github.updateRefs,
+github.createCommitOnBranch]`. `phase_b_only` instead requires disabled
+`REMOTE_REF_CREATE_AUTHORITY`, the complete enabled
+`PHASE_A_CONTINUATION_BINDING`, one fresh `CANDIDATE_COMMIT` authority and exact
+mutation operations `[github.createCommitOnBranch]`; `github.updateRefs` is
+forbidden.
+
+In `full_two_phase`, `PHASE_A_CONTINUATION_BINDING.required: false`; retained
+prior Phase-A evidence cannot substitute for the actual authorized Phase A.
+
+Missing, contradictory, reused or inapplicable declarations disable the
+profile. A disabled block has exactly its boolean field and no additional
+fields: `REMOTE_REF_CREATE_AUTHORITY.allowed: false`,
+`REMOTE_COMMIT_AUTHORITY.allowed: false`,
+`DURABLE_ATTEMPT_AUTHORITY.allowed: false`,
+`DURABLE_PHASE_AUTHORITIES.required: false`,
+`PHASE_A_CONTINUATION_BINDING.required: false`,
+`EXPECTED_PR_BINDING.required: false`, `ASSOCIATED_PR_SCOPE.required: false`
+or `PR_METADATA_RACE_ACCEPTANCE.accepted: false`. No disabled block grants a
+request, marker, storage, branch, commit or reconciliation permission.
+
+The shared normative new-profile commit shape is:
+
+```text
+REMOTE_COMMIT_AUTHORITY:
+  allowed: true
+  profile: github_graphql_create_ref_then_commit_candidate_v1
+  execution_mode: <full_two_phase-or-phase_b_only>
+  repository_identity:
+    node_id: <same-independently-anchored-repository-node-id>
+    numeric_id: <same-independently-anchored-repository-numeric-id>
+    provenance: <same-trusted-existing-identity-evidence-reference>
+  branch_ref_node_id_source: VERIFIED_PHASE_A_REF_NODE_ID
+  verified_branch_ref_node_id: <exact-independently-verified-ref-node-id>
+  branch_ref: refs/heads/<same-exact-authorized-branch>
+  expected_head_oid: <same-exact-base-commit-oid>
+  base_tree_oid: <exact-base-tree-oid>
+  paths: <exact-finite-union-of-create_paths-and-modify_paths>
+  create_paths: <exact-CREATE_ALLOWLIST>
+  modify_paths: <exact-MODIFY_ALLOWLIST>
+  path_count: <exact-positive-integer>
+  content_source: sealed_validated_local_candidate_bytes
+  tree_source: independently_derived_base_tree_plus_exact_additions_and_replacements
+  authorized_tree: <exact-independently-derived-authorized-tree-oid>
+  max_commits: 1
+  max_attempts: 1
+  message_headline: <exact-authorized-commit-headline>
+  api_verifier_context_id: <complete-verifier-context-id>
+  api_publisher_context_id: <complete-publisher-context-id>
+  mutation_document_sha256: <sealed-exact-mutation-document-sha256>
+  operation_id: <exact-phase-B-operation-id>
+  candidate_commit_durable_phase_authority_id: <CANDIDATE_COMMIT-phase-record-id>
+
+DURABLE_ATTEMPT_AUTHORITY:
+  allowed: false
+
+EXPECTED_PR_BINDING:
+  required: false
+ASSOCIATED_PR_SCOPE:
+  required: false
+PR_METADATA_RACE_ACCEPTANCE:
+  accepted: false
+LOCAL_SYNC_AUTHORITY:
+  allowed: false
+PUSH_AUTHORITY:
+  allowed: false
+PR_AUTHORITY:
+  create: false
+  edit: false
+  ready: false
+MERGE_AUTHORITY:
+  allowed: false
+DEPLOY_AUTHORITY:
+  allowed: false
+```
+
+The `full_two_phase` mode adds exactly this authority shape:
+
+```text
+REMOTE_REF_CREATE_AUTHORITY:
+  allowed: true
+  id: <exact-Phase-A-ref-create-authority-id>
+  profile: github_graphql_create_ref_then_commit_candidate_v1
+  repository_identity:
+    node_id: <same-independently-anchored-repository-node-id>
+    numeric_id: <same-independently-anchored-repository-numeric-id>
+    provenance: <same-trusted-existing-identity-evidence-reference>
+  ref_name: refs/heads/<exact-absent-authorized-branch>
+  expected_before_oid: 0000000000000000000000000000000000000000
+  target_oid: <exact-operator-approved-base-commit-oid>
+  force: false
+  max_attempts: 1
+  api_verifier_context_id: <complete-verifier-context-id>
+  api_publisher_context_id: <complete-publisher-context-id>
+  operation_id: <exact-phase-A-operation-id>
+  durable_attempt_authority_id: <REF_CREATE-phase-record-id>
+
+DURABLE_PHASE_AUTHORITIES:
+  required: true
+  profile: github_graphql_create_ref_then_commit_candidate_v1
+  execution_mode: full_two_phase
+  publication_operation_id: <exact-parent-publication-operation-id>
+  fresh_phase_set: [REF_CREATE, CANDIDATE_COMMIT]
+  records:
+    - id: <unique-REF_CREATE-record-id>
+      phase: REF_CREATE
+      operation_id: <same-exact-phase-A-operation-id>
+      authorization_reference: <explicit-current-operator-authorization>
+      marker_path: <exact-absolute-external-phase-A-marker-path>
+      evidence_ledger_path: <exact-authorized-append-only-ledger-path>
+      local_file_operations:
+        marker: [create_new_exclusive, write_initial_record, flush_to_disk, read_same_handle, read_existing_for_reconciliation, retain]
+        ledger: [append_nonsecret_records, flush_to_disk, read]
+      storage_contract: verified_local_fixed_NTFS_real_paths
+      record_version: 1
+      record_encoding: UTF8_no_BOM_ordered_compact_JSON_no_newline
+      record_field_order: [record_version, encoding, publication_operation_id, operation_id, phase_authority_id, phase, authorization, marker_path, consumed, repository_node_id, repository_numeric_id, ref_name, expected_before_oid, target_oid, force, request_id, request_payload_sha256, clientMutationId, context_id, helper_sha256]
+      reservation: FileMode.CreateNew
+      sharing: FileShare.None
+      persistence: FileStream.Flush(true)
+      recovery: existing_or_uncertain_means_read_only_reconciliation
+    - id: <unique-CANDIDATE_COMMIT-record-id>
+      phase: CANDIDATE_COMMIT
+      operation_id: <same-exact-phase-B-operation-id>
+      authorization_reference: <explicit-current-operator-authorization>
+      marker_path: <different-exact-absolute-external-phase-B-marker-path>
+      evidence_ledger_path: <exact-authorized-append-only-ledger-path>
+      local_file_operations:
+        marker: [create_new_exclusive, write_initial_record, flush_to_disk, read_same_handle, read_existing_for_reconciliation, retain]
+        ledger: [append_nonsecret_records, flush_to_disk, read]
+      storage_contract: verified_local_fixed_NTFS_real_paths
+      record_version: 1
+      record_encoding: UTF8_no_BOM_ordered_compact_JSON_no_newline
+      record_field_order: [record_version, encoding, publication_operation_id, operation_id, phase_authority_id, phase, authorization, marker_path, consumed, repository_node_id, repository_numeric_id, verified_ref_node_id, ref_name, expected_head_oid, authorized_tree, path_count, request_id, request_payload_sha256, clientMutationId, context_id, helper_sha256]
+      reservation: FileMode.CreateNew
+      sharing: FileShare.None
+      persistence: FileStream.Flush(true)
+      recovery: existing_or_uncertain_means_read_only_reconciliation
+
+PHASE_A_CONTINUATION_BINDING:
+  required: false
+
+REMOTE_MUTATION_AUTHORITY:
+  allowed: true
+  operations: [github.updateRefs, github.createCommitOnBranch]
+```
+
+The `phase_b_only` mode instead adds exactly this authority shape:
+
+```text
+REMOTE_REF_CREATE_AUTHORITY:
+  allowed: false
+
+DURABLE_PHASE_AUTHORITIES:
+  required: true
+  profile: github_graphql_create_ref_then_commit_candidate_v1
+  execution_mode: phase_b_only
+  publication_operation_id: <exact-successor-publication-operation-id>
+  fresh_phase_set: [CANDIDATE_COMMIT]
+  records:
+    - id: <unique-fresh-CANDIDATE_COMMIT-record-id>
+      phase: CANDIDATE_COMMIT
+      operation_id: <same-exact-phase-B-operation-id>
+      authorization_reference: <explicit-current-operator-authorization>
+      marker_path: <exact-absolute-external-phase-B-marker-path>
+      evidence_ledger_path: <exact-authorized-append-only-ledger-path>
+      local_file_operations:
+        marker: [create_new_exclusive, write_initial_record, flush_to_disk, read_same_handle, read_existing_for_reconciliation, retain]
+        ledger: [append_nonsecret_records, flush_to_disk, read]
+      storage_contract: verified_local_fixed_NTFS_real_paths
+      record_version: 1
+      record_encoding: UTF8_no_BOM_ordered_compact_JSON_no_newline
+      record_field_order: [record_version, encoding, publication_operation_id, operation_id, phase_authority_id, phase, authorization, marker_path, consumed, repository_node_id, repository_numeric_id, verified_ref_node_id, ref_name, expected_head_oid, authorized_tree, path_count, request_id, request_payload_sha256, clientMutationId, context_id, helper_sha256]
+      reservation: FileMode.CreateNew
+      sharing: FileShare.None
+      persistence: FileStream.Flush(true)
+      recovery: existing_or_uncertain_means_read_only_reconciliation
+
+PHASE_A_CONTINUATION_BINDING:
+  required: true
+  profile: github_graphql_create_ref_then_commit_candidate_v1
+  prior_operation_id: <exact-prior-Phase-A-operation-id>
+  prior_authorization_reference: <exact-prior-operator-authorization-reference>
+  prior_ref_create_authority_id: <exact-prior-REMOTE_REF_CREATE_AUTHORITY.id>
+  prior_durable_phase_authority_id: <exact-prior-REF_CREATE-record-id>
+  prior_marker_path: <exact-retained-prior-Phase-A-marker-path>
+  prior_evidence_ledger_path: <exact-retained-prior-evidence-ledger-path>
+  repository_identity:
+    node_id: <same-independently-anchored-repository-node-id>
+    numeric_id: <same-independently-anchored-repository-numeric-id>
+    provenance: <same-trusted-existing-identity-evidence-reference>
+  ref_node_id: <same-exact-independently-verified-ref-node-id>
+  ref_name: refs/heads/<same-exact-authorized-branch>
+  expected_base_oid: <same-exact-operator-approved-base-commit-oid>
+  observed_branch_head_oid: <freshly-observed-same-exact-base-commit-oid>
+  phase_a_outcome: BRANCH_CREATED_AT_BASE
+  phase_a_marker_state: retained_consumed_non_reusable
+
+REMOTE_MUTATION_AUTHORITY:
+  allowed: true
+  operations: [github.createCommitOnBranch]
+```
+
+The angle-bracket values above are required typed declarations, not live
+evidence or self-authorization. A future lane must supply every applicable
+value before execution. The profile remains disabled if a placeholder,
+missing field or observation is used to invent authority.
+
+#### Phase A: identity-bound absent-ref creation in `full_two_phase`
+
+Phase A exists only in `full_two_phase`. `phase_b_only` has no Phase-A
+dispatch, no fresh `REF_CREATE` authority and no `github.updateRefs` operation
+authority.
+
+Phase A contains exactly one top-level `updateRefs` mutation and exactly one
+`refUpdates` entry. Its actual input must bind:
+
+- `repositoryId` to the independently anchored Repository global node ID;
+- `name` to the exact declared `refs/heads/...` name;
+- `beforeOid` to exactly
+  `0000000000000000000000000000000000000000`;
+- `afterOid` to the exact operator-approved base commit;
+- `force=false`.
+
+The all-zero `beforeOid` is the server write precondition that the Ref must not
+exist. A prior absence observation cannot replace it. `repositoryId` is part of
+the mutation input; a mutable owner/name slug is not the write destination
+binding. `max_attempts` and `MAX_APPLICATION_DISPATCH` are both 1. `updateRefs`
+atomicity applies only to the declared ref updates inside that one mutation.
+Phase A and Phase B are not jointly atomic.
+
+Before Phase A, query the independently anchored Repository identity and exact
+ref name. An existing branch, failed/incomplete read, permission error or
+identity mismatch blocks; absence must not be inferred from an error. Reserve,
+persist and verify the `REF_CREATE` DURABLE phase authority before sending the
+sealed mutation bytes. No successful or ambiguous Phase A marker permits
+another Phase A dispatch.
+
+After a successful or possibly successful Phase A, independently query the
+anchored Repository node and exact ref name. Require the exact Repository
+node/numeric IDs, exact Ref name and prefix, one global Ref node ID, and target
+OID equal to the fixed Phase-A base. Capture that Ref identity only as
+`VERIFIED_PHASE_A_REF_NODE_ID`. `updateRefs` response correlation alone is not
+the Ref identity proof. A wrong/missing/ambiguous result transitions to
+`FAILED_RECONCILIATION_REQUIRED`; it never authorizes repair or replay.
+
+#### Phase B: one expected-head-bound candidate commit
+
+Phase B applies to both modes. It must first reverify the anchored Repository,
+the exact Ref global node ID/name and the Ref target still equal to the fixed
+approved base. In `full_two_phase`, that identity and base are the verified
+output of the current Phase A. In `phase_b_only`, they must match both the
+complete retained `PHASE_A_CONTINUATION_BINDING` and a fresh read-only live
+verification. Its actual `createCommitOnBranch` input must use only:
+
+- `branch: { id: VERIFIED_PHASE_A_REF_NODE_ID }`;
+- `expectedHeadOid` equal to the unchanged exact Phase-A base;
+- the exact authorized message;
+- `fileChanges.additions` containing the complete exact finite path set and
+  RFC 4648 Base64 of each sealed candidate blob.
+
+Do not include `repositoryNameWithOwner` or `branchName`. The fixed
+`expectedHeadOid` is the server destination-head precondition; a read-before-
+write observation is not its substitute. `max_commits`, `max_attempts` and
+`MAX_APPLICATION_DISPATCH` are all 1. Reserve, persist and verify the distinct
+`CANDIDATE_COMMIT` durable phase authority before sending the sealed Phase-B
+bytes. No successful or ambiguous Phase B marker permits another Phase B
+dispatch.
+
+`fileChanges.additions` may replace an existing regular 100644 text file or
+create an absent regular 100644 text file only when the path belongs to the
+corresponding exact `MODIFY_ALLOWLIST` or `CREATE_ALLOWLIST`. A create path must
+be absent in the fixed base tree. A modify path must exist in the fixed base
+tree as a regular 100644 file. Require unique paths, require
+`intersection(create_paths, modify_paths)` to be empty, and require the complete
+candidate diff to equal `union(create_paths, modify_paths)` and `path_count`.
+Every candidate path must be classified exactly once. No wildcard or inferred
+path is allowed.
+This profile imposes no arbitrary two-file limit, but makes no generic GitHub
+API file-count guarantee: the operator must declare and seal one exact finite
+set and count for each lane.
+
+Deletions, renames, symlinks, submodules, executables, mode changes and any
+unsupported path type are forbidden. `fileChanges.deletions` must be omitted.
+Every existing path must be 100644 in the base and candidate; every new path
+must resolve to 100644 in the resulting server tree. A mismatch fails closed.
+
+#### Candidate and exact tree verification
+
+Derive `AUTHORIZED_TREE` independently from the exact fixed base tree plus
+only the sealed additions/replacements. For every changed path retain base
+presence/absence, old/new blob OIDs, exact raw byte SHA-256, byte length and
+mode. Require all unchanged base-tree entries to remain byte-for-byte and
+mode-for-mode identical. The complete candidate index/worktree, exact path
+set, validators and execution contexts remain sealed through publication.
+
+After Phase B success or ambiguity, independently query the exact Ref and
+server commit. Success requires:
+
+- Ref target equals the verified server commit;
+- `parent_count = 1`;
+- sole parent equals the exact Phase-A/base expected head;
+- the full server tree equals `AUTHORIZED_TREE`;
+- every changed remote blob byte-matches the sealed tested candidate;
+- every changed mode is 100644 and every unchanged entry equals the base;
+- no extra, missing, deleted, renamed or mode-changed path exists.
+
+GitHub-generated author, committer, signature and timestamp metadata may differ
+from a local commit, so the server commit OID need not equal a local commit OID.
+Exact tree verification is the content authority.
+
+#### Non-atomic state machine and durable reconciliation
+
+`TWO_PHASE_PUBLICATION_ATOMIC_TOGETHER = NO`. The `full_two_phase` state
+machine is:
+
+```text
+NOT_STARTED
+-> REF_CREATE_RESERVED
+-> BRANCH_CREATED_AT_BASE
+-> COMMIT_RESERVED
+-> CANDIDATE_PUBLISHED
+
+any uncertain or mismatched outcome
+-> FAILED_RECONCILIATION_REQUIRED
+```
+
+The `phase_b_only` state machine begins from verified retained evidence rather
+than from a fresh Phase A:
+
+```text
+VERIFIED_PRIOR_BRANCH_CREATED_AT_BASE
+-> COMMIT_RESERVED
+-> CANDIDATE_PUBLISHED
+
+any uncertain or mismatched outcome
+-> FAILED_RECONCILIATION_REQUIRED
+```
+
+`full_two_phase` uses exactly two fresh DURABLE phase authority records with
+fresh phase set `[REF_CREATE, CANDIDATE_COMMIT]`. `phase_b_only` uses exactly
+one fresh record with fresh phase set `[CANDIDATE_COMMIT]`; the referenced
+prior `REF_CREATE` marker is evidence, not fresh dispatch authority. The fresh
+record IDs, marker paths and phase-bound operation identities must differ from
+each other and from every referenced prior record. Each inherits the §12.1
+CreateNew/FileShare.None, `Flush(true)`, same-held-handle verification,
+permanent retention and read-only reconciliation rules. Markers and ledger
+records are append-only evidence; never delete, truncate, replace, reuse or
+reinterpret one phase's record as authority for another phase. No profile
+claims exactly-once network delivery. Each fresh marker uses its declared fixed
+field order and records `consumed: true` before its phase dispatch. Phase A,
+when present, binds the exact repository/ref, zero-before/base/force values and
+sealed request/context/helper identities. Phase B binds the exact repository,
+verified Ref node, ref/base, `AUTHORIZED_TREE`, finite `path_count` and sealed
+request/context/helper identities. Missing or inapplicable phase bindings fail
+closed rather than being serialized as invented values.
+
+An ambiguous Phase A result permits only a read-only query of the exact
+Repository ID and Ref. An ambiguous Phase B result permits only read-only
+queries of the exact Ref/head, commit parent and complete resulting tree. No
+automatic retry, authentication replay, alternate client, alternate writer,
+ordinary Git push, REST Git-data write or expected-head refresh is allowed.
+
+If Phase A succeeds and Phase B does not, the safe partial state is exactly one
+feature branch whose head remains the approved canonical base; no candidate
+content has reached that branch. Do not repeat Phase A, delete the branch,
+force-repair it, push to it or switch writers. Continuation requires a
+separately authorized `phase_b_only` execution and complete
+`PHASE_A_CONTINUATION_BINDING`. The binding must prove the prior outcome
+`BRANCH_CREATED_AT_BASE` and bind the same repository node/numeric IDs, full
+ref name, Ref global node ID, approved base OID, prior Phase-A operation and
+authorization identities, prior `REMOTE_REF_CREATE_AUTHORITY` identity, prior
+durable marker identity/path and prior evidence ledger identity/path. The prior
+marker must already exist, remain permanently retained, be consumed or reserved
+as required by the canonical Phase-A outcome contract, and be non-reusable.
+Observation alone cannot synthesize prior authority.
+
+Immediately before a `phase_b_only` mutation, fresh read-only verification must
+prove that repository identity, Ref node ID and exact Ref name remain unchanged
+and that the branch head is still exactly `expected_base_oid`. Head drift
+blocks; it never refreshes `expected_head_oid` and never authorizes Phase-A
+replay. The successor must bind the same sealed candidate identity, exact
+`create_paths`, exact `modify_paths`, `AUTHORIZED_TREE`, expected base tree and
+commit purpose, with no resealing from remote state or scope expansion. It must
+use one fresh, distinct `CANDIDATE_COMMIT` durable authority, at most one
+`createCommitOnBranch` dispatch and no `github.updateRefs` authority. If
+reconciliation already proves the exact candidate commit/tree exists, classify
+the server outcome from that evidence and do not replay Phase B.
+
+#### API contexts, request records and lifecycle boundary
+
+Each authorized phase inherits every strict §12.1 API execution-context
+control: pinned executable/runtime/helper identities and hashes, exact GraphQL operation
+documents, closed child environments, configuration digest, approved
+credential source/reference and exact accessor, expected actor, normal TLS
+validation, exact `https://api.github.com/graphql` endpoint, no redirects, no
+proxy, no retry middleware, no authentication replay, and no alternate client
+or writer. No secret value enters evidence.
+
+Create a distinct append-only `API_REQUEST_RECORDS` entry with independently
+sealed final payload bytes/digest for every actual request. At minimum,
+`full_two_phase` normally records the preflight identity/absence query, Phase A
+`updateRefs`, Phase-A Ref verification, Phase-B Ref/head preflight,
+`createCommitOnBranch`, and Phase-B commit/Ref/tree verification.
+`phase_b_only` records the fresh continuation identity/Ref/head preflight,
+`createCommitOnBranch`, and Phase-B commit/Ref/tree verification; it records no
+Phase-A dispatch. Pagination or repeated read-only reconciliation calls each
+require another immutable request record. A future request record is not
+fabricated before its exact variables and bytes exist.
+
+Pre-PR publication under this profile requires
+`EXPECTED_PR_BINDING.required=false`, `ASSOCIATED_PR_SCOPE.required=false` and
+`PR_METADATA_RACE_ACCEPTANCE.accepted=false`. This exception applies only to
+this profile before any PR exists; an unexpected associated PR or incomplete
+inventory blocks without mutation or repair. NO PR authority is implied.
+Successful branch/candidate publication does not create, edit or ready a PR.
+`NEW_ORDINARY_VIONA_PR_CREATION_SUSPENDED` remains ACTIVE, and any later PR
+requires a separate exact operator authorization or exact-one exception. The
+profile also grants no review, Readiness, Stage2, branch-protection, merge,
+deployment, freeze-release or production authority.
+
+The profile does not require local synchronization for a pre-existing local
+candidate branch whose content was already reviewed and sealed. Any later
+local ref/object synchronization still requires independent
+`LOCAL_SYNC_AUTHORITY`; no reset, checkout overwrite, force, implicit ref
+rewrite or history repair is authorized.
+
+Repository identity mismatch; unexpected branch existence, rejected zero-before
+precondition, wrong Phase-A target or ambiguous Phase A in `full_two_phase`;
+missing or mismatched continuation branch/evidence in `phase_b_only`;
+unprovable Ref node identity; Phase-B head drift; `expectedHeadOid` mismatch;
+path-set/count drift; unsupported create/delete/rename/type/mode state;
+candidate tree mismatch; incomplete API or credential context; marker/ledger
+failure; GraphQL partial or error response; transport ambiguity; and unexpected
+local mutation all require STOP. Preserve evidence and perform no automatic
+repair.
+
+
 ---
 
 ## 13. Worktree Policy
@@ -2150,4 +2778,3 @@ Current state recorded as an example context only:
 | Current local planning tip | `40b8c61bf7a053880007978002fe6e26fe4ad5c4` |
 
 This envelope spec does not authorize Phase 0 or Phase 1 implementation.
-<!-- VIONA_BOOTSTRAP_ONLY_DO_NOT_MERGE: holder commit for canonical existing-branch publication; grants no authority. -->
