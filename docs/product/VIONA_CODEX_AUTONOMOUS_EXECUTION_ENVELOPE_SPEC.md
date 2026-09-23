@@ -188,6 +188,16 @@ REMOTE_COMMIT_AUTHORITY:
   branch_ref:
   expected_head_oid:
   base_tree_oid:
+  candidate_commit_oid:
+  candidate_parent_tree_oid:
+  candidate_tree_oid:
+  candidate_path_records:
+    - path:
+      base_blob_oid:
+      candidate_blob_oid:
+      candidate_raw_byte_length:
+      candidate_raw_sha256:
+      mode: 100644
   paths: []
   create_paths: []
   modify_paths: []
@@ -402,7 +412,7 @@ FINAL_CLASSIFICATION:
 ```
 
 `REMOTE_COMMIT_AUTHORITY` is a closed discriminated union keyed by `profile`.
-The new profile is further discriminated by `execution_mode`. Unknown profiles,
+The absent-branch profile is further discriminated by `execution_mode`. Unknown profiles,
 unknown modes, mixed profile fields, undeclared fields, null placeholders and
 missing required fields fail closed. Profile-inapplicable fields inside an
 enabled block must be omitted; they cannot be serialized as null. Separately
@@ -421,7 +431,9 @@ applicable. Require `repository_identity`, `branch_node_id`, `branch_ref`,
 `metadata_race_acceptance_id`. Forbid `execution_mode`,
 `branch_ref_node_id_source`, `verified_branch_ref_node_id`, `create_paths`,
 `modify_paths`, `path_count`, `authorized_tree` and
-`candidate_commit_durable_phase_authority_id`. Continue to require the singular
+`candidate_commit_durable_phase_authority_id`; also forbid the v2-only
+`candidate_commit_oid`, `candidate_parent_tree_oid`, `candidate_tree_oid` and
+`candidate_path_records`. Continue to require the singular
 `DURABLE_ATTEMPT_AUTHORITY`, `EXPECTED_PR_BINDING`, `ASSOCIATED_PR_SCOPE` and
 `PR_METADATA_RACE_ACCEPTANCE` contracts from §12.1.
 
@@ -439,7 +451,27 @@ API context IDs, `mutation_document_sha256`, `operation_id` and
 `expected_pr_binding_id`, `associated_pr_scope_id` and
 `metadata_race_acceptance_id` inside this `REMOTE_COMMIT_AUTHORITY`. Continue to
 require the exact disabled pre-PR binding blocks from §12.2; those blocks do not
-supply IDs to the forbidden fields.
+supply IDs to the forbidden fields. Also forbid the v2-only
+`candidate_commit_oid`, `candidate_parent_tree_oid`, `candidate_tree_oid` and
+`candidate_path_records`.
+
+For `github_graphql_existing_branch_finite_replace_v2`, `execution_mode` is not
+applicable. Require `repository_identity`, `branch_node_id`, `branch_ref`,
+`expected_head_oid`, `base_tree_oid`, `candidate_commit_oid`,
+`candidate_parent_tree_oid`, `candidate_tree_oid`, `candidate_path_records`,
+`paths`, `modify_paths`, an exact positive `path_count`,
+`content_source: sealed_validated_local_candidate_bytes`, `tree_source:`
+`independently_derived_existing_head_tree_plus_exact_replacements`,
+`authorized_tree`, `max_commits: 1`, `max_attempts: 1`, `message_headline`, both
+API context IDs, `mutation_document_sha256`, `operation_id`,
+`durable_attempt_authority_id`, `expected_pr_binding_id`,
+`associated_pr_scope_id` and `metadata_race_acceptance_id`. Forbid
+`execution_mode`, `branch_ref_node_id_source`, `verified_branch_ref_node_id`,
+`create_paths`, `replacement_count` and
+`candidate_commit_durable_phase_authority_id`. Require the singular
+`DURABLE_ATTEMPT_AUTHORITY`, `EXPECTED_PR_BINDING`, `ASSOCIATED_PR_SCOPE` and
+`PR_METADATA_RACE_ACCEPTANCE` contracts from §12.3. Mixed v1, v2 or §12.2
+fields fail closed.
 
 The profile/mode authority-block matrix is normative:
 
@@ -448,6 +480,7 @@ The profile/mode authority-block matrix is normative:
 | `github_graphql_existing_branch_replace_v1` / not applicable | Forbidden; newly introduced block omitted, or exact `allowed: false` only in a current full-schema serializer | `DURABLE_ATTEMPT_AUTHORITY` required; `DURABLE_PHASE_AUTHORITIES` forbidden/omitted or exact `required: false` only | Forbidden/omitted or exact `required: false` only | `EXPECTED_PR_BINDING`, `ASSOCIATED_PR_SCOPE` and `PR_METADATA_RACE_ACCEPTANCE` required | exactly `[github.createCommitOnBranch]` |
 | `github_graphql_create_ref_then_commit_candidate_v1` / `full_two_phase` | Required and enabled with the complete Phase-A shape | `DURABLE_ATTEMPT_AUTHORITY` exact `allowed: false` only; `DURABLE_PHASE_AUTHORITIES` requires fresh phase set exactly `[REF_CREATE, CANDIDATE_COMMIT]` | exact `required: false` only | exact disabled boolean-only blocks | exactly `[github.updateRefs, github.createCommitOnBranch]` |
 | `github_graphql_create_ref_then_commit_candidate_v1` / `phase_b_only` | exact `allowed: false` only | `DURABLE_ATTEMPT_AUTHORITY` exact `allowed: false` only; `DURABLE_PHASE_AUTHORITIES` requires fresh phase set exactly `[CANDIDATE_COMMIT]` | required with the complete continuation shape | exact disabled boolean-only blocks | exactly `[github.createCommitOnBranch]`; `github.updateRefs` forbidden |
+| `github_graphql_existing_branch_finite_replace_v2` / not applicable | exact `allowed: false` only | `DURABLE_ATTEMPT_AUTHORITY` required; `DURABLE_PHASE_AUTHORITIES` exact `required: false` only | exact `required: false` only | `EXPECTED_PR_BINDING`, `ASSOCIATED_PR_SCOPE` and `PR_METADATA_RACE_ACCEPTANCE` required | exactly `[github.createCommitOnBranch]` |
 
 An authority block marked forbidden grants no fields or operation. The exact
 disabled forms are `REMOTE_REF_CREATE_AUTHORITY.allowed: false`,
@@ -457,9 +490,10 @@ disabled forms are `REMOTE_REF_CREATE_AUTHORITY.allowed: false`,
 `PHASE_A_CONTINUATION_BINDING.required: false`,
 `EXPECTED_PR_BINDING.required: false`, `ASSOCIATED_PR_SCOPE.required: false`
 and `PR_METADATA_RACE_ACCEPTANCE.accepted: false`, each with no additional
-fields. Existing-profile envelopes created before the new blocks existed remain
-valid when those new-only forbidden blocks are omitted. Any other profile/mode
-combination blocks.
+fields. Existing v1 envelopes created before the new blocks existed remain
+valid when those new-only forbidden blocks are omitted. V2 does not widen,
+reinterpret or automatically migrate them, and v1 authorization IDs gain no
+v2 authority. Any other profile/mode combination blocks.
 
 `EXPECTED_BASE.refs_manifest_sha256` binds HEAD, root refs, FETCH_HEAD,
 MERGE_HEAD, and every visible `refs/` namespace: branches, remote-tracking refs,
@@ -1332,11 +1366,13 @@ Local commit does not imply push. Push does not imply PR. PR does not imply merg
 The supported API publication profiles are exactly:
 
 1. `github_graphql_existing_branch_replace_v1` under §12.1;
-2. `github_graphql_create_ref_then_commit_candidate_v1` under §12.2.
+2. `github_graphql_create_ref_then_commit_candidate_v1` under §12.2;
+3. `github_graphql_existing_branch_finite_replace_v2` under §12.3.
 
-No third API publication profile, ordinary Git push fallback, REST Git-data
-writer, alternate GraphQL writer, PR authority, merge authority or deploy
-authority is implied.
+No fourth API publication profile, ordinary Git push fallback, REST Git-data
+writer, Contents API writer, alternate GraphQL writer, PR authority, merge
+authority or deploy authority is implied. V2 does not supersede or reinterpret
+the exact-two-file v1 profile.
 
 ---
 
@@ -1901,10 +1937,11 @@ Trace every enabled requirement through its declaration and evidence:
 ### 12.2 Identity-bound create-ref-then-commit API publication profile
 
 `github_graphql_create_ref_then_commit_candidate_v1` is the only supported API
-profile for publishing a sealed candidate by first creating the exact absent
-destination branch, or for continuing only Phase B after a separately
-authorized Phase A has already produced the exact verified branch-at-base
-state. It has exactly two supported `execution_mode` values:
+profile for the absent-branch or retained-Phase-A continuation model: it
+publishes a sealed candidate by first creating the exact absent destination
+branch, or continues only Phase B after a separately authorized Phase A has
+already produced the exact verified branch-at-base state. It has exactly two
+supported `execution_mode` values:
 
 1. `full_two_phase`: Phase A uses `updateRefs` to create one exact branch at
    one exact base, then Phase B uses `createCommitOnBranch` to create one commit
@@ -2385,6 +2422,308 @@ failure; GraphQL partial or error response; transport ambiguity; and unexpected
 local mutation all require STOP. Preserve evidence and perform no automatic
 repair.
 
+
+---
+
+### 12.3 Existing-branch exact-finite-path replacement API publication profile
+
+`github_graphql_existing_branch_finite_replace_v2` is the only profile defined
+by this section. It advances one exact existing branch, already bound to one
+exact declared OPEN PR, by creating one server commit that replaces an exact
+positive finite set of existing regular 100644 text files. It is designed for
+a previously reviewed local candidate commit whose parent tree equals the
+remote branch's exact expected-head tree even when the local parent commit OID
+and remote expected-head commit OID differ.
+
+This profile is a separate closed-union member. It does not supersede, widen,
+reinterpret or automatically migrate
+`github_graphql_existing_branch_replace_v1`. V1 remains valid and unchanged for
+previously authorized exact-two-file envelopes: it retains
+`replacement_count: 2`, exactly two existing regular 100644 text files,
+`content_source: sealed_validated_staged_blobs`, `tree_source:`
+`independently_derived_base_tree_plus_replacements`, its singular
+`DURABLE_ATTEMPT_AUTHORITY`, required PR bindings and existing
+`createCommitOnBranch` behavior. Existing v1 envelope and authorization IDs
+gain no v2 authority. Each v2 use requires a separately issued v2
+authorization.
+
+Enabled v2 publication requires all of the following exact, mutually
+consistent blocks:
+
+- `REMOTE_COMMIT_AUTHORITY.allowed: true` with this exact profile and the v2
+  field shape below;
+- `REMOTE_MUTATION_AUTHORITY.allowed: true` with operations exactly
+  `[github.createCommitOnBranch]`;
+- one complete referenced `DURABLE_ATTEMPT_AUTHORITY`;
+- complete verifier and publisher `API_EXECUTION_CONTEXTS` plus append-only
+  `API_REQUEST_RECORDS` for every actual request;
+- required `EXPECTED_PR_BINDING`, `ASSOCIATED_PR_SCOPE` and explicitly accepted
+  `PR_METADATA_RACE_ACCEPTANCE` blocks with matching IDs;
+- `REMOTE_REF_CREATE_AUTHORITY.allowed: false`,
+  `DURABLE_PHASE_AUTHORITIES.required: false` and
+  `PHASE_A_CONTINUATION_BINDING.required: false` with no additional fields;
+- default-false local commit, push, PR mutation, merge and deployment
+  authorities unless separately authorized for another lane.
+
+Missing, contradictory, reused, mixed-profile or undeclared fields fail closed.
+V2 has no `execution_mode` and is not a `full_two_phase` or `phase_b_only`
+continuation. It grants no `github.updateRefs` operation or Ref-creation phase.
+
+The normative v2 `REMOTE_COMMIT_AUTHORITY` shape is:
+
+```text
+REMOTE_COMMIT_AUTHORITY:
+  allowed: true
+  profile: github_graphql_existing_branch_finite_replace_v2
+  repository_identity:
+    node_id: <independently-anchored-repository-node-id>
+    numeric_id: <independently-anchored-repository-numeric-id>
+    provenance: <trusted-existing-identity-evidence-reference>
+  branch_node_id: <exact-independently-verified-global-Ref-node-id>
+  branch_ref: refs/heads/<exact-existing-authorized-branch>
+  expected_head_oid: <fixed-operator-authorized-old-remote-head-oid>
+  base_tree_oid: <exact-tree-of-expected-head-and-local-candidate-parent>
+  candidate_commit_oid: <exact-reviewed-local-candidate-commit-oid>
+  candidate_parent_tree_oid: <exact-tree-of-the-candidate-sole-parent>
+  candidate_tree_oid: <exact-reviewed-local-candidate-tree-oid>
+  candidate_path_records:
+    - path: <exact-existing-modify-authorized-path>
+      base_blob_oid: <exact-base-tree-blob-oid>
+      candidate_blob_oid: <exact-candidate-tree-blob-oid>
+      candidate_raw_byte_length: <exact-nonnegative-integer>
+      candidate_raw_sha256: <exact-lowercase-sha256>
+      mode: 100644
+  paths: <exact-canonical-positive-finite-modify-path-array>
+  modify_paths: <same-exact-array-as-paths>
+  path_count: <exact-positive-integer>
+  content_source: sealed_validated_local_candidate_bytes
+  tree_source: independently_derived_existing_head_tree_plus_exact_replacements
+  authorized_tree: <independently-derived-exact-candidate-tree-oid>
+  max_commits: 1
+  max_attempts: 1
+  message_headline: <exact-authorized-server-commit-headline>
+  api_verifier_context_id: <complete-verifier-context-id>
+  api_publisher_context_id: <complete-publisher-context-id>
+  mutation_document_sha256: <sealed-exact-mutation-document-sha256>
+  operation_id: <exact-current-v2-publication-operation-id>
+  durable_attempt_authority_id: <fresh-singular-attempt-authority-id>
+  expected_pr_binding_id: <exact-declared-PR-binding-id>
+  associated_pr_scope_id: <exact-singleton-scope-id>
+  metadata_race_acceptance_id: <exact-current-race-acceptance-id>
+```
+
+Forbid `execution_mode`, `branch_ref_node_id_source`,
+`verified_branch_ref_node_id`, `create_paths`, `replacement_count`,
+`candidate_commit_durable_phase_authority_id` and every other §12.2-only field
+inside this block. Disabled global blocks use only the exact boolean forms
+specified above. A v1 field set cannot be inferred as v2, a v2 field set cannot
+be accepted as v1, and neither can be mixed with §12.2 fields.
+
+#### Reviewed local candidate and base-tree topology
+
+The candidate commit must exist in the exact authorized local repository and
+have exactly one parent. Independently read that parent and its complete tree.
+Require all of the following before durable reservation:
+
+- `candidate_commit_oid` equals the reviewed local candidate commit;
+- its parent count is one;
+- its sole parent's tree equals `candidate_parent_tree_oid`;
+- `candidate_parent_tree_oid` equals `base_tree_oid`;
+- the exact remote `expected_head_oid` exists in the anchored repository and
+  its complete tree also equals `base_tree_oid`;
+- the candidate's complete tree equals `candidate_tree_oid`;
+- independently derived `authorized_tree` equals `candidate_tree_oid`.
+
+The local candidate's parent commit OID need not equal the remote
+`expected_head_oid`. Equal trees prove only the exact content baseline needed
+for derivation; they do not make the commits identical, transfer metadata or
+authorize a different expected head. `expectedHeadOid` remains the fixed remote
+commit OID in the server mutation.
+
+#### Exact positive finite modify set and raw content
+
+`path_count` must be an integer greater than or equal to one. `paths`,
+`modify_paths` and `candidate_path_records[*].path` must contain the same unique
+paths in the same deterministic canonical order, and each length must equal
+`path_count`. No wildcard, duplicate, implicit, inferred or undeclared path is
+allowed. The exact set must equal the complete candidate diff from the sole
+parent to `candidate_commit_oid`. An unchanged path cannot be added to satisfy
+cardinality or scope.
+
+Every path must exist in `base_tree_oid` as a regular non-executable blob with
+mode 100644 and exist in `candidate_tree_oid` with the same mode. Its
+`base_blob_oid` and `candidate_blob_oid` must match those trees exactly. Reject
+any candidate containing a created, deleted, renamed, symlink, submodule,
+executable or mode-changed path, or any diff path absent from the declared set.
+`CREATE_ALLOWLIST` is empty and no deletion shape is expressible.
+
+For each path, read the candidate blob as raw bytes and independently verify
+its blob OID, exact raw byte length and SHA-256 against
+`candidate_path_records`. The exact retained byte buffer used for verification
+is the source for RFC 4648 Base64 in `fileChanges.additions`. Do not normalize
+text, substitute line endings, re-encode human text or reconstruct content from
+display output.
+
+#### Authorized-tree derivation
+
+Start with the complete exact `base_tree_oid`. Replace only the declared
+`modify_paths` entries with their exact `candidate_blob_oid` values at mode
+100644. Preserve every other base-tree entry, including names, types, modes and
+object IDs, exactly. Derive the complete result without trusting the candidate
+commit's tree field as the calculation source. Require the independently
+derived result to equal both `authorized_tree` and `candidate_tree_oid`.
+
+Any missing base entry, unclassified candidate diff, path/type/mode mismatch,
+tree-derivation mismatch or changed unchanged-entry blocks before reservation.
+The authorized tree is immutable for the lane and cannot be refreshed from a
+new remote observation.
+
+#### Existing Ref and expected-head write binding
+
+Independently anchor `repository_identity.node_id` and `numeric_id` before the
+lookup being verified. Query that Repository and the exact declared global Ref
+node. Require the same repository IDs, the exact full `branch_ref`,
+`refs/heads/` prefix, Ref global node ID, target commit equal to
+`expected_head_oid` and target tree equal to `base_tree_oid`.
+
+The actual `createCommitOnBranch` mutation must use only:
+
+```text
+branch: { id: REMOTE_COMMIT_AUTHORITY.branch_node_id }
+expectedHeadOid: REMOTE_COMMIT_AUTHORITY.expected_head_oid
+```
+
+Do not bind the write destination through mutable owner/name,
+`repositoryNameWithOwner`, `branchName` or a caller-supplied substitute. A
+successful read does not grant mutation authority or replace the server's
+fixed expected-head precondition.
+
+#### Exact PR identity, singleton scope and race acceptance
+
+V2 requires the complete §12.1 `EXPECTED_PR_BINDING`. It must bind PR number
+and node ID, owning/head/base repository node IDs, exact head Ref node and full
+head Ref, expected PR head OID, full base Ref and expected base OID, plus
+`state: OPEN`, `merged: false`, `draft: false` and `auto_merge: disabled`. All
+repository IDs must match the anchored repository. The PR's head Ref node/ref
+must equal the remote authority, and its expected head OID must equal
+`REMOTE_COMMIT_AUTHORITY.expected_head_oid` before dispatch. Query the declared
+PR identity directly; never choose one from branch search results.
+
+Reuse §12.1 `ASSOCIATED_PR_SCOPE` with policy
+`SINGLE_DECLARED_OPEN_PR_ONLY`. Query the verified Ref node's unfiltered
+`associatedPullRequests(states: [OPEN])` connection through
+`hasNextPage=false`, preserving every page and request seal. Perform complete
+observations at `pre_dispatch`, `post_publication` and `final_closure`. Require
+exact singleton equality with `EXPECTED_PR_BINDING`. Zero, additional,
+incomplete, inconsistent, unreadable or mismatched results block without
+repair.
+
+Reuse the complete explicit §12.1 `PR_METADATA_RACE_ACCEPTANCE`, bound to this
+exact v2 operation, candidate scope, PR, Ref and singleton scope. Preserve:
+
+```text
+atomic_pr_metadata_precondition: NOT_PROVIDED
+technically_eliminated: false
+known_pre_dispatch_mismatch: block
+observable_post_publication_mismatch: incident_stop_closure_no_rollback_or_retry
+```
+
+The acceptance covers only the declared metadata/membership interval risk. It
+does not waive required observations, exact repository/Ref/head/content
+bindings, incomplete inventory, a known mismatch, authentication failure,
+protection, review, merge or deployment requirements. It grants no additional
+mutation.
+
+#### Singular durable attempt and request identity
+
+V2 reuses the singular §12.1 `DURABLE_ATTEMPT_AUTHORITY`; it does not use
+`DURABLE_PHASE_AUTHORITIES`. Require one fresh authority and operation ID,
+marker path and append-only evidence-ledger path. Bind the deterministic marker
+to at least the exact authorization, profile, operation, repository IDs, PR
+number/node ID, Ref node/name, `expected_head_oid`, candidate commit/parent
+tree/candidate tree, `authorized_tree`, `path_count`, canonical path-record
+digest, helper and API-context identities, request ID and exact payload digest.
+
+Reserve with `FileMode.CreateNew` and `FileShare.None`; write deterministic
+UTF-8 no-BOM compact JSON in fixed field order, call `FileStream.Flush(true)`,
+and verify the complete record through the same held handle. Retain the handle
+through dispatch and outcome recording. Evidence-ledger writes are append-only
+and flushed. Keep the marker permanently. Existing, partial, corrupt,
+mismatched, unreadable, missing-after-reservation-evidence or uncertain state
+allows read-only reconciliation only. Never truncate, replace, delete, reuse or
+mint a new marker/operation to reset the budget.
+
+Every preflight, pagination, mutation, post-publication, final-closure or
+reconciliation call requires its own append-only `API_REQUEST_RECORDS` entry
+with exact context, operation name/type, reviewed document digest, authorized
+variable sources and final UTF-8 request-payload digest. Complete verifier and
+publisher contexts retain §12.1 executable/runtime/helper identities, closed
+environment, credential accessor, expected actor, normal TLS validation,
+exact `https://api.github.com/graphql` endpoint, no redirects, no proxy, no
+retry middleware, no authentication replay and no alternate client or writer.
+No secret enters evidence.
+
+#### One mutation dispatch
+
+The only permitted mutation is one `github.createCommitOnBranch`. It has
+`max_commits: 1`, `max_attempts: 1` and
+`MAX_APPLICATION_DISPATCH=1`. Its exact input uses the fixed Ref ID and
+expected head above, the exact authorized `message_headline`, and
+`fileChanges.additions` containing exactly `path_count` entries. Every entry's
+path is one exact `modify_paths` member and every `contents` value is RFC 4648
+Base64 of the corresponding sealed raw candidate byte buffer.
+`fileChanges.deletions` must be omitted.
+
+Once the request leaves the process, the application dispatch is consumed
+regardless of success, GraphQL error, timeout, connection failure or ambiguous
+response. No second dispatch, automatic retry, authentication replay,
+expected-head refresh, alternate endpoint/client/writer, branch force repair or
+fallback is allowed.
+
+#### Success, ambiguity and independent reconciliation
+
+After success or ambiguity, independently query and verify:
+
+- the same anchored repository node and numeric IDs;
+- the same exact Ref node ID and full name;
+- the Ref target is the returned or reconciled server commit;
+- server parent count is one and the sole parent equals `expected_head_oid`;
+- the complete server tree equals `authorized_tree`;
+- every modified path is mode 100644 and its raw blob bytes match the exact
+  candidate blob OID, raw length and SHA-256;
+- every unchanged base-tree entry is unchanged;
+- no extra, missing, created, deleted, renamed, type-changed or mode-changed
+  path exists;
+- post-publication and final PR/singleton observations satisfy the declared
+  binding and accepted race model.
+
+GitHub-generated author, committer, signature and timestamp metadata may make
+the server commit OID differ from `candidate_commit_oid`. Success depends on
+exact parent, tree, path, mode and raw-content identity, not local/server commit
+OID equality.
+
+If reconciliation proves the exact authorized successor, record the verified
+outcome without replay. If it proves failure, mismatch or cannot prove the
+result, retain all durable evidence and stop. Do not roll back a server commit,
+delete/recreate the branch, force-update it, switch writers or send another
+mutation.
+
+#### Prohibited fallbacks and local-sync boundary
+
+V2 supplies no branch creation, `github.updateRefs`, ordinary Git push, REST
+Git-data, Contents API, alternate GraphQL mutation, branch delete/recreate,
+force-update or history-rewrite writer. It grants no PR create/edit/ready,
+review, status/check, workflow, merge, deployment, branch-protection or other
+remote mutation authority.
+
+Remote publication does not mutate the local branch, index or working tree.
+Any later object import or local Ref transition requires separate exact
+`LOCAL_SYNC_AUTHORITY`, its own old-value guard and complete post-sync
+verification. Publication success must be reported separately from local sync.
+
+Repository, Ref, expected-head, candidate topology, path-set/count, raw-byte,
+tree, PR/singleton, race-acceptance, API-context, request-seal or durable-state
+failure requires STOP. There is no automatic repair or scope expansion.
 
 ---
 
