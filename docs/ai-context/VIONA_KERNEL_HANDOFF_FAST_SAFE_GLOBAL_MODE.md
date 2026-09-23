@@ -2,7 +2,7 @@
 
 **Document type:** Canonical kernel and session handoff for VIONA engineering, product, and AI agents.
 **Audience:** New ChatGPT / Cursor windows, staff, contractors, and automation executors.
-**Baseline:** CURRENT CANONICAL SOURCE BASELINE = `origin/master @ 64c2a34477195bd6c9c2cbb2279be69c26b319fd`; AS-OF DATE = `2026-09-20`. Historical Pack-era baseline: `origin/master @ 5b75114` — `feat(viona): implement Pack30D-5 real-provider spend circuit breaker (mock-only, both flags off) (#320)` — see §5 "Pack30D-6 Kernel Sync & Strategic Financial Pivot" narrative section below for the full PR #319–#320 catch-up (Circuit Breaker planning + implementation) plus the formal, permanent removal of Web3/Crypto/Smart Contracts from every visionary pillar and monetization section (real execution/production remain BLOCKED/NOT AUTHORIZED). Earlier baselines remain historical: `dc79017` (PR #317) — see §5 "Pack32.6 Marketing Agent Closure & Kernel Sync"; `c0c3214` (PR #312) — see §5 "Pack32.2 Kernel/Handoff sync".
+**Baseline:** CURRENT CANONICAL SOURCE BASELINE = `origin/master @ 5d25ef76ca5b84bd2fea7c02f29d28745b93c1b4`; AS-OF DATE = `2026-09-22`. Historical Pack-era baseline: `origin/master @ 5b75114` — `feat(viona): implement Pack30D-5 real-provider spend circuit breaker (mock-only, both flags off) (#320)` — see §5 "Pack30D-6 Kernel Sync & Strategic Financial Pivot" narrative section below for the full PR #319–#320 catch-up (Circuit Breaker planning + implementation) plus the formal, permanent removal of Web3/Crypto/Smart Contracts from every visionary pillar and monetization section (real execution/production remain BLOCKED/NOT AUTHORIZED). Earlier baselines remain historical: `dc79017` (PR #317) — see §5 "Pack32.6 Marketing Agent Closure & Kernel Sync"; `c0c3214` (PR #312) — see §5 "Pack32.2 Kernel/Handoff sync".
 **Supersedes for Request Engine sequencing:** prior scattered pack pointers when this doc conflicts on pack order or blocked state — align to this handoff.
 **Subordinate to:** `docs/ai-context/VIONA_OPERATING_PROTOCOL.md` and founder-signed **Master Blueprint** (`VIONA_FINAL_MASTER_BLUEPRINT_V2.md`). If conflict, stop and report drift risk.
 
@@ -156,14 +156,93 @@ Canonical checker: `node scripts/viona-forbidden-claims-check.mjs` (strict mode 
 | Field | Value |
 |-------|--------|
 | Remote | `origin/master` |
-| As-of date | `2026-09-20` |
-| Current canonical source baseline before release activation | `64c2a34477195bd6c9c2cbb2279be69c26b319fd` |
+| As-of date | `2026-09-22` |
+| Current canonical source baseline | `5d25ef76ca5b84bd2fea7c02f29d28745b93c1b4` |
+| Current canonical tree | `4b2fb07297fe0b44f4b722f8f478c75dcde98ec4` |
 | REC2 closure source | PR #465 squash merge; reviewed/final head `58953fe5c7d77bbac0f886da2c4680fb84e413ff` |
-| Kernel/Handoff reconciliation source | PR #467; `MERGED / CANONICAL`; merge commit `64c2a34477195bd6c9c2cbb2279be69c26b319fd` |
+| Previous Kernel/Handoff reconciliation | PR #467; `MERGED / CANONICAL`; merge commit `64c2a34477195bd6c9c2cbb2279be69c26b319fd` |
+| Freeze-release activation | PR #468; `MERGED / CANONICAL`; merge commit `86e23d4df03e26d47632c7b1c59edad73f0da096` |
+| PR #469 guarded squash closure | `5d25ef76ca5b84bd2fea7c02f29d28745b93c1b4`; `CLOSED / MERGED` |
 | Historical Pack-era snapshot | `c843111c6caa45fa59126b9460ef88c7fb5ef136` — `docs(pack18): add controlled write authorization packet (#229)` |
 | Earlier historical snapshot | `89a2f8c` — `docs(pack17): sync kernel handoff after read-only inbox staging qa (#228)` |
 
 New work must use the current canonical source baseline and its applicable authorization envelope. The older Pack-era baselines and narratives below are retained as history, not as the current repository baseline.
+
+### PR #468 freeze-release activation — current canonical correction
+
+PR #468 is `MERGED / CANONICAL` at `86e23d4df03e26d47632c7b1c59edad73f0da096`. Its valid merge activated the previously granted mandatory merge-authorization guardrail freeze release. The pre-PR468 pending-release account below remains historical evidence.
+
+| Current governance field | Verified state |
+|--------------------------|----------------|
+| `GLOBAL_MERGE_FREEZE` | `RELEASED` |
+| Canonical ordinary merge freeze scope | `GLOBAL_MERGE_FREEZE_RELEASED` |
+| `MANDATORY_MERGE_AUTHORIZATION_GUARDRAIL_FREEZE_ACTIVE` | `NO` |
+| Mandatory merge controls | `PRESERVED / ACTIVE`: exact-head approval → Readiness → ledger-backed Explicit Authorization → guarded merge wrapper |
+| `NEW_ORDINARY_VIONA_PR_CREATION_SUSPENDED` | `ACTIVE` |
+| Other containment | Emergency PR lifecycle containment and B1B governance freeze remain outside this release; no retroactive authority is claimed. |
+
+PR #469 used the governed existing-PR path. It did not release ordinary PR-creation suspension or create a general PR exception. This local Kernel/Handoff preparation authorizes no push, PR creation, remote publication, merge, or deployment; later publication needs a separate exact authorization.
+
+### PR #469 Identity-Bound Publication Protocol Closure — CLOSED/GREEN END-TO-END
+
+PR #469 canonically published and merged the reviewed identity-bound GraphQL publication-protocol changes. The squash commit changed only `docs/ai-context/VIONA_CODEX_CONTROLLED_AUTONOMOUS_EXECUTION_PROTOCOL.md` and `docs/product/VIONA_CODEX_AUTONOMOUS_EXECUTION_ENVELOPE_SPEC.md`.
+
+| Publication / approval evidence | Verified state |
+|---------------------------------|----------------|
+| Pre-publication remote branch head | `192b55143088e8cf89ed031dd92eb35d784a1029` |
+| Reviewed local candidate evidence head | `e37ff9847fb60d31cf50a87902e5dc65c3e67f48` |
+| Published PR head | `1f0ff492920f14ea23de44e7c19602e4f9537298` |
+| Authorized / published tree | `4b2fb07297fe0b44f4b722f8f478c75dcde98ec4` |
+| Publication helper | Governed and sealed `C:\KNG\viona-codex-api-evidence\pr469-protocol-extension-v1\Invoke-VionaPr469ExistingBranchPublication.ps1` |
+| Publication method | Exactly one GitHub GraphQL `createCommitOnBranch` dispatch; no push fallback, REST write fallback, or retry |
+| Publication durable authority | `CONSUMED / NON-REUSABLE`; marker retained |
+| Publication result | `VIONA_PR469_CANONICAL_PUBLICATION_EXECUTION_A2C_V4_COMPLETE_VERIFIED` |
+| Exact-head reviewer | `Maty2016`; review `5280313473`; `APPROVED` on `1f0ff492920f14ea23de44e7c19602e4f9537298` |
+| Required approval at gate execution | `1` active approval; satisfied |
+
+| Two-stage gate / ledger evidence | Verified state |
+|----------------------------------|----------------|
+| Stage 1 | `Viona Merge Readiness Gate`; workflow run `35749944485`, attempt `1`; check run `106821777139`; exact published head; `SUCCESS`; no duplicate successful result |
+| Stage 1 result | `VIONA_PR469_STAGE1_MERGE_READINESS_GATE_COMPLETE_VERIFIED` |
+| Stage 2 | `Viona Explicit Merge Authorization`; workflow run `35751990257`, attempt `1`; check run `106828481650`; exact published head; `SUCCESS`; no rerun |
+| Stage 2 authorization ID | `0f1f8107-bf3e-455d-8b98-8ce0176321be` |
+| Stage 2 target key | `018c6e9b7a2b5a092d823c222ba43337136c79e79b35e5dfee68fc935071eb5a` |
+| Stage 2 ledger ref | `refs/heads/viona-governance-merge-ledger-v1` |
+| Stage 2 ledger path | `records/01/018c6e9b7a2b5a092d823c222ba43337136c79e79b35e5dfee68fc935071eb5a.json` |
+| Stage 2 lifecycle | `ACTIVE → CONSUMING → CONSUMED`; terminal `CONSUMED / NON-REUSABLE`; no duplicate active authorization |
+| Stage 2 result | `VIONA_PR469_STAGE2_EXPLICIT_MERGE_AUTHORIZATION_COMPLETE_VERIFIED` |
+
+| Guarded merge / closure evidence | Verified state |
+|----------------------------------|----------------|
+| Canonical wrapper | `scripts/viona-guarded-pr-merge.mjs`; one execution |
+| Merge method / calls | `squash`; one merge API call; no second attempt, auto-merge, or push |
+| PR final state | `CLOSED / MERGED` |
+| Squash commit | `5d25ef76ca5b84bd2fea7c02f29d28745b93c1b4` |
+| Sole squash parent | `2c7e72cb07a7dfd7a480ed23ecb3274f8cdb0504` |
+| Merged tree | `4b2fb07297fe0b44f4b722f8f478c75dcde98ec4` |
+| Guarded merge result | `VIONA_PR469_GUARDED_SQUASH_MERGE_COMPLETE_VERIFIED` |
+| Terminal ledger detail | `state = CONSUMED`; `consumed_by = laoton80-del`; `merge_commit_sha = 5d25ef76ca5b84bd2fea7c02f29d28745b93c1b4`; `merge_api_result = null` |
+| Ledger interpretation | `NO_LEDGER_REPAIR_REQUIRED`: canonical wrapper permits this terminal shape; recorded merge SHA matches the independently verified GitHub squash merge. No ledger repair was performed. |
+| Post-merge closure | `VIONA_PR469_POSTMERGE_CLOSURE_MASTER_VERIFIED_A0`; exact master/tree above; only the two reviewed protocol files changed, with no unexpected path |
+
+| Local sync / current handoff | Verified state |
+|------------------------------|----------------|
+| Local sync result | `VIONA_PR469_POSTMERGE_LOCAL_SYNC_COMPLETE_VERIFIED`; no sync-lane commit, merge, rebase, or push |
+| Canonical local workspace | `C:\KNG\ket-noi-eu` |
+| `CURRENT CANONICAL SOURCE BASELINE` | `origin/master @ 5d25ef76ca5b84bd2fea7c02f29d28745b93c1b4` |
+| `CURRENT CANONICAL TREE` | `4b2fb07297fe0b44f4b722f8f478c75dcde98ec4` |
+| `CURRENT LOCAL BRANCH` at verified sync closure | `master` |
+| Local / origin / remote master parity at sync closure | `YES`; HEAD, local master, and origin/master at `5d25ef76ca5b84bd2fea7c02f29d28745b93c1b4`; workspace `CLEAN` |
+| Candidate evidence | Branch `docs/viona-graphql-create-ref-then-commit-candidate-v1` preserved at `e37ff9847fb60d31cf50a87902e5dc65c3e67f48` |
+| Preserved stash | `f5ff652358c7fef2457f5ac1f3442756bc0de57a`; unchanged |
+| PR #469 | `CLOSED / GREEN / END-TO-END VERIFIED` |
+| PR #469 publication authority | `CONSUMED / NON-REUSABLE` |
+| PR #469 Stage 2 merge authority | `CONSUMED / NON-REUSABLE` |
+| `GLOBAL_MERGE_FREEZE` | `RELEASED` |
+| `NEW_ORDINARY_VIONA_PR_CREATION_SUSPENDED` | `ACTIVE` |
+| Next product / engineering lane | `NOT SELECTED BY THIS DOCS-ONLY SYNC` |
+
+The verified local-sync state above predates this docs-only preparation branch, `docs/viona-pr469-kernel-handoff-closure-sync-v1`. That branch is local evidence preparation only; it does not move canonical master or grant publication authority.
 
 ### REC2 Two-Stage Merge Control Closure — Current Canonical Governance State
 
@@ -196,9 +275,11 @@ This section is the current canonical interpretation of VIONA merge control. Old
 
 Current interpretation: **REC2 TWO-STAGE MERGE CONTROL IMPLEMENTED, LIVE-PROVEN, MIGRATION COMPLETE, LEGACY STAGE1 REMOVED.**
 
+**HISTORICAL SNAPSHOT — SUPERSEDED BY CURRENT PR #468/#469 CLOSURE STATE ABOVE.** The freeze, PR #466 hold, and next-sequence material below records the pre-PR468 activation moment; its `ACTIVE` freeze and pending-activation wording are not current execution authority.
+
 #### Governance freeze before release activation becomes canonical
 
-| Field | Current state |
+| Field | Historical pre-PR468 state |
 |-------|---------------|
 | `GLOBAL_MERGE_FREEZE` | `ACTIVE` |
 | `ALL_VIONA_PR_MERGES_PROHIBITED` | `PRESERVED UNTIL EXPLICIT RELEASE` |
@@ -209,7 +290,7 @@ Current interpretation: **REC2 TWO-STAGE MERGE CONTROL IMPLEMENTED, LIVE-PROVEN,
 
 REC2 closure did not automatically release any freeze.
 
-#### Freeze-release readiness
+#### Freeze-release readiness (historical pre-PR468 snapshot)
 
 Source contracts retained:
 
@@ -232,7 +313,7 @@ activation branch is not canonical and does not itself effect release. The
 runtime becomes `GLOBAL_MERGE_FREEZE = RELEASED` only if this exact activation
 is separately published, reviewed, authorized, and validly merged to master.
 
-#### PR #466 governance hold
+#### PR #466 governance hold (historical pre-PR468 snapshot)
 
 | Field | Current state |
 |-------|---------------|
@@ -254,11 +335,11 @@ is separately published, reviewed, authorized, and validly merged to master.
 
 PR #466 is not recorded as technically failed.
 
-#### PR-creation governance
+#### PR-creation governance (historical pre-PR468 snapshot)
 
 `VIONA_REC2_R2_PR_CREATION_FREEZE_RELEASE_PACKET_V1` was a one-time PR-creation exception for its exact R2 target. It did not globally release `NEW_ORDINARY_VIONA_PR_CREATION_SUSPENDED`. The operator has now granted the mandatory merge-freeze release, but `NEW_ORDINARY_VIONA_PR_CREATION_SUSPENDED` remains active. This release-activation branch is not authorized for push or PR creation by its local preparation lane; remote publication requires a separate exact exception.
 
-#### Next governance sequence
+#### Next governance sequence (historical pre-PR468 plan; superseded)
 
 1. Obtain a separate exact publication exception for this fixed release-activation head.
 2. Review, authorize, and validly merge the exact activation through the mandatory two-stage control.
