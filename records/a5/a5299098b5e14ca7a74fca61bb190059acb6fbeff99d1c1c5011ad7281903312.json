@@ -3,7 +3,7 @@
   "schema_version": 1,
   "target_key": "a5299098b5e14ca7a74fca61bb190059acb6fbeff99d1c1c5011ad7281903312",
   "authorization_id": "95a1e068-4ed0-46eb-a814-211ad707e036",
-  "state": "ACTIVE",
+  "state": "CONSUMING",
   "repository": "laoton80-del/Ket-noi-eu",
   "pr_number": 470,
   "head_sha": "34e012917900cddcab5fde8a9287887de12cea66",
@@ -25,11 +25,11 @@
   "revoked_at": null,
   "revoked_by": null,
   "revocation_reason": null,
-  "consumption_started_at": null,
+  "consumption_started_at": "2026-09-24T14:11:51.473Z",
   "consumed_at": null,
   "consumed_by": null,
   "merge_commit_sha": null,
   "merge_api_result": null,
-  "last_transition_at": "2026-09-24T14:00:11.079Z",
+  "last_transition_at": "2026-09-24T14:11:51.473Z",
   "last_transition_actor": "laoton80-del"
 }
