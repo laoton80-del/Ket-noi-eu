@@ -3,6 +3,8 @@
 > **Vị trí file:** `docs/ai-context/VIONA_FINAL_MASTER_BLUEPRINT_V2.md`  
 > **Quan hệ V1:** V1 tiếng Anh tại `docs/ai-context/VIONA_FINAL_MASTER_BLUEPRINT.md`. V2 **đúc kết và mở rộng** V1; khi founder ký, V2 có thể trở thành SSoT chính hoặc được merge ngược vào V1.  
 > **Tóm tắt thay đổi so V1:** North Star **Global Vietnamese Companion OS**; **5 Operating Systems**; Local **hai chiều** (người bản địa đặt DN Việt); Travel **ba hướng**; **B2C AI Call Assistant** + **Industry-Aware Lễ Tân AI**; Core OS bổ sung **Mini-App Registry**, **CTA Resolver**; Shared Core bổ sung **Market language config**, **Industry taxonomy**; roadmap / P0 tasks / Design System / Financial Fortress chi tiết hóa.
+>
+> **Final 2.0.0 adoption — Architecture B (provenance note):** selected Final decisions (public identity, six-universe taxonomy, Home orchestration, design direction) are merged into this active Blueprint (§4, §5, §9, §14) instead of adding a parallel canonical tree. The external RC1/RC2 sources and the external Final package remain provenance only, not active parallel canon. Source identities: RC2 source SHA-256 `0814f2f92c5470620f4a5765b3d98fefeca76e410f89b011947f05e821790840`; Final canonical lock SHA-256 `a8c16198dfb318a0b9920e59da8e9fa31048b2bd7eb7c6ccdf91045e3039772a`; Final package MANIFEST SHA-256 `8b635f82af2383dc3bea23c342a1a8d37298c15c866853d8c27e8b3244406d61`. These hashes identify bytes only; they are not signatures and grant no execution authority. This note records no founder signature. This docs amendment grants no runtime, provider, payment or deployment authority.
 
 Bản V2 đúc kết từ V1 và bổ sung các điểm đã chốt: **Smart Trio i18n**, **đồng hành/bảo hộ**, **Local cho người Việt và người bản địa**, **Travel hai chiều**, **AI gọi/đặt lịch hộ**, **Lễ Tân AI đa ngành**, **thu nhập** cho tiểu thương/sinh viên/broker — **giữ nguyên** guardrail tài chính và an toàn của blueprint gốc (VIO không crypto/cash-out; không fake production; super app mini-app platform).
 
@@ -173,11 +175,15 @@ Broker QR
 Admin / Command Center
 ```
 
+Label note: "Leona Assistant" in this and later mini-app / capability lists is a legacy / internal capability label for Leona's specialist surface. It does not override the public umbrella assistant (Viona, §9); Leona remains the Companion & Concierge specialist under Viona, and technical / historical labels may remain for compatibility and provenance.
+
 ---
 
 ## 4. The 5 Operating Systems
 
 VIONA V2 không chỉ chia theo màn hình. VIONA phải có 5 hệ thống vận hành.
+
+> **Clarification (Final 2.0.0 adoption):** the five Operating Systems are cross-cutting operating / value systems. They are **not** the consumer universe taxonomy and do not add, remove, rename or replace the six universes defined in §5.
 
 ## 4.1 Survival & Protection OS
 
@@ -305,9 +311,26 @@ Blueprint gốc đã khóa Broker QR / QR attribution như growth loop, nhưng p
 
 ---
 
-# 5. The 4 Universes — V2 Corrected
+# 5. The Six Universes — Final 2.0.0 Taxonomy
 
-## Universe 1 — VIONA Hub
+Canonical universe taxonomy (exactly six):
+
+```txt
+1. Local
+2. Travel
+3. Academy
+4. Business
+5. Account
+6. SOS
+
+Home / Hub = orchestration layer, not a universe.
+Viona = shared public assistant layer (§9), not a universe.
+Wallet / VIO, community, messaging, impact and mini-apps = shared / domain capabilities, not universes.
+```
+
+History: the earlier heading "The 4 Universes — V2 Corrected" treated Hub as Universe 1 and did not list Business, Account or SOS as universes. That taxonomy is HISTORICAL / SUPERSEDED IN SCOPE. No Hub / Home function is removed; it is reframed below.
+
+## Home / Hub — Orchestration Layer (not a universe)
 
 Purpose:
 
@@ -340,7 +363,7 @@ Không để CTA chưa production trông như production.
 
 ---
 
-## Universe 2 — VIONA Local
+## Universe 1 — VIONA Local
 
 Purpose V2:
 
@@ -386,9 +409,11 @@ Local must let native customers book Vietnamese businesses.
 Merchant Việt must be able to operate in Vietnamese.
 ```
 
+Ownership note (Final 2.0.0): Local owns consumer discovery, requests and booking entry. Merchant-side operations listed above (merchant dashboard, B2B AI Receptionist, B2B marketplace / wholesale) are owned by Universe 4 — Business; Local demand hands off to Business through the shared request / booking contract. No capability is removed.
+
 ---
 
-## Universe 3 — VIONA Travel
+## Universe 2 — VIONA Travel
 
 Purpose V2:
 
@@ -431,7 +456,7 @@ Travel must never pretend live provider fulfillment or payment success.
 
 ---
 
-## Universe 4 — VIONA Academy
+## Universe 3 — VIONA Academy
 
 Purpose:
 
@@ -458,6 +483,66 @@ Rule:
 Academy should open early because it is a differentiator.
 AI grading/certification must be Lite/Beta if not production.
 ```
+
+---
+
+## Universe 4 — VIONA Business
+
+Purpose:
+
+```txt
+Merchant operations for Vietnamese businesses: bookings / requests inbox, CRM and customers,
+services and products, team, B2B / wholesale / e-shop import, and the Industry-Aware
+Lễ Tân AI (AI Receptionist, §8), which is owned by Business.
+```
+
+Rule:
+
+```txt
+Merchant state must be truthful: no fake revenue, inventory, booking or provider outcome.
+Dense operational layouts (table / list / sidebar) are allowed (§14).
+Local demand arrives through the shared request / booking contract.
+```
+
+---
+
+## Universe 5 — VIONA Account
+
+Purpose:
+
+```txt
+Identity, profile, privacy and consent, language / market (Smart Trio, §6), entitlements,
+memory and personalization controls, and truthful VIO / wallet / account surfaces.
+```
+
+Rule:
+
+```txt
+Account must stay reachable from every surface.
+VIO / wallet surfaces follow Financial Fortress (§11): no fake balance, no cash-out.
+```
+
+---
+
+## Universe 6 — VIONA SOS
+
+Purpose:
+
+```txt
+Safety / Global Lifeline entry; survival and emergency guidance per §4.1.
+```
+
+Rule:
+
+```txt
+SOS Core is free. SOS Plus is an optional monthly paid enhancement (commercial target; no
+checkout or subscription is live unless separately authorized); commercial terms stay in
+docs/product/VIONA_SOS_PLUS_PRODUCT_SPEC.md and are not changed here. No pay-to-be-rescued.
+No fake dispatch, provider, responder, location-sharing or recording behavior.
+Opening SOS is not itself an external emergency action.
+```
+
+Naming: SOS Core is the current canonical name of the free foundational safety tier; "SOS Basic" in some source documents is previous / legacy wording for the same tier, not a second free tier. SOS Plus remains the separate monthly paid enhancement, historical "SOS Basic" references remain valid provenance, and this docs change implies no runtime rename.
 
 ---
 
@@ -726,6 +811,87 @@ type AiReceptionistIndustryProfile = {
 
 # 9. AI Personas V2
 
+## Public Assistant Identity Hierarchy
+
+Canonical product identity decision (post PR #472). It defines public identity and product law only; it activates no runtime behavior.
+
+```txt
+VIONA = product / platform brand
+Viona = public umbrella assistant identity (public entry + orchestration layer)
+├─ Leona — Companion & Concierge specialist
+├─ Minh Khang — Language / Travel / Translation / Culture specialist
+├─ Cô Giáo AI — Academy learning specialist
+└─ Lễ Tân AI — Business / Merchant receptionist specialist
+```
+
+Rules:
+
+```txt
+- Viona orchestrates or hands off to the specialist personas.
+- Viona is not a fifth specialist persona and does not replace any specialist.
+- Viona is not a new autonomous runtime.
+- Viona grants no permission to bypass capability gates, cost confirmation,
+  or provider activation rules.
+- Each specialist keeps its identity and the capability boundaries
+  (Purpose / Allowed / Not allowed / Rules) defined in this section.
+- Existing route IDs, internal identifiers and feature flags (for example
+  LeonaCall, leonaAssistant, b2cAiCallAssistant, leona_outbound) do not need
+  global renaming because the public shell is Viona.
+```
+
+### Generic public entry — canonical target law
+
+Status: canonical target / product law. This does not state that the behavior is implemented today.
+
+```txt
+A generic public assistant entry presents "Viona" or "Ask Viona".
+The generic Viona entry is a non-debiting orchestration / entry surface.
+
+Opening the generic entry must not, by itself:
+- debit VIO Credits
+- start a paid call
+- start a provider call
+- start a booking or payment mutation
+- imply that live AI or provider service has already started
+
+When the user intentionally chooses a specialist capability with cost,
+provider, booking or mutation implications:
+specialist handoff
+→ readiness / gate check
+→ cost disclosure where applicable
+→ explicit user confirmation
+→ only then the separately authorized runtime path
+```
+
+### RC2 Viona panel
+
+```txt
+Decision: REFERENCE PUBLIC-SHELL DIRECTION, NOT RUNTIME ACTIVATION.
+- The RC2 "Viona" panel is the reference direction for the public Viona
+  assistant shell.
+- Its current UI-only / unavailable / gated state remains the honest state.
+- This decision does not activate the panel, does not route Home into it,
+  and does not change LeonaCall.
+- Runtime implementation requires a separate authorized implementation lane.
+```
+
+### Alfred — technical / historical identifier only
+
+```txt
+Public assistant name = Viona.
+Alfred = technical / historical internal intelligence identifier only.
+
+Allowed:
+- internal technical references and non-user-facing identifiers
+  (for example VionaRec2AlfredPanel and the home.rec2.alfred i18n key namespace)
+- historical architecture and evidence
+
+Not allowed:
+- reintroducing Alfred as the default public assistant name
+- treating Alfred as a seventh universe
+- mass-renaming historical or internal identifiers solely for branding
+```
+
 ## Minh Khang — Language & Travel Shield
 
 Purpose:
@@ -764,7 +930,7 @@ Purpose:
 expat/travel concierge
 emotional support
 survival guidance
-general assistant
+general companion / concierge help as Companion & Concierge specialist under Viona (not the universal/general assistant)
 Leona Lite / Call Lite when real and clearly labeled
 ```
 
@@ -982,7 +1148,26 @@ Blueprint gốc đã nói không được giấu mãi các differentiator; nếu
 
 # 14. Design System V2
 
-Design direction:
+Current canonical product direction (Final 2.0.0 adoption; aligned with `docs/design/VIONA_DESIGN_MODE_LOCK.md`):
+
+```txt
+- dark premium; midnight / deep navy canvas
+- realistic cinematic / photorealistic imagery with valid source and usage rights
+- high readability; controlled glow; gold sparingly
+- V-core = abstract Viona AI identity; no fixed human avatar
+- six universes share one design language with semantic accents
+- web / tablet / phone are re-laid out per surface: web and tablet landscape 3x2,
+  tablet portrait 2x3, phone 2 columns (1 column when width or font scale requires)
+- Business operational surfaces may stay dense (table / list / sidebar)
+- concept imagery is not runtime proof; no fake production imagery or data
+- light mode remains presentation-only per the design-mode lock
+```
+
+Launcher scope: the 3x2 / 2x3 / 2-column rule above applies to the full six-universe launcher (Local, Travel, Academy, Business, Account, SOS). A compact primary four-entry launcher (Local, Travel, Academy, Business) is a presentation subset only, not the universe taxonomy; its 2x2 / 4-up layouts remain valid where a plan specifically describes that subset, and Account and SOS stay reachable through their canonical shell / contextual ownership as universes, not removed ones.
+
+Status: direction / law only. It does not claim the runtime UI is already migrated and authorizes no implementation. The Rules below remain valid; "not too dark/gold everywhere" is read as controlled glow and sparing gold, not as a light-first direction.
+
+Historical V2 design direction (HISTORICAL / SUPERSEDED IN SCOPE as the core-app mode and colour direction):
 
 ```txt
 Clean Tech Trust UI for core app.
@@ -1003,7 +1188,7 @@ Rules:
 - logo is signature, not decoration
 ```
 
-Color intent:
+Historical color intent (HISTORICAL / SUPERSEDED IN SCOPE for the core-app light direction; SOS stays visually distinct per the design-mode lock):
 
 ```txt
 Core: clean light / blue / navy / trust
