@@ -288,7 +288,7 @@ const LiveAiTeacherScreenGated = mvpGateByFlag(
 
 const LeonaCallScreenGated = mvpGateByFlag(
   'leonaAssistantEnabled',
-  'Leona Assistant Lite',
+  'Leona',
   MVP_LEONA_LITE_OFF_MSG,
   LeonaCallScreen
 );
