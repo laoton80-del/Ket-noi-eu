@@ -54,11 +54,11 @@ export const MVP_TRAVEL_LITE_OFF_MSG = 'Travel Lite is not available in this bui
 
 /** Consumer Leona Assistant Lite — not B2B receptionist production or merchant vision. */
 export const MVP_LEONA_LITE_OFF_MSG =
-  'Leona Assistant Lite is not available in this build. When enabled, Leona provides AI guidance only — not legal, medical, emergency, or human-operator service.' as const;
+  'Leona is not available in this build. When enabled, Leona provides AI guidance only — not legal, medical, emergency, or human-operator service.' as const;
 
 /** B2B AI Receptionist demo / merchant intake — not consumer Leona. */
 export const MVP_B2B_AI_RECEPTIONIST_DEMO_OFF_MSG =
-  'B2B AI Receptionist demo is not available in this build. Merchant vision and intake use a separate flag from Leona Assistant Lite.' as const;
+  'B2B AI Receptionist demo is not available in this build. Merchant vision and intake use a separate flag from Leona.' as const;
 
 /** Live card / production checkout for travel commerce. */
 export const MVP_LIVE_PAYMENT_OFF_MSG =
