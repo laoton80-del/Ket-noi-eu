@@ -146,6 +146,14 @@ Controlled autonomous execution does not mean Codex becomes the product owner, r
 
 Codex is the primary executor for this protocol. Cursor may temporarily execute an authorized lane when the operator explicitly substitutes it. Executor substitution does not reset or expand authorization. It does not change canonical repository, branch/HEAD requirements, file allowlist, mutation budget, remote rights, stop conditions, or authorization provenance. Authorization belongs to the lane and action, not to executor branding.
 
+### 3.8 Versioned local exact-create envelope dispatch
+
+The legacy envelope contract and every historical `CREATE_ALLOWLIST` or `MODIFY_ALLOWLIST` retain their existing meanings and acquire no typed local-create authority.
+
+A future envelope may be evaluated under local exact-create semantics only when `ENVELOPE_CONTRACT.schema` is exactly `VIONA_CODEX_ENVELOPE_V2_LOCAL_EXACT_CREATE`, `profile_id` is exactly `VIONA_BME_PACK_A_SOURCE_CREATE_V1`, and the separately governed `docs/product/VIONA_CODEX_AUTONOMOUS_EXECUTION_ENVELOPE_LOCAL_EXACT_CREATE_V2_SPEC.md` is adopted and applicable. Dispatch must validate that exact V2 pair before interpreting `LOCAL_CREATE_AUTHORITY`. An absent, unknown, or mixed marker, a legacy envelope carrying `LOCAL_CREATE_AUTHORITY`, or nonempty legacy create/modify paths under this profile must block.
+
+This routing rule does not establish a parser or executor implementation, authenticate an Operator message, authorize Pack A, or grant any filesystem, Git, provider, network, or remote effect. Every execution still requires an independently verified exact Operator authorization and every precondition required by the successor specification.
+
 ---
 
 ## 4. Autonomy Levels
