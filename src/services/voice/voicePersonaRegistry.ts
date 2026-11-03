@@ -31,6 +31,7 @@ function scenarioBaseTone(scenario: VoiceScenario): VoicePersonaTone {
       return 'formal';
     case 'nails':
     case 'restaurant':
+    case 'retail_taphoa':
       return 'friendly';
     case 'potraviny':
     case 'grocery_wholesale':
