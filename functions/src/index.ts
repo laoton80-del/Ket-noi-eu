@@ -96,9 +96,18 @@ async function receiptAllowsTopup(
   return { ok: true };
 }
 
-const AI_PROXY_REQUIRE_AUTH = process.env.AI_PROXY_REQUIRE_AUTH?.trim() !== '0';
+const AI_PROXY_AUTH_BYPASS_REQUESTED = process.env.AI_PROXY_REQUIRE_AUTH?.trim() === '0';
+// Local development only: both the exact emulator marker and this separate opt-in are required.
+const AI_PROXY_EMULATOR_ALLOW_UNAUTHENTICATED =
+  process.env.FUNCTIONS_EMULATOR === 'true' && process.env.AI_PROXY_EMULATOR_ALLOW_UNAUTHENTICATED?.trim() === '1';
+const AI_PROXY_REQUIRE_AUTH = !AI_PROXY_AUTH_BYPASS_REQUESTED || !AI_PROXY_EMULATOR_ALLOW_UNAUTHENTICATED;
+const AI_PROXY_BLOCK_ANONYMOUS = process.env.AI_PROXY_BLOCK_ANONYMOUS?.trim() === '1';
 const AI_PROXY_MAX_RPM = Math.max(0, Number.parseInt(process.env.AI_PROXY_MAX_RPM ?? '120', 10) || 120);
 const AI_PROXY_RATE_WINDOW_MS = Math.max(10_000, Number.parseInt(process.env.AI_PROXY_RATE_WINDOW_MS ?? '60000', 10) || 60_000);
+const ANALYZE_DOCUMENT_MAX_RPM = 20;
+const ANALYZE_DOCUMENT_RATE_WINDOW_MS = 60_000;
+const ANALYZE_DOCUMENT_MAX_COUNTRY_CONTEXT_CHARS = 100;
+const ANALYZE_DOCUMENT_MAX_OUTPUT_TOKENS = 1024;
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY?.trim() ?? '';
 const GEMINI_MODEL = process.env.GEMINI_MODEL?.trim() || 'gemini-1.5-flash';
 
@@ -239,10 +248,18 @@ export const b2bOrderStaffOps = onRequest(
 );
 
 export const aiProxy = onRequest(
-  { region: 'europe-west1', cors: true, timeoutSeconds: 120, memory: '1GiB' },
+  { region: 'europe-west1', cors: true, timeoutSeconds: 120, memory: '1GiB', maxInstances: 10 },
   async (req, res) => {
-    if (req.method !== 'POST') return void res.status(405).send('Method Not Allowed');
+    let signInProvider = 'not_evaluated';
     try {
+      if (AI_PROXY_AUTH_BYPASS_REQUESTED && AI_PROXY_REQUIRE_AUTH) {
+        logger.error('[aiProxy] require_auth_override_ignored', {
+          trust_surface: 'ai_proxy',
+          authRequired: true,
+          reason: 'AI_PROXY_REQUIRE_AUTH=0_requires_emulator_dev_opt_in',
+        });
+      }
+      if (req.method !== 'POST') return void res.status(405).send('Method Not Allowed');
       const byteLen = requestBodyByteLength(req);
       if (byteLen > AI_PROXY_MAX_BODY_BYTES) {
         logger.warn('[aiProxy] body_too_large', { byteLen, max: AI_PROXY_MAX_BODY_BYTES });
@@ -255,17 +272,27 @@ export const aiProxy = onRequest(
         return void res.status(acAi.status).json({ ok: false, error: acAi.error });
       }
 
-      let uid = 'anonymous';
-      if (AI_PROXY_REQUIRE_AUTH) {
-        const auth = await requireFirebaseBearerUser(req);
-        if (!auth.ok) {
+      // Resolve locally so imports and all other Firebase surfaces remain unchanged.
+      const { requireFirebaseBearerUserDecoded } = await import('./walletAuth');
+      const auth = await requireFirebaseBearerUserDecoded(req);
+      let uid: string | null = null;
+      if (!auth.ok) {
+        signInProvider = auth.error === 'missing_bearer_token' ? 'unauthenticated' : 'unknown';
+        if (AI_PROXY_REQUIRE_AUTH || auth.error !== 'missing_bearer_token') {
           logger.warn('[aiProxy] denied', { trust_surface: 'ai_proxy', gate: 'firebase_bearer', status: auth.status, error: auth.error });
           return void res.status(auth.status).json({ ok: false, error: auth.error });
         }
+        signInProvider = 'emulator_unauthenticated';
+      } else {
         uid = auth.uid;
+        const provider = auth.decoded.firebase?.sign_in_provider;
+        signInProvider = typeof provider === 'string' && provider.length > 0 ? provider : 'unknown';
+        if (AI_PROXY_BLOCK_ANONYMOUS && signInProvider === 'anonymous') {
+          return void res.status(403).json({ ok: false, error: 'anonymous_not_allowed' });
+        }
       }
 
-      if (AI_PROXY_MAX_RPM > 0 && uid !== 'anonymous') {
+      if (AI_PROXY_MAX_RPM > 0 && uid !== null) {
         const allowed = takeAiProxyRateSlot(uid, AI_PROXY_MAX_RPM, AI_PROXY_RATE_WINDOW_MS);
         if (!allowed) {
           logger.warn('[aiProxy] rate_limited', { firebaseUid: uid });
@@ -306,7 +333,6 @@ export const aiProxy = onRequest(
         /* ignore body read for logging */
       }
       const errMsg = err.message;
-      const errName = err.name;
       let httpStatus = 500;
       let errorCode = 'proxy_error';
       let openaiStatus: number | undefined;
@@ -323,10 +349,7 @@ export const aiProxy = onRequest(
       }
       logger.error('[aiProxy] error', {
         trust_surface: 'ai_proxy',
-        errName,
-        errMsg,
-        stack: err.stack,
-        proxyOp: proxyOp || '(none)',
+        proxyOp: proxyOp === 'chat' || proxyOp === 'stt' || proxyOp === 'tts' ? proxyOp : '(unknown)',
         responseError: errorCode,
         httpStatus,
         openaiStatus,
@@ -335,6 +358,8 @@ export const aiProxy = onRequest(
         return void res.status(httpStatus).json({ ok: false, error: errorCode, openaiStatus });
       }
       return void res.status(httpStatus).json({ ok: false, error: errorCode });
+    } finally {
+      logger.info('[aiProxy] request', { trust_surface: 'ai_proxy', signInProvider });
     }
   }
 );
@@ -382,10 +407,11 @@ function parseDocumentResultOrThrow(rawModelText: string): DocumentParseResult {
 }
 
 export const analyzeDocumentProxy = onRequest(
-  { region: 'europe-west1', cors: true, timeoutSeconds: 120, memory: '1GiB' },
+  { region: 'europe-west1', cors: true, timeoutSeconds: 120, memory: '1GiB', maxInstances: 10 },
   async (req, res) => {
-    if (req.method !== 'POST') return void res.status(405).send('Method Not Allowed');
+    let signInProvider = 'not_evaluated';
     try {
+      if (req.method !== 'POST') return void res.status(405).send('Method Not Allowed');
       const ac = await verifyAppCheckForRequest(req, 'aiProxy');
       if (!ac.ok) {
         logger.warn('[analyzeDocumentProxy] denied', {
@@ -397,8 +423,10 @@ export const analyzeDocumentProxy = onRequest(
         return void res.status(ac.status).json({ ok: false, error: ac.error });
       }
 
-      const who = await requireFirebaseBearerUser(req);
+      const { requireFirebaseBearerUserDecoded } = await import('./walletAuth');
+      const who = await requireFirebaseBearerUserDecoded(req);
       if (!who.ok) {
+        signInProvider = who.error === 'missing_bearer_token' ? 'unauthenticated' : 'unknown';
         logger.warn('[analyzeDocumentProxy] denied', {
           trust_surface: 'document_proxy',
           gate: 'firebase_bearer',
@@ -407,10 +435,22 @@ export const analyzeDocumentProxy = onRequest(
         });
         return void res.status(who.status).json({ ok: false, error: who.error });
       }
+      const provider = who.decoded.firebase?.sign_in_provider;
+      signInProvider = typeof provider === 'string' && provider.length > 0 ? provider : 'unknown';
+      if (AI_PROXY_BLOCK_ANONYMOUS && signInProvider === 'anonymous') {
+        return void res.status(403).json({ ok: false, error: 'anonymous_not_allowed' });
+      }
+      if (!takeAiProxyRateSlot(who.uid, ANALYZE_DOCUMENT_MAX_RPM, ANALYZE_DOCUMENT_RATE_WINDOW_MS, 'analyzeDocumentProxy')) {
+        return void res.status(429).json({ ok: false, error: 'rate_limited' });
+      }
 
       const body = (typeof req.body === 'object' && req.body !== null ? req.body : {}) as Record<string, unknown>;
       const base64Image = typeof body.base64Image === 'string' ? body.base64Image.trim() : '';
-      const countryContext = typeof body.countryContext === 'string' ? body.countryContext.trim() : '';
+      const rawCountryContext = typeof body.countryContext === 'string' ? body.countryContext : '';
+      if (rawCountryContext.length > ANALYZE_DOCUMENT_MAX_COUNTRY_CONTEXT_CHARS) {
+        return void res.status(400).json({ ok: false, error: 'country_context_too_long' });
+      }
+      const countryContext = rawCountryContext.trim();
       if (!base64Image) return void res.status(400).json({ ok: false, error: 'base64_image_required' });
       if (!countryContext) return void res.status(400).json({ ok: false, error: 'country_context_required' });
       if (base64Image.length > 7_000_000) return void res.status(413).json({ ok: false, error: 'image_too_large' });
@@ -448,6 +488,7 @@ export const analyzeDocumentProxy = onRequest(
         generationConfig: {
           temperature: 0.2,
           responseMimeType: 'application/json',
+          maxOutputTokens: ANALYZE_DOCUMENT_MAX_OUTPUT_TOKENS,
         },
       };
 
@@ -465,7 +506,6 @@ export const analyzeDocumentProxy = onRequest(
         logger.error('[analyzeDocumentProxy] gemini_http_error', {
           trust_surface: 'document_proxy',
           status: upstream.status,
-          bodyPreview: upstreamText.slice(0, 400),
         });
         return void res.status(502).json({ ok: false, error: 'gemini_upstream_http', upstreamStatus: upstream.status });
       }
@@ -494,14 +534,13 @@ export const analyzeDocumentProxy = onRequest(
                 : 500;
         return void res.status(status).json({ ok: false, error: err.message });
       }
-      const e = error instanceof Error ? error : new Error(String(error));
       logger.error('[analyzeDocumentProxy] proxy_error', {
         trust_surface: 'document_proxy',
-        errName: e.name,
-        errMsg: e.message,
-        stack: e.stack,
+        responseError: 'document_proxy_error',
       });
       return void res.status(500).json({ ok: false, error: 'document_proxy_error' });
+    } finally {
+      logger.info('[analyzeDocumentProxy] request', { trust_surface: 'document_proxy', signInProvider });
     }
   }
 );

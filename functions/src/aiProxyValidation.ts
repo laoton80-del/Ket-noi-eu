@@ -7,7 +7,8 @@ const CHAT_MAX_MESSAGES = 48;
 const CHAT_MAX_TOTAL_TEXT_CHARS = 200_000;
 const CHAT_MAX_SINGLE_STRING = 100_000;
 const CHAT_MAX_IMAGE_DATA_URL_CHARS = 4_500_000;
-const CHAT_MAX_IMAGE_PARTS = 8;
+const CHAT_MAX_IMAGE_PARTS = 2;
+const CHAT_MAX_OUTPUT_TOKENS = 512;
 
 const STT_MAX_BASE64_CHARS = 12_000_000;
 const TTS_MAX_CHARS = 4096;
@@ -35,8 +36,8 @@ function countTextInContent(content: unknown): number {
   return n;
 }
 
-function validateImageParts(content: unknown): { ok: true } | { ok: false; error: string } {
-  if (typeof content === 'string' || !Array.isArray(content)) return { ok: true };
+function validateImageParts(content: unknown): { ok: true; imageCount: number } | { ok: false; error: string } {
+  if (typeof content === 'string' || !Array.isArray(content)) return { ok: true, imageCount: 0 };
   let images = 0;
   for (const part of content) {
     if (!part || typeof part !== 'object') continue;
@@ -52,7 +53,7 @@ function validateImageParts(content: unknown): { ok: true } | { ok: false; error
       return { ok: false, error: 'chat_image_url_not_allowed' };
     }
   }
-  return { ok: true };
+  return { ok: true, imageCount: images };
 }
 
 export type SanitizedChatMessage = { role: 'system' | 'user' | 'assistant'; content: unknown };
@@ -66,6 +67,7 @@ export function parseAndValidateChatPayload(body: Record<string, unknown>):
 
   const messages: SanitizedChatMessage[] = [];
   let totalText = 0;
+  let totalImages = 0;
   for (const m of raw) {
     if (!m || typeof m !== 'object') return { ok: false, error: 'chat_message_invalid' };
     const role = (m as { role?: string }).role;
@@ -80,6 +82,8 @@ export function parseAndValidateChatPayload(body: Record<string, unknown>):
     } else if (Array.isArray(content)) {
       const img = validateImageParts(content);
       if (!img.ok) return img;
+      totalImages += img.imageCount;
+      if (totalImages > CHAT_MAX_IMAGE_PARTS) return { ok: false, error: 'chat_too_many_images' };
       for (const part of content) {
         if (!part || typeof part !== 'object') return { ok: false, error: 'chat_part_invalid' };
         const p = part as { type?: string; text?: string };
@@ -105,7 +109,7 @@ export function parseAndValidateChatPayload(body: Record<string, unknown>):
 
   let maxTokens = typeof body.maxTokens === 'number' ? body.maxTokens : 240;
   if (!Number.isFinite(maxTokens)) maxTokens = 240;
-  maxTokens = Math.min(8192, Math.max(1, Math.floor(maxTokens)));
+  maxTokens = Math.min(CHAT_MAX_OUTPUT_TOKENS, Math.max(1, Math.floor(maxTokens)));
 
   return { ok: true, messages, temperature, maxTokens };
 }
