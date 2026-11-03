@@ -1,8 +1,9 @@
-import { TourismBookingStatus } from '@prisma/client';
+import { LlmRouterTaskType, TourismBookingStatus } from '@prisma/client';
 import OpenAI from 'openai';
 
 import { CREDIT_EXCHANGE_RATE_USD } from '../../config/pricingConfig';
 import { getPrisma } from '../../lib/prisma';
+import { assertLlmProviderAdmission, LlmProviderAdmissionDeniedError } from '../ai/llmProviderAdmissionGate';
 
 export class ViralWrapError extends Error {
   constructor(
@@ -57,6 +58,7 @@ function languageNameForPrompt(code: string): string {
 }
 
 async function generateHumorousViralLine(input: {
+  readonly userId: string;
   readonly languageName: string;
   readonly destinationLabel: string;
   readonly tripVigSpent: number;
@@ -64,6 +66,18 @@ async function generateHumorousViralLine(input: {
   readonly moneySavedUsd: number;
   readonly aiSessions: number;
 }): Promise<string> {
+  try {
+    assertLlmProviderAdmission({
+      taskType: LlmRouterTaskType.COMPLEX_MARKETING,
+      userId: input.userId,
+    });
+  } catch (error) {
+    if (error instanceof LlmProviderAdmissionDeniedError) {
+      throw new ViralWrapError(error.message, 503);
+    }
+    throw error;
+  }
+
   const apiKey = process.env.OPENAI_API_KEY?.trim();
   if (!apiKey || apiKey.length === 0) {
     throw new ViralWrapError('OPENAI_API_KEY is not configured', 503);
@@ -170,6 +184,7 @@ export async function generateUserTripSummary(userId: string, tripId: string): P
     `${booking.business.name} · ${booking.service.title}`.slice(0, 120) || 'VIONA Vietnam';
 
   const viralTagline = await generateHumorousViralLine({
+    userId,
     languageName,
     destinationLabel,
     tripVigSpent,
