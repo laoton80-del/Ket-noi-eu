@@ -11,6 +11,7 @@ import {
 import { getPrisma } from '../lib/prisma';
 import { AIGatewayInsufficientVigError, assertMinimumSpendableVig } from '../services/ai/AIGateway';
 import { createRoutedChatCompletion } from '../services/ai/AIRouterService';
+import { LlmProviderAdmissionDeniedError } from '../services/ai/llmProviderAdmissionGate';
 import { translateTravelPhraseToVietnamese } from '../services/ai/TranslationService';
 import { jsonFail, jsonOk } from '../utils/apiEnvelope';
 
@@ -253,6 +254,10 @@ export async function postTranslateTravelPhrase(req: Request, res: Response): Pr
     const result = await translateTravelPhraseToVietnamese(trimmed, sourceLangHint, { userId });
     jsonOk(res, { translatedText: result.translatedText, fromCache: result.fromCache });
   } catch (e) {
+    if (e instanceof LlmProviderAdmissionDeniedError) {
+      jsonFail(res, e.message, e.httpStatus, e.code);
+      return;
+    }
     const msg = e instanceof Error ? e.message : '';
     if (msg.includes('OPENAI_API_KEY')) {
       jsonFail(res, 'Translation service unavailable', 503);
@@ -327,6 +332,10 @@ export async function postChatCompletion(req: Request, res: Response): Promise<v
 
     jsonOk(res, completion);
   } catch (e) {
+    if (e instanceof LlmProviderAdmissionDeniedError) {
+      jsonFail(res, e.message, e.httpStatus, e.code);
+      return;
+    }
     const msg = e instanceof Error ? e.message : '';
     if (msg.includes('OPENAI_API_KEY')) {
       jsonFail(res, 'AI chat service unavailable', 503);

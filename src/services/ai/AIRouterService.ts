@@ -12,6 +12,7 @@ import type {
 import { LlmRouterTaskType } from '@prisma/client';
 
 import { getPrisma } from '../../lib/prisma';
+import { assertLlmProviderAdmission } from './llmProviderAdmissionGate';
 
 /** Task taxonomy — re-exported for callers (`LlmRouterTaskType` is the Prisma / DB enum). */
 export { LlmRouterTaskType as AIRouterTaskType };
@@ -74,17 +75,21 @@ function persistLlmUsageLog(input: Readonly<{
 
 export type RoutedChatCompletionInput = Readonly<{
   taskType: LlmRouterTaskType;
-  /** When present (e.g. authenticated API route), stored for audit. */
+  /** Required by paid-provider admission; also stored for audit after a completion. */
   userId?: string | null;
   params: Omit<ChatCompletionCreateParamsNonStreaming, 'model'>;
 }>;
 
 /**
- * Single entry for routed chat completions — injects `model` from {@link resolveRoutedModel}, logs tokens.
+ * Admission precedes key access, SDK construction and every routed provider attempt.
+ * Denial throws; callers may use an honest local fallback, never a fabricated completion.
+ * Token logging after success is telemetry, not a budget reservation or hard-dollar cap.
  */
 export async function createRoutedChatCompletion(
   input: RoutedChatCompletionInput
 ): Promise<ChatCompletion> {
+  assertLlmProviderAdmission({ taskType: input.taskType, userId: input.userId });
+
   const apiKey = process.env.OPENAI_API_KEY?.trim();
   if (!apiKey) {
     throw new Error('OPENAI_API_KEY is not configured');
