@@ -237,7 +237,8 @@ async function main(): Promise<void> {
     const hash = (bytes: string | Buffer) => createHash('sha256').update(bytes).digest('hex').toUpperCase();
     assert.equal(hash(protectedIndex), '7D76BA04105498556A5B3C3879D3DD332FCDEC2FBDBFA2B4E058FAE544ECFC71');
     assert.equal(hash(readFileSync(resolve(root, 'functions/src/walletAuth.ts'))), 'B559CF7A6F51BE6AA56163B3E5EAAF50062A536DADB8DDB9A2EE9DD3467DF84D');
-    assert.equal(hash(readFileSync(resolve(root, 'functions/lib/index.js'))), '6619F7642D30AF0D437311FE7A3C0E5B2830F98449E7E08E4E20FCA475F9C2CF');
+    // updated after functions/lib rebuild d2223d8
+    assert.equal(hash(readFileSync(resolve(root, 'functions/lib/index.js'))), 'E0AD5F20C5BCC0398137943C89B84C4077A91BA1306F9580A0A08644AD135B5D');
   });
   for (const [requested, expected] of [[undefined, 240], [512, 512], [513, 512], [8192, 512], [3.8, 3], [-1, 1], [NaN, 240], [Infinity, 240]] as const) {
     await test(`chat maxTokens ${String(requested)} is bounded at ${expected}`, () => {

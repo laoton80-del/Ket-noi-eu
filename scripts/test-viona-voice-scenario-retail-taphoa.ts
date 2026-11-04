@@ -193,7 +193,8 @@ async function main(): Promise<void> {
     const expected = {
       'functions/src/b2b/voice/processVoiceOrchestrationRequest.ts': '01A89EA9BD248F22F1B7F7BB72CA178581999E5CF87803E205FBC7CB7065CC2A',
       'src/services/voice/resolveVoicePersona.ts': '4DF8A5528C6EC13302DC7AC13493C26501F56C46E73B56F0AA61E1AEC3B7357C',
-      'functions/lib/index.js': '6619F7642D30AF0D437311FE7A3C0E5B2830F98449E7E08E4E20FCA475F9C2CF',
+      // updated after functions/lib rebuild d2223d8
+      'functions/lib/index.js': 'E0AD5F20C5BCC0398137943C89B84C4077A91BA1306F9580A0A08644AD135B5D',
     };
     for (const [file, digest] of Object.entries(expected)) {
       assert.equal(createHash('sha256').update(readFileSync(resolve(root, file))).digest('hex').toUpperCase(), digest);
