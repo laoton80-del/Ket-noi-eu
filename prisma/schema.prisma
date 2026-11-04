@@ -1262,8 +1262,8 @@ model AiModelPrice {
   calculationVersion             String
   effectiveFrom                  DateTime
   effectiveTo                    DateTime?
-  inputMicrousdPerToken          BigInt            @default(0)
-  outputMicrousdPerToken         BigInt            @default(0)
+  inputMicrousdPerMillionTokens  BigInt            @default(0)
+  outputMicrousdPerMillionTokens BigInt            @default(0)
   audioInputMicrousdPerSecond    BigInt            @default(0)
   audioOutputMicrousdPerSecond   BigInt            @default(0)
   imageMicrousdPerUnit           BigInt            @default(0)
