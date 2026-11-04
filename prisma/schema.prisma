@@ -1292,6 +1292,11 @@ model AiCostOperation {
   windowStartDay      DateTime
   windowStartMonth    DateTime
   dispatchedAt        DateTime?
+  providerRequestId   String?
+  usageInputTokens    BigInt?
+  usageOutputTokens   BigInt?
+  actualCostMicrousd  BigInt?
+  settledAt           DateTime?
   expiresAt           DateTime
   createdAt           DateTime            @default(now())
   updatedAt           DateTime            @updatedAt
@@ -1301,6 +1306,8 @@ model AiCostOperation {
 
   @@unique([subjectId, idempotencyKey])
   @@index([status, expiresAt])
+  @@index([status, dispatchedAt])
+  @@index([subjectId, status])
   @@index([windowStartDay])
   @@index([windowStartMonth])
 }
