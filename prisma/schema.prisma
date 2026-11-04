@@ -1252,3 +1252,85 @@ model VionaRequestExecutionAttempt {
   @@index([state, leaseExpiresAt])
   @@index([correlationId])
 }
+
+/// P0-A1 Cost Governor: platform-provider cost lifecycle only, in integer micro-USD.
+/// This model is unrelated to user VIO or credit balances and does not rename existing identifiers.
+model AiModelPrice {
+  id                             String            @id @default(uuid())
+  provider                       String
+  model                          String
+  calculationVersion             String
+  effectiveFrom                  DateTime
+  effectiveTo                    DateTime?
+  inputMicrousdPerToken          BigInt            @default(0)
+  outputMicrousdPerToken         BigInt            @default(0)
+  audioInputMicrousdPerSecond    BigInt            @default(0)
+  audioOutputMicrousdPerSecond   BigInt            @default(0)
+  imageMicrousdPerUnit           BigInt            @default(0)
+  createdAt                      DateTime          @default(now())
+  updatedAt                      DateTime          @updatedAt
+
+  operations AiCostOperation[]
+
+  @@unique([provider, model, effectiveFrom])
+  @@index([provider, model, effectiveFrom])
+}
+
+/// One idempotent provider-cost attempt. Runtime stores UTC windows at reserve time.
+model AiCostOperation {
+  id                  String              @id @default(uuid())
+  subjectId           String
+  idempotencyKey      String
+  rail                String
+  provider            String
+  model               String
+  operationKind       String
+  priceVersionId      String
+  reservedMicrousd    BigInt
+  settledMicrousd     BigInt              @default(0)
+  status              String              @default("RESERVED")
+  windowStartDay      DateTime
+  windowStartMonth    DateTime
+  dispatchedAt        DateTime?
+  expiresAt           DateTime
+  createdAt           DateTime            @default(now())
+  updatedAt           DateTime            @updatedAt
+
+  priceVersion  AiModelPrice       @relation(fields: [priceVersionId], references: [id], onDelete: Restrict)
+  ledgerEntries AiCostLedgerEntry[]
+
+  @@unique([subjectId, idempotencyKey])
+  @@index([status, expiresAt])
+  @@index([windowStartDay])
+  @@index([windowStartMonth])
+}
+
+/// Append-only reserve, settle, release, and adjustment events for one cost operation.
+model AiCostLedgerEntry {
+  id                String          @id @default(uuid())
+  operationId       String
+  entryType         String
+  amountMicrousd    BigInt
+  previousStatus    String?
+  nextStatus        String
+  reason            String?
+  createdAt         DateTime        @default(now())
+
+  operation AiCostOperation @relation(fields: [operationId], references: [id], onDelete: Restrict)
+
+  @@index([operationId, createdAt])
+}
+
+/// Counter state only. Runtime environment variables supply caps; no cap, VIO, or credit value is stored here.
+model AiCostBudgetCounter {
+  id                String   @id @default(uuid())
+  scope             String
+  windowStart       DateTime
+  reservedMicrousd  BigInt   @default(0)
+  settledMicrousd   BigInt   @default(0)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@unique([scope, windowStart])
+  @@index([windowStart])
+}
