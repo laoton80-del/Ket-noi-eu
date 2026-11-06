@@ -1,0 +1,82 @@
+name: VIONA P0 CI
+
+on:
+  push:
+    branches:
+      - integration/**
+      - candidate/**
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: viona-p0-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  static-and-legacy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+          fetch-depth: 1
+      - name: Setup Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: "24"
+          cache: npm
+      - name: Install root dependencies
+        run: npm ci
+      - name: Install functions dependencies
+        run: npm ci --prefix functions
+      - name: Typecheck root
+        run: npm run typecheck
+      - name: Typecheck functions
+        run: npm --prefix functions run typecheck
+      - name: Test cost governor core
+        run: npx tsx scripts/test-viona-cost-governor-core.ts
+      - name: Test A0 admission gate
+        run: npx tsx scripts/test-viona-llm-provider-admission-gate.ts
+      - name: Test A0b direct caller containment
+        run: npx tsx scripts/test-viona-p0-a0b-direct-caller-containment.ts
+      - name: Test A0c Firebase proxy soft caps
+        run: npx tsx --tsconfig functions/tsconfig.json scripts/test-viona-aiproxy-soft-caps.ts
+      - name: Test A0d no paid fallback
+        run: npx tsx scripts/test-viona-minhkhang-no-paid-fallback.ts
+      - name: Test A0e voice scenario
+        run: npx tsx scripts/test-viona-voice-scenario-retail-taphoa.ts
+
+  postgres:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        tz:
+          - UTC
+          - Europe/Prague
+          - Pacific/Auckland
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+          fetch-depth: 1
+      - name: Setup Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: "24"
+          cache: npm
+      - name: Install root dependencies
+        run: npm ci
+      - name: Install PostgreSQL test tools
+        run: npm ci --prefix scripts/ci/pg-test-tools
+      - name: Test PostgreSQL cost governor
+        env:
+          VIONA_TEST_PG_TOOLS_DIR: ${{ github.workspace }}/scripts/ci/pg-test-tools
+          VIONA_TEST_PG_TIME_ZONE: ${{ matrix.tz }}
+        run: npx tsx scripts/test-viona-cost-governor-postgres.ts
