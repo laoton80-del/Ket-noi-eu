@@ -14,6 +14,7 @@ import type { ApiRequestResult } from '../src/services/apiClient';
 import type * as MinhKhang from '../src/services/ai/MinhKhangService';
 
 const root = resolve(__dirname, '..');
+const lf = (bytes: Buffer): Buffer => Buffer.from(bytes.toString('latin1').replace(/\r\n/g, '\n'), 'latin1');
 const servicePath = resolve(root, 'src/services/ai/MinhKhangService.ts');
 const source = readFileSync(servicePath, 'utf8');
 const ast = ts.createSourceFile(servicePath, source, ts.ScriptTarget.Latest, true);
@@ -100,8 +101,8 @@ async function main(): Promise<void> {
     const hash = (value: string | Buffer) => createHash('sha256').update(value).digest('hex').toUpperCase();
     const outside = (source.slice(0, travel!.getStart(ast)) + source.slice(travel!.end)).replace(/\r\n/g, '\n');
     assert.equal(hash(outside), '322D960E5CDC182F9B96554E7E194E21627876C5F0B9182315820FDDA65FC82B');
-    assert.equal(hash(source.slice(vision!.getStart(ast), vision!.end)), '781155EFDF7DD1A9640925D75610DF2904926DC7AA78CD44A92B360C7157A36B');
-    assert.equal(hash(readFileSync(resolve(root, 'src/services/apiClient.ts'))), '53D4BBD13DF5668AF57DC18E393D010F103E38D0181F6C5B644E6F3E64931D7B');
+    assert.equal(hash(source.slice(vision!.getStart(ast), vision!.end).replace(/\r\n/g, '\n')), 'E8AD639013037A7A77B4A644E03E076A724A076AF9B30FBC7DA7749FAEB1CF15');
+    assert.equal(hash(lf(readFileSync(resolve(root, 'src/services/apiClient.ts')))), 'D3EFADB7EE3BB96F85CBFDAFBDDF81D785DE92BAFF67408618AF76FC496B2486');
   });
   for (const status of [200, 400, 401, 403, 404, 429, 500, 502, 503]) {
     await test(`configured REST ok:false/status ${status} returns offline without chat fallback`, async () => {

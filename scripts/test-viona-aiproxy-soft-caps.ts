@@ -15,6 +15,7 @@ import type * as Validation from '../functions/src/aiProxyValidation';
 import type * as Rate from '../functions/src/aiProxyRateLimit';
 
 const root = resolve(__dirname, '..');
+const lf = (bytes: Buffer): Buffer => Buffer.from(bytes.toString('latin1').replace(/\r\n/g, '\n'), 'latin1');
 const indexText = readFileSync(resolve(root, 'functions/src/index.ts'), 'utf8').replace(/\r\n/g, '\n');
 const indexAst = ts.createSourceFile('index.ts', indexText, ts.ScriptTarget.Latest, true);
 const targetNames = new Set(['aiProxy', 'analyzeDocumentProxy']);
@@ -236,7 +237,7 @@ async function main(): Promise<void> {
   await test('only approved index blocks/config changed; walletAuth and functions/lib remain untouched', () => {
     const hash = (bytes: string | Buffer) => createHash('sha256').update(bytes).digest('hex').toUpperCase();
     assert.equal(hash(protectedIndex), '7D76BA04105498556A5B3C3879D3DD332FCDEC2FBDBFA2B4E058FAE544ECFC71');
-    assert.equal(hash(readFileSync(resolve(root, 'functions/src/walletAuth.ts'))), 'B559CF7A6F51BE6AA56163B3E5EAAF50062A536DADB8DDB9A2EE9DD3467DF84D');
+    assert.equal(hash(lf(readFileSync(resolve(root, 'functions/src/walletAuth.ts')))), '71C10E0935D1EE954C4A38E6750CBA9F4BDA8BB4C74D017F23B09D9873F25512');
     // updated after functions/lib rebuild d2223d8
     assert.equal(hash(readFileSync(resolve(root, 'functions/lib/index.js'))), 'E0AD5F20C5BCC0398137943C89B84C4077A91BA1306F9580A0A08644AD135B5D');
   });

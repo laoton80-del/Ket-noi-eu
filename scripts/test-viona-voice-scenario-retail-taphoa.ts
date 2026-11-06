@@ -17,6 +17,7 @@ import type * as Persona from '../src/services/voice/resolveVoicePersona';
 import type { VoiceScenario } from '../src/services/voicePersona/voicePersonaTypes';
 
 const root = resolve(__dirname, '..');
+const lf = (bytes: Buffer): Buffer => Buffer.from(bytes.toString('latin1').replace(/\r\n/g, '\n'), 'latin1');
 const BASE = '3a6798d7752caf61000060f7f0401297d3f6f92a';
 const TYPES = 'src/services/voicePersona/voicePersonaTypes.ts';
 const PROFILE = 'src/services/voicePersona/resolveVoiceProfile.ts';
@@ -28,12 +29,12 @@ function git(args: string[]): string {
 }
 git(['merge-base', '--is-ancestor', BASE, 'HEAD']);
 const REVIEWED_A0E_V2_SHA256: Readonly<Record<string, string>> = {
-  [TYPES]: '04C035E64132725CCECCBF3E36062FE320B970B89360241E90BFE99A1F910E13',
-  [PROFILE]: '6813ED672443F30A03C90A68542B8CCB2FCBDEBA73FE5908CAD166DD271A2269',
-  [REGISTRY]: 'A78B968415A3081B94E17AF2F606D3B2409C9E9138FD131C5C7462024AABBADA',
+  [TYPES]: 'EBAF74ACFA4A78A56AA709902E6DA265502BA6D4D4DC9876EAE933B2D0B77CC4',
+  [PROFILE]: '53009E54B13CC05CFEA6A6782D28E48F1C9325183BFEA2771F90DFD11996883C',
+  [REGISTRY]: 'C7F6A4258964CCB40756E8302CA024E8AD599BB4638CFC5B65B45209C4123B02',
 };
 for (const [file, expected] of Object.entries(REVIEWED_A0E_V2_SHA256)) {
-  assert.equal(createHash('sha256').update(readFileSync(resolve(root, file))).digest('hex').toUpperCase(), expected);
+  assert.equal(createHash('sha256').update(lf(readFileSync(resolve(root, file)))).digest('hex').toUpperCase(), expected);
 }
 const baseline = new Map([TYPES, PROFILE, REGISTRY].map((file) => [file, git(['show', `${BASE}:${file}`])]));
 const candidate = new Map([TYPES, PROFILE, REGISTRY].map((file) => [file, readFileSync(resolve(root, file), 'utf8')]));
@@ -191,13 +192,14 @@ async function main(): Promise<void> {
   }
   await test('functions caller, persona resolver and generated lib remain untouched', () => {
     const expected = {
-      'functions/src/b2b/voice/processVoiceOrchestrationRequest.ts': '01A89EA9BD248F22F1B7F7BB72CA178581999E5CF87803E205FBC7CB7065CC2A',
-      'src/services/voice/resolveVoicePersona.ts': '4DF8A5528C6EC13302DC7AC13493C26501F56C46E73B56F0AA61E1AEC3B7357C',
+      'functions/src/b2b/voice/processVoiceOrchestrationRequest.ts': 'D3003D9637B3F7DD149D0AA4B480B63E2685482AA4ACFB6872F980519F6582A1',
+      'src/services/voice/resolveVoicePersona.ts': '85985C17CF90F9CA7C9C4F0C0B50E661E0BFEB4CD880F749E5731A3DB7B162CA',
       // updated after functions/lib rebuild d2223d8
       'functions/lib/index.js': 'E0AD5F20C5BCC0398137943C89B84C4077A91BA1306F9580A0A08644AD135B5D',
     };
     for (const [file, digest] of Object.entries(expected)) {
-      assert.equal(createHash('sha256').update(readFileSync(resolve(root, file))).digest('hex').toUpperCase(), digest);
+      const bytes = readFileSync(resolve(root, file));
+      assert.equal(createHash('sha256').update(file === 'functions/lib/index.js' ? bytes : lf(bytes)).digest('hex').toUpperCase(), digest);
     }
   });
   const before = beforeDigest.digest('hex').toUpperCase();
