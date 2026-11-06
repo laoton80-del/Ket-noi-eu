@@ -60,6 +60,7 @@ function harness(options: {
     process: { env },
     Error,
     TypeError,
+    AbortSignal: { timeout: () => ({}) },
     console: { info() {}, error() {} },
   }, { codeGeneration: { strings: false, wasm: false } });
 
@@ -118,10 +119,27 @@ function harness(options: {
   const prismaModule = { getPrisma: () => { counts.prismaReads += 1; return prisma; } };
   const prismaEnums = { LlmRouterTaskType: TASK_TYPES, Prisma: {}, TxStatus: {}, TxType: {} };
   const gate = load<typeof Gate>('src/services/ai/llmProviderAdmissionGate.ts');
+  const governor = {
+    createServerIdempotencyKey: () => 'synthetic-governor-key',
+    reserve: async () => ({ decision: 'ALLOW_RESERVED' as const, operation: { id: 'synthetic-operation' }, providerTimeoutMs: 1 }),
+    markDispatching: async () => true,
+    settle: async () => ({ applied: true }),
+    release: async () => true,
+    markOutcomeUnknown: async () => true,
+  };
+  const costGovernor = {
+    CostGovernorDeniedError: gate.LlmProviderAdmissionDeniedError,
+    assertCostGovernorReservation: (result: { decision: string }) => {
+      if (result.decision !== 'ALLOW_RESERVED') throw new gate.LlmProviderAdmissionDeniedError('disabled');
+    },
+    estimateInputTokensUpperBound: () => 1n,
+    getCostGovernor: () => governor,
+  };
   const router = load<typeof Router>('src/services/ai/AIRouterService.ts', {
     openai: FakeOpenAI,
     '@prisma/client': prismaEnums,
     '../../lib/prisma': prismaModule,
+    './CostGovernorService': costGovernor,
     './llmProviderAdmissionGate': gate,
   });
   const translation = load<typeof Translation>('src/services/ai/TranslationService.ts', {

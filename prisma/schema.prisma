@@ -1286,6 +1286,9 @@ model AiCostOperation {
   model               String
   operationKind       String
   priceVersionId      String
+  inputMicrousdPerMillionTokens  BigInt
+  outputMicrousdPerMillionTokens BigInt
+  providerTimeoutMs              BigInt
   reservedMicrousd    BigInt
   settledMicrousd     BigInt              @default(0)
   status              String              @default("RESERVED")

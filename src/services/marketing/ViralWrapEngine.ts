@@ -3,6 +3,12 @@ import OpenAI from 'openai';
 
 import { CREDIT_EXCHANGE_RATE_USD } from '../../config/pricingConfig';
 import { getPrisma } from '../../lib/prisma';
+import {
+  assertCostGovernorReservation,
+  CostGovernorDeniedError,
+  estimateInputTokensUpperBound,
+  getCostGovernor,
+} from '../ai/CostGovernorService';
 import { assertLlmProviderAdmission, LlmProviderAdmissionDeniedError } from '../ai/llmProviderAdmissionGate';
 
 export class ViralWrapError extends Error {
@@ -57,6 +63,12 @@ function languageNameForPrompt(code: string): string {
   return map[c] ?? 'English';
 }
 
+function isClearProviderFourXx(error: unknown): boolean {
+  if (typeof error !== 'object' || error === null || !('status' in error)) return false;
+  const status = (error as Readonly<{ status?: unknown }>).status;
+  return typeof status === 'number' && Number.isInteger(status) && status >= 400 && status < 500 && status !== 408 && status !== 409;
+}
+
 async function generateHumorousViralLine(input: {
   readonly userId: string;
   readonly languageName: string;
@@ -66,26 +78,7 @@ async function generateHumorousViralLine(input: {
   readonly moneySavedUsd: number;
   readonly aiSessions: number;
 }): Promise<string> {
-  try {
-    assertLlmProviderAdmission({
-      taskType: LlmRouterTaskType.COMPLEX_MARKETING,
-      userId: input.userId,
-    });
-  } catch (error) {
-    if (error instanceof LlmProviderAdmissionDeniedError) {
-      throw new ViralWrapError(error.message, 503);
-    }
-    throw error;
-  }
-
-  const apiKey = process.env.OPENAI_API_KEY?.trim();
-  if (!apiKey || apiKey.length === 0) {
-    throw new ViralWrapError('OPENAI_API_KEY is not configured', 503);
-  }
-  const model = process.env.OPENAI_MODEL?.trim() || 'gpt-4o-mini';
-  const client = new OpenAI({ apiKey });
-
-  const user = [
+  const prompt = [
     'Write ONE short, punchy, slightly humorous line for an Instagram Story “travel wrap” card.',
     `Output language: ${input.languageName} only.`,
     `Destination context: ${input.destinationLabel}.`,
@@ -95,20 +88,122 @@ async function generateHumorousViralLine(input: {
     `AI voice/translate sessions on trip ${input.aiSessions}.`,
     'Max 140 characters. No hashtags in the line. No markdown.',
   ].join(' ');
+  const messages = [
+    {
+      role: 'system' as const,
+      content:
+        'You are VIONA’s viral social copywriter. Be fun, confident, never mean-spirited, no slurs, no medical claims.',
+    },
+    { role: 'user' as const, content: prompt },
+  ];
 
-  const completion = await client.chat.completions.create({
-    model,
-    temperature: 0.9,
-    max_tokens: 120,
-    messages: [
-      {
-        role: 'system',
-        content:
-          'You are VIONA’s viral social copywriter. Be fun, confident, never mean-spirited, no slurs, no medical claims.',
-      },
-      { role: 'user', content: user },
-    ],
-  });
+  const governor = getCostGovernor();
+  let reservation: Awaited<ReturnType<typeof governor.reserve>>;
+  let model: string;
+  try {
+    assertLlmProviderAdmission({
+      taskType: LlmRouterTaskType.COMPLEX_MARKETING,
+      userId: input.userId,
+    });
+    model = process.env.OPENAI_MODEL?.trim() || 'gpt-4o-mini';
+    reservation = await governor.reserve({
+      subjectId: input.userId,
+      idempotencyKey: governor.createServerIdempotencyKey(),
+      rail: 'EXPRESS',
+      provider: 'openai',
+      model,
+      operationKind: 'VIRAL_WRAP',
+      inputTokensUpperBound: estimateInputTokensUpperBound(messages),
+      outputTokens: 120n,
+    });
+    assertCostGovernorReservation(reservation);
+  } catch (error) {
+    if (error instanceof LlmProviderAdmissionDeniedError) {
+      throw new ViralWrapError(error.message, 503);
+    }
+    throw error;
+  }
+
+  let client: OpenAI;
+  let timeoutSignal: AbortSignal;
+  try {
+    const apiKey = process.env.OPENAI_API_KEY?.trim();
+    if (!apiKey || apiKey.length === 0) {
+      throw new ViralWrapError('OPENAI_API_KEY is not configured', 503);
+    }
+    if (typeof AbortSignal === 'undefined' || typeof AbortSignal.timeout !== 'function') {
+      throw new CostGovernorDeniedError('DENY_LEDGER_UNAVAILABLE');
+    }
+    timeoutSignal = AbortSignal.timeout(reservation.providerTimeoutMs);
+    client = new OpenAI({ apiKey, maxRetries: 0 });
+  } catch (error) {
+    try {
+      await governor.release({ operationId: reservation.operation.id, reason: 'reserved_not_dispatched' });
+    } catch (releaseError) {
+      if (releaseError instanceof LlmProviderAdmissionDeniedError) {
+        throw new ViralWrapError(releaseError.message, 503);
+      }
+      throw releaseError;
+    }
+    if (error instanceof LlmProviderAdmissionDeniedError) throw new ViralWrapError(error.message, 503);
+    throw error;
+  }
+
+  try {
+    const dispatched = await governor.markDispatching(reservation.operation.id);
+    if (!dispatched) throw new CostGovernorDeniedError('DUPLICATE_IN_PROGRESS');
+  } catch (error) {
+    try {
+      await governor.release({ operationId: reservation.operation.id, reason: 'reserved_not_dispatched' });
+    } catch (releaseError) {
+      if (releaseError instanceof LlmProviderAdmissionDeniedError) {
+        throw new ViralWrapError(releaseError.message, 503);
+      }
+      throw releaseError;
+    }
+    if (error instanceof LlmProviderAdmissionDeniedError) throw new ViralWrapError(error.message, 503);
+    throw error;
+  }
+
+  let completion;
+  try {
+    completion = await client.chat.completions.create(
+      { model, temperature: 0.9, max_tokens: 120, messages },
+      { signal: timeoutSignal }
+    );
+  } catch (error) {
+    try {
+      if (isClearProviderFourXx(error)) {
+        await governor.release({ operationId: reservation.operation.id, reason: 'provider_http_4xx' });
+      } else {
+        await governor.markOutcomeUnknown(reservation.operation.id);
+      }
+    } catch (governorError) {
+      if (governorError instanceof LlmProviderAdmissionDeniedError) {
+        throw new ViralWrapError(governorError.message, 503);
+      }
+      throw governorError;
+    }
+    throw error;
+  }
+
+  try {
+    await governor.settle({
+      operationId: reservation.operation.id,
+      providerRequestId: completion.id,
+      usage: completion.usage
+        ? { inputTokens: completion.usage.prompt_tokens, outputTokens: completion.usage.completion_tokens }
+        : null,
+    });
+  } catch (error) {
+    try {
+      await governor.markOutcomeUnknown(reservation.operation.id);
+    } catch {
+      // Do not retry a paid provider call when durable settlement is unavailable.
+    }
+    if (error instanceof LlmProviderAdmissionDeniedError) throw new ViralWrapError(error.message, 503);
+    throw error;
+  }
 
   const line = completion.choices[0]?.message?.content?.trim().replace(/^["']|["']$/g, '') ?? '';
   if (line.length === 0) {

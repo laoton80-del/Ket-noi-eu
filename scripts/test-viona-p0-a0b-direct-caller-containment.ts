@@ -60,7 +60,7 @@ function harness(options: {
         return Reflect.get(target, key, receiver);
       },
     }) },
-    Error, TypeError, console: { info() {}, warn() {}, error() {} },
+    Error, TypeError, AbortSignal: { timeout: () => ({}) }, console: { info() {}, warn() {}, error() {} },
   }, { codeGeneration: { strings: false, wasm: false } });
 
   function load<T>(relativePath: string, dependencies: Record<string, unknown> = {}): T {
@@ -171,12 +171,30 @@ function harness(options: {
     } } };
   }
   const gate = load<typeof Gate>('src/services/ai/llmProviderAdmissionGate.ts');
+  const governor = {
+    createServerIdempotencyKey: () => 'synthetic-governor-key',
+    reserve: async () => ({ decision: 'ALLOW_RESERVED' as const, operation: { id: 'synthetic-operation' }, providerTimeoutMs: 1 }),
+    markDispatching: async () => true,
+    settle: async () => ({ applied: true }),
+    release: async () => true,
+    markOutcomeUnknown: async () => true,
+  };
+  const costGovernor = {
+    CostGovernorDeniedError: gate.LlmProviderAdmissionDeniedError,
+    assertCostGovernorReservation: (result: { decision: string }) => {
+      if (result.decision !== 'ALLOW_RESERVED') throw new gate.LlmProviderAdmissionDeniedError('disabled');
+    },
+    estimateInputTokensUpperBound: () => 1n,
+    getCostGovernor: () => governor,
+  };
   const router = load<typeof Router>('src/services/ai/AIRouterService.ts', {
-    '@prisma/client': enums, openai: FakeOpenAI, '../../lib/prisma': prismaModule, './llmProviderAdmissionGate': gate,
+    '@prisma/client': enums, openai: FakeOpenAI, '../../lib/prisma': prismaModule,
+    './CostGovernorService': costGovernor, './llmProviderAdmissionGate': gate,
   });
   const viral = load<typeof Viral>('src/services/marketing/ViralWrapEngine.ts', {
     '@prisma/client': enums, openai: FakeOpenAI, '../../lib/prisma': prismaModule,
-    '../../config/pricingConfig': { CREDIT_EXCHANGE_RATE_USD: 0.01 }, '../ai/llmProviderAdmissionGate': gate,
+    '../../config/pricingConfig': { CREDIT_EXCHANGE_RATE_USD: 0.01 }, '../ai/CostGovernorService': costGovernor,
+    '../ai/llmProviderAdmissionGate': gate,
   });
   const generator = load<typeof Generator>('src/services/marketing/AIPostGenerator.ts', {
     '@prisma/client': enums, '../../constants/globalPerformance': { GLOBAL_MAX_LIST_ITEMS: 100 },
