@@ -2099,7 +2099,7 @@ async function main(): Promise<void> {
         code: 'P2028',
       });
       const wrapper: CostGovernor = {
-        createServerIdempotencyKey: () => delegate.createServerIdempotencyKey(),
+        createServerIdempotencyKey: () => idempotencyKey,
         reserve: (request) => delegate.reserve(request),
         markDispatching: async (operationId) => {
           assert.equal(await delegate.markDispatching(operationId), true);
