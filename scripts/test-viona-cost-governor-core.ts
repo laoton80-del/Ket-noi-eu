@@ -53,9 +53,9 @@ type PriceRow = Readonly<{
   inputMicrousdPerMillionTokens: bigint;
   outputMicrousdPerMillionTokens: bigint;
 }>;
-type OperationRow = Readonly<Record<string, unknown>>;
+type OperationRow = Readonly<Record<string, unknown> & { id: string }>;
 
-function operationRow(overrides: Partial<Record<string, unknown>> = {}): OperationRow {
+function operationRow(overrides: Readonly<{ status?: string }> = {}): OperationRow {
   const window = new Date('2026-11-04T00:00:00.000Z');
   return {
     id: 'operation-1',
