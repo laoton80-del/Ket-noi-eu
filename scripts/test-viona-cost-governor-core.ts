@@ -651,6 +651,41 @@ async function main(): Promise<void> {
     assert.equal(responses.length, 0, 'all five lifecycle transactions must reach the spy adapter');
   });
 
+  await test('any transaction error (P2028) fails closed on all five governor methods', async () => {
+    const p2028 = Object.assign(new Error('Transaction already closed: ...'), {
+      name: 'PrismaClientKnownRequestError',
+      code: 'P2028',
+    });
+    const receivedOptions: Array<Readonly<{ maxWait: number; timeout: number }>> = [];
+    const database = {
+      async $transaction<T>(
+        _callback: (transaction: FakeSqlDatabase) => Promise<T>,
+        options: Readonly<{ maxWait: number; timeout: number }>
+      ): Promise<T> {
+        receivedOptions.push(options);
+        throw p2028;
+      },
+    };
+    const operationId = 'p2028-operation';
+    const isLedgerUnavailable = (error: unknown): boolean =>
+      (error as Readonly<{ code?: string }>).code === 'COST_GOVERNOR_DENY_LEDGER_UNAVAILABLE';
+
+    await withGovernorEnv(async () => {
+      const service = new CostGovernorService(() => database as never);
+      const reservation = await service.reserve(reserveInput({ idempotencyKey: 'p2028-reserve' }));
+      assert.deepEqual(reservation, { decision: 'DENY_LEDGER_UNAVAILABLE' });
+      await assert.rejects(service.markDispatching(operationId), isLedgerUnavailable);
+      await assert.rejects(service.settle({ operationId }), isLedgerUnavailable);
+      await assert.rejects(
+        service.release({ operationId, reason: 'reserved_not_dispatched' }),
+        isLedgerUnavailable
+      );
+      await assert.rejects(service.markOutcomeUnknown(operationId), isLedgerUnavailable);
+    });
+
+    assert.deepEqual(receivedOptions, Array.from({ length: 5 }, () => ({ maxWait: 5_000, timeout: 20_000 })));
+  });
+
   await test('SOS and emergency source import graph does not reach paid AI router, viral, or governor services', () => {
     const hits = sosImportPathsToPaidAi();
     assert.deepEqual(hits, [], `SOS import graph reached paid AI code:\n${hits.join('\n')}`);

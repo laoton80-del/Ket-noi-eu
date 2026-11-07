@@ -136,9 +136,15 @@ Interactive Prisma transactions use the fixed code constants `TX_MAX_WAIT_MS = 5
 and `TX_TIMEOUT_MS = 20000`; these are not environment variables. A module-load
 invariant requires the transaction timeout to exceed the database lock and
 statement timeouts by at least five seconds, and max wait to be at least one
-second. Prisma may wait up to five seconds to acquire a connection and, after
-acquisition, holds it for at most twenty seconds if a transaction stalls; normal
-database lock and statement failures occur earlier under the PostgreSQL guards.
+second. This is a defense-in-depth margin that reduces the chance of Prisma
+`P2028` interrupting the normal database guard path; it does not prove which
+timeout fires first. Prisma may wait up to five seconds to acquire a connection
+and, after acquisition, holds it for at most twenty seconds if a transaction
+stalls. PostgreSQL lock timeout (`55P03`), statement timeout (`57014`), and
+Prisma transaction timeout (`P2028`) all fail closed as ledger-unavailable
+(`503`); an accounting error does not release a reservation. An operation that
+has reached `DISPATCHING` and has an ambiguous outcome is never automatically
+released as if it had not been dispatched; retain its reservation for A1-RECON.
 
 ## PostgreSQL BIGINT arithmetic boundary
 
