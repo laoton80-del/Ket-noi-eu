@@ -579,6 +579,78 @@ async function main(): Promise<void> {
     }
   });
 
+  await test('all five governor transactions pass explicit production maxWait and timeout options', async () => {
+    const source = readFileSync(resolve(root, 'src/services/ai/CostGovernorService.ts'), 'utf8');
+    const ast = ts.createSourceFile('CostGovernorService.ts', source, ts.ScriptTarget.Latest, true);
+    const transactionCalls: ts.CallExpression[] = [];
+    const visit = (node: ts.Node): void => {
+      if (
+        ts.isCallExpression(node) &&
+        ts.isPropertyAccessExpression(node.expression) &&
+        node.expression.name.text === '$transaction'
+      ) {
+        transactionCalls.push(node);
+      }
+      ts.forEachChild(node, visit);
+    };
+    visit(ast);
+    assert.equal(transactionCalls.length, 5, 'expected one transaction call for each governor lifecycle method');
+    for (const call of transactionCalls) {
+      assert.equal(call.arguments.length, 2, 'every transaction call must pass explicit options');
+      assert.equal(call.arguments[1].getText(ast), 'TRANSACTION_OPTIONS');
+    }
+
+    const numberConstant = (name: string): number => {
+      const match = new RegExp(`const ${name} = ([\\d_]+);`).exec(source);
+      assert.ok(match, `missing ${name}`);
+      return Number(match[1].replaceAll('_', ''));
+    };
+    const bigintConstant = (name: string): bigint => {
+      const match = new RegExp(`const ${name} = ([\\d_]+)n;`).exec(source);
+      assert.ok(match, `missing ${name}`);
+      return BigInt(match[1].replaceAll('_', ''));
+    };
+    const maxWait = numberConstant('TX_MAX_WAIT_MS');
+    const timeout = numberConstant('TX_TIMEOUT_MS');
+    assert.ok(maxWait >= 1_000, `TX_MAX_WAIT_MS=${maxWait} must be at least 1000ms`);
+    assert.ok(
+      BigInt(timeout) >= bigintConstant('LOCK_TIMEOUT_MS') + bigintConstant('STATEMENT_TIMEOUT_MS') + 5_000n,
+      `TX_TIMEOUT_MS=${timeout} must exceed DB lock and statement timeouts by 5000ms`
+    );
+    assert.match(source, /if \(BigInt\(TX_TIMEOUT_MS\) < LOCK_TIMEOUT_MS \+ STATEMENT_TIMEOUT_MS \+ 5_000n\) \{\s*throw new Error/);
+    assert.match(source, /if \(TX_MAX_WAIT_MS < 1_000\) \{\s*throw new Error/);
+
+    const operation = operationRow({ status: 'DISPATCHING' });
+    const responses: unknown[] = [
+      { decision: 'ALLOW_RESERVED', operation, providerTimeoutMs: 45_000 },
+      true,
+      { applied: true, operation },
+      true,
+      true,
+    ];
+    const receivedOptions: Array<Readonly<{ maxWait: number; timeout: number }>> = [];
+    const database = {
+      async $transaction<T>(
+        _callback: (transaction: FakeSqlDatabase) => Promise<T>,
+        options: Readonly<{ maxWait: number; timeout: number }>
+      ): Promise<T> {
+        receivedOptions.push({ ...options });
+        return responses.shift() as T;
+      },
+    };
+    await withGovernorEnv(async () => {
+      const service = new CostGovernorService(() => database as never);
+      const reservation = await service.reserve(reserveInput({ idempotencyKey: 'transaction-options' }));
+      assert.equal(reservation.decision, 'ALLOW_RESERVED');
+      assert.equal(await service.markDispatching(operation.id), true);
+      await service.settle({ operationId: operation.id });
+      assert.equal(await service.release({ operationId: operation.id, reason: 'reserved_not_dispatched' }), true);
+      assert.equal(await service.markOutcomeUnknown(operation.id), true);
+    });
+    assert.deepEqual(receivedOptions, Array.from({ length: 5 }, () => ({ maxWait, timeout })));
+    assert.equal(responses.length, 0, 'all five lifecycle transactions must reach the spy adapter');
+  });
+
   await test('SOS and emergency source import graph does not reach paid AI router, viral, or governor services', () => {
     const hits = sosImportPathsToPaidAi();
     assert.deepEqual(hits, [], `SOS import graph reached paid AI code:\n${hits.join('\n')}`);

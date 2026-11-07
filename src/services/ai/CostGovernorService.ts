@@ -14,6 +14,8 @@ const RESERVED_TTL_MS = 300_000n;
 const DISPATCH_GUARD_MS = 30_000n;
 const LOCK_TIMEOUT_MS = 5_000n;
 const STATEMENT_TIMEOUT_MS = 10_000n;
+const TX_TIMEOUT_MS = 20_000;
+const TX_MAX_WAIT_MS = 5_000;
 const IN_FLIGHT_LEASE_GRACE_MS = 15_000n;
 const OUTCOME_UNKNOWN_RECONCILIATION_MS = 86_400_000n;
 const ADMISSION_ADVISORY_LOCK_ID = 7_913_114_201_001n;
@@ -24,6 +26,13 @@ const MAX_POSTGRES_BIGINT = 9_223_372_036_854_775_807n;
 if (LOCK_TIMEOUT_MS >= DISPATCH_GUARD_MS) {
   throw new Error('Cost governor lock timeout must be shorter than the dispatch guard');
 }
+if (BigInt(TX_TIMEOUT_MS) < LOCK_TIMEOUT_MS + STATEMENT_TIMEOUT_MS + 5_000n) {
+  throw new Error('Cost governor transaction timeout must exceed database lock and statement timeouts by five seconds');
+}
+if (TX_MAX_WAIT_MS < 1_000) {
+  throw new Error('Cost governor transaction maxWait must be at least one second');
+}
+const TRANSACTION_OPTIONS = Object.freeze({ maxWait: TX_MAX_WAIT_MS, timeout: TX_TIMEOUT_MS });
 
 export const COST_GOVERNOR_ENV_NAMES = {
   userDailyCap: 'VIONA_COST_GOVERNOR_USER_DAILY_CAP_MICRO_USD',
@@ -130,7 +139,10 @@ type RawSqlClient = Readonly<{
 }>;
 
 type CostGovernorDatabase = RawSqlClient & Readonly<{
-  $transaction<T>(callback: (transaction: RawSqlClient) => Promise<T>): Promise<T>;
+  $transaction<T>(
+    callback: (transaction: RawSqlClient) => Promise<T>,
+    options: Readonly<{ maxWait: number; timeout: number }>
+  ): Promise<T>;
 }>;
 
 type ModelPriceRow = Readonly<{
@@ -534,7 +546,7 @@ export class CostGovernorService implements CostGovernor {
           operation,
           providerTimeoutMs: Number(operation.providerTimeoutMs),
         };
-      });
+      }, TRANSACTION_OPTIONS);
     } catch (error) {
       if (error instanceof TransactionDecisionAbort) {
         return { decision: error.decision, detail: error.detail };
@@ -566,7 +578,7 @@ export class CostGovernorService implements CostGovernor {
           DISPATCH_GUARD_MS.toString()
         );
         return rows.length === 1;
-      });
+      }, TRANSACTION_OPTIONS);
     } catch (error) {
       throw asLedgerUnavailable(error);
     }
@@ -635,7 +647,7 @@ export class CostGovernorService implements CostGovernor {
           actualCostMicrousd === null ? 'usage_unavailable_conservative_settle' : 'provider_usage'
         );
         return { applied: true, operation: updated };
-      });
+      }, TRANSACTION_OPTIONS);
     } catch (error) {
       throw asLedgerUnavailable(error);
     }
@@ -675,7 +687,7 @@ export class CostGovernorService implements CostGovernor {
           input.reason
         );
         return true;
-      });
+      }, TRANSACTION_OPTIONS);
     } catch (error) {
       throw asLedgerUnavailable(error);
     }
@@ -711,7 +723,7 @@ export class CostGovernorService implements CostGovernor {
           operation.status
         );
         return true;
-      });
+      }, TRANSACTION_OPTIONS);
     } catch (error) {
       throw asLedgerUnavailable(error);
     }

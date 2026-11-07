@@ -132,6 +132,14 @@ fails closed: admission cannot dispatch a provider call, while terminal
 accounting reports a ledger error for reconciliation rather than silently
 changing money state.
 
+Interactive Prisma transactions use the fixed code constants `TX_MAX_WAIT_MS = 5000`
+and `TX_TIMEOUT_MS = 20000`; these are not environment variables. A module-load
+invariant requires the transaction timeout to exceed the database lock and
+statement timeouts by at least five seconds, and max wait to be at least one
+second. Prisma may wait up to five seconds to acquire a connection and, after
+acquisition, holds it for at most twenty seconds if a transaction stalls; normal
+database lock and statement failures occur earlier under the PostgreSQL guards.
+
 ## PostgreSQL BIGINT arithmetic boundary
 
 The runtime rejects configured caps above PostgreSQL `BIGINT`, but arithmetic

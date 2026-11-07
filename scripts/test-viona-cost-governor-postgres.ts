@@ -361,6 +361,8 @@ type SqlFault = Readonly<{
   after?(origin: 'query' | 'execute', query: string, values: readonly unknown[]): void;
 }>;
 
+type GovernorTransactionOptions = Readonly<{ maxWait: number; timeout: number }>;
+
 function oneShotSqlFault(
   origin: 'query' | 'execute',
   match: (query: string) => boolean,
@@ -380,9 +382,9 @@ function serviceFor(
   prisma: PrismaClient,
   diagnostics?: ReturnType<typeof diagnosticCollector>,
   fault?: SqlFault,
-  transactionTimeoutMs?: number
+  observedTransactionOptions?: GovernorTransactionOptions[]
 ): CostGovernorService {
-  if (!diagnostics && !fault) return new CostGovernorService(() => prisma as never);
+  if (!diagnostics && !fault && !observedTransactionOptions) return new CostGovernorService(() => prisma as never);
   const observeRawClient = (client: Readonly<{
     $queryRawUnsafe<T = unknown>(query: string, ...values: unknown[]): Promise<T>;
     $executeRawUnsafe(query: string, ...values: unknown[]): Promise<number>;
@@ -412,11 +414,15 @@ function serviceFor(
   });
   const rootClient = observeRawClient(prisma);
   const database = {
-    async $transaction<T>(callback: (transaction: ReturnType<typeof observeRawClient>) => Promise<T>): Promise<T> {
+    async $transaction<T>(
+      callback: (transaction: ReturnType<typeof observeRawClient>) => Promise<T>,
+      options: GovernorTransactionOptions
+    ): Promise<T> {
       try {
+        observedTransactionOptions?.push({ ...options });
         return await prisma.$transaction(
           async (transaction) => callback(observeRawClient(transaction as never)),
-          transactionTimeoutMs === undefined ? undefined : { timeout: transactionTimeoutMs }
+          options
         );
       } catch (error) {
         diagnostics?.record('transaction', error);
@@ -1979,7 +1985,8 @@ async function main(): Promise<void> {
     await test('42: a held operation-row lock makes dispatch fail closed before the router sends a provider request', async () => {
       await resetCostTables(prisma!); await insertFixturePrice(prisma!, { model: 'gpt-4o-mini' }); setFixtureConfig();
       diagnostics.clear();
-      const delegate = serviceFor(prisma!, diagnostics, undefined, 7_500);
+      const transactionOptions: GovernorTransactionOptions[] = [];
+      const delegate = serviceFor(prisma!, diagnostics, undefined, transactionOptions);
       let locker: PgClient | undefined;
       let releaseTimer: NodeJS.Timeout | undefined;
       const lockGovernor: CostGovernor = {
@@ -2013,6 +2020,8 @@ async function main(): Promise<void> {
         const lockDiagnostic = diagnostics.values().find((entry) => entry.sqlState === '55P03');
         assert.ok(lockDiagnostic, `expected SQLSTATE 55P03, got ${JSON.stringify(diagnostics.values())}`);
         assert.match(lockDiagnostic.message, /lock timeout|lock_not_available/i);
+        assert.ok(!diagnostics.values().some((entry) => entry.prismaCode === 'P2028'), 'the DB lock timeout must occur before the Prisma transaction timeout');
+        assert.deepEqual(transactionOptions, Array.from({ length: 3 }, () => ({ maxWait: 5_000, timeout: 20_000 })));
         console.log(`[diagnostic] scenario-42 SQLSTATE ${lockDiagnostic.sqlState} elapsed ${elapsedMs}ms`);
         assert.equal(harness.sdkRequests.length, 0, 'no provider SDK request may follow a lock timeout');
         const operationId = await operationIdForKey(prisma!, 'router-subject', 'router-lock-timeout');
@@ -2021,6 +2030,58 @@ async function main(): Promise<void> {
         if (releaseTimer) clearTimeout(releaseTimer);
         if (locker) {
           try { await locker.query('ROLLBACK'); } catch { /* the timer may have released it */ }
+          await locker.end();
+        }
+      }
+    });
+
+    await test('47: dispatched settlement lock timeout is 55P03 before P2028 and preserves the reservation', async () => {
+      await resetCostTables(prisma!); await insertFixturePrice(prisma!); setFixtureConfig();
+      diagnostics.clear();
+      const transactionOptions: GovernorTransactionOptions[] = [];
+      const delegate = serviceFor(prisma!, diagnostics, undefined, transactionOptions);
+      const subjectId = 'transaction-timeout-subject';
+      const reservation = allowed(await delegate.reserve(input(subjectId, 'transaction-timeout-dispatched')));
+      assert.equal(await delegate.markDispatching(reservation.operation.id), true);
+      const counterBefore = await counterTriplet(prisma!, subjectId);
+      const reserveEntriesBefore = await ledgerEntryCount(prisma!, reservation.operation.id, 'RESERVE');
+      const settleEntriesBefore = await ledgerEntryCount(prisma!, reservation.operation.id, 'SETTLE');
+      const releaseEntriesBefore = await ledgerEntryCount(prisma!, reservation.operation.id, 'RELEASE');
+
+      let locker: PgClient | undefined;
+      try {
+        locker = new PgClientClass({ host: '127.0.0.1', port, user, password, database: 'postgres' });
+        await locker.connect();
+        await locker.query('BEGIN');
+        await locker.query('SELECT "id" FROM "AiCostOperation" WHERE "id" = $1 FOR UPDATE', [reservation.operation.id]);
+
+        const startedAt = Date.now();
+        await assert.rejects(
+          delegate.settle({
+            operationId: reservation.operation.id,
+            usage: { inputTokens: 10n, outputTokens: 5n },
+          }),
+          (error: unknown) => (error as Readonly<{ code?: string }>).code === 'COST_GOVERNOR_DENY_LEDGER_UNAVAILABLE'
+        );
+        const elapsedMs = Date.now() - startedAt;
+        assert.ok(elapsedMs >= 4_500 && elapsedMs < 8_000, `settle elapsed ${elapsedMs}ms outside the PostgreSQL lock-timeout window`);
+        const lockDiagnostic = diagnostics.values().find((entry) => entry.sqlState === '55P03');
+        assert.ok(lockDiagnostic, `expected SQLSTATE 55P03, got ${JSON.stringify(diagnostics.values())}`);
+        assert.match(lockDiagnostic.message, /lock timeout|lock_not_available/i);
+        assert.ok(!diagnostics.values().some((entry) => entry.prismaCode === 'P2028'), 'the DB lock timeout must occur before the Prisma transaction timeout');
+        assert.deepEqual(transactionOptions, Array.from({ length: 3 }, () => ({ maxWait: 5_000, timeout: 20_000 })));
+
+        const operationAfter = await operation(prisma!, reservation.operation.id);
+        assert.equal(operationAfter.status, 'DISPATCHING');
+        assert.equal(operationAfter.settledMicrousd, 0n);
+        assert.deepEqual(await counterTriplet(prisma!, subjectId), counterBefore);
+        assert.equal(await ledgerEntryCount(prisma!, reservation.operation.id, 'RESERVE'), reserveEntriesBefore);
+        assert.equal(await ledgerEntryCount(prisma!, reservation.operation.id, 'SETTLE'), settleEntriesBefore);
+        assert.equal(await ledgerEntryCount(prisma!, reservation.operation.id, 'RELEASE'), releaseEntriesBefore);
+        console.log(`[diagnostic] scenario-47 SQLSTATE ${lockDiagnostic.sqlState} elapsed ${elapsedMs}ms; DISPATCHING reservation unchanged`);
+      } finally {
+        if (locker) {
+          try { await locker.query('ROLLBACK'); } catch { /* the transaction may already be closed */ }
           await locker.end();
         }
       }
