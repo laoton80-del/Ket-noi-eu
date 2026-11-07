@@ -2087,6 +2087,47 @@ async function main(): Promise<void> {
       }
     });
 
+    await test('48: ambiguous markDispatching commit (wrapper throws after DB commit) keeps DISPATCHING, refuses release, and makes no provider call', async () => {
+      await resetCostTables(prisma!); await insertFixturePrice(prisma!); setFixtureConfig();
+      diagnostics.clear();
+      const subjectId = 'router-subject';
+      const idempotencyKey = 'router-ambiguous-dispatch-commit';
+      const delegate = serviceFor(prisma!, diagnostics);
+      let counterAfterDispatch: Awaited<ReturnType<typeof counterTriplet>> | undefined;
+      const wrapperError = Object.assign(new Error('Transaction already closed: ...'), {
+        name: 'PrismaClientKnownRequestError',
+        code: 'P2028',
+      });
+      const wrapper: CostGovernor = {
+        createServerIdempotencyKey: () => delegate.createServerIdempotencyKey(),
+        reserve: (request) => delegate.reserve(request),
+        markDispatching: async (operationId) => {
+          assert.equal(await delegate.markDispatching(operationId), true);
+          counterAfterDispatch = await counterTriplet(prisma!, subjectId);
+          throw wrapperError;
+        },
+        settle: (request) => delegate.settle(request),
+        release: (request) => delegate.release(request),
+        markOutcomeUnknown: (operationId) => delegate.markOutcomeUnknown(operationId),
+      };
+      const harness = routerIntegrationHarness({ governor: wrapper });
+
+      await assert.rejects(
+        harness.router.createRoutedChatCompletion(
+          routedInputForPostgres(idempotencyKey, 'ambiguous dispatch commit')
+        )
+      );
+      assert.equal(harness.sdkRequests.length, 0);
+      const operationId = await operationIdForKey(prisma!, subjectId, idempotencyKey);
+      const stored = await operation(prisma!, operationId);
+      assert.equal(stored.status, 'DISPATCHING');
+      assert.equal(stored.settledMicrousd, 0n);
+      assert.ok(counterAfterDispatch, 'expected a counter snapshot after the real dispatch commit');
+      assert.deepEqual(await counterTriplet(prisma!, subjectId), counterAfterDispatch);
+      assert.equal(await ledgerEntryCount(prisma!, operationId, 'RELEASE'), 0n);
+      assert.equal(await ledgerEntryCount(prisma!, operationId, 'SETTLE'), 0n);
+    });
+
     await test('43: duplicate RESERVED and UNKNOWN operations win over invalid replay bounds without money movement', async () => {
       await resetCostTables(prisma!); await insertFixturePrice(prisma!); setFixtureConfig();
       const subjectId = 'idempotency-invalid-replay';

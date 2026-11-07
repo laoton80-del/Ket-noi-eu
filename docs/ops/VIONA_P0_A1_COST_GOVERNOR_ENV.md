@@ -142,9 +142,11 @@ timeout fires first. Prisma may wait up to five seconds to acquire a connection
 and, after acquisition, holds it for at most twenty seconds if a transaction
 stalls. PostgreSQL lock timeout (`55P03`), statement timeout (`57014`), and
 Prisma transaction timeout (`P2028`) all fail closed as ledger-unavailable
-(`503`); an accounting error does not release a reservation. An operation that
-has reached `DISPATCHING` and has an ambiguous outcome is never automatically
-released as if it had not been dispatched; retain its reservation for A1-RECON.
+(`503`). An accounting error never releases a reservation known to be dispatched
+or that may have been dispatched (`DISPATCHING`); retain it for A1-RECON. A
+reservation confirmed to remain `RESERVED`, with no dispatch made, may be
+released using `reserved_not_dispatched` as cleanup—for example, after a
+preparation failure before dispatch.
 
 ## PostgreSQL BIGINT arithmetic boundary
 
