@@ -2088,7 +2088,7 @@ async function main(): Promise<void> {
     });
 
     await test('48: ambiguous markDispatching commit (wrapper throws after DB commit) keeps DISPATCHING, refuses release, and makes no provider call', async () => {
-      await resetCostTables(prisma!); await insertFixturePrice(prisma!); setFixtureConfig();
+      await resetCostTables(prisma!); await insertFixturePrice(prisma!, { model: 'gpt-4o-mini' }); setFixtureConfig();
       diagnostics.clear();
       const subjectId = 'router-subject';
       const idempotencyKey = 'router-ambiguous-dispatch-commit';
