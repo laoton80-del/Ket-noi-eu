@@ -1,16 +1,18 @@
 import { DarkTheme, DefaultTheme, type Theme } from '@react-navigation/native';
 
+import { vionaCinematicTokens as cine } from '../design/vionaCinematicTokens';
+
 export const b2cTheme: Theme = {
   ...DefaultTheme,
-  dark: false,
+  dark: true,
   colors: {
     ...DefaultTheme.colors,
-    primary: '#2A67D1',
-    background: '#F8F9FA',
-    card: '#FFFFFF',
-    text: '#0B1628',
-    border: 'rgba(11, 22, 40, 0.12)',
-    notification: '#E53935',
+    primary: cine.color.accentGold,
+    background: cine.color.backgroundShell,
+    card: cine.color.surfaceNavy,
+    text: cine.color.textOnDark,
+    border: cine.color.line,
+    notification: cine.color.safety,
   },
 };
 
@@ -19,12 +21,12 @@ export const b2bTheme: Theme = {
   dark: true,
   colors: {
     ...DarkTheme.colors,
-    primary: '#00FF66',
-    background: '#0A1628',
-    card: '#0F2238',
-    text: '#F4F1EA',
-    border: 'rgba(0, 255, 102, 0.35)',
-    notification: '#E53935',
+    primary: cine.universe.business.accent,
+    background: cine.color.backgroundShell,
+    card: cine.color.surfaceNavy,
+    text: cine.color.textOnDark,
+    border: cine.universe.business.wash,
+    notification: cine.color.safety,
   },
 };
 

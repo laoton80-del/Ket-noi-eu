@@ -1,20 +1,22 @@
+import { vionaCinematicTokens as cine } from '../design/vionaCinematicTokens';
+
 export const KIDS_MODE_TOKENS = {
   colors: {
-    background: '#FFF7ED',
-    panel: '#F0FDFA',
-    panelBorder: '#99F6E4',
-    primary: '#7C3AED',
-    secondary: '#0EA5E9',
-    accent: '#F59E0B',
-    success: '#16A34A',
-    danger: '#DC2626',
-    textStrong: '#0C4A6E',
-    textMuted: '#334155',
+    background: cine.color.backgroundShell,
+    panel: cine.color.surfaceNavy,
+    panelBorder: cine.color.line,
+    primary: cine.universe.academy.accent,
+    secondary: cine.universe.travel.accent,
+    accent: cine.universe.local.accent,
+    success: cine.color.emerald,
+    danger: cine.color.safety,
+    textStrong: cine.color.textOnDark,
+    textMuted: cine.color.textMutedOnDark,
   },
   radius: {
-    card: 22,
-    button: 14,
-    pill: 999,
+    card: cine.radius.lg,
+    button: cine.radius.sm,
+    pill: cine.radius.pill,
   },
   typography: {
     titleSize: 28,

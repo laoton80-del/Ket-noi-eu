@@ -1,16 +1,17 @@
 /**
  * Unified Multiverse — global shell + per-Hub “Aura” accents.
- * Core structure stays dark navy/charcoal; only aura-driven borders, glows, and active tints change.
+ * Values alias the cinematic source. Exported names stay.
  */
+import { vionaCinematicTokens as cine } from '../design/vionaCinematicTokens';
 
 /** Core shell (every Hub). */
 export const hubCore = {
-  backgroundTop: '#121212',
-  backgroundBottom: '#1A1A24',
-  textPrimary: '#FFFFFF',
+  backgroundTop: cine.color.backgroundShell,
+  backgroundBottom: cine.color.surfaceNavy,
+  textPrimary: cine.color.textOnDark,
   /** Imperial Gold — premium headlines, key numerals. */
-  imperialGold: '#C5A059',
-  imperialGoldBright: '#E8D5A3',
+  imperialGold: cine.color.accentGold,
+  imperialGoldBright: cine.color.accentGold,
 } as const;
 
 /**
@@ -18,10 +19,10 @@ export const hubCore = {
  * Used for borders, icon tints, and subtle dual-tone emphasis — not full-screen repaints.
  */
 export const hubAuras = {
-  HUB_SERVICE: ['#00FF00', '#8A2BE2'] as const,
-  HUB_TOURISM: ['#00BFFF', '#1E90FF'] as const,
-  HUB_CHARITY: ['#FF3333', '#FF1493'] as const,
-  HUB_ACADEMY: ['#E5E4E2', '#FFFFFF'] as const,
+  HUB_SERVICE: [cine.universe.local.accent, cine.universe.local.wash] as const,
+  HUB_TOURISM: [cine.universe.travel.accent, cine.universe.travel.wash] as const,
+  HUB_CHARITY: [cine.universe.sos.accent, cine.universe.sos.wash] as const,
+  HUB_ACADEMY: [cine.universe.academy.accent, cine.universe.academy.wash] as const,
 } as const;
 
 export type HubId = keyof typeof hubAuras;

@@ -5,31 +5,32 @@
  */
 import { DarkTheme, DefaultTheme, type Theme } from '@react-navigation/native';
 
+import { vionaCinematicTokens as cine } from '../design/vionaCinematicTokens';
 import { MAIN_TAB, type RootStackParamList, type RootTabParamList } from '../navigation/routes';
 import type { ActiveRole } from '../store/userStore';
 import { b2bTheme } from './appModeThemes';
 
-/** Platinum Travel — acrylic white/silver field + imperial gold accents */
+/** Platinum Travel now aliases the cinematic dark glass shell. */
 export const V7_PLATINUM = {
-  bg: '#F2F4F8',
-  card: 'rgba(255, 255, 255, 0.94)',
-  ink: '#0A1628',
-  inkMuted: 'rgba(10, 22, 40, 0.55)',
-  gold: '#C5A059',
-  goldDeep: '#9A7209',
-  border: 'rgba(10, 22, 40, 0.08)',
-  gradientA: '#FDFBFB',
-  gradientB: '#E4E6E8',
-  gradientC: '#EBEDEE',
+  bg: cine.color.backgroundShell,
+  card: cine.color.surfaceGlass,
+  ink: cine.color.textOnDark,
+  inkMuted: cine.color.textMutedOnDark,
+  gold: cine.color.accentGold,
+  goldDeep: cine.color.accentGold,
+  border: cine.color.line,
+  gradientA: cine.color.backgroundDeep,
+  gradientB: cine.color.backgroundShell,
+  gradientC: cine.color.surfaceNavy,
 } as const;
 
-/** B2C dark “universes” (Hub / Local / Academy) — aligned with `theme.colors` navy stack */
+/** B2C dark universes — cinematic shell. */
 export const V7_MIDNIGHT_B2C = {
-  bg: '#0A1628',
-  card: '#0F2238',
-  text: '#F4F1EA',
-  gold: '#C5A059',
-  border: 'rgba(197, 160, 89, 0.28)',
+  bg: cine.color.backgroundShell,
+  card: cine.color.surfaceNavy,
+  text: cine.color.textOnDark,
+  gold: cine.color.accentGold,
+  border: cine.color.line,
 } as const;
 
 export function buildV7PlatinumTravelNavigationTheme(): Theme {
@@ -70,12 +71,12 @@ export const v7BrokerNavigationTheme: Theme = {
   dark: true,
   colors: {
     ...DarkTheme.colors,
-    primary: '#F5D286',
-    background: '#030304',
-    card: '#0C0C10',
-    text: '#F8FAFC',
-    border: 'rgba(245, 210, 134, 0.22)',
-    notification: '#E53935',
+    primary: cine.color.accentGold,
+    background: cine.color.backgroundShell,
+    card: cine.color.surfaceNavy,
+    text: cine.color.textOnDark,
+    border: cine.color.line,
+    notification: cine.color.safety,
   },
 };
 
@@ -85,12 +86,12 @@ export const v7AdminNavigationTheme: Theme = {
   dark: true,
   colors: {
     ...DarkTheme.colors,
-    primary: '#38BDF8',
-    background: '#030712',
-    card: '#0B1220',
-    text: '#E2E8F0',
-    border: 'rgba(248, 113, 113, 0.28)',
-    notification: '#F87171',
+    primary: cine.universe.account.accent,
+    background: cine.color.backgroundShell,
+    card: cine.color.surfaceNavy,
+    text: cine.color.textOnDark,
+    border: cine.color.line,
+    notification: cine.color.safety,
   },
 };
 

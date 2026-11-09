@@ -1,9 +1,11 @@
 import { Platform } from 'react-native';
 
+import { vionaCinematicTokens as cine } from '../../design/vionaCinematicTokens';
+
 /** Calm SOS shell — serious, readable, not travel-luxury or nightclub neon. */
 export const emergencyUiTokens = {
-  shellBg: '#09090B',
-  shellBgTravel: '#0c1018',
+  shellBg: cine.color.backgroundShell,
+  shellBgTravel: cine.color.surfaceNavy,
   contentMaxWidth: 520,
   contentPadding: 16,
   gridGap: 10,
@@ -31,7 +33,7 @@ export const emergencyHubAccentTokens: Record<
   }>
 > = {
   emergency: {
-    icon: '#FCA5A5',
+    icon: cine.color.safety,
     iconBg: 'rgba(127, 29, 29, 0.35)',
     iconBorder: 'rgba(248, 113, 113, 0.42)',
     cardBg: 'rgba(15, 23, 42, 0.94)',

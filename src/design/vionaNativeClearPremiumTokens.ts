@@ -8,29 +8,31 @@
  * Marker: VIONA_NATIVE_LIGHT_FIRST_CLEAR_PREMIUM_CARVE_PROPOSED_NOT_ACTIVATED
  * This file is a native-home carve, not a global LIGHT_MODE_CANONICAL switch.
  */
+import { vionaCinematicTokens as cine } from './vionaCinematicTokens';
+
 export const vionaNativeClearPremiumTokens = {
   bg: {
-    canvas: '#F3F8FF',
-    surface: '#FFFFFF',
-    elevated: '#FFFFFF',
-    muted: '#EAF1FB',
-    critical: '#FFE4E6',
+    canvas: cine.color.backgroundShell,
+    surface: cine.color.surfaceNavy,
+    elevated: cine.color.sapphire,
+    muted: cine.color.surfaceGlass,
+    critical: cine.universe.sos.wash,
   },
   ink: {
-    primary: '#0B1628',
-    secondary: 'rgba(23, 49, 90, 0.68)',
-    inverse: '#FFFFFF',
+    primary: cine.color.textOnDark,
+    secondary: cine.color.textMutedOnDark,
+    inverse: cine.color.backgroundShell,
   },
   line: {
-    subtle: 'rgba(12, 33, 70, 0.14)',
+    subtle: cine.color.line,
   },
   accent: {
-    local: '#14B8A6',
-    travel: '#2563EB',
-    academy: '#7C3AED',
-    business: '#183C73',
-    ai: '#7C3AED',
-    safety: '#C84B5A',
+    local: cine.universe.local.accent,
+    travel: cine.universe.travel.accent,
+    academy: cine.universe.academy.accent,
+    business: cine.universe.business.accent,
+    ai: cine.universe.academy.accent,
+    safety: cine.universe.sos.accent,
   },
   radius: {
     sm: 8,

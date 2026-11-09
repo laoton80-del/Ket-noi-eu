@@ -5,30 +5,32 @@
  * - Dark Ops: merchant / staff dashboards (use sparingly on consumer shells).
  */
 
-/** Canonical palette — matches product direction (trust-first, not casino/neon). */
+import { vionaCinematicTokens as cine } from '../../design/vionaCinematicTokens';
+
+/** Canonical palette — aliases the cinematic source. Exported names stay. */
 export const vionaHybrid = {
-  navy: '#071936',
-  navyDeep: '#050B14',
-  gold: '#C8A44D',
-  background: '#F6F8FB',
-  surface: '#FFFFFF',
-  surfaceMuted: '#F1F5F9',
-  border: '#E2E8F0',
-  textPrimary: '#0F172A',
-  textSecondary: '#64748B',
-  trustBlue: '#2563EB',
-  danger: '#DC2626',
-  opsBg: '#08111F',
-  opsSurface: '#111827',
-  opsBorder: 'rgba(148, 163, 184, 0.22)',
-  opsText: '#F8FAFC',
-  opsTextMuted: 'rgba(248, 250, 252, 0.68)',
+  navy: cine.color.backgroundShell,
+  navyDeep: cine.color.backgroundDeep,
+  gold: cine.color.accentGold,
+  background: cine.color.backgroundShell,
+  surface: cine.color.surfaceNavy,
+  surfaceMuted: cine.color.surfaceGlass,
+  border: cine.color.line,
+  textPrimary: cine.color.textOnDark,
+  textSecondary: cine.color.textMutedOnDark,
+  trustBlue: cine.universe.travel.accent,
+  danger: cine.color.safety,
+  opsBg: cine.color.backgroundShell,
+  opsSurface: cine.color.surfaceNavy,
+  opsBorder: cine.color.line,
+  opsText: cine.color.textOnDark,
+  opsTextMuted: cine.color.textMutedOnDark,
 } as const;
 
 /** Consumer “Clean Trust Light” — Home / Hub / Local / Login canvas. */
 export const vionaTrust = {
   canvas: vionaHybrid.background,
-  canvasDeep: '#EDF1F7',
+  canvasDeep: cine.color.backgroundDeep,
   surface: vionaHybrid.surface,
   surfaceMuted: vionaHybrid.surfaceMuted,
   border: vionaHybrid.border,
@@ -37,7 +39,7 @@ export const vionaTrust = {
   signal: vionaHybrid.trustBlue,
   signalMutedBg: 'rgba(37, 99, 235, 0.12)',
   accentGold: vionaHybrid.gold,
-  accentGoldLine: 'rgba(200, 164, 77, 0.38)',
+  accentGoldLine: cine.color.line,
 } as const;
 
 /** Travel / VIP moments — restrained navy + gold (no full chrome takeover). */
@@ -45,11 +47,11 @@ export const vionaPremium = {
   headerInk: vionaHybrid.navy,
   ribbonGold: vionaHybrid.gold,
   cardBorder: 'rgba(7, 25, 54, 0.12)',
-  subtleWash: '#EEF2F7',
+  subtleWash: cine.color.surfaceNavy,
   /** Large chauffeur / emphasis tile — dark navy panel on light canvas */
   conciergeBg: vionaHybrid.navy,
-  conciergeInk: '#F8FAFC',
-  conciergeInkMuted: 'rgba(248, 250, 252, 0.72)',
+  conciergeInk: cine.color.textOnDark,
+  conciergeInkMuted: cine.color.textMutedOnDark,
 } as const;
 
 /** Merchant / ops dashboards — dark shell tokens. */
