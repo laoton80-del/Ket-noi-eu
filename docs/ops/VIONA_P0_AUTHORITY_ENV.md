@@ -16,6 +16,8 @@ The runtime/service role MUST NOT own either authority table and MUST NOT have `
 
 The server issues an `ACTIVE_UNUSED` record only after the injected issue policy authorizes it, and writes an `ISSUED` ledger entry in the same transaction. `prepareSha256` is uppercase SHA-256 over recursively key-sorted, compact JSON encoded as UTF-8; object key order does not affect the hash. `verifyAndConsume` checks the current subject, tenant, exact target, context binding, payload hash, expiry, and injected current policy, then changes the record with a compare-and-swap and writes `CONSUMED` atomically. A rejected or expired consume is audited as `CONSUME_REJECTED` or `EXPIRED`. A crash after consume does not restore the authority.
 
+Payloads, `allowedDisclosures`, `constraints`, and `context.preparePayload` must be plain JSON; policy and consumers match their canonical form. Canonical JSON treats `-0` as `0` and sparse arrays as `[null]`, and discards symbol-keyed and non-enumerable properties; bind any semantics outside this domain in the policy layer.
+
 When a future caller reserves cost first, it must call `verifyAndConsume` before any dispatch. If consume does not win, it must call `CostGovernorService.release({ operationId, reason: 'reserved_not_dispatched' })`; this package tests that ordering but does not wire a provider caller.
 
 ## Operational controls

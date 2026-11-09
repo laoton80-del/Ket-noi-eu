@@ -175,6 +175,76 @@ async function main(): Promise<void> {
   assert.equal((mutableIssueInput as any).exactTarget, 'MUTATED');
   console.log('PASS issue() snapshots input against concurrent mutation');
 
+  let issuePolicyReady!: () => void;
+  let allowIssuePolicyToContinue!: () => void;
+  const issuePolicyReadyPromise = new Promise<void>((resolve) => { issuePolicyReady = resolve; });
+  const issuePolicyContinuePromise = new Promise<void>((resolve) => { allowIssuePolicyToContinue = resolve; });
+  let policySawPassport: unknown;
+  const nestedDisclosureInput = {
+    ...issueInput({ target: 'appointment:123', note: 'deep snapshot' }),
+    allowedDisclosures: { passport: true },
+  };
+  const nestedSnapshotService = new AuthorityService(new MemoryAuthorityDatabase(), {
+    authorizeIssue: async (snapshot) => {
+      await Promise.resolve();
+      issuePolicyReady();
+      await issuePolicyContinuePromise;
+      policySawPassport = (snapshot.allowedDisclosures as { passport: boolean }).passport;
+      return {
+        allowed: true,
+        policyVersion: 'policy-v1',
+        issuedBy: 'server:authority-test',
+        approvalRef: 'approval:test-fixture',
+        contextBinding: 'context-binding:test-fixture',
+      };
+    },
+    authorizeConsume: async () => ({ allowed: true }),
+  });
+  const nestedIssuePromise = nestedSnapshotService.issue(nestedDisclosureInput);
+  await issuePolicyReadyPromise;
+  nestedDisclosureInput.allowedDisclosures.passport = false;
+  allowIssuePolicyToContinue();
+  const nestedIssued = await nestedIssuePromise;
+  assert.equal(policySawPassport, true);
+  assert.deepEqual(nestedIssued.allowedDisclosures, { passport: true });
+  console.log('PASS issue() deep-snapshots nested input');
+
+  const contextDb = new MemoryAuthorityDatabase();
+  const contextInput = issueInput({ target: 'appointment:123', note: 'context snapshot' });
+  const contextIssuedByService = new AuthorityService(contextDb, policyProvider());
+  const contextIssued = await contextIssuedByService.issue(contextInput);
+  const mutableContext = contextFor(contextInput, contextInput.preparePayload);
+  let consumePolicyReady!: () => void;
+  let allowConsumePolicyToContinue!: () => void;
+  const consumePolicyReadyPromise = new Promise<void>((resolve) => { consumePolicyReady = resolve; });
+  const consumePolicyContinuePromise = new Promise<void>((resolve) => { allowConsumePolicyToContinue = resolve; });
+  let policySawSubjectId: string | undefined;
+  const contextSnapshotService = new AuthorityService(contextDb, {
+    authorizeIssue: async () => ({
+      allowed: true,
+      policyVersion: 'policy-v1',
+      issuedBy: 'server:authority-test',
+      approvalRef: 'approval:test-fixture',
+      contextBinding: 'context-binding:test-fixture',
+    }),
+    authorizeConsume: async (_record, snapshot) => {
+      await Promise.resolve();
+      consumePolicyReady();
+      await consumePolicyContinuePromise;
+      policySawSubjectId = snapshot.subjectId;
+      return { allowed: true };
+    },
+  });
+  const consumePromise = contextSnapshotService.verifyAndConsume(contextIssued.authorityId, mutableContext);
+  await consumePolicyReadyPromise;
+  mutableContext.subjectId = 'SAFE';
+  allowConsumePolicyToContinue();
+  const consumed = await consumePromise;
+  assert.equal(policySawSubjectId, contextInput.subjectId);
+  assert.equal(consumed.consumed, true);
+  assert.equal(consumed.authority?.subjectId, contextInput.subjectId);
+  console.log('PASS verifyAndConsume snapshots context against mutation');
+
   const srcRoot = resolve(__dirname, '..', 'src');
   const writer = /\b(?:INSERT\s+INTO|UPDATE)\s+"?(?:AuthorityRecord|AuthorityLedgerEntry)"?\b|\.authority(?:Record|LedgerEntry)\.(?:create|createMany|update|updateMany|upsert|delete|deleteMany)\s*\(/i;
   const outOfModuleWriters = sourceFiles(srcRoot)
@@ -186,7 +256,7 @@ async function main(): Promise<void> {
   assert.match(envDoc, /separate database role/i);
   assert.match(envDoc, /planner\/AI/i);
   console.log('PASS static single-writer guard and deploy-role requirement');
-  console.log('6 authority core checks passed.');
+  console.log('8 authority core checks passed.');
 }
 
 void main().catch((error: unknown) => {

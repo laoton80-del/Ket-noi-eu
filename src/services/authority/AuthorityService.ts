@@ -217,8 +217,11 @@ export class AuthorityService {
     const expiresAtUtc = utcTimestampWithoutZone(expiresAt);
     const maxCostMinorText = maxCostMinor.toString();
     const snapshot: AuthorityIssueInput = Object.freeze({
-      subjectId, tenantId, actionKind, exactTarget, maxAttempts, expiresAt, currency, maxCostMinor,
-      allowedDisclosures: input.allowedDisclosures, constraints: input.constraints, preparePayload: input.preparePayload,
+      subjectId, tenantId, actionKind, exactTarget, maxAttempts,
+      expiresAt: new Date(expiresAt.getTime()), currency, maxCostMinor,
+      allowedDisclosures: JSON.parse(disclosuresJson) as unknown,
+      constraints: JSON.parse(constraintsJson) as unknown,
+      preparePayload: JSON.parse(canonicalize(input.preparePayload)) as unknown,
     });
     const decision = await this.policy.authorizeIssue(snapshot);
     if (
@@ -268,12 +271,23 @@ export class AuthorityService {
 
   async verifyAndConsume(authorityId: string, context: AuthorityContext): Promise<AuthorityConsumeResult> {
     if (!UUID_PATTERN.test(authorityId)) return { consumed: false, reason: 'NOT_FOUND' };
+    // Snapshot context BEFORE any await so a concurrent caller mutation cannot change what is matched/approved.
+    const ctxSubjectId = context.subjectId;
+    const ctxTenantId = context.tenantId;
+    const ctxExactTarget = context.exactTarget;
+    const ctxContextBinding = context.contextBinding;
     const contextHash = prepareHash(context.preparePayload);
+    const frozenContext: AuthorityContext = Object.freeze({
+      subjectId: ctxSubjectId, tenantId: ctxTenantId, exactTarget: ctxExactTarget,
+      contextBinding: ctxContextBinding,
+      preparePayload: JSON.parse(canonicalize(context.preparePayload)) as unknown,
+    });
     return this.database.$transaction(async (transaction) => {
       const rows = await transaction.$queryRawUnsafe<AuthorityDbRow[]>(
         `SELECT *, ("expiresAt" > (clock_timestamp() AT TIME ZONE 'UTC')) AS "isNotExpired"
            FROM "AuthorityRecord"
-          WHERE "authorityId" = $1::uuid`,
+          WHERE "authorityId" = $1::uuid
+          FOR UPDATE`,
         authorityId
       );
       if (rows.length !== 1) return { consumed: false, reason: 'NOT_FOUND' } as const;
@@ -284,9 +298,9 @@ export class AuthorityService {
         return { consumed: false, reason: 'EXPIRED' } as const;
       }
       if (
-        record.subjectId !== context.subjectId || record.tenantId !== context.tenantId ||
-        record.prepareSha256 !== contextHash || record.exactTarget !== context.exactTarget ||
-        record.contextBinding !== context.contextBinding
+        record.subjectId !== ctxSubjectId || record.tenantId !== ctxTenantId ||
+        record.prepareSha256 !== contextHash || record.exactTarget !== ctxExactTarget ||
+        record.contextBinding !== ctxContextBinding
       ) {
         await this.appendLedger(transaction, authorityId, 'CONSUME_REJECTED', { reason: 'context_mismatch' });
         return { consumed: false, reason: 'CONTEXT_MISMATCH' } as const;
@@ -295,7 +309,7 @@ export class AuthorityService {
         await this.appendLedger(transaction, authorityId, 'CONSUME_REJECTED', { reason: 'already_consumed' });
         return { consumed: false, reason: 'ALREADY_CONSUMED' } as const;
       }
-      const policyDecision = await this.policy.authorizeConsume(record, context);
+      const policyDecision = await this.policy.authorizeConsume(record, frozenContext);
       if (policyDecision.allowed !== true) {
         await this.appendLedger(transaction, authorityId, 'CONSUME_REJECTED', {
           reason: policyDecision.reason ?? 'current_policy_rejected',
