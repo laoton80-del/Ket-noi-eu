@@ -672,6 +672,7 @@ function VionaRec2HomeEntry() {
       }
       contentState={uiPreview ? 'default' : offlineBoundary.contentState}
       reducedMotion={reducedMotion}
+      previewMode={uiPreview}
     />
   );
 }

@@ -1124,6 +1124,32 @@
           "subtitle": "Mở bề mặt hướng dẫn an toàn hiện có; không tự gọi hay điều phối cứu hộ."
         }
       },
+      "explorePrompt": "Hôm nay bạn muốn khám phá điều gì?",
+      "searchPlaceholder": "Hỏi Viona bất cứ điều gì…",
+      "searchNotConnected": "Ô tìm kiếm chưa được kết nối trong bản Home này.",
+      "weatherUnavailable": "Chưa có nguồn thời tiết",
+      "avatarPreview": "Preview",
+      "avatarGuest": "Khách",
+      "companionChat": "Chat với Viona",
+      "companionPreview": "Companion bản xem trước. Chưa kết nối.",
+      "companionInputPlaceholder": "Nhắn Viona…",
+      "companionNotConnected": "Chưa kết nối. Ô này không gửi tin.",
+      "sidebar": {
+        "home": "Trang chủ",
+        "messages": "Tin nhắn",
+        "calendar": "Lịch của tôi",
+        "apps": "Ứng dụng",
+        "community": "Cộng đồng",
+        "openingGradually": "Đang mở dần"
+      },
+      "chips": {
+        "tonight": "Gợi ý cho tối hôm nay",
+        "trip": "Lên kế hoạch chuyến đi",
+        "skill": "Học kỹ năng mới",
+        "business": "Tìm cơ hội kinh doanh",
+        "account": "Kiểm tra tài khoản",
+        "sos": "SOS khẩn cấp"
+      },
       "runtimeTruth": "RC2 Home là ứng viên cục bộ có feature flag. Thông báo, yêu cầu Viona trực tiếp và tác vụ suy diễn đều chưa khả dụng."
     },
     "tabHub": "Tổng quan",

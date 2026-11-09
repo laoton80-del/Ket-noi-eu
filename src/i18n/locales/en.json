@@ -1124,6 +1124,32 @@
           "subtitle": "Open the existing safety guidance surface; no automatic call or dispatch."
         }
       },
+      "explorePrompt": "What do you want to explore today?",
+      "searchPlaceholder": "Ask Viona anything…",
+      "searchNotConnected": "Search is not connected in this Home candidate.",
+      "weatherUnavailable": "Weather source not connected",
+      "avatarPreview": "Preview",
+      "avatarGuest": "Guest",
+      "companionChat": "Chat with Viona",
+      "companionPreview": "Preview companion. Not connected.",
+      "companionInputPlaceholder": "Message Viona…",
+      "companionNotConnected": "Not connected. This field does not send a message.",
+      "sidebar": {
+        "home": "Home",
+        "messages": "Messages",
+        "calendar": "My calendar",
+        "apps": "Apps",
+        "community": "Community",
+        "openingGradually": "Opening gradually"
+      },
+      "chips": {
+        "tonight": "Suggestions for tonight",
+        "trip": "Plan a trip",
+        "skill": "Learn a new skill",
+        "business": "Find a business opportunity",
+        "account": "Check account",
+        "sos": "Emergency SOS"
+      },
       "runtimeTruth": "RC2 Home is a local, feature-gated candidate. Notifications, live Viona requests, and inferred tasks are unavailable."
     },
     "tabHub": "Hub",
