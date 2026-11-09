@@ -59,7 +59,7 @@ export async function seedProvisionalOpenAiMiniPrice(
     if (activeRows.length > 0) {
       const closed = await transaction.$executeRawUnsafe(
         `UPDATE "AiModelPrice"
-            SET "effectiveTo" = (now() AT TIME ZONE 'UTC'),
+            SET "effectiveTo" = date_trunc('milliseconds', (now() AT TIME ZONE 'UTC')),
                 "updatedAt" = (now() AT TIME ZONE 'UTC')
           WHERE "id" = ANY($1::text[])`,
         activeRows.map((row) => row.id)
@@ -77,7 +77,7 @@ export async function seedProvisionalOpenAiMiniPrice(
          "audioInputMicrousdPerSecond", "audioOutputMicrousdPerSecond", "imageMicrousdPerUnit",
          "createdAt", "updatedAt"
        ) VALUES (
-         $1, $2, $3, $4, (now() AT TIME ZONE 'UTC'), NULL,
+         $1, $2, $3, $4, date_trunc('milliseconds', (now() AT TIME ZONE 'UTC')), NULL,
          $5::bigint, $6::bigint, $7::bigint, $8::bigint, $9::bigint,
          (now() AT TIME ZONE 'UTC'), (now() AT TIME ZONE 'UTC')
        )`,
