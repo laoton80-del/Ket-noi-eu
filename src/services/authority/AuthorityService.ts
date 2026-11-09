@@ -132,8 +132,11 @@ export function canonicalize(value: unknown): string {
   return serialized;
 }
 
+export function prepareHashFromCanonical(canonical: string): string {
+  return createHash('sha256').update(Buffer.from(canonical, 'utf8')).digest('hex').toUpperCase();
+}
 export function prepareHash(value: unknown): string {
-  return createHash('sha256').update(Buffer.from(canonicalize(value), 'utf8')).digest('hex').toUpperCase();
+  return prepareHashFromCanonical(canonicalize(value));
 }
 
 function nonEmpty(value: string): boolean {
@@ -211,7 +214,8 @@ export class AuthorityService {
       throw new Error('Authority issue input failed closed validation');
     }
     // Snapshot before any await so a concurrent caller mutation cannot change what was approved/stored.
-    const prepareSha256 = prepareHash(input.preparePayload);
+    const preparePayloadCanon = canonicalize(input.preparePayload);
+    const prepareSha256 = prepareHashFromCanonical(preparePayloadCanon);
     const disclosuresJson = canonicalize(input.allowedDisclosures);
     const constraintsJson = canonicalize(input.constraints);
     const expiresAtUtc = utcTimestampWithoutZone(expiresAt);
@@ -221,7 +225,7 @@ export class AuthorityService {
       expiresAt: new Date(expiresAt.getTime()), currency, maxCostMinor,
       allowedDisclosures: JSON.parse(disclosuresJson) as unknown,
       constraints: JSON.parse(constraintsJson) as unknown,
-      preparePayload: JSON.parse(canonicalize(input.preparePayload)) as unknown,
+      preparePayload: JSON.parse(preparePayloadCanon) as unknown,
     });
     const decision = await this.policy.authorizeIssue(snapshot);
     if (
@@ -276,11 +280,12 @@ export class AuthorityService {
     const ctxTenantId = context.tenantId;
     const ctxExactTarget = context.exactTarget;
     const ctxContextBinding = context.contextBinding;
-    const contextHash = prepareHash(context.preparePayload);
+    const contextPayloadCanon = canonicalize(context.preparePayload);
+    const contextHash = prepareHashFromCanonical(contextPayloadCanon);
     const frozenContext: AuthorityContext = Object.freeze({
       subjectId: ctxSubjectId, tenantId: ctxTenantId, exactTarget: ctxExactTarget,
       contextBinding: ctxContextBinding,
-      preparePayload: JSON.parse(canonicalize(context.preparePayload)) as unknown,
+      preparePayload: JSON.parse(contextPayloadCanon) as unknown,
     });
     return this.database.$transaction(async (transaction) => {
       const rows = await transaction.$queryRawUnsafe<AuthorityDbRow[]>(

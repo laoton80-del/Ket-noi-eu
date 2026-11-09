@@ -245,6 +245,34 @@ async function main(): Promise<void> {
   assert.equal(consumed.authority?.subjectId, contextInput.subjectId);
   console.log('PASS verifyAndConsume snapshots context against mutation');
 
+  // B5: preparePayload source is read exactly once (hash == payload shown to policy), even with a getter.
+  let payloadReads = 0;
+  const getterInput = issueInput({ placeholder: true });
+  Object.defineProperty(getterInput, 'preparePayload', {
+    enumerable: true,
+    configurable: true,
+    get() { return { amount: (++payloadReads === 1 ? 1_000_000 : 1) }; },
+  });
+  let b5PolicySawPayload: unknown;
+  const b5Service = new AuthorityService(new MemoryAuthorityDatabase(), {
+    authorizeIssue: async (snapshot) => {
+      b5PolicySawPayload = snapshot.preparePayload;
+      return {
+        allowed: true,
+        policyVersion: 'policy-v1',
+        issuedBy: 'server:authority-test',
+        approvalRef: 'approval:test-fixture',
+        contextBinding: 'context-binding:test-fixture',
+      };
+    },
+    authorizeConsume: async () => ({ allowed: true }),
+  });
+  const b5Issued = await b5Service.issue(getterInput);
+  assert.equal(payloadReads, 1);
+  assert.deepEqual(b5PolicySawPayload, { amount: 1_000_000 });
+  assert.equal(b5Issued.prepareSha256, prepareHash({ amount: 1_000_000 }));
+  console.log('PASS preparePayload is read once; hash matches payload shown to policy');
+
   const srcRoot = resolve(__dirname, '..', 'src');
   const writer = /\b(?:INSERT\s+INTO|UPDATE)\s+"?(?:AuthorityRecord|AuthorityLedgerEntry)"?\b|\.authority(?:Record|LedgerEntry)\.(?:create|createMany|update|updateMany|upsert|delete|deleteMany)\s*\(/i;
   const outOfModuleWriters = sourceFiles(srcRoot)
@@ -256,7 +284,7 @@ async function main(): Promise<void> {
   assert.match(envDoc, /separate database role/i);
   assert.match(envDoc, /planner\/AI/i);
   console.log('PASS static single-writer guard and deploy-role requirement');
-  console.log('8 authority core checks passed.');
+  console.log('9 authority core checks passed.');
 }
 
 void main().catch((error: unknown) => {
