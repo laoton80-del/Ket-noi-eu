@@ -23,6 +23,8 @@ change is not retroactive. A missing
 or invalid configuration still prevents a new dispatch before any provider
 request, and the caller releases the still-undispatched reservation.
 
+Temporary pilot timeout: `VIONA_COST_GOVERNOR_PROVIDER_TIMEOUT_MS=45000` is PROVISIONAL and must be re-verified at activation.
+
 ## Caller-supplied idempotency keys
 
 An idempotency key supplied by a caller is responsible for identifying the full
