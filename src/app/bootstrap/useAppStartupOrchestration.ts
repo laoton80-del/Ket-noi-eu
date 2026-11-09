@@ -13,6 +13,7 @@ import {
   type GuidedIntentId,
 } from '../../onboarding/guidedOnboardingStorage';
 import { warnIfAdminDebugInReleaseBuild } from '../../config/adminDebugGate';
+import { isVionaUiPreviewMode } from '../../config/vionaUiPreview';
 import { getDocumentTypeLabel, runStartupDocumentAlarmCheck } from '../../services/DocumentAlarmService';
 import { buildVisaExpiryThresholdTrigger, orchestrateAutonomousAction } from '../../services/autonomy';
 import { scheduleHolidayNotificationsForCountry } from '../../services/holidays';
@@ -113,6 +114,7 @@ export function useAppStartupOrchestration({
       if (!active || !mountedRef.current) return;
       setOpsConfig(localConfig);
       setOpsReady(true);
+      if (isVionaUiPreviewMode()) return;
 
       const remoteConfigAllowed = canResolveRec2RemoteOpsConfig({
         connectivity,

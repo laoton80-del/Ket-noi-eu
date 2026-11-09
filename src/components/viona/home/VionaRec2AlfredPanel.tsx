@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 
 import { useTranslation } from '../../../i18n';
+import { isVionaUiPreviewMode } from '../../../config/vionaUiPreview';
 import { VionaCraneMark } from '../brand/VionaCraneMark';
 import {
   openVionaRec2AlfredUi,
@@ -85,7 +86,9 @@ export function VionaRec2AlfredPanel({
       </View>
 
       <Text style={[styles.status, { lineHeight: typography.bodyLineHeight }]}>
-        {t(`home.rec2.alfred.states.${presentation.state}`)}
+        {isVionaUiPreviewMode()
+          ? 'Preview companion. No live assistant.'
+          : t(`home.rec2.alfred.states.${presentation.state}`)}
       </Text>
 
       {expanded ? (

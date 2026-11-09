@@ -169,6 +169,7 @@ import { useMiniAppEntry } from '../hooks/useMiniAppEntry';
 import { useHomeCommand } from '../context/HomeCommandContext';
 import { getVioPointsLabel } from '../core/monetization/vioDisplayLabels';
 import { getPersonaDisplayName } from '../config/aiPrompts';
+import { isVionaUiPreviewMode } from '../config/vionaUiPreview';
 import { useAuth } from '../context/AuthContext';
 import { MVP_B2B_AI_RECEPTIONIST_DEMO_OFF_MSG } from '../navigation/mvpSurfaceGate';
 import {
@@ -520,7 +521,9 @@ function detectHomeHoverPointer(): boolean {
 export function HomeScreen() {
   const { user, updateProfile } = useAuth();
   const [personaModalVisible, setPersonaModalVisible] = useState(false);
-  const renderer = resolveHomeRendererSelection(getFeatureFlags().rec2HomeShellEnabled);
+  const renderer = isVionaUiPreviewMode()
+    ? 'rec2'
+    : resolveHomeRendererSelection(getFeatureFlags().rec2HomeShellEnabled);
 
   useEffect(() => {
     if (!user) setPersonaModalVisible(false);
@@ -534,7 +537,9 @@ export function HomeScreen() {
 
   const applyPersonaChoice = useCallback(
     (persona: 'EXPAT' | 'TOURIST') => {
-      void patchUserPersonaOnServer(persona);
+      if (!isVionaUiPreviewMode()) {
+        void patchUserPersonaOnServer(persona);
+      }
       updateProfile({ persona, needsPersonaOnboarding: false });
       setPersonaModalVisible(false);
     },
@@ -615,31 +620,57 @@ function VionaRec2HomeEntry() {
     () => localizedRegionName(user?.country, i18n.resolvedLanguage ?? i18n.language),
     [i18n.language, i18n.resolvedLanguage, user?.country]
   );
+  const uiPreview = isVionaUiPreviewMode();
+  const previewCallback = useCallback(() => undefined, []);
 
   return (
     <VionaRec2HomeShell
-      displayName={user?.name}
-      regionLabel={regionLabel}
-      universeAvailability={{
-        localEnabled:
-          featureFlags.localEnabled && isRec2ActionAllowed(offlineBoundary, 'local'),
-        travelEnabled:
-          featureFlags.travelEnabled && isRec2ActionAllowed(offlineBoundary, 'travel'),
-        academyEnabled:
-          featureFlags.academyEnabled && isRec2ActionAllowed(offlineBoundary, 'academy'),
-        businessEligible,
-        accountAvailable:
-          homeCommand !== null && isRec2ActionAllowed(offlineBoundary, 'account'),
-        sosAvailable:
-          homeCommand !== null && isRec2ActionAllowed(offlineBoundary, 'sos-guidance'),
-      }}
-      universeCallbacks={universeCallbacks}
-      onOpenLanguage={
-        homeCommand && isRec2ActionAllowed(offlineBoundary, 'language')
-          ? homeCommand.openLanguageSheet
-          : undefined
+      displayName={uiPreview ? 'Preview' : user?.name}
+      regionLabel={uiPreview ? 'Cinematic preview' : regionLabel}
+      universeAvailability={
+        uiPreview
+          ? {
+              localEnabled: true,
+              travelEnabled: true,
+              academyEnabled: true,
+              businessEligible: true,
+              accountAvailable: true,
+              sosAvailable: true,
+            }
+          : {
+              localEnabled:
+                featureFlags.localEnabled && isRec2ActionAllowed(offlineBoundary, 'local'),
+              travelEnabled:
+                featureFlags.travelEnabled && isRec2ActionAllowed(offlineBoundary, 'travel'),
+              academyEnabled:
+                featureFlags.academyEnabled && isRec2ActionAllowed(offlineBoundary, 'academy'),
+              businessEligible,
+              accountAvailable:
+                homeCommand !== null && isRec2ActionAllowed(offlineBoundary, 'account'),
+              sosAvailable:
+                homeCommand !== null && isRec2ActionAllowed(offlineBoundary, 'sos-guidance'),
+            }
       }
-      contentState={offlineBoundary.contentState}
+      universeCallbacks={
+        uiPreview
+          ? {
+              local: previewCallback,
+              travel: previewCallback,
+              academy: previewCallback,
+              business: previewCallback,
+              account: previewCallback,
+              sos: previewCallback,
+            }
+          : universeCallbacks
+      }
+      onOpenLanguage={
+        uiPreview
+          ? undefined
+          : homeCommand && isRec2ActionAllowed(offlineBoundary, 'language')
+            ? homeCommand.openLanguageSheet
+            : undefined
+      }
+      contentState={uiPreview ? 'default' : offlineBoundary.contentState}
       reducedMotion={reducedMotion}
     />
   );

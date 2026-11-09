@@ -6,6 +6,7 @@ import { identifyUser, resetUser } from '../services/AnalyticsService';
 import { clearRestApiJwt } from '../services/apiClient';
 import type { RestLoginData } from '../services/restAuthClient';
 import { mapRestAuthUserToAuthUser } from '../services/auth/restSessionBridge';
+import { isVionaUiPreviewMode } from '../config/vionaUiPreview';
 import { ensureWalletFirebaseAuth } from '../services/walletFirebaseSession';
 import { getWalletState, syncWalletFromServer } from '../state/wallet';
 import { STORAGE_KEYS } from '../storage/storageKeys';
@@ -153,16 +154,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
+    if (isVionaUiPreviewMode()) return;
     if (!user) return;
     void ensureWalletFirebaseAuth();
   }, [user]);
 
   useEffect(() => {
+    if (isVionaUiPreviewMode()) return;
     if (!user?.phone) return;
     void syncWalletFromServer();
   }, [user?.phone]);
 
   useEffect(() => {
+    if (isVionaUiPreviewMode()) return;
     const u = user;
     if (!u) return;
     const id = u.serverUserId?.trim();

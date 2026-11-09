@@ -4,6 +4,7 @@ import { AppQueryProvider } from './src/providers/AppQueryProvider';
 import { initProductAnalytics } from './src/services/AnalyticsService';
 import * as Sentry from '@sentry/react-native';
 import { initMonitoringRadar } from './src/config/sentryConfig';
+import { isVionaUiPreviewMode } from './src/config/vionaUiPreview';
 
 import {
   Montserrat_400Regular,
@@ -1070,16 +1071,18 @@ function AppRoot() {
   }, [transitionAnim, transitionKey]);
 
   if (offlinePolicy.renderMode === 'offline-blocked') {
-    return (
-      <AppStateView
-        variant="offline"
-        title="CONNECTION LOST"
-        message="Please check your network settings and try again."
-        onRetry={() => {
-          void NetInfo.refresh().then((state) => setConnectivity(normalizeConnectivityState(state)));
-        }}
-      />
-    );
+    if (!isVionaUiPreviewMode()) {
+      return (
+        <AppStateView
+          variant="offline"
+          title="CONNECTION LOST"
+          message="Please check your network settings and try again."
+          onRetry={() => {
+            void NetInfo.refresh().then((state) => setConnectivity(normalizeConnectivityState(state)));
+          }}
+        />
+      );
+    }
   }
 
   if (offlinePolicy.renderMode === 'loading') {

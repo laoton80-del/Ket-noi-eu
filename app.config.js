@@ -173,6 +173,8 @@ module.exports = () => {
       eas: {
         projectId: '2c3531a4-61e9-4c5c-aaeb-3086543ecdc6',
       },
+      /** True only when the Expo process was started with VIONA_UI_PREVIEW_ONLY=1. */
+      vionaUiPreviewOnly: isVionaUiPreview,
       /** Injected at build time from root `.env` (see `src/config/env.ts`). Safe for client. Empty in Safe Full UI Preview. */
       stripePublishableKey,
       /** Mapbox public token (CEO: `EXPO_PUBLIC_MAPBOX_KEY`); legacy name still supported. Empty in Safe Full UI Preview. */
