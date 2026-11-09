@@ -18,11 +18,13 @@ import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useTranslation } from '../../../i18n';
 import { useHomeCommand } from '../../../context/HomeCommandContext';
 import { VionaGlobalSosShellAction } from '../VionaGlobalSosShellAction';
+import { VionaCraneMark } from '../brand/VionaCraneMark';
 import { UniversePhotoTile } from './UniversePhotoTile';
 import { VionaHomeCompanionPanel } from './VionaHomeCompanionPanel';
 import { VionaHomeSidebar } from './VionaHomeSidebar';
 import { VionaHomeSuggestionChips } from './VionaHomeSuggestionChips';
 import { VionaHomeTopBar } from './VionaHomeTopBar';
+import { readHomeColumnOpen, writeHomeColumnOpen } from './vionaHomeColumnMemory';
 import { resolveVionaCinematicTier, vionaCinematicTokens } from '../../../design/vionaCinematicTokens';
 import {
   VIONA_REC2_GATED_CARD_CONTENT_OPACITY,
@@ -139,6 +141,8 @@ export function VionaRec2HomeShell({
   }> | null>(null);
   const [searchValue, setSearchValue] = useState('');
   const [companionOpen, setCompanionOpen] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(() => readHomeColumnOpen('sidebar'));
+  const [desktopCompanionOpen, setDesktopCompanionOpen] = useState(() => readHomeColumnOpen('companion'));
   const onRootLayout = useCallback((event: LayoutChangeEvent) => {
     const { width, height } = event.nativeEvent.layout;
     if (!Number.isFinite(width) || width <= 0 || !Number.isFinite(height) || height <= 0) return;
@@ -154,6 +158,8 @@ export function VionaRec2HomeShell({
     ? resolveVionaCinematicTier(dimensions.width)
     : dimensions.width < 768 ? 'phone' : 'tablet';
   const desktopFrame = shellPlatform === 'web' && tier === 'desktop';
+  const sidebarReserve = desktopFrame && sidebarOpen ? vionaCinematicTokens.layout.railWidth : 0;
+  const companionReserve = desktopFrame && desktopCompanionOpen ? vionaCinematicTokens.layout.companionWidth : 0;
   const [heroFailed, setHeroFailed] = useState(false);
   const imagePresentation = resolveVionaRec2ImagePresentation({
     provenance: 'unverified',
@@ -163,17 +169,14 @@ export function VionaRec2HomeShell({
     () =>
       resolveVionaRec2HomeLayout({
         width: desktopFrame
-          ? Math.max(
-              1,
-              shellWidth - vionaCinematicTokens.layout.railWidth - vionaCinematicTokens.layout.companionWidth
-            )
+          ? Math.max(1, shellWidth - sidebarReserve - companionReserve)
           : shellWidth,
         height: shellHeight,
         fontScale: dimensions.fontScale,
         safeAreaInsets: insets,
         shellPlatform,
       }),
-    [desktopFrame, dimensions.fontScale, insets, shellHeight, shellPlatform, shellWidth]
+    [companionReserve, desktopFrame, dimensions.fontScale, insets, shellHeight, shellPlatform, shellWidth, sidebarReserve]
   );
   const universes = useMemo(
     () => createVionaRec2UniverseContract(universeAvailability),
@@ -196,11 +199,20 @@ export function VionaRec2HomeShell({
   useEffect(() => {
     if (Platform.OS !== 'web' || typeof window === 'undefined') return;
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape' && companionOpen) setCompanionOpen(false);
+      if (event.key !== 'Escape') return;
+      if (companionOpen) setCompanionOpen(false);
+      if (sidebarOpen) {
+        setSidebarOpen(false);
+        writeHomeColumnOpen('sidebar', false);
+      }
+      if (desktopCompanionOpen) {
+        setDesktopCompanionOpen(false);
+        writeHomeColumnOpen('companion', false);
+      }
     };
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
-  }, [companionOpen]);
+  }, [companionOpen, desktopCompanionOpen, sidebarOpen]);
 
   const center = (
     <ScrollView
@@ -221,19 +233,32 @@ export function VionaRec2HomeShell({
           styles.commandRow,
           layout.columns === 1 && styles.commandRowStacked,
           { paddingTop: layout.headerControlTopClearance },
+          desktopFrame && !desktopCompanionOpen && styles.commandOrbClearance,
         ]}
       >
         <VionaHomeTopBar
           displayName={normalizedName}
           regionLabel={normalizedRegion}
           previewMode={previewMode}
-          showBrand={!desktopFrame}
+          showBrand={!desktopFrame || !sidebarOpen}
           reducedMotion={reducedMotion}
           onOpenLanguage={onOpenLanguage}
           sosAction={sosAction}
           searchValue={searchValue}
           onSearchChange={setSearchValue}
           onFocus={() => undefined}
+          menu={
+            desktopFrame
+              ? {
+                  open: sidebarOpen,
+                  onPress: () => {
+                    const next = !sidebarOpen;
+                    setSidebarOpen(next);
+                    writeHomeColumnOpen('sidebar', next);
+                  },
+                }
+              : undefined
+          }
         />
       </View>
 
@@ -294,7 +319,7 @@ export function VionaRec2HomeShell({
               key={universe.id}
               universe={universe}
               callbacks={universeCallbacks}
-              width={Math.min(layout.cardWidth, 520)}
+              width={layout.cardWidth}
               reducedMotion={reducedMotion}
             />
           ))}
@@ -344,7 +369,7 @@ export function VionaRec2HomeShell({
       testID="viona-rec2-home-shell"
     >
       <LinearGradient colors={['#020713', '#04152A', '#020813']} style={[styles.stage, desktopFrame && styles.stageRow]}>
-        {desktopFrame ? (
+        {desktopFrame && sidebarOpen ? (
           <VionaHomeSidebar
             universes={universes}
             callbacks={universeCallbacks}
@@ -352,7 +377,7 @@ export function VionaRec2HomeShell({
           />
         ) : null}
         <View style={styles.center}>{center}</View>
-        {desktopFrame ? (
+        {desktopFrame && desktopCompanionOpen ? (
           <View style={styles.reservedCompanion}>
             <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.companionScroll}>
               <VionaHomeCompanionPanel
@@ -361,9 +386,29 @@ export function VionaRec2HomeShell({
                 reducedMotion={reducedMotion}
                 universes={universes}
                 callbacks={universeCallbacks}
+                onClose={() => {
+                  setDesktopCompanionOpen(false);
+                  writeHomeColumnOpen('companion', false);
+                }}
               />
             </ScrollView>
           </View>
+        ) : null}
+        {desktopFrame && !desktopCompanionOpen ? (
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={t('home.rec2.companionChat')}
+            onPress={() => {
+              setDesktopCompanionOpen(true);
+              writeHomeColumnOpen('companion', true);
+            }}
+            style={({ pressed }) => [
+              styles.companionOrb,
+              pressed && (reducedMotion ? styles.cardPressedReducedMotion : styles.cardPressed),
+            ]}
+          >
+            <VionaCraneMark size={28} variant="sapphire" glow={!reducedMotion} />
+          </Pressable>
         ) : null}
       </LinearGradient>
     </SafeAreaView>
@@ -372,7 +417,7 @@ export function VionaRec2HomeShell({
 
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: '#020713' },
-  stage: { flex: 1 },
+  stage: { flex: 1, position: 'relative' },
   stageRow: { flexDirection: 'row' },
   center: { flex: 1, minWidth: 0 },
   scroller: { flex: 1 },
@@ -397,6 +442,20 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
   },
   companionEntryText: { color: '#F4F8FC', fontSize: 16, fontWeight: '700' },
+  companionOrb: {
+    position: 'absolute',
+    top: 18,
+    right: 16,
+    zIndex: 30,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(18, 58, 102, 0.94)',
+    borderWidth: 1,
+    borderColor: 'rgba(125, 211, 252, 0.7)',
+  },
   companionSheet: {
     borderRadius: 24,
     borderWidth: 1,
@@ -419,6 +478,7 @@ const styles = StyleSheet.create({
   heroScrim: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(4, 12, 24, 0.62)' },
   commandRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 14, zIndex: 1 },
   commandRowStacked: { flexDirection: 'column', alignItems: 'stretch' },
+  commandOrbClearance: { paddingRight: 72 },
   heroCopy: { gap: 7, maxWidth: 720, zIndex: 1 },
   greeting: { color: '#8FD9FF', fontSize: 13, fontWeight: '700' },
   headline: { color: '#F7FAFF', fontSize: 26, lineHeight: 34, fontWeight: '800' },

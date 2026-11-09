@@ -1131,6 +1131,8 @@
       "avatarPreview": "Preview",
       "avatarGuest": "Guest",
       "companionChat": "Chat with Viona",
+      "menuOpen": "Open navigation",
+      "menuClose": "Close navigation",
       "companionPreview": "Preview companion. Not connected.",
       "companionInputPlaceholder": "Message Viona…",
       "companionNotConnected": "Not connected. This field does not send a message.",

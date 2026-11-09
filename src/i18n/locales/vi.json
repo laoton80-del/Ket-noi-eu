@@ -1131,6 +1131,8 @@
       "avatarPreview": "Preview",
       "avatarGuest": "Khách",
       "companionChat": "Chat với Viona",
+      "menuOpen": "Mở điều hướng",
+      "menuClose": "Đóng điều hướng",
       "companionPreview": "Companion bản xem trước. Chưa kết nối.",
       "companionInputPlaceholder": "Nhắn Viona…",
       "companionNotConnected": "Chưa kết nối. Ô này không gửi tin.",

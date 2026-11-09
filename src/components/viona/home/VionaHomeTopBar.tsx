@@ -17,6 +17,7 @@ export type VionaHomeTopBarProps = Readonly<{
   searchValue: string;
   onSearchChange: (value: string) => void;
   onFocus?: () => void;
+  menu?: Readonly<{ open: boolean; onPress: () => void }>;
 }>;
 
 export function VionaHomeTopBar({
@@ -30,6 +31,7 @@ export function VionaHomeTopBar({
   searchValue,
   onSearchChange,
   onFocus,
+  menu,
 }: VionaHomeTopBarProps) {
   const { t } = useTranslation();
   const name = displayName?.trim() || null;
@@ -38,6 +40,17 @@ export function VionaHomeTopBar({
 
   return (
     <View style={styles.bar}>
+      {menu ? (
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={menu.open ? t('home.rec2.menuClose') : t('home.rec2.menuOpen')}
+          accessibilityState={{ expanded: menu.open }}
+          onPress={menu.onPress}
+          style={styles.tool}
+        >
+          <Ionicons name={menu.open ? 'close' : 'menu-outline'} size={20} color={vionaCinematicTokens.color.ice} />
+        </Pressable>
+      ) : null}
       {showBrand ? (
         <View style={styles.brand}>
           <VionaCraneMark size={26} variant="sapphire" glow={!reducedMotion} />
