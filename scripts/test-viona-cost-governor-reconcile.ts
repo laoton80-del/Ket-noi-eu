@@ -433,8 +433,13 @@ async function main(): Promise<void> {
       await setExpired(prisma!, operationId);
       // Keep the row eligible for markDispatching while its expiry remains stale for reconciliation.
       await prisma!.$executeRawUnsafe(
-        `UPDATE "AiCostOperation"
-            SET "createdAt" = (clock_timestamp() AT TIME ZONE 'UTC')
+        `WITH fixture_clock AS (
+           SELECT (clock_timestamp() AT TIME ZONE 'UTC') AS "nowUtc"
+         )
+         UPDATE "AiCostOperation"
+            SET "createdAt" = fixture_clock."nowUtc" - interval '2 seconds',
+                "expiresAt" = fixture_clock."nowUtc" - interval '1 second'
+           FROM fixture_clock
           WHERE "id" = $1`,
         operationId
       );
