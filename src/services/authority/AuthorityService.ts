@@ -139,6 +139,10 @@ export function prepareHash(value: unknown): string {
   return prepareHashFromCanonical(canonicalize(value));
 }
 
+function isStringPrimitive(value: unknown): value is string {
+  return typeof value === 'string';
+}
+
 function nonEmpty(value: string): boolean {
   return value.trim().length > 0;
 }
@@ -196,15 +200,18 @@ export class AuthorityService {
   ) {}
 
   async issue(input: AuthorityIssueInput): Promise<AuthorityRecord> {
-    const subjectId = input.subjectId;
-    const tenantId = input.tenantId;
-    const exactTarget = input.exactTarget;
+    const subjectId: unknown = input.subjectId;
+    const tenantId: unknown = input.tenantId;
+    const exactTarget: unknown = input.exactTarget;
     const actionKind = input.actionKind;
     const maxAttempts = input.maxAttempts;
     const expiresAt = input.expiresAt;
-    const currency = input.currency;
-    const maxCostMinor = input.maxCostMinor;
+    const currency: unknown = input.currency;
+    const maxCostMinor: unknown = input.maxCostMinor;
     if (
+      !isStringPrimitive(subjectId) || !isStringPrimitive(tenantId) ||
+      !isStringPrimitive(exactTarget) || !isStringPrimitive(currency) ||
+      typeof maxCostMinor !== 'bigint' ||
       !nonEmpty(subjectId) || !nonEmpty(tenantId) || !nonEmpty(exactTarget) ||
       actionKind !== 'VOICE_CALL_BOOKING' || maxAttempts !== 1 ||
       !(expiresAt instanceof Date) || !/^[A-Z]{3}$/.test(currency) ||
@@ -280,12 +287,21 @@ export class AuthorityService {
   }
 
   async verifyAndConsume(authorityId: string, context: AuthorityContext): Promise<AuthorityConsumeResult> {
-    if (!UUID_PATTERN.test(authorityId)) return { consumed: false, reason: 'NOT_FOUND' };
+    const authorityIdText: unknown = authorityId;
+    if (!isStringPrimitive(authorityIdText) || !UUID_PATTERN.test(authorityIdText)) {
+      return { consumed: false, reason: 'NOT_FOUND' };
+    }
     // Snapshot context BEFORE any await so a concurrent caller mutation cannot change what is matched/approved.
-    const ctxSubjectId = context.subjectId;
-    const ctxTenantId = context.tenantId;
-    const ctxExactTarget = context.exactTarget;
-    const ctxContextBinding = context.contextBinding;
+    const ctxSubjectId: unknown = context.subjectId;
+    const ctxTenantId: unknown = context.tenantId;
+    const ctxExactTarget: unknown = context.exactTarget;
+    const ctxContextBinding: unknown = context.contextBinding;
+    if (
+      !isStringPrimitive(ctxSubjectId) || !isStringPrimitive(ctxTenantId) ||
+      !isStringPrimitive(ctxExactTarget) || !isStringPrimitive(ctxContextBinding)
+    ) {
+      return { consumed: false, reason: 'CONTEXT_MISMATCH' };
+    }
     const contextPayloadCanon = canonicalize(context.preparePayload);
     const contextHash = prepareHashFromCanonical(contextPayloadCanon);
     const frozenContext: AuthorityContext = Object.freeze({
@@ -299,13 +315,13 @@ export class AuthorityService {
            FROM "AuthorityRecord"
           WHERE "authorityId" = $1::uuid
           FOR UPDATE`,
-        authorityId
+        authorityIdText
       );
       if (rows.length !== 1) return { consumed: false, reason: 'NOT_FOUND' } as const;
       const row = rows[0];
       const record = authorityFromRow(row);
       if (row.isNotExpired !== true) {
-        await this.appendLedger(transaction, authorityId, 'EXPIRED', { reason: 'expired_before_consume' });
+        await this.appendLedger(transaction, authorityIdText, 'EXPIRED', { reason: 'expired_before_consume' });
         return { consumed: false, reason: 'EXPIRED' } as const;
       }
       if (
@@ -313,16 +329,16 @@ export class AuthorityService {
         record.prepareSha256 !== contextHash || record.exactTarget !== ctxExactTarget ||
         record.contextBinding !== ctxContextBinding
       ) {
-        await this.appendLedger(transaction, authorityId, 'CONSUME_REJECTED', { reason: 'context_mismatch' });
+        await this.appendLedger(transaction, authorityIdText, 'CONSUME_REJECTED', { reason: 'context_mismatch' });
         return { consumed: false, reason: 'CONTEXT_MISMATCH' } as const;
       }
       if (record.state !== 'ACTIVE_UNUSED') {
-        await this.appendLedger(transaction, authorityId, 'CONSUME_REJECTED', { reason: 'already_consumed' });
+        await this.appendLedger(transaction, authorityIdText, 'CONSUME_REJECTED', { reason: 'already_consumed' });
         return { consumed: false, reason: 'ALREADY_CONSUMED' } as const;
       }
       const policyDecision = await this.policy.authorizeConsume(record, frozenContext);
       if (policyDecision.allowed !== true) {
-        await this.appendLedger(transaction, authorityId, 'CONSUME_REJECTED', {
+        await this.appendLedger(transaction, authorityIdText, 'CONSUME_REJECTED', {
           reason: policyDecision.reason ?? 'current_policy_rejected',
         });
         return { consumed: false, reason: 'POLICY_REJECTED' } as const;
@@ -335,14 +351,14 @@ export class AuthorityService {
             AND "state" = 'ACTIVE_UNUSED'
             AND "expiresAt" > (clock_timestamp() AT TIME ZONE 'UTC')
           RETURNING *`,
-        authorityId
+        authorityIdText
       );
       if (consumedRows.length !== 1) {
-        await this.appendLedger(transaction, authorityId, 'CONSUME_REJECTED', { reason: 'compare_and_swap_lost' });
+        await this.appendLedger(transaction, authorityIdText, 'CONSUME_REJECTED', { reason: 'compare_and_swap_lost' });
         return { consumed: false, reason: 'ALREADY_CONSUMED' } as const;
       }
       const consumedAuthority = authorityFromRow(consumedRows[0]);
-      await this.appendLedger(transaction, authorityId, 'CONSUMED', {
+      await this.appendLedger(transaction, authorityIdText, 'CONSUMED', {
         actionKind: consumedAuthority.actionKind,
         prepareSha256: consumedAuthority.prepareSha256,
       });

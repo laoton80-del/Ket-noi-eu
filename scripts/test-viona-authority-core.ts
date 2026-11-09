@@ -298,6 +298,162 @@ async function main(): Promise<void> {
   assert.equal(b6Issued.expiresAt.getTime(), b6RealMs);
   console.log('PASS expiresAt epoch read once via intrinsic (stored == policy expiry)');
 
+  // B7: hostile objects, boxed primitives, and Proxies are rejected before policy and before any database call.
+  const b7Allow = {
+    allowed: true,
+    policyVersion: 'policy-v1',
+    issuedBy: 'server:authority-test',
+    approvalRef: 'approval:test-fixture',
+    contextBinding: 'context-binding:test-fixture',
+  } as const;
+  let b7IssueCalls = 0;
+  let b7Transactions = 0;
+  const b7Db = new MemoryAuthorityDatabase();
+  const b7Database: AuthorityDatabase = {
+    $transaction: async () => {
+      b7Transactions += 1;
+      throw new Error('database transaction must not start');
+    },
+    $queryRawUnsafe: b7Db.$queryRawUnsafe.bind(b7Db),
+    $executeRawUnsafe: b7Db.$executeRawUnsafe.bind(b7Db),
+  };
+  const b7Service = new AuthorityService(b7Database, {
+    authorizeIssue: async () => {
+      b7IssueCalls += 1;
+      return b7Allow;
+    },
+    authorizeConsume: async () => ({ allowed: true }),
+  });
+  const hostileCost = {
+    [Symbol.toPrimitive]() { return 1n; },
+    toString() { return '1000000000'; },
+  };
+  await assert.rejects(
+    () => b7Service.issue({ ...issueInput({ b7: 'cost' }), maxCostMinor: hostileCost as unknown as bigint }),
+    /failed closed validation/
+  );
+  assert.equal(b7IssueCalls, 0);
+  assert.equal(b7Transactions, 0);
+  assert.equal(b7Db.records.size, 0);
+  console.log('PASS B7 maxCostMinor object is rejected before authorizeIssue and before a database write');
+
+  const boxedCurrency = new String('USD');
+  const currencyProxy = new Proxy(
+    { [Symbol.toPrimitive]() { return 'USD'; }, toString() { return 'USD'; } },
+    {}
+  );
+  await assert.rejects(
+    () => b7Service.issue({ ...issueInput({ b7: 'boxed-currency' }), currency: boxedCurrency as unknown as string }),
+    /failed closed validation/
+  );
+  await assert.rejects(
+    () => b7Service.issue({ ...issueInput({ b7: 'proxy-currency' }), currency: currencyProxy as unknown as string }),
+    /failed closed validation/
+  );
+  await assert.rejects(
+    () => b7Service.issue({
+      ...issueInput({ b7: 'object-subject' }),
+      subjectId: { toString() { return 'subject-unit'; } } as unknown as string,
+    }),
+    /failed closed validation/
+  );
+  assert.equal(b7IssueCalls, 0);
+  assert.equal(b7Transactions, 0);
+
+  const validForConsume = issueInput({ b7: 'consume-guards' });
+  const consumeDb = new MemoryAuthorityDatabase();
+  let consumePolicyCalls = 0;
+  const consumeService = new AuthorityService(consumeDb, {
+    authorizeIssue: async () => b7Allow,
+    authorizeConsume: async () => {
+      consumePolicyCalls += 1;
+      return { allowed: true };
+    },
+  });
+  const issuedForConsume = await consumeService.issue(validForConsume);
+  const fakeAuthorityId = {
+    [Symbol.toPrimitive]() { return issuedForConsume.authorityId; },
+    toString() { return issuedForConsume.authorityId; },
+  };
+  const fakeConsume = await consumeService.verifyAndConsume(
+    fakeAuthorityId as unknown as string,
+    contextFor(validForConsume, validForConsume.preparePayload)
+  );
+  assert.deepEqual(fakeConsume, { consumed: false, reason: 'NOT_FOUND' });
+  const boxedContext = contextFor(validForConsume, validForConsume.preparePayload);
+  (boxedContext as { subjectId: unknown }).subjectId = new String(validForConsume.subjectId);
+  const boxedConsume = await consumeService.verifyAndConsume(issuedForConsume.authorityId, boxedContext);
+  assert.deepEqual(boxedConsume, { consumed: false, reason: 'CONTEXT_MISMATCH' });
+  assert.equal(consumePolicyCalls, 0);
+  assert.equal(consumeDb.records.get(issuedForConsume.authorityId)?.state, 'ACTIVE_UNUSED');
+  assert.equal(consumeDb.ledger.some((entry) => entry.entryType === 'CONSUME_REJECTED'), false);
+  console.log('PASS B7 boxed and object string scalars, including currency and authorityId, do not pass validation');
+
+  let subjectReads = 0;
+  let currencyReads = 0;
+  let costReads = 0;
+  let contextReads = 0;
+  let liveSubject = 'subject-unit';
+  let liveCurrency = 'USD';
+  let liveCost = 500n;
+  let liveContextSubject = 'subject-unit';
+  const getterIssue = issueInput({ b7: 'read-once' });
+  Object.defineProperty(getterIssue, 'subjectId', {
+    enumerable: true,
+    configurable: true,
+    get() { subjectReads += 1; return liveSubject; },
+  });
+  Object.defineProperty(getterIssue, 'currency', {
+    enumerable: true,
+    configurable: true,
+    get() { currencyReads += 1; return liveCurrency; },
+  });
+  Object.defineProperty(getterIssue, 'maxCostMinor', {
+    enumerable: true,
+    configurable: true,
+    get() { costReads += 1; return liveCost; },
+  });
+  const getterDb = new MemoryAuthorityDatabase();
+  const getterService = new AuthorityService(getterDb, {
+    authorizeIssue: async (snapshot) => {
+      await Promise.resolve();
+      liveSubject = 'MUTATED';
+      liveCurrency = 'EUR';
+      liveCost = 9n;
+      assert.equal(snapshot.subjectId, 'subject-unit');
+      assert.equal(snapshot.currency, 'USD');
+      assert.equal(snapshot.maxCostMinor, 500n);
+      return b7Allow;
+    },
+    authorizeConsume: async (_record, snapshot) => {
+      await Promise.resolve();
+      liveContextSubject = 'MUTATED';
+      assert.equal(snapshot.subjectId, 'subject-unit');
+      return { allowed: true };
+    },
+  });
+  const getterIssued = await getterService.issue(getterIssue);
+  assert.equal(subjectReads, 1);
+  assert.equal(currencyReads, 1);
+  assert.equal(costReads, 1);
+  assert.equal(getterIssued.subjectId, 'subject-unit');
+  assert.equal(getterIssued.currency, 'USD');
+  assert.equal(getterIssued.maxCostMinor, 500n);
+  assert.equal(getterDb.records.get(getterIssued.authorityId)?.subjectId, 'subject-unit');
+  assert.equal(getterDb.records.get(getterIssued.authorityId)?.currency, 'USD');
+  const getterContext = contextFor(getterIssue, getterIssue.preparePayload);
+  Object.defineProperty(getterContext, 'subjectId', {
+    enumerable: true,
+    configurable: true,
+    get() { contextReads += 1; return liveContextSubject; },
+  });
+  liveContextSubject = 'subject-unit';
+  const getterConsumed = await getterService.verifyAndConsume(getterIssued.authorityId, getterContext);
+  assert.equal(contextReads, 1);
+  assert.equal(getterConsumed.consumed, true);
+  assert.equal(getterConsumed.authority?.subjectId, 'subject-unit');
+  console.log('PASS B7 getters are read once and await mutation does not change the stored snapshot');
+
   const srcRoot = resolve(__dirname, '..', 'src');
   const writer = /\b(?:INSERT\s+INTO|UPDATE)\s+"?(?:AuthorityRecord|AuthorityLedgerEntry)"?\b|\.authority(?:Record|LedgerEntry)\.(?:create|createMany|update|updateMany|upsert|delete|deleteMany)\s*\(/i;
   const outOfModuleWriters = sourceFiles(srcRoot)
@@ -309,7 +465,7 @@ async function main(): Promise<void> {
   assert.match(envDoc, /separate database role/i);
   assert.match(envDoc, /planner\/AI/i);
   console.log('PASS static single-writer guard and deploy-role requirement');
-  console.log('10 authority core checks passed.');
+  console.log('13 authority core checks passed.');
 }
 
 void main().catch((error: unknown) => {
