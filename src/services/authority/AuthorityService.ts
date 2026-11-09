@@ -207,22 +207,28 @@ export class AuthorityService {
     if (
       !nonEmpty(subjectId) || !nonEmpty(tenantId) || !nonEmpty(exactTarget) ||
       actionKind !== 'VOICE_CALL_BOOKING' || maxAttempts !== 1 ||
-      !(expiresAt instanceof Date) || !Number.isFinite(expiresAt.getTime()) ||
-      expiresAt.getTime() <= Date.now() || !/^[A-Z]{3}$/.test(currency) ||
+      !(expiresAt instanceof Date) || !/^[A-Z]{3}$/.test(currency) ||
       maxCostMinor < 0n
     ) {
       throw new Error('Authority issue input failed closed validation');
     }
+    // Read the caller Date's epoch once via the Date intrinsic so overridden getTime/toISOString
+    // (or a Date subclass) cannot make the stored expiry disagree with the expiry the policy evaluates.
+    const expiresAtMs = Date.prototype.getTime.call(expiresAt);
+    if (!Number.isFinite(expiresAtMs) || expiresAtMs <= Date.now()) {
+      throw new Error('Authority issue input failed closed validation');
+    }
+    const trustedExpiresAt = new Date(expiresAtMs);
     // Snapshot before any await so a concurrent caller mutation cannot change what was approved/stored.
     const preparePayloadCanon = canonicalize(input.preparePayload);
     const prepareSha256 = prepareHashFromCanonical(preparePayloadCanon);
     const disclosuresJson = canonicalize(input.allowedDisclosures);
     const constraintsJson = canonicalize(input.constraints);
-    const expiresAtUtc = utcTimestampWithoutZone(expiresAt);
+    const expiresAtUtc = utcTimestampWithoutZone(trustedExpiresAt);
     const maxCostMinorText = maxCostMinor.toString();
     const snapshot: AuthorityIssueInput = Object.freeze({
       subjectId, tenantId, actionKind, exactTarget, maxAttempts,
-      expiresAt: new Date(expiresAt.getTime()), currency, maxCostMinor,
+      expiresAt: new Date(expiresAtMs), currency, maxCostMinor,
       allowedDisclosures: JSON.parse(disclosuresJson) as unknown,
       constraints: JSON.parse(constraintsJson) as unknown,
       preparePayload: JSON.parse(preparePayloadCanon) as unknown,

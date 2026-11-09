@@ -273,6 +273,31 @@ async function main(): Promise<void> {
   assert.equal(b5Issued.prepareSha256, prepareHash({ amount: 1_000_000 }));
   console.log('PASS preparePayload is read once; hash matches payload shown to policy');
 
+  // B6: expiresAt epoch is read once via Date intrinsic; overridden getTime/toISOString cannot split
+  // the stored expiry from the expiry the policy evaluates.
+  const b6RealMs = Date.now() + 24 * 60 * 60 * 1000;
+  const b6Date = new Date(b6RealMs);
+  (b6Date as unknown as { getTime: () => number }).getTime = () => Date.now() + 60_000;
+  const b6Input = { ...issueInput({ b6: true }), expiresAt: b6Date };
+  let b6PolicySawExpiryMs = 0;
+  const b6Service = new AuthorityService(new MemoryAuthorityDatabase(), {
+    authorizeIssue: async (snapshot) => {
+      b6PolicySawExpiryMs = snapshot.expiresAt.getTime();
+      return {
+        allowed: true,
+        policyVersion: 'policy-v1',
+        issuedBy: 'server:authority-test',
+        approvalRef: 'approval:test-fixture',
+        contextBinding: 'context-binding:test-fixture',
+      };
+    },
+    authorizeConsume: async () => ({ allowed: true }),
+  });
+  const b6Issued = await b6Service.issue(b6Input);
+  assert.equal(b6PolicySawExpiryMs, b6RealMs);
+  assert.equal(b6Issued.expiresAt.getTime(), b6RealMs);
+  console.log('PASS expiresAt epoch read once via intrinsic (stored == policy expiry)');
+
   const srcRoot = resolve(__dirname, '..', 'src');
   const writer = /\b(?:INSERT\s+INTO|UPDATE)\s+"?(?:AuthorityRecord|AuthorityLedgerEntry)"?\b|\.authority(?:Record|LedgerEntry)\.(?:create|createMany|update|updateMany|upsert|delete|deleteMany)\s*\(/i;
   const outOfModuleWriters = sourceFiles(srcRoot)
@@ -284,7 +309,7 @@ async function main(): Promise<void> {
   assert.match(envDoc, /separate database role/i);
   assert.match(envDoc, /planner\/AI/i);
   console.log('PASS static single-writer guard and deploy-role requirement');
-  console.log('9 authority core checks passed.');
+  console.log('10 authority core checks passed.');
 }
 
 void main().catch((error: unknown) => {
