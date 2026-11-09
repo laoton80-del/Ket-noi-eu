@@ -325,7 +325,7 @@ async function main(): Promise<void> {
     const reservation = await governor.reserve({
       subjectId: costSubject,
       idempotencyKey: `authority-release-${randomUUID()}`,
-      rail: 'AUTHORITY_TEST',
+      rail: 'EXPRESS',
       provider: 'openai',
       model: 'authority-fixture-model',
       operationKind: 'AUTHORITY_GATE_TEST',
@@ -333,7 +333,7 @@ async function main(): Promise<void> {
       outputTokens: 20n,
     });
     assert.equal(reservation.decision, 'ALLOW_RESERVED');
-    if (reservation.decision !== 'ALLOW_RESERVED') throw new Error(`Cost reserve failed: ${reservation.decision}`);
+    if (reservation.decision !== 'ALLOW_RESERVED') throw new Error('Cost reserve did not return ALLOW_RESERVED');
     const consumedInput = fixtureInput(costSubject, 'tenant-cost-release');
     const releaseService = authorityService(prisma, issuePolicy());
     const releaseAuthority = await releaseService.issue(consumedInput);
