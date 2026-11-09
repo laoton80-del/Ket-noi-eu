@@ -150,6 +150,37 @@ These roles must exist as named accountability on every release wave that touche
 
 Unresolved conflicts between Product and Engineering escalate to **Executive Sponsor**. Conflicts involving legal/regulatory claims escalate to **Compliance & Privacy Owner** + Sponsor.
 
+### 4.3 Three-tier compartmentalized sandbox acceleration
+
+This model routes separately authorized work by its actual effects. It does not itself grant source, runtime, data, Git, or release authority. Each lane still requires an explicit Operator envelope, canonical-root verification, exact target-file preservation, and the applicable baseline and safety gates.
+
+#### Tier 1 — Frontend sandbox: maximum acceleration
+
+- **Executor:** Cursor, under an explicitly authorized frontend lane.
+- **Eligible UI paths:** `src/screens/*`, `src/components/*`, `src/assets/*`, and `src/navigation/*`, including nested files under those prefixes. The active lane must still identify and preserve its exact target files.
+- **Data and effects:** Use 100% synthetic, in-memory mock data for sandbox flows. No live backend calls, provider execution, payments, persistence, real booking submission, or real SOS dispatch.
+- **Review and completion:** Pure UI, styling, and mock interaction changes are exempt from mandatory Codex Independent Security Review. Complete local UI validation, then obtain a direct Operator Visual Pass. This exemption does not waive a review required by the actual behavior or another governing gate.
+- **Truth boundary:** Do not present mock results as production outcomes. A frontend file that changes protected runtime behavior is not eligible for this exemption.
+
+#### Tier 2 — Backend logic sandbox
+
+- **Executor:** Codex, within an authorized isolated development environment for API, controller, domain, and business-logic work.
+- **Iteration:** Local implementation and remediation may be batched in a bounded, explicitly authorized Macro-Pack.
+- **Limits:** No implicit staging or production database writes, payment execution, or provider calls. Protected infrastructure capabilities escalate to Tier 3.
+- **Promotion:** A completed backend Macro-Pack requires independent audit and explicit Operator approval before merge into the canonical baseline.
+
+#### Tier 3 — Infrastructure and native sandbox
+
+- **Scope:** S14, native Windows ABI, Git plumbing, BME-07 Money, provider integration, and any operation crossing a protected security or financial boundary.
+- **Controls:** Preserve strict Zero-Trust, exact authority, scoped write sets, baseline requirements, and fail-closed behavior. Tier 1 or Tier 2 classification grants no automatic exemption from these controls.
+
+#### Cross-tier classification and LO-03 application
+
+- Classify work by actual effects and capabilities, not extension or folder name alone. Separate mixed-scope work into independent contracts; the stricter tier governs protected effects. Existing Class B and Class C reviews, product-safety rules, and §6 document control remain in force.
+- P2I-02 pure mock LO-03 UI is Tier 1: Cursor implementation, local UI validation, then Operator Visual Pass. It must not submit a real request.
+- P2I-03 real LO-03 domain/API integration is Tier 2, with Tier 3 gates for any protected effects.
+- P2I-03K legal, retention, and erasure dependencies remain unresolved and are not automatically approved. A UI mock does not establish production API readiness.
+
 ---
 
 ## 5. Agent-specific instruction (Cursor / automation)

@@ -1,0 +1,72 @@
+{
+  "edition": "VIONA_BME_FINAL_2026_10_02",
+  "blueprint_version": "FINAL_V3",
+  "encyclopedia_version": "V5",
+  "universe_count": 6,
+  "top_level_module_count": 63,
+  "engine_count": 8,
+  "artifacts": [
+    {
+      "file": "CONTENT_VALIDATION.json",
+      "bytes": 3178,
+      "sha256": "cc8c5dad722d28ed3c0551a50a836d073815d6a6f87d0a96f0b8bb85bf6b7e9f"
+    },
+    {
+      "file": "DOC_TRUOC_VIONA_BME_FINAL.md",
+      "bytes": 3537,
+      "sha256": "21a275bbf3b4aca27930fbb06dc1515c9c2f5645f74371823d2a4d1a35f46709"
+    },
+    {
+      "file": "VIONA_BLUEPRINT_FINAL_V3_BME.pdf",
+      "bytes": 154794,
+      "sha256": "c816e6d1341977671a7ca3e8433a2f7f902ec2e59ba52a337176b4d7f0305daa",
+      "pages": 33
+    },
+    {
+      "file": "VIONA_BME_MODULE_ENGINE_REGISTRY.json",
+      "bytes": 18363,
+      "sha256": "e56cba17c94a7c9f1eb5c167e3f3c2772f92e94bd9c096c100a8d731ab0d1989"
+    },
+    {
+      "file": "VIONA_POST_REC2_R9_EXPANSION_BLUEPRINT_MASTER_SOCKET_MAP_FINAL_V3_BROKERAGE_MARKETPLACE_ECONOMY.md",
+      "bytes": 51772,
+      "sha256": "a0903eaa5d9d0e5425184a51bba6413e4d70e7dc179e9810c57addc95e44db44"
+    },
+    {
+      "file": "VIONA_TOAN_THU_V5_BME_VI.pdf",
+      "bytes": 939962,
+      "sha256": "dd9a50dc25afa82dd3ef13b466213b72d671fb4c8335176b04eedd06136ea9d3",
+      "pages": 248
+    },
+    {
+      "file": "VIONA_TOAN_THU_V5_BROKERAGE_MARKETPLACE_ECONOMY_VI.md",
+      "bytes": 384783,
+      "sha256": "f50c8b660d702946fc128b906748a42924d72afbb3e8920e90abbf74dbd8aac1"
+    },
+    {
+      "file": "VIONA_TOAN_THU_V5_TAP_1.pdf",
+      "bytes": 156139,
+      "sha256": "9079247ed970d367bebdece16ac1f67061783d7aa4b1210767ccc094cb0c17e4",
+      "pages": 36
+    },
+    {
+      "file": "VIONA_TOAN_THU_V5_TAP_2.pdf",
+      "bytes": 214199,
+      "sha256": "16485174b009ea866c8bfb4c518396f2a702327450495fc8c68b8936b665964a",
+      "pages": 52
+    },
+    {
+      "file": "VIONA_TOAN_THU_V5_TAP_3.pdf",
+      "bytes": 311222,
+      "sha256": "dd0ee4e255d752e64b44f411bfa6c4130fbb4a16eb5cd3875c1e50780eada96f",
+      "pages": 92
+    },
+    {
+      "file": "VIONA_TOAN_THU_V5_TAP_4.pdf",
+      "bytes": 224218,
+      "sha256": "f2e75b94273a4057601aefa379ceee538f4b402a151eeb36a4fba9aa67bea290",
+      "pages": 63
+    }
+  ],
+  "manifest_does_not_hash_itself": true
+}

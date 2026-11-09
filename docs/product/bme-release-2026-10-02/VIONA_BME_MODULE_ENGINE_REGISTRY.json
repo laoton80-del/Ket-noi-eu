@@ -1,0 +1,471 @@
+{
+  "registry_scope": "PRODUCT_DOCUMENT_ARCHITECTURE_NOT_PRODUCTION_CLAIM",
+  "universe_count": 6,
+  "module_count": 63,
+  "brokerage_engine_count": 8,
+  "new_top_level_module_count": 0,
+  "modules": [
+    {
+      "module_id": "BU-01",
+      "universe": "Business",
+      "source_name": "Core POS & Smart Kitchen",
+      "description": "Máy tính tiền, chia hóa đơn, kết nối cân điện tử, máy quét mã vạch, KDS điều phối bếp."
+    },
+    {
+      "module_id": "BU-02",
+      "universe": "Business",
+      "source_name": "Salon & Beauty Engine",
+      "description": "Chia hoa hồng thợ (split tip), xoay tua thợ (turn-based), quản lý vật tư hóa chất."
+    },
+    {
+      "module_id": "BU-03",
+      "universe": "Business",
+      "source_name": "Asia Grocery & Potraviny",
+      "description": "Quản lý kho theo lô/hạn sử dụng, gợi ý hạ giá hàng cận date, công nợ sỉ/lẻ."
+    },
+    {
+      "module_id": "BU-04",
+      "universe": "Business",
+      "source_name": "Staff Shift Optimizer",
+      "description": "Tự động xếp ca làm việc, chấm công GPS/khuôn mặt."
+    },
+    {
+      "module_id": "BU-05",
+      "universe": "Business",
+      "source_name": "Local Reputation & SEO",
+      "description": "Tự động phát hiện đánh giá xấu trên Google/TripAdvisor và soạn phản hồi."
+    },
+    {
+      "module_id": "BU-06",
+      "universe": "Business",
+      "source_name": "Cross-border Logistics Hub",
+      "description": "Theo dõi vận tải tiểu ngạch, check mã HS và kiểm dịch thực vật."
+    },
+    {
+      "module_id": "BU-07",
+      "universe": "Business",
+      "source_name": "Franchise Hub & Commercial Lease",
+      "description": "Quản lý chuỗi chi nhánh, AI quét hợp đồng thuê mặt bằng cảnh báo rủi ro."
+    },
+    {
+      "module_id": "BU-08",
+      "universe": "Business",
+      "source_name": "Autonomous Voice Receptionist",
+      "description": "Tác tử AI đàm thoại thời gian thực chốt lịch hẹn."
+    },
+    {
+      "module_id": "BU-09",
+      "universe": "Business",
+      "source_name": "Predictive Strategy Engine",
+      "description": "Trí tuệ dự báo đề xuất giá bán linh hoạt (Dynamic Pricing)."
+    },
+    {
+      "module_id": "BU-10",
+      "universe": "Business",
+      "source_name": "Autonomous Supply Negotiator",
+      "description": "Tác tử đàm phán tự động tìm nguồn hàng rẻ nhất."
+    },
+    {
+      "module_id": "BU-11",
+      "universe": "Business",
+      "source_name": "Spatial AR Storefront",
+      "description": "Giao diện 3D AR quét mặt tiền hiện menu và nút đặt bàn."
+    },
+    {
+      "module_id": "BU-12",
+      "universe": "Business",
+      "source_name": "AI Tax Audit Defender",
+      "description": "Tác tử phân tích yêu cầu thanh tra thuế, tự động trích xuất Sổ cái và soạn thảo hồ sơ đối soát chuẩn pháp lý."
+    },
+    {
+      "module_id": "BU-13",
+      "universe": "Business",
+      "source_name": "GDPR Compliance Auto-Pilot",
+      "description": "Tự động mã hóa và hủy dữ liệu khách hàng theo đúng chuẩn luật bảo vệ dữ liệu EU để tránh án phạt."
+    },
+    {
+      "module_id": "BU-14",
+      "universe": "Business",
+      "source_name": "Spot-Market Energy Optimizer",
+      "description": "AI đọc giá điện/gas thời gian thực, tự động kích hoạt máy móc công suất lớn vào các khung giờ \"giá điện âm\"."
+    },
+    {
+      "module_id": "TR-01",
+      "universe": "Travel",
+      "source_name": "Visa & Immigration Copilot",
+      "description": "Tự động điền tờ khai Schengen, gia hạn cư trú, đặt lịch hẹn ngoại kiều."
+    },
+    {
+      "module_id": "TR-02",
+      "universe": "Travel",
+      "source_name": "Tax-Free & VAT Refund Auto-Pilot",
+      "description": "Scan hóa đơn, tự tạo hồ sơ hoàn thuế sân bay."
+    },
+    {
+      "module_id": "TR-03",
+      "universe": "Travel",
+      "source_name": "Live Voice Interpreter",
+      "description": "Phiên dịch giọng nói hai chiều trực tiếp (Việt - Bản địa)."
+    },
+    {
+      "module_id": "TR-04",
+      "universe": "Travel",
+      "source_name": "Intermodal Commute Hub",
+      "description": "Tích hợp mua vé tàu hỏa liên vận quốc tế, xe buýt đường dài."
+    },
+    {
+      "module_id": "TR-05",
+      "universe": "Travel",
+      "source_name": "Cross-border Pet Travel",
+      "description": "Hỗ trợ thủ tục kiểm dịch hàng không cho thú cưng."
+    },
+    {
+      "module_id": "TR-06",
+      "universe": "Travel",
+      "source_name": "B2B Tour Operator & GDS Hook",
+      "description": "Hệ thống điều hành tour, phân phối inventory du lịch và GDS/provider integration; trong FINAL V3 đây là module neo của **BME-02 Viona Travel Marketplace** và có thể mở các capability booking nội bộ mà không tạo module mới."
+    },
+    {
+      "module_id": "TR-07",
+      "universe": "Travel",
+      "source_name": "Dynamic Swarm Routing",
+      "description": "AI định tuyến tự đổi vé liên tuyến/báo trễ khách sạn khi phương tiện delay."
+    },
+    {
+      "module_id": "TR-08",
+      "universe": "Travel",
+      "source_name": "Immersive AR Concierge",
+      "description": "Hướng dẫn viên du lịch AR phủ thông tin lịch sử lên không gian thật."
+    },
+    {
+      "module_id": "TR-09",
+      "universe": "Travel",
+      "source_name": "Swarm Baggage Tracker",
+      "description": "Mạng lưới Bluetooth diện rộng tự động tìm vali thất lạc qua các thiết bị Viona lân cận."
+    },
+    {
+      "module_id": "TR-10",
+      "universe": "Travel",
+      "source_name": "Carbon Footprint Wallet",
+      "description": "Đo lường khí thải di chuyển và tự động mua tín chỉ xanh (Carbon Credits) bằng tiền lẻ tích lũy."
+    },
+    {
+      "module_id": "AC-01",
+      "universe": "Academy",
+      "source_name": "Vocational Exam Simulator",
+      "description": "Luyện thi lý thuyết lái xe, an toàn thực phẩm, thi nhập tịch."
+    },
+    {
+      "module_id": "AC-02",
+      "universe": "Academy",
+      "source_name": "Vietnamese Heritage Language Tutor",
+      "description": "Dạy tiếng Việt tương tác cho thế hệ F2, F3."
+    },
+    {
+      "module_id": "AC-03",
+      "universe": "Academy",
+      "source_name": "Expert Knowledge Marketplace",
+      "description": "Sàn thương mại đóng gói khóa học, tài liệu."
+    },
+    {
+      "module_id": "AC-04",
+      "universe": "Academy",
+      "source_name": "Credential Translator",
+      "description": "Quy đổi và hợp pháp hóa bằng cấp sang chuẩn EU."
+    },
+    {
+      "module_id": "AC-05",
+      "universe": "Academy",
+      "source_name": "Bio-sync Cognitive Learner",
+      "description": "Đọc sinh trắc học để đẩy bài học khó vào giờ Peak Focus."
+    },
+    {
+      "module_id": "AC-06",
+      "universe": "Academy",
+      "source_name": "Lesson Plan Architect",
+      "description": "Tự động thiết kế giáo án và chấm bài luận."
+    },
+    {
+      "module_id": "AC-07",
+      "universe": "Academy",
+      "source_name": "VR Vocation Simulator",
+      "description": "Thực hành nghề (nail, bếp) trong môi trường VR."
+    },
+    {
+      "module_id": "AC-08",
+      "universe": "Academy",
+      "source_name": "Digital Genealogy & Ancestry AI",
+      "description": "Lưu trữ hồi ký và nhân bản giọng nói/tính cách để thế hệ sau giao tiếp với tổ tiên qua AI."
+    },
+    {
+      "module_id": "AC-09",
+      "universe": "Academy",
+      "source_name": "Skill-to-Job Matching Engine",
+      "description": "AI tự động khớp nối học viên vừa tốt nghiệp với các doanh nghiệp kiều bào đang thiếu nhân sự."
+    },
+    {
+      "module_id": "LO-01",
+      "universe": "Local",
+      "source_name": "Bureaucracy Navigator",
+      "description": "Dịch công văn hành chính (thuế, tòa án, phạt nguội) và hướng dẫn xử lý."
+    },
+    {
+      "module_id": "LO-02",
+      "universe": "Local",
+      "source_name": "Community Real Estate",
+      "description": "Sàn sang nhượng quán ăn, tiệm nail, thuê nhà xác thực chủ quyền."
+    },
+    {
+      "module_id": "LO-03",
+      "universe": "Local",
+      "source_name": "On-demand Handyman",
+      "description": "Gọi thợ sửa điện nước, bảo trì khẩn cấp trong cộng đồng."
+    },
+    {
+      "module_id": "LO-04",
+      "universe": "Local",
+      "source_name": "Telehealth Medical Bridge",
+      "description": "Kết nối bác sĩ đa khoa người Việt từ xa, dịch đơn thuốc bản địa."
+    },
+    {
+      "module_id": "LO-05",
+      "universe": "Local",
+      "source_name": "Viona Mobility & Partner Economy (Community Carpool successor)",
+      "description": "Hệ sinh thái kiếm thu nhập hợp pháp cho người Việt ở nước ngoài thông qua Ride, Delivery, Errand, Local Helper, Student Jobs và Business Runner; mọi mode được Country Policy, Identity/Eligibility, Trust, Authority, Payment/Settlement và Safety gate theo từng quốc gia/thành phố."
+    },
+    {
+      "module_id": "LO-06",
+      "universe": "Local",
+      "source_name": "Predictive Lifestyle Orchestrator",
+      "description": "Tiên đoán hết nhu yếu phẩm, tự săn sale và nhắc thanh toán."
+    },
+    {
+      "module_id": "LO-07",
+      "universe": "Local",
+      "source_name": "Smart Home IoT Link",
+      "description": "Tích hợp điều khiển thiết bị nhà thông minh."
+    },
+    {
+      "module_id": "LO-08",
+      "universe": "Local",
+      "source_name": "Drone-Delivery API Hook",
+      "description": "Cổng kết nối robot giao hàng nội khu."
+    },
+    {
+      "module_id": "LO-09",
+      "universe": "Local",
+      "source_name": "Trust-based Networking & Dating",
+      "description": "Sàn giao lưu/hẹn hò yêu cầu KYC 100% sinh trắc học, triệt tiêu lừa đảo."
+    },
+    {
+      "module_id": "LO-10",
+      "universe": "Local",
+      "source_name": "Smart EV Charging Negotiator",
+      "description": "Tác tử tự động đàm phán với lưới điện để sạc xe điện vào khung giờ giá rẻ nhất trong đêm."
+    },
+    {
+      "module_id": "AT-01",
+      "universe": "Account",
+      "source_name": "Smart Remittance Router",
+      "description": "So sánh tỷ giá và định tuyến kiều hối hợp pháp tối ưu."
+    },
+    {
+      "module_id": "AT-02",
+      "universe": "Account",
+      "source_name": "Cross-border Tax Compliance",
+      "description": "Cảnh báo nghĩa vụ khai thuế song phương."
+    },
+    {
+      "module_id": "AT-03",
+      "universe": "Account",
+      "source_name": "Viona Trust Index",
+      "description": "Chấm điểm tín nhiệm giao thương nội bộ người dùng."
+    },
+    {
+      "module_id": "AT-04",
+      "universe": "Account",
+      "source_name": "Family Treasury & Micro-lending",
+      "description": "Quản lý quỹ gia đình đa quốc gia, hợp đồng thông minh cho họ/hụi."
+    },
+    {
+      "module_id": "AT-05",
+      "universe": "Account",
+      "source_name": "Multi-tenant Payment Gateway",
+      "description": "Cổng thanh toán, chia sẻ doanh thu tự động."
+    },
+    {
+      "module_id": "AT-06",
+      "universe": "Account",
+      "source_name": "Digital Inheritance Vault (Quantum-ready)",
+      "description": "Két di chúc và tài sản số kích hoạt khẩn cấp (Multisig) kháng lượng tử."
+    },
+    {
+      "module_id": "AT-07",
+      "universe": "Account",
+      "source_name": "Scam Shield AI",
+      "description": "Quét tin nhắn/link với DB tội phạm mạng để chặn lừa đảo."
+    },
+    {
+      "module_id": "AT-08",
+      "universe": "Account",
+      "source_name": "Micro-Wealth Autonomous Agent",
+      "description": "Trích lập tiền lẻ để tự động đầu tư an toàn."
+    },
+    {
+      "module_id": "AT-09",
+      "universe": "Account",
+      "source_name": "Crypto-Fiat Autonomous Bridge",
+      "description": "Cầu nối tự động đổi Crypto sang Fiat để thanh toán tức thời, sinh báo cáo AML."
+    },
+    {
+      "module_id": "AT-10",
+      "universe": "Account",
+      "source_name": "Smart Crowdfunding",
+      "description": "Sàn gọi vốn cộng đồng giải ngân theo tiến độ (Milestone) bằng Smart Contract."
+    },
+    {
+      "module_id": "SO-01",
+      "universe": "SOS",
+      "source_name": "Lost Passport Emergency Flow",
+      "description": "Tạo đơn trình báo mất giấy tờ tự gửi cảnh sát/Đại sứ quán."
+    },
+    {
+      "module_id": "SO-02",
+      "universe": "SOS",
+      "source_name": "Emergency Legal Guard",
+      "description": "Ghi âm khẩn cấp, phát tín hiệu cho luật sư khi bị tạm giữ."
+    },
+    {
+      "module_id": "SO-03",
+      "universe": "SOS",
+      "source_name": "Community Beacon Alert",
+      "description": "Phát tin báo mất tích (trẻ em/người già) bán kính hẹp."
+    },
+    {
+      "module_id": "SO-04",
+      "universe": "SOS",
+      "source_name": "Mental Health SOS & Cultural Navigator",
+      "description": "Cố vấn tâm lý khẩn cấp và cảnh báo \"luật bất thành văn\"."
+    },
+    {
+      "module_id": "SO-05",
+      "universe": "SOS",
+      "source_name": "Zero-Connection Safe Map",
+      "description": "Bản đồ Offline trạm xá, đồn cảnh sát, nhà cộng đồng kiều bào."
+    },
+    {
+      "module_id": "SO-06",
+      "universe": "SOS",
+      "source_name": "Predictive Biometric Over-watch",
+      "description": "Dự báo đột quỵ/nhồi máu cơ tim qua smartwatch và tự gọi cấp cứu."
+    },
+    {
+      "module_id": "SO-07",
+      "universe": "SOS",
+      "source_name": "Mesh-Network Survival Mode",
+      "description": "Tạo mạng kết nối truyền tay (Bluetooth/Wifi Direct) khi sập mạng viễn thông."
+    },
+    {
+      "module_id": "SO-08",
+      "universe": "SOS",
+      "source_name": "IoT Crash Detection",
+      "description": "Tự kích hoạt SOS qua cảm biến va chạm gia tốc."
+    },
+    {
+      "module_id": "SO-09",
+      "universe": "SOS",
+      "source_name": "Deepfake & Voice Clone Detector",
+      "description": "Trình quét phổ âm thanh thời gian thực cảnh báo cuộc gọi lừa đảo mạo danh người thân."
+    },
+    {
+      "module_id": "SO-10",
+      "universe": "SOS",
+      "source_name": "Coercion Silent Alarm",
+      "description": "Kích hoạt cảnh báo ngầm (ghi âm, gửi tọa độ) thông qua cử chỉ vuốt nghịch lý hoặc mật mã giọng nói ẩn khi người dùng bị khống chế."
+    }
+  ],
+  "engines": [
+    {
+      "engine_id": "BME-01",
+      "name": "Viona Mobility & Partner Economy",
+      "module_mapping": "LO-05; hỗ trợ Account/Business/Travel/SOS",
+      "demand_supply": "Khách/merchant ↔ Partner đủ eligibility",
+      "revenue_posture": "transaction/lead/platform fee",
+      "activation_posture": "A2 non-ride pilots; Ride ở B theo market/license"
+    },
+    {
+      "engine_id": "BME-02",
+      "name": "Viona Travel Marketplace",
+      "module_mapping": "TR-06; hỗ trợ TR-01, TR-04, TR-05, TR-07",
+      "demand_supply": "Khách du lịch ↔ hotel/transport/tour/provider",
+      "revenue_posture": "booking/provider commission, affiliate, SaaS",
+      "activation_posture": "B; từng provider/market GREEN"
+    },
+    {
+      "engine_id": "BME-03",
+      "name": "Viona Home & Real Estate Marketplace",
+      "module_mapping": "LO-02; hỗ trợ BU-07",
+      "demand_supply": "Người thuê/mua/sang nhượng ↔ owner/broker/business",
+      "revenue_posture": "listing, qualified lead, referral, transaction",
+      "activation_posture": "B; trust/title/policy gated"
+    },
+    {
+      "engine_id": "BME-04",
+      "name": "Viona Service Marketplace",
+      "module_mapping": "LO-03; hỗ trợ LO-01, Business supply",
+      "demand_supply": "Người cần dịch vụ ↔ handyman/helper/local professional",
+      "revenue_posture": "lead/transaction commission",
+      "activation_posture": "A2/B; category-by-category"
+    },
+    {
+      "engine_id": "BME-05",
+      "name": "Viona Talent Marketplace",
+      "module_mapping": "AC-09, AC-03; hỗ trợ BU-04",
+      "demand_supply": "Học viên/freelancer ↔ employer/client",
+      "revenue_posture": "recruitment/placement fee, marketplace commission, B2B SaaS",
+      "activation_posture": "A/B; work-right and fairness gated"
+    },
+    {
+      "engine_id": "BME-06",
+      "name": "Viona B2B Supply Marketplace",
+      "module_mapping": "BU-06, BU-10; hỗ trợ BU-03",
+      "demand_supply": "Merchant ↔ supplier/logistics/wholesale provider",
+      "revenue_posture": "partner/transaction commission, savings share, SaaS",
+      "activation_posture": "B/C; merchant authority required"
+    },
+    {
+      "engine_id": "BME-07",
+      "name": "Viona Money Marketplace",
+      "module_mapping": "AT-01, AT-02, AT-05, AT-08, AT-09",
+      "demand_supply": "User/business ↔ licensed financial/payment/professional provider",
+      "revenue_posture": "referral/provider commission, payment fee",
+      "activation_posture": "selected D; provider-led, jurisdiction gated"
+    },
+    {
+      "engine_id": "BME-08",
+      "name": "Viona Trusted Professional Network",
+      "module_mapping": "LO-04, SO-02, SO-04, BU-12, AT-02, TR-01",
+      "demand_supply": "User ↔ verified legal/health/tax/immigration professionals",
+      "revenue_posture": "referral/service fee, Plus/partner revenue",
+      "activation_posture": "selected D; high-trust, human/provider controlled"
+    }
+  ],
+  "lo05_internal_capabilities": [
+    "LO-05A",
+    "LO-05B",
+    "LO-05C",
+    "LO-05D",
+    "LO-05E",
+    "LO-05F"
+  ],
+  "tr06_internal_capabilities": [
+    "TR-06A",
+    "TR-06B",
+    "TR-06C",
+    "TR-06D",
+    "TR-06E",
+    "TR-06F",
+    "TR-06G",
+    "TR-06H"
+  ]
+}

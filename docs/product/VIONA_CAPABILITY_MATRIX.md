@@ -26,9 +26,11 @@ This matrix is not wired into live UI in Job A. Future implementation packs may 
 | requiresMarketReadiness | Country, language, provider, supplier, and local operating conditions must be reviewed. |
 | prohibitsAutonomousAction | AI or automation may explain, classify, draft, or suggest, but may not execute protected action alone. |
 
-## Universe readiness matrix
+## Capability readiness: Home orchestration and six universes
 
-| Universe | Status | Required flags | Current safe state | Not live in this pack |
+Home is a shared orchestration surface, not a seventh universe. The six universe rows are Local, Travel, Academy, Business, Account, and SOS. This taxonomy clarification changes no status, required flag, safe-state description, or live-readiness claim below.
+
+| Surface / universe | Status | Required flags | Current safe state | Not live in this pack |
 | --- | --- | --- | --- | --- |
 | Home | active | human confirmation, no autonomous action | Global command center, navigation, onboarding, and safe status explanation. | No protected-domain completion claim. |
 | Local | requestOnly | human confirmation, ops, market, no autonomous action | Service discovery, request drafts, translation support, and manual triage. | No guaranteed provider outcome or autonomous partner message. |

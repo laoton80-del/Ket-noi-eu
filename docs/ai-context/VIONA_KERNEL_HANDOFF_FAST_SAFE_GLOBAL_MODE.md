@@ -143,6 +143,11 @@ The exact six universes:
 
 Taxonomy note: this is a taxonomy correction only. The earlier presentation in this section that listed Home as a universe, and the earlier "4 Universes" taxonomy, are `HISTORICAL / SUPERSEDED IN SCOPE`. The five Operating Systems remain cross-cutting operating / value systems, not the universe taxonomy.
 
+### Post-R9K BME product-source pointer — not execution state
+
+- `docs/product/VIONA_BME_RELEASE_SOURCE_INDEX.md` records the exact Blueprint FINAL V3 / Handbook V5 release, its six-universe / 63-module / eight-engine product inventory, and its selected launch ordering. This is versioned product context, not a replacement for the current Master Blueprint V2, this handoff's engineering baseline, or any DEP01/Authz execution contract.
+- **Conflict status: unresolved.** The incoming AT-09/AT-10 and BME-07/AT-09 source text remains unmodified source material. It is not adopted into effective architecture while the existing §17.5 crypto/blockchain/smart-contract exclusion stands; a separate Operator/governance decision is required.
+
 ### Launcher law (current canon — docs / product law, not runtime proof)
 
 - Full six-universe launcher: web and tablet landscape **3 × 2**; tablet portrait **2 × 3**; phone **2 columns**, falling to **1 column** where width or font scale requires.
