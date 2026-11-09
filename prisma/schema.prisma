@@ -1344,3 +1344,44 @@ model AiCostBudgetCounter {
   @@unique([scope, windowStart])
   @@index([windowStart])
 }
+
+/// Server-issued, single-use authorization for one precisely bound action.
+model AuthorityRecord {
+  authorityId        String   @id @default(uuid()) @db.Uuid
+  subjectId          String
+  tenantId           String
+  policyVersion      String
+  prepareSha256      String   @db.VarChar(64)
+  actionKind         String
+  exactTarget        String
+  maxAttempts        Int      @default(1)
+  expiresAt          DateTime @db.Timestamp(3)
+  currency           String   @db.VarChar(3)
+  maxCostMinor       BigInt
+  allowedDisclosures Json     @db.JsonB
+  constraints        Json     @db.JsonB
+  state              String   @default("ACTIVE_UNUSED")
+  issuedBy           String
+  approvalRef        String
+  contextBinding     String
+  createdAt          DateTime @default(now()) @db.Timestamp(3)
+  consumedAt         DateTime? @db.Timestamp(3)
+
+  ledgerEntries AuthorityLedgerEntry[]
+
+  @@index([subjectId, tenantId])
+  @@index([state, expiresAt])
+}
+
+/// Append-only audit history for a single-use authority record.
+model AuthorityLedgerEntry {
+  id          String   @id @default(uuid()) @db.Uuid
+  authorityId String   @db.Uuid
+  entryType   String
+  detail      Json     @db.JsonB
+  createdAt   DateTime @default(now()) @db.Timestamp(3)
+
+  authority AuthorityRecord @relation(fields: [authorityId], references: [authorityId], onDelete: Restrict)
+
+  @@index([authorityId, createdAt])
+}

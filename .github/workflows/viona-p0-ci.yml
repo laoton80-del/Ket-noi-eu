@@ -49,6 +49,8 @@ jobs:
         run: npx tsx scripts/test-viona-minhkhang-no-paid-fallback.ts
       - name: Test A0e voice scenario
         run: npx tsx scripts/test-viona-voice-scenario-retail-taphoa.ts
+      - name: Test Authority core
+        run: npx tsx scripts/test-viona-authority-core.ts
 
   postgres:
     runs-on: ubuntu-latest
@@ -79,4 +81,4 @@ jobs:
         env:
           VIONA_TEST_PG_TOOLS_DIR: ${{ github.workspace }}/scripts/ci/pg-test-tools
           VIONA_TEST_PG_TIME_ZONE: ${{ matrix.tz }}
-        run: npx tsx scripts/test-viona-cost-governor-postgres.ts && npx tsx scripts/test-viona-cost-governor-price-seed.ts
+        run: npx tsx scripts/test-viona-cost-governor-postgres.ts && npx tsx scripts/test-viona-cost-governor-price-seed.ts && npx tsx scripts/test-viona-authority-postgres.ts
