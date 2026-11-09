@@ -16,20 +16,26 @@
  * Head activation: exact-head APPROVED review submitted_at <= run.created_at + snapshot A/B.
  */
 
-import { createHash } from 'node:crypto';
-import { pathToFileURL } from 'node:url';
-import path from 'node:path';
+import { createHash } from "node:crypto";
+import { pathToFileURL } from "node:url";
+import path from "node:path";
 
 export const REPOSITORY_LEVEL_REQUIRED_CHECK_IS_PRIMARY =
-  'REPOSITORY_LEVEL_REQUIRED_CHECK_IS_PRIMARY';
+  "REPOSITORY_LEVEL_REQUIRED_CHECK_IS_PRIMARY";
 export const GUARDED_MERGE_WRAPPER_IS_DEFENSE_IN_DEPTH =
-  'GUARDED_MERGE_WRAPPER_IS_DEFENSE_IN_DEPTH';
+  "GUARDED_MERGE_WRAPPER_IS_DEFENSE_IN_DEPTH";
 
 // Canonical Stage 1 identity (VIONA.REC2.MERGE_CONTROL.STAGE1_READINESS_SEMANTIC_MIGRATION.LOCAL_IMPLEMENTATION.V1):
 // this check communicates technical/procedural READINESS for a Governor
 // merge-authorization decision. It does NOT itself grant merge authority
 // and MUST NEVER carry authority=MERGE-shaped semantics (design §2).
-export const GATE_CHECK_RUN_NAME = 'Viona Merge Readiness Gate';
+export const GATE_CHECK_RUN_NAME = "Viona Merge Readiness Gate";
+export const GATE_DISPATCH_MODES = Object.freeze({
+  NORMAL: "NORMAL",
+  FAILED_STAGE1_SUPERSESSION_V1: "FAILED_STAGE1_SUPERSESSION_V1",
+});
+export const GATE_RECOVERY_EVIDENCE_SCHEMA =
+  "viona.stage1.failed-supersession/v1";
 // Canonical Stage 2 (Viona Explicit Merge Authorization) check-run name,
 // duplicated here as a local literal — intentionally NOT imported from
 // scripts/viona-merge-explicit-authorization.mjs, because that module
@@ -39,96 +45,163 @@ export const GATE_CHECK_RUN_NAME = 'Viona Merge Readiness Gate';
 // required context must already be green" enumeration below (governance
 // directive VIONA.REC2.MERGE_CONTROL.LANE_B2.CIRCULAR_DEPENDENCY_REMEDIATION.LOCAL_IMPLEMENTATION.V2) —
 // it does not relax enforcement of any other (unrelated) required context.
-const STAGE2_CHECK_RUN_NAME = 'Viona Explicit Merge Authorization';
-export const WORKFLOW_FILE_PATH = '.github/workflows/viona-merge-authorization-gate.yml';
-export const WORKFLOW_DISPLAY_NAME = 'Viona Merge Readiness Gate Dispatcher';
-export const JOB_ID = 'evaluate_merge_authorization';
-export const JOB_DISPLAY_NAME = 'Evaluate Viona Merge Readiness Gate';
-export const GATE_SCRIPT_PATH = 'scripts/viona-merge-authorization-gate.mjs';
-export const CANONICAL_REPOSITORY = 'laoton80-del/Ket-noi-eu';
-export const CANONICAL_BASE_BRANCH = 'master';
-export const CANONICAL_MERGE_MODE = 'squash';
+const STAGE2_CHECK_RUN_NAME = "Viona Explicit Merge Authorization";
+export const WORKFLOW_FILE_PATH =
+  ".github/workflows/viona-merge-authorization-gate.yml";
+export const WORKFLOW_DISPLAY_NAME = "Viona Merge Readiness Gate Dispatcher";
+export const JOB_ID = "evaluate_merge_authorization";
+export const JOB_DISPLAY_NAME = "Evaluate Viona Merge Readiness Gate";
+export const GATE_SCRIPT_PATH = "scripts/viona-merge-authorization-gate.mjs";
+export const CANONICAL_REPOSITORY = "laoton80-del/Ket-noi-eu";
+export const CANONICAL_BASE_BRANCH = "master";
+export const CANONICAL_MERGE_MODE = "squash";
 export const CANONICAL_FREEZE_SCOPE =
-  'FREEZE_EXCEPTION_FOR_MERGE_GUARDRAIL_REMEDIATION_ONLY';
+  "FREEZE_EXCEPTION_FOR_MERGE_GUARDRAIL_REMEDIATION_ONLY";
 export const GLOBAL_MERGE_FREEZE_STATES = Object.freeze({
-  ACTIVE: 'ACTIVE',
-  RELEASED: 'RELEASED',
+  ACTIVE: "ACTIVE",
+  RELEASED: "RELEASED",
 });
 export const GLOBAL_MERGE_FREEZE_STATE = GLOBAL_MERGE_FREEZE_STATES.RELEASED;
-export const RELEASED_FREEZE_SCOPE = 'GLOBAL_MERGE_FREEZE_RELEASED';
+export const RELEASED_FREEZE_SCOPE = "GLOBAL_MERGE_FREEZE_RELEASED";
 export const FREEZE_SCOPE_POLICY_FAILURES = Object.freeze({
-  ACTIVE_REMEDIATION_SCOPE_REQUIRED: 'ACTIVE_REMEDIATION_SCOPE_REQUIRED',
-  RELEASED_SCOPE_REQUIRED: 'RELEASED_SCOPE_REQUIRED',
-  UNKNOWN_FREEZE_STATE: 'UNKNOWN_FREEZE_STATE',
+  ACTIVE_REMEDIATION_SCOPE_REQUIRED: "ACTIVE_REMEDIATION_SCOPE_REQUIRED",
+  RELEASED_SCOPE_REQUIRED: "RELEASED_SCOPE_REQUIRED",
+  UNKNOWN_FREEZE_STATE: "UNKNOWN_FREEZE_STATE",
 });
-export const AUTHORIZED_ACTORS = Object.freeze(['laoton80-del']);
+export const AUTHORIZED_ACTORS = Object.freeze(["laoton80-del"]);
 export const ALLOWED_WORKFLOW_PERMISSIONS = Object.freeze([
-  'contents: read',
-  'pull-requests: read',
-  'checks: write',
+  "contents: read",
+  "pull-requests: read",
+  "checks: write",
 ]);
 export const FORBIDDEN_WORKFLOW_PERMISSIONS = Object.freeze([
-  'contents: write',
-  'pull-requests: write',
-  'statuses: write',
-  'actions: write',
-  'deployments: write',
-  'packages: write',
-  'id-token: write',
+  "contents: write",
+  "pull-requests: write",
+  "statuses: write",
+  "actions: write",
+  "deployments: write",
+  "packages: write",
+  "id-token: write",
 ]);
 
 export const BLOCKERS = Object.freeze({
   BLOCKED_MERGE_AUTHORIZATION_PROVENANCE_UNRESOLVED:
-    'BLOCKED_MERGE_AUTHORIZATION_PROVENANCE_UNRESOLVED',
-  BLOCKED_MERGE_AUTHORIZED_HEAD_MISMATCH: 'BLOCKED_MERGE_AUTHORIZED_HEAD_MISMATCH',
+    "BLOCKED_MERGE_AUTHORIZATION_PROVENANCE_UNRESOLVED",
+  BLOCKED_MERGE_AUTHORIZED_HEAD_MISMATCH:
+    "BLOCKED_MERGE_AUTHORIZED_HEAD_MISMATCH",
   BLOCKED_MERGE_MODE_AUTHORIZATION_MISMATCH:
-    'BLOCKED_MERGE_MODE_AUTHORIZATION_MISMATCH',
+    "BLOCKED_MERGE_MODE_AUTHORIZATION_MISMATCH",
   BLOCKED_MERGE_PR_NUMBER_AUTHORIZATION_MISMATCH:
-    'BLOCKED_MERGE_PR_NUMBER_AUTHORIZATION_MISMATCH',
-  BLOCKED_MERGE_BASE_BRANCH_MISMATCH: 'BLOCKED_MERGE_BASE_BRANCH_MISMATCH',
+    "BLOCKED_MERGE_PR_NUMBER_AUTHORIZATION_MISMATCH",
+  BLOCKED_MERGE_BASE_BRANCH_MISMATCH: "BLOCKED_MERGE_BASE_BRANCH_MISMATCH",
   BLOCKED_MERGE_SCOPE_CHANGED_AFTER_REVIEW:
-    'BLOCKED_MERGE_SCOPE_CHANGED_AFTER_REVIEW',
-  BLOCKED_MERGE_REQUIRED_CHECK_FAILED: 'BLOCKED_MERGE_REQUIRED_CHECK_FAILED',
+    "BLOCKED_MERGE_SCOPE_CHANGED_AFTER_REVIEW",
+  BLOCKED_MERGE_REQUIRED_CHECK_FAILED: "BLOCKED_MERGE_REQUIRED_CHECK_FAILED",
   BLOCKED_MERGE_REVIEW_REQUIREMENT_NOT_SATISFIED:
-    'BLOCKED_MERGE_REVIEW_REQUIREMENT_NOT_SATISFIED',
-  BLOCKED_MERGE_UNRESOLVED_CONVERSATION: 'BLOCKED_MERGE_UNRESOLVED_CONVERSATION',
-  BLOCKED_MERGE_OPERATOR_NOT_AUTHORIZED: 'BLOCKED_MERGE_OPERATOR_NOT_AUTHORIZED',
+    "BLOCKED_MERGE_REVIEW_REQUIREMENT_NOT_SATISFIED",
+  BLOCKED_MERGE_UNRESOLVED_CONVERSATION:
+    "BLOCKED_MERGE_UNRESOLVED_CONVERSATION",
+  BLOCKED_MERGE_OPERATOR_NOT_AUTHORIZED:
+    "BLOCKED_MERGE_OPERATOR_NOT_AUTHORIZED",
   BLOCKED_MERGE_FREEZE_REMEDIATION_SCOPE_MISSING:
-    'BLOCKED_MERGE_FREEZE_REMEDIATION_SCOPE_MISSING',
-  BLOCKED_MERGE_FREEZE_SCOPE_MISMATCH: 'BLOCKED_MERGE_FREEZE_SCOPE_MISMATCH',
-  BLOCKED_MERGE_FREEZE_STATE_UNKNOWN: 'BLOCKED_MERGE_FREEZE_STATE_UNKNOWN',
+    "BLOCKED_MERGE_FREEZE_REMEDIATION_SCOPE_MISSING",
+  BLOCKED_MERGE_FREEZE_SCOPE_MISMATCH: "BLOCKED_MERGE_FREEZE_SCOPE_MISMATCH",
+  BLOCKED_MERGE_FREEZE_STATE_UNKNOWN: "BLOCKED_MERGE_FREEZE_STATE_UNKNOWN",
   BLOCKED_MERGE_AUTHORIZATION_PREDATES_CURRENT_HEAD:
-    'BLOCKED_MERGE_AUTHORIZATION_PREDATES_CURRENT_HEAD',
-  BLOCKED_MERGE_AUTO_MERGE_ACTIVE: 'BLOCKED_MERGE_AUTO_MERGE_ACTIVE',
+    "BLOCKED_MERGE_AUTHORIZATION_PREDATES_CURRENT_HEAD",
+  BLOCKED_MERGE_AUTO_MERGE_ACTIVE: "BLOCKED_MERGE_AUTO_MERGE_ACTIVE",
   BLOCKED_MERGE_REPOSITORY_RULESET_NOT_ENFORCED:
-    'BLOCKED_MERGE_REPOSITORY_RULESET_NOT_ENFORCED',
+    "BLOCKED_MERGE_REPOSITORY_RULESET_NOT_ENFORCED",
   BLOCKED_MERGE_PROTECTION_READ_CREDENTIAL_MISSING:
-    'BLOCKED_MERGE_PROTECTION_READ_CREDENTIAL_MISSING',
+    "BLOCKED_MERGE_PROTECTION_READ_CREDENTIAL_MISSING",
   BLOCKED_MERGE_PROTECTION_READ_UNAUTHORIZED:
-    'BLOCKED_MERGE_PROTECTION_READ_UNAUTHORIZED',
+    "BLOCKED_MERGE_PROTECTION_READ_UNAUTHORIZED",
   BLOCKED_MERGE_WORKFLOW_RERUN_NOT_PERMITTED:
-    'BLOCKED_MERGE_WORKFLOW_RERUN_NOT_PERMITTED',
+    "BLOCKED_MERGE_WORKFLOW_RERUN_NOT_PERMITTED",
   BLOCKED_VIONA_T3_GATE_CONTEXT_IDENTITY_AMBIGUOUS:
-    'BLOCKED_VIONA_T3_GATE_CONTEXT_IDENTITY_AMBIGUOUS',
+    "BLOCKED_VIONA_T3_GATE_CONTEXT_IDENTITY_AMBIGUOUS",
   BLOCKED_VIONA_T3_GATE_CHECK_APP_IDENTITY_UNRESOLVED:
-    'BLOCKED_VIONA_T3_GATE_CHECK_APP_IDENTITY_UNRESOLVED',
+    "BLOCKED_VIONA_T3_GATE_CHECK_APP_IDENTITY_UNRESOLVED",
   BLOCKED_VIONA_T3_GATE_PERMISSION_SCOPE_EXCESSIVE:
-    'BLOCKED_VIONA_T3_GATE_PERMISSION_SCOPE_EXCESSIVE',
+    "BLOCKED_VIONA_T3_GATE_PERMISSION_SCOPE_EXCESSIVE",
   BLOCKED_VIONA_T3_AUTHORIZATION_PROVENANCE_MECHANISM_UNRESOLVED:
-    'BLOCKED_VIONA_T3_AUTHORIZATION_PROVENANCE_MECHANISM_UNRESOLVED',
+    "BLOCKED_VIONA_T3_AUTHORIZATION_PROVENANCE_MECHANISM_UNRESOLVED",
   BLOCKED_VIONA_T3_CANONICAL_WORKFLOW_VERSION_UNPROVEN:
-    'BLOCKED_VIONA_T3_CANONICAL_WORKFLOW_VERSION_UNPROVEN',
+    "BLOCKED_VIONA_T3_CANONICAL_WORKFLOW_VERSION_UNPROVEN",
   BLOCKED_VIONA_T3_AUTHORIZATION_HEAD_ACTIVATION_TIME_UNPROVEN:
-    'BLOCKED_VIONA_T3_AUTHORIZATION_HEAD_ACTIVATION_TIME_UNPROVEN',
+    "BLOCKED_VIONA_T3_AUTHORIZATION_HEAD_ACTIVATION_TIME_UNPROVEN",
   BLOCKED_VIONA_T3_DUPLICATE_GATE_RESULT_AMBIGUOUS:
-    'BLOCKED_VIONA_T3_DUPLICATE_GATE_RESULT_AMBIGUOUS',
+    "BLOCKED_VIONA_T3_DUPLICATE_GATE_RESULT_AMBIGUOUS",
   BLOCKED_VIONA_T3_CHECK_CREATED_BEFORE_MINIMUM_PROVENANCE:
-    'BLOCKED_VIONA_T3_CHECK_CREATED_BEFORE_MINIMUM_PROVENANCE',
-  BLOCKED_VIONA_T3_GATE_TECHNICAL_ERROR: 'BLOCKED_VIONA_T3_GATE_TECHNICAL_ERROR',
+    "BLOCKED_VIONA_T3_CHECK_CREATED_BEFORE_MINIMUM_PROVENANCE",
+  BLOCKED_VIONA_T3_FAILED_STAGE1_SUPERSESSION_INVALID:
+    "BLOCKED_VIONA_T3_FAILED_STAGE1_SUPERSESSION_INVALID",
+  BLOCKED_VIONA_T3_FAILED_STAGE1_SUPERSESSION_ALREADY_CONSUMED:
+    "BLOCKED_VIONA_T3_FAILED_STAGE1_SUPERSESSION_ALREADY_CONSUMED",
+  BLOCKED_VIONA_T3_GATE_TECHNICAL_ERROR:
+    "BLOCKED_VIONA_T3_GATE_TECHNICAL_ERROR",
+});
+
+// The recovery mode is deliberately case-bound. Adding another recoverable
+// failure requires a new, separately reviewed code/governance change; callers
+// cannot turn FAILED_STAGE1_SUPERSESSION_V1 into a generic retry facility by
+// supplying a different otherwise-well-formed binding.
+export const FAILED_STAGE1_SUPERSESSION_CASE_V1 = Object.freeze({
+  prNumber: 475,
+  headSha: "0fb0201bc7cba32dd31603fbfd07639fa78d6ee4",
+  treeSha: "fbe87bd54f3c33e65efafae15c2f00308c569f83",
+  priorRunId: 36228538792,
+  priorCheckRunId: 108367170206,
+  priorConclusion: "failure",
+  priorBlocker: BLOCKERS.BLOCKED_MERGE_SCOPE_CHANGED_AFTER_REVIEW,
+  priorDigest:
+    "b4be1d46cdfe30287e2aa3e2e79660c929d16a688366710f9697e99f931d1778",
+  canonicalDigest:
+    "fd0fee7a91ccd563b254f3f4c67f747428dde860482a54f9b1293e726763c826",
+  reviewerLogin: "Maty2016",
+  preflightCheckName: "Expo + Trust + Functions Preflight",
 });
 
 const FULL_SHA_RE = /^[0-9a-f]{40}$/i;
-const FORBIDDEN_INPUT_KEYS = Object.freeze(['authorization', 'authorized_operator']);
+const SHA256_RE = /^[0-9a-f]{64}$/i;
+const POSITIVE_INTEGER_RE = /^[1-9]\d*$/;
+const UUID_RE =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+const FORBIDDEN_INPUT_KEYS = Object.freeze([
+  "authorization",
+  "authorized_operator",
+]);
+const UNSCHEMATIZED_RECOVERY_ENV_KEYS = Object.freeze([
+  "VIONA_GATE_RECOVERY_CASE_ID",
+  "VIONA_GATE_RECOVERY_EXPECTED_TREE",
+  "VIONA_GATE_PRIOR_RUN_ID",
+  "VIONA_GATE_PRIOR_CHECK_RUN_ID",
+  "VIONA_GATE_PRIOR_FAILURE_BLOCKER",
+  "VIONA_GATE_PRIOR_SUPPLIED_SCOPE_DIGEST",
+]);
+
+function isSafePositiveInteger(value) {
+  return (
+    POSITIVE_INTEGER_RE.test(String(value ?? "")) &&
+    Number.isSafeInteger(Number(value))
+  );
+}
+
+export function recoveryBindingMatchesCanonicalCase(fields) {
+  const expected = FAILED_STAGE1_SUPERSESSION_CASE_V1;
+  return (
+    Number(fields?.prNumber) === expected.prNumber &&
+    String(fields?.headSha ?? "").toLowerCase() === expected.headSha &&
+    String(fields?.treeSha ?? "").toLowerCase() === expected.treeSha &&
+    String(fields?.priorRunId ?? "") === String(expected.priorRunId) &&
+    String(fields?.priorCheckRunId ?? "") ===
+      String(expected.priorCheckRunId) &&
+    fields?.priorBlocker === expected.priorBlocker &&
+    String(fields?.priorDigest ?? "").toLowerCase() === expected.priorDigest &&
+    String(fields?.canonicalDigest ?? "").toLowerCase() ===
+      expected.canonicalDigest
+  );
+}
 
 /**
  * Canonical, code-owned merge-freeze scope policy shared by Stage 1,
@@ -155,11 +228,17 @@ export function evaluateFreezeScopeForState({ freezeState, freezeScope }) {
     }
     return { ok: true, reason: null };
   }
-  return { ok: false, reason: FREEZE_SCOPE_POLICY_FAILURES.UNKNOWN_FREEZE_STATE };
+  return {
+    ok: false,
+    reason: FREEZE_SCOPE_POLICY_FAILURES.UNKNOWN_FREEZE_STATE,
+  };
 }
 
 function stage1BlockerForFreezeScopePolicy(policy) {
-  if (policy?.reason === FREEZE_SCOPE_POLICY_FAILURES.ACTIVE_REMEDIATION_SCOPE_REQUIRED) {
+  if (
+    policy?.reason ===
+    FREEZE_SCOPE_POLICY_FAILURES.ACTIVE_REMEDIATION_SCOPE_REQUIRED
+  ) {
     return BLOCKERS.BLOCKED_MERGE_FREEZE_REMEDIATION_SCOPE_MISSING;
   }
   if (policy?.reason === FREEZE_SCOPE_POLICY_FAILURES.RELEASED_SCOPE_REQUIRED) {
@@ -171,7 +250,7 @@ function stage1BlockerForFreezeScopePolicy(policy) {
 export const CANONICAL_MASTER_PROTECTION_PATH = `/repos/${CANONICAL_REPOSITORY}/branches/master/protection`;
 
 export function normalizeRestPath(urlPath) {
-  return String(urlPath ?? '').split('?')[0];
+  return String(urlPath ?? "").split("?")[0];
 }
 
 export function isCanonicalMasterProtectionPath(urlPath) {
@@ -190,7 +269,7 @@ function pathGuardError(message) {
 export function assertChecksRestRequest(method, urlPath) {
   void method;
   if (isCanonicalMasterProtectionPath(urlPath)) {
-    throw pathGuardError('checks_token_protection_get_forbidden');
+    throw pathGuardError("checks_token_protection_get_forbidden");
   }
 }
 
@@ -199,21 +278,170 @@ export function assertChecksRestRequest(method, urlPath) {
  * GET /repos/laoton80-del/Ket-noi-eu/branches/master/protection
  */
 export function assertProtectionReadRequest(method, urlPath) {
-  const m = String(method ?? '').toUpperCase();
-  if (m !== 'GET' || !isCanonicalMasterProtectionPath(urlPath)) {
-    throw pathGuardError('protection_read_path_forbidden');
+  const m = String(method ?? "").toUpperCase();
+  if (m !== "GET" || !isCanonicalMasterProtectionPath(urlPath)) {
+    throw pathGuardError("protection_read_path_forbidden");
   }
 }
 
 export function computeReviewedScopeDigest(files) {
   const records = (files ?? []).map((f) => {
-    const status = String(f.status ?? '');
-    const filename = String(f.filename ?? '');
-    const previous = String(f.previous_filename ?? f.previousFilename ?? '');
+    const status = String(f.status ?? "");
+    const filename = String(f.filename ?? "");
+    const previous = String(f.previous_filename ?? f.previousFilename ?? "");
     return { filename, line: `${status}\t${filename}\t${previous}` };
   });
-  records.sort((a, b) => (a.filename < b.filename ? -1 : a.filename > b.filename ? 1 : 0));
-  return createHash('sha256').update(records.map((r) => r.line).join('\n'), 'utf8').digest('hex');
+  records.sort((a, b) =>
+    a.filename < b.filename ? -1 : a.filename > b.filename ? 1 : 0
+  );
+  return createHash("sha256")
+    .update(records.map((r) => r.line).join("\n"), "utf8")
+    .digest("hex");
+}
+
+export function parseGateCheckEvidence(checkRun) {
+  const summary = checkRun?.output?.summary;
+  if (typeof summary !== "string" || summary.trim() === "") return null;
+  try {
+    const parsed = JSON.parse(summary);
+    return parsed && typeof parsed === "object" && !Array.isArray(parsed)
+      ? parsed
+      : null;
+  } catch {
+    return null;
+  }
+}
+
+export function recoveryCheckExternalId(recoveryCaseId) {
+  return `viona-stage1-recovery:${recoveryCaseId}`;
+}
+
+/**
+ * Resolve the one effective Stage-1 success for downstream Stage 2 / merge
+ * consumers. A normal head has exactly one canonical check. A recovered head
+ * has exactly one immutable failure plus one schema-bound successor. Every
+ * other cardinality or shape is ambiguous and therefore unusable.
+ */
+export function resolveEffectiveStage1Check(checkRuns, headSha) {
+  const head = String(headSha ?? "").toLowerCase();
+  const canonical = (checkRuns ?? []).filter(
+    (check) =>
+      check?.name === GATE_CHECK_RUN_NAME &&
+      String(check?.head_sha ?? "").toLowerCase() === head
+  );
+
+  if (canonical.length === 1) {
+    const [only] = canonical;
+    const evidence = parseGateCheckEvidence(only);
+    if (
+      evidence?.recoverySchema === GATE_RECOVERY_EVIDENCE_SCHEMA ||
+      evidence?.stage1DispatchMode ===
+        GATE_DISPATCH_MODES.FAILED_STAGE1_SUPERSESSION_V1 ||
+      evidence?.recovery_mode ===
+        GATE_DISPATCH_MODES.FAILED_STAGE1_SUPERSESSION_V1
+    ) {
+      return {
+        ok: false,
+        reason: "recovery_successor_without_prior",
+        check: null,
+      };
+    }
+    if (only?.conclusion !== "success") {
+      return { ok: false, reason: "single_stage1_not_success", check: null };
+    }
+    return {
+      ok: true,
+      reason: null,
+      mode: GATE_DISPATCH_MODES.NORMAL,
+      check: only,
+      priorCheck: null,
+      evidence,
+    };
+  }
+
+  if (canonical.length !== 2) {
+    return { ok: false, reason: "stage1_check_count_ambiguous", check: null };
+  }
+
+  const withEvidence = canonical.map((check) => ({
+    check,
+    evidence: parseGateCheckEvidence(check),
+  }));
+  const successors = withEvidence.filter(
+    ({ evidence }) =>
+      evidence?.recoverySchema === GATE_RECOVERY_EVIDENCE_SCHEMA &&
+      evidence?.recovery_mode ===
+        GATE_DISPATCH_MODES.FAILED_STAGE1_SUPERSESSION_V1
+  );
+  if (successors.length !== 1) {
+    return {
+      ok: false,
+      reason: "recovery_successor_identity_ambiguous",
+      check: null,
+    };
+  }
+
+  const successor = successors[0];
+  const prior = canonical.find(
+    (check) => String(check?.id) !== String(successor.check?.id)
+  );
+  const priorEvidence = parseGateCheckEvidence(prior);
+  const evidence = successor.evidence;
+  const recoveryCaseId = String(evidence?.recovery_case_id ?? "");
+  const priorAppId = prior?.app?.id ?? prior?.app_id ?? null;
+  const successorAppId =
+    successor.check?.app?.id ?? successor.check?.app_id ?? null;
+  const priorBlocker = priorEvidence?.blocker ?? prior?.output?.title ?? null;
+  const canonicalDigest = String(evidence?.canonical_digest ?? "");
+  const priorDigest = String(evidence?.prior_digest ?? "");
+  const expected = FAILED_STAGE1_SUPERSESSION_CASE_V1;
+  const metadataValid =
+    successor.check?.conclusion === "success" &&
+    successor.check?.status === "completed" &&
+    prior?.conclusion === "failure" &&
+    prior?.status === "completed" &&
+    evidence?.stage1DispatchMode ===
+      GATE_DISPATCH_MODES.FAILED_STAGE1_SUPERSESSION_V1 &&
+    Number(evidence?.exact_pr_number) === expected.prNumber &&
+    String(evidence?.exact_head ?? "").toLowerCase() === expected.headSha &&
+    String(evidence?.exact_head ?? "").toLowerCase() === head &&
+    String(evidence?.exact_tree ?? "").toLowerCase() === expected.treeSha &&
+    String(evidence?.supersedes_run_id ?? "") === String(expected.priorRunId) &&
+    String(evidence?.supersedes_check_run_id ?? "") ===
+      String(prior?.id ?? "") &&
+    String(evidence?.supersedes_check_run_id ?? "") ===
+      String(expected.priorCheckRunId) &&
+    evidence?.prior_conclusion === expected.priorConclusion &&
+    evidence?.prior_blocker === expected.priorBlocker &&
+    priorBlocker === evidence?.prior_blocker &&
+    UUID_RE.test(recoveryCaseId) &&
+    SHA256_RE.test(canonicalDigest) &&
+    SHA256_RE.test(priorDigest) &&
+    canonicalDigest.toLowerCase() === expected.canonicalDigest &&
+    priorDigest.toLowerCase() === expected.priorDigest &&
+    canonicalDigest.toLowerCase() ===
+      String(evidence?.reviewedScopeDigest ?? "").toLowerCase() &&
+    successor.check?.external_id === recoveryCheckExternalId(recoveryCaseId) &&
+    priorAppId != null &&
+    successorAppId != null &&
+    String(priorAppId) === String(successorAppId);
+
+  if (!metadataValid) {
+    return {
+      ok: false,
+      reason: "recovery_successor_metadata_invalid",
+      check: null,
+    };
+  }
+
+  return {
+    ok: true,
+    reason: null,
+    mode: GATE_DISPATCH_MODES.FAILED_STAGE1_SUPERSESSION_V1,
+    check: successor.check,
+    priorCheck: prior,
+    evidence,
+  };
 }
 
 export function sanitizeEvidence(evidence) {
@@ -221,11 +449,11 @@ export function sanitizeEvidence(evidence) {
   for (const k of Object.keys(out)) {
     const lk = k.toLowerCase();
     if (
-      lk.includes('token') ||
-      lk.includes('authorization') ||
-      lk.includes('header') ||
-      lk === 'github_token' ||
-      lk === 'gh_token'
+      lk.includes("token") ||
+      lk.includes("authorization") ||
+      lk.includes("header") ||
+      lk === "github_token" ||
+      lk === "gh_token"
     ) {
       delete out[k];
     }
@@ -234,15 +462,23 @@ export function sanitizeEvidence(evidence) {
 }
 
 export function assertPermissionScope(permissionLines) {
-  const lines = (permissionLines ?? []).map((l) => String(l).trim().toLowerCase());
+  const lines = (permissionLines ?? []).map((l) =>
+    String(l).trim().toLowerCase()
+  );
   for (const forbidden of FORBIDDEN_WORKFLOW_PERMISSIONS) {
     if (lines.includes(forbidden.toLowerCase())) {
-      return { ok: false, blocker: BLOCKERS.BLOCKED_VIONA_T3_GATE_PERMISSION_SCOPE_EXCESSIVE };
+      return {
+        ok: false,
+        blocker: BLOCKERS.BLOCKED_VIONA_T3_GATE_PERMISSION_SCOPE_EXCESSIVE,
+      };
     }
   }
-  for (const r of ['contents: read', 'pull-requests: read', 'checks: write']) {
+  for (const r of ["contents: read", "pull-requests: read", "checks: write"]) {
     if (!lines.includes(r.toLowerCase())) {
-      return { ok: false, blocker: BLOCKERS.BLOCKED_VIONA_T3_GATE_PERMISSION_SCOPE_EXCESSIVE };
+      return {
+        ok: false,
+        blocker: BLOCKERS.BLOCKED_VIONA_T3_GATE_PERMISSION_SCOPE_EXCESSIVE,
+      };
     }
   }
   return { ok: true };
@@ -252,43 +488,124 @@ export function parseStructuredInputs(env) {
   const unexpected = [];
   for (const key of FORBIDDEN_INPUT_KEYS) {
     const envKey = `VIONA_GATE_${key.toUpperCase()}`;
-    if (env[envKey] != null && String(env[envKey]).length > 0) unexpected.push(key);
+    if (env[envKey] != null && String(env[envKey]).length > 0)
+      unexpected.push(key);
   }
+  const dispatchMode = env.VIONA_GATE_DISPATCH_MODE;
   const prRaw = env.VIONA_GATE_PR_NUMBER;
   const headSha = env.VIONA_GATE_HEAD_SHA;
   const baseBranch = env.VIONA_GATE_BASE_BRANCH;
   const mergeMode = env.VIONA_GATE_MERGE_MODE;
   const freezeScope = env.VIONA_GATE_FREEZE_SCOPE;
   const reviewedScopeDigest = env.VIONA_GATE_REVIEWED_SCOPE_DIGEST;
+  const recoveryBinding = env.VIONA_GATE_RECOVERY_BINDING ?? "";
+  const recoveryParts = String(recoveryBinding).split("|");
+  const recoveryBindingShapeValid =
+    recoveryParts.length === 7 && recoveryParts[0] === "v1";
+  const recoveryCaseId = recoveryBindingShapeValid ? recoveryParts[1] : "";
+  const recoveryExpectedTree = recoveryBindingShapeValid
+    ? recoveryParts[2]
+    : "";
+  const priorRunId = recoveryBindingShapeValid ? recoveryParts[3] : "";
+  const priorCheckRunId = recoveryBindingShapeValid ? recoveryParts[4] : "";
+  const priorFailureBlocker = recoveryBindingShapeValid ? recoveryParts[5] : "";
+  const priorSuppliedScopeDigest = recoveryBindingShapeValid
+    ? recoveryParts[6]
+    : "";
+  const unschematizedRecoveryEnvPresent = UNSCHEMATIZED_RECOVERY_ENV_KEYS.some(
+    (key) => String(env[key] ?? "").trim() !== ""
+  );
   const missing = [];
   for (const [name, value] of [
-    ['pr_number', prRaw],
-    ['head_sha', headSha],
-    ['base_branch', baseBranch],
-    ['merge_mode', mergeMode],
-    ['freeze_scope', freezeScope],
-    ['reviewed_scope_digest', reviewedScopeDigest],
+    ["dispatch_mode", dispatchMode],
+    ["pr_number", prRaw],
+    ["head_sha", headSha],
+    ["base_branch", baseBranch],
+    ["merge_mode", mergeMode],
+    ["freeze_scope", freezeScope],
+    ["reviewed_scope_digest", reviewedScopeDigest],
   ]) {
-    if (value == null || String(value).trim() === '') missing.push(name);
+    if (value == null || String(value).trim() === "") missing.push(name);
   }
   const prNumberMalformed =
     prRaw == null || !/^\d+$/.test(String(prRaw).trim()) || Number(prRaw) <= 0;
-  const headShaMalformed = headSha == null || !FULL_SHA_RE.test(String(headSha));
+  const headShaMalformed =
+    headSha == null || !FULL_SHA_RE.test(String(headSha));
+  const dispatchModeMalformed =
+    !Object.values(GATE_DISPATCH_MODES).includes(dispatchMode);
+  const recoveryMissing = [];
+  if (
+    dispatchMode === GATE_DISPATCH_MODES.FAILED_STAGE1_SUPERSESSION_V1 &&
+    String(recoveryBinding).trim() === ""
+  ) {
+    recoveryMissing.push("recovery_binding");
+  }
+  const recoveryCaseBindingMismatch =
+    dispatchMode === GATE_DISPATCH_MODES.FAILED_STAGE1_SUPERSESSION_V1 &&
+    recoveryBindingShapeValid &&
+    !recoveryBindingMatchesCanonicalCase({
+      prNumber: prRaw,
+      headSha,
+      treeSha: recoveryExpectedTree,
+      priorRunId,
+      priorCheckRunId,
+      priorBlocker: priorFailureBlocker,
+      priorDigest: priorSuppliedScopeDigest,
+      canonicalDigest: reviewedScopeDigest,
+    });
+  const recoveryFieldsMalformed =
+    unschematizedRecoveryEnvPresent ||
+    (dispatchMode === GATE_DISPATCH_MODES.FAILED_STAGE1_SUPERSESSION_V1
+      ? !recoveryBindingShapeValid ||
+        !UUID_RE.test(String(recoveryCaseId)) ||
+        !FULL_SHA_RE.test(String(recoveryExpectedTree)) ||
+        !isSafePositiveInteger(priorRunId) ||
+        !isSafePositiveInteger(priorCheckRunId) ||
+        priorFailureBlocker !==
+          BLOCKERS.BLOCKED_MERGE_SCOPE_CHANGED_AFTER_REVIEW ||
+        !SHA256_RE.test(String(priorSuppliedScopeDigest)) ||
+        !SHA256_RE.test(String(reviewedScopeDigest)) ||
+        String(priorSuppliedScopeDigest).toLowerCase() ===
+          String(reviewedScopeDigest).toLowerCase() ||
+        recoveryCaseBindingMismatch
+      : String(recoveryBinding).trim() !== "");
   return {
+    dispatchMode,
     prNumber: prNumberMalformed ? prRaw : Number(prRaw),
     headSha,
     baseBranch,
     mergeMode,
     freezeScope,
     reviewedScopeDigest,
+    recoveryBinding,
+    recoveryCaseId,
+    recoveryExpectedTree,
+    priorRunId: isSafePositiveInteger(priorRunId)
+      ? Number(priorRunId)
+      : priorRunId,
+    priorCheckRunId: isSafePositiveInteger(priorCheckRunId)
+      ? Number(priorCheckRunId)
+      : priorCheckRunId,
+    priorFailureBlocker,
+    priorSuppliedScopeDigest,
     runId: env.VIONA_GATE_RUN_ID ?? null,
     repositoryClaim: env.VIONA_GATE_REPOSITORY ?? null,
     missing,
     prNumberMalformed,
     headShaMalformed,
-    freeTextAuthorizationPresent: unexpected.includes('authorization'),
-    callerAuthorizedOperatorPresent: unexpected.includes('authorized_operator'),
-    structuredInputsComplete: missing.length === 0 && !prNumberMalformed && !headShaMalformed,
+    dispatchModeMalformed,
+    recoveryMissing,
+    recoveryFieldsMalformed,
+    recoveryCaseBindingMismatch,
+    freeTextAuthorizationPresent: unexpected.includes("authorization"),
+    callerAuthorizedOperatorPresent: unexpected.includes("authorized_operator"),
+    structuredInputsComplete:
+      missing.length === 0 &&
+      !prNumberMalformed &&
+      !headShaMalformed &&
+      !dispatchModeMalformed &&
+      recoveryMissing.length === 0 &&
+      !recoveryFieldsMalformed,
   };
 }
 
@@ -305,28 +622,44 @@ export function evaluateMergeAuthorizationGate(facts) {
     actor: facts.actor ?? null,
     workflowRunId: facts.workflowRunId ?? null,
     mergeMode: facts.mergeMode ?? null,
+    stage1DispatchMode: facts.stage1DispatchMode ?? GATE_DISPATCH_MODES.NORMAL,
     reviewedScopeDigest: facts.computedReviewedScopeDigest ?? null,
     primaryEnforcement: REPOSITORY_LEVEL_REQUIRED_CHECK_IS_PRIMARY,
     wrapperRole: GUARDED_MERGE_WRAPPER_IS_DEFENSE_IN_DEPTH,
   };
   const fail = (blocker, extra = {}) => ({
-    conclusion: 'failure',
+    conclusion: "failure",
     blocker,
-    evidence: sanitizeEvidence({ ...evidenceBase, decision: 'failure', blocker, ...extra }),
+    evidence: sanitizeEvidence({
+      ...evidenceBase,
+      decision: "failure",
+      blocker,
+      ...extra,
+    }),
   });
 
   if (facts.technicalError === true) {
     return fail(BLOCKERS.BLOCKED_VIONA_T3_GATE_TECHNICAL_ERROR);
   }
-  if (facts.freeTextAuthorizationPresent === true || facts.callerAuthorizedOperatorPresent === true) {
-    return fail(BLOCKERS.BLOCKED_VIONA_T3_AUTHORIZATION_PROVENANCE_MECHANISM_UNRESOLVED);
+  if (
+    facts.freeTextAuthorizationPresent === true ||
+    facts.callerAuthorizedOperatorPresent === true
+  ) {
+    return fail(
+      BLOCKERS.BLOCKED_VIONA_T3_AUTHORIZATION_PROVENANCE_MECHANISM_UNRESOLVED
+    );
   }
-  if (facts.provenanceMechanism !== 'VERIFIED_ACTOR_ALLOWLISTED_GITHUB_WORKFLOW_DISPATCH_RECORD') {
-    return fail(BLOCKERS.BLOCKED_VIONA_T3_AUTHORIZATION_PROVENANCE_MECHANISM_UNRESOLVED);
+  if (
+    facts.provenanceMechanism !==
+    "VERIFIED_ACTOR_ALLOWLISTED_GITHUB_WORKFLOW_DISPATCH_RECORD"
+  ) {
+    return fail(
+      BLOCKERS.BLOCKED_VIONA_T3_AUTHORIZATION_PROVENANCE_MECHANISM_UNRESOLVED
+    );
   }
-  if (facts.eventName !== 'workflow_dispatch') {
+  if (facts.eventName !== "workflow_dispatch") {
     return fail(BLOCKERS.BLOCKED_MERGE_AUTHORIZATION_PROVENANCE_UNRESOLVED, {
-      reason: 'event_not_workflow_dispatch',
+      reason: "event_not_workflow_dispatch",
     });
   }
   if (Number(facts.runAttempt) !== 1) {
@@ -334,7 +667,7 @@ export function evaluateMergeAuthorizationGate(facts) {
   }
   if (facts.repository !== CANONICAL_REPOSITORY) {
     return fail(BLOCKERS.BLOCKED_MERGE_AUTHORIZATION_PROVENANCE_UNRESOLVED, {
-      reason: 'repository_mismatch',
+      reason: "repository_mismatch",
     });
   }
   if (!AUTHORIZED_ACTORS.includes(facts.actor)) {
@@ -342,12 +675,12 @@ export function evaluateMergeAuthorizationGate(facts) {
   }
   if (facts.triggeringActor !== facts.actor) {
     return fail(BLOCKERS.BLOCKED_MERGE_AUTHORIZATION_PROVENANCE_UNRESOLVED, {
-      reason: 'triggering_actor_mismatch',
+      reason: "triggering_actor_mismatch",
     });
   }
   if (facts.workflowPath !== WORKFLOW_FILE_PATH) {
     return fail(BLOCKERS.BLOCKED_MERGE_AUTHORIZATION_PROVENANCE_UNRESOLVED, {
-      reason: 'non_canonical_workflow_path',
+      reason: "non_canonical_workflow_path",
     });
   }
   if (facts.canonicalWorkflowVersionProven !== true) {
@@ -355,13 +688,16 @@ export function evaluateMergeAuthorizationGate(facts) {
   }
   if (facts.structuredInputsComplete !== true) {
     return fail(BLOCKERS.BLOCKED_MERGE_AUTHORIZATION_PROVENANCE_UNRESOLVED, {
-      reason: 'structured_inputs_missing',
+      reason: "structured_inputs_missing",
     });
   }
   if (facts.permissionScopeOk === false) {
     return fail(BLOCKERS.BLOCKED_VIONA_T3_GATE_PERMISSION_SCOPE_EXCESSIVE);
   }
-  if (facts.checkRunName != null && facts.checkRunName !== GATE_CHECK_RUN_NAME) {
+  if (
+    facts.checkRunName != null &&
+    facts.checkRunName !== GATE_CHECK_RUN_NAME
+  ) {
     return fail(BLOCKERS.BLOCKED_VIONA_T3_GATE_CONTEXT_IDENTITY_AMBIGUOUS);
   }
   if (facts.duplicateGateResult === true) {
@@ -370,22 +706,35 @@ export function evaluateMergeAuthorizationGate(facts) {
   if (facts.prNumberMalformed === true) {
     return fail(BLOCKERS.BLOCKED_MERGE_PR_NUMBER_AUTHORIZATION_MISMATCH);
   }
-  if (facts.headShaMalformed === true || !FULL_SHA_RE.test(String(facts.headSha ?? ''))) {
+  if (
+    facts.headShaMalformed === true ||
+    !FULL_SHA_RE.test(String(facts.headSha ?? ""))
+  ) {
     return fail(BLOCKERS.BLOCKED_MERGE_AUTHORIZED_HEAD_MISMATCH);
   }
   if (facts.prMissing === true) {
-    return fail(BLOCKERS.BLOCKED_MERGE_PR_NUMBER_AUTHORIZATION_MISMATCH, { reason: 'pr_missing' });
+    return fail(BLOCKERS.BLOCKED_MERGE_PR_NUMBER_AUTHORIZATION_MISMATCH, {
+      reason: "pr_missing",
+    });
   }
-  if (facts.prState !== 'OPEN') {
-    return fail(BLOCKERS.BLOCKED_MERGE_PR_NUMBER_AUTHORIZATION_MISMATCH, { reason: 'pr_not_open' });
+  if (facts.prState !== "OPEN") {
+    return fail(BLOCKERS.BLOCKED_MERGE_PR_NUMBER_AUTHORIZATION_MISMATCH, {
+      reason: "pr_not_open",
+    });
   }
   if (Number(facts.prNumber) !== Number(facts.actualPrNumber)) {
     return fail(BLOCKERS.BLOCKED_MERGE_PR_NUMBER_AUTHORIZATION_MISMATCH);
   }
-  if (facts.baseBranch !== CANONICAL_BASE_BRANCH || facts.actualBaseBranch !== CANONICAL_BASE_BRANCH) {
+  if (
+    facts.baseBranch !== CANONICAL_BASE_BRANCH ||
+    facts.actualBaseBranch !== CANONICAL_BASE_BRANCH
+  ) {
     return fail(BLOCKERS.BLOCKED_MERGE_BASE_BRANCH_MISMATCH);
   }
-  if (String(facts.headSha).toLowerCase() !== String(facts.actualHeadSha).toLowerCase()) {
+  if (
+    String(facts.headSha).toLowerCase() !==
+    String(facts.actualHeadSha).toLowerCase()
+  ) {
     return fail(BLOCKERS.BLOCKED_MERGE_AUTHORIZED_HEAD_MISMATCH);
   }
   if (facts.mergeMode !== CANONICAL_MERGE_MODE) {
@@ -399,7 +748,9 @@ export function evaluateMergeAuthorizationGate(facts) {
     return fail(stage1BlockerForFreezeScopePolicy(freezePolicy));
   }
   if (facts.headActivationProven !== true) {
-    return fail(BLOCKERS.BLOCKED_VIONA_T3_AUTHORIZATION_HEAD_ACTIVATION_TIME_UNPROVEN);
+    return fail(
+      BLOCKERS.BLOCKED_VIONA_T3_AUTHORIZATION_HEAD_ACTIVATION_TIME_UNPROVEN
+    );
   }
   if (facts.authorizationPredatesCurrentHead === true) {
     return fail(BLOCKERS.BLOCKED_MERGE_AUTHORIZATION_PREDATES_CURRENT_HEAD);
@@ -422,25 +773,32 @@ export function evaluateMergeAuthorizationGate(facts) {
   if (facts.unresolvedConversation === true) {
     return fail(BLOCKERS.BLOCKED_MERGE_UNRESOLVED_CONVERSATION);
   }
-  if (facts.requiredCheckFailed === true || facts.staleRequiredCheckFromOtherSha === true) {
+  if (
+    facts.requiredCheckFailed === true ||
+    facts.staleRequiredCheckFromOtherSha === true
+  ) {
     return fail(BLOCKERS.BLOCKED_MERGE_REQUIRED_CHECK_FAILED);
   }
   if (facts.finalHeadMismatch === true) {
-    return fail(BLOCKERS.BLOCKED_MERGE_AUTHORIZED_HEAD_MISMATCH, { reason: 'snapshot_b_head_changed' });
+    return fail(BLOCKERS.BLOCKED_MERGE_AUTHORIZED_HEAD_MISMATCH, {
+      reason: "snapshot_b_head_changed",
+    });
   }
   if (facts.gateAppIdentityResolved === false) {
     return fail(BLOCKERS.BLOCKED_VIONA_T3_GATE_CHECK_APP_IDENTITY_UNRESOLVED);
   }
   if (facts.allConditionsExplicitlyGreen !== true) {
-    return fail(BLOCKERS.BLOCKED_VIONA_T3_GATE_TECHNICAL_ERROR, { reason: 'no_default_success' });
+    return fail(BLOCKERS.BLOCKED_VIONA_T3_GATE_TECHNICAL_ERROR, {
+      reason: "no_default_success",
+    });
   }
 
   return {
-    conclusion: 'success',
+    conclusion: "success",
     blocker: null,
     evidence: sanitizeEvidence({
       ...evidenceBase,
-      decision: 'success',
+      decision: "success",
       blocker: null,
       gateAppId: facts.gateAppId ?? null,
     }),
@@ -450,23 +808,49 @@ export function evaluateMergeAuthorizationGate(facts) {
 export function selectExactHeadApproval(reviews, headSha, dispatchCreatedAtMs) {
   const head = String(headSha).toLowerCase();
   const dispatchMs = Number(dispatchCreatedAtMs);
-  if (!Number.isFinite(dispatchMs)) return { ok: false, reason: 'dispatch_time_unresolved' };
+  if (!Number.isFinite(dispatchMs))
+    return { ok: false, reason: "dispatch_time_unresolved" };
   const candidates = (reviews ?? []).filter((r) => {
-    if (!r || r.state !== 'APPROVED') return false;
-    if (r.state === 'DISMISSED' || r.dismissed_at) return false;
-    if (String(r.commit_id ?? '').toLowerCase() !== head) return false;
-    const submitted = Date.parse(r.submitted_at ?? '');
+    if (!r || r.state !== "APPROVED") return false;
+    if (r.state === "DISMISSED" || r.dismissed_at) return false;
+    if (String(r.commit_id ?? "").toLowerCase() !== head) return false;
+    const submitted = Date.parse(r.submitted_at ?? "");
     if (!Number.isFinite(submitted)) return false;
     if (submitted > dispatchMs) return false;
     return true;
   });
-  if (candidates.length === 0) return { ok: false, reason: 'no_exact_head_approval_before_dispatch' };
+  if (candidates.length === 0)
+    return { ok: false, reason: "no_exact_head_approval_before_dispatch" };
   return { ok: true, review: candidates[0] };
+}
+
+export function selectRecoveryCaseApproval(
+  reviews,
+  headSha,
+  dispatchCreatedAtMs
+) {
+  const expectedReviewer = FAILED_STAGE1_SUPERSESSION_CASE_V1.reviewerLogin;
+  const exactReviewerReviews = (reviews ?? []).filter(
+    (review) => review?.user?.login === expectedReviewer
+  );
+  const selected = selectExactHeadApproval(
+    exactReviewerReviews,
+    headSha,
+    dispatchCreatedAtMs
+  );
+  if (!selected.ok) {
+    return {
+      ok: false,
+      reason: "recovery_case_exact_reviewer_approval_missing",
+    };
+  }
+  return selected;
 }
 
 async function rest(deps, method, urlPath, body) {
   deps.mergeCalls = deps.mergeCalls ?? [];
-  if (/\/merges$|\/merge$/.test(urlPath)) deps.mergeCalls.push({ method, urlPath });
+  if (/\/merges$|\/merge$/.test(urlPath))
+    deps.mergeCalls.push({ method, urlPath });
   assertChecksRestRequest(method, urlPath);
   return deps.restRequest({ method, urlPath, body });
 }
@@ -475,20 +859,24 @@ async function listPaginated(deps, firstPath, extractItems) {
   const all = [];
   let page = 1;
   for (;;) {
-    const sep = firstPath.includes('?') ? '&' : '?';
-    const batch = await rest(deps, 'GET', `${firstPath}${sep}per_page=100&page=${page}`);
+    const sep = firstPath.includes("?") ? "&" : "?";
+    const batch = await rest(
+      deps,
+      "GET",
+      `${firstPath}${sep}per_page=100&page=${page}`
+    );
     const items = extractItems(batch);
     if (!Array.isArray(items)) {
-      const err = new Error('unexpected_list_shape');
-      err.sanitized = { message: 'unexpected_list_shape' };
+      const err = new Error("unexpected_list_shape");
+      err.sanitized = { message: "unexpected_list_shape" };
       throw err;
     }
     all.push(...items);
     if (items.length < 100) break;
     page += 1;
     if (page > 100) {
-      const err = new Error('pagination_bound_exceeded');
-      err.sanitized = { message: 'pagination_bound_exceeded' };
+      const err = new Error("pagination_bound_exceeded");
+      err.sanitized = { message: "pagination_bound_exceeded" };
       throw err;
     }
   }
@@ -499,15 +887,15 @@ async function listAllPrFiles(deps, owner, repo, prNumber) {
   return listPaginated(
     deps,
     `/repos/${owner}/${repo}/pulls/${prNumber}/files`,
-    (batch) => (Array.isArray(batch) ? batch : batch?.items ?? null),
+    (batch) => (Array.isArray(batch) ? batch : batch?.items ?? null)
   );
 }
 
 async function listAllCheckRuns(deps, owner, repo, headSha) {
   return listPaginated(
     deps,
-    `/repos/${owner}/${repo}/commits/${headSha}/check-runs`,
-    (batch) => batch?.check_runs ?? null,
+    `/repos/${owner}/${repo}/commits/${headSha}/check-runs?filter=all`,
+    (batch) => batch?.check_runs ?? null
   );
 }
 
@@ -530,8 +918,8 @@ async function listReviewThreadsPaginated(deps, owner, repo, prNumber) {
     });
     const conn = gql?.data?.repository?.pullRequest?.reviewThreads;
     if (!conn || !Array.isArray(conn.nodes)) {
-      const err = new Error('unexpected_graphql_shape');
-      err.sanitized = { message: 'unexpected_graphql_shape' };
+      const err = new Error("unexpected_graphql_shape");
+      err.sanitized = { message: "unexpected_graphql_shape" };
       throw err;
     }
     threads.push(...conn.nodes);
@@ -542,7 +930,7 @@ async function listReviewThreadsPaginated(deps, owner, repo, prNumber) {
 }
 
 function contentIdentity(contentJson) {
-  if (!contentJson || typeof contentJson !== 'object') return null;
+  if (!contentJson || typeof contentJson !== "object") return null;
   return {
     sha: contentJson.sha ?? null,
     path: contentJson.path ?? null,
@@ -554,54 +942,83 @@ function contentIdentity(contentJson) {
  * Prove canonical workflow version using run ID as lookup key only.
  * Does not trust caller-supplied workflow SHA env vars.
  */
-export async function proveCanonicalWorkflowVersion(deps, { owner, repo, runId }) {
-  const repository = await rest(deps, 'GET', `/repos/${owner}/${repo}`);
+export async function proveCanonicalWorkflowVersion(
+  deps,
+  { owner, repo, runId }
+) {
+  const repository = await rest(deps, "GET", `/repos/${owner}/${repo}`);
   const defaultBranch = repository?.default_branch;
   if (defaultBranch !== CANONICAL_BASE_BRANCH) {
-    return { ok: false, reason: 'default_branch_not_master' };
+    return { ok: false, reason: "default_branch_not_master" };
   }
-  const ref = await rest(deps, 'GET', `/repos/${owner}/${repo}/git/ref/heads/${defaultBranch}`);
+  const ref = await rest(
+    deps,
+    "GET",
+    `/repos/${owner}/${repo}/git/ref/heads/${defaultBranch}`
+  );
   const currentMasterSha = ref?.object?.sha;
-  if (!FULL_SHA_RE.test(String(currentMasterSha ?? ''))) {
-    return { ok: false, reason: 'master_sha_unresolved' };
+  if (!FULL_SHA_RE.test(String(currentMasterSha ?? ""))) {
+    return { ok: false, reason: "master_sha_unresolved" };
   }
 
-  const run = await rest(deps, 'GET', `/repos/${owner}/${repo}/actions/runs/${runId}`);
-  if (!run || run.message === 'Not Found') return { ok: false, reason: 'run_missing' };
-  if (run.event !== 'workflow_dispatch') return { ok: false, reason: 'event_mismatch' };
-  if (Number(run.run_attempt) !== 1) return { ok: false, reason: 'run_attempt_not_1' };
-  if (run.head_branch !== defaultBranch) return { ok: false, reason: 'run_not_on_default_branch' };
-  if (String(run.head_sha).toLowerCase() !== String(currentMasterSha).toLowerCase()) {
-    return { ok: false, reason: 'run_head_not_current_master' };
+  const run = await rest(
+    deps,
+    "GET",
+    `/repos/${owner}/${repo}/actions/runs/${runId}`
+  );
+  if (!run || run.message === "Not Found")
+    return { ok: false, reason: "run_missing" };
+  if (run.event !== "workflow_dispatch")
+    return { ok: false, reason: "event_mismatch" };
+  if (Number(run.run_attempt) !== 1)
+    return { ok: false, reason: "run_attempt_not_1" };
+  if (run.head_branch !== defaultBranch)
+    return { ok: false, reason: "run_not_on_default_branch" };
+  if (
+    String(run.head_sha).toLowerCase() !==
+    String(currentMasterSha).toLowerCase()
+  ) {
+    return { ok: false, reason: "run_head_not_current_master" };
   }
-  if (run.path !== WORKFLOW_FILE_PATH) return { ok: false, reason: 'run_path_mismatch' };
-  if (run.workflow_id == null) return { ok: false, reason: 'workflow_id_missing' };
+  if (run.path !== WORKFLOW_FILE_PATH)
+    return { ok: false, reason: "run_path_mismatch" };
+  if (run.workflow_id == null)
+    return { ok: false, reason: "workflow_id_missing" };
 
-  const workflow = await rest(deps, 'GET', `/repos/${owner}/${repo}/actions/workflows/${run.workflow_id}`);
+  const workflow = await rest(
+    deps,
+    "GET",
+    `/repos/${owner}/${repo}/actions/workflows/${run.workflow_id}`
+  );
   if (!workflow || workflow.path !== WORKFLOW_FILE_PATH) {
-    return { ok: false, reason: 'workflow_metadata_path_mismatch' };
+    return { ok: false, reason: "workflow_metadata_path_mismatch" };
   }
-  if (workflow.state && workflow.state !== 'active') {
-    return { ok: false, reason: 'workflow_not_active' };
+  if (workflow.state && workflow.state !== "active") {
+    return { ok: false, reason: "workflow_not_active" };
   }
 
   const atRun = await rest(
     deps,
-    'GET',
-    `/repos/${owner}/${repo}/contents/${WORKFLOW_FILE_PATH}?ref=${run.head_sha}`,
+    "GET",
+    `/repos/${owner}/${repo}/contents/${WORKFLOW_FILE_PATH}?ref=${run.head_sha}`
   );
   const atMaster = await rest(
     deps,
-    'GET',
-    `/repos/${owner}/${repo}/contents/${WORKFLOW_FILE_PATH}?ref=${defaultBranch}`,
+    "GET",
+    `/repos/${owner}/${repo}/contents/${WORKFLOW_FILE_PATH}?ref=${defaultBranch}`
   );
   const idRun = contentIdentity(atRun);
   const idMaster = contentIdentity(atMaster);
-  if (!idRun?.sha || !idMaster?.sha) return { ok: false, reason: 'workflow_blob_unresolved' };
-  if (idRun.path !== WORKFLOW_FILE_PATH || idMaster.path !== WORKFLOW_FILE_PATH) {
-    return { ok: false, reason: 'workflow_content_path_mismatch' };
+  if (!idRun?.sha || !idMaster?.sha)
+    return { ok: false, reason: "workflow_blob_unresolved" };
+  if (
+    idRun.path !== WORKFLOW_FILE_PATH ||
+    idMaster.path !== WORKFLOW_FILE_PATH
+  ) {
+    return { ok: false, reason: "workflow_content_path_mismatch" };
   }
-  if (idRun.sha !== idMaster.sha) return { ok: false, reason: 'workflow_blob_mismatch' };
+  if (idRun.sha !== idMaster.sha)
+    return { ok: false, reason: "workflow_blob_mismatch" };
 
   return {
     ok: true,
@@ -611,20 +1028,395 @@ export async function proveCanonicalWorkflowVersion(deps, { owner, repo, runId }
     defaultBranch,
     actor: run.actor?.login ?? run.triggering_actor?.login ?? null,
     triggeringActor: run.triggering_actor?.login ?? run.actor?.login ?? null,
-    createdAtMs: Date.parse(run.created_at ?? ''),
+    createdAtMs: Date.parse(run.created_at ?? ""),
   };
 }
 
 function earlyFail(blocker, extra = {}) {
   return {
-    conclusion: 'failure',
+    conclusion: "failure",
     blocker,
-    evidence: sanitizeEvidence({ decision: 'failure', blocker, ...extra }),
+    evidence: sanitizeEvidence({ decision: "failure", blocker, ...extra }),
     checkCreated: 0,
     checkCompleted: 0,
     checkRunId: null,
     gateAppId: null,
     minimumProvenanceBeforeCheck: true,
+  };
+}
+
+function buildRecoveryEvidence(inputs, computedDigest) {
+  if (
+    inputs.dispatchMode !== GATE_DISPATCH_MODES.FAILED_STAGE1_SUPERSESSION_V1
+  ) {
+    return { stage1DispatchMode: GATE_DISPATCH_MODES.NORMAL };
+  }
+  return {
+    stage1DispatchMode: inputs.dispatchMode,
+    recoverySchema: GATE_RECOVERY_EVIDENCE_SCHEMA,
+    recovery_mode: inputs.dispatchMode,
+    recovery_case_id: inputs.recoveryCaseId,
+    exact_pr_number: Number(inputs.prNumber),
+    exact_head: String(inputs.headSha).toLowerCase(),
+    exact_tree: String(inputs.recoveryExpectedTree).toLowerCase(),
+    supersedes_run_id: Number(inputs.priorRunId),
+    supersedes_check_run_id: Number(inputs.priorCheckRunId),
+    prior_conclusion: "failure",
+    prior_blocker: inputs.priorFailureBlocker,
+    prior_digest: String(inputs.priorSuppliedScopeDigest).toLowerCase(),
+    canonical_digest: String(
+      computedDigest ?? inputs.reviewedScopeDigest
+    ).toLowerCase(),
+  };
+}
+
+async function validateFailedStage1RecoveryBeforeCreate(deps, context) {
+  const {
+    owner,
+    repo,
+    inputs,
+    proven,
+    reviews,
+    prA,
+    existingGateChecks,
+    allChecks,
+  } = context;
+  const fail = (blocker, reason, extra = {}) => ({
+    ok: false,
+    blocker,
+    reason,
+    ...extra,
+  });
+
+  if (existingGateChecks.length > 1) {
+    return fail(
+      BLOCKERS.BLOCKED_VIONA_T3_FAILED_STAGE1_SUPERSESSION_ALREADY_CONSUMED,
+      "successor_or_ambiguous_stage1_already_exists",
+      { count: existingGateChecks.length }
+    );
+  }
+  if (existingGateChecks.length !== 1) {
+    return fail(
+      BLOCKERS.BLOCKED_VIONA_T3_FAILED_STAGE1_SUPERSESSION_INVALID,
+      "exactly_one_prior_stage1_required",
+      { count: existingGateChecks.length }
+    );
+  }
+  if (prA?.draft !== false) {
+    return fail(
+      BLOCKERS.BLOCKED_VIONA_T3_FAILED_STAGE1_SUPERSESSION_INVALID,
+      "recovery_requires_non_draft_pr"
+    );
+  }
+  if (
+    !selectRecoveryCaseApproval(reviews, inputs.headSha, proven.createdAtMs).ok
+  ) {
+    return fail(
+      BLOCKERS.BLOCKED_MERGE_AUTHORIZATION_PREDATES_CURRENT_HEAD,
+      "recovery_case_exact_reviewer_approval_missing"
+    );
+  }
+  const preflightChecks = allChecks.filter(
+    (check) =>
+      check?.name === FAILED_STAGE1_SUPERSESSION_CASE_V1.preflightCheckName &&
+      String(check?.head_sha ?? "").toLowerCase() ===
+        String(inputs.headSha).toLowerCase()
+  );
+  if (
+    preflightChecks.length !== 1 ||
+    preflightChecks[0]?.status !== "completed" ||
+    preflightChecks[0]?.conclusion !== "success"
+  ) {
+    return fail(
+      BLOCKERS.BLOCKED_MERGE_REQUIRED_CHECK_FAILED,
+      "recovery_case_preflight_not_exactly_one_success",
+      { count: preflightChecks.length }
+    );
+  }
+  if (
+    allChecks.some(
+      (check) =>
+        check?.name === STAGE2_CHECK_RUN_NAME &&
+        String(check?.head_sha ?? "").toLowerCase() ===
+          String(inputs.headSha).toLowerCase()
+    )
+  ) {
+    return fail(
+      BLOCKERS.BLOCKED_VIONA_T3_FAILED_STAGE1_SUPERSESSION_INVALID,
+      "stage2_check_already_exists"
+    );
+  }
+  if (
+    allChecks.some(
+      (check) =>
+        typeof check?.name === "string" &&
+        check.name !== GATE_CHECK_RUN_NAME &&
+        check.name.startsWith(GATE_CHECK_RUN_NAME)
+    )
+  ) {
+    return fail(
+      BLOCKERS.BLOCKED_VIONA_T3_FAILED_STAGE1_SUPERSESSION_INVALID,
+      "stage1_alias_context_exists"
+    );
+  }
+
+  const listedPrior = existingGateChecks[0];
+  if (String(listedPrior?.id ?? "") !== String(inputs.priorCheckRunId)) {
+    return fail(
+      BLOCKERS.BLOCKED_VIONA_T3_FAILED_STAGE1_SUPERSESSION_INVALID,
+      "prior_check_id_mismatch"
+    );
+  }
+
+  let priorCheck;
+  let priorRun;
+  let commit;
+  try {
+    [priorCheck, priorRun, commit] = await Promise.all([
+      rest(
+        deps,
+        "GET",
+        `/repos/${owner}/${repo}/check-runs/${inputs.priorCheckRunId}`
+      ),
+      rest(
+        deps,
+        "GET",
+        `/repos/${owner}/${repo}/actions/runs/${inputs.priorRunId}`
+      ),
+      rest(
+        deps,
+        "GET",
+        `/repos/${owner}/${repo}/git/commits/${inputs.headSha}`
+      ),
+    ]);
+  } catch {
+    return fail(
+      BLOCKERS.BLOCKED_VIONA_T3_FAILED_STAGE1_SUPERSESSION_INVALID,
+      "prior_evidence_lookup_failed"
+    );
+  }
+
+  const priorEvidence = parseGateCheckEvidence(priorCheck);
+  const priorBlocker =
+    priorEvidence?.blocker ?? priorCheck?.output?.title ?? null;
+  const priorAppId = priorCheck?.app?.id ?? priorCheck?.app_id ?? null;
+  const listedPriorAppId = listedPrior?.app?.id ?? listedPrior?.app_id ?? null;
+  const priorCheckValid =
+    String(priorCheck?.id ?? "") === String(inputs.priorCheckRunId) &&
+    priorCheck?.name === GATE_CHECK_RUN_NAME &&
+    String(priorCheck?.head_sha ?? "").toLowerCase() ===
+      String(inputs.headSha).toLowerCase() &&
+    priorCheck?.status === "completed" &&
+    priorCheck?.conclusion === "failure" &&
+    priorBlocker === inputs.priorFailureBlocker &&
+    priorAppId != null &&
+    (listedPriorAppId == null ||
+      String(listedPriorAppId) === String(priorAppId));
+  if (!priorCheckValid) {
+    return fail(
+      BLOCKERS.BLOCKED_VIONA_T3_FAILED_STAGE1_SUPERSESSION_INVALID,
+      "prior_check_evidence_mismatch"
+    );
+  }
+
+  const priorActor =
+    priorRun?.actor?.login ?? priorRun?.triggering_actor?.login ?? null;
+  const priorTriggeringActor =
+    priorRun?.triggering_actor?.login ?? priorRun?.actor?.login ?? null;
+  const priorCreatedAtMs = Date.parse(priorRun?.created_at ?? "");
+  const priorRunValid =
+    String(priorRun?.id ?? "") === String(inputs.priorRunId) &&
+    String(priorRun?.id ?? "") !== String(inputs.runId) &&
+    priorRun?.event === "workflow_dispatch" &&
+    Number(priorRun?.run_attempt) === 1 &&
+    priorRun?.status === "completed" &&
+    priorRun?.conclusion === "failure" &&
+    priorRun?.head_branch === CANONICAL_BASE_BRANCH &&
+    FULL_SHA_RE.test(String(priorRun?.head_sha ?? "")) &&
+    priorRun?.path === WORKFLOW_FILE_PATH &&
+    String(priorRun?.workflow_id ?? "") === String(proven.workflow?.id ?? "") &&
+    AUTHORIZED_ACTORS.includes(priorActor) &&
+    priorTriggeringActor === priorActor &&
+    Number.isFinite(priorCreatedAtMs) &&
+    priorCreatedAtMs < Number(proven.createdAtMs);
+  if (!priorRunValid) {
+    return fail(
+      BLOCKERS.BLOCKED_VIONA_T3_FAILED_STAGE1_SUPERSESSION_INVALID,
+      "prior_run_evidence_mismatch"
+    );
+  }
+
+  const actualTree = commit?.tree?.sha ?? null;
+  if (
+    !FULL_SHA_RE.test(String(actualTree ?? "")) ||
+    String(actualTree).toLowerCase() !==
+      String(inputs.recoveryExpectedTree).toLowerCase()
+  ) {
+    return fail(
+      BLOCKERS.BLOCKED_VIONA_T3_FAILED_STAGE1_SUPERSESSION_INVALID,
+      "head_tree_mismatch"
+    );
+  }
+
+  let files;
+  try {
+    files = await listAllPrFiles(deps, owner, repo, inputs.prNumber);
+  } catch {
+    return fail(
+      BLOCKERS.BLOCKED_VIONA_T3_GATE_TECHNICAL_ERROR,
+      "pr_files_lookup_failed"
+    );
+  }
+  const computedDigest = computeReviewedScopeDigest(files);
+  if (
+    computedDigest.toLowerCase() !==
+    String(inputs.reviewedScopeDigest).toLowerCase()
+  ) {
+    return fail(
+      BLOCKERS.BLOCKED_MERGE_SCOPE_CHANGED_AFTER_REVIEW,
+      "canonical_digest_mismatch"
+    );
+  }
+
+  try {
+    const threads = await listReviewThreadsPaginated(
+      deps,
+      owner,
+      repo,
+      inputs.prNumber
+    );
+    if (threads.some((thread) => thread && thread.isResolved === false)) {
+      return fail(
+        BLOCKERS.BLOCKED_MERGE_UNRESOLVED_CONVERSATION,
+        "unresolved_conversation"
+      );
+    }
+  } catch {
+    return fail(
+      BLOCKERS.BLOCKED_MERGE_UNRESOLVED_CONVERSATION,
+      "graphql_error"
+    );
+  }
+
+  if (String(deps.env?.VIONA_GATE_PROTECTION_READ_TOKEN ?? "").trim() === "") {
+    return fail(
+      BLOCKERS.BLOCKED_MERGE_PROTECTION_READ_CREDENTIAL_MISSING,
+      "protection_read_credential_missing"
+    );
+  }
+  let protection;
+  try {
+    if (!deps.protectionRestRequest) {
+      return fail(
+        BLOCKERS.BLOCKED_VIONA_T3_GATE_TECHNICAL_ERROR,
+        "protection_adapter_missing"
+      );
+    }
+    protection = await deps.protectionRestRequest({
+      method: "GET",
+      urlPath: CANONICAL_MASTER_PROTECTION_PATH,
+    });
+  } catch (err) {
+    const status = err?.sanitized?.status;
+    if (status === 401 || status === 403) {
+      return fail(
+        BLOCKERS.BLOCKED_MERGE_PROTECTION_READ_UNAUTHORIZED,
+        "protection_get_unauthorized"
+      );
+    }
+    if (status === 404) {
+      return fail(
+        BLOCKERS.BLOCKED_MERGE_REPOSITORY_RULESET_NOT_ENFORCED,
+        "protection_missing"
+      );
+    }
+    return fail(
+      BLOCKERS.BLOCKED_VIONA_T3_GATE_TECHNICAL_ERROR,
+      "protection_get_error"
+    );
+  }
+  const protectionMalformed =
+    protection == null ||
+    typeof protection !== "object" ||
+    Array.isArray(protection);
+  const repositoryEnforcementActive =
+    !protectionMalformed &&
+    (protection?.enforce_admins?.enabled === true ||
+      protection?.required_status_checks != null);
+  if (!repositoryEnforcementActive) {
+    return fail(
+      BLOCKERS.BLOCKED_MERGE_REPOSITORY_RULESET_NOT_ENFORCED,
+      "protection_not_enforced"
+    );
+  }
+  for (const requiredContext of protection?.required_status_checks?.contexts ??
+    []) {
+    if (
+      requiredContext === GATE_CHECK_RUN_NAME ||
+      requiredContext === STAGE2_CHECK_RUN_NAME
+    )
+      continue;
+    const onHead = allChecks.filter(
+      (check) =>
+        check?.name === requiredContext &&
+        String(check?.head_sha ?? "").toLowerCase() ===
+          String(inputs.headSha).toLowerCase()
+    );
+    if (!onHead.some((check) => check?.conclusion === "success")) {
+      return fail(
+        BLOCKERS.BLOCKED_MERGE_REQUIRED_CHECK_FAILED,
+        "required_check_not_success",
+        {
+          requiredContext,
+        }
+      );
+    }
+  }
+
+  let prB;
+  try {
+    prB = await rest(
+      deps,
+      "GET",
+      `/repos/${owner}/${repo}/pulls/${inputs.prNumber}`
+    );
+  } catch {
+    return fail(
+      BLOCKERS.BLOCKED_MERGE_AUTHORIZED_HEAD_MISMATCH,
+      "snapshot_b_lookup_failed"
+    );
+  }
+  if (
+    !prB ||
+    prB.state !== "open" ||
+    prB.draft !== false ||
+    prB.base?.ref !== CANONICAL_BASE_BRANCH ||
+    prB.auto_merge ||
+    String(prB.head?.sha ?? "").toLowerCase() !==
+      String(inputs.headSha).toLowerCase()
+  ) {
+    return fail(
+      BLOCKERS.BLOCKED_MERGE_AUTHORIZED_HEAD_MISMATCH,
+      "snapshot_b_failed"
+    );
+  }
+  if (
+    !selectRecoveryCaseApproval(reviews, inputs.headSha, proven.createdAtMs).ok
+  ) {
+    return fail(
+      BLOCKERS.BLOCKED_MERGE_AUTHORIZATION_PREDATES_CURRENT_HEAD,
+      "snapshot_b_review_invalid"
+    );
+  }
+
+  return {
+    ok: true,
+    priorCheck,
+    priorRun,
+    priorAppId,
+    actualTree,
+    files,
+    computedDigest,
   };
 }
 
@@ -635,65 +1427,103 @@ export async function runMergeAuthorizationGate(deps) {
   const env = deps.env ?? {};
   const log = deps.log ?? ((msg) => console.log(msg));
   const inputs = parseStructuredInputs(env);
-  const [owner, repo] = CANONICAL_REPOSITORY.split('/');
+  const [owner, repo] = CANONICAL_REPOSITORY.split("/");
 
   let checkRunId = null;
   let gateAppId = null;
   let checkCreated = 0;
   let checkCompleted = 0;
+  let recoveryPreflight = null;
 
   const completeIfCreated = async (result) => {
+    const evidence = sanitizeEvidence({
+      ...(result.evidence ?? {}),
+      ...buildRecoveryEvidence(inputs, recoveryPreflight?.computedDigest),
+    });
     if (checkRunId != null && deps.completeCheckRun) {
       await deps.completeCheckRun({
         checkRunId,
         name: GATE_CHECK_RUN_NAME,
         headSha: inputs.headSha,
-        conclusion: result.conclusion === 'success' ? 'success' : 'failure',
+        conclusion: result.conclusion === "success" ? "success" : "failure",
         output: {
           title: result.blocker ?? GATE_CHECK_RUN_NAME,
-          summary: JSON.stringify(sanitizeEvidence(result.evidence)),
+          summary: JSON.stringify(evidence),
         },
       });
       checkCompleted += 1;
     }
     const out = {
       ...result,
+      evidence,
       checkRunId,
       gateAppId,
       checkCreated,
       checkCompleted,
-      minimumProvenanceBeforeCheck: checkCreated === 0 || result.conclusion !== undefined,
+      minimumProvenanceBeforeCheck:
+        checkCreated === 0 || result.conclusion !== undefined,
     };
-    log(JSON.stringify(sanitizeEvidence({
-      ...out.evidence,
-      checkRunId,
-      gateAppId,
-      checkCreated,
-      checkCompleted,
-      mergeCalls: deps.mergeCalls?.length ?? 0,
-    })));
+    log(
+      JSON.stringify(
+        sanitizeEvidence({
+          ...evidence,
+          checkRunId,
+          gateAppId,
+          checkCreated,
+          checkCompleted,
+          mergeCalls: deps.mergeCalls?.length ?? 0,
+        })
+      )
+    );
     return out;
   };
 
   try {
-    if (inputs.freeTextAuthorizationPresent || inputs.callerAuthorizedOperatorPresent) {
-      return earlyFail(BLOCKERS.BLOCKED_VIONA_T3_AUTHORIZATION_PROVENANCE_MECHANISM_UNRESOLVED);
+    if (
+      inputs.freeTextAuthorizationPresent ||
+      inputs.callerAuthorizedOperatorPresent
+    ) {
+      return earlyFail(
+        BLOCKERS.BLOCKED_VIONA_T3_AUTHORIZATION_PROVENANCE_MECHANISM_UNRESOLVED
+      );
+    }
+    if (inputs.recoveryCaseBindingMismatch) {
+      return earlyFail(
+        BLOCKERS.BLOCKED_VIONA_T3_FAILED_STAGE1_SUPERSESSION_INVALID,
+        {
+          reason: "recovery_case_binding_mismatch",
+        }
+      );
     }
     if (!inputs.structuredInputsComplete) {
-      return earlyFail(BLOCKERS.BLOCKED_MERGE_AUTHORIZATION_PROVENANCE_UNRESOLVED, {
-        reason: 'structured_inputs_missing',
-        missing: inputs.missing,
-      });
+      return earlyFail(
+        BLOCKERS.BLOCKED_MERGE_AUTHORIZATION_PROVENANCE_UNRESOLVED,
+        {
+          reason: "structured_inputs_missing",
+          missing: [...inputs.missing, ...inputs.recoveryMissing],
+          dispatchModeMalformed: inputs.dispatchModeMalformed,
+          recoveryFieldsMalformed: inputs.recoveryFieldsMalformed,
+        }
+      );
     }
-    if (inputs.repositoryClaim && inputs.repositoryClaim !== CANONICAL_REPOSITORY) {
-      return earlyFail(BLOCKERS.BLOCKED_MERGE_AUTHORIZATION_PROVENANCE_UNRESOLVED, {
-        reason: 'repository_claim_mismatch',
-      });
+    if (
+      inputs.repositoryClaim &&
+      inputs.repositoryClaim !== CANONICAL_REPOSITORY
+    ) {
+      return earlyFail(
+        BLOCKERS.BLOCKED_MERGE_AUTHORIZATION_PROVENANCE_UNRESOLVED,
+        {
+          reason: "repository_claim_mismatch",
+        }
+      );
     }
     if (!inputs.runId) {
-      return earlyFail(BLOCKERS.BLOCKED_MERGE_AUTHORIZATION_PROVENANCE_UNRESOLVED, {
-        reason: 'run_id_missing',
-      });
+      return earlyFail(
+        BLOCKERS.BLOCKED_MERGE_AUTHORIZATION_PROVENANCE_UNRESOLVED,
+        {
+          reason: "run_id_missing",
+        }
+      );
     }
 
     const permissionCheck = deps.workflowPermissionLines
@@ -712,22 +1542,31 @@ export async function runMergeAuthorizationGate(deps) {
         runId: inputs.runId,
       });
     } catch {
-      return earlyFail(BLOCKERS.BLOCKED_VIONA_T3_CANONICAL_WORKFLOW_VERSION_UNPROVEN, {
-        reason: 'workflow_version_api_error',
-      });
+      return earlyFail(
+        BLOCKERS.BLOCKED_VIONA_T3_CANONICAL_WORKFLOW_VERSION_UNPROVEN,
+        {
+          reason: "workflow_version_api_error",
+        }
+      );
     }
     if (!proven.ok) {
-      if (proven.reason === 'run_attempt_not_1') {
+      if (proven.reason === "run_attempt_not_1") {
         return earlyFail(BLOCKERS.BLOCKED_MERGE_WORKFLOW_RERUN_NOT_PERMITTED);
       }
-      if (proven.reason === 'event_mismatch') {
-        return earlyFail(BLOCKERS.BLOCKED_MERGE_AUTHORIZATION_PROVENANCE_UNRESOLVED, {
-          reason: proven.reason,
-        });
+      if (proven.reason === "event_mismatch") {
+        return earlyFail(
+          BLOCKERS.BLOCKED_MERGE_AUTHORIZATION_PROVENANCE_UNRESOLVED,
+          {
+            reason: proven.reason,
+          }
+        );
       }
-      return earlyFail(BLOCKERS.BLOCKED_VIONA_T3_CANONICAL_WORKFLOW_VERSION_UNPROVEN, {
-        reason: proven.reason,
-      });
+      return earlyFail(
+        BLOCKERS.BLOCKED_VIONA_T3_CANONICAL_WORKFLOW_VERSION_UNPROVEN,
+        {
+          reason: proven.reason,
+        }
+      );
     }
 
     const actor = proven.actor;
@@ -736,29 +1575,45 @@ export async function runMergeAuthorizationGate(deps) {
       return earlyFail(BLOCKERS.BLOCKED_MERGE_OPERATOR_NOT_AUTHORIZED);
     }
     if (triggeringActor !== actor) {
-      return earlyFail(BLOCKERS.BLOCKED_MERGE_AUTHORIZATION_PROVENANCE_UNRESOLVED, {
-        reason: 'triggering_actor_mismatch',
-      });
+      return earlyFail(
+        BLOCKERS.BLOCKED_MERGE_AUTHORIZATION_PROVENANCE_UNRESOLVED,
+        {
+          reason: "triggering_actor_mismatch",
+        }
+      );
     }
 
     // --- PR snapshot A ---
     let prA;
     try {
-      prA = await rest(deps, 'GET', `/repos/${owner}/${repo}/pulls/${inputs.prNumber}`);
+      prA = await rest(
+        deps,
+        "GET",
+        `/repos/${owner}/${repo}/pulls/${inputs.prNumber}`
+      );
     } catch {
-      return earlyFail(BLOCKERS.BLOCKED_MERGE_PR_NUMBER_AUTHORIZATION_MISMATCH, {
-        reason: 'pr_missing',
-      });
+      return earlyFail(
+        BLOCKERS.BLOCKED_MERGE_PR_NUMBER_AUTHORIZATION_MISMATCH,
+        {
+          reason: "pr_missing",
+        }
+      );
     }
-    if (!prA || prA.message === 'Not Found') {
-      return earlyFail(BLOCKERS.BLOCKED_MERGE_PR_NUMBER_AUTHORIZATION_MISMATCH, {
-        reason: 'pr_missing',
-      });
+    if (!prA || prA.message === "Not Found") {
+      return earlyFail(
+        BLOCKERS.BLOCKED_MERGE_PR_NUMBER_AUTHORIZATION_MISMATCH,
+        {
+          reason: "pr_missing",
+        }
+      );
     }
-    if (prA.state !== 'open') {
-      return earlyFail(BLOCKERS.BLOCKED_MERGE_PR_NUMBER_AUTHORIZATION_MISMATCH, {
-        reason: 'pr_not_open',
-      });
+    if (prA.state !== "open") {
+      return earlyFail(
+        BLOCKERS.BLOCKED_MERGE_PR_NUMBER_AUTHORIZATION_MISMATCH,
+        {
+          reason: "pr_not_open",
+        }
+      );
     }
     if (Number(prA.number) !== Number(inputs.prNumber)) {
       return earlyFail(BLOCKERS.BLOCKED_MERGE_PR_NUMBER_AUTHORIZATION_MISMATCH);
@@ -766,7 +1621,10 @@ export async function runMergeAuthorizationGate(deps) {
     if (prA.base?.ref !== CANONICAL_BASE_BRANCH) {
       return earlyFail(BLOCKERS.BLOCKED_MERGE_BASE_BRANCH_MISMATCH);
     }
-    if (String(prA.head?.sha).toLowerCase() !== String(inputs.headSha).toLowerCase()) {
+    if (
+      String(prA.head?.sha).toLowerCase() !==
+      String(inputs.headSha).toLowerCase()
+    ) {
       return earlyFail(BLOCKERS.BLOCKED_MERGE_AUTHORIZED_HEAD_MISMATCH);
     }
     if (inputs.baseBranch !== CANONICAL_BASE_BRANCH) {
@@ -792,32 +1650,51 @@ export async function runMergeAuthorizationGate(deps) {
       reviews = await listPaginated(
         deps,
         `/repos/${owner}/${repo}/pulls/${inputs.prNumber}/reviews`,
-        (batch) => (Array.isArray(batch) ? batch : null),
+        (batch) => (Array.isArray(batch) ? batch : null)
       );
     } catch {
-      return earlyFail(BLOCKERS.BLOCKED_MERGE_REVIEW_REQUIREMENT_NOT_SATISFIED, {
-        reason: 'reviews_api_error',
-      });
+      return earlyFail(
+        BLOCKERS.BLOCKED_MERGE_REVIEW_REQUIREMENT_NOT_SATISFIED,
+        {
+          reason: "reviews_api_error",
+        }
+      );
     }
-    const approval = selectExactHeadApproval(reviews, inputs.headSha, proven.createdAtMs);
+    const approval = selectExactHeadApproval(
+      reviews,
+      inputs.headSha,
+      proven.createdAtMs
+    );
     if (!approval.ok) {
-      if (approval.reason === 'dispatch_time_unresolved') {
-        return earlyFail(BLOCKERS.BLOCKED_VIONA_T3_AUTHORIZATION_HEAD_ACTIVATION_TIME_UNPROVEN);
+      if (approval.reason === "dispatch_time_unresolved") {
+        return earlyFail(
+          BLOCKERS.BLOCKED_VIONA_T3_AUTHORIZATION_HEAD_ACTIVATION_TIME_UNPROVEN
+        );
       }
-      return earlyFail(BLOCKERS.BLOCKED_MERGE_AUTHORIZATION_PREDATES_CURRENT_HEAD, {
-        reason: approval.reason,
-        also: BLOCKERS.BLOCKED_VIONA_T3_AUTHORIZATION_HEAD_ACTIVATION_TIME_UNPROVEN,
-      });
+      return earlyFail(
+        BLOCKERS.BLOCKED_MERGE_AUTHORIZATION_PREDATES_CURRENT_HEAD,
+        {
+          reason: approval.reason,
+          also: BLOCKERS.BLOCKED_VIONA_T3_AUTHORIZATION_HEAD_ACTIVATION_TIME_UNPROVEN,
+        }
+      );
     }
 
     // Duplicate exact-name gate checks on this head (before create)
     let existingGateChecks;
+    let allChecksBeforeCreate;
     try {
-      const allChecks = await listAllCheckRuns(deps, owner, repo, inputs.headSha);
-      existingGateChecks = allChecks.filter(
+      allChecksBeforeCreate = await listAllCheckRuns(
+        deps,
+        owner,
+        repo,
+        inputs.headSha
+      );
+      existingGateChecks = allChecksBeforeCreate.filter(
         (c) =>
           c.name === GATE_CHECK_RUN_NAME &&
-          String(c.head_sha).toLowerCase() === String(inputs.headSha).toLowerCase(),
+          String(c.head_sha).toLowerCase() ===
+            String(inputs.headSha).toLowerCase()
       );
       if (deps.extraCheckRunsBeforeCreate) {
         existingGateChecks = existingGateChecks.concat(
@@ -825,32 +1702,60 @@ export async function runMergeAuthorizationGate(deps) {
             (c) =>
               c.name === GATE_CHECK_RUN_NAME &&
               String(c.head_sha ?? inputs.headSha).toLowerCase() ===
-                String(inputs.headSha).toLowerCase(),
-          ),
+                String(inputs.headSha).toLowerCase()
+          )
         );
       }
     } catch {
       return earlyFail(BLOCKERS.BLOCKED_VIONA_T3_GATE_TECHNICAL_ERROR, {
-        reason: 'check_list_before_create_failed',
+        reason: "check_list_before_create_failed",
       });
     }
-    if (existingGateChecks.length > 0) {
-      return earlyFail(BLOCKERS.BLOCKED_VIONA_T3_DUPLICATE_GATE_RESULT_AMBIGUOUS, {
-        reason: 'existing_same_head_gate_check',
-        count: existingGateChecks.length,
+    if (inputs.dispatchMode === GATE_DISPATCH_MODES.NORMAL) {
+      if (existingGateChecks.length > 0) {
+        return earlyFail(
+          BLOCKERS.BLOCKED_VIONA_T3_DUPLICATE_GATE_RESULT_AMBIGUOUS,
+          {
+            reason: "existing_same_head_gate_check",
+            count: existingGateChecks.length,
+          }
+        );
+      }
+    } else {
+      recoveryPreflight = await validateFailedStage1RecoveryBeforeCreate(deps, {
+        owner,
+        repo,
+        inputs,
+        proven,
+        reviews,
+        prA,
+        existingGateChecks,
+        allChecks: allChecksBeforeCreate,
       });
+      if (!recoveryPreflight.ok) {
+        return earlyFail(recoveryPreflight.blocker, {
+          reason: recoveryPreflight.reason,
+          count: recoveryPreflight.count,
+          requiredContext: recoveryPreflight.requiredContext,
+        });
+      }
     }
 
     // --- Create exactly one in-progress check (minimum provenance satisfied) ---
     if (!deps.createCheckRun) {
       return earlyFail(BLOCKERS.BLOCKED_VIONA_T3_GATE_TECHNICAL_ERROR, {
-        reason: 'create_adapter_missing',
+        reason: "create_adapter_missing",
       });
     }
     const created = await deps.createCheckRun({
       name: GATE_CHECK_RUN_NAME,
       headSha: inputs.headSha,
-      status: 'in_progress',
+      status: "in_progress",
+      externalId:
+        inputs.dispatchMode ===
+        GATE_DISPATCH_MODES.FAILED_STAGE1_SUPERSESSION_V1
+          ? recoveryCheckExternalId(inputs.recoveryCaseId)
+          : null,
     });
     checkCreated += 1;
     checkRunId = created?.id ?? created?.check_run_id ?? null;
@@ -858,16 +1763,16 @@ export async function runMergeAuthorizationGate(deps) {
     if (checkRunId == null) {
       return completeIfCreated(
         earlyFail(BLOCKERS.BLOCKED_VIONA_T3_GATE_TECHNICAL_ERROR, {
-          reason: 'check_run_id_missing',
-        }),
+          reason: "check_run_id_missing",
+        })
       );
     }
     if (gateAppId == null) {
       return completeIfCreated({
-        conclusion: 'failure',
+        conclusion: "failure",
         blocker: BLOCKERS.BLOCKED_VIONA_T3_GATE_CHECK_APP_IDENTITY_UNRESOLVED,
         evidence: sanitizeEvidence({
-          decision: 'failure',
+          decision: "failure",
           blocker: BLOCKERS.BLOCKED_VIONA_T3_GATE_CHECK_APP_IDENTITY_UNRESOLVED,
         }),
       });
@@ -876,22 +1781,28 @@ export async function runMergeAuthorizationGate(deps) {
     // Inject concurrent duplicate after create (tests)
     if (deps.injectDuplicateAfterCreate === true) {
       return completeIfCreated({
-        conclusion: 'failure',
+        conclusion: "failure",
         blocker: BLOCKERS.BLOCKED_VIONA_T3_DUPLICATE_GATE_RESULT_AMBIGUOUS,
         evidence: sanitizeEvidence({
-          decision: 'failure',
+          decision: "failure",
           blocker: BLOCKERS.BLOCKED_VIONA_T3_DUPLICATE_GATE_RESULT_AMBIGUOUS,
-          reason: 'concurrent_duplicate_after_create',
+          reason: "concurrent_duplicate_after_create",
         }),
       });
     }
 
     // Post-create duplicate scan
-    const afterChecks = await listAllCheckRuns(deps, owner, repo, inputs.headSha);
+    const afterChecks = await listAllCheckRuns(
+      deps,
+      owner,
+      repo,
+      inputs.headSha
+    );
     let gateAfter = afterChecks.filter(
       (c) =>
         c.name === GATE_CHECK_RUN_NAME &&
-        String(c.head_sha).toLowerCase() === String(inputs.headSha).toLowerCase(),
+        String(c.head_sha).toLowerCase() ===
+          String(inputs.headSha).toLowerCase()
     );
     if (deps.extraCheckRunsAfterCreate) {
       gateAfter = gateAfter.concat(
@@ -899,47 +1810,116 @@ export async function runMergeAuthorizationGate(deps) {
           (c) =>
             c.name === GATE_CHECK_RUN_NAME &&
             String(c.head_sha ?? inputs.headSha).toLowerCase() ===
-              String(inputs.headSha).toLowerCase(),
-        ),
+              String(inputs.headSha).toLowerCase()
+        )
       );
     }
     // Include the just-created check if list adapters omit it
     if (!gateAfter.some((c) => String(c.id) === String(checkRunId))) {
-      gateAfter.push({ id: checkRunId, name: GATE_CHECK_RUN_NAME, head_sha: inputs.headSha, app: { id: gateAppId } });
+      gateAfter.push({
+        id: checkRunId,
+        name: GATE_CHECK_RUN_NAME,
+        head_sha: inputs.headSha,
+        app: { id: gateAppId },
+        external_id:
+          inputs.dispatchMode ===
+          GATE_DISPATCH_MODES.FAILED_STAGE1_SUPERSESSION_V1
+            ? recoveryCheckExternalId(inputs.recoveryCaseId)
+            : null,
+      });
     }
-    if (gateAfter.length !== 1 || String(gateAfter[0].id) !== String(checkRunId)) {
+    if (
+      inputs.dispatchMode ===
+        GATE_DISPATCH_MODES.FAILED_STAGE1_SUPERSESSION_V1 &&
+      recoveryPreflight?.priorCheck &&
+      !gateAfter.some(
+        (check) =>
+          String(check?.id) === String(recoveryPreflight.priorCheck?.id)
+      )
+    ) {
+      gateAfter.push(recoveryPreflight.priorCheck);
+    }
+    const expectedGateCount =
+      inputs.dispatchMode === GATE_DISPATCH_MODES.FAILED_STAGE1_SUPERSESSION_V1
+        ? 2
+        : 1;
+    const expectedIds = new Set([
+      String(checkRunId),
+      ...(recoveryPreflight?.priorCheck
+        ? [String(recoveryPreflight.priorCheck.id)]
+        : []),
+    ]);
+    if (
+      gateAfter.length !== expectedGateCount ||
+      gateAfter.some((check) => !expectedIds.has(String(check?.id))) ||
+      !gateAfter.some((check) => String(check?.id) === String(checkRunId))
+    ) {
       return completeIfCreated({
-        conclusion: 'failure',
+        conclusion: "failure",
         blocker: BLOCKERS.BLOCKED_VIONA_T3_DUPLICATE_GATE_RESULT_AMBIGUOUS,
         evidence: sanitizeEvidence({
-          decision: 'failure',
+          decision: "failure",
           blocker: BLOCKERS.BLOCKED_VIONA_T3_DUPLICATE_GATE_RESULT_AMBIGUOUS,
-          reason: 'post_create_count_or_id_mismatch',
+          reason: "post_create_count_or_id_mismatch",
         }),
       });
     }
-    const listedApp = gateAfter[0].app?.id ?? gateAfter[0].app_id;
+    const listedCreated = gateAfter.find(
+      (check) => String(check?.id) === String(checkRunId)
+    );
+    const listedApp = listedCreated?.app?.id ?? listedCreated?.app_id;
     if (listedApp != null && String(listedApp) !== String(gateAppId)) {
       return completeIfCreated({
-        conclusion: 'failure',
+        conclusion: "failure",
         blocker: BLOCKERS.BLOCKED_VIONA_T3_DUPLICATE_GATE_RESULT_AMBIGUOUS,
         evidence: sanitizeEvidence({
-          decision: 'failure',
+          decision: "failure",
           blocker: BLOCKERS.BLOCKED_VIONA_T3_DUPLICATE_GATE_RESULT_AMBIGUOUS,
-          reason: 'app_identity_conflict',
+          reason: "app_identity_conflict",
         }),
       });
+    }
+    if (
+      inputs.dispatchMode === GATE_DISPATCH_MODES.FAILED_STAGE1_SUPERSESSION_V1
+    ) {
+      const listedPrior = gateAfter.find(
+        (check) => String(check?.id) === String(inputs.priorCheckRunId)
+      );
+      const listedPriorAppId =
+        listedPrior?.app?.id ?? listedPrior?.app_id ?? null;
+      if (
+        listedPrior?.conclusion !== "failure" ||
+        listedPriorAppId == null ||
+        String(listedPriorAppId) !== String(gateAppId)
+      ) {
+        return completeIfCreated({
+          conclusion: "failure",
+          blocker: BLOCKERS.BLOCKED_VIONA_T3_FAILED_STAGE1_SUPERSESSION_INVALID,
+          evidence: sanitizeEvidence({
+            decision: "failure",
+            blocker:
+              BLOCKERS.BLOCKED_VIONA_T3_FAILED_STAGE1_SUPERSESSION_INVALID,
+            reason: "prior_check_changed_or_app_identity_conflict",
+          }),
+        });
+      }
     }
 
     // Remaining policy evaluation
-    const files = await listAllPrFiles(deps, owner, repo, inputs.prNumber);
-    const computedDigest = computeReviewedScopeDigest(files);
-    if (computedDigest.toLowerCase() !== String(inputs.reviewedScopeDigest).toLowerCase()) {
+    const files =
+      recoveryPreflight?.files ??
+      (await listAllPrFiles(deps, owner, repo, inputs.prNumber));
+    const computedDigest =
+      recoveryPreflight?.computedDigest ?? computeReviewedScopeDigest(files);
+    if (
+      computedDigest.toLowerCase() !==
+      String(inputs.reviewedScopeDigest).toLowerCase()
+    ) {
       return completeIfCreated({
-        conclusion: 'failure',
+        conclusion: "failure",
         blocker: BLOCKERS.BLOCKED_MERGE_SCOPE_CHANGED_AFTER_REVIEW,
         evidence: sanitizeEvidence({
-          decision: 'failure',
+          decision: "failure",
           blocker: BLOCKERS.BLOCKED_MERGE_SCOPE_CHANGED_AFTER_REVIEW,
         }),
       });
@@ -947,38 +1927,43 @@ export async function runMergeAuthorizationGate(deps) {
 
     let unresolvedConversation = false;
     try {
-      const threads = await listReviewThreadsPaginated(deps, owner, repo, inputs.prNumber);
+      const threads = await listReviewThreadsPaginated(
+        deps,
+        owner,
+        repo,
+        inputs.prNumber
+      );
       unresolvedConversation = threads.some((t) => t && t.isResolved === false);
     } catch {
       return completeIfCreated({
-        conclusion: 'failure',
+        conclusion: "failure",
         blocker: BLOCKERS.BLOCKED_MERGE_UNRESOLVED_CONVERSATION,
         evidence: sanitizeEvidence({
-          decision: 'failure',
+          decision: "failure",
           blocker: BLOCKERS.BLOCKED_MERGE_UNRESOLVED_CONVERSATION,
-          reason: 'graphql_error',
+          reason: "graphql_error",
         }),
       });
     }
     if (unresolvedConversation) {
       return completeIfCreated({
-        conclusion: 'failure',
+        conclusion: "failure",
         blocker: BLOCKERS.BLOCKED_MERGE_UNRESOLVED_CONVERSATION,
         evidence: sanitizeEvidence({
-          decision: 'failure',
+          decision: "failure",
           blocker: BLOCKERS.BLOCKED_MERGE_UNRESOLVED_CONVERSATION,
         }),
       });
     }
 
     const protectionTokenPresent =
-      String(env.VIONA_GATE_PROTECTION_READ_TOKEN ?? '').trim().length > 0;
+      String(env.VIONA_GATE_PROTECTION_READ_TOKEN ?? "").trim().length > 0;
     if (!protectionTokenPresent) {
       return completeIfCreated({
-        conclusion: 'failure',
+        conclusion: "failure",
         blocker: BLOCKERS.BLOCKED_MERGE_PROTECTION_READ_CREDENTIAL_MISSING,
         evidence: sanitizeEvidence({
-          decision: 'failure',
+          decision: "failure",
           blocker: BLOCKERS.BLOCKED_MERGE_PROTECTION_READ_CREDENTIAL_MISSING,
         }),
       });
@@ -991,27 +1976,27 @@ export async function runMergeAuthorizationGate(deps) {
     try {
       if (!deps.protectionRestRequest) {
         return completeIfCreated({
-          conclusion: 'failure',
+          conclusion: "failure",
           blocker: BLOCKERS.BLOCKED_VIONA_T3_GATE_TECHNICAL_ERROR,
           evidence: sanitizeEvidence({
-            decision: 'failure',
+            decision: "failure",
             blocker: BLOCKERS.BLOCKED_VIONA_T3_GATE_TECHNICAL_ERROR,
-            reason: 'protection_adapter_missing',
+            reason: "protection_adapter_missing",
           }),
         });
       }
       protection = await deps.protectionRestRequest({
-        method: 'GET',
+        method: "GET",
         urlPath: CANONICAL_MASTER_PROTECTION_PATH,
       });
     } catch (err) {
       const status = err?.sanitized?.status;
       if (status === 401 || status === 403) {
         return completeIfCreated({
-          conclusion: 'failure',
+          conclusion: "failure",
           blocker: BLOCKERS.BLOCKED_MERGE_PROTECTION_READ_UNAUTHORIZED,
           evidence: sanitizeEvidence({
-            decision: 'failure',
+            decision: "failure",
             blocker: BLOCKERS.BLOCKED_MERGE_PROTECTION_READ_UNAUTHORIZED,
             status,
           }),
@@ -1019,43 +2004,156 @@ export async function runMergeAuthorizationGate(deps) {
       }
       if (status === 404) {
         return completeIfCreated({
-          conclusion: 'failure',
+          conclusion: "failure",
           blocker: BLOCKERS.BLOCKED_MERGE_REPOSITORY_RULESET_NOT_ENFORCED,
           evidence: sanitizeEvidence({
-            decision: 'failure',
+            decision: "failure",
             blocker: BLOCKERS.BLOCKED_MERGE_REPOSITORY_RULESET_NOT_ENFORCED,
             status,
           }),
         });
       }
       return completeIfCreated({
-        conclusion: 'failure',
+        conclusion: "failure",
         blocker: BLOCKERS.BLOCKED_VIONA_T3_GATE_TECHNICAL_ERROR,
         evidence: sanitizeEvidence({
-          decision: 'failure',
+          decision: "failure",
           blocker: BLOCKERS.BLOCKED_VIONA_T3_GATE_TECHNICAL_ERROR,
-          reason: 'protection_get_error',
+          reason: "protection_get_error",
         }),
       });
     }
     const protectionMalformed =
-      protection == null || typeof protection !== 'object' || Array.isArray(protection);
+      protection == null ||
+      typeof protection !== "object" ||
+      Array.isArray(protection);
     repositoryEnforcementActive =
       !protectionMalformed &&
       (protection?.enforce_admins?.enabled === true ||
         protection?.required_status_checks != null);
     if (!repositoryEnforcementActive) {
       return completeIfCreated({
-        conclusion: 'failure',
+        conclusion: "failure",
         blocker: BLOCKERS.BLOCKED_MERGE_REPOSITORY_RULESET_NOT_ENFORCED,
         evidence: sanitizeEvidence({
-          decision: 'failure',
+          decision: "failure",
           blocker: BLOCKERS.BLOCKED_MERGE_REPOSITORY_RULESET_NOT_ENFORCED,
         }),
       });
     }
     const requiredContexts = protection?.required_status_checks?.contexts ?? [];
     const checkRuns = await listAllCheckRuns(deps, owner, repo, inputs.headSha);
+    if (
+      inputs.dispatchMode ===
+        GATE_DISPATCH_MODES.FAILED_STAGE1_SUPERSESSION_V1 &&
+      checkRuns.some(
+        (check) =>
+          (check?.name === STAGE2_CHECK_RUN_NAME ||
+            (typeof check?.name === "string" &&
+              check.name !== GATE_CHECK_RUN_NAME &&
+              check.name.startsWith(GATE_CHECK_RUN_NAME))) &&
+          String(check?.head_sha ?? "").toLowerCase() ===
+            String(inputs.headSha).toLowerCase()
+      )
+    ) {
+      return completeIfCreated({
+        conclusion: "failure",
+        blocker: BLOCKERS.BLOCKED_VIONA_T3_FAILED_STAGE1_SUPERSESSION_INVALID,
+        evidence: sanitizeEvidence({
+          decision: "failure",
+          blocker: BLOCKERS.BLOCKED_VIONA_T3_FAILED_STAGE1_SUPERSESSION_INVALID,
+          reason: "final_stage2_or_stage1_alias_conflict",
+        }),
+      });
+    }
+    let finalGateChecks = checkRuns.filter(
+      (check) =>
+        check?.name === GATE_CHECK_RUN_NAME &&
+        String(check?.head_sha ?? "").toLowerCase() ===
+          String(inputs.headSha).toLowerCase()
+    );
+    if (
+      !finalGateChecks.some((check) => String(check?.id) === String(checkRunId))
+    ) {
+      finalGateChecks.push({
+        id: checkRunId,
+        name: GATE_CHECK_RUN_NAME,
+        head_sha: inputs.headSha,
+        app: { id: gateAppId },
+      });
+    }
+    if (
+      recoveryPreflight?.priorCheck &&
+      !finalGateChecks.some(
+        (check) =>
+          String(check?.id) === String(recoveryPreflight.priorCheck?.id)
+      )
+    ) {
+      finalGateChecks.push(recoveryPreflight.priorCheck);
+    }
+    const finalExpectedIds = new Set([
+      String(checkRunId),
+      ...(recoveryPreflight?.priorCheck
+        ? [String(recoveryPreflight.priorCheck.id)]
+        : []),
+    ]);
+    if (
+      finalGateChecks.length !== expectedGateCount ||
+      finalGateChecks.some((check) => !finalExpectedIds.has(String(check?.id)))
+    ) {
+      return completeIfCreated({
+        conclusion: "failure",
+        blocker: BLOCKERS.BLOCKED_VIONA_T3_DUPLICATE_GATE_RESULT_AMBIGUOUS,
+        evidence: sanitizeEvidence({
+          decision: "failure",
+          blocker: BLOCKERS.BLOCKED_VIONA_T3_DUPLICATE_GATE_RESULT_AMBIGUOUS,
+          reason: "final_check_count_or_id_mismatch",
+        }),
+      });
+    }
+    const finalCreated = finalGateChecks.find(
+      (check) => String(check?.id) === String(checkRunId)
+    );
+    const finalCreatedAppId =
+      finalCreated?.app?.id ?? finalCreated?.app_id ?? null;
+    if (
+      finalCreatedAppId != null &&
+      String(finalCreatedAppId) !== String(gateAppId)
+    ) {
+      return completeIfCreated({
+        conclusion: "failure",
+        blocker: BLOCKERS.BLOCKED_VIONA_T3_DUPLICATE_GATE_RESULT_AMBIGUOUS,
+        evidence: sanitizeEvidence({
+          decision: "failure",
+          blocker: BLOCKERS.BLOCKED_VIONA_T3_DUPLICATE_GATE_RESULT_AMBIGUOUS,
+          reason: "final_created_app_identity_conflict",
+        }),
+      });
+    }
+    if (
+      inputs.dispatchMode === GATE_DISPATCH_MODES.FAILED_STAGE1_SUPERSESSION_V1
+    ) {
+      const finalPrior = finalGateChecks.find(
+        (check) => String(check?.id) === String(inputs.priorCheckRunId)
+      );
+      const finalPriorAppId = finalPrior?.app?.id ?? finalPrior?.app_id ?? null;
+      if (
+        finalPrior?.conclusion !== "failure" ||
+        finalPriorAppId == null ||
+        String(finalPriorAppId) !== String(gateAppId)
+      ) {
+        return completeIfCreated({
+          conclusion: "failure",
+          blocker: BLOCKERS.BLOCKED_VIONA_T3_FAILED_STAGE1_SUPERSESSION_INVALID,
+          evidence: sanitizeEvidence({
+            decision: "failure",
+            blocker:
+              BLOCKERS.BLOCKED_VIONA_T3_FAILED_STAGE1_SUPERSESSION_INVALID,
+            reason: "final_prior_check_changed_or_app_identity_conflict",
+          }),
+        });
+      }
+    }
     for (const ctx of requiredContexts) {
       if (ctx === GATE_CHECK_RUN_NAME || ctx === STAGE2_CHECK_RUN_NAME) {
         continue;
@@ -1063,70 +2161,116 @@ export async function runMergeAuthorizationGate(deps) {
       const onHead = checkRuns.filter(
         (c) =>
           c.name === ctx &&
-          String(c.head_sha).toLowerCase() === String(inputs.headSha).toLowerCase(),
+          String(c.head_sha).toLowerCase() ===
+            String(inputs.headSha).toLowerCase()
       );
       const other = checkRuns.filter(
         (c) =>
           c.name === ctx &&
-          String(c.head_sha).toLowerCase() !== String(inputs.headSha).toLowerCase(),
+          String(c.head_sha).toLowerCase() !==
+            String(inputs.headSha).toLowerCase()
       );
-      if (onHead.length === 0 && other.length > 0) staleRequiredCheckFromOtherSha = true;
-      if (!onHead.some((c) => c.conclusion === 'success')) requiredCheckFailed = true;
+      if (onHead.length === 0 && other.length > 0)
+        staleRequiredCheckFromOtherSha = true;
+      if (!onHead.some((c) => c.conclusion === "success"))
+        requiredCheckFailed = true;
     }
     if (requiredCheckFailed || staleRequiredCheckFromOtherSha) {
       return completeIfCreated({
-        conclusion: 'failure',
+        conclusion: "failure",
         blocker: BLOCKERS.BLOCKED_MERGE_REQUIRED_CHECK_FAILED,
         evidence: sanitizeEvidence({
-          decision: 'failure',
+          decision: "failure",
           blocker: BLOCKERS.BLOCKED_MERGE_REQUIRED_CHECK_FAILED,
         }),
       });
     }
 
     // Snapshot B — final reconfirmation
-    const prB = await rest(deps, 'GET', `/repos/${owner}/${repo}/pulls/${inputs.prNumber}`);
+    const prB = await rest(
+      deps,
+      "GET",
+      `/repos/${owner}/${repo}/pulls/${inputs.prNumber}`
+    );
     if (
       !prB ||
-      prB.state !== 'open' ||
+      prB.state !== "open" ||
+      (inputs.dispatchMode ===
+        GATE_DISPATCH_MODES.FAILED_STAGE1_SUPERSESSION_V1 &&
+        prB.draft !== false) ||
       prB.base?.ref !== CANONICAL_BASE_BRANCH ||
       prB.auto_merge ||
-      String(prB.head?.sha).toLowerCase() !== String(inputs.headSha).toLowerCase()
+      String(prB.head?.sha).toLowerCase() !==
+        String(inputs.headSha).toLowerCase()
     ) {
       return completeIfCreated({
-        conclusion: 'failure',
+        conclusion: "failure",
         blocker: BLOCKERS.BLOCKED_MERGE_AUTHORIZED_HEAD_MISMATCH,
         evidence: sanitizeEvidence({
-          decision: 'failure',
+          decision: "failure",
           blocker: BLOCKERS.BLOCKED_MERGE_AUTHORIZED_HEAD_MISMATCH,
-          reason: 'snapshot_b_failed',
+          reason: "snapshot_b_failed",
         }),
       });
     }
-    const approvalB = selectExactHeadApproval(reviews, inputs.headSha, proven.createdAtMs);
+    let finalReviews = reviews;
+    if (
+      inputs.dispatchMode === GATE_DISPATCH_MODES.FAILED_STAGE1_SUPERSESSION_V1
+    ) {
+      try {
+        finalReviews = await listPaginated(
+          deps,
+          `/repos/${owner}/${repo}/pulls/${inputs.prNumber}/reviews`,
+          (batch) => (Array.isArray(batch) ? batch : null)
+        );
+      } catch {
+        return completeIfCreated({
+          conclusion: "failure",
+          blocker: BLOCKERS.BLOCKED_MERGE_REVIEW_REQUIREMENT_NOT_SATISFIED,
+          evidence: sanitizeEvidence({
+            decision: "failure",
+            blocker: BLOCKERS.BLOCKED_MERGE_REVIEW_REQUIREMENT_NOT_SATISFIED,
+            reason: "final_reviews_api_error",
+          }),
+        });
+      }
+    }
+    const approvalB =
+      inputs.dispatchMode === GATE_DISPATCH_MODES.FAILED_STAGE1_SUPERSESSION_V1
+        ? selectRecoveryCaseApproval(
+            finalReviews,
+            inputs.headSha,
+            proven.createdAtMs
+          )
+        : selectExactHeadApproval(
+            finalReviews,
+            inputs.headSha,
+            proven.createdAtMs
+          );
     if (!approvalB.ok) {
       return completeIfCreated({
-        conclusion: 'failure',
+        conclusion: "failure",
         blocker: BLOCKERS.BLOCKED_MERGE_AUTHORIZATION_PREDATES_CURRENT_HEAD,
         evidence: sanitizeEvidence({
-          decision: 'failure',
+          decision: "failure",
           blocker: BLOCKERS.BLOCKED_MERGE_AUTHORIZATION_PREDATES_CURRENT_HEAD,
-          reason: 'snapshot_b_review_invalid',
+          reason: "snapshot_b_review_invalid",
         }),
       });
     }
 
     if (deps.forceTechnicalErrorAfterCreate === true) {
-      throw Object.assign(new Error('forced_technical_error'), {
-        sanitized: { message: 'forced_technical_error' },
+      throw Object.assign(new Error("forced_technical_error"), {
+        sanitized: { message: "forced_technical_error" },
       });
     }
 
     const facts = {
-      provenanceMechanism: 'VERIFIED_ACTOR_ALLOWLISTED_GITHUB_WORKFLOW_DISPATCH_RECORD',
+      provenanceMechanism:
+        "VERIFIED_ACTOR_ALLOWLISTED_GITHUB_WORKFLOW_DISPATCH_RECORD",
       freeTextAuthorizationPresent: false,
       callerAuthorizedOperatorPresent: false,
-      eventName: 'workflow_dispatch',
+      eventName: "workflow_dispatch",
       runAttempt: 1,
       repository: CANONICAL_REPOSITORY,
       actor,
@@ -1144,11 +2288,12 @@ export async function runMergeAuthorizationGate(deps) {
       headSha: inputs.headSha,
       headShaMalformed: false,
       prMissing: false,
-      prState: 'OPEN',
+      prState: "OPEN",
       baseBranch: inputs.baseBranch,
       actualBaseBranch: prB.base.ref,
       actualHeadSha: prB.head.sha,
       mergeMode: inputs.mergeMode,
+      stage1DispatchMode: inputs.dispatchMode,
       freezeScope: inputs.freezeScope,
       headActivationProven: true,
       authorizationPredatesCurrentHead: false,
@@ -1173,31 +2318,35 @@ export async function runMergeAuthorizationGate(deps) {
   } catch (err) {
     const blocker = BLOCKERS.BLOCKED_VIONA_T3_GATE_TECHNICAL_ERROR;
     const result = {
-      conclusion: 'failure',
+      conclusion: "failure",
       blocker,
       evidence: sanitizeEvidence({
-        decision: 'failure',
+        decision: "failure",
         blocker,
-        message: err?.sanitized?.message ?? 'technical_error',
+        message: err?.sanitized?.message ?? "technical_error",
       }),
     };
     if (checkCreated > 0) return completeIfCreated(result);
-    return { ...earlyFail(blocker, result.evidence), checkCreated: 0, checkCompleted: 0 };
+    return {
+      ...earlyFail(blocker, result.evidence),
+      checkCreated: 0,
+      checkCompleted: 0,
+    };
   }
 }
 
 export function createProductionDeps(env = process.env) {
   const checksToken = env.GITHUB_TOKEN;
-  const apiBase = 'https://api.github.com';
+  const apiBase = "https://api.github.com";
 
   async function githubFetch(token, { method, urlPath, body }) {
     const res = await fetch(`${apiBase}${urlPath}`, {
       method,
       headers: {
-        Accept: 'application/vnd.github+json',
+        Accept: "application/vnd.github+json",
         Authorization: `Bearer ${token}`,
-        'X-GitHub-Api-Version': '2022-11-28',
-        ...(body ? { 'Content-Type': 'application/json' } : {}),
+        "X-GitHub-Api-Version": "2022-11-28",
+        ...(body ? { "Content-Type": "application/json" } : {}),
       },
       body: body ? JSON.stringify(body) : undefined,
     });
@@ -1206,11 +2355,11 @@ export function createProductionDeps(env = process.env) {
     try {
       json = text ? JSON.parse(text) : null;
     } catch {
-      json = { message: 'unparseable_response' };
+      json = { message: "unparseable_response" };
     }
     if (!res.ok) {
       const err = new Error(`GitHub REST ${res.status}`);
-      err.sanitized = { status: res.status, message: json?.message ?? 'error' };
+      err.sanitized = { status: res.status, message: json?.message ?? "error" };
       throw err;
     }
     return json;
@@ -1223,10 +2372,12 @@ export function createProductionDeps(env = process.env) {
 
   async function protectionRestRequest({ method, urlPath, body }) {
     assertProtectionReadRequest(method, urlPath);
-    const protectionToken = String(env.VIONA_GATE_PROTECTION_READ_TOKEN ?? '').trim();
+    const protectionToken = String(
+      env.VIONA_GATE_PROTECTION_READ_TOKEN ?? ""
+    ).trim();
     if (!protectionToken) {
-      const err = new Error('protection_read_credential_missing');
-      err.sanitized = { message: 'protection_read_credential_missing' };
+      const err = new Error("protection_read_credential_missing");
+      err.sanitized = { message: "protection_read_credential_missing" };
       throw err;
     }
     return githubFetch(protectionToken, { method, urlPath, body });
@@ -1234,18 +2385,18 @@ export function createProductionDeps(env = process.env) {
 
   async function graphqlRequest({ query, variables }) {
     const res = await fetch(`${apiBase}/graphql`, {
-      method: 'POST',
+      method: "POST",
       headers: {
-        Accept: 'application/vnd.github+json',
+        Accept: "application/vnd.github+json",
         Authorization: `Bearer ${checksToken}`,
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
       },
       body: JSON.stringify({ query, variables }),
     });
     const json = await res.json();
     if (!res.ok || json.errors) {
-      const err = new Error('GitHub GraphQL error');
-      err.sanitized = { message: 'graphql_error' };
+      const err = new Error("GitHub GraphQL error");
+      err.sanitized = { message: "graphql_error" };
       throw err;
     }
     return json;
@@ -1256,28 +2407,39 @@ export function createProductionDeps(env = process.env) {
     restRequest,
     protectionRestRequest,
     graphqlRequest,
-    async createCheckRun({ name, headSha, status }) {
+    async createCheckRun({ name, headSha, status, externalId }) {
       return restRequest({
-        method: 'POST',
+        method: "POST",
         urlPath: `/repos/${ownerOf()}/${repoOf()}/check-runs`,
-        body: { name, head_sha: headSha, status },
+        body: {
+          name,
+          head_sha: headSha,
+          status,
+          ...(externalId ? { external_id: externalId } : {}),
+        },
       });
     },
     async completeCheckRun({ checkRunId, name, headSha, conclusion, output }) {
       return restRequest({
-        method: 'PATCH',
+        method: "PATCH",
         urlPath: `/repos/${ownerOf()}/${repoOf()}/check-runs/${checkRunId}`,
-        body: { name, head_sha: headSha, status: 'completed', conclusion, output },
+        body: {
+          name,
+          head_sha: headSha,
+          status: "completed",
+          conclusion,
+          output,
+        },
       });
     },
     log: (msg) => console.log(msg),
   };
 
   function ownerOf() {
-    return CANONICAL_REPOSITORY.split('/')[0];
+    return CANONICAL_REPOSITORY.split("/")[0];
   }
   function repoOf() {
-    return CANONICAL_REPOSITORY.split('/')[1];
+    return CANONICAL_REPOSITORY.split("/")[1];
   }
 }
 
@@ -1294,7 +2456,7 @@ function isDirectRun() {
 export async function main(env = process.env) {
   const deps = createProductionDeps(env);
   const result = await runMergeAuthorizationGate(deps);
-  if (result.conclusion !== 'success') process.exitCode = 1;
+  if (result.conclusion !== "success") process.exitCode = 1;
   return result;
 }
 
@@ -1302,10 +2464,10 @@ if (isDirectRun()) {
   main().catch((err) => {
     console.error(
       JSON.stringify({
-        error: 'gate_failed',
+        error: "gate_failed",
         blocker: BLOCKERS.BLOCKED_VIONA_T3_GATE_TECHNICAL_ERROR,
-        message: err?.sanitized?.message ?? 'error',
-      }),
+        message: err?.sanitized?.message ?? "error",
+      })
     );
     process.exitCode = 1;
   });

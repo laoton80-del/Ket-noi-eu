@@ -9,19 +9,21 @@
  * Wrapper cannot manufacture gate success, alter protection, or admin-bypass.
  */
 
-import { pathToFileURL } from 'node:url';
-import path from 'node:path';
+import { pathToFileURL } from "node:url";
+import path from "node:path";
 import {
   GATE_CHECK_RUN_NAME,
+  GATE_DISPATCH_MODES,
   CANONICAL_REPOSITORY,
   CANONICAL_BASE_BRANCH,
   CANONICAL_MERGE_MODE,
   REPOSITORY_LEVEL_REQUIRED_CHECK_IS_PRIMARY,
   GUARDED_MERGE_WRAPPER_IS_DEFENSE_IN_DEPTH,
   computeReviewedScopeDigest,
+  resolveEffectiveStage1Check,
   sanitizeEvidence,
   BLOCKERS,
-} from './viona-merge-authorization-gate.mjs';
+} from "./viona-merge-authorization-gate.mjs";
 import {
   STAGE2_CHECK_RUN_NAME,
   AUTHORIZATION_STATES,
@@ -40,7 +42,7 @@ import {
   computeTargetKey,
   ledgerReadRecord,
   ledgerConditionalWriteRecord,
-} from './viona-merge-explicit-authorization.mjs';
+} from "./viona-merge-explicit-authorization.mjs";
 
 export {
   REPOSITORY_LEVEL_REQUIRED_CHECK_IS_PRIMARY,
@@ -75,7 +77,7 @@ const FULL_SHA_RE = /^[0-9a-f]{40}$/i;
  * manual reconciliation rather than any retry or reactivation.
  */
 const MERGE_SUCCEEDED_LEDGER_FINALIZATION_FAILED_BLOCKER =
-  'MERGE_SUCCEEDED_LEDGER_FINALIZATION_FAILED_RECONCILIATION_REQUIRED';
+  "MERGE_SUCCEEDED_LEDGER_FINALIZATION_FAILED_RECONCILIATION_REQUIRED";
 
 export function parseGuardedMergeArgs(argv) {
   const out = {
@@ -94,43 +96,43 @@ export function parseGuardedMergeArgs(argv) {
     const a = argv[i];
     const next = argv[i + 1];
     switch (a) {
-      case '--repo':
+      case "--repo":
         out.repo = next;
         i += 1;
         break;
-      case '--pr':
+      case "--pr":
         out.pr = next;
         i += 1;
         break;
-      case '--head':
+      case "--head":
         out.head = next;
         i += 1;
         break;
-      case '--base':
+      case "--base":
         out.base = next;
         i += 1;
         break;
-      case '--mode':
+      case "--mode":
         out.mode = next;
         i += 1;
         break;
-      case '--reviewed-scope-digest':
+      case "--reviewed-scope-digest":
         out.reviewedScopeDigest = next;
         i += 1;
         break;
-      case '--gate-app-id':
+      case "--gate-app-id":
         out.gateAppId = next;
         i += 1;
         break;
-      case '--freeze-scope':
+      case "--freeze-scope":
         out.freezeScope = next;
         i += 1;
         break;
-      case '--authorization-id':
+      case "--authorization-id":
         out.authorizationId = next;
         i += 1;
         break;
-      case '--execute':
+      case "--execute":
         out.execute = true;
         break;
       default:
@@ -157,29 +159,33 @@ export function evaluateGuardedMerge(facts) {
   const fail = (blocker, extra = {}) => ({
     ok: false,
     blocker,
-    evidence: { ...evidence, decision: 'blocked', blocker, ...extra },
+    evidence: { ...evidence, decision: "blocked", blocker, ...extra },
   });
 
   if (facts.repository !== CANONICAL_REPOSITORY) {
     return fail(BLOCKERS.BLOCKED_MERGE_AUTHORIZATION_PROVENANCE_UNRESOLVED, {
-      reason: 'repository_mismatch',
+      reason: "repository_mismatch",
     });
   }
 
-  if (facts.prMissing || facts.prState !== 'OPEN') {
+  if (facts.prMissing || facts.prState !== "OPEN") {
     return fail(BLOCKERS.BLOCKED_MERGE_PR_NUMBER_AUTHORIZATION_MISMATCH, {
-      reason: facts.prMissing ? 'pr_missing' : 'pr_not_open',
+      reason: facts.prMissing ? "pr_missing" : "pr_not_open",
     });
   }
 
   if (
-    !FULL_SHA_RE.test(String(facts.headSha ?? '')) ||
-    String(facts.headSha).toLowerCase() !== String(facts.actualHeadSha).toLowerCase()
+    !FULL_SHA_RE.test(String(facts.headSha ?? "")) ||
+    String(facts.headSha).toLowerCase() !==
+      String(facts.actualHeadSha).toLowerCase()
   ) {
     return fail(BLOCKERS.BLOCKED_MERGE_AUTHORIZED_HEAD_MISMATCH);
   }
 
-  if (facts.base !== CANONICAL_BASE_BRANCH || facts.actualBase !== CANONICAL_BASE_BRANCH) {
+  if (
+    facts.base !== CANONICAL_BASE_BRANCH ||
+    facts.actualBase !== CANONICAL_BASE_BRANCH
+  ) {
     return fail(BLOCKERS.BLOCKED_MERGE_BASE_BRANCH_MISMATCH);
   }
 
@@ -192,6 +198,11 @@ export function evaluateGuardedMerge(facts) {
     String(facts.suppliedReviewedScopeDigest).toLowerCase()
   ) {
     return fail(BLOCKERS.BLOCKED_MERGE_SCOPE_CHANGED_AFTER_REVIEW);
+  }
+  if (facts.gateCheckEvidenceDigestMismatch === true) {
+    return fail(BLOCKERS.BLOCKED_MERGE_SCOPE_CHANGED_AFTER_REVIEW, {
+      reason: "effective_stage1_evidence_digest_mismatch",
+    });
   }
 
   if (facts.autoMergeActive === true) {
@@ -211,18 +222,26 @@ export function evaluateGuardedMerge(facts) {
   }
 
   if (facts.gateCheckMissing === true) {
-    return fail(BLOCKERS.BLOCKED_MERGE_REQUIRED_CHECK_FAILED, { reason: 'gate_check_missing' });
+    return fail(BLOCKERS.BLOCKED_MERGE_REQUIRED_CHECK_FAILED, {
+      reason: "gate_check_missing",
+    });
   }
 
   if (facts.gateCheckStaleSha === true) {
     return fail(BLOCKERS.BLOCKED_MERGE_AUTHORIZED_HEAD_MISMATCH, {
-      reason: 'gate_check_stale_sha',
+      reason: "gate_check_stale_sha",
     });
   }
 
-  if (facts.gateCheckConclusion !== 'success') {
+  if (facts.gateCheckResolutionInvalid === true) {
+    return fail(BLOCKERS.BLOCKED_VIONA_T3_GATE_CONTEXT_IDENTITY_AMBIGUOUS, {
+      reason: "effective_stage1_resolution_failed",
+    });
+  }
+
+  if (facts.gateCheckConclusion !== "success") {
     return fail(BLOCKERS.BLOCKED_MERGE_REQUIRED_CHECK_FAILED, {
-      reason: 'gate_check_not_success',
+      reason: "gate_check_not_success",
     });
   }
 
@@ -230,15 +249,19 @@ export function evaluateGuardedMerge(facts) {
     return fail(BLOCKERS.BLOCKED_VIONA_T3_GATE_CONTEXT_IDENTITY_AMBIGUOUS);
   }
 
-  if (facts.gateAppIdMissing === true || facts.gateAppId == null || facts.gateAppId === '') {
+  if (
+    facts.gateAppIdMissing === true ||
+    facts.gateAppId == null ||
+    facts.gateAppId === ""
+  ) {
     return fail(BLOCKERS.BLOCKED_VIONA_T3_GATE_CHECK_APP_IDENTITY_UNRESOLVED, {
-      reason: 'gate_app_id_missing',
+      reason: "gate_app_id_missing",
     });
   }
 
   if (String(facts.gateAppId) !== String(facts.actualGateAppId)) {
     return fail(BLOCKERS.BLOCKED_VIONA_T3_GATE_CHECK_APP_IDENTITY_UNRESOLVED, {
-      reason: 'gate_app_id_mismatch',
+      reason: "gate_app_id_mismatch",
     });
   }
 
@@ -262,7 +285,7 @@ export function evaluateGuardedMerge(facts) {
     if (facts.stage2CheckMissing === true) {
       return fail(STAGE2_BLOCKERS.BLOCKED_STAGE2_CHECK_MISSING);
     }
-    if (facts.stage2CheckConclusion !== 'success') {
+    if (facts.stage2CheckConclusion !== "success") {
       return fail(STAGE2_BLOCKERS.BLOCKED_STAGE2_CHECK_NOT_SUCCESS);
     }
     // Directive §18: "check success without matching valid ledger state
@@ -274,7 +297,10 @@ export function evaluateGuardedMerge(facts) {
       return fail(STAGE2_BLOCKERS.BLOCKED_STAGE2_LEDGER_TARGET_KEY_MISMATCH);
     }
     if (facts.stage2LifecycleOk !== true) {
-      return fail(facts.stage2LifecycleBlocker ?? STAGE2_BLOCKERS.BLOCKED_STAGE2_AUTHORIZATION_NOT_ACTIVE);
+      return fail(
+        facts.stage2LifecycleBlocker ??
+          STAGE2_BLOCKERS.BLOCKED_STAGE2_AUTHORIZATION_NOT_ACTIVE
+      );
     }
     const freezePolicy = evaluateFreezeScopeForState({
       freezeState: GLOBAL_MERGE_FREEZE_STATE,
@@ -289,10 +315,11 @@ export function evaluateGuardedMerge(facts) {
     if (
       facts.authorizationId != null &&
       facts.stage2RecordAuthorizationId != null &&
-      String(facts.authorizationId) !== String(facts.stage2RecordAuthorizationId)
+      String(facts.authorizationId) !==
+        String(facts.stage2RecordAuthorizationId)
     ) {
       return fail(STAGE2_BLOCKERS.BLOCKED_STAGE2_AUTHORIZATION_NOT_FOUND, {
-        reason: 'authorization_id_mismatch',
+        reason: "authorization_id_mismatch",
       });
     }
   }
@@ -300,7 +327,7 @@ export function evaluateGuardedMerge(facts) {
   return {
     ok: true,
     blocker: null,
-    evidence: { ...evidence, decision: 'verified', blocker: null },
+    evidence: { ...evidence, decision: "verified", blocker: null },
   };
 }
 
@@ -309,7 +336,7 @@ async function listAllPrFiles(deps, owner, repo, prNumber) {
   let page = 1;
   for (;;) {
     const batch = await deps.restRequest({
-      method: 'GET',
+      method: "GET",
       urlPath: `/repos/${owner}/${repo}/pulls/${prNumber}/files?per_page=100&page=${page}`,
     });
     const items = Array.isArray(batch) ? batch : [];
@@ -320,6 +347,32 @@ async function listAllPrFiles(deps, owner, repo, prNumber) {
   return files;
 }
 
+async function listAllCheckRuns(deps, owner, repo, headSha) {
+  const checkRuns = [];
+  let page = 1;
+  for (;;) {
+    const batch = await deps.restRequest({
+      method: "GET",
+      urlPath: `/repos/${owner}/${repo}/commits/${headSha}/check-runs?filter=all&per_page=100&page=${page}`,
+    });
+    const items = batch?.check_runs;
+    if (!Array.isArray(items)) {
+      const err = new Error("unexpected_check_runs_shape");
+      err.sanitized = { message: "unexpected_check_runs_shape" };
+      throw err;
+    }
+    checkRuns.push(...items);
+    if (items.length < 100) break;
+    page += 1;
+    if (page > 100) {
+      const err = new Error("check_runs_pagination_bound_exceeded");
+      err.sanitized = { message: "check_runs_pagination_bound_exceeded" };
+      throw err;
+    }
+  }
+  return checkRuns;
+}
+
 export async function runGuardedPrMerge(deps) {
   const args = deps.args ?? parseGuardedMergeArgs(deps.argv ?? []);
   const mergeCalls = [];
@@ -327,27 +380,30 @@ export async function runGuardedPrMerge(deps) {
   const protectionMutations = [];
 
   const restRequest = async (req) => {
-    if (/\/merges$|\/merge$/.test(req.urlPath) && req.method === 'PUT') {
+    if (/\/merges$|\/merge$/.test(req.urlPath) && req.method === "PUT") {
       mergeCalls.push(req);
     }
-    if (/\/check-runs$/.test(req.urlPath) && req.method === 'POST') {
+    if (/\/check-runs$/.test(req.urlPath) && req.method === "POST") {
       checkRunCreates.push(req);
     }
-    if (/\/protection/.test(req.urlPath) && ['PUT', 'PATCH', 'DELETE'].includes(req.method)) {
+    if (
+      /\/protection/.test(req.urlPath) &&
+      ["PUT", "PATCH", "DELETE"].includes(req.method)
+    ) {
       protectionMutations.push(req);
     }
     return deps.restRequest(req);
   };
 
-  const [owner, repoName] = CANONICAL_REPOSITORY.split('/');
+  const [owner, repoName] = CANONICAL_REPOSITORY.split("/");
   let pr = null;
   let prMissing = true;
   try {
     pr = await restRequest({
-      method: 'GET',
+      method: "GET",
       urlPath: `/repos/${owner}/${repoName}/pulls/${args.pr}`,
     });
-    prMissing = !pr || pr.message === 'Not Found';
+    prMissing = !pr || pr.message === "Not Found";
   } catch {
     prMissing = true;
   }
@@ -371,7 +427,8 @@ export async function runGuardedPrMerge(deps) {
         }`,
         variables: { owner, repo: repoName, number: Number(args.pr) },
       });
-      const threads = gql?.data?.repository?.pullRequest?.reviewThreads?.nodes ?? [];
+      const threads =
+        gql?.data?.repository?.pullRequest?.reviewThreads?.nodes ?? [];
       unresolvedConversation = threads.some((t) => t && t.isResolved === false);
     } catch {
       unresolvedConversation = true;
@@ -382,14 +439,15 @@ export async function runGuardedPrMerge(deps) {
   if (!prMissing) {
     try {
       reviews = await restRequest({
-        method: 'GET',
+        method: "GET",
         urlPath: `/repos/${owner}/${repoName}/pulls/${args.pr}/reviews`,
       });
     } catch {
       reviews = [];
     }
   }
-  const reviewSatisfied = Array.isArray(reviews) && reviews.some((r) => r.state === 'APPROVED');
+  const reviewSatisfied =
+    Array.isArray(reviews) && reviews.some((r) => r.state === "APPROVED");
 
   let requiredCheckFailed = false;
   let gateCheckMissing = true;
@@ -397,6 +455,8 @@ export async function runGuardedPrMerge(deps) {
   let gateCheckConclusion = null;
   let actualGateAppId = null;
   let duplicateConflictingGateContext = false;
+  let gateCheckResolutionInvalid = false;
+  let gateCheckEvidenceDigestMismatch = false;
 
   // Stage 2 (Viona Explicit Merge Authorization) facts — dormant during
   // Lane B1 (no branch protection requires this context yet), but the
@@ -418,30 +478,32 @@ export async function runGuardedPrMerge(deps) {
   let stage2Required = false;
 
   if (!prMissing && pr?.head?.sha) {
-    const checks = await restRequest({
-      method: 'GET',
-      urlPath: `/repos/${owner}/${repoName}/commits/${pr.head.sha}/check-runs`,
-    });
-    const checkRuns = [...(checks?.check_runs ?? []), ...(deps.extraCheckRuns ?? [])];
+    const listedCheckRuns = await listAllCheckRuns(
+      { restRequest },
+      owner,
+      repoName,
+      pr.head.sha
+    );
+    const checkRuns = [...listedCheckRuns, ...(deps.extraCheckRuns ?? [])];
     const gateOnHead = checkRuns.filter(
       (c) =>
         c.name === GATE_CHECK_RUN_NAME &&
-        String(c.head_sha).toLowerCase() === String(pr.head.sha).toLowerCase(),
+        String(c.head_sha).toLowerCase() === String(pr.head.sha).toLowerCase()
     );
     const gateOther = checkRuns.filter(
       (c) =>
         c.name === GATE_CHECK_RUN_NAME &&
-        String(c.head_sha).toLowerCase() !== String(pr.head.sha).toLowerCase(),
+        String(c.head_sha).toLowerCase() !== String(pr.head.sha).toLowerCase()
     );
-    if (gateOther.some((c) => c.conclusion === 'success')) {
+    if (gateOther.some((c) => c.conclusion === "success")) {
       // conflicting success elsewhere is noted but does not satisfy current head
       void gateOther;
     }
     const aliases = checkRuns.filter(
       (c) =>
-        typeof c.name === 'string' &&
+        typeof c.name === "string" &&
         c.name !== GATE_CHECK_RUN_NAME &&
-        c.name.startsWith(GATE_CHECK_RUN_NAME),
+        c.name.startsWith(GATE_CHECK_RUN_NAME)
     );
     if (aliases.length > 0) duplicateConflictingGateContext = true;
     if (deps.forceDuplicateConflictingGateContext === true) {
@@ -455,13 +517,32 @@ export async function runGuardedPrMerge(deps) {
       }
     } else {
       gateCheckMissing = false;
-      const success = gateOnHead.find((c) => c.conclusion === 'success');
-      gateCheckConclusion = success?.conclusion ?? gateOnHead[0]?.conclusion ?? null;
-      actualGateAppId = success?.app?.id ?? gateOnHead[0]?.app?.id ?? null;
+      const effectiveStage1 = resolveEffectiveStage1Check(
+        gateOnHead,
+        pr.head.sha
+      );
+      if (effectiveStage1.ok) {
+        gateCheckConclusion = effectiveStage1.check?.conclusion ?? null;
+        actualGateAppId =
+          effectiveStage1.check?.app?.id ??
+          effectiveStage1.check?.app_id ??
+          null;
+        if (
+          effectiveStage1.mode ===
+            GATE_DISPATCH_MODES.FAILED_STAGE1_SUPERSESSION_V1 &&
+          String(
+            effectiveStage1.evidence?.canonical_digest ?? ""
+          ).toLowerCase() !== computedDigest.toLowerCase()
+        ) {
+          gateCheckEvidenceDigestMismatch = true;
+        }
+      } else {
+        gateCheckResolutionInvalid = true;
+      }
     }
 
     const protection = await restRequest({
-      method: 'GET',
+      method: "GET",
       urlPath: `/repos/${owner}/${repoName}/branches/master/protection`,
     });
     const requiredContexts = protection?.required_status_checks?.contexts ?? [];
@@ -474,13 +555,14 @@ export async function runGuardedPrMerge(deps) {
     // the moment Lane B2 adds the context, with no further code change.
     stage2Required = requiredContexts.includes(STAGE2_CHECK_RUN_NAME);
     for (const ctx of requiredContexts) {
-      if (ctx === GATE_CHECK_RUN_NAME || ctx === STAGE2_CHECK_RUN_NAME) continue;
+      if (ctx === GATE_CHECK_RUN_NAME || ctx === STAGE2_CHECK_RUN_NAME)
+        continue;
       const onHead = checkRuns.filter(
         (c) =>
           c.name === ctx &&
-          String(c.head_sha).toLowerCase() === String(pr.head.sha).toLowerCase(),
+          String(c.head_sha).toLowerCase() === String(pr.head.sha).toLowerCase()
       );
-      if (!onHead.some((c) => c.conclusion === 'success')) {
+      if (!onHead.some((c) => c.conclusion === "success")) {
         requiredCheckFailed = true;
       }
     }
@@ -490,14 +572,15 @@ export async function runGuardedPrMerge(deps) {
     const stage2OnHead = checkRuns.filter(
       (c) =>
         c.name === STAGE2_CHECK_RUN_NAME &&
-        String(c.head_sha).toLowerCase() === String(pr.head.sha).toLowerCase(),
+        String(c.head_sha).toLowerCase() === String(pr.head.sha).toLowerCase()
     );
     if (stage2OnHead.length === 0) {
       stage2CheckMissing = true;
       stage2LifecycleBlocker = STAGE2_BLOCKERS.BLOCKED_STAGE2_CHECK_MISSING;
     } else {
       stage2CheckMissing = false;
-      const success = stage2OnHead.find((c) => c.conclusion === 'success') ?? stage2OnHead[0];
+      const success =
+        stage2OnHead.find((c) => c.conclusion === "success") ?? stage2OnHead[0];
       stage2CheckConclusion = success?.conclusion ?? null;
       const projection = parseStage2Record(success);
 
@@ -517,12 +600,16 @@ export async function runGuardedPrMerge(deps) {
         !projection ||
         projection.target_key !== stage2TargetKey ||
         projection.ledger_ref !== LEDGER_REF ||
-        String(projection.head_sha ?? '').toLowerCase() !== String(pr.head.sha).toLowerCase();
+        String(projection.head_sha ?? "").toLowerCase() !==
+          String(pr.head.sha).toLowerCase();
 
       if (!stage2TargetKeyMismatch) {
         let ledgerLookup;
         try {
-          ledgerLookup = await ledgerReadRecord({ restRequest }, stage2TargetKey);
+          ledgerLookup = await ledgerReadRecord(
+            { restRequest },
+            stage2TargetKey
+          );
         } catch {
           ledgerLookup = { record: null, blobSha: null };
         }
@@ -535,9 +622,9 @@ export async function runGuardedPrMerge(deps) {
             prNumber: args.pr,
             reviewedScopeDigest: computedDigest,
             mergeMode: args.mode,
-            prClosed: pr?.state !== 'open',
+            prClosed: pr?.state !== "open",
           },
-          nowMs: typeof deps.nowMs === 'function' ? deps.nowMs() : Date.now(),
+          nowMs: typeof deps.nowMs === "function" ? deps.nowMs() : Date.now(),
         });
         stage2LifecycleOk = lifecycle.ok;
         stage2LifecycleBlocker = lifecycle.blocker ?? null;
@@ -553,7 +640,11 @@ export async function runGuardedPrMerge(deps) {
     repository: args.repo,
     prNumber: args.pr,
     prMissing,
-    prState: prMissing ? null : pr?.state === 'open' ? 'OPEN' : String(pr?.state ?? '').toUpperCase(),
+    prState: prMissing
+      ? null
+      : pr?.state === "open"
+      ? "OPEN"
+      : String(pr?.state ?? "").toUpperCase(),
     headSha: args.head,
     actualHeadSha: pr?.head?.sha ?? null,
     base: args.base,
@@ -569,7 +660,9 @@ export async function runGuardedPrMerge(deps) {
     gateCheckStaleSha,
     gateCheckConclusion,
     duplicateConflictingGateContext,
-    gateAppIdMissing: args.gateAppId == null || args.gateAppId === '',
+    gateCheckResolutionInvalid,
+    gateCheckEvidenceDigestMismatch,
+    gateAppIdMissing: args.gateAppId == null || args.gateAppId === "",
     gateAppId: args.gateAppId,
     actualGateAppId,
     stage2Required,
@@ -602,7 +695,9 @@ export async function runGuardedPrMerge(deps) {
   }
 
   if (!args.execute) {
-    deps.log?.(JSON.stringify(sanitizeEvidence({ ...result.evidence, dryRun: true })));
+    deps.log?.(
+      JSON.stringify(sanitizeEvidence({ ...result.evidence, dryRun: true }))
+    );
     return result;
   }
 
@@ -619,16 +714,20 @@ export async function runGuardedPrMerge(deps) {
     // behavior — a single merge API call, no claim/consumption
     // bookkeeping — for callers operating before Lane B2 activates Stage 2.
     await restRequest({
-      method: 'PUT',
+      method: "PUT",
       urlPath: `/repos/${owner}/${repoName}/pulls/${args.pr}/merge`,
       body: {
-        merge_method: 'squash',
+        merge_method: "squash",
         sha: pr.head.sha,
       },
     });
     result.mergeInvoked = true;
     result.mergeCalls = mergeCalls;
-    deps.log?.(JSON.stringify(sanitizeEvidence({ ...result.evidence, mergeInvoked: true })));
+    deps.log?.(
+      JSON.stringify(
+        sanitizeEvidence({ ...result.evidence, mergeInvoked: true })
+      )
+    );
     return result;
   }
 
@@ -647,7 +746,9 @@ export async function runGuardedPrMerge(deps) {
   // succeed for a given blob sha; every other concurrent caller observes
   // the rejection and MUST fail closed immediately, with no retry-to-win
   // (directive §13, §14).
-  const nowIso = new Date(typeof deps.nowMs === 'function' ? deps.nowMs() : Date.now()).toISOString();
+  const nowIso = new Date(
+    typeof deps.nowMs === "function" ? deps.nowMs() : Date.now()
+  ).toISOString();
 
   let reread;
   try {
@@ -671,13 +772,19 @@ export async function runGuardedPrMerge(deps) {
       prNumber: args.pr,
       reviewedScopeDigest: computedDigest,
       mergeMode: args.mode,
-      prClosed: pr?.state !== 'open',
+      prClosed: pr?.state !== "open",
     },
-    nowMs: typeof deps.nowMs === 'function' ? deps.nowMs() : Date.now(),
+    nowMs: typeof deps.nowMs === "function" ? deps.nowMs() : Date.now(),
   });
   if (!rereadValidity.ok) {
     deps.log?.(JSON.stringify(sanitizeEvidence(rereadValidity.evidence)));
-    return { ...result, ok: false, blocker: rereadValidity.blocker, mergeInvoked: false, claimed: false };
+    return {
+      ...result,
+      ok: false,
+      blocker: rereadValidity.blocker,
+      mergeInvoked: false,
+      claimed: false,
+    };
   }
 
   // CLAIM: ACTIVE -> CONSUMING via ledger sha-conditional PUT (single
@@ -696,14 +803,20 @@ export async function runGuardedPrMerge(deps) {
       record: claimRecord,
       expectedBlobSha: rereadBlobSha,
       message: `viona-ledger: CONSUMING ${claimRecord.authorization_id} pr#${args.pr}`,
-    },
+    }
   );
   if (!claim.ok) {
     // Stale sha: another caller's conditional write already landed first.
     // Fail closed immediately — never retry-to-win, never call the merge
     // API (directive §13, §14).
     deps.log?.(
-      JSON.stringify(sanitizeEvidence({ ...result.evidence, mergeInvoked: false, ledgerClaim: 'stale_sha' })),
+      JSON.stringify(
+        sanitizeEvidence({
+          ...result.evidence,
+          mergeInvoked: false,
+          ledgerClaim: "stale_sha",
+        })
+      )
     );
     return {
       ...result,
@@ -719,19 +832,21 @@ export async function runGuardedPrMerge(deps) {
   let mergeResponse;
   try {
     mergeResponse = await restRequest({
-      method: 'PUT',
+      method: "PUT",
       urlPath: `/repos/${owner}/${repoName}/pulls/${args.pr}/merge`,
       body: {
-        merge_method: 'squash',
+        merge_method: "squash",
         sha: pr.head.sha,
       },
     });
   } catch (err) {
     const mergeResultClass = classifyMergeAttemptFailure(err);
-    const recoveryNowMs = typeof deps.nowMs === 'function' ? deps.nowMs() : Date.now();
+    const recoveryNowMs =
+      typeof deps.nowMs === "function" ? deps.nowMs() : Date.now();
     const recoveryAtIso = new Date(recoveryNowMs).toISOString();
     let revertedState = AUTHORIZATION_STATES.CONSUMING;
-    let resultBlocker = STAGE2_BLOCKERS.BLOCKED_STAGE2_MERGE_RESULT_UNKNOWN_RECONCILIATION_REQUIRED;
+    let resultBlocker =
+      STAGE2_BLOCKERS.BLOCKED_STAGE2_MERGE_RESULT_UNKNOWN_RECONCILIATION_REQUIRED;
 
     if (mergeResultClass === MERGE_RESULT_CLASSES.SAFE_RETRYABLE_FAILURE) {
       // Revision directive LANE_B1.IMPLEMENTATION_REVISION.V1 §4/§5/§18 +
@@ -758,7 +873,7 @@ export async function runGuardedPrMerge(deps) {
           prNumber: args.pr,
           reviewedScopeDigest: computedDigest,
           mergeMode: args.mode,
-          prClosed: pr?.state !== 'open',
+          prClosed: pr?.state !== "open",
         },
         nowMs: recoveryNowMs,
       });
@@ -767,7 +882,10 @@ export async function runGuardedPrMerge(deps) {
         // case where reactivation is permitted.
         revertedState = AUTHORIZATION_STATES.ACTIVE;
         resultBlocker = STAGE2_BLOCKERS.BLOCKED_STAGE2_AUTHORIZATION_NOT_ACTIVE;
-      } else if (recoveryValidity.blocker === STAGE2_BLOCKERS.BLOCKED_STAGE2_AUTHORIZATION_EXPIRED) {
+      } else if (
+        recoveryValidity.blocker ===
+        STAGE2_BLOCKERS.BLOCKED_STAGE2_AUTHORIZATION_EXPIRED
+      ) {
         // Case B (directive §5): expired — never reactivate.
         revertedState = AUTHORIZATION_STATES.EXPIRED;
         resultBlocker = STAGE2_BLOCKERS.BLOCKED_STAGE2_AUTHORIZATION_EXPIRED;
@@ -777,9 +895,12 @@ export async function runGuardedPrMerge(deps) {
         // or unresolved ambiguity — is treated as INVALIDATED, never
         // reactivated. No new lifecycle state is introduced.
         revertedState = AUTHORIZATION_STATES.INVALIDATED;
-        resultBlocker = STAGE2_BLOCKERS.BLOCKED_STAGE2_AUTHORIZATION_INVALIDATED;
+        resultBlocker =
+          STAGE2_BLOCKERS.BLOCKED_STAGE2_AUTHORIZATION_INVALIDATED;
       }
-    } else if (mergeResultClass === MERGE_RESULT_CLASSES.NON_RETRYABLE_FAILURE) {
+    } else if (
+      mergeResultClass === MERGE_RESULT_CLASSES.NON_RETRYABLE_FAILURE
+    ) {
       revertedState = AUTHORIZATION_STATES.INVALIDATED;
       resultBlocker = STAGE2_BLOCKERS.BLOCKED_STAGE2_AUTHORIZATION_INVALIDATED;
     }
@@ -794,10 +915,14 @@ export async function runGuardedPrMerge(deps) {
           { restRequest },
           {
             targetKey: stage2TargetKey,
-            record: { ...claimRecord, state: revertedState, last_transition_at: recoveryAtIso },
+            record: {
+              ...claimRecord,
+              state: revertedState,
+              last_transition_at: recoveryAtIso,
+            },
             expectedBlobSha: currentBlobSha,
             message: `viona-ledger: ${revertedState} ${claimRecord.authorization_id} pr#${args.pr}`,
-          },
+          }
         );
       } catch {
         // Best-effort revert write; if it fails the record simply remains
@@ -809,8 +934,13 @@ export async function runGuardedPrMerge(deps) {
     }
     deps.log?.(
       JSON.stringify(
-        sanitizeEvidence({ ...result.evidence, mergeInvoked: false, mergeResultClass, revertedState }),
-      ),
+        sanitizeEvidence({
+          ...result.evidence,
+          mergeInvoked: false,
+          mergeResultClass,
+          revertedState,
+        })
+      )
     );
     return {
       ...result,
@@ -847,10 +977,13 @@ export async function runGuardedPrMerge(deps) {
         },
         expectedBlobSha: currentBlobSha,
         message: `viona-ledger: CONSUMED ${claimRecord.authorization_id} pr#${args.pr}`,
-      },
+      }
     );
   } catch {
-    finalizeWrite = { ok: false, reason: 'ledger_finalization_technical_error' };
+    finalizeWrite = {
+      ok: false,
+      reason: "ledger_finalization_technical_error",
+    };
   }
 
   result.mergeInvoked = true;
@@ -868,28 +1001,30 @@ export async function runGuardedPrMerge(deps) {
           mergeInvoked: true,
           mergeSucceededLedgerFinalizationFailed: true,
           mergeCommitSha: mergeResponse?.sha ?? null,
-        }),
-      ),
+        })
+      )
     );
     return result;
   }
 
-  deps.log?.(JSON.stringify(sanitizeEvidence({ ...result.evidence, mergeInvoked: true })));
+  deps.log?.(
+    JSON.stringify(sanitizeEvidence({ ...result.evidence, mergeInvoked: true }))
+  );
   return result;
 }
 
 export function createProductionDeps(env = process.env) {
   const token = env.GITHUB_TOKEN;
-  const apiBase = 'https://api.github.com';
+  const apiBase = "https://api.github.com";
 
   async function restRequest({ method, urlPath, body }) {
     const res = await fetch(`${apiBase}${urlPath}`, {
       method,
       headers: {
-        Accept: 'application/vnd.github+json',
+        Accept: "application/vnd.github+json",
         Authorization: `Bearer ${token}`,
-        'X-GitHub-Api-Version': '2022-11-28',
-        ...(body ? { 'Content-Type': 'application/json' } : {}),
+        "X-GitHub-Api-Version": "2022-11-28",
+        ...(body ? { "Content-Type": "application/json" } : {}),
       },
       body: body ? JSON.stringify(body) : undefined,
     });
@@ -898,11 +1033,11 @@ export function createProductionDeps(env = process.env) {
     try {
       json = text ? JSON.parse(text) : null;
     } catch {
-      json = { message: 'unparseable_response' };
+      json = { message: "unparseable_response" };
     }
     if (!res.ok) {
       const err = new Error(`GitHub REST ${res.status}`);
-      err.sanitized = { status: res.status, message: json?.message ?? 'error' };
+      err.sanitized = { status: res.status, message: json?.message ?? "error" };
       throw err;
     }
     return json;
@@ -910,11 +1045,11 @@ export function createProductionDeps(env = process.env) {
 
   async function graphqlRequest({ query, variables }) {
     const res = await fetch(`${apiBase}/graphql`, {
-      method: 'POST',
+      method: "POST",
       headers: {
-        Accept: 'application/vnd.github+json',
+        Accept: "application/vnd.github+json",
         Authorization: `Bearer ${token}`,
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
       },
       body: JSON.stringify({ query, variables }),
     });
@@ -949,7 +1084,12 @@ export async function main(argv = process.argv.slice(2), env = process.env) {
 
 if (isDirectRun()) {
   main().catch((err) => {
-    console.error(JSON.stringify({ error: 'guarded_merge_failed', message: err?.sanitized?.message ?? 'error' }));
+    console.error(
+      JSON.stringify({
+        error: "guarded_merge_failed",
+        message: err?.sanitized?.message ?? "error",
+      })
+    );
     process.exitCode = 1;
   });
 }

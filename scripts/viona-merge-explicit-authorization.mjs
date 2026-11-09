@@ -31,10 +31,10 @@
  * is accepted.
  */
 
-import { createHash, randomUUID } from 'node:crypto';
-import { pathToFileURL } from 'node:url';
-import path from 'node:path';
-import { Buffer } from 'node:buffer';
+import { createHash, randomUUID } from "node:crypto";
+import { pathToFileURL } from "node:url";
+import path from "node:path";
+import { Buffer } from "node:buffer";
 import {
   CANONICAL_REPOSITORY,
   CANONICAL_BASE_BRANCH,
@@ -46,17 +46,20 @@ import {
   FREEZE_SCOPE_POLICY_FAILURES,
   AUTHORIZED_ACTORS,
   GATE_CHECK_RUN_NAME as STAGE1_CHECK_RUN_NAME,
+  GATE_DISPATCH_MODES,
+  resolveEffectiveStage1Check,
   computeReviewedScopeDigest,
   evaluateFreezeScopeForState,
   sanitizeEvidence,
   selectExactHeadApproval,
-} from './viona-merge-authorization-gate.mjs';
+} from "./viona-merge-authorization-gate.mjs";
 
-export const STAGE2_CHECK_RUN_NAME = 'Viona Explicit Merge Authorization';
+export const STAGE2_CHECK_RUN_NAME = "Viona Explicit Merge Authorization";
 export const STAGE2_WORKFLOW_FILE_PATH =
-  '.github/workflows/viona-merge-explicit-authorization.yml';
-export const STAGE2_JOB_ID = 'evaluate_explicit_merge_authorization';
-export const STAGE2_SCRIPT_PATH = 'scripts/viona-merge-explicit-authorization.mjs';
+  ".github/workflows/viona-merge-explicit-authorization.yml";
+export const STAGE2_JOB_ID = "evaluate_explicit_merge_authorization";
+export const STAGE2_SCRIPT_PATH =
+  "scripts/viona-merge-explicit-authorization.mjs";
 export const AUTHORIZATION_TTL_MINUTES = 15;
 
 /**
@@ -84,10 +87,10 @@ export const AUTHORIZATION_TTL_MINUTES = 15;
  * the ref/path internally from these constants rather than accepting them
  * as parameters.
  */
-export const LEDGER_REF = 'viona-governance-merge-ledger-v1';
-export const LEDGER_SCHEMA = 'viona.merge-authority-ledger/v1';
+export const LEDGER_REF = "viona-governance-merge-ledger-v1";
+export const LEDGER_SCHEMA = "viona.merge-authority-ledger/v1";
 export const LEDGER_SCHEMA_VERSION = 1;
-const LEDGER_PATH_PREFIX = 'records/';
+const LEDGER_PATH_PREFIX = "records/";
 const LEDGER_TARGET_KEY_RE = /^[0-9a-f]{64}$/;
 
 /**
@@ -99,16 +102,20 @@ export function computeTargetSerialization(target) {
   const lines = [
     `repository=${target.repository}`,
     `pr_number=${Number(target.prNumber)}`,
-    `head_sha=${String(target.headSha ?? '').toLowerCase()}`,
+    `head_sha=${String(target.headSha ?? "").toLowerCase()}`,
     `base_branch=${target.baseBranch}`,
     `merge_mode=${target.mergeMode}`,
-    `reviewed_scope_digest=${String(target.reviewedScopeDigest ?? '').toLowerCase()}`,
+    `reviewed_scope_digest=${String(
+      target.reviewedScopeDigest ?? ""
+    ).toLowerCase()}`,
   ];
-  return lines.map((line) => `${line}\n`).join('');
+  return lines.map((line) => `${line}\n`).join("");
 }
 
 export function computeTargetKey(target) {
-  return createHash('sha256').update(computeTargetSerialization(target), 'utf8').digest('hex');
+  return createHash("sha256")
+    .update(computeTargetSerialization(target), "utf8")
+    .digest("hex");
 }
 
 /**
@@ -117,10 +124,10 @@ export function computeTargetKey(target) {
  * cannot smuggle an arbitrary path through this function.
  */
 export function computeLedgerPath(targetKey) {
-  const key = String(targetKey ?? '');
+  const key = String(targetKey ?? "");
   if (!LEDGER_TARGET_KEY_RE.test(key)) {
-    throw Object.assign(new Error('invalid_target_key'), {
-      sanitized: { message: 'invalid_target_key' },
+    throw Object.assign(new Error("invalid_target_key"), {
+      sanitized: { message: "invalid_target_key" },
     });
   }
   return `${LEDGER_PATH_PREFIX}${key.slice(0, 2)}/${key}.json`;
@@ -133,28 +140,28 @@ export function computeLedgerPath(targetKey) {
  * binding failures must occur before HTTP mutation).
  */
 export function assertLedgerWritePath(urlPath) {
-  const [owner, repo] = CANONICAL_REPOSITORY.split('/');
+  const [owner, repo] = CANONICAL_REPOSITORY.split("/");
   const prefix = `/repos/${owner}/${repo}/contents/${LEDGER_PATH_PREFIX}`;
-  const bare = String(urlPath ?? '').split('?')[0];
+  const bare = String(urlPath ?? "").split("?")[0];
   if (!bare.startsWith(prefix)) {
-    throw Object.assign(new Error('ledger_write_path_forbidden'), {
-      sanitized: { message: 'ledger_write_path_forbidden' },
+    throw Object.assign(new Error("ledger_write_path_forbidden"), {
+      sanitized: { message: "ledger_write_path_forbidden" },
     });
   }
 }
 
 function ledgerContentsUrlPath(targetKey) {
-  const [owner, repo] = CANONICAL_REPOSITORY.split('/');
+  const [owner, repo] = CANONICAL_REPOSITORY.split("/");
   return `/repos/${owner}/${repo}/contents/${computeLedgerPath(targetKey)}`;
 }
 
 function decodeLedgerContentsPayload(res) {
-  if (!res || typeof res.content !== 'string') return null;
-  const encoding = res.encoding === 'base64' ? 'base64' : 'utf8';
-  const raw = Buffer.from(res.content, encoding).toString('utf8');
+  if (!res || typeof res.content !== "string") return null;
+  const encoding = res.encoding === "base64" ? "base64" : "utf8";
+  const raw = Buffer.from(res.content, encoding).toString("utf8");
   try {
     const parsed = JSON.parse(raw);
-    return parsed && typeof parsed === 'object' ? parsed : null;
+    return parsed && typeof parsed === "object" ? parsed : null;
   } catch {
     return null;
   }
@@ -170,18 +177,19 @@ export async function ledgerReadRecord(deps, targetKey) {
   const urlPath = `${ledgerContentsUrlPath(targetKey)}?ref=${LEDGER_REF}`;
   let res;
   try {
-    res = await deps.restRequest({ method: 'GET', urlPath });
+    res = await deps.restRequest({ method: "GET", urlPath });
   } catch (err) {
     if (err?.sanitized?.status === 404) return { record: null, blobSha: null };
     throw err;
   }
-  if (!res || res.message === 'Not Found') return { record: null, blobSha: null };
+  if (!res || res.message === "Not Found")
+    return { record: null, blobSha: null };
   return { record: decodeLedgerContentsPayload(res), blobSha: res.sha ?? null };
 }
 
 function encodeLedgerContentsBody(record, { sha, message, branch } = {}) {
   const json = JSON.stringify(record, null, 2);
-  const content = Buffer.from(json, 'utf8').toString('base64');
+  const content = Buffer.from(json, "utf8").toString("base64");
   const body = { message, content, branch: branch ?? LEDGER_REF };
   if (sha != null) body.sha = sha;
   return body;
@@ -200,15 +208,21 @@ export async function ledgerCreateRecord(deps, { targetKey, record, message }) {
   const urlPath = ledgerContentsUrlPath(targetKey);
   assertLedgerWritePath(urlPath);
   const body = encodeLedgerContentsBody(record, {
-    message: message ?? `viona-ledger: ${record.state} ${record.authorization_id} pr#${record.pr_number}`,
+    message:
+      message ??
+      `viona-ledger: ${record.state} ${record.authorization_id} pr#${record.pr_number}`,
   });
   try {
-    const res = await deps.restRequest({ method: 'PUT', urlPath, body });
-    return { ok: true, blobSha: res?.content?.sha ?? null, commitSha: res?.commit?.sha ?? null };
+    const res = await deps.restRequest({ method: "PUT", urlPath, body });
+    return {
+      ok: true,
+      blobSha: res?.content?.sha ?? null,
+      commitSha: res?.commit?.sha ?? null,
+    };
   } catch (err) {
     const status = err?.sanitized?.status;
     if (status === 409 || status === 422) {
-      return { ok: false, reason: 'already_exists' };
+      return { ok: false, reason: "already_exists" };
     }
     throw err;
   }
@@ -221,20 +235,29 @@ export async function ledgerCreateRecord(deps, { targetKey, record, message }) {
  * the caller lost the race and MUST fail closed, never retry-to-win
  * (directive §13, §14).
  */
-export async function ledgerConditionalWriteRecord(deps, { targetKey, record, expectedBlobSha, message }) {
+export async function ledgerConditionalWriteRecord(
+  deps,
+  { targetKey, record, expectedBlobSha, message }
+) {
   const urlPath = ledgerContentsUrlPath(targetKey);
   assertLedgerWritePath(urlPath);
   const body = encodeLedgerContentsBody(record, {
     sha: expectedBlobSha,
-    message: message ?? `viona-ledger: ${record.state} ${record.authorization_id} pr#${record.pr_number}`,
+    message:
+      message ??
+      `viona-ledger: ${record.state} ${record.authorization_id} pr#${record.pr_number}`,
   });
   try {
-    const res = await deps.restRequest({ method: 'PUT', urlPath, body });
-    return { ok: true, blobSha: res?.content?.sha ?? null, commitSha: res?.commit?.sha ?? null };
+    const res = await deps.restRequest({ method: "PUT", urlPath, body });
+    return {
+      ok: true,
+      blobSha: res?.content?.sha ?? null,
+      commitSha: res?.commit?.sha ?? null,
+    };
   } catch (err) {
     const status = err?.sanitized?.status;
     if (status === 409 || status === 422) {
-      return { ok: false, reason: 'stale_sha' };
+      return { ok: false, reason: "stale_sha" };
     }
     throw err;
   }
@@ -259,9 +282,9 @@ export function buildFreezeExceptionBinding({
   return {
     repository,
     pr_number: prNumber,
-    head_sha: String(headSha ?? '').toLowerCase(),
+    head_sha: String(headSha ?? "").toLowerCase(),
     authorization_id: authorizationId,
-    reviewed_scope_digest: String(reviewedScopeDigest ?? '').toLowerCase(),
+    reviewed_scope_digest: String(reviewedScopeDigest ?? "").toLowerCase(),
     merge_mode: mergeMode,
     actor,
     window_start: windowStart,
@@ -326,7 +349,12 @@ export function buildLedgerRecord(input) {
  * immutable references sufficient to locate the authoritative ledger
  * record — never the full lifecycle record, and never any credential.
  */
-export function buildCheckRunProjection({ authorizationId, targetKey, headSha, expiresAt }) {
+export function buildCheckRunProjection({
+  authorizationId,
+  targetKey,
+  headSha,
+  expiresAt,
+}) {
   return {
     schema: LEDGER_SCHEMA,
     schema_version: LEDGER_SCHEMA_VERSION,
@@ -334,7 +362,7 @@ export function buildCheckRunProjection({ authorizationId, targetKey, headSha, e
     target_key: targetKey,
     ledger_ref: LEDGER_REF,
     ledger_path: computeLedgerPath(targetKey),
-    head_sha: String(headSha ?? '').toLowerCase(),
+    head_sha: String(headSha ?? "").toLowerCase(),
     expires_at: expiresAt,
   };
 }
@@ -354,16 +382,17 @@ export {
   evaluateFreezeScopeForState,
   sanitizeEvidence,
   selectExactHeadApproval,
+  resolveEffectiveStage1Check,
 };
 
 export const AUTHORIZATION_STATES = Object.freeze({
-  ISSUED: 'ISSUED',
-  ACTIVE: 'ACTIVE',
-  CONSUMING: 'CONSUMING',
-  CONSUMED: 'CONSUMED',
-  EXPIRED: 'EXPIRED',
-  REVOKED: 'REVOKED',
-  INVALIDATED: 'INVALIDATED',
+  ISSUED: "ISSUED",
+  ACTIVE: "ACTIVE",
+  CONSUMING: "CONSUMING",
+  CONSUMED: "CONSUMED",
+  EXPIRED: "EXPIRED",
+  REVOKED: "REVOKED",
+  INVALIDATED: "INVALIDATED",
 });
 
 export const TERMINAL_AUTHORIZATION_STATES = Object.freeze([
@@ -374,66 +403,81 @@ export const TERMINAL_AUTHORIZATION_STATES = Object.freeze([
 ]);
 
 export const MERGE_RESULT_CLASSES = Object.freeze({
-  SAFE_RETRYABLE_FAILURE: 'SAFE_RETRYABLE_FAILURE',
-  NON_RETRYABLE_FAILURE: 'NON_RETRYABLE_FAILURE',
-  MERGE_RESULT_UNKNOWN: 'MERGE_RESULT_UNKNOWN',
+  SAFE_RETRYABLE_FAILURE: "SAFE_RETRYABLE_FAILURE",
+  NON_RETRYABLE_FAILURE: "NON_RETRYABLE_FAILURE",
+  MERGE_RESULT_UNKNOWN: "MERGE_RESULT_UNKNOWN",
 });
 
 export const BLOCKERS = Object.freeze({
-  BLOCKED_STAGE2_STRUCTURED_INPUTS_MISSING: 'BLOCKED_STAGE2_STRUCTURED_INPUTS_MISSING',
-  BLOCKED_STAGE2_PROVENANCE_UNRESOLVED: 'BLOCKED_STAGE2_PROVENANCE_UNRESOLVED',
-  BLOCKED_STAGE2_OPERATOR_NOT_AUTHORIZED: 'BLOCKED_STAGE2_OPERATOR_NOT_AUTHORIZED',
-  BLOCKED_STAGE2_WORKFLOW_RERUN_NOT_PERMITTED: 'BLOCKED_STAGE2_WORKFLOW_RERUN_NOT_PERMITTED',
+  BLOCKED_STAGE2_STRUCTURED_INPUTS_MISSING:
+    "BLOCKED_STAGE2_STRUCTURED_INPUTS_MISSING",
+  BLOCKED_STAGE2_PROVENANCE_UNRESOLVED: "BLOCKED_STAGE2_PROVENANCE_UNRESOLVED",
+  BLOCKED_STAGE2_OPERATOR_NOT_AUTHORIZED:
+    "BLOCKED_STAGE2_OPERATOR_NOT_AUTHORIZED",
+  BLOCKED_STAGE2_WORKFLOW_RERUN_NOT_PERMITTED:
+    "BLOCKED_STAGE2_WORKFLOW_RERUN_NOT_PERMITTED",
   BLOCKED_STAGE2_CANONICAL_WORKFLOW_VERSION_UNPROVEN:
-    'BLOCKED_STAGE2_CANONICAL_WORKFLOW_VERSION_UNPROVEN',
-  BLOCKED_STAGE2_PR_MISMATCH: 'BLOCKED_STAGE2_PR_MISMATCH',
-  BLOCKED_STAGE2_BASE_BRANCH_MISMATCH: 'BLOCKED_STAGE2_BASE_BRANCH_MISMATCH',
-  BLOCKED_STAGE2_HEAD_MISMATCH: 'BLOCKED_STAGE2_HEAD_MISMATCH',
-  BLOCKED_STAGE2_MERGE_MODE_MISMATCH: 'BLOCKED_STAGE2_MERGE_MODE_MISMATCH',
-  BLOCKED_STAGE2_FREEZE_EXCEPTION_MISSING: 'BLOCKED_STAGE2_FREEZE_EXCEPTION_MISSING',
+    "BLOCKED_STAGE2_CANONICAL_WORKFLOW_VERSION_UNPROVEN",
+  BLOCKED_STAGE2_PR_MISMATCH: "BLOCKED_STAGE2_PR_MISMATCH",
+  BLOCKED_STAGE2_BASE_BRANCH_MISMATCH: "BLOCKED_STAGE2_BASE_BRANCH_MISMATCH",
+  BLOCKED_STAGE2_HEAD_MISMATCH: "BLOCKED_STAGE2_HEAD_MISMATCH",
+  BLOCKED_STAGE2_MERGE_MODE_MISMATCH: "BLOCKED_STAGE2_MERGE_MODE_MISMATCH",
+  BLOCKED_STAGE2_FREEZE_EXCEPTION_MISSING:
+    "BLOCKED_STAGE2_FREEZE_EXCEPTION_MISSING",
   BLOCKED_STAGE2_FREEZE_EXCEPTION_NOT_PERMITTED:
-    'BLOCKED_STAGE2_FREEZE_EXCEPTION_NOT_PERMITTED',
-  BLOCKED_STAGE2_FREEZE_SCOPE_MISMATCH: 'BLOCKED_STAGE2_FREEZE_SCOPE_MISMATCH',
-  BLOCKED_STAGE2_FREEZE_STATE_MISMATCH: 'BLOCKED_STAGE2_FREEZE_STATE_MISMATCH',
-  BLOCKED_STAGE2_FREEZE_STATE_UNKNOWN: 'BLOCKED_STAGE2_FREEZE_STATE_UNKNOWN',
-  BLOCKED_STAGE2_STAGE1_MISSING: 'BLOCKED_STAGE2_STAGE1_MISSING',
-  BLOCKED_STAGE2_STAGE1_NOT_SUCCESS: 'BLOCKED_STAGE2_STAGE1_NOT_SUCCESS',
-  BLOCKED_STAGE2_STAGE1_IDENTITY_MISMATCH: 'BLOCKED_STAGE2_STAGE1_IDENTITY_MISMATCH',
-  BLOCKED_STAGE2_STAGE1_SUPERSEDED: 'BLOCKED_STAGE2_STAGE1_SUPERSEDED',
+    "BLOCKED_STAGE2_FREEZE_EXCEPTION_NOT_PERMITTED",
+  BLOCKED_STAGE2_FREEZE_SCOPE_MISMATCH: "BLOCKED_STAGE2_FREEZE_SCOPE_MISMATCH",
+  BLOCKED_STAGE2_FREEZE_STATE_MISMATCH: "BLOCKED_STAGE2_FREEZE_STATE_MISMATCH",
+  BLOCKED_STAGE2_FREEZE_STATE_UNKNOWN: "BLOCKED_STAGE2_FREEZE_STATE_UNKNOWN",
+  BLOCKED_STAGE2_STAGE1_MISSING: "BLOCKED_STAGE2_STAGE1_MISSING",
+  BLOCKED_STAGE2_STAGE1_NOT_SUCCESS: "BLOCKED_STAGE2_STAGE1_NOT_SUCCESS",
+  BLOCKED_STAGE2_STAGE1_IDENTITY_MISMATCH:
+    "BLOCKED_STAGE2_STAGE1_IDENTITY_MISMATCH",
+  BLOCKED_STAGE2_STAGE1_SUPERSEDED: "BLOCKED_STAGE2_STAGE1_SUPERSEDED",
   BLOCKED_STAGE2_REVIEW_REQUIREMENT_NOT_SATISFIED:
-    'BLOCKED_STAGE2_REVIEW_REQUIREMENT_NOT_SATISFIED',
-  BLOCKED_STAGE2_UNRESOLVED_CONVERSATION: 'BLOCKED_STAGE2_UNRESOLVED_CONVERSATION',
-  BLOCKED_STAGE2_SCOPE_DIGEST_MISMATCH: 'BLOCKED_STAGE2_SCOPE_DIGEST_MISMATCH',
-  BLOCKED_STAGE2_DUPLICATE_AUTHORIZATION: 'BLOCKED_STAGE2_DUPLICATE_AUTHORIZATION',
-  BLOCKED_STAGE2_AUTO_MERGE_ACTIVE: 'BLOCKED_STAGE2_AUTO_MERGE_ACTIVE',
-  BLOCKED_STAGE2_PR_CLOSED: 'BLOCKED_STAGE2_PR_CLOSED',
-  BLOCKED_STAGE2_TECHNICAL_ERROR: 'BLOCKED_STAGE2_TECHNICAL_ERROR',
+    "BLOCKED_STAGE2_REVIEW_REQUIREMENT_NOT_SATISFIED",
+  BLOCKED_STAGE2_UNRESOLVED_CONVERSATION:
+    "BLOCKED_STAGE2_UNRESOLVED_CONVERSATION",
+  BLOCKED_STAGE2_SCOPE_DIGEST_MISMATCH: "BLOCKED_STAGE2_SCOPE_DIGEST_MISMATCH",
+  BLOCKED_STAGE2_DUPLICATE_AUTHORIZATION:
+    "BLOCKED_STAGE2_DUPLICATE_AUTHORIZATION",
+  BLOCKED_STAGE2_AUTO_MERGE_ACTIVE: "BLOCKED_STAGE2_AUTO_MERGE_ACTIVE",
+  BLOCKED_STAGE2_PR_CLOSED: "BLOCKED_STAGE2_PR_CLOSED",
+  BLOCKED_STAGE2_TECHNICAL_ERROR: "BLOCKED_STAGE2_TECHNICAL_ERROR",
 
   // Wrapper/re-check surface (consumed by scripts/viona-guarded-pr-merge.mjs).
-  BLOCKED_STAGE2_CHECK_MISSING: 'BLOCKED_STAGE2_CHECK_MISSING',
-  BLOCKED_STAGE2_CHECK_NOT_SUCCESS: 'BLOCKED_STAGE2_CHECK_NOT_SUCCESS',
+  BLOCKED_STAGE2_CHECK_MISSING: "BLOCKED_STAGE2_CHECK_MISSING",
+  BLOCKED_STAGE2_CHECK_NOT_SUCCESS: "BLOCKED_STAGE2_CHECK_NOT_SUCCESS",
 
   // Lifecycle-validity (used by the wrapper / re-check callers, not only
   // by the issuance evaluator above).
-  BLOCKED_STAGE2_AUTHORIZATION_NOT_FOUND: 'BLOCKED_STAGE2_AUTHORIZATION_NOT_FOUND',
-  BLOCKED_STAGE2_AUTHORIZATION_NOT_ACTIVE: 'BLOCKED_STAGE2_AUTHORIZATION_NOT_ACTIVE',
-  BLOCKED_STAGE2_AUTHORIZATION_EXPIRED: 'BLOCKED_STAGE2_AUTHORIZATION_EXPIRED',
-  BLOCKED_STAGE2_AUTHORIZATION_REVOKED: 'BLOCKED_STAGE2_AUTHORIZATION_REVOKED',
-  BLOCKED_STAGE2_AUTHORIZATION_CONSUMED: 'BLOCKED_STAGE2_AUTHORIZATION_CONSUMED',
-  BLOCKED_STAGE2_AUTHORIZATION_INVALIDATED: 'BLOCKED_STAGE2_AUTHORIZATION_INVALIDATED',
+  BLOCKED_STAGE2_AUTHORIZATION_NOT_FOUND:
+    "BLOCKED_STAGE2_AUTHORIZATION_NOT_FOUND",
+  BLOCKED_STAGE2_AUTHORIZATION_NOT_ACTIVE:
+    "BLOCKED_STAGE2_AUTHORIZATION_NOT_ACTIVE",
+  BLOCKED_STAGE2_AUTHORIZATION_EXPIRED: "BLOCKED_STAGE2_AUTHORIZATION_EXPIRED",
+  BLOCKED_STAGE2_AUTHORIZATION_REVOKED: "BLOCKED_STAGE2_AUTHORIZATION_REVOKED",
+  BLOCKED_STAGE2_AUTHORIZATION_CONSUMED:
+    "BLOCKED_STAGE2_AUTHORIZATION_CONSUMED",
+  BLOCKED_STAGE2_AUTHORIZATION_INVALIDATED:
+    "BLOCKED_STAGE2_AUTHORIZATION_INVALIDATED",
   BLOCKED_STAGE2_MERGE_RESULT_UNKNOWN_RECONCILIATION_REQUIRED:
-    'BLOCKED_STAGE2_MERGE_RESULT_UNKNOWN_RECONCILIATION_REQUIRED',
+    "BLOCKED_STAGE2_MERGE_RESULT_UNKNOWN_RECONCILIATION_REQUIRED",
 
   // Ledger-backend (Lane B1 V2) surface.
-  BLOCKED_STAGE2_LEDGER_WRITE_CONFLICT: 'BLOCKED_STAGE2_LEDGER_WRITE_CONFLICT',
-  BLOCKED_STAGE2_LEDGER_READ_FAILED: 'BLOCKED_STAGE2_LEDGER_READ_FAILED',
-  BLOCKED_STAGE2_LEDGER_TARGET_KEY_MISMATCH: 'BLOCKED_STAGE2_LEDGER_TARGET_KEY_MISMATCH',
+  BLOCKED_STAGE2_LEDGER_WRITE_CONFLICT: "BLOCKED_STAGE2_LEDGER_WRITE_CONFLICT",
+  BLOCKED_STAGE2_LEDGER_READ_FAILED: "BLOCKED_STAGE2_LEDGER_READ_FAILED",
+  BLOCKED_STAGE2_LEDGER_TARGET_KEY_MISMATCH:
+    "BLOCKED_STAGE2_LEDGER_TARGET_KEY_MISMATCH",
 });
 
 const FULL_SHA_RE = /^[0-9a-f]{40}$/i;
 
 export function stage2BlockerForFreezeScopePolicy(policy) {
-  if (policy?.reason === FREEZE_SCOPE_POLICY_FAILURES.ACTIVE_REMEDIATION_SCOPE_REQUIRED) {
+  if (
+    policy?.reason ===
+    FREEZE_SCOPE_POLICY_FAILURES.ACTIVE_REMEDIATION_SCOPE_REQUIRED
+  ) {
     return BLOCKERS.BLOCKED_STAGE2_FREEZE_EXCEPTION_MISSING;
   }
   if (policy?.reason === FREEZE_SCOPE_POLICY_FAILURES.RELEASED_SCOPE_REQUIRED) {
@@ -450,19 +494,32 @@ export function stage2BlockerForFreezeScopePolicy(policy) {
  * binding, so a caller cannot manufacture an ACTIVE exception as an
  * ordinary post-release shortcut.
  */
-export function evaluateFreezeRecordForState({ freezeState, record, expected = {} }) {
-  const scope = evaluateFreezeScopeForState({ freezeState, freezeScope: record?.freeze_scope });
+export function evaluateFreezeRecordForState({
+  freezeState,
+  record,
+  expected = {},
+}) {
+  const scope = evaluateFreezeScopeForState({
+    freezeState,
+    freezeScope: record?.freeze_scope,
+  });
   if (!scope.ok) {
     return { ...scope, blocker: stage2BlockerForFreezeScopePolicy(scope) };
   }
 
   if (record?.freeze_state !== freezeState) {
-    return { ok: false, blocker: BLOCKERS.BLOCKED_STAGE2_FREEZE_STATE_MISMATCH };
+    return {
+      ok: false,
+      blocker: BLOCKERS.BLOCKED_STAGE2_FREEZE_STATE_MISMATCH,
+    };
   }
 
   if (freezeState === GLOBAL_MERGE_FREEZE_STATES.RELEASED) {
     if (record.freeze_exception_binding != null) {
-      return { ok: false, blocker: BLOCKERS.BLOCKED_STAGE2_FREEZE_EXCEPTION_NOT_PERMITTED };
+      return {
+        ok: false,
+        blocker: BLOCKERS.BLOCKED_STAGE2_FREEZE_EXCEPTION_NOT_PERMITTED,
+      };
     }
     return { ok: true, blocker: null };
   }
@@ -471,15 +528,19 @@ export function evaluateFreezeRecordForState({ freezeState, record, expected = {
   const febValid =
     feb &&
     Number(feb.pr_number) === Number(record.pr_number) &&
-    String(feb.head_sha ?? '').toLowerCase() === String(record.head_sha ?? '').toLowerCase() &&
+    String(feb.head_sha ?? "").toLowerCase() ===
+      String(record.head_sha ?? "").toLowerCase() &&
     feb.authorization_id === record.authorization_id &&
-    String(feb.reviewed_scope_digest ?? '').toLowerCase() ===
-      String(record.reviewed_scope_digest ?? '').toLowerCase() &&
+    String(feb.reviewed_scope_digest ?? "").toLowerCase() ===
+      String(record.reviewed_scope_digest ?? "").toLowerCase() &&
     feb.merge_mode === record.merge_mode &&
     (expected.repository == null || feb.repository === expected.repository) &&
     (expected.actor == null || feb.actor === expected.actor);
   if (!febValid) {
-    return { ok: false, blocker: BLOCKERS.BLOCKED_STAGE2_FREEZE_EXCEPTION_MISSING };
+    return {
+      ok: false,
+      blocker: BLOCKERS.BLOCKED_STAGE2_FREEZE_EXCEPTION_MISSING,
+    };
   }
   return { ok: true, blocker: null };
 }
@@ -498,20 +559,21 @@ export function parseStage2Inputs(env) {
 
   const missing = [];
   for (const [name, value] of [
-    ['pr_number', prRaw],
-    ['head_sha', headSha],
-    ['base_branch', baseBranch],
-    ['merge_mode', mergeMode],
-    ['reviewed_scope_digest', reviewedScopeDigest],
-    ['stage1_check_run_id', stage1CheckRunId],
-    ['freeze_scope', freezeScope],
+    ["pr_number", prRaw],
+    ["head_sha", headSha],
+    ["base_branch", baseBranch],
+    ["merge_mode", mergeMode],
+    ["reviewed_scope_digest", reviewedScopeDigest],
+    ["stage1_check_run_id", stage1CheckRunId],
+    ["freeze_scope", freezeScope],
   ]) {
-    if (value == null || String(value).trim() === '') missing.push(name);
+    if (value == null || String(value).trim() === "") missing.push(name);
   }
 
   const prNumberMalformed =
     prRaw == null || !/^\d+$/.test(String(prRaw).trim()) || Number(prRaw) <= 0;
-  const headShaMalformed = headSha == null || !FULL_SHA_RE.test(String(headSha));
+  const headShaMalformed =
+    headSha == null || !FULL_SHA_RE.test(String(headSha));
   const stage1CheckRunIdMalformed =
     stage1CheckRunId == null || !/^\d+$/.test(String(stage1CheckRunId).trim());
 
@@ -521,7 +583,9 @@ export function parseStage2Inputs(env) {
     baseBranch,
     mergeMode,
     reviewedScopeDigest,
-    stage1CheckRunId: stage1CheckRunIdMalformed ? stage1CheckRunId : Number(stage1CheckRunId),
+    stage1CheckRunId: stage1CheckRunIdMalformed
+      ? stage1CheckRunId
+      : Number(stage1CheckRunId),
     freezeScope,
     runId: env.VIONA_STAGE2_RUN_ID ?? null,
     repositoryClaim: env.VIONA_STAGE2_REPOSITORY ?? null,
@@ -530,16 +594,22 @@ export function parseStage2Inputs(env) {
     headShaMalformed,
     stage1CheckRunIdMalformed,
     structuredInputsComplete:
-      missing.length === 0 && !prNumberMalformed && !headShaMalformed && !stage1CheckRunIdMalformed,
+      missing.length === 0 &&
+      !prNumberMalformed &&
+      !headShaMalformed &&
+      !stage1CheckRunIdMalformed,
   };
 }
 
-export function computeAuthorizationExpiry(authorizedAtMs, ttlMinutes = AUTHORIZATION_TTL_MINUTES) {
+export function computeAuthorizationExpiry(
+  authorizedAtMs,
+  ttlMinutes = AUTHORIZATION_TTL_MINUTES
+) {
   return authorizedAtMs + ttlMinutes * 60 * 1000;
 }
 
 export function generateAuthorizationId(deps = {}) {
-  if (typeof deps.randomUUID === 'function') return deps.randomUUID();
+  if (typeof deps.randomUUID === "function") return deps.randomUUID();
   return randomUUID();
 }
 
@@ -561,40 +631,58 @@ export function evaluateAuthorizationIssuance(facts) {
     stage1CheckRunId: facts.stage1CheckRunId ?? null,
   };
   const fail = (blocker, extra = {}) => ({
-    conclusion: 'failure',
+    conclusion: "failure",
     blocker,
-    evidence: sanitizeEvidence({ ...evidenceBase, decision: 'failure', blocker, ...extra }),
+    evidence: sanitizeEvidence({
+      ...evidenceBase,
+      decision: "failure",
+      blocker,
+      ...extra,
+    }),
   });
 
   if (facts.technicalError === true) {
     return fail(BLOCKERS.BLOCKED_STAGE2_TECHNICAL_ERROR);
   }
-  if (facts.provenanceMechanism !== 'VERIFIED_ACTOR_ALLOWLISTED_GITHUB_WORKFLOW_DISPATCH_RECORD') {
+  if (
+    facts.provenanceMechanism !==
+    "VERIFIED_ACTOR_ALLOWLISTED_GITHUB_WORKFLOW_DISPATCH_RECORD"
+  ) {
     return fail(BLOCKERS.BLOCKED_STAGE2_PROVENANCE_UNRESOLVED);
   }
-  if (facts.eventName !== 'workflow_dispatch') {
-    return fail(BLOCKERS.BLOCKED_STAGE2_PROVENANCE_UNRESOLVED, { reason: 'event_not_workflow_dispatch' });
+  if (facts.eventName !== "workflow_dispatch") {
+    return fail(BLOCKERS.BLOCKED_STAGE2_PROVENANCE_UNRESOLVED, {
+      reason: "event_not_workflow_dispatch",
+    });
   }
   if (Number(facts.runAttempt) !== 1) {
     return fail(BLOCKERS.BLOCKED_STAGE2_WORKFLOW_RERUN_NOT_PERMITTED);
   }
   if (facts.repository !== CANONICAL_REPOSITORY) {
-    return fail(BLOCKERS.BLOCKED_STAGE2_PROVENANCE_UNRESOLVED, { reason: 'repository_mismatch' });
+    return fail(BLOCKERS.BLOCKED_STAGE2_PROVENANCE_UNRESOLVED, {
+      reason: "repository_mismatch",
+    });
   }
   if (!AUTHORIZED_ACTORS.includes(facts.actor)) {
     return fail(BLOCKERS.BLOCKED_STAGE2_OPERATOR_NOT_AUTHORIZED);
   }
   if (facts.triggeringActor !== facts.actor) {
-    return fail(BLOCKERS.BLOCKED_STAGE2_PROVENANCE_UNRESOLVED, { reason: 'triggering_actor_mismatch' });
+    return fail(BLOCKERS.BLOCKED_STAGE2_PROVENANCE_UNRESOLVED, {
+      reason: "triggering_actor_mismatch",
+    });
   }
   if (facts.workflowPath !== STAGE2_WORKFLOW_FILE_PATH) {
-    return fail(BLOCKERS.BLOCKED_STAGE2_PROVENANCE_UNRESOLVED, { reason: 'non_canonical_workflow_path' });
+    return fail(BLOCKERS.BLOCKED_STAGE2_PROVENANCE_UNRESOLVED, {
+      reason: "non_canonical_workflow_path",
+    });
   }
   if (facts.canonicalWorkflowVersionProven !== true) {
     return fail(BLOCKERS.BLOCKED_STAGE2_CANONICAL_WORKFLOW_VERSION_UNPROVEN);
   }
   if (facts.structuredInputsComplete !== true) {
-    return fail(BLOCKERS.BLOCKED_STAGE2_STRUCTURED_INPUTS_MISSING, { missing: facts.missing ?? [] });
+    return fail(BLOCKERS.BLOCKED_STAGE2_STRUCTURED_INPUTS_MISSING, {
+      missing: facts.missing ?? [],
+    });
   }
   const freezePolicy = evaluateFreezeScopeForState({
     freezeState: GLOBAL_MERGE_FREEZE_STATE,
@@ -604,18 +692,24 @@ export function evaluateAuthorizationIssuance(facts) {
     return fail(stage2BlockerForFreezeScopePolicy(freezePolicy));
   }
   if (facts.prMissing === true) {
-    return fail(BLOCKERS.BLOCKED_STAGE2_PR_MISMATCH, { reason: 'pr_missing' });
+    return fail(BLOCKERS.BLOCKED_STAGE2_PR_MISMATCH, { reason: "pr_missing" });
   }
-  if (facts.prState !== 'OPEN') {
-    return fail(BLOCKERS.BLOCKED_STAGE2_PR_CLOSED, { reason: 'pr_not_open' });
+  if (facts.prState !== "OPEN") {
+    return fail(BLOCKERS.BLOCKED_STAGE2_PR_CLOSED, { reason: "pr_not_open" });
   }
   if (Number(facts.prNumber) !== Number(facts.actualPrNumber)) {
     return fail(BLOCKERS.BLOCKED_STAGE2_PR_MISMATCH);
   }
-  if (facts.baseBranch !== CANONICAL_BASE_BRANCH || facts.actualBaseBranch !== CANONICAL_BASE_BRANCH) {
+  if (
+    facts.baseBranch !== CANONICAL_BASE_BRANCH ||
+    facts.actualBaseBranch !== CANONICAL_BASE_BRANCH
+  ) {
     return fail(BLOCKERS.BLOCKED_STAGE2_BASE_BRANCH_MISMATCH);
   }
-  if (String(facts.headSha ?? '').toLowerCase() !== String(facts.actualHeadSha ?? '').toLowerCase()) {
+  if (
+    String(facts.headSha ?? "").toLowerCase() !==
+    String(facts.actualHeadSha ?? "").toLowerCase()
+  ) {
     return fail(BLOCKERS.BLOCKED_STAGE2_HEAD_MISMATCH);
   }
   if (facts.mergeMode !== CANONICAL_MERGE_MODE) {
@@ -627,24 +721,31 @@ export function evaluateAuthorizationIssuance(facts) {
   if (facts.stage1Missing === true) {
     return fail(BLOCKERS.BLOCKED_STAGE2_STAGE1_MISSING);
   }
-  if (facts.stage1Conclusion !== 'success') {
+  if (facts.stage1Conclusion !== "success") {
     return fail(BLOCKERS.BLOCKED_STAGE2_STAGE1_NOT_SUCCESS);
   }
   if (
     facts.stage1CheckName !== STAGE1_CHECK_RUN_NAME ||
     Number(facts.stage1CheckRunId) !== Number(facts.actualStage1CheckRunId)
   ) {
-    return fail(BLOCKERS.BLOCKED_STAGE2_STAGE1_IDENTITY_MISMATCH, { reason: 'wrong_check_identity' });
+    return fail(BLOCKERS.BLOCKED_STAGE2_STAGE1_IDENTITY_MISMATCH, {
+      reason: "wrong_check_identity",
+    });
   }
-  if (String(facts.stage1HeadSha ?? '').toLowerCase() !== String(facts.headSha ?? '').toLowerCase()) {
-    return fail(BLOCKERS.BLOCKED_STAGE2_STAGE1_IDENTITY_MISMATCH, { reason: 'wrong_head' });
+  if (
+    String(facts.stage1HeadSha ?? "").toLowerCase() !==
+    String(facts.headSha ?? "").toLowerCase()
+  ) {
+    return fail(BLOCKERS.BLOCKED_STAGE2_STAGE1_IDENTITY_MISMATCH, {
+      reason: "wrong_head",
+    });
   }
   if (facts.stage1Superseded === true) {
     return fail(BLOCKERS.BLOCKED_STAGE2_STAGE1_SUPERSEDED);
   }
   if (
-    String(facts.computedReviewedScopeDigest ?? '').toLowerCase() !==
-    String(facts.reviewedScopeDigest ?? '').toLowerCase()
+    String(facts.computedReviewedScopeDigest ?? "").toLowerCase() !==
+    String(facts.reviewedScopeDigest ?? "").toLowerCase()
   ) {
     return fail(BLOCKERS.BLOCKED_STAGE2_SCOPE_DIGEST_MISMATCH);
   }
@@ -658,21 +759,26 @@ export function evaluateAuthorizationIssuance(facts) {
     return fail(BLOCKERS.BLOCKED_STAGE2_DUPLICATE_AUTHORIZATION);
   }
   if (facts.allConditionsExplicitlyGreen !== true) {
-    return fail(BLOCKERS.BLOCKED_STAGE2_TECHNICAL_ERROR, { reason: 'no_default_success' });
+    return fail(BLOCKERS.BLOCKED_STAGE2_TECHNICAL_ERROR, {
+      reason: "no_default_success",
+    });
   }
 
   const authorizedAtMs = Number(facts.authorizedAtMs);
   const authorizationId = facts.authorizationId ?? null;
   return {
-    conclusion: 'success',
+    conclusion: "success",
     blocker: null,
     authorizationId,
     authorizedAtMs,
-    expiresAtMs: computeAuthorizationExpiry(authorizedAtMs, facts.ttlMinutes ?? AUTHORIZATION_TTL_MINUTES),
+    expiresAtMs: computeAuthorizationExpiry(
+      authorizedAtMs,
+      facts.ttlMinutes ?? AUTHORIZATION_TTL_MINUTES
+    ),
     finalAuthorizationState: AUTHORIZATION_STATES.ACTIVE,
     evidence: sanitizeEvidence({
       ...evidenceBase,
-      decision: 'success',
+      decision: "success",
       blocker: null,
       authorizationId,
     }),
@@ -698,7 +804,7 @@ export function evaluateAuthorizationLifecycleValidity(facts) {
   const fail = (blocker, extra = {}) => ({
     ok: false,
     blocker,
-    evidence: sanitizeEvidence({ decision: 'failure', blocker, ...extra }),
+    evidence: sanitizeEvidence({ decision: "failure", blocker, ...extra }),
   });
 
   if (!record) {
@@ -717,15 +823,21 @@ export function evaluateAuthorizationLifecycleValidity(facts) {
     return fail(BLOCKERS.BLOCKED_STAGE2_AUTHORIZATION_EXPIRED);
   }
   if (record.state === AUTHORIZATION_STATES.CONSUMING) {
-    return fail(BLOCKERS.BLOCKED_STAGE2_MERGE_RESULT_UNKNOWN_RECONCILIATION_REQUIRED);
+    return fail(
+      BLOCKERS.BLOCKED_STAGE2_MERGE_RESULT_UNKNOWN_RECONCILIATION_REQUIRED
+    );
   }
   if (record.state !== AUTHORIZATION_STATES.ACTIVE) {
     return fail(BLOCKERS.BLOCKED_STAGE2_AUTHORIZATION_NOT_ACTIVE);
   }
   const expiresAtMs = Number.isFinite(record.expires_at_ms)
     ? Number(record.expires_at_ms)
-    : Date.parse(record.expires_at ?? '');
-  if (!Number.isFinite(nowMs) || !Number.isFinite(expiresAtMs) || nowMs > expiresAtMs) {
+    : Date.parse(record.expires_at ?? "");
+  if (
+    !Number.isFinite(nowMs) ||
+    !Number.isFinite(expiresAtMs) ||
+    nowMs > expiresAtMs
+  ) {
     return fail(BLOCKERS.BLOCKED_STAGE2_AUTHORIZATION_EXPIRED);
   }
   if (expected.prClosed === true) {
@@ -733,16 +845,20 @@ export function evaluateAuthorizationLifecycleValidity(facts) {
   }
   if (
     expected.headSha != null &&
-    String(record.head_sha ?? '').toLowerCase() !== String(expected.headSha).toLowerCase()
+    String(record.head_sha ?? "").toLowerCase() !==
+      String(expected.headSha).toLowerCase()
   ) {
     return fail(BLOCKERS.BLOCKED_STAGE2_HEAD_MISMATCH);
   }
-  if (expected.prNumber != null && Number(record.pr_number) !== Number(expected.prNumber)) {
+  if (
+    expected.prNumber != null &&
+    Number(record.pr_number) !== Number(expected.prNumber)
+  ) {
     return fail(BLOCKERS.BLOCKED_STAGE2_PR_MISMATCH);
   }
   if (
     expected.reviewedScopeDigest != null &&
-    String(record.reviewed_scope_digest ?? '').toLowerCase() !==
+    String(record.reviewed_scope_digest ?? "").toLowerCase() !==
       String(expected.reviewedScopeDigest).toLowerCase()
   ) {
     return fail(BLOCKERS.BLOCKED_STAGE2_SCOPE_DIGEST_MISMATCH);
@@ -763,7 +879,10 @@ export function evaluateAuthorizationLifecycleValidity(facts) {
   return {
     ok: true,
     blocker: null,
-    evidence: sanitizeEvidence({ decision: 'valid', authorizationId: record.authorization_id }),
+    evidence: sanitizeEvidence({
+      decision: "valid",
+      authorizationId: record.authorization_id,
+    }),
   };
 }
 
@@ -775,10 +894,10 @@ export function evaluateAuthorizationLifecycleValidity(facts) {
  */
 export function parseStage2Record(checkRun) {
   const summary = checkRun?.output?.summary;
-  if (summary == null || summary === '') return null;
+  if (summary == null || summary === "") return null;
   try {
     const parsed = JSON.parse(summary);
-    if (!parsed || typeof parsed !== 'object') return null;
+    if (!parsed || typeof parsed !== "object") return null;
     return parsed;
   } catch {
     return null;
@@ -813,20 +932,24 @@ async function listPaginated(deps, firstPath, extractItems) {
   const all = [];
   let page = 1;
   for (;;) {
-    const sep = firstPath.includes('?') ? '&' : '?';
-    const batch = await rest(deps, 'GET', `${firstPath}${sep}per_page=100&page=${page}`);
+    const sep = firstPath.includes("?") ? "&" : "?";
+    const batch = await rest(
+      deps,
+      "GET",
+      `${firstPath}${sep}per_page=100&page=${page}`
+    );
     const items = extractItems(batch);
     if (!Array.isArray(items)) {
-      const err = new Error('unexpected_list_shape');
-      err.sanitized = { message: 'unexpected_list_shape' };
+      const err = new Error("unexpected_list_shape");
+      err.sanitized = { message: "unexpected_list_shape" };
       throw err;
     }
     all.push(...items);
     if (items.length < 100) break;
     page += 1;
     if (page > 100) {
-      const err = new Error('pagination_bound_exceeded');
-      err.sanitized = { message: 'pagination_bound_exceeded' };
+      const err = new Error("pagination_bound_exceeded");
+      err.sanitized = { message: "pagination_bound_exceeded" };
       throw err;
     }
   }
@@ -837,7 +960,15 @@ async function listAllPrFiles(deps, owner, repo, prNumber) {
   return listPaginated(
     deps,
     `/repos/${owner}/${repo}/pulls/${prNumber}/files`,
-    (batch) => (Array.isArray(batch) ? batch : batch?.items ?? null),
+    (batch) => (Array.isArray(batch) ? batch : batch?.items ?? null)
+  );
+}
+
+async function listAllCheckRuns(deps, owner, repo, headSha) {
+  return listPaginated(
+    deps,
+    `/repos/${owner}/${repo}/commits/${headSha}/check-runs?filter=all`,
+    (batch) => batch?.check_runs ?? null
   );
 }
 
@@ -860,8 +991,8 @@ async function listReviewThreadsPaginated(deps, owner, repo, prNumber) {
     });
     const conn = gql?.data?.repository?.pullRequest?.reviewThreads;
     if (!conn || !Array.isArray(conn.nodes)) {
-      const err = new Error('unexpected_graphql_shape');
-      err.sanitized = { message: 'unexpected_graphql_shape' };
+      const err = new Error("unexpected_graphql_shape");
+      err.sanitized = { message: "unexpected_graphql_shape" };
       throw err;
     }
     threads.push(...conn.nodes);
@@ -872,8 +1003,12 @@ async function listReviewThreadsPaginated(deps, owner, repo, prNumber) {
 }
 
 function contentIdentity(contentJson) {
-  if (!contentJson || typeof contentJson !== 'object') return null;
-  return { sha: contentJson.sha ?? null, path: contentJson.path ?? null, type: contentJson.type ?? null };
+  if (!contentJson || typeof contentJson !== "object") return null;
+  return {
+    sha: contentJson.sha ?? null,
+    path: contentJson.path ?? null,
+    type: contentJson.type ?? null,
+  };
 }
 
 /**
@@ -884,54 +1019,83 @@ function contentIdentity(contentJson) {
  * implementation is hardcoded to its own WORKFLOW_FILE_PATH and Stage 1's
  * file is outside the Lane B1 modification allowlist.
  */
-export async function proveCanonicalStage2WorkflowVersion(deps, { owner, repo, runId }) {
-  const repository = await rest(deps, 'GET', `/repos/${owner}/${repo}`);
+export async function proveCanonicalStage2WorkflowVersion(
+  deps,
+  { owner, repo, runId }
+) {
+  const repository = await rest(deps, "GET", `/repos/${owner}/${repo}`);
   const defaultBranch = repository?.default_branch;
   if (defaultBranch !== CANONICAL_BASE_BRANCH) {
-    return { ok: false, reason: 'default_branch_not_master' };
+    return { ok: false, reason: "default_branch_not_master" };
   }
-  const ref = await rest(deps, 'GET', `/repos/${owner}/${repo}/git/ref/heads/${defaultBranch}`);
+  const ref = await rest(
+    deps,
+    "GET",
+    `/repos/${owner}/${repo}/git/ref/heads/${defaultBranch}`
+  );
   const currentMasterSha = ref?.object?.sha;
-  if (!FULL_SHA_RE.test(String(currentMasterSha ?? ''))) {
-    return { ok: false, reason: 'master_sha_unresolved' };
+  if (!FULL_SHA_RE.test(String(currentMasterSha ?? ""))) {
+    return { ok: false, reason: "master_sha_unresolved" };
   }
 
-  const run = await rest(deps, 'GET', `/repos/${owner}/${repo}/actions/runs/${runId}`);
-  if (!run || run.message === 'Not Found') return { ok: false, reason: 'run_missing' };
-  if (run.event !== 'workflow_dispatch') return { ok: false, reason: 'event_mismatch' };
-  if (Number(run.run_attempt) !== 1) return { ok: false, reason: 'run_attempt_not_1' };
-  if (run.head_branch !== defaultBranch) return { ok: false, reason: 'run_not_on_default_branch' };
-  if (String(run.head_sha).toLowerCase() !== String(currentMasterSha).toLowerCase()) {
-    return { ok: false, reason: 'run_head_not_current_master' };
+  const run = await rest(
+    deps,
+    "GET",
+    `/repos/${owner}/${repo}/actions/runs/${runId}`
+  );
+  if (!run || run.message === "Not Found")
+    return { ok: false, reason: "run_missing" };
+  if (run.event !== "workflow_dispatch")
+    return { ok: false, reason: "event_mismatch" };
+  if (Number(run.run_attempt) !== 1)
+    return { ok: false, reason: "run_attempt_not_1" };
+  if (run.head_branch !== defaultBranch)
+    return { ok: false, reason: "run_not_on_default_branch" };
+  if (
+    String(run.head_sha).toLowerCase() !==
+    String(currentMasterSha).toLowerCase()
+  ) {
+    return { ok: false, reason: "run_head_not_current_master" };
   }
-  if (run.path !== STAGE2_WORKFLOW_FILE_PATH) return { ok: false, reason: 'run_path_mismatch' };
-  if (run.workflow_id == null) return { ok: false, reason: 'workflow_id_missing' };
+  if (run.path !== STAGE2_WORKFLOW_FILE_PATH)
+    return { ok: false, reason: "run_path_mismatch" };
+  if (run.workflow_id == null)
+    return { ok: false, reason: "workflow_id_missing" };
 
-  const workflow = await rest(deps, 'GET', `/repos/${owner}/${repo}/actions/workflows/${run.workflow_id}`);
+  const workflow = await rest(
+    deps,
+    "GET",
+    `/repos/${owner}/${repo}/actions/workflows/${run.workflow_id}`
+  );
   if (!workflow || workflow.path !== STAGE2_WORKFLOW_FILE_PATH) {
-    return { ok: false, reason: 'workflow_metadata_path_mismatch' };
+    return { ok: false, reason: "workflow_metadata_path_mismatch" };
   }
-  if (workflow.state && workflow.state !== 'active') {
-    return { ok: false, reason: 'workflow_not_active' };
+  if (workflow.state && workflow.state !== "active") {
+    return { ok: false, reason: "workflow_not_active" };
   }
 
   const atRun = await rest(
     deps,
-    'GET',
-    `/repos/${owner}/${repo}/contents/${STAGE2_WORKFLOW_FILE_PATH}?ref=${run.head_sha}`,
+    "GET",
+    `/repos/${owner}/${repo}/contents/${STAGE2_WORKFLOW_FILE_PATH}?ref=${run.head_sha}`
   );
   const atMaster = await rest(
     deps,
-    'GET',
-    `/repos/${owner}/${repo}/contents/${STAGE2_WORKFLOW_FILE_PATH}?ref=${defaultBranch}`,
+    "GET",
+    `/repos/${owner}/${repo}/contents/${STAGE2_WORKFLOW_FILE_PATH}?ref=${defaultBranch}`
   );
   const idRun = contentIdentity(atRun);
   const idMaster = contentIdentity(atMaster);
-  if (!idRun?.sha || !idMaster?.sha) return { ok: false, reason: 'workflow_blob_unresolved' };
-  if (idRun.path !== STAGE2_WORKFLOW_FILE_PATH || idMaster.path !== STAGE2_WORKFLOW_FILE_PATH) {
-    return { ok: false, reason: 'workflow_content_path_mismatch' };
+  if (!idRun?.sha || !idMaster?.sha)
+    return { ok: false, reason: "workflow_blob_unresolved" };
+  if (
+    idRun.path !== STAGE2_WORKFLOW_FILE_PATH ||
+    idMaster.path !== STAGE2_WORKFLOW_FILE_PATH
+  ) {
+    return { ok: false, reason: "workflow_content_path_mismatch" };
   }
-  if (idRun.sha !== idMaster.sha) return { ok: false, reason: 'workflow_blob_mismatch' };
+  if (idRun.sha !== idMaster.sha)
+    return { ok: false, reason: "workflow_blob_mismatch" };
 
   return {
     ok: true,
@@ -941,15 +1105,15 @@ export async function proveCanonicalStage2WorkflowVersion(deps, { owner, repo, r
     defaultBranch,
     actor: run.actor?.login ?? run.triggering_actor?.login ?? null,
     triggeringActor: run.triggering_actor?.login ?? run.actor?.login ?? null,
-    createdAtMs: Date.parse(run.created_at ?? ''),
+    createdAtMs: Date.parse(run.created_at ?? ""),
   };
 }
 
 function earlyFail(blocker, extra = {}) {
   return {
-    conclusion: 'failure',
+    conclusion: "failure",
     blocker,
-    evidence: sanitizeEvidence({ decision: 'failure', blocker, ...extra }),
+    evidence: sanitizeEvidence({ decision: "failure", blocker, ...extra }),
     checkCreated: 0,
     checkCompleted: 0,
     checkRunId: null,
@@ -964,7 +1128,7 @@ export async function runExplicitMergeAuthorization(deps) {
   const env = deps.env ?? {};
   const log = deps.log ?? ((msg) => console.log(msg));
   const inputs = parseStage2Inputs(env);
-  const [owner, repo] = CANONICAL_REPOSITORY.split('/');
+  const [owner, repo] = CANONICAL_REPOSITORY.split("/");
 
   let checkRunId = null;
   let checkCreated = 0;
@@ -990,12 +1154,13 @@ export async function runExplicitMergeAuthorization(deps) {
       // safe to serialize directly without that redaction pass; the
       // failure-path `evidence` object (which may echo caller-influenced
       // values) continues to go through `sanitizeEvidence` unchanged.
-      const summaryPayload = result.projection ?? sanitizeEvidence(result.evidence);
+      const summaryPayload =
+        result.projection ?? sanitizeEvidence(result.evidence);
       await deps.completeCheckRun({
         checkRunId,
         name: STAGE2_CHECK_RUN_NAME,
         headSha: inputs.headSha,
-        conclusion: result.conclusion === 'success' ? 'success' : 'failure',
+        conclusion: result.conclusion === "success" ? "success" : "failure",
         output: {
           title: result.blocker ?? STAGE2_CHECK_RUN_NAME,
           summary: JSON.stringify(summaryPayload),
@@ -1004,19 +1169,37 @@ export async function runExplicitMergeAuthorization(deps) {
       checkCompleted += 1;
     }
     const out = { ...result, checkRunId, checkCreated, checkCompleted };
-    log(JSON.stringify(sanitizeEvidence({ ...out.evidence, checkRunId, checkCreated, checkCompleted })));
+    log(
+      JSON.stringify(
+        sanitizeEvidence({
+          ...out.evidence,
+          checkRunId,
+          checkCreated,
+          checkCompleted,
+        })
+      )
+    );
     return out;
   };
 
   try {
     if (!inputs.structuredInputsComplete) {
-      return earlyFail(BLOCKERS.BLOCKED_STAGE2_STRUCTURED_INPUTS_MISSING, { missing: inputs.missing });
+      return earlyFail(BLOCKERS.BLOCKED_STAGE2_STRUCTURED_INPUTS_MISSING, {
+        missing: inputs.missing,
+      });
     }
-    if (inputs.repositoryClaim && inputs.repositoryClaim !== CANONICAL_REPOSITORY) {
-      return earlyFail(BLOCKERS.BLOCKED_STAGE2_PROVENANCE_UNRESOLVED, { reason: 'repository_claim_mismatch' });
+    if (
+      inputs.repositoryClaim &&
+      inputs.repositoryClaim !== CANONICAL_REPOSITORY
+    ) {
+      return earlyFail(BLOCKERS.BLOCKED_STAGE2_PROVENANCE_UNRESOLVED, {
+        reason: "repository_claim_mismatch",
+      });
     }
     if (!inputs.runId) {
-      return earlyFail(BLOCKERS.BLOCKED_STAGE2_PROVENANCE_UNRESOLVED, { reason: 'run_id_missing' });
+      return earlyFail(BLOCKERS.BLOCKED_STAGE2_PROVENANCE_UNRESOLVED, {
+        reason: "run_id_missing",
+      });
     }
     const freezePolicy = evaluateFreezeScopeForState({
       freezeState: GLOBAL_MERGE_FREEZE_STATE,
@@ -1028,17 +1211,27 @@ export async function runExplicitMergeAuthorization(deps) {
 
     let proven;
     try {
-      proven = await proveCanonicalStage2WorkflowVersion(deps, { owner, repo, runId: inputs.runId });
-    } catch {
-      return earlyFail(BLOCKERS.BLOCKED_STAGE2_CANONICAL_WORKFLOW_VERSION_UNPROVEN, {
-        reason: 'workflow_version_api_error',
+      proven = await proveCanonicalStage2WorkflowVersion(deps, {
+        owner,
+        repo,
+        runId: inputs.runId,
       });
+    } catch {
+      return earlyFail(
+        BLOCKERS.BLOCKED_STAGE2_CANONICAL_WORKFLOW_VERSION_UNPROVEN,
+        {
+          reason: "workflow_version_api_error",
+        }
+      );
     }
     if (!proven.ok) {
-      if (proven.reason === 'run_attempt_not_1') {
+      if (proven.reason === "run_attempt_not_1") {
         return earlyFail(BLOCKERS.BLOCKED_STAGE2_WORKFLOW_RERUN_NOT_PERMITTED);
       }
-      return earlyFail(BLOCKERS.BLOCKED_STAGE2_CANONICAL_WORKFLOW_VERSION_UNPROVEN, { reason: proven.reason });
+      return earlyFail(
+        BLOCKERS.BLOCKED_STAGE2_CANONICAL_WORKFLOW_VERSION_UNPROVEN,
+        { reason: proven.reason }
+      );
     }
 
     const actor = proven.actor;
@@ -1047,17 +1240,27 @@ export async function runExplicitMergeAuthorization(deps) {
       return earlyFail(BLOCKERS.BLOCKED_STAGE2_OPERATOR_NOT_AUTHORIZED);
     }
     if (triggeringActor !== actor) {
-      return earlyFail(BLOCKERS.BLOCKED_STAGE2_PROVENANCE_UNRESOLVED, { reason: 'triggering_actor_mismatch' });
+      return earlyFail(BLOCKERS.BLOCKED_STAGE2_PROVENANCE_UNRESOLVED, {
+        reason: "triggering_actor_mismatch",
+      });
     }
 
     let prA;
     try {
-      prA = await rest(deps, 'GET', `/repos/${owner}/${repo}/pulls/${inputs.prNumber}`);
+      prA = await rest(
+        deps,
+        "GET",
+        `/repos/${owner}/${repo}/pulls/${inputs.prNumber}`
+      );
     } catch {
-      return earlyFail(BLOCKERS.BLOCKED_STAGE2_PR_MISMATCH, { reason: 'pr_missing' });
+      return earlyFail(BLOCKERS.BLOCKED_STAGE2_PR_MISMATCH, {
+        reason: "pr_missing",
+      });
     }
-    if (!prA || prA.message === 'Not Found') {
-      return earlyFail(BLOCKERS.BLOCKED_STAGE2_PR_MISMATCH, { reason: 'pr_missing' });
+    if (!prA || prA.message === "Not Found") {
+      return earlyFail(BLOCKERS.BLOCKED_STAGE2_PR_MISMATCH, {
+        reason: "pr_missing",
+      });
     }
 
     // Ledger-backed duplicate-issuance check BEFORE creating a check
@@ -1083,36 +1286,72 @@ export async function runExplicitMergeAuthorization(deps) {
     const existingLedgerRecord = ledgerLookup.record;
     const existingLedgerBlobSha = ledgerLookup.blobSha;
     const duplicateActiveAuthorization =
-      existingLedgerRecord != null && !TERMINAL_AUTHORIZATION_STATES.includes(existingLedgerRecord.state);
+      existingLedgerRecord != null &&
+      !TERMINAL_AUTHORIZATION_STATES.includes(existingLedgerRecord.state);
     if (duplicateActiveAuthorization) {
       // Same technique as the Stage 1 gate's pre-create duplicate scan —
       // never create a second check run for a target that already has a
       // live (non-terminal) ledger authorization.
-      return earlyFail(BLOCKERS.BLOCKED_STAGE2_DUPLICATE_AUTHORIZATION, { targetKey });
+      return earlyFail(BLOCKERS.BLOCKED_STAGE2_DUPLICATE_AUTHORIZATION, {
+        targetKey,
+      });
     }
 
     if (!deps.createCheckRun) {
-      return earlyFail(BLOCKERS.BLOCKED_STAGE2_TECHNICAL_ERROR, { reason: 'create_adapter_missing' });
+      return earlyFail(BLOCKERS.BLOCKED_STAGE2_TECHNICAL_ERROR, {
+        reason: "create_adapter_missing",
+      });
     }
     const created = await deps.createCheckRun({
       name: STAGE2_CHECK_RUN_NAME,
       headSha: inputs.headSha,
-      status: 'in_progress',
+      status: "in_progress",
     });
     checkCreated += 1;
     checkRunId = created?.id ?? created?.check_run_id ?? null;
     if (checkRunId == null) {
-      return completeIfCreated(earlyFail(BLOCKERS.BLOCKED_STAGE2_TECHNICAL_ERROR, { reason: 'check_run_id_missing' }));
+      return completeIfCreated(
+        earlyFail(BLOCKERS.BLOCKED_STAGE2_TECHNICAL_ERROR, {
+          reason: "check_run_id_missing",
+        })
+      );
     }
 
     // Stage 1 binding
     let stage1Check = null;
     try {
-      stage1Check = await rest(deps, 'GET', `/repos/${owner}/${repo}/check-runs/${inputs.stage1CheckRunId}`);
+      stage1Check = await rest(
+        deps,
+        "GET",
+        `/repos/${owner}/${repo}/check-runs/${inputs.stage1CheckRunId}`
+      );
     } catch {
       stage1Check = null;
     }
-    const stage1Missing = !stage1Check || stage1Check.message === 'Not Found';
+    const stage1Missing = !stage1Check || stage1Check.message === "Not Found";
+    let stage1Resolution = {
+      ok: false,
+      reason: "stage1_check_list_unresolved",
+      check: null,
+    };
+    try {
+      const stage1Candidates = await listAllCheckRuns(
+        deps,
+        owner,
+        repo,
+        inputs.headSha
+      );
+      stage1Resolution = resolveEffectiveStage1Check(
+        stage1Candidates,
+        inputs.headSha
+      );
+    } catch {
+      stage1Resolution = {
+        ok: false,
+        reason: "stage1_check_list_unresolved",
+        check: null,
+      };
+    }
 
     // Review + files + conversations
     let reviews = [];
@@ -1120,16 +1359,25 @@ export async function runExplicitMergeAuthorization(deps) {
       reviews = await listPaginated(
         deps,
         `/repos/${owner}/${repo}/pulls/${inputs.prNumber}/reviews`,
-        (batch) => (Array.isArray(batch) ? batch : null),
+        (batch) => (Array.isArray(batch) ? batch : null)
       );
     } catch {
       reviews = [];
     }
-    const approval = selectExactHeadApproval(reviews, inputs.headSha, proven.createdAtMs);
+    const approval = selectExactHeadApproval(
+      reviews,
+      inputs.headSha,
+      proven.createdAtMs
+    );
 
     let unresolvedConversation = false;
     try {
-      const threads = await listReviewThreadsPaginated(deps, owner, repo, inputs.prNumber);
+      const threads = await listReviewThreadsPaginated(
+        deps,
+        owner,
+        repo,
+        inputs.prNumber
+      );
       unresolvedConversation = threads.some((t) => t && t.isResolved === false);
     } catch {
       unresolvedConversation = true;
@@ -1153,8 +1401,9 @@ export async function runExplicitMergeAuthorization(deps) {
       missing: inputs.missing,
       structuredInputsComplete: inputs.structuredInputsComplete,
 
-      provenanceMechanism: 'VERIFIED_ACTOR_ALLOWLISTED_GITHUB_WORKFLOW_DISPATCH_RECORD',
-      eventName: 'workflow_dispatch',
+      provenanceMechanism:
+        "VERIFIED_ACTOR_ALLOWLISTED_GITHUB_WORKFLOW_DISPATCH_RECORD",
+      eventName: "workflow_dispatch",
       runAttempt: 1,
       actor,
       triggeringActor,
@@ -1163,7 +1412,8 @@ export async function runExplicitMergeAuthorization(deps) {
       workflowRunId: inputs.runId,
 
       prMissing: false,
-      prState: prA.state === 'open' ? 'OPEN' : String(prA.state ?? '').toUpperCase(),
+      prState:
+        prA.state === "open" ? "OPEN" : String(prA.state ?? "").toUpperCase(),
       actualPrNumber: prA.number,
       actualBaseBranch: prA.base?.ref ?? null,
       actualHeadSha: prA.head?.sha ?? null,
@@ -1176,7 +1426,16 @@ export async function runExplicitMergeAuthorization(deps) {
       stage1HeadSha: stage1Check?.head_sha ?? null,
       stage1Superseded:
         !stage1Missing &&
-        String(stage1Check?.head_sha ?? '').toLowerCase() !== String(inputs.headSha).toLowerCase(),
+        (String(stage1Check?.head_sha ?? "").toLowerCase() !==
+          String(inputs.headSha).toLowerCase() ||
+          stage1Resolution.ok !== true ||
+          String(stage1Resolution.check?.id ?? "") !==
+            String(inputs.stage1CheckRunId) ||
+          (stage1Resolution.mode ===
+            GATE_DISPATCH_MODES.FAILED_STAGE1_SUPERSESSION_V1 &&
+            String(
+              stage1Resolution.evidence?.canonical_digest ?? ""
+            ).toLowerCase() !== computedDigest.toLowerCase())),
 
       computedReviewedScopeDigest: computedDigest,
       reviewSatisfied: approval.ok,
@@ -1192,7 +1451,7 @@ export async function runExplicitMergeAuthorization(deps) {
     if (deps.forceFacts) Object.assign(facts, deps.forceFacts);
 
     const evaluated = evaluateAuthorizationIssuance(facts);
-    if (evaluated.conclusion !== 'success') {
+    if (evaluated.conclusion !== "success") {
       return completeIfCreated(evaluated);
     }
 
@@ -1205,10 +1464,13 @@ export async function runExplicitMergeAuthorization(deps) {
     // rather than silently trusting it.
     if (
       existingLedgerRecord != null &&
-      String(evaluated.authorizationId) === String(existingLedgerRecord.authorization_id)
+      String(evaluated.authorizationId) ===
+        String(existingLedgerRecord.authorization_id)
     ) {
       return completeIfCreated(
-        earlyFail(BLOCKERS.BLOCKED_STAGE2_TECHNICAL_ERROR, { reason: 'authorization_id_not_fresh' }),
+        earlyFail(BLOCKERS.BLOCKED_STAGE2_TECHNICAL_ERROR, {
+          reason: "authorization_id_not_fresh",
+        })
       );
     }
 
@@ -1271,17 +1533,21 @@ export async function runExplicitMergeAuthorization(deps) {
             });
     } catch {
       return completeIfCreated(
-        earlyFail(BLOCKERS.BLOCKED_STAGE2_LEDGER_WRITE_CONFLICT, { reason: 'ledger_write_technical_error' }),
+        earlyFail(BLOCKERS.BLOCKED_STAGE2_LEDGER_WRITE_CONFLICT, {
+          reason: "ledger_write_technical_error",
+        })
       );
     }
     if (!ledgerWrite.ok) {
       // A concurrent writer won the race between our read and our write —
       // never overwrite blindly (§11); fail closed instead.
       const blocker =
-        ledgerWrite.reason === 'already_exists'
+        ledgerWrite.reason === "already_exists"
           ? BLOCKERS.BLOCKED_STAGE2_DUPLICATE_AUTHORIZATION
           : BLOCKERS.BLOCKED_STAGE2_LEDGER_WRITE_CONFLICT;
-      return completeIfCreated(earlyFail(blocker, { reason: ledgerWrite.reason }));
+      return completeIfCreated(
+        earlyFail(blocker, { reason: ledgerWrite.reason })
+      );
     }
 
     const projection = buildCheckRunProjection({
@@ -1294,27 +1560,35 @@ export async function runExplicitMergeAuthorization(deps) {
   } catch (err) {
     const blocker = BLOCKERS.BLOCKED_STAGE2_TECHNICAL_ERROR;
     const result = {
-      conclusion: 'failure',
+      conclusion: "failure",
       blocker,
-      evidence: sanitizeEvidence({ decision: 'failure', blocker, message: err?.sanitized?.message ?? 'technical_error' }),
+      evidence: sanitizeEvidence({
+        decision: "failure",
+        blocker,
+        message: err?.sanitized?.message ?? "technical_error",
+      }),
     };
     if (checkCreated > 0) return completeIfCreated(result);
-    return { ...earlyFail(blocker, result.evidence), checkCreated: 0, checkCompleted: 0 };
+    return {
+      ...earlyFail(blocker, result.evidence),
+      checkCreated: 0,
+      checkCompleted: 0,
+    };
   }
 }
 
 export function createProductionDeps(env = process.env) {
   const token = env.GITHUB_TOKEN;
-  const apiBase = 'https://api.github.com';
+  const apiBase = "https://api.github.com";
 
   async function githubFetch(bearerToken, { method, urlPath, body }) {
     const res = await fetch(`${apiBase}${urlPath}`, {
       method,
       headers: {
-        Accept: 'application/vnd.github+json',
+        Accept: "application/vnd.github+json",
         Authorization: `Bearer ${bearerToken}`,
-        'X-GitHub-Api-Version': '2022-11-28',
-        ...(body ? { 'Content-Type': 'application/json' } : {}),
+        "X-GitHub-Api-Version": "2022-11-28",
+        ...(body ? { "Content-Type": "application/json" } : {}),
       },
       body: body ? JSON.stringify(body) : undefined,
     });
@@ -1323,11 +1597,11 @@ export function createProductionDeps(env = process.env) {
     try {
       json = text ? JSON.parse(text) : null;
     } catch {
-      json = { message: 'unparseable_response' };
+      json = { message: "unparseable_response" };
     }
     if (!res.ok) {
       const err = new Error(`GitHub REST ${res.status}`);
-      err.sanitized = { status: res.status, message: json?.message ?? 'error' };
+      err.sanitized = { status: res.status, message: json?.message ?? "error" };
       throw err;
     }
     return json;
@@ -1339,24 +1613,24 @@ export function createProductionDeps(env = process.env) {
 
   async function graphqlRequest({ query, variables }) {
     const res = await fetch(`${apiBase}/graphql`, {
-      method: 'POST',
+      method: "POST",
       headers: {
-        Accept: 'application/vnd.github+json',
+        Accept: "application/vnd.github+json",
         Authorization: `Bearer ${token}`,
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
       },
       body: JSON.stringify({ query, variables }),
     });
     const json = await res.json();
     if (!res.ok || json.errors) {
-      const err = new Error('GitHub GraphQL error');
-      err.sanitized = { message: 'graphql_error' };
+      const err = new Error("GitHub GraphQL error");
+      err.sanitized = { message: "graphql_error" };
       throw err;
     }
     return json;
   }
 
-  const [owner, repoName] = CANONICAL_REPOSITORY.split('/');
+  const [owner, repoName] = CANONICAL_REPOSITORY.split("/");
 
   return {
     env,
@@ -1365,16 +1639,22 @@ export function createProductionDeps(env = process.env) {
     randomUUID,
     async createCheckRun({ name, headSha, status }) {
       return restRequest({
-        method: 'POST',
+        method: "POST",
         urlPath: `/repos/${owner}/${repoName}/check-runs`,
         body: { name, head_sha: headSha, status },
       });
     },
     async completeCheckRun({ checkRunId, name, headSha, conclusion, output }) {
       return restRequest({
-        method: 'PATCH',
+        method: "PATCH",
         urlPath: `/repos/${owner}/${repoName}/check-runs/${checkRunId}`,
-        body: { name, head_sha: headSha, status: 'completed', conclusion, output },
+        body: {
+          name,
+          head_sha: headSha,
+          status: "completed",
+          conclusion,
+          output,
+        },
       });
     },
     log: (msg) => console.log(msg),
@@ -1394,7 +1674,7 @@ function isDirectRun() {
 export async function main(env = process.env) {
   const deps = createProductionDeps(env);
   const result = await runExplicitMergeAuthorization(deps);
-  if (result.conclusion !== 'success') process.exitCode = 1;
+  if (result.conclusion !== "success") process.exitCode = 1;
   return result;
 }
 
@@ -1402,10 +1682,10 @@ if (isDirectRun()) {
   main().catch((err) => {
     console.error(
       JSON.stringify({
-        error: 'stage2_evaluation_failed',
+        error: "stage2_evaluation_failed",
         blocker: BLOCKERS.BLOCKED_STAGE2_TECHNICAL_ERROR,
-        message: err?.sanitized?.message ?? 'error',
-      }),
+        message: err?.sanitized?.message ?? "error",
+      })
     );
     process.exitCode = 1;
   });

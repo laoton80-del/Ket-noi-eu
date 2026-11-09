@@ -3,33 +3,44 @@
 **Revision status:** V1 REVISED — gaps closed per
 `VIONA.REC2.MERGE_CONTROL.LANE_A.DESIGN_REVISION.V1`
 (prior review: `DESIGN_REVISION_REQUIRED`, 7 gaps identified).
-This revision upgrades the document from *directionally correct* to
-*implementation-deterministic*. Lane B1 must not need to invent token
+This revision upgrades the document from _directionally correct_ to
+_implementation-deterministic_. Lane B1 must not need to invent token
 consumption semantics, replay protection, concurrency handling, failure
 behavior, audit fields, wrapper verification rules, or test cases — all are
 fixed below.
 
+**Failed-Stage-1 recovery addendum:** locally implemented under
+`APPROVE_VIONA_RUNTIME_CANON_ADOPTION_WAVE1_PR475_FAILED_STAGE1_DETERMINISTIC_SUPERSESSION_GOVERNANCE_REMEDIATION_LOCAL_IMPLEMENTATION_A2_V1`.
+This addendum defines code and offline-test behavior only. It does not
+authorize publication, workflow dispatch, check mutation, Stage 2, merge, or
+deployment. Live use remains gated on a separately authorized disposable
+protected-PR proof of GitHub's same-name check resolution behavior.
+
 ## 1. Overview and Purpose
+
 This document defines the canonical architecture for VIONA's two-stage merge-control mechanism. It resolves the semantic gap where GitHub mechanically conflated "technical engineering readiness" with "explicit Governor merge authority."
 
 The target state requires **both** stages to be mechanically satisfied in GitHub Branch Protection before a PR can be merged, ensuring Zero-Loss economics and strict Governance control.
 
 ## 2. Stage 1: Viona Merge Readiness Gate
+
 **Canonical Context:** `Viona Merge Readiness Gate`
-**Semantic Meaning:** *This PR is technically and procedurally ready for a Governor merge authorization decision.*
+**Semantic Meaning:** _This PR is technically and procedurally ready for a Governor merge authorization decision._
 
 **Validation Requirements:**
-* Exact PR number and exact Head SHA.
-* Expected base branch (e.g., `master`).
-* Valid, exact-head human approval (no stale reviews, no head drift).
-* All Preflight / CI checks passed.
-* Review conversation resolution.
-* Deterministic `reviewed_scope_digest` generated and validated.
-* Branch protection state and mergeability (no conflicts).
 
-*Constraint:* Stage 1 MUST NOT contain any authorization tokens, `authority=MERGE` flags, or grant permission to execute the merge. Stage 1 replaces the legacy `Viona Merge Authorization Gate` context to clarify its semantic boundary.
+- Exact PR number and exact Head SHA.
+- Expected base branch (e.g., `master`).
+- Valid, exact-head human approval (no stale reviews, no head drift).
+- All Preflight / CI checks passed.
+- Review conversation resolution.
+- Deterministic `reviewed_scope_digest` generated and validated.
+- Branch protection state and mergeability (no conflicts).
+
+_Constraint:_ Stage 1 MUST NOT contain any authorization tokens, `authority=MERGE` flags, or grant permission to execute the merge. Stage 1 replaces the legacy `Viona Merge Authorization Gate` context to clarify its semantic boundary.
 
 **Stage 1 identity (retained for Stage 2 binding):** every Stage 1 success emits, and Stage 2 must later bind to, an immutable tuple:
+
 ```
 stage1_check_name      = "Viona Merge Readiness Gate"
 stage1_check_run_id    = <GitHub check-run id>
@@ -38,11 +49,116 @@ stage1_completed_at    = <ISO-8601 timestamp>
 stage1_conclusion      = success | failure
 ```
 
+### 2.1 Deterministic supersession of one definitive failed Stage 1
+
+An ordinary Stage-1 workflow run is never rerun and never creates a second
+same-name check on the same head. The dispatch schema is a closed union:
+
+- `NORMAL` — the original behavior; zero existing exact-name, exact-head
+  Stage-1 checks are required before creation.
+- `FAILED_STAGE1_SUPERSESSION_V1` — a separately governed, one-shot recovery
+  for exactly one immutable failed Stage-1 check. V1 is code-bound only to
+  the audited PR #475 case below; it is not a reusable recovery mode. This is
+  not a retry of the failed workflow run and grants no merge authority.
+
+Recovery binds the exact repository, PR, head, tree, canonical scope digest,
+prior workflow-run ID, prior check-run ID, prior blocker, prior supplied
+digest, and a unique UUID recovery-case ID. Before creating a successor, the
+gate must prove all of the following:
+
+The recovery-only values are transported as one closed, versioned workflow
+input so the dispatcher stays below GitHub's ten-input limit:
+
+```
+recovery_binding = v1|case_uuid|tree_sha|prior_run_id|prior_check_run_id|prior_blocker|prior_digest
+```
+
+The parser requires exactly these seven segments and rejects the binding in
+`NORMAL` mode, unknown versions, empty/malformed segments, unsafe numeric IDs,
+unschematized recovery environment fields, or any value outside this single
+audited case:
+
+```
+pr_number               = 475
+head_sha                = 0fb0201bc7cba32dd31603fbfd07639fa78d6ee4
+tree_sha                = fbe87bd54f3c33e65efafae15c2f00308c569f83
+supersedes_run_id       = 36228538792
+supersedes_check_run_id = 108367170206
+prior_conclusion        = failure
+prior_blocker           = BLOCKED_MERGE_SCOPE_CHANGED_AFTER_REVIEW
+prior_digest            = b4be1d46cdfe30287e2aa3e2e79660c929d16a688366710f9697e99f931d1778
+canonical_digest        = fd0fee7a91ccd563b254f3f4c67f747428dde860482a54f9b1293e726763c826
+required_reviewer       = Maty2016
+required_preflight      = Expo + Trust + Functions Preflight
+```
+
+`recovery_case_id` remains a fresh UUID issued for the later, separately
+authorized recovery lane; this local implementation neither issues nor
+consumes that authority.
+
+1. exactly one canonical `Viona Merge Readiness Gate` check exists on the
+   exact head;
+2. it is the specified terminal failure, produced by the same GitHub App,
+   with blocker `BLOCKED_MERGE_SCOPE_CHANGED_AFTER_REVIEW`;
+3. the specified prior workflow is a completed failed attempt-1 canonical
+   `workflow_dispatch`, predates the recovery dispatch, and has an authorized
+   actor;
+4. the exact head tree and independently recomputed reviewed-scope digest
+   match the recovery envelope, while the recorded prior supplied digest is
+   well-formed and differs from the canonical digest;
+5. the PR remains open and non-draft on the exact head/base with
+   no auto-merge, Maty2016's exact-head approval remains effective,
+   `Expo + Trust + Functions Preflight` remains the one completed successful
+   exact-head check of that name, conversations are resolved, repository
+   enforcement is active, and every unrelated required check is green;
+6. no Stage-2 check, Stage-1 alias, or prior successor exists on the head.
+
+Only after those proofs may the gate create one successor with the same
+canonical check name and an `external_id` of
+`viona-stage1-recovery:<recovery_case_id>`. The original failed check is never
+updated or deleted. The successor's JSON evidence is immutable audit binding
+and includes:
+
+```
+recoverySchema = "viona.stage1.failed-supersession/v1"
+stage1DispatchMode = "FAILED_STAGE1_SUPERSESSION_V1"
+recovery_mode = "FAILED_STAGE1_SUPERSESSION_V1"
+recovery_case_id
+exact_pr_number = 475
+exact_head
+exact_tree
+supersedes_run_id
+supersedes_check_run_id
+prior_conclusion = "failure"
+prior_blocker = "BLOCKED_MERGE_SCOPE_CHANGED_AFTER_REVIEW"
+prior_digest
+canonical_digest
+```
+
+Exactly two same-name checks are valid only when they form this one-failure /
+one-success, same-App, schema-bound pair. Stage 2 and the guarded merge wrapper
+must resolve the successor by its exact evidence; they must never select an
+arbitrary successful check. Every producer and consumer must list check runs
+with `filter=all` and complete pagination; GitHub's latest-only view is not
+sufficient supersession evidence. One check is the normal form. Zero, three or more,
+two checks without an exact binding, a lone recovery successor, a failed
+successor, an App mismatch, or malformed evidence is ambiguous and fails
+closed. A recovery successor failure consumes the case/head recovery attempt;
+there is no recovery-of-recovery path.
+
+Because GitHub's published branch-protection contract does not expressly
+guarantee how one failed and one successful same-name check on the same commit
+are reduced for required-check enforcement, production use requires a
+separately authorized disposable protected-PR proof. Until that proof is
+green, this local implementation is not an operational recovery permission.
+
 ## 3. Stage 2: Viona Explicit Merge Authorization
+
 **Canonical Context:** `Viona Explicit Merge Authorization`
-**Semantic Meaning:** *The Governor explicitly authorizes one merge of one exact PR revision under one exact merge mode.*
+**Semantic Meaning:** _The Governor explicitly authorizes one merge of one exact PR revision under one exact merge mode._
 
 ### 3.1 Authorization identity
+
 Each Stage 2 authorization MUST carry a unique, immutable `authorization_id`
 (a cryptographically strong nonce — e.g., a UUIDv4 or a 256-bit random hex
 string generated at issuance time). The `authorization_id` is the primary key
@@ -51,29 +167,33 @@ derived only from the PR number, and MUST NEVER be guessable, reused, or
 recomputed deterministically from public inputs alone.
 
 ### 3.2 Binding (complete)
+
 A Stage 2 authorization is bound strictly and exclusively to:
-* Repository Identity
-* PR Number & exact Head SHA
-* Base Branch & Merge Mode
-* `reviewed_scope_digest` (must equal Stage 1's digest)
-* **Stage 1 identity**: `stage1_check_name`, `stage1_check_run_id`,
+
+- Repository Identity
+- PR Number & exact Head SHA
+- Base Branch & Merge Mode
+- `reviewed_scope_digest` (must equal Stage 1's digest)
+- **Stage 1 identity**: `stage1_check_name`, `stage1_check_run_id`,
   `stage1_head_sha`, `stage1_completed_at`, `stage1_conclusion` (§2)
-* Governor authorizing actor identity
-* `authorized_at` (issuance timestamp)
-* `expires_at` (issuance timestamp + TTL, default 15 minutes)
-* `authorization_id` (§3.1)
+- Governor authorizing actor identity
+- `authorized_at` (issuance timestamp)
+- `expires_at` (issuance timestamp + TTL, default 15 minutes)
+- `authorization_id` (§3.1)
 
 Stage 2 MUST fail (non-success, `NO MERGE AUTHORITY`) if any of the following
 hold at evaluation time:
-* Stage 1 is missing for the exact head SHA.
-* Stage 1's `stage1_conclusion` is not `success`.
-* Stage 1 is bound to a different head SHA than the one Stage 2 targets.
-* Stage 1 has been superseded by a head change (a newer commit exists on the
+
+- Stage 1 is missing for the exact head SHA.
+- Stage 1's `stage1_conclusion` is not `success`.
+- Stage 1 is bound to a different head SHA than the one Stage 2 targets.
+- Stage 1 has been superseded by a head change (a newer commit exists on the
   PR after `stage1_completed_at`).
 
 ## 4. Stage 2 Authorization Lifecycle
 
 ### 4.1 States
+
 Every Stage 2 authorization occupies exactly one of the following states at
 any instant:
 
@@ -88,6 +208,7 @@ INVALIDATED  — an invalidation trigger (§5) fired; permanently unusable.
 ```
 
 ### 4.2 Valid transitions
+
 ```
 ISSUED
   ↓ validation succeeds (identity + binding + Stage 1 checks pass)
@@ -135,6 +256,7 @@ that has reached any terminal state may ever be reused, replayed, reissued
 under the same identity, or treated as valid by any evaluator.
 
 ### 4.3 Atomic consumption principle
+
 The design mandates the following exact ordering, and forbids any other:
 
 ```
@@ -156,6 +278,7 @@ replay race: two concurrent evaluators could both pass VERIFY and both issue
 a MERGE call before either records consumption.
 
 ### 4.4 Single-claim guarantee
+
 The `ACTIVE → CONSUMING` transition MUST be an atomic compare-and-set style
 claim keyed on `authorization_id`: exactly one caller may successfully move a
 given `authorization_id` from `ACTIVE` to `CONSUMING`. Only the caller that
@@ -168,11 +291,13 @@ Check Run itself used as a single-writer resource via conditional update,
 or an external append-only ledger with a compare-and-set primitive) is a
 Lane-B implementation decision, but the semantics in this section are fixed
 and non-negotiable:
-* Lookup of an `authorization_id`'s current state MUST be deterministic.
-* Duplicate consumption attempts MUST fail closed.
-* Every state transition MUST be recorded and auditable (§6, §9).
+
+- Lookup of an `authorization_id`'s current state MUST be deterministic.
+- Duplicate consumption attempts MUST fail closed.
+- Every state transition MUST be recorded and auditable (§6, §9).
 
 ### 4.5 Merge failure during consumption
+
 If an authorization reaches `CONSUMING` and the GitHub merge call does not
 cleanly succeed, the design distinguishes exactly three outcomes:
 
@@ -205,6 +330,7 @@ No failure branch may silently grant or restore authority without passing
 back through full validation.
 
 ### 4.6 Merge-result-unknown reconciliation
+
 When an authorization is held in `CONSUMING` due to `MERGE_RESULT_UNKNOWN`,
 the design requires:
 
@@ -279,12 +405,13 @@ final_state
 ```
 
 Required semantics (fixed now; storage mechanism is a Lane-B decision):
-* Lookup of a record by `authorization_id` MUST be deterministic — the same
+
+- Lookup of a record by `authorization_id` MUST be deterministic — the same
   id always resolves to the same record and the same current state.
-* An attempt to consume an `authorization_id` that is not in `ACTIVE` state
+- An attempt to consume an `authorization_id` that is not in `ACTIVE` state
   MUST fail closed (return `NO MERGE AUTHORITY`), including for
   already-`CONSUMED`, `EXPIRED`, `REVOKED`, or `INVALIDATED` records.
-* Every state transition (§4.2) MUST append an entry to this record (or an
+- Every state transition (§4.2) MUST append an entry to this record (or an
   equivalent tamper-evident append-only log referencing it) sufficient to
   reconstruct the full lifecycle history (§9).
 
@@ -363,10 +490,11 @@ MAX_ACTIVE_AUTHORIZATIONS_PER_EXACT_TARGET = 1
 At most one authorization may be in `ISSUED` or `ACTIVE` state for a given
 exact tuple at any time. Issuing a new authorization for the same exact
 tuple while a prior one is still `ISSUED`/`ACTIVE` MUST either:
-* explicitly revoke/replace the earlier authorization (transitioning it to
+
+- explicitly revoke/replace the earlier authorization (transitioning it to
   `REVOKED` as an atomic part of issuing the new one, with the revocation
   recorded per §6), or
-* fail outright, refusing to issue the new authorization.
+- fail outright, refusing to issue the new authorization.
 
 Ambiguous parallel authority (two simultaneously `ACTIVE` authorizations for
 the same exact tuple) is forbidden by construction and must never occur.
@@ -384,6 +512,7 @@ unless a valid explicit freeze exception exists for that exact request.
 
 **Freeze exception binding:** an exception is never global or reusable. It
 must be bound to the exact same tuple as the authorization it enables:
+
 ```
 repository
 PR
@@ -394,6 +523,7 @@ merge mode
 authorized (exception-granting) actor
 time window (start/expiry)
 ```
+
 A generic or globally reusable freeze bypass is forbidden. An exception
 that does not name an exact PR, exact head SHA, and exact `authorization_id`
 is invalid and MUST be rejected by the Stage 2 evaluator.
@@ -428,31 +558,34 @@ not converted into a generic or reusable bypass by release.
 Every row below resolves, absent a proven valid active Stage 2 artifact, to
 **NO MERGE AUTHORITY**.
 
-| Condition | Required result |
-|---|---|
-| Stage 1 missing | Stage 2 denied — NO MERGE AUTHORITY |
-| Stage 1 failure | Stage 2 denied — NO MERGE AUTHORITY |
-| Stage 2 missing | Merge blocked (GitHub required-check gate) |
-| Stage 2 failure | Merge blocked — NO MERGE AUTHORITY |
-| Wrong PR | Reject — NO MERGE AUTHORITY |
-| Wrong head SHA | Reject — NO MERGE AUTHORITY |
-| Wrong base | Reject — NO MERGE AUTHORITY |
-| Wrong digest | Reject — NO MERGE AUTHORITY |
-| Wrong merge mode | Reject — NO MERGE AUTHORITY |
-| Expired authorization | Reject — NO MERGE AUTHORITY (state=EXPIRED) |
-| Revoked authorization | Reject — NO MERGE AUTHORITY (state=REVOKED) |
-| Consumed authorization (replay) | Reject — NO MERGE AUTHORITY (state=CONSUMED) |
-| Review dismissed | Invalidate — NO MERGE AUTHORITY (state=INVALIDATED) |
-| Approval stale | Invalidate — NO MERGE AUTHORITY (state=INVALIDATED) |
-| Head changed | Invalidate — NO MERGE AUTHORITY (state=INVALIDATED) |
-| Branch protection changed | Re-evaluate / fail closed — wrapper aborts (§7) |
-| Workflow failure | No authority — NO MERGE AUTHORITY |
-| Check producer failure | No authority — NO MERGE AUTHORITY |
-| Merge result unknown | Reconciliation required (§4.6) — no new authority issued |
-| GitHub API timeout | Do not assume merge failed — treat as MERGE_RESULT_UNKNOWN (§4.5) |
-| Freeze active, no exception | Stage 2 denied — NO MERGE AUTHORITY (§9) |
-| Concurrent duplicate claim | Second claim fails closed — NO MERGE AUTHORITY (§7) |
-| PR closed without merge | Invalidate — NO MERGE AUTHORITY (§5) |
+| Condition                                  | Required result                                                                                                            |
+| ------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------- |
+| Stage 1 missing                            | Stage 2 denied — NO MERGE AUTHORITY                                                                                        |
+| Stage 1 failure                            | Stage 2 denied — NO MERGE AUTHORITY                                                                                        |
+| One eligible digest-defect Stage 1 failure | A separately authorized one-shot supersession may re-evaluate Stage 1 under §2.1; no Stage 2 or merge authority is implied |
+| Recovery successor failure                 | Terminal for that recovery case/head; no retry or recovery-of-recovery                                                     |
+| Malformed/extra same-head Stage 1 records  | Ambiguous; Stage 2 and merge wrapper fail closed                                                                           |
+| Stage 2 missing                            | Merge blocked (GitHub required-check gate)                                                                                 |
+| Stage 2 failure                            | Merge blocked — NO MERGE AUTHORITY                                                                                         |
+| Wrong PR                                   | Reject — NO MERGE AUTHORITY                                                                                                |
+| Wrong head SHA                             | Reject — NO MERGE AUTHORITY                                                                                                |
+| Wrong base                                 | Reject — NO MERGE AUTHORITY                                                                                                |
+| Wrong digest                               | Reject — NO MERGE AUTHORITY                                                                                                |
+| Wrong merge mode                           | Reject — NO MERGE AUTHORITY                                                                                                |
+| Expired authorization                      | Reject — NO MERGE AUTHORITY (state=EXPIRED)                                                                                |
+| Revoked authorization                      | Reject — NO MERGE AUTHORITY (state=REVOKED)                                                                                |
+| Consumed authorization (replay)            | Reject — NO MERGE AUTHORITY (state=CONSUMED)                                                                               |
+| Review dismissed                           | Invalidate — NO MERGE AUTHORITY (state=INVALIDATED)                                                                        |
+| Approval stale                             | Invalidate — NO MERGE AUTHORITY (state=INVALIDATED)                                                                        |
+| Head changed                               | Invalidate — NO MERGE AUTHORITY (state=INVALIDATED)                                                                        |
+| Branch protection changed                  | Re-evaluate / fail closed — wrapper aborts (§7)                                                                            |
+| Workflow failure                           | No authority — NO MERGE AUTHORITY                                                                                          |
+| Check producer failure                     | No authority — NO MERGE AUTHORITY                                                                                          |
+| Merge result unknown                       | Reconciliation required (§4.6) — no new authority issued                                                                   |
+| GitHub API timeout                         | Do not assume merge failed — treat as MERGE_RESULT_UNKNOWN (§4.5)                                                          |
+| Freeze active, no exception                | Stage 2 denied — NO MERGE AUTHORITY (§9)                                                                                   |
+| Concurrent duplicate claim                 | Second claim fails closed — NO MERGE AUTHORITY (§7)                                                                        |
+| PR closed without merge                    | Invalidate — NO MERGE AUTHORITY (§5)                                                                                       |
 
 ## 11. Audit Trail (complete)
 
@@ -551,9 +684,11 @@ failing condition; it never partially claims and never issues a merge call
 on a failed recheck.
 
 ## 13. Direct Merge Bypass & Defense-in-Depth
+
 Relying on two required contexts conceptually closes the semantic gap. However, to prevent users with Admin/Owner privileges from bypassing the `viona-guarded-pr-merge.mjs` wrapper via the GitHub UI:
-* **Primary Defense:** GitHub Branch Protection mandates both Stage 1 and Stage 2 contexts. Without Stage 2, the UI merge button remains disabled.
-* **Secondary Defense:** Future iterations should evaluate GitHub Rulesets locking target branches to specific trusted GitHub Apps or automated actor restrictions, entirely removing direct human merge privileges.
+
+- **Primary Defense:** GitHub Branch Protection mandates both Stage 1 and Stage 2 contexts. Without Stage 2, the UI merge button remains disabled.
+- **Secondary Defense:** Future iterations should evaluate GitHub Rulesets locking target branches to specific trusted GitHub Apps or automated actor restrictions, entirely removing direct human merge privileges.
 
 ## 14. Implementation Acceptance Test Matrix
 
@@ -564,24 +699,33 @@ mechanics; only the final end-to-end proof (T01, T16) strictly requires
 observing actual branch-protection behavior, which can itself be done via a
 disposable test branch/PR rather than a production merge.
 
-| ID | Case | Setup | Expected result |
-|---|---|---|---|
-| T01 | Stage 1 only | Stage 1 = success, Stage 2 = missing | Merge mechanically blocked by branch protection |
-| T02 | Correct authorization | exact PR, exact head, exact digest, exact mode, valid approval, Stage 1 success, valid Governor authorization | Stage 2 = success |
-| T03 | Wrong PR | authorization issued for a different PR number | REJECT |
-| T04 | Wrong SHA | authorization issued for a different head SHA | REJECT |
-| T05 | Wrong digest | reviewed_scope_digest does not match live PR files | REJECT |
-| T06 | Wrong merge mode | requested mode != authorized mode | REJECT |
-| T07 | Expired authorization | now > expires_at | REJECT |
-| T08 | Revoked authorization | Governor revoked before use | REJECT |
-| T09 | Replay consumed authorization | authorization already in CONSUMED state | REJECT |
-| T10 | Head changes after Stage 2 | PR head SHA advances after Stage 2 success | Stage 2 authority INVALIDATED; merge blocked |
-| T11 | Review invalidated | approving review dismissed after authorization issued | authorization INVALIDATED; merge blocked |
-| T12 | Concurrent consumption | two consumers attempt the same authorization_id simultaneously | exactly one claims (CONSUMING); the other fails closed |
-| T13 | Merge API timeout after request | GitHub accepts request but response is lost | do not retry blindly; reconcile actual PR/commit-graph state first (§4.6) |
-| T14 | Branch protection drift | required contexts change between verification and claim | wrapper aborts before claiming |
-| T15 | Freeze active without exception | GLOBAL_MERGE_FREEZE=ACTIVE, no exception present | Stage 2 cannot become success |
-| T16 | Freeze active with valid exact exception | exception bound to exact PR/head/authorization_id | Stage 2 may become success only for that exact bound target |
+| ID  | Case                                         | Setup                                                                                                         | Expected result                                                                                       |
+| --- | -------------------------------------------- | ------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| T01 | Stage 1 only                                 | Stage 1 = success, Stage 2 = missing                                                                          | Merge mechanically blocked by branch protection                                                       |
+| T02 | Correct authorization                        | exact PR, exact head, exact digest, exact mode, valid approval, Stage 1 success, valid Governor authorization | Stage 2 = success                                                                                     |
+| T03 | Wrong PR                                     | authorization issued for a different PR number                                                                | REJECT                                                                                                |
+| T04 | Wrong SHA                                    | authorization issued for a different head SHA                                                                 | REJECT                                                                                                |
+| T05 | Wrong digest                                 | reviewed_scope_digest does not match live PR files                                                            | REJECT                                                                                                |
+| T06 | Wrong merge mode                             | requested mode != authorized mode                                                                             | REJECT                                                                                                |
+| T07 | Expired authorization                        | now > expires_at                                                                                              | REJECT                                                                                                |
+| T08 | Revoked authorization                        | Governor revoked before use                                                                                   | REJECT                                                                                                |
+| T09 | Replay consumed authorization                | authorization already in CONSUMED state                                                                       | REJECT                                                                                                |
+| T10 | Head changes after Stage 2                   | PR head SHA advances after Stage 2 success                                                                    | Stage 2 authority INVALIDATED; merge blocked                                                          |
+| T11 | Review invalidated                           | approving review dismissed after authorization issued                                                         | authorization INVALIDATED; merge blocked                                                              |
+| T12 | Concurrent consumption                       | two consumers attempt the same authorization_id simultaneously                                                | exactly one claims (CONSUMING); the other fails closed                                                |
+| T13 | Merge API timeout after request              | GitHub accepts request but response is lost                                                                   | do not retry blindly; reconcile actual PR/commit-graph state first (§4.6)                             |
+| T14 | Branch protection drift                      | required contexts change between verification and claim                                                       | wrapper aborts before claiming                                                                        |
+| T15 | Freeze active without exception              | GLOBAL_MERGE_FREEZE=ACTIVE, no exception present                                                              | Stage 2 cannot become success                                                                         |
+| T16 | Freeze active with valid exact exception     | exception bound to exact PR/head/authorization_id                                                             | Stage 2 may become success only for that exact bound target                                           |
+| T17 | Normal duplicate Stage 1                     | `NORMAL` with any existing exact-name/exact-head Stage-1 check                                                | REJECT before check creation                                                                          |
+| T18 | Valid failed-Stage-1 supersession            | exact one prior failure + exact run/check/head/tree/digest/blocker/review/CI bindings                         | exactly one schema-bound successor is created; prior evidence unchanged                               |
+| T19 | Wrong prior check/run/tree/blocker/digest    | any recovery binding differs                                                                                  | REJECT before check creation                                                                          |
+| T20 | Recovery after successor exists              | two or more exact-name/exact-head Stage-1 checks already exist                                                | REJECT before check creation; recovery attempt consumed                                               |
+| T21 | Lone recovery successor                      | predecessor failure absent from the check set                                                                 | Stage 2 and wrapper REJECT                                                                            |
+| T22 | Malformed successor evidence or App mismatch | two checks but schema/external-id/supersession/App binding is invalid                                         | Stage 2 and wrapper REJECT                                                                            |
+| T23 | Extra canonical Stage-1 check                | three or more exact-name/exact-head checks                                                                    | Stage 2 and wrapper REJECT as ambiguous                                                               |
+| T24 | Valid successor pair                         | immutable failure + exact successful successor pair                                                           | Stage 2 binds only the successor check-run ID; wrapper selects only that successor                    |
+| T25 | Disposable protected-PR proof                | one failed and one successful same-name check on a disposable protected target                                | GitHub required-check behavior is directly observed and documented before any production recovery use |
 
 ## 15. Migration Plan (atomic ordering)
 
@@ -639,10 +783,11 @@ master) — but the ordering above avoids relying on that fail-closed safety
 net as the primary protection; it is verified defense-in-depth only.
 
 ## 16. PR #461 Historical Governance Exception
+
 This control design stems from the forensic audit of PR #461. The permanent historical record for PR #461 is defined as follows:
 
-* **CONTENT_INTEGRITY:** GREEN (Byte-identical reviewed/merged content, proper base lineage, 29-file scope match).
-* **TECHNICAL_PRE_MERGE_EVIDENCE:** GREEN (Exact-head human approval, green preflight, green legacy merge gate).
-* **GOVERNANCE_SEQUENCE:** EXCEPTION_REQUIRES_RECONCILIATION.
-* **Facts:** PR #461 was merged successfully by an authorized human account while `GLOBAL_MERGE_FREEZE` remained ACTIVE and explicit VIONA merge authority had not been issued. The legacy branch protection mechanically allowed this because it conflated technical readiness with authority.
-* **Resolution:** No retrospective authorization is created. No revert is required, as the content integrity is strictly sound. The governance enforcement gap is permanently closed, going forward, by this V1 Two-Stage architecture. This design does not retroactively validate, authorize, or reclassify PR #461's merge; PR #461 remains `CONTENT_GREEN / GOVERNANCE_SEQUENCE_EXCEPTION` for all historical purposes.
+- **CONTENT_INTEGRITY:** GREEN (Byte-identical reviewed/merged content, proper base lineage, 29-file scope match).
+- **TECHNICAL_PRE_MERGE_EVIDENCE:** GREEN (Exact-head human approval, green preflight, green legacy merge gate).
+- **GOVERNANCE_SEQUENCE:** EXCEPTION_REQUIRES_RECONCILIATION.
+- **Facts:** PR #461 was merged successfully by an authorized human account while `GLOBAL_MERGE_FREEZE` remained ACTIVE and explicit VIONA merge authority had not been issued. The legacy branch protection mechanically allowed this because it conflated technical readiness with authority.
+- **Resolution:** No retrospective authorization is created. No revert is required, as the content integrity is strictly sound. The governance enforcement gap is permanently closed, going forward, by this V1 Two-Stage architecture. This design does not retroactively validate, authorize, or reclassify PR #461's merge; PR #461 remains `CONTENT_GREEN / GOVERNANCE_SEQUENCE_EXCEPTION` for all historical purposes.

@@ -4,26 +4,31 @@
  * Global fetch trap proves network isolation.
  */
 
-import assert from 'node:assert/strict';
+import assert from "node:assert/strict";
 import {
   GATE_CHECK_RUN_NAME,
   CANONICAL_REPOSITORY,
   computeReviewedScopeDigest,
   BLOCKERS,
+  GATE_DISPATCH_MODES,
+  GATE_RECOVERY_EVIDENCE_SCHEMA,
+  FAILED_STAGE1_SUPERSESSION_CASE_V1,
+  recoveryCheckExternalId,
+  resolveEffectiveStage1Check,
   REPOSITORY_LEVEL_REQUIRED_CHECK_IS_PRIMARY,
   GUARDED_MERGE_WRAPPER_IS_DEFENSE_IN_DEPTH,
-} from './viona-merge-authorization-gate.mjs';
+} from "./viona-merge-authorization-gate.mjs";
 import {
   evaluateGuardedMerge,
   parseGuardedMergeArgs,
   runGuardedPrMerge,
-} from './viona-guarded-pr-merge.mjs';
+} from "./viona-guarded-pr-merge.mjs";
 
 const originalFetch = globalThis.fetch;
 let unexpectedNetworkCalls = 0;
 globalThis.fetch = function unexpectedFetchTrap() {
   unexpectedNetworkCalls += 1;
-  throw new Error('UNEXPECTED_NETWORK_ACCESS');
+  throw new Error("UNEXPECTED_NETWORK_ACCESS");
 };
 
 let passed = 0;
@@ -38,39 +43,123 @@ async function testAsync(name, fn) {
   console.log(`PASS ${name}`);
 }
 
-const HEAD = 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa';
-const HEAD2 = 'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb';
+const HEAD = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
+const HEAD2 = "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb";
+const RECOVERY_CASE_ID = "123e4567-e89b-42d3-a456-426614174000";
+const RECOVERY_FILES = Object.freeze([
+  { status: "modified", filename: "App.tsx" },
+  {
+    status: "added",
+    filename: "scripts/test-viona-runtime-canon-wave1-public-copy.ts",
+  },
+  { status: "modified", filename: "src/i18n/locales/cs.json" },
+  { status: "modified", filename: "src/i18n/locales/de.json" },
+  { status: "modified", filename: "src/i18n/locales/en.json" },
+  { status: "modified", filename: "src/i18n/locales/fr.json" },
+  { status: "modified", filename: "src/i18n/locales/ja.json" },
+  { status: "modified", filename: "src/i18n/locales/ko.json" },
+  { status: "modified", filename: "src/i18n/locales/vi.json" },
+  { status: "modified", filename: "src/navigation/mvpSurfaceGate.tsx" },
+]);
+
+function recoveryGateChecks() {
+  const canonicalDigest = FAILED_STAGE1_SUPERSESSION_CASE_V1.canonicalDigest;
+  const prior = {
+    id: FAILED_STAGE1_SUPERSESSION_CASE_V1.priorCheckRunId,
+    name: GATE_CHECK_RUN_NAME,
+    head_sha: FAILED_STAGE1_SUPERSESSION_CASE_V1.headSha,
+    status: "completed",
+    conclusion: "failure",
+    app: { id: 42 },
+    output: {
+      title: BLOCKERS.BLOCKED_MERGE_SCOPE_CHANGED_AFTER_REVIEW,
+      summary: JSON.stringify({
+        blocker: BLOCKERS.BLOCKED_MERGE_SCOPE_CHANGED_AFTER_REVIEW,
+      }),
+    },
+  };
+  const successor = {
+    id: 601,
+    name: GATE_CHECK_RUN_NAME,
+    head_sha: FAILED_STAGE1_SUPERSESSION_CASE_V1.headSha,
+    status: "completed",
+    conclusion: "success",
+    app: { id: 42 },
+    external_id: recoveryCheckExternalId(RECOVERY_CASE_ID),
+    output: {
+      title: GATE_CHECK_RUN_NAME,
+      summary: JSON.stringify({
+        stage1DispatchMode: GATE_DISPATCH_MODES.FAILED_STAGE1_SUPERSESSION_V1,
+        recoverySchema: GATE_RECOVERY_EVIDENCE_SCHEMA,
+        recovery_mode: GATE_DISPATCH_MODES.FAILED_STAGE1_SUPERSESSION_V1,
+        recovery_case_id: RECOVERY_CASE_ID,
+        exact_pr_number: FAILED_STAGE1_SUPERSESSION_CASE_V1.prNumber,
+        exact_head: FAILED_STAGE1_SUPERSESSION_CASE_V1.headSha,
+        exact_tree: FAILED_STAGE1_SUPERSESSION_CASE_V1.treeSha,
+        supersedes_run_id: FAILED_STAGE1_SUPERSESSION_CASE_V1.priorRunId,
+        supersedes_check_run_id:
+          FAILED_STAGE1_SUPERSESSION_CASE_V1.priorCheckRunId,
+        prior_conclusion: FAILED_STAGE1_SUPERSESSION_CASE_V1.priorConclusion,
+        prior_blocker: FAILED_STAGE1_SUPERSESSION_CASE_V1.priorBlocker,
+        prior_digest: FAILED_STAGE1_SUPERSESSION_CASE_V1.priorDigest,
+        canonical_digest: canonicalDigest,
+        reviewedScopeDigest: canonicalDigest,
+      }),
+    },
+  };
+  return { prior, successor };
+}
+
+function recoveryWrapperOptions(checkRuns, execute) {
+  return {
+    execute,
+    files: RECOVERY_FILES,
+    pr: {
+      number: FAILED_STAGE1_SUPERSESSION_CASE_V1.prNumber,
+      state: "open",
+      base: { ref: "master" },
+      head: { sha: FAILED_STAGE1_SUPERSESSION_CASE_V1.headSha },
+      auto_merge: null,
+    },
+    args: {
+      pr: String(FAILED_STAGE1_SUPERSESSION_CASE_V1.prNumber),
+      head: FAILED_STAGE1_SUPERSESSION_CASE_V1.headSha,
+      reviewedScopeDigest: FAILED_STAGE1_SUPERSESSION_CASE_V1.canonicalDigest,
+    },
+    checkRuns,
+  };
+}
 
 function happyWrapperFacts(over = {}) {
   return {
     repository: CANONICAL_REPOSITORY,
-    prNumber: '100',
+    prNumber: "100",
     prMissing: false,
-    prState: 'OPEN',
+    prState: "OPEN",
     headSha: HEAD,
     actualHeadSha: HEAD,
-    base: 'master',
-    actualBase: 'master',
-    mode: 'squash',
-    computedReviewedScopeDigest: 'digest',
-    suppliedReviewedScopeDigest: 'digest',
+    base: "master",
+    actualBase: "master",
+    mode: "squash",
+    computedReviewedScopeDigest: "digest",
+    suppliedReviewedScopeDigest: "digest",
     autoMergeActive: false,
     unresolvedConversation: false,
     reviewSatisfied: true,
     requiredCheckFailed: false,
     gateCheckMissing: false,
     gateCheckStaleSha: false,
-    gateCheckConclusion: 'success',
+    gateCheckConclusion: "success",
     duplicateConflictingGateContext: false,
     gateAppIdMissing: false,
-    gateAppId: '42',
+    gateAppId: "42",
     actualGateAppId: 42,
     ...over,
   };
 }
 
 function createMockWrapperDeps(options = {}) {
-  const files = options.files ?? [{ status: 'modified', filename: 'a.txt' }];
+  const files = options.files ?? [{ status: "modified", filename: "a.txt" }];
   const digest = computeReviewedScopeDigest(files);
   const mergeCalls = [];
   const checkRunCreates = [];
@@ -78,8 +167,8 @@ function createMockWrapperDeps(options = {}) {
 
   const pr = options.pr ?? {
     number: 100,
-    state: 'open',
-    base: { ref: 'master' },
+    state: "open",
+    base: { ref: "master" },
     head: { sha: HEAD },
     auto_merge: null,
   };
@@ -87,17 +176,18 @@ function createMockWrapperDeps(options = {}) {
   return {
     args: {
       repo: CANONICAL_REPOSITORY,
-      pr: '100',
+      pr: "100",
       head: HEAD,
-      base: 'master',
-      mode: 'squash',
+      base: "master",
+      mode: "squash",
       reviewedScopeDigest: digest,
-      gateAppId: '42',
+      gateAppId: "42",
       execute: options.execute === true,
       ...options.args,
     },
     forceFacts: options.forceFacts,
-    forceDuplicateConflictingGateContext: options.forceDuplicateConflictingGateContext,
+    forceDuplicateConflictingGateContext:
+      options.forceDuplicateConflictingGateContext,
     extraCheckRuns: options.extraCheckRuns ?? [],
     mergeCalls,
     checkRunCreates,
@@ -105,47 +195,59 @@ function createMockWrapperDeps(options = {}) {
     log: () => {},
     async restRequest(req) {
       const { method, urlPath } = req;
-      if (/\/pulls\/\d+\/merge$/.test(urlPath) && method === 'PUT') {
+      if (/\/pulls\/\d+\/merge$/.test(urlPath) && method === "PUT") {
         mergeCalls.push(req);
         return { merged: true, sha: HEAD };
       }
-      if (/\/check-runs$/.test(urlPath) && method === 'POST') {
+      if (/\/check-runs$/.test(urlPath) && method === "POST") {
         checkRunCreates.push(req);
       }
-      if (/\/protection/.test(urlPath) && ['PUT', 'PATCH', 'DELETE'].includes(method)) {
+      if (
+        /\/protection/.test(urlPath) &&
+        ["PUT", "PATCH", "DELETE"].includes(method)
+      ) {
         protectionMutations.push(req);
       }
-      if (/\/pulls\/\d+$/.test(urlPath) && method === 'GET') {
-        if (options.prMissing) throw new Error('missing');
+      if (/\/pulls\/\d+$/.test(urlPath) && method === "GET") {
+        if (options.prMissing) throw new Error("missing");
         return pr;
       }
-      if (urlPath.includes('/files')) return files;
-      if (urlPath.includes('/reviews')) return options.reviews ?? [{ state: 'APPROVED' }];
-      if (urlPath.includes('/check-runs')) {
+      if (urlPath.includes("/files")) return files;
+      if (urlPath.includes("/reviews"))
+        return options.reviews ?? [{ state: "APPROVED" }];
+      if (urlPath.includes("/check-runs")) {
+        if (urlPath.includes("/commits/")) {
+          assert.equal(
+            new URL("https://x" + urlPath).searchParams.get("filter"),
+            "all"
+          );
+        }
         return {
           check_runs: options.checkRuns ?? [
             {
               name: GATE_CHECK_RUN_NAME,
               head_sha: HEAD,
-              conclusion: 'success',
-              status: 'completed',
+              conclusion: "success",
+              status: "completed",
               app: { id: 42 },
             },
             {
-              name: 'Viona Emergency Merge Lock',
+              name: "Viona Emergency Merge Lock",
               head_sha: HEAD,
-              conclusion: 'success',
-              status: 'completed',
+              conclusion: "success",
+              status: "completed",
             },
           ],
         };
       }
-      if (urlPath.includes('/branches/master/protection')) {
+      if (urlPath.includes("/branches/master/protection")) {
         return {
           enforce_admins: { enabled: true },
           required_status_checks: {
-            contexts:
-              options.requiredContexts ?? ['Viona Emergency Merge Lock', GATE_CHECK_RUN_NAME],
+            contexts: options.requiredContexts ?? [
+              "Viona Emergency Merge Lock",
+              GATE_CHECK_RUN_NAME,
+            ],
           },
         };
       }
@@ -157,7 +259,9 @@ function createMockWrapperDeps(options = {}) {
           repository: {
             pullRequest: {
               reviewThreads: {
-                nodes: options.unresolved ? [{ isResolved: false }] : [{ isResolved: true }],
+                nodes: options.unresolved
+                  ? [{ isResolved: false }]
+                  : [{ isResolved: true }],
               },
             },
           },
@@ -169,29 +273,29 @@ function createMockWrapperDeps(options = {}) {
 
 async function main() {
   try {
-    test('parse args execute flag', () => {
+    test("parse args execute flag", () => {
       const a = parseGuardedMergeArgs([
-        '--repo',
+        "--repo",
         CANONICAL_REPOSITORY,
-        '--pr',
-        '1',
-        '--head',
+        "--pr",
+        "1",
+        "--head",
         HEAD,
-        '--base',
-        'master',
-        '--mode',
-        'squash',
-        '--reviewed-scope-digest',
-        'x',
-        '--gate-app-id',
-        '9',
-        '--execute',
+        "--base",
+        "master",
+        "--mode",
+        "squash",
+        "--reviewed-scope-digest",
+        "x",
+        "--gate-app-id",
+        "9",
+        "--execute",
       ]);
       assert.equal(a.execute, true);
-      assert.equal(a.gateAppId, '9');
+      assert.equal(a.gateAppId, "9");
     });
 
-    await testAsync('1 valid dry-run performs zero merge calls', async () => {
+    await testAsync("1 valid dry-run performs zero merge calls", async () => {
       const deps = createMockWrapperDeps({ execute: false });
       const result = await runGuardedPrMerge(deps);
       assert.equal(result.ok, true);
@@ -199,155 +303,178 @@ async function main() {
       assert.equal(deps.mergeCalls.length, 0);
     });
 
-    await testAsync('2 valid execute allows exactly one mocked merge call', async () => {
-      const deps = createMockWrapperDeps({ execute: true });
-      const result = await runGuardedPrMerge(deps);
-      assert.equal(result.ok, true);
-      assert.equal(result.mergeInvoked, true);
-      assert.equal(deps.mergeCalls.length, 1);
-    });
+    await testAsync(
+      "2 valid execute allows exactly one mocked merge call",
+      async () => {
+        const deps = createMockWrapperDeps({ execute: true });
+        const result = await runGuardedPrMerge(deps);
+        assert.equal(result.ok, true);
+        assert.equal(result.mergeInvoked, true);
+        assert.equal(deps.mergeCalls.length, 1);
+      }
+    );
 
-    test('3 wrong repository', () => {
-      assert.equal(evaluateGuardedMerge(happyWrapperFacts({ repository: 'other/x' })).ok, false);
-    });
-
-    test('4 PR not OPEN', () => {
-      assert.equal(evaluateGuardedMerge(happyWrapperFacts({ prState: 'CLOSED' })).ok, false);
-    });
-
-    test('5 head mismatch', () => {
+    test("3 wrong repository", () => {
       assert.equal(
-        evaluateGuardedMerge(happyWrapperFacts({ actualHeadSha: HEAD2 })).blocker,
-        BLOCKERS.BLOCKED_MERGE_AUTHORIZED_HEAD_MISMATCH,
+        evaluateGuardedMerge(happyWrapperFacts({ repository: "other/x" })).ok,
+        false
       );
     });
 
-    test('6 base mismatch', () => {
+    test("4 PR not OPEN", () => {
       assert.equal(
-        evaluateGuardedMerge(happyWrapperFacts({ actualBase: 'develop' })).blocker,
-        BLOCKERS.BLOCKED_MERGE_BASE_BRANCH_MISMATCH,
+        evaluateGuardedMerge(happyWrapperFacts({ prState: "CLOSED" })).ok,
+        false
       );
     });
 
-    test('7 mode mismatch', () => {
+    test("5 head mismatch", () => {
       assert.equal(
-        evaluateGuardedMerge(happyWrapperFacts({ mode: 'merge' })).blocker,
-        BLOCKERS.BLOCKED_MERGE_MODE_AUTHORIZATION_MISMATCH,
+        evaluateGuardedMerge(happyWrapperFacts({ actualHeadSha: HEAD2 }))
+          .blocker,
+        BLOCKERS.BLOCKED_MERGE_AUTHORIZED_HEAD_MISMATCH
       );
     });
 
-    test('8 reviewed-scope digest mismatch', () => {
+    test("6 base mismatch", () => {
+      assert.equal(
+        evaluateGuardedMerge(happyWrapperFacts({ actualBase: "develop" }))
+          .blocker,
+        BLOCKERS.BLOCKED_MERGE_BASE_BRANCH_MISMATCH
+      );
+    });
+
+    test("7 mode mismatch", () => {
+      assert.equal(
+        evaluateGuardedMerge(happyWrapperFacts({ mode: "merge" })).blocker,
+        BLOCKERS.BLOCKED_MERGE_MODE_AUTHORIZATION_MISMATCH
+      );
+    });
+
+    test("8 reviewed-scope digest mismatch", () => {
       assert.equal(
         evaluateGuardedMerge(
           happyWrapperFacts({
-            computedReviewedScopeDigest: 'a',
-            suppliedReviewedScopeDigest: 'b',
-          }),
+            computedReviewedScopeDigest: "a",
+            suppliedReviewedScopeDigest: "b",
+          })
         ).blocker,
-        BLOCKERS.BLOCKED_MERGE_SCOPE_CHANGED_AFTER_REVIEW,
+        BLOCKERS.BLOCKED_MERGE_SCOPE_CHANGED_AFTER_REVIEW
       );
     });
 
-    test('9 auto-merge active', () => {
+    test("9 auto-merge active", () => {
       assert.equal(
-        evaluateGuardedMerge(happyWrapperFacts({ autoMergeActive: true })).blocker,
-        BLOCKERS.BLOCKED_MERGE_AUTO_MERGE_ACTIVE,
+        evaluateGuardedMerge(happyWrapperFacts({ autoMergeActive: true }))
+          .blocker,
+        BLOCKERS.BLOCKED_MERGE_AUTO_MERGE_ACTIVE
       );
     });
 
-    test('10 unresolved conversation', () => {
-      assert.equal(
-        evaluateGuardedMerge(happyWrapperFacts({ unresolvedConversation: true })).blocker,
-        BLOCKERS.BLOCKED_MERGE_UNRESOLVED_CONVERSATION,
-      );
-    });
-
-    test('11 review unsatisfied', () => {
-      assert.equal(
-        evaluateGuardedMerge(happyWrapperFacts({ reviewSatisfied: false })).blocker,
-        BLOCKERS.BLOCKED_MERGE_REVIEW_REQUIREMENT_NOT_SATISFIED,
-      );
-    });
-
-    test('12 required check failed', () => {
-      assert.equal(
-        evaluateGuardedMerge(happyWrapperFacts({ requiredCheckFailed: true })).blocker,
-        BLOCKERS.BLOCKED_MERGE_REQUIRED_CHECK_FAILED,
-      );
-    });
-
-    test('13 missing gate check', () => {
-      assert.equal(evaluateGuardedMerge(happyWrapperFacts({ gateCheckMissing: true })).ok, false);
-    });
-
-    test('14 gate check on stale SHA', () => {
+    test("10 unresolved conversation", () => {
       assert.equal(
         evaluateGuardedMerge(
-          happyWrapperFacts({ gateCheckStaleSha: true, gateCheckMissing: true }),
+          happyWrapperFacts({ unresolvedConversation: true })
+        ).blocker,
+        BLOCKERS.BLOCKED_MERGE_UNRESOLVED_CONVERSATION
+      );
+    });
+
+    test("11 review unsatisfied", () => {
+      assert.equal(
+        evaluateGuardedMerge(happyWrapperFacts({ reviewSatisfied: false }))
+          .blocker,
+        BLOCKERS.BLOCKED_MERGE_REVIEW_REQUIREMENT_NOT_SATISFIED
+      );
+    });
+
+    test("12 required check failed", () => {
+      assert.equal(
+        evaluateGuardedMerge(happyWrapperFacts({ requiredCheckFailed: true }))
+          .blocker,
+        BLOCKERS.BLOCKED_MERGE_REQUIRED_CHECK_FAILED
+      );
+    });
+
+    test("13 missing gate check", () => {
+      assert.equal(
+        evaluateGuardedMerge(happyWrapperFacts({ gateCheckMissing: true })).ok,
+        false
+      );
+    });
+
+    test("14 gate check on stale SHA", () => {
+      assert.equal(
+        evaluateGuardedMerge(
+          happyWrapperFacts({ gateCheckStaleSha: true, gateCheckMissing: true })
         ).ok,
-        false,
+        false
       );
     });
 
-    test('15 gate check conclusion not success', () => {
-      assert.equal(
-        evaluateGuardedMerge(happyWrapperFacts({ gateCheckConclusion: 'failure' })).ok,
-        false,
-      );
-    });
-
-    test('16 duplicate conflicting gate contexts', () => {
+    test("15 gate check conclusion not success", () => {
       assert.equal(
         evaluateGuardedMerge(
-          happyWrapperFacts({ duplicateConflictingGateContext: true }),
-        ).blocker,
-        BLOCKERS.BLOCKED_VIONA_T3_GATE_CONTEXT_IDENTITY_AMBIGUOUS,
+          happyWrapperFacts({ gateCheckConclusion: "failure" })
+        ).ok,
+        false
       );
     });
 
-    test('17 gate app ID missing', () => {
+    test("16 duplicate conflicting gate contexts", () => {
       assert.equal(
         evaluateGuardedMerge(
-          happyWrapperFacts({ gateAppIdMissing: true, gateAppId: null }),
+          happyWrapperFacts({ duplicateConflictingGateContext: true })
         ).blocker,
-        BLOCKERS.BLOCKED_VIONA_T3_GATE_CHECK_APP_IDENTITY_UNRESOLVED,
+        BLOCKERS.BLOCKED_VIONA_T3_GATE_CONTEXT_IDENTITY_AMBIGUOUS
       );
     });
 
-    test('18 gate app ID mismatch', () => {
+    test("17 gate app ID missing", () => {
       assert.equal(
-        evaluateGuardedMerge(happyWrapperFacts({ gateAppId: '1', actualGateAppId: 2 })).blocker,
-        BLOCKERS.BLOCKED_VIONA_T3_GATE_CHECK_APP_IDENTITY_UNRESOLVED,
+        evaluateGuardedMerge(
+          happyWrapperFacts({ gateAppIdMissing: true, gateAppId: null })
+        ).blocker,
+        BLOCKERS.BLOCKED_VIONA_T3_GATE_CHECK_APP_IDENTITY_UNRESOLVED
       );
     });
 
-    await testAsync('19 no --execute means zero mutation', async () => {
+    test("18 gate app ID mismatch", () => {
+      assert.equal(
+        evaluateGuardedMerge(
+          happyWrapperFacts({ gateAppId: "1", actualGateAppId: 2 })
+        ).blocker,
+        BLOCKERS.BLOCKED_VIONA_T3_GATE_CHECK_APP_IDENTITY_UNRESOLVED
+      );
+    });
+
+    await testAsync("19 no --execute means zero mutation", async () => {
       const deps = createMockWrapperDeps({ execute: false });
       await runGuardedPrMerge(deps);
       assert.equal(deps.mergeCalls.length, 0);
     });
 
-    await testAsync('20 blocker means zero merge calls', async () => {
+    await testAsync("20 blocker means zero merge calls", async () => {
       const deps = createMockWrapperDeps({ execute: true });
-      deps.forceFacts = { repository: 'wrong/repo' };
+      deps.forceFacts = { repository: "wrong/repo" };
       const result = await runGuardedPrMerge(deps);
       assert.equal(result.ok, false);
       assert.equal(deps.mergeCalls.length, 0);
     });
 
-    await testAsync('21 successful execute never retries', async () => {
+    await testAsync("21 successful execute never retries", async () => {
       const deps = createMockWrapperDeps({ execute: true });
       await runGuardedPrMerge(deps);
       assert.equal(deps.mergeCalls.length, 1);
     });
 
-    await testAsync('22 wrapper never creates a check run', async () => {
+    await testAsync("22 wrapper never creates a check run", async () => {
       const deps = createMockWrapperDeps({ execute: true });
       await runGuardedPrMerge(deps);
       assert.equal(deps.checkRunCreates.length, 0);
     });
 
-    await testAsync('23 wrapper never changes branch protection', async () => {
+    await testAsync("23 wrapper never changes branch protection", async () => {
       const deps = createMockWrapperDeps({ execute: true });
       await runGuardedPrMerge(deps);
       assert.equal(deps.protectionMutations.length, 0);
@@ -356,36 +483,39 @@ async function main() {
     // --- Stage1 Readiness semantic migration (governance directive
     // VIONA.REC2.MERGE_CONTROL.STAGE1_READINESS_SEMANTIC_MIGRATION.LOCAL_IMPLEMENTATION.V1) ---
     await testAsync(
-      '23b R12 legacy-named Stage1 success alone does not satisfy wrapper lookup',
+      "23b R12 legacy-named Stage1 success alone does not satisfy wrapper lookup",
       async () => {
         const deps = createMockWrapperDeps({
           execute: true,
           checkRuns: [
             {
-              name: 'Viona Merge Authorization Gate',
+              name: "Viona Merge Authorization Gate",
               head_sha: HEAD,
-              conclusion: 'success',
-              status: 'completed',
+              conclusion: "success",
+              status: "completed",
               app: { id: 42 },
             },
             {
-              name: 'Viona Emergency Merge Lock',
+              name: "Viona Emergency Merge Lock",
               head_sha: HEAD,
-              conclusion: 'success',
-              status: 'completed',
+              conclusion: "success",
+              status: "completed",
             },
           ],
         });
         const result = await runGuardedPrMerge(deps);
         assert.equal(result.ok, false);
-        assert.equal(result.blocker, BLOCKERS.BLOCKED_MERGE_REQUIRED_CHECK_FAILED);
+        assert.equal(
+          result.blocker,
+          BLOCKERS.BLOCKED_MERGE_REQUIRED_CHECK_FAILED
+        );
         assert.equal(result.mergeInvoked, false);
         assert.equal(deps.mergeCalls.length, 0);
-      },
+      }
     );
 
     await testAsync(
-      '23c R13 wrapper remains fail-closed while branch protection still requires legacy Stage1 context',
+      "23c R13 wrapper remains fail-closed while branch protection still requires legacy Stage1 context",
       async () => {
         // Default checkRuns already include the NEW Readiness Gate success;
         // no legacy-named success exists anywhere. Branch protection still
@@ -395,14 +525,209 @@ async function main() {
         // context" and correctly found missing/unsatisfied.
         const deps = createMockWrapperDeps({
           execute: true,
-          requiredContexts: ['Viona Merge Authorization Gate', 'Viona Explicit Merge Authorization'],
+          requiredContexts: [
+            "Viona Merge Authorization Gate",
+            "Viona Explicit Merge Authorization",
+          ],
         });
         const result = await runGuardedPrMerge(deps);
         assert.equal(result.ok, false);
-        assert.equal(result.blocker, BLOCKERS.BLOCKED_MERGE_REQUIRED_CHECK_FAILED);
+        assert.equal(
+          result.blocker,
+          BLOCKERS.BLOCKED_MERGE_REQUIRED_CHECK_FAILED
+        );
         assert.equal(result.mergeInvoked, false);
         assert.equal(deps.mergeCalls.length, 0);
-      },
+      }
+    );
+
+    await testAsync(
+      "23d wrapper deterministically accepts the valid recovery successor",
+      async () => {
+        const { prior, successor } = recoveryGateChecks();
+        const resolved = resolveEffectiveStage1Check(
+          [prior, successor],
+          FAILED_STAGE1_SUPERSESSION_CASE_V1.headSha
+        );
+        assert.equal(resolved.ok, true);
+        assert.equal(resolved.check.id, successor.id);
+        const deps = createMockWrapperDeps(
+          recoveryWrapperOptions(
+            [
+              prior,
+              successor,
+              {
+                name: "Viona Emergency Merge Lock",
+                head_sha: FAILED_STAGE1_SUPERSESSION_CASE_V1.headSha,
+                conclusion: "success",
+                status: "completed",
+              },
+            ],
+            false
+          )
+        );
+        const result = await runGuardedPrMerge(deps);
+        assert.equal(result.ok, true);
+        assert.equal(result.mergeInvoked, false);
+        assert.equal(deps.mergeCalls.length, 0);
+      }
+    );
+
+    await testAsync(
+      "23e wrapper rejects malformed or extra Stage1 recovery records",
+      async () => {
+        const { prior, successor } = recoveryGateChecks();
+        const malformed = createMockWrapperDeps(
+          recoveryWrapperOptions(
+            [
+              prior,
+              { ...successor, external_id: null },
+              {
+                name: "Viona Emergency Merge Lock",
+                head_sha: FAILED_STAGE1_SUPERSESSION_CASE_V1.headSha,
+                conclusion: "success",
+                status: "completed",
+              },
+            ],
+            true
+          )
+        );
+        const malformedResult = await runGuardedPrMerge(malformed);
+        assert.equal(malformedResult.ok, false);
+        assert.equal(
+          malformedResult.blocker,
+          BLOCKERS.BLOCKED_VIONA_T3_GATE_CONTEXT_IDENTITY_AMBIGUOUS
+        );
+        assert.equal(malformed.mergeCalls.length, 0);
+
+        const extra = createMockWrapperDeps(
+          recoveryWrapperOptions(
+            [
+              prior,
+              successor,
+              { ...successor, id: 602, output: { summary: "{}" } },
+              {
+                name: "Viona Emergency Merge Lock",
+                head_sha: FAILED_STAGE1_SUPERSESSION_CASE_V1.headSha,
+                conclusion: "success",
+                status: "completed",
+              },
+            ],
+            true
+          )
+        );
+        const extraResult = await runGuardedPrMerge(extra);
+        assert.equal(extraResult.ok, false);
+        assert.equal(extra.mergeCalls.length, 0);
+      }
+    );
+
+    await testAsync(
+      "23f wrapper rejects a recovery successor digest that differs from live scope",
+      async () => {
+        const { prior, successor } = recoveryGateChecks();
+        const options = recoveryWrapperOptions(
+          [
+            prior,
+            successor,
+            {
+              name: "Viona Emergency Merge Lock",
+              head_sha: FAILED_STAGE1_SUPERSESSION_CASE_V1.headSha,
+              conclusion: "success",
+              status: "completed",
+            },
+          ],
+          true
+        );
+        options.files = [
+          { status: "modified", filename: "different-live-scope.txt" },
+        ];
+        options.args.reviewedScopeDigest = computeReviewedScopeDigest(
+          options.files
+        );
+        const deps = createMockWrapperDeps(options);
+        const result = await runGuardedPrMerge(deps);
+        assert.equal(result.ok, false);
+        assert.equal(
+          result.blocker,
+          BLOCKERS.BLOCKED_MERGE_SCOPE_CHANGED_AFTER_REVIEW
+        );
+        assert.equal(deps.mergeCalls.length, 0);
+      }
+    );
+
+    await testAsync(
+      "23g wrapper honors every shared-resolver rejection before merge",
+      async () => {
+        const { prior, successor } = recoveryGateChecks();
+        const emergencyLock = {
+          name: "Viona Emergency Merge Lock",
+          head_sha: FAILED_STAGE1_SUPERSESSION_CASE_V1.headSha,
+          conclusion: "success",
+          status: "completed",
+        };
+        const malformedSuccessor = { ...successor, external_id: null };
+        const arbitrarySuccess = {
+          ...successor,
+          id: 602,
+          external_id: null,
+          output: {
+            title: GATE_CHECK_RUN_NAME,
+            summary: JSON.stringify({
+              stage1DispatchMode: GATE_DISPATCH_MODES.NORMAL,
+              reviewedScopeDigest:
+                FAILED_STAGE1_SUPERSESSION_CASE_V1.canonicalDigest,
+            }),
+          },
+        };
+        const invalidHistories = [
+          { name: "lone recovery successor", checks: [successor] },
+          {
+            name: "malformed recovery evidence",
+            checks: [prior, malformedSuccessor],
+          },
+          {
+            name: "arbitrary unbound same-name success",
+            checks: [prior, arbitrarySuccess],
+          },
+        ];
+
+        for (const invalidHistory of invalidHistories) {
+          const resolved = resolveEffectiveStage1Check(
+            invalidHistory.checks,
+            FAILED_STAGE1_SUPERSESSION_CASE_V1.headSha
+          );
+          assert.equal(
+            resolved.ok,
+            false,
+            `${invalidHistory.name} must fail shared resolution`
+          );
+          const deps = createMockWrapperDeps(
+            recoveryWrapperOptions(
+              [...invalidHistory.checks, emergencyLock],
+              true
+            )
+          );
+          const result = await runGuardedPrMerge(deps);
+          assert.equal(
+            result.ok,
+            false,
+            `${invalidHistory.name} must fail guarded merge`
+          );
+          assert.equal(
+            result.blocker,
+            BLOCKERS.BLOCKED_VIONA_T3_GATE_CONTEXT_IDENTITY_AMBIGUOUS
+          );
+          assert.equal(
+            result.evidence.reason,
+            "effective_stage1_resolution_failed"
+          );
+          assert.equal(result.mergeInvoked, false);
+          assert.equal(deps.mergeCalls.length, 0);
+          assert.equal(deps.checkRunCreates.length, 0);
+          assert.equal(deps.protectionMutations.length, 0);
+        }
+      }
     );
 
     // R14 ("wrapper works after final protection state": new Readiness Gate
@@ -415,18 +740,18 @@ async function main() {
     // via this migration's import, so R14 is proven there with zero textual
     // change (see R16 rerun below and governance directive §13).
 
-    test('24 exact primary and defense-in-depth markers exist', () => {
+    test("24 exact primary and defense-in-depth markers exist", () => {
       assert.equal(
         REPOSITORY_LEVEL_REQUIRED_CHECK_IS_PRIMARY,
-        'REPOSITORY_LEVEL_REQUIRED_CHECK_IS_PRIMARY',
+        "REPOSITORY_LEVEL_REQUIRED_CHECK_IS_PRIMARY"
       );
       assert.equal(
         GUARDED_MERGE_WRAPPER_IS_DEFENSE_IN_DEPTH,
-        'GUARDED_MERGE_WRAPPER_IS_DEFENSE_IN_DEPTH',
+        "GUARDED_MERGE_WRAPPER_IS_DEFENSE_IN_DEPTH"
       );
     });
 
-    test('25 global fetch trap unused', () => {
+    test("25 global fetch trap unused", () => {
       assert.equal(unexpectedNetworkCalls, 0);
     });
 

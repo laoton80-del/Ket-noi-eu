@@ -6,6 +6,14 @@ name: Viona Merge Readiness Gate Dispatcher
 on:
   workflow_dispatch:
     inputs:
+      dispatch_mode:
+        description: Closed mode; recovery V1 is one-shot and bound only to the audited PR 475 case
+        required: true
+        default: NORMAL
+        type: choice
+        options:
+          - NORMAL
+          - FAILED_STAGE1_SUPERSESSION_V1
       pr_number:
         description: Pull request number (integer as string)
         required: true
@@ -36,6 +44,10 @@ on:
       reviewed_scope_digest:
         description: Deterministic reviewed-scope digest (SHA-256 hex)
         required: true
+        type: string
+      recovery_binding:
+        description: v1|case_uuid|tree_sha|prior_run_id|prior_check_run_id|prior_blocker|prior_digest; PR 475 recovery only
+        required: false
         type: string
 
 # Bind concurrency to repository + PR + head. cancel-in-progress=false so an
@@ -92,12 +104,14 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           VIONA_GATE_PROTECTION_READ_TOKEN: ${{ steps.protection_read.outputs.token }}
+          VIONA_GATE_DISPATCH_MODE: ${{ inputs.dispatch_mode }}
           VIONA_GATE_PR_NUMBER: ${{ inputs.pr_number }}
           VIONA_GATE_HEAD_SHA: ${{ inputs.head_sha }}
           VIONA_GATE_BASE_BRANCH: ${{ inputs.base_branch }}
           VIONA_GATE_MERGE_MODE: ${{ inputs.merge_mode }}
           VIONA_GATE_FREEZE_SCOPE: ${{ inputs.freeze_scope }}
           VIONA_GATE_REVIEWED_SCOPE_DIGEST: ${{ inputs.reviewed_scope_digest }}
+          VIONA_GATE_RECOVERY_BINDING: ${{ inputs.recovery_binding }}
           VIONA_GATE_RUN_ID: ${{ github.run_id }}
           VIONA_GATE_REPOSITORY: ${{ github.repository }}
         run: node scripts/viona-merge-authorization-gate.mjs
