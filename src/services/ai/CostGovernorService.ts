@@ -22,6 +22,8 @@ const ADMISSION_ADVISORY_LOCK_ID = 7_913_114_201_001n;
 const MICRO_USD_PER_MILLION_TOKENS = 1_000_000n;
 const MAX_TIMEOUT_MS = 2_147_483_647n;
 const MAX_POSTGRES_BIGINT = 9_223_372_036_854_775_807n;
+const DEFAULT_RECONCILIATION_BATCH_SIZE = 100;
+const MAX_RECONCILIATION_BATCH_SIZE = 500;
 
 if (LOCK_TIMEOUT_MS >= DISPATCH_GUARD_MS) {
   throw new Error('Cost governor lock timeout must be shorter than the dispatch guard');
@@ -122,6 +124,23 @@ export type CostGovernorSettleInput = Readonly<{
 export type CostGovernorReleaseInput = Readonly<{
   operationId: string;
   reason: 'reserved_not_dispatched' | 'provider_http_4xx';
+}>;
+
+export type CostGovernorReconcilableOperation = Readonly<{
+  operationId: string;
+  status: 'RESERVED' | 'DISPATCHING' | 'OUTCOME_UNKNOWN';
+  dispatchedAt: Date | null;
+  reservedMicrousd: bigint;
+  expiresAt: Date;
+}>;
+
+export type CostGovernorReconciliationAction = 'released' | 'markedUnknown' | 'settled' | 'skipped';
+
+export type CostGovernorReconciliationStats = Readonly<{
+  released: number;
+  markedUnknown: number;
+  settled: number;
+  skipped: number;
 }>;
 
 export type CostGovernor = Readonly<{
@@ -260,6 +279,10 @@ function toDate(value: unknown): Date {
   const date = value instanceof Date ? value : new Date(String(value));
   if (Number.isNaN(date.getTime())) throw new Error('Cost governor database returned an invalid timestamp');
   return date;
+}
+
+function toNullableDate(value: unknown): Date | null {
+  return value == null ? null : toDate(value);
 }
 
 function operationFromRow(row: OperationRow): CostGovernorOperation {
@@ -726,6 +749,118 @@ export class CostGovernorService implements CostGovernor {
       }, TRANSACTION_OPTIONS);
     } catch (error) {
       throw asLedgerUnavailable(error);
+    }
+  }
+
+  async findReconcilableOperations(
+    limit = DEFAULT_RECONCILIATION_BATCH_SIZE
+  ): Promise<readonly CostGovernorReconcilableOperation[]> {
+    if (!Number.isSafeInteger(limit) || limit < 1 || limit > MAX_RECONCILIATION_BATCH_SIZE) {
+      throw new RangeError(`Cost governor reconciliation limit must be between 1 and ${MAX_RECONCILIATION_BATCH_SIZE}`);
+    }
+
+    // expiresAt is stored as UTC-naive TIMESTAMP; compare it with the DB clock in that same representation.
+    const rows = await this.databaseProvider().$queryRawUnsafe<OperationRow[]>(
+      `SELECT "id", "status", "dispatchedAt", "reservedMicrousd", "expiresAt"
+         FROM "AiCostOperation"
+        WHERE "status" IN ('RESERVED', 'DISPATCHING', 'OUTCOME_UNKNOWN')
+          AND "expiresAt" < (clock_timestamp() AT TIME ZONE 'UTC')
+        ORDER BY "expiresAt" ASC, "id" ASC
+        LIMIT $1::integer`,
+      limit
+    );
+
+    return rows.map((row) => this.reconcilableOperationFromRow(row));
+  }
+
+  async reconcileOperation(operationId: string): Promise<CostGovernorReconciliationAction> {
+    if (!isExactNonEmpty(operationId)) return 'skipped';
+    const candidate = await this.findReconciliationCandidate(operationId);
+    if (!candidate || !candidate.isExpired) return 'skipped';
+
+    if (candidate.status === 'RESERVED') {
+      if (candidate.dispatchedAt !== null) return 'skipped';
+      const applied = await this.applyReconciliationTransition(
+        candidate,
+        () => this.release({ operationId, reason: 'reserved_not_dispatched' })
+      );
+      return applied ? 'released' : 'skipped';
+    }
+
+    if (candidate.status === 'DISPATCHING') {
+      const applied = await this.applyReconciliationTransition(
+        candidate,
+        () => this.markOutcomeUnknown(operationId)
+      );
+      return applied ? 'markedUnknown' : 'skipped';
+    }
+
+    const settled = await this.applyReconciliationTransition(
+      candidate,
+      async () => (await this.settle({ operationId })).applied
+    );
+    return settled ? 'settled' : 'skipped';
+  }
+
+  async reconcileStale(limit = DEFAULT_RECONCILIATION_BATCH_SIZE): Promise<CostGovernorReconciliationStats> {
+    const candidates = await this.findReconcilableOperations(limit);
+    const stats = { released: 0, markedUnknown: 0, settled: 0, skipped: 0 };
+    for (const candidate of candidates) {
+      const action = await this.reconcileOperation(candidate.operationId);
+      stats[action] += 1;
+    }
+    return stats;
+  }
+
+  private async findReconciliationCandidate(
+    operationId: string
+  ): Promise<Readonly<CostGovernorReconcilableOperation & { isExpired: boolean }> | null> {
+    const rows = await this.databaseProvider().$queryRawUnsafe<OperationRow[]>(
+      `SELECT "id", "status", "dispatchedAt", "reservedMicrousd", "expiresAt",
+              ("expiresAt" < (clock_timestamp() AT TIME ZONE 'UTC')) AS "isExpired"
+         FROM "AiCostOperation"
+        WHERE "id" = $1
+          AND "status" IN ('RESERVED', 'DISPATCHING', 'OUTCOME_UNKNOWN')`,
+      operationId
+    );
+    if (rows.length === 0) return null;
+    return { ...this.reconcilableOperationFromRow(rows[0]), isExpired: rows[0].isExpired === true };
+  }
+
+  private reconcilableOperationFromRow(row: OperationRow): CostGovernorReconcilableOperation {
+    const status = row.status;
+    const reservedMicrousd = toBigInt(row.reservedMicrousd as bigint | number | string | null | undefined);
+    if (
+      (status !== 'RESERVED' && status !== 'DISPATCHING' && status !== 'OUTCOME_UNKNOWN') ||
+      reservedMicrousd === null ||
+      reservedMicrousd < 0n
+    ) {
+      throw new Error('Cost governor reconciliation query returned an invalid operation');
+    }
+    return {
+      operationId: String(row.id),
+      status,
+      dispatchedAt: toNullableDate(row.dispatchedAt),
+      reservedMicrousd,
+      expiresAt: toDate(row.expiresAt),
+    };
+  }
+
+  private async applyReconciliationTransition(
+    candidate: Readonly<CostGovernorReconcilableOperation & { isExpired: boolean }>,
+    transition: () => Promise<boolean>
+  ): Promise<boolean> {
+    try {
+      return await transition();
+    } catch (error) {
+      const current = await this.findReconciliationCandidate(candidate.operationId);
+      const candidateChanged =
+        current === null ||
+        current.status !== candidate.status ||
+        !current.isExpired ||
+        (candidate.status === 'RESERVED' && current.dispatchedAt !== null);
+      if (candidateChanged) return false;
+      throw error;
     }
   }
 

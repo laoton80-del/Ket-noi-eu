@@ -16,6 +16,8 @@ Mỗi mục có ID, việc cần làm, chủ, trạng thái, điều kiện hoà
 | A1-AUTHORITY-RPC | Code RPC cho authority | chưa phân công | OPEN |
 | A1-RECON | Đối soát DISPATCHING và RESERVED mồ côi | Claude + Operator ký | OPEN |
 | A1-ENV | Sáu biến VIONA_COST_GOVERNOR_* chỉ sau A1-RECON | chưa phân công | OPEN |
+| FIREBASE-AI-COST-CONTAINMENT | Đóng đường gọi OpenAI/Gemini trả phí ngoài Cost Governor trước Grand Launch | chưa phân công | OPEN |
+| A1-SOS-CAP-CLASSIFICATION | Chốt miễn SOS sau SOS Core bằng phân loại server-side; không dùng cờ client | chưa phân công | OPEN |
 | A1-MIGRATION-SNAPSHOT | Migration snapshot chỉ khi bảng rỗng | chưa phân công | OPEN |
 | WALLET-RECEIPT | Sau deploy, biến receipt bằng 1 | Operator | OPEN |
 | PROVIDER-SPEND-CAPS | Hạn mức chi và cảnh báo ở nhà cung cấp | Operator | OPEN |
@@ -56,6 +58,8 @@ Mỗi mục có ID, việc cần làm, chủ, trạng thái, điều kiện hoà
 - Trạng thái: OPEN.
 - Điều kiện hoàn tất: A1-RECON được review độc lập và Operator ký, trước khi đặt đủ 6 biến ở mục A1-ENV.
 - Nguồn: `docs/ops/VIONA_P0_A1_COST_GOVERNOR_ENV.md` mục Production activation condition. `DISPATCHING` và `RESERVED` có trong `src/services/ai/CostGovernorService.ts`.
+- Candidate này thêm batch scan giới hạn, tái sử dụng transition tiền hiện có, one-shot worker và test PostgreSQL. Lịch chạy production chưa được wire trong gói này; phần đó là deploy-time. Trạng thái vẫn OPEN cho tới khi có review độc lập và Operator ký.
+- Kiểm chứng PostgreSQL 3 múi giờ: PENDING Linux CI; lần chạy Windows local dừng tại `server.initialise` do initdb báo `invalid byte sequence for encoding UTF8: 0x9e`.
 
 ### A1-ENV
 
@@ -98,11 +102,27 @@ Mỗi mục có ID, việc cần làm, chủ, trạng thái, điều kiện hoà
 
 ### A1-FIREBASE
 
-- Việc: SOS phải được miễn cap chi phí. Vô hiệu hóa `withOneRetry` phía client vì nguy cơ tính tiền 2 lần.
+- Việc: xử lý ranh giới Firebase/SOS. Vô hiệu hóa `withOneRetry` phía client vì nguy cơ tính tiền 2 lần.
 - Chủ: chưa phân công.
 - Trạng thái: OPEN.
-- Điều kiện hoàn tất: đường SOS không bị chặn bởi cost cap hoặc lỗi sổ, có test riêng trước khi bật; client không còn `withOneRetry` trên đường trả phí.
+- Điều kiện hoàn tất: quyết định miễn SOS khỏi cap chờ SOS Core và phân loại SOS server-side; không chấp nhận cờ client để bỏ qua admission. Sau khi quyết định được chốt, đường SOS có test riêng trước khi bật; client không còn `withOneRetry` trên đường trả phí.
 - Nguồn: `docs/ops/VIONA_P0_A1_COST_GOVERNOR_ENV.md` mục SOS and Firebase boundary: đường SOS/emergency không được bị cost cap hoặc lỗi sổ chặn, và rail đó cần test riêng trước khi bật. Hàm `withOneRetry` nằm trong `src/services/OpenAIService.ts`.
+
+### FIREBASE-AI-COST-CONTAINMENT
+
+- Việc: đưa các lời gọi OpenAI của `aiProxy` và Gemini của `analyzeDocumentProxy` qua Cost Governor trước outbound provider call.
+- Chủ: chưa phân công.
+- Trạng thái: OPEN.
+- Điều kiện hoàn tất: cả hai proxy đều reserve trước khi gọi provider, fail-closed khi authority từ chối/lỗi, và có test riêng; phải đóng trước Grand Launch.
+- Nguồn: `functions/src/index.ts` các handler `aiProxy` và `analyzeDocumentProxy`.
+
+### A1-SOS-CAP-CLASSIFICATION
+
+- Việc: chốt cách miễn SOS khỏi cap sau khi hoàn tất SOS Core và nhận diện nguồn SOS bằng quy tắc server-side.
+- Chủ: chưa phân công.
+- Trạng thái: OPEN.
+- Điều kiện hoàn tất: server-side classification được review và có test; tuyệt đối không dùng cờ do client gửi để bỏ qua Cost Governor. Chưa triển khai miễn trừ trong gói này.
+- Nguồn: `docs/ops/VIONA_P0_A1_COST_GOVERNOR_ENV.md` mục SOS and Firebase boundary; checklist này không cấp quyền bật miễn trừ.
 
 ### ADJACENT-MONEY
 

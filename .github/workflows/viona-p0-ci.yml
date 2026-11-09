@@ -82,3 +82,8 @@ jobs:
           VIONA_TEST_PG_TOOLS_DIR: ${{ github.workspace }}/scripts/ci/pg-test-tools
           VIONA_TEST_PG_TIME_ZONE: ${{ matrix.tz }}
         run: npx tsx scripts/test-viona-cost-governor-postgres.ts && npx tsx scripts/test-viona-cost-governor-price-seed.ts && npx tsx scripts/test-viona-authority-postgres.ts
+      - name: Test PostgreSQL Cost Governor reconciliation
+        env:
+          VIONA_TEST_PG_TOOLS_DIR: ${{ github.workspace }}/scripts/ci/pg-test-tools
+          VIONA_TEST_PG_TIME_ZONE: ${{ matrix.tz }}
+        run: npx tsx scripts/test-viona-cost-governor-reconcile.ts
