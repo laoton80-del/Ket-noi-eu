@@ -1,4 +1,9 @@
 export { vionaTokens } from './vionaTokens';
+export {
+  vionaCinematicTokens,
+  resolveVionaCinematicTier,
+} from './vionaCinematicTokens';
+export type { VionaCinematicTier, VionaCinematicTokens } from './vionaCinematicTokens';
 export type { VionaTokens } from './vionaTokens';
 export {
   premiumTileCanvas,

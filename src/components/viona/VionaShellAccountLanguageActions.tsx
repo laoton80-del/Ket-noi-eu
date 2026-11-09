@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { type ReactElement, useCallback } from 'react';
-import { Platform, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Platform, Pressable, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 
 import { useTranslation } from '../../utils/i18n';
 import { FontFamily } from '../../theme/typography';
@@ -36,7 +36,9 @@ export function VionaShellAccountLanguageActions({
   onPressRole,
 }: VionaShellAccountLanguageActionsProps): ReactElement {
   const { t } = useTranslation();
+  const { width } = useWindowDimensions();
   const isLeftRail = layout === 'leftRail';
+  const iconFirst = !isLeftRail && width <= 360;
 
   const onAccount = useCallback(() => {
     triggerHaptic();
@@ -68,9 +70,11 @@ export function VionaShellAccountLanguageActions({
       >
         <View style={[styles.chip, isLeftRail && styles.chipRail]}>
           <Ionicons name="person-circle" size={isLeftRail ? 16 : 18} color="#FFFFFF" />
-          <Text style={[styles.label, isLeftRail && styles.labelRail]} numberOfLines={1}>
-            {t('home.accountChipShort')}
-          </Text>
+          {iconFirst ? null : (
+            <Text style={[styles.label, isLeftRail && styles.labelRail]} numberOfLines={1}>
+              {t('home.accountChipShort')}
+            </Text>
+          )}
         </View>
       </Pressable>
 

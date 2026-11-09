@@ -272,6 +272,13 @@ export function resolveVionaRec2ImagePresentation(
   return { mode: 'image', reason: 'licensed-ready' };
 }
 
+/** Layout widths for the cinematic Home. Does not change availability. */
+export const VIONA_CINEMATIC_BREAKPOINTS = {
+  phoneMax: 767,
+  tabletMin: 768,
+  desktopMin: 1180,
+} as const;
+
 export const VIONA_REC2_ALFRED_STATES = [
   'idle',
   'permission-required',

@@ -601,12 +601,12 @@ const styles = StyleSheet.create({
     ...StyleSheet.absoluteFillObject,
   },
   sheet: {
-    backgroundColor: '#050A14',
+    backgroundColor: '#07111C',
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     borderWidth: 1,
     borderColor: 'rgba(220, 38, 38, 0.38)',
-    paddingHorizontal: 18,
+    paddingHorizontal: 20,
     /** paddingTop applied inline (native / web / handle variants). */
     paddingTop: 0,
     maxWidth: '100%',

@@ -91,7 +91,7 @@ export function AcademyScreen(): ReactElement {
   const horizontalPad = width >= TABLET_MIN ? theme.spacing.xl : theme.spacing.lg;
   const contentWidth = Math.min(width, HUB_MAX_WIDTH);
   const gridColumns = width >= 960 ? 3 : width >= 640 ? 2 : 1;
-  const gridGap = width >= TABLET_MIN ? 14 : 12;
+  const gridGap = width >= TABLET_MIN ? 16 : 14;
   const innerTrackWidth = contentWidth - horizontalPad * 2;
   const moduleWidth =
     gridColumns === 1
@@ -410,7 +410,7 @@ const styles = StyleSheet.create({
   },
   backdropVioletWash: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(120, 60, 200, 0.06)',
+    backgroundColor: 'rgba(18, 12, 40, 0.28)',
   },
   hubRoot: {
     flex: 1,

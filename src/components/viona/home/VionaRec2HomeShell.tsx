@@ -1,9 +1,10 @@
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useCallback, useMemo, useState, type ComponentProps } from 'react';
+import { useCallback, useEffect, useMemo, useState, type ComponentProps } from 'react';
 import {
   ActivityIndicator,
   Platform,
+  Image,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -15,12 +16,16 @@ import {
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useTranslation } from '../../../i18n';
-import { VionaRec2AlfredPanel } from './VionaRec2AlfredPanel';
+import { useHomeCommand } from '../../../context/HomeCommandContext';
+import { VionaCraneMark } from '../brand/VionaCraneMark';
+import { VionaGlobalSosShellAction } from '../VionaGlobalSosShellAction';
+import { VionaCinematicCompanion } from './VionaCinematicCompanion';
+import { VionaCinematicRail } from './VionaCinematicRail';
+import { VionaCinematicUniverseCard } from './VionaCinematicUniverseCard';
+import { resolveVionaCinematicTier, vionaCinematicTokens } from '../../../design/vionaCinematicTokens';
 import {
   VIONA_REC2_NOTIFICATION_PRESENTATION,
-  VIONA_REC2_GATED_CARD_CONTENT_OPACITY,
   createVionaRec2UniverseContract,
-  invokeVionaRec2UniverseCallback,
   resolveVionaRec2HomeLayout,
   resolveVionaRec2ImagePresentation,
   resolveVionaRec2TaskSurface,
@@ -29,22 +34,9 @@ import {
   type VionaRec2TypographyMetrics,
   type VionaRec2UniverseAvailabilityInput,
   type VionaRec2UniverseCallbacks,
-  type VionaRec2UniverseContract,
-  type VionaRec2UniverseId,
 } from './vionaRec2HomeContract';
 
 type IconName = ComponentProps<typeof Ionicons>['name'];
-
-const UNIVERSE_VISUALS: Readonly<
-  Record<VionaRec2UniverseId, Readonly<{ icon: IconName; accent: string; glow: string }>>
-> = {
-  local: { icon: 'location-outline', accent: '#F3A431', glow: 'rgba(243, 164, 49, 0.24)' },
-  travel: { icon: 'airplane-outline', accent: '#39BFFF', glow: 'rgba(57, 191, 255, 0.23)' },
-  academy: { icon: 'school-outline', accent: '#AE62FF', glow: 'rgba(174, 98, 255, 0.22)' },
-  business: { icon: 'business-outline', accent: '#38D59A', glow: 'rgba(56, 213, 154, 0.22)' },
-  account: { icon: 'person-circle-outline', accent: '#5B9DFF', glow: 'rgba(91, 157, 255, 0.22)' },
-  sos: { icon: 'shield-checkmark-outline', accent: '#FF5B65', glow: 'rgba(255, 91, 101, 0.23)' },
-};
 
 export type VionaRec2HomeShellProps = Readonly<{
   displayName?: string | null;
@@ -55,78 +47,6 @@ export type VionaRec2HomeShellProps = Readonly<{
   contentState?: VionaRec2ContentState;
   reducedMotion?: boolean;
 }>;
-
-function UniverseCard({
-  universe,
-  width,
-  callbacks,
-  reducedMotion,
-  typography,
-}: Readonly<{
-  universe: VionaRec2UniverseContract;
-  width: number;
-  callbacks: VionaRec2UniverseCallbacks;
-  reducedMotion: boolean;
-  typography: VionaRec2TypographyMetrics;
-}>) {
-  const { t } = useTranslation();
-  const [focused, setFocused] = useState(false);
-  const visual = UNIVERSE_VISUALS[universe.id];
-  const interactive = universe.availability === 'available' && typeof callbacks[universe.id] === 'function';
-
-  return (
-    <Pressable
-      accessibilityRole="button"
-      accessibilityLabel={t(`home.rec2.universes.${universe.id}.title`)}
-      accessibilityHint={
-        interactive
-          ? t('home.rec2.universeOpenHint')
-          : t(`home.rec2.availability.${universe.availability}`)
-      }
-      accessibilityState={{ disabled: !interactive }}
-      disabled={!interactive}
-      onFocus={() => setFocused(true)}
-      onBlur={() => setFocused(false)}
-      onPress={() => invokeVionaRec2UniverseCallback(universe, callbacks)}
-      style={({ pressed }) => [
-        styles.cardHost,
-        { width, borderColor: focused ? visual.accent : 'rgba(133, 174, 211, 0.25)' },
-        focused && styles.cardFocused,
-        pressed && (reducedMotion ? styles.cardPressedReducedMotion : styles.cardPressed),
-        !interactive && styles.cardDisabled,
-      ]}
-    >
-      <LinearGradient colors={[visual.glow, 'rgba(7, 18, 32, 0.96)']} style={styles.cardGradient}>
-        <View style={[styles.iconCore, { borderColor: visual.accent, backgroundColor: visual.glow }]}>
-          <Ionicons name={visual.icon} size={24} color={visual.accent} />
-        </View>
-        <View style={styles.cardCopy}>
-          <Text style={[styles.cardTitle, { lineHeight: typography.cardTitleLineHeight }]}>
-            {t(`home.rec2.universes.${universe.id}.title`)}
-          </Text>
-          <Text style={[styles.cardSubtitle, { lineHeight: typography.bodyLineHeight }]}>
-            {t(`home.rec2.universes.${universe.id}.subtitle`)}
-          </Text>
-        </View>
-        <View style={styles.cardFooter}>
-          <Text
-            style={[
-              styles.availability,
-              { color: visual.accent, lineHeight: typography.availabilityLineHeight },
-            ]}
-          >
-            {t(`home.rec2.availability.${universe.availability}`)}
-          </Text>
-          <Ionicons
-            name={interactive ? 'arrow-forward-circle-outline' : 'lock-closed-outline'}
-            size={20}
-            color={interactive ? visual.accent : '#72869A'}
-          />
-        </View>
-      </LinearGradient>
-    </Pressable>
-  );
-}
 
 function ContentStateBanner({
   state,
@@ -180,6 +100,7 @@ export function VionaRec2HomeShell({
   reducedMotion = false,
 }: VionaRec2HomeShellProps) {
   const { t } = useTranslation();
+  const homeCommand = useHomeCommand();
   const dimensions = useWindowDimensions();
   const insets = useSafeAreaInsets();
   const [measuredSize, setMeasuredSize] = useState<Readonly<{
@@ -193,25 +114,62 @@ export function VionaRec2HomeShell({
       current?.width === width && current.height === height ? current : { width, height }
     );
   }, []);
+  const shellWidth = measuredSize?.width ?? dimensions.width;
+  const shellHeight = measuredSize?.height ?? dimensions.height;
+  const shellPlatform = Platform.OS === 'web' ? 'web' : 'native';
+  // Native keeps its existing tab navigation even on a wide device. The
+  // permanent web desktop classification must not leak into native chrome.
+  const tier = shellPlatform === 'web'
+    ? resolveVionaCinematicTier(dimensions.width)
+    : dimensions.width < 768 ? 'phone' : 'tablet';
+  const [heroFailed, setHeroFailed] = useState(false);
+  const heroPresentation = resolveVionaRec2ImagePresentation({
+    provenance: 'unverified',
+    loadState: heroFailed ? 'error' : 'ready',
+  });
+  const [companionOpen, setCompanionOpen] = useState(false);
+  const [navOpen, setNavOpen] = useState(false);
+  const [navPinned, setNavPinned] = useState(false);
+  const [vionaOpen, setVionaOpen] = useState(false);
+  const [vionaPinned, setVionaPinned] = useState(false);
+  const focusShell = tier !== 'phone';
+  const reserveCompanion = useMemo(() => {
+    if (!(vionaPinned && tier === 'desktop')) return false;
+    const reserved = resolveVionaRec2HomeLayout({
+      width: Math.max(1, shellWidth - vionaCinematicTokens.layout.companionWidth),
+      height: shellHeight,
+      fontScale: dimensions.fontScale,
+      safeAreaInsets: insets,
+      shellPlatform,
+    });
+    return reserved.cardWidth >= 280;
+  }, [
+    dimensions.fontScale,
+    insets,
+    shellHeight,
+    shellPlatform,
+    shellWidth,
+    tier,
+    vionaPinned,
+  ]);
   const layout = useMemo(
     () =>
       resolveVionaRec2HomeLayout({
-        width: measuredSize?.width ?? dimensions.width,
-        height: measuredSize?.height ?? dimensions.height,
+        width: reserveCompanion
+          ? Math.max(1, shellWidth - vionaCinematicTokens.layout.companionWidth)
+          : shellWidth,
+        height: shellHeight,
         fontScale: dimensions.fontScale,
         safeAreaInsets: insets,
-        shellPlatform: Platform.OS === 'web' ? 'web' : 'native',
+        shellPlatform,
       }),
     [
       dimensions.fontScale,
-      dimensions.height,
-      dimensions.width,
-      insets.bottom,
-      insets.left,
-      insets.right,
-      insets.top,
-      measuredSize?.height,
-      measuredSize?.width,
+      insets,
+      reserveCompanion,
+      shellHeight,
+      shellPlatform,
+      shellWidth,
     ]
   );
   const universes = useMemo(
@@ -222,36 +180,84 @@ export function VionaRec2HomeShell({
     () => resolveVionaRec2TypographyMetrics(layout.fontScale),
     [layout.fontScale]
   );
-  const imagePresentation = resolveVionaRec2ImagePresentation({
-    provenance: 'unknown',
-    loadState: 'missing',
-  });
   const normalizedName = displayName?.trim() || null;
   const normalizedRegion = regionLabel?.trim() || null;
 
-  return (
-    <SafeAreaView
-      style={[styles.safeArea, { paddingBottom: layout.shellBottomObstruction }]}
-      edges={['top', 'left', 'right']}
-      onLayout={onRootLayout}
-      testID="viona-rec2-home-shell"
-    >
-      <LinearGradient colors={['#020713', '#04152A', '#020813']} style={styles.background}>
+  useEffect(() => {
+    if (tier === 'desktop') return;
+    setNavOpen(false);
+    setNavPinned(false);
+    setVionaOpen(false);
+    setVionaPinned(false);
+  }, [tier]);
+
+  useEffect(() => {
+    if (Platform.OS !== 'web' || typeof window === 'undefined') return;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape') return;
+      if (navOpen && !navPinned) {
+        setNavOpen(false);
+        return;
+      }
+      if (vionaOpen && !vionaPinned) setVionaOpen(false);
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [navOpen, navPinned, vionaOpen, vionaPinned]);
+
+  const requestNavOpen = (open: boolean) => {
+    setNavOpen(open);
+    if (!open) return;
+    if (tier !== 'desktop' || !vionaPinned) {
+      setVionaOpen(false);
+      if (tier !== 'desktop') setVionaPinned(false);
+    }
+  };
+  const requestVionaOpen = (open: boolean) => {
+    setVionaOpen(open);
+    if (!open) return;
+    if (tier !== 'desktop' || !navPinned) {
+      setNavOpen(false);
+      if (tier !== 'desktop') setNavPinned(false);
+    }
+  };
+
+  const center = (
         <ScrollView
           key={`viona-rec2-home-content-${layout.fontScale}`}
+          style={styles.scroller}
           contentContainerStyle={[
             styles.content,
             {
               paddingHorizontal: layout.horizontalPadding,
-              paddingBottom: layout.contentBreathingClearance,
+              paddingBottom: layout.contentBreathingClearance + layout.shellBottomObstruction,
               gap: layout.gap,
             },
           ]}
           showsVerticalScrollIndicator={false}
         >
-          <LinearGradient colors={['rgba(12, 54, 98, 0.94)', 'rgba(4, 17, 34, 0.96)']} style={styles.hero}>
+          <LinearGradient
+            colors={['rgba(62, 36, 18, 0.55)', 'rgba(12, 54, 98, 0.94)', 'rgba(4, 17, 34, 0.96)']}
+            style={[styles.hero, tier === 'desktop' && styles.heroDesktop, tier === 'tablet' && styles.heroTablet]}
+          >
+            {heroPresentation.mode === 'image' ? (
+              <View pointerEvents="none" style={styles.heroPhoto}>
+                <Image
+                  source={require('../../../../assets/brand/viona/cinematic/photos/hero-night-abstract.webp')}
+                  resizeMode="cover"
+                  accessible={false}
+                  accessibilityIgnoresInvertColors
+                  onError={() => setHeroFailed(true)}
+                  style={styles.heroPhotoFill}
+                />
+              </View>
+            ) : null}
+            <View pointerEvents="none" style={styles.heroScrim} />
             <View style={[styles.commandRow, layout.columns === 1 && styles.commandRowStacked]}>
               <View style={styles.brandBlock}>
+                <View style={styles.brandMark}>
+                  <VionaCraneMark size={tier === 'phone' ? 28 : 36} variant="sapphire" glow={!reducedMotion} />
+                </View>
                 <Text style={[styles.brand, { lineHeight: typography.brandLineHeight }]}>VIONA</Text>
                 <Text style={[styles.brandSubtitle, { lineHeight: typography.microLineHeight }]}>
                   {t('home.rec2.brandSubtitle')}
@@ -262,6 +268,7 @@ export function VionaRec2HomeShell({
                   styles.headerControls,
                   { paddingTop: layout.headerControlTopClearance },
                   layout.columns === 1 && styles.headerControlsStacked,
+                  focusShell && styles.headerControlsDockClearance,
                 ]}
               >
                 <Pressable
@@ -282,6 +289,9 @@ export function VionaRec2HomeShell({
                 >
                   <Ionicons name="notifications-outline" size={20} color="#71879C" />
                 </View>
+                {focusShell && shellPlatform === 'web' && homeCommand ? (
+                  <VionaGlobalSosShellAction onHoldComplete={homeCommand.triggerSafetyAssist} />
+                ) : null}
               </View>
             </View>
 
@@ -307,9 +317,7 @@ export function VionaRec2HomeShell({
             <View style={styles.visualFallback}>
               <Ionicons name="planet-outline" size={23} color="#63C8FF" />
               <Text style={[styles.visualFallbackText, { lineHeight: typography.bodyLineHeight }]}>
-                {imagePresentation.mode === 'gradient-fallback'
-                  ? t('home.rec2.imageFallback')
-                  : t('home.rec2.imageReady')}
+                {t('home.rec2.imageFallback')}
               </Text>
             </View>
           </LinearGradient>
@@ -333,19 +341,50 @@ export function VionaRec2HomeShell({
             </View>
             <View style={[styles.grid, { gap: layout.gap }]}>
               {universes.map((universe) => (
-                <UniverseCard
+                <VionaCinematicUniverseCard
                   key={universe.id}
                   universe={universe}
                   callbacks={universeCallbacks}
-                  width={layout.cardWidth}
+                  width={Math.min(layout.cardWidth, 520)}
                   reducedMotion={reducedMotion}
-                  typography={typography}
+                  imageSource={
+                    universe.id === 'local'
+                      ? require('../../../../assets/brand/viona/cinematic/photos/card-local.webp')
+                      : universe.id === 'travel'
+                        ? require('../../../../assets/brand/viona/cinematic/photos/card-travel.webp')
+                        : universe.id === 'business'
+                          ? require('../../../../assets/brand/viona/cinematic/photos/card-business.webp')
+                          : universe.id === 'academy'
+                            ? require('../../../../assets/brand/viona/cinematic/photos/card-academy.webp')
+                            : universe.id === 'account'
+                              ? require('../../../../assets/brand/viona/cinematic/photos/card-account.webp')
+                              : universe.id === 'sos'
+                                ? require('../../../../assets/brand/viona/cinematic/photos/card-sos.webp')
+                                : undefined
+                  }
                 />
               ))}
             </View>
           </View>
 
-          <VionaRec2AlfredPanel reducedMotion={reducedMotion} />
+          {!focusShell ? (
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={t('home.rec2.alfred.expand')}
+              onPress={() => setCompanionOpen(true)}
+              style={styles.companionEntry}
+            >
+              <VionaCraneMark size={22} variant="sapphire" glow={!reducedMotion} />
+              <Text style={styles.companionEntryText}>{t('home.rec2.alfred.title')}</Text>
+            </Pressable>
+          ) : null}
+          {companionOpen && !focusShell ? (
+            <VionaCinematicCompanion
+              mode="sheet"
+              reducedMotion={reducedMotion}
+              onClose={() => setCompanionOpen(false)}
+            />
+          ) : null}
 
           <Text style={[styles.truthNote, { lineHeight: typography.truthLineHeight }]}>
             {VIONA_REC2_NOTIFICATION_PRESENTATION.availability === 'unavailable'
@@ -353,6 +392,72 @@ export function VionaRec2HomeShell({
               : ''}
           </Text>
         </ScrollView>
+  );
+
+  return (
+    <SafeAreaView
+      style={[styles.safeArea, { paddingBottom: layout.shellBottomObstruction }]}
+      edges={['top', 'left', 'right']}
+      onLayout={onRootLayout}
+      testID="viona-rec2-home-shell"
+    >
+      <LinearGradient colors={['#020713', '#04152A', '#020813']} style={[styles.stage, reserveCompanion && styles.stageRow]}>
+        <View style={styles.center}>{center}</View>
+        {focusShell ? (
+          <VionaCinematicRail
+            universes={universes}
+            callbacks={universeCallbacks}
+            onOpenLanguage={onOpenLanguage}
+            open={navOpen}
+            pinned={navPinned}
+            hoverEnabled={tier === 'desktop' && Platform.OS === 'web'}
+            reducedMotion={reducedMotion}
+            onOpenChange={requestNavOpen}
+            onPinnedChange={(pinned) => {
+              setNavPinned(pinned);
+              if (pinned) setNavOpen(true);
+            }}
+          />
+        ) : null}
+        {focusShell && reserveCompanion ? (
+          <View style={styles.reservedCompanion}>
+            <VionaCinematicCompanion
+              mode="panel"
+              reducedMotion={reducedMotion}
+              pinned={vionaPinned}
+              onPinnedChange={(pinned) => {
+                setVionaPinned(pinned);
+                if (pinned) setVionaOpen(true);
+              }}
+              onClose={() => {
+                setVionaPinned(false);
+                setVionaOpen(false);
+              }}
+            />
+          </View>
+        ) : null}
+        {focusShell && !reserveCompanion ? (
+          <VionaCinematicCompanion
+            mode="dock"
+            reducedMotion={reducedMotion}
+            open={vionaOpen}
+            pinned={vionaPinned}
+            hoverEnabled={tier === 'desktop' && Platform.OS === 'web'}
+            dockBottom={12}
+            onOpenChange={requestVionaOpen}
+            onPinnedChange={(pinned) => {
+              setVionaPinned(pinned);
+              if (pinned) {
+                setVionaOpen(true);
+                if (!navPinned) setNavOpen(false);
+              }
+            }}
+            onClose={() => {
+              setVionaPinned(false);
+              setVionaOpen(false);
+            }}
+          />
+        ) : null}
       </LinearGradient>
     </SafeAreaView>
   );
@@ -361,6 +466,32 @@ export function VionaRec2HomeShell({
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: '#020713' },
   background: { flex: 1 },
+  stage: { flex: 1 },
+  stageRow: { flexDirection: 'row' },
+  center: { flex: 1, minWidth: 0 },
+  scroller: { flex: 1 },
+  headerControlsDockClearance: { marginRight: 56 },
+  reservedCompanion: {
+    width: vionaCinematicTokens.layout.companionWidth,
+    padding: 12,
+    borderLeftWidth: 1,
+    borderLeftColor: 'rgba(148, 196, 232, 0.28)',
+  },
+  heroDesktop: { minHeight: 300 },
+  heroTablet: { minHeight: 260 },
+  brandMark: { marginBottom: 6 },
+  companionEntry: {
+    minHeight: 52,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(125, 211, 252, 0.35)',
+    backgroundColor: 'rgba(8, 20, 36, 0.8)',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    paddingHorizontal: 14,
+  },
+  companionEntryText: { color: '#F4F8FC', fontSize: 16, fontWeight: '700' },
   content: { paddingTop: 10 },
   hero: {
     borderRadius: 26,
@@ -369,18 +500,22 @@ const styles = StyleSheet.create({
     padding: 20,
     gap: 18,
     overflow: 'hidden',
+    minHeight: 220,
   },
-  commandRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 14 },
+  heroPhoto: { ...StyleSheet.absoluteFillObject },
+  heroPhotoFill: { width: '100%', height: '100%' },
+  heroScrim: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(4, 12, 24, 0.62)' },
+  commandRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 14, zIndex: 1 },
   commandRowStacked: { flexDirection: 'column', alignItems: 'stretch' },
-  brandBlock: { gap: 2, flexShrink: 1 },
+  brandBlock: { gap: 8, flexShrink: 1, flexDirection: 'row', alignItems: 'center' },
   brand: { color: '#FFFFFF', fontSize: 25, fontWeight: '300', letterSpacing: 7 },
   brandSubtitle: { color: '#9BB6CC', fontSize: 10, letterSpacing: 1.3 },
   headerControls: { flexDirection: 'row', gap: 8 },
   headerControlsStacked: { alignSelf: 'flex-end' },
   headerButton: {
-    width: 42,
-    height: 42,
-    borderRadius: 21,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
@@ -388,7 +523,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(2, 12, 24, 0.54)',
   },
   headerButtonPressed: { opacity: 0.72, transform: [{ scale: 0.97 }] },
-  heroCopy: { gap: 7, maxWidth: 720 },
+  heroCopy: { gap: 7, maxWidth: 720, zIndex: 1 },
   greeting: { color: '#8FD9FF', fontSize: 13, fontWeight: '700' },
   headline: { color: '#F7FAFF', fontSize: 26, lineHeight: 34, fontWeight: '800' },
   contextRow: { flexDirection: 'row', alignItems: 'center', gap: 5 },
@@ -404,7 +539,8 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(99, 200, 255, 0.26)',
     paddingHorizontal: 12,
     paddingVertical: 8,
-    backgroundColor: 'rgba(3, 15, 29, 0.64)',
+    backgroundColor: 'rgba(3, 15, 29, 0.72)',
+    zIndex: 1,
   },
   visualFallbackText: { color: '#96B5CA', fontSize: 11, flexShrink: 1 },
   stateBanner: {
@@ -436,7 +572,7 @@ const styles = StyleSheet.create({
   cardFocused: { shadowColor: '#57C4FF', shadowOpacity: 0.3, shadowRadius: 14, elevation: 6 },
   cardPressed: { opacity: 0.78, transform: [{ scale: 0.985 }] },
   cardPressedReducedMotion: { opacity: 0.78 },
-  cardDisabled: { opacity: VIONA_REC2_GATED_CARD_CONTENT_OPACITY },
+  cardDisabled: { opacity: 0.92 },
   iconCore: {
     width: 46,
     height: 46,

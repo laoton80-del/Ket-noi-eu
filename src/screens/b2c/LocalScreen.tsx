@@ -71,6 +71,7 @@ import { VionaSosPlusInfoModal } from '../../components/viona/VionaSosPlusInfoMo
 import { SOS_PLUS_PRODUCT_SURFACE_UI_ENABLED } from '../../config/sosPlusSurface';
 import { SOS_PLUS_PROFILE_UI_ENABLED } from '../../config/sosPlusProduction';
 import { localConstellation } from '../../components/local/localConstellationTokens';
+import { LocalRequestOfflineJourney } from '../../components/local/LocalRequestOfflineJourney';
 import { theme } from '../../theme/theme';
 import { FontFamily } from '../../theme/typography';
 
@@ -98,10 +99,13 @@ const VIP_POSTING_COST_VIG = 120;
  * band, and a very subtle emerald/cyan network keeps the field alive while the dark-glass
  * hero/cards remain the visual focus. Theme-invariant by design.
  */
-const LOCAL_PREMIUM_CANVAS = '#0A1622';
-const LOCAL_PREMIUM_SKY_TOP = '#11222C';
+/** Internal LO-03 capability. The entry tile does not display this code. */
+const LO03_ENTRY_CAPABILITY = 'FIXER_HIRE' as const;
+
+const LOCAL_PREMIUM_CANVAS = '#07111C';
+const LOCAL_PREMIUM_SKY_TOP = '#102033';
 const LOCAL_PREMIUM_SKY_BOTTOM = '#06130F';
-const LOCAL_PREMIUM_WARM_GLOW = 'rgba(255, 210, 156, 0.10)';
+const LOCAL_PREMIUM_WARM_GLOW = 'rgba(243, 177, 90, 0.16)';
 const LOCAL_PREMIUM_WARM_GLOW_SOFT = 'rgba(255, 210, 156, 0.03)';
 const LOCAL_PREMIUM_AURORA_EMERALD = 'rgba(72, 210, 165, 0.06)';
 const LOCAL_PREMIUM_AURORA_CYAN = 'rgba(98, 206, 255, 0.045)';
@@ -523,7 +527,7 @@ const DEFAULT_POSTS: readonly ClassifiedPost[] = [
 ];
 
 export function LocalScreen() {
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const { width, height } = useWindowDimensions();
   const navigation = useNavigation<Nav>();
   // Same underlying navigation object as `navigation`, but typed as the bottom-tab navigator so we
@@ -548,6 +552,7 @@ export function LocalScreen() {
   const [languageSheetOpen, setLanguageSheetOpen] = useState(false);
   const [sosHoldGateOpen, setSosHoldGateOpen] = useState(false);
   const [sosPlusInfoOpen, setSosPlusInfoOpen] = useState(false);
+  const [lo03OfflineOpen, setLo03OfflineOpen] = useState(false);
   const homeCommand = useHomeCommand();
   const modalAnim = useSharedValue(0);
 
@@ -944,6 +949,18 @@ export function LocalScreen() {
         >
           <LocalHubCompactStatusGuide />
 
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Gọi thợ sửa chữa. Bản xem trước. Chưa gửi yêu cầu."
+            onPress={() => {
+              if (LO03_ENTRY_CAPABILITY === 'FIXER_HIRE') setLo03OfflineOpen(true);
+            }}
+            style={styles.lo03OfflineEntry}
+          >
+            <Text style={styles.lo03OfflineTitle}>Gọi thợ sửa chữa</Text>
+            <Text style={styles.lo03OfflineBody}>Bản xem trước · Chưa gửi yêu cầu</Text>
+          </Pressable>
+
           <View
             onLayout={(e) => {
               setClassifiedsY(e.nativeEvent.layout.y);
@@ -1058,6 +1075,10 @@ export function LocalScreen() {
           </Reanimated.View>
         </View>
       </Modal>
+
+      {lo03OfflineOpen ? (
+        <LocalRequestOfflineJourney visible onClose={() => setLo03OfflineOpen(false)} />
+      ) : null}
 
       <SmartTrioLanguageSheet visible={languageSheetOpen} onClose={() => setLanguageSheetOpen(false)} />
 
@@ -1452,6 +1473,28 @@ const styles = StyleSheet.create({
   },
   merchantToolsSection: {
     marginTop: 8,
+  },
+  lo03OfflineEntry: {
+    width: '100%',
+    marginTop: 10,
+    marginBottom: 4,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(125, 211, 252, 0.4)',
+    backgroundColor: 'rgba(7, 17, 28, 0.92)',
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+  },
+  lo03OfflineTitle: {
+    color: premiumLuminousInk.titleBright,
+    fontSize: 16,
+    fontFamily: FontFamily.bold,
+  },
+  lo03OfflineBody: {
+    marginTop: 4,
+    color: premiumLuminousInk.subtitle,
+    fontSize: 13,
+    fontFamily: FontFamily.medium,
   },
   connectedUniversesSection: {
     marginTop: 12,

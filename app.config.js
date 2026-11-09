@@ -1,7 +1,34 @@
-require('dotenv').config();
+/**
+ * Opt-in Safe Full UI Preview. Set in the process environment before Expo
+ * starts, together with EXPO_NO_DOTENV=1. This file cannot unload secrets
+ * that Expo CLI already read through @expo/env.
+ */
+const isVionaUiPreview = process.env.VIONA_UI_PREVIEW_ONLY === '1';
+
+if (isVionaUiPreview) {
+  const expoNoDotenv = (process.env.EXPO_NO_DOTENV ?? '').trim().toLowerCase();
+  const expoDotenvDisabled = expoNoDotenv === '1' || expoNoDotenv === 'true';
+  if (!expoDotenvDisabled) {
+    throw new Error(
+      'VIONA_UI_PREVIEW_ONLY=1 requires EXPO_NO_DOTENV=1 (or true) before Expo CLI starts. Refusing preview because @expo/env may already have loaded .env.'
+    );
+  }
+} else {
+  require('dotenv').config();
+}
 
 module.exports = () => {
-  const stripeMerchantIdentifier = process.env.EXPO_PUBLIC_STRIPE_MERCHANT_IDENTIFIER?.trim() ?? '';
+  const stripeMerchantIdentifier = isVionaUiPreview
+    ? ''
+    : (process.env.EXPO_PUBLIC_STRIPE_MERCHANT_IDENTIFIER?.trim() ?? '');
+  const stripePublishableKey = isVionaUiPreview
+    ? ''
+    : (process.env.STRIPE_PUBLISHABLE_KEY?.trim() ?? '');
+  const mapboxPublicToken = isVionaUiPreview
+    ? ''
+    : (process.env.EXPO_PUBLIC_MAPBOX_KEY?.trim() ??
+      process.env.EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN?.trim() ??
+      '');
   const plugins = [
     'react-native-compressor',
     '@react-native-firebase/app',
@@ -146,17 +173,11 @@ module.exports = () => {
       eas: {
         projectId: '2c3531a4-61e9-4c5c-aaeb-3086543ecdc6',
       },
-      /** Injected at build time from root `.env` (see `src/config/env.ts`). Safe for client. */
-      stripePublishableKey: process.env.STRIPE_PUBLISHABLE_KEY?.trim() ?? '',
-      /** Mapbox public token (CEO: `EXPO_PUBLIC_MAPBOX_KEY`); legacy name still supported. */
-      mapboxKey:
-        process.env.EXPO_PUBLIC_MAPBOX_KEY?.trim() ??
-        process.env.EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN?.trim() ??
-        '',
-      mapboxAccessToken:
-        process.env.EXPO_PUBLIC_MAPBOX_KEY?.trim() ??
-        process.env.EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN?.trim() ??
-        '',
+      /** Injected at build time from root `.env` (see `src/config/env.ts`). Safe for client. Empty in Safe Full UI Preview. */
+      stripePublishableKey,
+      /** Mapbox public token (CEO: `EXPO_PUBLIC_MAPBOX_KEY`); legacy name still supported. Empty in Safe Full UI Preview. */
+      mapboxKey: mapboxPublicToken,
+      mapboxAccessToken: mapboxPublicToken,
     },
   }};
 };

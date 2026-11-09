@@ -7267,6 +7267,8 @@ const styles = StyleSheet.create({
   },
   heroCardShell: {
     width: '100%',
+    borderRadius: 20,
+    overflow: 'hidden',
   },
   heroStage: {
     width: '100%',

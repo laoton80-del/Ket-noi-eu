@@ -50,7 +50,7 @@ const SituationGridComponent: React.FC<Props> = ({ onPressSituation }) => {
 
   return (
     <WidgetCard>
-      <Text style={styles.sectionTitle}>{t('academySub.adult.situationSection')}</Text>
+      <Text style={styles.sectionTitle} accessibilityRole="header">{t('academySub.adult.situationSection')}</Text>
       <Text style={styles.hint}>{t('academySub.adult.situationHint')}</Text>
       <View style={styles.grid}>
         {ADULT_SITUATION_ITEM_KEYS.map((key) => {
@@ -60,6 +60,7 @@ const SituationGridComponent: React.FC<Props> = ({ onPressSituation }) => {
               key={key}
               onPress={() => onPressSituation(label)}
               style={styles.chip}
+              accessibilityRole="button"
             >
               <Text style={styles.chipText} numberOfLines={2}>
                 {label}

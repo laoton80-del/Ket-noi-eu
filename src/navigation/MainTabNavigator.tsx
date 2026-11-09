@@ -42,6 +42,8 @@ import {
   isFashionHomeDesktopShell,
   readFocusedTabRouteFromRootState,
 } from './fashionHomeDesktopShell';
+import { resolveFashionHomeShellMode } from './fashionHomeShellMode';
+import { resolveVionaCinematicTier } from '../design/vionaCinematicTokens';
 import { roleTabChrome } from './tabRoleTheme';
 import {
   shouldMountSosInTabBarShell,
@@ -78,6 +80,41 @@ import { VionaShellAccountLanguageActions } from '../components/viona/VionaShell
 import { SOSModal } from '../screens/b2c/SOSModal';
 const Tab = createBottomTabNavigator<RootTabParamList>();
 
+function narrowTabAccessibilityLabel(routeName: string, translate: (key: string) => string): string {
+  switch (routeName) {
+    case MAIN_TAB.B2C.home:
+      return translate('home.tabHub');
+    case MAIN_TAB.B2C.local:
+      return translate('home.tabLocal');
+    case MAIN_TAB.B2C.travel:
+      return translate('home.tabTravel');
+    case MAIN_TAB.B2C.ai:
+      return translate('home.tabAcademy');
+    case MAIN_TAB.B2B.merchant:
+      return 'Dashboard';
+    case MAIN_TAB.B2B.catalog:
+      return 'Menu';
+    case MAIN_TAB.B2B.orders:
+      return 'Orders';
+    case MAIN_TAB.B2B.earnings:
+      return 'Wallet';
+    case MAIN_TAB.BROKER.radar:
+      return 'Radar';
+    case MAIN_TAB.BROKER.merchants:
+      return 'Merchants';
+    case MAIN_TAB.BROKER.qr:
+      return 'QR';
+    case MAIN_TAB.BROKER.commissions:
+      return 'Commissions';
+    case MAIN_TAB.BROKER.wallet:
+      return 'Wallet';
+    case MAIN_TAB.ADMIN.deck:
+      return 'Command Center';
+    default:
+      return routeName;
+  }
+}
+
 /** Web-only overlay reserves. Native bottom shell uses a non-overlapping chrome row (P1-V11). */
 const WEB_BOTTOM_SHELL_ACCOUNT_LANGUAGE_RESERVE = 120;
 const WEB_BOTTOM_SHELL_ACCOUNT_LANGUAGE_RESERVE_WITH_ROLE = 168;
@@ -113,7 +150,11 @@ function BrokerRoleMvpDisabledSurface(): ReactElement {
 function B2BMvpMerchantDashboard(): ReactElement {
   const flags = useMemo(() => getFeatureFlags(), []);
   if (!flags.merchantDashboardEnabled) return <B2BMvpDisabledSurface />;
-  return <MerchantDashboardScreen />;
+  return (
+    <View style={styles.businessChrome}>
+      <MerchantDashboardScreen />
+    </View>
+  );
 }
 
 function B2BMvpCatalog(): ReactElement {
@@ -274,14 +315,38 @@ export function MainTabNavigator(): ReactElement {
     [currentActiveRole, focusedTabRoute, width]
   );
 
+  // REC2 owns its own tablet/desktop navigation. Keep the Reconstruction shell
+  // predicate above intact for the feature-flag rollback path.
+  const rec2HomeIntegratedShell =
+    flags.rec2HomeShellEnabled &&
+    Platform.OS === 'web' &&
+    resolveVionaCinematicTier(width) !== 'phone' &&
+    resolveFashionHomeShellMode({
+      platform: Platform.OS,
+      windowWidth: width,
+      activeRole: currentActiveRole,
+      focusedTabRoute,
+    }) !== 'legacy';
+  const integratedHomeShell = fashionHomeDesktopShell || rec2HomeIntegratedShell;
+
+  // Before the focused tab resolves, prefer the Home-owned held action on a
+  // wide REC2 B2C surface; do not briefly mount a second tab-chrome action.
+  const rec2HomeOwnsSos =
+    flags.rec2HomeShellEnabled &&
+    Platform.OS === 'web' &&
+    resolveVionaCinematicTier(width) !== 'phone' &&
+    currentActiveRole === 'B2C' &&
+    (focusedTabRoute == null || focusedTabRoute === MAIN_TAB.B2C.home);
+
   const mountSosInTabBarShell = shouldMountSosInTabBarShell({
     role: currentActiveRole,
     focusedTabRoute,
     fashionHomeDesktopShell,
+    rec2HomeIntegratedShell: rec2HomeOwnsSos,
   });
 
   /** Shell language sheet: fashion command bar + tab-chrome account/language hosts. */
-  const mountShellLanguageSheet = fashionHomeDesktopShell || mountSosInTabBarShell;
+  const mountShellLanguageSheet = integratedHomeShell || mountSosInTabBarShell;
 
   useEffect(() => {
     if (!mountShellLanguageSheet) setLanguageSheetOpen(false);
@@ -301,8 +366,10 @@ export function MainTabNavigator(): ReactElement {
     profileSwitcherRef.current?.openRolePicker();
   }, [offlineBoundary.remoteNavigationAllowed]);
 
-  const b2cDesktopBottomTabs = isDesktopWeb && currentActiveRole === 'B2C' && !fashionHomeDesktopShell;
-  const tabBarPosition = b2cDesktopBottomTabs ? 'bottom' : isDesktopWeb ? 'left' : 'bottom';
+  const b2cDesktopBottomTabs = isDesktopWeb && currentActiveRole === 'B2C' && !integratedHomeShell;
+  // REC2 Home owns wide-screen navigation; its hidden outer bar must not reserve a left rail.
+  const tabBarPosition = rec2HomeIntegratedShell || b2cDesktopBottomTabs ? 'bottom' : isDesktopWeb ? 'left' : 'bottom';
+  const iconFirstBottomTabs = tabBarPosition === 'bottom' && width <= 360;
 
   const renderTabBar = useCallback(
     (props: BottomTabBarProps) => {
@@ -465,7 +532,7 @@ export function MainTabNavigator(): ReactElement {
     ]
   );
 
-  const b2cHomeDesktopScene = fashionHomeDesktopShell;
+  const b2cHomeDesktopScene = integratedHomeShell;
   const sceneTopPadding = !isDesktopWeb
     ? 0
     : b2cHomeDesktopScene
@@ -611,6 +678,8 @@ export function MainTabNavigator(): ReactElement {
           })}
           screenOptions={({ route }) => ({
             headerShown: false,
+            tabBarShowLabel: !iconFirstBottomTabs,
+            tabBarAccessibilityLabel: iconFirstBottomTabs ? narrowTabAccessibilityLabel(route.name, t) : undefined,
             tabBarPosition,
             tabBarActiveTintColor: chrome.active,
             tabBarInactiveTintColor: chrome.inactive,
@@ -689,10 +758,10 @@ export function MainTabNavigator(): ReactElement {
                   },
               tabBarPosition === 'bottom' ? TAB_BAR_WEB_GLASS : null,
               tabBarPosition === 'left' && styles.tabBarDesktop,
-              fashionHomeDesktopShell && fashionHomeHiddenTabBarStyle,
+              integratedHomeShell && fashionHomeHiddenTabBarStyle,
             ],
             sceneStyle: {
-              backgroundColor: fashionHomeDesktopShell ? vionaTokens.fashionTech.canvas : chrome.barBg,
+              backgroundColor: integratedHomeShell ? vionaTokens.fashionTech.canvas : chrome.barBg,
               paddingTop: sceneTopPadding,
             },
             tabBarLabel:
@@ -734,7 +803,7 @@ export function MainTabNavigator(): ReactElement {
                 options={{
                   title: t('home.tabHub'),
                   ...resolveVionaHomeRouteTabBarStyleOverride(
-                    fashionHomeDesktopShell,
+                    integratedHomeShell,
                     fashionHomeHiddenTabBarStyle
                   ),
                 }}
@@ -976,9 +1045,18 @@ const styles = StyleSheet.create({
     borderTopWidth: StyleSheet.hairlineWidth,
     minHeight: 56,
   },
+  businessChrome: {
+    flex: 1,
+    backgroundColor: '#07111C',
+    borderTopWidth: 3,
+    borderTopColor: '#3DDC97',
+    paddingTop: 4,
+  },
   tabBar: {
     position: 'absolute',
     borderTopWidth: 1,
+    borderTopColor: 'rgba(125, 211, 252, 0.28)',
+    backgroundColor: '#07111C',
     elevation: 8,
     shadowColor: '#0B1628',
     shadowOffset: { width: 0, height: -4 },

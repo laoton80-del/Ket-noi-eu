@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 
 import { useTranslation } from '../../../i18n';
+import { VionaCraneMark } from '../brand/VionaCraneMark';
 import {
   openVionaRec2AlfredUi,
   resolveVionaRec2AlfredPresentation,
@@ -52,7 +53,7 @@ export function VionaRec2AlfredPanel({
     <LinearGradient colors={['#071B35', '#06101F', '#030812']} style={styles.panel}>
       <View style={styles.header}>
         <View style={styles.core} accessibilityElementsHidden>
-          <Ionicons name="sparkles" size={25} color="#7FD6FF" />
+          <VionaCraneMark size={28} variant="sapphire" glow={!reducedMotion} />
         </View>
         <View style={styles.headingCopy}>
           <Text

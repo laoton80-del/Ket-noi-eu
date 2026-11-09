@@ -26,7 +26,7 @@ const QuickPhrasesCardComponent: React.FC<Props> = ({
 
   return (
     <WidgetCard>
-      <Text style={styles.title}>{t('academySub.adult.quickPhrasesTitle')}</Text>
+      <Text style={styles.title} accessibilityRole="header">{t('academySub.adult.quickPhrasesTitle')}</Text>
       <Text style={styles.hint}>{t('academySub.adult.quickPhrasesHint')}</Text>
       <View style={styles.list}>
         {phrases.map((phrase) => (
@@ -35,6 +35,8 @@ const QuickPhrasesCardComponent: React.FC<Props> = ({
             onPress={() => onPressPhrase?.(phrase)}
             style={styles.row}
             disabled={!onPressPhrase}
+            accessibilityRole="button"
+            accessibilityState={{ disabled: !onPressPhrase }}
           >
             <Text style={[styles.phrase, !onPressPhrase && styles.phraseMuted]}>
               {phrase}

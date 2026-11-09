@@ -773,13 +773,13 @@ export function CaNhanScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: ft.canvas,
+    backgroundColor: '#07111C',
     overflow: 'hidden',
   },
   screenBackdrop: {
     ...StyleSheet.absoluteFillObject,
     zIndex: 0,
-    backgroundColor: ft.canvas,
+    backgroundColor: '#07111C',
     overflow: 'hidden',
   },
   constellationFrame: {

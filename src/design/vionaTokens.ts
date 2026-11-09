@@ -144,6 +144,14 @@ export const vionaTokens = {
       care: ['#140c12', '#1a1418', '#120e14'] as const,
     },
   },
+  /** Cinematic Companion OS aliases. Does not replace the light-surface palette above. */
+  cinematic: {
+    midnight: '#07111C',
+    sapphire: '#123A66',
+    ice: '#F4F8FC',
+    cyan: '#7DD3FC',
+    gold: '#E7C27A',
+  },
 } as const;
 
 export type VionaTokens = typeof vionaTokens;
