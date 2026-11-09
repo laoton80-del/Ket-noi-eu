@@ -63,3 +63,7 @@ $$ LANGUAGE plpgsql;
 CREATE TRIGGER "AuthorityLedgerEntry_append_only"
   BEFORE UPDATE OR DELETE ON "AuthorityLedgerEntry"
   FOR EACH ROW EXECUTE FUNCTION "viona_reject_authority_ledger_mutation"();
+
+CREATE TRIGGER "AuthorityLedgerEntry_no_truncate"
+  BEFORE TRUNCATE ON "AuthorityLedgerEntry"
+  FOR EACH STATEMENT EXECUTE FUNCTION "viona_reject_authority_ledger_mutation"();

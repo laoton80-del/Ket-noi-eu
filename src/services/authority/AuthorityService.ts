@@ -111,7 +111,7 @@ function canonicalValue(value: unknown, stack: Set<object>): unknown {
   if (isPlainObject(value)) {
     if (stack.has(value)) throw new TypeError('Canonical JSON does not support cycles');
     stack.add(value);
-    const result: Record<string, unknown> = {};
+    const result: Record<string, unknown> = Object.create(null) as Record<string, unknown>;
     for (const key of Object.keys(value).sort()) {
       const item = value[key];
       if (item === undefined || typeof item === 'function' || typeof item === 'symbol' || typeof item === 'bigint') {
@@ -193,19 +193,36 @@ export class AuthorityService {
   ) {}
 
   async issue(input: AuthorityIssueInput): Promise<AuthorityRecord> {
+    const subjectId = input.subjectId;
+    const tenantId = input.tenantId;
+    const exactTarget = input.exactTarget;
+    const actionKind = input.actionKind;
+    const maxAttempts = input.maxAttempts;
+    const expiresAt = input.expiresAt;
+    const currency = input.currency;
+    const maxCostMinor = input.maxCostMinor;
     if (
-      !nonEmpty(input.subjectId) || !nonEmpty(input.tenantId) || !nonEmpty(input.exactTarget) ||
-      input.actionKind !== 'VOICE_CALL_BOOKING' || input.maxAttempts !== 1 ||
-      !(input.expiresAt instanceof Date) || !Number.isFinite(input.expiresAt.getTime()) ||
-      input.expiresAt.getTime() <= Date.now() || !/^[A-Z]{3}$/.test(input.currency) ||
-      input.maxCostMinor < 0n
+      !nonEmpty(subjectId) || !nonEmpty(tenantId) || !nonEmpty(exactTarget) ||
+      actionKind !== 'VOICE_CALL_BOOKING' || maxAttempts !== 1 ||
+      !(expiresAt instanceof Date) || !Number.isFinite(expiresAt.getTime()) ||
+      expiresAt.getTime() <= Date.now() || !/^[A-Z]{3}$/.test(currency) ||
+      maxCostMinor < 0n
     ) {
       throw new Error('Authority issue input failed closed validation');
     }
+    // Snapshot before any await so a concurrent caller mutation cannot change what was approved/stored.
     const prepareSha256 = prepareHash(input.preparePayload);
-    const decision = await this.policy.authorizeIssue(input);
+    const disclosuresJson = canonicalize(input.allowedDisclosures);
+    const constraintsJson = canonicalize(input.constraints);
+    const expiresAtUtc = utcTimestampWithoutZone(expiresAt);
+    const maxCostMinorText = maxCostMinor.toString();
+    const snapshot: AuthorityIssueInput = Object.freeze({
+      subjectId, tenantId, actionKind, exactTarget, maxAttempts, expiresAt, currency, maxCostMinor,
+      allowedDisclosures: input.allowedDisclosures, constraints: input.constraints, preparePayload: input.preparePayload,
+    });
+    const decision = await this.policy.authorizeIssue(snapshot);
     if (
-      !decision.allowed || !nonEmpty(decision.policyVersion) || !nonEmpty(decision.issuedBy) ||
+      decision.allowed !== true || !nonEmpty(decision.policyVersion) || !nonEmpty(decision.issuedBy) ||
       !nonEmpty(decision.approvalRef) || !nonEmpty(decision.contextBinding)
     ) {
       throw new Error(`Authority issue denied${decision.reason ? `: ${decision.reason}` : ''}`);
@@ -223,18 +240,18 @@ export class AuthorityService {
            $12::jsonb, $13::jsonb, 'ACTIVE_UNUSED', $14, $15, $16, (now() AT TIME ZONE 'UTC'), NULL
          ) RETURNING *`,
         authorityId,
-        input.subjectId,
-        input.tenantId,
+        subjectId,
+        tenantId,
         decision.policyVersion,
         prepareSha256,
-        input.actionKind,
-        input.exactTarget,
-        input.maxAttempts,
-        utcTimestampWithoutZone(input.expiresAt),
-        input.currency,
-        input.maxCostMinor.toString(),
-        canonicalize(input.allowedDisclosures),
-        canonicalize(input.constraints),
+        actionKind,
+        exactTarget,
+        maxAttempts,
+        expiresAtUtc,
+        currency,
+        maxCostMinorText,
+        disclosuresJson,
+        constraintsJson,
         decision.issuedBy,
         decision.approvalRef,
         decision.contextBinding
@@ -243,7 +260,7 @@ export class AuthorityService {
       const authority = authorityFromRow(rows[0]);
       await this.appendLedger(transaction, authorityId, 'ISSUED', {
         policyVersion: decision.policyVersion,
-        actionKind: input.actionKind,
+        actionKind,
       });
       return authority;
     }, TRANSACTION_OPTIONS);
@@ -254,7 +271,7 @@ export class AuthorityService {
     const contextHash = prepareHash(context.preparePayload);
     return this.database.$transaction(async (transaction) => {
       const rows = await transaction.$queryRawUnsafe<AuthorityDbRow[]>(
-        `SELECT *, ("expiresAt" > (now() AT TIME ZONE 'UTC')) AS "isNotExpired"
+        `SELECT *, ("expiresAt" > (clock_timestamp() AT TIME ZONE 'UTC')) AS "isNotExpired"
            FROM "AuthorityRecord"
           WHERE "authorityId" = $1::uuid`,
         authorityId
@@ -279,7 +296,7 @@ export class AuthorityService {
         return { consumed: false, reason: 'ALREADY_CONSUMED' } as const;
       }
       const policyDecision = await this.policy.authorizeConsume(record, context);
-      if (!policyDecision.allowed) {
+      if (policyDecision.allowed !== true) {
         await this.appendLedger(transaction, authorityId, 'CONSUME_REJECTED', {
           reason: policyDecision.reason ?? 'current_policy_rejected',
         });
@@ -288,10 +305,10 @@ export class AuthorityService {
       const consumedRows = await transaction.$queryRawUnsafe<AuthorityRow[]>(
         `UPDATE "AuthorityRecord"
             SET "state" = 'CONSUMED',
-                "consumedAt" = date_trunc('milliseconds', now() AT TIME ZONE 'UTC')
+                "consumedAt" = date_trunc('milliseconds', clock_timestamp() AT TIME ZONE 'UTC')
           WHERE "authorityId" = $1::uuid
             AND "state" = 'ACTIVE_UNUSED'
-            AND "expiresAt" > (now() AT TIME ZONE 'UTC')
+            AND "expiresAt" > (clock_timestamp() AT TIME ZONE 'UTC')
           RETURNING *`,
         authorityId
       );

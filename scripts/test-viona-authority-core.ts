@@ -126,6 +126,10 @@ async function main(): Promise<void> {
   assert.throws(() => canonicalize({ value: Number.NaN }), /non-finite/);
   assert.throws(() => canonicalize({ value: 1n }), /unsupported value/);
   console.log('PASS canonical JSON ordering, UTF-8 SHA-256, changed payload, and unsupported values');
+  // B1: __proto__ own-key must not collapse to {} (hash binding integrity)
+  assert.equal(canonicalize(JSON.parse('{"__proto__":{"x":1}}')), '{"__proto__":{"x":1}}');
+  assert.notEqual(prepareHash(JSON.parse('{"__proto__":{"x":1}}')), prepareHash({}));
+  console.log('PASS __proto__ payload is canonicalized distinctly (no hash collision)');
 
   const unissuedDb = new MemoryAuthorityDatabase();
   const unissuedService = new AuthorityService(unissuedDb, policyProvider());
@@ -148,6 +152,29 @@ async function main(): Promise<void> {
   assert.equal(changedDb.ledger.some((entry) => entry.entryType === 'CONSUMED'), false);
   console.log('PASS payload mutation is rejected and audited as CONSUME_REJECTED');
 
+  const snapshotDb = new MemoryAuthorityDatabase();
+  const mutableIssueInput = issueInput({ target: 'appointment:123', note: 'snapshot' });
+  const snapshotService = new AuthorityService(snapshotDb, {
+    authorizeIssue: async (snapshot) => {
+      await Promise.resolve();
+      (mutableIssueInput as any).exactTarget = 'MUTATED';
+      assert.equal(snapshot.exactTarget, 'appointment:123');
+      return {
+        allowed: true,
+        policyVersion: 'policy-v1',
+        issuedBy: 'server:authority-test',
+        approvalRef: 'approval:test-fixture',
+        contextBinding: 'context-binding:test-fixture',
+      };
+    },
+    authorizeConsume: async () => ({ allowed: true }),
+  });
+  const snapshotIssued = await snapshotService.issue(mutableIssueInput);
+  assert.equal(snapshotIssued.exactTarget, 'appointment:123');
+  assert.equal(snapshotDb.records.get(snapshotIssued.authorityId)?.exactTarget, 'appointment:123');
+  assert.equal((mutableIssueInput as any).exactTarget, 'MUTATED');
+  console.log('PASS issue() snapshots input against concurrent mutation');
+
   const srcRoot = resolve(__dirname, '..', 'src');
   const writer = /\b(?:INSERT\s+INTO|UPDATE)\s+"?(?:AuthorityRecord|AuthorityLedgerEntry)"?\b|\.authority(?:Record|LedgerEntry)\.(?:create|createMany|update|updateMany|upsert|delete|deleteMany)\s*\(/i;
   const outOfModuleWriters = sourceFiles(srcRoot)
@@ -159,7 +186,7 @@ async function main(): Promise<void> {
   assert.match(envDoc, /separate database role/i);
   assert.match(envDoc, /planner\/AI/i);
   console.log('PASS static single-writer guard and deploy-role requirement');
-  console.log('4 authority core checks passed.');
+  console.log('6 authority core checks passed.');
 }
 
 void main().catch((error: unknown) => {
