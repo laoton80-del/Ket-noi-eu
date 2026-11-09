@@ -426,6 +426,47 @@ async function main(): Promise<void> {
       assert.deepEqual(await governor.reconcileStale(), { released: 0, markedUnknown: 0, settled: 0, skipped: 0 });
     });
 
+    await test('7: reconcile does not release an operation that wins markDispatching', async () => {
+      await resetCostTables(prisma!);
+      setFixtureConfig();
+      const operationId = await reserveOne(governor, 'recon-race-dispatching', 'race-dispatching');
+      await setExpired(prisma!, operationId);
+      // Keep the row eligible for markDispatching while its expiry remains stale for reconciliation.
+      await prisma!.$executeRawUnsafe(
+        `UPDATE "AiCostOperation"
+            SET "createdAt" = (clock_timestamp() AT TIME ZONE 'UTC')
+          WHERE "id" = $1`,
+        operationId
+      );
+
+      const [reconcileResult, dispatchingResult] = await Promise.all([
+        governor.reconcileOperation(operationId),
+        governor.markDispatching(operationId),
+      ]);
+      const reconcileWon = reconcileResult === 'released';
+      const dispatchingWon = dispatchingResult;
+      assert.notEqual(reconcileWon, dispatchingWon, 'exactly one transition must win from RESERVED');
+
+      const stored = await operation(prisma!, operationId);
+      const releaseCount = await ledgerCount(prisma!, operationId, 'RELEASE');
+      assert.ok(releaseCount <= 1, 'release must not be recorded more than once');
+
+      if (reconcileWon) {
+        assert.equal(stored.status, 'RELEASED');
+        assert.equal(dispatchingResult, false);
+        assert.equal(releaseCount, 1);
+        assert.deepEqual(await counter(prisma!, 'GLOBAL_DAY'), { reservedMicrousd: 0n, settledMicrousd: 0n });
+      } else {
+        assert.equal(dispatchingResult, true);
+        assert.equal(reconcileResult, 'skipped', 'a changed status must prevent reconciliation release');
+        assert.equal(stored.status, 'DISPATCHING');
+        assert.deepEqual(await counter(prisma!, 'GLOBAL_DAY'), {
+          reservedMicrousd: RESERVE_AMOUNT,
+          settledMicrousd: 0n,
+        });
+      }
+    });
+
     console.log(`\n${passed} reconciliation PostgreSQL tests passed with ${testTimeZone}.`);
   } finally {
     if (prisma) await runPhase('prisma.$disconnect', () => prisma!.$disconnect()).catch(() => undefined);
