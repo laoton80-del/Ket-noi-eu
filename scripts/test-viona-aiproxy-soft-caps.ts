@@ -18,7 +18,7 @@ const root = resolve(__dirname, '..');
 const lf = (bytes: Buffer): Buffer => Buffer.from(bytes.toString('latin1').replace(/\r\n/g, '\n'), 'latin1');
 const indexText = readFileSync(resolve(root, 'functions/src/index.ts'), 'utf8').replace(/\r\n/g, '\n');
 const indexAst = ts.createSourceFile('index.ts', indexText, ts.ScriptTarget.Latest, true);
-const targetNames = new Set(['aiProxy', 'analyzeDocumentProxy']);
+const targetNames = new Set(['aiProxy', 'analyzeDocumentProxy', 'walletOps']);
 const parserNames = new Set(['safeJsonParse', 'extractJsonObject', 'parseDocumentResultOrThrow']);
 function approvedStatement(statement: ts.Statement): boolean {
   return ts.isVariableStatement(statement) && statement.declarationList.declarations.every((declaration) =>
@@ -34,14 +34,17 @@ const selected = indexAst.statements.filter((statement) =>
   || (ts.isTypeAliasDeclaration(statement) && statement.name.text === 'DocumentParseResult')
 );
 assert.equal(selected.filter((statement) => ts.isVariableStatement(statement)
-  && statement.declarationList.declarations.some((d) => ts.isIdentifier(d.name) && targetNames.has(d.name.text))).length, 2);
+  && statement.declarationList.declarations.some((d) => ts.isIdentifier(d.name) && targetNames.has(d.name.text))).length, 3);
 const handlerSource = `
 import { logger } from 'firebase-functions/v2';
 import { HttpsError, onRequest } from 'firebase-functions/v2/https';
+import { getFirestore } from 'firebase-admin/firestore';
+import { requireFirebaseBearerUser } from './walletAuth';
 import { verifyAppCheckForRequest } from './appCheckGate';
 import { takeAiProxyRateSlot } from './aiProxyRateLimit';
 import { AI_PROXY_MAX_BODY_BYTES, parseAndValidateChatPayload, requestBodyByteLength, validateSttPayload, validateTtsPayload } from './aiProxyValidation';
 import { proxyChat, proxyStt, proxyTts } from './openaiProxy';
+const db = getFirestore();
 ${selected.map((statement) => indexText.slice(statement.getFullStart(), statement.end)).join('\n')}
 `;
 
@@ -60,7 +63,7 @@ type Endpoint = {
   options: Record<string, unknown>;
   handler: (req: RequestFixture, res: ResponseFixture) => Promise<void>;
 };
-type EndpointName = 'aiProxy' | 'analyzeDocumentProxy';
+type EndpointName = 'aiProxy' | 'analyzeDocumentProxy' | 'walletOps';
 type LogRecord = { level: string; message: string; data?: unknown };
 const TOKEN_MARKER = 'OFFLINE_FIREBASE_ID_TOKEN_NEVER_LOG';
 const APP_CHECK_MARKER = 'OFFLINE_APP_CHECK_TOKEN_NEVER_LOG';
@@ -87,6 +90,16 @@ function harness(options: {
   const logger = Object.fromEntries(['info', 'warn', 'error'].map((level) => [level,
     (message: unknown, data?: unknown) => logs.push({ level, message: String(message), data }),
   ]));
+  const db = {
+    collection: (name: string) => {
+      assert.equal(name, 'wallets');
+      return {
+        doc: (uid: string) => ({
+          get: async () => ({ data: () => ({ credits: uid === 'anonymous-user' ? 7 : 11, lifetimeSpent: 2 }) }),
+        }),
+      };
+    },
+  };
   class FakeHttpsError extends Error {
     constructor(readonly code: string, message: string) { super(message); this.name = 'HttpsError'; }
   }
@@ -138,6 +151,7 @@ function harness(options: {
   const validation = load<typeof Validation>('functions/src/aiProxyValidation.ts');
   const rate = load<typeof Rate>('functions/src/aiProxyRateLimit.ts');
   const walletAuth = load<{
+    requireFirebaseBearerUser: (req: RequestFixture) => Promise<{ ok: true; uid: string } | { ok: false; status: number; error: string }>;
     requireFirebaseBearerUserDecoded: (req: RequestFixture) => Promise<unknown>;
   }>('functions/src/walletAuth.ts', {
     'firebase-admin/auth': { getAuth: () => ({ verifyIdToken: async (token: string) => {
@@ -150,6 +164,7 @@ function harness(options: {
   const upstream = load('functions/src/openaiProxy.ts');
   const endpoints = load<Record<EndpointName, Endpoint>>('functions/src/index.ts', {
     'firebase-functions/v2': { logger },
+    'firebase-admin/firestore': { getFirestore: () => db },
     'firebase-functions/v2/https': {
       HttpsError: FakeHttpsError,
       onRequest: (config: Record<string, unknown>, handler: Endpoint['handler']) => ({ options: config, handler }),
@@ -158,7 +173,7 @@ function harness(options: {
     './aiProxyRateLimit': rate,
     './openaiProxy': upstream,
     './walletAuth': {
-      requireFirebaseBearerUser: () => { throw new Error('Legacy uid-only auth helper must not be used'); },
+      requireFirebaseBearerUser: (req: RequestFixture) => walletAuth.requireFirebaseBearerUser(req),
       requireFirebaseBearerUserDecoded: (req: RequestFixture) => {
         counts.decoded += 1;
         return walletAuth.requireFirebaseBearerUserDecoded(req);
@@ -166,7 +181,7 @@ function harness(options: {
     },
     './appCheckGate': { verifyAppCheckForRequest: async (req: RequestFixture, surface: string) => {
       counts.appCheck += 1;
-      assert.equal(surface, 'aiProxy');
+      assert.ok(surface === 'aiProxy' || surface === 'walletOps');
       return req.header('x-firebase-appcheck') === `${APP_CHECK_MARKER}_invalid`
         ? { ok: false, status: 401, error: 'app_check_invalid' } : { ok: true };
     } },
@@ -210,12 +225,20 @@ function harness(options: {
     const logStart = logs.length;
     await endpoints[name].handler(req, res);
     const requestLogs = logs.slice(logStart).filter((log) => log.message === `[${name}] request`);
-    assert.equal(requestLogs.length, 1, 'each request must emit exactly one structured provider observation');
-    assert.ok(Object.prototype.hasOwnProperty.call(requestLogs[0].data, 'signInProvider'));
+    if (name === 'walletOps') {
+      assert.equal(requestLogs.length, result.status === 200 ? 1 : 0);
+    } else {
+      assert.equal(requestLogs.length, 1, 'each request must emit exactly one structured provider observation');
+      assert.ok(Object.prototype.hasOwnProperty.call(requestLogs[0].data, 'signInProvider'));
+    }
     noTokenLogs();
     return result;
   }
-  return { endpoints, validation, rate, logs, requests, counts, call, noTokenLogs, advance: (ms: number) => { now += ms; } };
+  return {
+    endpoints, validation, rate, walletAuth, logs, requests, counts, call, noTokenLogs,
+    registerIdentity: (token: string, uid: string, provider: string) => identities.set(token, { uid, provider }),
+    advance: (ms: number) => { now += ms; },
+  };
 }
 
 function assertError(response: { status: number; body: Record<string, unknown> }, status: number, error: string): void {
@@ -234,12 +257,12 @@ async function test(name: string, run: () => Promise<void> | void): Promise<void
 }
 
 async function main(): Promise<void> {
-  await test('only approved index blocks/config changed; walletAuth and functions/lib remain untouched', () => {
+  await test('only approved handler/auth blocks changed; generated bundle identity matches', () => {
     const hash = (bytes: string | Buffer) => createHash('sha256').update(bytes).digest('hex').toUpperCase();
-    assert.equal(hash(protectedIndex), '7D76BA04105498556A5B3C3879D3DD332FCDEC2FBDBFA2B4E058FAE544ECFC71');
+    assert.equal(hash(protectedIndex), '2FE73F227357597DB49329CB2A13A9FB083A654BF91BC296B0E11E65553560A0');
     assert.equal(hash(lf(readFileSync(resolve(root, 'functions/src/walletAuth.ts')))), '71C10E0935D1EE954C4A38E6750CBA9F4BDA8BB4C74D017F23B09D9873F25512');
-    // updated after functions/lib rebuild d2223d8
-    assert.equal(hash(readFileSync(resolve(root, 'functions/lib/index.js'))), 'E0AD5F20C5BCC0398137943C89B84C4077A91BA1306F9580A0A08644AD135B5D');
+    // Updated after the Firebase stopgap functions/lib rebuild.
+    assert.equal(hash(readFileSync(resolve(root, 'functions/lib/index.js'))), '61396AE622882D6AF3039C9FF6FBB1E3776383D9301919D46EA70347087E3DE0');
   });
   for (const [requested, expected] of [[undefined, 240], [512, 512], [513, 512], [8192, 512], [3.8, 3], [-1, 1], [NaN, 240], [Infinity, 240]] as const) {
     await test(`chat maxTokens ${String(requested)} is bounded at ${expected}`, () => {
@@ -288,6 +311,40 @@ async function main(): Promise<void> {
     assert.equal(h.requests.length, 2);
   });
 
+  await test('AI_PROXY_KILL returns exact 503 for chat, vision, STT, TTS, and document before provider calls', async () => {
+    const h = harness({ env: { AI_PROXY_KILL: '1' } });
+    const operations: Array<[EndpointName, Record<string, unknown>]> = [
+      ['aiProxy', CHAT],
+      ['aiProxy', { ...CHAT, messages: [{ role: 'user', content: [image()] }] }],
+      ['aiProxy', { op: 'stt', base64Audio: 'QUFBQQ==', mime: 'audio/mp4' }],
+      ['aiProxy', { op: 'tts', text: 'Synthetic speech', voice: 'nova' }],
+      ['analyzeDocumentProxy', DOCUMENT],
+    ];
+    for (const [name, body] of operations) {
+      const response = await h.call(name, body, { noToken: true });
+      assert.equal(response.status, 503);
+      assert.equal(response.body.error, 'ai_temporarily_disabled');
+      assert.deepEqual(Object.keys(response.body), ['error']);
+    }
+    assert.equal(h.requests.length, 0);
+    assert.equal(h.counts.decoded, 0);
+  });
+
+  await test('uid rate limit is reached before chat, vision, STT, and TTS dispatch', async () => {
+    const operations: Array<[string, Record<string, unknown>]> = [
+      ['chat', CHAT],
+      ['vision', { ...CHAT, messages: [{ role: 'user', content: [image()] }] }],
+      ['stt', { op: 'stt', base64Audio: 'QUFBQQ==', mime: 'audio/mp4' }],
+      ['tts', { op: 'tts', text: 'Synthetic speech', voice: 'nova' }],
+    ];
+    for (const [label, body] of operations) {
+      const h = harness({ env: { AI_PROXY_MAX_RPM: '1' } });
+      assert.equal((await h.call('aiProxy', body, { uid: `uid-${label}` })).status, 200, `${label} first request`);
+      assertError(await h.call('aiProxy', body, { uid: `uid-${label}` }), 429, 'rate_limited');
+      assert.equal(h.requests.length, 1, `${label} only reaches provider once`);
+    }
+  });
+
   for (const [name, emulator, dev] of [
     ['outside emulator', undefined, undefined], ['outside emulator with dev flag', undefined, '1'],
     ['false emulator marker', 'false', '1'], ['non-exact emulator marker', 'TRUE', '1'],
@@ -318,20 +375,13 @@ async function main(): Promise<void> {
   });
   for (const name of ['aiProxy', 'analyzeDocumentProxy'] as const) {
     const body = name === 'aiProxy' ? CHAT : DOCUMENT;
-    for (const flag of [undefined, '0']) {
-      await test(`${name}: anonymous token stays allowed with block flag ${String(flag)}`, async () => {
-        const h = harness({ env: { AI_PROXY_BLOCK_ANONYMOUS: flag } });
-        assert.equal((await h.call(name, body, { provider: 'anonymous' })).status, 200);
-        assert.equal(providerLog(h, name).signInProvider, 'anonymous'); assert.equal(h.requests.length, 1);
-      });
-    }
-    await test(`${name}: block flag rejects anonymous token with 403 and zero fetch`, async () => {
-      const h = harness({ env: { AI_PROXY_BLOCK_ANONYMOUS: '1' } });
-      assertError(await h.call(name, body, { provider: 'anonymous' }), 403, 'anonymous_not_allowed');
-      assert.equal(providerLog(h, name).signInProvider, 'anonymous'); assert.equal(h.requests.length, 0);
+    await test(`${name}: valid anonymous Firebase token is accepted`, async () => {
+      const h = harness();
+      assert.equal((await h.call(name, body, { uid: 'anonymous-user', provider: 'anonymous' })).status, 200);
+      assert.equal(providerLog(h, name).signInProvider, 'anonymous'); assert.equal(h.requests.length, 1);
     });
-    await test(`${name}: block flag keeps non-anonymous AI available`, async () => {
-      const h = harness({ env: { AI_PROXY_BLOCK_ANONYMOUS: '1' } });
+    await test(`${name}: non-anonymous verified user keeps AI available`, async () => {
+      const h = harness();
       assert.equal((await h.call(name, body, { provider: 'google.com' })).status, 200);
       assert.equal(providerLog(h, name).signInProvider, 'google.com'); assert.equal(h.requests.length, 1);
     });
@@ -351,11 +401,37 @@ async function main(): Promise<void> {
       assert.equal(h.requests.length, 0); assert.equal(h.counts.decoded, 0);
     });
   }
-  await test('anonymous block also applies to a token supplied in emulator bypass mode', async () => {
-    const h = harness({ env: { AI_PROXY_REQUIRE_AUTH: '0', FUNCTIONS_EMULATOR: 'true', AI_PROXY_EMULATOR_ALLOW_UNAUTHENTICATED: '1', AI_PROXY_BLOCK_ANONYMOUS: '1' } });
-    assertError(await h.call('aiProxy', CHAT, { provider: 'anonymous' }), 403, 'anonymous_not_allowed');
-    assert.equal(h.requests.length, 0);
+  await test('valid anonymous token is accepted by aiProxy even with emulator bypass configuration', async () => {
+    const h = harness({ env: { AI_PROXY_REQUIRE_AUTH: '0', FUNCTIONS_EMULATOR: 'true', AI_PROXY_EMULATOR_ALLOW_UNAUTHENTICATED: '1' } });
+    assert.equal((await h.call('aiProxy', CHAT, { provider: 'anonymous' })).status, 200);
+    assert.equal(h.requests.length, 1);
   });
+  await test('requireFirebaseBearerUser accepts a verified anonymous ID token', async () => {
+    const h = harness();
+    const token = `${TOKEN_MARKER}.direct-anonymous`;
+    h.registerIdentity(token, 'anon-user', 'anonymous');
+    const req: RequestFixture = { method: 'POST', body: {}, rawBody: Buffer.alloc(0), header: (name) => name.toLowerCase() === 'authorization' ? `Bearer ${token}` : undefined };
+    const result = await h.walletAuth.requireFirebaseBearerUser(req);
+    assert.equal(result.ok, true);
+    if (result.ok) assert.equal(result.uid, 'anon-user');
+  });
+  await test('walletOps accepts a valid anonymous Firebase token', async () => {
+    const h = harness();
+    const response = await h.call('walletOps', { op: 'get' }, { uid: 'anonymous-user', provider: 'anonymous' });
+    assert.equal(response.status, 200);
+    assert.equal(response.body.ok, true);
+    assert.equal(response.body.credits, 7);
+    assert.equal(response.body.lifetimeSpent, 2);
+  });
+  for (const requestOptions of [{ noToken: true }, { invalidToken: true }]) {
+    await test(`walletOps rejects ${requestOptions.noToken ? 'missing' : 'invalid'} token with 401`, async () => {
+      const h = harness();
+      const response = await h.call('walletOps', { op: 'get' }, requestOptions);
+      assert.equal(response.status, 401);
+      assert.equal(response.body.ok, false);
+      assert.equal(response.body.error, requestOptions.noToken ? 'missing_bearer_token' : 'invalid_id_token');
+    });
+  }
   await test('chat raw body limit is unchanged and rejects before fetch', async () => {
     const h = harness();
     assertError(await h.call('aiProxy', CHAT, { rawBytes: 6 * 1024 * 1024 + 1 }), 413, 'payload_too_large');
@@ -371,6 +447,11 @@ async function main(): Promise<void> {
     h.advance(59_999);
     assertError(await h.call('analyzeDocumentProxy', DOCUMENT), 429, 'rate_limited');
     h.advance(1); assert.equal((await h.call('analyzeDocumentProxy', DOCUMENT)).status, 200);
+  });
+  await test('document body byte limit rejects an oversized payload before provider fetch', async () => {
+    const h = harness();
+    assertError(await h.call('analyzeDocumentProxy', DOCUMENT, { rawBytes: 8 * 1024 * 1024 + 1 }), 413, 'document_payload_too_large');
+    assert.equal(h.counts.decoded, 0); assert.equal(h.requests.length, 0);
   });
   await test('chat and document rate keys and windows are separate', async () => {
     const h = harness({ env: { AI_PROXY_MAX_RPM: '2', AI_PROXY_RATE_WINDOW_MS: '10000' } });
@@ -437,7 +518,7 @@ async function main(): Promise<void> {
     const h = harness({ upstreamStatus: 400, geminiText: `Synthetic echoed token ${TOKEN_MARKER}` });
     assertError(await h.call('analyzeDocumentProxy', DOCUMENT), 502, 'gemini_upstream_http'); h.noTokenLogs();
   });
-  console.log(`\n${passed} passed; real Firebase/Auth/App Check/provider/DB modules never loaded; no .env or build output written.`);
+  console.log(`\n${passed} passed; real Firebase/Auth/App Check/provider/DB modules never loaded; no .env used; build output is validated separately.`);
 }
 
 void main().catch((error: unknown) => { console.error(error); process.exitCode = 1; });

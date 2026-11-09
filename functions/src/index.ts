@@ -101,12 +101,15 @@ const AI_PROXY_AUTH_BYPASS_REQUESTED = process.env.AI_PROXY_REQUIRE_AUTH?.trim()
 const AI_PROXY_EMULATOR_ALLOW_UNAUTHENTICATED =
   process.env.FUNCTIONS_EMULATOR === 'true' && process.env.AI_PROXY_EMULATOR_ALLOW_UNAUTHENTICATED?.trim() === '1';
 const AI_PROXY_REQUIRE_AUTH = !AI_PROXY_AUTH_BYPASS_REQUESTED || !AI_PROXY_EMULATOR_ALLOW_UNAUTHENTICATED;
-const AI_PROXY_BLOCK_ANONYMOUS = process.env.AI_PROXY_BLOCK_ANONYMOUS?.trim() === '1';
+const AI_PROXY_KILL = process.env.AI_PROXY_KILL?.trim() === '1';
+// Anonymous Firebase UIDs are valid app sessions but can rotate around per-UID buckets; App Check plus real identity binding (P0-B) is still required to address abuse.
 const AI_PROXY_MAX_RPM = Math.max(0, Number.parseInt(process.env.AI_PROXY_MAX_RPM ?? '120', 10) || 120);
 const AI_PROXY_RATE_WINDOW_MS = Math.max(10_000, Number.parseInt(process.env.AI_PROXY_RATE_WINDOW_MS ?? '60000', 10) || 60_000);
 const ANALYZE_DOCUMENT_MAX_RPM = 20;
 const ANALYZE_DOCUMENT_RATE_WINDOW_MS = 60_000;
+const ANALYZE_DOCUMENT_MAX_BODY_BYTES = 8 * 1024 * 1024;
 const ANALYZE_DOCUMENT_MAX_COUNTRY_CONTEXT_CHARS = 100;
+const ANALYZE_DOCUMENT_MAX_IMAGE_BASE64_CHARS = 7_000_000;
 const ANALYZE_DOCUMENT_MAX_OUTPUT_TOKENS = 1024;
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY?.trim() ?? '';
 const GEMINI_MODEL = process.env.GEMINI_MODEL?.trim() || 'gemini-1.5-flash';
@@ -260,6 +263,10 @@ export const aiProxy = onRequest(
         });
       }
       if (req.method !== 'POST') return void res.status(405).send('Method Not Allowed');
+      if (AI_PROXY_KILL) {
+        logger.error('[aiProxy] kill_switch_enabled', { trust_surface: 'ai_proxy' });
+        return void res.status(503).json({ error: 'ai_temporarily_disabled' });
+      }
       const byteLen = requestBodyByteLength(req);
       if (byteLen > AI_PROXY_MAX_BODY_BYTES) {
         logger.warn('[aiProxy] body_too_large', { byteLen, max: AI_PROXY_MAX_BODY_BYTES });
@@ -287,9 +294,6 @@ export const aiProxy = onRequest(
         uid = auth.uid;
         const provider = auth.decoded.firebase?.sign_in_provider;
         signInProvider = typeof provider === 'string' && provider.length > 0 ? provider : 'unknown';
-        if (AI_PROXY_BLOCK_ANONYMOUS && signInProvider === 'anonymous') {
-          return void res.status(403).json({ ok: false, error: 'anonymous_not_allowed' });
-        }
       }
 
       if (AI_PROXY_MAX_RPM > 0 && uid !== null) {
@@ -412,6 +416,14 @@ export const analyzeDocumentProxy = onRequest(
     let signInProvider = 'not_evaluated';
     try {
       if (req.method !== 'POST') return void res.status(405).send('Method Not Allowed');
+      if (AI_PROXY_KILL) {
+        logger.error('[analyzeDocumentProxy] kill_switch_enabled', { trust_surface: 'document_proxy' });
+        return void res.status(503).json({ error: 'ai_temporarily_disabled' });
+      }
+      const byteLen = requestBodyByteLength(req);
+      if (byteLen > ANALYZE_DOCUMENT_MAX_BODY_BYTES) {
+        return void res.status(413).json({ ok: false, error: 'document_payload_too_large' });
+      }
       const ac = await verifyAppCheckForRequest(req, 'aiProxy');
       if (!ac.ok) {
         logger.warn('[analyzeDocumentProxy] denied', {
@@ -437,9 +449,6 @@ export const analyzeDocumentProxy = onRequest(
       }
       const provider = who.decoded.firebase?.sign_in_provider;
       signInProvider = typeof provider === 'string' && provider.length > 0 ? provider : 'unknown';
-      if (AI_PROXY_BLOCK_ANONYMOUS && signInProvider === 'anonymous') {
-        return void res.status(403).json({ ok: false, error: 'anonymous_not_allowed' });
-      }
       if (!takeAiProxyRateSlot(who.uid, ANALYZE_DOCUMENT_MAX_RPM, ANALYZE_DOCUMENT_RATE_WINDOW_MS, 'analyzeDocumentProxy')) {
         return void res.status(429).json({ ok: false, error: 'rate_limited' });
       }
@@ -453,7 +462,9 @@ export const analyzeDocumentProxy = onRequest(
       const countryContext = rawCountryContext.trim();
       if (!base64Image) return void res.status(400).json({ ok: false, error: 'base64_image_required' });
       if (!countryContext) return void res.status(400).json({ ok: false, error: 'country_context_required' });
-      if (base64Image.length > 7_000_000) return void res.status(413).json({ ok: false, error: 'image_too_large' });
+      if (base64Image.length > ANALYZE_DOCUMENT_MAX_IMAGE_BASE64_CHARS) {
+        return void res.status(413).json({ ok: false, error: 'image_too_large' });
+      }
 
       const systemPrompt =
         `You are an expert administrative/legal assistant for Vietnamese expats living in ${countryContext}. Analyze the provided document image.\n` +

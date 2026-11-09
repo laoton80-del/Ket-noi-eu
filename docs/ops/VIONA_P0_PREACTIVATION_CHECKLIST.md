@@ -17,6 +17,7 @@ Mỗi mục có ID, việc cần làm, chủ, trạng thái, điều kiện hoà
 | A1-RECON | Đối soát DISPATCHING và RESERVED mồ côi | Claude + Operator ký | OPEN |
 | A1-ENV | Sáu biến VIONA_COST_GOVERNOR_* chỉ sau A1-RECON | chưa phân công | OPEN |
 | FIREBASE-AI-COST-CONTAINMENT | Đóng đường gọi OpenAI/Gemini trả phí ngoài Cost Governor trước Grand Launch | chưa phân công | OPEN |
+| FIREBASE-APPCHECK-ABUSE | Per-uid rate-limit lách được qua xoay uid anonymous; bật App Check + real identity (P0-B). | chưa phân công | OPEN |
 | A1-SOS-CAP-CLASSIFICATION | Chốt miễn SOS sau SOS Core bằng phân loại server-side; không dùng cờ client | chưa phân công | OPEN |
 | A1-MIGRATION-SNAPSHOT | Migration snapshot chỉ khi bảng rỗng | chưa phân công | OPEN |
 | WALLET-RECEIPT | Sau deploy, biến receipt bằng 1 | Operator | OPEN |
