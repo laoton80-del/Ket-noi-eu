@@ -45,6 +45,7 @@ import {
   premiumTileLayout,
   resolvePremiumTileGridColumns,
 } from '../design/premiumTileVisualTokens';
+import { IntroSoundToggle } from '../components/viona/intro/IntroSoundToggle';
 import { VionaBrandLockup } from '../components/viona/VionaBrandLockup';
 import { vionaTokens } from '../design';
 import { theme } from '../theme/theme';
@@ -752,6 +753,7 @@ export function CaNhanScreen() {
                 </Pressable>
               );
             })}
+            <IntroSoundToggle />
             <Pressable
               onPress={() => setLanguageModalOpen(false)}
               style={({ pressed }) => [styles.langModalClose, pressed && { opacity: 0.82 }]}

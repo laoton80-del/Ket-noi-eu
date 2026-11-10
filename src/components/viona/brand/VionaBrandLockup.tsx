@@ -1,7 +1,7 @@
 import { Image, StyleSheet, View } from 'react-native';
 
-const MARK = require('../../../../assets/brand/viona/in-app/mark-white-256.png');
-const WORDMARK = require('../../../../assets/brand/viona/in-app/wordmark-h192.png');
+const MARK = require('../../../../assets/brand/viona/viona-symbol.png');
+const WORDMARK = require('../../../../assets/brand/viona/viona-wordmark.png');
 
 export function VionaBrandLockup({
   reducedMotion = false,
@@ -29,5 +29,5 @@ const styles = StyleSheet.create({
     shadowRadius: 10,
   },
   markStill: {},
-  word: { width: 108, height: 28 },
+  word: { width: 112, height: 42 },
 });

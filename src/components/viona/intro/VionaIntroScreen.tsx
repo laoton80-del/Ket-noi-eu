@@ -11,18 +11,18 @@ import Animated, {
 } from 'react-native-reanimated';
 
 import { useFashionHomePrefersReducedMotion } from '../fashionHomeDesktopShell';
-import { playIntroChime } from './introChime';
+import { playIntroChime, stopIntroChime } from './introChime';
 
 const EARTH = require('../../../../assets/brand/viona/intro/intro-earth.png');
-const MARK = require('../../../../assets/brand/viona/in-app/mark-white-256.png');
-const WORDMARK = require('../../../../assets/brand/viona/in-app/wordmark-h192.png');
+const MARK = require('../../../../assets/brand/viona/viona-symbol.png');
+const WORDMARK = require('../../../../assets/brand/viona/viona-wordmark.png');
 
 function readReducedMotion(): boolean {
   if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return false;
   return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 }
 
-const HOLD_MS = 2700;
+const HOLD_MS = 4000;
 const REDUCED_HOLD_MS = 1000;
 const FADE_MS = 250;
 
@@ -77,6 +77,7 @@ export function VionaIntroScreen({ onDone }: Readonly<{ onDone: () => void }>) {
   }));
 
   const skip = () => {
+    void stopIntroChime();
     if (reducedMotion) {
       onDone();
       return;
@@ -163,5 +164,5 @@ const styles = StyleSheet.create({
     shadowRadius: 16,
   },
   mark: { width: 72, height: 72 },
-  word: { width: 180, height: 42 },
+  word: { width: 180, height: 68 },
 });
