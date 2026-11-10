@@ -1,7 +1,19 @@
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useState, type ComponentProps } from 'react';
-import { Image, Pressable, StyleSheet, Text, View, type ImageSourcePropType, type TextStyle } from 'react-native';
+import { useEffect, useRef, useState, type ComponentProps } from 'react';
+import {
+  Animated,
+  Easing,
+  Image,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+  type ImageSourcePropType,
+  type ImageStyle,
+  type TextStyle,
+  type ViewStyle,
+} from 'react-native';
 
 import { vionaCinematicTokens } from '../../../design/vionaCinematicTokens';
 import { useTranslation } from '../../../i18n';
@@ -14,6 +26,7 @@ import {
   type VionaRec2UniverseContract,
   type VionaRec2UniverseId,
 } from './vionaRec2HomeContract';
+import { ensureVionaReducedMotionGuard } from './vionaReducedMotionGuard';
 
 type IconName = ComponentProps<typeof Ionicons>['name'];
 
@@ -52,6 +65,7 @@ export type UniversePhotoTileProps = Readonly<{
   width: number;
   reducedMotion?: boolean;
   subtitleStyle?: TextStyle;
+  enterIndex?: number;
 }>;
 
 export function UniversePhotoTile({
@@ -60,11 +74,15 @@ export function UniversePhotoTile({
   width,
   reducedMotion = false,
   subtitleStyle,
+  enterIndex = 0,
 }: UniversePhotoTileProps) {
   const { t } = useTranslation();
   const [focused, setFocused] = useState(false);
+  const [hovered, setHovered] = useState(false);
   const [loaded, setLoaded] = useState(false);
   const [failed, setFailed] = useState(false);
+  const playedEntrance = useRef(false);
+  const entrance = useRef(new Animated.Value(reducedMotion ? 1 : 0)).current;
   const imageSource = UNIVERSE_ASSETS[universe.id];
   const provenance = IMAGE_PROVENANCE[universe.id];
   const loadState: VionaRec2ImageInput['loadState'] = failed ? 'error' : loaded ? 'ready' : 'loading';
@@ -76,8 +94,63 @@ export function UniversePhotoTile({
   const title = t(`home.rec2.universes.${universe.id}.title`);
   const body = t(`home.rec2.universes.${universe.id}.subtitle`);
   const stateLabel = t(`home.rec2.availability.${universe.availability}`);
+  const calm = universe.id === 'sos';
+  const lifted = interactive && (hovered || focused);
+
+  useEffect(() => {
+    ensureVionaReducedMotionGuard();
+  }, []);
+
+  useEffect(() => {
+    if (reducedMotion) {
+      entrance.setValue(1);
+      return;
+    }
+    if (playedEntrance.current) return;
+    playedEntrance.current = true;
+    const anim = Animated.timing(entrance, {
+      toValue: 1,
+      duration: 180,
+      delay: Math.min(Math.max(enterIndex, 0), 5) * 60,
+      easing: Easing.out(Easing.cubic),
+      useNativeDriver: true,
+    });
+    anim.start();
+    return () => anim.stop();
+  }, [entrance, enterIndex, reducedMotion]);
+
+  const cardMotion = reducedMotion
+    ? null
+    : ({
+        transitionProperty: 'transform',
+        transitionDuration: '180ms',
+        transitionTimingFunction: 'ease-out',
+        willChange: 'transform',
+      } as ViewStyle);
+  const photoMotion = reducedMotion
+    ? null
+    : ({
+        transitionProperty: 'transform',
+        transitionDuration: '220ms',
+        transitionTimingFunction: 'ease-out',
+        willChange: 'transform',
+      } as ImageStyle);
 
   return (
+    <View testID="viona-motion" style={{ width }}>
+    <Animated.View
+      style={{
+        opacity: entrance,
+        transform: [
+          {
+            translateY: entrance.interpolate({
+              inputRange: [0, 1],
+              outputRange: [8, 0],
+            }),
+          },
+        ],
+      }}
+    >
     <Pressable
       accessibilityRole="button"
       accessibilityLabel={title}
@@ -86,10 +159,21 @@ export function UniversePhotoTile({
       disabled={!interactive}
       onFocus={() => setFocused(true)}
       onBlur={() => setFocused(false)}
+      onHoverIn={() => setHovered(true)}
+      onHoverOut={() => setHovered(false)}
       onPress={() => invokeVionaRec2UniverseCallback(universe, callbacks)}
       style={({ pressed }) => [
         styles.host,
-        { width, borderColor: focused || pressed ? tone.accent : tone.accent },
+        cardMotion,
+        { borderColor: tone.accent },
+        lifted && (calm ? styles.calmShadow : {
+          shadowColor: tone.accent,
+          shadowOffset: { width: 0, height: 10 },
+          shadowOpacity: 0.45,
+          shadowRadius: 18,
+          elevation: 8,
+        }),
+        lifted && !pressed && !reducedMotion && (calm ? styles.liftCalm : styles.lift),
         pressed && (reducedMotion ? styles.pressedStill : styles.pressed),
       ]}
     >
@@ -103,7 +187,11 @@ export function UniversePhotoTile({
               accessibilityIgnoresInvertColors
               onLoad={() => setLoaded(true)}
               onError={() => setFailed(true)}
-              style={styles.photoFill}
+              style={[
+                styles.photoFill,
+                photoMotion,
+                lifted && !reducedMotion && (calm ? styles.photoCalm : styles.photoLift),
+              ]}
             />
           </View>
         ) : null}
@@ -125,6 +213,8 @@ export function UniversePhotoTile({
         </View>
       </LinearGradient>
     </Pressable>
+    </Animated.View>
+    </View>
   );
 }
 
@@ -136,6 +226,11 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     backgroundColor: vionaCinematicTokens.color.midnight,
   },
+  lift: { transform: [{ translateY: -4 }, { scale: 1.01 }] },
+  liftCalm: { transform: [{ translateY: -4 }] },
+  calmShadow: vionaCinematicTokens.elevation.cardOnShell,
+  photoLift: { transform: [{ scale: 1.03 }] },
+  photoCalm: { transform: [{ scale: 1.01 }] },
   fill: { flexGrow: 1, minHeight: 196 },
   photo: { ...StyleSheet.absoluteFillObject },
   photoPending: { opacity: 0 },

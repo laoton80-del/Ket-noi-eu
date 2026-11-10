@@ -1,8 +1,10 @@
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useCallback, useEffect, useMemo, useState, type ComponentProps } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type ComponentProps } from 'react';
 import {
   ActivityIndicator,
+  Animated,
+  Easing,
   Image,
   Platform,
   Pressable,
@@ -25,6 +27,7 @@ import { VionaHomeSidebar } from './VionaHomeSidebar';
 import { VionaHomeSuggestionChips } from './VionaHomeSuggestionChips';
 import { VionaHomeTopBar } from './VionaHomeTopBar';
 import { readHomeColumnOpen, writeHomeColumnOpen } from './vionaHomeColumnMemory';
+import { ensureVionaReducedMotionGuard } from './vionaReducedMotionGuard';
 import { resolveVionaCinematicTier, vionaCinematicTokens } from '../../../design/vionaCinematicTokens';
 import {
   VIONA_REC2_GATED_CARD_CONTENT_OPACITY,
@@ -59,11 +62,13 @@ function UniverseCard({
   callbacks,
   width,
   reducedMotion,
+  enterIndex,
 }: Readonly<{
   universe: VionaRec2UniverseContract;
   callbacks: VionaRec2UniverseCallbacks;
   width: number;
   reducedMotion: boolean;
+  enterIndex: number;
 }>) {
   return (
     <UniversePhotoTile
@@ -72,7 +77,73 @@ function UniverseCard({
       width={width}
       reducedMotion={reducedMotion}
       subtitleStyle={styles.cardSubtitle}
+      enterIndex={enterIndex}
     />
+  );
+}
+
+function VionaCompanionOrb({
+  reducedMotion,
+  onPress,
+}: Readonly<{ reducedMotion: boolean; onPress: () => void }>) {
+  const pulse = useRef(new Animated.Value(0)).current;
+  const { t } = useTranslation();
+
+  useEffect(() => {
+    ensureVionaReducedMotionGuard();
+    if (reducedMotion) {
+      pulse.setValue(0);
+      return;
+    }
+    const loop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulse, {
+          toValue: 1,
+          duration: 1500,
+          easing: Easing.inOut(Easing.ease),
+          useNativeDriver: true,
+        }),
+        Animated.timing(pulse, {
+          toValue: 0,
+          duration: 1500,
+          easing: Easing.inOut(Easing.ease),
+          useNativeDriver: true,
+        }),
+      ])
+    );
+    loop.start();
+    return () => loop.stop();
+  }, [pulse, reducedMotion]);
+
+  return (
+    <View testID="viona-motion">
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={t('home.rec2.companionChat')}
+      onPress={onPress}
+      style={({ pressed }) => [
+        styles.companionOrb,
+        pressed && (reducedMotion ? styles.cardPressedReducedMotion : styles.cardPressed),
+      ]}
+    >
+      <Animated.View
+        style={
+          reducedMotion
+            ? undefined
+            : {
+                opacity: pulse.interpolate({ inputRange: [0, 1], outputRange: [0.92, 1] }),
+                transform: [
+                  {
+                    scale: pulse.interpolate({ inputRange: [0, 1], outputRange: [1, 1.04] }),
+                  },
+                ],
+              }
+        }
+      >
+        <VionaCraneMark size={28} variant="sapphire" glow={!reducedMotion} />
+      </Animated.View>
+    </Pressable>
+    </View>
   );
 }
 
@@ -314,13 +385,14 @@ export function VionaRec2HomeShell({
           </Text>
         </View>
         <View style={[styles.grid, { gap: layout.gap }]}>
-          {universes.map((universe) => (
+          {universes.map((universe, index) => (
             <UniverseCard
               key={universe.id}
               universe={universe}
               callbacks={universeCallbacks}
               width={layout.cardWidth}
               reducedMotion={reducedMotion}
+              enterIndex={index}
             />
           ))}
         </View>
@@ -395,20 +467,13 @@ export function VionaRec2HomeShell({
           </View>
         ) : null}
         {desktopFrame && !desktopCompanionOpen ? (
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel={t('home.rec2.companionChat')}
+          <VionaCompanionOrb
+            reducedMotion={reducedMotion}
             onPress={() => {
               setDesktopCompanionOpen(true);
               writeHomeColumnOpen('companion', true);
             }}
-            style={({ pressed }) => [
-              styles.companionOrb,
-              pressed && (reducedMotion ? styles.cardPressedReducedMotion : styles.cardPressed),
-            ]}
-          >
-            <VionaCraneMark size={28} variant="sapphire" glow={!reducedMotion} />
-          </Pressable>
+          />
         ) : null}
       </LinearGradient>
     </SafeAreaView>
