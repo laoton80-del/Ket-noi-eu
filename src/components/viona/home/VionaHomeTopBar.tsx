@@ -1,10 +1,10 @@
 import { Ionicons } from '@expo/vector-icons';
 import { type ReactNode } from 'react';
-import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Pressable, StyleSheet, Text, TextInput, View, useWindowDimensions } from 'react-native';
 
 import { vionaCinematicTokens } from '../../../design/vionaCinematicTokens';
 import { useTranslation } from '../../../i18n';
-import { VionaBrandLockup } from '../VionaBrandLockup';
+import { VionaCraneMark } from '../brand/VionaCraneMark';
 
 export type VionaHomeTopBarProps = Readonly<{
   displayName?: string | null;
@@ -34,7 +34,12 @@ export function VionaHomeTopBar({
   menu,
 }: VionaHomeTopBarProps) {
   const { t } = useTranslation();
+  const { width } = useWindowDimensions();
   const name = displayName?.trim() || null;
+  const desktop = width >= vionaCinematicTokens.layout.desktopMin;
+  const tablet = width >= 768;
+  const markSize = desktop ? 44 : tablet ? 36 : 32;
+  const wordSize = desktop ? 22 : tablet ? 18 : 16;
   const avatarLabel = previewMode ? t('home.rec2.avatarPreview') : name ?? t('home.rec2.avatarGuest');
   const place = regionLabel?.trim() || null;
 
@@ -52,7 +57,11 @@ export function VionaHomeTopBar({
         </Pressable>
       ) : null}
       {showBrand ? (
-        <VionaBrandLockup variant="compact" />
+        <View accessibilityRole="text" accessibilityLabel="VIONA" style={styles.brandAnchor}>
+          <View pointerEvents="none" style={styles.brandGlow} />
+          <VionaCraneMark size={markSize} variant="gold" />
+          <Text style={[styles.brandWord, { fontSize: wordSize, letterSpacing: desktop ? 3.4 : 2.4 }]}>VIONA</Text>
+        </View>
       ) : null}
       <View style={styles.place}>
         <Ionicons name="location-outline" size={15} color={vionaCinematicTokens.color.cyan} />
@@ -110,7 +119,33 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 10,
   },
-  brand: { width: 36, alignItems: 'center' },
+  brandAnchor: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    minHeight: 48,
+    paddingLeft: 6,
+    paddingRight: 10,
+    backgroundColor: 'transparent',
+  },
+  brandGlow: {
+    position: 'absolute',
+    left: 4,
+    right: 0,
+    top: 8,
+    bottom: 8,
+    borderRadius: 999,
+    backgroundColor: 'rgba(243, 217, 166, 0.07)',
+    shadowColor: '#F3D9A6',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.45,
+    shadowRadius: 16,
+  },
+  brandWord: {
+    color: '#D4AF7C',
+    fontFamily: vionaCinematicTokens.fontFamily.bold,
+    fontWeight: '700',
+  },
   place: { flexDirection: 'row', alignItems: 'center', gap: 6, maxWidth: 220 },
   placeCopy: { gap: 1, flexShrink: 1 },
   placeText: { color: vionaCinematicTokens.color.ice, fontSize: 13, fontFamily: vionaCinematicTokens.fontFamily.semibold },
