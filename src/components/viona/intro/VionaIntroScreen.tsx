@@ -2,7 +2,8 @@ import { LinearGradient } from 'expo-linear-gradient';
 // @ts-expect-error react-dom has no declaration file in this app
 import { createPortal } from 'react-dom';
 import { useEffect } from 'react';
-import { Image, Platform, Pressable, StyleSheet, Text, View, useWindowDimensions, type ImageStyle } from 'react-native';
+import { Asset } from 'expo-asset';
+import { Image, Platform, Pressable, StyleSheet, Text, View, useWindowDimensions, type ImageStyle, type ViewStyle } from 'react-native';
 import { Inter_500Medium, Inter_600SemiBold, useFonts } from '@expo-google-fonts/inter';
 import Animated, {
   Easing,
@@ -21,6 +22,58 @@ import { playIntroChime, stopIntroChime } from './introChime';
 const EARTH = require('../../../../assets/brand/viona/intro/intro-earth.png');
 const CRANE = require('../../../../assets/brand/viona/viona-symbol-gold.png');
 const CRANE_FRAME = 1024 / 712;
+const EARTH_W = 1024;
+const EARTH_H = 1536;
+const LIMB_CX = 509.2;
+const LIMB_CY = 1581.1;
+const LIMB_R = 812.9;
+const EARTH_ANCHOR_Y = 0.46;
+
+function earthLimb(width: number, height: number) {
+  const boxH = height * 0.78;
+  const scale = Math.max(width / EARTH_W, boxH / EARTH_H);
+  const dispW = EARTH_W * scale;
+  const dispH = EARTH_H * scale;
+  const cx = (width - dispW) / 2 + LIMB_CX * scale;
+  const cy = height - boxH + (boxH - dispH) * EARTH_ANCHOR_Y + LIMB_CY * scale;
+  const radius = LIMB_R * scale;
+  const half = (Math.asin(Math.min(0.92, width / 2 / Math.max(radius, 1))) * 180) / Math.PI;
+  return { cx, cy, radius, half };
+}
+
+function craneMaskStyle(): ViewStyle | null {
+  if (Platform.OS !== 'web') return null;
+  let uri = '';
+  try {
+    uri = Asset.fromModule(CRANE).uri ?? '';
+  } catch {
+    uri = '';
+  }
+  if (!uri) return null;
+  const mask = `url("${uri.replace(/"/g, '')}")`;
+  return {
+    WebkitMaskImage: mask,
+    maskImage: mask,
+    WebkitMaskSize: '100% 100%',
+    maskSize: '100% 100%',
+    WebkitMaskRepeat: 'no-repeat',
+    maskRepeat: 'no-repeat',
+    WebkitMaskPosition: 'center',
+    maskPosition: 'center',
+    maskMode: 'alpha',
+  } as ViewStyle;
+}
+
+function limbPaint(color: string): ViewStyle {
+  if (Platform.OS !== 'web') return {};
+  const ring =
+    'radial-gradient(circle, transparent calc(50% - 7px), #000 calc(50% - 5.5px), #000 calc(50% - 1.5px), transparent calc(50% - 0.2px))';
+  return {
+    backgroundImage: `conic-gradient(from 0deg, #E6F4FF 0deg, ${color} 8deg, transparent 26deg, transparent 334deg, ${color} 352deg, #E6F4FF 360deg)`,
+    WebkitMaskImage: ring,
+    maskImage: ring,
+  } as ViewStyle;
+}
 
 function readReducedMotion(): boolean {
   if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return false;
@@ -46,7 +99,7 @@ export function VionaIntroScreen({ onDone }: Readonly<{ onDone: () => void }>) {
   const veil = useSharedValue(1);
   const logo = useSharedValue(reducedMotion ? 1 : 0);
   const lines = useSharedValue(reducedMotion ? 1 : 0);
-  const glowPulse = useSharedValue(reducedMotion ? 0.72 : 0.45);
+  const trace = useSharedValue(0);
   const sweep = useSharedValue(0);
 
   useEffect(() => {
@@ -57,7 +110,7 @@ export function VionaIntroScreen({ onDone }: Readonly<{ onDone: () => void }>) {
     if (reducedMotion) {
       logo.value = 1;
       lines.value = 1;
-      glowPulse.value = 0.72;
+      trace.value = 0;
       sweep.value = 0;
       const timer = setTimeout(finish, REDUCED_HOLD_MS);
       return () => {
@@ -67,8 +120,8 @@ export function VionaIntroScreen({ onDone }: Readonly<{ onDone: () => void }>) {
     }
     logo.value = withDelay(300, withTiming(1, { duration: 700, easing: Easing.out(Easing.cubic) }));
     lines.value = withDelay(500, withTiming(1, { duration: 650, easing: Easing.out(Easing.cubic) }));
-    glowPulse.value = withRepeat(withTiming(0.9, { duration: 2200, easing: Easing.inOut(Easing.ease) }), -1, true);
-    sweep.value = withRepeat(withTiming(1, { duration: 5200, easing: Easing.linear }), -1, false);
+    trace.value = withRepeat(withTiming(1, { duration: 3600, easing: Easing.linear }), -1, false);
+    sweep.value = withRepeat(withTiming(1, { duration: 7000, easing: Easing.linear }), -1, false);
     void playIntroChime(false);
     const timer = setTimeout(() => {
       veil.value = withTiming(0, { duration: FADE_MS }, (finished) => {
@@ -79,7 +132,12 @@ export function VionaIntroScreen({ onDone }: Readonly<{ onDone: () => void }>) {
       cancelled = true;
       clearTimeout(timer);
     };
-  }, [glowPulse, lines, logo, onDone, reducedMotion, sweep, veil]);
+  }, [lines, logo, onDone, reducedMotion, sweep, trace, veil]);
+
+  const limb = earthLimb(width, height);
+  const logoMask = craneMaskStyle();
+  const bandW = Math.max(12, Math.round(frame * 0.2));
+  const blueRadius = Math.max(48, limb.radius - 8);
 
   const veilStyle = useAnimatedStyle(() => ({ opacity: veil.value }));
   const logoStyle = useAnimatedStyle(() => ({
@@ -87,38 +145,20 @@ export function VionaIntroScreen({ onDone }: Readonly<{ onDone: () => void }>) {
     transform: [{ scale: 0.96 + logo.value * 0.04 }],
   }));
   const linesStyle = useAnimatedStyle(() => ({ opacity: lines.value }));
-  const glowStyle = useAnimatedStyle(() => ({ opacity: reducedMotion ? 0.72 : glowPulse.value }));
-  const arcCyanStyle = useAnimatedStyle(() => ({
-    opacity: reducedMotion ? 0 : 0.25 + 0.55 * Math.sin(sweep.value * Math.PI * 2),
-    transform: [{ translateX: (sweep.value - 0.5) * 90 }],
-  }));
-  const arcBlueStyle = useAnimatedStyle(() => ({
-    opacity: reducedMotion ? 0 : 0.2 + 0.45 * Math.sin((sweep.value + 0.38) * Math.PI * 2),
-    transform: [{ translateX: (0.5 - sweep.value) * 70 }],
-  }));
-  const rayAStyle = useAnimatedStyle(() => {
-    const t = sweep.value % 1;
-    const fade = t < 0.55 ? t / 0.55 : (1 - t) / 0.45;
+  const traceStyle = useAnimatedStyle(() => {
+    const edge = trace.value < 0.08 ? trace.value / 0.08 : trace.value > 0.92 ? (1 - trace.value) / 0.08 : 1;
     return {
-      opacity: reducedMotion ? 0 : Math.max(0, fade) * 0.85,
-      transform: [{ translateY: reducedMotion ? 0 : -t * 26 }, { scaleY: 0.35 + Math.max(0, fade) * 0.65 }],
+      opacity: edge,
+      transform: [{ translateX: -bandW + trace.value * (frame + bandW) }],
     };
   });
-  const rayBStyle = useAnimatedStyle(() => {
-    const t = (sweep.value + 0.33) % 1;
-    const fade = t < 0.55 ? t / 0.55 : (1 - t) / 0.45;
-    return {
-      opacity: reducedMotion ? 0 : Math.max(0, fade) * 0.85,
-      transform: [{ translateY: reducedMotion ? 0 : -t * 26 }, { scaleY: 0.35 + Math.max(0, fade) * 0.65 }],
-    };
+  const arcCyanStyle = useAnimatedStyle(() => {
+    const span = limb.half + 16;
+    return { transform: [{ rotate: `${-span + sweep.value * span * 2}deg` }] };
   });
-  const rayCStyle = useAnimatedStyle(() => {
-    const t = (sweep.value + 0.62) % 1;
-    const fade = t < 0.55 ? t / 0.55 : (1 - t) / 0.45;
-    return {
-      opacity: reducedMotion ? 0 : Math.max(0, fade) * 0.85,
-      transform: [{ translateY: reducedMotion ? 0 : -t * 22 }, { scaleY: 0.35 + Math.max(0, fade) * 0.65 }],
-    };
+  const arcBlueStyle = useAnimatedStyle(() => {
+    const span = limb.half + 16;
+    return { transform: [{ rotate: `${-span + 28 + sweep.value * span * 2}deg` }] };
   });
 
   const skip = () => {
@@ -138,13 +178,6 @@ export function VionaIntroScreen({ onDone }: Readonly<{ onDone: () => void }>) {
       : fontsLoaded
         ? 'Inter_600SemiBold'
         : undefined;
-  const rimGlow =
-    Platform.OS === 'web'
-      ? ({
-          filter:
-            'drop-shadow(0 0 1px #F3D9A6) drop-shadow(0 0 3px rgba(243, 217, 166, 0.9)) drop-shadow(0 0 7px rgba(243, 217, 166, 0.45))',
-        } as ImageStyle)
-      : null;
 
   const scene = (
     <Animated.View style={[styles.fill, veilStyle]}>
@@ -162,23 +195,60 @@ export function VionaIntroScreen({ onDone }: Readonly<{ onDone: () => void }>) {
           locations={[0, 0.46, 1]}
           style={styles.topWash}
         />
+        {!reducedMotion && Platform.OS === 'web' ? (
+          <>
+            <Animated.View
+              pointerEvents="none"
+              style={[
+                styles.limbArc,
+                limbPaint('#00D1FF'),
+                arcCyanStyle,
+                {
+                  width: limb.radius * 2,
+                  height: limb.radius * 2,
+                  left: limb.cx - limb.radius,
+                  top: limb.cy - limb.radius,
+                },
+              ]}
+            />
+            <Animated.View
+              pointerEvents="none"
+              style={[
+                styles.limbArc,
+                limbPaint('#007BFF'),
+                arcBlueStyle,
+                {
+                  width: blueRadius * 2,
+                  height: blueRadius * 2,
+                  left: limb.cx - blueRadius,
+                  top: limb.cy - blueRadius,
+                },
+              ]}
+            />
+          </>
+        ) : null}
         <View pointerEvents="none" style={[styles.cluster, { top: clusterTop }]}>
           <Animated.View style={[styles.logo, logoStyle]}>
             <View style={[styles.mark, { width: frame, height: frame }]}>
-              {!reducedMotion ? (
-                <Animated.Image
-                  source={CRANE}
-                  resizeMode="contain"
-                  accessibilityIgnoresInvertColors
-                  style={[{ width: frame, height: frame, position: 'absolute' }, rimGlow, glowStyle]}
-                />
-              ) : null}
               <Image
                 source={CRANE}
                 resizeMode="contain"
                 accessibilityIgnoresInvertColors
-                style={[{ width: frame, height: frame }, reducedMotion ? rimGlow : null]}
+                style={{ width: frame, height: frame }}
               />
+              {!reducedMotion && logoMask ? (
+                <Animated.View pointerEvents="none" style={[styles.traceMask, { width: frame, height: frame }, logoMask]}>
+                  <Animated.View style={[styles.traceBand, { width: bandW, height: frame }, traceStyle]}>
+                    <LinearGradient
+                      colors={['rgba(243,217,166,0)', '#F3D9A6', '#E6F4FF', '#F3D9A6', 'rgba(243,217,166,0)']}
+                      locations={[0, 0.32, 0.5, 0.68, 1]}
+                      start={{ x: 0, y: 0.5 }}
+                      end={{ x: 1, y: 0.5 }}
+                      style={StyleSheet.absoluteFill}
+                    />
+                  </Animated.View>
+                </Animated.View>
+              ) : null}
             </View>
             <Text
               style={[
@@ -230,15 +300,6 @@ export function VionaIntroScreen({ onDone }: Readonly<{ onDone: () => void }>) {
             </Text>
           </Animated.View>
         </View>
-        {!reducedMotion ? (
-          <>
-            <Animated.View pointerEvents="none" style={[styles.limb, styles.limbCyan, arcCyanStyle]} />
-            <Animated.View pointerEvents="none" style={[styles.limb, styles.limbBlue, arcBlueStyle]} />
-            <Animated.View pointerEvents="none" style={[styles.cityRay, styles.cityRayA, rayAStyle]} />
-            <Animated.View pointerEvents="none" style={[styles.cityRay, styles.cityRayB, rayBStyle]} />
-            <Animated.View pointerEvents="none" style={[styles.cityRay, styles.cityRayC, rayCStyle]} />
-          </>
-        ) : null}
       </Pressable>
     </Animated.View>
   );
@@ -249,7 +310,7 @@ export function VionaIntroScreen({ onDone }: Readonly<{ onDone: () => void }>) {
 }
 
 const styles = StyleSheet.create({
-  fill: { ...StyleSheet.absoluteFillObject, zIndex: 1000 },
+  fill: { ...StyleSheet.absoluteFillObject, zIndex: 1000, overflow: 'hidden' },
   sky: { ...StyleSheet.absoluteFillObject, backgroundColor: '#0A1A33' },
   earth: {
     position: 'absolute',
@@ -259,7 +320,7 @@ const styles = StyleSheet.create({
     width: '100%',
     height: '78%',
     ...(Platform.OS === 'web'
-      ? ({ objectFit: 'cover', objectPosition: 'center bottom' } as ImageStyle)
+      ? ({ objectFit: 'cover', objectPosition: 'center 46%' } as ImageStyle)
       : {}),
   },
   topWash: {
@@ -278,24 +339,9 @@ const styles = StyleSheet.create({
   },
   logo: { alignItems: 'center', gap: 4 },
   mark: { alignItems: 'center', justifyContent: 'center' },
-  limb: {
-    position: 'absolute',
-    height: 90,
-    borderTopWidth: 2,
-    borderRadius: 999,
-  },
-  limbCyan: { left: '-6%', right: '-6%', bottom: '16%', borderTopColor: '#00D1FF' },
-  limbBlue: { left: '4%', right: '4%', bottom: '12%', borderTopColor: '#007BFF' },
-  cityRay: {
-    position: 'absolute',
-    width: 2,
-    height: 46,
-    borderRadius: 2,
-    backgroundColor: '#00D1FF',
-  },
-  cityRayA: { left: '34%', bottom: '18%' },
-  cityRayB: { left: '51%', bottom: '15%', backgroundColor: '#007BFF' },
-  cityRayC: { left: '66%', bottom: '19%' },
+  traceMask: { position: 'absolute', left: 0, top: 0, overflow: 'hidden' },
+  traceBand: { position: 'absolute', left: 0, top: 0 },
+  limbArc: { position: 'absolute' },
   word: {
     color: '#F3D9A6',
     textAlign: 'center',
