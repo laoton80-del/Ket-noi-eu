@@ -1149,40 +1149,34 @@ async function main(): Promise<void> {
     assert.equal(h.routedInputs.length, 1, 'invalid input or key must not dispatch to the router');
   });
 
-  await test('controller redacts provider URL and data URI errors while returning 500', async () => {
-    const cases = [
-      {
-        error: Object.assign(new Error('provider rejected https://example.invalid/private.jpg?token=SECRET_MARKER'), { status: 502 }),
-        forbidden: /SECRET_MARKER|https:\/\/example\.invalid\/private\.jpg/,
-        redacted: /\[redacted-url\]/,
-      },
-      {
-        error: Object.assign(new Error('provider rejected data:image/jpeg;base64,BASE64_SECRET_MARKER'), { status: 502 }),
-        forbidden: /BASE64_SECRET_MARKER|data:image\/jpeg;base64/,
-        redacted: /\[redacted-data-uri\]/,
-      },
-    ] as const;
+  await test('controller logs only fixed metadata for provider errors and returns 500', async () => {
+    const providerError = Object.assign(new Error(
+      "provider rejected https://example.invalid/O'Neil.jpg?alt=media&token=SECRET_MARKER Bearer BEARER_SECRET PROMPT_SECRET"
+    ), { status: 502 });
+    const h = controllerHarness({ routerError: providerError });
+    const response = {
+      statusCode: 0,
+      body: undefined as unknown,
+      status(code: number) { this.statusCode = code; return this; },
+      json(value: unknown) { this.body = value; return this; },
+    };
+    await h.controller.postChatCompletion({
+      authUserId: 'subject-a',
+      body: { messages: [{ role: 'user', content: 'synthetic request' }], maxTokens: 20 },
+    }, response);
 
-    for (const testCase of cases) {
-      const h = controllerHarness({ routerError: testCase.error });
-      const response = {
-        statusCode: 0,
-        body: undefined as unknown,
-        status(code: number) { this.statusCode = code; return this; },
-        json(value: unknown) { this.body = value; return this; },
-      };
-      await h.controller.postChatCompletion({
-        authUserId: 'subject-a',
-        body: { messages: [{ role: 'user', content: 'synthetic request' }], maxTokens: 20 },
-      }, response);
-
-      assert.equal(response.statusCode, 500);
-      const logged = JSON.stringify(h.consoleErrors);
-      assert.doesNotMatch(logged, testCase.forbidden);
-      assert.match(logged, testCase.redacted);
-      assert.match(logged, /"errName":"Error"/);
-      assert.match(logged, /"status":502/);
+    assert.equal(response.statusCode, 500);
+    const logged = JSON.stringify(h.consoleErrors);
+    for (const secret of ['SECRET_MARKER', "O'Neil", 'BEARER_SECRET', 'PROMPT_SECRET', 'token=', 'Bearer']) {
+      assert.equal(logged.includes(secret), false, `log leaked ${secret}`);
     }
+    assert.match(logged, /AI_CHAT_UNEXPECTED/);
+    assert.match(logged, /"errName":"Error"/);
+    assert.match(logged, /"status":502/);
+    const metadata = h.consoleErrors[0]?.[1] as Readonly<Record<string, unknown>>;
+    assert.deepEqual(Object.keys(metadata).sort(), ['code', 'errName', 'status']);
+    assert.equal(metadata.code, 'AI_CHAT_UNEXPECTED');
+    assert.equal(Object.prototype.hasOwnProperty.call(metadata, 'message'), false);
   });
 
   await test('vision reserve adds the default image-token bound and settlement forwards provider usage', async () => {
