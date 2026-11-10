@@ -88,7 +88,7 @@ module.exports = () => {
     [
       'expo-notifications',
       {
-        icon: './assets/images/icon.png',
+        icon: './assets/brand/viona/app-icon.png',
         color: '#0B2A66',
       },
     ],
@@ -163,7 +163,7 @@ module.exports = () => {
     web: {
       shortName: 'VIONA',
       name: 'VIONA',
-      favicon: './assets/brand/viona/web/favicon-48.png',
+      favicon: './assets/brand/viona/favicon.png',
       themeColor: '#0A1A33',
       backgroundColor: '#0A1A33',
       display: 'standalone',

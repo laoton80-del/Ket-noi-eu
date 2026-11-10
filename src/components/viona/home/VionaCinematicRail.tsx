@@ -4,7 +4,7 @@ import { Animated, Platform, Pressable, ScrollView, StyleSheet, Text, View } fro
 
 import { vionaCinematicTokens } from '../../../design/vionaCinematicTokens';
 import { useTranslation } from '../../../i18n';
-import { VionaCraneMark } from '../brand/VionaCraneMark';
+import { VionaBrandLockup } from '../VionaBrandLockup';
 import {
   invokeVionaRec2UniverseCallback,
   type VionaRec2UniverseCallbacks,
@@ -312,8 +312,7 @@ export function VionaCinematicRail({
             ]}
           >
             <View style={styles.brandRow}>
-              <VionaCraneMark size={28} variant="sapphire" />
-              <Text style={styles.word}>VIONA</Text>
+              <VionaBrandLockup variant="iconOnly" />
               {canPin ? (
                 <Pressable
                   accessibilityRole="button"

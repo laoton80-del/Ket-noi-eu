@@ -14,8 +14,7 @@ import { useFashionHomePrefersReducedMotion } from '../fashionHomeDesktopShell';
 import { playIntroChime, stopIntroChime } from './introChime';
 
 const EARTH = require('../../../../assets/brand/viona/intro/intro-earth.png');
-const MARK = require('../../../../assets/brand/viona/viona-symbol.png');
-const WORDMARK = require('../../../../assets/brand/viona/viona-wordmark.png');
+const BRAND = require('../../../../assets/brand/viona/logo-in-app.png');
 
 function readReducedMotion(): boolean {
   if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return false;
@@ -104,10 +103,7 @@ export function VionaIntroScreen({ onDone }: Readonly<{ onDone: () => void }>) {
         <Animated.View pointerEvents="none" style={[styles.ray, styles.rayB, rayStyle]} />
         <Animated.View pointerEvents="none" style={[styles.ray, styles.rayC, rayStyle]} />
         <Animated.View pointerEvents="none" style={[styles.logo, logoStyle]}>
-          <View style={reducedMotion ? undefined : styles.markGlow}>
-            <Image source={MARK} resizeMode="contain" style={styles.mark} />
-          </View>
-          <Image source={WORDMARK} resizeMode="contain" accessibilityLabel="VIONA" style={styles.word} />
+          <Image source={BRAND} resizeMode="contain" accessibilityLabel="VIONA" style={styles.brand} />
         </Animated.View>
       </Pressable>
     </Animated.View>
@@ -157,12 +153,5 @@ const styles = StyleSheet.create({
   rayB: { left: '52%', bottom: '26%' },
   rayC: { left: '63%', bottom: '20%' },
   logo: { position: 'absolute', top: '16%', left: 0, right: 0, alignItems: 'center', gap: 10 },
-  markGlow: {
-    shadowColor: '#00D1FF',
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.55,
-    shadowRadius: 16,
-  },
-  mark: { width: 72, height: 72 },
-  word: { width: 180, height: 68 },
+  brand: { width: 220, height: 48 },
 });

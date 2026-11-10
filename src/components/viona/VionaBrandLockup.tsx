@@ -34,36 +34,15 @@ export function VionaBrandLockup({
   const caption = subtitle ?? eyebrow;
   const content = (
     <View style={[styles.wrap, style]} accessibilityRole={onPress ? undefined : 'text'} accessibilityLabel={accessibilityLabel}>
-      {variant === 'iconOnly' ? (
-        <Image
-          source={LOGO_IMAGE}
-          resizeMode="contain"
-          accessibilityIgnoresInvertColors
-          style={[
-            styles.iconOnlyImage,
-            {
-              width: spec.imageWidth,
-              height: spec.imageHeight,
-            },
-          ]}
-        />
-      ) : (
-        <Text
-          style={[
-            styles.wordmark,
-            {
-              fontSize: spec.fontSize,
-              letterSpacing: spec.letterSpacing,
-              color: spec.ink,
-              textShadowColor: spec.glow,
-              textShadowRadius: spec.glowRadius,
-              textShadowOffset: { width: 0, height: 0 },
-            },
-          ]}
-        >
-          VIONA
-        </Text>
-      )}
+      <Image
+        source={LOGO_IMAGE}
+        resizeMode="contain"
+        accessibilityIgnoresInvertColors
+        style={{
+          width: spec.imageWidth,
+          height: spec.imageHeight,
+        }}
+      />
       {caption ? (
         <Text style={[styles.subtitle, { color: VIONA_GLOBAL_LIGHT_NETWORK_LOGO.wordmarkMuted }]} numberOfLines={2}>
           {caption}
@@ -99,8 +78,8 @@ function resolveVariantSpec(variant: VionaBrandLockupVariant) {
         ink: logo.wordmarkIvory,
         glow: logo.glowIvory,
         glowRadius: logo.heroGlowRadiusPx,
-        imageWidth: 248,
-        imageHeight: 56,
+        imageWidth: 280,
+        imageHeight: 64,
       };
     case 'compact':
       return {

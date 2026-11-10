@@ -13,7 +13,7 @@ export function TravelHubScreen() {
   return (
     <SafeAreaView style={styles.safe} edges={['top', 'left', 'right']}>
       <View style={styles.frame}>
-        <VionaCraneMark size={22} variant="sapphire" />
+        <VionaCraneMark size={22} variant="gold" />
         <View style={styles.copy}>
           <Text style={styles.title}>VIONA Travel</Text>
           <Text style={styles.note}>Location stays off until you choose it on this screen.</Text>

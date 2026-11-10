@@ -7,7 +7,6 @@ const ROOT = __dirname;
 const INPUT_CANDIDATES = [
   'brand-logo-source.png',
   'brand-logo.png',
-  'assets/images/brand-logo-premium.png',
 ];
 
 const IMAGE_DIR = path.join(ROOT, 'assets', 'images');
@@ -136,7 +135,6 @@ async function main() {
   await ensureDirs();
   const inputPath = await resolveInputPath();
 
-  await fs.copyFile(inputPath, path.join(IMAGE_DIR, 'brand-logo-premium.png'));
   await squareCanvas(inputPath, path.join(IMAGE_DIR, 'icon.png'), 1024, '#0B2A66');
   await squareCanvas(inputPath, path.join(IMAGE_DIR, 'adaptive-icon.png'), 1024, '#0B2A66');
   await createFavicon(inputPath);

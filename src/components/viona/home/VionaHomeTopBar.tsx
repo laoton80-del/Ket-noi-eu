@@ -4,7 +4,7 @@ import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { vionaCinematicTokens } from '../../../design/vionaCinematicTokens';
 import { useTranslation } from '../../../i18n';
-import { VionaBrandLockup } from '../brand/VionaBrandLockup';
+import { VionaBrandLockup } from '../VionaBrandLockup';
 
 export type VionaHomeTopBarProps = Readonly<{
   displayName?: string | null;
@@ -52,7 +52,7 @@ export function VionaHomeTopBar({
         </Pressable>
       ) : null}
       {showBrand ? (
-        <VionaBrandLockup reducedMotion={reducedMotion} compact />
+        <VionaBrandLockup variant="compact" />
       ) : null}
       <View style={styles.place}>
         <Ionicons name="location-outline" size={15} color={vionaCinematicTokens.color.cyan} />
