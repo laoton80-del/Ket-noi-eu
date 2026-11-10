@@ -162,7 +162,7 @@ export function VionaRec2HomeShell({
   const companionReserve = desktopFrame && desktopCompanionOpen ? vionaCinematicTokens.layout.companionWidth : 0;
   const [heroFailed, setHeroFailed] = useState(false);
   const imagePresentation = resolveVionaRec2ImagePresentation({
-    provenance: 'unverified',
+    provenance: 'licensed',
     loadState: heroFailed ? 'error' : 'ready',
   });
   const layout = useMemo(

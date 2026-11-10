@@ -26,15 +26,15 @@ const ICONS: Record<VionaRec2UniverseId, IconName> = {
   sos: 'shield-checkmark-outline',
 };
 
-// Swap a universe to 'licensed' and point its asset at a cleared file.
-// The tile layout stays the same; unverified entries keep the accent gradient.
+// These six cinematic photos are licensed. See PROVENANCE.md.
+// A non-licensed value keeps the accent gradient.
 const IMAGE_PROVENANCE: Readonly<Record<VionaRec2UniverseId, VionaRec2ImageInput['provenance']>> = {
-  local: 'unverified',
-  travel: 'unverified',
-  academy: 'unverified',
-  business: 'unverified',
-  account: 'unverified',
-  sos: 'unverified',
+  local: 'licensed',
+  travel: 'licensed',
+  academy: 'licensed',
+  business: 'licensed',
+  account: 'licensed',
+  sos: 'licensed',
 };
 
 const UNIVERSE_ASSETS: Readonly<Record<VionaRec2UniverseId, ImageSourcePropType>> = {

@@ -25,15 +25,14 @@ const ICONS: Record<VionaRec2UniverseId, IconName> = {
   sos: 'shield-checkmark-outline',
 };
 
-// Image files alone do not establish display rights. Each entry stays unverified
-// until its provenance has been independently approved for this surface.
+// Licensed cinematic photos. Record: assets/brand/viona/cinematic/PROVENANCE.md.
 const IMAGE_PROVENANCE: Readonly<Record<VionaRec2UniverseId, VionaRec2ImageInput['provenance']>> = {
-  local: 'unverified',
-  travel: 'unverified',
-  academy: 'unverified',
-  business: 'unverified',
-  account: 'unverified',
-  sos: 'unverified',
+  local: 'licensed',
+  travel: 'licensed',
+  academy: 'licensed',
+  business: 'licensed',
+  account: 'licensed',
+  sos: 'licensed',
 };
 
 type VionaCinematicUniverseCardProps = Readonly<{
