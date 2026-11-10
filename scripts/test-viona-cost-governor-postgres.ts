@@ -2497,7 +2497,10 @@ async function main(): Promise<void> {
       });
 
       assert.equal(router.sdkRequests.length, 1);
-      assert.deepEqual((router.sdkRequests[0] as Readonly<{ messages: readonly unknown[] }>).messages, messages);
+      assert.deepStrictEqual(
+        JSON.parse(JSON.stringify((router.sdkRequests[0] as Readonly<{ messages: readonly unknown[] }>).messages)),
+        messages,
+      );
       const operationId = await operationIdForKey(prisma!, subjectId, idempotencyKey);
       const settled = await operation(prisma!, operationId);
       const textUpperBound = estimateInputTokensUpperBound([{ role: 'user', content: [{ type: 'text', text }] }]);
