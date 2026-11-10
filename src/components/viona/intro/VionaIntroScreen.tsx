@@ -1,7 +1,7 @@
 import { LinearGradient } from 'expo-linear-gradient';
 // @ts-expect-error react-dom has no declaration file in this app
 import { createPortal } from 'react-dom';
-import { useEffect } from 'react';
+import { createElement, useEffect } from 'react';
 import { Asset } from 'expo-asset';
 import { Image, Platform, Pressable, StyleSheet, Text, View, useWindowDimensions, type ImageStyle, type ViewStyle } from 'react-native';
 import { Inter_500Medium, Inter_600SemiBold, useFonts } from '@expo-google-fonts/inter';
@@ -64,15 +64,103 @@ function craneMaskStyle(): ViewStyle | null {
   } as ViewStyle;
 }
 
-function limbPaint(color: string): ViewStyle {
-  if (Platform.OS !== 'web') return {};
-  const ring =
-    'radial-gradient(circle, transparent calc(50% - 7px), #000 calc(50% - 5.5px), #000 calc(50% - 1.5px), transparent calc(50% - 0.2px))';
-  return {
-    backgroundImage: `conic-gradient(from 0deg, #E6F4FF 0deg, ${color} 8deg, transparent 26deg, transparent 334deg, ${color} 352deg, #E6F4FF 360deg)`,
-    WebkitMaskImage: ring,
-    maskImage: ring,
-  } as ViewStyle;
+const LIMB_PERIOD_MS = 4400;
+
+function limbArcPath(cx: number, cy: number, radius: number, halfDeg: number) {
+  const half = (halfDeg * Math.PI) / 180;
+  const x1 = cx + radius * Math.sin(-half);
+  const y1 = cy - radius * Math.cos(-half);
+  const x2 = cx + radius * Math.sin(half);
+  const y2 = cy - radius * Math.cos(half);
+  const length = Math.max(1, radius * half * 2);
+  const d = `M ${x1.toFixed(1)} ${y1.toFixed(1)} A ${radius.toFixed(1)} ${radius.toFixed(1)} 0 0 1 ${x2.toFixed(1)} ${y2.toFixed(1)}`;
+  return { d, length };
+}
+
+function ensureLimbMotion(outerLen: number, innerLen: number) {
+  if (typeof document === 'undefined') return;
+  const id = 'viona-limb-kf';
+  let node = document.getElementById(id);
+  if (!node) {
+    node = document.createElement('style');
+    node.id = id;
+    document.head.appendChild(node);
+  }
+  const write = (len: number, name: string, shift: number) => {
+    const glow = Math.max(90, len * 0.22);
+    const core = Math.max(28, len * 0.06);
+    const lead = Math.round((glow - core) / 2 + shift);
+    return `@keyframes ${name}{from{stroke-dashoffset:${shift}}to{stroke-dashoffset:${shift - len}}}@keyframes ${name}Core{from{stroke-dashoffset:${lead}}to{stroke-dashoffset:${lead - len}}}`;
+  };
+  node.textContent = `${write(Math.round(outerLen), 'vionaLimbCyan', 0)}${write(Math.round(innerLen), 'vionaLimbBlue', Math.round(innerLen * 0.42))}`;
+}
+
+function LimbComets({
+  width,
+  height,
+  limb,
+}: {
+  width: number;
+  height: number;
+  limb: ReturnType<typeof earthLimb>;
+}) {
+  const outer = limbArcPath(limb.cx, limb.cy, limb.radius, limb.half + 14);
+  const inner = limbArcPath(limb.cx, limb.cy, Math.max(48, limb.radius - 8), limb.half + 14);
+  useEffect(() => {
+    ensureLimbMotion(outer.length, inner.length);
+  }, [inner.length, outer.length]);
+  const stroke = Math.max(4.5, width / 130);
+  const dash = (length: number, portion: number) => {
+    const mark = Math.max(32, length * portion);
+    return `${mark.toFixed(1)} ${Math.max(1, length - mark).toFixed(1)}`;
+  };
+  const run = (name: string) => ({ animation: `${name} ${LIMB_PERIOD_MS}ms linear infinite` });
+  const arc = (
+    d: string,
+    length: number,
+    color: string,
+    widthPx: number,
+    opacity: number,
+    portion: number,
+    motion: string,
+    glow: boolean,
+  ) =>
+    createElement('path', {
+      d,
+      fill: 'none',
+      stroke: color,
+      strokeWidth: widthPx,
+      strokeOpacity: opacity,
+      strokeLinecap: 'round',
+      strokeLinejoin: 'round',
+      strokeDasharray: dash(length, portion),
+      filter: glow ? 'url(#vionaLimbGlow)' : undefined,
+      style: run(motion),
+    });
+  return createElement(
+    'svg',
+    {
+      width,
+      height,
+      viewBox: `0 0 ${width} ${height}`,
+      style: { position: 'absolute', left: 0, top: 0, pointerEvents: 'none' },
+    },
+    createElement(
+      'defs',
+      null,
+      createElement(
+        'filter',
+        { id: 'vionaLimbGlow', x: '-40%', y: '-120%', width: '180%', height: '340%' },
+        createElement('feGaussianBlur', { stdDeviation: '2.2' }),
+      ),
+    ),
+    arc(outer.d, outer.length, '#00D1FF', stroke * 3.4, 1, 0.22, 'vionaLimbCyan', true),
+    arc(outer.d, outer.length, '#00D1FF', stroke * 1.7, 1, 0.14, 'vionaLimbCyan', false),
+    arc(outer.d, outer.length, '#FFFFFF', stroke * 0.95, 1, 0.06, 'vionaLimbCyanCore', false),
+    arc(inner.d, inner.length, '#007BFF', stroke * 2.8, 1, 0.18, 'vionaLimbBlue', true),
+    arc(inner.d, inner.length, '#007BFF', stroke * 1.45, 1, 0.11, 'vionaLimbBlue', false),
+    arc(inner.d, inner.length, '#F3FBFF', stroke * 0.8, 1, 0.05, 'vionaLimbBlueCore', false),
+  );
 }
 
 function readReducedMotion(): boolean {
@@ -100,7 +188,6 @@ export function VionaIntroScreen({ onDone }: Readonly<{ onDone: () => void }>) {
   const logo = useSharedValue(reducedMotion ? 1 : 0);
   const lines = useSharedValue(reducedMotion ? 1 : 0);
   const trace = useSharedValue(0);
-  const sweep = useSharedValue(0);
 
   useEffect(() => {
     let cancelled = false;
@@ -111,7 +198,6 @@ export function VionaIntroScreen({ onDone }: Readonly<{ onDone: () => void }>) {
       logo.value = 1;
       lines.value = 1;
       trace.value = 0;
-      sweep.value = 0;
       const timer = setTimeout(finish, REDUCED_HOLD_MS);
       return () => {
         cancelled = true;
@@ -121,7 +207,6 @@ export function VionaIntroScreen({ onDone }: Readonly<{ onDone: () => void }>) {
     logo.value = withDelay(300, withTiming(1, { duration: 700, easing: Easing.out(Easing.cubic) }));
     lines.value = withDelay(500, withTiming(1, { duration: 650, easing: Easing.out(Easing.cubic) }));
     trace.value = withRepeat(withTiming(1, { duration: 3600, easing: Easing.linear }), -1, false);
-    sweep.value = withRepeat(withTiming(1, { duration: 7000, easing: Easing.linear }), -1, false);
     void playIntroChime(false);
     const timer = setTimeout(() => {
       veil.value = withTiming(0, { duration: FADE_MS }, (finished) => {
@@ -132,12 +217,11 @@ export function VionaIntroScreen({ onDone }: Readonly<{ onDone: () => void }>) {
       cancelled = true;
       clearTimeout(timer);
     };
-  }, [lines, logo, onDone, reducedMotion, sweep, trace, veil]);
+  }, [lines, logo, onDone, reducedMotion, trace, veil]);
 
   const limb = earthLimb(width, height);
   const logoMask = craneMaskStyle();
-  const bandW = Math.max(12, Math.round(frame * 0.2));
-  const blueRadius = Math.max(48, limb.radius - 8);
+  const bandW = Math.max(22, Math.round(frame * 0.34));
 
   const veilStyle = useAnimatedStyle(() => ({ opacity: veil.value }));
   const logoStyle = useAnimatedStyle(() => ({
@@ -152,15 +236,6 @@ export function VionaIntroScreen({ onDone }: Readonly<{ onDone: () => void }>) {
       transform: [{ translateX: -bandW + trace.value * (frame + bandW) }],
     };
   });
-  const arcCyanStyle = useAnimatedStyle(() => {
-    const span = limb.half + 16;
-    return { transform: [{ rotate: `${-span + sweep.value * span * 2}deg` }] };
-  });
-  const arcBlueStyle = useAnimatedStyle(() => {
-    const span = limb.half + 16;
-    return { transform: [{ rotate: `${-span + 28 + sweep.value * span * 2}deg` }] };
-  });
-
   const skip = () => {
     void stopIntroChime();
     if (reducedMotion) {
@@ -195,38 +270,7 @@ export function VionaIntroScreen({ onDone }: Readonly<{ onDone: () => void }>) {
           locations={[0, 0.46, 1]}
           style={styles.topWash}
         />
-        {!reducedMotion && Platform.OS === 'web' ? (
-          <>
-            <Animated.View
-              pointerEvents="none"
-              style={[
-                styles.limbArc,
-                limbPaint('#00D1FF'),
-                arcCyanStyle,
-                {
-                  width: limb.radius * 2,
-                  height: limb.radius * 2,
-                  left: limb.cx - limb.radius,
-                  top: limb.cy - limb.radius,
-                },
-              ]}
-            />
-            <Animated.View
-              pointerEvents="none"
-              style={[
-                styles.limbArc,
-                limbPaint('#007BFF'),
-                arcBlueStyle,
-                {
-                  width: blueRadius * 2,
-                  height: blueRadius * 2,
-                  left: limb.cx - blueRadius,
-                  top: limb.cy - blueRadius,
-                },
-              ]}
-            />
-          </>
-        ) : null}
+        {!reducedMotion && Platform.OS === 'web' ? <LimbComets width={width} height={height} limb={limb} /> : null}
         <View pointerEvents="none" style={[styles.cluster, { top: clusterTop }]}>
           <Animated.View style={[styles.logo, logoStyle]}>
             <View style={[styles.mark, { width: frame, height: frame }]}>
@@ -237,14 +281,24 @@ export function VionaIntroScreen({ onDone }: Readonly<{ onDone: () => void }>) {
                 style={{ width: frame, height: frame }}
               />
               {!reducedMotion && logoMask ? (
-                <Animated.View pointerEvents="none" style={[styles.traceMask, { width: frame, height: frame }, logoMask]}>
+                <Animated.View
+                  pointerEvents="none"
+                  style={[styles.traceMask, { width: frame, height: frame }, logoMask, styles.traceBlend]}
+                >
                   <Animated.View style={[styles.traceBand, { width: bandW, height: frame }, traceStyle]}>
                     <LinearGradient
-                      colors={['rgba(243,217,166,0)', '#F3D9A6', '#E6F4FF', '#F3D9A6', 'rgba(243,217,166,0)']}
-                      locations={[0, 0.32, 0.5, 0.68, 1]}
+                      colors={['rgba(255,255,255,0)', '#F3D9A6', '#FFFFFF', '#FFFFFF', '#F3D9A6', 'rgba(255,255,255,0)']}
+                      locations={[0, 0.16, 0.4, 0.6, 0.84, 1]}
                       start={{ x: 0, y: 0.5 }}
                       end={{ x: 1, y: 0.5 }}
-                      style={StyleSheet.absoluteFill}
+                      style={[StyleSheet.absoluteFill, styles.traceGlow]}
+                    />
+                    <LinearGradient
+                      colors={['rgba(255,255,255,0)', '#FFFFFF', '#FFFFFF', 'rgba(255,255,255,0)']}
+                      locations={[0, 0.28, 0.72, 1]}
+                      start={{ x: 0, y: 0.5 }}
+                      end={{ x: 1, y: 0.5 }}
+                      style={[styles.traceCore, { left: bandW * 0.3, width: bandW * 0.4 }]}
                     />
                   </Animated.View>
                 </Animated.View>
@@ -340,8 +394,10 @@ const styles = StyleSheet.create({
   logo: { alignItems: 'center', gap: 4 },
   mark: { alignItems: 'center', justifyContent: 'center' },
   traceMask: { position: 'absolute', left: 0, top: 0, overflow: 'hidden' },
+  traceBlend: Platform.OS === 'web' ? ({ mixBlendMode: 'plus-lighter' } as ViewStyle) : {},
   traceBand: { position: 'absolute', left: 0, top: 0 },
-  limbArc: { position: 'absolute' },
+  traceGlow: Platform.OS === 'web' ? ({ filter: 'blur(5px)' } as ViewStyle) : {},
+  traceCore: { position: 'absolute', top: 0, bottom: 0 },
   word: {
     color: '#F3D9A6',
     textAlign: 'center',
