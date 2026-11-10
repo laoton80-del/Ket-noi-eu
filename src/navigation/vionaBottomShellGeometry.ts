@@ -25,7 +25,7 @@ export const VIONA_WEB_BOTTOM_SHELL_OBSTRUCTION_PX =
 export const VIONA_REC2_HOME_CONTENT_BREATHING_CLEARANCE_PX = 28;
 
 const VIONA_DOCK_LABEL_BLOCK_PX = 16;
-const VIONA_DOCK_INSIDE_RATIO = 0.36;
+const VIONA_DOCK_INSIDE_RATIO = 0.28;
 
 /** Seated companion orb: most of the ball above the bar, the foot inside a center cradle. */
 export function resolveVionaCollapsedOrb(width: number): Readonly<{

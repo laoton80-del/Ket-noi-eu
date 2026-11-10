@@ -1,4 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
+// react-dom is present for web; this app does not ship its type package.
+// @ts-expect-error module has no declaration file
+import { createPortal } from 'react-dom';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useCallback, useEffect, useMemo, useState, type ComponentProps } from 'react';
 import {
@@ -90,10 +93,10 @@ function VionaCompanionOrb({
   const orb = resolveVionaCollapsedOrb(width);
   const seated =
     Platform.OS === 'web'
-      ? ({ position: 'fixed', bottom: orb.dockBottom, zIndex: 80 } as unknown as ViewStyle)
+      ? ({ position: 'fixed', bottom: orb.dockBottom, zIndex: 400 } as unknown as ViewStyle)
       : { bottom: Math.max(12, orb.dockBottom - 24) };
 
-  return (
+  const dock = (
     <View pointerEvents="box-none" style={[styles.companionDock, seated]} testID="viona-motion">
       <Pressable
         accessibilityRole="button"
@@ -109,6 +112,10 @@ function VionaCompanionOrb({
       </Pressable>
     </View>
   );
+  if (Platform.OS === 'web' && typeof document !== 'undefined') {
+    return createPortal(dock, document.body);
+  }
+  return dock;
 }
 
 function ContentStateBanner({

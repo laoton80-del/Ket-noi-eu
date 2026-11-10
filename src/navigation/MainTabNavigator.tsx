@@ -503,7 +503,7 @@ export function MainTabNavigator(): ReactElement {
             />
           ) : null}
           {vionaGlassBar ? <View pointerEvents="none" style={[styles.tabBarOrbWash, notchGlow]} /> : null}
-          {vionaGlassBar ? <View pointerEvents="none" style={[styles.tabBarHairline, notchMask]} /> : null}
+          {vionaGlassBar ? <View pointerEvents="none" style={styles.tabBarHairline} /> : null}
           <View style={styles.tabBarMain}>
             <BottomTabBar {...props} />
           </View>
@@ -800,7 +800,7 @@ export function MainTabNavigator(): ReactElement {
                   },
               tabBarPosition === 'bottom' ? TAB_BAR_WEB_GLASS : null,
               currentActiveRole === 'B2C' && !b2cTravelPlatinum && tabBarPosition === 'bottom'
-                ? { borderTopWidth: 0 }
+                ? { borderTopWidth: 2, borderTopColor: '#00D1FF' }
                 : null,
               tabBarPosition === 'left' && styles.tabBarDesktop,
               integratedHomeShell && fashionHomeHiddenTabBarStyle,
@@ -1007,6 +1007,8 @@ const styles = StyleSheet.create({
     right: 0,
     bottom: 0,
     height: VIONA_WEB_BOTTOM_TAB_BAR_HEIGHT_PX,
+    zIndex: 20,
+    overflow: 'visible',
   },
   tabBarGlass: { ...StyleSheet.absoluteFillObject },
   tabBarHairline: {
@@ -1016,11 +1018,12 @@ const styles = StyleSheet.create({
     right: 0,
     height: 2,
     backgroundColor: '#00D1FF',
+    opacity: 1,
     shadowColor: '#00D1FF',
     shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.95,
-    shadowRadius: 12,
-    zIndex: 4,
+    shadowOpacity: 1,
+    shadowRadius: 10,
+    zIndex: 6,
     ...(Platform.OS === 'web'
       ? ({ boxShadow: '0 0 14px 1px rgba(0, 209, 255, 0.85)' } as unknown as ViewStyle)
       : null),
