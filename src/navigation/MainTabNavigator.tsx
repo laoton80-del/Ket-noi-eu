@@ -1,4 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import {
   BottomTabBar,
   createBottomTabNavigator,
@@ -475,8 +476,17 @@ export function MainTabNavigator(): ReactElement {
         );
       }
 
+      const vionaGlassBar = currentActiveRole === 'B2C' && !b2cTravelPlatinum;
       return (
         <View style={styles.tabBarHost} testID="viona-sos-tab-bar-host">
+          {vionaGlassBar ? (
+            <LinearGradient
+              pointerEvents="none"
+              colors={['rgba(18, 46, 82, 0.94)', 'rgba(10, 26, 51, 0.96)']}
+              style={styles.tabBarGlass}
+            />
+          ) : null}
+          {vionaGlassBar ? <View pointerEvents="none" style={styles.tabBarHairline} /> : null}
           <View style={styles.tabBarMain}>
             <BottomTabBar {...props} />
           </View>
@@ -515,8 +525,10 @@ export function MainTabNavigator(): ReactElement {
       );
     },
     [
+      b2cTravelPlatinum,
       chrome.barBg,
       chrome.barBorder,
+      currentActiveRole,
       mountSosInTabBarShell,
       nativeChromePad,
       nativeChromeRowHeight,
@@ -693,6 +705,9 @@ export function MainTabNavigator(): ReactElement {
             ],
             tabBarItemStyle: [
               styles.tabItem,
+              currentActiveRole === 'B2C' && !b2cTravelPlatinum && tabBarPosition === 'bottom'
+                ? styles.tabItemAiry
+                : null,
               tabBarPosition === 'left' && styles.tabItemDesktop,
               mountSosInTabBarShell && tabBarPosition === 'bottom' && Platform.OS !== 'web'
                 ? styles.nativeBottomTabItem
@@ -701,7 +716,10 @@ export function MainTabNavigator(): ReactElement {
             tabBarStyle: [
               styles.tabBar,
               {
-                backgroundColor: chrome.barBg,
+                backgroundColor:
+                  currentActiveRole === 'B2C' && !b2cTravelPlatinum && tabBarPosition === 'bottom'
+                    ? 'transparent'
+                    : chrome.barBg,
                 borderTopColor: chrome.barBorder,
                 borderRightColor: chrome.barBorder,
               },
@@ -785,13 +803,19 @@ export function MainTabNavigator(): ReactElement {
                       </Text>
                     )
                   : undefined,
-            tabBarIcon: ({ focused }) => (
-              <Ionicons
-                name={tabIconName(route.name as keyof RootTabParamList, currentActiveRole, focused)}
-                size={tabSizing.iconSize}
-                color={focused ? chrome.active : chrome.inactive}
-              />
-            ),
+            tabBarIcon: ({ focused }) => {
+              const vionaBottom =
+                currentActiveRole === 'B2C' && !b2cTravelPlatinum && tabBarPosition === 'bottom';
+              return (
+                <View style={vionaBottom && focused ? styles.tabIconGlow : undefined}>
+                  <Ionicons
+                    name={tabIconName(route.name as keyof RootTabParamList, currentActiveRole, focused)}
+                    size={tabSizing.iconSize}
+                    color={focused ? chrome.active : chrome.inactive}
+                  />
+                </View>
+              );
+            },
           })}
         >
         {currentActiveRole === 'B2C' ? (
@@ -956,6 +980,30 @@ const styles = StyleSheet.create({
     right: 0,
     bottom: 0,
     height: VIONA_WEB_BOTTOM_TAB_BAR_HEIGHT_PX,
+  },
+  tabBarGlass: { ...StyleSheet.absoluteFillObject },
+  tabBarHairline: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 1,
+    backgroundColor: 'rgba(0, 209, 255, 0.55)',
+    shadowColor: '#00D1FF',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.8,
+    shadowRadius: 8,
+    zIndex: 3,
+  },
+  tabIconGlow: {
+    shadowColor: '#00D1FF',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.85,
+    shadowRadius: 8,
+  },
+  tabItemAiry: {
+    paddingHorizontal: 10,
+    paddingVertical: 2,
   },
   nativeBottomShellHost: {
     position: 'relative',

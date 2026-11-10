@@ -97,7 +97,8 @@ function VionaCompanionOrb({
           pressed && (reducedMotion ? styles.cardPressedReducedMotion : styles.cardPressed),
         ]}
       >
-        <VionaCompanionOrbImage size={64} reducedMotion={reducedMotion} />
+        <View pointerEvents="none" style={styles.companionCradle} />
+        <VionaCompanionOrbImage size={80} reducedMotion={reducedMotion} />
         <Text style={styles.companionDockLabel}>Viona</Text>
       </Pressable>
     </View>
@@ -464,25 +465,33 @@ const styles = StyleSheet.create({
     position: 'absolute',
     left: 0,
     right: 0,
-    bottom: 12,
+    bottom: 8,
     zIndex: 40,
     alignItems: 'center',
     ...(Platform.OS === 'web'
-      ? ({ position: 'fixed', bottom: 28, zIndex: 80 } as unknown as ViewStyle)
+      ? ({ position: 'fixed', bottom: 10, zIndex: 80 } as unknown as ViewStyle)
       : null),
   },
   companionDockButton: {
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: 'transparent',
+  },
+  companionCradle: {
+    position: 'absolute',
+    width: 148,
+    height: 34,
+    bottom: 42,
+    borderRadius: 999,
+    backgroundColor: 'rgba(0, 209, 255, 0.28)',
     shadowColor: '#00D1FF',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.4,
-    shadowRadius: 16,
-    elevation: 12,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.85,
+    shadowRadius: 18,
+    ...(Platform.OS === 'web' ? ({ filter: 'blur(14px)' } as unknown as ViewStyle) : null),
   },
   companionDockLabel: {
-    marginTop: -4,
+    marginTop: 2,
     color: '#E6F4FF',
     fontSize: 11,
     fontFamily: vionaCinematicTokens.fontFamily.semibold,

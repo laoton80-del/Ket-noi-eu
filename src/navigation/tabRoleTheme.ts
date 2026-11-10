@@ -54,9 +54,9 @@ export function roleTabChrome(
   //  - barBorder is a crisper cyan/blue top edge-light (not heavy neon).
   //  - active is a clearer, brighter cyan-blue; inactive is a readable muted slate (not disabled-looking).
   return {
-    active: '#9CCBFF',
-    inactive: 'rgba(178, 200, 230, 0.64)',
-    barBg: 'rgba(8, 20, 38, 0.9)',
-    barBorder: 'rgba(124, 196, 255, 0.44)',
+    active: '#00D1FF',
+    inactive: 'rgba(230, 244, 255, 0.52)',
+    barBg: 'rgba(10, 26, 51, 0.78)',
+    barBorder: 'rgba(0, 209, 255, 0.42)',
   };
 }
