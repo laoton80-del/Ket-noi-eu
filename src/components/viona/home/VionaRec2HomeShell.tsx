@@ -17,6 +17,7 @@ import {
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useTranslation } from '../../../i18n';
+import { resolveVionaCollapsedOrb } from '../../../navigation/vionaBottomShellGeometry';
 import { useHomeCommand } from '../../../context/HomeCommandContext';
 import { VionaGlobalSosShellAction } from '../VionaGlobalSosShellAction';
 import { VionaCompanionOrbImage } from '../brand/VionaCompanionOrbImage';
@@ -85,9 +86,15 @@ function VionaCompanionOrb({
   onPress,
 }: Readonly<{ reducedMotion: boolean; onPress: () => void }>) {
   const { t } = useTranslation();
+  const { width } = useWindowDimensions();
+  const orb = resolveVionaCollapsedOrb(width);
+  const seated =
+    Platform.OS === 'web'
+      ? ({ position: 'fixed', bottom: orb.dockBottom, zIndex: 80 } as unknown as ViewStyle)
+      : { bottom: Math.max(12, orb.dockBottom - 24) };
 
   return (
-    <View pointerEvents="box-none" style={styles.companionDock} testID="viona-motion">
+    <View pointerEvents="box-none" style={[styles.companionDock, seated]} testID="viona-motion">
       <Pressable
         accessibilityRole="button"
         accessibilityLabel={t('home.rec2.companionChat')}
@@ -97,8 +104,7 @@ function VionaCompanionOrb({
           pressed && (reducedMotion ? styles.cardPressedReducedMotion : styles.cardPressed),
         ]}
       >
-        <View pointerEvents="none" style={styles.companionCradle} />
-        <VionaCompanionOrbImage size={80} reducedMotion={reducedMotion} />
+        <VionaCompanionOrbImage size={orb.size} reducedMotion={reducedMotion} />
         <Text style={styles.companionDockLabel}>Viona</Text>
       </Pressable>
     </View>
@@ -465,30 +471,13 @@ const styles = StyleSheet.create({
     position: 'absolute',
     left: 0,
     right: 0,
-    bottom: 8,
     zIndex: 40,
     alignItems: 'center',
-    ...(Platform.OS === 'web'
-      ? ({ position: 'fixed', bottom: 50, zIndex: 80 } as unknown as ViewStyle)
-      : { bottom: 36 }),
   },
   companionDockButton: {
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: 'transparent',
-  },
-  companionCradle: {
-    position: 'absolute',
-    width: 280,
-    height: 36,
-    bottom: -8,
-    borderRadius: 999,
-    backgroundColor: 'rgba(0, 209, 255, 0.42)',
-    shadowColor: '#00D1FF',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.9,
-    shadowRadius: 22,
-    ...(Platform.OS === 'web' ? ({ filter: 'blur(16px)' } as unknown as ViewStyle) : null),
   },
   companionDockLabel: {
     marginTop: 2,

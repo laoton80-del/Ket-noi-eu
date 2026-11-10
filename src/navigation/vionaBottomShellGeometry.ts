@@ -24,6 +24,32 @@ export const VIONA_WEB_BOTTOM_SHELL_OBSTRUCTION_PX =
 /** Existing Home terminal breathing room, kept separate from shell obstruction. */
 export const VIONA_REC2_HOME_CONTENT_BREATHING_CLEARANCE_PX = 28;
 
+const VIONA_DOCK_LABEL_BLOCK_PX = 16;
+const VIONA_DOCK_INSIDE_RATIO = 0.36;
+
+/** Seated companion orb: most of the ball above the bar, the foot inside a center cradle. */
+export function resolveVionaCollapsedOrb(width: number): Readonly<{
+  size: number;
+  inside: number;
+  dockBottom: number;
+  sideGap: number;
+  notchRadius: number;
+  notchCenterY: number;
+}> {
+  const size = width >= 1180 ? 108 : width >= 768 ? 88 : 76;
+  const inside = Math.round(size * VIONA_DOCK_INSIDE_RATIO);
+  const dockBottom = Math.max(0, VIONA_WEB_BOTTOM_TAB_BAR_HEIGHT_PX - inside - VIONA_DOCK_LABEL_BLOCK_PX);
+  const sideGap = width >= 1180 ? 64 : width >= 768 ? 44 : 20;
+  return {
+    size,
+    inside,
+    dockBottom,
+    sideGap,
+    notchRadius: Math.round(size * 0.48),
+    notchCenterY: inside - Math.round(size / 2),
+  };
+}
+
 export type VionaBottomShellPlatform = 'web' | 'native';
 
 export type VionaHomeBottomReservation = Readonly<{

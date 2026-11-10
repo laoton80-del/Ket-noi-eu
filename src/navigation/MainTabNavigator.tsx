@@ -53,6 +53,7 @@ import {
 import {
   VIONA_WEB_BOTTOM_SHELL_OBSTRUCTION_PX,
   VIONA_WEB_BOTTOM_TAB_BAR_HEIGHT_PX,
+  resolveVionaCollapsedOrb,
   resolveVionaHomeRouteTabBarStyleOverride,
   resolveVionaNativeBottomShellGeometry,
 } from './vionaBottomShellGeometry';
@@ -477,6 +478,20 @@ export function MainTabNavigator(): ReactElement {
       }
 
       const vionaGlassBar = currentActiveRole === 'B2C' && !b2cTravelPlatinum;
+      const seatedOrb = resolveVionaCollapsedOrb(width);
+      const notchMask =
+        Platform.OS === 'web'
+          ? ({
+              WebkitMaskImage: `radial-gradient(circle ${seatedOrb.notchRadius}px at 50% ${seatedOrb.notchCenterY}px, transparent ${seatedOrb.notchRadius - 6}px, #000 ${seatedOrb.notchRadius}px)`,
+              maskImage: `radial-gradient(circle ${seatedOrb.notchRadius}px at 50% ${seatedOrb.notchCenterY}px, transparent ${seatedOrb.notchRadius - 6}px, #000 ${seatedOrb.notchRadius}px)`,
+            } as unknown as ViewStyle)
+          : null;
+      const notchGlow =
+        Platform.OS === 'web'
+          ? ({
+              backgroundImage: `radial-gradient(circle ${seatedOrb.notchRadius + 6}px at 50% ${seatedOrb.notchCenterY}px, transparent ${seatedOrb.notchRadius - 4}px, rgba(0, 209, 255, 0.9) ${seatedOrb.notchRadius}px, rgba(0, 209, 255, 0.18) ${seatedOrb.notchRadius + 5}px, transparent ${seatedOrb.notchRadius + 10}px)`,
+            } as unknown as ViewStyle)
+          : null;
       return (
         <View style={styles.tabBarHost} testID="viona-sos-tab-bar-host">
           {vionaGlassBar ? (
@@ -484,11 +499,11 @@ export function MainTabNavigator(): ReactElement {
               pointerEvents="none"
               colors={['rgba(8, 64, 108, 0.96)', 'rgba(10, 36, 68, 0.94)', 'rgba(8, 22, 44, 0.97)']}
               locations={[0, 0.42, 1]}
-              style={styles.tabBarGlass}
+              style={[styles.tabBarGlass, notchMask]}
             />
           ) : null}
-          {vionaGlassBar ? <View pointerEvents="none" style={styles.tabBarOrbWash} /> : null}
-          {vionaGlassBar ? <View pointerEvents="none" style={styles.tabBarHairline} /> : null}
+          {vionaGlassBar ? <View pointerEvents="none" style={[styles.tabBarOrbWash, notchGlow]} /> : null}
+          {vionaGlassBar ? <View pointerEvents="none" style={[styles.tabBarHairline, notchMask]} /> : null}
           <View style={styles.tabBarMain}>
             <BottomTabBar {...props} />
           </View>
@@ -531,6 +546,7 @@ export function MainTabNavigator(): ReactElement {
       chrome.barBg,
       chrome.barBorder,
       currentActiveRole,
+      width,
       mountSosInTabBarShell,
       nativeChromePad,
       nativeChromeRowHeight,
@@ -710,6 +726,12 @@ export function MainTabNavigator(): ReactElement {
               currentActiveRole === 'B2C' && !b2cTravelPlatinum && tabBarPosition === 'bottom'
                 ? styles.tabItemAiry
                 : null,
+              currentActiveRole === 'B2C' && !b2cTravelPlatinum && tabBarPosition === 'bottom' && route.name === MAIN_TAB.B2C.local
+                ? { marginRight: resolveVionaCollapsedOrb(width).sideGap, alignItems: 'flex-end' as const }
+                : null,
+              currentActiveRole === 'B2C' && !b2cTravelPlatinum && tabBarPosition === 'bottom' && route.name === MAIN_TAB.B2C.travel
+                ? { marginLeft: resolveVionaCollapsedOrb(width).sideGap, alignItems: 'flex-start' as const }
+                : null,
               tabBarPosition === 'left' && styles.tabItemDesktop,
               mountSosInTabBarShell && tabBarPosition === 'bottom' && Platform.OS !== 'web'
                 ? styles.nativeBottomTabItem
@@ -777,6 +799,9 @@ export function MainTabNavigator(): ReactElement {
                         : undefined,
                   },
               tabBarPosition === 'bottom' ? TAB_BAR_WEB_GLASS : null,
+              currentActiveRole === 'B2C' && !b2cTravelPlatinum && tabBarPosition === 'bottom'
+                ? { borderTopWidth: 0 }
+                : null,
               tabBarPosition === 'left' && styles.tabBarDesktop,
               integratedHomeShell && fashionHomeHiddenTabBarStyle,
             ],
@@ -1007,12 +1032,6 @@ const styles = StyleSheet.create({
     top: 0,
     bottom: 0,
     zIndex: 2,
-    ...(Platform.OS === 'web'
-      ? ({
-          backgroundImage:
-            'radial-gradient(ellipse 460px 78px at 50% 0%, rgba(0, 209, 255, 0.62) 0%, rgba(0, 209, 255, 0.22) 38%, rgba(0, 209, 255, 0) 74%)',
-        } as unknown as ViewStyle)
-      : { backgroundColor: 'rgba(0, 209, 255, 0.12)' }),
   },
   tabIconGlow: {
     shadowColor: '#00D1FF',
