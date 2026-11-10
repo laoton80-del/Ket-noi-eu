@@ -1,10 +1,17 @@
+import { Inter_600SemiBold, useFonts } from '@expo-google-fonts/inter';
 import { Ionicons } from '@expo/vector-icons';
 import { type ReactNode } from 'react';
-import { Pressable, StyleSheet, Text, TextInput, View, useWindowDimensions } from 'react-native';
+import { Image, Platform, Pressable, StyleSheet, Text, TextInput, View, useWindowDimensions, type ViewStyle } from 'react-native';
 
 import { vionaCinematicTokens } from '../../../design/vionaCinematicTokens';
 import { useTranslation } from '../../../i18n';
-import { VionaCraneMark } from '../brand/VionaCraneMark';
+
+const GOLD_MARK = require('../../../../assets/brand/viona/viona-symbol-gold.png');
+
+function webBlur(px: number): ViewStyle | null {
+  if (Platform.OS !== 'web') return null;
+  return { filter: `blur(${px}px)` } as ViewStyle;
+}
 
 export type VionaHomeTopBarProps = Readonly<{
   displayName?: string | null;
@@ -35,11 +42,12 @@ export function VionaHomeTopBar({
 }: VionaHomeTopBarProps) {
   const { t } = useTranslation();
   const { width } = useWindowDimensions();
+  const [fontsLoaded] = useFonts({ Inter_600SemiBold });
   const name = displayName?.trim() || null;
   const desktop = width >= vionaCinematicTokens.layout.desktopMin;
   const tablet = width >= 768;
-  const markSize = desktop ? 44 : tablet ? 36 : 32;
-  const wordSize = desktop ? 22 : tablet ? 18 : 16;
+  const markSize = desktop ? 60 : tablet ? 48 : 42;
+  const wordSize = desktop ? 26 : tablet ? 20 : 17;
   const avatarLabel = previewMode ? t('home.rec2.avatarPreview') : name ?? t('home.rec2.avatarGuest');
   const place = regionLabel?.trim() || null;
 
@@ -58,9 +66,30 @@ export function VionaHomeTopBar({
       ) : null}
       {showBrand ? (
         <View accessibilityRole="text" accessibilityLabel="VIONA" style={styles.brandAnchor}>
-          <View pointerEvents="none" style={styles.brandGlow} />
-          <VionaCraneMark size={markSize} variant="gold" />
-          <Text style={[styles.brandWord, { fontSize: wordSize, letterSpacing: desktop ? 3.4 : 2.4 }]}>VIONA</Text>
+          <View style={[styles.markSlot, { width: markSize, height: markSize }]}>
+            <View
+              pointerEvents="none"
+              style={[styles.halo, { width: markSize * 0.72, height: markSize * 0.72 }, webBlur(18)]}
+            />
+            <Image
+              source={GOLD_MARK}
+              resizeMode="contain"
+              accessibilityIgnoresInvertColors
+              style={{ width: markSize, height: markSize }}
+            />
+          </View>
+          <Text
+            style={[
+              styles.brandWord,
+              {
+                fontSize: wordSize,
+                letterSpacing: Math.round(wordSize * 0.2),
+                fontFamily: fontsLoaded ? 'Inter_600SemiBold' : 'Montserrat_600SemiBold',
+              },
+            ]}
+          >
+            VIONA
+          </Text>
         </View>
       ) : null}
       <View style={styles.place}>
@@ -123,28 +152,23 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    minHeight: 48,
-    paddingLeft: 6,
-    paddingRight: 10,
+    paddingLeft: 8,
+    paddingRight: 12,
     backgroundColor: 'transparent',
   },
-  brandGlow: {
+  markSlot: { alignItems: 'center', justifyContent: 'center' },
+  halo: {
     position: 'absolute',
-    left: 4,
-    right: 0,
-    top: 8,
-    bottom: 8,
+    backgroundColor: 'rgba(243, 217, 166, 0.34)',
     borderRadius: 999,
-    backgroundColor: 'rgba(243, 217, 166, 0.07)',
     shadowColor: '#F3D9A6',
     shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.45,
-    shadowRadius: 16,
+    shadowOpacity: 0.55,
+    shadowRadius: 18,
   },
   brandWord: {
-    color: '#D4AF7C',
-    fontFamily: vionaCinematicTokens.fontFamily.bold,
-    fontWeight: '700',
+    color: '#F3D9A6',
+    fontWeight: '600',
   },
   place: { flexDirection: 'row', alignItems: 'center', gap: 6, maxWidth: 220 },
   placeCopy: { gap: 1, flexShrink: 1 },
