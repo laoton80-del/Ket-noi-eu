@@ -64,7 +64,9 @@ function craneMaskStyle(): ViewStyle | null {
   } as ViewStyle;
 }
 
-const LIMB_PERIOD_MS = 4400;
+const LIMB_PERIOD_MS = 7200;
+const LIMB_SPOT_PX = 52;
+const LIMB_PEAK_PX = 16;
 
 function limbArcPath(cx: number, cy: number, radius: number, halfDeg: number) {
   const half = (halfDeg * Math.PI) / 180;
@@ -77,7 +79,7 @@ function limbArcPath(cx: number, cy: number, radius: number, halfDeg: number) {
   return { d, length };
 }
 
-function ensureLimbMotion(outerLen: number, innerLen: number) {
+function ensureLimbMotion(length: number) {
   if (typeof document === 'undefined') return;
   const id = 'viona-limb-kf';
   let node = document.getElementById(id);
@@ -86,13 +88,10 @@ function ensureLimbMotion(outerLen: number, innerLen: number) {
     node.id = id;
     document.head.appendChild(node);
   }
-  const write = (len: number, name: string, shift: number) => {
-    const glow = Math.max(90, len * 0.22);
-    const core = Math.max(28, len * 0.06);
-    const lead = Math.round((glow - core) / 2 + shift);
-    return `@keyframes ${name}{from{stroke-dashoffset:${shift}}to{stroke-dashoffset:${shift - len}}}@keyframes ${name}Core{from{stroke-dashoffset:${lead}}to{stroke-dashoffset:${lead - len}}}`;
-  };
-  node.textContent = `${write(Math.round(outerLen), 'vionaLimbCyan', 0)}${write(Math.round(innerLen), 'vionaLimbBlue', Math.round(innerLen * 0.42))}`;
+  const len = Math.max(1, Math.round(length));
+  const bodyLead = Math.round((LIMB_SPOT_PX - 34) / 2);
+  const peakLead = Math.round((LIMB_SPOT_PX - LIMB_PEAK_PX) / 2);
+  node.textContent = `@keyframes vionaLimbSpot{from{stroke-dashoffset:0}to{stroke-dashoffset:-${len}}}@keyframes vionaLimbBody{from{stroke-dashoffset:${bodyLead}}to{stroke-dashoffset:${bodyLead - len}}}@keyframes vionaLimbPeak{from{stroke-dashoffset:${peakLead}}to{stroke-dashoffset:${peakLead - len}}}`;
 }
 
 function LimbComets({
@@ -104,36 +103,22 @@ function LimbComets({
   height: number;
   limb: ReturnType<typeof earthLimb>;
 }) {
-  const outer = limbArcPath(limb.cx, limb.cy, limb.radius, limb.half + 14);
-  const inner = limbArcPath(limb.cx, limb.cy, Math.max(48, limb.radius - 8), limb.half + 14);
+  const inset = (limb.radius / LIMB_R) * 6;
+  const arc = limbArcPath(limb.cx, limb.cy, Math.max(48, limb.radius - inset), Math.max(16, limb.half - 4));
   useEffect(() => {
-    ensureLimbMotion(outer.length, inner.length);
-  }, [inner.length, outer.length]);
-  const stroke = Math.max(4.5, width / 130);
-  const dash = (length: number, portion: number) => {
-    const mark = Math.max(32, length * portion);
-    return `${mark.toFixed(1)} ${Math.max(1, length - mark).toFixed(1)}`;
-  };
+    ensureLimbMotion(arc.length);
+  }, [arc.length]);
+  const dash = (mark: number) => `${mark} ${Math.max(1, arc.length - mark).toFixed(1)}`;
   const run = (name: string) => ({ animation: `${name} ${LIMB_PERIOD_MS}ms linear infinite` });
-  const arc = (
-    d: string,
-    length: number,
-    color: string,
-    widthPx: number,
-    opacity: number,
-    portion: number,
-    motion: string,
-    glow: boolean,
-  ) =>
+  const spot = (color: string, widthPx: number, opacity: number, mark: number, motion: string, glow: boolean) =>
     createElement('path', {
-      d,
+      d: arc.d,
       fill: 'none',
       stroke: color,
       strokeWidth: widthPx,
       strokeOpacity: opacity,
       strokeLinecap: 'round',
-      strokeLinejoin: 'round',
-      strokeDasharray: dash(length, portion),
+      strokeDasharray: dash(mark),
       filter: glow ? 'url(#vionaLimbGlow)' : undefined,
       style: run(motion),
     });
@@ -150,16 +135,13 @@ function LimbComets({
       null,
       createElement(
         'filter',
-        { id: 'vionaLimbGlow', x: '-40%', y: '-120%', width: '180%', height: '340%' },
-        createElement('feGaussianBlur', { stdDeviation: '2.2' }),
+        { id: 'vionaLimbGlow', x: '-20%', y: '-80%', width: '140%', height: '260%' },
+        createElement('feGaussianBlur', { stdDeviation: '0.7' }),
       ),
     ),
-    arc(outer.d, outer.length, '#00D1FF', stroke * 3.4, 1, 0.22, 'vionaLimbCyan', true),
-    arc(outer.d, outer.length, '#00D1FF', stroke * 1.7, 1, 0.14, 'vionaLimbCyan', false),
-    arc(outer.d, outer.length, '#FFFFFF', stroke * 0.95, 1, 0.06, 'vionaLimbCyanCore', false),
-    arc(inner.d, inner.length, '#007BFF', stroke * 2.8, 1, 0.18, 'vionaLimbBlue', true),
-    arc(inner.d, inner.length, '#007BFF', stroke * 1.45, 1, 0.11, 'vionaLimbBlue', false),
-    arc(inner.d, inner.length, '#F3FBFF', stroke * 0.8, 1, 0.05, 'vionaLimbBlueCore', false),
+    spot('#00D1FF', 3, 0.45, LIMB_SPOT_PX, 'vionaLimbSpot', true),
+    spot('#00D1FF', 2.5, 1, 34, 'vionaLimbBody', false),
+    spot('#FFFFFF', 1.5, 1, LIMB_PEAK_PX, 'vionaLimbPeak', false),
   );
 }
 
