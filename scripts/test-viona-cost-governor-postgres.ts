@@ -32,6 +32,7 @@ import {
   type CostGovernorReserveInput,
   type CostGovernorReserveResult,
 } from '../src/services/ai/CostGovernorService';
+import { seedLaneBModelPrices } from './seed-viona-cost-governor-price';
 import { LlmProviderAdmissionDeniedError } from '../src/services/ai/llmProviderAdmissionGate';
 import type * as RouterModule from '../src/services/ai/AIRouterService';
 import type * as ViralModule from '../src/services/marketing/ViralWrapEngine';
@@ -43,6 +44,7 @@ const A1_MIGRATIONS = [
   resolve(root, 'prisma', 'migrations', '20261104000000_ai_cost_receipt_inflight', 'migration.sql'),
   resolve(root, 'prisma', 'migrations', '20261104010000_ai_cost_price_unit_per_million', 'migration.sql'),
   resolve(root, 'prisma', 'migrations', '20261105000000_ai_cost_operation_snapshots', 'migration.sql'),
+  resolve(root, 'prisma', 'migrations', '20261110120000_laneb_mult_unit_price_snapshots', 'migration.sql'),
 ] as const;
 const inputPrice = 150000n;
 const outputPrice = 600000n;
@@ -149,6 +151,18 @@ async function verifySnapshotColumnsAbsent(client: PgClient): Promise<void> {
   assert.equal(snapshotColumns.rows.length, 0, 'rejected snapshot migration must not partially add columns');
 }
 
+async function verifyLaneBColumnsAbsent(client: PgClient): Promise<void> {
+  const columns = await client.query(
+    `SELECT column_name
+       FROM information_schema.columns
+      WHERE table_schema = 'public'
+        AND table_name = 'AiCostOperation'
+        AND column_name = ANY($1::text[])`,
+    [['audioInputMicrousdPerSecond', 'audioOutputMicrousdPerSecond', 'imageMicrousdPerUnit']]
+  );
+  assert.equal(columns.rows.length, 0, 'rejected Lane B migration must not partially add unit snapshots');
+}
+
 async function proveSnapshotMigrationGuard(client: PgClient): Promise<void> {
   const priorMigrations = A1_MIGRATIONS.slice(0, 3);
   const snapshotMigration = A1_MIGRATIONS[3];
@@ -186,6 +200,104 @@ async function proveSnapshotMigrationGuard(client: PgClient): Promise<void> {
   await verifyA1Schema(client);
 }
 
+async function proveLaneBMigrationGuard(client: PgClient): Promise<void> {
+  const priorMigrations = A1_MIGRATIONS.slice(0, 4);
+  const laneBMigration = A1_MIGRATIONS[4];
+  const laneBSql = await fs.readFile(laneBMigration, 'utf8');
+
+  await dropA1Tables(client);
+  await applyA1Migrations(client, priorMigrations);
+  await client.query(
+    `INSERT INTO "AiModelPrice" (
+       "id", "provider", "model", "calculationVersion", "effectiveFrom",
+       "inputMicrousdPerMillionTokens", "outputMicrousdPerMillionTokens",
+       "audioInputMicrousdPerSecond", "audioOutputMicrousdPerSecond", "imageMicrousdPerUnit",
+       "createdAt", "updatedAt"
+     ) VALUES (
+       'laneb-invalid-reserve-price', 'openai', 'laneb-invalid-reserve-model', 'fixture-v1',
+       (now() AT TIME ZONE 'UTC'), 1, 1, 0, 0, 0,
+       (now() AT TIME ZONE 'UTC'), (now() AT TIME ZONE 'UTC')
+     )`
+  );
+  await client.query(
+    `INSERT INTO "AiCostOperation" (
+       "id", "subjectId", "idempotencyKey", "rail", "provider", "model", "operationKind", "priceVersionId",
+       "inputMicrousdPerMillionTokens", "outputMicrousdPerMillionTokens", "providerTimeoutMs", "reservedMicrousd",
+       "windowStartDay", "windowStartMonth", "expiresAt", "createdAt", "updatedAt"
+     ) VALUES (
+       'laneb-invalid-reserve-operation', 'laneb-subject', 'laneb-key', 'EXPRESS', 'openai',
+       'laneb-invalid-reserve-model', 'ROUTED_CHAT_COMPLETION', 'laneb-invalid-reserve-price',
+       1, 1, 1000, 0, (now() AT TIME ZONE 'UTC'), (now() AT TIME ZONE 'UTC'),
+       (now() AT TIME ZONE 'UTC') + interval '1 minute',
+       (now() AT TIME ZONE 'UTC'), (now() AT TIME ZONE 'UTC')
+     )`
+  );
+  await assert.rejects(
+    client.query(laneBSql),
+    /AiCostOperation contains rows incompatible with LaneB cost-model checks; refusing migration/
+  );
+  await verifyLaneBColumnsAbsent(client);
+  const oldChecks = await client.query(
+    `SELECT conname FROM pg_constraint WHERE contype = 'c' AND conname = ANY($1::text[])`,
+    [['AiCostOperation_inputMicrousdPerMillionTokens_positive', 'AiCostOperation_outputMicrousdPerMillionTokens_positive']]
+  );
+  assert.equal(oldChecks.rows.length, 2, 'failed preflight must leave both original token checks intact');
+
+  await dropA1Tables(client);
+  await applyA1Migrations(client, priorMigrations);
+  await client.query(
+    `INSERT INTO "AiModelPrice" (
+       "id", "provider", "model", "calculationVersion", "effectiveFrom",
+       "inputMicrousdPerMillionTokens", "outputMicrousdPerMillionTokens",
+       "audioInputMicrousdPerSecond", "audioOutputMicrousdPerSecond", "imageMicrousdPerUnit",
+       "createdAt", "updatedAt"
+     ) VALUES (
+       'laneb-valid-price', 'openai', 'laneb-valid-model', 'fixture-v1',
+       (now() AT TIME ZONE 'UTC'), 1, 1, 0, 0, 0,
+       (now() AT TIME ZONE 'UTC'), (now() AT TIME ZONE 'UTC')
+     )`
+  );
+  await client.query(
+    `INSERT INTO "AiCostOperation" (
+       "id", "subjectId", "idempotencyKey", "rail", "provider", "model", "operationKind", "priceVersionId",
+       "inputMicrousdPerMillionTokens", "outputMicrousdPerMillionTokens", "providerTimeoutMs", "reservedMicrousd",
+       "windowStartDay", "windowStartMonth", "expiresAt", "createdAt", "updatedAt"
+     ) VALUES (
+       'laneb-valid-operation', 'laneb-subject', 'laneb-valid-key', 'EXPRESS', 'openai',
+       'laneb-valid-model', 'ROUTED_CHAT_COMPLETION', 'laneb-valid-price',
+       1, 1, 1000, 1, (now() AT TIME ZONE 'UTC'), (now() AT TIME ZONE 'UTC'),
+       (now() AT TIME ZONE 'UTC') + interval '1 minute',
+       (now() AT TIME ZONE 'UTC'), (now() AT TIME ZONE 'UTC')
+     )`
+  );
+  await client.query(laneBSql);
+  const preserved = await client.query(
+    `SELECT "reservedMicrousd", "inputMicrousdPerMillionTokens", "outputMicrousdPerMillionTokens",
+            "audioInputMicrousdPerSecond", "audioOutputMicrousdPerSecond", "imageMicrousdPerUnit"
+       FROM "AiCostOperation" WHERE "id" = 'laneb-valid-operation'`
+  );
+  assert.equal(preserved.rows.length, 1);
+  assert.equal(preserved.rows[0].reservedMicrousd, '1');
+  assert.equal(preserved.rows[0].inputMicrousdPerMillionTokens, '1');
+  assert.equal(preserved.rows[0].outputMicrousdPerMillionTokens, '1');
+  assert.equal(preserved.rows[0].audioInputMicrousdPerSecond, null);
+  assert.equal(preserved.rows[0].audioOutputMicrousdPerSecond, null);
+  assert.equal(preserved.rows[0].imageMicrousdPerUnit, null);
+  await client.query(
+    `UPDATE "AiCostOperation"
+        SET "inputMicrousdPerMillionTokens" = 0, "outputMicrousdPerMillionTokens" = 0
+      WHERE "id" = 'laneb-valid-operation'`
+  );
+  await assert.rejects(
+    client.query(`UPDATE "AiCostOperation" SET "reservedMicrousd" = 0 WHERE "id" = 'laneb-valid-operation'`),
+    /AiCostOperation_reservedMicrousd_positive/
+  );
+
+  await dropA1Tables(client);
+  await applyA1Migrations(client);
+  await verifyA1Schema(client);
+}
+
 async function verifyA1Schema(client: PgClient): Promise<void> {
   const expectedTables = ['AiModelPrice', 'AiCostOperation', 'AiCostLedgerEntry', 'AiCostBudgetCounter'];
   const tables = await client.query(
@@ -207,6 +319,9 @@ async function verifyA1Schema(client: PgClient): Promise<void> {
     ['AiCostOperation', 'inputMicrousdPerMillionTokens'],
     ['AiCostOperation', 'outputMicrousdPerMillionTokens'],
     ['AiCostOperation', 'providerTimeoutMs'],
+    ['AiCostOperation', 'audioInputMicrousdPerSecond'],
+    ['AiCostOperation', 'audioOutputMicrousdPerSecond'],
+    ['AiCostOperation', 'imageMicrousdPerUnit'],
     ['AiModelPrice', 'inputMicrousdPerMillionTokens'],
     ['AiModelPrice', 'outputMicrousdPerMillionTokens'],
   ] as const;
@@ -218,6 +333,8 @@ async function verifyA1Schema(client: PgClient): Promise<void> {
            ('AiCostOperation', 'usageOutputTokens'), ('AiCostOperation', 'actualCostMicrousd'),
            ('AiCostOperation', 'settledAt'), ('AiCostOperation', 'inputMicrousdPerMillionTokens'),
            ('AiCostOperation', 'outputMicrousdPerMillionTokens'), ('AiCostOperation', 'providerTimeoutMs'),
+           ('AiCostOperation', 'audioInputMicrousdPerSecond'), ('AiCostOperation', 'audioOutputMicrousdPerSecond'),
+           ('AiCostOperation', 'imageMicrousdPerUnit'),
            ('AiModelPrice', 'inputMicrousdPerMillionTokens'),
            ('AiModelPrice', 'outputMicrousdPerMillionTokens')
          )`
@@ -237,8 +354,9 @@ async function verifyA1Schema(client: PgClient): Promise<void> {
     'AiCostOperation_actualCostMicrousd_nonnegative',
     'AiCostOperation_settled_requires_settledAt',
     'AiCostOperation_actualCost_requires_settled',
-    'AiCostOperation_inputMicrousdPerMillionTokens_positive',
-    'AiCostOperation_outputMicrousdPerMillionTokens_positive',
+    'AiCostOperation_inputMicrousdPerMillionTokens_nonnegative',
+    'AiCostOperation_outputMicrousdPerMillionTokens_nonnegative',
+    'AiCostOperation_reservedMicrousd_positive',
     'AiCostOperation_providerTimeoutMs_valid',
     'AiCostBudgetCounter_reservedMicrousd_nonnegative',
     'AiCostBudgetCounter_settledMicrousd_nonnegative',
@@ -456,7 +574,7 @@ function input(subjectId: string, idempotencyKey: string, overrides: Partial<Cos
     rail: 'EXPRESS',
     provider: 'openai',
     model: 'fixture-mini',
-    operationKind: 'POSTGRES_TEST',
+    operationKind: 'ROUTED_CHAT_COMPLETION',
     inputTokensUpperBound: reserveInputTokens,
     outputTokens: reserveOutputTokens,
     ...overrides,
@@ -727,6 +845,9 @@ async function operation(prisma: PrismaClient, id: string): Promise<Readonly<{
   actualCostMicrousd: bigint | null;
   inputMicrousdPerMillionTokens: bigint;
   outputMicrousdPerMillionTokens: bigint;
+  audioInputMicrousdPerSecond: bigint | null;
+  audioOutputMicrousdPerSecond: bigint | null;
+  imageMicrousdPerUnit: bigint | null;
   providerTimeoutMs: bigint;
   windowStartDay: Date;
   windowStartMonth: Date;
@@ -742,6 +863,9 @@ async function operation(prisma: PrismaClient, id: string): Promise<Readonly<{
     actualCostMicrousd: bigint | null;
     inputMicrousdPerMillionTokens: bigint;
     outputMicrousdPerMillionTokens: bigint;
+    audioInputMicrousdPerSecond: bigint | null;
+    audioOutputMicrousdPerSecond: bigint | null;
+    imageMicrousdPerUnit: bigint | null;
     providerTimeoutMs: bigint;
     windowStartDay: Date;
     windowStartMonth: Date;
@@ -751,7 +875,8 @@ async function operation(prisma: PrismaClient, id: string): Promise<Readonly<{
     settledAt: Date | null;
   }>>(
     `SELECT "status", "reservedMicrousd", "settledMicrousd", "actualCostMicrousd",
-            "inputMicrousdPerMillionTokens", "outputMicrousdPerMillionTokens", "providerTimeoutMs",
+            "inputMicrousdPerMillionTokens", "outputMicrousdPerMillionTokens",
+            "audioInputMicrousdPerSecond", "audioOutputMicrousdPerSecond", "imageMicrousdPerUnit", "providerTimeoutMs",
             "windowStartDay", "windowStartMonth",
             "createdAt", "dispatchedAt", "expiresAt", "settledAt"
        FROM "AiCostOperation" WHERE "id" = $1`,
@@ -864,6 +989,10 @@ async function main(): Promise<void> {
     await runPhase('prove snapshot migration guard and apply empty-table path', () => test(
       '44: snapshot migration rejects a legacy row without partial schema and applies on an empty table',
       () => proveSnapshotMigrationGuard(pg!)
+    ));
+    await runPhase('prove Lane B nonpositive-reserve migration guard', () => test(
+      '44b: Lane B migration rejects nonpositive legacy reserves and preserves valid snapshots',
+      () => proveLaneBMigrationGuard(pg!)
     ));
     await runPhase('pg.end after schema verification', () => pg!.end());
     pg = undefined;
@@ -1854,10 +1983,16 @@ async function main(): Promise<void> {
       assert.equal(reserved.inputMicrousdPerMillionTokens, inputPrice);
       assert.equal(reserved.outputMicrousdPerMillionTokens, outputPrice);
       assert.equal(first.operation.priceVersionId, priceId);
-      await assert.rejects(prisma!.$executeRawUnsafe(
+      const zeroSnapshot = await prisma!.$executeRawUnsafe(
         'UPDATE "AiCostOperation" SET "inputMicrousdPerMillionTokens" = 0 WHERE "id" = $1',
         first.operation.id
-      ));
+      );
+      assert.equal(zeroSnapshot, 1, 'zero is valid for a price dimension not charged by a unit operation');
+      await prisma!.$executeRawUnsafe(
+        'UPDATE "AiCostOperation" SET "inputMicrousdPerMillionTokens" = $2::bigint WHERE "id" = $1',
+        first.operation.id,
+        inputPrice.toString()
+      );
       await assert.rejects(prisma!.$executeRawUnsafe(
         'UPDATE "AiCostOperation" SET "providerTimeoutMs" = 0 WHERE "id" = $1',
         first.operation.id
@@ -2190,6 +2325,81 @@ async function main(): Promise<void> {
         assert.equal(await countRows(prisma!, '"AiCostOperation"'), 0n);
         assert.equal(await countRows(prisma!, '"AiCostBudgetCounter"'), 0n);
       }
+    });
+
+    await test('49: token chat settles actual usage while TTS and STT settle at their unit reserve', async () => {
+      await resetCostTables(prisma!);
+      const seeded = await seedLaneBModelPrices(prisma!);
+      assert.equal(seeded.length, 4);
+      setFixtureConfig();
+
+      const chat = allowed(await governor.reserve(input('laneb-chat', 'laneb-chat', { model: 'gpt-4o-mini' })));
+      assert.equal(chat.operation.reservedMicrousd, 14n);
+      assert.equal(chat.operation.inputMicrousdPerMillionTokens, 150000n);
+      assert.equal(chat.operation.outputMicrousdPerMillionTokens, 600000n);
+      assert.equal(await governor.markDispatching(chat.operation.id), true);
+      const chatSettled = await governor.settle({
+        operationId: chat.operation.id,
+        usage: { inputTokens: 2n, outputTokens: 4n },
+      });
+      assert.equal(chatSettled.operation.settledMicrousd, 3n);
+      assert.equal((await operation(prisma!, chat.operation.id)).actualCostMicrousd, 3n);
+      assert.equal(await counter(prisma!, 'USER_DAY:laneb-chat').then((value) => value.settledMicrousd), 3n);
+
+      const tts = allowed(await governor.reserve(input('laneb-tts', 'laneb-tts', {
+        model: 'gpt-4o-mini-tts', operationKind: 'TTS', inputTokensUpperBound: 10n, outputTokens: 0n,
+      })));
+      assert.equal(tts.operation.reservedMicrousd, 6n);
+      assert.equal(tts.operation.inputMicrousdPerMillionTokens, 600000n);
+      assert.equal(tts.operation.outputMicrousdPerMillionTokens, 0n);
+      assert.equal(await governor.markDispatching(tts.operation.id), true);
+      const ttsSettled = await governor.settle({
+        operationId: tts.operation.id,
+        usage: { inputTokens: 8n, outputTokens: 0n },
+      });
+      assert.equal(ttsSettled.operation.settledMicrousd, 6n);
+      assert.equal((await operation(prisma!, tts.operation.id)).actualCostMicrousd, null);
+      assert.equal(await counter(prisma!, 'USER_DAY:laneb-tts').then((value) => value.settledMicrousd), 6n);
+
+      const stt = allowed(await governor.reserve(input('laneb-stt', 'laneb-stt', {
+        model: 'gpt-4o-transcribe', operationKind: 'STT',
+        inputTokensUpperBound: 0n, outputTokens: 0n, audioSecondsUpperBound: 3n,
+      })));
+      assert.equal(stt.operation.reservedMicrousd, 300n);
+      assert.equal(stt.operation.inputMicrousdPerMillionTokens, 0n);
+      assert.equal(stt.operation.outputMicrousdPerMillionTokens, 0n);
+      assert.equal(stt.operation.audioInputMicrousdPerSecond, 100n);
+      assert.equal(stt.operation.audioOutputMicrousdPerSecond, 0n);
+      assert.equal(await governor.markDispatching(stt.operation.id), true);
+      const sttSettled = await governor.settle({ operationId: stt.operation.id });
+      assert.equal(sttSettled.operation.settledMicrousd, 300n);
+      assert.equal((await operation(prisma!, stt.operation.id)).actualCostMicrousd, null);
+      assert.equal(await counter(prisma!, 'USER_DAY:laneb-stt').then((value) => value.settledMicrousd), 300n);
+    });
+
+    await test('50: a zero computed reserve denies without creating an operation or counter', async () => {
+      await resetCostTables(prisma!); await insertFixturePrice(prisma!); setFixtureConfig();
+      const result = await governor.reserve(input('laneb-zero', 'laneb-zero', {
+        inputTokensUpperBound: 0n,
+        outputTokens: 0n,
+      }));
+      assert.equal(result.decision, 'DENY_POLICY');
+      assert.equal(await countRows(prisma!, '"AiCostOperation"'), 0n);
+      assert.equal(await countRows(prisma!, '"AiCostBudgetCounter"'), 0n);
+    });
+
+    await test('51: a missing STT audio-second rate denies before creating an operation or counter', async () => {
+      await resetCostTables(prisma!); await insertFixturePrice(prisma!, { model: 'gpt-4o-transcribe' }); setFixtureConfig();
+      const result = await governor.reserve(input('laneb-stt-missing-rate', 'laneb-stt-missing-rate', {
+        model: 'gpt-4o-transcribe',
+        operationKind: 'STT',
+        inputTokensUpperBound: 0n,
+        outputTokens: 0n,
+        audioSecondsUpperBound: 2n,
+      }));
+      assert.equal(result.decision, 'DENY_UNCONFIGURED');
+      assert.equal(await countRows(prisma!, '"AiCostOperation"'), 0n);
+      assert.equal(await countRows(prisma!, '"AiCostBudgetCounter"'), 0n);
     });
 
     console.log(`\n${passed} PostgreSQL scenarios passed with independent Prisma transactions, a 60-connection pool, and ${testTimeZone}.`);

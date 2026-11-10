@@ -8,6 +8,7 @@ import { randomUUID } from 'node:crypto';
 import { Buffer } from 'node:buffer';
 
 import { getPrisma } from '../../lib/prisma';
+import { costMicrousd, costModelUnit, type CostModelPrices } from './costModel';
 import { LlmProviderAdmissionDeniedError } from './llmProviderAdmissionGate';
 
 const RESERVED_TTL_MS = 300_000n;
@@ -19,7 +20,6 @@ const TX_MAX_WAIT_MS = 5_000;
 const IN_FLIGHT_LEASE_GRACE_MS = 15_000n;
 const OUTCOME_UNKNOWN_RECONCILIATION_MS = 86_400_000n;
 const ADMISSION_ADVISORY_LOCK_ID = 7_913_114_201_001n;
-const MICRO_USD_PER_MILLION_TOKENS = 1_000_000n;
 const MAX_TIMEOUT_MS = 2_147_483_647n;
 const MAX_POSTGRES_BIGINT = 9_223_372_036_854_775_807n;
 const DEFAULT_RECONCILIATION_BATCH_SIZE = 100;
@@ -79,6 +79,9 @@ export type CostGovernorOperation = Readonly<{
   priceVersionId: string;
   inputMicrousdPerMillionTokens: bigint;
   outputMicrousdPerMillionTokens: bigint;
+  audioInputMicrousdPerSecond: bigint;
+  audioOutputMicrousdPerSecond: bigint;
+  imageMicrousdPerUnit: bigint;
   providerTimeoutMs: bigint;
   reservedMicrousd: bigint;
   settledMicrousd: bigint;
@@ -98,6 +101,7 @@ export type CostGovernorReserveInput = Readonly<{
   operationKind: string;
   inputTokensUpperBound: bigint;
   outputTokens: bigint;
+  audioSecondsUpperBound?: bigint;
 }>;
 
 export type CostGovernorReserveResult =
@@ -168,6 +172,9 @@ type ModelPriceRow = Readonly<{
   id: string;
   inputMicrousdPerMillionTokens: bigint | number | string;
   outputMicrousdPerMillionTokens: bigint | number | string;
+  audioInputMicrousdPerSecond: bigint | number | string;
+  audioOutputMicrousdPerSecond: bigint | number | string;
+  imageMicrousdPerUnit: bigint | number | string;
 }>;
 
 type OperationRow = Readonly<Record<string, unknown>>;
@@ -294,15 +301,28 @@ function operationFromRow(row: OperationRow): CostGovernorOperation {
   const outputMicrousdPerMillionTokens = toBigInt(
     row.outputMicrousdPerMillionTokens as bigint | number | string | null | undefined
   );
+  const audioInputRaw = row.audioInputMicrousdPerSecond;
+  const audioOutputRaw = row.audioOutputMicrousdPerSecond;
+  const imageRaw = row.imageMicrousdPerUnit;
+  const audioInputMicrousdPerSecond = audioInputRaw == null ? 0n : toBigInt(audioInputRaw as bigint | number | string);
+  const audioOutputMicrousdPerSecond = audioOutputRaw == null ? 0n : toBigInt(audioOutputRaw as bigint | number | string);
+  const imageMicrousdPerUnit = imageRaw == null ? 0n : toBigInt(imageRaw as bigint | number | string);
   const providerTimeoutMs = toBigInt(row.providerTimeoutMs as bigint | number | string | null | undefined);
   if (
     reservedMicrousd === null ||
+    reservedMicrousd <= 0n ||
     settledMicrousd === null ||
     inputMicrousdPerMillionTokens === null ||
     outputMicrousdPerMillionTokens === null ||
+    audioInputMicrousdPerSecond === null ||
+    audioInputMicrousdPerSecond < 0n ||
+    audioOutputMicrousdPerSecond === null ||
+    audioOutputMicrousdPerSecond < 0n ||
+    imageMicrousdPerUnit === null ||
+    imageMicrousdPerUnit < 0n ||
     providerTimeoutMs === null ||
-    inputMicrousdPerMillionTokens <= 0n ||
-    outputMicrousdPerMillionTokens <= 0n ||
+    inputMicrousdPerMillionTokens < 0n ||
+    outputMicrousdPerMillionTokens < 0n ||
     providerTimeoutMs <= 0n ||
     providerTimeoutMs > MAX_TIMEOUT_MS
   ) {
@@ -319,6 +339,9 @@ function operationFromRow(row: OperationRow): CostGovernorOperation {
     priceVersionId: String(row.priceVersionId),
     inputMicrousdPerMillionTokens,
     outputMicrousdPerMillionTokens,
+    audioInputMicrousdPerSecond,
+    audioOutputMicrousdPerSecond,
+    imageMicrousdPerUnit,
     providerTimeoutMs,
     reservedMicrousd,
     settledMicrousd,
@@ -334,32 +357,27 @@ function isExactNonEmpty(value: string | null | undefined): value is string {
   return typeof value === 'string' && value.length > 0 && value === value.trim();
 }
 
-function hasValidReserveTokenBounds(input: CostGovernorReserveInput): boolean {
-  return (
-    typeof input.inputTokensUpperBound === 'bigint' &&
-    typeof input.outputTokens === 'bigint' &&
-    input.inputTokensUpperBound >= 0n &&
-    input.outputTokens >= 0n
-  );
-}
-
-function calculateMicrousd(
-  inputTokens: bigint,
-  outputTokens: bigint,
-  inputMicrousdPerMillionTokens: bigint,
-  outputMicrousdPerMillionTokens: bigint
-): bigint {
+function hasValidReserveBounds(input: CostGovernorReserveInput): boolean {
   if (
-    inputTokens < 0n ||
-    outputTokens < 0n ||
-    inputMicrousdPerMillionTokens <= 0n ||
-    outputMicrousdPerMillionTokens <= 0n
-  ) {
-    throw new Error('Cost governor inputs must be non-negative');
+    typeof input.inputTokensUpperBound !== 'bigint' ||
+    typeof input.outputTokens !== 'bigint' ||
+    input.inputTokensUpperBound < 0n ||
+    input.outputTokens < 0n
+  ) return false;
+  switch (costModelUnit(input.operationKind, input.model)) {
+    case 'audio-second':
+      return input.audioSecondsUpperBound !== undefined &&
+        typeof input.audioSecondsUpperBound === 'bigint' &&
+        input.audioSecondsUpperBound >= 0n &&
+        input.inputTokensUpperBound === 0n &&
+        input.outputTokens === 0n;
+    case 'token-input':
+      return input.audioSecondsUpperBound === undefined && input.outputTokens === 0n;
+    case 'token-bidirectional':
+      return input.audioSecondsUpperBound === undefined;
+    default:
+      return false;
   }
-  const numerator =
-    inputTokens * inputMicrousdPerMillionTokens + outputTokens * outputMicrousdPerMillionTokens;
-  return (numerator + MICRO_USD_PER_MILLION_TOKENS - 1n) / MICRO_USD_PER_MILLION_TOKENS;
 }
 
 /**
@@ -452,7 +470,7 @@ export class CostGovernorService implements CostGovernor {
         await setReadCommitted(transaction);
         const existingBeforeLock = await this.findOperationByIdempotency(transaction, subjectId, input.idempotencyKey);
         if (existingBeforeLock) return operationDecision(existingBeforeLock, input);
-        if (!hasValidReserveTokenBounds(input)) return { decision: 'DENY_POLICY' };
+        if (!hasValidReserveBounds(input)) return { decision: 'DENY_POLICY' };
 
         await transaction.$executeRawUnsafe(
           'SELECT pg_advisory_xact_lock($1::bigint)',
@@ -465,7 +483,8 @@ export class CostGovernorService implements CostGovernor {
         const config = readCostGovernorConfig();
         if (!config) return { decision: 'DENY_UNCONFIGURED' };
         const priceRows = await transaction.$queryRawUnsafe<ModelPriceRow[]>(
-          `SELECT "id", "inputMicrousdPerMillionTokens", "outputMicrousdPerMillionTokens"
+          `SELECT "id", "inputMicrousdPerMillionTokens", "outputMicrousdPerMillionTokens",
+                  "audioInputMicrousdPerSecond", "audioOutputMicrousdPerSecond", "imageMicrousdPerUnit"
              FROM "AiModelPrice"
             WHERE "provider" = $1
               AND "model" = $2
@@ -478,20 +497,57 @@ export class CostGovernorService implements CostGovernor {
 
         const inputPrice = toBigInt(priceRows[0].inputMicrousdPerMillionTokens);
         const outputPrice = toBigInt(priceRows[0].outputMicrousdPerMillionTokens);
+        const audioInputPrice = toBigInt(priceRows[0].audioInputMicrousdPerSecond);
+        const audioOutputPrice = toBigInt(priceRows[0].audioOutputMicrousdPerSecond);
+        const imagePrice = toBigInt(priceRows[0].imageMicrousdPerUnit);
         if (
           inputPrice === null ||
           outputPrice === null ||
-          inputPrice <= 0n ||
-          outputPrice <= 0n
+          audioInputPrice === null ||
+          audioOutputPrice === null ||
+          imagePrice === null ||
+          inputPrice < 0n ||
+          outputPrice < 0n ||
+          audioInputPrice < 0n ||
+          audioOutputPrice < 0n ||
+          imagePrice < 0n
         ) {
           return { decision: 'DENY_UNCONFIGURED' };
         }
-        const reserveMicrousd = calculateMicrousd(
-          input.inputTokensUpperBound,
-          input.outputTokens,
-          inputPrice,
-          outputPrice
-        );
+        const unit = costModelUnit(input.operationKind, input.model);
+        if (unit === null) return { decision: 'DENY_UNCONFIGURED' };
+        const priceSnapshot: CostModelPrices = unit === 'token-bidirectional'
+          ? {
+              inputMicrousdPerMillionTokens: inputPrice,
+              outputMicrousdPerMillionTokens: outputPrice,
+              audioInputMicrousdPerSecond: 0n,
+              audioOutputMicrousdPerSecond: 0n,
+              imageMicrousdPerUnit: 0n,
+            }
+          : unit === 'token-input'
+            ? {
+                inputMicrousdPerMillionTokens: inputPrice,
+                outputMicrousdPerMillionTokens: 0n,
+                audioInputMicrousdPerSecond: 0n,
+                audioOutputMicrousdPerSecond: 0n,
+                imageMicrousdPerUnit: 0n,
+              }
+            : {
+                inputMicrousdPerMillionTokens: 0n,
+                outputMicrousdPerMillionTokens: 0n,
+                audioInputMicrousdPerSecond: audioInputPrice,
+                audioOutputMicrousdPerSecond: 0n,
+                imageMicrousdPerUnit: 0n,
+              };
+        const reserveMicrousd = costMicrousd(input.operationKind, {
+          model: input.model,
+          inputTokens: input.inputTokensUpperBound,
+          outputTokens: input.outputTokens,
+          audioSeconds: input.audioSecondsUpperBound,
+          prices: priceSnapshot,
+        });
+        if (reserveMicrousd === null) return { decision: 'DENY_UNCONFIGURED' };
+        if (reserveMicrousd <= 0n) return { decision: 'DENY_POLICY' };
 
         const [userInflight, globalInflight] = await Promise.all([
           this.countInflight(transaction, subjectId),
@@ -525,17 +581,20 @@ export class CostGovernorService implements CostGovernor {
           `INSERT INTO "AiCostOperation" (
              "id", "subjectId", "idempotencyKey", "rail", "provider", "model", "operationKind",
              "priceVersionId", "inputMicrousdPerMillionTokens", "outputMicrousdPerMillionTokens",
+             "audioInputMicrousdPerSecond", "audioOutputMicrousdPerSecond", "imageMicrousdPerUnit",
              "providerTimeoutMs", "reservedMicrousd", "status", "windowStartDay", "windowStartMonth",
              "expiresAt", "createdAt", "updatedAt"
            ) VALUES (
-             $1, $2, $3, $4, $5, $6, $7, $8, $9::bigint, $10::bigint, $11::bigint, $12::bigint, 'RESERVED',
+             $1, $2, $3, $4, $5, $6, $7, $8, $9::bigint, $10::bigint, $11::bigint, $12::bigint,
+             $13::bigint, $14::bigint, $15::bigint, 'RESERVED',
              date_trunc('day', now() AT TIME ZONE 'UTC'),
              date_trunc('month', now() AT TIME ZONE 'UTC'),
-              (now() AT TIME ZONE 'UTC') + ($13::bigint * interval '1 millisecond'),
+              (now() AT TIME ZONE 'UTC') + ($16::bigint * interval '1 millisecond'),
               (now() AT TIME ZONE 'UTC'), (now() AT TIME ZONE 'UTC')
            )
            RETURNING "id", "subjectId", "idempotencyKey", "rail", "provider", "model", "operationKind",
-             "priceVersionId", "inputMicrousdPerMillionTokens", "outputMicrousdPerMillionTokens", "providerTimeoutMs",
+             "priceVersionId", "inputMicrousdPerMillionTokens", "outputMicrousdPerMillionTokens",
+             "audioInputMicrousdPerSecond", "audioOutputMicrousdPerSecond", "imageMicrousdPerUnit", "providerTimeoutMs",
              "reservedMicrousd", "settledMicrousd", "status", "windowStartDay",
              "windowStartMonth", "dispatchedAt", "expiresAt"`,
           randomUUID(),
@@ -546,8 +605,11 @@ export class CostGovernorService implements CostGovernor {
           input.model,
           input.operationKind,
           priceRows[0].id,
-          inputPrice.toString(),
-          outputPrice.toString(),
+          priceSnapshot.inputMicrousdPerMillionTokens.toString(),
+          priceSnapshot.outputMicrousdPerMillionTokens.toString(),
+          priceSnapshot.audioInputMicrousdPerSecond.toString(),
+          priceSnapshot.audioOutputMicrousdPerSecond.toString(),
+          priceSnapshot.imageMicrousdPerUnit.toString(),
           config.providerTimeoutMs.toString(),
           reserveMicrousd.toString(),
           RESERVED_TTL_MS.toString()
@@ -620,16 +682,24 @@ export class CostGovernorService implements CostGovernor {
 
         const usageInput = toBigInt(input.usage?.inputTokens ?? null);
         const usageOutput = toBigInt(input.usage?.outputTokens ?? null);
-        const hasCompleteUsage = usageInput !== null && usageOutput !== null && usageInput >= 0n && usageOutput >= 0n;
+        const hasCompleteTokenUsage = usageInput !== null && usageOutput !== null && usageInput >= 0n && usageOutput >= 0n;
         let actualCostMicrousd: bigint | null = null;
         let settledMicrousd = operation.reservedMicrousd;
-        if (hasCompleteUsage) {
-          actualCostMicrousd = calculateMicrousd(
-            usageInput,
-            usageOutput,
-            operation.inputMicrousdPerMillionTokens,
-            operation.outputMicrousdPerMillionTokens
-          );
+        const unit = costModelUnit(operation.operationKind, operation.model);
+        if (unit === 'token-bidirectional' && hasCompleteTokenUsage) {
+          actualCostMicrousd = costMicrousd(operation.operationKind, {
+            model: operation.model,
+            inputTokens: usageInput,
+            outputTokens: usageOutput,
+            prices: {
+              inputMicrousdPerMillionTokens: operation.inputMicrousdPerMillionTokens,
+              outputMicrousdPerMillionTokens: operation.outputMicrousdPerMillionTokens,
+              audioInputMicrousdPerSecond: operation.audioInputMicrousdPerSecond,
+              audioOutputMicrousdPerSecond: operation.audioOutputMicrousdPerSecond,
+              imageMicrousdPerUnit: operation.imageMicrousdPerUnit,
+            },
+          });
+          if (actualCostMicrousd === null) throw new Error('Cost governor token settlement has no valid reserve-time price');
           settledMicrousd = actualCostMicrousd;
         }
 
@@ -647,14 +717,15 @@ export class CostGovernorService implements CostGovernor {
                   "updatedAt" = (now() AT TIME ZONE 'UTC')
             WHERE "id" = $1
             RETURNING "id", "subjectId", "idempotencyKey", "rail", "provider", "model", "operationKind",
-              "priceVersionId", "inputMicrousdPerMillionTokens", "outputMicrousdPerMillionTokens", "providerTimeoutMs",
+              "priceVersionId", "inputMicrousdPerMillionTokens", "outputMicrousdPerMillionTokens",
+              "audioInputMicrousdPerSecond", "audioOutputMicrousdPerSecond", "imageMicrousdPerUnit", "providerTimeoutMs",
               "reservedMicrousd", "settledMicrousd", "status", "windowStartDay",
               "windowStartMonth", "dispatchedAt", "expiresAt"`,
           operation.id,
           settledMicrousd.toString(),
           input.providerRequestId ?? null,
-          hasCompleteUsage ? usageInput!.toString() : null,
-          hasCompleteUsage ? usageOutput!.toString() : null,
+          hasCompleteTokenUsage ? usageInput!.toString() : null,
+          hasCompleteTokenUsage ? usageOutput!.toString() : null,
           actualCostMicrousd?.toString() ?? null
         );
         if (updatedRows.length !== 1) throw new Error('Cost governor settle update did not return a row');
@@ -667,7 +738,11 @@ export class CostGovernorService implements CostGovernor {
           operation.id,
           settledMicrousd.toString(),
           operation.status,
-          actualCostMicrousd === null ? 'usage_unavailable_conservative_settle' : 'provider_usage'
+          actualCostMicrousd !== null
+            ? 'provider_usage'
+            : unit === 'token-bidirectional'
+              ? 'usage_unavailable_conservative_settle'
+              : 'non_token_settle_at_reserve'
         );
         return { applied: true, operation: updated };
       }, TRANSACTION_OPTIONS);
@@ -870,8 +945,9 @@ export class CostGovernorService implements CostGovernor {
     idempotencyKey: string
   ): Promise<CostGovernorOperation | null> {
     const rows = await transaction.$queryRawUnsafe<OperationRow[]>(
-      `SELECT "id", "subjectId", "idempotencyKey", "rail", "provider", "model", "operationKind",
-              "priceVersionId", "inputMicrousdPerMillionTokens", "outputMicrousdPerMillionTokens", "providerTimeoutMs",
+        `SELECT "id", "subjectId", "idempotencyKey", "rail", "provider", "model", "operationKind",
+              "priceVersionId", "inputMicrousdPerMillionTokens", "outputMicrousdPerMillionTokens",
+              "audioInputMicrousdPerSecond", "audioOutputMicrousdPerSecond", "imageMicrousdPerUnit", "providerTimeoutMs",
               "reservedMicrousd", "settledMicrousd", "status", "windowStartDay",
               "windowStartMonth", "dispatchedAt", "expiresAt"
          FROM "AiCostOperation"
@@ -935,8 +1011,9 @@ export class CostGovernorService implements CostGovernor {
 
   private async requireOperationForUpdate(transaction: RawSqlClient, operationId: string): Promise<CostGovernorOperation> {
     const rows = await transaction.$queryRawUnsafe<OperationRow[]>(
-      `SELECT "id", "subjectId", "idempotencyKey", "rail", "provider", "model", "operationKind",
-              "priceVersionId", "inputMicrousdPerMillionTokens", "outputMicrousdPerMillionTokens", "providerTimeoutMs",
+        `SELECT "id", "subjectId", "idempotencyKey", "rail", "provider", "model", "operationKind",
+              "priceVersionId", "inputMicrousdPerMillionTokens", "outputMicrousdPerMillionTokens",
+              "audioInputMicrousdPerSecond", "audioOutputMicrousdPerSecond", "imageMicrousdPerUnit", "providerTimeoutMs",
               "reservedMicrousd", "settledMicrousd", "status", "windowStartDay",
               "windowStartMonth", "dispatchedAt", "expiresAt"
          FROM "AiCostOperation"

@@ -15,7 +15,12 @@ import {
   CostGovernorService,
   type CostGovernorReserveInput,
 } from '../src/services/ai/CostGovernorService';
-import { PROVISIONAL_PRICE, seedProvisionalOpenAiMiniPrice } from './seed-viona-cost-governor-price';
+import {
+  LANE_B_MODEL_PRICES,
+  LANE_B_PRICE_PROVENANCE,
+  PROVISIONAL_PRICE,
+  seedLaneBModelPrices,
+} from './seed-viona-cost-governor-price';
 
 const execFile = promisify(execFileCallback);
 const root = resolve(__dirname, '..');
@@ -24,6 +29,7 @@ const MIGRATIONS = [
   '20261104000000_ai_cost_receipt_inflight',
   '20261104010000_ai_cost_price_unit_per_million',
   '20261105000000_ai_cost_operation_snapshots',
+  '20261110120000_laneb_mult_unit_price_snapshots',
 ] as const;
 const TIMEOUT_MS = 60_000;
 const testTimeZone = process.env.VIONA_TEST_PG_TIME_ZONE ?? 'UTC';
@@ -148,6 +154,20 @@ async function activeRows(prisma: PrismaClient): Promise<ActivePrice[]> {
   );
 }
 
+async function activeLaneBRows(prisma: PrismaClient): Promise<ActivePrice[]> {
+  return prisma.$queryRawUnsafe<ActivePrice[]>(
+    `SELECT "id", "calculationVersion", "effectiveTo",
+            "inputMicrousdPerMillionTokens", "outputMicrousdPerMillionTokens",
+            "audioInputMicrousdPerSecond", "audioOutputMicrousdPerSecond", "imageMicrousdPerUnit"
+       FROM "AiModelPrice"
+      WHERE "calculationVersion" = $1
+        AND "effectiveFrom" <= (now() AT TIME ZONE 'UTC')
+        AND ("effectiveTo" IS NULL OR (now() AT TIME ZONE 'UTC') < "effectiveTo")
+      ORDER BY "provider", "model"`,
+    LANE_B_PRICE_PROVENANCE
+  );
+}
+
 async function totalRows(prisma: PrismaClient): Promise<number> {
   const rows = await prisma.$queryRawUnsafe<Array<{ count: bigint }>>(
     `SELECT count(*)::bigint AS "count" FROM "AiModelPrice" WHERE "provider" = $1 AND "model" = $2`,
@@ -222,12 +242,38 @@ async function main(): Promise<void> {
     await phase('prisma.$connect', () => prisma!.$connect());
     setFixtureConfig();
 
-    await test('seed creates provisional OpenAI mini price and reserve snapshots it', async () => {
-      const seeded = await seedProvisionalOpenAiMiniPrice(prisma!);
-      assert.equal(seeded.outcome, 'inserted');
+    await test('Lane B seed installs all four operator-approved unit prices and chat reserve snapshots its rate', async () => {
+      const seededResults = await seedLaneBModelPrices(prisma!);
+      assert.equal(seededResults.length, 4);
+      assert.ok(seededResults.every((result) => result.outcome === 'inserted'));
+      const activeSeedRows = await activeLaneBRows(prisma!);
+      assert.equal(activeSeedRows.length, 4);
+      for (const target of LANE_B_MODEL_PRICES) {
+        const rowsForModel = await prisma!.$queryRawUnsafe<ActivePrice[]>(
+          `SELECT "id", "calculationVersion", "effectiveTo",
+                  "inputMicrousdPerMillionTokens", "outputMicrousdPerMillionTokens",
+                  "audioInputMicrousdPerSecond", "audioOutputMicrousdPerSecond", "imageMicrousdPerUnit"
+             FROM "AiModelPrice"
+            WHERE "provider" = $1 AND "model" = $2
+              AND "effectiveFrom" <= (now() AT TIME ZONE 'UTC')
+              AND ("effectiveTo" IS NULL OR (now() AT TIME ZONE 'UTC') < "effectiveTo")`,
+          target.provider,
+          target.model
+        );
+        assert.equal(rowsForModel.length, 1, `${target.provider}/${target.model} must have one active version`);
+        const seeded = rowsForModel[0];
+        assert.equal(seeded.calculationVersion, LANE_B_PRICE_PROVENANCE);
+        assert.equal(seeded.inputMicrousdPerMillionTokens, target.inputMicrousdPerMillionTokens);
+        assert.equal(seeded.outputMicrousdPerMillionTokens, target.outputMicrousdPerMillionTokens);
+        assert.equal(seeded.audioInputMicrousdPerSecond, target.audioInputMicrousdPerSecond);
+        assert.equal(seeded.audioOutputMicrousdPerSecond, target.audioOutputMicrousdPerSecond);
+        assert.equal(seeded.imageMicrousdPerUnit, target.imageMicrousdPerUnit);
+      }
       const rows = await activeRows(prisma!);
       assert.equal(rows.length, 1);
-      assert.equal(rows[0].id, seeded.priceVersionId);
+      const seededMini = seededResults.find((result) => result.model === PROVISIONAL_PRICE.model);
+      assert.ok(seededMini);
+      assert.equal(rows[0].id, seededMini.priceVersionId);
       assert.equal(rows[0].calculationVersion, PROVISIONAL_PRICE.calculationVersion);
       assert.equal(rows[0].inputMicrousdPerMillionTokens, PROVISIONAL_PRICE.inputMicrousdPerMillionTokens);
       assert.equal(rows[0].outputMicrousdPerMillionTokens, PROVISIONAL_PRICE.outputMicrousdPerMillionTokens);
@@ -252,21 +298,23 @@ async function main(): Promise<void> {
       assert.equal(result.operation.inputMicrousdPerMillionTokens, 150000n);
       assert.equal(result.operation.outputMicrousdPerMillionTokens, 600000n);
       assert.equal(result.operation.reservedMicrousd, 14n);
-      assert.equal(result.operation.priceVersionId, seeded.priceVersionId);
+      assert.equal(result.operation.priceVersionId, seededMini.priceVersionId);
     });
 
-    await test('repeated seed is idempotent and creates no extra version', async () => {
+    await test('repeated Lane B seed is idempotent and preserves all model versions', async () => {
       const before = await activeRows(prisma!);
       assert.equal(before.length, 1);
       const firstId = before[0].id;
       const beforeCount = await totalRows(prisma!);
-      const second = await seedProvisionalOpenAiMiniPrice(prisma!);
-      const third = await seedProvisionalOpenAiMiniPrice(prisma!);
-      assert.equal(second.outcome, 'unchanged');
-      assert.equal(third.outcome, 'unchanged');
-      assert.equal(second.priceVersionId, firstId);
-      assert.equal(third.priceVersionId, firstId);
+      const beforeActiveIds = (await activeLaneBRows(prisma!)).map((row) => row.id);
+      const second = await seedLaneBModelPrices(prisma!);
+      const third = await seedLaneBModelPrices(prisma!);
+      assert.ok(second.every((result) => result.outcome === 'unchanged'));
+      assert.ok(third.every((result) => result.outcome === 'unchanged'));
+      assert.equal(second.find((result) => result.model === PROVISIONAL_PRICE.model)?.priceVersionId, firstId);
+      assert.equal(third.find((result) => result.model === PROVISIONAL_PRICE.model)?.priceVersionId, firstId);
       assert.equal(await totalRows(prisma!), beforeCount);
+      assert.deepEqual((await activeLaneBRows(prisma!)).map((row) => row.id), beforeActiveIds);
       assert.equal((await activeRows(prisma!)).length, 1);
     });
 
@@ -298,7 +346,9 @@ async function main(): Promise<void> {
           PROVISIONAL_PRICE.model
         );
       });
-      const reseeded = await seedProvisionalOpenAiMiniPrice(prisma!);
+      const reseededResults = await seedLaneBModelPrices(prisma!);
+      const reseeded = reseededResults.find((result) => result.model === PROVISIONAL_PRICE.model);
+      assert.ok(reseeded);
       assert.equal(reseeded.outcome, 'inserted');
       const rows = await activeRows(prisma!);
       assert.equal(rows.length, 1);

@@ -33,6 +33,7 @@ const migrations = [
   resolve(root, 'prisma/migrations/20261104010000_ai_cost_price_unit_per_million/migration.sql'),
   resolve(root, 'prisma/migrations/20261105000000_ai_cost_operation_snapshots/migration.sql'),
   resolve(root, 'prisma/migrations/20261109120000_authority/migration.sql'),
+  resolve(root, 'prisma/migrations/20261110120000_laneb_mult_unit_price_snapshots/migration.sql'),
 ] as const;
 const testTimeZone = process.env.VIONA_TEST_PG_TIME_ZONE ?? 'UTC';
 const PHASE_TIMEOUT_MS = 60_000;
@@ -328,7 +329,7 @@ async function main(): Promise<void> {
       rail: 'EXPRESS',
       provider: 'openai',
       model: 'authority-fixture-model',
-      operationKind: 'AUTHORITY_GATE_TEST',
+      operationKind: 'ROUTED_CHAT_COMPLETION',
       inputTokensUpperBound: 10n,
       outputTokens: 20n,
     });

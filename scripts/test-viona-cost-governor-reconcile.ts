@@ -30,6 +30,7 @@ const A1_MIGRATIONS = [
   resolve(root, 'prisma', 'migrations', '20261104000000_ai_cost_receipt_inflight', 'migration.sql'),
   resolve(root, 'prisma', 'migrations', '20261104010000_ai_cost_price_unit_per_million', 'migration.sql'),
   resolve(root, 'prisma', 'migrations', '20261105000000_ai_cost_operation_snapshots', 'migration.sql'),
+  resolve(root, 'prisma', 'migrations', '20261110120000_laneb_mult_unit_price_snapshots', 'migration.sql'),
 ] as const;
 const INPUT_PRICE = 150_000n;
 const OUTPUT_PRICE = 600_000n;
@@ -119,19 +120,28 @@ async function forceStopTemporaryPostgres(dataDir: string): Promise<void> {
     const raw = await fs.readFile(pidPath, 'utf8');
     const pid = raw.split(/\r?\n/, 1)[0];
     if (!/^\d+$/.test(pid)) throw new Error('Temporary PostgreSQL postmaster pid was malformed');
+    const isProcessRunning = (): boolean => {
+      try {
+        process.kill(Number(pid), 0);
+        return true;
+      } catch (error) {
+        if (typeof error === 'object' && error !== null && 'code' in error && error.code === 'ESRCH') return false;
+        return true;
+      }
+    };
     try {
-      if (process.platform === 'win32') {
+      if (isProcessRunning() && process.platform === 'win32') {
         await execFile('taskkill.exe', ['/PID', pid, '/T', '/F'], { windowsHide: true });
-      } else {
+      } else if (isProcessRunning()) {
         process.kill(Number(pid), 'SIGTERM');
       }
     } catch {
       // The embedded server may already have stopped.
     }
-    for (let attempt = 0; attempt < 50 && existsSync(pidPath); attempt += 1) {
+    for (let attempt = 0; attempt < 50 && isProcessRunning(); attempt += 1) {
       await new Promise<void>((resolveDelay) => setTimeout(resolveDelay, 100));
     }
-    if (existsSync(pidPath)) throw new Error('Temporary PostgreSQL did not stop; its data directory was preserved');
+    if (isProcessRunning()) throw new Error('Temporary PostgreSQL did not stop; its data directory was preserved');
   }
   await fs.rm(dataDir, { recursive: true, force: true });
 }
@@ -174,7 +184,7 @@ function reserveInput(subjectId: string, idempotencyKey: string): CostGovernorRe
     rail: 'EXPRESS',
     provider: 'openai',
     model: 'recon-fixture-mini',
-    operationKind: 'RECON_TEST',
+    operationKind: 'ROUTED_CHAT_COMPLETION',
     inputTokensUpperBound: INPUT_TOKENS,
     outputTokens: OUTPUT_TOKENS,
   };

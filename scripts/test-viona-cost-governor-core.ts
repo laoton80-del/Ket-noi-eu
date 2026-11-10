@@ -22,6 +22,7 @@ import {
   type CostGovernorReserveInput,
   type CostGovernorReserveResult,
 } from '../src/services/ai/CostGovernorService';
+import { costMicrousd } from '../src/services/ai/costModel';
 import type * as Gate from '../src/services/ai/llmProviderAdmissionGate';
 import type * as Router from '../src/services/ai/AIRouterService';
 import type * as Viral from '../src/services/marketing/ViralWrapEngine';
@@ -52,6 +53,9 @@ type PriceRow = Readonly<{
   id: string;
   inputMicrousdPerMillionTokens: bigint;
   outputMicrousdPerMillionTokens: bigint;
+  audioInputMicrousdPerSecond: bigint;
+  audioOutputMicrousdPerSecond: bigint;
+  imageMicrousdPerUnit: bigint;
 }>;
 type OperationRow = Readonly<Record<string, unknown> & { id: string }>;
 
@@ -64,10 +68,13 @@ function operationRow(overrides: Readonly<{ status?: string }> = {}): OperationR
     rail: 'EXPRESS',
     provider: 'openai',
     model: 'mini-model',
-    operationKind: 'TEST',
+    operationKind: 'ROUTED_CHAT_COMPLETION',
     priceVersionId: 'price-1',
     inputMicrousdPerMillionTokens: 150000n,
     outputMicrousdPerMillionTokens: 600000n,
+    audioInputMicrousdPerSecond: 0n,
+    audioOutputMicrousdPerSecond: 0n,
+    imageMicrousdPerUnit: 0n,
     providerTimeoutMs: 45000n,
     reservedMicrousd: 10n,
     settledMicrousd: 0n,
@@ -110,7 +117,14 @@ class FakeSqlDatabase {
     if (this.options.failDatabase) throw new Error('synthetic database unavailable');
     if (query.includes('FROM "AiModelPrice"')) {
       return (this.options.prices ?? [
-        { id: 'price-1', inputMicrousdPerMillionTokens: 150000n, outputMicrousdPerMillionTokens: 600000n },
+        {
+          id: 'price-1',
+          inputMicrousdPerMillionTokens: 150000n,
+          outputMicrousdPerMillionTokens: 600000n,
+          audioInputMicrousdPerSecond: 0n,
+          audioOutputMicrousdPerSecond: 0n,
+          imageMicrousdPerUnit: 0n,
+        },
       ]) as T;
     }
     if (query.includes('WHERE "subjectId" = $1 AND "idempotencyKey" = $2')) {
@@ -139,7 +153,7 @@ function reserveInput(overrides: Partial<CostGovernorReserveInput> = {}): CostGo
     rail: 'EXPRESS',
     provider: 'openai',
     model: 'mini-model',
-    operationKind: 'TEST',
+    operationKind: 'ROUTED_CHAT_COMPLETION',
     inputTokensUpperBound: 10n,
     outputTokens: 20n,
     ...overrides,
@@ -509,6 +523,92 @@ async function test(name: string, run: () => Promise<void> | void): Promise<void
 }
 
 async function main(): Promise<void> {
+  await test('unit cost model prices token pairs with one total ceil, TTS input tokens, and STT seconds', () => {
+    const tokenPrices = {
+      inputMicrousdPerMillionTokens: 1n,
+      outputMicrousdPerMillionTokens: 1n,
+      audioInputMicrousdPerSecond: 0n,
+      audioOutputMicrousdPerSecond: 0n,
+      imageMicrousdPerUnit: 0n,
+    };
+    assert.equal(costMicrousd('ROUTED_CHAT_COMPLETION', {
+      model: 'gpt-4o-mini', inputTokens: 1n, outputTokens: 1n, prices: tokenPrices,
+    }), 1n, 'input/output token cost must round once over their combined numerator');
+    assert.equal(costMicrousd('TTS', {
+      model: 'gpt-4o-mini-tts',
+      inputTokens: 10n,
+      outputTokens: 0n,
+      prices: { ...tokenPrices, inputMicrousdPerMillionTokens: 600000n, outputMicrousdPerMillionTokens: 0n },
+    }), 6n);
+    assert.equal(costMicrousd('STT', {
+      model: 'gpt-4o-transcribe',
+      inputTokens: 0n,
+      outputTokens: 0n,
+      audioSeconds: 2n,
+      prices: { ...tokenPrices, inputMicrousdPerMillionTokens: 0n, outputMicrousdPerMillionTokens: 0n, audioInputMicrousdPerSecond: 100n },
+    }), 200n);
+  });
+
+  await test('unit cost model denies missing rates, unknown units, mismatched models, and negative quantities', () => {
+    const prices = {
+      inputMicrousdPerMillionTokens: 150000n,
+      outputMicrousdPerMillionTokens: 600000n,
+      audioInputMicrousdPerSecond: 0n,
+      audioOutputMicrousdPerSecond: 0n,
+      imageMicrousdPerUnit: 0n,
+    };
+    assert.equal(costMicrousd('STT', {
+      model: 'gpt-4o-transcribe', inputTokens: 0n, outputTokens: 0n, audioSeconds: 2n, prices,
+    }), null);
+    assert.equal(costMicrousd('FUTURE_UNMAPPED_OPERATION', {
+      model: 'fixture', inputTokens: 1n, outputTokens: 1n, prices,
+    }), null);
+    assert.equal(costMicrousd('STT', {
+      model: 'wrong-model', inputTokens: 0n, outputTokens: 0n, audioSeconds: 1n, prices,
+    }), null);
+    assert.equal(costMicrousd('TTS', {
+      model: 'gpt-4o-mini-tts', inputTokens: -1n, outputTokens: 0n, prices,
+    }), null);
+    assert.equal(costMicrousd('ROUTED_CHAT_COMPLETION', {
+      model: 'gpt-4o-mini', inputTokens: 1n, outputTokens: 1n,
+      prices: { ...prices, outputMicrousdPerMillionTokens: 0n },
+    }), null);
+  });
+
+  await test('zero computed reserve denies before budget counters or operation writes', async () => {
+    const database = new FakeSqlDatabase();
+    await withGovernorEnv(async () => {
+      const result = await serviceFor(database).reserve(reserveInput({
+        idempotencyKey: 'zero-cost-denied', inputTokensUpperBound: 0n, outputTokens: 0n,
+      }));
+      assert.equal(result.decision, 'DENY_POLICY');
+    });
+    assert.deepEqual(database.counterScopes, []);
+  });
+
+  await test('missing STT second rate denies before budget counters', async () => {
+    const database = new FakeSqlDatabase({ prices: [{
+      id: 'price-no-audio-rate',
+      inputMicrousdPerMillionTokens: 0n,
+      outputMicrousdPerMillionTokens: 0n,
+      audioInputMicrousdPerSecond: 0n,
+      audioOutputMicrousdPerSecond: 0n,
+      imageMicrousdPerUnit: 0n,
+    }] });
+    await withGovernorEnv(async () => {
+      const result = await serviceFor(database).reserve(reserveInput({
+        idempotencyKey: 'missing-stt-rate',
+        model: 'gpt-4o-transcribe',
+        operationKind: 'STT',
+        inputTokensUpperBound: 0n,
+        outputTokens: 0n,
+        audioSecondsUpperBound: 2n,
+      }));
+      assert.equal(result.decision, 'DENY_UNCONFIGURED');
+    });
+    assert.deepEqual(database.counterScopes, []);
+  });
+
   await test('all six configuration settings fail closed for missing, zero, negative, and malformed values', () => {
     for (const name of Object.values(COST_GOVERNOR_ENV_NAMES)) {
       for (const invalid of [undefined, '0', '-1', '1.5', ' 1', '01', 'not-a-number']) {
@@ -694,12 +794,24 @@ async function main(): Promise<void> {
   await withGovernorEnv(async () => {
     await test('missing, overlapping, or zero token prices deny as unconfigured before counters or operations', async () => {
       for (const prices of [[], [
-        { id: 'p1', inputMicrousdPerMillionTokens: 1n, outputMicrousdPerMillionTokens: 1n },
-        { id: 'p2', inputMicrousdPerMillionTokens: 1n, outputMicrousdPerMillionTokens: 1n },
+        {
+          id: 'p1', inputMicrousdPerMillionTokens: 1n, outputMicrousdPerMillionTokens: 1n,
+          audioInputMicrousdPerSecond: 0n, audioOutputMicrousdPerSecond: 0n, imageMicrousdPerUnit: 0n,
+        },
+        {
+          id: 'p2', inputMicrousdPerMillionTokens: 1n, outputMicrousdPerMillionTokens: 1n,
+          audioInputMicrousdPerSecond: 0n, audioOutputMicrousdPerSecond: 0n, imageMicrousdPerUnit: 0n,
+        },
       ], [
-        { id: 'zero-input', inputMicrousdPerMillionTokens: 0n, outputMicrousdPerMillionTokens: 1n },
+        {
+          id: 'zero-input', inputMicrousdPerMillionTokens: 0n, outputMicrousdPerMillionTokens: 1n,
+          audioInputMicrousdPerSecond: 0n, audioOutputMicrousdPerSecond: 0n, imageMicrousdPerUnit: 0n,
+        },
       ], [
-        { id: 'zero-output', inputMicrousdPerMillionTokens: 1n, outputMicrousdPerMillionTokens: 0n },
+        {
+          id: 'zero-output', inputMicrousdPerMillionTokens: 1n, outputMicrousdPerMillionTokens: 0n,
+          audioInputMicrousdPerSecond: 0n, audioOutputMicrousdPerSecond: 0n, imageMicrousdPerUnit: 0n,
+        },
       ]]) {
         const database = new FakeSqlDatabase({ prices });
         const result = await serviceFor(database).reserve(reserveInput());

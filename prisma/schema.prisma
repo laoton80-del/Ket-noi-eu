@@ -1288,6 +1288,9 @@ model AiCostOperation {
   priceVersionId      String
   inputMicrousdPerMillionTokens  BigInt
   outputMicrousdPerMillionTokens BigInt
+  audioInputMicrousdPerSecond    BigInt?
+  audioOutputMicrousdPerSecond   BigInt?
+  imageMicrousdPerUnit           BigInt?
   providerTimeoutMs              BigInt
   reservedMicrousd    BigInt
   settledMicrousd     BigInt              @default(0)
