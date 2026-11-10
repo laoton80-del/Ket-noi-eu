@@ -2474,11 +2474,9 @@ async function main(): Promise<void> {
       assert.equal(await countRows(prisma!, '"AiCostBudgetCounter"'), 0n);
     });
 
-    await test('52: Express vision reserves text plus the per-image upper bound and settles provider token usage', async () => {
+    await test('52: Express vision routes to gpt-4o, reserves the per-image upper bound, and settles provider token usage', async () => {
       await resetCostTables(prisma!);
-      await insertFixturePrice(prisma!, { model: 'gpt-4o-mini' });
       setFixtureConfig();
-      const router = routerIntegrationHarness({ governor: serviceFor(prisma!) });
       const subjectId = 'router-subject';
       const idempotencyKey = 'router-vision-image-once';
       const text = 'Read the visible label.';
@@ -2489,14 +2487,28 @@ async function main(): Promise<void> {
           { type: 'image_url', image_url: { url: 'data:image/jpeg;base64,c3ludGhldGlj' } },
         ],
       }];
-      await router.router.createRoutedChatCompletion({
+      const request = {
         taskType: 'ROUTING_INQUIRY' as never,
         userId: subjectId,
         idempotencyKey,
         params: { messages, max_tokens: 20 } as never,
+      };
+      const missingPriceRouter = routerIntegrationHarness({ governor: serviceFor(prisma!) });
+      await assert.rejects(missingPriceRouter.router.createRoutedChatCompletion(request), (error: unknown) => {
+        assert.equal((error as Readonly<{ code?: string }>).code, 'COST_GOVERNOR_DENY_UNCONFIGURED');
+        return true;
       });
+      assert.equal(missingPriceRouter.sdkConstructed.value, 0);
+      assert.equal(missingPriceRouter.sdkRequests.length, 0);
+      assert.equal(await countRows(prisma!, '"AiCostOperation"'), 0n);
+      assert.equal(await countRows(prisma!, '"AiCostBudgetCounter"'), 0n);
+
+      await insertFixturePrice(prisma!, { model: 'gpt-4o' });
+      const router = routerIntegrationHarness({ governor: serviceFor(prisma!) });
+      await router.router.createRoutedChatCompletion(request);
 
       assert.equal(router.sdkRequests.length, 1);
+      assert.equal((router.sdkRequests[0] as Readonly<{ model: string }>).model, 'gpt-4o');
       assert.deepStrictEqual(
         JSON.parse(JSON.stringify((router.sdkRequests[0] as Readonly<{ messages: readonly unknown[] }>).messages)),
         messages,
@@ -2504,9 +2516,9 @@ async function main(): Promise<void> {
       const operationId = await operationIdForKey(prisma!, subjectId, idempotencyKey);
       const settled = await operation(prisma!, operationId);
       const textUpperBound = estimateInputTokensUpperBound([{ role: 'user', content: [{ type: 'text', text }] }]);
-      const inputUpperBound = textUpperBound + 3000n;
+      const inputUpperBound = textUpperBound + 1700n;
       const expectedReserve = (inputUpperBound * inputPrice + 20n * outputPrice + 999_999n) / 1_000_000n;
-      const imageOnlyReserve = (3000n * inputPrice + 999_999n) / 1_000_000n;
+      const imageOnlyReserve = (1700n * inputPrice + 999_999n) / 1_000_000n;
       const actualUsageCost = (10n * inputPrice + 20n * outputPrice + 999_999n) / 1_000_000n;
       assert.equal(settled.reservedMicrousd, expectedReserve);
       assert.ok(settled.reservedMicrousd >= imageOnlyReserve);

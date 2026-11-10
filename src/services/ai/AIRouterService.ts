@@ -25,7 +25,7 @@ export { LlmRouterTaskType as AIRouterTaskType };
 
 export const MODEL_TIER_FAST = 'gpt-4o-mini' as const;
 export const MODEL_TIER_FULL = 'gpt-4o' as const;
-const DEFAULT_VISION_IMAGE_INPUT_TOKENS_PER_IMAGE = 3000n;
+const DEFAULT_VISION_IMAGE_INPUT_TOKENS_PER_IMAGE = 1700n;
 
 /**
  * Routing rules:
@@ -327,7 +327,7 @@ function visionImageInputTokensPerImage(): bigint {
   if (!raw || !/^\+?\d+$/.test(raw)) return DEFAULT_VISION_IMAGE_INPUT_TOKENS_PER_IMAGE;
   try {
     const value = BigInt(raw);
-    return value > 0n ? value : DEFAULT_VISION_IMAGE_INPUT_TOKENS_PER_IMAGE;
+    return value > DEFAULT_VISION_IMAGE_INPUT_TOKENS_PER_IMAGE ? value : DEFAULT_VISION_IMAGE_INPUT_TOKENS_PER_IMAGE;
   } catch {
     return DEFAULT_VISION_IMAGE_INPUT_TOKENS_PER_IMAGE;
   }
@@ -382,7 +382,10 @@ export async function createRoutedChatCompletion(
   assertLlmProviderAdmission({ taskType: input.taskType, userId: input.userId });
   const paramsSnapshot = normalizeRoutedChatParams(input.params);
 
-  const model = resolveRoutedModel(input.taskType);
+  const hasImageContent = paramsSnapshot.messages.some(
+    (message) => typeof message.content !== 'string' && message.content.some((part) => part.type === 'image_url')
+  );
+  const model = hasImageContent ? MODEL_TIER_FULL : resolveRoutedModel(input.taskType);
   const governor = getCostGovernor();
   const reservation = await governor.reserve({
     subjectId: input.userId,

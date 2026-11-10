@@ -883,6 +883,13 @@ async function main(): Promise<void> {
         assert.equal(result.decision, 'DENY_UNCONFIGURED');
         assert.deepEqual(database.counterScopes, []);
       }
+      const missingVisionPrice = new FakeSqlDatabase({ prices: [] });
+      const visionResult = await serviceFor(missingVisionPrice).reserve(reserveInput({
+        idempotencyKey: 'missing-gpt-4o-price',
+        model: 'gpt-4o',
+      }));
+      assert.equal(visionResult.decision, 'DENY_UNCONFIGURED');
+      assert.deepEqual(missingVisionPrice.counterScopes, []);
     });
 
     await test('fractional, lossy, and non-integer string prices deny before counters', async () => {
@@ -1149,10 +1156,12 @@ async function main(): Promise<void> {
     }];
     await h.router.createRoutedChatCompletion(routedInputWithUncheckedParams({ messages, max_tokens: 20 }));
 
-    const reserve = h.reserveInputs[0] as Readonly<{ inputTokensUpperBound: bigint }>;
+    const reserve = h.reserveInputs[0] as Readonly<{ model: string; inputTokensUpperBound: bigint }>;
+    assert.equal(reserve.model, 'gpt-4o');
+    assert.equal((h.providerParams[0] as Readonly<{ model: string }>).model, 'gpt-4o');
     assert.equal(
       reserve.inputTokensUpperBound,
-      estimateInputTokensUpperBound([{ role: 'user', content: [{ type: 'text', text: 'Read this image.' }] }]) + 3000n
+      estimateInputTokensUpperBound([{ role: 'user', content: [{ type: 'text', text: 'Read this image.' }] }]) + 1700n
     );
     assert.deepStrictEqual(normalizeCrossRealm(h.settlements), normalizeCrossRealm([{
       operationId: 'vm-operation',
@@ -1177,16 +1186,18 @@ async function main(): Promise<void> {
     const expectedTextBound = estimateInputTokensUpperBound([{ role: 'user', content: [{ type: 'text', text: 'Two images.' }] }]);
     const twoImageHarness = providerHarness();
     await twoImageHarness.router.createRoutedChatCompletion(routedInputWithUncheckedParams({ messages, max_tokens: 20 }));
+    assert.equal((twoImageHarness.reserveInputs[0] as Readonly<{ model: string }>).model, 'gpt-4o');
     assert.equal(
       (twoImageHarness.reserveInputs[0] as Readonly<{ inputTokensUpperBound: bigint }>).inputTokensUpperBound,
-      expectedTextBound + 6000n
+      expectedTextBound + 3400n
     );
 
     for (const [configured, expected] of [
+      ['1', 1700n],
       ['5000', 5000n],
-      ['abc', 3000n],
-      ['0', 3000n],
-      ['-1', 3000n],
+      ['abc', 1700n],
+      ['0', 1700n],
+      ['-1', 1700n],
     ] as const) {
       const configuredHarness = providerHarness({ visionImageInputTokensPerImage: configured });
       const oneImageMessages = [{ role: 'user', content: [messages[0].content[0], messages[0].content[1]] }];
@@ -1234,7 +1245,9 @@ async function main(): Promise<void> {
       ...routedInput(),
       idempotencyKey: 'stable-client-key',
     });
-    const reserve = h.reserveInputs[0] as Readonly<{ inputTokensUpperBound: bigint; idempotencyKey: string }>;
+    const reserve = h.reserveInputs[0] as Readonly<{ model: string; inputTokensUpperBound: bigint; idempotencyKey: string }>;
+    assert.equal(reserve.model, 'gpt-4o-mini');
+    assert.equal((h.providerParams[0] as Readonly<{ model: string }>).model, 'gpt-4o-mini');
     assert.equal(reserve.inputTokensUpperBound, estimateInputTokensUpperBound([{ role: 'user', content: 'Synthetic input' }]));
     assert.equal(reserve.idempotencyKey, 'stable-client-key');
   });
