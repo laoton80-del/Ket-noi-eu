@@ -51,11 +51,11 @@ const TASK_TYPES = {
 
 type PriceRow = Readonly<{
   id: string;
-  inputMicrousdPerMillionTokens: bigint;
-  outputMicrousdPerMillionTokens: bigint;
-  audioInputMicrousdPerSecond: bigint;
-  audioOutputMicrousdPerSecond: bigint;
-  imageMicrousdPerUnit: bigint;
+  inputMicrousdPerMillionTokens: bigint | number | string;
+  outputMicrousdPerMillionTokens: bigint | number | string;
+  audioInputMicrousdPerSecond: bigint | number | string;
+  audioOutputMicrousdPerSecond: bigint | number | string;
+  imageMicrousdPerUnit: bigint | number | string;
 }>;
 type OperationRow = Readonly<Record<string, unknown> & { id: string }>;
 
@@ -815,6 +815,24 @@ async function main(): Promise<void> {
       ]]) {
         const database = new FakeSqlDatabase({ prices });
         const result = await serviceFor(database).reserve(reserveInput());
+        assert.equal(result.decision, 'DENY_UNCONFIGURED');
+        assert.deepEqual(database.counterScopes, []);
+      }
+    });
+
+    await test('fractional, lossy, and non-integer string prices deny before counters', async () => {
+      for (const invalidPrice of [1.5, Number.MAX_SAFE_INTEGER + 1, '1.5', '1e3'] as const) {
+        const database = new FakeSqlDatabase({ prices: [{
+          id: 'invalid-token-price',
+          inputMicrousdPerMillionTokens: invalidPrice,
+          outputMicrousdPerMillionTokens: 600000n,
+          audioInputMicrousdPerSecond: 0n,
+          audioOutputMicrousdPerSecond: 0n,
+          imageMicrousdPerUnit: 0n,
+        }] });
+        const result = await serviceFor(database).reserve(reserveInput({
+          idempotencyKey: `invalid-token-price-${String(invalidPrice)}`,
+        }));
         assert.equal(result.decision, 'DENY_UNCONFIGURED');
         assert.deepEqual(database.counterScopes, []);
       }

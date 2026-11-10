@@ -30,6 +30,7 @@ const MIGRATIONS = [
   '20261104010000_ai_cost_price_unit_per_million',
   '20261105000000_ai_cost_operation_snapshots',
   '20261110120000_laneb_mult_unit_price_snapshots',
+  '20261111000000_ai_model_price_active_unique',
 ] as const;
 const TIMEOUT_MS = 60_000;
 const testTimeZone = process.env.VIONA_TEST_PG_TIME_ZONE ?? 'UTC';
@@ -316,6 +317,19 @@ async function main(): Promise<void> {
       assert.equal(await totalRows(prisma!), beforeCount);
       assert.deepEqual((await activeLaneBRows(prisma!)).map((row) => row.id), beforeActiveIds);
       assert.equal((await activeRows(prisma!)).length, 1);
+
+      const governor = new CostGovernorService(() => prisma as never);
+      const reserved = await governor.reserve({
+        subjectId: `reseed-reserve-${randomUUID()}`,
+        idempotencyKey: `reseed-reserve-${randomUUID()}`,
+        rail: 'EXPRESS',
+        provider: PROVISIONAL_PRICE.provider,
+        model: PROVISIONAL_PRICE.model,
+        operationKind: 'ROUTED_CHAT_COMPLETION',
+        inputTokensUpperBound: 10n,
+        outputTokens: 20n,
+      });
+      assert.equal(reserved.decision, 'ALLOW_RESERVED', 'repeated seeds must leave a reservable active price');
     });
 
     await test('a changed active version is closed and replaced by the provisional version', async () => {

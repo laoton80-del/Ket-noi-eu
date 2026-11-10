@@ -700,8 +700,13 @@ export class CostGovernorService implements CostGovernor {
             },
           });
           if (actualCostMicrousd === null) throw new Error('Cost governor token settlement has no valid reserve-time price');
-          settledMicrousd = actualCostMicrousd;
+          if (actualCostMicrousd > 0n) {
+            settledMicrousd = actualCostMicrousd;
+          } else {
+            actualCostMicrousd = null;
+          }
         }
+        if (settledMicrousd <= 0n) throw new Error('Cost governor settlement must remain positive');
 
         await this.moveCountersToSettled(transaction, operation, settledMicrousd);
         const updatedRows = await transaction.$queryRawUnsafe<OperationRow[]>(

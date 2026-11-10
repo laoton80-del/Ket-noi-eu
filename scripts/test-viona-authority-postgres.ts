@@ -34,6 +34,7 @@ const migrations = [
   resolve(root, 'prisma/migrations/20261105000000_ai_cost_operation_snapshots/migration.sql'),
   resolve(root, 'prisma/migrations/20261109120000_authority/migration.sql'),
   resolve(root, 'prisma/migrations/20261110120000_laneb_mult_unit_price_snapshots/migration.sql'),
+  resolve(root, 'prisma/migrations/20261111000000_ai_model_price_active_unique/migration.sql'),
 ] as const;
 const testTimeZone = process.env.VIONA_TEST_PG_TIME_ZONE ?? 'UTC';
 const PHASE_TIMEOUT_MS = 60_000;

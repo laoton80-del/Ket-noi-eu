@@ -84,55 +84,57 @@ async function seedOnePriceVersion(
   transaction: Prisma.TransactionClient,
   target: (typeof LANE_B_MODEL_PRICES)[number]
 ): Promise<ProvisionalPriceSeedResult> {
-  const activeRows = await transaction.$queryRawUnsafe<ActivePriceRow[]>(
-    `SELECT "id", "calculationVersion", "inputMicrousdPerMillionTokens", "outputMicrousdPerMillionTokens",
-            "audioInputMicrousdPerSecond", "audioOutputMicrousdPerSecond", "imageMicrousdPerUnit"
-       FROM "AiModelPrice"
-      WHERE "provider" = $1
-        AND "model" = $2
-        AND "effectiveFrom" <= (now() AT TIME ZONE 'UTC')
-        AND ("effectiveTo" IS NULL OR (now() AT TIME ZONE 'UTC') < "effectiveTo")
-      ORDER BY "effectiveFrom" DESC
-      FOR UPDATE`,
-    target.provider,
-    target.model
-  );
-
-  if (activeRows.length === 1 && priceMatches(activeRows[0], target)) {
-    return { outcome: 'unchanged', priceVersionId: activeRows[0].id };
-  }
-
   const cutoverRows = await transaction.$queryRawUnsafe<Array<{ cutover: string }>>(
     `WITH clock AS (
-       SELECT date_trunc('milliseconds', now() AT TIME ZONE 'UTC') AS "now"
+       SELECT date_trunc('milliseconds', clock_timestamp() AT TIME ZONE 'UTC') AS "cutover"
      )
      SELECT to_char(
               GREATEST(
-                clock."now",
+                clock."cutover",
                 COALESCE(
-                  date_trunc('milliseconds', (
-                    SELECT MAX("effectiveFrom") + interval '1 millisecond'
+                  (
+                    SELECT date_trunc('milliseconds', MAX("effectiveFrom") + interval '1 millisecond')
                       FROM "AiModelPrice"
-                     WHERE "id" = ANY($1::text[])
-                  )),
-                  clock."now"
+                     WHERE "provider" = $1 AND "model" = $2
+                  ),
+                  clock."cutover"
                 )
               ),
               'YYYY-MM-DD HH24:MI:SS.MS'
             ) AS "cutover"
        FROM clock`,
-    activeRows.map((row) => row.id)
+    target.provider,
+    target.model
   );
   if (cutoverRows.length !== 1 || typeof cutoverRows[0].cutover !== 'string') {
     throw new Error(`Could not resolve a safe AiModelPrice cutover for ${target.provider}/${target.model}`);
   }
   const cutover = cutoverRows[0].cutover;
 
+  const activeRows = await transaction.$queryRawUnsafe<ActivePriceRow[]>(
+    `SELECT "id", "calculationVersion", "inputMicrousdPerMillionTokens", "outputMicrousdPerMillionTokens",
+            "audioInputMicrousdPerSecond", "audioOutputMicrousdPerSecond", "imageMicrousdPerUnit"
+       FROM "AiModelPrice"
+      WHERE "provider" = $1
+        AND "model" = $2
+        AND "effectiveFrom" <= $3::timestamp(3)
+        AND ("effectiveTo" IS NULL OR $3::timestamp(3) < "effectiveTo")
+      ORDER BY "effectiveFrom" DESC
+      FOR UPDATE`,
+    target.provider,
+    target.model,
+    cutover
+  );
+
+  if (activeRows.length === 1 && priceMatches(activeRows[0], target)) {
+    return { outcome: 'unchanged', priceVersionId: activeRows[0].id };
+  }
+
   if (activeRows.length > 0) {
     const closed = await transaction.$executeRawUnsafe(
       `UPDATE "AiModelPrice"
           SET "effectiveTo" = $2::timestamp(3),
-              "updatedAt" = (now() AT TIME ZONE 'UTC')
+              "updatedAt" = $2::timestamp(3)
         WHERE "id" = ANY($1::text[])`,
       activeRows.map((row) => row.id),
       cutover
@@ -152,7 +154,7 @@ async function seedOnePriceVersion(
      ) VALUES (
        $1, $2, $3, $4, $5::timestamp(3), NULL,
        $6::bigint, $7::bigint, $8::bigint, $9::bigint, $10::bigint,
-       (now() AT TIME ZONE 'UTC'), (now() AT TIME ZONE 'UTC')
+       $5::timestamp(3), $5::timestamp(3)
      )`,
     priceVersionId,
     target.provider,

@@ -45,6 +45,7 @@ const A1_MIGRATIONS = [
   resolve(root, 'prisma', 'migrations', '20261104010000_ai_cost_price_unit_per_million', 'migration.sql'),
   resolve(root, 'prisma', 'migrations', '20261105000000_ai_cost_operation_snapshots', 'migration.sql'),
   resolve(root, 'prisma', 'migrations', '20261110120000_laneb_mult_unit_price_snapshots', 'migration.sql'),
+  resolve(root, 'prisma', 'migrations', '20261111000000_ai_model_price_active_unique', 'migration.sql'),
 ] as const;
 const inputPrice = 150000n;
 const outputPrice = 600000n;
@@ -204,6 +205,8 @@ async function proveLaneBMigrationGuard(client: PgClient): Promise<void> {
   const priorMigrations = A1_MIGRATIONS.slice(0, 4);
   const laneBMigration = A1_MIGRATIONS[4];
   const laneBSql = await fs.readFile(laneBMigration, 'utf8');
+  const activeUniqueMigration = A1_MIGRATIONS[5];
+  const activeUniqueSql = await fs.readFile(activeUniqueMigration, 'utf8');
 
   await dropA1Tables(client);
   await applyA1Migrations(client, priorMigrations);
@@ -293,6 +296,45 @@ async function proveLaneBMigrationGuard(client: PgClient): Promise<void> {
     /AiCostOperation_reservedMicrousd_positive/
   );
 
+  await client.query(
+    `INSERT INTO "AiModelPrice" (
+       "id", "provider", "model", "calculationVersion", "effectiveFrom",
+       "inputMicrousdPerMillionTokens", "outputMicrousdPerMillionTokens",
+       "audioInputMicrousdPerSecond", "audioOutputMicrousdPerSecond", "imageMicrousdPerUnit",
+       "createdAt", "updatedAt"
+     ) VALUES (
+       'laneb-duplicate-active-price', 'openai', 'laneb-valid-model', 'fixture-v2',
+       (now() AT TIME ZONE 'UTC') + interval '1 millisecond', 1, 1, 0, 0, 0,
+       (now() AT TIME ZONE 'UTC'), (now() AT TIME ZONE 'UTC')
+     )`
+  );
+  await assert.rejects(
+    client.query(activeUniqueSql),
+    /AiModelPrice has multiple active versions per provider\/model; refusing unique index/
+  );
+  const indexAfterRejectedPrecheck = await client.query(
+    `SELECT indexname FROM pg_indexes WHERE schemaname = 'public' AND indexname = 'AiModelPrice_active_unique'`
+  );
+  assert.equal(indexAfterRejectedPrecheck.rows.length, 0, 'precheck failure must not install the partial unique index');
+
+  await client.query(`DELETE FROM "AiModelPrice" WHERE "id" = 'laneb-duplicate-active-price'`);
+  await client.query(activeUniqueSql);
+  await assert.rejects(
+    client.query(
+      `INSERT INTO "AiModelPrice" (
+         "id", "provider", "model", "calculationVersion", "effectiveFrom",
+         "inputMicrousdPerMillionTokens", "outputMicrousdPerMillionTokens",
+         "audioInputMicrousdPerSecond", "audioOutputMicrousdPerSecond", "imageMicrousdPerUnit",
+         "createdAt", "updatedAt"
+       ) VALUES (
+         'laneb-second-indexed-active-price', 'openai', 'laneb-valid-model', 'fixture-v3',
+         (now() AT TIME ZONE 'UTC') + interval '2 milliseconds', 1, 1, 0, 0, 0,
+         (now() AT TIME ZONE 'UTC'), (now() AT TIME ZONE 'UTC')
+       )`
+    ),
+    /AiModelPrice_active_unique/
+  );
+
   await dropA1Tables(client);
   await applyA1Migrations(client);
   await verifyA1Schema(client);
@@ -371,6 +413,7 @@ async function verifyA1Schema(client: PgClient): Promise<void> {
 
   const expectedIndexes = [
     'AiModelPrice_provider_model_effectiveFrom_key',
+    'AiModelPrice_active_unique',
     'AiCostOperation_subjectId_idempotencyKey_key',
     'AiCostOperation_status_expiresAt_idx',
     'AiCostOperation_status_dispatchedAt_idx',
@@ -1456,6 +1499,31 @@ async function main(): Promise<void> {
       for (const scope of ['GLOBAL_MONTH', 'GLOBAL_DAY', 'USER_DAY:missing-usage']) {
         assert.deepEqual(await counter(prisma!, scope), { reservedMicrousd: 0n, settledMicrousd: reserveAmount });
       }
+
+      const zeroUsage = allowed(await governor.reserve(input('zero-usage', 'zero-usage')));
+      assert.equal(await governor.markDispatching(zeroUsage.operation.id), true);
+      assert.equal((await governor.settle({
+        operationId: zeroUsage.operation.id,
+        usage: { inputTokens: 0n, outputTokens: 0n },
+      })).applied, true);
+      const zeroUsageStored = await operation(prisma!, zeroUsage.operation.id);
+      assert.equal(zeroUsageStored.status, 'SETTLED');
+      assert.equal(zeroUsageStored.actualCostMicrousd, null);
+      assert.equal(zeroUsageStored.settledMicrousd, zeroUsageStored.reservedMicrousd);
+      assert.ok(zeroUsageStored.settledMicrousd > 0n);
+      const zeroUsageLedger = await prisma!.$queryRawUnsafe<Array<{ reason: string | null }>>(
+        `SELECT "reason" FROM "AiCostLedgerEntry" WHERE "operationId" = $1 AND "entryType" = 'SETTLE'`,
+        zeroUsage.operation.id
+      );
+      assert.equal(zeroUsageLedger.length, 1);
+      assert.equal(zeroUsageLedger[0].reason, 'usage_unavailable_conservative_settle');
+      for (const scope of ['GLOBAL_MONTH', 'GLOBAL_DAY']) {
+        assert.deepEqual(await counter(prisma!, scope), { reservedMicrousd: 0n, settledMicrousd: reserveAmount * 2n });
+      }
+      assert.deepEqual(await counter(prisma!, 'USER_DAY:zero-usage'), {
+        reservedMicrousd: 0n,
+        settledMicrousd: reserveAmount,
+      });
     });
 
     await test('26: settlement keeps its reserve-time price snapshot after the source version is closed and replaced', async () => {

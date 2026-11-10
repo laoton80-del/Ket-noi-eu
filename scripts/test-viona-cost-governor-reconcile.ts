@@ -31,6 +31,7 @@ const A1_MIGRATIONS = [
   resolve(root, 'prisma', 'migrations', '20261104010000_ai_cost_price_unit_per_million', 'migration.sql'),
   resolve(root, 'prisma', 'migrations', '20261105000000_ai_cost_operation_snapshots', 'migration.sql'),
   resolve(root, 'prisma', 'migrations', '20261110120000_laneb_mult_unit_price_snapshots', 'migration.sql'),
+  resolve(root, 'prisma', 'migrations', '20261111000000_ai_model_price_active_unique', 'migration.sql'),
 ] as const;
 const INPUT_PRICE = 150_000n;
 const OUTPUT_PRICE = 600_000n;
