@@ -1,9 +1,10 @@
+import { LinearGradient } from 'expo-linear-gradient';
 import { useState } from 'react';
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { vionaCinematicTokens } from '../../../design/vionaCinematicTokens';
 import { useTranslation } from '../../../i18n';
-import { VionaCraneMark } from '../brand/VionaCraneMark';
+import { VionaCompanionOrbImage } from '../brand/VionaCompanionOrbImage';
 import { VionaRec2AlfredPanel } from './VionaRec2AlfredPanel';
 import { VionaHomeSuggestionChips } from './VionaHomeSuggestionChips';
 import {
@@ -34,14 +35,14 @@ export function VionaHomeCompanionPanel({
     : t('home.rec2.greetingGuest');
 
   return (
-    <View style={styles.panel}>
+    <LinearGradient colors={['rgba(18, 42, 74, 0.96)', 'rgba(10, 26, 51, 0.92)', 'rgba(7, 17, 28, 0.96)']} style={styles.panel}>
       {onClose ? (
         <Pressable accessibilityRole="button" accessibilityLabel={t('home.rec2.alfred.collapse')} onPress={onClose} style={styles.close}>
           <Text style={styles.closeLabel}>{t('home.rec2.alfred.collapse')}</Text>
         </Pressable>
       ) : null}
       <View style={styles.orb} accessibilityElementsHidden>
-        <VionaCraneMark size={42} variant="sapphire" glow={!reducedMotion} />
+        <VionaCompanionOrbImage size={112} reducedMotion={reducedMotion} />
       </View>
       <Text style={styles.greeting}>{greeting}</Text>
       <Text style={styles.status}>
@@ -60,25 +61,28 @@ export function VionaHomeCompanionPanel({
       />
       <Text style={styles.note}>{t('home.rec2.companionNotConnected')}</Text>
       <VionaRec2AlfredPanel reducedMotion={reducedMotion} />
-    </View>
+    </LinearGradient>
   );
 }
 
 const styles = StyleSheet.create({
-  panel: { gap: 12 },
+  panel: {
+    gap: 14,
+    borderRadius: 22,
+    borderWidth: 1,
+    borderColor: 'rgba(230, 244, 255, 0.14)',
+    padding: 14,
+    ...vionaCinematicTokens.elevation.cardOnShell,
+  },
   close: { alignSelf: 'flex-end', minHeight: 36, justifyContent: 'center' },
   closeLabel: { color: vionaCinematicTokens.color.cyan, fontSize: 12, fontFamily: vionaCinematicTokens.fontFamily.semibold },
   orb: {
     alignSelf: 'center',
-    width: 84,
-    height: 84,
-    borderRadius: 42,
+    width: 128,
+    height: 128,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'rgba(18, 58, 102, 0.55)',
-    borderWidth: 1,
-    borderColor: 'rgba(125, 211, 252, 0.55)',
-    ...vionaCinematicTokens.elevation.cardOnShell,
+    marginVertical: 4,
   },
   greeting: {
     color: vionaCinematicTokens.color.ice,

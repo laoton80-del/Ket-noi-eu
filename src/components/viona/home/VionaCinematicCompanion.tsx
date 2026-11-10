@@ -4,7 +4,7 @@ import { Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { vionaCinematicTokens } from '../../../design/vionaCinematicTokens';
 import { useTranslation } from '../../../i18n';
-import { VionaCraneMark } from '../brand/VionaCraneMark';
+import { VionaCompanionOrbImage } from '../brand/VionaCompanionOrbImage';
 import { resolveVionaRec2AlfredPresentation } from './vionaRec2HomeContract';
 import { VionaRec2AlfredPanel } from './VionaRec2AlfredPanel';
 
@@ -133,7 +133,7 @@ export function VionaCinematicCompanion({
               onPinnedChange={canPinDock ? onPinnedChange : undefined}
             />
             <View style={styles.orb} accessibilityElementsHidden>
-              <VionaCraneMark size={36} variant="sapphire" glow={!reducedMotion} />
+              <VionaCompanionOrbImage size={88} reducedMotion={reducedMotion} />
             </View>
             <VionaRec2AlfredPanel reducedMotion={reducedMotion} />
           </View>
@@ -152,7 +152,7 @@ export function VionaCinematicCompanion({
           testID="viona-focus-viona-dock"
         >
           <View style={styles.trigger}>
-            <VionaCraneMark size={28} variant="sapphire" glow={!reducedMotion} />
+            <VionaCompanionOrbImage size={54} reducedMotion={reducedMotion} />
           </View>
           {preview && !open ? (
             <View pointerEvents="none" style={styles.preview}>
@@ -173,7 +173,7 @@ export function VionaCinematicCompanion({
         <CompanionToolbar pinned={pinned} onClose={onClose} onPinnedChange={onPinnedChange} />
       ) : null}
       <View style={styles.orb} accessibilityElementsHidden>
-        <VionaCraneMark size={mode === 'panel' ? 42 : 36} variant="sapphire" glow={!reducedMotion} />
+        <VionaCompanionOrbImage size={mode === 'panel' ? 112 : 88} reducedMotion={reducedMotion} />
       </View>
       <VionaRec2AlfredPanel reducedMotion={reducedMotion} />
       {mode === 'sheet' && onClose ? (
@@ -229,19 +229,16 @@ const styles = StyleSheet.create({
     borderRadius: vionaCinematicTokens.radius.lg,
     borderWidth: 1,
     borderColor: vionaCinematicTokens.color.line,
-    backgroundColor: vionaCinematicTokens.color.midnight,
+    backgroundColor: 'rgba(10, 26, 51, 0.94)',
     padding: 12,
+    ...vionaCinematicTokens.elevation.cardOnShell,
   },
   orb: {
     alignSelf: 'center',
-    width: 72,
-    height: 72,
-    borderRadius: 36,
+    width: 120,
+    height: 120,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'rgba(18, 58, 102, 0.55)',
-    borderWidth: 1,
-    borderColor: 'rgba(125, 211, 252, 0.45)',
   },
   closeButton: {
     minHeight: 44,
@@ -264,8 +261,8 @@ const styles = StyleSheet.create({
     maxWidth: '92%',
     borderRadius: vionaCinematicTokens.radius.lg,
     borderWidth: 1,
-    borderColor: vionaCinematicTokens.color.line,
-    backgroundColor: vionaCinematicTokens.color.midnight,
+    borderColor: 'rgba(230, 244, 255, 0.14)',
+    backgroundColor: 'rgba(10, 26, 51, 0.94)',
     padding: 12,
     gap: 8,
     zIndex: 30,
@@ -276,14 +273,10 @@ const styles = StyleSheet.create({
     alignItems: 'flex-end',
   },
   trigger: {
-    width: 54,
-    height: 54,
-    borderRadius: 27,
+    width: 64,
+    height: 64,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'rgba(18, 58, 102, 0.94)',
-    borderWidth: 1,
-    borderColor: 'rgba(125, 211, 252, 0.7)',
   },
   preview: {
     marginTop: 8,

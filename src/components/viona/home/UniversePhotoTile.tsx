@@ -165,7 +165,8 @@ export function UniversePhotoTile({
       style={({ pressed }) => [
         styles.host,
         cardMotion,
-        { borderColor: tone.accent },
+        { borderColor: lifted ? tone.accent : 'rgba(230, 244, 255, 0.12)' },
+        !lifted && vionaCinematicTokens.elevation.cardOnShell,
         lifted && (calm ? styles.calmShadow : {
           shadowColor: tone.accent,
           shadowOffset: { width: 0, height: 10 },
@@ -195,7 +196,13 @@ export function UniversePhotoTile({
             />
           </View>
         ) : null}
-        {showImage ? <View pointerEvents="none" style={styles.scrim} /> : null}
+        {showImage ? (
+          <LinearGradient
+            pointerEvents="none"
+            colors={['rgba(10, 26, 51, 0)', 'rgba(10, 26, 51, 0.72)']}
+            style={styles.scrim}
+          />
+        ) : null}
         <View style={[styles.copy, universe.availability !== 'available' && styles.gatedCopy]}>
           <View style={[styles.icon, { borderColor: tone.accent }]}>
             <Ionicons name={ICONS[universe.id]} size={22} color={tone.accent} />
@@ -235,7 +242,7 @@ const styles = StyleSheet.create({
   photo: { ...StyleSheet.absoluteFillObject },
   photoPending: { opacity: 0 },
   photoFill: { width: '100%', height: '100%' },
-  scrim: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(2, 7, 19, 0.55)' },
+  scrim: { ...StyleSheet.absoluteFillObject },
   copy: { flexGrow: 1, minHeight: 196, padding: 16, gap: 8, justifyContent: 'flex-end' },
   gatedCopy: { opacity: VIONA_REC2_GATED_CARD_CONTENT_OPACITY },
   icon: {

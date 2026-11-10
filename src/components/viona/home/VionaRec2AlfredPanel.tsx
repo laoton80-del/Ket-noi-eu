@@ -13,7 +13,7 @@ import {
 
 import { useTranslation } from '../../../i18n';
 import { isVionaUiPreviewMode } from '../../../config/vionaUiPreview';
-import { VionaCraneMark } from '../brand/VionaCraneMark';
+import { VionaCompanionOrbImage } from '../brand/VionaCompanionOrbImage';
 import {
   openVionaRec2AlfredUi,
   resolveVionaRec2AlfredPresentation,
@@ -54,7 +54,7 @@ export function VionaRec2AlfredPanel({
     <LinearGradient colors={['#071B35', '#06101F', '#030812']} style={styles.panel}>
       <View style={styles.header}>
         <View style={styles.core} accessibilityElementsHidden>
-          <VionaCraneMark size={28} variant="sapphire" glow={!reducedMotion} />
+          <VionaCompanionOrbImage size={44} reducedMotion={reducedMotion} />
         </View>
         <View style={styles.headingCopy}>
           <Text
@@ -124,7 +124,7 @@ const styles = StyleSheet.create({
   panel: {
     borderRadius: 22,
     borderWidth: 1,
-    borderColor: 'rgba(82, 177, 255, 0.42)',
+    borderColor: 'rgba(230, 244, 255, 0.14)',
     padding: 18,
     gap: 10,
     shadowColor: '#006DFF',
@@ -137,12 +137,8 @@ const styles = StyleSheet.create({
   core: {
     width: 48,
     height: 48,
-    borderRadius: 24,
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: 'rgba(115, 205, 255, 0.7)',
-    backgroundColor: 'rgba(12, 89, 170, 0.28)',
   },
   // minWidth guards the longest eyebrow word ("INTELLIGENCE" at fontSize 11,
   // 800 weight, letterSpacing 1.25 ≈ 96px) so the row can still shrink under

@@ -1,10 +1,8 @@
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useCallback, useEffect, useMemo, useRef, useState, type ComponentProps } from 'react';
+import { useCallback, useEffect, useMemo, useState, type ComponentProps } from 'react';
 import {
   ActivityIndicator,
-  Animated,
-  Easing,
   Image,
   Platform,
   Pressable,
@@ -20,14 +18,13 @@ import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useTranslation } from '../../../i18n';
 import { useHomeCommand } from '../../../context/HomeCommandContext';
 import { VionaGlobalSosShellAction } from '../VionaGlobalSosShellAction';
-import { VionaCraneMark } from '../brand/VionaCraneMark';
+import { VionaCompanionOrbImage } from '../brand/VionaCompanionOrbImage';
 import { UniversePhotoTile } from './UniversePhotoTile';
 import { VionaHomeCompanionPanel } from './VionaHomeCompanionPanel';
 import { VionaHomeSidebar } from './VionaHomeSidebar';
 import { VionaHomeSuggestionChips } from './VionaHomeSuggestionChips';
 import { VionaHomeTopBar } from './VionaHomeTopBar';
 import { readHomeColumnOpen, writeHomeColumnOpen } from './vionaHomeColumnMemory';
-import { ensureVionaReducedMotionGuard } from './vionaReducedMotionGuard';
 import { resolveVionaCinematicTier, vionaCinematicTokens } from '../../../design/vionaCinematicTokens';
 import {
   VIONA_REC2_GATED_CARD_CONTENT_OPACITY,
@@ -86,34 +83,7 @@ function VionaCompanionOrb({
   reducedMotion,
   onPress,
 }: Readonly<{ reducedMotion: boolean; onPress: () => void }>) {
-  const pulse = useRef(new Animated.Value(0)).current;
   const { t } = useTranslation();
-
-  useEffect(() => {
-    ensureVionaReducedMotionGuard();
-    if (reducedMotion) {
-      pulse.setValue(0);
-      return;
-    }
-    const loop = Animated.loop(
-      Animated.sequence([
-        Animated.timing(pulse, {
-          toValue: 1,
-          duration: 1500,
-          easing: Easing.inOut(Easing.ease),
-          useNativeDriver: true,
-        }),
-        Animated.timing(pulse, {
-          toValue: 0,
-          duration: 1500,
-          easing: Easing.inOut(Easing.ease),
-          useNativeDriver: true,
-        }),
-      ])
-    );
-    loop.start();
-    return () => loop.stop();
-  }, [pulse, reducedMotion]);
 
   return (
     <View testID="viona-motion">
@@ -126,22 +96,7 @@ function VionaCompanionOrb({
         pressed && (reducedMotion ? styles.cardPressedReducedMotion : styles.cardPressed),
       ]}
     >
-      <Animated.View
-        style={
-          reducedMotion
-            ? undefined
-            : {
-                opacity: pulse.interpolate({ inputRange: [0, 1], outputRange: [0.92, 1] }),
-                transform: [
-                  {
-                    scale: pulse.interpolate({ inputRange: [0, 1], outputRange: [1, 1.04] }),
-                  },
-                ],
-              }
-        }
-      >
-        <VionaCraneMark size={28} variant="sapphire" glow={!reducedMotion} />
-      </Animated.View>
+      <VionaCompanionOrbImage size={64} reducedMotion={reducedMotion} />
     </Pressable>
     </View>
   );
@@ -349,7 +304,12 @@ export function VionaRec2HomeShell({
             />
           </View>
         ) : null}
-        <View pointerEvents="none" style={styles.heroScrim} />
+        <LinearGradient
+          pointerEvents="none"
+          colors={['rgba(10, 26, 51, 0)', 'rgba(10, 26, 51, 0.28)', 'rgba(10, 26, 51, 0.7)']}
+          locations={[0, 0.42, 1]}
+          style={styles.heroScrim}
+        />
         <View style={styles.heroCopy}>
           <Text style={[styles.greeting, { lineHeight: typography.greetingLineHeight }]}>
             {normalizedName
@@ -364,12 +324,14 @@ export function VionaRec2HomeShell({
           </Text>
         </View>
         <VionaHomeSuggestionChips universes={universes} callbacks={universeCallbacks} />
-        <View style={styles.visualFallback}>
-          <Ionicons name="planet-outline" size={23} color="#63C8FF" />
-          <Text style={[styles.visualFallbackText, { lineHeight: typography.bodyLineHeight }]}>
-            {t('home.rec2.imageFallback')}
-          </Text>
-        </View>
+        {imagePresentation.mode === 'image' ? null : (
+          <View style={styles.visualFallback}>
+            <Ionicons name="planet-outline" size={23} color="#63C8FF" />
+            <Text style={[styles.visualFallbackText, { lineHeight: typography.bodyLineHeight }]}>
+              {t('home.rec2.imageFallback')}
+            </Text>
+          </View>
+        )}
       </LinearGradient>
 
       <ContentStateBanner state={contentState} typography={typography} />
@@ -408,7 +370,7 @@ export function VionaRec2HomeShell({
             pressed && (reducedMotion ? styles.cardPressedReducedMotion : styles.cardPressed),
           ]}
         >
-          <Ionicons name="chatbubble-ellipses-outline" size={18} color={vionaCinematicTokens.color.cyan} />
+          <VionaCompanionOrbImage size={44} reducedMotion={reducedMotion} />
           <Text style={styles.companionEntryText}>{t('home.rec2.companionChat')}</Text>
         </Pressable>
       ) : null}
@@ -451,6 +413,11 @@ export function VionaRec2HomeShell({
         <View style={styles.center}>{center}</View>
         {desktopFrame && desktopCompanionOpen ? (
           <View style={styles.reservedCompanion}>
+            <LinearGradient
+              pointerEvents="none"
+              colors={['rgba(0, 209, 255, 0)', 'rgba(0, 209, 255, 0.28)', 'rgba(0, 209, 255, 0)']}
+              style={styles.companionDivider}
+            />
             <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.companionScroll}>
               <VionaHomeCompanionPanel
                 displayName={normalizedName}
@@ -488,65 +455,86 @@ const styles = StyleSheet.create({
   scroller: { flex: 1 },
   reservedCompanion: {
     width: vionaCinematicTokens.layout.companionWidth,
-    padding: 12,
-    borderLeftWidth: 1,
-    borderLeftColor: 'rgba(148, 196, 232, 0.28)',
+    padding: 16,
+    paddingLeft: 18,
+    backgroundColor: 'rgba(10, 26, 51, 0.42)',
+  },
+  companionDivider: {
+    position: 'absolute',
+    left: 0,
+    top: 20,
+    bottom: 20,
+    width: 1,
   },
   companionScroll: { paddingBottom: 24 },
   heroDesktop: { minHeight: 280 },
   heroTablet: { minHeight: 240 },
   companionEntry: {
-    minHeight: 52,
-    borderRadius: 16,
+    minHeight: 64,
+    borderRadius: 18,
     borderWidth: 1,
-    borderColor: 'rgba(125, 211, 252, 0.35)',
-    backgroundColor: 'rgba(8, 20, 36, 0.8)',
+    borderColor: 'rgba(230, 244, 255, 0.14)',
+    backgroundColor: 'rgba(10, 26, 51, 0.72)',
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
-    paddingHorizontal: 14,
+    gap: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    ...vionaCinematicTokens.elevation.cardOnShell,
   },
   companionEntryText: { color: '#F4F8FC', fontSize: 16, fontWeight: '700' },
   companionOrb: {
     position: 'absolute',
-    top: 18,
-    right: 16,
+    top: 12,
+    right: 12,
     zIndex: 30,
-    width: 56,
-    height: 56,
-    borderRadius: 28,
+    width: 72,
+    height: 72,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'rgba(18, 58, 102, 0.94)',
-    borderWidth: 1,
-    borderColor: 'rgba(125, 211, 252, 0.7)',
   },
   companionSheet: {
     borderRadius: 24,
     borderWidth: 1,
-    borderColor: 'rgba(148, 196, 232, 0.28)',
-    backgroundColor: '#07111C',
+    borderColor: 'rgba(230, 244, 255, 0.14)',
+    backgroundColor: 'rgba(10, 26, 51, 0.94)',
     padding: 16,
+    ...vionaCinematicTokens.elevation.cardOnShell,
   },
-  content: { paddingTop: 10 },
+  content: { paddingTop: 18 },
   hero: {
-    borderRadius: 26,
+    borderRadius: 28,
     borderWidth: 1,
-    borderColor: 'rgba(98, 185, 245, 0.32)',
-    padding: 20,
-    gap: 18,
+    borderColor: 'rgba(230, 244, 255, 0.14)',
+    padding: 24,
+    gap: 22,
     overflow: 'hidden',
-    minHeight: 220,
+    minHeight: 240,
+    ...vionaCinematicTokens.elevation.cardOnShell,
   },
   heroPhoto: { ...StyleSheet.absoluteFillObject },
   heroPhotoFill: { width: '100%', height: '100%' },
   heroScrim: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(4, 12, 24, 0.62)' },
   commandRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 14, zIndex: 1 },
   commandRowStacked: { flexDirection: 'column', alignItems: 'stretch' },
-  commandOrbClearance: { paddingRight: 72 },
-  heroCopy: { gap: 7, maxWidth: 720, zIndex: 1 },
-  greeting: { color: '#8FD9FF', fontSize: 13, fontWeight: '700' },
-  headline: { color: '#F7FAFF', fontSize: 26, lineHeight: 34, fontWeight: '800' },
+  commandOrbClearance: { paddingRight: 84 },
+  heroCopy: { gap: 10, maxWidth: 720, zIndex: 1 },
+  greeting: {
+    color: 'rgba(0, 209, 255, 0.72)',
+    fontSize: 12,
+    fontFamily: vionaCinematicTokens.fontFamily.semibold,
+    letterSpacing: 1.8,
+  },
+  headline: {
+    color: '#F7FAFF',
+    fontSize: 28,
+    lineHeight: 34,
+    fontFamily: vionaCinematicTokens.fontFamily.bold,
+    fontWeight: '700',
+    textShadowColor: 'rgba(10, 26, 51, 0.85)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 8,
+  },
   contextText: { color: '#B7CADB', fontSize: 12 },
   visualFallback: {
     alignSelf: 'flex-start',
@@ -567,7 +555,7 @@ const styles = StyleSheet.create({
     minHeight: 48,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: 'rgba(82, 180, 240, 0.26)',
+    borderColor: 'rgba(230, 244, 255, 0.12)',
     paddingHorizontal: 14,
     flexDirection: 'row',
     alignItems: 'center',
@@ -576,10 +564,15 @@ const styles = StyleSheet.create({
   },
   gatedFade: { opacity: VIONA_REC2_GATED_CARD_CONTENT_OPACITY },
   stateText: { color: '#B9CFDF', fontSize: 12, flex: 1 },
-  section: { gap: 12 },
+  section: { gap: 16 },
   sectionHeadingRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 },
   sectionHeadingColumn: { flexDirection: 'column', alignItems: 'flex-start' },
-  sectionTitle: { color: '#F0F6FC', fontSize: 18, fontWeight: '800' },
+  sectionTitle: {
+    color: '#F0F6FC',
+    fontSize: 18,
+    fontFamily: vionaCinematicTokens.fontFamily.bold,
+    fontWeight: '700',
+  },
   layoutLabel: { color: '#738DA3', fontSize: 10, textTransform: 'uppercase', letterSpacing: 0.8 },
   grid: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'stretch' },
   cardHost: {
@@ -599,8 +592,8 @@ const styles = StyleSheet.create({
     padding: 12,
     borderRadius: 15,
     borderWidth: 1,
-    borderColor: 'rgba(89, 176, 231, 0.23)',
-    backgroundColor: 'rgba(7, 25, 44, 0.82)',
+    borderColor: 'rgba(230, 244, 255, 0.12)',
+    backgroundColor: 'rgba(11, 28, 51, 0.82)',
   },
   taskEmptyText: { color: '#A6BACB', fontSize: 12, lineHeight: 17, flex: 1 },
   truthNote: { color: '#61798E', fontSize: 10, lineHeight: 15, textAlign: 'center', paddingHorizontal: 12 },

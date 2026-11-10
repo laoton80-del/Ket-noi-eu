@@ -1,5 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { type ComponentProps } from 'react';
+import { LinearGradient } from 'expo-linear-gradient';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { vionaCinematicTokens } from '../../../design/vionaCinematicTokens';
@@ -41,7 +42,7 @@ export function VionaHomeSidebar({
 }>) {
   const { t } = useTranslation();
   return (
-    <View style={styles.rail}>
+    <LinearGradient colors={['#0B1C33', '#07111C', '#020713']} style={styles.rail}>
       <View style={styles.brand}>
         <VionaBrandLockup variant="iconOnly" />
       </View>
@@ -72,7 +73,7 @@ export function VionaHomeSidebar({
           />
         ))}
       </ScrollView>
-    </View>
+    </LinearGradient>
   );
 }
 
@@ -120,8 +121,7 @@ const styles = StyleSheet.create({
   rail: {
     width: vionaCinematicTokens.layout.railWidth,
     borderRightWidth: 1,
-    borderRightColor: vionaCinematicTokens.color.line,
-    backgroundColor: vionaCinematicTokens.color.backgroundDeep,
+    borderRightColor: 'rgba(230, 244, 255, 0.12)',
     paddingVertical: 16,
     paddingHorizontal: 10,
     gap: 12,
