@@ -25,6 +25,7 @@ export { LlmRouterTaskType as AIRouterTaskType };
 
 export const MODEL_TIER_FAST = 'gpt-4o-mini' as const;
 export const MODEL_TIER_FULL = 'gpt-4o' as const;
+const DEFAULT_VISION_IMAGE_INPUT_TOKENS_PER_IMAGE = 3000n;
 
 /**
  * Routing rules:
@@ -107,9 +108,14 @@ type NormalizedTextContentPart = Readonly<{
   text: string;
 }>;
 
+type NormalizedImageUrlContentPart = Readonly<{
+  type: 'image_url';
+  image_url: Readonly<{ url: string }>;
+}>;
+
 type NormalizedRoutedChatMessage = Readonly<{
   role: 'system' | 'user' | 'assistant';
-  content: string | readonly NormalizedTextContentPart[];
+  content: string | readonly (NormalizedTextContentPart | NormalizedImageUrlContentPart)[];
 }>;
 
 type NormalizedResponseFormat = Readonly<{
@@ -151,25 +157,42 @@ function denyRoutedChatPolicy(): never {
   throw new CostGovernorDeniedError('DENY_POLICY');
 }
 
-function normalizeMessageContent(value: unknown): string | readonly NormalizedTextContentPart[] {
+function normalizeMessageContent(
+  value: unknown
+): string | readonly (NormalizedTextContentPart | NormalizedImageUrlContentPart)[] {
   if (typeof value === 'string') return value;
-  if (!Array.isArray(value)) return denyRoutedChatPolicy();
+  if (!Array.isArray(value) || value.length === 0) return denyRoutedChatPolicy();
 
-  const parts: NormalizedTextContentPart[] = [];
+  const parts: Array<NormalizedTextContentPart | NormalizedImageUrlContentPart> = [];
   for (const part of value) {
     const type = isRecord(part) && hasOwn(part, 'type') ? part.type : undefined;
-    const text = isRecord(part) && hasOwn(part, 'text') ? part.text : undefined;
-    if (
-      !isRecord(part) ||
-      !hasOwn(part, 'type') ||
-      !hasOwn(part, 'text') ||
-      !hasOnlyAllowedKeys(part, new Set(['type', 'text'])) ||
-      type !== 'text' ||
-      typeof text !== 'string'
-    ) {
-      return denyRoutedChatPolicy();
+    if (!isRecord(part) || !hasOwn(part, 'type')) return denyRoutedChatPolicy();
+
+    if (type === 'text') {
+      if (!hasOwn(part, 'text') || !hasOnlyAllowedKeys(part, new Set(['type', 'text']))) {
+        return denyRoutedChatPolicy();
+      }
+      const text = part.text;
+      if (typeof text !== 'string' || text.length === 0) return denyRoutedChatPolicy();
+      parts.push(Object.freeze({ type: 'text' as const, text }));
+      continue;
     }
-    parts.push(Object.freeze({ type: 'text' as const, text }));
+
+    if (type === 'image_url') {
+      if (!hasOwn(part, 'image_url') || !hasOnlyAllowedKeys(part, new Set(['type', 'image_url']))) {
+        return denyRoutedChatPolicy();
+      }
+      const imageUrl = part.image_url;
+      if (!isRecord(imageUrl) || !hasOwn(imageUrl, 'url') || !hasOnlyAllowedKeys(imageUrl, new Set(['url']))) {
+        return denyRoutedChatPolicy();
+      }
+      const url = imageUrl.url;
+      if (typeof url !== 'string' || url.length === 0) return denyRoutedChatPolicy();
+      parts.push(Object.freeze({ type: 'image_url' as const, image_url: Object.freeze({ url }) }));
+      continue;
+    }
+
+    return denyRoutedChatPolicy();
   }
   return Object.freeze(parts);
 }
@@ -299,6 +322,31 @@ function outputTokenUpperBound(params: Pick<RoutedChatParamsSnapshot, 'max_token
   return BigInt(maxTokens);
 }
 
+function visionImageInputTokensPerImage(): bigint {
+  const raw = process.env.VISION_IMAGE_INPUT_TOKENS_PER_IMAGE?.trim();
+  if (!raw || !/^\+?\d+$/.test(raw)) return DEFAULT_VISION_IMAGE_INPUT_TOKENS_PER_IMAGE;
+  try {
+    const value = BigInt(raw);
+    return value > 0n ? value : DEFAULT_VISION_IMAGE_INPUT_TOKENS_PER_IMAGE;
+  } catch {
+    return DEFAULT_VISION_IMAGE_INPUT_TOKENS_PER_IMAGE;
+  }
+}
+
+function routedInputTokensUpperBound(messages: readonly NormalizedRoutedChatMessage[]): bigint {
+  let imageCount = 0n;
+  const textMessages = messages.map((message) => {
+    if (typeof message.content === 'string') return message;
+    const textParts: NormalizedTextContentPart[] = [];
+    for (const part of message.content) {
+      if (part.type === 'image_url') imageCount += 1n;
+      else textParts.push(part);
+    }
+    return { role: message.role, content: Object.freeze(textParts) };
+  });
+  return estimateInputTokensUpperBound(textMessages) + imageCount * visionImageInputTokensPerImage();
+}
+
 function hasUsableProviderCompletion(completion: ChatCompletion): boolean {
   return completion.choices.some((choice) => {
     const content = choice.message?.content;
@@ -343,7 +391,7 @@ export async function createRoutedChatCompletion(
     provider: 'openai',
     model,
     operationKind: 'ROUTED_CHAT_COMPLETION',
-    inputTokensUpperBound: estimateInputTokensUpperBound(paramsSnapshot.messages),
+    inputTokensUpperBound: routedInputTokensUpperBound(paramsSnapshot.messages),
     outputTokens: outputTokenUpperBound(paramsSnapshot),
   });
   assertCostGovernorReservation(reservation);

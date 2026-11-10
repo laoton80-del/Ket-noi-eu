@@ -28,6 +28,13 @@ import type * as Router from '../src/services/ai/AIRouterService';
 import type * as Viral from '../src/services/marketing/ViralWrapEngine';
 
 const root = resolve(__dirname, '..');
+function normalizeCrossRealm(value: unknown): unknown {
+  const serialized = JSON.stringify(value, (_key, nestedValue: unknown) =>
+    typeof nestedValue === 'bigint' ? `__big__${nestedValue.toString()}` : nestedValue
+  );
+  if (serialized === undefined) throw new TypeError('cross-realm assertion value is not JSON-serializable');
+  return JSON.parse(serialized) as unknown;
+}
 const GOVERNOR_ENV: Record<string, string> = {
   [COST_GOVERNOR_ENV_NAMES.userDailyCap]: '100000',
   [COST_GOVERNOR_ENV_NAMES.globalDailyCap]: '1000000',
@@ -189,6 +196,7 @@ type RouterHarnessOptions = Readonly<{
   nativeAbortSignal?: boolean;
   providerTimeoutMs?: number;
   openAiConstructor?: unknown;
+  visionImageInputTokensPerImage?: string;
   markDispatchingError?: string;
   settleError?: Error;
   markOutcomeUnknownError?: Error;
@@ -240,6 +248,7 @@ function providerHarness(options: RouterHarnessOptions = {}) {
   const environment: Record<string, string | undefined> = {
     ...ADMISSION_ENV,
     OPENAI_API_KEY: 'offline-fake-key-never-sent',
+    VISION_IMAGE_INPUT_TOKENS_PER_IMAGE: options.visionImageInputTokensPerImage,
   };
   const env = new Proxy(environment, {
     get(target, property, receiver) {
@@ -448,6 +457,62 @@ function routedInputWithUncheckedParams(params: Record<string, unknown>): Router
     userId: 'subject-a',
     params: params as Router.RoutedChatCompletionInput['params'],
   };
+}
+
+type FakeControllerResponse = Readonly<{
+  status(code: number): FakeControllerResponse;
+  json(body: unknown): FakeControllerResponse;
+}>;
+
+function controllerHarness() {
+  const routedInputs: unknown[] = [];
+  const completion = { id: 'controller-offline-completion', choices: [{ message: { content: 'synthetic response' } }] };
+  class FakeAdmissionDeniedError extends Error {
+    readonly httpStatus = 503;
+    readonly code = 'admission_denied';
+  }
+  class FakeGatewayError extends Error {
+    readonly httpStatus = 402;
+  }
+  const jsonFail = (response: FakeControllerResponse, message: string, status: number, code?: string): void => {
+    response.status(status).json({ success: false, error: message, ...(code === undefined ? {} : { code }) });
+  };
+  const jsonOk = (response: FakeControllerResponse, data: unknown): void => {
+    response.status(200).json({ success: true, data });
+  };
+  const controller = compileVm<{ postChatCompletion(req: unknown, res: unknown): Promise<void> }>(
+    createContext({}, { codeGeneration: { strings: false, wasm: false } }),
+    'src/controllers/AIController.ts',
+    {
+      '@prisma/client': {
+        LlmRouterTaskType: TASK_TYPES,
+        Prisma: { TransactionIsolationLevel: { Serializable: 'Serializable' } },
+        TxStatus: {},
+        TxType: {},
+      },
+      '../core/feature-flags/featureFlags': { getFeatureFlags: () => ({ legalScanEnabled: false }) },
+      '../domain/legalScanPricing': {
+        countWordsInDocument: () => 0,
+        estimateLegalScanPages: () => 0,
+        legalScanPriceVig: () => 0,
+      },
+      '../lib/prisma': { getPrisma: () => ({}) },
+      '../services/ai/AIGateway': {
+        AIGatewayInsufficientVigError: FakeGatewayError,
+        assertMinimumSpendableVig: async () => {},
+      },
+      '../services/ai/AIRouterService': {
+        createRoutedChatCompletion: async (input: unknown) => {
+          routedInputs.push(input);
+          return completion;
+        },
+      },
+      '../services/ai/llmProviderAdmissionGate': { LlmProviderAdmissionDeniedError: FakeAdmissionDeniedError },
+      '../services/ai/TranslationService': { translateTravelPhraseToVietnamese: async () => ({ translatedText: '' }) },
+      '../utils/apiEnvelope': { jsonFail, jsonOk },
+    }
+  );
+  return { controller, routedInputs, completion };
 }
 
 const SOURCE_EXTENSIONS = ['.ts', '.tsx', '.js', '.jsx'] as const;
@@ -960,10 +1025,6 @@ async function main(): Promise<void> {
       ['non-integer seed', { ...base, seed: 1.5 }],
       ['non-string user', { ...base, user: 7 }],
       ['malformed stop list', { ...base, stop: ['ok', 7] }],
-      ['image content', {
-        max_tokens: 20,
-        messages: [{ role: 'user', content: [{ type: 'image_url', image_url: { url: 'offline://image' } }] }],
-      }],
       ['non-text content part', {
         max_tokens: 20,
         messages: [{ role: 'user', content: [{ type: 'input_audio', input_audio: { data: 'offline', format: 'wav' } }] }],
@@ -1017,6 +1078,165 @@ async function main(): Promise<void> {
       assert.equal(h.sdk.value, 1);
       assert.equal(h.provider.value, 1);
     }
+  });
+
+  await test('controller preserves mixed vision content and forwards a valid Idempotency-Key header', async () => {
+    const h = controllerHarness();
+    const messages = [{
+      role: 'user',
+      content: [
+        { type: 'text', text: 'Describe this picture.' },
+        { type: 'image_url', image_url: { url: 'data:image/jpeg;base64,ZmFrZQ==' } },
+      ],
+    }];
+    const response = {
+      statusCode: 0,
+      body: undefined as unknown,
+      status(code: number) { this.statusCode = code; return this; },
+      json(body: unknown) { this.body = body; return this; },
+    };
+    await h.controller.postChatCompletion({
+      authUserId: 'subject-a',
+      body: { messages, maxTokens: 20 },
+      get: (name: string) => name.toLowerCase() === 'idempotency-key' ? '  client-operation-1  ' : undefined,
+    }, response);
+
+    assert.equal(response.statusCode, 200);
+    assert.equal(h.routedInputs.length, 1);
+    const routed = h.routedInputs[0] as Readonly<{
+      idempotencyKey?: string;
+      params: Readonly<{ messages: readonly unknown[] }>;
+    }>;
+    assert.equal(routed.idempotencyKey, 'client-operation-1');
+    assert.deepStrictEqual(normalizeCrossRealm(routed.params.messages), normalizeCrossRealm(messages));
+  });
+
+  await test('controller leaves absent client idempotency keys to the router and rejects invalid messages or keys with 400', async () => {
+    const h = controllerHarness();
+    const invoke = async (body: unknown, key?: string) => {
+      const response = {
+        statusCode: 0,
+        body: undefined as unknown,
+        status(code: number) { this.statusCode = code; return this; },
+        json(value: unknown) { this.body = value; return this; },
+      };
+      await h.controller.postChatCompletion({
+        authUserId: 'subject-a',
+        body,
+        get: (name: string) => name.toLowerCase() === 'idempotency-key' ? key : undefined,
+      }, response);
+      return response;
+    };
+
+    const noKey = await invoke({ messages: [{ role: 'user', content: 'text-only' }], maxTokens: 20 });
+    assert.equal(noKey.statusCode, 200);
+    assert.equal(Object.prototype.hasOwnProperty.call(h.routedInputs[0], 'idempotencyKey'), false);
+    assert.equal((await invoke({ messages: [{ role: 'user', content: [] }] })).statusCode, 400);
+    assert.equal((await invoke({ messages: [{ role: 'tool', content: 'invalid role' }] })).statusCode, 400);
+    assert.equal((await invoke({ messages: [{ role: 'user', content: 'text' }] }, '  ')).statusCode, 400);
+    assert.equal((await invoke({ messages: [{ role: 'user', content: 'text' }] }, 'k'.repeat(201))).statusCode, 400);
+    assert.equal(h.routedInputs.length, 1, 'invalid input or key must not dispatch to the router');
+  });
+
+  await test('vision reserve adds the default image-token bound and settlement forwards provider usage', async () => {
+    const h = providerHarness();
+    const messages = [{
+      role: 'user',
+      content: [
+        { type: 'text', text: 'Read this image.' },
+        { type: 'image_url', image_url: { url: 'https://example.invalid/image.jpg' } },
+      ],
+    }];
+    await h.router.createRoutedChatCompletion(routedInputWithUncheckedParams({ messages, max_tokens: 20 }));
+
+    const reserve = h.reserveInputs[0] as Readonly<{ inputTokensUpperBound: bigint }>;
+    assert.equal(
+      reserve.inputTokensUpperBound,
+      estimateInputTokensUpperBound([{ role: 'user', content: [{ type: 'text', text: 'Read this image.' }] }]) + 3000n
+    );
+    assert.deepStrictEqual(normalizeCrossRealm(h.settlements), normalizeCrossRealm([{
+      operationId: 'vm-operation',
+      providerRequestId: 'provider-receipt',
+      usage: { inputTokens: 3, outputTokens: 2 },
+    }]));
+    assert.deepStrictEqual(
+      normalizeCrossRealm((h.providerParams[0] as Readonly<{ messages: readonly unknown[] }>).messages),
+      normalizeCrossRealm(messages)
+    );
+  });
+
+  await test('vision image token upper bound scales with image count and uses valid runtime configuration', async () => {
+    const messages = [{
+      role: 'user',
+      content: [
+        { type: 'text', text: 'Two images.' },
+        { type: 'image_url', image_url: { url: 'https://example.invalid/one.jpg' } },
+        { type: 'image_url', image_url: { url: 'data:image/png;base64,b25l' } },
+      ],
+    }];
+    const expectedTextBound = estimateInputTokensUpperBound([{ role: 'user', content: [{ type: 'text', text: 'Two images.' }] }]);
+    const twoImageHarness = providerHarness();
+    await twoImageHarness.router.createRoutedChatCompletion(routedInputWithUncheckedParams({ messages, max_tokens: 20 }));
+    assert.equal(
+      (twoImageHarness.reserveInputs[0] as Readonly<{ inputTokensUpperBound: bigint }>).inputTokensUpperBound,
+      expectedTextBound + 6000n
+    );
+
+    for (const [configured, expected] of [
+      ['5000', 5000n],
+      ['abc', 3000n],
+      ['0', 3000n],
+      ['-1', 3000n],
+    ] as const) {
+      const configuredHarness = providerHarness({ visionImageInputTokensPerImage: configured });
+      const oneImageMessages = [{ role: 'user', content: [messages[0].content[0], messages[0].content[1]] }];
+      await configuredHarness.router.createRoutedChatCompletion(
+        routedInputWithUncheckedParams({ messages: oneImageMessages, max_tokens: 20 })
+      );
+      assert.equal(
+        (configuredHarness.reserveInputs[0] as Readonly<{ inputTokensUpperBound: bigint }>).inputTokensUpperBound,
+        estimateInputTokensUpperBound([{ role: 'user', content: [{ type: 'text', text: 'Two images.' }] }]) + expected,
+        `VISION_IMAGE_INPUT_TOKENS_PER_IMAGE=${configured}`
+      );
+    }
+  });
+
+  await test('malformed multimodal parts fail closed before reserve, key access, SDK construction, or provider call', async () => {
+    const badContents: readonly unknown[][] = [
+      [],
+      [{ type: 'audio', audio: 'not-allowed' }],
+      [{ type: 'image_url', image_url: {} }],
+      [{ type: 'image_url', image_url: { url: '' } }],
+      [{ type: 'image_url', image_url: { url: 'data:image/png;base64,x', detail: 'high' } }],
+      [{ type: 'text', text: '' }],
+      [{ type: 'text' }],
+      [{ type: 'text', text: 'ok', extra: true }],
+    ];
+    for (const content of badContents) {
+      const h = providerHarness();
+      await assert.rejects(h.router.createRoutedChatCompletion(routedInputWithUncheckedParams({
+        messages: [{ role: 'user', content }],
+        max_tokens: 20,
+      })), (error: unknown) => {
+        assert.equal((error as Readonly<{ code?: string }>).code, 'COST_GOVERNOR_DENY_POLICY');
+        return true;
+      });
+      assert.equal(h.calls.reserve, 0);
+      assert.equal(h.keyReads.value, 0);
+      assert.equal(h.sdk.value, 0);
+      assert.equal(h.provider.value, 0);
+    }
+  });
+
+  await test('text-only reserve has no vision surcharge and caller idempotency reaches reserve unchanged', async () => {
+    const h = providerHarness({ visionImageInputTokensPerImage: '5000' });
+    await h.router.createRoutedChatCompletion({
+      ...routedInput(),
+      idempotencyKey: 'stable-client-key',
+    });
+    const reserve = h.reserveInputs[0] as Readonly<{ inputTokensUpperBound: bigint; idempotencyKey: string }>;
+    assert.equal(reserve.inputTokensUpperBound, estimateInputTokensUpperBound([{ role: 'user', content: 'Synthetic input' }]));
+    assert.equal(reserve.idempotencyKey, 'stable-client-key');
   });
 
   await test('routed-chat normalizers snapshot getter values once and reject hostile shapes or negative zero before reserve', async () => {

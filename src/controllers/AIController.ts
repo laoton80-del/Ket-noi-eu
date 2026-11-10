@@ -277,16 +277,23 @@ type ChatWireMessage = Readonly<{ role?: unknown; content?: unknown }>;
 function parseChatCompletionMessages(body: unknown): ChatCompletionMessageParam[] | null {
   if (typeof body !== 'object' || body === null) return null;
   const raw = (body as { messages?: unknown }).messages;
-  if (!Array.isArray(raw)) return null;
+  if (!Array.isArray(raw) || raw.length === 0) return null;
   const out: ChatCompletionMessageParam[] = [];
   for (const item of raw.slice(0, MAX_CHAT_COMPLETION_MESSAGES)) {
-    if (typeof item !== 'object' || item === null) continue;
+    if (typeof item !== 'object' || item === null) return null;
     const m = item as ChatWireMessage;
     const role = m.role;
     const content = m.content;
-    if (role !== 'system' && role !== 'user' && role !== 'assistant') continue;
-    if (typeof content !== 'string' || content.length === 0) continue;
-    out.push({ role, content: content.slice(0, MAX_CHAT_COMPLETION_CHARS_PER_MESSAGE) });
+    if (role !== 'system' && role !== 'user' && role !== 'assistant') return null;
+    if (typeof content === 'string' && content.length > 0) {
+      out.push({ role, content: content.slice(0, MAX_CHAT_COMPLETION_CHARS_PER_MESSAGE) });
+      continue;
+    }
+    if (Array.isArray(content) && content.length > 0) {
+      out.push({ role, content } as ChatCompletionMessageParam);
+      continue;
+    }
+    return null;
   }
   return out.length > 0 ? out : null;
 }
@@ -308,6 +315,16 @@ export async function postChatCompletion(req: Request, res: Response): Promise<v
       return;
     }
 
+    const rawIdempotencyKey = req.get('Idempotency-Key');
+    let idempotencyKey: string | undefined;
+    if (rawIdempotencyKey !== undefined) {
+      idempotencyKey = rawIdempotencyKey.trim();
+      if (rawIdempotencyKey.length > 200 || idempotencyKey.length === 0) {
+        jsonFail(res, 'Idempotency-Key must be non-empty and at most 200 characters', 400);
+        return;
+      }
+    }
+
     const bodyObj = typeof req.body === 'object' && req.body !== null ? (req.body as Record<string, unknown>) : {};
     const temperatureRaw = bodyObj.temperature;
     const maxTokensRaw = bodyObj.maxTokens;
@@ -323,6 +340,7 @@ export async function postChatCompletion(req: Request, res: Response): Promise<v
     const completion = await createRoutedChatCompletion({
       taskType: LlmRouterTaskType.ROUTING_INQUIRY,
       userId,
+      ...(idempotencyKey === undefined ? {} : { idempotencyKey }),
       params: {
         messages,
         temperature,

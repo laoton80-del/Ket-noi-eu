@@ -666,6 +666,7 @@ type RouterIntegrationOptions = Readonly<{
   governor: CostGovernor;
   providerFailure?: Error & Readonly<{ status?: number }>;
   apiKey?: string;
+  visionImageInputTokensPerImage?: string;
   consoleLines?: string[];
   usageLogFailure?: Error;
 }>;
@@ -683,6 +684,9 @@ function routerIntegrationHarness(options: RouterIntegrationOptions): Readonly<{
     VIONA_LLM_PROVIDER_ALLOWED_TASK_TYPES: 'ROUTING_INQUIRY',
     OPENAI_API_KEY: options.apiKey ?? 'router-fake-key-never-sent',
   };
+  if (options.visionImageInputTokensPerImage !== undefined) {
+    environment.VISION_IMAGE_INPUT_TOKENS_PER_IMAGE = options.visionImageInputTokensPerImage;
+  }
   const capture = (...values: unknown[]): void => {
     options.consoleLines?.push(values.map((value) => String(value)).join(' '));
   };
@@ -2468,6 +2472,65 @@ async function main(): Promise<void> {
       assert.equal(result.decision, 'DENY_UNCONFIGURED');
       assert.equal(await countRows(prisma!, '"AiCostOperation"'), 0n);
       assert.equal(await countRows(prisma!, '"AiCostBudgetCounter"'), 0n);
+    });
+
+    await test('52: Express vision reserves text plus the per-image upper bound and settles provider token usage', async () => {
+      await resetCostTables(prisma!);
+      await insertFixturePrice(prisma!, { model: 'gpt-4o-mini' });
+      setFixtureConfig();
+      const router = routerIntegrationHarness({ governor: serviceFor(prisma!) });
+      const subjectId = 'router-vision-subject';
+      const idempotencyKey = 'router-vision-image-once';
+      const text = 'Read the visible label.';
+      const messages = [{
+        role: 'user',
+        content: [
+          { type: 'text', text },
+          { type: 'image_url', image_url: { url: 'data:image/jpeg;base64,c3ludGhldGlj' } },
+        ],
+      }];
+      await router.router.createRoutedChatCompletion({
+        taskType: 'ROUTING_INQUIRY' as never,
+        userId: subjectId,
+        idempotencyKey,
+        params: { messages, max_tokens: 20 } as never,
+      });
+
+      assert.equal(router.sdkRequests.length, 1);
+      assert.deepEqual((router.sdkRequests[0] as Readonly<{ messages: readonly unknown[] }>).messages, messages);
+      const operationId = await operationIdForKey(prisma!, subjectId, idempotencyKey);
+      const settled = await operation(prisma!, operationId);
+      const textUpperBound = estimateInputTokensUpperBound([{ role: 'user', content: [{ type: 'text', text }] }]);
+      const inputUpperBound = textUpperBound + 3000n;
+      const expectedReserve = (inputUpperBound * inputPrice + 20n * outputPrice + 999_999n) / 1_000_000n;
+      const imageOnlyReserve = (3000n * inputPrice + 999_999n) / 1_000_000n;
+      const actualUsageCost = (10n * inputPrice + 20n * outputPrice + 999_999n) / 1_000_000n;
+      assert.equal(settled.reservedMicrousd, expectedReserve);
+      assert.ok(settled.reservedMicrousd >= imageOnlyReserve);
+      assert.equal(settled.status, 'SETTLED');
+      assert.equal(settled.actualCostMicrousd, actualUsageCost);
+      assert.deepEqual(await counterTriplet(prisma!, subjectId), {
+        GLOBAL_MONTH: { reservedMicrousd: 0n, settledMicrousd: actualUsageCost },
+        GLOBAL_DAY: { reservedMicrousd: 0n, settledMicrousd: actualUsageCost },
+        [`USER_DAY:${subjectId}`]: { reservedMicrousd: 0n, settledMicrousd: actualUsageCost },
+      });
+    });
+
+    await test('53: same router idempotency key reserves once while a distinct key reserves a second operation', async () => {
+      await resetCostTables(prisma!); await insertFixturePrice(prisma!); setFixtureConfig();
+      const subjectId = 'router-idempotency-pair';
+      const first = allowed(await governor.reserve(input(subjectId, 'same-client-key')));
+      const duplicate = await governor.reserve(input(subjectId, 'same-client-key'));
+      assert.equal(duplicate.decision, 'DUPLICATE_IN_PROGRESS');
+      const distinct = allowed(await governor.reserve(input(subjectId, 'different-client-key')));
+      assert.equal(await countRows(prisma!, '"AiCostOperation"'), 2n);
+      assert.equal(await ledgerEntryCount(prisma!, first.operation.id, 'RESERVE'), 1n);
+      assert.equal(await ledgerEntryCount(prisma!, distinct.operation.id, 'RESERVE'), 1n);
+      assert.deepEqual(await counterTriplet(prisma!, subjectId), {
+        GLOBAL_MONTH: { reservedMicrousd: first.operation.reservedMicrousd + distinct.operation.reservedMicrousd, settledMicrousd: 0n },
+        GLOBAL_DAY: { reservedMicrousd: first.operation.reservedMicrousd + distinct.operation.reservedMicrousd, settledMicrousd: 0n },
+        [`USER_DAY:${subjectId}`]: { reservedMicrousd: first.operation.reservedMicrousd + distinct.operation.reservedMicrousd, settledMicrousd: 0n },
+      });
     });
 
     console.log(`\n${passed} PostgreSQL scenarios passed with independent Prisma transactions, a 60-connection pool, and ${testTimeZone}.`);
