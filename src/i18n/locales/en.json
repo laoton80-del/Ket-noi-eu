@@ -1159,6 +1159,13 @@
       },
       "runtimeTruth": "RC2 Home is a local, feature-gated candidate. Notifications, live Viona requests, and inferred tasks are unavailable."
     },
+    "dockNav": {
+      "home": "Home",
+      "messages": "Messages",
+      "notifications": "Alerts",
+      "settings": "Settings",
+      "comingSoon": "Coming soon"
+    },
     "tabHub": "Hub",
     "tabLocal": "Local",
     "tabTravel": "Travel Lite",

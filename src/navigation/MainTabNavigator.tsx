@@ -46,6 +46,7 @@ import {
 import { resolveFashionHomeShellMode } from './fashionHomeShellMode';
 import { resolveVionaCinematicTier } from '../design/vionaCinematicTokens';
 import { roleTabChrome } from './tabRoleTheme';
+import { VionaGlassTabBar } from './VionaGlassTabBar';
 import {
   shouldMountSosInTabBarShell,
   shouldShowGlobalLifelineSos,
@@ -377,6 +378,36 @@ export function MainTabNavigator(): ReactElement {
     (props: BottomTabBarProps) => {
       // Surfaces that own in-screen SOS/account/language (or fashion Home) keep the stock bar.
       if (!mountSosInTabBarShell) {
+        if (currentActiveRole === 'B2C' && !b2cTravelPlatinum && tabBarPosition === 'bottom') {
+          const seatedOrb = resolveVionaCollapsedOrb(width);
+          return (
+            <View style={styles.tabBarHost} testID="viona-glass-tab-bar">
+              <LinearGradient
+                pointerEvents="none"
+                colors={['rgba(8, 64, 108, 0.96)', 'rgba(10, 36, 68, 0.94)', 'rgba(8, 22, 44, 0.97)']}
+                locations={[0, 0.42, 1]}
+                style={styles.tabBarGlass}
+              />
+              <View pointerEvents="none" style={styles.tabBarSides} />
+              <View
+                pointerEvents="none"
+                style={[styles.tabBarHairline, { right: '50%', marginRight: Math.round(seatedOrb.size / 2) }]}
+              />
+              <View
+                pointerEvents="none"
+                style={[styles.tabBarHairline, { left: '50%', marginLeft: Math.round(seatedOrb.size / 2) }]}
+              />
+              <VionaGlassTabBar
+                state={props.state}
+                navigation={props.navigation}
+                width={width}
+                paddingLeft={12}
+                paddingRight={12}
+                onPressSettings={openShellAccount}
+              />
+            </View>
+          );
+        }
         return <BottomTabBar {...props} />;
       }
 
@@ -515,8 +546,24 @@ export function MainTabNavigator(): ReactElement {
               />
             </>
           ) : null}
+          {vionaGlassBar ? <View pointerEvents="none" style={styles.tabBarSides} /> : null}
           <View style={styles.tabBarMain}>
-            <BottomTabBar {...props} />
+            {vionaGlassBar ? (
+              <VionaGlassTabBar
+                state={props.state}
+                navigation={props.navigation}
+                width={width}
+                paddingLeft={
+                  showRolePicker
+                    ? WEB_BOTTOM_SHELL_ACCOUNT_LANGUAGE_RESERVE_WITH_ROLE
+                    : WEB_BOTTOM_SHELL_ACCOUNT_LANGUAGE_RESERVE
+                }
+                paddingRight={WEB_BOTTOM_SHELL_SOS_RESERVE}
+                onPressSettings={openShellAccount}
+              />
+            ) : (
+              <BottomTabBar {...props} />
+            )}
           </View>
           <View
             style={[
@@ -1022,14 +1069,24 @@ const styles = StyleSheet.create({
     overflow: 'visible',
   },
   tabBarGlass: { ...StyleSheet.absoluteFillObject },
+  tabBarSides: {
+    ...StyleSheet.absoluteFillObject,
+    borderLeftWidth: 1,
+    borderRightWidth: 1,
+    borderColor: 'rgba(0, 209, 255, 0.28)',
+    zIndex: 6,
+  },
   tabBarHairline: {
     position: 'absolute',
     top: 0,
     left: 0,
     right: 0,
-    height: 2,
-    backgroundColor: '#00D1FF',
-    opacity: 1,
+    height: 1,
+    backgroundColor: 'rgba(0, 209, 255, 0.28)',
+    shadowColor: '#00D1FF',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.45,
+    shadowRadius: 6,
     zIndex: 6,
   },
   tabBarOrbWash: {
