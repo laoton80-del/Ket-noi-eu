@@ -1,5 +1,6 @@
+import { LinearGradient } from 'expo-linear-gradient';
 import { useEffect } from 'react';
-import { Image, Platform, Pressable, StyleSheet, Text, View, useWindowDimensions, type ImageStyle } from 'react-native';
+import { Image, Platform, Pressable, StyleSheet, Text, View, useWindowDimensions, type ImageStyle, type ViewStyle } from 'react-native';
 import { Inter_500Medium, Inter_600SemiBold, useFonts } from '@expo-google-fonts/inter';
 import Animated, {
   Easing,
@@ -16,7 +17,13 @@ import { useFashionHomePrefersReducedMotion } from '../fashionHomeDesktopShell';
 import { playIntroChime, stopIntroChime } from './introChime';
 
 const EARTH = require('../../../../assets/brand/viona/intro/intro-earth.png');
-const CRANE = require('../../../../assets/brand/viona/favicon2.png');
+const CRANE = require('../../../../assets/brand/viona/viona-symbol-gold.png');
+const CRANE_FRAME = 1024 / 712;
+
+function webBlur(px: number): ViewStyle | null {
+  if (Platform.OS !== 'web') return null;
+  return { filter: `blur(${px}px)` } as ViewStyle;
+}
 
 function readReducedMotion(): boolean {
   if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return false;
@@ -35,14 +42,14 @@ export function VionaIntroScreen({ onDone }: Readonly<{ onDone: () => void }>) {
   const [fontsLoaded] = useFonts({ Inter_500Medium, Inter_600SemiBold });
   const desktop = width >= 1024;
   const markSize = desktop ? 200 : 140;
-  const wordSize = desktop ? 56 : 40;
-  const clusterHeight = markSize + Math.round(markSize * 0.12) + wordSize + 92;
+  const frame = Math.round(markSize * CRANE_FRAME);
+  const wordSize = desktop ? 48 : 34;
+  const clusterHeight = frame + wordSize + 110;
   const clusterTop = Math.max(16, height * 0.4 - clusterHeight / 2);
   const veil = useSharedValue(1);
   const logo = useSharedValue(reducedMotion ? 1 : 0);
   const lines = useSharedValue(reducedMotion ? 1 : 0);
-  const arc = useSharedValue(reducedMotion ? 0.35 : 0);
-  const ray = useSharedValue(reducedMotion ? 0.2 : 0);
+  const glowPulse = useSharedValue(reducedMotion ? 0.8 : 0.62);
 
   useEffect(() => {
     let cancelled = false;
@@ -52,6 +59,7 @@ export function VionaIntroScreen({ onDone }: Readonly<{ onDone: () => void }>) {
     if (reducedMotion) {
       logo.value = 1;
       lines.value = 1;
+      glowPulse.value = 0.8;
       const timer = setTimeout(finish, REDUCED_HOLD_MS);
       return () => {
         cancelled = true;
@@ -60,8 +68,7 @@ export function VionaIntroScreen({ onDone }: Readonly<{ onDone: () => void }>) {
     }
     logo.value = withDelay(300, withTiming(1, { duration: 700, easing: Easing.out(Easing.cubic) }));
     lines.value = withDelay(500, withTiming(1, { duration: 650, easing: Easing.out(Easing.cubic) }));
-    arc.value = withRepeat(withTiming(1, { duration: 2800, easing: Easing.inOut(Easing.ease) }), -1, true);
-    ray.value = withRepeat(withTiming(1, { duration: 1600, easing: Easing.out(Easing.quad) }), -1, false);
+    glowPulse.value = withRepeat(withTiming(0.92, { duration: 2400, easing: Easing.inOut(Easing.ease) }), -1, true);
     void playIntroChime(false);
     const timer = setTimeout(() => {
       veil.value = withTiming(0, { duration: FADE_MS }, (finished) => {
@@ -72,7 +79,7 @@ export function VionaIntroScreen({ onDone }: Readonly<{ onDone: () => void }>) {
       cancelled = true;
       clearTimeout(timer);
     };
-  }, [arc, lines, logo, onDone, ray, reducedMotion, veil]);
+  }, [glowPulse, lines, logo, onDone, reducedMotion, veil]);
 
   const veilStyle = useAnimatedStyle(() => ({ opacity: veil.value }));
   const logoStyle = useAnimatedStyle(() => ({
@@ -80,14 +87,7 @@ export function VionaIntroScreen({ onDone }: Readonly<{ onDone: () => void }>) {
     transform: [{ scale: 0.96 + logo.value * 0.04 }],
   }));
   const linesStyle = useAnimatedStyle(() => ({ opacity: lines.value }));
-  const arcStyle = useAnimatedStyle(() => ({
-    opacity: reducedMotion ? 0.35 : 0.2 + arc.value * 0.55,
-    transform: [{ translateX: reducedMotion ? 0 : (arc.value - 0.5) * 24 }],
-  }));
-  const rayStyle = useAnimatedStyle(() => ({
-    opacity: reducedMotion ? 0 : ray.value * (1 - ray.value) * 1.6,
-    transform: [{ translateY: reducedMotion ? 0 : -ray.value * 36 }, { scaleY: reducedMotion ? 1 : 0.4 + ray.value * 0.6 }],
-  }));
+  const glowStyle = useAnimatedStyle(() => ({ opacity: reducedMotion ? 0.8 : glowPulse.value }));
 
   const skip = () => {
     void stopIntroChime();
@@ -110,26 +110,32 @@ export function VionaIntroScreen({ onDone }: Readonly<{ onDone: () => void }>) {
           onError={() => onDone()}
           style={styles.earth}
         />
-        <View pointerEvents="none" style={styles.topWash} />
-        <Animated.View pointerEvents="none" style={[styles.arc, styles.arcWide, arcStyle]} />
-        <Animated.View pointerEvents="none" style={[styles.arc, styles.arcInner, { borderTopColor: '#007BFF' }, arcStyle]} />
-        <Animated.View pointerEvents="none" style={[styles.ray, styles.rayA, rayStyle]} />
-        <Animated.View pointerEvents="none" style={[styles.ray, styles.rayB, rayStyle]} />
-        <Animated.View pointerEvents="none" style={[styles.ray, styles.rayC, rayStyle]} />
+        <LinearGradient
+          pointerEvents="none"
+          colors={['rgba(10, 26, 51, 0.96)', 'rgba(10, 26, 51, 0.55)', 'rgba(10, 26, 51, 0)']}
+          locations={[0, 0.46, 1]}
+          style={styles.topWash}
+        />
         <View pointerEvents="none" style={[styles.cluster, { top: clusterTop }]}>
           <Animated.View style={[styles.logo, logoStyle]}>
-            <Image
-              source={CRANE}
-              resizeMode="contain"
-              accessibilityIgnoresInvertColors
-              style={{ width: markSize, height: markSize, marginBottom: Math.round(markSize * 0.12) }}
-            />
+            <View style={[styles.mark, { width: frame, height: frame }]}>
+              <Animated.View pointerEvents="none" style={[styles.glowStack, glowStyle]}>
+                <View style={[styles.glow, styles.glowWide, { width: frame * 0.92, height: frame * 0.92 }, webBlur(32)]} />
+                <View style={[styles.glow, styles.glowTight, { width: frame * 0.58, height: frame * 0.58 }, webBlur(16)]} />
+              </Animated.View>
+              <Image
+                source={CRANE}
+                resizeMode="contain"
+                accessibilityIgnoresInvertColors
+                style={{ width: frame, height: frame }}
+              />
+            </View>
             <Text
               style={[
                 styles.word,
                 {
                   fontSize: wordSize,
-                  letterSpacing: desktop ? 10 : 6,
+                  letterSpacing: Math.round(wordSize * 0.2),
                   fontFamily: fontsLoaded ? 'Inter_600SemiBold' : 'Montserrat_600SemiBold',
                 },
               ]}
@@ -143,7 +149,7 @@ export function VionaIntroScreen({ onDone }: Readonly<{ onDone: () => void }>) {
                 styles.tagVi,
                 {
                   fontSize: desktop ? 18 : 16,
-                  fontFamily: fontsLoaded ? 'Inter_600SemiBold' : 'Montserrat_600SemiBold',
+                  fontFamily: fontsLoaded ? 'Inter_500Medium' : 'Montserrat_500Medium',
                 },
               ]}
             >
@@ -154,7 +160,7 @@ export function VionaIntroScreen({ onDone }: Readonly<{ onDone: () => void }>) {
                 styles.tagVi,
                 {
                   fontSize: desktop ? 18 : 16,
-                  fontFamily: fontsLoaded ? 'Inter_600SemiBold' : 'Montserrat_600SemiBold',
+                  fontFamily: fontsLoaded ? 'Inter_500Medium' : 'Montserrat_500Medium',
                 },
               ]}
             >
@@ -198,29 +204,8 @@ const styles = StyleSheet.create({
     top: 0,
     left: 0,
     right: 0,
-    height: '46%',
-    backgroundColor: '#0A1A33',
-    opacity: 0.92,
+    height: '68%',
   },
-  arc: {
-    position: 'absolute',
-    height: 80,
-    borderTopWidth: 2,
-    borderTopColor: '#00D1FF',
-    borderRadius: 999,
-  },
-  arcWide: { left: '-8%', right: '-8%', top: '54%' },
-  arcInner: { left: '6%', right: '6%', top: '58%' },
-  ray: {
-    position: 'absolute',
-    width: 2,
-    height: 72,
-    borderRadius: 2,
-    backgroundColor: '#00D1FF',
-  },
-  rayA: { left: '38%', bottom: '22%' },
-  rayB: { left: '52%', bottom: '26%' },
-  rayC: { left: '63%', bottom: '20%' },
   cluster: {
     position: 'absolute',
     left: 0,
@@ -228,9 +213,33 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 28,
   },
-  logo: { alignItems: 'center', gap: 8 },
-  word: { color: '#D4AF7C', textAlign: 'center' },
-  taglines: { alignItems: 'center', alignSelf: 'stretch', gap: 6, marginTop: 18 },
+  logo: { alignItems: 'center', gap: 4 },
+  mark: { alignItems: 'center', justifyContent: 'center' },
+  glowStack: { ...StyleSheet.absoluteFillObject, alignItems: 'center', justifyContent: 'center' },
+  glow: { position: 'absolute', borderRadius: 999 },
+  glowWide: {
+    backgroundColor: 'rgba(243, 217, 166, 0.28)',
+    shadowColor: '#F3D9A6',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.7,
+    shadowRadius: 28,
+  },
+  glowTight: {
+    backgroundColor: 'rgba(243, 217, 166, 0.42)',
+    shadowColor: '#F3D9A6',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.85,
+    shadowRadius: 14,
+  },
+  word: {
+    color: '#F3D9A6',
+    textAlign: 'center',
+    fontWeight: '600',
+    textShadowColor: 'rgba(243, 217, 166, 0.55)',
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 12,
+  },
+  taglines: { alignItems: 'center', alignSelf: 'stretch', gap: 8, marginTop: 22 },
   tagVi: { color: '#E6F4FF', textAlign: 'center', letterSpacing: 1.4 },
   tagEn: { color: '#F3D9A6', textAlign: 'center', marginTop: 8 },
 });
