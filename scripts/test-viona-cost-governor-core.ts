@@ -464,8 +464,9 @@ type FakeControllerResponse = Readonly<{
   json(body: unknown): FakeControllerResponse;
 }>;
 
-function controllerHarness() {
+function controllerHarness(options: Readonly<{ routerError?: Error }> = {}) {
   const routedInputs: unknown[] = [];
+  const consoleErrors: unknown[][] = [];
   const completion = { id: 'controller-offline-completion', choices: [{ message: { content: 'synthetic response' } }] };
   class FakeAdmissionDeniedError extends Error {
     readonly httpStatus = 503;
@@ -481,7 +482,9 @@ function controllerHarness() {
     response.status(200).json({ success: true, data });
   };
   const controller = compileVm<{ postChatCompletion(req: unknown, res: unknown): Promise<void> }>(
-    createContext({}, { codeGeneration: { strings: false, wasm: false } }),
+    createContext({
+      console: { error: (...values: unknown[]) => { consoleErrors.push(values); } },
+    }, { codeGeneration: { strings: false, wasm: false } }),
     'src/controllers/AIController.ts',
     {
       '@prisma/client': {
@@ -504,6 +507,7 @@ function controllerHarness() {
       '../services/ai/AIRouterService': {
         createRoutedChatCompletion: async (input: unknown) => {
           routedInputs.push(input);
+          if (options.routerError) throw options.routerError;
           return completion;
         },
       },
@@ -512,7 +516,7 @@ function controllerHarness() {
       '../utils/apiEnvelope': { jsonFail, jsonOk },
     }
   );
-  return { controller, routedInputs, completion };
+  return { controller, routedInputs, completion, consoleErrors };
 }
 
 const SOURCE_EXTENSIONS = ['.ts', '.tsx', '.js', '.jsx'] as const;
@@ -1143,6 +1147,42 @@ async function main(): Promise<void> {
     assert.equal((await invoke({ messages: [{ role: 'user', content: 'text' }] }, '  ')).statusCode, 400);
     assert.equal((await invoke({ messages: [{ role: 'user', content: 'text' }] }, 'k'.repeat(201))).statusCode, 400);
     assert.equal(h.routedInputs.length, 1, 'invalid input or key must not dispatch to the router');
+  });
+
+  await test('controller redacts provider URL and data URI errors while returning 500', async () => {
+    const cases = [
+      {
+        error: Object.assign(new Error('provider rejected https://example.invalid/private.jpg?token=SECRET_MARKER'), { status: 502 }),
+        forbidden: /SECRET_MARKER|https:\/\/example\.invalid\/private\.jpg/,
+        redacted: /\[redacted-url\]/,
+      },
+      {
+        error: Object.assign(new Error('provider rejected data:image/jpeg;base64,BASE64_SECRET_MARKER'), { status: 502 }),
+        forbidden: /BASE64_SECRET_MARKER|data:image\/jpeg;base64/,
+        redacted: /\[redacted-data-uri\]/,
+      },
+    ] as const;
+
+    for (const testCase of cases) {
+      const h = controllerHarness({ routerError: testCase.error });
+      const response = {
+        statusCode: 0,
+        body: undefined as unknown,
+        status(code: number) { this.statusCode = code; return this; },
+        json(value: unknown) { this.body = value; return this; },
+      };
+      await h.controller.postChatCompletion({
+        authUserId: 'subject-a',
+        body: { messages: [{ role: 'user', content: 'synthetic request' }], maxTokens: 20 },
+      }, response);
+
+      assert.equal(response.statusCode, 500);
+      const logged = JSON.stringify(h.consoleErrors);
+      assert.doesNotMatch(logged, testCase.forbidden);
+      assert.match(logged, testCase.redacted);
+      assert.match(logged, /"errName":"Error"/);
+      assert.match(logged, /"status":502/);
+    }
   });
 
   await test('vision reserve adds the default image-token bound and settlement forwards provider usage', async () => {

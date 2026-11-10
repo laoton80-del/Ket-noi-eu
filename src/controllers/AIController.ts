@@ -45,6 +45,12 @@ const AI_LEDGER_PARTY = 'ViGlobalAI';
 const MAX_LEGAL_SCAN_DOCUMENT_CHARS = 10_000;
 const MAX_TRANSLATION_REQUEST_CHARS = 14_000;
 
+function redactSensitiveText(value: string): string {
+  return value
+    .replace(/\bhttps?:\/\/[^\s"'<>]+/gi, '[redacted-url]')
+    .replace(/\bdata:[^\s"'<>]+/gi, '[redacted-data-uri]');
+}
+
 function readAuthUserId(req: Request): string | null {
   const id = req.authUserId;
   return typeof id === 'string' && id.length > 0 ? id : null;
@@ -359,7 +365,19 @@ export async function postChatCompletion(req: Request, res: Response): Promise<v
       jsonFail(res, 'AI chat service unavailable', 503);
       return;
     }
-    console.error('[AIController] postChatCompletion', e);
+    const errorMetadata = typeof e === 'object' && e !== null
+      ? e as Readonly<{ name?: unknown; status?: unknown; message?: unknown }>
+      : {};
+    const errName = typeof errorMetadata.name === 'string' ? errorMetadata.name : 'UnknownError';
+    const status = typeof errorMetadata.status === 'number' && Number.isFinite(errorMetadata.status)
+      ? errorMetadata.status
+      : undefined;
+    const message = typeof errorMetadata.message === 'string' ? redactSensitiveText(errorMetadata.message) : '';
+    console.error('[AIController] postChatCompletion', {
+      errName,
+      ...(status === undefined ? {} : { status }),
+      message,
+    });
     jsonFail(res, 'Unexpected error', 500);
   }
 }
