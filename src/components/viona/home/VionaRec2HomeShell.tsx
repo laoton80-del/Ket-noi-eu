@@ -11,6 +11,7 @@ import {
   Text,
   View,
   type LayoutChangeEvent,
+  type ViewStyle,
   useWindowDimensions,
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -86,18 +87,19 @@ function VionaCompanionOrb({
   const { t } = useTranslation();
 
   return (
-    <View testID="viona-motion">
-    <Pressable
-      accessibilityRole="button"
-      accessibilityLabel={t('home.rec2.companionChat')}
-      onPress={onPress}
-      style={({ pressed }) => [
-        styles.companionOrb,
-        pressed && (reducedMotion ? styles.cardPressedReducedMotion : styles.cardPressed),
-      ]}
-    >
-      <VionaCompanionOrbImage size={64} reducedMotion={reducedMotion} />
-    </Pressable>
+    <View pointerEvents="box-none" style={styles.companionDock} testID="viona-motion">
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel={t('home.rec2.companionChat')}
+        onPress={onPress}
+        style={({ pressed }) => [
+          styles.companionDockButton,
+          pressed && (reducedMotion ? styles.cardPressedReducedMotion : styles.cardPressed),
+        ]}
+      >
+        <VionaCompanionOrbImage size={64} reducedMotion={reducedMotion} />
+        <Text style={styles.companionDockLabel}>Viona</Text>
+      </Pressable>
     </View>
   );
 }
@@ -259,7 +261,6 @@ export function VionaRec2HomeShell({
           styles.commandRow,
           layout.columns === 1 && styles.commandRowStacked,
           { paddingTop: layout.headerControlTopClearance },
-          desktopFrame && !desktopCompanionOpen && styles.commandOrbClearance,
         ]}
       >
         <VionaHomeTopBar
@@ -360,20 +361,6 @@ export function VionaRec2HomeShell({
         </View>
       </View>
 
-      {!desktopFrame ? (
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel={t('home.rec2.companionChat')}
-          onPress={() => setCompanionOpen(true)}
-          style={({ pressed }) => [
-            styles.companionEntry,
-            pressed && (reducedMotion ? styles.cardPressedReducedMotion : styles.cardPressed),
-          ]}
-        >
-          <VionaCompanionOrbImage size={44} reducedMotion={reducedMotion} />
-          <Text style={styles.companionEntryText}>{t('home.rec2.companionChat')}</Text>
-        </Pressable>
-      ) : null}
       {companionOpen && !desktopFrame ? (
         <View style={styles.companionSheet}>
           <VionaHomeCompanionPanel
@@ -433,12 +420,16 @@ export function VionaRec2HomeShell({
             </ScrollView>
           </View>
         ) : null}
-        {desktopFrame && !desktopCompanionOpen ? (
+        {!(desktopFrame ? desktopCompanionOpen : companionOpen) ? (
           <VionaCompanionOrb
             reducedMotion={reducedMotion}
             onPress={() => {
-              setDesktopCompanionOpen(true);
-              writeHomeColumnOpen('companion', true);
+              if (desktopFrame) {
+                setDesktopCompanionOpen(true);
+                writeHomeColumnOpen('companion', true);
+                return;
+              }
+              setCompanionOpen(true);
             }}
           />
         ) : null}
@@ -469,29 +460,33 @@ const styles = StyleSheet.create({
   companionScroll: { paddingBottom: 24 },
   heroDesktop: { minHeight: 280 },
   heroTablet: { minHeight: 240 },
-  companionEntry: {
-    minHeight: 64,
-    borderRadius: 18,
-    borderWidth: 1,
-    borderColor: 'rgba(230, 244, 255, 0.14)',
-    backgroundColor: 'rgba(10, 26, 51, 0.72)',
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    ...vionaCinematicTokens.elevation.cardOnShell,
-  },
-  companionEntryText: { color: '#F4F8FC', fontSize: 16, fontWeight: '700' },
-  companionOrb: {
+  companionDock: {
     position: 'absolute',
-    top: 12,
-    right: 12,
-    zIndex: 30,
-    width: 72,
-    height: 72,
+    left: 0,
+    right: 0,
+    bottom: 12,
+    zIndex: 40,
+    alignItems: 'center',
+    ...(Platform.OS === 'web'
+      ? ({ position: 'fixed', bottom: 28, zIndex: 80 } as unknown as ViewStyle)
+      : null),
+  },
+  companionDockButton: {
     alignItems: 'center',
     justifyContent: 'center',
+    backgroundColor: 'transparent',
+    shadowColor: '#00D1FF',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.4,
+    shadowRadius: 16,
+    elevation: 12,
+  },
+  companionDockLabel: {
+    marginTop: -4,
+    color: '#E6F4FF',
+    fontSize: 11,
+    fontFamily: vionaCinematicTokens.fontFamily.semibold,
+    letterSpacing: 0.4,
   },
   companionSheet: {
     borderRadius: 24,
@@ -517,7 +512,6 @@ const styles = StyleSheet.create({
   heroScrim: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(4, 12, 24, 0.62)' },
   commandRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 14, zIndex: 1 },
   commandRowStacked: { flexDirection: 'column', alignItems: 'stretch' },
-  commandOrbClearance: { paddingRight: 84 },
   heroCopy: { gap: 10, maxWidth: 720, zIndex: 1 },
   greeting: {
     color: 'rgba(0, 209, 255, 0.72)',
