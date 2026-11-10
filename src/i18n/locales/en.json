@@ -1046,6 +1046,11 @@
     "tierDemoSuccessTitle": "Demo purchase recorded",
     "tierDemoSuccessBody": "Wallet sync preview only — not an app-store receipt or live subscription."
   },
+  "intro": {
+    "taglineLine1": "VÌ NGƯỜI VIỆT",
+    "taglineLine2": "VÌ MỘT THẾ GIỚI TỐT ĐẸP HƠN",
+    "taglineConnected": "PEOPLE • PLACES • OPPORTUNITIES • ALWAYS CONNECTED"
+  },
   "home": {
     "rec2": {
       "brandSubtitle": "Global Vietnamese Companion OS",

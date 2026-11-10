@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
-import { Image, Platform, Pressable, StyleSheet, View, type ImageStyle } from 'react-native';
+import { Image, Platform, Pressable, StyleSheet, Text, View, useWindowDimensions, type ImageStyle } from 'react-native';
+import { Inter_500Medium, Inter_600SemiBold, useFonts } from '@expo-google-fonts/inter';
 import Animated, {
   Easing,
   runOnJS,
@@ -10,11 +11,12 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 
+import { useTranslation } from '../../../i18n';
 import { useFashionHomePrefersReducedMotion } from '../fashionHomeDesktopShell';
 import { playIntroChime, stopIntroChime } from './introChime';
 
 const EARTH = require('../../../../assets/brand/viona/intro/intro-earth.png');
-const BRAND = require('../../../../assets/brand/viona/logo-in-app.png');
+const CRANE = require('../../../../assets/brand/viona/favicon2.png');
 
 function readReducedMotion(): boolean {
   if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return false;
@@ -28,8 +30,17 @@ const FADE_MS = 250;
 export function VionaIntroScreen({ onDone }: Readonly<{ onDone: () => void }>) {
   const reducedFromHook = useFashionHomePrefersReducedMotion();
   const reducedMotion = reducedFromHook || readReducedMotion();
+  const { t } = useTranslation();
+  const { width, height } = useWindowDimensions();
+  const [fontsLoaded] = useFonts({ Inter_500Medium, Inter_600SemiBold });
+  const desktop = width >= 1024;
+  const markSize = desktop ? 200 : 140;
+  const wordSize = desktop ? 56 : 40;
+  const clusterHeight = markSize + Math.round(markSize * 0.12) + wordSize + 92;
+  const clusterTop = Math.max(16, height * 0.4 - clusterHeight / 2);
   const veil = useSharedValue(1);
   const logo = useSharedValue(reducedMotion ? 1 : 0);
+  const lines = useSharedValue(reducedMotion ? 1 : 0);
   const arc = useSharedValue(reducedMotion ? 0.35 : 0);
   const ray = useSharedValue(reducedMotion ? 0.2 : 0);
 
@@ -40,6 +51,7 @@ export function VionaIntroScreen({ onDone }: Readonly<{ onDone: () => void }>) {
     };
     if (reducedMotion) {
       logo.value = 1;
+      lines.value = 1;
       const timer = setTimeout(finish, REDUCED_HOLD_MS);
       return () => {
         cancelled = true;
@@ -47,6 +59,7 @@ export function VionaIntroScreen({ onDone }: Readonly<{ onDone: () => void }>) {
       };
     }
     logo.value = withDelay(300, withTiming(1, { duration: 700, easing: Easing.out(Easing.cubic) }));
+    lines.value = withDelay(500, withTiming(1, { duration: 650, easing: Easing.out(Easing.cubic) }));
     arc.value = withRepeat(withTiming(1, { duration: 2800, easing: Easing.inOut(Easing.ease) }), -1, true);
     ray.value = withRepeat(withTiming(1, { duration: 1600, easing: Easing.out(Easing.quad) }), -1, false);
     void playIntroChime(false);
@@ -59,13 +72,14 @@ export function VionaIntroScreen({ onDone }: Readonly<{ onDone: () => void }>) {
       cancelled = true;
       clearTimeout(timer);
     };
-  }, [arc, logo, onDone, ray, reducedMotion, veil]);
+  }, [arc, lines, logo, onDone, ray, reducedMotion, veil]);
 
   const veilStyle = useAnimatedStyle(() => ({ opacity: veil.value }));
   const logoStyle = useAnimatedStyle(() => ({
     opacity: logo.value,
     transform: [{ scale: 0.96 + logo.value * 0.04 }],
   }));
+  const linesStyle = useAnimatedStyle(() => ({ opacity: lines.value }));
   const arcStyle = useAnimatedStyle(() => ({
     opacity: reducedMotion ? 0.35 : 0.2 + arc.value * 0.55,
     transform: [{ translateX: reducedMotion ? 0 : (arc.value - 0.5) * 24 }],
@@ -102,9 +116,64 @@ export function VionaIntroScreen({ onDone }: Readonly<{ onDone: () => void }>) {
         <Animated.View pointerEvents="none" style={[styles.ray, styles.rayA, rayStyle]} />
         <Animated.View pointerEvents="none" style={[styles.ray, styles.rayB, rayStyle]} />
         <Animated.View pointerEvents="none" style={[styles.ray, styles.rayC, rayStyle]} />
-        <Animated.View pointerEvents="none" style={[styles.logo, logoStyle]}>
-          <Image source={BRAND} resizeMode="contain" accessibilityLabel="VIONA" style={styles.brand} />
-        </Animated.View>
+        <View pointerEvents="none" style={[styles.cluster, { top: clusterTop }]}>
+          <Animated.View style={[styles.logo, logoStyle]}>
+            <Image
+              source={CRANE}
+              resizeMode="contain"
+              accessibilityIgnoresInvertColors
+              style={{ width: markSize, height: markSize, marginBottom: Math.round(markSize * 0.12) }}
+            />
+            <Text
+              style={[
+                styles.word,
+                {
+                  fontSize: wordSize,
+                  letterSpacing: desktop ? 10 : 6,
+                  fontFamily: fontsLoaded ? 'Inter_600SemiBold' : 'Montserrat_600SemiBold',
+                },
+              ]}
+            >
+              VIONA
+            </Text>
+          </Animated.View>
+          <Animated.View style={[styles.taglines, linesStyle]}>
+            <Text
+              style={[
+                styles.tagVi,
+                {
+                  fontSize: desktop ? 18 : 16,
+                  fontFamily: fontsLoaded ? 'Inter_600SemiBold' : 'Montserrat_600SemiBold',
+                },
+              ]}
+            >
+              {t('intro.taglineLine1')}
+            </Text>
+            <Text
+              style={[
+                styles.tagVi,
+                {
+                  fontSize: desktop ? 18 : 16,
+                  fontFamily: fontsLoaded ? 'Inter_600SemiBold' : 'Montserrat_600SemiBold',
+                },
+              ]}
+            >
+              {t('intro.taglineLine2')}
+            </Text>
+            <Text
+              style={[
+                styles.tagEn,
+                {
+                  fontSize: desktop ? 12 : 11,
+                  letterSpacing: desktop ? 3 : 2,
+                  fontFamily: fontsLoaded ? 'Inter_500Medium' : 'Montserrat_500Medium',
+                },
+              ]}
+            >
+              {t('intro.taglineConnected')}
+            </Text>
+          </Animated.View>
+        </View>
       </Pressable>
     </Animated.View>
   );
@@ -152,6 +221,16 @@ const styles = StyleSheet.create({
   rayA: { left: '38%', bottom: '22%' },
   rayB: { left: '52%', bottom: '26%' },
   rayC: { left: '63%', bottom: '20%' },
-  logo: { position: 'absolute', top: '16%', left: 0, right: 0, alignItems: 'center', gap: 10 },
-  brand: { width: 220, height: 48 },
+  cluster: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    alignItems: 'center',
+    paddingHorizontal: 28,
+  },
+  logo: { alignItems: 'center', gap: 8 },
+  word: { color: '#D4AF7C', textAlign: 'center' },
+  taglines: { alignItems: 'center', alignSelf: 'stretch', gap: 6, marginTop: 18 },
+  tagVi: { color: '#E6F4FF', textAlign: 'center', letterSpacing: 1.4 },
+  tagEn: { color: '#F3D9A6', textAlign: 'center', marginTop: 8 },
 });
