@@ -39,11 +39,11 @@ module.exports = () => {
         image: './assets/brand/viona/splash.png',
         resizeMode: 'contain',
         imageWidth: 240,
-        backgroundColor: '#071936',
+        backgroundColor: '#0A1A33',
         dark: {
           image: './assets/brand/viona/splash.png',
           resizeMode: 'contain',
-          backgroundColor: '#071936',
+          backgroundColor: '#0A1A33',
         },
       },
     ],
@@ -126,7 +126,7 @@ module.exports = () => {
     splash: {
       image: './assets/brand/viona/splash.png',
       resizeMode: 'contain',
-      backgroundColor: '#071936',
+      backgroundColor: '#0A1A33',
     },
     userInterfaceStyle: 'light',
     scheme: 'ketnoiglobal',
@@ -146,7 +146,7 @@ module.exports = () => {
     android: {
       adaptiveIcon: {
         foregroundImage: './assets/brand/viona/adaptive-icon.png',
-        backgroundColor: '#071936',
+        backgroundColor: '#0A1A33',
       },
       edgeToEdgeEnabled: true,
       predictiveBackGestureEnabled: false,
@@ -163,9 +163,9 @@ module.exports = () => {
     web: {
       shortName: 'VIONA',
       name: 'VIONA',
-      favicon: './assets/brand/viona/favicon.png',
-      themeColor: '#071936',
-      backgroundColor: '#071936',
+      favicon: './assets/brand/viona/web/favicon-48.png',
+      themeColor: '#0A1A33',
+      backgroundColor: '#0A1A33',
       display: 'standalone',
     },
     plugins,

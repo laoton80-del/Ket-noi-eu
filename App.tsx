@@ -5,6 +5,7 @@ import { initProductAnalytics } from './src/services/AnalyticsService';
 import * as Sentry from '@sentry/react-native';
 import { initMonitoringRadar } from './src/config/sentryConfig';
 import { isVionaUiPreviewMode } from './src/config/vionaUiPreview';
+import { VionaColdIntro } from './src/components/viona/intro/VionaColdIntro';
 
 import {
   Montserrat_400Regular,
@@ -1125,6 +1126,7 @@ function AppRoot() {
         }
         startupLinkingOutcome={projectedOfflineSession.startupLinkingOutcome}
       />
+      <VionaColdIntro />
     </V7NavigationSurfaceProvider>
   );
 }

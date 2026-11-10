@@ -4,7 +4,7 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { vionaCinematicTokens } from '../../../design/vionaCinematicTokens';
 import { useTranslation } from '../../../i18n';
-import { VionaCraneMark } from '../brand/VionaCraneMark';
+import { VionaBrandLockup } from '../brand/VionaBrandLockup';
 import {
   invokeVionaRec2UniverseCallback,
   type VionaRec2UniverseCallbacks,
@@ -43,8 +43,7 @@ export function VionaHomeSidebar({
   return (
     <View style={styles.rail}>
       <View style={styles.brand}>
-        <VionaCraneMark size={28} variant="sapphire" glow={!reducedMotion} />
-        <Text style={styles.brandName}>VIONA</Text>
+        <VionaBrandLockup reducedMotion={reducedMotion} />
       </View>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.list}>
         <SidebarRow icon="home" label={t('home.rec2.sidebar.home')} selected onPress={() => undefined} />
