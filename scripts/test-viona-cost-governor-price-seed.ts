@@ -350,19 +350,42 @@ async function main(): Promise<void> {
       const reseeded = reseededResults.find((result) => result.model === PROVISIONAL_PRICE.model);
       assert.ok(reseeded);
       assert.equal(reseeded.outcome, 'inserted');
-      const rows = await activeRows(prisma!);
-      assert.equal(rows.length, 1);
-      assert.equal(rows[0].id, reseeded.priceVersionId);
-      assert.notEqual(rows[0].id, changedId);
-      assert.equal(rows[0].calculationVersion, PROVISIONAL_PRICE.calculationVersion);
-      assert.equal(rows[0].inputMicrousdPerMillionTokens, 150000n);
-      assert.equal(rows[0].outputMicrousdPerMillionTokens, 600000n);
-      const closedRows = await prisma!.$queryRawUnsafe<Array<{ id: string; effectiveTo: Date | null }>>(
-        `SELECT "id", "effectiveTo" FROM "AiModelPrice" WHERE "id" = ANY($1::text[])`,
+      const replacementRows = await prisma!.$queryRawUnsafe<Array<{
+        id: string;
+        effectiveFrom: Date;
+        effectiveTo: Date | null;
+        calculationVersion: string;
+        inputMicrousdPerMillionTokens: bigint;
+        outputMicrousdPerMillionTokens: bigint;
+      }>>(
+        `SELECT "id", "effectiveFrom", "effectiveTo", "calculationVersion",
+                "inputMicrousdPerMillionTokens", "outputMicrousdPerMillionTokens"
+           FROM "AiModelPrice" WHERE "id" = $1`,
+        reseeded.priceVersionId
+      );
+      assert.equal(replacementRows.length, 1);
+      const replacement = replacementRows[0];
+      assert.equal(replacement.id, reseeded.priceVersionId);
+      assert.notEqual(replacement.id, changedId);
+      assert.equal(replacement.calculationVersion, PROVISIONAL_PRICE.calculationVersion);
+      assert.equal(replacement.inputMicrousdPerMillionTokens, 150000n);
+      assert.equal(replacement.outputMicrousdPerMillionTokens, 600000n);
+      assert.equal(replacement.effectiveTo, null, 'the replacement version must remain open-ended');
+      const closedRows = await prisma!.$queryRawUnsafe<Array<{
+        id: string;
+        effectiveFrom: Date;
+        effectiveTo: Date | null;
+      }>>(
+        `SELECT "id", "effectiveFrom", "effectiveTo" FROM "AiModelPrice" WHERE "id" = ANY($1::text[])`,
         [previousId, changedId]
       );
       assert.equal(closedRows.length, 2);
-      assert.ok(closedRows.every((row) => row.effectiveTo instanceof Date));
+      const previous = closedRows.find((row) => row.id === previousId);
+      const changed = closedRows.find((row) => row.id === changedId);
+      assert.ok(previous?.effectiveTo instanceof Date && previous.effectiveTo > previous.effectiveFrom);
+      assert.ok(changed?.effectiveTo instanceof Date && changed.effectiveTo > changed.effectiveFrom);
+      assert.equal(previous.effectiveTo.getTime(), changed.effectiveFrom.getTime());
+      assert.equal(changed.effectiveTo.getTime(), replacement.effectiveFrom.getTime());
       assert.equal(await totalRows(prisma!), 3);
     });
 

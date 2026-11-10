@@ -102,13 +102,40 @@ async function seedOnePriceVersion(
     return { outcome: 'unchanged', priceVersionId: activeRows[0].id };
   }
 
+  const cutoverRows = await transaction.$queryRawUnsafe<Array<{ cutover: string }>>(
+    `WITH clock AS (
+       SELECT date_trunc('milliseconds', now() AT TIME ZONE 'UTC') AS "now"
+     )
+     SELECT to_char(
+              GREATEST(
+                clock."now",
+                COALESCE(
+                  date_trunc('milliseconds', (
+                    SELECT MAX("effectiveFrom") + interval '1 millisecond'
+                      FROM "AiModelPrice"
+                     WHERE "id" = ANY($1::text[])
+                  )),
+                  clock."now"
+                )
+              ),
+              'YYYY-MM-DD HH24:MI:SS.MS'
+            ) AS "cutover"
+       FROM clock`,
+    activeRows.map((row) => row.id)
+  );
+  if (cutoverRows.length !== 1 || typeof cutoverRows[0].cutover !== 'string') {
+    throw new Error(`Could not resolve a safe AiModelPrice cutover for ${target.provider}/${target.model}`);
+  }
+  const cutover = cutoverRows[0].cutover;
+
   if (activeRows.length > 0) {
     const closed = await transaction.$executeRawUnsafe(
       `UPDATE "AiModelPrice"
-          SET "effectiveTo" = date_trunc('milliseconds', (now() AT TIME ZONE 'UTC')),
+          SET "effectiveTo" = $2::timestamp(3),
               "updatedAt" = (now() AT TIME ZONE 'UTC')
         WHERE "id" = ANY($1::text[])`,
-      activeRows.map((row) => row.id)
+      activeRows.map((row) => row.id),
+      cutover
     );
     if (closed !== activeRows.length) {
       throw new Error(`Could not close every active AiModelPrice version for ${target.provider}/${target.model}`);
@@ -123,14 +150,15 @@ async function seedOnePriceVersion(
        "audioInputMicrousdPerSecond", "audioOutputMicrousdPerSecond", "imageMicrousdPerUnit",
        "createdAt", "updatedAt"
      ) VALUES (
-       $1, $2, $3, $4, date_trunc('milliseconds', (now() AT TIME ZONE 'UTC')), NULL,
-       $5::bigint, $6::bigint, $7::bigint, $8::bigint, $9::bigint,
+       $1, $2, $3, $4, $5::timestamp(3), NULL,
+       $6::bigint, $7::bigint, $8::bigint, $9::bigint, $10::bigint,
        (now() AT TIME ZONE 'UTC'), (now() AT TIME ZONE 'UTC')
      )`,
     priceVersionId,
     target.provider,
     target.model,
     target.calculationVersion,
+    cutover,
     target.inputMicrousdPerMillionTokens.toString(),
     target.outputMicrousdPerMillionTokens.toString(),
     target.audioInputMicrousdPerSecond.toString(),
@@ -145,10 +173,11 @@ async function seedOnePriceVersion(
        FROM "AiModelPrice"
       WHERE "provider" = $1
         AND "model" = $2
-        AND "effectiveFrom" <= (now() AT TIME ZONE 'UTC')
-        AND ("effectiveTo" IS NULL OR (now() AT TIME ZONE 'UTC') < "effectiveTo")`,
+        AND "effectiveFrom" <= $3::timestamp(3)
+        AND ("effectiveTo" IS NULL OR $3::timestamp(3) < "effectiveTo")`,
     target.provider,
-    target.model
+    target.model,
+    cutover
   );
   if (verifiedRows.length !== 1 || verifiedRows[0].id !== priceVersionId || !priceMatches(verifiedRows[0], target)) {
     throw new Error(`AiModelPrice seed did not leave exactly one active version for ${target.provider}/${target.model}`);
