@@ -469,8 +469,8 @@ const styles = StyleSheet.create({
     zIndex: 40,
     alignItems: 'center',
     ...(Platform.OS === 'web'
-      ? ({ position: 'fixed', bottom: 10, zIndex: 80 } as unknown as ViewStyle)
-      : null),
+      ? ({ position: 'fixed', bottom: 50, zIndex: 80 } as unknown as ViewStyle)
+      : { bottom: 36 }),
   },
   companionDockButton: {
     alignItems: 'center',
@@ -479,16 +479,16 @@ const styles = StyleSheet.create({
   },
   companionCradle: {
     position: 'absolute',
-    width: 148,
-    height: 34,
-    bottom: 42,
+    width: 280,
+    height: 36,
+    bottom: -8,
     borderRadius: 999,
-    backgroundColor: 'rgba(0, 209, 255, 0.28)',
+    backgroundColor: 'rgba(0, 209, 255, 0.42)',
     shadowColor: '#00D1FF',
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.85,
-    shadowRadius: 18,
-    ...(Platform.OS === 'web' ? ({ filter: 'blur(14px)' } as unknown as ViewStyle) : null),
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.9,
+    shadowRadius: 22,
+    ...(Platform.OS === 'web' ? ({ filter: 'blur(16px)' } as unknown as ViewStyle) : null),
   },
   companionDockLabel: {
     marginTop: 2,

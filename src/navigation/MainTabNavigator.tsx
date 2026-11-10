@@ -482,10 +482,12 @@ export function MainTabNavigator(): ReactElement {
           {vionaGlassBar ? (
             <LinearGradient
               pointerEvents="none"
-              colors={['rgba(18, 46, 82, 0.94)', 'rgba(10, 26, 51, 0.96)']}
+              colors={['rgba(8, 64, 108, 0.96)', 'rgba(10, 36, 68, 0.94)', 'rgba(8, 22, 44, 0.97)']}
+              locations={[0, 0.42, 1]}
               style={styles.tabBarGlass}
             />
           ) : null}
+          {vionaGlassBar ? <View pointerEvents="none" style={styles.tabBarOrbWash} /> : null}
           {vionaGlassBar ? <View pointerEvents="none" style={styles.tabBarHairline} /> : null}
           <View style={styles.tabBarMain}>
             <BottomTabBar {...props} />
@@ -987,13 +989,30 @@ const styles = StyleSheet.create({
     top: 0,
     left: 0,
     right: 0,
-    height: 1,
-    backgroundColor: 'rgba(0, 209, 255, 0.55)',
+    height: 2,
+    backgroundColor: '#00D1FF',
     shadowColor: '#00D1FF',
     shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.8,
-    shadowRadius: 8,
-    zIndex: 3,
+    shadowOpacity: 0.95,
+    shadowRadius: 12,
+    zIndex: 4,
+    ...(Platform.OS === 'web'
+      ? ({ boxShadow: '0 0 14px 1px rgba(0, 209, 255, 0.85)' } as unknown as ViewStyle)
+      : null),
+  },
+  tabBarOrbWash: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    top: 0,
+    bottom: 0,
+    zIndex: 2,
+    ...(Platform.OS === 'web'
+      ? ({
+          backgroundImage:
+            'radial-gradient(ellipse 460px 78px at 50% 0%, rgba(0, 209, 255, 0.62) 0%, rgba(0, 209, 255, 0.22) 38%, rgba(0, 209, 255, 0) 74%)',
+        } as unknown as ViewStyle)
+      : { backgroundColor: 'rgba(0, 209, 255, 0.12)' }),
   },
   tabIconGlow: {
     shadowColor: '#00D1FF',

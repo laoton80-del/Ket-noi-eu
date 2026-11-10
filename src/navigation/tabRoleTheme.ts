@@ -56,7 +56,7 @@ export function roleTabChrome(
   return {
     active: '#00D1FF',
     inactive: 'rgba(230, 244, 255, 0.52)',
-    barBg: 'rgba(10, 26, 51, 0.78)',
-    barBorder: 'rgba(0, 209, 255, 0.42)',
+    barBg: 'rgba(8, 42, 74, 0.82)',
+    barBorder: 'rgba(0, 209, 255, 0.9)',
   };
 }
