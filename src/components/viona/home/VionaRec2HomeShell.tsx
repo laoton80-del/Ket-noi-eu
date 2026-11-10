@@ -21,6 +21,7 @@ import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 
 import { useTranslation } from '../../../i18n';
 import { resolveVionaCollapsedOrb } from '../../../navigation/vionaBottomShellGeometry';
+import { isColdIntroActive, subscribeColdIntro } from '../intro/coldIntroSession';
 import { useHomeCommand } from '../../../context/HomeCommandContext';
 import { VionaGlobalSosShellAction } from '../VionaGlobalSosShellAction';
 import { VionaCompanionOrbImage } from '../brand/VionaCompanionOrbImage';
@@ -181,6 +182,8 @@ export function VionaRec2HomeShell({
     height: number;
   }> | null>(null);
   const [searchValue, setSearchValue] = useState('');
+  const [introActive, setIntroActive] = useState(isColdIntroActive);
+  useEffect(() => subscribeColdIntro(setIntroActive), []);
   const [companionOpen, setCompanionOpen] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(() => readHomeColumnOpen('sidebar'));
   const [desktopCompanionOpen, setDesktopCompanionOpen] = useState(() => readHomeColumnOpen('companion'));
@@ -433,7 +436,7 @@ export function VionaRec2HomeShell({
             </ScrollView>
           </View>
         ) : null}
-        {!(desktopFrame ? desktopCompanionOpen : companionOpen) ? (
+        {!introActive && !(desktopFrame ? desktopCompanionOpen : companionOpen) ? (
           <VionaCompanionOrb
             reducedMotion={reducedMotion}
             onPress={() => {

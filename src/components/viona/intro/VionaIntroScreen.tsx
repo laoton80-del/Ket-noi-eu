@@ -1,6 +1,8 @@
 import { LinearGradient } from 'expo-linear-gradient';
+// @ts-expect-error react-dom has no declaration file in this app
+import { createPortal } from 'react-dom';
 import { useEffect } from 'react';
-import { Image, Platform, Pressable, StyleSheet, Text, View, useWindowDimensions, type ImageStyle, type ViewStyle } from 'react-native';
+import { Image, Platform, Pressable, StyleSheet, Text, View, useWindowDimensions, type ImageStyle } from 'react-native';
 import { Inter_500Medium, Inter_600SemiBold, useFonts } from '@expo-google-fonts/inter';
 import Animated, {
   Easing,
@@ -19,11 +21,6 @@ import { playIntroChime, stopIntroChime } from './introChime';
 const EARTH = require('../../../../assets/brand/viona/intro/intro-earth.png');
 const CRANE = require('../../../../assets/brand/viona/viona-symbol-gold.png');
 const CRANE_FRAME = 1024 / 712;
-
-function webBlur(px: number): ViewStyle | null {
-  if (Platform.OS !== 'web') return null;
-  return { filter: `blur(${px}px)` } as ViewStyle;
-}
 
 function readReducedMotion(): boolean {
   if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return false;
@@ -49,7 +46,8 @@ export function VionaIntroScreen({ onDone }: Readonly<{ onDone: () => void }>) {
   const veil = useSharedValue(1);
   const logo = useSharedValue(reducedMotion ? 1 : 0);
   const lines = useSharedValue(reducedMotion ? 1 : 0);
-  const glowPulse = useSharedValue(reducedMotion ? 0.8 : 0.62);
+  const glowPulse = useSharedValue(reducedMotion ? 0.72 : 0.45);
+  const sweep = useSharedValue(0);
 
   useEffect(() => {
     let cancelled = false;
@@ -59,7 +57,8 @@ export function VionaIntroScreen({ onDone }: Readonly<{ onDone: () => void }>) {
     if (reducedMotion) {
       logo.value = 1;
       lines.value = 1;
-      glowPulse.value = 0.8;
+      glowPulse.value = 0.72;
+      sweep.value = 0;
       const timer = setTimeout(finish, REDUCED_HOLD_MS);
       return () => {
         cancelled = true;
@@ -68,7 +67,8 @@ export function VionaIntroScreen({ onDone }: Readonly<{ onDone: () => void }>) {
     }
     logo.value = withDelay(300, withTiming(1, { duration: 700, easing: Easing.out(Easing.cubic) }));
     lines.value = withDelay(500, withTiming(1, { duration: 650, easing: Easing.out(Easing.cubic) }));
-    glowPulse.value = withRepeat(withTiming(0.92, { duration: 2400, easing: Easing.inOut(Easing.ease) }), -1, true);
+    glowPulse.value = withRepeat(withTiming(0.9, { duration: 2200, easing: Easing.inOut(Easing.ease) }), -1, true);
+    sweep.value = withRepeat(withTiming(1, { duration: 5200, easing: Easing.linear }), -1, false);
     void playIntroChime(false);
     const timer = setTimeout(() => {
       veil.value = withTiming(0, { duration: FADE_MS }, (finished) => {
@@ -79,7 +79,7 @@ export function VionaIntroScreen({ onDone }: Readonly<{ onDone: () => void }>) {
       cancelled = true;
       clearTimeout(timer);
     };
-  }, [glowPulse, lines, logo, onDone, reducedMotion, veil]);
+  }, [glowPulse, lines, logo, onDone, reducedMotion, sweep, veil]);
 
   const veilStyle = useAnimatedStyle(() => ({ opacity: veil.value }));
   const logoStyle = useAnimatedStyle(() => ({
@@ -87,7 +87,39 @@ export function VionaIntroScreen({ onDone }: Readonly<{ onDone: () => void }>) {
     transform: [{ scale: 0.96 + logo.value * 0.04 }],
   }));
   const linesStyle = useAnimatedStyle(() => ({ opacity: lines.value }));
-  const glowStyle = useAnimatedStyle(() => ({ opacity: reducedMotion ? 0.8 : glowPulse.value }));
+  const glowStyle = useAnimatedStyle(() => ({ opacity: reducedMotion ? 0.72 : glowPulse.value }));
+  const arcCyanStyle = useAnimatedStyle(() => ({
+    opacity: reducedMotion ? 0 : 0.25 + 0.55 * Math.sin(sweep.value * Math.PI * 2),
+    transform: [{ translateX: (sweep.value - 0.5) * 90 }],
+  }));
+  const arcBlueStyle = useAnimatedStyle(() => ({
+    opacity: reducedMotion ? 0 : 0.2 + 0.45 * Math.sin((sweep.value + 0.38) * Math.PI * 2),
+    transform: [{ translateX: (0.5 - sweep.value) * 70 }],
+  }));
+  const rayAStyle = useAnimatedStyle(() => {
+    const t = sweep.value % 1;
+    const fade = t < 0.55 ? t / 0.55 : (1 - t) / 0.45;
+    return {
+      opacity: reducedMotion ? 0 : Math.max(0, fade) * 0.85,
+      transform: [{ translateY: reducedMotion ? 0 : -t * 26 }, { scaleY: 0.35 + Math.max(0, fade) * 0.65 }],
+    };
+  });
+  const rayBStyle = useAnimatedStyle(() => {
+    const t = (sweep.value + 0.33) % 1;
+    const fade = t < 0.55 ? t / 0.55 : (1 - t) / 0.45;
+    return {
+      opacity: reducedMotion ? 0 : Math.max(0, fade) * 0.85,
+      transform: [{ translateY: reducedMotion ? 0 : -t * 26 }, { scaleY: 0.35 + Math.max(0, fade) * 0.65 }],
+    };
+  });
+  const rayCStyle = useAnimatedStyle(() => {
+    const t = (sweep.value + 0.62) % 1;
+    const fade = t < 0.55 ? t / 0.55 : (1 - t) / 0.45;
+    return {
+      opacity: reducedMotion ? 0 : Math.max(0, fade) * 0.85,
+      transform: [{ translateY: reducedMotion ? 0 : -t * 22 }, { scaleY: 0.35 + Math.max(0, fade) * 0.65 }],
+    };
+  });
 
   const skip = () => {
     void stopIntroChime();
@@ -100,7 +132,21 @@ export function VionaIntroScreen({ onDone }: Readonly<{ onDone: () => void }>) {
     });
   };
 
-  return (
+  const wordFont =
+    Platform.OS === 'web'
+      ? 'Inter_600SemiBold, Inter, system-ui, sans-serif'
+      : fontsLoaded
+        ? 'Inter_600SemiBold'
+        : undefined;
+  const rimGlow =
+    Platform.OS === 'web'
+      ? ({
+          filter:
+            'drop-shadow(0 0 1px #F3D9A6) drop-shadow(0 0 3px rgba(243, 217, 166, 0.9)) drop-shadow(0 0 7px rgba(243, 217, 166, 0.45))',
+        } as ImageStyle)
+      : null;
+
+  const scene = (
     <Animated.View style={[styles.fill, veilStyle]}>
       <Pressable accessibilityRole="button" accessibilityLabel="Skip intro" onPress={skip} style={styles.fill}>
         <View style={styles.sky} />
@@ -119,15 +165,19 @@ export function VionaIntroScreen({ onDone }: Readonly<{ onDone: () => void }>) {
         <View pointerEvents="none" style={[styles.cluster, { top: clusterTop }]}>
           <Animated.View style={[styles.logo, logoStyle]}>
             <View style={[styles.mark, { width: frame, height: frame }]}>
-              <Animated.View pointerEvents="none" style={[styles.glowStack, glowStyle]}>
-                <View style={[styles.glow, styles.glowWide, { width: frame * 0.92, height: frame * 0.92 }, webBlur(32)]} />
-                <View style={[styles.glow, styles.glowTight, { width: frame * 0.58, height: frame * 0.58 }, webBlur(16)]} />
-              </Animated.View>
+              {!reducedMotion ? (
+                <Animated.Image
+                  source={CRANE}
+                  resizeMode="contain"
+                  accessibilityIgnoresInvertColors
+                  style={[{ width: frame, height: frame, position: 'absolute' }, rimGlow, glowStyle]}
+                />
+              ) : null}
               <Image
                 source={CRANE}
                 resizeMode="contain"
                 accessibilityIgnoresInvertColors
-                style={{ width: frame, height: frame }}
+                style={[{ width: frame, height: frame }, reducedMotion ? rimGlow : null]}
               />
             </View>
             <Text
@@ -136,7 +186,7 @@ export function VionaIntroScreen({ onDone }: Readonly<{ onDone: () => void }>) {
                 {
                   fontSize: wordSize,
                   letterSpacing: Math.round(wordSize * 0.2),
-                  fontFamily: fontsLoaded ? 'Inter_600SemiBold' : 'Montserrat_600SemiBold',
+                  fontFamily: wordFont,
                 },
               ]}
             >
@@ -149,7 +199,7 @@ export function VionaIntroScreen({ onDone }: Readonly<{ onDone: () => void }>) {
                 styles.tagVi,
                 {
                   fontSize: desktop ? 18 : 16,
-                  fontFamily: fontsLoaded ? 'Inter_500Medium' : 'Montserrat_500Medium',
+                  fontFamily: Platform.OS === 'web' ? 'Inter_500Medium, Inter, system-ui, sans-serif' : fontsLoaded ? 'Inter_500Medium' : undefined,
                 },
               ]}
             >
@@ -160,7 +210,7 @@ export function VionaIntroScreen({ onDone }: Readonly<{ onDone: () => void }>) {
                 styles.tagVi,
                 {
                   fontSize: desktop ? 18 : 16,
-                  fontFamily: fontsLoaded ? 'Inter_500Medium' : 'Montserrat_500Medium',
+                  fontFamily: Platform.OS === 'web' ? 'Inter_500Medium, Inter, system-ui, sans-serif' : fontsLoaded ? 'Inter_500Medium' : undefined,
                 },
               ]}
             >
@@ -172,7 +222,7 @@ export function VionaIntroScreen({ onDone }: Readonly<{ onDone: () => void }>) {
                 {
                   fontSize: desktop ? 12 : 11,
                   letterSpacing: desktop ? 3 : 2,
-                  fontFamily: fontsLoaded ? 'Inter_500Medium' : 'Montserrat_500Medium',
+                  fontFamily: Platform.OS === 'web' ? 'Inter_500Medium, Inter, system-ui, sans-serif' : fontsLoaded ? 'Inter_500Medium' : undefined,
                 },
               ]}
             >
@@ -180,13 +230,26 @@ export function VionaIntroScreen({ onDone }: Readonly<{ onDone: () => void }>) {
             </Text>
           </Animated.View>
         </View>
+        {!reducedMotion ? (
+          <>
+            <Animated.View pointerEvents="none" style={[styles.limb, styles.limbCyan, arcCyanStyle]} />
+            <Animated.View pointerEvents="none" style={[styles.limb, styles.limbBlue, arcBlueStyle]} />
+            <Animated.View pointerEvents="none" style={[styles.cityRay, styles.cityRayA, rayAStyle]} />
+            <Animated.View pointerEvents="none" style={[styles.cityRay, styles.cityRayB, rayBStyle]} />
+            <Animated.View pointerEvents="none" style={[styles.cityRay, styles.cityRayC, rayCStyle]} />
+          </>
+        ) : null}
       </Pressable>
     </Animated.View>
   );
+  if (Platform.OS === 'web' && typeof document !== 'undefined') {
+    return createPortal(scene, document.body);
+  }
+  return scene;
 }
 
 const styles = StyleSheet.create({
-  fill: { ...StyleSheet.absoluteFillObject, zIndex: 80 },
+  fill: { ...StyleSheet.absoluteFillObject, zIndex: 1000 },
   sky: { ...StyleSheet.absoluteFillObject, backgroundColor: '#0A1A33' },
   earth: {
     position: 'absolute',
@@ -215,22 +278,24 @@ const styles = StyleSheet.create({
   },
   logo: { alignItems: 'center', gap: 4 },
   mark: { alignItems: 'center', justifyContent: 'center' },
-  glowStack: { ...StyleSheet.absoluteFillObject, alignItems: 'center', justifyContent: 'center' },
-  glow: { position: 'absolute', borderRadius: 999 },
-  glowWide: {
-    backgroundColor: 'rgba(243, 217, 166, 0.28)',
-    shadowColor: '#F3D9A6',
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.7,
-    shadowRadius: 28,
+  limb: {
+    position: 'absolute',
+    height: 90,
+    borderTopWidth: 2,
+    borderRadius: 999,
   },
-  glowTight: {
-    backgroundColor: 'rgba(243, 217, 166, 0.42)',
-    shadowColor: '#F3D9A6',
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.85,
-    shadowRadius: 14,
+  limbCyan: { left: '-6%', right: '-6%', bottom: '16%', borderTopColor: '#00D1FF' },
+  limbBlue: { left: '4%', right: '4%', bottom: '12%', borderTopColor: '#007BFF' },
+  cityRay: {
+    position: 'absolute',
+    width: 2,
+    height: 46,
+    borderRadius: 2,
+    backgroundColor: '#00D1FF',
   },
+  cityRayA: { left: '34%', bottom: '18%' },
+  cityRayB: { left: '51%', bottom: '15%', backgroundColor: '#007BFF' },
+  cityRayC: { left: '66%', bottom: '19%' },
   word: {
     color: '#F3D9A6',
     textAlign: 'center',
