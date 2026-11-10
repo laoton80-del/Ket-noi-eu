@@ -1,7 +1,8 @@
 import { LinearGradient } from 'expo-linear-gradient';
 // @ts-expect-error react-dom has no declaration file in this app
 import { createPortal } from 'react-dom';
-import { createElement, useEffect } from 'react';
+import { createElement, useEffect, useRef, useState } from 'react';
+import { ResizeMode, Video, type AVPlaybackStatus } from 'expo-av';
 import { Asset } from 'expo-asset';
 import { Image, Platform, Pressable, StyleSheet, Text, View, useWindowDimensions, type ImageStyle, type ViewStyle } from 'react-native';
 import { Inter_500Medium, Inter_600SemiBold, useFonts } from '@expo-google-fonts/inter';
@@ -20,6 +21,7 @@ import { useFashionHomePrefersReducedMotion } from '../fashionHomeDesktopShell';
 import { playIntroChime, stopIntroChime } from './introChime';
 
 const EARTH = require('../../../../assets/brand/viona/intro/intro-earth.png');
+const EARTH_VIDEO = require('../../../../assets/brand/viona/intro/intro-earth.mp4');
 const CRANE = require('../../../../assets/brand/viona/viona-symbol-gold.png');
 const CRANE_FRAME = 1024 / 712;
 const EARTH_W = 1024;
@@ -157,6 +159,9 @@ const FADE_MS = 250;
 export function VionaIntroScreen({ onDone }: Readonly<{ onDone: () => void }>) {
   const reducedFromHook = useFashionHomePrefersReducedMotion();
   const reducedMotion = reducedFromHook || readReducedMotion();
+  const [backdrop, setBackdrop] = useState<'poster' | 'video' | 'still'>(reducedMotion ? 'still' : 'poster');
+  const backdropRef = useRef(backdrop);
+  backdropRef.current = backdrop;
   const { t } = useTranslation();
   const { width, height } = useWindowDimensions();
   const [fontsLoaded] = useFonts({ Inter_500Medium, Inter_600SemiBold });
@@ -201,6 +206,23 @@ export function VionaIntroScreen({ onDone }: Readonly<{ onDone: () => void }>) {
     };
   }, [lines, logo, onDone, reducedMotion, trace, veil]);
 
+  useEffect(() => {
+    if (reducedMotion || backdrop !== 'poster') return;
+    const timer = setTimeout(() => {
+      if (backdropRef.current === 'poster') setBackdrop('still');
+    }, 3500);
+    return () => clearTimeout(timer);
+  }, [backdrop, reducedMotion]);
+
+  const onEarthStatus = (status: AVPlaybackStatus) => {
+    if (backdropRef.current === 'still') return;
+    if (!status.isLoaded) {
+      if (status.error) setBackdrop('still');
+      return;
+    }
+    if (status.isPlaying || status.positionMillis > 40) setBackdrop('video');
+  };
+
   const limb = earthLimb(width, height);
   const logoMask = craneMaskStyle();
   const bandW = Math.max(22, Math.round(frame * 0.34));
@@ -243,16 +265,36 @@ export function VionaIntroScreen({ onDone }: Readonly<{ onDone: () => void }>) {
         <Image
           source={EARTH}
           resizeMode="cover"
-          onError={() => onDone()}
-          style={styles.earth}
+          onError={() => {
+            if (backdrop !== 'video') onDone();
+          }}
+          style={[styles.earth, backdrop === 'video' ? styles.posterHidden : null]}
         />
+        {backdrop !== 'still' ? (
+          <Video
+            source={EARTH_VIDEO}
+            resizeMode={ResizeMode.COVER}
+            shouldPlay
+            isLooping={false}
+            isMuted
+            volume={0}
+            useNativeControls={false}
+            pointerEvents="none"
+            onError={() => setBackdrop('still')}
+            onPlaybackStatusUpdate={onEarthStatus}
+            videoStyle={styles.videoFill}
+            style={[styles.video, { width, height }, backdrop === 'video' ? null : styles.posterHidden]}
+          />
+        ) : null}
         <LinearGradient
           pointerEvents="none"
           colors={['rgba(10, 26, 51, 0.96)', 'rgba(10, 26, 51, 0.55)', 'rgba(10, 26, 51, 0)']}
           locations={[0, 0.46, 1]}
           style={styles.topWash}
         />
-        {!reducedMotion && Platform.OS === 'web' ? <LimbComets width={width} height={height} limb={limb} /> : null}
+        {backdrop === 'still' && !reducedMotion && Platform.OS === 'web' ? (
+          <LimbComets width={width} height={height} limb={limb} />
+        ) : null}
         <View pointerEvents="none" style={[styles.cluster, { top: clusterTop }]}>
           <Animated.View style={[styles.logo, logoStyle]}>
             <View style={[styles.mark, { width: frame, height: frame }]}>
@@ -359,6 +401,12 @@ const styles = StyleSheet.create({
       ? ({ objectFit: 'cover', objectPosition: 'center 46%' } as ImageStyle)
       : {}),
   },
+  posterHidden: { opacity: 0 },
+  video: { ...StyleSheet.absoluteFillObject, overflow: 'hidden' },
+  videoFill:
+    Platform.OS === 'web'
+      ? ({ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', objectFit: 'cover' } as ViewStyle)
+      : { ...StyleSheet.absoluteFillObject },
   topWash: {
     position: 'absolute',
     top: 0,
