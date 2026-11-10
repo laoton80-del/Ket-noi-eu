@@ -2479,7 +2479,7 @@ async function main(): Promise<void> {
       await insertFixturePrice(prisma!, { model: 'gpt-4o-mini' });
       setFixtureConfig();
       const router = routerIntegrationHarness({ governor: serviceFor(prisma!) });
-      const subjectId = 'router-vision-subject';
+      const subjectId = 'router-subject';
       const idempotencyKey = 'router-vision-image-once';
       const text = 'Read the visible label.';
       const messages = [{

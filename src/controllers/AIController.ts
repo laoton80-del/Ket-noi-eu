@@ -315,7 +315,7 @@ export async function postChatCompletion(req: Request, res: Response): Promise<v
       return;
     }
 
-    const rawIdempotencyKey = req.get('Idempotency-Key');
+    const rawIdempotencyKey = typeof req.get === 'function' ? req.get('Idempotency-Key') : undefined;
     let idempotencyKey: string | undefined;
     if (rawIdempotencyKey !== undefined) {
       idempotencyKey = rawIdempotencyKey.trim();
