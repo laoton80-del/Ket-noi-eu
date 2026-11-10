@@ -108,7 +108,6 @@ function VionaCompanionOrb({
         ]}
       >
         <VionaCompanionOrbImage size={orb.size} reducedMotion={reducedMotion} />
-        <Text style={styles.companionDockLabel}>Viona</Text>
       </Pressable>
     </View>
   );
@@ -485,13 +484,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: 'transparent',
-  },
-  companionDockLabel: {
-    marginTop: 2,
-    color: '#E6F4FF',
-    fontSize: 11,
-    fontFamily: vionaCinematicTokens.fontFamily.semibold,
-    letterSpacing: 0.4,
   },
   companionSheet: {
     borderRadius: 24,
