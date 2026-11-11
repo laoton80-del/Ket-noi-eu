@@ -79,7 +79,6 @@ import { BrokerMerchantsTabScreen } from '../screens/broker/BrokerMerchantsTabSc
 import { WalletScreen } from '../screens/WalletScreen';
 import { AdminCommandCenter } from '../screens/admin/AdminCommandCenter';
 import { VionaGlobalSosShellAction } from '../components/viona/VionaGlobalSosShellAction';
-import { VionaSosFloatingHost } from '../components/viona/VionaSosFloatingButton';
 import { VionaShellAccountLanguageActions } from '../components/viona/VionaShellAccountLanguageActions';
 import { SOSModal } from '../screens/b2c/SOSModal';
 const Tab = createBottomTabNavigator<RootTabParamList>();
@@ -406,6 +405,7 @@ export function MainTabNavigator(): ReactElement {
                 paddingLeft={12}
                 paddingRight={12}
                 onPressSettings={openShellAccount}
+                onConfirmSos={onSosHoldComplete}
               />
             </View>
           );
@@ -561,8 +561,9 @@ export function MainTabNavigator(): ReactElement {
                     ? WEB_BOTTOM_SHELL_ACCOUNT_LANGUAGE_RESERVE_WITH_ROLE
                     : WEB_BOTTOM_SHELL_ACCOUNT_LANGUAGE_RESERVE
                 }
-                paddingRight={WEB_BOTTOM_SHELL_SOS_RESERVE}
+                paddingRight={12}
                 onPressSettings={openShellAccount}
+                onConfirmSos={onSosHoldComplete}
               />
             ) : (
               <BottomTabBar {...props} />
@@ -587,18 +588,20 @@ export function MainTabNavigator(): ReactElement {
               onPressRole={openShellRole}
             />
           </View>
-          <View
-            style={[
-              styles.sosShellSlot,
-              {
-                paddingBottom: Math.max(props.insets.bottom, 10),
-                paddingRight: Math.max(props.insets.right, 8),
-              },
-            ]}
-            pointerEvents="box-none"
-          >
-            <VionaGlobalSosShellAction layout="bottomChip" onHoldComplete={onSosHoldComplete} />
-          </View>
+          {vionaGlassBar ? null : (
+            <View
+              style={[
+                styles.sosShellSlot,
+                {
+                  paddingBottom: Math.max(props.insets.bottom, 10),
+                  paddingRight: Math.max(props.insets.right, 8),
+                },
+              ]}
+              pointerEvents="box-none"
+            >
+              <VionaGlobalSosShellAction layout="bottomChip" onHoldComplete={onSosHoldComplete} />
+            </View>
+          )}
         </View>
       );
     },
@@ -1004,7 +1007,6 @@ export function MainTabNavigator(): ReactElement {
           />
         ) : null}
         </Tab.Navigator>
-        <VionaSosFloatingHost />
       </HomeCommandProvider>
 
       <ProfileSwitcher

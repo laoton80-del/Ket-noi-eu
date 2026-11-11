@@ -1,6 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import type { BottomTabBarProps } from '@react-navigation/bottom-tabs';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { useState } from 'react';
+import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { vionaCinematicTokens } from '../design/vionaCinematicTokens';
 import { useTranslation } from '../i18n';
@@ -21,6 +22,7 @@ export function VionaGlassTabBar({
   paddingLeft,
   paddingRight,
   onPressSettings,
+  onConfirmSos,
 }: Readonly<{
   state: BottomTabBarProps['state'];
   navigation: BottomTabBarProps['navigation'];
@@ -28,8 +30,12 @@ export function VionaGlassTabBar({
   paddingLeft: number;
   paddingRight: number;
   onPressSettings: () => void;
+  onConfirmSos: () => void;
 }>) {
   const { t } = useTranslation();
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const compact = width < 420;
+  const wide = width >= 1024;
   const orb = resolveVionaCollapsedOrb(width);
   const focusedName = state.routes[state.index]?.name;
   const homeRoute = state.routes.find((route) => route.name === MAIN_TAB.B2C.home);
@@ -55,7 +61,7 @@ export function VionaGlassTabBar({
 
   return (
     <View style={[styles.row, { paddingLeft, paddingRight }]}>
-      <View style={styles.side}>
+      <View style={[styles.side, wide && styles.sideLeft]}>
         {left.map((item) => (
           <DockButton
             key={item.id}
@@ -67,7 +73,7 @@ export function VionaGlassTabBar({
         ))}
       </View>
       <View style={{ width: orb.size }} />
-      <View style={styles.side}>
+      <View style={[styles.side, wide && styles.sideRight]}>
         {right.map((item) => (
           <DockButton
             key={item.id}
@@ -77,7 +83,39 @@ export function VionaGlassTabBar({
             selected={false}
           />
         ))}
+        <View style={styles.sosDivider} />
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={t('sos.edgeA11y')}
+          onPress={() => setConfirmOpen(true)}
+          style={[styles.sos, compact && styles.sosCompact]}
+        >
+          <Ionicons name="shield-outline" size={compact ? 16 : 18} color="#E6F4FF" />
+          <Text style={[styles.sosLabel, compact && styles.sosLabelCompact]}>SOS</Text>
+        </Pressable>
       </View>
+      <Modal transparent visible={confirmOpen} animationType="none" onRequestClose={() => setConfirmOpen(false)}>
+        <View style={styles.scrim}>
+          <Pressable accessibilityRole="button" accessibilityLabel={t('sos.confirmCancel')} onPress={() => setConfirmOpen(false)} style={styles.scrimDismiss} />
+          <View style={styles.sheet}>
+            <Text style={styles.sheetTitle}>{t('sos.confirmTitle')}</Text>
+            <Text style={styles.sheetBody}>{t('sos.confirmBody')}</Text>
+            <Pressable
+              accessibilityRole="button"
+              onPress={() => {
+                setConfirmOpen(false);
+                onConfirmSos();
+              }}
+              style={styles.confirm}
+            >
+              <Text style={styles.confirmLabel}>{t('sos.confirmYes')}</Text>
+            </Pressable>
+            <Pressable accessibilityRole="button" onPress={() => setConfirmOpen(false)} style={styles.cancel}>
+              <Text style={styles.cancelLabel}>{t('sos.confirmCancel')}</Text>
+            </Pressable>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -127,6 +165,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-evenly',
   },
+  sideLeft: { justifyContent: 'flex-end', gap: 8 },
+  sideRight: { justifyContent: 'flex-start', gap: 8 },
   button: {
     minWidth: 64,
     alignItems: 'center',
@@ -150,4 +190,66 @@ const styles = StyleSheet.create({
     fontSize: 8,
     fontFamily: vionaCinematicTokens.fontFamily.medium,
   },
+  sosDivider: {
+    width: 1,
+    height: 28,
+    marginLeft: 4,
+    backgroundColor: 'rgba(230, 244, 255, 0.22)',
+  },
+  sos: {
+    minWidth: 52,
+    minHeight: 48,
+    paddingHorizontal: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 1,
+    borderBottomWidth: 2,
+    borderBottomColor: '#D4AF7C',
+    backgroundColor: 'rgba(90, 36, 44, 0.55)',
+  },
+  sosCompact: { minWidth: 44, paddingHorizontal: 4 },
+  sosLabel: {
+    color: '#E6F4FF',
+    fontSize: 11,
+    fontFamily: vionaCinematicTokens.fontFamily.semibold,
+    fontWeight: '600',
+  },
+  sosLabelCompact: { fontSize: 9 },
+  scrim: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(4, 12, 24, 0.62)',
+    padding: 24,
+  },
+  scrimDismiss: { ...StyleSheet.absoluteFillObject },
+  sheet: {
+    width: '100%',
+    maxWidth: 320,
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: 'rgba(212, 175, 124, 0.45)',
+    backgroundColor: '#0E1C31',
+    padding: 18,
+    gap: 12,
+  },
+  sheetTitle: {
+    color: '#E6F4FF',
+    fontSize: 18,
+    fontFamily: vionaCinematicTokens.fontFamily.semibold,
+    fontWeight: '600',
+  },
+  sheetBody: { color: 'rgba(230, 244, 255, 0.78)', fontSize: 13, lineHeight: 18 },
+  confirm: {
+    minHeight: 48,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#7A3038',
+    borderWidth: 1.5,
+    borderColor: '#D4AF7C',
+  },
+  confirmLabel: { color: '#E6F4FF', fontSize: 15, fontFamily: vionaCinematicTokens.fontFamily.semibold, fontWeight: '600' },
+  cancel: { minHeight: 44, alignItems: 'center', justifyContent: 'center' },
+  cancelLabel: { color: 'rgba(230, 244, 255, 0.72)', fontSize: 14 },
 });
