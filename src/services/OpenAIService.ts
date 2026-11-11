@@ -15,6 +15,7 @@ import { devWarn } from '../utils/devLog';
 import { mergeTrustBackendHeaders } from '../utils/trustBackendHeaders';
 import { isDemoSandboxActive, mockOpenAiUserVisibleReply } from './ux/DemoSandbox';
 import { checkAndConsumeQuota, QuotaExceededError } from './ai/AIQuotaManager';
+import { AiAuthRequiredError, restApiFetchJson } from './apiClient';
 
 function throwAiProxyHttpError(res: Response, bodyText: string, label: string): never {
   let code = `${label}_${res.status}`;
@@ -40,6 +41,7 @@ const TTS_CACHE_STORAGE_KEY = STORAGE_KEYS.ttsClientCache;
 
 type OpenAIRequestOptions = {
   path: string;
+  idempotencyKey: string;
   method?: 'GET' | 'POST';
   headers?: Record<string, string>;
   body?: BodyInit | null;
@@ -52,8 +54,25 @@ async function backendAiHeaders(): Promise<Record<string, string>> {
   return mergeTrustBackendHeaders({ 'Content-Type': 'application/json', Authorization: `Bearer ${token}` });
 }
 
-async function openAIRequest<T>({ path, method = 'POST', headers, body }: OpenAIRequestOptions): Promise<T> {
-  if (!BACKEND_API_BASE) throw new Error('backend_api_base_missing');
+function createIdempotencyKey(): string {
+  const cryptoApi = globalThis.crypto;
+  if (typeof cryptoApi?.randomUUID === 'function') return cryptoApi.randomUUID();
+
+  const bytes = new Uint8Array(16);
+  if (typeof cryptoApi?.getRandomValues === 'function') {
+    cryptoApi.getRandomValues(bytes);
+  } else {
+    for (let index = 0; index < bytes.length; index += 1) {
+      bytes[index] = Math.floor(Math.random() * 256);
+    }
+  }
+  bytes[6] = (bytes[6] & 0x0f) | 0x40;
+  bytes[8] = (bytes[8] & 0x3f) | 0x80;
+  const hex = Array.from(bytes, (byte) => byte.toString(16).padStart(2, '0')).join('');
+  return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`;
+}
+
+async function openAIRequest<T>({ path, idempotencyKey, method = 'POST', headers, body }: OpenAIRequestOptions): Promise<T> {
   if (method !== 'POST' || path !== '/chat/completions') throw new Error('openai_proxy_unsupported');
   const parsed = typeof body === 'string' ? (JSON.parse(body) as { messages?: unknown[]; temperature?: number; max_tokens?: number }) : {};
   if (isDemoSandboxActive()) {
@@ -64,20 +83,18 @@ async function openAIRequest<T>({ path, method = 'POST', headers, body }: OpenAI
     const text = mockOpenAiUserVisibleReply(typeof lastUser?.content === 'string' ? lastUser.content : '');
     return { choices: [{ message: { content: text } }] } as T;
   }
-  const baseHeaders = await backendAiHeaders();
-  const res = await fetch(`${BACKEND_API_BASE}/aiProxy`, {
+  const result = await restApiFetchJson<T>('/api/ai/chat-completion', {
     method: 'POST',
-    headers: { ...baseHeaders, ...(headers ?? {}) },
-    body: JSON.stringify({
-      op: 'chat',
+    headers: { ...(headers ?? {}), 'Idempotency-Key': idempotencyKey },
+    body: {
       messages: parsed.messages ?? [],
       temperature: typeof parsed.temperature === 'number' ? parsed.temperature : 0.6,
       maxTokens: typeof parsed.max_tokens === 'number' ? parsed.max_tokens : 240,
-    }),
+    },
+    timeoutMs: 30_000,
   });
-  const text = await res.text();
-  if (!res.ok) throwAiProxyHttpError(res, text, 'openai_proxy');
-  return JSON.parse(text) as T;
+  if (!result.ok) throw new Error(result.code || result.error || `openai_proxy_${result.status}`);
+  return result.data;
 }
 
 async function sleep(ms: number) {
@@ -87,7 +104,8 @@ async function sleep(ms: number) {
 async function withOneRetry<T>(fn: () => Promise<T>): Promise<T> {
   try {
     return await fn();
-  } catch {
+  } catch (error) {
+    if (error instanceof AiAuthRequiredError) throw error;
     await sleep(RETRY_DELAY_MS);
     return fn();
   }
@@ -289,11 +307,13 @@ export async function analyzeImage(
       'với đúng 3 keys: dich_de (string), kien_thuc (string), cau_hoi_goi_mo (array of 3 strings).';
   const userPrompt = options?.userPrompt ?? 'Phân tích bài tập và trả JSON đúng schema.';
   const imageMimeType = options?.imageMimeType ?? 'image/jpeg';
+  const idempotencyKey = createIdempotencyKey();
   const data = await withOneRetry(() =>
     openAIRequest<{
       choices?: { message?: { content?: string } }[];
     }>({
       path: '/chat/completions',
+      idempotencyKey,
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         model: 'gpt-4o-mini',
@@ -328,11 +348,13 @@ export async function scanDocumentWithAI(
   countryCode?: string,
   imageMimeType: 'image/jpeg' | 'image/webp' | 'image/png' = 'image/webp'
 ): Promise<DocumentScanAiResult> {
+  const idempotencyKey = createIdempotencyKey();
   const data = await withOneRetry(() =>
     openAIRequest<{
       choices?: { message?: { content?: string } }[];
     }>({
       path: '/chat/completions',
+      idempotencyKey,
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         model: 'gpt-4o-mini',
@@ -380,11 +402,13 @@ export async function scanDocumentWithAI(
   }
 
   // Re-check pass: focus extracting expiry only when first pass is uncertain.
+  const secondPassIdempotencyKey = createIdempotencyKey();
   const second = await withOneRetry(() =>
     openAIRequest<{
       choices?: { message?: { content?: string } }[];
     }>({
       path: '/chat/completions',
+      idempotencyKey: secondPassIdempotencyKey,
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         model: 'gpt-4o-mini',
@@ -419,11 +443,13 @@ export async function analyzeKidsHomeworkWithAI(
   base64Image: string,
   imageMimeType: 'image/jpeg' | 'image/webp' | 'image/png' = 'image/jpeg'
 ): Promise<KidsHomeworkAiResult> {
+  const idempotencyKey = createIdempotencyKey();
   const data = await withOneRetry(() =>
     openAIRequest<{
       choices?: { message?: { content?: string } }[];
     }>({
       path: '/chat/completions',
+      idempotencyKey,
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         model: 'gpt-4o-mini',
@@ -546,11 +572,13 @@ export async function getChatCompletion(
     }
   }
 
+  const idempotencyKey = createIdempotencyKey();
   const data = await withOneRetry(() =>
     openAIRequest<{
       choices?: { message?: { content?: string } }[];
     }>({
       path: '/chat/completions',
+      idempotencyKey,
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         model: 'gpt-4o-mini',

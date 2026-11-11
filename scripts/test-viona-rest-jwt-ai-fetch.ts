@@ -8,7 +8,7 @@ const ROOT = path.resolve(__dirname, '..');
 const API_CLIENT = path.join(ROOT, 'src/services/apiClient.ts');
 const API_CLIENT_SOURCE = fs.readFileSync(API_CLIENT, 'utf8');
 
-type MockResponse = Readonly<{ status: number; text(): Promise<string> }>;
+type MockResponse = Readonly<{ status: number; ok: boolean; text(): Promise<string> }>;
 type MockFetchInit = Readonly<{
   method?: string;
   headers?: Readonly<Record<string, string>>;
@@ -16,9 +16,17 @@ type MockFetchInit = Readonly<{
   signal?: AbortSignal;
 }>;
 type MockFetch = (url: string, init: MockFetchInit) => Promise<MockResponse>;
+type ApiRequestInit = Readonly<{
+  method?: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
+  body?: unknown;
+  skipAuth?: boolean;
+  headers?: Readonly<Record<string, string>>;
+  signal?: AbortSignal;
+  timeoutMs?: number;
+}>;
 type ApiClientModule = {
   AiAuthRequiredError: new () => Error & Readonly<{ code: string }>;
-  restApiFetchJson<T>(path: string, init?: Readonly<Record<string, unknown>>): Promise<{
+  restApiFetchJson<T>(path: string, init?: ApiRequestInit): Promise<{
     ok: boolean;
     status: number;
     data?: T;
@@ -34,7 +42,7 @@ function jwtWithExpiry(exp: number): string {
 }
 
 function response(status: number, body: unknown): MockResponse {
-  return { status, text: async () => JSON.stringify(body) };
+  return { status, ok: status >= 200 && status < 300, text: async () => JSON.stringify(body) };
 }
 
 function harness(storedJwt: string | null, initialFetch: MockFetch) {
@@ -116,6 +124,146 @@ function harness(storedJwt: string | null, initialFetch: MockFetch) {
     client: module.exports as ApiClientModule,
     logs,
     setFetch(next: MockFetch) { fetcher = next; },
+  };
+}
+
+type OpenAIServiceTestModule = {
+  analyzeImage(base64Image: string, options?: { userPrompt?: string }): Promise<string>;
+  scanDocumentWithAI(base64Image: string, countryCode?: string): Promise<{
+    documentType: string;
+    expiryDate: string | null;
+    confidence: 'high' | 'medium' | 'low';
+  }>;
+  analyzeKidsHomeworkWithAI(base64Image: string): Promise<{
+    subject: string;
+    level: 'easy' | 'medium' | 'advanced';
+    plainSummary: string;
+    steps: string[];
+  }>;
+  getChatCompletion(messages: Array<{ role: 'system' | 'user' | 'assistant'; content: string }>, persona: never): Promise<string>;
+  transcribeAudio(audioUri: string): Promise<string>;
+  generateSpeech(text: string, voice: 'nova' | 'alloy' | 'shimmer'): Promise<string>;
+};
+
+type OpenAIServiceRestResponder = (url: string, init: MockFetchInit, requestNumber: number) => Promise<MockResponse>;
+
+function uuidForTest(index: number): string {
+  return `00000000-0000-4000-8000-${index.toString(16).padStart(12, '0')}`;
+}
+
+function openAIServiceHarness(restJwt: string, restResponder: OpenAIServiceRestResponder) {
+  const restRequests: Array<{ url: string; init: MockFetchInit }> = [];
+  const restCalls: Array<{ path: string; init?: ApiRequestInit }> = [];
+  const apiHarness = harness(restJwt, async (url, init) => {
+    restRequests.push({ url, init });
+    return restResponder(url, init, restRequests.length);
+  });
+  const storage = {
+    async getItem(): Promise<string | null> { return null; },
+    async setItem(): Promise<void> {},
+    async removeItem(): Promise<void> {},
+  };
+  let demoActive = false;
+  let directFetch: MockFetch = async () => { throw new Error('Unexpected native fetch call'); };
+  let uuidCount = 0;
+  let walletAuthCalls = 0;
+  const apiClientForOpenAI: ApiClientModule = {
+    AiAuthRequiredError: apiHarness.client.AiAuthRequiredError,
+    restApiFetchJson<T>(path: string, init?: ApiRequestInit) {
+      restCalls.push({ path, init });
+      return apiHarness.client.restApiFetchJson<T>(path, init);
+    },
+  };
+  const dependencies: Readonly<Record<string, unknown>> = {
+    '@react-native-async-storage/async-storage': storage,
+    'expo-file-system/legacy': {
+      EncodingType: { Base64: 'base64' },
+      cacheDirectory: 'file:///offline-cache/',
+      documentDirectory: 'file:///offline-documents/',
+      async readAsStringAsync(): Promise<string> { return 'offline-audio-base64'; },
+      async writeAsStringAsync(): Promise<void> {},
+      async getInfoAsync(): Promise<{ exists: boolean }> { return { exists: false }; },
+    },
+    'react-native': { Platform: { OS: 'ios' } },
+    './AnalyticsService': { trackEvent: () => {} },
+    '../config/aiPrompts': { getPersonaSystemPrompt: () => 'offline persona system prompt' },
+    '../config/countryPacks': {
+      vaultDataExtractorPrimarySystemPrompt: () => 'offline document extraction prompt',
+      vaultDataExtractorSecondarySystemPrompt: () => 'offline expiry recheck prompt',
+    },
+    './walletFirebaseSession': {
+      async ensureWalletFirebaseAuth(): Promise<void> { walletAuthCalls += 1; },
+      async getWalletIdToken(): Promise<string> { walletAuthCalls += 1; return 'offline-firebase-id-token'; },
+    },
+    '../storage/storageKeys': {
+      STORAGE_KEYS: { authSession: 'auth-session', ttsClientCache: 'tts-cache' },
+    },
+    './identity': {
+      adaptResponse: (value: string) => value,
+      buildAIIdentityPromptContext: () => '',
+      getAIIdentity: async () => null,
+      getAIIdentityMemory: async () => null,
+    },
+    './networkEffect': { buildNetworkPromptInjection: async () => null },
+    '../utils/devLog': { devWarn: () => {} },
+    '../utils/trustBackendHeaders': { mergeTrustBackendHeaders: (headers: Record<string, string>) => headers },
+    './ux/DemoSandbox': {
+      isDemoSandboxActive: () => demoActive,
+      mockOpenAiUserVisibleReply: () => 'offline demo reply',
+    },
+    './ai/AIQuotaManager': {
+      async checkAndConsumeQuota(): Promise<void> {},
+      QuotaExceededError: class QuotaExceededError extends Error {},
+    },
+    './apiClient': apiClientForOpenAI,
+  };
+  const context = vm.createContext({
+    process: { env: {
+      EXPO_PUBLIC_BACKEND_API_BASE: 'https://backend.invalid',
+      EXPO_PUBLIC_TTS_CACHE_API_BASE: '',
+      EXPO_PUBLIC_TTS_CACHE_TTL_DAYS: '90',
+      EXPO_PUBLIC_TTS_CACHE_VERSION: 'test',
+    } },
+    __DEV__: false,
+    crypto: { randomUUID: () => uuidForTest(++uuidCount) },
+    fetch: (url: string, init: MockFetchInit) => directFetch(url, init),
+    setTimeout,
+    clearTimeout,
+    console: { log: () => {}, info: () => {}, warn: () => {}, error: () => {} },
+  });
+  const openAiPath = path.join(ROOT, 'src/services/OpenAIService.ts');
+  const compiled = ts.transpileModule(fs.readFileSync(openAiPath, 'utf8'), {
+    fileName: openAiPath,
+    compilerOptions: {
+      module: ts.ModuleKind.CommonJS,
+      target: ts.ScriptTarget.ES2022,
+      esModuleInterop: true,
+    },
+  }).outputText;
+  const module = { exports: {} as Record<string, unknown> };
+  const closedRequire = (specifier: string): unknown => {
+    if (!Object.prototype.hasOwnProperty.call(dependencies, specifier)) {
+      throw new Error(`Unexpected OpenAIService runtime dependency blocked: ${specifier}`);
+    }
+    return dependencies[specifier];
+  };
+  const execute = new vm.Script(`(function(require, module, exports) { ${compiled}\n})`, {
+    filename: openAiPath,
+  }).runInContext(context, { timeout: 1_000 }) as (
+    require: typeof closedRequire,
+    module: { exports: unknown },
+    exports: unknown
+  ) => void;
+  execute(closedRequire, module, module.exports);
+  return {
+    service: module.exports as OpenAIServiceTestModule,
+    api: apiHarness.client,
+    restRequests,
+    restCalls,
+    setDemoActive(value: boolean) { demoActive = value; },
+    setDirectFetch(next: MockFetch) { directFetch = next; },
+    getUuidCount() { return uuidCount; },
+    getWalletAuthCalls() { return walletAuthCalls; },
   };
 }
 
@@ -244,6 +392,142 @@ async function run(): Promise<void> {
     assert.equal(result.ok, true);
     assert.equal(seen.length, 1);
     assert.equal(seen[0].headers?.Authorization, undefined);
+  });
+
+  await test('OpenAIService chat and image callers use the REST JWT rail with caller idempotency keys', async () => {
+    const completions = [
+      { choices: [{ message: { content: 'chat answer' } }] },
+      { choices: [{ message: { content: '{"vision":true}' } }] },
+      { choices: [{ message: { content: JSON.stringify({ documentType: 'Passport', expiryDate: '01/01/2030' }) } }] },
+      { choices: [{ message: { content: JSON.stringify({ subject: 'Math', level: 'easy', plainSummary: 'Short answer', steps: ['Step one'] }) } }] },
+    ];
+    const h = openAIServiceHarness(validToken, async (_url, _init, requestNumber) =>
+      response(200, { success: true, data: completions[requestNumber - 1] })
+    );
+    const chat = await h.service.getChatCompletion([{ role: 'user', content: 'hello' }], 'friendly' as never);
+    const vision = await h.service.analyzeImage('vision-base64', { userPrompt: 'describe the picture' });
+    const document = await h.service.scanDocumentWithAI('document-base64', 'CZ');
+    const homework = await h.service.analyzeKidsHomeworkWithAI('homework-base64');
+
+    assert.equal(chat, 'chat answer');
+    assert.equal(vision, '{"vision":true}');
+    assert.equal(document.expiryDate, '01/01/2030');
+    assert.equal(homework.subject, 'Math');
+    assert.equal(h.restCalls.length, 4);
+    assert.equal(h.restRequests.length, 4);
+    assert.equal(h.getUuidCount(), 4);
+    assert.equal(h.getWalletAuthCalls(), 0);
+
+    const keys: string[] = [];
+    for (let index = 0; index < h.restRequests.length; index += 1) {
+      const request = h.restRequests[index];
+      const call = h.restCalls[index];
+      assert.equal(request.url, 'https://rest.invalid/api/ai/chat-completion');
+      assert.equal(request.init.method, 'POST');
+      assert.equal(request.init.headers?.Authorization, `Bearer ${validToken}`);
+      assert.equal(call.path, '/api/ai/chat-completion');
+      assert.equal(call.init?.timeoutMs, 30_000);
+      const key = request.init.headers?.['Idempotency-Key'];
+      assert.match(key ?? '', /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-8[0-9a-f]{3}-[0-9a-f]{12}$/i);
+      keys.push(key ?? '');
+      const body = JSON.parse(request.init.body ?? '{}') as Record<string, unknown>;
+      assert.deepEqual(Object.keys(body).sort(), ['maxTokens', 'messages', 'temperature']);
+      assert.equal(body.maxTokens, [240, 500, 220, 420][index]);
+      assert.equal(typeof body.temperature, 'number');
+      assert.ok(Array.isArray(body.messages));
+    }
+    assert.equal(new Set(keys).size, 4);
+    const visionBody = JSON.parse(h.restRequests[1].init.body ?? '{}') as {
+      messages: Array<{ role?: unknown; content?: unknown }>;
+    };
+    const visionUserMessage = visionBody.messages.find((message) => message.role === 'user');
+    assert.ok(Array.isArray(visionUserMessage?.content));
+    assert.deepEqual((visionUserMessage?.content as unknown[])[1], {
+      type: 'image_url',
+      image_url: { url: 'data:image/jpeg;base64,vision-base64' },
+    });
+  });
+
+  await test('transient REST failure retries once with the same idempotency key', async () => {
+    const h = openAIServiceHarness(validToken, async (_url, _init, requestNumber) => {
+      if (requestNumber === 1) {
+        return response(503, { success: false, error: 'temporary unavailable', code: 'provider_unavailable' });
+      }
+      return response(200, { success: true, data: { choices: [{ message: { content: 'retried answer' } }] } });
+    });
+    const result = await h.service.analyzeImage('retry-image');
+    assert.equal(result, 'retried answer');
+    assert.equal(h.restRequests.length, 2);
+    assert.equal(h.getUuidCount(), 1);
+    assert.equal(h.restRequests[0].init.headers?.['Idempotency-Key'], h.restRequests[1].init.headers?.['Idempotency-Key']);
+  });
+
+  await test('OpenAIService does not retry ai_auth_required', async () => {
+    const h = openAIServiceHarness(validToken, async () =>
+      response(401, { success: false, error: 'unauthorized' })
+    );
+    await assert.rejects(
+      h.service.analyzeImage('auth-image'),
+      (error: unknown) => error instanceof h.api.AiAuthRequiredError && error.code === 'ai_auth_required'
+    );
+    assert.equal(h.restRequests.length, 1);
+    assert.equal(h.getUuidCount(), 1);
+    assert.equal(h.getWalletAuthCalls(), 0);
+  });
+
+  await test('document recheck has its own key while each attempt remains idempotent', async () => {
+    const contents = [
+      JSON.stringify({ documentType: 'Passport', expiryDate: null }),
+      JSON.stringify({ documentType: 'Passport', expiryDate: '02/02/2031' }),
+    ];
+    const h = openAIServiceHarness(validToken, async (_url, _init, requestNumber) =>
+      response(200, { success: true, data: { choices: [{ message: { content: contents[requestNumber - 1] } }] } })
+    );
+    const result = await h.service.scanDocumentWithAI('two-pass-document');
+    assert.equal(result.expiryDate, '02/02/2031');
+    assert.equal(h.restRequests.length, 2);
+    assert.equal(h.getUuidCount(), 2);
+    assert.notEqual(
+      h.restRequests[0].init.headers?.['Idempotency-Key'],
+      h.restRequests[1].init.headers?.['Idempotency-Key']
+    );
+  });
+
+  await test('demo sandbox skips REST auth/network and STT/TTS remain on Firebase /aiProxy', async () => {
+    const h = openAIServiceHarness(validToken, async () => {
+      throw new Error('Unexpected REST AI fetch in demo or STT/TTS test');
+    });
+    h.setDemoActive(true);
+    assert.equal(
+      await h.service.getChatCompletion([{ role: 'user', content: 'demo prompt' }], 'friendly' as never),
+      'offline demo reply'
+    );
+    assert.equal(h.restRequests.length, 0);
+    assert.equal(h.getWalletAuthCalls(), 0);
+
+    h.setDemoActive(false);
+    const directRequests: Array<{ url: string; init: MockFetchInit }> = [];
+    h.setDirectFetch(async (url, init) => {
+      directRequests.push({ url, init });
+      const body = JSON.parse(init.body ?? '{}') as { op?: string };
+      return body.op === 'stt'
+        ? response(200, { text: 'recognized speech' })
+        : response(200, { audioBase64: 'b2ZmbGluZS1hdWRpbw==' });
+    });
+    assert.equal(await h.service.transcribeAudio('file:///offline-input.m4a'), 'recognized speech');
+    const speechUri = await h.service.generateSpeech('hello', 'nova');
+    assert.match(speechUri, /^file:\/\/\/offline-cache\/tts-/);
+    assert.equal(directRequests.length, 2);
+    assert.equal(h.restRequests.length, 0);
+    assert.deepEqual(directRequests.map(({ url }) => url), [
+      'https://backend.invalid/aiProxy',
+      'https://backend.invalid/aiProxy',
+    ]);
+    assert.deepEqual(
+      directRequests.map(({ init }) => (JSON.parse(init.body ?? '{}') as { op?: string }).op),
+      ['stt', 'tts']
+    );
+    assert.ok(directRequests.every(({ init }) => init.headers?.Authorization === 'Bearer offline-firebase-id-token'));
   });
 
   console.log(`${passed} REST JWT AI fetch checks passed`);
