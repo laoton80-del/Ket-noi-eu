@@ -1,16 +1,17 @@
 import { Ionicons } from '@expo/vector-icons';
+import { Asset } from 'expo-asset';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useEffect, useRef, useState, type ComponentProps } from 'react';
 import {
   Animated,
   Easing,
   Image,
+  Platform,
   Pressable,
   StyleSheet,
   Text,
   View,
   type ImageSourcePropType,
-  type ImageStyle,
   type TextStyle,
   type ViewStyle,
 } from 'react-native';
@@ -50,8 +51,18 @@ const IMAGE_PROVENANCE: Readonly<Record<VionaRec2UniverseId, VionaRec2ImageInput
   sos: 'licensed',
 };
 
+/** Keep the top of each landmark inside the cover frame. */
+const PHOTO_FOCUS: Readonly<Record<VionaRec2UniverseId, string>> = {
+  local: 'center',
+  travel: 'center 30%',
+  academy: 'center 16%',
+  business: 'center 20%',
+  account: 'center top',
+  sos: 'center 4%',
+};
+
 const UNIVERSE_ASSETS: Readonly<Record<VionaRec2UniverseId, ImageSourcePropType>> = {
-  local: require('../../../../assets/brand/viona/cinematic/photos/card-local.webp'),
+  local: require('../../../../assets/brand/viona/cinematic/photos/card-local.jpg'),
   travel: require('../../../../assets/brand/viona/cinematic/photos/card-travel.webp'),
   academy: require('../../../../assets/brand/viona/cinematic/photos/card-academy.webp'),
   business: require('../../../../assets/brand/viona/cinematic/photos/card-business.webp'),
@@ -100,6 +111,10 @@ export function UniversePhotoTile({
   useEffect(() => {
     ensureVionaReducedMotionGuard();
   }, []);
+
+  useEffect(() => {
+    if (Platform.OS === 'web') setLoaded(true);
+  }, [universe.id]);
 
   useEffect(() => {
     if (reducedMotion) {
@@ -167,33 +182,44 @@ export function UniversePhotoTile({
         cardMotion,
         { borderColor: lifted ? tone.accent : 'rgba(0, 209, 255, 0.16)' },
         !lifted && vionaCinematicTokens.elevation.cardOnShell,
-        lifted && (calm ? styles.calmShadow : {
+        lifted && {
           shadowColor: tone.accent,
           shadowOffset: { width: 0, height: 10 },
           shadowOpacity: 0.45,
           shadowRadius: 18,
           elevation: 8,
-        }),
+        },
         lifted && !pressed && !reducedMotion && (calm ? styles.liftCalm : styles.lift),
         pressed && (reducedMotion ? styles.pressedStill : styles.pressed),
       ]}
     >
       <LinearGradient colors={[tone.wash, vionaCinematicTokens.color.navy, vionaCinematicTokens.color.midnight]} style={styles.fill}>
         {canLoadImage ? (
-          <View pointerEvents="none" style={[styles.photo, !showImage && styles.photoPending]}>
-            <Image
-              source={imageSource}
-              resizeMode="cover"
-              accessible={false}
-              accessibilityIgnoresInvertColors
-              onLoad={() => setLoaded(true)}
-              onError={() => setFailed(true)}
-              style={[
-                styles.photoFill,
-                photoMotion,
-                lifted && !reducedMotion && (calm ? styles.photoCalm : styles.photoLift),
-              ]}
-            />
+          <View pointerEvents="none" style={[styles.photo, Platform.OS !== 'web' && !showImage && styles.photoPending]}>
+            {Platform.OS === 'web' ? (
+              <View
+                style={[
+                  styles.photoFill,
+                  photoMotion,
+                  {
+                    backgroundImage: `url("${Asset.fromModule(imageSource as number).uri}")`,
+                    backgroundRepeat: 'no-repeat',
+                    backgroundSize: 'cover',
+                    backgroundPosition: PHOTO_FOCUS[universe.id],
+                  } as ViewStyle,
+                ]}
+              />
+            ) : (
+              <Image
+                source={imageSource}
+                resizeMode="cover"
+                accessible={false}
+                accessibilityIgnoresInvertColors
+                onLoad={() => setLoaded(true)}
+                onError={() => setFailed(true)}
+                style={[styles.photoFill, photoMotion]}
+              />
+            )}
           </View>
         ) : null}
         {showImage ? (
@@ -235,9 +261,6 @@ const styles = StyleSheet.create({
   },
   lift: { transform: [{ translateY: -4 }, { scale: 1.01 }] },
   liftCalm: { transform: [{ translateY: -4 }] },
-  calmShadow: vionaCinematicTokens.elevation.cardOnShell,
-  photoLift: { transform: [{ scale: 1.03 }] },
-  photoCalm: { transform: [{ scale: 1.01 }] },
   fill: { flexGrow: 1, minHeight: 196 },
   photo: { ...StyleSheet.absoluteFillObject },
   photoPending: { opacity: 0 },
