@@ -1,12 +1,24 @@
 import { Ionicons } from '@expo/vector-icons';
 import type { BottomTabBarProps } from '@react-navigation/bottom-tabs';
-import { useState } from 'react';
-import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
+import * as Haptics from 'expo-haptics';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { AccessibilityInfo, Modal, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
+import Svg, { Circle } from 'react-native-svg';
 
 import { vionaCinematicTokens } from '../design/vionaCinematicTokens';
 import { useTranslation } from '../i18n';
 import { MAIN_TAB } from './routes';
 import { resolveVionaCollapsedOrb } from './vionaBottomShellGeometry';
+
+const SOS_HOLD_MS = 600;
+const SOS_NAV_MUTED = '#7F94B2';
+const SOS_CORAL = '#E5705A';
+const SOS_CORAL_BRIGHT = '#F0997B';
+const SOS_GOLD = '#D4AF7C';
+const SOS_RING_SIZE = 30;
+const SOS_RING_STROKE = 3;
+const SOS_RING_RADIUS = (SOS_RING_SIZE - SOS_RING_STROKE) / 2;
+const SOS_RING_CIRC = 2 * Math.PI * SOS_RING_RADIUS;
 
 type NavItem = Readonly<{
   id: 'home' | 'messages' | 'notifications' | 'settings';
@@ -84,15 +96,7 @@ export function VionaGlassTabBar({
           />
         ))}
         <View style={styles.sosDivider} />
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel={t('sos.edgeA11y')}
-          onPress={() => setConfirmOpen(true)}
-          style={[styles.sos, compact && styles.sosCompact]}
-        >
-          <Ionicons name="shield-outline" size={compact ? 16 : 18} color="#E6F4FF" />
-          <Text style={[styles.sosLabel, compact && styles.sosLabelCompact]}>SOS</Text>
-        </Pressable>
+        <SosEndCap compact={compact} onActivate={onConfirmSos} onOpenConfirm={() => setConfirmOpen(true)} />
       </View>
       <Modal transparent visible={confirmOpen} animationType="none" onRequestClose={() => setConfirmOpen(false)}>
         <View style={styles.scrim}>
@@ -116,6 +120,176 @@ export function VionaGlassTabBar({
           </View>
         </View>
       </Modal>
+    </View>
+  );
+}
+
+function SosEndCap({
+  compact,
+  onActivate,
+  onOpenConfirm,
+}: Readonly<{
+  compact: boolean;
+  onActivate: () => void;
+  onOpenConfirm: () => void;
+}>) {
+  const { t } = useTranslation();
+  const [progress, setProgress] = useState(0);
+  const [holding, setHolding] = useState(false);
+  const [hintOn, setHintOn] = useState(false);
+  const [ack, setAck] = useState(false);
+  const startRef = useRef<number | null>(null);
+  const tickRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const firedRef = useRef(false);
+  const viaPointerRef = useRef(false);
+  const readerRef = useRef(false);
+  const midHapticRef = useRef(false);
+  const reducedRef = useRef(false);
+  const hintTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const clearTick = useCallback(() => {
+    if (tickRef.current != null) {
+      clearInterval(tickRef.current);
+      tickRef.current = null;
+    }
+  }, []);
+
+  useEffect(() => {
+    void AccessibilityInfo.isScreenReaderEnabled().then((enabled) => {
+      readerRef.current = enabled;
+    });
+    const readerSub = AccessibilityInfo.addEventListener?.('screenReaderChanged', (enabled) => {
+      readerRef.current = enabled;
+    });
+    void AccessibilityInfo.isReduceMotionEnabled?.().then((enabled) => {
+      reducedRef.current = enabled;
+    });
+    return () => {
+      readerSub?.remove?.();
+      clearTick();
+      if (hintTimerRef.current) clearTimeout(hintTimerRef.current);
+    };
+  }, [clearTick]);
+
+  const showHint = useCallback(() => {
+    setHintOn(true);
+    if (hintTimerRef.current) clearTimeout(hintTimerRef.current);
+    hintTimerRef.current = setTimeout(() => setHintOn(false), 1400);
+  }, []);
+
+  const unwind = useCallback((from: number) => {
+    clearTick();
+    const started = Date.now();
+    tickRef.current = setInterval(() => {
+      const t = Math.min(1, (Date.now() - started) / 160);
+      setProgress(from * (1 - t));
+      if (t < 1) return;
+      clearTick();
+      setProgress(0);
+    }, 16);
+  }, [clearTick]);
+
+  const onPressIn = useCallback(() => {
+    viaPointerRef.current = true;
+    firedRef.current = false;
+    midHapticRef.current = false;
+    setHolding(true);
+    setAck(false);
+    startRef.current = Date.now();
+    setProgress(0);
+    clearTick();
+    if (Platform.OS !== 'web') void Haptics.selectionAsync();
+    tickRef.current = setInterval(() => {
+      const start = startRef.current;
+      if (start == null) return;
+      const next = Math.min(1, (Date.now() - start) / SOS_HOLD_MS);
+      setProgress(next);
+      if (next >= 0.5 && !midHapticRef.current && Platform.OS !== 'web') {
+        midHapticRef.current = true;
+        void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      }
+      if (next < 1 || firedRef.current) return;
+      firedRef.current = true;
+      clearTick();
+      startRef.current = null;
+      setHolding(false);
+      if (Platform.OS !== 'web') void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      onActivate();
+      if (reducedRef.current) {
+        setProgress(0);
+        setAck(false);
+        return;
+      }
+      setAck(true);
+      setTimeout(() => {
+        setAck(false);
+        setProgress(0);
+      }, 180);
+    }, 16);
+  }, [clearTick, onActivate]);
+
+  const onPressOut = useCallback(() => {
+    if (firedRef.current) return;
+    const elapsed = Date.now() - (startRef.current ?? Date.now());
+    const from = Math.min(1, elapsed / SOS_HOLD_MS);
+    startRef.current = null;
+    setHolding(false);
+    unwind(from);
+    if (!readerRef.current && viaPointerRef.current && elapsed < 250) showHint();
+  }, [showHint, unwind]);
+
+  const onPress = useCallback(() => {
+    if (readerRef.current || !viaPointerRef.current) {
+      firedRef.current = true;
+      clearTick();
+      startRef.current = null;
+      setHolding(false);
+      setProgress(0);
+      setHintOn(false);
+      onOpenConfirm();
+    }
+    viaPointerRef.current = false;
+  }, [clearTick, onOpenConfirm]);
+
+  const tone = holding || progress > 0.02 ? SOS_CORAL_BRIGHT : SOS_NAV_MUTED;
+
+  return (
+    <View style={styles.sosWrap}>
+      {hintOn ? <Text style={styles.holdCue}>{t('sos.holdCue')}</Text> : null}
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel={t('sos.edgeA11y')}
+        accessibilityHint={t('sos.holdCue')}
+        onAccessibilityTap={onOpenConfirm}
+        onPressIn={onPressIn}
+        onPressOut={onPressOut}
+        onPress={onPress}
+        style={[styles.sos, compact && styles.sosCompact, ack && styles.sosAck]}
+      >
+        <View style={styles.sosIcon}>
+          {progress > 0.02 ? (
+            <Svg width={SOS_RING_SIZE} height={SOS_RING_SIZE} style={styles.sosRing}>
+              <Circle
+                cx={SOS_RING_SIZE / 2}
+                cy={SOS_RING_SIZE / 2}
+                r={SOS_RING_RADIUS}
+                stroke={SOS_CORAL}
+                strokeWidth={SOS_RING_STROKE}
+                fill="none"
+                strokeDasharray={`${SOS_RING_CIRC} ${SOS_RING_CIRC}`}
+                strokeDashoffset={SOS_RING_CIRC * (1 - progress)}
+                strokeLinecap="round"
+                rotation={-90}
+                originX={SOS_RING_SIZE / 2}
+                originY={SOS_RING_SIZE / 2}
+              />
+              {progress >= 1 ? <Circle cx={SOS_RING_SIZE / 2} cy={SOS_RING_STROKE / 2 + 1} r={2} fill={SOS_GOLD} /> : null}
+            </Svg>
+          ) : null}
+          <Ionicons name="shield" size={compact ? 16 : 18} color={tone} />
+        </View>
+        <Text style={[styles.sosLabel, compact && styles.sosLabelCompact, { color: tone }]}>SOS</Text>
+      </Pressable>
     </View>
   );
 }
@@ -194,27 +368,40 @@ const styles = StyleSheet.create({
     width: 1,
     height: 28,
     marginLeft: 4,
-    backgroundColor: 'rgba(230, 244, 255, 0.22)',
+    backgroundColor: SOS_GOLD,
+    opacity: 0.85,
   },
+  sosWrap: { position: 'relative', justifyContent: 'center' },
   sos: {
-    minWidth: 52,
-    minHeight: 48,
-    paddingHorizontal: 8,
+    minWidth: 56,
+    minHeight: 56,
+    paddingHorizontal: 6,
     alignItems: 'center',
     justifyContent: 'center',
     gap: 1,
-    borderBottomWidth: 2,
-    borderBottomColor: '#D4AF7C',
-    backgroundColor: 'rgba(90, 36, 44, 0.55)',
+    backgroundColor: 'transparent',
   },
-  sosCompact: { minWidth: 44, paddingHorizontal: 4 },
+  sosCompact: { minWidth: 56, paddingHorizontal: 2 },
+  sosAck: { opacity: 0.55 },
+  sosIcon: { width: SOS_RING_SIZE, height: SOS_RING_SIZE, alignItems: 'center', justifyContent: 'center' },
+  sosRing: { position: 'absolute', left: 0, top: 0 },
   sosLabel: {
-    color: '#E6F4FF',
+    color: SOS_NAV_MUTED,
     fontSize: 11,
     fontFamily: vionaCinematicTokens.fontFamily.semibold,
     fontWeight: '600',
   },
-  sosLabelCompact: { fontSize: 9 },
+  sosLabelCompact: { fontSize: 10 },
+  holdCue: {
+    position: 'absolute',
+    bottom: 58,
+    right: 0,
+    width: 128,
+    textAlign: 'right',
+    color: '#E6F4FF',
+    fontSize: 11,
+    fontFamily: vionaCinematicTokens.fontFamily.medium,
+  },
   scrim: {
     flex: 1,
     alignItems: 'center',

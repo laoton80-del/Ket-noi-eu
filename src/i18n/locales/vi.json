@@ -444,6 +444,7 @@
     "a11yChip": "Lối vào khẩn cấp SOS",
     "floatingA11y": "Nút khẩn cấp SOS, giữ để kích hoạt",
     "edgeA11y": "Nút khẩn cấp SOS",
+    "holdCue": "Giữ để gọi SOS",
     "confirmTitle": "Gọi SOS?",
     "confirmBody": "Mở luồng khẩn cấp hiện có. Không tự gọi số cấp cứu.",
     "confirmYes": "Xác nhận",

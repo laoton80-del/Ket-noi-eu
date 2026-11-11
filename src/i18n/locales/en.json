@@ -444,6 +444,7 @@
     "a11yChip": "SOS emergency entry",
     "floatingA11y": "Emergency SOS button, hold to activate",
     "edgeA11y": "Emergency SOS button",
+    "holdCue": "Hold to activate SOS",
     "confirmTitle": "Open SOS?",
     "confirmBody": "Opens the existing emergency flow. This does not place a call.",
     "confirmYes": "Confirm",
