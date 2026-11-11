@@ -6,18 +6,17 @@ import { vionaCinematicTokens } from '../../../design/vionaCinematicTokens';
 import { useTranslation } from '../../../i18n';
 import { VionaCompanionOrbImage } from '../brand/VionaCompanionOrbImage';
 import { VionaRec2AlfredPanel } from './VionaRec2AlfredPanel';
-import { VionaHomeSuggestionChips } from './VionaHomeSuggestionChips';
 import {
   type VionaRec2UniverseCallbacks,
   type VionaRec2UniverseContract,
 } from './vionaRec2HomeContract';
 
+const ASSISTANT_PROMPTS = ['news', 'translate', 'food', 'email', 'concept', 'practice'] as const;
+
 export function VionaHomeCompanionPanel({
   displayName,
   previewMode = false,
   reducedMotion = false,
-  universes,
-  callbacks,
   onClose,
 }: Readonly<{
   displayName?: string | null;
@@ -29,6 +28,7 @@ export function VionaHomeCompanionPanel({
 }>) {
   const { t } = useTranslation();
   const [draft, setDraft] = useState('');
+  const [activePrompt, setActivePrompt] = useState<string | null>(null);
   const name = displayName?.trim() || null;
   const greeting = name
     ? t('home.rec2.greetingNamed', { name })
@@ -48,7 +48,29 @@ export function VionaHomeCompanionPanel({
       <Text style={styles.status}>
         {previewMode ? t('home.rec2.companionPreview') : t('home.rec2.alfred.states.unavailable')}
       </Text>
-      <VionaHomeSuggestionChips universes={universes} callbacks={callbacks} />
+      <View style={styles.chips}>
+        {ASSISTANT_PROMPTS.map((id) => {
+          const label = t(`home.rec2.assistantChips.${id}`);
+          const selected = activePrompt === id;
+          return (
+            <Pressable
+              key={id}
+              accessibilityRole="button"
+              accessibilityLabel={label}
+              accessibilityState={{ selected }}
+              onPress={() => {
+                setActivePrompt(id);
+                setDraft(label);
+              }}
+              style={[styles.chip, selected && styles.chipSelected]}
+            >
+              <LinearGradient colors={['rgba(18, 42, 74, 0.92)', 'rgba(10, 26, 51, 0.84)']} style={styles.chipFill}>
+                <Text style={styles.chipLabel}>{label}</Text>
+              </LinearGradient>
+            </Pressable>
+          );
+        })}
+      </View>
       <TextInput
         accessibilityLabel={t('home.rec2.companionInputPlaceholder')}
         accessibilityHint={t('home.rec2.companionNotConnected')}
@@ -94,6 +116,20 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   status: { color: vionaCinematicTokens.color.gold, fontSize: 12, textAlign: 'center' },
+  chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 14 },
+  chip: {
+    borderRadius: vionaCinematicTokens.radius.pill,
+    borderWidth: 1,
+    borderColor: 'rgba(0, 209, 255, 0.22)',
+    overflow: 'hidden',
+  },
+  chipSelected: { borderColor: '#D4AF7C' },
+  chipFill: { paddingHorizontal: 16, paddingVertical: 11 },
+  chipLabel: {
+    color: vionaCinematicTokens.color.ice,
+    fontFamily: vionaCinematicTokens.fontFamily.medium,
+    fontSize: 12,
+  },
   input: {
     minHeight: 44,
     borderRadius: vionaCinematicTokens.radius.md,

@@ -1168,6 +1168,14 @@
         "account": "Kiểm tra tài khoản",
         "sos": "SOS khẩn cấp"
       },
+      "assistantChips": {
+        "news": "Tóm tắt tin hôm nay",
+        "translate": "Dịch một đoạn văn",
+        "food": "Món Việt gần đây",
+        "email": "Soạn email giúp tôi",
+        "concept": "Giải thích một khái niệm",
+        "practice": "Luyện hội thoại"
+      },
       "runtimeTruth": "RC2 Home là ứng viên cục bộ có feature flag. Thông báo, yêu cầu Viona trực tiếp và tác vụ suy diễn đều chưa khả dụng."
     },
     "dockNav": {

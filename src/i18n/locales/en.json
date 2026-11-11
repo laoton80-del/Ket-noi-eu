@@ -1168,6 +1168,14 @@
         "account": "Check account",
         "sos": "Emergency SOS"
       },
+      "assistantChips": {
+        "news": "Summarize today's news",
+        "translate": "Translate a passage",
+        "food": "Vietnamese food nearby",
+        "email": "Draft an email for me",
+        "concept": "Explain a concept",
+        "practice": "Practice a conversation"
+      },
       "runtimeTruth": "RC2 Home is a local, feature-gated candidate. Notifications, live Viona requests, and inferred tasks are unavailable."
     },
     "dockNav": {
