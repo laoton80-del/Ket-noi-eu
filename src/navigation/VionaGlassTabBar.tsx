@@ -1,21 +1,25 @@
 import { Ionicons } from '@expo/vector-icons';
 import type { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import * as Haptics from 'expo-haptics';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { AccessibilityInfo, Modal, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
+import { AccessibilityInfo, Image, Modal, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 import Svg, { Circle } from 'react-native-svg';
 
+import { useHomeCommand } from '../context/HomeCommandContext';
 import { vionaCinematicTokens } from '../design/vionaCinematicTokens';
 import { useTranslation } from '../i18n';
 import { MAIN_TAB } from './routes';
 import { resolveVionaCollapsedOrb } from './vionaBottomShellGeometry';
+import { getVionaDockStatus, subscribeVionaDockStatus, type VionaDockStatus } from './vionaDockStatus';
 
 const SOS_HOLD_MS = 600;
 const SOS_NAV_MUTED = '#7F94B2';
 const SOS_CORAL = '#E5705A';
 const SOS_CORAL_BRIGHT = '#F0997B';
 const SOS_GOLD = '#D4AF7C';
-const SOS_RING_SIZE = 30;
+const SOS_RING_SIZE = 36;
+const SOS_ICON_SIZE = 24;
 const SOS_RING_STROKE = 3;
 const SOS_RING_RADIUS = (SOS_RING_SIZE - SOS_RING_STROKE) / 2;
 const SOS_RING_CIRC = 2 * Math.PI * SOS_RING_RADIUS;
@@ -47,8 +51,11 @@ export function VionaGlassTabBar({
   const { t } = useTranslation();
   const [confirmOpen, setConfirmOpen] = useState(false);
   const compact = width < 420;
+  const split = width >= 768;
   const wide = width >= 1024;
   const orb = resolveVionaCollapsedOrb(width);
+  const bandWidth = wide ? 760 : Math.max(0, width - 8);
+  const sideWidth = Math.floor((bandWidth - orb.size) / 2);
   const focusedName = state.routes[state.index]?.name;
   const homeRoute = state.routes.find((route) => route.name === MAIN_TAB.B2C.home);
 
@@ -67,37 +74,81 @@ export function VionaGlassTabBar({
     { id: 'messages', icon: 'chatbubble-outline', disabled: true },
   ];
   const right: readonly NavItem[] = [
-    { id: 'notifications', icon: 'notifications-outline', disabled: true },
+    ...(split ? [] : [{ id: 'notifications' as const, icon: 'notifications-outline' as const, disabled: true }]),
     { id: 'settings', icon: 'settings-outline', onPress: onPressSettings },
   ];
 
   return (
-    <View style={[styles.row, { paddingLeft, paddingRight }]}>
-      <View style={[styles.side, wide && styles.sideLeft]}>
-        {left.map((item) => (
-          <DockButton
-            key={item.id}
-            item={item}
-            label={t(`home.dockNav.${item.id}`)}
-            hint={item.disabled ? t('home.dockNav.comingSoon') : undefined}
-            selected={item.id === 'home' && focusedName === MAIN_TAB.B2C.home}
-          />
-        ))}
+    <View
+      style={[
+        styles.row,
+        split ? styles.splitRow : { paddingLeft: 4, paddingRight: Math.min(paddingRight, 4) },
+      ]}
+    >
+      {split ? (
+        <>
+          <DockStatus />
+          <View style={{ width: orb.size, flexShrink: 0 }} />
+          <View style={styles.splitRight}>
+            <View style={styles.splitNav}>
+              {[...left, { id: 'settings' as const, icon: 'settings-outline' as const, onPress: onPressSettings }].map((item) => (
+                <DockButton
+                  key={item.id}
+                  item={item}
+                  label={t(`home.dockNav.${item.id}`)}
+                  hint={item.disabled ? t('home.dockNav.comingSoon') : undefined}
+                  selected={item.id === 'home' && focusedName === MAIN_TAB.B2C.home}
+                />
+              ))}
+            </View>
+            <View style={styles.sosCluster}>
+              <View style={styles.sosDivider} />
+              <SosEndCap compact={false} onActivate={onConfirmSos} onOpenConfirm={() => setConfirmOpen(true)} />
+            </View>
+          </View>
+        </>
+      ) : null}
+      {split ? null : (
+      <View style={[styles.band, wide && styles.bandWide]}>
+        <View
+          style={[
+            styles.side,
+            { width: sideWidth },
+            wide ? styles.sideWide : styles.sideMobile,
+            !wide ? { paddingLeft: Math.min(paddingLeft, 96), justifyContent: 'flex-start', gap: 4 } : null,
+          ]}
+        >
+          {left.map((item) => (
+            <DockButton
+              key={item.id}
+              item={item}
+              label={t(`home.dockNav.${item.id}`)}
+              hint={item.disabled ? t('home.dockNav.comingSoon') : undefined}
+              overlayHint={compact}
+              iconOnly={compact && item.id === 'messages'}
+              selected={item.id === 'home' && focusedName === MAIN_TAB.B2C.home}
+            />
+          ))}
+        </View>
+        <View style={{ width: orb.size, flexShrink: 0 }} />
+        <View style={[styles.side, { width: sideWidth }, wide ? styles.sideWide : styles.sideMobile]}>
+          {right.map((item) => (
+            <DockButton
+              key={item.id}
+              item={item}
+              label={t(`home.dockNav.${item.id}`)}
+              hint={item.disabled ? t('home.dockNav.comingSoon') : undefined}
+              overlayHint={compact}
+              selected={false}
+            />
+          ))}
+          <View style={[styles.sosCluster, !wide && styles.sosClusterCompact]}>
+            <View style={styles.sosDivider} />
+            <SosEndCap compact={compact} onActivate={onConfirmSos} onOpenConfirm={() => setConfirmOpen(true)} />
+          </View>
+        </View>
       </View>
-      <View style={{ width: orb.size }} />
-      <View style={[styles.side, wide && styles.sideRight]}>
-        {right.map((item) => (
-          <DockButton
-            key={item.id}
-            item={item}
-            label={t(`home.dockNav.${item.id}`)}
-            hint={item.disabled ? t('home.dockNav.comingSoon') : undefined}
-            selected={false}
-          />
-        ))}
-        <View style={styles.sosDivider} />
-        <SosEndCap compact={compact} onActivate={onConfirmSos} onOpenConfirm={() => setConfirmOpen(true)} />
-      </View>
+      )}
       <Modal transparent visible={confirmOpen} animationType="none" onRequestClose={() => setConfirmOpen(false)}>
         <View style={styles.scrim}>
           <Pressable accessibilityRole="button" accessibilityLabel={t('sos.confirmCancel')} onPress={() => setConfirmOpen(false)} style={styles.scrimDismiss} />
@@ -286,10 +337,93 @@ function SosEndCap({
               {progress >= 1 ? <Circle cx={SOS_RING_SIZE / 2} cy={SOS_RING_STROKE / 2 + 1} r={2} fill={SOS_GOLD} /> : null}
             </Svg>
           ) : null}
-          <Ionicons name="shield" size={compact ? 16 : 18} color={tone} />
+          <Ionicons name="shield" size={SOS_ICON_SIZE} color={tone} />
         </View>
         <Text style={[styles.sosLabel, compact && styles.sosLabelCompact, { color: tone }]}>SOS</Text>
       </Pressable>
+    </View>
+  );
+}
+
+function isTechnicalPlace(label: string): boolean {
+  return /cinematic|not connected|weather source|nguồn thời tiết|chưa có nguồn/i.test(label);
+}
+
+function useDockStatus(): VionaDockStatus | null {
+  const [status, setStatus] = useState<VionaDockStatus | null>(() => getVionaDockStatus());
+  useEffect(() => {
+    setStatus(getVionaDockStatus());
+    return subscribeVionaDockStatus(setStatus);
+  }, []);
+  return status;
+}
+
+function DockStatus() {
+  const { t, i18n } = useTranslation();
+  const homeCommand = useHomeCommand();
+  const status = useDockStatus();
+  const [now, setNow] = useState(() => new Date());
+  useEffect(() => {
+    const timer = setInterval(() => setNow(new Date()), 30000);
+    return () => clearInterval(timer);
+  }, []);
+  if (!status) return <View style={styles.splitLeft} />;
+
+  const locale = (i18n.resolvedLanguage ?? i18n.language ?? 'en').trim() || 'en';
+  const rawPlace = status.regionLabel?.trim() || '';
+  const place =
+    status.previewMode || !rawPlace || isTechnicalPlace(rawPlace) ? t('home.rec2.header.previewPlace') : rawPlace;
+  const date = new Intl.DateTimeFormat(locale, { day: 'numeric', month: 'short' }).format(now);
+  const time = new Intl.DateTimeFormat(locale, { hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).format(now);
+  const name = status.previewMode
+    ? t('home.rec2.avatarPreview')
+    : status.displayName?.trim() || t('home.rec2.avatarGuest');
+  const signedName = status.displayName?.trim() || '';
+  const signedIn = !status.previewMode && signedName.length > 0;
+  const initial = signedIn ? signedName.slice(0, 1).toUpperCase() : '';
+
+  return (
+    <View style={styles.splitLeft}>
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel={name}
+        onPress={() => homeCommand?.openAccount()}
+        style={styles.statusUser}
+      >
+        {status.avatarUri ? (
+          <Image source={{ uri: status.avatarUri }} style={styles.statusPhoto} />
+        ) : initial ? (
+          <LinearGradient colors={['#1A4E86', '#0A1A33']} style={styles.statusAvatar}>
+            <Text style={styles.statusInitial}>{initial}</Text>
+          </LinearGradient>
+        ) : (
+          <View style={styles.statusAvatar}>
+            <Ionicons name="person-outline" size={16} color={vionaCinematicTokens.color.ice} />
+          </View>
+        )}
+        <Text style={styles.statusName} numberOfLines={1}>
+          {name}
+        </Text>
+      </Pressable>
+      <View style={styles.goldTick} />
+      <View style={styles.statusPlace}>
+        <Ionicons name="location-outline" size={14} color={vionaCinematicTokens.color.cyan} />
+        <Text style={styles.statusPlaceText} numberOfLines={1}>
+          {place}
+        </Text>
+      </View>
+      <View style={styles.goldTick} />
+      <Text style={styles.statusClock} numberOfLines={1}>{`${date} · ${time}`}</Text>
+      {status.weather ? (
+        <>
+          <View style={styles.goldTick} />
+          <View style={styles.statusPlace}>
+            <Ionicons name="partly-sunny-outline" size={14} color={vionaCinematicTokens.color.ice} />
+            <Text style={styles.statusClock}>{`${status.weather.temperatureC}°`}</Text>
+          </View>
+        </>
+      ) : null}
+      {status.rankLabel?.trim() ? <Text style={styles.statusRank} numberOfLines={1}>{`👑 ${status.rankLabel.trim()}`}</Text> : null}
     </View>
   );
 }
@@ -298,11 +432,15 @@ function DockButton({
   item,
   label,
   hint,
+  overlayHint,
+  iconOnly,
   selected,
 }: Readonly<{
   item: NavItem;
   label: string;
   hint?: string;
+  overlayHint?: boolean;
+  iconOnly?: boolean;
   selected: boolean;
 }>) {
   return (
@@ -320,8 +458,8 @@ function DockButton({
         color={selected ? '#00D1FF' : 'rgba(230, 244, 255, 0.55)'}
         style={selected ? styles.iconGlow : undefined}
       />
-      <Text style={[styles.label, selected && styles.labelSelected]}>{label}</Text>
-      {hint ? <Text style={styles.hint}>{hint}</Text> : null}
+      {iconOnly ? null : <Text style={[styles.label, selected && styles.labelSelected]}>{label}</Text>}
+      {hint && !overlayHint && !iconOnly ? <Text style={styles.hint}>{hint}</Text> : null}
     </Pressable>
   );
 }
@@ -331,18 +469,86 @@ const styles = StyleSheet.create({
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
+    justifyContent: 'center',
   },
-  side: {
+  splitRow: { paddingLeft: 16, paddingRight: 16, justifyContent: 'flex-start' },
+  splitLeft: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-evenly',
+    minWidth: 0,
+    gap: 10,
   },
-  sideLeft: { justifyContent: 'flex-end', gap: 8 },
-  sideRight: { justifyContent: 'flex-start', gap: 8 },
+  splitRight: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    minWidth: 0,
+    gap: 8,
+  },
+  splitNav: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    minWidth: 0,
+  },
+  statusUser: { flexDirection: 'row', alignItems: 'center', gap: 8, flexShrink: 1, minWidth: 0 },
+  statusAvatar: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: vionaCinematicTokens.color.sapphire,
+    borderWidth: 1,
+    borderColor: vionaCinematicTokens.color.gold,
+  },
+  statusPhoto: { width: 28, height: 28, borderRadius: 14 },
+  statusInitial: { color: vionaCinematicTokens.color.ice, fontSize: 12, fontFamily: vionaCinematicTokens.fontFamily.bold },
+  statusName: {
+    flexShrink: 1,
+    color: vionaCinematicTokens.color.ice,
+    fontSize: 13,
+    fontFamily: vionaCinematicTokens.fontFamily.semibold,
+  },
+  statusPlace: { flexDirection: 'row', alignItems: 'center', gap: 4, flexShrink: 1, minWidth: 0 },
+  statusPlaceText: {
+    flexShrink: 1,
+    color: vionaCinematicTokens.color.ice,
+    fontSize: 12,
+    fontFamily: vionaCinematicTokens.fontFamily.medium,
+  },
+  statusClock: {
+    color: 'rgba(230, 244, 255, 0.86)',
+    fontSize: 12,
+    fontFamily: vionaCinematicTokens.fontFamily.medium,
+    flexShrink: 0,
+  },
+  statusRank: { color: '#F3D9A6', fontSize: 11, fontFamily: vionaCinematicTokens.fontFamily.medium },
+  goldTick: { width: 1, height: 16, backgroundColor: SOS_GOLD, opacity: 0.4, flexShrink: 0 },
+  band: {
+    width: '100%',
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  bandWide: { maxWidth: 760 },
+  side: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    minWidth: 0,
+    flexShrink: 0,
+  },
+  sideWide: {
+    justifyContent: 'space-evenly',
+    gap: 12,
+  },
+  sideMobile: {
+    justifyContent: 'space-evenly',
+    gap: 4,
+  },
   button: {
-    minWidth: 64,
+    flexShrink: 0,
     alignItems: 'center',
     justifyContent: 'center',
     gap: 1,
@@ -364,10 +570,11 @@ const styles = StyleSheet.create({
     fontSize: 8,
     fontFamily: vionaCinematicTokens.fontFamily.medium,
   },
+  sosCluster: { flexDirection: 'row', alignItems: 'center', gap: 10, flexShrink: 0 },
+  sosClusterCompact: { gap: 6 },
   sosDivider: {
     width: 1,
     height: 28,
-    marginLeft: 4,
     backgroundColor: SOS_GOLD,
     opacity: 0.85,
   },
@@ -387,7 +594,7 @@ const styles = StyleSheet.create({
   sosRing: { position: 'absolute', left: 0, top: 0 },
   sosLabel: {
     color: SOS_NAV_MUTED,
-    fontSize: 11,
+    fontSize: 10,
     fontFamily: vionaCinematicTokens.fontFamily.semibold,
     fontWeight: '600',
   },

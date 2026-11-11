@@ -190,6 +190,7 @@ import {
   resolveHomeRendererSelection,
 } from '../navigation/homePresentationTarget';
 import { MAIN_TAB, type RootStackParamList } from '../navigation/routes';
+import { setVionaDockStatus } from '../navigation/vionaDockStatus';
 import { normalizeCountryCodeOrSentinel } from '../config/countryPacks';
 import { vionaTokens } from '../design';
 import { getRestApiJwt, isRestApiConfigured } from '../services/apiClient';
@@ -622,6 +623,15 @@ function VionaRec2HomeEntry() {
   );
   const uiPreview = isVionaUiPreviewMode();
   const previewCallback = useCallback(() => undefined, []);
+  useEffect(() => {
+    setVionaDockStatus({
+      displayName: uiPreview ? 'Preview' : user?.name ?? null,
+      regionLabel: uiPreview ? 'Cinematic preview' : regionLabel,
+      previewMode: uiPreview,
+      weather: null,
+    });
+    return () => setVionaDockStatus(null);
+  }, [regionLabel, uiPreview, user?.name]);
 
   return (
     <VionaRec2HomeShell

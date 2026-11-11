@@ -81,6 +81,7 @@ export function VionaHomeTopBar({
   const name = displayName?.trim() || null;
   const desktop = width >= vionaCinematicTokens.layout.desktopMin;
   const tablet = width >= 768;
+  const statusInDock = tablet;
   const markSize = desktop ? 60 : tablet ? 48 : 42;
   const wordSize = desktop ? 26 : tablet ? 20 : 17;
   const rawPlace = regionLabel?.trim() || '';
@@ -134,19 +135,21 @@ export function VionaHomeTopBar({
           </Text>
         </View>
       ) : null}
-      <View style={[styles.place, width < 768 && styles.placeNarrow]}>
-        <Ionicons name="location-outline" size={15} color={vionaCinematicTokens.color.cyan} />
-        <Text style={styles.placeText} numberOfLines={2}>
-          {place}
-          <Text style={styles.metaDim}>{`  ·  ${clock.date}  ·  ${clock.time}`}</Text>
-        </Text>
-        {weather ? (
-          <View style={styles.weather}>
-            <Ionicons name="partly-sunny-outline" size={14} color={vionaCinematicTokens.color.ice} />
-            <Text style={styles.placeText}>{`${weather.temperatureC}°`}</Text>
-          </View>
-        ) : null}
-      </View>
+      {statusInDock ? null : (
+        <View style={[styles.place, styles.placeNarrow]}>
+          <Ionicons name="location-outline" size={15} color={vionaCinematicTokens.color.cyan} />
+          <Text style={styles.placeText} numberOfLines={2}>
+            {place}
+            <Text style={styles.metaDim}>{`  ·  ${clock.date}  ·  ${clock.time}`}</Text>
+          </Text>
+          {weather ? (
+            <View style={styles.weather}>
+              <Ionicons name="partly-sunny-outline" size={14} color={vionaCinematicTokens.color.ice} />
+              <Text style={styles.placeText}>{`${weather.temperatureC}°`}</Text>
+            </View>
+          ) : null}
+        </View>
+      )}
       <View style={[styles.search, width < 768 && styles.searchNarrow]}>
         <Ionicons name="search-outline" size={16} color={vionaCinematicTokens.color.muted} />
         <TextInput
@@ -181,32 +184,34 @@ export function VionaHomeTopBar({
           <Text style={styles.langCode}>{languageCode}</Text>
           <Ionicons name="chevron-down" size={12} color={vionaCinematicTokens.color.ice} />
         </Pressable>
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel={identityName}
-          onPress={() => homeCommand?.openAccount()}
-          style={styles.user}
-        >
-          {avatarUri ? (
-            <Image source={{ uri: avatarUri }} style={styles.avatarPhoto} />
-          ) : initial ? (
-            <LinearGradient colors={['#1A4E86', '#0A1A33']} style={styles.avatar}>
-              <Text style={styles.avatarText}>{initial}</Text>
-            </LinearGradient>
-          ) : (
-            <View style={styles.avatar}>
-              <Ionicons name="person-outline" size={18} color={vionaCinematicTokens.color.ice} />
+        {statusInDock ? null : (
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={identityName}
+            onPress={() => homeCommand?.openAccount()}
+            style={styles.user}
+          >
+            {avatarUri ? (
+              <Image source={{ uri: avatarUri }} style={styles.avatarPhoto} />
+            ) : initial ? (
+              <LinearGradient colors={['#1A4E86', '#0A1A33']} style={styles.avatar}>
+                <Text style={styles.avatarText}>{initial}</Text>
+              </LinearGradient>
+            ) : (
+              <View style={styles.avatar}>
+                <Ionicons name="person-outline" size={18} color={vionaCinematicTokens.color.ice} />
+              </View>
+            )}
+            <View style={styles.userCopy}>
+              <Text style={styles.userName} numberOfLines={1}>
+                {identityName}
+              </Text>
+              {rankLabel?.trim() ? (
+                <Text style={styles.rank} numberOfLines={1}>{`👑 ${rankLabel.trim()}`}</Text>
+              ) : null}
             </View>
-          )}
-          <View style={styles.userCopy}>
-            <Text style={styles.userName} numberOfLines={1}>
-              {identityName}
-            </Text>
-            {rankLabel?.trim() ? (
-              <Text style={styles.rank} numberOfLines={1}>{`👑 ${rankLabel.trim()}`}</Text>
-            ) : null}
-          </View>
-        </Pressable>
+          </Pressable>
+        )}
       </View>
     </View>
   );
