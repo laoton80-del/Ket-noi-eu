@@ -259,12 +259,28 @@ async function ledgerCount(prisma: PrismaClient, operationId: string, entryType:
   return Number(rows[0]?.count ?? 0n);
 }
 
-async function ledgerReason(prisma: PrismaClient, operationId: string, entryType: string): Promise<string | null> {
+async function ledgerTotalCount(prisma: PrismaClient, operationId: string): Promise<number> {
+  const rows = await prisma.$queryRawUnsafe<ReadonlyArray<{ count: bigint }>>(
+    `SELECT count(*)::bigint AS "count" FROM "AiCostLedgerEntry" WHERE "operationId" = $1`,
+    operationId
+  );
+  return Number(rows[0]?.count ?? 0n);
+}
+
+async function ledgerReason(
+  prisma: PrismaClient,
+  operationId: string,
+  entryType: string,
+  nextStatus?: string
+): Promise<string | null> {
   const rows = await prisma.$queryRawUnsafe<ReadonlyArray<{ reason: string | null }>>(
     `SELECT "reason" FROM "AiCostLedgerEntry"
-      WHERE "operationId" = $1 AND "entryType" = $2`,
+      WHERE "operationId" = $1 AND "entryType" = $2
+        AND ($3::text IS NULL OR "nextStatus" = $3)
+      ORDER BY "createdAt" ASC, "id" ASC`,
     operationId,
-    entryType
+    entryType,
+    nextStatus ?? null
   );
   return rows[0]?.reason ?? null;
 }
@@ -362,7 +378,7 @@ async function main(): Promise<void> {
       assert.deepEqual(await governor.reconcileStale(), { released: 0, markedUnknown: 1, settled: 0, skipped: 0 });
       const stored = await operation(prisma!, operationId);
       assert.equal(stored.status, 'OUTCOME_UNKNOWN');
-      assert.equal(await ledgerReason(prisma!, operationId, 'ADJUSTMENT'), 'provider_outcome_unknown');
+      assert.equal(await ledgerReason(prisma!, operationId, 'ADJUSTMENT', 'OUTCOME_UNKNOWN'), 'provider_outcome_unknown');
       assert.ok(stored.expiresAt.getTime() > Date.now() + 23 * 60 * 60 * 1000);
       assert.ok(stored.expiresAt.getTime() < Date.now() + 25 * 60 * 60 * 1000);
       assert.deepEqual(await counter(prisma!, 'GLOBAL_DAY'), { reservedMicrousd: RESERVE_AMOUNT, settledMicrousd: 0n });
@@ -481,6 +497,98 @@ async function main(): Promise<void> {
           settledMicrousd: 0n,
         });
       }
+    });
+
+    await test('8: markDispatching writes one atomic dispatch ledger entry only when applied', async () => {
+      await resetCostTables(prisma!);
+      setFixtureConfig();
+      const operationId = await reserveOne(governor, 'recon-dispatch-ledger', 'dispatch-ledger');
+      assert.equal(await ledgerTotalCount(prisma!, operationId), 1);
+      assert.equal(await ledgerCount(prisma!, operationId, 'RESERVE'), 1);
+
+      assert.equal(await governor.markDispatching(operationId), true);
+      const dispatchRows = await prisma!.$queryRawUnsafe<ReadonlyArray<{
+        amountMicrousd: bigint;
+        previousStatus: string | null;
+        nextStatus: string | null;
+        reason: string | null;
+      }>>(
+        `SELECT "amountMicrousd", "previousStatus", "nextStatus", "reason"
+           FROM "AiCostLedgerEntry"
+          WHERE "operationId" = $1 AND "entryType" = 'ADJUSTMENT'
+            AND "previousStatus" = 'RESERVED' AND "nextStatus" = 'DISPATCHING'`,
+        operationId
+      );
+      assert.equal(dispatchRows.length, 1);
+      assert.equal(dispatchRows[0].amountMicrousd, 0n);
+      assert.equal(dispatchRows[0].previousStatus, 'RESERVED');
+      assert.equal(dispatchRows[0].nextStatus, 'DISPATCHING');
+      assert.equal(dispatchRows[0].reason, 'provider_dispatch');
+      assert.equal(await ledgerTotalCount(prisma!, operationId), 2);
+      assert.equal(await ledgerCount(prisma!, operationId, 'ADJUSTMENT'), 1);
+
+      assert.equal(await governor.markDispatching(operationId), false);
+      assert.equal(await ledgerTotalCount(prisma!, operationId), 2);
+      assert.equal(await ledgerCount(prisma!, operationId, 'ADJUSTMENT'), 1);
+    });
+
+    await test('9: reconciliation skips settlement when expiry is extended before the locked transition', async () => {
+      await resetCostTables(prisma!);
+      setFixtureConfig();
+      const operationId = await reserveOne(governor, 'recon-toctou-extend', 'toctou-extend');
+      assert.equal(await governor.markDispatching(operationId), true);
+      assert.equal(await governor.markOutcomeUnknown(operationId), true);
+      await setExpired(prisma!, operationId);
+
+      let expiryExtended = false;
+      const raceDatabase = new Proxy(prisma!, {
+        get(target, property) {
+          if (property === '$queryRawUnsafe') {
+            return async <T = unknown>(query: string, ...values: unknown[]): Promise<T> => {
+              const rows = await target.$queryRawUnsafe<T>(query, ...values);
+              if (!expiryExtended && query.includes('AS "isExpired"')) {
+                expiryExtended = true;
+                await target.$executeRawUnsafe(
+                  `UPDATE "AiCostOperation"
+                      SET "expiresAt" = (clock_timestamp() AT TIME ZONE 'UTC') + interval '24 hours'
+                    WHERE "id" = $1`,
+                  values[0]
+                );
+              }
+              return rows;
+            };
+          }
+          const value: unknown = Reflect.get(target, property, target);
+          return typeof value === 'function' ? value.bind(target) : value;
+        },
+      });
+      const raceGovernor = new CostGovernorService(() => raceDatabase as never);
+
+      assert.equal(await raceGovernor.reconcileOperation(operationId), 'skipped');
+      assert.equal(expiryExtended, true, 'the expiry extension must occur after the unlocked candidate read');
+      assert.equal((await operation(prisma!, operationId)).status, 'OUTCOME_UNKNOWN');
+      assert.equal(await ledgerCount(prisma!, operationId, 'SETTLE'), 0);
+      assert.deepEqual(await counter(prisma!, 'GLOBAL_DAY'), { reservedMicrousd: RESERVE_AMOUNT, settledMicrousd: 0n });
+    });
+
+    await test('10: normal in-flight settlement is unaffected by the reconcile-only expiry guard', async () => {
+      await resetCostTables(prisma!);
+      setFixtureConfig();
+      const operationId = await reserveOne(governor, 'recon-normal-settle', 'normal-inflight-settle');
+      assert.equal(await governor.markDispatching(operationId), true);
+
+      const settled = await governor.settle({
+        operationId,
+        usage: { inputTokens: INPUT_TOKENS, outputTokens: OUTPUT_TOKENS },
+      });
+      assert.equal(settled.applied, true);
+      assert.equal(settled.operation.status, 'SETTLED');
+      assert.equal(settled.operation.settledMicrousd, RESERVE_AMOUNT);
+      assert.equal((await operation(prisma!, operationId)).actualCostMicrousd, RESERVE_AMOUNT);
+      assert.deepEqual(await counter(prisma!, 'GLOBAL_DAY'), {
+        reservedMicrousd: 0n,
+        settledMicrousd: RESERVE_AMOUNT,
+      });
     });
 
     console.log(`\n${passed} reconciliation PostgreSQL tests passed with ${testTimeZone}.`);

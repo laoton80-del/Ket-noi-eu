@@ -662,19 +662,33 @@ export class CostGovernorService implements CostGovernor {
           RESERVED_TTL_MS.toString(),
           DISPATCH_GUARD_MS.toString()
         );
-        return rows.length === 1;
+        if (rows.length !== 1) return false;
+        await transaction.$executeRawUnsafe(
+          `INSERT INTO "AiCostLedgerEntry" (
+             "id", "operationId", "entryType", "amountMicrousd", "previousStatus", "nextStatus", "reason", "createdAt"
+           ) VALUES ($1, $2, 'ADJUSTMENT', 0, 'RESERVED', 'DISPATCHING', 'provider_dispatch', (now() AT TIME ZONE 'UTC'))`,
+          randomUUID(),
+          operationId
+        );
+        return true;
       }, TRANSACTION_OPTIONS);
     } catch (error) {
       throw asLedgerUnavailable(error);
     }
   }
 
-  async settle(input: CostGovernorSettleInput): Promise<Readonly<{ applied: boolean; operation: CostGovernorOperation }>> {
+  async settle(
+    input: CostGovernorSettleInput,
+    reconcileRequireExpired = false
+  ): Promise<Readonly<{ applied: boolean; operation: CostGovernorOperation }>> {
     if (!isExactNonEmpty(input.operationId)) throw new CostGovernorDeniedError('DENY_POLICY');
     try {
       return await this.databaseProvider().$transaction(async (transaction) => {
         await setReadCommitted(transaction);
         const operation = await this.requireOperationForUpdate(transaction, input.operationId);
+        if (reconcileRequireExpired && !(await this.isExpiredUnderRowLock(transaction, operation.id))) {
+          return { applied: false, operation };
+        }
         if (operation.status === 'SETTLED') return { applied: false, operation };
         if (operation.status !== 'DISPATCHING' && operation.status !== 'OUTCOME_UNKNOWN') {
           throw new Error(`Cannot settle cost operation in status ${operation.status}`);
@@ -756,12 +770,13 @@ export class CostGovernorService implements CostGovernor {
     }
   }
 
-  async release(input: CostGovernorReleaseInput): Promise<boolean> {
+  async release(input: CostGovernorReleaseInput, reconcileRequireExpired = false): Promise<boolean> {
     if (!isExactNonEmpty(input.operationId)) throw new CostGovernorDeniedError('DENY_POLICY');
     try {
       return await this.databaseProvider().$transaction(async (transaction) => {
         await setReadCommitted(transaction);
         const operation = await this.requireOperationForUpdate(transaction, input.operationId);
+        if (reconcileRequireExpired && !(await this.isExpiredUnderRowLock(transaction, operation.id))) return false;
         if (operation.status === 'RELEASED') return false;
         const allowed =
           operation.status === 'RESERVED' ||
@@ -796,12 +811,13 @@ export class CostGovernorService implements CostGovernor {
     }
   }
 
-  async markOutcomeUnknown(operationId: string): Promise<boolean> {
+  async markOutcomeUnknown(operationId: string, reconcileRequireExpired = false): Promise<boolean> {
     if (!isExactNonEmpty(operationId)) throw new CostGovernorDeniedError('DENY_POLICY');
     try {
       return await this.databaseProvider().$transaction(async (transaction) => {
         await setReadCommitted(transaction);
         const operation = await this.requireOperationForUpdate(transaction, operationId);
+        if (reconcileRequireExpired && !(await this.isExpiredUnderRowLock(transaction, operation.id))) return false;
         if (operation.status === 'OUTCOME_UNKNOWN') return false;
         if (operation.status !== 'DISPATCHING') {
           throw new Error(`Cannot mark cost operation outcome unknown in status ${operation.status}`);
@@ -862,7 +878,7 @@ export class CostGovernorService implements CostGovernor {
       if (candidate.dispatchedAt !== null) return 'skipped';
       const applied = await this.applyReconciliationTransition(
         candidate,
-        () => this.release({ operationId, reason: 'reserved_not_dispatched' })
+        () => this.release({ operationId, reason: 'reserved_not_dispatched' }, true)
       );
       return applied ? 'released' : 'skipped';
     }
@@ -870,14 +886,14 @@ export class CostGovernorService implements CostGovernor {
     if (candidate.status === 'DISPATCHING') {
       const applied = await this.applyReconciliationTransition(
         candidate,
-        () => this.markOutcomeUnknown(operationId)
+        () => this.markOutcomeUnknown(operationId, true)
       );
       return applied ? 'markedUnknown' : 'skipped';
     }
 
     const settled = await this.applyReconciliationTransition(
       candidate,
-      async () => (await this.settle({ operationId })).applied
+      async () => (await this.settle({ operationId }, true)).applied
     );
     return settled ? 'settled' : 'skipped';
   }
@@ -1028,6 +1044,17 @@ export class CostGovernorService implements CostGovernor {
     );
     if (rows.length !== 1) throw new Error('Cost governor operation does not exist');
     return operationFromRow(rows[0]);
+  }
+
+  private async isExpiredUnderRowLock(transaction: RawSqlClient, operationId: string): Promise<boolean> {
+    const rows = await transaction.$queryRawUnsafe<ReadonlyArray<{ isExpired: boolean }>>(
+      `SELECT ("expiresAt" < (clock_timestamp() AT TIME ZONE 'UTC')) AS "isExpired"
+         FROM "AiCostOperation"
+        WHERE "id" = $1`,
+      operationId
+    );
+    if (rows.length !== 1) throw new Error('Cost governor locked operation expiry query returned no row');
+    return rows[0].isExpired === true;
   }
 
   private async moveCountersToSettled(

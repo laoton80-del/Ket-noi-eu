@@ -959,13 +959,20 @@ async function countRows(prisma: PrismaClient, table: string): Promise<bigint> {
   return rows[0].count;
 }
 
-async function ledgerEntryCount(prisma: PrismaClient, operationId: string, entryType: string): Promise<bigint> {
+async function ledgerEntryCount(
+  prisma: PrismaClient,
+  operationId: string,
+  entryType: string,
+  nextStatus?: string
+): Promise<bigint> {
   const rows = await prisma.$queryRawUnsafe<Array<{ count: bigint }>>(
     `SELECT count(*)::bigint AS "count"
        FROM "AiCostLedgerEntry"
-      WHERE "operationId" = $1 AND "entryType" = $2`,
+      WHERE "operationId" = $1 AND "entryType" = $2
+        AND ($3::text IS NULL OR "nextStatus" = $3)`,
     operationId,
-    entryType
+    entryType,
+    nextStatus ?? null
   );
   assert.equal(rows.length, 1, `missing ledger count for ${entryType}`);
   return rows[0].count;
@@ -1746,6 +1753,20 @@ async function main(): Promise<void> {
       );
 
       await resetCostTables(prisma!); await insertFixturePrice(prisma!); setFixtureConfig();
+      const dispatchReservation = allowed(await governor.reserve(input('rollback-dispatch', 'rollback-dispatch')));
+      const dispatchBefore = await counterTriplet(prisma!, 'rollback-dispatch');
+      const failingDispatch = serviceFor(prisma!, undefined, ledgerInsert('ADJUSTMENT'));
+      await assert.rejects(
+        failingDispatch.markDispatching(dispatchReservation.operation.id),
+        (error: unknown) => (error as Readonly<{ code?: string }>).code === 'COST_GOVERNOR_DENY_LEDGER_UNAVAILABLE'
+      );
+      assert.equal((await operation(prisma!, dispatchReservation.operation.id)).status, 'RESERVED');
+      assert.deepEqual(await counterTriplet(prisma!, 'rollback-dispatch'), dispatchBefore);
+      assert.equal(await ledgerEntryCount(prisma!, dispatchReservation.operation.id, 'ADJUSTMENT'), 0n);
+      assert.equal(await governor.markDispatching(dispatchReservation.operation.id), true);
+      assert.equal(await ledgerEntryCount(prisma!, dispatchReservation.operation.id, 'ADJUSTMENT'), 1n);
+
+      await resetCostTables(prisma!); await insertFixturePrice(prisma!); setFixtureConfig();
       const settleReservation = allowed(await governor.reserve(input('rollback-settle', 'rollback-settle')));
       assert.equal(await governor.markDispatching(settleReservation.operation.id), true);
       const settleBefore = await counterTriplet(prisma!, 'rollback-settle');
@@ -1788,9 +1809,11 @@ async function main(): Promise<void> {
       );
       assert.equal((await operation(prisma!, unknownReservation.operation.id)).status, 'DISPATCHING');
       assert.deepEqual(await counterTriplet(prisma!, 'rollback-unknown'), unknownBefore);
-      assert.equal(await ledgerEntryCount(prisma!, unknownReservation.operation.id, 'ADJUSTMENT'), 0n);
-      assert.equal(await governor.markOutcomeUnknown(unknownReservation.operation.id), true);
       assert.equal(await ledgerEntryCount(prisma!, unknownReservation.operation.id, 'ADJUSTMENT'), 1n);
+      assert.equal(await ledgerEntryCount(prisma!, unknownReservation.operation.id, 'ADJUSTMENT', 'OUTCOME_UNKNOWN'), 0n);
+      assert.equal(await governor.markOutcomeUnknown(unknownReservation.operation.id), true);
+      assert.equal(await ledgerEntryCount(prisma!, unknownReservation.operation.id, 'ADJUSTMENT'), 2n);
+      assert.equal(await ledgerEntryCount(prisma!, unknownReservation.operation.id, 'ADJUSTMENT', 'OUTCOME_UNKNOWN'), 1n);
     });
 
     await test('35: AIRouter plus the real governor settles success and contains dispatch/provider failures', async () => {
