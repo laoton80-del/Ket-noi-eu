@@ -60,7 +60,6 @@ export function VionaHomeTopBar({
   showBrand = false,
   reducedMotion: _reducedMotion = false,
   onOpenLanguage,
-  sosAction,
   searchValue,
   onSearchChange,
   onFocus,
@@ -182,7 +181,6 @@ export function VionaHomeTopBar({
           <Text style={styles.langCode}>{languageCode}</Text>
           <Ionicons name="chevron-down" size={12} color={vionaCinematicTokens.color.ice} />
         </Pressable>
-        {sosAction}
         <Pressable
           accessibilityRole="button"
           accessibilityLabel={identityName}

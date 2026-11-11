@@ -442,6 +442,7 @@
     "triageBufferBody": "Try again in {{seconds}}s.",
     "chip": "SOS",
     "a11yChip": "SOS emergency entry",
+    "floatingA11y": "Emergency SOS button, hold to activate",
     "holdHelper": "Hold 3 seconds for emergency flow",
     "holdA11y": "SOS hold control",
     "plusName": "SOS Plus",

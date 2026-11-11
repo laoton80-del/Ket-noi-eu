@@ -442,6 +442,7 @@
     "triageBufferBody": "Thử lại sau {{seconds}} giây.",
     "chip": "SOS",
     "a11yChip": "Lối vào khẩn cấp SOS",
+    "floatingA11y": "Nút khẩn cấp SOS, giữ để kích hoạt",
     "holdHelper": "Giữ 3 giây để mở luồng khẩn cấp",
     "holdA11y": "Điều khiển giữ SOS",
     "plusName": "SOS Plus",
