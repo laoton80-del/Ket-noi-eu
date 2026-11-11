@@ -57,6 +57,8 @@ jobs:
         run: npx tsx --tsconfig functions/tsconfig.json scripts/test-viona-aiproxy-soft-caps.ts
       - name: Test A0d no paid fallback
         run: npx tsx scripts/test-viona-minhkhang-no-paid-fallback.ts
+      - name: Test REST-JWT AI fetch rail
+        run: npx tsx scripts/test-viona-rest-jwt-ai-fetch.ts
       - name: Test A0e voice scenario
         run: npx tsx scripts/test-viona-voice-scenario-retail-taphoa.ts
       - name: Test Authority core

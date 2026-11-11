@@ -102,7 +102,7 @@ async function main(): Promise<void> {
     const outside = (source.slice(0, travel!.getStart(ast)) + source.slice(travel!.end)).replace(/\r\n/g, '\n');
     assert.equal(hash(outside), '322D960E5CDC182F9B96554E7E194E21627876C5F0B9182315820FDDA65FC82B');
     assert.equal(hash(source.slice(vision!.getStart(ast), vision!.end).replace(/\r\n/g, '\n')), 'E8AD639013037A7A77B4A644E03E076A724A076AF9B30FBC7DA7749FAEB1CF15');
-    assert.equal(hash(lf(readFileSync(resolve(root, 'src/services/apiClient.ts')))), 'D3EFADB7EE3BB96F85CBFDAFBDDF81D785DE92BAFF67408618AF76FC496B2486');
+    assert.equal(hash(lf(readFileSync(resolve(root, 'src/services/apiClient.ts')))), 'AF9E52806C0C083543688C49C246E262AD7F7120507883FD7587CF9F1E5B97D9');
   });
   for (const status of [200, 400, 401, 403, 404, 429, 500, 502, 503]) {
     await test(`configured REST ok:false/status ${status} returns offline without chat fallback`, async () => {
