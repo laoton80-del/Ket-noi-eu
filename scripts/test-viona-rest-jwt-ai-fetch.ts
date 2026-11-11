@@ -343,6 +343,77 @@ function copilotClientHarness(restJwt: string | null, restResponder: OpenAIServi
   };
 }
 
+type TaxCopilotClientTestModule = {
+  analyzePayslip(base64Image: string, country: string): Promise<{
+    gross: string;
+    net: string;
+    taxDeducted: string;
+    advice: string;
+  }>;
+};
+
+type TaxApiClientModule = ApiClientModule & { isRestApiConfigured(): boolean };
+
+function taxCopilotClientHarness(restJwt: string | null, restResponder: OpenAIServiceRestResponder) {
+  const restRequests: Array<{ url: string; init: MockFetchInit }> = [];
+  const restCalls: Array<{ path: string; init?: ApiRequestInit }> = [];
+  const apiHarness = harness(restJwt, async (url, init) => {
+    restRequests.push({ url, init });
+    return restResponder(url, init, restRequests.length);
+  });
+  const api = apiHarness.client as TaxApiClientModule;
+  let uuidCount = 0;
+  let directFetchCalls = 0;
+  const apiClientForTax: TaxApiClientModule = {
+    AiAuthRequiredError: api.AiAuthRequiredError,
+    isRestApiConfigured: () => api.isRestApiConfigured(),
+    restApiFetchJson<T>(path: string, init?: ApiRequestInit) {
+      restCalls.push({ path, init });
+      return api.restApiFetchJson<T>(path, init);
+    },
+  };
+  const dependencies: Readonly<Record<string, unknown>> = { '../apiClient': apiClientForTax };
+  const taxPath = path.join(ROOT, 'src/services/ai/TaxCopilotClient.ts');
+  const compiled = ts.transpileModule(fs.readFileSync(taxPath, 'utf8'), {
+    fileName: taxPath,
+    compilerOptions: {
+      module: ts.ModuleKind.CommonJS,
+      target: ts.ScriptTarget.ES2022,
+      esModuleInterop: true,
+    },
+  }).outputText;
+  const context = vm.createContext({
+    crypto: { randomUUID: () => uuidForTest(++uuidCount) },
+    fetch: async () => { directFetchCalls += 1; throw new Error('Unexpected direct Tax fetch'); },
+    setTimeout: (callback: () => void) => { callback(); return 1; },
+    clearTimeout: () => {},
+    console: { log: () => {}, info: () => {}, warn: () => {}, error: () => {} },
+  });
+  const module = { exports: {} as Record<string, unknown> };
+  const closedRequire = (specifier: string): unknown => {
+    if (!Object.prototype.hasOwnProperty.call(dependencies, specifier)) {
+      throw new Error(`Unexpected TaxCopilotClient runtime dependency blocked: ${specifier}`);
+    }
+    return dependencies[specifier];
+  };
+  const execute = new vm.Script(`(function(require, module, exports) { ${compiled}\n})`, {
+    filename: taxPath,
+  }).runInContext(context, { timeout: 1_000 }) as (
+    require: typeof closedRequire,
+    module: { exports: unknown },
+    exports: unknown
+  ) => void;
+  execute(closedRequire, module, module.exports);
+  return {
+    client: module.exports as TaxCopilotClientTestModule,
+    api,
+    restRequests,
+    restCalls,
+    getUuidCount() { return uuidCount; },
+    getDirectFetchCalls() { return directFetchCalls; },
+  };
+}
+
 async function run(): Promise<void> {
   let passed = 0;
   const test = async (name: string, fn: () => Promise<void>): Promise<void> => {
@@ -626,6 +697,72 @@ async function run(): Promise<void> {
     assert.equal(h.restRequests.length, 1);
     assert.equal(h.getUuidCount(), 1);
     assert.equal(h.getFirebaseTokenReads(), 0);
+    assert.equal(h.getDirectFetchCalls(), 0);
+  });
+
+  await test('Tax payslip transport uses REST JWT, 320-token body, idempotency and keeps the existing mock on completion parse miss', async () => {
+    const h = taxCopilotClientHarness(validToken, async () => response(200, {
+      success: true,
+      data: {
+        choices: [{
+          message: {
+            content: JSON.stringify({ gross: 'REAL gross', net: 'REAL net', taxDeducted: 'REAL tax', advice: 'REAL advice' }),
+          },
+        }],
+      },
+    }));
+    const longBase64 = `${'A'.repeat(4_000)}TAIL_MUST_BE_CUT`;
+    const result = await h.client.analyzePayslip(longBase64, ' DE ');
+    assert.equal(result.gross, '3000 EUR');
+    assert.equal(result.net, '2200 EUR');
+    assert.equal(result.taxDeducted, '800 EUR');
+    assert.equal(result.advice, 'Bạn có thể hoàn lại khoảng 300 EUR thuế vào cuối năm nếu nộp đầy đủ hồ sơ khấu trừ tại DE.');
+    assert.equal(h.restCalls.length, 1);
+    assert.equal(h.restRequests.length, 1);
+    assert.equal(h.restCalls[0].path, '/api/ai/chat-completion');
+    assert.equal(h.restRequests[0].url, 'https://rest.invalid/api/ai/chat-completion');
+    assert.equal(h.restRequests[0].init.method, 'POST');
+    assert.equal(h.restRequests[0].init.headers?.Authorization, `Bearer ${validToken}`);
+    assert.match(
+      h.restRequests[0].init.headers?.['Idempotency-Key'] ?? '',
+      /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-8[0-9a-f]{3}-[0-9a-f]{12}$/i
+    );
+    assert.equal(h.restCalls[0].init?.timeoutMs, 20_000);
+    const body = JSON.parse(h.restRequests[0].init.body ?? '{}') as {
+      messages: Array<{ role: string; content: string }>;
+      temperature: number;
+      maxTokens: number;
+    };
+    assert.deepEqual(Object.keys(body).sort(), ['maxTokens', 'messages', 'temperature']);
+    assert.equal(body.temperature, 0.2);
+    assert.equal(body.maxTokens, 320);
+    assert.match(body.messages[0]?.content ?? '', /DE/);
+    assert.equal(body.messages[1]?.content, `Phân tích bảng lương này (base64): ${'A'.repeat(4_000)}`);
+    assert.equal(body.messages[1]?.content.includes('TAIL_MUST_BE_CUT'), false);
+    assert.equal(h.getUuidCount(), 1);
+    assert.equal(h.getDirectFetchCalls(), 0);
+    const taxSource = fs.readFileSync(path.join(ROOT, 'src/services/ai/TaxCopilotClient.ts'), 'utf8');
+    assert.doesNotMatch(taxSource, /getWalletIdToken|\/aiProxy|op:\s*['"]chat['"]/);
+  });
+
+  await test('Tax REST HTTP failure keeps the existing mock fallback', async () => {
+    const h = taxCopilotClientHarness(validToken, async () => response(503, {
+      success: false,
+      error: 'synthetic unavailable',
+      code: 'provider_unavailable',
+    }));
+    const result = await h.client.analyzePayslip('image-base64', 'CZ');
+    assert.equal(result.gross, '3000 EUR');
+    assert.equal(h.restRequests.length, 1);
+    assert.equal(h.getUuidCount(), 1);
+  });
+
+  await test('Tax ai_auth_required follows existing mock catch path without retry', async () => {
+    const h = taxCopilotClientHarness(validToken, async () => response(401, { success: false, error: 'unauthorized' }));
+    const result = await h.client.analyzePayslip('image-base64', 'CZ');
+    assert.equal(result.gross, '3000 EUR');
+    assert.equal(h.restRequests.length, 1);
+    assert.equal(h.getUuidCount(), 1);
     assert.equal(h.getDirectFetchCalls(), 0);
   });
 
