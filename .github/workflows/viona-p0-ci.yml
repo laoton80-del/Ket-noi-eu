@@ -29,6 +29,16 @@ jobs:
         with:
           node-version: "24"
           cache: npm
+      - name: Guard production OPENAI_LOG verbosity
+        env:
+          OPENAI_LOG: ${{ vars.OPENAI_LOG }}
+        run: |
+          case "${OPENAI_LOG,,}" in
+            debug|info)
+              echo "::error::Production OPENAI_LOG must not use debug or info verbosity."
+              exit 1
+              ;;
+          esac
       - name: Install root dependencies
         run: npm ci
       - name: Install functions dependencies

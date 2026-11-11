@@ -79,7 +79,7 @@ export async function registerPushAndSyncToServer(): Promise<PushRegistrationRes
     body: { fcmToken: reg.expoPushToken },
   });
   if (!sync.ok && __DEV__) {
-    console.warn('[NotificationService] push-token sync failed', sync.error);
+    console.warn('[NotificationService] push-token sync failed', { code: 'PUSH_TOKEN_SYNC_FAILED' });
   }
   return reg;
 }

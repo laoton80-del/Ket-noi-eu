@@ -22,6 +22,7 @@ import {
   validateTransitionReasonBody,
 } from '../services/local/localProviderEligibilityValidation';
 import { jsonFail, jsonOk } from '../utils/apiEnvelope';
+import { logSafeError } from '../utils/safeLogError';
 
 function readAuthUserId(req: Request): string | null {
   const id = req.authUserId;
@@ -61,7 +62,7 @@ export async function getLocalProviders(
     );
     jsonOk(res, data, 200);
   } catch (err) {
-    console.error('[getLocalProviders]', err);
+    logSafeError('[getLocalProviders]', err);
     jsonFail(res, 'Internal server error', 500);
   }
 }
@@ -112,7 +113,7 @@ export async function postRegisterLocalProvider(
 
     jsonOk(res, { provider: result.provider }, result.created ? 201 : 200);
   } catch (err) {
-    console.error('[postRegisterLocalProvider]', err);
+    logSafeError('[postRegisterLocalProvider]', err);
     jsonFail(res, 'Internal server error', 500);
   }
 }
@@ -175,7 +176,7 @@ export async function patchLocalProvider(
 
     jsonOk(res, { provider: result.provider }, 200);
   } catch (err) {
-    console.error('[patchLocalProvider]', err);
+    logSafeError('[patchLocalProvider]', err);
     jsonFail(res, 'Internal server error', 500);
   }
 }
@@ -224,7 +225,7 @@ export async function postActivateLocalProvider(
 
     jsonOk(res, { provider: result.provider }, 200);
   } catch (err) {
-    console.error('[postActivateLocalProvider]', err);
+    logSafeError('[postActivateLocalProvider]', err);
     jsonFail(res, 'Internal server error', 500);
   }
 }
@@ -301,7 +302,7 @@ export async function postSuspendLocalProvider(
   try {
     await postTransitionWithOptionalReason(req, res, 'suspend', deps);
   } catch (err) {
-    console.error('[postSuspendLocalProvider]', err);
+    logSafeError('[postSuspendLocalProvider]', err);
     jsonFail(res, 'Internal server error', 500);
   }
 }
@@ -315,7 +316,7 @@ export async function postRetireLocalProvider(
   try {
     await postTransitionWithOptionalReason(req, res, 'retire', deps);
   } catch (err) {
-    console.error('[postRetireLocalProvider]', err);
+    logSafeError('[postRetireLocalProvider]', err);
     jsonFail(res, 'Internal server error', 500);
   }
 }

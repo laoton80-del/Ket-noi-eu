@@ -704,7 +704,7 @@ function ReconstructionHomeScreen() {
         try {
           const r = await fetchBalance();
           if (!cancelled && !r.ok && __DEV__) {
-            console.warn('[HomeScreen] REST wallet balance:', r.error);
+            console.warn('[HomeScreen] REST wallet balance failed', { code: 'WALLET_BALANCE_FETCH_FAILED' });
           }
         } finally {
           if (!cancelled) setWalletBalanceLoading(false);

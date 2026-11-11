@@ -25,6 +25,7 @@ Mỗi mục có ID, việc cần làm, chủ, trạng thái, điều kiện hoà
 | A1-FIREBASE | SOS miễn cap; tắt withOneRetry phía client | chưa phân công | OPEN |
 | ADJACENT-MONEY | A4-STOP/A4-DEMO, A2, P0-B | chưa phân công | OPEN |
 | LEONA-PHASE-DONE | Leona phase done không gọi provider | chưa phân công | OPEN |
+| OPENAI-LOG-PRODUCTION | Production `OPENAI_LOG` must not be `debug` or `info`; CI checks the mirrored `OPENAI_LOG` variable | Operator | OPEN |
 
 ## Chi tiết
 
@@ -100,6 +101,12 @@ Mỗi mục có ID, việc cần làm, chủ, trạng thái, điều kiện hoà
 - Trạng thái: OPEN.
 - Điều kiện hoàn tất: Operator xác nhận đã đặt cap và alert tại nhà cung cấp, ngoài repo.
 - Nguồn: chưa xác minh trong repo.
+
+### OPENAI-LOG-PRODUCTION
+
+- Production must leave `OPENAI_LOG` unset or use a level other than `debug` or `info`; OpenAI SDK debug/info logging may include request bodies.
+- CI reads the repository variable `OPENAI_LOG`; the Operator must keep this mirror synchronized with production configuration for the guard to apply.
+- Owner: Operator. Status: OPEN until the production value and CI mirror are verified.
 
 ### A1-FIREBASE
 

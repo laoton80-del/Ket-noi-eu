@@ -372,6 +372,7 @@ function providerHarness(options: RouterHarnessOptions = {}) {
     '../../lib/prisma': { getPrisma: () => prisma },
     './CostGovernorService': costGovernor,
     './llmProviderAdmissionGate': gate,
+    '../../utils/safeLogError': { logSafeError: () => {} },
   });
   const viralPrisma = {
     tourismBooking: {
@@ -464,7 +465,7 @@ type FakeControllerResponse = Readonly<{
   json(body: unknown): FakeControllerResponse;
 }>;
 
-function controllerHarness(options: Readonly<{ routerError?: Error }> = {}) {
+function controllerHarness(options: Readonly<{ routerError?: Error; translationError?: Error }> = {}) {
   const routedInputs: unknown[] = [];
   const consoleErrors: unknown[][] = [];
   const completion = { id: 'controller-offline-completion', choices: [{ message: { content: 'synthetic response' } }] };
@@ -481,7 +482,17 @@ function controllerHarness(options: Readonly<{ routerError?: Error }> = {}) {
   const jsonOk = (response: FakeControllerResponse, data: unknown): void => {
     response.status(200).json({ success: true, data });
   };
-  const controller = compileVm<{ postChatCompletion(req: unknown, res: unknown): Promise<void> }>(
+  const safeLogger = compileVm<{
+    logSafeError(label: string, err: unknown, extra?: Readonly<Record<string, string | number>>): void;
+  }>(
+    createContext({ console: { error: (...values: unknown[]) => { consoleErrors.push(values); } } }, { codeGeneration: { strings: false, wasm: false } }),
+    'src/utils/safeLogError.ts',
+    {}
+  );
+  const controller = compileVm<{
+    postChatCompletion(req: unknown, res: unknown): Promise<void>;
+    postTranslateTravelPhrase(req: unknown, res: unknown): Promise<void>;
+  }>(
     createContext({
       console: { error: (...values: unknown[]) => { consoleErrors.push(values); } },
     }, { codeGeneration: { strings: false, wasm: false } }),
@@ -512,11 +523,73 @@ function controllerHarness(options: Readonly<{ routerError?: Error }> = {}) {
         },
       },
       '../services/ai/llmProviderAdmissionGate': { LlmProviderAdmissionDeniedError: FakeAdmissionDeniedError },
-      '../services/ai/TranslationService': { translateTravelPhraseToVietnamese: async () => ({ translatedText: '' }) },
+      '../services/ai/TranslationService': {
+        translateTravelPhraseToVietnamese: async () => {
+          if (options.translationError) throw options.translationError;
+          return { translatedText: '' };
+        },
+      },
       '../utils/apiEnvelope': { jsonFail, jsonOk },
+      '../utils/safeLogError': safeLogger,
     }
   );
   return { controller, routedInputs, completion, consoleErrors };
+}
+
+type FakeAppErrorHandler = (err: unknown, req: unknown, res: unknown, next: unknown) => void;
+
+function appErrorHandlerHarness(): Readonly<{ handler: FakeAppErrorHandler; loggerCalls: unknown[][] }> {
+  const loggerCalls: unknown[][] = [];
+  const errorHandlers: FakeAppErrorHandler[] = [];
+  const app: Record<string, (...args: unknown[]) => unknown> = {};
+  app.set = () => app;
+  app.disable = () => app;
+  app.use = (...args: unknown[]) => {
+    const last = args.at(-1);
+    if (typeof last === 'function' && last.length === 4) errorHandlers.push(last as FakeAppErrorHandler);
+    return app;
+  };
+  app.get = () => app;
+  app.post = () => app;
+  const fakeExpress = Object.assign(() => app, {
+    raw: () => () => {},
+    json: () => () => {},
+  });
+  const routeModules = [
+    './routes/adminRoutes', './routes/aiRoutes', './routes/bookingRoutes', './routes/authRoutes',
+    './routes/businessRoutes', './routes/charityRoutes', './routes/educationRoutes', './routes/mediaRoutes',
+    './routes/payRoutes', './routes/userRoutes', './routes/brokerRoutes', './routes/localRoutes',
+    './routes/tourismRoutes', './routes/vionaRoutes', './routes/walletRoutes',
+    './routes/aiReceptionistLeadRoutes', './routes/internalRoutes', './routes/vionaWebhookRoutes',
+  ];
+  const dependencies: Record<string, unknown> = {
+    cors: () => () => {},
+    express: fakeExpress,
+    './config/httpSecurity': { buildExpressCorsOptions: () => ({}), getTrustProxyHops: () => 0 },
+    './controllers/StripeWebhookController': { postStripeWebhook: async () => {} },
+    './middleware/RateLimitMiddleware': { pathAwareApiRateLimiter: () => {} },
+    ...Object.fromEntries(routeModules.map((specifier) => [specifier, {}])),
+    './utils/apiEnvelope': {
+      jsonFail: (res: FakeControllerResponse, message: string, status: number) => {
+        res.status(status).json({ success: false, error: message });
+      },
+    },
+    './utils/Logger': { logger: { error: (...args: unknown[]) => { loggerCalls.push(args); } } },
+    './utils/safeLogError': compileVm<{ safeErrorMeta(err: unknown): Readonly<{ errName: string; status?: number }> }>(
+      createContext({ console: { error() {} } }, { codeGeneration: { strings: false, wasm: false } }),
+      'src/utils/safeLogError.ts',
+      {}
+    ),
+  };
+  const appModule = compileVm<{ createApp(): unknown }>(
+    createContext({}, { codeGeneration: { strings: false, wasm: false } }),
+    'src/app.ts',
+    dependencies
+  );
+  appModule.createApp();
+  const handler = errorHandlers[0];
+  if (!handler) throw new Error('global app error handler was not registered');
+  return { handler, loggerCalls };
 }
 
 const SOURCE_EXTENSIONS = ['.ts', '.tsx', '.js', '.jsx'] as const;
@@ -1177,6 +1250,116 @@ async function main(): Promise<void> {
     assert.deepEqual(Object.keys(metadata).sort(), ['code', 'errName', 'status']);
     assert.equal(metadata.code, 'AI_CHAT_UNEXPECTED');
     assert.equal(Object.prototype.hasOwnProperty.call(metadata, 'message'), false);
+  });
+
+  await test('global app error handler excludes parser body, bearer token, and prompt from logs', () => {
+    const h = appErrorHandlerHarness();
+    const error = Object.assign(new SyntaxError('invalid JSON body'), {
+      status: 400,
+      body: 'https://x?token=SECRET Bearer BEARER_X PROMPT_X',
+    });
+    const response = {
+      statusCode: 0,
+      body: undefined as unknown,
+      status(code: number) { this.statusCode = code; return this; },
+      json(value: unknown) { this.body = value; return this; },
+    };
+
+    h.handler(error, {}, response, () => {});
+
+    assert.equal(response.statusCode, 500);
+    const logged = JSON.stringify(h.loggerCalls);
+    for (const secret of ['SECRET', 'BEARER_X', 'PROMPT_X', 'token=', 'Bearer', 'https://x', 'invalid JSON body']) {
+      assert.equal(logged.includes(secret), false, `global handler log leaked ${secret}`);
+    }
+    const metadata = h.loggerCalls[0]?.[0] as Readonly<Record<string, unknown>>;
+    assert.deepEqual(Object.keys(metadata).sort(), ['code', 'errName', 'status']);
+    assert.equal(metadata.code, 'API_UNHANDLED');
+    assert.equal(metadata.errName, 'SyntaxError');
+    assert.equal(metadata.status, 400);
+  });
+
+  await test('translation provider errors log only fixed metadata and return 500', async () => {
+    const providerError = Object.assign(new Error(
+      "provider rejected https://example.invalid/O'Neil.jpg?alt=media&token=SECRET_MARKER Bearer BEARER_SECRET PROMPT_SECRET"
+    ), { status: 502 });
+    const h = controllerHarness({ translationError: providerError });
+    const response = {
+      statusCode: 0,
+      body: undefined as unknown,
+      status(code: number) { this.statusCode = code; return this; },
+      json(value: unknown) { this.body = value; return this; },
+    };
+    await h.controller.postTranslateTravelPhrase({
+      authUserId: 'subject-a',
+      body: { text: 'synthetic travel phrase' },
+    }, response);
+
+    assert.equal(response.statusCode, 500);
+    const logged = JSON.stringify(h.consoleErrors);
+    for (const secret of ['SECRET_MARKER', "O'Neil", 'BEARER_SECRET', 'PROMPT_SECRET', 'token=', 'Bearer']) {
+      assert.equal(logged.includes(secret), false, `translation log leaked ${secret}`);
+    }
+    assert.match(logged, /AI_TRANSLATE_UNEXPECTED/);
+    assert.match(logged, /"errName":"Error"/);
+    assert.match(logged, /"status":502/);
+    const metadata = h.consoleErrors[0]?.[1] as Readonly<Record<string, unknown>>;
+    assert.deepEqual(Object.keys(metadata).sort(), ['code', 'errName', 'status']);
+  });
+
+  await test('safe log helper emits only bounded metadata for sensitive errors', () => {
+    const loggedCalls: unknown[][] = [];
+    const helper = compileVm<{
+      safeErrorMeta(err: unknown): Readonly<{ errName: string; status?: number }>;
+      logSafeError(label: string, err: unknown, extra?: Readonly<Record<string, string | number>>): void;
+    }>(
+      createContext({ console: { error: (...args: unknown[]) => { loggedCalls.push(args); } } }, { codeGeneration: { strings: false, wasm: false } }),
+      'src/utils/safeLogError.ts',
+      {}
+    );
+    const error = Object.assign(new Error('https://x?token=SECRET Bearer B PROMPT'), {
+      status: 503,
+      body: 'request body SECRET',
+      headers: { authorization: 'Bearer B' },
+    });
+
+    assert.deepEqual(normalizeCrossRealm(helper.safeErrorMeta(error)), { errName: 'Error', status: 503 });
+    helper.logSafeError('[safe-log-test]', error, { code: 'SYNTHETIC_FAILURE' });
+
+    const serialized = JSON.stringify(loggedCalls);
+    for (const secret of ['SECRET', 'Bearer B', 'PROMPT', 'token=', 'request body', 'authorization']) {
+      assert.equal(serialized.includes(secret), false, `safe logger leaked ${secret}`);
+    }
+    assert.deepEqual(normalizeCrossRealm(loggedCalls), [[
+      '[safe-log-test]',
+      { errName: 'Error', status: 503, code: 'SYNTHETIC_FAILURE' },
+    ]]);
+  });
+
+  await test('source guard rejects raw thrown errors passed directly to log sinks', () => {
+    const violations: string[] = [];
+    const patterns = [
+      /console\.error\(\s*[^,]+,\s*(?:e|err|error|ex)\s*\)/g,
+      /console\.error\(\s*(?:e|err|error|ex)\s*\)/g,
+      /console\.warn\(\s*[^,]+,\s*(?:e|err|error|ex)\s*\)/g,
+      /console\.warn\(\s*(?:e|err|error|ex)\s*\)/g,
+      /logger\.(?:error|warn)\(\s*\{\s*err\b/g,
+    ];
+    const sourceRoot = resolve(root, 'src');
+    const helperPath = resolve(sourceRoot, 'utils/safeLogError.ts');
+    for (const file of listSourceFiles(sourceRoot)) {
+      if (resolve(file) === helperPath) continue;
+      const source = readFileSync(file, 'utf8');
+      for (const pattern of patterns) {
+        pattern.lastIndex = 0;
+        let match: RegExpExecArray | null;
+        while ((match = pattern.exec(source)) !== null) {
+          const line = source.slice(0, match.index).split('\n').length;
+          violations.push(`${file.slice(root.length + 1).replace(/\\/g, '/')}:${line}`);
+        }
+      }
+    }
+    assert.deepEqual(violations, [], `raw error log sink found at ${violations.join(', ')}`);
   });
 
   await test('vision reserve adds the default image-token bound and settlement forwards provider usage', async () => {

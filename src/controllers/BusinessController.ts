@@ -3,6 +3,7 @@ import type { Request, Response } from 'express';
 import { getPrisma } from '../lib/prisma';
 import { calculateMerchantRankingStatus } from '../services/b2b/MerchantRankingService';
 import { jsonFail, jsonOk } from '../utils/apiEnvelope';
+import { logSafeError } from '../utils/safeLogError';
 
 function readBusinessId(req: Request): string | null {
   const p = req.params.businessId;
@@ -37,7 +38,7 @@ export async function getMyBusinessRanking(req: Request, res: Response): Promise
     const ranking = await calculateMerchantRankingStatus(business.id);
     jsonOk(res, ranking);
   } catch (e) {
-    console.error('[business] ranking', e);
+    logSafeError('[business] ranking', e);
     jsonFail(res, 'Could not load ranking status', 500);
   }
 }
@@ -73,7 +74,7 @@ export async function getBusinessRankingById(req: Request, res: Response): Promi
     const ranking = await calculateMerchantRankingStatus(business.id);
     jsonOk(res, ranking);
   } catch (e) {
-    console.error('[business] ranking by id', e);
+    logSafeError('[business] ranking by id', e);
     jsonFail(res, 'Could not load ranking status', 500);
   }
 }

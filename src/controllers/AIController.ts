@@ -14,6 +14,7 @@ import { createRoutedChatCompletion } from '../services/ai/AIRouterService';
 import { LlmProviderAdmissionDeniedError } from '../services/ai/llmProviderAdmissionGate';
 import { translateTravelPhraseToVietnamese } from '../services/ai/TranslationService';
 import { jsonFail, jsonOk } from '../utils/apiEnvelope';
+import { logSafeError } from '../utils/safeLogError';
 
 export type LegalScanAlertLevel = 'CRITICAL' | 'SAFE';
 
@@ -263,7 +264,7 @@ export async function postTranslateTravelPhrase(req: Request, res: Response): Pr
       jsonFail(res, 'Translation service unavailable', 503);
       return;
     }
-    console.error('[AIController] postTranslateTravelPhrase', e);
+    logSafeError('[AIController] postTranslateTravelPhrase', e, { code: 'AI_TRANSLATE_UNEXPECTED' });
     jsonFail(res, 'Unexpected error', 500);
   }
 }
@@ -359,17 +360,7 @@ export async function postChatCompletion(req: Request, res: Response): Promise<v
       jsonFail(res, 'AI chat service unavailable', 503);
       return;
     }
-    const errName = (typeof (e as { name?: unknown })?.name === 'string' ? (e as { name: string }).name : 'UnknownError')
-      .replace(/[^A-Za-z0-9_.-]/g, '')
-      .slice(0, 64);
-    const status = typeof (e as { status?: unknown })?.status === 'number' && Number.isFinite((e as { status: number }).status)
-      ? (e as { status: number }).status
-      : undefined;
-    console.error('[AIController] postChatCompletion', {
-      code: 'AI_CHAT_UNEXPECTED',
-      errName,
-      ...(status === undefined ? {} : { status }),
-    });
+    logSafeError('[AIController] postChatCompletion', e, { code: 'AI_CHAT_UNEXPECTED' });
     jsonFail(res, 'Unexpected error', 500);
   }
 }

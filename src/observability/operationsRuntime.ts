@@ -1,4 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { safeErrorMeta } from '../utils/safeLogError';
 
 const OPS_PREFIX = '[kn-ops]';
 const OPS_CONFIG_CACHE_KEY = 'kn_ops_remote_config_v1';
@@ -58,14 +59,7 @@ function baseConfig(): OpsRuntimeConfig {
 }
 
 function sanitizeError(error: unknown): Record<string, unknown> {
-  if (error instanceof Error) {
-    return {
-      name: error.name,
-      message: error.message,
-      stack: error.stack?.split('\n').slice(0, 8).join('\n'),
-    };
-  }
-  return { message: String(error) };
+  return safeErrorMeta(error);
 }
 
 function print(level: LogLevel, event: string, payload?: Record<string, unknown>): void {

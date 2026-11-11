@@ -49,6 +49,7 @@
  */
 
 import { appendVionaExecutionAuditEvent } from './vionaExecutionAuditWriteService';
+import { logSafeError } from '../../utils/safeLogError';
 import {
   previewVionaExecutionPlanRealProviderPocRoute,
   type PreviewVionaExecutionPlanRealProviderPocResult,
@@ -195,9 +196,7 @@ export async function dispatchVionaAutonomousRequest(
       payloadJson: { reason: decision.reason },
     });
     if (!auditResult.ok) {
-      console.error(
-        `[pack32-dispatcher] failed to append intent-rejected audit event for request ${requestId}: ${auditResult.error}`,
-      );
+      logSafeError(`[pack32-dispatcher] failed to append intent-rejected audit event for request ${requestId}`, auditResult.error, { code: 'AUDIT_APPEND_FAILED' });
     }
     return { ok: true, requestId, dispatch: { accepted: false, reason: decision.reason }, route: null };
   }
@@ -217,9 +216,7 @@ export async function dispatchVionaAutonomousRequest(
       payloadJson: { toolName: decision.toolName },
     });
     if (!auditResult.ok) {
-      console.error(
-        `[pack32-dispatcher] failed to append hallucination-blocked audit event for request ${requestId}: ${auditResult.error}`,
-      );
+      logSafeError(`[pack32-dispatcher] failed to append hallucination-blocked audit event for request ${requestId}`, auditResult.error, { code: 'AUDIT_APPEND_FAILED' });
     }
     return { ok: true, requestId, dispatch: { accepted: false, reason: 'unknown_tool' }, route: null };
   }
@@ -238,9 +235,7 @@ export async function dispatchVionaAutonomousRequest(
     },
   });
   if (!toolSelectedAudit.ok) {
-    console.error(
-      `[pack32-dispatcher] failed to append tool-selected audit event for request ${requestId}: ${toolSelectedAudit.error}`,
-    );
+    logSafeError(`[pack32-dispatcher] failed to append tool-selected audit event for request ${requestId}`, toolSelectedAudit.error, { code: 'AUDIT_APPEND_FAILED' });
   }
 
   // This switch is the single, explicit place each registered tool's `toolInput` mapping onto its
@@ -267,9 +262,7 @@ export async function dispatchVionaAutonomousRequest(
         },
       });
       if (!auditResult.ok) {
-        console.error(
-          `[pack40d3b-dispatcher] failed to append provider-disabled audit for request ${requestId}: ${auditResult.error}`,
-        );
+        logSafeError(`[pack40d3b-dispatcher] failed to append provider-disabled audit for request ${requestId}`, auditResult.error, { code: 'AUDIT_APPEND_FAILED' });
       }
       return {
         ok: true,
@@ -299,9 +292,7 @@ export async function dispatchVionaAutonomousRequest(
           payloadJson: { toolName: entry.name },
         });
         if (!auditResult.ok) {
-          console.error(
-            `[pack37-dispatcher] failed to append merchant-context-missing audit event for request ${requestId}: ${auditResult.error}`,
-          );
+          logSafeError(`[pack37-dispatcher] failed to append merchant-context-missing audit event for request ${requestId}`, auditResult.error, { code: 'AUDIT_APPEND_FAILED' });
         }
         return {
           ok: true,

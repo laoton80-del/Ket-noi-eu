@@ -19,6 +19,7 @@ import {
   getCostGovernor,
 } from './CostGovernorService';
 import { assertLlmProviderAdmission } from './llmProviderAdmissionGate';
+import { logSafeError } from '../../utils/safeLogError';
 
 /** Task taxonomy — re-exported for callers (`LlmRouterTaskType` is the Prisma / DB enum). */
 export { LlmRouterTaskType as AIRouterTaskType };
@@ -76,7 +77,7 @@ function persistLlmUsageLog(input: Readonly<{
       },
     })
     .catch((err: unknown) => {
-      console.error('[AIRouter] LlmApiUsageLog persist failed', err);
+      logSafeError('[AIRouter] LlmApiUsageLog persist failed', err);
     });
 }
 

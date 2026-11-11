@@ -135,18 +135,21 @@ function harness(options: {
     estimateInputTokensUpperBound: () => 1n,
     getCostGovernor: () => governor,
   };
+  const safeLogger = { logSafeError: () => {}, safeErrorMeta: () => ({ errName: 'UnknownError' }) };
   const router = load<typeof Router>('src/services/ai/AIRouterService.ts', {
     openai: FakeOpenAI,
     '@prisma/client': prismaEnums,
     '../../lib/prisma': prismaModule,
     './CostGovernorService': costGovernor,
     './llmProviderAdmissionGate': gate,
+    '../../utils/safeLogError': safeLogger,
   });
   const translation = load<typeof Translation>('src/services/ai/TranslationService.ts', {
     'node:crypto': { createHash },
     '@prisma/client': prismaEnums,
     '../../lib/prisma': prismaModule,
     './AIRouterService': router,
+    '../../utils/safeLogError': safeLogger,
   });
   const envelope = load('src/utils/apiEnvelope.ts');
   const outOfScope = () => { throw new Error('Unexpected legal-scan/wallet execution blocked'); };
@@ -162,6 +165,7 @@ function harness(options: {
     '../services/ai/llmProviderAdmissionGate': gate,
     '../services/ai/TranslationService': translation,
     '../utils/apiEnvelope': envelope,
+    '../utils/safeLogError': safeLogger,
   });
   const formatter = load<typeof Formatter>('src/lib/viona/merchant/vionaMerchantReadOnlyQueryReplyFormatter.ts', {
     '@prisma/client': prismaEnums,

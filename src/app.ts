@@ -24,6 +24,7 @@ import { internalRouter } from './routes/internalRoutes';
 import { vionaWebhookRouter } from './routes/vionaWebhookRoutes';
 import { jsonFail } from './utils/apiEnvelope';
 import { logger } from './utils/Logger';
+import { safeErrorMeta } from './utils/safeLogError';
 
 export function createApp(): express.Application {
   const app = express();
@@ -88,7 +89,7 @@ export function createApp(): express.Application {
       res: express.Response,
       _next: express.NextFunction
     ): void => {
-      logger.error({ err }, '[api] unhandled error');
+      logger.error({ code: 'API_UNHANDLED', ...safeErrorMeta(err) }, '[api] unhandled error');
       jsonFail(res, 'Internal server error', 500);
     }
   );

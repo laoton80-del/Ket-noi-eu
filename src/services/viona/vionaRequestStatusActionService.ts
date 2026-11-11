@@ -21,6 +21,7 @@ import {
 } from './vionaRequestStatusPrincipalContext';
 import { getVionaRequestById } from './vionaRequestReadService';
 import { appendVionaExecutionAuditEvent } from './vionaExecutionAuditWriteService';
+import { logSafeError } from '../../utils/safeLogError';
 import type { AppendVionaExecutionAuditEventInput } from './vionaExecutionAuditWriteService';
 
 export const VIONA_REQUEST_STATUS_AUDIT_EVENT_TYPE = 'action.status';
@@ -554,9 +555,7 @@ export async function transitionVionaRequestStatus(
     );
 
     if (!auditHookResult.ok) {
-      console.error(
-        `[pack30d2-state-machine-audit-hook] failed to append stateTransition audit event for request ${requestId}: ${auditHookResult.error ?? 'unknown error'}`,
-      );
+      logSafeError(`[pack30d2-state-machine-audit-hook] failed to append stateTransition audit event for request ${requestId}`, auditHookResult.error, { code: 'AUDIT_APPEND_FAILED' });
     }
   }
 

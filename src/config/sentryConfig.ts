@@ -3,6 +3,7 @@
  * Safe for local dev when DSN is unset (no network, no crash).
  */
 import * as Sentry from '@sentry/react-native';
+import { safeErrorMeta } from '../utils/safeLogError';
 
 let initialized = false;
 
@@ -27,7 +28,7 @@ export function initMonitoringRadar(): void {
   } catch (e) {
     if (__DEV__) {
       // eslint-disable-next-line no-console
-      console.warn('[MonitoringRadar] Sentry init failed (app continues):', e);
+      console.warn('[MonitoringRadar] Sentry init failed (app continues):', safeErrorMeta(e));
     }
   }
 }

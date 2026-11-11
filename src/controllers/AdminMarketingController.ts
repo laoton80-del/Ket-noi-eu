@@ -10,6 +10,7 @@ import { generateTranslations, generateVionaMarketingContentDraft } from '../ser
 import { DEFAULT_MARKETING_POLYGLOT_TARGETS } from '../services/marketing/marketingPolyglotTargets';
 import { publishToFacebookPage } from '../services/marketing/FacebookGraphAPI';
 import { jsonFail, jsonOk } from '../utils/apiEnvelope';
+import { logSafeError } from '../utils/safeLogError';
 import {
   dispatchVionaMarketingContentRequest,
   type VionaMarketingContentDispatchRejectionReason,
@@ -160,7 +161,7 @@ export async function getMarketingPosts(req: Request, res: Response): Promise<vo
       limit: take,
     });
   } catch (err) {
-    console.error('[AdminMarketingController] getMarketingPosts', err);
+    logSafeError('[AdminMarketingController] getMarketingPosts', err);
     jsonFail(res, 'Failed to load marketing posts', 500);
   }
 }
@@ -194,7 +195,7 @@ export async function putMarketingPost(req: Request, res: Response): Promise<voi
     });
     jsonOk(res, toDto(updated));
   } catch (err) {
-    console.error('[AdminMarketingController] putMarketingPost', err);
+    logSafeError('[AdminMarketingController] putMarketingPost', err);
     jsonFail(res, 'Failed to update post', 500);
   }
 }
@@ -226,7 +227,7 @@ export async function postMarketingPostPublish(req: Request, res: Response): Pro
     }
     const fb = await publishToFacebookPage(messageText);
     if (!fb.success) {
-      console.error('[AdminMarketingController] Facebook publish failed', fb.error);
+      logSafeError('[AdminMarketingController] Facebook publish failed', fb.error, { code: 'FACEBOOK_PUBLISH_FAILED' });
       jsonFail(res, fb.error, 502);
       return;
     }
@@ -239,7 +240,7 @@ export async function postMarketingPostPublish(req: Request, res: Response): Pro
     });
     jsonOk(res, { post: toDto(updated), facebookPostId: fb.postId });
   } catch (err) {
-    console.error('[AdminMarketingController] postMarketingPostPublish', err);
+    logSafeError('[AdminMarketingController] postMarketingPostPublish', err);
     jsonFail(res, err instanceof Error ? err.message : 'Publish failed', 500);
   }
 }
@@ -264,7 +265,7 @@ export async function deleteMarketingDraft(req: Request, res: Response): Promise
     await getPrisma().marketingPost.delete({ where: { id } });
     jsonOk(res, { deleted: true, id });
   } catch (err) {
-    console.error('[AdminMarketingController] deleteMarketingDraft', err);
+    logSafeError('[AdminMarketingController] deleteMarketingDraft', err);
     jsonFail(res, 'Failed to delete draft', 500);
   }
 }
@@ -325,7 +326,7 @@ export async function postMarketingApproveAndTranslate(req: Request, res: Respon
       jsonFail(res, err.message, 503, err.code);
       return;
     }
-    console.error('[AdminMarketingController] approve-and-translate', err);
+    logSafeError('[AdminMarketingController] approve-and-translate', err);
     jsonFail(res, err instanceof Error ? err.message : 'Translation failed', 500);
   }
 }
@@ -342,7 +343,7 @@ export async function postTriggerAutoPost(_req: Request, res: Response): Promise
       jsonFail(res, err.message, 503, err.code);
       return;
     }
-    console.error('[AdminMarketingController] trigger-auto-post failed:', err);
+    logSafeError('[AdminMarketingController] trigger-auto-post failed:', err);
     jsonFail(res, err instanceof Error ? err.message : 'Draft generation failed', 500);
   }
 }
@@ -443,7 +444,7 @@ export async function postAdminMarketingGenerateDraft(
       jsonFail(res, err.message, 503, err.code);
       return;
     }
-    console.error('[AdminMarketingController] postAdminMarketingGenerateDraft', err);
+    logSafeError('[AdminMarketingController] postAdminMarketingGenerateDraft', err);
     jsonFail(res, 'Internal server error', 500);
   }
 }

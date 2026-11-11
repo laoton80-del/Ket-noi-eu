@@ -32,6 +32,7 @@ import type {
   PreviewVionaExecutionPlanRouteResult,
 } from './vionaExecutionPlanRouteDto';
 import { VIONA_EXECUTION_PLAN_ROUTE_SAFETY } from './vionaExecutionPlanRouteDto';
+import { logSafeError } from '../../utils/safeLogError';
 import {
   executeVionaTwilioTestPocReal,
   type VionaTwilioRealExecutionResult,
@@ -237,9 +238,7 @@ export async function previewVionaExecutionPlanRoute(
   if (!auditWriteResult.ok) {
     // Pack30D-1: an audit-write failure must never turn this side-effect-free, mock-only
     // response into a 5xx — log and continue with the pre-existing Pack30B response shape.
-    console.error(
-      `[pack30d1-audit-write] failed to append execution-plan-preview audit event for request ${requestId}: ${auditWriteResult.error}`,
-    );
+    logSafeError(`[pack30d1-audit-write] failed to append execution-plan-preview audit event for request ${requestId}`, auditWriteResult.error, { code: 'AUDIT_APPEND_FAILED' });
   }
 
   return {
@@ -449,9 +448,7 @@ export async function previewVionaExecutionPlanRealProviderPocRoute(
       },
     });
     if (!auditResult.ok) {
-      console.error(
-        `[pack30d4-real-provider-poc] failed to append plan-denied audit event for request ${requestId}: ${auditResult.error}`,
-      );
+      logSafeError(`[pack30d4-real-provider-poc] failed to append plan-denied audit event for request ${requestId}`, auditResult.error, { code: 'AUDIT_APPEND_FAILED' });
     }
     return {
       ok: true,
@@ -478,9 +475,7 @@ export async function previewVionaExecutionPlanRealProviderPocRoute(
   });
 
   if (!hold.ok) {
-    console.error(
-      `[pack31-escrow] hold denied for request ${requestId}, action ${plan.actionId}: ${hold.reason}`,
-    );
+    logSafeError(`[pack31-escrow] hold denied for request ${requestId}, action ${plan.actionId}`, hold.reason, { code: 'ESCROW_HOLD_DENIED' });
     // Pack32.5 — audit-ledger integration gap fix: a hold failure must be durably recorded, not
     // just console-logged, so the Core System Integration Audit's "ledger records the error"
     // requirement holds for every denial path, not only the plan-denied path above.
@@ -498,9 +493,7 @@ export async function previewVionaExecutionPlanRealProviderPocRoute(
       },
     });
     if (!holdFailureAuditResult.ok) {
-      console.error(
-        `[pack31-escrow] failed to append hold-denied audit event for request ${requestId}: ${holdFailureAuditResult.error}`,
-      );
+      logSafeError(`[pack31-escrow] failed to append hold-denied audit event for request ${requestId}`, holdFailureAuditResult.error, { code: 'AUDIT_APPEND_FAILED' });
     }
     return {
       ok: true,
@@ -538,15 +531,11 @@ export async function previewVionaExecutionPlanRealProviderPocRoute(
       auditActorRoleLabel: actorRoleLabel,
     });
   } catch (error) {
-    console.error(
-      `[pack31-escrow] settle threw for hold ${hold.holdId} on request ${requestId}: ${error instanceof Error ? error.message : 'unknown_error'}`,
-    );
+    logSafeError(`[pack31-escrow] settle threw for hold ${hold.holdId} on request ${requestId}`, error, { code: 'ESCROW_SETTLE_THREW' });
     resolved = { ok: false, reason: 'settle_error' };
   }
   if (!resolved.ok) {
-    console.error(
-      `[pack31-escrow] settle failed for hold ${hold.holdId} on request ${requestId}: ${resolved.reason}`,
-    );
+    logSafeError(`[pack31-escrow] settle failed for hold ${hold.holdId} on request ${requestId}`, resolved.reason, { code: 'ESCROW_SETTLE_FAILED' });
   }
 
   return {
