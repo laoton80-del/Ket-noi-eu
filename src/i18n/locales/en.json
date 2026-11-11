@@ -1133,6 +1133,10 @@
       "searchPlaceholder": "Ask Viona anything…",
       "searchNotConnected": "Search is not connected in this Home candidate.",
       "weatherUnavailable": "Weather source not connected",
+      "header": {
+        "previewPlace": "Preview",
+        "notifications": "Notifications"
+      },
       "avatarPreview": "Preview",
       "avatarGuest": "Guest",
       "companionChat": "Chat with Viona",

@@ -1133,6 +1133,10 @@
       "searchPlaceholder": "Hỏi Viona bất cứ điều gì…",
       "searchNotConnected": "Ô tìm kiếm chưa được kết nối trong bản Home này.",
       "weatherUnavailable": "Chưa có nguồn thời tiết",
+      "header": {
+        "previewPlace": "Chế độ xem thử",
+        "notifications": "Thông báo"
+      },
       "avatarPreview": "Preview",
       "avatarGuest": "Khách",
       "companionChat": "Chat với Viona",
