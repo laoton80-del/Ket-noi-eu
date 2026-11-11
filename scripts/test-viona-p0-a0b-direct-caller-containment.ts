@@ -187,9 +187,11 @@ function harness(options: {
     estimateInputTokensUpperBound: () => 1n,
     getCostGovernor: () => governor,
   };
+  const safeLogger = { logSafeError: () => {}, safeErrorMeta: () => ({ errName: 'UnknownError' }) };
   const router = load<typeof Router>('src/services/ai/AIRouterService.ts', {
     '@prisma/client': enums, openai: FakeOpenAI, '../../lib/prisma': prismaModule,
     './CostGovernorService': costGovernor, './llmProviderAdmissionGate': gate,
+    '../../utils/safeLogError': safeLogger,
   });
   const viral = load<typeof Viral>('src/services/marketing/ViralWrapEngine.ts', {
     '@prisma/client': enums, openai: FakeOpenAI, '../../lib/prisma': prismaModule,
@@ -207,6 +209,7 @@ function harness(options: {
   const autoPoster = load<typeof AutoPoster>('src/services/marketing/AutoPoster.ts', {
     'node-cron': { schedule() { throw new Error('Scheduling is blocked in this test'); } },
     '../../workers/marketingWorker': worker, '../../utils/Logger': logger,
+    '../../utils/safeLogError': safeLogger,
   });
   const entry = {
     name: 'marketing_content_generator', description: 'Synthetic draft tool', category: 'content_generation_draft',
@@ -235,6 +238,7 @@ function harness(options: {
   const controller = load<typeof Controller>('src/controllers/AdminMarketingController.ts', {
     '@prisma/client': enums, '../constants/globalPerformance': { GLOBAL_MAX_LIST_ITEMS: 100 },
     '../lib/prisma': prismaModule, '../services/ai/llmProviderAdmissionGate': gate,
+    '../utils/safeLogError': safeLogger,
     '../lib/viona/dispatcher/vionaIntentRouter': { defaultVionaDispatchCallLlm: (prompt: string) => hooks.callLlm(prompt) },
     '../services/marketing/AutoPoster': { runMarketingDraftCronJob: () => hooks.runCron() },
     '../services/marketing/AIPostGenerator': {
