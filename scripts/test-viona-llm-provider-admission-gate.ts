@@ -336,6 +336,19 @@ async function main(): Promise<void> {
     assert.equal(response.body.data, h.completion);
     assert.equal(h.counts.providerCalls, 1);
   });
+  await test('HTTP chat accepts maxTokens 1024 and clamps higher requests to 1024', async () => {
+    for (const requestedMaxTokens of [1024, 2048]) {
+      const h = harness({ env: ALLOW_ENV });
+      const response = await http(h.controller.postChatCompletion, {
+        ...chatBody,
+        maxTokens: requestedMaxTokens,
+      }, 'allowed-user');
+      assert.equal(response.status, 200);
+      assert.equal(h.requests.length, 1);
+      assert.equal(h.requests[0]?.max_tokens, 1024);
+      assert.equal(h.counts.providerCalls, 1);
+    }
+  });
   await test('HTTP provider failure never becomes success', async () => {
     const h = harness({ env: ALLOW_ENV, providerFailure: new Error('Synthetic timeout') });
     const response = await http(h.controller.postChatCompletion, chatBody, 'allowed-user');

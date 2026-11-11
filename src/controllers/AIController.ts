@@ -271,7 +271,7 @@ export async function postTranslateTravelPhrase(req: Request, res: Response): Pr
 
 const MAX_CHAT_COMPLETION_MESSAGES = 32;
 const MAX_CHAT_COMPLETION_CHARS_PER_MESSAGE = 14_000;
-const MAX_CHAT_COMPLETION_OUTPUT_TOKENS = 512;
+const MAX_CHAT_COMPLETION_OUTPUT_TOKENS = 1024;
 
 type ChatWireMessage = Readonly<{ role?: unknown; content?: unknown }>;
 

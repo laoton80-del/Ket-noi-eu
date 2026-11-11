@@ -267,6 +267,82 @@ function openAIServiceHarness(restJwt: string, restResponder: OpenAIServiceRestR
   };
 }
 
+type CopilotClientTestModule = {
+  draftGlobalDocument(intent: string, country: string, language: string): Promise<string>;
+};
+
+function copilotClientHarness(restJwt: string | null, restResponder: OpenAIServiceRestResponder) {
+  const restRequests: Array<{ url: string; init: MockFetchInit }> = [];
+  const restCalls: Array<{ path: string; init?: ApiRequestInit }> = [];
+  const apiHarness = harness(restJwt, async (url, init) => {
+    restRequests.push({ url, init });
+    return restResponder(url, init, restRequests.length);
+  });
+  let uuidCount = 0;
+  let firebaseTokenReads = 0;
+  let trustHeaderMerges = 0;
+  let directFetchCalls = 0;
+  const apiClientForCopilot: ApiClientModule = {
+    AiAuthRequiredError: apiHarness.client.AiAuthRequiredError,
+    restApiFetchJson<T>(path: string, init?: ApiRequestInit) {
+      restCalls.push({ path, init });
+      return apiHarness.client.restApiFetchJson<T>(path, init);
+    },
+  };
+  const dependencies: Readonly<Record<string, unknown>> = {
+    '../walletFirebaseSession': {
+      async getWalletIdToken() { firebaseTokenReads += 1; return 'offline-firebase-id-token'; },
+    },
+    '../../utils/trustBackendHeaders': {
+      async mergeTrustBackendHeaders(headers: Record<string, string>) {
+        trustHeaderMerges += 1;
+        return headers;
+      },
+    },
+    '../apiClient': apiClientForCopilot,
+  };
+  const context = vm.createContext({
+    process: { env: { EXPO_PUBLIC_BACKEND_API_BASE: 'https://backend.invalid' } },
+    crypto: { randomUUID: () => uuidForTest(++uuidCount) },
+    fetch: async () => { directFetchCalls += 1; throw new Error('Unexpected direct Copilot fetch'); },
+    console: { log: () => {}, info: () => {}, warn: () => {}, error: () => {} },
+  });
+  const copilotPath = path.join(ROOT, 'src/services/ai/CopilotClient.ts');
+  const compiled = ts.transpileModule(fs.readFileSync(copilotPath, 'utf8'), {
+    fileName: copilotPath,
+    compilerOptions: {
+      module: ts.ModuleKind.CommonJS,
+      target: ts.ScriptTarget.ES2022,
+      esModuleInterop: true,
+    },
+  }).outputText;
+  const module = { exports: {} as Record<string, unknown> };
+  const closedRequire = (specifier: string): unknown => {
+    if (!Object.prototype.hasOwnProperty.call(dependencies, specifier)) {
+      throw new Error(`Unexpected CopilotClient runtime dependency blocked: ${specifier}`);
+    }
+    return dependencies[specifier];
+  };
+  const execute = new vm.Script(`(function(require, module, exports) { ${compiled}\n})`, {
+    filename: copilotPath,
+  }).runInContext(context, { timeout: 1_000 }) as (
+    require: typeof closedRequire,
+    module: { exports: unknown },
+    exports: unknown
+  ) => void;
+  execute(closedRequire, module, module.exports);
+  return {
+    client: module.exports as CopilotClientTestModule,
+    api: apiHarness.client,
+    restRequests,
+    restCalls,
+    getUuidCount() { return uuidCount; },
+    getFirebaseTokenReads() { return firebaseTokenReads; },
+    getTrustHeaderMerges() { return trustHeaderMerges; },
+    getDirectFetchCalls() { return directFetchCalls; },
+  };
+}
+
 async function run(): Promise<void> {
   let passed = 0;
   const test = async (name: string, fn: () => Promise<void>): Promise<void> => {
@@ -491,6 +567,66 @@ async function run(): Promise<void> {
       h.restRequests[0].init.headers?.['Idempotency-Key'],
       h.restRequests[1].init.headers?.['Idempotency-Key']
     );
+  });
+
+  await test('Copilot draft uses REST JWT, 900-token payload, 20s timeout and keeps response extraction', async () => {
+    const h = copilotClientHarness(validToken, async () => response(200, {
+      success: true,
+      data: { choices: [{ message: { content: '  Final legal draft.  ' } }] },
+    }));
+    const draft = await h.client.draftGlobalDocument('  prepare a letter  ', ' CZ ', ' Czech ');
+    assert.equal(draft, 'Final legal draft.');
+    assert.equal(h.restRequests.length, 1);
+    assert.equal(h.restCalls.length, 1);
+    assert.equal(h.restRequests[0].url, 'https://rest.invalid/api/ai/chat-completion');
+    assert.equal(h.restRequests[0].init.method, 'POST');
+    assert.equal(h.restRequests[0].init.headers?.Authorization, `Bearer ${validToken}`);
+    assert.match(
+      h.restRequests[0].init.headers?.['Idempotency-Key'] ?? '',
+      /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-8[0-9a-f]{3}-[0-9a-f]{12}$/i
+    );
+    assert.equal(h.restCalls[0].path, '/api/ai/chat-completion');
+    assert.equal(h.restCalls[0].init?.timeoutMs, 20_000);
+    const body = JSON.parse(h.restRequests[0].init.body ?? '{}') as {
+      messages: Array<{ role: string; content: string }>;
+      temperature: number;
+      maxTokens: number;
+    };
+    assert.deepEqual(Object.keys(body).sort(), ['maxTokens', 'messages', 'temperature']);
+    assert.equal(body.temperature, 0.35);
+    assert.equal(body.maxTokens, 900);
+    assert.equal(body.messages[1]?.content, 'prepare a letter');
+    assert.match(body.messages[0]?.content ?? '', /Czech/);
+    assert.match(body.messages[0]?.content ?? '', /CZ/);
+    assert.equal(h.getUuidCount(), 1);
+    assert.equal(h.getFirebaseTokenReads(), 0);
+    assert.equal(h.getTrustHeaderMerges(), 0);
+    assert.equal(h.getDirectFetchCalls(), 0);
+  });
+
+  await test('Copilot missing Express JWT fails closed without Firebase fallback', async () => {
+    const h = copilotClientHarness(null, async () => {
+      throw new Error('Unexpected Copilot request without an Express JWT');
+    });
+    await assert.rejects(
+      h.client.draftGlobalDocument('intent', 'CZ', 'Czech'),
+      (error: unknown) => error instanceof h.api.AiAuthRequiredError && error.code === 'ai_auth_required'
+    );
+    assert.equal(h.restRequests.length, 0);
+    assert.equal(h.getFirebaseTokenReads(), 0);
+    assert.equal(h.getDirectFetchCalls(), 0);
+  });
+
+  await test('Copilot 401 propagates ai_auth_required without retry', async () => {
+    const h = copilotClientHarness(validToken, async () => response(401, { success: false, error: 'unauthorized' }));
+    await assert.rejects(
+      h.client.draftGlobalDocument('intent', 'CZ', 'Czech'),
+      (error: unknown) => error instanceof h.api.AiAuthRequiredError && error.code === 'ai_auth_required'
+    );
+    assert.equal(h.restRequests.length, 1);
+    assert.equal(h.getUuidCount(), 1);
+    assert.equal(h.getFirebaseTokenReads(), 0);
+    assert.equal(h.getDirectFetchCalls(), 0);
   });
 
   await test('demo sandbox skips REST auth/network and STT/TTS remain on Firebase /aiProxy', async () => {
