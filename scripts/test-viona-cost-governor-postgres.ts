@@ -2403,7 +2403,7 @@ async function main(): Promise<void> {
     await test('49: token chat settles actual usage while TTS and STT settle at their unit reserve', async () => {
       await resetCostTables(prisma!);
       const seeded = await seedLaneBModelPrices(prisma!);
-      assert.equal(seeded.length, 4);
+      assert.equal(seeded.length, 5);
       setFixtureConfig();
 
       const chat = allowed(await governor.reserve(input('laneb-chat', 'laneb-chat', { model: 'gpt-4o-mini' })));

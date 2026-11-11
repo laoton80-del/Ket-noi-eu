@@ -142,8 +142,8 @@ function clearFixtureConfig(): void {
 
 async function activeRows(
   prisma: PrismaClient,
-  provider = PROVISIONAL_PRICE.provider,
-  model = PROVISIONAL_PRICE.model
+  provider: string = PROVISIONAL_PRICE.provider,
+  model: string = PROVISIONAL_PRICE.model
 ): Promise<ActivePrice[]> {
   return prisma.$queryRawUnsafe<ActivePrice[]>(
     `SELECT "id", "calculationVersion", "effectiveTo",
@@ -175,8 +175,8 @@ async function activeLaneBRows(prisma: PrismaClient): Promise<ActivePrice[]> {
 
 async function totalRows(
   prisma: PrismaClient,
-  provider = PROVISIONAL_PRICE.provider,
-  model = PROVISIONAL_PRICE.model
+  provider: string = PROVISIONAL_PRICE.provider,
+  model: string = PROVISIONAL_PRICE.model
 ): Promise<number> {
   const rows = await prisma.$queryRawUnsafe<Array<{ count: bigint }>>(
     `SELECT count(*)::bigint AS "count" FROM "AiModelPrice" WHERE "provider" = $1 AND "model" = $2`,
