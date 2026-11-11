@@ -333,7 +333,7 @@ export function VionaRec2HomeShell({
                     backgroundImage: `url("${Asset.fromModule(HERO_PHOTO).uri}")`,
                     backgroundRepeat: 'no-repeat',
                     backgroundSize: 'cover',
-                    backgroundPosition: 'center',
+                    backgroundPosition: 'center 60%',
                     transform: [{ scaleX: -1 }],
                   } as ViewStyle,
                 ]}
