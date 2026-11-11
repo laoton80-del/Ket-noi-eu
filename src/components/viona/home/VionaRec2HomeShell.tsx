@@ -332,8 +332,9 @@ export function VionaRec2HomeShell({
                   {
                     backgroundImage: `url("${Asset.fromModule(HERO_PHOTO).uri}")`,
                     backgroundRepeat: 'no-repeat',
-                    backgroundSize: '155% auto',
-                    backgroundPosition: 'left center',
+                    backgroundSize: 'cover',
+                    backgroundPosition: 'center',
+                    transform: [{ scaleX: -1 }],
                   } as ViewStyle,
                 ]}
               />
@@ -344,7 +345,7 @@ export function VionaRec2HomeShell({
                 accessible={false}
                 accessibilityIgnoresInvertColors
                 onError={() => setHeroFailed(true)}
-                style={styles.heroPhotoFill}
+                style={[styles.heroPhotoFill, Platform.OS === 'web' && styles.heroFlip]}
               />
             )}
           </View>
@@ -359,23 +360,21 @@ export function VionaRec2HomeShell({
             style={styles.heroScrim}
           />
         )}
-        <View style={[styles.heroColumn, tier === 'desktop' && styles.heroColumnWide, tier === 'tablet' && styles.heroColumnFill]}>
-          <View style={styles.heroCopy}>
-            <Text style={[styles.greeting, { lineHeight: typography.greetingLineHeight }]}>
-              {normalizedName
-                ? t('home.rec2.greetingNamed', { name: normalizedName })
-                : t('home.rec2.greetingGuest')}
-            </Text>
-            <Text style={[styles.headline, { lineHeight: typography.headlineLineHeight }]}>
-              {t('home.rec2.explorePrompt')}
-            </Text>
-            <Text style={[styles.contextText, { lineHeight: typography.bodyLineHeight }]}>
-              {t('home.rec2.headline')}
-            </Text>
-          </View>
-          <View style={tier !== 'phone' ? styles.heroActions : undefined}>
-            <VionaHomeSuggestionChips universes={universes} callbacks={universeCallbacks} />
-          </View>
+        <View style={styles.heroCopy}>
+          <Text style={[styles.greeting, { lineHeight: typography.greetingLineHeight }]}>
+            {normalizedName
+              ? t('home.rec2.greetingNamed', { name: normalizedName })
+              : t('home.rec2.greetingGuest')}
+          </Text>
+          <Text style={[styles.headline, { lineHeight: typography.headlineLineHeight }]}>
+            {t('home.rec2.explorePrompt')}
+          </Text>
+          <Text style={[styles.contextText, { lineHeight: typography.bodyLineHeight }]}>
+            {t('home.rec2.headline')}
+          </Text>
+        </View>
+        <View style={tier !== 'phone' ? styles.heroActions : undefined}>
+          <VionaHomeSuggestionChips universes={universes} callbacks={universeCallbacks} />
         </View>
         {imagePresentation.mode === 'image' ? null : (
           <View style={styles.visualFallback}>
@@ -516,7 +515,7 @@ const styles = StyleSheet.create({
   heroDesktop: { minHeight: 280 },
   heroTablet: { minHeight: 240 },
   heroSpread: { paddingBottom: 32 },
-  heroActions: { marginTop: 'auto', zIndex: 1 },
+  heroActions: { marginTop: 'auto', zIndex: 2, alignSelf: 'stretch' },
   companionDock: {
     position: 'absolute',
     left: 0,
@@ -554,14 +553,12 @@ const styles = StyleSheet.create({
   heroScrimSide: {
     ...StyleSheet.absoluteFillObject,
     zIndex: 1,
-    backgroundImage: 'linear-gradient(90deg, rgba(10,26,51,0.82) 0%, rgba(10,26,51,0.55) 45%, rgba(10,26,51,0) 70%)',
+    backgroundImage: 'linear-gradient(90deg, rgba(10,26,51,0.70) 0%, rgba(10,26,51,0.40) 40%, rgba(10,26,51,0) 65%)',
   } as ViewStyle,
-  heroColumn: { zIndex: 2 },
-  heroColumnWide: { maxWidth: '56%', width: '100%', alignSelf: 'flex-start', flexGrow: 1 },
-  heroColumnFill: { width: '100%', flexGrow: 1 },
+  heroFlip: { transform: [{ scaleX: -1 }] },
   commandRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 14, zIndex: 1 },
   commandRowStacked: { flexDirection: 'column', alignItems: 'stretch' },
-  heroCopy: { gap: 10, maxWidth: 720, zIndex: 1 },
+  heroCopy: { gap: 10, maxWidth: 720, zIndex: 2 },
   greeting: {
     color: 'rgba(0, 209, 255, 0.72)',
     fontSize: 12,
