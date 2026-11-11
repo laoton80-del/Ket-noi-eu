@@ -17,6 +17,16 @@ export const LANE_B_MODEL_PRICES = Object.freeze([
   },
   {
     provider: 'openai',
+    model: 'gpt-4o',
+    calculationVersion: LANE_B_PRICE_PROVENANCE,
+    inputMicrousdPerMillionTokens: 2500000n,
+    outputMicrousdPerMillionTokens: 10000000n,
+    audioInputMicrousdPerSecond: 0n,
+    audioOutputMicrousdPerSecond: 0n,
+    imageMicrousdPerUnit: 0n,
+  },
+  {
+    provider: 'openai',
     model: 'gpt-4o-mini-tts',
     calculationVersion: LANE_B_PRICE_PROVENANCE,
     inputMicrousdPerMillionTokens: 600000n,
@@ -188,7 +198,7 @@ async function seedOnePriceVersion(
   return { outcome: 'inserted', priceVersionId };
 }
 
-/** Add all four operator-approved immutable Lane B price versions when needed. */
+/** Add all five operator-approved immutable Lane B price versions when needed. */
 export async function seedLaneBModelPrices(prisma: PrismaClient): Promise<readonly LaneBPriceSeedResult[]> {
   return prisma.$transaction(async (transaction) => {
     await transaction.$executeRawUnsafe('LOCK TABLE "AiModelPrice" IN SHARE ROW EXCLUSIVE MODE');

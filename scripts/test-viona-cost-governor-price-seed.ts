@@ -140,7 +140,11 @@ function clearFixtureConfig(): void {
   for (const name of Object.values(COST_GOVERNOR_ENV_NAMES)) delete process.env[name];
 }
 
-async function activeRows(prisma: PrismaClient): Promise<ActivePrice[]> {
+async function activeRows(
+  prisma: PrismaClient,
+  provider = PROVISIONAL_PRICE.provider,
+  model = PROVISIONAL_PRICE.model
+): Promise<ActivePrice[]> {
   return prisma.$queryRawUnsafe<ActivePrice[]>(
     `SELECT "id", "calculationVersion", "effectiveTo",
             "inputMicrousdPerMillionTokens", "outputMicrousdPerMillionTokens",
@@ -150,8 +154,8 @@ async function activeRows(prisma: PrismaClient): Promise<ActivePrice[]> {
         AND "effectiveFrom" <= (now() AT TIME ZONE 'UTC')
         AND ("effectiveTo" IS NULL OR (now() AT TIME ZONE 'UTC') < "effectiveTo")
       ORDER BY "effectiveFrom" DESC`,
-    PROVISIONAL_PRICE.provider,
-    PROVISIONAL_PRICE.model
+    provider,
+    model
   );
 }
 
@@ -169,11 +173,15 @@ async function activeLaneBRows(prisma: PrismaClient): Promise<ActivePrice[]> {
   );
 }
 
-async function totalRows(prisma: PrismaClient): Promise<number> {
+async function totalRows(
+  prisma: PrismaClient,
+  provider = PROVISIONAL_PRICE.provider,
+  model = PROVISIONAL_PRICE.model
+): Promise<number> {
   const rows = await prisma.$queryRawUnsafe<Array<{ count: bigint }>>(
     `SELECT count(*)::bigint AS "count" FROM "AiModelPrice" WHERE "provider" = $1 AND "model" = $2`,
-    PROVISIONAL_PRICE.provider,
-    PROVISIONAL_PRICE.model
+    provider,
+    model
   );
   return Number(rows[0]?.count ?? -1n);
 }
@@ -243,12 +251,12 @@ async function main(): Promise<void> {
     await phase('prisma.$connect', () => prisma!.$connect());
     setFixtureConfig();
 
-    await test('Lane B seed installs all four operator-approved unit prices and chat reserve snapshots its rate', async () => {
+    await test('Lane B seed installs all five operator-approved unit prices and chat reserve snapshots its rate', async () => {
       const seededResults = await seedLaneBModelPrices(prisma!);
-      assert.equal(seededResults.length, 4);
+      assert.equal(seededResults.length, 5);
       assert.ok(seededResults.every((result) => result.outcome === 'inserted'));
       const activeSeedRows = await activeLaneBRows(prisma!);
-      assert.equal(activeSeedRows.length, 4);
+      assert.equal(activeSeedRows.length, 5);
       for (const target of LANE_B_MODEL_PRICES) {
         const rowsForModel = await prisma!.$queryRawUnsafe<ActivePrice[]>(
           `SELECT "id", "calculationVersion", "effectiveTo",
@@ -263,6 +271,7 @@ async function main(): Promise<void> {
         );
         assert.equal(rowsForModel.length, 1, `${target.provider}/${target.model} must have one active version`);
         const seeded = rowsForModel[0];
+        assert.equal(seeded.effectiveTo, null, `${target.provider}/${target.model} active version must be open-ended`);
         assert.equal(seeded.calculationVersion, LANE_B_PRICE_PROVENANCE);
         assert.equal(seeded.inputMicrousdPerMillionTokens, target.inputMicrousdPerMillionTokens);
         assert.equal(seeded.outputMicrousdPerMillionTokens, target.outputMicrousdPerMillionTokens);
@@ -270,6 +279,11 @@ async function main(): Promise<void> {
         assert.equal(seeded.audioOutputMicrousdPerSecond, target.audioOutputMicrousdPerSecond);
         assert.equal(seeded.imageMicrousdPerUnit, target.imageMicrousdPerUnit);
       }
+      const gpt4oRows = await activeRows(prisma!, 'openai', 'gpt-4o');
+      assert.equal(gpt4oRows.length, 1);
+      assert.equal(gpt4oRows[0].inputMicrousdPerMillionTokens, 2500000n);
+      assert.equal(gpt4oRows[0].outputMicrousdPerMillionTokens, 10000000n);
+      assert.equal(gpt4oRows[0].effectiveTo, null);
       const rows = await activeRows(prisma!);
       assert.equal(rows.length, 1);
       const seededMini = seededResults.find((result) => result.model === PROVISIONAL_PRICE.model);
@@ -332,8 +346,10 @@ async function main(): Promise<void> {
       assert.equal(reserved.decision, 'ALLOW_RESERVED', 'repeated seeds must leave a reservable active price');
     });
 
-    await test('a changed active version is closed and replaced by the provisional version', async () => {
-      const previousRows = await activeRows(prisma!);
+    await test('a changed gpt-4o version is closed and replaced by the seeded version', async () => {
+      const target = LANE_B_MODEL_PRICES.find((price) => price.provider === 'openai' && price.model === 'gpt-4o');
+      assert.ok(target);
+      const previousRows = await activeRows(prisma!, target.provider, target.model);
       assert.equal(previousRows.length, 1);
       const previousId = previousRows[0].id;
       const changedId = randomUUID();
@@ -356,12 +372,12 @@ async function main(): Promise<void> {
              10000, 20000, 0, 0, 0, (now() AT TIME ZONE 'UTC'), (now() AT TIME ZONE 'UTC')
            )`,
           changedId,
-          PROVISIONAL_PRICE.provider,
-          PROVISIONAL_PRICE.model
+          target.provider,
+          target.model
         );
       });
       const reseededResults = await seedLaneBModelPrices(prisma!);
-      const reseeded = reseededResults.find((result) => result.model === PROVISIONAL_PRICE.model);
+      const reseeded = reseededResults.find((result) => result.provider === target.provider && result.model === target.model);
       assert.ok(reseeded);
       assert.equal(reseeded.outcome, 'inserted');
       const replacementRows = await prisma!.$queryRawUnsafe<Array<{
@@ -381,9 +397,9 @@ async function main(): Promise<void> {
       const replacement = replacementRows[0];
       assert.equal(replacement.id, reseeded.priceVersionId);
       assert.notEqual(replacement.id, changedId);
-      assert.equal(replacement.calculationVersion, PROVISIONAL_PRICE.calculationVersion);
-      assert.equal(replacement.inputMicrousdPerMillionTokens, 150000n);
-      assert.equal(replacement.outputMicrousdPerMillionTokens, 600000n);
+      assert.equal(replacement.calculationVersion, target.calculationVersion);
+      assert.equal(replacement.inputMicrousdPerMillionTokens, target.inputMicrousdPerMillionTokens);
+      assert.equal(replacement.outputMicrousdPerMillionTokens, target.outputMicrousdPerMillionTokens);
       assert.equal(replacement.effectiveTo, null, 'the replacement version must remain open-ended');
       const closedRows = await prisma!.$queryRawUnsafe<Array<{
         id: string;
@@ -400,7 +416,8 @@ async function main(): Promise<void> {
       assert.ok(changed?.effectiveTo instanceof Date && changed.effectiveTo > changed.effectiveFrom);
       assert.equal(previous.effectiveTo.getTime(), changed.effectiveFrom.getTime());
       assert.equal(changed.effectiveTo.getTime(), replacement.effectiveFrom.getTime());
-      assert.equal(await totalRows(prisma!), 3);
+      assert.equal((await activeRows(prisma!, target.provider, target.model)).length, 1);
+      assert.equal(await totalRows(prisma!, target.provider, target.model), 3);
     });
 
     console.log(`PASS ${passes} price-seed PostgreSQL checks (${testTimeZone})`);
