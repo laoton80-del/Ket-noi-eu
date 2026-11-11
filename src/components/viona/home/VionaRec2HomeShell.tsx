@@ -464,7 +464,10 @@ const styles = StyleSheet.create({
     width: vionaCinematicTokens.layout.companionWidth,
     padding: 16,
     paddingLeft: 18,
-    backgroundColor: 'rgba(10, 26, 51, 0.42)',
+    backgroundColor: 'rgba(10, 26, 51, 0.38)',
+    ...(Platform.OS === 'web'
+      ? ({ backdropFilter: 'blur(18px) saturate(140%)', WebkitBackdropFilter: 'blur(18px) saturate(140%)' } as ViewStyle)
+      : {}),
   },
   companionDivider: {
     position: 'absolute',
@@ -509,7 +512,7 @@ const styles = StyleSheet.create({
   },
   heroPhoto: { ...StyleSheet.absoluteFillObject },
   heroPhotoFill: { width: '100%', height: '100%' },
-  heroScrim: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(4, 12, 24, 0.62)' },
+  heroScrim: { ...StyleSheet.absoluteFillObject },
   commandRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 14, zIndex: 1 },
   commandRowStacked: { flexDirection: 'column', alignItems: 'stretch' },
   heroCopy: { gap: 10, maxWidth: 720, zIndex: 1 },

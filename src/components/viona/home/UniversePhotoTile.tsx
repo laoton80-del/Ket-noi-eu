@@ -165,7 +165,7 @@ export function UniversePhotoTile({
       style={({ pressed }) => [
         styles.host,
         cardMotion,
-        { borderColor: lifted ? tone.accent : 'rgba(230, 244, 255, 0.12)' },
+        { borderColor: lifted ? tone.accent : 'rgba(0, 209, 255, 0.16)' },
         !lifted && vionaCinematicTokens.elevation.cardOnShell,
         lifted && (calm ? styles.calmShadow : {
           shadowColor: tone.accent,

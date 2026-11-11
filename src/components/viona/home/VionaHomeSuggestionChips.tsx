@@ -31,6 +31,7 @@ export function VionaHomeSuggestionChips({
   callbacks: VionaRec2UniverseCallbacks;
 }>) {
   const { t } = useTranslation();
+  const [activeId, setActiveId] = useState<string | null>(null);
   return (
     <View style={styles.row}>
       {CHIP_TARGETS.map((chip) => {
@@ -45,9 +46,12 @@ export function VionaHomeSuggestionChips({
             label={label}
             sos={chip.id === 'sos'}
             interactive={interactive}
+            active={activeId === chip.id}
             hint={interactive ? t('home.rec2.universeOpenHint') : t('home.rec2.sidebar.openingGradually')}
             onPress={() => {
-              if (universe) invokeVionaRec2UniverseCallback(universe, callbacks);
+              if (!interactive || !universe) return;
+              setActiveId(chip.id);
+              invokeVionaRec2UniverseCallback(universe, callbacks);
             }}
           />
         );
@@ -60,12 +64,14 @@ function SuggestionChip({
   label,
   sos,
   interactive,
+  active,
   hint,
   onPress,
 }: Readonly<{
   label: string;
   sos: boolean;
   interactive: boolean;
+  active: boolean;
   hint: string;
   onPress: () => void;
 }>) {
@@ -83,6 +89,7 @@ function SuggestionChip({
       style={({ pressed }) => [
         styles.chip,
         sos ? styles.chipSos : null,
+        active && !sos ? styles.chipActive : null,
         !interactive && styles.chipIdle,
         hovered && interactive && (sos ? styles.chipSosHover : styles.chipHover),
         pressed && interactive && (sos ? styles.chipSosHover : styles.chipPressed),
@@ -96,14 +103,22 @@ function SuggestionChip({
 }
 
 const styles = StyleSheet.create({
-  row: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, zIndex: 1 },
+  row: { flexDirection: 'row', flexWrap: 'wrap', gap: 14, zIndex: 1 },
   chip: {
     borderRadius: vionaCinematicTokens.radius.pill,
     borderWidth: 1,
-    borderColor: 'rgba(230, 244, 255, 0.14)',
+    borderColor: 'rgba(0, 209, 255, 0.22)',
     overflow: 'hidden',
   },
-  chipFill: { paddingHorizontal: 14, paddingVertical: 9 },
+  chipFill: { paddingHorizontal: 16, paddingVertical: 11 },
+  chipActive: {
+    borderColor: '#D4AF7C',
+    shadowColor: '#F3D9A6',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.65,
+    shadowRadius: 10,
+    elevation: 4,
+  },
   chipSos: { borderColor: 'rgba(255, 92, 106, 0.55)' },
   chipIdle: { opacity: 0.72 },
   chipHover: {

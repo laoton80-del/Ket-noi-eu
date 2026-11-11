@@ -391,12 +391,13 @@ export function MainTabNavigator(): ReactElement {
               <View pointerEvents="none" style={styles.tabBarSides} />
               <View
                 pointerEvents="none"
-                style={[styles.tabBarHairline, { right: '50%', marginRight: Math.round(seatedOrb.size / 2) }]}
+                style={[styles.tabBarHairline, { right: '50%', marginRight: seatedOrb.notchRadius }]}
               />
               <View
                 pointerEvents="none"
-                style={[styles.tabBarHairline, { left: '50%', marginLeft: Math.round(seatedOrb.size / 2) }]}
+                style={[styles.tabBarHairline, { left: '50%', marginLeft: seatedOrb.notchRadius }]}
               />
+              <View pointerEvents="none" style={orbRimStyle(seatedOrb)} />
               <VionaGlassTabBar
                 state={props.state}
                 navigation={props.navigation}
@@ -538,12 +539,13 @@ export function MainTabNavigator(): ReactElement {
             <>
               <View
                 pointerEvents="none"
-                style={[styles.tabBarHairline, { right: '50%', marginRight: Math.round(seatedOrb.size / 2) }]}
+                style={[styles.tabBarHairline, { right: '50%', marginRight: seatedOrb.notchRadius }]}
               />
               <View
                 pointerEvents="none"
-                style={[styles.tabBarHairline, { left: '50%', marginLeft: Math.round(seatedOrb.size / 2) }]}
+                style={[styles.tabBarHairline, { left: '50%', marginLeft: seatedOrb.notchRadius }]}
               />
+              <View pointerEvents="none" style={orbRimStyle(seatedOrb)} />
             </>
           ) : null}
           {vionaGlassBar ? <View pointerEvents="none" style={styles.tabBarSides} /> : null}
@@ -1050,6 +1052,26 @@ export function MainTabNavigator(): ReactElement {
 // chrome) this turns the bar into premium frosted glass — content behind the absolute bar blurs
 // through. On opaque role chromes (B2B/Broker/Admin) the blur is a visual no-op, and on native the
 // property is simply ignored, so this is safe to apply to every bottom bar.
+function orbRimStyle(orb: ReturnType<typeof resolveVionaCollapsedOrb>): ViewStyle {
+  const diameter = orb.notchRadius * 2;
+  return {
+    position: 'absolute',
+    width: diameter,
+    height: diameter,
+    left: '50%',
+    marginLeft: -orb.notchRadius,
+    top: orb.notchCenterY - orb.notchRadius,
+    borderRadius: orb.notchRadius,
+    borderWidth: 1,
+    borderColor: 'rgba(0, 209, 255, 0.72)',
+    shadowColor: '#00D1FF',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.85,
+    shadowRadius: 8,
+    zIndex: 6,
+  };
+}
+
 const TAB_BAR_WEB_GLASS: ViewStyle =
   Platform.OS === 'web'
     ? ({
@@ -1073,7 +1095,11 @@ const styles = StyleSheet.create({
     ...StyleSheet.absoluteFillObject,
     borderLeftWidth: 1,
     borderRightWidth: 1,
-    borderColor: 'rgba(0, 209, 255, 0.28)',
+    borderColor: 'rgba(0, 209, 255, 0.46)',
+    shadowColor: '#00D1FF',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.35,
+    shadowRadius: 8,
     zIndex: 6,
   },
   tabBarHairline: {
@@ -1082,11 +1108,11 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     height: 1,
-    backgroundColor: 'rgba(0, 209, 255, 0.28)',
+    backgroundColor: 'rgba(0, 209, 255, 0.72)',
     shadowColor: '#00D1FF',
     shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.45,
-    shadowRadius: 6,
+    shadowOpacity: 0.9,
+    shadowRadius: 8,
     zIndex: 6,
   },
   tabBarOrbWash: {

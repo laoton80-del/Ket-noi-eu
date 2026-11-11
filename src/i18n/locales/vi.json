@@ -1160,7 +1160,7 @@
       "runtimeTruth": "RC2 Home là ứng viên cục bộ có feature flag. Thông báo, yêu cầu Viona trực tiếp và tác vụ suy diễn đều chưa khả dụng."
     },
     "dockNav": {
-      "home": "Trang chủ",
+      "home": "Hub",
       "messages": "Tin nhắn",
       "notifications": "Thông báo",
       "settings": "Cài đặt",

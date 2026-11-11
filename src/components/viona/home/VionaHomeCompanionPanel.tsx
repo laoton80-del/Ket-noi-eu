@@ -1,6 +1,6 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import { useState } from 'react';
-import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Platform, Pressable, StyleSheet, Text, TextInput, View, type ViewStyle } from 'react-native';
 
 import { vionaCinematicTokens } from '../../../design/vionaCinematicTokens';
 import { useTranslation } from '../../../i18n';
@@ -35,7 +35,7 @@ export function VionaHomeCompanionPanel({
     : t('home.rec2.greetingGuest');
 
   return (
-    <LinearGradient colors={['rgba(18, 42, 74, 0.96)', 'rgba(10, 26, 51, 0.92)', 'rgba(7, 17, 28, 0.96)']} style={styles.panel}>
+    <LinearGradient colors={['rgba(18, 42, 74, 0.72)', 'rgba(10, 26, 51, 0.58)', 'rgba(7, 17, 28, 0.78)']} style={styles.panel}>
       {onClose ? (
         <Pressable accessibilityRole="button" accessibilityLabel={t('home.rec2.alfred.collapse')} onPress={onClose} style={styles.close}>
           <Text style={styles.closeLabel}>{t('home.rec2.alfred.collapse')}</Text>
@@ -67,11 +67,14 @@ export function VionaHomeCompanionPanel({
 
 const styles = StyleSheet.create({
   panel: {
-    gap: 14,
+    gap: 16,
     borderRadius: 22,
     borderWidth: 1,
-    borderColor: 'rgba(230, 244, 255, 0.14)',
-    padding: 14,
+    borderColor: 'rgba(0, 209, 255, 0.16)',
+    padding: 16,
+    ...(Platform.OS === 'web'
+      ? ({ backdropFilter: 'blur(18px) saturate(140%)', WebkitBackdropFilter: 'blur(18px) saturate(140%)' } as ViewStyle)
+      : {}),
     ...vionaCinematicTokens.elevation.cardOnShell,
   },
   close: { alignSelf: 'flex-end', minHeight: 36, justifyContent: 'center' },
