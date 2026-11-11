@@ -7,22 +7,19 @@ import { vionaCinematicTokens } from '../../../design/vionaCinematicTokens';
 import { useTranslation } from '../../../i18n';
 import { VionaBrandLockup } from '../VionaBrandLockup';
 import {
-  invokeVionaRec2UniverseCallback,
   type VionaRec2UniverseCallbacks,
   type VionaRec2UniverseContract,
-  type VionaRec2UniverseId,
 } from './vionaRec2HomeContract';
 
 type IconName = ComponentProps<typeof Ionicons>['name'];
 
-const UNIVERSE_ICONS: Record<VionaRec2UniverseId, IconName> = {
-  local: 'location-outline',
-  travel: 'airplane-outline',
-  academy: 'school-outline',
-  business: 'briefcase-outline',
-  account: 'person-circle-outline',
-  sos: 'shield-checkmark-outline',
-};
+const UTILITY_ITEMS: readonly Readonly<{ id: 'saved' | 'history' | 'notifications' | 'invite' | 'help'; icon: IconName }>[] = [
+  { id: 'saved', icon: 'bookmark-outline' },
+  { id: 'history', icon: 'time-outline' },
+  { id: 'notifications', icon: 'notifications-outline' },
+  { id: 'invite', icon: 'person-add-outline' },
+  { id: 'help', icon: 'help-circle-outline' },
+];
 
 const LATER_ITEMS: readonly Readonly<{ id: 'messages' | 'calendar' | 'apps' | 'community'; icon: IconName }>[] = [
   { id: 'messages', icon: 'chatbubbles-outline' },
@@ -32,9 +29,9 @@ const LATER_ITEMS: readonly Readonly<{ id: 'messages' | 'calendar' | 'apps' | 'c
 ];
 
 export function VionaHomeSidebar({
-  universes,
-  callbacks,
-  reducedMotion = false,
+  universes: _universes,
+  callbacks: _callbacks,
+  reducedMotion: _reducedMotion = false,
 }: Readonly<{
   universes: readonly VionaRec2UniverseContract[];
   callbacks: VionaRec2UniverseCallbacks;
@@ -48,20 +45,15 @@ export function VionaHomeSidebar({
       </View>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.list}>
         <SidebarRow icon="home" label={t('home.rec2.sidebar.home')} selected onPress={() => undefined} />
-        {universes.map((universe) => {
-          const interactive = universe.availability === 'available' && typeof callbacks[universe.id] === 'function';
-          return (
-            <SidebarRow
-              key={universe.id}
-              icon={UNIVERSE_ICONS[universe.id]}
-              label={t(`home.rec2.universes.${universe.id}.title`)}
-              disabled={!interactive}
-              hint={interactive ? undefined : t(`home.rec2.availability.${universe.availability}`)}
-              accent={universe.id === 'sos' ? vionaCinematicTokens.universe.sos.accent : undefined}
-              onPress={interactive ? () => invokeVionaRec2UniverseCallback(universe, callbacks) : undefined}
-            />
-          );
-        })}
+        {UTILITY_ITEMS.map((item) => (
+          <SidebarRow
+            key={item.id}
+            icon={item.icon}
+            label={t(`home.rec2.sidebar.${item.id}`)}
+            disabled
+            hint={t('home.dockNav.comingSoon')}
+          />
+        ))}
         <View style={styles.rule} />
         {LATER_ITEMS.map((item) => (
           <SidebarRow
@@ -72,6 +64,14 @@ export function VionaHomeSidebar({
             hint={t('home.rec2.sidebar.openingGradually')}
           />
         ))}
+        <View style={styles.rule} />
+        <SidebarRow
+          icon="log-out-outline"
+          label={t('home.rec2.sidebar.logout')}
+          disabled
+          muted
+          hint={t('home.dockNav.comingSoon')}
+        />
       </ScrollView>
     </LinearGradient>
   );
@@ -84,6 +84,7 @@ function SidebarRow({
   disabled = false,
   hint,
   accent,
+  muted = false,
   onPress,
 }: Readonly<{
   icon: IconName;
@@ -92,6 +93,7 @@ function SidebarRow({
   disabled?: boolean;
   hint?: string;
   accent?: string;
+  muted?: boolean;
   onPress?: () => void;
 }>) {
   return (
@@ -104,13 +106,13 @@ function SidebarRow({
       style={({ pressed }) => [
         styles.row,
         selected && styles.rowSelected,
-        disabled && styles.rowDisabled,
+        disabled && !muted && styles.rowDisabled,
         pressed && !!onPress && styles.rowPressed,
       ]}
     >
-      <Ionicons name={icon} size={18} color={accent ?? (selected ? vionaCinematicTokens.color.gold : vionaCinematicTokens.color.ice)} />
+      <Ionicons name={icon} size={18} color={accent ?? (muted ? vionaCinematicTokens.color.muted : selected ? vionaCinematicTokens.color.gold : vionaCinematicTokens.color.ice)} />
       <View style={styles.copy}>
-        <Text style={[styles.label, accent ? { color: accent } : null]}>{label}</Text>
+        <Text style={[styles.label, muted && styles.labelMuted, accent ? { color: accent } : null]}>{label}</Text>
         {hint ? <Text style={styles.hint}>{hint}</Text> : null}
       </View>
     </Pressable>
@@ -157,5 +159,6 @@ const styles = StyleSheet.create({
     fontFamily: vionaCinematicTokens.fontFamily.medium,
     fontSize: 13,
   },
+  labelMuted: { color: vionaCinematicTokens.color.muted },
   hint: { color: vionaCinematicTokens.color.muted, fontSize: 10 },
 });

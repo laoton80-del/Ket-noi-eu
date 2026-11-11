@@ -1158,7 +1158,13 @@
         "calendar": "My calendar",
         "apps": "Apps",
         "community": "Community",
-        "openingGradually": "Opening gradually"
+        "openingGradually": "Opening gradually",
+        "saved": "Saved",
+        "history": "History",
+        "notifications": "Notifications",
+        "invite": "Invite a friend",
+        "help": "Help & Support",
+        "logout": "Log out"
       },
       "chips": {
         "tonight": "Suggestions for tonight",

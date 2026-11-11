@@ -1158,7 +1158,13 @@
         "calendar": "Lịch của tôi",
         "apps": "Ứng dụng",
         "community": "Cộng đồng",
-        "openingGradually": "Đang mở dần"
+        "openingGradually": "Đang mở dần",
+        "saved": "Đã lưu",
+        "history": "Lịch sử",
+        "notifications": "Thông báo",
+        "invite": "Mời bạn bè",
+        "help": "Trợ giúp",
+        "logout": "Đăng xuất"
       },
       "chips": {
         "tonight": "Gợi ý cho tối hôm nay",
