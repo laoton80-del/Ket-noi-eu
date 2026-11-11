@@ -2,6 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 // react-dom is present for web; this app does not ship its type package.
 // @ts-expect-error module has no declaration file
 import { createPortal } from 'react-dom';
+import { Asset } from 'expo-asset';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useCallback, useEffect, useMemo, useState, type ComponentProps } from 'react';
 import {
@@ -21,6 +22,7 @@ import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 
 import { useTranslation } from '../../../i18n';
 import { resolveVionaCollapsedOrb } from '../../../navigation/vionaBottomShellGeometry';
+import { setVionaOrbSeated } from '../../../navigation/vionaSeatedOrb';
 import { isColdIntroActive, subscribeColdIntro } from '../intro/coldIntroSession';
 import { useHomeCommand } from '../../../context/HomeCommandContext';
 import { VionaGlobalSosShellAction } from '../VionaGlobalSosShellAction';
@@ -32,6 +34,8 @@ import { VionaHomeSuggestionChips } from './VionaHomeSuggestionChips';
 import { VionaHomeTopBar } from './VionaHomeTopBar';
 import { readHomeColumnOpen, writeHomeColumnOpen } from './vionaHomeColumnMemory';
 import { resolveVionaCinematicTier, vionaCinematicTokens } from '../../../design/vionaCinematicTokens';
+
+const HERO_PHOTO = require('../../../../assets/brand/viona/cinematic/photos/hero-night-abstract.webp');
 import {
   VIONA_REC2_GATED_CARD_CONTENT_OPACITY,
   VIONA_REC2_NOTIFICATION_PRESENTATION,
@@ -202,6 +206,11 @@ export function VionaRec2HomeShell({
     ? resolveVionaCinematicTier(dimensions.width)
     : dimensions.width < 768 ? 'phone' : 'tablet';
   const desktopFrame = shellPlatform === 'web' && tier === 'desktop';
+  const orbSeated = !introActive && !(desktopFrame ? desktopCompanionOpen : companionOpen);
+  useEffect(() => {
+    setVionaOrbSeated(orbSeated);
+    return () => setVionaOrbSeated(false);
+  }, [orbSeated]);
   const sidebarReserve = desktopFrame && sidebarOpen ? vionaCinematicTokens.layout.railWidth : 0;
   const companionReserve = desktopFrame && desktopCompanionOpen ? vionaCinematicTokens.layout.companionWidth : 0;
   const [heroFailed, setHeroFailed] = useState(false);
@@ -307,40 +316,67 @@ export function VionaRec2HomeShell({
 
       <LinearGradient
         colors={['rgba(62, 36, 18, 0.55)', 'rgba(12, 54, 98, 0.94)', 'rgba(4, 17, 34, 0.96)']}
-        style={[styles.hero, tier === 'desktop' && styles.heroDesktop, tier === 'tablet' && styles.heroTablet]}
+        style={[
+          styles.hero,
+          tier === 'desktop' && styles.heroDesktop,
+          tier === 'tablet' && styles.heroTablet,
+          tier !== 'phone' && styles.heroSpread,
+        ]}
       >
         {imagePresentation.mode === 'image' ? (
           <View pointerEvents="none" style={styles.heroPhoto}>
-            <Image
-              source={require('../../../../assets/brand/viona/cinematic/photos/hero-night-abstract.webp')}
-              resizeMode="cover"
-              accessible={false}
-              accessibilityIgnoresInvertColors
-              onError={() => setHeroFailed(true)}
-              style={styles.heroPhotoFill}
-            />
+            {tier === 'desktop' ? (
+              <View
+                style={[
+                  styles.heroPhotoFill,
+                  {
+                    backgroundImage: `url("${Asset.fromModule(HERO_PHOTO).uri}")`,
+                    backgroundRepeat: 'no-repeat',
+                    backgroundSize: '155% auto',
+                    backgroundPosition: 'left center',
+                  } as ViewStyle,
+                ]}
+              />
+            ) : (
+              <Image
+                source={HERO_PHOTO}
+                resizeMode="cover"
+                accessible={false}
+                accessibilityIgnoresInvertColors
+                onError={() => setHeroFailed(true)}
+                style={styles.heroPhotoFill}
+              />
+            )}
           </View>
         ) : null}
-        <LinearGradient
-          pointerEvents="none"
-          colors={['rgba(10, 26, 51, 0)', 'rgba(10, 26, 51, 0.28)', 'rgba(10, 26, 51, 0.7)']}
-          locations={[0, 0.42, 1]}
-          style={styles.heroScrim}
-        />
-        <View style={styles.heroCopy}>
-          <Text style={[styles.greeting, { lineHeight: typography.greetingLineHeight }]}>
-            {normalizedName
-              ? t('home.rec2.greetingNamed', { name: normalizedName })
-              : t('home.rec2.greetingGuest')}
-          </Text>
-          <Text style={[styles.headline, { lineHeight: typography.headlineLineHeight }]}>
-            {t('home.rec2.explorePrompt')}
-          </Text>
-          <Text style={[styles.contextText, { lineHeight: typography.bodyLineHeight }]}>
-            {t('home.rec2.headline')}
-          </Text>
+        {tier === 'desktop' ? (
+          <View pointerEvents="none" style={styles.heroScrimSide} />
+        ) : (
+          <LinearGradient
+            pointerEvents="none"
+            colors={['rgba(10, 26, 51, 0)', 'rgba(10, 26, 51, 0.28)', 'rgba(10, 26, 51, 0.7)']}
+            locations={[0, 0.42, 1]}
+            style={styles.heroScrim}
+          />
+        )}
+        <View style={[styles.heroColumn, tier === 'desktop' && styles.heroColumnWide, tier === 'tablet' && styles.heroColumnFill]}>
+          <View style={styles.heroCopy}>
+            <Text style={[styles.greeting, { lineHeight: typography.greetingLineHeight }]}>
+              {normalizedName
+                ? t('home.rec2.greetingNamed', { name: normalizedName })
+                : t('home.rec2.greetingGuest')}
+            </Text>
+            <Text style={[styles.headline, { lineHeight: typography.headlineLineHeight }]}>
+              {t('home.rec2.explorePrompt')}
+            </Text>
+            <Text style={[styles.contextText, { lineHeight: typography.bodyLineHeight }]}>
+              {t('home.rec2.headline')}
+            </Text>
+          </View>
+          <View style={tier !== 'phone' ? styles.heroActions : undefined}>
+            <VionaHomeSuggestionChips universes={universes} callbacks={universeCallbacks} />
+          </View>
         </View>
-        <VionaHomeSuggestionChips universes={universes} callbacks={universeCallbacks} />
         {imagePresentation.mode === 'image' ? null : (
           <View style={styles.visualFallback}>
             <Ionicons name="planet-outline" size={23} color="#63C8FF" />
@@ -479,6 +515,8 @@ const styles = StyleSheet.create({
   companionScroll: { paddingBottom: 24 },
   heroDesktop: { minHeight: 280 },
   heroTablet: { minHeight: 240 },
+  heroSpread: { paddingBottom: 32 },
+  heroActions: { marginTop: 'auto', zIndex: 1 },
   companionDock: {
     position: 'absolute',
     left: 0,
@@ -513,6 +551,14 @@ const styles = StyleSheet.create({
   heroPhoto: { ...StyleSheet.absoluteFillObject },
   heroPhotoFill: { width: '100%', height: '100%' },
   heroScrim: { ...StyleSheet.absoluteFillObject },
+  heroScrimSide: {
+    ...StyleSheet.absoluteFillObject,
+    zIndex: 1,
+    backgroundImage: 'linear-gradient(90deg, rgba(10,26,51,0.82) 0%, rgba(10,26,51,0.55) 45%, rgba(10,26,51,0) 70%)',
+  } as ViewStyle,
+  heroColumn: { zIndex: 2 },
+  heroColumnWide: { maxWidth: '56%', width: '100%', alignSelf: 'flex-start', flexGrow: 1 },
+  heroColumnFill: { width: '100%', flexGrow: 1 },
   commandRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 14, zIndex: 1 },
   commandRowStacked: { flexDirection: 'column', alignItems: 'stretch' },
   heroCopy: { gap: 10, maxWidth: 720, zIndex: 1 },
