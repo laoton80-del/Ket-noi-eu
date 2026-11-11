@@ -717,7 +717,6 @@ function routerIntegrationHarness(options: RouterIntegrationOptions): Readonly<{
     estimateInputTokensUpperBound,
     getCostGovernor: () => options.governor,
   };
-  const safeLogger = { logSafeError: () => {}, safeErrorMeta: () => ({ errName: 'UnknownError' }) };
   const router = compileVmModule<typeof RouterModule>(context, 'src/services/ai/AIRouterService.ts', {
     '@prisma/client': { LlmRouterTaskType: ROUTER_TASK_TYPES },
     openai: FakeOpenAI,
@@ -733,7 +732,7 @@ function routerIntegrationHarness(options: RouterIntegrationOptions): Readonly<{
     },
     './CostGovernorService': costGovernor,
     './llmProviderAdmissionGate': gate,
-    '../../utils/safeLogError': safeLogger,
+    '../../utils/safeLogError': compileVmModule(context, 'src/utils/safeLogError.ts', {}),
   });
   return { router, sdkRequests, sdkConstructed };
 }
