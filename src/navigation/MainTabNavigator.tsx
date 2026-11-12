@@ -58,6 +58,7 @@ import {
   resolveVionaHomeRouteTabBarStyleOverride,
   resolveVionaNativeBottomShellGeometry,
 } from './vionaBottomShellGeometry';
+import { isVionaOrbSeated, subscribeVionaOrbSeated } from './vionaSeatedOrb';
 import {
   isRec2ActionAllowed,
   useRec2OfflineHomeBoundary,
@@ -245,6 +246,7 @@ export function MainTabNavigator(): ReactElement {
   const [paywallTarget, setPaywallTarget] = useState<RedirectTarget | null>(null);
   const [sosSheetOpen, setSosSheetOpen] = useState(false);
   const [languageSheetOpen, setLanguageSheetOpen] = useState(false);
+  const [orbSeated, setOrbSeated] = useState(isVionaOrbSeated);
   const profileSwitcherRef = useRef<ProfileSwitcherHandle | null>(null);
 
   const onSosHoldComplete = useCallback(() => {
@@ -258,6 +260,8 @@ export function MainTabNavigator(): ReactElement {
 
   /** V7 “Global Lifeline”: all roles; B2C hides global shell SOS only on Academy tab (voice shell). */
   const showGlobalLifelineSos = shouldShowGlobalLifelineSos(currentActiveRole, focusedTabRoute);
+
+  useEffect(() => subscribeVionaOrbSeated(setOrbSeated), []);
 
   useEffect(() => {
     syncFromMainTab(currentActiveRole, focusedTabRoute);
@@ -389,15 +393,22 @@ export function MainTabNavigator(): ReactElement {
                 style={styles.tabBarGlass}
               />
               <View pointerEvents="none" style={styles.tabBarSides} />
-              <View
-                pointerEvents="none"
-                style={[styles.tabBarHairline, { right: '50%', marginRight: seatedOrb.notchRadius }]}
-              />
-              <View
-                pointerEvents="none"
-                style={[styles.tabBarHairline, { left: '50%', marginLeft: seatedOrb.notchRadius }]}
-              />
-              <View pointerEvents="none" style={orbRimStyle(seatedOrb)} />
+              {orbSeated ? (
+                <>
+                  <View
+                    pointerEvents="none"
+                    style={[styles.tabBarHairline, { right: '50%', marginRight: seatedOrb.notchRadius }]}
+                  />
+                  <View
+                    pointerEvents="none"
+                    style={[styles.tabBarHairline, { left: '50%', marginLeft: seatedOrb.notchRadius }]}
+                  />
+                  <View pointerEvents="none" style={orbBloomStyle(seatedOrb)} />
+                  <View pointerEvents="none" style={orbRimStyle(seatedOrb)} />
+                </>
+              ) : (
+                <View pointerEvents="none" style={styles.tabBarHairline} />
+              )}
               <VionaGlassTabBar
                 state={props.state}
                 navigation={props.navigation}
@@ -522,7 +533,7 @@ export function MainTabNavigator(): ReactElement {
       const notchGlow =
         Platform.OS === 'web'
           ? ({
-              backgroundImage: `radial-gradient(circle ${seatedOrb.notchRadius + 6}px at 50% ${seatedOrb.notchCenterY}px, transparent ${seatedOrb.notchRadius - 4}px, rgba(0, 209, 255, 0.9) ${seatedOrb.notchRadius}px, rgba(0, 209, 255, 0.18) ${seatedOrb.notchRadius + 5}px, transparent ${seatedOrb.notchRadius + 10}px)`,
+              backgroundImage: `radial-gradient(circle ${seatedOrb.notchRadius + 48}px at 50% ${seatedOrb.notchCenterY}px, transparent ${seatedOrb.notchRadius - 2}px, rgba(0, 209, 255, 1) ${seatedOrb.notchRadius}px, rgba(0, 209, 255, 0.5) ${seatedOrb.notchRadius + 8}px, rgba(0, 209, 255, 0.25) ${seatedOrb.notchRadius + 20}px, rgba(0, 209, 255, 0.08) ${seatedOrb.notchRadius + 40}px, transparent ${seatedOrb.notchRadius + 48}px)`,
             } as unknown as ViewStyle)
           : null;
       return (
@@ -532,22 +543,27 @@ export function MainTabNavigator(): ReactElement {
               pointerEvents="none"
               colors={['rgba(8, 64, 108, 0.96)', 'rgba(10, 36, 68, 0.94)', 'rgba(8, 22, 44, 0.97)']}
               locations={[0, 0.42, 1]}
-              style={[styles.tabBarGlass, notchMask]}
+              style={[styles.tabBarGlass, orbSeated ? notchMask : null]}
             />
           ) : null}
-          {vionaGlassBar ? <View pointerEvents="none" style={[styles.tabBarOrbWash, notchGlow]} /> : null}
+          {vionaGlassBar && orbSeated ? <View pointerEvents="none" style={[styles.tabBarOrbWash, notchGlow]} /> : null}
           {vionaGlassBar ? (
-            <>
-              <View
-                pointerEvents="none"
-                style={[styles.tabBarHairline, { right: '50%', marginRight: seatedOrb.notchRadius }]}
-              />
-              <View
-                pointerEvents="none"
-                style={[styles.tabBarHairline, { left: '50%', marginLeft: seatedOrb.notchRadius }]}
-              />
-              <View pointerEvents="none" style={orbRimStyle(seatedOrb)} />
-            </>
+            orbSeated ? (
+              <>
+                <View
+                  pointerEvents="none"
+                  style={[styles.tabBarHairline, { right: '50%', marginRight: seatedOrb.notchRadius }]}
+                />
+                <View
+                  pointerEvents="none"
+                  style={[styles.tabBarHairline, { left: '50%', marginLeft: seatedOrb.notchRadius }]}
+                />
+                <View pointerEvents="none" style={orbBloomStyle(seatedOrb)} />
+                <View pointerEvents="none" style={orbRimStyle(seatedOrb)} />
+              </>
+            ) : (
+              <View pointerEvents="none" style={styles.tabBarHairline} />
+            )
           ) : null}
           {vionaGlassBar ? <View pointerEvents="none" style={styles.tabBarSides} /> : null}
           <View style={styles.tabBarMain}>
@@ -607,6 +623,7 @@ export function MainTabNavigator(): ReactElement {
     },
     [
       b2cTravelPlatinum,
+      orbSeated,
       chrome.barBg,
       chrome.barBorder,
       currentActiveRole,
@@ -1056,22 +1073,40 @@ export function MainTabNavigator(): ReactElement {
 // chrome) this turns the bar into premium frosted glass — content behind the absolute bar blurs
 // through. On opaque role chromes (B2B/Broker/Admin) the blur is a visual no-op, and on native the
 // property is simply ignored, so this is safe to apply to every bottom bar.
-function orbRimStyle(orb: ReturnType<typeof resolveVionaCollapsedOrb>): ViewStyle {
-  const diameter = orb.notchRadius * 2;
+function orbCircleFrame(orb: ReturnType<typeof resolveVionaCollapsedOrb>): ViewStyle {
   return {
     position: 'absolute',
-    width: diameter,
-    height: diameter,
+    width: orb.notchRadius * 2,
+    height: orb.notchRadius * 2,
     left: '50%',
     marginLeft: -orb.notchRadius,
     top: orb.notchCenterY - orb.notchRadius,
     borderRadius: orb.notchRadius,
-    borderWidth: 1,
-    borderColor: 'rgba(0, 209, 255, 0.72)',
-    shadowColor: '#00D1FF',
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.85,
-    shadowRadius: 8,
+  };
+}
+
+function orbBloomStyle(orb: ReturnType<typeof resolveVionaCollapsedOrb>): ViewStyle {
+  return {
+    ...orbCircleFrame(orb),
+    zIndex: 5,
+    ...(Platform.OS === 'web'
+      ? ({
+          boxShadow: '0 0 8px rgba(0, 209, 255, 0.5), 0 0 20px rgba(0, 209, 255, 0.25), 0 0 40px rgba(0, 209, 255, 0.08)',
+        } as ViewStyle)
+      : {
+          shadowColor: '#00D1FF',
+          shadowOffset: { width: 0, height: 0 },
+          shadowOpacity: 0.25,
+          shadowRadius: 20,
+        }),
+  };
+}
+
+function orbRimStyle(orb: ReturnType<typeof resolveVionaCollapsedOrb>): ViewStyle {
+  return {
+    ...orbCircleFrame(orb),
+    borderWidth: 2,
+    borderColor: 'rgba(0, 209, 255, 1)',
     zIndex: 6,
   };
 }
