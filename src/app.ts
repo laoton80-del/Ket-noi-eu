@@ -3,6 +3,7 @@ import express from 'express';
 
 import { buildExpressCorsOptions, getTrustProxyHops } from './config/httpSecurity';
 import * as StripeWebhookController from './controllers/StripeWebhookController';
+import { AI_PROXY_MAX_BODY_BYTES } from '../functions/src/aiProxyValidation';
 import { pathAwareApiRateLimiter } from './middleware/RateLimitMiddleware';
 import { adminRouter } from './routes/adminRoutes';
 import { aiRouter } from './routes/aiRoutes';
@@ -52,7 +53,7 @@ export function createApp(): express.Application {
     vionaWebhookRouter,
   );
 
-  app.use(express.json({ limit: '512kb' }));
+  app.use(express.json({ limit: AI_PROXY_MAX_BODY_BYTES }));
 
   app.use(pathAwareApiRateLimiter);
 
