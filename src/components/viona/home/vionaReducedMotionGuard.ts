@@ -11,7 +11,9 @@ export function ensureVionaReducedMotionGuard(): void {
   style.textContent = [
     '@media (prefers-reduced-motion: reduce) {',
     '  [data-testid="viona-motion"],',
-    '  [data-testid="viona-motion"] * {',
+    '  [data-testid="viona-motion"] *,',
+    '  [data-testid="viona-companion-orb"],',
+    '  [data-testid="viona-companion-orb"] * {',
     '    animation: none !important;',
     '    transition: none !important;',
     '  }',

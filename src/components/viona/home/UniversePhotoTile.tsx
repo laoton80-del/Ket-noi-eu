@@ -137,8 +137,8 @@ export function UniversePhotoTile({
   const cardMotion = reducedMotion
     ? null
     : ({
-        transitionProperty: 'transform',
-        transitionDuration: '180ms',
+        transitionProperty: 'transform, box-shadow, border-color',
+        transitionDuration: '220ms',
         transitionTimingFunction: 'ease-out',
         willChange: 'transform',
       } as ViewStyle);
@@ -152,7 +152,28 @@ export function UniversePhotoTile({
       } as ImageStyle);
 
   return (
-    <View testID="viona-motion" style={{ width }}>
+    <View
+      testID="viona-motion"
+      style={[
+        { width, overflow: 'visible' },
+        lifted
+          ? Platform.OS === 'web'
+            ? ({
+                boxShadow: `0 0 18px 0 ${tone.accent}47`,
+                transitionProperty: 'box-shadow',
+                transitionDuration: '220ms',
+                transitionTimingFunction: 'ease-out',
+              } as ViewStyle)
+            : {
+                shadowColor: tone.accent,
+                shadowOffset: { width: 0, height: 0 },
+                shadowOpacity: 0.28,
+                shadowRadius: 16,
+                elevation: 4,
+              }
+          : null,
+      ]}
+    >
     <Animated.View
       style={{
         opacity: entrance,
@@ -181,14 +202,6 @@ export function UniversePhotoTile({
         styles.host,
         cardMotion,
         { borderColor: lifted ? tone.accent : 'rgba(0, 209, 255, 0.16)' },
-        !lifted && vionaCinematicTokens.elevation.cardOnShell,
-        lifted && {
-          shadowColor: tone.accent,
-          shadowOffset: { width: 0, height: 10 },
-          shadowOpacity: 0.45,
-          shadowRadius: 18,
-          elevation: 8,
-        },
         lifted && !pressed && !reducedMotion && (calm ? styles.liftCalm : styles.lift),
         pressed && (reducedMotion ? styles.pressedStill : styles.pressed),
       ]}

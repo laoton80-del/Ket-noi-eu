@@ -21,6 +21,7 @@ import {
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useTranslation } from '../../../i18n';
+import { ensureVionaReducedMotionGuard } from './vionaReducedMotionGuard';
 import { resolveVionaCollapsedOrb } from '../../../navigation/vionaBottomShellGeometry';
 import { setVionaOrbSeated } from '../../../navigation/vionaSeatedOrb';
 import { isColdIntroActive, subscribeColdIntro } from '../intro/coldIntroSession';
@@ -42,7 +43,6 @@ import {
   createVionaRec2UniverseContract,
   resolveVionaRec2HomeLayout,
   resolveVionaRec2ImagePresentation,
-  resolveVionaRec2TaskSurface,
   resolveVionaRec2TypographyMetrics,
   type VionaRec2ContentState,
   type VionaRec2TypographyMetrics,
@@ -89,6 +89,26 @@ function UniverseCard({
   );
 }
 
+const ORB_PULSE_STYLE_ID = 'viona-orb-pulse';
+
+function ensureOrbPulseKeyframes(): void {
+  if (Platform.OS !== 'web' || typeof document === 'undefined') return;
+  if (document.getElementById(ORB_PULSE_STYLE_ID)) return;
+  const style = document.createElement('style');
+  style.id = ORB_PULSE_STYLE_ID;
+  style.textContent = [
+    '@keyframes viona-orb-pulse {',
+    '  0%, 100% { transform: scale(1); }',
+    '  50% { transform: scale(1.04); }',
+    '}',
+  ].join('\n');
+  document.head.appendChild(style);
+}
+
+function restingOrbSize(width: number): number {
+  return Math.round(resolveVionaCollapsedOrb(width).size * 0.85 * 0.9);
+}
+
 function VionaCompanionOrb({
   reducedMotion,
   onPress,
@@ -96,24 +116,61 @@ function VionaCompanionOrb({
   const { t } = useTranslation();
   const { width } = useWindowDimensions();
   const orb = resolveVionaCollapsedOrb(width);
+  const size = restingOrbSize(width);
+  const glow = Math.round(size * 1.75);
   const seated =
     Platform.OS === 'web'
       ? ({ position: 'fixed', bottom: orb.dockBottom, zIndex: 400 } as unknown as ViewStyle)
       : { bottom: Math.max(12, orb.dockBottom - 24) };
 
+  useEffect(() => {
+    ensureVionaReducedMotionGuard();
+    ensureOrbPulseKeyframes();
+  }, []);
+
   const dock = (
-    <View pointerEvents="box-none" style={[styles.companionDock, seated]} testID="viona-motion">
-      <Pressable
-        accessibilityRole="button"
-        accessibilityLabel={t('home.rec2.companionChat')}
-        onPress={onPress}
-        style={({ pressed }) => [
-          styles.companionDockButton,
-          pressed && (reducedMotion ? styles.cardPressedReducedMotion : styles.cardPressed),
+    <View pointerEvents="box-none" style={[styles.companionDock, seated]} testID="viona-companion-orb">
+      <View
+        pointerEvents="box-none"
+        style={[
+          styles.orbLive,
+          { width: size, height: size },
+          !reducedMotion && Platform.OS === 'web'
+            ? ({
+                animationName: 'viona-orb-pulse',
+                animationDuration: '3200ms',
+                animationTimingFunction: 'ease-in-out',
+                animationIterationCount: 'infinite',
+                transformOrigin: 'center center',
+              } as ViewStyle)
+            : null,
         ]}
       >
-        <VionaCompanionOrbImage size={orb.size} reducedMotion={reducedMotion} />
-      </Pressable>
+        <View
+          pointerEvents="none"
+          style={[
+            styles.orbGlow,
+            {
+              width: glow,
+              height: glow,
+              left: (size - glow) / 2,
+              top: (size - glow) / 2,
+              borderRadius: glow / 2,
+            },
+          ]}
+        />
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={t('home.rec2.companionChat')}
+          onPress={onPress}
+          style={({ pressed }) => [
+            styles.companionDockButton,
+            pressed && (reducedMotion ? styles.cardPressedReducedMotion : styles.cardPressed),
+          ]}
+        >
+          <VionaCompanionOrbImage size={size} reducedMotion={reducedMotion} />
+        </Pressable>
+      </View>
     </View>
   );
   if (Platform.OS === 'web' && typeof document !== 'undefined') {
@@ -145,24 +202,6 @@ function ContentStateBanner({
       <Text style={[styles.stateText, { lineHeight: typography.bodyLineHeight }]}>
         {t(`home.rec2.states.${state}`)}
       </Text>
-    </View>
-  );
-}
-
-function TaskStrip({ typography }: Readonly<{ typography: VionaRec2TypographyMetrics }>) {
-  const { t } = useTranslation();
-  const taskSurface = resolveVionaRec2TaskSurface();
-  return (
-    <View style={styles.section} testID="viona-rec2-task-surface">
-      <Text style={[styles.sectionTitle, { lineHeight: typography.sectionTitleLineHeight }]}>
-        {t('home.rec2.tasks.title')}
-      </Text>
-      <View style={styles.taskEmpty} accessibilityLiveRegion="polite">
-        <Ionicons name="file-tray-outline" size={17} color="#68CFFF" />
-        <Text style={[styles.taskEmptyText, { lineHeight: typography.bodyLineHeight }]}>
-          {taskSurface.state === 'no-trusted-adapter' ? t('home.rec2.tasks.noTrustedAdapter') : ''}
-        </Text>
-      </View>
     </View>
   );
 }
@@ -206,6 +245,14 @@ export function VionaRec2HomeShell({
     ? resolveVionaCinematicTier(dimensions.width)
     : dimensions.width < 768 ? 'phone' : 'tablet';
   const desktopFrame = shellPlatform === 'web' && tier === 'desktop';
+  const openCompanion = useCallback(() => {
+    if (desktopFrame) {
+      setDesktopCompanionOpen(true);
+      writeHomeColumnOpen('companion', true);
+      return;
+    }
+    setCompanionOpen(true);
+  }, [desktopFrame]);
   const orbSeated = !introActive && !(desktopFrame ? desktopCompanionOpen : companionOpen);
   useEffect(() => {
     setVionaOrbSeated(orbSeated);
@@ -239,8 +286,16 @@ export function VionaRec2HomeShell({
     () => resolveVionaRec2TypographyMetrics(layout.fontScale),
     [layout.fontScale]
   );
-  const normalizedName = displayName?.trim() || null;
+  const rawName = displayName?.trim() ?? '';
+  const normalizedName = rawName && !/^preview$/i.test(rawName) ? rawName : null;
   const normalizedRegion = regionLabel?.trim() || null;
+  useEffect(() => {
+    if (process.env.NODE_ENV !== 'development') return;
+    if (VIONA_REC2_NOTIFICATION_PRESENTATION.availability === 'unavailable') {
+      console.log(t('home.rec2.runtimeTruth'));
+    }
+    console.log(t(`home.rec2.layouts.${layout.mode}`), layout.columns, layout.rows);
+  }, [layout.columns, layout.mode, layout.rows, t]);
   const sosAction = shellPlatform === 'web' && homeCommand ? (
     <VionaGlobalSosShellAction onHoldComplete={homeCommand.triggerSafetyAssist} />
   ) : null;
@@ -275,7 +330,10 @@ export function VionaRec2HomeShell({
         styles.content,
         {
           paddingHorizontal: layout.horizontalPadding,
-          paddingBottom: layout.contentBreathingClearance + layout.shellBottomObstruction,
+          paddingBottom: Math.max(
+            layout.contentBreathingClearance + layout.shellBottomObstruction,
+            restingOrbSize(dimensions.width) + 4 + 72
+          ),
           gap: layout.gap,
         },
       ]}
@@ -314,6 +372,7 @@ export function VionaRec2HomeShell({
         />
       </View>
 
+      <View collapsable={false} testID="viona-home-hero">
       <LinearGradient
         colors={['rgba(62, 36, 18, 0.55)', 'rgba(12, 54, 98, 0.94)', 'rgba(4, 17, 34, 0.96)']}
         style={[
@@ -374,7 +433,11 @@ export function VionaRec2HomeShell({
           </Text>
         </View>
         <View style={tier !== 'phone' ? styles.heroActions : undefined}>
-          <VionaHomeSuggestionChips universes={universes} callbacks={universeCallbacks} />
+          <VionaHomeSuggestionChips
+            universes={universes}
+            callbacks={universeCallbacks}
+            onTonight={openCompanion}
+          />
         </View>
         {imagePresentation.mode === 'image' ? null : (
           <View style={styles.visualFallback}>
@@ -385,20 +448,17 @@ export function VionaRec2HomeShell({
           </View>
         )}
       </LinearGradient>
+      </View>
 
       <ContentStateBanner state={contentState} typography={typography} />
-      <TaskStrip typography={typography} />
 
       <View style={styles.section}>
         <View style={[styles.sectionHeadingRow, layout.columns === 1 && styles.sectionHeadingColumn]}>
           <Text style={[styles.sectionTitle, { lineHeight: typography.sectionTitleLineHeight }]}>
             {t('home.rec2.universesTitle')}
           </Text>
-          <Text style={[styles.layoutLabel, { lineHeight: typography.microLineHeight }]}>
-            {t(`home.rec2.layouts.${layout.mode}`)} · {layout.columns} × {layout.rows}
-          </Text>
         </View>
-        <View style={[styles.grid, { gap: layout.gap }]}>
+        <View style={[styles.grid, { gap: layout.gap }]} testID="viona-home-universes">
           {universes.map((universe, index) => (
             <UniverseCard
               key={universe.id}
@@ -424,18 +484,12 @@ export function VionaRec2HomeShell({
           />
         </View>
       ) : null}
-
-      <Text style={[styles.truthNote, { lineHeight: typography.truthLineHeight }]}>
-        {VIONA_REC2_NOTIFICATION_PRESENTATION.availability === 'unavailable'
-          ? t('home.rec2.runtimeTruth')
-          : ''}
-      </Text>
     </ScrollView>
   );
 
   return (
     <SafeAreaView
-      style={[styles.safeArea, { paddingBottom: layout.shellBottomObstruction }]}
+      style={styles.safeArea}
       edges={['top', 'left', 'right']}
       onLayout={onRootLayout}
       testID="viona-rec2-home-shell"
@@ -472,17 +526,7 @@ export function VionaRec2HomeShell({
           </View>
         ) : null}
         {!introActive && !(desktopFrame ? desktopCompanionOpen : companionOpen) ? (
-          <VionaCompanionOrb
-            reducedMotion={reducedMotion}
-            onPress={() => {
-              if (desktopFrame) {
-                setDesktopCompanionOpen(true);
-                writeHomeColumnOpen('companion', true);
-                return;
-              }
-              setCompanionOpen(true);
-            }}
-          />
+          <VionaCompanionOrb reducedMotion={reducedMotion} onPress={openCompanion} />
         ) : null}
       </LinearGradient>
     </SafeAreaView>
@@ -522,11 +566,36 @@ const styles = StyleSheet.create({
     right: 0,
     zIndex: 40,
     alignItems: 'center',
+    backgroundColor: 'transparent',
+  },
+  orbLive: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'transparent',
+    overflow: 'visible',
+  },
+  orbGlow: {
+    position: 'absolute',
+    zIndex: 0,
+    backgroundColor: 'transparent',
+    ...(Platform.OS === 'web'
+      ? ({
+          backgroundImage:
+            'radial-gradient(circle, rgba(150, 205, 255, 0.55) 0%, rgba(80, 155, 230, 0.28) 38%, rgba(40, 110, 200, 0.08) 62%, rgba(40, 110, 200, 0) 74%)',
+          filter: 'blur(36px)',
+        } as ViewStyle)
+      : {
+          shadowColor: '#7EC4FF',
+          shadowOffset: { width: 0, height: 0 },
+          shadowOpacity: 0.45,
+          shadowRadius: 28,
+        }),
   },
   companionDockButton: {
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: 'transparent',
+    zIndex: 1,
   },
   companionSheet: {
     borderRadius: 24,
@@ -545,7 +614,9 @@ const styles = StyleSheet.create({
     gap: 22,
     overflow: 'hidden',
     minHeight: 240,
-    ...vionaCinematicTokens.elevation.cardOnShell,
+    shadowOpacity: 0,
+    elevation: 0,
+    ...(Platform.OS === 'web' ? ({ boxShadow: 'none' } as ViewStyle) : {}),
   },
   heroPhoto: { ...StyleSheet.absoluteFillObject },
   heroPhotoFill: { width: '100%', height: '100%' },

@@ -1,11 +1,11 @@
 import { Ionicons } from '@expo/vector-icons';
-import { type ComponentProps } from 'react';
+import { type ComponentProps, useState } from 'react';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { vionaCinematicTokens } from '../../../design/vionaCinematicTokens';
 import { useTranslation } from '../../../i18n';
-import { VionaBrandLockup } from '../VionaBrandLockup';
+const GOLD_MARK = require('../../../../assets/brand/viona/viona-symbol-gold.png');
 import {
   type VionaRec2UniverseCallbacks,
   type VionaRec2UniverseContract,
@@ -38,39 +38,44 @@ export function VionaHomeSidebar({
   reducedMotion?: boolean;
 }>) {
   const { t } = useTranslation();
+  const [moreOpen, setMoreOpen] = useState(false);
   return (
     <LinearGradient colors={['#0B1C33', '#07111C', '#020713']} style={styles.rail}>
       <View style={styles.brand}>
-        <VionaBrandLockup variant="iconOnly" />
+        <Image source={GOLD_MARK} resizeMode="contain" accessibilityIgnoresInvertColors style={styles.brandMark} />
       </View>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.list}>
         <SidebarRow icon="home" label={t('home.rec2.sidebar.home')} selected onPress={() => undefined} />
-        {UTILITY_ITEMS.map((item) => (
-          <SidebarRow
-            key={item.id}
-            icon={item.icon}
-            label={t(`home.rec2.sidebar.${item.id}`)}
-            disabled
-            hint={t('home.dockNav.comingSoon')}
-          />
-        ))}
-        <View style={styles.rule} />
-        {LATER_ITEMS.map((item) => (
-          <SidebarRow
-            key={item.id}
-            icon={item.icon}
-            label={t(`home.rec2.sidebar.${item.id}`)}
-            disabled
-            hint={t('home.rec2.sidebar.openingGradually')}
-          />
-        ))}
+        <SidebarRow
+          icon={moreOpen ? 'chevron-up' : 'ellipsis-horizontal'}
+          label={t('home.rec2.sidebar.moreFeatures')}
+          onPress={() => setMoreOpen((open) => !open)}
+        />
+        {moreOpen ? (
+          <>
+            {UTILITY_ITEMS.map((item) => (
+              <SidebarRow
+                key={item.id}
+                icon={item.icon}
+                label={t(`home.rec2.sidebar.${item.id}`)}
+                disabled
+              />
+            ))}
+            {LATER_ITEMS.map((item) => (
+              <SidebarRow
+                key={item.id}
+                icon={item.icon}
+                label={t(`home.rec2.sidebar.${item.id}`)}
+                disabled
+              />
+            ))}
+          </>
+        ) : null}
         <View style={styles.rule} />
         <SidebarRow
           icon="log-out-outline"
           label={t('home.rec2.sidebar.logout')}
-          disabled
-          muted
-          hint={t('home.dockNav.comingSoon')}
+          onPress={() => undefined}
         />
       </ScrollView>
     </LinearGradient>
@@ -106,13 +111,13 @@ function SidebarRow({
       style={({ pressed }) => [
         styles.row,
         selected && styles.rowSelected,
-        disabled && !muted && styles.rowDisabled,
+        disabled && styles.rowDisabled,
         pressed && !!onPress && styles.rowPressed,
       ]}
     >
-      <Ionicons name={icon} size={18} color={accent ?? (muted ? vionaCinematicTokens.color.muted : selected ? vionaCinematicTokens.color.gold : vionaCinematicTokens.color.ice)} />
+      <Ionicons name={icon} size={18} color={accent ?? (muted ? vionaCinematicTokens.color.muted : selected ? vionaCinematicTokens.color.cyan : vionaCinematicTokens.color.ice)} />
       <View style={styles.copy}>
-        <Text style={[styles.label, muted && styles.labelMuted, accent ? { color: accent } : null]}>{label}</Text>
+        <Text style={[styles.label, (muted || disabled) && styles.labelMuted, accent ? { color: accent } : null]}>{label}</Text>
         {hint ? <Text style={styles.hint}>{hint}</Text> : null}
       </View>
     </Pressable>
@@ -150,8 +155,18 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 8,
   },
-  rowSelected: { backgroundColor: 'rgba(231, 194, 122, 0.12)' },
-  rowDisabled: { opacity: 0.55 },
+  rowSelected: { backgroundColor: 'rgba(0, 209, 255, 0.12)' },
+  brandMark: { width: 40, height: 40 },
+  groupLabel: {
+    color: vionaCinematicTokens.color.muted,
+    fontSize: 10,
+    letterSpacing: 1.2,
+    textTransform: 'uppercase',
+    marginTop: 14,
+    marginBottom: 4,
+    paddingHorizontal: 10,
+  },
+  rowDisabled: { opacity: 0.38 },
   rowPressed: { opacity: 0.8 },
   copy: { flex: 1, gap: 1 },
   label: {

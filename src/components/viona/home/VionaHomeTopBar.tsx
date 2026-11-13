@@ -10,11 +10,6 @@ import { useTranslation } from '../../../i18n';
 
 const GOLD_MARK = require('../../../../assets/brand/viona/viona-symbol-gold.png');
 
-function webBlur(px: number): ViewStyle | null {
-  if (Platform.OS !== 'web') return null;
-  return { filter: `blur(${px}px)` } as ViewStyle;
-}
-
 export type VionaHomeTopBarProps = Readonly<{
   displayName?: string | null;
   regionLabel?: string | null;
@@ -58,7 +53,7 @@ export function VionaHomeTopBar({
   regionLabel,
   previewMode = false,
   showBrand = false,
-  reducedMotion: _reducedMotion = false,
+  reducedMotion = false,
   onOpenLanguage,
   searchValue,
   onSearchChange,
@@ -85,11 +80,11 @@ export function VionaHomeTopBar({
   const markSize = desktop ? 60 : tablet ? 48 : 42;
   const wordSize = desktop ? 26 : tablet ? 20 : 17;
   const rawPlace = regionLabel?.trim() || '';
-  const place =
-    previewMode || !rawPlace || isTechnicalPlace(rawPlace) ? t('home.rec2.header.previewPlace') : rawPlace;
+  const placeIsReal = !previewMode && !!rawPlace && !isTechnicalPlace(rawPlace);
   const clock = headerClock(i18n.resolvedLanguage ?? i18n.language, now);
-  const identityName = previewMode ? t('home.rec2.avatarPreview') : name ?? t('home.rec2.avatarGuest');
-  const signedIn = !previewMode && !!name;
+  const realName = name && !/^preview$/i.test(name) ? name : null;
+  const identityName = realName ?? t('home.rec2.avatarGuest');
+  const signedIn = !!realName;
   const initial = signedIn && name ? name.slice(0, 1).toUpperCase() : '';
   const languageCode = (i18n.resolvedLanguage ?? i18n.language ?? 'en').slice(0, 2).toUpperCase();
   const notices = notificationCount > 0 ? Math.min(99, notificationCount) : 0;
@@ -108,39 +103,19 @@ export function VionaHomeTopBar({
         </Pressable>
       ) : null}
       {showBrand ? (
-        <View accessibilityRole="text" accessibilityLabel="VIONA" style={styles.brandAnchor}>
-          <View style={[styles.markSlot, { width: markSize, height: markSize }]}>
-            <View
-              pointerEvents="none"
-              style={[styles.halo, { width: markSize * 0.72, height: markSize * 0.72 }, webBlur(18)]}
-            />
-            <Image
-              source={GOLD_MARK}
-              resizeMode="contain"
-              accessibilityIgnoresInvertColors
-              style={{ width: markSize, height: markSize }}
-            />
-          </View>
-          <Text
-            style={[
-              styles.brandWord,
-              {
-                fontSize: wordSize,
-                letterSpacing: Math.round(wordSize * 0.2),
-                fontFamily: fontsLoaded ? 'Inter_600SemiBold' : 'Montserrat_600SemiBold',
-              },
-            ]}
-          >
-            VIONA
-          </Text>
-        </View>
+        <BrandLockup
+          markSize={markSize}
+          wordSize={wordSize}
+          fontFamily={fontsLoaded ? 'Inter_600SemiBold' : 'Montserrat_600SemiBold'}
+          reducedMotion={reducedMotion}
+        />
       ) : null}
       {statusInDock ? null : (
         <View style={[styles.place, styles.placeNarrow]}>
-          <Ionicons name="location-outline" size={15} color={vionaCinematicTokens.color.cyan} />
+          {placeIsReal ? <Ionicons name="location-outline" size={15} color={vionaCinematicTokens.color.cyan} /> : null}
           <Text style={styles.placeText} numberOfLines={2}>
-            {place}
-            <Text style={styles.metaDim}>{`  ·  ${clock.date}  ·  ${clock.time}`}</Text>
+            {placeIsReal ? rawPlace : ''}
+            <Text style={styles.metaDim}>{`${placeIsReal ? '  ·  ' : ''}${clock.date}  ·  ${clock.time}`}</Text>
           </Text>
           {weather ? (
             <View style={styles.weather}>
@@ -184,35 +159,112 @@ export function VionaHomeTopBar({
           <Text style={styles.langCode}>{languageCode}</Text>
           <Ionicons name="chevron-down" size={12} color={vionaCinematicTokens.color.ice} />
         </Pressable>
-        {statusInDock ? null : (
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel={identityName}
-            onPress={() => homeCommand?.openAccount()}
-            style={styles.user}
-          >
-            {avatarUri ? (
-              <Image source={{ uri: avatarUri }} style={styles.avatarPhoto} />
-            ) : initial ? (
-              <LinearGradient colors={['#1A4E86', '#0A1A33']} style={styles.avatar}>
-                <Text style={styles.avatarText}>{initial}</Text>
-              </LinearGradient>
-            ) : (
-              <View style={styles.avatar}>
-                <Ionicons name="person-outline" size={18} color={vionaCinematicTokens.color.ice} />
-              </View>
-            )}
-            <View style={styles.userCopy}>
-              <Text style={styles.userName} numberOfLines={1}>
-                {identityName}
-              </Text>
-              {rankLabel?.trim() ? (
-                <Text style={styles.rank} numberOfLines={1}>{`👑 ${rankLabel.trim()}`}</Text>
-              ) : null}
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={identityName}
+          onPress={() => homeCommand?.openAccount()}
+          style={styles.user}
+        >
+          {avatarUri ? (
+            <Image source={{ uri: avatarUri }} style={styles.avatarPhoto} />
+          ) : initial ? (
+            <LinearGradient colors={['#1A4E86', '#0A1A33']} style={styles.avatar}>
+              <Text style={styles.avatarText}>{initial}</Text>
+            </LinearGradient>
+          ) : (
+            <View style={styles.avatar}>
+              <Ionicons name="person-outline" size={18} color={vionaCinematicTokens.color.ice} />
             </View>
-          </Pressable>
-        )}
+          )}
+          <View style={styles.userCopy}>
+            <Text style={styles.userName} numberOfLines={1}>
+              {identityName}
+            </Text>
+            {rankLabel?.trim() ? (
+              <Text style={styles.rank} numberOfLines={1}>{`👑 ${rankLabel.trim()}`}</Text>
+            ) : null}
+          </View>
+        </Pressable>
       </View>
+    </View>
+  );
+}
+
+function BrandLockup({
+  markSize,
+  wordSize,
+  fontFamily,
+  reducedMotion,
+}: Readonly<{
+  markSize: number;
+  wordSize: number;
+  fontFamily: string;
+  reducedMotion: boolean;
+}>) {
+  const [sheenOn, setSheenOn] = useState(false);
+  const [sheenX, setSheenX] = useState(-36);
+  useEffect(() => {
+    if (!sheenOn || reducedMotion) return;
+    const start = performance.now();
+    let frame = 0;
+    const step = (now: number) => {
+      const t = Math.min(1, (now - start) / 1200);
+      const eased = t < 0.5 ? 2 * t * t : 1 - ((-2 * t + 2) ** 2) / 2;
+      setSheenX(-36 + eased * 292);
+      if (t < 1) frame = requestAnimationFrame(step);
+    };
+    frame = requestAnimationFrame(step);
+    return () => cancelAnimationFrame(frame);
+  }, [reducedMotion, sheenOn]);
+  const hover =
+    Platform.OS === 'web' && !reducedMotion
+      ? {
+          onMouseEnter: () => {
+            setSheenOn(false);
+            requestAnimationFrame(() => setSheenOn(true));
+          },
+          onMouseLeave: () => setSheenOn(false),
+        }
+      : null;
+
+  return (
+    <View accessibilityRole="text" accessibilityLabel="VIONA" style={styles.brandAnchor} {...hover}>
+      <Image
+        source={GOLD_MARK}
+        resizeMode="contain"
+        accessibilityIgnoresInvertColors
+        style={[styles.mark, { width: markSize, height: markSize }]}
+      />
+      <Text
+        style={[
+          styles.brandWord,
+          {
+            fontSize: wordSize,
+            letterSpacing: Math.round(wordSize * 0.2),
+            fontFamily,
+          },
+        ]}
+      >
+        VIONA
+      </Text>
+      {sheenOn && !reducedMotion ? (
+        <View
+          pointerEvents="none"
+          style={[
+            styles.sheen,
+            {
+              opacity: sheenX < -8 || sheenX > 230 ? 0 : 0.9,
+              transform: [{ translateX: sheenX }, { skewX: '-16deg' }],
+            },
+            Platform.OS === 'web'
+              ? ({
+                  backgroundImage: 'linear-gradient(90deg, transparent, rgba(255,252,245,0.72), transparent)',
+                  backgroundColor: 'transparent',
+                } as ViewStyle)
+              : null,
+          ]}
+        />
+      ) : null}
     </View>
   );
 }
@@ -228,6 +280,8 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   brandAnchor: {
+    position: 'relative',
+    overflow: 'hidden',
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
@@ -235,15 +289,21 @@ const styles = StyleSheet.create({
     paddingRight: 12,
     backgroundColor: 'transparent',
   },
-  markSlot: { alignItems: 'center', justifyContent: 'center' },
-  halo: {
+  mark: Platform.OS === 'web'
+    ? ({ filter: 'drop-shadow(0 0 2px rgba(243, 217, 166, 0.35))' } as ViewStyle)
+    : {
+        shadowColor: '#F3D9A6',
+        shadowOffset: { width: 0, height: 0 },
+        shadowOpacity: 0.28,
+        shadowRadius: 2,
+      },
+  sheen: {
     position: 'absolute',
-    backgroundColor: 'rgba(243, 217, 166, 0.34)',
-    borderRadius: 999,
-    shadowColor: '#F3D9A6',
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.55,
-    shadowRadius: 18,
+    top: 0,
+    bottom: 0,
+    left: 0,
+    width: 10,
+    backgroundColor: 'transparent',
   },
   brandWord: {
     color: '#F3D9A6',

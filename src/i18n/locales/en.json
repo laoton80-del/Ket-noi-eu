@@ -1064,7 +1064,7 @@
       "language": "Choose language",
       "notificationUnavailable": "Notifications are not connected in this Home candidate",
       "greetingNamed": "Good to see you, {{name}}.",
-      "greetingGuest": "Welcome to VIONA.",
+      "greetingGuest": "Good to see you.",
       "headline": "Your life, connected through one calm Home.",
       "imageFallback": "Cinematic gradient shown until a licensed visual is available",
       "imageReady": "Licensed visual available",
@@ -1149,9 +1149,9 @@
       "companionChat": "Chat with Viona",
       "menuOpen": "Open navigation",
       "menuClose": "Close navigation",
-      "companionPreview": "Preview companion. Not connected.",
+      "companionPreview": "Preview companion — not connected to a live assistant.",
       "companionInputPlaceholder": "Message Viona…",
-      "companionNotConnected": "Not connected. This field does not send a message.",
+      "companionNotConnected": "Preview companion — not connected to a live assistant.",
       "sidebar": {
         "home": "Home",
         "messages": "Messages",
@@ -1164,7 +1164,8 @@
         "notifications": "Notifications",
         "invite": "Invite a friend",
         "help": "Help & Support",
-        "logout": "Log out"
+        "logout": "Log out",
+        "moreFeatures": "More features — coming soon"
       },
       "chips": {
         "tonight": "Suggestions for tonight",

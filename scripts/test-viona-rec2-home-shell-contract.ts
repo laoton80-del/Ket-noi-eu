@@ -723,7 +723,7 @@ assert(
   mainTabSource.includes("from './vionaBottomShellGeometry'") &&
     mainTabSource.includes('height: VIONA_WEB_BOTTOM_TAB_BAR_HEIGHT_PX') &&
     mainTabSource.includes('minHeight: VIONA_WEB_BOTTOM_SHELL_OBSTRUCTION_PX') &&
-    shellSource.includes('paddingBottom: layout.shellBottomObstruction') &&
+    shellSource.includes('Math.max(layout.shellBottomObstruction, orbClearance)') &&
     shellSource.includes('paddingBottom: layout.contentBreathingClearance')
 );
 assert(
@@ -808,9 +808,11 @@ assert(
     !/allowFontScaling\s*=\s*\{false\}|maxFontSizeMultiplier/.test(alfredSource)
 );
 assert(
-  'presentation name and responsive grid geometry render as separate values',
+  'layout geometry is kept for development logs and is not rendered as user-facing chrome',
   shellSource.includes("t(`home.rec2.layouts.${layout.mode}`)") &&
-    shellSource.includes('{layout.columns} × {layout.rows}')
+    shellSource.includes('layout.columns') &&
+    shellSource.includes('layout.rows') &&
+    !shellSource.includes('{layout.columns} × {layout.rows}')
 );
 assert('RC2 runtime source contains no AI provider invocation', !/(openai|anthropic|LeonaCall|autoSubmit\s*:)/i.test(runtimeSources));
 assert('RC2 runtime source contains no microphone request', !/(requestMicrophone|requestPermissionsAsync|Audio\.requestPermissions)/i.test(runtimeSources));

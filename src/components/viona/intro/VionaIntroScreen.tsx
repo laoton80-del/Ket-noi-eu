@@ -166,11 +166,15 @@ export function VionaIntroScreen({ onDone }: Readonly<{ onDone: () => void }>) {
   const { width, height } = useWindowDimensions();
   const [fontsLoaded] = useFonts({ Inter_500Medium, Inter_600SemiBold });
   const desktop = width >= 1024;
+  const cinematic = Platform.OS === 'web' && desktop;
   const markSize = desktop ? 200 : 140;
   const frame = Math.round(markSize * CRANE_FRAME);
   const wordSize = desktop ? 48 : 34;
-  const clusterHeight = frame + wordSize + 110;
-  const clusterTop = Math.max(16, height * 0.4 - clusterHeight / 2);
+  const tagViSize = cinematic ? 24 : desktop ? 18 : 16;
+  const tagEnSize = cinematic ? 17 : desktop ? 12 : 11;
+  const tagEnTrack = cinematic ? 5.4 : desktop ? 3 : 2;
+  const clusterHeight = frame + wordSize + (cinematic ? 156 : 110);
+  const clusterTop = Math.max(16, height * (cinematic ? 0.24 : 0.4) - clusterHeight / 2);
   const veil = useSharedValue(1);
   const logo = useSharedValue(reducedMotion ? 1 : 0);
   const lines = useSharedValue(reducedMotion ? 1 : 0);
@@ -295,7 +299,7 @@ export function VionaIntroScreen({ onDone }: Readonly<{ onDone: () => void }>) {
         {backdrop === 'still' && !reducedMotion && Platform.OS === 'web' ? (
           <LimbComets width={width} height={height} limb={limb} />
         ) : null}
-        <View pointerEvents="none" style={[styles.cluster, { top: clusterTop }]}>
+        <View pointerEvents="none" style={[styles.cluster, { top: clusterTop }, cinematic && styles.clusterWide]}>
           <Animated.View style={[styles.logo, logoStyle]}>
             <View style={[styles.mark, { width: frame, height: frame }]}>
               <Image
@@ -311,14 +315,14 @@ export function VionaIntroScreen({ onDone }: Readonly<{ onDone: () => void }>) {
                 >
                   <Animated.View style={[styles.traceBand, { width: bandW, height: frame }, traceStyle]}>
                     <LinearGradient
-                      colors={['rgba(255,255,255,0)', '#F3D9A6', '#FFFFFF', '#FFFFFF', '#F3D9A6', 'rgba(255,255,255,0)']}
+                      colors={['rgba(246,227,184,0)', '#E7D3A1', '#F6E3B8', '#F6E3B8', '#E7D3A1', 'rgba(246,227,184,0)']}
                       locations={[0, 0.16, 0.4, 0.6, 0.84, 1]}
                       start={{ x: 0, y: 0.5 }}
                       end={{ x: 1, y: 0.5 }}
                       style={[StyleSheet.absoluteFill, styles.traceGlow]}
                     />
                     <LinearGradient
-                      colors={['rgba(255,255,255,0)', '#FFFFFF', '#FFFFFF', 'rgba(255,255,255,0)']}
+                      colors={['rgba(246,227,184,0)', 'rgba(246,227,184,0.55)', 'rgba(246,227,184,0.55)', 'rgba(246,227,184,0)']}
                       locations={[0, 0.28, 0.72, 1]}
                       start={{ x: 0, y: 0.5 }}
                       end={{ x: 1, y: 0.5 }}
@@ -331,6 +335,7 @@ export function VionaIntroScreen({ onDone }: Readonly<{ onDone: () => void }>) {
             <Text
               style={[
                 styles.word,
+                Platform.OS === 'web' && styles.wordFoil,
                 {
                   fontSize: wordSize,
                   letterSpacing: Math.round(wordSize * 0.2),
@@ -341,12 +346,13 @@ export function VionaIntroScreen({ onDone }: Readonly<{ onDone: () => void }>) {
               VIONA
             </Text>
           </Animated.View>
-          <Animated.View style={[styles.taglines, linesStyle]}>
+          <Animated.View style={[styles.taglines, cinematic && styles.taglinesWide, linesStyle]}>
             <Text
               style={[
                 styles.tagVi,
                 {
-                  fontSize: desktop ? 18 : 16,
+                  fontSize: tagViSize,
+                  lineHeight: cinematic ? 32 : undefined,
                   fontFamily: Platform.OS === 'web' ? 'Inter_500Medium, Inter, system-ui, sans-serif' : fontsLoaded ? 'Inter_500Medium' : undefined,
                 },
               ]}
@@ -357,7 +363,8 @@ export function VionaIntroScreen({ onDone }: Readonly<{ onDone: () => void }>) {
               style={[
                 styles.tagVi,
                 {
-                  fontSize: desktop ? 18 : 16,
+                  fontSize: tagViSize,
+                  lineHeight: cinematic ? 32 : undefined,
                   fontFamily: Platform.OS === 'web' ? 'Inter_500Medium, Inter, system-ui, sans-serif' : fontsLoaded ? 'Inter_500Medium' : undefined,
                 },
               ]}
@@ -368,8 +375,9 @@ export function VionaIntroScreen({ onDone }: Readonly<{ onDone: () => void }>) {
               style={[
                 styles.tagEn,
                 {
-                  fontSize: desktop ? 12 : 11,
-                  letterSpacing: desktop ? 3 : 2,
+                  fontSize: tagEnSize,
+                  lineHeight: cinematic ? 24 : undefined,
+                  letterSpacing: tagEnTrack,
                   fontFamily: Platform.OS === 'web' ? 'Inter_500Medium, Inter, system-ui, sans-serif' : fontsLoaded ? 'Inter_500Medium' : undefined,
                 },
               ]}
@@ -421,6 +429,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 28,
   },
+  clusterWide: { paddingHorizontal: 72 },
   logo: { alignItems: 'center', gap: 4 },
   mark: { alignItems: 'center', justifyContent: 'center' },
   traceMask: { position: 'absolute', left: 0, top: 0, overflow: 'hidden' },
@@ -432,11 +441,26 @@ const styles = StyleSheet.create({
     color: '#F3D9A6',
     textAlign: 'center',
     fontWeight: '600',
-    textShadowColor: 'rgba(243, 217, 166, 0.55)',
-    textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 12,
   },
+  wordFoil: Platform.OS === 'web'
+    ? ({
+        color: 'transparent',
+        backgroundImage: 'linear-gradient(180deg, #F6E3B8 0%, #FFF6DE 14%, #F6E3B8 30%, #D4AF7C 58%, #B8955E 100%)',
+        WebkitBackgroundClip: 'text',
+        backgroundClip: 'text',
+        WebkitTextFillColor: 'transparent',
+      } as ViewStyle)
+    : {},
   taglines: { alignItems: 'center', alignSelf: 'stretch', gap: 8, marginTop: 22 },
+  taglinesWide: { gap: 10, marginTop: 26 },
   tagVi: { color: '#E6F4FF', textAlign: 'center', letterSpacing: 1.4 },
-  tagEn: { color: '#F3D9A6', textAlign: 'center', marginTop: 8 },
+  tagEn: {
+    color: '#F3D9A6',
+    textAlign: 'center',
+    marginTop: 8,
+    textShadowColor: 'rgba(0, 0, 0, 0.62)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 6,
+    ...(Platform.OS === 'web' ? ({ textShadow: '0 1px 6px rgba(0,0,0,0.62)' } as ViewStyle) : null),
+  },
 });

@@ -625,7 +625,7 @@ function VionaRec2HomeEntry() {
   const previewCallback = useCallback(() => undefined, []);
   useEffect(() => {
     setVionaDockStatus({
-      displayName: uiPreview ? 'Preview' : user?.name ?? null,
+      displayName: user?.name ?? null,
       regionLabel: uiPreview ? 'Cinematic preview' : regionLabel,
       previewMode: uiPreview,
       weather: null,
@@ -635,7 +635,7 @@ function VionaRec2HomeEntry() {
 
   return (
     <VionaRec2HomeShell
-      displayName={uiPreview ? 'Preview' : user?.name}
+      displayName={user?.name}
       regionLabel={uiPreview ? 'Cinematic preview' : regionLabel}
       universeAvailability={
         uiPreview

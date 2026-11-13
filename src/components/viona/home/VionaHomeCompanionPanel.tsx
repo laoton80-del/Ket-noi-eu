@@ -1,3 +1,4 @@
+import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useState } from 'react';
 import { Platform, Pressable, StyleSheet, Text, TextInput, View, type ViewStyle } from 'react-native';
@@ -45,9 +46,7 @@ export function VionaHomeCompanionPanel({
         <VionaCompanionOrbImage size={112} reducedMotion={reducedMotion} />
       </View>
       <Text style={styles.greeting}>{greeting}</Text>
-      <Text style={styles.status}>
-        {previewMode ? t('home.rec2.companionPreview') : t('home.rec2.alfred.states.unavailable')}
-      </Text>
+      <Text style={styles.status}>{t('home.rec2.companionPreview')}</Text>
       <View style={styles.chips}>
         {ASSISTANT_PROMPTS.map((id) => {
           const label = t(`home.rec2.assistantChips.${id}`);
@@ -71,17 +70,21 @@ export function VionaHomeCompanionPanel({
           );
         })}
       </View>
-      <TextInput
-        accessibilityLabel={t('home.rec2.companionInputPlaceholder')}
-        accessibilityHint={t('home.rec2.companionNotConnected')}
-        placeholder={t('home.rec2.companionInputPlaceholder')}
-        placeholderTextColor={vionaCinematicTokens.color.muted}
-        value={draft}
-        onChangeText={setDraft}
-        onSubmitEditing={() => undefined}
-        style={styles.input}
-      />
-      <Text style={styles.note}>{t('home.rec2.companionNotConnected')}</Text>
+      <View
+        style={styles.inputRow}
+        accessibilityState={{ disabled: true }}
+      >
+        <Ionicons name="lock-closed-outline" size={15} color={vionaCinematicTokens.color.muted} />
+        <TextInput
+          accessibilityLabel={t('home.rec2.companionInputPlaceholder')}
+          accessibilityHint={t('home.rec2.companionPreview')}
+          editable={false}
+          placeholder={t('home.rec2.companionInputPlaceholder')}
+          placeholderTextColor={vionaCinematicTokens.color.muted}
+          value={draft}
+          style={styles.input}
+        />
+      </View>
       <VionaRec2AlfredPanel reducedMotion={reducedMotion} />
     </LinearGradient>
   );
@@ -123,22 +126,31 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(0, 209, 255, 0.22)',
     overflow: 'hidden',
   },
-  chipSelected: { borderColor: '#D4AF7C' },
+  chipSelected: { borderColor: '#00D1FF' },
   chipFill: { paddingHorizontal: 16, paddingVertical: 11 },
   chipLabel: {
     color: vionaCinematicTokens.color.ice,
     fontFamily: vionaCinematicTokens.fontFamily.medium,
     fontSize: 12,
   },
-  input: {
+  inputRow: {
     minHeight: 44,
     borderRadius: vionaCinematicTokens.radius.md,
     borderWidth: 1,
     borderColor: vionaCinematicTokens.color.line,
-    backgroundColor: vionaCinematicTokens.color.surfaceGlass,
-    color: vionaCinematicTokens.color.ice,
+    backgroundColor: 'rgba(10, 26, 51, 0.35)',
+    opacity: 0.55,
     paddingHorizontal: 12,
-    paddingVertical: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    ...(Platform.OS === 'web' ? ({ cursor: 'not-allowed' } as ViewStyle) : {}),
   },
-  note: { color: vionaCinematicTokens.color.muted, fontSize: 11, lineHeight: 16 },
+  input: {
+    flex: 1,
+    minHeight: 40,
+    color: vionaCinematicTokens.color.muted,
+    paddingVertical: 8,
+    ...(Platform.OS === 'web' ? ({ cursor: 'not-allowed', outlineStyle: 'none' } as ViewStyle) : {}),
+  },
 });

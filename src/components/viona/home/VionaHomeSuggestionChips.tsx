@@ -26,9 +26,11 @@ const CHIP_TARGETS: readonly Readonly<{
 export function VionaHomeSuggestionChips({
   universes,
   callbacks,
+  onTonight,
 }: Readonly<{
   universes: readonly VionaRec2UniverseContract[];
   callbacks: VionaRec2UniverseCallbacks;
+  onTonight?: () => void;
 }>) {
   const { t } = useTranslation();
   const [activeId, setActiveId] = useState<string | null>(null);
@@ -38,7 +40,9 @@ export function VionaHomeSuggestionChips({
         const universe = chip.universeId
           ? universes.find((item) => item.id === chip.universeId)
           : undefined;
-        const interactive = !!universe && universe.availability === 'available' && typeof callbacks[universe.id] === 'function';
+        const interactive = chip.id === 'tonight'
+          ? typeof onTonight === 'function'
+          : !!universe && universe.availability === 'available' && typeof callbacks[universe.id] === 'function';
         const label = t(`home.rec2.chips.${chip.id}`);
         return (
           <SuggestionChip
@@ -49,8 +53,13 @@ export function VionaHomeSuggestionChips({
             active={activeId === chip.id}
             hint={interactive ? t('home.rec2.universeOpenHint') : t('home.rec2.sidebar.openingGradually')}
             onPress={() => {
-              if (!interactive || !universe) return;
+              if (!interactive) return;
               setActiveId(chip.id);
+              if (chip.id === 'tonight') {
+                onTonight?.();
+                return;
+              }
+              if (!universe) return;
               invokeVionaRec2UniverseCallback(universe, callbacks);
             }}
           />
@@ -112,8 +121,8 @@ const styles = StyleSheet.create({
   },
   chipFill: { paddingHorizontal: 16, paddingVertical: 11 },
   chipActive: {
-    borderColor: '#D4AF7C',
-    shadowColor: '#F3D9A6',
+    borderColor: '#00D1FF',
+    shadowColor: '#00D1FF',
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.65,
     shadowRadius: 10,

@@ -1064,7 +1064,7 @@
       "language": "Chọn ngôn ngữ",
       "notificationUnavailable": "Thông báo chưa được kết nối trong bản Home thử nghiệm này",
       "greetingNamed": "Rất vui gặp lại, {{name}}.",
-      "greetingGuest": "Chào mừng bạn đến với VIONA.",
+      "greetingGuest": "Chào bạn quay lại.",
       "headline": "Một Home bình tĩnh kết nối trọn vẹn cuộc sống của bạn.",
       "imageFallback": "Dùng nền chuyển sắc điện ảnh cho đến khi có hình ảnh được cấp phép",
       "imageReady": "Hình ảnh được cấp phép đã sẵn sàng",
@@ -1149,9 +1149,9 @@
       "companionChat": "Chat với Viona",
       "menuOpen": "Mở điều hướng",
       "menuClose": "Đóng điều hướng",
-      "companionPreview": "Companion bản xem trước. Chưa kết nối.",
+      "companionPreview": "Preview companion — chưa kết nối trợ lý thật.",
       "companionInputPlaceholder": "Nhắn Viona…",
-      "companionNotConnected": "Chưa kết nối. Ô này không gửi tin.",
+      "companionNotConnected": "Preview companion — chưa kết nối trợ lý thật.",
       "sidebar": {
         "home": "Trang chủ",
         "messages": "Tin nhắn",
@@ -1164,7 +1164,8 @@
         "notifications": "Thông báo",
         "invite": "Mời bạn bè",
         "help": "Trợ giúp",
-        "logout": "Đăng xuất"
+        "logout": "Đăng xuất",
+        "moreFeatures": "Thêm tính năng — sắp ra mắt"
       },
       "chips": {
         "tonight": "Gợi ý cho tối hôm nay",
