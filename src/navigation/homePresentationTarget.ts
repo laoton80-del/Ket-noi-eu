@@ -18,6 +18,18 @@ export type HomePresentationTargetInput = Readonly<{
   shellMode: FashionHomeShellMode;
 }>;
 
+export type HomeRendererSelection = 'reconstruction' | 'rec2';
+
+/**
+ * One renderer decision for Home. OFF preserves the complete reconstruction
+ * presentation path; RC2 never mounts beside it as a hidden sibling.
+ */
+export function resolveHomeRendererSelection(
+  rec2HomeShellEnabled: boolean
+): HomeRendererSelection {
+  return rec2HomeShellEnabled === true ? 'rec2' : 'reconstruction';
+}
+
 export function resolveHomePresentationTarget(
   input: HomePresentationTargetInput
 ): HomePresentationTarget {

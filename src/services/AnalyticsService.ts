@@ -8,6 +8,7 @@
 import { Platform } from 'react-native';
 
 import type { PostHog } from 'posthog-react-native';
+import { safeErrorMeta } from '../utils/safeLogError';
 
 let posthogClient: PostHog | null = null;
 let initAttempted = false;
@@ -80,7 +81,7 @@ export function initProductAnalytics(): void {
       captureAppLifecycleEvents: true,
     });
   } catch (e) {
-    console.warn('[Analytics] PostHog init failed', e);
+    console.warn('[Analytics] PostHog init failed', safeErrorMeta(e));
     posthogClient = null;
   }
 }
@@ -91,7 +92,7 @@ export function trackEvent(eventName: string, properties?: Record<string, unknow
   try {
     posthogClient.capture(eventName, safe ?? {});
   } catch (e) {
-    console.warn('[Analytics] capture failed', e);
+    console.warn('[Analytics] capture failed', safeErrorMeta(e));
   }
 }
 
@@ -101,7 +102,7 @@ export function identifyUser(userId: string, traits?: Record<string, unknown>): 
   try {
     posthogClient.identify(userId, safe ?? {});
   } catch (e) {
-    console.warn('[Analytics] identify failed', e);
+    console.warn('[Analytics] identify failed', safeErrorMeta(e));
   }
 }
 
@@ -110,6 +111,6 @@ export function resetUser(): void {
   try {
     posthogClient.reset();
   } catch (e) {
-    console.warn('[Analytics] reset failed', e);
+    console.warn('[Analytics] reset failed', safeErrorMeta(e));
   }
 }

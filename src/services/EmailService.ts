@@ -8,6 +8,7 @@
  */
 
 import { SESClient, SendEmailCommand } from '@aws-sdk/client-ses';
+import { logSafeError } from '../utils/safeLogError';
 
 export type SendEmailInput = Readonly<{
   to: string;
@@ -92,7 +93,7 @@ export async function sendEmail(input: SendEmailInput): Promise<void> {
       })
     );
   } catch (err) {
-    console.error('LỖI AWS SES CHI TIẾT:', err);
+    logSafeError('LỖI AWS SES CHI TIẾT:', err);
     throw err;
   }
 }

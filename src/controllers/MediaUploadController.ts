@@ -5,6 +5,7 @@ import type { Request, Response } from 'express';
 import { MAX_MEDIA_UPLOAD_BYTES } from '../constants/mediaUploadLimits';
 import { putStorageObject } from '../services/StorageService';
 import { jsonFail, jsonOk } from '../utils/apiEnvelope';
+import { logSafeError } from '../utils/safeLogError';
 
 function extFromMime(mime: string): string {
   const m = mime.toLowerCase();
@@ -66,7 +67,7 @@ export async function postMerchantImage(req: Request, res: Response): Promise<vo
       jsonFail(res, 'Media exceeds maximum size (2MB)', 413);
       return;
     }
-    console.error('[media] upload', e);
+    logSafeError('[media] upload', e);
     jsonFail(res, 'Could not store image', 500);
     return;
   }

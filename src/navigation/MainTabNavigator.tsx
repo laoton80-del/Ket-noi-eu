@@ -7,7 +7,7 @@ import {
 import { useNavigation, useNavigationState } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactElement } from 'react';
-import { Alert, Platform, StyleSheet, View, useWindowDimensions, type ViewStyle } from 'react-native';
+import { Alert, Platform, StyleSheet, Text, View, useWindowDimensions, type ViewStyle } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { ProfileSwitcher, type ProfileSwitcherHandle } from '../components/ProfileSwitcher';
@@ -47,6 +47,16 @@ import {
   shouldMountSosInTabBarShell,
   shouldShowGlobalLifelineSos,
 } from './vionaGlobalSosShellVisibility';
+import {
+  VIONA_WEB_BOTTOM_SHELL_OBSTRUCTION_PX,
+  VIONA_WEB_BOTTOM_TAB_BAR_HEIGHT_PX,
+  resolveVionaHomeRouteTabBarStyleOverride,
+  resolveVionaNativeBottomShellGeometry,
+} from './vionaBottomShellGeometry';
+import {
+  isRec2ActionAllowed,
+  useRec2OfflineHomeBoundary,
+} from '../app/bootstrap/rec2OfflineHomePolicy';
 
 import { HomeScreen } from '../screens/HomeScreen';
 import { AcademyScreen } from '../screens/AcademyScreen';
@@ -183,10 +193,11 @@ export function MainTabNavigator(): ReactElement {
   const { t } = useTranslation();
   const navigation = useNavigation<StackNav>();
   const { user, pendingRedirect, setPendingRedirect } = useAuth();
+  const offlineBoundary = useRec2OfflineHomeBoundary();
   const currentActiveRole = useUserStore((s) => s.currentActiveRole);
   const switchRole = useUserStore((s) => s.switchRole);
   const allowedRoles = useUserStore((s) => s.allowedRoles);
-  const showRolePicker = allowedRoles.length > 1;
+  const showRolePicker = !offlineBoundary.localOnlyGuestHome && allowedRoles.length > 1;
   const [paywallTarget, setPaywallTarget] = useState<RedirectTarget | null>(null);
   const [sosSheetOpen, setSosSheetOpen] = useState(false);
   const [languageSheetOpen, setLanguageSheetOpen] = useState(false);
@@ -225,29 +236,32 @@ export function MainTabNavigator(): ReactElement {
   useEffect(() => {
     if (!showGlobalLifelineSos) setSosSheetOpen(false);
   }, [showGlobalLifelineSos]);
-  const { width } = useWindowDimensions();
+  const { width, fontScale } = useWindowDimensions();
   const insets = useSafeAreaInsets();
   const isDesktopWeb = Platform.OS === 'web' && width > 768;
-  const compactTabs = width <= 375;
   const b2cTravelPlatinum =
     currentActiveRole === 'B2C' && focusedTabRoute === MAIN_TAB.B2C.travel;
   const chrome = roleTabChrome(currentActiveRole, { b2cTravelPlatinum });
 
-  const tabSizing = useMemo(
-    () => ({
-      tabBarBaseHeight: compactTabs ? 52 : 56,
-      labelSize: compactTabs ? 10 : 11,
-      iconSize: compactTabs ? 22 : 24,
-    }),
-    [compactTabs]
+  const nativeShellGeometry = useMemo(
+    () =>
+      resolveVionaNativeBottomShellGeometry({
+        width,
+        fontScale,
+        safeAreaBottom: insets.bottom,
+        chromeRowBase: NATIVE_BOTTOM_SHELL_CHROME_ROW,
+      }),
+    [fontScale, insets.bottom, width]
   );
+  const tabSizing = nativeShellGeometry;
 
   const flags = useMemo(() => getFeatureFlags(), []);
 
   const tabBarLift = tabSizing.tabBarBaseHeight + (isDesktopWeb ? Math.max(insets.bottom, 16) : Math.max(insets.bottom, 10)) + 10;
-  const nativeChromePad = Math.max(insets.bottom, 10);
-  const nativeTabsBandHeight = tabSizing.tabBarBaseHeight + 8;
-  const nativeTwoBandShellHeight = nativeTabsBandHeight + NATIVE_BOTTOM_SHELL_CHROME_ROW + nativeChromePad;
+  const nativeChromePad = nativeShellGeometry.bottomPadding;
+  const nativeTabsBandHeight = nativeShellGeometry.tabsBandHeight;
+  const nativeChromeRowHeight = nativeShellGeometry.chromeRowHeight;
+  const nativeTwoBandShellHeight = nativeShellGeometry.totalHeight;
 
   const fashionHomeDesktopShell = useMemo(
     () =>
@@ -274,16 +288,18 @@ export function MainTabNavigator(): ReactElement {
   }, [mountShellLanguageSheet]);
 
   const openShellAccount = useCallback(() => {
+    if (!isRec2ActionAllowed(offlineBoundary, 'account')) return;
     profileSwitcherRef.current?.openPersonalHub();
-  }, []);
+  }, [offlineBoundary]);
 
   const openShellLanguage = useCallback(() => {
     setLanguageSheetOpen(true);
   }, []);
 
   const openShellRole = useCallback(() => {
+    if (!offlineBoundary.remoteNavigationAllowed) return;
     profileSwitcherRef.current?.openRolePicker();
-  }, []);
+  }, [offlineBoundary.remoteNavigationAllowed]);
 
   const b2cDesktopBottomTabs = isDesktopWeb && currentActiveRole === 'B2C' && !fashionHomeDesktopShell;
   const tabBarPosition = b2cDesktopBottomTabs ? 'bottom' : isDesktopWeb ? 'left' : 'bottom';
@@ -343,6 +359,7 @@ export function MainTabNavigator(): ReactElement {
       if (Platform.OS !== 'web') {
         return (
           <View
+            key={`viona-native-bottom-shell-${nativeShellGeometry.fontScale}`}
             style={[
               styles.nativeBottomShellHost,
               styles.nativeBottomShellHostBorder,
@@ -361,6 +378,7 @@ export function MainTabNavigator(): ReactElement {
               style={[
                 styles.nativeBottomChromeRow,
                 {
+                  minHeight: nativeChromeRowHeight,
                   paddingBottom: nativeChromePad,
                   paddingLeft: Math.max(props.insets.left, 8),
                   paddingRight: Math.max(props.insets.right, 8),
@@ -434,6 +452,8 @@ export function MainTabNavigator(): ReactElement {
       chrome.barBorder,
       mountSosInTabBarShell,
       nativeChromePad,
+      nativeChromeRowHeight,
+      nativeShellGeometry.fontScale,
       nativeTabsBandHeight,
       nativeTwoBandShellHeight,
       onSosHoldComplete,
@@ -456,19 +476,33 @@ export function MainTabNavigator(): ReactElement {
     () => ({
       openLanguageSheet: () => setLanguageSheetOpen(true),
       triggerSafetyAssist: onSosHoldComplete,
-      openAccount: () => profileSwitcherRef.current?.openPersonalHub(),
-      openRolePicker: () => profileSwitcherRef.current?.openRolePicker(),
+      openAccount: () => {
+        if (isRec2ActionAllowed(offlineBoundary, 'account')) {
+          profileSwitcherRef.current?.openPersonalHub();
+        }
+      },
+      openRolePicker: () => {
+        if (offlineBoundary.remoteNavigationAllowed) profileSwitcherRef.current?.openRolePicker();
+      },
       showRolePicker,
     }),
-    [onSosHoldComplete, showRolePicker]
+    [offlineBoundary, onSosHoldComplete, showRolePicker]
   );
 
   const openPaywall = (target: RedirectTarget) => {
+    if (!offlineBoundary.remoteNavigationAllowed) return;
     setPendingRedirect(target);
     setPaywallTarget(target);
   };
 
   useEffect(() => {
+    if (!offlineBoundary.localOnlyGuestHome) return;
+    if (pendingRedirect) setPendingRedirect(null);
+    if (paywallTarget) setPaywallTarget(null);
+  }, [offlineBoundary.localOnlyGuestHome, paywallTarget, pendingRedirect, setPendingRedirect]);
+
+  useEffect(() => {
+    if (!offlineBoundary.remoteNavigationAllowed) return;
     if (!user || !pendingRedirect) return;
 
     const defaultTabForActiveRole = (): keyof RootTabParamList => {
@@ -552,6 +586,7 @@ export function MainTabNavigator(): ReactElement {
   }, [
     currentActiveRole,
     navigation,
+    offlineBoundary.remoteNavigationAllowed,
     pendingRedirect,
     setPendingRedirect,
     switchRole,
@@ -564,6 +599,16 @@ export function MainTabNavigator(): ReactElement {
         <Tab.Navigator
           key={currentActiveRole}
           tabBar={renderTabBar}
+          screenListeners={({ route }) => ({
+            tabPress: (event) => {
+              if (
+                offlineBoundary.localOnlyGuestHome &&
+                route.name !== MAIN_TAB.B2C.home
+              ) {
+                event.preventDefault();
+              }
+            },
+          })}
           screenOptions={({ route }) => ({
             headerShown: false,
             tabBarPosition,
@@ -604,10 +649,14 @@ export function MainTabNavigator(): ReactElement {
                 : {
                     height:
                       mountSosInTabBarShell && Platform.OS !== 'web'
-                        ? nativeTwoBandShellHeight
+                        // The custom outer host owns the full two-band shell. This nested
+                        // BottomTabBar owns only the measured tabs band so its labels are
+                        // laid out inside the same band that clips them.
+                        ? nativeTabsBandHeight
                         : tabSizing.tabBarBaseHeight + Math.max(insets.bottom, 10),
                     paddingBottom:
                       mountSosInTabBarShell && Platform.OS !== 'web'
+                        // Safe-area and utility chrome belong to the sibling chrome row.
                         ? 0
                         : Math.max(insets.bottom, 10),
                     paddingTop: mountSosInTabBarShell && Platform.OS !== 'web' ? 0 : 8,
@@ -649,7 +698,24 @@ export function MainTabNavigator(): ReactElement {
             tabBarLabel:
               tabBarPosition === 'left'
                 ? compactDesktopTabLabel(route.name as keyof RootTabParamList, currentActiveRole)
-                : undefined,
+                : mountSosInTabBarShell && Platform.OS !== 'web'
+                  ? ({ color, children }) => (
+                      <Text
+                        numberOfLines={nativeShellGeometry.labelLineCount}
+                        style={[
+                          styles.tabLabel,
+                          styles.nativeBottomTabLabel,
+                          {
+                            color,
+                            fontSize: nativeShellGeometry.labelSize,
+                            lineHeight: nativeShellGeometry.labelLineHeight,
+                          },
+                        ]}
+                      >
+                        {children}
+                      </Text>
+                    )
+                  : undefined,
             tabBarIcon: ({ focused }) => (
               <Ionicons
                 name={tabIconName(route.name as keyof RootTabParamList, currentActiveRole, focused)}
@@ -667,7 +733,10 @@ export function MainTabNavigator(): ReactElement {
                 component={HomeScreen}
                 options={{
                   title: t('home.tabHub'),
-                  tabBarStyle: fashionHomeDesktopShell ? fashionHomeHiddenTabBarStyle : undefined,
+                  ...resolveVionaHomeRouteTabBarStyleOverride(
+                    fashionHomeDesktopShell,
+                    fashionHomeHiddenTabBarStyle
+                  ),
                 }}
               />
             ) : null}
@@ -692,6 +761,10 @@ export function MainTabNavigator(): ReactElement {
                 options={{ title: t('home.tabAcademy') }}
                 listeners={{
                   tabPress: (e) => {
+                    if (offlineBoundary.localOnlyGuestHome) {
+                      e.preventDefault();
+                      return;
+                    }
                     if (!user && !isDemoSandboxActive()) {
                       e.preventDefault();
                       openPaywall('Academy');
@@ -781,6 +854,10 @@ export function MainTabNavigator(): ReactElement {
         visible={!!paywallTarget}
         onClose={() => setPaywallTarget(null)}
         onContinue={() => {
+          if (!offlineBoundary.remoteNavigationAllowed) {
+            setPaywallTarget(null);
+            return;
+          }
           const redirect = paywallTarget ?? undefined;
           setPaywallTarget(null);
           if (redirect) setPendingRedirect(redirect);
@@ -809,6 +886,7 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
+    height: VIONA_WEB_BOTTOM_TAB_BAR_HEIGHT_PX,
   },
   nativeBottomShellHost: {
     position: 'relative',
@@ -828,7 +906,6 @@ const styles = StyleSheet.create({
   nativeBottomChromeRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    minHeight: NATIVE_BOTTOM_SHELL_CHROME_ROW,
   },
   nativeBottomTabItem: {
     justifyContent: 'flex-start',
@@ -868,7 +945,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     minWidth: 96,
-    minHeight: 44,
+    minHeight: VIONA_WEB_BOTTOM_SHELL_OBSTRUCTION_PX,
   },
   /** Desktop left-rail chrome host — column layout; utilities + SOS in rail foot, not over scene content. */
   leftRailHost: {
@@ -921,6 +998,11 @@ const styles = StyleSheet.create({
   tabLabel: {
     fontFamily: FontFamily.semibold,
     marginTop: 2,
+  },
+  nativeBottomTabLabel: {
+    maxWidth: '100%',
+    flexShrink: 1,
+    textAlign: 'center',
   },
   tabLabelDesktop: {
     textAlign: 'center',

@@ -3,6 +3,9 @@ var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
 var __getOwnPropNames = Object.getOwnPropertyNames;
 var __hasOwnProp = Object.prototype.hasOwnProperty;
+var __esm = (fn, res) => function __init() {
+  return fn && (res = (0, fn[__getOwnPropNames(fn)[0]])(fn = 0)), res;
+};
 var __export = (target, all) => {
   for (var name in all)
     __defProp(target, name, { get: all[name], enumerable: true });
@@ -16,6 +19,42 @@ var __copyProps = (to, from, except, desc) => {
   return to;
 };
 var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
+
+// src/walletAuth.ts
+var walletAuth_exports = {};
+__export(walletAuth_exports, {
+  requireFirebaseBearerUser: () => requireFirebaseBearerUser,
+  requireFirebaseBearerUserDecoded: () => requireFirebaseBearerUserDecoded
+});
+async function requireFirebaseBearerUser(req) {
+  const raw = String(req.header("authorization") ?? req.header("Authorization") ?? "");
+  const token = raw.startsWith("Bearer ") ? raw.slice(7).trim() : "";
+  if (!token) return { ok: false, status: 401, error: "missing_bearer_token" };
+  try {
+    const decoded = await (0, import_auth.getAuth)().verifyIdToken(token);
+    return { ok: true, uid: decoded.uid };
+  } catch {
+    return { ok: false, status: 401, error: "invalid_id_token" };
+  }
+}
+async function requireFirebaseBearerUserDecoded(req) {
+  const raw = String(req.header("authorization") ?? req.header("Authorization") ?? "");
+  const token = raw.startsWith("Bearer ") ? raw.slice(7).trim() : "";
+  if (!token) return { ok: false, status: 401, error: "missing_bearer_token" };
+  try {
+    const decoded = await (0, import_auth.getAuth)().verifyIdToken(token);
+    return { ok: true, uid: decoded.uid, decoded };
+  } catch {
+    return { ok: false, status: 401, error: "invalid_id_token" };
+  }
+}
+var import_auth;
+var init_walletAuth = __esm({
+  "src/walletAuth.ts"() {
+    "use strict";
+    import_auth = require("firebase-admin/auth");
+  }
+});
 
 // src/index.ts
 var index_exports = {};
@@ -2159,6 +2198,7 @@ function scenarioBaseTone(scenario) {
       return "formal";
     case "nails":
     case "restaurant":
+    case "retail_taphoa":
       return "friendly";
     case "potraviny":
     case "grocery_wholesale":
@@ -3239,17 +3279,18 @@ async function processVoiceOrchestrationRequest(db2, body) {
 var buckets = /* @__PURE__ */ new Map();
 var PRUNE_EVERY = 500;
 var pruneCounter = 0;
-function takeAiProxyRateSlot(uid, maxPerWindow, windowMs) {
+function takeAiProxyRateSlot(uid, maxPerWindow, windowMs, scope = "aiProxy") {
   if (maxPerWindow <= 0) return true;
   const now = Date.now();
-  const cur = buckets.get(uid);
+  const key = JSON.stringify([scope, uid]);
+  const cur = buckets.get(key);
   if (!cur || now - cur.windowStart >= windowMs) {
-    buckets.set(uid, { windowStart: now, count: 1 });
+    buckets.set(key, { windowStart: now, count: 1, windowMs });
     pruneCounter += 1;
     if (pruneCounter >= PRUNE_EVERY) {
       pruneCounter = 0;
       for (const [k, v] of buckets) {
-        if (now - v.windowStart > windowMs * 3) buckets.delete(k);
+        if (now - v.windowStart > v.windowMs * 3) buckets.delete(k);
       }
     }
     return true;
@@ -3265,7 +3306,8 @@ var CHAT_MAX_MESSAGES = 48;
 var CHAT_MAX_TOTAL_TEXT_CHARS = 2e5;
 var CHAT_MAX_SINGLE_STRING = 1e5;
 var CHAT_MAX_IMAGE_DATA_URL_CHARS = 45e5;
-var CHAT_MAX_IMAGE_PARTS = 8;
+var CHAT_MAX_IMAGE_PARTS = 2;
+var CHAT_MAX_OUTPUT_TOKENS = 512;
 var STT_MAX_BASE64_CHARS = 12e6;
 var TTS_MAX_CHARS = 4096;
 var ALLOWED_TTS_VOICES = /* @__PURE__ */ new Set(["nova", "alloy", "shimmer"]);
@@ -3279,7 +3321,7 @@ var ALLOWED_STT_MIME = /* @__PURE__ */ new Set([
   "video/mp4"
 ]);
 function validateImageParts(content) {
-  if (typeof content === "string" || !Array.isArray(content)) return { ok: true };
+  if (typeof content === "string" || !Array.isArray(content)) return { ok: true, imageCount: 0 };
   let images = 0;
   for (const part of content) {
     if (!part || typeof part !== "object") continue;
@@ -3295,7 +3337,7 @@ function validateImageParts(content) {
       return { ok: false, error: "chat_image_url_not_allowed" };
     }
   }
-  return { ok: true };
+  return { ok: true, imageCount: images };
 }
 function parseAndValidateChatPayload(body) {
   const raw = body.messages;
@@ -3303,6 +3345,7 @@ function parseAndValidateChatPayload(body) {
   if (raw.length === 0 || raw.length > CHAT_MAX_MESSAGES) return { ok: false, error: "chat_messages_count_invalid" };
   const messages = [];
   let totalText = 0;
+  let totalImages = 0;
   for (const m of raw) {
     if (!m || typeof m !== "object") return { ok: false, error: "chat_message_invalid" };
     const role = m.role;
@@ -3317,6 +3360,8 @@ function parseAndValidateChatPayload(body) {
     } else if (Array.isArray(content)) {
       const img = validateImageParts(content);
       if (!img.ok) return img;
+      totalImages += img.imageCount;
+      if (totalImages > CHAT_MAX_IMAGE_PARTS) return { ok: false, error: "chat_too_many_images" };
       for (const part of content) {
         if (!part || typeof part !== "object") return { ok: false, error: "chat_part_invalid" };
         const p = part;
@@ -3339,7 +3384,7 @@ function parseAndValidateChatPayload(body) {
   temperature = Math.min(2, Math.max(0, temperature));
   let maxTokens = typeof body.maxTokens === "number" ? body.maxTokens : 240;
   if (!Number.isFinite(maxTokens)) maxTokens = 240;
-  maxTokens = Math.min(8192, Math.max(1, Math.floor(maxTokens)));
+  maxTokens = Math.min(CHAT_MAX_OUTPUT_TOKENS, Math.max(1, Math.floor(maxTokens)));
   return { ok: true, messages, temperature, maxTokens };
 }
 function validateSttPayload(body) {
@@ -3435,30 +3480,8 @@ async function proxyTts(text, voice) {
   return Buffer.from(arr).toString("base64");
 }
 
-// src/walletAuth.ts
-var import_auth = require("firebase-admin/auth");
-async function requireFirebaseBearerUser(req) {
-  const raw = String(req.header("authorization") ?? req.header("Authorization") ?? "");
-  const token = raw.startsWith("Bearer ") ? raw.slice(7).trim() : "";
-  if (!token) return { ok: false, status: 401, error: "missing_bearer_token" };
-  try {
-    const decoded = await (0, import_auth.getAuth)().verifyIdToken(token);
-    return { ok: true, uid: decoded.uid };
-  } catch {
-    return { ok: false, status: 401, error: "invalid_id_token" };
-  }
-}
-async function requireFirebaseBearerUserDecoded(req) {
-  const raw = String(req.header("authorization") ?? req.header("Authorization") ?? "");
-  const token = raw.startsWith("Bearer ") ? raw.slice(7).trim() : "";
-  if (!token) return { ok: false, status: 401, error: "missing_bearer_token" };
-  try {
-    const decoded = await (0, import_auth.getAuth)().verifyIdToken(token);
-    return { ok: true, uid: decoded.uid, decoded };
-  } catch {
-    return { ok: false, status: 401, error: "invalid_id_token" };
-  }
-}
+// src/index.ts
+init_walletAuth();
 
 // src/b2b/staff/b2bStaffQueueSnapshot.ts
 var import_firestore6 = require("firebase-admin/firestore");
@@ -3611,6 +3634,7 @@ function liveStaffQueueRowFromOrderDoc(docId, d, queueDataSource) {
 }
 
 // src/b2b/staff/b2bStaffQueueSnapshot.ts
+init_walletAuth();
 var B2B_TENANT_CLAIM = "b2bTenantId";
 function parseLimit(raw, fallback) {
   const n = Number.parseInt(String(raw ?? ""), 10);
@@ -3767,9 +3791,18 @@ async function receiptAllowsTopup(fs, paymentEventId, walletUid, creditsAmount) 
   }
   return { ok: true };
 }
-var AI_PROXY_REQUIRE_AUTH = process.env.AI_PROXY_REQUIRE_AUTH?.trim() !== "0";
+var AI_PROXY_AUTH_BYPASS_REQUESTED = process.env.AI_PROXY_REQUIRE_AUTH?.trim() === "0";
+var AI_PROXY_EMULATOR_ALLOW_UNAUTHENTICATED = process.env.FUNCTIONS_EMULATOR === "true" && process.env.AI_PROXY_EMULATOR_ALLOW_UNAUTHENTICATED?.trim() === "1";
+var AI_PROXY_REQUIRE_AUTH = !AI_PROXY_AUTH_BYPASS_REQUESTED || !AI_PROXY_EMULATOR_ALLOW_UNAUTHENTICATED;
+var AI_PROXY_KILL = process.env.AI_PROXY_KILL?.trim() === "1";
 var AI_PROXY_MAX_RPM = Math.max(0, Number.parseInt(process.env.AI_PROXY_MAX_RPM ?? "120", 10) || 120);
 var AI_PROXY_RATE_WINDOW_MS = Math.max(1e4, Number.parseInt(process.env.AI_PROXY_RATE_WINDOW_MS ?? "60000", 10) || 6e4);
+var ANALYZE_DOCUMENT_MAX_RPM = 20;
+var ANALYZE_DOCUMENT_RATE_WINDOW_MS = 6e4;
+var ANALYZE_DOCUMENT_MAX_BODY_BYTES = 8 * 1024 * 1024;
+var ANALYZE_DOCUMENT_MAX_COUNTRY_CONTEXT_CHARS = 100;
+var ANALYZE_DOCUMENT_MAX_IMAGE_BASE64_CHARS = 7e6;
+var ANALYZE_DOCUMENT_MAX_OUTPUT_TOKENS = 1024;
 var GEMINI_API_KEY = process.env.GEMINI_API_KEY?.trim() ?? "";
 var GEMINI_MODEL = process.env.GEMINI_MODEL?.trim() || "gemini-1.5-flash";
 logRuntimeTrustPostureOnce();
@@ -3894,10 +3927,22 @@ var b2bOrderStaffOps = (0, import_https2.onRequest)(
   }
 );
 var aiProxy = (0, import_https2.onRequest)(
-  { region: "europe-west1", cors: true, timeoutSeconds: 120, memory: "1GiB" },
+  { region: "europe-west1", cors: true, timeoutSeconds: 120, memory: "1GiB", maxInstances: 10 },
   async (req, res) => {
-    if (req.method !== "POST") return void res.status(405).send("Method Not Allowed");
+    let signInProvider = "not_evaluated";
     try {
+      if (AI_PROXY_AUTH_BYPASS_REQUESTED && AI_PROXY_REQUIRE_AUTH) {
+        import_v29.logger.error("[aiProxy] require_auth_override_ignored", {
+          trust_surface: "ai_proxy",
+          authRequired: true,
+          reason: "AI_PROXY_REQUIRE_AUTH=0_requires_emulator_dev_opt_in"
+        });
+      }
+      if (req.method !== "POST") return void res.status(405).send("Method Not Allowed");
+      if (AI_PROXY_KILL) {
+        import_v29.logger.error("[aiProxy] kill_switch_enabled", { trust_surface: "ai_proxy" });
+        return void res.status(503).json({ error: "ai_temporarily_disabled" });
+      }
       const byteLen = requestBodyByteLength(req);
       if (byteLen > AI_PROXY_MAX_BODY_BYTES) {
         import_v29.logger.warn("[aiProxy] body_too_large", { byteLen, max: AI_PROXY_MAX_BODY_BYTES });
@@ -3908,16 +3953,22 @@ var aiProxy = (0, import_https2.onRequest)(
         import_v29.logger.warn("[aiProxy] denied", { trust_surface: "ai_proxy", gate: "app_check", status: acAi.status, error: acAi.error });
         return void res.status(acAi.status).json({ ok: false, error: acAi.error });
       }
-      let uid = "anonymous";
-      if (AI_PROXY_REQUIRE_AUTH) {
-        const auth = await requireFirebaseBearerUser(req);
-        if (!auth.ok) {
+      const { requireFirebaseBearerUserDecoded: requireFirebaseBearerUserDecoded2 } = await Promise.resolve().then(() => (init_walletAuth(), walletAuth_exports));
+      const auth = await requireFirebaseBearerUserDecoded2(req);
+      let uid = null;
+      if (!auth.ok) {
+        signInProvider = auth.error === "missing_bearer_token" ? "unauthenticated" : "unknown";
+        if (AI_PROXY_REQUIRE_AUTH || auth.error !== "missing_bearer_token") {
           import_v29.logger.warn("[aiProxy] denied", { trust_surface: "ai_proxy", gate: "firebase_bearer", status: auth.status, error: auth.error });
           return void res.status(auth.status).json({ ok: false, error: auth.error });
         }
+        signInProvider = "emulator_unauthenticated";
+      } else {
         uid = auth.uid;
+        const provider = auth.decoded.firebase?.sign_in_provider;
+        signInProvider = typeof provider === "string" && provider.length > 0 ? provider : "unknown";
       }
-      if (AI_PROXY_MAX_RPM > 0 && uid !== "anonymous") {
+      if (AI_PROXY_MAX_RPM > 0 && uid !== null) {
         const allowed = takeAiProxyRateSlot(uid, AI_PROXY_MAX_RPM, AI_PROXY_RATE_WINDOW_MS);
         if (!allowed) {
           import_v29.logger.warn("[aiProxy] rate_limited", { firebaseUid: uid });
@@ -3956,7 +4007,6 @@ var aiProxy = (0, import_https2.onRequest)(
       } catch {
       }
       const errMsg = err.message;
-      const errName = err.name;
       let httpStatus = 500;
       let errorCode = "proxy_error";
       let openaiStatus;
@@ -3973,10 +4023,7 @@ var aiProxy = (0, import_https2.onRequest)(
       }
       import_v29.logger.error("[aiProxy] error", {
         trust_surface: "ai_proxy",
-        errName,
-        errMsg,
-        stack: err.stack,
-        proxyOp: proxyOp || "(none)",
+        proxyOp: proxyOp === "chat" || proxyOp === "stt" || proxyOp === "tts" ? proxyOp : "(unknown)",
         responseError: errorCode,
         httpStatus,
         openaiStatus
@@ -3985,6 +4032,8 @@ var aiProxy = (0, import_https2.onRequest)(
         return void res.status(httpStatus).json({ ok: false, error: errorCode, openaiStatus });
       }
       return void res.status(httpStatus).json({ ok: false, error: errorCode });
+    } finally {
+      import_v29.logger.info("[aiProxy] request", { trust_surface: "ai_proxy", signInProvider });
     }
   }
 );
@@ -4021,10 +4070,19 @@ function parseDocumentResultOrThrow(rawModelText) {
   return { title, summary, urgency, actionItems };
 }
 var analyzeDocumentProxy = (0, import_https2.onRequest)(
-  { region: "europe-west1", cors: true, timeoutSeconds: 120, memory: "1GiB" },
+  { region: "europe-west1", cors: true, timeoutSeconds: 120, memory: "1GiB", maxInstances: 10 },
   async (req, res) => {
-    if (req.method !== "POST") return void res.status(405).send("Method Not Allowed");
+    let signInProvider = "not_evaluated";
     try {
+      if (req.method !== "POST") return void res.status(405).send("Method Not Allowed");
+      if (AI_PROXY_KILL) {
+        import_v29.logger.error("[analyzeDocumentProxy] kill_switch_enabled", { trust_surface: "document_proxy" });
+        return void res.status(503).json({ error: "ai_temporarily_disabled" });
+      }
+      const byteLen = requestBodyByteLength(req);
+      if (byteLen > ANALYZE_DOCUMENT_MAX_BODY_BYTES) {
+        return void res.status(413).json({ ok: false, error: "document_payload_too_large" });
+      }
       const ac = await verifyAppCheckForRequest(req, "aiProxy");
       if (!ac.ok) {
         import_v29.logger.warn("[analyzeDocumentProxy] denied", {
@@ -4035,8 +4093,10 @@ var analyzeDocumentProxy = (0, import_https2.onRequest)(
         });
         return void res.status(ac.status).json({ ok: false, error: ac.error });
       }
-      const who = await requireFirebaseBearerUser(req);
+      const { requireFirebaseBearerUserDecoded: requireFirebaseBearerUserDecoded2 } = await Promise.resolve().then(() => (init_walletAuth(), walletAuth_exports));
+      const who = await requireFirebaseBearerUserDecoded2(req);
       if (!who.ok) {
+        signInProvider = who.error === "missing_bearer_token" ? "unauthenticated" : "unknown";
         import_v29.logger.warn("[analyzeDocumentProxy] denied", {
           trust_surface: "document_proxy",
           gate: "firebase_bearer",
@@ -4045,12 +4105,23 @@ var analyzeDocumentProxy = (0, import_https2.onRequest)(
         });
         return void res.status(who.status).json({ ok: false, error: who.error });
       }
+      const provider = who.decoded.firebase?.sign_in_provider;
+      signInProvider = typeof provider === "string" && provider.length > 0 ? provider : "unknown";
+      if (!takeAiProxyRateSlot(who.uid, ANALYZE_DOCUMENT_MAX_RPM, ANALYZE_DOCUMENT_RATE_WINDOW_MS, "analyzeDocumentProxy")) {
+        return void res.status(429).json({ ok: false, error: "rate_limited" });
+      }
       const body = typeof req.body === "object" && req.body !== null ? req.body : {};
       const base64Image = typeof body.base64Image === "string" ? body.base64Image.trim() : "";
-      const countryContext = typeof body.countryContext === "string" ? body.countryContext.trim() : "";
+      const rawCountryContext = typeof body.countryContext === "string" ? body.countryContext : "";
+      if (rawCountryContext.length > ANALYZE_DOCUMENT_MAX_COUNTRY_CONTEXT_CHARS) {
+        return void res.status(400).json({ ok: false, error: "country_context_too_long" });
+      }
+      const countryContext = rawCountryContext.trim();
       if (!base64Image) return void res.status(400).json({ ok: false, error: "base64_image_required" });
       if (!countryContext) return void res.status(400).json({ ok: false, error: "country_context_required" });
-      if (base64Image.length > 7e6) return void res.status(413).json({ ok: false, error: "image_too_large" });
+      if (base64Image.length > ANALYZE_DOCUMENT_MAX_IMAGE_BASE64_CHARS) {
+        return void res.status(413).json({ ok: false, error: "image_too_large" });
+      }
       const systemPrompt = `You are an expert administrative/legal assistant for Vietnamese expats living in ${countryContext}. Analyze the provided document image.
 You MUST return ONLY a valid JSON object (no markdown, no backticks, no extra text) matching exactly this interface:
 {
@@ -4080,7 +4151,8 @@ You MUST return ONLY a valid JSON object (no markdown, no backticks, no extra te
         ],
         generationConfig: {
           temperature: 0.2,
-          responseMimeType: "application/json"
+          responseMimeType: "application/json",
+          maxOutputTokens: ANALYZE_DOCUMENT_MAX_OUTPUT_TOKENS
         }
       };
       const upstream = await fetch(
@@ -4095,8 +4167,7 @@ You MUST return ONLY a valid JSON object (no markdown, no backticks, no extra te
       if (!upstream.ok) {
         import_v29.logger.error("[analyzeDocumentProxy] gemini_http_error", {
           trust_surface: "document_proxy",
-          status: upstream.status,
-          bodyPreview: upstreamText.slice(0, 400)
+          status: upstream.status
         });
         return void res.status(502).json({ ok: false, error: "gemini_upstream_http", upstreamStatus: upstream.status });
       }
@@ -4114,14 +4185,13 @@ You MUST return ONLY a valid JSON object (no markdown, no backticks, no extra te
         const status = err.code === "unauthenticated" ? 401 : err.code === "permission-denied" ? 403 : err.code === "invalid-argument" ? 400 : 500;
         return void res.status(status).json({ ok: false, error: err.message });
       }
-      const e = error instanceof Error ? error : new Error(String(error));
       import_v29.logger.error("[analyzeDocumentProxy] proxy_error", {
         trust_surface: "document_proxy",
-        errName: e.name,
-        errMsg: e.message,
-        stack: e.stack
+        responseError: "document_proxy_error"
       });
       return void res.status(500).json({ ok: false, error: "document_proxy_error" });
+    } finally {
+      import_v29.logger.info("[analyzeDocumentProxy] request", { trust_surface: "document_proxy", signInProvider });
     }
   }
 );

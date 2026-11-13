@@ -57,6 +57,7 @@ import { vionaTokens } from '../design';
 import { theme } from '../theme/theme';
 import { FontFamily } from '../theme/typography';
 import { hasB2BWorkspaceAccess } from '../utils/b2bAccess';
+import { safeErrorMeta } from '../utils/safeLogError';
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
 const ADMIN_UNLOCK_KEY = STORAGE_KEYS.adminUnlock;
@@ -348,7 +349,7 @@ export function CaNhanScreen(): ReactElement {
       try {
         token = await FirebaseAuth.getIdToken(user, true);
       } catch (e) {
-        console.warn('[dev-fid-token]', 'TOKEN_FETCH_FAILED', formatDevFirebaseAuthError(e));
+        console.warn('[dev-fid-token]', 'TOKEN_FETCH_FAILED', safeErrorMeta(e));
         Alert.alert('Token unavailable', formatDevFirebaseAuthError(e));
         return;
       }

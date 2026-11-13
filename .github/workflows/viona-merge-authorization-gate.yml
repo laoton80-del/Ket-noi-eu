@@ -1,0 +1,103 @@
+# Viona Merge Readiness Gate Dispatcher
+# Canonical required context is the explicit Checks API check run
+# "Viona Merge Readiness Gate" — not this workflow job result.
+name: Viona Merge Readiness Gate Dispatcher
+
+on:
+  workflow_dispatch:
+    inputs:
+      pr_number:
+        description: Pull request number (integer as string)
+        required: true
+        type: string
+      head_sha:
+        description: Full 40-character PR head SHA
+        required: true
+        type: string
+      base_branch:
+        description: Base branch (exact)
+        required: true
+        type: choice
+        options:
+          - master
+      merge_mode:
+        description: Merge mode (exact)
+        required: true
+        type: choice
+        options:
+          - squash
+      freeze_scope:
+        description: Audit scope only; canonical code selects the legal scope for its freeze state, and this input cannot change that state
+        required: true
+        type: choice
+        options:
+          - FREEZE_EXCEPTION_FOR_MERGE_GUARDRAIL_REMEDIATION_ONLY
+          - GLOBAL_MERGE_FREEZE_RELEASED
+      reviewed_scope_digest:
+        description: Deterministic reviewed-scope digest (SHA-256 hex)
+        required: true
+        type: string
+
+# Bind concurrency to repository + PR + head. cancel-in-progress=false so an
+# older run cannot be cancelled into a reusable success race.
+concurrency:
+  group: viona-merge-authorization-gate-${{ github.repository }}-${{ inputs.pr_number }}-${{ inputs.head_sha }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  pull-requests: read
+  checks: write
+
+jobs:
+  evaluate_merge_authorization:
+    name: Evaluate Viona Merge Readiness Gate
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      # Secrets are not read into `if:` expressions. Detect presence without
+      # printing values. If absent, skip minting and pass an empty token so the
+      # gate script can fail-closed with BLOCKED_MERGE_PROTECTION_READ_CREDENTIAL_MISSING.
+      - name: Detect protection-read App secrets
+        id: protection_read_secrets
+        env:
+          APP_ID: ${{ secrets.VIONA_GATE_PROTECTION_READ_APP_ID }}
+          APP_PRIVATE_KEY: ${{ secrets.VIONA_GATE_PROTECTION_READ_APP_PRIVATE_KEY }}
+        run: |
+          if [ -n "$APP_ID" ] && [ -n "$APP_PRIVATE_KEY" ]; then
+            echo "present=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "present=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Mint protection-read GitHub App token
+        id: protection_read
+        if: steps.protection_read_secrets.outputs.present == 'true'
+        uses: actions/create-github-app-token@v2
+        with:
+          app-id: ${{ secrets.VIONA_GATE_PROTECTION_READ_APP_ID }}
+          private-key: ${{ secrets.VIONA_GATE_PROTECTION_READ_APP_PRIVATE_KEY }}
+          owner: laoton80-del
+          repositories: Ket-noi-eu
+          permission-administration: read
+
+      - name: Evaluate Viona Merge Readiness Gate
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VIONA_GATE_PROTECTION_READ_TOKEN: ${{ steps.protection_read.outputs.token }}
+          VIONA_GATE_PR_NUMBER: ${{ inputs.pr_number }}
+          VIONA_GATE_HEAD_SHA: ${{ inputs.head_sha }}
+          VIONA_GATE_BASE_BRANCH: ${{ inputs.base_branch }}
+          VIONA_GATE_MERGE_MODE: ${{ inputs.merge_mode }}
+          VIONA_GATE_FREEZE_SCOPE: ${{ inputs.freeze_scope }}
+          VIONA_GATE_REVIEWED_SCOPE_DIGEST: ${{ inputs.reviewed_scope_digest }}
+          VIONA_GATE_RUN_ID: ${{ github.run_id }}
+          VIONA_GATE_REPOSITORY: ${{ github.repository }}
+        run: node scripts/viona-merge-authorization-gate.mjs

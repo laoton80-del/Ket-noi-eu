@@ -2,7 +2,7 @@
 
 **Document type:** Canonical kernel and session handoff for VIONA engineering, product, and AI agents.
 **Audience:** New ChatGPT / Cursor windows, staff, contractors, and automation executors.
-**Baseline:** `origin/master @ 5b75114` — `feat(viona): implement Pack30D-5 real-provider spend circuit breaker (mock-only, both flags off) (#320)` — see §5 "Pack30D-6 Kernel Sync & Strategic Financial Pivot" narrative section below for the full PR #319–#320 catch-up (Circuit Breaker planning + implementation) plus the formal, permanent removal of Web3/Crypto/Smart Contracts from every visionary pillar and monetization section (real execution/production remain BLOCKED/NOT AUTHORIZED). Prior baseline `dc79017` (PR #317) — see §5 "Pack32.6 Marketing Agent Closure & Kernel Sync" narrative section for the PR #313–#317 catch-up. Prior baseline `c0c3214` (PR #312) — see §5 "Pack32.2 Kernel/Handoff sync" narrative section for the PR #292–#312 catch-up (Pack30D-2/3/4, Pack31, Pack32, Pack32.5, Pack33, Pack32.1).
+**Baseline:** CURRENT CANONICAL SOURCE BASELINE = `origin/master @ deec836ac02b565398cfaa4cf0b5f1ae11b974ae`; CURRENT CANONICAL TREE = `e89d2625c094969910b3687f4c679a957871d307`; AS-OF DATE = `2026-09-25` (PR #473 canonical identity and six-universe adoption guarded squash closure + post-merge local master sync). Previous canonical baseline (PR #472 Kernel/Handoff closure sync after PR #470, `2026-09-24`): `820a8f0fd00ea92c2ac5df77559032fa24fc997e`, tree `bb6e3dbdc05d5755a190816dd791211cb0d67d8b`, retained as history. Earlier canonical baseline (PR #470 guarded squash closure, `2026-09-24`): `9ba4a3f8f31799221b9025f03eedee11857b7cad`, tree `f5e5653581b4401c9e5b4aa29a760aaec5dbbf70`, retained as history. Earlier canonical baseline (PR #471 closure and PR #470 pre-merge base, `2026-09-23`): `3c542ccb2542357812054ddb40b7b85613d21a53`, tree `894abd09bfa0661b22c26434b8dba9b78ac46a5b`, retained as history. Earlier canonical baseline (PR #469 closure, `2026-09-22`): `5d25ef76ca5b84bd2fea7c02f29d28745b93c1b4`, retained as history. PR #470 pre-publication remote head `df1c758cee318ba2f01bfdd39ce4c118da75c10e` (tree `c6fb164ef83886534c8d50e15f848828748f57d0`) is historical publication-candidate provenance only. Historical Pack-era baseline: `origin/master @ 5b75114` — `feat(viona): implement Pack30D-5 real-provider spend circuit breaker (mock-only, both flags off) (#320)` — see §5 "Pack30D-6 Kernel Sync & Strategic Financial Pivot" narrative section below for the full PR #319–#320 catch-up (Circuit Breaker planning + implementation) plus the formal, permanent removal of Web3/Crypto/Smart Contracts from every visionary pillar and monetization section (real execution/production remain BLOCKED/NOT AUTHORIZED). Earlier baselines remain historical: `dc79017` (PR #317) — see §5 "Pack32.6 Marketing Agent Closure & Kernel Sync"; `c0c3214` (PR #312) — see §5 "Pack32.2 Kernel/Handoff sync".
 **Supersedes for Request Engine sequencing:** prior scattered pack pointers when this doc conflicts on pack order or blocked state — align to this handoff.
 **Subordinate to:** `docs/ai-context/VIONA_OPERATING_PROTOCOL.md` and founder-signed **Master Blueprint** (`VIONA_FINAL_MASTER_BLUEPRINT_V2.md`). If conflict, stop and report drift risk.
 
@@ -101,17 +101,71 @@ When a pack prompt defines allowed files and checks, **Cursor executes everythin
 
 Implementation shape: **Super App / Mini-App Platform** (Companion OS), not a single vertical.
 
-### Universes
+### Public assistant identity (current canon)
 
-| Universe | Role |
-|----------|------|
-| **Home** | LifeOS hub, loyalty, cross-universe entry |
-| **Local** | Local services marketplace, requests, merchant OS |
-| **Travel** | Trip companion, interpreter, transport, emergency guidance |
-| **Academy** | Learning, AI teacher, credentials (honest maturity labels) |
-| **Business** | Merchant / B2B / wholesale / e-shop import |
-| **Account** | Profile, wallet, settings, consent |
-| **SOS** | Global Lifeline — safety entry; no fake dispatch |
+Canonical per Master Blueprint V2 §9, adopted by PR #473. This is public identity / product law only; it activates no runtime behavior.
+
+| Identity | Canonical meaning |
+|----------|-------------------|
+| **VIONA** | Product / platform brand |
+| **Viona** | Public umbrella assistant identity (public entry + orchestration layer) |
+| **Leona** | Companion & Concierge specialist under Viona |
+| **Minh Khang** | Language / Travel / Translation / Culture specialist under Viona |
+| **Cô Giáo AI** | Academy learning specialist under Viona |
+| **Lễ Tân AI** | Business / Merchant receptionist specialist under Viona |
+| **Alfred** | Technical / historical internal intelligence identifier only |
+
+- Viona is **not** a fifth specialist, does **not** replace any specialist identity, and is **not** a new autonomous runtime.
+- Specialist cost / provider / sensitive actions remain gated; Viona grants no permission to bypass capability gates, cost confirmation, or provider activation rules.
+- "Leona Assistant" is a legacy / internal capability label for Leona's specialist surface.
+- Public assistant name = **Viona**. Alfred is allowed only in internal technical identifiers, historical references, and compatibility / provenance references; Alfred is not the default public assistant name and not a universe.
+- No runtime route / flag / internal-ID mass rename is implied, and no repository-wide branding rename is required solely to remove historical or internal Alfred identifiers. This docs sync performs no internal rename.
+
+### Universe taxonomy (current canon — exactly six universes)
+
+Canonical per Master Blueprint V2 §5, adopted by PR #473. Home / Hub and Viona are shared layers, not universes:
+
+| Shared layer | Classification |
+|--------------|----------------|
+| **Home / Hub** | **Orchestration layer — not a universe.** LifeOS command center, loyalty, cross-universe entry; no Home / Hub function is removed |
+| **Viona** | **Shared public assistant / orchestration identity — not a universe** |
+
+The exact six universes:
+
+| # | Universe | Role |
+|---|----------|------|
+| 1 | **Local** | Local services marketplace, requests, merchant OS |
+| 2 | **Travel** | Trip companion, interpreter, transport, emergency guidance |
+| 3 | **Academy** | Learning, AI teacher, credentials (honest maturity labels) |
+| 4 | **Business** | Merchant / B2B / wholesale / e-shop import |
+| 5 | **Account** | Profile, wallet, settings, consent |
+| 6 | **SOS** | Global Lifeline — safety entry; no fake dispatch |
+
+Taxonomy note: this is a taxonomy correction only. The earlier presentation in this section that listed Home as a universe, and the earlier "4 Universes" taxonomy, are `HISTORICAL / SUPERSEDED IN SCOPE`. The five Operating Systems remain cross-cutting operating / value systems, not the universe taxonomy.
+
+### Launcher law (current canon — docs / product law, not runtime proof)
+
+- Full six-universe launcher: web and tablet landscape **3 × 2**; tablet portrait **2 × 3**; phone **2 columns**, falling to **1 column** where width or font scale requires.
+- A four-entry launcher (Local / Travel / Academy / Business) is a **presentation subset only**, not the universe taxonomy. Account and SOS remain universes and remain reachable.
+
+### Design direction (current canon — docs / product law, not runtime proof)
+
+- Active canonical visual direction: **dark premium**; **midnight / deep navy** canvas; **realistic cinematic** / photorealistic direction; high readability; controlled glow; gold sparingly; one coherent VIONA design language across the six universes; V-core = abstract Viona AI identity, with no required fixed human avatar.
+- The prior light-first Clear Premium native carve remains historical planning context and is `HISTORICAL / SUPERSEDED IN SCOPE` as the active visual target, per the Mobile/Home master plan supersession note.
+- This records product law / docs state only. It does not claim that the runtime UI has already migrated, and it authorizes no implementation.
+
+### SOS naming and commercial law (current canon)
+
+- **SOS Core** = canonical name of the free foundational safety tier.
+- **"SOS Basic"** = previous / legacy wording for the **same** free tier (for example in `VIONA_OPERATING_PROTOCOL.md`), not another free tier; historical references remain valid provenance and no runtime rename is implied.
+- **SOS Plus** = separate optional monthly paid enhancement (commercial target). Pricing is unchanged and is not defined here. No checkout, subscription, provider, or rescue capability is claimed as live. No pay-to-be-rescued framing.
+
+### Generic Viona entry (TARGET PRODUCT LAW — not a current-runtime claim)
+
+- The generic "Viona" / "Ask Viona" entry is **non-debiting**. This is target product law; it does not state that the behavior is implemented today.
+- Opening the generic Viona entry must not, by itself: debit VIO Credits; start a paid AI call; start a provider call; start a booking or payment mutation; or imply that paid or provider execution has already started.
+- A specialist action with cost / provider / sensitive implications follows: specialist handoff → readiness / gate check → cost disclosure where applicable → explicit user confirmation → separately authorized runtime path.
+- No runtime behavior change is authorized by this docs sync.
 
 ### Core AI / business pillars
 
@@ -156,13 +210,546 @@ Canonical checker: `node scripts/viona-forbidden-claims-check.mjs` (strict mode 
 | Field | Value |
 |-------|--------|
 | Remote | `origin/master` |
-| Commit | `c843111` |
-| Full hash | `c843111c6caa45fa59126b9460ef88c7fb5ef136` |
-| Message | `docs(pack18): add controlled write authorization packet (#229)` |
-| Previous master | `89a2f8c` — `docs(pack17): sync kernel handoff after read-only inbox staging qa (#228)` |
-| Previous latest (prior to #229) | `89a2f8c` — `docs(pack17): sync kernel handoff after read-only inbox staging qa (#228)` |
+| As-of date | `2026-09-25` |
+| Current canonical source baseline | `deec836ac02b565398cfaa4cf0b5f1ae11b974ae` |
+| Current canonical tree | `e89d2625c094969910b3687f4c679a957871d307` |
+| PR #473 guarded squash closure (current) | `deec836ac02b565398cfaa4cf0b5f1ae11b974ae`; `CLOSED / MERGED / END-TO-END VERIFIED`; published server head `3fc7a43056e965e5175acef1444f816b17f72f64`; sole parent `820a8f0fd00ea92c2ac5df77559032fa24fc997e`; merged tree `e89d2625c094969910b3687f4c679a957871d307`; merged Blueprint blob `61caa1105c5506de767d788c6c18ca82abfe993f`; merged Mobile/Home plan blob `e56a79a9c01036f7d97db192c67711973204e23e`; post-merge local master sync `COMPLETE` |
+| Previous canonical baseline (historical) | `820a8f0fd00ea92c2ac5df77559032fa24fc997e`; tree `bb6e3dbdc05d5755a190816dd791211cb0d67d8b`; PR #472 Kernel/Handoff closure sync after PR #470; merged Kernel blob `a81086418e5f84051639572c1abf210f1b95d936` |
+| PR #470 guarded squash closure (historical) | `9ba4a3f8f31799221b9025f03eedee11857b7cad`; `CLOSED / MERGED / END-TO-END VERIFIED`; final published head `34e012917900cddcab5fde8a9287887de12cea66`; sole parent `3c542ccb2542357812054ddb40b7b85613d21a53`; merged tree `f5e5653581b4401c9e5b4aa29a760aaec5dbbf70`; merged Kernel blob `b0f3736ee874d2cd6205a82fb5e3f51f0e111d8f` |
+| Earlier canonical baseline (historical) | `3c542ccb2542357812054ddb40b7b85613d21a53`; tree `894abd09bfa0661b22c26434b8dba9b78ac46a5b`; PR #471 closure; PR #470 pre-merge base |
+| Earlier canonical baseline (historical) | `5d25ef76ca5b84bd2fea7c02f29d28745b93c1b4`; tree `4b2fb07297fe0b44f4b722f8f478c75dcde98ec4`; PR #469 closure |
+| REC2 closure source | PR #465 squash merge; reviewed/final head `58953fe5c7d77bbac0f886da2c4680fb84e413ff` |
+| PR #466 canonical REC2 Home activation | `CLOSED / MERGED`; final head `8b2df80929876825e4160d5042c04a5635ff1fc4`; squash merge `2c7e72cb07a7dfd7a480ed23ecb3274f8cdb0504`; `VIONA_PRODUCT_COMPLETION_REC2_CANONICAL_HOME_ACTIVATION` |
+| Previous Kernel/Handoff reconciliation | PR #467; `MERGED / CANONICAL`; merge commit `64c2a34477195bd6c9c2cbb2279be69c26b319fd` |
+| Freeze-release activation | PR #468; `MERGED / CANONICAL`; merge commit `86e23d4df03e26d47632c7b1c59edad73f0da096` |
+| PR #469 guarded squash closure | `5d25ef76ca5b84bd2fea7c02f29d28745b93c1b4`; `CLOSED / MERGED` |
+| PR #471 guarded squash closure | `3c542ccb2542357812054ddb40b7b85613d21a53`; `CLOSED / MERGED`; sole parent `5d25ef76ca5b84bd2fea7c02f29d28745b93c1b4` |
+| PR #470 branch update (one-off non-profile exception; historical provenance) | `COMPLETE`; resulting PR #470 head `df1c758cee318ba2f01bfdd39ce4c118da75c10e`, tree `c6fb164ef83886534c8d50e15f848828748f57d0`; incorporates master `3c542ccb2542357812054ddb40b7b85613d21a53`; canonical master not moved |
+| Historical Pack-era snapshot | `c843111c6caa45fa59126b9460ef88c7fb5ef136` — `docs(pack18): add controlled write authorization packet (#229)` |
+| Earlier historical snapshot | `89a2f8c` — `docs(pack17): sync kernel handoff after read-only inbox staging qa (#228)` |
 
-All new work branches from `c843111` unless a later pack explicitly updates this handoff.
+New work must use the current canonical source baseline and its applicable authorization envelope. The older Pack-era baselines and narratives below are retained as history, not as the current repository baseline.
+
+### PR #473 Final Identity and Six-Universe Canon Adoption — CLOSED/GREEN END-TO-END
+
+PR #473, `docs(viona): adopt final identity and six-universe canon`, is `CLOSED / MERGED / END-TO-END VERIFIED`. The squash commit changed exactly two canonical docs, the Master Blueprint V2 and the Mobile/Home master plan; it did not change this Kernel/Handoff file. This section records the current canonical state as of the AS-OF baseline above. The PR #472 record below is the previous canonical baseline; the PR #470, PR #471, PR #469, and earlier sections below are historical checkpoints and not current execution authority. The facts below are historical closure evidence for PR #473 only; they grant no future authority.
+
+| PR #473 publication / scope | Verified state |
+|-----------------------------|----------------|
+| Base | `820a8f0fd00ea92c2ac5df77559032fa24fc997e` |
+| Local source candidate | `5fc17935b2b685cbbe1428332a91790502d122f1`; local source identity only, never asserted equal to the server head |
+| Publication profile | `github_graphql_create_ref_then_commit_candidate_v1` (`full_two_phase`): one `updateRefs` creating the absent branch at base, then one `createCommitOnBranch` with exactly two additions; `2` publication mutations total; no push |
+| Published server head | `3fc7a43056e965e5175acef1444f816b17f72f64`; sole parent `820a8f0fd00ea92c2ac5df77559032fa24fc997e` |
+| Published candidate tree | `e89d2625c094969910b3687f4c679a957871d307` |
+| Changed paths | Exactly two, both modified: `docs/ai-context/VIONA_FINAL_MASTER_BLUEPRINT_V2.md`; `docs/product/VIONA_MOBILE_CLEAR_PREMIUM_COMPANION_DESIGN_SYSTEM_AND_HOME_ARCHITECTURE_MASTER_PLAN.md` |
+| Final merged Blueprint blob | `61caa1105c5506de767d788c6c18ca82abfe993f` |
+| Final merged Mobile/Home plan blob | `e56a79a9c01036f7d97db192c67711973204e23e` |
+| PR creation authority | `APPROVE_VIONA_POST_FINAL_CANONICAL_ADOPTION_EXACT_ONE_PR_CREATION_EXCEPTION_A4_V1`; exact-one exception for this PR only; `A4 = CONSUMED / NON-REUSABLE`; ordinary PR creation not reopened |
+
+| PR #473 pre-PR publication | Verified state |
+|----------------------------|----------------|
+| Publication profile | `github_graphql_create_ref_then_commit_candidate_v1` / `full_two_phase` |
+| Publication authorization | `APPROVE_VIONA_POST_FINAL_CANONICAL_ADOPTION_ABSENT_BRANCH_FULL_TWO_PHASE_PUBLICATION_A3_V1` |
+| Publication classification | `VIONA_POST_FINAL_CANONICAL_ADOPTION_ABSENT_BRANCH_FULL_TWO_PHASE_PUBLICATION_A3_COMPLETE_VERIFIED_V1` |
+| A3 terminal state | `CONSUMED / NON-REUSABLE` |
+| Server branch | `docs/viona-public-assistant-canonical-identity-decision-a1-v1` |
+| Published server head | `3fc7a43056e965e5175acef1444f816b17f72f64` |
+| Published parent | `820a8f0fd00ea92c2ac5df77559032fa24fc997e` |
+| Published tree | `e89d2625c094969910b3687f4c679a957871d307` |
+| Phase 1 | `SUCCEEDED_VERIFIED` |
+| Phase 2 | `SUCCEEDED_VERIFIED` |
+| Remote mutation shape | exactly 2 GraphQL publication mutations: absent-ref creation then candidate commit; ordinary Git push `0` |
+| Authority boundary | publication created the candidate branch only; it granted no PR, review, Stage 1, Stage 2, merge, deploy or local-sync authority |
+| Relationship to PR creation | A3 publication authority != A4 exact-one PR creation exception; A3 did not create PR #473; PR #473 was created afterwards under the separate A4 authority recorded above |
+
+| PR #473 review / CI | Verified state |
+|---------------------|----------------|
+| Exact-head reviewer | `Maty2016`; `APPROVED` |
+| Review ID / node | `5314231079` / `PRR_kwDOSFpBeM8AAAABPMC7Jw` |
+| Reviewed head | `3fc7a43056e965e5175acef1444f816b17f72f64`; submitted `2026-09-25T06:22:58Z` |
+| Unresolved review threads | `0` |
+| Release Discipline | `SUCCESS`; automatic `pull_request` run `36102394778`; job `Expo + Trust + Functions Preflight` `SUCCESS` |
+
+| PR #473 two-stage gate evidence | Verified state |
+|---------------------------------|----------------|
+| Stage 1 | `Viona Merge Readiness Gate`; workflow run `36103026895` (run number `18`); check run `107969546067`; head `3fc7a43056e965e5175acef1444f816b17f72f64`; app ID `15368`; `SUCCESS`; merge mode `squash`; freeze scope `GLOBAL_MERGE_FREEZE_RELEASED`; `A6 = CONSUMED / NON-REUSABLE` |
+| Reviewed-scope digest | `cb04cce4acccccf303885dc1102f33a8840f887f5a5db364e4d452607c389522` |
+| Stage 2 | `Viona Explicit Merge Authorization`; workflow run `36103524491` (run number `11`); check run `107971163196`; head `3fc7a43056e965e5175acef1444f816b17f72f64`; `SUCCESS`; `A7 = CONSUMED / NON-REUSABLE` |
+| Stage 2 authorization ID | `6ce1cc25-96af-4350-8645-0022c0897825` |
+| Stage 2 target key | `84ed779fc1bc4dd10ecc79fbc94ff5ed833cb7e82a084cc53b6a8b010c12a4a2` |
+| Ledger ref / path | `viona-governance-merge-ledger-v1` / `records/84/84ed779fc1bc4dd10ecc79fbc94ff5ed833cb7e82a084cc53b6a8b010c12a4a2.json` |
+| Authorized at / original expiry | `2026-09-25T06:36:06.033Z` / `2026-09-25T06:51:06.033Z` |
+
+| PR #473 ledger lifecycle | Verified state |
+|--------------------------|----------------|
+| Lifecycle | `ISSUED → CONSUMING → CONSUMED`; ledger commits `c6b0b4b24856147d55e351906ebf0e64a0ec7f47` → `53cccfe6c498dfd3d0661940d3efb7219bd411bb` → `fcfe8a445dd26e6e7fd0d4681f55ee383e5b7067` |
+| Terminal ledger state | `CONSUMED / NON-REUSABLE`; record blob `414eae3f1187e59200256cd72cfbfde0a24a45d1`; ledger ref tip `fcfe8a445dd26e6e7fd0d4681f55ee383e5b7067`; `consumed_by = laoton80-del`; `merge_commit_sha = deec836ac02b565398cfaa4cf0b5f1ae11b974ae`; `revoked_at = null` |
+| `merge_api_result` | `null`; known current implementation shape; non-blocking because `merge_commit_sha`, GitHub PR state, master lineage/tree, and the terminal ledger binding independently prove the successful merge |
+
+| PR #473 guarded merge | Verified state |
+|-----------------------|----------------|
+| Authorization | `APPROVE_VIONA_PR473_GUARDED_SQUASH_MERGE_EXECUTION_A8_V1`; `A8 = CONSUMED / NON-REUSABLE` |
+| Guarded merge wrapper | `scripts/viona-guarded-pr-merge.mjs`; `1` invocation; `1` `squash` merge API call; no replay, retry, auto-merge, or deploy |
+| Squash merge commit | `deec836ac02b565398cfaa4cf0b5f1ae11b974ae`; PR merged `2026-09-25T06:42:49Z` by `laoton80-del` |
+| Sole squash parent | `820a8f0fd00ea92c2ac5df77559032fa24fc997e` |
+| Merged tree | `e89d2625c094969910b3687f4c679a957871d307`; equals the published candidate tree |
+| Merged scope | Exactly the two canonical docs listed above (modified) |
+| Server-side ordering | `CONSUMING` ledger commit (`06:42:47Z`) before the squash commit (`06:42:48Z`); `CONSUMED` ledger commit (`06:42:50Z`) after PR `merged_at` (`06:42:49Z`); merge occurred before Stage 2 expiry |
+| Source branch | `docs/viona-public-assistant-canonical-identity-decision-a1-v1` retained at `3fc7a43056e965e5175acef1444f816b17f72f64`; no branch deletion |
+
+| PR #473 local canonical sync | Verified state |
+|------------------------------|----------------|
+| Authorization / classification | `APPROVE_VIONA_PR473_POSTMERGE_LOCAL_MASTER_SYNC_A9_V1`; `VIONA_PR473_POSTMERGE_LOCAL_MASTER_SYNC_A9_COMPLETE_VERIFIED_V1`; `A9 = CONSUMED / NON-REUSABLE` |
+| Canonical workspace | `C:\KNG\ket-noi-eu` |
+| Sync method | One fetch → switch master → `git merge --ff-only origin/master`; no local commit, rebase, reset, or push |
+| Final verified parity | HEAD, local master, and origin/master at `deec836ac02b565398cfaa4cf0b5f1ae11b974ae`; tree `e89d2625c094969910b3687f4c679a957871d307`; workspace `CLEAN` |
+| Evidence branches | Local source branch retained at `5fc17935b2b685cbbe1428332a91790502d122f1`; remote source branch retained at `3fc7a43056e965e5175acef1444f816b17f72f64` |
+
+| Previous canonical baseline — PR #472 (historical) | Verified state |
+|----------------------------------------------------|----------------|
+| Title | `docs(governance): sync PR470 closure into kernel` |
+| State | `CLOSED / MERGED` |
+| Merge commit | `820a8f0fd00ea92c2ac5df77559032fa24fc997e`; sole parent `9ba4a3f8f31799221b9025f03eedee11857b7cad` |
+| Tree | `bb6e3dbdc05d5755a190816dd791211cb0d67d8b` |
+| Merged Kernel blob | `a81086418e5f84051639572c1abf210f1b95d936` |
+| Scope | Exactly one path, this Kernel/Handoff file |
+| Interpretation | Historical previous canonical baseline after the PR #473 closure; its Kernel content is the PR #470 closure sync recorded below |
+
+| Current governance state (after PR #473) | State |
+|------------------------------------------|-------|
+| `GLOBAL_MERGE_FREEZE` | `RELEASED` |
+| `NEW_ORDINARY_VIONA_PR_CREATION_SUSPENDED` | `ACTIVE / PRESERVED`; not released by PR #473 or by this closure sync; the A4 exact-one exception applied only to PR #473 |
+| `EMERGENCY_VIONA_PR_LIFECYCLE_CONTAINMENT_ACTIVE` | `PRESERVED` |
+| `B1B_GOVERNANCE_FREEZE_ACTIVE` | `PRESERVED` |
+| `NO_RETROACTIVE_AUTHORIZATION_CLAIMED` | `PRESERVED` |
+| Mandatory merge controls | `PRESERVED / ACTIVE`: exact-head approval → Viona Merge Readiness Gate → Viona Explicit Merge Authorization → guarded merge wrapper |
+| PR #473 lane authorities | A4 through A9 `CONSUMED / NON-REUSABLE` as applicable |
+| This closure sync | Authorized as a local candidate only (`APPROVE_VIONA_PR473_POSTMERGE_KERNEL_HANDOFF_CLOSURE_SYNC_LOCAL_CANDIDATE_A10_V1`); grants no remote, publication, PR, merge, or deploy authority |
+| Next product / engineering lane | `NOT SELECTED BY THIS DOCS-ONLY CLOSURE SYNC` |
+
+#### PR #473 non-blocking governance/tooling backlog findings
+
+PR #473 reconfirms both PR #470 guarded-merge tooling findings recorded below. Both remain `OPEN_BACKLOG_NON_BLOCKING`; impact on PR #473 closure: `NONE`; code remediation: `NOT AUTHORIZED BY THIS DOCS-ONLY LANE`.
+
+| Finding | PR #473 observation |
+|---------|---------------------|
+| `PR470_MERGE_API_RESULT_AUDIT_TRAIL_FINDING` | The successful terminal `CONSUMED` record again has `merge_api_result = null`. |
+| `PR470_GUARDED_MERGE_TIMESTAMP_ROBUSTNESS_FINDING` | The wrapper's captured timestamp again makes `consumption_started_at = consumed_at = last_transition_at = 2026-09-25T06:42:49.097Z`; GitHub server-side chronology independently proves `ISSUED → CONSUMING → MERGE → CONSUMED`. |
+
+### PR #470 Canonical Kernel/Handoff Closure — CLOSED/GREEN END-TO-END
+
+PR #470, `docs(governance): close PR469 kernel handoff`, is `CLOSED / MERGED / END-TO-END VERIFIED`. The squash commit changed only this Kernel/Handoff file. This section records the canonical state at the PR #470 closure baseline `9ba4a3f8f31799221b9025f03eedee11857b7cad`; it is a historical checkpoint superseded as current state by the PR #472 and PR #473 records above. The PR #471, PR #469, and earlier sections below, including every PR #470 pre-publication snapshot, are historical checkpoints and not current execution authority.
+
+| PR #470 publication / final content | Verified state |
+|-------------------------------------|----------------|
+| Final published PR head | `34e012917900cddcab5fde8a9287887de12cea66`; sole parent `df1c758cee318ba2f01bfdd39ce4c118da75c10e` |
+| Final tree | `f5e5653581b4401c9e5b4aa29a760aaec5dbbf70` |
+| Final Kernel blob | `b0f3736ee874d2cd6205a82fb5e3f51f0e111d8f`; mode `100644`; raw length `685031` bytes |
+| Kernel raw SHA-256 | `d9e088ac9adcad55f3e6a4397bc88e4bf7720c7371c4c4c97e9ee02699cac34f` |
+| Finite-replace-v2 publication authority | `CONSUMED / NON-REUSABLE` |
+| Durable closure | `COMPLETE / INDEPENDENTLY VERIFIED` |
+
+| PR #470 review / thread closure | Verified state |
+|---------------------------------|----------------|
+| Review thread `PRRT_kwDOSFpBeM6lBWIw` | `RESOLVED`; resolved by `laoton80-del` |
+| Final unresolved thread count | `0` |
+| Final exact-head approver | `Maty2016`; `APPROVED` on `34e012917900cddcab5fde8a9287887de12cea66` |
+| Earlier review/thread states | Historical pre-publication evidence only (see the PR #470 pre-publication snapshots below) |
+
+| PR #470 two-stage gate / ledger evidence | Verified state |
+|------------------------------------------|----------------|
+| Stage 1 | `Viona Merge Readiness Gate`; check run `107649806357`; head `34e012917900cddcab5fde8a9287887de12cea66`; `SUCCESS`; `STAGE1_DISPATCH_AUTHORIZED = CONSUMED / NON-REUSABLE` |
+| Stage 2 | `Viona Explicit Merge Authorization`; check run `107666589849`; head `34e012917900cddcab5fde8a9287887de12cea66`; `SUCCESS`; `STAGE2_DISPATCH_AUTHORIZED = CONSUMED / NON-REUSABLE` |
+| Stage 2 authorization ID | `95a1e068-4ed0-46eb-a814-211ad707e036` |
+| Stage 2 target key | `a5299098b5e14ca7a74fca61bb190059acb6fbeff99d1c1c5011ad7281903312` |
+| Stage 2 ledger lifecycle | `ISSUED → CONSUMING → CONSUMED`; ledger commits `b6515b9c7f235c3c76c399486b3f342f3e591e7d` → `097be274a7bcc36fc1bec68e04bd5c834635ee6f` → `c243f19917b1e6893f3232790ebdba3b5405df4f` |
+| Final ledger state | `CONSUMED / NON-REUSABLE`; record blob `394f7505d444e5b13335b2893ab0d3ffbf5fcd64`; ledger ref tip `c243f19917b1e6893f3232790ebdba3b5405df4f`; `merge_commit_sha = 9ba4a3f8f31799221b9025f03eedee11857b7cad` |
+
+| PR #470 guarded merge | Verified state |
+|-----------------------|----------------|
+| Guarded merge wrapper | `scripts/viona-guarded-pr-merge.mjs`; one execution; one `squash` merge API call; no auto-merge, replay, retry, or push |
+| Squash merge commit | `9ba4a3f8f31799221b9025f03eedee11857b7cad`; merged `2026-09-24T14:11:50Z` by `laoton80-del` |
+| Sole squash parent | `3c542ccb2542357812054ddb40b7b85613d21a53` |
+| Merged tree | `f5e5653581b4401c9e5b4aa29a760aaec5dbbf70`; equals the final published head tree |
+| Merged scope | Exactly one path, `docs/ai-context/VIONA_KERNEL_HANDOFF_FAST_SAFE_GLOBAL_MODE.md` (modified) |
+| Server-side ordering | `CONSUMING` ledger commit before the squash commit; `CONSUMED` ledger commit after PR `merged_at`; merge occurred before Stage 2 expiry |
+| Post-merge A0 classification | `VIONA_PR470_GUARDED_SQUASH_MERGE_POSTMERGE_INDEPENDENT_VERIFICATION_VERIFIED_READY_A0_V1` |
+| `GUARDED_MERGE_AUTHORIZED` | `CONSUMED` |
+
+| PR #470 local canonical sync | Verified state |
+|------------------------------|----------------|
+| Local sync classification | `VIONA_PR470_POSTMERGE_LOCAL_MASTER_SYNC_A1_COMPLETE_VERIFIED` |
+| Sync method | Exact master fetch plus fast-forward only; no commit, rebase, reset, or push |
+| Final verified parity | HEAD, local master, origin/master, and remote master at `9ba4a3f8f31799221b9025f03eedee11857b7cad`; tree `f5e5653581b4401c9e5b4aa29a760aaec5dbbf70`; workspace `CLEAN` |
+| Evidence branch | `docs/viona-pr470-final-kernel-after-update-v4` preserved at `da91c55864e13c497635524d6fbd98e40a9f8105` (tree identical to the final published head tree) |
+| Preserved stashes | `11` entries; unchanged by the sync lane |
+| `LOCAL_SYNC_AUTHORIZED` | `CONSUMED` |
+
+| PR #470 terminal sequence state | State |
+|---------------------------------|-------|
+| `PR470_CONTINUATION_SEQUENCE` | `COMPLETE / CONSUMED / NON-REUSABLE`; the planned sequence recorded at candidate preparation below (candidate review, PR #470-specific v2 helper, publication, thread resolution, fresh approval, Stage 1, Stage 2, guarded merge, local sync) is completed history |
+| `NEXT_PR470_MUTATION` | `NONE` |
+
+| Governance state at PR #470 closure (historical; current state is in the PR #473 section above) | State |
+|--------------------------|-------|
+| `GLOBAL_MERGE_FREEZE` | `RELEASED` |
+| `NEW_ORDINARY_VIONA_PR_CREATION_SUSPENDED` | `ACTIVE`; not released by PR #470 or by this closure sync; ordinary PR creation has not reopened |
+| `EMERGENCY_VIONA_PR_LIFECYCLE_CONTAINMENT_ACTIVE` | `PRESERVED` |
+| `B1B_GOVERNANCE_FREEZE_ACTIVE` | `PRESERVED` |
+| `NO_RETROACTIVE_AUTHORIZATION_CLAIMED` | `PRESERVED` |
+| Mandatory merge controls | `PRESERVED / ACTIVE`: exact-head approval → Readiness → Explicit Authorization → guarded merge wrapper |
+| Canonical publication profile count | `3`; unchanged |
+| Next product / engineering lane | `NOT SELECTED BY THIS DOCS-ONLY CLOSURE SYNC` |
+
+#### PR #470 non-blocking governance/tooling backlog findings
+
+| Finding | State |
+|---------|-------|
+| `PR470_GUARDED_MERGE_TIMESTAMP_ROBUSTNESS_FINDING` | `OPEN_BACKLOG_NON_BLOCKING`. The guarded merge wrapper captures one local-clock `nowIso` before the ledger claim and reuses that value for both the `CONSUMING` and `CONSUMED` record timestamps, so the PR #470 record shows `consumption_started_at = consumed_at = last_transition_at = 2026-09-24T14:11:51.473Z` although the server-side squash commit is `14:11:49Z`. GitHub server-side chronology independently proved `ISSUED → CONSUMING → MERGE → CONSUMED`. Impact on PR #470 closure: `NONE`. Code remediation: `NOT AUTHORIZED BY THIS DOCS-ONLY LANE`. |
+| `PR470_MERGE_API_RESULT_AUDIT_TRAIL_FINDING` | `OPEN_BACKLOG_NON_BLOCKING`. The terminal ledger record has `merge_api_result = null`; the current implementation permits this shape. `merge_commit_sha`, GitHub PR state, master lineage/tree, and the terminal ledger binding independently prove the successful merge. Design/audit completeness may be improved in a future tooling lane. Impact on PR #470 closure: `NONE`. Code remediation: `NOT AUTHORIZED BY THIS DOCS-ONLY LANE`. |
+
+### PR #471 Existing-Branch Finite Replace V2 Protocol Extension — CLOSED/GREEN END-TO-END
+
+PR #471, `docs(governance): add existing-branch finite replace v2`, is `CLOSED / MERGED`. The squash commit changed only `docs/ai-context/VIONA_CODEX_CONTROLLED_AUTONOMOUS_EXECUTION_PROTOCOL.md` and `docs/product/VIONA_CODEX_AUTONOMOUS_EXECUTION_ENVELOPE_SPEC.md`; it did not change this Kernel/Handoff file. This section records the canonical state at the PR #471 closure baseline `3c542ccb2542357812054ddb40b7b85613d21a53`; it is a historical checkpoint superseded as current state by the PR #470 closure above. The PR #469 and earlier sections below are also historical checkpoints.
+
+| PR #471 closure field | Verified state |
+|-----------------------|----------------|
+| Published branch head before merge | `737d9cce496d1c9a6a9f10b08d9329fd43544c6b` |
+| Squash merge commit | `3c542ccb2542357812054ddb40b7b85613d21a53` |
+| Sole squash parent | `5d25ef76ca5b84bd2fea7c02f29d28745b93c1b4` |
+| Merged tree | `894abd09bfa0661b22c26434b8dba9b78ac46a5b` |
+| Merged protocol blob | `9930db57235de993f325cb8b54fa9185e9b1b539`; mode `100644` |
+| Merged envelope spec blob | `a8b15c380052cfd0c6e2fdb38fcbc3ff47ac1ba0`; mode `100644` |
+| Guarded merge result | `VIONA_FINITE_REPLACE_V2_PROTOCOL_EXTENSION_PR471_GUARDED_MERGE_COMPLETE_VERIFIED` |
+| Local sync result | `VIONA_FINITE_REPLACE_V2_PROTOCOL_EXTENSION_PR471_POSTMERGE_LOCAL_MASTER_SYNC_COMPLETE_VERIFIED`; fast-forward only; HEAD, local master, and origin/master at `3c542ccb2542357812054ddb40b7b85613d21a53`; workspace `CLEAN` |
+
+| PR #471 governance evidence | Verified state |
+|-----------------------------|----------------|
+| Exact-head approval | `Maty2016`; `APPROVED` on `737d9cce496d1c9a6a9f10b08d9329fd43544c6b` |
+| Stage 1 | `Viona Merge Readiness Gate`; check run `107276857765`; exact head; `SUCCESS` |
+| Stage 2 | `Viona Explicit Merge Authorization`; check run `107279470372`; exact head; `SUCCESS` |
+| Stage 2 authorization ID | `a233f133-802a-4dcf-b0d3-fa5e25c62707` |
+| Stage 2 target key | `4fc99759ca961f0d3e34cb752f80b229e7e44e1cede26bc80ade42ac557460b9` |
+| Stage 2 ledger lifecycle | `ACTIVE → CONSUMING → CONSUMED`; terminal `CONSUMED / NON-REUSABLE`; `merge_commit_sha = 3c542ccb2542357812054ddb40b7b85613d21a53` |
+| Guarded merge | `scripts/viona-guarded-pr-merge.mjs`; one execution; one `squash` merge API call; no replay, retry, auto-merge, or push |
+
+#### Canonical API publication profiles after PR #471
+
+| Profile | State |
+|---------|-------|
+| `github_graphql_existing_branch_replace_v1` | `CANONICAL_ON_MASTER`; unchanged separate profile (protocol §7.6, envelope spec §12.1) |
+| `github_graphql_create_ref_then_commit_candidate_v1` | `CANONICAL_ON_MASTER`; unchanged separate profile (protocol §7.7, envelope spec §12.2) |
+| `github_graphql_existing_branch_finite_replace_v2` | `CANONICAL_ON_MASTER`; canonical source `master @ 3c542ccb2542357812054ddb40b7b85613d21a53` (protocol §7.8, envelope spec §12.3) |
+| Canonical profile count | `3`; no fourth profile is implied |
+
+High-level intent of `github_graphql_existing_branch_finite_replace_v2` (the protocol and envelope spec on master govern; this summary grants no authority):
+
+- advances one existing remote branch bound to one exact declared OPEN PR;
+- replaces one exact positive finite set of existing regular non-executable `100644` text blob paths;
+- requires complete candidate-diff equality with that path set;
+- binds a fixed `expectedHeadOid` and an exact `AUTHORIZED_TREE`;
+- enforces singleton-PR, metadata-race, and durable-attempt controls;
+- allows one `createCommitOnBranch` application dispatch, with no retry;
+- has no push, REST write, Contents API write, alternate GraphQL writer, branch delete/recreate, or force-update fallback.
+
+Historical pre-publication note (superseded by the PR #470 closure above; not current execution authority): V2 binds the candidate's sole-parent tree to the remote head's `base_tree_oid`. Before the PR #470 branch update, PR #470's remote head tree (`cc02c11de04a6e419c23333705e5bd1260a33b3d`) differed from the post-PR471 candidate's parent tree (`894abd09bfa0661b22c26434b8dba9b78ac46a5b`), so v2 was not applicable. After the branch update, PR #470's pre-publication remote head at final candidate preparation was `df1c758cee318ba2f01bfdd39ce4c118da75c10e` with tree `c6fb164ef83886534c8d50e15f848828748f57d0`, and the final candidate's sole parent is that exact head. The candidate-parent/remote-head tree precondition is therefore preparable; it holds only while the PR #470 remote head remains `df1c758cee318ba2f01bfdd39ce4c118da75c10e` until publication. This is not publication authorization.
+
+#### PR #471 publication helper — RETIRED
+
+| Field | State |
+|-------|-------|
+| `PR471_PUBLICATION_HELPER_STATUS` | `RETIRED_PERMANENTLY_NONREUSABLE` |
+| `PUBLICATION_HELPER_POST_DISPATCH_TYPENAME_DEFECT` | `CLOSED_BY_RETIREMENT` |
+| Historical defect | The `commit.repository` query selections in `VionaFiniteReplaceV2CreateCommitOnBranch.graphql` and `VionaFiniteReplaceV2PublicationVerification.graphql` omitted `__typename`, while `Assert-VionaRepositoryIdentity` required it; the offline test fakes supplied it, so the offline suite did not detect the gap. The PR #471 publication helper exited non-zero after a successful dispatch. |
+| Fix state | Not fixed in the old helper; there is no in-place remediation lane |
+| Tooling folder | `C:\KNG\viona-codex-api-evidence\finite-replace-v2-protocol-extension-publication-v1\` (helper, test, config, GraphQL documents, markers, ledger) preserved unchanged as historical evidence |
+| Prior 160-test offline suite | Historical verified evidence only; not a re-runnable future publication suite |
+| Remote authority | None; no current remote authority exists from the old helper |
+| Content impact | None. The defect did not alter PR #471 published content and does not invalidate the canonical protocol or profile; PR #471 publication and merge were independently verified exact |
+
+#### PR #470-specific v2 helper — carry-forward requirements (HISTORICAL SNAPSHOT; SUPERSEDED BY PR470 CLOSED/GREEN END-TO-END STATE; NOT CURRENT EXECUTION AUTHORITY)
+
+At candidate preparation, a new PR #470-specific helper was required for any v2 publication to PR #470. The PR #470 publication is complete and its authority is `CONSUMED / NON-REUSABLE`. The requirements recorded at that time were:
+
+1. Every validated `commit.repository` selection requests `__typename`, `id`, `databaseId`, and `nameWithOwner`.
+2. Fake fixtures may contain validation-required fields only when the corresponding actual GraphQL selection requests those fields.
+3. Query/document-vs-fixture parity is explicitly tested.
+4. A pre-fix-shaped query/response fails.
+5. A realistic Phase-B response passes.
+6. A realistic final-verification response passes.
+7. `Assert-VionaRepositoryIdentity` is not weakened.
+8. The suite does not depend on repository or durable state consumed by publication.
+9. Helper, config, and seals bind the exact PR #470 repository, PR node, remote head, remote head tree, candidate parent tree, candidate tree, and the single Kernel replacement path.
+
+#### PR #470 pre-publication baseline at final candidate preparation (2026-09-23) — HISTORICAL SNAPSHOT
+
+`HISTORICAL SNAPSHOT` / `SUPERSEDED BY PR470 CLOSED/GREEN END-TO-END STATE` / `NOT CURRENT EXECUTION AUTHORITY`. PR #470 is now `CLOSED / MERGED`; the `OPEN` and merged `false` values below are pre-publication history only. Current state is recorded in "PR #470 Canonical Kernel/Handoff Closure — CLOSED/GREEN END-TO-END" above.
+
+These values describe the verified pre-publication baseline used to bind the future PR #470-specific v2 helper. The later published head, thread resolution, fresh approval, Stage 1/Stage 2 checks, merge commit, and post-merge closure are recorded by their respective later lanes and are not predicted by this frozen candidate.
+
+| Field | Pre-publication baseline (verified at final candidate preparation) |
+|-------|--------------------------------------------------------------------|
+| PR #470 | `OPEN`; draft `false`; merged `false`; `docs(governance): close PR469 kernel handoff`; not merge-ready |
+| Remote head branch | `docs/viona-pr469-kernel-handoff-closure-sync-v1` |
+| Remote head | `df1c758cee318ba2f01bfdd39ce4c118da75c10e`; GitHub branch-update merge commit; parents `174a4461fc5a87f968096f114b06b3f05cc7826f` then `3c542ccb2542357812054ddb40b7b85613d21a53`; tree `c6fb164ef83886534c8d50e15f848828748f57d0`; Kernel blob `8ed5892b955125e60b2f536a2fafb9b7bbf15747` |
+| Previous remote head (historical) | `174a4461fc5a87f968096f114b06b3f05cc7826f`; sole parent `5d25ef76ca5b84bd2fea7c02f29d28745b93c1b4`; tree `cc02c11de04a6e419c23333705e5bd1260a33b3d` |
+| Base | `master`; base SHA `3c542ccb2542357812054ddb40b7b85613d21a53`; canonical master `3c542ccb2542357812054ddb40b7b85613d21a53` |
+| Master vs PR #470 head | Master is an ancestor of the PR #470 head; behind `0`; ahead `2` |
+| PR #470 diff vs master | Exactly one path, `docs/ai-context/VIONA_KERNEL_HANDOFF_FAST_SAFE_GLOBAL_MODE.md` (`+90 / -9`); no protocol or envelope spec path |
+| Mergeable state | `blocked`; not merge-ready |
+| Old local remediation | Local branch `docs/viona-pr469-kernel-handoff-closure-sync-v1` at `396547de3480f6c72190b9cc36e0a5a350e039c5` (parent `945d43522a0b19a1e30cc209e9f37c5053954b40`, whose tree equals the previous PR #470 remote head tree); `PRESERVED / NOT PUBLISHED / NOT MUTATED`; retained as evidence |
+| Reviewed post-PR471 candidate | Local branch `docs/viona-pr470-kernel-handoff-post-pr471-candidate-v2` at `8dd81df80925bebd12b2167d36f3b5d0dfa60996`; parent `3c542ccb2542357812054ddb40b7b85613d21a53`; A0 result `VIONA_PR470_KERNEL_HANDOFF_POST_PR471_CANDIDATE_INDEPENDENTLY_REVIEWED_READY_A0_V1`; `PRESERVED / REVIEWED / NOT_PUBLISHED / SUPERSEDED_FOR_FINAL_PUBLICATION_PREPARATION`; its parent tree is not the PR #470 remote head tree, so it is not a v2 publication candidate |
+| Final candidate | Local branch `docs/viona-pr470-final-kernel-after-update-v4`; sole parent `df1c758cee318ba2f01bfdd39ce4c118da75c10e`; parent tree `c6fb164ef83886534c8d50e15f848828748f57d0`; carries forward the reviewed `8dd81df80925bebd12b2167d36f3b5d0dfa60996` Kernel content; pre-publication content target for the future finite-replace-v2 publication by PR #470-specific v2 tooling |
+
+Neither `396547de3480f6c72190b9cc36e0a5a350e039c5` nor `8dd81df80925bebd12b2167d36f3b5d0dfa60996` may be published to PR #470. Only the final candidate based on the exact pre-publication PR #470 remote head `df1c758cee318ba2f01bfdd39ce4c118da75c10e` may be considered for a future v2 publication, after its own review and a separate exact authorization.
+
+`PR470_CONTINUATION_STATE_AT_CANDIDATE_PREPARATION` = `READY_FOR_FINAL_CANDIDATE_A0_THEN_PR470_SPECIFIC_V2_HELPER` (historical; superseded by `PR470_CONTINUATION_SEQUENCE` = `COMPLETE / CONSUMED / NON-REUSABLE`)
+
+#### PR #470 branch update — COMPLETE (one-off non-profile exception; historical provenance)
+
+| Field | Verified state |
+|-------|----------------|
+| Authorization | `APPROVE_VIONA_PR470_EXACT_ONE_UPDATE_BRANCH_TO_MASTER_A4_V2`; `CONSUMED / NONREUSABLE`; the V1 authorization was superseded before any marker or dispatch |
+| Operation class | `ONE_OFF_NON_PROFILE_PR_BRANCH_SYNCHRONIZATION_EXCEPTION`; not `REMOTE_COMMIT_AUTHORITY`; no publication profile created; canonical publication profile count remains `3` |
+| Operation | One REST `PUT /repos/laoton80-del/Ket-noi-eu/pulls/470/update-branch` with `expected_head_sha = 174a4461fc5a87f968096f114b06b3f05cc7826f`; HTTP `202 Accepted`; no retry; no fallback writer |
+| Result head / tree | `df1c758cee318ba2f01bfdd39ce4c118da75c10e` / `c6fb164ef83886534c8d50e15f848828748f57d0` |
+| Master incorporated | `3c542ccb2542357812054ddb40b7b85613d21a53`; canonical master unchanged |
+| Attempt marker | `MARKER_PATH_DEFECT = REMEDIATED` (`VIONA_PR470_UPDATE_BRANCH_MARKER_RELOCATION_A2_COMPLETE_VERIFIED`); consumed marker at `C:\KNG\viona-codex-api-evidence\pr470-update-branch-v2\attempt-marker.json`, SHA-256 `7e3d6c02511799565cc1f677b7ebd08c21aca4db1fe3d3380962890d16dc8d50`; relocation note SHA-256 `31439859137b84c1ec854df7266429de3fe832601d5add7466b0cc01f0639f8c`; stray repository copy removed; workspace clean |
+
+#### PR #470 pre-publication review/thread/check baseline (after the branch update, at final candidate preparation) — HISTORICAL SNAPSHOT
+
+`HISTORICAL SNAPSHOT` / `SUPERSEDED BY PR470 CLOSED/GREEN END-TO-END STATE` / `NOT CURRENT EXECUTION AUTHORITY`. The unresolved thread, new-approval requirement, and Stage 1 / Stage 2 not-run values below are pre-publication history only. Thread `PRRT_kwDOSFpBeM6lBWIw` is now `RESOLVED`, the final exact-head approval is recorded, and Stage 1 / Stage 2 are `SUCCESS` and consumed (see the PR #470 closure section above).
+
+| Field | Pre-publication baseline (verified at final candidate preparation) |
+|-------|--------------------------------------------------------------------|
+| Maty2016 review `5293687765` | `APPROVED`, submitted against old head `174a4461fc5a87f968096f114b06b3f05cc7826f` before the branch update; GitHub did not dismiss it, and at candidate preparation the reviews API reported its commit as `df1c758cee318ba2f01bfdd39ce4c118da75c10e` |
+| `PRE_PUBLICATION_APPROVAL` | `NONAUTHORITATIVE_FOR_FUTURE_PUBLISHED_HEAD`; a VIONA governance classification, not a GitHub review state; it does not satisfy Stage 1 for the future published head |
+| `FUTURE_PUBLISHED_HEAD_REQUIRES_NEW_APPROVAL` | `YES`; a fresh approval on the exact final published head |
+| Review thread `PRRT_kwDOSFpBeM6lBWIw` | `UNRESOLVED` at candidate preparation; outdated `false`; finding: PR #466 merged activation missing from the current-state section |
+| P2 content | This Kernel carries the PR #466 correction forward (see "PR #466 canonical REC2 Home activation — CLOSED/GREEN" below); the content correction does not change GitHub thread state, and outdated is not resolved |
+| `THREAD_RESOLUTION_REQUIRED_BEFORE_STAGE1` | `YES`; explicit resolution of the thread is a separate later step |
+| Pre-publication head check | `Expo + Trust + Functions Preflight`; check run `107369027862`; head `df1c758cee318ba2f01bfdd39ce4c118da75c10e`; `completed / success`; baseline evidence for that head only; the future v2-published head requires its own applicable check state |
+| Stage 1 / Stage 2 | Not run at candidate preparation; required on the exact future published head |
+
+Planned sequence at candidate preparation — HISTORICAL SNAPSHOT; all eleven steps are COMPLETE (`PR470_CONTINUATION_SEQUENCE` = `COMPLETE / CONSUMED / NON-REUSABLE`; `NEXT_PR470_MUTATION` = `NONE`); not current execution authority. Original plan text (each step required separate authorization; plan snapshot, not a status record):
+
+1. Independent A0 review of the final Kernel candidate based on PR #470 head `df1c758cee318ba2f01bfdd39ce4c118da75c10e`.
+2. Build a new PR #470-specific v2 publication helper bound to exact PR #470, head `df1c758cee318ba2f01bfdd39ce4c118da75c10e`, tree `c6fb164ef83886534c8d50e15f848828748f57d0`, the final candidate commit/tree, the single Kernel path, and the carry-forward query/fixture requirements above.
+3. Independent A0 review of that PR #470 helper.
+4. Separate exact publication authorization using canonical `github_graphql_existing_branch_finite_replace_v2`.
+5. One v2 publication dispatch plus read-only reconciliation.
+6. Explicitly resolve review thread `PRRT_kwDOSFpBeM6lBWIw` after verifying the final published Kernel addresses it.
+7. Fresh Maty2016 `APPROVED` review on the exact final published head.
+8. Stage 1 readiness.
+9. Stage 2 explicit merge authorization.
+10. Guarded merge.
+11. Post-merge local master sync / closure.
+
+At candidate preparation, no remote authority was granted by that Kernel candidate lane.
+
+Historical governance snapshot at candidate preparation; current governance flags are recorded in the PR #470 closure section above.
+
+| Governance state | At candidate preparation |
+|------------------|--------------------------|
+| `GLOBAL_MERGE_FREEZE` | `RELEASED` |
+| `NEW_ORDINARY_VIONA_PR_CREATION_SUSPENDED` | `ACTIVE`; merging PR #471 did not release it; PR #470 is the existing continuation PR for this Kernel update |
+| Canonical publication profile count | `3`; the PR #470 branch-update exception created no fourth profile |
+| Product decisions | Unchanged by PR #471, by the PR #470 branch update, and by this docs-only candidate |
+
+### PR #466 canonical REC2 Home activation — CLOSED/GREEN
+
+PR #466, `feat(home): activate canonical REC2 home by default`, is `CLOSED / MERGED`. The lower PR #466 governance-hold account remains historical pre-PR468 provenance and is superseded by this current merged record.
+
+| PR #466 current field | Verified state |
+|-----------------------|----------------|
+| Final reviewed head | `8b2df80929876825e4160d5042c04a5635ff1fc4` |
+| Squash merge | `2c7e72cb07a7dfd7a480ed23ecb3274f8cdb0504` |
+| Base at merge | `86e23d4df03e26d47632c7b1c59edad73f0da096` |
+| Product classification | `VIONA_PRODUCT_COMPLETION_REC2_CANONICAL_HOME_ACTIVATION` |
+| REC2 Home activation | `CANONICAL / ACTIVE IN SOURCE`: REC2 Home is the default B2C Home renderer when `EXPO_PUBLIC_FEATURE_REC2_HOME_SHELL` is unset/default. |
+| Rollback / invalid configuration | `EXPO_PUBLIC_FEATURE_REC2_HOME_SHELL=false` selects Reconstruction Home; any invalid non-empty value also fails closed to Reconstruction Home. |
+| Product architecture | Home remains orchestration, not a seventh universe. The canonical six universes are Local / Travel / Academy / Business / Account / SOS. |
+| Deployment and protected boundaries | PR #466 performed no deployment and introduced no backend, database, provider, payment, live-AI, or SOS-provider mutation. |
+
+### PR #468 freeze-release activation — current canonical correction
+
+PR #468 is `MERGED / CANONICAL` at `86e23d4df03e26d47632c7b1c59edad73f0da096`. Its valid merge activated the previously granted mandatory merge-authorization guardrail freeze release. The pre-PR468 pending-release account below remains historical evidence.
+
+| Current governance field | Verified state |
+|--------------------------|----------------|
+| `GLOBAL_MERGE_FREEZE` | `RELEASED` |
+| Canonical ordinary merge freeze scope | `GLOBAL_MERGE_FREEZE_RELEASED` |
+| `MANDATORY_MERGE_AUTHORIZATION_GUARDRAIL_FREEZE_ACTIVE` | `NO` |
+| Mandatory merge controls | `PRESERVED / ACTIVE`: exact-head approval → Readiness → ledger-backed Explicit Authorization → guarded merge wrapper |
+| `NEW_ORDINARY_VIONA_PR_CREATION_SUSPENDED` | `ACTIVE` |
+| Other containment | Emergency PR lifecycle containment and B1B governance freeze remain outside this release; no retroactive authority is claimed. |
+
+PR #469 and PR #470 used the governed existing-PR path. Neither released ordinary PR-creation suspension or created a general PR exception. This docs-only post-PR470 Kernel/Handoff closure sync authorizes no push, PR creation, remote publication, merge, or deployment; any later publication needs a separate exact authorization.
+
+### PR #469 Identity-Bound Publication Protocol Closure — CLOSED/GREEN END-TO-END
+
+PR #469 canonically published and merged the reviewed identity-bound GraphQL publication-protocol changes. The squash commit changed only `docs/ai-context/VIONA_CODEX_CONTROLLED_AUTONOMOUS_EXECUTION_PROTOCOL.md` and `docs/product/VIONA_CODEX_AUTONOMOUS_EXECUTION_ENVELOPE_SPEC.md`.
+
+| Publication / approval evidence | Verified state |
+|---------------------------------|----------------|
+| Pre-publication remote branch head | `192b55143088e8cf89ed031dd92eb35d784a1029` |
+| Reviewed local candidate evidence head | `e37ff9847fb60d31cf50a87902e5dc65c3e67f48` |
+| Published PR head | `1f0ff492920f14ea23de44e7c19602e4f9537298` |
+| Authorized / published tree | `4b2fb07297fe0b44f4b722f8f478c75dcde98ec4` |
+| Publication helper | Governed and sealed `C:\KNG\viona-codex-api-evidence\pr469-protocol-extension-v1\Invoke-VionaPr469ExistingBranchPublication.ps1` |
+| Publication method | Exactly one GitHub GraphQL `createCommitOnBranch` dispatch; no push fallback, REST write fallback, or retry |
+| Publication durable authority | `CONSUMED / NON-REUSABLE`; marker retained |
+| Publication result | `VIONA_PR469_CANONICAL_PUBLICATION_EXECUTION_A2C_V4_COMPLETE_VERIFIED` |
+| Exact-head reviewer | `Maty2016`; review `5280313473`; `APPROVED` on `1f0ff492920f14ea23de44e7c19602e4f9537298` |
+| Required approval at gate execution | `1` active approval; satisfied |
+
+| Two-stage gate / ledger evidence | Verified state |
+|----------------------------------|----------------|
+| Stage 1 | `Viona Merge Readiness Gate`; workflow run `35749944485`, attempt `1`; check run `106821777139`; exact published head; `SUCCESS`; no duplicate successful result |
+| Stage 1 result | `VIONA_PR469_STAGE1_MERGE_READINESS_GATE_COMPLETE_VERIFIED` |
+| Stage 2 | `Viona Explicit Merge Authorization`; workflow run `35751990257`, attempt `1`; check run `106828481650`; exact published head; `SUCCESS`; no rerun |
+| Stage 2 authorization ID | `0f1f8107-bf3e-455d-8b98-8ce0176321be` |
+| Stage 2 target key | `018c6e9b7a2b5a092d823c222ba43337136c79e79b35e5dfee68fc935071eb5a` |
+| Stage 2 ledger ref | `refs/heads/viona-governance-merge-ledger-v1` |
+| Stage 2 ledger path | `records/01/018c6e9b7a2b5a092d823c222ba43337136c79e79b35e5dfee68fc935071eb5a.json` |
+| Stage 2 lifecycle | `ACTIVE → CONSUMING → CONSUMED`; terminal `CONSUMED / NON-REUSABLE`; no duplicate active authorization |
+| Stage 2 result | `VIONA_PR469_STAGE2_EXPLICIT_MERGE_AUTHORIZATION_COMPLETE_VERIFIED` |
+
+| Guarded merge / closure evidence | Verified state |
+|----------------------------------|----------------|
+| Canonical wrapper | `scripts/viona-guarded-pr-merge.mjs`; one execution |
+| Merge method / calls | `squash`; one merge API call; no second attempt, auto-merge, or push |
+| PR final state | `CLOSED / MERGED` |
+| Squash commit | `5d25ef76ca5b84bd2fea7c02f29d28745b93c1b4` |
+| Sole squash parent | `2c7e72cb07a7dfd7a480ed23ecb3274f8cdb0504` |
+| Merged tree | `4b2fb07297fe0b44f4b722f8f478c75dcde98ec4` |
+| Guarded merge result | `VIONA_PR469_GUARDED_SQUASH_MERGE_COMPLETE_VERIFIED` |
+| Terminal ledger detail | `state = CONSUMED`; `consumed_by = laoton80-del`; `merge_commit_sha = 5d25ef76ca5b84bd2fea7c02f29d28745b93c1b4`; `merge_api_result = null` |
+| Ledger interpretation | `NO_LEDGER_REPAIR_REQUIRED`: canonical wrapper permits this terminal shape; recorded merge SHA matches the independently verified GitHub squash merge. No ledger repair was performed. |
+| Post-merge closure | `VIONA_PR469_POSTMERGE_CLOSURE_MASTER_VERIFIED_A0`; exact master/tree above; only the two reviewed protocol files changed, with no unexpected path |
+
+| Local sync / handoff at PR #469 closure (historical; superseded by the PR #471 and PR #470 closure states above) | Verified state |
+|------------------------------|----------------|
+| Local sync result | `VIONA_PR469_POSTMERGE_LOCAL_SYNC_COMPLETE_VERIFIED`; no sync-lane commit, merge, rebase, or push |
+| Canonical local workspace | `C:\KNG\ket-noi-eu` |
+| `CURRENT CANONICAL SOURCE BASELINE` | `origin/master @ 5d25ef76ca5b84bd2fea7c02f29d28745b93c1b4` |
+| `CURRENT CANONICAL TREE` | `4b2fb07297fe0b44f4b722f8f478c75dcde98ec4` |
+| `CURRENT LOCAL BRANCH` at verified sync closure | `master` |
+| Local / origin / remote master parity at sync closure | `YES`; HEAD, local master, and origin/master at `5d25ef76ca5b84bd2fea7c02f29d28745b93c1b4`; workspace `CLEAN` |
+| Candidate evidence | Branch `docs/viona-graphql-create-ref-then-commit-candidate-v1` preserved at `e37ff9847fb60d31cf50a87902e5dc65c3e67f48` |
+| Preserved stash | `f5ff652358c7fef2457f5ac1f3442756bc0de57a`; unchanged |
+| PR #469 | `CLOSED / GREEN / END-TO-END VERIFIED` |
+| PR #469 publication authority | `CONSUMED / NON-REUSABLE` |
+| PR #469 Stage 2 merge authority | `CONSUMED / NON-REUSABLE` |
+| `GLOBAL_MERGE_FREEZE` | `RELEASED` |
+| `NEW_ORDINARY_VIONA_PR_CREATION_SUSPENDED` | `ACTIVE` |
+| Next product / engineering lane | `NOT SELECTED BY THIS DOCS-ONLY SYNC` |
+
+Historical note (PR #469 closure era): the verified local-sync state above predates the earlier local docs-only preparation branch `docs/viona-pr469-kernel-handoff-closure-sync-v1`, now preserved at `396547de3480f6c72190b9cc36e0a5a350e039c5` as historical remediation evidence. That local branch was evidence preparation only; it did not move canonical master or grant publication authority. The final candidate branch prepared for the PR #470 v2 publication was `docs/viona-pr470-final-kernel-after-update-v4`, now preserved at `da91c55864e13c497635524d6fbd98e40a9f8105` as local evidence; PR #470 is `CLOSED / MERGED` (see the PR #470 closure section above).
+
+### REC2 Two-Stage Merge Control Closure — Current Canonical Governance State
+
+This section is the current canonical interpretation of VIONA merge control. Older T1–T3 entries below are retained as historical incident and migration provenance only.
+
+| Field | Current state |
+|-------|---------------|
+| `VIONA_REC2_TWO_STAGE_MERGE_CONTROL` | `CLOSED_GREEN` |
+| Final cleanup PR | PR #465 |
+| Reviewed/final PR head | `58953fe5c7d77bbac0f886da2c4680fb84e413ff` |
+| REC2 squash merge | `76068e7f7eab54bebc8553beb5a5dd0d0754146c` |
+| Current canonical master before release activation | `64c2a34477195bd6c9c2cbb2279be69c26b319fd` |
+| Final Stage1 | `Viona Merge Readiness Gate` |
+| Final Stage2 | `Viona Explicit Merge Authorization` |
+| Required status checks | `Viona Merge Readiness Gate` / `app_id 15368`; `Viona Explicit Merge Authorization` / `app_id 15368` |
+| Required-status-check strictness | `strict = true` |
+| Legacy Stage1 | `Viona Merge Authorization Gate` — `REMOVED_FROM_ACTIVE_REQUIRED_CONTEXTS` |
+| `LEGACY_STAGE1_CONSTANT_PRESENT` | `NO` |
+| `LEGACY_STAGE1_SKIP_PRESENT` | `NO` |
+| `ACTIVE_RUNTIME_LEGACY_SEMANTIC_USE_COUNT` | `0` |
+| Guarded merge consumer | `scripts/viona-guarded-pr-merge.mjs` |
+| Guarded merge consumer role | `CANONICAL / SOLE INTENDED STAGE2 AUTHORIZATION CONSUMER` |
+| Final REC2 authorization | `7f1a9875-b544-4f47-9b6b-5811143f6ac2` |
+| Final authorization state | `CONSUMED` |
+| Final ledger ref after REC2 closure | `11183517981a94f473e6e36a27fde3d01d319d9a` |
+| REC2 Stage2 run count after closure | `3` |
+| Current ledger ref after PR #467 canonicalization | `472306f92f58156b070566f85b2aedf57b8c9b71` |
+| Current Stage2 run count after PR #467 canonicalization | `4` |
+| Deployment performed during REC2 closure | `NO` |
+
+Current interpretation: **REC2 TWO-STAGE MERGE CONTROL IMPLEMENTED, LIVE-PROVEN, MIGRATION COMPLETE, LEGACY STAGE1 REMOVED.**
+
+**HISTORICAL SNAPSHOT — SUPERSEDED BY CURRENT PR #468/#469 CLOSURE STATE ABOVE.** The freeze, PR #466 hold, and next-sequence material below records the pre-PR468 activation moment; its `ACTIVE` freeze and pending-activation wording are not current execution authority.
+
+#### Governance freeze before release activation becomes canonical
+
+| Field | Historical pre-PR468 state |
+|-------|---------------|
+| `GLOBAL_MERGE_FREEZE` | `ACTIVE` |
+| `ALL_VIONA_PR_MERGES_PROHIBITED` | `PRESERVED UNTIL EXPLICIT RELEASE` |
+| `MANDATORY_MERGE_AUTHORIZATION_GUARDRAIL_FREEZE_ACTIVE` | `YES` |
+| `B1B_GOVERNANCE_FREEZE_ACTIVE` | `YES` |
+| `NO_RETROACTIVE_AUTHORIZATION_CLAIMED` | `PRESERVED` |
+| Canonical master runtime freeze scope before activation | `FREEZE_EXCEPTION_FOR_MERGE_GUARDRAIL_REMEDIATION_ONLY` |
+
+REC2 closure did not automatically release any freeze.
+
+#### Freeze-release readiness (historical pre-PR468 snapshot)
+
+Source contracts retained:
+
+- Repository-Level Merge Authorization Technical Containment Plan §8: eight-condition formulation.
+- Mandatory Merge-Authorization Guardrail Implementation Plan §7: seven-condition formulation.
+
+This reconciliation does not create a new numbered freeze-release contract and does not renumber either historical source. It does not claim that either historical formulation has been newly superseded. Both formulations require the applicable guardrail implementation, testing, and post-merge verification to be complete; Kernel/Handoff to record or canonicalize the guardrail state; and the operator to explicitly release the freeze before release can become effective.
+
+| Field | State |
+|-------|-------|
+| REC2 implementation / verification | `CLOSED_GREEN`; live-proven |
+| Kernel/Handoff reconciliation | PR #467; `MERGED / CANONICAL`; recording requirement `SATISFIED` |
+| Explicit operator freeze release | `GRANTED` via `RELEASE_VIONA_MANDATORY_MERGE_AUTHORIZATION_GUARDRAIL_FREEZE_AFTER_IMPLEMENTATION_AND_POST_MERGE_VERIFICATION` |
+| Runtime release effectiveness | `PENDING THIS ACTIVATION MERGE` |
+| Result before activation is canonical | `GLOBAL_MERGE_FREEZE = ACTIVE` |
+
+PR #467 completed the Kernel/Handoff recording requirement when it reached
+canonical master. The operator release is now granted, but this local
+activation branch is not canonical and does not itself effect release. The
+runtime becomes `GLOBAL_MERGE_FREEZE = RELEASED` only if this exact activation
+is separately published, reviewed, authorized, and validly merged to master.
+
+#### PR #466 governance hold (historical pre-PR468 snapshot)
+
+| Field | Current state |
+|-------|---------------|
+| PR | #466 |
+| Purpose | Canonical REC2 six-universe Home activation |
+| Head | `829b05ba7a12411f7d73935d4ea41442cfa51157` |
+| State | `OPEN`; `NON_DRAFT`; `UNMERGED` |
+| Exact-head Preflight | check run `105985462222`; `SUCCESS` |
+| Maty2016 exact-head approval | review `5258381266`; `APPROVED` |
+| Unresolved review threads | `0` |
+| Reviewed scope digest | `4f8862f72deefcd45060ff8ec9b896ba02868cc8ef8b849aeeef687c3edc9890` |
+| Target key | `b8aadba6ffdb2610676dc5be4032acf1af31fe7c22be1486c6a87e1dba915a36` |
+| Target ledger record | `ABSENT` |
+| Readiness check | `NOT ISSUED` |
+| Stage2 | `NOT ISSUED` |
+| Merge | `NOT AUTHORIZED` |
+| Reason | `ACTIVE MERGE FREEZE` + product PR cannot legitimately use `FREEZE_EXCEPTION_FOR_MERGE_GUARDRAIL_REMEDIATION_ONLY` |
+| Classification | `BLOCKED_ONLY_BY_CURRENT_GOVERNANCE_FREEZE_RELEASE_SEQUENCE` |
+
+PR #466 is not recorded as technically failed.
+
+#### PR-creation governance (historical pre-PR468 snapshot)
+
+`VIONA_REC2_R2_PR_CREATION_FREEZE_RELEASE_PACKET_V1` was a one-time PR-creation exception for its exact R2 target. It did not globally release `NEW_ORDINARY_VIONA_PR_CREATION_SUSPENDED`. The operator has now granted the mandatory merge-freeze release, but `NEW_ORDINARY_VIONA_PR_CREATION_SUSPENDED` remains active. This release-activation branch is not authorized for push or PR creation by its local preparation lane; remote publication requires a separate exact exception.
+
+#### Next governance sequence (historical pre-PR468 plan; superseded)
+
+1. Obtain a separate exact publication exception for this fixed release-activation head.
+2. Review, authorize, and validly merge the exact activation through the mandatory two-stage control.
+3. Verify the code-owned `GLOBAL_MERGE_FREEZE = RELEASED` state is canonical on master.
+4. Only then, and under a separate exact authorization, resume PR #466 Readiness → Stage2 → guarded merge under ordinary post-release semantics.
+
+Documenting this sequence does not authorize any step.
 
 ### Pack25 controlled status-action UI visual confirmation (CLOSED/GREEN)
 
@@ -458,7 +1045,9 @@ All new work branches from `c843111` unless a later pack explicitly updates this
 | FC-P0 Local provider authority E8 Case B Vercel CLI operator interactive login | **MERGED / VERIFIED ON MASTER** — PR #444 squash `@ 20b6bce37810c51bd54fe5a4226571bb33a1528b` (reviewed head `53d776e…`); `VERCEL_CLI_OPERATOR_INTERACTIVE_LOGIN_VERIFIED`; `B1A_AUTHENTICATION_PREREQUISITE_REMEDIATED_WITH_PROJECT_PROVISIONING_RETRY_UNAUTHORIZED`; four Case B blockers preserved. Evidence: `docs/product/VIONA_FC_P0_LOCAL_PROVIDER_AUTHORITY_E8_CASE_B_VERCEL_CLI_OPERATOR_INTERACTIVE_LOGIN_RESULT.md`. |
 | FC-P0 Local provider authority E8 Case B B1A staging project provisioning retry | **MERGED — FACTUAL RESULT GREEN AND RETAINED ON MASTER** — PR #445 squash `@ 20711265cd25202a4426be740697b5a9d67c113c` (reviewed head `899b5ce…`; parent `20b6bce…`; mergedAt `2026-07-24T18:22:23Z`); created `viona-web-staging-eu` under `ket-noi-global`; local link verified; deployments/env = 0; Git/domains/aliases **NOT RECONFIRMED BY CURRENT CLI CONTRACT**; transient link side effect remediated (historical OIDC/gitignore mutation counts preserved; residual = 0); classifications include `DEDICATED_VERCEL_STAGING_PROJECT_PROVISIONED_WITH_ZERO_DEPLOYMENTS`, `B1A_LOCAL_PROJECT_LINK_VERIFIED_WITH_GIT_BINDING_UNAUTHORIZED`, `B1A_VERCEL_LINK_TRANSIENT_LOCAL_ENV_AND_GITIGNORE_MUTATION_REMEDIATED_WITH_NO_OIDC_SECRET_OR_TRACKED_DIFF_REMAINING`; **historical pre-merge fixed-head merge authorization NOT PROVEN / REMAINS PERMANENTLY UNRESOLVED**; first permanent non-retroactive exception accepted (`ACKNOWLEDGE_AND_ACCEPT_…_PR445_…_AS_NON_RETROACTIVE_GOVERNANCE_EXCEPTION`) — `NO_RETROACTIVE_AUTHORIZATION_CLAIMED`; four Case B blockers preserved; B1B–B7 unauthorized. Evidence: `docs/product/VIONA_FC_P0_LOCAL_PROVIDER_AUTHORITY_E8_CASE_B_B1A_VERCEL_STAGING_PROJECT_PROVISIONING_RETRY_RESULT.md`; governance: `docs/product/VIONA_FC_P0_LOCAL_PROVIDER_AUTHORITY_E8_CASE_B_PR445_MERGE_AUTHORIZATION_PROVENANCE_GAP_NON_RETROACTIVE_EXCEPTION_DECISION.md`. |
 | FC-P0 Local provider authority E8 Case B PR #446 exception acceptance + Kernel/Handoff sync | **MERGED ON MASTER via PR #447 squash `@ 636ad1e145e65547d80a863e2d249279bce8b25d`** — PR #446 content retained; historical fixed-head pre-merge authorization for #446 remains NOT PROVEN / PERMANENTLY UNRESOLVED; Option A+ second non-retroactive exception accepted; `MANDATORY_MERGE_AUTHORIZATION_GUARDRAIL_FREEZE_ACTIVE`; `B1B_GOVERNANCE_FREEZE_ACTIVE`; `NO_RETROACTIVE_AUTHORIZATION_CLAIMED`. Evidence: `docs/product/VIONA_FC_P0_LOCAL_PROVIDER_AUTHORITY_E8_CASE_B_PR446_REPEAT_MERGE_AUTHORIZATION_CONTROL_FAILURE_NON_RETROACTIVE_EXCEPTION_AND_GUARDRAIL_DECISION.md`, `docs/product/VIONA_MANDATORY_MERGE_AUTHORIZATION_GUARDRAIL_IMPLEMENTATION_PLAN.md`. |
-| FC-P0 Local provider authority PR #447 active mandatory merge-freeze breach | **PR447_INCIDENT_DISPOSITION_AND_TECHNICAL_CONTAINMENT_SYNC_PREPARED_UNCOMMITTED** — PR #447 MERGED DURING ACTIVE MANDATORY FREEZE (reviewed head `ace52962355ecb38016f70f35502e82efab8f054`; squash `@ 636ad1e145e65547d80a863e2d249279bce8b25d`; mergedAt `2026-07-26T16:48:49Z`; merged_by `laoton80-del` metadata only); factual content GREEN / RETAINED; governance lifecycle NOT GREEN; incident OPEN; Disposition **A SELECTED** (retain content; no third exception); Direction **C SELECTED FOR PLANNING** (repository-level technical containment — design-only); freeze-remediation exception NOT FOUND / NOT GRANTED; `PR447_INCIDENT_CONTAINMENT_ACTIVE`; `MANDATORY_MERGE_AUTHORIZATION_GUARDRAIL_FREEZE_ACTIVE`; `NO_FURTHER_VIONA_PR_MERGE_UNTIL_GUARDRAIL_IMPLEMENTED_TESTED_AND_VERIFIED`; `B1B_GOVERNANCE_FREEZE_ACTIVE`; `NO_RETROACTIVE_AUTHORIZATION_CLAIMED`; not canonical until later authorized commit/review/remediation-controlled merge + post-merge verify. Evidence: `docs/product/VIONA_PR447_ACTIVE_MANDATORY_MERGE_FREEZE_BREACH_GOVERNANCE_INCIDENT_INVESTIGATION_CONTAINMENT_AND_DISPOSITION.md`, `docs/product/VIONA_REPOSITORY_LEVEL_MERGE_AUTHORIZATION_TECHNICAL_CONTAINMENT_PLAN.md`. |
+| FC-P0 Local provider authority PR #447 active mandatory merge-freeze breach | **INCIDENT OPEN / FACTUAL CONTENT RETAINED** — PR #447 MERGED DURING ACTIVE MANDATORY FREEZE (reviewed head `ace52962355ecb38016f70f35502e82efab8f054`; squash `@ 636ad1e145e65547d80a863e2d249279bce8b25d`; mergedAt `2026-07-26T16:48:49Z`; merged_by `laoton80-del` metadata only); governance lifecycle NOT GREEN; Disposition A selected; Direction C planning recorded on master via PR #448; freeze-remediation exception NOT FOUND / NOT GRANTED; `PR447_INCIDENT_CONTAINMENT_ACTIVE`; incident remains OPEN and is not closed by PR #448. Evidence: `docs/product/VIONA_PR447_ACTIVE_MANDATORY_MERGE_FREEZE_BREACH_GOVERNANCE_INCIDENT_INVESTIGATION_CONTAINMENT_AND_DISPOSITION.md`, `docs/product/VIONA_REPOSITORY_LEVEL_MERGE_AUTHORIZATION_TECHNICAL_CONTAINMENT_PLAN.md`. |
+| FC-P0 Local provider authority PR #448 second active mandatory merge-freeze breach | **INCIDENT OPEN / CONTAINMENT ACTIVE** — PR #448 MERGED DURING ACTIVE MANDATORY FREEZE (reviewed head `7c99c2a77544ffb0c3a5fb73cd6ee12316f1e37a`; squash `@ c6a19e203a3aa6897cffad8dc9d908f9bca9e9ec`; mergedAt `2026-07-27T01:34:28Z`; merged_by `laoton80-del` metadata only); factual content GREEN / RETAINED; governance lifecycle NOT GREEN; Disposition **A SELECTED**; Direction **C SELECTED**; no new governance exception; `EMERGENCY_VIONA_PR_LIFECYCLE_CONTAINMENT_ACTIVE`; `NEW_ORDINARY_VIONA_PR_CREATION_SUSPENDED`; `ALL_VIONA_PR_MERGES_PROHIBITED`; `MANDATORY_MERGE_AUTHORIZATION_GUARDRAIL_FREEZE_ACTIVE`; `B1B_GOVERNANCE_FREEZE_ACTIVE`; `NO_RETROACTIVE_AUTHORIZATION_CLAIMED`; PR #447 and #448 incidents both remain OPEN. Evidence: `docs/product/VIONA_PR448_SECOND_ACTIVE_MANDATORY_MERGE_FREEZE_BREACH_GOVERNANCE_INCIDENT_INVESTIGATION_EMERGENCY_CONTAINMENT_AND_DISPOSITION.md`, `docs/product/VIONA_EMERGENCY_PR_LIFECYCLE_CONTAINMENT_AND_REPOSITORY_LEVEL_GITHUB_PROTECTION_IMPLEMENTATION_PLAN.md`. |
+| VIONA emergency master lockdown T1–T3 (uncommitted packet sync) | **HISTORICAL SNAPSHOT — SUPERSEDED BY REC2 TWO-STAGE CLOSURE; see “REC2 Two-Stage Merge Control Closure — Current Canonical Governance State” above.** Historical record: `VIONA_T2_RESULT_AND_PHASE_T3_MERGE_AUTHORIZATION_GATE_PLAN_SYNC_PREPARED_UNCOMMITTED` — T1: master emergency branch protection APPLIED and GET-verified (`Viona Emergency Merge Lock`; strict; enforce_admins; force/delete disabled); T2: effectiveness VERIFIED via master configuration evidence + controlled mirror negative tests (PR #449 ephemeral test PR CLOSED / UNMERGED / mirror-target only; master destructive tests NOT EXECUTED; master protection UNCHANGED after cleanup); `EMERGENCY_MASTER_LOCKDOWN_EFFECTIVENESS_VERIFIED` (emergency control only — not gate complete); at that historical snapshot, Viona Merge Authorization Gate: **NOT IMPLEMENTED**; Phase T3: implementation + bootstrap Candidate A (head-bound emergency-lock success) + post-merge required-context transition **PLANNED / NOT AUTHORIZED / NOT EXECUTED**; containment/freeze/B1B remained ACTIVE/ACTIVE/FROZEN. Evidence: `docs/product/VIONA_T2_EMERGENCY_BRANCH_PROTECTION_EFFECTIVENESS_VERIFICATION_RESULT.md`, `docs/product/VIONA_T3_MERGE_AUTHORIZATION_GATE_IMPLEMENTATION_BOOTSTRAP_AND_VERIFICATION_PLAN.md`. |
 | Pack26 implementation | **NOT opened** |
 
 ### DEFERRED / BACKLOG (recorded, not authorized — logged during Pack37 implementation sync; updated during Pack38 implementation sync with 2 additional findings; those 2 findings moved out during Pack39 planning sync into their own planning packet — see the Pack39 planning row above — and removed from this list accordingly)

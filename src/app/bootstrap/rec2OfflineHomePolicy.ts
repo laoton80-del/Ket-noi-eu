@@ -1,0 +1,462 @@
+import { createContext, useContext } from 'react';
+
+export type Rec2ConnectivityTruth = true | false | null;
+
+export type Rec2ConnectivityState = Readonly<{
+  isConnected: Rec2ConnectivityTruth;
+  isInternetReachable: Rec2ConnectivityTruth;
+}>;
+
+export type Rec2OfflineHomeRenderMode =
+  | 'loading'
+  | 'maintenance'
+  | 'online-app'
+  | 'local-offline-home'
+  | 'offline-blocked';
+
+export type Rec2OfflineHomeContentState = 'default' | 'loading' | 'offline' | 'gated';
+
+export type Rec2OfflineHomePolicyInput = Readonly<{
+  rec2HomeEnabled: boolean;
+  connectivity: Rec2ConnectivityState;
+  isHydrating: boolean;
+  hasAuthenticatedUser: boolean;
+  hasB2BWorkspaceAccess: boolean;
+  isB2CMode: boolean;
+  localeReady: boolean;
+  fontAssetsReady: boolean;
+  intentGateReady: boolean;
+  opsReady: boolean;
+  remoteOpsReady: boolean;
+  operationalKillSwitch: boolean;
+  operationalReadOnlyMode: boolean;
+  disabledFeatures: readonly string[];
+}>;
+
+export type Rec2OfflineHomePolicy = Readonly<{
+  renderMode: Rec2OfflineHomeRenderMode;
+  localOnlyGuestHome: boolean;
+  remoteInitializersAllowed: boolean;
+  remoteNavigationAllowed: boolean;
+  rootLinkingAllowed: boolean;
+  contentState: Rec2OfflineHomeContentState;
+  fontAssetsReady: boolean;
+  connectivity: Rec2ConnectivityState;
+  operationalReadOnlyMode: boolean;
+  disabledFeatures: readonly string[];
+}>;
+
+export type Rec2OfflineHomeRuntimeBoundary = Rec2OfflineHomePolicy;
+
+export const Rec2OfflineHomeBoundaryContext =
+  createContext<Rec2OfflineHomeRuntimeBoundary | null>(null);
+
+export function useRec2OfflineHomeBoundary(): Rec2OfflineHomeRuntimeBoundary {
+  const value = useContext(Rec2OfflineHomeBoundaryContext);
+  if (!value) {
+    throw new Error('useRec2OfflineHomeBoundary must be used inside AppRoot');
+  }
+  return value;
+}
+
+export function canRunRec2RemoteInitializers(
+  input: Pick<
+    Rec2OfflineHomePolicyInput,
+    | 'connectivity'
+    | 'isHydrating'
+    | 'remoteOpsReady'
+    | 'operationalKillSwitch'
+    | 'operationalReadOnlyMode'
+  >
+): boolean {
+  return canResolveRec2RemoteOpsConfig(input) && input.remoteOpsReady;
+}
+
+export function canResolveRec2RemoteOpsConfig(
+  input: Pick<
+    Rec2OfflineHomePolicyInput,
+    | 'connectivity'
+    | 'isHydrating'
+    | 'operationalKillSwitch'
+    | 'operationalReadOnlyMode'
+  >
+): boolean {
+  return (
+    input.connectivity.isConnected === true &&
+    input.connectivity.isInternetReachable === true &&
+    !input.isHydrating &&
+    !input.operationalKillSwitch &&
+    !input.operationalReadOnlyMode
+  );
+}
+
+export type Rec2OpsConfigSource = 'env_only' | 'remote_cached' | 'remote_fresh';
+
+/** Only a genuinely fresh remote resolution establishes remote ops readiness. */
+export function isRec2RemoteOpsResolutionReady(source: Rec2OpsConfigSource): boolean {
+  return source === 'remote_fresh';
+}
+
+/**
+ * Connectivity grants only remote readiness. It never grants identity,
+ * permission, or operational authority, and an unknown value is not online.
+ */
+export function resolveRec2OfflineHomePolicy(
+  input: Rec2OfflineHomePolicyInput
+): Rec2OfflineHomePolicy {
+  const remoteInitializersAllowed = canRunRec2RemoteInitializers(input);
+  const remoteNetworkReady =
+    input.connectivity.isConnected === true &&
+    input.connectivity.isInternetReachable === true;
+  const explicitlyOffline =
+    input.connectivity.isConnected === false ||
+    input.connectivity.isInternetReachable === false;
+  const localCoreReadinessComplete =
+    !input.isHydrating &&
+    input.localeReady &&
+    input.intentGateReady &&
+    input.opsReady;
+  const localGuestHomeEligible =
+    input.rec2HomeEnabled &&
+    !input.hasAuthenticatedUser &&
+    !input.hasB2BWorkspaceAccess &&
+    input.isB2CMode;
+
+  let renderMode: Rec2OfflineHomeRenderMode;
+  if (input.opsReady && input.operationalKillSwitch) {
+    renderMode = 'maintenance';
+  } else if (!localCoreReadinessComplete) {
+    renderMode = 'loading';
+  } else if (explicitlyOffline && localGuestHomeEligible) {
+    // A disconnected RC2 guest may render with the platform font fallback.
+    // The real font readiness value remains false and online/privileged paths
+    // retain the ordinary font gate below.
+    renderMode = 'local-offline-home';
+  } else if (!input.fontAssetsReady) {
+    renderMode = 'loading';
+  } else if (
+    remoteNetworkReady &&
+    input.remoteOpsReady &&
+    !input.operationalReadOnlyMode
+  ) {
+    renderMode = 'online-app';
+  } else if (localGuestHomeEligible) {
+    renderMode = 'local-offline-home';
+  } else {
+    renderMode = 'offline-blocked';
+  }
+
+  const localOnlyGuestHome = renderMode === 'local-offline-home';
+  const onlineApp = renderMode === 'online-app';
+  return {
+    renderMode,
+    localOnlyGuestHome,
+    remoteInitializersAllowed,
+    remoteNavigationAllowed: onlineApp,
+    rootLinkingAllowed: onlineApp,
+    contentState: localOnlyGuestHome
+      ? explicitlyOffline
+        ? 'offline'
+        : input.operationalReadOnlyMode
+          ? 'gated'
+          : 'loading'
+      : 'default',
+    fontAssetsReady: input.fontAssetsReady,
+    connectivity: { ...input.connectivity },
+    operationalReadOnlyMode: input.operationalReadOnlyMode,
+    // No AppRoot feature-name mapping exists. Preserve exact downstream truth
+    // without substring, prefix, or semantic guessing.
+    disabledFeatures: input.disabledFeatures.slice(),
+  };
+}
+
+export type Rec2LocalAction =
+  | 'language'
+  | 'viona-panel'
+  | 'sos-guidance'
+  | 'account'
+  | 'local'
+  | 'travel'
+  | 'academy'
+  | 'business'
+  | 'protected-route';
+
+const OFFLINE_LOCAL_ACTIONS: ReadonlySet<Rec2LocalAction> = new Set([
+  'language',
+  'viona-panel',
+  'sos-guidance',
+]);
+
+export function isRec2ActionAllowed(
+  boundary: Rec2OfflineHomeRuntimeBoundary,
+  action: Rec2LocalAction
+): boolean {
+  if (boundary.remoteNavigationAllowed) return true;
+  return boundary.localOnlyGuestHome && OFFLINE_LOCAL_ACTIONS.has(action);
+}
+
+/** Claims a remote initializer at most once for this mounted app session. */
+export function claimRec2RemoteInitializerOnce(
+  started: Set<string>,
+  key: string,
+  allowed: boolean
+): boolean {
+  if (!allowed || started.has(key)) return false;
+  started.add(key);
+  return true;
+}
+
+export type Rec2StartupLinkingOutcome =
+  | 'pending'
+  | 'authorized-online'
+  | 'rejected-offline';
+
+export const REC2_PENDING_NATIVE_LINK_BUFFER_MAX_SIZE = 8;
+
+/**
+ * Retains only the newest bounded set of native URL events observed while
+ * startup linking is pending. The queue is process-local and never grants
+ * navigation authority by itself.
+ */
+export function enqueueRec2PendingNativeLink(
+  pendingLinks: readonly string[],
+  url: string
+): readonly string[] {
+  if (!url) return pendingLinks;
+  const next = [...pendingLinks, url];
+  return next.length <= REC2_PENDING_NATIVE_LINK_BUFFER_MAX_SIZE
+    ? next
+    : next.slice(-REC2_PENDING_NATIVE_LINK_BUFFER_MAX_SIZE);
+}
+
+export type Rec2PendingNativeLinkSettlement = Readonly<{
+  pendingLinks: readonly string[];
+  linksToDeliver: readonly string[];
+}>;
+
+/**
+ * Only committed online authorization releases queued runtime URLs. A
+ * committed offline rejection clears them, and a pending/unknown decision
+ * leaves them untouched without delivery.
+ */
+export function settleRec2PendingNativeLinks(
+  pendingLinks: readonly string[],
+  outcome: Rec2StartupLinkingOutcome
+): Rec2PendingNativeLinkSettlement {
+  if (outcome === 'authorized-online') {
+    return { pendingLinks: [], linksToDeliver: [...pendingLinks] };
+  }
+  if (outcome === 'pending') {
+    return { pendingLinks: [...pendingLinks], linksToDeliver: [] };
+  }
+  return { pendingLinks: [], linksToDeliver: [] };
+}
+
+export type Rec2OfflineSessionState = Readonly<{
+  startupLinkingOutcome: Rec2StartupLinkingOutcome;
+}>;
+
+export type Rec2OfflineSessionAdvanceContext = Readonly<{
+  navigationWillMount: boolean;
+}>;
+
+/**
+ * Classifies the startup linking decision exactly once from the navigation
+ * lifecycle that AppRoot will actually render. Connectivity alone cannot
+ * reject an initial URL before a local offline navigation shell mounts.
+ */
+export function advanceRec2OfflineSession(
+  previous: Rec2OfflineSessionState,
+  policy: Rec2OfflineHomePolicy,
+  context: Rec2OfflineSessionAdvanceContext
+): Rec2OfflineSessionState {
+  if (
+    previous.startupLinkingOutcome === 'authorized-online' ||
+    previous.startupLinkingOutcome === 'rejected-offline'
+  ) {
+    return previous;
+  }
+
+  if (previous.startupLinkingOutcome !== 'pending') {
+    return previous;
+  }
+
+  if (context.navigationWillMount && policy.rootLinkingAllowed) {
+    return { startupLinkingOutcome: 'authorized-online' };
+  }
+
+  const explicitlyOffline =
+    policy.connectivity.isConnected === false ||
+    policy.connectivity.isInternetReachable === false;
+  if (
+    context.navigationWillMount &&
+    policy.renderMode === 'local-offline-home' &&
+    explicitlyOffline
+  ) {
+    return { startupLinkingOutcome: 'rejected-offline' };
+  }
+
+  return previous;
+}
+
+export function resolveRec2SessionRootLinking(
+  session: Rec2OfflineSessionState,
+  policy: Rec2OfflineHomePolicy
+): boolean {
+  if (
+    session.startupLinkingOutcome !== 'authorized-online' &&
+    session.startupLinkingOutcome !== 'rejected-offline'
+  ) {
+    return false;
+  }
+  return policy.rootLinkingAllowed;
+}
+
+export type Rec2RootLinkingLifecycleState = Readonly<{
+  navigationMounted: boolean;
+  pendingStartupLinkingObserved: boolean;
+  pendingStartupLinkingInitialization: boolean;
+  linkingInitializationComplete: boolean;
+  initializationGeneration: number;
+}>;
+
+export const INITIAL_REC2_ROOT_LINKING_LIFECYCLE_STATE: Rec2RootLinkingLifecycleState =
+  Object.freeze({
+    navigationMounted: false,
+    pendingStartupLinkingObserved: false,
+    pendingStartupLinkingInitialization: false,
+    linkingInitializationComplete: false,
+    initializationGeneration: 0,
+  });
+
+/**
+ * React Navigation captures its initial-linking thenable when the container
+ * mounts. If any startup gate causes the navigation shell to mount while the
+ * linking decision is pending, a later linking prop change cannot reliably
+ * re-read the cold-start URL. Advance the generation exactly once when that
+ * mounted pending startup becomes authorized. A local offline shell rejection
+ * is terminal and can never trigger the remount/replay path.
+ */
+export function advanceRec2RootLinkingLifecycle(
+  previous: Rec2RootLinkingLifecycleState,
+  session: Rec2OfflineSessionState,
+  policy: Rec2OfflineHomeRuntimeBoundary,
+  navigationWillMount: boolean
+): Rec2RootLinkingLifecycleState {
+  if (!previous.navigationMounted) {
+    if (!navigationWillMount) {
+      return previous;
+    }
+
+    const pendingStartupLinkingInitialization =
+      session.startupLinkingOutcome === 'pending' && !policy.rootLinkingAllowed;
+
+    return {
+      navigationMounted: true,
+      pendingStartupLinkingObserved: pendingStartupLinkingInitialization,
+      pendingStartupLinkingInitialization,
+      linkingInitializationComplete: policy.rootLinkingAllowed,
+      initializationGeneration: previous.initializationGeneration,
+    };
+  }
+
+  if (
+    previous.pendingStartupLinkingInitialization &&
+    session.startupLinkingOutcome === 'rejected-offline'
+  ) {
+    return {
+      ...previous,
+      pendingStartupLinkingInitialization: false,
+    };
+  }
+
+  if (
+    previous.pendingStartupLinkingInitialization &&
+    !previous.linkingInitializationComplete &&
+    policy.rootLinkingAllowed &&
+    session.startupLinkingOutcome === 'authorized-online'
+  ) {
+    return {
+      navigationMounted: true,
+      pendingStartupLinkingObserved: previous.pendingStartupLinkingObserved,
+      pendingStartupLinkingInitialization: false,
+      linkingInitializationComplete: true,
+      initializationGeneration: previous.initializationGeneration + 1,
+    };
+  }
+
+  return previous;
+}
+
+export const REC2_OPS_CONFIG_CACHE_KEY = 'kn_ops_remote_config_v1';
+
+export type Rec2LocalOpsConfig = Readonly<{
+  killSwitch: boolean;
+  readOnlyMode: boolean;
+  disabledFeatures: string[];
+  source: 'env_only' | 'remote_cached';
+  fetchedAt: null;
+}>;
+
+type Rec2LocalOpsConfigInput = Readonly<{
+  envKillSwitch?: string;
+  envReadOnlyMode?: string;
+  envDisabledFeatures?: string;
+  cached: unknown;
+}>;
+
+function envFlag(value: string | undefined): boolean {
+  return value?.trim() === '1';
+}
+
+function envList(value: string | undefined): string[] {
+  return (value ?? '')
+    .split(',')
+    .map((item) => item.trim())
+    .filter((item) => item.length > 0);
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+/**
+ * Resolves only environment and already-cached safety policy. It performs no
+ * network access and does not manufacture a fresh remote-config timestamp.
+ */
+export function resolveRec2LocalOpsConfig(
+  input: Rec2LocalOpsConfigInput
+): Rec2LocalOpsConfig {
+  const base: Rec2LocalOpsConfig = {
+    killSwitch: envFlag(input.envKillSwitch),
+    readOnlyMode: envFlag(input.envReadOnlyMode),
+    disabledFeatures: envList(input.envDisabledFeatures),
+    source: 'env_only',
+    fetchedAt: null,
+  };
+  if (!isRecord(input.cached)) return base;
+
+  const hasRecognizedField =
+    typeof input.cached.killSwitch === 'boolean' ||
+    typeof input.cached.readOnlyMode === 'boolean' ||
+    Array.isArray(input.cached.disabledFeatures);
+  if (!hasRecognizedField) return base;
+
+  return {
+    killSwitch:
+      typeof input.cached.killSwitch === 'boolean'
+        ? input.cached.killSwitch
+        : base.killSwitch,
+    readOnlyMode:
+      typeof input.cached.readOnlyMode === 'boolean'
+        ? input.cached.readOnlyMode
+        : base.readOnlyMode,
+    disabledFeatures: Array.isArray(input.cached.disabledFeatures)
+      ? input.cached.disabledFeatures.filter(
+          (item): item is string => typeof item === 'string' && item.trim().length > 0
+        )
+      : base.disabledFeatures,
+    source: 'remote_cached',
+    fetchedAt: null,
+  };
+}

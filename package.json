@@ -61,7 +61,10 @@
     "test:local-provider-eligibility-read-ops-control": "tsx scripts/test-local-provider-eligibility-read-ops-control.ts",
     "test:local-provider-eligibility-client-wiring": "tsx scripts/test-local-provider-eligibility-client-wiring.ts",
     "test:local-create-failure-code-envelope": "tsx scripts/test-local-create-failure-code-envelope.ts",
-    "test:local-create-pack-b-recovery-discrimination": "tsx scripts/test-local-create-pack-b-recovery-discrimination.ts"
+    "test:local-create-pack-b-recovery-discrimination": "tsx scripts/test-local-create-pack-b-recovery-discrimination.ts",
+    "test:viona-merge-authorization-gate": "node scripts/test-viona-merge-authorization-gate.mjs",
+    "test:viona-guarded-pr-merge": "node scripts/test-viona-guarded-pr-merge.mjs",
+    "test:viona-merge-governance": "npm run test:viona-merge-authorization-gate && npm run test:viona-guarded-pr-merge"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1041.0",

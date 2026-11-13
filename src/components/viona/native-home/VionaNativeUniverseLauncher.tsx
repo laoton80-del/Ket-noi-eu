@@ -77,7 +77,7 @@ export function VionaNativeUniverseLauncher({
                 {item.label}
               </Text>
               <View style={[styles.chip, { borderColor: accent }]}>
-                <Text style={[styles.chipText, { color: accent }]} numberOfLines={1}>
+                <Text style={[styles.chipText, { color: tkn.ink.primary }]} numberOfLines={1}>
                   {item.readinessLabel}
                 </Text>
               </View>

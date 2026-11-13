@@ -1,7 +1,5 @@
-import { getWalletIdToken } from '../walletFirebaseSession';
-import { mergeTrustBackendHeaders } from '../../utils/trustBackendHeaders';
+import { isRestApiConfigured, restApiFetchJson } from '../apiClient';
 
-const BACKEND_API_BASE = process.env.EXPO_PUBLIC_BACKEND_API_BASE?.trim() ?? '';
 const REQUEST_TIMEOUT_MS = 20_000;
 
 export type PayslipAnalysis = {
@@ -42,39 +40,45 @@ function parsePayslipOutput(raw: string): PayslipAnalysis | null {
   return null;
 }
 
+function createIdempotencyKey(): string {
+  const cryptoApi = globalThis.crypto;
+  if (typeof cryptoApi?.randomUUID === 'function') return cryptoApi.randomUUID();
+
+  const bytes = new Uint8Array(16);
+  if (typeof cryptoApi?.getRandomValues === 'function') {
+    cryptoApi.getRandomValues(bytes);
+  } else {
+    for (let index = 0; index < bytes.length; index += 1) {
+      bytes[index] = Math.floor(Math.random() * 256);
+    }
+  }
+  bytes[6] = (bytes[6] & 0x0f) | 0x40;
+  bytes[8] = (bytes[8] & 0x3f) | 0x80;
+  const hex = Array.from(bytes, (byte) => byte.toString(16).padStart(2, '0')).join('');
+  return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`;
+}
+
 export async function analyzePayslip(base64Image: string, country: string): Promise<PayslipAnalysis> {
   const normalizedImage = base64Image.trim();
   const normalizedCountry = country.trim();
   if (!normalizedImage) throw new Error('image_required');
   if (!normalizedCountry) throw new Error('country_required');
 
-  if (!BACKEND_API_BASE) {
+  if (!isRestApiConfigured()) {
     await new Promise((resolve) => setTimeout(resolve, 1200));
     return mockPayslipResult(normalizedCountry);
   }
-
-  const token = await getWalletIdToken(true);
-  if (!token) throw new Error('wallet_auth_token_missing');
-  const headers = await mergeTrustBackendHeaders({
-    'Content-Type': 'application/json',
-    Authorization: `Bearer ${token}`,
-  });
 
   const systemPrompt =
     `You are a payroll and tax copilot for Vietnamese expats in ${normalizedCountry}. ` +
     'Analyze the payslip image and return ONLY a valid JSON object with keys gross, net, taxDeducted, advice. ' +
     'Use concise Vietnamese for advice.';
 
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
   try {
-    const res = await fetch(`${BACKEND_API_BASE}/aiProxy`, {
+    const result = await restApiFetchJson<unknown>('/api/ai/chat-completion', {
       method: 'POST',
-      headers,
-      body: JSON.stringify({
-        op: 'chat',
-        temperature: 0.2,
-        maxTokens: 320,
+      headers: { 'Idempotency-Key': createIdempotencyKey() },
+      body: {
         messages: [
           { role: 'system', content: systemPrompt },
           {
@@ -82,22 +86,22 @@ export async function analyzePayslip(base64Image: string, country: string): Prom
             content: `Phân tích bảng lương này (base64): ${normalizedImage.slice(0, 4000)}`,
           },
         ],
-      }),
-      signal: controller.signal,
+        temperature: 0.2,
+        maxTokens: 320,
+      },
+      timeoutMs: REQUEST_TIMEOUT_MS,
     });
-    if (!res.ok) {
+    if (!result.ok) {
       await new Promise((resolve) => setTimeout(resolve, 900));
       return mockPayslipResult(normalizedCountry);
     }
-    const text = await res.text();
-    const parsed = parsePayslipOutput(text);
+    const raw = JSON.stringify(result.data) ?? '';
+    const parsed = parsePayslipOutput(raw);
     if (parsed) return parsed;
     await new Promise((resolve) => setTimeout(resolve, 900));
     return mockPayslipResult(normalizedCountry);
   } catch {
     await new Promise((resolve) => setTimeout(resolve, 900));
     return mockPayslipResult(normalizedCountry);
-  } finally {
-    clearTimeout(timeout);
   }
 }

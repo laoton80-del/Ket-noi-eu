@@ -449,12 +449,12 @@
     "priceEuroUi": "4,99 €/tháng",
     "plusTagline": "SOS Plus là lớp đồng hành khẩn cấp toàn cầu cho người Việt ở nước ngoài và người đi lại xuyên quốc gia.",
     "holdThreeProduct": "Giữ 3 giây để bắt đầu SOS",
-    "learnBasicVsPlus": "So sánh Basic và Plus — chi tiết",
-    "learnBasicVsPlusA11y": "Mở so sánh SOS Basic và SOS Plus",
+    "learnBasicVsPlus": "So sánh Core và Plus — chi tiết",
+    "learnBasicVsPlusA11y": "Mở so sánh SOS Core và SOS Plus",
     "sheetPlusLearnMore": "Giới thiệu SOS Plus (kế hoạch)",
-    "plusInfoTitle": "SOS Basic & SOS Plus",
+    "plusInfoTitle": "SOS Core & SOS Plus",
     "plusInfoUnderstood": "Tôi đã hiểu",
-    "basicTierTitle": "SOS Basic",
+    "basicTierTitle": "SOS Core",
     "basicTierBadge": "Lite",
     "basicTierBody": "Điểm vào lớp an toàn toàn cầu cho người Việt: hướng dẫn khẩn cấp trong app sau khi đăng nhập. Hướng dẫn có thể dựa trên quốc gia bạn chọn trong hồ sơ khi có; số khẩn cấp có thể khác theo vùng và không phải định tuyến trực tiếp đã xác minh. Giữ để xác nhận giảm chạm nhầm. Không thay cho việc gọi số khẩn cấp địa phương.",
     "plusTierTitle": "SOS Plus",
@@ -473,11 +473,11 @@
     "disclaimerNotReplacement": "VIONA SOS không thay thế dịch vụ khẩn cấp địa phương.",
     "disclaimerUiOnly": "Màn hình này chỉ mang tính thông tin. Điều phối tự động, kích hoạt từ khóa, ghi âm/ghi hình và thanh toán đăng ký chưa bật trong bản này.",
     "disclaimer": "Gọi khẩn cấp và ghi âm/ghi hình cần người dùng thiết lập, cấp quyền thiết bị và phụ thuộc khu vực. VIONA SOS không thay thế dịch vụ khẩn cấp địa phương.",
-    "preLoginTitle": "SOS Basic",
+    "preLoginTitle": "SOS Core",
     "preLoginBody": "Mở SOS từ đây trước khi đăng nhập để xem hướng dẫn và cổng an toàn. Công cụ khẩn cấp đầy đủ trong app mở sau khi đăng nhập. Luồng này không gọi điện.",
     "preLoginAck": "OK",
     "preLoginGateTitle": "Hướng dẫn khẩn cấp",
-    "preLoginGateSub": "Dùng màn hình này mà không cần đăng nhập — dành cho người Việt khắp thế giới. Đọc hướng dẫn, có thể xem Basic vs Plus, rồi giữ để xác nhận. Không gọi điện và không gửi vị trí chỉ từ cổng này.",
+    "preLoginGateSub": "Dùng màn hình này mà không cần đăng nhập — dành cho người Việt khắp thế giới. Đọc hướng dẫn, có thể xem Core vs Plus, rồi giữ để xác nhận. Không gọi điện và không gửi vị trí chỉ từ cổng này.",
     "preLoginHoldHelper": "Giữ 3 giây để xác nhận. Không gọi điện.",
     "cancelHold": "Hủy",
     "gateTitle": "Kích hoạt SOS",
@@ -590,7 +590,7 @@
     "openProfileCta": "Hồ sơ & đồng ý",
     "openProfileA11y": "Mở hồ sơ SOS Plus và cài đặt đồng ý",
     "planSection": "Gói",
-    "planFree": "Miễn phí (SOS Basic)",
+    "planFree": "Miễn phí (SOS Core)",
     "planFreeHint": "Đã có lối vào an toàn. Nâng cấp trả phí sẽ cần thanh toán khi sẵn sàng.",
     "simulatePlusTitle": "Xem thử trạng thái SOS Plus",
     "simulatePlusSub": "Chỉ xem trên thiết bị. Không mở quyền trả phí hay tự động cứu hộ.",
@@ -1047,6 +1047,85 @@
     "tierDemoSuccessBody": "Chỉ đồng bộ ví thử nghiệm — không phải biên lai cửa hàng hay gói đăng ký thật."
   },
   "home": {
+    "rec2": {
+      "brandSubtitle": "Hệ điều hành đồng hành toàn cầu cho người Việt",
+      "language": "Chọn ngôn ngữ",
+      "notificationUnavailable": "Thông báo chưa được kết nối trong bản Home thử nghiệm này",
+      "greetingNamed": "Rất vui gặp lại, {{name}}.",
+      "greetingGuest": "Chào mừng bạn đến với VIONA.",
+      "headline": "Một Home bình tĩnh kết nối trọn vẹn cuộc sống của bạn.",
+      "imageFallback": "Dùng nền chuyển sắc điện ảnh cho đến khi có hình ảnh được cấp phép",
+      "imageReady": "Hình ảnh được cấp phép đã sẵn sàng",
+      "universeOpenHint": "Mở vũ trụ VIONA này",
+      "universesTitle": "Khám phá sáu vũ trụ VIONA",
+      "availability": {
+        "available": "Mở",
+        "gated": "Cần quyền truy cập",
+        "unavailable": "Chưa khả dụng"
+      },
+      "layouts": {
+        "web": "Web",
+        "tablet-landscape": "Tablet ngang",
+        "tablet-portrait": "Tablet dọc",
+        "phone": "Điện thoại"
+      },
+      "states": {
+        "loading": "Nội dung Home đang tải.",
+        "empty": "Chưa có nội dung Home để hiển thị.",
+        "offline": "Bạn đang ngoại tuyến. Chỉ các điều khiển có sẵn cục bộ được hiển thị.",
+        "gated": "Nội dung Home này cần quyền truy cập hiện chưa có."
+      },
+      "tasks": {
+        "title": "Tiếp tục việc đang làm",
+        "noTrustedAdapter": "Chưa kết nối nguồn tác vụ đáng tin cậy, nên VIONA không tự suy diễn tác vụ cho bạn."
+      },
+      "alfred": {
+        "eyebrow": "TRÍ TUỆ DÙNG CHUNG",
+        "title": "Viona",
+        "expand": "Mở bảng thông tin Viona",
+        "collapse": "Đóng bảng thông tin Viona",
+        "uiOnlyDetail": "Bảng này chỉ cung cấp thông tin trong bản Home RC2. Nó không gọi nhà cung cấp AI, mở microphone, gửi yêu cầu hay trừ ví.",
+        "voiceUnavailable": "Giọng nói chưa khả dụng trong bản này",
+        "states": {
+          "idle": "Sẵn sàng khi runtime Viona đáng tin cậy được kết nối.",
+          "permission-required": "Cần xin quyền trước khi dùng giọng nói.",
+          "listening": "Trạng thái thử nghiệm đang nghe.",
+          "processing": "Trạng thái thử nghiệm đang xử lý.",
+          "response": "Trạng thái thử nghiệm phản hồi.",
+          "interrupted": "Trạng thái thử nghiệm Viona bị gián đoạn.",
+          "offline": "Runtime Viona đang ngoại tuyến.",
+          "unavailable": "Viona chỉ có giao diện và chưa nhận yêu cầu trực tiếp trong bản này.",
+          "error": "Trạng thái thử nghiệm Viona gặp lỗi."
+        }
+      },
+      "universes": {
+        "local": {
+          "title": "Local",
+          "subtitle": "Dịch vụ quanh bạn, cộng đồng người Việt và hỗ trợ đời sống hằng ngày."
+        },
+        "travel": {
+          "title": "Travel",
+          "subtitle": "Hướng dẫn hành trình và ngôn ngữ, không ngụ ý đã đặt dịch vụ."
+        },
+        "academy": {
+          "title": "Academy",
+          "subtitle": "Học và luyện tập qua các bề mặt Academy hiện có."
+        },
+        "business": {
+          "title": "Business",
+          "subtitle": "Workspace merchant chỉ dành cho tài khoản đủ điều kiện."
+        },
+        "account": {
+          "title": "Account",
+          "subtitle": "Hồ sơ, ngôn ngữ, quyền riêng tư và các điều khiển tài khoản khả dụng."
+        },
+        "sos": {
+          "title": "SOS",
+          "subtitle": "Mở bề mặt hướng dẫn an toàn hiện có; không tự gọi hay điều phối cứu hộ."
+        }
+      },
+      "runtimeTruth": "RC2 Home là ứng viên cục bộ có feature flag. Thông báo, yêu cầu Viona trực tiếp và tác vụ suy diễn đều chưa khả dụng."
+    },
     "tabHub": "Tổng quan",
     "tabLocal": "Địa phương",
     "tabTravel": "Du lịch Lite",

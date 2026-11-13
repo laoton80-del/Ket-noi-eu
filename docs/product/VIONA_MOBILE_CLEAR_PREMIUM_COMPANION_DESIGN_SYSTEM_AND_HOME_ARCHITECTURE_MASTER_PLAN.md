@@ -81,6 +81,8 @@ That direction is a **planning selection**. It is **not** current canonical prod
 | Commercial | `REQUEST_ONLY_NO_CHARGE`; no fake prices/discounts/bookings |
 | Migration | Additive / controlled; isolation first |
 
+> **Supersession in scope (Final 2.0.0 adoption, Architecture B):** the current canonical product visual direction is **dark premium, midnight / deep navy, realistic cinematic** (Master Blueprint V2 §14; `VIONA_DESIGN_MODE_LOCK.md`). The light-first Clear Premium native carve above remains historical planning context and is **superseded in scope as the active visual target**. This plan's architecture, IA, function-preservation, responsive, six-universe, Account-reachability, exact-one host, platform-isolation and SOS rules remain valid unless directly inconsistent with the dark target. This docs change activates no runtime redesign; web and native implementation still require separate authorized lanes.
+
 **This Master Plan is not implementation authority.** Each future phase needs its own operator authorization, exact file allowlist, visual acceptance criteria, and rollback boundary.
 
 ---
@@ -413,11 +415,25 @@ Red reserved for actual safety/critical meaning — not OTA sale chrome.
 
 AI is contextual, available, cost-aware, **non-dominant**. Home is not an AI chat interface.
 
-Preserve personas where applicable: Minh Khang · Leona · Lễ Tân AI · Cô Giáo AI.
+**Public umbrella assistant = Viona.** Viona is the public entry / orchestration identity above the specialist personas (canonical: Master Blueprint V2 §9 "Public Assistant Identity Hierarchy"). VIONA remains the product brand.
+
+Preserve personas where applicable: Minh Khang · Leona · Lễ Tân AI · Cô Giáo AI. They remain capability-specific specialists under Viona.
+
+Product / UX identity hierarchy (not a runtime implementation object):
+
+```text
+Viona
+├─ Leona — Companion & Concierge
+├─ Minh Khang — Language / Travel / Translation / Culture
+├─ Cô Giáo AI — Academy
+└─ Lễ Tân AI — Business / Merchant
+```
+
+Generic-entry rule (target product law, not a statement of current implementation): the generic Viona entry is **non-debiting**. Specialist actions with cost, provider or sensitive implications retain readiness gating, cost guard, explicit user confirmation, and safety / policy enforcement.
 
 States: entry · minimized · expanded sheet · loading/cost guard · unavailable · Beta · tool-confirmation.
 
-This packet authorizes **zero** runtime AI change.
+This packet authorizes **zero** runtime AI change — no prompt changes, no route changes, no debit-behavior changes, and no provider activation.
 
 ---
 
@@ -431,6 +447,8 @@ Do not treat tablet as stretched phone. Web out of native redesign implementatio
 | Phone landscape | Compress hero; tabs + SOS reachable |
 | Tablet portrait | Max content ~720–800; 4-up universe; 2-col discovery |
 | Tablet landscape | Split launcher + companion; **not** desktop Fashion command bar |
+
+> **Launcher scope:** the universe 2×2 / 4-up entries above, the §5 universe launcher and the Home wireframes describe the **primary four-entry launcher** (Local · Travel · Academy · Business), a compact presentation subset only — not the universe taxonomy. The **full six-universe launcher** (Local · Travel · Academy · Business · Account · SOS) follows Master Blueprint V2 §14 (web / tablet landscape 3×2, tablet portrait 2×3, phone 2 columns, 1 when required). Account and SOS are not removed universes; they stay reachable through their canonical shell / contextual ownership (§7).
 
 Native never activates web desktop shell.
 

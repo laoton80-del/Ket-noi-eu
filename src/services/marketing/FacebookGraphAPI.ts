@@ -1,4 +1,5 @@
 import axios, { isAxiosError } from 'axios';
+import { logSafeError } from '../../utils/safeLogError';
 
 const FB_GRAPH_VERSION = 'v19.0';
 
@@ -45,7 +46,7 @@ export async function publishToFacebookPage(content: string): Promise<FacebookPu
         : undefined;
 
     if (!postId) {
-      console.error('[FacebookGraphAPI] Unexpected response payload:', data);
+      console.error('[FacebookGraphAPI] Unexpected response payload', { code: 'FACEBOOK_POST_ID_MISSING' });
       return { success: false, error: 'Facebook API returned no post id' };
     }
 
@@ -53,17 +54,17 @@ export async function publishToFacebookPage(content: string): Promise<FacebookPu
   } catch (err) {
     if (isAxiosError(err)) {
       const fb = err.response?.data;
-      console.error('[FacebookGraphAPI] Feed POST failed', {
-        status: err.response?.status,
-        data: fb ?? err.message,
-      });
+      const status = err.response?.status;
+      const errorMeta: Record<string, string | number> = { code: 'FACEBOOK_POST_FAILED' };
+      if (typeof status === 'number' && Number.isFinite(status)) errorMeta.status = status;
+      logSafeError('[FacebookGraphAPI] Feed POST failed', err, errorMeta);
       const msg =
         typeof fb === 'object' && fb !== null && 'error' in fb
           ? JSON.stringify((fb as { error: unknown }).error)
           : err.message;
       return { success: false, error: msg };
     }
-    console.error('[FacebookGraphAPI] Feed POST failed', err);
+    logSafeError('[FacebookGraphAPI] Feed POST failed', err);
     return { success: false, error: err instanceof Error ? err.message : 'Unknown error' };
   }
 }

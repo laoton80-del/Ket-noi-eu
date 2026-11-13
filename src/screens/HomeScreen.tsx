@@ -42,6 +42,8 @@ import {
   VionaSosPlusInfoModal,
 } from '../components/viona';
 import { VionaFashionHomeAdaptiveComposition } from '../components/viona/VionaFashionHomeAdaptiveComposition';
+import { VionaRec2HomeShell } from '../components/viona/home/VionaRec2HomeShell';
+import type { VionaRec2UniverseCallbacks } from '../components/viona/home/vionaRec2HomeContract';
 import {
   VionaNativeHomeOpeningStage,
   type VionaNativeQuickActionItem,
@@ -182,7 +184,10 @@ import {
   resolveFashionHomeShellMode,
   type FashionHomeShellMode,
 } from '../navigation/fashionHomeShellMode';
-import { resolveHomePresentationTarget } from '../navigation/homePresentationTarget';
+import {
+  resolveHomePresentationTarget,
+  resolveHomeRendererSelection,
+} from '../navigation/homePresentationTarget';
 import { MAIN_TAB, type RootStackParamList } from '../navigation/routes';
 import { normalizeCountryCodeOrSentinel } from '../config/countryPacks';
 import { vionaTokens } from '../design';
@@ -198,6 +203,10 @@ import { useTranslation } from '../i18n';
 import { useUserStore } from '../store/userStore';
 import { hasB2BWorkspaceAccess } from '../utils/b2bAccess';
 import { localizedRegionName } from '../utils/localizedRegionName';
+import {
+  isRec2ActionAllowed,
+  useRec2OfflineHomeBoundary,
+} from '../app/bootstrap/rec2OfflineHomePolicy';
 import { DashboardB2CScreen } from './b2c/DashboardB2CScreen';
 import type { AuthUser } from '../context/authTypes';
 
@@ -504,16 +513,147 @@ function detectHomeHoverPointer(): boolean {
   }
 }
 
+/**
+ * Renderer boundary: only the selected child mounts, so the RC2 candidate never
+ * starts reconstruction Home hooks or their effects while its feature flag is on.
+ */
 export function HomeScreen() {
+  const { user, updateProfile } = useAuth();
+  const [personaModalVisible, setPersonaModalVisible] = useState(false);
+  const renderer = resolveHomeRendererSelection(getFeatureFlags().rec2HomeShellEnabled);
+
+  useEffect(() => {
+    if (!user) setPersonaModalVisible(false);
+  }, [user]);
+
+  useFocusEffect(
+    useCallback(() => {
+      if (user?.needsPersonaOnboarding === true) setPersonaModalVisible(true);
+    }, [user?.needsPersonaOnboarding])
+  );
+
+  const applyPersonaChoice = useCallback(
+    (persona: 'EXPAT' | 'TOURIST') => {
+      void patchUserPersonaOnServer(persona);
+      updateProfile({ persona, needsPersonaOnboarding: false });
+      setPersonaModalVisible(false);
+    },
+    [updateProfile]
+  );
+
+  return (
+    <>
+      {renderer === 'rec2' ? <VionaRec2HomeEntry /> : <ReconstructionHomeScreen />}
+      <PersonaOnboardingModal
+        visible={personaModalVisible}
+        onPickExpat={() => applyPersonaChoice('EXPAT')}
+        onPickTourist={() => applyPersonaChoice('TOURIST')}
+      />
+    </>
+  );
+}
+
+function VionaRec2HomeEntry() {
+  const navigation = useNavigation<Nav>();
+  const { openMiniApp } = useMiniAppEntry();
+  const { user } = useAuth();
+  const { i18n } = useTranslation();
+  const featureFlags = useMemo(() => getFeatureFlags(), []);
+  const switchRole = useUserStore((state) => state.switchRole);
+  const homeCommand = useHomeCommand();
+  const reducedMotion = useFashionHomePrefersReducedMotion();
+  const offlineBoundary = useRec2OfflineHomeBoundary();
+  const businessEligible =
+    offlineBoundary.remoteNavigationAllowed && hasB2BWorkspaceAccess(user);
+
+  const openLocal = useCallback(() => {
+    if (!isRec2ActionAllowed(offlineBoundary, 'local')) return;
+    openMiniApp('local', () => navigation.navigate('Tabs', { screen: MAIN_TAB.B2C.local }));
+  }, [navigation, offlineBoundary, openMiniApp]);
+
+  const openTravel = useCallback(() => {
+    if (!isRec2ActionAllowed(offlineBoundary, 'travel')) return;
+    if (!featureFlags.travelEnabled) return;
+    openMiniApp('travel', () => navigation.navigate('Tabs', { screen: MAIN_TAB.B2C.travel }));
+  }, [featureFlags.travelEnabled, navigation, offlineBoundary, openMiniApp]);
+
+  const openAcademy = useCallback(() => {
+    if (!isRec2ActionAllowed(offlineBoundary, 'academy')) return;
+    if (!featureFlags.academyEnabled) return;
+    openMiniApp('academy', () => navigation.navigate('Tabs', { screen: MAIN_TAB.B2C.ai }));
+  }, [featureFlags.academyEnabled, navigation, offlineBoundary, openMiniApp]);
+
+  const openBusiness = useCallback(() => {
+    if (!isRec2ActionAllowed(offlineBoundary, 'business')) return;
+    if (!hasB2BWorkspaceAccess(user)) return;
+    switchRole('B2B');
+    navigation.navigate('Tabs', { screen: MAIN_TAB.B2B.merchant });
+  }, [navigation, offlineBoundary, switchRole, user]);
+
+  const universeCallbacks = useMemo<VionaRec2UniverseCallbacks>(
+    () => ({
+      local: openLocal,
+      travel: openTravel,
+      academy: openAcademy,
+      ...(businessEligible ? { business: openBusiness } : {}),
+      ...(homeCommand && isRec2ActionAllowed(offlineBoundary, 'account')
+        ? {
+            account: homeCommand.openAccount,
+          }
+        : {}),
+      ...(homeCommand && isRec2ActionAllowed(offlineBoundary, 'sos-guidance')
+        ? {
+            // The shared shell callback opens the existing guidance sheet only.
+            sos: homeCommand.triggerSafetyAssist,
+          }
+        : {}),
+    }),
+    [businessEligible, homeCommand, offlineBoundary, openAcademy, openBusiness, openLocal, openTravel]
+  );
+
+  const regionLabel = useMemo(
+    () => localizedRegionName(user?.country, i18n.resolvedLanguage ?? i18n.language),
+    [i18n.language, i18n.resolvedLanguage, user?.country]
+  );
+
+  return (
+    <VionaRec2HomeShell
+      displayName={user?.name}
+      regionLabel={regionLabel}
+      universeAvailability={{
+        localEnabled:
+          featureFlags.localEnabled && isRec2ActionAllowed(offlineBoundary, 'local'),
+        travelEnabled:
+          featureFlags.travelEnabled && isRec2ActionAllowed(offlineBoundary, 'travel'),
+        academyEnabled:
+          featureFlags.academyEnabled && isRec2ActionAllowed(offlineBoundary, 'academy'),
+        businessEligible,
+        accountAvailable:
+          homeCommand !== null && isRec2ActionAllowed(offlineBoundary, 'account'),
+        sosAvailable:
+          homeCommand !== null && isRec2ActionAllowed(offlineBoundary, 'sos-guidance'),
+      }}
+      universeCallbacks={universeCallbacks}
+      onOpenLanguage={
+        homeCommand && isRec2ActionAllowed(offlineBoundary, 'language')
+          ? homeCommand.openLanguageSheet
+          : undefined
+      }
+      contentState={offlineBoundary.contentState}
+      reducedMotion={reducedMotion}
+    />
+  );
+}
+
+function ReconstructionHomeScreen() {
   const { t, i18n } = useTranslation();
   const { openMiniApp } = useMiniAppEntry();
   const navigation = useNavigation<Nav>();
   const { width, height } = useWindowDimensions();
   const insets = useSafeAreaInsets();
-  const { user, setPendingRedirect, updateProfile } = useAuth();
+  const { user, setPendingRedirect } = useAuth();
   const isTourist = user?.persona === 'TOURIST';
   const featureFlags = useMemo(() => getFeatureFlags(), []);
-  const [personaModalVisible, setPersonaModalVisible] = useState(false);
   const wallet = useWalletState();
   const [showPaywall, setShowPaywall] = useState(false);
   const [showPin, setShowPin] = useState(false);
@@ -553,10 +693,6 @@ export function HomeScreen() {
     };
   }, [user?.country, user?.name, user?.phone]);
 
-  useEffect(() => {
-    if (!user) setPersonaModalVisible(false);
-  }, [user]);
-
   useFocusEffect(
     useCallback(() => {
       let cancelled = false;
@@ -568,7 +704,7 @@ export function HomeScreen() {
         try {
           const r = await fetchBalance();
           if (!cancelled && !r.ok && __DEV__) {
-            console.warn('[HomeScreen] REST wallet balance:', r.error);
+            console.warn('[HomeScreen] REST wallet balance failed', { code: 'WALLET_BALANCE_FETCH_FAILED' });
           }
         } finally {
           if (!cancelled) setWalletBalanceLoading(false);
@@ -578,21 +714,6 @@ export function HomeScreen() {
         cancelled = true;
       };
     }, [])
-  );
-
-  useFocusEffect(
-    useCallback(() => {
-      if (user?.needsPersonaOnboarding === true) setPersonaModalVisible(true);
-    }, [user?.needsPersonaOnboarding])
-  );
-
-  const applyPersonaChoice = useCallback(
-    (persona: 'EXPAT' | 'TOURIST') => {
-      void patchUserPersonaOnServer(persona);
-      updateProfile({ persona, needsPersonaOnboarding: false });
-      setPersonaModalVisible(false);
-    },
-    [updateProfile]
   );
 
   const localClock = useMemo(
@@ -3216,12 +3337,6 @@ export function HomeScreen() {
         </VionaCard>
         ) : null}
       </ScrollView>
-
-      <PersonaOnboardingModal
-        visible={personaModalVisible}
-        onPickExpat={() => applyPersonaChoice('EXPAT')}
-        onPickTourist={() => applyPersonaChoice('TOURIST')}
-      />
 
       <AuthPaywallModal
         visible={showPaywall}

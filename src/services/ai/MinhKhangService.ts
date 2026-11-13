@@ -92,21 +92,23 @@ export async function translateTravelPhrase(text: string, sourceLangHint: string
     return { translatedVi: '', sourceLangGuess: sourceLangHint, provider: 'mock_offline' };
   }
 
-  if (isRestApiConfigured()) {
-    const api = await restApiFetchJson<{ translatedText: string; fromCache: boolean }>(
-      '/api/ai/translate/travel-phrase',
-      { method: 'POST', body: { text: trimmed, sourceLangHint } }
-    );
-    if (api.ok) {
-      return {
-        translatedVi: api.data.translatedText,
-        sourceLangGuess: sourceLangHint,
-        provider: api.data.fromCache ? 'cached_server' : 'openai_proxy',
-      };
-    }
-  }
-
   try {
+    if (isRestApiConfigured()) {
+      const api = await restApiFetchJson<{ translatedText: string; fromCache: boolean }>(
+        '/api/ai/translate/travel-phrase',
+        { method: 'POST', body: { text: trimmed, sourceLangHint } }
+      );
+      if (api.ok) {
+        return {
+          translatedVi: api.data.translatedText,
+          sourceLangGuess: sourceLangHint,
+          provider: api.data.fromCache ? 'cached_server' : 'openai_proxy',
+        };
+      }
+      // A configured REST backend is authoritative; its failure must use the offline result.
+      throw new Error('travel_phrase_rest_unavailable');
+    }
+
     const out = await getChatCompletion(
       [
         {

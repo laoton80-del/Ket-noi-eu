@@ -4,6 +4,7 @@ import { loginWithPhoneAndPin } from '../services/api/AuthService';
 import { requestEmailOtp, verifyEmailOtp } from '../services/auth/EmailOtpService';
 import { jsonFail, jsonOk } from '../utils/apiEnvelope';
 import { logger } from '../utils/Logger';
+import { safeErrorMeta } from '../utils/safeLogError';
 
 function readString(value: unknown): string | null {
   return typeof value === 'string' ? value : null;
@@ -38,7 +39,7 @@ export async function postLogin(req: Request, res: Response): Promise<void> {
 
     jsonOk(res, { token: result.token, user: result.user });
   } catch (err) {
-    logger.error({ err }, 'LỖI postLogin');
+    logger.error({ ...safeErrorMeta(err) }, 'LỖI postLogin');
     jsonFail(res, 'Unexpected error', 500);
   }
 }
@@ -73,7 +74,7 @@ export async function postEmailOtpRequest(req: Request, res: Response): Promise<
     }
     jsonOk(res, { sent: true });
   } catch (err) {
-    logger.error({ err }, 'LỖI postEmailOtpRequest');
+    logger.error({ ...safeErrorMeta(err) }, 'LỖI postEmailOtpRequest');
     jsonFail(res, 'Unexpected error', 500);
   }
 }
@@ -112,7 +113,7 @@ export async function postEmailOtpVerify(req: Request, res: Response): Promise<v
     }
     jsonOk(res, { flow: 'pre_auth' as const, preAuthToken: r.preAuthToken, email: r.email });
   } catch (err) {
-    logger.error({ err }, 'LỖI postEmailOtpVerify');
+    logger.error({ ...safeErrorMeta(err) }, 'LỖI postEmailOtpVerify');
     jsonFail(res, 'Unexpected error', 500);
   }
 }

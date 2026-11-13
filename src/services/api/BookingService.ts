@@ -7,6 +7,7 @@ import { getPrisma } from '../../lib/prisma';
 import { finalizeBrokerQrProgramAfterBookingCommit, syntheticWalletFingerprintForBooker } from './brokerEmpireEscrow';
 import { recordCharityAccrualForSettlement } from './LedgerService';
 import { createWalletForUser } from '../WalletService';
+import { logSafeError } from '../../utils/safeLogError';
 
 /** Ledger sentinel: VIG moved from spendable balance into booking lock (`lockedBalanceVIG`). */
 const BOOKING_LOCK_PARTY = 'ViGlobalBookingLock';
@@ -465,7 +466,7 @@ export async function completeBookingViaQr(
 
     if (getFeatureFlags().brokerQrEnabled) {
       void finalizeBrokerQrProgramAfterBookingCommit(bookingId).catch((err: unknown) => {
-        console.error('[BookingService] broker QR program post-commit failed', err);
+        logSafeError('[BookingService] broker QR program post-commit failed', err);
       });
     }
 

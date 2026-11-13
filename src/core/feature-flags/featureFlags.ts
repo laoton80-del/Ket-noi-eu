@@ -12,7 +12,16 @@ export function parseTruthyEnvString(raw: string | undefined): boolean {
   return typeof raw === 'string' && raw.trim() === 'true';
 }
 
+/** Canonical REC2 Home defaults ON when unset. Explicit `"false"` rolls back; every other non-empty value fails closed. */
+export function resolveRec2HomeShellEnabled(raw: string | undefined): boolean {
+  const normalized = raw?.trim();
+  if (!normalized) return true;
+  return normalized === 'true';
+}
+
 export interface FeatureFlags {
+  /** Canonical REC2 Home. Defaults ON; explicit false or invalid non-empty config rolls back to Reconstruction. */
+  rec2HomeShellEnabled: boolean;
   hubEnabled: boolean;
   localEnabled: boolean;
   bookingEnabled: boolean;
@@ -76,6 +85,9 @@ const MVP_DEFAULT_TRUE = true as const;
  * Risk surfaces require explicit `EXPO_PUBLIC_FEATURE_*=true` where noted.
  */
 export function getFeatureFlags(): FeatureFlags {
+  const rec2HomeShellEnabled = resolveRec2HomeShellEnabled(
+    process.env.EXPO_PUBLIC_FEATURE_REC2_HOME_SHELL
+  );
   const academyLiteEnabled = MVP_DEFAULT_TRUE;
   const leonaAssistantEnabled = MVP_DEFAULT_TRUE;
   const travelLiteEnabled = MVP_DEFAULT_TRUE;
@@ -94,6 +106,7 @@ export function getFeatureFlags(): FeatureFlags {
   const b2bAutoPaymentEnabled = parseTruthyEnvString(process.env.EXPO_PUBLIC_FEATURE_B2B_AUTO_PAYMENT);
 
   return {
+    rec2HomeShellEnabled,
     hubEnabled: MVP_DEFAULT_TRUE,
     localEnabled: MVP_DEFAULT_TRUE,
     bookingEnabled: MVP_DEFAULT_TRUE,
