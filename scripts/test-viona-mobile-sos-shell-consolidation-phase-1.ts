@@ -131,7 +131,7 @@ assert(
     /nativeBottomChromeSpacer:\s*\{[\s\S]*flex:\s*1/.test(mainTab) &&
     /nativeBottomSosSlot:\s*\{[\s\S]*flexShrink:\s*0/.test(mainTab) &&
     /nativeBottomTabsClip:\s*\{[\s\S]*overflow:\s*'hidden'/.test(mainTab) &&
-    /paddingBottom:[\s\S]*NATIVE_BOTTOM_SHELL_CHROME_ROW/.test(mainTab)
+    /NATIVE_BOTTOM_SHELL_CHROME_ROW[\s\S]*paddingBottom:/.test(mainTab)
 );
 assert(
   'Web overlay reserves remain 120 / 168 / 104',
