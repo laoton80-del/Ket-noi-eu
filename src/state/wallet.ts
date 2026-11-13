@@ -70,7 +70,7 @@ function persistWalletState() {
   void AsyncStorage.setItem(WALLET_STORAGE_KEY, JSON.stringify(walletState));
 }
 
-async function callWalletOps<T = unknown>(payload: Record<string, unknown>): Promise<T> {
+export async function callWalletOps<T = unknown>(payload: Record<string, unknown>): Promise<T> {
   if (!BACKEND_API_BASE) throw new Error('backend_api_base_missing');
   const token = await getWalletIdToken();
   if (!token) throw new Error('wallet_auth_token_missing');
@@ -178,6 +178,18 @@ export async function rollbackReservedCredits(idempotencyKey: string): Promise<v
   }
 }
 
+/** Refund a committed hold once, for an explicitly compensated first-turn failure. */
+export async function refundCommittedHoldCredits(idempotencyKey: string): Promise<boolean> {
+  try {
+    const out = await callWalletOps<{ ok: boolean }>({ op: 'refundCommittedHold', idempotencyKey });
+    if (!out.ok) return false;
+    await syncWalletFromServer();
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 export type TrustedMonetizedServiceKind = 'leona_outbound' | 'letan_booking';
 
 /** Server-authoritative debit for monetized flows; idempotent per key. */
@@ -204,11 +216,16 @@ export async function chargeTrustedService(params: {
 }
 
 /** Grant VIG Token only once per immutable payment event id (server ledger). */
-export async function topupCreditsServer(amount: number, paymentEventId: string): Promise<{ ok: boolean }> {
-  const pei = paymentEventId.trim();
-  if (!pei) return { ok: false };
+export async function topupCreditsServer(packId: string, idempotencyKey: string): Promise<{ ok: boolean }> {
+  const safePackId = packId.trim();
+  const safeIdempotencyKey = idempotencyKey.trim();
+  if (!safePackId || !safeIdempotencyKey) return { ok: false };
   try {
-    const out = await callWalletOps<{ ok: boolean }>({ op: 'topup', amount, paymentEventId: pei });
+    const out = await callWalletOps<{ ok: boolean }>({
+      op: 'topup',
+      packId: safePackId,
+      idempotencyKey: safeIdempotencyKey,
+    });
     if (!out.ok) return { ok: false };
     await syncWalletFromServer();
     return { ok: true };

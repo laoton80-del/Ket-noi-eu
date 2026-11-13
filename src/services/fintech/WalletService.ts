@@ -1,5 +1,5 @@
 import { getVioCreditsLabel } from '../../core/monetization/vioDisplayLabels';
-import { syncWalletFromServer } from '../../state/wallet';
+import { callWalletOps, syncWalletFromServer } from '../../state/wallet';
 import { trackEvent } from '../AnalyticsService';
 
 const BACKEND_API_BASE = process.env.EXPO_PUBLIC_BACKEND_API_BASE?.trim() ?? '';
@@ -21,6 +21,7 @@ export type P2PTransferResult =
         | 'invalid_input'
         | 'self_transfer_not_allowed'
         | 'insufficient_balance'
+        | 'not_available'
         | 'service_unavailable'
         | 'server_error';
       messageVi: string;
@@ -63,20 +64,14 @@ export async function transferVigTokensByPhone(params: Readonly<{
 
   if (BACKEND_API_BASE) {
     try {
-      const res = await fetch(`${BACKEND_API_BASE}/walletOps`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          op: 'p2pTransfer',
-          senderPhone,
-          recipientPhone,
-          amount: amountVig,
-          idempotencyKey,
-        }),
+      const parsed = await callWalletOps<{ ok?: boolean; error?: string; transferId?: string }>({
+        op: 'p2pTransfer',
+        senderPhone,
+        recipientPhone,
+        amount: amountVig,
+        idempotencyKey,
       });
-      const text = await res.text();
-      const parsed = text ? (JSON.parse(text) as { ok?: boolean; error?: string; transferId?: string }) : {};
-      if (!res.ok || parsed.ok !== true) {
+      if (parsed.ok !== true) {
         if (parsed.error === 'insufficient_balance') {
           return {
             ok: false,
@@ -95,7 +90,20 @@ export async function transferVigTokensByPhone(params: Readonly<{
         amountVig,
         createdAtIso: new Date().toISOString(),
       };
-    } catch {
+    } catch (error) {
+      if (error instanceof Error && error.message === 'insufficient_balance') {
+        return {
+          ok: false,
+          code: 'insufficient_balance',
+          messageVi: `Số dư ${getVioCreditsLabel()} không đủ để chuyển.`,
+        };
+      }
+      if (error instanceof Error && /^(unknown_wallet_op|wallet_ops_\d+)$/.test(error.message)) {
+        if (error.message === 'unknown_wallet_op') {
+          return { ok: false, code: 'not_available', messageVi: 'Chuyển tiền P2P hiện chưa khả dụng.' };
+        }
+        return { ok: false, code: 'server_error', messageVi: 'Không thể xử lý chuyển khoản lúc này.' };
+      }
       return {
         ok: false,
         code: 'service_unavailable',
