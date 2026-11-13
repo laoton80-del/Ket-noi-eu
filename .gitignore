@@ -73,3 +73,9 @@ scripts/build-tier1-*.mjs
 scripts/build-fr-ja-ko-safety.mjs
 scripts/tier1-pack-build.mjs
 scripts/_build-tier1-*.mjs
+
+.env
+.env.local
+.env.backup-*
+google-services.json
+GoogleService-Info.plist

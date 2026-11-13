@@ -723,8 +723,8 @@ assert(
   mainTabSource.includes("from './vionaBottomShellGeometry'") &&
     mainTabSource.includes('height: VIONA_WEB_BOTTOM_TAB_BAR_HEIGHT_PX') &&
     mainTabSource.includes('minHeight: VIONA_WEB_BOTTOM_SHELL_OBSTRUCTION_PX') &&
-    shellSource.includes('Math.max(layout.shellBottomObstruction, orbClearance)') &&
-    shellSource.includes('paddingBottom: layout.contentBreathingClearance')
+    shellSource.includes('layout.contentBreathingClearance + layout.shellBottomObstruction') &&
+    shellSource.includes('restingOrbSize(dimensions.width) + 4 + 72')
 );
 assert(
   'gated universe styling consumes the semantic opacity contract',
