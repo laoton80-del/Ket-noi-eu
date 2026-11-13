@@ -597,9 +597,9 @@ export const walletOps = onRequest(
        * 1) Optional precondition: webhook sets `platform_payment_receipts/{paymentEventId}` to `paid`.
        * 2) This handler applies credits once and mirrors idempotency in `wallets/{uid}/verifiedTopups/...`.
        *
-       * **Pack identity:** `walletOps` topup does **not** accept `packageId` / pack id. Credits granted are
-       * exactly `body.amount` after receipt checks. Client must send the same credit count the user saw
-       * at checkout; payments microservice may correlate `packageId` + fiat separately (not in this repo).
+       * **Pack identity:** `walletOps` accepts a `packId`, not a client-supplied amount. Credits granted
+       * come only from `PACK_TRUTH_TABLE`; receipt lookup and verified-top-up idempotency both use the
+       * same `idempotencyKey` supplied by the client.
        */
       try {
         const packId = String(body.packId ?? '').trim();
@@ -792,8 +792,13 @@ export const walletOps = onRequest(
         const hold = await tx.get(holdRef);
         if (!hold.exists) return { ok: false, error: 'hold_not_found' };
         const h = hold.data() as { amount?: number; status?: string };
-        if (h.status === 'committed' && op === 'commit') return { ok: true };
-        if (h.status === 'rolled_back' && op === 'rollback') return { ok: true };
+        if (h.status === 'committed') {
+          return op === 'commit' ? { ok: true } : { ok: false, error: 'hold_already_committed' };
+        }
+        if (h.status === 'rolled_back') {
+          return op === 'rollback' ? { ok: true } : { ok: false, error: 'hold_already_rolled_back' };
+        }
+        if (h.status !== 'reserved') return { ok: false, error: 'hold_not_reserved' };
         if (op === 'rollback') {
           const snap = await tx.get(ref);
           const d = (snap.data() ?? {}) as { credits?: number };

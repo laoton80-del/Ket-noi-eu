@@ -70,7 +70,7 @@ function persistWalletState() {
   void AsyncStorage.setItem(WALLET_STORAGE_KEY, JSON.stringify(walletState));
 }
 
-async function callWalletOps<T = unknown>(payload: Record<string, unknown>): Promise<T> {
+export async function callWalletOps<T = unknown>(payload: Record<string, unknown>): Promise<T> {
   if (!BACKEND_API_BASE) throw new Error('backend_api_base_missing');
   const token = await getWalletIdToken();
   if (!token) throw new Error('wallet_auth_token_missing');
@@ -204,11 +204,16 @@ export async function chargeTrustedService(params: {
 }
 
 /** Grant VIG Token only once per immutable payment event id (server ledger). */
-export async function topupCreditsServer(amount: number, paymentEventId: string): Promise<{ ok: boolean }> {
-  const pei = paymentEventId.trim();
-  if (!pei) return { ok: false };
+export async function topupCreditsServer(packId: string, idempotencyKey: string): Promise<{ ok: boolean }> {
+  const safePackId = packId.trim();
+  const safeIdempotencyKey = idempotencyKey.trim();
+  if (!safePackId || !safeIdempotencyKey) return { ok: false };
   try {
-    const out = await callWalletOps<{ ok: boolean }>({ op: 'topup', amount, paymentEventId: pei });
+    const out = await callWalletOps<{ ok: boolean }>({
+      op: 'topup',
+      packId: safePackId,
+      idempotencyKey: safeIdempotencyKey,
+    });
     if (!out.ok) return { ok: false };
     await syncWalletFromServer();
     return { ok: true };

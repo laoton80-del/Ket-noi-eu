@@ -11,12 +11,16 @@ import { resolve } from 'node:path';
 import { createContext, runInContext } from 'node:vm';
 import * as ts from 'typescript';
 
+import { GLOBAL_WALLET_PACKAGES } from '../src/config/globalWalletPackages';
 import type * as Validation from '../functions/src/aiProxyValidation';
 import type * as Rate from '../functions/src/aiProxyRateLimit';
 
 const root = resolve(__dirname, '..');
 const lf = (bytes: Buffer): Buffer => Buffer.from(bytes.toString('latin1').replace(/\r\n/g, '\n'), 'latin1');
 const indexText = readFileSync(resolve(root, 'functions/src/index.ts'), 'utf8').replace(/\r\n/g, '\n');
+const walletStateText = readFileSync(resolve(root, 'src/state/wallet.ts'), 'utf8').replace(/\r\n/g, '\n');
+const walletTopUpScreenText = readFileSync(resolve(root, 'src/screens/WalletTopUpScreen.tsx'), 'utf8').replace(/\r\n/g, '\n');
+const fintechWalletText = readFileSync(resolve(root, 'src/services/fintech/WalletService.ts'), 'utf8').replace(/\r\n/g, '\n');
 const indexAst = ts.createSourceFile('index.ts', indexText, ts.ScriptTarget.Latest, true);
 const targetNames = new Set(['aiProxy', 'analyzeDocumentProxy', 'walletOps']);
 const parserNames = new Set(['safeJsonParse', 'extractJsonObject', 'parseDocumentResultOrThrow']);
@@ -38,7 +42,7 @@ assert.equal(selected.filter((statement) => ts.isVariableStatement(statement)
 const handlerSource = `
 import { logger } from 'firebase-functions/v2';
 import { HttpsError, onRequest } from 'firebase-functions/v2/https';
-import { getFirestore } from 'firebase-admin/firestore';
+import { FieldValue, getFirestore } from 'firebase-admin/firestore';
 import { requireFirebaseBearerUser } from './walletAuth';
 import { verifyAppCheckForRequest } from './appCheckGate';
 import { takeAiProxyRateSlot } from './aiProxyRateLimit';
@@ -85,19 +89,50 @@ function harness(options: {
   const requests: Array<{ url: string; init: Record<string, unknown> }> = [];
   const counts = { auth: 0, decoded: 0, appCheck: 0 };
   const identities = new Map<string, { uid: string; provider: string | undefined }>();
+  const walletBalances = new Map<string, { credits: number; lifetimeSpent: number }>();
+  const walletSubdocs = new Map<string, Record<string, unknown>>();
   let now = 1_000_000;
   let sequence = 0;
   const logger = Object.fromEntries(['info', 'warn', 'error'].map((level) => [level,
     (message: unknown, data?: unknown) => logs.push({ level, message: String(message), data }),
   ]));
+  type FakeWalletRef =
+    | { kind: 'wallet'; uid: string; get: () => Promise<{ exists: boolean; data: () => Record<string, unknown> }>; collection: (name: string) => { doc: (key: string) => FakeWalletRef } }
+    | { kind: 'subdoc'; uid: string; collectionName: string; key: string };
+  const defaultWallet = (uid: string) => ({ credits: uid === 'anonymous-user' ? 7 : 11, lifetimeSpent: 2 });
+  const subdocKey = (uid: string, collectionName: string, key: string) => `${uid}/${collectionName}/${key}`;
+  const walletRef = (uid: string): FakeWalletRef => ({
+    kind: 'wallet', uid,
+    get: async () => ({ exists: true, data: () => ({ ...(walletBalances.get(uid) ?? defaultWallet(uid)) }) }),
+    collection: (name) => ({ doc: (key) => ({ kind: 'subdoc', uid, collectionName: name, key }) }),
+  });
+  const readFakeRef = (ref: FakeWalletRef) => {
+    if (ref.kind === 'wallet') return walletBalances.get(ref.uid) ?? defaultWallet(ref.uid);
+    return walletSubdocs.get(subdocKey(ref.uid, ref.collectionName, ref.key));
+  };
+  const writeFakeRef = (ref: FakeWalletRef, data: Record<string, unknown>, merge?: boolean) => {
+    const current = readFakeRef(ref) ?? {};
+    const next = merge ? { ...current, ...data } : { ...data };
+    if (ref.kind === 'wallet') walletBalances.set(ref.uid, next as { credits: number; lifetimeSpent: number });
+    else walletSubdocs.set(subdocKey(ref.uid, ref.collectionName, ref.key), next);
+  };
+  const transactionApi = {
+    get: async (ref: FakeWalletRef) => {
+      const data = readFakeRef(ref);
+      return { exists: data !== undefined, data: () => data };
+    },
+    set: (ref: FakeWalletRef, data: Record<string, unknown>, options?: { merge?: boolean }) => writeFakeRef(ref, data, options?.merge),
+  };
+  let transactionTail: Promise<void> = Promise.resolve();
   const db = {
+    runTransaction: <T>(update: (tx: typeof transactionApi) => Promise<T>): Promise<T> => {
+      const current = transactionTail.then(() => update(transactionApi));
+      transactionTail = current.then(() => undefined, () => undefined);
+      return current;
+    },
     collection: (name: string) => {
       assert.equal(name, 'wallets');
-      return {
-        doc: (uid: string) => ({
-          get: async () => ({ data: () => ({ credits: uid === 'anonymous-user' ? 7 : 11, lifetimeSpent: 2 }) }),
-        }),
-      };
+      return { doc: (uid: string) => walletRef(uid) };
     },
   };
   class FakeHttpsError extends Error {
@@ -164,7 +199,7 @@ function harness(options: {
   const upstream = load('functions/src/openaiProxy.ts');
   const endpoints = load<Record<EndpointName, Endpoint>>('functions/src/index.ts', {
     'firebase-functions/v2': { logger },
-    'firebase-admin/firestore': { getFirestore: () => db },
+    'firebase-admin/firestore': { getFirestore: () => db, FieldValue: { serverTimestamp: () => ({ serverTimestamp: true }) } },
     'firebase-functions/v2/https': {
       HttpsError: FakeHttpsError,
       onRequest: (config: Record<string, unknown>, handler: Endpoint['handler']) => ({ options: config, handler }),
@@ -202,6 +237,7 @@ function harness(options: {
     denyAppCheck?: boolean;
     method?: string;
     rawBytes?: number;
+    skipWalletRequestLogCheck?: boolean;
   } = {}) {
     const token = `${TOKEN_MARKER}.${++sequence}`;
     if (!requestOptions.invalidToken) identities.set(token, {
@@ -226,7 +262,10 @@ function harness(options: {
     await endpoints[name].handler(req, res);
     const requestLogs = logs.slice(logStart).filter((log) => log.message === `[${name}] request`);
     if (name === 'walletOps') {
-      assert.equal(requestLogs.length, result.status === 200 ? 1 : 0);
+      if (!requestOptions.skipWalletRequestLogCheck) {
+        const shouldLogRequest = !requestOptions.noToken && !requestOptions.invalidToken && !requestOptions.denyAppCheck;
+        assert.equal(requestLogs.length, shouldLogRequest ? 1 : 0);
+      }
     } else {
       assert.equal(requestLogs.length, 1, 'each request must emit exactly one structured provider observation');
       assert.ok(Object.prototype.hasOwnProperty.call(requestLogs[0].data, 'signInProvider'));
@@ -237,6 +276,9 @@ function harness(options: {
   return {
     endpoints, validation, rate, walletAuth, logs, requests, counts, call, noTokenLogs,
     registerIdentity: (token: string, uid: string, provider: string) => identities.set(token, { uid, provider }),
+    setWalletCredits: (uid: string, credits: number) => walletBalances.set(uid, { credits, lifetimeSpent: 0 }),
+    walletCredits: (uid: string) => (walletBalances.get(uid) ?? defaultWallet(uid)).credits,
+    hold: (uid: string, key: string) => walletSubdocs.get(subdocKey(uid, 'holds', key)),
     advance: (ms: number) => { now += ms; },
   };
 }
@@ -257,6 +299,103 @@ async function test(name: string, run: () => Promise<void> | void): Promise<void
 }
 
 async function main(): Promise<void> {
+  await test('wallet top-up wire contract uses configured pack IDs and one receipt idempotency key', () => {
+    const packTable = indexText.match(/const PACK_TRUTH_TABLE: Record<string, number> = \{([\s\S]*?)\n\};/);
+    assert.ok(packTable, 'server PACK_TRUTH_TABLE must remain present');
+    const serverPackIds = [...packTable[1].matchAll(/^\s*([a-z]+):\s*\d+,\s*$/gm)].map((match) => match[1]).sort();
+    const purchasablePackIds = GLOBAL_WALLET_PACKAGES.filter((pack) => pack.purchasable).map((pack) => pack.id).sort();
+    assert.deepStrictEqual(serverPackIds, purchasablePackIds);
+
+    const clientTopup = walletStateText.match(/export async function topupCreditsServer\([\s\S]*?\n\}/)?.[0];
+    assert.ok(clientTopup, 'client topup helper must exist');
+    assert.match(clientTopup, /op: 'topup'[\s\S]*packId: safePackId[\s\S]*idempotencyKey: safeIdempotencyKey/);
+    assert.doesNotMatch(clientTopup, /\bamount\b|paymentEventId/);
+    assert.match(walletTopUpScreenText, /topupCreditsServer\(walletPackageId,\s*paymentEventId\)/);
+
+    const serverTopup = indexText.match(/if \(op === 'topup'\) \{([\s\S]*?)\n    if \(op === 'charge'\)/)?.[1];
+    assert.ok(serverTopup, 'walletOps topup handler must exist');
+    assert.match(serverTopup, /PACK_TRUTH_TABLE\[packId\]/);
+    assert.match(serverTopup, /receiptAllowsTopup\(db, idempotencyKey, userId, creditsToGrant\)/);
+    const executableTopup = serverTopup.replace(/\/\*[\s\S]*?\*\/|\/\/.*$/gm, '');
+    assert.doesNotMatch(executableTopup, /body\.amount/);
+  });
+  await test('wallet P2P client reuses Firebase walletOps auth and a collision-resistant suffix', () => {
+    assert.match(fintechWalletText, /import \{ callWalletOps, syncWalletFromServer \} from '\.\.\/\.\.\/state\/wallet'/);
+    assert.match(fintechWalletText, /await callWalletOps<[^>]+>\(\{[\s\S]*op: 'p2pTransfer'/);
+    assert.match(walletTopUpScreenText, /idempotencyKey: `p2p-\$\{senderPhone\}-\$\{Date\.now\(\)\}-\$\{Math\.random\(\)\.toString\(36\)\.slice\(2, 8\)\}`/);
+    assert.match(fintechWalletText, /code: 'not_available', messageVi: 'Chuyển tiền P2P hiện chưa khả dụng\.'/);
+  });
+  await test('wallet hold reversal is terminal and repeated rollback cannot mint credits', async () => {
+    const h = harness(); const uid = 'hold-sequence-user'; const key = 'hold-sequence-key';
+    h.setWalletCredits(uid, 20);
+    const call = (op: 'reserve' | 'commit' | 'rollback') => h.call('walletOps', { op, idempotencyKey: key, amount: 4 }, { uid });
+
+    assert.equal((await call('reserve')).status, 200);
+    assert.equal(h.walletCredits(uid), 16);
+    assert.equal((await call('rollback')).status, 200);
+    assert.equal(h.walletCredits(uid), 20);
+    const reverseCommit = await call('commit');
+    assertError(reverseCommit, 400, 'hold_already_rolled_back');
+    const repeatedRollback = await call('rollback');
+    assert.equal(repeatedRollback.status, 200, 'same-terminal replay remains idempotent');
+    assert.equal(h.walletCredits(uid), 20, 'repeated rollback must not mint credits');
+    assert.equal(h.hold(uid, key)?.status, 'rolled_back');
+  });
+  await test('wallet hold commit cannot be reversed by rollback', async () => {
+    const h = harness(); const uid = 'hold-commit-user'; const key = 'hold-commit-key';
+    h.setWalletCredits(uid, 20);
+    const call = (op: 'reserve' | 'commit' | 'rollback') => h.call('walletOps', { op, idempotencyKey: key, amount: 4 }, { uid });
+
+    assert.equal((await call('reserve')).status, 200);
+    assert.equal((await call('commit')).status, 200);
+    const reverseRollback = await call('rollback');
+    assertError(reverseRollback, 400, 'hold_already_committed');
+    assert.equal(h.walletCredits(uid), 16);
+    assert.equal(h.hold(uid, key)?.status, 'committed');
+  });
+  await test('wallet hold duplicate terminal calls and commit/rollback race are one-way', async () => {
+    const duplicateCommit = harness(); const uidCommit = 'hold-duplicate-commit-user'; const keyCommit = 'hold-duplicate-commit-key';
+    duplicateCommit.setWalletCredits(uidCommit, 20);
+    await duplicateCommit.call('walletOps', { op: 'reserve', amount: 3, idempotencyKey: keyCommit }, { uid: uidCommit });
+    const commitResults = await Promise.all([
+      duplicateCommit.call('walletOps', { op: 'commit', idempotencyKey: keyCommit }, { uid: uidCommit, skipWalletRequestLogCheck: true }),
+      duplicateCommit.call('walletOps', { op: 'commit', idempotencyKey: keyCommit }, { uid: uidCommit, skipWalletRequestLogCheck: true }),
+    ]);
+    assert.deepStrictEqual(commitResults.map((result) => result.status), [200, 200]);
+    assert.equal(duplicateCommit.hold(uidCommit, keyCommit)?.status, 'committed');
+    assert.equal(duplicateCommit.walletCredits(uidCommit), 17);
+
+    const duplicateRollback = harness(); const uidRollback = 'hold-duplicate-rollback-user'; const keyRollback = 'hold-duplicate-rollback-key';
+    duplicateRollback.setWalletCredits(uidRollback, 20);
+    await duplicateRollback.call('walletOps', { op: 'reserve', amount: 3, idempotencyKey: keyRollback }, { uid: uidRollback });
+    const rollbackResults = await Promise.all([
+      duplicateRollback.call('walletOps', { op: 'rollback', idempotencyKey: keyRollback }, { uid: uidRollback, skipWalletRequestLogCheck: true }),
+      duplicateRollback.call('walletOps', { op: 'rollback', idempotencyKey: keyRollback }, { uid: uidRollback, skipWalletRequestLogCheck: true }),
+    ]);
+    assert.deepStrictEqual(rollbackResults.map((result) => result.status), [200, 200]);
+    assert.equal(duplicateRollback.hold(uidRollback, keyRollback)?.status, 'rolled_back');
+    assert.equal(duplicateRollback.walletCredits(uidRollback), 20);
+
+    const race = harness(); const uidRace = 'hold-race-user'; const keyRace = 'hold-race-key';
+    race.setWalletCredits(uidRace, 20);
+    await race.call('walletOps', { op: 'reserve', amount: 3, idempotencyKey: keyRace }, { uid: uidRace });
+    const raceResults = await Promise.all([
+      race.call('walletOps', { op: 'commit', idempotencyKey: keyRace }, { uid: uidRace, skipWalletRequestLogCheck: true }),
+      race.call('walletOps', { op: 'rollback', idempotencyKey: keyRace }, { uid: uidRace, skipWalletRequestLogCheck: true }),
+    ]);
+    assert.equal(raceResults.filter((result) => result.status === 200).length, 1);
+    assert.equal(raceResults.filter((result) => result.status === 400).length, 1);
+    const finalHold = race.hold(uidRace, keyRace);
+    if (finalHold?.status === 'committed') {
+      assertError(raceResults.find((result) => result.status === 400)!, 400, 'hold_already_committed');
+      assert.equal(race.walletCredits(uidRace), 17);
+    } else {
+      assert.equal(finalHold?.status, 'rolled_back');
+      assertError(raceResults.find((result) => result.status === 400)!, 400, 'hold_already_rolled_back');
+      assert.equal(race.walletCredits(uidRace), 20);
+    }
+  });
+
   await test('only approved handler/auth blocks changed; generated bundle identity matches', () => {
     const hash = (bytes: string | Buffer) => createHash('sha256').update(bytes).digest('hex').toUpperCase();
     assert.equal(hash(protectedIndex), '2FE73F227357597DB49329CB2A13A9FB083A654BF91BC296B0E11E65553560A0');
