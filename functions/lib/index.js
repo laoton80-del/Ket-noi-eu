@@ -4409,8 +4409,13 @@ var walletOps = (0, import_https2.onRequest)(
         const hold = await tx.get(holdRef);
         if (!hold.exists) return { ok: false, error: "hold_not_found" };
         const h = hold.data();
-        if (h.status === "committed" && op === "commit") return { ok: true };
-        if (h.status === "rolled_back" && op === "rollback") return { ok: true };
+        if (h.status === "committed") {
+          return op === "commit" ? { ok: true } : { ok: false, error: "hold_already_committed" };
+        }
+        if (h.status === "rolled_back") {
+          return op === "rollback" ? { ok: true } : { ok: false, error: "hold_already_rolled_back" };
+        }
+        if (h.status !== "reserved") return { ok: false, error: "hold_not_reserved" };
         if (op === "rollback") {
           const snap = await tx.get(ref);
           const d = snap.data() ?? {};
@@ -4420,6 +4425,35 @@ var walletOps = (0, import_https2.onRequest)(
         }
         tx.set(holdRef, { status: "committed", updatedAt: import_firestore8.FieldValue.serverTimestamp() }, { merge: true });
         return { ok: true };
+      });
+      return void res.status(result.ok ? 200 : 400).json(result);
+    }
+    if (op === "refundCommittedHold") {
+      const key = String(body.idempotencyKey ?? "").trim();
+      if (!key) return void res.status(400).json({ ok: false, error: "missing_hold_key" });
+      if (key.length > 900) return void res.status(400).json({ ok: false, error: "hold_key_too_long" });
+      const holdRef = ref.collection("holds").doc(key);
+      const refundRef = ref.collection("refunds").doc(key);
+      const result = await db.runTransaction(async (tx) => {
+        const hold = await tx.get(holdRef);
+        if (!hold.exists) return { ok: false, error: "hold_not_found" };
+        const h = hold.data();
+        if (h.status !== "committed") return { ok: false, error: "hold_not_committed" };
+        if (typeof h.amount !== "number" || !Number.isFinite(h.amount) || h.amount <= 0) {
+          return { ok: false, error: "invalid_hold_amount" };
+        }
+        const refund = await tx.get(refundRef);
+        if (refund.exists) return { ok: true, duplicate: true };
+        const snap = await tx.get(ref);
+        const d = snap.data() ?? {};
+        tx.set(ref, { credits: (d.credits ?? 0) + h.amount, updatedAt: import_firestore8.FieldValue.serverTimestamp() }, { merge: true });
+        tx.set(refundRef, {
+          status: "applied",
+          holdId: key,
+          amount: h.amount,
+          createdAt: import_firestore8.FieldValue.serverTimestamp()
+        });
+        return { ok: true, duplicate: false };
       });
       return void res.status(result.ok ? 200 : 400).json(result);
     }

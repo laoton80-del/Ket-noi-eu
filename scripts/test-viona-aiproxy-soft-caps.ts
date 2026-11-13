@@ -21,6 +21,7 @@ const indexText = readFileSync(resolve(root, 'functions/src/index.ts'), 'utf8').
 const walletStateText = readFileSync(resolve(root, 'src/state/wallet.ts'), 'utf8').replace(/\r\n/g, '\n');
 const walletTopUpScreenText = readFileSync(resolve(root, 'src/screens/WalletTopUpScreen.tsx'), 'utf8').replace(/\r\n/g, '\n');
 const fintechWalletText = readFileSync(resolve(root, 'src/services/fintech/WalletService.ts'), 'utf8').replace(/\r\n/g, '\n');
+const liveInterpreterText = readFileSync(resolve(root, 'src/hooks/useLiveInterpreter.ts'), 'utf8').replace(/\r\n/g, '\n');
 const indexAst = ts.createSourceFile('index.ts', indexText, ts.ScriptTarget.Latest, true);
 const targetNames = new Set(['aiProxy', 'analyzeDocumentProxy', 'walletOps']);
 const parserNames = new Set(['safeJsonParse', 'extractJsonObject', 'parseDocumentResultOrThrow']);
@@ -279,6 +280,7 @@ function harness(options: {
     setWalletCredits: (uid: string, credits: number) => walletBalances.set(uid, { credits, lifetimeSpent: 0 }),
     walletCredits: (uid: string) => (walletBalances.get(uid) ?? defaultWallet(uid)).credits,
     hold: (uid: string, key: string) => walletSubdocs.get(subdocKey(uid, 'holds', key)),
+    refund: (uid: string, key: string) => walletSubdocs.get(subdocKey(uid, 'refunds', key)),
     advance: (ms: number) => { now += ms; },
   };
 }
@@ -395,13 +397,37 @@ async function main(): Promise<void> {
       assert.equal(race.walletCredits(uidRace), 20);
     }
   });
+  await test('interpreter first-turn compensation refunds a committed hold exactly once on retry', async () => {
+    const failureBlock = liveInterpreterText.match(/if \(turnCountRef\.current === 0 && sessionDebitTxIdRef\.current\) \{([\s\S]*?)\n\s*\}/)?.[1];
+    assert.ok(failureBlock, 'first-turn failure compensation block must exist');
+    assert.match(failureBlock, /refundCommittedHoldCredits\(sessionDebitTxIdRef\.current\)/);
+    assert.doesNotMatch(failureBlock, /rollbackReservedCredits/);
+    assert.match(walletStateText, /op: 'refundCommittedHold', idempotencyKey/);
+
+    const h = harness(); const uid = 'interpreter-refund-user'; const key = 'interpreter-session-hold';
+    h.setWalletCredits(uid, 20);
+    assert.equal((await h.call('walletOps', { op: 'reserve', amount: 5, idempotencyKey: key }, { uid })).status, 200);
+    assert.equal((await h.call('walletOps', { op: 'commit', idempotencyKey: key }, { uid })).status, 200);
+    assert.equal(h.walletCredits(uid), 15, 'committed session hold is charged before the first turn');
+
+    const refundResults = await Promise.all([
+      h.call('walletOps', { op: 'refundCommittedHold', idempotencyKey: key }, { uid, skipWalletRequestLogCheck: true }),
+      h.call('walletOps', { op: 'refundCommittedHold', idempotencyKey: key }, { uid, skipWalletRequestLogCheck: true }),
+    ]);
+    assert.deepStrictEqual(refundResults.map((result) => result.status), [200, 200]);
+    assert.deepStrictEqual(refundResults.map((result) => result.body.duplicate).sort(), [false, true]);
+    assert.equal(h.walletCredits(uid), 20);
+    assert.equal(h.refund(uid, key)?.amount, 5);
+    assert.equal(h.refund(uid, key)?.status, 'applied');
+    assert.equal(h.walletCredits(uid), 20, 'retry returns the existing refund without crediting again');
+  });
 
   await test('only approved handler/auth blocks changed; generated bundle identity matches', () => {
     const hash = (bytes: string | Buffer) => createHash('sha256').update(bytes).digest('hex').toUpperCase();
     assert.equal(hash(protectedIndex), '2FE73F227357597DB49329CB2A13A9FB083A654BF91BC296B0E11E65553560A0');
     assert.equal(hash(lf(readFileSync(resolve(root, 'functions/src/walletAuth.ts')))), '71C10E0935D1EE954C4A38E6750CBA9F4BDA8BB4C74D017F23B09D9873F25512');
     // Updated after the Firebase stopgap functions/lib rebuild.
-    assert.equal(hash(readFileSync(resolve(root, 'functions/lib/index.js'))), '61396AE622882D6AF3039C9FF6FBB1E3776383D9301919D46EA70347087E3DE0');
+    assert.equal(hash(readFileSync(resolve(root, 'functions/lib/index.js'))), '9EA6EF839BF265B2F7205A5DE4914D043A8BBBDA88D44A21C2096A4A0CFE0967');
   });
   for (const [requested, expected] of [[undefined, 240], [512, 512], [513, 512], [8192, 512], [3.8, 3], [-1, 1], [NaN, 240], [Infinity, 240]] as const) {
     await test(`chat maxTokens ${String(requested)} is bounded at ${expected}`, () => {

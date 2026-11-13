@@ -811,6 +811,35 @@ export const walletOps = onRequest(
       });
       return void res.status(result.ok ? 200 : 400).json(result);
     }
+    if (op === 'refundCommittedHold') {
+      const key = String(body.idempotencyKey ?? '').trim();
+      if (!key) return void res.status(400).json({ ok: false, error: 'missing_hold_key' });
+      if (key.length > 900) return void res.status(400).json({ ok: false, error: 'hold_key_too_long' });
+      const holdRef = ref.collection('holds').doc(key);
+      const refundRef = ref.collection('refunds').doc(key);
+      const result = await db.runTransaction(async (tx) => {
+        const hold = await tx.get(holdRef);
+        if (!hold.exists) return { ok: false, error: 'hold_not_found' };
+        const h = hold.data() as { amount?: number; status?: string };
+        if (h.status !== 'committed') return { ok: false, error: 'hold_not_committed' };
+        if (typeof h.amount !== 'number' || !Number.isFinite(h.amount) || h.amount <= 0) {
+          return { ok: false, error: 'invalid_hold_amount' };
+        }
+        const refund = await tx.get(refundRef);
+        if (refund.exists) return { ok: true, duplicate: true };
+        const snap = await tx.get(ref);
+        const d = (snap.data() ?? {}) as { credits?: number };
+        tx.set(ref, { credits: (d.credits ?? 0) + h.amount, updatedAt: FieldValue.serverTimestamp() }, { merge: true });
+        tx.set(refundRef, {
+          status: 'applied',
+          holdId: key,
+          amount: h.amount,
+          createdAt: FieldValue.serverTimestamp(),
+        });
+        return { ok: true, duplicate: false };
+      });
+      return void res.status(result.ok ? 200 : 400).json(result);
+    }
     logger.warn('[walletOps] unknown_op', { trust_surface: 'wallet_ops', firebaseUid: userId, op });
     return void res.status(400).json({ ok: false, error: 'unknown_wallet_op' });
   }

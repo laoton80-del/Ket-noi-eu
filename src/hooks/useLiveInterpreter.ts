@@ -12,7 +12,7 @@ import {
   runInterpreterTurn,
   type LiveInterpreterSessionSnapshot,
 } from '../services/liveInterpreterService';
-import { getWalletState, reserveAndCommitCredits, rollbackReservedCredits, syncWalletFromServer } from '../state/wallet';
+import { getWalletState, refundCommittedHoldCredits, reserveAndCommitCredits, syncWalletFromServer } from '../state/wallet';
 import type { SellCTA } from '../services/selling/sellingTypes';
 import { useAuth } from '../context/AuthContext';
 import { defaultPatternIdFor, trackNetworkEffectEvent } from '../services/networkEffect';
@@ -361,7 +361,7 @@ export function useLiveInterpreter({ assistantLanguageCode }: UseLiveInterpreter
       void appendUsageHistory({ type: 'interpreter', status: 'success', note: scenario });
     } catch {
       if (turnCountRef.current === 0 && sessionDebitTxIdRef.current) {
-        void rollbackReservedCredits(sessionDebitTxIdRef.current);
+        await refundCommittedHoldCredits(sessionDebitTxIdRef.current);
         sessionDebitTxIdRef.current = null;
       }
       void trackNetworkEffectEvent({

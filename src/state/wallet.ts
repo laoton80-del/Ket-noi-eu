@@ -178,6 +178,18 @@ export async function rollbackReservedCredits(idempotencyKey: string): Promise<v
   }
 }
 
+/** Refund a committed hold once, for an explicitly compensated first-turn failure. */
+export async function refundCommittedHoldCredits(idempotencyKey: string): Promise<boolean> {
+  try {
+    const out = await callWalletOps<{ ok: boolean }>({ op: 'refundCommittedHold', idempotencyKey });
+    if (!out.ok) return false;
+    await syncWalletFromServer();
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 export type TrustedMonetizedServiceKind = 'leona_outbound' | 'letan_booking';
 
 /** Server-authoritative debit for monetized flows; idempotent per key. */
