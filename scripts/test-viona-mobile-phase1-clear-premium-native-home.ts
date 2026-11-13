@@ -40,6 +40,148 @@ const PHASE1_DESCENDANT_ALLOWED = new Set([
   'scripts/test-viona-mobile-phase1-clear-premium-native-home.ts',
 ]);
 
+/** Exact P2-A Travel native presentation-isolation descendant. */
+const PHASE2_A_TRAVEL_ISOLATION_DESCENDANT_ALLOWED = new Set([
+  'src/navigation/travelPresentationTarget.ts',
+  'src/components/viona/VionaNativeTravelOpeningStage.tsx',
+  'scripts/test-viona-mobile-phase2-travel-native-presentation-isolation.ts',
+  'src/screens/b2c/TravelScreen.tsx',
+]);
+
+/** Exact P2-B Travel native Clear Premium composition descendant. */
+const PHASE2_B_TRAVEL_COMPOSITION_DESCENDANT_ALLOWED = new Set([
+  'src/components/viona/native-travel/VionaNativeTravelClearPremiumComposition.tsx',
+  'src/components/viona/native-travel/VionaNativeTravelContextStrip.tsx',
+  'src/components/viona/native-travel/VionaNativeTravelFlagshipActions.tsx',
+  'src/components/viona/native-travel/VionaNativeTravelUtilityActions.tsx',
+  'src/components/viona/native-travel/VionaNativeTravelSecondaryStack.tsx',
+  'scripts/test-viona-mobile-phase2-travel-native-clear-premium-composition.ts',
+  'src/screens/b2c/TravelScreen.tsx',
+  'scripts/test-viona-mobile-phase2-travel-native-presentation-isolation.ts',
+  'scripts/test-viona-mobile-phase1-clear-premium-native-home.ts',
+]);
+
+/** Exact P2-C Travel native responsive four-matrix descendant. No glob. */
+const PHASE2_C_TRAVEL_RESPONSIVE_DESCENDANT_ALLOWED = new Set([
+  'src/components/viona/native-travel/VionaNativeTravelClearPremiumComposition.tsx',
+  'src/components/viona/native-travel/VionaNativeTravelContextStrip.tsx',
+  'src/components/viona/native-travel/VionaNativeTravelFlagshipActions.tsx',
+  'src/components/viona/native-travel/VionaNativeTravelUtilityActions.tsx',
+  'src/components/viona/native-travel/VionaNativeTravelSecondaryStack.tsx',
+  'scripts/test-viona-mobile-phase2-travel-native-responsive-refinement.ts',
+  'scripts/test-viona-mobile-phase1-clear-premium-native-home.ts',
+  'scripts/test-viona-mobile-phase2-travel-native-clear-premium-composition.ts',
+]);
+
+/** Exact P2-D Travel final-closure descendant. Tests only. No glob. No product/runtime mutation. */
+const PHASE2_D_TRAVEL_FINAL_CLOSURE_DESCENDANT_ALLOWED = new Set([
+  'scripts/test-viona-mobile-phase2-travel-final-closure.ts',
+  'scripts/test-viona-mobile-phase1-clear-premium-native-home.ts',
+  'scripts/test-viona-mobile-phase2-travel-native-clear-premium-composition.ts',
+  'scripts/test-viona-mobile-phase2-travel-native-responsive-refinement.ts',
+]);
+
+/** Exact P3-A Local native presentation-isolation descendant (parity only; not P3-B restyle). */
+const PHASE3_A_LOCAL_ISOLATION_DESCENDANT_ALLOWED = new Set([
+  'src/navigation/localPresentationTarget.ts',
+  'src/components/viona/VionaNativeLocalOpeningStage.tsx',
+  'scripts/test-viona-mobile-phase3-local-native-presentation-isolation.ts',
+  'src/screens/b2c/LocalScreen.tsx',
+  'scripts/test-viona-mobile-phase1-clear-premium-native-home.ts',
+]);
+
+/** Exact P3-B Local native Clear Premium composition descendant. */
+const PHASE3_B_LOCAL_COMPOSITION_DESCENDANT_ALLOWED = new Set([
+  'src/components/viona/native-local/VionaNativeLocalClearPremiumComposition.tsx',
+  'src/components/viona/native-local/VionaNativeLocalContextHero.tsx',
+  'src/components/viona/native-local/VionaNativeLocalFlagshipActions.tsx',
+  'src/components/viona/native-local/VionaNativeLocalUtilityActions.tsx',
+  'src/components/viona/native-local/VionaNativeLocalSecondaryStack.tsx',
+  'scripts/test-viona-mobile-phase3-local-native-clear-premium-composition.ts',
+  'src/screens/b2c/LocalScreen.tsx',
+  'scripts/test-viona-mobile-phase1-clear-premium-native-home.ts',
+  'scripts/test-viona-mobile-phase3-local-native-presentation-isolation.ts',
+]);
+
+/** Exact P3-C Local native responsive four-matrix descendant. No glob. */
+const PHASE3_C_LOCAL_RESPONSIVE_DESCENDANT_ALLOWED = new Set([
+  'src/components/viona/native-local/VionaNativeLocalClearPremiumComposition.tsx',
+  'src/components/viona/native-local/VionaNativeLocalContextHero.tsx',
+  'src/components/viona/native-local/VionaNativeLocalFlagshipActions.tsx',
+  'src/components/viona/native-local/VionaNativeLocalUtilityActions.tsx',
+  'src/components/viona/native-local/VionaNativeLocalSecondaryStack.tsx',
+  'scripts/test-viona-mobile-phase3-local-native-responsive-refinement.ts',
+  'scripts/test-viona-mobile-phase1-clear-premium-native-home.ts',
+  'scripts/test-viona-mobile-phase3-local-native-clear-premium-composition.ts',
+  'scripts/test-viona-mobile-phase3-local-native-presentation-isolation.ts',
+]);
+
+/** Exact P3-D Local final-closure descendant. Tests only. No glob. No product/runtime mutation. */
+const PHASE3_D_LOCAL_FINAL_CLOSURE_DESCENDANT_ALLOWED = new Set([
+  'scripts/test-viona-mobile-phase3-local-final-closure.ts',
+  'scripts/test-viona-mobile-phase1-clear-premium-native-home.ts',
+  'scripts/test-viona-mobile-phase3-local-native-presentation-isolation.ts',
+  'scripts/test-viona-mobile-phase3-local-native-clear-premium-composition.ts',
+  'scripts/test-viona-mobile-phase3-local-native-responsive-refinement.ts',
+]);
+
+/** Exact P4-A native Account chrome-first descendant. No glob. */
+const PHASE4_A_ACCOUNT_CHROME_DESCENDANT_ALLOWED = new Set([
+  'src/components/viona/VionaShellAccountLanguageActions.tsx',
+  'scripts/test-viona-mobile-phase4-account-chrome-isolation.ts',
+  'scripts/test-viona-mobile-phase1-clear-premium-native-home.ts',
+  'scripts/test-viona-mobile-phase3-local-native-presentation-isolation.ts',
+  'scripts/test-viona-mobile-phase3-local-native-clear-premium-composition.ts',
+  'scripts/test-viona-mobile-phase3-local-native-responsive-refinement.ts',
+  'scripts/test-viona-mobile-phase3-local-final-closure.ts',
+]);
+
+/** Exact P4-B1 native PersonalHub presentation-isolation descendant. No glob. */
+const PHASE4_B1_ACCOUNT_PERSONALHUB_ISOLATION_DESCENDANT_ALLOWED = new Set([
+  'src/navigation/accountPresentationTarget.ts',
+  'src/components/viona/VionaNativeAccountOpeningStage.tsx',
+  'scripts/test-viona-mobile-phase4-account-personalhub-presentation-isolation.ts',
+  'src/screens/CaNhanScreen.tsx',
+  'scripts/test-viona-mobile-phase1-clear-premium-native-home.ts',
+]);
+
+/** Exact P4-B2 native PersonalHub Clear Premium composition descendant. No glob. */
+const PHASE4_B2_ACCOUNT_COMPOSITION_DESCENDANT_ALLOWED = new Set([
+  'src/components/viona/native-account/VionaNativeAccountClearPremiumComposition.tsx',
+  'scripts/test-viona-mobile-phase4-account-personalhub-composition.ts',
+  'src/screens/CaNhanScreen.tsx',
+  'scripts/test-viona-mobile-phase1-clear-premium-native-home.ts',
+  'scripts/test-viona-mobile-phase4-account-personalhub-presentation-isolation.ts',
+]);
+
+/** Exact P4-C Account four-matrix responsive descendant. No glob. */
+const PHASE4_C_ACCOUNT_RESPONSIVE_DESCENDANT_ALLOWED = new Set([
+  'src/components/viona/native-account/VionaNativeAccountClearPremiumComposition.tsx',
+  'scripts/test-viona-mobile-phase4-account-responsive-refinement.ts',
+  'scripts/test-viona-mobile-phase4-account-personalhub-composition.ts',
+  'scripts/test-viona-mobile-phase4-account-personalhub-presentation-isolation.ts',
+  'scripts/test-viona-mobile-phase4-account-chrome-isolation.ts',
+  'scripts/test-viona-mobile-phase1-clear-premium-native-home.ts',
+  'scripts/test-viona-mobile-phase3-local-native-presentation-isolation.ts',
+  'scripts/test-viona-mobile-phase3-local-native-clear-premium-composition.ts',
+  'scripts/test-viona-mobile-phase3-local-native-responsive-refinement.ts',
+  'scripts/test-viona-mobile-phase3-local-final-closure.ts',
+]);
+
+/** Exact P4-D Account final-closure descendant. Tests only. No glob. No product/runtime mutation. */
+const PHASE4_D_ACCOUNT_FINAL_CLOSURE_DESCENDANT_ALLOWED = new Set([
+  'scripts/test-viona-mobile-phase4-account-final-closure.ts',
+  'scripts/test-viona-mobile-phase1-clear-premium-native-home.ts',
+  'scripts/test-viona-mobile-phase4-account-chrome-isolation.ts',
+  'scripts/test-viona-mobile-phase4-account-personalhub-presentation-isolation.ts',
+  'scripts/test-viona-mobile-phase4-account-personalhub-composition.ts',
+  'scripts/test-viona-mobile-phase4-account-responsive-refinement.ts',
+  'scripts/test-viona-mobile-phase3-local-native-presentation-isolation.ts',
+  'scripts/test-viona-mobile-phase3-local-native-clear-premium-composition.ts',
+  'scripts/test-viona-mobile-phase3-local-native-responsive-refinement.ts',
+  'scripts/test-viona-mobile-phase3-local-final-closure.ts',
+]);
+
 const DENY = [
   'src/navigation/fashionHomeShellMode.ts',
   'src/navigation/MainTabNavigator.tsx',
@@ -410,7 +552,30 @@ assert('B2C Academy tab unchanged', mainTab.includes('MAIN_TAB.B2C.ai') && mainT
   );
 }
 
-assert('mutation path matches selected Phase 1 or exact cumulative R2 contract', changed.every((p) => r2Base ? Object.prototype.hasOwnProperty.call(R2_EXPECTED_PATHS, p) : ALLOWED.has(p) || PHASE1_DESCENDANT_ALLOWED.has(p) || p.length === 0));
+assert(
+  'mutation path matches selected Phase 1 or exact cumulative R2 contract',
+  changed.every(
+    (p) =>
+      r2Base
+        ? Object.prototype.hasOwnProperty.call(R2_EXPECTED_PATHS, p)
+        : ALLOWED.has(p) ||
+          PHASE1_DESCENDANT_ALLOWED.has(p) ||
+          PHASE2_A_TRAVEL_ISOLATION_DESCENDANT_ALLOWED.has(p) ||
+          PHASE2_B_TRAVEL_COMPOSITION_DESCENDANT_ALLOWED.has(p) ||
+          PHASE2_C_TRAVEL_RESPONSIVE_DESCENDANT_ALLOWED.has(p) ||
+          PHASE2_D_TRAVEL_FINAL_CLOSURE_DESCENDANT_ALLOWED.has(p) ||
+          PHASE3_A_LOCAL_ISOLATION_DESCENDANT_ALLOWED.has(p) ||
+          PHASE3_B_LOCAL_COMPOSITION_DESCENDANT_ALLOWED.has(p) ||
+          PHASE3_C_LOCAL_RESPONSIVE_DESCENDANT_ALLOWED.has(p) ||
+          PHASE3_D_LOCAL_FINAL_CLOSURE_DESCENDANT_ALLOWED.has(p) ||
+          PHASE4_A_ACCOUNT_CHROME_DESCENDANT_ALLOWED.has(p) ||
+          PHASE4_B1_ACCOUNT_PERSONALHUB_ISOLATION_DESCENDANT_ALLOWED.has(p) ||
+          PHASE4_B2_ACCOUNT_COMPOSITION_DESCENDANT_ALLOWED.has(p) ||
+          PHASE4_C_ACCOUNT_RESPONSIVE_DESCENDANT_ALLOWED.has(p) ||
+          PHASE4_D_ACCOUNT_FINAL_CLOSURE_DESCENDANT_ALLOWED.has(p) ||
+          p.length === 0
+  )
+);
 for (const denied of DENY) {
   if (r2Base ? Object.prototype.hasOwnProperty.call(R2_EXPECTED_PATHS, denied) : PHASE1_DESCENDANT_ALLOWED.has(denied)) continue;
   assert(`${denied} absent from mutation`, !changed.includes(denied));
