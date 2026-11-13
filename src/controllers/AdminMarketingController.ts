@@ -3,11 +3,14 @@ import type { Request, Response } from 'express';
 
 import { GLOBAL_MAX_LIST_ITEMS } from '../constants/globalPerformance';
 import { getPrisma } from '../lib/prisma';
+import { defaultVionaDispatchCallLlm } from '../lib/viona/dispatcher/vionaIntentRouter';
+import { LlmProviderAdmissionDeniedError } from '../services/ai/llmProviderAdmissionGate';
 import { runMarketingDraftCronJob } from '../services/marketing/AutoPoster';
-import { generateTranslations } from '../services/marketing/AIPostGenerator';
+import { generateTranslations, generateVionaMarketingContentDraft } from '../services/marketing/AIPostGenerator';
 import { DEFAULT_MARKETING_POLYGLOT_TARGETS } from '../services/marketing/marketingPolyglotTargets';
 import { publishToFacebookPage } from '../services/marketing/FacebookGraphAPI';
 import { jsonFail, jsonOk } from '../utils/apiEnvelope';
+import { logSafeError } from '../utils/safeLogError';
 import {
   dispatchVionaMarketingContentRequest,
   type VionaMarketingContentDispatchRejectionReason,
@@ -158,7 +161,7 @@ export async function getMarketingPosts(req: Request, res: Response): Promise<vo
       limit: take,
     });
   } catch (err) {
-    console.error('[AdminMarketingController] getMarketingPosts', err);
+    logSafeError('[AdminMarketingController] getMarketingPosts', err);
     jsonFail(res, 'Failed to load marketing posts', 500);
   }
 }
@@ -192,7 +195,7 @@ export async function putMarketingPost(req: Request, res: Response): Promise<voi
     });
     jsonOk(res, toDto(updated));
   } catch (err) {
-    console.error('[AdminMarketingController] putMarketingPost', err);
+    logSafeError('[AdminMarketingController] putMarketingPost', err);
     jsonFail(res, 'Failed to update post', 500);
   }
 }
@@ -224,7 +227,7 @@ export async function postMarketingPostPublish(req: Request, res: Response): Pro
     }
     const fb = await publishToFacebookPage(messageText);
     if (!fb.success) {
-      console.error('[AdminMarketingController] Facebook publish failed', fb.error);
+      logSafeError('[AdminMarketingController] Facebook publish failed', fb.error, { code: 'FACEBOOK_PUBLISH_FAILED' });
       jsonFail(res, fb.error, 502);
       return;
     }
@@ -237,7 +240,7 @@ export async function postMarketingPostPublish(req: Request, res: Response): Pro
     });
     jsonOk(res, { post: toDto(updated), facebookPostId: fb.postId });
   } catch (err) {
-    console.error('[AdminMarketingController] postMarketingPostPublish', err);
+    logSafeError('[AdminMarketingController] postMarketingPostPublish', err);
     jsonFail(res, err instanceof Error ? err.message : 'Publish failed', 500);
   }
 }
@@ -262,7 +265,7 @@ export async function deleteMarketingDraft(req: Request, res: Response): Promise
     await getPrisma().marketingPost.delete({ where: { id } });
     jsonOk(res, { deleted: true, id });
   } catch (err) {
-    console.error('[AdminMarketingController] deleteMarketingDraft', err);
+    logSafeError('[AdminMarketingController] deleteMarketingDraft', err);
     jsonFail(res, 'Failed to delete draft', 500);
   }
 }
@@ -295,15 +298,20 @@ export async function postMarketingApproveAndTranslate(req: Request, res: Respon
       return;
     }
 
-    await getPrisma().marketingPost.update({
-      where: { id },
+    // Generation can deny admission. Leave approval/content and existing translations intact on DENY.
+    await generateTranslations(id, base, DEFAULT_MARKETING_POLYGLOT_TARGETS);
+
+    const approval = await getPrisma().marketingPost.updateMany({
+      where: { id, status: MarketingPostStatus.DRAFT },
       data: {
         approvedBaseContent: base,
         content: base,
       },
     });
-
-    await generateTranslations(id, base, DEFAULT_MARKETING_POLYGLOT_TARGETS);
+    if (approval.count !== 1) {
+      jsonFail(res, 'Trạng thái bài đã đổi trong lúc dịch; phê duyệt không được áp dụng.', 409);
+      return;
+    }
 
     const post = await getPrisma().marketingPost.findUniqueOrThrow({
       where: { id },
@@ -314,7 +322,11 @@ export async function postMarketingApproveAndTranslate(req: Request, res: Respon
       post: toDto(post, post.translations.map((t) => translationToDto(t))),
     });
   } catch (err) {
-    console.error('[AdminMarketingController] approve-and-translate', err);
+    if (err instanceof LlmProviderAdmissionDeniedError) {
+      jsonFail(res, err.message, 503, err.code);
+      return;
+    }
+    logSafeError('[AdminMarketingController] approve-and-translate', err);
     jsonFail(res, err instanceof Error ? err.message : 'Translation failed', 500);
   }
 }
@@ -327,7 +339,11 @@ export async function postTriggerAutoPost(_req: Request, res: Response): Promise
     const out = await runMarketingDraftCronJob();
     jsonOk(res, out);
   } catch (err) {
-    console.error('[AdminMarketingController] trigger-auto-post failed:', err);
+    if (err instanceof LlmProviderAdmissionDeniedError) {
+      jsonFail(res, err.message, 503, err.code);
+      return;
+    }
+    logSafeError('[AdminMarketingController] trigger-auto-post failed:', err);
     jsonFail(res, err instanceof Error ? err.message : 'Draft generation failed', 500);
   }
 }
@@ -379,8 +395,24 @@ export async function postAdminMarketingGenerateDraft(
 
     const userMessage = `Draft a ${tone} marketing/social post about "${topic}" in the language identified by ISO code "${targetLanguageCode}".`;
 
+    // The existing dispatcher converts callback errors to generic rejection reasons. Preserve
+    // only the typed admission denial per request so it cannot become an unrelated 502 or success.
+    let admissionDenial: LlmProviderAdmissionDeniedError | undefined;
+    const trackAdmission = async <T>(call: () => Promise<T>): Promise<T> => {
+      try {
+        return await call();
+      } catch (error) {
+        if (error instanceof LlmProviderAdmissionDeniedError) admissionDenial = error;
+        throw error;
+      }
+    };
+
     const dispatch = deps.dispatch ?? dispatchVionaMarketingContentRequest;
-    const result = await dispatch({ userMessage });
+    const result = await dispatch({ userMessage }, {
+      callLlm: (prompt) => trackAdmission(() => defaultVionaDispatchCallLlm(prompt)),
+      generateDraft: (input) => trackAdmission(() => generateVionaMarketingContentDraft(input)),
+    });
+    if (admissionDenial) throw admissionDenial;
 
     if (!result.ok) {
       if (result.reason === 'invalid_input') {
@@ -408,7 +440,11 @@ export async function postAdminMarketingGenerateDraft(
       confidence: result.confidence,
     });
   } catch (err) {
-    console.error('[AdminMarketingController] postAdminMarketingGenerateDraft', err);
+    if (err instanceof LlmProviderAdmissionDeniedError) {
+      jsonFail(res, err.message, 503, err.code);
+      return;
+    }
+    logSafeError('[AdminMarketingController] postAdminMarketingGenerateDraft', err);
     jsonFail(res, 'Internal server error', 500);
   }
 }

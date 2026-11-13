@@ -9,6 +9,7 @@ import { LlmRouterTaskType } from '@prisma/client';
 
 import { getPrisma } from '../../lib/prisma';
 import { createRoutedChatCompletion } from './AIRouterService';
+import { logSafeError } from '../../utils/safeLogError';
 
 const TARGET_VI = 'vi' as const;
 const MAX_CACHED_SOURCE_CHARS = 12_000;
@@ -57,7 +58,7 @@ function persistCacheEntry(input: Readonly<{
       },
     })
     .catch((err: unknown) => {
-      console.error('[TranslationCache] persist failed', err);
+      logSafeError('[TranslationCache] persist failed', err);
     });
 }
 

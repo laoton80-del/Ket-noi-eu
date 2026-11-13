@@ -24,6 +24,12 @@ import { internalRouter } from './routes/internalRoutes';
 import { vionaWebhookRouter } from './routes/vionaWebhookRoutes';
 import { jsonFail } from './utils/apiEnvelope';
 import { logger } from './utils/Logger';
+import { safeErrorMeta } from './utils/safeLogError';
+
+// Mirrors functions/src/aiProxyValidation.ts AI_PROXY_MAX_BODY_BYTES.
+// Defined locally (not imported) - src/ must never depend on functions/ at
+// compile- or run-time (see closedRequire guard in test-viona-cost-governor-core.ts).
+const AI_PROXY_MAX_BODY_BYTES = 6 * 1024 * 1024;
 
 export function createApp(): express.Application {
   const app = express();
@@ -51,7 +57,7 @@ export function createApp(): express.Application {
     vionaWebhookRouter,
   );
 
-  app.use(express.json({ limit: '512kb' }));
+  app.use(express.json({ limit: AI_PROXY_MAX_BODY_BYTES }));
 
   app.use(pathAwareApiRateLimiter);
 
@@ -88,7 +94,7 @@ export function createApp(): express.Application {
       res: express.Response,
       _next: express.NextFunction
     ): void => {
-      logger.error({ err }, '[api] unhandled error');
+      logger.error({ code: 'API_UNHANDLED', ...safeErrorMeta(err) }, '[api] unhandled error');
       jsonFail(res, 'Internal server error', 500);
     }
   );

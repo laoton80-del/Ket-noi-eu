@@ -10,6 +10,7 @@ function scenarioToTone(scenario: VoiceScenario): VoiceProfile['tone'] {
       return 'formal';
     case 'nails':
     case 'restaurant':
+    case 'retail_taphoa':
     case 'general':
     case 'live_interpreter':
     case 'b2b_receptionist':

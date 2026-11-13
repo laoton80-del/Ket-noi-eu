@@ -5,6 +5,7 @@ import {
   runMarketingAutoPosterJob,
 } from '../../workers/marketingWorker';
 import { logger } from '../../utils/Logger';
+import { safeErrorMeta } from '../../utils/safeLogError';
 
 export type { MarketingDraftCronResult };
 
@@ -24,7 +25,7 @@ function safeRunJob(slot: 'morning' | 'evening'): void {
       const out = await runMarketingAutoPosterJob();
       logger.info({ draftId: out.draft.id, slot }, '[AutoPoster] AI draft saved');
     } catch (err) {
-      logger.error({ err, slot }, '[AutoPoster] Scheduled job failed');
+      logger.error({ ...safeErrorMeta(err), slot }, '[AutoPoster] Scheduled job failed');
     }
   })();
 }

@@ -5,6 +5,7 @@
  */
 import { tryCreditBrokerPaygShareFromAiUsage } from '../b2b/BrokerService';
 import { debitSpendableVigForAiGateway, getWalletBalanceByUserId } from '../WalletService';
+import { logSafeError } from '../../utils/safeLogError';
 
 const VIG_EPS = 1e-6;
 
@@ -96,7 +97,7 @@ export async function debitVigAfterAiInference(input: AiGatewayDebitInput): Prom
         correlationKey,
       });
     } catch (e) {
-      console.error('[AIGateway] broker PAYG net-revenue share failed', e);
+      logSafeError('[AIGateway] broker PAYG net-revenue share failed', e);
     }
   }
   return out;

@@ -1,7 +1,5 @@
-import { getWalletIdToken } from '../walletFirebaseSession';
-import { mergeTrustBackendHeaders } from '../../utils/trustBackendHeaders';
+import { restApiFetchJson } from '../apiClient';
 
-const BACKEND_API_BASE = process.env.EXPO_PUBLIC_BACKEND_API_BASE?.trim() ?? '';
 const REQUEST_TIMEOUT_MS = 20_000;
 
 type AiProxyChatResponse = {
@@ -34,6 +32,24 @@ function extractTextFromChatResponse(payload: AiProxyChatResponse): string {
   return '';
 }
 
+function createIdempotencyKey(): string {
+  const cryptoApi = globalThis.crypto;
+  if (typeof cryptoApi?.randomUUID === 'function') return cryptoApi.randomUUID();
+
+  const bytes = new Uint8Array(16);
+  if (typeof cryptoApi?.getRandomValues === 'function') {
+    cryptoApi.getRandomValues(bytes);
+  } else {
+    for (let index = 0; index < bytes.length; index += 1) {
+      bytes[index] = Math.floor(Math.random() * 256);
+    }
+  }
+  bytes[6] = (bytes[6] & 0x0f) | 0x40;
+  bytes[8] = (bytes[8] & 0x3f) | 0x80;
+  const hex = Array.from(bytes, (byte) => byte.toString(16).padStart(2, '0')).join('');
+  return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`;
+}
+
 export async function draftGlobalDocument(intent: string, country: string, language: string): Promise<string> {
   const normalizedIntent = intent.trim();
   const normalizedCountry = country.trim();
@@ -41,65 +57,28 @@ export async function draftGlobalDocument(intent: string, country: string, langu
   if (!normalizedIntent) throw new Error('intent_required');
   if (!normalizedCountry) throw new Error('country_required');
   if (!normalizedLanguage) throw new Error('language_required');
-  if (!BACKEND_API_BASE) throw new Error('backend_api_base_missing');
-
-  const token = await getWalletIdToken(true);
-  if (!token) throw new Error('wallet_auth_token_missing');
-  const headers = await mergeTrustBackendHeaders({
-    'Content-Type': 'application/json',
-    Authorization: `Bearer ${token}`,
-  });
 
   const systemPrompt =
     `You are a top-tier legal and business secretary for a Vietnamese expat living in ${normalizedCountry}. ` +
     `The user will give you a short intent in Vietnamese. You must write a highly professional, culturally appropriate email or document in ${normalizedLanguage}. ` +
     'Return ONLY the final text of the document, ready to be copied and pasted. No introductory or concluding remarks.';
 
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
-  let res: Response;
-  try {
-    res = await fetch(`${BACKEND_API_BASE}/aiProxy`, {
-      method: 'POST',
-      headers,
-      body: JSON.stringify({
-        op: 'chat',
-        temperature: 0.35,
-        maxTokens: 900,
-        messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: normalizedIntent },
-        ],
-      }),
-      signal: controller.signal,
-    });
-  } catch (error) {
-    if (error instanceof Error && error.name === 'AbortError') {
-      throw new Error('network_timeout');
-    }
-    throw new Error('network_error');
-  } finally {
-    clearTimeout(timeout);
-  }
+  const result = await restApiFetchJson<AiProxyChatResponse>('/api/ai/chat-completion', {
+    method: 'POST',
+    body: {
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: normalizedIntent },
+      ],
+      temperature: 0.35,
+      maxTokens: 900,
+    },
+    headers: { 'Idempotency-Key': createIdempotencyKey() },
+    timeoutMs: REQUEST_TIMEOUT_MS,
+  });
+  if (!result.ok) throw new Error(result.code || result.error || `ai_proxy_${result.status}`);
 
-  const text = await res.text();
-  if (!res.ok) {
-    let parsedError = '';
-    try {
-      parsedError = String((JSON.parse(text) as { error?: string }).error ?? '').trim();
-    } catch {
-      parsedError = '';
-    }
-    throw new Error(parsedError || `ai_proxy_${res.status}`);
-  }
-
-  let payload: AiProxyChatResponse = {};
-  try {
-    payload = text ? (JSON.parse(text) as AiProxyChatResponse) : {};
-  } catch {
-    throw new Error('ai_parse_error');
-  }
-  const draft = extractTextFromChatResponse(payload);
+  const draft = extractTextFromChatResponse(result.data);
   if (!draft) throw new Error('ai_empty_output');
   return draft;
 }

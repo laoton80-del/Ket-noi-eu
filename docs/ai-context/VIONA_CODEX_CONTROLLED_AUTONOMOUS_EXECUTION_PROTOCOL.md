@@ -146,6 +146,14 @@ Controlled autonomous execution does not mean Codex becomes the product owner, r
 
 Codex is the primary executor for this protocol. Cursor may temporarily execute an authorized lane when the operator explicitly substitutes it. Executor substitution does not reset or expand authorization. It does not change canonical repository, branch/HEAD requirements, file allowlist, mutation budget, remote rights, stop conditions, or authorization provenance. Authorization belongs to the lane and action, not to executor branding.
 
+### 3.8 Versioned local exact-create envelope dispatch
+
+The legacy envelope contract and every historical `CREATE_ALLOWLIST` or `MODIFY_ALLOWLIST` retain their existing meanings and acquire no typed local-create authority.
+
+A future envelope may be evaluated under local exact-create semantics only when `ENVELOPE_CONTRACT.schema` is exactly `VIONA_CODEX_ENVELOPE_V2_LOCAL_EXACT_CREATE`, `profile_id` is exactly `VIONA_BME_PACK_A_SOURCE_CREATE_V1`, and the separately governed `docs/product/VIONA_CODEX_AUTONOMOUS_EXECUTION_ENVELOPE_LOCAL_EXACT_CREATE_V2_SPEC.md` is adopted and applicable. Dispatch must validate that exact V2 pair before interpreting `LOCAL_CREATE_AUTHORITY`. An absent, unknown, or mixed marker, a legacy envelope carrying `LOCAL_CREATE_AUTHORITY`, or nonempty legacy create/modify paths under this profile must block.
+
+This routing rule does not establish a parser or executor implementation, authenticate an Operator message, authorize Pack A, or grant any filesystem, Git, provider, network, or remote effect. Every execution still requires an independently verified exact Operator authorization and every precondition required by the successor specification.
+
 ---
 
 ## 4. Autonomy Levels
@@ -231,12 +239,17 @@ Compute `EXPECTED_BASE.refs_manifest_sha256` using the complete logical ref
 inventory in envelope spec §3, including HEAD, all refs namespaces, direct OIDs,
 and immediate symbolic targets. Use the Git 2.43-compatible files-backend
 procedure, including packed/loose completeness and explicit root-ref reads.
-Require ref integrity and two matching
-snapshots; unsupported, malformed, dangling, or incomplete state fails closed.
-No namespace is exempt, and candidate capture cannot adopt changed refs.
-Implementation, validators, and staging must preserve this identity. Any
-separately authorized branch/ref operation needs exact old/new transition
-proof and a declared next phase baseline before validators.
+Require ref integrity and two matching snapshots; unsupported, malformed,
+dangling, or incomplete state fails closed. No namespace is exempt from
+inventory. The sole comparison exception is the non-authorizing,
+evidence-only `refs/codex/**` projection defined for
+`github_graphql_existing_branch_one_create_one_modify_v1` in §7.9
+and envelope spec §12.4. It applies only to that profile, only after retaining
+both complete maps, grants no ref mutation, and does not change any other
+profile. Candidate capture cannot adopt any other changed ref.
+Implementation, validators, and staging must otherwise preserve the complete
+identity. Any separately authorized branch/ref operation needs exact old/new
+transition proof and a declared next phase baseline before validators.
 
 For every validator group, first seal the complete expected input state using
 the envelope spec §3 `POST_VALIDATOR_STATE_RECHECK.comparison_source`. The source
@@ -361,9 +374,10 @@ git add --all
 
 Committing requires explicit authorization and an expected subject or commit purpose. Codex must verify staged paths before committing.
 
-This gate governs local commit creation. Server commit creation uses the
-independent REMOTE_COMMIT_AUTHORITY contract in §§7.6-7.7; it does not implicitly
-invoke this local gate or authorize another commit.
+This gate governs local commit creation. Server commit creation uses exactly
+one independently authorized REMOTE_COMMIT_AUTHORITY profile selected from
+§§7.6-7.9; it does not implicitly invoke this local gate or authorize another
+commit.
 
 Before any local commit-authorized operation, Codex must reject any in-progress Git
 operation that can alter commit ancestry or commit semantics. The check must
@@ -438,7 +452,7 @@ The retained ordinary named-remote push profile is unsupported until a
 separately reviewed transport contract establishes both the declared old-value
 write precondition and immutable repository write binding. The recipe below
 alone establishes neither, so an enabled ordinary push must fail closed before
-preparation, including dry-runs. API publication uses §§7.6-7.7 only when separately
+preparation, including dry-runs. API publication uses §§7.6-7.9 only when separately
 authorized; there is no ordinary Git push fallback.
 
 Push requires explicit authorization. A local branch or local commit does
@@ -641,12 +655,14 @@ The supported API publication profiles are exactly:
 2. `github_graphql_create_ref_then_commit_candidate_v1` under this section and
    envelope spec §12.2;
 3. `github_graphql_existing_branch_finite_replace_v2` under §7.8 and envelope
-   spec §12.3.
+   spec §12.3;
+4. `github_graphql_existing_branch_one_create_one_modify_v1` under §7.9 and
+   envelope spec §12.4.
 
-No fourth profile is implied. The absent-branch profile and the finite-path
-existing-branch profile do not weaken, broaden or retroactively reinterpret
-`github_graphql_existing_branch_replace_v1`. None is an ordinary Git push
-fallback or grants a REST Git-data, Contents API or alternate GraphQL writer.
+No fifth profile is implied. The new profile and the three pre-existing
+profiles do not weaken, broaden or retroactively reinterpret one another. None
+is an ordinary Git push fallback or grants a REST Git-data, Contents API or
+alternate GraphQL writer.
 
 `REMOTE_COMMIT_AUTHORITY.profile` is a closed dispatch. The existing profile
 retains `branch_node_id`, `replacement_count: 2`,
@@ -665,8 +681,11 @@ profile's `REMOTE_COMMIT_AUTHORITY`; its pre-PR PR-binding blocks are explicitly
 disabled. The finite-path existing-branch profile is separately defined by
 §7.8 and requires reviewed-local-candidate identity, an exact positive finite
 modify-only path set, singular durable authority and the same required PR
-binding blocks as v1. Unknown profiles, implicit upgrades or mixed fields fail
-closed.
+binding blocks as v1. The §7.9 profile instead requires one CREATE plus one
+MODIFY on an existing Ref, singular durable authority, exact empty local-ref
+transitions and the §7.7 pre-PR disabled binding blocks plus a complete zero-open-
+associated-PR inventory. Unknown profiles, implicit upgrades or mixed fields
+fail closed.
 
 The absent-branch profile has exactly two supported `execution_mode` values:
 
@@ -939,6 +958,96 @@ remains separate and default-false. It also grants no PR create/edit, review,
 workflow, merge, deploy, branch-protection or production authority. Envelope
 spec §12.3 is the detailed normative source for this profile.
 
+### 7.9 Existing-branch exact one-create/one-modify API publication
+
+The profile defined by this section is
+`github_graphql_existing_branch_one_create_one_modify_v1` from envelope spec
+§12.4. It advances one exact existing feature branch with one
+`github.createCommitOnBranch` dispatch containing exactly one absent-path
+addition and one existing-path replacement. It creates no branch or PR and
+performs no local worktree, index, branch-ref or remote-tracking-ref mutation.
+
+This is a separate closed-dispatch member. It does not reinterpret §§7.6-7.8.
+Require the exact profile shape, CREATE=1/MODIFY=1/DELETE=0 records, distinct
+paths, complete two-path diff, independently derived authorized tree, singular
+`DURABLE_ATTEMPT_AUTHORITY`, complete verifier/publisher
+`API_EXECUTION_CONTEXTS`, append-only `API_REQUEST_RECORDS`, and
+`REMOTE_MUTATION_AUTHORITY.operations` exactly
+`[github.createCommitOnBranch]`. `REMOTE_REF_CREATE_AUTHORITY`,
+`DURABLE_PHASE_AUTHORITIES`, `PHASE_A_CONTINUATION_BINDING`, local commit/push/
+sync and every PR/merge/deploy authority remain disabled in their exact forms.
+
+Independently resolve the governed repository-identity provenance record before
+using current API observations. Verify the Repository node/numeric IDs, exact
+Ref global node/name/ownership, existing head and base tree. Prove the CREATE
+path absent and MODIFY path present at mode 100644 with its exact preimage.
+Verify both raw postimages by byte length, SHA-256 and Git blob OID, then derive
+the complete result tree by one insertion and one replacement while preserving
+every sibling entry. The actual mutation must carry the unchanged fixed
+`expectedHeadOid` in the same input; GET-then-write, REST ref PATCH and mutable
+slug/branch selectors are not write constraints.
+
+Construct exactly two RFC 4648 Base64 additions in CREATE-then-MODIFY order
+from the retained raw byte buffers. Use the reviewed mutation document and
+exact JCS UTF-8 request body required by §12.4, seal that buffer, append/read
+back its `API_REQUEST_RECORDS` entry and durably append/read back
+`DISPATCH_STARTED` before sending. Do not normalize text or reconstruct bytes
+after sealing. No deletion, third path, rename, type/mode change or provider-
+side content inference is allowed.
+
+The singular attempt marker and event chain use §12.4's fixed profile,
+attempt/phase/operation, destination, tree, path-record, request/context/helper
+and authorization bindings. The repository-provenance digest is the exact JCS
+object digest; the reservation marker digest is over the exact persisted and
+same-handle-read-back marker bytes. Each response-evidence reference resolves
+to the same sequence-2 request, API context, operation and attempt, and the
+event/evidence HTTP status is identical in both AVAILABLE and UNAVAILABLE
+variants. AVAILABLE response bytes are retained before text or JSON decoding.
+Reconciliation metadata uses the exact closed AVAILABLE, UNAVAILABLE or
+NOT_APPLICABLE union, a trusted evidence reference, an H64 digest of that exact
+resolved record, the exact metadata request record when a request occurred, and
+repository/Ref/commit subject equality. Sequence 5 uses one digest of the
+complete exact sequence-4 event for both its reconciliation reference and
+event-chain predecessor. Changed-path arrays use §12.4's exact element,
+uniqueness and ordering rules. Reservation consumes the attempt before
+dispatch. Every event is append-only and hash-chained; partial, corrupt,
+missing-after-reservation or uncertain evidence permits read-only
+reconciliation only. `MAX_APPLICATION_DISPATCH=1`. No retry, authentication
+replay, expected-head refresh, alternate client/writer, push or automatic
+rollback is allowed.
+
+After any definitive or ambiguous response, independently reconcile the exact
+Repository, Ref, server commit, sole parent, complete tree, both blobs/modes,
+exact two-path delta and semantic commit message. GitHub-controlled author,
+committer, signature and timestamps are evidence rather than authority; no
+predetermined server commit OID is required. Exact reconciliation is the only
+success route. An unchanged head after ambiguity is not success and never
+restores dispatch permission. A wrong tree, extra path or unexpected head is a
+blocked conflict.
+
+This profile is pre-PR only. Use the exact disabled PR binding blocks and
+require a complete sealed inventory showing zero open PRs associated with the
+Ref before dispatch. Any PR or incomplete inventory blocks. Publication grants
+no PR authority. `expected_local_ref_transitions=[]`. Build and retain
+both complete §3 ref maps. For this profile only, compare the
+`GOVERNANCE_STABLE_REFS` projection excluding raw-name prefix
+`refs/codex/` byte-for-byte, pin HEAD and the checked-out branch
+separately, and pin all `refs/remotes/` records as the separate
+critical remote-tracking projection. Inventory the start/end
+`EPHEMERAL_EXECUTOR_REFS` records without adopting their OIDs.
+A fully evidenced autonomous change confined there is not itself drift; any
+executor-issued ref mutation command, missing inventory, or other ref change
+blocks. This grants no ref authority and changes no other profile. Because
+local commit/push/sync are disabled, `hooks_path` is inapplicable and
+omitted—no empty hooks directory or `--no-verify` assertion is
+fabricated.
+
+Envelope spec §12.4 is the detailed normative source, including the closed
+repository-provenance type, path records, request serialization, one-shot event
+and terminal-outcome types, reconciliation table, candidate-evidence boundary
+and finite negative-test matrix. Runtime or storage placeholders keep the
+profile disabled; this protocol does not itself authorize publication.
+
 ---
 
 ## 8. VIONA Safety Surfaces
@@ -1000,10 +1109,11 @@ Codex may proceed without asking another question only when all of these are tru
 7. validation commands are safe for the lane;
 8. the final state can be verified.
 
-An explicitly authorized API lane proceeds only through the applicable
-§§7.6-7.7 profile after candidate
-validation and complete context/state checks, then through separately authorized
-local synchronization. A2/A2C or local packaging never implies either operation.
+An explicitly authorized API lane proceeds only through its exact selected
+supported profile in §§7.6-7.9 after candidate validation and complete
+context/state checks, then through separately authorized local synchronization.
+The common context controls do not select a profile. A2/A2C or local packaging
+never implies either operation.
 
 Codex must stop and report when any of these is false.
 
@@ -1039,7 +1149,7 @@ Every controlled autonomous lane should end with:
 | Staged | Exact staged paths/content identity, semantic index manifest, empty resolve-undo proof, and any verified stage transition |
 | Commit | Commit hash or `none`; PRE_COMMIT_HEAD, AUTHORIZED_TREE, resulting tree and parent proof when committed |
 | Push | No attempt, verified success, failure, or uncertain result; independent repository identity/provenance, expected/observed destination, environment-policy and executable proofs, endpoint/config/environment digests, hooks-disabled proof and complete pre/post local-state comparisons for every attempt |
-| API publication | Applicable singular or phase-specific durable-authority storage/operation/marker persistence and recovery evidence; every API_REQUEST_RECORDS seal; applicable PR-bound or pre-PR profile proof; context fingerprints, per-phase dispatch/outcome, server parent/tree/Ref and separate local-sync proof under §§7.6-7.7; `none` when unused |
+| API publication | Applicable singular or phase-specific durable-authority storage/operation/marker persistence and recovery evidence; every API_REQUEST_RECORDS seal; applicable PR-bound or pre-PR profile proof; context fingerprints, per-phase dispatch/outcome, server parent/tree/Ref and separate local-sync proof under §§7.6-7.9; `none` when unused |
 | PR | `zero` unless authorized and completed |
 | Runtime/source | `zero` for docs-only lanes |
 | Validation | Commands run, pass/fail result, comparison source, sealed input identities, and every post-validator state comparison |

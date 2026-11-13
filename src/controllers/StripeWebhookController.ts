@@ -5,6 +5,7 @@ import {
   parsePaymentIntentSucceeded,
   verifyStripeWebhookSignature,
 } from '../services/api/StripeWebhookService';
+import { logSafeError } from '../utils/safeLogError';
 
 function readRawBuffer(req: Request): Buffer {
   const b = req.body;
@@ -55,7 +56,7 @@ export async function postStripeWebhook(req: Request, res: Response): Promise<vo
       res.status(400).json({ received: true, error: 'metadata.user_id / userId required on PaymentIntent' });
       return;
     }
-    console.error('[stripe webhook]', e);
+    logSafeError('[stripe webhook]', e);
     res.status(500).json({ received: false, error: 'fulfillment_failed' });
   }
 }

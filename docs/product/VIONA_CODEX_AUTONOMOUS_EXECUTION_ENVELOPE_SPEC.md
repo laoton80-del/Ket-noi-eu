@@ -198,14 +198,20 @@ REMOTE_COMMIT_AUTHORITY:
       candidate_raw_byte_length:
       candidate_raw_sha256:
       mode: 100644
+  create_path_record:
+  modify_path_record:
   paths: []
   create_paths: []
   modify_paths: []
   path_count:
+  create_count:
+  modify_count:
+  delete_count:
   replacement_count:
   content_source:
   tree_source:
   authorized_tree:
+  expected_local_ref_transitions: []
   max_commits: 1
   max_attempts: 1
   message_headline:
@@ -473,6 +479,29 @@ API context IDs, `mutation_document_sha256`, `operation_id`,
 `PR_METADATA_RACE_ACCEPTANCE` contracts from §12.3. Mixed v1, v2 or §12.2
 fields fail closed.
 
+For `github_graphql_existing_branch_one_create_one_modify_v1`,
+`execution_mode` is not applicable. Require `repository_identity`,
+`branch_node_id`, `branch_ref`, `expected_head_oid`, `base_tree_oid`, exact
+`create_path_record` and `modify_path_record`, `paths`, `create_paths`,
+`modify_paths`, `path_count: 2`, `create_count: 1`, `modify_count: 1`,
+`delete_count: 0`, `content_source: sealed_validated_local_candidate_bytes`,
+`tree_source:`
+`independently_derived_existing_head_tree_plus_one_addition_and_one_replacement`,
+`authorized_tree`, `expected_local_ref_transitions: []`, `max_commits: 1`,
+`max_attempts: 1`, `message_headline`, both API context IDs,
+`mutation_document_sha256`, `operation_id` and
+`durable_attempt_authority_id`. Forbid `execution_mode`,
+`branch_ref_node_id_source`, `verified_branch_ref_node_id`,
+`candidate_commit_oid`, `candidate_parent_tree_oid`, `candidate_tree_oid`,
+`candidate_path_records`, `replacement_count`,
+`candidate_commit_durable_phase_authority_id`, `expected_pr_binding_id`,
+`associated_pr_scope_id` and `metadata_race_acceptance_id`. Require the
+singular `DURABLE_ATTEMPT_AUTHORITY` and the exact disabled pre-PR blocks from
+§12.4. The six fields `create_path_record`, `modify_path_record`,
+`create_count`, `modify_count`, `delete_count` and
+`expected_local_ref_transitions` are new-profile-only and forbidden in every
+pre-existing profile member. Mixed field sets fail closed.
+
 The profile/mode authority-block matrix is normative:
 
 | Profile / mode | `REMOTE_REF_CREATE_AUTHORITY` | Durable authority | `PHASE_A_CONTINUATION_BINDING` | PR binding blocks | Exact `REMOTE_MUTATION_AUTHORITY.operations` |
@@ -481,6 +510,7 @@ The profile/mode authority-block matrix is normative:
 | `github_graphql_create_ref_then_commit_candidate_v1` / `full_two_phase` | Required and enabled with the complete Phase-A shape | `DURABLE_ATTEMPT_AUTHORITY` exact `allowed: false` only; `DURABLE_PHASE_AUTHORITIES` requires fresh phase set exactly `[REF_CREATE, CANDIDATE_COMMIT]` | exact `required: false` only | exact disabled boolean-only blocks | exactly `[github.updateRefs, github.createCommitOnBranch]` |
 | `github_graphql_create_ref_then_commit_candidate_v1` / `phase_b_only` | exact `allowed: false` only | `DURABLE_ATTEMPT_AUTHORITY` exact `allowed: false` only; `DURABLE_PHASE_AUTHORITIES` requires fresh phase set exactly `[CANDIDATE_COMMIT]` | required with the complete continuation shape | exact disabled boolean-only blocks | exactly `[github.createCommitOnBranch]`; `github.updateRefs` forbidden |
 | `github_graphql_existing_branch_finite_replace_v2` / not applicable | exact `allowed: false` only | `DURABLE_ATTEMPT_AUTHORITY` required; `DURABLE_PHASE_AUTHORITIES` exact `required: false` only | exact `required: false` only | `EXPECTED_PR_BINDING`, `ASSOCIATED_PR_SCOPE` and `PR_METADATA_RACE_ACCEPTANCE` required | exactly `[github.createCommitOnBranch]` |
+| `github_graphql_existing_branch_one_create_one_modify_v1` / not applicable | exact `allowed: false` only | `DURABLE_ATTEMPT_AUTHORITY` required; `DURABLE_PHASE_AUTHORITIES` exact `required: false` only | exact `required: false` only | exact disabled boolean-only blocks plus complete zero-open-associated-PR preflight | exactly `[github.createCommitOnBranch]` |
 
 An authority block marked forbidden grants no fields or operation. The exact
 disabled forms are `REMOTE_REF_CREATE_AUTHORITY.allowed: false`,
@@ -573,12 +603,19 @@ Reflog/cache metadata is not part of this logical ref manifest.
 
 Require two matching complete snapshots at every acceptance and quiesce
 concurrent ref writers. Implementation, validators, and staging must preserve
-the baseline map; candidate capture cannot adopt ref drift. Any separately
-authorized ref operation needs exact names, actions, old values (including
-absence), expected new values, and a verified next phase baseline. Ordinary
-commit/push transitions follow §11. Use `--no-replace-objects` for object,
-content, HEAD, tree, and parent proofs. Unsupported or incomplete verification
-fails closed without automatic repair.
+the baseline map; candidate capture cannot adopt ref drift. The sole
+comparison exception is the non-authorizing, evidence-only
+`refs/codex/**` projection defined for
+`github_graphql_existing_branch_one_create_one_modify_v1` in §12.4.
+That exception is available only after constructing and retaining both complete
+logical ref maps under this section; it never omits a ref from inventory,
+grants no ref mutation, and does not apply to §§12.1-12.3 or any other profile.
+Any separately authorized ref operation needs exact names, actions, old values
+(including absence), expected new values, and a verified next phase baseline.
+Ordinary commit/push transitions follow §11. Use
+`--no-replace-objects` for object, content, HEAD, tree, and parent
+proofs. Unsupported or incomplete verification fails closed without automatic
+repair.
 
 `EXPECTED_BASE.unstaged_tracked_paths` is the exact baseline path set for
 unstaged tracked changes. Use `unstaged_tracked_paths: []` when no unstaged
@@ -884,9 +921,10 @@ Require:
 - expected staged-content digest and semantic index manifest, with empty resolve-undo proof;
 - exact nonignored untracked path set and content-identity manifest;
 - exact ignored untracked path set and content-identity manifest;
-- for an API publication lane, the full applicable §§12.1-12.2 verifier/publisher contexts,
-  anchored repository/Ref/head/base and supported no-redirect client; establish
-  client safety before edits when the operator requires that ordering;
+- for an API publication lane, the common §12.1 verifier/publisher context
+  contract plus the exact selected supported profile in §§12.1-12.4, anchored
+  repository/Ref/head/base and supported no-redirect client; establish client
+  safety before edits when the operator requires that ordering;
 - when push is enabled, its independently declared repository identity and
   destination old state, validated environment allowlist and executable/path
   identities, and the complete §11 push context before push preparation.
@@ -978,7 +1016,7 @@ IMPLEMENT INSIDE THE AUTHORIZED ENVELOPE
 -> RECHECK NONIGNORED AND IGNORED PATH SETS AND CONTENT MANIFESTS
 -> COMPARE EVERY VALUE WITH THE SAME SEALED INPUT STATE
 -> REVALIDATE BEFORE ANY INDEPENDENTLY AUTHORIZED STAGE/COMMIT TRANSITION
--> IF INDEPENDENTLY AUTHORIZED API PROFILE: REVALIDATE THE APPLICABLE §§12.1-12.2 CONTEXT AND CANDIDATE
+-> IF INDEPENDENTLY AUTHORIZED API PROFILE: REVALIDATE COMMON §12.1 CONTROLS AND THE EXACT SELECTED PROFILE IN §§12.1-12.4
 -> ONE API DISPATCH; VERIFY REMOTE PARENT/TREE/REF; SYNC ONLY IF SEPARATELY AUTHORIZED
 -> CAPTURE FINAL GIT STATE AND TRANSITION EVIDENCE
 ```
@@ -1015,8 +1053,9 @@ Every autonomous lane must return:
 - runtime effect;
 - remote effect and, for push, §11 identity/provenance, expected destination,
   environment-policy/executable proof and all pre/post comparisons;
-- API publication, when authorized: applicable §§12.1-12.2 request/context/attempt records,
-  full tree/blob and parent/Ref evidence, and separate local-sync outcome;
+- API publication, when authorized: common §12.1 request/context/attempt
+  controls plus the exact selected profile evidence under §§12.1-12.4, full
+  tree/blob and parent/Ref evidence, and separate local-sync outcome;
 - rollback state;
 - final classification.
 
@@ -1119,7 +1158,7 @@ closed before preparation unless a separately reviewed, explicitly authorized
 transport contract establishes both write bindings and its complete declared
 API verifier context. No such Git write-binding mechanism is supplied here;
 URL reads, broad credentials and post-write checks cannot substitute for it.
-The separately authorized API profiles in §§12.1-12.2 have no ordinary Git push fallback.
+The separately authorized API profiles in §§12.1-12.4 have no ordinary Git push fallback.
 
 When `PUSH_AUTHORITY.allowed` is false, omit every other push field. When
 true, `remote`, `push_url`, `repository_identity`, `api_verifier_context_id`, `expected_destination`,
@@ -1367,12 +1406,13 @@ The supported API publication profiles are exactly:
 
 1. `github_graphql_existing_branch_replace_v1` under §12.1;
 2. `github_graphql_create_ref_then_commit_candidate_v1` under §12.2;
-3. `github_graphql_existing_branch_finite_replace_v2` under §12.3.
+3. `github_graphql_existing_branch_finite_replace_v2` under §12.3;
+4. `github_graphql_existing_branch_one_create_one_modify_v1` under §12.4.
 
-No fourth API publication profile, ordinary Git push fallback, REST Git-data
+No fifth API publication profile, ordinary Git push fallback, REST Git-data
 writer, Contents API writer, alternate GraphQL writer, PR authority, merge
-authority or deploy authority is implied. V2 does not supersede or reinterpret
-the exact-two-file v1 profile.
+authority or deploy authority is implied. The new profile does not supersede
+or reinterpret any of the three pre-existing profile members.
 
 ---
 
@@ -2724,6 +2764,662 @@ verification. Publication success must be reported separately from local sync.
 Repository, Ref, expected-head, candidate topology, path-set/count, raw-byte,
 tree, PR/singleton, race-acceptance, API-context, request-seal or durable-state
 failure requires STOP. There is no automatic repair or scope expansion.
+
+### 12.4 Existing-branch exact one-create/one-modify API publication profile
+
+`github_graphql_existing_branch_one_create_one_modify_v1` is the only profile
+defined by this section. It advances one exact existing branch with one
+`createCommitOnBranch` application dispatch whose complete file plan is exactly
+one absent path creation plus one existing path replacement. It authorizes no
+branch creation, local Git mutation, ordinary push, REST Git-data or Contents
+API write, PR mutation, merge, deployment or fallback writer.
+
+This is a new closed-union member. It does not widen, reinterpret or migrate
+§§12.1-12.3, and their authorization IDs gain no authority under this profile.
+Every use requires a fresh, exact operator envelope and all future runtime,
+credential, storage and evidence bindings. Documentation and examples never
+self-authorize a request.
+
+#### Closed authority shape
+
+An enabled instance requires exactly this profile-specific
+`REMOTE_COMMIT_AUTHORITY` shape in addition to the globally required envelope
+fields:
+
+```text
+REMOTE_COMMIT_AUTHORITY:
+  allowed: true
+  profile: github_graphql_existing_branch_one_create_one_modify_v1
+  repository_identity:
+    node_id: <independently-anchored-repository-node-id>
+    numeric_id: <independently-anchored-repository-numeric-id>
+    provenance: <GitHubRepositoryIdentityProvenance-V1>
+  branch_node_id: <exact-independently-verified-global-Ref-node-id>
+  branch_ref: refs/heads/<exact-existing-authorized-branch>
+  expected_head_oid: <fixed-operator-authorized-old-remote-head-oid>
+  base_tree_oid: <exact-tree-of-expected-head>
+  create_path_record: <GitHubCreatePathRecord-V1>
+  modify_path_record: <GitHubModifyPathRecord-V1>
+  paths: [<exact-create-path>, <exact-modify-path>]
+  create_paths: [<same-exact-create-path>]
+  modify_paths: [<same-exact-modify-path>]
+  path_count: 2
+  create_count: 1
+  modify_count: 1
+  delete_count: 0
+  content_source: sealed_validated_local_candidate_bytes
+  tree_source: independently_derived_existing_head_tree_plus_one_addition_and_one_replacement
+  authorized_tree: <exact-independently-derived-result-tree-oid>
+  expected_local_ref_transitions: []
+  max_commits: 1
+  max_attempts: 1
+  message_headline: <exact-authorized-server-commit-headline>
+  api_verifier_context_id: <complete-verifier-context-id>
+  api_publisher_context_id: <complete-publisher-context-id>
+  mutation_document_sha256: <sealed-exact-mutation-document-sha256>
+  operation_id: <exact-current-publication-operation-and-clientMutationId>
+  durable_attempt_authority_id: <fresh-singular-attempt-authority-id>
+
+REMOTE_REF_CREATE_AUTHORITY:
+  allowed: false
+DURABLE_PHASE_AUTHORITIES:
+  required: false
+PHASE_A_CONTINUATION_BINDING:
+  required: false
+EXPECTED_PR_BINDING:
+  required: false
+ASSOCIATED_PR_SCOPE:
+  required: false
+PR_METADATA_RACE_ACCEPTANCE:
+  accepted: false
+LOCAL_SYNC_AUTHORITY:
+  allowed: false
+COMMIT_AUTHORITY:
+  allowed: false
+PUSH_AUTHORITY:
+  allowed: false
+PR_AUTHORITY:
+  create: false
+  edit: false
+  ready: false
+MERGE_AUTHORITY:
+  allowed: false
+DEPLOY_AUTHORITY:
+  allowed: false
+REMOTE_MUTATION_AUTHORITY:
+  allowed: true
+  operations: [github.createCommitOnBranch]
+```
+
+`execution_mode`, every Phase-A field, every candidate-commit topology field,
+`replacement_count`, every PR-reference ID and any undeclared field are
+forbidden. Disabled blocks have only their exact boolean field. The two paths
+must be distinct. `paths` is exactly the two-element ordered array
+`[create_path_record.path, modify_path_record.path]`; the one-element
+`create_paths` and `modify_paths` arrays must equal their corresponding record.
+No wildcard, prefix grant, optional third path or reordered request plan is
+valid.
+
+For all exact JCS records in this profile, `H40` is 40 lowercase
+hexadecimal characters, `H64` is 64 lowercase hexadecimal characters, and
+`U0` is a nonnegative JSON integer with no textual leading-zero representation.
+`TEXT_NFC(n)` is a JSON string of 1 through n Unicode scalar values whose input
+is already NFC; normalization-to-repair and truncation are forbidden.
+`OPAQUE_ID` and evidence references are `TEXT_NFC(512)`; Repository and Ref
+node IDs are `TEXT_NFC(256)`; a repository numeric ID is positive `U0`; and
+an exact repository path is a relative UTF-8 string of 1 through 4096 bytes
+using `/`, with no NUL, backslash, empty, `.` or `..` segment and no Unicode
+or case normalization.
+
+For this profile, `JCS_UTF8(X)` is the exact RFC 8785 serialization of
+`X` encoded as UTF-8 without BOM or terminal newline, and
+`SHA256_HEX(B)` is lowercase hexadecimal SHA-256 of the exact byte
+sequence `B`.
+
+`GitHubRepositoryIdentityProvenance V1` has marker
+`VIONA_GITHUB_REPOSITORY_IDENTITY_PROVENANCE_V1` and exact keys
+`{schema,evidence_id,evidence_source,evidence_record_sha256,
+authorization_reference,repository_full_name,repository_node_id,
+repository_numeric_id,recorded_before_current_lookup}`.
+`evidence_id` and `authorization_reference` are `OPAQUE_ID`;
+`repository_full_name` is exact `TEXT_NFC(256)`;
+`repository_node_id` and `repository_numeric_id` use the types above;
+`evidence_source` is exactly
+`GOVERNED_RETAINED_REPOSITORY_IDENTITY_RECORD`, and
+`recorded_before_current_lookup=true`. Let `R` be the exact retained
+record bytes resolved by `evidence_id`. The field
+`evidence_record_sha256` must equal `SHA256_HEX(R)`. The resolver
+must obtain `R` from the separately governed trusted evidence system,
+verify its authorization provenance, and require its repository IDs to equal
+the provenance object and authority.
+
+Let `P` be the complete exact
+`GitHubRepositoryIdentityProvenance V1` object used by the authority.
+The durable marker field `repository_provenance_sha256` must equal
+`SHA256_HEX(JCS_UTF8(P))`. The digest is outside `P` and no
+alternative retained-record or current-lookup projection is permitted. The
+current lookup may corroborate but cannot create or replace `R` or
+`P`. Caller text, a reference, either hash, or the boolean alone is
+never provenance or mutation authority. The exact current full name is checked
+against the retained record and current provider response, but the write target
+is the immutable Repository/Ref node binding, not the mutable slug.
+
+The API context must additionally prove provider `github`, host
+`api.github.com`, exact endpoint `https://api.github.com/graphql`, normal TLS
+validation, no proxy or redirect, and the complete §12.1 verifier/publisher
+runtime, helper, environment, configuration, credential accessor and expected
+actor bindings. A profile instance does not fill any of those fields with a
+placeholder.
+
+#### Exact path-record and tree contract
+
+`GitHubCreatePathRecord V1` has marker
+`VIONA_GITHUB_CREATE_PATH_RECORD_V1` and exact keys
+`{schema,operation,path,base_state,candidate_blob_oid,
+candidate_raw_byte_length,candidate_raw_sha256,mode}`. Its literals are
+`operation=CREATE`, `base_state=ABSENT` and `mode=100644`.
+
+`GitHubModifyPathRecord V1` has marker
+`VIONA_GITHUB_MODIFY_PATH_RECORD_V1` and exact keys
+`{schema,operation,path,base_blob_oid,base_raw_byte_length,base_raw_sha256,
+candidate_blob_oid,candidate_raw_byte_length,candidate_raw_sha256,mode}`. Its
+literals are `operation=MODIFY` and `mode=100644`.
+
+Byte lengths are nonnegative JSON integers. Blob OIDs are full lowercase H40
+for this SHA-1 repository and raw SHA-256 values are lowercase H64. For every
+bound raw byte array B, verify both
+`SHA256(B)` and `SHA1(ASCII("blob ") || ASCII(decimal(length(B))) || NUL || B)`.
+No text decoding, newline conversion, filter, display reconstruction or
+provider-side content inference participates. The CREATE path must be absent
+from `base_tree_oid`. The MODIFY path must be a regular mode-100644 blob there,
+and its exact raw bytes must match all three preimage fields. Both candidate
+postimages must match their length, SHA-256 and blob OID.
+
+Independently obtain the complete tree of `expected_head_oid` and require it to
+equal `base_tree_oid`. Starting from that exact tree, insert only the CREATE
+blob at mode 100644 and replace only the MODIFY blob at mode 100644, rebuilding
+all affected intermediate trees while preserving every sibling entry exactly.
+The calculated root must equal `authorized_tree`. The complete base-to-result
+delta must be exactly CREATE=1, MODIFY=1, DELETE=0, RENAME=0 and MODE_CHANGE=0.
+No local candidate commit OID is a required remote OID. A reviewed local commit
+may be retained as `LOCAL_EVIDENCE_OBJECT_ONLY`; server success never depends
+on equality with it.
+
+#### Exact request construction and destination CAS
+
+Immediately before reservation and again before dispatch, query the independently
+anchored Repository and exact global Ref. Require the Ref to exist, belong to
+that Repository, have exactly the declared full `refs/heads/...` name and node
+ID, target `expected_head_oid`, and target tree `base_tree_oid`. Re-prove CREATE
+absence and MODIFY preimage identity. A GET result is observation only.
+
+The reviewed mutation document contains exactly one top-level
+`createCommitOnBranch` mutation. Its input uses only the exact destination and
+plan below:
+
+```text
+branch: { id: REMOTE_COMMIT_AUTHORITY.branch_node_id }
+expectedHeadOid: REMOTE_COMMIT_AUTHORITY.expected_head_oid
+message: { headline: REMOTE_COMMIT_AUTHORITY.message_headline }
+fileChanges:
+  additions:
+    - path: REMOTE_COMMIT_AUTHORITY.create_path_record.path
+      contents: RFC4648_BASE64(exact CREATE postimage bytes)
+    - path: REMOTE_COMMIT_AUTHORITY.modify_path_record.path
+      contents: RFC4648_BASE64(exact MODIFY postimage bytes)
+clientMutationId: REMOTE_COMMIT_AUTHORITY.operation_id
+```
+
+`message.body` and `fileChanges.deletions` are omitted. Standard RFC 4648
+Base64 uses `=` padding when required and no whitespace or line wrapping. Decode
+each value immediately before request serialization and require exact equality
+with its retained raw source buffer. The additions order is CREATE then MODIFY.
+No third addition is permitted.
+
+Hash the exact UTF-8 mutation document including whitespace as already required
+by `request_documents`. Construct the semantic request body only from the
+reviewed document, operation name and fixed variables above; serialize it with
+RFC 8785 JCS to UTF-8 without BOM or terminal newline. The exact transmitted
+buffer must be that retained sealed buffer. `API_REQUEST_RECORDS` binds its
+unique request ID, context, operation/type, query digest, authorized variable
+sources, payload SHA-256, phase and purpose. The fixed `expectedHeadOid` in this
+same mutation is the server destination race control; a read-before-write or a
+separate REST ref PATCH is never a substitute.
+
+#### Durable one-shot attempt and append-only events
+
+This profile reuses one singular §12.1 `DURABLE_ATTEMPT_AUTHORITY`. Its `id` is
+the `attempt_id`; its fixed `phase_id` is
+`EXISTING_BRANCH_ONE_CREATE_ONE_MODIFY_COMMIT`. The enabled authority retains
+the complete existing key set and literals, but its
+`record_field_order` is exactly
+`[record_version,encoding,profile,attempt_id,phase_id,operation_id,
+authorization,marker_path,consumed,repository_provenance_sha256,
+repository_node_id,repository_numeric_id,branch_node_id,branch_ref,
+expected_head_oid,base_tree_oid,authorized_tree,create_path_record_sha256,
+modify_path_record_sha256,request_id,request_payload_sha256,
+query_document_sha256,context_id,helper_sha256,clientMutationId]`.
+The corresponding compact marker contains exactly those keys in that order;
+`record_version=1`,
+`encoding=UTF8_no_BOM_ordered_compact_JSON_no_newline`, the profile
+literal is exact, and `consumed=true`. Path-record digests are
+`SHA256_HEX(JCS_UTF8(exact path record))`. The
+`repository_provenance_sha256` field uses the sole projection defined
+above. Every other value must equal the referenced authority, request record,
+API context or retained provenance. No additional key is permitted.
+
+Let `M` be the exact compact marker bytes persisted through CreateNew,
+`FileShare.None` and `Flush(true)`, then read back through the
+same held handle before sequence 1 is constructed. The
+`marker_sha256` in the sequence-1 `ATTEMPT_RESERVED` body must
+equal `SHA256_HEX(M)`. Hashing an object model, a reserialization,
+caller bytes, pre-write bytes or a marker path is forbidden. The read-back bytes
+must also equal the originally written marker bytes exactly.
+
+The authority retains CreateNew, FileShare.None, `Flush(true)`,
+same-held-handle verification, exclusive ownership through dispatch/outcome,
+permanent retention and read-only-reconciliation-on-uncertainty. Existing,
+partial, corrupt, replaced, missing-after-reservation-evidence or uncertain
+state blocks.
+
+Every attempt-ledger event is exact JCS UTF-8 under
+`GitHubPublicationAttemptEvent V1`, marker
+`VIONA_GITHUB_PUBLICATION_ATTEMPT_EVENT_V1`, with exact keys
+`{schema,event_id,attempt_id,phase_id,operation_id,sequence,
+previous_event_sha256,event_kind,recorded_at_utc,body}`. Event, attempt, phase
+and operation IDs are `OPAQUE_ID`; `recorded_at_utc` is an exact RFC 3339 UTC
+string with terminal `Z`, retained as observation rather than ordering
+authority. Sequence is canonical U0 beginning at `0`; sequence zero uses 64
+lowercase zeroes as `previous_event_sha256`, and every later value is SHA-256
+of the exact prior event bytes. Event IDs are unique. Event kinds and exact body
+types are:
+
+| Sequence / kind | Exact body marker and keys |
+| --- | --- |
+| 0 / `RESERVATION_INTENT` | `VIONA_GITHUB_PUBLICATION_RESERVATION_INTENT_V1`; `{schema,authorization_reference,marker_path,evidence_ledger_path,repository_node_id,repository_numeric_id,branch_node_id,branch_ref,expected_head_oid,authorized_tree,request_id,request_payload_sha256}` |
+| 1 / `ATTEMPT_RESERVED` | `VIONA_GITHUB_PUBLICATION_ATTEMPT_RESERVED_V1`; `{schema,marker_sha256,authorization_reference,repository_node_id,repository_numeric_id,branch_node_id,branch_ref,expected_head_oid,authorized_tree,create_path_record_sha256,modify_path_record_sha256}` |
+| 2 / `DISPATCH_STARTED` | `VIONA_GITHUB_PUBLICATION_DISPATCH_STARTED_V1`; `{schema,request_id,request_payload_sha256,query_document_sha256,context_id,client_mutation_id}` |
+| 3 / `PROVIDER_RESPONSE_RECORDED` | `VIONA_GITHUB_PUBLICATION_PROVIDER_RESPONSE_V1`; `{schema,result_kind,http_status,response_body_state,response_body_sha256,response_evidence_reference,returned_commit_oid}` |
+| 4 / `RECONCILIATION_RECORDED` | `VIONA_GITHUB_PUBLICATION_RECONCILIATION_V1`; `{schema,status,ref_target_oid,server_commit_oid,server_parent_oid,server_tree_oid,create_blob_oid,modify_blob_oid,changed_paths,message_headline,message_body,provider_metadata_evidence_reference,provider_metadata_evidence_sha256,readback_evidence_reference}` |
+| 5 / `TERMINAL_RESULT` | `VIONA_GITHUB_PUBLICATION_TERMINAL_RESULT_V1`; `{schema,result,attempt_consumed,retry_allowed,reconciliation_event_sha256}` |
+
+`HTTP_STATUS` is a canonical JSON integer in the closed range
+100 through 599. A known `http_status` must be `HTTP_STATUS`;
+an unavailable one is the literal `UNAVAILABLE`.
+
+For AVAILABLE response bodies,
+`GitHubProviderResponseBodyEvidence V1` has marker
+`VIONA_GITHUB_PROVIDER_RESPONSE_BODY_EVIDENCE_V1` and exact keys
+`{schema,evidence_id,request_id,http_status,response_body_byte_length,
+response_body_sha256,response_body_bytes_reference,capture_stage}`.
+IDs and the bytes reference are `OPAQUE_ID`,
+`http_status` is `HTTP_STATUS`, byte length is canonical U0,
+and `capture_stage` is exactly
+`HTTP_RESPONSE_CONTENT_STREAM_BEFORE_TEXT_OR_JSON_DECODING`. Let
+`B` be the concatenation, in read order through EOF, of the bytes
+returned by the reviewed response content stream after HTTP transfer framing
+has been removed and before charset decoding, UTF-8 decoding, JSON parsing,
+formatting or normalization. The trusted evidence record's bytes reference must
+resolve exactly `B`; its length and
+`response_body_sha256=SHA256_HEX(B)` must match. A decoded or
+reformatted JSON reconstruction is never `B`.
+
+For unavailable bodies,
+`GitHubProviderResponseUnavailableEvidence V1` has marker
+`VIONA_GITHUB_PROVIDER_RESPONSE_UNAVAILABLE_EVIDENCE_V1` and exact
+keys `{schema,evidence_id,request_id,http_status,unavailable_reason,
+error_evidence_reference}`. IDs and the error reference are
+`OPAQUE_ID`; `http_status` is `HTTP_STATUS` or
+`UNAVAILABLE`; and `unavailable_reason` is exactly one of
+`NO_RESPONSE`, `BODY_READ_FAILED`,
+`BODY_READ_INCOMPLETE` or `EVIDENCE_PERSISTENCE_FAILED`.
+Let `D2` be the exact sequence-2 `DISPATCH_STARTED` event and let
+`Q_dispatch` be the unique append-only `API_REQUEST_RECORDS`
+entry whose `request_id` equals `D2.body.request_id`. Before any
+sequence-3 event is accepted, trusted resolution must prove
+`Q_dispatch.context_id=D2.body.context_id`,
+`Q_dispatch.query_document_sha256=D2.body.query_document_sha256`, and
+`Q_dispatch.request_payload_sha256=D2.body.request_payload_sha256`.
+The request record, `D2`, its durable marker and the sequence-3 event must
+belong to the same `operation_id`, `attempt_id`, phase and durable-attempt
+authority; resolution across another operation, attempt, ledger or API context
+is forbidden.
+
+For an exact sequence-3 `PROVIDER_RESPONSE_RECORDED` event `D3`,
+`D3.body.response_evidence_reference` must resolve from the trusted
+evidence system to exactly one immutable response-evidence record `R_response`
+whose `evidence_id` equals that reference. It must satisfy
+`R_response.request_id=D2.body.request_id=Q_dispatch.request_id` and
+therefore inherit the same exact request, operation, attempt and context
+binding. The resolved type is exactly
+`GitHubProviderResponseBodyEvidence V1` when
+`response_body_state=AVAILABLE` and exactly
+`GitHubProviderResponseUnavailableEvidence V1` when it is
+`UNAVAILABLE`. In both variants,
+`D3.body.http_status=R_response.http_status`. For AVAILABLE,
+`D3.body.response_body_sha256=R_response.response_body_sha256`; for
+UNAVAILABLE, `D3.body.response_body_sha256=UNAVAILABLE`. No caller-supplied
+reference, hash or same-shaped record and no evidence from another request or
+attempt can satisfy this correspondence.
+
+`result_kind` is exactly `DEFINITIVE_SUCCESS`,
+`DEFINITIVE_REJECTION` or `AMBIGUOUS`.
+`returned_commit_oid` is H40 only when actually returned and
+`UNAVAILABLE` otherwise. `DEFINITIVE_SUCCESS` requires a
+known 2xx `HTTP_STATUS`, AVAILABLE evidence and returned H40.
+`DEFINITIVE_REJECTION` requires known `HTTP_STATUS`,
+AVAILABLE evidence and `returned_commit_oid=UNAVAILABLE`.
+`AMBIGUOUS` retains every known actual field, permits unavailable
+status/body/commit, and never establishes success. Every other combination
+rejects.
+
+`GitHubProviderCommitMetadataEvidence V1` has marker
+`VIONA_GITHUB_PROVIDER_COMMIT_METADATA_EVIDENCE_V1` and exact keys
+`{schema,evidence_id,operation_id,attempt_id,phase_id,request_id,
+api_request_record_sha256,context_id,repository_node_id,branch_node_id,
+commit_oid,query_document_sha256,request_payload_sha256,http_status,
+response_body_byte_length,response_body_sha256,response_body_bytes_reference,
+capture_scope,recorded_at_utc}`. IDs and the bytes reference use the types
+above; OIDs and digests are H40/H64; `http_status` is a 2xx
+`HTTP_STATUS`; byte length is U0; `recorded_at_utc` is an exact RFC 3339
+UTC string ending in `Z`; and `capture_scope` is exactly
+`SEALED_RECONCILIATION_QUERY_PROVIDER_COMMIT_METADATA`.
+
+Let `Q_meta_record` be the unique exact append-only
+`API_REQUEST_RECORDS` entry resolved by `request_id`. The field
+`api_request_record_sha256` must equal
+`SHA256_HEX(JCS_UTF8(Q_meta_record))`; `context_id`,
+`query_document_sha256` and `request_payload_sha256` must equal the
+corresponding fields of `Q_meta_record`. The record must have
+`operation_type=query`, `phase=reconciliation`, and
+`purpose=read_back_server_commit_metadata`. Its authorized variable-binding
+sources and exact retained final request payload must bind the authority's
+repository node ID and branch node ID plus the same E4 `server_commit_oid`;
+the payload digest must be the SHA-256 of those exact final UTF-8 request bytes.
+The evidence `operation_id`, `attempt_id` and `phase_id` must equal the
+outer E4 fields and exact durable-attempt authority. The request, context,
+evidence record and E4 must therefore belong to that same operation, attempt
+and phase.
+
+Let `Q_meta` be the exact UTF-8 bytes of that request record's sealed reviewed
+query document, including whitespace and with no reconstruction. The evidence
+`query_document_sha256` must equal `SHA256_HEX(Q_meta)`. That exact query
+must request `author`, `committer`, `signature`, `authoredDate` and
+`committedDate`. Let `B_meta` be the concatenation through EOF of the bytes
+returned by the reviewed response content stream for `Q_meta`, at the same
+pre-text/pre-JSON capture stage defined for `B`. The bytes reference must
+resolve exactly `B_meta`; byte length and
+`response_body_sha256=SHA256_HEX(B_meta)` must match. The parsed response must
+contain all requested fields for the same repository, Ref and commit subjects;
+provider-controlled values remain evidence only.
+
+`GitHubProviderCommitMetadataErrorObservation V1` has marker
+`VIONA_GITHUB_PROVIDER_COMMIT_METADATA_ERROR_OBSERVATION_V1` and exact keys
+`{schema,error_source,error_stage,error_code,error_evidence_byte_length,
+error_evidence_sha256,error_evidence_bytes_reference}`. `error_source` is
+exactly `TRANSPORT`, `PROVIDER`, `LOCAL_EVIDENCE` or
+`RESPONSE_VALIDATION`; `error_stage` is exactly `BEFORE_RESPONSE`,
+`RESPONSE_CONTENT_STREAM`, `EVIDENCE_PERSISTENCE`, `GRAPHQL_RESPONSE` or
+`METADATA_FIELD_VALIDATION`; and `error_code` is `TEXT_NFC(128)` or
+`UNAVAILABLE`. The final three fields are respectively U0, H64 and
+`OPAQUE_ID`, or all three are the literal `UNAVAILABLE`. When available,
+the trusted reference resolves the exact retained error bytes and the length
+and digest must match. The observation is evidence only and never authorizes or
+changes a classification.
+
+`GitHubProviderCommitMetadataUnavailableEvidence V1` has marker
+`VIONA_GITHUB_PROVIDER_COMMIT_METADATA_UNAVAILABLE_EVIDENCE_V1` and exact
+keys `{schema,evidence_id,operation_id,attempt_id,phase_id,request_id,
+api_request_record_sha256,context_id,repository_node_id,branch_node_id,
+commit_oid,query_document_sha256,request_payload_sha256,http_status,
+unavailable_reason,error_observation,recorded_at_utc}`. Its operation,
+attempt, phase, request and subject fields obey the exact E4 and
+`Q_meta_record` bindings above; `commit_oid` is H40 and equals E4
+`server_commit_oid`; `http_status` is `HTTP_STATUS` or `UNAVAILABLE`;
+`error_observation` is the exact error-observation type above; and
+`unavailable_reason` is exactly one of `NO_RESPONSE`, `BODY_READ_FAILED`,
+`BODY_READ_INCOMPLETE`, `EVIDENCE_PERSISTENCE_FAILED`,
+`GRAPHQL_ERRORS_PRESENT`, `RESPONSE_JSON_INVALID` or
+`REQUIRED_METADATA_FIELD_MISSING`. The reason and error source/stage must be
+truthfully compatible: respectively `TRANSPORT/BEFORE_RESPONSE`,
+`TRANSPORT/RESPONSE_CONTENT_STREAM`,
+`TRANSPORT/RESPONSE_CONTENT_STREAM`, `LOCAL_EVIDENCE/EVIDENCE_PERSISTENCE`,
+`PROVIDER/GRAPHQL_RESPONSE`, `RESPONSE_VALIDATION/GRAPHQL_RESPONSE`, or
+`RESPONSE_VALIDATION/METADATA_FIELD_VALIDATION`. `NO_RESPONSE` requires
+`http_status=UNAVAILABLE`; the two body-read reasons and
+`EVIDENCE_PERSISTENCE_FAILED` permit `HTTP_STATUS` or `UNAVAILABLE`; and
+the three response-validation/provider reasons require `HTTP_STATUS`.
+Missing request provenance, a subject mismatch, an unsealed query or an
+untrusted error record is invalid evidence rather than another unavailable
+reason.
+
+`GitHubProviderCommitMetadataNotApplicableEvidence V1` has marker
+`VIONA_GITHUB_PROVIDER_COMMIT_METADATA_NOT_APPLICABLE_EVIDENCE_V1` and exact
+keys `{schema,evidence_id,operation_id,attempt_id,phase_id,repository_node_id,
+branch_node_id,ref_target_oid,not_applicable_reason,
+readback_evidence_reference,recorded_at_utc}`. Its operation, attempt and phase
+IDs equal the outer E4 fields and exact durable-attempt authority.
+`not_applicable_reason` is exactly `NO_RECONCILED_SERVER_COMMIT_OID`;
+`ref_target_oid` is H40 or `UNAVAILABLE`; and
+`readback_evidence_reference` must equal E4
+`readback_evidence_reference` and resolve the same exact reconciliation
+observation. This variant is permitted only when E4
+`server_commit_oid=UNAVAILABLE`; it asserts no metadata request occurred and
+proves no metadata value.
+
+E4 `provider_metadata_evidence_reference` is always an `OPAQUE_ID` that
+must resolve from the trusted evidence system to one immutable record whose
+`evidence_id` equals the reference. The resolved record is exactly one of the
+AVAILABLE, UNAVAILABLE or NOT_APPLICABLE types above, selected only by its exact
+schema marker. For every variant,
+`provider_metadata_evidence_sha256=SHA256_HEX(JCS_UTF8(the exact resolved
+record))`; the digest is H64 and is outside that record. Every variant's
+operation, attempt, phase, repository, branch/ref and commit or ref-target
+subjects must equal E4 and the authority exactly. A locator, self-consistent
+caller JSON or hash without this trusted request, subject and resolution chain
+proves nothing. Provider metadata never becomes authority.
+
+Every `changed_paths` element is the exact repository-path type
+defined above, and duplicates are forbidden. `UTF8_PATH_LESS(a,b)`
+compares unsigned bytes of the exact UTF-8 encodings lexicographically, with a
+proper prefix sorting before the longer value. For
+`AUTHORIZED_SUCCESS`, `changed_paths` is exactly
+`[create_path_record.path,modify_path_record.path]` in that order.
+For `CONFLICT` or `UNVERIFIED` after a complete diff it is
+the complete unique observed changed-path set sorted by
+`UTF8_PATH_LESS`; before a complete diff it is `[]`.
+`HEAD_UNCHANGED` always uses `[]`. JCS does not reorder
+array members.
+
+Reconciliation `status` is exactly `AUTHORIZED_SUCCESS`,
+`HEAD_UNCHANGED`, `CONFLICT` or `UNVERIFIED`. OID fields admit only H40
+or `UNAVAILABLE`; message fields admit the exact observed string or
+`UNAVAILABLE`; both evidence references are `OPAQUE_ID`; and
+`provider_metadata_evidence_sha256` is always H64 over the exact resolved
+metadata union record. The reference must resolve the exact member required by
+the row and satisfy every request, digest and subject equality above.
+Compatibility is closed as follows:
+
+| Status | Exact field compatibility |
+| --- | --- |
+| `AUTHORIZED_SUCCESS` | `ref_target_oid=server_commit_oid`; parent, tree and both blob OIDs are available and equal the authority; `changed_paths` uses the exact ordered two-path array above; headline equals authority; body is the empty string; the metadata reference resolves exact AVAILABLE evidence for that server commit. |
+| `HEAD_UNCHANGED` | `ref_target_oid=expected_head_oid`; server commit/parent/tree/blob OIDs and both message fields are `UNAVAILABLE`; `changed_paths=[]`; the metadata reference resolves the exact NOT_APPLICABLE record with reason `NO_RECONCILED_SERVER_COMMIT_OID`. |
+| `CONFLICT` | At least one completely observed required predicate is false. Every obtained scalar is retained and `changed_paths` follows the complete-diff rule. If `server_commit_oid` is H40, the metadata reference resolves exact AVAILABLE or UNAVAILABLE evidence for that commit; if it is `UNAVAILABLE`, it resolves exact NOT_APPLICABLE evidence. |
+| `UNVERIFIED` | At least one required observation failed or is unavailable. Every obtained scalar is retained and `changed_paths` follows the complete-diff rule. If `server_commit_oid` is H40, the metadata reference resolves exact AVAILABLE or UNAVAILABLE evidence for that commit; if it is `UNAVAILABLE`, it resolves exact NOT_APPLICABLE evidence. It proves neither absence nor success. |
+
+The terminal `result` is exactly `SUCCESS_RECONCILED`,
+`REJECTED_HEAD_UNCHANGED`, `AMBIGUOUS_HEAD_UNCHANGED`,
+`POSTCONDITION_FAILED`, `CONFLICT_BLOCKED` or
+`UNKNOWN_BLOCKED`. `attempt_consumed=true` and
+`retry_allowed=false` are mandatory for every terminal after
+dispatch. Let `E4` be the complete exact sequence-4
+`RECONCILIATION_RECORDED GitHubPublicationAttemptEvent V1`.
+The sequence-5 body field `reconciliation_event_sha256` and the
+sequence-5 outer `previous_event_sha256` must both equal
+`SHA256_HEX(JCS_UTF8(E4))` and therefore must equal each other.
+Neither value is independently caller-selectable. Exact authorized
+reconciliation is the only route to `SUCCESS_RECONCILED`, regardless
+of whether the response was received. A definitive rejection plus
+HEAD_UNCHANGED maps to `REJECTED_HEAD_UNCHANGED`; an ambiguous result
+plus HEAD_UNCHANGED maps to `AMBIGUOUS_HEAD_UNCHANGED`; a claimed
+success without exact reconciliation maps to `POSTCONDITION_FAILED`;
+conflict and unverifiable results map to their corresponding blocked terminals.
+No event or receipt grants a second dispatch.
+
+After the final request bytes exist and before marker creation, append, flush
+and read back sequence-0 `RESERVATION_INTENT`. Then create and verify the marker
+and append/read back sequence-1 `ATTEMPT_RESERVED`. A retained intent with a
+missing or uncertain marker blocks rather than restoring allowance. Before
+sending, append and durably read back the request record and sequence-2
+`DISPATCH_STARTED` event. The reservation intent consumes the attempt budget;
+after any bytes may have left the process the possible remote effect also
+requires reconciliation. A crash or missing later event leaves an append-only
+partial prefix and permits only read-only reconciliation. Records are never overwritten,
+truncated, deleted, renumbered or rewritten. A future resend is not a retry
+inside this profile: it requires a separately reviewed, explicitly authorized
+successor operation with a fresh ID/marker that cross-references and preserves
+the complete prior attempt. Observation or an unchanged head cannot mint that
+authority.
+
+#### Independent reconciliation and success
+
+After definitive success, rejection, transport ambiguity or a lost response,
+perform only authorized read-only reconciliation of the same Repository and
+Ref. Do not blindly repeat the mutation. Success requires all of the following:
+
+- the Ref target is one new server commit;
+- the server commit has exactly one parent equal to `expected_head_oid`;
+- its complete tree equals `authorized_tree`;
+- the CREATE and MODIFY paths have exact mode 100644 and exact authorized blob
+  bytes/OIDs;
+- the parent-to-server delta contains exactly those two path changes and no
+  third path, deletion, rename, type or mode change;
+- the semantic commit headline equals `message_headline` and body is empty;
+- repository and Ref identities remain exact; and
+- the worktree, index, HEAD, checked-out branch, governance-stable refs and
+  critical remote-tracking refs satisfy the exact profile-specific preservation
+  contract below, while both complete ref maps and both
+  `refs/codex/**` inventories are retained as evidence.
+
+The server commit OID is an observed output, not a preauthorized value. Capture
+provider-controlled author, committer, signature and timestamps as evidence.
+If the head is unchanged, the original mutation is not proven successful and
+this attempt cannot be replayed. If the head advanced to anything other than
+the exact authorized successor, classify conflict and stop. A success response
+with a wrong tree or extra path is failure, never partial success. No rollback,
+force update, alternate writer, REST PATCH or ordinary push is authorized.
+
+#### Local, hook and PR boundaries
+
+For this API-only profile, `expected_local_ref_transitions=[]` and
+`LOCAL_SYNC_AUTHORITY.allowed=false`. Worktree and index mutation,
+checked-out branch movement, remote-tracking ref mutation and every
+executor-issued ref mutation command remain forbidden.
+
+At each required checkpoint, construct and retain the complete logical ref map
+`R` exactly as §3 requires before applying any projection.
+`GOVERNANCE_STABLE_REFS(R)` is the exact ordered subsequence containing
+HEAD, root records and every `refs/` record whose raw name does not
+start with the ASCII byte prefix `refs/codex/`.
+`EPHEMERAL_EXECUTOR_REFS(R)` is the exact ordered subsequence of
+records whose raw name starts with that prefix. Both subsequences retain the
+same `name NUL kind NUL value NUL` records and raw-name ordering from
+§3; neither is a lossy name-only list.
+
+Start and end `GOVERNANCE_STABLE_REFS` records must be byte-for-byte
+equal. HEAD's immediate symbolic target and the direct
+`refs/heads/<EXPECTED_BASE.branch>` record/OID must also be checked
+and reported separately and remain exact. `CRITICAL_REMOTE_TRACKING_REFS`
+is the ordered projection of every stable record whose raw name starts with
+`refs/remotes/`; its start/end records must be byte-for-byte equal and
+reported separately. Any stable, HEAD, checked-out-branch or critical
+remote-tracking difference blocks.
+
+Start and end `EPHEMERAL_EXECUTOR_REFS` names, kinds and values must
+both be retained as evidence. A difference confined to that projection does not
+by itself create governance drift for this profile, but it grants no mutation
+authority and cannot be adopted as any expected OID. The sealed executor
+command/action trace must prove zero executor-issued ref create, update, delete,
+pack, prune or symbolic-ref mutation commands. Missing complete maps, missing
+trace evidence, a malformed ref, or any difference outside
+`refs/codex/**` blocks. This exception is exclusive to this profile
+and does not alter §§12.1-12.3.
+
+Because no local commit, push or sync process is enabled, every
+`hooks_path` field is profile-inapplicable and must be omitted. No
+external empty hooks directory and no `--no-verify` claim is required
+or permitted by this route.
+
+This profile is pre-PR only. It reuses §12.2's exact disabled boolean-only
+`EXPECTED_PR_BINDING`, `ASSOCIATED_PR_SCOPE` and
+`PR_METADATA_RACE_ACCEPTANCE` forms. Before dispatch, completely inventory the
+exact Ref's open associated PR connection through `hasNextPage=false` using
+sealed request records and require zero results. An unexpected PR, partial
+GraphQL errors or incomplete inventory blocks. The profile creates or modifies
+no PR; later PR work remains a separate authorization lane.
+
+#### Candidate-binding illustration, not authority
+
+For the current reviewed candidate evidence, the intended instance would bind
+Repository `R_kgDOSFpBeA` / numeric ID `1213874552`, full name
+`laoton80-del/Ket-noi-eu`, Ref
+`REF_kwDOSFpBeNoAQXJlZnMvaGVhZHMvZmVhdC92aW9uYS1ydW50aW1lLWNhbm9uLWFkb3B0aW9uLXdhdmUxLXB1YmxpYy1jb3B5LXYx`, full ref
+`refs/heads/feat/viona-runtime-canon-adoption-wave1-public-copy-v1`, expected
+head `0fb0201bc7cba32dd31603fbfd07639fa78d6ee4`, base tree
+`fbe87bd54f3c33e65efafae15c2f00308c569f83`, and authorized result tree
+`6c180ecf65e0f4749c69806388b72d10371cb215`.
+
+The CREATE record is path
+`docs/product/VIONA_CODEX_AUTONOMOUS_EXECUTION_ENVELOPE_LOCAL_EXACT_CREATE_V2_SPEC.md`,
+blob `6c51c9692c270856f196f9cce9b125b08bc8e18a`, 286399 raw bytes and SHA-256
+`f24eac5b744253f7f53d8a94b65314a5a17a608e8cf0cc467df89ba0fc483b1b`.
+The MODIFY record is path
+`docs/ai-context/VIONA_CODEX_CONTROLLED_AUTONOMOUS_EXECUTION_PROTOCOL.md`, base
+blob `9930db57235de993f325cb8b54fa9185e9b1b539` / 58775 bytes / SHA-256
+`77b14490cbd4de254949659dd09a0dea0083f1efea2498ec6e98b8bdbc6a6ad5`, and
+candidate blob `550ba58d52ae9944ff267af80dcfcaa0149e3354` / 59959 bytes / SHA-256
+`7eaca2e6b4c0a9426fd4047ee499efadfbe06bcbea2c93c8ec6478a6f6083193`.
+Local commit `c60d5b8f63c05488fa44f85f7d76a5747c391ec7` is
+`LOCAL_EVIDENCE_OBJECT_ONLY_NOT_REMOTE_PUBLICATION_TARGET`. These values are
+review inputs only. Missing message, context, credential, durable-storage,
+request-document or operator-authorization bindings keep execution disabled.
+
+#### Finite normative test matrix
+
+| # | Case | Required result |
+| ---: | --- | --- |
+| 1 | Target branch absent | Reject before reservation. |
+| 2 | Live head differs from `expected_head_oid` | Provider/server CAS rejection or preflight block; no commit and no refresh. |
+| 3 | CREATE path already exists in the expected-head tree | Reject. |
+| 4 | MODIFY path is absent | Reject. |
+| 5 | MODIFY preimage blob/length/SHA-256 differs | Reject. |
+| 6 | Third addition or changed path exists | Reject; exact cardinality violated. |
+| 7 | Any deletion is requested or observed | Reject. |
+| 8 | Rename, copy, type, submodule, executable or mode change exists | Reject. |
+| 9 | Repository node or numeric ID differs from trusted provenance | Reject. |
+| 10 | Ref node, full name or repository ownership differs | Reject. |
+| 11 | Base64 decodes to bytes other than the retained source buffer | Reject. |
+| 12 | Request document or final payload hash differs | Reject before dispatch. |
+| 13 | Authenticated actor differs from the context binding | Reject. |
+| 14 | Ambiguous response and unchanged head | Record `AMBIGUOUS_HEAD_UNCHANGED`; no blind retry. |
+| 15 | Ambiguous response and exact authorized successor | Reconcile `SUCCESS_RECONCILED`; no replay. |
+| 16 | Ambiguous response and unexpected new tree/head | `CONFLICT_BLOCKED`. |
+| 17 | Success response but wrong full tree | `POSTCONDITION_FAILED`. |
+| 18 | Success response but a third path changed | `POSTCONDITION_FAILED`. |
+| 19 | Exact parent/tree/two blobs/message and identities | `SUCCESS_RECONCILED`. |
+| 20 | Any worktree/index/HEAD/stable-ref/critical-remote-tracking delta, any executor-issued ref mutation command, or an uninventoryable ref state | Fail preservation and stop; a fully evidenced autonomous difference confined to `refs/codex/**` is reported under the profile projection and is not itself drift. |
+| 21 | Provenance is caller text/hash without trusted record resolution | Reject. |
+| 22 | Open associated PR exists or inventory is incomplete | Reject before mutation. |
+| 23 | Marker/event/request-record persistence is partial or uncertain | Block; reconciliation only after reservation. |
+| 24 | A second dispatch is attempted under the same marker | Reject. |
+| 25 | REST ref PATCH, Contents API, REST Git-data, push or alternate GraphQL writer is selected | Reject. |
+| 26 | Commit body is nonempty or headline differs | Fail reconciliation. |
+| 27 | Provider metadata differs from local evidence while parent/tree/content are exact | Retain metadata evidence; do not require a predetermined server commit OID. |
+| 28 | `expected_local_ref_transitions` is nonempty or a hooks path is supplied | Reject mixed profile fields. |
+
+This profile remains documentation-only until its exact postimage is separately
+reviewed and adopted and a future operator envelope supplies every runtime and
+storage binding. It authorizes no request in this document.
 
 ---
 

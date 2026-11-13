@@ -20,6 +20,7 @@ import {
 import { normalizeOpsTourismCancelReason } from '../services/tourism/tourismOpsCancelPolicy';
 import { generateUserTripSummary, ViralWrapError } from '../services/marketing/ViralWrapEngine';
 import { jsonFail, jsonOk } from '../utils/apiEnvelope';
+import { logSafeError } from '../utils/safeLogError';
 
 function readAuthUserId(req: Request): string | null {
   const id = req.authUserId;
@@ -257,7 +258,7 @@ export async function getViralWrap(req: Request, res: Response): Promise<void> {
       jsonFail(res, e.message, e.statusCode);
       return;
     }
-    console.error('[TourismController] getViralWrap', e);
+    logSafeError('[TourismController] getViralWrap', e);
     jsonFail(res, 'Unexpected error', 500);
   }
 }

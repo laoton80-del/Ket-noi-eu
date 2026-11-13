@@ -7,6 +7,7 @@ import 'dotenv/config';
 
 import { flushLogsForShutdown } from '../utils/Logger';
 import { runMarketingAutoPosterJob } from './marketingWorker';
+import { logSafeError } from '../utils/safeLogError';
 
 void (async () => {
   try {
@@ -15,7 +16,7 @@ void (async () => {
     console.log(JSON.stringify({ ok: true, draftId: out.draft.id }));
   } catch (e) {
     // eslint-disable-next-line no-console
-    console.error(e);
+    logSafeError('[runMarketingDraftOnce] failed', e);
     process.exitCode = 1;
   } finally {
     await flushLogsForShutdown();
