@@ -152,18 +152,23 @@ export async function syncWalletFromServer(): Promise<void> {
 
 export async function reserveAndCommitCredits(
   amount: number,
-  idempotencyKey: string
-): Promise<{ ok: boolean }> {
+  idempotencyKey: string,
+  options?: Readonly<{ purpose: 'live_interpreter' }>
+): Promise<{ ok: boolean; interpreterHoldReceipt?: string }> {
   try {
-    const reserve = await callWalletOps<{ ok: boolean }>({ op: 'reserve', amount, idempotencyKey });
+    const reserve = await callWalletOps<{ ok: boolean }>({
+      op: 'reserve', amount, idempotencyKey,
+      ...(options?.purpose ? { purpose: options.purpose } : {}),
+    });
     if (!reserve.ok) return { ok: false };
-    const commit = await callWalletOps<{ ok: boolean }>({ op: 'commit', idempotencyKey });
+    const commit = await callWalletOps<{ ok: boolean; interpreterHoldReceipt?: string }>({ op: 'commit', idempotencyKey });
     if (!commit.ok) {
       await callWalletOps({ op: 'rollback', idempotencyKey });
       return { ok: false };
     }
+    if (options?.purpose === 'live_interpreter' && !commit.interpreterHoldReceipt) return { ok: false };
     await syncWalletFromServer();
-    return { ok: true };
+    return { ok: true, ...(commit.interpreterHoldReceipt ? { interpreterHoldReceipt: commit.interpreterHoldReceipt } : {}) };
   } catch {
     return { ok: false };
   }
@@ -179,8 +184,16 @@ export async function rollbackReservedCredits(idempotencyKey: string): Promise<v
 }
 
 /** Refund a committed hold once, for an explicitly compensated first-turn failure. */
-export async function refundCommittedHoldCredits(idempotencyKey: string): Promise<boolean> {
+export async function refundCommittedHoldCredits(idempotencyKey: string, interpreterFailureProof: string): Promise<boolean> {
   try {
+    if (!interpreterFailureProof) return false;
+    try {
+      await callWalletOps<{ ok: boolean }>({
+        op: 'recordInterpreterProviderFailure', idempotencyKey, interpreterFailureProof,
+      });
+    } catch {
+      // Refund still requires the server-owned verified failure record; this also supports retry after a lost response.
+    }
     const out = await callWalletOps<{ ok: boolean }>({ op: 'refundCommittedHold', idempotencyKey });
     if (!out.ok) return false;
     await syncWalletFromServer();

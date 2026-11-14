@@ -16,6 +16,8 @@ export type InterpreterProviderParams = {
   userGender?: VoiceUserGender;
   userId?: string;
   countryCode?: string;
+  interpreterHoldKey?: string;
+  interpreterHoldReceipt?: string;
 };
 
 export type InterpreterCoreResult = {
@@ -26,7 +28,10 @@ export type InterpreterCoreResult = {
 };
 
 async function openAiInterpreterTurn(audioUri: string, params: InterpreterProviderParams): Promise<InterpreterCoreResult> {
-  const transcript = await transcribeAudio(audioUri);
+  const transcript = await transcribeAudio(audioUri, {
+    interpreterHoldKey: params.interpreterHoldKey,
+    interpreterHoldReceipt: params.interpreterHoldReceipt,
+  });
   const userContent = buildLiveInterpreterTranslationUserContent(
     params.scenario,
     params.direction,
@@ -38,6 +43,8 @@ async function openAiInterpreterTurn(audioUri: string, params: InterpreterProvid
     ...(params.userId ? { userId: params.userId } : {}),
     serviceContext: 'interpreter',
     activeScenario: params.scenario,
+    interpreterHoldKey: params.interpreterHoldKey,
+    interpreterHoldReceipt: params.interpreterHoldReceipt,
     networkContext: {
       actionType: 'interpreter',
       language: params.assistantLanguageCode,

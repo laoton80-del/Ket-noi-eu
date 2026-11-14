@@ -15,6 +15,7 @@ import { defaultPatternIdFor, trackNetworkEffectEvent } from './networkEffect';
 import { getAssistantSettings } from '../state/assistantSettings';
 import { runInterpreterTurnCore } from './liveInterpreterProvider';
 import { QuotaExceededError } from './ai/AIQuotaManager';
+import { InterpreterProviderFailureError } from './ai/interpreterProviderFailureError';
 
 export type InterpreterTurnResult = {
   transcript: string;
@@ -66,6 +67,9 @@ export async function runInterpreterTurn(
     userId?: string;
     /** Profile country for locale-aware interpreter prompts. */
     countryCode?: string;
+    /** Opaque walletOps-issued context used only for server-verified first-turn failure compensation. */
+    interpreterHoldKey?: string;
+    interpreterHoldReceipt?: string;
   }
 ): Promise<InterpreterTurnResult> {
   const startedAt = Date.now();
@@ -135,6 +139,7 @@ export async function runInterpreterTurn(
       spokenUri,
     };
   } catch (e) {
+    if (e instanceof InterpreterProviderFailureError) throw e;
     if (e instanceof QuotaExceededError) {
       const msg =
         '⚠️ Energy depleted. Please top up VIO Credits to continue using AI services (in-app only — not cash or crypto).';

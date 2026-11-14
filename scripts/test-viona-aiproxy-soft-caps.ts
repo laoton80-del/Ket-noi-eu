@@ -5,7 +5,7 @@
  * Run: tsx --tsconfig functions/tsconfig.json scripts/test-viona-aiproxy-soft-caps.ts
  */
 import * as assert from 'node:assert/strict';
-import { createHash } from 'node:crypto';
+import { createHash, createHmac, randomUUID, timingSafeEqual } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { createContext, runInContext } from 'node:vm';
@@ -22,10 +22,19 @@ const walletStateText = readFileSync(resolve(root, 'src/state/wallet.ts'), 'utf8
 const walletTopUpScreenText = readFileSync(resolve(root, 'src/screens/WalletTopUpScreen.tsx'), 'utf8').replace(/\r\n/g, '\n');
 const fintechWalletText = readFileSync(resolve(root, 'src/services/fintech/WalletService.ts'), 'utf8').replace(/\r\n/g, '\n');
 const liveInterpreterText = readFileSync(resolve(root, 'src/hooks/useLiveInterpreter.ts'), 'utf8').replace(/\r\n/g, '\n');
+const openAiServiceText = readFileSync(resolve(root, 'src/services/OpenAIService.ts'), 'utf8').replace(/\r\n/g, '\n');
+const liveInterpreterServiceText = readFileSync(resolve(root, 'src/services/liveInterpreterService.ts'), 'utf8').replace(/\r\n/g, '\n');
 const indexAst = ts.createSourceFile('index.ts', indexText, ts.ScriptTarget.Latest, true);
 const targetNames = new Set(['aiProxy', 'analyzeDocumentProxy', 'walletOps']);
-const parserNames = new Set(['safeJsonParse', 'extractJsonObject', 'parseDocumentResultOrThrow']);
+const parserNames = new Set([
+  'safeJsonParse', 'extractJsonObject', 'parseDocumentResultOrThrow',
+  'readOpenAiSttFailureStatus', 'readCommittedInterpreterReceipt',
+]);
 function approvedStatement(statement: ts.Statement): boolean {
+  if (ts.isImportDeclaration(statement)) {
+    const moduleName = ts.isStringLiteral(statement.moduleSpecifier) ? statement.moduleSpecifier.text : '';
+    return moduleName === '@app/services/ai/interpreterRefundProof';
+  }
   return ts.isVariableStatement(statement) && statement.declarationList.declarations.every((declaration) =>
     ts.isIdentifier(declaration.name) && (targetNames.has(declaration.name.text) || /^(AI_PROXY_|ANALYZE_DOCUMENT_|GEMINI_)/.test(declaration.name.text))
   );
@@ -34,7 +43,7 @@ const protectedIndex = indexAst.statements.filter((statement) => !approvedStatem
   .map((statement) => indexText.slice(statement.getFullStart(), statement.end)).join('')
   + indexText.slice(indexAst.endOfFileToken.getFullStart());
 const selected = indexAst.statements.filter((statement) =>
-  approvedStatement(statement)
+  (approvedStatement(statement) && !ts.isImportDeclaration(statement))
   || (ts.isFunctionDeclaration(statement) && statement.name !== undefined && parserNames.has(statement.name.text))
   || (ts.isTypeAliasDeclaration(statement) && statement.name.text === 'DocumentParseResult')
 );
@@ -49,6 +58,11 @@ import { verifyAppCheckForRequest } from './appCheckGate';
 import { takeAiProxyRateSlot } from './aiProxyRateLimit';
 import { AI_PROXY_MAX_BODY_BYTES, parseAndValidateChatPayload, requestBodyByteLength, validateSttPayload, validateTtsPayload } from './aiProxyValidation';
 import { proxyChat, proxyStt, proxyTts } from './openaiProxy';
+import {
+  createInterpreterHoldReceipt, createInterpreterProviderFailureProof, createInterpreterRefundNonce,
+  isDefinitiveInterpreterProviderStatus, isInterpreterRefundProofConfigured,
+  verifyInterpreterHoldReceipt, verifyInterpreterProviderFailureProof,
+} from '@app/services/ai/interpreterRefundProof';
 const db = getFirestore();
 ${selected.map((statement) => indexText.slice(statement.getFullStart(), statement.end)).join('\n')}
 `;
@@ -73,6 +87,7 @@ type LogRecord = { level: string; message: string; data?: unknown };
 const TOKEN_MARKER = 'OFFLINE_FIREBASE_ID_TOKEN_NEVER_LOG';
 const APP_CHECK_MARKER = 'OFFLINE_APP_CHECK_TOKEN_NEVER_LOG';
 const OPENAI_KEY = 'offline-openai-key-not-real';
+const REFUND_PROOF_SECRET = 'offline-only-refund-proof-signing-key-32-bytes';
 const GEMINI_KEY = 'offline-gemini-key-not-real';
 const CHAT = { op: 'chat', messages: [{ role: 'user', content: 'Synthetic question' }] };
 const DOCUMENT = { base64Image: 'QUFBQQ==', countryContext: 'Czechia' };
@@ -85,7 +100,12 @@ function harness(options: {
   upstreamStatus?: number;
   geminiText?: string;
 } = {}) {
-  const env: Record<string, string | undefined> = { OPENAI_API_KEY: OPENAI_KEY, GEMINI_API_KEY: GEMINI_KEY, ...options.env };
+  const env: Record<string, string | undefined> = {
+    OPENAI_API_KEY: OPENAI_KEY,
+    GEMINI_API_KEY: GEMINI_KEY,
+    VIONA_INTERPRETER_REFUND_PROOF_SECRET: REFUND_PROOF_SECRET,
+    ...options.env,
+  };
   const logs: LogRecord[] = [];
   const requests: Array<{ url: string; init: Record<string, unknown> }> = [];
   const counts = { auth: 0, decoded: 0, appCheck: 0 };
@@ -99,18 +119,27 @@ function harness(options: {
   ]));
   type FakeWalletRef =
     | { kind: 'wallet'; uid: string; get: () => Promise<{ exists: boolean; data: () => Record<string, unknown> }>; collection: (name: string) => { doc: (key: string) => FakeWalletRef } }
-    | { kind: 'subdoc'; uid: string; collectionName: string; key: string };
+    | { kind: 'subdoc'; uid: string; collectionName: string; key: string; get: () => Promise<{ exists: boolean; data: () => Record<string, unknown> }> };
   const defaultWallet = (uid: string) => ({ credits: uid === 'anonymous-user' ? 7 : 11, lifetimeSpent: 2 });
   const subdocKey = (uid: string, collectionName: string, key: string) => `${uid}/${collectionName}/${key}`;
-  const walletRef = (uid: string): FakeWalletRef => ({
-    kind: 'wallet', uid,
-    get: async () => ({ exists: true, data: () => ({ ...(walletBalances.get(uid) ?? defaultWallet(uid)) }) }),
-    collection: (name) => ({ doc: (key) => ({ kind: 'subdoc', uid, collectionName: name, key }) }),
-  });
   const readFakeRef = (ref: FakeWalletRef) => {
     if (ref.kind === 'wallet') return walletBalances.get(ref.uid) ?? defaultWallet(ref.uid);
     return walletSubdocs.get(subdocKey(ref.uid, ref.collectionName, ref.key));
   };
+  const walletRef = (uid: string): FakeWalletRef => ({
+    kind: 'wallet', uid,
+    get: async () => ({ exists: true, data: () => ({ ...(walletBalances.get(uid) ?? defaultWallet(uid)) }) }),
+    collection: (name) => ({ doc: (key) => {
+      const subdoc: FakeWalletRef = {
+        kind: 'subdoc', uid, collectionName: name, key,
+        get: async () => {
+          const data = readFakeRef(subdoc);
+          return { exists: data !== undefined, data: () => data ?? {} };
+        },
+      };
+      return subdoc;
+    } }),
+  });
   const writeFakeRef = (ref: FakeWalletRef, data: Record<string, unknown>, merge?: boolean) => {
     const current = readFakeRef(ref) ?? {};
     const next = merge ? { ...current, ...data } : { ...data };
@@ -186,6 +215,10 @@ function harness(options: {
   }
   const validation = load<typeof Validation>('functions/src/aiProxyValidation.ts');
   const rate = load<typeof Rate>('functions/src/aiProxyRateLimit.ts');
+  const interpreterRefundProof = load<typeof import('../src/services/ai/interpreterRefundProof')>(
+    'src/services/ai/interpreterRefundProof.ts',
+    { 'node:crypto': { createHmac, randomUUID, timingSafeEqual } }
+  );
   const walletAuth = load<{
     requireFirebaseBearerUser: (req: RequestFixture) => Promise<{ ok: true; uid: string } | { ok: false; status: number; error: string }>;
     requireFirebaseBearerUserDecoded: (req: RequestFixture) => Promise<unknown>;
@@ -208,6 +241,7 @@ function harness(options: {
     './aiProxyValidation': validation,
     './aiProxyRateLimit': rate,
     './openaiProxy': upstream,
+    '@app/services/ai/interpreterRefundProof': interpreterRefundProof,
     './walletAuth': {
       requireFirebaseBearerUser: (req: RequestFixture) => walletAuth.requireFirebaseBearerUser(req),
       requireFirebaseBearerUserDecoded: (req: RequestFixture) => {
@@ -397,19 +431,50 @@ async function main(): Promise<void> {
       assert.equal(race.walletCredits(uidRace), 20);
     }
   });
-  await test('interpreter first-turn compensation refunds a committed hold exactly once on retry', async () => {
+  await test('interpreter refund requires server-observed provider failure and refunds once', async () => {
     const failureBlock = liveInterpreterText.match(/if \(turnCountRef\.current === 0 && sessionDebitTxIdRef\.current\) \{([\s\S]*?)\n\s*\}/)?.[1];
     assert.ok(failureBlock, 'first-turn failure compensation block must exist');
-    assert.match(failureBlock, /refundCommittedHoldCredits\(sessionDebitTxIdRef\.current\)/);
+    assert.match(failureBlock, /error instanceof InterpreterProviderFailureError/);
+    assert.match(failureBlock, /refundCommittedHoldCredits\(sessionDebitTxIdRef\.current, error\.interpreterFailureProof\)/);
     assert.doesNotMatch(failureBlock, /rollbackReservedCredits/);
+    assert.match(openAiServiceText, /throw new InterpreterProviderFailureError\(interpreterFailureProof\)/);
+    assert.match(openAiServiceText, /error instanceof AiAuthRequiredError \|\| error instanceof InterpreterProviderFailureError/);
+    assert.match(liveInterpreterServiceText, /if \(e instanceof InterpreterProviderFailureError\) throw e/);
+    assert.match(walletStateText, /op: 'recordInterpreterProviderFailure', idempotencyKey, interpreterFailureProof/);
     assert.match(walletStateText, /op: 'refundCommittedHold', idempotencyKey/);
 
-    const h = harness(); const uid = 'interpreter-refund-user'; const key = 'interpreter-session-hold';
+    const h = harness({ upstreamStatus: 400 }); const uid = 'interpreter-refund-user'; const key = 'interpreter-session-hold';
     h.setWalletCredits(uid, 20);
-    assert.equal((await h.call('walletOps', { op: 'reserve', amount: 5, idempotencyKey: key }, { uid })).status, 200);
-    assert.equal((await h.call('walletOps', { op: 'commit', idempotencyKey: key }, { uid })).status, 200);
+    assert.equal((await h.call('walletOps', { op: 'reserve', amount: 5, idempotencyKey: key, purpose: 'live_interpreter' }, { uid })).status, 200);
+    const commit = await h.call('walletOps', { op: 'commit', idempotencyKey: key }, { uid });
+    assert.equal(commit.status, 200);
+    const interpreterHoldReceipt = String(commit.body.interpreterHoldReceipt ?? '');
+    assert.ok(interpreterHoldReceipt.length > 0, 'server returns a signed receipt only after committing the interpreter hold');
     assert.equal(h.walletCredits(uid), 15, 'committed session hold is charged before the first turn');
 
+    const noEvidence = await h.call('walletOps', { op: 'refundCommittedHold', idempotencyKey: key }, { uid, skipWalletRequestLogCheck: true });
+    assertError(noEvidence, 400, 'interpreter_failure_unverified');
+    const forgedEvidence = await h.call('walletOps', {
+      op: 'recordInterpreterProviderFailure', idempotencyKey: key, interpreterFailureProof: 'client-forged-proof',
+    }, { uid, skipWalletRequestLogCheck: true });
+    assertError(forgedEvidence, 400, 'interpreter_failure_unverified');
+    assert.equal(h.walletCredits(uid), 15, 'missing or forged client evidence never credits the wallet');
+    assert.equal(h.refund(uid, key), undefined);
+
+    const providerFailure = await h.call('aiProxy', {
+      op: 'stt', base64Audio: 'QUFBQQ==', mime: 'audio/mp4',
+      interpreterHoldKey: key, interpreterHoldReceipt,
+    }, { uid });
+    assert.equal(providerFailure.status, 502);
+    assert.equal(providerFailure.body.error, 'openai_upstream_http');
+    const signedFailureProof = String(providerFailure.body.interpreterFailureProof ?? '');
+    assert.ok(signedFailureProof.length > 0, 'Firebase proxy signs a provider HTTP 4xx failure it observed');
+
+    const recorded = await h.call('walletOps', {
+      op: 'recordInterpreterProviderFailure', idempotencyKey: key, interpreterFailureProof: signedFailureProof,
+    }, { uid, skipWalletRequestLogCheck: true });
+    assert.equal(recorded.status, 200);
+    assert.equal(recorded.body.ok, true);
     const refundResults = await Promise.all([
       h.call('walletOps', { op: 'refundCommittedHold', idempotencyKey: key }, { uid, skipWalletRequestLogCheck: true }),
       h.call('walletOps', { op: 'refundCommittedHold', idempotencyKey: key }, { uid, skipWalletRequestLogCheck: true }),
@@ -422,12 +487,83 @@ async function main(): Promise<void> {
     assert.equal(h.walletCredits(uid), 20, 'retry returns the existing refund without crediting again');
   });
 
+  await test('interpreter refunds fail closed without the shared server proof key', async () => {
+    const h = harness({ env: { VIONA_INTERPRETER_REFUND_PROOF_SECRET: undefined } });
+    const uid = 'interpreter-proof-unconfigured-user';
+    h.setWalletCredits(uid, 20);
+    const reserve = await h.call('walletOps', {
+      op: 'reserve', amount: 5, idempotencyKey: 'interpreter-proof-unconfigured-hold', purpose: 'live_interpreter',
+    }, { uid });
+    assertError(reserve, 503, 'interpreter_refund_proof_unavailable');
+    assert.equal(h.walletCredits(uid), 20);
+  });
+
+  await test('ambiguous provider errors never produce interpreter refund evidence', async () => {
+    for (const upstreamStatus of [408, 409, 500]) {
+      const h = harness({ upstreamStatus });
+      const uid = `interpreter-ambiguous-${upstreamStatus}`;
+      const key = `interpreter-ambiguous-hold-${upstreamStatus}`;
+      h.setWalletCredits(uid, 20);
+      assert.equal((await h.call('walletOps', {
+        op: 'reserve', amount: 5, idempotencyKey: key, purpose: 'live_interpreter',
+      }, { uid })).status, 200);
+      const commit = await h.call('walletOps', { op: 'commit', idempotencyKey: key }, { uid });
+      const receipt = String(commit.body.interpreterHoldReceipt ?? '');
+      const failure = await h.call('aiProxy', {
+        op: 'stt', base64Audio: 'QUFBQQ==', mime: 'audio/mp4',
+        interpreterHoldKey: key, interpreterHoldReceipt: receipt,
+      }, { uid });
+      assert.equal(failure.status, 502);
+      assert.equal(failure.body.interpreterFailureProof, undefined);
+      const record = await h.call('walletOps', {
+        op: 'recordInterpreterProviderFailure', idempotencyKey: key, interpreterFailureProof: failure.body.interpreterFailureProof,
+      }, { uid, skipWalletRequestLogCheck: true });
+      assertError(record, 400, 'invalid_interpreter_failure_evidence');
+      const refund = await h.call('walletOps', { op: 'refundCommittedHold', idempotencyKey: key }, { uid, skipWalletRequestLogCheck: true });
+      assertError(refund, 400, 'interpreter_failure_unverified');
+      assert.equal(h.walletCredits(uid), 15);
+    }
+  });
+
+  await test('provider 429 is definitive and produces interpreter refund evidence', async () => {
+    const h = harness({ upstreamStatus: 429 });
+    const uid = 'interpreter-throttled-user';
+    const key = 'interpreter-throttled-hold';
+    h.setWalletCredits(uid, 20);
+    assert.equal((await h.call('walletOps', {
+      op: 'reserve', amount: 5, idempotencyKey: key, purpose: 'live_interpreter',
+    }, { uid })).status, 200);
+    const commit = await h.call('walletOps', { op: 'commit', idempotencyKey: key }, { uid });
+    assert.equal(commit.status, 200);
+    const receipt = String(commit.body.interpreterHoldReceipt ?? '');
+    assert.ok(receipt.length > 0);
+
+    const failure = await h.call('aiProxy', {
+      op: 'stt', base64Audio: 'QUFBQQ==', mime: 'audio/mp4',
+      interpreterHoldKey: key, interpreterHoldReceipt: receipt,
+    }, { uid });
+    assert.equal(failure.status, 502);
+    const proof = String(failure.body.interpreterFailureProof ?? '');
+    assert.ok(proof.length > 0, 'status 429 remains eligible for server-signed interpreter failure proof');
+
+    const recorded = await h.call('walletOps', {
+      op: 'recordInterpreterProviderFailure', idempotencyKey: key, interpreterFailureProof: proof,
+    }, { uid, skipWalletRequestLogCheck: true });
+    assert.equal(recorded.status, 200);
+    const refund = await h.call('walletOps', {
+      op: 'refundCommittedHold', idempotencyKey: key,
+    }, { uid, skipWalletRequestLogCheck: true });
+    assert.equal(refund.status, 200);
+    assert.equal(refund.body.duplicate, false);
+    assert.equal(h.walletCredits(uid), 20);
+  });
+
   await test('only approved handler/auth blocks changed; generated bundle identity matches', () => {
     const hash = (bytes: string | Buffer) => createHash('sha256').update(bytes).digest('hex').toUpperCase();
-    assert.equal(hash(protectedIndex), '2FE73F227357597DB49329CB2A13A9FB083A654BF91BC296B0E11E65553560A0');
+    assert.equal(hash(protectedIndex), 'F0F070B5177B9DCE56CB1F501AA3B98231D3637CD91F9403CABE3CB1471B9D70');
     assert.equal(hash(lf(readFileSync(resolve(root, 'functions/src/walletAuth.ts')))), '71C10E0935D1EE954C4A38E6750CBA9F4BDA8BB4C74D017F23B09D9873F25512');
     // Updated after the Firebase stopgap functions/lib rebuild.
-    assert.equal(hash(readFileSync(resolve(root, 'functions/lib/index.js'))), '9EA6EF839BF265B2F7205A5DE4914D043A8BBBDA88D44A21C2096A4A0CFE0967');
+    assert.equal(hash(readFileSync(resolve(root, 'functions/lib/index.js'))), '32564D856703F7E6541112191A5A9C034B678CE12752783C5429747620436368');
   });
   for (const [requested, expected] of [[undefined, 240], [512, 512], [513, 512], [8192, 512], [3.8, 3], [-1, 1], [NaN, 240], [Infinity, 240]] as const) {
     await test(`chat maxTokens ${String(requested)} is bounded at ${expected}`, () => {

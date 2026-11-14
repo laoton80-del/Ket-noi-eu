@@ -43,6 +43,15 @@ import { paymentReceiptDocPath, type PaymentReceiptRecord } from './payments/pay
 import { verifySignedRequest } from './security';
 import { proxyChat, proxyStt, proxyTts } from './openaiProxy';
 import { requireFirebaseBearerUser } from './walletAuth';
+import {
+  createInterpreterHoldReceipt,
+  createInterpreterProviderFailureProof,
+  createInterpreterRefundNonce,
+  isDefinitiveInterpreterProviderStatus,
+  isInterpreterRefundProofConfigured,
+  verifyInterpreterHoldReceipt,
+  verifyInterpreterProviderFailureProof,
+} from '@app/services/ai/interpreterRefundProof';
 
 const db = getFirestore();
 const B2B_WEBHOOK_SECRET = process.env.B2B_WEBHOOK_SECRET?.trim() ?? '';
@@ -59,6 +68,24 @@ const SERVICE_COST_TABLE: Record<string, number> = {
   business_copilot_draft: 30,
   tax_refund_draft: 30,
 };
+
+function readOpenAiSttFailureStatus(error: unknown): number | null {
+  if (!(error instanceof Error)) return null;
+  const match = /^openai_stt_(\d+)$/.exec(error.message);
+  if (!match) return null;
+  const status = Number(match[1]);
+  return isDefinitiveInterpreterProviderStatus(status) ? status : null;
+}
+
+async function readCommittedInterpreterReceipt(uid: string, holdKey: string, receipt: string) {
+  const claims = verifyInterpreterHoldReceipt(receipt, { subjectId: uid, holdKey });
+  if (!claims) return null;
+  const holdSnap = await db.collection('wallets').doc(uid).collection('holds').doc(holdKey).get();
+  if (!holdSnap.exists) return null;
+  const hold = holdSnap.data() as { status?: string; purpose?: string; refundProofNonce?: string };
+  if (hold.status !== 'committed' || hold.purpose !== 'live_interpreter' || hold.refundProofNonce !== claims.nonce) return null;
+  return claims;
+}
 
 /**
  * When `WALLET_TOPUP_REQUIRE_PAYMENT_RECEIPT=1`, topup requires a prior webhook-written receipt
@@ -317,8 +344,28 @@ export const aiProxy = onRequest(
       if (op === 'stt') {
         const parsed = validateSttPayload(body);
         if (!parsed.ok) return void res.status(400).json({ ok: false, error: parsed.error });
-        const out = await proxyStt(parsed.base64Audio, parsed.mime);
-        return void res.status(200).json(out);
+        let interpreterFailureProof: string | null = null;
+        try {
+          const out = await proxyStt(parsed.base64Audio, parsed.mime);
+          return void res.status(200).json(out);
+        } catch (error) {
+          const upstreamStatus = readOpenAiSttFailureStatus(error);
+          const holdKey = typeof body.interpreterHoldKey === 'string' ? body.interpreterHoldKey.trim() : '';
+          const holdReceipt = typeof body.interpreterHoldReceipt === 'string' ? body.interpreterHoldReceipt.trim() : '';
+          if (uid && holdKey && holdReceipt && upstreamStatus !== null) {
+            const claims = await readCommittedInterpreterReceipt(uid, holdKey, holdReceipt);
+            if (claims) interpreterFailureProof = createInterpreterProviderFailureProof(holdReceipt, upstreamStatus, 'firebase_stt');
+          }
+          if (interpreterFailureProof) {
+            return void res.status(502).json({
+              ok: false,
+              error: 'openai_upstream_http',
+              openaiStatus: upstreamStatus,
+              interpreterFailureProof,
+            });
+          }
+          throw error;
+        }
       }
       if (op === 'tts') {
         const parsed = validateTtsPayload(body);
@@ -769,17 +816,30 @@ export const walletOps = onRequest(
     if (op === 'reserve') {
       const amount = Number(body.amount ?? 0);
       const key = String(body.idempotencyKey ?? '');
+      const purposeRaw = body.purpose;
+      if (purposeRaw !== undefined && purposeRaw !== 'live_interpreter') {
+        return void res.status(400).json({ ok: false, error: 'unsupported_hold_purpose' });
+      }
+      const purpose = purposeRaw === 'live_interpreter' ? 'live_interpreter' : undefined;
+      if (purpose === 'live_interpreter' && !isInterpreterRefundProofConfigured()) {
+        return void res.status(503).json({ ok: false, error: 'interpreter_refund_proof_unavailable' });
+      }
       if (!Number.isFinite(amount) || amount <= 0 || !key) return void res.status(400).json({ ok: false, error: 'invalid_reserve' });
       const holdRef = ref.collection('holds').doc(key);
       const result = await db.runTransaction(async (tx) => {
         const hold = await tx.get(holdRef);
-        if (hold.exists) return { ok: true, holdId: key };
+        if (hold.exists) {
+          const existing = hold.data() as { purpose?: string };
+          return (existing.purpose ?? undefined) === purpose
+            ? { ok: true, holdId: key }
+            : { ok: false, error: 'hold_purpose_conflict' };
+        }
         const snap = await tx.get(ref);
         const d = (snap.data() ?? {}) as { credits?: number; lifetimeSpent?: number };
         const credits = d.credits ?? 0;
         if (credits < amount) return { ok: false, error: 'insufficient_credits' };
         tx.set(ref, { credits: credits - amount, lifetimeSpent: d.lifetimeSpent ?? 0, updatedAt: FieldValue.serverTimestamp() }, { merge: true });
-        tx.set(holdRef, { amount, status: 'reserved', createdAt: FieldValue.serverTimestamp() });
+        tx.set(holdRef, { amount, status: 'reserved', ...(purpose ? { purpose } : {}), createdAt: FieldValue.serverTimestamp() });
         return { ok: true, holdId: key };
       });
       return void res.status(result.ok ? 200 : 400).json(result);
@@ -791,9 +851,15 @@ export const walletOps = onRequest(
       const result = await db.runTransaction(async (tx) => {
         const hold = await tx.get(holdRef);
         if (!hold.exists) return { ok: false, error: 'hold_not_found' };
-        const h = hold.data() as { amount?: number; status?: string };
+        const h = hold.data() as { amount?: number; status?: string; purpose?: string; refundProofNonce?: string };
         if (h.status === 'committed') {
-          return op === 'commit' ? { ok: true } : { ok: false, error: 'hold_already_committed' };
+          if (op !== 'commit') return { ok: false, error: 'hold_already_committed' };
+          if (h.purpose !== 'live_interpreter') return { ok: true };
+          const nonce = h.refundProofNonce ?? createInterpreterRefundNonce();
+          const receipt = createInterpreterHoldReceipt(userId, key, nonce);
+          if (!receipt) return { ok: false, error: 'interpreter_refund_proof_unavailable' };
+          if (!h.refundProofNonce) tx.set(holdRef, { refundProofNonce: nonce }, { merge: true });
+          return { ok: true, interpreterHoldReceipt: receipt };
         }
         if (h.status === 'rolled_back') {
           return op === 'rollback' ? { ok: true } : { ok: false, error: 'hold_already_rolled_back' };
@@ -806,8 +872,54 @@ export const walletOps = onRequest(
           tx.set(holdRef, { status: 'rolled_back', updatedAt: FieldValue.serverTimestamp() }, { merge: true });
           return { ok: true };
         }
+        if (h.purpose === 'live_interpreter') {
+          if (!isInterpreterRefundProofConfigured()) return { ok: false, error: 'interpreter_refund_proof_unavailable' };
+          const nonce = createInterpreterRefundNonce();
+          const receipt = createInterpreterHoldReceipt(userId, key, nonce);
+          if (!receipt) return { ok: false, error: 'interpreter_refund_proof_unavailable' };
+          tx.set(holdRef, { status: 'committed', refundProofNonce: nonce, updatedAt: FieldValue.serverTimestamp() }, { merge: true });
+          return { ok: true, interpreterHoldReceipt: receipt };
+        }
         tx.set(holdRef, { status: 'committed', updatedAt: FieldValue.serverTimestamp() }, { merge: true });
         return { ok: true };
+      });
+      return void res.status(result.ok ? 200 : 400).json(result);
+    }
+    if (op === 'recordInterpreterProviderFailure') {
+      const key = String(body.idempotencyKey ?? '').trim();
+      const proof = typeof body.interpreterFailureProof === 'string' ? body.interpreterFailureProof.trim() : '';
+      if (!key || key.length > 900 || !proof) return void res.status(400).json({ ok: false, error: 'invalid_interpreter_failure_evidence' });
+      const holdRef = ref.collection('holds').doc(key);
+      const failureRef = ref.collection('interpreterFailures').doc(key);
+      const result = await db.runTransaction(async (tx) => {
+        const hold = await tx.get(holdRef);
+        if (!hold.exists) return { ok: false, error: 'hold_not_found' };
+        const h = hold.data() as { status?: string; purpose?: string; refundProofNonce?: string };
+        if (h.status !== 'committed' || h.purpose !== 'live_interpreter' || !h.refundProofNonce) {
+          return { ok: false, error: 'interpreter_hold_not_refundable' };
+        }
+        const claims = verifyInterpreterProviderFailureProof(proof, {
+          subjectId: userId,
+          holdKey: key,
+          nonce: h.refundProofNonce,
+        });
+        if (!claims) return { ok: false, error: 'interpreter_failure_unverified' };
+        const failure = await tx.get(failureRef);
+        if (failure.exists) {
+          const prior = failure.data() as { nonce?: string; source?: string; providerStatus?: number };
+          return prior.nonce === claims.nonce && prior.source === claims.source && prior.providerStatus === claims.status
+            ? { ok: true, duplicate: true }
+            : { ok: false, error: 'interpreter_failure_already_recorded' };
+        }
+        tx.set(failureRef, {
+          status: 'verified',
+          holdId: key,
+          nonce: claims.nonce,
+          source: claims.source,
+          providerStatus: claims.status,
+          createdAt: FieldValue.serverTimestamp(),
+        });
+        return { ok: true, duplicate: false };
       });
       return void res.status(result.ok ? 200 : 400).json(result);
     }
@@ -817,16 +929,26 @@ export const walletOps = onRequest(
       if (key.length > 900) return void res.status(400).json({ ok: false, error: 'hold_key_too_long' });
       const holdRef = ref.collection('holds').doc(key);
       const refundRef = ref.collection('refunds').doc(key);
+      const failureRef = ref.collection('interpreterFailures').doc(key);
       const result = await db.runTransaction(async (tx) => {
         const hold = await tx.get(holdRef);
         if (!hold.exists) return { ok: false, error: 'hold_not_found' };
-        const h = hold.data() as { amount?: number; status?: string };
+        const h = hold.data() as { amount?: number; status?: string; purpose?: string; refundProofNonce?: string };
         if (h.status !== 'committed') return { ok: false, error: 'hold_not_committed' };
+        if (h.purpose !== 'live_interpreter' || !h.refundProofNonce) {
+          return { ok: false, error: 'interpreter_failure_unverified' };
+        }
         if (typeof h.amount !== 'number' || !Number.isFinite(h.amount) || h.amount <= 0) {
           return { ok: false, error: 'invalid_hold_amount' };
         }
         const refund = await tx.get(refundRef);
         if (refund.exists) return { ok: true, duplicate: true };
+        const failure = await tx.get(failureRef);
+        if (!failure.exists) return { ok: false, error: 'interpreter_failure_unverified' };
+        const failureData = failure.data() as { status?: string; holdId?: string; nonce?: string };
+        if (failureData.status !== 'verified' || failureData.holdId !== key || failureData.nonce !== h.refundProofNonce) {
+          return { ok: false, error: 'interpreter_failure_unverified' };
+        }
         const snap = await tx.get(ref);
         const d = (snap.data() ?? {}) as { credits?: number };
         tx.set(ref, { credits: (d.credits ?? 0) + h.amount, updatedAt: FieldValue.serverTimestamp() }, { merge: true });
@@ -836,6 +958,7 @@ export const walletOps = onRequest(
           amount: h.amount,
           createdAt: FieldValue.serverTimestamp(),
         });
+        tx.set(failureRef, { status: 'consumed', consumedAt: FieldValue.serverTimestamp() }, { merge: true });
         return { ok: true, duplicate: false };
       });
       return void res.status(result.ok ? 200 : 400).json(result);
