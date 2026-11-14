@@ -6,22 +6,27 @@ import { vionaCinematicTokens } from '../../../design/vionaCinematicTokens';
 import { useTranslation } from '../../../i18n';
 import { VionaCraneMark } from '../brand/VionaCraneMark';
 import {
-  invokeVionaRec2UniverseCallback,
   type VionaRec2UniverseCallbacks,
   type VionaRec2UniverseContract,
-  type VionaRec2UniverseId,
 } from './vionaRec2HomeContract';
 
 type IconName = ComponentProps<typeof Ionicons>['name'];
 
-const ICONS: Record<VionaRec2UniverseId, IconName> = {
-  local: 'location-outline',
-  travel: 'airplane-outline',
-  academy: 'school-outline',
-  business: 'briefcase-outline',
-  account: 'person-circle-outline',
-  sos: 'shield-checkmark-outline',
-};
+const UTILITY_NAV: readonly Readonly<{
+  id: 'saved' | 'history' | 'notifications' | 'invite' | 'help' | 'messages' | 'calendar' | 'apps' | 'community';
+  icon: IconName;
+  hint: 'openingGradually' | 'comingSoon';
+}>[] = [
+  { id: 'saved', icon: 'bookmark-outline', hint: 'openingGradually' },
+  { id: 'history', icon: 'time-outline', hint: 'openingGradually' },
+  { id: 'notifications', icon: 'notifications-outline', hint: 'openingGradually' },
+  { id: 'invite', icon: 'person-add-outline', hint: 'comingSoon' },
+  { id: 'help', icon: 'help-circle-outline', hint: 'comingSoon' },
+  { id: 'messages', icon: 'chatbubbles-outline', hint: 'openingGradually' },
+  { id: 'calendar', icon: 'calendar-outline', hint: 'openingGradually' },
+  { id: 'apps', icon: 'grid-outline', hint: 'openingGradually' },
+  { id: 'community', icon: 'people-outline', hint: 'openingGradually' },
+];
 
 const DRAWER_WIDTH = vionaCinematicTokens.layout.railWidth;
 const CLOSE_DELAY_MS = 400;
@@ -39,8 +44,6 @@ type VionaCinematicRailProps = Readonly<{
 }>;
 
 export function VionaCinematicRail({
-  universes,
-  callbacks,
   onOpenLanguage,
   open,
   pinned,
@@ -337,27 +340,35 @@ export function VionaCinematicRail({
               showsVerticalScrollIndicator={false}
               style={styles.listScroll}
             >
-              {universes.map((universe) => {
-                const interactive =
-                  universe.availability === 'available' && typeof callbacks[universe.id] === 'function';
-                const tone = vionaCinematicTokens.universe[universe.id];
-                return (
-                  <Pressable
-                    key={universe.id}
-                    accessibilityRole="button"
-                    accessibilityLabel={t(`home.rec2.universes.${universe.id}.title`)}
-                    accessibilityState={{ disabled: !interactive }}
-                    disabled={!interactive}
-                    onHoverIn={hoverIn}
-                    onHoverOut={hoverOut}
-                    onPress={() => invokeVionaRec2UniverseCallback(universe, callbacks)}
-                    style={({ pressed }) => [styles.item, pressed && interactive && styles.itemPressed]}
-                  >
-                    <Ionicons name={ICONS[universe.id]} size={18} color={tone.accent} />
-                    <Text style={styles.itemLabel}>{t(`home.rec2.universes.${universe.id}.title`)}</Text>
-                  </Pressable>
-                );
-              })}
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={t('home.rec2.sidebar.home', { defaultValue: 'Home' })}
+                accessibilityState={{ selected: true }}
+                onHoverIn={hoverIn}
+                onHoverOut={hoverOut}
+                style={styles.item}
+              >
+                <Ionicons name="home" size={18} color={vionaCinematicTokens.color.gold} />
+                <Text style={styles.itemLabel}>{t('home.rec2.sidebar.home', { defaultValue: 'Home' })}</Text>
+              </Pressable>
+              {UTILITY_NAV.map((item) => (
+                <Pressable
+                  key={item.id}
+                  accessibilityRole="button"
+                  accessibilityLabel={`${t(`home.rec2.sidebar.${item.id}`, { defaultValue: item.id })}. ${t(`home.rec2.sidebar.${item.hint}`, { defaultValue: item.hint })}`}
+                  accessibilityState={{ disabled: true }}
+                  disabled
+                  style={styles.item}
+                >
+                  <Ionicons name={item.icon} size={18} color={vionaCinematicTokens.color.ice} />
+                  <View style={styles.utilityCopy}>
+                    <Text style={styles.itemLabel}>{t(`home.rec2.sidebar.${item.id}`, { defaultValue: item.id })}</Text>
+                    <Text style={styles.utilityHint}>
+                      {t(`home.rec2.sidebar.${item.hint}`, { defaultValue: item.hint === 'comingSoon' ? 'Coming soon' : 'Opening gradually' })}
+                    </Text>
+                  </View>
+                </Pressable>
+              ))}
             </ScrollView>
             <Pressable
               accessibilityRole="button"
@@ -464,6 +475,8 @@ const styles = StyleSheet.create({
   },
   itemPressed: { backgroundColor: 'rgba(47, 123, 255, 0.16)' },
   itemLabel: { color: vionaCinematicTokens.color.ice, fontSize: 14, fontWeight: '600', flexShrink: 1 },
+  utilityCopy: { flex: 1 },
+  utilityHint: { color: vionaCinematicTokens.color.muted, fontSize: 11 },
   language: {
     minHeight: 44,
     flexDirection: 'row',

@@ -59,6 +59,7 @@ import type { GuidedIntentId } from './src/onboarding/guidedOnboardingStorage';
 import { resolveRootStackRoute } from './src/navigation/AppNavigator';
 import { MainTabNavigator } from './src/navigation/MainTabNavigator';
 import type { RootStackParamList } from './src/navigation/routes';
+import { VionaColdIntro } from './src/components/viona/intro/VionaColdIntro';
 import { CaNhanScreen } from './src/screens/CaNhanScreen';
 import {
   UniverseLandingRouteScreen,
@@ -1111,6 +1112,7 @@ function AppRoot() {
 
   return (
     <V7NavigationSurfaceProvider>
+      <VionaColdIntro />
       <AppNavigationShell
         insets={insets}
         isLargeScreen={isLargeScreen}

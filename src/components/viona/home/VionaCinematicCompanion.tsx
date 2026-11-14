@@ -4,6 +4,7 @@ import { Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { vionaCinematicTokens } from '../../../design/vionaCinematicTokens';
 import { useTranslation } from '../../../i18n';
+import { VionaCompanionOrbImage } from '../brand/VionaCompanionOrbImage';
 import { VionaCraneMark } from '../brand/VionaCraneMark';
 import { resolveVionaRec2AlfredPresentation } from './vionaRec2HomeContract';
 import { VionaRec2AlfredPanel } from './VionaRec2AlfredPanel';
@@ -140,7 +141,7 @@ export function VionaCinematicCompanion({
         ) : null}
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel={open ? 'Đóng Viona / Close Viona' : 'Mở Viona / Open Viona'}
+          accessibilityLabel={open ? 'Đóng Viona / Close Viona' : t('home.rec2.companionChat', { defaultValue: 'Chat with Viona' })}
           accessibilityState={{ expanded: open }}
           onHoverIn={() => {
             if (hoverEnabled && !open) setPreview(true);
@@ -148,11 +149,12 @@ export function VionaCinematicCompanion({
           onHoverOut={() => setPreview(false)}
           onPress={toggle}
           ref={dockTriggerRef}
-          style={[styles.dockHit, { top: 12, right: 12 }]}
-          testID="viona-focus-viona-dock"
+          style={[styles.dockHit, { bottom: Math.max(4, dockBottom) }]}
+          testID="viona-companion-orb"
         >
+          <View pointerEvents="none" style={styles.orbBloom} />
           <View style={styles.trigger}>
-            <VionaCraneMark size={28} variant="sapphire" glow={!reducedMotion} />
+            <VionaCompanionOrbImage size={101} reducedMotion={reducedMotion} />
           </View>
           {preview && !open ? (
             <View pointerEvents="none" style={styles.preview}>
@@ -272,18 +274,39 @@ const styles = StyleSheet.create({
   },
   dockHit: {
     position: 'absolute',
+    left: 0,
+    right: 0,
     zIndex: 50,
-    alignItems: 'flex-end',
+    alignItems: 'center',
+  },
+  orbBloom: {
+    position: 'absolute',
+    width: 177,
+    height: 177,
+    borderRadius: 89,
+    zIndex: 0,
+    ...(Platform.OS === 'web'
+      ? {
+          backgroundImage:
+            'radial-gradient(circle, rgba(150, 205, 255, 0.55) 0%, rgba(80, 155, 230, 0.28) 38%, rgba(40, 110, 200, 0) 74%)',
+          filter: 'blur(36px)',
+        }
+      : {
+          backgroundColor: 'rgba(126, 196, 255, 0.28)',
+          shadowColor: '#7EC4FF',
+          shadowOffset: { width: 0, height: 0 },
+          shadowOpacity: 0.7,
+          shadowRadius: 24,
+        }),
   },
   trigger: {
-    width: 54,
-    height: 54,
-    borderRadius: 27,
+    width: 101,
+    height: 101,
+    borderRadius: 51,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'rgba(18, 58, 102, 0.94)',
-    borderWidth: 1,
-    borderColor: 'rgba(125, 211, 252, 0.7)',
+    backgroundColor: 'transparent',
+    zIndex: 1,
   },
   preview: {
     marginTop: 8,

@@ -76,6 +76,7 @@ import { BrokerMerchantsTabScreen } from '../screens/broker/BrokerMerchantsTabSc
 import { WalletScreen } from '../screens/WalletScreen';
 import { AdminCommandCenter } from '../screens/admin/AdminCommandCenter';
 import { VionaGlobalSosShellAction } from '../components/viona/VionaGlobalSosShellAction';
+import { VionaSosTabEndCap } from './VionaSosTabEndCap';
 import { VionaShellAccountLanguageActions } from '../components/viona/VionaShellAccountLanguageActions';
 import { SOSModal } from '../screens/b2c/SOSModal';
 const Tab = createBottomTabNavigator<RootTabParamList>();
@@ -403,7 +404,7 @@ export function MainTabNavigator(): ReactElement {
               </View>
               <View style={styles.nativeBottomChromeSpacer} pointerEvents="none" />
               <View style={styles.nativeBottomSosSlot}>
-                <VionaGlobalSosShellAction layout="bottomChip" onHoldComplete={onSosHoldComplete} />
+                <VionaSosTabEndCap onConfirm={onSosHoldComplete} />
               </View>
             </View>
           </View>
@@ -444,7 +445,7 @@ export function MainTabNavigator(): ReactElement {
             ]}
             pointerEvents="box-none"
           >
-            <VionaGlobalSosShellAction layout="bottomChip" onHoldComplete={onSosHoldComplete} />
+            <VionaSosTabEndCap onConfirm={onSosHoldComplete} />
           </View>
         </View>
       );

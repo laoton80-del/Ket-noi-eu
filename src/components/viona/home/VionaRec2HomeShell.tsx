@@ -12,10 +12,12 @@ import {
   View,
   type ImageSourcePropType,
   type LayoutChangeEvent,
+  type ViewStyle,
   useWindowDimensions,
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { Asset } from 'expo-asset';
 import { useTranslation } from '../../../i18n';
 import { VionaCinematicCompanion } from './VionaCinematicCompanion';
 import { VionaCinematicRail } from './VionaCinematicRail';
@@ -39,7 +41,7 @@ import {
 type IconName = ComponentProps<typeof Ionicons>['name'];
 
 const CINEMATIC_CARD_IMAGES: Readonly<Record<VionaRec2UniverseId, ImageSourcePropType>> = {
-  local: require('../../../../assets/brand/viona/cinematic/photos/card-local.webp'),
+  local: require('../../../../assets/brand/viona/cinematic/photos/card-local.jpg'),
   travel: require('../../../../assets/brand/viona/cinematic/photos/card-travel.webp'),
   academy: require('../../../../assets/brand/viona/cinematic/photos/card-academy.webp'),
   business: require('../../../../assets/brand/viona/cinematic/photos/card-business.webp'),
@@ -205,15 +207,33 @@ export function VionaRec2HomeShell({
           showsVerticalScrollIndicator={false}
         >
           <LinearGradient colors={['rgba(12, 54, 98, 0.94)', 'rgba(4, 17, 34, 0.96)']} style={styles.hero}>
-            <Image
-              source={HERO_IMAGE}
-              resizeMode="cover"
-              accessible={false}
-              accessibilityIgnoresInvertColors
-              onLoad={() => setHeroLoaded(true)}
-              onError={() => setHeroFailed(true)}
-              style={styles.heroPhoto}
-            />
+            {Platform.OS === 'web' ? (
+              <View
+                pointerEvents="none"
+                accessibilityIgnoresInvertColors
+                onLayout={() => setHeroLoaded(true)}
+                style={[
+                  styles.heroPhoto,
+                  {
+                    backgroundImage: `url("${Asset.fromModule(HERO_IMAGE).uri}")`,
+                    backgroundRepeat: 'no-repeat',
+                    backgroundSize: 'cover',
+                    backgroundPosition: 'center 60%',
+                    transform: [{ scaleX: -1 }],
+                  } as ViewStyle,
+                ]}
+              />
+            ) : (
+              <Image
+                source={HERO_IMAGE}
+                resizeMode="cover"
+                accessible={false}
+                accessibilityIgnoresInvertColors
+                onLoad={() => setHeroLoaded(true)}
+                onError={() => setHeroFailed(true)}
+                style={[styles.heroPhoto, styles.heroFlip]}
+              />
+            )}
             {imagePresentation.mode === 'image' ? <View pointerEvents="none" style={styles.heroScrim} /> : null}
             <View style={[styles.commandRow, layout.columns === 1 && styles.commandRowStacked]}>
               <View style={styles.brandBlock}>
@@ -257,6 +277,9 @@ export function VionaRec2HomeShell({
                   : t('home.rec2.greetingGuest')}
               </Text>
               <Text style={[styles.headline, { lineHeight: typography.headlineLineHeight }]}>
+                {t('home.rec2.explorePrompt', { defaultValue: 'What do you want to explore today?' })}
+              </Text>
+              <Text style={[styles.contextText, { lineHeight: typography.bodyLineHeight }]}>
                 {t('home.rec2.headline')}
               </Text>
               {normalizedRegion ? (
@@ -276,13 +299,7 @@ export function VionaRec2HomeShell({
                   {t('home.rec2.imageFallback')}
                 </Text>
               </View>
-            ) : (
-              <View style={styles.visualFallback}>
-                <Text style={[styles.visualFallbackText, { lineHeight: typography.bodyLineHeight }]}>
-                  {t('home.rec2.imageReady')}
-                </Text>
-              </View>
-            )}
+            ) : null}
           </LinearGradient>
 
           <ContentStateBanner state={contentState} typography={typography} />
@@ -361,6 +378,7 @@ const styles = StyleSheet.create({
   headerButtonPressed: { opacity: 0.72, transform: [{ scale: 0.97 }] },
   heroCopy: { gap: 7, maxWidth: 720, zIndex: 1 },
   heroPhoto: { ...StyleSheet.absoluteFillObject },
+  heroFlip: { transform: [{ scaleX: -1 }] },
   heroScrim: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(4, 12, 24, 0.55)' },
   greeting: { color: '#8FD9FF', fontSize: 13, fontWeight: '700' },
   headline: { color: '#F7FAFF', fontSize: 26, lineHeight: 34, fontWeight: '800' },
