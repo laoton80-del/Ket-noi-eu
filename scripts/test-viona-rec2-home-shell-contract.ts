@@ -744,9 +744,9 @@ assert('guest, loading, empty, offline, gated, image fallback, focus and pressed
   "state === 'offline'",
   "state === 'gated'",
   'imagePresentation.mode',
-  'onFocus',
-  'pressed',
-].every((token) => shellSource.includes(token)));
+].every((token) => shellSource.includes(token)) &&
+  read('src/components/viona/home/VionaCinematicUniverseCard.tsx').includes('onFocus') &&
+  read('src/components/viona/home/VionaCinematicUniverseCard.tsx').includes('pressed'));
 assert(
   'build-time flag source declares default-on REC2 and explicit false rollback',
   flagsSource.includes('EXPO_PUBLIC_FEATURE_REC2_HOME_SHELL') &&
@@ -772,11 +772,11 @@ assert(
 );
 
 const runtimeSources = [rec2EntrySource, shellSource, alfredSource, contractSource].join('\n');
-const universeCardSource = sourceBetween(shellSource, 'function UniverseCard(', 'function ContentStateBanner(');
+const universeCardSource = read('src/components/viona/home/VionaCinematicUniverseCard.tsx');
 assert(
   'universe descriptions have no finite line cap or tail ellipsis',
-  universeCardSource.includes('styles.cardSubtitle') &&
-    !/cardSubtitle[^>]*(?:numberOfLines|ellipsizeMode)/.test(universeCardSource)
+  universeCardSource.includes('styles.body') &&
+    !/styles\.body[^>]*(?:numberOfLines|ellipsizeMode)/.test(universeCardSource)
 );
 assert(
   'universe cards can grow with content instead of using a fixed or maximum height',
