@@ -1,7 +1,21 @@
 import { Ionicons } from '@expo/vector-icons';
+import { Asset } from 'expo-asset';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useState, type ComponentProps } from 'react';
-import { Image, Pressable, StyleSheet, Text, View, type ImageSourcePropType, type TextStyle } from 'react-native';
+import { useEffect, useRef, useState, type ComponentProps } from 'react';
+import {
+  Animated,
+  Easing,
+  Image,
+  Platform,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+  type ImageSourcePropType,
+  type ImageStyle,
+  type TextStyle,
+  type ViewStyle,
+} from 'react-native';
 
 import { vionaCinematicTokens } from '../../../design/vionaCinematicTokens';
 import { useTranslation } from '../../../i18n';
@@ -14,6 +28,7 @@ import {
   type VionaRec2UniverseContract,
   type VionaRec2UniverseId,
 } from './vionaRec2HomeContract';
+import { ensureVionaReducedMotionGuard } from './vionaReducedMotionGuard';
 
 type IconName = ComponentProps<typeof Ionicons>['name'];
 
@@ -37,8 +52,18 @@ const IMAGE_PROVENANCE: Readonly<Record<VionaRec2UniverseId, VionaRec2ImageInput
   sos: 'licensed',
 };
 
+/** Keep the top of each landmark inside the cover frame. */
+const PHOTO_FOCUS: Readonly<Record<VionaRec2UniverseId, string>> = {
+  local: 'center',
+  travel: 'center 30%',
+  academy: 'center 16%',
+  business: 'center 20%',
+  account: 'center top',
+  sos: 'center 4%',
+};
+
 const UNIVERSE_ASSETS: Readonly<Record<VionaRec2UniverseId, ImageSourcePropType>> = {
-  local: require('../../../../assets/brand/viona/cinematic/photos/card-local.webp'),
+  local: require('../../../../assets/brand/viona/cinematic/photos/card-local.jpg'),
   travel: require('../../../../assets/brand/viona/cinematic/photos/card-travel.webp'),
   academy: require('../../../../assets/brand/viona/cinematic/photos/card-academy.webp'),
   business: require('../../../../assets/brand/viona/cinematic/photos/card-business.webp'),
@@ -52,6 +77,7 @@ export type UniversePhotoTileProps = Readonly<{
   width: number;
   reducedMotion?: boolean;
   subtitleStyle?: TextStyle;
+  enterIndex?: number;
 }>;
 
 export function UniversePhotoTile({
@@ -60,11 +86,15 @@ export function UniversePhotoTile({
   width,
   reducedMotion = false,
   subtitleStyle,
+  enterIndex = 0,
 }: UniversePhotoTileProps) {
   const { t } = useTranslation();
   const [focused, setFocused] = useState(false);
+  const [hovered, setHovered] = useState(false);
   const [loaded, setLoaded] = useState(false);
   const [failed, setFailed] = useState(false);
+  const playedEntrance = useRef(false);
+  const entrance = useRef(new Animated.Value(reducedMotion ? 1 : 0)).current;
   const imageSource = UNIVERSE_ASSETS[universe.id];
   const provenance = IMAGE_PROVENANCE[universe.id];
   const loadState: VionaRec2ImageInput['loadState'] = failed ? 'error' : loaded ? 'ready' : 'loading';
@@ -76,8 +106,88 @@ export function UniversePhotoTile({
   const title = t(`home.rec2.universes.${universe.id}.title`);
   const body = t(`home.rec2.universes.${universe.id}.subtitle`);
   const stateLabel = t(`home.rec2.availability.${universe.availability}`);
+  const calm = universe.id === 'sos';
+  const lifted = interactive && (hovered || focused);
+
+  useEffect(() => {
+    ensureVionaReducedMotionGuard();
+  }, []);
+
+  useEffect(() => {
+    if (Platform.OS === 'web') setLoaded(true);
+  }, [universe.id]);
+
+  useEffect(() => {
+    if (reducedMotion) {
+      entrance.setValue(1);
+      return;
+    }
+    if (playedEntrance.current) return;
+    playedEntrance.current = true;
+    const anim = Animated.timing(entrance, {
+      toValue: 1,
+      duration: 180,
+      delay: Math.min(Math.max(enterIndex, 0), 5) * 60,
+      easing: Easing.out(Easing.cubic),
+      useNativeDriver: true,
+    });
+    anim.start();
+    return () => anim.stop();
+  }, [entrance, enterIndex, reducedMotion]);
+
+  const cardMotion = reducedMotion
+    ? null
+    : ({
+        transitionProperty: 'transform, box-shadow, border-color',
+        transitionDuration: '220ms',
+        transitionTimingFunction: 'ease-out',
+        willChange: 'transform',
+      } as ViewStyle);
+  const photoMotion = reducedMotion
+    ? null
+    : ({
+        transitionProperty: 'transform',
+        transitionDuration: '220ms',
+        transitionTimingFunction: 'ease-out',
+        willChange: 'transform',
+      } as ImageStyle);
 
   return (
+    <View
+      testID="viona-motion"
+      style={[
+        { width, overflow: 'visible' },
+        lifted
+          ? Platform.OS === 'web'
+            ? ({
+                boxShadow: `0 0 18px 0 ${tone.accent}47`,
+                transitionProperty: 'box-shadow',
+                transitionDuration: '220ms',
+                transitionTimingFunction: 'ease-out',
+              } as ViewStyle)
+            : {
+                shadowColor: tone.accent,
+                shadowOffset: { width: 0, height: 0 },
+                shadowOpacity: 0.28,
+                shadowRadius: 16,
+                elevation: 4,
+              }
+          : null,
+      ]}
+    >
+    <Animated.View
+      style={{
+        opacity: entrance,
+        transform: [
+          {
+            translateY: entrance.interpolate({
+              inputRange: [0, 1],
+              outputRange: [8, 0],
+            }),
+          },
+        ],
+      }}
+    >
     <Pressable
       accessibilityRole="button"
       accessibilityLabel={title}
@@ -86,28 +196,53 @@ export function UniversePhotoTile({
       disabled={!interactive}
       onFocus={() => setFocused(true)}
       onBlur={() => setFocused(false)}
+      onHoverIn={() => setHovered(true)}
+      onHoverOut={() => setHovered(false)}
       onPress={() => invokeVionaRec2UniverseCallback(universe, callbacks)}
       style={({ pressed }) => [
         styles.host,
-        { width, borderColor: focused || pressed ? tone.accent : tone.accent },
+        cardMotion,
+        { borderColor: lifted ? tone.accent : 'rgba(0, 209, 255, 0.16)' },
+        lifted && !pressed && !reducedMotion && (calm ? styles.liftCalm : styles.lift),
         pressed && (reducedMotion ? styles.pressedStill : styles.pressed),
       ]}
     >
       <LinearGradient colors={[tone.wash, vionaCinematicTokens.color.navy, vionaCinematicTokens.color.midnight]} style={styles.fill}>
         {canLoadImage ? (
-          <View pointerEvents="none" style={[styles.photo, !showImage && styles.photoPending]}>
-            <Image
-              source={imageSource}
-              resizeMode="cover"
-              accessible={false}
-              accessibilityIgnoresInvertColors
-              onLoad={() => setLoaded(true)}
-              onError={() => setFailed(true)}
-              style={styles.photoFill}
-            />
+          <View pointerEvents="none" style={[styles.photo, Platform.OS !== 'web' && !showImage && styles.photoPending]}>
+            {Platform.OS === 'web' ? (
+              <View
+                style={[
+                  styles.photoFill,
+                  photoMotion,
+                  {
+                    backgroundImage: `url("${Asset.fromModule(imageSource as number).uri}")`,
+                    backgroundRepeat: 'no-repeat',
+                    backgroundSize: 'cover',
+                    backgroundPosition: PHOTO_FOCUS[universe.id],
+                  } as ViewStyle,
+                ]}
+              />
+            ) : (
+              <Image
+                source={imageSource}
+                resizeMode="cover"
+                accessible={false}
+                accessibilityIgnoresInvertColors
+                onLoad={() => setLoaded(true)}
+                onError={() => setFailed(true)}
+                style={[styles.photoFill, photoMotion]}
+              />
+            )}
           </View>
         ) : null}
-        {showImage ? <View pointerEvents="none" style={styles.scrim} /> : null}
+        {showImage ? (
+          <LinearGradient
+            pointerEvents="none"
+            colors={['rgba(10, 26, 51, 0)', 'rgba(10, 26, 51, 0.72)']}
+            style={styles.scrim}
+          />
+        ) : null}
         <View style={[styles.copy, universe.availability !== 'available' && styles.gatedCopy]}>
           <View style={[styles.icon, { borderColor: tone.accent }]}>
             <Ionicons name={ICONS[universe.id]} size={22} color={tone.accent} />
@@ -125,6 +260,8 @@ export function UniversePhotoTile({
         </View>
       </LinearGradient>
     </Pressable>
+    </Animated.View>
+    </View>
   );
 }
 
@@ -136,11 +273,13 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     backgroundColor: vionaCinematicTokens.color.midnight,
   },
+  lift: { transform: [{ translateY: -4 }, { scale: 1.01 }] },
+  liftCalm: { transform: [{ translateY: -4 }] },
   fill: { flexGrow: 1, minHeight: 196 },
   photo: { ...StyleSheet.absoluteFillObject },
   photoPending: { opacity: 0 },
   photoFill: { width: '100%', height: '100%' },
-  scrim: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(2, 7, 19, 0.55)' },
+  scrim: { ...StyleSheet.absoluteFillObject },
   copy: { flexGrow: 1, minHeight: 196, padding: 16, gap: 8, justifyContent: 'flex-end' },
   gatedCopy: { opacity: VIONA_REC2_GATED_CARD_CONTENT_OPACITY },
   icon: {

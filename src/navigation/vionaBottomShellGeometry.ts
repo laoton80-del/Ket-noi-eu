@@ -24,6 +24,29 @@ export const VIONA_WEB_BOTTOM_SHELL_OBSTRUCTION_PX =
 /** Existing Home terminal breathing room, kept separate from shell obstruction. */
 export const VIONA_REC2_HOME_CONTENT_BREATHING_CLEARANCE_PX = 28;
 
+/** Seated companion orb. The circle reaches near the bottom edge of the bar; the label is not part of the dock. */
+export function resolveVionaCollapsedOrb(width: number): Readonly<{
+  size: number;
+  inside: number;
+  dockBottom: number;
+  sideGap: number;
+  notchRadius: number;
+  notchCenterY: number;
+}> {
+  const size = width >= 1180 ? 132 : width >= 768 ? 112 : 96;
+  const dockBottom = 4;
+  const inside = VIONA_WEB_BOTTOM_TAB_BAR_HEIGHT_PX - dockBottom;
+  const sideGap = width >= 1180 ? 78 : width >= 768 ? 52 : 28;
+  return {
+    size,
+    inside,
+    dockBottom,
+    sideGap,
+    notchRadius: Math.round(size * 0.44),
+    notchCenterY: Math.round(VIONA_WEB_BOTTOM_TAB_BAR_HEIGHT_PX - (dockBottom + size / 2)),
+  };
+}
+
 export type VionaBottomShellPlatform = 'web' | 'native';
 
 export type VionaHomeBottomReservation = Readonly<{

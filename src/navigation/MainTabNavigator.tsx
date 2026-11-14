@@ -7,6 +7,7 @@ import {
 import { useNavigation, useNavigationState } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactElement } from 'react';
+import { LinearGradient } from 'expo-linear-gradient';
 import { Alert, Platform, StyleSheet, Text, View, useWindowDimensions, type ViewStyle } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -77,6 +78,7 @@ import { WalletScreen } from '../screens/WalletScreen';
 import { AdminCommandCenter } from '../screens/admin/AdminCommandCenter';
 import { VionaGlobalSosShellAction } from '../components/viona/VionaGlobalSosShellAction';
 import { VionaSosTabEndCap } from './VionaSosTabEndCap';
+import { VionaGlassTabBar } from './VionaGlassTabBar';
 import { VionaShellAccountLanguageActions } from '../components/viona/VionaShellAccountLanguageActions';
 import { SOSModal } from '../screens/b2c/SOSModal';
 const Tab = createBottomTabNavigator<RootTabParamList>();
@@ -411,42 +413,69 @@ export function MainTabNavigator(): ReactElement {
         );
       }
 
+      const vionaGlassBar = currentActiveRole === 'B2C' && !b2cTravelPlatinum;
       return (
         <View style={styles.tabBarHost} testID="viona-sos-tab-bar-host">
-          <View style={styles.tabBarMain}>
-            <BottomTabBar {...props} />
-          </View>
-          <View
-            style={[
-              styles.accountLanguageShellSlot,
-              {
-                paddingBottom: Math.max(props.insets.bottom, 10),
-                paddingLeft: Math.max(props.insets.left, 8),
-              },
-            ]}
-            pointerEvents="box-none"
-            testID="viona-shell-account-language-bottom-slot"
-          >
-            <VionaShellAccountLanguageActions
-              layout="bottomChip"
-              showRolePicker={showRolePicker}
-              onPressAccount={openShellAccount}
-              onPressLanguage={openShellLanguage}
-              onPressRole={openShellRole}
+          {vionaGlassBar ? (
+            <LinearGradient
+              pointerEvents="none"
+              colors={['rgba(8, 64, 108, 0.96)', 'rgba(10, 36, 68, 0.94)', 'rgba(8, 22, 44, 0.97)']}
+              locations={[0, 0.42, 1]}
+              style={styles.tabBarGlass}
             />
+          ) : null}
+          {vionaGlassBar ? <View pointerEvents="none" style={styles.tabBarSides} /> : null}
+          {vionaGlassBar ? <View pointerEvents="none" style={styles.tabBarTopGlow} /> : null}
+          <View style={styles.tabBarMain}>
+            {vionaGlassBar ? (
+              <VionaGlassTabBar
+                state={props.state}
+                navigation={props.navigation}
+                width={width}
+                paddingLeft={12}
+                paddingRight={12}
+                onPressSettings={openShellAccount}
+                onConfirmSos={onSosHoldComplete}
+              />
+            ) : (
+              <BottomTabBar {...props} />
+            )}
           </View>
-          <View
-            style={[
-              styles.sosShellSlot,
-              {
-                paddingBottom: Math.max(props.insets.bottom, 10),
-                paddingRight: Math.max(props.insets.right, 8),
-              },
-            ]}
-            pointerEvents="box-none"
-          >
-            <VionaSosTabEndCap onConfirm={onSosHoldComplete} />
-          </View>
+          {vionaGlassBar ? null : (
+            <View
+              style={[
+                styles.accountLanguageShellSlot,
+                {
+                  paddingBottom: Math.max(props.insets.bottom, 10),
+                  paddingLeft: Math.max(props.insets.left, 8),
+                },
+              ]}
+              pointerEvents="box-none"
+              testID="viona-shell-account-language-bottom-slot"
+            >
+              <VionaShellAccountLanguageActions
+                layout="bottomChip"
+                showRolePicker={showRolePicker}
+                onPressAccount={openShellAccount}
+                onPressLanguage={openShellLanguage}
+                onPressRole={openShellRole}
+              />
+            </View>
+          )}
+          {vionaGlassBar ? null : (
+            <View
+              style={[
+                styles.sosShellSlot,
+                {
+                  paddingBottom: Math.max(props.insets.bottom, 10),
+                  paddingRight: Math.max(props.insets.right, 8),
+                },
+              ]}
+              pointerEvents="box-none"
+            >
+              <VionaSosTabEndCap onConfirm={onSosHoldComplete} />
+            </View>
+          )}
         </View>
       );
     },
@@ -465,6 +494,9 @@ export function MainTabNavigator(): ReactElement {
       openShellRole,
       showRolePicker,
       tabBarPosition,
+      b2cTravelPlatinum,
+      currentActiveRole,
+      width,
     ]
   );
 
@@ -890,6 +922,31 @@ const styles = StyleSheet.create({
     right: 0,
     bottom: 0,
     height: VIONA_WEB_BOTTOM_TAB_BAR_HEIGHT_PX,
+  },
+  tabBarGlass: { ...StyleSheet.absoluteFillObject },
+  tabBarSides: {
+    ...StyleSheet.absoluteFillObject,
+    borderLeftWidth: 1,
+    borderRightWidth: 1,
+    borderColor: 'rgba(0, 209, 255, 0.46)',
+    zIndex: 6,
+  },
+  tabBarTopGlow: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 2,
+    zIndex: 7,
+    ...(Platform.OS === 'web'
+      ? ({
+          backgroundImage:
+            'linear-gradient(90deg, transparent 0%, rgba(120,195,255,0.9) 50%, transparent 100%)',
+          boxShadow: '0 0 12px 2px rgba(120,195,255,0.6)',
+        } as ViewStyle)
+      : {
+          backgroundColor: 'rgba(120, 195, 255, 0.9)',
+        }),
   },
   nativeBottomShellHost: {
     position: 'relative',
