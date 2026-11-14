@@ -1,35 +1,45 @@
 # VIONA Universe Capability Map
 
+> **2026-11-14 correction:** per the canonical taxonomy in `VIONA_OPERATING_PROTOCOL.md`
+> §V2, `VIONA_CODEX_CANONICAL_ENTRYPOINT.md`, and the Toàn thư V5/BME encyclopedia, there
+> are **exactly six universes: Local, Travel, Academy, Business, Account, SOS**. Home/Hub
+> is the **orchestration layer**, not a seventh universe. The table below (written in
+> 2026-06-09, before Operating Protocol V2 was promoted) used to list Home, "B2B Wholesale
+> / E-shop Import", and "Admin / Evidence" as peer rows alongside the six universes — that
+> has been corrected below. This does not remove or gate any route/capability; it only
+> fixes which row each surface is filed under.
+
 ## Non-Removal Guard
 
 VIONA is a Global Vietnamese Companion OS and Super App Mini-App Platform. Routes and capabilities are not deleted just because they are not production-ready today.
 
 Rule: gate instead of delete. If a capability is incomplete, keep it mapped, label its readiness honestly, and block the unsafe live behavior until the required systems, owners, and runbooks exist.
 
-## Universe Map
+## Universe Map (the six canonical universes)
 
 | Universe | Current route/screen families to preserve | Capability classes | Primary risk flags |
 | --- | --- | --- | --- |
-| Home | `Tabs`, `TabHome`, `HomeScreen`, `LifeOSDashboard`, `DashboardB2CPreview`, `KetNoiYeuThuong` | Consumer UI, Account/profile, Docs/evidence/admin where previews are used | auth/session if profile-linked, payment-like if wallet/reward CTAs are present |
 | Local | `TabLocal`, `LocalUniverse`, `LocalUserRequestStatus`, `MerchantDetail`, `MerchantStorefront`, `LocalMerchantRequestInbox` | Consumer UI, Merchant/B2B, Booking/request, Account/profile | booking mutation, tenant/merchant, auth/session |
 | Travel | `TabTravel`, `TravelHub`, `TravelCompanion`, `VietnamHub`, `TourismCheckout`, `TourismBookingConfirmed`, `ViralWrap`, `TravelFlightSearch`, `FlightSearchAssistant`, `TravelHospitality`, `LocalFixer`, `LocalFixerCheckout`, `FixerEarnings` | Consumer UI, Travel utility, Booking/request, AI, Payment/wallet | payment-like, booking mutation, AI action, tenant/merchant |
 | Academy | `TabAi`, `AdultLearningHome`, `KidsLearningHome`, `VietKids`, `KidsLeaderboard`, `LiveAiTeacher` | Academy/learning, AI, Consumer UI | AI action, legal/medical only if credential or diagnosis claims appear |
-| Business | `TabMerchant`, `TabCatalog`, `TabOrders`, `TabEarnings`, `MerchantDashboard`, `B2BPaywall`, `InboundQueue`, `SmartCalendar`, `WalletB2B`, `AdBidding`, `PromoTools`, `B2BPromotionSettings`, `SponsoredAds`, `KOLPartnerDashboard`, `PartnerOnboarding`, broker tabs | Merchant/B2B, Payment/wallet, Booking/request, AI, Docs/evidence/admin | tenant/merchant, payment-like, booking mutation, AI action, auth/session |
+| Business | `TabMerchant`, `TabCatalog`, `TabOrders`, `TabEarnings`, `MerchantDashboard`, `B2BPaywall`, `InboundQueue`, `SmartCalendar`, `WalletB2B`, `AdBidding`, `PromoTools`, `B2BPromotionSettings`, `SponsoredAds`, `KOLPartnerDashboard`, `PartnerOnboarding`, broker tabs; **sub-area: B2B Wholesale / E-shop Import** (`Orders`, `InternalTradeMarket`, `TabCatalog`, `TabOrders`, merchant catalog/order-ticket surfaces, supplier trade planning docs); **sub-area: Admin/Evidence** (`TabCommandCenter`, `AdminDashboard`, `LocalOpsAudit`, `AdminProfitDashboard`, `SalesLeadCRM`, `AdContentFactory`, `OutboundCampaign`, `FacebookWarRoom`, `MarketingApproval`) | Merchant/B2B, Payment/wallet, Booking/request, AI, Docs/evidence/admin | tenant/merchant, payment-like, booking mutation, AI action, auth/session |
 | Account | `PersonalHub`, `Wallet`, `ReferralReward`, `CashOut`, `DailyReward`, `LoyaltyRewards`, `Vault`, `Login`, `Otp`, `RoleSelection`, `SetupProfile` | Account/profile, Payment/wallet, Consumer UI | payment-like, auth/session, legal/medical where vault/tax copy appears |
 | SOS | `EmergencySOS`, `SosPlusProfile`, `TravelSosHub`, global SOS header/modal entry | SOS/safety, Travel utility, Account/profile, AI when TTS/helper copy appears | emergency/SOS, legal/medical, AI action, auth/session |
-| B2B Wholesale / E-shop Import | `Orders`, `InternalTradeMarket`, `TabCatalog`, merchant catalog/order-ticket surfaces, supplier trade planning docs | Merchant/B2B, Booking/request, Payment/wallet, AI, Docs/evidence/admin | tenant/merchant, payment-like, booking mutation, AI action |
-| Admin / Evidence | `TabCommandCenter`, `AdminDashboard`, `LocalOpsAudit`, `AdminProfitDashboard`, `SalesLeadCRM`, `AdContentFactory`, `OutboundCampaign`, `FacebookWarRoom`, `MarketingApproval` | Docs/evidence/admin, Merchant/B2B, AI | tenant/merchant, AI action, payment-like if revenue dashboards are shown |
+
+## Home/Hub — orchestration layer, not a universe
+
+Home/Hub remains the Global Command Center and orchestration surface across the six canonical universes. Preserve `Tabs`, `TabHome`, `HomeScreen`, `LifeOSDashboard`, `DashboardB2CPreview`, and `KetNoiYeuThuong`. Its capabilities include Consumer UI, Account/profile, and Docs/evidence/admin where previews are used; risk flags remain auth/session when profile-linked and payment-like when wallet/reward CTAs are present.
 
 ## Capability Preservation Rules
 
-1. Home remains the Global Command Center and universe launcher. It must not be reduced to a demo splash page.
+1. Home/Hub remains the Global Command Center and orchestration layer, not a seventh universe. It must not be reduced to a demo splash page.
 2. Local remains a services and request universe. Broken visual polish is not permission to remove request, merchant, or storefront capability.
 3. Travel remains a travel companion universe. Payment or booking risk should be gated, not erased.
 4. Academy remains part of the global platform. AI teacher surfaces need AI safety labels before live claims.
-5. Business remains a merchant and B2B operating universe. Tenant, workspace, billing, catalog, and order flows require explicit gates.
+5. Business remains a merchant and B2B operating universe. B2B Wholesale / E-shop Import and Admin/Evidence are Business sub-areas, not peer universes. Tenant, workspace, billing, catalog, and order flows require explicit gates.
 6. Account remains the identity, profile, rewards, wallet-adjacent and personal hub layer. Wallet or cash-out truth must not be faked.
 7. SOS remains Global Lifeline. It must not imply dispatch, GPS sharing, authorities contacted, recording, or live emergency response without approved systems and consent.
-8. B2B Wholesale / E-shop Import remains strategic platform scope. Catalog import, supplier availability, stock, MOQ, pricing, delivery, settlement, refund, and compliance must not be invented.
+8. B2B Wholesale / E-shop Import remains strategic platform scope (a Business sub-area, not its own universe). Catalog import, supplier availability, stock, MOQ, pricing, delivery, settlement, refund, and compliance must not be invented.
 
 ## Production-Readiness Sequence
 
