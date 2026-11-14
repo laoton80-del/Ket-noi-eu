@@ -188,6 +188,7 @@ import {
   resolveHomePresentationTarget,
   resolveHomeRendererSelection,
 } from '../navigation/homePresentationTarget';
+import { setVionaDockStatus } from '../navigation/vionaDockStatus';
 import { MAIN_TAB, type RootStackParamList } from '../navigation/routes';
 import { normalizeCountryCodeOrSentinel } from '../config/countryPacks';
 import { vionaTokens } from '../design';
@@ -609,6 +610,15 @@ function VionaRec2HomeEntry() {
     () => localizedRegionName(user?.country, i18n.resolvedLanguage ?? i18n.language),
     [i18n.language, i18n.resolvedLanguage, user?.country]
   );
+  useEffect(() => {
+    setVionaDockStatus({
+      displayName: user?.name ?? null,
+      regionLabel,
+      previewMode: false,
+      weather: null,
+    });
+    return () => setVionaDockStatus(null);
+  }, [regionLabel, user?.name]);
 
   return (
     <VionaRec2HomeShell

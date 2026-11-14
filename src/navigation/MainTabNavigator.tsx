@@ -922,6 +922,8 @@ const styles = StyleSheet.create({
     right: 0,
     bottom: 0,
     height: VIONA_WEB_BOTTOM_TAB_BAR_HEIGHT_PX,
+    zIndex: 20,
+    overflow: 'visible',
   },
   tabBarGlass: { ...StyleSheet.absoluteFillObject },
   tabBarSides: {
