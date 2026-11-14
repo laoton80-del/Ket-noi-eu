@@ -188,6 +188,7 @@ import {
   resolveHomePresentationTarget,
   resolveHomeRendererSelection,
 } from '../navigation/homePresentationTarget';
+import { observeVionaDockPlaceWeather } from '../navigation/vionaDockObservation';
 import { setVionaDockStatus } from '../navigation/vionaDockStatus';
 import { MAIN_TAB, type RootStackParamList } from '../navigation/routes';
 import { normalizeCountryCodeOrSentinel } from '../config/countryPacks';
@@ -611,14 +612,26 @@ function VionaRec2HomeEntry() {
     [i18n.language, i18n.resolvedLanguage, user?.country]
   );
   useEffect(() => {
-    setVionaDockStatus({
-      displayName: user?.name ?? null,
-      regionLabel,
-      previewMode: false,
-      weather: null,
-    });
-    return () => setVionaDockStatus(null);
-  }, [regionLabel, user?.name]);
+    let cancelled = false;
+    const publish = (place: string | null, temperatureC: number | null) => {
+      if (cancelled) return;
+      setVionaDockStatus({
+        displayName: user?.name ?? null,
+        regionLabel: place,
+        previewMode: false,
+        weather: temperatureC == null ? null : { temperatureC },
+      });
+    };
+    publish(regionLabel, null);
+    const language = i18n.resolvedLanguage ?? i18n.language ?? 'en';
+    void observeVionaDockPlaceWeather(regionLabel, user?.country, language)
+      .then((observation) => publish(observation.place, observation.temperatureC))
+      .catch(() => publish(regionLabel, null));
+    return () => {
+      cancelled = true;
+      setVionaDockStatus(null);
+    };
+  }, [i18n.language, i18n.resolvedLanguage, regionLabel, user?.country, user?.name]);
 
   return (
     <VionaRec2HomeShell
