@@ -28,6 +28,10 @@ Readiness labels are internal production-readiness signals only:
 | Gated | Feature flag, workspace, role, or safety gate controls entry. |
 | Unknown | Static extraction could not prove the current readiness label. |
 
+**2026-11-14 correction:** there are exactly six universes per `VIONA_OPERATING_PROTOCOL.md`
+§V2 and the Toàn thư V5/BME encyclopedia. Home is the orchestration layer (not a universe);
+B2B Wholesale / E-shop Import is a Business sub-area (not its own universe).
+
 Universe labels follow the north-star platform shape:
 
 | Universe | Scope |

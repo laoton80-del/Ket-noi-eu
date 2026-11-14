@@ -37,11 +37,19 @@ const RISK_FLAG_RULES = [
   ['tenant/merchant', /\b(tenant|merchant|b2b|workspace|catalog|orders|inbox|supplier|wholesale|broker|kol|partner|storefront)\b/i],
 ];
 
+// NOTE (2026-11-14): per canonical taxonomy (VIONA_OPERATING_PROTOCOL.md V2,
+// VIONA_CODEX_CANONICAL_ENTRYPOINT.md, Toàn thư V5/BME) there are EXACTLY six
+// universes: Local, Travel, Academy, Business, Account, SOS. Home/Hub is the
+// orchestration layer, NOT a seventh universe, and wholesale/catalog-import
+// routes belong to Business (e.g. module BU-03/BU-06 in the 63-module
+// registry), not a separate universe-level bucket. The labels below are kept
+// distinct for route-classification signal, but are named so no summary line
+// can be misread as "N universes" when N > 6.
 const EXPLICIT_UNIVERSE_RULES = [
   ['SOS', /^(EmergencySOS|SosPlusProfile|TravelSosHub)$/],
-  ['B2B Wholesale / E-shop Import', /^(Orders|InternalTradeMarket|TabCatalog|TabOrders)$/],
+  ['Business · B2B Wholesale / E-shop Import', /^(Orders|InternalTradeMarket|TabCatalog|TabOrders)$/],
   ['Academy', /^(TabAi|AdultLearningHome|KidsLearningHome|VietKids|KidsLeaderboard|LiveAiTeacher|Academy)$/],
-  ['Home', /^(Tabs|TabHome|LifeOSDashboard|DashboardB2CPreview|KetNoiYeuThuong)$/],
+  ['Home (orchestration layer, not a universe)', /^(Tabs|TabHome|LifeOSDashboard|DashboardB2CPreview|KetNoiYeuThuong)$/],
   [
     'Travel',
     /^(TabTravel|TravelCompanion|TravelHub|VietnamHub|TourismCheckout|TourismBookingConfirmed|ViralWrap|TravelFlightSearch|TravelHospitality|FlightSearchAssistant|LocalFixer|LocalFixerCheckout|FixerEarnings)$/,
@@ -59,9 +67,9 @@ const EXPLICIT_UNIVERSE_RULES = [
 
 const UNIVERSE_RULES = [
   ['SOS', /\b(sos|emergency|lifeline)\b/i],
-  ['B2B Wholesale / E-shop Import', /\b(internaltrademarket|wholesale|e-shop|eshop|supplier|catalog import)\b/i],
+  ['Business · B2B Wholesale / E-shop Import', /\b(internaltrademarket|wholesale|e-shop|eshop|supplier|catalog import)\b/i],
   ['Academy', /\b(academy|learning|teacher|vietkids|kids|leaderboard|student|lesson)\b/i],
-  ['Home', /\b(tabs|tabhome|home|lifeos|dashboardb2cpreview|dashboard|ketnoiyeuthuong)\b/i],
+  ['Home (orchestration layer, not a universe)', /\b(tabs|tabhome|home|lifeos|dashboardb2cpreview|dashboard|ketnoiyeuthuong)\b/i],
   ['Business', /\b(b2b|merchant|broker|business|orders|catalog|earnings|radar|qr|commissions|inbound|trade|ad bidding|promo|sponsored|kol|partner|paywall|smartcalendar|walletb2b)\b/i],
   ['Travel', /\b(travel|tourism|vietnamhub|viralwrap|flight|hospitality|fixer|trip|embassy|tourist)\b/i],
   ['Local', /\b(local|merchantdetail|merchantstorefront|services|discover)\b/i],
@@ -626,7 +634,17 @@ function main() {
       return row;
     })
     .sort((a, b) => {
-      const order = ['Home', 'Local', 'Travel', 'Academy', 'Business', 'B2B Wholesale / E-shop Import', 'Account', 'SOS', 'Unknown'];
+      const order = [
+        'Local',
+        'Travel',
+        'Academy',
+        'Business',
+        'Business · B2B Wholesale / E-shop Import',
+        'Account',
+        'SOS',
+        'Home (orchestration layer, not a universe)',
+        'Unknown',
+      ];
       return order.indexOf(a.universe) - order.indexOf(b.universe) || a.route.localeCompare(b.route);
     });
 
@@ -647,8 +665,11 @@ function main() {
   lines.push('');
   lines.push('## Summary');
   lines.push('');
+  const CANONICAL_UNIVERSES = ['Local', 'Travel', 'Academy', 'Business', 'Account', 'SOS'];
   lines.push(`- Routes/screens found: ${inventory.length}`);
-  lines.push(`- Universes mapped: ${universeCounts.map(([name]) => name).join(', ')}`);
+  lines.push(`- Canonical universes (exactly 6, per Operating Protocol V2 / Toàn thư V5): ${CANONICAL_UNIVERSES.join(', ')}`);
+  lines.push(`- Other classification buckets (not universes — orchestration layer or a Business sub-area): ${universeCounts.map(([name]) => name).filter((name) => name !== 'Unknown' && !CANONICAL_UNIVERSES.includes(name)).join(', ') || 'none'}`);
+  lines.push(`- All buckets found by this run: ${universeCounts.map(([name]) => name).join(', ')}`);
   lines.push(`- Unknown/unclassified: ${unknowns.length}`);
   lines.push(`- High-risk capabilities: ${highRisk.length}`);
   lines.push(`- Component files with route references: ${componentRefs.length}`);
