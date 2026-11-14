@@ -1,4 +1,16 @@
 {
+  "universeLanding": {
+    "backHome": "Home",
+    "back": "Back",
+    "buildSection": "Launch modules",
+    "gatedSection": "Coming soon",
+    "comingSoon": "Coming soon",
+    "phase2": "The detailed screen is stage 2. This page has no live data and does not start a booking, payment, or emergency action.",
+    "required": "Required for this launch",
+    "evidence": "Included when evidence is ready",
+    "gatedHint": "Not open",
+    "missing": "This module is not in the launch manifest."
+  },
   "welcome_message": "Welcome to VIONA",
   "book_now": "Book now",
   "global_ready_tagline": "One app, every region",
@@ -1113,7 +1125,7 @@
         },
         "business": {
           "title": "Business",
-          "subtitle": "Merchant workspace access for eligible accounts only."
+          "subtitle": "Launch catalog for the Business universe. Merchant tools stay behind their own access."
         },
         "account": {
           "title": "Account",
@@ -1121,7 +1133,7 @@
         },
         "sos": {
           "title": "SOS",
-          "subtitle": "Open the existing safety guidance surface; no automatic call or dispatch."
+          "subtitle": "SOS universe catalog. The hold control on the navigation bar remains the existing safety guidance."
         }
       },
       "runtimeTruth": "RC2 Home is a local, feature-gated candidate. Notifications, live Viona requests, and inferred tasks are unavailable."

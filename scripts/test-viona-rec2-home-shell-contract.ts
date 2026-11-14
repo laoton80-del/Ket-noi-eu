@@ -701,12 +701,19 @@ assert('Local, Travel and Academy preserve the existing mini-app entry gates', [
   "openMiniApp('travel'",
   "openMiniApp('academy'",
 ].every((token) => rec2EntrySource.includes(token)));
-assert('Business route is guarded by live B2B access helper', rec2EntrySource.includes('if (!hasB2BWorkspaceAccess(user)) return;'));
-assert('SOS entry reuses the existing shell guidance callback', rec2EntrySource.includes('sos: homeCommand.triggerSafetyAssist'));
 assert(
-  'Account and language reuse existing shell commands behind the offline action policy',
-  rec2EntrySource.includes('account: homeCommand.openAccount') &&
-    rec2EntrySource.includes('? homeCommand.openLanguageSheet')
+  'Business home card opens the universe landing and does not switch the merchant role',
+  rec2EntrySource.includes("navigation.navigate('UniverseLanding', { universe: 'business' })") &&
+    !rec2EntrySource.includes('switchRole')
+);
+assert(
+  'Account and SOS home cards open their universe landings',
+  rec2EntrySource.includes("navigation.navigate('UniverseLanding', { universe: 'account' })") &&
+    rec2EntrySource.includes("navigation.navigate('UniverseLanding', { universe: 'sos' })")
+);
+assert(
+  'Language still reuses the existing shell command behind the offline action policy',
+  rec2EntrySource.includes('? homeCommand.openLanguageSheet')
 );
 assert('runtime Home shell does not accept task records', !shellSource.includes('tasks?:') && !shellSource.includes('tasks ='));
 assert('runtime Home shell does not accept Alfred fixture state', !shellSource.includes('simulatedAlfredFixture') && !alfredSource.includes('simulatedFixture'));

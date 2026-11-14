@@ -1,4 +1,16 @@
 {
+  "universeLanding": {
+    "backHome": "Về Home",
+    "back": "Quay lại",
+    "buildSection": "Module trong đợt mở",
+    "gatedSection": "Sắp ra mắt",
+    "comingSoon": "Sắp ra mắt",
+    "phase2": "Màn hình chi tiết thuộc giai đoạn 2. Trang này không có dữ liệu vận hành và không bắt đầu đặt chỗ, thanh toán hay cuộc gọi khẩn cấp.",
+    "required": "Bắt buộc cho đợt mở",
+    "evidence": "Mở khi đủ evidence",
+    "gatedHint": "Chưa mở",
+    "missing": "Module này không có trong manifest launch."
+  },
   "welcome_message": "Chào mừng đến VIONA",
   "book_now": "Đặt ngay",
   "global_ready_tagline": "Một ứng dụng, mọi khu vực",
@@ -1113,7 +1125,7 @@
         },
         "business": {
           "title": "Business",
-          "subtitle": "Workspace merchant chỉ dành cho tài khoản đủ điều kiện."
+          "subtitle": "Danh mục đợt mở của vũ trụ Business. Công cụ merchant vẫn nằm sau quyền riêng."
         },
         "account": {
           "title": "Account",
@@ -1121,7 +1133,7 @@
         },
         "sos": {
           "title": "SOS",
-          "subtitle": "Mở bề mặt hướng dẫn an toàn hiện có; không tự gọi hay điều phối cứu hộ."
+          "subtitle": "Danh mục vũ trụ SOS. Nút giữ trên thanh điều hướng vẫn là hướng dẫn an toàn hiện có."
         }
       },
       "runtimeTruth": "RC2 Home là ứng viên cục bộ có feature flag. Thông báo, yêu cầu Viona trực tiếp và tác vụ suy diễn đều chưa khả dụng."

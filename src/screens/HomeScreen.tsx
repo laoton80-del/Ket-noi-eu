@@ -201,7 +201,6 @@ import { FontFamily } from '../theme/typography';
 import { useFullscreenMode } from '../hooks/useFullscreenMode';
 import { useTranslation } from '../i18n';
 import { useUserStore } from '../store/userStore';
-import { hasB2BWorkspaceAccess } from '../utils/b2bAccess';
 import { localizedRegionName } from '../utils/localizedRegionName';
 import {
   isRec2ActionAllowed,
@@ -559,12 +558,10 @@ function VionaRec2HomeEntry() {
   const { user } = useAuth();
   const { i18n } = useTranslation();
   const featureFlags = useMemo(() => getFeatureFlags(), []);
-  const switchRole = useUserStore((state) => state.switchRole);
   const homeCommand = useHomeCommand();
   const reducedMotion = useFashionHomePrefersReducedMotion();
   const offlineBoundary = useRec2OfflineHomeBoundary();
-  const businessEligible =
-    offlineBoundary.remoteNavigationAllowed && hasB2BWorkspaceAccess(user);
+  const businessEligible = isRec2ActionAllowed(offlineBoundary, 'business');
 
   const openLocal = useCallback(() => {
     if (!isRec2ActionAllowed(offlineBoundary, 'local')) return;
@@ -585,10 +582,8 @@ function VionaRec2HomeEntry() {
 
   const openBusiness = useCallback(() => {
     if (!isRec2ActionAllowed(offlineBoundary, 'business')) return;
-    if (!hasB2BWorkspaceAccess(user)) return;
-    switchRole('B2B');
-    navigation.navigate('Tabs', { screen: MAIN_TAB.B2B.merchant });
-  }, [navigation, offlineBoundary, switchRole, user]);
+    navigation.navigate('UniverseLanding', { universe: 'business' });
+  }, [navigation, offlineBoundary]);
 
   const universeCallbacks = useMemo<VionaRec2UniverseCallbacks>(
     () => ({
@@ -598,17 +593,16 @@ function VionaRec2HomeEntry() {
       ...(businessEligible ? { business: openBusiness } : {}),
       ...(homeCommand && isRec2ActionAllowed(offlineBoundary, 'account')
         ? {
-            account: homeCommand.openAccount,
+            account: () => navigation.navigate('UniverseLanding', { universe: 'account' }),
           }
         : {}),
       ...(homeCommand && isRec2ActionAllowed(offlineBoundary, 'sos-guidance')
         ? {
-            // The shared shell callback opens the existing guidance sheet only.
-            sos: homeCommand.triggerSafetyAssist,
+            sos: () => navigation.navigate('UniverseLanding', { universe: 'sos' }),
           }
         : {}),
     }),
-    [businessEligible, homeCommand, offlineBoundary, openAcademy, openBusiness, openLocal, openTravel]
+    [businessEligible, homeCommand, navigation, offlineBoundary, openAcademy, openBusiness, openLocal, openTravel]
   );
 
   const regionLabel = useMemo(
@@ -759,7 +753,6 @@ function ReconstructionHomeScreen() {
 
   const isDesktopWeb = Platform.OS === 'web' && width > 768;
   const currentActiveRole = useUserStore((s) => s.currentActiveRole);
-  const switchRole = useUserStore((s) => s.switchRole);
   const focusedTabRoute = useNavigationState(readFocusedTabRouteFromRootState);
   const fashionHomeDesktopShellActive = useMemo(
     () =>
@@ -1380,14 +1373,8 @@ function ReconstructionHomeScreen() {
 
   const goUniverseBusiness = useCallback(() => {
     void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    if (hasB2BWorkspaceAccess(user)) {
-      switchRole('B2B');
-      navigation.navigate('Tabs', { screen: MAIN_TAB.B2B.merchant });
-      return;
-    }
-    /** Merchant operating hub first (pilot preview); upgrade remains on `B2BPaywall`. */
-    navigation.navigate('MerchantDashboard');
-  }, [navigation, switchRole, user]);
+    navigation.navigate('UniverseLanding', { universe: 'business' });
+  }, [navigation]);
 
   const homeCommand = useHomeCommand();
   const { isWeb: isWebFullscreen, isSupported: isFullscreenSupported, isFullscreen, toggleFullscreen } =

@@ -60,6 +60,10 @@ import { resolveRootStackRoute } from './src/navigation/AppNavigator';
 import { MainTabNavigator } from './src/navigation/MainTabNavigator';
 import type { RootStackParamList } from './src/navigation/routes';
 import { CaNhanScreen } from './src/screens/CaNhanScreen';
+import {
+  UniverseLandingRouteScreen,
+  UniverseModuleNoteScreen,
+} from './src/screens/universe/VionaUniverseLandingScreen';
 import { WalletScreen } from './src/screens/WalletScreen';
 import { LeonaCallScreen } from './src/screens/LeonaCallScreen';
 import { CallScreen } from './src/screens/comms/CallScreen';
@@ -663,6 +667,8 @@ function AppNavigationShell({
             <Stack.Group>
               <Stack.Screen name="Tabs" component={MainTabNavigator} />
               <Stack.Screen name="PersonalHub" component={CaNhanScreen} />
+              <Stack.Screen name="UniverseLanding" component={UniverseLandingRouteScreen} />
+              <Stack.Screen name="UniverseModuleNote" component={UniverseModuleNoteScreen} />
               <Stack.Screen name="LifeOSDashboard" component={LifeOSDashboard} />
               <Stack.Screen name="DashboardB2CPreview" component={DashboardB2CPreviewScreen} />
               {isReferenceLabsEnabled()

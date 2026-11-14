@@ -1,4 +1,16 @@
 {
+  "universeLanding": {
+    "backHome": "Home",
+    "back": "Back",
+    "buildSection": "Launch modules",
+    "gatedSection": "Coming soon",
+    "comingSoon": "Coming soon",
+    "phase2": "The detailed screen is stage 2. This page has no live data and does not start a booking, payment, or emergency action.",
+    "required": "Required for this launch",
+    "evidence": "Included when evidence is ready",
+    "gatedHint": "Not open",
+    "missing": "This module is not in the launch manifest."
+  },
   "welcome_message": "Willkommen bei VIONA",
   "book_now": "Jetzt buchen",
   "global_ready_tagline": "Eine App, jede Region",

@@ -59,9 +59,11 @@ import {
 } from '../app/bootstrap/rec2OfflineHomePolicy';
 
 import { HomeScreen } from '../screens/HomeScreen';
-import { AcademyScreen } from '../screens/AcademyScreen';
-import { LocalScreen } from '../screens/b2c/LocalScreen';
-import { TravelHubScreen } from '../screens/b2c/travel/TravelHubScreen';
+import {
+  AcademyUniverseLandingScreen,
+  LocalUniverseLandingScreen,
+  TravelUniverseLandingScreen,
+} from '../screens/universe/VionaUniverseLandingScreen';
 import { MerchantDashboardScreen } from '../screens/b2b/MerchantDashboardScreen';
 import { MerchantCatalogTabScreen } from '../screens/b2b/MerchantCatalogTabScreen';
 import { OrdersScreen } from '../screens/b2b/OrdersScreen';
@@ -743,21 +745,21 @@ export function MainTabNavigator(): ReactElement {
             {flags.localEnabled ? (
               <Tab.Screen
                 name={MAIN_TAB.B2C.local}
-                component={LocalScreen}
+                component={LocalUniverseLandingScreen}
                 options={{ title: t('home.tabLocal') }}
               />
             ) : null}
             {flags.travelLiteEnabled ? (
               <Tab.Screen
                 name={MAIN_TAB.B2C.travel}
-                component={TravelHubScreen}
+                component={TravelUniverseLandingScreen}
                 options={{ title: t('home.tabTravel') }}
               />
             ) : null}
             {flags.academyLiteEnabled ? (
               <Tab.Screen
                 name={MAIN_TAB.B2C.ai}
-                component={AcademyScreen}
+                component={AcademyUniverseLandingScreen}
                 options={{ title: t('home.tabAcademy') }}
                 listeners={{
                   tabPress: (e) => {

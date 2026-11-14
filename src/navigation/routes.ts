@@ -1,4 +1,5 @@
 import type { NavigatorScreenParams } from '@react-navigation/native';
+import type { VionaRec2UniverseId } from '../components/viona/home/vionaRec2HomeContract';
 import type { InterpreterScenario } from '../config/aiPrompts';
 import type { AiPersonaId } from '../config/aiPersonaCapabilities';
 import type { RedirectTarget } from '../context/AuthContext';
@@ -69,6 +70,10 @@ export type RootStackParamList = {
   Tabs: NavigatorScreenParams<RootTabParamList> | undefined;
   /** Full account hub (wallet, language, legal) — opened from Profile Switcher / merchant-broker headers. */
   PersonalHub: undefined;
+  /** Stage-1 universe shell. Home remains the switcher; this is not a seventh universe. */
+  UniverseLanding: { universe: VionaRec2UniverseId };
+  /** Stage-1 note for one BUILD module. No live data and no module interior. */
+  UniverseModuleNote: { moduleId: string };
   LifeOSDashboard: undefined;
   /** AF.UI.2 — isolated dashboard grid review (`/dashboard-preview`). */
   DashboardB2CPreview: undefined;
