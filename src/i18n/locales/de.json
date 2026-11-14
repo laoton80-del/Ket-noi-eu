@@ -790,6 +790,19 @@
     "flightSearchA11y": "Flüge suchen"
   },
   "home": {
+    "rec2": {
+      "assistantChips": {
+        "news": "Die Nachrichten von heute zusammenfassen",
+        "translate": "Eine Textstelle übersetzen",
+        "food": "Vietnamesisches Essen in der Nähe",
+        "email": "Eine E-Mail für mich entwerfen",
+        "concept": "Einen Begriff erklären",
+        "practice": "Ein Gespräch üben"
+      },
+      "sidebar": {
+        "moreFeatures": "Weitere Funktionen"
+      }
+    },
     "tabHub": "Hub",
     "tabLocal": "Local",
     "tabTravel": "Travel Lite",
@@ -990,5 +1003,10 @@
     "safetyBannerTitle": "Academy Lite · Demo-Sitzung",
     "noHighStakes": "Nicht für Prüfungen, Einwanderung oder andere Entscheidungen mit hohen Einsätzen nutzen.",
     "upgradePanelBody": "Abos und Wallet-Checkout sind in diesem Build nicht aktiv. Nutze Demo-Sitzungen nur zum Üben."
+  },
+  "intro": {
+    "taglineLine1": "VÌ NGƯỜI VIỆT",
+    "taglineLine2": "VÌ MỘT THẾ GIỚI TỐT ĐẸP HƠN",
+    "taglineConnected": "PEOPLE · PLACES · OPPORTUNITIES · ALWAYS CONNECTED"
   }
 }

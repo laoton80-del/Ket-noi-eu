@@ -699,6 +699,19 @@
     "checkoutDemo": "注目の宿を予約 · VIO Creditsで支払う"
   },
   "home": {
+    "rec2": {
+      "assistantChips": {
+        "news": "今日のニュースを要約",
+        "translate": "文章を翻訳",
+        "food": "近くのベトナム料理",
+        "email": "メールの下書きを作成",
+        "concept": "概念を説明",
+        "practice": "会話を練習"
+      },
+      "sidebar": {
+        "moreFeatures": "その他の機能"
+      }
+    },
     "tabHub": "ハブ",
     "tabLocal": "ローカル",
     "tabTravel": "Travel Lite",
@@ -753,5 +766,10 @@
       "headline": "あらゆる人生の方向への、あなたのグローバルコンパニオン。",
       "subtitle": "ローカル生活、旅行支援、学習、AIアシスト — 世界中のベトナム人のために。"
     }
+  },
+  "intro": {
+    "taglineLine1": "VÌ NGƯỜI VIỆT",
+    "taglineLine2": "VÌ MỘT THẾ GIỚI TỐT ĐẸP HƠN",
+    "taglineConnected": "PEOPLE · PLACES · OPPORTUNITIES · ALWAYS CONNECTED"
   }
 }

@@ -699,6 +699,19 @@
     "checkoutDemo": "Réserver un séjour en vedette · payer en VIO Credits"
   },
   "home": {
+    "rec2": {
+      "assistantChips": {
+        "news": "Résumer l'actualité du jour",
+        "translate": "Traduire un passage",
+        "food": "Cuisine vietnamienne à proximité",
+        "email": "Rédiger un e-mail pour moi",
+        "concept": "Expliquer un concept",
+        "practice": "Pratiquer une conversation"
+      },
+      "sidebar": {
+        "moreFeatures": "Plus de fonctionnalités"
+      }
+    },
     "tabHub": "Hub",
     "tabLocal": "Local",
     "tabTravel": "Travel Lite",
@@ -753,5 +766,10 @@
       "headline": "Votre compagnon mondial, pour chaque direction de vie.",
       "subtitle": "Vie locale, aide voyage, apprentissage et assistance IA — conçu pour les Vietnamiens dans le monde."
     }
+  },
+  "intro": {
+    "taglineLine1": "VÌ NGƯỜI VIỆT",
+    "taglineLine2": "VÌ MỘT THẾ GIỚI TỐT ĐẸP HƠN",
+    "taglineConnected": "PEOPLE · PLACES · OPPORTUNITIES · ALWAYS CONNECTED"
   }
 }

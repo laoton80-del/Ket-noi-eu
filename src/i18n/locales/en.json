@@ -1090,9 +1090,18 @@
         "account": "Check account",
         "sos": "Emergency SOS"
       },
+      "assistantChips": {
+        "news": "Summarize today's news",
+        "translate": "Translate a passage",
+        "food": "Vietnamese food nearby",
+        "email": "Draft an email for me",
+        "concept": "Explain a concept",
+        "practice": "Practice a conversation"
+      },
       "companionChat": "Chat with Viona",
       "sidebar": {
         "home": "Home",
+        "moreFeatures": "More features",
         "messages": "Messages",
         "calendar": "My calendar",
         "apps": "Apps",
@@ -2376,5 +2385,10 @@
       "change": "Change",
       "followDevice": "Auto (device + profile)"
     }
+  },
+  "intro": {
+    "taglineLine1": "VÌ NGƯỜI VIỆT",
+    "taglineLine2": "VÌ MỘT THẾ GIỚI TỐT ĐẸP HƠN",
+    "taglineConnected": "PEOPLE · PLACES · OPPORTUNITIES · ALWAYS CONNECTED"
   }
 }

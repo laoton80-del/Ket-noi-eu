@@ -790,6 +790,19 @@
     "flightSearchA11y": "Letenky"
   },
   "home": {
+    "rec2": {
+      "assistantChips": {
+        "news": "Shrnutí dnešních zpráv",
+        "translate": "Přeložit úryvek",
+        "food": "Vietnamské jídlo poblíž",
+        "email": "Napsat e-mail za mě",
+        "concept": "Vysvětlit pojem",
+        "practice": "Procvičit konverzaci"
+      },
+      "sidebar": {
+        "moreFeatures": "Další funkce"
+      }
+    },
     "tabHub": "Hub",
     "tabLocal": "Místní",
     "tabTravel": "Travel Lite",
@@ -990,5 +1003,10 @@
     "safetyBannerTitle": "Academy Lite · Demo relace",
     "noHighStakes": "Nepoužívejte pro zkoušky, imigraci ani jiná rozhodnutí s vysokými sázkami.",
     "upgradePanelBody": "Předplatné a platba přes peněženku v této verzi nejsou aktivní. Používejte demo relace jen k procvičování."
+  },
+  "intro": {
+    "taglineLine1": "VÌ NGƯỜI VIỆT",
+    "taglineLine2": "VÌ MỘT THẾ GIỚI TỐT ĐẸP HƠN",
+    "taglineConnected": "PEOPLE · PLACES · OPPORTUNITIES · ALWAYS CONNECTED"
   }
 }

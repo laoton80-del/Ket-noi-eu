@@ -699,6 +699,19 @@
     "checkoutDemo": "추천 숙소 요청 미리보기 · VIO Credits"
   },
   "home": {
+    "rec2": {
+      "assistantChips": {
+        "news": "오늘 뉴스 요약",
+        "translate": "문장 번역",
+        "food": "근처 베트남 음식",
+        "email": "이메일 초안 작성",
+        "concept": "개념 설명",
+        "practice": "대화 연습"
+      },
+      "sidebar": {
+        "moreFeatures": "다른 기능"
+      }
+    },
     "tabHub": "허브",
     "tabLocal": "로컬",
     "tabTravel": "Travel Lite",
@@ -753,5 +766,10 @@
       "headline": "삶의 모든 방향을 위한 글로벌 동반.",
       "subtitle": "로컬 생활, 여행 지원, 학습, AI 지원 — 전 세계 베트남인을 위해."
     }
+  },
+  "intro": {
+    "taglineLine1": "VÌ NGƯỜI VIỆT",
+    "taglineLine2": "VÌ MỘT THẾ GIỚI TỐT ĐẸP HƠN",
+    "taglineConnected": "PEOPLE · PLACES · OPPORTUNITIES · ALWAYS CONNECTED"
   }
 }

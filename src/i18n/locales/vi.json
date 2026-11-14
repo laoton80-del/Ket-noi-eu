@@ -1090,9 +1090,18 @@
         "account": "Kiểm tra tài khoản",
         "sos": "SOS khẩn cấp"
       },
+      "assistantChips": {
+        "news": "Tóm tắt tin tức hôm nay",
+        "translate": "Dịch một đoạn văn",
+        "food": "Món Việt gần đây",
+        "email": "Soạn email giúp tôi",
+        "concept": "Giải thích một khái niệm",
+        "practice": "Luyện hội thoại"
+      },
       "companionChat": "Trò chuyện với Viona",
       "sidebar": {
         "home": "Home",
+        "moreFeatures": "Tính năng khác",
         "messages": "Tin nhắn",
         "calendar": "Lịch của tôi",
         "apps": "Ứng dụng",
@@ -2376,5 +2385,10 @@
       "change": "Đổi",
       "followDevice": "Tự động (máy + hồ sơ)"
     }
+  },
+  "intro": {
+    "taglineLine1": "VÌ NGƯỜI VIỆT",
+    "taglineLine2": "VÌ MỘT THẾ GIỚI TỐT ĐẸP HƠN",
+    "taglineConnected": "PEOPLE · PLACES · OPPORTUNITIES · ALWAYS CONNECTED"
   }
 }
