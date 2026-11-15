@@ -71,6 +71,15 @@ export function VionaHomeTopBar({
   const [now, setNow] = useState(() => new Date());
   const [searchFocused, setSearchFocused] = useState(false);
   useEffect(() => {
+    if (Platform.OS !== 'web' || typeof document === 'undefined') return;
+    const id = 'viona-home-search-focus';
+    if (document.getElementById(id)) return;
+    const style = document.createElement('style');
+    style.id = id;
+    style.textContent = `[data-testid="viona-home-search"]:focus-within{border-color:${vionaCinematicTokens.color.accentGold} !important;}`;
+    document.head.appendChild(style);
+  }, []);
+  useEffect(() => {
     const timer = setInterval(() => setNow(new Date()), 30000);
     return () => clearInterval(timer);
   }, []);
@@ -126,7 +135,10 @@ export function VionaHomeTopBar({
           ) : null}
         </View>
       )}
-      <View style={[styles.search, width < 768 && styles.searchNarrow, searchFocused && styles.searchFocused]}>
+      <View
+        testID="viona-home-search"
+        style={[styles.search, width < 768 && styles.searchNarrow, searchFocused && styles.searchFocused]}
+      >
         <Ionicons name="search-outline" size={16} color={searchFocused ? vionaCinematicTokens.color.accentGold : vionaCinematicTokens.color.muted} />
         <TextInput
           accessibilityLabel={t('home.rec2.searchPlaceholder')}
