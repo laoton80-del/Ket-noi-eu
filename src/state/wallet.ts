@@ -70,7 +70,7 @@ function persistWalletState() {
   void AsyncStorage.setItem(WALLET_STORAGE_KEY, JSON.stringify(walletState));
 }
 
-async function callWalletOps<T = unknown>(payload: Record<string, unknown>): Promise<T> {
+export async function callWalletOps<T = unknown>(payload: Record<string, unknown>): Promise<T> {
   if (!BACKEND_API_BASE) throw new Error('backend_api_base_missing');
   const token = await getWalletIdToken();
   if (!token) throw new Error('wallet_auth_token_missing');
@@ -152,18 +152,23 @@ export async function syncWalletFromServer(): Promise<void> {
 
 export async function reserveAndCommitCredits(
   amount: number,
-  idempotencyKey: string
-): Promise<{ ok: boolean }> {
+  idempotencyKey: string,
+  options?: Readonly<{ purpose: 'live_interpreter' }>
+): Promise<{ ok: boolean; interpreterHoldReceipt?: string }> {
   try {
-    const reserve = await callWalletOps<{ ok: boolean }>({ op: 'reserve', amount, idempotencyKey });
+    const reserve = await callWalletOps<{ ok: boolean }>({
+      op: 'reserve', amount, idempotencyKey,
+      ...(options?.purpose ? { purpose: options.purpose } : {}),
+    });
     if (!reserve.ok) return { ok: false };
-    const commit = await callWalletOps<{ ok: boolean }>({ op: 'commit', idempotencyKey });
+    const commit = await callWalletOps<{ ok: boolean; interpreterHoldReceipt?: string }>({ op: 'commit', idempotencyKey });
     if (!commit.ok) {
       await callWalletOps({ op: 'rollback', idempotencyKey });
       return { ok: false };
     }
+    if (options?.purpose === 'live_interpreter' && !commit.interpreterHoldReceipt) return { ok: false };
     await syncWalletFromServer();
-    return { ok: true };
+    return { ok: true, ...(commit.interpreterHoldReceipt ? { interpreterHoldReceipt: commit.interpreterHoldReceipt } : {}) };
   } catch {
     return { ok: false };
   }
@@ -175,6 +180,26 @@ export async function rollbackReservedCredits(idempotencyKey: string): Promise<v
     await syncWalletFromServer();
   } catch {
     // ignore
+  }
+}
+
+/** Refund a committed hold once, for an explicitly compensated first-turn failure. */
+export async function refundCommittedHoldCredits(idempotencyKey: string, interpreterFailureProof: string): Promise<boolean> {
+  try {
+    if (!interpreterFailureProof) return false;
+    try {
+      await callWalletOps<{ ok: boolean }>({
+        op: 'recordInterpreterProviderFailure', idempotencyKey, interpreterFailureProof,
+      });
+    } catch {
+      // Refund still requires the server-owned verified failure record; this also supports retry after a lost response.
+    }
+    const out = await callWalletOps<{ ok: boolean }>({ op: 'refundCommittedHold', idempotencyKey });
+    if (!out.ok) return false;
+    await syncWalletFromServer();
+    return true;
+  } catch {
+    return false;
   }
 }
 
@@ -204,11 +229,16 @@ export async function chargeTrustedService(params: {
 }
 
 /** Grant VIG Token only once per immutable payment event id (server ledger). */
-export async function topupCreditsServer(amount: number, paymentEventId: string): Promise<{ ok: boolean }> {
-  const pei = paymentEventId.trim();
-  if (!pei) return { ok: false };
+export async function topupCreditsServer(packId: string, idempotencyKey: string): Promise<{ ok: boolean }> {
+  const safePackId = packId.trim();
+  const safeIdempotencyKey = idempotencyKey.trim();
+  if (!safePackId || !safeIdempotencyKey) return { ok: false };
   try {
-    const out = await callWalletOps<{ ok: boolean }>({ op: 'topup', amount, paymentEventId: pei });
+    const out = await callWalletOps<{ ok: boolean }>({
+      op: 'topup',
+      packId: safePackId,
+      idempotencyKey: safeIdempotencyKey,
+    });
     if (!out.ok) return { ok: false };
     await syncWalletFromServer();
     return { ok: true };

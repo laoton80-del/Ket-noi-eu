@@ -27,6 +27,13 @@ export { LlmRouterTaskType as AIRouterTaskType };
 export const MODEL_TIER_FAST = 'gpt-4o-mini' as const;
 export const MODEL_TIER_FULL = 'gpt-4o' as const;
 const DEFAULT_VISION_IMAGE_INPUT_TOKENS_PER_IMAGE = 1700n;
+const routedProviderHttpErrors = new WeakMap<object, number>();
+
+/** Returns a status only for errors that this router caught directly from its provider SDK call. */
+export function routedProviderHttpStatus(error: unknown): number | null {
+  if (typeof error !== 'object' || error === null) return null;
+  return routedProviderHttpErrors.get(error) ?? null;
+}
 
 /**
  * Routing rules:
@@ -438,6 +445,8 @@ export async function createRoutedChatCompletion(
     );
   } catch (error) {
     if (isClearProviderFourXx(error)) {
+      const providerStatus = (error as Readonly<{ status: number }>).status;
+      if (typeof error === 'object' && error !== null) routedProviderHttpErrors.set(error, providerStatus);
       await governor.release({ operationId: reservation.operation.id, reason: 'provider_http_4xx' });
     } else {
       await governor.markOutcomeUnknown(reservation.operation.id);

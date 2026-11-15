@@ -261,7 +261,7 @@ export function WalletTopUpScreen() {
         senderPhone,
         recipientPhone: recipient,
         amountVig: amount,
-        idempotencyKey: `p2p-${senderPhone}-${Date.now()}`,
+        idempotencyKey: `p2p-${senderPhone}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
       });
       if (!result.ok) {
         Alert.alert('Không thể chuyển VIO Credits', result.messageVi);
@@ -482,7 +482,7 @@ export function WalletTopUpScreen() {
         Alert.alert(w.paymentMissingIdTitle, w.paymentMissingIdBody);
         return;
       }
-      const topup = await topupCreditsServer(checkoutPack.turns, paymentEventId);
+      const topup = await topupCreditsServer(walletPackageId, paymentEventId);
       logPaymentPilotStage('topup_result', {
         walletPackageId,
         commercialCountryCode: commercialCtx.countryCode,

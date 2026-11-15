@@ -195,7 +195,7 @@ async function main(): Promise<void> {
       'functions/src/b2b/voice/processVoiceOrchestrationRequest.ts': 'D3003D9637B3F7DD149D0AA4B480B63E2685482AA4ACFB6872F980519F6582A1',
       'src/services/voice/resolveVoicePersona.ts': '85985C17CF90F9CA7C9C4F0C0B50E661E0BFEB4CD880F749E5731A3DB7B162CA',
       // updated after functions/lib rebuild d2223d8
-      'functions/lib/index.js': '61396AE622882D6AF3039C9FF6FBB1E3776383D9301919D46EA70347087E3DE0',
+      'functions/lib/index.js': '9EA6EF839BF265B2F7205A5DE4914D043A8BBBDA88D44A21C2096A4A0CFE0967',
     };
     for (const [file, digest] of Object.entries(expected)) {
       const bytes = readFileSync(resolve(root, file));

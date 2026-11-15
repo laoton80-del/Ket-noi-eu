@@ -16,15 +16,21 @@ import { mergeTrustBackendHeaders } from '../utils/trustBackendHeaders';
 import { isDemoSandboxActive, mockOpenAiUserVisibleReply } from './ux/DemoSandbox';
 import { checkAndConsumeQuota, QuotaExceededError } from './ai/AIQuotaManager';
 import { AiAuthRequiredError, restApiFetchJson } from './apiClient';
+import { InterpreterProviderFailureError } from './ai/interpreterProviderFailureError';
 
 function throwAiProxyHttpError(res: Response, bodyText: string, label: string): never {
   let code = `${label}_${res.status}`;
+  let interpreterFailureProof: string | null = null;
   try {
-    const j = JSON.parse(bodyText) as { error?: string };
+    const j = JSON.parse(bodyText) as { error?: string; interpreterFailureProof?: unknown };
     if (typeof j.error === 'string') code = j.error;
+    if (typeof j.interpreterFailureProof === 'string' && j.interpreterFailureProof.length > 0) {
+      interpreterFailureProof = j.interpreterFailureProof;
+    }
   } catch {
     /* non-json */
   }
+  if (interpreterFailureProof) throw new InterpreterProviderFailureError(interpreterFailureProof);
   if (__DEV__) {
     devWarn('aiProxy', 'ai_proxy_http_error', { status: res.status, error: code, label });
   }
@@ -93,7 +99,10 @@ async function openAIRequest<T>({ path, idempotencyKey, method = 'POST', headers
     },
     timeoutMs: 30_000,
   });
-  if (!result.ok) throw new Error(result.code || result.error || `openai_proxy_${result.status}`);
+  if (!result.ok) {
+    if (result.interpreterFailureProof) throw new InterpreterProviderFailureError(result.interpreterFailureProof);
+    throw new Error(result.code || result.error || `openai_proxy_${result.status}`);
+  }
   return result.data;
 }
 
@@ -105,7 +114,7 @@ async function withOneRetry<T>(fn: () => Promise<T>): Promise<T> {
   try {
     return await fn();
   } catch (error) {
-    if (error instanceof AiAuthRequiredError) throw error;
+    if (error instanceof AiAuthRequiredError || error instanceof InterpreterProviderFailureError) throw error;
     await sleep(RETRY_DELAY_MS);
     return fn();
   }
@@ -502,7 +511,10 @@ export async function analyzeKidsHomeworkWithAI(
   }
 }
 
-export async function transcribeAudio(audioUri: string): Promise<string> {
+export async function transcribeAudio(audioUri: string, options?: {
+  interpreterHoldKey?: string;
+  interpreterHoldReceipt?: string;
+}): Promise<string> {
   const mime = Platform.OS === 'ios' ? 'audio/m4a' : 'audio/mp4';
   if (!BACKEND_API_BASE) throw new Error('backend_api_base_missing');
   const base64Audio = await FileSystem.readAsStringAsync(audioUri, { encoding: FileSystem.EncodingType.Base64 });
@@ -510,7 +522,13 @@ export async function transcribeAudio(audioUri: string): Promise<string> {
     const res = await fetch(`${BACKEND_API_BASE}/aiProxy`, {
       method: 'POST',
       headers: await backendAiHeaders(),
-      body: JSON.stringify({ op: 'stt', base64Audio, mime }),
+      body: JSON.stringify({
+        op: 'stt', base64Audio, mime,
+        ...(options?.interpreterHoldKey && options.interpreterHoldReceipt ? {
+          interpreterHoldKey: options.interpreterHoldKey,
+          interpreterHoldReceipt: options.interpreterHoldReceipt,
+        } : {}),
+      }),
     });
     const sttText = await res.text();
     if (!res.ok) throwAiProxyHttpError(res, sttText, 'openai_stt');
@@ -532,6 +550,8 @@ export async function getChatCompletion(
     serviceContext?: 'call' | 'interpreter' | 'vault' | 'lifeos' | 'emergency' | 'learning';
     emergencyMode?: boolean;
     activeScenario?: LegalScenario;
+    interpreterHoldKey?: string;
+    interpreterHoldReceipt?: string;
   }
 ): Promise<string> {
   const authSnapshot = await readAuthSnapshot();
@@ -579,7 +599,13 @@ export async function getChatCompletion(
     }>({
       path: '/chat/completions',
       idempotencyKey,
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        ...(options?.serviceContext === 'interpreter' && options.interpreterHoldKey && options.interpreterHoldReceipt ? {
+          'X-Viona-Interpreter-Hold-Key': options.interpreterHoldKey,
+          'X-Viona-Interpreter-Hold-Receipt': options.interpreterHoldReceipt,
+        } : {}),
+      },
       body: JSON.stringify({
         model: 'gpt-4o-mini',
         temperature: 0.6,

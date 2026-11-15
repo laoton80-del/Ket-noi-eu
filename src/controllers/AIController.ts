@@ -10,8 +10,9 @@ import {
 } from '../domain/legalScanPricing';
 import { getPrisma } from '../lib/prisma';
 import { AIGatewayInsufficientVigError, assertMinimumSpendableVig } from '../services/ai/AIGateway';
-import { createRoutedChatCompletion } from '../services/ai/AIRouterService';
+import { createRoutedChatCompletion, routedProviderHttpStatus } from '../services/ai/AIRouterService';
 import { LlmProviderAdmissionDeniedError } from '../services/ai/llmProviderAdmissionGate';
+import { createInterpreterProviderFailureProof, isDefinitiveInterpreterProviderStatus, verifyInterpreterHoldReceipt } from '../services/ai/interpreterRefundProof';
 import { translateTravelPhraseToVietnamese } from '../services/ai/TranslationService';
 import { jsonFail, jsonOk } from '../utils/apiEnvelope';
 import { logSafeError } from '../utils/safeLogError';
@@ -303,6 +304,7 @@ function parseChatCompletionMessages(body: unknown): ChatCompletionMessageParam[
  * Authenticated OpenAI chat proxy for mobile `AIEngine` — **no** client-side API keys.
  */
 export async function postChatCompletion(req: Request, res: Response): Promise<void> {
+  let validInterpreterReceipt: string | null = null;
   try {
     const userId = readAuthUserId(req);
     if (!userId) {
@@ -325,6 +327,14 @@ export async function postChatCompletion(req: Request, res: Response): Promise<v
         return;
       }
     }
+    const rawInterpreterHoldKey = typeof req.get === 'function' ? req.get('X-Viona-Interpreter-Hold-Key') : undefined;
+    const rawInterpreterHoldReceipt = typeof req.get === 'function' ? req.get('X-Viona-Interpreter-Hold-Receipt') : undefined;
+    const interpreterHoldKey = rawInterpreterHoldKey?.trim() ?? '';
+    const interpreterHoldReceipt = rawInterpreterHoldReceipt?.trim() ?? '';
+    validInterpreterReceipt = interpreterHoldKey && interpreterHoldReceipt &&
+      verifyInterpreterHoldReceipt(interpreterHoldReceipt, { subjectId: userId, holdKey: interpreterHoldKey })
+      ? interpreterHoldReceipt
+      : null;
 
     const bodyObj = typeof req.body === 'object' && req.body !== null ? (req.body as Record<string, unknown>) : {};
     const temperatureRaw = bodyObj.temperature;
@@ -359,6 +369,19 @@ export async function postChatCompletion(req: Request, res: Response): Promise<v
     if (msg.includes('OPENAI_API_KEY')) {
       jsonFail(res, 'AI chat service unavailable', 503);
       return;
+    }
+    const providerStatus = routedProviderHttpStatus(e);
+    if (validInterpreterReceipt && providerStatus !== null && isDefinitiveInterpreterProviderStatus(providerStatus)) {
+      const interpreterFailureProof = createInterpreterProviderFailureProof(validInterpreterReceipt, providerStatus, 'express_chat');
+      if (interpreterFailureProof) {
+        res.status(502).json({
+          success: false,
+          error: 'AI provider request failed',
+          code: 'AI_PROVIDER_FAILED',
+          interpreterFailureProof,
+        });
+        return;
+      }
     }
     logSafeError('[AIController] postChatCompletion', e, { code: 'AI_CHAT_UNEXPECTED' });
     jsonFail(res, 'Unexpected error', 500);

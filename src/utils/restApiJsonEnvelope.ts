@@ -7,6 +7,7 @@ export type RestApiJsonFailure = Readonly<{
   success: false;
   error: string;
   code?: string;
+  interpreterFailureProof?: string;
 }>;
 export type RestApiJsonEnvelope<T> = RestApiJsonSuccess<T> | RestApiJsonFailure;
 
@@ -20,14 +21,19 @@ export function parseRestApiJsonEnvelope<T>(raw: string): RestApiJsonEnvelope<T>
     }
     if (success === false && typeof (v as { error?: unknown }).error === 'string') {
       const codeRaw = (v as { code?: unknown }).code;
+      const interpreterFailureProof = (v as { interpreterFailureProof?: unknown }).interpreterFailureProof;
+      const extra = typeof interpreterFailureProof === 'string' && interpreterFailureProof.length > 0
+        ? { interpreterFailureProof }
+        : {};
       if (typeof codeRaw === 'string' && codeRaw.length > 0) {
         return {
           success: false,
           error: (v as { error: string }).error,
           code: codeRaw,
+          ...extra,
         };
       }
-      return { success: false, error: (v as { error: string }).error };
+      return { success: false, error: (v as { error: string }).error, ...extra };
     }
     return null;
   } catch {

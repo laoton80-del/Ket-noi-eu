@@ -17,6 +17,8 @@ export type ApiRequestResult<T> =
       error: string;
       /** Optional machine failure code when the server envelope includes an allowlisted `code`. */
       code?: string;
+      /** Opaque server-signed evidence; walletOps verifies it before any interpreter refund. */
+      interpreterFailureProof?: string;
       unreachable?: boolean;
     }>;
 
@@ -252,6 +254,9 @@ export async function restApiFetchJson<T>(
       error: parsed.error,
       ...(typeof parsed.code === 'string' && parsed.code.length > 0
         ? { code: parsed.code }
+        : {}),
+      ...(typeof parsed.interpreterFailureProof === 'string' && parsed.interpreterFailureProof.length > 0
+        ? { interpreterFailureProof: parsed.interpreterFailureProof }
         : {}),
     };
   }

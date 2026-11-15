@@ -521,8 +521,14 @@ function controllerHarness(options: Readonly<{ routerError?: Error; translationE
           if (options.routerError) throw options.routerError;
           return completion;
         },
+        routedProviderHttpStatus: () => null,
       },
       '../services/ai/llmProviderAdmissionGate': { LlmProviderAdmissionDeniedError: FakeAdmissionDeniedError },
+      '../services/ai/interpreterRefundProof': {
+        createInterpreterProviderFailureProof: () => null,
+        isDefinitiveInterpreterProviderStatus: () => false,
+        verifyInterpreterHoldReceipt: () => null,
+      },
       '../services/ai/TranslationService': {
         translateTravelPhraseToVietnamese: async () => {
           if (options.translationError) throw options.translationError;
@@ -1602,6 +1608,7 @@ async function main(): Promise<void> {
     const failure = Object.assign(new Error('synthetic 429'), { status: 429 });
     const h = providerHarness({ providerFailure: failure });
     await assert.rejects(h.router.createRoutedChatCompletion(routedInput()), (error) => error === failure);
+    assert.equal(h.router.routedProviderHttpStatus(failure), 429, 'only the provider SDK error is marked for the authenticated controller');
     assert.equal(h.calls.markDispatching, 1);
     assert.equal(h.calls.release, 1);
     assert.equal(h.calls.markOutcomeUnknown, 0);
@@ -1617,6 +1624,7 @@ async function main(): Promise<void> {
       const failure = Object.assign(new Error(`synthetic ${status}`), { status });
       const routerHarness = providerHarness({ providerFailure: failure });
       await assert.rejects(routerHarness.router.createRoutedChatCompletion(routedInput()), (error) => error === failure);
+      assert.equal(routerHarness.router.routedProviderHttpStatus(failure), null, 'ambiguous 408/409 responses never authorize a refund');
       assert.equal(routerHarness.calls.release, 0);
       assert.equal(routerHarness.calls.markOutcomeUnknown, 1);
 

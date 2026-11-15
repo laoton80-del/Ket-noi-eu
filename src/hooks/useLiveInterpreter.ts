@@ -12,12 +12,13 @@ import {
   runInterpreterTurn,
   type LiveInterpreterSessionSnapshot,
 } from '../services/liveInterpreterService';
-import { getWalletState, reserveAndCommitCredits, rollbackReservedCredits, syncWalletFromServer } from '../state/wallet';
+import { getWalletState, refundCommittedHoldCredits, reserveAndCommitCredits, syncWalletFromServer } from '../state/wallet';
 import type { SellCTA } from '../services/selling/sellingTypes';
 import { useAuth } from '../context/AuthContext';
 import { defaultPatternIdFor, trackNetworkEffectEvent } from '../services/networkEffect';
 import { trackGrowthEvent, trackGrowthEventOnce } from '../services/growth';
 import { appendUsageHistory } from '../services/history';
+import { InterpreterProviderFailureError } from '../services/ai/interpreterProviderFailureError';
 
 export type InterpreterPhase = 'idle' | 'recording' | 'processing' | 'playing' | 'error';
 
@@ -69,6 +70,7 @@ export function useLiveInterpreter({ assistantLanguageCode }: UseLiveInterpreter
   const lastActivityAtRef = useRef<number | null>(null);
   const turnCountRef = useRef(0);
   const sessionDebitTxIdRef = useRef<string | null>(null);
+  const sessionHoldReceiptRef = useRef<string | null>(null);
   const scenarioRef = useRef(scenario);
   scenarioRef.current = scenario;
 
@@ -178,11 +180,12 @@ export function useLiveInterpreter({ assistantLanguageCode }: UseLiveInterpreter
       return false;
     }
     const holdKey = `interp-${Date.now()}`;
-    const res = await reserveAndCommitCredits(INTERPRETER_SESSION_CREDITS, holdKey);
-    if (!res.ok) {
+    const res = await reserveAndCommitCredits(INTERPRETER_SESSION_CREDITS, holdKey, { purpose: 'live_interpreter' });
+    if (!res.ok || !res.interpreterHoldReceipt) {
       return false;
     }
     sessionDebitTxIdRef.current = holdKey;
+    sessionHoldReceiptRef.current = res.interpreterHoldReceipt;
     const now = Date.now();
     sessionStartedAtRef.current = now;
     lastActivityAtRef.current = now;
@@ -342,7 +345,13 @@ export function useLiveInterpreter({ assistantLanguageCode }: UseLiveInterpreter
         assistantLanguageCode,
         userId: user?.phone,
         countryCode: user?.country,
+        interpreterHoldKey: sessionDebitTxIdRef.current ?? undefined,
+        interpreterHoldReceipt: sessionHoldReceiptRef.current ?? undefined,
       });
+      if (turnCountRef.current === 0) {
+        sessionDebitTxIdRef.current = null;
+        sessionHoldReceiptRef.current = null;
+      }
       lastActivityAtRef.current = Date.now();
       setTurns((prev) => [
         ...prev,
@@ -359,10 +368,13 @@ export function useLiveInterpreter({ assistantLanguageCode }: UseLiveInterpreter
         setPhase('idle');
       }
       void appendUsageHistory({ type: 'interpreter', status: 'success', note: scenario });
-    } catch {
+    } catch (error) {
       if (turnCountRef.current === 0 && sessionDebitTxIdRef.current) {
-        void rollbackReservedCredits(sessionDebitTxIdRef.current);
+        if (error instanceof InterpreterProviderFailureError) {
+          await refundCommittedHoldCredits(sessionDebitTxIdRef.current, error.interpreterFailureProof);
+        }
         sessionDebitTxIdRef.current = null;
+        sessionHoldReceiptRef.current = null;
       }
       void trackNetworkEffectEvent({
         actionType: 'interpreter',

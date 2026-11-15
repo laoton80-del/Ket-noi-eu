@@ -43,6 +43,14 @@ router generates a fresh server-side key for that attempt.
 | `VIONA_COST_GOVERNOR_GLOBAL_INFLIGHT_LIMIT` | Maximum concurrent in-flight paid attempts across all subjects. | None; deny when absent or invalid. | `5` |
 | `VIONA_COST_GOVERNOR_PROVIDER_TIMEOUT_MS` | Provider attempt timeout in milliseconds. The in-flight lease is this value plus the fixed 15,000 ms grace period. | None; deny when absent or invalid. | `45000` |
 
+## Interpreter first-turn refund proof
+
+| Variable | Meaning | Missing/invalid behavior |
+| --- | --- | --- |
+| `VIONA_INTERPRETER_REFUND_PROOF_SECRET` | Shared server-only HMAC key (at least 32 characters), set to the same value in the Express API and Firebase Functions runtimes. It signs committed interpreter-hold receipts and provider-failure evidence. | Interpreter-purpose reserve is denied. No client-reported failure can authorize a refund. |
+
+The provider proxy may issue failure evidence only after observing a definitive provider HTTP 4xx; HTTP 408/409, 5xx, timeouts, network errors, local fallbacks, and client-only exceptions do not qualify. `walletOps` verifies the signed evidence against the Firebase UID, committed hold nonce, and hold key, stores one verified failure record, then atomically consumes it with the existing `refunds/{holdKey}` idempotency record. Receipts expire after one hour and unrecorded failure evidence after ten minutes. Rotating the shared key invalidates outstanding receipts and unrecorded proofs; already verified Firestore failure records remain eligible for the existing one-shot refund.
+
 The reserved-without-dispatch TTL is fixed at 300,000 ms. A timed-out lease no
 longer occupies an in-flight slot, but it does not release a money reservation.
 An orphaned `RESERVED` operation—when a process crashes before

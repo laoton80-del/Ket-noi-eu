@@ -70,10 +70,10 @@ async function main() {
   }
 
   const probeId = `w1-receipt-probe-${Date.now()}`;
-  const amount = 1;
+  const packId = 'starter';
 
   if (mode === 'missing-only') {
-    const r = await walletOps({ op: 'topup', amount, paymentEventId: probeId });
+    const r = await walletOps({ op: 'topup', packId, idempotencyKey: probeId });
     const err = typeof r.j.error === 'string' ? r.j.error : '';
     if (r.res.status === 409 && err.startsWith('payment_receipt_')) {
       logEvidence('missing_receipt_denied', { status: r.res.status, error: err, paymentEventId: probeId });
@@ -91,7 +91,7 @@ async function main() {
   }
 
   // auto: probe strict on/off
-  const probe = await walletOps({ op: 'topup', amount, paymentEventId: probeId });
+  const probe = await walletOps({ op: 'topup', packId, idempotencyKey: probeId });
   const probeErr = typeof probe.j.error === 'string' ? probe.j.error : '';
 
   if (probe.res.status === 409 && probeErr.startsWith('payment_receipt_')) {
@@ -115,18 +115,18 @@ async function main() {
       note: 'topup succeeded without prior receipt document',
     });
     const dupId = `w1-receipt-dup-${Date.now()}`;
-    const first = await walletOps({ op: 'topup', amount: 25, paymentEventId: dupId });
+    const first = await walletOps({ op: 'topup', packId, idempotencyKey: dupId });
     if (!first.res.ok || first.j.duplicate === true) {
       logEvidence('duplicate_first_failed', { status: first.res.status, text: first.text.slice(0, 300) });
       process.exit(1);
     }
-    const second = await walletOps({ op: 'topup', amount: 25, paymentEventId: dupId });
-    if (!second.res.ok || second.j.duplicate !== true) {
+    const second = await walletOps({ op: 'topup', packId, idempotencyKey: dupId });
+    if (second.res.status !== 409 || second.j.error !== 'idempotency_key_already_processed') {
       logEvidence('duplicate_second_failed', { status: second.res.status, text: second.text.slice(0, 300) });
       process.exit(1);
     }
-    logEvidence('duplicate_idempotent_ok', { paymentEventId: dupId });
-    console.log('[verify-receipt-strictness] OK: receipt strict OFF; duplicate replay returns duplicate:true.');
+    logEvidence('duplicate_replay_rejected_without_recredit', { paymentEventId: dupId });
+    console.log('[verify-receipt-strictness] OK: receipt strict OFF; duplicate replay rejected without recredit.');
     process.exit(0);
   }
 
@@ -146,7 +146,13 @@ async function seededFlow() {
     process.exit(1);
   }
   const paymentEventId = process.env.VERIFY_RECEIPT_PAYMENT_EVENT_ID?.trim() || `w1-seeded-${Date.now()}`;
-  const amount = Number(process.env.VERIFY_RECEIPT_CREDITS_AMOUNT ?? '10') || 10;
+  const packId = process.env.VERIFY_RECEIPT_PACK_ID?.trim() || 'starter';
+  const creditsByPack = { starter: 100, basic: 230, standard: 650, pro: 1400, power: 3000 };
+  const amount = creditsByPack[packId];
+  if (!Number.isFinite(amount)) {
+    console.error('[verify-receipt-strictness] FAIL: VERIFY_RECEIPT_PACK_ID must be a top-up pack id');
+    process.exit(1);
+  }
 
   const seed = spawnSync(
     process.execPath,
@@ -158,18 +164,18 @@ async function seededFlow() {
     process.exit(1);
   }
 
-  const first = await walletOps({ op: 'topup', amount, paymentEventId });
+  const first = await walletOps({ op: 'topup', packId, idempotencyKey: paymentEventId });
   if (!first.res.ok || first.j.ok !== true) {
     logEvidence('seeded_topup_failed', { status: first.res.status, text: first.text.slice(0, 400) });
     process.exit(1);
   }
-  const second = await walletOps({ op: 'topup', amount, paymentEventId });
-  if (!second.res.ok || second.j.duplicate !== true) {
+  const second = await walletOps({ op: 'topup', packId, idempotencyKey: paymentEventId });
+  if (second.res.status !== 409 || second.j.error !== 'idempotency_key_already_processed') {
     logEvidence('seeded_duplicate_failed', { status: second.res.status, text: second.text.slice(0, 400) });
     process.exit(1);
   }
-  logEvidence('seeded_success_and_duplicate', { paymentEventId, amount });
-  console.log('[verify-receipt-strictness] OK: seeded receipt → topup → duplicate replay.');
+  logEvidence('seeded_success_and_duplicate_rejected', { paymentEventId, packId, creditsGranted: amount });
+  console.log('[verify-receipt-strictness] OK: seeded receipt → topup → duplicate replay rejected without recredit.');
   process.exit(0);
 }
 
