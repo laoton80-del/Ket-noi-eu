@@ -437,24 +437,59 @@ function DockButton({
   selected: boolean;
 }>) {
   const idle = quiet ? SOS_NAV_MUTED : 'rgba(230, 244, 255, 0.38)';
+  const idleHover = quiet ? '#96AFD2' : 'rgba(230, 244, 255, 0.45)';
+  const polish = item.id === 'home' || item.id === 'messages' || item.id === 'settings';
+  const [hovered, setHovered] = useState(false);
+  const canHover = polish && Platform.OS === 'web';
+  const colorEase =
+    polish && Platform.OS === 'web'
+      ? ({
+          transitionProperty: 'color, fill',
+          transitionDuration: '180ms',
+          transitionTimingFunction: 'ease',
+        } as ViewStyle)
+      : null;
+  const iconColor = canHover && hovered ? idleHover : idle;
+  const hoverTarget = canHover
+    ? {
+        onMouseEnter: () => setHovered(true),
+        onMouseLeave: () => setHovered(false),
+      }
+    : null;
   return (
+    <View {...hoverTarget}>
     <Pressable
       accessibilityRole="button"
       accessibilityLabel={hint ? `${label}. ${hint}` : label}
       accessibilityState={{ disabled: !!item.disabled, selected }}
       disabled={!!item.disabled}
       onPress={item.onPress}
+      onHoverIn={canHover && !item.disabled ? () => setHovered(true) : undefined}
+      onHoverOut={canHover && !item.disabled ? () => setHovered(false) : undefined}
       style={styles.button}
     >
       <Ionicons
         name={item.icon}
         size={selected ? iconSize + 3 : iconSize}
-        color={selected ? vionaCinematicTokens.color.accentGold : idle}
-        style={selected ? styles.iconGlow : undefined}
+        color={iconColor}
+        style={colorEase}
       />
-      {iconOnly ? null : <Text style={[styles.label, quiet && styles.labelQuiet, selected && styles.labelSelected]}>{label}</Text>}
+      {iconOnly ? null : (
+        <Text
+          style={[
+            styles.label,
+            quiet && styles.labelQuiet,
+            colorEase,
+            selected && styles.labelSelected,
+            { color: iconColor },
+          ]}
+        >
+          {label}
+        </Text>
+      )}
       {hint && !overlayHint && !iconOnly ? <Text style={styles.hint}>{hint}</Text> : null}
     </Pressable>
+    </View>
   );
 }
 
@@ -524,18 +559,12 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     paddingHorizontal: 8,
   },
-  iconGlow: {
-    textShadowColor: 'rgba(231, 194, 122, 0.9)',
-    textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 8,
-  },
   label: {
     color: 'rgba(230, 244, 255, 0.38)',
     fontSize: 10,
     fontFamily: vionaCinematicTokens.fontFamily.medium,
   },
   labelSelected: {
-    color: vionaCinematicTokens.color.accentGold,
     fontFamily: vionaCinematicTokens.fontFamily.bold,
     fontSize: 12,
   },

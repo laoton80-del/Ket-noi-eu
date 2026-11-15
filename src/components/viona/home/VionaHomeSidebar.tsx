@@ -1,11 +1,11 @@
 import { Ionicons } from '@expo/vector-icons';
 import { type ComponentProps, useState } from 'react';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { vionaCinematicTokens } from '../../../design/vionaCinematicTokens';
 import { useTranslation } from '../../../i18n';
-const GOLD_MARK = require('../../../../assets/brand/viona/viona-symbol-gold.png');
+import { VionaPanelHeader, vionaSidePanelColors, vionaSidePanelFrame } from './VionaPanelHeader';
 import {
   type VionaRec2UniverseCallbacks,
   type VionaRec2UniverseContract,
@@ -42,21 +42,8 @@ export function VionaHomeSidebar({
   const { t } = useTranslation();
   const [moreOpen, setMoreOpen] = useState(false);
   return (
-    <LinearGradient colors={['#0B1C33', '#07111C', '#020713']} style={styles.rail}>
-      <View style={styles.brand}>
-        <Image source={GOLD_MARK} resizeMode="contain" accessibilityIgnoresInvertColors style={styles.brandMark} />
-        {onClose ? (
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel={t('home.rec2.menuClose')}
-            onPress={onClose}
-            hitSlop={8}
-            style={styles.close}
-          >
-            <Ionicons name="close" size={18} color={vionaCinematicTokens.color.ice} />
-          </Pressable>
-        ) : null}
-      </View>
+    <LinearGradient colors={[...vionaSidePanelColors]} style={[styles.rail, vionaSidePanelFrame]}>
+      <VionaPanelHeader closeLabel={t('home.rec2.menuClose')} onClose={onClose} />
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.list}>
         <SidebarRow icon="home" label={t('home.rec2.sidebar.home')} selected onPress={() => undefined} />
         <SidebarRow
@@ -139,32 +126,11 @@ function SidebarRow({
 
 const styles = StyleSheet.create({
   rail: {
-    width: vionaCinematicTokens.layout.railWidth,
-    borderRightWidth: 1,
-    borderRightColor: 'rgba(230, 244, 255, 0.12)',
-    paddingVertical: 16,
+    flex: 1,
+    paddingTop: 6,
+    paddingBottom: 16,
     paddingHorizontal: 10,
-    gap: 12,
-  },
-  brand: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
     gap: 8,
-    paddingHorizontal: 8,
-  },
-  close: {
-    width: 32,
-    height: 32,
-    borderRadius: 10,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  brandName: {
-    color: vionaCinematicTokens.color.ice,
-    fontFamily: vionaCinematicTokens.fontFamily.semibold,
-    letterSpacing: 3,
-    fontSize: 16,
   },
   list: { gap: 4, paddingBottom: 24 },
   rule: {
@@ -182,7 +148,6 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
   },
   rowSelected: { backgroundColor: 'rgba(0, 209, 255, 0.12)' },
-  brandMark: { width: 40, height: 40 },
   groupLabel: {
     color: vionaCinematicTokens.color.muted,
     fontSize: 10,

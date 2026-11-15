@@ -30,7 +30,7 @@ import { useHomeCommand } from '../../../context/HomeCommandContext';
 import { VionaGlobalSosShellAction } from '../VionaGlobalSosShellAction';
 import { VionaCompanionOrbImage } from '../brand/VionaCompanionOrbImage';
 import { UniversePhotoTile } from './UniversePhotoTile';
-import { VionaHomeCompanionPanel } from './VionaHomeCompanionPanel';
+import { ensureFacePulse, VionaHomeCompanionPanel } from './VionaHomeCompanionPanel';
 import { VionaHomeSidebar } from './VionaHomeSidebar';
 import { VionaHomeSuggestionChips } from './VionaHomeSuggestionChips';
 import { VionaHomeTopBar } from './VionaHomeTopBar';
@@ -90,22 +90,6 @@ function UniverseCard({
   );
 }
 
-const ORB_PULSE_STYLE_ID = 'viona-orb-pulse';
-
-function ensureOrbPulseKeyframes(): void {
-  if (Platform.OS !== 'web' || typeof document === 'undefined') return;
-  if (document.getElementById(ORB_PULSE_STYLE_ID)) return;
-  const style = document.createElement('style');
-  style.id = ORB_PULSE_STYLE_ID;
-  style.textContent = [
-    '@keyframes viona-orb-pulse {',
-    '  0%, 100% { transform: scale(1); }',
-    '  50% { transform: scale(1.04); }',
-    '}',
-  ].join('\n');
-  document.head.appendChild(style);
-}
-
 function restingOrbSize(width: number): number {
   return Math.round(resolveVionaCollapsedOrb(width).size * 0.85 * 0.9);
 }
@@ -118,7 +102,6 @@ function VionaCompanionOrb({
   const { width } = useWindowDimensions();
   const orb = resolveVionaCollapsedOrb(width);
   const size = restingOrbSize(width);
-  const glow = Math.round(size * 1.75);
   const seated =
     Platform.OS === 'web'
       ? ({ position: 'fixed', bottom: orb.dockBottom, zIndex: 400 } as unknown as ViewStyle)
@@ -126,39 +109,22 @@ function VionaCompanionOrb({
 
   useEffect(() => {
     ensureVionaReducedMotionGuard();
-    ensureOrbPulseKeyframes();
+    ensureFacePulse();
   }, []);
 
   const dock = (
     <View pointerEvents="box-none" style={[styles.companionDock, seated]} testID="viona-companion-orb">
       <View
         pointerEvents="box-none"
-        style={[
-          styles.orbLive,
-          { width: size, height: size },
-          !reducedMotion && Platform.OS === 'web'
-            ? ({
-                animationName: 'viona-orb-pulse',
-                animationDuration: '3200ms',
-                animationTimingFunction: 'ease-in-out',
-                animationIterationCount: 'infinite',
-                transformOrigin: 'center center',
-              } as ViewStyle)
-            : null,
-        ]}
+        style={[styles.orbLive, { width: size, height: size }]}
+        {...(Platform.OS === 'web' ? ({ dataSet: { vionaOrb: 'wrap' } } as const) : null)}
       >
         <View
           pointerEvents="none"
-          style={[
-            styles.orbGlow,
-            {
-              width: glow,
-              height: glow,
-              left: (size - glow) / 2,
-              top: (size - glow) / 2,
-              borderRadius: glow / 2,
-            },
-          ]}
+          style={Platform.OS === 'web' ? styles.orbGlowSlot : styles.orbGlow}
+          {...(Platform.OS === 'web'
+            ? ({ dataSet: { vionaOrb: reducedMotion ? 'glow-still' : 'glow' } } as const)
+            : null)}
         />
         <Pressable
           accessibilityRole="button"
@@ -169,7 +135,9 @@ function VionaCompanionOrb({
             pressed && (reducedMotion ? styles.cardPressedReducedMotion : styles.cardPressed),
           ]}
         >
-          <VionaCompanionOrbImage size={size} reducedMotion={reducedMotion} />
+          <View {...(Platform.OS === 'web' && !reducedMotion ? ({ dataSet: { vionaOrb: 'body' } } as const) : null)}>
+            <VionaCompanionOrbImage size={size} reducedMotion={reducedMotion} />
+          </View>
         </Pressable>
       </View>
     </View>
@@ -538,17 +506,23 @@ export function VionaRec2HomeShell({
     >
       <LinearGradient colors={['#020713', '#04152A', '#020813']} style={[styles.stage, desktopFrame && styles.stageRow]}>
         {desktopFrame && sidebarOpen ? (
-          <VionaHomeSidebar
-            universes={universes}
-            callbacks={universeCallbacks}
-            reducedMotion={reducedMotion}
-            onClose={toggleSidebar}
-          />
+          <View style={styles.sidebarColumn}>
+            <VionaHomeSidebar
+              universes={universes}
+              callbacks={universeCallbacks}
+              reducedMotion={reducedMotion}
+              onClose={toggleSidebar}
+            />
+          </View>
         ) : null}
         <View style={styles.center}>{center}</View>
         {desktopFrame && companionOpen ? (
-          <View style={styles.companionColumn}>
-            <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.companionScroll}>
+          <View style={[styles.companionColumn, { marginBottom: layout.shellBottomObstruction }]}>
+            <ScrollView
+              style={styles.companionScroller}
+              showsVerticalScrollIndicator={false}
+              contentContainerStyle={styles.companionScroll}
+            >
               <VionaHomeCompanionPanel
                 displayName={normalizedName}
                 previewMode={previewMode}
@@ -579,14 +553,25 @@ const styles = StyleSheet.create({
   stageRow: { flexDirection: 'row' },
   center: { flex: 1, minWidth: 0 },
   scroller: { flex: 1 },
+  sidebarColumn: {
+    width: vionaCinematicTokens.layout.railWidth,
+    flexShrink: 0,
+    alignSelf: 'stretch',
+    paddingVertical: 16,
+    paddingLeft: 16,
+    paddingRight: 18,
+  },
   companionColumn: {
     width: vionaCinematicTokens.layout.companionWidth,
     flexShrink: 0,
     alignSelf: 'stretch',
-    padding: 16,
+    minHeight: 0,
+    overflow: 'hidden',
+    paddingTop: 16,
     paddingLeft: 18,
-    backgroundColor: 'rgba(10, 26, 51, 0.38)',
+    paddingRight: 16,
   },
+  companionScroller: { flex: 1, minHeight: 0 },
   companionSheet: {
     borderRadius: 24,
     borderWidth: 1,
@@ -613,22 +598,23 @@ const styles = StyleSheet.create({
     backgroundColor: 'transparent',
     overflow: 'visible',
   },
+  orbGlowSlot: {
+    position: 'absolute',
+    top: -40,
+    right: -40,
+    bottom: -40,
+    left: -40,
+    zIndex: 0,
+  },
   orbGlow: {
     position: 'absolute',
+    top: -40,
+    right: -40,
+    bottom: -40,
+    left: -40,
     zIndex: 0,
-    backgroundColor: 'transparent',
-    ...(Platform.OS === 'web'
-      ? ({
-          backgroundImage:
-            'radial-gradient(circle, rgba(150, 205, 255, 0.55) 0%, rgba(80, 155, 230, 0.28) 38%, rgba(40, 110, 200, 0.08) 62%, rgba(40, 110, 200, 0) 74%)',
-          filter: 'blur(36px)',
-        } as ViewStyle)
-      : {
-          shadowColor: '#7EC4FF',
-          shadowOffset: { width: 0, height: 0 },
-          shadowOpacity: 0.45,
-          shadowRadius: 28,
-        }),
+    borderRadius: 92,
+    backgroundColor: 'rgba(70, 140, 255, 0.28)',
   },
   companionDockButton: {
     alignItems: 'center',

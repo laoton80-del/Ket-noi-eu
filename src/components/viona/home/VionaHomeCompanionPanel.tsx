@@ -1,18 +1,61 @@
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Platform, Pressable, StyleSheet, Text, TextInput, View, type ViewStyle } from 'react-native';
 
 import { vionaCinematicTokens } from '../../../design/vionaCinematicTokens';
 import { useTranslation } from '../../../i18n';
 import { VionaCompanionOrbImage } from '../brand/VionaCompanionOrbImage';
 import { VionaRec2AlfredPanel } from './VionaRec2AlfredPanel';
+import { VionaPanelHeader, vionaSidePanelColors, vionaSidePanelFrame } from './VionaPanelHeader';
 import {
   type VionaRec2UniverseCallbacks,
   type VionaRec2UniverseContract,
 } from './vionaRec2HomeContract';
 
 const ASSISTANT_PROMPTS = ['news', 'translate', 'food', 'email', 'concept', 'practice'] as const;
+const FACE_SIZE = 104;
+const FACE_PULSE_STYLE_ID = 'viona-face-pulse';
+
+export function ensureFacePulse(): void {
+  if (Platform.OS !== 'web' || typeof document === 'undefined') return;
+  let style = document.getElementById(FACE_PULSE_STYLE_ID);
+  if (!style) {
+    style = document.createElement('style');
+    style.id = FACE_PULSE_STYLE_ID;
+    document.head.appendChild(style);
+  }
+  style.textContent = [
+    '@keyframes viona-orb-pulse {',
+    '  0%, 100% { transform: scale(1); }',
+    '  50% { transform: scale(1.04); }',
+    '}',
+    '@keyframes viona-orb-glow-pulse {',
+    '  0%, 100% { opacity: 0.6; }',
+    '  50% { opacity: 1; }',
+    '}',
+    '[data-viona-orb="wrap"] { position: relative; }',
+    '[data-viona-orb="glow"],',
+    '[data-viona-orb="glow-still"] {',
+    '  position: absolute;',
+    '  inset: -40px;',
+    '  border-radius: 50%;',
+    '  background: radial-gradient(circle, rgba(70, 140, 255, 0.72) 0%, rgba(50, 110, 230, 0.4) 40%, rgba(40, 90, 220, 0) 70%);',
+    '  filter: blur(28px);',
+    '  z-index: 0;',
+    '  pointer-events: none;',
+    '}',
+    '[data-viona-orb="glow"] {',
+    '  animation: viona-orb-glow-pulse 2.6s ease-in-out infinite;',
+    '}',
+    '[data-viona-orb="body"] {',
+    '  position: relative;',
+    '  z-index: 1;',
+    '  transform-origin: center center;',
+    '  animation: viona-orb-pulse 2.6s ease-in-out infinite;',
+    '}',
+  ].join('\n');
+}
 
 export function VionaHomeCompanionPanel({
   displayName,
@@ -34,16 +77,33 @@ export function VionaHomeCompanionPanel({
   const greeting = name
     ? t('home.rec2.greetingNamed', { name })
     : t('home.rec2.greetingGuest');
+  useEffect(() => {
+    ensureFacePulse();
+  }, []);
 
   return (
-    <LinearGradient colors={['rgba(18, 42, 74, 0.72)', 'rgba(10, 26, 51, 0.58)', 'rgba(7, 17, 28, 0.78)']} style={styles.panel}>
-      {onClose ? (
-        <Pressable accessibilityRole="button" accessibilityLabel={t('home.rec2.alfred.collapse')} onPress={onClose} style={styles.close}>
-          <Text style={styles.closeLabel}>{t('home.rec2.alfred.collapse')}</Text>
-        </Pressable>
-      ) : null}
-      <View style={styles.orb} accessibilityElementsHidden>
-        <VionaCompanionOrbImage size={112} reducedMotion={reducedMotion} />
+    <LinearGradient colors={[...vionaSidePanelColors]} style={styles.panel}>
+      <View style={styles.intro}>
+        <VionaPanelHeader showMark={false} closeLabel={t('home.rec2.alfred.collapse')} onClose={onClose} />
+        <View
+          accessibilityElementsHidden
+          style={styles.face}
+          {...(Platform.OS === 'web' ? ({ dataSet: { vionaOrb: 'wrap' } } as const) : null)}
+        >
+          <View
+            pointerEvents="none"
+            style={styles.faceGlow}
+            {...(Platform.OS === 'web'
+              ? ({ dataSet: { vionaOrb: reducedMotion ? 'glow-still' : 'glow' } } as const)
+              : null)}
+          />
+          <View
+            style={styles.faceOrb}
+            {...(Platform.OS === 'web' && !reducedMotion ? ({ dataSet: { vionaOrb: 'body' } } as const) : null)}
+          >
+            <VionaCompanionOrbImage size={FACE_SIZE} reducedMotion={reducedMotion} />
+          </View>
+        </View>
       </View>
       <Text style={styles.greeting}>{greeting}</Text>
       <Text style={styles.status}>{t('home.rec2.companionPreview')}</Text>
@@ -93,24 +153,44 @@ export function VionaHomeCompanionPanel({
 const styles = StyleSheet.create({
   panel: {
     gap: 16,
-    borderRadius: 22,
-    borderWidth: 1,
-    borderColor: 'rgba(0, 209, 255, 0.16)',
-    padding: 16,
-    ...(Platform.OS === 'web'
-      ? ({ backdropFilter: 'blur(18px) saturate(140%)', WebkitBackdropFilter: 'blur(18px) saturate(140%)' } as ViewStyle)
-      : {}),
-    ...vionaCinematicTokens.elevation.cardOnShell,
+    paddingTop: 6,
+    paddingBottom: 16,
+    paddingLeft: 16,
+    paddingRight: 16,
+    ...vionaSidePanelFrame,
   },
-  close: { alignSelf: 'flex-end', minHeight: 36, justifyContent: 'center' },
-  closeLabel: { color: vionaCinematicTokens.color.cyan, fontSize: 12, fontFamily: vionaCinematicTokens.fontFamily.semibold },
-  orb: {
+  intro: { gap: 0 },
+  face: {
     alignSelf: 'center',
-    width: 128,
-    height: 128,
+    position: 'relative',
+    width: FACE_SIZE,
+    height: FACE_SIZE,
+    marginTop: -22,
+    marginBottom: 14,
+    overflow: 'visible',
+  },
+  faceGlow: {
+    position: 'absolute',
+    top: -40,
+    right: -40,
+    bottom: -40,
+    left: -40,
+    zIndex: 0,
+    ...(Platform.OS === 'web'
+      ? null
+      : {
+          borderRadius: 92,
+          backgroundColor: 'rgba(60, 120, 255, 0.22)',
+        }),
+  },
+  faceOrb: {
+    position: 'relative',
+    zIndex: 1,
+    width: FACE_SIZE,
+    height: FACE_SIZE,
     alignItems: 'center',
     justifyContent: 'center',
-    marginVertical: 4,
+    backgroundColor: 'transparent',
   },
   greeting: {
     color: vionaCinematicTokens.color.ice,
