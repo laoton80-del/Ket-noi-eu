@@ -436,7 +436,7 @@ function DockButton({
   quiet?: boolean;
   selected: boolean;
 }>) {
-  const idle = quiet ? SOS_NAV_MUTED : 'rgba(230, 244, 255, 0.55)';
+  const idle = quiet ? SOS_NAV_MUTED : 'rgba(230, 244, 255, 0.38)';
   return (
     <Pressable
       accessibilityRole="button"
@@ -448,8 +448,8 @@ function DockButton({
     >
       <Ionicons
         name={item.icon}
-        size={iconSize}
-        color={selected ? '#00D1FF' : idle}
+        size={selected ? iconSize + 3 : iconSize}
+        color={selected ? vionaCinematicTokens.color.accentGold : idle}
         style={selected ? styles.iconGlow : undefined}
       />
       {iconOnly ? null : <Text style={[styles.label, quiet && styles.labelQuiet, selected && styles.labelSelected]}>{label}</Text>}
@@ -510,7 +510,7 @@ const styles = StyleSheet.create({
   },
   sideWide: {
     justifyContent: 'space-evenly',
-    gap: 12,
+    gap: 28,
   },
   sideMobile: {
     justifyContent: 'space-evenly',
@@ -522,18 +522,23 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 1,
     paddingVertical: 4,
+    paddingHorizontal: 8,
   },
   iconGlow: {
-    textShadowColor: 'rgba(0, 209, 255, 0.85)',
+    textShadowColor: 'rgba(231, 194, 122, 0.9)',
     textShadowOffset: { width: 0, height: 0 },
     textShadowRadius: 8,
   },
   label: {
-    color: 'rgba(230, 244, 255, 0.55)',
+    color: 'rgba(230, 244, 255, 0.38)',
     fontSize: 10,
     fontFamily: vionaCinematicTokens.fontFamily.medium,
   },
-  labelSelected: { color: '#00D1FF' },
+  labelSelected: {
+    color: vionaCinematicTokens.color.accentGold,
+    fontFamily: vionaCinematicTokens.fontFamily.bold,
+    fontSize: 12,
+  },
   labelQuiet: {
     color: SOS_NAV_MUTED,
     fontSize: 10,

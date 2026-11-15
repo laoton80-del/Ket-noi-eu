@@ -162,7 +162,7 @@ function VionaCompanionOrb({
         />
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel={t('home.rec2.companionChat')}
+          accessibilityLabel={t('home.rec2.sidebar.home')}
           onPress={onPress}
           style={({ pressed }) => [
             styles.companionDockButton,
@@ -258,6 +258,7 @@ export function VionaRec2HomeShell({
 }: VionaRec2HomeShellProps) {
   const { t } = useTranslation();
   const homeCommand = useHomeCommand();
+  const homeScroller = useRef<ScrollView>(null);
   const dimensions = useWindowDimensions();
   const insets = useSafeAreaInsets();
   const [measuredSize, setMeasuredSize] = useState<Readonly<{
@@ -285,6 +286,12 @@ export function VionaRec2HomeShell({
     ? resolveVionaCinematicTier(dimensions.width)
     : dimensions.width < 768 ? 'phone' : 'tablet';
   const desktopFrame = shellPlatform === 'web' && tier === 'desktop';
+  const returnToHome = useCallback(() => {
+    setCompanionOpen(false);
+    setDesktopCompanionOpen(false);
+    writeHomeColumnOpen('companion', false);
+    homeScroller.current?.scrollTo({ y: 0, animated: true });
+  }, []);
   const openCompanion = useCallback(() => {
     if (desktopFrame) {
       setDesktopCompanionOpen(true);
@@ -378,6 +385,7 @@ export function VionaRec2HomeShell({
 
   const center = (
     <ScrollView
+      ref={homeScroller}
       key={`viona-rec2-home-content-${layout.fontScale}`}
       style={styles.scroller}
       contentContainerStyle={[
@@ -578,7 +586,7 @@ export function VionaRec2HomeShell({
           </View>
         ) : null}
         {!introActive && !(desktopFrame ? desktopCompanionOpen : companionOpen) ? (
-          <VionaCompanionOrb reducedMotion={reducedMotion} onPress={openCompanion} />
+          <VionaCompanionOrb reducedMotion={reducedMotion} onPress={returnToHome} />
         ) : null}
       </LinearGradient>
     </SafeAreaView>
