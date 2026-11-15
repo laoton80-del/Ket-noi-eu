@@ -5,10 +5,9 @@ import { createElement, useEffect, useRef, useState } from 'react';
 import { ResizeMode, Video, type AVPlaybackStatus } from 'expo-av';
 import { Asset } from 'expo-asset';
 import { Image, Platform, Pressable, StyleSheet, Text, View, useWindowDimensions, type ImageStyle, type ViewStyle } from 'react-native';
-import { Inter_500Medium, Inter_600SemiBold, useFonts } from '@expo-google-fonts/inter';
+import { Inter_600SemiBold, useFonts } from '@expo-google-fonts/inter';
 import Animated, {
   Easing,
-  runOnJS,
   useAnimatedStyle,
   useSharedValue,
   withDelay,
@@ -16,6 +15,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 
+import { vionaCinematicTokens } from '../../../design/vionaCinematicTokens';
 import { useTranslation } from '../../../i18n';
 import { useFashionHomePrefersReducedMotion } from '../fashionHomeDesktopShell';
 import { playIntroChime, stopIntroChime } from './introChime';
@@ -156,6 +156,11 @@ const HOLD_MS = 4000;
 const REDUCED_HOLD_MS = 1000;
 const FADE_MS = 250;
 
+const taglineFontFamily =
+  Platform.OS === 'web'
+    ? `${vionaCinematicTokens.fontFamily.medium}, Montserrat, system-ui, sans-serif`
+    : vionaCinematicTokens.fontFamily.medium;
+
 export function VionaIntroScreen({ onDone }: Readonly<{ onDone: () => void }>) {
   const reducedFromHook = useFashionHomePrefersReducedMotion();
   const reducedMotion = reducedFromHook || readReducedMotion();
@@ -164,7 +169,7 @@ export function VionaIntroScreen({ onDone }: Readonly<{ onDone: () => void }>) {
   backdropRef.current = backdrop;
   const { t } = useTranslation();
   const { width, height } = useWindowDimensions();
-  const [fontsLoaded] = useFonts({ Inter_500Medium, Inter_600SemiBold });
+  const [fontsLoaded] = useFonts({ Inter_600SemiBold });
   const desktop = width >= 1024;
   const cinematic = Platform.OS === 'web' && desktop;
   const markSize = desktop ? 200 : 140;
@@ -200,9 +205,8 @@ export function VionaIntroScreen({ onDone }: Readonly<{ onDone: () => void }>) {
     trace.value = withRepeat(withTiming(1, { duration: 3600, easing: Easing.linear }), -1, false);
     void playIntroChime(false);
     const timer = setTimeout(() => {
-      veil.value = withTiming(0, { duration: FADE_MS }, (finished) => {
-        if (finished) runOnJS(finish)();
-      });
+      veil.value = withTiming(0, { duration: FADE_MS });
+      finish();
     }, HOLD_MS);
     return () => {
       cancelled = true;
@@ -246,13 +250,8 @@ export function VionaIntroScreen({ onDone }: Readonly<{ onDone: () => void }>) {
   });
   const skip = () => {
     void stopIntroChime();
-    if (reducedMotion) {
-      onDone();
-      return;
-    }
-    veil.value = withTiming(0, { duration: FADE_MS }, (finished) => {
-      if (finished) runOnJS(onDone)();
-    });
+    veil.value = withTiming(0, { duration: FADE_MS });
+    onDone();
   };
 
   const wordFont =
@@ -353,7 +352,8 @@ export function VionaIntroScreen({ onDone }: Readonly<{ onDone: () => void }>) {
                 {
                   fontSize: tagViSize,
                   lineHeight: cinematic ? 32 : undefined,
-                  fontFamily: Platform.OS === 'web' ? 'Inter_500Medium, Inter, system-ui, sans-serif' : fontsLoaded ? 'Inter_500Medium' : undefined,
+                  letterSpacing: 1.5,
+                  fontFamily: taglineFontFamily,
                 },
               ]}
             >
@@ -365,7 +365,8 @@ export function VionaIntroScreen({ onDone }: Readonly<{ onDone: () => void }>) {
                 {
                   fontSize: tagViSize,
                   lineHeight: cinematic ? 32 : undefined,
-                  fontFamily: Platform.OS === 'web' ? 'Inter_500Medium, Inter, system-ui, sans-serif' : fontsLoaded ? 'Inter_500Medium' : undefined,
+                  letterSpacing: 1.5,
+                  fontFamily: taglineFontFamily,
                 },
               ]}
             >
@@ -378,7 +379,7 @@ export function VionaIntroScreen({ onDone }: Readonly<{ onDone: () => void }>) {
                   fontSize: tagEnSize,
                   lineHeight: cinematic ? 24 : undefined,
                   letterSpacing: tagEnTrack,
-                  fontFamily: Platform.OS === 'web' ? 'Inter_500Medium, Inter, system-ui, sans-serif' : fontsLoaded ? 'Inter_500Medium' : undefined,
+                  fontFamily: taglineFontFamily,
                 },
               ]}
             >

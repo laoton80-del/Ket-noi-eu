@@ -160,7 +160,7 @@ export function UniversePhotoTile({
         lifted
           ? Platform.OS === 'web'
             ? ({
-                boxShadow: `0 0 18px 0 ${tone.accent}47`,
+                boxShadow: `0 0 24px 0 ${tone.accent}60`,
                 transitionProperty: 'box-shadow',
                 transitionDuration: '220ms',
                 transitionTimingFunction: 'ease-out',
