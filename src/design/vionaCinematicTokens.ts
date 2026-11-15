@@ -93,8 +93,10 @@ export const vionaCinematicTokens = {
     phoneMax: 767,
     tabletMax: 1179,
     desktopMin: 1180,
-    railWidth: 212,
-    companionWidth: 300,
+    // The nav rail is a single column of short rows. The companion column stays
+    // a little wider so suggestion chips can wrap beside the shared header.
+    railWidth: 240,
+    companionWidth: 280,
   },
   universe: {
     local: { accent: '#F3B15A', wash: 'rgba(243, 177, 90, 0.22)' },

@@ -52,14 +52,14 @@ const IMAGE_PROVENANCE: Readonly<Record<VionaRec2UniverseId, VionaRec2ImageInput
   sos: 'licensed',
 };
 
-/** Keep the top of each landmark inside the cover frame. */
+/** Keep each card's main subject inside the cover frame as the column width changes. */
 const PHOTO_FOCUS: Readonly<Record<VionaRec2UniverseId, string>> = {
-  local: 'center',
-  travel: 'center 30%',
-  academy: 'center 16%',
-  business: 'center 20%',
-  account: 'center top',
-  sos: 'center 4%',
+  local: 'center 70%',
+  travel: 'center 28%',
+  academy: 'center 42%',
+  business: 'center 46%',
+  account: 'center 34%',
+  sos: 'center 40%',
 };
 
 const UNIVERSE_ASSETS: Readonly<Record<VionaRec2UniverseId, ImageSourcePropType>> = {
@@ -187,7 +187,15 @@ export function UniversePhotoTile({
         : null;
 
   return (
-    <View testID="viona-motion" style={{ width, overflow: 'visible' }}>
+    <View
+      testID="viona-motion"
+      style={[
+        { width, overflow: 'visible' },
+        Platform.OS === 'web'
+          ? ({ transitionProperty: 'width', transitionDuration: '280ms', transitionTimingFunction: 'ease' } as ViewStyle)
+          : null,
+      ]}
+    >
     <Animated.View
       style={{
         opacity: entrance,
@@ -264,7 +272,7 @@ export function UniversePhotoTile({
             <Ionicons name={ICONS[universe.id]} size={22} color={statusColor} />
           </View>
           <Text style={styles.title}>{title}</Text>
-          <Text style={[styles.body, subtitleStyle]}>{body}</Text>
+          <Text numberOfLines={2} style={[styles.body, styles.bodyClamp, subtitleStyle]}>{body}</Text>
           <View style={styles.footer}>
             <Text style={[styles.state, { color: statusColor }]}>{stateLabel}</Text>
             <Ionicons
@@ -325,7 +333,16 @@ const styles = StyleSheet.create({
     fontFamily: vionaCinematicTokens.fontFamily.regular,
     fontSize: 13,
     lineHeight: 18,
+    minHeight: 36,
   },
+  bodyClamp: Platform.OS === 'web'
+    ? ({
+        display: '-webkit-box',
+        WebkitLineClamp: 2,
+        WebkitBoxOrient: 'vertical',
+        overflow: 'hidden',
+      } as TextStyle)
+    : {},
   footer: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
   state: { fontSize: 11, fontWeight: '800', letterSpacing: 0.6, textTransform: 'uppercase' },
   pressed: { opacity: 0.9, transform: [{ scale: 0.985 }] },
