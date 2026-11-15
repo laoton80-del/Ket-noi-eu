@@ -164,6 +164,13 @@ export function UniversePhotoTile({
         willChange: 'transform',
       } as ImageStyle);
 
+  const lockedPhoto =
+    universe.availability === 'available'
+      ? null
+      : Platform.OS === 'web'
+        ? ({ filter: 'grayscale(1) brightness(0.78)' } as ViewStyle)
+        : { opacity: 0.72 };
+
   const glow =
     lifted && Platform.OS === 'web'
       ? ({
@@ -218,7 +225,7 @@ export function UniversePhotoTile({
       <View style={styles.clip}>
       <LinearGradient colors={[tone.wash, vionaCinematicTokens.color.navy, vionaCinematicTokens.color.midnight]} style={styles.fill}>
         {canLoadImage ? (
-          <View pointerEvents="none" style={[styles.photo, Platform.OS !== 'web' && !showImage && styles.photoPending]}>
+          <View pointerEvents="none" style={[styles.photo, lockedPhoto, Platform.OS !== 'web' && !showImage && styles.photoPending]}>
             {Platform.OS === 'web' ? (
               <View
                 style={[
