@@ -296,6 +296,7 @@ export function VionaRec2HomeShell({
     return () => setVionaOrbSeated(false);
   }, [orbSeated]);
   const sidebarReserve = desktopFrame && sidebarOpen ? vionaCinematicTokens.layout.railWidth : 0;
+  const companionReserve = desktopFrame && companionOpen ? vionaCinematicTokens.layout.companionWidth : 0;
   const [heroFailed, setHeroFailed] = useState(false);
   const [heroWidth, setHeroWidth] = useState<number | null>(null);
   const onHeroLayout = useCallback((event: LayoutChangeEvent) => {
@@ -317,13 +318,13 @@ export function VionaRec2HomeShell({
   const layout = useMemo(
     () =>
       resolveVionaRec2HomeLayout({
-        width: desktopFrame ? Math.max(1, shellWidth - sidebarReserve) : shellWidth,
+        width: desktopFrame ? Math.max(1, shellWidth - sidebarReserve - companionReserve) : shellWidth,
         height: shellHeight,
         fontScale: dimensions.fontScale,
         safeAreaInsets: insets,
         shellPlatform,
       }),
-    [desktopFrame, dimensions.fontScale, insets, shellHeight, shellPlatform, shellWidth, sidebarReserve]
+    [companionReserve, desktopFrame, dimensions.fontScale, insets, shellHeight, shellPlatform, shellWidth, sidebarReserve]
   );
   const estimatedHeroWidth = Math.max(1, layout.effectiveWidth - layout.horizontalPadding * 2);
   const universes = useMemo(
@@ -513,6 +514,18 @@ export function VionaRec2HomeShell({
         </View>
       </View>
 
+      {companionOpen && !desktopFrame ? (
+        <View style={styles.companionSheet}>
+          <VionaHomeCompanionPanel
+            displayName={normalizedName}
+            previewMode={previewMode}
+            reducedMotion={reducedMotion}
+            universes={universes}
+            callbacks={universeCallbacks}
+            onClose={closeCompanion}
+          />
+        </View>
+      ) : null}
     </ScrollView>
   );
 
@@ -533,8 +546,8 @@ export function VionaRec2HomeShell({
           />
         ) : null}
         <View style={styles.center}>{center}</View>
-        {companionOpen ? (
-          <View style={[styles.companionOverlay, desktopFrame ? styles.companionOverlayWide : styles.companionOverlayPhone]}>
+        {desktopFrame && companionOpen ? (
+          <View style={styles.companionColumn}>
             <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.companionScroll}>
               <VionaHomeCompanionPanel
                 displayName={normalizedName}
@@ -566,26 +579,21 @@ const styles = StyleSheet.create({
   stageRow: { flexDirection: 'row' },
   center: { flex: 1, minWidth: 0 },
   scroller: { flex: 1 },
-  companionOverlay: {
-    position: 'absolute',
-    zIndex: 35,
+  companionColumn: {
+    width: vionaCinematicTokens.layout.companionWidth,
+    flexShrink: 0,
+    alignSelf: 'stretch',
+    padding: 16,
+    paddingLeft: 18,
+    backgroundColor: 'rgba(10, 26, 51, 0.38)',
+  },
+  companionSheet: {
     borderRadius: 24,
-    overflow: 'hidden',
-    backgroundColor: 'rgba(10, 26, 51, 0.94)',
     borderWidth: 1,
     borderColor: 'rgba(230, 244, 255, 0.14)',
-  },
-  companionOverlayWide: {
-    top: 16,
-    right: 16,
-    bottom: 16,
-    width: vionaCinematicTokens.layout.companionWidth,
-  },
-  companionOverlayPhone: {
-    left: 12,
-    right: 12,
-    bottom: 96,
-    maxHeight: '70%',
+    backgroundColor: 'rgba(10, 26, 51, 0.94)',
+    padding: 16,
+    ...vionaCinematicTokens.elevation.cardOnShell,
   },
   companionScroll: { paddingBottom: 24 },
   heroTablet: { minHeight: 240 },
