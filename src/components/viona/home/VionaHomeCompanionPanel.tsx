@@ -118,7 +118,13 @@ const styles = StyleSheet.create({
     fontSize: 18,
     textAlign: 'center',
   },
-  status: { color: vionaCinematicTokens.color.gold, fontSize: 12, textAlign: 'center' },
+  status: {
+    color: vionaCinematicTokens.color.muted,
+    fontFamily: vionaCinematicTokens.fontFamily.regular,
+    fontSize: 11,
+    lineHeight: 15,
+    textAlign: 'center',
+  },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 14 },
   chip: {
     borderRadius: vionaCinematicTokens.radius.pill,
