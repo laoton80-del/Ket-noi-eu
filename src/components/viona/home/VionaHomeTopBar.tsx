@@ -99,7 +99,7 @@ export function VionaHomeTopBar({
           onPress={menu.onPress}
           style={styles.tool}
         >
-          <Ionicons name={menu.open ? 'close' : 'menu-outline'} size={20} color={vionaCinematicTokens.color.ice} />
+          <Ionicons name="menu-outline" size={20} color={vionaCinematicTokens.color.ice} />
         </Pressable>
       ) : null}
       {showBrand ? (

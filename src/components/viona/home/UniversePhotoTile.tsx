@@ -152,32 +152,27 @@ export function UniversePhotoTile({
         willChange: 'transform',
       } as ImageStyle);
 
+  const glow =
+    lifted && Platform.OS === 'web'
+      ? ({
+          boxShadow: `0 0 24px 0 ${tone.accent}60`,
+        } as ViewStyle)
+      : lifted
+        ? {
+            shadowColor: tone.accent,
+            shadowOffset: { width: 0, height: 0 },
+            shadowOpacity: 0.28,
+            shadowRadius: 16,
+            elevation: 4,
+          }
+        : null;
+
   return (
-    <View
-      testID="viona-motion"
-      style={[
-        { width, overflow: 'visible' },
-        lifted
-          ? Platform.OS === 'web'
-            ? ({
-                boxShadow: `0 0 24px 0 ${tone.accent}60`,
-                transitionProperty: 'box-shadow',
-                transitionDuration: '220ms',
-                transitionTimingFunction: 'ease-out',
-              } as ViewStyle)
-            : {
-                shadowColor: tone.accent,
-                shadowOffset: { width: 0, height: 0 },
-                shadowOpacity: 0.28,
-                shadowRadius: 16,
-                elevation: 4,
-              }
-          : null,
-      ]}
-    >
+    <View testID="viona-motion" style={{ width, overflow: 'visible' }}>
     <Animated.View
       style={{
         opacity: entrance,
+        overflow: 'visible',
         transform: [
           {
             translateY: entrance.interpolate({
@@ -202,11 +197,13 @@ export function UniversePhotoTile({
       style={({ pressed }) => [
         styles.host,
         cardMotion,
+        glow,
         { borderColor: lifted ? `${tone.accent}59` : 'rgba(0, 209, 255, 0.16)' },
         lifted && !pressed && !reducedMotion && (calm ? styles.liftCalm : styles.lift),
         pressed && (reducedMotion ? styles.pressedStill : styles.pressed),
       ]}
     >
+      <View style={styles.clip}>
       <LinearGradient colors={[tone.wash, vionaCinematicTokens.color.navy, vionaCinematicTokens.color.midnight]} style={styles.fill}>
         {canLoadImage ? (
           <View pointerEvents="none" style={[styles.photo, Platform.OS !== 'web' && !showImage && styles.photoPending]}>
@@ -259,6 +256,7 @@ export function UniversePhotoTile({
           </View>
         </View>
       </LinearGradient>
+      </View>
     </Pressable>
     </Animated.View>
     </View>
@@ -270,6 +268,13 @@ const styles = StyleSheet.create({
     minHeight: 196,
     borderRadius: vionaCinematicTokens.radius.lg,
     borderWidth: 1,
+    overflow: 'visible',
+    backgroundColor: 'transparent',
+  },
+  clip: {
+    flexGrow: 1,
+    minHeight: 196,
+    borderRadius: vionaCinematicTokens.radius.lg - 1,
     overflow: 'hidden',
     backgroundColor: vionaCinematicTokens.color.midnight,
   },
