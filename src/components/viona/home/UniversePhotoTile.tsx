@@ -202,7 +202,7 @@ export function UniversePhotoTile({
       style={({ pressed }) => [
         styles.host,
         cardMotion,
-        { borderColor: lifted ? tone.accent : 'rgba(0, 209, 255, 0.16)' },
+        { borderColor: lifted ? `${tone.accent}59` : 'rgba(0, 209, 255, 0.16)' },
         lifted && !pressed && !reducedMotion && (calm ? styles.liftCalm : styles.lift),
         pressed && (reducedMotion ? styles.pressedStill : styles.pressed),
       ]}

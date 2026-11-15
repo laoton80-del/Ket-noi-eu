@@ -32,10 +32,12 @@ export function VionaHomeSidebar({
   universes: _universes,
   callbacks: _callbacks,
   reducedMotion: _reducedMotion = false,
+  onClose,
 }: Readonly<{
   universes: readonly VionaRec2UniverseContract[];
   callbacks: VionaRec2UniverseCallbacks;
   reducedMotion?: boolean;
+  onClose?: () => void;
 }>) {
   const { t } = useTranslation();
   const [moreOpen, setMoreOpen] = useState(false);
@@ -43,6 +45,17 @@ export function VionaHomeSidebar({
     <LinearGradient colors={['#0B1C33', '#07111C', '#020713']} style={styles.rail}>
       <View style={styles.brand}>
         <Image source={GOLD_MARK} resizeMode="contain" accessibilityIgnoresInvertColors style={styles.brandMark} />
+        {onClose ? (
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={t('home.rec2.menuClose')}
+            onPress={onClose}
+            hitSlop={8}
+            style={styles.close}
+          >
+            <Ionicons name="close" size={18} color={vionaCinematicTokens.color.ice} />
+          </Pressable>
+        ) : null}
       </View>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.list}>
         <SidebarRow icon="home" label={t('home.rec2.sidebar.home')} selected onPress={() => undefined} />
@@ -133,7 +146,20 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     gap: 12,
   },
-  brand: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 8 },
+  brand: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 8,
+    paddingHorizontal: 8,
+  },
+  close: {
+    width: 32,
+    height: 32,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   brandName: {
     color: vionaCinematicTokens.color.ice,
     fontFamily: vionaCinematicTokens.fontFamily.semibold,

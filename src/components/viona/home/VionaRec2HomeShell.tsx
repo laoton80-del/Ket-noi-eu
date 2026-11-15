@@ -261,6 +261,19 @@ export function VionaRec2HomeShell({
   const sidebarReserve = desktopFrame && sidebarOpen ? vionaCinematicTokens.layout.railWidth : 0;
   const companionReserve = desktopFrame && desktopCompanionOpen ? vionaCinematicTokens.layout.companionWidth : 0;
   const [heroFailed, setHeroFailed] = useState(false);
+  const [heroWidth, setHeroWidth] = useState<number | null>(null);
+  const onHeroLayout = useCallback((event: LayoutChangeEvent) => {
+    const next = event.nativeEvent.layout.width;
+    if (!Number.isFinite(next) || next <= 0) return;
+    setHeroWidth((current) => (current === next ? current : next));
+  }, []);
+  const toggleSidebar = useCallback(() => {
+    setSidebarOpen((open) => {
+      const next = !open;
+      writeHomeColumnOpen('sidebar', next);
+      return next;
+    });
+  }, []);
   const imagePresentation = resolveVionaRec2ImagePresentation({
     provenance: 'licensed',
     loadState: heroFailed ? 'error' : 'ready',
@@ -278,6 +291,7 @@ export function VionaRec2HomeShell({
       }),
     [companionReserve, desktopFrame, dimensions.fontScale, insets, shellHeight, shellPlatform, shellWidth, sidebarReserve]
   );
+  const estimatedHeroWidth = Math.max(1, layout.effectiveWidth - layout.horizontalPadding * 2);
   const universes = useMemo(
     () => createVionaRec2UniverseContract(universeAvailability),
     [universeAvailability]
@@ -361,11 +375,7 @@ export function VionaRec2HomeShell({
             desktopFrame
               ? {
                   open: sidebarOpen,
-                  onPress: () => {
-                    const next = !sidebarOpen;
-                    setSidebarOpen(next);
-                    writeHomeColumnOpen('sidebar', next);
-                  },
+                  onPress: toggleSidebar,
                 }
               : undefined
           }
@@ -375,9 +385,10 @@ export function VionaRec2HomeShell({
       <View collapsable={false} testID="viona-home-hero">
       <LinearGradient
         colors={['rgba(62, 36, 18, 0.55)', 'rgba(12, 54, 98, 0.94)', 'rgba(4, 17, 34, 0.96)']}
+        onLayout={onHeroLayout}
         style={[
           styles.hero,
-          tier === 'desktop' && styles.heroDesktop,
+          tier === 'desktop' && { minHeight: resolveDesktopHeroMinHeight(heroWidth ?? estimatedHeroWidth) },
           tier === 'tablet' && styles.heroTablet,
           tier !== 'phone' && styles.heroSpread,
         ]}
@@ -500,6 +511,7 @@ export function VionaRec2HomeShell({
             universes={universes}
             callbacks={universeCallbacks}
             reducedMotion={reducedMotion}
+            onClose={toggleSidebar}
           />
         ) : null}
         <View style={styles.center}>{center}</View>
@@ -533,6 +545,11 @@ export function VionaRec2HomeShell({
   );
 }
 
+function resolveDesktopHeroMinHeight(frameWidth: number): number {
+  const width = Number.isFinite(frameWidth) && frameWidth > 0 ? frameWidth : 280;
+  return Math.min(440, Math.max(280, Math.round(width * 0.16)));
+}
+
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: '#020713' },
   stage: { flex: 1, position: 'relative' },
@@ -556,7 +573,6 @@ const styles = StyleSheet.create({
     width: 1,
   },
   companionScroll: { paddingBottom: 24 },
-  heroDesktop: { minHeight: 280 },
   heroTablet: { minHeight: 240 },
   heroSpread: { paddingBottom: 32 },
   heroActions: { marginTop: 'auto', zIndex: 2, alignSelf: 'stretch' },
