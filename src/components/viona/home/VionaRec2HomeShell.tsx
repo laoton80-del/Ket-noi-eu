@@ -4,9 +4,10 @@ import { Ionicons } from '@expo/vector-icons';
 import { createPortal } from 'react-dom';
 import { Asset } from 'expo-asset';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useCallback, useEffect, useMemo, useState, type ComponentProps } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type ComponentProps } from 'react';
 import {
-  ActivityIndicator,
+  Animated,
+  Easing,
   Image,
   Platform,
   Pressable,
@@ -179,26 +180,65 @@ function VionaCompanionOrb({
   return dock;
 }
 
+const HOME_CONTENT_LOADING_FALLBACK_MS = 2200;
+
+/**
+ * Guest local Home keeps `contentState: 'loading'` until remote reachability
+ * resolves. The shell itself has no further fetch: the hero and universe cards
+ * are already the final content. A shimmer stands in for that row, then leaves.
+ */
+function HomeContentLoadingSkeleton() {
+  const drift = useRef(new Animated.Value(0)).current;
+  const [settled, setSettled] = useState(false);
+  useEffect(() => {
+    const motion = Animated.loop(
+      Animated.sequence([
+        Animated.timing(drift, {
+          toValue: 1,
+          duration: 1100,
+          easing: Easing.inOut(Easing.quad),
+          useNativeDriver: true,
+        }),
+        Animated.timing(drift, { toValue: 0, duration: 0, useNativeDriver: true }),
+      ])
+    );
+    motion.start();
+    const timer = setTimeout(() => setSettled(true), HOME_CONTENT_LOADING_FALLBACK_MS);
+    return () => {
+      motion.stop();
+      clearTimeout(timer);
+    };
+  }, [drift]);
+  if (settled) return null;
+  const translateX = drift.interpolate({ inputRange: [0, 1], outputRange: [-180, 520] });
+  return (
+    <View style={styles.stateBanner} accessibilityLiveRegion="polite">
+      <View style={styles.loadingSkeleton}>
+        <Animated.View pointerEvents="none" style={[styles.loadingSheen, { transform: [{ translateX }] }]} />
+      </View>
+    </View>
+  );
+}
+
 function ContentStateBanner({
   state,
   typography,
 }: Readonly<{ state: VionaRec2ContentState; typography: VionaRec2TypographyMetrics }>) {
   const { t } = useTranslation();
   if (state === 'default') return null;
+  if (state === 'loading') return <HomeContentLoadingSkeleton />;
   const icon: IconName =
-    state === 'loading'
-      ? 'hourglass-outline'
-      : state === 'offline'
-        ? 'cloud-offline-outline'
-        : state === 'gated'
-          ? 'lock-closed-outline'
-          : 'file-tray-outline';
+    state === 'offline'
+      ? 'cloud-offline-outline'
+      : state === 'gated'
+        ? 'lock-closed-outline'
+        : 'file-tray-outline';
   return (
     <View
       style={[styles.stateBanner, state === 'gated' && styles.gatedFade]}
       accessibilityLiveRegion="polite"
     >
-      {state === 'loading' ? <ActivityIndicator color="#65C8FF" size="small" /> : <Ionicons name={icon} size={18} color="#65C8FF" />}
+      <Ionicons name={icon} size={18} color="#65C8FF" />
       <Text style={[styles.stateText, { lineHeight: typography.bodyLineHeight }]}>
         {t(`home.rec2.states.${state}`)}
       </Text>
@@ -691,6 +731,20 @@ const styles = StyleSheet.create({
   },
   gatedFade: { opacity: VIONA_REC2_GATED_CARD_CONTENT_OPACITY },
   stateText: { color: '#B9CFDF', fontSize: 12, flex: 1 },
+  loadingSkeleton: {
+    flex: 1,
+    height: 14,
+    borderRadius: 7,
+    overflow: 'hidden',
+    backgroundColor: 'rgba(230, 244, 255, 0.08)',
+  },
+  loadingSheen: {
+    position: 'absolute',
+    top: 0,
+    bottom: 0,
+    width: 140,
+    backgroundColor: 'rgba(231, 194, 122, 0.35)',
+  },
   section: { gap: 16 },
   sectionHeadingRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 },
   sectionHeadingColumn: { flexDirection: 'column', alignItems: 'flex-start' },
