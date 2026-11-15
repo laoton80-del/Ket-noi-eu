@@ -162,7 +162,7 @@ function VionaCompanionOrb({
         />
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel={t('home.rec2.sidebar.home')}
+          accessibilityLabel={t('home.rec2.companionChat')}
           onPress={onPress}
           style={({ pressed }) => [
             styles.companionDockButton,
@@ -258,7 +258,6 @@ export function VionaRec2HomeShell({
 }: VionaRec2HomeShellProps) {
   const { t } = useTranslation();
   const homeCommand = useHomeCommand();
-  const homeScroller = useRef<ScrollView>(null);
   const dimensions = useWindowDimensions();
   const insets = useSafeAreaInsets();
   const [measuredSize, setMeasuredSize] = useState<Readonly<{
@@ -270,7 +269,6 @@ export function VionaRec2HomeShell({
   useEffect(() => subscribeColdIntro(setIntroActive), []);
   const [companionOpen, setCompanionOpen] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(() => readHomeColumnOpen('sidebar'));
-  const [desktopCompanionOpen, setDesktopCompanionOpen] = useState(() => readHomeColumnOpen('companion'));
   const onRootLayout = useCallback((event: LayoutChangeEvent) => {
     const { width, height } = event.nativeEvent.layout;
     if (!Number.isFinite(width) || width <= 0 || !Number.isFinite(height) || height <= 0) return;
@@ -286,27 +284,18 @@ export function VionaRec2HomeShell({
     ? resolveVionaCinematicTier(dimensions.width)
     : dimensions.width < 768 ? 'phone' : 'tablet';
   const desktopFrame = shellPlatform === 'web' && tier === 'desktop';
-  const returnToHome = useCallback(() => {
-    setCompanionOpen(false);
-    setDesktopCompanionOpen(false);
-    writeHomeColumnOpen('companion', false);
-    homeScroller.current?.scrollTo({ y: 0, animated: true });
-  }, []);
   const openCompanion = useCallback(() => {
-    if (desktopFrame) {
-      setDesktopCompanionOpen(true);
-      writeHomeColumnOpen('companion', true);
-      return;
-    }
     setCompanionOpen(true);
-  }, [desktopFrame]);
-  const orbSeated = !introActive && !(desktopFrame ? desktopCompanionOpen : companionOpen);
+  }, []);
+  const closeCompanion = useCallback(() => {
+    setCompanionOpen(false);
+  }, []);
+  const orbSeated = !introActive && !companionOpen;
   useEffect(() => {
     setVionaOrbSeated(orbSeated);
     return () => setVionaOrbSeated(false);
   }, [orbSeated]);
   const sidebarReserve = desktopFrame && sidebarOpen ? vionaCinematicTokens.layout.railWidth : 0;
-  const companionReserve = desktopFrame && desktopCompanionOpen ? vionaCinematicTokens.layout.companionWidth : 0;
   const [heroFailed, setHeroFailed] = useState(false);
   const [heroWidth, setHeroWidth] = useState<number | null>(null);
   const onHeroLayout = useCallback((event: LayoutChangeEvent) => {
@@ -328,15 +317,13 @@ export function VionaRec2HomeShell({
   const layout = useMemo(
     () =>
       resolveVionaRec2HomeLayout({
-        width: desktopFrame
-          ? Math.max(1, shellWidth - sidebarReserve - companionReserve)
-          : shellWidth,
+        width: desktopFrame ? Math.max(1, shellWidth - sidebarReserve) : shellWidth,
         height: shellHeight,
         fontScale: dimensions.fontScale,
         safeAreaInsets: insets,
         shellPlatform,
       }),
-    [companionReserve, desktopFrame, dimensions.fontScale, insets, shellHeight, shellPlatform, shellWidth, sidebarReserve]
+    [desktopFrame, dimensions.fontScale, insets, shellHeight, shellPlatform, shellWidth, sidebarReserve]
   );
   const estimatedHeroWidth = Math.max(1, layout.effectiveWidth - layout.horizontalPadding * 2);
   const universes = useMemo(
@@ -374,18 +361,13 @@ export function VionaRec2HomeShell({
         setSidebarOpen(false);
         writeHomeColumnOpen('sidebar', false);
       }
-      if (desktopCompanionOpen) {
-        setDesktopCompanionOpen(false);
-        writeHomeColumnOpen('companion', false);
-      }
     };
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
-  }, [companionOpen, desktopCompanionOpen, sidebarOpen]);
+  }, [companionOpen, sidebarOpen]);
 
   const center = (
     <ScrollView
-      ref={homeScroller}
       key={`viona-rec2-home-content-${layout.fontScale}`}
       style={styles.scroller}
       contentContainerStyle={[
@@ -531,18 +513,6 @@ export function VionaRec2HomeShell({
         </View>
       </View>
 
-      {companionOpen && !desktopFrame ? (
-        <View style={styles.companionSheet}>
-          <VionaHomeCompanionPanel
-            displayName={normalizedName}
-            previewMode={previewMode}
-            reducedMotion={reducedMotion}
-            universes={universes}
-            callbacks={universeCallbacks}
-            onClose={() => setCompanionOpen(false)}
-          />
-        </View>
-      ) : null}
     </ScrollView>
   );
 
@@ -563,13 +533,8 @@ export function VionaRec2HomeShell({
           />
         ) : null}
         <View style={styles.center}>{center}</View>
-        {desktopFrame && desktopCompanionOpen ? (
-          <View style={styles.reservedCompanion}>
-            <LinearGradient
-              pointerEvents="none"
-              colors={['rgba(0, 209, 255, 0)', 'rgba(0, 209, 255, 0.28)', 'rgba(0, 209, 255, 0)']}
-              style={styles.companionDivider}
-            />
+        {companionOpen ? (
+          <View style={[styles.companionOverlay, desktopFrame ? styles.companionOverlayWide : styles.companionOverlayPhone]}>
             <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.companionScroll}>
               <VionaHomeCompanionPanel
                 displayName={normalizedName}
@@ -577,16 +542,13 @@ export function VionaRec2HomeShell({
                 reducedMotion={reducedMotion}
                 universes={universes}
                 callbacks={universeCallbacks}
-                onClose={() => {
-                  setDesktopCompanionOpen(false);
-                  writeHomeColumnOpen('companion', false);
-                }}
+                onClose={closeCompanion}
               />
             </ScrollView>
           </View>
         ) : null}
-        {!introActive && !(desktopFrame ? desktopCompanionOpen : companionOpen) ? (
-          <VionaCompanionOrb reducedMotion={reducedMotion} onPress={returnToHome} />
+        {!introActive && !companionOpen ? (
+          <VionaCompanionOrb reducedMotion={reducedMotion} onPress={openCompanion} />
         ) : null}
       </LinearGradient>
     </SafeAreaView>
@@ -604,21 +566,26 @@ const styles = StyleSheet.create({
   stageRow: { flexDirection: 'row' },
   center: { flex: 1, minWidth: 0 },
   scroller: { flex: 1 },
-  reservedCompanion: {
-    width: vionaCinematicTokens.layout.companionWidth,
-    padding: 16,
-    paddingLeft: 18,
-    backgroundColor: 'rgba(10, 26, 51, 0.38)',
-    ...(Platform.OS === 'web'
-      ? ({ backdropFilter: 'blur(18px) saturate(140%)', WebkitBackdropFilter: 'blur(18px) saturate(140%)' } as ViewStyle)
-      : {}),
-  },
-  companionDivider: {
+  companionOverlay: {
     position: 'absolute',
-    left: 0,
-    top: 20,
-    bottom: 20,
-    width: 1,
+    zIndex: 35,
+    borderRadius: 24,
+    overflow: 'hidden',
+    backgroundColor: 'rgba(10, 26, 51, 0.94)',
+    borderWidth: 1,
+    borderColor: 'rgba(230, 244, 255, 0.14)',
+  },
+  companionOverlayWide: {
+    top: 16,
+    right: 16,
+    bottom: 16,
+    width: vionaCinematicTokens.layout.companionWidth,
+  },
+  companionOverlayPhone: {
+    left: 12,
+    right: 12,
+    bottom: 96,
+    maxHeight: '70%',
   },
   companionScroll: { paddingBottom: 24 },
   heroTablet: { minHeight: 240 },
@@ -660,14 +627,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     backgroundColor: 'transparent',
     zIndex: 1,
-  },
-  companionSheet: {
-    borderRadius: 24,
-    borderWidth: 1,
-    borderColor: 'rgba(230, 244, 255, 0.14)',
-    backgroundColor: 'rgba(10, 26, 51, 0.94)',
-    padding: 16,
-    ...vionaCinematicTokens.elevation.cardOnShell,
   },
   content: { paddingTop: 18 },
   hero: {
