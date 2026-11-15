@@ -108,6 +108,18 @@ export function UniversePhotoTile({
   const stateLabel = t(`home.rec2.availability.${universe.availability}`);
   const calm = universe.id === 'sos';
   const lifted = interactive && (hovered || focused);
+  const statusColor =
+    universe.availability === 'available'
+      ? tone.accent
+      : universe.availability === 'gated'
+        ? vionaCinematicTokens.color.amber
+        : '#9AA3AD';
+  const restingBorder =
+    universe.availability === 'available'
+      ? `${tone.accent}33`
+      : universe.availability === 'gated'
+        ? `${vionaCinematicTokens.color.amber}66`
+        : 'rgba(154, 163, 173, 0.45)';
 
   useEffect(() => {
     ensureVionaReducedMotionGuard();
@@ -198,7 +210,7 @@ export function UniversePhotoTile({
         styles.host,
         cardMotion,
         glow,
-        { borderColor: lifted ? `${tone.accent}59` : 'rgba(0, 209, 255, 0.16)' },
+        { borderColor: lifted ? `${tone.accent}59` : restingBorder },
         lifted && !pressed && !reducedMotion && (calm ? styles.liftCalm : styles.lift),
         pressed && (reducedMotion ? styles.pressedStill : styles.pressed),
       ]}
@@ -241,17 +253,17 @@ export function UniversePhotoTile({
           />
         ) : null}
         <View style={[styles.copy, universe.availability !== 'available' && styles.gatedCopy]}>
-          <View style={[styles.icon, { borderColor: tone.accent }]}>
-            <Ionicons name={ICONS[universe.id]} size={22} color={tone.accent} />
+          <View style={[styles.icon, { borderColor: statusColor }]}>
+            <Ionicons name={ICONS[universe.id]} size={22} color={statusColor} />
           </View>
           <Text style={styles.title}>{title}</Text>
           <Text style={[styles.body, subtitleStyle]}>{body}</Text>
           <View style={styles.footer}>
-            <Text style={[styles.state, { color: tone.accent }]}>{stateLabel}</Text>
+            <Text style={[styles.state, { color: statusColor }]}>{stateLabel}</Text>
             <Ionicons
               name={interactive ? 'arrow-forward' : 'lock-closed-outline'}
               size={16}
-              color={interactive ? tone.accent : vionaCinematicTokens.color.muted}
+              color={statusColor}
             />
           </View>
         </View>
