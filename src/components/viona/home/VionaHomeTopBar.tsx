@@ -69,6 +69,7 @@ export function VionaHomeTopBar({
   const { width } = useWindowDimensions();
   const [fontsLoaded] = useFonts({ Inter_600SemiBold });
   const [now, setNow] = useState(() => new Date());
+  const [searchFocused, setSearchFocused] = useState(false);
   useEffect(() => {
     const timer = setInterval(() => setNow(new Date()), 30000);
     return () => clearInterval(timer);
@@ -125,15 +126,19 @@ export function VionaHomeTopBar({
           ) : null}
         </View>
       )}
-      <View style={[styles.search, width < 768 && styles.searchNarrow]}>
-        <Ionicons name="search-outline" size={16} color={vionaCinematicTokens.color.muted} />
+      <View style={[styles.search, width < 768 && styles.searchNarrow, searchFocused && styles.searchFocused]}>
+        <Ionicons name="search-outline" size={16} color={searchFocused ? vionaCinematicTokens.color.accentGold : vionaCinematicTokens.color.muted} />
         <TextInput
           accessibilityLabel={t('home.rec2.searchPlaceholder')}
           placeholder={t('home.rec2.searchPlaceholder')}
           placeholderTextColor={vionaCinematicTokens.color.muted}
           value={searchValue}
           onChangeText={onSearchChange}
-          onFocus={onFocus}
+          onFocus={() => {
+            setSearchFocused(true);
+            onFocus?.();
+          }}
+          onBlur={() => setSearchFocused(false)}
           onSubmitEditing={() => undefined}
           returnKeyType="search"
           style={styles.searchInput}
@@ -141,7 +146,7 @@ export function VionaHomeTopBar({
       </View>
       <View style={styles.tools}>
         <View accessibilityRole="image" accessibilityLabel={t('home.rec2.header.notifications')} style={styles.tool}>
-          <Ionicons name="notifications-outline" size={18} color={vionaCinematicTokens.color.ice} />
+          <Ionicons name="notifications-outline" size={18} color={vionaCinematicTokens.color.accentGold} />
           {notices > 0 ? (
             <View style={styles.noticeBadge}>
               <Text style={styles.noticeBadgeText}>{notices}</Text>
@@ -157,7 +162,7 @@ export function VionaHomeTopBar({
           style={styles.lang}
         >
           <Text style={styles.langCode}>{languageCode}</Text>
-          <Ionicons name="chevron-down" size={12} color={vionaCinematicTokens.color.ice} />
+          <Ionicons name="chevron-down" size={12} color={vionaCinematicTokens.color.accentGold} />
         </Pressable>
         <Pressable
           accessibilityRole="button"
@@ -336,11 +341,15 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
   },
   searchNarrow: { flexBasis: '100%' },
+  searchFocused: { borderColor: vionaCinematicTokens.color.accentGold },
   searchInput: {
     flex: 1,
     color: vionaCinematicTokens.color.ice,
     fontSize: 14,
     paddingVertical: 8,
+    ...(Platform.OS === 'web'
+      ? ({ outlineStyle: 'none', caretColor: vionaCinematicTokens.color.accentGold } as ViewStyle)
+      : null),
   },
   tools: { flexDirection: 'row', alignItems: 'center', gap: 8, marginLeft: 'auto' },
   tool: {
@@ -381,7 +390,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 3,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#00D1FF',
+    backgroundColor: vionaCinematicTokens.color.accentGold,
   },
   noticeBadgeText: { color: '#04111F', fontSize: 8, fontFamily: vionaCinematicTokens.fontFamily.bold },
   user: { flexDirection: 'row', alignItems: 'center', gap: 8, maxWidth: 180, minWidth: 0 },

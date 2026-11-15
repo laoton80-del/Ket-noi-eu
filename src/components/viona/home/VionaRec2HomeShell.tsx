@@ -238,7 +238,7 @@ function ContentStateBanner({
       style={[styles.stateBanner, state === 'gated' && styles.gatedFade]}
       accessibilityLiveRegion="polite"
     >
-      <Ionicons name={icon} size={18} color="#65C8FF" />
+      <Ionicons name={icon} size={18} color={vionaCinematicTokens.color.accentGold} />
       <Text style={[styles.stateText, { lineHeight: typography.bodyLineHeight }]}>
         {t(`home.rec2.states.${state}`)}
       </Text>
@@ -492,7 +492,7 @@ export function VionaRec2HomeShell({
         </View>
         {imagePresentation.mode === 'image' ? null : (
           <View style={styles.visualFallback}>
-            <Ionicons name="planet-outline" size={23} color="#63C8FF" />
+            <Ionicons name="planet-outline" size={23} color={vionaCinematicTokens.color.accentGold} />
             <Text style={[styles.visualFallbackText, { lineHeight: typography.bodyLineHeight }]}>
               {t('home.rec2.imageFallback')}
             </Text>
