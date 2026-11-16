@@ -129,6 +129,7 @@ const AI_PROXY_EMULATOR_ALLOW_UNAUTHENTICATED =
   process.env.FUNCTIONS_EMULATOR === 'true' && process.env.AI_PROXY_EMULATOR_ALLOW_UNAUTHENTICATED?.trim() === '1';
 const AI_PROXY_REQUIRE_AUTH = !AI_PROXY_AUTH_BYPASS_REQUESTED || !AI_PROXY_EMULATOR_ALLOW_UNAUTHENTICATED;
 const AI_PROXY_KILL = process.env.AI_PROXY_KILL?.trim() === '1';
+const AI_PROXY_BLOCK_ANONYMOUS = process.env.AI_PROXY_BLOCK_ANONYMOUS?.trim() === '1';
 // Anonymous Firebase UIDs are valid app sessions but can rotate around per-UID buckets; App Check plus real identity binding (P0-B) is still required to address abuse.
 const AI_PROXY_MAX_RPM = Math.max(0, Number.parseInt(process.env.AI_PROXY_MAX_RPM ?? '120', 10) || 120);
 const AI_PROXY_RATE_WINDOW_MS = Math.max(10_000, Number.parseInt(process.env.AI_PROXY_RATE_WINDOW_MS ?? '60000', 10) || 60_000);
@@ -321,6 +322,9 @@ export const aiProxy = onRequest(
         uid = auth.uid;
         const provider = auth.decoded.firebase?.sign_in_provider;
         signInProvider = typeof provider === 'string' && provider.length > 0 ? provider : 'unknown';
+        if (AI_PROXY_BLOCK_ANONYMOUS && signInProvider === 'anonymous') {
+          return void res.status(403).json({ ok: false, error: 'anonymous_not_allowed' });
+        }
       }
 
       if (AI_PROXY_MAX_RPM > 0 && uid !== null) {
@@ -496,6 +500,9 @@ export const analyzeDocumentProxy = onRequest(
       }
       const provider = who.decoded.firebase?.sign_in_provider;
       signInProvider = typeof provider === 'string' && provider.length > 0 ? provider : 'unknown';
+      if (AI_PROXY_BLOCK_ANONYMOUS && signInProvider === 'anonymous') {
+        return void res.status(403).json({ ok: false, error: 'anonymous_not_allowed' });
+      }
       if (!takeAiProxyRateSlot(who.uid, ANALYZE_DOCUMENT_MAX_RPM, ANALYZE_DOCUMENT_RATE_WINDOW_MS, 'analyzeDocumentProxy')) {
         return void res.status(429).json({ ok: false, error: 'rate_limited' });
       }

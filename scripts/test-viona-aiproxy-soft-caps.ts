@@ -562,8 +562,8 @@ async function main(): Promise<void> {
     const hash = (bytes: string | Buffer) => createHash('sha256').update(bytes).digest('hex').toUpperCase();
     assert.equal(hash(protectedIndex), 'F0F070B5177B9DCE56CB1F501AA3B98231D3637CD91F9403CABE3CB1471B9D70');
     assert.equal(hash(lf(readFileSync(resolve(root, 'functions/src/walletAuth.ts')))), '71C10E0935D1EE954C4A38E6750CBA9F4BDA8BB4C74D017F23B09D9873F25512');
-    // Updated after the Firebase stopgap functions/lib rebuild.
-    assert.equal(hash(readFileSync(resolve(root, 'functions/lib/index.js'))), '32564D856703F7E6541112191A5A9C034B678CE12752783C5429747620436368');
+    // Updated for the opt-in AI_PROXY_BLOCK_ANONYMOUS guards in the AI proxy.
+    assert.equal(hash(readFileSync(resolve(root, 'functions/lib/index.js'))), 'EF006466DA185E0DCD637681CB7ACC3CE03F6D8102E584962B839CA7FDF0398D');
   });
   for (const [requested, expected] of [[undefined, 240], [512, 512], [513, 512], [8192, 512], [3.8, 3], [-1, 1], [NaN, 240], [Infinity, 240]] as const) {
     await test(`chat maxTokens ${String(requested)} is bounded at ${expected}`, () => {
