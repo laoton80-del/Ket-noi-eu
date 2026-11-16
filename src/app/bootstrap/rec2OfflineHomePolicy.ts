@@ -185,6 +185,11 @@ const OFFLINE_LOCAL_ACTIONS: ReadonlySet<Rec2LocalAction> = new Set([
   'language',
   'viona-panel',
   'sos-guidance',
+  'local',
+  'travel',
+  'academy',
+  'business',
+  'account',
 ]);
 
 export function isRec2ActionAllowed(

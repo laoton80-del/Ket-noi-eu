@@ -44,10 +44,14 @@ export function VionaPanelHeader({
   closeLabel,
   onClose,
   showMark = true,
+  showCloseLabel = false,
+  testID,
 }: Readonly<{
   closeLabel: string;
   onClose?: () => void;
   showMark?: boolean;
+  showCloseLabel?: boolean;
+  testID?: string;
 }>) {
   const [fontsLoaded] = useFonts({ Inter_600SemiBold });
   const anchorRef = useRef<View>(null);
@@ -130,15 +134,21 @@ export function VionaPanelHeader({
             </Text>
           ) : null}
           <Pressable
+            testID={testID}
             accessibilityRole="button"
             accessibilityLabel={closeLabel}
             onPress={onClose}
             onHoverIn={showTip}
             onHoverOut={hideTip}
             hitSlop={8}
-            style={styles.close}
+            style={showCloseLabel ? styles.closeWithLabel : styles.close}
           >
             <Ionicons name="close" size={18} color={vionaCinematicTokens.color.ice} />
+            {showCloseLabel ? (
+              <Text style={styles.closeLabel} numberOfLines={1}>
+                {closeLabel}
+              </Text>
+            ) : null}
           </Pressable>
         </View>
       ) : null}
@@ -188,6 +198,21 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  closeWithLabel: {
+    minHeight: 32,
+    borderRadius: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 4,
+    paddingHorizontal: 8,
+  },
+  closeLabel: {
+    color: vionaCinematicTokens.color.ice,
+    fontFamily: vionaCinematicTokens.fontFamily.medium,
+    fontSize: 13,
+    lineHeight: 16,
   },
   tip: {
     position: 'absolute',

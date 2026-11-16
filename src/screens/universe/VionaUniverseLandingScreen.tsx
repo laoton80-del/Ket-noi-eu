@@ -1,4 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import {
   useNavigation,
   useRoute,
@@ -7,9 +8,14 @@ import {
   type RouteProp,
 } from '@react-navigation/native';
 import { useMemo, type ReactElement } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Image, Pressable, ScrollView, StyleSheet, Text, View, type ImageSourcePropType } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import {
+  VionaPanelHeader,
+  vionaSidePanelColors,
+  vionaSidePanelFrame,
+} from '../../components/viona/home/VionaPanelHeader';
 import type { VionaRec2UniverseId } from '../../components/viona/home/vionaRec2HomeContract';
 import { vionaTokens } from '../../design';
 import { useTranslation } from '../../i18n';
@@ -28,6 +34,15 @@ const ACCENT: Readonly<Record<VionaRec2UniverseId, string>> = {
   business: '#38D59A',
   account: '#5B9DFF',
   sos: '#FF5B65',
+};
+
+const HERO: Readonly<Record<VionaRec2UniverseId, ImageSourcePropType>> = {
+  local: require('../../../assets/brand/viona/cinematic/photos/card-local.jpg'),
+  travel: require('../../../assets/brand/viona/cinematic/photos/card-travel.webp'),
+  academy: require('../../../assets/brand/viona/cinematic/photos/card-academy.webp'),
+  business: require('../../../assets/brand/viona/cinematic/photos/card-business.webp'),
+  account: require('../../../assets/brand/viona/cinematic/photos/card-account.webp'),
+  sos: require('../../../assets/brand/viona/cinematic/photos/card-sos.webp'),
 };
 
 function openHome(navigation: NavigationProp<ParamListBase>): void {
@@ -60,26 +75,28 @@ export function VionaUniverseLandingScreen({
       style={[styles.screen, { paddingTop: insets.top + 12, backgroundColor: vionaTokens.fashionTech.canvas }]}
       testID={`viona-universe-landing-${universe}`}
     >
-      <View style={styles.header}>
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel={t('universeLanding.backHome', { defaultValue: 'Home' })}
-          onPress={() => openHome(navigation)}
-          style={styles.homeLink}
-          testID={`viona-universe-home-${universe}`}
-        >
-          <Ionicons name="arrow-back" size={18} color={accent} />
-          <Text style={[styles.homeLinkText, { color: accent }]}>
-            {t('universeLanding.backHome', { defaultValue: 'Home' })}
+      <LinearGradient colors={[...vionaSidePanelColors]} style={[vionaSidePanelFrame, styles.landingCard]}>
+        <Image
+          source={HERO[universe]}
+          resizeMode="cover"
+          accessibilityIgnoresInvertColors
+          style={styles.hero}
+        />
+        <View style={styles.landingCopy}>
+          <VionaPanelHeader
+            testID={`viona-universe-home-${universe}`}
+            showCloseLabel
+            closeLabel={t('universeLanding.backHome', { defaultValue: 'Home' })}
+            onClose={() => openHome(navigation)}
+          />
+          <Text accessibilityRole="header" style={styles.title}>
+            {title}
           </Text>
-        </Pressable>
-        <Text accessibilityRole="header" style={styles.title}>
-          {title}
-        </Text>
-        <Text style={styles.lead}>
-          {t(`home.rec2.universes.${universe}.subtitle`, { defaultValue: '' })}
-        </Text>
-      </View>
+          <Text style={styles.lead}>
+            {t(`home.rec2.universes.${universe}.subtitle`, { defaultValue: '' })}
+          </Text>
+        </View>
+      </LinearGradient>
       <ScrollView contentContainerStyle={[styles.list, { paddingBottom: insets.bottom + 28 }]}>
         <Text style={styles.section}>
           {t('universeLanding.buildSection', { defaultValue: 'Launch modules' })}
@@ -211,9 +228,17 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingHorizontal: 20,
   },
-  header: {
-    gap: 8,
+  landingCard: {
     marginBottom: 8,
+  },
+  hero: {
+    width: '100%',
+    height: 168,
+  },
+  landingCopy: {
+    gap: 8,
+    paddingHorizontal: 12,
+    paddingBottom: 12,
   },
   homeLink: {
     alignItems: 'center',
